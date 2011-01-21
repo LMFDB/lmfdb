@@ -1,0 +1,138 @@
+{% extends 'homepage.html' %}
+
+{% block title %}
+Classical Modular Forms Navigation Page
+{% endblock %}
+
+{% block content %}
+
+
+<div id = "header">
+  <a href="/ModularForm/">Modular Forms</a><a href="/ModularForm/GL2/"> on GL(2)</a><a href="/ModularForm/GL2/Q"> over \( \mathbb{Q} \)</a> : Holomorphic Cuspforms
+<H1>
+Choose your space of cusp forms
+</H1>
+</div>
+<div id = "Content">
+
+{% if info.error is defined %}
+
+<h1>There was an error in meeting your previous request. Please change parameters.</h1>
+
+<div> 
+<h2> Error message: </h2>
+{{ info.error | safe }}
+</div>
+{% endif %}
+<!-- To make an interface that is easier to read we implement each case of input separately -->
+
+<!-- {{ info | safe }} -->
+
+
+
+
+<table width="650px" border="1">
+  <tr>
+    <td>
+      <form name = "space_choice" method = "get">
+
+{% if info.level is defined  and not info.level is none %}
+       <h3>Geometric information</h3>
+        Geometry of \(X_0({{ info.level }})\):
+	<br>
+	{{ info.geometric | safe }}
+	<br>
+	<input type="button" name="plot" value="Plot Fundamental domain" onclick="draw_fd()">
+	<br>
+	<!--input type="hidden" name="level" value="{{ info.level }}"-->
+{% endif %}
+	<h3>Choose a space to view</h3>
+	Level:
+	{% if info.initial_list_of_levels is defined %}
+	     <select name="level_list" onclick="return selectLevel(event)">
+	     {% for lvl in info.initial_list_of_levels %}
+	     <option value="{{lvl}}">{{ lvl }}  
+             {% endfor %}
+	     {% if info.level is defined  and not info.level is none %}
+	     <input type="text" size="10" name="level" value="{{info.level}}">
+	     {% else %}
+   	    <input type="text" size="10" name="level" value="1">
+            {% endif %}
+       {% endif %}
+	    <input type="button" name="show_geometric_info" value="Show geometric information for this level" onclick="javascript:show_geometry()">
+{#% endif %#}
+	<table border="1">
+	  <tr>
+{#% if info.weight is defined  and not info.weight is none %#}
+<!-- input type="hidden" name="weight" value="{{ info.weight }}" -->
+	<br>
+	    <td width="150px">
+	      <!--Please input weight -->
+	      {% for (wt,chk) in info.initial_list_of_weights %}
+	        {% if wt == 2 %}
+    	         <label><input type=radio name="weight_list" checked value="2" onclick="return selectWeight(event)"> weight 2 </label>
+		{% else %}
+    	         <label><input type=radio name="weight_list" value="{{wt}}" onclick="return selectWeight(event)"> weight {{ wt }} </label>
+	        {% endif %}
+	      <br>
+	      {% endfor %}
+	      {% if info.weight is defined  and not info.weight is none %}
+	      <input type="text" name="weight" size="3" value="{{info.weight}}">
+	      {% else %}
+	      <input type="text" name="weight" size="3" value="2">
+	      {% endif %}
+	    </td>
+{#% if info.character is defined  and not info.character is none and not info.character == -1 %#}
+	    <!--input type="hidden" name="character" value="{{ info.character }}"-->
+{#% else %#}
+           <td valign="top">  
+
+  	   <span title="We use the Sage ordering to name the characters. The trivial character is nr. 0"> Character </span>
+	      {% if info.level is defined  and not info.level is none %}
+	         modulo {{ info.level }} :
+	      {% endif %}
+	   <br>
+           {% if info.list_of_characters is defined %}
+	      <select name="character">
+		    {{ info.list_of_characters | safe }}
+	      </select>
+	    </td>
+	   {% else %}	    
+	      <!--select name="character">
+		    <option value="0">Trivial character</a>
+	      </select -->
+	    <input type="text" name="character" size="10" value="Trivial character" class="cleardefault" title="We use the Sage ordering to name the characters">
+	    <br>
+	    <input type="button" name="list_char" value="List Characters" onclick="list_characters()">
+	    </td>
+	    <td valign="top">  
+
+	  {% endif %}
+{#% endif %#}
+         </tr>		
+         </table>
+        <span align="center">
+       <input type="button" name="Submit" value="Submit" onclick="check_space_choice_Form()">
+       <span>
+      </form>
+  </td>
+<td valign="top" width="200px">
+  <form name="get_tables_of_stuff" method = "get">
+    <h3>Browse tables</h3>
+    <br>
+    <input type="hidden" name="weight" value="{{ info.weight }}">
+    <input type="hidden" name="get_table" value="1">
+    Range of levels: <br>
+    <input type="text" name="level_min" size="3" value="1" class="cleardefault">
+     -- <input type="text" name="level_max" size="3" value="50" class="cleardefault">
+    <br><input type=radio name="list_chars" checked value="0">    trivial character 
+    <br><input type=radio name="list_chars"  value="1"> list all characters 
+    <br>
+    <input type="button" name="Submit" value="Browse" onclick="check_table_form()"> 
+    <br><small>(opens in a new window)</small>
+    </form>
+</td>
+</tr>
+</table>
+</html>
+{% endblock content %}

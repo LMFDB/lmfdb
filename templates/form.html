@@ -1,0 +1,21 @@
+{% extends 'homepage.html' %}
+
+{% block title %}Get EC{% endblock %}
+
+{% block body %}
+
+<div id = "header">
+Form to get an EC
+</div>
+
+<div id = "Content">
+<h2>Form to get an EC</h2>
+
+<form name="input" action="{{ url_for('EC_toplevel') }}" method="get">
+Conductor: <input type="text" name="conductor" value="10" />
+<input type="submit" value="Submit" />
+</form>
+
+</div>
+
+{% endblock %}

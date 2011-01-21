@@ -1,0 +1,40 @@
+{% extends 'homepage.html' %}
+
+{% block title %}Number Fields{% endblock %}
+
+{% block body %}
+
+<div id = "header">
+<H1>Number fields</H1>
+</div>
+
+<div id = "Content"> 
+
+<h2> Results (at most {{info.count}} are shown)</h2>
+
+<table border=1 cellpadding=5 class='right_align_table'>
+<tr>
+<th>Label</th>
+<th>Polynomial</th>
+<th>Discriminant</th>
+<th>Class number</th>
+<th>Class group</th>
+</tr>
+{% for field in info.fields: %}
+<tr>
+<td align='left'><a href="/NumberField/{{field.label}}">{{field.label}}</a></td>
+<td>{{info.format_coeffs(field.coefficients)}}</td>
+<td>{{field.discriminant}}</td>
+<td>{{field.class_number}}</td>
+<td>{{field.class_group}}</td>
+</tr>
+{% endfor %}
+</table>
+
+<br>
+<p>
+Results for database query {{ info.query }}
+</p>
+</div>
+
+{% endblock %}

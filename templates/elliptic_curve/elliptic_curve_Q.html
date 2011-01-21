@@ -1,0 +1,52 @@
+{% extends 'homepage.html' %}
+
+{% block title %}Elliptic curves over the rationals{% endblock %}
+
+{% block content %}
+
+<div id = "header">
+<H1>Elliptic curves over \(\mathbb{Q}\)</H1>
+</div>
+
+<div id = "Content">
+
+<form>
+<input type='text' name='label' size=10>
+<input type='submit' name='jump' value='Jump'>
+</form>
+
+<h2> Filter </h2>
+
+<form>
+Conductor <input type='text' name='conductor'>
+Isogeny Class <input type='text' name='iso'>
+Torsion Order <input type='text' name='torsion'>
+Rank <input type='text' name='rank'>
+Optimal <input type='checkbox' name='optimal'>
+<input type='submit' value='Filter'>
+</form>
+
+<h2> Browse </h2>
+
+<p>
+<p>
+By rank:
+{% for r in info.rank_list: %}
+<a href="?rank={{r}}">{{r}}</a>
+{% endfor %}
+
+<p>
+By size of torsion subgroup: 
+{% for t in info.torsion_list: %}
+<a href="?torsion={{t}}">{{t}}</a>
+{% endfor %}
+
+<p>
+By conductor: 
+{% for r in info.conductor_list: %}
+<a href="?conductor={{r}}">{{r}}</a>
+{% endfor %}
+
+</div>
+
+{% endblock %}

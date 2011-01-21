@@ -1,0 +1,108 @@
+div#Content
+{
+  padding: 20px;
+  background-color: #EFEEDF;
+}
+
+div#navigate
+{
+  margin-bottom: 10px;
+  padding: 10px 20px 10px 20px;
+  background-color: #EFEEDF;
+  font-size: 80%;
+}
+
+table#siegel_navtable
+{
+  border-spacing: 10px;
+}
+
+table#siegel_navtable td.button
+{
+  width: 150px;
+  height: 100px;
+  border: 4px outset #CCCCCC;
+  text-align: center;
+  background-color: #CCCCCC;
+  font-size: 120%;
+}
+
+table#siegel_navtable td.text
+{
+  padding: 10px;
+  height: 100px;
+  border: 1px solid black;
+  text-align: left;
+  background-color: #DDDDDD;
+}
+
+div.literature
+{
+  margin-top: 10px;
+  font-size: 90%;
+  color: #111111;
+}
+.name
+{
+  font-weight: bold;
+}
+.enternumber
+{
+  border: 1px solid black;
+}
+.submitbutton
+{
+  border: 1px solid black;
+  background-color: #45BDD7;
+}
+table.siegel_dim_table
+{
+  border: 1px solid black;
+  border-collapse: collapse;
+  font-size: 12px;
+  max-width: 600px;
+}
+table.siegel_dim_table td
+{
+  padding: 2px 5px 2px 5px;
+  border: 1px solid black;
+}
+table.siegel_dim_table td a
+{
+  color: #067AAB;
+  text-decoration: none;
+}
+table.siegel_dim_table td a:visited
+{
+  color: #067AAB;
+  text-decoration: none;
+}
+table.siegel_dim_table td a:hover
+{
+  color: #067AAB;
+  text-decoration: underline;
+}
+.emph
+{
+  font-style: italic;
+}
+.error
+{
+  margin: 20px 0 20px 0;
+  padding: 10px;
+  border: 1px solid red;
+  color: red;
+  font-size: 120%;
+}
+.long1
+{
+  margin: 20px 5px 20px 5px;
+  padding: 1px;
+  max-width: 600px;
+  overflow: auto;
+}
+.small
+{
+  font-size: 12px;
+}
+

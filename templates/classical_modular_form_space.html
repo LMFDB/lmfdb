@@ -1,0 +1,51 @@
+{% extends 'homepage.html' %}
+<!-- { include 'sidebar.html' % -->
+
+{% block title %}Classical Modular Forms Space Page{% endblock %}
+
+{% block content %}
+
+<div id = "header">
+  <a href="/ModularForm/">Modular Forms</a><a href="/ModularForm/GL2/"> on GL(2)</a><a href="/ModularForm/GL2/Q"> over \( \mathbb{Q} \)</a> : <a href="/ModularForm/GL2/Q/holomorphic/">Holomorphic Cuspforms</a>
+<H1>
+Cuspidal modular forms of weight {{ info.weight }} for 
+\({% if info.level==1 %} 
+	\mathrm{SL}_{2}(\mathbb{Z}) 
+{% else %} 
+	\Gamma_0({{ info.level }})  
+{% endif %}\)
+{% if info.character>0 %} 
+with character \( \chi_{ {{ info.character }} }\) modulo \( {{ info.level }}\) with  <span style="white-space:nowrap">order \( {{ info.character_order }}\) </span> and <span style="white-space:nowrap">conductor \( {{ info.character_conductor }}\)</span>
+{% else %} 
+   with trivial character.
+{% endif %}
+</H1>
+</div>
+
+<div id = "Content" width="100%">
+{% if info.error is defined %}
+	Error !
+{% else %}
+<!--	{% if info.dimension>0 %}
+		\[\mathrm{dim}\, S_{ {{ info.weight }} }({{ info.level }})={{ info.dimension }}\]		 The Sturm bound for this space is {{ info.sturm_bound }}. 	{% else %}
+		\[S_{ {{ info.weight }} }({{ info.level }})=\{0\}\]
+	{% endif %}
+-->
+	{% if info.nontrivial_new %}
+		<br>
+		Decomposition of \(S_{ {{ info.weight }} }^{new}({{ info.level }})\) into galois orbits :
+		{{ info.new_decomposition | safe }}
+	{% else %}
+		\[S_{ {{ info.weight }} }^{new}({{ info.level }})=\{0\}\]
+	{% endif %}
+
+	{% if info.old_decomposition != "" %}
+		<br>
+		Decomposition of \(S_{ {{ info.weight }} }^{old}({{ info.level }})\) into lower level spaces:
+		{{ info.old_decomposition | safe }}
+	{% endif %}
+	
+{% endif %}
+</div>
+
+{% endblock %}

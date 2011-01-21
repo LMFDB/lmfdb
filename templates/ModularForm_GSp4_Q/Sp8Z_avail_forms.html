@@ -1,0 +1,15 @@
+The following table shows,
+
+<table class="siegel_dim_table">
+  <tr><td>Weight</td><td>Galois-Orbits</td></tr>
+  {% for wt,forms in  info.forms%}
+  <tr>
+    <td>{{ wt }}</td>
+    <td>
+      {% for form,dim in forms %}
+      <span style="margin-right:20px;"><a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', group='Kp', form = form, weight = wt, page = 'specimen') }}">{{ form }}: {{ dim }}</a></span>
+      {% endfor %}
+    </td>
+  </tr>
+  {% endfor %}
+</table>

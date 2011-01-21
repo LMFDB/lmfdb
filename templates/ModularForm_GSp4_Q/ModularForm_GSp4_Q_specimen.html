@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% include 'sidebar.html' %}
+
+{% block title %}Siegel Modular Forms{% endblock %}
+
+{% block body %}
+
+<div id = "header">
+  <div class="logo">Siegel Modular Forms</div>
+</div>
+
+<div id = "Content">
+
+  <div id="main">
+    <h2>Galois orbit</h2>
+    <h4>Weight: {{ info['weight'] }}&nbsp;&nbsp;&nbsp;&nbsp;
+    
+    {% if info.orbit %}
+    [{{ info['orbit'] }}]
+    {% else %}
+    [Need to indicate Maass, Interesting, etc. here]
+    {% endif %}
+    
+    </h4>
+    <h2>Number field containing all coefficients</h2>
+      <div class="long1"><div class="small">{{ info['form'][0] }}</div></div>
+    <h2>As polynomial in generators</h2>
+      {% if info.form[1] %} 
+      <div class="long1"><div class="small">{{ info['form'][1] }}</div></div>
+      {% else %}
+      <div class="long1"><div class="small">Not applicable</div></div>
+      {% endif %}
+    <h2>Hecke eigenvalues</h2>
+    <div class="long1">
+      <table class="siegel_dim_table">
+        <tr><td>n</td><td>&lambda;(n)</td></tr>
+        {% for l,val in info['form'][2] %}
+          <tr><td>{{ l }}</td><td>{{ val }}</td></tr>
+        {% endfor %}
+      </table>
+    </div>
+    <h2>Fourier coefficients</h2>
+      In this table a triple \((n,r,m)\) stands for the quadratic form \(\begin{bmatrix}n&r/2\\r/2&m\end{bmatrix}\).
+      The Fourier expansion of the modular form is given as
+      \[
+         f(\tau,z,\tau')=\sum_{T=(n,r,m)}a(T)e^{2\pi i(n\tau+rz+m\tau')}.
+      \]
+    <div class="long1">
+      <table class="siegel_dim_table">
+        <tr><td>4nm-r^2</td><td>T=(n,r,m)</td><td>a(T)</td></tr>
+        {% for l,val in info['form'][3] %}
+          <tr><td>{{ 4*l[0]*l[2]-l[1]*l[1]}}</td><td>{{ l }}</td><td>{{ val }}</td></tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+
+</div>
+
+{% include 'footer.html' %}
+
+{% endblock %}
+

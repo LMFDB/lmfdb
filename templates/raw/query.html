@@ -1,0 +1,57 @@
+{% extends 'homepage.html' %}
+
+{% block title %}Elliptic curves over the rationals{% endblock %}
+
+{% block content %}
+
+<div id = "header">
+<H1>{{db}}.{{coll}}</H1>
+</div>
+
+<div id = "Content">
+
+<pre>
+{{info.metadata}}
+</pre>
+
+<h2>Search</h2>
+
+<p>
+<form>
+{% for key in indices %}
+<p>{{key}} <input name='{{key}}' value='{{info.get(key, '')}}'>
+{% endfor %}
+<p>columns <input name='_fields' value='{{','.join(info.default_fields)}}' size=70>
+limit <input name='_limit' value='{{info._limit}}' size=5>
+<input type='submit' name='_search' value='Search'>
+</form>
+
+{% if res %}
+<h2>Results</h2>
+
+Download as: 
+{% for format, url in info.formats %}
+<a href='{{url}}' target='_blank'>{{format}}</a>
+{% endfor %}
+
+<br><br>
+<table width='100%' class='right_align_table'>
+<tr>
+{% for fld in info.default_fields %}
+    <td><b>{{fld}}</b></td>
+{% endfor %}
+</tr>
+{% for datum in res %}
+    <tr>
+        {% for fld in info.default_fields %}
+            <td>{{datum[fld]}}</td>
+        {% endfor %}
+    </tr>
+{% endfor %}
+</table>
+
+{% endif %}
+
+</div>
+
+{% endblock %}

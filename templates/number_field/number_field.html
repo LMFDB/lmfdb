@@ -1,0 +1,92 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+    <script>
+    function show_code(system) {
+        $('.sage').hide()
+        $('.pari').hide()
+        $('.magma').hide()
+        $('.'+system).show()
+    }
+    </script>
+
+    <div id="header">
+        <div class="logo">
+            {{ info.logo }}
+        </div>
+        <div class="banner">
+            <span>The logo of the portal could go here... </span>
+        </div>
+    </div>
+    <div id="Content">
+
+        <h1>
+            Field label {{ info.label }}</h1>
+            <div>
+                <a onclick="show_code('sage'); return false" href='#'>sage</a>
+                <a onclick="show_code('pari'); return false" href='#'>pari</a>
+                <a onclick="show_code('magma'); return false" href='#'>magma</a>
+            </div>
+            <p>
+        <div class='sage nodisplay code'>sage: K = NumberField(PolynomialRing(QQ,'x')({{info.coefficients}}),'a')</div>
+        <div class='pari nodisplay code'>pari: K = bnfinit(Polrev({{info.coefficients}}))</div>
+        <div class='magma nodisplay code'>> K<a> := NumberField(PolynomialRing(Rationals())!{{info.coefficients}});</div>
+        </p>
+        <h2>
+            Defining Polynomial
+        </h2>
+        <div class='sage nodisplay code'>sage: K.defining_polynomial()</div>
+        <div class='pari nodisplay code'>pari: K.pol</div>
+        <div class='magma nodisplay code'>> DefiningPolynomial(K);</div>
+        <p>
+            {{ info.polynomial }}
+        </p>
+
+
+        <h2>
+	    Integral basis (with respect to field generator $a$)
+        </h2>
+        <div class='sage nodisplay code'>sage: K.integral_basis()</div>
+        <div class='pari nodisplay code'>pari: K.zk</div>
+        <div class='magma nodisplay code'>> IntegralBasis(K);</div>
+        <p>
+            {{ info.integral_basis}}
+        </p>
+
+        <h2>
+            Class number and class group
+        </h2>
+        <div class='sage nodisplay code'>sage: K.class_number(), K.class_group().invariants()</div>
+        <div class='pari nodisplay code'>pari: K.clgp</div>
+        <div class='magma nodisplay code'>> ClassNumber(K), ClassGroup(K);</div>
+<p>
+            {{ info.class_number }}, {{ info.class_group }}
+        </p>
+
+
+        <h2>
+            Regulator
+        </h2>
+        <div class='sage nodisplay code'>sage: K.regulator()</div>
+        <div class='pari nodisplay code'>pari: K.reg</div>
+        <div class='magma nodisplay code'>> Regulator(K);</div>
+        <p>
+            {{ info.regulator }}
+        </p>
+
+
+        <h2>
+            Galois group
+        </h2>
+        <div class='sage nodisplay code'>sage: K.class_group().isomorphism_type_info_simple_group()</div>
+        <div class='pari nodisplay code'>pari: polgalois(pol)</div>
+        <div class='magma nodisplay code'>> GaloisGroup(K);</div>
+        <p>
+            {{ info.galois_group }}
+        </p>
+
+
+
+{% endblock %}
+</html>

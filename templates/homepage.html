@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block body %}
+
+    {% block sidebar %} 
+    {% if info %}
+        <div id="sidebar">
+
+    {% if info.sidebar %}
+     {% for topic, content in info.sidebar %}
+       <h2>{{ topic }}</h2>
+       <ul class="subnav">
+         {% for text, url in content %}
+           <li><a href="{{ url }}">{{ text }}</a></li>
+         {% endfor %}
+       </ul>
+     {% endfor %}
+    {% endif %}
+
+        {% if info.properties %}
+            <h2>
+                Properties</h2>
+            <ul class="subnav">
+                    {% for text in info.properties %}
+                            <li>{{ text }}</li>
+                            {% endfor %}
+            </ul>
+        {% endif %}
+        {% if info.check %}
+            <h2>
+                Check</h2>
+            <ul class="subnav">
+                    {% for text,url in info.check %}
+                            <li><a href="{{ url }}">{{ text }}</a></li>
+                            {% endfor %}
+            </ul>
+        {% endif %}
+
+        {% if info.downloads_visible %}
+                    <h2>
+                    Downloads</h2>
+                    <ul class="subnav">
+                            {% for text,url in info.downloads %}
+                                    <li><a href="{{ url }}">{{ text }}</a></li>
+                                    {% endfor %}
+                    </ul>
+         {% endif %}
+         {% if info.learnmore %}
+            <h2>
+                Learn more about</h2>
+            <ul class="subnav">
+                    {% for text,url in info.learnmore %}
+                            <li><a href="{{ url }}">{{ text }}</a></li>
+                            {% endfor %}
+            </ul>
+        {% endif %}
+        {% if info.friends %}
+            <h2>
+                Friends</h2>
+            <ul class="subnav">
+                    {% for text,url in info.friends %}
+                            <li><a href="{{ url }}">{{ text }}</a></li>
+                            {% endfor %}
+            </ul>
+        {% endif %}
+        </div>
+    {% else %}
+    There is no "info" dict given to render the template.
+    {% endif %}
+    {% endblock sidebar %}
+
+    {% block content %}
+
+    There is nothing here. This is just a template.
+
+    {% endblock content %}
+
+
+    {% block footer %}
+    {% if info %}
+    <div class="footer">
+            <p>
+            &copy; Data computed by {{ info.credit }}.<br />
+            The creation of this website was supported by the NSF, AIM ...<br />
+            Number Theory, the Queen of Mathematics!</p>
+    </div>
+    {% else %}
+    There is no "info" dict given to render the template.
+    {% endif %}
+    {% endblock footer %}
+
+{% endblock body %}

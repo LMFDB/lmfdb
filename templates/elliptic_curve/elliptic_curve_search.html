@@ -1,0 +1,38 @@
+{% extends 'homepage.html' %}
+
+{% block title %}Elliptic curves over the rationals{% endblock %}
+
+{% block body %}
+
+<div id = "header">
+<H1>Elliptic curves over \(\mathbb{Q}\)</H1>
+</div>
+
+<div id = "Content"> <!--{{ info.query }}-->
+
+<h2> Results </h2>
+<center>
+\(y^2 + a_1 x y + a_3 y = x^3 + a_2 x^2 + a_4 x + a_6\)
+</center>
+<table border=0 width='100%'>
+<tr>
+<td align=center>Cremona<br>label</td>
+<td>[\(a_1\),\(a_2\),\(a_3\),\(a_4\),\(a_6\)]</td>
+<td>rank</td>
+<td>&nbsp;</td>
+<td>torsion<br>order</td>
+</tr>
+{% for curve in info.curves: %}
+<tr>
+<td align=center><a href="/EllipticCurve/Q/{{curve.conductor}}/{{curve.iso}}/{{curve.number}}">{{curve.label}}</a></td>
+<td>{{info.format_ainvs(curve.ainvs)}}</td>
+<td align=center>{{curve.rank}}</td>
+<td>&nbsp;</td>
+<td align=center>{{curve.torsion}}</td>
+</tr>
+{% endfor %}
+</table>
+
+</div>
+
+{% endblock %}

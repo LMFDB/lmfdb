@@ -1,0 +1,33 @@
+{% extends 'homepage.html' %}
+
+{% block title %}{{ info.title }}{% endblock %}
+
+
+{% block content %}
+    <div id="header">
+        <div class="logo">
+            <a href="/L">{{ info.objecttitle }} home</a>
+        </div>
+        <div class="banner">
+            <span>The logo of the portal could go here... </span>
+        </div>
+    </div>
+    <div id="Content">
+        <h1>
+            {{ info.title }}
+        </h1>
+        {{ info.contents|safe }}
+    </div>
+    
+	<div class="spacer">
+        &nbsp;</div>
+        
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $("#zeroes").load("{{ info.zeroeslink|safe }}");
+        });
+    </script>
+
+{% endblock %}
+
+

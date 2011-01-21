@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Siegel Modular Forms{% endblock %}
+
+{% block body %}
+
+{% include 'sidebar.html' %}
+
+<div id = "header">
+  <div class="logo">Siegel Modular Forms</div>
+</div>
+
+<div id = "Content">
+
+    <h2>Generators and relations</script></h2>
+
+    {% include ['ModularForm_GSp4_Q/', info.group, '_gen_rel.html']|join %}
+
+</div>
+
+{% include 'footer.html' %}
+
+{% endblock %}
+
+
+

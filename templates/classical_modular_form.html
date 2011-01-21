@@ -1,0 +1,105 @@
+{% extends 'homepage.html' %}
+
+{% block title %}Classical Modular Form Page{% endblock %}
+
+{% block content %}
+
+<div id = "header">
+  <a href="/ModularForm/">Modular Forms</a><a href="/ModularForm/GL2/"> on GL(2)</a><a href="/ModularForm/GL2/Q"> over \( \mathbb{Q} \)</a> : Holomorphic Cuspforms
+<H1>
+Cuspidal new modular form '{{ info.label[0] }}' of weight {{ info.weight }} for 
+\({% if info.level==1 %} 
+	\mathrm{SL}_{2}(\mathbb{Z}) 
+{% else %} 
+        \Gamma_0({{ info.level }})  
+{% endif %}\)
+{% if info.character>0 %} 
+with character \( \chi_{ {{ info.character }} }\) modulo \( {{ info.level }}\) with  <span style="white-space:nowrap">order \( {{ info.character_order }}\) </span> and <span style="white-space:nowrap">conductor \( {{ info.character_conductor }}\)</span>
+{% else %} 
+   with trivial character.
+{% endif %}
+
+</H1>
+</div>
+
+<div id = "Content">
+{% if info.error is defined %}
+	Error !
+{% else %}
+<h2> q-expansion</h2>
+	<br>
+	{{ info.q_exp | safe }}
+	{{ info.polynomial_st | safe }}
+	<!-- br>
+	One can embed it into \(\mathbb{C}\) as
+	<br -->
+	<br>
+	{{ info.embeddings | safe }}
+<h2> Detailed data</h2>
+	<br>
+	The first Satake parameters \(\alpha_p\) are
+	<br>
+	{{ info.satake | safe }}
+	<br>
+	The corresponding Satake angles \(\theta_p = \textrm{Arg}(\alpha_p) \) are
+	<br>
+	{{ info.satake_angle | safe }}
+
+	{% if info.atkin_lehner != "" %}
+		<br>
+		The Atkin-Lehner eigenvalues are
+		<br>
+		{{ info.atkin_lehner | safe }}
+		<br>
+		The Atkin-Lehner eigenvalues corresponding to cusps are
+		<br>
+		{{ info.atkin_lehner_cusps | safe }}
+		<br><small>* ) The Fricke involution</small>
+	{% endif %}
+
+	<br>
+	Twist information:<br>
+	{{ info.twist_info | safe }}
+	<br>
+	{% if info.CM != "" %}
+		Complex multiplication information:<br>
+		{{ info.CM | safe }}
+	{% endif %}
+	<br>
+	<h2>Special Values</h2>
+	Values at some CM points:
+	{{ info.CM_values | safe }}
+
+	{% if info.explicitformulas is defined %}
+	<h2>Explicit Formulas</h2>
+	
+	 {{info.explicitformulas }}
+	{% endif %}
+
+	<!-- h2>Explicit Formulas</h2 -->
+	{% if  true%}
+	<h2>Get more coefficients</h2>
+	<form name = "get_coefficients" method = "get">
+	  Get / compute  <input type="text" size="10" name="number" value="10"> 
+	  coefficients.
+	  In 
+	  <input type="hidden" name="level" value="{{info.level }}">
+	  <input type="hidden" name="character" value="{{info.character }}">
+	  <input type="hidden" name="weight" value="{{info.weight }}">
+	  <input type="hidden" name="label" value="{{info.label }}">
+	  <ul>
+	    <li> 
+	      <label><input type=radio name="format" checked value="q_exp" onclick="return selectCFormat(event)"> q-expansion </label>
+	    </li>
+	    <li>
+	      <label><input type=radio name="format" value="embeddings" onclick="return selectCFormat(event)"> Complex embeddings </label>
+	    with <input type="text" size="10" name="prec" value="15"> digits precision. 
+	    </li>
+	  </ul>
+	  <input type="button" name="Submit" value="Get coefficients" onclick="check_coefficient_form()">
+	  </form>
+{% endif %}
+{% endif %}
+</div>
+
+{% endblock %}

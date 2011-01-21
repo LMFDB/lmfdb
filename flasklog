@@ -1,0 +1,17 @@
+Exception on /Lfunction/ [GET]
+Traceback (most recent call last):
+  File "/home/bober/sage-4.5.3/local/lib/python2.6/site-packages/Flask-0.6-py2.6.egg/flask/app.py", line 861, in wsgi_app
+    rv = self.dispatch_request()
+  File "/home/bober/sage-4.5.3/local/lib/python2.6/site-packages/Flask-0.6-py2.6.egg/flask/app.py", line 696, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "website.py", line 74, in render_Lfunction
+    return Lfunction.render_webpage(request.args, family, group, field, objectName, level)
+  File "/home/bober/lmfdb/Lfunction.py", line 15, in render_webpage
+    info = getNavigationFromDb(args, family, group, field, objectName, level)
+  File "/home/bober/lmfdb/Lfunction.py", line 33, in getNavigationFromDb
+    connection = pymongo.Connection()
+  File "build/bdist.linux-x86_64/egg/pymongo/connection.py", line 305, in __init__
+    self.__find_master()
+  File "build/bdist.linux-x86_64/egg/pymongo/connection.py", line 509, in __find_master
+    raise AutoReconnect("could not find master/primary")
+AutoReconnect: could not find master/primary
