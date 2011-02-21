@@ -1,3 +1,6 @@
+"""
+start this via $ sage -python website.py <portnumber>
+"""
 from base import *
 
 import hilbert_modular_form
