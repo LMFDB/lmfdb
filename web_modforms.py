@@ -299,7 +299,7 @@ class WebModFormSpace(Parent):
         s=s+"\]"
         return s
 
-    def print_galois_orbits(self,prec=10):
+    def print_galois_orbits(self,prec=10,qexp_max_len=50):
         r"""
         Print the Galois orbits of self.
 
@@ -323,6 +323,30 @@ class WebModFormSpace(Parent):
             tbl['headersv'].append(header)
             dim=self._decomposition[j].dimension()
             orbit=self.galois_orbit(j,prec)
+            # we might to truncate the power series
+            # if it is too long
+            cc = orbit.coefficients()
+            
+            slist = list()
+            i = 1
+            for c in cc:
+                s=''
+                if i>0:
+                    s+='+'
+                    si=str(i)
+                else:
+                    si=''
+                if(c==1):
+                    s+='q^{'+si+'}'
+                elif(str(c).count('-')>0 or str(c).count('+')>0):
+                    s+='('+str(c)+')q^{'+si+'}'
+                else:
+                    s+=str(c)+'q^{'+si+'}'
+                if(len(s)-i > qexp_max_len):
+                    s+='//'
+                slist.append(my_latex_from_qexp(s))
+                i+=1
+            s+='\)'
             K=orbit.base_ring()
             if(K==QQ):
                 poly=ZZ['x'].gen()
@@ -334,7 +358,9 @@ class WebModFormSpace(Parent):
                     is_relative = True
                 else:
                     disc=factor(K.discriminant())
-            tbl['data'].append([dim,poly,disc,orbit])
+            tbl['data'].append([dim,poly,disc,slist])
+        # we already formatted the table
+        tbl['data_format']={3:'html'}
         s=html_table(tbl)
         if(is_relative):
             s = s + "<br><small>For relative number fields we list the absolute norm of the discriminant)</small>"
@@ -1101,11 +1127,7 @@ class WebNewForm(SageObject):
         """
         if(prec==None):
             prec=self._prec
-        s=""+str(self.q_expansion(prec))+""
-        ss=re.sub('x\d','x',s)
-        s=re.sub("\^(\d+)","^{\\1}",ss)
-        ss=re.sub('\*','',s)
-        s=re.sub('zeta(\d+)','\zeta_{\\1}',ss)
+        s = my_latex_from_qexp(str(self.q_expansion(prec)))
         return s
 
 
@@ -1354,10 +1376,16 @@ def html_table(tbl):
         s="<table "+str(tbl['atts'])+">\n"
     else:
         s="<table>\n"
-    if(tbl.has_key('data_format')):
-        format=tbl['data_format']
-    else:
-        format=""
+    format = dict()
+    for i in range(ncols):
+        format[i]=''
+        if(tbl.has_key('data_format')):
+            if isinstance(tbl['data_format'],dict):
+                if(tbl['data_format'].has_key(i)):
+                    format[i]=tbl['data_format'][i]
+            elif(isinstance(tbl['data_format'],str)):
+                format[i]=tbl['data_format']
+
     if(tbl.has_key('header')):
         
         s+="<thead><tr><th><td colspan=\""+str(ncols)+"\">"+tbl['header']+"</td></th></tr></thead>"
@@ -1372,6 +1400,15 @@ def html_table(tbl):
     #    sheaderh="<span class=\"math\">"
     # check which type of content we have
     h1=tbl['headersv'][0]
+    col_width=dict()
+    for i in range(ncols):
+        col_width[i]=0
+        if tbl.has_key('col_width'):
+            if tbl['col_width'].has_key(i):
+                col_width[i]=tbl['col_width'][i]
+
+    print "col width=",col_width
+    print "format=",format
     #if(isinstance(h1,str) and not re.match("\$",h1)):
     #    sheaderv="<span>"
     #else:
@@ -1387,21 +1424,49 @@ def html_table(tbl):
     s=s+row
     for r in range(nrows):
         row="<tr><td>"+sheaderv+str(tbl['headersv'][r])+"</td>"
-        if(format=='html'):
-            for k in range(ncols):
-                row=row+"\t<td>"+str(data[r][k])+"</td> \n"
-        else:
-            for k in range(ncols):
-                sss=latex(data[r][k])
-                if(len(sss)>0):
-                    row=row+"\t<td>\("+sss+"\)</td> \n"
+        for k in range(ncols):
+            if format[k]=='html' or format[k]=='text':
+                row=row+"\t<td>"
+                if isinstance(data[r][k],list):
+                    print "list=",data[r][k]
+                    for ss in data[r][k]:
+                        sss = str(ss)
+                        if(len(sss)>0):
+                            row+=sss
                 else:
-                    row=row+"\t<td></td> \n"
+                    sss = str(data[r][k])
+                row=row+"</td> \n"
+            else:
+                row+="\t<td>"
+                if isinstance(data[r][k],list):
+                    print "list=",data[r][k]
+                    for ss in data[r][k]:
+                        sss = latex(ss)
+                        if(len(sss)>0):
+                            row+="\("+sss+"\)"
+                else:
+                    sss=latex(data[r][k])
+                    if(len(sss)>0):
+                        row=row+"\("+sss+"\)</td> \n"
+                row+="</td>\n"
+        # allow for different format in different columns
         row=row+"</tr> \n"
         s=s+row
     s=s+"</tbody></table>"
     return s
 
+
+def my_latex_from_qexp(s):
+    r"""
+    Make LaTeX from string. in particular from parts of q-expansions.
+    """
+    ss = "\("
+    ss+=re.sub('x\d','x',s)
+    ss=re.sub("\^(\d+)","^{\\1}",ss)
+    ss=re.sub('\*','',ss)
+    ss=re.sub('zeta(\d+)','\zeta_{\\1}',ss)  
+    ss += "\)"
+    return ss
 
 def _get_newform(k,N,chi,fi=None):
     r"""

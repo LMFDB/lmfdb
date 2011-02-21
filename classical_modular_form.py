@@ -554,6 +554,7 @@ def set_info_for_modular_form_space(level,weight,character,info,sbar):
 	info['dimension'] = WMFS.dimension()
 	info['sturm_bound'] = WMFS.sturm_bound()
 	info['new_decomposition'] = WMFS.print_galois_orbits()
+	print "new_decomp=",info['new_decomposition']
 	info['nontrivial_new'] = len(info['new_decomposition'])
 	## we try to catch well-known bugs...
 	try:
