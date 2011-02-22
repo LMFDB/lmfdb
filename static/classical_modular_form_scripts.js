@@ -96,14 +96,16 @@ function check_space_choice_Form() {
     if (document.space_choice.character.value == document.space_choice.character.defaultText) {
 	document.space_choice.character.value=0;
     }
-    
     var agree=true;
     var level_set=false;
     var weight_set=false;
     var form=document.space_choice;
     var weight;
-    var N = document.space_choice.level.value ;
+    alert("hej submit0");
+    var N = document.space_choice.level.value;
+    alert("hej submit1");
     var k = document.space_choice.weight.value; 
+    alert("hej submit2");
     agree = true;
     if( (N>1000 || k >1000) || (N >30 && k > 30)) {
 	s="This might take some time. Are you sure you want to use these parameters?";

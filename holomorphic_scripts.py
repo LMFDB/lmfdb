@@ -269,7 +269,7 @@ def get_cusp_expansions_of_newform(k,N=1,fi=0,prec=10):
      - ''s'' string giving the Atkin-Lehner eigenvalues corresponding to the Cusps (where possible)
     """
     res=dict()
-    (t,f) = _get_newform(k,N,fi)
+    (t,f) = _get_newform(k,N,0,fi)
     if(not t):
         return s
     res[Infinity]=1
