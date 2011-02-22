@@ -5,13 +5,13 @@
 
 <title>{% block title %}MFDB{% endblock title %}</title>
 
-<script type="text/javascript" src="{{ url_for('static', filename='jquery.min.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('static', filename='MathJax/MathJax.js') }}"></script>
-<link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet" type="text/css" />
-<link href="{{ url_for('static', filename='siegel.css') }}" rel="stylesheet" type="text/css" />
-<link href="{{ url_for('static', filename='Lfunctionsiegel.css') }}" rel="stylesheet" type="text/css" />
-<script type="text/javascript" src="{{ url_for('static', filename='classical_modular_form_util-functions.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('static', filename='classical_modular_form_scripts.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('.static', filename='jquery.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('.static', filename='MathJax/MathJax.js') }}"></script>
+<link href="{{ url_for('.static', filename='style.css') }}" rel="stylesheet" type="text/css" />
+<link href="{{ url_for('.static', filename='siegel.css') }}" rel="stylesheet" type="text/css" />
+<link href="{{ url_for('.static', filename='Lfunctionsiegel.css') }}" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="{{ url_for('.static', filename='classical_modular_form_util-functions.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('.static', filename='classical_modular_form_scripts.js') }}"></script>
 <script type="text/javascript">
 MathJax.Hub.Config({
 extensions: ["tex2jax.js","TeX/AMSmath.js","TeX/AMSsymbols.js"],
