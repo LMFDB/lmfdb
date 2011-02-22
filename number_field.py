@@ -15,14 +15,14 @@ def NF_redirect():
 # function copied from classical_modular_form.py
 def set_sidebar(l):
 	res=list()
-	print "l=",l
+#	print "l=",l
 	for ll in l:
 		if(len(ll)>1):
 			content=list()
 			for n in range(1,len(ll)):
 				content.append(ll[n])
 			res.append([ll[0],content])
-	print "res=",res
+#	print "res=",res
 	return res
 
 
@@ -62,6 +62,8 @@ def coeff_to_poly(c):
 def coeff_to_nf(c):
     return NumberField(coeff_to_poly(c), 'a')
 
+def sig2sign(sig):
+    return [1,-1][sig[1]%2]
 
 group_names = {}
 group_names[(1, 1, 1, 1)] = ('S1','S1')
@@ -171,7 +173,7 @@ def by_label(label):
     return render_field_webpage({'label' : label})
 
 def parse_list(L):
-    return [int(a) for a in str(L)[1:-1].split(',')]
+    return eval(str(L))
 
 def number_field_search(**args):
     info = to_dict(args)
@@ -180,7 +182,7 @@ def number_field_search(**args):
     query = {}
     for field in ['degree', 'signature', 'discriminant', 'class_number', 'class_group', 'galois_group']:
         if info.get(field):
-            if field in ['signature', 'class_group']:
+            if field in ['class_group', 'signature']:
                 query[field] = parse_list(info[field])
             else:
                 if field == 'galois_group':
@@ -208,15 +210,19 @@ def number_field_search(**args):
             return render_field_webpage({'label': label})
 
     if 'discriminant' in query:
-        res = C.numberfields.fields.find(query)
-        res = res.sort([('degree',pymongo.ASCENDING),('signature',pymongo.DESCENDING),('discriminant',pymongo.ASCENDING)]) # TODO: pages
+        res = C.numberfields.fields.find(query).sort([('degree',pymongo.ASCENDING),('signature',pymongo.DESCENDING),('discriminant',pymongo.ASCENDING)]) # TODO: pages
     else:
-        query['discriminant'] = {'$lt':0}
-        res_neg = C.numberfields.fields.find(dict(query))
-        res_neg = res_neg.sort([('degree',pymongo.ASCENDING),('signature',pymongo.DESCENDING),('discriminant',pymongo.DESCENDING)]) # TODO: pages
-        query['discriminant'] = {'$gt':0}
-        res_pos = C.numberfields.fields.find(dict(query))
-        res_pos = res_pos.sort([('degree',pymongo.ASCENDING),('signature',pymongo.DESCENDING),('discriminant',pymongo.ASCENDING)]) # TODO: pages
+        # find matches with negative discriminant:
+        neg_query = dict(query)
+        neg_query['discriminant'] = {'$lt':0}
+        res_neg = C.numberfields.fields.find(neg_query).sort([('degree',pymongo.ASCENDING),('discriminant',pymongo.DESCENDING)])
+        # TODO: pages
+
+        # find matches with positive discriminant:
+        pos_query = dict(query)
+        pos_query['discriminant'] = {'$gt':0}
+        res_pos = C.numberfields.fields.find(pos_query).sort([('degree',pymongo.ASCENDING),('discriminant',pymongo.ASCENDING)])
+        # TODO: pages
 
         res = merge_sort(iter(res_neg),iter(res_pos))
 
@@ -239,15 +245,45 @@ def iter_limit(it,lim):
 
                    
 def merge_sort(it1,it2):
-    a = it1.next()
-    b = it2.next()
+    try:
+        a = it1.next()
+    except StopIteration:
+        b = it2.next()
+        while True:
+            yield b
+            b = it2.next()
+        return
+    
+    try:
+        b = it2.next()
+    except StopIteration:
+        a = it1.next()
+        while True:
+            yield a
+            a = it1.next()
+        return
+                
     while True:
         if abs(a['discriminant'])<abs(b['discriminant']):
             yield a
-            a = it1.next()
+            try:
+                a = it1.next()
+            except StopIteration:
+                b = it2.next()
+                while True:
+                    yield b
+                    b = it2.next()
+                return
         else:
             yield b
-            b = it2.next()
+            try:
+                b = it2.next()
+            except StopIteration:
+                a = it1.next()
+                while True:
+                    yield a
+                    a = it1.next()
+                return
     return
 
 def support_is_disjoint(D,plist):
@@ -314,4 +350,3 @@ def old_merge(it1,it2,lim):
                     yield a
                     count += 1
                 return
-
