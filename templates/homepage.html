@@ -1,6 +1,13 @@
 {% extends "base.html" %}
-
 {% block body %}
+
+    <div id="header">
+        <a href="/"><div class="logo"></div></a>
+        <div class"right">
+          <div class="title">LMDB: TITLE OF PAGE</div>
+          <div class="bread">Bread &gt; Crumb &gt; Hierarchy</div>
+        </div>
+    </div>
 
     {% block sidebar %} 
     {% if info %}
@@ -69,24 +76,36 @@
     {% endif %}
     {% endblock sidebar %}
 
-    {% block content %}
 
-    There is nothing here. This is just a template.
-
-    {% endblock content %}
-
-
-    {% block footer %}
-    {% if info %}
-    <div class="footer">
-            <p>
-            &copy; Data computed by {{ info.credit }}.<br />
-            The creation of this website was supported by the NSF, AIM ...<br />
-            Number Theory, the Queen of Mathematics!</p>
+<div id="Content">
+   {% if properties %}
+    <div id="properties">
+     <ul>
+     {% for p in properties %}
+       <li>{{ p[0] }} = {{ p[1] }}</li>
+     {% endfor %}
+     </ul>
     </div>
-    {% else %}
-    There is no "info" dict given to render the template.
+   {% endif %}
+
+    {% block content %}
+    There is nothing here. This is just a template.
+    {% endblock content %}
+</div>
+
+<div class="spacer">&nbsp;</div>
+
+<div class="footer">
+    {% if credit %}
+    &copy; Data computed by {{ credit|safe }}.<br />
     {% endif %}
-    {% endblock footer %}
+    
+    {% if support %}
+      {{ support|safe }}<br/>
+    {% else %}
+       The creation of this website was supported by the NSF, AIM ...<br />
+    {% endif %}
+    Number Theory, the Queen of Mathematics!
+</div>
 
 {% endblock body %}
