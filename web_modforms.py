@@ -18,7 +18,7 @@ import re
 class WebModFormSpace(Parent):
     r"""
     Space of cuspforms to be presented on the web.
-
+        G  = NS.
 
     EXAMPLES::
 
@@ -26,11 +26,12 @@ class WebModFormSpace(Parent):
  
 
     """
+    
     def __init__(self,k,N=1,chi=0,prec=10,data=None):
         r"""
         Init self.
         """
-        print "k=",k
+        #print "k=",k
         self._k = ZZ(k)
         self._N = ZZ(N)
         self._chi = ZZ(chi)
@@ -329,24 +330,31 @@ class WebModFormSpace(Parent):
             
             slist = list()
             i = 1
-            for c in cc:
-                s=''
-                if i>0:
-                    s+='+'
-                    si=str(i)
-                else:
-                    si=''
-                if(c==1):
-                    s+='q^{'+si+'}'
-                elif(str(c).count('-')>0 or str(c).count('+')>0):
-                    s+='('+str(c)+')q^{'+si+'}'
-                else:
-                    s+=str(c)+'q^{'+si+'}'
-                if(len(s)-i > qexp_max_len):
-                    s+='//'
-                slist.append(my_latex_from_qexp(s))
-                i+=1
-            s+='\)'
+            # try to split up the orbit if too long
+            s = str(orbit)
+            ss = "\("+my_latex_from_qexp(s)+"\)"
+            ll=0
+            if len(s)>qexp_max_len:
+                print "LEN > MAX!"
+                sl = ss.split('}')
+                for i in range(len(sl)-1):
+                    sss = ''
+                    if i>0 and i<len(sl)-1:
+                        sss = '\('
+                    sss += sl[i]
+                    if i < len(sl)-2:
+                        sss += '}\)'
+                    else:
+                        sss += '})\)'
+                    ll = ll+len(str(sl[i]))
+                    if ll>qexp_max_len:
+                        ll = 0
+                        sss+="<br>"
+                    slist.append(sss)
+                    #print i,sss
+            else:
+                slist.append(ss)
+
             K=orbit.base_ring()
             if(K==QQ):
                 poly=ZZ['x'].gen()
@@ -361,6 +369,8 @@ class WebModFormSpace(Parent):
             tbl['data'].append([dim,poly,disc,slist])
         # we already formatted the table
         tbl['data_format']={3:'html'}
+        tbl['col_width']={3:'200'}
+        tbl['atts']='width="200" border="1"'
         s=html_table(tbl)
         if(is_relative):
             s = s + "<br><small>For relative number fields we list the absolute norm of the discriminant)</small>"
@@ -1128,6 +1138,7 @@ class WebNewForm(SageObject):
         if(prec==None):
             prec=self._prec
         s = my_latex_from_qexp(str(self.q_expansion(prec)))
+        s = "\("+s+"\)"
         return s
 
 
@@ -1342,8 +1353,51 @@ class WebNewForm(SageObject):
         # s=html.table([cm_vals.keys(),cm_vals.values()])
         return s
 
-    
 
+
+
+    def twist_by(self,x):
+        r"""
+        twist self by a primitive Dirichlet character x
+        """
+        #xx = x.primitive()
+        assert x.is_primitive()
+        q = x.conductor()
+        # what level will the twist live on?
+        level = self.level()
+        qq =  self._character.conductor()
+        new_level = lcm(self.level(),lcm(q*q,q*qq))
+        D = DirichletGroup(new_level)
+        new_x = D(self._character)*D(x)*D(x)
+        ix = D.list().index(new_x)
+        #  the correct space
+        NS = WebModFormSpace(self._k,new_level,ix,self._prec)
+        # have to find whih form wee want
+        NS.galois_decomposition()
+        M = NS.sturm_bound() + len(divisors(new_level))
+        C = self.f.coefficients(M)
+        for label in NS._galois_orbits_labels:
+            print "label=",label
+            FT = NS.f(label)
+            CT = FT.f.coefficients(M)
+            print CT
+            K = FT.f.hecke_eigenvalue_field()
+            try:
+                for n in range(2,M):
+                    if(new_level % n+1 ==0):
+                        continue
+                    print "n=",n
+                    ct = CT[n]
+                    c  = K(x(n))*K(C[n])
+                    print ct,c
+                    if ct <> c:
+                        raise StopIteration()
+            except StopIteration:
+                pass
+            else:
+                print  "Twist of f=",FT
+        return  FT
+            
 ###
 ### Independent helper functions  
 ### 
@@ -1394,11 +1448,6 @@ def html_table(tbl):
     # check which type of content we have
     h1=tbl['headersh'][0]
     sheaderh="";    sheaderv=""
-    #if(isinstance(h1,str) and not re.match("\$",h1)):
-    #    sheaderh="<span>"
-    #else:
-    #    sheaderh="<span class=\"math\">"
-    # check which type of content we have
     h1=tbl['headersv'][0]
     col_width=dict()
     for i in range(ncols):
@@ -1425,10 +1474,11 @@ def html_table(tbl):
     for r in range(nrows):
         row="<tr><td>"+sheaderv+str(tbl['headersv'][r])+"</td>"
         for k in range(ncols):
+            wid = col_width[k]
             if format[k]=='html' or format[k]=='text':
-                row=row+"\t<td>"
+                row=row+"\t<td width=\""+str(wid)+"\">"
                 if isinstance(data[r][k],list):
-                    print "list=",data[r][k]
+                    #print "HTML list=",data[r][k]
                     for ss in data[r][k]:
                         sss = str(ss)
                         if(len(sss)>0):
@@ -1437,9 +1487,9 @@ def html_table(tbl):
                     sss = str(data[r][k])
                 row=row+"</td> \n"
             else:
-                row+="\t<td>"
+                row=row+"\t<td width=\""+str(wid)+"\">"
                 if isinstance(data[r][k],list):
-                    print "list=",data[r][k]
+                    #print "LATEX list=",data[r][k]
                     for ss in data[r][k]:
                         sss = latex(ss)
                         if(len(sss)>0):
@@ -1460,12 +1510,12 @@ def my_latex_from_qexp(s):
     r"""
     Make LaTeX from string. in particular from parts of q-expansions.
     """
-    ss = "\("
+    ss = ""
     ss+=re.sub('x\d','x',s)
     ss=re.sub("\^(\d+)","^{\\1}",ss)
     ss=re.sub('\*','',ss)
     ss=re.sub('zeta(\d+)','\zeta_{\\1}',ss)  
-    ss += "\)"
+    ss += ""
     return ss
 
 def _get_newform(k,N,chi,fi=None):
@@ -1519,6 +1569,10 @@ def _get_newform(k,N,chi,fi=None):
         else:
             f="Could not construct space $S^{new}_{%s}(%s,\chi_{%s})$" %(k,N,chi)
     return (t,f)
+
+
+
+
 
 
 def _degree(K):

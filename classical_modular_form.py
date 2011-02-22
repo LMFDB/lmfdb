@@ -1,7 +1,7 @@
 from flask import render_template,send_file, make_response
 from web_modforms import *
 import tempfile, os,re
-
+from utilities import ajax_more
 
 #import re
 ### Maximum values to be generated on the fly
@@ -12,7 +12,9 @@ N_max_db = 1000000
 k_max_db = 300000
 
 _verbose = 0
-
+#################
+# Top level
+#################
 def render_webpage(args):
 	if len(args)==0:
 		info = dict()
@@ -175,7 +177,7 @@ def set_table(info,is_set,make_link=True): #level_min,level_max,weight=2,chi=0,m
 	tbl['data']=list()
 	tbl['data_format']='html'
 	tbl['class']="dimension_table"
-	tbl['atts']="border=\"1\" class=\"data_table\""
+	tbl['atts']="border=\"0\" class=\"data_table\""
 	num_rows = ceil(QQ(level_max-level_min+1) / QQ(rowlen0))
 	print "num_rows=",num_rows
 	for i in range(1,rowlen0+1):
@@ -470,7 +472,8 @@ def set_info_for_one_modular_form(level,weight,character,label,info,sbar):
 		return (info,sbar)		
 	info['satake'] = WNF.print_satake_parameters()
 	info['polynomial'] = WNF.polynomial()
-	info['q_exp'] = "\["+WNF.print_q_expansion()+"\]"
+	#info['q_exp'] = "\["+WNF.print_q_expansion()+"\]"
+	info['q_exp'] = ajax_more(WNF.print_q_expansion,5,10,20,50,100)
 	
 	## check the varable...
 	#m = re.search('zeta_{\d+}',info['q_exp'])

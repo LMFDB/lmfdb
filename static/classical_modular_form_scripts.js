@@ -101,11 +101,8 @@ function check_space_choice_Form() {
     var weight_set=false;
     var form=document.space_choice;
     var weight;
-    alert("hej submit0");
     var N = document.space_choice.level.value;
-    alert("hej submit1");
     var k = document.space_choice.weight.value; 
-    alert("hej submit2");
     agree = true;
     if( (N>1000 || k >1000) || (N >30 && k > 30)) {
 	s="This might take some time. Are you sure you want to use these parameters?";
