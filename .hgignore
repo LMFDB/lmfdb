@@ -1,5 +1,8 @@
 syntax:glob
 
 *.pyc
+*~
 
 static/MathJax
+
+flasklog
