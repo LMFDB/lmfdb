@@ -39,12 +39,12 @@ def number_field_render_webpage():
         discriminant_list_endpoints = [100**k for k in range(6)]
         discriminant_list = ["%s-%s" % (start,end-1) for start, end in zip(discriminant_list_endpoints[:-1], discriminant_list_endpoints[1:])]
         info = {
-        'degree_list': [1,2,3,4,5,6,7],
-        'signature_list': [[1,1],[2,0],[0,1],[3,0],[1,1],[4,0],[2,1],[0,2],[5,0],[3,1],[1,2],[6,0],[4,1],[2,2],[0,3],[7,0],[5,1],[3,2],[1,3]],
-        'class_number_list': [1,2,3,4,5,6,7,8,9,10,'11-1000000'],
+        'degree_list': range(1,11),
+        'signature_list': sum([[[d-2*r2,r2] for r2 in range(1+(d//2))] for d in range(1,11)],[]), 
+        'class_number_list': range(1,11)+['11-1000000'],
         'discriminant_list': discriminant_list
     }
-        info['credit'] = 'the PARI group'	
+        info['credit'] = 'the PARI group and J. Voight'	
 
         explain=['Further information']
         explain.append(('Unique labels for number fields (not yet implemented)','/'))
