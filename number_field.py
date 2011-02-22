@@ -67,19 +67,24 @@ def sig2sign(sig):
 
 group_names = {}
 group_names[(1, 1, 1, 1)] = ('S1','S1')
+
 group_names[(2, 2, -1, 1)] = ('S2','S2')
+
 group_names[(3, 6, -1, 1)] = ('S3','S3')
 group_names[(3, 3, 1, 2)] = ('A3','A3')
+
 group_names[(4, 8, -1, 1)] = ('D(4)','D4')
 group_names[(4, 4, -1, 1)] = ('C(4) = 4','C4')
 group_names[(4, 4, 1, 1)] = ('E(4) = 2[x]2','V4')
 group_names[(4, 24, -1, 1)] = ('S4','S4')
 group_names[(4, 12, 1, 1)] = ('A4','A4')
+
 group_names[(5, 120, -1, 1)] = ('S5','S5')
 group_names[(5, 10, 1, 1)] = ('D(5) = 5:2','D5')
 group_names[(5, 60, 1, 1)] = ('A5','A5')
 group_names[(5, 20, -1, 1)] = ('F(5) = 5:4','F5')
 group_names[(5, 5, 1, 1)] = ('C(5) = 5','C5')
+
 group_names[(6, 18, -1, 1)] = ('F_18(6) = [3^2]2 = 3 wr 2','?')
 group_names[(6, 48, -1, 1)] = ('2S_4(6) = [2^3]S(3) = 2 wr S(3)','?')
 group_names[(6, 72, -1, 1)] = ('F_36(6):2 = [S(3)^2]2 = S(3) wr 2','?')
@@ -95,11 +100,47 @@ group_names[(6, 36, -1, 1)] = ('F_18(6):2 = [1/2.S(3)^2]2','?')
 group_names[(6, 360, 1, 1)] = ('A6','A6')
 group_names[(6, 60, 1, 1)] = ('L(6) = PSL(2,5) = A_5(6)','?')
 # 2 more degree 6 fields exist, not yet in the database
+
 group_names[(7, 5040, -1, 1)] = ('S7','S7')
 group_names[(7, 14, -1, 1)] = ('D(7) = 7:2','D7')
 group_names[(7, 7, 1, 1)] = ('C(7) = 7','C7')
 group_names[(7, 2520, 1, 1)] = ('A7','A7')
+# We converted [14, -1, 2, 'D(7) = 7:2'] and [5040, -1, 7, 'S7'] on import
+
 # 3 more degree 7 fields exist, not yet in the database
+
+group_names[(8, 1152, -1, 47)] = ('[S(4)^2]2','?')
+group_names[(8, 128, -1, 35)] = ('[2^4]D(4)','?')
+group_names[(8, 16, 1, 10)] = ('[2^2]4','?')
+group_names[(8, 16, 1, 11)] = ('1/2[2^3]E(4)=Q_8:2','?')
+group_names[(8, 16, 1, 9)] = ('E(8):2=D(4)[x]2','?')
+group_names[(8, 32, -1, 17)] = ('[4^2]2','?')
+group_names[(8, 384, -1, 44)] = ('[2^4]S(4)','?')
+group_names[(8, 40320, -1, 50)] = ('S8','S8')
+group_names[(8, 48, 1, 24)] = ('E(8):D_6=S(4)[x]2','?')
+group_names[(8, 64, -1, 27)] = ('[2^4]4','?')
+group_names[(8, 64, -1, 31)] = ('[2^4]E(4)','?')
+group_names[(8, 8, -1, 1)] = ('C(8)=8','C8')
+group_names[(8, 8, 1, 2)] = ('4[x]2','?')
+group_names[(8, 8, 1, 4)] = ('D_8(8)=[4]2','D8')
+
+
+# Degree 9: only the groups which occur in the Voight list!
+group_names[(9, 9, 1, 1)] = ('C(9)=9','C9')
+group_names[(9, 18, -1, 4)] = ('S(3)[x]3','?')
+group_names[(9, 162, -1, 20)] = ('[3^3]S(3)=3wrS(3)','?')
+group_names[(9, 648, -1, 28)] = ('[S(3)^3]3=S(3)wr3','?')
+group_names[(9, 362880, -1, 34)] = ('S9','S9')
+
+# Degree 10: only the groups which occur in the Voight list!
+group_names[(10, 28800, -1, 43)] = ('[S(5)^2]2','?')
+group_names[(10, 50, -1, 6)] = ('[5^2]2','?')
+group_names[(10, 160, -1, 14)] = ('[2^5]5','?')
+group_names[(10, 200, -1, 21)] = ('[D(5)^2]2','?')
+group_names[(10, 1920, 1, 37)] = ('[2^4]S(5)','?')
+group_names[(10, 3840, -1, 39)] = ('[2^5]S(5)','?')
+group_names[(10, 3628800, -1, 45)] = ('S10','S10')
+group_names[(10, 240, -1, 22)] = ('S(5)[x]2','?')
 
 groups = [{'label':list(g),'gap_name':group_names[g][0],'human_name':group_names[g][1]} for g in group_names.keys()]
 
