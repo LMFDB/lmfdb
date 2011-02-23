@@ -81,6 +81,7 @@ a:hover { color: #000; }
     font-weight: bold;
     font-family: sans-serif;
     min-height: 80px;
+    padding-top: 5px;
 }
 #header .bread {
     /* border: 1px solid red; */
@@ -88,19 +89,12 @@ a:hover { color: #000; }
 }
 
 
-blockquote p
-{
-    color: #CC6600;
-    line-height: 18px;
-    font-family: serif;
-}
-
 #main {
-	margin: 0px;
-	margin-left: 200px;
+	margin: 0 0 0 200px;
 	padding: 0 0 10px 10px;
     /* border: 1px solid purple; */
 }
+
 #properties {
     font-size: 85%;
     font-family: sans-serif;
@@ -132,7 +126,7 @@ blockquote p
     text-decoration: none;
     font-size: 12px;
     padding-left: 15px;
-    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-family: sans-serif;
     line-height: 18px;
     background-color: #F1EFE2;
     padding-top: 5px;
@@ -142,26 +136,28 @@ blockquote p
     border: 2px solid #ECE9D8;
 */
 }
+/*
+blockquote p {
+    color: #CC6600;
+    line-height: 18px;
+    font-family: serif;
+}
+*/
 
-
-#sidebar
-{
+#sidebar {
     float: left;
     width: 200px;
     padding: 15px 0px;
-    voice-family: "\"}\"";
-    voice-family: inherit;
     font-family: sans-serif;
     font-size: 85%;
     color: #390;
 }
 
-#sidebar h2
-{
+#sidebar h2 {
     font-family: sans-serif;
     font-size: 95%;
-    background-color: #eee;
-    color: #696;
+    background-color: #bfb;
+    color: #292;
     padding: 5px;
     margin: 0px;
 }
