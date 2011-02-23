@@ -2,13 +2,12 @@
 {% block body %}
 
     <div id="header">
-        <div class="logo"><a href="/"><img src="{{ url_for('static', filename='images/lmdb-logo.png') }}" /></a></div>
+        <div class="logo"><a href="/"><img src="{{ url_for('.static', filename='images/lmdb-logo.png') }}" /></a></div>
         <div class="right">
           <div class="title">LMDB: 
             {% if title %}{{ title }}
             {% else %}TITLE OF PAGE MISSING \( \chi^2 \) even more text and tex \( \frac{1}{1+x+x^2} \) and even more ...
             {% endif %}
-            <!--and some extra text ... and some extra text ... and even more.-->
           </div>
           <div class="bread">
             <a href="/">Top</a>

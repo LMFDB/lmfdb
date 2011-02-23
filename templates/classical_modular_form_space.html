@@ -24,7 +24,9 @@ with character \( \chi_{ {{ info.character }} }\) modulo \( {{ info.level }}\) w
 
 <div id = "Content" width="100%">
 {% if info.error is defined %}
-	Error !
+{{ info.error |safe }}
+<br>
+{{ info.sage_version | safe}}
 {% else %}
 <!--	{% if info.dimension>0 %}
 		\[\mathrm{dim}\, S_{ {{ info.weight }} }({{ info.level }})={{ info.dimension }}\]		 The Sturm bound for this space is {{ info.sturm_bound }}. 	{% else %}
