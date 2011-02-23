@@ -1,3 +1,6 @@
+"""
+start this via $ sage -python website.py <portnumber>
+"""
 from base import *
 
 import hilbert_modular_form
@@ -102,23 +105,72 @@ def render_example_plot():
 def not_yet_implemented():
     return render_template("not_yet_implemented.html")
 
-if __name__ == '__main__':
 
-    if '--debug' in sys.argv:
-        debug = True
-        sys.argv.remove('--debug')
-    else:
-        debug = False
+def usage():
+    print """
+Usage: %s [OPTION]...
 
-    if len(sys.argv) > 1:
-        port = int(sys.argv[1])
-    else:
-        port = 37777
+  -p, --port=NUM    bind to port NUM (default 37777)
+  -h, --host=HOST   bind to host HOST (default "127.0.0.1")
+  -l, --log=FILE    log to FILE (default "flasklog")
+      --debug       enable debug mode
+      --help        show this help
+""" % sys.argv[0]
+
+def main():
+
+    import getopt
+    try:
+        opts, args = getopt.getopt(sys.argv[1:],
+                "p:h:l:",
+                [ "port=", "host=", "log=", "debug", "help",
+                # undocumented, see below
+                "enable-reloader", "disable-reloader",
+                "enable-debugger", "disable-debugger",
+                ])
+    except getopt.GetoptError, err:
+        sys.stderr.write("%s: %s\n" % (sys.argv[0], err))
+        sys.stderr.write("Try '%s --help' for usage\n" % sys.argv[0])
+        sys.exit(2)
+
+    # default options
+    options = { "port": 37777, "host": "127.0.0.1" }
+    logfile = "flasklog"
+
+    for opt, arg in opts:
+        if opt == "--help":
+            usage()
+            sys.exit()
+        elif opt in ("-p", "--port"):
+            options["port"] = int(arg)
+        elif opt in ("-h", "--host"):
+            options["host"] = arg
+        elif opt in ("-l", "--log"):
+            logfile = arg
+        elif opt == "--debug":
+            options["debug"] = True
+        # undocumented: the following allow changing the defaults for
+        # these options to werkzeug (they both default to False unless
+        # --debug is set, in which case they default to True but can
+        # be turned off)
+        elif opt == "--enable-reloader":
+            options["use_reloader"] = True
+        elif opt == "--disable-reloader":
+            options["use_reloader"] = False
+        elif opt == "--enable-debugger":
+            options["use_debugger"] = True
+        elif opt == "--disable-debugger":
+            options["use_debugger"] = False
 
     import logging
-    file_handler = logging.FileHandler("flasklog")
+    file_handler = logging.FileHandler(logfile)
     file_handler.setLevel(logging.WARNING)
    
     app.logger.addHandler(file_handler)
-    app.run(debug= debug, host="0.0.0.0", port=port)
+    app.run(**options)
+
+
+if __name__ == '__main__':
+
+    main()
 

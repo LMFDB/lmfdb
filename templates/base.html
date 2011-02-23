@@ -3,23 +3,25 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
-<title>{% block title %}MFDB{% endblock title %}</title>
+<title>
+{% if title %}LMDB: {{ title }}{% else %}LMDB{% endif %}
+</title>
 
-<script type="text/javascript" src="{{ url_for('static', filename='jquery.min.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('static', filename='MathJax/MathJax.js') }}"></script>
-<link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet" type="text/css" />
-<link href="{{ url_for('static', filename='siegel.css') }}" rel="stylesheet" type="text/css" />
-<link href="{{ url_for('static', filename='Lfunctionsiegel.css') }}" rel="stylesheet" type="text/css" />
-<script type="text/javascript" src="{{ url_for('static', filename='classical_modular_form_util-functions.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('static', filename='classical_modular_form_scripts.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('.static', filename='jquery.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('.static', filename='MathJax/MathJax.js') }}"></script>
+<link href="{{ url_for('.static', filename='style.css') }}" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="{{ url_for('.static', filename='classical_modular_form_util-functions.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('.static', filename='classical_modular_form_scripts.js') }}"></script>
 <script type="text/javascript">
 MathJax.Hub.Config({
-extensions: ["tex2jax.js","TeX/AMSmath.js","TeX/AMSsymbols.js"],
-jax: ["input/TeX","output/HTML-CSS"],
-tex2jax: {
-inlineMath: [['$','$'],["\\(","\\)"]],
-processEscapes: true,
-},
+  extensions: ["tex2jax.js","TeX/AMSmath.js","TeX/AMSsymbols.js"],
+  jax: ["input/TeX","output/HTML-CSS"],
+  tex2jax: {
+    inlineMath: [['$','$'],["\\(","\\)"]],
+    processEscapes: true,
+  },
+  "HTML-CSS": { scale: 85 }
+  menuSettings: { zoom: "Hover", zscale: "150%" }
 });
 </script>
 <script type="text/javascript">
@@ -38,15 +40,16 @@ _gaq.push(['_trackPageview']);
 
 <body>
 
+{% if false %}
 <div style="width: 100%; background-color: #f88; text-align: center; padding: 3px;margin-bottom:0px; border-bottom: 2px solid red;">
 Pre-Release Version. Feedback via 
 <a href="mailto:farmer@aimath.org" subject="[LMDB] ">direct e-mail</a> or 
 <a href="http://groups.google.com/group/lmdb" target="_blank">discuss online</a>.</div>
+{% endif %}
 
 {% block body %}
 
 {% endblock body %}
-
 
 </body>
 </html>
