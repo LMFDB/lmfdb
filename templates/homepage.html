@@ -23,7 +23,6 @@
     </div>
 
     {% block sidebar %} 
-    {% if info %}
     <div id="sidebar">
 
      <h2>Navigation</h2>
@@ -33,47 +32,27 @@
        <li><a href=".">Link 3</a></li>
      </ul>
 
-     {% if info.downloads_visible %}
-        <h2>Downloads</h2>
+     {% macro entry(title, entries) -%}
+       {% if entries %}
+        <h2>{{ title }}</h2>
         <ul class="subnav">
-            {% for text,url in info.downloads %}
+            {% for text,url in entries %}
                <li><a href="{{ url }}">{{ text }}</a></li>
             {% endfor %}
         </ul>
-     {% endif %}
-        
-     {% if info.learnmore %}
-        <h2>Learn more about</h2>
-        <ul class="subnav">
-            {% for text,url in info.learnmore %}
-               <li><a href="{{ url }}">{{ text }}</a></li>
-            {% endfor %}
-        </ul>
-     {% endif %}
-  
-     {% if info.friends %}
-        <h2>Friends</h2>
-        <ul class="subnav">
-           {% for text,url in info.friends %}
-               <li><a href="{{ url }}">{{ text }}</a></li>
-           {% endfor %}
-        </ul>
+       {% endif %}
+     {%- endmacro %}
+
+     {{ entry("Downloads", info.downloads) }}
+     {{ entry("Learn more about", info.learnmore) }}
+     {{ entry("Friends", info.friends) }}
+
+     {% if sidebar %}
+      {% for topic, content in sidebar %}
+        {{ entry(topic, content) }}
+      {% endfor %}
      {% endif %}
 
-    {% if sidebar %}
-     {% for topic, content in sidebar %}
-       <h2>{{ topic }}</h2>
-       <ul>
-         {% for text, url in content %}
-           <li><a href="{{ url }}">{{ text }}</a></li>
-         {% endfor %}
-       </ul>
-     {% endfor %}
-    {% endif %}
-
-    {% else %}
-    There is no "info" dict given to render the template.
-    {% endif %}
     </div>
     {% endblock sidebar %}
 
