@@ -7,6 +7,8 @@ fields.create_index('galois_group')
 fields.create_index('signature')
 fields.create_index('discriminant')
 fields.create_index('class_number')
+fields.create_index([('degree',pymongo.ASCENDING),('discriminant',pymongo.DESCENDING)])
+fields.create_index([('degree',pymongo.ASCENDING),('discriminant',pymongo.ASCENDING)])
 
 
 

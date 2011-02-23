@@ -96,13 +96,12 @@ function check_space_choice_Form() {
     if (document.space_choice.character.value == document.space_choice.character.defaultText) {
 	document.space_choice.character.value=0;
     }
-    
     var agree=true;
     var level_set=false;
     var weight_set=false;
     var form=document.space_choice;
     var weight;
-    var N = document.space_choice.level.value ;
+    var N = document.space_choice.level.value;
     var k = document.space_choice.weight.value; 
     agree = true;
     if( (N>1000 || k >1000) || (N >30 && k > 30)) {

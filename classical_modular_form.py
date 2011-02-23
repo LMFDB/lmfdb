@@ -1,7 +1,7 @@
-from flask import render_template
+from flask import render_template,send_file, make_response
 from web_modforms import *
 import tempfile, os,re
-
+from utilities import ajax_more
 
 #import re
 ### Maximum values to be generated on the fly
@@ -11,12 +11,17 @@ k_max_comp = 30
 N_max_db = 1000000 
 k_max_db = 300000
 
+_verbose = 0
+#################
+# Top level
+#################
 def render_webpage(args):
 	if len(args)==0:
 		info = dict()
 	else:
 	        info = dict(args)
 	info['credit'] = 'Sage'	
+	info['sage_version']=version()
 	# the topics for the sidebar
 	#navigation=list() #['Browse'] #list()
 	properties=['Properties']
@@ -24,14 +29,16 @@ def render_webpage(args):
 	friends=['Friends'] #list()
 	siblings=['Siblings'] #list()
 	lifts=['Lifts / Correspondences'] #list()
-
+	
 	## This is the list of weights we initially put on the form
 	info['initial_list_of_weights']=list()
 	## This is the list of levels we initially put on the form
 	info['initial_list_of_levels']=range(1,50)
 	cur_url='?'
 	## try to get basic parameters. If this generates an error someone supplied wrong type of parameters.
+	print "info1=",info
 	(info,is_set)=set_basic_parameters(info)
+	print "info2=",info
 	if(info.has_key('error')): 
 		return render_template("classical_modular_form_navigation.html", info=info)
 	cur_url=""
@@ -63,9 +70,10 @@ def render_webpage(args):
 			# either as q_expansions (in non-parsed latex)  or simply as a table
 			info=print_list_of_coefficients(info)
 			info['sidebar']=set_sidebar([parents,siblings,friends,lifts])
-			print "Printing table of coefficients!"
-			print "info=",info
+			#print "Printing table of coefficients!"
+			#print "info=",info
 			return  render_template("classical_modular_form_table.html", info=info)
+		
 		else:
 			info['error']="Need weight and level!"
 			return render_template("classical_modular_form_navigation.html", info=info)
@@ -78,8 +86,15 @@ def render_webpage(args):
 
 		## if all parameters are specified we display the homepage of a single (galois orbit of a) form
 		if(is_set['label']): 
+			if info.has_key('download'):
+				print "saving self!"
+				info['tempfile'] = "/tmp/tmp_web_mod_form.sobj"
 			(info,sbar)=set_info_for_one_modular_form(level,weight,character,label,info,sbar)
+			if info.has_key('download') and not info.has_key('error'):					
+				return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
+				#os.remove(fn) ## clears the temporary file					
 			info['sidebar']=set_sidebar([properties,parents,siblings,friends,lifts])
+			print info
 			return render_template("classical_modular_form.html", info=info)
 		else:
 			info['sidebar']=set_sidebar([properties,parents,siblings,friends,lifts])
@@ -105,6 +120,8 @@ def render_webpage(args):
 	return render_template("classical_modular_form_navigation.html", info=info)
 
 
+
+
 def set_sidebar(l):
 	res=list()
 	#print "l=",l
@@ -126,6 +143,8 @@ def set_table(info,is_set,make_link=True): #level_min,level_max,weight=2,chi=0,m
 	"""
 	D=0
 	rowlen=10 # split into rows of this length...
+	rowlen0 = rowlen
+	rowlen1 = rowlen
 	characters=dict()
 	if(info.has_key('level_min')):
 		level_min=int(info['level_min'][0])
@@ -135,6 +154,8 @@ def set_table(info,is_set,make_link=True): #level_min,level_max,weight=2,chi=0,m
 		level_max=int(info['level_max'][0])
 	else:
 		level_max=50
+	if (level_max-level_min+1) < rowlen:
+		rowlen0=level_max-level_min+1
 	if(info['list_chars'][0]<>'0'):
 		char1=1
 	else:
@@ -144,6 +165,7 @@ def set_table(info,is_set,make_link=True): #level_min,level_max,weight=2,chi=0,m
 	else:
 		weight=2
 	## setup the table
+	#print "char11=",char1
 	tbl=dict()
 	if(char1==1):
 		tbl['header']='Dimension of \( S_{'+str(weight)+'}(N,\chi_{n})\)'
@@ -155,18 +177,19 @@ def set_table(info,is_set,make_link=True): #level_min,level_max,weight=2,chi=0,m
 	tbl['data']=list()
 	tbl['data_format']='html'
 	tbl['class']="dimension_table"
-	tbl['atts']="border=\"1\" class=\"data_table\""
-	num_rows = ceil(QQ(level_max) / QQ(rowlen))
-	for i in range(1,rowlen+1):
-		tbl['headersh'].append(i)
+	tbl['atts']="border=\"0\" class=\"data_table\""
+	num_rows = ceil(QQ(level_max-level_min+1) / QQ(rowlen0))
+	print "num_rows=",num_rows
+	for i in range(1,rowlen0+1):
+		tbl['headersh'].append(i+level_min-1)
 		
 	for r in range(num_rows):
-		tbl['headersv'].append(r*rowlen)
+		tbl['headersv'].append(r*rowlen0)
 	for r in range(num_rows):
 		row=list()
 		#print "row nr. ",r
-		for k in range(1,rowlen+1):
-			N=r*rowlen+k
+		for k in range(1,rowlen0+1):
+			N=level_min-1+r*rowlen0+k
 			s="<a name=\"#"+str(N)+"\"></a>"
 			#print "col ",k,"=",N
 			if(N>level_max or N < 1):
@@ -181,7 +204,9 @@ def set_table(info,is_set,make_link=True): #level_min,level_max,weight=2,chi=0,m
 
 				#print "dim(",N,weight,")=",d
 			else:
+				
 				D=DirichletGroup(N)
+				print "D=",D
 				s="<a name=\"#"+str(N)+"\"></a>"
 				small_tbl=dict()
 				#small_tbl['header']='Dimension of \( S_{'+str(weight)+'}(N)\)'
@@ -194,7 +219,7 @@ def set_table(info,is_set,make_link=True): #level_min,level_max,weight=2,chi=0,m
 				row1=list()
 				#num_small_rows = ceil(QQ(level_max) / QQ(rowlen))
 				ii=0
-				for chi in range(1,len(D.list())):
+				for chi in range(0,len(D.list())):
 					x=D[chi]
 					S=CuspForms(x,weight)
 					d=S.dimension()
@@ -207,7 +232,8 @@ def set_table(info,is_set,make_link=True): #level_min,level_max,weight=2,chi=0,m
 					else:
 						row1.append(d)
 					ii=ii+1
-					if(ii>rowlen and len(row1)>0):
+					print "d=",d
+					if(ii>rowlen1 and len(row1)>0):
                                                 ## we make a new table since we may not have regularly dstributed labels
 						#print "Break line! Make new table!"
 						small_tbl['data'].append(row1)
@@ -228,10 +254,12 @@ def set_table(info,is_set,make_link=True): #level_min,level_max,weight=2,chi=0,m
 					
 					#print N,k,chi,d
 				#print s
+				else:
+					s="All spaces are zero-dimensional!"
 				row.append(s)
 		tbl['data'].append(row)				
 	s=html_table(tbl)
-	s=s+"\n <br> \(N="+str(rowlen)+"\cdot row+col\)"
+	s=s+"\n <br> \(N="+str(rowlen0)+"\cdot row+col\)"
 	#print "Whole table=",s
 	## ugly solution. but we have latex in the data fields...
 	ss=re.sub('texttt','',s)
@@ -245,6 +273,8 @@ def print_list_of_coefficients(info):
 	Print a table of Fourier coefficients in the requested format
 	"""
 
+	print "info.keys=",info.keys()
+	print "info[level]=",info['level']
 	l = set_basic_parameters(info)
 	print "l=",l
 	print "--------------"
@@ -309,38 +339,59 @@ def set_basic_parameters(info):
 	is_set = dict()
 	# we need this dictionary since "0" is "False" i python
 	is_set['level']=False;	is_set['weight']=False;	is_set['character']=False;	is_set['label']=False;
+	llevel=None; wweigh=None; llabel=None; ccharacter=None
 	try:
-		if info.has_key('level'):
-			if(info['level'][0]<>'' and info['level'][0]>0):
-				level=int(info['level'][0])
-				info['level']=level; is_set['level']=True
-		if info.has_key('weight'):
-			if(info['weight'][0]<>'' and info['weight'][0]>1):
-				weight=int(info['weight'][0])
-				info['weight']=weight; is_set['weight']=True
-		if info.has_key('character'):
-			is_set['character']=True
-			if(info['character'][0]=='Trivial character'):
-				character=int(0)
-			elif(info['character'][0]<>''):
-				character=int(info['character'][0])
-			else:
-				is_set['character']=False
-			info['character']=character
-		if info.has_key('label'):
-			if(len(info['label'][0])>0):
-				label=str(info['label'][0])	
-				is_set['label']=True
-			info['label']=label
-	except: ## An error here means that someone supplied wrong type of parameters
-		info['error'] = 'Incorrect parameters were supplied! Please try again'
+		level=_extract_info(info,is_set,'level')
+		weight=_extract_info(info,is_set,'weight')
+		character=_extract_info(info,is_set,'character')
+		label=_extract_info(info,is_set,'label')
+		#print info
+		if _verbose>0:
+			print "is_set=",is_set
+			print "weight=",weight
+			print "level=",level
+			print "char=",character
+			print "label=",label
+	except ArithmeticError: ## An error here means that someone supplied wrong type of parameters
+		s='Incorrect parameters were supplied! Please try again'
+		print s
+		info['error'] = s
 		#return render_template("classical_modular_form_navigation.html", info=info)
 	return (info,is_set) # (level,weight,character,label)
 
 
+def _extract_info(info,is_set,label):
+	r"""
+	"""
+	if(not info.has_key(label) or str(info[label][0])==''):
+		is_set[label]=False
+		return None
+	is_set[label]=True
+	if(str(info[label][0])==''):
+		print label+"is not set!"
+	else:
+		print label+"is set to:"+str(info[label])+":"
+	if(isinstance(info[label],list)):
+		val=info[label][0]
+	elif(isinstance(info[label],dict)):
+		val=info[label][info[label].keys()[0]]
+	else:
+		val=info[label]
+	if(val<>'' and label=='weight' or label=='level'):
+		info[label]=int(val)
+	elif(label=='character'):
+		if(val=='Trivial character'):
+			info[label]=int(0)
+		else:
+			try:
+				info[label]=int(val)
+			except ValueError:
+				info[label]=int(0)
+	elif(label=='label'):
+		info[label]=str(val)
+	return val
 
 def render_fd_plot(level,info):
-	from flask import make_response
 	group = None
 	if(info.has_key('group')):
 		group = info['group'][0]
@@ -394,42 +445,57 @@ def set_info_for_navigation(info,is_set,sbar):
 	lifts.append(('Half-Integral Weight Forms','/ModularForm/Mp2/Q'))
 	lifts.append(('Siegel Modular Forms','/ModularForm/GSp4/Q'))
 	return (info,lifts)
+
+#import __main__.web_modforms #WebNewForm 
+#from web_modforms import
+import __main__
+__main__.WebModFormSpace=WebModFormSpace
+__main__.WebNewForm=WebNewForm
 		
 def set_info_for_one_modular_form(level,weight,character,label,info,sbar):
 	r"""
 	Set the info for on modular form.
 
-	"""
+	"""			
 	try:
 		WNF = WebNewForm(weight,level,character,label)
+		if info.has_key('download') and info.has_key('tempfile'):
+			WNF._save_to_file(info['tempfile'])
+			info['filename']=str(weight)+'-'+str(level)+'-'+str(character)+'-'+label+'.sobj'
+			return (info,sbar)
 	except:
 		info['error']="Could not compute the desired function!"
 	(properties,parents,friends,siblings,lifts)=sbar
-	print info.keys()
-	print WNF
+	#print info.keys()
+	#print WNF
 	if(info.has_key('error')):
 		return (info,sbar)		
 	info['satake'] = WNF.print_satake_parameters()
 	info['polynomial'] = WNF.polynomial()
-	info['q_exp'] = "\["+WNF.print_q_expansion()+"\]"
+	#info['q_exp'] = "\["+WNF.print_q_expansion()+"\]"
+	info['q_exp'] = ajax_more(WNF.print_q_expansion,5,10,20,50,100)
 	
 	## check the varable...
 	#m = re.search('zeta_{\d+}',info['q_exp'])
 	#if(m):
 	#	ss = re.sub('x','\\'+m.group(),info['polynomial'])
 	#	info['polynomial'] = ss
-	if(info['polynomial']<>''):
+	if(WNF.dimension()>1):
 		info['polynomial_st'] = 'where ' +'\('+	info['polynomial'] +'=0\)'
 	else:
 		info['polynomial_st'] = ''
 		
 	info['satake_angle'] = WNF.print_satake_parameters(type='thetas')
-	if(WNF.base_ring().is_relative()):
+	K = WNF.base_ring()
+	if(K<>QQ and K.is_relative()):
 		info['degree'] = int(WNF.base_ring().relative_degree())
 	else:
 		info['degree'] = int(WNF.base_ring().degree())
 	info['q_exp_embeddings'] = WNF.print_q_expansion_embeddings()
-	if(int(info['degree'])>1):
+	if(int(info['degree'])>1 and WNF.dimension()>1):
+		info['embeddings'] = 'One can embed it into \( \mathbb{C} \) as ' + info['q_exp_embeddings']
+
+	elif(int(info['degree'])>1):
 		info['embeddings'] = 'One can embed it into \( \mathbb{C} \) as ' + info['q_exp_embeddings']
 	else:
 		info['embeddings'] = ''			
@@ -473,6 +539,7 @@ def set_info_for_one_modular_form(level,weight,character,label,info,sbar):
 
 
 
+
 def set_info_for_modular_form_space(level,weight,character,info,sbar):
 	r"""
 	Set information about a space of modular forms.
@@ -481,6 +548,7 @@ def set_info_for_modular_form_space(level,weight,character,info,sbar):
 	if(level > N_max_comp or weight > k_max_comp):
 		info['error']="Will take too long to compute!"
 	try:
+		#print  "PARAM_S:",weight,level,character
 		WMFS = WebModFormSpace(weight,level,character)
 	except RuntimeError:
 		info['error']="Sage error: Could not construct the desired space!"
@@ -489,8 +557,30 @@ def set_info_for_modular_form_space(level,weight,character,info,sbar):
 	info['dimension'] = WMFS.dimension()
 	info['sturm_bound'] = WMFS.sturm_bound()
 	info['new_decomposition'] = WMFS.print_galois_orbits()
+	print "new_decomp=",info['new_decomposition']
 	info['nontrivial_new'] = len(info['new_decomposition'])
-	info['old_decomposition'] = WMFS.print_oldspace_decomposition()
+	## we try to catch well-known bugs...
+	try:
+		O = WMFS.print_oldspace_decomposition()
+		info['old_decomposition'] = O
+	except:
+		O =[]
+		info['old_decomposition'] = "n/a"
+		(A,B,C)=sys.exc_info()
+		# build an error message...
+		errtype=A.__name__
+		errmsg=B
+		s="%s: %s  at:" %(errtype,errmsg)
+		next=C.tb_next
+		while(next):
+			ln=next.tb_lineno
+			filen=next.tb_frame.f_code.co_filename 			
+			s+="\n line no. %s in file %s" %(ln,filen)
+			next=next.tb_next
+		#print s
+		## make an error popup with detailed error message
+		
+		info['error_note'] = "Could not construct oldspace!\n"+s
 	# properties for the sidebar
 	s='Dimension = '+str(info['dimension'])
 	properties.append((s,''))
@@ -504,7 +594,7 @@ def set_info_for_modular_form_space(level,weight,character,info,sbar):
 	par_url='?level='+str(level)
 	parents.append([par_lbl,par_url])
 	par_lbl='\( S_{k} (\Gamma_0(' + str(level) + '),\cdot )\)'
-	par_url='?level='+str(level)+'weight='+str(weight)
+	par_url='?level='+str(level)+'&weight='+str(weight)
 	parents.append((par_lbl,par_url))
 	##
 	if info.has_key('character'):
@@ -512,9 +602,17 @@ def set_info_for_modular_form_space(level,weight,character,info,sbar):
 		info['character_conductor']=WMFS.character_conductor()
 	if(not info.has_key('label')):
 		O=WMFS.oldspace_decomposition()
-		for (old_level,mult,d) in O:
-			s="\(S_{%s}(\Gamma_0(%s)) \) " % (weight,old_level)
-			friends.append((s,'?weight='+str(weight)+'&level='+str(old_level)+'&character='+str(character)))	
+		#print "O=",O
+		try:
+			for (old_level,chi,mult,d) in O:
+				if chi<>0:
+					s="\(S_{%s}(\Gamma_0(%s),\chi_{%s}) \) " % (weight,old_level,chi)
+					friends.append((s,'?weight='+str(weight)+'&level='+str(old_level)+'&character='+str(chi)))
+				else:
+					s="\(S_{%s}(\Gamma_0(%s)) \) " % (weight,old_level)
+					friends.append((s,'?weight='+str(weight)+'&level='+str(old_level)+'&character='+str(0)))
+		except:
+			pass
 	friends.append(('Lfunctions','/Lfunction'))
 	lifts.append(('Half-Integral Weight Forms','/ModularForm/Mp2/Q'))
 	lifts.append(('Siegel Modular Forms','/ModularForm/GSp4/Q'))

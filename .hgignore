@@ -1,7 +1,13 @@
 syntax:glob
 
 *.pyc
+*~
 
 static/MathJax
 
 flasklog
+
+# vim swap files
+.*.sw?
+# backup files
+*~
