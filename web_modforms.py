@@ -7,7 +7,8 @@ AUTHORS:
  - Aurel Page
 
 
-
+TODO:
+Fix complex characters. I.e. embedddings and galois conjugates in a consistent way. 
 
 """
 from sage.all import *
@@ -17,49 +18,96 @@ import re
 class WebModFormSpace(Parent):
     r"""
     Space of cuspforms to be presented on the web.
-
+        G  = NS.
 
     EXAMPLES::
 
-    sage: WS=WebMOdFormSpace(2,39)
+    sage: WS=WebModFormSpace(2,39)
  
 
     """
-    def __init__(self,k,N=1,chi=0,prec=10):
+    
+    def __init__(self,k,N=1,chi=0,prec=10,data=None):
         r"""
         Init self.
         """
-        try: 
-            self._group=Gamma0(N)
+        #print "k=",k
+        self._k = ZZ(k)
+        self._N = ZZ(N)
+        self._chi = ZZ(chi)
+        self._prec = ZZ(prec)
+        self.prec = ZZ(prec)
 
-            if(chi==0):
-                self._fullspace=CuspForms(N,k)
-                self._modular_symbols=ModularSymbols(N,k,sign=1).cuspidal_submodule()
-                self._character=0
-            else:
-                x=DirichletGroup(N)[chi]
-                self._fullspace=CuspForms(x,k)
-                self._modular_symbols=ModularSymbols(x,k,sign=1).cuspidal_submodule()
+        if isinstance(data,dict):
+            if data.has_key('group'):
+                self._group = data['group']
+            if data.has_key('character'):
+                self._character = data['character']
+            if data.has_key('fullspace'):
+                self._fullspace = data['fullspace']
+            if data.has_key('modular_symbols'):
+                 self._modular_symbols = data['modular_symbols']
+            if data.has_key('newspace'):
+                self._newspace = data['newspace'] 
+            if data.has_key('newforms'):
+                 self._newforms = data['newforms']
+            if data.has_key('new_modular_symbols'):
+                self._new_modular_symbols = data['new_modular_symbols'] 
+            if data.has_key('decomposition'):
+                self._decomposition= data['decomposition']
+            if data.has_key('galois_orbits_labels'):
+                self._galois_orbits_labels= data['galois_orbits_labels']
+            if data.has_key('oldspace_decomposition'):
+                self._oldspace_decomposition=data['oldspace_decomposition']
+        else:
+            try:
+                self._group=Gamma0(N)
                 self._character=DirichletGroup(N)[chi]
-            if(N<>1):
-                self._newspace=self._fullspace.new_submodule()
-            else:
-                self._newspace=self._fullspace
-            self._newforms=self._fullspace.newforms(names='x')
-            self._new_modular_symbols=self._modular_symbols.new_submodule()
-
-        except:
-            raise RuntimeError, "Could not construct space for (k=%s,N=%s,chi=%s)=" % (k,N,chi)
-        self._k=ZZ(k); self._N=ZZ(N); self._chi=ZZ(chi)
-        self._decomposition=[]
-        self.prec=prec
+                if(chi==0):
+                    self._fullspace=CuspForms(N,k)
+                    self._modular_symbols=ModularSymbols(N,k,sign=1).cuspidal_submodule()
+                else:
+                    self._fullspace=CuspForms(self._character,k)
+                    self._modular_symbols=ModularSymbols(self._character,k,sign=1).cuspidal_submodule()
+                if(N<>1):
+                    self._newspace=self._fullspace.new_submodule()
+                else:
+                    self._newspace=self._fullspace
+                self._newforms=self._fullspace.newforms(names='x')
+                self._new_modular_symbols=self._modular_symbols.new_submodule()
+                self._decomposition=[]
+                self._oldspace_decomposition=[]
+                self._galois_orbits_labels=[]
+                
+            except RuntimeError:
+            
+                raise RuntimeError, "Could not construct space for (k=%s,N=%s,chi=%s)=" % (k,N,chi)
         self._verbose=0
-        self._oldspace_decomposition=[]
-        self._galois_orbits_labels=[]
         if(self.dimension()==self.dimension_newspace()):
             self._is_new=True
         else:
             self._is_new=False
+
+
+
+    def __reduce__(self):
+        r"""
+        Used for pickling.
+        """
+        data = dict()
+        data['group'] = self._group 
+        data['character'] = self._character 
+        data['fullspace'] = self._fullspace
+        data['modular_symbols'] = self._modular_symbols
+        data['newspace'] = self._newspace
+        data['newforms'] = self._newforms
+        data['new_modular_symbols'] = self._new_modular_symbols
+        data['decomposition'] = self._decomposition
+        data['galois_orbits_labels'] = self._galois_orbits_labels
+        data['oldspace_decomposition'] = self._oldspace_decomposition
+
+        return(WebModFormSpace,(self._k,self._N,self._chi,self.prec,self._character,data))
+          
 
     def _repr_(self):
         return str(self._fullspace)
@@ -146,9 +194,9 @@ class WebModFormSpace(Parent):
         Return function f in the set of newforms on self.
         """
         if(isinstance(i,int) or i in ZZ):
-            F=WebNewForm(self._k,self._N,self._chi,fi=i,verbose=-1)
+            F=WebNewForm(self._k,self._N,self._chi,fi=i)
         else:
-            F=WebNewForm(self._k,self._N,self._chi,label=i,verbose=-1)
+            F=WebNewForm(self._k,self._N,self._chi,label=i)
         if(F.f<>None):
             return F
         else:
@@ -180,18 +228,46 @@ class WebModFormSpace(Parent):
         for d in divisors(N):
             if(d==1):
                 continue
-            O=M.old_submodule(d); Od=O.dimension()
+            q = N.divide_knowing_divisible_by(d)
             if(self._verbose>1):
                 print "d=",d
+            # since there is a bug in the current version of sage
+            # we have to try this...
+            try:
+                O=M.old_submodule(d)
+            except AttributeError:
+                O=M.zero_submodule()
+            Od=O.dimension()
+            if(self._verbose>1):
                 print "O=",O
+                print "Od=",Od
             if(d==N and k==2 or Od==0):
                 continue
-            S=ModularSymbols(ZZ(N/d),k,sign=1).cuspidal_submodule().new_submodule(); Sd=S.dimension()
-            mult=len(divisors(ZZ(d)))
-            # print "mult,N/d,Sd=",mult,ZZ(N/d),Sd
-            check_dim=check_dim+mult*Sd
-            L.append((ZZ(N/d),mult,Sd))
-            #print "check_dim=",check_dim
+            if self._character.is_trivial():
+                #S=ModularSymbols(ZZ(N/d),k,sign=1).cuspidal_submodule().new_submodule(); Sd=S.dimension()
+                print "q=",q,type(q)
+                print "k=",k,type(k)
+                Sd = sage.modular.dims.dimension_new_cusp_forms(q,k)
+                if(self._verbose>1):
+                    print "Sd=",Sd
+                if Sd > 0:
+                    mult=len(divisors(ZZ(d)))
+                    check_dim=check_dim+mult*Sd
+                    L.append((q,0,mult,Sd))
+            else:
+                xd = self._character.decomposition()
+                for xx in xd:
+                    if xx.modulus() == q:
+                        Sd = dimension_new_cusp_forms(xx,k)
+                        if Sd>0:
+                            # identify this character for internal storage... should be optimized
+                            x_k = DirichletGroup(q).list().index(xx)
+                            mult=len(divisors(ZZ(d)))
+                            check_dim=check_dim+mult*Sd
+                            L.append((q,x_k,mult,Sd))
+            if(self._verbose>1):
+                print "mult,N/d,Sd=",mult,ZZ(N/d),Sd
+                print "check_dim=",check_dim
         check_dim=check_dim-M.dimension()
         if(check_dim<>0):
             raise ArithmeticError, "Something wrong! check_dim=%s" % check_dim
@@ -203,23 +279,28 @@ class WebModFormSpace(Parent):
         """
         if(len(self._oldspace_decomposition)==0):
             self._oldspace_decomposition=self.oldspace_decomposition()
-        # we have only implemented this for trivial character
-        if(self._chi<>0):
-            return ""
+        
         O=self._oldspace_decomposition
+
         n=0; s=""
-        s="\[S_{%s}^{old}(%s) = " % (self._k,self._N)
+        if(self._chi<>0):
+            s="\[S_{%s}^{old}(%s,\chi_{%s}) = " % (self._k,self._N,self._chi)
+        else:
+            s="\[S_{%s}^{old}(%s) = " % (self._k,self._N)
         if(len(O)==0):
             s=s+"\left\{ 0 \\right\}"
         for n in range(len(O)):
-            (N,m,d)=O[n]
-            s=s+" %s\cdot S_{%s}^{new}(%s)" %(m,self._k,N)
+            (N,chi,m,d)=O[n]
+            if(self._chi<>0):
+                s=s+" %s\cdot S_{%s}^{new}(%s,\chi_{%s})" %(m,self._k,N,chi)
+            else:
+                s=s+" %s\cdot S_{%s}^{new}(%s)" %(m,self._k,N)
             if(n<len(O)-1 and len(O)>1):
                 s=s+"\\oplus "
         s=s+"\]"
         return s
 
-    def print_galois_orbits(self,prec=10):
+    def print_galois_orbits(self,prec=10,qexp_max_len=50):
         r"""
         Print the Galois orbits of self.
 
@@ -243,6 +324,37 @@ class WebModFormSpace(Parent):
             tbl['headersv'].append(header)
             dim=self._decomposition[j].dimension()
             orbit=self.galois_orbit(j,prec)
+            # we might to truncate the power series
+            # if it is too long
+            cc = orbit.coefficients()
+            
+            slist = list()
+            i = 1
+            # try to split up the orbit if too long
+            s = str(orbit)
+            ss = "\("+my_latex_from_qexp(s)+"\)"
+            ll=0
+            if len(s)>qexp_max_len:
+                print "LEN > MAX!"
+                sl = ss.split('}')
+                for i in range(len(sl)-1):
+                    sss = ''
+                    if i>0 and i<len(sl)-1:
+                        sss = '\('
+                    sss += sl[i]
+                    if i < len(sl)-2:
+                        sss += '}\)'
+                    else:
+                        sss += '})\)'
+                    ll = ll+len(str(sl[i]))
+                    if ll>qexp_max_len:
+                        ll = 0
+                        sss+="<br>"
+                    slist.append(sss)
+                    #print i,sss
+            else:
+                slist.append(ss)
+
             K=orbit.base_ring()
             if(K==QQ):
                 poly=ZZ['x'].gen()
@@ -254,7 +366,11 @@ class WebModFormSpace(Parent):
                     is_relative = True
                 else:
                     disc=factor(K.discriminant())
-            tbl['data'].append([dim,poly,disc,orbit])
+            tbl['data'].append([dim,poly,disc,slist])
+        # we already formatted the table
+        tbl['data_format']={3:'html'}
+        tbl['col_width']={3:'200'}
+        tbl['atts']='width="200" border="1"'
         s=html_table(tbl)
         if(is_relative):
             s = s + "<br><small>For relative number fields we list the absolute norm of the discriminant)</small>"
@@ -300,16 +416,22 @@ class WebNewForm(SageObject):
     r"""
     Class for representing a (cuspidal) newform on the web.
     """
-    def __init__(self,k,N,chi=0,label='',fi=0,prec=10,bitprec=53,verbose=0):
+    def __init__(self,k,N,chi=0,label='',fi=0,prec=10,bitprec=53,verbose=-1,data=None):
         r"""
         Init self as form number fi in S_k(N,chi)
         """
         t=False
-        self._parent=WebModFormSpace(k,N,chi)
+        self._parent=None; self.f=None
+        if isinstance(data,dict):
+            if data.has_key('parent'):
+                self._parent=data['parent']
+            if data.has_key('f'):
+                self._f = data['f']
+        if not self._parent:
+            self._parent=WebModFormSpace(k,N,chi)
         self.f=None
         self._verbose=verbose
         try:
-            self.f=None
             if(len(label)>0): # the label takes priority
                 L=self._parent.galois_decomposition()
                 for j in range(len(L)):
@@ -322,40 +444,79 @@ class WebNewForm(SageObject):
                 raise IndexError,"Requested function does not exist!"
             else:
                 return None
-        self._k=k
-        self._N=N
-        self._atkin_lehner_eigenvalues={}
+        self._k=ZZ(k)
+        self._N=ZZ(N)
+        self._chi=ZZ(chi)
+        if(self._chi<>0):
+            self._character=self._parent._character
+        else:
+            self._character=trivial_character(N)
+
         #self.atkin_lehner_eigenvalues()
         self._base_ring = self.f.base_ring()
         self._prec=prec
         self._bitprec=bitprec
-        self._embeddings=[]
-        self._label=None
+        self._label=''
         self._fi=None
+        self._break_line_at = 0 ## breaking of lines in display
+        self._atkin_lehner_eigenvalues={}
         if(label <> ''):
             self._label=label
         else:
             self._fi = fi
-
-            
-        self.q_expansion_embeddings(prec,bitprec)
-        self._as_polynomial_in_E4_and_E6=None
-        self._chi=self._parent._chi
-        if(self._parent._chi<>0):
-            self._character=self._parent._character
+        self._data = dict() # stores a lot of stuff
+        if isinstance(data,dict):
+            #self._data = data
+            if data.has_key('atkin_lehner_eigenalues'):
+                self._atkin_lehner_eigenvalues=data['atkin_lehner_eigenalues']
+            self._embeddings=data['embeddings']
+            self._as_polynomial_in_E4_and_E6=data['as_poly']
+            self._twist_info = data['twist_info']
+            self._is_CM = data['is_CM']
+            self._satake = data['satake']
+            self._dimension = data['dimension']
         else:
-            self._character=0
-        self._twist_info = []
-        self._is_CM = []
-        self._satake = {}
-        self._dimension = None
+            self._embeddings=[]            
+            self.q_expansion_embeddings(prec,bitprec)
+            self._as_polynomial_in_E4_and_E6=None
+            self._twist_info = []
+            self._is_CM = []
+            self._satake = {}
+            self._dimension = None
+        ## we shold figure out which complex embeddings preserve the character
+        
+
     def __repr__(self):
         r""" String representation f self.
         """
         return str(self.q_expansion())
 
+    def __reduce__(self):
+        r"""
+        Reduce self for pickling.
+        """
+        data=dict()
+        data['atkin_lehner_eigenvalues']=self._atkin_lehner_eigenvalues
+        data['f']=self.f
+        data['embeddings']=self._embeddings
+        data['as_poly'] = self._as_polynomial_in_E4_and_E6
+        data['twist_info'] = self._twist_info 
+        data['is_CM'] = self._is_CM 
+        data['satake'] = self._satake 
+        data['dimension'] = self._dimension
+        return(WebNewForm,(self._k,self._N,self._chi,self._label,self._fi,self._prec,self._bitprec,data))
+
+    def _save_to_file(self,file):
+        r"""
+        Save self to file.
+        """
+        self.save(file,compress=None)
+        
     def level(self):
         return self._N
+
+    def group(self):
+        return self._parent.group()
 
     def label(self):
         if(not self._label):
@@ -394,7 +555,7 @@ class WebNewForm(SageObject):
         The dimension of this galois orbit is not necessarily equal to the degree of the number field, when we have a character....
         We therefore need this routine to distinguish between the two cases...
         """
-        if(not self._dimension):
+        if not hasattr(self,'_dimension') or self._dimension == None or self._dimension<=0:
             P = self.parent()
             j = P.labels().index(self.label())
             self._dimension = self.parent().galois_decomposition()[j].dimension()
@@ -402,10 +563,18 @@ class WebNewForm(SageObject):
 
 
     def q_expansion_embeddings(self,prec=10,bitprec=53):
-        r""" Compute all embeddings of self into C
+        r""" Compute all embeddings of self into C which are in the same space as self.
         """
-        if(len(self._embeddings)<>0):
-            return self._embeddings
+        if(len(self._embeddings)>=prec):
+            bp = self._embeddings[0][0].prec()
+            if bp <= bitprec:
+                res = list()
+                for n in range(prec):
+                    l = list()
+                    for i in range(len(self._embeddings[0])):
+                        l.append(self._embeddings[n][i].n(bitprec))
+                    res.append(l)
+                return res
         if(bitprec<=0):
             bitprec=self._bitprec
         if(prec<=0):
@@ -415,7 +584,10 @@ class WebNewForm(SageObject):
         coeffs=list()
         for n in range(ZZ(prec)):
             cn=self.f.coefficients(ZZ(prec))[n]
-            coeffs.append(cn.complex_embeddings(bitprec))
+            if(self.dimension()>1):
+                coeffs.append(cn.complex_embeddings(bitprec))
+            else:
+                coeffs.append([cn.complex_embedding(bitprec)])
         self._embeddings=coeffs
         return self._embeddings
         
@@ -423,10 +595,7 @@ class WebNewForm(SageObject):
         return self._base_ring
 
     def degree(self):
-        if(self._base_ring.is_relative()):
-            return self._base_ring.relative_degree()
-        else:
-            return self._base_ring.degree()
+        return _degree(self._base_ring)
 
     def q_expansion(self,prec=10):
         return self.f.q_expansion(ZZ(prec))
@@ -797,10 +966,8 @@ class WebNewForm(SageObject):
         if(self._verbose>1):
             print "eps=",eps
         K=self.base_ring()
-        if(K.is_relative):
-            degree = K.relative_degree()
-        else:
-            degree = K.degree()
+        # recall that 
+        degree = min(K.degree(),self.dimension())
         cm_vals=dict()
         # the points we want are i and rho. More can be added later...
         rho=CyclotomicField(3).gen()
@@ -879,10 +1046,7 @@ class WebNewForm(SageObject):
         if(self._satake<>{}):
             return self._satake
         K=self.base_ring()
-        if(K.is_relative):
-            degree = K.relative_degree()
-        else:
-            degree = K.degree()
+        degree = _degree(K)
         RF=RealField(bits)
         CF=ComplexField(bits)
         ps=prime_range(prec)
@@ -931,10 +1095,7 @@ class WebNewForm(SageObject):
         tbl['data']=list()
         tbl['headersv']=list()
         K = self.base_ring()
-        if(K.is_relative):
-            degree = K.relative_degree()
-        else:
-            degree = K.degree()
+        degree = _degree(K)
         if(self.dimension()>1):
             tbl['corner_label']="\( Embedding \, \\backslash \, p\)"
         else:
@@ -969,9 +1130,10 @@ class WebNewForm(SageObject):
 
     ## printing functions
 
-    def print_q_expansion(self,prec=None):
+
+    def print_q_expansion(self,prec=None,br=0):
         r"""
-        Print a q-expansion f self.
+        Print the q-expansion of self.
         
         INPUT:
  
@@ -983,15 +1145,25 @@ class WebNewForm(SageObject):
 
 
         """
+        
         if(prec==None):
             prec=self._prec
-        s=""+str(self.q_expansion(prec))+""
-        ss=re.sub('x\d','x',s)
-        s=re.sub("\^(\d+)","^{\\1}",ss)
-        ss=re.sub('\*','',s)
-        s=re.sub('zeta(\d+)','\zeta_{\\1}',ss)
+        s = my_latex_from_qexp(str(self.q_expansion(prec)))
+        sb = list()
+        #brpt
+        if br > 0:
+            sb = break_line_at(s,br)
+        if len(sb)==0:
+            s = "\("+s+"\)"
+        else:
+            s = "\("+"\)<br>\(".join(sb)+"\)"
+        print "print_q_exp: prec=",prec
+        print "break_at=",self._break_line_at
+        print "s=",s
         return s
 
+    
+    
 
     def print_q_expansion_embeddings(self,prec=10,bprec=53):
         r"""
@@ -1024,6 +1196,7 @@ class WebNewForm(SageObject):
         if(isinstance(coeffs,str)):
             return coeffs  ### we probably failed to compute the form
         # make a table of the coefficients
+        print "print_embeddings: prec=",prec,"bprec=",bprec
         tbl=dict()
         tbl['atts']="border=\"1\""
         tbl['headersh']=list()
@@ -1054,7 +1227,7 @@ class WebNewForm(SageObject):
                 s = latex(K.gen())
         else:
             if(K.is_relative()):
-                s=latex(self.base_ring().relative_polynomial())
+                s=latex(K.relative_polynomial())
             else:
                 s=latex(self.base_ring().polynomial())
         return s
@@ -1174,10 +1347,7 @@ class WebNewForm(SageObject):
         """
         cm_vals=self.cm_values()
         K=self.base_ring()
-        if(K.is_relative):
-            degree = K.relative_degree()
-        else:
-            degree = K.degree()
+        degree = _degree(K)
         if(self._verbose>2):
             print "vals=",cm_vals
             print "errs=",err
@@ -1207,8 +1377,51 @@ class WebNewForm(SageObject):
         # s=html.table([cm_vals.keys(),cm_vals.values()])
         return s
 
-    
 
+
+
+    def twist_by(self,x):
+        r"""
+        twist self by a primitive Dirichlet character x
+        """
+        #xx = x.primitive()
+        assert x.is_primitive()
+        q = x.conductor()
+        # what level will the twist live on?
+        level = self.level()
+        qq =  self._character.conductor()
+        new_level = lcm(self.level(),lcm(q*q,q*qq))
+        D = DirichletGroup(new_level)
+        new_x = D(self._character)*D(x)*D(x)
+        ix = D.list().index(new_x)
+        #  the correct space
+        NS = WebModFormSpace(self._k,new_level,ix,self._prec)
+        # have to find whih form wee want
+        NS.galois_decomposition()
+        M = NS.sturm_bound() + len(divisors(new_level))
+        C = self.f.coefficients(M)
+        for label in NS._galois_orbits_labels:
+            print "label=",label
+            FT = NS.f(label)
+            CT = FT.f.coefficients(M)
+            print CT
+            K = FT.f.hecke_eigenvalue_field()
+            try:
+                for n in range(2,M):
+                    if(new_level % n+1 ==0):
+                        continue
+                    print "n=",n
+                    ct = CT[n]
+                    c  = K(x(n))*K(C[n])
+                    print ct,c
+                    if ct <> c:
+                        raise StopIteration()
+            except StopIteration:
+                pass
+            else:
+                print  "Twist of f=",FT
+        return  FT
+            
 ###
 ### Independent helper functions  
 ### 
@@ -1235,14 +1448,21 @@ def html_table(tbl):
     for i in range(nrows):
         if(len(data[i])<>ncols):
             print "wrong number of cols!"        
+
     if(tbl.has_key('atts')):
         s="<table "+str(tbl['atts'])+">\n"
     else:
         s="<table>\n"
-    if(tbl.has_key('data_format')):
-        format=tbl['data_format']
-    else:
-        format=""
+    format = dict()
+    for i in range(ncols):
+        format[i]=''
+        if(tbl.has_key('data_format')):
+            if isinstance(tbl['data_format'],dict):
+                if(tbl['data_format'].has_key(i)):
+                    format[i]=tbl['data_format'][i]
+            elif(isinstance(tbl['data_format'],str)):
+                format[i]=tbl['data_format']
+
     if(tbl.has_key('header')):
         
         s+="<thead><tr><th><td colspan=\""+str(ncols)+"\">"+tbl['header']+"</td></th></tr></thead>"
@@ -1251,12 +1471,16 @@ def html_table(tbl):
     # check which type of content we have
     h1=tbl['headersh'][0]
     sheaderh="";    sheaderv=""
-    #if(isinstance(h1,str) and not re.match("\$",h1)):
-    #    sheaderh="<span>"
-    #else:
-    #    sheaderh="<span class=\"math\">"
-    # check which type of content we have
     h1=tbl['headersv'][0]
+    col_width=dict()
+    for i in range(ncols):
+        col_width[i]=0
+        if tbl.has_key('col_width'):
+            if tbl['col_width'].has_key(i):
+                col_width[i]=tbl['col_width'][i]
+
+    print "col width=",col_width
+    print "format=",format
     #if(isinstance(h1,str) and not re.match("\$",h1)):
     #    sheaderv="<span>"
     #else:
@@ -1272,21 +1496,124 @@ def html_table(tbl):
     s=s+row
     for r in range(nrows):
         row="<tr><td>"+sheaderv+str(tbl['headersv'][r])+"</td>"
-        if(format=='html'):
-            for k in range(ncols):
-                row=row+"\t<td>"+str(data[r][k])+"</td> \n"
-        else:
-            for k in range(ncols):
-                sss=latex(data[r][k])
-                if(len(sss)>0):
-                    row=row+"\t<td>\("+sss+"\)</td> \n"
+        for k in range(ncols):
+            wid = col_width[k]
+            if format[k]=='html' or format[k]=='text':
+                row=row+"\t<td width=\""+str(wid)+"\">"
+                if isinstance(data[r][k],list):
+                    #print "HTML list=",data[r][k]
+                    for ss in data[r][k]:
+                        sss = str(ss)
+                        if(len(sss)>0):
+                            row+=sss
                 else:
-                    row=row+"\t<td></td> \n"
+                    sss = str(data[r][k])
+                row=row+"</td> \n"
+            else:
+                row=row+"\t<td width=\""+str(wid)+"\">"
+                if isinstance(data[r][k],list):
+                    #print "LATEX list=",data[r][k]
+                    for ss in data[r][k]:
+                        sss = latex(ss)
+                        if(len(sss)>0):
+                            row+="\("+sss+"\)"
+                else:
+                    sss=latex(data[r][k])
+                    if(len(sss)>0):
+                        row=row+"\("+sss+"\)</td> \n"
+                row+="</td>\n"
+        # allow for different format in different columns
         row=row+"</tr> \n"
         s=s+row
     s=s+"</tbody></table>"
     return s
 
+
+def my_latex_from_qexp(s):
+    r"""
+    Make LaTeX from string. in particular from parts of q-expansions.
+    """
+    ss = ""
+    ss+=re.sub('x\d','x',s)
+    ss=re.sub("\^(\d+)","^{\\1}",ss)
+    ss=re.sub('\*','',ss)
+    ss=re.sub('zeta(\d+)','\zeta_{\\1}',ss)  
+    ss += ""
+    return ss
+
+
+def break_line_at(s,brpt=20):
+    r"""
+    Breaks a line containing math 'smartly' at brpt characters.
+    With smartly we mean that we break at + or - but keep brackets
+    together
+    """
+    sl=list()
+    stmp = ''
+    left_par = 0
+    for i in range(len(s)):
+        if s[i] == '(': ## go to the matching case
+            left_par = 1
+        elif s[i] == ')' and left_par==1:
+            left_par = 0
+        if left_par == 0 and (s[i] == '+' or s[i]== '-'):
+            sl.append(stmp)
+            stmp=''
+        stmp = join([stmp,s[i]])
+        if i==len(s)-1:
+            sl.append(stmp)
+
+    # sl now contains a split  e.g. into terms in the q-expansion
+    # we now have to join as many as fits on the line
+    #print "sl=",sl
+    res = list()
+    stmp=''
+    for j in range(len(sl)):
+        l = len_as_printed(stmp)+len_as_printed(sl[j])
+        print "l=",l
+        #print join([stmp,sl[j]])
+        #print "len(stmp)+len(sl[j])=",len(stmp)+len(sl[j])
+        if l<brpt:
+            stmp = join([stmp,sl[j]])
+        else:
+            res.append(stmp)
+            stmp = sl[j]
+        #print "stmp=",stmp
+        if j == len(sl)-1:
+            res.append(stmp)
+    return res
+
+def len_as_printed(s):
+    r"""
+    Returns the length of s, as it will appear after being math_jax'ed
+    """
+    lenq=1
+    lendig=1
+    lenpm=1.5
+    lenpar=0.5
+    lenexp=0.75
+    lensub=0.75
+    ss = s
+    ss = re.sub(" ","",ss)    # remove white-space
+    ss = re.sub("\*","",ss)    # remove *
+    num_exp = s.count("^")    # count number of exponents
+    exps = re.findall("\^{?(\d*)",s) # a list of all exponents
+    sexps = "".join(exps)
+    num_subs = s.count("_")    # count number of exponents
+    subs = re.findall("_{?(\d*)",s) # a list of all  subscripts
+    ssubs = "".join(subs)
+    ss = re.sub("\^{?(\d*)}?","",ss)  # remove exponenents
+    print join([ss,ssubs,sexps])
+    tot_len=(ss.count(")")+ss.count("("))*lenpar
+    tot_len+=ss.count("q")*lenq
+    tot_len+=len(re.findall("\d",s))*lendig
+    tot_len+=(s.count("+")+s.count("-"))*lenpm
+    tot_len+=num_subs*lensub
+    tot_len+=num_exp*lenexp
+    #
+    #tot_len = len(ss)+ceil((len(ssubs)+len(sexps))*0.67)
+    return tot_len
+    
 
 def _get_newform(k,N,chi,fi=None):
     r"""
@@ -1340,6 +1667,24 @@ def _get_newform(k,N,chi,fi=None):
             f="Could not construct space $S^{new}_{%s}(%s,\chi_{%s})$" %(k,N,chi)
     return (t,f)
 
+
+
+
+
+
+def _degree(K):
+    r"""
+    Returns the degree of the number field K
+    """
+    if(K==QQ):
+        return 1
+    try:
+        if(K.is_relative()):
+            return K.relative_degree()
+        return K.degree()
+    except AttributeError:
+        return  -1 ##  exit silently
+        
 def print_geometric_data_Gamma0N(N):
         r""" Print data about Gamma0(N).
         """
@@ -1368,3 +1713,8 @@ def print_geometric_data_Gamma0N(N):
         #s=s+str(G.nu2())+","+str(G.nu3())
         #s=s+")\)</div>"
         return s
+
+
+import __main__
+__main__.WebModFormSpace=WebModFormSpace
+__main__.WebNewForm=WebNewForm
