@@ -61,7 +61,28 @@ def allgens(line):
         'gens': ["(%s)" % gen[1:-1] for gen in data[5:]],
     }
 
+def degphi(line):
+    data=split(line)
+    label = data[0] + data[1] + data[2]
+    return label, {
+        'degree':data[3]
+    }
+    
+def allisog(line):
+    data=split(line)
+    label = data[0] + data[1] + data[2]
+    return label, {
+        'Curves_in_the_class':data[4],
+        'Isogeny_matrix':data[5]
+    } 
 
+def intpts(line):
+    data=split(line)
+    label=data[0]
+    return label, {
+    'x-coordinates_of_integral_points':data[2]
+    }
+        
 def lookup_or_create(label):
     item = curves.find_one({'label': label})
     if item is None:
