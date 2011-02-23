@@ -168,7 +168,8 @@ def render_curve_webpage(label):
         tor_struct = ' \\times '.join(['C_{%s}'%a.order() for a in G]) + ' \\cong '
         tor_struct += ' \\times '.join(['\\langle %s \\rangle'%a for a in G])
     info['tor_structure'] = tor_struct
-    properties = [ ("prop %s = %s" % (_,_*1923)) for _ in range(12) ]
+    properties = [ '<h2>Torsion Structure</h2>', '\(%s\)<br/><br/>' % tor_struct ]
+    properties.extend([ "prop %s = %s<br/>" % (_,_*1923) for _ in range(12) ])
     credit = 'John Cremona'
     t = "Ell Curve %s" % info['label']
     return render_template("elliptic_curve/elliptic_curve.html", info=info, properties=properties, credit=credit, title = t)

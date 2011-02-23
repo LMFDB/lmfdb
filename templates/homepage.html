@@ -85,7 +85,7 @@
        <h1>Citation</h1>
         {% if properties %}
          <h1>Properties</h1>
-         {% for p in properties %}{{ p|safe }}<br/>{% endfor %}
+         {% for p in properties %}{{ p|safe }}{% endfor %}
         {% endif %}
       </div>
 

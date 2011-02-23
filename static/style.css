@@ -112,7 +112,14 @@ a:hover { color: #000; }
     -moz-border-radius-topleft: 10px;
 }
 #properties h1 {
-    font-size: 120%;
+    font-size: 110%;
+    padding: 0;
+    margin-bottom: 0;
+}
+#properties h2 {
+    font-size: 100%;
+    padding: 0;
+    margin-bottom: 0;
 }
 #Content {
     font-size: 95%;
