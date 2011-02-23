@@ -3,13 +3,13 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
-<title>{% block title %}MFDB{% endblock title %}</title>
+<title>
+{% if title %}LMDB: {{ title }}{% else %}LMDB{% endif %}
+</title>
 
 <script type="text/javascript" src="{{ url_for('static', filename='jquery.min.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='MathJax/MathJax.js') }}"></script>
 <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet" type="text/css" />
-<link href="{{ url_for('static', filename='siegel.css') }}" rel="stylesheet" type="text/css" />
-<link href="{{ url_for('static', filename='Lfunctionsiegel.css') }}" rel="stylesheet" type="text/css" />
 <script type="text/javascript" src="{{ url_for('static', filename='classical_modular_form_util-functions.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='classical_modular_form_scripts.js') }}"></script>
 <script type="text/javascript">
@@ -48,7 +48,6 @@ Pre-Release Version. Feedback via
 {% block body %}
 
 {% endblock body %}
-
 
 </body>
 </html>

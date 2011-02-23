@@ -52,7 +52,8 @@ def rational_elliptic_curves():
         'conductor_list': conductor_list,
     }
     credit = 'John Cremona'
-    return render_template("elliptic_curve/elliptic_curve_Q.html", info = info, credit=credit)
+    t = 'Elliptic curves over the rationals'
+    return render_template("elliptic_curve/elliptic_curve_Q.html", info = info, credit=credit, title = t)
 
 @app.route("/EllipticCurve/Q/<conductor>")
 def by_conductor(conductor):
@@ -86,7 +87,8 @@ def elliptic_curve_search(**args):
     info['curves'] = res
     info['format_ainvs'] = format_ainvs
     credit = 'John Cremona'
-    return render_template("elliptic_curve/elliptic_curve_search.html", info = info, credit=credit)
+    t = 'Elliptic curves over \(\mathbb{Q}\)'
+    return render_template("elliptic_curve/elliptic_curve_search.html", info = info, credit=credit, title = t)
     
 
 ##########################
@@ -166,9 +168,10 @@ def render_curve_webpage(label):
         tor_struct = ' \\times '.join(['C_{%s}'%a.order() for a in G]) + ' \\cong '
         tor_struct += ' \\times '.join(['\\langle %s \\rangle'%a for a in G])
     info['tor_structure'] = tor_struct
-    properties = [ ("prop1", "val1"), ("prop2", "val2") ]
+    properties = [ ("prop %s = %s" % (_,_*1923)) for _ in range(12) ]
     credit = 'John Cremona'
-    return render_template("elliptic_curve/elliptic_curve.html", info=info, properties=properties, credit=credit)
+    t = "Ell Curve %s" % info['label']
+    return render_template("elliptic_curve/elliptic_curve.html", info=info, properties=properties, credit=credit, title = t)
 
 @app.route("/EllipticCurve/Q/padic_data")
 def padic_data():

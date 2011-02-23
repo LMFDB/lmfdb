@@ -2,10 +2,24 @@
 {% block body %}
 
     <div id="header">
-        <a href="/"><div class="logo"></div></a>
-        <div class"right">
-          <div class="title">LMDB: TITLE OF PAGE</div>
-          <div class="bread">Bread &gt; Crumb &gt; Hierarchy</div>
+        <div class="logo"><a href="/"><img src="{{ url_for('static', filename='images/lmdb-logo.png') }}" /></a></div>
+        <div class="right">
+          <div class="title">LMDB: 
+            {% if title %}{{ title }}
+            {% else %}TITLE OF PAGE \( \chi^2 \) even more text and tex \( \frac{1}{1+x+x^2} \) and even more ...
+            {% endif %}
+            <!--and some extra text ... and some extra text ... and even more.-->
+          </div>
+          <div class="bread">
+            <a href="/">Top</a>
+            {% if bread %}
+              {% for b in bread %}
+                &gt; <a href="{{ b[1] }}">{{ b[0] }}</a>
+              {% endfor %}
+            {% else %}
+              &gt; Bread &gt; Crumb &gt; Hierarchy
+            {% endif %}
+          </div>
         </div>
     </div>
 
@@ -13,10 +27,17 @@
     {% if info %}
         <div id="sidebar">
 
+<h2>Navigation</h2>
+<ul>
+  <li><a href=".">Link 1</a></li>
+  <li><a href=".">Link 2</a></li>
+  <li><a href=".">Link 3</a></li>
+</ul>
+
     {% if info.sidebar %}
      {% for topic, content in info.sidebar %}
        <h2>{{ topic }}</h2>
-       <ul class="subnav">
+       <ul>
          {% for text, url in content %}
            <li><a href="{{ url }}">{{ text }}</a></li>
          {% endfor %}
@@ -24,15 +45,6 @@
      {% endfor %}
     {% endif %}
 
-        {% if info.properties %}
-            <h2>
-                Properties</h2>
-            <ul class="subnav">
-                    {% for text in info.properties %}
-                            <li>{{ text }}</li>
-                            {% endfor %}
-            </ul>
-        {% endif %}
         {% if info.check %}
             <h2>
                 Check</h2>
@@ -77,25 +89,25 @@
     {% endblock sidebar %}
 
 
-<div id="Content">
+<div id="main">
+  <div id="Content">
    {% if properties %}
     <div id="properties">
-     <ul>
+     <h1>Citation</h1>
+     <h1>Properties</h1>
      {% for p in properties %}
-       <li>{{ p[0] }} = {{ p[1] }}</li>
+       {{ p|safe }}<br/>
      {% endfor %}
-     </ul>
     </div>
    {% endif %}
 
     {% block content %}
     There is nothing here. This is just a template.
     {% endblock content %}
+  </div>
 </div>
 
-<div class="spacer">&nbsp;</div>
-
-<div class="footer">
+<div id="footer">
     {% if credit %}
     &copy; Data computed by {{ credit|safe }}.<br />
     {% endif %}

@@ -19,13 +19,15 @@
                 <a onclick="show_code('pari'); return false" href='#'>pari</a>
                 <a onclick="show_code('magma'); return false" href='#'>magma</a>
             </div>
+ 
+       <div>{{ lipsum(5, 200) }}</div>
         
         <h2>
             Minimal Weierstrass equation
         </h2>
         <div class='sage nodisplay code'>sage: E = EllipticCurve({{info.ainvs}})</div>
         <div class='pari nodisplay code'>? E = ellinit({{info.ainvs}})</div>
-        <div class='magma nodisplay code'>> E := EllipticCurve({{info.ainvs}});</div>
+        <div class='magma nodisplay code'>&gt; E := EllipticCurve({{info.ainvs}});</div>
         <p>
             {{ info.equation }}
         </p>
