@@ -29,9 +29,9 @@ def set_sidebar(l):
 @app.route("/NumberField/GaloisGroups")
 def render_groups_page():
     info = {}
-    info['credit'] = 'the PARI group'	
+    credit = 'the PARI group'	
     groups.sort()
-    return render_template("number_field/galois_groups.html", groups=groups, info=info)
+    return render_template("number_field/galois_groups.html", groups=groups, info=info, credit=credit)
 
 @app.route("/NumberField")
 def number_field_render_webpage():
@@ -45,7 +45,7 @@ def number_field_render_webpage():
         'class_number_list': range(1,11)+['11-1000000'],
         'discriminant_list': discriminant_list
     }
-        info['credit'] = 'the PARI group and J. Voight'	
+        credit = 'the PARI group and J. Voight'	
 
         explain=['Further information']
         explain.append(('Unique labels for number fields (not yet implemented)','/'))
@@ -53,7 +53,7 @@ def number_field_render_webpage():
         explain.append(('Discriminant ranges (not yet implemented)','/'))
         info['sidebar']=set_sidebar([explain])
 
-        return render_template("number_field/number_field_all.html", info = info)
+        return render_template("number_field/number_field_all.html", info = info, credit=credit)
     else:
         return number_field_search(**args)
 
@@ -163,7 +163,7 @@ def render_field_webpage(args):
     if data is None:
         return "No such field"    
     info = {}
-    info['credit'] = 'the PARI group'	
+    credit = 'the PARI group'	
     try:
         info['count'] = args['count']
     except KeyError:
@@ -190,7 +190,8 @@ def render_field_webpage(args):
     info['downloads'] = [('worksheet', '/')]
     info['friends'] = [('L-function', '/')]
     info['learnmore'] = [('Number Fields', '/')]
-    return render_template("number_field/number_field.html", info = info)
+    credit = ''
+    return render_template("number_field/number_field.html", info = info, properties=properties, credit=credit, title = t)
 
 def format_coeffs(coeffs):
     """
@@ -205,7 +206,6 @@ def format_coeffs(coeffs):
 def number_fields():
     if len(request.args) != 0:
         return number_field_search(**request.args)
-    info['credit'] = 'the PARI group'
     info['learnmore'] = [('Galois groups', '/')]
     return render_template("number_field/number_field_all.html", info = info)
     

@@ -1,28 +1,24 @@
 {% extends 'homepage.html' %}
-
 {% block content %}
 
-    <script>
-    function show_code(system) {
-        $('.sage').hide()
-        $('.pari').hide()
-        $('.magma').hide()
-        $('.'+system).show()
+<script>
+var cur_system = null;
+function show_code(system) {
+    $('.sage').hide();
+    $('.pari').hide();
+    $('.magma').hide();
+    if (cur_system == null) {
+      $('.'+system).show();
+      cur_system = system;
+    } else {
+      $('.'+system).hide();
+      cur_system = null;
     }
-    </script>
+}
+</script>
 
-    <div id="header">
-        <div class="logo">
-            {{ info.logo }}
-        </div>
-        <div class="banner">
-            <span>The logo of the portal could go here... </span>
-        </div>
-    </div>
-    <div id="Content">
 
-        <h1>
-            Number Field label {{ info.label }}</h1>
+        <h1> Number field {{ info.label }}</h1>
             <div>
                 <a onclick="show_code('sage'); return false" href='#'>sage</a>
                 <a onclick="show_code('pari'); return false" href='#'>pari</a>
