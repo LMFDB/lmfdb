@@ -29,9 +29,35 @@ def set_sidebar(l):
 @app.route("/NumberField/GaloisGroups")
 def render_groups_page():
     info = {}
-    credit = 'the PARI group'	
-    groups.sort()
-    return render_template("number_field/galois_groups.html", groups=groups, info=info, credit=credit)
+    info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
+    credit = 'the PARI group and J. Voight'	
+    def gcmp(x,y):
+        a = cmp(x['label'][0],y['label'][0])
+        if a: return a
+        a = cmp(x['label'][1],y['label'][1])
+        return a
+    groups.sort(cmp=gcmp)
+    t = 'Galois group labels'
+    bread = [('Number Fields', url_for("number_field_render_webpage")),('Galois group labels',url_for("render_groups_page"))]
+    return render_template("number_field/galois_groups.html", groups=groups, info=info, credit=credit, title=t, bread=bread)
+
+@app.route("/NumberField/FieldLabels")
+def render_labels_page():
+    info = {}
+    info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
+    credit = 'the PARI group and J. Voight'	
+    t = 'Number field labels'
+    bread = [('Number Fields', url_for("number_field_render_webpage")),('Galois group labels',url_for("render_groups_page"))]
+    return render_template("number_field/number_field_labels.html", info=info, credit=credit, title=t, bread=bread)
+
+@app.route("/NumberField/Discriminants")
+def render_discriminants_page():
+    info = {}
+    info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
+    credit = 'the PARI group and J. Voight'	
+    t = 'Number Field Discriminant Ranges'
+    bread = [('Number Fields', url_for("number_field_render_webpage")),('Galois group labels',url_for("render_groups_page"))]
+    return render_template("number_field/discriminant_ranges.html", info=info, credit=credit, title=t, bread=bread)
 
 @app.route("/NumberField")
 def number_field_render_webpage():
@@ -46,14 +72,17 @@ def number_field_render_webpage():
         'discriminant_list': discriminant_list
     }
         credit = 'the PARI group and J. Voight'	
+        t = 'Number Fields'
+        bread = [('Number Fields', url_for("number_field_render_webpage"))]
+        info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
+#         explain=['Further information']
+#         explain.append(('Unique labels for number fields',url_for("render_labels_page")))
+# 	explain.append(('Unique labels for Galois groups',url_for("render_groups_page")))
+#         explain.append(('Discriminant ranges (not yet implemented)','/'))
+#         sidebar = set_sidebar([explain])
 
-        explain=['Further information']
-        explain.append(('Unique labels for number fields (not yet implemented)','/'))
-	explain.append(('Unique labels for Galois groups',url_for("render_groups_page")))
-        explain.append(('Discriminant ranges (not yet implemented)','/'))
-        info['sidebar']=set_sidebar([explain])
 
-        return render_template("number_field/number_field_all.html", info = info, credit=credit)
+        return render_template("number_field/number_field_all.html", info = info, credit=credit, title=t, bread=bread)
     else:
         return number_field_search(**args)
 
@@ -163,7 +192,7 @@ def render_field_webpage(args):
     if data is None:
         return "No such field"    
     info = {}
-    credit = 'the PARI group'	
+    credit = 'the PARI group and J. Voight'	
     try:
         info['count'] = args['count']
     except KeyError:
@@ -189,9 +218,18 @@ def render_field_webpage(args):
     info['downloads_visible'] = True
     info['downloads'] = [('worksheet', '/')]
     info['friends'] = [('L-function', '/')]
-    info['learnmore'] = [('Number Fields', '/')]
-    credit = ''
-    return render_template("number_field/number_field.html", info = info, properties=properties, credit=credit, title = t)
+    info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
+    bread = [('Number Fields', url_for("number_field_render_webpage")),('%s'%data['label'],' ')]
+    t = "Number Field %s" % info['label']
+
+    credit = 'the PARI group and J. Voight'	
+    properties = ['<br>']
+    properties.extend('Degree = %s<br>'%data['degree'])
+    properties.extend('Signature = %s<br>'%data['signature'])
+    properties.extend('Discriminant = %s<br>'%data['discriminant'])
+    properties.extend('Class number = %s<br>'%data['class_number'])
+    properties.extend('Galois group = %s<br>'%data['galois_group'])
+    return render_template("number_field/number_field.html", info = info, properties=properties, credit=credit, title = t, bread=bread)
 
 def format_coeffs(coeffs):
     """
@@ -206,7 +244,7 @@ def format_coeffs(coeffs):
 def number_fields():
     if len(request.args) != 0:
         return number_field_search(**request.args)
-    info['learnmore'] = [('Galois groups', '/')]
+    info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
     return render_template("number_field/number_field_all.html", info = info)
     
 
@@ -275,7 +313,11 @@ def number_field_search(**args):
         
     info['fields'] = res
     info['format_coeffs'] = format_coeffs
-    return render_template("number_field/number_field_search.html", info = info)
+    info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
+    t = 'Number Field search results'
+    bread = [('Number Fields', url_for("number_field_render_webpage")),('Search results',' ')]
+    properties = []
+    return render_template("number_field/number_field_search.html", info = info, title=t, properties=properties, bread=bread)
 
 
 def iter_limit(it,lim):

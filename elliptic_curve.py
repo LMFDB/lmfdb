@@ -171,7 +171,7 @@ def render_curve_webpage(label):
     properties = [ '<h2>Torsion Structure</h2>', '\(%s\)<br/><br/>' % tor_struct ]
     properties.extend([ "prop %s = %s<br/>" % (_,_*1923) for _ in range(12) ])
     credit = 'John Cremona'
-    t = "Ell Curve %s" % info['label']
+    t = "Elliptic Curve %s" % info['label']
     return render_template("elliptic_curve/elliptic_curve.html", info=info, properties=properties, credit=credit, title = t)
 
 @app.route("/EllipticCurve/Q/padic_data")
