@@ -1,0 +1,36 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+
+    <div id="header">
+    </div>
+    <div id="Content">
+
+        <h1>Naming of Galois groups</h1>
+
+<p>
+Each Galois group is identified by a label consisting of a triple of
+integers (order, sign, index(?)), and also has an official GAP
+indentifier.  For convenience, we list here the usual short names for
+some of the groups.  These may be used in the search field.
+</p>
+
+<table border=1 cellpadding=5 class='right_align_table'>
+<tr>
+<th>Label</th>
+<th>Gap name</th>
+<th>Human name</th>
+</tr>
+{% for group in groups: %}
+<tr>
+<td>{{group['label']}}</td>
+<td>{{group['gap_name']}}</td>
+<td>{{group['human_name']}}</td>
+</tr>
+{% endfor %}
+</table>
+
+
+{% endblock %}
+</html>
