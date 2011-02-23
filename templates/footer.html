@@ -1,15 +1,3 @@
 
 {% block footer %}
-{% if info %}
-<div class="footer">
-        <p>
-        {% if info.credit %}
-        &copy; Data computed by {{ info.credit|safe }}.<br />
-        {% endif %}
-        The creation of this website was supported by the NSF, AIM ...<br />
-        Number Theory, the Queen of Mathematics!</p>
-</div>
-{% else %}
-There is no "info" dict given to render the template.
-{% endif %}
 {% endblock %}

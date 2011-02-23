@@ -51,8 +51,9 @@ def rational_elliptic_curves():
         'torsion_list': [1,2,3,4,5,6,7,8,9,10,12,16], 
         'conductor_list': conductor_list,
     }
-    info['credit'] = 'John Cremona'
-    return render_template("elliptic_curve/elliptic_curve_Q.html", info = info)
+    credit = 'John Cremona'
+    t = 'Elliptic curves over the rationals'
+    return render_template("elliptic_curve/elliptic_curve_Q.html", info = info, credit=credit, title = t)
 
 @app.route("/EllipticCurve/Q/<conductor>")
 def by_conductor(conductor):
@@ -85,8 +86,9 @@ def elliptic_curve_search(**args):
         .limit(500)) # TOOD: pages
     info['curves'] = res
     info['format_ainvs'] = format_ainvs
-    info['credit'] = 'John Cremona'
-    return render_template("elliptic_curve/elliptic_curve_search.html", info = info)
+    credit = 'John Cremona'
+    t = 'Elliptic curves over \(\mathbb{Q}\)'
+    return render_template("elliptic_curve/elliptic_curve_search.html", info = info, credit=credit, title = t)
     
 
 ##########################
@@ -96,7 +98,7 @@ def elliptic_curve_search(**args):
 @app.route("/EllipticCurve/Q/<int:conductor>/<iso_class>")
 def render_isogeny_class(conductor, iso_class):
     info = {}
-    info['credit'] = 'John Cremona'
+    credit = 'John Cremona'
     label = "%s%s" % (conductor, iso_class)
     data = C.ellcurves.curves.find_one({'label': label + "1"})
     if data is None:
@@ -114,7 +116,7 @@ def render_isogeny_class(conductor, iso_class):
     info['curves'] = list(curves)
     info['format_ainvs'] = format_ainvs
     info['download_qexp_url'] = url_for('download_qexp', limit=100, ainvs=','.join([str(a) for a in ainvs]))
-    return render_template("elliptic_curve/iso_class.html", info = info)
+    return render_template("elliptic_curve/iso_class.html", info = info, credit=credit)
 
 @app.route("/EllipticCurve/Q/<int:conductor>/<iso_class>/<int:number>")
 def by_curve(conductor, iso_class, number):
@@ -125,7 +127,6 @@ def render_curve_webpage(label):
     if data is None:
         return "No such curve"    
     info = {}
-    info['credit'] = 'John Cremona'
     ainvs = [int(a) for a in data['ainvs']]
     E = EllipticCurve(ainvs)
     N = data['conductor']
@@ -167,7 +168,11 @@ def render_curve_webpage(label):
         tor_struct = ' \\times '.join(['C_{%s}'%a.order() for a in G]) + ' \\cong '
         tor_struct += ' \\times '.join(['\\langle %s \\rangle'%a for a in G])
     info['tor_structure'] = tor_struct
-    return render_template("elliptic_curve/elliptic_curve.html", info = info)
+    properties = [ '<h2>Torsion Structure</h2>', '\(%s\)<br/><br/>' % tor_struct ]
+    properties.extend([ "prop %s = %s<br/>" % (_,_*1923) for _ in range(12) ])
+    credit = 'John Cremona'
+    t = "Ell Curve %s" % info['label']
+    return render_template("elliptic_curve/elliptic_curve.html", info=info, properties=properties, credit=credit, title = t)
 
 @app.route("/EllipticCurve/Q/padic_data")
 def padic_data():

@@ -1,15 +1,70 @@
 {% extends "base.html" %}
-
 {% block body %}
+
+    <div id="header">
+        <div class="logo"><a href="/"><img src="{{ url_for('static', filename='images/lmdb-logo.png') }}" /></a></div>
+        <div class="right">
+          <div class="title">LMDB: 
+            {% if title %}{{ title }}
+            {% else %}TITLE OF PAGE MISSING \( \chi^2 \) even more text and tex \( \frac{1}{1+x+x^2} \) and even more ...
+            {% endif %}
+            <!--and some extra text ... and some extra text ... and even more.-->
+          </div>
+          <div class="bread">
+            <a href="/">Top</a>
+            {% if bread %}
+              {% for b in bread %}
+                &gt; <a href="{{ b[1] }}">{{ b[0] }}</a>
+              {% endfor %}
+            {% else %}
+              &gt; Bread &gt; Crumb &gt; Hierarchy
+            {% endif %}
+          </div>
+        </div>
+    </div>
 
     {% block sidebar %} 
     {% if info %}
-        <div id="sidebar">
+    <div id="sidebar">
 
-    {% if info.sidebar %}
-     {% for topic, content in info.sidebar %}
+     <h2>Navigation</h2>
+     <ul>
+       <li><a href=".">Link 1</a></li>
+       <li><a href=".">Link 2</a></li>
+       <li><a href=".">Link 3</a></li>
+     </ul>
+
+     {% if info.downloads_visible %}
+        <h2>Downloads</h2>
+        <ul class="subnav">
+            {% for text,url in info.downloads %}
+               <li><a href="{{ url }}">{{ text }}</a></li>
+            {% endfor %}
+        </ul>
+     {% endif %}
+        
+     {% if info.learnmore %}
+        <h2>Learn more about</h2>
+        <ul class="subnav">
+            {% for text,url in info.learnmore %}
+               <li><a href="{{ url }}">{{ text }}</a></li>
+            {% endfor %}
+        </ul>
+     {% endif %}
+  
+     {% if info.friends %}
+        <h2>Friends</h2>
+        <ul class="subnav">
+           {% for text,url in info.friends %}
+               <li><a href="{{ url }}">{{ text }}</a></li>
+           {% endfor %}
+        </ul>
+     {% endif %}
+
+    {% if sidebar %}
+     {% for topic, content in sidebar %}
        <h2>{{ topic }}</h2>
-       <ul class="subnav">
+       <ul>
          {% for text, url in content %}
            <li><a href="{{ url }}">{{ text }}</a></li>
          {% endfor %}
@@ -17,76 +72,40 @@
      {% endfor %}
     {% endif %}
 
-        {% if info.properties %}
-            <h2>
-                Properties</h2>
-            <ul class="subnav">
-                    {% for text in info.properties %}
-                            <li>{{ text }}</li>
-                            {% endfor %}
-            </ul>
-        {% endif %}
-        {% if info.check %}
-            <h2>
-                Check</h2>
-            <ul class="subnav">
-                    {% for text,url in info.check %}
-                            <li><a href="{{ url }}">{{ text }}</a></li>
-                            {% endfor %}
-            </ul>
-        {% endif %}
-
-        {% if info.downloads_visible %}
-                    <h2>
-                    Downloads</h2>
-                    <ul class="subnav">
-                            {% for text,url in info.downloads %}
-                                    <li><a href="{{ url }}">{{ text }}</a></li>
-                                    {% endfor %}
-                    </ul>
-         {% endif %}
-         {% if info.learnmore %}
-            <h2>
-                Learn more about</h2>
-            <ul class="subnav">
-                    {% for text,url in info.learnmore %}
-                            <li><a href="{{ url }}">{{ text }}</a></li>
-                            {% endfor %}
-            </ul>
-        {% endif %}
-        {% if info.friends %}
-            <h2>
-                Friends</h2>
-            <ul class="subnav">
-                    {% for text,url in info.friends %}
-                            <li><a href="{{ url }}">{{ text }}</a></li>
-                            {% endfor %}
-            </ul>
-        {% endif %}
-        </div>
     {% else %}
     There is no "info" dict given to render the template.
     {% endif %}
+    </div>
     {% endblock sidebar %}
 
+
+<div id="main">
+  <div id="Content">
+      <div id="properties">
+       <h1>Citation</h1>
+        {% if properties %}
+         <h1>Properties</h1>
+         {% for p in properties %}{{ p|safe }}{% endfor %}
+        {% endif %}
+      </div>
+
     {% block content %}
-
     There is nothing here. This is just a template.
-
     {% endblock content %}
+  </div>
+</div>
 
-
-    {% block footer %}
-    {% if info %}
-    <div class="footer">
-            <p>
-            &copy; Data computed by {{ info.credit }}.<br />
-            The creation of this website was supported by the NSF, AIM ...<br />
-            Number Theory, the Queen of Mathematics!</p>
-    </div>
-    {% else %}
-    There is no "info" dict given to render the template.
+<div id="footer">
+    {% if credit %}
+      &copy; Data computed by {{ credit|safe }}.<br />
     {% endif %}
-    {% endblock footer %}
+    
+    {% if support %}
+      {{ support|safe }}<br/>
+    {% else %}
+       The creation of this website was supported by the NSF, AIM ...<br />
+    {% endif %}
+    Number Theory, the Queen of Mathematics!
+</div>
 
 {% endblock body %}
