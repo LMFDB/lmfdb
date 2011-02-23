@@ -30,6 +30,7 @@ def set_sidebar(l):
 def render_groups_page():
     info = {}
     info['credit'] = 'the PARI group'	
+    groups.sort()
     return render_template("number_field/galois_groups.html", groups=groups, info=info)
 
 @app.route("/NumberField")
