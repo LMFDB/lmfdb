@@ -1,210 +1,193 @@
 {% extends 'homepage.html' %}
-
 {% block content %}
 
-    <script>
-    function show_code(system) {
-        $('.sage').hide()
-        $('.pari').hide()
-        $('.magma').hide()
-        $('.'+system).show()
+<script>
+var cur_system = null;
+function show_code(system) {
+    $('.sage').hide();
+    $('.pari').hide();
+    $('.magma').hide();
+    if (cur_system == null) {
+      $('.'+system).show();
+      cur_system = system;
+    } else {
+      $('.'+system).hide();
+      cur_system = null;
     }
-    </script>
+}
+</script>
 
 
-        <h1>
-            {{ info.label }}</h1>
-            <div>
-                <a onclick="show_code('sage'); return false" href='#'>sage</a>
-                <a onclick="show_code('pari'); return false" href='#'>pari</a>
-                <a onclick="show_code('magma'); return false" href='#'>magma</a>
-            </div>
- 
-       <div>{{ lipsum(5, 200) }}</div>
-        
-        <h2>
-            Minimal Weierstrass equation
-        </h2>
-        <div class='sage nodisplay code'>sage: E = EllipticCurve({{info.ainvs}})</div>
-        <div class='pari nodisplay code'>? E = ellinit({{info.ainvs}})</div>
-        <div class='magma nodisplay code'>&gt; E := EllipticCurve({{info.ainvs}});</div>
-        <p>
-            {{ info.equation }}
-        </p>
-        <h2>
-            Torsion Structure
-        </h2>
-        <div class='sage nodisplay code'>sage: E.torsion_subgroup()</div>
-        <div class='pari nodisplay code'>? elltors(E) </div>
-        <div class='magma nodisplay code'>> TorsionSubgroup(E);</div>
-        <p>
-            \({{ info.tor_structure }}\)
-        </p>
-        <h2>
-            Infinite order Mordell-Weil generators
-        </h2>
-        <div class='sage nodisplay code'>sage: E.gens()</div>
-        <div class='pari nodisplay code'> </div>
-        <div class='magma nodisplay code'>> Generators(E);</div>
-        <p>
-            \({{ info.generators }}\)
-        </p>
+    <h1> {{ info.label }}</h1>
+    <div>
+        <a onclick="show_code('sage'); return false" href='#'>sage</a>
+        <a onclick="show_code('pari'); return false" href='#'>pari</a>
+        <a onclick="show_code('magma'); return false" href='#'>magma</a>
+    </div>
+    <div>{{ lipsum(5, 200) }}</div>
+    
+    <h2> Minimal Weierstrass equation </h2>
+    <div class='sage nodisplay code'>sage: E = EllipticCurve({{info.ainvs}})</div>
+    <div class='pari nodisplay code'>? E = ellinit({{info.ainvs}})</div>
+    <div class='magma nodisplay code'>&gt; E := EllipticCurve({{info.ainvs}});</div>
+    <p> {{ info.equation }} </p>
 
-        <h2>
-	   Invariants
+    <h2> Torsion Structure </h2>
+    <div class='sage nodisplay code'>sage: E.torsion_subgroup()</div>
+    <div class='pari nodisplay code'>? elltors(E) </div>
+    <div class='magma nodisplay code'>&gt; TorsionSubgroup(E);</div>
+    <p> \({{ info.tor_structure }}\) </p>
 
-        </h2>
-            <table>
+    <h2> Infinite order Mordell-Weil generators </h2>
+    <div class='sage nodisplay code'>sage: E.gens()</div>
+    <div class='pari nodisplay code'> </div>
+    <div class='magma nodisplay code'>&gt; Generators(E);</div>
+    <p> \({{ info.generators }}\) </p>
 
-            <tr>
-            <td>
-                <span class='sage nodisplay code'>sage: E.conductor().factor()</span>
-                <span class='pari nodisplay code'></span>
-                <span class='magma nodisplay code'></span>
-            </td>
-            <td align='right'>\(N \)</td>
-            <td>=</td>
-            <td>\({{ info.cond_factor }}\)</td>
-            </tr>
+    <h2> Invariants </h2>
+        <table>
 
-            <tr>
-            <td>
-                <span class='sage nodisplay code'>sage: E.discriminant()</span>
-                <span class='pari nodisplay code'>? E[12]</span>
-                <span class='magma nodisplay code'>> Discriminant(E);</span>
-            </td>
-            <td align='right'>\(\Delta \)</td>
-            <td>=</td>
-            <td>{{ info.discriminant }}</td>
-            </tr>
+        <tr>
+        <td>
+            <span class='sage nodisplay code'>sage: E.conductor().factor()</span>
+            <span class='pari nodisplay code'></span>
+            <span class='magma nodisplay code'></span>
+        </td>
+        <td align='right'>\(N \)</td>
+        <td>=</td>
+        <td>\({{ info.cond_factor }}\)</td>
+        </tr>
 
-            <tr>
-            <td>
-                <span class='sage nodisplay code'>sage: E.j_invariant()</span>
-                <span class='pari nodisplay code'>? E[13]</span>
-                <span class='magma nodisplay code'>> jInvariant(E);</span>
-            </td>
-            <td align='right'>\(j \)</td>
-            <td>=</td>
-            <td>{{ info.j_invariant }}</td>
-            </tr>
+        <tr>
+        <td>
+            <span class='sage nodisplay code'>sage: E.discriminant()</span>
+            <span class='pari nodisplay code'>? E[12]</span>
+            <span class='magma nodisplay code'>&gt; Discriminant(E);</span>
+        </td>
+        <td align='right'>\(\Delta \)</td>
+        <td>=</td>
+        <td>{{ info.discriminant }}</td>
+        </tr>
+
+        <tr>
+        <td>
+            <span class='sage nodisplay code'>sage: E.j_invariant()</span>
+            <span class='pari nodisplay code'>? E[13]</span>
+            <span class='magma nodisplay code'>&gt; jInvariant(E);</span>
+        </td>
+        <td align='right'>\(j \)</td>
+        <td>=</td>
+        <td>{{ info.j_invariant }}</td>
+        </tr>
 
 
-           </table>
+       </table>
 
-        <h2>
-            BSD invariants
-        </h2>
-        <p>
-            <table>
+    <h2> BSD invariants </h2>
+    <p>
+        <table>
 
-            <tr>
-            <td>
-                <span class='sage nodisplay code'>sage: E.rank()</span>
-                <span class='pari nodisplay code'></span>
-                <span class='magma nodisplay code'>> Rank(E);</span>
-            </td>
-            <td align='right'>\( r \)</td>
-            <td>=</td>
-            <td>{{ info.rank }}</td>
-            <tr>
+        <tr>
+        <td>
+            <span class='sage nodisplay code'>sage: E.rank()</span>
+            <span class='pari nodisplay code'></span>
+            <span class='magma nodisplay code'>&gt; Rank(E);</span>
+        </td>
+        <td align='right'>\( r \)</td>
+        <td>=</td>
+        <td>{{ info.rank }}</td>
+        <tr>
 
-            <tr>
-            <td>
-                <span class='sage nodisplay code'>sage: E.regulator()</span>
-                <span class='pari nodisplay code'></span>
-                <span class='magma nodisplay code'>> Regulator(E);</span>
-            </td>
-            <td align='right'> \( \text{Reg} \) </td>
-            <td>=</td>
-            <td>{{ info.regulator }}</td>
-            <tr>
+        <tr>
+        <td>
+            <span class='sage nodisplay code'>sage: E.regulator()</span>
+            <span class='pari nodisplay code'></span>
+            <span class='magma nodisplay code'>&gt; Regulator(E);</span>
+        </td>
+        <td align='right'> \( \text{Reg} \) </td>
+        <td>=</td>
+        <td>{{ info.regulator }}</td>
+        <tr>
 
-            <tr>
-            <td>
-                <span class='sage nodisplay code'>sage: E.period_lattice().omega()</span>
-                <span class='pari nodisplay code'></span>
-                <span class='magma nodisplay code'>> RealPeriod(E);</span>
-            </td>
-            <td align='right'>\( \Omega \)</td>
-            <td>=</td>
-            <td>{{ info.real_period }}</td>
-            <tr>
+        <tr>
+        <td>
+            <span class='sage nodisplay code'>sage: E.period_lattice().omega()</span>
+            <span class='pari nodisplay code'></span>
+            <span class='magma nodisplay code'>&gt; RealPeriod(E);</span>
+        </td>
+        <td align='right'>\( \Omega \)</td>
+        <td>=</td>
+        <td>{{ info.real_period }}</td>
+        <tr>
 
-            <tr>
-            <td>
-                <span class='sage nodisplay code'>sage: E.tamagawa_numbers()</span>
-                <span class='pari nodisplay code'></span>
-                <span class='magma nodisplay code'>> TamagawaNumbers(E);</span>
-            </td>
-            <td align='right'>\( \prod_p c_p \)</td>
-            <td>=</td>
-            <td>\( {{ info.tamagawa_numbers }} \)</td>
-            <tr>
+        <tr>
+        <td>
+            <span class='sage nodisplay code'>sage: E.tamagawa_numbers()</span>
+            <span class='pari nodisplay code'></span>
+            <span class='magma nodisplay code'>&gt; TamagawaNumbers(E);</span>
+        </td>
+        <td align='right'>\( \prod_p c_p \)</td>
+        <td>=</td>
+        <td>\( {{ info.tamagawa_numbers }} \)</td>
+        <tr>
 
-            <tr>
-            <td>
-                <span class='sage nodisplay code'>sage: E.torsion_order()</span>
-                <span class='pari nodisplay code'>? elltors(E)[1]</span>
-                <span class='magma nodisplay code'>> OrderTorsionSubgroup(E);</span>
-            </td>
-            <td align='right'>\( \#E_{tor} \)</td>
-            <td>=</td>
-            <td>{{ info.torsion }}</td>
-            <tr>
+        <tr>
+        <td>
+            <span class='sage nodisplay code'>sage: E.torsion_order()</span>
+            <span class='pari nodisplay code'>? elltors(E)[1]</span>
+            <span class='magma nodisplay code'>&gt; OrderTorsionSubgroup(E);</span>
+        </td>
+        <td align='right'>\( \#E_{tor} \)</td>
+        <td>=</td>
+        <td>{{ info.torsion }}</td>
+        <tr>
 
-            <tr>
-            <td>
-                <span class='sage nodisplay code'>sage: E.sha().an_numerical()</span>
-                <span class='pari nodisplay code'></span>
-                <span class='magma nodisplay code'>> MordellWeilShaInformation(E);</span>
-            </td>
-            <td align='right'>\( \text{Sha}_{an} \)</td>
-            <td>=</td>
-            <td>{{ info.sha_an }}</td>
-            <tr>
+        <tr>
+        <td>
+            <span class='sage nodisplay code'>sage: E.sha().an_numerical()</span>
+            <span class='pari nodisplay code'></span>
+            <span class='magma nodisplay code'>&gt; MordellWeilShaInformation(E);</span>
+        </td>
+        <td align='right'>\( \text{Sha}_{an} \)</td>
+        <td>=</td>
+        <td>{{ info.sha_an }}</td>
+        <tr>
 
-            </table>
-        </p>
-        <h2>
-            Modular form
-        </h2>
-        <div class='sage nodisplay code'>sage: E.q_eigenform(10)</div>
-        <div class='pari nodisplay code'></div>
-        <div class='magma nodisplay code'>> ModularForm(E);</div>
-        <p>
-            {{ info.f | safe }}
-            <a href='{{info.download_qexp_url}}' target='_blank'>download</a>
-        </p>
+        </table>
+    </p>
 
-        <h2>
-            \(L\)-function
-        </h2>
-        <p>
-            \( {{ info.lder }} = {{ info.special_value }} \)
-        </p>
-        
-        <h2>
-            \( p \)-adic data
-        </h2>
-        <p>
-            <select onchange="$('#padic').load('{{url_for('padic_data', label=info.label, p='xxx', rank=info.rank).replace('xxx', "'+this.value+'")}}', function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'padic']);}); ">
-            <option value=''>Choose a prime...</option>
-            {% for p in info.p_adic_primes %}
-            <option value="{{ p }}">{{ p }}</option>
-            {% endfor %}
-            </select>
-            <div id='padic'>
-            </div>
-        </p>
-        <h2>
-            Plot of the real part.
-        </h2>
-        <div class='sage nodisplay code'>sage: E.plot()</div>
-        <div class='pari nodisplay code'> </div>
-        <div class='magma nodisplay code'> </div>
-        <center>
-        <img src="{{info.plot}}" />
-        </center>
+    <h2> Modular form </h2>
+    <div class='sage nodisplay code'>sage: E.q_eigenform(10)</div>
+    <div class='pari nodisplay code'></div>
+    <div class='magma nodisplay code'>&gt; ModularForm(E);</div>
+    <p>
+        {{ info.f | safe }}
+        <a href='{{info.download_qexp_url}}' target='_blank'>download</a>
+    </p>
+
+    <h2> \(L\)-function </h2>
+    <p>
+        \( {{ info.lder }} = {{ info.special_value }} \)
+    </p>
+    
+    <h2> \( p \)-adic data </h2>
+    <p>
+        <select onchange="$('#padic').load('{{url_for('padic_data', label=info.label, p='xxx', rank=info.rank).replace('xxx', "'+this.value+'")}}', function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'padic']);}); ">
+        <option value=''>Choose a prime...</option>
+        {% for p in info.p_adic_primes %}
+        <option value="{{ p }}">{{ p }}</option>
+        {% endfor %}
+        </select>
+        <div id='padic'>
+        </div>
+    </p>
+
+    <h2> Plot of the real part.  </h2>
+    <div class='sage nodisplay code'>sage: E.plot()</div>
+    <div class='pari nodisplay code'> </div>
+    <div class='magma nodisplay code'> </div>
+    <center>
+    <img src="{{info.plot}}" />
+    </center>
         
 {% endblock %}
