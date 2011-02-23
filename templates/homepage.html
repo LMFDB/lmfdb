@@ -2,7 +2,7 @@
 {% block body %}
 
     <div id="header">
-        <div class="logo"><a href="/"><img src="{{ url_for('static', filename='images/lmdb-logo.png') }}" /></a></div>
+        <div class="logo"><a href="/"><img src="{{ url_for('.static', filename='images/lmdb-logo.png') }}" /></a></div>
         <div class="right">
           <div class="title">LMDB: 
             {% if title %}{{ title }}
