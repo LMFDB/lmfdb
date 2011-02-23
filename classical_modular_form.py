@@ -36,9 +36,9 @@ def render_webpage(args):
 	info['initial_list_of_levels']=range(1,50)
 	cur_url='?'
 	## try to get basic parameters. If this generates an error someone supplied wrong type of parameters.
-	print "info1=",info
+	#print "info1=",info
 	(info,is_set)=set_basic_parameters(info)
-	print "info2=",info
+	#print "info2=",info
 	if(info.has_key('error')): 
 		return render_template("classical_modular_form_navigation.html", info=info)
 	cur_url=""
@@ -89,12 +89,12 @@ def render_webpage(args):
 			if info.has_key('download'):
 				print "saving self!"
 				info['tempfile'] = "/tmp/tmp_web_mod_form.sobj"
-			(info,sbar)=set_info_for_one_modular_form(level,weight,character,label,info,sbar)
+			(info,sbar)=set_info_for_one_modular_form(level,weight,character,label,info,sbar,args)
 			if info.has_key('download') and not info.has_key('error'):					
 				return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
 				#os.remove(fn) ## clears the temporary file					
 			info['sidebar']=set_sidebar([properties,parents,siblings,friends,lifts])
-			print info
+			#print info
 			return render_template("classical_modular_form.html", info=info)
 		else:
 			info['sidebar']=set_sidebar([properties,parents,siblings,friends,lifts])
@@ -108,15 +108,12 @@ def render_webpage(args):
 	#	#print "Here!!!!"
 	#
 	# if we have a weight we only list the even/odd characters
-	#print level,weight,chi
-	#print "info=",info
-	#space_url=cur_url
-	#print "HERE!"
+
 	sbar=(friends,lifts)
 	(info,lifts)=set_info_for_navigation(info,is_set,sbar)
 	(friends,lifts)=sbar
 	info['sidebar']=set_sidebar([friends,lifts])
-	print "sidebar=",info['sidebar']
+	#print "sidebar=",info['sidebar']
 	return render_template("classical_modular_form_navigation.html", info=info)
 
 
@@ -452,7 +449,7 @@ import __main__
 __main__.WebModFormSpace=WebModFormSpace
 __main__.WebNewForm=WebNewForm
 		
-def set_info_for_one_modular_form(level,weight,character,label,info,sbar):
+def set_info_for_one_modular_form(level,weight,character,label,info,sbar,args):
 	r"""
 	Set the info for on modular form.
 
@@ -473,8 +470,12 @@ def set_info_for_one_modular_form(level,weight,character,label,info,sbar):
 	info['satake'] = WNF.print_satake_parameters()
 	info['polynomial'] = WNF.polynomial()
 	#info['q_exp'] = "\["+WNF.print_q_expansion()+"\]"
-	info['q_exp'] = ajax_more(WNF.print_q_expansion,5,10,20,50,100)
-	
+	old_break = WNF._break_line_at
+	WNF._break_line_at=50
+	#info['q_exp'] = ajax_more(WNF.print_q_expansion,5,10,20,50,100)
+	br = 45
+	info['q_exp'] = ajax_more(WNF.print_q_expansion,{'prec':5,'br':br},{'prec':10,'br':br},{'prec':20,'br':br},{'prec':100,'br':br},{'prec':200,'br':br})
+	WNF._break_line_at=old_break
 	## check the varable...
 	#m = re.search('zeta_{\d+}',info['q_exp'])
 	#if(m):
@@ -491,12 +492,20 @@ def set_info_for_one_modular_form(level,weight,character,label,info,sbar):
 		info['degree'] = int(WNF.base_ring().relative_degree())
 	else:
 		info['degree'] = int(WNF.base_ring().degree())
-	info['q_exp_embeddings'] = WNF.print_q_expansion_embeddings()
+	#info['q_exp_embeddings'] = WNF.print_q_expansion_embeddings()
 	if(int(info['degree'])>1 and WNF.dimension()>1):
-		info['embeddings'] = 'One can embed it into \( \mathbb{C} \) as ' + info['q_exp_embeddings']
-
+		s = 'One can embed it into \( \mathbb{C} \) as:' 
+		bprec = 26
+		print s
+		#args = 
+		#info['embeddings'] =  ajax_more2(WNF.print_q_expansion_embeddings,{'prec':5,'bprec':bprec},{'prec':10,'bprec':bprec},{'prec':25,'bprec':bprec},{'prec':50,'bprec':bprec},text='More coefficients')
+		info['embeddings'] =  ajax_more2(WNF.print_q_expansion_embeddings,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more coeffs.','more precision'])
 	elif(int(info['degree'])>1):
-		info['embeddings'] = 'One can embed it into \( \mathbb{C} \) as ' + info['q_exp_embeddings']
+		s = 'There are '+info['degree']+' embeddings into \( \mathbb{C} \):'
+		bprec = 26
+		print s
+		info['embeddings'] = ajax_more2(WNF.print_q_expansion_embeddings,{'prec':5,'bprec':bprec},{'prec':10,'bprec':bprec},{'prec':25,'bprec':bprec},{'prec':50,'bprec':bprec})
+
 	else:
 		info['embeddings'] = ''			
 
@@ -529,7 +538,12 @@ def set_info_for_one_modular_form(level,weight,character,label,info,sbar):
 			else:
 				l=('-- '+str(label),cur_url)
 			siblings.append(l)
-	friends.append(('L-function','/Lfunction/ModularForm/GL2/Q/holomorphic/?weight='+str(weight)+'&level='+str(level)+'&character='+str(character)+"&label="+label))
+
+	for j in range(WNF.degree()):
+		s = 'L-function '+str(level)+str(label)+str(j)
+		url = '/L'+url_for('render_classical_modular_form',weight=weight,level=level,label=label,number=j) 
+		friends.append((s,url))
+		#friends.append((s,'/Lfunction/ModularForm/GL2/Q/holomorphic/?weight='+str(weight)+'&level='+str(level)+'&character='+str(character)+"&label="+label+"&number="+str(j)))
 	
 	space_url='?&level='+str(level)+'&weight='+str(weight)+'&character='+str(character)
 	parents.append(('\( S_{k} (\Gamma_0(' + str(level) + '),\chi )\)',space_url))
@@ -613,8 +627,67 @@ def set_info_for_modular_form_space(level,weight,character,info,sbar):
 					friends.append((s,'?weight='+str(weight)+'&level='+str(old_level)+'&character='+str(0)))
 		except:
 			pass
-	friends.append(('Lfunctions','/Lfunction'))
+	#friends.append(('Lfunctions','/Lfunction'))
 	lifts.append(('Half-Integral Weight Forms','/ModularForm/Mp2/Q'))
 	lifts.append(('Siegel Modular Forms','/ModularForm/GSp4/Q'))
 	sbar=(properties,parents,friends,siblings,lifts)
 	return (info,sbar)
+
+import random
+from utilities import *
+
+
+def ajax_more2(callback, *arg_list, **kwds):
+	r"""
+	Like ajax_more but accepts increase in two directions.
+	Call with
+	ajax_more2(function,{'arg1':[x1,x2,...,],'arg2':[y1,y2,...]},'text1','text2')
+	where function takes two named argument 'arg1' and 'arg2'
+	"""
+	inline = kwds.get('inline', True)
+	text = kwds.get('text', 'more')
+	print "text=",text
+	text0 = text[0]
+	text1 = text[1]
+	print "arglist=",arg_list
+	nonce = hex(random.randint(0, 1<<128))
+	if inline:
+		args = arg_list[0]
+		print "args=",args
+		key1,key2=args.keys()
+		l1=args[key1]
+		l2=args[key2]
+		print "key1=",key1
+		print "key2=",key2
+		print "l1=",l1
+		print "l2=",l2
+		args={key1:l1[0],key2:l2[0]}
+		l11=l1[1:]; l21=l2[1:]
+		#arg_list = arg_list[1:]
+		arg_list1 = {key1:l1,key2:l21}
+		arg_list2 = {key1:l11,key2:l2}
+		#print "arglist1=",arg_list
+		if isinstance(args, tuple):
+			res = callback(*arg_list)
+		elif isinstance(args, dict):
+			res = callback(**args)
+		else:
+			res = callback(args)
+		res = web_latex(res)
+	else:
+		res = ''
+	print "arg_list1=",arg_list1
+	print "arg_list2=",arg_list2
+	arg_list1=(arg_list1,)
+	arg_list2=(arg_list2,)
+	if arg_list1 or arg_list2:
+		url1 = ajax_url(ajax_more2, callback, *arg_list1, inline=True, text=text)
+		url2 = ajax_url(ajax_more2, callback, *arg_list2, inline=True, text=text)
+		s0 = """<span id='%(nonce)s'>%(res)s """  % locals()
+		s1 = """[<a onclick="$('#%(nonce)s').load('%(url1)s', function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'%(nonce)s']);}); return false;" href="#">%(text0)s</a>""" % locals()
+		t = """| <a onclick="$('#%(nonce)s').load('%(url2)s', function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'%(nonce)s']);}); return false;" href="#">%(text1)s</a>]</span>""" % locals()
+		return (s0+s1+t)
+
+	
+	else:
+		return res

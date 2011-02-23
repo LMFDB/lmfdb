@@ -458,6 +458,7 @@ class WebNewForm(SageObject):
         self._bitprec=bitprec
         self._label=''
         self._fi=None
+        self._break_line_at = 0 ## breaking of lines in display
         self._atkin_lehner_eigenvalues={}
         if(label <> ''):
             self._label=label
@@ -564,8 +565,16 @@ class WebNewForm(SageObject):
     def q_expansion_embeddings(self,prec=10,bitprec=53):
         r""" Compute all embeddings of self into C which are in the same space as self.
         """
-        if(len(self._embeddings)<>0):
-            return self._embeddings
+        if(len(self._embeddings)>=prec):
+            bp = self._embeddings[0][0].prec()
+            if bp <= bitprec:
+                res = list()
+                for n in range(prec):
+                    l = list()
+                    for i in range(len(self._embeddings[0])):
+                        l.append(self._embeddings[n][i].n(bitprec))
+                    res.append(l)
+                return res
         if(bitprec<=0):
             bitprec=self._bitprec
         if(prec<=0):
@@ -1121,9 +1130,10 @@ class WebNewForm(SageObject):
 
     ## printing functions
 
-    def print_q_expansion(self,prec=None):
+
+    def print_q_expansion(self,prec=None,br=0):
         r"""
-        Print a q-expansion f self.
+        Print the q-expansion of self.
         
         INPUT:
  
@@ -1135,12 +1145,25 @@ class WebNewForm(SageObject):
 
 
         """
+        
         if(prec==None):
             prec=self._prec
         s = my_latex_from_qexp(str(self.q_expansion(prec)))
-        s = "\("+s+"\)"
+        sb = list()
+        #brpt
+        if br > 0:
+            sb = break_line_at(s,br)
+        if len(sb)==0:
+            s = "\("+s+"\)"
+        else:
+            s = "\("+"\)<br>\(".join(sb)+"\)"
+        print "print_q_exp: prec=",prec
+        print "break_at=",self._break_line_at
+        print "s=",s
         return s
 
+    
+    
 
     def print_q_expansion_embeddings(self,prec=10,bprec=53):
         r"""
@@ -1173,6 +1196,7 @@ class WebNewForm(SageObject):
         if(isinstance(coeffs,str)):
             return coeffs  ### we probably failed to compute the form
         # make a table of the coefficients
+        print "print_embeddings: prec=",prec,"bprec=",bprec
         tbl=dict()
         tbl['atts']="border=\"1\""
         tbl['headersh']=list()
@@ -1424,8 +1448,7 @@ def html_table(tbl):
     for i in range(nrows):
         if(len(data[i])<>ncols):
             print "wrong number of cols!"        
-    print "tbl=",tbl
-    print "data=",data
+
     if(tbl.has_key('atts')):
         s="<table "+str(tbl['atts'])+">\n"
     else:
@@ -1517,6 +1540,80 @@ def my_latex_from_qexp(s):
     ss=re.sub('zeta(\d+)','\zeta_{\\1}',ss)  
     ss += ""
     return ss
+
+
+def break_line_at(s,brpt=20):
+    r"""
+    Breaks a line containing math 'smartly' at brpt characters.
+    With smartly we mean that we break at + or - but keep brackets
+    together
+    """
+    sl=list()
+    stmp = ''
+    left_par = 0
+    for i in range(len(s)):
+        if s[i] == '(': ## go to the matching case
+            left_par = 1
+        elif s[i] == ')' and left_par==1:
+            left_par = 0
+        if left_par == 0 and (s[i] == '+' or s[i]== '-'):
+            sl.append(stmp)
+            stmp=''
+        stmp = join([stmp,s[i]])
+        if i==len(s)-1:
+            sl.append(stmp)
+
+    # sl now contains a split  e.g. into terms in the q-expansion
+    # we now have to join as many as fits on the line
+    #print "sl=",sl
+    res = list()
+    stmp=''
+    for j in range(len(sl)):
+        l = len_as_printed(stmp)+len_as_printed(sl[j])
+        print "l=",l
+        #print join([stmp,sl[j]])
+        #print "len(stmp)+len(sl[j])=",len(stmp)+len(sl[j])
+        if l<brpt:
+            stmp = join([stmp,sl[j]])
+        else:
+            res.append(stmp)
+            stmp = sl[j]
+        #print "stmp=",stmp
+        if j == len(sl)-1:
+            res.append(stmp)
+    return res
+
+def len_as_printed(s):
+    r"""
+    Returns the length of s, as it will appear after being math_jax'ed
+    """
+    lenq=1
+    lendig=1
+    lenpm=1.5
+    lenpar=0.5
+    lenexp=0.75
+    lensub=0.75
+    ss = s
+    ss = re.sub(" ","",ss)    # remove white-space
+    ss = re.sub("\*","",ss)    # remove *
+    num_exp = s.count("^")    # count number of exponents
+    exps = re.findall("\^{?(\d*)",s) # a list of all exponents
+    sexps = "".join(exps)
+    num_subs = s.count("_")    # count number of exponents
+    subs = re.findall("_{?(\d*)",s) # a list of all  subscripts
+    ssubs = "".join(subs)
+    ss = re.sub("\^{?(\d*)}?","",ss)  # remove exponenents
+    print join([ss,ssubs,sexps])
+    tot_len=(ss.count(")")+ss.count("("))*lenpar
+    tot_len+=ss.count("q")*lenq
+    tot_len+=len(re.findall("\d",s))*lendig
+    tot_len+=(s.count("+")+s.count("-"))*lenpm
+    tot_len+=num_subs*lensub
+    tot_len+=num_exp*lenexp
+    #
+    #tot_len = len(ss)+ceil((len(ssubs)+len(sexps))*0.67)
+    return tot_len
+    
 
 def _get_newform(k,N,chi,fi=None):
     r"""
