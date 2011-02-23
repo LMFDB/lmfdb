@@ -24,6 +24,7 @@ function show_code(system) {
         <a onclick="show_code('pari'); return false" href='#'>pari</a>
         <a onclick="show_code('magma'); return false" href='#'>magma</a>
     </div>
+    <div></div>
     
     <h2> Minimal Weierstrass equation </h2>
     <div class='sage nodisplay code'>sage: E = EllipticCurve({{info.ainvs}})</div>
@@ -43,6 +44,12 @@ function show_code(system) {
     <div class='magma nodisplay code'>&gt; Generators(E);</div>
     <p> \({{ info.generators }}\) </p>
 
+    <h2> Integral points </h2>
+    <div class='sage nodisplay code'>sage: E.integral_points()</div>
+    <div class='pari nodisplay code'> </div>
+    <div class='magma nodisplay code'>&gt; ;</div>
+    <p> \({{ info.xintegral_points}}\) </p>
+    
     <h2> Invariants </h2>
         <table>
 
@@ -65,7 +72,7 @@ function show_code(system) {
         </td>
         <td align='right'>\(\Delta \)</td>
         <td>=</td>
-        <td>{{ info.discriminant }}</td>
+        <td>\({{ info.disc_factor }} \)</td>
         </tr>
 
         <tr>
@@ -76,13 +83,14 @@ function show_code(system) {
         </td>
         <td align='right'>\(j \)</td>
         <td>=</td>
-        <td>{{ info.j_invariant }}</td>
+        <td>\({{ info.j_invar_factor }}\)</td>
         </tr>
 
 
        </table>
 
     <h2> BSD invariants </h2>
+    <div></div>
     <p>
         <table>
 
@@ -161,7 +169,9 @@ function show_code(system) {
     <div class='magma nodisplay code'>&gt; ModularForm(E);</div>
     <p>
         {{ info.f | safe }}
-        <a href='{{info.download_qexp_url}}' target='_blank'>download</a>
+    </p>
+    <p align="center">
+        <a  href='{{info.download_qexp_url}}' target='_blank' >download coefficients</a>
     </p>
 
     <h2> \(L\)-function </h2>

@@ -6,8 +6,8 @@ from base import app, db, C
 from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
 
 from utilities import ajax_more, image_src, web_latex, to_dict, parse_range
-import sage.all
-from sage.all import ZZ, EllipticCurve
+import sage.all 
+from sage.all import ZZ, EllipticCurve, latex
 q = ZZ['x'].gen()
 
 #########################
@@ -23,6 +23,9 @@ def format_ainvs(ainvs):
     a list of unicodes looks like [u'0', u'1', ...]
     """
     return [int(a) for a in ainvs]
+
+def xintegral_point(s):
+    return [int(a) for a in eval(s) if a not in ['[',',',']']]    
 
 #########################
 #    Top level
@@ -106,6 +109,7 @@ def render_isogeny_class(conductor, iso_class):
     label = "%s%s" % (conductor, iso_class)
     ainvs = [int(a) for a in data['ainvs']]
     E = EllipticCurve(ainvs)
+    discriminant=E.discriminant()
     info = {'label': label}
     info['optimal_ainvs'] = ainvs
     info['f'] = ajax_more(E.q_eigenform, 10, 20, 50, 100, 250)
@@ -129,24 +133,30 @@ def render_curve_webpage(label):
     info = {}
     ainvs = [int(a) for a in data['ainvs']]
     E = EllipticCurve(ainvs)
-    N = data['conductor']
+    N = ZZ(data['conductor'])
     iso_class = data['iso']
     rank = data['rank']
+    j_invariant=E.j_invariant()
+    discriminant=E.discriminant()
+    xintpoints=[E.lift_x(x) for x in xintegral_point(data['x-coordinates_of_integral_points'])]
     info.update(data)
     info.update({
-        'discriminant': E.discriminant(),
-        'j_invariant': E.j_invariant(),
+        'conductor': N,
+        'disc_factor': latex(discriminant.factor()),
+        'j_invar_factor':latex(j_invariant.factor()),
         'label': label,
         'equation': web_latex(E),
         'f': ajax_more(E.q_eigenform, 10, 20, 50, 100, 250),
-        'generators': (' '.join(web_latex(g) for g in data['gens'])) if 'gens' in data else '',
+        'generators': (', '.join(web_latex(g) for g in data['gens'])) if 'gens' in data else '',
 
         'lder'  : "L%s(1)" % ("'"*rank),
 
         'p_adic_primes': [p for p in sage.all.prime_range(5,100) if E.is_ordinary(p) and not p.divides(N)],
         'ainvs': format_ainvs(data['ainvs']),
-        'tamagawa_numbers': r' \cdot '.join(str(sage.all.factor(c)) for c in E.tamagawa_numbers())
-        })
+        'tamagawa_numbers': r' \cdot '.join(str(sage.all.factor(c)) for c in E.tamagawa_numbers()),
+        'cond_factor':latex(N.factor()),
+        'xintegral_points':','.join(str(i_p) for i_p in xintpoints)
+            })
     info['downloads_visible'] = True
     info['downloads'] = [('worksheet', url_for("not_yet_implemented"))]
     info['friends'] = [('Isogeny class', "/EllipticCurve/Q/%s/%s" % (N, iso_class)),
@@ -154,24 +164,25 @@ def render_curve_webpage(label):
                        ('L-function', url_for("not_yet_implemented"))]
     info['learnmore'] = [('Elliptic Curves', url_for("not_yet_implemented"))]
     info['plot'] = image_src(E.plot())
-    info['discriminant'] = E.discriminant()
-    info['j_invariant'] = E.j_invariant()
-    info['conductor'] = data['conductor']
     info['iso_class'] = data['iso']
-    info['cond_factor'] = str(E.conductor().factor()).replace('*', '\\cdot')
-    info['rank'] = rank
+
     info['download_qexp_url'] = url_for('download_qexp', limit=100, ainvs=','.join([str(a) for a in ainvs]))
     G = E.torsion_subgroup().gens()
+    
     if len(G) == 0:
         tor_struct = '0'
+        tor_group='0'
     else:
         tor_struct = ' \\times '.join(['C_{%s}'%a.order() for a in G]) + ' \\cong '
         tor_struct += ' \\times '.join(['\\langle %s \\rangle'%a for a in G])
+        tor_group=' \\times '.join(['C_{%s}'%a.order() for a in G])
     info['tor_structure'] = tor_struct
-    properties = [ '<h2>Torsion Structure</h2>', '\(%s\)<br/><br/>' % tor_struct ]
-    properties.extend([ "prop %s = %s<br/>" % (_,_*1923) for _ in range(12) ])
+    properties = [ '<h2>Torsion Structure</h2>', '\(%s\)<br/><br/>' % tor_group, '<h2>Rank</h2>','\(%s\)<br/><br/>' % rank, 
+    '<h2> Discriminant</h2>','\(%s\)<br/><br/>' % discriminant,'<h2>Conductor</h2>','\(%s\)<br/><br/>' % N,
+    '<h2>j-invariant</h2>','\(%s\)<br/><br/>' % j_invariant ]
+    #properties.extend([ "prop %s = %s<br/>" % (_,_*1923) for _ in range(12) ])
     credit = 'John Cremona'
-    t = "Elliptic Curve %s" % info['label']
+    t = "Ell Curve %s" % info['label']
     return render_template("elliptic_curve/elliptic_curve.html", info=info, properties=properties, credit=credit, title = t)
 
 @app.route("/EllipticCurve/Q/padic_data")
