@@ -3,8 +3,8 @@ from sage.all import SQLDatabase
 import base
 
 padic_db = base.getDBConnection().ellcurves.padic_db
-padic_db.create_index("label")
-padic_db.create_index("prime")
+padic_db.ensure_index("label")
+padic_db.ensure_index("prime")
 
 def lookup_or_create(label,p):
     item = padic_db.find_one({'label': label, 'p': p})

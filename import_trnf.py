@@ -3,13 +3,13 @@ import pymongo
 import base
 
 fields = base.getDBConnection().numberfields.fields
-fields.create_index('degree')
-fields.create_index('galois_group')
-fields.create_index('signature')
-fields.create_index('discriminant')
-fields.create_index('class_number')
-fields.create_index([('degree',pymongo.ASCENDING),('discriminant',pymongo.DESCENDING)])
-fields.create_index([('degree',pymongo.ASCENDING),('discriminant',pymongo.ASCENDING)])
+fields.ensure_index('degree')
+fields.ensure_index('galois_group')
+fields.ensure_index('signature')
+fields.ensure_index('discriminant')
+fields.ensure_index('class_number')
+fields.ensure_index([('degree',pymongo.ASCENDING),('discriminant',pymongo.DESCENDING)])
+fields.ensure_index([('degree',pymongo.ASCENDING),('discriminant',pymongo.ASCENDING)])
 
 def coeffs(s):
     return [a for a in s[1:-1].split(',')]
