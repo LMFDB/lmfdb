@@ -1,6 +1,7 @@
+import base
+
 ##import sys
 ##sys.path.append("C:\Users\Stefan\Documents\Python")
-from pymongo import Connection
 
 ##info = {'title': 'L-functions corresponding to \(GL(3)\) Maass forms, level 4'}
 ##info['id'] = 'L/ModularForm/GL3/Q/maass/4'
@@ -19,7 +20,7 @@ from pymongo import Connection
 ##info['contents'] =f.read()
 ##f.close()
 ##
-##connection = Connection()
+##connection = base.getDBConnection()
 ##db = connection.Lfunction
 ##collection = db.LNavigation
 ##collection.insert(info)
@@ -42,7 +43,7 @@ f = open('plotOfEigenvalues.html')
 info['contents'] =f.read()
 f.close()
 
-connection = Connection(port=37010)
+connection = base.getDBConnection()
 db = connection.Lfunction
 collection = db.LNavigation
 collection.insert(info)
@@ -63,7 +64,7 @@ info['downloads'] = []
 info['properties'] = ['Degree = ' + str(info['degree']), 'Primitive' ]
 info['contents'] = ''
 
-connection = Connection(port=37010)
+connection = base.getDBConnection()
 db = connection.Lfunction
 collection = db.LNavigation
 collection.insert(info)
@@ -87,7 +88,7 @@ info['contents'] =f.read()
 f.close()
 
 
-connection = Connection(port=37010)
+connection = base.getDBConnection()
 db = connection.Lfunction
 collection = db.LNavigation
 collection.insert(info)
@@ -106,7 +107,7 @@ info['downloads'] = []
 info['properties'] = []
 info['contents'] = 'This page has not been created yet.'
 
-connection = Connection(port=37010)
+connection = base.getDBConnection()
 db = connection.Lfunction
 collection = db.LNavigation
 collection.insert(info)

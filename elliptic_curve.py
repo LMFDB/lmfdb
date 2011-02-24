@@ -2,7 +2,7 @@
 import re
 
 from pymongo import ASCENDING
-from base import app, db, C
+from base import app
 from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
 
 from utilities import ajax_more, image_src, web_latex, to_dict, parse_range
@@ -81,7 +81,8 @@ def elliptic_curve_search(**args):
     if 'optimal' in info:
         query['number'] = 1
     info['query'] = query
-    res = (C.ellcurves.curves.find(query)
+    import base
+    res = (base.getDBConnection().ellcurves.curves.find(query)
         .sort([('conductor', ASCENDING), ('iso', ASCENDING), ('number', ASCENDING)])
         .limit(500)) # TOOD: pages
     info['curves'] = res
@@ -123,6 +124,8 @@ def by_curve(conductor, iso_class, number):
     return render_curve_webpage(label="%s%s%s" % (conductor, iso_class, number))
 
 def render_curve_webpage(label):
+    import base
+    C = base.getDBConnection()
     data = C.ellcurves.curves.find_one({'label': label})
     if data is None:
         return "No such curve"    

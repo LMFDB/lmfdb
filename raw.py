@@ -1,6 +1,6 @@
 import json
 
-from base import app, db, C
+from base import app
 from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
 from utilities import to_dict, parse_range
 
@@ -10,6 +10,8 @@ def is_safe(name):
 @app.route("/raw")
 def database_list():
     all_db = []
+    import base
+    C = base.getDBConnection()
     for db_name in C.database_names():
         if db_name in ('admin', 'local'):
             continue

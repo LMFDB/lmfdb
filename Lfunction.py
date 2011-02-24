@@ -30,7 +30,8 @@ def getNavigationFromDb(args, family, group, field, objectName, level):
                     if level:
                         pageid += '/' + level
 
-    connection = pymongo.Connection(port=37010)
+    import base
+    connection = base.getDBConnection()
     db = connection.Lfunction
     collection = db.LNavigation
     return collection.find_one({'id': pageid})

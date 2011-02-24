@@ -112,6 +112,7 @@ Usage: %s [OPTION]...
   -p, --port=NUM    bind to port NUM (default 37777)
   -h, --host=HOST   bind to host HOST (default "127.0.0.1")
   -l, --log=FILE    log to FILE (default "flasklog")
+      --dbport=NUM  bind the MongoDB to the given port (default 37010)
       --debug       enable debug mode
       --help        show this help
 """ % sys.argv[0]
@@ -122,7 +123,7 @@ def main():
     try:
         opts, args = getopt.getopt(sys.argv[1:],
                 "p:h:l:",
-                [ "port=", "host=", "log=", "debug", "help",
+                [ "port=", "host=", "dbport=", "log=", "debug", "help",
                 # undocumented, see below
                 "enable-reloader", "disable-reloader",
                 "enable-debugger", "disable-debugger",
@@ -132,9 +133,10 @@ def main():
         sys.stderr.write("Try '%s --help' for usage\n" % sys.argv[0])
         sys.exit(2)
 
-    # default options
+    # default options to pass to the app.run()
     options = { "port": 37777, "host": "127.0.0.1" }
     logfile = "flasklog"
+    dbport = 37010
 
     for opt, arg in opts:
         if opt == "--help":
@@ -146,6 +148,8 @@ def main():
             options["host"] = arg
         elif opt in ("-l", "--log"):
             logfile = arg
+        elif opt in ("--dbport"):
+            dbport = int(arg)
         elif opt == "--debug":
             options["debug"] = True
         # undocumented: the following allow changing the defaults for
@@ -164,6 +168,9 @@ def main():
     import logging
     file_handler = logging.FileHandler(logfile)
     file_handler.setLevel(logging.WARNING)
+    
+    import base
+    base._init(dbport)
    
     app.logger.addHandler(file_handler)
     app.run(**options)

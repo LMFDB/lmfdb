@@ -1,7 +1,7 @@
 import re
 import pymongo
 
-from base import app, db, C
+from base import app
 from flask import Flask, session, g, render_template, url_for, request, redirect
 
 from utilities import ajax_more, image_src, web_latex, to_dict, parse_range
@@ -188,6 +188,8 @@ def render_field_webpage(args):
     data = None
     if 'label' in args:
         label = str(args['label'])
+        import base
+        C = base.getDBConnection()
         data = C.numberfields.fields.find_one({'label': label})
     if data is None:
         return "No such field"    
@@ -284,23 +286,31 @@ def number_field_search(**args):
 
     info['query'] = dict(query)
     if 'lucky' in args:
+        import base
+        C = base.getDBConnection()
         one = C.numberfields.fields.find_one(query)
         if one:
             label = one['label']
             return render_field_webpage({'label': label})
 
     if 'discriminant' in query:
+        import base
+        C = base.getDBConnection()
         res = C.numberfields.fields.find(query).sort([('degree',pymongo.ASCENDING),('signature',pymongo.DESCENDING),('discriminant',pymongo.ASCENDING)]) # TODO: pages
     else:
         # find matches with negative discriminant:
         neg_query = dict(query)
         neg_query['discriminant'] = {'$lt':0}
+        import base
+        C = base.getDBConnection()
         res_neg = C.numberfields.fields.find(neg_query).sort([('degree',pymongo.ASCENDING),('discriminant',pymongo.DESCENDING)])
         # TODO: pages
 
         # find matches with positive discriminant:
         pos_query = dict(query)
         pos_query['discriminant'] = {'$gt':0}
+        import base
+        C = base.getDBConnection()
         res_pos = C.numberfields.fields.find(pos_query).sort([('degree',pymongo.ASCENDING),('discriminant',pymongo.ASCENDING)])
         # TODO: pages
 

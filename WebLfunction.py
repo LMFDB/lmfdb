@@ -47,7 +47,8 @@ class WebLfunction:
              
         elif self.type=='gl2maass':
             self.id = dict["id"]
-            connection = pymongo.Connection(port=37010)
+            import base
+            connection = base.getDBConnection()
             db = connection.MaassWaveForm
             collection = db.HT
             data=collection.find_one({'_id':bson.objectid.ObjectId(self.id)})

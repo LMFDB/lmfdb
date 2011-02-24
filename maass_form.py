@@ -13,14 +13,14 @@
 #
 
 from flask import render_template,url_for
-import pymongo
 import bson
 from sets import Set
 
 
 
 def ConnectDB():
-	return pymongo.Connection(port=37010).MaassWaveForm
+    import base
+    return base.getDBConnection()
 
 def ConnectToFS():
 	return ConnectDB().FS
@@ -277,9 +277,8 @@ def render_webpage(args):
 	eigenvalue = args.get("eigenvalue", None)
 #	multicheck = args.get("multicheck", None)
 	
-	
-#C = pymongo.Connection('localhost')
-	C = pymongo.Connection(port=37010)
+	import base
+	C = base.getDBConnection()
 	DB = C.MaassWaveForm
 	Collection = DB.HT
 	Collection.ensure_index("Eigenvalue")

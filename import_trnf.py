@@ -1,8 +1,8 @@
 import os.path, gzip, re, sys, time
 import pymongo
-from pymongo import Connection
+import base
 
-fields = Connection(port=37010).numberfields.fields
+fields = base.getDBConnection().numberfields.fields
 fields.create_index('degree')
 fields.create_index('galois_group')
 fields.create_index('signature')

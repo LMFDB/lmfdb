@@ -1,8 +1,9 @@
 import os.path, gzip, re, sys, time
 import pymongo
-from pymongo import Connection
+import base
 
-curves = Connection(port=37010).ellcurves.curves
+conn = base.getDBConnection()
+curves = conn.ellcurves.curves
 curves.create_index('label')
 curves.create_index('conductor')
 curves.create_index('rank')
