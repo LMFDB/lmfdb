@@ -7,8 +7,9 @@
 from pymongo import *
 from bson import Code
 from random import random
+import base
 
-mr = Connection(port=37010).testdb.mr
+mr = base.getDBConnection().testdb.mr
 
 mr.remove()
 

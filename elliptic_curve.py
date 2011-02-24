@@ -2,7 +2,7 @@
 import re
 
 from pymongo import ASCENDING
-from base import app, db, C
+from base import app
 from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
 
 from utilities import ajax_more, image_src, web_latex, to_dict, parse_range
@@ -58,7 +58,7 @@ def rational_elliptic_curves():
     t = 'Elliptic curves over the rationals'
     return render_template("elliptic_curve/elliptic_curve_Q.html", info = info, credit=credit, title = t)
 
-@app.route("/EllipticCurve/Q/<conductor>")
+@app.route("/EllipticCurve/Q/<int:conductor>")
 def by_conductor(conductor):
     return elliptic_curve_search(conductor=conductor, **request.args)
 
@@ -84,7 +84,8 @@ def elliptic_curve_search(**args):
     if 'optimal' in info:
         query['number'] = 1
     info['query'] = query
-    res = (C.ellcurves.curves.find(query)
+    import base
+    res = (base.getDBConnection().ellcurves.curves.find(query)
         .sort([('conductor', ASCENDING), ('iso', ASCENDING), ('number', ASCENDING)])
         .limit(500)) # TOOD: pages
     info['curves'] = res
@@ -122,11 +123,17 @@ def render_isogeny_class(conductor, iso_class):
     info['download_qexp_url'] = url_for('download_qexp', limit=100, ainvs=','.join([str(a) for a in ainvs]))
     return render_template("elliptic_curve/iso_class.html", info = info, credit=credit)
 
+@app.route("/EllipticCurve/Q/<label>")
+def by_cremona_label(label):
+    return render_curve_webpage(str(label))
+
 @app.route("/EllipticCurve/Q/<int:conductor>/<iso_class>/<int:number>")
 def by_curve(conductor, iso_class, number):
     return render_curve_webpage(label="%s%s%s" % (conductor, iso_class, number))
 
 def render_curve_webpage(label):
+    import base
+    C = base.getDBConnection()
     data = C.ellcurves.curves.find_one({'label': label})
     if data is None:
         return "No such curve"    
@@ -161,7 +168,7 @@ def render_curve_webpage(label):
     info['downloads'] = [('worksheet', url_for("not_yet_implemented"))]
     info['friends'] = [('Isogeny class', "/EllipticCurve/Q/%s/%s" % (N, iso_class)),
                        ('modular form', url_for("not_yet_implemented")),
-                       ('L-function', url_for("not_yet_implemented"))]
+                       ('L-function', "/L/EllipticCurve/Q/%s" % label)]
     info['learnmore'] = [('Elliptic Curves', url_for("not_yet_implemented"))]
     info['plot'] = image_src(E.plot())
     info['iso_class'] = data['iso']

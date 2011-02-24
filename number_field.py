@@ -1,7 +1,7 @@
 import re
 import pymongo
 
-from base import app, db, C
+from base import app
 from flask import Flask, session, g, render_template, url_for, request, redirect
 
 from utilities import ajax_more, image_src, web_latex, to_dict, parse_range
@@ -38,7 +38,7 @@ def render_groups_page():
         return a
     groups.sort(cmp=gcmp)
     t = 'Galois group labels'
-    bread = [('Number Fields', url_for("number_field_render_webpage")),('Galois group labels',url_for("render_groups_page"))]
+    bread = [('Number Fields', url_for("number_field_render_webpage")),('Galois group labels',' ')]
     return render_template("number_field/galois_groups.html", groups=groups, info=info, credit=credit, title=t, bread=bread)
 
 @app.route("/NumberField/FieldLabels")
@@ -47,7 +47,7 @@ def render_labels_page():
     info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
     credit = 'the PARI group and J. Voight'	
     t = 'Number field labels'
-    bread = [('Number Fields', url_for("number_field_render_webpage")),('Galois group labels',url_for("render_groups_page"))]
+    bread = [('Number Fields', url_for("number_field_render_webpage")),('Number field labels','')]
     return render_template("number_field/number_field_labels.html", info=info, credit=credit, title=t, bread=bread)
 
 @app.route("/NumberField/Discriminants")
@@ -56,7 +56,7 @@ def render_discriminants_page():
     info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
     credit = 'the PARI group and J. Voight'	
     t = 'Number Field Discriminant Ranges'
-    bread = [('Number Fields', url_for("number_field_render_webpage")),('Galois group labels',url_for("render_groups_page"))]
+    bread = [('Number Fields', url_for("number_field_render_webpage")),('Discriminant ranges',' ')]
     return render_template("number_field/discriminant_ranges.html", info=info, credit=credit, title=t, bread=bread)
 
 @app.route("/NumberField")
@@ -188,6 +188,8 @@ def render_field_webpage(args):
     data = None
     if 'label' in args:
         label = str(args['label'])
+        import base
+        C = base.getDBConnection()
         data = C.numberfields.fields.find_one({'label': label})
     if data is None:
         return "No such field"    
@@ -284,23 +286,31 @@ def number_field_search(**args):
 
     info['query'] = dict(query)
     if 'lucky' in args:
+        import base
+        C = base.getDBConnection()
         one = C.numberfields.fields.find_one(query)
         if one:
             label = one['label']
             return render_field_webpage({'label': label})
 
     if 'discriminant' in query:
+        import base
+        C = base.getDBConnection()
         res = C.numberfields.fields.find(query).sort([('degree',pymongo.ASCENDING),('signature',pymongo.DESCENDING),('discriminant',pymongo.ASCENDING)]) # TODO: pages
     else:
         # find matches with negative discriminant:
         neg_query = dict(query)
         neg_query['discriminant'] = {'$lt':0}
+        import base
+        C = base.getDBConnection()
         res_neg = C.numberfields.fields.find(neg_query).sort([('degree',pymongo.ASCENDING),('discriminant',pymongo.DESCENDING)])
         # TODO: pages
 
         # find matches with positive discriminant:
         pos_query = dict(query)
         pos_query['discriminant'] = {'$gt':0}
+        import base
+        C = base.getDBConnection()
         res_pos = C.numberfields.fields.find(pos_query).sort([('degree',pymongo.ASCENDING),('discriminant',pymongo.ASCENDING)])
         # TODO: pages
 

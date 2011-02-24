@@ -1,7 +1,7 @@
 from flask import render_template, request
-from pymongo import Connection
 
 from base import app
+import base
 
 @app.route('/ModularForm/GL2/<field>/holomorphic/')
 def render_hilbert_modular_form(field):
@@ -12,7 +12,7 @@ def render_hilbert_modular_form(field):
         info = dict(args)
     info['field_input'] = field
 
-    db = Connection(port=int(37010)).hmfs
+    db = base.getDBConnection().hmfs
     field_id_str = db.fields.find_one({'name':field})['id_str']
     info['field_id_str'] = field_id_str
     info['field_pretty'] = field_pretty(field)

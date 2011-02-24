@@ -1,12 +1,13 @@
 import os.path, gzip, re, sys, time
 import pymongo
-from pymongo import Connection
+import base
 
-curves = Connection(port=37010).ellcurves.curves
-curves.create_index('label')
-curves.create_index('conductor')
-curves.create_index('rank')
-curves.create_index('torsion')
+conn = base.getDBConnection()
+curves = conn.ellcurves.curves
+curves.ensure_index('label')
+curves.ensure_index('conductor')
+curves.ensure_index('rank')
+curves.ensure_index('torsion')
 
 
 def ainvs(s):

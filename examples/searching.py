@@ -5,8 +5,10 @@
 from pymongo import *
 import random
 from math import floor, ceil
+import base
 
-test = Connection(port=37010).testdb.test
+conn = base.getDBConnection()
+test = conn.testdb.test
 test.remove()
 test.ensure_index('list')
 

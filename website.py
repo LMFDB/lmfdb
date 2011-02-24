@@ -56,25 +56,25 @@ def form_example():
     return render_template("form.html", info=info)
 
 @app.route("/Lfunction/")
-@app.route("/Lfunction/<family>")
-@app.route("/Lfunction/<family>/<group>")
-@app.route("/Lfunction/<family>/<group>/<field>")
-@app.route("/Lfunction/<family>/<group>/<field>/<objectName>")
-@app.route("/Lfunction/<family>/<group>/<field>/<objectName>/<level>")
+@app.route("/Lfunction/<arg1>")
+@app.route("/Lfunction/<arg1>/<arg2>")
+@app.route("/Lfunction/<arg1>/<arg2>/<arg3>")
+@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>")
+@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
 @app.route("/L/")
-@app.route("/L/<family>")
-@app.route("/L/<family>/<group>")
-@app.route("/L/<family>/<group>/<field>")
-@app.route("/L/<family>/<group>/<field>/<objectName>")
-@app.route("/L/<family>/<group>/<field>/<objectName>/<level>")
+@app.route("/L/<arg1>") # arg1 is EllipticCurve, ModularForm, etc
+@app.route("/L/<arg1>/<arg2>") # arg2 is field
+@app.route("/L/<arg1>/<arg2>/<arg3>") #arg3 is label
+@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>")
+@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
 @app.route("/L-function/")
-@app.route("/L-function/<family>")
-@app.route("/L-function/<family>/<group>")
-@app.route("/L-function/<family>/<group>/<field>")
-@app.route("/L-function/<family>/<group>/<field>/<objectName>")
-@app.route("/L-function/<family>/<group>/<field>/<objectName>/<level>")
-def render_Lfunction(family = None, group = None, field = None, objectName = None, level = None):
-    return Lfunction.render_webpage(request.args, family, group, field, objectName, level)
+@app.route("/L-function/<arg1>")
+@app.route("/L-function/<arg1>/<arg2>")
+@app.route("/L-function/<arg1>/<arg2>/<arg3>")
+@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>")
+@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
+def render_Lfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = None):
+    return Lfunction.render_webpage(request.args, arg1, arg2, arg3, arg4, arg5)
 
 @app.route("/plotLfunction")
 def plotLfunction():
@@ -112,6 +112,7 @@ Usage: %s [OPTION]...
   -p, --port=NUM    bind to port NUM (default 37777)
   -h, --host=HOST   bind to host HOST (default "127.0.0.1")
   -l, --log=FILE    log to FILE (default "flasklog")
+      --dbport=NUM  bind the MongoDB to the given port (default 37010)
       --debug       enable debug mode
       --help        show this help
 """ % sys.argv[0]
@@ -122,7 +123,7 @@ def main():
     try:
         opts, args = getopt.getopt(sys.argv[1:],
                 "p:h:l:",
-                [ "port=", "host=", "log=", "debug", "help",
+                [ "port=", "host=", "dbport=", "log=", "debug", "help",
                 # undocumented, see below
                 "enable-reloader", "disable-reloader",
                 "enable-debugger", "disable-debugger",
@@ -132,9 +133,10 @@ def main():
         sys.stderr.write("Try '%s --help' for usage\n" % sys.argv[0])
         sys.exit(2)
 
-    # default options
+    # default options to pass to the app.run()
     options = { "port": 37777, "host": "127.0.0.1" }
     logfile = "flasklog"
+    dbport = 37010
 
     for opt, arg in opts:
         if opt == "--help":
@@ -146,6 +148,8 @@ def main():
             options["host"] = arg
         elif opt in ("-l", "--log"):
             logfile = arg
+        elif opt in ("--dbport"):
+            dbport = int(arg)
         elif opt == "--debug":
             options["debug"] = True
         # undocumented: the following allow changing the defaults for
@@ -164,6 +168,9 @@ def main():
     import logging
     file_handler = logging.FileHandler(logfile)
     file_handler.setLevel(logging.WARNING)
+    
+    import base
+    base._init(dbport)
    
     app.logger.addHandler(file_handler)
     app.run(**options)
