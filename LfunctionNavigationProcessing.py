@@ -32,7 +32,7 @@ def processDirichletNavigation(info, args):
         s += '<td>\n'
         j = i-N
         for k in range(len(chars[j][1])):
-            s += '<a href="Lfunction?type=dirichlet&charactermodulus='
+            s += '<a href="Dirichlet?charactermodulus='
             s += str(i)
             s += '&characternumber='
             s += str(chars[j][1][k])

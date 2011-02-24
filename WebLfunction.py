@@ -5,6 +5,8 @@ import sage.libs.lcalc.lcalc_Lfunction as lc
 import re
 import pymongo
 import bson
+#import web_modforms
+from web_modforms import *
 
 class WebLfunction:
     """Class for presenting an L-function on a web page
@@ -25,7 +27,7 @@ class WebLfunction:
         self.texname = "L(s)"  # default name.  will be set later, for most L-functions
         self.texnamecompleteds = "\\Lambda(s)"  # default name.  will be set later, for most L-functions
         self.texnamecompleted1ms = "\\overline{\\Lambda(1-\\overline{s})}"  # default name.  will be set later, for most L-functions
-        
+        self.primitive = True # should be changed         
         if self.type=='lcalcurl':
             import urllib
             self.url = dict['url']
@@ -37,13 +39,12 @@ class WebLfunction:
             self.parseLcalcfile()
 
         elif self.type=='gl2holomorphic':
-            self.level = dict['level']
-            self.weight = dict['weight']
-            self.character = dict['character']
-            self.title = "$L(s,f)$, where $f$ is a holomorphic cusp form with weight "+str(self.weight)+", level "+str(self.level)+", and character "+str(self.character)
-            self.texname = "L(s,f)"
-            self.texnamecompleteds = "\\Lambda(s,f)"
-            self.texnamecompleted1ms = "{\\Lambda(1-{s},\\overline{f})}" 
+            self.weight = int(dict['weight'])
+            self.level = int(dict['level'])
+            self.character = int(dict['character'])
+            self.label = dict['label']
+            self.number = int(dict['number'])
+            self.modularformL()
              
         elif self.type=='gl2maass':
             self.id = dict["id"]
@@ -112,6 +113,63 @@ class WebLfunction:
         """
         self.sageLfunction = lc.Lfunction_C(self.title, self.coefficient_type, self.dirichlet_coefficients, self.coefficient_period, self.Q_fe, self.sign , self.kappa_fe, self.lambda_fe ,self.poles, self.residues)
 
+
+    def _set_properties(self):
+        deg = str(self.degree)
+        if self.selfdual:
+            sd = 'Self dual'
+        else:
+            sd = 'Not self dual'
+        ll = str(self.level)
+        sg = str(self.sign)
+        if self.primitive:
+            prim = 'Primitive'
+        else:
+            prim = 'Not primitive'
+        self.properties = ['Degree ',deg]
+        self.properties.extend(['<br>', sd])
+        self.properties.extend(['<br>Level ', ll])
+        self.properties.extend(['<br>Sign ',sg])
+        self.properties.extend(['<br>',prim])
+
+    def modularformL(self):
+        self.MF = WebNewForm(self.weight, self.level, self.character, self.label)
+
+        self.automorphyexp = float(self.weight-1)/float(2)
+        self.Q_fe = float(sqrt(self.level)/(2*math.pi))
+        if self.level>1:
+            self.sign = self.MF.atkin_lehner_eigenvalues() * (-1)**(float(self.weight/2))
+        else:
+            self.sign = (-1)**(float(self.weight/2))
+        self.kappa_fe = [1]
+        self.lambda_fe = [self.automorphyexp]
+        self.mu_fe = []
+        self.nu_fe = [self.automorphyexp]
+        self.selfdual = True
+        self.langlands = True
+        self.degree = 2
+        self.poles = []
+        self.residues = []
+        self.numcoeff = 9 #just testing
+        self.dirichlet_coefficients = []#self.MF.anlist(self.numcoeff)[1:] #remove a0
+        for n in range(1,self.numcoeff):
+            self.dirichlet_coefficients.append(self.MF._embeddings[n][self.number])
+        for n in range(1,len(self.dirichlet_coefficients)-1):
+            an = self.dirichlet_coefficients[n]
+            self.dirichlet_coefficients[n]=float(an)/float(n**self.automorphyexp)
+        self.coefficient_period = 0
+        self.coefficient_type = 2
+        self.quasidegree = 1
+        self.checkselfdual()
+        self.texname = "L(s,f)"
+        self.texnamecompleteds = "\\Lambda(s,f)"
+        if self.selfdual:
+            self.texnamecompleted1ms = "\\Lambda(1-s,f)"
+        else:
+            self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{f})"
+        self.title = "L-function of a holomorphic cusp form: $L(s,f)$, "+ "where $f$ is a holomorphic cusp form with weight "+str(self.weight)+", level "+str(self.level)+", and character "+str(self.character)
+        self._set_properties()
+
 #===================
     def maassL(self):
         self.coefficient_type = 2
@@ -149,7 +207,7 @@ class WebLfunction:
 
 #===========================
     def ellipticcurveL(self):
-	self.E = EllipticCurve(self.label)
+	self.E = EllipticCurve(str(self.label))
         self.quasidegree = 1
         self.level = self.E.conductor()
         self.Q_fe = float(sqrt(self.level)/(2*math.pi))
@@ -164,7 +222,7 @@ class WebLfunction:
         self.dirichlet_coefficients = self.E.anlist(self.numcoeff)[1:]  #remove a0
 	for n in range(0,len(self.dirichlet_coefficients)-1):
 	   an = self.dirichlet_coefficients[n]
-	   self.dirichlet_coefficients[n]=float(an)/float(sqrt(n))
+	   self.dirichlet_coefficients[n]=float(an)/float(sqrt(n+1))
 	   
         self.poles = []
         self.residues = []
@@ -174,10 +232,16 @@ class WebLfunction:
         self.texname = "L(s,E)"
         self.texnamecompleteds = "\\Lambda(s,E)"
         self.texnamecompleted1ms = "\\Lambda(1-s,E)"
-        self.title = "Elliptic Curve L-function: $L(s,E)$"
+        self.title = "L-function $L(s,E)$ for the Elliptic Curve over Q defined by " + str(latex(self.E)) + " with label "+ self.E.label()
+
+        self.properties = ['Degree ','%s<br><br>' % self.degree]
+        self.properties.extend(['Level ', '%s' % self.level])
+        self.credit = 'Sage'
 #        self.title = self.title+", where $\\chi$ is the character modulo "+\
 #str(self.charactermodulus) + ", number " + str(self.characternumber)
-
+        self._set_properties()
+        self.specialvalues =  'test'#'L(1/2) = '+str(self.sageLfunction.value(.5))
+        
 
 #===========================
 
@@ -223,7 +287,7 @@ class WebLfunction:
         self.title = "Dirichlet L-function: $L(s,\\chi)$"
 	self.title = self.title+", where $\\chi$ is the character modulo "+\
 str(self.charactermodulus) + ", number " + str(self.characternumber)
-
+        self._set_properties()
 #===========================
     def riemannzeta(self):
 	self.coefficient_type = 1
@@ -248,6 +312,7 @@ str(self.charactermodulus) + ", number " + str(self.characternumber)
         self.texnamecompleteds = "\\xi(s)"
         self.texnamecompleted1ms = "\\xi(1-s)"
 	self.title = "Riemann Zeta-function: $\\zeta(s)$"
+        self._set_properties()
 
     def parseLcalcfile(self):
         lines = self.contents.split('\n',6)
@@ -420,3 +485,4 @@ def lfuncFE(ldesc,fmt):
 def lfuncDS(ldesc,fmt):
         Ltmp=WebLfunction(ldesc)
         return(Ltmp.lfuncDStex(fmt))
+

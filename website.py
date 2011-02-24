@@ -56,25 +56,25 @@ def form_example():
     return render_template("form.html", info=info)
 
 @app.route("/Lfunction/")
-@app.route("/Lfunction/<family>")
-@app.route("/Lfunction/<family>/<group>")
-@app.route("/Lfunction/<family>/<group>/<field>")
-@app.route("/Lfunction/<family>/<group>/<field>/<objectName>")
-@app.route("/Lfunction/<family>/<group>/<field>/<objectName>/<level>")
+@app.route("/Lfunction/<arg1>")
+@app.route("/Lfunction/<arg1>/<arg2>")
+@app.route("/Lfunction/<arg1>/<arg2>/<arg3>")
+@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>")
+@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
 @app.route("/L/")
-@app.route("/L/<family>")
-@app.route("/L/<family>/<group>")
-@app.route("/L/<family>/<group>/<field>")
-@app.route("/L/<family>/<group>/<field>/<objectName>")
-@app.route("/L/<family>/<group>/<field>/<objectName>/<level>")
+@app.route("/L/<arg1>") # arg1 is EllipticCurve, ModularForm, etc
+@app.route("/L/<arg1>/<arg2>") # arg2 is field
+@app.route("/L/<arg1>/<arg2>/<arg3>") #arg3 is label
+@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>")
+@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
 @app.route("/L-function/")
-@app.route("/L-function/<family>")
-@app.route("/L-function/<family>/<group>")
-@app.route("/L-function/<family>/<group>/<field>")
-@app.route("/L-function/<family>/<group>/<field>/<objectName>")
-@app.route("/L-function/<family>/<group>/<field>/<objectName>/<level>")
-def render_Lfunction(family = None, group = None, field = None, objectName = None, level = None):
-    return Lfunction.render_webpage(request.args, family, group, field, objectName, level)
+@app.route("/L-function/<arg1>")
+@app.route("/L-function/<arg1>/<arg2>")
+@app.route("/L-function/<arg1>/<arg2>/<arg3>")
+@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>")
+@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
+def render_Lfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = None):
+    return Lfunction.render_webpage(request.args, arg1, arg2, arg3, arg4, arg5)
 
 @app.route("/plotLfunction")
 def plotLfunction():
