@@ -3,6 +3,7 @@ import json
 from base import app
 from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
 from utilities import to_dict, parse_range
+import base
 
 def is_safe(name):
     return name not in ('admin', 'local', 'system.indexes')
@@ -10,7 +11,6 @@ def is_safe(name):
 @app.route("/raw")
 def database_list():
     all_db = []
-    import base
     C = base.getDBConnection()
     for db_name in C.database_names():
         if db_name in ('admin', 'local'):
@@ -23,6 +23,7 @@ def database_list():
 def database_query(db_name, coll_name):
     if not is_safe(db_name) or not is_safe(coll_name):
         return "Nope."
+    C = base.getDBConnection()
     if db_name not in C.database_names():
         return "No such database."
     db = getattr(C, db_name)
