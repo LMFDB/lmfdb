@@ -20,7 +20,7 @@ from sets import Set
 
 def ConnectDB():
     import base
-    return base.getDBConnection()
+    return base.getDBConnection().MaassWaveForm
 
 def ConnectToFS():
 	return ConnectDB().FS

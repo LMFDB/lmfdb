@@ -27,9 +27,12 @@
 
      <h2>Navigation</h2>
      <ul>
-       <li><a href=".">Link 1</a></li>
-       <li><a href=".">Link 2</a></li>
-       <li><a href=".">Link 3</a></li>
+       <li><a href="{{ url_for('EC_toplevel') }}">Elliptic Curves over Q</a> 
+       <li><a href="{{ url_for('render_maass_form') }}">Maass cusp forms</a></li> 
+       <li><a href="{{ url_for('render_Lfunction') }}">L-functions</a> </li> 
+       <li><a href="{{ url_for('ModularForm_GSp4_Q_top_level') }}">Siegel modular forms</a> </li> 
+       <li><a href="{{ url_for('render_classical_modular_form') }}">Classical modular forms</a></li> 
+       <li><a href="{{ url_for('number_field_render_webpage') }}">Number Fields</a></li>
      </ul>
 
      {% macro entry(title, entries) -%}
