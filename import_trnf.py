@@ -63,6 +63,7 @@ def process(f):
             GG = [5040, -1, 1, 'S7']
         if GG==[14, -1, 2, 'D(7) = 7:2']:
             GG = [14, -1, 1, 'D(7) = 7:2']
+    if G.is_abelian(): print GG
 #    print GG
 #    GGlist = GGlist.union(Set([tuple(GG)]))
     return label, {
@@ -84,7 +85,7 @@ def lookup_or_create(label):
     else:
         return item
 
-for batch in [deg10fields]: #[deg6fields, deg7fields, deg8fields, deg9fields, deg10fields]:
+for batch in [deg6fields, deg7fields, deg8fields, deg9fields, deg10fields]:
     t = time.time()
     global GGlist
     global old_D
@@ -99,7 +100,7 @@ for batch in [deg10fields]: #[deg6fields, deg7fields, deg8fields, deg9fields, de
         info = lookup_or_create(label)
         info.update(data)
 #        print info
-        fields.insert(info)
+#        fields.insert(info)
 #        fields.remove(info)
         if time.time() - t > 5:
             print "\t", label
