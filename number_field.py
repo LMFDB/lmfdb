@@ -183,6 +183,13 @@ def complete_group_code(c):
         return c[1:]+[group_names[tuple(c)][0]]
     except KeyError:
         return 0
+
+def GG_data(GGlabel):
+    GG = complete_group_code(GGlabel)
+    order = GG[0]
+    sign = GG[1]
+    ab = GGlabel in ['S1','S2','A3','C4','V4','C5','C6','C7','C8','C9','C10']
+    return order,sign,ab
  
 def render_field_webpage(args):
     data = None
@@ -203,6 +210,13 @@ def render_field_webpage(args):
     data['galois_group'] = str(data['galois_group'][3])
     data['class_group'] = str(AbelianGroup(data['class_group']))
     sig = data['signature']
+    D = ZZ(data['discriminant'])
+    ram_primes = str(D.prime_factors())[1:-1]
+    Gorder,Gsign,Gab = GG_data(data['galois_group'])
+    if Gab:
+        Gab='abelian'
+    else:
+        Gab='non-abelian'
     unit_rank = sig[0]+sig[1]-1
     if unit_rank==0:
         reg = 1
@@ -213,7 +227,8 @@ def render_field_webpage(args):
         'label': label,
         'polynomial': web_latex(K.defining_polynomial()),
         'integral_basis': web_latex(K.integral_basis()),
-        'regulator': web_latex(reg)
+        'regulator': web_latex(reg),
+        'Gorder': Gorder, 'Gsign': Gsign, 'Gab': Gab
         })
     info['downloads_visible'] = True
     info['downloads'] = [('worksheet', '/')]
@@ -223,10 +238,12 @@ def render_field_webpage(args):
     t = "Number Field %s" % info['label']
 
     credit = 'the PARI group and J. Voight'	
+
     properties = ['<br>']
     properties.extend('Degree = %s<br>'%data['degree'])
     properties.extend('Signature = %s<br>'%data['signature'])
     properties.extend('Discriminant = %s<br>'%data['discriminant'])
+    properties.extend('Ramified primes: %s<br>'%ram_primes)
     properties.extend('Class number = %s<br>'%data['class_number'])
     properties.extend('Galois group = %s<br>'%data['galois_group'])
     return render_template("number_field/number_field.html", info = info, properties=properties, credit=credit, title = t, bread=bread)
