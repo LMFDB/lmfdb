@@ -42,6 +42,17 @@ def splitcoeff(coeff):
 
     return answer
 
+def pol_to_html(p):
+   r"""
+   Convert polynomial p to html.
+   """
+   s = str(p)
+   s = re.sub("\^(\d*)","<sup>\\1</sup>",s)
+   s = re.sub("\_(\d*)","<sub>\\1</sub>",s)
+   s = re.sub("\*","",s)
+   s = re.sub("x","<i>x</i>",s)
+   return s
+
 
 def web_latex(x):
     if isinstance(x, (str, unicode)):

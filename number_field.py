@@ -4,7 +4,7 @@ import pymongo
 from base import app, db, C
 from flask import Flask, session, g, render_template, url_for, request, redirect
 
-from utilities import ajax_more, image_src, web_latex, to_dict, parse_range
+from utilities import ajax_more, image_src, web_latex, to_dict, parse_range, pol_to_html
 import sage.all
 from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, AbelianGroup
 
@@ -63,11 +63,12 @@ def render_discriminants_page():
 def number_field_render_webpage():
     args = request.args
     if len(args) == 0:      
-        discriminant_list_endpoints = [100**k for k in range(6)]
+#        discriminant_list_endpoints = [100**k for k in range(6)]
+        discriminant_list_endpoints = [-10000,-1000,-100,0,100,1000,10000]
         discriminant_list = ["%s-%s" % (start,end-1) for start, end in zip(discriminant_list_endpoints[:-1], discriminant_list_endpoints[1:])]
         info = {
         'degree_list': range(1,11),
-        'signature_list': sum([[[d-2*r2,r2] for r2 in range(1+(d//2))] for d in range(1,11)],[]), 
+        'signature_list': sum([[[d-2*r2,r2] for r2 in range(1+(d//2))] for d in range(1,7)],[]) + sum([[[d,0]] for d in range(7,11)],[]), 
         'class_number_list': range(1,11)+['11-1000000'],
         'discriminant_list': discriminant_list
     }
@@ -75,12 +76,6 @@ def number_field_render_webpage():
         t = 'Number Fields'
         bread = [('Number Fields', url_for("number_field_render_webpage"))]
         info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
-#         explain=['Further information']
-#         explain.append(('Unique labels for number fields',url_for("render_labels_page")))
-# 	explain.append(('Unique labels for Galois groups',url_for("render_groups_page")))
-#         explain.append(('Discriminant ranges (not yet implemented)','/'))
-#         sidebar = set_sidebar([explain])
-
 
         return render_template("number_field/number_field_all.html", info = info, credit=credit, title=t, bread=bread)
     else:
@@ -211,7 +206,9 @@ def render_field_webpage(args):
     data['class_group'] = str(AbelianGroup(data['class_group']))
     sig = data['signature']
     D = ZZ(data['discriminant'])
-    ram_primes = str(D.prime_factors())[1:-1]
+    ram_primes = D.prime_factors()
+    npr = len(ram_primes)
+    ram_primes = str(ram_primes)[1:-1]
     Gorder,Gsign,Gab = GG_data(data['galois_group'])
     if Gab:
         Gab='abelian'
@@ -240,21 +237,22 @@ def render_field_webpage(args):
     credit = 'the PARI group and J. Voight'	
 
     properties = ['<br>']
-    properties.extend('Degree = %s<br>'%data['degree'])
-    properties.extend('Signature = %s<br>'%data['signature'])
-    properties.extend('Discriminant = %s<br>'%data['discriminant'])
-    properties.extend('Ramified primes: %s<br>'%ram_primes)
-    properties.extend('Class number = %s<br>'%data['class_number'])
-    properties.extend('Galois group = %s<br>'%data['galois_group'])
+    properties.extend('<table>')
+    properties.extend('<tr><td align=left>Degree:<td align=left> %s</td>'%data['degree'])
+    properties.extend('<tr><td align=left>Signature:<td align=left>%s</td>'%data['signature'])
+    properties.extend('<tr><td align=left>Discriminant:<td align=left>%s</td>'%data['discriminant'])
+    if npr==1:
+        properties.extend('<tr><td align=left>Ramified prime:<td align=left>%s</td>'%ram_primes)
+    else:
+        properties.extend('<tr><td align=left>Ramified primes:<td align=left>%s</td>'%ram_primes)
+    properties.extend('<tr><td align=left>Class number:<td align=left>%s</td>'%data['class_number'])
+    properties.extend('<tr><td align=left>Galois group:<td align=left>%s</td>'%data['galois_group'])
+    properties.extend('</table>')
     return render_template("number_field/number_field.html", info = info, properties=properties, credit=credit, title = t, bread=bread)
 
 def format_coeffs(coeffs):
-    """
-    The a-invariants are stored as a list of strings because mongodb doesn't
-    have big-ints, and all strings are stored as unicode. However, printing 
-    a list of unicodes looks like [u'0', u'1', ...]
-    """
-    return web_latex(coeff_to_poly(coeffs))
+    return pol_to_html(str(coeff_to_poly(coeffs)))
+#    return web_latex(coeff_to_poly(coeffs))
 
 
 @app.route("/NumberField")
@@ -297,6 +295,7 @@ def number_field_search(**args):
         except:
             count = 10
     else:
+        info['count'] = 10
         count = 10
 
     info['query'] = dict(query)
@@ -308,27 +307,39 @@ def number_field_search(**args):
 
     if 'discriminant' in query:
         res = C.numberfields.fields.find(query).sort([('degree',pymongo.ASCENDING),('signature',pymongo.DESCENDING),('discriminant',pymongo.ASCENDING)]) # TODO: pages
+        nres = res.count()
     else:
         # find matches with negative discriminant:
         neg_query = dict(query)
         neg_query['discriminant'] = {'$lt':0}
         res_neg = C.numberfields.fields.find(neg_query).sort([('degree',pymongo.ASCENDING),('discriminant',pymongo.DESCENDING)])
+        nres_neg = res_neg.count()
         # TODO: pages
 
         # find matches with positive discriminant:
         pos_query = dict(query)
         pos_query['discriminant'] = {'$gt':0}
         res_pos = C.numberfields.fields.find(pos_query).sort([('degree',pymongo.ASCENDING),('discriminant',pymongo.ASCENDING)])
+        nres_pos = res_pos.count()
         # TODO: pages
 
         res = merge_sort(iter(res_neg),iter(res_pos))
-
+        nres = nres_pos+nres_neg
+        
     if ur_primes:
         res = filter_ur_primes(res, ur_primes)
 
     res = iter_limit(res,count)
         
     info['fields'] = res
+    info['number'] = nres
+    if nres==1:
+        info['report'] = 'unique match'
+    else:
+        if nres>count:
+            info['report'] = 'displaying first %s of %s matches'%(count,nres)
+        else:
+            info['report'] = 'displaying all %s matches'%nres
     info['format_coeffs'] = format_coeffs
     info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
     t = 'Number Field search results'
