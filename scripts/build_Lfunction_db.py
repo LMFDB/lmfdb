@@ -9,14 +9,15 @@ import sage.libs.lcalc.lcalc_Lfunction as lc
 
 C = Connection(port=37010)
 
-Lfunctions = C.test.Lfunctions_test
+Lfunctions = C.test.Lfunctions_test2
 
 def remove_all():
     Lfunctions.drop()
 
-def insert_dirichlet_L_functions(Q):
+def insert_dirichlet_L_functions(start, end):
     print "Putting Dirichlet L-functions into database."
-    for q in range(3, Q):
+    start = max(3, start)
+    for q in range(start, end):
         print "Working on modulus", q
         sys.stdout.flush()
         G = DirichletGroup(q)
@@ -29,24 +30,21 @@ def insert_dirichlet_L_functions(Q):
                 Lfunction_data['first_zero'] = float(z)
                 Lfunction_data['description'] = "Dirichlet L-function for character number " + str(n) + " modulo " + str(q)
                 Lfunction_data['degree'] = 1
-                Lfunction_data['signature_R'] = 1
-                Lfunction_data['signature_C'] = 0
+                Lfunction_data['signature'] = (1,0)
                 if chi.is_odd():
-                    Lfunction_data['mu_real'] = [1.0,]
-                    Lfunction_data['mu_imag'] = [0.0,]
+                    Lfunction_data['mu'] = [ (1.0,0.0), ]
                 else:
-                    Lfunction_data['mu_real'] = [0.0,]
-                    Lfunction_data['mu_imag'] = [0.0,]
+                    Lfunction_data['mu'] = [ (0.0,0.0), ]
 
-                Lfunction_data['conductor'] = q
+                Lfunction_data['level'] = q
 
                 coeffs = []
 
                 for k in range(0, 10):
                     coeffs.append(CC(chi(k)))
                 
-                Lfunction_data['coeffs_real'] = [float(x.real()) for x in coeffs]
-                Lfunction_data['coeffs_imag'] = [float(x.imag()) for x in coeffs]
+                Lfunction_data['coeffs'] = [ (float(x.real()), float(x.imag())) for x in coeffs]
+                Lfunction_data['special'] = {'type' : 'dirichlet', 'modulus' : q, 'number' : n}
 
                 Lfunctions.insert(Lfunction_data)
 
@@ -67,8 +65,6 @@ def update_entries():
             Lfunctions.save(L)
 
 
-
-
 def insert_EC_L_functions(start=1, end=100):
     curves = C.ellcurves.curves
     for N in range(start, end):
@@ -87,35 +83,34 @@ def insert_EC_L_functions(start=1, end=100):
 
             Lfunction_data = {}
             Lfunction_data['first_zero'] = z
-            Lfunction_data['description'] = 'Elliptic curve L-function for curve ' + str(curve['label'])
+            Lfunction_data['description'] = 'Elliptic curve L-function for curve ' + str(curve['label'][:-1])
             Lfunction_data['degree'] = 2
-            Lfunction_data['signature_R'] = 0
-            Lfunction_data['signature_C'] = 1
-            Lfunction_data['eta_real'] = [1.0,]
-            Lfunction_data['eta_imag'] = [0.0,]
+            Lfunction_data['signature'] = [0,1]
+            Lfunction_data['eta'] = [(1.0, 0),]
 
-            Lfunction_data['conductor'] = N
+            Lfunction_data['level'] = N
+            Lfunction_data['special'] = {'type' : 'elliptic', 'label' : curve['label'][:-1]}
 
             coeffs = []
 
             for k in range(1, 11):
                 coeffs.append(CC(E.an(k)/sqrt(k)))
             
-            Lfunction_data['coeffs_real'] = [float(x.real()) for x in coeffs]
-            Lfunction_data['coeffs_imag'] = [float(x.imag()) for x in coeffs]
+            Lfunction_data['coeffs'] = [(float(x.real()), float(x.imag())) for x in coeffs]
 
             Lfunctions.insert(Lfunction_data)
 
 def build_indices():
     Lfunctions.create_index("first_zero")
+    Lfunctions.create_index("level")
     Lfunctions.create_index("degree")
-    Lfunctions.create_index("conductor")
     
 
 if __name__=="__main__":
-    #insert_EC_L_functions(800, 1300)
     #build_indices()
-    update_entries()
-    pass
     #remove_all()
+    for n in range(1, 10):
+        insert_EC_L_functions(n * 100, (n+1)*100)
+        #insert_dirichlet_L_functions(n * 100, (n+1)*100)
+    pass
     #insert_dirichlet_L_functions(50)
