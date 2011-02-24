@@ -38,7 +38,7 @@ def render_groups_page():
         return a
     groups.sort(cmp=gcmp)
     t = 'Galois group labels'
-    bread = [('Number Fields', url_for("number_field_render_webpage")),('Galois group labels',url_for("render_groups_page"))]
+    bread = [('Number Fields', url_for("number_field_render_webpage")),('Galois group labels',' ')]
     return render_template("number_field/galois_groups.html", groups=groups, info=info, credit=credit, title=t, bread=bread)
 
 @app.route("/NumberField/FieldLabels")
@@ -47,7 +47,7 @@ def render_labels_page():
     info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
     credit = 'the PARI group and J. Voight'	
     t = 'Number field labels'
-    bread = [('Number Fields', url_for("number_field_render_webpage")),('Galois group labels',url_for("render_groups_page"))]
+    bread = [('Number Fields', url_for("number_field_render_webpage")),('Number field labels','')]
     return render_template("number_field/number_field_labels.html", info=info, credit=credit, title=t, bread=bread)
 
 @app.route("/NumberField/Discriminants")
@@ -56,7 +56,7 @@ def render_discriminants_page():
     info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
     credit = 'the PARI group and J. Voight'	
     t = 'Number Field Discriminant Ranges'
-    bread = [('Number Fields', url_for("number_field_render_webpage")),('Galois group labels',url_for("render_groups_page"))]
+    bread = [('Number Fields', url_for("number_field_render_webpage")),('Discriminant ranges',' ')]
     return render_template("number_field/discriminant_ranges.html", info=info, credit=credit, title=t, bread=bread)
 
 @app.route("/NumberField")
