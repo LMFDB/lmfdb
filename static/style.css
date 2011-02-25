@@ -204,3 +204,15 @@ blockquote p {
 .nodisplay {
     display: None;
 }
+
+table.ntdata {
+  width: 100%;
+  border: 0;
+}
+
+table.ntdata thead tr {
+  background: #afa;
+  border-bottom: 1px solid black;
+}
+table.ntdata tbody tr {
+ }

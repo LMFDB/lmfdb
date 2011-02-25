@@ -4,8 +4,9 @@
 
 
 from pymongo import *
+import base
 
-db = Connection(port=37010).db
+db = base.getDBConnection().db
 data1 = db.refdata1
 data1.remove()
 data2 = db.refdata2

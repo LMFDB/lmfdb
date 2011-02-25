@@ -1,0 +1,29 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+
+        <h1>Labelling Number Fields</h1>
+
+<p>
+Each number field has a unique label of the form d.r.D.i where
+<ul>
+<li>\(d\) is the degree
+<li>\(r\) is the real signature (so the full signature is \([r,(d-r)/2]\))
+<li>\(D\) is the discriminant
+<li>\(i\) is the index, counting from 1 (in case there is more than field
+  with the same signature and discriminant: for example 4.0.1008.1 and
+  4.0.1008.2)
+</ul>
+</p>
+<p>The database consists of fields from two sources:
+<ul>
+<li>The PARI database from the Bordeaux PARI group
+<li>Additional totally real fields of degrees from 6 to 10 computed by
+  John Voight.
+</ul>
+</p>
+
+
+
+{% endblock %}
+</html>

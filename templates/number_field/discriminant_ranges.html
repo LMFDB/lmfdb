@@ -1,0 +1,56 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+
+        <h1>Discriminant Ranges for Number Fields</h1>
+
+
+<p>The database consists of fields from two sources:
+<ul>
+<li>The PARI database from the Bordeaux PARI group
+<li>Additional totally real fields of degrees from 6 to 10 computed by
+  John Voight.
+</ul>
+</p>
+
+<p>
+<ul>
+<li>PARI database discriminant ranges.  It is possible that the
+  discriminant range depends further on the signature, but this is not
+  shown here.
+<p>
+<table border=1 cellpadding=5 class='right_align_table'>
+<tr>
+<th>degree</th>
+<th>minimum discriminant</th>
+<th>maximum discriminant</th>
+</tr>
+<tr><td>1<td>\(1\)<td>\(1\)</tr>
+<tr><td>2<td>\(-10^6\)<td>\(10^6\)</tr>
+<tr><td>3<td>\(-10^6\)<td>\(2\cdot10^6\)</tr>
+<tr><td>4<td>\(-10^6\)<td>\(10^6\)</tr>
+<tr><td>5<td>\(-10^6\)<td>\(2\cdot10^7\)</tr>
+<tr><td>6<td>\(-10^6\)<td>\(10^7\)</tr>
+<tr><td>7<td>\(-11841551\)<td>\(149324209\)</tr>
+</table>
+</p>
+<li>Voight database additional discriminant ranges.
+<p>
+<table border=1 cellpadding=5 class='right_align_table'>
+<tr>
+<th>degree</th>
+<th>minimum discriminant</th>
+<th>maximum discriminant</th>
+</tr>
+<tr><td>6<td>\(10^7\)<td>\(16771805\)</tr>
+<tr><td>7<td>\(149324209\)<td>\(213873729\)</tr>
+<tr><td>8<td>\(282300416\)<td>\(2556640000\)</tr>
+<tr><td>9<td>\(9685993193\)<td>\(25405254289\)</tr>
+<tr><td>10<td>\(443952558373\)<td>\(7623696325213\)</tr>
+</table>
+</p>
+</ul>
+</p>
+
+{% endblock %}
+</html>

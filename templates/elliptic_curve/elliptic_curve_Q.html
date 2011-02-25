@@ -7,23 +7,6 @@
 </div>
 
 <div id = "Content">
-
-<form>
-<input type='text' name='label' size=10>
-<input type='submit' name='jump' value='Jump'>
-</form>
-
-<h2> Filter </h2>
-
-<form>
-Conductor <input type='text' name='conductor'>
-Isogeny Class <input type='text' name='iso'>
-Torsion Order <input type='text' name='torsion'>
-Rank <input type='text' name='rank'>
-Optimal <input type='checkbox' name='optimal'>
-<input type='submit' value='Filter'>
-</form>
-
 <h2> Browse </h2>
 
 <p>
@@ -40,10 +23,37 @@ By size of torsion subgroup:
 {% endfor %}
 
 <p>
-By conductor: 
-{% for r in info.conductor_list: %}
-<a href="?conductor={{r}}">{{r}}</a>
-{% endfor %}
+By conductor (these are not all possible ranges, but only some) : 
+<a href="?conductor={{'1-99'}}">{{'1-99'}}</a>,
+<a href="?conductor={{'300-400'}}">{{'300-400'}}</a>
+
+<form>
+<input type='text' name='label' size=25>
+<input type='submit' name='jump' value='label or isogeny class'>
+<br>(e.g. 389a2 or 389a)
+</form>
+
+<h2> Filter </h2>
+
+<form>
+<table>
+<tr>
+<td>Conductor</td><td> <input type='text' name='conductor'></td><td>e.g. 389</td>
+</tr>
+<tr>
+<td>Torsion Order</td><td> <input type='text' name='torsion'></td><td>e.g.2</td>
+</tr>
+<tr>
+<td>Rank </td><td><input type='text' name='rank'></td><td>e.g.1</td>
+</tr>
+<tr>
+<td>Optimal </td><td><input type='checkbox' name='optimal'></td>
+</tr>
+</table>
+<td><input type='submit' value='Filter'></td>
+
+</form>
+
 
 </div>
 

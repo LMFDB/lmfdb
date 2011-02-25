@@ -5,9 +5,13 @@ from sage.all import *
 from functools import wraps
 from werkzeug.contrib.cache import SimpleCache
 
-# Do not change this, it breaks everyone else.
-C = Connection(port=37010)
-db = C.mf
-lfuncs = db.lfuncs
+_C = None
+ 
+def _init(dbport):
+ global _C
+ _C = Connection(port=dbport)
+
+def getDBConnection():
+  return _C
 
 app = Flask('__main__')

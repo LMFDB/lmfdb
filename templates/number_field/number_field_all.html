@@ -1,14 +1,6 @@
 {% extends 'homepage.html' %}
-
-{% block title %}Number fields{% endblock %}
-
 {% block content %}
 
-<div id = "header">
-<H1>Number fields</H1>
-</div>
-
-<div id = "Content">
 
 <h2>Search by label</h2>
 
@@ -24,15 +16,17 @@
 <h2> Filter </h2>
 
 <form>
-<center>Degree <input type='text' name='degree'>
+<center align=left>Degree <input type='text' name='degree'>
 Signature <input type='text' name='signature'></center>
+<center align=left>Discriminant <input type='text' name='discriminant'></center>
+<center align=left>Class number <input type='text' name='class_number'>
+Class group <input type='text' name='class_group'></center>
+<center align=left>Galois group <input type='text' name='galois_group'></center>
+<center align=left>Unramified primes <input type='text' name='ur_primes'></center>
+<center align=left>Maximum number of fields <input type='text'
+                                                   name='count'
+                                                   value=10></center>
 <br>
-<center>Discriminant <input type='text' name='discriminant'></center><br>
-<center>Class number <input type='text' name='class_number'>
-Class group <input type='text' name='class_group'></center><br>
-<center>Galois group <input type='text' name='galois_group'></center><br>
-<center>Unramified primes <input type='text' name='ur_primes'></center><br>
-<center>Maximum number of fields <input type='text' name='count' value=10></center><br>
 <input type='submit' value='Filter'>
 </form>
 
@@ -62,7 +56,5 @@ By class number:
 {% for r in info.class_number_list: %}
 <a href="?class_number={{r}}">{{r}}</a>
 {% endfor %}
-
-</div>
 
 {% endblock %}

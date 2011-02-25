@@ -1,7 +1,7 @@
 import re
 import pymongo
 
-from base import app, db, C
+from base import app
 from flask import Flask, session, g, render_template, url_for, request, redirect
 
 from utilities import ajax_more, image_src, web_latex, to_dict, parse_range
@@ -29,8 +29,35 @@ def set_sidebar(l):
 @app.route("/NumberField/GaloisGroups")
 def render_groups_page():
     info = {}
-    info['credit'] = 'the PARI group'	
-    return render_template("number_field/galois_groups.html", groups=groups, info=info)
+    info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
+    credit = 'the PARI group and J. Voight'	
+    def gcmp(x,y):
+        a = cmp(x['label'][0],y['label'][0])
+        if a: return a
+        a = cmp(x['label'][1],y['label'][1])
+        return a
+    groups.sort(cmp=gcmp)
+    t = 'Galois group labels'
+    bread = [('Number Fields', url_for("number_field_render_webpage")),('Galois group labels',' ')]
+    return render_template("number_field/galois_groups.html", groups=groups, info=info, credit=credit, title=t, bread=bread)
+
+@app.route("/NumberField/FieldLabels")
+def render_labels_page():
+    info = {}
+    info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
+    credit = 'the PARI group and J. Voight'	
+    t = 'Number field labels'
+    bread = [('Number Fields', url_for("number_field_render_webpage")),('Number field labels','')]
+    return render_template("number_field/number_field_labels.html", info=info, credit=credit, title=t, bread=bread)
+
+@app.route("/NumberField/Discriminants")
+def render_discriminants_page():
+    info = {}
+    info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
+    credit = 'the PARI group and J. Voight'	
+    t = 'Number Field Discriminant Ranges'
+    bread = [('Number Fields', url_for("number_field_render_webpage")),('Discriminant ranges',' ')]
+    return render_template("number_field/discriminant_ranges.html", info=info, credit=credit, title=t, bread=bread)
 
 @app.route("/NumberField")
 def number_field_render_webpage():
@@ -44,15 +71,18 @@ def number_field_render_webpage():
         'class_number_list': range(1,11)+['11-1000000'],
         'discriminant_list': discriminant_list
     }
-        info['credit'] = 'the PARI group and J. Voight'	
+        credit = 'the PARI group and J. Voight'	
+        t = 'Number Fields'
+        bread = [('Number Fields', url_for("number_field_render_webpage"))]
+        info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
+#         explain=['Further information']
+#         explain.append(('Unique labels for number fields',url_for("render_labels_page")))
+# 	explain.append(('Unique labels for Galois groups',url_for("render_groups_page")))
+#         explain.append(('Discriminant ranges (not yet implemented)','/'))
+#         sidebar = set_sidebar([explain])
 
-        explain=['Further information']
-        explain.append(('Unique labels for number fields (not yet implemented)','/'))
-	explain.append(('Unique labels for Galois groups',url_for("render_groups_page")))
-        explain.append(('Discriminant ranges (not yet implemented)','/'))
-        info['sidebar']=set_sidebar([explain])
 
-        return render_template("number_field/number_field_all.html", info = info)
+        return render_template("number_field/number_field_all.html", info = info, credit=credit, title=t, bread=bread)
     else:
         return number_field_search(**args)
 
@@ -158,11 +188,13 @@ def render_field_webpage(args):
     data = None
     if 'label' in args:
         label = str(args['label'])
+        import base
+        C = base.getDBConnection()
         data = C.numberfields.fields.find_one({'label': label})
     if data is None:
         return "No such field"    
     info = {}
-    info['credit'] = 'the PARI group'	
+    credit = 'the PARI group and J. Voight'	
     try:
         info['count'] = args['count']
     except KeyError:
@@ -188,8 +220,18 @@ def render_field_webpage(args):
     info['downloads_visible'] = True
     info['downloads'] = [('worksheet', '/')]
     info['friends'] = [('L-function', '/')]
-    info['learnmore'] = [('Number Fields', '/')]
-    return render_template("number_field/number_field.html", info = info)
+    info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
+    bread = [('Number Fields', url_for("number_field_render_webpage")),('%s'%data['label'],' ')]
+    t = "Number Field %s" % info['label']
+
+    credit = 'the PARI group and J. Voight'	
+    properties = ['<br>']
+    properties.extend('Degree = %s<br>'%data['degree'])
+    properties.extend('Signature = %s<br>'%data['signature'])
+    properties.extend('Discriminant = %s<br>'%data['discriminant'])
+    properties.extend('Class number = %s<br>'%data['class_number'])
+    properties.extend('Galois group = %s<br>'%data['galois_group'])
+    return render_template("number_field/number_field.html", info = info, properties=properties, credit=credit, title = t, bread=bread)
 
 def format_coeffs(coeffs):
     """
@@ -204,8 +246,7 @@ def format_coeffs(coeffs):
 def number_fields():
     if len(request.args) != 0:
         return number_field_search(**request.args)
-    info['credit'] = 'the PARI group'
-    info['learnmore'] = [('Galois groups', '/')]
+    info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
     return render_template("number_field/number_field_all.html", info = info)
     
 
@@ -245,23 +286,31 @@ def number_field_search(**args):
 
     info['query'] = dict(query)
     if 'lucky' in args:
+        import base
+        C = base.getDBConnection()
         one = C.numberfields.fields.find_one(query)
         if one:
             label = one['label']
             return render_field_webpage({'label': label})
 
     if 'discriminant' in query:
+        import base
+        C = base.getDBConnection()
         res = C.numberfields.fields.find(query).sort([('degree',pymongo.ASCENDING),('signature',pymongo.DESCENDING),('discriminant',pymongo.ASCENDING)]) # TODO: pages
     else:
         # find matches with negative discriminant:
         neg_query = dict(query)
         neg_query['discriminant'] = {'$lt':0}
+        import base
+        C = base.getDBConnection()
         res_neg = C.numberfields.fields.find(neg_query).sort([('degree',pymongo.ASCENDING),('discriminant',pymongo.DESCENDING)])
         # TODO: pages
 
         # find matches with positive discriminant:
         pos_query = dict(query)
         pos_query['discriminant'] = {'$gt':0}
+        import base
+        C = base.getDBConnection()
         res_pos = C.numberfields.fields.find(pos_query).sort([('degree',pymongo.ASCENDING),('discriminant',pymongo.ASCENDING)])
         # TODO: pages
 
@@ -274,7 +323,11 @@ def number_field_search(**args):
         
     info['fields'] = res
     info['format_coeffs'] = format_coeffs
-    return render_template("number_field/number_field_search.html", info = info)
+    info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
+    t = 'Number Field search results'
+    bread = [('Number Fields', url_for("number_field_render_webpage")),('Search results',' ')]
+    properties = []
+    return render_template("number_field/number_field_search.html", info = info, title=t, properties=properties, bread=bread)
 
 
 def iter_limit(it,lim):
