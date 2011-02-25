@@ -1,14 +1,23 @@
 {% extends "base.html" %}
+
+{% macro index() -%}
+<ul>
+<li><a href="{{ url_for('.EC_toplevel')  }}  ">Elliptic Curves over Q</a>
+<li><a href="{{ url_for('.render_maass_form')  }}  ">Maass cusp forms</a></li>
+<li><a href="{{ url_for('.render_Lfunction') }}">L-functions</a> </li>
+<li><a href="{{ url_for('.ModularForm_GSp4_Q_top_level')  }}  ">Siegel modular forms</a> </li>
+<li><a href="{{ url_for('.render_classical_modular_form')  }}  ">Classical modular forms</a></li>
+<li><a href="{{ url_for('.number_field_render_webpage')  }}  ">Number Fields</a></li>
+<li><a href="{{ url_for('.hilbert_modular_form_render_webpage')  }}">Hilbert Modular Forms</a></li>
+<li><a href="{{ url_for('.LfunctionDB.query', zerolowerbound=1.1, zeroupperbound=2.1) }} ">First zero search example</a></li>
+</ul>
+{%- endmacro %}
+
 {% block body %}
 
 <div id="header">
     <div class="logo"><a href="/"><img src="{{ url_for('.static', filename='images/lmdb-logo.png') }}" /></a></div>
     <div class="right">
-      <div class="title">LMDB: 
-        {% if title %}{{ title }}
-        {% else %}TITLE OF PAGE MISSING \( \chi^2 \) even more text and tex \( \frac{1}{1+x+x^2} \) and even more ...
-        {% endif %}
-      </div>
       <div class="bread">
         <a href="/">Top</a>
         {% if bread %}
@@ -19,21 +28,16 @@
           &gt; Bread &gt; Crumb &gt; Hierarchy
         {% endif %}
       </div>
+      <div class="title"> 
+        {% if title %}{{ title }}
+        {% else %}TITLE OF PAGE MISSING \( \chi^2 \) even more text and tex \( \frac{1}{1+x+x^2} \) and even more ...
+        {% endif %}
+      </div>
     </div>
 </div>
 
 {% block sidebar %} 
 <div id="sidebar">
-
- <h2>Navigation</h2>
- <ul>
-   <li><a href="{{ url_for('.EC_toplevel') }}">Elliptic Curves over Q</a> 
-   <li><a href="{{ url_for('.render_maass_form') }}">Maass cusp forms</a></li> 
-   <li><a href="{{ url_for('.render_Lfunction') }}">L-functions</a> </li> 
-   <li><a href="{{ url_for('.ModularForm_GSp4_Q_top_level') }}">Siegel modular forms</a> </li> 
-   <li><a href="{{ url_for('.render_classical_modular_form') }}">Classical modular forms</a></li> 
-   <li><a href="{{ url_for('.number_field_render_webpage') }}">Number Fields</a></li>
- </ul>
 
  {% macro entry(title, entries) -%}
    {% if entries %}
@@ -45,6 +49,9 @@
     </ul>
    {% endif %}
  {%- endmacro %}
+
+ <h2 id="top">Navigation</h2>
+ {{ index() }}
 
  {{ entry("Downloads", info.downloads) }}
  {{ entry("Learn more about", info.learnmore) }}
@@ -62,13 +69,18 @@
 
 <div id="main">
   <div id="Content">
+    {% if (citation or properties) %}
       <div id="properties">
-       <h1>Citation</h1>
+        {% if citation %}
+         <h1>Citation</h1>
+         {{ citation }}
+        {% endif %} 
         {% if properties %}
          <h1>Properties</h1>
          {% for p in properties %}{{ p|safe }}{% endfor %}
         {% endif %}
       </div>
+    {% endif %}
 
     {% block content %}
     There is nothing here. This is just a template.

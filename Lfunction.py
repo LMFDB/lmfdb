@@ -5,34 +5,90 @@ import pymongo
 from WebLfunction import *
 import LfunctionNavigationProcessing
 import LfunctionPageProcessing
+import LfunctionComp
 #from elliptic_curve import by_cremona_label
 # just testing
 
 def render_webpage(args, arg1, arg2, arg3, arg4, arg5):
    # put different types of L-functions into here
     temp_args = {}
+    info = {}
+    #print arg1, arg2, args, len(args)
     for a in args:
         temp_args[a] = args[a]
     if arg1 == 'Riemann':
         temp_args['type'] = 'riemann'
+    elif len(args)==0 and arg1 == None: #this means I'm at the basic navigation page
+        print "start page"
+        info = set_info_for_start_page()
+        return render_template("LfunctionNavigate.html", info = info, title = 'L-functions')
+    elif arg1 == 'Character' and arg2 == 'Dirichlet' and len(args)==0:
+        info['title'] = 'Table of Dirichlet Characters'
+        #print "here"
+        info['contents'] = processDirichletNavigation(args)
+        return render_template("LfunctionTable.html",info=info, title=info['title'])
     elif arg1 == 'Character' and arg2 == 'Dirichlet' and args['characternumber'] and args['charactermodulus']:
+        print "inside if"
         temp_args['type'] = 'dirichlet'
     elif arg1 == 'EllipticCurve' and arg2 == 'Q' and arg3:
         temp_args['type'] = 'ellipticcurve'
         temp_args['label'] = str(arg3) 
-
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic':
         temp_args['type'] = 'gl2holomorphic'
 
-    else:
-        info = getNavigationFromDb(temp_args, arg1, arg2, arg3, arg4, arg5)
-        info = processNavigationContents(info, args, arg1, arg2, arg3, arg4, arg5)
-        return render_template("LfunctionNavigate.html", info = info, title = 'L-functions')
+    elif arg1 and arg1.startswith("degree"):
+        degree = int(arg1[6])
+        info = { "degree" : degree }
+        info["key"] = 777
+        return render_template("DegreeNavigateL.html", info=info, title = 'Degree ' + str(degree)+ ' L-functions')
+
+#David and Sally added the following case to handle Stefan's L-functions
+    elif args['type'] and args['type'] == 'lcalcurl':
+        temp_args['type'] = args['type']
+        temp_args['url'] = args['url'] 
+
+
+        #print  "here",arg1,arg2,arg3,arg4,arg5,temp_args
+        #info = getNavigationFromDb(temp_args, arg1, arg2, arg3, arg4, arg5)
+        #info = processNavigationContents(info, temp_args, arg1, arg2, arg3, arg4, arg5)
+        #print "here!!!"
+        
+    #else:
+    #    info = getNavigationFromDb(temp_args, arg1, arg2, arg3, arg4, arg5)
+    #    info = processNavigationContents(info, args, arg1, arg2, arg3, arg4, arg5)
+        
+
     L = WebLfunction(temp_args)
     #return "23423"
-    
     info = initLfunction(L, temp_args)
     return render_template('Lfunction.html',info=info, title = info['title'], bread = info['bread'], properties = info['properties'])
+
+
+def set_info_for_start_page():
+    tl = [{'title':'Riemann','link':'Riemann'},
+          {'title':'Dirichlet','link':'Character/Dirichlet'},
+          {'title':'Elliptic Curve', 'link':'EllipticCurve/Q'}] #etc
+
+    info = {
+        'degree_list': range(1,6),
+        #'signature_list': sum([[[d-2*r2,r2] for r2 in range(1+(d//2))] for d in range(1,11)],[]), 
+        #'class_number_list': range(1,11)+['11-1000000'],
+        #'discriminant_list': discriminant_list
+        'type_list': tl
+    }
+    credit = ''	
+    t = 'L-functions'
+    info['bread'] = [('L-functions', url_for("render_Lfunction"))]
+    info['learnmore'] = [('L-functions', 'http://wiki.l-functions.org/L-function')]
+#         explain=['Further information']
+#         explain.append(('Unique labels for number fields',url_for("render_labels_page")))
+# 	explain.append(('Unique labels for Galois groups',url_for("render_groups_page")))
+#         explain.append(('Discriminant ranges (not yet implemented)','/'))
+#         sidebar = set_sidebar([explain])
+
+    return info
+#        return number_field_search(**args)
+
 
 def getNavigationFromDb(args, family, group, field, objectName, level):
     print str(family), str(group), str(field)
@@ -53,6 +109,7 @@ def getNavigationFromDb(args, family, group, field, objectName, level):
     db = connection.Lfunction
     collection = db.LNavigation
     return collection.find_one({'id': pageid})
+
 
 def processNavigationContents(info, args, arg1,arg2,arg3,arg4,arg5):
     #print str(family), str(group), str(field)
@@ -90,10 +147,13 @@ def initLfunction(L,args):
         info['url'] = L.url
     except:
         info['url'] =''
-
+#set info['bread'] and to be empty and set info['properties'], but exist (temp. fix by David & Sally)
+    info['bread'] = []
+    info['properties'] = []
     if args['type'] == 'gl2maass':
         info['zeroeslink'] = ''
         info['plotlink'] = ''
+#        info['bread'] = [('L-function','/L'),('GL(2) Maass','/L/ModularForm/GL2/Q/maass')]
     elif args['type'] == 'riemann':
         info['properties'] = L.properties
         info['bread'] = [('L-function','/L'),('Riemann Zeta','/L/Riemann')]
@@ -122,6 +182,7 @@ def initLfunction(L,args):
         label = str(L.label)
         number = str(L.number)
         info['friends'] = [('Modular Form','/ModularForm/GL2/Q/holomorphic/?weight='+weight+'&level='+level+'&character='+character +'&label='+label+'&number='+number)]
+#    elif args['type'] == 'lcalcurl':
     else:
         info['zeroeslink'] = url_for('zeroesLfunction', **args)
         info['plotlink'] = url_for('plotLfunction', **args)
@@ -208,3 +269,49 @@ def render_showcollections_demo():
         dbList.append( (str(db.name), collList) )
     info = {'collections' : dbList}
     return render_template("ShowCollectionDemo.html", info = info)
+
+def processDirichletNavigation(args):
+    print str(args)
+    try:
+        print args['start']
+        N = int(args['start'])
+        if N < 3:
+            N=3
+        elif N > 100:
+            N=100
+    except:
+        N = 3
+    try:
+        length = int(args['length'])
+        if length < 1:
+            length = 1
+        elif length > 20:
+            length = 20
+    except:
+        length = 10
+    try:
+        numcoeff = int(args['numcoeff'])
+    except:
+        numcoeff = 50
+    chars = LfunctionComp.charactertable(N, N+length,'primitive')
+    s = '<table>\n'
+    s += '<tr>\n<th scope="col">Conductor</th>\n'
+    s += '<th scope="col">Primitive characters</th>\n</tr>\n'
+    for i in range(N,N+length):
+        s += '<tr>\n<th scope="row">' + str(i) + '</th>\n'
+        s += '<td>\n'
+        j = i-N
+        for k in range(len(chars[j][1])):
+            s += '<a href="Dirichlet?charactermodulus='
+            s += str(i)
+            s += '&characternumber='
+            s += str(chars[j][1][k])
+            s += '&numcoeff='
+            s += str(numcoeff)
+            s += '">'
+            s += '\(\chi_{' + str(chars[j][1][k]) + '}\)</a> '
+        s += '</td>\n</tr>\n'
+    s += '</table>\n'
+    return s
+    #info['contents'] = s
+    #return info
