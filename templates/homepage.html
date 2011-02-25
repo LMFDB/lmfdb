@@ -22,10 +22,10 @@
         <a href="/">Top</a>
         {% if bread %}
           {% for b in bread %}
-            &gt; <a href="{{ b[1] }}">{{ b[0] }}</a>
+            &rarr; <a href="{{ b[1] }}">{{ b[0] }}</a>
           {% endfor %}
         {% else %}
-          &gt; Bread &gt; Crumb &gt; Hierarchy
+          &rarr; Bread &rarr; Crumb &rarr; Hierarchy
         {% endif %}
       </div>
       <div class="title"> 
