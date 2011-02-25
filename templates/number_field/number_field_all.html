@@ -2,59 +2,76 @@
 {% block content %}
 
 
-<h2>Search by label</h2>
+<h3>Search by label</h3>
 
 <form>
+Go to a specific field by giving its label (e.g. 1.1.1.1 for \(\mathbb{Q}\))
 <input type='text' name='natural' size=60>
-<p>
 <input type='submit' name='search value='search by label'>
-<!--
-<input type='submit' name='lucky' value="search by label">
--->
 </form>
 
-<h2> Filter </h2>
+<h3> Browse </h3>
 
-<form>
-<center align=left>Degree <input type='text' name='degree'>
-Signature <input type='text' name='signature'></center>
-<center align=left>Discriminant <input type='text' name='discriminant'></center>
-<center align=left>Class number <input type='text' name='class_number'>
-Class group <input type='text' name='class_group'></center>
-<center align=left>Galois group <input type='text' name='galois_group'></center>
-<center align=left>Unramified primes <input type='text' name='ur_primes'></center>
-<center align=left>Maximum number of fields <input type='text'
-                                                   name='count'
-                                                   value=10></center>
-<br>
-<input type='submit' value='Filter'>
-</form>
-
-<h2> Browse </h2>
-
-<p>
-<p>
+<ul>
+<li>
 By degree:
 {% for r in info.degree_list: %}
-<a href="?degree={{r}}">{{r}}</a>
+<a href="?degree={{r}}">{{r}}</a>&nbsp;&nbsp;
 {% endfor %}
-
-<p>
+<li>
+By discriminant range: 
+{% for r in info.discriminant_list: %}
+<a href="?discriminant={{r}}">{{r}}</a>&nbsp;&nbsp;
+{% endfor %}
+<li>
 By signature: 
 {% for t in info.signature_list: %}
-<a href="?signature={{t}}">{{t}}</a>
+<a href="?signature={{t}}">{{t}}</a>&nbsp;&nbsp;
 {% endfor %}
-
-<p>
-By discriminant: 
-{% for r in info.discriminant_list: %}
-<a href="?discriminant={{r}}">{{r}}</a>
-{% endfor %}
-
-<p>
+<li>
 By class number: 
 {% for r in info.class_number_list: %}
-<a href="?class_number={{r}}">{{r}}</a>
+<a href="?class_number={{r}}">{{r}}</a>&nbsp;&nbsp;
 {% endfor %}
+</ul>
+
+<h3> Search </h3>
+<form>
+<p>
+Enter values into one or more boxes to restrict the search.
+<input type='submit' value='Search'>
+</p>
+<table border=0 cellpadding=5>
+<tr>
+<td align=left>Degree <td><input type='text' name='degree'> 
+<font color=gray>(e.g. 3)&nbsp;</font>
+<td>&nbsp;&nbsp;
+<td align=left>Signature <td><input type='text' name='signature'> 
+<font color=gray>(e.g. [1,1])</font>
+</tr>
+<tr>
+<td align=left>Discriminant 
+<td colspan=4><input type='text' name='discriminant'> 
+<font color=gray>(e.g. -3, or a range such as 1000-2000 or -1000--1)&nbsp;</font>
+</tr>
+<tr>
+<td align=left>Class number <td><input type='text' name='class_number'>
+<font color=gray>(e.g. 5)</font>
+<td>&nbsp;&nbsp;
+<td align=left>Class group structure<td><input type='text' name='class_group'>
+<font color=gray>(e.g. [], [3], [2,2])</font>
+</tr>
+<tr>
+<td align=left>Galois group <td><input type='text' name='galois_group'>
+<font color=gray>(e.g. C5)</font>
+<td>&nbsp;&nbsp;
+<td align=left>Unramified primes <td><input type='text' name='ur_primes'>
+</tr>
+</table>
+<center align=left>Maximum number of fields to display <input type='text'
+                                                   name='count'
+                                                   value=10>
+</center>
+</form>
 
 {% endblock %}

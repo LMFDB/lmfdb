@@ -1,7 +1,7 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<h2> Results (at most {{info.count}} are shown)</h2>
+<h2> Results ({{info.report}})</h2>
 
 <table border=1 cellpadding=5 class='right_align_table'>
 <tr>
@@ -14,7 +14,7 @@
 {% for field in info.fields: %}
 <tr>
 <td align='left'><a href="/NumberField/{{field.label}}">{{field.label}}</a></td>
-<td>{{info.format_coeffs(field.coefficients)}}</td>
+<td>{{info.format_coeffs(field.coefficients)|safe}}</td>
 <td>{{field.discriminant}}</td>
 <td>{{field.class_number}}</td>
 <td>{{field.class_group}}</td>

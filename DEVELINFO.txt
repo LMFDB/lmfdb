@@ -1,0 +1,52 @@
+Conventions
+===========
+
+Template
+--------
+
+A template has several variables:
+ * title - that appears on several places
+ * properties - right hand bar, see below
+ * bread - breadcumb hierarchy, i.e. [ ('name', 'url'), ... ]
+ * sidebar - additional sidebar entries, datastructure is
+   [ ('topic', [ ('text', 'url'), ...]), ... ]
+   ** info.downloads, info.friends, info.learnmore have the same strucutre,
+      names might change sometimes.
+ * credit - small credits note at the bottom
+ * support - either a default or a line that says who has supported this. 
+
+
+The idea is to extend "homepage.html" and replace the content block:
+{% block content %}
+   ... your stuff ...
+{% endblock %}
+
+
+
+List-table should always be like
+--------------------------------
+
+<table class="ntdata">
+  <thead><tr><td>...</td></tr></thead>
+
+  <tbody>
+   <tr class="odd"> <td>...</td></tr>
+   <tr class="even"><td>...</td></tr>
+   <tr class="odd"> <td>...</td></tr>
+   ...
+  </tbody>
+</table>
+
+
+use jinja's engine to do the even/odd formatting. 
+TODO there will also be a MACRO inside the template engine doing all the rendering.
+
+
+Properties
+----------
+the table on the right renders Strings formatted in the following datastructure:
+prop = [ ( '<description>', [ '<value 1>', '<value 2>', ...] ), ... ]
+or
+prop = [ ( '<description>', '<value>'), ('<description>', '<value>'), ... ]
+you can mix list or non-list.
+
