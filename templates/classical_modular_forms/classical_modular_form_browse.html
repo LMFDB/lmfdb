@@ -22,12 +22,20 @@
 <table>
   <tr>
     <td>
-      <h3>Browse spaces of cuspforms</h3>
+      <h3>Browse spaces of cuspforms {{info.browse_type | safe}}</h3>
       
       {{info.list_spaces| safe }}
     </td>
   </tr>
 </table>
-
+<br>
+{% if info.geometric is defined %}
+{% if info.level > 1 %}
+<h3>Geometric information for \(\Gamma_{0}({{ info.level}})\)</h3>
+{% else %}
+<h3>Geometric information for \(PSL_{2}(\mathbb{Z}) \)</h3>
+{% endif %}
+ {{ info.geometric | safe }}
+{% endif %}
 
 {% endblock content %}

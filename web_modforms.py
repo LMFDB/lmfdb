@@ -1752,10 +1752,11 @@ def print_geometric_data_Gamma0N(N):
         """
         G=Gamma0(N)
         #s="<div>"
-        if(G == SL2Z):
-            s="\(  {\\rm SL}_{2}(\mathbb{Z}) \)"
-        else:
-            s="\("+latex(G)+"\)"
+        #if(G == SL2Z):
+        #    s="\(  {\\rm SL}_{2}(\mathbb{Z}) \)"
+        #else:
+        #    s="\("+latex(G)+"\)"
+        s = ""
         tbl=dict()
         tbl['header']=s
         tbl['headersh']=['']
