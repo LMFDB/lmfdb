@@ -42,6 +42,17 @@ def splitcoeff(coeff):
 
     return answer
 
+def pol_to_html(p):
+   r"""
+   Convert polynomial p to html.
+   """
+   s = str(p)
+   s = re.sub("\^(\d*)","<sup>\\1</sup>",s)
+   s = re.sub("\_(\d*)","<sub>\\1</sub>",s)
+   s = re.sub("\*","",s)
+   s = re.sub("x","<i>x</i>",s)
+   return s
+
 
 def web_latex(x):
     if isinstance(x, (str, unicode)):
@@ -173,6 +184,8 @@ def image_callback(G):
 
 def parse_range(arg, parse_singleton=int):
     # TODO: graceful errors
+    if type(arg)==parse_singleton:
+        return arg
     if ',' in arg:
         return {'$or': [parse_range(a) for a in arg.split(',')]}
     elif '-' in arg[1:]:
@@ -186,3 +199,9 @@ def parse_range(arg, parse_singleton=int):
         return q
     else:
         return parse_singleton(arg)
+
+
+def coeff_to_poly(c):
+    from sage.all import PolynomialRing, QQ
+    return PolynomialRing(QQ, 'x')(c)
+

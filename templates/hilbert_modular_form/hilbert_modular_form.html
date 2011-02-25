@@ -1,0 +1,54 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<H1>Hilbert cusp form {{ info.label }} </H1>
+
+  <h2>  Field information  </h2>
+
+  <p>
+    <table>
+      <tr><td>Degree<td> {{ info.field_info.degree }}
+      <tr><td>Discriminant<td> {{ info.field_info.discriminant }}
+      <tr><td>Polynomial<td> {{ info.field_poly|safe }}
+      <tr><td>Class number<td> {{ info.field_info.class_number }}
+      <tr><td>Galois group<td> {{ info.field_info.galois_group }}
+    </table>
+  </p>
+
+  <h2>  Weight  </h2>
+
+  <p> {{ info.weight }} </p>
+
+  <h2>  Level  </h2>
+
+  <p> {{ info.level_ideal }} with norm {{ info.level_norm }} </p>
+
+  <h2>  Label  </h2>
+
+  <p> {{ info.label_suffix }} </p>
+
+
+  <h2>  Hecke polynomial  </h2>
+
+  <p> {{ info.hecke_polynomial }} </p>
+
+  <h2>  Hecke eigenvalues  </h2>
+
+<table border=1 cellpadding=5 class='right_align_table'>
+<tr>
+<th>Norm</th>
+<th>Prime</th>
+<th>Eigenvalue</th>
+</tr>
+{% for entry in info.eigs: %}
+<tr>
+<td>{{entry.prime_norm}}</td>
+<td>{{entry.prime_ideal}}</td>
+<td>{{entry.eigenvalue}}</td>
+</tr>
+{% endfor %}
+</table>
+
+
+
+{% endblock %}
