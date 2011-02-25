@@ -18,10 +18,9 @@ function show_code(system) {
 </script>
 
 
-    <h1> {{ title }}</h1>
-    <div>
-        <a onclick="show_code('sage'); return false" href='#'>sage</a>
-        <a onclick="show_code('pari'); return false" href='#'>pari</a>
+    <div align ="right">
+      Show commands for:  <a onclick="show_code('sage'); return false" href='#'>sage</a>,
+        <a onclick="show_code('pari'); return false" href='#'>pari</a>,
         <a onclick="show_code('magma'); return false" href='#'>magma</a>
     </div>
     <div></div>
@@ -155,7 +154,7 @@ function show_code(system) {
             <span class='pari nodisplay code'></span>
             <span class='magma nodisplay code'>&gt; MordellWeilShaInformation(E);</span>
         </td>
-        <td align='right'>\( \text{Sha}_{an} \)</td>
+        <td align='right'>&#1064;\(_{an} \) </td>
         <td>=</td>
         <td>{{ info.sha_an }}</td>
         <tr>
