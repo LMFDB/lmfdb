@@ -1,8 +1,8 @@
-from flask import render_template,send_file, make_response
+from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
 from web_modforms import *
 import tempfile, os,re
 from utilities import ajax_more
-
+from base import app, db, C
 #import re
 ### Maximum values to be generated on the fly
 N_max_comp = 100
@@ -12,26 +12,275 @@ N_max_db = 1000000
 k_max_db = 300000
 
 _verbose = 0
+
+
 #################
 # Top level
 #################
-def render_webpage(args):
-	if len(args)==0:
-		info = dict()
+
+#def render_classical_modular_form():#
+#	#return render_webpage(**request.args)
+#	return classical_modular_forms(**request.args)
+
+
+
+###########################################
+# Search / Navigate
+###########################################
+@app.route('/ModularForm/GL2/Q/holomorphic/')
+def render_classical_modular_forms():
+	info   = to_dict(request.args)
+	level  = _my_get(info,'level', -1,int)
+	weight = _my_get(info,'weight',-1,int) 
+	character = _my_get(info,'character', '0',str) #int(info.get('weight',0))
+	label  = info.get('label', '')
+        print "HERE:::::::::::::::::::",level,weight
+        if level<0:
+            level=None
+        if weight<0:
+            weigh=None
+        print "HERE:::::::::::::::::::",level,weight
+
+	# we see if we have submitted parameters
+	if level and weight and character and label:
+		#return redirect(url_for("render_one_classical_modular_form", level,weight,character,label))
+            return redirect(url_for("render_one_classical_modular_form", **info))
+	if level and weight and character:
+            return redirect(url_for("render_classical_modular_form_space", **info))
+	if level and weight:
+            return redirect(url_for("render_classical_modular_form_browsing", **info))
+	if level:
+            info['level']=level
+            return redirect(url_for("render_classical_modular_form_space2", **info))
+        if weight:
+            return browse_classical_modular_forms(**info)
+        #return redirect(url_for("render_classical_modular_form_browsing", **info))
+        return render_classical_modular_form_navigation_wp(**request.args)
+#return redirect(url_for("render_classical_modular_form_space", **info))
+
+
+@app.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<label>/")
+def render_one_classical_modular_form(level,weight,character,label):
+	## see if we want to display it or if we want to do domething else
+	print level,weight,character,label
+	return render_one_classical_modular_form_wp(level,weight,character,label)
+
+@app.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/")
+def render_classical_modular_form_space(level,weight,character):
+    print "render_classical_modular_form_space::",level,weight
+    info=to_dict(request.args)
+    info['level']=level; info['weight']=weight; info['character']=character
+    return render_classical_modular_form_space_wp(**info)
+
+@app.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/")
+def render_classical_modular_form_browsing(level,weight):
+    print "Get level and ewight"
+    info=to_dict(request.args)
+    info['level']=level; info['weight']=weight
+    print "render_classical_modular_form_browsing::",level,weight
+    return browse_classical_modular_forms(**info)
+#return render_classical_modular_form_space_wp(**info)
+#return redirect(url_for("render_classical_modular_form_space", **info))
+
+
+@app.route("/ModularForm/GL2/Q/holomorphic/<int:level>/")
+def render_classical_modular_form_space2(level):
+    print "render_classical_modular_form_space2::",level
+    info=to_dict(request.args);
+    info['level']=level; info['weight']=None
+    return browse_classical_modular_forms(**info)
+
+
+###
+## The routines that renders the various parts
+###
+
+def render_one_classical_modular_form_wp(level,weight,character,label):
+	info = to_dict(request.args) # get any extra info wee might have submitted
+	if info.has_key('download'):
+		print "saving self!"
+		info['tempfile'] = "/tmp/tmp_web_mod_form.sobj"
+	properties=list(); parents=list(); siblings=list(); friends=list()
+	citation = ['Sage:'+version()]
+	lifts=['Lifts / Correspondences'] #list()
+	sbar=(properties,parents,friends,siblings,lifts)
+	(info,sbar)=set_info_for_one_modular_form(level,weight,character,label,info,sbar)
+	err = info.get('error','')
+	info['parents']=parents
+	info['siblings']=siblings
+	info['friends']=friends
+	print "friends=",friends
+	if info.has_key('download') and not info.has_key('error'):					
+		return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
+	#os.remove(fn) ## clears the temporary file					
+	info['sidebar']=set_sidebar([properties,parents,siblings,friends,lifts])
+	template = "classical_modular_forms/classical_modular_form.html"
+	title = "Cuspidal newform %s of weight %s for "%(label,weight)
+	if level==1:
+		title+="\(\mathrm{SL}_{2}(\mathbb{Z})\)"
 	else:
-	        info = dict(args)
+		title+="\(\Gamma_0(%s)\)" %(level)
+	if character>0:
+		title+=" with character \(\chi_{%s}\) mod %s" %(character,level)
+		title+=" of order %s and conductor %s" %(info['character_order'],info['character_conductor'])
+	else:
+		title+=" with trivial character!"
+	url1 = url_for('render_classical_modular_forms')
+	url2 = url_for('render_classical_modular_form_space',level=level,weight=weight,character=character) 
+	url3 = url_for('render_classical_modular_form_space',level=level,weight=weight,character=character) 
+	bread = [('Holomorphic Modular Forms',url1)]
+	bread.append(("of level %s" % level,url2))
+	bread.append(("weight %s" % weight,url3))
+	if character == 0 :
+		bread.append(("and trivial character",url3))
+	else:
+		bread.append(("and character \(\chi_{%s}\)" % character,url3))
+	#info['name']=str(level)+str(label)
+	return render_template(template, info=info,title=title,bread=bread,properties=properties)	
+
+		
+def render_classical_modular_form_navigation_wp(**args):
+	info = to_dict(args)
+	level  = _my_get(info,'level', 0,int)
+	weight = _my_get(info,'weight', 0,int)
+	label  = info.get('label', '')
+	if(info.has_key('plot') and level <> None):
+		return render_fd_plot(level,info)
+	is_set=dict()
+	is_set['weight']=False; is_set['level']=False
+	if weight<>0:
+		is_set['weight']=True
+	if level<>0:
+		is_set['level']=True
+		
+	if(info.has_key('get_table')): # we want a table
+		info = set_table(info,is_set)
+		page = "classical_modular_forms/classical_modular_form_table.html"
+		title = "Table of Classical Modular Forms Spaces"
+		return render_template(page, info=info,title=title)
+		## This is the list of weights we initially put on the form
+        ## List of weights and levels we initially put on the form
+	## This is the list of weights we initially put on the form
+	## This is the list of weights we initially put on the form
+	weight = int (weight)
+        info['initial_list_of_weights'] = print_list_of_weights()
+	info['initial_list_of_levels']=range(1,30+1)
+	
+	#url1 = ajax_url(ajax_more2, print_list_of_characters, *arg_list1, inline=True, text='List Characters')
+
+	info['list_chars']=ajax_once(print_list_of_characters,text='print list of characters!')
+	## t = """| <a onclick="$('#%(nonce)s').load('%(url2)s', function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'%(nonce)s']);}); return false;" href="#">%(text1)s</a>]</span>""" % locals()
+	## info['list_of_characters'] = 
+	if level:
+		info['geometric'] = print_geometric_data_Gamma0N(level)
+		if info.has_key('plot'):
+			return render_fd_plot(level,info)
+	title = "Holomorphic Modular Cuspforms"
+	bread =[('Modular Forms',url_for('modular_form_toplevel'))]
+	return render_template("classical_modular_forms/classical_modular_form_navigation.html", info=info,title=title,bread=bread)
+
+
+
+def browse_classical_modular_forms(**info):
+    r"""
+    Browse modular forms of given level or weight.
+    """
+    print "BROWSE HERE!!!!!!!!!!!!!!"
+    info   = to_dict(info)
+    print "info=",info
+    level  = _my_get(info,'level', '-1',int)
+    weight = _my_get(info,'weight', '-1',int)
+    label  = info.get('label', '')
+    char  = info.get('character', '0')
+    bread =[('Modular Forms',url_for('modular_form_toplevel'))]
+    if level <0:
+        level=None
+    if weight<0:
+        weight=None
+    if char=='0':
+        info['list_chars']='0'
+    else:
+        info['list_chars']='1'
+    print "level=",level
+    print "wt=",weight    
+    if level and not weight:
+        print "here1!"
+        title = "Holomorphic Modular Cuspforms of level %s " % level
+        level = int(level)
+        info['level_min']=level;info['level_max']=level
+        info['weight_min']=1;info['weight_max']=36
+        s = make_table_of_dimensions(level_start=level,level_stop=level,**info)
+        print "s=",s
+        info['list_spaces']=s
+        #info['list_spaces']=ajax_more(make_table_of_dimensions,{'weight':10},{'weight':20},{'weight':30},text='more')
+	title = "Holomorphic Modular Cuspforms of level %s " % level
+	bread =[('Modular Forms',url_for('modular_form_toplevel'))]
+        return render_template("classical_modular_forms/classical_modular_form_browse.html", info=info,title=title,bread=bread)
+    if weight and not level:
+        print "here2!"
+        info['level_min']=1;info['level_max']=50
+        info['weight_min']=weight;info['weight_max']=weight
+        info['list_spaces']=make_table_of_dimensions(weight_start=weight,weight_stop=weight,**info) #make_table_of_spaces(level=[10,20,30])
+	title = "Holomorphic Modular Cuspforms of weight %s" %weight
+	bread =[('Modular Forms',url_for('modular_form_toplevel'))]
+        return render_template("classical_modular_forms/classical_modular_form_browse.html", info=info,title=title,bread=bread)
+    print "here2!"
+    info['level_min']=level;info['level_max']=level
+    info['weight_min']=weight;info['weight_max']=weight
+    return render_classical_modular_form_space_list_chars(level,weight) #
+    #make_table_of_dimensions(weight_start=weight,weight_stop=weight,**info) #make_table_of_spaces(level=[10,20,30])
+    #title = "Holomorphic Modular Cuspforms of level %s and weight %s" %(level,weight)
+    #bread =[('Modular Forms',url_for('modular_form_toplevel'))]
+    #return render_template("classical_modular_forms/classical_modular_form_browse.html", info=info,title=title,bread=bread)
+    
+def render_classical_modular_form_space_wp(**args):
+    info = to_dict(args)
+    level  = _my_get(info,'level', 0,int)
+    weight = _my_get(info,'weight', 0,int)
+    character = _my_get(info,'character', 0,int)
+    properties=list(); parents=list(); friends=list(); lifts=list(); siblings=list() 
+    sbar=(properties,parents,friends,siblings,lifts)
+    if character=='*':
+        return render_classical_modular_form_space_list_chars(level,weight)
+    (info,sbar)=set_info_for_modular_form_space(level,weight,character,info,sbar)
+    (properties,parents,friends,siblings,lifts)=sbar
+    title = "Holomorphic Modular Cuspforms of weight %s on \(\Gamma_{0}(%s)\)" %(weight,level)
+    bread =[('Modular Forms',url_for('modular_form_toplevel'))]
+    return render_template("classical_modular_forms/classical_modular_form_space.html", info=info,title=title,bread=bread)
+
+
+
+def render_classical_modular_form_space_list_chars(level,weight):
+    r"""
+
+    """
+    info = dict()
+    D = DirichletGroup(level)
+    #s = make_table_of_dimensions(level_start=level,level_stop=level,weight_start=weight,weight_stop=weight,char=1)
+    s = make_table_of_characters(level,weight)
+    info['level']=level; info['weight']=weight
+    info['list_spaces']=s
+    title = "Holomorphic Modular Cuspforms of level %s and weight %s " %(level,weight)
+    bread =[('Modular Forms',url_for('modular_form_toplevel'))]
+    return render_template("classical_modular_forms/classical_modular_form_browse.html", info=info,title=title,bread=bread)
+
+def render_webpage(**args):
+	info   = to_dict(args)
+	level  = info.get('level', '')
+	weight = info.get('weight', '')
+	label  = info.get('label', '')
 	info['credit'] = 'Sage'	
 	info['sage_version']=version()
 	# the topics for the sidebar
-	#navigation=list() #['Browse'] #list()
+
 	properties=['Properties']
 	parents=['Parents'] #list()
 	friends=['Friends'] #list()
 	siblings=['Siblings'] #list()
 	lifts=['Lifts / Correspondences'] #list()
-	
+
 	## This is the list of weights we initially put on the form
-	info['initial_list_of_weights']=list()
+        info['initial_list_of_weights'] = print_list_of_weights()
 	## This is the list of levels we initially put on the form
 	info['initial_list_of_levels']=range(1,50)
 	cur_url='?'
@@ -40,7 +289,9 @@ def render_webpage(args):
 	(info,is_set)=set_basic_parameters(info)
 	#print "info2=",info
 	if(info.has_key('error')): 
-		return render_template("classical_modular_form_navigation.html", info=info)
+		page = "classical_modular_forms/classical_modular_form_navigation.html"
+		title = "Classical Modular Forms Navigation Page"
+		return render_template(page, info=info,title=title)
 	cur_url=""
 	if(is_set['level']):
 		level = info['level']
@@ -58,12 +309,6 @@ def render_webpage(args):
 	#
 	# we now have all parameters set and can go to choose which action we perform
 	#
-	if(info.has_key('plot') and level <> None):
-		return render_fd_plot(level,info)
-	if(info.has_key('get_table')):
-		# we want a table
-		info = set_table(info,is_set)
-		return render_template("classical_modular_form_table.html", info=info)
 	if(info.has_key('get_coeffs')):
 		if(is_set['level'] and is_set['weight']):
 			# we want to print more Fourier coefficients
@@ -72,11 +317,15 @@ def render_webpage(args):
 			info['sidebar']=set_sidebar([parents,siblings,friends,lifts])
 			#print "Printing table of coefficients!"
 			#print "info=",info
-			return  render_template("classical_modular_form_table.html", info=info)
-		
+			page = "classical_modular_forms/classical_modular_form_table.html"
+			title = "Table of Classical Modular Forms Spaces"
+			return render_template(page, info=info,title=title)
+
 		else:
 			info['error']="Need weight and level!"
-			return render_template("classical_modular_form_navigation.html", info=info)
+			page = "classical_modular_forms/classical_modular_form_navigation.html"
+			title = "Classical Modular Forms Navigation Page"
+			return render_template(page, info=info,title=title)
 
 	## if we have a level, weight and character we want to show the homepage of a space.
 	if(is_set['level'] and is_set['weight'] and is_set['character']):
@@ -95,10 +344,21 @@ def render_webpage(args):
 				#os.remove(fn) ## clears the temporary file					
 			info['sidebar']=set_sidebar([properties,parents,siblings,friends,lifts])
 			#print info
-			return render_template("classical_modular_form.html", info=info)
+			page = "classical_modular_forms/classical_modular_form.html"
+			title = "Cuspidal newform %s of weight %s for "%(info['label'],info['weight'])
+			if info['level']==1:
+				title+="\(\mathrm{SL}_{2}(\mathbb{Z})\)"
+			else:
+				title+="\(\Gamma_0(%s)\)" %(info['level'])
+			if info['character']>0:
+				title+=" with character \(\chi_{%s}\) mod %s" %(info['character'],info['level'])
+				title+=" of order %s and conductor %s" %(info['character_order'],info['character_conductor'])
+			url1 = url_for('render_classical_modular_forms',level=level,weight=weight) 
+			bread = [('Space',url1)]
+			return render_template("classical_modular_forms/classical_modular_form.html", info=info,title=title,bread=bread)
 		else:
 			info['sidebar']=set_sidebar([properties,parents,siblings,friends,lifts])
-			return render_template("classical_modular_form_space.html", info=info)
+			return render_template("classical_modular_forms/classical_modular_form_space.html", info=info)
 	##
 	## If we did not specify a space completely we want the navigation page
 	## 
@@ -114,7 +374,7 @@ def render_webpage(args):
 	(friends,lifts)=sbar
 	info['sidebar']=set_sidebar([friends,lifts])
 	#print "sidebar=",info['sidebar']
-	return render_template("classical_modular_form_navigation.html", info=info)
+	return render_template("classical_modular_forms/classical_modular_form_navigation.html", info=info)
 
 
 
@@ -132,6 +392,157 @@ def set_sidebar(l):
 	return res
 #	info['sidebar']=set_sidebar(navigation,parents,siblings,friends)
 
+
+
+#def make_table_of_spaces(weight=None,level=None):
+#    r"""
+#    """
+#    set_table(info,is_set,make_link=True)
+
+def make_table_of_characters(level,weight,**kwds):
+    r""" Make a table of spaces S_k(N,\chi) for all compatible characters chi.
+    """
+    D=DirichletGroup(level)
+    print "D=",D
+    s = "List of \(S_{%s} (%s, \chi_{n}) \)" %(weight,level)
+    s+="<a name=\"#"+str(level)+"\"></a>"
+    tbl=dict()
+    tbl['headersv']=['\( d \)']
+    tbl['headersh']=list()
+    tbl['corner_label']="\( n \)"
+    tbl['data']=list()
+    tbl['atts']="border=\"1\" padding=\"1\""
+    tbl['data_format']='html'
+    row=list()
+    rowlen = 25
+    ii=0
+    dims = dict()
+    for chi in range(0,len(D.list())):
+        x=D[chi]; S=CuspForms(x,weight); d=S.dimension()
+        dims[chi]=d
+    numrows = ceil(map(lambda x: x>0,dims).count(True)/rowlen)
+
+    for chi in range(0,len(D.list())):
+        d = dims[chi]
+        if d==0:
+            continue
+        tbl['headersh'].append(chi)
+        url = url_for('render_classical_modular_form_space',level=level,weight=weight,character=chi) 
+        row.append("<a href=\""+url+"\">"+str(d)+"</a>")
+        ii=ii+1
+        if(ii>rowlen and len(row)>0):
+            print "appending row:",row
+            tbl['data'].append(row)
+            s=s+html_table(tbl)
+            tbl['headersh']=list(); tbl['data']=list(); row=list()
+            ii=0
+    if(len(row)>0):
+        tbl['data'].append(row)
+        if (len(row)>0 or len(tbl['data'])>0): 
+            ss=html_table(tbl)
+            s=s+ss
+        else:
+            s="All spaces are zero-dimensional!"
+    return s
+
+def make_table_of_dimensions(level_start=1,level_stop=50,weight_start=1,weight_stop=24,char=0,**kwds):
+    r"""
+    make an html table with information about spaces of modular forms
+    with parameters in the given ranges.
+    Should use database in the future... 
+    """
+    D=0
+    rowlen=30 # split into rows of this length...
+    rowlen0 = rowlen
+    rowlen1 = rowlen
+    characters=dict()
+    level = 'N' ; weight = 'k'
+    print "char=",char
+    if level_start == level_stop:
+        level = level_start
+        count_min = weight_start; count_max = weight_stop
+        if (weight_stop-weight_start+1) < rowlen:
+            rowlen0=weight_stop-weight_start+1
+    if weight_start==weight_stop:
+        weight = weight_start
+        count_min = level_start; count_max = level_stop
+        if (level_stop-level_start+1) < rowlen:
+            rowlen0=level_stop-level_start+1
+    #else:
+    #    return ""
+    tbl=dict()
+    if(char==1):
+        tbl['header']='Dimension of \( S_{'+str(weight)+'}('+str(level)+',\chi_{n})\)'
+    else:
+        s = 'Dimension of \( S_{'+str(weight)+'}('+str(level)+')\)'
+        s += ' (trivial character)'
+        tbl['header']=s
+    tbl['headersv']=list()
+    tbl['headersh']=list()
+    tbl['corner_label']="k"
+    tbl['data']=list()
+    tbl['data_format']='html'
+    tbl['class']="dimension_table"
+    tbl['atts']="border=\"0\" class=\"data_table\""
+    num_rows = ceil(QQ(count_max-count_min+1) / QQ(rowlen0))
+    print "num_rows=",num_rows
+    for i in range(1,rowlen0+1):
+        tbl['headersh'].append(i+count_min-1)
+    if level_start==level_stop:
+        tbl['headersv']=['d:']
+    else:
+        tbl['headersv']=['d:']
+    # make a dummy table first
+    for r in range(num_rows):
+        row=[]
+        for k in range(1,rowlen0+1):
+            row.append("")
+        tbl['data'].append(row)				
+    tbl['data_format']=dict()
+    for k in range(0,rowlen0):
+        tbl['data_format'][k]='html'
+
+    print "nu_rows=",len(tbl['data'])
+    print "num_cols=",rowlen0
+    print "num_cols=",[len(r) for r in tbl['data']]
+    for r in range(num_rows):
+        for k in range(0,rowlen0):
+            cnt = count_min+r*rowlen0+k
+            if level_start==level_stop:
+                weight=cnt
+            else:
+                level=cnt
+            url = url_for('render_classical_modular_form_browsing',level=level,weight=weight)
+            if(cnt>count_max or cnt < count_min):
+                tbl['data'][r][k]=""
+                continue
+            s="<a name=\"#%s,%s\"></a>" % (level,weight)
+            if(char==0):
+                d=dimension_cusp_forms(level,weight)
+                #print "d=",d
+                #url="?weight="+str(weight)+"&level="+str(N)+"&character=0"
+                print "cnt=",cnt
+                print "r,k=",r,k
+                ss = s + "<a  href=\""+url+"\">"+str(d)+"</a>"
+                tbl['data'][r][k]=ss
+            else:
+                ss = make_table_of_characters(level,weight)
+                tbl['data'][r][k]=ss
+            #tbl['data'][r][k]=s
+            #print "row=",row
+            #tbl['data'][r]=row			
+    #print "tbl=",tbl
+    s=html_table(tbl)
+    #s=s+"\n <br> \(N="+str(rowlen0)+"\cdot row+col\)"
+    #print "SS=",s
+    return s
+    #ss=re.sub('texttt','',s)
+    #info['popup_table']=ss
+ 	#info['sidebar']=set_sidebar([navigation,parents,siblings,friends,lifts])
+        #   return info
+
+
+
 def set_table(info,is_set,make_link=True): #level_min,level_max,weight=2,chi=0,make_link=True):
 	r"""
 	make a bunch of html tables with information about spaces of modular forms
@@ -144,21 +555,21 @@ def set_table(info,is_set,make_link=True): #level_min,level_max,weight=2,chi=0,m
 	rowlen1 = rowlen
 	characters=dict()
 	if(info.has_key('level_min')):
-		level_min=int(info['level_min'][0])
+		level_min=int(info['level_min'])
 	else:
 		level_min=1
 	if(info.has_key('level_max')):
-		level_max=int(info['level_max'][0])
+		level_max=int(info['level_max'])
 	else:
 		level_max=50
 	if (level_max-level_min+1) < rowlen:
 		rowlen0=level_max-level_min+1
-	if(info['list_chars'][0]<>'0'):
+	if(info['list_chars']<>'0'):
 		char1=1
 	else:
 		char1=0
 	if(is_set['weight']):
-		weight=info['weight']
+		weight=int(info['weight'])
 	else:
 		weight=2
 	## setup the table
@@ -179,11 +590,16 @@ def set_table(info,is_set,make_link=True): #level_min,level_max,weight=2,chi=0,m
 	print "num_rows=",num_rows
 	for i in range(1,rowlen0+1):
 		tbl['headersh'].append(i+level_min-1)
-		
+
 	for r in range(num_rows):
 		tbl['headersv'].append(r*rowlen0)
+	print "level_min=",level_min
+	print "level_max=",level_max
+	print "char=",char1
 	for r in range(num_rows):
 		row=list()
+                for k in range(1,rowlen0+1):
+                    row.append("")
 		#print "row nr. ",r
 		for k in range(1,rowlen0+1):
 			N=level_min-1+r*rowlen0+k
@@ -193,6 +609,7 @@ def set_table(info,is_set,make_link=True): #level_min,level_max,weight=2,chi=0,m
 				continue
 			if(char1==0):
 				d=dimension_cusp_forms(N,weight)
+				print "d=",d
 				if(make_link):
 					url="?weight="+str(weight)+"&level="+str(N)+"&character=0"
 					row.append(s+"<a target=\"mainWindow\" href=\""+url+"\">"+str(d)+"</a>")
@@ -201,7 +618,7 @@ def set_table(info,is_set,make_link=True): #level_min,level_max,weight=2,chi=0,m
 
 				#print "dim(",N,weight,")=",d
 			else:
-				
+
 				D=DirichletGroup(N)
 				print "D=",D
 				s="<a name=\"#"+str(N)+"\"></a>"
@@ -248,16 +665,17 @@ def set_table(info,is_set,make_link=True): #level_min,level_max,weight=2,chi=0,m
 					#print "ss=",ss
 					s=s+ss
 					#s=s+"\( \chi_{"+str(chi)+"}\) :"+str(d)
-					
+
 					#print N,k,chi,d
 				#print s
 				else:
 					s="All spaces are zero-dimensional!"
 				row.append(s)
+		print "row=",row
 		tbl['data'].append(row)				
 	s=html_table(tbl)
 	s=s+"\n <br> \(N="+str(rowlen0)+"\cdot row+col\)"
-	#print "Whole table=",s
+	print "Whole table=",s
 	## ugly solution. but we have latex in the data fields...
 	ss=re.sub('texttt','',s)
 	info['popup_table']=ss
@@ -314,7 +732,7 @@ def print_list_of_coefficients(info):
 				shead=shead+"Embeddings: <ul>"
 				for j in range(1,F.dimension()):
 					shead=shead+"<li><a href=\"#"+F.label()+"\">"+F.label()+"</a>"
-					
+
 		for F in FS:
 			c=F.print_q_expansion_embeddings(number,bprec)
 			s=s+"<a name=\""+F.label()+"\"></a>\n"
@@ -322,7 +740,7 @@ def print_list_of_coefficients(info):
 				s=s+"<a name=\""+str(j)+"\"></a>\n"
 				for n in range(len(c)): 
 					s=s+str(j)+" "+str(c[n][j])
-					
+
 	ss= shead+"\n"+s 
 	info['popup_table']=ss
 	return info
@@ -411,16 +829,10 @@ def set_info_for_navigation(info,is_set,sbar):
 	"""
 	(friends,lifts)=sbar
 	## We always print the list of weights
-	if(not is_set['weight']):
-		info['weight'] = 2  ## the default value
-	for n in range(2,13):
-		if(n==info['weight']):
-			info['initial_list_of_weights'].append((n,"checked"))
-		else:
-			info['initial_list_of_weights'].append((n,""))
-		
+        info['initial_list_of_weights'] = print_list_of_weights()
+#ajax_more2(print_list_of_weights,{'kstart':[0,10,25,50],'klen':[15,15,15]},text=['<<','>>'])
 	## And the  list of characters if we know the level.
-	
+
 	if(is_set['level']): 
 		s="<option value="+str(0)+">Trivial character</option>"
 		D=DirichletGroup(info['level'])
@@ -443,39 +855,87 @@ def set_info_for_navigation(info,is_set,sbar):
 	lifts.append(('Siegel Modular Forms','/ModularForm/GSp4/Q'))
 	return (info,lifts)
 
+
+def print_list_of_weights_old(kstart=0,klen=20):
+    r"""
+    prints as list of weights with links to left and right.
+    """
+    s=""
+    for k in range(kstart+1,kstart+klen+1):
+        s+="<a href=\""+url_for('render_classical_modular_forms',weight=k)+"\">%s </a>\n" % k
+    return s
+
+def print_list_of_weights(kstart=0,klen=20):
+    r"""
+    prints as list of weights with links to left and right.
+    """
+    print "kstart,klen=",kstart,klen
+    nonce = hex(random.randint(0, 1<<128))
+    s=""
+    for k in range(kstart+1,kstart+klen+1):
+        s+="<a href=\""+url_for('render_classical_modular_forms',weight=k)+"\">%s </a>\n" % k
+
+    url = ajax_url(print_list_of_weights,print_list_of_weights,kstart,klen,inline=True)
+    s0 = """<span id='%(nonce)s'>""" % locals() 
+    s1 = """<small><a onclick="$('#%(nonce)s').load('%(url)s', {kstart:10},function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'%(nonce)s']);}); return false;" href="#"> &lt;&lt; </a></small>""" %locals()
+    s2 = """<small><a onclick="$('#%(nonce)s').load('%(url)s', {kstart:50},function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'%(nonce)s']);}); return false;" href="#"> &gt;&gt; </a></small>""" %locals()    
+    res = s0 + s1 + s + s2 + "</span>"
+    return res
+
+
+
 #import __main__.web_modforms #WebNewForm 
 #from web_modforms import
 import __main__
 __main__.WebModFormSpace=WebModFormSpace
 __main__.WebNewForm=WebNewForm
-		
-def set_info_for_one_modular_form(level,weight,character,label,info,sbar,args):
+
+def set_info_for_one_modular_form(level,weight,character,label,info,sbar):
 	r"""
 	Set the info for on modular form.
 
-	"""			
+	"""
 	try:
+		#M = WebModFormSpace(weight,level,character)
+		#if label
 		WNF = WebNewForm(weight,level,character,label)
 		if info.has_key('download') and info.has_key('tempfile'):
 			WNF._save_to_file(info['tempfile'])
 			info['filename']=str(weight)+'-'+str(level)+'-'+str(character)+'-'+label+'.sobj'
 			return (info,sbar)
 	except:
+		WNF = None
+		print "Could not compute the desired function!"
 		info['error']="Could not compute the desired function!"
 	(properties,parents,friends,siblings,lifts)=sbar
 	#print info.keys()
+	#print "--------------------------------------------------------------------------------"
 	#print WNF
-	if(info.has_key('error')):
+	if WNF==None or  WNF.f == None:
+		print "level=",level
+		info['error']="This space is empty!"
+		
+		D = DirichletGroup(level)
+		if len(D.list())> character:
+			x = D.list()[character]
+			info['character_order']=x.order()
+			info['character_conductor']=x.conductor()
+		else:
+			info['character_order']='0'
+			info['character_conductor']=level
+	if info.has_key('error'):
 		return (info,sbar)		
-	info['satake'] = WNF.print_satake_parameters()
+	info['name']=WNF._name
+	#info['embeddings'] =  ajax_more2(WNF.print_q_expansion_embeddings,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more coeffs.','more precision'])
+	info['satake'] = ajax_more2(WNF.print_satake_parameters,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more parameters','more precision'])
 	info['polynomial'] = WNF.polynomial()
 	#info['q_exp'] = "\["+WNF.print_q_expansion()+"\]"
-	old_break = WNF._break_line_at
-	WNF._break_line_at=50
+	#old_break = WNF._break_line_at
+	#WNF._break_line_at=50
 	#info['q_exp'] = ajax_more(WNF.print_q_expansion,5,10,20,50,100)
 	br = 45
 	info['q_exp'] = ajax_more(WNF.print_q_expansion,{'prec':5,'br':br},{'prec':10,'br':br},{'prec':20,'br':br},{'prec':100,'br':br},{'prec':200,'br':br})
-	WNF._break_line_at=old_break
+	#WNF._break_line_at=old_break
 	## check the varable...
 	#m = re.search('zeta_{\d+}',info['q_exp'])
 	#if(m):
@@ -485,8 +945,8 @@ def set_info_for_one_modular_form(level,weight,character,label,info,sbar,args):
 		info['polynomial_st'] = 'where ' +'\('+	info['polynomial'] +'=0\)'
 	else:
 		info['polynomial_st'] = ''
-		
-	info['satake_angle'] = WNF.print_satake_parameters(type='thetas')
+
+	#info['satake_angle'] = WNF.print_satake_parameters(type='thetas')
 	K = WNF.base_ring()
 	if(K<>QQ and K.is_relative()):
 		info['degree'] = int(WNF.base_ring().relative_degree())
@@ -521,12 +981,12 @@ def set_info_for_one_modular_form(level,weight,character,label,info,sbar,args):
 		s='Is minimal'
 	else:
 		s='Is a twist of lower level'
-	properties.append((s,''))
+	properties.append(s)
 	if(WNF.is_CM()[0]):				
 		s='Is a CM-form'
 	else:
 		s='Is not a CM-form'
-	properties.append((s,''))
+	properties.append(s)
 	if(level==1):
 		info['explicit_formula'] = WNF.print_as_polynomial_in_E4_and_E6()
 	cur_url='?&level='+str(level)+'&weight='+str(weight)+'&character='+str(character)+'&label='+str(label)
@@ -540,11 +1000,12 @@ def set_info_for_one_modular_form(level,weight,character,label,info,sbar,args):
 			siblings.append(l)
 
 	for j in range(WNF.degree()):
-		s = 'L-function '+str(level)+str(label)+str(j)
-		url = '/L'+url_for('render_classical_modular_form',weight=weight,level=level,label=label,number=j) 
+		label = str(label)+str(j+1)
+		s = 'L-function '+str(level)+label
+		url = '/L'+url_for('render_one_classical_modular_form',level=level,weight=weight,character=character,label=label) 
 		friends.append((s,url))
 		#friends.append((s,'/Lfunction/ModularForm/GL2/Q/holomorphic/?weight='+str(weight)+'&level='+str(level)+'&character='+str(character)+"&label="+label+"&number="+str(j)))
-	
+
 	space_url='?&level='+str(level)+'&weight='+str(weight)+'&character='+str(character)
 	parents.append(('\( S_{k} (\Gamma_0(' + str(level) + '),\chi )\)',space_url))
 	info['sidebar']=set_sidebar([properties,parents,siblings,friends,lifts])
@@ -558,16 +1019,17 @@ def set_info_for_modular_form_space(level,weight,character,info,sbar):
 	r"""
 	Set information about a space of modular forms.
 	"""
+        print "character=",character
 	(properties,parents,friends,siblings,lifts)=sbar
 	if(level > N_max_comp or weight > k_max_comp):
-		info['error']="Will take too long to compute!"
+            info['error']="Will take too long to compute!"
 	try:
 		#print  "PARAM_S:",weight,level,character
-		WMFS = WebModFormSpace(weight,level,character)
+            WMFS = WebModFormSpace(weight,level,character)
 	except RuntimeError:
 		info['error']="Sage error: Could not construct the desired space!"
 	if(info.has_key('error')):
-	   return (info,sbar)
+		return (info,sbar)
 	info['dimension'] = WMFS.dimension()
 	info['sturm_bound'] = WMFS.sturm_bound()
 	info['new_decomposition'] = WMFS.print_galois_orbits()
@@ -593,7 +1055,7 @@ def set_info_for_modular_form_space(level,weight,character,info,sbar):
 			next=next.tb_next
 		#print s
 		## make an error popup with detailed error message
-		
+
 		info['error_note'] = "Could not construct oldspace!\n"+s
 	# properties for the sidebar
 	s='Dimension = '+str(info['dimension'])
@@ -602,7 +1064,7 @@ def set_info_for_modular_form_space(level,weight,character,info,sbar):
 	properties.append((s,''))
 	s='Sturm bound = '+str(WMFS.sturm_bound())
 	properties.append((s,''))		
-	
+
 	## Make parent spaces of S_k(N,chi) for the sidebar
 	par_lbl='\( S_{*} (\Gamma_0(' + str(level) + '),\cdot )\)'
 	par_url='?level='+str(level)
@@ -646,6 +1108,8 @@ def ajax_more2(callback, *arg_list, **kwds):
 	"""
 	inline = kwds.get('inline', True)
 	text = kwds.get('text', 'more')
+	print "inline=",inline
+
 	print "text=",text
 	text0 = text[0]
 	text1 = text[1]
@@ -683,11 +1147,60 @@ def ajax_more2(callback, *arg_list, **kwds):
 	if arg_list1 or arg_list2:
 		url1 = ajax_url(ajax_more2, callback, *arg_list1, inline=True, text=text)
 		url2 = ajax_url(ajax_more2, callback, *arg_list2, inline=True, text=text)
+		print "arg_list1=",url1
+		print "arg_list2=",url2
 		s0 = """<span id='%(nonce)s'>%(res)s """  % locals()
 		s1 = """[<a onclick="$('#%(nonce)s').load('%(url1)s', function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'%(nonce)s']);}); return false;" href="#">%(text0)s</a>""" % locals()
 		t = """| <a onclick="$('#%(nonce)s').load('%(url2)s', function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'%(nonce)s']);}); return false;" href="#">%(text1)s</a>]</span>""" % locals()
 		return (s0+s1+t)
-
-	
 	else:
 		return res
+
+def ajax_once(callback,*arglist,**kwds):
+	r"""
+	"""
+
+	text = kwds.get('text', 'more')
+	print "text=",text
+	print "arglist=",arglist
+	print "kwds=",kwds
+	print "req=",request.args
+	nonce = hex(random.randint(0, 1<<128))
+	res = callback()
+	url = ajax_url(ajax_once,print_list_of_characters,arglist,kwds,inline=True)
+	s0 = """<span id='%(nonce)s'>%(res)s """  % locals()
+	#	s1 = """[<a onclick="$('#%(nonce)s').load('%(url)s', {'level':22,'weight':4},function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'%(nonce)s']);}); return false;" href="#">%(text)s</a>""" % locals()
+	s1 = """[<a onclick="$('#%(nonce)s').load('%(url)s', {a:1},function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'%(nonce)s']);}); return false;" href="#">%(text)s</a>""" % locals()
+	return s0+s1
+
+def print_list_of_characters(level=1,weight=2):
+	r"""
+	Prints a list of characters compatible with the weight and level.
+	"""
+	D = DirichletGroup(level)
+	res=list()
+	for j in range(len(D.list())):
+		if D.list()[j].is_even() and is_even(weight):
+			res.append(j)
+		if D.list()[j].is_odd() and is_odd(weight):
+			res.append(j)
+	s = ""
+	for j in res:
+		s+="\(\chi_{"+str(j)+"}\)"
+	return s
+
+def _my_get(dict,key,default,f=None):
+	r"""
+	Improved version of dict.get where an empty string also gives default.
+	and before returning we apply f on the result.
+	"""
+	x = dict.get(key,default)
+	if x=='':
+		x=default
+	if f<>None:
+		try:
+			x = f(x)
+		except:
+			pass
+	return x
+	

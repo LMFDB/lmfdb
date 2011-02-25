@@ -431,19 +431,30 @@ class WebNewForm(SageObject):
             self._parent=WebModFormSpace(k,N,chi)
         self.f=None
         self._verbose=verbose
-        try:
-            if(len(label)>0): # the label takes priority
-                L=self._parent.galois_decomposition()
-                for j in range(len(L)):
-                    if(self._parent._galois_orbits_labels[j]==label):
-                        self.f=self._parent._newforms[j]
-            if(self.f == None):
-                self.f=self._parent._newforms[fi]
-        except IndexError:
+        # try to split the label at letters and numbers
+        num=1
+        if re.sub("([a-zA-Z]*)(\d*)","\\1 \\2",label):
+            l = label.split(" ")
+            label = l[0]
+            if len(l)>1:
+                num = l[1]
+        #print "label=",label
+        #print "num=",num
+        self._label = label
+        if len(label)==0:
+            label='a'
+        self._parent.galois_decomposition()
+        if label not in self._parent._galois_orbits_labels:
+            label=self._parent._galois_orbits_labels[0] ## defaults
+        j = self._parent._galois_orbits_labels.index(label)
+        self.f=self._parent._newforms[j]
+        ##
+        self._name = str(N)+str(label)+str(num)
+        if self.f == None:
             if(self._verbose>=0):
                 raise IndexError,"Requested function does not exist!"
             else:
-                return None
+                return 
         self._k=ZZ(k)
         self._N=ZZ(N)
         self._chi=ZZ(chi)
@@ -458,13 +469,13 @@ class WebNewForm(SageObject):
         self._bitprec=bitprec
         self._label=''
         self._fi=None
-        self._break_line_at = 0 ## breaking of lines in display
         self._atkin_lehner_eigenvalues={}
         if(label <> ''):
             self._label=label
         else:
             self._fi = fi
         self._data = dict() # stores a lot of stuff
+        self._satake={}
         if isinstance(data,dict):
             #self._data = data
             if data.has_key('atkin_lehner_eigenalues'):
@@ -489,8 +500,11 @@ class WebNewForm(SageObject):
     def __repr__(self):
         r""" String representation f self.
         """
-        return str(self.q_expansion())
-
+        if self.f <>None:
+            return str(self.q_expansion())
+        else:
+            return ""
+        
     def __reduce__(self):
         r"""
         Reduce self for pickling.
@@ -516,7 +530,8 @@ class WebNewForm(SageObject):
         return self._N
 
     def group(self):
-        return self._parent.group()
+        if hasattr(self,'_parent'):
+            return self._parent.group()
 
     def label(self):
         if(not self._label):
@@ -524,10 +539,12 @@ class WebNewForm(SageObject):
         return self._label
 
     def weight(self):
-        return self._k
+        if hasattr(self,'_k'):
+            return self._k
 
     def character(self):
-        return self._character
+        if hasattr(self,'_character'):
+            return self._character
 
     def character_order(self):
         return self.parent.character_order()
@@ -536,13 +553,16 @@ class WebNewForm(SageObject):
         return self.parent.character_conductor()
 
     def chi(self):
-        return self._chi
+        if hasattr(self,'_chi'):
+            return self._chi
 
     def prec(self):
-        return self._prec
+        if hasattr(self,'_prec'):
+            return self._prec
 
     def parent(self):
-        return self._parent
+        if hasattr(self,'_parent'):
+            return self._parent
     
     def is_rational(self):
         if(self.base_ring()==QQ):
@@ -557,17 +577,19 @@ class WebNewForm(SageObject):
         """
         if not hasattr(self,'_dimension') or self._dimension == None or self._dimension<=0:
             P = self.parent()
-            j = P.labels().index(self.label())
-            self._dimension = self.parent().galois_decomposition()[j].dimension()
-        return self._dimension
-
+            if P.labels().count(self.label())>0:
+                j = P.labels().index(self.label())
+                self._dimension = self.parent().galois_decomposition()[j].dimension()
+                return self._dimension
+            else:
+                return 0
 
     def q_expansion_embeddings(self,prec=10,bitprec=53):
         r""" Compute all embeddings of self into C which are in the same space as self.
         """
         if(len(self._embeddings)>=prec):
             bp = self._embeddings[0][0].prec()
-            if bp <= bitprec:
+            if bp >= bitprec:
                 res = list()
                 for n in range(prec):
                     l = list()
@@ -592,13 +614,19 @@ class WebNewForm(SageObject):
         return self._embeddings
         
     def base_ring(self):
-        return self._base_ring
+        if hasattr(self,'_base_ring'):
+            return self._base_ring
+        else:
+            return None
 
     def degree(self):
-        return _degree(self._base_ring)
-
+        if hasattr(self,'_base_ring'):
+            return _degree(self._base_ring)
+        else:
+            return None
     def q_expansion(self,prec=10):
-        return self.f.q_expansion(ZZ(prec))
+        if hasattr(self.f,'q_expansion'):
+            return self.f.q_expansion(ZZ(prec))
     
     def atkin_lehner_eigenvalues(self):
         r""" Compute the Atkin-Lehner eigenvalues of self. 
@@ -1043,8 +1071,12 @@ class WebNewForm(SageObject):
         -''bits'' -- do real embedings intoi field of bits precision
 
         """
-        if(self._satake<>{}):
-            return self._satake
+        if not hasattr(self,'_satake'):
+            self._satake={}
+        elif(self._satake<>{}):
+            x = self._satake['thetas'].values()[0].values()[0]
+            if x.prec() >= bits: # else recompute
+                return self._satake
         K=self.base_ring()
         degree = _degree(K)
         RF=RealField(bits)
@@ -1082,15 +1114,15 @@ class WebNewForm(SageObject):
         self._satake['thetas']=thetas
         return self._satake
     
-    def print_satake_parameters(self,type='alphas',prec=10,bits=53):
-        satake=self.satake_parameters(prec,bits)
+    def print_satake_parameters(self,stype=['alphas','thetas'],prec=10,bprec=53):
+        print "print_satake=",prec,bprec
+        if self.f == None:
+            return ""
+        satake=self.satake_parameters(prec,bprec)
         tbl=dict()
-        tbl['headersh']=satake[type][0].keys()
-        #if(self.base_ring()==QQ):
-        #    tbl['headersv']=[""]
-        #    tbl['data']=[satake[type].values()]
-        #    tbl['corner_label']="\(p\)"
-        #else:
+        if not isinstance(stype,list):
+            stype = [stype]
+        tbl['headersh']=satake[stype[0]][0].keys()
         tbl['atts']="border=\"1\""
         tbl['data']=list()
         tbl['headersv']=list()
@@ -1100,18 +1132,19 @@ class WebNewForm(SageObject):
             tbl['corner_label']="\( Embedding \, \\backslash \, p\)"
         else:
             tbl['corner_label']="\( p\)"
-        for j in range(degree):
-            if(self.dimension()>1):
-                tbl['headersv'].append(j)
-            else:
-                if(type=='alphas'):
-                    tbl['headersv'].append('\(\\alpha_p\)')
+        for type in stype:
+            for j in range(degree):
+                if(self.dimension()>1):
+                    tbl['headersv'].append(j)
                 else:
-                    tbl['headersv'].append('\(\\theta_p\)')
-            row=list()
-            for p in satake[type][j].keys():
-                row.append(satake[type][j][p])
-            tbl['data'].append(row)
+                    if(type=='alphas'):
+                        tbl['headersv'].append('\(\\alpha_p\)')
+                    else:
+                        tbl['headersv'].append('\(\\theta_p\)')
+                row=list()
+                for p in satake[type][j].keys():
+                    row.append(satake[type][j][p])
+                tbl['data'].append(row)
         #print tbl
         s=html_table(tbl)
         return s
@@ -1158,7 +1191,6 @@ class WebNewForm(SageObject):
         else:
             s = "\("+"\)<br>\(".join(sb)+"\)"
         print "print_q_exp: prec=",prec
-        print "break_at=",self._break_line_at
         print "s=",s
         return s
 
@@ -1215,22 +1247,35 @@ class WebNewForm(SageObject):
         s=html_table(tbl)
         return s
 
-    def polynomial(self):
+    def polynomial(self,format='latex'):
         r"""
         Here we have to check whether f is defined over a base ring over Q or over a CyclotomicField...
         """
         K = self.base_ring()
-        if(self.dimension()==1):
+        if K == None:
+            return ""
+        if(self.dimension()==1 or K==QQ):
             if(K == QQ):
                 s = 'x'
             else:
-                s = latex(K.gen())
+                if format == 'latex':
+                    s = latex(K.gen())
+                elif format == 'html':
+                    s = pol_to_html(K.relative_polynomial())
         else:
             if(K.is_relative()):
-                s=latex(K.relative_polynomial())
+                if format == 'latex':
+                    s=latex(K.relative_polynomial())
+                elif format == 'html':
+                    s = pol_to_html(K.relative_polynomial())
             else:
-                s=latex(self.base_ring().polynomial())
+                if format == 'latex':
+                    s=latex(self.base_ring().polynomial())
+                elif format == 'html':
+                    s = pol_to_html(K.relative_polynomial())
         return s
+
+    
         
     def print_atkin_lehner_eigenvalues(self):
         r"""
@@ -1442,10 +1487,10 @@ def html_table(tbl):
     ncols=len(tbl["headersh"])
     nrows=len(tbl["headersv"])
     data=tbl['data']
-    
     if(len(data)<>nrows):
         print "wrong number of rows!"
     for i in range(nrows):
+        print "len(",i,")=",len(data[i])
         if(len(data[i])<>ncols):
             print "wrong number of cols!"        
 
@@ -1462,9 +1507,7 @@ def html_table(tbl):
                     format[i]=tbl['data_format'][i]
             elif(isinstance(tbl['data_format'],str)):
                 format[i]=tbl['data_format']
-
     if(tbl.has_key('header')):
-        
         s+="<thead><tr><th><td colspan=\""+str(ncols)+"\">"+tbl['header']+"</td></th></tr></thead>"
     s=s+"<tbody>"
     #smath="<span class=\"math\">"
@@ -1473,18 +1516,23 @@ def html_table(tbl):
     sheaderh="";    sheaderv=""
     h1=tbl['headersv'][0]
     col_width=dict()
-    for i in range(ncols):
-        col_width[i]=0
-        if tbl.has_key('col_width'):
-            if tbl['col_width'].has_key(i):
-                col_width[i]=tbl['col_width'][i]
-
+    if not tbl.has_key('col_width'):
+        # use maximum width as default
+        maxw = 0
+        for k in range(ncols):
+            for r in range(nrows):
+                if len(str(data[r][k]))>maxw:
+                    maxw = len(str(data[r][k]))
+        for k in range(ncols):
+            col_width[k]=maxw
+    else:
+        for i in range(ncols):        
+            col_width[i]=0
+            if tbl.has_key('col_width'):
+                if tbl['col_width'].has_key(i):
+                    col_width[i]=tbl['col_width'][i]
     print "col width=",col_width
     print "format=",format
-    #if(isinstance(h1,str) and not re.match("\$",h1)):
-    #    sheaderv="<span>"
-    #else:
-    #    sheaderv="<span class=\"math\">"
     if(tbl.has_key("corner_label")):
         row="<tr><td>"+str(tbl["corner_label"])+"</td>"
     else:
@@ -1499,15 +1547,16 @@ def html_table(tbl):
         for k in range(ncols):
             wid = col_width[k]
             if format[k]=='html' or format[k]=='text':
-                row=row+"\t<td width=\""+str(wid)+"\">"
+                row=row+"\t<td halign=\"center\" width=\""+str(wid)+"\">"
+                print "HTML=",data[r][k]
                 if isinstance(data[r][k],list):
-                    #print "HTML list=",data[r][k]
                     for ss in data[r][k]:
                         sss = str(ss)
                         if(len(sss)>0):
                             row+=sss
                 else:
                     sss = str(data[r][k])
+                    row+=sss
                 row=row+"</td> \n"
             else:
                 row=row+"\t<td width=\""+str(wid)+"\">"
@@ -1715,6 +1764,17 @@ def print_geometric_data_Gamma0N(N):
         return s
 
 
+def pol_to_html(p):
+    r"""
+    Convert polynomial p to html
+    """
+    s = str(p)
+    s = re.sub("\^(\d*)","<sup>\\1</sup>",s)
+    s = re.sub("\_(\d*)","<sub>\\1</suB>",s)
+    return s
+
+
 import __main__
 __main__.WebModFormSpace=WebModFormSpace
 __main__.WebNewForm=WebNewForm
+
