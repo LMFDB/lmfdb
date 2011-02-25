@@ -449,7 +449,7 @@ class WebNewForm(SageObject):
         j = self._parent._galois_orbits_labels.index(label)
         self.f=self._parent._newforms[j]
         ##
-        self._name = str(N)+str(label)+str(num)
+        self._name = str(N)+str(label)+str(num) +" (weight %s)" % k
         if self.f == None:
             if(self._verbose>=0):
                 raise IndexError,"Requested function does not exist!"
@@ -586,6 +586,7 @@ class WebNewForm(SageObject):
                 return 0
         else:
             return self._dimension
+        
     def q_expansion_embeddings(self,prec=10,bitprec=53):
         r""" Compute all embeddings of self into C which are in the same space as self.
         """
@@ -999,7 +1000,7 @@ class WebNewForm(SageObject):
         K=self.base_ring()
         print "K=",K
         # recall that 
-        degree = min(K.degree(),self.dimension())
+        degree = K.degree()
         cm_vals=dict()
         # the points we want are i and rho. More can be added later...
         rho=CyclotomicField(3).gen()
@@ -1413,6 +1414,7 @@ class WebNewForm(SageObject):
         tbl['data']=list()
         tbl['atts']="border=\"1\""
         tbl['headersv']=list()
+        #degree = self.dimension()
         for h in range(degree):
             if(degree==1):
                 tbl['headersv'].append("\( f(\\tau) \)")
