@@ -13,17 +13,23 @@ def render_webpage(args, arg1, arg2, arg3, arg4, arg5):
    # put different types of L-functions into here
     temp_args = {}
     info = {}
+    #print arg1, arg2, args, len(args)
     for a in args:
         temp_args[a] = args[a]
     if arg1 == 'Riemann':
         temp_args['type'] = 'riemann'
-    elif arg1 == 'Character' and arg2 == 'Dirichlet' and args['characternumber'] and args['charactermodulus']:
-        #print "inside if"
-        temp_args['type'] = 'dirichlet'
-    elif arg1 == 'Character' and arg2 == 'Dirichlet':
+    elif len(args)==0 and arg1 == None: #this means I'm at the basic navigation page
+        print "start page"
+        info = set_info_for_start_page()
+        return render_template("LfunctionNavigate.html", info = info, title = 'L-functions')
+    elif arg1 == 'Character' and arg2 == 'Dirichlet' and len(args)==0:
         info['title'] = 'Table of Dirichlet Characters'
+        #print "here"
         info['contents'] = processDirichletNavigation(args)
         return render_template("LfunctionTable.html",info=info, title=info['title'])
+    elif arg1 == 'Character' and arg2 == 'Dirichlet' and args['characternumber'] and args['charactermodulus']:
+        print "inside if"
+        temp_args['type'] = 'dirichlet'
     elif arg1 == 'EllipticCurve' and arg2 == 'Q' and arg3:
         temp_args['type'] = 'ellipticcurve'
         temp_args['label'] = str(arg3) 
@@ -41,17 +47,16 @@ def render_webpage(args, arg1, arg2, arg3, arg4, arg5):
         temp_args['type'] = args['type']
         temp_args['url'] = args['url'] 
 
-    elif args == {} and arg1 == None: #this means I'm at the basic navigation page
-        info = set_info_for_start_page()
+
         #print  "here",arg1,arg2,arg3,arg4,arg5,temp_args
         #info = getNavigationFromDb(temp_args, arg1, arg2, arg3, arg4, arg5)
         #info = processNavigationContents(info, temp_args, arg1, arg2, arg3, arg4, arg5)
         #print "here!!!"
         
-    else:
-        info = getNavigationFromDb(temp_args, arg1, arg2, arg3, arg4, arg5)
-        info = processNavigationContents(info, args, arg1, arg2, arg3, arg4, arg5)
-        return render_template("LfunctionNavigate.html", info = info, title = 'L-functions')
+    #else:
+    #    info = getNavigationFromDb(temp_args, arg1, arg2, arg3, arg4, arg5)
+    #    info = processNavigationContents(info, args, arg1, arg2, arg3, arg4, arg5)
+        
 
     L = WebLfunction(temp_args)
     #return "23423"
