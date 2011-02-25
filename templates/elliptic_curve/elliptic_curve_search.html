@@ -27,14 +27,14 @@ Optimal <input type='checkbox'  name='optimal' {% if info.optimal %} checked {%e
 <td><h2>Results</h2></td>
 <tr>
 <td align=center>Cremona label</td>
-<td align=center>[\(a_1\),\(a_2\),\(a_3\),\(a_4\),\(a_6\)]</td>
+<td align=left>[\(a_1\),\(a_2\),\(a_3\),\(a_4\),\(a_6\)]</td>
 <td align=center>rank</td>
 <td align=center>torsion order</td>
 </tr>
 {% for curve in info.curves: %}
 <tr>
 <td align=center><a href="/EllipticCurve/Q/{{curve.conductor}}/{{curve.iso}}/{{curve.number}}">{{curve.label}}</a></td>
-<td>{{info.format_ainvs(curve.ainvs)}}</td>
+<td align=left>{{info.format_ainvs(curve.ainvs)}}</td>
 <td align=center><a href="/EllipticCurve/Q?conductor={{info.conductor}}&rank={{curve.rank}}&torsion={{info.torsion}}">{{curve.rank}}</a></td>
 <td align=center><a href="/EllipticCurve/Q?conductor={{info.conductor}}&rank={{info.rank}}&torsion={{curve.torsion}}">{{curve.torsion}}</a></td>
 </tr>
