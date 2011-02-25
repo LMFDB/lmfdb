@@ -34,7 +34,7 @@ def render_classical_modular_forms():
 	weight = _my_get(info,'weight',-1,int) 
 	character = _my_get(info,'character', '0',str) #int(info.get('weight',0))
 	label  = info.get('label', '')
-        print "HERE:::::::::::::::::::",level,weight
+        print "HERE:::::::::::::::::::",level,weight,character,label
         if level<0:
             level=None
         if weight<0:
@@ -43,6 +43,7 @@ def render_classical_modular_forms():
 
 	# we see if we have submitted parameters
 	if level and weight and character and label:
+            print "HERE:::::::::::::::::::ALSO"
 		#return redirect(url_for("render_one_classical_modular_form", level,weight,character,label))
             return redirect(url_for("render_one_classical_modular_form", **info))
 	if level and weight and character:
@@ -69,7 +70,10 @@ def render_one_classical_modular_form(level,weight,character,label):
 def render_classical_modular_form_space(level,weight,character):
     print "render_classical_modular_form_space::",level,weight
     info=to_dict(request.args)
+    label  = info.get('label', '')
     info['level']=level; info['weight']=weight; info['character']=character
+    if label:
+        return render_one_classical_modular_form_wp(level,weight,character,label)
     return render_classical_modular_form_space_wp(**info)
 
 @app.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/")
@@ -964,10 +968,11 @@ def set_info_for_one_modular_form(level,weight,character,label,info,sbar):
 		#info['embeddings'] =  ajax_more2(WNF.print_q_expansion_embeddings,{'prec':5,'bprec':bprec},{'prec':10,'bprec':bprec},{'prec':25,'bprec':bprec},{'prec':50,'bprec':bprec},text='More coefficients')
 		info['embeddings'] =  ajax_more2(WNF.print_q_expansion_embeddings,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more coeffs.','more precision'])
 	elif(int(info['degree'])>1):
-		s = 'There are '+info['degree']+' embeddings into \( \mathbb{C} \):'
+		s = 'There are '+str(info['degree'])+' embeddings into \( \mathbb{C} \):'
 		bprec = 26
 		print s
-		info['embeddings'] = ajax_more2(WNF.print_q_expansion_embeddings,{'prec':5,'bprec':bprec},{'prec':10,'bprec':bprec},{'prec':25,'bprec':bprec},{'prec':50,'bprec':bprec})
+		info['embeddings'] =  ajax_more2(WNF.print_q_expansion_embeddings,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more coeffs.','more precision'])
+		#info['embeddings'] = ajax_more2(WNF.print_q_expansion_embeddings,{'prec':5,'bprec':bprec},{'prec':10,'bprec':bprec},{'prec':25,'bprec':bprec},{'prec':50,'bprec':bprec})
 
 	else:
 		info['embeddings'] = ''			
@@ -1057,7 +1062,7 @@ def set_info_for_modular_form_space(level,weight,character,info,sbar):
 			s+="\n line no. %s in file %s" %(ln,filen)
 			next=next.tb_next
 		#print s
-		## make an error popup with detailed error message
+		## make 97an error popup with detailed error message
 
 		info['error_note'] = "Could not construct oldspace!\n"+s
 	# properties for the sidebar

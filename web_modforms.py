@@ -476,6 +476,7 @@ class WebNewForm(SageObject):
             self._fi = fi
         self._data = dict() # stores a lot of stuff
         self._satake={}
+        
         if isinstance(data,dict):
             #self._data = data
             if data.has_key('atkin_lehner_eigenalues'):
@@ -493,7 +494,7 @@ class WebNewForm(SageObject):
             self._twist_info = []
             self._is_CM = []
             self._satake = {}
-            self._dimension = None
+            self._dimension = 1 # None
         ## we shold figure out which complex embeddings preserve the character
         
 
@@ -583,17 +584,19 @@ class WebNewForm(SageObject):
                 return self._dimension
             else:
                 return 0
-
+        else:
+            return self._dimension
     def q_expansion_embeddings(self,prec=10,bitprec=53):
         r""" Compute all embeddings of self into C which are in the same space as self.
         """
-        if(len(self._embeddings)>=prec):
+        if(len(self._embeddings)>prec):
             bp = self._embeddings[0][0].prec()
             if bp >= bitprec:
                 res = list()
-                for n in range(prec):
+                # 
+                for n in range(max(prec,len(self._embeddings))):
                     l = list()
-                    for i in range(len(self._embeddings[0])):
+                    for i in range(len(self._embeddings[n])):
                         l.append(self._embeddings[n][i].n(bitprec))
                     res.append(l)
                 return res
@@ -994,6 +997,7 @@ class WebNewForm(SageObject):
         if(self._verbose>1):
             print "eps=",eps
         K=self.base_ring()
+        print "K=",K
         # recall that 
         degree = min(K.degree(),self.dimension())
         cm_vals=dict()
@@ -1241,7 +1245,10 @@ class WebNewForm(SageObject):
             tbl['headersv'].append("\(v_{%s}(a(n)) \)" % i)
             row=list()
             for n in range(len(coeffs)):
-                row.append(coeffs[n][i])
+                if i<len(coeffs[n]):
+                    row.append(coeffs[n][i])
+                else:
+                    row.append("")
             tbl['data'].append(row)
 
         s=html_table(tbl)
@@ -1414,7 +1421,10 @@ class WebNewForm(SageObject):
                 
             row=list()
             for tau in cm_vals.keys():
-                row.append(cm_vals[tau][h])            
+                if cm_vals[tau].has_key(h):
+                    row.append(cm_vals[tau][h])            
+                else:
+                    row.append("")
             tbl['data'].append(row)
         #print tbl
         #print 
