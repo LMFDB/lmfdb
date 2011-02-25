@@ -35,9 +35,9 @@ def render_classical_modular_forms():
 	character = _my_get(info,'character', '0',str) #int(info.get('weight',0))
 	label  = info.get('label', '')
         print "HERE:::::::::::::::::::",level,weight,character,label
-        if level<0:
+        if level<=0:
             level=None
-        if weight<0:
+        if weight<=0:
             weight=None
         print "HERE:::::::::::::::::::",level,weight
 
@@ -45,6 +45,7 @@ def render_classical_modular_forms():
 	if level and weight and character and label:
             print "HERE:::::::::::::::::::ALSO"
 		#return redirect(url_for("render_one_classical_modular_form", level,weight,character,label))
+            info['level']=level; info['weight']=weight; info['label']=label; info['character']=character
             return redirect(url_for("render_one_classical_modular_form", **info))
 	if level and weight and character:
             return redirect(url_for("render_classical_modular_form_space", **info))
