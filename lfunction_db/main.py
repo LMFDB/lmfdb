@@ -1,4 +1,4 @@
-from base import app, C
+from base import app, getDBConnection
 import flask
 from flask import render_template, request
 
@@ -12,6 +12,7 @@ mod = flask.Module(__name__, 'LfunctionDB')
 @mod.route("/")
 @mod.route("/<zero>")
 def zero_search(**kwargs):
+    C = getDBConnection()
     if not 'zero' in kwargs:
         query = C.test.Lfunctions_test2.find().sort('first_zero')
     else:
@@ -30,6 +31,7 @@ def zero_search(**kwargs):
 
 @mod.route("/query")
 def query(**kwargs):
+    C = getDBConnection()
     degree = request.args.get("degree", 0, type=int)
     level = request.args.get("level", 0, type=int)
     first_zero_start = request.args.get("zerolowerbound", -1.0, type=float)
