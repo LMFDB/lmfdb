@@ -1,12 +1,13 @@
 from base import app, C
+import flask
 from flask import render_template, request
 
-from . import mod
 from utils import LazyMongoDBPagination
-
 from copy import copy
 
 import pymongo
+
+mod = flask.Module(__name__, 'LfunctionDB')
 
 @mod.route("/")
 @mod.route("/<zero>")
@@ -25,10 +26,10 @@ def zero_search(**kwargs):
         #        printed_arrow = True
         #    result_string = result_string + str(x['zero']) + " " + str(x['modulus']) + " " + str(x['character']) + "<br>\n"
         #return result_string
-    return render_template('zero_search/zero_search.html', pagination=pagination, info = {})
+    return render_template('LfunctionDB/list.html', pagination=pagination, info = {})
 
-@mod.route("/list")
-def list_functions(**kwargs):
+@mod.route("/query")
+def query(**kwargs):
     degree = request.args.get("degree", 0, type=int)
     level = request.args.get("level", 0, type=int)
     first_zero_start = request.args.get("zerolowerbound", -1.0, type=float)
@@ -36,7 +37,7 @@ def list_functions(**kwargs):
     sort = request.args.get("sort", "first_zero", type=str)
     direction = request.args.get("direction", "up", type=str)
 
-    if sort not in ['degree', 'first_zero', 'level']:
+    if sort not in ['degree', 'first_zero', 'level', 'coeffs']:
         sort = "first_zero"
     if direction not in ["up", "down"]:
         direction = "up"
@@ -60,5 +61,5 @@ def list_functions(**kwargs):
         filter['first_zero']['$lte'] = float(first_zero_end)
 
     query = C.test.Lfunctions_test2.find(filter).sort(sort, direction)
-    pagination = LazyMongoDBPagination(query = query, per_page=50, page=request.args.get('page', 1), endpoint="list_functions", endpoint_params=dict(request.args))
-    return render_template('zero_search/zero_search.html', pagination=pagination, info = {'blah' : 'blah'})
+    pagination = LazyMongoDBPagination(query = query, per_page=50, page=request.args.get('page', 1), endpoint="query", endpoint_params=dict(request.args))
+    return render_template('LfunctionDB/list.html', pagination=pagination, info = {'blah' : 'blah'})

@@ -1,5 +1,6 @@
 {% extends 'homepage.html' %}
 
+
 {% macro print_complex(z): -%}
 {% if z[1] == 0: %}
 {{ z[0] }}
@@ -10,6 +11,12 @@
           {{z[0]}} + {{z[1]}}i
     {% endif %}
 {% endif %}
+{%- endmacro %}
+
+{% macro print_complex_list(L) -%}
+{% for z in L %}
+{{print_complex(z)}},
+{% endfor %}
 {%- endmacro %}
 
 {% macro Lfunction_to_html_in_table(L): -%}
@@ -47,9 +54,9 @@ Zero upper bound: <input type="text" name="zeroupperbound" value={{request.args.
 
 <table>
     {% if request.args.direction=="up" %}
-    <tr><td><a href={{url_for("list_functions", degree=request.args.degree, level=request.args.level, zerolowerbound=request.args.zerolowerbound, zeroupperbound=request.args.zeroupperbound, sort="first_zero", direction="down", page=request.args.get('page', 1))}}>First zero</a></td><td>Degree</td><td>&nbsp;level</td><td>Signature</td><td>Description</td></tr>
+    <tr><td><a href={{url_for("query", degree=request.args.degree, level=request.args.level, zerolowerbound=request.args.zerolowerbound, zeroupperbound=request.args.zeroupperbound, sort="first_zero", direction="down", page=request.args.get('page', 1))}}>First zero</a></td><td>Degree</td><td>&nbsp;level</td><td>Signature</td><td>Description</td></tr>
     {% else %}
-    <tr><td><a href={{url_for("list_functions", degree=request.args.degree, level=request.args.level, zerolowerbound=request.args.zerolowerbound, zeroupperbound=request.args.zeroupperbound, sort="first_zero", direction="up", page=request.args.get('page', 1))}}>First zero</a></td><td>Degree</td><td>&nbsp;level</td><td>Signature</td><td>Description</td></tr>
+    <tr><td><a href={{url_for("query", degree=request.args.degree, level=request.args.level, zerolowerbound=request.args.zerolowerbound, zeroupperbound=request.args.zeroupperbound, sort="first_zero", direction="up", page=request.args.get('page', 1))}}>First zero</a></td><td>Degree</td><td>&nbsp;level</td><td>Signature</td><td>Description</td></tr>
     {% endif %}
     {% for L in pagination.entries %}
         <tr>
