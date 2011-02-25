@@ -4,9 +4,10 @@ import pymongo
 from base import app, db, C
 from flask import Flask, session, g, render_template, url_for, request, redirect
 
-from utilities import ajax_more, image_src, web_latex, to_dict, parse_range, pol_to_html
 import sage.all
 from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, AbelianGroup
+
+from utilities import ajax_more, image_src, web_latex, to_dict, parse_range, coeff_to_poly, pol_to_html
 
 @app.route("/NF")
 def NF_redirect():
@@ -80,9 +81,6 @@ def number_field_render_webpage():
         return render_template("number_field/number_field_all.html", info = info, credit=credit, title=t, bread=bread)
     else:
         return number_field_search(**args)
-
-def coeff_to_poly(c):
-    return PolynomialRing(QQ, 'x')(c)
 
 def coeff_to_nf(c):
     return NumberField(coeff_to_poly(c), 'a')

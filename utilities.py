@@ -197,3 +197,9 @@ def parse_range(arg, parse_singleton=int):
         return q
     else:
         return parse_singleton(arg)
+
+
+def coeff_to_poly(c):
+    from sage.all import PolynomialRing, QQ
+    return PolynomialRing(QQ, 'x')(c)
+
