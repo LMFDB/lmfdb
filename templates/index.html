@@ -10,18 +10,13 @@ Examples:
 <li><a href="{{ url_for('ModularForm_GSp4_Q_top_level')  }}  ">Siegel modular forms</a> </li>
 <li><a href="{{ url_for('render_classical_modular_form')  }}  ">Classical modular forms</a></li>
 <li><a href="{{ url_for('number_field_render_webpage')  }}  ">Number Fields</a></li>
+<li><a href="{{ url_for('hilbert_modular_form_render_webpage')  }}">Hilbert Modular Forms</a></li>
 <li><a href="{{ url_for('LfunctionDB.query', zerolowerbound=1.1, zeroupperbound=2.1) }} ">First zero search example</li>
 </ul>
 
 Raw:
 <ul>
 <li><a href="/raw">raw</a>
-</ul>
-
-Further examples, Hilbert modular forms:
-<ul>
-<li><a href="{{ url_for('render_hilbert_modular_form', field="Qsqrt5") }}?level_norm=31">Forms over Qsqrt5 with level of norm 31</a> </li>
-<li><a href="{{ url_for('render_hilbert_modular_form', field="Qsqrt8") }}?level_norm=81&label=a">The form over Qsqrt8 with level of norm 81 and label "a"</a> </li>
 </ul>
 
 {% endblock %}
