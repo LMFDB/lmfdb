@@ -184,6 +184,8 @@ def image_callback(G):
 
 def parse_range(arg, parse_singleton=int):
     # TODO: graceful errors
+    if type(arg)==parse_singleton:
+        return arg
     if ',' in arg:
         return {'$or': [parse_range(a) for a in arg.split(',')]}
     elif '-' in arg[1:]:
