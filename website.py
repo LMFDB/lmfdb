@@ -46,7 +46,8 @@ def example(blah = None):
 @app.route("/ModularForm/")
 @app.route("/AutomorphicForm/")
 def modular_form_toplevel():
-    return render_template("modular_form_space.html", info = { })
+    return redirect(url_for("render_classical_modular_forms", info={}))
+    #return render_template("modular_form_space.html", info = { })
     
 @app.route("/calc")
 def calc():
@@ -91,9 +92,9 @@ def zeroesLfunction():
 def ModularForm_GSp4_Q_top_level():
     return siegel_modular_form.render_webpage(request.args)
 
-@app.route('/ModularForm/GL2/Q/holomorphic/')
-def render_classical_modular_form():
-    return classical_modular_form.render_webpage(request.args)
+#@app.route('/ModularForm/GL2/Q/holomorphic/')
+#def render_classical_modular_form():
+#    return classical_modular_form.render_webpage(request.args)
 
 @app.route('/ModularForm/GL2/Q/Maass/')
 def render_maass_form():
