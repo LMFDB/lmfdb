@@ -1,7 +1,7 @@
 import re
 import pymongo
 
-from base import app, db, C
+from base import app, getDBConnection
 from flask import Flask, session, g, render_template, url_for, request, redirect
 
 import sage.all
@@ -34,6 +34,7 @@ def hilbert_modular_form_render_webpage():
         return hilbert_modular_form_search(**args)
 
 def hilbert_modular_form_search(**args):
+    C = getDBConnection()
     info = to_dict(args) # what has been entered in the search boxes
     if 'natural' in info:
         return render_hmf_webpage({'label' : info['natural']})
@@ -78,6 +79,7 @@ def hilbert_modular_form_search(**args):
 
 @app.route('/ModularForm/GL2/<field_label>/holomorphic/<label>')
 def render_hmf_webpage(**args):
+    C = getDBConnection()
     data = None
     if 'label' in args:
         label = str(args['label'])
