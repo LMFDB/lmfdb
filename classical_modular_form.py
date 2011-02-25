@@ -87,6 +87,7 @@ def render_classical_modular_form_browsing(level,weight):
     info=to_dict(request.args)
     info['level']=level; info['weight']=weight
     print "render_classical_modular_form_browsing::",level,weight
+
     return browse_classical_modular_forms(**info)
 #return render_classical_modular_form_space_wp(**info)
 #return redirect(url_for("render_classical_modular_form_space", **info))
@@ -212,6 +213,11 @@ def browse_classical_modular_forms(**info):
         info['list_chars']='1'
     print "level=",level
     print "wt=",weight    
+    if level:
+        info['geometric'] = print_geometric_data_Gamma0N(level)
+        if info.has_key('plot'):
+            return render_fd_plot(level,info)
+
     if level and not weight:
         print "here1!"
         title = "Holomorphic Modular Cuspforms of level %s " % level
@@ -224,6 +230,7 @@ def browse_classical_modular_forms(**info):
         #info['list_spaces']=ajax_more(make_table_of_dimensions,{'weight':10},{'weight':20},{'weight':30},text='more')
 	title = "Holomorphic Modular Cuspforms of level %s " % level
 	bread =[('Modular Forms',url_for('modular_form_toplevel'))]
+        info['browse_type']=" of level %s " % level
         return render_template("classical_modular_forms/classical_modular_form_browse.html", info=info,title=title,bread=bread)
     if weight and not level:
         print "here2!"
@@ -232,6 +239,7 @@ def browse_classical_modular_forms(**info):
         info['list_spaces']=make_table_of_dimensions(weight_start=weight,weight_stop=weight,**info) #make_table_of_spaces(level=[10,20,30])
 	title = "Holomorphic Modular Cuspforms of weight %s" %weight
 	bread =[('Modular Forms',url_for('modular_form_toplevel'))]
+        info['browse_type']=" of weight %s " % weight
         return render_template("classical_modular_forms/classical_modular_form_browse.html", info=info,title=title,bread=bread)
     print "here2!"
     info['level_min']=level;info['level_max']=level
@@ -271,6 +279,7 @@ def render_classical_modular_form_space_list_chars(level,weight):
     info['list_spaces']=s
     title = "Holomorphic Modular Cuspforms of level %s and weight %s " %(level,weight)
     bread =[('Modular Forms',url_for('modular_form_toplevel'))]
+    info['browse_type']=" of level %s and weight %s " % (level,weight)
     return render_template("classical_modular_forms/classical_modular_form_browse.html", info=info,title=title,bread=bread)
 
 def render_webpage(**args):
