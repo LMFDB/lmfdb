@@ -219,12 +219,17 @@ def render_field_webpage(args):
         reg = 1
     else:
         reg = K.regulator()
+    UK = K.unit_group()
+    
     info.update(data)
     info.update({
         'label': label,
         'polynomial': web_latex(K.defining_polynomial()),
         'integral_basis': web_latex(K.integral_basis()),
         'regulator': web_latex(reg),
+        'unit_rank': unit_rank,
+        'root_of_unity': web_latex(UK.torsion_generator()),
+        'fund_units': web_latex(UK.fundamental_units()),
         'Gorder': Gorder, 'Gsign': Gsign, 'Gab': Gab
         })
     info['downloads_visible'] = True

@@ -62,13 +62,30 @@ function show_code(system) {
 
 
         <h2>
-            Regulator
+            Unit group
         </h2>
+        <div class='sage nodisplay code'>sage: UK = K.unit_group()</div>
+        <div class='sage nodisplay code'>sage: UK.rank()</div>
+        <div class='sage nodisplay code'>sage: UK.torsion_generator()</div>
+        <div class='sage nodisplay code'>sage: UK.roots_of_unity()</div>
         <div class='sage nodisplay code'>sage: K.regulator()</div>
+
+        <div class='pari nodisplay code'>pari: #K.fu</div>
+        <div class='pari nodisplay code'>pari: K.tu[2]</div>
+        <div class='pari nodisplay code'>pari: K.fu</div>
         <div class='pari nodisplay code'>pari: K.reg</div>
+
+        <div class='magma nodisplay code'>> UnitRank(K);</div>
+        <div class='magma nodisplay code'>> K!f(TorsionSubgroup(UK).1);</div>
+        <div class='magma nodisplay code'>> [K!Integers(K)!f(u) : u in Generators(UK)];</div>
         <div class='magma nodisplay code'>> Regulator(K);</div>
         <p>
-            {{ info.regulator }}
+          <table>
+            <tr><td>Rank:<td>&nbsp;&nbsp;<td>{{info.unit_rank}}</tr>
+            <tr><td>Torsion generator:<td>&nbsp;&nbsp;<td>{{info.root_of_unity}}</tr>
+            <tr><td>Fundamental units:<td>&nbsp;&nbsp;<td>{{info.fund_units}}</tr>
+            <tr><td>Regulator:<td>&nbsp;&nbsp;<td>{{info.regulator}}</tr>
+          </table>
         </p>
 
 
