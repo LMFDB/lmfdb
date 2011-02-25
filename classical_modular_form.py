@@ -479,7 +479,10 @@ def make_table_of_dimensions(level_start=1,level_stop=50,weight_start=1,weight_s
         tbl['header']=s
     tbl['headersv']=list()
     tbl['headersh']=list()
-    tbl['corner_label']="k"
+    if weight=='k':
+        tbl['corner_label']="k"
+    else:
+        tbl['corner_label']="N"
     tbl['data']=list()
     tbl['data_format']='html'
     tbl['class']="dimension_table"
