@@ -2,8 +2,10 @@
 import re
 
 from pymongo import ASCENDING
+import base
 from base import app
 from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
+
 
 from utilities import ajax_more, image_src, web_latex, to_dict, parse_range
 import sage.all 
@@ -84,7 +86,6 @@ def elliptic_curve_search(**args):
     if 'optimal' in info:
         query['number'] = 1
     info['query'] = query
-    import base
     res = (base.getDBConnection().ellcurves.curves.find(query)
         .sort([('conductor', ASCENDING), ('iso', ASCENDING), ('number', ASCENDING)])
         .limit(500)) # TOOD: pages
@@ -104,6 +105,7 @@ def render_isogeny_class(conductor, iso_class):
     info = {}
     credit = 'John Cremona'
     label = "%s%s" % (conductor, iso_class)
+    C = base.getDBConnection()
     data = C.ellcurves.curves.find_one({'label': label + "1"})
     if data is None:
         return "No such curves"
@@ -125,14 +127,17 @@ def render_isogeny_class(conductor, iso_class):
 
 @app.route("/EllipticCurve/Q/<label>")
 def by_cremona_label(label):
-    return render_curve_webpage(str(label))
+    N, iso, number = cremona_label_regex.match(label).groups()
+    if number:
+        return render_curve_webpage(str(label))
+    else:
+        return render_isogeny_class(int(N), iso)
 
 @app.route("/EllipticCurve/Q/<int:conductor>/<iso_class>/<int:number>")
 def by_curve(conductor, iso_class, number):
     return render_curve_webpage(label="%s%s%s" % (conductor, iso_class, number))
 
 def render_curve_webpage(label):
-    import base
     C = base.getDBConnection()
     data = C.ellcurves.curves.find_one({'label': label})
     if data is None:
@@ -203,6 +208,7 @@ def padic_data():
     if request.args['rank'] == '0':
         info['reg'] = 1
     elif number == '1':
+        C = base.getDBConnection()
         data = C.ellcurves.padic_db.find_one({'label': N + iso, 'p': p})
         info['data'] = data
         if data is None:
