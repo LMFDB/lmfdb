@@ -62,7 +62,7 @@ def form_example():
 @app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>")
 @app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
 @app.route("/L/")
-@app.route("/L/<arg1>") # arg1 is EllipticCurve, ModularForm, etc
+@app.route("/L/<arg1>") # arg1 is EllipticCurve, ModularForm, Character, etc
 @app.route("/L/<arg1>/<arg2>") # arg2 is field
 @app.route("/L/<arg1>/<arg2>/<arg3>") #arg3 is label
 @app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>")

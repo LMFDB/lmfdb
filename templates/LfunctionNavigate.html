@@ -16,7 +16,7 @@
         <h1>
             {{ info.title }}
         </h1>-->
-        {{ info.contents|safe }}
+        <!--{{ info.degree_list|safe }}-->
     </div>
     
 	<div class="spacer">
@@ -27,7 +27,73 @@
             $("#zeroes").load("{{ info.zeroeslink|safe }}");
         });
     </script>
+<h2> Browse </h2>
 
+<p>
+<p>
+<b>By degree</b>:
+{% for r in info.degree_list: %}
+<a href="?degree={{r}}">{{r}}</a>
+{% endfor %}
+<br>
+
+<b>By type:</b>
+{% for t in info.type_list: %}
+<a href="{{t.link}}">{{t.title}}</a>
+{% endfor %}
+<br>
+<br>
+<h2> Search </h2>
+
+<form>
+<b>By Properties:</b><br>
+Degree <input type='text' name='degree'><br>
+Signature <input type='text' name='signature'><br>
+Level <input type='text' name='level'>
+<br><br>
+<b>By Values:</b><br>
+Lowest Zero is greater than <input type='text' name='zero_lower_bound'> and less than <input type='text' name='zero_upper_bound'><br>
+Critical Value is around <input type='text' name='critical_valiue'><br>
+Value at 1 is around <input type='text' name='special_value'><br>
+<input type='submit' value='Search'>
+</form>
+
+
+
+<!--<h2>Search by label</h2>
+
+<form>
+<input type='text' name='natural' size=60>
+<p>
+<input type='submit' name='search value='search by label'>
+-->
+
+<!--
+<input type='submit' name='lucky' value="search by label">
+-->
+</form>
+
+
+
+<!--
+<p>
+By signature: 
+{% for t in info.signature_list: %}
+<a href="?signature={{t}}">{{t}}</a>
+{% endfor %}
+
+<p>
+By discriminant: 
+{% for r in info.discriminant_list: %}
+<a href="?discriminant={{r}}">{{r}}</a>
+{% endfor %}
+
+<p>
+By class number: 
+{% for r in info.class_number_list: %}
+<a href="?class_number={{r}}">{{r}}</a>
+{% endfor %}
+-->
 {% endblock %}
 
 
