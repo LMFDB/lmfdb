@@ -145,10 +145,12 @@ def render_curve_webpage(label):
     info = {}
     ainvs = [int(a) for a in data['ainvs']]
     E = EllipticCurve(ainvs)
+    label=data['label']
     N = ZZ(data['conductor'])
     iso_class = data['iso']
     rank = data['rank']
     j_invariant=E.j_invariant()
+    plot=E.plot()
     discriminant=E.discriminant()
     xintpoints=[E.lift_x(x) for x in xintegral_point(data['x-coordinates_of_integral_points'])]
     info.update(data)
@@ -175,7 +177,7 @@ def render_curve_webpage(label):
                        ('modular form', url_for("not_yet_implemented")),
                        ('L-function', "/L/EllipticCurve/Q/%s" % label)]
     info['learnmore'] = [('Elliptic Curves', url_for("not_yet_implemented"))]
-    info['plot'] = image_src(E.plot())
+    info['plot'] = image_src(plot)
     info['iso_class'] = data['iso']
 
     info['download_qexp_url'] = url_for('download_qexp', limit=100, ainvs=','.join([str(a) for a in ainvs]))
@@ -189,9 +191,10 @@ def render_curve_webpage(label):
         tor_struct += ' \\times '.join(['\\langle %s \\rangle'%a for a in G])
         tor_group=' \\times '.join(['C_{%s}'%a.order() for a in G])
     info['tor_structure'] = tor_struct
-    properties = [ '<h2>Torsion Structure</h2>', '\(%s\)<br/><br/>' % tor_group, '<h2>Rank</h2>','\(%s\)<br/><br/>' % rank, 
-    '<h2> Discriminant</h2>','\(%s\)<br/><br/>' % discriminant,'<h2>Conductor</h2>','\(%s\)<br/><br/>' % N,
-    '<h2>j-invariant</h2>','\(%s\)<br/><br/>' % j_invariant ]
+    properties = ['<h2>%s</h2>' % label, ' <img src="%s" width="200" height="150"/><br/><br/>' % image_src(plot),'<h2>Conductor</h2>',
+    '\(%s\)<br/><br/>' % N, '<h2> Discriminant</h2>','\(%s\)<br/><br/>' % discriminant, '<h2>j-invariant</h2>','\(%s\)<br/><br/>' % j_invariant,
+     '<h2>Rank</h2>','\(%s\)<br/><br/>' % rank ,'<h2>Torsion Structure</h2>', '\(%s\)<br/><br/>' % tor_group
+    ]
     #properties.extend([ "prop %s = %s<br/>" % (_,_*1923) for _ in range(12) ])
     credit = 'John Cremona'
     t = "Ell Curve %s" % info['label']
