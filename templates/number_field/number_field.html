@@ -17,13 +17,13 @@ function show_code(system) {
 }
 </script>
 
-
-        <h1> Number field {{ info.label }}</h1>
             <div>
+              <i><font size="3">Display code for creating this field in:</font></i>
                 <a onclick="show_code('sage'); return false" href='#'>sage</a>
                 <a onclick="show_code('pari'); return false" href='#'>pari</a>
                 <a onclick="show_code('magma'); return false" href='#'>magma</a>
             </div>
+
             <p>
         <div class='sage nodisplay code'>sage: K = NumberField(PolynomialRing(QQ,'x')({{info.coefficients}}),'a')</div>
         <div class='pari nodisplay code'>pari: K = bnfinit(Polrev({{info.coefficients}}))</div>
