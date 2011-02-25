@@ -416,9 +416,9 @@ def make_table_of_characters(level,weight,**kwds):
     s = "List of \(S_{%s} (%s, \chi_{n}) \)" %(weight,level)
     s+="<a name=\"#"+str(level)+"\"></a>"
     tbl=dict()
-    tbl['headersv']=['\( d \)']
+    tbl['headersv']=['dimension:']
     tbl['headersh']=list()
-    tbl['corner_label']="\( n \)"
+    tbl['corner_label']="\( n \):"
     tbl['data']=list()
     tbl['atts']="class=\"nt_data\" border=\"0\" padding=\"1\""
     tbl['data_format']='html'
@@ -501,9 +501,9 @@ def make_table_of_dimensions(level_start=1,level_stop=50,weight_start=1,weight_s
     for i in range(1,rowlen0+1):
         tbl['headersh'].append(i+count_min-1)
     if level_start==level_stop:
-        tbl['headersv']=['d:']
+        tbl['headersv']=['dimension:']
     else:
-        tbl['headersv']=['d:']
+        tbl['headersv']=['dimension:']
     # make a dummy table first
     for r in range(num_rows):
         row=[]
