@@ -145,6 +145,6 @@ def render_webpage(args):
 
 	else:
             bread += [(sidebar[0][0], sidebar[0][1][0][1])]
-            return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_basic.html", info = info, title = 'Siegel Modular Forms', sidebar = sidebar)
+            return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_basic.html", info = info, title = 'Siegel Modular Forms', sidebar = sidebar, bread = bread)
     else:
         return render_template("ModularForm_GSp4_Q/None.html")

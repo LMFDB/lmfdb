@@ -4,7 +4,7 @@ def dimension( wt, group, char = None, tp = 0):
     """
     Return the dimensions of all, Klingen Eisenstein, Maass cusp,
     and interesting cusp Siegel modular forms.
-    For Sp(8,Z), returns total dim of cuspforms, ikeda, miyawaki, other
+    For Sp(8,Z), returns total dim of cuspforms, Ikeda, Miyawaki, other ...
     """
     R = PowerSeriesRing(ZZ, default_prec = wt + 1 , names=('x',))
     (x,) = R._first_ngens(1)
