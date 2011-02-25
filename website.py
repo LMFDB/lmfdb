@@ -1,5 +1,6 @@
 """
-start this via $ sage -python website.py <portnumber>
+start this via $ sage -python website.py --port <portnumber>
+add --debug if you are debugging
 """
 from base import *
 
