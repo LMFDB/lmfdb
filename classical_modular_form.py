@@ -38,7 +38,7 @@ def render_classical_modular_forms():
         if level<0:
             level=None
         if weight<0:
-            weigh=None
+            weight=None
         print "HERE:::::::::::::::::::",level,weight
 
 	# we see if we have submitted parameters
@@ -411,7 +411,7 @@ def make_table_of_characters(level,weight,**kwds):
     tbl['headersh']=list()
     tbl['corner_label']="\( n \)"
     tbl['data']=list()
-    tbl['atts']="border=\"1\" padding=\"1\""
+    tbl['atts']="class=\"nt_data\" border=\"0\" padding=\"1\""
     tbl['data_format']='html'
     row=list()
     rowlen = 25
