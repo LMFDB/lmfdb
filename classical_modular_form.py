@@ -430,12 +430,18 @@ def make_table_of_characters(level,weight,**kwds):
         x=D[chi]; S=CuspForms(x,weight); d=S.dimension()
         dims[chi]=d
     numrows = ceil(map(lambda x: x>0,dims).count(True)/rowlen)
-
+    tbl['col_width']=dict()
+    ci=0
     for chi in range(0,len(D.list())):
         d = dims[chi]
         if d==0:
             continue
-        tbl['headersh'].append(chi)
+        x = D.list()[chi]
+        order = x.order()
+        st = " %s (order %s) " %(chi,order)
+        tbl['headersh'].append(st)
+        tbl['col_width'][ci]=["100"]
+        ci+=1
         url = url_for('render_classical_modular_form_space',level=level,weight=weight,character=chi) 
         row.append("<a href=\""+url+"\">"+str(d)+"</a>")
         ii=ii+1
