@@ -1,0 +1,16 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+<script type="text/javascript" src="{{ url_for('static', filename='classical_modular_form_util-functions.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='classical_modular_form_scripts.js') }}"></script>
+
+{% if info.popup_table is defined  %}
+
+<!--span onload="window.open('url to open','window name','attribute1,attribute2')--> 
+
+
+{{ info.popup_table  | safe }}
+
+{% endif %}
+{% endblock content %}
