@@ -1,0 +1,14 @@
+{% extends 'homepage.html' %}
+{% include 'sidebar.html' %}
+
+
+
+{% block content %}
+
+<div id = "Content">
+{{info.contents|safe}}
+</div>
+
+{% include 'footer.html' %}
+
+{% endblock %}
