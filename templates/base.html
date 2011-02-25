@@ -7,9 +7,9 @@
 {% if title %}LMDB: {{ title }}{% else %}LMDB{% endif %}
 </title>
 
-<script type="text/javascript" src="{{ url_for('static', filename='jquery.min.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('static', filename='MathJax/MathJax.js') }}"></script>
-<link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="{{ url_for('.static', filename='jquery.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('.static', filename='MathJax/MathJax.js') }}"></script>
+<link href="{{ url_for('.static', filename='style.css') }}" rel="stylesheet" type="text/css" />
 <script type="text/javascript">
 MathJax.Hub.Config({
   extensions: ["tex2jax.js","TeX/AMSmath.js","TeX/AMSsymbols.js"],
