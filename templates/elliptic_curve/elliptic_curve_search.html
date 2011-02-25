@@ -11,10 +11,7 @@
 
 <tr>
 <form>
-<td> Conductor <input type='text' name='conductor'  
-value={{info.conductor}}></td>
-<td></td>
-
+<td align=center> Conductor <input type='text' name='conductor'  value={{info.conductor}}></td>
 <td align=center>Rank <input type='text' name='rank' value={{info.rank}}></td>
 <td align=center>Torsion Order <input type='text' name='torsion' value={{info.torsion}}> 
 Optimal <input type='checkbox' name='optimal' {% if info.optimal %} checked {%endif %}></td>
@@ -29,7 +26,7 @@ Optimal <input type='checkbox' name='optimal' {% if info.optimal %} checked {%en
 <tr>
 <td><h2>Results</h2></td>
 <tr>
-<td align=center>Cremona<br>label</td>
+<td align=center>Cremona label</td>
 <td align=center>[\(a_1\),\(a_2\),\(a_3\),\(a_4\),\(a_6\)]</td>
 <td align=center>rank</td>
 <td align=center>torsion order</td>
@@ -40,7 +37,6 @@ Optimal <input type='checkbox' name='optimal' {% if info.optimal %} checked {%en
 <td>{{info.format_ainvs(curve.ainvs)}}</td>
 <td align=center>{{curve.rank}}</td>
 <td align=center>{{curve.torsion}}</td>
-
 </tr>
 {% endfor %}
 </table>
