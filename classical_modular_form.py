@@ -32,14 +32,16 @@ def render_classical_modular_forms():
 	info   = to_dict(request.args)
 	level  = _my_get(info,'level', -1,int)
 	weight = _my_get(info,'weight',-1,int) 
-	character = _my_get(info,'character', '0',str) #int(info.get('weight',0))
+	character = _my_get(info,'character', '',str) #int(info.get('weight',0))
 	label  = info.get('label', '')
         print "HERE:::::::::::::::::::",level,weight,character,label
         if level<=0:
             level=None
         if weight<=0:
             weight=None
-        print "HERE:::::::::::::::::::",level,weight
+        if character=='':
+            character=None
+        print "HERE:::::::::::::::::::",level,weight,character
 
 	# we see if we have submitted parameters
 	if level and weight and character and label:
@@ -48,8 +50,10 @@ def render_classical_modular_forms():
             info['level']=level; info['weight']=weight; info['label']=label; info['character']=character
             return redirect(url_for("render_one_classical_modular_form", **info))
 	if level and weight and character:
+            info['level']=level; info['weight']=weight; info['label']=label; info['character']=character
             return redirect(url_for("render_classical_modular_form_space", **info))
 	if level and weight:
+            info['level']=level; info['weight']=weight; info['label']=label; info['character']=character
             return redirect(url_for("render_classical_modular_form_browsing", **info))
 	if level:
             info['level']=level
