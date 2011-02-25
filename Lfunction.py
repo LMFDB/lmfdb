@@ -24,6 +24,17 @@ def render_webpage(args, arg1, arg2, arg3, arg4, arg5):
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic':
         temp_args['type'] = 'gl2holomorphic'
 
+    elif arg1 and arg1.startswith("degree"):
+        degree = int(arg1[6])
+        info = { "degree" : degree }
+        info["key"] = 777
+        return render_template("DegreeNavigateL.html", info=info, title = 'Degree ' + str(degree)+ ' L-functions')
+
+#David and Sally added the following case to handle Stefan's L-functions
+    elif args['type'] and args['type'] == 'lcalcurl':
+        temp_args['type'] = args['type']
+        temp_args['url'] = args['url'] 
+
     else:
         info = getNavigationFromDb(temp_args, arg1, arg2, arg3, arg4, arg5)
         info = processNavigationContents(info, args, arg1, arg2, arg3, arg4, arg5)
@@ -90,10 +101,13 @@ def initLfunction(L,args):
         info['url'] = L.url
     except:
         info['url'] =''
-
+#set info['bread'] and to be empty and set info['properties'], but exist (temp. fix by David & Sally)
+    info['bread'] = []
+    info['properties'] = []
     if args['type'] == 'gl2maass':
         info['zeroeslink'] = ''
         info['plotlink'] = ''
+#        info['bread'] = [('L-function','/L'),('GL(2) Maass','/L/ModularForm/GL2/Q/maass')]
     elif args['type'] == 'riemann':
         info['properties'] = L.properties
         info['bread'] = [('L-function','/L'),('Riemann Zeta','/L/Riemann')]
@@ -122,6 +136,7 @@ def initLfunction(L,args):
         label = str(L.label)
         number = str(L.number)
         info['friends'] = [('Modular Form','/ModularForm/GL2/Q/holomorphic/?weight='+weight+'&level='+level+'&character='+character +'&label='+label+'&number='+number)]
+#    elif args['type'] == 'lcalcurl':
     else:
         info['zeroeslink'] = url_for('zeroesLfunction', **args)
         info['plotlink'] = url_for('plotLfunction', **args)
