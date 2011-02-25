@@ -1,7 +1,5 @@
 {% extends 'homepage.html' %}
 
-{% block title %}{{ info.title }}{% endblock %}
-
 
 {% block content %}
 <!--    <div id="header">
@@ -17,16 +15,8 @@
             {{ info.title }}
         </h1>-->
         <!--{{ info.degree_list|safe }}-->
-    </div>
+
     
-	<div class="spacer">
-        &nbsp;</div>
-        
-    <script type="text/javascript">
-        $(document).ready(function() {
-            $("#zeroes").load("{{ info.zeroeslink|safe }}");
-        });
-    </script>
 <h2> Browse </h2>
 
 <p>

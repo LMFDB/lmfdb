@@ -17,17 +17,16 @@ def render_webpage(args, arg1, arg2, arg3, arg4, arg5):
         temp_args[a] = args[a]
     if arg1 == 'Riemann':
         temp_args['type'] = 'riemann'
+    elif arg1 == 'Character' and arg2 == 'Dirichlet' and args['characternumber'] and args['charactermodulus']:
+        #print "inside if"
+        temp_args['type'] = 'dirichlet'
     elif arg1 == 'Character' and arg2 == 'Dirichlet':
         info['title'] = 'Table of Dirichlet Characters'
         info['contents'] = processDirichletNavigation(args)
         return render_template("LfunctionTable.html",info=info, title=info['title'])
-    elif arg1 == 'Character' and arg2 == 'Dirichlet' and args['characternumber'] and args['charactermodulus']:
-        #print "inside if"
-        temp_args['type'] = 'dirichlet'
     elif arg1 == 'EllipticCurve' and arg2 == 'Q' and arg3:
         temp_args['type'] = 'ellipticcurve'
         temp_args['label'] = str(arg3) 
-
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic':
         temp_args['type'] = 'gl2holomorphic'
 
