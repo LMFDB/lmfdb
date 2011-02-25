@@ -1,34 +1,22 @@
 {% extends 'homepage.html' %}
 
-{% block title %}Classical Modular Form Page{% endblock %}
-
 {% block content %}
+<script type="text/javascript" src="{{ url_for('static', filename='classical_modular_form_util-functions.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='classical_modular_form_scripts.js') }}"></script>
 
-<div id = "header">
-  <a href="/ModularForm/">Modular Forms</a><a href="/ModularForm/GL2/"> on GL(2)</a><a href="/ModularForm/GL2/Q"> over \( \mathbb{Q} \)</a> : Holomorphic Cuspforms
-<H1>
-Cuspidal new modular form '{{ info.label[0] }}' of weight {{ info.weight }} for 
-\({% if info.level==1 %} 
-	\mathrm{SL}_{2}(\mathbb{Z}) 
-{% else %} 
-        \Gamma_0({{ info.level }})  
-{% endif %}\)
-{% if info.character>0 %} 
-with character \( \chi_{ {{ info.character }} }\) modulo \( {{ info.level }}\) with  <span style="white-space:nowrap">order \( {{ info.character_order }}\) </span> and <span style="white-space:nowrap">conductor \( {{ info.character_conductor }}\)</span>
-{% else %} 
-   with trivial character.
-{% endif %}
 
-</H1>
-</div>
 
+  <!--a href="/ModularForm/">Modular Forms</a><a href="/ModularForm/GL2/"> on GL(2)</a><a href="/ModularForm/GL2/Q"> over \( \mathbb{Q} \)</a> : Holomorphic Cuspforms
+-->
 <div id = "Content">
 {% if info.error is defined %}
-	Error !
+   {{ info.error | safe }}
 {% else %}
+<h1> {{ info.name | safe }}
 <h2> q-expansion</h2>
 	<br>
 	{{ info.q_exp | safe }}
+	<br>
 	{{ info.polynomial_st | safe }}
 	<!-- br>
 	One can embed it into \(\mathbb{C}\) as
@@ -36,15 +24,10 @@ with character \( \chi_{ {{ info.character }} }\) modulo \( {{ info.level }}\) w
 	<br>
 	{{ info.embeddings | safe }}
 <h2> Detailed data</h2>
-	<br>
-	The first Satake parameters \(\alpha_p\) are
+	The first few Satake parameters \(\alpha_p\) and angles \(\theta_p = \textrm{Arg}(\alpha_p) \) are
 	<br>
 	{{ info.satake | safe }}
 	<br>
-	The corresponding Satake angles \(\theta_p = \textrm{Arg}(\alpha_p) \) are
-	<br>
-	{{ info.satake_angle | safe }}
-
 	{% if info.atkin_lehner != "" %}
 		<br>
 		The Atkin-Lehner eigenvalues are

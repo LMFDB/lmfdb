@@ -1,0 +1,131 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+<script type="text/javascript" src="{{ url_for('static', filename='classical_modular_form_util-functions.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='classical_modular_form_scripts.js') }}"></script>
+
+
+
+<div id = "Content">
+
+{% if info.error is defined %}
+
+<h1>There was an error in meeting your previous request. Please change parameters.</h1>
+
+<div> 
+<h2> Error message: </h2>
+{{ info.error | safe }}
+</div>
+{% endif %}
+<!-- To make an interface that is easier to read we implement each case of input separately -->
+
+<!-- {{ info | safe }} $("div").data("option",{"start":1}); -->
+
+<script>
+$(document).ready(function() {
+$("#l_list").data("start",1); $("#l_list").data("len",20); $("#l_list").data("min",1);
+$("#l_list").data("name","level");
+$("#w_list").data("start",1); $("#w_list").data("len",20); $("#w_list").data("min",1);
+$("#w_list").data("name","weight");
+ print_list("#l_list");
+ print_list("#w_list");
+ });
+
+function shift(id,lr) {
+   var start = $(id).data("start");
+   var min = $(id).data("min");
+   var len = $(id).data("len");
+   if (lr == "left")
+      start = start - len;
+   if (lr == "right")
+      start = start + len;
+   if (start <= min) {
+      start = min;
+   }
+   $(id).contents().detach();
+   $(id).data("start",start);
+   $(id).data("min",min);
+   $(id).data("len",len);
+ /*alert("start:"+$(id).data("start")+" "+len+" "+min); */
+   print_list(id);
+
+}
+
+function print_list(id) {
+    var min = $(id).data("min");
+    var start = $(id).data("start");
+    var len = $(id).data("len");
+    var name = $(id).data("name");
+    var url = getAbsolutePath();
+    if (start > min) {
+       $(id).append("<a id='go_left' href='#' onclick=\"shift('"+id+"','left')\"><small>&lt;&lt;</small></a>");
+    };
+    for (var i = start; i < len+start; i++) {
+	s = "<a href="+url+"?"+name+"="+i+" >" + i + "</a> ";
+	$(id).append(s);
+    }
+    $(id).append("<a id='go_right' href='#' onclick=\"shift('"+id+"','right')\"><small>&gt;&gt;</small></a>");
+
+};
+</script>
+
+
+<table>
+  <tr>
+    <td>
+	<h3>Browse spaces of cuspforms</h3>
+	<table>
+	  <tr>
+	    <td valign="top">Level:</td>
+	    <td>
+	      <div id="l_list" data-hidden="true" data-start='' data-len=''></div>
+	     </td>
+	    </tr>
+	  <tr>
+	  <tr>
+	    <td valign="top">Weight:</td>
+	    <td>
+	      <div id="w_list" data-hidden="true" data-start='' data-len=''></div>
+	    </td>
+	  </tr>
+        </table>
+	<table>
+	  <tr>
+            <td valign="top">  
+  	      <span title="We use the Sage ordering to name the characters. The trivial character is nr. 0"> Character 
+	      </span>
+	      <select name="character">
+		<option value="0" >Trivial character
+                <option value="all">All characters
+	      </select>
+	    </td>
+	  </tr>		
+        </table>
+    </td>
+  </tr>
+<tr>
+  <td>
+  <form name="get_tables_of_stuff" method = "get" action="">
+    <h3>Search</h3>
+    <table>
+      <tr>
+	<td>Level:</td><td> <input type="text" name="level" value=""> <span class="eg">e.g. 20</span></td>
+      </tr>
+      <tr>
+	<td>Weight:</td><td> <input type="text" name="weight" value=""> <span class="eg">e.g 24</span></td>
+      </tr>
+      <tr>
+	<td>Character:</td><td> <input type="text" name="weight" value=""> <span class="eg">e.g 1</span> (0 means trivial character, leave blank for all characters)</td>
+      </tr>
+      <tr>
+	<td>Isogeny class:</td><td> <input type="text" name="label" value=""> <span class="eg">e.g a</span> </td>
+      </tr>
+    </table>
+    <input type="button" name="Submit" value="Search" onclick="submit()">
+    </form>
+</td>
+</tr>
+</table>
+</html>
+{% endblock content %}
