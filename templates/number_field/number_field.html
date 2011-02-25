@@ -29,6 +29,7 @@ function show_code(system) {
         <div class='pari nodisplay code'>pari: K = bnfinit(Polrev({{info.coefficients}}))</div>
         <div class='magma nodisplay code'>> K<a> := NumberField(PolynomialRing(Rationals())!{{info.coefficients}});</div>
         </p>
+
         <h2>
             Defining Polynomial
         </h2>
@@ -83,7 +84,12 @@ function show_code(system) {
           <table>
             <tr><td>Rank:<td>&nbsp;&nbsp;<td>{{info.unit_rank}}</tr>
             <tr><td>Torsion generator:<td>&nbsp;&nbsp;<td>{{info.root_of_unity}}</tr>
-            <tr><td>Fundamental units:<td>&nbsp;&nbsp;<td>{{info.fund_units}}</tr>
+{% if info.unit_rank==1 %}
+            <tr><td>Fundamental unit:<td>&nbsp;&nbsp;<td>{{info.fund_units|safe}}</tr>
+{% endif %}
+{% if info.unit_rank>1 %}
+            <tr><td>Fundamental units:<td>&nbsp;&nbsp;<td>{{info.fund_units|safe}}</tr>
+{% endif %}
             <tr><td>Regulator:<td>&nbsp;&nbsp;<td>{{info.regulator}}</tr>
           </table>
         </p>
