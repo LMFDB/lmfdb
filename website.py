@@ -46,7 +46,7 @@ def example(blah = None):
 @app.route("/ModularForm/")
 @app.route("/AutomorphicForm/")
 def modular_form_toplevel():
-    return redirect(url_for("render_classical_modular_forms", info={}))
+    return redirect(url_for("render_classical_modular_forms"))
     #return render_template("modular_form_space.html", info = { })
     
 @app.route("/calc")

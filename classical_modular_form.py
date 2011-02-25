@@ -2,7 +2,7 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 from web_modforms import *
 import tempfile, os,re
 from utilities import ajax_more
-from base import app, db, C
+from base import app, db
 #import re
 ### Maximum values to be generated on the fly
 N_max_comp = 100
