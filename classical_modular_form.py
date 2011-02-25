@@ -416,7 +416,7 @@ def make_table_of_characters(level,weight,**kwds):
     s = "List of \(S_{%s} (%s, \chi_{n}) \)" %(weight,level)
     s+="<a name=\"#"+str(level)+"\"></a>"
     tbl=dict()
-    tbl['headersv']=['dimension:']
+    tbl['headersv']=['order of \(\chi_{n}\):','dimension:']
     tbl['headersh']=list()
     tbl['corner_label']="\( n \):"
     tbl['data']=list()
@@ -436,12 +436,31 @@ def make_table_of_characters(level,weight,**kwds):
         d = dims[chi]
         if d==0:
             continue
+        tbl['headersh'].append(chi)
+        tbl['col_width'][ii]=["100"]
         x = D.list()[chi]
         order = x.order()
-        st = " %s (order %s) " %(chi,order)
-        tbl['headersh'].append(st)
-        tbl['col_width'][ci]=["100"]
-        ci+=1
+        #st = " %s (order %s) " %(chi,order)
+        ii=ii+1
+        row.append(order)
+        if(ii>rowlen and len(row)>0):
+            print "appending row:",row
+            tbl['data'].append(row)
+            s=s+html_table(tbl)
+            tbl['headersh']=list(); tbl['data']=list(); row=list()
+            ii=0
+    if(len(row)>0):
+        tbl['data'].append(row)
+        #if (len(row)>0 or len(tbl['data'])>0): 
+        #    ss=html_table(tbl)
+        #    s=s+ss
+
+    row = list()
+    ii=0
+    for chi in range(0,len(D.list())):
+        d = dims[chi]
+        if d==0:
+            continue
         url = url_for('render_classical_modular_form_space',level=level,weight=weight,character=chi) 
         row.append("<a href=\""+url+"\">"+str(d)+"</a>")
         ii=ii+1
@@ -451,6 +470,7 @@ def make_table_of_characters(level,weight,**kwds):
             s=s+html_table(tbl)
             tbl['headersh']=list(); tbl['data']=list(); row=list()
             ii=0
+
     if(len(row)>0):
         tbl['data'].append(row)
         if (len(row)>0 or len(tbl['data'])>0): 
