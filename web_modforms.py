@@ -1534,8 +1534,11 @@ def html_table(tbl):
         maxw = 0
         for k in range(ncols):
             for r in range(nrows):
-                if len(str(data[r][k]))>maxw:
-                    maxw = len(str(data[r][k]))
+                l =len_as_printed(str(data[r][k]))
+                if l>maxw:
+                    maxw = l
+                    #print "l=",l," max=",data[r][k]
+        l = l*10.0 # use true font size?
         for k in range(ncols):
             col_width[k]=maxw
     else:
@@ -1544,10 +1547,12 @@ def html_table(tbl):
             if tbl.has_key('col_width'):
                 if tbl['col_width'].has_key(i):
                     col_width[i]=tbl['col_width'][i]
-    print "col width=",col_width
-    print "format=",format
+    #print "col width=",col_width
+    #print "format=",format
     if(tbl.has_key("corner_label")):
-        row="<tr><td>"+str(tbl["corner_label"])+"</td>"
+        l = len_as_printed(str(tbl["corner_label"]))*10
+        row="<tr><td width=\"%s\">" % l
+        row+=str(tbl["corner_label"])+"</td>"
     else:
         row="<tr><td></td>"
     for k in range(ncols):
@@ -1556,12 +1561,15 @@ def html_table(tbl):
     row=row+"</tr> \n"
     s=s+row
     for r in range(nrows):
-        row="<tr><td>"+sheaderv+str(tbl['headersv'][r])+"</td>"
+        l = len_as_printed(str(tbl["headersv"][r]))*10
+        print "l=",l,"head=",tbl["headersv"]
+        row="<tr><td width=\"%s\">" %l
+        row+=sheaderv+str(tbl['headersv'][r])+"</td>"
         for k in range(ncols):
             wid = col_width[k]
             if format[k]=='html' or format[k]=='text':
                 row=row+"\t<td halign=\"center\" width=\""+str(wid)+"\">"
-                print "HTML=",data[r][k]
+                #print "HTML=",data[r][k]
                 if isinstance(data[r][k],list):
                     for ss in data[r][k]:
                         sss = str(ss)
@@ -1645,7 +1653,7 @@ def break_line_at(s,brpt=20):
             res.append(stmp)
     return res
 
-def len_as_printed(s):
+def len_as_printed(s,format='latex'):
     r"""
     Returns the length of s, as it will appear after being math_jax'ed
     """
@@ -1655,7 +1663,9 @@ def len_as_printed(s):
     lenpar=0.5
     lenexp=0.75
     lensub=0.75
-    ss = s
+    ## remove all html first since it is not displayed
+    ss = re.sub("<[^>]*>","",s)
+    print "ss=",ss
     ss = re.sub(" ","",ss)    # remove white-space
     ss = re.sub("\*","",ss)    # remove *
     num_exp = s.count("^")    # count number of exponents
@@ -1669,6 +1679,7 @@ def len_as_printed(s):
     tot_len=(ss.count(")")+ss.count("("))*lenpar
     tot_len+=ss.count("q")*lenq
     tot_len+=len(re.findall("\d",s))*lendig
+    tot_len+=len(re.findall("\w",s))*lenq
     tot_len+=(s.count("+")+s.count("-"))*lenpm
     tot_len+=num_subs*lensub
     tot_len+=num_exp*lenexp
