@@ -1768,20 +1768,31 @@ def print_geometric_data_Gamma0N(N):
         #else:
         #    s="\("+latex(G)+"\)"
         s = ""
-        tbl=dict()
-        tbl['header']=s
-        tbl['headersh']=['']
-        tbl['headersv']=['index:']
-        tbl['data']=list()
-        tbl['atts']=''
-        tbl['data'].append([G.index()])
-        tbl['headersv'].append('genus:')
-        tbl['data'].append([G.genus()])
-        tbl['headersv'].append('#order 2:')
-        tbl['data'].append([G.nu2()])
-        tbl['headersv'].append('#order 3:')
-        tbl['data'].append([G.nu3()])
-        s=html_table(tbl)
+        ## tbl=dict()
+        ## tbl['header']=s
+        ## tbl['headersh']=['']
+        ## tbl['headersv']=['index:']
+        ## tbl['data']=list()
+        ## tbl['atts']=''
+        ## tbl['data'].append([G.index()])
+        ## tbl['headersv'].append('genus:')
+        ## tbl['data'].append([G.genus()])
+        ## tbl['headersv'].append('#order 2:')
+        ## tbl['data'].append([G.nu2()])
+        ## tbl['headersv'].append('#order 3:')
+        ## tbl['data'].append([G.nu3()])
+        ## s=html_table(tbl)
+        s="<table>"
+        s+="<tr><td>index:</td><td>%s</td></tr>" % G.index()
+        s+="<tr><td>genus:</td><td>%s</td></tr>" % G.genus()
+        s+="<tr><td>Cusps:</td><td>\(%s\)</td></tr>" % latex(G.cusps())
+        s+="<tr><td colspan=\"2\">Number of elliptic fixed points</td></tr>"
+        s+="<tr><td>order 2:</td><td>%s</td></tr>" % G.nu2()
+        s+="<tr><td>order 3:</td><td>%s</td></tr>" % G.nu3()
+
+        s+="</table>"
+
+
         #s=s+"\((\\textrm{index}; \\textrm{genus}, \\nu_2,\\nu_3)=("
         #s=s+str(G.index())+";"+str(G.genus())+","
         #s=s+str(G.nu2())+","+str(G.nu3())

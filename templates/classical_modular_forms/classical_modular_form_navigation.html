@@ -58,7 +58,7 @@ function print_list(id) {
     var name = $(id).data("name");
     var url = getAbsolutePath();
     if (start > min) {
-       $(id).append("<a id='go_left' href='#' onclick=\"shift('"+id+"','left')\"><small>&lt;&lt;</small></a>");
+       $(id).append("<a id='go_left' href='#' onclick=\"shift('"+id+"','left')\" style=\"display:inline\"><small>&lt;&lt;</small></a>");
     };
     var char = $("#char_selection").data("char");
     if (char == 0) {
@@ -67,12 +67,12 @@ function print_list(id) {
        s = "&character=all"
     }
     for (var i = start; i < len+start; i++) {
-        /*s = "<a href="+url+"?"+name+"="+i+" >" + i + "</a> ";*/
+        /*s = "<a href="+url+"?"+name+"="+i+" style=\"display:inline\">" + i + "</a> ";*/
   /*s = "<a href='' onclick='set_value(\""+id+"\","+i+");document.browse.submit()' >" + i + "</a> ";*/
-        s = "<a href=\"javascript:set_value('"+id+"',"+i+")\" >" + i + "</a> ";
+        s = "<a href=\"javascript:set_value('"+id+"',"+i+")\" style=\"display:inline\">" + i + "</a> ";
 	$(id).append(s);
     }
-    $(id).append("<a id='go_right' href='#' onclick=\"shift('"+id+"','right')\"><small>&gt;&gt;</small></a>");
+    $(id).append("<a id='go_right' href='#' onclick=\"shift('"+id+"','right')\" style=\"display:inline\"><small>&gt;&gt;</small></a>");
 
 };
 
@@ -90,9 +90,9 @@ function set_value(id,val) {
     <td>
       <form name="browse" method = "get" action="{{url_for('render_classical_modular_forms')}}">
 	<h3>Browse spaces of cuspforms</h3>
-	<input type="hidden" name="weight" value="">
-	<input type="hidden" name="level" value="">
-	<table>
+	<input type="hidden" name="weight" value=""/>
+	<input type="hidden" name="level" value=""/>
+	<table width="100%">
 	  <tr>
 	    <td valign="top">Level:</td>
 	    <td>
