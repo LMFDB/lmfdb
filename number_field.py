@@ -89,16 +89,16 @@ def sig2sign(sig):
     return [1,-1][sig[1]%2]
 
 group_names = {}
-group_names[(1, 1, 1, 1)] = ('S1','C1')
+group_names[(1, 1, 1, 1)] = ('S1','C1','D1','A1','A2')
 
 group_names[(2, 2, -1, 1)] = ('S2','C2')
 
-group_names[(3, 6, -1, 1)] = ('S3','S3')
+group_names[(3, 6, -1, 1)] = ('S3','D3')
 group_names[(3, 3, 1, 2)] = ('A3','C3')
 
 group_names[(4, 8, -1, 1)] = ('D(4)','D4')
 group_names[(4, 4, -1, 1)] = ('C(4) = 4','C4')
-group_names[(4, 4, 1, 1)] = ('E(4) = 2[x]2','V4')
+group_names[(4, 4, 1, 1)] = ('E(4) = 2[x]2','V4', 'D2')
 group_names[(4, 24, -1, 1)] = ('S4','S4')
 group_names[(4, 12, 1, 1)] = ('A4','A4')
 
