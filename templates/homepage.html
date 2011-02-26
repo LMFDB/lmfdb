@@ -69,6 +69,22 @@
 
 <div id="main">
   <div id="Content">
+    {% if properties2 %}
+    <table>
+     {% for p in properties2 %}
+       <tr>
+        <td>{{p[0]}}</td>
+        <td>
+        {% if string(p[1]) %}
+            {{ p[1] }}
+        {% else %}
+            e|join('<br/>')
+        {% endif %}
+        </td>
+       </tr>
+     {% endfor %} 
+    {% endif %}
+
     {% if (citation or properties) %}
       <div id="properties">
         {% if citation %}
