@@ -174,7 +174,7 @@ def complete_group_code(c):
     try:
         c = parse_list(c)
         return c[1:]+[group_names[tuple(c)][0]]
-    except KeyError:
+    except (KeyError, NameError):
         return 0
 
 def GG_data(GGlabel):
