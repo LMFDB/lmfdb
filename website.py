@@ -1,5 +1,6 @@
 """
-start this via $ sage -python website.py <portnumber>
+start this via $ sage -python website.py --port <portnumber>
+add --debug if you are debugging
 """
 from base import *
 
@@ -11,6 +12,7 @@ import Lfunction
 import maass_form
 import plot_example
 import number_field
+import lfunction_db
 import maass_form_picard
 
 import raw
@@ -44,7 +46,8 @@ def example(blah = None):
 @app.route("/ModularForm/")
 @app.route("/AutomorphicForm/")
 def modular_form_toplevel():
-    return render_template("modular_form_space.html", info = { })
+    return redirect(url_for("render_classical_modular_forms"))
+    #return render_template("modular_form_space.html", info = { })
     
 @app.route("/calc")
 def calc():
@@ -63,7 +66,7 @@ def form_example():
 @app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>")
 @app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
 @app.route("/L/")
-@app.route("/L/<arg1>") # arg1 is EllipticCurve, ModularForm, etc
+@app.route("/L/<arg1>") # arg1 is EllipticCurve, ModularForm, Character, etc
 @app.route("/L/<arg1>/<arg2>") # arg2 is field
 @app.route("/L/<arg1>/<arg2>/<arg3>") #arg3 is label
 @app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>")
@@ -89,9 +92,9 @@ def zeroesLfunction():
 def ModularForm_GSp4_Q_top_level():
     return siegel_modular_form.render_webpage(request.args)
 
-@app.route('/ModularForm/GL2/Q/holomorphic/')
-def render_classical_modular_form():
-    return classical_modular_form.render_webpage(request.args)
+#@app.route('/ModularForm/GL2/Q/holomorphic/')
+#def render_classical_modular_form():
+#    return classical_modular_form.render_webpage(request.args)
 
 @app.route('/ModularForm/GL2/Q/Maass/')
 def render_maass_form():

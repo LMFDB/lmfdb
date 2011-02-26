@@ -1,6 +1,7 @@
 syntax:glob
 
 *.pyc
+*.swp
 *~
 
 static/MathJax

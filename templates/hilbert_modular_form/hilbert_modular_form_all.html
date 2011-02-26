@@ -1,0 +1,30 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+
+<h2> Search </h2>
+
+<form>
+<center align=left>Field (a label, e.g. 2.2.5.1 for \(\mathbb{Q}(\sqrt{5})\)) <input type='text' 
+                                name='field_label'>
+</center><br>
+<center align=left>Weight vector (e.g. [2,2]) <input type='text' 
+                                name='weight'>
+</center><br>
+<center align=left>Level norm (e.g. 1) <input type='text' 
+                                name='level_norm'>
+</center><br>
+<center align=left>Dimension (e.g. 1) <input type='text' 
+                                name='dimension'>
+</center><br>
+<center align=left>Maximum number of forms <input type='text'
+                                                  name='count'
+                                                  value=10></center>
+<br>
+<input type='submit' value='Search'>
+</form>
+
+<h2> Browse </h2>
+
+
+{% endblock %}
