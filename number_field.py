@@ -89,16 +89,16 @@ def sig2sign(sig):
     return [1,-1][sig[1]%2]
 
 group_names = {}
-group_names[(1, 1, 1, 1)] = ('S1','S1')
+group_names[(1, 1, 1, 1)] = ('S1','C1','D1','A1','A2')
 
-group_names[(2, 2, -1, 1)] = ('S2','S2')
+group_names[(2, 2, -1, 1)] = ('S2','C2')
 
-group_names[(3, 6, -1, 1)] = ('S3','S3')
-group_names[(3, 3, 1, 2)] = ('A3','A3')
+group_names[(3, 6, -1, 1)] = ('S3','D3')
+group_names[(3, 3, 1, 2)] = ('A3','C3')
 
 group_names[(4, 8, -1, 1)] = ('D(4)','D4')
 group_names[(4, 4, -1, 1)] = ('C(4) = 4','C4')
-group_names[(4, 4, 1, 1)] = ('E(4) = 2[x]2','V4')
+group_names[(4, 4, 1, 1)] = ('E(4) = 2[x]2','V4', 'D2')
 group_names[(4, 24, -1, 1)] = ('S4','S4')
 group_names[(4, 12, 1, 1)] = ('A4','A4')
 
@@ -168,13 +168,14 @@ group_names[(10, 240, -1, 22)] = ('S(5)[x]2','?')
 groups = [{'label':list(g),'gap_name':group_names[g][0],'human_name':group_names[g][1]} for g in group_names.keys()]
 
 def complete_group_code(c):
+    c = c.upper()
     for g in group_names.keys():
         if c in group_names[g]:
             return list(g)[1:]+[group_names[g][0]]
     try:
         c = parse_list(c)
         return c[1:]+[group_names[tuple(c)][0]]
-    except KeyError:
+    except (KeyError, NameError):
         return 0
 
 def GG_data(GGlabel):

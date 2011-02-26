@@ -1,9 +1,14 @@
-from flask import render_template,url_for
+from flask import render_template,url_for,request
 import bson
 import base
 
 @base.app.route("/ModularForm/GL2/C/Maass/")
 def maass_form_picard():
+   htp = base.getDBConnection().HTPicard.picard
+   docid = request.args.get('id', None)   
    info = {}
-   data = range(100)
-   return render_template("maass_form_picard.html", title = "maass form complex", data = data, info=info)
+   ds = [ (_['_id'], _['ev']) for _ in htp.find(fields=['ev'], sort=[('ev', 1)]) ]
+   data = None
+   if docid:
+     data = htp.find_one({'_id' : docid })
+   return render_template("maass_form_picard.html", title = "Maass cusp forms on on PSL(2,Z[i])", data = data, id=docid, info=info, ds=ds)

@@ -3,10 +3,38 @@
 
 <h1>{{ title }}</h1>
 
-
-{% for i in data %}
-   value {{ i }} <br/>
+<div style="font-size: 75%">
+{% for i in ds %}
+<a href="?id={{ i[0] }}">{{ "%5.2f"|format(i[1])}}</a> 
 {% endfor %}
+</div>
 
+{% if id %}
+<div>eigenvalue = {{ data.ev }}</div>
+<div>symmetry type: {{data.sym|join(" ")}}</div>
+<div>accuracy: {{data.prec}}</div>
+
+<table class="ntdata">
+<thead><tr><td>real(beta)</td>
+           <td>imag(beta)</td>
+           <td>a(beta)</td>
+<!--           <td>symmetry type</td>-->
+</tr>
+</thead>
+<tbody>
+{% for i in data.coef %}
+   <tr>
+   {% for v in i %}
+     <td>{{ v }}</td>
+   {% endfor %}
+{#   <td>{{data.sym|join(" ")}}</td> #}
+   </tr>
+{% endfor %}
+</tbody>
+</table>
+
+{% endif %}
+
+<div>computed by Holger Then</div>
 
 {% endblock %}
