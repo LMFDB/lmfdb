@@ -168,6 +168,7 @@ group_names[(10, 240, -1, 22)] = ('S(5)[x]2','?')
 groups = [{'label':list(g),'gap_name':group_names[g][0],'human_name':group_names[g][1]} for g in group_names.keys()]
 
 def complete_group_code(c):
+    c = c.upper()
     for g in group_names.keys():
         if c in group_names[g]:
             return list(g)[1:]+[group_names[g][0]]
