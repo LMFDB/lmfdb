@@ -240,3 +240,15 @@ table.ntdata thead tr {
 }
 table.ntdata tbody tr {
  }
+
+table.ntdata tr.odd {
+ background: white;
+}
+
+table.ntdata tr.even {
+ background: #eeffee;
+}
+
+table.ntdata tr.line {
+ border-bottom: 1px dotted gray;
+}
