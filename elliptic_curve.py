@@ -27,8 +27,18 @@ def format_ainvs(ainvs):
     return [int(a) for a in ainvs]
 
 def xintegral_point(s):
-    return [int(a) for a in eval(s) if a not in ['[',',',']']]    
+    return [int(a) for a in eval(s) if a not in ['[',',',']']] 
 
+def proj_to_aff(s):
+    fulllist=[]
+    for x in s:
+        L=[]
+        for y in x:
+            if y !=':'and len(L)<2 :
+                L.append(y)
+        fulllist.append(tuple(L))
+    return fulllist
+    
 #########################
 #    Top level
 #########################
@@ -152,7 +162,8 @@ def render_curve_webpage(label):
     j_invariant=E.j_invariant()
     plot=E.plot()
     discriminant=E.discriminant()
-    xintpoints=[E.lift_x(x) for x in xintegral_point(data['x-coordinates_of_integral_points'])]
+    xintpoints_projective=[E.lift_x(x) for x in xintegral_point(data['x-coordinates_of_integral_points'])]
+    xintpoints=proj_to_aff(xintpoints_projective)
     info.update(data)
     info.update({
         'conductor': N,
@@ -161,15 +172,14 @@ def render_curve_webpage(label):
         'label': label,
         'equation': web_latex(E),
         'f': ajax_more(E.q_eigenform, 10, 20, 50, 100, 250),
-        'generators': (', '.join(web_latex(g) for g in data['gens'])) if 'gens' in data else '',
-
+        'generators': ', '.join(web_latex(g) for g in data['gens']) if 'gens' in data else '',
         'lder'  : "L%s(1)" % ("'"*rank),
 
         'p_adic_primes': [p for p in sage.all.prime_range(5,100) if E.is_ordinary(p) and not p.divides(N)],
         'ainvs': format_ainvs(data['ainvs']),
         'tamagawa_numbers': r' \cdot '.join(str(sage.all.factor(c)) for c in E.tamagawa_numbers()),
         'cond_factor':latex(N.factor()),
-        'xintegral_points':','.join(str(i_p) for i_p in xintpoints)
+        'xintegral_points':','.join(web_latex(i_p) for i_p in xintpoints)
             })
     info['downloads_visible'] = True
     info['downloads'] = [('worksheet', url_for("not_yet_implemented"))]
@@ -184,12 +194,12 @@ def render_curve_webpage(label):
     G = E.torsion_subgroup().gens()
     
     if len(G) == 0:
-        tor_struct = '0'
-        tor_group='0'
+        tor_struct = 'Trivial'
+        tor_group='Trivial'
     else:
-        tor_struct = ' \\times '.join(['C_{%s}'%a.order() for a in G]) + ' \\cong '
-        tor_struct += ' \\times '.join(['\\langle %s \\rangle'%a for a in G])
-        tor_group=' \\times '.join(['C_{%s}'%a.order() for a in G])
+        tor_struct = ' \\times '.join(['\mathbb{Z}/{%s}\mathbb{Z}'%a.order() for a in G])
+       # tor_struct += ' \\times '.join(['\\langle %s \\rangle'%a for a in G])
+        tor_group=' \\times '.join(['\mathbb{Z}/{%s}\mathbb{Z}'%a.order() for a in G])
     info['tor_structure'] = tor_struct
     properties = ['<h2>%s</h2>' % label, ' <img src="%s" width="200" height="150"/><br/><br/>' % image_src(plot),'<h2>Conductor</h2>',
     '\(%s\)<br/><br/>' % N, '<h2> Discriminant</h2>','\(%s\)<br/><br/>' % discriminant, '<h2>j-invariant</h2>','\(%s\)<br/><br/>' % j_invariant,
@@ -197,7 +207,7 @@ def render_curve_webpage(label):
     ]
     #properties.extend([ "prop %s = %s<br/>" % (_,_*1923) for _ in range(12) ])
     credit = 'John Cremona'
-    t = "Ell Curve %s" % info['label']
+    t = "Elliptic Curve %s" % info['label']
     return render_template("elliptic_curve/elliptic_curve.html", info=info, properties=properties, credit=credit, title = t)
 
 @app.route("/EllipticCurve/Q/padic_data")

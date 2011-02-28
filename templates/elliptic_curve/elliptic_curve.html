@@ -31,23 +31,38 @@ function show_code(system) {
     <div class='magma nodisplay code'>&gt; E := EllipticCurve({{info.ainvs}});</div>
     <p> {{ info.equation }} </p>
 
-    <h2> Torsion Structure </h2>
-    <div class='sage nodisplay code'>sage: E.torsion_subgroup()</div>
-    <div class='pari nodisplay code'>? elltors(E) </div>
-    <div class='magma nodisplay code'>&gt; TorsionSubgroup(E);</div>
-    <p> \({{ info.tor_structure }}\) </p>
-
-    <h2> Infinite order Mordell-Weil generators </h2>
+    <h2> Mordell-Weil Group structure<h2>
+    <div>{% if info.rank==1 %}{% if info.torsion!=1 %}\(\mathbb{Z}\times {{info.tor_structure}}\) 
+    
+    {%endif%}  {%endif%} </div>
+    <div>{% if info.rank==1 %}{% if info.torsion==1 %}\(\mathbb{Z}\) {%endif%}  {%endif%} </div>
+    <div> {% if info.rank !=0 and info.rank!=1 %} {% if info.torsion!=1 %}\(\mathbb{Z}^{{info.rank}} \times {{info.tor_structure}}\) {%endif%}  {%endif%} </div>
+    <div> {% if info.rank !=0 and info.rank!=1%} {% if info.torsion==1 %} \(\mathbb{Z}^{{info.rank}}\){%endif%}  {%endif%} </div>
+    <div> {% if info.rank ==0 %} {% if info.torsion!=1 %} \({{info.tor_structure}}\){%endif%}  {%endif%} </div>
+    <div> {% if info.rank ==0 %} {% if info.torsion==1 %} Trivial {%endif%}  {%endif%} </div>
+    
+    {% if info.rank!=0 %}    
+    <p><h3> Infinite order Mordell-Weil generators </h3>
     <div class='sage nodisplay code'>sage: E.gens()</div>
     <div class='pari nodisplay code'> </div>
     <div class='magma nodisplay code'>&gt; Generators(E);</div>
-    <p> \({{ info.generators }}\) </p>
+    <p> \({{ info.generators }}\) </p></p>
+    {%endif %}
+    
+    {% if info.torsion!=1 %}    
+    <p><h3> Torsion generators </h3>
+    <div class='sage nodisplay code'>sage: E.torsion_subgroup()</div>
+    <div class='pari nodisplay code'>? elltors(E) </div>
+    <div class='magma nodisplay code'>&gt; TorsionSubgroup(E);</div>
+    <p> \({{ info.tor_structure }}\) </p></p>
+    {%endif %}
+
 
     <h2> Integral points </h2>
     <div class='sage nodisplay code'>sage: E.integral_points()</div>
     <div class='pari nodisplay code'> </div>
     <div class='magma nodisplay code'>&gt; ;</div>
-    <p> \({{ info.xintegral_points}}\) </p>
+    <p> {{ info.xintegral_points}} </p>
     
     <h2> Invariants </h2>
         <table>
@@ -169,7 +184,7 @@ function show_code(system) {
     <p>
         {{ info.f | safe }}
     </p>
-    <p align="center">
+    <p align="right">
         <a  href='{{info.download_qexp_url}}' target='_blank' >download coefficients</a>
     </p>
 
