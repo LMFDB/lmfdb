@@ -164,6 +164,14 @@ def render_curve_webpage(label):
     discriminant=E.discriminant()
     xintpoints_projective=[E.lift_x(x) for x in xintegral_point(data['x-coordinates_of_integral_points'])]
     xintpoints=proj_to_aff(xintpoints_projective)
+    G = E.torsion_subgroup().gens()
+    if len(G) == 0:
+        tor_struct = 'Trivial'
+        tor_group='Trivial'
+    else:
+        tor_group=' \\times '.join(['\mathbb{Z}/{%s}\mathbb{Z}'%a.order() for a in G])
+    info['tor_structure'] = tor_group
+    info['tor_gens']=G
     info.update(data)
     info.update({
         'conductor': N,
@@ -179,8 +187,9 @@ def render_curve_webpage(label):
         'ainvs': format_ainvs(data['ainvs']),
         'tamagawa_numbers': r' \cdot '.join(str(sage.all.factor(c)) for c in E.tamagawa_numbers()),
         'cond_factor':latex(N.factor()),
-        'xintegral_points':','.join(web_latex(i_p) for i_p in xintpoints)
-            })
+        'xintegral_points':','.join(web_latex(i_p) for i_p in xintpoints),
+        'tor_gens':list(G)
+                    })
     info['downloads_visible'] = True
     info['downloads'] = [('worksheet', url_for("not_yet_implemented"))]
     info['friends'] = [('Isogeny class', "/EllipticCurve/Q/%s/%s" % (N, iso_class)),
@@ -189,18 +198,7 @@ def render_curve_webpage(label):
     info['learnmore'] = [('Elliptic Curves', url_for("not_yet_implemented"))]
     info['plot'] = image_src(plot)
     info['iso_class'] = data['iso']
-
     info['download_qexp_url'] = url_for('download_qexp', limit=100, ainvs=','.join([str(a) for a in ainvs]))
-    G = E.torsion_subgroup().gens()
-    
-    if len(G) == 0:
-        tor_struct = 'Trivial'
-        tor_group='Trivial'
-    else:
-        tor_struct = ' \\times '.join(['\mathbb{Z}/{%s}\mathbb{Z}'%a.order() for a in G])
-       # tor_struct += ' \\times '.join(['\\langle %s \\rangle'%a for a in G])
-        tor_group=' \\times '.join(['\mathbb{Z}/{%s}\mathbb{Z}'%a.order() for a in G])
-    info['tor_structure'] = tor_struct
     properties = ['<h2>%s</h2>' % label, ' <img src="%s" width="200" height="150"/><br/><br/>' % image_src(plot),'<h2>Conductor</h2>',
     '\(%s\)<br/><br/>' % N, '<h2> Discriminant</h2>','\(%s\)<br/><br/>' % discriminant, '<h2>j-invariant</h2>','\(%s\)<br/><br/>' % j_invariant,
      '<h2>Rank</h2>','\(%s\)<br/><br/>' % rank ,'<h2>Torsion Structure</h2>', '\(%s\)<br/><br/>' % tor_group

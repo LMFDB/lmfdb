@@ -31,10 +31,10 @@ function show_code(system) {
     <div class='magma nodisplay code'>&gt; E := EllipticCurve({{info.ainvs}});</div>
     <p> {{ info.equation }} </p>
 
-    <h2> Mordell-Weil Group structure<h2>
-    <div>{% if info.rank==1 %}{% if info.torsion!=1 %}\(\mathbb{Z}\times {{info.tor_structure}}\) 
-    
-    {%endif%}  {%endif%} </div>
+    <h2> Mordell-Weil Group structure</h2>
+   <div>{% if info.rank==1 %}{% if info.torsion!=1 %} \(\mathbb{Z}\times {{info.tor_structure}}\) 
+    {%endif%}  {%endif%}     </div>
+
     <div>{% if info.rank==1 %}{% if info.torsion==1 %}\(\mathbb{Z}\) {%endif%}  {%endif%} </div>
     <div> {% if info.rank !=0 and info.rank!=1 %} {% if info.torsion!=1 %}\(\mathbb{Z}^{{info.rank}} \times {{info.tor_structure}}\) {%endif%}  {%endif%} </div>
     <div> {% if info.rank !=0 and info.rank!=1%} {% if info.torsion==1 %} \(\mathbb{Z}^{{info.rank}}\){%endif%}  {%endif%} </div>
@@ -54,7 +54,7 @@ function show_code(system) {
     <div class='sage nodisplay code'>sage: E.torsion_subgroup()</div>
     <div class='pari nodisplay code'>? elltors(E) </div>
     <div class='magma nodisplay code'>&gt; TorsionSubgroup(E);</div>
-    <p> \({{ info.tor_structure }}\) </p></p>
+    <p> {{ info.tor_gens }} </p></p>
     {%endif %}
 
 
@@ -114,7 +114,7 @@ function show_code(system) {
             <span class='pari nodisplay code'></span>
             <span class='magma nodisplay code'>&gt; Rank(E);</span>
         </td>
-        <td align='right'>\( r \)</td>
+        <td align='center'>\( r \)</td>
         <td>=</td>
         <td>{{ info.rank }}</td>
         <tr>
@@ -125,7 +125,7 @@ function show_code(system) {
             <span class='pari nodisplay code'></span>
             <span class='magma nodisplay code'>&gt; Regulator(E);</span>
         </td>
-        <td align='right'> \( \text{Reg} \) </td>
+        <td align='center'> \( \text{Reg} \) </td>
         <td>=</td>
         <td>{{ info.regulator }}</td>
         <tr>
@@ -136,7 +136,7 @@ function show_code(system) {
             <span class='pari nodisplay code'></span>
             <span class='magma nodisplay code'>&gt; RealPeriod(E);</span>
         </td>
-        <td align='right'>\( \Omega \)</td>
+        <td align='center'>\( \Omega \)</td>
         <td>=</td>
         <td>{{ info.real_period }}</td>
         <tr>
@@ -147,7 +147,7 @@ function show_code(system) {
             <span class='pari nodisplay code'></span>
             <span class='magma nodisplay code'>&gt; TamagawaNumbers(E);</span>
         </td>
-        <td align='right'>\( \prod_p c_p \)</td>
+        <td align='center'>\( \prod_p c_p \)</td>
         <td>=</td>
         <td>\( {{ info.tamagawa_numbers }} \)</td>
         <tr>
@@ -158,7 +158,7 @@ function show_code(system) {
             <span class='pari nodisplay code'>? elltors(E)[1]</span>
             <span class='magma nodisplay code'>&gt; OrderTorsionSubgroup(E);</span>
         </td>
-        <td align='right'>\( \#E_{tor} \)</td>
+        <td align='center'>\( \#E_{tor} \)</td>
         <td>=</td>
         <td>{{ info.torsion }}</td>
         <tr>
@@ -169,7 +169,7 @@ function show_code(system) {
             <span class='pari nodisplay code'></span>
             <span class='magma nodisplay code'>&gt; MordellWeilShaInformation(E);</span>
         </td>
-        <td align='right'>&#1064;\(_{an} \) </td>
+        <td align='center'>&#1064;\(_{an} \) </td>
         <td>=</td>
         <td>{{ info.sha_an }}</td>
         <tr>
