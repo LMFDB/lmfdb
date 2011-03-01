@@ -63,14 +63,16 @@ def render_discriminants_page():
 @app.route("/NumberField")
 def number_field_render_webpage():
     args = request.args
+    sig_list = sum([[[d-2*r2,r2] for r2 in range(1+(d//2))] for d in range(1,7)],[]) + sum([[[d,0]] for d in range(7,11)],[])
+    sig_list = sig_list[:10]
     if len(args) == 0:      
 #        discriminant_list_endpoints = [100**k for k in range(6)]
         discriminant_list_endpoints = [-10000,-1000,-100,0,100,1000,10000]
         discriminant_list = ["%s-%s" % (start,end-1) for start, end in zip(discriminant_list_endpoints[:-1], discriminant_list_endpoints[1:])]
         info = {
         'degree_list': range(1,11),
-        'signature_list': sum([[[d-2*r2,r2] for r2 in range(1+(d//2))] for d in range(1,7)],[]) + sum([[[d,0]] for d in range(7,11)],[]), 
-        'class_number_list': range(1,11)+['11-1000000'],
+        'signature_list': sig_list, 
+        'class_number_list': range(1,6)+['6-10'],
         'discriminant_list': discriminant_list
     }
         credit = 'the PARI group and J. Voight'	
@@ -220,12 +222,18 @@ def render_field_webpage(args):
         reg = 1
     else:
         reg = K.regulator()
+    UK = K.unit_group()
+    
     info.update(data)
     info.update({
         'label': label,
         'polynomial': web_latex(K.defining_polynomial()),
         'integral_basis': web_latex(K.integral_basis()),
         'regulator': web_latex(reg),
+        'unit_rank': unit_rank,
+        'root_of_unity': web_latex(UK.torsion_generator()),
+#        'fund_units': web_latex(UK.fundamental_units()),
+        'fund_units': ',&nbsp; '.join([web_latex(u) for u in UK.fundamental_units()]),
         'Gorder': Gorder, 'Gsign': Gsign, 'Gab': Gab
         })
     info['downloads_visible'] = True
@@ -239,15 +247,15 @@ def render_field_webpage(args):
 
     properties = ['<br>']
     properties.extend('<table>')
-    properties.extend('<tr><td align=left>Degree:<td align=left> %s</td>'%data['degree'])
-    properties.extend('<tr><td align=left>Signature:<td align=left>%s</td>'%data['signature'])
-    properties.extend('<tr><td align=left>Discriminant:<td align=left>%s</td>'%data['discriminant'])
+    properties.extend('<tr><td align=left><b>Degree:</b><td align=left> %s</td>'%data['degree'])
+    properties.extend('<tr><td align=left><b>Signature:</b><td align=left>%s</td>'%data['signature'])
+    properties.extend('<tr><td align=left><b>Discriminant:</b><td align=left>%s</td>'%data['discriminant'])
     if npr==1:
-        properties.extend('<tr><td align=left>Ramified prime:<td align=left>%s</td>'%ram_primes)
+        properties.extend('<tr><td align=left><b>Ramified prime:</b><td align=left>%s</td>'%ram_primes)
     else:
-        properties.extend('<tr><td align=left>Ramified primes:<td align=left>%s</td>'%ram_primes)
-    properties.extend('<tr><td align=left>Class number:<td align=left>%s</td>'%data['class_number'])
-    properties.extend('<tr><td align=left>Galois group:<td align=left>%s</td>'%data['galois_group'])
+        properties.extend('<tr><td align=left><b>Ramified primes:</b><td align=left>%s</td>'%ram_primes)
+    properties.extend('<tr><td align=left><b>Class number:</b><td align=left>%s</td>'%data['class_number'])
+    properties.extend('<tr><td align=left><b>Galois group:</b><td align=left>%s</td>'%data['galois_group'])
     properties.extend('</table>')
     return render_template("number_field/number_field.html", info = info, properties=properties, credit=credit, title = t, bread=bread)
 

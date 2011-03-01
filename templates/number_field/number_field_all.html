@@ -2,14 +2,6 @@
 {% block content %}
 
 
-<h3>Search by label</h3>
-
-<form>
-Go to a specific field by giving its label (e.g. 1.1.1.1 for \(\mathbb{Q}\))
-<input type='text' name='natural' size=60>
-<input type='submit' name='search value='search by label'>
-</form>
-
 <h3> Browse </h3>
 
 <ul>
@@ -35,43 +27,55 @@ By class number:
 {% endfor %}
 </ul>
 
-<h3> Search </h3>
+<h3>Go to a specific field</h3>
+
+<form>
+Label:&nbsp;&nbsp;
+<input type='text' name='natural' size=10> (e.g. 1.1.1.1 for \(\mathbb{Q}\))
+<input type='submit' name='search' value='Go'>
+</form>
+
+<h3> Search for fields </h3>
 <form>
 <p>
-Enter values into one or more boxes to restrict the search.
+Enter values into one or more boxes to restrict the search.&nbsp;&nbsp;
 <input type='submit' value='Search'>
 </p>
 <table border=0 cellpadding=5>
 <tr>
-<td align=left>Degree <td><input type='text' name='degree'> 
+<td align=left>Degree <td><input type='text' name='degree' size=10> 
 <font color=gray>(e.g. 3)&nbsp;</font>
 <td>&nbsp;&nbsp;
-<td align=left>Signature <td><input type='text' name='signature'> 
+<td align=left>Signature <td><input type='text' name='signature' size=10> 
 <font color=gray>(e.g. [1,1])</font>
 </tr>
 <tr>
 <td align=left>Discriminant 
-<td colspan=4><input type='text' name='discriminant'> 
+<td colspan=4><input type='text' name='discriminant' size=10 size=10> 
 <font color=gray>(e.g. -3, or a range such as 1000-2000 or -1000--1)&nbsp;</font>
 </tr>
 <tr>
-<td align=left>Class number <td><input type='text' name='class_number'>
+<td align=left>Class number <td><input type='text' name='class_number' size=10>
 <font color=gray>(e.g. 5)</font>
 <td>&nbsp;&nbsp;
-<td align=left>Class group structure<td><input type='text' name='class_group'>
+<td align=left>Class group structure<td><input type='text' name='class_group' size=10>
 <font color=gray>(e.g. [], [3], [2,2])</font>
 </tr>
 <tr>
-<td align=left>Galois group <td><input type='text' name='galois_group'>
+<td align=left>Galois group <td><input type='text' name='galois_group' size=10>
 <font color=gray>(e.g. C5)</font>
 <td>&nbsp;&nbsp;
-<td align=left>Unramified primes <td><input type='text' name='ur_primes'>
+<td align=left>Unramified primes <td><input type='text'
+                                            name='ur_primes' size=10>
+<font color=gray>(e.g. 2,3)</font>
+</tr>
+<tr>
+<td align=left colspan=3>Maximum number of fields to display <input type='text'
+                                                   name='count'
+                                                   value=10 size=10>
+</td>
 </tr>
 </table>
-<center align=left>Maximum number of fields to display <input type='text'
-                                                   name='count'
-                                                   value=10>
-</center>
 </form>
 
 {% endblock %}

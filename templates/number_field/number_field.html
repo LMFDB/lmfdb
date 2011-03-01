@@ -17,24 +17,25 @@ function show_code(system) {
 }
 </script>
 
-
-        <h1> Number field {{ info.label }}</h1>
             <div>
+              <i><font size="3">Display code for creating this field in:</font></i>
                 <a onclick="show_code('sage'); return false" href='#'>sage</a>
                 <a onclick="show_code('pari'); return false" href='#'>pari</a>
                 <a onclick="show_code('magma'); return false" href='#'>magma</a>
             </div>
+
             <p>
         <div class='sage nodisplay code'>sage: K = NumberField(PolynomialRing(QQ,'x')({{info.coefficients}}),'a')</div>
         <div class='pari nodisplay code'>pari: K = bnfinit(Polrev({{info.coefficients}}))</div>
-        <div class='magma nodisplay code'>&gt; K &lt;a&gt; := NumberField(PolynomialRing(Rationals())!{{info.coefficients}});</div>
+        <div class='magma nodisplay code'>> K<a> := NumberField(PolynomialRing(Rationals())!{{info.coefficients}});</div>
         </p>
+
         <h2>
             Defining Polynomial
         </h2>
         <div class='sage nodisplay code'>sage: K.defining_polynomial()</div>
         <div class='pari nodisplay code'>pari: K.pol</div>
-        <div class='magma nodisplay code'>&gt; DefiningPolynomial(K);</div>
+        <div class='magma nodisplay code'>> DefiningPolynomial(K);</div>
         <p>
             {{ info.polynomial }}
         </p>
@@ -45,7 +46,7 @@ function show_code(system) {
         </h2>
         <div class='sage nodisplay code'>sage: K.integral_basis()</div>
         <div class='pari nodisplay code'>pari: K.zk</div>
-        <div class='magma nodisplay code'>&gt; IntegralBasis(K);</div>
+        <div class='magma nodisplay code'>> IntegralBasis(K);</div>
         <p>
             {{ info.integral_basis}}
         </p>
@@ -55,20 +56,42 @@ function show_code(system) {
         </h2>
         <div class='sage nodisplay code'>sage: K.class_group().invariants()</div>
         <div class='pari nodisplay code'>pari: K.clgp</div>
-        <div class='magma nodisplay code'>&gt; ClassGroup(K);</div>
+        <div class='magma nodisplay code'>> ClassGroup(K);</div>
 <p>
             {{ info.class_group }}
         </p>
 
 
         <h2>
-            Regulator
+            Unit group
         </h2>
+        <div class='sage nodisplay code'>sage: UK = K.unit_group()</div>
+        <div class='sage nodisplay code'>sage: UK.rank()</div>
+        <div class='sage nodisplay code'>sage: UK.torsion_generator()</div>
+        <div class='sage nodisplay code'>sage: UK.roots_of_unity()</div>
         <div class='sage nodisplay code'>sage: K.regulator()</div>
+
+        <div class='pari nodisplay code'>pari: #K.fu</div>
+        <div class='pari nodisplay code'>pari: K.tu[2]</div>
+        <div class='pari nodisplay code'>pari: K.fu</div>
         <div class='pari nodisplay code'>pari: K.reg</div>
-        <div class='magma nodisplay code'>&gt; Regulator(K);</div>
+
+        <div class='magma nodisplay code'>> UnitRank(K);</div>
+        <div class='magma nodisplay code'>> K!f(TorsionSubgroup(UK).1);</div>
+        <div class='magma nodisplay code'>> [K!Integers(K)!f(u) : u in Generators(UK)];</div>
+        <div class='magma nodisplay code'>> Regulator(K);</div>
         <p>
-            {{ info.regulator }}
+          <table>
+            <tr><td>Rank:<td>&nbsp;&nbsp;<td>{{info.unit_rank}}</tr>
+            <tr><td>Torsion generator:<td>&nbsp;&nbsp;<td>{{info.root_of_unity}}</tr>
+{% if info.unit_rank==1 %}
+            <tr><td>Fundamental unit:<td>&nbsp;&nbsp;<td>{{info.fund_units|safe}}</tr>
+{% endif %}
+{% if info.unit_rank>1 %}
+            <tr><td>Fundamental units:<td>&nbsp;&nbsp;<td>{{info.fund_units|safe}}</tr>
+{% endif %}
+            <tr><td>Regulator:<td>&nbsp;&nbsp;<td>{{info.regulator}}</tr>
+          </table>
         </p>
 
 
@@ -77,7 +100,7 @@ function show_code(system) {
         </h2>
         <div class='sage nodisplay code'>sage: K.class_group().isomorphism_type_info_simple_group()</div>
         <div class='pari nodisplay code'>pari: polgalois(pol)</div>
-        <div class='magma nodisplay code'>&gt; GaloisGroup(K);</div>
+        <div class='magma nodisplay code'>> GaloisGroup(K);</div>
         <p>
             {{ info.galois_group }} (order {{ info.Gorder }}, sign {{
             info.Gsign}}, {{ info.Gab }})
