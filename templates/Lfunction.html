@@ -1,7 +1,5 @@
 {% extends 'homepage.html' %}
 
-{% block title %}{{ info.title }}{% endblock %}
-
 {% block content %}
     <!--<div id="header">
         <div class="logo">
@@ -12,8 +10,6 @@
         </div>
     </div>-->
     <div id="Content">
-        <!--<h1>
-            {{ info.title }}</h1>-->
         <h2>
             Dirichlet series
         </h2>
@@ -24,7 +20,11 @@
             Functional equation
         </h2>
         <p>
-            {{ info.functionalequation }}
+            <div id="functionalEqText">{{ info.functionalequation }}</div>
+			<div class="LfunctionFooter">
+            	<a id="functionalEqSelberg">Selberg</a>
+            	<a id="functionalEqAnalytic">Analytic</a>
+	    </div>
         </p>
         <h2>
             Euler product
@@ -71,6 +71,16 @@
         $(document).ready(function() {
             $("#zeroes").load("{{ info.zeroeslink|safe }}");
         });
+
+	$("#functionalEqSelberg").click(function() {
+	var math = MathJax.Hub.getAllJax("functionalEqText")[0];
+	MathJax.Hub.Queue(["Text",math, "{{ info.functionalequationSelberg|safe }}"]);
+	});
+		
+	$("#functionalEqAnalytic").click(function() {
+	var math = MathJax.Hub.getAllJax("functionalEqText")[0];
+	MathJax.Hub.Queue(["Text",math, "{{ info.functionalequationAnalytic|safe }}"]);
+	});
     </script>
 
 {% endblock %}

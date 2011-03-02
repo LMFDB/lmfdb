@@ -1,7 +1,6 @@
 {% extends 'homepage.html' %}
 
 {% block content %}
-        <h1> {{ title }} </h1>
 
 {% if info.degree==2 %}
 <div>hello {{ info.degree }}</div>
@@ -47,7 +46,7 @@ with $0 \le \mu_2 \le \mu_1$.
 </div>
 <div>The dots in the plot correspond to $(\mu_1,\mu_2)$ for Sp(4,Z) L-functions
 which have been found by a computer search.</div>
-<embed src="http://www.aimath.org/~farmer/print/Sp4.svg" width="470" height="330">
+<embed src="/static/images/Sp4.svg" width="470" height="330">
 <br>
 <h3>Maass cusp forms on SL(4,Z)</h3>
 <div>These satisfy a functional equation with $\Gamma$-factors
@@ -61,7 +60,7 @@ where $\mu_1 + \mu_2 = \mu_3 + \mu_4$.
 </div>
 <div>The dots in the plot correspond to $(\mu_1,\mu_2)$ for SL(4,Z) L-functions
 which have been found by a computer search.</div>
-<embed src="http://www.aimath.org/~farmer/print/SL4.svg" width="520" height="360">
+<embed src="/static/images/SL4.svg" width="520" height="360">
 {% endif %}
  
 {% endblock %}
