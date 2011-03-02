@@ -27,7 +27,10 @@ class WebLfunction:
         self.texname = "L(s)"  # default name.  will be set later, for most L-functions
         self.texnamecompleteds = "\\Lambda(s)"  # default name.  will be set later, for most L-functions
         self.texnamecompleted1ms = "\\overline{\\Lambda(1-\\overline{s})}"  # default name.  will be set later, for most L-functions
-        self.primitive = True # should be changed         
+        self.primitive = True # should be changed
+        self.citation = ''
+        self.credit = ''
+        
         if self.type=='lcalcurl':
             import urllib
             self.url = dict['url']
@@ -37,6 +40,10 @@ class WebLfunction:
         elif self.type=='lcalcfile':
             self.contents = dict['filecontents']
             self.parseLcalcfile()
+
+        elif self.type=='db':
+            self.id = dict["id"]
+            self.getFromDatabase()
 
         elif self.type=='gl2holomorphic':
             self.weight = int(dict['weight'])
@@ -48,38 +55,7 @@ class WebLfunction:
              
         elif self.type=='gl2maass':
             self.id = dict["id"]
-            import base
-            connection = base.getDBConnection()
-            db = connection.MaassWaveForm
-            collection = db.HT
-            data=collection.find_one({'_id':bson.objectid.ObjectId(self.id)})
-            self.symmetry = data['Symmetry']
-            self.eigenvalue = float(data['Eigenvalue'])
-            self.norm = data['Norm']
-            self.dirichlet_coefficients = data['Coefficient']
-            if 'Level' in data.keys():
-                self.level = int(data['Level'])
-            else:
-                self.level = 1
-	    self.charactermodulus = self.level
-	    if 'Weight' in data.keys():
-                self.weight = int(data['Weight'])
-            else:
-                self.weight = 0
-	    if 'Character' in data.keys():
-                self.characternumber = int(data['Character'])
-            if self.level > 1:
-		self.fricke = data['Fricke']  #no fricke for level 1
-# end of database input
 	    self.maassL()
-             
-        elif self.type=='gl3maass':
-            self.level = dict['level']
-            self.eigenvalue = dict['eigenvalue']
-            self.title = "$L(s,f)$, where $f$ is a Maass cusp form with level "+str(self.level)+", and eigenvalue "+str(self.eigenvalue)
-            self.texname = "L(s,f)"
-            self.texnamecompleteds = "\\Lambda(s,f)"
-            self.texnamecompleted1ms = "{\\Lambda(1-{s},\\overline{f})}" 
              
 	elif self.type=='riemann':
 	    if "numcoeff" in dict.keys():
@@ -112,26 +88,17 @@ class WebLfunction:
         self.coefficient_type: 1 = integer, 2 = double, 3 = complex
         self.coefficient_period:  0 = non-periodic
         """
-        self.sageLfunction = lc.Lfunction_C(self.title, self.coefficient_type, self.dirichlet_coefficients, self.coefficient_period, self.Q_fe, self.sign , self.kappa_fe, self.lambda_fe ,self.poles, self.residues)
+        self._set_properties()
+
+        self.sageLfunction = lc.Lfunction_C(self.title, self.coefficient_type,
+                                            self.dirichlet_coefficients,
+                                            self.coefficient_period,
+                                            self.Q_fe, self.sign ,
+                                            self.kappa_fe, self.lambda_fe ,
+                                            self.poles, self.residues)
 
 
-    def _set_properties(self):
-        deg = str(self.degree)
-        if self.selfdual:
-            sd = 'Self dual'
-        else:
-            sd = 'Not self dual'
-        ll = str(self.level)
-        sg = str(self.sign)
-        if self.primitive:
-            prim = 'Primitive'
-        else:
-            prim = 'Not primitive'
-        self.properties = ['Degree ',deg]
-        self.properties.extend(['<br>', sd])
-        self.properties.extend(['<br>Level ', ll])
-        self.properties.extend(['<br>Sign ',sg])
-        self.properties.extend(['<br>',prim])
+#===================  Set all the properties for different types of L-functions
 
     def modularformL(self):
         self.MF = WebNewForm(self.weight, self.level, self.character, self.label)
@@ -169,10 +136,34 @@ class WebLfunction:
         else:
             self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{f})"
         self.title = "L-function of a holomorphic cusp form: $L(s,f)$, "+ "where $f$ is a holomorphic cusp form with weight "+str(self.weight)+", level "+str(self.level)+", and character "+str(self.character)
-        self._set_properties()
 
 #===================
+                                               
     def maassL(self):
+        import base
+        connection = base.getDBConnection()
+        db = connection.MaassWaveForm
+        collection = db.HT
+        data=collection.find_one({'_id':bson.objectid.ObjectId(self.id)})
+        self.symmetry = data['Symmetry']
+        self.eigenvalue = float(data['Eigenvalue'])
+        self.norm = data['Norm']
+        self.dirichlet_coefficients = data['Coefficient']
+        if 'Level' in data.keys():
+            self.level = int(data['Level'])
+        else:
+            self.level = 1
+        self.charactermodulus = self.level
+        if 'Weight' in data.keys():
+            self.weight = int(data['Weight'])
+        else:
+            self.weight = 0
+        if 'Character' in data.keys():
+            self.characternumber = int(data['Character'])
+        if self.level > 1:
+            self.fricke = data['Fricke']  #no fricke for level 1
+# end of database input
+
         self.coefficient_type = 2
         self.selfdual = True
         self.quasidegree = 2
@@ -207,6 +198,7 @@ class WebLfunction:
         self.title = "$L(s,f)$, where $f$ is a Maass cusp form with level "+str(self.level)+", and eigenvalue "+str(self.eigenvalue)
 
 #===========================
+                                               
     def ellipticcurveL(self):
 	self.E = EllipticCurve(str(self.label))
         self.quasidegree = 1
@@ -240,7 +232,6 @@ class WebLfunction:
         self.credit = 'Sage'
 #        self.title = self.title+", where $\\chi$ is the character modulo "+\
 #str(self.charactermodulus) + ", number " + str(self.characternumber)
-        self._set_properties()
         self.specialvalues =  'test'#'L(1/2) = '+str(self.sageLfunction.value(.5))
         
 
@@ -285,11 +276,14 @@ class WebLfunction:
 	    self.texnamecompleted1ms = "\\Lambda(1-s,\\chi)"
         else:
             self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{\\chi})"
+        self.credit = 'Sage'
         self.title = "Dirichlet L-function: $L(s,\\chi)$"
-	self.title = self.title+", where $\\chi$ is the character modulo "+\
-str(self.charactermodulus) + ", number " + str(self.characternumber)
-        self._set_properties()
+	self.title = (self.title+", where $\\chi$ is the character modulo "+
+                      str(self.charactermodulus) + ", number " +
+                      str(self.characternumber))
+
 #===========================
+                                               
     def riemannzeta(self):
 	self.coefficient_type = 1
 	self.quasidegree = 1
@@ -312,9 +306,37 @@ str(self.charactermodulus) + ", number " + str(self.characternumber)
         self.texname = "\\zeta(s)"
         self.texnamecompleteds = "\\xi(s)"
         self.texnamecompleted1ms = "\\xi(1-s)"
+        self.credit = 'Sage'
 	self.title = "Riemann Zeta-function: $\\zeta(s)$"
-        self._set_properties()
 
+#===========================
+                                               
+    def getFromDatabase(self):
+        import base
+        connection = base.getDBConnection()
+        dbName = 'Lfunction'
+        dbColl = 'LemurellMaassHighDegree'  #Probably later a choice
+        db = pymongo.database.Database(connection, dbName)
+        collection = pymongo.collection.Collection(db,dbColl)
+        self.dbEntry = collection.find_one({'_id': self.id}) 
+        self.contents = self.dbEntry['lcalcfile']
+        self.parseLcalcfile()
+
+        self.family = self.dbEntry['family']
+        self.group = self.dbEntry['group']
+        self.field = self.dbEntry['field']
+        self.objectName = self.dbEntry['objectName']
+
+        self.texnamecompleted1ms = self.dbEntry['texnamecompleted1ms']
+        self.texname = self.dbEntry['texname']
+        self.texnamecompleteds = self.dbEntry['texnamecompleteds']
+        self.title = self.dbEntry['title']
+        self.citation = self.dbEntry['citation']
+        self.credit = self.dbEntry['credit']
+
+#=========================== Extract the information from an Lcalcfile
+#=========================== which is stored in self.contents
+                                               
     def parseLcalcfile(self):
         lines = self.contents.split('\n',6)
         self.coefficient_type = int(lines[0])
@@ -340,11 +362,6 @@ str(self.charactermodulus) + ", number " + str(self.characternumber)
         """
         
         self.degree = int(round(2*sum(self.kappa_fe)))
-	if self.degree == 3:
-	    self.type = "gl3maass"
-            self.texname = "L(s,f)"  
-            self.texnamecompleteds = "\\Lambda(s,f)"  
-            self.texnamecompleted1ms = "\\Lambda(1-s, \\overline{f})"  
 
         self.level = int(round(math.pi**float(self.degree) * 4**len(self.nu_fe) * self.Q_fe**2 ))
 # note:  math.pi was not compatible with the sage type of degree
@@ -356,19 +373,48 @@ str(self.charactermodulus) + ", number " + str(self.characternumber)
 #	
 	if self.selfdual:
 	    self.texnamecompleted1ms = "\\Lambda(1-s)"  # default name.  will be set later, for most L-functions
-	self.originalfile = re.match(".*/([^/]+)$", self.url)
-        self.originalfile = self.originalfile.group(1)
-        self.title = "An L-function generated by an Lcalc file: "+self.originalfile
+
+        print 'Start url'
+        try:
+            self.originalfile = re.match(".*/([^/]+)$", self.url)
+            self.originalfile = self.originalfile.group(1)
+            self.title = "An L-function generated by an Lcalc file: "+self.originalfile
+        except:
+            self.originalfile = ''
+
+        print 'End url'
         
-#===============
+#=============== Checks whether coefficients are real to determine
+#=============== whether L-function is selfdual
+                                               
     def checkselfdual(self):
 	self.selfdual = True
         for n in range(1,min(8,len(self.dirichlet_coefficients))):
             if abs(imag_part(self.dirichlet_coefficients[n]/self.dirichlet_coefficients[0])) > 0.00001:
                 self.selfdual = False
 
-# checks whether coefficients are real to determine whether L-function is selfdual
+#=============== Sets the html of the properties to display in the upper right corner
 
+    def _set_properties(self):
+        deg = str(self.degree)
+        if self.selfdual:
+            sd = 'Self dual'
+        else:
+            sd = 'Not self dual'
+        ll = str(self.level)
+        sg = str(self.sign)
+        if self.primitive:
+            prim = 'Primitive'
+        else:
+            prim = 'Not primitive'
+        self.properties = ['Degree: ',deg]
+        self.properties.extend(['<br>', sd])
+        self.properties.extend(['<br>Level: ', ll])
+        self.properties.extend(['<br>Sign: ',sg])
+        self.properties.extend(['<br>',prim])
+
+
+# 
 #===============
 
     def lfuncDStex(self,fmt):
@@ -470,20 +516,4 @@ self.texnamecompleted1ms+"\n\\end{align}\n"
 	return(ans)
                            
 #++++++++++++++++++++++++++++++
-
-def lfuncvalue(ldesc, s):
-	Ltmp=WebLfunction(ldesc)
-	return(Ltmp.sageLfunction.value(s))
-
-def lfunctitle(ldesc):
-        Ltmp=WebLfunction(ldesc)
-        return(Ltmp.title)
-
-def lfuncFE(ldesc,fmt):
-        Ltmp=WebLfunction(ldesc)
-        return(Ltmp.lfuncFEtex(fmt))
-
-def lfuncDS(ldesc,fmt):
-        Ltmp=WebLfunction(ldesc)
-        return(Ltmp.lfuncDStex(fmt))
 

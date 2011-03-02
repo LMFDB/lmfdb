@@ -1,0 +1,634 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<line x1="0" y1="333.20" x2="512.50" y2="333.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="0" y1="333.20" x2="0" y2="0" style="stroke: rgb(0, 0, 0);"/>
+<line x1="20" y1="329.20" x2="20" y2="333.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="40" y1="329.20" x2="40" y2="333.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="60" y1="329.20" x2="60" y2="333.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="80" y1="329.20" x2="80" y2="333.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="100" y1="329.20" x2="100" y2="333.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="120" y1="329.20" x2="120" y2="333.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="140" y1="329.20" x2="140" y2="333.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="160" y1="329.20" x2="160" y2="333.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="180" y1="329.20" x2="180" y2="333.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="200" y1="329.20" x2="200" y2="333.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="220" y1="329.20" x2="220" y2="333.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="240" y1="329.20" x2="240" y2="333.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="260" y1="329.20" x2="260" y2="333.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="280" y1="329.20" x2="280" y2="333.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="300" y1="329.20" x2="300" y2="333.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="320" y1="329.20" x2="320" y2="333.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="340" y1="329.20" x2="340" y2="333.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="360" y1="329.20" x2="360" y2="333.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="380" y1="329.20" x2="380" y2="333.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="400" y1="329.20" x2="400" y2="333.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="420" y1="329.20" x2="420" y2="333.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="440" y1="329.20" x2="440" y2="333.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="460" y1="329.20" x2="460" y2="333.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="480" y1="329.20" x2="480" y2="333.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="500" y1="329.20" x2="500" y2="333.20" style="stroke: rgb(0, 0, 0);"/>
+<text x="94" y="325.2" style="fill: rgb(102, 102, 102); font-size: 11px;">5</text>
+<line y1="0" x1="100" y2="333.20" x2="100" style="stroke: rgb(204, 204, 204); stroke-dasharray: 3, 3;"/>
+<text x="194" y="325.2" style="fill: rgb(102, 102, 102); font-size: 11px;">10</text>
+<line y1="0" x1="200" y2="333.20" x2="200" style="stroke: rgb(204, 204, 204); stroke-dasharray: 3, 3;"/>
+<text x="294" y="325.2" style="fill: rgb(102, 102, 102); font-size: 11px;">15</text>
+<line y1="0" x1="300" y2="333.20" x2="300" style="stroke: rgb(204, 204, 204); stroke-dasharray: 3, 3;"/>
+<text x="394" y="325.2" style="fill: rgb(102, 102, 102); font-size: 11px;">20</text>
+<line y1="0" x1="400" y2="333.20" x2="400" style="stroke: rgb(204, 204, 204); stroke-dasharray: 3, 3;"/>
+<text x="494" y="325.2" style="fill: rgb(102, 102, 102); font-size: 11px;">25</text>
+<line y1="0" x1="500" y2="333.20" x2="500" style="stroke: rgb(204, 204, 204); stroke-dasharray: 3, 3;"/>
+<line x1="0" y1="313.20" x2="4" y2="313.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="0" y1="293.20" x2="4" y2="293.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="0" y1="273.20" x2="4" y2="273.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="0" y1="253.20" x2="4" y2="253.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="0" y1="233.20" x2="4" y2="233.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="0" y1="213.20" x2="4" y2="213.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="0" y1="193.20" x2="4" y2="193.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="0" y1="173.20" x2="4" y2="173.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="0" y1="153.20" x2="4" y2="153.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="0" y1="133.20" x2="4" y2="133.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="0" y1="113.20" x2="4" y2="113.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="0" y1="93.20" x2="4" y2="93.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="0" y1="73.20" x2="4" y2="73.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="0" y1="53.20" x2="4" y2="53.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="0" y1="33.20" x2="4" y2="33.20" style="stroke: rgb(0, 0, 0);"/>
+<line x1="0" y1="13.20" x2="4" y2="13.20" style="stroke: rgb(0, 0, 0);"/>
+<text x="5" y="236.2" style="fill: rgb(102, 102, 102); font-size: 11px;">5</text>
+<line x1="0" y1="233.20" x2="512.50" y2="233.20" style="stroke: rgb(204, 204, 204); stroke-dasharray: 3, 3;"/>
+<text x="5" y="136.2" style="fill: rgb(102, 102, 102); font-size: 11px;">10</text>
+<line x1="0" y1="133.20" x2="512.50" y2="133.20" style="stroke: rgb(204, 204, 204); stroke-dasharray: 3, 3;"/>
+<text x="5" y="36.2" style="fill: rgb(102, 102, 102); font-size: 11px;">15</text>
+<line x1="0" y1="33.20" x2="512.50" y2="33.20" style="stroke: rgb(204, 204, 204); stroke-dasharray: 3, 3;"/>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass1.txt" target="_top">
+<circle cx="260.96" cy="198.67" r="3" style="fill: rgb(0, 0, 39);"><title>{13.048, 6.7262, -4.3678}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass2.txt" target="_top">
+<circle cx="274.84" cy="154.98" r="3" style="fill: rgb(0, 0, 66);"><title>{13.742, 8.9109, -6.6712}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass3.txt" target="_top">
+<circle cx="298.90" cy="129.73" r="3" style="fill: rgb(0, 0, 72);"><title>{14.945, 10.173, -7.6380}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass4.txt" target="_top">
+<circle cx="316.47" cy="213.51" r="3" style="fill: rgb(0, 0, 32);"><title>{15.824, 5.9844, -3.3205}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass5.txt" target="_top">
+<circle cx="316.87" cy="170.39" r="3" style="fill: rgb(0, 0, 64);"><title>{15.843, 8.1402, -6.3981}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass6.txt" target="_top">
+<circle cx="318.99" cy="108.73" r="3" style="fill: rgb(0, 0, 71);"><title>{15.949, 11.224, -7.4685}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass7.txt" target="_top">
+<circle cx="319.98" cy="222.15" r="3" style="fill: rgb(0, 0, 39);"><title>{15.999, 5.5525, -4.2898}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass8.txt" target="_top">
+<circle cx="320.97" cy="184.33" r="3" style="fill: rgb(0, 0, 54);"><title>{16.049, 7.4435, -5.7475}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass9.txt" target="_top">
+<circle cx="323.51" cy="146.95" r="3" style="fill: rgb(0, 0, 80);"><title>{16.176, 9.3122, -7.9949}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass10.txt" target="_top">
+<circle cx="334.52" cy="121.69" r="3" style="fill: rgb(0, 0, 80);"><title>{16.726, 10.575, -8.0502}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass11.txt" target="_top">
+<circle cx="337.99" cy="287.75" r="3" style="fill: rgb(0, 0, 56);"><title>{16.900, 2.2726, -6.0358}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass12.txt" target="_top">
+<circle cx="338.53" cy="83.63" r="3" style="fill: rgb(0, 0, 103);"><title>{16.926, 12.479, -10.635}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass13.txt" target="_top">
+<circle cx="339.14" cy="142.46" r="3" style="fill: rgb(0, 0, 70);"><title>{16.957, 9.5367, -7.3277}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass14.txt" target="_top">
+<circle cx="343.21" cy="222.81" r="3" style="fill: rgb(0, 0, 35);"><title>{17.160, 5.5194, -3.6788}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass15.txt" target="_top">
+<circle cx="345.50" cy="189.47" r="3" style="fill: rgb(0, 0, 39);"><title>{17.275, 7.1864, -4.3840}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass16.txt" target="_top">
+<circle cx="350.60" cy="229.94" r="3" style="fill: rgb(0, 0, 37);"><title>{17.530, 5.1628, -4.0357}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass17.txt" target="_top">
+<circle cx="351.51" cy="176.92" r="3" style="fill: rgb(0, 0, 71);"><title>{17.576, 7.8141, -7.4399}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass18.txt" target="_top">
+<circle cx="352.20" cy="176.98" r="3" style="fill: rgb(0, 0, 56);"><title>{17.610, 7.8110, -6.0675}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass19.txt" target="_top">
+<circle cx="355.18" cy="244.25" r="3" style="fill: rgb(0, 0, 83);"><title>{17.759, 4.4477, -8.4518}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass20.txt" target="_top">
+<circle cx="358.17" cy="111.75" r="3" style="fill: rgb(0, 0, 101);"><title>{17.908, 11.072, -10.292}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass21.txt" target="_top">
+<circle cx="358.50" cy="142.12" r="3" style="fill: rgb(0, 0, 113);"><title>{17.925, 9.5540, -11.287}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass22.txt" target="_top">
+<circle cx="362.75" cy="190.08" r="3" style="fill: rgb(0, 0, 53);"><title>{18.137, 7.1560, -5.6411}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass23.txt" target="_top">
+<circle cx="363.81" cy="88.40" r="3" style="fill: rgb(0, 0, 114);"><title>{18.191, 12.240, -11.451}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass24.txt" target="_top">
+<circle cx="364.73" cy="253.54" r="3" style="fill: rgb(0, 0, 73);"><title>{18.237, 3.9831, -7.7818}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass25.txt" target="_top">
+<circle cx="366.98" cy="155.36" r="3" style="fill: rgb(0, 0, 112);"><title>{18.349, 8.8921, -11.108}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass26.txt" target="_top">
+<circle cx="367.09" cy="218.27" r="3" style="fill: rgb(0, 0, 50);"><title>{18.355, 5.7463, -5.1724}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass27.txt" target="_top">
+<circle cx="367.48" cy="157.50" r="3" style="fill: rgb(0, 0, 71);"><title>{18.374, 8.7849, -7.5868}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass28.txt" target="_top">
+<circle cx="369.14" cy="206.11" r="3" style="fill: rgb(0, 0, 102);"><title>{18.457, 6.3546, -10.499}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass29.txt" target="_top">
+<circle cx="369.29" cy="99.24" r="3" style="fill: rgb(0, 0, 100);"><title>{18.465, 11.698, -10.255}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass30.txt" target="_top">
+<circle cx="370.42" cy="230.81" r="3" style="fill: rgb(0, 0, 35);"><title>{18.521, 5.1193, -3.7469}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass31.txt" target="_top">
+<circle cx="370.57" cy="127.85" r="3" style="fill: rgb(0, 0, 88);"><title>{18.529, 10.267, -9.1994}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass32.txt" target="_top">
+<circle cx="372.70" cy="59.13" r="3" style="fill: rgb(0, 0, 121);"><title>{18.635, 13.704, -12.501}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass33.txt" target="_top">
+<circle cx="373.02" cy="190.25" r="3" style="fill: rgb(0, 0, 54);"><title>{18.651, 7.1475, -5.7923}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass34.txt" target="_top">
+<circle cx="373.42" cy="214.53" r="3" style="fill: rgb(0, 0, 71);"><title>{18.671, 5.9336, -7.5429}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass35.txt" target="_top">
+<circle cx="373.99" cy="210.39" r="3" style="fill: rgb(0, 0, 97);"><title>{18.700, 6.1405, -9.6926}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass36.txt" target="_top">
+<circle cx="376.79" cy="227.54" r="3" style="fill: rgb(0, 0, 68);"><title>{18.839, 5.2830, -7.0949}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass37.txt" target="_top">
+<circle cx="377.72" cy="224.14" r="3" style="fill: rgb(0, 0, 66);"><title>{18.886, 5.4530, -6.7151}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass38.txt" target="_top">
+<circle cx="379.42" cy="185.76" r="3" style="fill: rgb(0, 0, 55);"><title>{18.971, 7.3719, -5.9257}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass39.txt" target="_top">
+<circle cx="379.55" cy="247.29" r="3" style="fill: rgb(0, 0, 72);"><title>{18.978, 4.2953, -7.6843}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass40.txt" target="_top">
+<circle cx="380.69" cy="100.22" r="3" style="fill: rgb(0, 0, 101);"><title>{19.034, 11.649, -10.368}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass41.txt" target="_top">
+<circle cx="380.75" cy="293.75" r="3" style="fill: rgb(0, 0, 50);"><title>{19.038, 1.9724, -5.1036}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass42.txt" target="_top">
+<circle cx="380.87" cy="155.85" r="3" style="fill: rgb(0, 0, 101);"><title>{19.044, 8.8676, -10.383}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass43.txt" target="_top">
+<circle cx="381.19" cy="147.01" r="3" style="fill: rgb(0, 0, 83);"><title>{19.060, 9.3096, -8.4806}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass44.txt" target="_top">
+<circle cx="382.96" cy="66.40" r="3" style="fill: rgb(0, 0, 115);"><title>{19.148, 13.340, -11.675}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass45.txt" target="_top">
+<circle cx="383.15" cy="240.38" r="3" style="fill: rgb(0, 0, 36);"><title>{19.157, 4.6410, -3.7969}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass46.txt" target="_top">
+<circle cx="387.17" cy="186.77" r="3" style="fill: rgb(0, 0, 69);"><title>{19.358, 7.3213, -7.2199}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass47.txt" target="_top">
+<circle cx="387.45" cy="129.15" r="3" style="fill: rgb(0, 0, 98);"><title>{19.372, 10.202, -9.8316}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass48.txt" target="_top">
+<circle cx="388.40" cy="191.60" r="3" style="fill: rgb(0, 0, 52);"><title>{19.420, 7.0798, -5.4624}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass49.txt" target="_top">
+<circle cx="388.50" cy="154.36" r="3" style="fill: rgb(0, 0, 105);"><title>{19.425, 8.9419, -10.922}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass50.txt" target="_top">
+<circle cx="388.62" cy="226.40" r="3" style="fill: rgb(0, 0, 35);"><title>{19.431, 5.3401, -3.6531}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass51.txt" target="_top">
+<circle cx="389.35" cy="189.27" r="3" style="fill: rgb(0, 0, 86);"><title>{19.468, 7.1965, -8.9814}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass52.txt" target="_top">
+<circle cx="390.57" cy="91.11" r="3" style="fill: rgb(0, 0, 112);"><title>{19.528, 12.104, -11.221}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass53.txt" target="_top">
+<circle cx="391.20" cy="20.00" r="3" style="fill: rgb(0, 0, 135);"><title>{19.560, 15.660, -13.855}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass54.txt" target="_top">
+<circle cx="391.60" cy="202.66" r="3" style="fill: rgb(0, 0, 96);"><title>{19.580, 6.5268, -9.6361}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass55.txt" target="_top">
+<circle cx="391.70" cy="228.72" r="3" style="fill: rgb(0, 0, 39);"><title>{19.585, 5.2237, -4.3908}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass56.txt" target="_top">
+<circle cx="392.46" cy="278.73" r="3" style="fill: rgb(0, 0, 69);"><title>{19.623, 2.7233, -7.1867}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass57.txt" target="_top">
+<circle cx="392.92" cy="154.64" r="3" style="fill: rgb(0, 0, 81);"><title>{19.646, 8.9281, -8.1577}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass58.txt" target="_top">
+<circle cx="393.31" cy="137.38" r="3" style="fill: rgb(0, 0, 118);"><title>{19.665, 9.7910, -12.080}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass59.txt" target="_top">
+<circle cx="394.55" cy="217.03" r="3" style="fill: rgb(0, 0, 88);"><title>{19.727, 5.8085, -9.3284}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass60.txt" target="_top">
+<circle cx="395.94" cy="93.25" r="3" style="fill: rgb(0, 0, 100);"><title>{19.797, 11.998, -10.235}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass61.txt" target="_top">
+<circle cx="396.08" cy="98.62" r="3" style="fill: rgb(0, 0, 136);"><title>{19.804, 11.729, -13.981}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass62.txt" target="_top">
+<circle cx="398.37" cy="299.50" r="3" style="fill: rgb(0, 0, 41);"><title>{19.919, 1.6851, -4.6622}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass63.txt" target="_top">
+<circle cx="398.84" cy="242.31" r="3" style="fill: rgb(0, 0, 98);"><title>{19.942, 4.5445, -9.8398}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass64.txt" target="_top">
+<circle cx="398.87" cy="217.15" r="3" style="fill: rgb(0, 0, 86);"><title>{19.944, 5.8022, -8.9720}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass65.txt" target="_top">
+<circle cx="399.30" cy="125.17" r="3" style="fill: rgb(0, 0, 98);"><title>{19.965, 10.401, -9.9505}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass66.txt" target="_top">
+<circle cx="399.40" cy="102.48" r="3" style="fill: rgb(0, 0, 130);"><title>{19.970, 11.536, -13.112}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass67.txt" target="_top">
+<circle cx="400.60" cy="192.92" r="3" style="fill: rgb(0, 0, 117);"><title>{20.030, 7.0138, -12.019}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass68.txt" target="_top">
+<circle cx="403.48" cy="266.76" r="3" style="fill: rgb(0, 0, 52);"><title>{20.174, 3.3218, -5.4594}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass69.txt" target="_top">
+<circle cx="403.51" cy="247.87" r="3" style="fill: rgb(0, 0, 65);"><title>{20.175, 4.2665, -6.5065}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass70.txt" target="_top">
+<circle cx="404.42" cy="191.33" r="3" style="fill: rgb(0, 0, 53);"><title>{20.221, 7.0932, -5.6225}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass71.txt" target="_top">
+<circle cx="404.70" cy="230.75" r="3" style="fill: rgb(0, 0, 66);"><title>{20.235, 5.1222, -6.7122}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass72.txt" target="_top">
+<circle cx="404.71" cy="177.98" r="3" style="fill: rgb(0, 0, 100);"><title>{20.235, 7.7609, -10.215}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass73.txt" target="_top">
+<circle cx="405.20" cy="251.02" r="3" style="fill: rgb(0, 0, 88);"><title>{20.260, 4.1091, -9.1798}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass74.txt" target="_top">
+<circle cx="405.60" cy="142.42" r="3" style="fill: rgb(0, 0, 83);"><title>{20.280, 9.5390, -8.4232}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass75.txt" target="_top">
+<circle cx="408.68" cy="152.20" r="3" style="fill: rgb(0, 0, 119);"><title>{20.434, 9.0501, -12.184}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass76.txt" target="_top">
+<circle cx="408.71" cy="287.37" r="3" style="fill: rgb(0, 0, 69);"><title>{20.435, 2.2912, -7.1433}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass77.txt" target="_top">
+<circle cx="409.06" cy="224.05" r="3" style="fill: rgb(0, 0, 83);"><title>{20.453, 5.4574, -8.4818}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass78.txt" target="_top">
+<circle cx="409.11" cy="188.00" r="3" style="fill: rgb(0, 0, 81);"><title>{20.456, 7.2601, -8.2128}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass79.txt" target="_top">
+<circle cx="409.49" cy="129.37" r="3" style="fill: rgb(0, 0, 119);"><title>{20.474, 10.191, -12.199}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass80.txt" target="_top">
+<circle cx="409.87" cy="119.44" r="3" style="fill: rgb(0, 0, 134);"><title>{20.493, 10.688, -13.648}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass81.txt" target="_top">
+<circle cx="409.88" cy="193.86" r="3" style="fill: rgb(0, 0, 66);"><title>{20.494, 6.9669, -6.7646}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass82.txt" target="_top">
+<circle cx="410.30" cy="205.82" r="3" style="fill: rgb(0, 0, 102);"><title>{20.515, 6.3692, -10.493}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass83.txt" target="_top">
+<circle cx="410.62" cy="175.73" r="3" style="fill: rgb(0, 0, 67);"><title>{20.531, 7.8734, -6.9074}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass84.txt" target="_top">
+<circle cx="410.68" cy="159.79" r="3" style="fill: rgb(0, 0, 101);"><title>{20.534, 8.6705, -10.404}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass85.txt" target="_top">
+<circle cx="411.19" cy="210.73" r="3" style="fill: rgb(0, 0, 86);"><title>{20.559, 6.1233, -9.0120}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass86.txt" target="_top">
+<circle cx="411.27" cy="165.05" r="3" style="fill: rgb(0, 0, 114);"><title>{20.563, 8.4074, -11.401}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass87.txt" target="_top">
+<circle cx="413.21" cy="191.83" r="3" style="fill: rgb(0, 0, 104);"><title>{20.660, 7.0685, -10.827}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass88.txt" target="_top">
+<circle cx="413.61" cy="224.13" r="3" style="fill: rgb(0, 0, 49);"><title>{20.681, 5.4535, -4.9833}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass89.txt" target="_top">
+<circle cx="414.15" cy="190.51" r="3" style="fill: rgb(0, 0, 85);"><title>{20.707, 7.1346, -8.8458}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass90.txt" target="_top">
+<circle cx="414.35" cy="217.72" r="3" style="fill: rgb(0, 0, 67);"><title>{20.718, 5.7738, -6.8218}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass91.txt" target="_top">
+<circle cx="416.28" cy="226.55" r="3" style="fill: rgb(0, 0, 67);"><title>{20.814, 5.3323, -6.8223}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass92.txt" target="_top">
+<circle cx="417.26" cy="213.55" r="3" style="fill: rgb(0, 0, 112);"><title>{20.863, 5.9825, -11.222}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass93.txt" target="_top">
+<circle cx="417.71" cy="214.27" r="3" style="fill: rgb(0, 0, 41);"><title>{20.885, 5.9466, -4.7325}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass94.txt" target="_top">
+<circle cx="418.72" cy="254.86" r="3" style="fill: rgb(0, 0, 71);"><title>{20.936, 3.9170, -7.4545}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass95.txt" target="_top">
+<circle cx="419.03" cy="187.81" r="3" style="fill: rgb(0, 0, 102);"><title>{20.951, 7.2694, -10.595}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass96.txt" target="_top">
+<circle cx="419.40" cy="251.23" r="3" style="fill: rgb(0, 0, 86);"><title>{20.970, 4.0982, -8.9621}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass97.txt" target="_top">
+<circle cx="420.03" cy="294.17" r="3" style="fill: rgb(0, 0, 41);"><title>{21.001, 1.9515, -4.7421}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass98.txt" target="_top">
+<circle cx="420.18" cy="140.99" r="3" style="fill: rgb(0, 0, 115);"><title>{21.009, 9.6102, -11.656}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass99.txt" target="_top">
+<circle cx="420.79" cy="197.29" r="3" style="fill: rgb(0, 0, 82);"><title>{21.040, 6.7953, -8.3815}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass100.txt" target="_top">
+<circle cx="421.12" cy="223.80" r="3" style="fill: rgb(0, 0, 84);"><title>{21.056, 5.4698, -8.6381}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass101.txt" target="_top">
+<circle cx="421.23" cy="285.01" r="3" style="fill: rgb(0, 0, 66);"><title>{21.062, 2.4093, -6.6836}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass102.txt" target="_top">
+<circle cx="421.35" cy="251.66" r="3" style="fill: rgb(0, 0, 66);"><title>{21.068, 4.0771, -6.7793}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass103.txt" target="_top">
+<circle cx="421.51" cy="214.69" r="3" style="fill: rgb(0, 0, 103);"><title>{21.075, 5.9253, -10.620}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass104.txt" target="_top">
+<circle cx="421.69" cy="112.34" r="3" style="fill: rgb(0, 0, 131);"><title>{21.084, 11.043, -13.163}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass105.txt" target="_top">
+<circle cx="423.30" cy="186.05" r="3" style="fill: rgb(0, 0, 98);"><title>{21.165, 7.3573, -9.9366}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass106.txt" target="_top">
+<circle cx="423.42" cy="267.33" r="3" style="fill: rgb(0, 0, 33);"><title>{21.171, 3.2935, -3.4405}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass107.txt" target="_top">
+<circle cx="423.44" cy="182.87" r="3" style="fill: rgb(0, 0, 84);"><title>{21.172, 7.5164, -8.6614}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass108.txt" target="_top">
+<circle cx="423.69" cy="276.77" r="3" style="fill: rgb(0, 0, 97);"><title>{21.185, 2.8212, -9.7459}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass109.txt" target="_top">
+<circle cx="423.86" cy="260.74" r="3" style="fill: rgb(0, 0, 41);"><title>{21.193, 3.6227, -4.6467}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass110.txt" target="_top">
+<circle cx="424.04" cy="303.40" r="3" style="fill: rgb(0, 0, 38);"><title>{21.202, 1.4902, -4.2609}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass111.txt" target="_top">
+<circle cx="424.34" cy="261.20" r="3" style="fill: rgb(0, 0, 82);"><title>{21.217, 3.5997, -8.3461}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass112.txt" target="_top">
+<circle cx="425.13" cy="245.86" r="3" style="fill: rgb(0, 0, 86);"><title>{21.257, 4.3669, -8.9039}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass113.txt" target="_top">
+<circle cx="425.15" cy="141.10" r="3" style="fill: rgb(0, 0, 115);"><title>{21.257, 9.6050, -11.633}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass114.txt" target="_top">
+<circle cx="425.33" cy="185.52" r="3" style="fill: rgb(0, 0, 68);"><title>{21.267, 7.3840, -7.0573}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass115.txt" target="_top">
+<circle cx="425.68" cy="246.66" r="3" style="fill: rgb(0, 0, 33);"><title>{21.284, 4.3272, -3.4521}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass116.txt" target="_top">
+<circle cx="427.82" cy="198.04" r="3" style="fill: rgb(0, 0, 105);"><title>{21.391, 6.7577, -10.924}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass117.txt" target="_top">
+<circle cx="428.19" cy="205.82" r="3" style="fill: rgb(0, 0, 50);"><title>{21.410, 6.3687, -5.0634}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass118.txt" target="_top">
+<circle cx="428.77" cy="135.03" r="3" style="fill: rgb(0, 0, 134);"><title>{21.438, 9.9085, -13.761}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass119.txt" target="_top">
+<circle cx="429.81" cy="162.06" r="3" style="fill: rgb(0, 0, 115);"><title>{21.491, 8.5567, -11.657}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass120.txt" target="_top">
+<circle cx="430.04" cy="176.87" r="3" style="fill: rgb(0, 0, 116);"><title>{21.502, 7.8163, -11.819}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass121.txt" target="_top">
+<circle cx="430.07" cy="324.97" r="3" style="fill: rgb(0, 0, 64);"><title>{21.504, 0.41156, -6.4181}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass122.txt" target="_top">
+<circle cx="430.14" cy="183.87" r="3" style="fill: rgb(0, 0, 98);"><title>{21.507, 7.4662, -9.8115}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass123.txt" target="_top">
+<circle cx="430.37" cy="248.72" r="3" style="fill: rgb(0, 0, 57);"><title>{21.518, 4.2239, -6.2727}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass124.txt" target="_top">
+<circle cx="431.07" cy="199.17" r="3" style="fill: rgb(0, 0, 57);"><title>{21.554, 6.7014, -6.1743}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass125.txt" target="_top">
+<circle cx="432.44" cy="194.89" r="3" style="fill: rgb(0, 0, 82);"><title>{21.622, 6.9155, -8.2418}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass126.txt" target="_top">
+<circle cx="432.46" cy="265.49" r="3" style="fill: rgb(0, 0, 67);"><title>{21.623, 3.3853, -6.9425}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass127.txt" target="_top">
+<circle cx="433.03" cy="243.85" r="3" style="fill: rgb(0, 0, 20);"><title>{21.652, 4.4676, -2.2233}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass128.txt" target="_top">
+<circle cx="434.13" cy="230.73" r="3" style="fill: rgb(0, 0, 73);"><title>{21.706, 5.1235, -7.8360}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass129.txt" target="_top">
+<circle cx="434.92" cy="217.00" r="3" style="fill: rgb(0, 0, 101);"><title>{21.746, 5.8099, -10.359}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass130.txt" target="_top">
+<circle cx="434.95" cy="184.63" r="3" style="fill: rgb(0, 0, 96);"><title>{21.748, 7.4286, -9.6252}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass131.txt" target="_top">
+<circle cx="435.11" cy="247.14" r="3" style="fill: rgb(0, 0, 65);"><title>{21.756, 4.3029, -6.6033}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass132.txt" target="_top">
+<circle cx="435.88" cy="290.62" r="3" style="fill: rgb(0, 0, 66);"><title>{21.794, 2.1291, -6.7505}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass133.txt" target="_top">
+<circle cx="436.47" cy="231.17" r="3" style="fill: rgb(0, 0, 82);"><title>{21.824, 5.1014, -8.2762}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass134.txt" target="_top">
+<circle cx="436.50" cy="186.94" r="3" style="fill: rgb(0, 0, 120);"><title>{21.825, 7.3127, -12.460}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass135.txt" target="_top">
+<circle cx="437.08" cy="145.19" r="3" style="fill: rgb(0, 0, 114);"><title>{21.854, 9.4003, -11.527}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass136.txt" target="_top">
+<circle cx="437.08" cy="257.22" r="3" style="fill: rgb(0, 0, 68);"><title>{21.854, 3.7989, -6.9805}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass137.txt" target="_top">
+<circle cx="437.22" cy="213.79" r="3" style="fill: rgb(0, 0, 87);"><title>{21.861, 5.9703, -9.0776}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass138.txt" target="_top">
+<circle cx="437.24" cy="256.00" r="3" style="fill: rgb(0, 0, 49);"><title>{21.862, 3.8602, -4.9429}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass139.txt" target="_top">
+<circle cx="437.40" cy="212.87" r="3" style="fill: rgb(0, 0, 99);"><title>{21.870, 6.0163, -10.072}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass140.txt" target="_top">
+<circle cx="438.16" cy="191.22" r="3" style="fill: rgb(0, 0, 101);"><title>{21.908, 7.0987, -10.365}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass141.txt" target="_top">
+<circle cx="438.49" cy="226.45" r="3" style="fill: rgb(0, 0, 65);"><title>{21.924, 5.3376, -6.5171}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass142.txt" target="_top">
+<circle cx="439.06" cy="255.28" r="3" style="fill: rgb(0, 0, 82);"><title>{21.953, 3.8957, -8.2710}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass143.txt" target="_top">
+<circle cx="439.81" cy="195.20" r="3" style="fill: rgb(0, 0, 100);"><title>{21.990, 6.9001, -10.195}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass144.txt" target="_top">
+<circle cx="439.86" cy="174.11" r="3" style="fill: rgb(0, 0, 112);"><title>{21.993, 7.9543, -11.207}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass145.txt" target="_top">
+<circle cx="440.26" cy="195.14" r="3" style="fill: rgb(0, 0, 116);"><title>{22.013, 6.9028, -11.807}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass146.txt" target="_top">
+<circle cx="440.43" cy="194.07" r="3" style="fill: rgb(0, 0, 131);"><title>{22.022, 6.9562, -13.144}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass147.txt" target="_top">
+<circle cx="441.16" cy="269.15" r="3" style="fill: rgb(0, 0, 41);"><title>{22.058, 3.2025, -4.7251}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass148.txt" target="_top">
+<circle cx="441.42" cy="317.33" r="3" style="fill: rgb(0, 0, 65);"><title>{22.071, 0.79360, -6.4993}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass149.txt" target="_top">
+<circle cx="441.44" cy="208.57" r="3" style="fill: rgb(0, 0, 85);"><title>{22.072, 6.2312, -8.8543}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass150.txt" target="_top">
+<circle cx="441.89" cy="300.64" r="3" style="fill: rgb(0, 0, 38);"><title>{22.095, 1.6280, -4.2544}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass151.txt" target="_top">
+<circle cx="442.23" cy="244.45" r="3" style="fill: rgb(0, 0, 104);"><title>{22.111, 4.4376, -10.843}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass152.txt" target="_top">
+<circle cx="442.96" cy="220.57" r="3" style="fill: rgb(0, 0, 83);"><title>{22.148, 5.6313, -8.4034}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass153.txt" target="_top">
+<circle cx="443.02" cy="260.55" r="3" style="fill: rgb(0, 0, 64);"><title>{22.151, 3.6322, -6.3634}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass154.txt" target="_top">
+<circle cx="444.20" cy="190.43" r="3" style="fill: rgb(0, 0, 115);"><title>{22.210, 7.1386, -11.590}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass155.txt" target="_top">
+<circle cx="444.83" cy="289.70" r="3" style="fill: rgb(0, 0, 57);"><title>{22.242, 2.1747, -6.3236}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass156.txt" target="_top">
+<circle cx="445.00" cy="296.16" r="3" style="fill: rgb(0, 0, 40);"><title>{22.250, 1.8520, -4.5089}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass157.txt" target="_top">
+<circle cx="445.04" cy="280.56" r="3" style="fill: rgb(0, 0, 82);"><title>{22.252, 2.6320, -8.3728}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass158.txt" target="_top">
+<circle cx="445.21" cy="247.90" r="3" style="fill: rgb(0, 0, 84);"><title>{22.260, 4.2651, -8.6395}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass159.txt" target="_top">
+<circle cx="447.67" cy="306.38" r="3" style="fill: rgb(0, 0, 83);"><title>{22.383, 1.3408, -8.5096}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass160.txt" target="_top">
+<circle cx="449.93" cy="309.17" r="3" style="fill: rgb(0, 0, 36);"><title>{22.496, 1.2016, -3.8192}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass161.txt" target="_top">
+<circle cx="450.23" cy="280.87" r="3" style="fill: rgb(0, 0, 85);"><title>{22.512, 2.6165, -8.8046}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass162.txt" target="_top">
+<circle cx="450.45" cy="315.64" r="3" style="fill: rgb(0, 0, 86);"><title>{22.522, 0.87779, -8.8927}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass163.txt" target="_top">
+<circle cx="450.86" cy="194.66" r="3" style="fill: rgb(0, 0, 66);"><title>{22.543, 6.9270, -6.7863}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass164.txt" target="_top">
+<circle cx="450.93" cy="328.04" r="3" style="fill: rgb(0, 0, 55);"><title>{22.547, 0.25793, -5.8871}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass165.txt" target="_top">
+<circle cx="451.58" cy="167.94" r="3" style="fill: rgb(0, 0, 101);"><title>{22.579, 8.2628, -10.319}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass166.txt" target="_top">
+<circle cx="452.06" cy="192.62" r="3" style="fill: rgb(0, 0, 97);"><title>{22.603, 7.0289, -9.7317}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass167.txt" target="_top">
+<circle cx="452.13" cy="279.53" r="3" style="fill: rgb(0, 0, 71);"><title>{22.607, 2.6832, -7.4632}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass168.txt" target="_top">
+<circle cx="453.58" cy="210.76" r="3" style="fill: rgb(0, 0, 119);"><title>{22.679, 6.1219, -12.192}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass169.txt" target="_top">
+<circle cx="454.16" cy="247.15" r="3" style="fill: rgb(0, 0, 25);"><title>{22.708, 4.3024, -3.0262}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass170.txt" target="_top">
+<circle cx="454.43" cy="191.45" r="3" style="fill: rgb(0, 0, 117);"><title>{22.721, 7.0876, -11.905}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass171.txt" target="_top">
+<circle cx="455.68" cy="186.03" r="3" style="fill: rgb(0, 0, 115);"><title>{22.784, 7.3584, -11.575}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass172.txt" target="_top">
+<circle cx="456.43" cy="303.44" r="3" style="fill: rgb(0, 0, 72);"><title>{22.821, 1.4880, -7.6389}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass173.txt" target="_top">
+<circle cx="456.76" cy="205.11" r="3" style="fill: rgb(0, 0, 38);"><title>{22.838, 6.4045, -4.2132}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass174.txt" target="_top">
+<circle cx="457.14" cy="270.38" r="3" style="fill: rgb(0, 0, 65);"><title>{22.857, 3.1407, -6.6396}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass175.txt" target="_top">
+<circle cx="459.04" cy="287.06" r="3" style="fill: rgb(0, 0, 64);"><title>{22.952, 2.3072, -6.4344}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass176.txt" target="_top">
+<circle cx="459.32" cy="213.80" r="3" style="fill: rgb(0, 0, 116);"><title>{22.966, 5.9697, -11.813}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass177.txt" target="_top">
+<circle cx="459.35" cy="285.58" r="3" style="fill: rgb(0, 0, 54);"><title>{22.967, 2.3807, -5.7193}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass178.txt" target="_top">
+<circle cx="464.45" cy="299.41" r="3" style="fill: rgb(0, 0, 38);"><title>{23.223, 1.6895, -4.2002}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass179.txt" target="_top">
+<circle cx="464.56" cy="233.15" r="3" style="fill: rgb(0, 0, 105);"><title>{23.228, 5.0022, -10.969}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass180.txt" target="_top">
+<circle cx="465.75" cy="290.77" r="3" style="fill: rgb(0, 0, 55);"><title>{23.288, 2.1215, -5.9775}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass181.txt" target="_top">
+<circle cx="466.94" cy="297.59" r="3" style="fill: rgb(0, 0, 57);"><title>{23.347, 1.7803, -6.2569}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass182.txt" target="_top">
+<circle cx="469.63" cy="280.78" r="3" style="fill: rgb(0, 0, 100);"><title>{23.481, 2.6212, -10.262}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass183.txt" target="_top">
+<circle cx="470.86" cy="349.64" r="3" style="fill: rgb(0, 0, 81);"><title>{23.543, -0.82218, -8.1259}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass184.txt" target="_top">
+<circle cx="473.14" cy="290.19" r="3" style="fill: rgb(0, 0, 89);"><title>{23.657, 2.1502, -9.4016}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass185.txt" target="_top">
+<circle cx="473.59" cy="296.14" r="3" style="fill: rgb(0, 0, 40);"><title>{23.679, 1.8531, -4.4593}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass186.txt" target="_top">
+<circle cx="475.41" cy="286.87" r="3" style="fill: rgb(0, 0, 71);"><title>{23.771, 2.3166, -7.5365}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass187.txt" target="_top">
+<circle cx="475.61" cy="310.37" r="3" style="fill: rgb(0, 0, 72);"><title>{23.780, 1.1415, -7.6098}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass188.txt" target="_top">
+<circle cx="475.72" cy="290.09" r="3" style="fill: rgb(0, 0, 82);"><title>{23.786, 2.1552, -8.3620}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass189.txt" target="_top">
+<circle cx="479.19" cy="312.79" r="3" style="fill: rgb(0, 0, 64);"><title>{23.960, 1.0207, -6.4037}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass190.txt" target="_top">
+<circle cx="482.18" cy="286.36" r="3" style="fill: rgb(0, 0, 98);"><title>{24.109, 2.3421, -9.9171}</title></circle>
+</a>
+<a xlink:href="http://www.modform.org/L/ModularForm/GL4/Q/maass/Lfunction?type=lcalcurl&amp;url=http://www.math.chalmers.se/~sj/pub/gl4Maass/sl4Maass191.txt" target="_top">
+<circle cx="492.50" cy="334.44" r="3" style="fill: rgb(0, 0, 80);"><title>{24.625, -0.062192, -7.9304}</title></circle>
+</a>
+</svg>
