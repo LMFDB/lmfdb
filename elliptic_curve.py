@@ -27,9 +27,16 @@ def format_ainvs(ainvs):
     return [int(a) for a in ainvs]
 
 def xintegral_point(s):
+    """
+    parses integral points
+    """
     return [int(a) for a in eval(s) if a not in ['[',',',']']] 
 
 def proj_to_aff(s):
+    r"""
+    This is used to convert projective coordinates to affine for integral points
+    """
+
     fulllist=[]
     for x in s:
         L=[]
@@ -37,6 +44,16 @@ def proj_to_aff(s):
             if y !=':'and len(L)<2 :
                 L.append(y)
         fulllist.append(tuple(L))
+    return fulllist
+    
+def parse_gens(s):
+    r"""
+    Converts projective coordinates to affine coordinates for generator
+    """    
+    fulllist=[]
+    for g in s:
+        g1=g.replace('(', ' ').replace(')',' ').split(':')
+        fulllist.append((eval(g1[0]),eval(g1[1])))
     return fulllist
     
 #########################
@@ -83,9 +100,9 @@ def elliptic_curve_search(**args):
         if m:
             N, iso, number = cremona_label_regex.match(label).groups()
             if number:
-                return render_curve_webpage(label=label)
+                return render_curve_webpage_by_label(label=label)
             else:
-                return iso_class(int(N), iso)
+                return render_isogeny_class(int(N), iso)
         else:
             query['label'] = label
     for field in ['conductor', 'torsion', 'rank']:
@@ -139,15 +156,15 @@ def render_isogeny_class(conductor, iso_class):
 def by_cremona_label(label):
     N, iso, number = cremona_label_regex.match(label).groups()
     if number:
-        return render_curve_webpage(str(label))
+        return render_curve_webpage_by_label(str(label))
     else:
         return render_isogeny_class(int(N), iso)
 
 @app.route("/EllipticCurve/Q/<int:conductor>/<iso_class>/<int:number>")
 def by_curve(conductor, iso_class, number):
-    return render_curve_webpage(label="%s%s%s" % (conductor, iso_class, number))
+    return render_curve_webpage_by_label(label="%s%s%s" % (conductor, iso_class, number))
 
-def render_curve_webpage(label):
+def render_curve_webpage_by_label(label):
     C = base.getDBConnection()
     data = C.ellcurves.curves.find_one({'label': label})
     if data is None:
@@ -165,6 +182,8 @@ def render_curve_webpage(label):
     xintpoints_projective=[E.lift_x(x) for x in xintegral_point(data['x-coordinates_of_integral_points'])]
     xintpoints=proj_to_aff(xintpoints_projective)
     G = E.torsion_subgroup().gens()
+    if 'gens' in data:
+        generator=parse_gens(data['gens'])
     if len(G) == 0:
         tor_struct = 'Trivial'
         tor_group='Trivial'
@@ -180,9 +199,8 @@ def render_curve_webpage(label):
         'label': label,
         'equation': web_latex(E),
         'f': ajax_more(E.q_eigenform, 10, 20, 50, 100, 250),
-        'generators': ', '.join(web_latex(g) for g in data['gens']) if 'gens' in data else '',
+        'generators':','.join(web_latex(g) for g in generator) if 'gens' in data else ' ',
         'lder'  : "L%s(1)" % ("'"*rank),
-
         'p_adic_primes': [p for p in sage.all.prime_range(5,100) if E.is_ordinary(p) and not p.divides(N)],
         'ainvs': format_ainvs(data['ainvs']),
         'tamagawa_numbers': r' \cdot '.join(str(sage.all.factor(c)) for c in E.tamagawa_numbers()),
