@@ -22,10 +22,10 @@
         <a href="/">Top</a>
         {% if bread %}
           {% for b in bread %}
-            &gt; <a href="{{ b[1] }}">{{ b[0] }}</a>
+            &rarr; <a href="{{ b[1] }}">{{ b[0] }}</a>
           {% endfor %}
         {% else %}
-          &gt; Bread &gt; Crumb &gt; Hierarchy
+          &rarr; Bread &rarr; Crumb &rarr; Hierarchy
         {% endif %}
       </div>
       <div class="title"> 
@@ -69,6 +69,22 @@
 
 <div id="main">
   <div id="Content">
+    {% if properties2 %}
+    <table>
+     {% for p in properties2 %}
+       <tr>
+        <td>{{p[0]}}</td>
+        <td>
+        {% if string(p[1]) %}
+            {{ p[1] }}
+        {% else %}
+            e|join('<br/>')
+        {% endif %}
+        </td>
+       </tr>
+     {% endfor %} 
+    {% endif %}
+
     {% if (citation or properties) %}
       <div id="properties">
         {% if citation %}
@@ -76,7 +92,7 @@
          {{ citation }}
         {% endif %} 
         {% if properties %}
-         <h1>Properties</h1>
+         {# <h1>Properties</h1> #}
          {% for p in properties %}{{ p|safe }}{% endfor %}
         {% endif %}
       </div>

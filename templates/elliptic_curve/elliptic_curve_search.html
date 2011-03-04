@@ -11,10 +11,10 @@
 
 <tr>
 <form>
-<td align=center> Conductor <input type='text' name='conductor'  value={{info.conductor}}></td>
-<td align=center>Rank <input type='text' name='rank' value={{info.rank}}></td>
-<td align=center>Torsion Order <input type='text' name='torsion' value={{info.torsion}}> 
-Optimal <input type='checkbox' name='optimal' {% if info.optimal %} checked {%endif %}></td>
+<td align=center> Conductor <input type='text' name='conductor' size=10 value={{info.conductor}}></td>
+<td align=center>Rank <input type='text' name='rank'size=1 value={{info.rank}}></td>
+<td align=center>Torsion Order <input type='text' name='torsion' size=1 value={{info.torsion}}> 
+Optimal <input type='checkbox'  name='optimal' {% if info.optimal %} checked {%endif %}></td>
 </tr>
 
 
@@ -26,17 +26,19 @@ Optimal <input type='checkbox' name='optimal' {% if info.optimal %} checked {%en
 <tr>
 <td><h2>Results</h2></td>
 <tr>
+<td align=center>Isogeny class</td>
 <td align=center>Cremona label</td>
-<td align=center>[\(a_1\),\(a_2\),\(a_3\),\(a_4\),\(a_6\)]</td>
+<td align=left>[\(a_1\),\(a_2\),\(a_3\),\(a_4\),\(a_6\)]</td>
 <td align=center>rank</td>
 <td align=center>torsion order</td>
 </tr>
 {% for curve in info.curves: %}
 <tr>
+<td align=center><a href="/EllipticCurve/Q/{{curve.conductor}}/{{curve.iso}}">{{curve.conductor}}{{curve.iso}}</a></td>
 <td align=center><a href="/EllipticCurve/Q/{{curve.conductor}}/{{curve.iso}}/{{curve.number}}">{{curve.label}}</a></td>
-<td>{{info.format_ainvs(curve.ainvs)}}</td>
-<td align=center>{{curve.rank}}</td>
-<td align=center>{{curve.torsion}}</td>
+<td align=left>{{info.format_ainvs(curve.ainvs)}}</td>
+<td align=center><a href="/EllipticCurve/Q?conductor={{info.conductor}}&rank={{curve.rank}}&torsion={{info.torsion}}">{{curve.rank}}</a></td>
+<td align=center><a href="/EllipticCurve/Q?conductor={{info.conductor}}&rank={{info.rank}}&torsion={{curve.torsion}}">{{curve.torsion}}</a></td>
 </tr>
 {% endfor %}
 </table>
