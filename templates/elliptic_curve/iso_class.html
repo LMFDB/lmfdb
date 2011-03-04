@@ -27,29 +27,43 @@
             <tr>
             <td align=center>Cremona<br>label</td>
             <td>\([a_1,a_2,a_3,a_4,a_6]\)</td>
-            <td>rank</td>
-            <td>&nbsp;</td>
-            <td>torsion<br>order</td>
+            <td>torsion order</td>
             </tr>
         {% for curve in info.curves: %}
             <tr>
             <td align=center><a href="/EllipticCurve/Q/{{curve.conductor}}/{{curve.iso}}/{{curve.number}}">{{curve.label}}</a></td>
             <td>{{info.format_ainvs(curve.ainvs)}}</td>
-            <td align=center>{{curve.rank}}</td>
-            <td>&nbsp;</td>
             <td align=center>{{curve.torsion}}</td>
             </tr>
         {% endfor %}
         </table>
-
+        <h2>Rank</h2>
+        <div class='sage nodisplay code'>sage: E.rank()</div>
+        <p>
+        {{ info.rank}}
+        </p>
+        <h2>
+            Modular degree for a1
+        </h2>
+     <div class='sage nodisplay code'>sage: E.modular_degree()</div>
+        <p>
+        {{info.modular_degree}}
+        </p>
+        
         <h2>
             Modular form
         </h2>
         <div class='sage nodisplay code'>sage: E.q_eigenform(10)</div>
         <p>
             {{ info.f | safe }}
-            <a href='{{info.download_qexp_url}}' target='_blank'>download</a>
         </p>
+         <p align="right">
+        <a  href='{{info.download_qexp_url}}' target='_blank' >download coefficients</a>
+    </p>
+    <h2>Isogeny Matrix</h2>
+    <p>
+    \({{info.isogeny_matrix}}\)
+    </p>
         <h2>
             Isogeny graph.
         </h2>

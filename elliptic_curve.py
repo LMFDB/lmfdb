@@ -9,7 +9,7 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 
 from utilities import ajax_more, image_src, web_latex, to_dict, parse_range
 import sage.all 
-from sage.all import ZZ, EllipticCurve, latex
+from sage.all import ZZ, EllipticCurve, latex, matrix
 q = ZZ['x'].gen()
 
 #########################
@@ -109,7 +109,7 @@ def elliptic_curve_search(**args):
         if info.get(field):
             query[field] = parse_range(info[field])
     if info.get('iso'):
-        query['iso'] = parse_range(info['iso'], str)
+        query['isogeny'] = parse_range(info['isogeny'], str)
     if 'optimal' in info:
         query['number'] = 1
     info['query'] = query
@@ -142,6 +142,9 @@ def render_isogeny_class(conductor, iso_class):
     discriminant=E.discriminant()
     info = {'label': label}
     info['optimal_ainvs'] = ainvs
+    info['rank'] = data['rank'] 
+    info['isogeny_matrix']=latex(matrix(eval(data['Isogeny_matrix'])))
+    info['modular_degree']=data['degree']
     info['f'] = ajax_more(E.q_eigenform, 10, 20, 50, 100, 250)
     G = E.isogeny_graph(); n = G.num_verts()
     G.relabel(range(1,n+1)) # proper cremona labels...
@@ -197,6 +200,7 @@ def render_curve_webpage_by_label(label):
         'disc_factor': latex(discriminant.factor()),
         'j_invar_factor':latex(j_invariant.factor()),
         'label': label,
+        'isogeny':str(N)+iso_class,
         'equation': web_latex(E),
         'f': ajax_more(E.q_eigenform, 10, 20, 50, 100, 250),
         'generators':','.join(web_latex(g) for g in generator) if 'gens' in data else ' ',
