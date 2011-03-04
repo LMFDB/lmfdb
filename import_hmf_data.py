@@ -11,10 +11,8 @@ hmf_forms.create_index('level_norm')
 hmf_forms.create_index('level_ideal')
 hmf_forms.create_index('dimension')
 
-def parse_label(field_label, weight, level_ideal, label_suffix):
-    label_str = field_label + str(weight) + str(level_ideal) + label_suffix
-    label_str = label_str.replace(' ', '')
-    return label_str
+def parse_label(field_label, weight, level_ideal_label, label_suffix):
+    return field_label + '-' + str(weight) + '-' + level_ideal_label + '-' + label_suffix
 
 def import_data(hmf_filename):
     hmff = file(hmf_filename)
@@ -104,3 +102,61 @@ def import_data(hmf_filename):
         else:
             existing_form = existing_forms.next()
             assert info['hecke_eigenvalues'] == existing_form['hecke_eigenvalues']
+
+#def parse_label_old(field_label, weight, level_ideal, label_suffix):
+#    label_str = field_label + str(weight) + str(level_ideal) + label_suffix
+#    label_str = label_str.replace(' ', '')
+#    return label_str
+
+def repair_fields(D):
+    F = hmf_fields.find_one({"label" : '2.2.' + str(D) + '.1'})
+
+    P = PolynomialRing(Rationals(), 'w')
+    w = P.gens()[0]
+
+    primes = F['primes']
+    primes = [[int(eval(p)[0]), int(eval(p)[1]), str(eval(p)[2])] for p in primes]
+    F['primes'] = primes
+    
+    hmff = file("data_2_" + (4-len(str(D)))*'0' + str(D))
+
+    # Parse field data
+    for i in range(7):
+        v = hmff.readline()
+    ideals = eval(v[10:][:-2])
+    ideals = [[p[0],p[1],str(p[2])] for p in ideals]
+    F['ideals'] = ideals
+    hmf_fields.save(F)
+
+def repair_fields_add_ideal_labels(D):
+    F = hmf_fields.find_one({"label" : '2.2.' + str(D) + '.1'})
+
+    ideals = F['ideals']
+    ideal_labels = ['1.1']
+    N = 1
+    cnt = 1
+    for I in ideals[2:]:
+        NI = I[0]
+        if NI == N:
+            cnt += 1
+        else:
+            cnt = 1
+        N = NI
+        ideal_labels.append(str(NI) + '.' + str(cnt))
+    F['ideal_labels'] = ideal_labels
+    hmf_fields.save(F)
+
+def attach_new_label(f):
+    F = hmf_fields.find_one({"label" : f['field_label']})
+
+    P = PolynomialRing(Rationals(), 'w')
+    w = P.gens()[0]
+
+    N = eval(f['level_ideal'])
+    f['level_ideal'] = [N[0], N[1], str(N[2])]
+    ideal_label = F['ideal_labels'][F['ideals'].index(f['level_ideal'])]
+    f['level_ideal_label'] = ideal_label
+
+    f['label'] =  parse_label(f['field_label'], f['weight'], ideal_label, f['label_suffix'])
+    print f['label']
+    hmf_forms.save(f)
