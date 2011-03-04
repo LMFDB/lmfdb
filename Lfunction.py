@@ -16,6 +16,13 @@ def render_webpage(args, arg1, arg2, arg3, arg4, arg5):
     #print arg1, arg2, args, len(args)
     for a in args:
         temp_args[a] = args[a]
+    print temp_args
+    #if temp_args.has_key('degree'):
+         #d = temp_args['degree']  
+         #print d
+         #info = { "degree" : int(d)}
+         #info["key"] = 777
+    #     return render_template("/lfunction_db/templates/list.html", info=info)
     if arg1 == 'Riemann':
         temp_args['type'] = 'riemann'
     elif len(args)==0 and arg1 == None: #this means I'm at the basic navigation page
@@ -303,7 +310,7 @@ def processDirichletNavigation(args):
         s += '<td>\n'
         j = i-N
         for k in range(len(chars[j][1])):
-            s += '<a href="Dirichlet?charactermodulus='
+            s += '<a style=\'display:inline\' href="Dirichlet?charactermodulus='
             s += str(i)
             s += '&characternumber='
             s += str(chars[j][1][k])

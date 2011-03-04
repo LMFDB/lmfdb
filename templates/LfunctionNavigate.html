@@ -35,17 +35,37 @@
 <br>
 <h2> Search </h2>
 
-<form>
-<b>By Properties:</b><br>
-Degree <input type='text' name='degree'><br>
-Signature <input type='text' name='signature'><br>
-Level <input type='text' name='level'>
-<br><br>
-<b>By Values:</b><br>
-Lowest Zero is greater than <input type='text' name='zero_lower_bound'> and less than <input type='text' name='zero_upper_bound'><br>
-Critical Value is around <input type='text' name='critical_valiue'><br>
-Value at 1 is around <input type='text' name='special_value'><br>
-<input type='submit' value='Search'>
+
+<form action="{{url_for(".LfunctionDB.query")}}" method=get>
+<table>
+<tr>
+<td>Degree</td><td> <input type='text' name='degree' size = "4"></td><td><span class="formexample"> e.g. 4 </span></td>
+</tr>
+
+<tr>
+<td>Signature</td><td> <input type='text' name='signature' size = '4'></td><td><span class="formexample"> e.g. [1,2] </span></td>
+</tr>
+
+<tr>
+<td>Level </td><td><input type='text' name='level' size='4'></td><td><span class="formexample"> e.g. 389 </span></td>
+</tr>
+<tr>
+
+<tr>
+<td>Lowest Zero is greater than</td><td> <input type='text' size='4' name='zerolowerbound'></td><td> and less than </td><td><input type='text' size='4' name='zeroupperbound'></td><td><span class="formexample"> e.g. 1.1 and 2.1 </span></td>
+</tr>
+<tr>
+<td>Critical Value is around</td><td> <input type='text' name='critical_value' size='4'></td><td><span class="formexample"> e.g. 0.5 </span></td>
+</tr>
+<tr>
+<td>Value at 1 is around</td><td> <input type='text' name='special_value' size='4'></td><td><span class="formexample"> e.g. 3.1 </span></td>
+</tr>
+<tr>
+<td>
+<input type='submit' value='Search' >
+</td>
+</tr>
+</table>
 </form>
 
 
