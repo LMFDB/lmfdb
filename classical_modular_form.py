@@ -23,18 +23,19 @@ _verbose = 0
 #	return classical_modular_forms(**request.args)
 
 
-
 ###########################################
 # Search / Navigate
 ###########################################
 @app.route('/ModularForm/GL2/Q/holomorphic/')
 def render_classical_modular_forms():
 	info   = to_dict(request.args)
+        print "args=",request.args
+        print "info=",info
 	level  = _my_get(info,'level', -1,int)
 	weight = _my_get(info,'weight',-1,int) 
 	character = _my_get(info,'character', '',str) #int(info.get('weight',0))
 	label  = info.get('label', '')
-        print "HERE:::::::::::::::::::",level,weight,character,label
+        print "HERE1:::::::::::::::::::",level,weight,character,label
         if level<=0:
             level=None
         if weight<=0:
@@ -57,8 +58,10 @@ def render_classical_modular_forms():
             return redirect(url_for("render_classical_modular_form_browsing", **info))
 	if level:
             info['level']=level
+            print "Have level only!"
             return redirect(url_for("render_classical_modular_form_space2", **info))
         if weight:
+            print "Have weight only!"
             return browse_classical_modular_forms(**info)
         #return redirect(url_for("render_classical_modular_form_browsing", **info))
         return render_classical_modular_form_navigation_wp(**request.args)
@@ -87,6 +90,7 @@ def render_classical_modular_form_browsing(level,weight):
     info=to_dict(request.args)
     info['level']=level; info['weight']=weight
     print "render_classical_modular_form_browsing::",level,weight
+
     return browse_classical_modular_forms(**info)
 #return render_classical_modular_form_space_wp(**info)
 #return redirect(url_for("render_classical_modular_form_space", **info))
@@ -184,7 +188,7 @@ def render_classical_modular_form_navigation_wp(**args):
 		info['geometric'] = print_geometric_data_Gamma0N(level)
 		if info.has_key('plot'):
 			return render_fd_plot(level,info)
-	title = "Holomorphic Modular Cuspforms"
+	title = "Holomorphic Cusp Forms"
 	bread =[('Modular Forms',url_for('modular_form_toplevel'))]
 	return render_template("classical_modular_forms/classical_modular_form_navigation.html", info=info,title=title,bread=bread)
 
@@ -212,26 +216,41 @@ def browse_classical_modular_forms(**info):
         info['list_chars']='1'
     print "level=",level
     print "wt=",weight    
+    if level:
+        info['geometric'] = print_geometric_data_Gamma0N(level)
+        if info.has_key('plot'):
+            return render_fd_plot(level,info)
+
     if level and not weight:
         print "here1!"
-        title = "Holomorphic Modular Cuspforms of level %s " % level
+        title = "Holomorphic Cusp Forms of level %s " % level
         level = int(level)
         info['level_min']=level;info['level_max']=level
         info['weight_min']=1;info['weight_max']=36
-        s = make_table_of_dimensions(level_start=level,level_stop=level,**info)
-        print "s=",s
-        info['list_spaces']=s
+        #s = make_table_of_dimensions(level_start=level,level_stop=level,**info)
+        #print "s=",s
+        largs=dict()
+        #largs['level']=level
+        #largs['weight_block'] = 
+        largs = [ {'level':level,'character':char,'weight_block':k} for k in range(50)]
+        #info['list_spaces']=make_table_of_dimensions(level_start=level,level_stop=level,**info)
+	#{'prec':5,'br':br},{'prec':10,'br':br},{'prec':20,'br':br},{'prec':100,'br':br},{'prec':200,'br':br})
+
+        info['list_spaces']=ajax_more(make_table_of_spaces_fixed_level,*largs,text='more')
         #info['list_spaces']=ajax_more(make_table_of_dimensions,{'weight':10},{'weight':20},{'weight':30},text='more')
-	title = "Holomorphic Modular Cuspforms of level %s " % level
+	title = "Holomorphic Cusp Forms of level %s " % level
 	bread =[('Modular Forms',url_for('modular_form_toplevel'))]
+        info['browse_type']=" of level %s " % level
         return render_template("classical_modular_forms/classical_modular_form_browse.html", info=info,title=title,bread=bread)
     if weight and not level:
         print "here2!"
         info['level_min']=1;info['level_max']=50
         info['weight_min']=weight;info['weight_max']=weight
         info['list_spaces']=make_table_of_dimensions(weight_start=weight,weight_stop=weight,**info) #make_table_of_spaces(level=[10,20,30])
-	title = "Holomorphic Modular Cuspforms of weight %s" %weight
+	title = "Holomorphic Cusp Forms of weight %s" %weight
 	bread =[('Modular Forms',url_for('modular_form_toplevel'))]
+        info['browse_type']=" of weight %s " % weight
+        print "RENDER TEMPLATE!"
         return render_template("classical_modular_forms/classical_modular_form_browse.html", info=info,title=title,bread=bread)
     print "here2!"
     info['level_min']=level;info['level_max']=level
@@ -253,7 +272,7 @@ def render_classical_modular_form_space_wp(**args):
         return render_classical_modular_form_space_list_chars(level,weight)
     (info,sbar)=set_info_for_modular_form_space(level,weight,character,info,sbar)
     (properties,parents,friends,siblings,lifts)=sbar
-    title = "Holomorphic Modular Cuspforms of weight %s on \(\Gamma_{0}(%s)\)" %(weight,level)
+    title = "Holomorphic Cusp Forms of weight %s on \(\Gamma_{0}(%s)\)" %(weight,level)
     bread =[('Modular Forms',url_for('modular_form_toplevel'))]
     return render_template("classical_modular_forms/classical_modular_form_space.html", info=info,title=title,bread=bread)
 
@@ -271,6 +290,7 @@ def render_classical_modular_form_space_list_chars(level,weight):
     info['list_spaces']=s
     title = "Holomorphic Modular Cuspforms of level %s and weight %s " %(level,weight)
     bread =[('Modular Forms',url_for('modular_form_toplevel'))]
+    info['browse_type']=" of level %s and weight %s " % (level,weight)
     return render_template("classical_modular_forms/classical_modular_form_browse.html", info=info,title=title,bread=bread)
 
 def render_webpage(**args):
@@ -420,7 +440,7 @@ def make_table_of_characters(level,weight,**kwds):
     tbl['headersh']=list()
     tbl['corner_label']="\( n \):"
     tbl['data']=list()
-    tbl['atts']="class=\"nt_data\" border=\"0\" padding=\"1\""
+    tbl['atts']="class=\"nt_data\" border=\"0\" padding=\"25\""
     tbl['data_format']='html'
     row=list()
     rowlen = 25
@@ -483,11 +503,11 @@ def make_table_of_characters(level,weight,**kwds):
 def make_table_of_dimensions(level_start=1,level_stop=50,weight_start=1,weight_stop=24,char=0,**kwds):
     r"""
     make an html table with information about spaces of modular forms
-    with parameters in the given ranges.
+    with parameters in the given ranges. using a fixed character.
     Should use database in the future... 
     """
     D=0
-    rowlen=30 # split into rows of this length...
+    rowlen=15 # split into rows of this length...
     rowlen0 = rowlen
     rowlen1 = rowlen
     characters=dict()
@@ -506,32 +526,38 @@ def make_table_of_dimensions(level_start=1,level_stop=50,weight_start=1,weight_s
     #else:
     #    return ""
     tbl=dict()
-    if(char==1):
-        tbl['header']='Dimension of \( S_{'+str(weight)+'}('+str(level)+',\chi_{n})\)'
+    if(char==0):
+        tbl['header']='' #Dimension of \( S_{'+str(weight)+'}('+str(level)+',\chi_{n})\)'
+        charst=""
     else:
-        s = 'Dimension of \( S_{'+str(weight)+'}('+str(level)+')\)'
-        s += ' (trivial character)'
-        tbl['header']=s
+        #s = 'Dimension of \( S_{'+str(weight)+'}('+str(level)+')\)'
+        #s += ' (trivial character)'
+        charst=",\chi_{%s}" % char
+        tbl['header']=''
     tbl['headersv']=list()
     tbl['headersh']=list()
     if weight=='k':
-        tbl['corner_label']="k"
+        tbl['corner_label']="weight \(k\):"
     else:
-        tbl['corner_label']="N"
+        tbl['corner_label']="level \(N\):"
     tbl['data']=list()
     tbl['data_format']='html'
     tbl['class']="dimension_table"
-    tbl['atts']="border=\"0\" class=\"data_table\""
+    tbl['atts']="border=\"1\" class=\"nt_data\" padding=\"25\" width=\"100%\""
     num_rows = ceil(QQ(count_max-count_min+1) / QQ(rowlen0))
     print "num_rows=",num_rows
     for i in range(1,rowlen0+1):
         tbl['headersh'].append(i+count_min-1)
     if level_start==level_stop:
-        tbl['headersv']=['dimension:']
+        st = "Dimension of \(S_{k}(%s%s) \):" % (level,charst)
+        tbl['headersv']=[st]
     else:
-        tbl['headersv']=['dimension:']
+        st = "Dimension of \(S_{%s}(N%s) \):" % (weight,charst)
+        tbl['headersv']=[st]
+    tbl['headersv'].append('Link to space:')
     # make a dummy table first
-    for r in range(num_rows):
+    #num_rows = (num_rows-1)*2
+    for r in range(num_rows*2):
         row=[]
         for k in range(1,rowlen0+1):
             row.append("")
@@ -552,20 +578,23 @@ def make_table_of_dimensions(level_start=1,level_stop=50,weight_start=1,weight_s
                 level=cnt
             url = url_for('render_classical_modular_form_browsing',level=level,weight=weight)
             if(cnt>count_max or cnt < count_min):
-                tbl['data'][r][k]=""
+                tbl['data'][2*r][k]=""
                 continue
-            s="<a name=\"#%s,%s\"></a>" % (level,weight)
+            #s="<a name=\"#%s,%s\"></a>" % (level,weight)
             if(char==0):
                 d=dimension_cusp_forms(level,weight)
-                #print "d=",d
-                #url="?weight="+str(weight)+"&level="+str(N)+"&character=0"
-                print "cnt=",cnt
-                print "r,k=",r,k
-                ss = s + "<a  href=\""+url+"\">"+str(d)+"</a>"
-                tbl['data'][r][k]=ss
             else:
-                ss = make_table_of_characters(level,weight)
-                tbl['data'][r][k]=ss
+                x = DirichletGroup(level)[char]
+                d=dimension_cusp_forms(x,weight)
+            tbl['data'][2*r][k]=str(d)
+            if d>0:
+                s = "\(S_{%s}(%s)\)" % (weight,level)
+                ss = "<a  href=\""+url+"\">"+s+"</a>"
+                tbl['data'][2*r+1][k]=ss
+            #else:
+            #    tbl['data'][2*r+1][k]="\(\emptyset\)"
+            #    ss = make_table_of_characters(level,weight)
+            #    tbl['data'][2*r+1][k]=ss
             #tbl['data'][r][k]=s
             #print "row=",row
             #tbl['data'][r]=row			
@@ -1051,6 +1080,56 @@ def set_info_for_one_modular_form(level,weight,character,label,info,sbar):
 	return (info,sbar)
 
 
+
+def make_table_of_spaces_fixed_level(level=1,character=0,weight_block=0,**kwds):
+    r"""
+    """
+    wlen=15
+    #level = arg[0][0]
+    #weight_block = arg[0][1]
+    print "AAAA",level,weight_block,character
+
+    w_start = wlen*weight_block
+    w_stop  = wlen*(weight_block+1)
+    s="<table class=\"nt_data\"><thead></thead><tbody>\n"
+    s+="<tr><td>Weight \(k\):</td>"
+    dims=dict()
+    links=dict()
+    for weight in range(w_start,w_start+wlen):
+        s+="<td> %s </td>" % weight
+    s+="</tr><tr>"
+    character = int(character)
+    if character > 0 :
+        s+="<td>Dimension of \(S_{k}(%s),\chi_{%s}\):" % (level,character)
+    else:
+        s+="<td>Dimension of \(S_{k}(%s)\):" % (level)
+    if character > 0 :
+        D = DirichletGroup(level).list()
+    for weight in range(w_start,w_start+wlen):
+        if character > 0 :
+            x = D[int(character)]
+            dims[weight]=dimension_cusp_forms(x,weight)
+        else:
+            dims[weight]=dimension_cusp_forms(level,weight)
+        s+="<td> %s </td>" % dims[weight]
+    for weight in range(w_start,w_start+wlen):
+        if dims[weight]>0:
+            url = url_for('render_classical_modular_form_browsing',level=level,weight=weight)
+            if character>0:
+                lab = "\(S_{%s}(%s,\chi_{%s})\)" %(weight,level,character)
+            else:
+                lab = "\(S_{%s}(%s)\)" %(weight,level)
+            links[weight]="<a  href=\"%s\">%s</a>" %(url,lab)
+        else:
+            links[weight]=""
+    l=max(map(len_as_printed,map(str,links)))*10.0
+    s+="</tr><tr>"
+    s+="<td>Link to space:</td>"
+    for weight in range(w_start,w_start+wlen):
+        s += "<td width=\"%s\">%s</td>" % (l,links[weight])
+    s+="</tr></tbody></table>"
+    #print s
+    return s
 
 
 
