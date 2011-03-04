@@ -46,11 +46,10 @@
 </script>
 
 <div id = "Content">
-  <h2>Dimensions</h2>
 
- {% if info.group=='Sp8Z' %}
+  {% if info.group=='Sp8Z' %}
   Only weights up to 16 is available.
- {% else %}
+  {% else %}
 
   {% if info.group=='Kp' %}
   Enter a prime level and a range of weights
@@ -63,26 +62,26 @@
     <input type="hidden" name="page" value="dimensions" />
 
     <table>
-    {% if info.group=='Kp' %}
-    <tr><td>
-    prime level(s):</td><td> <input type="text" name="level" id="weight_range" size="8" class="enternumber"
-			   {% if info.level_range %}
-			   value = '{{ info.level_range }}'
-			   {% endif %}
-			   ></td><td></td></tr>
-    {% endif %}
-    <tr><td>
-    weight(s):</td><td><input type="text" name="weight_range" id="weight_range" size="8" class="enternumber"
-		      {% if info.weight_range %}
-		      value = '{{ info.weight_range }}'
-		      {% endif %}
-		      >
-    
-    </td><td>
-    &nbsp;&nbsp;&nbsp;<input type="submit" value="Submit" class="submitbutton" onmouseover="this.style.backgroundColor='#83D9EB'" onmouseout="this.style.backgroundColor='#45BDD7'" />
+      {% if info.group=='Kp' %}
+      <tr><td>
+	  prime level(s):</td><td> <input type="text" name="level" id="weight_range" size="8" class="enternumber"
+					  {% if info.level_range %}
+					  value = '{{ info.level_range }}'
+					  {% endif %}
+					  ></td><td></td></tr>
+      {% endif %}
+      <tr><td>
+	  weight(s):</td><td><input type="text" name="weight_range" id="weight_range" size="8" class="enternumber"
+				    {% if info.weight_range %}
+				    value = '{{ info.weight_range }}'
+				    {% endif %}
+				    >
+	  
+	</td><td>
+	  &nbsp;&nbsp;&nbsp;<input type="submit" value="Submit" class="submitbutton" onmouseover="this.style.backgroundColor='#83D9EB'" onmouseout="this.style.backgroundColor='#45BDD7'" />
     </td></tr></table>
   </form>
- {% endif %}
+  {% endif %}
 
 
   {% if info.error %}
@@ -139,27 +138,25 @@
     {% if info.dimensions %}
 
 
-  {% for k,dims in info.dimensions %}
-  <tr>
-    <td>{{ k }}</td>
-    {% for d in dims %}
-    <td>{{ d }}</td>
+    {% for k,dims in info.dimensions %}
+    <tr>
+      <td>{{ k }}</td>
+      {% for d in dims %}
+      <td>{{ d }}</td>
+      {% endfor %}
+    </tr>
     {% endfor %}
-  </tr>
-  {% endfor %}
-</table>
+  </table>
 
   {% else %}
-  </table>
-  Dimension table to be implemented
+</table>
+Dimension table to be implemented
 {% endif %}
 
 {% endif %}
 
 
 </div>
-
-{% include 'footer.html' %}
 
 {% endblock %}
 
