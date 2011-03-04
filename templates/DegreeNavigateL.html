@@ -1,0 +1,102 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+        <h1> {{ title }} </h1>
+
+{% if info.degree==1 %}
+<div>There are two types of degree 1 L-functions: the Riemann zeta function and
+Dirichlet L-functions associatedto a primitive Dirichlet character.</div>
+
+[[
+the rest of this page should be ab expansion of what is currently available at
+
+http://l-functions.org/Lfunction/Character/Dirichlet
+
+]]
+
+{% endif %}
+
+{% if info.degree==2 %}
+<div>There are two known types of primitive degree 2 L-functions:</div>
+<p>
+<div>$L(s, f)$: the L-function of a holomorphic newform in $S_k(\Gamma_0(N))$</div>
+<p>
+<div>$L(s, f)$: the L-function of a Maass cusp form on  $\Gamma_0(N)$</div>
+
+[[ page under construction]]
+{% endif %}
+
+{% if info.degree==3 %}
+<div>The known types of primitive degree 4 L-functions are:</div>
+<p>
+<div>$L(s, f, \mathrm{sym}^2)$: the symmetric square of a degree 2 L-function</div>
+ <p>
+<div>$L(s,f)$: standard L-function of a cusp form on GL(3)</div>
+
+
+<h2>Available Examples:</h2>
+
+<h3>Maass cusp forms on SL(3,Z)</h3>
+
+Here we want to include the material that is currently in the file:
+
+plotOfEigenvalues.html
+
+{% endif %}
+ 
+{% if info.degree==4 %}
+<div>The known types of primitive degree 4 L-functions are:</div>
+<p>
+<div>$L(s, f, \mathrm{sym}^3)$: the symmetric cube L-function of a cusp form on GL(2)</div>
+        <p>
+
+        <div>$L(s, f, \mathrm{sym}^3)$: the symmetric cube L-function of a cusp form on GL(2)</div>
+        <p>
+	<div>$L(s, F, \mathrm{spin})$: spin L-function of a Siegel modular form on GSp(4) (genus 2)</div>
+	<p>
+	<div>$L(s,f)$: standard L-function of a cusp form on the Picard group SL(2,Z[i])</div>
+	<p>
+	<div>$L(s,f)$: standard L-function of a cusp form on Sp(4)</div>
+
+	<p>
+	<div>$L(s,f)$: standard L-function of a cusp form on GL(4)</div>
+	<p>
+	<div>$L(s,E)$: L-function of an elliptic curve over a quadratic field</div>
+	<p>
+	<div>$L(s,f)$: standard L-function of a Hilbert modular form on GL(2) over a real quadratic field</div>
+        <p>
+
+<h2>Available Examples:</h2>
+
+<h3>Maass cusp forms on Sp(4,Z)</h3>
+<div>These satisfy a functional equation with $\Gamma$-factors
+\begin{equation}
+\Gamma_R(s + i \mu_1) 
+\Gamma_R(s + i \mu_2) 
+\Gamma_R(s - i \mu_1) 
+\Gamma_R(s - i \mu_2) 
+\end{equation}
+with $0 \le \mu_2 \le \mu_1$.
+</div>
+<div>The dots in the plot correspond to $(\mu_1,\mu_2)$ for Sp(4,Z) L-functions
+which have been found by a computer search.</div>
+<embed src="/static/images/Sp4.svg" width="470" height="330">
+<br>
+<h3>Maass cusp forms on SL(4,Z)</h3>
+<div>These satisfy a functional equation with $\Gamma$-factors
+\begin{equation}
+\Gamma_R(s + i \mu_1) 
+\Gamma_R(s + i \mu_2) 
+\Gamma_R(s - i \mu_3) 
+\Gamma_R(s - i \mu_4) 
+\end{equation}
+where $\mu_1 + \mu_2 = \mu_3 + \mu_4$.
+</div>
+<div>The dots in the plot correspond to $(\mu_1,\mu_2)$ for SL(4,Z) L-functions
+which have been found by a computer search.</div>
+<embed src="/static/images/SL4.svg" width="520" height="360">
+{% endif %}
+ 
+{% endblock %}
+
+
