@@ -1,13 +1,3 @@
-div.literature
-{
-  margin-top: 10px;
-  font-size: 90%;
-  color: #111111;
-}
-.name
-{
-  font-weight: bold;
-}
 .enternumber
 {
   border: 1px solid black;
@@ -43,27 +33,4 @@ table.siegel_dim_table td a:hover
 {
   color: #067AAB;
   text-decoration: underline;
-}
-.emph
-{
-  font-style: italic;
-}
-.error
-{
-  margin: 20px 0 20px 0;
-  padding: 10px;
-  border: 1px solid red;
-  color: red;
-  font-size: 120%;
-}
-.long1
-{
-  margin: 20px 5px 20px 5px;
-  padding: 1px;
-  max-width: 600px;
-  overflow: auto;
-}
-.small
-{
-  font-size: 12px;
 }
