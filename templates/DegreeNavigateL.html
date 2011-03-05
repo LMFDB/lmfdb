@@ -4,26 +4,53 @@
         <h1> {{ title }} </h1>
 
 {% if info.degree==1 %}
-<div>There are two types of degree 1 L-functions: the Riemann zeta function and
-Dirichlet L-functions associatedto a primitive Dirichlet character.</div>
+<div>There are two types of degree 1 L-functions:</div>
+<ul>
+<li><a href="/L/Riemann"> $\zeta(s)$: the Riemann zeta function</a>
+</li>
+<li><a href="degree1#Dirichlet"> $L(s,\chi)$: the Dirichlet L-functions associatedto a primitive Dirichlet character $\chi$</a></li>
+</ul>
 
-[[
-the rest of this page should be ab expansion of what is currently available at
+<h2>Available Examples</h2>
 
-http://l-functions.org/Lfunction/Character/Dirichlet
+<h3>Dirichlet $L$-functions for primitive Dirichlet Character</h3>
 
-]]
+{{info.contents|safe}}
 
 {% endif %}
 
 {% if info.degree==2 %}
-<div>There are two known types of primitive degree 2 L-functions:</div>
-<p>
-<div>$L(s, f)$: the L-function of a holomorphic newform in $S_k(\Gamma_0(N))$</div>
-<p>
-<div>$L(s, f)$: the L-function of a Maass cusp form on  $\Gamma_0(N)$</div>
 
-[[ page under construction]]
+<h2>Automorphic Objects</h2>
+
+<div>There are two known types of primitive degree 2 L-functions that arise from automorphic objects:</div>
+<ul>
+<li><a href="degree2#GL2_Q_Holomorphic">$L(s, f)$: the L-function of a holomorphic newform in $S_k(\Gamma_0(N))$</a>
+</li>
+<li><a href="degree2#GL2_Q_Maass">$L(s, f)$: the L-function of a Maass cusp form on  $\Gamma_0(N)$</a></li>
+</ul>
+
+<h2>Geometric Objects</h2>
+
+<div>There is one known type of primitive degree 2 L-function that arises from a geometric object:</div>
+<ul>
+<li>
+<a href="degree2#EllipticCurve_Q">$L(s, E)$: the L-function of an elliptic curve $E$ over $\Q$.</a></li>
+</ul>
+<h2>Available Examples</h2>
+
+<h3 id="GL2_Q_Holomorphic">Holomorphic Newforms</h3>
+<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+
+<h3 id="GL2_Q_Maass">Maass cusp forms on GL(2,Z)</h3>
+<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+
+<h3 id="EllipticCurve_Q">Elliptic Curves over Q</h3>
+<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+
+
+
+
 {% endif %}
 
 {% if info.degree==3 %}

@@ -21,16 +21,25 @@
 
 <p>
 <p>
-<b>By degree</b>:
+<h3>By degree</h3>
+<table><tr>
 {% for r in info.degree_list: %}
-<a href="degree{{r}}">{{r}}</a>
+<td><a href="degree{{r}}">&nbsp;&nbsp;&nbsp;{{r}}</a></td>
 {% endfor %}
-<br>
+</tr>
+</table>
+<p>
 
-<b>By type:</b>
-{% for t in info.type_list: %}
-<a href="{{t.link}}">{{t.title}}</a>
+<h3>By type</h3>
+<table>
+{% for i in info.l: %}
+<tr>
+{% for t in info.type_table[i]: %}
+<td><a href="{{t.link}}">{{t.title|safe}}</a></td>
 {% endfor %}
+<tr>
+{% endfor %}
+</table>
 <br>
 <br>
 <h2> Search </h2>

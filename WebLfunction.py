@@ -45,6 +45,16 @@ class WebLfunction:
             self.id = dict["id"]
             self.getFromDatabase()
 
+        elif self.type=='sl4maass':
+            self.source = dict["source"]
+            self.id = dict["id"]
+            self.getFromDatabase()
+
+        elif self.type=='sp4maass':
+            self.source = dict["source"]
+            self.id = dict["id"]
+            self.getFromDatabase()
+
         elif self.type=='gl2holomorphic':
             self.weight = int(dict['weight'])
             self.level = int(dict['level'])

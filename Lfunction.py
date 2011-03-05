@@ -6,66 +6,54 @@ from WebLfunction import *
 import LfunctionNavigationProcessing
 import LfunctionPageProcessing
 import LfunctionComp
+from utilities import to_dict
 #from elliptic_curve import by_cremona_label
 # just testing
 
 def render_webpage(args, arg1, arg2, arg3, arg4, arg5):
-   # put different types of L-functions into here
-    temp_args = {}
-    info = {}
-    #print arg1, arg2, args, len(args)
-    for a in args:
-        temp_args[a] = args[a]
-    print temp_args
-    #if temp_args.has_key('degree'):
-         #d = temp_args['degree']  
-         #print d
-         #info = { "degree" : int(d)}
-         #info["key"] = 777
-    #     return render_template("/lfunction_db/templates/list.html", info=info)
+    temp_args = to_dict(args)
+    if len(args) == 0: 
+        if arg1 == None: # this means we're at the start page
+            info = set_info_for_start_page()
+            return render_template("LfunctionNavigate.html", info = info, title = 'L-functions')
+        elif arg1.startswith("degree"):
+            degree = int(arg1[6:])
+            info = { "degree" : degree }
+            info["key"] = 777
+            if degree == 1:
+                info["contents"] = processDirichletNavigation(args)
+            return render_template("DegreeNavigateL.html", info=info, title = 'Degree ' + str(degree)+ ' L-functions')
+            
+        elif arg1 == 'custom': # need a better name
+            return "not yet implemented"
+    # args may or may not be empty
+    # what follows are all things that need homepages
+
     if arg1 == 'Riemann':
         temp_args['type'] = 'riemann'
-    elif len(args)==0 and arg1 == None: #this means I'm at the basic navigation page
-        #print "start page"
-        info = set_info_for_start_page()
-        return render_template("LfunctionNavigate.html", info = info, title = 'L-functions')
-    elif arg1 == 'Character' and arg2 == 'Dirichlet' and len(args)==0:
-        info['title'] = 'Table of Dirichlet Characters'
-        #print "here"
-        info['contents'] = processDirichletNavigation(args)
-        return render_template("LfunctionTable.html",info=info,
-                               title=info['title'])
-    elif arg1 == 'Character' and arg2 == 'Dirichlet' and args['characternumber'] and args['charactermodulus']:
-        #print "inside if"
+    elif arg1 == 'Character' and arg2 == 'Dirichlet':
         temp_args['type'] = 'dirichlet'
-    elif arg1 == 'EllipticCurve' and arg2 == 'Q' and arg3:
+        temp_args['charactermodulus'] = arg3
+        temp_args['characternumber'] = arg4 
+    elif arg1 == 'EllipticCurve' and arg2 == 'Q':
         temp_args['type'] = 'ellipticcurve'
         temp_args['label'] = str(arg3) 
-    elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic':
+    elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic': # this has args: one for weight and one for level
         temp_args['type'] = 'gl2holomorphic'
+        print temp_args
 
-    elif arg1 and arg1.startswith("degree"):
-        degree = int(arg1[6])
-        info = { "degree" : degree }
-        info["key"] = 777
-        return render_template("DegreeNavigateL.html", info=info,
-                               title = 'Degree ' + str(degree)+ ' L-functions')
+    elif arg1 == 'ModularForm' and arg2 == 'GL2'and arg3 == 'Q' and arg4 == 'maass':
+        temp_args['type'] = 'gl2maass'
+    
+    elif arg1 == 'ModularForm' and arg2 == 'GSp4'and arg3 == 'Q' and arg4 == 'maass':
+        temp_args['type'] = 'sp4maass'
+        temp_args['source'] = args['type']
 
-#David and Sally added the following case to handle Stefan's L-functions
-    elif args['type'] and args['type'] == 'lcalcurl':
-        temp_args['type'] = args['type']
-        temp_args['url'] = args['url'] 
-
-
-        #print  "here",arg1,arg2,arg3,arg4,arg5,temp_args
-        #info = getNavigationFromDb(temp_args, arg1, arg2, arg3, arg4, arg5)
-        #info = processNavigationContents(info, temp_args, arg1, arg2, arg3, arg4, arg5)
-        #print "here!!!"
-        
-    #else:
-    #    info = getNavigationFromDb(temp_args, arg1, arg2, arg3, arg4, arg5)
-    #    info = processNavigationContents(info, args, arg1, arg2, arg3, arg4, arg5)
-        
+    elif arg1 == 'ModularForm' and arg2 == 'GL4'and arg3 == 'Q' and arg4 == 'maass':
+        temp_args['type'] = 'sl4maass'
+        temp_args['source'] = args['type'] #type should be changed to 'source'
+    else: # this means we're somewhere that requires args: db queries, holomorphic modular forms, custom,  maass forms, and maybe some others, all of which require a homepage.  
+        return "not yet implemented"
 
     L = WebLfunction(temp_args)
     #return "23423"
@@ -77,17 +65,84 @@ def render_webpage(args, arg1, arg2, arg3, arg4, arg5):
                            support = info['support'])
 
 
+   # put different types of L-functions into here
+#    temp_args = {}
+#    info = {}
+    #print arg1, arg2, args, len(args)
+#    for a in args:
+#        temp_args[a] = args[a]
+#    print temp_args
+    #if temp_args.has_key('degree'):
+         #d = temp_args['degree']  
+         #print d
+         #info = { "degree" : int(d)}
+         #info["key"] = 777
+    #     return render_template("/lfunction_db/templates/list.html", info=info)
+#    if arg1 == 'Riemann':
+#        temp_args['type'] = 'riemann'
+#    elif len(args)==0 and arg1 == None: #this means I'm at the basic navigation page
+#        #print "start page"
+#        info = set_info_for_start_page()
+#        return render_template("LfunctionNavigate.html", info = info, title = 'L-functions')
+#    elif arg1 == 'Character' and arg2 == 'Dirichlet' and len(args)==0:
+#        info['title'] = 'Table of Dirichlet Characters'
+#        #print "here"
+#        info['contents'] = processDirichletNavigation(args)
+#        return render_template("LfunctionTable.html",info=info,
+#                               title=info['title'])
+#    elif arg1 == 'Character' and arg2 == 'Dirichlet' and args['characternumber'] and args['charactermodulus']:
+#        #print "inside if"
+#        temp_args['type'] = 'dirichlet'
+#    elif arg1 == 'EllipticCurve' and arg2 == 'Q' and arg3:
+#        temp_args['type'] = 'ellipticcurve'
+#        temp_args['label'] = str(arg3) 
+#    elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic':
+#        temp_args['type'] = 'gl2holomorphic'
+#
+#    elif arg1 and arg1.startswith("degree"):
+#        degree = int(arg1[6])
+#        info = { "degree" : degree }
+#        info["key"] = 777
+#        return render_template("DegreeNavigateL.html", info=info,
+#                               title = 'Degree ' + str(degree)+ ' L-functions')
+
+#David and Sally added the following case to handle Stefan's L-functions
+#    elif args['type'] and args['type'] == 'lcalcurl':
+#        temp_args['type'] = args['type']
+#        temp_args['url'] = args['url'] 
+#
+#
+#        #print  "here",arg1,arg2,arg3,arg4,arg5,temp_args
+#        #info = getNavigationFromDb(temp_args, arg1, arg2, arg3, arg4, arg5)
+#        #info = processNavigationContents(info, temp_args, arg1, arg2, arg3, arg4, arg5)
+#        #print "here!!!"
+#        
+#    #else:
+#    #    info = getNavigationFromDb(temp_args, arg1, arg2, arg3, arg4, arg5)
+#    #    info = processNavigationContents(info, args, arg1, arg2, arg3, arg4, arg5)
+#        
+
+
+
 def set_info_for_start_page():
-    tl = [{'title':'Riemann','link':'Riemann'},
-          {'title':'Dirichlet','link':'Character/Dirichlet'},
-          {'title':'Elliptic Curve', 'link':'EllipticCurve/Q'}] #etc
+    tl = [{'title':'&nbsp;&nbsp;&nbsp;Riemann&nbsp;&nbsp;&nbsp;','link':'Riemann'},
+          {'title':'&nbsp;&nbsp;&nbsp;Dirichlet&nbsp;&nbsp;&nbsp;','link':'degree1#Dirichlet'}, {'title':'','link':''}] #make the degree 1 ones, should be url_fors
+
+    tt = {1: tl}
+
+    tl = [{'title':'&nbsp;&nbsp;&nbsp;Elliptic Curve&nbsp;&nbsp;&nbsp;','link':'degree2#EllipticCurve_Q'},
+          {'title':'&nbsp;&nbsp;&nbsp;Holomorphic SL2 Cusp Form&nbsp;&nbsp;&nbsp;', 'link':'degree2#GL2_Q_Holomorphic'},
+          {'title':'&nbsp;&nbsp;&nbsp;Maass GL2 Form&nbsp;&nbsp;&nbsp;', 'link':'degree2#GL2_Q_Maass'}]
+
+    tt[2] = tl
 
     info = {
         'degree_list': range(1,6),
         #'signature_list': sum([[[d-2*r2,r2] for r2 in range(1+(d//2))] for d in range(1,11)],[]), 
         #'class_number_list': range(1,11)+['11-1000000'],
         #'discriminant_list': discriminant_list
-        'type_list': tl
+        'type_table': tt,
+        'l':[1,2] #just for testing
     }
     credit = ''	
     t = 'L-functions'
