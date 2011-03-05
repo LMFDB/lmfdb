@@ -132,7 +132,7 @@ def ajax_url(callback, *args, **kwds):
         args = args,
     nonce = hex(random.randint(0, 1<<128))
     pending[nonce] = callback, args, kwds, _ajax_sticky
-    return url_for('ajax_result', id=nonce)
+    return url_for('.ajax_result', id=nonce)
 
 @app.route('/callback_ajax/<id>')
 def ajax_result(id):

@@ -1,0 +1,7 @@
+from base import app
+from flask import Module
+
+from cmf_main import mod
+#cmf_main  = Module(__name__,name='cmf_main')
+app.register_module(mod, url_prefix="/ModularForm/GL2/Q/holomorphic")
+#/ModularForm/GL2/Q/holomorphic")
