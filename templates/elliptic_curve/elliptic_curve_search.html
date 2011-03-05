@@ -26,6 +26,7 @@ Optimal <input type='checkbox'  name='optimal' {% if info.optimal %} checked {%e
 <tr>
 <td><h2>Results</h2></td>
 <tr>
+<td align=center>Isogeny class</td>
 <td align=center>Cremona label</td>
 <td align=left>[\(a_1\),\(a_2\),\(a_3\),\(a_4\),\(a_6\)]</td>
 <td align=center>rank</td>
@@ -33,6 +34,7 @@ Optimal <input type='checkbox'  name='optimal' {% if info.optimal %} checked {%e
 </tr>
 {% for curve in info.curves: %}
 <tr>
+<td align=center><a href="/EllipticCurve/Q/{{curve.conductor}}/{{curve.iso}}">{{curve.conductor}}{{curve.iso}}</a></td>
 <td align=center><a href="/EllipticCurve/Q/{{curve.conductor}}/{{curve.iso}}/{{curve.number}}">{{curve.label}}</a></td>
 <td align=left>{{info.format_ainvs(curve.ainvs)}}</td>
 <td align=center><a href="/EllipticCurve/Q?conductor={{info.conductor}}&rank={{curve.rank}}&torsion={{info.torsion}}">{{curve.rank}}</a></td>
