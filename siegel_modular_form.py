@@ -146,7 +146,7 @@ def render_webpage(args = {}):
 ##             info['downloads'] = [ ('Fourier coefficients', f_url), ('Hecke eigenvalues', g_url)]
               
             bread += [(sidebar[0][0], sidebar[0][1][0][1]), ( weight + '_' + form, url_for( 'ModularForm_GSp4_Q_top_level', group = group, page='specimen', orbit = orbit, form = form))]
-            return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_specimen.html", info = info,  title = 'Specimen', sidebar = sidebar, bread = bread)            
+            return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_specimen.html", info = info,  title = 'Form ' + weight + '_' + form, sidebar = sidebar, bread = bread)            
 
 	else:
             info = {}
