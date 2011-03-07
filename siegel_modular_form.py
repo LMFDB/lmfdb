@@ -4,11 +4,16 @@ import pickle
 import urllib
 from sage.all_cmdline import *
 
+DATA = 'http://data.countnumber.de/Siegel-Modular-Forms/'
+
 def render_webpage(args = {}):
     bread = [('Siegel modular forms', url_for( 'ModularForm_GSp4_Q_top_level'))]
     if len(args) == 0:
         info = {}
-        return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_navigation.html", info = info, title = 'Collections of Siegel Modular Forms', bread = bread)
+        return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_navigation.html", \
+                                   info = info, \
+                                   title = 'Collections of Siegel Modular Forms', \
+                                   bread = bread)
 
     info = dict(args)
     group = args.get('group')
@@ -69,7 +74,7 @@ def render_webpage(args = {}):
 
 	if page == 'forms':
             try:
-                f = urllib.urlopen( 'http://data.countnumber.de/Siegel-Modular-Forms/'+ group +'/available_eigenforms.p')
+                f = urllib.urlopen( DATA + group +'/available_eigenforms.p')
                 go = pickle.load(f)
                 f.close()
                 forms_exist = True
@@ -124,7 +129,7 @@ def render_webpage(args = {}):
         if page == 'specimen':
             info['weight'] = weight
             file_name = weight + '_' + form + '.sobj'
-            f_url = 'http://data.countnumber.de/Siegel-Modular-Forms/' + group + '/eigenforms/' + file_name
+            f_url = DATA + group + '/eigenforms/' + file_name
             f =load(f_url)
             f_keys = f[2].keys()
             # we sort the table of Fourier coefficients by discriminant, forms in increasing lexicographic order
@@ -132,10 +137,13 @@ def render_webpage(args = {}):
             f_keys.sort( cmp = our_cmp)
 
             file_name = weight + '_' + form + '-ev.sobj'
-            g_url = 'http://data.countnumber.de/Siegel-Modular-Forms/'+ group +'/eigenvalues/' + file_name
+            g_url = DATA + group +'/eigenvalues/' + file_name
             g =load( g_url)
 
-            info['form'] = [ f[0].parent(), f[1], [ (l,g[1][l]) for l in g[1]], [(i,f[2][i]) for i in f_keys], f_url, g_url]
+            info['form'] = [ f[0].parent(), f[1], \
+                                 [ (l,g[1][l]) for l in g[1]], \
+                                 [(i,f[2][i]) for i in f_keys], \
+                                 f_url, g_url]
 ##             info['friends'] = [ ('Spin L-function', url_for('not_yet_implemented')), \
 ##                                 ('Standard L-function', url_for('not_yet_implemented')), \
 ##                                 ('First Fourier-Jacobi coefficient', url_for('not_yet_implemented'))]

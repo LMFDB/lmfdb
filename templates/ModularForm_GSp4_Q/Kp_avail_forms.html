@@ -1,29 +1,28 @@
-The following table shows,
-<ul>
-  <li>in level 277, the nonlift,</li>
-  <li>in levels 349, 353, 389, 461, 523, 587,
-    the <em>conjectured</em> nonlifts.</li>
-</ul>
-The number (#) next to each orbit denotes the number of eigenforms in the orbit.
+<p>The following table shows,
+  <ul>
+    <li>in level 277, the nonlift,</li>
+    <li>in levels 349, 353, 389, 461, 523, 587,
+      the <em>conjectured</em> nonlifts.</li>
+  </ul>
+  The number (#) next to each orbit denotes the number of eigenforms in the orbit.
+</p>
 
-<script language="javascript"> var prevlev=0; var s; var a; var lev;</script>
-
-<table class="ntdata">
-  <tr><th>Weight</th><th>Level</th><th>Galois-Orbits of nonlifts</th></tr>
-  {% for wt,forms in  info.forms %}
-  {% for form,dim in forms|sort  %}
-  <script language="javascript">
-    s="{{ form }}";  a=s.split('_'); lev=a[1];
-    if(lev != prevlev){
-    if(prevlev != 0){document.write("</td></tr>");}
-prevlev=lev;
-document.write("<tr> <td>{{ wt }}</td><td>" + lev +" </td> <td>");
-    }
-</script>
-<span style="margin-right:20px;">
-  <a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', group='Kp', form = form, weight = wt, page = 'specimen',orbit='Nonlift') }}">{{ form }} ({{ dim }})</a></span>
-{% endfor %}
-</td>
-</tr>
-{% endfor %}
-</table>
+{{ info.forms }}
+<div class="box1">
+  <table class="ntdata">
+    <thead>
+      <tr><td>Weight</td><td>Level</td><td>Galois-Orbits of nonlifts</td></tr>
+    </thead>
+    {% for wt,forms in  info.forms %}
+      {% for form,dim in forms|sort  %}
+    <tr class = "{{ loop.cycle( 'odd', 'even') }}">
+      <td>{{ wt }}</td>
+      <td>???</td>
+      <td>
+	<a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', group='Kp', form = form, weight = wt, page = 'specimen', orbit = form) }}">{{ form }} ({{ dim }})</a>
+      </td>
+    </tr>
+      {% endfor %}
+    {% endfor %}
+  </table>
+</div>

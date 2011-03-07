@@ -1,48 +1,39 @@
-The following table shows, for each even weight between 4 and 58, the Galois orbits of Hecke eigenforms in the space \(M_*({\rm Sp}(4,\mathbb{Z}))\).
-The number (#) next to each orbit denotes the number of eigenforms in the orbit.
-<ul>
-  <li>
-    <span class="emph">Eisen</span> denotes an orbit consisting of Siegel Eisenstein series,
-  </li>
-  <li>
-    <span class="emph">Klingen</span> denotes an orbit consisting of Klingen Eisenstein series,
-  </li>
-  <li>
-    <span class="emph">Maass</span> denotes an orbit consisting of Maass liftings,
-  </li>
-  <li>
-    <span class="emph">Ups</span> denotes an orbit consisting of cusp forms which are neither Eisenstein series nor Maass liftings.
-  </li>
-</ul>
-You can click on an orbit to get Fourier coefficient, Hecke eigenvalues,
-and other information.
+<p>
+  The following table shows, for each even weight between 4 and 58, the Galois orbits of Hecke eigenforms in the space \(M_*({\rm Sp}(4,\mathbb{Z}))\).
+  The number (#) next to each orbit denotes the number of eigenforms in the orbit.
+  <ul>
+    <li>
+      <span class="emph">E</span> denotes an orbit consisting of Siegel Eisenstein series,
+    </li>
+    <li>
+      <span class="emph">Klingen</span> denotes an orbit consisting of Klingen Eisenstein series,
+    </li>
+    <li>
+      <span class="emph">Maass</span> denotes an orbit consisting of Maass liftings,
+    </li>
+    <li>
+      <span class="emph">Ups</span> denotes an orbit consisting of cusp forms which are neither Eisenstein series nor Maass liftings.
+    </li>
+  </ul>
+  You can click on an orbit to get Fourier coefficient, Hecke eigenvalues,
+  and other information.
+</p>
 
-<div class="long1">
-  <table class="siegel_dim_table">
-    <tr><td>Weight</td><td>Galois orbits</td></tr>
-    {% for wt,forms in  info.forms%}
-    <tr>
+<div class = "box1">
+  <table class="ntdata">
+    <thead>
+      <tr><td>Weight</td><td>Galois orbits</td></tr>
+    </thead>
+    {% for wt,forms in  info.forms %}
+    <tr class = "{{ loop.cycle( 'odd', 'even') }}">
       <td>{{ wt }}</td>
       <td>
         {% for form,dim in forms|sort %}
-	{% set orbit = "orbit type to be implemented" %}
-	{% if form == "Maass" %}
-	{%  set orbit ="Maass" %}
-	{%  set orbit_abbrev ="Maass" %}
-	{% elif form == "E" %}
-	{%  set orbit ="Eisenstein" %}
-	{%  set orbit_abbrev ="Eisen" %}
-	{% elif form == "Klingen" %}
-	{%  set orbit ="Klingen" %}
-	{%  set orbit_abbrev ="Klingen" %}
-	{% else %}
-	{%  set orbit ="Interesting" %}
-	{%  set orbit_abbrev =form %}
-	{%  endif %}
-        <span style="margin-right:20px;"><a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', group='Sp4Z', form = form, weight = wt, page = 'specimen', orbit= orbit ) }}">{{ orbit_abbrev }} ({{ dim }})</a></span>
+	   <a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', group='Sp4Z', form = form, weight = wt, page = 'specimen', orbit = form ) }}">{{ form }} ({{ dim }})</a>
         {% endfor %}
       </td>
     </tr>
     {% endfor %}
   </table>
 </div>
+

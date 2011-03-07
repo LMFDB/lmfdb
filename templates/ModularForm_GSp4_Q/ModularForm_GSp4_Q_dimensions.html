@@ -126,31 +126,33 @@ the dimensions of the following subspaces of
 
 {% endif %}
 
-
-<table class="siegel_dim_table">
-  <tr>
-    {% for header in info.table_headers %}
-    <td>{{ header }}</td>
+<div class="box1">
+  <table class="ntdata">
+    <thead>
+      <tr>
+	{% for header in info.table_headers %}
+	<td>{{ header }}</td>
+	{% endfor %}
+      </tr>
+    </thead>
+    {% if info.dimensions %}
+    
+    {% for k,dims in info.dimensions %}
+    <tr class = "{{ loop.cycle( 'odd', 'even') }}">
+      <td>{{ k }}</td>
+      {% for d in dims %}
+      <td>{{ d }}</td>
+      {% endfor %}
+    </tr>
     {% endfor %}
-  </tr>
+  </table>
 
-  {% if info.dimensions %}
+  {% else %}
 
-
-  {% for k,dims in info.dimensions %}
-  <tr>
-    <td>{{ k }}</td>
-    {% for d in dims %}
-    <td>{{ d }}</td>
-    {% endfor %}
-  </tr>
-  {% endfor %}
-</table>
-
-{% else %}
-</table>
-Dimension table to be implemented
-{% endif %}
+  </table>
+  Dimension table to be implemented
+  {% endif %}
+<div>
 
 {% endif %}
 

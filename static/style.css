@@ -234,34 +234,35 @@ blockquote p {
 }
 
 table {
-  border: 0;
-  border-collapse:collapse;
+    border: 0;
+    border-collapse:collapse;
 }
 
 table a {
- display: block;
-  padding: 2px 0;
+    display: block;
+    padding: 2px 0;
 }
 
 table a:hover {
-  background: #afa;
+    background: #afa;
 }
 
 
 table.ntdata {
-  width: 100%;
-  border: 0;
+    width: 100%;
+    border: 0;
 }
 
 table.ntdata thead tr {
-  background: #afa;
-  border-bottom: 1px solid black;
+    background: #afa;
+    border-bottom: 1px solid black;
 }
+
 table.ntdata tbody tr {
- }
+}
 
 table.ntdata tr.odd {
- background: white;
+    background: white;
 }
 
 table.ntdata tr.even {
@@ -269,38 +270,51 @@ table.ntdata tr.even {
 }
 
 table.ntdata tr.line {
- border-bottom: 1px dotted gray;
+    border-bottom: 1px dotted gray;
 }
-div.literature
-{
-  margin-top: 10px;
-  font-size: 90%;
-  color: #111111;
+
+div.literature {
+    margin-top: 10px;
+    font-size: 90%;
+    color: #111111;
 }
-.name
-{
-  font-weight: bold;
+
+.name {
+    font-weight: bold;
 }
-.emph
-{
-  font-style: italic;
+
+.emph {
+    font-style: italic;
 }
-.error
-{
-  margin: 20px 0 20px 0;
-  padding: 10px;
-  border: 1px solid red;
-  color: red;
-  font-size: 120%;
+
+/*** Tables for the Siegel corner ***/
+
+.box1 {
+    margin: 20px 5px 20px 5px;
+    padding: 1px;
+    max-width: 600px;
+    overflow: auto;
 }
-.long1
-{
-  margin: 20px 5px 20px 5px;
-  padding: 1px;
-  max-width: 600px;
-  overflow: auto;
+
+.small{
+    font-size: 12px;
 }
-.small
+
+.error {
+    margin: 20px 0 20px 0;
+    padding: 10px;
+    border: 1px solid red;
+    color: red;
+    font-size: 120%;
+}
+
+.enternumber
 {
-  font-size: 12px;
+  border: 1px solid black;
+}
+
+.submitbutton
+{
+  border: 1px solid black;
+  background-color: #45BDD7;
 }
