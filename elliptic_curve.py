@@ -185,6 +185,7 @@ def render_curve_webpage_by_label(label):
     xintpoints_projective=[E.lift_x(x) for x in xintegral_point(data['x-coordinates_of_integral_points'])]
     xintpoints=proj_to_aff(xintpoints_projective)
     G = E.torsion_subgroup().gens()
+    
     if 'gens' in data:
         generator=parse_gens(data['gens'])
     if len(G) == 0:
@@ -192,8 +193,11 @@ def render_curve_webpage_by_label(label):
         tor_group='Trivial'
     else:
         tor_group=' \\times '.join(['\mathbb{Z}/{%s}\mathbb{Z}'%a.order() for a in G])
-    info['tor_structure'] = tor_group
-    info['tor_gens']=G
+    if 'torsion_structure' in data:
+        info['tor_structure']= ' \\times '.join(['\mathbb{Z}/{%s}\mathbb{Z}'% int(a) for a in data['torsion_structure']])
+    else:
+        info['tor_structure'] = tor_group
+        
     info.update(data)
     info.update({
         'conductor': N,
@@ -210,8 +214,8 @@ def render_curve_webpage_by_label(label):
         'tamagawa_numbers': r' \cdot '.join(str(sage.all.factor(c)) for c in E.tamagawa_numbers()),
         'cond_factor':latex(N.factor()),
         'xintegral_points':','.join(web_latex(i_p) for i_p in xintpoints),
-        'tor_gens':list(G)
-                    })
+        'tor_gens':','.join(web_latex(eval(g)) for g in data['torsion_generators']) if 'torsion_generators' in data else list(G)
+                        })
     info['downloads_visible'] = True
     info['downloads'] = [('worksheet', url_for("not_yet_implemented"))]
     info['friends'] = [('Isogeny class', "/EllipticCurve/Q/%s/%s" % (N, iso_class)),
