@@ -279,11 +279,12 @@ def download_all():
     label=(request.args.get('label'))
     C = base.getDBConnection()
     data = C.ellcurves.isogeny.find_one({'label': label})
-    data1=[(c,data[c]) for c in data]
+    data1=[[c,data[c]] for c in data]
     curves=data['label_of_curves_in_the_class']
     for lab in curves:
         data_curves=C.ellcurves.curves.find_one({'label': lab})
-        data1.append([(dc,data_curves[dc]) for dc in data_curves])
-    response=make_response('\n'.join(str(an) for an in  data1))
+        for dc in data_curves:
+            data1.append([dc, data_curves[dc]])
+    response=make_response('\n'.join(str('='.join(str(a) for a in an)) for an in  data1))
     response.headers['Content-type'] = 'text/plain'
     return response
