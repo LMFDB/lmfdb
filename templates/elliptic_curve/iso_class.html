@@ -39,6 +39,7 @@
         <p>
         {{ info.rank}}
         </p>
+        {% if info.imag==None %}
         <h2>
         More info
         </h2>
@@ -61,7 +62,7 @@
          <p>
             {{ info.imag['auto']}}
         </p>
-        
+        {%endif %}
           <h2>
             Modular degree for a1
         </h2>
@@ -90,9 +91,9 @@
         <center>
         <img width="300" height="300" src="{{info.graph_img}}" />
         </center>
-     <p align="right">
-        <a  href='{{info.download_all_url}}' target='_blank' >download all info</a>
+    
+    <p align="right">
+        <a  href='{{info.download_all_url}}' target='_blank' >download all</a>
     </p>
-
 {% endblock %}
 </html>

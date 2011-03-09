@@ -6,7 +6,6 @@ import base
 from base import app
 from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
 
-from utils import LazyMongoDBPagination
 
 from utilities import ajax_more, image_src, web_latex, to_dict, parse_range
 import sage.all 
@@ -144,8 +143,10 @@ def render_isogeny_class(conductor, iso_class):
     #discriminant=E.discriminant()
     info = {'label': label}
     info['optimal_ainvs'] = ainvs
-    info['imag']=data['imag']
-    info['real']=data['real']
+    if 'imag' in data:
+        info['imag']=data['imag']
+    if 'real' in data:
+        info['real']=data['real']
     info['rank'] = data['rank'] 
     info['isogeny_matrix']=latex(matrix(eval(data['isogeny_matrix'])))
     info['modular_degree']=data['degree']
@@ -157,8 +158,9 @@ def render_isogeny_class(conductor, iso_class):
 #    C.ellcurves.isogeny.find({'conductor': conductor, 'iso': iso_class}).sort('number')
     info['curves'] = list(curves)
    # info['format_ainvs'] = format_ainvs
-    #info['download_qexp_url'] = url_for('download_qexp', limit=100, ainvs=','.join([str(a) for a in ainvs]))
-    #info['download_all_url'] = url_for('download_qexp', limit=100, ainvs=','.join([str(a) for a in ainvs]))
+    info['download_qexp_url'] = url_for('download_qexp', limit=100, ainvs=','.join([str(a) for a in ainvs]))
+    info['download_all_url'] = url_for('download_all', label=str(label))
+
     return render_template("elliptic_curve/iso_class.html", info = info, credit=credit)
 
 @app.route("/EllipticCurve/Q/<label>")
@@ -272,3 +274,16 @@ def download_qexp():
     response.headers['Content-type'] = 'text/plain'
     return response
 
+@app.route("/EllipticCurve/Q/download_all")
+def download_all():
+    label=(request.args.get('label'))
+    C = base.getDBConnection()
+    data = C.ellcurves.isogeny.find_one({'label': label})
+    data1=[(c,data[c]) for c in data]
+    curves=data['label_of_curves_in_the_class']
+    for lab in curves:
+        data_curves=C.ellcurves.curves.find_one({'label': lab})
+        data1.append([(dc,data_curves[dc]) for dc in data_curves])
+    response=make_response('\n'.join(str(an) for an in  data1))
+    response.headers['Content-type'] = 'text/plain'
+    return response
