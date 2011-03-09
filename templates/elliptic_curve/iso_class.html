@@ -25,15 +25,12 @@
         </h2>
         <table border=0 width='100%'>
             <tr>
-            <td align=center>Cremona<br>label</td>
-            <td>\([a_1,a_2,a_3,a_4,a_6]\)</td>
-            <td>torsion order</td>
+            <td >Cremona label</td>
             </tr>
         {% for curve in info.curves: %}
             <tr>
-            <td align=center><a href="/EllipticCurve/Q/{{curve.conductor}}/{{curve.iso}}/{{curve.number}}">{{curve.label}}</a></td>
-            <td>{{info.format_ainvs(curve.ainvs)}}</td>
-            <td align=center>{{curve.torsion}}</td>
+            <td ><a href="/EllipticCurve/Q/{{curve}}">{{curve}}</a></td>
+           
             </tr>
         {% endfor %}
         </table>
@@ -43,13 +40,35 @@
         {{ info.rank}}
         </p>
         <h2>
+        More info
+        </h2>
+        <h3>
+        coefficients for linear combination
+        </h3>
+        <p>
+        {{ info.imag['vec']}}
+        </p>
+        
+        <h3>
+        qfs
+        </h3>
+        <p>
+        {{ info.imag['qfs']}}
+        </p>
+        <h3>
+        Automorphisms
+        </h3>
+         <p>
+            {{ info.imag['auto']}}
+        </p>
+        
+          <h2>
             Modular degree for a1
         </h2>
      <div class='sage nodisplay code'>sage: E.modular_degree()</div>
         <p>
         {{info.modular_degree}}
         </p>
-        
         <h2>
             Modular form
         </h2>
@@ -71,7 +90,9 @@
         <center>
         <img width="300" height="300" src="{{info.graph_img}}" />
         </center>
-    
+     <p align="right">
+        <a  href='{{info.download_all_url}}' target='_blank' >download all info</a>
+    </p>
 
 {% endblock %}
 </html>

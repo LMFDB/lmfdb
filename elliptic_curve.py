@@ -6,6 +6,7 @@ import base
 from base import app
 from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
 
+from utils import LazyMongoDBPagination
 
 from utilities import ajax_more, image_src, web_latex, to_dict, parse_range
 import sage.all 
@@ -91,6 +92,7 @@ def rational_elliptic_curves():
 def by_conductor(conductor):
     return elliptic_curve_search(conductor=conductor, **request.args)
 
+
 def elliptic_curve_search(**args):
     info = to_dict(args)
     query = {}
@@ -120,7 +122,7 @@ def elliptic_curve_search(**args):
     info['format_ainvs'] = format_ainvs
     credit = 'John Cremona'
     t = 'Elliptic curves over \(\mathbb{Q}\)'
-    return render_template("elliptic_curve/elliptic_curve_search.html", info = info, credit=credit, title = t)
+    return render_template("elliptic_curve/elliptic_curve_search.html",  info = info, credit=credit, title = t)
     
 
 ##########################
@@ -133,26 +135,30 @@ def render_isogeny_class(conductor, iso_class):
     credit = 'John Cremona'
     label = "%s%s" % (conductor, iso_class)
     C = base.getDBConnection()
-    data = C.ellcurves.curves.find_one({'label': label + "1"})
+    data = C.ellcurves.isogeny.find_one({'label': label})
     if data is None:
         return "No such curves"
-    label = "%s%s" % (conductor, iso_class)
-    ainvs = [int(a) for a in data['ainvs']]
+    #label = "%s%s" % (conductor, iso_class)
+    ainvs = [int(a) for a in data['ainvs_for_optimal_curve']]
     E = EllipticCurve(ainvs)
-    discriminant=E.discriminant()
+    #discriminant=E.discriminant()
     info = {'label': label}
     info['optimal_ainvs'] = ainvs
+    info['imag']=data['imag']
+    info['real']=data['real']
     info['rank'] = data['rank'] 
-    info['isogeny_matrix']=latex(matrix(eval(data['Isogeny_matrix'])))
+    info['isogeny_matrix']=latex(matrix(eval(data['isogeny_matrix'])))
     info['modular_degree']=data['degree']
     info['f'] = ajax_more(E.q_eigenform, 10, 20, 50, 100, 250)
     G = E.isogeny_graph(); n = G.num_verts()
     G.relabel(range(1,n+1)) # proper cremona labels...
     info['graph_img'] = image_src(G.plot(edge_labels=True))
-    curves = C.ellcurves.curves.find({'conductor': conductor, 'iso': iso_class}).sort('number')
+    curves = data['label_of_curves_in_the_class']
+#    C.ellcurves.isogeny.find({'conductor': conductor, 'iso': iso_class}).sort('number')
     info['curves'] = list(curves)
-    info['format_ainvs'] = format_ainvs
-    info['download_qexp_url'] = url_for('download_qexp', limit=100, ainvs=','.join([str(a) for a in ainvs]))
+   # info['format_ainvs'] = format_ainvs
+    #info['download_qexp_url'] = url_for('download_qexp', limit=100, ainvs=','.join([str(a) for a in ainvs]))
+    #info['download_all_url'] = url_for('download_qexp', limit=100, ainvs=','.join([str(a) for a in ainvs]))
     return render_template("elliptic_curve/iso_class.html", info = info, credit=credit)
 
 @app.route("/EllipticCurve/Q/<label>")
@@ -265,3 +271,4 @@ def download_qexp():
     response = make_response('\n'.join(str(an) for an in E.anlist(int(request.args.get('limit', 100)), python_ints=True)))
     response.headers['Content-type'] = 'text/plain'
     return response
+
