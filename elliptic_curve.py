@@ -91,6 +91,7 @@ def rational_elliptic_curves():
 def by_conductor(conductor):
     return elliptic_curve_search(conductor=conductor, **request.args)
 
+
 def elliptic_curve_search(**args):
     info = to_dict(args)
     query = {}
@@ -120,7 +121,7 @@ def elliptic_curve_search(**args):
     info['format_ainvs'] = format_ainvs
     credit = 'John Cremona'
     t = 'Elliptic curves over \(\mathbb{Q}\)'
-    return render_template("elliptic_curve/elliptic_curve_search.html", info = info, credit=credit, title = t)
+    return render_template("elliptic_curve/elliptic_curve_search.html",  info = info, credit=credit, title = t)
     
 
 ##########################
@@ -133,26 +134,33 @@ def render_isogeny_class(conductor, iso_class):
     credit = 'John Cremona'
     label = "%s%s" % (conductor, iso_class)
     C = base.getDBConnection()
-    data = C.ellcurves.curves.find_one({'label': label + "1"})
+    data = C.ellcurves.isogeny.find_one({'label': label})
     if data is None:
         return "No such curves"
-    label = "%s%s" % (conductor, iso_class)
-    ainvs = [int(a) for a in data['ainvs']]
+    #label = "%s%s" % (conductor, iso_class)
+    ainvs = [int(a) for a in data['ainvs_for_optimal_curve']]
     E = EllipticCurve(ainvs)
-    discriminant=E.discriminant()
+    #discriminant=E.discriminant()
     info = {'label': label}
     info['optimal_ainvs'] = ainvs
+    if 'imag' in data:
+        info['imag']=data['imag']
+    if 'real' in data:
+        info['real']=data['real']
     info['rank'] = data['rank'] 
-    info['isogeny_matrix']=latex(matrix(eval(data['Isogeny_matrix'])))
+    info['isogeny_matrix']=latex(matrix(eval(data['isogeny_matrix'])))
     info['modular_degree']=data['degree']
     info['f'] = ajax_more(E.q_eigenform, 10, 20, 50, 100, 250)
     G = E.isogeny_graph(); n = G.num_verts()
     G.relabel(range(1,n+1)) # proper cremona labels...
     info['graph_img'] = image_src(G.plot(edge_labels=True))
-    curves = C.ellcurves.curves.find({'conductor': conductor, 'iso': iso_class}).sort('number')
+    curves = data['label_of_curves_in_the_class']
+#    C.ellcurves.isogeny.find({'conductor': conductor, 'iso': iso_class}).sort('number')
     info['curves'] = list(curves)
-    info['format_ainvs'] = format_ainvs
+   # info['format_ainvs'] = format_ainvs
     info['download_qexp_url'] = url_for('download_qexp', limit=100, ainvs=','.join([str(a) for a in ainvs]))
+    info['download_all_url'] = url_for('download_all', label=str(label))
+
     return render_template("elliptic_curve/iso_class.html", info = info, credit=credit)
 
 @app.route("/EllipticCurve/Q/<label>")
@@ -185,6 +193,7 @@ def render_curve_webpage_by_label(label):
     xintpoints_projective=[E.lift_x(x) for x in xintegral_point(data['x-coordinates_of_integral_points'])]
     xintpoints=proj_to_aff(xintpoints_projective)
     G = E.torsion_subgroup().gens()
+    
     if 'gens' in data:
         generator=parse_gens(data['gens'])
     if len(G) == 0:
@@ -192,8 +201,11 @@ def render_curve_webpage_by_label(label):
         tor_group='Trivial'
     else:
         tor_group=' \\times '.join(['\mathbb{Z}/{%s}\mathbb{Z}'%a.order() for a in G])
-    info['tor_structure'] = tor_group
-    info['tor_gens']=G
+    if 'torsion_structure' in data:
+        info['tor_structure']= ' \\times '.join(['\mathbb{Z}/{%s}\mathbb{Z}'% int(a) for a in data['torsion_structure']])
+    else:
+        info['tor_structure'] = tor_group
+        
     info.update(data)
     info.update({
         'conductor': N,
@@ -210,8 +222,8 @@ def render_curve_webpage_by_label(label):
         'tamagawa_numbers': r' \cdot '.join(str(sage.all.factor(c)) for c in E.tamagawa_numbers()),
         'cond_factor':latex(N.factor()),
         'xintegral_points':','.join(web_latex(i_p) for i_p in xintpoints),
-        'tor_gens':list(G)
-                    })
+        'tor_gens':','.join(web_latex(eval(g)) for g in data['torsion_generators']) if 'torsion_generators' in data else list(G)
+                        })
     info['downloads_visible'] = True
     info['downloads'] = [('worksheet', url_for("not_yet_implemented"))]
     info['friends'] = [('Isogeny class', "/EllipticCurve/Q/%s/%s" % (N, iso_class)),
@@ -259,5 +271,20 @@ def download_qexp():
     ainvs = request.args.get('ainvs')
     E = EllipticCurve([int(a) for a in ainvs.split(',')])
     response = make_response('\n'.join(str(an) for an in E.anlist(int(request.args.get('limit', 100)), python_ints=True)))
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
+@app.route("/EllipticCurve/Q/download_all")
+def download_all():
+    label=(request.args.get('label'))
+    C = base.getDBConnection()
+    data = C.ellcurves.isogeny.find_one({'label': label})
+    data1=[[c,data[c]] for c in data]
+    curves=data['label_of_curves_in_the_class']
+    for lab in curves:
+        data_curves=C.ellcurves.curves.find_one({'label': lab})
+        for dc in data_curves:
+            data1.append([dc, data_curves[dc]])
+    response=make_response('\n'.join(str('='.join(str(a) for a in an)) for an in  data1))
     response.headers['Content-type'] = 'text/plain'
     return response
