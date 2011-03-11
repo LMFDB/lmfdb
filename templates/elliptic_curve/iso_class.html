@@ -39,31 +39,7 @@
         <p>
         {{ info.rank}}
         </p>
-        {% if 'imag' in info %}
         <h2>
-        More info
-        </h2>
-        <h3>
-        coefficients for linear combination
-        </h3>
-        <p>
-        {{ info.imag['vec']}}
-        </p>
-        
-        <h3>
-        qfs
-        </h3>
-        <p>
-        {{ info.imag['qfs']}}
-        </p>
-        <h3>
-        Automorphisms
-        </h3>
-         <p>
-            {{ info.imag['auto']}}
-        </p>
-        {%endif %}
-          <h2>
             Modular degree for a1
         </h2>
      <div class='sage nodisplay code'>sage: E.modular_degree()</div>
@@ -91,9 +67,15 @@
         <center>
         <img width="300" height="300" src="{{info.graph_img}}" />
         </center>
-    
+    <h2>Download Stuff </h2>
     <p align="right">
         <a  href='{{info.download_all_url}}' target='_blank' >download all</a>
     </p>
-{% endblock %}
+ <p align="right">
+        <a  href='{{info.download_Rub_data_imag}}' target='_blank' >download Rubinstein data imaginary</a>
+    </p>
+ <p align="right">
+        <a  href='{{info.download_Rub_data_real}}' target='_blank' >download Rubinstein data real</a>
+    </p>
+    {% endblock %}
 </html>

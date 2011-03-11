@@ -9,7 +9,7 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 
 from utilities import ajax_more, image_src, web_latex, to_dict, parse_range
 import sage.all 
-from sage.all import ZZ, EllipticCurve, latex, matrix
+from sage.all import ZZ, EllipticCurve, latex, matrix,srange
 q = ZZ['x'].gen()
 
 #########################
@@ -84,8 +84,9 @@ def rational_elliptic_curves():
         'conductor_list': conductor_list,
     }
     credit = 'John Cremona'
-    t = 'Elliptic curves over the rationals'
-    return render_template("elliptic_curve/elliptic_curve_Q.html", info = info, credit=credit, title = t)
+    t = 'Elliptic curves over \(\mathbb{Q}\)'
+    bread = [('Elliptic Curves', url_for("rational_elliptic_curves")),('Elliptic curves over \(\mathbb{Q}\)',' ')]
+    return render_template("elliptic_curve/elliptic_curve_Q.html", info = info, credit=credit, title = t,bread=bread)
 
 @app.route("/EllipticCurve/Q/<int:conductor>")
 def by_conductor(conductor):
@@ -121,7 +122,8 @@ def elliptic_curve_search(**args):
     info['format_ainvs'] = format_ainvs
     credit = 'John Cremona'
     t = 'Elliptic curves over \(\mathbb{Q}\)'
-    return render_template("elliptic_curve/elliptic_curve_search.html",  info = info, credit=credit, title = t)
+    bread = [('Elliptic Curves', url_for("rational_elliptic_curves")),('Elliptic Curves over \(\mathbb{Q}\)', url_for("rational_elliptic_curves")),('search results',' ')]
+    return render_template("elliptic_curve/elliptic_curve_search.html",  info = info, credit=credit,bread=bread, title = t)
     
 
 ##########################
@@ -137,10 +139,8 @@ def render_isogeny_class(conductor, iso_class):
     data = C.ellcurves.isogeny.find_one({'label': label})
     if data is None:
         return "No such curves"
-    #label = "%s%s" % (conductor, iso_class)
     ainvs = [int(a) for a in data['ainvs_for_optimal_curve']]
     E = EllipticCurve(ainvs)
-    #discriminant=E.discriminant()
     info = {'label': label}
     info['optimal_ainvs'] = ainvs
     if 'imag' in data:
@@ -155,13 +155,15 @@ def render_isogeny_class(conductor, iso_class):
     G.relabel(range(1,n+1)) # proper cremona labels...
     info['graph_img'] = image_src(G.plot(edge_labels=True))
     curves = data['label_of_curves_in_the_class']
-#    C.ellcurves.isogeny.find({'conductor': conductor, 'iso': iso_class}).sort('number')
     info['curves'] = list(curves)
-   # info['format_ainvs'] = format_ainvs
     info['download_qexp_url'] = url_for('download_qexp', limit=100, ainvs=','.join([str(a) for a in ainvs]))
     info['download_all_url'] = url_for('download_all', label=str(label))
+  #  info['download_Rub_data_imag']=url_for('download_Rub_data', label=str(label), type='i')
+  #  info['download_Rub_data_real']=url_for('download_Rub_data', label=str(label), type='r')
+    t= "Elliptic Curve Isogeny Class %s" % info['label']
+    bread = [('Elliptic Curves ', url_for("rational_elliptic_curves")),('Elliptic Curves over \(\mathbb{Q}\)',url_for("rational_elliptic_curves")),('isogeny class %s' %info['label'],' ')]
 
-    return render_template("elliptic_curve/iso_class.html", info = info, credit=credit)
+    return render_template("elliptic_curve/iso_class.html", info = info,bread=bread, credit=credit,title = t)
 
 @app.route("/EllipticCurve/Q/<label>")
 def by_cremona_label(label):
@@ -240,7 +242,9 @@ def render_curve_webpage_by_label(label):
     #properties.extend([ "prop %s = %s<br/>" % (_,_*1923) for _ in range(12) ])
     credit = 'John Cremona'
     t = "Elliptic Curve %s" % info['label']
-    return render_template("elliptic_curve/elliptic_curve.html", info=info, properties=properties, credit=credit, title = t)
+    bread = [('Elliptic Curves ', url_for("rational_elliptic_curves")),('Elliptic Curves over \(\mathbb{Q}\)', url_for("rational_elliptic_curves")),('Elliptic curves %s' %info['label'],' ')]
+
+    return render_template("elliptic_curve/elliptic_curve.html", info=info, properties=properties, credit=credit,bread=bread, title = t)
 
 @app.route("/EllipticCurve/Q/padic_data")
 def padic_data():
@@ -279,12 +283,31 @@ def download_all():
     label=(request.args.get('label'))
     C = base.getDBConnection()
     data = C.ellcurves.isogeny.find_one({'label': label})
-    data1=[[c,data[c]] for c in data]
+    #all data about this isogeny
+    data1=[str(c)+'='+str(data[c]) for c in data]
     curves=data['label_of_curves_in_the_class']
+    #titles of all entries of curves
+    lab=curves[0]
+    titles_curves=[str(c) for c in C.ellcurves.curves.find_one({'label': lab})]
+    data1.append(titles_curves)
     for lab in curves:
+        print lab
         data_curves=C.ellcurves.curves.find_one({'label': lab})
-        for dc in data_curves:
-            data1.append([dc, data_curves[dc]])
-    response=make_response('\n'.join(str('='.join(str(a) for a in an)) for an in  data1))
+        data1.append([data_curves[t] for t in titles_curves])
+    response=make_response('\n'.join(str(an) for an in  data1))
     response.headers['Content-type'] = 'text/plain'
     return response
+    
+#@app.route("/EllipticCurve/Q/download_Rub_data")
+#def download_Rub_data():
+#    import gridfs
+#    label=(request.args.get('label'))
+#    type=(request.args.get('type'))
+#    C = base.getDBConnection()
+#    fs = gridfs.GridFS(C.ellcurves,'isogeny' )
+#    isogeny=C.ellcurves.isogeny.files
+#    filename=isogeny.find_one({'label':str(label),'type':str(type)})['filename']
+#    d= fs.get_last_version(filename)
+#    response = make_response(d.readline())
+#    response.headers['Content-type'] = 'text/plain'
+#    return response
