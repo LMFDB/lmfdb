@@ -23,6 +23,7 @@ curves.ensure_index('label')
 curves.ensure_index('conductor')
 curves.ensure_index('rank')
 curves.ensure_index('torsion')
+curves.ensure_index('torsion_structure')
 
 
 def ainvs(s):
