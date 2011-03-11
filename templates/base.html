@@ -7,11 +7,11 @@
 {% if title %}LMDB: {{ title }}{% else %}LMDB{% endif %}
 </title>
 
-script type="text/javascript" src="{{ url_for('.static', filename='jquery.min.js') }}"></script>
-<!--script type="text/javascript" src="{{ url_for('.static', filename='MathJax/MathJax.js') }}"></script-->
-<script type="text/javascript" src="{{ url_for('.static', filename='MathJax/MathJax.js', config='default')}}"></script>
+<script type="text/javascript" src="{{ url_for('.static', filename='jquery.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('.static', filename='MathJax/MathJax.js', config='default') }}"></script>
 <link href="{{ url_for('.static', filename='style.css') }}" rel="stylesheet" type="text/css" />
-<!--MathJax.Hub.Config({
+<script type="text/javascript">
+MathJax.Hub.Config({
   extensions: ["tex2jax.js","TeX/AMSmath.js","TeX/AMSsymbols.js"],
   jax: ["input/TeX","output/HTML-CSS"],
   tex2jax: {
@@ -21,7 +21,7 @@ script type="text/javascript" src="{{ url_for('.static', filename='jquery.min.js
   "HTML-CSS": { scale: 85 }
   menuSettings: { zoom: "Hover", zscale: "150%" }
 });
-</script-->
+</script>
 <script type="text/javascript">
 var _gaq = _gaq || [];
 _gaq.push(['_setAccount', 'UA-19138192-1']);
