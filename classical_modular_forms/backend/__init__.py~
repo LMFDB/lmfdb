@@ -1,8 +1,0 @@
-from base import app
-#from flask import Module
-
-#import views.cmf_main # from views import cmf_main
-import views
-
-app.register_module(views.cmf_main.cmf, url_prefix="/ModularForm/GL2/Q/holomorphic")
-
