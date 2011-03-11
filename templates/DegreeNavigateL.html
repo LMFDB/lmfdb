@@ -1,7 +1,7 @@
 {% extends 'homepage.html' %}
 
 {% block content %}
-        <h1> {{ title }} </h1>
+
 
 {% if info.degree==1 %}
 <div>There are two types of degree 1 L-functions:</div>
@@ -15,7 +15,7 @@
 
 <h3>Dirichlet $L$-functions for primitive Dirichlet Character</h3>
 
-{{info.contents|safe}}
+{{info.contents[0]|safe}}
 
 {% endif %}
 
@@ -40,14 +40,16 @@
 <h2>Available Examples</h2>
 
 <h3 id="GL2_Q_Holomorphic">Holomorphic Newforms</h3>
-<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+
+{{info.contents[1]|safe}}
 
 <h3 id="GL2_Q_Maass">Maass cusp forms on GL(2,Z)</h3>
-<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+
+{{info.contents[2]|safe}}
 
 <h3 id="EllipticCurve_Q">Elliptic Curves over Q</h3>
-<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
 
+{{info.contents[0]|safe}}
 
 
 

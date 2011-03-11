@@ -235,7 +235,7 @@ class WebLfunction:
         self.texname = "L(s,E)"
         self.texnamecompleteds = "\\Lambda(s,E)"
         self.texnamecompleted1ms = "\\Lambda(1-s,E)"
-        self.title = "L-function $L(s,E)$ for the Elliptic Curve over Q defined by " + str(latex(self.E)) + " with label "+ self.E.label()
+        self.title = "L-function $L(s,E)$ for the Elliptic Curve over Q with label "+ self.E.label()
 
         self.properties = ['Degree ','%s<br><br>' % self.degree]
         self.properties.extend(['Level ', '%s' % self.level])

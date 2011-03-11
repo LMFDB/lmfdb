@@ -19,19 +19,16 @@
     
 <h2> Browse </h2>
 
-<p>
-<p>
-<h3>By degree</h3>
-<table><tr>
+<h3>By degree</h3><table cellpadding = "10"><tr>
 {% for r in info.degree_list: %}
-<td><a href="degree{{r}}">&nbsp;&nbsp;&nbsp;{{r}}</a></td>
+<td><a href="degree{{r}}">{{r}}</a></td>
 {% endfor %}
 </tr>
 </table>
 <p>
 
 <h3>By type</h3>
-<table>
+<table cellpadding ="10">
 {% for i in info.l: %}
 <tr>
 {% for t in info.type_table[i]: %}

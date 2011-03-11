@@ -15,14 +15,18 @@ def render_webpage(args, arg1, arg2, arg3, arg4, arg5):
     if len(args) == 0: 
         if arg1 == None: # this means we're at the start page
             info = set_info_for_start_page()
-            return render_template("LfunctionNavigate.html", info = info, title = 'L-functions')
+            return render_template("LfunctionNavigate.html", info = info, title = 'L-functions', bread=info['bread'])
         elif arg1.startswith("degree"):
             degree = int(arg1[6:])
             info = { "degree" : degree }
             info["key"] = 777
+            info["bread"] =  [('L-functions', url_for("render_Lfunction")), ('Degree '+str(degree), '/L/degree'+str(degree))]
             if degree == 1:
-                info["contents"] = processDirichletNavigation(args)
-            return render_template("DegreeNavigateL.html", info=info, title = 'Degree ' + str(degree)+ ' L-functions')
+                info["contents"] = [processDirichletNavigation(args)]
+            elif degree == 2:
+                info["contents"] = [processEllipticCurveNavigation(args)]
+                
+            return render_template("DegreeNavigateL.html", info=info, title = 'Degree ' + str(degree)+ ' L-functions', bread = info["bread"])
             
         elif arg1 == 'custom': # need a better name
             return "not yet implemented"
@@ -125,14 +129,14 @@ def render_webpage(args, arg1, arg2, arg3, arg4, arg5):
 
 
 def set_info_for_start_page():
-    tl = [{'title':'&nbsp;&nbsp;&nbsp;Riemann&nbsp;&nbsp;&nbsp;','link':'Riemann'},
-          {'title':'&nbsp;&nbsp;&nbsp;Dirichlet&nbsp;&nbsp;&nbsp;','link':'degree1#Dirichlet'}, {'title':'','link':''}] #make the degree 1 ones, should be url_fors
+    tl = [{'title':'Riemann','link':'Riemann'},
+          {'title':'Dirichlet','link':'degree1#Dirichlet'}, {'title':'','link':''}] #make the degree 1 ones, should be url_fors
 
     tt = {1: tl}
 
-    tl = [{'title':'&nbsp;&nbsp;&nbsp;Elliptic Curve&nbsp;&nbsp;&nbsp;','link':'degree2#EllipticCurve_Q'},
-          {'title':'&nbsp;&nbsp;&nbsp;Holomorphic SL2 Cusp Form&nbsp;&nbsp;&nbsp;', 'link':'degree2#GL2_Q_Holomorphic'},
-          {'title':'&nbsp;&nbsp;&nbsp;Maass GL2 Form&nbsp;&nbsp;&nbsp;', 'link':'degree2#GL2_Q_Maass'}]
+    tl = [{'title':'Elliptic Curve','link':'degree2#EllipticCurve_Q'},
+          {'title':'Holomorphic SL2 Cusp Form', 'link':'degree2#GL2_Q_Holomorphic'},
+          {'title':'Maass GL2 Form', 'link':'degree2#GL2_Q_Maass'}]
 
     tt[2] = tl
 
@@ -236,12 +240,12 @@ def initLfunction(L,args):
     elif args['type'] == 'dirichlet':
         snum = str(L.characternumber)
         smod = str(L.charactermodulus)
-        info['bread'] = [('L-function','/L'),('Dirichlet Character','/L/Character/Dirichlet'),('Character Number '+snum+' of Modulus '+ smod,'/L/Character/Dirichlet?charactermodulus='+smod+'&characternumber='+snum)]
+        info['bread'] = [('L-function','/L'),('Dirichlet Character','/L/degree1#Dirichlet'),('Character Number '+snum+' of Modulus '+ smod,'/L/Character/Dirichlet/'+smod+'/'+snum)]
 
     elif args['type'] == 'ellipticcurve':
         label = L.label
         info['friends'] = [('Elliptic Curve', url_for('by_cremona_label',label=label)),('Modular Form', url_for('not_yet_implemented'))]
-        info['bread'] = [('L-function','/L'),('Elliptic Curve','/L/EllipticCurve/Q'),
+        info['bread'] = [('L-function','/L'),('Elliptic Curve','/L/degree2#EllipticCurve_Q'),
                          (label,url_for('render_Lfunction',arg1='EllipticCurve',arg2='Q',arg3= label))]
 
     elif args['type'] == 'gl2holomorphic':
@@ -365,15 +369,58 @@ def processDirichletNavigation(args):
         s += '<td>\n'
         j = i-N
         for k in range(len(chars[j][1])):
-            s += '<a style=\'display:inline\' href="Dirichlet?charactermodulus='
+            s += '<a style=\'display:inline\' href="Character/Dirichlet/'
             s += str(i)
-            s += '&characternumber='
+            s += '/'
             s += str(chars[j][1][k])
-            s += '&numcoeff='
+            s += '/&numcoeff='
             s += str(numcoeff)
             s += '">'
             s += '\(\chi_{' + str(chars[j][1][k]) + '}\)</a> '
         s += '</td>\n</tr>\n'
+    s += '</table>\n'
+    return s
+    #info['contents'] = s
+    #return info
+
+def processEllipticCurveNavigation(args):
+    try:
+        print args['start']
+        N = int(args['start'])
+        if N < 11:
+            N=11
+        elif N > 100:
+            N=100
+    except:
+        N = 11
+    try:
+        length = int(args['length'])
+        if length < 1:
+            length = 1
+        elif length > 20:
+            length = 20
+    except:
+        length = 10
+    try:
+        numcoeff = int(args['numcoeff'])
+    except:
+        numcoeff = 50
+    iso_dict = LfunctionComp.isogenyclasstable(N, N+length)
+    s = '<table>\n'
+    s += '<tr>\n<th scope="col">Conductor</th>\n'
+    s += '<th scope="col">Isogeny Classes</th>\n</tr>\n'
+    iso_dict.keys()
+    print iso_dict
+    for cond in iso_dict.keys():
+        s += '<tr>\n<th scope="row">' + str(cond) + '</th>\n'
+        s += '<td>\n' 
+        for iso in iso_dict[cond]:
+            print cond, iso
+            s += "<a href=\"EllipticCurve/Q/"+iso+"\">"
+            s += iso
+            s+= "</a>" 
+            s += '</td>\n'
+        s += '\n</tr>\n'
     s += '</table>\n'
     return s
     #info['contents'] = s
