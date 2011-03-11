@@ -6,7 +6,7 @@ import re
 import pymongo
 import bson
 #import web_modforms
-from classical_modular_forms.web_modforms import *
+from classical_modular_forms.backend.web_modforms import *
 
 class WebLfunction:
     """Class for presenting an L-function on a web page
