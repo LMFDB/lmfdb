@@ -12,8 +12,12 @@ TODO:
 Fix complex characters. I.e. embedddings and galois conjugates in a consistent way. 
 
 """
-from sage.all import *
+from sage.all import ZZ,QQ,DirichletGroup,CuspForms,Gamma0,ModularSymbols,Newforms,trivial_character,is_squarefree,divisors
+from sage.all import Parent,SageObject
 from plot_dom import draw_fundamental_domain
+from cmf_core import html_table,len_as_printed
+#from sage.monoids.all import AlphabeticStrings
+
 import re
 
 class WebModFormSpace(Parent):
@@ -106,9 +110,8 @@ class WebModFormSpace(Parent):
         data['decomposition'] = self._decomposition
         data['galois_orbits_labels'] = self._galois_orbits_labels
         data['oldspace_decomposition'] = self._oldspace_decomposition
-
-        return(WebModFormSpace,(self._k,self._N,self._chi,self.prec,self._character,data))
-          
+        #return(WebModFormSpace,(self._k,self._N,self._chi,self.prec,data))
+	return(unpickle_wmfs_v1,(self._k,self._N,self._chi,self.prec,data))   
 
     def _repr_(self):
         return str(self._fullspace)
@@ -118,6 +121,7 @@ class WebModFormSpace(Parent):
         r"""
         We compose the new subspace into galois orbits.
         """
+	from sage.monoids.all import AlphabeticStrings
         if(len(self._decomposition)<>0):
             return self._decomposition
         L=self._modular_symbols.new_submodule().decomposition()
@@ -306,7 +310,7 @@ class WebModFormSpace(Parent):
         Print the Galois orbits of self.
 
         """
-        
+	from sage.monoids.all import AlphabeticStrings
         L=self.galois_decomposition()
         if(len(L)==0):
             return ""
@@ -699,7 +703,7 @@ class WebNewForm(SageObject):
         else:
             return None
 
-    def is_twist(self):
+    def is_minimal(self):
         r"""
         Returns True if self is a twist and otherwise False.
         """
@@ -718,6 +722,8 @@ class WebNewForm(SageObject):
         
         -''[t,l]'' -- tuple of a Bool t and a list l. The list l contains all tuples of forms which twists to the given form.
         The actual minimal one is the first element of this list.
+	     t is set to True if self is minimal and False otherwise
+
 
         EXAMPLES::
 
@@ -1486,117 +1492,6 @@ class WebNewForm(SageObject):
 
 
 
-def html_table(tbl):
-    r""" Takes a dictonary and returns an html-table.
-
-    INPUT:
-    
-    -''tbl'' -- dictionary with the following keys
-              - headersh // horozontal headers
-              - headersv // vertical headers
-              - rows -- dictionary of rows of data
-              
-    """
-    ncols=len(tbl["headersh"])
-    nrows=len(tbl["headersv"])
-    data=tbl['data']
-    if(len(data)<>nrows):
-        print "wrong number of rows!"
-    for i in range(nrows):
-        print "len(",i,")=",len(data[i])
-        if(len(data[i])<>ncols):
-            print "wrong number of cols!"        
-
-    if(tbl.has_key('atts')):
-        s="<table "+str(tbl['atts'])+">\n"
-    else:
-        s="<table>\n"
-    format = dict()
-    for i in range(ncols):
-        format[i]=''
-        if(tbl.has_key('data_format')):
-            if isinstance(tbl['data_format'],dict):
-                if(tbl['data_format'].has_key(i)):
-                    format[i]=tbl['data_format'][i]
-            elif(isinstance(tbl['data_format'],str)):
-                format[i]=tbl['data_format']
-    if(tbl.has_key('header')):
-        s+="<thead><tr><th><td colspan=\""+str(ncols)+"\">"+tbl['header']+"</td></th></tr></thead>"
-    s=s+"<tbody>"
-    #smath="<span class=\"math\">"
-    # check which type of content we have
-    h1=tbl['headersh'][0]
-    sheaderh="";    sheaderv=""
-    h1=tbl['headersv'][0]
-    col_width=dict()
-    if not tbl.has_key('col_width'):
-        # use maximum width as default
-        maxw = 0
-        for k in range(ncols):
-            for r in range(nrows):
-                l =len_as_printed(str(data[r][k]))
-                if l>maxw:
-                    maxw = l
-                    #print "l=",l," max=",data[r][k]
-        l = l*10.0 # use true font size?
-        for k in range(ncols):
-            col_width[k]=maxw
-    else:
-        for i in range(ncols):        
-            col_width[i]=0
-            if tbl.has_key('col_width'):
-                if tbl['col_width'].has_key(i):
-                    col_width[i]=tbl['col_width'][i]
-    #print "col width=",col_width
-    #print "format=",format
-    if(tbl.has_key("corner_label")):
-        l = len_as_printed(str(tbl["corner_label"]))*10
-        row="<tr><td width=\"%s\">" % l
-        row+=str(tbl["corner_label"])+"</td>"
-    else:
-        row="<tr><td></td>"
-    for k in range(ncols):
-        row=row+"<td>"+sheaderh+str(tbl['headersh'][k])+"</td> \n"
-
-    row=row+"</tr> \n"
-    s=s+row
-    for r in range(nrows):
-        l = len_as_printed(str(tbl["headersv"][r]))*10
-        print "l=",l,"head=",tbl["headersv"]
-        row="<tr><td width=\"%s\">" %l
-        row+=sheaderv+str(tbl['headersv'][r])+"</td>"
-        for k in range(ncols):
-            wid = col_width[k]
-            if format[k]=='html' or format[k]=='text':
-                row=row+"\t<td halign=\"center\" width=\""+str(wid)+"\">"
-                #print "HTML=",data[r][k]
-                if isinstance(data[r][k],list):
-                    for ss in data[r][k]:
-                        sss = str(ss)
-                        if(len(sss)>0):
-                            row+=sss
-                else:
-                    sss = str(data[r][k])
-                    row+=sss
-                row=row+"</td> \n"
-            else:
-                row=row+"\t<td width=\""+str(wid)+"\">"
-                if isinstance(data[r][k],list):
-                    #print "LATEX list=",data[r][k]
-                    for ss in data[r][k]:
-                        sss = latex(ss)
-                        if(len(sss)>0):
-                            row+="\("+sss+"\)"
-                else:
-                    sss=latex(data[r][k])
-                    if(len(sss)>0):
-                        row=row+"\("+sss+"\)</td> \n"
-                row+="</td>\n"
-        # allow for different format in different columns
-        row=row+"</tr> \n"
-        s=s+row
-    s=s+"</tbody></table>"
-    return s
 
 
 def my_latex_from_qexp(s):
@@ -1653,40 +1548,7 @@ def break_line_at(s,brpt=20):
             res.append(stmp)
     return res
 
-def len_as_printed(s,format='latex'):
-    r"""
-    Returns the length of s, as it will appear after being math_jax'ed
-    """
-    lenq=1
-    lendig=1
-    lenpm=1.5
-    lenpar=0.5
-    lenexp=0.75
-    lensub=0.75
-    ## remove all html first since it is not displayed
-    ss = re.sub("<[^>]*>","",s)
-    print "ss=",ss
-    ss = re.sub(" ","",ss)    # remove white-space
-    ss = re.sub("\*","",ss)    # remove *
-    num_exp = s.count("^")    # count number of exponents
-    exps = re.findall("\^{?(\d*)",s) # a list of all exponents
-    sexps = "".join(exps)
-    num_subs = s.count("_")    # count number of exponents
-    subs = re.findall("_{?(\d*)",s) # a list of all  subscripts
-    ssubs = "".join(subs)
-    ss = re.sub("\^{?(\d*)}?","",ss)  # remove exponenents
-    print join([ss,ssubs,sexps])
-    tot_len=(ss.count(")")+ss.count("("))*lenpar
-    tot_len+=ss.count("q")*lenq
-    tot_len+=len(re.findall("\d",s))*lendig
-    tot_len+=len(re.findall("\w",s))*lenq
-    tot_len+=(s.count("+")+s.count("-"))*lenpm
-    tot_len+=num_subs*lensub
-    tot_len+=num_exp*lenexp
-    #
-    #tot_len = len(ss)+ceil((len(ssubs)+len(sexps))*0.67)
-    return tot_len
-    
+
 
 def _get_newform(k,N,chi,fi=None):
     r"""
@@ -1758,59 +1620,9 @@ def _degree(K):
     except AttributeError:
         return  -1 ##  exit silently
         
-def print_geometric_data_Gamma0N(N):
-        r""" Print data about Gamma0(N).
-        """
-        G=Gamma0(N)
-        #s="<div>"
-        #if(G == SL2Z):
-        #    s="\(  {\\rm SL}_{2}(\mathbb{Z}) \)"
-        #else:
-        #    s="\("+latex(G)+"\)"
-        s = ""
-        ## tbl=dict()
-        ## tbl['header']=s
-        ## tbl['headersh']=['']
-        ## tbl['headersv']=['index:']
-        ## tbl['data']=list()
-        ## tbl['atts']=''
-        ## tbl['data'].append([G.index()])
-        ## tbl['headersv'].append('genus:')
-        ## tbl['data'].append([G.genus()])
-        ## tbl['headersv'].append('#order 2:')
-        ## tbl['data'].append([G.nu2()])
-        ## tbl['headersv'].append('#order 3:')
-        ## tbl['data'].append([G.nu3()])
-        ## s=html_table(tbl)
-        s="<table>"
-        s+="<tr><td>index:</td><td>%s</td></tr>" % G.index()
-        s+="<tr><td>genus:</td><td>%s</td></tr>" % G.genus()
-        s+="<tr><td>Cusps:</td><td>\(%s\)</td></tr>" % latex(G.cusps())
-        s+="<tr><td colspan=\"2\">Number of elliptic fixed points</td></tr>"
-        s+="<tr><td>order 2:</td><td>%s</td></tr>" % G.nu2()
-        s+="<tr><td>order 3:</td><td>%s</td></tr>" % G.nu3()
-
-        s+="</table>"
 
 
-        #s=s+"\((\\textrm{index}; \\textrm{genus}, \\nu_2,\\nu_3)=("
-        #s=s+str(G.index())+";"+str(G.genus())+","
-        #s=s+str(G.nu2())+","+str(G.nu3())
-        #s=s+")\)</div>"
-        return s
-
-
-def pol_to_html(p):
-    r"""
-    Convert polynomial p to html
-    """
-    s = str(p)
-    s = re.sub("\^(\d*)","<sup>\\1</sup>",s)
-    s = re.sub("\_(\d*)","<sub>\\1</suB>",s)
-    return s
-
-
-import __main__
-__main__.WebModFormSpace=WebModFormSpace
-__main__.WebNewForm=WebNewForm
+def unpickle_wmfs_v1(k,N,chi,prec,data):
+    M = WebModFormSpace(k,N,chi,prec,data)
+    return M
 

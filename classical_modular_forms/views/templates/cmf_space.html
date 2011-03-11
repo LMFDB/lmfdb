@@ -6,7 +6,7 @@
 <script type="text/javascript" src="{{ url_for('static', filename='classical_modular_form_scripts.js') }}"></script>
 
 <H1>
-Cuspidal modular forms of weight {{ info.weight }} for 
+Cusp forms of weight {{ info.weight }} for 
 \({% if info.level==1 %} 
 	\mathrm{SL}_{2}(\mathbb{Z}) 
 {% else %} 
@@ -17,25 +17,32 @@ with character \( \chi_{ {{ info.character }} }\) modulo \( {{ info.level }}\) w
 {% else %} 
    with trivial character.
 {% endif %}
+{% if info.extra_info is defined %}
+<span style="font-size:50%">({{ info.extra_info |safe }})</span>
+{% endif %}
 </H1>
 
 
 {% if info.error is defined %}
 {{ info.error |safe }}
+
+
 <br>
 {{ info.sage_version | safe}}
 {% else %}
 	{% if info.nontrivial_new %}
-		<br>
-		Decomposition of \(S_{ {{ info.weight }} }^{new}({{ info.level }})\) into galois orbits :
+		<h3>
+		Decomposition of \(S_{ {{ info.weight }} }^{new}({{ info.level }})\) into galois orbits
+		</h3>
 		{{ info.new_decomposition | safe }}
 	{% else %}
 		\[S_{ {{ info.weight }} }^{new}({{ info.level }})=\{0\}\]
 	{% endif %}
 
 	{% if info.old_decomposition != "" %}
-		<br>
-		Decomposition of \(S_{ {{ info.weight }} }^{old}({{ info.level }})\) into lower level spaces:
+		<h3>
+		Decomposition of \(S_{ {{ info.weight }} }^{old}({{ info.level }})\) into lower level spaces
+		</h3>
 		{{ info.old_decomposition | safe }}
 	{% endif %}
 	
