@@ -1,27 +1,47 @@
+r"""
+Import data from Cremona tables.
+Note: This code can be run on all files in any order. Even if you rerun this code on previously entered files, it should have no affect. 
+This code checks if the entry exists, if so returns that and updates with new information. If the entry does not exist then it creates it and 
+returns that. 
+
+Initial version (Paris 2010)
+More tables Feb 2010 Gagan Sekhon
+Needed importing code for Stein-Watkins 
+"""
+
+
 import os.path, gzip, re, sys, time
 import pymongo
 import base
 
 conn = base.getDBConnection()
 curves = conn.ellcurves.curves
+#The following ensure_index command checks if there is an index on label, conductor, rank and torsion. If there is no index it creates one. 
+#Need: once torsion structure is computed, we should have an index on that too. 
+
 curves.ensure_index('label')
 curves.ensure_index('conductor')
 curves.ensure_index('rank')
 curves.ensure_index('torsion')
+curves.ensure_index('torsion_structure')
 
 
 def ainvs(s):
 #    return [int(a) for a in s[1:-1].split(',')]
     return [a for a in s[1:-1].split(',')]
 
-def parse_gens(s):
-    return [int(a) for a in s[1:-1].split(':')]
+
+#def parse_gens(s):
+ #   return [int(a) for a in s[1:-1].split(':')]
 
 whitespace = re.compile(r'\s+')
 def split(line):
     return whitespace.split(line.strip())
 
 def allbsd(line):
+r"""
+Parses allbsd files
+"""
     data = split(line)
     label = data[0] + data[1] + data[2]
     return label, {
@@ -39,6 +59,9 @@ def allbsd(line):
     }
 
 def allcurves(line):
+r"""
+Parses allcurves files
+"""
     data = split(line)
     label = data[0] + data[1] + data[2]
     return label, {
@@ -51,6 +74,9 @@ def allcurves(line):
     }
 
 def allgens(line):
+r"""
+Parses allgens files
+"""
     data = split(line)
     label = data[0] + data[1] + data[2]
     return label, {
@@ -63,6 +89,9 @@ def allgens(line):
     }
 
 def degphi(line):
+r"""
+Parses degphi files
+"""
     data=split(line)
     label = data[0] + data[1] + data[2]
     return label, {
@@ -70,6 +99,9 @@ def degphi(line):
     }
     
 def allisog(line):
+r"""
+Parses allisog files
+"""
     data=split(line)
     label = data[0] + data[1] + data[2]
     return label, {
@@ -78,6 +110,9 @@ def allisog(line):
     } 
 
 def intpts(line):
+r"""
+Parses intpts files
+"""
     data=split(line)
     label=data[0]
     return label, {
@@ -85,12 +120,18 @@ def intpts(line):
     }
         
 def lookup_or_create(label):
+r"""
+This function looks for the label, if there is an entry with that label then that entry is returned. If there is no entry with this label then a new 
+one is created and returned. 
+This prevents accidental duplications.
+"""
     item = curves.find_one({'label': label})
     if item is None:
         return {'label': label}
     else:
         return item
 
+#this code actually reads all the files and calls the appropriate function. 
 for path in sys.argv[1:]:
     print path
     filename = os.path.basename(path)

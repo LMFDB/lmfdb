@@ -1,8 +1,16 @@
-from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
-from web_modforms import *
+from flask import render_template, url_for, request, redirect, make_response
+import flask
 import tempfile, os,re
-from utilities import ajax_more
+from utilities import ajax_more,ajax_result
+#from utilities import ajax_result as ajax_result #,ajax_url
+from sage.all import *
 from base import app, db
+from classical_modular_forms.backend.web_modforms import WebModFormSpace,WebNewForm
+from classical_modular_forms.backend.cmf_core import * #html_table
+
+CMF="cmf"
+cmf = flask.Module(__name__,'cmf')
+
 #import re
 ### Maximum values to be generated on the fly
 N_max_comp = 100
@@ -13,7 +21,12 @@ k_max_db = 300000
 
 _verbose = 0
 
-
+#from jinja2 import Environment
+print "EN_V path:",app.jinja_loader.searchpath
+l=app.jinja_env.list_templates()
+#for x in l:
+#    print x
+print "MODULES:",app.modules
 #################
 # Top level
 #################
@@ -21,78 +34,93 @@ _verbose = 0
 #def render_classical_modular_form():#
 #	#return render_webpage(**request.args)
 #	return classical_modular_forms(**request.args)
-
-
-
 ###########################################
 # Search / Navigate
 ###########################################
-@app.route('/ModularForm/GL2/Q/holomorphic/')
+#@app.route("/ModularForm/GL2/Q/holomorphic/")
+@cmf.route("/") #'/ModularForm/GL2/Q/holomorphic/')
+
 def render_classical_modular_forms():
-	info   = to_dict(request.args)
-	level  = _my_get(info,'level', -1,int)
-	weight = _my_get(info,'weight',-1,int) 
-	character = _my_get(info,'character', '',str) #int(info.get('weight',0))
-	label  = info.get('label', '')
-        print "HERE:::::::::::::::::::",level,weight,character,label
-        if level<=0:
-            level=None
-        if weight<=0:
-            weight=None
-        if character=='':
-            character=None
-        print "HERE:::::::::::::::::::",level,weight,character
+    info   = to_dict(request.args)
+    l=app.jinja_env.list_templates()
+    for x in l:
+	print x
+    print "MODULES:",app.modules
+    print "EN_V path:",app.modules['cmf'].jinja_loader.searchpath
+    print "args=",request.args
+    print "info=",info
+    level  = _my_get(info,'level', -1,int)
+    weight = _my_get(info,'weight',-1,int) 
+    character = _my_get(info,'character', '',str) #int(info.get('weight',0))
+    label  = info.get('label', '')
+    print "HERE1:::::::::::::::::::",level,weight,character,label
+    if level<=0:
+        level=None
+    if weight<=0:
+        weight=None
+    if character=='':
+        character=None
+    print "HERE:::::::::::::::::::",level,weight,character
 
-	# we see if we have submitted parameters
-	if level and weight and character and label:
-            print "HERE:::::::::::::::::::ALSO"
+    # we see if we have submitted parameters
+    if level and weight and character and label:
+        print "HERE:::::::::::::::::::ALSO"
 		#return redirect(url_for("render_one_classical_modular_form", level,weight,character,label))
-            info['level']=level; info['weight']=weight; info['label']=label; info['character']=character
-            return redirect(url_for("render_one_classical_modular_form", **info))
-	if level and weight and character:
-            info['level']=level; info['weight']=weight; info['label']=label; info['character']=character
-            return redirect(url_for("render_classical_modular_form_space", **info))
-	if level and weight:
-            info['level']=level; info['weight']=weight; info['label']=label; info['character']=character
-            return redirect(url_for("render_classical_modular_form_browsing", **info))
-	if level:
-            info['level']=level
-            return redirect(url_for("render_classical_modular_form_space2", **info))
-        if weight:
-            return browse_classical_modular_forms(**info)
-        #return redirect(url_for("render_classical_modular_form_browsing", **info))
-        return render_classical_modular_form_navigation_wp(**request.args)
-#return redirect(url_for("render_classical_modular_form_space", **info))
+        info['level']=level; info['weight']=weight; info['label']=label; info['character']=character
+        return redirect(url_for("cmf.render_one_classical_modular_form", **info))
+    if level and weight and character:
+        info['level']=level; info['weight']=weight; info['label']=label; info['character']=character
+        return redirect(url_for("cmf.render_classical_modular_form_space", **info))
+    if level and weight:
+        info['level']=level; info['weight']=weight; info['label']=label; info['character']=character
+        return redirect(url_for("cmf.render_classical_modular_form_browsing", **info))
+    if level:
+        info['level']=level
+        print "Have level only!"
+        return redirect(url_for("cmf.render_classical_modular_form_space2", **info))
+    if weight:
+        print "Have weight only!"
+        return browse_classical_modular_forms(**info)
+    return render_classical_modular_form_navigation_wp(**request.args)
 
 
-@app.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<label>/")
+#@cmf.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<label>/")
+@cmf.route("/<int:level>/<int:weight>/<int:character>/<label>/")
 def render_one_classical_modular_form(level,weight,character,label):
-	## see if we want to display it or if we want to do domething else
-	print level,weight,character,label
-	return render_one_classical_modular_form_wp(level,weight,character,label)
+    r"""
+     test
+"""
+    print level,weight,character,label
+    return render_one_classical_modular_form_wp(level,weight,character,label)
 
-@app.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/")
-def render_classical_modular_form_space(level,weight,character):
+#@cmf.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/")
+@cmf.route("/<int:level>/<int:weight>/<int:character>/")
+def render_classical_modular_form_space(level,weight,character,**kwds):
     print "render_classical_modular_form_space::",level,weight
     info=to_dict(request.args)
+    print "req=",request.args
     label  = info.get('label', '')
     info['level']=level; info['weight']=weight; info['character']=character
     if label:
         return render_one_classical_modular_form_wp(level,weight,character,label)
     return render_classical_modular_form_space_wp(**info)
 
-@app.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/")
+#@cmf.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/")
+@cmf.route("/<int:level>/<int:weight>/")
+#@app.route("/<int:level>/<int:weight>/")
 def render_classical_modular_form_browsing(level,weight):
     print "Get level and ewight"
     info=to_dict(request.args)
     info['level']=level; info['weight']=weight
     print "render_classical_modular_form_browsing::",level,weight
+
     return browse_classical_modular_forms(**info)
-#return render_classical_modular_form_space_wp(**info)
-#return redirect(url_for("render_classical_modular_form_space", **info))
 
 
-@app.route("/ModularForm/GL2/Q/holomorphic/<int:level>/")
+
+#@cmf.route("/ModularForm/GL2/Q/holomorphic/<int:level>/")
+@cmf.route("/<int:level>/")
+#@app.route("/<int:level>/")
 def render_classical_modular_form_space2(level):
     print "render_classical_modular_form_space2::",level
     info=to_dict(request.args);
@@ -105,94 +133,102 @@ def render_classical_modular_form_space2(level):
 ###
 
 def render_one_classical_modular_form_wp(level,weight,character,label):
-	info = to_dict(request.args) # get any extra info wee might have submitted
-	if info.has_key('download'):
-		print "saving self!"
-		info['tempfile'] = "/tmp/tmp_web_mod_form.sobj"
-	properties=list(); parents=list(); siblings=list(); friends=list()
-	citation = ['Sage:'+version()]
-	lifts=['Lifts / Correspondences'] #list()
-	sbar=(properties,parents,friends,siblings,lifts)
-	(info,sbar)=set_info_for_one_modular_form(level,weight,character,label,info,sbar)
-	err = info.get('error','')
-	info['parents']=parents
-	info['siblings']=siblings
-	info['friends']=friends
-	print "friends=",friends
-	if info.has_key('download') and not info.has_key('error'):					
-		return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
-	#os.remove(fn) ## clears the temporary file					
-	info['sidebar']=set_sidebar([properties,parents,siblings,friends,lifts])
-	template = "classical_modular_forms/classical_modular_form.html"
-	title = "Cuspidal newform %s of weight %s for "%(label,weight)
-	if level==1:
-		title+="\(\mathrm{SL}_{2}(\mathbb{Z})\)"
-	else:
-		title+="\(\Gamma_0(%s)\)" %(level)
-	if character>0:
-		title+=" with character \(\chi_{%s}\) mod %s" %(character,level)
-		title+=" of order %s and conductor %s" %(info['character_order'],info['character_conductor'])
-	else:
-		title+=" with trivial character!"
-	url1 = url_for('render_classical_modular_forms')
-	url2 = url_for('render_classical_modular_form_space',level=level,weight=weight,character=character) 
-	url3 = url_for('render_classical_modular_form_space',level=level,weight=weight,character=character) 
-	bread = [('Holomorphic Modular Forms',url1)]
-	bread.append(("of level %s" % level,url2))
-	bread.append(("weight %s" % weight,url3))
-	if character == 0 :
-		bread.append(("and trivial character",url3))
-	else:
-		bread.append(("and character \(\chi_{%s}\)" % character,url3))
-	#info['name']=str(level)+str(label)
-	return render_template(template, info=info,title=title,bread=bread,properties=properties)	
+    r"""
+    Renders the webpage for one classical modular form.
+    
+    """
+    info = to_dict(request.args) # get any extra info wee might have submitted
+    if info.has_key('download'):
+	print "saving self!"
+	info['tempfile'] = "/tmp/tmp_web_mod_form.sobj"
+    properties=list(); parents=list(); siblings=list(); friends=list()
+    citation = ['Sage:'+version()]
+    lifts=['Lifts / Correspondences'] #list()
+    sbar=(properties,parents,friends,siblings,lifts)
+    (info,sbar)=set_info_for_one_modular_form(level,weight,character,label,info,sbar)
+    err = info.get('error','')
+    info['parents']=parents
+    info['siblings']=siblings
+    info['friends']=friends
+    print "friends=",friends
+    if info.has_key('download') and not info.has_key('error'):					
+	return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
+    #os.remove(fn) ## clears the temporary file					
+    info['sidebar']=set_sidebar([properties,parents,siblings,friends,lifts])
+    template = CMF+"/cmf.html"
+    title = "Cuspidal newform %s of weight %s for "%(label,weight)
+    if level==1:
+        title+="\(\mathrm{SL}_{2}(\mathbb{Z})\)"
+    else:
+	title+="\(\Gamma_0(%s)\)" %(level)
+    if character>0:
+	title+=" with character \(\chi_{%s}\) mod %s" %(character,level)
+	title+=" of order %s and conductor %s" %(info['character_order'],info['character_conductor'])
+    else:
+        title+=" with trivial character!"
+    url1 = url_for('cmf.render_classical_modular_forms')
+    url2 = url_for('cmf.render_classical_modular_form_space',level=level,weight=weight,character=character) 
+    url3 = url_for('cmf.render_classical_modular_form_space',level=level,weight=weight,character=character) 
+    bread = [('Holomorphic Modular Forms',url1)]
+    bread.append(("of level %s" % level,url2))
+    bread.append(("weight %s" % weight,url3))
+    if character == 0 :
+        bread.append(("and trivial character",url3))
+    else:
+	bread.append(("and character \(\chi_{%s}\)" % character,url3))
+    # info['name']=str(level)+str(label)
+    return render_template(template, info=info,title=title,bread=bread,properties=properties)	
 
 		
 def render_classical_modular_form_navigation_wp(**args):
-	info = to_dict(args)
-	level  = _my_get(info,'level', 0,int)
-	weight = _my_get(info,'weight', 0,int)
-	label  = info.get('label', '')
-	if(info.has_key('plot') and level <> None):
-		return render_fd_plot(level,info)
-	is_set=dict()
-	is_set['weight']=False; is_set['level']=False
-	if weight<>0:
-		is_set['weight']=True
-	if level<>0:
-		is_set['level']=True
-		
-	if(info.has_key('get_table')): # we want a table
-		info = set_table(info,is_set)
-		page = "classical_modular_forms/classical_modular_form_table.html"
-		title = "Table of Classical Modular Forms Spaces"
-		return render_template(page, info=info,title=title)
-		## This is the list of weights we initially put on the form
+    r"""
+    Renders the webpage for the navigational page.
+    
+    """
+    info = to_dict(args)
+    level  = _my_get(info,'level', 0,int)
+    weight = _my_get(info,'weight', 0,int)
+    label  = info.get('label', '')
+    if(info.has_key('plot') and level <> None):
+	return render_fd_plot(level,info)
+    is_set=dict()
+    is_set['weight']=False; is_set['level']=False
+    if weight<>0:
+	is_set['weight']=True
+    if level<>0:
+	is_set['level']=True
+	
+    if(info.has_key('get_table')): # we want a table
+	info = set_table(info,is_set)
+	page = CMF+"/cmf_table.html"
+	title = "Table of Classical Modular Forms Spaces"
+	return render_template(page, info=info,title=title)
+    ## This is the list of weights we initially put on the form
         ## List of weights and levels we initially put on the form
 	## This is the list of weights we initially put on the form
 	## This is the list of weights we initially put on the form
-	weight = int (weight)
-        info['initial_list_of_weights'] = print_list_of_weights()
-	info['initial_list_of_levels']=range(1,30+1)
+    weight = int (weight)
+    #info['initial_list_of_weights'] = print_list_of_weights()
+    #info['initial_list_of_levels']=range(1,30+1)
 	
-	#url1 = ajax_url(ajax_more2, print_list_of_characters, *arg_list1, inline=True, text='List Characters')
+    #url1 = ajax_url(ajax_more2, print_list_of_characters, *arg_list1, inline=True, text='List Characters')
 
-	info['list_chars']=ajax_once(print_list_of_characters,text='print list of characters!')
-	## t = """| <a onclick="$('#%(nonce)s').load('%(url2)s', function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'%(nonce)s']);}); return false;" href="#">%(text1)s</a>]</span>""" % locals()
+    info['list_chars']=ajax_once(print_list_of_characters,text='print list of characters!')
+    ## t = """| <a onclick="$('#%(nonce)s').load('%(url2)s', function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'%(nonce)s']);}); return false;" href="#">%(text1)s</a>]</span>""" % locals()
 	## info['list_of_characters'] = 
-	if level:
-		info['geometric'] = print_geometric_data_Gamma0N(level)
-		if info.has_key('plot'):
-			return render_fd_plot(level,info)
-	title = "Holomorphic Modular Cuspforms"
-	bread =[('Modular Forms',url_for('modular_form_toplevel'))]
-	return render_template("classical_modular_forms/classical_modular_form_navigation.html", info=info,title=title,bread=bread)
+    if level:
+	info['geometric'] = print_geometric_data_Gamma0N(level)
+	if info.has_key('plot'):
+	    return render_fd_plot(level,info)
+    title = "Holomorphic Cusp Forms"
+    bread =[('Modular Forms',url_for('.modular_form_toplevel'))]
+    return render_template("cmf/cmf_navigation.html", info=info,title=title,bread=bread)
 
 
 
 def browse_classical_modular_forms(**info):
     r"""
-    Browse modular forms of given level or weight.
+    Renders the webpage for browsing modular forms of given level and/or weight.
     """
     print "BROWSE HERE!!!!!!!!!!!!!!"
     info   = to_dict(info)
@@ -201,7 +237,8 @@ def browse_classical_modular_forms(**info):
     weight = _my_get(info,'weight', '-1',int)
     label  = info.get('label', '')
     char  = info.get('character', '0')
-    bread =[('Modular Forms',url_for('modular_form_toplevel'))]
+    #bread =[('Modular Forms',url_for('.modular_form_toplevel'))]
+    bread =[('Modular Forms',url_for('render_classical_modular_forms'))]
     if level <0:
         level=None
     if weight<0:
@@ -212,37 +249,44 @@ def browse_classical_modular_forms(**info):
         info['list_chars']='1'
     print "level=",level
     print "wt=",weight    
+    if level:
+        info['geometric'] = print_geometric_data_Gamma0N(level)
+        if info.has_key('plot'):
+            return render_fd_plot(level,info)
+
     if level and not weight:
         print "here1!"
-        title = "Holomorphic Modular Cuspforms of level %s " % level
+        title = "Holomorphic Cusp Forms of level %s " % level
         level = int(level)
         info['level_min']=level;info['level_max']=level
         info['weight_min']=1;info['weight_max']=36
-        s = make_table_of_dimensions(level_start=level,level_stop=level,**info)
-        print "s=",s
-        info['list_spaces']=s
-        #info['list_spaces']=ajax_more(make_table_of_dimensions,{'weight':10},{'weight':20},{'weight':30},text='more')
-	title = "Holomorphic Modular Cuspforms of level %s " % level
-	bread =[('Modular Forms',url_for('modular_form_toplevel'))]
-        return render_template("classical_modular_forms/classical_modular_form_browse.html", info=info,title=title,bread=bread)
+        largs = [ {'level':level,'character':char,'weight_block':k} for k in range(100)]
+        info['list_spaces']=ajax_more(make_table_of_spaces_fixed_level,*largs,text='more')
+	title = "Holomorphic Cusp Forms of level %s " % level
+	#bread =[('Modular Forms',url_for('.modular_form_toplevel'))]
+	bread =[('Modular Forms',url_for('render_classical_modular_forms'))]
+	info['browse_type']=" of level %s " % level
+        return render_template(CMF+"/cmf_browse.html", info=info,title=title,bread=bread)
     if weight and not level:
         print "here2!"
         info['level_min']=1;info['level_max']=50
         info['weight_min']=weight;info['weight_max']=weight
         info['list_spaces']=make_table_of_dimensions(weight_start=weight,weight_stop=weight,**info) #make_table_of_spaces(level=[10,20,30])
-	title = "Holomorphic Modular Cuspforms of weight %s" %weight
-	bread =[('Modular Forms',url_for('modular_form_toplevel'))]
-        return render_template("classical_modular_forms/classical_modular_form_browse.html", info=info,title=title,bread=bread)
+	title = "Holomorphic Cusp Forms of weight %s" %weight
+	#bread =[('Modular Forms',url_for('.modular_form_toplevel'))]
+	bread =[('Modular Forms',url_for('render_classical_modular_forms'))]
+        info['browse_type']=" of weight %s " % weight
+        print "RENDER TEMPLATE!"
+        return render_template(CMF+"/cmf_browse.html", info=info,title=title,bread=bread)
     print "here2!"
     info['level_min']=level;info['level_max']=level
     info['weight_min']=weight;info['weight_max']=weight
-    return render_classical_modular_form_space_list_chars(level,weight) #
-    #make_table_of_dimensions(weight_start=weight,weight_stop=weight,**info) #make_table_of_spaces(level=[10,20,30])
-    #title = "Holomorphic Modular Cuspforms of level %s and weight %s" %(level,weight)
-    #bread =[('Modular Forms',url_for('modular_form_toplevel'))]
-    #return render_template("classical_modular_forms/classical_modular_form_browse.html", info=info,title=title,bread=bread)
+    return render_classical_modular_form_space_list_chars(level,weight) 
     
 def render_classical_modular_form_space_wp(**args):
+    r"""
+    Render the webpage for a classical modular forms space.
+    """
     info = to_dict(args)
     level  = _my_get(info,'level', 0,int)
     weight = _my_get(info,'weight', 0,int)
@@ -253,25 +297,31 @@ def render_classical_modular_form_space_wp(**args):
         return render_classical_modular_form_space_list_chars(level,weight)
     (info,sbar)=set_info_for_modular_form_space(level,weight,character,info,sbar)
     (properties,parents,friends,siblings,lifts)=sbar
-    title = "Holomorphic Modular Cuspforms of weight %s on \(\Gamma_{0}(%s)\)" %(weight,level)
-    bread =[('Modular Forms',url_for('modular_form_toplevel'))]
-    return render_template("classical_modular_forms/classical_modular_form_space.html", info=info,title=title,bread=bread)
+    title = "Holomorphic Cusp Forms of weight %s on \(\Gamma_{0}(%s)\)" %(weight,level)
+    bread =[('Modular Forms',url_for('.modular_form_toplevel'))]
+    return render_template(CMF+"/cmf_space.html", info=info,title=title,bread=bread)
 
 
 
 def render_classical_modular_form_space_list_chars(level,weight):
     r"""
-
+    Renders a page with list of spaces of classical forms of given 
+    level and weight (list all characters) 
     """
     info = dict()
     D = DirichletGroup(level)
     #s = make_table_of_dimensions(level_start=level,level_stop=level,weight_start=weight,weight_stop=weight,char=1)
     s = make_table_of_characters(level,weight)
     info['level']=level; info['weight']=weight
+    if not isinstance(s,str):
+	info['character'] = s
+	#info['extra_info']="This is the only space of level %s and weight %s." %(level,weight)
+	return redirect(url_for("cmf.render_classical_modular_form_space", **info))
     info['list_spaces']=s
     title = "Holomorphic Modular Cuspforms of level %s and weight %s " %(level,weight)
-    bread =[('Modular Forms',url_for('modular_form_toplevel'))]
-    return render_template("classical_modular_forms/classical_modular_form_browse.html", info=info,title=title,bread=bread)
+    bread =[('Modular Forms',url_for('.modular_form_toplevel'))]
+    info['browse_type']=" of level %s and weight %s " % (level,weight)
+    return render_template(CMF+"/cmf_browse.html", info=info,title=title,bread=bread)
 
 def render_webpage(**args):
 	info   = to_dict(args)
@@ -298,7 +348,7 @@ def render_webpage(**args):
 	(info,is_set)=set_basic_parameters(info)
 	#print "info2=",info
 	if(info.has_key('error')): 
-		page = "classical_modular_forms/classical_modular_form_navigation.html"
+		page = CMF+"/cmf_navigation.html"
 		title = "Classical Modular Forms Navigation Page"
 		return render_template(page, info=info,title=title)
 	cur_url=""
@@ -326,13 +376,13 @@ def render_webpage(**args):
 			info['sidebar']=set_sidebar([parents,siblings,friends,lifts])
 			#print "Printing table of coefficients!"
 			#print "info=",info
-			page = "classical_modular_forms/classical_modular_form_table.html"
+			page = CMF+"/cmf_table.html"
 			title = "Table of Classical Modular Forms Spaces"
 			return render_template(page, info=info,title=title)
 
 		else:
 			info['error']="Need weight and level!"
-			page = "classical_modular_forms/classical_modular_form_navigation.html"
+			page = CMF+"/cmf_navigation.html"
 			title = "Classical Modular Forms Navigation Page"
 			return render_template(page, info=info,title=title)
 
@@ -353,7 +403,7 @@ def render_webpage(**args):
 				#os.remove(fn) ## clears the temporary file					
 			info['sidebar']=set_sidebar([properties,parents,siblings,friends,lifts])
 			#print info
-			page = "classical_modular_forms/classical_modular_form.html"
+			page = "classical_modular_forms/cmf.html"
 			title = "Cuspidal newform %s of weight %s for "%(info['label'],info['weight'])
 			if info['level']==1:
 				title+="\(\mathrm{SL}_{2}(\mathbb{Z})\)"
@@ -362,12 +412,12 @@ def render_webpage(**args):
 			if info['character']>0:
 				title+=" with character \(\chi_{%s}\) mod %s" %(info['character'],info['level'])
 				title+=" of order %s and conductor %s" %(info['character_order'],info['character_conductor'])
-			url1 = url_for('render_classical_modular_forms',level=level,weight=weight) 
+			url1 = url_for('cmf.render_classical_modular_forms',level=level,weight=weight) 
 			bread = [('Space',url1)]
-			return render_template("classical_modular_forms/classical_modular_form.html", info=info,title=title,bread=bread)
+			return render_template(CMF+"/classical_modular_forms/cmf.html", info=info,title=title,bread=bread)
 		else:
 			info['sidebar']=set_sidebar([properties,parents,siblings,friends,lifts])
-			return render_template("classical_modular_forms/classical_modular_form_space.html", info=info)
+			return render_template(CMF+"/classical_modular_forms/cmf_space.html", info=info)
 	##
 	## If we did not specify a space completely we want the navigation page
 	## 
@@ -383,8 +433,7 @@ def render_webpage(**args):
 	(friends,lifts)=sbar
 	info['sidebar']=set_sidebar([friends,lifts])
 	#print "sidebar=",info['sidebar']
-	return render_template("classical_modular_forms/classical_modular_form_navigation.html", info=info)
-
+	return render_template(CMF+"/cmf_navigation.html", info=info)
 
 
 
@@ -401,13 +450,6 @@ def set_sidebar(l):
 	return res
 #	info['sidebar']=set_sidebar(navigation,parents,siblings,friends)
 
-
-
-#def make_table_of_spaces(weight=None,level=None):
-#    r"""
-#    """
-#    set_table(info,is_set,make_link=True)
-
 def make_table_of_characters(level,weight,**kwds):
     r""" Make a table of spaces S_k(N,\chi) for all compatible characters chi.
     """
@@ -420,7 +462,7 @@ def make_table_of_characters(level,weight,**kwds):
     tbl['headersh']=list()
     tbl['corner_label']="\( n \):"
     tbl['data']=list()
-    tbl['atts']="class=\"nt_data\" border=\"0\" padding=\"1\""
+    tbl['atts']="class=\"nt_data\" border=\"0\" padding=\"25\""
     tbl['data_format']='html'
     row=list()
     rowlen = 25
@@ -429,6 +471,12 @@ def make_table_of_characters(level,weight,**kwds):
     for chi in range(0,len(D.list())):
         x=D[chi]; S=CuspForms(x,weight); d=S.dimension()
         dims[chi]=d
+    num_non_zero = (map(lambda x:  x>0,dims.values())).count(True)
+    print "Number of non_zer0",num_non_zero
+    if num_non_zero == 1:
+	d = max(dims.values())
+	chi = dims.keys()[dims.values().index(d)]
+	return chi
     numrows = ceil(map(lambda x: x>0,dims).count(True)/rowlen)
     tbl['col_width']=dict()
     ci=0
@@ -461,7 +509,7 @@ def make_table_of_characters(level,weight,**kwds):
         d = dims[chi]
         if d==0:
             continue
-        url = url_for('render_classical_modular_form_space',level=level,weight=weight,character=chi) 
+        url = url_for('cmf.render_classical_modular_form_space',level=level,weight=weight,character=chi) 
         row.append("<a href=\""+url+"\">"+str(d)+"</a>")
         ii=ii+1
         if(ii>rowlen and len(row)>0):
@@ -483,11 +531,11 @@ def make_table_of_characters(level,weight,**kwds):
 def make_table_of_dimensions(level_start=1,level_stop=50,weight_start=1,weight_stop=24,char=0,**kwds):
     r"""
     make an html table with information about spaces of modular forms
-    with parameters in the given ranges.
+    with parameters in the given ranges. using a fixed character.
     Should use database in the future... 
     """
     D=0
-    rowlen=30 # split into rows of this length...
+    rowlen=15 # split into rows of this length...
     rowlen0 = rowlen
     rowlen1 = rowlen
     characters=dict()
@@ -506,32 +554,38 @@ def make_table_of_dimensions(level_start=1,level_stop=50,weight_start=1,weight_s
     #else:
     #    return ""
     tbl=dict()
-    if(char==1):
-        tbl['header']='Dimension of \( S_{'+str(weight)+'}('+str(level)+',\chi_{n})\)'
+    if(char==0):
+        tbl['header']='' #Dimension of \( S_{'+str(weight)+'}('+str(level)+',\chi_{n})\)'
+        charst=""
     else:
-        s = 'Dimension of \( S_{'+str(weight)+'}('+str(level)+')\)'
-        s += ' (trivial character)'
-        tbl['header']=s
+        #s = 'Dimension of \( S_{'+str(weight)+'}('+str(level)+')\)'
+        #s += ' (trivial character)'
+        charst=",\chi_{%s}" % char
+        tbl['header']=''
     tbl['headersv']=list()
     tbl['headersh']=list()
     if weight=='k':
-        tbl['corner_label']="k"
+        tbl['corner_label']="weight \(k\):"
     else:
-        tbl['corner_label']="N"
+        tbl['corner_label']="level \(N\):"
     tbl['data']=list()
     tbl['data_format']='html'
     tbl['class']="dimension_table"
-    tbl['atts']="border=\"0\" class=\"data_table\""
+    tbl['atts']="border=\"1\" class=\"nt_data\" padding=\"25\" width=\"100%\""
     num_rows = ceil(QQ(count_max-count_min+1) / QQ(rowlen0))
     print "num_rows=",num_rows
     for i in range(1,rowlen0+1):
         tbl['headersh'].append(i+count_min-1)
     if level_start==level_stop:
-        tbl['headersv']=['dimension:']
+        st = "Dimension of \(S_{k}(%s%s) \):" % (level,charst)
+        tbl['headersv']=[st]
     else:
-        tbl['headersv']=['dimension:']
+        st = "Dimension of \(S_{%s}(N%s) \):" % (weight,charst)
+        tbl['headersv']=[st]
+    tbl['headersv'].append('Link to space:')
     # make a dummy table first
-    for r in range(num_rows):
+    #num_rows = (num_rows-1)*2
+    for r in range(num_rows*2):
         row=[]
         for k in range(1,rowlen0+1):
             row.append("")
@@ -550,22 +604,25 @@ def make_table_of_dimensions(level_start=1,level_stop=50,weight_start=1,weight_s
                 weight=cnt
             else:
                 level=cnt
-            url = url_for('render_classical_modular_form_browsing',level=level,weight=weight)
+            url = url_for('cmf.render_classical_modular_form_browsing',level=level,weight=weight)
             if(cnt>count_max or cnt < count_min):
-                tbl['data'][r][k]=""
+                tbl['data'][2*r][k]=""
                 continue
-            s="<a name=\"#%s,%s\"></a>" % (level,weight)
+            #s="<a name=\"#%s,%s\"></a>" % (level,weight)
             if(char==0):
                 d=dimension_cusp_forms(level,weight)
-                #print "d=",d
-                #url="?weight="+str(weight)+"&level="+str(N)+"&character=0"
-                print "cnt=",cnt
-                print "r,k=",r,k
-                ss = s + "<a  href=\""+url+"\">"+str(d)+"</a>"
-                tbl['data'][r][k]=ss
             else:
-                ss = make_table_of_characters(level,weight)
-                tbl['data'][r][k]=ss
+                x = DirichletGroup(level)[char]
+                d=dimension_cusp_forms(x,weight)
+            tbl['data'][2*r][k]=str(d)
+            if d>0:
+                s = "\(S_{%s}(%s)\)" % (weight,level)
+                ss = "<a  href=\""+url+"\">"+s+"</a>"
+                tbl['data'][2*r+1][k]=ss
+            #else:
+            #    tbl['data'][2*r+1][k]="\(\emptyset\)"
+            #    ss = make_table_of_characters(level,weight)
+            #    tbl['data'][2*r+1][k]=ss
             #tbl['data'][r][k]=s
             #print "row=",row
             #tbl['data'][r]=row			
@@ -751,7 +808,7 @@ def print_list_of_coefficients(info):
 	else:
 		for a in WMFS.labels():
 			FS.append(WMFS.f(a))
-	shead="Cuspidal modular forms of weight "+str(weight)+"on \("+latex(WMFS.group())+"\)"
+	shead="Cusp forms of weight "+str(weight)+"on \("+latex(WMFS.group())+"\)"
 	s=""
 	if( (chi<>None) and (chi>0)):
 		s=s+" and character \( \chi_{"+str(chi)+"}\)"
@@ -900,7 +957,7 @@ def print_list_of_weights_old(kstart=0,klen=20):
     """
     s=""
     for k in range(kstart+1,kstart+klen+1):
-        s+="<a href=\""+url_for('render_classical_modular_forms',weight=k)+"\">%s </a>\n" % k
+        s+="<a href=\""+url_for('cmf.render_classical_modular_forms',weight=k)+"\">%s </a>\n" % k
     return s
 
 def print_list_of_weights(kstart=0,klen=20):
@@ -911,7 +968,7 @@ def print_list_of_weights(kstart=0,klen=20):
     nonce = hex(random.randint(0, 1<<128))
     s=""
     for k in range(kstart+1,kstart+klen+1):
-        s+="<a href=\""+url_for('render_classical_modular_forms',weight=k)+"\">%s </a>\n" % k
+        s+="<a href=\""+url_for('cmf.render_classical_modular_forms',weight=k)+"\">%s </a>\n" % k
 
     url = ajax_url(print_list_of_weights,print_list_of_weights,kstart,klen,inline=True)
     s0 = """<span id='%(nonce)s'>""" % locals() 
@@ -924,9 +981,9 @@ def print_list_of_weights(kstart=0,klen=20):
 
 #import __main__.web_modforms #WebNewForm 
 #from web_modforms import
-import __main__
-__main__.WebModFormSpace=WebModFormSpace
-__main__.WebNewForm=WebNewForm
+#import __main__
+#__main__.WebModFormSpace=WebModFormSpace
+#__main__.WebNewForm=WebNewForm
 
 def set_info_for_one_modular_form(level,weight,character,label,info,sbar):
 	r"""
@@ -1041,7 +1098,7 @@ def set_info_for_one_modular_form(level,weight,character,label,info,sbar):
 	for j in range(WNF.degree()):
 		label = str(label)+str(j+1)
 		s = 'L-function '+str(level)+label
-		url = '/L'+url_for('render_one_classical_modular_form',level=level,weight=weight,character=character,label=label) 
+		url = '/L'+url_for('cmf.render_one_classical_modular_form',level=level,weight=weight,character=character,label=label) 
 		friends.append((s,url))
 		#friends.append((s,'/Lfunction/ModularForm/GL2/Q/holomorphic/?weight='+str(weight)+'&level='+str(level)+'&character='+str(character)+"&label="+label+"&number="+str(j)))
 
@@ -1051,6 +1108,56 @@ def set_info_for_one_modular_form(level,weight,character,label,info,sbar):
 	return (info,sbar)
 
 
+
+def make_table_of_spaces_fixed_level(level=1,character=0,weight_block=0,**kwds):
+    r"""
+    """
+    wlen=15
+    #level = arg[0][0]
+    #weight_block = arg[0][1]
+    print "AAAA",level,weight_block,character
+
+    w_start = wlen*weight_block
+    w_stop  = wlen*(weight_block+1)
+    s="<table><thead></thead><tbody>\n"
+    s+="<tr><td>Weight \(k\):</td>"
+    dims=dict()
+    links=dict()
+    for weight in range(w_start,w_start+wlen):
+        s+="<td> %s </td>" % weight
+    s+="</tr><tr>"
+    character = int(character)
+    if character > 0 :
+        s+="<td>Dimension of \(S_{k}(%s),\chi_{%s}\):" % (level,character)
+    else:
+        s+="<td>Dimension of \(S_{k}(%s)\):" % (level)
+    if character > 0 :
+        D = DirichletGroup(level).list()
+    for weight in range(w_start,w_start+wlen):
+        if character > 0 :
+            x = D[int(character)]
+            dims[weight]=dimension_cusp_forms(x,weight)
+        else:
+            dims[weight]=dimension_cusp_forms(level,weight)
+        s+="<td> %s </td>" % dims[weight]
+    for weight in range(w_start,w_start+wlen):
+        if dims[weight]>0:
+            url = url_for('cmf.render_classical_modular_form_browsing',level=level,weight=weight)
+            if character>0:
+                lab = "\(S_{%s}(%s,\chi_{%s})\)" %(weight,level,character)
+            else:
+                lab = "\(S_{%s}(%s)\)" %(weight,level)
+            links[weight]="<a  style=\"display:inline\" href=\"%s\">%s</a>" %(url,lab)
+        else:
+            links[weight]=""
+    l=max(map(len_as_printed,map(str,links)))*10.0
+    s+="</tr><tr>"
+    s+="<td>Link to space:</td>"
+    for weight in range(w_start,w_start+wlen):
+        s += "<td width=\"%s\">%s</td>" % (l,links[weight])
+    s+="</tr></tbody></table>"
+    #print s
+    return s
 
 
 
@@ -1194,6 +1301,18 @@ def ajax_more2(callback, *arg_list, **kwds):
 		return (s0+s1+t)
 	else:
 		return res
+
+def ajax_url(callback, *args, **kwds):
+    if '_ajax_sticky' in kwds:
+        _ajax_sticky = kwds.pop('_ajax_sticky')
+    else:
+        _ajax_sticky = False
+    if not isinstance(args, tuple):
+        args = args,
+    nonce = hex(random.randint(0, 1<<128))
+    pending[nonce] = callback, args, kwds, _ajax_sticky
+    return url_for('.ajax_result', id=nonce)
+
 
 def ajax_once(callback,*arglist,**kwds):
 	r"""
