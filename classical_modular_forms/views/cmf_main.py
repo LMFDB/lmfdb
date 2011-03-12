@@ -38,16 +38,18 @@ print "MODULES:",app.modules
 # Search / Navigate
 ###########################################
 #@app.route("/ModularForm/GL2/Q/holomorphic/")
-@cmf.route("/") #'/ModularForm/GL2/Q/holomorphic/')
+@cmf.route("/",methods=['GET','POST']) #'/ModularForm/GL2/Q/holomorphic/')
 
 def render_classical_modular_forms():
-    info   = to_dict(request.args)
-    l=app.jinja_env.list_templates()
-    for x in l:
-	print x
+    if request.method == 'GET':
+	info   = to_dict(request.args)
+    else:
+	info   = to_dict(request.form)
     print "MODULES:",app.modules
     print "EN_V path:",app.modules['cmf'].jinja_loader.searchpath
     print "args=",request.args
+    print "method=",request.method
+    print "req.form=",request.form
     print "info=",info
     level  = _my_get(info,'level', -1,int)
     weight = _my_get(info,'weight',-1,int) 
@@ -60,6 +62,32 @@ def render_classical_modular_forms():
         weight=None
     if character=='':
         character=None
+    if info.has_key('jump_to'):  # try to find out where we want to jump
+	s = str(info['jump_to'])
+	info.pop('jump_to')
+	weight = 2  # this is default for jumping
+	if s == 'delta':
+	    weight = 12; level = 1; label = "a"
+	    exit
+	# first see if we have a label or not, i.e. if we have precisely one string of letters at the end
+	test = re.findall("[a-z]+",s)
+	print "label mat=",test
+	if len(test)==1: 
+	    label = test
+	# the first string of integers should be the level
+	test = re.findall("^\d+",s)
+	print "level mat=",test
+	if test:
+	    level = int(test[0])
+	if len(test)>1: ## we also have weight
+	    weight = int(test[1])
+	if len(test)>1: ## we also have character
+	    character = int(test[2])
+	    
+	print "label=",label
+	print "level=",level
+
+	    
     print "HERE:::::::::::::::::::",level,weight,character
 
     # we see if we have submitted parameters
@@ -90,6 +118,7 @@ def render_one_classical_modular_form(level,weight,character,label):
     r"""
      test
 """
+    
     print level,weight,character,label
     return render_one_classical_modular_form_wp(level,weight,character,label)
 
@@ -296,6 +325,11 @@ def render_classical_modular_form_space_wp(**args):
     if character=='*':
         return render_classical_modular_form_space_list_chars(level,weight)
     (info,sbar)=set_info_for_modular_form_space(level,weight,character,info,sbar)
+    if info['dimension']==1: # if there is only one orbit we list it
+	print "Dimension is onee!"
+	info =dict()
+	info['level']=level; info['weight']=weight; info['label']='a'; info['character']=character
+	return redirect(url_for("cmf.render_one_classical_modular_form", **info))
     (properties,parents,friends,siblings,lifts)=sbar
     title = "Holomorphic Cusp Forms of weight %s on \(\Gamma_{0}(%s)\)" %(weight,level)
     bread =[('Modular Forms',url_for('.modular_form_toplevel'))]
@@ -1028,7 +1062,7 @@ def set_info_for_one_modular_form(level,weight,character,label,info,sbar):
 	#old_break = WNF._break_line_at
 	#WNF._break_line_at=50
 	#info['q_exp'] = ajax_more(WNF.print_q_expansion,5,10,20,50,100)
-	br = 45
+	br = 500
 	info['q_exp'] = ajax_more(WNF.print_q_expansion,{'prec':5,'br':br},{'prec':10,'br':br},{'prec':20,'br':br},{'prec':100,'br':br},{'prec':200,'br':br})
 	#WNF._break_line_at=old_break
 	## check the varable...
@@ -1074,9 +1108,9 @@ def set_info_for_one_modular_form(level,weight,character,label,info,sbar):
 	info['CM_values'] = WNF.print_values_at_cm_points()
 	# properties for the sidebar
 	if(info['twist_info'][0]):				
-		s='Is minimal'
+		s='Is minimal<br>'
 	else:
-		s='Is a twist of lower level'
+		s='Is a twist of lower level<br>'
 	properties.append(s)
 	if(WNF.is_CM()[0]):				
 		s='Is a CM-form'
@@ -1113,34 +1147,43 @@ def make_table_of_spaces_fixed_level(level=1,character=0,weight_block=0,**kwds):
     r"""
     """
     wlen=15
-    #level = arg[0][0]
-    #weight_block = arg[0][1]
-    print "AAAA",level,weight_block,character
-
     w_start = wlen*weight_block
     w_stop  = wlen*(weight_block+1)
     s="<table><thead></thead><tbody>\n"
     s+="<tr><td>Weight \(k\):</td>"
     dims=dict()
     links=dict()
-    for weight in range(w_start,w_start+wlen):
+    character = int(character)
+    x = trivial_character(level)
+    if character > 0 :
+        D = DirichletGroup(level).list()
+	x = D[int(character)]
+    if x.is_even() and is_odd(w_start):
+	    w_start = w_start+1; w_stop = w_stop+1
+    if x.is_odd() and is_even(w_start):
+	w_start = w_start+1; w_stop = w_stop+1
+    weights = list()
+    for weight in range(w_start,w_start+2*wlen,2):
+	weights.append(weight)
+    for weight in weights:
         s+="<td> %s </td>" % weight
     s+="</tr><tr>"
-    character = int(character)
     if character > 0 :
         s+="<td>Dimension of \(S_{k}(%s),\chi_{%s}\):" % (level,character)
     else:
         s+="<td>Dimension of \(S_{k}(%s)\):" % (level)
-    if character > 0 :
-        D = DirichletGroup(level).list()
-    for weight in range(w_start,w_start+wlen):
+    for weight in weights:
         if character > 0 :
-            x = D[int(character)]
             dims[weight]=dimension_cusp_forms(x,weight)
         else:
             dims[weight]=dimension_cusp_forms(level,weight)
         s+="<td> %s </td>" % dims[weight]
-    for weight in range(w_start,w_start+wlen):
+    j = 0 # we display ony even weight if the character is even
+    print "w_start=",w_start
+    print "w_stop=",w_stop
+    for weight in weights:
+	if not dims.has_key(weight):
+	    continue
         if dims[weight]>0:
             url = url_for('cmf.render_classical_modular_form_browsing',level=level,weight=weight)
             if character>0:
@@ -1150,11 +1193,15 @@ def make_table_of_spaces_fixed_level(level=1,character=0,weight_block=0,**kwds):
             links[weight]="<a  style=\"display:inline\" href=\"%s\">%s</a>" %(url,lab)
         else:
             links[weight]=""
+	j+=1
+	if j>=wlen:
+	    exit
     l=max(map(len_as_printed,map(str,links)))*10.0
     s+="</tr><tr>"
     s+="<td>Link to space:</td>"
-    for weight in range(w_start,w_start+wlen):
-        s += "<td width=\"%s\">%s</td>" % (l,links[weight])
+    for weight in weights:
+	if links.has_key(weight):
+	    s += "<td width=\"%s\">%s</td>" % (l+50,links[weight])
     s+="</tr></tbody></table>"
     #print s
     return s

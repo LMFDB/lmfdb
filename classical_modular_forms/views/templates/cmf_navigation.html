@@ -123,8 +123,19 @@ function set_value(id,val) {
     </td>
   </tr>
   <tr>
+  <tr>
     <td>
-      <form name="search" method = "get" action="{{url_for('render_classical_modular_forms')}}">
+      <form name="search" method = "post" action="{{url_for('render_classical_modular_forms')}}">
+	<h3>Jump to a specific cusp form</h3>
+	<form>
+	  <input type="text" name="jump_to" value=""> <span class="formexample">e.g. 1.12</span>
+       <input type="submit" value="Jump">
+	</form>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <form name="search" method = "post" action="{{url_for('render_classical_modular_forms')}}">
 	<h3>Search</h3>
 	<table class="">
 	  <tr>
@@ -140,7 +151,8 @@ function set_value(id,val) {
 	    <td>Dimension of Galois Orbit:</td><td> <input type="text" name="gdim" value=""> <span class="formexample">e.g. 1 (i.e. the rational field)</span> </td>
 	  </tr>
 	</table>
-	<input type="button" name="Submit" value="Search" onclick="document.search.submit()">
+	<input type="submit" name="Submit" value="Search">
+	<!--input type="button" name="Submit" value="Search" onclick="document.search.submit()"-->
       </form>
     </td>
   </tr>

@@ -12,8 +12,8 @@ TODO:
 Fix complex characters. I.e. embedddings and galois conjugates in a consistent way. 
 
 """
-from sage.all import ZZ,QQ,DirichletGroup,CuspForms,Gamma0,ModularSymbols,Newforms,trivial_character,is_squarefree,divisors
-from sage.all import Parent,SageObject
+from sage.all import ZZ,QQ,DirichletGroup,CuspForms,Gamma0,ModularSymbols,Newforms,trivial_character,is_squarefree,divisors,RealField,ComplexField,prime_range,I,join,gcd,Cusp,Infinity,ceil,CyclotomicField,exp,pi,primes_first_n,euler_phi
+from sage.all import Parent,SageObject,dimension_new_cusp_forms
 from plot_dom import draw_fundamental_domain
 from cmf_core import html_table,len_as_printed
 #from sage.monoids.all import AlphabeticStrings
@@ -252,7 +252,7 @@ class WebModFormSpace(Parent):
                 #S=ModularSymbols(ZZ(N/d),k,sign=1).cuspidal_submodule().new_submodule(); Sd=S.dimension()
                 print "q=",q,type(q)
                 print "k=",k,type(k)
-                Sd = sage.modular.dims.dimension_new_cusp_forms(q,k)
+                Sd = dimension_new_cusp_forms(q,k)
                 if(self._verbose>1):
                     print "Sd=",Sd
                 if Sd > 0:
@@ -524,7 +524,7 @@ class WebNewForm(SageObject):
         data['is_CM'] = self._is_CM 
         data['satake'] = self._satake 
         data['dimension'] = self._dimension
-        return(WebNewForm,(self._k,self._N,self._chi,self._label,self._fi,self._prec,self._bitprec,data))
+        return(unpickle_wnf_v1,(self._k,self._N,self._chi,self._label,self._fi,self._prec,self._bitprec,self._verbose,data))
 
     def _save_to_file(self,file):
         r"""
@@ -1621,6 +1621,9 @@ def _degree(K):
         return  -1 ##  exit silently
         
 
+def unpickle_wnf_v1(k,N,chi,label,fi,prec,bitprec,verbose,data):
+    F = WebNewForm(k,N,chi,label,fi,prec,bitprec,verbose,data)
+    return F
 
 def unpickle_wmfs_v1(k,N,chi,prec,data):
     M = WebModFormSpace(k,N,chi,prec,data)
