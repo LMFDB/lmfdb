@@ -56,11 +56,12 @@ def hilbert_modular_form_search(**args):
         count = 10
 
     info['query'] = dict(query)
-
-    res = C.hmfs.forms.find(query).sort([('label',pymongo.ASCENDING)]).limit(10)
+#    C.hmfs.forms.ensure_index([('label',pymongo.ASCENDING)])
+    res = C.hmfs.forms.find(query).sort([('label',pymongo.ASCENDING)]).limit(count)
     nres = res.count()
         
     info['forms'] = res
+    info['field_pretty_name'] = field_pretty(res[0]['field_label'])
     info['number'] = nres
     if nres==1:
         info['report'] = 'unique match'

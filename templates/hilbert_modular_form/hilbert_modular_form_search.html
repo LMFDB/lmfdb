@@ -7,6 +7,7 @@
 <tr>
 <th>Complete Label</th>
 <th>Field</th>
+<th>Field label</th>
 <th>Norm(Level)</th>
 <th>Level</th>
 <th>Label</th>
@@ -16,6 +17,7 @@
 <tr>
 <td align='left'><a href="{{url_for('render_hmf_webpage',field_label=form.field_label,label=form.label)}}">
     {{ form.label}} </a></td>
+<td>{{info.field_pretty_name|safe}}</td>
 <td>{{form.field_label}}</td>
 <td>{{form.level_norm}}</td>
 <td>{{form.level_ideal}}</td>
