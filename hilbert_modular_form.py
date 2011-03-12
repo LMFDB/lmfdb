@@ -116,21 +116,25 @@ def render_hmf_webpage(**args):
     n = min(len(eigs),len(primes))
     info['eigs'] = [{'eigenvalue': eigs[i],
                      'prime_ideal': primes[i], 
-                     'prime_norm': eval(primes[i])[0]} for i in range(n)]
+                     'prime_norm': primes[i][0]} for i in range(n)]
         
     properties = []
-#     properties = ['<br>']
-#     properties.extend('<table>')
-#     properties.extend('<tr><td align=left>Degree:<td align=left> %s</td>'%data['degree'])
-#     properties.extend('<tr><td align=left>Signature:<td align=left>%s</td>'%data['signature'])
-#     properties.extend('<tr><td align=left>Discriminant:<td align=left>%s</td>'%data['discriminant'])
-#     if npr==1:
-#         properties.extend('<tr><td align=left>Ramified prime:<td align=left>%s</td>'%ram_primes)
-#     else:
-#         properties.extend('<tr><td align=left>Ramified primes:<td align=left>%s</td>'%ram_primes)
-#     properties.extend('<tr><td align=left>Class number:<td align=left>%s</td>'%data['class_number'])
-#     properties.extend('<tr><td align=left>Galois group:<td align=left>%s</td>'%data['galois_group'])
-#     properties.extend('</table>')
+    properties = ['<br>']
+    properties.extend('<table>')
+    properties.extend('<tr><td align=left>Field:<td align=left>%s</td>'%data["field_label"])
+    properties.extend('<tr><td align=left>Degree:<td align=left> %s</td>'%field_info['degree'])
+    properties.extend('<tr><td align=left>Discriminant:<td align=left>%s</td>'%field_info['discriminant'])
+    properties.extend('<tr><td align=left>Polynomial:<td align=left>%s</td>'%field_info['discriminant'])
+    properties.extend('<tr><td align=left>Class number:<td align=left>%s</td>'%field_info['class_number'])
+    properties.extend('<tr><td align=left>Galois group:<td align=left>%s</td>'%field_info['galois_group'])
+    properties.extend('</table>')
+    properties.extend('<hr>')
+    properties.extend('<table>')
+    properties.extend('<tr><td align=left>Weight:<td align=left>%s</td>'%data["weight"])
+    properties.extend('<tr><td align=left>Level:<td align=left> %s</td>'%data['level_ideal'])
+    properties.extend('<tr><td align=left>Level Norm:<td align=left>%s</td>'%data['level_norm'])
+    properties.extend('<tr><td align=left>Label:<td align=left>%s</td>'%data['label_suffix'])
+    properties.extend('</table>')
 
     return render_template("hilbert_modular_form/hilbert_modular_form.html", info = info, properties=properties, credit=credit, title = t, bread=bread)
 
