@@ -34,11 +34,11 @@ class WebLfunction:
         if self.type=='lcalcurl':
             import urllib
             self.url = dict['url']
-            self.contents = urllib.urlopen(self.url).read()
+            self.lcalcfile = urllib.urlopen(self.url).read()
             self.parseLcalcfile()
 
         elif self.type=='lcalcfile':
-            self.contents = dict['filecontents']
+            self.lcalcfile = dict['filecontents']
             self.parseLcalcfile()
 
         elif self.type=='db':
@@ -329,7 +329,7 @@ class WebLfunction:
         db = pymongo.database.Database(connection, dbName)
         collection = pymongo.collection.Collection(db,dbColl)
         self.dbEntry = collection.find_one({'_id': self.id}) 
-        self.contents = self.dbEntry['lcalcfile']
+        self.lcalcfile = self.dbEntry['lcalcfile']
         self.parseLcalcfile()
 
         self.family = self.dbEntry['family']
@@ -345,13 +345,13 @@ class WebLfunction:
         self.credit = self.dbEntry['credit']
 
 #=========================== Extract the information from an Lcalcfile
-#=========================== which is stored in self.contents
+#=========================== which is stored in self.lcalcfile
                                                
     def parseLcalcfile(self):
-        lines = self.contents.split('\n',6)
+        lines = self.lcalcfile.split('\n',6)
         self.coefficient_type = int(lines[0])
         self.quasidegree = int(lines[4])
-        lines = self.contents.split('\n',8+2*self.quasidegree)
+        lines = self.lcalcfile.split('\n',8+2*self.quasidegree)
         self.Q_fe = float(lines[5+2*self.quasidegree])
         self.sign = pair2complex(lines[6+2*self.quasidegree])
 
@@ -394,6 +394,12 @@ class WebLfunction:
 
         print 'End url'
         
+#=========================== Returns the Lcalcfile 
+#=========================== 
+                                               
+    def createLcalcfile(self):
+        return('Not yet implemented')
+
 #=============== Checks whether coefficients are real to determine
 #=============== whether L-function is selfdual
                                                

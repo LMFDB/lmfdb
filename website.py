@@ -78,7 +78,7 @@ def form_example():
 @app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>")
 @app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
 def render_Lfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = None):
-    return Lfunction.render_webpage(request.args, arg1, arg2, arg3, arg4, arg5)
+    return Lfunction.render_webpage(request, arg1, arg2, arg3, arg4, arg5)
 
 @app.route("/plotLfunction")
 def plotLfunction():
