@@ -45,12 +45,7 @@ class WebLfunction:
             self.id = dict["id"]
             self.getFromDatabase()
 
-        elif self.type=='sl4maass':
-            self.source = dict["source"]
-            self.id = dict["id"]
-            self.getFromDatabase()
-
-        elif self.type=='sp4maass':
+        elif self.type=='sl4maass' or self.type=='sp4maass' or self.type=='sl3maass':
             self.source = dict["source"]
             self.id = dict["id"]
             self.getFromDatabase()
@@ -384,7 +379,6 @@ class WebLfunction:
 	if self.selfdual:
 	    self.texnamecompleted1ms = "\\Lambda(1-s)"  # default name.  will be set later, for most L-functions
 
-        print 'Start url'
         try:
             self.originalfile = re.match(".*/([^/]+)$", self.url)
             self.originalfile = self.originalfile.group(1)
@@ -392,7 +386,6 @@ class WebLfunction:
         except:
             self.originalfile = ''
 
-        print 'End url'
         
 #=========================== Returns the Lcalcfile 
 #=========================== 

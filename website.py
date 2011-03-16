@@ -84,6 +84,10 @@ def render_Lfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = 
 def plotLfunction():
     return Lfunction.render_plotLfunction(request.args)
 
+@app.route("/browseGraph")
+def browseGraph():
+    return Lfunction.render_browseGraph(request.args)
+
 @app.route("/zeroesLfunction")
 def zeroesLfunction():
     return Lfunction.render_zeroesLfunction(request.args)

@@ -6,6 +6,7 @@ from WebLfunction import *
 import LfunctionNavigationProcessing
 import LfunctionPageProcessing
 import LfunctionComp
+import LfunctionPlot
 from utilities import to_dict
 #from elliptic_curve import by_cremona_label
 # just testing
@@ -26,6 +27,8 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
                 info["contents"] = [processDirichletNavigation(args)]
             elif degree == 2:
                 info["contents"] = [processEllipticCurveNavigation(args)]
+            elif degree == 3 or degree == 4:
+                info["contents"] = LfunctionPlot.getAllMaassGraphHtml(degree)
                 
             return render_template("DegreeNavigateL.html", info=info, title = 'Degree ' + str(degree)+ ' L-functions', bread = info["bread"])
             
@@ -58,6 +61,11 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
     elif arg1 == 'ModularForm' and arg2 == 'GL4'and arg3 == 'Q' and arg4 == 'maass':
         temp_args['type'] = 'sl4maass'
         temp_args['source'] = args['source'] 
+
+    elif arg1 == 'ModularForm' and arg2 == 'GL3'and arg3 == 'Q' and arg4 == 'maass':
+        temp_args['type'] = 'sl3maass'
+        temp_args['source'] = args['source'] 
+
     else: # this means we're somewhere that requires args: db queries, holomorphic modular forms, custom,  maass forms, and maybe some others, all of which require a homepage.  
         return "not yet implemented"
 
@@ -67,14 +75,13 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
     try:
         print temp_args
         if temp_args['download'] == 'lcalcfile':
-            print 'Doing lcalcfile'
             return render_lcalcfile(L)
     except:
-        print 1
+        1
         #Do nothing
 
     info = initLfunction(L, temp_args, request)
-    print info['bread']
+
     return render_template('Lfunction.html',info=info, title = info['title'],
                            bread = info['bread'], properties = info['properties'],
                            citation = info['citation'], credit = info['credit'],
@@ -328,6 +335,14 @@ def render_plotLfunction(args):
     response.headers['Content-type'] = 'image/png'
     return response
 
+def render_browseGraph(args):
+    print args
+    data = LfunctionPlot.paintSvgFile(args['group'], int(args['level']), args['sign'])
+    response = make_response(data)
+    response.headers['Content-type'] = 'image/svg+xml'
+    return response
+
+
 def render_zeroesLfunction(args):
     WebL = WebLfunction(args)
     s = str(WebL.sageLfunction.find_zeros(-15,15,0.1))
@@ -341,6 +356,7 @@ def render_lcalcfile(L):
 
     response.headers['Content-type'] = 'text/plain'
     return response
+
 
 def render_showcollections_demo():
     connection = pymongo.Connection()
