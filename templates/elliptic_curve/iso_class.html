@@ -20,20 +20,7 @@
             </div>
         <div class='sage nodisplay code'>sage: E = EllipticCurve({{info.ainvs}})<br>sage: E.isogeny_class()</div>
         <div class='pari nodisplay code'>xxx</div>
-        <h2>
-            Curves
-        </h2>
-        <table border=0 width='100%'>
-            <tr>
-            <td >Cremona label</td>
-            </tr>
-        {% for curve in info.curves: %}
-            <tr>
-            <td ><a href="/EllipticCurve/Q/{{curve}}">{{curve}}</a></td>
-           
-            </tr>
-        {% endfor %}
-        </table>
+        
         <h2>Rank</h2>
         <div class='sage nodisplay code'>sage: E.rank()</div>
         <p>
@@ -70,12 +57,6 @@
     <h2>Download Stuff </h2>
     <p align="right">
         <a  href='{{info.download_all_url}}' target='_blank' >download all</a>
-    </p>
- <p align="right">
-        <a  href='{{info.download_Rub_data_imag}}' target='_blank' >download Rubinstein data imaginary</a>
-    </p>
- <p align="right">
-        <a  href='{{info.download_Rub_data_real}}' target='_blank' >download Rubinstein data real</a>
     </p>
     {% endblock %}
 </html>

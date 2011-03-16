@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+ # -*- coding: utf-8 -*-
 import re
 
 from pymongo import ASCENDING
@@ -131,6 +131,9 @@ def elliptic_curve_search(**args):
 ##########################
 
 @app.route("/EllipticCurve/Q/<int:conductor>/<iso_class>")
+def by_isogeny(conductor, iso_class):
+    return render_isogeny_class(conductor, iso_class)
+    
 def render_isogeny_class(conductor, iso_class):
     info = {}
     credit = 'John Cremona'
@@ -158,8 +161,10 @@ def render_isogeny_class(conductor, iso_class):
     info['curves'] = list(curves)
     info['download_qexp_url'] = url_for('download_qexp', limit=100, ainvs=','.join([str(a) for a in ainvs]))
     info['download_all_url'] = url_for('download_all', label=str(label))
-  #  info['download_Rub_data_imag']=url_for('download_Rub_data', label=str(label), type='i')
-  #  info['download_Rub_data_real']=url_for('download_Rub_data', label=str(label), type='r')
+    friends=[('Elliptic Curve %s' % l , "/EllipticCurve/Q/%s" % l) for l in data['label_of_curves_in_the_class']]
+    friends.append(('Quadratic Twist', "/quadratic_twists/%s" % (label)))
+    info['friends'] = friends
+
     t= "Elliptic Curve Isogeny Class %s" % info['label']
     bread = [('Elliptic Curves ', url_for("rational_elliptic_curves")),('Elliptic Curves over \(\mathbb{Q}\)',url_for("rational_elliptic_curves")),('isogeny class %s' %info['label'],' ')]
 

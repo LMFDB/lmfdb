@@ -8,6 +8,7 @@ import hilbert_modular_form
 import siegel_modular_form
 import classical_modular_form
 import elliptic_curve
+import quadratic_twists
 import Lfunction
 import maass_form
 import plot_example
