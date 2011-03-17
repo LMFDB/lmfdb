@@ -7,6 +7,12 @@ import base
 
 
 
+## ============================================
+## Returns the id for the L-function of given group, level, sign and
+## spectral parameters. (Used for Maass forms and works for GL(n) and GSp(4).)
+## This id is used in the database as '_id' of the L-function document.
+## NOTE: SHOULD CHANGE THIS TO INCLUDE THE SIGN IN THE ID
+## ============================================
 def createLid(group, objectName, level, sign, parameters):
     ans = group + objectName + '_' + str(level) + '_' + str(sign)
     if group == 'GSp4':
@@ -20,6 +26,11 @@ def createLid(group, objectName, level, sign, parameters):
             ans += toAdd
     return ans
 
+## ============================================
+## Returns all the html including links to the svg-files for Maass forms
+## of given degree (gives output for degree 3 and 4). Data is fetched from
+## the database.
+## ============================================
 def getAllMaassGraphHtml(degree):
     conn = base.getDBConnection()
     db = conn.Lfunction
@@ -46,11 +57,15 @@ def getAllMaassGraphHtml(degree):
                               'function(obj,prev) { prev.csum += 1; }')
             for docSign in signs:
                 s = docSign['sign']
-##                print s
+                print 'sign: ' + s
                 ans += getOneGraphHtml(g,l,s)
                     
     return(ans)
 
+## ============================================
+## Returns the header and information about the Gamma-factors for the
+## group with name group (in html and MathJax)
+## ============================================
 def getGroupHtml(group):
     if group == 'GSp4':
         ans = "<h3>Maass cusp forms for GSp(4)</h3>\n"
@@ -89,6 +104,11 @@ def getGroupHtml(group):
         
     return(ans)
 
+## ============================================
+## Returns the header, some information and the url for the svg-file for
+## the L-functions of the Maass forms for given group, level and
+## sign (of the functional equation) (in html and MathJax)
+## ============================================
 def getOneGraphHtml(group, level, sign):
     ans = ("<h4>Maass cusp forms of level " + str(level) + " and sign " 
           + str(sign) + "</h4>\n")
@@ -105,12 +125,17 @@ def getOneGraphHtml(group, level, sign):
         
     return(ans)
     
+## ============================================
+## Returns the url and width and height of the svg-file for
+## the L-functions of the Maass forms for given group, level and
+## sign (of the functional equation).
+## ============================================
 def getGraphInfo(group, level, sign):
     (width,height) = getWidthAndHeight(group, level, sign)
-#    print (width,height)
-#    url = url_for('browseGraph',group=group, level=level, sign=sign)
+##    url = url_for('browseGraph',group=group, level=level, sign=sign)
     url = ('/browseGraph?group=' + group + '&level=' + str(level)
            + '&sign=' + sign)
+    url =url.replace('+', '%2B')  ## + is a special character in urls
     ans = {'src': url}
     ans['width']= width
     ans['height']= height
@@ -118,6 +143,11 @@ def getGraphInfo(group, level, sign):
     return(ans)
 
 
+## ============================================
+## Returns the width and height of the svg-file for
+## the L-functions of the Maass forms for given group, level and
+## sign (of the functional equation).
+## ============================================
 def getWidthAndHeight(group, level, sign):
     conn = base.getDBConnection()
     db = conn.Lfunction
@@ -131,26 +161,28 @@ def getWidthAndHeight(group, level, sign):
     yfactor = 20
     extraSpace = 40
 
-    ans = "<svg  xmlns='http://www.w3.org/2000/svg'"
-    ans += " xmlns:xlink='http://www.w3.org/1999/xlink'>\n"
-
-    max1 = 0
-    max2 = 0
+    xMax = 0
+    yMax = 0
     for l in LfunctionList:
         splitId = l['_id'].split("_")
-        if float(splitId[index1])>max1:
-            max1 = float(splitId[index1])
-        if float(splitId[index2])>max2:
-            max2 = float(splitId[index2])
+        if float(splitId[index1])>xMax:
+            xMax = float(splitId[index1])
+        if float(splitId[index2])>yMax:
+            yMax = float(splitId[index2])
 
-    max1 = math.ceil(max1)
-    max2 = math.ceil(max2)
-    width = int(xfactor *max1 + extraSpace)
-    height = int(yfactor *max2 + extraSpace)
+    xMax = math.ceil(xMax)
+    yMax = math.ceil(yMax)
+    width = int(xfactor *xMax + extraSpace)
+    height = int(yfactor *yMax + extraSpace)
 
     return( (width, height) )
 
 
+## ============================================
+## Returns the contents (as a string) of the svg-file for
+## the L-functions of the Maass forms for given group, level and
+## sign (of the functional equation).
+## ============================================
 def paintSvgFile(group, level, sign):
     conn = base.getDBConnection()
     db = conn.Lfunction
@@ -170,75 +202,86 @@ def paintSvgFile(group, level, sign):
     ans += " xmlns:xlink='http://www.w3.org/1999/xlink'>\n"
 
     paralist = []
-    max1 = 0
-    max2 = 0
+    xMax = 0
+    yMax = 0
     for l in LfunctionList:
         splitId = l['_id'].split("_")
         paralist.append((splitId[index1],splitId[index2],l['_id']))
-        if float(splitId[index1])>max1:
-            max1 = float(splitId[index1])
-        if float(splitId[index2])>max2:
-            max2 = float(splitId[index2])
+        if float(splitId[index1])>xMax:
+            xMax = float(splitId[index1])
+        if float(splitId[index2])>yMax:
+            yMax = float(splitId[index2])
 
-    max1 = int(math.ceil(max1))
-    max2 = int(math.ceil(max2))
-    xwidth = xfactor *max1 + extraSpace
-    yheight = yfactor *max2 + extraSpace
+    xMax = int(math.ceil(xMax))
+    yMax = int(math.ceil(yMax))
+    width = xfactor *xMax + extraSpace
+    height = yfactor *yMax + extraSpace
 
-    ans += paintCS(xwidth, yheight, max1, max2, xfactor, yfactor, ticlength)
+    ans += paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength)
 
     for (x,y,lid) in paralist:
         linkurl = "/L/ModularForm/" + group + "/Q/maass?source=db&amp;id=" + lid
         ans += "<a xlink:href='" + linkurl + "' target='_top'>\n"
         ans += "<circle cx='" + str(float(x)*xfactor)[0:7]
-        ans += "' cy='" +  str(yheight- float(y)*yfactor)[0:7]
+        ans += "' cy='" +  str(height- float(y)*yfactor)[0:7]
         ans += "' r='" + str(radius)
-        ans += "' style='fill:rgb(0,204,0)'><title>" + str((x,y))
-        ans += "</title></circle></a>\n"
+        ans += "' style='fill:rgb(0,204,0)'>"
+        ans += "<title>" + str((x,y)).replace("u", "").replace("'", "") + "</title>"
+        ans += "</circle></a>\n"
 
     ans += "</svg>"
     
     return(ans)
 
-def paintCS(xwidth, yheight, max1, max2, xfactor, yfactor,ticlength):
-    xmlText = ("<line x1='0' y1='" + str(yheight) + "' x2='" +
-               str(xwidth) + "' y2='" + str(yheight) +
+## ============================================
+## Returns the svg-code for a simple coordinate system.
+## width = width of the system
+## height = height of the system
+## xMax = maximum in first (x) coordinate
+## yMax = maximum in second (y) coordinate
+## xfactor = the number of pixels per unit in x
+## yfactor = the number of pixels per unit in y
+## ticlength = the length of the tickmarks
+## ============================================
+def paintCS(width, height, xMax, yMax, xfactor, yfactor,ticlength):
+    xmlText = ("<line x1='0' y1='" + str(height) + "' x2='" +
+               str(width) + "' y2='" + str(height) +
                "' style='stroke:rgb(0,0,0);'/>\n")
-    xmlText = xmlText + ("<line x1='0' y1='" + str(yheight) +
+    xmlText = xmlText + ("<line x1='0' y1='" + str(height) +
                          "' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n")
-    for i in range( 1,  max1 + 1):
+    for i in range( 1,  xMax + 1):
         xmlText = xmlText + ("<line x1='" + str(i*xfactor) + "' y1='" +
-                             str(yheight - ticlength) + "' x2='" +
-                             str(i*xfactor) + "' y2='" + str(yheight) +
+                             str(height - ticlength) + "' x2='" +
+                             str(i*xfactor) + "' y2='" + str(height) +
                              "' style='stroke:rgb(0,0,0);'/>\n")
 
-    for i in range( 5,  max1 + 1, 5):
+    for i in range( 5,  xMax + 1, 5):
         xmlText = xmlText + ("<text x='" + str(i*xfactor - 6) + "' y='" +
-                             str(yheight - 2 * ticlength) +
+                             str(height - 2 * ticlength) +
                              "' style='fill:rgb(102,102,102);font-size:11px;'>"
                              + str(i) + "</text>\n")
         
         xmlText = xmlText + ("<line y1='0' x1='" + str(i*xfactor) +
-                         "' y2='" + str(yheight) + "' x2='" +
+                         "' y2='" + str(height) + "' x2='" +
                          str(i*xfactor) +
                          "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
-    for i in range( 1,  max1 + 1):
+    for i in range( 1,  yMax + 1):
         xmlText = xmlText + ("<line x1='0' y1='" +
-                             str(yheight - i*yfactor) + "' x2='" +
+                             str(height - i*yfactor) + "' x2='" +
                              str(ticlength) + "' y2='" +
-                             str(yheight - i*yfactor) +
+                             str(height - i*yfactor) +
                              "' style='stroke:rgb(0,0,0);'/>\n")
 
-    for i in range( 5,  max1 + 1, 5):
+    for i in range( 5,  yMax + 1, 5):
         xmlText = xmlText + ("<text x='5' y='" +
-                             str(yheight - i*yfactor + 3) +
+                             str(height - i*yfactor + 3) +
                              "' style='fill:rgb(102,102,102);font-size:11px;'>" +
                              str(i) + "</text>\n")
 
         xmlText = xmlText + ("<line x1='0' y1='" +
-                         str(yheight - i*yfactor) + "' x2='" + str(xwidth) +
-                         "' y2='" + str(yheight - i*yfactor) +
+                         str(height - i*yfactor) + "' x2='" + str(width) +
+                         "' y2='" + str(height - i*yfactor) +
                          "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
     return(xmlText)
