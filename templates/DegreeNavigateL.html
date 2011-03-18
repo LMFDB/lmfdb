@@ -1,14 +1,76 @@
 {% extends 'homepage.html' %}
 
 {% block content %}
-        <h1> {{ title }} </h1>
+
+
+{% if info.degree==1 %}
+<div>There are two types of degree 1 L-functions:</div>
+<ul>
+<li><a href="/L/Riemann"> $\zeta(s)$: the Riemann zeta function</a>
+</li>
+<li><a href="degree1#Dirichlet"> $L(s,\chi)$: the Dirichlet L-functions associatedto a primitive Dirichlet character $\chi$</a></li>
+</ul>
+
+<h2>Available Examples</h2>
+
+<h3>Dirichlet $L$-functions for primitive Dirichlet Character</h3>
+
+{{info.contents[0]|safe}}
+
+{% endif %}
 
 {% if info.degree==2 %}
-<div>hello {{ info.degree }}</div>
+
+<h2>Automorphic Objects</h2>
+
+<div>There are two known types of primitive degree 2 L-functions that arise from automorphic objects:</div>
+<ul>
+<li><a href="degree2#GL2_Q_Holomorphic">$L(s, f)$: the L-function of a holomorphic newform in $S_k(\Gamma_0(N))$</a>
+</li>
+<li><a href="degree2#GL2_Q_Maass">$L(s, f)$: the L-function of a Maass cusp form on  $\Gamma_0(N)$</a></li>
+</ul>
+
+<h2>Geometric Objects</h2>
+
+<div>There is one known type of primitive degree 2 L-function that arises from a geometric object:</div>
+<ul>
+<li>
+<a href="degree2#EllipticCurve_Q">$L(s, E)$: the L-function of an elliptic curve $E$ over $\Q$.</a></li>
+</ul>
+<h2>Available Examples</h2>
+
+<h3 id="GL2_Q_Holomorphic">Holomorphic Newforms</h3>
+
+{{info.contents[1]|safe}}
+
+<h3 id="GL2_Q_Maass">Maass cusp forms on GL(2,Z)</h3>
+
+{{info.contents[2]|safe}}
+
+<h3 id="EllipticCurve_Q">Elliptic Curves over Q</h3>
+
+{{info.contents[0]|safe}}
+
+
+
 {% endif %}
 
 {% if info.degree==3 %}
-<div>good-bye {{ info.degree }}</div>
+<div>The known types of primitive degree 4 L-functions are:</div>
+<p>
+<div>$L(s, f, \mathrm{sym}^2)$: the symmetric square of a degree 2 L-function</div>
+ <p>
+<div>$L(s,f)$: standard L-function of a cusp form on GL(3)</div>
+
+
+<h2>Available Examples:</h2>
+
+<h3>Maass cusp forms on SL(3,Z)</h3>
+
+Here we want to include the material that is currently in the file:
+
+plotOfEigenvalues.html
+
 {% endif %}
  
 {% if info.degree==4 %}
@@ -47,7 +109,7 @@ with $0 \le \mu_2 \le \mu_1$.
 </div>
 <div>The dots in the plot correspond to $(\mu_1,\mu_2)$ for Sp(4,Z) L-functions
 which have been found by a computer search.</div>
-<embed src="http://www.aimath.org/~farmer/print/Sp4.svg" width="470" height="330">
+<embed src="/static/images/Sp4.svg" width="470" height="330">
 <br>
 <h3>Maass cusp forms on SL(4,Z)</h3>
 <div>These satisfy a functional equation with $\Gamma$-factors
@@ -61,7 +123,7 @@ where $\mu_1 + \mu_2 = \mu_3 + \mu_4$.
 </div>
 <div>The dots in the plot correspond to $(\mu_1,\mu_2)$ for SL(4,Z) L-functions
 which have been found by a computer search.</div>
-<embed src="http://www.aimath.org/~farmer/print/SL4.svg" width="520" height="360">
+<embed src="/static/images/SL4.svg" width="520" height="360">
 {% endif %}
  
 {% endblock %}

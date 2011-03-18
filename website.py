@@ -6,7 +6,7 @@ from base import *
 
 import hilbert_modular_form
 import siegel_modular_form
-import classical_modular_form
+import classical_modular_forms
 import elliptic_curve
 import quadratic_twists
 import Lfunction

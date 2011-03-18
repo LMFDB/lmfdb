@@ -11,4 +11,4 @@ def maass_form_picard():
    data = None
    if docid:
      data = htp.find_one({'_id' : docid })
-   return render_template("maass_form_picard.html", title = "Maass cusp forms on on PSL(2,Z[i])", data = data, id=docid, info=info, ds=ds)
+   return render_template("maass_form_picard.html", title = "Maass cusp forms on PSL(2,Z[i])", data = data, id=docid, info=info, ds=ds)
