@@ -39,15 +39,6 @@
 		<br><small>* ) The Fricke involution</small>
 	{% endif %}
 
-	<br>
-	Twist information:<br>
-	{{ info.twist_info | safe }}
-	<br>
-	{% if info.CM != "" %}
-		Complex multiplication information:<br>
-		{{ info.CM | safe }}
-	{% endif %}
-	<br>
 	<h2>Special Values</h2>
 	Values at some CM points:
 	{{ info.CM_values | safe }}
@@ -63,8 +54,7 @@
 	<h2>Get more coefficients</h2>
 	<form name = "get_coefficients" method = "get">
 	  Get / compute  <input type="text" size="10" name="number" value="10"> 
-	  coefficients.
-	  In 
+	  coefficients in the following format:
 	  <input type="hidden" name="level" value="{{info.level }}">
 	  <input type="hidden" name="character" value="{{info.character }}">
 	  <input type="hidden" name="weight" value="{{info.weight }}">
