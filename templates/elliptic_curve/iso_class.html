@@ -20,50 +20,13 @@
             </div>
         <div class='sage nodisplay code'>sage: E = EllipticCurve({{info.ainvs}})<br>sage: E.isogeny_class()</div>
         <div class='pari nodisplay code'>xxx</div>
-        <h2>
-            Curves
-        </h2>
-        <table border=0 width='100%'>
-            <tr>
-            <td >Cremona label</td>
-            </tr>
-        {% for curve in info.curves: %}
-            <tr>
-            <td ><a href="/EllipticCurve/Q/{{curve}}">{{curve}}</a></td>
-           
-            </tr>
-        {% endfor %}
-        </table>
+        
         <h2>Rank</h2>
         <div class='sage nodisplay code'>sage: E.rank()</div>
         <p>
         {{ info.rank}}
         </p>
-        {% if 'imag' in info %}
         <h2>
-        More info
-        </h2>
-        <h3>
-        coefficients for linear combination
-        </h3>
-        <p>
-        {{ info.imag['vec']}}
-        </p>
-        
-        <h3>
-        qfs
-        </h3>
-        <p>
-        {{ info.imag['qfs']}}
-        </p>
-        <h3>
-        Automorphisms
-        </h3>
-         <p>
-            {{ info.imag['auto']}}
-        </p>
-        {%endif %}
-          <h2>
             Modular degree for a1
         </h2>
      <div class='sage nodisplay code'>sage: E.modular_degree()</div>
@@ -91,9 +54,9 @@
         <center>
         <img width="300" height="300" src="{{info.graph_img}}" />
         </center>
-    
+    <h2>Download Stuff </h2>
     <p align="right">
         <a  href='{{info.download_all_url}}' target='_blank' >download all</a>
     </p>
-{% endblock %}
+    {% endblock %}
 </html>

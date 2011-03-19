@@ -1,0 +1,14 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<h2> Browse </h2>
+
+
+<p>
+By isogeny : 
+{% for r in info.isogeny_list: %}
+<a href="{{r}}">{{r}}</a>,
+{% endfor %}
+</p>
+     
+{% endblock %}

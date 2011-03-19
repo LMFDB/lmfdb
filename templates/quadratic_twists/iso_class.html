@@ -1,0 +1,34 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+<h2>Automorphism </h2>
+{{info.auto}}
+
+<h2>qfs</h2>
+{{info.qfs}} 
+   
+<h2>vec </h2>
+
+{{info.vec}}  
+ 
+ <h2>Download Stuff </h2>
+    <p align="right">
+        <a  href='{{info.download_Rub_data_100}}' target='_blank' >download first 100 coefficients Rubinstein data {% if info.type=='i'%} 
+        imaginary {% else %} real {%endif%}</a>
+    </p>
+<p align="right">
+        </a>
+    </p>
+    <p> The following can and will take a long time, if you just want more than 100 coefficients then go to the appropriage page above and change 'limit' 
+    </p>
+ <p align="right">
+        <a  href='{{info.download_Rub_data}}' target='_blank' >download all coefficients Rubinstein data {% if info.type=='i'%} 
+        imaginary {% else %} real {%endif%}</a>
+
+    </p>
+<p align="right">
+        </a>
+    </p>
+
+{% endblock %}
+</html>
