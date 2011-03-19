@@ -39,20 +39,21 @@
 		<br><small>* ) The Fricke involution</small>
 	{% endif %}
 
-	<h2>Special Values</h2>
+<h2>Special Values</h2>
 	Values at some CM points:
 	{{ info.CM_values | safe }}
 
 	{% if info.explicitformulas is defined %}
-	<h2>Explicit Formulas</h2>
+<h2>Explicit Formulas</h2>
 	
 	 {{info.explicitformulas }}
 	{% endif %}
 
 	<!-- h2>Explicit Formulas</h2 -->
 	{% if  true%}
-	<h2>Get more coefficients</h2>
-	<form name = "get_coefficients" method = "get">
+<h2>Get more coefficients</h2>
+	<form name="get_coefficients" method="post"  action="{{url_for('render_classical_modular_forms')}}">
+	  <input type="hidden" name="download" value="coefficients">
 	  Get / compute  <input type="text" size="10" name="number" value="10"> 
 	  coefficients in the following format:
 	  <input type="hidden" name="level" value="{{info.level }}">
@@ -61,7 +62,10 @@
 	  <input type="hidden" name="label" value="{{info.label }}">
 	  <ul>
 	    <li> 
-	      <label><input type=radio name="format" checked value="q_exp" onclick="return selectCFormat(event)"> q-expansion </label>
+	      <label><input type=radio name="format" checked value="q_expansion_one_line" onclick="return selectCFormat(event)"> q-expansion (on one line)</label>
+	    </li>
+	    <li> 
+	      <label><input type=radio name="format" checked value="q_expansion_table" onclick="return selectCFormat(event)"> q-expansion (table)</label>
 	    </li>
 	    <li>
 	      <label><input type=radio name="format" value="embeddings" onclick="return selectCFormat(event)"> Complex embeddings </label>
@@ -70,6 +74,24 @@
 	  </ul>
 	  <input type="button" name="Submit" value="Get coefficients" onclick="check_coefficient_form()">
 	  </form>
+
+<h2>Download as Sage Object</h2>
+<form name="download_object_form" method="post"  action="{{url_for('render_classical_modular_forms')}}">
+  <input type="hidden" name="download" value="object">
+  <input type="hidden" name="level" value="{{info.level }}">
+  <input type="hidden" name="character" value="{{info.character }}">
+  <input type="hidden" name="weight" value="{{info.weight }}">
+  <input type="hidden" name="label" value="{{info.label }}">
+  <input type="submit" name="Submit" value="Download" Onclick="document.download.submit()">
+</form>
+<div class="formexample"> 
+<form name="download_file" method="post"  action="{{url_for('render_classical_modular_forms')}}">
+  Note: In order to use this data file you need to download and import
+  <input type="hidden" name="download" value="file">
+  <input type="hidden" name="download_file" value="web_modforms.py">
+  <a href="javascript:void(0);" OnClick="document.download_file.submit()">web_modforms.py</a>
+ </form>
+</div>
 {% endif %}
 {% endif %}
 </div>

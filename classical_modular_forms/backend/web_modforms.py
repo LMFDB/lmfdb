@@ -13,7 +13,7 @@ Fix complex characters. I.e. embedddings and galois conjugates in a consistent w
 
 """
 from sage.all import ZZ,QQ,DirichletGroup,CuspForms,Gamma0,ModularSymbols,Newforms,trivial_character,is_squarefree,divisors,RealField,ComplexField,prime_range,I,join,gcd,Cusp,Infinity,ceil,CyclotomicField,exp,pi,primes_first_n,euler_phi
-from sage.all import Parent,SageObject,dimension_new_cusp_forms,vector,dimension_modular_forms,EisensteinForms,Matrix,floor,denominator
+from sage.all import Parent,SageObject,dimension_new_cusp_forms,vector,dimension_modular_forms,EisensteinForms,Matrix,floor,denominator,latex
 from plot_dom import draw_fundamental_domain
 from cmf_core import html_table,len_as_printed
 #from sage.monoids.all import AlphabeticStrings
@@ -21,6 +21,7 @@ from cmf_core import html_table,len_as_printed
 import re
 
 import pymongo 
+from utilities import pol_to_html 
 dburl = 'localhost:27017'
 
 from pymongo.helpers import bson     
@@ -56,7 +57,10 @@ class WebModFormSpace(Parent):
         #print "k=",k
         self._k = ZZ(k)
         self._N = ZZ(N)
-        self._chi = ZZ(chi)
+        if chi=='trivial':
+            self._chi=ZZ(0)
+        else:
+            self._chi = ZZ(chi)
         self._prec = ZZ(prec)
         self.prec = ZZ(prec)
         # check what is in the database
@@ -85,8 +89,8 @@ class WebModFormSpace(Parent):
         else:
             try:
                 self._group=Gamma0(N)
-                self._character=DirichletGroup(N)[chi]
-                if(chi==0):
+                self._character=DirichletGroup(N)[self._chi]
+                if(self._chi==0):
                     self._fullspace=CuspForms(N,k)
                     self._modular_symbols=ModularSymbols(N,k,sign=1).cuspidal_submodule()
                 else:
@@ -104,7 +108,7 @@ class WebModFormSpace(Parent):
                 
             except RuntimeError:
             
-                raise RuntimeError, "Could not construct space for (k=%s,N=%s,chi=%s)=" % (k,N,chi)
+                raise RuntimeError, "Could not construct space for (k=%s,N=%s,chi=%s)=" % (k,N,self._chi)
         self._verbose=0
         if(self.dimension()==self.dimension_newspace()):
             self._is_new=True
@@ -120,6 +124,12 @@ class WebModFormSpace(Parent):
         data = self.to_dict()
         #return(WebModFormSpace,(self._k,self._N,self._chi,self.prec,data))
 	return(unpickle_wmfs_v1,(self._k,self._N,self._chi,self.prec,data))   
+
+    def _save_to_file(self,file):
+        r"""
+        Save self to file.
+        """
+        self.save(file,compress=None)
 
     def to_dict(self):
         r"""
@@ -446,10 +456,14 @@ class WebNewForm(SageObject):
     r"""
     Class for representing a (cuspidal) newform on the web.
     """
-    def __init__(self,k,N,chi=0,label='',fi=0,prec=10,bitprec=53,verbose=-1,data=None):
+    def __init__(self,k,N,chi=0,label='',fi=-1,prec=10,bitprec=53,verbose=-1,data=None):
         r"""
         Init self as form number fi in S_k(N,chi)
         """
+        if chi=='trivial':
+            chi=ZZ(0)
+        else:
+            chi=ZZ(chi)
         t=False
         self._parent=None; self.f=None
         if isinstance(data,dict):
@@ -471,13 +485,21 @@ class WebNewForm(SageObject):
         #print "label=",label
         #print "num=",num
         self._label = label
-        if len(label)==0:
-            label='a'
         self._parent.galois_decomposition()
         if label not in self._parent._galois_orbits_labels:
-            label=self._parent._galois_orbits_labels[0] ## defaults
+            label=''
+        if fi>=0 and fi < len(self._parent._galois_orbits_labels):
+            label = self._parent._galois_orbits_labels[fi]
+        #if len(label)==0:
+        #    label='a'
+
+        #label=self._parent._galois_orbits_labels[0] ## defaults
         j = self._parent._galois_orbits_labels.index(label)
-        self.f=self._parent._newforms[j]
+        if j < len(self._parent._newforms):
+            self.f=self._parent._newforms[j]
+        else:
+            self.f = None
+            return 
         ##
         self._name = str(N)+str(label)+str(num) +" (weight %s)" % k
         if self.f == None:
@@ -527,6 +549,16 @@ class WebNewForm(SageObject):
             self._dimension = 1 # None
         ## we shold figure out which complex embeddings preserve the character
         
+    def __eq__(self,other):
+        if not isinstance(other,type(self)):
+            return False
+        if self._k<>other._k:
+            return False
+        if self._level<>other._level:
+            return False        
+        if self._character <> other._character:
+            return False
+        return True
 
     def __repr__(self):
         r""" String representation f self.
@@ -640,7 +672,7 @@ class WebNewForm(SageObject):
         coeffs=list()
         for n in range(ZZ(prec)):
             cn=self.f.coefficients(ZZ(prec))[n]
-            if(self.dimension()>1):
+            if(self.degree()>1):
                 coeffs.append(cn.complex_embeddings(bitprec))
             else:
                 coeffs.append([cn.complex_embedding(bitprec)])
@@ -1302,17 +1334,23 @@ class WebNewForm(SageObject):
                     s = latex(K.gen())
                 elif format == 'html':
                     s = pol_to_html(K.relative_polynomial())
+                else:
+                    s = str(K.relative_polynomial())
         else:
             if(K.is_relative()):
                 if format == 'latex':
                     s=latex(K.relative_polynomial())
                 elif format == 'html':
                     s = pol_to_html(K.relative_polynomial())
+                else:
+                    s = str(K.relative_polynomial())
             else:
                 if format == 'latex':
                     s=latex(self.base_ring().polynomial())
                 elif format == 'html':
                     s = pol_to_html(K.relative_polynomial())
+                else:
+                    s = str(K.relative_polynomial())
         return s
 
     

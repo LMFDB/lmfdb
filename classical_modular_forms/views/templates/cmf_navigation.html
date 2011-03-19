@@ -125,11 +125,10 @@ function set_value(id,val) {
   <tr>
   <tr>
     <td>
-      <form name="search" method = "post" action="{{url_for('render_classical_modular_forms')}}">
+
 	<h3>Jump to a specific cusp form</h3>
-	<form>
-	  <input type="text" name="jump_to" value=""> <span class="formexample">e.g. 1.12</span>
-       <input type="submit" value="Jump">
+	<form name="search" method = "post" action="{{url_for('render_classical_modular_forms')}}">	  <input type="text" name="jump_to" value=""> <span class="formexample">e.g. 1.12</span>
+	  <input type="submit" value="Jump">
 	</form>
     </td>
   </tr>

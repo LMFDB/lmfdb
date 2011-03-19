@@ -191,10 +191,11 @@ function check_coefficient_form() {
 	if(label != '') {
 	    label="&label="+label;
 	}
-	url="/ModularForm/GL2/Q/holomorphic/";
+	document.get_coefficients.submit()
+	/*url="/ModularForm/GL2/Q/holomorphic/";
 	url=url+"?level="+level+"&weight="+weight+label+"&character="+character; 
 	url=url+"&get_coeffs=1&number="+d;
-	mainWindow = window.open(url,'Fourier Coefficients','width=400,height=400,scrollbars=yes,resizable=yes')
+	mainWindow = window.open(url,'Fourier Coefficients','width=400,height=400,scrollbars=yes,resizable=yes')*/
 	    /*document.get_tables_of_stuff.submit();*/
     }
   }

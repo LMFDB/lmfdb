@@ -1065,7 +1065,7 @@ def len_as_printed(s,format='latex'):
     lensub=0.75
     ## remove all html first since it is not displayed
     ss = re.sub("<[^>]*>","",s)
-    print "ss=",ss
+    #print "ss=",ss
     ss = re.sub(" ","",ss)    # remove white-space
     ss = re.sub("\*","",ss)    # remove *
     num_exp = s.count("^")    # count number of exponents
@@ -1075,7 +1075,7 @@ def len_as_printed(s,format='latex'):
     subs = re.findall("_{?(\d*)",s) # a list of all  subscripts
     ssubs = "".join(subs)
     ss = re.sub("\^{?(\d*)}?","",ss)  # remove exponenents
-    print join([ss,ssubs,sexps])
+    #print join([ss,ssubs,sexps])
     tot_len=(ss.count(")")+ss.count("("))*lenpar
     tot_len+=ss.count("q")*lenq
     tot_len+=len(re.findall("\d",s))*lendig
