@@ -56,7 +56,7 @@
 {% endif %}
 
 {% if info.degree==3 %}
-<div>The known types of primitive degree 4 L-functions are:</div>
+<div>The known types of primitive degree 3 L-functions are:</div>
 <p>
 <div>$L(s, f, \mathrm{sym}^2)$: the symmetric square of a degree 2 L-function</div>
  <p>
@@ -65,11 +65,7 @@
 
 <h2>Available Examples:</h2>
 
-<h3>Maass cusp forms on SL(3,Z)</h3>
-
-Here we want to include the material that is currently in the file:
-
-plotOfEigenvalues.html
+{{info.contents|safe}}
 
 {% endif %}
  
@@ -97,7 +93,7 @@ plotOfEigenvalues.html
 
 <h2>Available Examples:</h2>
 
-<h3>Maass cusp forms on Sp(4,Z)</h3>
+<!-- <h3>Maass cusp forms on Sp(4,Z)</h3>
 <div>These satisfy a functional equation with $\Gamma$-factors
 \begin{equation}
 \Gamma_R(s + i \mu_1) 
@@ -123,7 +119,10 @@ where $\mu_1 + \mu_2 = \mu_3 + \mu_4$.
 </div>
 <div>The dots in the plot correspond to $(\mu_1,\mu_2)$ for SL(4,Z) L-functions
 which have been found by a computer search.</div>
-<embed src="/static/images/SL4.svg" width="520" height="360">
+<embed src="/static/images/SL4.svg" width="520" height="360"> -->
+
+{{info.contents|safe}}
+
 {% endif %}
  
 {% endblock %}

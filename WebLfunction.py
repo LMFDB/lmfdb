@@ -34,23 +34,18 @@ class WebLfunction:
         if self.type=='lcalcurl':
             import urllib
             self.url = dict['url']
-            self.contents = urllib.urlopen(self.url).read()
+            self.lcalcfile = urllib.urlopen(self.url).read()
             self.parseLcalcfile()
 
         elif self.type=='lcalcfile':
-            self.contents = dict['filecontents']
+            self.lcalcfile = dict['filecontents']
             self.parseLcalcfile()
 
         elif self.type=='db':
             self.id = dict["id"]
             self.getFromDatabase()
 
-        elif self.type=='sl4maass':
-            self.source = dict["source"]
-            self.id = dict["id"]
-            self.getFromDatabase()
-
-        elif self.type=='sp4maass':
+        elif self.type=='sl4maass' or self.type=='sp4maass' or self.type=='sl3maass':
             self.source = dict["source"]
             self.id = dict["id"]
             self.getFromDatabase()
@@ -116,7 +111,9 @@ class WebLfunction:
         self.automorphyexp = float(self.weight-1)/float(2)
         self.Q_fe = float(sqrt(self.level)/(2*math.pi))
         if self.level>1:
-            self.sign = self.MF.atkin_lehner_eigenvalues() * (-1)**(float(self.weight/2))
+#            self.sign = self.MF.atkin_lehner_eigenvalues() * (-1)**(float(self.weight/2))
+            self.sign = self.MF.atkin_lehner_eigenvalues()[self.level] * (-1)**(float(self.weight/2))
+#FIX: extract eigenvalue corresponding to the level.  (atkin_lehner_eigenvalues is a dictionary
         else:
             self.sign = (-1)**(float(self.weight/2))
         self.kappa_fe = [1]
@@ -135,6 +132,7 @@ class WebLfunction:
         for n in range(1,len(self.dirichlet_coefficients)-1):
             an = self.dirichlet_coefficients[n]
             self.dirichlet_coefficients[n]=float(an)/float(n**self.automorphyexp)
+#FIX: These coefficients are wrong; too large and a1 is not 1
         self.coefficient_period = 0
         self.coefficient_type = 2
         self.quasidegree = 1
@@ -329,7 +327,7 @@ class WebLfunction:
         db = pymongo.database.Database(connection, dbName)
         collection = pymongo.collection.Collection(db,dbColl)
         self.dbEntry = collection.find_one({'_id': self.id}) 
-        self.contents = self.dbEntry['lcalcfile']
+        self.lcalcfile = self.dbEntry['lcalcfile']
         self.parseLcalcfile()
 
         self.family = self.dbEntry['family']
@@ -345,13 +343,13 @@ class WebLfunction:
         self.credit = self.dbEntry['credit']
 
 #=========================== Extract the information from an Lcalcfile
-#=========================== which is stored in self.contents
+#=========================== which is stored in self.lcalcfile
                                                
     def parseLcalcfile(self):
-        lines = self.contents.split('\n',6)
+        lines = self.lcalcfile.split('\n',6)
         self.coefficient_type = int(lines[0])
         self.quasidegree = int(lines[4])
-        lines = self.contents.split('\n',8+2*self.quasidegree)
+        lines = self.lcalcfile.split('\n',8+2*self.quasidegree)
         self.Q_fe = float(lines[5+2*self.quasidegree])
         self.sign = pair2complex(lines[6+2*self.quasidegree])
 
@@ -384,7 +382,6 @@ class WebLfunction:
 	if self.selfdual:
 	    self.texnamecompleted1ms = "\\Lambda(1-s)"  # default name.  will be set later, for most L-functions
 
-        print 'Start url'
         try:
             self.originalfile = re.match(".*/([^/]+)$", self.url)
             self.originalfile = self.originalfile.group(1)
@@ -392,8 +389,47 @@ class WebLfunction:
         except:
             self.originalfile = ''
 
-        print 'End url'
         
+#=========================== Returns the Lcalcfile 
+#=========================== 
+                                               
+    def createLcalcfile(self):
+        thefile="";
+        if self.selfdual:
+            thefile = thefile + "2\n"  # 2 means real coefficients
+        else:
+            thefile = thefile + "3\n"  # 3 means complex coefficients
+
+        thefile = thefile + "0\n"  # 0 means unknown type
+
+        thefile = thefile + str(len(self.dirichlet_coefficients)) + "\n"  
+
+        thefile = thefile + "0\n"  # assume the coefficients are not periodic
+        
+        thefile = thefile + str(self.quasidegree) + "\n"  # number of actual Gamma functions
+
+        for n in range(0,self.quasidegree):
+            thefile = thefile + str(self.kappa_fe[n]) + "\n"
+            thefile = thefile + str(real_part(self.lambda_fe[n])) + " " + str(imag_part(self.lambda_fe[n])) + "\n"
+        
+        thefile = thefile + str(real_part(self.Q_fe)) +  "\n"
+
+        thefile = thefile + str(real_part(self.sign)) + " " + str(imag_part(self.sign)) + "\n"
+
+        thefile = thefile + str(len(self.poles)) + "\n"  # counts number of poles
+
+        for n in range(0,len(self.poles)):
+            thefile = thefile + str(real_part(self.poles[n])) + " " + str(imag_part(self.poles[n])) + "\n" #pole location
+            thefile = thefile + str(real_part(self.residues[n])) + " " + str(imag_part(self.residues[n])) + "\n" #residue at pole
+
+        for n in range(0,len(self.dirichlet_coefficients)):
+            thefile = thefile + str(real_part(self.dirichlet_coefficients[n]))   # add real part of Dirichlet coefficient
+            if not self.selfdual:  # if not selfdual
+                thefile = thefile + " " + str(imag_part(self.dirichlet_coefficients[n]))   # add imaginary part of Dirichlet coefficient
+            thefile = thefile + "\n" 
+        
+        return(thefile)
+
 #=============== Checks whether coefficients are real to determine
 #=============== whether L-function is selfdual
                                                
@@ -499,7 +535,7 @@ class WebLfunction:
         if fmt=="analytic":
             ans="\\begin{align}\n"+self.texnamecompleteds+"=\\mathstrut &"
 	    if self.level>1:
-               ans=ans+latex(self.level)+"^{-\\frac{s}{2}}"
+               ans=ans+latex(self.level)+"^{\\frac{s}{2}}"
             for mu in self.mu_fe:
                ans=ans+"\Gamma_R(s"+seriescoeff(mu,0,"signed","",-6,5)+")"
             for nu in self.nu_fe:
