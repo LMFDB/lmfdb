@@ -88,6 +88,10 @@ def plotLfunction():
 def browseGraph():
     return Lfunction.render_browseGraph(request.args)
 
+@app.route("/browseGraphHolo")
+def browseGraphHolo():
+    return Lfunction.render_browseGraphHolo(request.args)
+
 @app.route("/zeroesLfunction")
 def zeroesLfunction():
     return Lfunction.render_zeroesLfunction(request.args)

@@ -17,6 +17,7 @@ from sage.all import Parent,SageObject,dimension_new_cusp_forms,vector,dimension
 from plot_dom import draw_fundamental_domain
 from cmf_core import html_table,len_as_printed
 #from sage.monoids.all import AlphabeticStrings
+from sage.all import factor
 
 import re
 

@@ -26,7 +26,8 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
             if degree == 1:
                 info["contents"] = [processDirichletNavigation(args)]
             elif degree == 2:
-                info["contents"] = [processEllipticCurveNavigation(args)]
+#                info["contents"] = [processEllipticCurveNavigation(args),"holomorphic here"]
+                info["contents"] = [processEllipticCurveNavigation(args), LfunctionPlot.getOneGraphHtmlHolo(1, 5, 2, 14)]
             elif degree == 3 or degree == 4:
                 info["contents"] = LfunctionPlot.getAllMaassGraphHtml(degree)
                 
@@ -338,6 +339,13 @@ def render_plotLfunction(args):
 def render_browseGraph(args):
     print args
     data = LfunctionPlot.paintSvgFile(args['group'], int(args['level']), args['sign'])
+    response = make_response(data)
+    response.headers['Content-type'] = 'image/svg+xml'
+    return response
+
+def render_browseGraphHolo(args):
+    print args
+    data = LfunctionPlot.paintSvgHolo(args['Nmin'], args['Nmax'], args['kmin'], args['kmax'])
     response = make_response(data)
     response.headers['Content-type'] = 'image/svg+xml'
     return response

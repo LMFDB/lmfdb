@@ -111,7 +111,9 @@ class WebLfunction:
         self.automorphyexp = float(self.weight-1)/float(2)
         self.Q_fe = float(sqrt(self.level)/(2*math.pi))
         if self.level>1:
-            self.sign = self.MF.atkin_lehner_eigenvalues() * (-1)**(float(self.weight/2))
+#            self.sign = self.MF.atkin_lehner_eigenvalues() * (-1)**(float(self.weight/2))
+            self.sign = self.MF.atkin_lehner_eigenvalues()[self.level] * (-1)**(float(self.weight/2))
+#FIX: extract eigenvalue corresponding to the level.  (atkin_lehner_eigenvalues is a dictionary
         else:
             self.sign = (-1)**(float(self.weight/2))
         self.kappa_fe = [1]
@@ -130,6 +132,7 @@ class WebLfunction:
         for n in range(1,len(self.dirichlet_coefficients)-1):
             an = self.dirichlet_coefficients[n]
             self.dirichlet_coefficients[n]=float(an)/float(n**self.automorphyexp)
+#FIX: These coefficients are wrong; too large and a1 is not 1
         self.coefficient_period = 0
         self.coefficient_type = 2
         self.quasidegree = 1
@@ -391,7 +394,41 @@ class WebLfunction:
 #=========================== 
                                                
     def createLcalcfile(self):
-        return('Not yet implemented')
+        thefile="";
+        if self.selfdual:
+            thefile = thefile + "2\n"  # 2 means real coefficients
+        else:
+            thefile = thefile + "3\n"  # 3 means complex coefficients
+
+        thefile = thefile + "0\n"  # 0 means unknown type
+
+        thefile = thefile + str(len(self.dirichlet_coefficients)) + "\n"  
+
+        thefile = thefile + "0\n"  # assume the coefficients are not periodic
+        
+        thefile = thefile + str(self.quasidegree) + "\n"  # number of actual Gamma functions
+
+        for n in range(0,self.quasidegree):
+            thefile = thefile + str(self.kappa_fe[n]) + "\n"
+            thefile = thefile + str(real_part(self.lambda_fe[n])) + " " + str(imag_part(self.lambda_fe[n])) + "\n"
+        
+        thefile = thefile + str(real_part(self.Q_fe)) +  "\n"
+
+        thefile = thefile + str(real_part(self.sign)) + " " + str(imag_part(self.sign)) + "\n"
+
+        thefile = thefile + str(len(self.poles)) + "\n"  # counts number of poles
+
+        for n in range(0,len(self.poles)):
+            thefile = thefile + str(real_part(self.poles[n])) + " " + str(imag_part(self.poles[n])) + "\n" #pole location
+            thefile = thefile + str(real_part(self.residues[n])) + " " + str(imag_part(self.residues[n])) + "\n" #residue at pole
+
+        for n in range(0,len(self.dirichlet_coefficients)):
+            thefile = thefile + str(real_part(self.dirichlet_coefficients[n]))   # add real part of Dirichlet coefficient
+            if not self.selfdual:  # if not selfdual
+                thefile = thefile + " " + str(imag_part(self.dirichlet_coefficients[n]))   # add imaginary part of Dirichlet coefficient
+            thefile = thefile + "\n" 
+        
+        return(thefile)
 
 #=============== Checks whether coefficients are real to determine
 #=============== whether L-function is selfdual
@@ -498,7 +535,7 @@ class WebLfunction:
         if fmt=="analytic":
             ans="\\begin{align}\n"+self.texnamecompleteds+"=\\mathstrut &"
 	    if self.level>1:
-               ans=ans+latex(self.level)+"^{-\\frac{s}{2}}"
+               ans=ans+latex(self.level)+"^{\\frac{s}{2}}"
             for mu in self.mu_fe:
                ans=ans+"\Gamma_R(s"+seriescoeff(mu,0,"signed","",-6,5)+")"
             for nu in self.nu_fe:
