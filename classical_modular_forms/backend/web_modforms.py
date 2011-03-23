@@ -494,7 +494,13 @@ class WebNewForm(SageObject):
         #    label='a'
 
         #label=self._parent._galois_orbits_labels[0] ## defaults
-        j = self._parent._galois_orbits_labels.index(label)
+        if self._parent._galois_orbits_labels.count(label):
+            j = self._parent._galois_orbits_labels.index(label)
+        elif(len(self._parent._galois_orbits_labels)==1):
+            j=0
+        else:
+            raise ValueError,"The space has dimension > 1. Please specify a label!"
+
         if j < len(self._parent._newforms):
             self.f=self._parent._newforms[j]
         else:
@@ -668,15 +674,16 @@ class WebNewForm(SageObject):
         if(prec<=0):
             prec=self._prec            
         if(self.base_ring() == QQ):
-            return str(self.f.coefficients(ZZ(prec)))
-        coeffs=list()
-        for n in range(ZZ(prec)):
-            cn=self.f.coefficients(ZZ(prec))[n]
-            if(self.degree()>1):
-                coeffs.append(cn.complex_embeddings(bitprec))
-            else:
-                coeffs.append([cn.complex_embedding(bitprec)])
-        self._embeddings=coeffs
+            self._embeddings=self.f.coefficients(ZZ(prec))
+        else:
+            coeffs=list()
+            for n in range(ZZ(prec)):
+                cn=self.f.coefficients(ZZ(prec))[n]
+                if(self.degree()>1):
+                    coeffs.append(cn.complex_embeddings(bitprec))
+                else:
+                    coeffs.append([cn.complex_embedding(bitprec)])
+            self._embeddings=coeffs
         return self._embeddings
         
     def base_ring(self):
