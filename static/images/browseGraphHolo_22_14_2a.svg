@@ -1,0 +1,991 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<line x1="0" y1="440" x2="1560" y2="440" style="stroke: rgb(0, 0, 0);"/>
+<line x1="0" y1="440" x2="0" y2="0" style="stroke: rgb(0, 0, 0);"/>
+<line x1="70" y1="436" x2="70" y2="440" style="stroke: rgb(0, 0, 0);"/>
+<line x1="140" y1="436" x2="140" y2="440" style="stroke: rgb(0, 0, 0);"/>
+<line x1="210" y1="436" x2="210" y2="440" style="stroke: rgb(0, 0, 0);"/>
+<line x1="280" y1="436" x2="280" y2="440" style="stroke: rgb(0, 0, 0);"/>
+<line x1="350" y1="436" x2="350" y2="440" style="stroke: rgb(0, 0, 0);"/>
+<line x1="420" y1="436" x2="420" y2="440" style="stroke: rgb(0, 0, 0);"/>
+<line x1="490" y1="436" x2="490" y2="440" style="stroke: rgb(0, 0, 0);"/>
+<line x1="560" y1="436" x2="560" y2="440" style="stroke: rgb(0, 0, 0);"/>
+<line x1="630" y1="436" x2="630" y2="440" style="stroke: rgb(0, 0, 0);"/>
+<line x1="700" y1="436" x2="700" y2="440" style="stroke: rgb(0, 0, 0);"/>
+<line x1="770" y1="436" x2="770" y2="440" style="stroke: rgb(0, 0, 0);"/>
+<line x1="840" y1="436" x2="840" y2="440" style="stroke: rgb(0, 0, 0);"/>
+<line x1="910" y1="436" x2="910" y2="440" style="stroke: rgb(0, 0, 0);"/>
+<line x1="980" y1="436" x2="980" y2="440" style="stroke: rgb(0, 0, 0);"/>
+<line x1="1050" y1="436" x2="1050" y2="440" style="stroke: rgb(0, 0, 0);"/>
+<line x1="1120" y1="436" x2="1120" y2="440" style="stroke: rgb(0, 0, 0);"/>
+<line x1="1190" y1="436" x2="1190" y2="440" style="stroke: rgb(0, 0, 0);"/>
+<line x1="1260" y1="436" x2="1260" y2="440" style="stroke: rgb(0, 0, 0);"/>
+<line x1="1330" y1="436" x2="1330" y2="440" style="stroke: rgb(0, 0, 0);"/>
+<line x1="1400" y1="436" x2="1400" y2="440" style="stroke: rgb(0, 0, 0);"/>
+<line x1="1470" y1="436" x2="1470" y2="440" style="stroke: rgb(0, 0, 0);"/>
+<line x1="1540" y1="436" x2="1540" y2="440" style="stroke: rgb(0, 0, 0);"/>
+<text x="67" y="432" style="fill: rgb(102, 102, 102); font-size: 11px;">1</text>
+<line y1="0" x1="70" y2="440" x2="70" style="stroke: rgb(204, 204, 204); stroke-dasharray: 3, 3;"/>
+<text x="137" y="432" style="fill: rgb(102, 102, 102); font-size: 11px;">2</text>
+<line y1="0" x1="140" y2="440" x2="140" style="stroke: rgb(204, 204, 204); stroke-dasharray: 3, 3;"/>
+<text x="207" y="432" style="fill: rgb(102, 102, 102); font-size: 11px;">3</text>
+<line y1="0" x1="210" y2="440" x2="210" style="stroke: rgb(204, 204, 204); stroke-dasharray: 3, 3;"/>
+<text x="277" y="432" style="fill: rgb(102, 102, 102); font-size: 11px;">4</text>
+<line y1="0" x1="280" y2="440" x2="280" style="stroke: rgb(204, 204, 204); stroke-dasharray: 3, 3;"/>
+<text x="347" y="432" style="fill: rgb(102, 102, 102); font-size: 11px;">5</text>
+<line y1="0" x1="350" y2="440" x2="350" style="stroke: rgb(204, 204, 204); stroke-dasharray: 3, 3;"/>
+<text x="417" y="432" style="fill: rgb(102, 102, 102); font-size: 11px;">6</text>
+<line y1="0" x1="420" y2="440" x2="420" style="stroke: rgb(204, 204, 204); stroke-dasharray: 3, 3;"/>
+<text x="487" y="432" style="fill: rgb(102, 102, 102); font-size: 11px;">7</text>
+<line y1="0" x1="490" y2="440" x2="490" style="stroke: rgb(204, 204, 204); stroke-dasharray: 3, 3;"/>
+<text x="557" y="432" style="fill: rgb(102, 102, 102); font-size: 11px;">8</text>
+<line y1="0" x1="560" y2="440" x2="560" style="stroke: rgb(204, 204, 204); stroke-dasharray: 3, 3;"/>
+<text x="627" y="432" style="fill: rgb(102, 102, 102); font-size: 11px;">9</text>
+<line y1="0" x1="630" y2="440" x2="630" style="stroke: rgb(204, 204, 204); stroke-dasharray: 3, 3;"/>
+<text x="694" y="432" style="fill: rgb(102, 102, 102); font-size: 11px;">10</text>
+<line y1="0" x1="700" y2="440" x2="700" style="stroke: rgb(204, 204, 204); stroke-dasharray: 3, 3;"/>
+<text x="764" y="432" style="fill: rgb(102, 102, 102); font-size: 11px;">11</text>
+<line y1="0" x1="770" y2="440" x2="770" style="stroke: rgb(204, 204, 204); stroke-dasharray: 3, 3;"/>
+<text x="834" y="432" style="fill: rgb(102, 102, 102); font-size: 11px;">12</text>
+<line y1="0" x1="840" y2="440" x2="840" style="stroke: rgb(204, 204, 204); stroke-dasharray: 3, 3;"/>
+<text x="904" y="432" style="fill: rgb(102, 102, 102); font-size: 11px;">13</text>
+<line y1="0" x1="910" y2="440" x2="910" style="stroke: rgb(204, 204, 204); stroke-dasharray: 3, 3;"/>
+<text x="974" y="432" style="fill: rgb(102, 102, 102); font-size: 11px;">14</text>
+<line y1="0" x1="980" y2="440" x2="980" style="stroke: rgb(204, 204, 204); stroke-dasharray: 3, 3;"/>
+<text x="1044" y="432" style="fill: rgb(102, 102, 102); font-size: 11px;">15</text>
+<line y1="0" x1="1050" y2="440" x2="1050" style="stroke: rgb(204, 204, 204); stroke-dasharray: 3, 3;"/>
+<text x="1114" y="432" style="fill: rgb(102, 102, 102); font-size: 11px;">16</text>
+<line y1="0" x1="1120" y2="440" x2="1120" style="stroke: rgb(204, 204, 204); stroke-dasharray: 3, 3;"/>
+<text x="1184" y="432" style="fill: rgb(102, 102, 102); font-size: 11px;">17</text>
+<line y1="0" x1="1190" y2="440" x2="1190" style="stroke: rgb(204, 204, 204); stroke-dasharray: 3, 3;"/>
+<text x="1254" y="432" style="fill: rgb(102, 102, 102); font-size: 11px;">18</text>
+<line y1="0" x1="1260" y2="440" x2="1260" style="stroke: rgb(204, 204, 204); stroke-dasharray: 3, 3;"/>
+<text x="1324" y="432" style="fill: rgb(102, 102, 102); font-size: 11px;">19</text>
+<line y1="0" x1="1330" y2="440" x2="1330" style="stroke: rgb(204, 204, 204); stroke-dasharray: 3, 3;"/>
+<text x="1394" y="432" style="fill: rgb(102, 102, 102); font-size: 11px;">20</text>
+<line y1="0" x1="1400" y2="440" x2="1400" style="stroke: rgb(204, 204, 204); stroke-dasharray: 3, 3;"/>
+<text x="1464" y="432" style="fill: rgb(102, 102, 102); font-size: 11px;">21</text>
+<line y1="0" x1="1470" y2="440" x2="1470" style="stroke: rgb(204, 204, 204); stroke-dasharray: 3, 3;"/>
+<text x="1534" y="432" style="fill: rgb(102, 102, 102); font-size: 11px;">22</text>
+<line y1="0" x1="1540" y2="440" x2="1540" style="stroke: rgb(204, 204, 204); stroke-dasharray: 3, 3;"/>
+<line x1="0" y1="410" x2="4" y2="410" style="stroke: rgb(0, 0, 0);"/>
+<line x1="0" y1="380" x2="4" y2="380" style="stroke: rgb(0, 0, 0);"/>
+<line x1="0" y1="350" x2="4" y2="350" style="stroke: rgb(0, 0, 0);"/>
+<line x1="0" y1="320" x2="4" y2="320" style="stroke: rgb(0, 0, 0);"/>
+<line x1="0" y1="290" x2="4" y2="290" style="stroke: rgb(0, 0, 0);"/>
+<line x1="0" y1="260" x2="4" y2="260" style="stroke: rgb(0, 0, 0);"/>
+<line x1="0" y1="230" x2="4" y2="230" style="stroke: rgb(0, 0, 0);"/>
+<line x1="0" y1="200" x2="4" y2="200" style="stroke: rgb(0, 0, 0);"/>
+<line x1="0" y1="170" x2="4" y2="170" style="stroke: rgb(0, 0, 0);"/>
+<line x1="0" y1="140" x2="4" y2="140" style="stroke: rgb(0, 0, 0);"/>
+<line x1="0" y1="110" x2="4" y2="110" style="stroke: rgb(0, 0, 0);"/>
+<line x1="0" y1="80" x2="4" y2="80" style="stroke: rgb(0, 0, 0);"/>
+<line x1="0" y1="50" x2="4" y2="50" style="stroke: rgb(0, 0, 0);"/>
+<line x1="0" y1="20" x2="4" y2="20" style="stroke: rgb(0, 0, 0);"/>
+<text x="5" y="383" style="fill: rgb(102, 102, 102); font-size: 11px;">2</text>
+<text x="5" y="323" style="fill: rgb(102, 102, 102); font-size: 11px;">4</text>
+<line x1="0" y1="320" x2="1560" y2="320" style="stroke: rgb(204, 204, 204); stroke-dasharray: 3, 3;"/>
+<text x="5" y="263" style="fill: rgb(102, 102, 102); font-size: 11px;">6</text>
+<text x="5" y="203" style="fill: rgb(102, 102, 102); font-size: 11px;">8</text>
+<line x1="0" y1="200" x2="1560" y2="200" style="stroke: rgb(204, 204, 204); stroke-dasharray: 3, 3;"/>
+<text x="5" y="143" style="fill: rgb(102, 102, 102); font-size: 11px;">10</text>
+<text x="5" y="83" style="fill: rgb(102, 102, 102); font-size: 11px;">12</text>
+<line x1="0" y1="80" x2="1560" y2="80" style="stroke: rgb(204, 204, 204); stroke-dasharray: 3, 3;"/>
+<text x="5" y="23" style="fill: rgb(102, 102, 102); font-size: 11px;">14</text>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=1&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="73.5" cy="80.0" r="3" style="fill: rgb(0, 0, 255);"><title>(1, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=2&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="143.5" cy="200.0" r="3" style="fill: rgb(0, 0, 255);"><title>(2, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=2&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="143.5" cy="140.0" r="3" style="fill: rgb(0, 0, 255);"><title>(2, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=2&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="136.5" cy="20.0" r="3" style="fill: rgb(204, 0, 0);"><title>(2, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=2&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="143.5" cy="20.0" r="3" style="fill: rgb(0, 0, 255);"><title>(2, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=3&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="213.5" cy="260.0" r="3" style="fill: rgb(0, 0, 255);"><title>(3, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=3&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="213.5" cy="200.0" r="3" style="fill: rgb(0, 0, 255);"><title>(3, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=3&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="206.5" cy="140.0" r="3" style="fill: rgb(204, 0, 0);"><title>(3, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=3&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="213.5" cy="140.0" r="3" style="fill: rgb(0, 0, 255);"><title>(3, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=3&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="213.5" cy="80.0" r="3" style="fill: rgb(0, 0, 255);"><title>(3, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=3&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="206.5" cy="20.0" r="3" style="fill: rgb(204, 0, 0);"><title>(3, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=3&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="213.5" cy="20.0" r="3" style="fill: rgb(0, 0, 255);"><title>(3, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=3&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="220.5" cy="20.0" r="3" style="fill: rgb(0, 0, 255);"><title>(3, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=4&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="283.5" cy="260.0" r="3" style="fill: rgb(0, 0, 255);"><title>(4, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=4&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="283.5" cy="140.0" r="3" style="fill: rgb(0, 0, 255);"><title>(4, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=4&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="276.5" cy="80.0" r="3" style="fill: rgb(204, 0, 0);"><title>(4, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=4&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="283.5" cy="20.0" r="3" style="fill: rgb(0, 0, 255);"><title>(4, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=5&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="353.5" cy="320.0" r="3" style="fill: rgb(0, 0, 255);"><title>(5, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=5&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="353.5" cy="260.0" r="3" style="fill: rgb(0, 0, 255);"><title>(5, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=5&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="346.5" cy="200.0" r="3" style="fill: rgb(204, 0, 0);"><title>(5, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=5&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="353.5" cy="200.0" r="3" style="fill: rgb(0, 0, 255);"><title>(5, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=5&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="360.5" cy="200.0" r="3" style="fill: rgb(0, 0, 255);"><title>(5, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=5&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="346.5" cy="140.0" r="3" style="fill: rgb(204, 0, 0);"><title>(5, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=5&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="353.5" cy="140.0" r="3" style="fill: rgb(0, 0, 255);"><title>(5, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=5&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="360.5" cy="140.0" r="3" style="fill: rgb(0, 0, 255);"><title>(5, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=5&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="346.5" cy="80.0" r="3" style="fill: rgb(204, 0, 0);"><title>(5, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=5&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="353.5" cy="80.0" r="3" style="fill: rgb(0, 0, 255);"><title>(5, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=5&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="360.5" cy="80.0" r="3" style="fill: rgb(0, 0, 255);"><title>(5, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=5&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="346.5" cy="20.0" r="3" style="fill: rgb(204, 0, 0);"><title>(5, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=5&amp;character=0&amp;label=a&amp;number=1" target="_top">
+<circle cx="339.5" cy="20.0" r="3" style="fill: rgb(204, 0, 0);"><title>(5, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=5&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="353.5" cy="20.0" r="3" style="fill: rgb(0, 0, 255);"><title>(5, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=5&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="360.5" cy="20.0" r="3" style="fill: rgb(0, 0, 255);"><title>(5, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=5&amp;character=0&amp;label=a&amp;label=b&amp;number=2" target="_top">
+<circle cx="367.5" cy="20.0" r="3" style="fill: rgb(0, 0, 255);"><title>(5, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=6&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="423.5" cy="320.0" r="3" style="fill: rgb(0, 0, 255);"><title>(6, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=6&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="423.5" cy="260.0" r="3" style="fill: rgb(0, 0, 255);"><title>(6, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=6&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="423.5" cy="200.0" r="3" style="fill: rgb(0, 0, 255);"><title>(6, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=6&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="423.5" cy="140.0" r="3" style="fill: rgb(0, 0, 255);"><title>(6, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=6&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="423.5" cy="80.0" r="3" style="fill: rgb(0, 0, 255);"><title>(6, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=6&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="416.5" cy="80.0" r="3" style="fill: rgb(204, 0, 0);"><title>(6, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=6&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="423.5" cy="75.2" r="3" style="fill: rgb(0, 0, 255);"><title>(6, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=6&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="423.5" cy="20.0" r="3" style="fill: rgb(0, 0, 255);"><title>(6, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=7&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="493.5" cy="320.0" r="3" style="fill: rgb(0, 0, 255);"><title>(7, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=7&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="486.5" cy="260.0" r="3" style="fill: rgb(204, 0, 0);"><title>(7, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=7&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="493.5" cy="260.0" r="3" style="fill: rgb(0, 0, 255);"><title>(7, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=7&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="500.5" cy="260.0" r="3" style="fill: rgb(0, 0, 255);"><title>(7, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=7&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="486.5" cy="200.0" r="3" style="fill: rgb(204, 0, 0);"><title>(7, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=7&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="493.5" cy="200.0" r="3" style="fill: rgb(0, 0, 255);"><title>(7, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=7&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="500.5" cy="200.0" r="3" style="fill: rgb(0, 0, 255);"><title>(7, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=7&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="486.5" cy="140.0" r="3" style="fill: rgb(204, 0, 0);"><title>(7, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=7&amp;character=0&amp;label=a&amp;number=1" target="_top">
+<circle cx="479.5" cy="140.0" r="3" style="fill: rgb(204, 0, 0);"><title>(7, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=7&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="493.5" cy="140.0" r="3" style="fill: rgb(0, 0, 255);"><title>(7, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=7&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="500.5" cy="140.0" r="3" style="fill: rgb(0, 0, 255);"><title>(7, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=7&amp;character=0&amp;label=a&amp;label=b&amp;number=2" target="_top">
+<circle cx="507.5" cy="140.0" r="3" style="fill: rgb(0, 0, 255);"><title>(7, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=7&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="486.5" cy="80.0" r="3" style="fill: rgb(204, 0, 0);"><title>(7, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=7&amp;character=0&amp;label=a&amp;number=1" target="_top">
+<circle cx="479.5" cy="80.0" r="3" style="fill: rgb(204, 0, 0);"><title>(7, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=7&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="493.5" cy="80.0" r="3" style="fill: rgb(0, 0, 255);"><title>(7, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=7&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="500.5" cy="80.0" r="3" style="fill: rgb(0, 0, 255);"><title>(7, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=7&amp;character=0&amp;label=a&amp;label=b&amp;number=2" target="_top">
+<circle cx="507.5" cy="80.0" r="3" style="fill: rgb(0, 0, 255);"><title>(7, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=7&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="486.5" cy="20.0" r="3" style="fill: rgb(204, 0, 0);"><title>(7, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=7&amp;character=0&amp;label=a&amp;number=1" target="_top">
+<circle cx="479.5" cy="20.0" r="3" style="fill: rgb(204, 0, 0);"><title>(7, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=7&amp;character=0&amp;label=a&amp;number=2" target="_top">
+<circle cx="472.5" cy="20.0" r="3" style="fill: rgb(204, 0, 0);"><title>(7, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=7&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="493.5" cy="20.0" r="3" style="fill: rgb(0, 0, 255);"><title>(7, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=7&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="500.5" cy="20.0" r="3" style="fill: rgb(0, 0, 255);"><title>(7, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=7&amp;character=0&amp;label=a&amp;label=b&amp;number=2" target="_top">
+<circle cx="507.5" cy="20.0" r="3" style="fill: rgb(0, 0, 255);"><title>(7, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=7&amp;character=0&amp;label=a&amp;label=b&amp;number=3" target="_top">
+<circle cx="514.5" cy="20.0" r="3" style="fill: rgb(0, 0, 255);"><title>(7, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=8&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="563.5" cy="320.0" r="3" style="fill: rgb(0, 0, 255);"><title>(8, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=8&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="563.5" cy="260.0" r="3" style="fill: rgb(0, 0, 255);"><title>(8, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=8&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="556.5" cy="200.0" r="3" style="fill: rgb(204, 0, 0);"><title>(8, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=8&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="563.5" cy="200.0" r="3" style="fill: rgb(0, 0, 255);"><title>(8, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=8&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="556.5" cy="140.0" r="3" style="fill: rgb(204, 0, 0);"><title>(8, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=8&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="563.5" cy="140.0" r="3" style="fill: rgb(0, 0, 255);"><title>(8, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=8&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="556.5" cy="80.0" r="3" style="fill: rgb(204, 0, 0);"><title>(8, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=8&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="563.5" cy="80.0" r="3" style="fill: rgb(0, 0, 255);"><title>(8, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=8&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="570.5" cy="80.0" r="3" style="fill: rgb(0, 0, 255);"><title>(8, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=8&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="556.5" cy="20.0" r="3" style="fill: rgb(204, 0, 0);"><title>(8, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=8&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="563.5" cy="20.0" r="3" style="fill: rgb(0, 0, 255);"><title>(8, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=8&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="570.5" cy="20.0" r="3" style="fill: rgb(0, 0, 255);"><title>(8, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=9&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="633.5" cy="320.0" r="3" style="fill: rgb(0, 0, 255);"><title>(9, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=9&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="633.5" cy="260.0" r="3" style="fill: rgb(0, 0, 255);"><title>(9, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=9&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="626.5" cy="200.0" r="3" style="fill: rgb(204, 0, 0);"><title>(9, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=9&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="633.5" cy="200.0" r="3" style="fill: rgb(0, 0, 255);"><title>(9, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=9&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="640.5" cy="200.0" r="3" style="fill: rgb(0, 0, 255);"><title>(9, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=9&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="633.5" cy="140.0" r="3" style="fill: rgb(0, 0, 255);"><title>(9, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=9&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="626.5" cy="140.0" r="3" style="fill: rgb(204, 0, 0);"><title>(9, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=9&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="633.5" cy="135.2" r="3" style="fill: rgb(0, 0, 255);"><title>(9, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=9&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="626.5" cy="80.0" r="3" style="fill: rgb(204, 0, 0);"><title>(9, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=9&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="626.5" cy="75.2" r="3" style="fill: rgb(204, 0, 0);"><title>(9, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=9&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="633.5" cy="80.0" r="3" style="fill: rgb(0, 0, 255);"><title>(9, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=9&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=1" target="_top">
+<circle cx="640.5" cy="80.0" r="3" style="fill: rgb(0, 0, 255);"><title>(9, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=9&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="633.5" cy="20.0" r="3" style="fill: rgb(0, 0, 255);"><title>(9, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=9&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="626.5" cy="20.0" r="3" style="fill: rgb(204, 0, 0);"><title>(9, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=9&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="619.5" cy="20.0" r="3" style="fill: rgb(204, 0, 0);"><title>(9, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=9&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="633.5" cy="15.2" r="3" style="fill: rgb(0, 0, 255);"><title>(9, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=9&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=1" target="_top">
+<circle cx="640.5" cy="15.2" r="3" style="fill: rgb(0, 0, 255);"><title>(9, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=10&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="703.5" cy="320.0" r="3" style="fill: rgb(0, 0, 255);"><title>(10, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=10&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="696.5" cy="260.0" r="3" style="fill: rgb(204, 0, 0);"><title>(10, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=10&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="703.5" cy="260.0" r="3" style="fill: rgb(0, 0, 255);"><title>(10, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=10&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="703.5" cy="255.2" r="3" style="fill: rgb(0, 0, 255);"><title>(10, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=10&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="703.5" cy="200.0" r="3" style="fill: rgb(0, 0, 255);"><title>(10, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=10&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="703.5" cy="140.0" r="3" style="fill: rgb(0, 0, 255);"><title>(10, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=10&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="696.5" cy="140.0" r="3" style="fill: rgb(204, 0, 0);"><title>(10, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=10&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="703.5" cy="135.2" r="3" style="fill: rgb(0, 0, 255);"><title>(10, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=10&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="696.5" cy="80.0" r="3" style="fill: rgb(204, 0, 0);"><title>(10, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=10&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="703.5" cy="80.0" r="3" style="fill: rgb(0, 0, 255);"><title>(10, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=10&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="696.5" cy="75.2" r="3" style="fill: rgb(204, 0, 0);"><title>(10, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=10&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=0" target="_top">
+<circle cx="703.5" cy="75.2" r="3" style="fill: rgb(0, 0, 255);"><title>(10, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=10&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=1" target="_top">
+<circle cx="710.5" cy="75.2" r="3" style="fill: rgb(0, 0, 255);"><title>(10, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=10&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="696.5" cy="20.0" r="3" style="fill: rgb(204, 0, 0);"><title>(10, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=10&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="703.5" cy="20.0" r="3" style="fill: rgb(0, 0, 255);"><title>(10, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=10&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="703.5" cy="15.2" r="3" style="fill: rgb(0, 0, 255);"><title>(10, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=2&amp;level=11&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="773.5" cy="380.0" r="3" style="fill: rgb(0, 0, 255);"><title>(11, 2)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=11&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="773.5" cy="320.0" r="3" style="fill: rgb(0, 0, 255);"><title>(11, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=11&amp;character=0&amp;label=a&amp;number=1" target="_top">
+<circle cx="780.5" cy="320.0" r="3" style="fill: rgb(0, 0, 255);"><title>(11, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=11&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="766.5" cy="260.0" r="3" style="fill: rgb(204, 0, 0);"><title>(11, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=11&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="773.5" cy="260.0" r="3" style="fill: rgb(0, 0, 255);"><title>(11, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=11&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="780.5" cy="260.0" r="3" style="fill: rgb(0, 0, 255);"><title>(11, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=11&amp;character=0&amp;label=a&amp;label=b&amp;number=2" target="_top">
+<circle cx="787.5" cy="260.0" r="3" style="fill: rgb(0, 0, 255);"><title>(11, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=11&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="766.5" cy="200.0" r="3" style="fill: rgb(204, 0, 0);"><title>(11, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=11&amp;character=0&amp;label=a&amp;number=1" target="_top">
+<circle cx="759.5" cy="200.0" r="3" style="fill: rgb(204, 0, 0);"><title>(11, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=11&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="773.5" cy="200.0" r="3" style="fill: rgb(0, 0, 255);"><title>(11, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=11&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="780.5" cy="200.0" r="3" style="fill: rgb(0, 0, 255);"><title>(11, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=11&amp;character=0&amp;label=a&amp;label=b&amp;number=2" target="_top">
+<circle cx="787.5" cy="200.0" r="3" style="fill: rgb(0, 0, 255);"><title>(11, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=11&amp;character=0&amp;label=a&amp;label=b&amp;number=3" target="_top">
+<circle cx="794.5" cy="200.0" r="3" style="fill: rgb(0, 0, 255);"><title>(11, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=11&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="766.5" cy="140.0" r="3" style="fill: rgb(204, 0, 0);"><title>(11, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=11&amp;character=0&amp;label=a&amp;number=1" target="_top">
+<circle cx="759.5" cy="140.0" r="3" style="fill: rgb(204, 0, 0);"><title>(11, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=11&amp;character=0&amp;label=a&amp;number=2" target="_top">
+<circle cx="752.5" cy="140.0" r="3" style="fill: rgb(204, 0, 0);"><title>(11, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=11&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="773.5" cy="140.0" r="3" style="fill: rgb(0, 0, 255);"><title>(11, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=11&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="780.5" cy="140.0" r="3" style="fill: rgb(0, 0, 255);"><title>(11, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=11&amp;character=0&amp;label=a&amp;label=b&amp;number=2" target="_top">
+<circle cx="787.5" cy="140.0" r="3" style="fill: rgb(0, 0, 255);"><title>(11, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=11&amp;character=0&amp;label=a&amp;label=b&amp;number=3" target="_top">
+<circle cx="794.5" cy="140.0" r="3" style="fill: rgb(0, 0, 255);"><title>(11, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=11&amp;character=0&amp;label=a&amp;label=b&amp;number=4" target="_top">
+<circle cx="801.5" cy="140.0" r="3" style="fill: rgb(0, 0, 255);"><title>(11, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=11&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="766.5" cy="80.0" r="3" style="fill: rgb(204, 0, 0);"><title>(11, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=11&amp;character=0&amp;label=a&amp;number=1" target="_top">
+<circle cx="759.5" cy="80.0" r="3" style="fill: rgb(204, 0, 0);"><title>(11, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=11&amp;character=0&amp;label=a&amp;number=2" target="_top">
+<circle cx="752.5" cy="80.0" r="3" style="fill: rgb(204, 0, 0);"><title>(11, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=11&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="773.5" cy="80.0" r="3" style="fill: rgb(0, 0, 255);"><title>(11, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=11&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="780.5" cy="80.0" r="3" style="fill: rgb(0, 0, 255);"><title>(11, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=11&amp;character=0&amp;label=a&amp;label=b&amp;number=2" target="_top">
+<circle cx="787.5" cy="80.0" r="3" style="fill: rgb(0, 0, 255);"><title>(11, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=11&amp;character=0&amp;label=a&amp;label=b&amp;number=3" target="_top">
+<circle cx="794.5" cy="80.0" r="3" style="fill: rgb(0, 0, 255);"><title>(11, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=11&amp;character=0&amp;label=a&amp;label=b&amp;number=4" target="_top">
+<circle cx="801.5" cy="80.0" r="3" style="fill: rgb(0, 0, 255);"><title>(11, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=11&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="766.5" cy="20.0" r="3" style="fill: rgb(204, 0, 0);"><title>(11, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=11&amp;character=0&amp;label=a&amp;number=1" target="_top">
+<circle cx="759.5" cy="20.0" r="3" style="fill: rgb(204, 0, 0);"><title>(11, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=11&amp;character=0&amp;label=a&amp;number=2" target="_top">
+<circle cx="752.5" cy="20.0" r="3" style="fill: rgb(204, 0, 0);"><title>(11, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=11&amp;character=0&amp;label=a&amp;number=3" target="_top">
+<circle cx="745.5" cy="20.0" r="3" style="fill: rgb(204, 0, 0);"><title>(11, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=11&amp;character=0&amp;label=a&amp;number=4" target="_top">
+<circle cx="738.5" cy="20.0" r="3" style="fill: rgb(204, 0, 0);"><title>(11, 14)</title></circle></a>
+<a xlink:href="/not_yet_implemented" target="_top">
+<text x="777" y="22.4" style="fill: rgb(0, 0, 255); font-size: 14px; font-weight: bold;">7</text>
+</a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=12&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="843.5" cy="320.0" r="3" style="fill: rgb(0, 0, 255);"><title>(12, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=12&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="836.5" cy="200.0" r="3" style="fill: rgb(204, 0, 0);"><title>(12, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=12&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="843.5" cy="200.0" r="3" style="fill: rgb(0, 0, 255);"><title>(12, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=12&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="843.5" cy="140.0" r="3" style="fill: rgb(0, 0, 255);"><title>(12, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=12&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="836.5" cy="80.0" r="3" style="fill: rgb(204, 0, 0);"><title>(12, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=12&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="843.5" cy="80.0" r="3" style="fill: rgb(0, 0, 255);"><title>(12, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=12&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="843.5" cy="20.0" r="3" style="fill: rgb(0, 0, 255);"><title>(12, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=12&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="836.5" cy="20.0" r="3" style="fill: rgb(204, 0, 0);"><title>(12, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=13&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="906.5" cy="320.0" r="3" style="fill: rgb(204, 0, 0);"><title>(13, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=13&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="913.5" cy="320.0" r="3" style="fill: rgb(0, 0, 255);"><title>(13, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=13&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="920.5" cy="320.0" r="3" style="fill: rgb(0, 0, 255);"><title>(13, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=13&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="906.5" cy="260.0" r="3" style="fill: rgb(204, 0, 0);"><title>(13, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=13&amp;character=0&amp;label=a&amp;number=1" target="_top">
+<circle cx="899.5" cy="260.0" r="3" style="fill: rgb(204, 0, 0);"><title>(13, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=13&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="913.5" cy="260.0" r="3" style="fill: rgb(0, 0, 255);"><title>(13, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=13&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="920.5" cy="260.0" r="3" style="fill: rgb(0, 0, 255);"><title>(13, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=13&amp;character=0&amp;label=a&amp;label=b&amp;number=2" target="_top">
+<circle cx="927.5" cy="260.0" r="3" style="fill: rgb(0, 0, 255);"><title>(13, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=13&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="906.5" cy="200.0" r="3" style="fill: rgb(204, 0, 0);"><title>(13, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=13&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="906.5" cy="195.2" r="3" style="fill: rgb(204, 0, 0);"><title>(13, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=13&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="899.5" cy="195.2" r="3" style="fill: rgb(204, 0, 0);"><title>(13, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=13&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="913.5" cy="200.0" r="3" style="fill: rgb(0, 0, 255);"><title>(13, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=13&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=1" target="_top">
+<circle cx="920.5" cy="200.0" r="3" style="fill: rgb(0, 0, 255);"><title>(13, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=13&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=2" target="_top">
+<circle cx="927.5" cy="200.0" r="3" style="fill: rgb(0, 0, 255);"><title>(13, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=13&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=3" target="_top">
+<circle cx="934.5" cy="200.0" r="3" style="fill: rgb(0, 0, 255);"><title>(13, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=13&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="906.5" cy="140.0" r="3" style="fill: rgb(204, 0, 0);"><title>(13, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=13&amp;character=0&amp;label=a&amp;number=1" target="_top">
+<circle cx="899.5" cy="140.0" r="3" style="fill: rgb(204, 0, 0);"><title>(13, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=13&amp;character=0&amp;label=a&amp;number=2" target="_top">
+<circle cx="892.5" cy="140.0" r="3" style="fill: rgb(204, 0, 0);"><title>(13, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=13&amp;character=0&amp;label=a&amp;number=3" target="_top">
+<circle cx="885.5" cy="140.0" r="3" style="fill: rgb(204, 0, 0);"><title>(13, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=13&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="913.5" cy="140.0" r="3" style="fill: rgb(0, 0, 255);"><title>(13, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=13&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="920.5" cy="140.0" r="3" style="fill: rgb(0, 0, 255);"><title>(13, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=13&amp;character=0&amp;label=a&amp;label=b&amp;number=2" target="_top">
+<circle cx="927.5" cy="140.0" r="3" style="fill: rgb(0, 0, 255);"><title>(13, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=13&amp;character=0&amp;label=a&amp;label=b&amp;number=3" target="_top">
+<circle cx="934.5" cy="140.0" r="3" style="fill: rgb(0, 0, 255);"><title>(13, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=13&amp;character=0&amp;label=a&amp;label=b&amp;number=4" target="_top">
+<circle cx="941.5" cy="140.0" r="3" style="fill: rgb(0, 0, 255);"><title>(13, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=13&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="906.5" cy="80.0" r="3" style="fill: rgb(204, 0, 0);"><title>(13, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=13&amp;character=0&amp;label=a&amp;number=1" target="_top">
+<circle cx="899.5" cy="80.0" r="3" style="fill: rgb(204, 0, 0);"><title>(13, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=13&amp;character=0&amp;label=a&amp;number=2" target="_top">
+<circle cx="892.5" cy="80.0" r="3" style="fill: rgb(204, 0, 0);"><title>(13, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=13&amp;character=0&amp;label=a&amp;number=3" target="_top">
+<circle cx="885.5" cy="80.0" r="3" style="fill: rgb(204, 0, 0);"><title>(13, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=13&amp;character=0&amp;label=a&amp;number=4" target="_top">
+<circle cx="878.5" cy="80.0" r="3" style="fill: rgb(204, 0, 0);"><title>(13, 12)</title></circle></a>
+<a xlink:href="/not_yet_implemented" target="_top">
+<text x="917" y="82.4" style="fill: rgb(0, 0, 255); font-size: 14px; font-weight: bold;">6</text>
+</a>
+<a xlink:href="/not_yet_implemented" target="_top">
+<text x="896" y="22.4" style="fill: rgb(204, 0, 0); font-size: 14px; font-weight: bold;">6</text>
+</a>
+<a xlink:href="/not_yet_implemented" target="_top">
+<text x="917" y="22.4" style="fill: rgb(0, 0, 255); font-size: 14px; font-weight: bold;">7</text>
+</a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=2&amp;level=14&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="983.5" cy="380.0" r="3" style="fill: rgb(0, 0, 255);"><title>(14, 2)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=14&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="983.5" cy="320.0" r="3" style="fill: rgb(0, 0, 255);"><title>(14, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=14&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="983.5" cy="315.2" r="3" style="fill: rgb(0, 0, 255);"><title>(14, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=14&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="983.5" cy="260.0" r="3" style="fill: rgb(0, 0, 255);"><title>(14, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=14&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="983.5" cy="255.2" r="3" style="fill: rgb(0, 0, 255);"><title>(14, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=14&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="983.5" cy="200.0" r="3" style="fill: rgb(0, 0, 255);"><title>(14, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=14&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="976.5" cy="200.0" r="3" style="fill: rgb(204, 0, 0);"><title>(14, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=14&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="983.5" cy="195.2" r="3" style="fill: rgb(0, 0, 255);"><title>(14, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=14&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=1" target="_top">
+<circle cx="990.5" cy="195.2" r="3" style="fill: rgb(0, 0, 255);"><title>(14, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=14&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="976.5" cy="140.0" r="3" style="fill: rgb(204, 0, 0);"><title>(14, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=14&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="983.5" cy="140.0" r="3" style="fill: rgb(0, 0, 255);"><title>(14, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=14&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="983.5" cy="135.2" r="3" style="fill: rgb(0, 0, 255);"><title>(14, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=14&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=1" target="_top">
+<circle cx="990.5" cy="135.2" r="3" style="fill: rgb(0, 0, 255);"><title>(14, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=14&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="976.5" cy="80.0" r="3" style="fill: rgb(204, 0, 0);"><title>(14, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=14&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="976.5" cy="75.2" r="3" style="fill: rgb(204, 0, 0);"><title>(14, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=14&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="983.5" cy="80.0" r="3" style="fill: rgb(0, 0, 255);"><title>(14, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=14&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=1" target="_top">
+<circle cx="990.5" cy="80.0" r="3" style="fill: rgb(0, 0, 255);"><title>(14, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=14&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=0" target="_top">
+<circle cx="983.5" cy="75.2" r="3" style="fill: rgb(0, 0, 255);"><title>(14, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=14&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=1" target="_top">
+<circle cx="990.5" cy="75.2" r="3" style="fill: rgb(0, 0, 255);"><title>(14, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=14&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="976.5" cy="20.0" r="3" style="fill: rgb(204, 0, 0);"><title>(14, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=14&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="976.5" cy="15.2" r="3" style="fill: rgb(204, 0, 0);"><title>(14, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=14&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="983.5" cy="20.0" r="3" style="fill: rgb(0, 0, 255);"><title>(14, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=14&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=1" target="_top">
+<circle cx="990.5" cy="20.0" r="3" style="fill: rgb(0, 0, 255);"><title>(14, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=14&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=0" target="_top">
+<circle cx="983.5" cy="15.2" r="3" style="fill: rgb(0, 0, 255);"><title>(14, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=14&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=1" target="_top">
+<circle cx="990.5" cy="15.2" r="3" style="fill: rgb(0, 0, 255);"><title>(14, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=2&amp;level=15&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1053.5" cy="380.0" r="3" style="fill: rgb(0, 0, 255);"><title>(15, 2)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=15&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1053.5" cy="320.0" r="3" style="fill: rgb(0, 0, 255);"><title>(15, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=15&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1053.5" cy="315.2" r="3" style="fill: rgb(0, 0, 255);"><title>(15, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=15&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1046.5" cy="260.0" r="3" style="fill: rgb(204, 0, 0);"><title>(15, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=15&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1053.5" cy="260.0" r="3" style="fill: rgb(0, 0, 255);"><title>(15, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=15&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="1053.5" cy="255.2" r="3" style="fill: rgb(0, 0, 255);"><title>(15, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=15&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=1" target="_top">
+<circle cx="1060.5" cy="255.2" r="3" style="fill: rgb(0, 0, 255);"><title>(15, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=15&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1046.5" cy="200.0" r="3" style="fill: rgb(204, 0, 0);"><title>(15, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=15&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1053.5" cy="200.0" r="3" style="fill: rgb(0, 0, 255);"><title>(15, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=15&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="1053.5" cy="195.2" r="3" style="fill: rgb(0, 0, 255);"><title>(15, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=15&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=1" target="_top">
+<circle cx="1060.5" cy="195.2" r="3" style="fill: rgb(0, 0, 255);"><title>(15, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=15&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1046.5" cy="140.0" r="3" style="fill: rgb(204, 0, 0);"><title>(15, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=15&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1046.5" cy="135.2" r="3" style="fill: rgb(204, 0, 0);"><title>(15, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=15&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="1053.5" cy="140.0" r="3" style="fill: rgb(0, 0, 255);"><title>(15, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=15&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=1" target="_top">
+<circle cx="1060.5" cy="140.0" r="3" style="fill: rgb(0, 0, 255);"><title>(15, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=15&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=0" target="_top">
+<circle cx="1053.5" cy="135.2" r="3" style="fill: rgb(0, 0, 255);"><title>(15, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=15&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=1" target="_top">
+<circle cx="1060.5" cy="135.2" r="3" style="fill: rgb(0, 0, 255);"><title>(15, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=15&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1046.5" cy="80.0" r="3" style="fill: rgb(204, 0, 0);"><title>(15, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=15&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1046.5" cy="75.2" r="3" style="fill: rgb(204, 0, 0);"><title>(15, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=15&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="1039.5" cy="75.2" r="3" style="fill: rgb(204, 0, 0);"><title>(15, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=15&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="1053.5" cy="80.0" r="3" style="fill: rgb(0, 0, 255);"><title>(15, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=15&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=1" target="_top">
+<circle cx="1060.5" cy="80.0" r="3" style="fill: rgb(0, 0, 255);"><title>(15, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=15&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=0" target="_top">
+<circle cx="1053.5" cy="75.2" r="3" style="fill: rgb(0, 0, 255);"><title>(15, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=15&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=1" target="_top">
+<circle cx="1060.5" cy="75.2" r="3" style="fill: rgb(0, 0, 255);"><title>(15, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=15&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=2" target="_top">
+<circle cx="1067.5" cy="75.2" r="3" style="fill: rgb(0, 0, 255);"><title>(15, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=15&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1046.5" cy="20.0" r="3" style="fill: rgb(204, 0, 0);"><title>(15, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=15&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1046.5" cy="15.2" r="3" style="fill: rgb(204, 0, 0);"><title>(15, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=15&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="1039.5" cy="15.2" r="3" style="fill: rgb(204, 0, 0);"><title>(15, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=15&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="1053.5" cy="20.0" r="3" style="fill: rgb(0, 0, 255);"><title>(15, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=15&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=1" target="_top">
+<circle cx="1060.5" cy="20.0" r="3" style="fill: rgb(0, 0, 255);"><title>(15, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=15&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=0" target="_top">
+<circle cx="1053.5" cy="15.2" r="3" style="fill: rgb(0, 0, 255);"><title>(15, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=15&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=1" target="_top">
+<circle cx="1060.5" cy="15.2" r="3" style="fill: rgb(0, 0, 255);"><title>(15, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=15&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=2" target="_top">
+<circle cx="1067.5" cy="15.2" r="3" style="fill: rgb(0, 0, 255);"><title>(15, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=16&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1123.5" cy="320.0" r="3" style="fill: rgb(0, 0, 255);"><title>(16, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=16&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1116.5" cy="260.0" r="3" style="fill: rgb(204, 0, 0);"><title>(16, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=16&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1123.5" cy="260.0" r="3" style="fill: rgb(0, 0, 255);"><title>(16, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=16&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1123.5" cy="200.0" r="3" style="fill: rgb(0, 0, 255);"><title>(16, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=16&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1116.5" cy="200.0" r="3" style="fill: rgb(204, 0, 0);"><title>(16, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=16&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="1123.5" cy="195.2" r="3" style="fill: rgb(0, 0, 255);"><title>(16, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=16&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1123.5" cy="140.0" r="3" style="fill: rgb(0, 0, 255);"><title>(16, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=16&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1116.5" cy="140.0" r="3" style="fill: rgb(204, 0, 0);"><title>(16, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=16&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="1116.5" cy="135.2" r="3" style="fill: rgb(204, 0, 0);"><title>(16, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=16&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=0" target="_top">
+<circle cx="1123.5" cy="135.2" r="3" style="fill: rgb(0, 0, 255);"><title>(16, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=16&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1116.5" cy="80.0" r="3" style="fill: rgb(204, 0, 0);"><title>(16, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=16&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1123.5" cy="80.0" r="3" style="fill: rgb(0, 0, 255);"><title>(16, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=16&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="1116.5" cy="75.2" r="3" style="fill: rgb(204, 0, 0);"><title>(16, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=16&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=0" target="_top">
+<circle cx="1123.5" cy="75.2" r="3" style="fill: rgb(0, 0, 255);"><title>(16, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=16&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=1" target="_top">
+<circle cx="1130.5" cy="75.2" r="3" style="fill: rgb(0, 0, 255);"><title>(16, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=16&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1123.5" cy="20.0" r="3" style="fill: rgb(0, 0, 255);"><title>(16, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=16&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1123.5" cy="15.2" r="3" style="fill: rgb(0, 0, 255);"><title>(16, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=16&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="1116.5" cy="20.0" r="3" style="fill: rgb(204, 0, 0);"><title>(16, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=16&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=0" target="_top">
+<circle cx="1123.5" cy="10.4" r="3" style="fill: rgb(0, 0, 255);"><title>(16, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=16&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;label=e&amp;number=0" target="_top">
+<circle cx="1116.5" cy="15.2" r="3" style="fill: rgb(204, 0, 0);"><title>(16, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=16&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;label=e&amp;number=1" target="_top">
+<circle cx="1109.5" cy="15.2" r="3" style="fill: rgb(204, 0, 0);"><title>(16, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=2&amp;level=17&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1193.5" cy="380.0" r="3" style="fill: rgb(0, 0, 255);"><title>(17, 2)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=17&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1186.5" cy="320.0" r="3" style="fill: rgb(204, 0, 0);"><title>(17, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=17&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1193.5" cy="320.0" r="3" style="fill: rgb(0, 0, 255);"><title>(17, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=17&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="1200.5" cy="320.0" r="3" style="fill: rgb(0, 0, 255);"><title>(17, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=17&amp;character=0&amp;label=a&amp;label=b&amp;number=2" target="_top">
+<circle cx="1207.5" cy="320.0" r="3" style="fill: rgb(0, 0, 255);"><title>(17, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=17&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1186.5" cy="260.0" r="3" style="fill: rgb(204, 0, 0);"><title>(17, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=17&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1186.5" cy="255.2" r="3" style="fill: rgb(204, 0, 0);"><title>(17, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=17&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="1193.5" cy="260.0" r="3" style="fill: rgb(0, 0, 255);"><title>(17, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=17&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=1" target="_top">
+<circle cx="1200.5" cy="260.0" r="3" style="fill: rgb(0, 0, 255);"><title>(17, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=17&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=2" target="_top">
+<circle cx="1207.5" cy="260.0" r="3" style="fill: rgb(0, 0, 255);"><title>(17, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=17&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=3" target="_top">
+<circle cx="1214.5" cy="260.0" r="3" style="fill: rgb(0, 0, 255);"><title>(17, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=17&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1186.5" cy="200.0" r="3" style="fill: rgb(204, 0, 0);"><title>(17, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=17&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1186.5" cy="195.2" r="3" style="fill: rgb(204, 0, 0);"><title>(17, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=17&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="1179.5" cy="195.2" r="3" style="fill: rgb(204, 0, 0);"><title>(17, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=17&amp;character=0&amp;label=a&amp;label=b&amp;number=2" target="_top">
+<circle cx="1172.5" cy="195.2" r="3" style="fill: rgb(204, 0, 0);"><title>(17, 8)</title></circle></a>
+<a xlink:href="/not_yet_implemented" target="_top">
+<text x="1197" y="202.4" style="fill: rgb(0, 0, 255); font-size: 14px; font-weight: bold;">6</text>
+</a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=17&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1186.5" cy="140.0" r="3" style="fill: rgb(204, 0, 0);"><title>(17, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=17&amp;character=0&amp;label=a&amp;number=1" target="_top">
+<circle cx="1179.5" cy="140.0" r="3" style="fill: rgb(204, 0, 0);"><title>(17, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=17&amp;character=0&amp;label=a&amp;number=2" target="_top">
+<circle cx="1172.5" cy="140.0" r="3" style="fill: rgb(204, 0, 0);"><title>(17, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=17&amp;character=0&amp;label=a&amp;number=3" target="_top">
+<circle cx="1165.5" cy="140.0" r="3" style="fill: rgb(204, 0, 0);"><title>(17, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=17&amp;character=0&amp;label=a&amp;number=4" target="_top">
+<circle cx="1158.5" cy="140.0" r="3" style="fill: rgb(204, 0, 0);"><title>(17, 10)</title></circle></a>
+<a xlink:href="/not_yet_implemented" target="_top">
+<text x="1197" y="142.4" style="fill: rgb(0, 0, 255); font-size: 14px; font-weight: bold;">7</text>
+</a>
+<a xlink:href="/not_yet_implemented" target="_top">
+<text x="1176" y="82.4" style="fill: rgb(204, 0, 0); font-size: 14px; font-weight: bold;">6</text>
+</a>
+<a xlink:href="/not_yet_implemented" target="_top">
+<text x="1197" y="82.4" style="fill: rgb(0, 0, 255); font-size: 14px; font-weight: bold;">8</text>
+</a>
+<a xlink:href="/not_yet_implemented" target="_top">
+<text x="1176" y="22.4" style="fill: rgb(204, 0, 0); font-size: 14px; font-weight: bold;">8</text>
+</a>
+<a xlink:href="/not_yet_implemented" target="_top">
+<text x="1197" y="22.4" style="fill: rgb(0, 0, 255); font-size: 14px; font-weight: bold;">10</text>
+</a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=18&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1263.5" cy="320.0" r="3" style="fill: rgb(0, 0, 255);"><title>(18, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=18&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1256.5" cy="260.0" r="3" style="fill: rgb(204, 0, 0);"><title>(18, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=18&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1263.5" cy="260.0" r="3" style="fill: rgb(0, 0, 255);"><title>(18, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=18&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="1263.5" cy="255.2" r="3" style="fill: rgb(0, 0, 255);"><title>(18, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=18&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1256.5" cy="200.0" r="3" style="fill: rgb(204, 0, 0);"><title>(18, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=18&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1263.5" cy="200.0" r="3" style="fill: rgb(0, 0, 255);"><title>(18, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=18&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1263.5" cy="140.0" r="3" style="fill: rgb(0, 0, 255);"><title>(18, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=18&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1256.5" cy="140.0" r="3" style="fill: rgb(204, 0, 0);"><title>(18, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=18&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="1256.5" cy="135.2" r="3" style="fill: rgb(204, 0, 0);"><title>(18, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=18&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=0" target="_top">
+<circle cx="1263.5" cy="135.2" r="3" style="fill: rgb(0, 0, 255);"><title>(18, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=18&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1256.5" cy="80.0" r="3" style="fill: rgb(204, 0, 0);"><title>(18, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=18&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1263.5" cy="80.0" r="3" style="fill: rgb(0, 0, 255);"><title>(18, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=18&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="1263.5" cy="75.2" r="3" style="fill: rgb(0, 0, 255);"><title>(18, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=18&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=0" target="_top">
+<circle cx="1256.5" cy="75.2" r="3" style="fill: rgb(204, 0, 0);"><title>(18, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=18&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;label=e&amp;number=0" target="_top">
+<circle cx="1263.5" cy="70.4" r="3" style="fill: rgb(0, 0, 255);"><title>(18, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=18&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1263.5" cy="20.0" r="3" style="fill: rgb(0, 0, 255);"><title>(18, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=18&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1256.5" cy="20.0" r="3" style="fill: rgb(204, 0, 0);"><title>(18, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=18&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="1263.5" cy="15.2" r="3" style="fill: rgb(0, 0, 255);"><title>(18, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=18&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=0" target="_top">
+<circle cx="1256.5" cy="15.2" r="3" style="fill: rgb(204, 0, 0);"><title>(18, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=18&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;label=e&amp;number=0" target="_top">
+<circle cx="1263.5" cy="10.4" r="3" style="fill: rgb(0, 0, 255);"><title>(18, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=2&amp;level=19&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1333.5" cy="380.0" r="3" style="fill: rgb(0, 0, 255);"><title>(19, 2)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=19&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1326.5" cy="320.0" r="3" style="fill: rgb(204, 0, 0);"><title>(19, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=19&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1333.5" cy="320.0" r="3" style="fill: rgb(0, 0, 255);"><title>(19, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=19&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="1340.5" cy="320.0" r="3" style="fill: rgb(0, 0, 255);"><title>(19, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=19&amp;character=0&amp;label=a&amp;label=b&amp;number=2" target="_top">
+<circle cx="1347.5" cy="320.0" r="3" style="fill: rgb(0, 0, 255);"><title>(19, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=19&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1333.5" cy="260.0" r="3" style="fill: rgb(0, 0, 255);"><title>(19, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=19&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1326.5" cy="260.0" r="3" style="fill: rgb(204, 0, 0);"><title>(19, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=19&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="1326.5" cy="255.2" r="3" style="fill: rgb(204, 0, 0);"><title>(19, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=19&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=1" target="_top">
+<circle cx="1319.5" cy="255.2" r="3" style="fill: rgb(204, 0, 0);"><title>(19, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=19&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=0" target="_top">
+<circle cx="1333.5" cy="255.2" r="3" style="fill: rgb(0, 0, 255);"><title>(19, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=19&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=1" target="_top">
+<circle cx="1340.5" cy="255.2" r="3" style="fill: rgb(0, 0, 255);"><title>(19, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=19&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=2" target="_top">
+<circle cx="1347.5" cy="255.2" r="3" style="fill: rgb(0, 0, 255);"><title>(19, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=19&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=3" target="_top">
+<circle cx="1354.5" cy="255.2" r="3" style="fill: rgb(0, 0, 255);"><title>(19, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=19&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1326.5" cy="200.0" r="3" style="fill: rgb(204, 0, 0);"><title>(19, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=19&amp;character=0&amp;label=a&amp;number=1" target="_top">
+<circle cx="1319.5" cy="200.0" r="3" style="fill: rgb(204, 0, 0);"><title>(19, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=19&amp;character=0&amp;label=a&amp;number=2" target="_top">
+<circle cx="1312.5" cy="200.0" r="3" style="fill: rgb(204, 0, 0);"><title>(19, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=19&amp;character=0&amp;label=a&amp;number=3" target="_top">
+<circle cx="1305.5" cy="200.0" r="3" style="fill: rgb(204, 0, 0);"><title>(19, 8)</title></circle></a>
+<a xlink:href="/not_yet_implemented" target="_top">
+<text x="1337" y="202.4" style="fill: rgb(0, 0, 255); font-size: 14px; font-weight: bold;">6</text>
+</a>
+<a xlink:href="/not_yet_implemented" target="_top">
+<text x="1316" y="142.4" style="fill: rgb(204, 0, 0); font-size: 14px; font-weight: bold;">6</text>
+</a>
+<a xlink:href="/not_yet_implemented" target="_top">
+<text x="1337" y="142.4" style="fill: rgb(0, 0, 255); font-size: 14px; font-weight: bold;">8</text>
+</a>
+<a xlink:href="/not_yet_implemented" target="_top">
+<text x="1316" y="82.4" style="fill: rgb(204, 0, 0); font-size: 14px; font-weight: bold;">7</text>
+</a>
+<a xlink:href="/not_yet_implemented" target="_top">
+<text x="1337" y="82.4" style="fill: rgb(0, 0, 255); font-size: 14px; font-weight: bold;">9</text>
+</a>
+<a xlink:href="/not_yet_implemented" target="_top">
+<text x="1316" y="22.4" style="fill: rgb(204, 0, 0); font-size: 14px; font-weight: bold;">9</text>
+</a>
+<a xlink:href="/not_yet_implemented" target="_top">
+<text x="1337" y="22.4" style="fill: rgb(0, 0, 255); font-size: 14px; font-weight: bold;">11</text>
+</a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=2&amp;level=20&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1403.5" cy="380.0" r="3" style="fill: rgb(0, 0, 255);"><title>(20, 2)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=20&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1403.5" cy="320.0" r="3" style="fill: rgb(0, 0, 255);"><title>(20, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=20&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1403.5" cy="260.0" r="3" style="fill: rgb(0, 0, 255);"><title>(20, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=20&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1396.5" cy="200.0" r="3" style="fill: rgb(204, 0, 0);"><title>(20, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=20&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1403.5" cy="200.0" r="3" style="fill: rgb(0, 0, 255);"><title>(20, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=20&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="1410.5" cy="200.0" r="3" style="fill: rgb(0, 0, 255);"><title>(20, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=20&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1396.5" cy="140.0" r="3" style="fill: rgb(204, 0, 0);"><title>(20, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=20&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1403.5" cy="140.0" r="3" style="fill: rgb(0, 0, 255);"><title>(20, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=20&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="1410.5" cy="140.0" r="3" style="fill: rgb(0, 0, 255);"><title>(20, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=20&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1396.5" cy="80.0" r="3" style="fill: rgb(204, 0, 0);"><title>(20, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=20&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1403.5" cy="80.0" r="3" style="fill: rgb(0, 0, 255);"><title>(20, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=20&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="1410.5" cy="80.0" r="3" style="fill: rgb(0, 0, 255);"><title>(20, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=20&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1396.5" cy="20.0" r="3" style="fill: rgb(204, 0, 0);"><title>(20, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=20&amp;character=0&amp;label=a&amp;number=1" target="_top">
+<circle cx="1389.5" cy="20.0" r="3" style="fill: rgb(204, 0, 0);"><title>(20, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=20&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1403.5" cy="20.0" r="3" style="fill: rgb(0, 0, 255);"><title>(20, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=20&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="1410.5" cy="20.0" r="3" style="fill: rgb(0, 0, 255);"><title>(20, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=20&amp;character=0&amp;label=a&amp;label=b&amp;number=2" target="_top">
+<circle cx="1417.5" cy="20.0" r="3" style="fill: rgb(0, 0, 255);"><title>(20, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=2&amp;level=21&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1473.5" cy="380.0" r="3" style="fill: rgb(0, 0, 255);"><title>(21, 2)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=21&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1466.5" cy="320.0" r="3" style="fill: rgb(204, 0, 0);"><title>(21, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1473.5" cy="320.0" r="3" style="fill: rgb(0, 0, 255);"><title>(21, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="1473.5" cy="315.2" r="3" style="fill: rgb(0, 0, 255);"><title>(21, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=1" target="_top">
+<circle cx="1480.5" cy="315.2" r="3" style="fill: rgb(0, 0, 255);"><title>(21, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=21&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1473.5" cy="260.0" r="3" style="fill: rgb(0, 0, 255);"><title>(21, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1466.5" cy="260.0" r="3" style="fill: rgb(204, 0, 0);"><title>(21, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="1473.5" cy="255.2" r="3" style="fill: rgb(0, 0, 255);"><title>(21, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=0" target="_top">
+<circle cx="1473.5" cy="250.4" r="3" style="fill: rgb(0, 0, 255);"><title>(21, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=21&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1466.5" cy="200.0" r="3" style="fill: rgb(204, 0, 0);"><title>(21, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1466.5" cy="195.2" r="3" style="fill: rgb(204, 0, 0);"><title>(21, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="1459.5" cy="195.2" r="3" style="fill: rgb(204, 0, 0);"><title>(21, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="1473.5" cy="200.0" r="3" style="fill: rgb(0, 0, 255);"><title>(21, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=1" target="_top">
+<circle cx="1480.5" cy="200.0" r="3" style="fill: rgb(0, 0, 255);"><title>(21, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=0" target="_top">
+<circle cx="1473.5" cy="195.2" r="3" style="fill: rgb(0, 0, 255);"><title>(21, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=1" target="_top">
+<circle cx="1480.5" cy="195.2" r="3" style="fill: rgb(0, 0, 255);"><title>(21, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=2" target="_top">
+<circle cx="1487.5" cy="195.2" r="3" style="fill: rgb(0, 0, 255);"><title>(21, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=21&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1466.5" cy="140.0" r="3" style="fill: rgb(204, 0, 0);"><title>(21, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1466.5" cy="135.2" r="3" style="fill: rgb(204, 0, 0);"><title>(21, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="1459.5" cy="135.2" r="3" style="fill: rgb(204, 0, 0);"><title>(21, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="1473.5" cy="140.0" r="3" style="fill: rgb(0, 0, 255);"><title>(21, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=1" target="_top">
+<circle cx="1480.5" cy="140.0" r="3" style="fill: rgb(0, 0, 255);"><title>(21, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=0" target="_top">
+<circle cx="1473.5" cy="135.2" r="3" style="fill: rgb(0, 0, 255);"><title>(21, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=1" target="_top">
+<circle cx="1480.5" cy="135.2" r="3" style="fill: rgb(0, 0, 255);"><title>(21, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=2" target="_top">
+<circle cx="1487.5" cy="135.2" r="3" style="fill: rgb(0, 0, 255);"><title>(21, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=21&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1466.5" cy="80.0" r="3" style="fill: rgb(204, 0, 0);"><title>(21, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1466.5" cy="75.2" r="3" style="fill: rgb(204, 0, 0);"><title>(21, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="1473.5" cy="80.0" r="3" style="fill: rgb(0, 0, 255);"><title>(21, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=1" target="_top">
+<circle cx="1480.5" cy="80.0" r="3" style="fill: rgb(0, 0, 255);"><title>(21, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=2" target="_top">
+<circle cx="1487.5" cy="80.0" r="3" style="fill: rgb(0, 0, 255);"><title>(21, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=0" target="_top">
+<circle cx="1466.5" cy="70.4" r="3" style="fill: rgb(204, 0, 0);"><title>(21, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=1" target="_top">
+<circle cx="1459.5" cy="70.4" r="3" style="fill: rgb(204, 0, 0);"><title>(21, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=2" target="_top">
+<circle cx="1452.5" cy="70.4" r="3" style="fill: rgb(204, 0, 0);"><title>(21, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;label=e&amp;number=0" target="_top">
+<circle cx="1473.5" cy="75.2" r="3" style="fill: rgb(0, 0, 255);"><title>(21, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;label=e&amp;number=1" target="_top">
+<circle cx="1480.5" cy="75.2" r="3" style="fill: rgb(0, 0, 255);"><title>(21, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;label=e&amp;number=2" target="_top">
+<circle cx="1487.5" cy="75.2" r="3" style="fill: rgb(0, 0, 255);"><title>(21, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;label=e&amp;number=3" target="_top">
+<circle cx="1494.5" cy="75.2" r="3" style="fill: rgb(0, 0, 255);"><title>(21, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=21&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1466.5" cy="20.0" r="3" style="fill: rgb(204, 0, 0);"><title>(21, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=21&amp;character=0&amp;label=a&amp;number=1" target="_top">
+<circle cx="1459.5" cy="20.0" r="3" style="fill: rgb(204, 0, 0);"><title>(21, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1466.5" cy="15.2" r="3" style="fill: rgb(204, 0, 0);"><title>(21, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="1459.5" cy="15.2" r="3" style="fill: rgb(204, 0, 0);"><title>(21, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;number=2" target="_top">
+<circle cx="1452.5" cy="15.2" r="3" style="fill: rgb(204, 0, 0);"><title>(21, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="1473.5" cy="20.0" r="3" style="fill: rgb(0, 0, 255);"><title>(21, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=1" target="_top">
+<circle cx="1480.5" cy="20.0" r="3" style="fill: rgb(0, 0, 255);"><title>(21, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=2" target="_top">
+<circle cx="1487.5" cy="20.0" r="3" style="fill: rgb(0, 0, 255);"><title>(21, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=0" target="_top">
+<circle cx="1473.5" cy="15.2" r="3" style="fill: rgb(0, 0, 255);"><title>(21, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=1" target="_top">
+<circle cx="1480.5" cy="15.2" r="3" style="fill: rgb(0, 0, 255);"><title>(21, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=2" target="_top">
+<circle cx="1487.5" cy="15.2" r="3" style="fill: rgb(0, 0, 255);"><title>(21, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=21&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=3" target="_top">
+<circle cx="1494.5" cy="15.2" r="3" style="fill: rgb(0, 0, 255);"><title>(21, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=22&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1536.5" cy="320.0" r="3" style="fill: rgb(204, 0, 0);"><title>(22, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=22&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1543.5" cy="320.0" r="3" style="fill: rgb(0, 0, 255);"><title>(22, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=4&amp;level=22&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="1543.5" cy="315.2" r="3" style="fill: rgb(0, 0, 255);"><title>(22, 4)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=22&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1543.5" cy="260.0" r="3" style="fill: rgb(0, 0, 255);"><title>(22, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=22&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1536.5" cy="260.0" r="3" style="fill: rgb(204, 0, 0);"><title>(22, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=22&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="1536.5" cy="255.2" r="3" style="fill: rgb(204, 0, 0);"><title>(22, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=22&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=0" target="_top">
+<circle cx="1543.5" cy="255.2" r="3" style="fill: rgb(0, 0, 255);"><title>(22, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=6&amp;level=22&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=1" target="_top">
+<circle cx="1550.5" cy="255.2" r="3" style="fill: rgb(0, 0, 255);"><title>(22, 6)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=22&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1536.5" cy="200.0" r="3" style="fill: rgb(204, 0, 0);"><title>(22, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=22&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1543.5" cy="200.0" r="3" style="fill: rgb(0, 0, 255);"><title>(22, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=22&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="1536.5" cy="195.2" r="3" style="fill: rgb(204, 0, 0);"><title>(22, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=22&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=0" target="_top">
+<circle cx="1543.5" cy="195.2" r="3" style="fill: rgb(0, 0, 255);"><title>(22, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=8&amp;level=22&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=1" target="_top">
+<circle cx="1550.5" cy="195.2" r="3" style="fill: rgb(0, 0, 255);"><title>(22, 8)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=22&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1536.5" cy="140.0" r="3" style="fill: rgb(204, 0, 0);"><title>(22, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=22&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1543.5" cy="140.0" r="3" style="fill: rgb(0, 0, 255);"><title>(22, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=22&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="1543.5" cy="135.2" r="3" style="fill: rgb(0, 0, 255);"><title>(22, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=22&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=0" target="_top">
+<circle cx="1543.5" cy="130.4" r="3" style="fill: rgb(0, 0, 255);"><title>(22, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=22&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=1" target="_top">
+<circle cx="1550.5" cy="130.4" r="3" style="fill: rgb(0, 0, 255);"><title>(22, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=22&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;label=e&amp;number=0" target="_top">
+<circle cx="1536.5" cy="135.2" r="3" style="fill: rgb(204, 0, 0);"><title>(22, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=10&amp;level=22&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;label=e&amp;number=1" target="_top">
+<circle cx="1529.5" cy="135.2" r="3" style="fill: rgb(204, 0, 0);"><title>(22, 10)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=22&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1536.5" cy="80.0" r="3" style="fill: rgb(204, 0, 0);"><title>(22, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=22&amp;character=0&amp;label=a&amp;number=1" target="_top">
+<circle cx="1529.5" cy="80.0" r="3" style="fill: rgb(204, 0, 0);"><title>(22, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=22&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1536.5" cy="75.2" r="3" style="fill: rgb(204, 0, 0);"><title>(22, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=22&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="1529.5" cy="75.2" r="3" style="fill: rgb(204, 0, 0);"><title>(22, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=22&amp;character=0&amp;label=a&amp;label=b&amp;number=2" target="_top">
+<circle cx="1522.5" cy="75.2" r="3" style="fill: rgb(204, 0, 0);"><title>(22, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=22&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="1543.5" cy="80.0" r="3" style="fill: rgb(0, 0, 255);"><title>(22, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=22&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=1" target="_top">
+<circle cx="1550.5" cy="80.0" r="3" style="fill: rgb(0, 0, 255);"><title>(22, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=22&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=2" target="_top">
+<circle cx="1557.5" cy="80.0" r="3" style="fill: rgb(0, 0, 255);"><title>(22, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=22&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=0" target="_top">
+<circle cx="1543.5" cy="75.2" r="3" style="fill: rgb(0, 0, 255);"><title>(22, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=22&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=1" target="_top">
+<circle cx="1550.5" cy="75.2" r="3" style="fill: rgb(0, 0, 255);"><title>(22, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=12&amp;level=22&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=2" target="_top">
+<circle cx="1557.5" cy="75.2" r="3" style="fill: rgb(0, 0, 255);"><title>(22, 12)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=22&amp;character=0&amp;label=a&amp;number=0" target="_top">
+<circle cx="1536.5" cy="20.0" r="3" style="fill: rgb(204, 0, 0);"><title>(22, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=22&amp;character=0&amp;label=a&amp;number=1" target="_top">
+<circle cx="1529.5" cy="20.0" r="3" style="fill: rgb(204, 0, 0);"><title>(22, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=22&amp;character=0&amp;label=a&amp;label=b&amp;number=0" target="_top">
+<circle cx="1543.5" cy="20.0" r="3" style="fill: rgb(0, 0, 255);"><title>(22, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=22&amp;character=0&amp;label=a&amp;label=b&amp;number=1" target="_top">
+<circle cx="1550.5" cy="20.0" r="3" style="fill: rgb(0, 0, 255);"><title>(22, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=22&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=0" target="_top">
+<circle cx="1536.5" cy="15.2" r="3" style="fill: rgb(204, 0, 0);"><title>(22, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=22&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;number=1" target="_top">
+<circle cx="1529.5" cy="15.2" r="3" style="fill: rgb(204, 0, 0);"><title>(22, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=22&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=0" target="_top">
+<circle cx="1543.5" cy="15.2" r="3" style="fill: rgb(0, 0, 255);"><title>(22, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=22&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=1" target="_top">
+<circle cx="1550.5" cy="15.2" r="3" style="fill: rgb(0, 0, 255);"><title>(22, 14)</title></circle></a>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic?weight=14&amp;level=22&amp;character=0&amp;label=a&amp;label=b&amp;label=c&amp;label=d&amp;number=2" target="_top">
+<circle cx="1557.5" cy="15.2" r="3" style="fill: rgb(0, 0, 255);"><title>(22, 14)</title></circle></a>
+</svg>
