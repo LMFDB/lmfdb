@@ -110,12 +110,10 @@ class WebLfunction:
 
         self.automorphyexp = float(self.weight-1)/float(2)
         self.Q_fe = float(sqrt(self.level)/(2*math.pi))
-        if self.level>1:
-#            self.sign = self.MF.atkin_lehner_eigenvalues() * (-1)**(float(self.weight/2))
+        if self.level == 1:  # For level 1, the sign is always plus
+            self.sign = 1
+        else:  # for level not 1, calculate sign from Fricke involution and weight
             self.sign = self.MF.atkin_lehner_eigenvalues()[self.level] * (-1)**(float(self.weight/2))
-#FIX: extract eigenvalue corresponding to the level.  (atkin_lehner_eigenvalues is a dictionary
-        else:
-            self.sign = (-1)**(float(self.weight/2))
         self.kappa_fe = [1]
         self.lambda_fe = [self.automorphyexp]
         self.mu_fe = []
@@ -125,13 +123,18 @@ class WebLfunction:
         self.degree = 2
         self.poles = []
         self.residues = []
-        self.numcoeff = 9 #just testing
-        self.dirichlet_coefficients = []#self.MF.anlist(self.numcoeff)[1:] #remove a0
-        for n in range(1,self.numcoeff):
-            self.dirichlet_coefficients.append(self.MF._embeddings[n][self.number])
-        for n in range(1,len(self.dirichlet_coefficients)-1):
+        self.numcoeff = 30 #just testing
+        self.dirichlet_coefficients = []
+        # now, begin appending list of Dirichlet coefficients
+        degree = self.MF.degree()  #number of forms in the Galois orbit
+        if degree == 1:
+           self.dirichlet_coefficients = self.MF.q_expansion_embeddings() #when coeffs are rational, q_expansion_embedding() is the list of Fourier coefficients
+        else:
+           for n in range(0,self.numcoeff):
+              self.dirichlet_coefficients.append(self.MF.q_expansion_embeddings()[n][self.number])
+        for n in range(0,len(self.dirichlet_coefficients)):
             an = self.dirichlet_coefficients[n]
-            self.dirichlet_coefficients[n]=float(an)/float(n**self.automorphyexp)
+            self.dirichlet_coefficients[n]=float(an)/float((n+1)**self.automorphyexp)
 #FIX: These coefficients are wrong; too large and a1 is not 1
         self.coefficient_period = 0
         self.coefficient_type = 2

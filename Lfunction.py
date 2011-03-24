@@ -27,7 +27,7 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
                 info["contents"] = [processDirichletNavigation(args)]
             elif degree == 2:
 #                info["contents"] = [processEllipticCurveNavigation(args),"holomorphic here"]
-                info["contents"] = [processEllipticCurveNavigation(args), LfunctionPlot.getOneGraphHtmlHolo(1, 5, 2, 14)]
+                info["contents"] = [processEllipticCurveNavigation(args), LfunctionPlot.getOneGraphHtmlHolo(1, 22, 2, 14)]
             elif degree == 3 or degree == 4:
                 info["contents"] = LfunctionPlot.getAllMaassGraphHtml(degree)
                 
