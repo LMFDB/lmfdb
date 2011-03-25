@@ -7,7 +7,7 @@ By convention a 'core function' starting with get_  returns a string.
 
 """
 
-from sage.all import ZZ,Newform,is_squarefree,squarefree_part,factor,is_square,divisors,DirichletGroup,QQ,xgcd,prime_factors,Gamma0,html,I,ceil,ComplexField,RealField,dimension_cusp_forms,sturm_bound
+from sage.all import ZZ,Newform,is_squarefree,squarefree_part,factor,is_square,divisors,DirichletGroup,QQ,xgcd,prime_factors,Gamma0,html,I,ceil,ComplexField,RealField,dimension_cusp_forms,sturm_bound,latex,join
 import re
 
 
@@ -249,7 +249,7 @@ def get_atkin_lehner_eigenvalues(k,N=1,chi=0,fi=0):
     tbl['headersv']=["$\epsilon_{Q}$"]
     for Q in res.keys():
         tbl['data'][0].append(res[Q])
-    s=_html_table(tbl)
+    s=html_table(tbl)
     return s
 
 
@@ -422,7 +422,7 @@ def get_fourier_coefficients_of_newform_embeddings(k,N=1,xi=0,fi=0,prec=10):
         tbl['data'].append(row)
     #
     #print tbl
-    s=_html_table(tbl)
+    s=html_table(tbl)
     return s
 
 
@@ -589,7 +589,7 @@ def get_values_at_CM_points(k,N=1,chi=0,fi=0,digits=12,verbose=0):
                 row.append(cm_vals[tau][h])            
             tbl['data'].append(row)
 
-    s=_html_table(tbl)
+    s=html_table(tbl)
     #s=html.table([cm_vals.keys(),cm_vals.values()])
     return s
 
@@ -665,7 +665,7 @@ def get_satake_parameters(k,N=1,chi=0,fi=0,prec=10,bits=53,angles=False):
             tbl['headersv'].append(j)
             tbl['data'].append(ems[j])
     #print tbl
-    s=_html_table(tbl)
+    s=html_table(tbl)
     return s
 
 
@@ -940,7 +940,7 @@ def fourier_coefficients_of_newform_embeddings(k,N=1,xi=0,fi=0,prec=10):
     return coeffs
 
 
-def _html_table(tbl):
+def html_table(tbl):
     r""" Takes a dictonary and returns an html-table.
 
     INPUT:
@@ -957,36 +957,159 @@ def _html_table(tbl):
     if(len(data)<>nrows):
         print "wrong number of rows!"
     for i in range(nrows):
+        print "len(",i,")=",len(data[i])
         if(len(data[i])<>ncols):
             print "wrong number of cols!"        
-    s="<table class=\"table_form\" border=1><tbody>\n"
-    smath="<span class=\"math\">"
+
+    if(tbl.has_key('atts')):
+        s="<table "+str(tbl['atts'])+">\n"
+    else:
+        s="<table>\n"
+    format = dict()
+    for i in range(ncols):
+        format[i]=''
+        if(tbl.has_key('data_format')):
+            if isinstance(tbl['data_format'],dict):
+                if(tbl['data_format'].has_key(i)):
+                    format[i]=tbl['data_format'][i]
+            elif(isinstance(tbl['data_format'],str)):
+                format[i]=tbl['data_format']
+    if(tbl.has_key('header')):
+        s+="<thead><tr><th><td colspan=\""+str(ncols)+"\">"+tbl['header']+"</td></th></tr></thead>"
+    s=s+"<tbody>"
+    #smath="<span class=\"math\">"
     # check which type of content we have
     h1=tbl['headersh'][0]
-    if(isinstance(h1,str) and not re.match("\$",h1)):
-        sheaderh="<span>"
-    else:
-        sheaderh="<span class=\"math\">"
-    # check which type of content we have
+    sheaderh="";    sheaderv=""
     h1=tbl['headersv'][0]
-    if(isinstance(h1,str) and not re.match("\$",h1)):
-        sheaderv="<span>"
+    col_width=dict()
+    if not tbl.has_key('col_width'):
+        # use maximum width as default
+        maxw = 0
+        for k in range(ncols):
+            for r in range(nrows):
+                l =len_as_printed(str(data[r][k]))
+                if l>maxw:
+                    maxw = l
+                    #print "l=",l," max=",data[r][k]
+        l = l*10.0 # use true font size?
+        for k in range(ncols):
+            col_width[k]=maxw
     else:
-        sheaderv="<span class=\"math\">"
+        for i in range(ncols):        
+            col_width[i]=0
+            if tbl.has_key('col_width'):
+                if tbl['col_width'].has_key(i):
+                    col_width[i]=tbl['col_width'][i]
+    #print "col width=",col_width
+    #print "format=",format
     if(tbl.has_key("corner_label")):
-        row="<tr><td>"+str(tbl["corner_label"])+"</td>"
+        l = len_as_printed(str(tbl["corner_label"]))*10
+        row="<tr><td width=\"%s\">" % l
+        row+=str(tbl["corner_label"])+"</td>"
     else:
         row="<tr><td></td>"
     for k in range(ncols):
-        row=row+"<td>"+sheaderh+str(tbl['headersh'][k])+"</span></td> \n"
+        row=row+"<td>"+sheaderh+str(tbl['headersh'][k])+"</td> \n"
 
     row=row+"</tr> \n"
     s=s+row
     for r in range(nrows):
-        row="<tr><td>"+sheaderv+str(tbl['headersv'][r])+"</td>"
+        l = len_as_printed(str(tbl["headersv"][r]))*10
+        print "l=",l,"head=",tbl["headersv"]
+        row="<tr><td width=\"%s\">" %l
+        row+=sheaderv+str(tbl['headersv'][r])+"</td>"
         for k in range(ncols):
-            row=row+"\t<td>"+smath+latex(data[r][k])+"</td> \n"
+            wid = col_width[k]
+            if format[k]=='html' or format[k]=='text':
+                row=row+"\t<td halign=\"center\" width=\""+str(wid)+"\">"
+                #print "HTML=",data[r][k]
+                if isinstance(data[r][k],list):
+                    for ss in data[r][k]:
+                        sss = str(ss)
+                        if(len(sss)>0):
+                            row+=sss
+                else:
+                    sss = str(data[r][k])
+                    row+=sss
+                row=row+"</td> \n"
+            else:
+                row=row+"\t<td width=\""+str(wid)+"\">"
+                if isinstance(data[r][k],list):
+                    #print "LATEX list=",data[r][k]
+                    for ss in data[r][k]:
+                        sss = latex(ss)
+                        if(len(sss)>0):
+                            row+="\("+sss+"\)"
+                else:
+                    sss=latex(data[r][k])
+                    if(len(sss)>0):
+                        row=row+"\("+sss+"\)</td> \n"
+                row+="</td>\n"
+        # allow for different format in different columns
         row=row+"</tr> \n"
         s=s+row
     s=s+"</tbody></table>"
+    return s
+
+
+def len_as_printed(s,format='latex'):
+    r"""
+    Returns the length of s, as it will appear after being math_jax'ed
+    """
+    lenq=1
+    lendig=1
+    lenpm=1.5
+    lenpar=0.5
+    lenexp=0.75
+    lensub=0.75
+    ## remove all html first since it is not displayed
+    ss = re.sub("<[^>]*>","",s)
+    #print "ss=",ss
+    ss = re.sub(" ","",ss)    # remove white-space
+    ss = re.sub("\*","",ss)    # remove *
+    num_exp = s.count("^")    # count number of exponents
+    exps = re.findall("\^{?(\d*)",s) # a list of all exponents
+    sexps = "".join(exps)
+    num_subs = s.count("_")    # count number of exponents
+    subs = re.findall("_{?(\d*)",s) # a list of all  subscripts
+    ssubs = "".join(subs)
+    ss = re.sub("\^{?(\d*)}?","",ss)  # remove exponenents
+    #print join([ss,ssubs,sexps])
+    tot_len=(ss.count(")")+ss.count("("))*lenpar
+    tot_len+=ss.count("q")*lenq
+    tot_len+=len(re.findall("\d",s))*lendig
+    tot_len+=len(re.findall("\w",s))*lenq
+    tot_len+=(s.count("+")+s.count("-"))*lenpm
+    tot_len+=num_subs*lensub
+    tot_len+=num_exp*lenexp
+    #
+    #tot_len = len(ss)+ceil((len(ssubs)+len(sexps))*0.67)
+    return tot_len
+    
+
+
+def print_geometric_data_Gamma0N(N):
+        r""" Print data about Gamma0(N).
+        """
+        G=Gamma0(N)
+        s = ""
+        s="<table>"
+        s+="<tr><td>index:</td><td>%s</td></tr>" % G.index()
+        s+="<tr><td>genus:</td><td>%s</td></tr>" % G.genus()
+        s+="<tr><td>Cusps:</td><td>\(%s\)</td></tr>" % latex(G.cusps())
+        s+="<tr><td colspan=\"2\">Number of elliptic fixed points</td></tr>"
+        s+="<tr><td>order 2:</td><td>%s</td></tr>" % G.nu2()
+        s+="<tr><td>order 3:</td><td>%s</td></tr>" % G.nu3()
+        s+="</table>"
+        return s
+
+
+def pol_to_html(p):
+    r"""
+    Convert polynomial p to html
+    """
+    s = str(p)
+    s = re.sub("\^(\d*)","<sup>\\1</sup>",s)
+    s = re.sub("\_(\d*)","<sub>\\1</suB>",s)
     return s

@@ -12,9 +12,21 @@ TODO:
 Fix complex characters. I.e. embedddings and galois conjugates in a consistent way. 
 
 """
-from sage.all import *
+from sage.all import ZZ,QQ,DirichletGroup,CuspForms,Gamma0,ModularSymbols,Newforms,trivial_character,is_squarefree,divisors,RealField,ComplexField,prime_range,I,join,gcd,Cusp,Infinity,ceil,CyclotomicField,exp,pi,primes_first_n,euler_phi
+from sage.all import Parent,SageObject,dimension_new_cusp_forms,vector,dimension_modular_forms,EisensteinForms,Matrix,floor,denominator,latex
 from plot_dom import draw_fundamental_domain
+from cmf_core import html_table,len_as_printed
+#from sage.monoids.all import AlphabeticStrings
+from sage.all import factor
+
 import re
+
+import pymongo 
+from utilities import pol_to_html 
+dburl = 'localhost:27017'
+
+from pymongo.helpers import bson     
+from bson import BSON
 
 class WebModFormSpace(Parent):
     r"""
@@ -27,7 +39,18 @@ class WebModFormSpace(Parent):
  
 
     """
-    
+    def get_from_db(db,k,N,chi,prec):
+        r"""
+        Try to see what is in the database. 
+        """
+        try: 
+            connection = pymongo.Connection(db)
+        except:
+            raise "Check that a mongodb is running at %s !" % db
+        
+        
+
+        
     def __init__(self,k,N=1,chi=0,prec=10,data=None):
         r"""
         Init self.
@@ -35,9 +58,13 @@ class WebModFormSpace(Parent):
         #print "k=",k
         self._k = ZZ(k)
         self._N = ZZ(N)
-        self._chi = ZZ(chi)
+        if chi=='trivial':
+            self._chi=ZZ(0)
+        else:
+            self._chi = ZZ(chi)
         self._prec = ZZ(prec)
         self.prec = ZZ(prec)
+        # check what is in the database
 
         if isinstance(data,dict):
             if data.has_key('group'):
@@ -63,8 +90,8 @@ class WebModFormSpace(Parent):
         else:
             try:
                 self._group=Gamma0(N)
-                self._character=DirichletGroup(N)[chi]
-                if(chi==0):
+                self._character=DirichletGroup(N)[self._chi]
+                if(self._chi==0):
                     self._fullspace=CuspForms(N,k)
                     self._modular_symbols=ModularSymbols(N,k,sign=1).cuspidal_submodule()
                 else:
@@ -82,7 +109,7 @@ class WebModFormSpace(Parent):
                 
             except RuntimeError:
             
-                raise RuntimeError, "Could not construct space for (k=%s,N=%s,chi=%s)=" % (k,N,chi)
+                raise RuntimeError, "Could not construct space for (k=%s,N=%s,chi=%s)=" % (k,N,self._chi)
         self._verbose=0
         if(self.dimension()==self.dimension_newspace()):
             self._is_new=True
@@ -95,6 +122,20 @@ class WebModFormSpace(Parent):
         r"""
         Used for pickling.
         """
+        data = self.to_dict()
+        #return(WebModFormSpace,(self._k,self._N,self._chi,self.prec,data))
+	return(unpickle_wmfs_v1,(self._k,self._N,self._chi,self.prec,data))   
+
+    def _save_to_file(self,file):
+        r"""
+        Save self to file.
+        """
+        self.save(file,compress=None)
+
+    def to_dict(self):
+        r"""
+        Makes a dictionary of the relevant information.
+        """
         data = dict()
         data['group'] = self._group 
         data['character'] = self._character 
@@ -106,10 +147,8 @@ class WebModFormSpace(Parent):
         data['decomposition'] = self._decomposition
         data['galois_orbits_labels'] = self._galois_orbits_labels
         data['oldspace_decomposition'] = self._oldspace_decomposition
-
-        return(WebModFormSpace,(self._k,self._N,self._chi,self.prec,self._character,data))
-          
-
+        return data
+    
     def _repr_(self):
         return str(self._fullspace)
 
@@ -118,6 +157,7 @@ class WebModFormSpace(Parent):
         r"""
         We compose the new subspace into galois orbits.
         """
+	from sage.monoids.all import AlphabeticStrings
         if(len(self._decomposition)<>0):
             return self._decomposition
         L=self._modular_symbols.new_submodule().decomposition()
@@ -248,7 +288,7 @@ class WebModFormSpace(Parent):
                 #S=ModularSymbols(ZZ(N/d),k,sign=1).cuspidal_submodule().new_submodule(); Sd=S.dimension()
                 print "q=",q,type(q)
                 print "k=",k,type(k)
-                Sd = sage.modular.dims.dimension_new_cusp_forms(q,k)
+                Sd = dimension_new_cusp_forms(q,k)
                 if(self._verbose>1):
                     print "Sd=",Sd
                 if Sd > 0:
@@ -306,7 +346,7 @@ class WebModFormSpace(Parent):
         Print the Galois orbits of self.
 
         """
-        
+	from sage.monoids.all import AlphabeticStrings
         L=self.galois_decomposition()
         if(len(L)==0):
             return ""
@@ -417,10 +457,14 @@ class WebNewForm(SageObject):
     r"""
     Class for representing a (cuspidal) newform on the web.
     """
-    def __init__(self,k,N,chi=0,label='',fi=0,prec=10,bitprec=53,verbose=-1,data=None):
+    def __init__(self,k,N,chi=0,label='',fi=-1,prec=10,bitprec=53,verbose=-1,data=None):
         r"""
         Init self as form number fi in S_k(N,chi)
         """
+        if chi=='trivial':
+            chi=ZZ(0)
+        else:
+            chi=ZZ(chi)
         t=False
         self._parent=None; self.f=None
         if isinstance(data,dict):
@@ -442,13 +486,27 @@ class WebNewForm(SageObject):
         #print "label=",label
         #print "num=",num
         self._label = label
-        if len(label)==0:
-            label='a'
         self._parent.galois_decomposition()
         if label not in self._parent._galois_orbits_labels:
-            label=self._parent._galois_orbits_labels[0] ## defaults
-        j = self._parent._galois_orbits_labels.index(label)
-        self.f=self._parent._newforms[j]
+            label=''
+        if fi>=0 and fi < len(self._parent._galois_orbits_labels):
+            label = self._parent._galois_orbits_labels[fi]
+        #if len(label)==0:
+        #    label='a'
+
+        #label=self._parent._galois_orbits_labels[0] ## defaults
+        if self._parent._galois_orbits_labels.count(label):
+            j = self._parent._galois_orbits_labels.index(label)
+        elif(len(self._parent._galois_orbits_labels)==1):
+            j=0
+        else:
+            raise ValueError,"The space has dimension > 1. Please specify a label!"
+
+        if j < len(self._parent._newforms):
+            self.f=self._parent._newforms[j]
+        else:
+            self.f = None
+            return 
         ##
         self._name = str(N)+str(label)+str(num) +" (weight %s)" % k
         if self.f == None:
@@ -498,6 +556,16 @@ class WebNewForm(SageObject):
             self._dimension = 1 # None
         ## we shold figure out which complex embeddings preserve the character
         
+    def __eq__(self,other):
+        if not isinstance(other,type(self)):
+            return False
+        if self._k<>other._k:
+            return False
+        if self._level<>other._level:
+            return False        
+        if self._character <> other._character:
+            return False
+        return True
 
     def __repr__(self):
         r""" String representation f self.
@@ -520,7 +588,7 @@ class WebNewForm(SageObject):
         data['is_CM'] = self._is_CM 
         data['satake'] = self._satake 
         data['dimension'] = self._dimension
-        return(WebNewForm,(self._k,self._N,self._chi,self._label,self._fi,self._prec,self._bitprec,data))
+        return(unpickle_wnf_v1,(self._k,self._N,self._chi,self._label,self._fi,self._prec,self._bitprec,self._verbose,data))
 
     def _save_to_file(self,file):
         r"""
@@ -607,15 +675,16 @@ class WebNewForm(SageObject):
         if(prec<=0):
             prec=self._prec            
         if(self.base_ring() == QQ):
-            return str(self.f.coefficients(ZZ(prec)))
-        coeffs=list()
-        for n in range(ZZ(prec)):
-            cn=self.f.coefficients(ZZ(prec))[n]
-            if(self.dimension()>1):
-                coeffs.append(cn.complex_embeddings(bitprec))
-            else:
-                coeffs.append([cn.complex_embedding(bitprec)])
-        self._embeddings=coeffs
+            self._embeddings=self.f.coefficients(ZZ(prec))
+        else:
+            coeffs=list()
+            for n in range(ZZ(prec)):
+                cn=self.f.coefficients(ZZ(prec))[n]
+                if(self.degree()>1):
+                    coeffs.append(cn.complex_embeddings(bitprec))
+                else:
+                    coeffs.append([cn.complex_embedding(bitprec)])
+            self._embeddings=coeffs
         return self._embeddings
         
     def base_ring(self):
@@ -699,7 +768,7 @@ class WebNewForm(SageObject):
         else:
             return None
 
-    def is_twist(self):
+    def is_minimal(self):
         r"""
         Returns True if self is a twist and otherwise False.
         """
@@ -718,6 +787,8 @@ class WebNewForm(SageObject):
         
         -''[t,l]'' -- tuple of a Bool t and a list l. The list l contains all tuples of forms which twists to the given form.
         The actual minimal one is the first element of this list.
+	     t is set to True if self is minimal and False otherwise
+
 
         EXAMPLES::
 
@@ -1271,17 +1342,23 @@ class WebNewForm(SageObject):
                     s = latex(K.gen())
                 elif format == 'html':
                     s = pol_to_html(K.relative_polynomial())
+                else:
+                    s = str(K.relative_polynomial())
         else:
             if(K.is_relative()):
                 if format == 'latex':
                     s=latex(K.relative_polynomial())
                 elif format == 'html':
                     s = pol_to_html(K.relative_polynomial())
+                else:
+                    s = str(K.relative_polynomial())
             else:
                 if format == 'latex':
                     s=latex(self.base_ring().polynomial())
                 elif format == 'html':
                     s = pol_to_html(K.relative_polynomial())
+                else:
+                    s = str(K.relative_polynomial())
         return s
 
     
@@ -1486,109 +1563,6 @@ class WebNewForm(SageObject):
 
 
 
-def html_table(tbl):
-    r""" Takes a dictonary and returns an html-table.
-
-    INPUT:
-    
-    -''tbl'' -- dictionary with the following keys
-              - headersh // horozontal headers
-              - headersv // vertical headers
-              - rows -- dictionary of rows of data
-              
-    """
-    ncols=len(tbl["headersh"])
-    nrows=len(tbl["headersv"])
-    data=tbl['data']
-    if(len(data)<>nrows):
-        print "wrong number of rows!"
-    for i in range(nrows):
-        print "len(",i,")=",len(data[i])
-        if(len(data[i])<>ncols):
-            print "wrong number of cols!"        
-
-    if(tbl.has_key('atts')):
-        s="<table "+str(tbl['atts'])+">\n"
-    else:
-        s="<table>\n"
-    format = dict()
-    for i in range(ncols):
-        format[i]=''
-        if(tbl.has_key('data_format')):
-            if isinstance(tbl['data_format'],dict):
-                if(tbl['data_format'].has_key(i)):
-                    format[i]=tbl['data_format'][i]
-            elif(isinstance(tbl['data_format'],str)):
-                format[i]=tbl['data_format']
-    if(tbl.has_key('header')):
-        s+="<thead><tr><th><td colspan=\""+str(ncols)+"\">"+tbl['header']+"</td></th></tr></thead>"
-    s=s+"<tbody>"
-    #smath="<span class=\"math\">"
-    # check which type of content we have
-    h1=tbl['headersh'][0]
-    sheaderh="";    sheaderv=""
-    h1=tbl['headersv'][0]
-    col_width=dict()
-    if not tbl.has_key('col_width'):
-        # use maximum width as default
-        maxw = 0
-        for k in range(ncols):
-            for r in range(nrows):
-                if len(str(data[r][k]))>maxw:
-                    maxw = len(str(data[r][k]))
-        for k in range(ncols):
-            col_width[k]=maxw
-    else:
-        for i in range(ncols):        
-            col_width[i]=0
-            if tbl.has_key('col_width'):
-                if tbl['col_width'].has_key(i):
-                    col_width[i]=tbl['col_width'][i]
-    print "col width=",col_width
-    print "format=",format
-    if(tbl.has_key("corner_label")):
-        row="<tr><td>"+str(tbl["corner_label"])+"</td>"
-    else:
-        row="<tr><td></td>"
-    for k in range(ncols):
-        row=row+"<td>"+sheaderh+str(tbl['headersh'][k])+"</td> \n"
-
-    row=row+"</tr> \n"
-    s=s+row
-    for r in range(nrows):
-        row="<tr><td>"+sheaderv+str(tbl['headersv'][r])+"</td>"
-        for k in range(ncols):
-            wid = col_width[k]
-            if format[k]=='html' or format[k]=='text':
-                row=row+"\t<td halign=\"center\" width=\""+str(wid)+"\">"
-                print "HTML=",data[r][k]
-                if isinstance(data[r][k],list):
-                    for ss in data[r][k]:
-                        sss = str(ss)
-                        if(len(sss)>0):
-                            row+=sss
-                else:
-                    sss = str(data[r][k])
-                    row+=sss
-                row=row+"</td> \n"
-            else:
-                row=row+"\t<td width=\""+str(wid)+"\">"
-                if isinstance(data[r][k],list):
-                    #print "LATEX list=",data[r][k]
-                    for ss in data[r][k]:
-                        sss = latex(ss)
-                        if(len(sss)>0):
-                            row+="\("+sss+"\)"
-                else:
-                    sss=latex(data[r][k])
-                    if(len(sss)>0):
-                        row=row+"\("+sss+"\)</td> \n"
-                row+="</td>\n"
-        # allow for different format in different columns
-        row=row+"</tr> \n"
-        s=s+row
-    s=s+"</tbody></table>"
-    return s
 
 
 def my_latex_from_qexp(s):
@@ -1645,37 +1619,7 @@ def break_line_at(s,brpt=20):
             res.append(stmp)
     return res
 
-def len_as_printed(s):
-    r"""
-    Returns the length of s, as it will appear after being math_jax'ed
-    """
-    lenq=1
-    lendig=1
-    lenpm=1.5
-    lenpar=0.5
-    lenexp=0.75
-    lensub=0.75
-    ss = s
-    ss = re.sub(" ","",ss)    # remove white-space
-    ss = re.sub("\*","",ss)    # remove *
-    num_exp = s.count("^")    # count number of exponents
-    exps = re.findall("\^{?(\d*)",s) # a list of all exponents
-    sexps = "".join(exps)
-    num_subs = s.count("_")    # count number of exponents
-    subs = re.findall("_{?(\d*)",s) # a list of all  subscripts
-    ssubs = "".join(subs)
-    ss = re.sub("\^{?(\d*)}?","",ss)  # remove exponenents
-    print join([ss,ssubs,sexps])
-    tot_len=(ss.count(")")+ss.count("("))*lenpar
-    tot_len+=ss.count("q")*lenq
-    tot_len+=len(re.findall("\d",s))*lendig
-    tot_len+=(s.count("+")+s.count("-"))*lenpm
-    tot_len+=num_subs*lensub
-    tot_len+=num_exp*lenexp
-    #
-    #tot_len = len(ss)+ceil((len(ssubs)+len(sexps))*0.67)
-    return tot_len
-    
+
 
 def _get_newform(k,N,chi,fi=None):
     r"""
@@ -1747,47 +1691,12 @@ def _degree(K):
     except AttributeError:
         return  -1 ##  exit silently
         
-def print_geometric_data_Gamma0N(N):
-        r""" Print data about Gamma0(N).
-        """
-        G=Gamma0(N)
-        #s="<div>"
-        if(G == SL2Z):
-            s="\(  {\\rm SL}_{2}(\mathbb{Z}) \)"
-        else:
-            s="\("+latex(G)+"\)"
-        tbl=dict()
-        tbl['header']=s
-        tbl['headersh']=['']
-        tbl['headersv']=['index:']
-        tbl['data']=list()
-        tbl['atts']=''
-        tbl['data'].append([G.index()])
-        tbl['headersv'].append('genus:')
-        tbl['data'].append([G.genus()])
-        tbl['headersv'].append('#order 2:')
-        tbl['data'].append([G.nu2()])
-        tbl['headersv'].append('#order 3:')
-        tbl['data'].append([G.nu3()])
-        s=html_table(tbl)
-        #s=s+"\((\\textrm{index}; \\textrm{genus}, \\nu_2,\\nu_3)=("
-        #s=s+str(G.index())+";"+str(G.genus())+","
-        #s=s+str(G.nu2())+","+str(G.nu3())
-        #s=s+")\)</div>"
-        return s
 
+def unpickle_wnf_v1(k,N,chi,label,fi,prec,bitprec,verbose,data):
+    F = WebNewForm(k,N,chi,label,fi,prec,bitprec,verbose,data)
+    return F
 
-def pol_to_html(p):
-    r"""
-    Convert polynomial p to html
-    """
-    s = str(p)
-    s = re.sub("\^(\d*)","<sup>\\1</sup>",s)
-    s = re.sub("\_(\d*)","<sub>\\1</suB>",s)
-    return s
-
-
-import __main__
-__main__.WebModFormSpace=WebModFormSpace
-__main__.WebNewForm=WebNewForm
+def unpickle_wmfs_v1(k,N,chi,prec,data):
+    M = WebModFormSpace(k,N,chi,prec,data)
+    return M
 

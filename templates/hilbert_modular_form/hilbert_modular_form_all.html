@@ -1,30 +1,44 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
+<h2> Browse </h2>
 
 <h2> Search </h2>
 
 <form>
-<center align=left>Field (a label, e.g. 2.2.5.1 for \(\mathbb{Q}(\sqrt{5})\)) <input type='text' 
-                                name='field_label'>
-</center><br>
-<center align=left>Weight vector (e.g. [2,2]) <input type='text' 
-                                name='weight'>
-</center><br>
-<center align=left>Level norm (e.g. 1) <input type='text' 
-                                name='level_norm'>
-</center><br>
-<center align=left>Dimension (e.g. 1) <input type='text' 
-                                name='dimension'>
-</center><br>
-<center align=left>Maximum number of forms <input type='text'
-                                                  name='count'
-                                                  value=10></center>
-<br>
-<input type='submit' value='Search'>
+<table>
+<tr>
+<td>Field</td>  
+<td><input type='text' name='field_label' size=10>
+<td><span class="formexample"> a label, e.g. 2.2.5.1 for
+    \(\mathbb{Q}(\sqrt{5})\) </span></td>
+</tr>
+<tr>
+<td>Weight vector</td>
+<td><input type='text' name='weight' size=10>
+<td><span class="formexample"> e.g. [2,2]</td>
+</tr>
+<tr>
+<td>Level norm</td>
+<td><input type='text' name='level_norm' size=10>
+<td><span class="formexample"> e.g. 1</td>
+</tr>
+<tr>
+<td>Dimension</td>
+<td><input type='text' name='dimension' size=10>
+<td><span class="formexample"> e.g. 1</td>
+</tr>
+<tr>
+<td>Maximum number of forms</td>
+<td><input type='text' name='count' value=10 size=10></td>
+<td><span class="formexample"> &nbsp;</td>
+</tr>
+<tr>
+<td colspan=3><input type='submit' value='Search'>
+</td>
+</tr>
+</table>
 </form>
-
-<h2> Browse </h2>
 
 
 {% endblock %}

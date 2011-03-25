@@ -6,11 +6,13 @@ from WebLfunction import *
 import LfunctionNavigationProcessing
 import LfunctionPageProcessing
 import LfunctionComp
+import LfunctionPlot
 from utilities import to_dict
 #from elliptic_curve import by_cremona_label
 # just testing
 
-def render_webpage(args, arg1, arg2, arg3, arg4, arg5):
+def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
+    args = request.args
     temp_args = to_dict(args)
     if len(args) == 0: 
         if arg1 == None: # this means we're at the start page
@@ -24,12 +26,16 @@ def render_webpage(args, arg1, arg2, arg3, arg4, arg5):
             if degree == 1:
                 info["contents"] = [processDirichletNavigation(args)]
             elif degree == 2:
-                info["contents"] = [processEllipticCurveNavigation(args)]
+#                info["contents"] = [processEllipticCurveNavigation(args),"holomorphic here"]
+                info["contents"] = [processEllipticCurveNavigation(args), LfunctionPlot.getOneGraphHtmlHolo(1, 22, 2, 14)]
+            elif degree == 3 or degree == 4:
+                info["contents"] = LfunctionPlot.getAllMaassGraphHtml(degree)
                 
             return render_template("DegreeNavigateL.html", info=info, title = 'Degree ' + str(degree)+ ' L-functions', bread = info["bread"])
             
         elif arg1 == 'custom': # need a better name
             return "not yet implemented"
+            
     # args may or may not be empty
     # what follows are all things that need homepages
 
@@ -51,18 +57,32 @@ def render_webpage(args, arg1, arg2, arg3, arg4, arg5):
     
     elif arg1 == 'ModularForm' and arg2 == 'GSp4'and arg3 == 'Q' and arg4 == 'maass':
         temp_args['type'] = 'sp4maass'
-        temp_args['source'] = args['type']
+        temp_args['source'] = args['source']
 
     elif arg1 == 'ModularForm' and arg2 == 'GL4'and arg3 == 'Q' and arg4 == 'maass':
         temp_args['type'] = 'sl4maass'
-        temp_args['source'] = args['type'] #type should be changed to 'source'
+        temp_args['source'] = args['source'] 
+
+    elif arg1 == 'ModularForm' and arg2 == 'GL3'and arg3 == 'Q' and arg4 == 'maass':
+        temp_args['type'] = 'sl3maass'
+        temp_args['source'] = args['source'] 
+
     else: # this means we're somewhere that requires args: db queries, holomorphic modular forms, custom,  maass forms, and maybe some others, all of which require a homepage.  
         return "not yet implemented"
 
     L = WebLfunction(temp_args)
     #return "23423"
-    info = initLfunction(L, temp_args)
-    print info['bread']
+   
+    try:
+        print temp_args
+        if temp_args['download'] == 'lcalcfile':
+            return render_lcalcfile(L)
+    except:
+        1
+        #Do nothing
+
+    info = initLfunction(L, temp_args, request)
+
     return render_template('Lfunction.html',info=info, title = info['title'],
                            bread = info['bread'], properties = info['properties'],
                            citation = info['citation'], credit = info['credit'],
@@ -204,7 +224,7 @@ def processNavigationContents(info, args, arg1,arg2,arg3,arg4,arg5):
 
     
 
-def initLfunction(L,args):
+def initLfunction(L,args, request):
     info = {'title': L.title}
     info['citation'] = ''
     info['support'] = ''
@@ -256,11 +276,11 @@ def initLfunction(L,args):
         number = str(L.number)
         info['friends'] = [('Modular Form','/ModularForm/GL2/Q/holomorphic/?weight='+weight+'&level='+level+'&character='+character +'&label='+label+'&number='+number)]
 
-    elif args['type'] == 'db':
+    elif args['source'] == 'db':
         info['bread'] = [('L-function','/L') ,
                          ('Degree ' + str(L.degree),'/L/degree' +
                           str(L.degree)),
-                         (L.id, 'Lfunction?type=db&id=' + L.id )]
+                         (L.id, request.url )]
 
     info['dirichlet'] = L.lfuncDStex("analytic")
     info['eulerproduct'] = L.lfuncEPtex("abstract")
@@ -272,6 +292,12 @@ def initLfunction(L,args):
 #LfunctionPageProcessing.setPageLinks(info, L, args)
 
     info['learnmore'] = [('L-functions', 'http://wiki.l-functions.org/L-functions') ]
+    if len(request.args)==0:
+        lcalcUrl = request.url + '?download=lcalcfile'
+    else:
+        lcalcUrl = request.url + '&download=lcalcfile'
+        
+    info['downloads'] = [('Lcalcfile', lcalcUrl) ]
     
     info['check'] = [('Riemann hypothesis', '/L/TODO') ,('Functional equation', '/L/TODO') \
                        ,('Euler product', '/L/TODO')]
@@ -310,10 +336,35 @@ def render_plotLfunction(args):
     response.headers['Content-type'] = 'image/png'
     return response
 
+def render_browseGraph(args):
+    print args
+    data = LfunctionPlot.paintSvgFile(args['group'], int(args['level']), args['sign'])
+    response = make_response(data)
+    response.headers['Content-type'] = 'image/svg+xml'
+    return response
+
+def render_browseGraphHolo(args):
+    print args
+    data = LfunctionPlot.paintSvgHolo(args['Nmin'], args['Nmax'], args['kmin'], args['kmax'])
+    response = make_response(data)
+    response.headers['Content-type'] = 'image/svg+xml'
+    return response
+
+
 def render_zeroesLfunction(args):
     WebL = WebLfunction(args)
     s = str(WebL.sageLfunction.find_zeros(-15,15,0.1))
     return s[1:len(s)-1]
+
+def render_lcalcfile(L):
+    try:
+        response = make_response(L.lcalcfile)
+    except:
+        response = make_response(L.createLcalcfile())
+
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
 
 def render_showcollections_demo():
     connection = pymongo.Connection()
