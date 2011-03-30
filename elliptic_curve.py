@@ -18,6 +18,7 @@ q = ZZ['x'].gen()
 
 cremona_label_regex = re.compile(r'(\d+)([a-z])+(\d*)')
 sw_label_regex=re.compile(r'sw(\d+).(\d+).(\d*)')
+
 def format_ainvs(ainvs):
     """
     The a-invariants are stored as a list of strings because mongodb doesn't
@@ -110,8 +111,8 @@ def elliptic_curve_search(**args):
     for field in ['conductor', 'torsion', 'rank']:
         if info.get(field):
             query[field] = parse_range(info[field])
-    #if info.get('iso'):
-     #   query['isogeny'] = parse_range(info['isogeny'], str)
+    if info.get('iso'):
+        query['isogeny'] = parse_range(info['isogeny'], str)
     if 'optimal' in info:
         query['number'] = 1
     info['query'] = query
@@ -170,22 +171,17 @@ def render_isogeny_class(conductor, iso_class):
 
     return render_template("elliptic_curve/iso_class.html", info = info,bread=bread, credit=credit,title = t)
 
+
 @app.route("/EllipticCurve/Q/<label>")
-def by_label(label):
-    if str(label)[0]=='s':
-        label1=str(label)[1:]
-        N,iso,number=sw_label_regex(label).groups()
-        if number:
-            return render_curve_webpage_by_label(str(label))
-        else:
-            return render_isogeny_class(int(N), iso)
-    else:
-    
+def by_cremona_label(label):
+    try:
         N, iso, number = cremona_label_regex.match(label).groups()
-        if number:
-            return render_curve_webpage_by_label(str(label))
-        else:
-            return render_isogeny_class(int(N), iso)
+    except:
+        N, iso, number = sw_label_regex.match(label).groups()
+    if number:
+        return render_curve_webpage_by_label(str(label))
+    else:
+        return render_isogeny_class(int(N), iso)
 
 @app.route("/EllipticCurve/Q/<int:conductor>/<iso_class>/<int:number>")
 def by_curve(conductor, iso_class, number):
@@ -193,7 +189,7 @@ def by_curve(conductor, iso_class, number):
         return render_curve_webpage_by_label(label="%s%s%s" % (conductor, iso_class, number))
     else:
         return render_curve_webpage_by_label(label="sw%s.%s.%s" % (conductor, iso_class, number))
-
+        
 def render_curve_webpage_by_label(label):
     C = base.getDBConnection()
     data = C.ellcurves.curves.find_one({'label': label})
