@@ -105,14 +105,14 @@ def elliptic_curve_search(**args):
             if number:
                 return render_curve_webpage_by_label(label=label)
             else:
-                return render_isogeny_class(int(N), iso)
+                return render_isogeny_class(str(N)+iso)
         else:
             query['label'] = label
     for field in ['conductor', 'torsion', 'rank']:
         if info.get(field):
             query[field] = parse_range(info[field])
-    if info.get('iso'):
-        query['isogeny'] = parse_range(info['isogeny'], str)
+    #if info.get('iso'):
+        #query['isogeny'] = parse_range(info['isogeny'], str)
     if 'optimal' in info:
         query['number'] = 1
     info['query'] = query
@@ -132,7 +132,7 @@ def elliptic_curve_search(**args):
 ##########################
 
 @app.route("/EllipticCurve/Q/<label>")
-def by_isogeny(label):
+def by_label(label):
     try:
         N, iso, number = cremona_label_regex.match(label).groups()
     except:
@@ -181,15 +181,15 @@ def render_isogeny_class(iso_class):
 
 
 #@app.route("/EllipticCurve/Q/<label>")
-def by_cremona_label(label):
-    try:
-        N, iso, number = cremona_label_regex.match(label).groups()
-    except:
-        N, iso, number = sw_label_regex.match(label).groups()
-    if number:
-        return render_curve_webpage_by_label(str(label))
-    else:
-        return render_isogeny_class(str(N)+iso)
+#def by_cremona_label(label):
+#    try:
+#        N, iso, number = cremona_label_regex.match(label).groups()
+#    except:
+#        N, iso, number = sw_label_regex.match(label).groups()
+#    if number:
+#        return render_curve_webpage_by_label(str(label))
+#    else:
+#        return render_isogeny_class(str(N)+iso)
 
 #@app.route("/EllipticCurve/Q/<int:conductor>/<iso_class>/<int:number>")
 #def by_curve(conductor, iso_class, number):
@@ -235,7 +235,7 @@ def render_curve_webpage_by_label(label):
         'disc_factor': latex(discriminant.factor()),
         'j_invar_factor':latex(j_invariant.factor()),
         'label': label,
-        'isogeny':str(N)+iso_class,
+        'isogeny':iso_class,
         'equation': web_latex(E),
         'f': ajax_more(E.q_eigenform, 10, 20, 50, 100, 250),
         'generators':','.join(web_latex(g) for g in generator) if 'gens' in data else ' ',
@@ -274,7 +274,7 @@ def padic_data():
     p = int(request.args['p'])
     info['p'] = p
     N, iso, number = cremona_label_regex.match(label).groups()
-    print N, iso, number
+    #print N, iso, number
     if request.args['rank'] == '0':
         info['reg'] = 1
     elif number == '1':
