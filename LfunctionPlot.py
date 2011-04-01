@@ -149,7 +149,7 @@ def getGraphInfo(group, level, sign):
 ## ============================================
 def getGraphInfoHolo(Nmin, Nmax, kmin, kmax):
 #    (width,height) = getWidthAndHeight(group, level, sign)
-    xfactor = 70
+    xfactor = 90
     yfactor = 30
     extraSpace = 30
 
@@ -371,16 +371,16 @@ def paintCSHolo(width, height, xMax, yMax, xfactor, yfactor,ticlength):
 ## the L-functions of holomorphic cusp forms.
 ## ============================================
 def paintSvgHolo(Nmin,Nmax,kmin,kmax):
-    xfactor = 70
+    xfactor = 90
     yfactor = 30
     extraSpace = 20
     ticlength = 4
-    radius = 3
-    xdotspacing = 0.10  # horizontal spacing of dots
-    ydotspacing = 0.16  # vertical spacing of dots
+    radius = 3.3
+    xdotspacing = 0.11  # horizontal spacing of dots
+    ydotspacing = 0.28  # vertical spacing of dots
     colourplus = "rgb(0,0,255)"
     colourminus = "rgb(204,0,0)"
-    maxdots = 1  # max number of dots to display
+    maxdots = 5  # max number of dots to display
 
     ans = "<svg  xmlns='http://www.w3.org/2000/svg'"
     ans += " xmlns:xlink='http://www.w3.org/1999/xlink'>\n"
@@ -394,14 +394,14 @@ def paintSvgHolo(Nmin,Nmax,kmin,kmax):
 
     alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
 #loop over levels and weights
-    for x in range(int(Nmin), int(Nmax) + 1):
+    for x in range(int(Nmin), int(Nmax) + 1):  # x is the level
         print "level = " + str(x)
-        for y in range(int(kmin), int(kmax) + 1, 2):
+        for y in range(int(kmin), int(kmax) + 1, 2):  # y is the weight 
            print "  weight = " + str(y)
            lid = "(" + str(x) + "," + str(y) + ")"
            linkurl = "/L/ModularForm/" + "GL2/Q/holomorphic?weight=" + str(y) +"&amp;level=" + str(x) + "&amp;character=0"
            WS = WebModFormSpace(y,x)
-           numlabels = len(WS.galois_decomposition())
+           numlabels = len(WS.galois_decomposition())  # one label per Galois orbit
            thelabels = alphabet[0:numlabels]    # list of labels for the Galois orbits for weight y, level x
            countplus = 0   # count how many Galois orbits have sign Plus (+ 1)
            countminus = 0   # count how many Galois orbits have sign Minus (- 1)
@@ -409,7 +409,7 @@ def paintSvgHolo(Nmin,Nmax,kmin,kmax):
            ybaseminus = y  # baseline y-coord for minus cases
            numpluslabels=0
            numminuslabels=0
-           for label in thelabels:
+           for label in thelabels:  # looping over Galois orbit
                linkurl += "&amp;label=" + label
                MF = WebNewForm(y,x,0,label)   # one of the Galois orbits for weight y, level x
                numberwithlabel = MF.degree()  # number of forms in the Galois orbit
@@ -419,17 +419,17 @@ def paintSvgHolo(Nmin,Nmax,kmin,kmax):
                   frickeeigenvalue = MF.atkin_lehner_eigenvalues()[x] # gives Fricke eigenvalue
                   signfe = frickeeigenvalue * (-1)**float(y/2)  # sign of functional equation
                xbase = x - signfe * (xdotspacing/2.0) 
-               if signfe > 0:
+               if signfe > 0:  # go to right in BLUE if plus
                   ybase = ybaseplus
                   ybaseplus += ydotspacing
                   thiscolour = colourplus
                   numpluslabels += 1
-               else:
+               else:  # go to the left in RED of minus
                   ybase = ybaseminus
                   ybaseminus += ydotspacing
                   thiscolour = colourminus
                   numminuslabels += 1
-               if numberwithlabel > maxdots:
+               if numberwithlabel > maxdots:  # if more than maxdots in orbit, use number as symbol
                    xbase += 1.5 * signfe * xdotspacing
                    if signfe < 0:   # move over more to position numbers on minus side.
                       xbase += signfe * xdotspacing
@@ -448,7 +448,9 @@ def paintSvgHolo(Nmin,Nmax,kmin,kmax):
                       ybaseminus +=  1.5 * ydotspacing
                    else:
                       ybaseplus +=  1.5 * ydotspacing
-               else:   
+               else:  # otherwise, use one dot per form in orbit, connected with a line 
+                 firstcenterx = xbase + signfe * xdotspacing
+                 firstcentery = ybase 
                  for number in range(0,numberwithlabel):
                    xbase += signfe * xdotspacing
                    ans += "<a xlink:href='" + linkurl + "&amp;number=" + str(number) + "' target='_top'>\n"
@@ -458,6 +460,14 @@ def paintSvgHolo(Nmin,Nmax,kmin,kmax):
                    ans += "' style='fill:"+ thiscolour +"'>"
                    ans += "<title>" + str((x,y)).replace("u", "").replace("'", "") + "</title>"
                    ans += "</circle></a>\n"
+                 if numberwithlabel > 1:  # join dots if there are at least two
+                   lastcenterx = xbase
+                   lastcentery = ybase
+                   ans += "<line x1='" +  str(float(firstcenterx)*xfactor)[0:7]
+                   ans += "' y1='" + str(float(height - firstcentery*yfactor))[0:7]
+                   ans += "' x2='" + str(float(lastcenterx)*xfactor)[0:7]
+                   ans += "' y2='" + str(float(height - lastcentery*yfactor))[0:7]
+                   ans += "' style='stroke:" + thiscolour + ";stroke-width:2.4'/>"
 
     ans += "</svg>"
 
@@ -474,15 +484,15 @@ def getOneGraphHtmlHolo(Nmin, Nmax, kmin, kmax):
     ans += "\\begin{equation}\n \\Lambda(s) := N^{s/2} \\Gamma_C"
     ans += "\\left(s + \\frac{k-1}{2} \\right) L(s) "
     ans += "=\\pm \\Lambda(1-s)\n\\end{equation}\n<br/>"
-    ans += "If \\(L(s) = \sum a_n n^{-s} \) then \(a_n n^{\frac{k-1}{2} \) "
-    ans += "is an algebraic integer.  </div>\n"
+    ans += "If \\(L(s) = \sum a_n n^{-s} \) then \(a_n n^{\frac{k-1}{2}} \) "
+    ans += "is an algebraic integer. <p/> </div>\n"
     ans += "<div>This plot shows \((N,k)\) for such L-functions. "
     ans += "The color indicates the sign of the functional equation.  "
     ans += "The horizontal grouping indicates the degree of the field containing "
     ans += "the arithmetically normalized coefficients.\n<br/><br/></div>\n"
     graphInfo = getGraphInfoHolo(Nmin, Nmax, kmin, kmax)
 #    ans += ("<embed src='" + graphInfo['src'] + "' width='" + str(graphInfo['width']) +
-    ans += ("<embed src='/static/images/browseGraphHolo_22_14_2a.svg' width='" + str(graphInfo['width']) +
+    ans += ("<embed src='/static/images/browseGraphHolo_22_14_3a.svg' width='" + str(graphInfo['width']) +
            "' height='" + str(graphInfo['height']) +
             "' type='image/svg+xml' " +
             "pluginspage='http://www.adobe.com/svg/viewer/install/'/>\n")
