@@ -63,15 +63,19 @@ def quadratic_twists():
 
 @app.route("/quadratic_twists/<label>")
 def render_isogeny_class(label):
-    info = {}
     credit = ' '
     label = "%s" % label
     C = base.getDBConnection()
+    info=C.quadratic_twists.isogeny.files.find_one({'label': label})
     data = C.quadratic_twists.isogeny.find_one({'label': label})
     if data is None:
         return "No such curves"
     data['download_Rub_data_100']=url_for('download_Rub_data', label=str(label), limit=100)
     data['download_Rub_data']=url_for('download_Rub_data', label=str(label))
+    if 'related_to' in info:
+        data['related_to']=info['related_to']
+    else:
+        data['related_to']=''
     if data['type']=='r':
         type='real'
     else:
@@ -91,9 +95,9 @@ def download_Rub_data():
     filename=isogeny.find_one({'label':label})['filename']
     d= fs.get_last_version(filename)
     if limit==None:
-        limit=d.length
-    else:
+        response = make_response(d.read())
+    else: 
         limit=eval(limit)
-    response = make_response(''.join(str(d.readline()) for i in srange(limit)))
+        response = make_response(''.join(str(d.readline()) for i in srange(limit)))
     response.headers['Content-type'] = 'text/plain'
     return response
