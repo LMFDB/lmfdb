@@ -1,3 +1,5 @@
+import re
+
 from flask import render_template, url_for, make_response
 from sage.all import *
 import tempfile, os
@@ -10,6 +12,10 @@ import LfunctionPlot
 from utilities import to_dict
 #from elliptic_curve import by_cremona_label
 # just testing
+
+
+
+cremona_label_regex = re.compile(r'(\d+)([a-z])+(\d*)')
 
 def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
     args = request.args
@@ -48,6 +54,7 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
     elif arg1 == 'EllipticCurve' and arg2 == 'Q':
         temp_args['type'] = 'ellipticcurve'
         temp_args['label'] = str(arg3) 
+
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic': # this has args: one for weight and one for level
         temp_args['type'] = 'gl2holomorphic'
         print temp_args
@@ -72,6 +79,8 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
 
     L = WebLfunction(temp_args)
     #return "23423"
+
+    print L
    
     try:
         print temp_args
