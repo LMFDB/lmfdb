@@ -7,8 +7,10 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 import sage.all
 from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, AbelianGroup, polygen
 
-from utilities import ajax_more, image_src, web_latex, to_dict, parse_range, coeff_to_poly, pol_to_html
+from utilities import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html
 
+def parse_list(L): # parse a string like '[2,2]' without just calling eval()
+    return [int(a) for a in str(L)[1:-1].split(',')]
 
 def field_pretty(field_str):
     d,r,D,i = field_str.split('.')
@@ -42,7 +44,7 @@ def hilbert_modular_form_search(**args):
     for field in ['field_label', 'weight', 'level_norm', 'dimension']:
         if info.get(field):
             if field == 'weight':
-                query[field] = eval(info[field])
+                query[field] = parse_list(info[field])
             else:
                 query[field] = info[field]
 

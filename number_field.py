@@ -277,7 +277,8 @@ def by_label(label):
     return render_field_webpage({'label' : label})
 
 def parse_list(L):
-    return eval(str(L))
+    return [int(a) for a in str(L)[1:-1].split(',')]
+    # return eval(str(L)) works but using eval() is insecure
 
 def number_field_search(**args):
     info = to_dict(args)
