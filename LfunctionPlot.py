@@ -593,7 +593,11 @@ def reindex_characters(min_mod, max_mod):
     from sage.sets.set import Set
     char_dict = {}
     for N in range(min_mod, max_mod + 1):
-        G = list(DirichletGroup(N))
+        GG = list(DirichletGroup(N))
+        G = []
+        for g in GG:
+            if g.is_primitive():
+                G.append(g)
         for ii in range(len(G)):
             chi = G[ii]
             chib = chi.bar()
