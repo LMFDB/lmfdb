@@ -131,18 +131,26 @@ def elliptic_curve_search(**args):
 #  Specific curve pages
 ##########################
 
-@app.route("/EllipticCurve/Q/<int:conductor>/<iso_class>")
-def by_isogeny(conductor, iso_class):
-    return render_isogeny_class(conductor, iso_class)
+@app.route("/EllipticCurve/Q/<label>")
+def by_isogeny(label):
+    try:
+        N, iso, number = cremona_label_regex.match(label).groups()
+    except:
+        N, iso, number = sw_label_regex.match(label).groups()
+    if number:
+        return render_curve_webpage_by_label(label=label)
+    else:
+        return render_isogeny_class(label)
     
-def render_isogeny_class(conductor, iso_class):
+def render_isogeny_class(iso_class):
     info = {}
     credit = 'John Cremona'
-    label = "%s%s" % (conductor, iso_class)
+    label=iso_class
+
     C = base.getDBConnection()
     data = C.ellcurves.isogeny.find_one({'label': label})
     if data is None:
-        return "No such curves"
+        return "No such isogeny class"
     ainvs = [int(a) for a in data['ainvs_for_optimal_curve']]
     E = EllipticCurve(ainvs)
     info = {'label': label}
@@ -172,7 +180,7 @@ def render_isogeny_class(conductor, iso_class):
     return render_template("elliptic_curve/iso_class.html", info = info,bread=bread, credit=credit,title = t)
 
 
-@app.route("/EllipticCurve/Q/<label>")
+#@app.route("/EllipticCurve/Q/<label>")
 def by_cremona_label(label):
     try:
         N, iso, number = cremona_label_regex.match(label).groups()
@@ -181,14 +189,14 @@ def by_cremona_label(label):
     if number:
         return render_curve_webpage_by_label(str(label))
     else:
-        return render_isogeny_class(int(N), iso)
+        return render_isogeny_class(str(N)+iso)
 
-@app.route("/EllipticCurve/Q/<int:conductor>/<iso_class>/<int:number>")
-def by_curve(conductor, iso_class, number):
-    if conductor <140000:
-        return render_curve_webpage_by_label(label="%s%s%s" % (conductor, iso_class, number))
-    else:
-        return render_curve_webpage_by_label(label="sw%s.%s.%s" % (conductor, iso_class, number))
+#@app.route("/EllipticCurve/Q/<int:conductor>/<iso_class>/<int:number>")
+#def by_curve(conductor, iso_class, number):
+#    if conductor <140000:
+#        return render_curve_webpage_by_label(label="%s%s%s" % (conductor, iso_class, number))
+#    else:
+#        return render_curve_webpage_by_label(label="sw%s.%s.%s" % (conductor, iso_class, number))
         
 def render_curve_webpage_by_label(label):
     C = base.getDBConnection()
@@ -241,7 +249,7 @@ def render_curve_webpage_by_label(label):
                         })
     info['downloads_visible'] = True
     info['downloads'] = [('worksheet', url_for("not_yet_implemented"))]
-    info['friends'] = [('Isogeny class', "/EllipticCurve/Q/%s/%s" % (N, iso_class)),
+    info['friends'] = [('Isogeny class', "/EllipticCurve/Q/%s" % (iso_class)),
                        ('modular form', url_for("not_yet_implemented")),
                        ('L-function', "/L/EllipticCurve/Q/%s" % label)]
     info['learnmore'] = [('Elliptic Curves', url_for("not_yet_implemented"))]
