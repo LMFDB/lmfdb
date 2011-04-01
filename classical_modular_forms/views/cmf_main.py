@@ -56,20 +56,20 @@ def render_classical_modular_forms():
         level=None
     if weight<=0:
         weight=None
-    if character=='':
-        character=None
     if info.has_key('jump_to'):  # try to find out where we want to jump
-	s = str(info['jump_to'])
+	s = _my_get(info,'jump_to','',str)
 	info.pop('jump_to')
 	weight = 2  # this is default for jumping
+        character = 0 # this is default for jumping
 	if s == 'delta':
 	    weight = 12; level = 1; label = "a"
 	    exit
 	# first see if we have a label or not, i.e. if we have precisely one string of letters at the end
 	test = re.findall("[a-z]+",s)
-	print "label mat=",test
 	if len(test)==1: 
-	    label = test
+	    label = test[0]
+	print "label1=",label
+        
 	# the first string of integers should be the level
 	test = re.findall("^\d+",s)
 	print "level mat=",test
@@ -84,13 +84,14 @@ def render_classical_modular_forms():
 	print "level=",level
 
 	    
-    print "HERE:::::::::::::::::::",level,weight,character
+    print "HERE:::::::::::::::::::",level,weight,character,label
 
     # we see if we have submitted parameters
-    if level and weight and character and label:
+    if level and weight and character<>'' and label:
 		#return redirect(url_for("render_one_classical_modular_form", level,weight,character,label))
         info['level']=level; info['weight']=weight; info['label']=label; info['character']=character
-        return redirect(url_for("cmf.render_one_classical_modular_form", **info))
+        print "WE ARE HERE!"
+        return redirect(url_for("cmf.render_one_classical_modular_form", level=level, weight=weight,character=character,label=label))
     if level and weight and character:
         info['level']=level; info['weight']=weight; info['label']=label; info['character']=character
         return redirect(url_for("cmf.render_classical_modular_form_space", **info))
@@ -172,6 +173,10 @@ def render_one_classical_modular_form_wp(info):
     lifts=['Lifts / Correspondences'] #list()
     sbar=(properties,parents,friends,siblings,lifts)
     (info,sbar)=set_info_for_one_modular_form(info,sbar)
+
+    print "INFO111=",info
+
+
     err = info.get('error','')
     info['parents']=parents
     info['siblings']=siblings
@@ -342,14 +347,17 @@ def render_classical_modular_form_space_wp(info):
     if info.has_key('character') and info['character']=='*':
         return render_classical_modular_form_space_list_chars(level,weight)
     (info,sbar)=set_info_for_modular_form_space(info,sbar)
+    print "HERE!!!!!!!!"
+    print "keys=",info.keys()
+    print "dim=",info['dimension']
     if info.has_key('download') and not info.has_key('error'):					
 	return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
     if info.has_key('dimension') and info['dimension']==1: # if there is only one orbit we list it
 	print "Dimension is one!"
         info =dict()
         info['level']=level; info['weight']=weight; info['label']='a'; info['character']=character
-    print "INFO=",info
-    return redirect(url_for('cmf.render_one_classical_modular_form', **info))
+        # print "INFO=",info
+        return redirect(url_for('cmf.render_one_classical_modular_form', **info))
     (properties,parents,friends,siblings,lifts)=sbar
     title = "Holomorphic Cusp Forms of weight %s on \(\Gamma_{0}(%s)\)" %(weight,level)
     bread =[('Modular Forms',url_for('.modular_form_toplevel'))]
@@ -931,141 +939,146 @@ def print_list_of_weights(kstart=0,klen=20):
 #__main__.WebNewForm=WebNewForm
 
 def set_info_for_one_modular_form(info,sbar): #level,weight,character,label,info,sbar):
-	r"""
-	Set the info for on modular form.
-
-	"""
-        level  = _my_get(info,'level', -1,int)
-        weight = _my_get(info,'weight',-1,int) 
-        character = _my_get(info,'character', '',str) #int(info.get('weight',0))
-        if character=='':
-            character=0
-        label  = info.get('label', '')
-	try:
-		#M = WebModFormSpace(weight,level,character)
-		#if label
-                print weight,level,character,label
-                print type(weight),type(level),type(character),type(label)
-		WNF = WebNewForm(weight,level,character,label)
-		if info.has_key('download') and info.has_key('tempfile'):
-                    WNF._save_to_file(info['tempfile'])
-                    info['filename']=str(weight)+'-'+str(level)+'-'+str(character)+'-'+label+'.sobj'
-                    return (info,sbar)
-	except IndexError:
-		WNF = None
-		print "Could not compute the desired function!"
-                print level,weight,character,label
-		info['error']="Could not compute the desired function!"
-	(properties,parents,friends,siblings,lifts)=sbar
-	#print info.keys()
-	#print "--------------------------------------------------------------------------------"
-	#print WNF
-	if WNF==None or  WNF.f == None:
-		print "level=",level
-		info['error']="This space is empty!"
+    r"""
+    Set the info for on modular form.
+    
+    """
+    level  = _my_get(info,'level', -1,int)
+    weight = _my_get(info,'weight',-1,int) 
+    character = _my_get(info,'character', '',str) #int(info.get('weight',0))
+    if character=='':
+        character=0
+    label  = info.get('label', '')
+    try:
+        #M = WebModFormSpace(weight,level,character)
+        #if label
+        print weight,level,character,label
+        print type(weight),type(level),type(character),type(label)
+        WNF = WebNewForm(weight,level,character,label)
+        if info.has_key('download') and info.has_key('tempfile'):
+            WNF._save_to_file(info['tempfile'])
+            info['filename']=str(weight)+'-'+str(level)+'-'+str(character)+'-'+label+'.sobj'
+            return (info,sbar)
+    except IndexError:
+        WNF = None
+        print "Could not compute the desired function!"
+        print level,weight,character,label
+        info['error']="Could not compute the desired function!"
+    (properties,parents,friends,siblings,lifts)=sbar
+    #print info.keys()
+    #print "--------------------------------------------------------------------------------"
+    #print WNF
+    if WNF==None or  WNF.f == None:
+        print "level=",level
+        info['error']="This space is empty!"
 		
-        D = DirichletGroup(level)
-        if len(D.list())> character:
-            x = D.list()[character]
-            info['character_order']=x.order()
-            info['character_conductor']=x.conductor()
-        else:
-            info['character_order']='0'
-            info['character_conductor']=level
-        if info.has_key('error'):
-            return (info,sbar)		
-	info['name']=WNF._name
-	#info['embeddings'] =  ajax_more2(WNF.print_q_expansion_embeddings,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more coeffs.','more precision'])
-	info['satake'] = ajax_more2(WNF.print_satake_parameters,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more parameters','more precision'])
-	info['polynomial'] = WNF.polynomial()
-	#info['q_exp'] = "\["+WNF.print_q_expansion()+"\]"
-	#old_break = WNF._break_line_at
-	#WNF._break_line_at=50
-	#info['q_exp'] = ajax_more(WNF.print_q_expansion,5,10,20,50,100)
-	br = 500
-	info['q_exp'] = ajax_more(WNF.print_q_expansion,{'prec':5,'br':br},{'prec':10,'br':br},{'prec':20,'br':br},{'prec':100,'br':br},{'prec':200,'br':br})
-	#WNF._break_line_at=old_break
-	## check the varable...
-	#m = re.search('zeta_{\d+}',info['q_exp'])
-	#if(m):
-	#	ss = re.sub('x','\\'+m.group(),info['polynomial'])
-	#	info['polynomial'] = ss
-	if(WNF.dimension()>1):
-		info['polynomial_st'] = 'where ' +'\('+	info['polynomial'] +'=0\)'
-	else:
-		info['polynomial_st'] = ''
+    D = DirichletGroup(level)
+    if len(D.list())> character:
+        x = D.list()[character]
+        info['character_order']=x.order()
+        info['character_conductor']=x.conductor()
+    else:
+        info['character_order']='0'
+        info['character_conductor']=level
+    if info.has_key('error'):
+        return (info,sbar)		
+    info['name']=WNF._name
+    #info['embeddings'] =  ajax_more2(WNF.print_q_expansion_embeddings,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more coeffs.','more precision'])
+    info['satake'] = ajax_more2(WNF.print_satake_parameters,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more parameters','more precision'])
+    info['polynomial'] = WNF.polynomial()
+    #info['q_exp'] = "\["+WNF.print_q_expansion()+"\]"
+    #old_break = WNF._break_line_at
+    #WNF._break_line_at=50
+    #info['q_exp'] = ajax_more(WNF.print_q_expansion,5,10,20,50,100)
+    br = 500
+    info['q_exp'] = ajax_more(WNF.print_q_expansion,{'prec':5,'br':br},{'prec':10,'br':br},{'prec':20,'br':br},{'prec':100,'br':br},{'prec':200,'br':br})
+    #WNF._break_line_at=old_break
+    ## check the varable...
+    #m = re.search('zeta_{\d+}',info['q_exp'])
+    #if(m):
+    #	ss = re.sub('x','\\'+m.group(),info['polynomial'])
+    #	info['polynomial'] = ss
+    if(WNF.dimension()>1):
+        info['polynomial_st'] = 'where ' +'\('+	info['polynomial'] +'=0\)'
+    else:
+        info['polynomial_st'] = ''
+        
+    #info['satake_angle'] = WNF.print_satake_parameters(type='thetas')
+    K = WNF.base_ring()
+    if(K<>QQ and K.is_relative()):
+        info['degree'] = int(WNF.base_ring().relative_degree())
+    else:
+        info['degree'] = int(WNF.base_ring().degree())
+    #info['q_exp_embeddings'] = WNF.print_q_expansion_embeddings()
+    if(int(info['degree'])>1 and WNF.dimension()>1):
+        s = 'One can embed it into \( \mathbb{C} \) as:' 
+        bprec = 26
+        print s
+        #args = 
+        #info['embeddings'] =  ajax_more2(WNF.print_q_expansion_embeddings,{'prec':5,'bprec':bprec},{'prec':10,'bprec':bprec},{'prec':25,'bprec':bprec},{'prec':50,'bprec':bprec},text='More coefficients')
+        info['embeddings'] =  ajax_more2(WNF.print_q_expansion_embeddings,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more coeffs.','more precision'])
+    elif(int(info['degree'])>1):
+        s = 'There are '+str(info['degree'])+' embeddings into \( \mathbb{C} \):'
+        bprec = 26
+        print s
+        info['embeddings'] =  ajax_more2(WNF.print_q_expansion_embeddings,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more coeffs.','more precision'])
+        #info['embeddings'] = ajax_more2(WNF.print_q_expansion_embeddings,{'prec':5,'bprec':bprec},{'prec':10,'bprec':bprec},{'prec':25,'bprec':bprec},{'prec':50,'bprec':bprec})
 
-	#info['satake_angle'] = WNF.print_satake_parameters(type='thetas')
-	K = WNF.base_ring()
-	if(K<>QQ and K.is_relative()):
-		info['degree'] = int(WNF.base_ring().relative_degree())
-	else:
-		info['degree'] = int(WNF.base_ring().degree())
-	#info['q_exp_embeddings'] = WNF.print_q_expansion_embeddings()
-	if(int(info['degree'])>1 and WNF.dimension()>1):
-		s = 'One can embed it into \( \mathbb{C} \) as:' 
-		bprec = 26
-		print s
-		#args = 
-		#info['embeddings'] =  ajax_more2(WNF.print_q_expansion_embeddings,{'prec':5,'bprec':bprec},{'prec':10,'bprec':bprec},{'prec':25,'bprec':bprec},{'prec':50,'bprec':bprec},text='More coefficients')
-		info['embeddings'] =  ajax_more2(WNF.print_q_expansion_embeddings,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more coeffs.','more precision'])
-	elif(int(info['degree'])>1):
-		s = 'There are '+str(info['degree'])+' embeddings into \( \mathbb{C} \):'
-		bprec = 26
-		print s
-		info['embeddings'] =  ajax_more2(WNF.print_q_expansion_embeddings,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more coeffs.','more precision'])
-		#info['embeddings'] = ajax_more2(WNF.print_q_expansion_embeddings,{'prec':5,'bprec':bprec},{'prec':10,'bprec':bprec},{'prec':25,'bprec':bprec},{'prec':50,'bprec':bprec})
+    else:
+        info['embeddings'] = ''			
+    #info['atkin_lehner'] = WNF.print_atkin_lehner_eigenvalues()
+    #info['atkin_lehner_cusps'] = WNF.print_atkin_lehner_eigenvalues_for_all_cusps()
+    info['twist_info'] = WNF.print_twist_info()
+    info['CM'] = WNF.print_is_CM()
+    info['CM_values'] = WNF.print_values_at_cm_points()
+    # properties for the sidebar
+    if(info['twist_info'][0]):				
+        s='Is minimal<br>'
+    else:
+        s='Is a twist of lower level<br>'
+    properties.append(s)
+    if(WNF.is_CM()[0]):				
+        s='* Is a CM-form'
+    else:
+        s='* Is not a CM-form'
+    properties.append(s)
+    
+    #info['atkin_lehner'] = WNF.print_atkin_lehner_eigenvalues()
+    #info['atkin_lehner_cusps'] =
+    s = "<h5> Atkin-Lehner eigenvalues</h5>"
+    s = s+WNF.print_atkin_lehner_eigenvalues_for_all_cusps()
+    s+="<br><small>* ) The Fricke involution</small>"
+    properties.append(s)
+    if(level==1):
+        info['explicit_formula'] = WNF.print_as_polynomial_in_E4_and_E6()
+    cur_url='?&level='+str(level)+'&weight='+str(weight)+'&character='+str(character)+'&label='+str(label)
+    if(len(WNF.parent().galois_decomposition())>1):
+        for label_other in WNF.parent()._galois_orbits_labels:
+            if(label_other<>label):
+                s='Modular Form '
+            else:
+                s='Modular Form '
+            s=s+str(level)+str(label_other)
+            url = url_for('cmf.render_one_classical_modular_form',level=level,weight=weight,character=character,label=label_other)                 
+            friends.append((s,url))
 
-	else:
-		info['embeddings'] = ''			
+    #    label = str(label)+str(j+1)
+    s = 'L-Function '+str(level)+label
+    url = "/L/ModularForm/GL2/Q/holomorphic?level=%s&weight=%s&character=%s&label=%s&number=%s" %(level,weight,character,label,0)
+    # url = '/L'+url_for('cmf.render_one_classical_modular_form',level=level,weight=weight,character=character,label=label) 
+    friends.append((s,url))
+    # if there is an elliptic curve over Q associated to self we also list that
+    if WNF.weight()==2 and WNF.degree()==1:
+        llabel=str(level)+label
+        s = 'Elliptic Curve '+llabel
+        url = '/EllipticCurve/Q/'+llabel 
+        friends.append((s,url))
+    #friends.append((s,'/Lfunction/ModularForm/GL2/Q/holomorphic/?weight='+str(weight)+'&level='+str(level)+'&character='+str(character)+"&label="+label+"&number="+str(j)))
 
-
-
-	info['atkin_lehner'] = WNF.print_atkin_lehner_eigenvalues()
-	info['atkin_lehner_cusps'] = WNF.print_atkin_lehner_eigenvalues_for_all_cusps()
-	info['twist_info'] = WNF.print_twist_info()
-	info['CM'] = WNF.print_is_CM()
-	info['CM_values'] = WNF.print_values_at_cm_points()
-	# properties for the sidebar
-	if(info['twist_info'][0]):				
-		s='Is minimal<br>'
-	else:
-		s='Is a twist of lower level<br>'
-	properties.append(s)
-	if(WNF.is_CM()[0]):				
-		s='Is a CM-form'
-	else:
-		s='Is not a CM-form'
-	properties.append(s)
-	if(level==1):
-		info['explicit_formula'] = WNF.print_as_polynomial_in_E4_and_E6()
-	cur_url='?&level='+str(level)+'&weight='+str(weight)+'&character='+str(character)+'&label='+str(label)
-	if(len(WNF.parent().galois_decomposition())>1):
-		for label_other in WNF.parent()._galois_orbits_labels:
-			if(label_other<>label):
-				s=re.sub('label='+label,'label='+str(label_other),cur_url)
-				l=(str(label_other),s)
-			else:
-				l=('-- '+str(label),cur_url)
-			siblings.append(l)
-
-	for j in range(WNF.degree()):
-		label = str(label)+str(j+1)
-		s = 'L-function '+str(level)+label
-		url = '/L'+url_for('cmf.render_one_classical_modular_form',level=level,weight=weight,character=character,label=label) 
-		friends.append((s,url))
-                # if there is an elliptic curve we also list that
-                if WNF.weight()==2 and WNF.degree()==1 and WNF.group().genus()==1:
-                    llabel=str(level)+label
-                    s = 'Elliptic Curve '+llabel
-                    url = '/EllipticCurve/Q/'+llabel 
-                    friends.append((s,url))
-		#friends.append((s,'/Lfunction/ModularForm/GL2/Q/holomorphic/?weight='+str(weight)+'&level='+str(level)+'&character='+str(character)+"&label="+label+"&number="+str(j)))
-
-	space_url='?&level='+str(level)+'&weight='+str(weight)+'&character='+str(character)
-	parents.append(('\( S_{k} (\Gamma_0(' + str(level) + '),\chi )\)',space_url))
-	info['sidebar']=set_sidebar([properties,parents,siblings,friends,lifts])
-	return (info,sbar)
+    space_url='?&level='+str(level)+'&weight='+str(weight)+'&character='+str(character)
+    parents.append(('\( S_{k} (\Gamma_0(' + str(level) + '),\chi )\)',space_url))
+    info['sidebar']=set_sidebar([properties,parents,siblings,friends,lifts])
+    return (info,sbar)
 
 
 

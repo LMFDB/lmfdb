@@ -1,3 +1,4 @@
+
 r""" Class for newforms in format which can be presented on the web easily
 
 
@@ -18,7 +19,7 @@ from plot_dom import draw_fundamental_domain
 from cmf_core import html_table,len_as_printed
 #from sage.monoids.all import AlphabeticStrings
 from sage.all import factor
-
+from flask import url_for
 import re
 
 import pymongo 
@@ -360,7 +361,8 @@ class WebModFormSpace(Parent):
         is_relative = False
         for j in range(len(self._decomposition)):
             label=self._galois_orbits_labels[j]
-            url="?weight="+str(self.weight())+"&level="+str(self.level())+"&character="+str(self.character())+"&label="+label
+            #url="?weight="+str(self.weight())+"&level="+str(self.level())+"&character="+str(self.character())+"&label="+label
+            url=url_for('cmf.render_one_classical_modular_form',level=self.level(),weight=self.weight(),label=label,character=self.character())
             header="<a href=\""+url+"\">"+label+"</a>"
             tbl['headersv'].append(header)
             dim=self._decomposition[j].dimension()
@@ -509,7 +511,9 @@ class WebNewForm(SageObject):
             self.f = None
             return 
         ##
-        self._name = str(N)+str(label)+str(num) +" (weight %s)" % k
+        #self._name = str(N)+str(label)+str(num) +" (weight %s)" % k
+        # a name is e.g. 11a (weight 2)
+        self._name = str(N)+str(label) +" (weight %s)" % k
         if self.f == None:
             if(self._verbose>=0):
                 raise IndexError,"Requested function does not exist!"
@@ -739,9 +743,14 @@ class WebNewForm(SageObject):
         """
         res=dict()
         for c in self.parent().group().cusps():
-            ep=self.atkin_lehner_at_cusp(c)
-            if(ep):
-                res[c]=ep
+            if c==Infinity:
+                continue
+            l=self.atkin_lehner_at_cusp(c)
+            print "l=",c,l
+            if(l):
+                (Q,ep)=l
+                res[c]=[Q,ep]
+                #res[c]=ep
         return res
             
     def atkin_lehner_at_cusp(self,cusp):
@@ -753,10 +762,10 @@ class WebNewForm(SageObject):
         if( x <> 0 and not x.is_trivial()):
             return None
         if(cusp==Cusp(Infinity)):
-            return 1
+            return (ZZ(0),1)
         elif(cusp==Cusp(0)):
             try: 
-                return self.atkin_lehner_eigenvalues()[self.level()]
+                return (self.level(),self.atkin_lehner_eigenvalues()[self.level()])
             except:
                 return None
         cusp=QQ(cusp)
@@ -765,7 +774,7 @@ class WebNewForm(SageObject):
         p=cusp.numerator()
         d=ZZ(cusp*N)
         if(d.divides(N) and gcd(ZZ(N/d),ZZ(d))==1):
-            return self.f.atkin_lehner_eigenvalue(ZZ(d))
+            return (ZZ(d),self.f.atkin_lehner_eigenvalue(ZZ(d)))
         else:
             return None
 
@@ -1397,17 +1406,19 @@ class WebNewForm(SageObject):
         tbl['atts']="border=\"1\""
         tbl['data']=[0]
         tbl['data'][0]=list()
-        tbl['corner_label']="\( c \)"
+        tbl['corner_label']="\( Q \)  \([cusp]\)"
         tbl['headersv']=["\(\epsilon_{Q}\)"]
-        for Q in l.keys():
+        for c in l.keys():
             #print "Q=",Q
-            if(Q<>Cusp(Infinity)):
+            if(c<>Cusp(Infinity)):
                 #print "hej"
-                if( Q==0 ):
-                    tbl['headersh'].append('\('+str(Q)+'^{*}\)')
+                Q = l[c][0]
+                s = '\('+str(Q)+"\; ["+str(c)+"]\)"
+                if( c==0 ):
+                    tbl['headersh'].append(s+'\({}^{*}\)')
                 else:
-                    tbl['headersh'].append('\('+str(Q)+'\)')
-                tbl['data'][0].append(l[Q])
+                    tbl['headersh'].append(s)
+                tbl['data'][0].append(l[c][1])
         print tbl
         s=html_table(tbl)
         #s=s+"<br><small>* ) The Fricke involution</small>"

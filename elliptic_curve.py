@@ -234,7 +234,7 @@ def render_curve_webpage_by_label(label):
     info['downloads_visible'] = True
     info['downloads'] = [('worksheet', url_for("not_yet_implemented"))]
     info['friends'] = [('Isogeny class', "/EllipticCurve/Q/%s/%s" % (N, iso_class)),
-                       ('modular form', url_for("not_yet_implemented")),
+                       ('modular form', url_for("cmf.render_classical_modular_form_from_label",label="%s" %(iso_class))),
                        ('L-function', "/L/EllipticCurve/Q/%s" % label)]
     info['learnmore'] = [('Elliptic Curves', url_for("not_yet_implemented"))]
     info['plot'] = image_src(plot)
