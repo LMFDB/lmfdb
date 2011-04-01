@@ -24,7 +24,7 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
             info["key"] = 777
             info["bread"] =  [('L-functions', url_for("render_Lfunction")), ('Degree '+str(degree), '/L/degree'+str(degree))]
             if degree == 1:
-                info["contents"] = [processDirichletNavigation(args)]
+                info["contents"] = [LfunctionPlot.getOneGraphHtmlChar(1,35,1,13)]
             elif degree == 2:
 #                info["contents"] = [processEllipticCurveNavigation(args),"holomorphic here"]
                 info["contents"] = [processEllipticCurveNavigation(args), LfunctionPlot.getOneGraphHtmlHolo(1, 22, 2, 14)]
@@ -316,7 +316,7 @@ def parameterstringfromdict(dic):
         answer += v
         answer += '&'
     return answer[0:len(answer)-1]
-        
+         
 
 def plotLfunction(args):
     WebL = WebLfunction(args)
@@ -350,6 +350,11 @@ def render_browseGraphHolo(args):
     response.headers['Content-type'] = 'image/svg+xml'
     return response
 
+def render_browseGraphChar(args):
+    data = LfunctionPlot.paintSvgChar(args['min_cond'], args['max_cond'], args['min_order'], arg['max_order'])
+    response = make_response(data)
+    respone.headers['Content-type'] = 'image/svg+xml'
+    return response
 
 def render_zeroesLfunction(args):
     WebL = WebLfunction(args)

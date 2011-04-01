@@ -93,6 +93,10 @@ def browseGraph():
 def browseGraphHolo():
     return Lfunction.render_browseGraphHolo(request.args)
 
+@app.route("/browseGraphChar")
+def browseGraphChar():
+    return Lfunction.render_browseGraphHolo(request.args)
+
 @app.route("/zeroesLfunction")
 def zeroesLfunction():
     return Lfunction.render_zeroesLfunction(request.args)
