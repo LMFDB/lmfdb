@@ -449,8 +449,17 @@ def paintSvgHolo(Nmin,Nmax,kmin,kmax):
                    else:
                       ybaseplus +=  1.5 * ydotspacing
                else:  # otherwise, use one dot per form in orbit, connected with a line 
-                 firstcenterx = xbase + signfe * xdotspacing
-                 firstcentery = ybase 
+                 if numberwithlabel > 1:  # join dots if there are at least two
+# add lines first and then dots to prevent line from hiding link
+                   firstcenterx = xbase + signfe * xdotspacing
+                   firstcentery = ybase 
+                   lastcenterx = xbase + (numberwithlabel * signfe * xdotspacing)
+                   lastcentery = ybase
+                   ans += "<line x1='" +  str(float(firstcenterx)*xfactor)[0:7]
+                   ans += "' y1='" + str(float(height - firstcentery*yfactor))[0:7]
+                   ans += "' x2='" + str(float(lastcenterx)*xfactor)[0:7]
+                   ans += "' y2='" + str(float(height - lastcentery*yfactor))[0:7]
+                   ans += "' style='stroke:" + thiscolour + ";stroke-width:2.4'/>"
                  for number in range(0,numberwithlabel):
                    xbase += signfe * xdotspacing
                    ans += "<a xlink:href='" + linkurl + "&amp;number=" + str(number) + "' target='_top'>\n"
@@ -460,14 +469,6 @@ def paintSvgHolo(Nmin,Nmax,kmin,kmax):
                    ans += "' style='fill:"+ thiscolour +"'>"
                    ans += "<title>" + str((x,y)).replace("u", "").replace("'", "") + "</title>"
                    ans += "</circle></a>\n"
-                 if numberwithlabel > 1:  # join dots if there are at least two
-                   lastcenterx = xbase
-                   lastcentery = ybase
-                   ans += "<line x1='" +  str(float(firstcenterx)*xfactor)[0:7]
-                   ans += "' y1='" + str(float(height - firstcentery*yfactor))[0:7]
-                   ans += "' x2='" + str(float(lastcenterx)*xfactor)[0:7]
-                   ans += "' y2='" + str(float(height - lastcentery*yfactor))[0:7]
-                   ans += "' style='stroke:" + thiscolour + ";stroke-width:2.4'/>"
 
     ans += "</svg>"
 
