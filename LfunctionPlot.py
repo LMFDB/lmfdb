@@ -461,6 +461,8 @@ def paintSvgHolo(Nmin,Nmax,kmin,kmax):
 
     ans += "</svg>"
 
+    print ans
+ 
     return(ans)
 
 ## ============================================
@@ -489,3 +491,300 @@ def getOneGraphHtmlHolo(Nmin, Nmax, kmin, kmax):
     return(ans)
    
 
+
+## ============================================
+## Returns the url and width and height of the svg-file for
+## Dirichlet L-functions.
+## ============================================
+def getGraphInfoChar(min_cond, max_cond, min_order, max_order):
+#    (width,height) = getWidthAndHeight(group, level, sign)
+    xfactor = 70
+    yfactor = 30
+    extraSpace = 30
+    #print min_cond,max_cond,min_order,max_order
+    (width,height) = (2*extraSpace + xfactor*(max_order), 2*extraSpace + yfactor*(max_cond))
+##    url = url_for('browseGraph',group=group, level=level, sign=sign)
+    url = ('/browseGraphChar?min_cond=' + str(min_cond) + '&max_cond=' + str(max_cond) + '&min_order=' + str(min_order) + '&max_order=' + str(max_order))
+#    url =url.replace('+', '%2B')  ## + is a special character in urls
+    ans = {'src': url}
+    ans['width']= width
+    ans['height']= height
+    #print (width, height)
+    return ans
+
+
+## ============================================
+## Returns the svg-code for a simple coordinate system.
+## width = width of the system
+## height = height of the system
+## xMax = maximum in first (x) coordinate
+## yMax = maximum in second (y) coordinate
+## xfactor = the number of pixels per unit in x
+## yfactor = the number of pixels per unit in y
+## ticlength = the length of the tickmarks
+## ============================================
+def paintCSChar(width, height, xMax, yMax, xfactor, yfactor,ticlength):
+    xmlText = ("<line x1='0' y1='" + str(height) + "' x2='" +
+               str(width) + "' y2='" + str(height) +
+               "' style='stroke:rgb(0,0,0);'/>\n")
+    xmlText = xmlText + ("<line x1='0' y1='" + str(height) +
+                         "' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n")
+    for i in range( 1,  xMax + 1):
+        xmlText = xmlText + ("<line x1='" + str(i*xfactor) + "' y1='" +
+                             str(height - ticlength) + "' x2='" +
+                             str(i*xfactor) + "' y2='" + str(height) +
+                             "' style='stroke:rgb(0,0,0);'/>\n")
+
+    for i in range( 1,  xMax + 1, 1):
+        digitoffset = 6
+        if i < 10:
+           digitoffset = 3
+        xmlText = xmlText + ("<text x='" + str(i*xfactor - digitoffset) + "' y='" +
+                             str(height - 2 * ticlength) +
+                             "' style='fill:rgb(102,102,102);font-size:11px;'>"
+                             + str(i) + "</text>\n")
+
+        xmlText = xmlText + ("<line y1='0' x1='" + str(i*xfactor) +
+                         "' y2='" + str(height) + "' x2='" +
+                         str(i*xfactor) +
+                         "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+
+    for i in range( 1,  yMax + 1):
+        xmlText = xmlText + ("<line x1='0' y1='" +
+                             str(height - i*yfactor) + "' x2='" +
+                             str(ticlength) + "' y2='" +
+                             str(height - i*yfactor) +
+                             "' style='stroke:rgb(0,0,0);'/>\n")
+
+    for i in range( 2,  yMax + 1, 2):
+        xmlText = xmlText + ("<text x='5' y='" +
+                             str(height - i*yfactor + 3) +
+                             "' style='fill:rgb(102,102,102);font-size:11px;'>" +
+                             str(i) + "</text>\n")
+
+        if i%4==0 :  #  put dahes every four units
+           xmlText = xmlText + ("<line x1='0' y1='" +
+                         str(height - i*yfactor) + "' x2='" + str(width) +
+                         "' y2='" + str(height - i*yfactor) +
+                         "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+
+    return xmlText
+
+## =============================================
+## helper function that organizes the Dirichlet characters
+## by order.  It returns a dict of characters where each entry
+## is a list of pairs. In particular char_dict[(N, order)] = [(ii,parity)]
+## where N is the conductor of the character with index ii in Sage's 
+## ordering, and is even if parity is 0 and 1 otherwise.
+## =============================================
+
+
+def reindex_characters(min_mod, max_mod):
+    from sage.sets.set import Set
+    char_dict = {}
+    for N in range(min_mod, max_mod + 1):
+        G = list(DirichletGroup(N))
+        for ii in range(len(G)):
+            chi = G[ii]
+            chib = chi.bar()
+            ord = chi.order()
+            parity = 1 # even
+            if chi.is_odd():
+                parity = -1
+            if ord < 13:
+                if chi == chib: #chi is real
+                    try:
+                        char_dict[(ord, N)].append((ii, parity))
+                    except KeyError:
+                        char_dict[(ord, N)] = []
+                        char_dict[(ord, N)].append((ii, parity))
+                else: #chi is complex 
+                    jj = G.index(chib)
+                    try:
+                        char_dict[(ord, N, "i")].append((ii,jj,parity))
+                    except KeyError:
+                        char_dict[(ord, N, "i")] = []
+                        char_dict[(ord, N, "i")].append((ii,jj,parity))
+            else:
+                if chi == chib: #chi is real
+                    try:
+                        char_dict[(13, N)].append((ii, parity))
+                    except KeyError:
+                        char_dict[(13, N)] = []
+                        char_dict[(13, N)].append((ii, parity))
+                else: #chi is complex 
+                    jj = G.index(chib)
+                    try:
+                        char_dict[(13, N, "i")].append((ii,jj,parity))
+                    except KeyError:
+                        char_dict[(13, N, "i")] = []
+                        char_dict[(13, N, "i")].append((ii,jj,parity))
+    cd = {} 
+    for k in char_dict:
+        if len(k) == 2:
+            cd[k] = char_dict[k]
+
+    for k in char_dict:
+        if len(k) == 3:
+            ll = char_dict[k]
+            for a,b,c in ll:
+                ll.remove((b,a,c))
+            try:
+                cd[(k[0],k[1])].extend(ll) 
+            except KeyError:
+                cd[(k[0],k[1])] = ll                         
+    return cd
+
+'''
+def reindex_characters(min_cond, max_cond):
+    from sage.modular.dirichlet import DirichletGroup
+    char_dict = {}
+    for N in range(min_cond, max_cond + 1):
+        DGN = DirichletGroup(N)
+        for ii in range(len(DGN)):
+            chi = DGN[ii]
+            ord = chi.order()
+            parity = 1 # even
+            if chi.is_odd():
+                parity = -1 #odd
+            if ord < 7:
+                try:
+                    char_dict[(ord,N)].append((ii,parity))
+                except KeyError:
+                    char_dict[(ord,N)] = []
+                    char_dict[(ord,N)].append((ii,parity))
+            else:
+                try:
+                    char_dict[(7,N)].append((ii,parity))
+                except KeyError:
+                    char_dict[(7,N)] = []
+                    char_dict[(7,N)].append((ii,parity))
+    return char_dict
+'''
+
+
+## ============================================
+## Returns the contents (as a string) of the svg-file for
+## the Dirichlet L-functions.
+## ============================================
+
+def paintSvgChar(min_cond,max_cond,min_order,max_order):
+    xfactor = 70
+    yfactor = 30
+    extraSpace = 20
+    ticlength = 4
+    radius = 3
+    xdotspacing = 0.10  # horizontal spacing of dots
+    ydotspacing = 0.16  # vertical spacing of dots
+    colourplus = "rgb(0,0,255)"
+    colourminus = "rgb(204,0,0)"
+    maxdots = 1  # max number of dots to display
+
+    ans = "<svg  xmlns='http://www.w3.org/2000/svg'"
+    ans += " xmlns:xlink='http://www.w3.org/1999/xlink'>\n"
+
+    xMax = int(max_order)
+    yMax = int(max_cond)
+    width = xfactor *xMax + 3*extraSpace
+    height = yfactor *yMax + 3*extraSpace
+
+    ans += paintCSChar(width, height, xMax, yMax, xfactor, yfactor, ticlength)
+
+    #loop over orders and conductors
+    cd = reindex_characters(min_cond, max_cond)
+    for (x,y) in cd:
+        lid = "(" + str(x) + "," + str(y) + ")"
+        linkurl = "/L/" + "Character/Dirichlet/" + str(y) 
+        counteven = 0   # count how many characters are even
+        countodd = 0   # count how many characters are odd
+        xbaseplus = x - (xdotspacing/2.0)
+        xbaseminus = x + (xdotspacing/2.0)
+        for ii in range(len(cd[(x,y)])):
+            current = cd[(x,y)][ii]
+            if len(current) == 2:
+                parity = current[1]
+                if parity == 1:
+                    xbaseplus += xdotspacing
+                    thiscolour = colourplus
+                    counteven += 1
+                    ans += "<a xlink:href='" + linkurl + "/" + str(current[0]) + "' target='_top'>\n"
+                    ans += "<circle cx='" + str(float(xbaseplus)*xfactor)[0:7]
+                    ans += "' cy='" +  str(height-(y*yfactor))[0:7]
+                    ans += "' r='" + str(radius)
+                    ans += "' style='fill:"+ thiscolour +"'>"
+                    ans += "<title>" + str((x,y)).replace("u", "").replace("'", "") + "</title>"
+                    ans += "</circle></a>\n"
+    
+                else:
+                    xbaseminus -= xdotspacing
+                    thiscolour = colourminus
+                    countodd += 1
+                    ans += "<a xlink:href='" + linkurl + "/" + str(current[0]) + "' target='_top'>\n"
+                    ans += "<circle cx='" + str(float(xbaseminus)*xfactor)[0:7]
+                    ans += "' cy='" +  str(height-(y*yfactor))[0:7]
+                    ans += "' r='" + str(radius)
+                    ans += "' style='fill:"+ thiscolour +"'>"
+                    ans += "<title>" + str((x,y)).replace("u", "").replace("'", "") + "</title>"
+                    ans += "</circle></a>\n"
+            if len(current) == 3:
+                parity = cd[(x,y)][ii][2]
+                if parity == 1:
+                    xbaseplus += xdotspacing
+                    thiscolour = colourplus
+                    counteven += 1
+                    ans += "<a xlink:href='" + linkurl + "/" + str(current[0]) + "' target='_top'>\n"
+                    ans += "<circle cx='" + str(float(xbaseplus)*xfactor)[0:7]
+                    ans += "' cy='" +  str(height-(y*yfactor))[0:7]
+                    ans += "' r='" + str(radius)
+                    ans += "' style='fill:"+ thiscolour +"'>"
+                    ans += "<title>" + str((x,y)).replace("u", "").replace("'", "") + "</title>"
+                    ans += "</circle></a>\n"
+                    ans += "<a xlink:href='" + linkurl + "/" + str(current[1]) + "' target='_top'>\n"
+                    ans += "<circle cx='" + str(float(xbaseplus)*xfactor)[0:7]
+                    ans += "' cy='" +  str(height-(y*yfactor)+ 2*radius)[0:7]
+                    ans += "' r='" + str(radius)
+                    ans += "' style='fill:"+ thiscolour +"'>"
+                    ans += "<title>" + str((x,y)).replace("u", "").replace("'", "") + "</title>"
+                    ans += "</circle></a>\n"
+                else:
+                    xbaseminus -= xdotspacing
+                    thiscolour = colourminus
+                    countodd += 1
+                    ans += "<a xlink:href='" + linkurl + "/" + str(cd[(x,y)][ii][0]) + "' target='_top'>\n"
+                    ans += "<circle cx='" + str(float(xbaseminus)*xfactor)[0:7]
+                    ans += "' cy='" +  str(height-(y*yfactor))[0:7]
+                    ans += "' r='" + str(radius)
+                    ans += "' style='fill:"+ thiscolour +"'>"
+                    ans += "<title>" + str((x,y)).replace("u", "").replace("'", "") + "</title>"
+                    ans += "</circle></a>\n"
+                    ans += "<a xlink:href='" + linkurl + "/" + str(cd[(x,y)][ii][1]) + "' target='_top'>\n"
+                    ans += "<circle cx='" + str(float(xbaseminus)*xfactor)[0:7]
+                    ans += "' cy='" +  str(height-(y*yfactor)+ 2*radius)[0:7]
+                    ans += "' r='" + str(radius)
+                    ans += "' style='fill:"+ thiscolour +"'>"
+                    ans += "<title>" + str((x,y)).replace("u", "").replace("'", "") + "</title>"
+                    ans += "</circle></a>\n"
+
+    ans += "</svg>"
+
+
+    return ans 
+
+
+
+## ============================================
+## Returns the header, some information and the url for the svg-file for
+## the Dirichlet L-functions.
+## ============================================
+def getOneGraphHtmlChar(min_cond, max_cond, min_order, max_order):
+    ans = "<div>These L-functions have a functional equation of the form ...</div>\n"
+    graphInfo = getGraphInfoChar(min_cond, max_cond, min_order, max_order)
+    print graphInfo
+#    ans += ("<embed src='" + graphInfo['src'] + "' width='" + str(graphInfo['width']) +
+    ans += ("<embed src='/static/images/browseGraphChar_1_35.svg' width='" + str(graphInfo['width']) +
+           "' height='" + str(graphInfo['height']) +
+            "' type='image/svg+xml' " +
+            "pluginspage='http://www.adobe.com/svg/viewer/install/'/>\n")
+    ans += "<br/>\n"
+
+    return(ans)
