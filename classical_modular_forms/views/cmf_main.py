@@ -125,13 +125,13 @@ def render_one_classical_modular_form(level,weight,character,label):
 def render_classical_modular_form_space(level,weight,character,**kwds):
     print "render_classical_modular_form_space::",level,weight
     info = get_args()
+    info['level']=level; info['weight']=weight; info['character']=character
     if info['label']<>'':
         return render_one_classical_modular_form_wp(info) #level,weight,character,label,info)
     return render_classical_modular_form_space_wp(info)
 
-#@cmf.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/")
+
 @cmf.route("/<int:level>/<int:weight>/")
-#@app.route("/<int:level>/<int:weight>/")
 def render_classical_modular_form_browsing(level,weight):
     info = get_args()
     info['level']=level; info['weight']=weight
@@ -144,6 +144,13 @@ def render_classical_modular_form_space2(level):
     info=get_args()
     info['level']=level; info['weight']=None
     return browse_classical_modular_forms(**info)
+
+# see if the argument can be interpreted as a label of some sort
+# see if we can jump directly to it
+@cmf.route("/<label>/")
+def render_classical_modular_form_from_label(label):
+    return redirect(url_for("cmf.render_classical_modular_forms", jump_to=label))
+
 
 
 ###
@@ -236,7 +243,7 @@ def render_classical_modular_form_navigation_wp(**args):
     info['list_chars']=ajax_once(print_list_of_characters,text='print list of characters!')
     ## t = """| <a onclick="$('#%(nonce)s').load('%(url2)s', function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'%(nonce)s']);}); return false;" href="#">%(text1)s</a>]</span>""" % locals()
 	## info['list_of_characters'] = 
-    if level:
+    if level>0:
 	info['geometric'] = print_geometric_data_Gamma0N(level)
 	if info.has_key('plot'):
 	    return render_fd_plot(level,info)
@@ -324,18 +331,25 @@ def render_classical_modular_form_space_wp(info):
     r"""
     Render the webpage for a classical modular forms space.
     """
+    level  = _my_get(info,'level', -1,int)
+    weight = _my_get(info,'weight',-1,int) 
+    character = _my_get(info,'character', '',str) #int(info.get('weight',0))
+    label = _my_get(info,'label', 'a',str)
+    if character=='':
+        character=0
     properties=list(); parents=list(); friends=list(); lifts=list(); siblings=list() 
     sbar=(properties,parents,friends,siblings,lifts)
-    if character=='*':
+    if info.has_key('character') and info['character']=='*':
         return render_classical_modular_form_space_list_chars(level,weight)
     (info,sbar)=set_info_for_modular_form_space(info,sbar)
     if info.has_key('download') and not info.has_key('error'):					
 	return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
-    if info['dimension']==1: # if there is only one orbit we list it
+    if info.has_key('dimension') and info['dimension']==1: # if there is only one orbit we list it
 	print "Dimension is one!"
-	info =dict()
-	info['level']=level; info['weight']=weight; info['label']='a'; info['character']=character
-	return redirect(url_for("cmf.render_one_classical_modular_form", **info))
+        info =dict()
+        info['level']=level; info['weight']=weight; info['label']='a'; info['character']=character
+    print "INFO=",info
+    return redirect(url_for('cmf.render_one_classical_modular_form', **info))
     (properties,parents,friends,siblings,lifts)=sbar
     title = "Holomorphic Cusp Forms of weight %s on \(\Gamma_{0}(%s)\)" %(weight,level)
     bread =[('Modular Forms',url_for('.modular_form_toplevel'))]
@@ -1040,6 +1054,12 @@ def set_info_for_one_modular_form(info,sbar): #level,weight,character,label,info
 		s = 'L-function '+str(level)+label
 		url = '/L'+url_for('cmf.render_one_classical_modular_form',level=level,weight=weight,character=character,label=label) 
 		friends.append((s,url))
+                # if there is an elliptic curve we also list that
+                if WNF.weight()==2 and WNF.degree()==1 and WNF.group().genus()==1:
+                    llabel=str(level)+label
+                    s = 'Elliptic Curve '+llabel
+                    url = '/EllipticCurve/Q/'+llabel 
+                    friends.append((s,url))
 		#friends.append((s,'/Lfunction/ModularForm/GL2/Q/holomorphic/?weight='+str(weight)+'&level='+str(level)+'&character='+str(character)+"&label="+label+"&number="+str(j)))
 
 	space_url='?&level='+str(level)+'&weight='+str(weight)+'&character='+str(character)
@@ -1114,10 +1134,11 @@ def make_table_of_spaces_fixed_level(level=1,character=0,weight_block=0,**kwds):
 
 
 
-def set_inf_foor_modular_form_space(info,sbar):
+def set_info_for_modular_form_space(info,sbar):
 	r"""
 	Set information about a space of modular forms.
 	"""
+        print "info=",info
         level  = _my_get(info,'level', -1,int)
         weight = _my_get(info,'weight',-1,int) 
         character = _my_get(info,'character', '',str) #int(info.get('weight',0))
@@ -1126,15 +1147,18 @@ def set_inf_foor_modular_form_space(info,sbar):
 	(properties,parents,friends,siblings,lifts)=sbar
 	if(level > N_max_comp or weight > k_max_comp):
             info['error']="Will take too long to compute!"
-	try:
+        if level > 0:
+            try:
 		#print  "PARAM_S:",weight,level,character
-            WMFS = WebModFormSpace(weight,level,character)
-            if info.has_key('download') and info.has_key('tempfile'):
-                WNF._save_to_file(info['tempfile'])
-                info['filename']=str(weight)+'-'+str(level)+'-'+str(character)+'-'+label+'.sobj'
-                return (info,sbar)
-        except RuntimeError:
-            info['error']="Sage error: Could not construct the desired space!"
+                WMFS = WebModFormSpace(weight,level,character)
+                if info.has_key('download') and info.has_key('tempfile'):
+                    WNF._save_to_file(info['tempfile'])
+                    info['filename']=str(weight)+'-'+str(level)+'-'+str(character)+'-'+label+'.sobj'
+                    return (info,sbar)
+            except RuntimeError:
+                info['error']="Sage error: Could not construct the desired space!"
+        else:
+            info['error']="Got wrong level: %s " %level
 	if(info.has_key('error')):
 		return (info,sbar)
 	info['dimension'] = WMFS.dimension()

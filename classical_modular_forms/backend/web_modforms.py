@@ -499,10 +499,11 @@ class WebNewForm(SageObject):
             j = self._parent._galois_orbits_labels.index(label)
         elif(len(self._parent._galois_orbits_labels)==1):
             j=0
-        else:
+        elif len(self._parent._galois_orbits_labels)>0:
             raise ValueError,"The space has dimension > 1. Please specify a label!"
-
-        if j < len(self._parent._newforms):
+        else:
+            j=-1 #raise ValueError,"The space is zero-dimensional!"
+        if j < len(self._parent._newforms) and j>=0:
             self.f=self._parent._newforms[j]
         else:
             self.f = None
