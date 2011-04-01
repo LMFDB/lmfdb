@@ -63,7 +63,10 @@ def hilbert_modular_form_search(**args):
     nres = res.count()
         
     info['forms'] = res
-    info['field_pretty_name'] = field_pretty(res[0]['field_label'])
+    if nres>0:
+        info['field_pretty_name'] = field_pretty(res[0]['field_label'])
+    else:
+        info['field_pretty_name'] = ''
     info['number'] = nres
     if nres==1:
         info['report'] = 'unique match'
