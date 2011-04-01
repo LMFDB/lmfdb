@@ -34,8 +34,8 @@ Optimal <input type='checkbox'  name='optimal' {% if info.optimal %} checked {%e
 </tr>
 {% for curve in info.curves: %}
 <tr>
-<td align=center><a href="/EllipticCurve/Q/{{curve.conductor}}/{{curve.iso}}">{{curve.conductor}}{{curve.iso}}</a></td>
-<td align=center><a href="/EllipticCurve/Q/{{curve.conductor}}/{{curve.iso}}/{{curve.number}}">{{curve.label}}</a></td>
+<td align=center><a href="/EllipticCurve/Q/{{curve.iso}}">{{curve.iso}}</a></td>
+<td align=center><a href="/EllipticCurve/Q/{{curve.label}}">{{curve.label}}</a></td>
 <td align=left>{{info.format_ainvs(curve.ainvs)}}</td>
 <td align=center><a href="/EllipticCurve/Q?conductor={{info.conductor}}&rank={{curve.rank}}&torsion={{info.torsion}}">{{curve.rank}}</a></td>
 <td align=center><a href="/EllipticCurve/Q?conductor={{info.conductor}}&rank={{info.rank}}&torsion={{curve.torsion}}">{{curve.torsion}}</a></td>

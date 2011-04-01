@@ -10,7 +10,12 @@
 <h2>vec </h2>
 
 {{info.vec}}  
- 
+
+<h2>related to</h2>
+{%for r in info.related_to %}
+<a href='{{r.url}}'> {{r.label}}</a>
+{% endfor %}
+
  <h2>Download Stuff </h2>
     <p align="right">
         <a  href='{{info.download_Rub_data_100}}' target='_blank' >download first 100 coefficients Rubinstein data {% if info.type=='i'%} 
