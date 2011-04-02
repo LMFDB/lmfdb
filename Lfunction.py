@@ -41,13 +41,16 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
 
     if arg1 == 'Riemann':
         temp_args['type'] = 'riemann'
+
     elif arg1 == 'Character' and arg2 == 'Dirichlet':
         temp_args['type'] = 'dirichlet'
         temp_args['charactermodulus'] = arg3
         temp_args['characternumber'] = arg4 
+
     elif arg1 == 'EllipticCurve' and arg2 == 'Q':
         temp_args['type'] = 'ellipticcurve'
         temp_args['label'] = str(arg3) 
+
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic': # this has args: one for weight and one for level
         temp_args['type'] = 'gl2holomorphic'
         print temp_args
@@ -66,6 +69,12 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
     elif arg1 == 'ModularForm' and arg2 == 'GL3'and arg3 == 'Q' and arg4 == 'maass':
         temp_args['type'] = 'sl3maass'
         temp_args['source'] = args['source'] 
+
+    elif arg1 == 'NumberField':
+        temp_args['type'] = 'dedekind'
+        temp_args['label'] = str(arg2)
+        temp_args['source'] = ""  # it's a bug to require this to be defined
+
 
     else: # this means we're somewhere that requires args: db queries, holomorphic modular forms, custom,  maass forms, and maybe some others, all of which require a homepage.  
         return "not yet implemented"

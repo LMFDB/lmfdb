@@ -410,6 +410,7 @@ def paintSvgHolo(Nmin,Nmax,kmin,kmax):
            numpluslabels=0
            numminuslabels=0
            for label in thelabels:  # looping over Galois orbit
+               linkurl = "/L/ModularForm/" + "GL2/Q/holomorphic?weight=" + str(y) +"&amp;level=" + str(x) + "&amp;character=0"
                linkurl += "&amp;label=" + label
                MF = WebNewForm(y,x,0,label)   # one of the Galois orbits for weight y, level x
                numberwithlabel = MF.degree()  # number of forms in the Galois orbit
