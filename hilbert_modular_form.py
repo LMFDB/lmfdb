@@ -5,21 +5,14 @@ from base import app, getDBConnection
 from flask import Flask, session, g, render_template, url_for, request, redirect
 
 import sage.all
-from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, AbelianGroup, polygen
+from sage.all import ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi
 
 from utilities import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html
 
+from number_field import parse_field_string, field_pretty
+
 def parse_list(L): # parse a string like '[2,2]' without just calling eval()
     return [int(a) for a in str(L)[1:-1].split(',')]
-
-def field_pretty(field_str):
-    d,r,D,i = field_str.split('.')
-    if d == '1':  # Q
-        return '\( {\mathbb Q} \)'
-    if d == '2':  # quadratic field
-        return '\( {\mathbb Q}(\sqrt{' + D + '}) \)'
-    return field_str
-#    TODO:  pretty-printing of fields of higher degree
 
 @app.route("/ModularForm/GL2/")
 def hilbert_modular_form_render_webpage():
@@ -46,7 +39,10 @@ def hilbert_modular_form_search(**args):
             if field == 'weight':
                 query[field] = parse_list(info[field])
             else:
-                query[field] = info[field]
+                if field == 'field_label':
+                    query[field] = parse_field_string(info[field])
+                else:
+                    query[field] = info[field]
 
     if info.get('count'):        
         try:
