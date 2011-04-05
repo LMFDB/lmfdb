@@ -17,7 +17,7 @@ q = ZZ['x'].gen()
 #########################
 
 cremona_label_regex = re.compile(r'(\d+)([a-z])+(\d*)')
-sw_label_regex=re.compile(r'sw(\d+).(\d+).(\d*)')
+sw_label_regex=re.compile(r'sw(\d+)(\.)(\d+)(\.*)(\d*)')
 
 def format_ainvs(ainvs):
     """
@@ -132,11 +132,11 @@ def elliptic_curve_search(**args):
 ##########################
 
 @app.route("/EllipticCurve/Q/<label>")
-def by_label(label):
+def by_ec_label(label):
     try:
         N, iso, number = cremona_label_regex.match(label).groups()
     except:
-        N, iso, number = sw_label_regex.match(label).groups()
+        N,d1, iso,d2, number = sw_label_regex.match(label).groups()
     if number:
         return render_curve_webpage_by_label(label=label)
     else:

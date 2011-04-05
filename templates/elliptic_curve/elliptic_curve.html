@@ -23,12 +23,60 @@ function show_code(system) {
         <a onclick="show_code('pari'); return false" href='#'>pari</a>,
         <a onclick="show_code('magma'); return false" href='#'>magma</a>
     </div>
-    <div></div>
+    <div class='sage nodisplay code'>
+    sage: E = EllipticCurve({{info.ainvs}})
+    <br>sage: E.gens()
+    <br>sage: E.torsion_subgroup().gens() 
+    <br>sage: E.integral_points()
+    <br>sage: E.conductor().factor()
+    <br>sage: E.discriminant()
+    <br>sage: E.j_invariant()
+    <br>sage: E.rank()
+    <br>sage: E.regulator()
+    <br>sage: E.period_lattice().omega()
+    <br>sage: E.tamagawa_numbers()
+    <br>sage: E.torsion_order()
+    <br>sage: E.sha().an_numerical()
+    <br>sage: E.q_eigenform(10)
+    <br>sage: E.lseries().dokchitser().derivative(1,{{info.rank}})/factorial({{info.rank}})
+    <br>sage: E.plot()
+    </div>
+
+    <div class='pari nodisplay code'>
+    ? E = ellinit({{info.ainvs}})
+    <br>? Generators
+    <br>? elltors(E)
+    <br>? Integral points
+    <br>? conductor
+    <br>? E.disc
+    <br>? E.j
+    <br>? rank
+    <br>? regulator
+    <br>? omega
+    <br>? tamagawa_numbers
+    <br>? elltors(E)[1]
+    <br>? sha
+    <br>? q_eigenform
+    <br>? L-function value
+    </div>
+    <div class='magma nodisplay code'>
+    &gt; E := EllipticCurve({{info.ainvs}});
+    <br>&gt; Generators(E);
+    <br>&gt; TorsionSubgroup(E);
+    <br>&gt; Discriminant(E);
+    <br>&gt; jInvariant(E);
+    <br>&gt; Rank(E);
+    <br>&gt; Regulator(E);
+    <br>&gt; RealPeriod(E);
+    <br>&gt; TamagawaNumbers(E);
+    <br>&gt; OrderTorsionSubgroup(E);
+    <br>&gt; MordellWeilShaInformation(E);
+    <br>&gt; ModularForm(E);
+    </div>
+
+
     
     <h2> Minimal Weierstrass equation </h2>
-    <div class='sage nodisplay code'>sage: E = EllipticCurve({{info.ainvs}})</div>
-    <div class='pari nodisplay code'>? E = ellinit({{info.ainvs}})</div>
-    <div class='magma nodisplay code'>&gt; E := EllipticCurve({{info.ainvs}});</div>
     <p> {{ info.equation }} </p>
 
     <h2> Mordell-Weil Group structure</h2>
@@ -43,25 +91,16 @@ function show_code(system) {
     
     {% if info.rank!=0 %}    
     <p><h3> Infinite order Mordell-Weil generators </h3>
-    <div class='sage nodisplay code'>sage: E.gens()</div>
-    <div class='pari nodisplay code'> </div>
-    <div class='magma nodisplay code'>&gt; Generators(E);</div>
     <p> {{ info.generators }} </p></p>
     {%endif %}
     
     {% if info.torsion!=1 %}    
     <p><h3> Torsion generators </h3>
-    <div class='sage nodisplay code'>sage: E.torsion_subgroup()</div>
-    <div class='pari nodisplay code'>? elltors(E) </div>
-    <div class='magma nodisplay code'>&gt; TorsionSubgroup(E);</div>
     <p> {{ info.tor_gens }} </p></p>
     {%endif %}
 
 
     <h2> Integral points </h2>
-    <div class='sage nodisplay code'>sage: E.integral_points()</div>
-    <div class='pari nodisplay code'> </div>
-    <div class='magma nodisplay code'>&gt; ;</div>
     <p> {{ info.xintegral_points}} </p>
     
     <h2> Invariants </h2>
@@ -69,9 +108,6 @@ function show_code(system) {
 
         <tr>
         <td>
-            <span class='sage nodisplay code'>sage: E.conductor().factor()</span>
-            <span class='pari nodisplay code'></span>
-            <span class='magma nodisplay code'></span>
         </td>
         <td align='right'>\(N \)</td>
         <td>=</td>
@@ -80,9 +116,6 @@ function show_code(system) {
 
         <tr>
         <td>
-            <span class='sage nodisplay code'>sage: E.discriminant()</span>
-            <span class='pari nodisplay code'>? E[12]</span>
-            <span class='magma nodisplay code'>&gt; Discriminant(E);</span>
         </td>
         <td align='right'>\(\Delta \)</td>
         <td>=</td>
@@ -91,9 +124,6 @@ function show_code(system) {
 
         <tr>
         <td>
-            <span class='sage nodisplay code'>sage: E.j_invariant()</span>
-            <span class='pari nodisplay code'>? E[13]</span>
-            <span class='magma nodisplay code'>&gt; jInvariant(E);</span>
         </td>
         <td align='right'>\(j \)</td>
         <td>=</td>
@@ -110,9 +140,6 @@ function show_code(system) {
 
         <tr>
         <td>
-            <span class='sage nodisplay code'>sage: E.rank()</span>
-            <span class='pari nodisplay code'></span>
-            <span class='magma nodisplay code'>&gt; Rank(E);</span>
         </td>
         <td align='center'>\( r \)</td>
         <td>=</td>
@@ -121,9 +148,6 @@ function show_code(system) {
 
         <tr>
         <td>
-            <span class='sage nodisplay code'>sage: E.regulator()</span>
-            <span class='pari nodisplay code'></span>
-            <span class='magma nodisplay code'>&gt; Regulator(E);</span>
         </td>
         <td align='center'> \( \text{Reg} \) </td>
         <td>=</td>
@@ -132,9 +156,6 @@ function show_code(system) {
 
         <tr>
         <td>
-            <span class='sage nodisplay code'>sage: E.period_lattice().omega()</span>
-            <span class='pari nodisplay code'></span>
-            <span class='magma nodisplay code'>&gt; RealPeriod(E);</span>
         </td>
         <td align='center'>\( \Omega \)</td>
         <td>=</td>
@@ -143,9 +164,6 @@ function show_code(system) {
 
         <tr>
         <td>
-            <span class='sage nodisplay code'>sage: E.tamagawa_numbers()</span>
-            <span class='pari nodisplay code'></span>
-            <span class='magma nodisplay code'>&gt; TamagawaNumbers(E);</span>
         </td>
         <td align='center'>\( \prod_p c_p \)</td>
         <td>=</td>
@@ -154,9 +172,6 @@ function show_code(system) {
 
         <tr>
         <td>
-            <span class='sage nodisplay code'>sage: E.torsion_order()</span>
-            <span class='pari nodisplay code'>? elltors(E)[1]</span>
-            <span class='magma nodisplay code'>&gt; OrderTorsionSubgroup(E);</span>
         </td>
         <td align='center'>\( \#E_{tor} \)</td>
         <td>=</td>
@@ -165,9 +180,6 @@ function show_code(system) {
 
         <tr>
         <td>
-            <span class='sage nodisplay code'>sage: E.sha().an_numerical()</span>
-            <span class='pari nodisplay code'></span>
-            <span class='magma nodisplay code'>&gt; MordellWeilShaInformation(E);</span>
         </td>
         <td align='center'>&#1064;\(_{an} \) </td>
         <td>=</td>
@@ -178,9 +190,6 @@ function show_code(system) {
     </p>
 
     <h2> Modular form </h2>
-    <div class='sage nodisplay code'>sage: E.q_eigenform(10)</div>
-    <div class='pari nodisplay code'></div>
-    <div class='magma nodisplay code'>&gt; ModularForm(E);</div>
     <p>
         {{ info.f | safe }}
     </p>
@@ -206,8 +215,6 @@ function show_code(system) {
     </p>
 
     <h2> Plot of the real part.  </h2>
-    <div class='sage nodisplay code'>sage: E.plot()</div>
-    <div class='pari nodisplay code'> </div>
     <div class='magma nodisplay code'> </div>
     <center>
     <img src="{{info.plot}}" />

@@ -211,7 +211,7 @@ class WebLfunction:
 #===========================
                                                
     def ellipticcurveL(self):
-	self.E = EllipticCurve(str(self.label))
+        self.E = EllipticCurve(str(self.label))
         self.quasidegree = 1
         self.level = self.E.conductor()
         self.Q_fe = float(sqrt(self.level)/(2*math.pi))
