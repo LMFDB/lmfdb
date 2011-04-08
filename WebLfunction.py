@@ -453,37 +453,37 @@ class WebLfunction:
     def createLcalcfile(self):
         thefile="";
         if self.selfdual:
-            thefile = thefile + "2\n"  # 2 means real coefficients
+            thefile += "2\n"  # 2 means real coefficients
         else:
-            thefile = thefile + "3\n"  # 3 means complex coefficients
+            thefile += "3\n"  # 3 means complex coefficients
 
-        thefile = thefile + "0\n"  # 0 means unknown type
+        thefile += "0\n"  # 0 means unknown type
 
-        thefile = thefile + str(len(self.dirichlet_coefficients)) + "\n"  
+        thefile += str(len(self.dirichlet_coefficients)) + "\n"  
 
-        thefile = thefile + "0\n"  # assume the coefficients are not periodic
+        thefile += "0\n"  # assume the coefficients are not periodic
         
-        thefile = thefile + str(self.quasidegree) + "\n"  # number of actual Gamma functions
+        thefile += str(self.quasidegree) + "\n"  # number of actual Gamma functions
 
         for n in range(0,self.quasidegree):
             thefile = thefile + str(self.kappa_fe[n]) + "\n"
             thefile = thefile + str(real_part(self.lambda_fe[n])) + " " + str(imag_part(self.lambda_fe[n])) + "\n"
         
-        thefile = thefile + str(real_part(self.Q_fe)) +  "\n"
+        thefile += str(real_part(self.Q_fe)) +  "\n"
 
-        thefile = thefile + str(real_part(self.sign)) + " " + str(imag_part(self.sign)) + "\n"
+        thefile += str(real_part(self.sign)) + " " + str(imag_part(self.sign)) + "\n"
 
-        thefile = thefile + str(len(self.poles)) + "\n"  # counts number of poles
+        thefile += str(len(self.poles)) + "\n"  # counts number of poles
 
         for n in range(0,len(self.poles)):
-            thefile = thefile + str(real_part(self.poles[n])) + " " + str(imag_part(self.poles[n])) + "\n" #pole location
-            thefile = thefile + str(real_part(self.residues[n])) + " " + str(imag_part(self.residues[n])) + "\n" #residue at pole
+            thefile += str(real_part(self.poles[n])) + " " + str(imag_part(self.poles[n])) + "\n" #pole location
+            thefile += str(real_part(self.residues[n])) + " " + str(imag_part(self.residues[n])) + "\n" #residue at pole
 
         for n in range(0,len(self.dirichlet_coefficients)):
-            thefile = thefile + str(real_part(self.dirichlet_coefficients[n]))   # add real part of Dirichlet coefficient
+            thefile += str(real_part(self.dirichlet_coefficients[n]))   # add real part of Dirichlet coefficient
             if not self.selfdual:  # if not selfdual
-                thefile = thefile + " " + str(imag_part(self.dirichlet_coefficients[n]))   # add imaginary part of Dirichlet coefficient
-            thefile = thefile + "\n" 
+                thefile += " " + str(imag_part(self.dirichlet_coefficients[n]))   # add imaginary part of Dirichlet coefficient
+            thefile += "\n" 
         
         return(thefile)
 

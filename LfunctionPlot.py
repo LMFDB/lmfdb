@@ -420,6 +420,7 @@ def paintSvgHolo(Nmin,Nmax,kmin,kmax):
                   frickeeigenvalue = MF.atkin_lehner_eigenvalues()[x] # gives Fricke eigenvalue
                   signfe = frickeeigenvalue * (-1)**float(y/2)  # sign of functional equation
                xbase = x - signfe * (xdotspacing/2.0) 
+
                if signfe > 0:  # go to right in BLUE if plus
                   ybase = ybaseplus
                   ybaseplus += ydotspacing
@@ -430,6 +431,7 @@ def paintSvgHolo(Nmin,Nmax,kmin,kmax):
                   ybaseminus += ydotspacing
                   thiscolour = colourminus
                   numminuslabels += 1
+
                if numberwithlabel > maxdots:  # if more than maxdots in orbit, use number as symbol
                    xbase += 1.5 * signfe * xdotspacing
                    if signfe < 0:   # move over more to position numbers on minus side.
