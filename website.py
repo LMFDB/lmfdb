@@ -15,6 +15,7 @@ import plot_example
 import number_field
 import lfunction_db
 import maass_form_picard
+import maass_waveforms
 
 import raw
 

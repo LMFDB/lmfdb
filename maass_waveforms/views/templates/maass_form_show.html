@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% include 'sidebar.html' %}
+
+{% block title %}Maass Form Page{% endblock %}
+
+{% block body %}
+
+<div id = "header">
+<h1>{{ info.info1 }}</h1>
+</div>
+
+<div id = "Content">
+<p><a href="{{ info.back }}">Back to main page</a></p>
+
+
+<style type="text/css">
+table.maass_coff td {
+        padding-left: 15px;
+        padding-right: 15px;
+        font-size: 80%;
+}
+table.maass_coff tr.odd {
+        background-color: #ffffff;
+}
+table.maass_coff td.id {
+        text-align: right;
+}
+</style>
+
+{% for head,data in info.maass_data %}
+<h4>{{ head }}</h4>
+{% if head == "Coefficients" %}
+<table class="maass_coff">
+<tbody>
+<tr><td>\(n\)</td><td>\(a_n\)</td></tr>
+{% set row_class = cycler('odd', 'even') %}
+{% for id,an in data %}
+<tr class="{{ row_class.next() }}">
+<td class="id">{{ id+1 }}</td>
+<td>{{ an }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+{% else %}
+<p>{{ data }}</p>
+{% endif %}
+{% endfor %}
+</div>
+
+{% include 'footer.html' %}
+
+{% endblock %}
