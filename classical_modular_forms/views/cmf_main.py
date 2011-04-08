@@ -2,7 +2,7 @@ from flask import render_template, url_for, request, redirect, make_response,sen
 import flask
 import tempfile, os,re
 from utilities import ajax_more,ajax_result
-#from utilities import ajax_result as ajax_result #,ajax_url
+#from utilities import ajax_result as a sajax_result #,ajax_url
 from sage.all import *
 from base import app, db
 from classical_modular_forms.backend.web_modforms import WebModFormSpace,WebNewForm
