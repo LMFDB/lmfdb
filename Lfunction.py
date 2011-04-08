@@ -1,3 +1,5 @@
+import re
+
 from flask import render_template, url_for, make_response
 from sage.all import *
 import tempfile, os
@@ -10,6 +12,10 @@ import LfunctionPlot
 from utilities import to_dict
 #from elliptic_curve import by_cremona_label
 # just testing
+
+
+
+cremona_label_regex = re.compile(r'(\d+)([a-z])+(\d*)')
 
 def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
     args = request.args
@@ -24,7 +30,7 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
             info["key"] = 777
             info["bread"] =  [('L-functions', url_for("render_Lfunction")), ('Degree '+str(degree), '/L/degree'+str(degree))]
             if degree == 1:
-                info["contents"] = [processDirichletNavigation(args)]
+                info["contents"] = [LfunctionPlot.getOneGraphHtmlChar(1,35,1,13)]
             elif degree == 2:
 #                info["contents"] = [processEllipticCurveNavigation(args),"holomorphic here"]
                 info["contents"] = [processEllipticCurveNavigation(args), LfunctionPlot.getOneGraphHtmlHolo(1, 22, 2, 14)]
@@ -41,6 +47,8 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
 
     if arg1 == 'Riemann':
         temp_args['type'] = 'riemann'
+    elif arg1 == 'Character' and arg2 == 'Dirichlet' and arg3 == '1' and arg4 == '0':
+        temp_args['type'] = 'riemann'
     elif arg1 == 'Character' and arg2 == 'Dirichlet':
         temp_args['type'] = 'dirichlet'
         temp_args['charactermodulus'] = arg3
@@ -48,6 +56,7 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
     elif arg1 == 'EllipticCurve' and arg2 == 'Q':
         temp_args['type'] = 'ellipticcurve'
         temp_args['label'] = str(arg3) 
+
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic': # this has args: one for weight and one for level
         temp_args['type'] = 'gl2holomorphic'
         print temp_args
@@ -72,6 +81,8 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
 
     L = WebLfunction(temp_args)
     #return "23423"
+
+    print L
    
     try:
         print temp_args
@@ -264,7 +275,7 @@ def initLfunction(L,args, request):
 
     elif args['type'] == 'ellipticcurve':
         label = L.label
-        info['friends'] = [('Elliptic Curve', url_for('by_cremona_label',label=label)),('Modular Form', url_for('not_yet_implemented'))]
+        info['friends'] = [('Elliptic Curve', url_for('by_label',label=label)),('Modular Form', url_for('not_yet_implemented'))]
         info['bread'] = [('L-function','/L'),('Elliptic Curve','/L/degree2#EllipticCurve_Q'),
                          (label,url_for('render_Lfunction',arg1='EllipticCurve',arg2='Q',arg3= label))]
 
@@ -316,7 +327,7 @@ def parameterstringfromdict(dic):
         answer += v
         answer += '&'
     return answer[0:len(answer)-1]
-        
+         
 
 def plotLfunction(args):
     WebL = WebLfunction(args)
@@ -350,6 +361,11 @@ def render_browseGraphHolo(args):
     response.headers['Content-type'] = 'image/svg+xml'
     return response
 
+def render_browseGraphChar(args):
+    data = LfunctionPlot.paintSvgChar(args['min_cond'], args['max_cond'], args['min_order'], arg['max_order'])
+    response = make_response(data)
+    respone.headers['Content-type'] = 'image/svg+xml'
+    return response
 
 def render_zeroesLfunction(args):
     WebL = WebLfunction(args)

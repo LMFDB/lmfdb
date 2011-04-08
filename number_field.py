@@ -5,9 +5,53 @@ from base import app
 from flask import Flask, session, g, render_template, url_for, request, redirect
 
 import sage.all
-from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, AbelianGroup
+from sage.all import ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, euler_phi
 
 from utilities import ajax_more, image_src, web_latex, to_dict, parse_range, coeff_to_poly, pol_to_html
+
+def field_pretty(field_str):
+    d,r,D,i = field_str.split('.')
+    if d == '1':  # Q
+        return '\( {\mathbb Q} \)'
+    if d == '2':  # quadratic field
+        D = ZZ(D).squarefree_part()
+        if r=='0': D = -D
+        return '\( {\mathbb Q}(\sqrt{' + str(D) + '}) \)'
+    for n in [5,7,8,9,10]: 
+        if field_str==parse_field_string('Qzeta'+str(n)):
+            return '\( {\mathbb Q}(\zeta_%s) \)'%n
+    return field_str
+#    TODO:  pretty-printing of more fields of higher degree
+
+def parse_field_string(F): # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
+    if F=='Q': return '1.1.1.1'
+    fail_string = str(F + ' is not a valid field label or string')
+    if F[0]=='Q':
+        if F[1:5] in ['sqrt','root']:
+            try:
+                d=ZZ(eval(F[5:])).squarefree_part()
+            except ValueError:
+                return fail_string
+            if d%4 in [2,3]:
+                D=4*d
+            else:
+                D=d
+            absD = D.abs()
+            s=0 if D<0 else 2
+            return '2.%s.%s.1'%(s,str(absD))
+        if F[1:5]=='zeta':
+            try:
+                d=ZZ(eval(F[5:]))
+            except ValueError:
+                return fail_string
+            if d<1: return fail_string
+            if d%4==2: d/=2  # Q(zeta_6)=Q(zeta_3), etc)
+            if d==1: return '1.1.1.1'
+            deg = euler_phi(d)
+            adisc = CyclotomicField(d).discriminant().abs() # uses formula!
+            return '%s.0.%s.1'%(deg,adisc)
+        return fail_string
+    return F
 
 @app.route("/NF")
 def NF_redirect():
@@ -66,7 +110,6 @@ def number_field_render_webpage():
     sig_list = sum([[[d-2*r2,r2] for r2 in range(1+(d//2))] for d in range(1,7)],[]) + sum([[[d,0]] for d in range(7,11)],[])
     sig_list = sig_list[:10]
     if len(args) == 0:      
-#        discriminant_list_endpoints = [100**k for k in range(6)]
         discriminant_list_endpoints = [-10000,-1000,-100,0,100,1000,10000]
         discriminant_list = ["%s-%s" % (start,end-1) for start, end in zip(discriminant_list_endpoints[:-1], discriminant_list_endpoints[1:])]
         info = {
@@ -169,22 +212,24 @@ group_names[(10, 240, -1, 22)] = ('S(5)[x]2','?')
 
 groups = [{'label':list(g),'gap_name':group_names[g][0],'human_name':group_names[g][1]} for g in group_names.keys()]
 
+abelian_group_names = ('S1','C1','D1','A1','A2') + ('S2','C2') + ('A3','C3') + ('C(4) = 4','C4') + ('C(5) = 5','C5') + ('C(6) = 6 = 3[x]2','C6') + ('C(7) = 7','C7') + ('C(8)=8','C8') + ('4[x]2',) + ('C(9)=9','C9') + ('S10','S10')
+
 def complete_group_code(c):
-    c = c.upper()
     for g in group_names.keys():
         if c in group_names[g]:
             return list(g)[1:]+[group_names[g][0]]
     try:
-        c = parse_list(c)
-        return c[1:]+[group_names[tuple(c)][0]]
-    except (KeyError, NameError):
+        if (c[0]=='[' and c[-1]==']') or (c[0]=='(' and c[-1]==')'):
+            c = parse_list(c)
+            return c[1:]+[group_names[tuple(c)][0]]
+    except (KeyError, NameError, ValueError):
         return 0
 
 def GG_data(GGlabel):
     GG = complete_group_code(GGlabel)
     order = GG[0]
     sign = GG[1]
-    ab = GGlabel in ['S1','S2','A3','C4','V4','C5','C6','C7','C8','C9','C10']
+    ab = GGlabel in abelian_group_names
     return order,sign,ab
  
 def render_field_webpage(args):
@@ -195,7 +240,7 @@ def render_field_webpage(args):
         C = base.getDBConnection()
         data = C.numberfields.fields.find_one({'label': label})
     if data is None:
-        return "No such field"    
+        return "No such field: " + label + " in the database"  
     info = {}
     credit = 'the PARI group and J. Voight'	
     try:
@@ -226,7 +271,7 @@ def render_field_webpage(args):
     
     info.update(data)
     info.update({
-        'label': label,
+        'label': field_pretty(label),
         'polynomial': web_latex(K.defining_polynomial()),
         'integral_basis': web_latex(K.integral_basis()),
         'regulator': web_latex(reg),
@@ -240,7 +285,7 @@ def render_field_webpage(args):
     info['downloads'] = [('worksheet', '/')]
     info['friends'] = [('L-function', '/')]
     info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
-    bread = [('Number Fields', url_for("number_field_render_webpage")),('%s'%data['label'],' ')]
+    bread = [('Number Fields', url_for("number_field_render_webpage")),('%s'%info['label'],' ')]
     t = "Number Field %s" % info['label']
 
     credit = 'the PARI group and J. Voight'	
@@ -277,12 +322,15 @@ def by_label(label):
     return render_field_webpage({'label' : label})
 
 def parse_list(L):
-    return eval(str(L))
+    return [int(a) for a in str(L)[1:-1].split(',')]
+    # return eval(str(L)) works but using eval() is insecure
 
 def number_field_search(**args):
     info = to_dict(args)
     if 'natural' in info:
-        return render_field_webpage({'label' : info['natural']})
+        field_id = info['natural']
+        field_id = parse_field_string(info['natural'])
+        return render_field_webpage({'label' : field_id})
     query = {}
     for field in ['degree', 'signature', 'discriminant', 'class_number', 'class_group', 'galois_group']:
         if info.get(field):
