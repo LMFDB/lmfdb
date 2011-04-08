@@ -535,7 +535,7 @@ class WebLfunction:
 	        if(n % numperline ==0):
 		    ans=ans+"\\cr\n"
 		    ans=ans+"&"
-	    ans=ans+"+ \\ \\cdots\n\\end{align}"
+	    ans=ans+" + \\ \\cdots\n\\end{align}"
 
 	elif fmt=="abstract":
 	   if self.type=="riemann":
@@ -597,7 +597,7 @@ class WebLfunction:
                ans=ans+"\Gamma_R(s"+seriescoeff(mu,0,"signed","",-6,5)+")"
             for nu in self.nu_fe:
                ans=ans+"\Gamma_C(s"+seriescoeff(nu,0,"signed","",-6,5)+")"
-            ans=ans+"\\cdot "+self.texname+"\\cr\n"
+            ans=ans+" \\cdot "+self.texname+"\\cr\n"
             ans=ans+"=\\mathstrut & "+seriescoeff(self.sign,0,"factor","",-6,5)+\
 self.texnamecompleted1ms+"\n\\end{align}\n"
 	elif fmt=="selberg":
