@@ -5,19 +5,14 @@ from base import app, getDBConnection
 from flask import Flask, session, g, render_template, url_for, request, redirect
 
 import sage.all
-from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, AbelianGroup, polygen
+from sage.all import ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi
 
-from utilities import ajax_more, image_src, web_latex, to_dict, parse_range, coeff_to_poly, pol_to_html
+from utilities import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html
 
+from number_field import parse_field_string, field_pretty
 
-def field_pretty(field_str):
-    d,r,D,i = field_str.split('.')
-    if d == '1':  # Q
-        return '\( {\mathbb Q} \)'
-    if d == '2':  # quadratic field
-        return '\( {\mathbb Q}(\sqrt{' + D + '}) \)'
-    return field_str
-#    TODO:  pretty-printing of fields of higher degree
+def parse_list(L): # parse a string like '[2,2]' without just calling eval()
+    return [int(a) for a in str(L)[1:-1].split(',')]
 
 @app.route("/ModularForm/GL2/")
 def hilbert_modular_form_render_webpage():
@@ -42,9 +37,12 @@ def hilbert_modular_form_search(**args):
     for field in ['field_label', 'weight', 'level_norm', 'dimension']:
         if info.get(field):
             if field == 'weight':
-                query[field] = eval(info[field])
+                query[field] = parse_list(info[field])
             else:
-                query[field] = info[field]
+                if field == 'field_label':
+                    query[field] = parse_field_string(info[field])
+                else:
+                    query[field] = info[field]
 
     if info.get('count'):        
         try:
@@ -61,7 +59,10 @@ def hilbert_modular_form_search(**args):
     nres = res.count()
         
     info['forms'] = res
-    info['field_pretty_name'] = field_pretty(res[0]['field_label'])
+    if nres>0:
+        info['field_pretty_name'] = field_pretty(res[0]['field_label'])
+    else:
+        info['field_pretty_name'] = ''
     info['number'] = nres
     if nres==1:
         info['report'] = 'unique match'
