@@ -86,6 +86,11 @@ class WebLfunction:
 		self.numcoeff = 20 # set default to 20 coefficients
 	    self.dirichletL()
 
+        elif self.type=='dedekind':
+           # self.id = dict["id"]
+	    self.label = dict['label']
+	    self.dedekindL()
+
         else:
             raise KeyError 
 
@@ -123,15 +128,17 @@ class WebLfunction:
         self.degree = 2
         self.poles = []
         self.residues = []
-        self.numcoeff = 30 #just testing
+        self.numcoeff = 30 #just testing  NB: Need to learn how to use more coefficients
         self.dirichlet_coefficients = []
         # now, begin appending list of Dirichlet coefficients
         degree = self.MF.degree()  #number of forms in the Galois orbit
         if degree == 1:
-           self.dirichlet_coefficients = self.MF.q_expansion_embeddings() #when coeffs are rational, q_expansion_embedding() is the list of Fourier coefficients
+           self.dirichlet_coefficients = self.MF.q_expansion_embeddings(self.numcoeff) #when coeffs are rational, q_expansion_embedding() is the list of Fourier coefficients
         else:
            for n in range(0,self.numcoeff):
-              self.dirichlet_coefficients.append(self.MF.q_expansion_embeddings()[n][self.number])
+              print str(n)
+              print str(self.number)
+              self.dirichlet_coefficients.append(self.MF.q_expansion_embeddings(self.numcoeff)[n][self.number])
         for n in range(0,len(self.dirichlet_coefficients)):
             an = self.dirichlet_coefficients[n]
             self.dirichlet_coefficients[n]=float(an)/float((n+1)**self.automorphyexp)
@@ -207,6 +214,53 @@ class WebLfunction:
         else:
             self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{f})"
         self.title = "$L(s,f)$, where $f$ is a Maass cusp form with level "+str(self.level)+", and eigenvalue "+str(self.eigenvalue)
+
+#===========================
+    def dedekindL(self): # added by DK
+        import base
+        connection = base.getDBConnection()
+        db = connection.numberfields.fields
+        poly_coeffs = db.find_one({'label':self.label})['coefficients']
+        R = QQ['x']; (x,) = R._first_ngens(1)
+        self.polynomial = sum([poly_coeffs[i]*x**i for i in range(len(poly_coeffs))])
+        self.NF = NumberField(self.polynomial, 'a')
+        self.signature = self.NF.signature()
+        self.sign = 1
+        self.quasidegree = sum(self.signature)
+        self.level = self.NF.discriminant().abs()
+        self.degreeofN = self.NF.degree()
+
+        self.Q_fe = float(sqrt(self.level)/(2**(self.signature[1]) * (math.pi)**(float(self.degreeofN)/2.0)))
+
+        self.kappa_fe = self.signature[0]* [0.5] + self.signature[1] * [1]
+        self.lambda_fe = self.quasidegree * [0]
+        self.mu_fe = self.signature[0]*[0] # not in use?
+        self.nu_fe = self.signature[1]*[0] # not in use?
+        self.langlands = True
+        self.degree = self.signature[0] + 2 * self.signature[1] # N = r1 +2r2
+        self.dirichlet_coefficients = [Integer(x) for x in self.NF.zeta_coefficients(5000)]
+        self.h=self.NF.class_number()
+        self.R=self.NF.regulator()
+        self.w=len(self.NF.roots_of_unity())
+        self.h=self.NF.class_number()
+        self.res=RR(2**self.signature[0]*self.h*self.R/self.w) #r1 = self.signature[0]
+
+        self.poles = [1,0]
+        self.residues = [self.res,-self.res]
+        self.coefficient_period = 0
+        self.selfdual = True
+        self.coefficient_type = 0
+        self.texname = "\\zeta_K(s)"
+        self.texnamecompleteds = "\\Lambda_K(s)"
+        if self.selfdual:
+            self.texnamecompleted1ms = "\\Lambda_K(1-s)"
+        else:
+            self.texnamecompleted1ms = "\\Lambda_K(1-s)"
+        self.title = "Dedekind zeta-function: $\\zeta_K(s)$"
+        self.title = self.title+", where $K$ is the "+ str(self.NF)
+        self._set_properties()
+        self.credit = 'Sage'
+        self.citation = ''
 
 #===========================
                                                
@@ -399,37 +453,37 @@ class WebLfunction:
     def createLcalcfile(self):
         thefile="";
         if self.selfdual:
-            thefile = thefile + "2\n"  # 2 means real coefficients
+            thefile += "2\n"  # 2 means real coefficients
         else:
-            thefile = thefile + "3\n"  # 3 means complex coefficients
+            thefile += "3\n"  # 3 means complex coefficients
 
-        thefile = thefile + "0\n"  # 0 means unknown type
+        thefile += "0\n"  # 0 means unknown type
 
-        thefile = thefile + str(len(self.dirichlet_coefficients)) + "\n"  
+        thefile += str(len(self.dirichlet_coefficients)) + "\n"  
 
-        thefile = thefile + "0\n"  # assume the coefficients are not periodic
+        thefile += "0\n"  # assume the coefficients are not periodic
         
-        thefile = thefile + str(self.quasidegree) + "\n"  # number of actual Gamma functions
+        thefile += str(self.quasidegree) + "\n"  # number of actual Gamma functions
 
         for n in range(0,self.quasidegree):
             thefile = thefile + str(self.kappa_fe[n]) + "\n"
             thefile = thefile + str(real_part(self.lambda_fe[n])) + " " + str(imag_part(self.lambda_fe[n])) + "\n"
         
-        thefile = thefile + str(real_part(self.Q_fe)) +  "\n"
+        thefile += str(real_part(self.Q_fe)) +  "\n"
 
-        thefile = thefile + str(real_part(self.sign)) + " " + str(imag_part(self.sign)) + "\n"
+        thefile += str(real_part(self.sign)) + " " + str(imag_part(self.sign)) + "\n"
 
-        thefile = thefile + str(len(self.poles)) + "\n"  # counts number of poles
+        thefile += str(len(self.poles)) + "\n"  # counts number of poles
 
         for n in range(0,len(self.poles)):
-            thefile = thefile + str(real_part(self.poles[n])) + " " + str(imag_part(self.poles[n])) + "\n" #pole location
-            thefile = thefile + str(real_part(self.residues[n])) + " " + str(imag_part(self.residues[n])) + "\n" #residue at pole
+            thefile += str(real_part(self.poles[n])) + " " + str(imag_part(self.poles[n])) + "\n" #pole location
+            thefile += str(real_part(self.residues[n])) + " " + str(imag_part(self.residues[n])) + "\n" #residue at pole
 
         for n in range(0,len(self.dirichlet_coefficients)):
-            thefile = thefile + str(real_part(self.dirichlet_coefficients[n]))   # add real part of Dirichlet coefficient
+            thefile += str(real_part(self.dirichlet_coefficients[n]))   # add real part of Dirichlet coefficient
             if not self.selfdual:  # if not selfdual
-                thefile = thefile + " " + str(imag_part(self.dirichlet_coefficients[n]))   # add imaginary part of Dirichlet coefficient
-            thefile = thefile + "\n" 
+                thefile += " " + str(imag_part(self.dirichlet_coefficients[n]))   # add imaginary part of Dirichlet coefficient
+            thefile += "\n" 
         
         return(thefile)
 
@@ -481,7 +535,7 @@ class WebLfunction:
 	        if(n % numperline ==0):
 		    ans=ans+"\\cr\n"
 		    ans=ans+"&"
-	    ans=ans+"+ \\ \\cdots\n\\end{align}"
+	    ans=ans+" + \\ \\cdots\n\\end{align}"
 
 	elif fmt=="abstract":
 	   if self.type=="riemann":
@@ -543,7 +597,7 @@ class WebLfunction:
                ans=ans+"\Gamma_R(s"+seriescoeff(mu,0,"signed","",-6,5)+")"
             for nu in self.nu_fe:
                ans=ans+"\Gamma_C(s"+seriescoeff(nu,0,"signed","",-6,5)+")"
-            ans=ans+"\\cdot "+self.texname+"\\cr\n"
+            ans=ans+" \\cdot "+self.texname+"\\cr\n"
             ans=ans+"=\\mathstrut & "+seriescoeff(self.sign,0,"factor","",-6,5)+\
 self.texnamecompleted1ms+"\n\\end{align}\n"
 	elif fmt=="selberg":

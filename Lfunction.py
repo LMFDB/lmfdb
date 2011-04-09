@@ -53,6 +53,7 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
         temp_args['type'] = 'dirichlet'
         temp_args['charactermodulus'] = arg3
         temp_args['characternumber'] = arg4 
+
     elif arg1 == 'EllipticCurve' and arg2 == 'Q':
         temp_args['type'] = 'ellipticcurve'
         temp_args['label'] = str(arg3) 
@@ -76,13 +77,17 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
         temp_args['type'] = 'sl3maass'
         temp_args['source'] = args['source'] 
 
+    elif arg1 == 'NumberField':
+        temp_args['type'] = 'dedekind'
+        temp_args['label'] = str(arg2)
+        temp_args['source'] = ""  # it's a bug to require this to be defined
+
+
     else: # this means we're somewhere that requires args: db queries, holomorphic modular forms, custom,  maass forms, and maybe some others, all of which require a homepage.  
         return "not yet implemented"
 
     L = WebLfunction(temp_args)
     #return "23423"
-
-    print L
    
     try:
         print temp_args
