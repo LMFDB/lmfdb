@@ -1,5 +1,7 @@
 import flask
-from flask import  request
+import bson
+import pymongo
+from flask import render_template, url_for, request, redirect, make_response,send_file
 from utilities import *
 
 def ConnectDB():
@@ -32,7 +34,7 @@ def getMaassfromById(DBname,MaassID):
 	try: 
 		OBJ = bson.objectid.ObjectId(MaassID)
         except bson.errors.InvalidId:
-        	return render_template("maass_form_nav.html", info=info)
+        	return render_template("mwf/mwf_browse.html", info=info)
 	data = Col.find_one({'_id':OBJ})
 	ret.append(["Eigenvalue","\(\\lambda=r^2 + \\frac{1}{4} \\ , \\quad r= \\ \)"+str(data['Eigenvalue'])])
 	if data['Symmetry'] <> "none":
@@ -48,8 +50,64 @@ def getMaassfromById(DBname,MaassID):
  			ANs.append([idx,a])
 			idx = idx +1
 		ret.append(["Coefficients",ANs])
+        ret['Eigenvalue']=data['Eigenvalue']
+        ret['Level']=data['Level']
 	return [Title,ret]
-	
+
+
+
+def get_maassform_by_id(maass_id):
+    ret = []
+    db = ConnectDB() #Col = ConnectByName(DBname)
+    try: 
+        obj = bson.ObjectId(str(maass_id))
+    except bson.errors.InvalidId:
+        data['error']="Invalid id for object in database!"
+        #return render_template("mwf/mwf_browse.html", info=info)
+    else:
+        data = None
+        try:
+            for collection_name in db.collection_names():
+                c = pymongo.collection.Collection(db,collection_name)
+                data = c.find_one({"_id": obj})
+                print "c=",c
+                print "col=",collection_name
+                print "data=",data
+                if data <> None:
+                    data['dbname']=collection_name
+                    raise StopIteration()
+        except StopIteration:
+            pass
+        if data == None:
+            data=dict()
+            data['error']="Invalid id for object in database!"
+        #return render_template("mwf/mwf_browse.html", info=info)
+    return data
+
+def set_info_for_maass_form(data):
+    ret = []
+    print "data=",data
+    #print "EV=",data["Eigenvalue"]
+    ret.append(["Eigenvalue","\(\\lambda=r^2 + \\frac{1}{4} \\ , \\quad r= \\ \)"+str(data['Eigenvalue'])])
+    if data['Symmetry'] <> "none":
+        ret.append(["Symmetry",data['Symmetry']])
+    if data['dbname'] == "HT":
+        title = MakeTitle("1","0","0") 
+    else:
+        title = MakeTitle(str(data['Level']),str(data['Weight']),str(data['Character']))
+    if data['Coefficient']:
+        idx = 0
+        ANs = []
+        for a in data['Coefficient']:
+            if idx >100:
+                break
+            ANs.append([idx,a])
+            idx = idx +1
+        ret.append(["Coefficients",ANs])
+    return [title,ret]
+
+def download_coefficients(maass_id,number=100):
+    pass
 
 def getallgroupsLevel():
 	ret = []

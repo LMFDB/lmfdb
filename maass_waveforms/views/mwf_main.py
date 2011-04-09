@@ -144,8 +144,9 @@ def render_maass_waveforms_for_one_group(level):
                 res[collection_name].append((R,k,id))
             except:
                 pass
-            # now we have all maass waveforms for this group
-            
+        res[collection_name].sort()
+    # now we have all maass waveforms for this group
+    
     s="<table><tr>"
     for name in res.keys():
         if(len(res[name])==0):
@@ -156,7 +157,8 @@ def render_maass_waveforms_for_one_group(level):
         s+="     </td></tr></thead>"
         s+="<tbody>"
         for (R,k,id) in res[name]:
-            s+="<tr><td><a href=\""+url_for('mwf.render_one_maass_waveform',objectid=str(id))+"\">"+str(R)+"</a></td></tr>"
+            url = url_for('mwf.render_one_maass_waveform',objectid=str(id),db=name)
+            s+="<tr><td><a href=\"%s\">%s</a></td></tr>" %(url,R)
         s+="</tbody>"
         s+="</table>"
         s+="</td>"
@@ -170,10 +172,11 @@ def render_maass_waveforms_for_one_group(level):
 
 @mwf.route("/<objectid>",methods=['GET','POST'])
 def render_one_maass_waveform(objectid):
-    info = dict()
+    info = get_args_mwf()
     info['MaassID']=objectid
     return render_one_maass_waveform_wp(info)
     
+
 
 def render_one_maass_waveform_wp(info):
     r"""
@@ -182,20 +185,34 @@ def render_one_maass_waveform_wp(info):
     #if not info.has_key('MaassID'):
     #    return redirect(url_for('mwf.render_maass_waveforms'))
     info["check"]=[]
-    info["check"].append(["Hecke relation",url_for('not_yet_implemented')])
-    info["check"].append(["Ramanujan-Petersson conjecture",url_for('not_yet_implemented')])
+    #info["check"].append(["Hecke relation",url_for('not_yet_implemented')])
+    #info["check"].append(["Ramanujan-Petersson conjecture",url_for('not_yet_implemented')])
+    maass_id = info['MaassID']
+    #dbname=info['db']
     info["friends"]= []
-    info["friends"].append(["L-function",url_for('not_yet_implemented')])
+    info["friends"].append(["L-function","L/"+url_for('render_one_maass_waveform',objectid=maass_id)])
     info["downloads"]= []
-    info["downloads"].append(["Maass form data",url_for('not_yet_implemented')])
+    #info["downloads"].append(["Maass form data",url_for('not_yet_implemented')])
     
     bread=[('Maass waveforms',url_for('render_maass_waveforms'))]
+
     properties=[]
-    [title,Maassfrom] = getMaassfromById(DBname,MaassID)
-    #info["info1"] = Title
-    info["maass_data"] = Maassfrom
-    info["credit"] += GetNameOfPerson(DBname)
-    return render_template("maass_form_show.html", info=info,title=title,bread=bread,properties=properties)
+    data = get_maassform_by_id(maass_id)
+    if not data.has_key('error'):
+        [title,maass_info] =  set_info_for_maass_form(data)
+        info["maass_data"] = maass_info
+        info["credit"] = GetNameOfPerson(data['dbname'])
+        level = data['Level']
+        R = data['Eigenvalue']
+        title="Maass waveforms on \(\Gamma_{0}(%s)\) with R=%s" %(level,R)
+    else:
+        print "data=",data
+        title="Could not find Maass this waveform in the database!"
+        info['error']=data['error']
+
+    bread=[('Maass waveforms',url_for('render_maass_waveforms'))]
+    return render_template("mwf/mwf_one_maass_form.html", info=info,title=title,bread=bread,properties=properties)
+
     
     
     
