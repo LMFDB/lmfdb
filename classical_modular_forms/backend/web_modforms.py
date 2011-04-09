@@ -1,3 +1,4 @@
+
 r""" Class for newforms in format which can be presented on the web easily
 
 
@@ -13,12 +14,12 @@ Fix complex characters. I.e. embedddings and galois conjugates in a consistent w
 
 """
 from sage.all import ZZ,QQ,DirichletGroup,CuspForms,Gamma0,ModularSymbols,Newforms,trivial_character,is_squarefree,divisors,RealField,ComplexField,prime_range,I,join,gcd,Cusp,Infinity,ceil,CyclotomicField,exp,pi,primes_first_n,euler_phi
-from sage.all import Parent,SageObject,dimension_new_cusp_forms,vector,dimension_modular_forms,EisensteinForms,Matrix,floor,denominator,latex
+from sage.all import Parent,SageObject,dimension_new_cusp_forms,vector,dimension_modular_forms,EisensteinForms,Matrix,floor,denominator,latex,is_prime,prime_pi,next_prime,primes_first_n,previous_prime
 from plot_dom import draw_fundamental_domain
 from cmf_core import html_table,len_as_printed
 #from sage.monoids.all import AlphabeticStrings
 from sage.all import factor
-
+from flask import url_for
 import re
 
 import pymongo 
@@ -51,7 +52,7 @@ class WebModFormSpace(Parent):
         
 
         
-    def __init__(self,k,N=1,chi=0,prec=10,data=None):
+    def __init__(self,k,N=1,chi=0,prec=10,data=None,compute=None):
         r"""
         Init self.
         """
@@ -64,9 +65,12 @@ class WebModFormSpace(Parent):
             self._chi = ZZ(chi)
         self._prec = ZZ(prec)
         self.prec = ZZ(prec)
+        self._ap = list()
         # check what is in the database
 
         if isinstance(data,dict):
+            if data.has_key('ap'):
+                self._ap = data['ap']
             if data.has_key('group'):
                 self._group = data['group']
             if data.has_key('character'):
@@ -82,7 +86,7 @@ class WebModFormSpace(Parent):
             if data.has_key('new_modular_symbols'):
                 self._new_modular_symbols = data['new_modular_symbols'] 
             if data.has_key('decomposition'):
-                self._decomposition= data['decomposition']
+                self._galois_decomposition= data['galois_decomposition']
             if data.has_key('galois_orbits_labels'):
                 self._galois_orbits_labels= data['galois_orbits_labels']
             if data.has_key('oldspace_decomposition'):
@@ -92,20 +96,39 @@ class WebModFormSpace(Parent):
                 self._group=Gamma0(N)
                 self._character=DirichletGroup(N)[self._chi]
                 if(self._chi==0):
-                    self._fullspace=CuspForms(N,k)
+                    #self._fullspace=CuspForms(N,k)
                     self._modular_symbols=ModularSymbols(N,k,sign=1).cuspidal_submodule()
                 else:
-                    self._fullspace=CuspForms(self._character,k)
+                    #self._fullspace=CuspForms(self._character,k)
                     self._modular_symbols=ModularSymbols(self._character,k,sign=1).cuspidal_submodule()
                 if(N<>1):
-                    self._newspace=self._fullspace.new_submodule()
+                    #self._newspace=self._fullspace.new_submodule()
+                    self._newspace=self._modular_symbols.new_submodule()
                 else:
-                    self._newspace=self._fullspace
-                self._newforms=self._fullspace.newforms(names='x')
-                self._new_modular_symbols=self._modular_symbols.new_submodule()
-                self._decomposition=[]
+                    self._newspace=self._modular_symbols
+                self._newform_eigenvalues=self._modular_symbols.ambient().compact_newform_eigenvalues(prime_range(prec),names='x')
+                self._newforms = list()
+                #self._fullspace.newforms(names='x')
+                #self._new_modular_symbols=self._modular_symbols.new_submodule()
+                self._galois_decomposition=[]
                 self._oldspace_decomposition=[]
                 self._galois_orbits_labels=[]
+                self._newforms = self.galois_decomposition()
+                if compute=='all':
+                    i = 0
+                    for i in range(len(self._newforms)):
+                        f_data
+                        f_data=dict()
+                        f_data['parent']=self
+                        f_data['f']=self._newforms[i]
+                        if len(self._ap)<i:
+                            f_data['ap']=self._ap[i]
+                        #f_data['ap']=self._ap[i]
+                        label = self._galois_orbits_labels[i]
+                        self._newforms = WebNewForm(self._k,self._N,self._chi,label=label,fi=i,prec=prec,bitprec=bitprec,verbose=verbose,data=f_data,compute='all')
+                        
+
+
                 
             except RuntimeError:
             
@@ -139,18 +162,20 @@ class WebModFormSpace(Parent):
         data = dict()
         data['group'] = self._group 
         data['character'] = self._character 
-        data['fullspace'] = self._fullspace
+        #data['fullspace'] = self._fullspace
         data['modular_symbols'] = self._modular_symbols
-        data['newspace'] = self._newspace
+        #data['newspace'] = self._newspace
         data['newforms'] = self._newforms
         data['new_modular_symbols'] = self._new_modular_symbols
-        data['decomposition'] = self._decomposition
+        data['galois_decomposition'] = self._galois_decomposition
         data['galois_orbits_labels'] = self._galois_orbits_labels
         data['oldspace_decomposition'] = self._oldspace_decomposition
         return data
     
     def _repr_(self):
-        return str(self._fullspace)
+        s = 'Space of Cusp forms on '+self.group()+' of weight'+self._k
+        s+=' and dimension'+self.dimension()
+        #return str(self._fullspace)
 
     # internal methods to generate properties of self
     def galois_decomposition(self):
@@ -158,10 +183,10 @@ class WebModFormSpace(Parent):
         We compose the new subspace into galois orbits.
         """
 	from sage.monoids.all import AlphabeticStrings
-        if(len(self._decomposition)<>0):
-            return self._decomposition
+        if(len(self._galois_decomposition)<>0):
+            return self._galois_decomposition
         L=self._modular_symbols.new_submodule().decomposition()
-        self._decomposition=L
+        self._galois_decomposition=L
         # we also label the compnents
         x=AlphabeticStrings().gens()
         for j in range(len(L)):
@@ -185,10 +210,10 @@ class WebModFormSpace(Parent):
         return self._newspace.dimension()
 
     def dimension_cuspforms(self):
-        return self._fullspace.dimension()
+        return self._modular_symbols.dimension()
 
     def dimension(self):
-        return self._fullspace.dimension()
+        return self._modular_symbols.dimension()
 
     def weight(self):
         return self._k
@@ -218,7 +243,7 @@ class WebModFormSpace(Parent):
     def sturm_bound(self):
         r""" Return the Sturm bound of S_k(N,xi), i.e. the number of coefficients necessary to determine a form uniquely in the space.
         """
-        return self._fullspace.sturm_bound()
+        return self._modular_symbols.sturm_bound()
 
     def labels(self):
         r"""
@@ -253,7 +278,7 @@ class WebModFormSpace(Parent):
 
     def oldspace_decomposition(self):
         r"""
-        Get decomposition of the oldspace in self.fullspace into submodules.
+        Get decomposition of the oldspace in self into submodules.
         
         """
         if(len(self._oldspace_decomposition)<>0):
@@ -358,12 +383,13 @@ class WebModFormSpace(Parent):
         tbl['data']=list()
         tbl['corner_label']=""
         is_relative = False
-        for j in range(len(self._decomposition)):
+        for j in range(len(self._galois_decomposition)):
             label=self._galois_orbits_labels[j]
-            url="?weight="+str(self.weight())+"&level="+str(self.level())+"&character="+str(self.character())+"&label="+label
+            #url="?weight="+str(self.weight())+"&level="+str(self.level())+"&character="+str(self.character())+"&label="+label
+            url=url_for('cmf.render_one_classical_modular_form',level=self.level(),weight=self.weight(),label=label,character=self.character())
             header="<a href=\""+url+"\">"+label+"</a>"
             tbl['headersv'].append(header)
-            dim=self._decomposition[j].dimension()
+            dim=self._galois_decomposition[j].dimension()
             orbit=self.galois_orbit(j,prec)
             # we might to truncate the power series
             # if it is too long
@@ -421,7 +447,7 @@ class WebModFormSpace(Parent):
     def print_geometric_data(self):
         r""" Print data about the underlying group.
         """
-        #G=self._fullspace.group()
+
         return print_geometric_data_Gamma0N(self.level())
         #s="<div>"
         #s=s+"\("+latex(G)+"\)"+" : "
@@ -457,7 +483,7 @@ class WebNewForm(SageObject):
     r"""
     Class for representing a (cuspidal) newform on the web.
     """
-    def __init__(self,k,N,chi=0,label='',fi=-1,prec=10,bitprec=53,verbose=-1,data=None):
+    def __init__(self,k,N,chi=0,label='',fi=-1,prec=10,bitprec=53,verbose=-1,data=None,compute=None):
         r"""
         Init self as form number fi in S_k(N,chi)
         """
@@ -467,48 +493,39 @@ class WebNewForm(SageObject):
             chi=ZZ(chi)
         t=False
         self._parent=None; self.f=None
+        self.f=None
         if isinstance(data,dict):
             if data.has_key('parent'):
                 self._parent=data['parent']
             if data.has_key('f'):
-                self._f = data['f']
+                self.f = data['f']
         if not self._parent:
             self._parent=WebModFormSpace(k,N,chi)
-        self.f=None
         self._verbose=verbose
         # try to split the label at letters and numbers
-        num=1
-        if re.sub("([a-zA-Z]*)(\d*)","\\1 \\2",label):
-            l = label.split(" ")
-            label = l[0]
-            if len(l)>1:
-                num = l[1]
-        #print "label=",label
-        #print "num=",num
+        #if re.sub("([a-zA-Z]*)(\d*)","\\1 \\2",label):
+        #    l = label.split(" ")
+        #    label = l[0]
+        #    if len(l)>1:
+        #        num = l[1]
         self._label = label
         self._parent.galois_decomposition()
         if label not in self._parent._galois_orbits_labels:
             label=''
         if fi>=0 and fi < len(self._parent._galois_orbits_labels):
             label = self._parent._galois_orbits_labels[fi]
-        #if len(label)==0:
-        #    label='a'
-
-        #label=self._parent._galois_orbits_labels[0] ## defaults
         if self._parent._galois_orbits_labels.count(label):
             j = self._parent._galois_orbits_labels.index(label)
         elif(len(self._parent._galois_orbits_labels)==1):
             j=0
-        else:
+        elif len(self._parent._galois_orbits_labels)>0:
             raise ValueError,"The space has dimension > 1. Please specify a label!"
-
-        if j < len(self._parent._newforms):
-            self.f=self._parent._newforms[j]
         else:
-            self.f = None
-            return 
-        ##
-        self._name = str(N)+str(label)+str(num) +" (weight %s)" % k
+            j=-1 #raise ValueError,"The space is zero-dimensional!"
+        if j < len(self._parent._newforms) and j>=0:
+            self.f=self._parent._newforms[j]
+        # a name is e.g. 11a (weight 2)
+        self._name = str(N)+str(label) +" (weight %s)" % k
         if self.f == None:
             if(self._verbose>=0):
                 raise IndexError,"Requested function does not exist!"
@@ -521,39 +538,65 @@ class WebNewForm(SageObject):
             self._character=self._parent._character
         else:
             self._character=trivial_character(N)
-
         #self.atkin_lehner_eigenvalues()
-        self._base_ring = self.f.base_ring()
+        self._base_ring = self.f.q_eigenform(prec,names='x').base_ring()
         self._prec=prec
         self._bitprec=bitprec
         self._label=''
         self._fi=None
         self._atkin_lehner_eigenvalues={}
+        #print "f=",self.f
         if(label <> ''):
             self._label=label
         else:
             self._fi = fi
         self._data = dict() # stores a lot of stuff
         self._satake={}
-        
+        self._ap = list()    # List of Hecke eigenvalues (can be long)
+        self._coefficients = dict() # list of Fourier coefficients (should not be long)
         if isinstance(data,dict):
             #self._data = data
             if data.has_key('atkin_lehner_eigenalues'):
                 self._atkin_lehner_eigenvalues=data['atkin_lehner_eigenalues']
-            self._embeddings=data['embeddings']
-            self._as_polynomial_in_E4_and_E6=data['as_poly']
-            self._twist_info = data['twist_info']
-            self._is_CM = data['is_CM']
-            self._satake = data['satake']
-            self._dimension = data['dimension']
+            if data.has_key('coefficients'):
+                self._coefficients = data['coefficients']
+            if data.has_key('ap'):
+                self._an = data['ap']
+            if data.has_key('ebeddings'):
+                self._embeddings=data['embeddings']
+            if data.has_key('as_poly'):
+                self._as_polynomial_in_E4_and_E6=data['as_poly']
+            if data.has_key('twist_info'):
+                self._twist_info = data['twist_info']
+            if data.has_key('is_CM'):
+                self._is_CM = data['is_CM']
+            if data.has_key('satke'):
+                self._satake = data['satake']
+            if data.has_key('dimension'):
+                self._dimension = data['dimension']
+        elif compute=='all':
+            self.q_expansion_embeddings(prec,bitprec)
+            #self._embeddings=[]            
+            if self._N==1:
+                self.as_polynomial_in_E4_and_E6()
+            #self._as_polynomial_in_E4_and_E6=None
+            self.twist_info(prec)
+            #self._twist_info = []
+            self.is_CM()
+            #self._is_CM = []
+            self.satake_parameters()
+            #self._satake = {}
+            self._dimension = self.f.dimension() #1 # None
+            c = self.coefficients(self.prec())
         else:
             self._embeddings=[]            
-            self.q_expansion_embeddings(prec,bitprec)
+            #self.q_expansion_embeddings(prec,bitprec)
             self._as_polynomial_in_E4_and_E6=None
             self._twist_info = []
             self._is_CM = []
             self._satake = {}
             self._dimension = 1 # None
+
         ## we shold figure out which complex embeddings preserve the character
         
     def __eq__(self,other):
@@ -574,6 +617,9 @@ class WebNewForm(SageObject):
             return str(self.q_expansion())
         else:
             return ""
+
+
+
         
     def __reduce__(self):
         r"""
@@ -675,11 +721,13 @@ class WebNewForm(SageObject):
         if(prec<=0):
             prec=self._prec            
         if(self.base_ring() == QQ):
-            self._embeddings=self.f.coefficients(ZZ(prec))
+            self._embeddings = self.coefficients(range(prec))
         else:
             coeffs=list()
+            #E,v = self.f.compact_system_of_eigenvalues(prec)
+            cc = self.coefficients(range(prec))
             for n in range(ZZ(prec)):
-                cn=self.f.coefficients(ZZ(prec))[n]
+                cn=cc[n]
                 if(self.degree()>1):
                     coeffs.append(cn.complex_embeddings(bitprec))
                 else:
@@ -698,9 +746,68 @@ class WebNewForm(SageObject):
             return _degree(self._base_ring)
         else:
             return None
+
+    def coefficient(self,n):
+        return self.coefficients([n,n+1])
+
+    def coefficients(self,nrange=range(1,10)):
+        r"""
+        Gives the coeffficients in a range.
+        We assume that the self._ap containing Hecke eigenvalues
+        are stored.
+
+        """
+        res = []
+        if not isinstance(nrange,list):
+            M = nrange
+            nrange = range(0,M)
+        for n in nrange:
+            if n==1:
+                res.append(1)
+            elif n==0:
+                res.append(0)
+            elif is_prime(n):
+                pi = prime_pi(n)-1
+                if pi < len(self._ap): 
+                    ap = self._ap[pi]
+                else:
+                    # fill up the ap vector
+                    prims = primes_first_n(len(self._ap))
+                    if len(prims)>0:
+                        ps = next_prime(primes_first_n(len(self._ap)))
+                    else:
+                        ps = ZZ(2)
+                    #print "nprime=",ps
+                    mn = max(nrange)
+                    if is_prime(mn):
+                        pe = mn
+                    else:
+                        pe = previous_prime(mn)
+                    #print "ps,pe=",ps,pe
+                    E,v = self.f.compact_system_of_eigenvalues(prime_range(ps,pe+1),names='x')
+                    c = E*v
+                    for app in c:
+                        self._ap.append(app)
+                ap = self._ap[pi]
+                res.append(ap)
+                # we store up to self.prec coefficients which are not prime
+                if n <= self.prec():
+                    self._coefficients[n]=ap
+            else:
+                if self._coefficients.has_key(n):
+                    an = self._coefficients[n]
+                else:
+                    print "n=",n
+                    an = self.f.eigenvalue(n,name='x')
+                    self._coefficients[n]=an
+                res.append(an)
+        return res
+
     def q_expansion(self,prec=10):
         if hasattr(self.f,'q_expansion'):
             return self.f.q_expansion(ZZ(prec))
+        if hasattr(self.f,'q_eigenform'):
+            return self.f.q_eigenform(ZZ(prec),names='x')
     
     def atkin_lehner_eigenvalues(self):
         r""" Compute the Atkin-Lehner eigenvalues of self. 
@@ -724,7 +831,13 @@ class WebNewForm(SageObject):
                 continue
             if(gcd(Q,ZZ(self.level()/Q))==1):
                 try:
-                    res[Q]=self.f.atkin_lehner_eigenvalue(ZZ(Q))
+                    M=self.f.atkin_lehner_operator(ZZ(Q)).matrix()
+                    ev = M.eigenvalues()
+                    if len(ev)>1:
+                        if len(set(ev))>1:
+                            raise ArithmeticError,"Should be one Atkin-Lehner eigenvalue. Got: %s " % ev
+                    res[Q]=ev[0]
+                    #res[Q]=self.f.atkin_lehner_eigenvalue(ZZ(Q))
                 except:
                     pass
         self._atkin_lehner_eigenvalues=res
@@ -738,9 +851,14 @@ class WebNewForm(SageObject):
         """
         res=dict()
         for c in self.parent().group().cusps():
-            ep=self.atkin_lehner_at_cusp(c)
-            if(ep):
-                res[c]=ep
+            if c==Infinity:
+                continue
+            l=self.atkin_lehner_at_cusp(c)
+            print "l=",c,l
+            if(l):
+                (Q,ep)=l
+                res[c]=[Q,ep]
+                #res[c]=ep
         return res
             
     def atkin_lehner_at_cusp(self,cusp):
@@ -752,10 +870,10 @@ class WebNewForm(SageObject):
         if( x <> 0 and not x.is_trivial()):
             return None
         if(cusp==Cusp(Infinity)):
-            return 1
+            return (ZZ(0),1)
         elif(cusp==Cusp(0)):
             try: 
-                return self.atkin_lehner_eigenvalues()[self.level()]
+                return (self.level(),self.atkin_lehner_eigenvalues()[self.level()])
             except:
                 return None
         cusp=QQ(cusp)
@@ -764,7 +882,13 @@ class WebNewForm(SageObject):
         p=cusp.numerator()
         d=ZZ(cusp*N)
         if(d.divides(N) and gcd(ZZ(N/d),ZZ(d))==1):
-            return self.f.atkin_lehner_eigenvalue(ZZ(d))
+            M = self.f.atkin_lehner_operator(ZZ(d))
+            ev = M.eigenvalues()
+            if len(ev)>1:
+                if len(set(ev))>1:
+                    raise ArithmeticError,"Should be one Atkin-Lehner eigenvalue. Got: %s " % ev
+            return (ZZ(d),ev[0])
+            #return (ZZ(d),self.f.atkin_lehner_eigenvalue(ZZ(d)))
         else:
             return None
 
@@ -903,7 +1027,8 @@ class WebNewForm(SageObject):
         if(len(self._is_CM)>0):
             return self._is_CM
         max_nump=self._number_of_hecke_eigenvalues_to_check()
-        coeffs=self.f.coefficients(max_nump+1)
+        #E,v = self.f.compact_system_of_eigenvalues(max_nump+1)
+        coeffs=self.coefficients(range(max_nump+1))
         nz=coeffs.count(0) # number of zero coefficients
         nnz = len(coeffs) - nz # number of non-zero coefficients
         if(nz==0):
@@ -947,9 +1072,10 @@ class WebNewForm(SageObject):
         k=self.weight()
         K=self.base_ring()
         l=list()
-        for n in range(d+1):
-            l.append(self.f.q_expansion(d+2)[n])
-        v=vector(l) # (self.f.coefficients(d+1))
+        #for n in range(d+1):
+        #    l.append(self.f.q_expansion(d+2)[n])
+        #v=vector(l) # (self.f.coefficients(d+1))
+        v = self.coefficients(range(d+1))
         d=dimension_modular_forms(1,k)
         lv=len(v)
         if(lv<d):
@@ -1095,7 +1221,7 @@ class WebNewForm(SageObject):
                     for prec in range(minprec,maxprec,10):
                         if(self._verbose>1):
                             print "prec=",prec
-                        v2=self.f.q_expansion(prec)(q)
+                        v2=self.f.q_eigenform(prec)(q)
                         err=abs(v2-v1)
                         if(self._verbose>1):
                             print "err=",err
@@ -1120,7 +1246,8 @@ class WebNewForm(SageObject):
                             fexp[h]=list()
                             v2[h]=0
                             for n in range(prec):
-                                c=self.f.coefficients(ZZ(prec))[n]
+                                #c=self.f.coefficients(ZZ(prec))[n]
+                                c=self.coefficient(n)
                                 cc=c.complex_embeddings(CF.prec())[h]
                                 v2[h]=v2[h]+cc*q**n
                             err[h]=abs(v2[h]-v1[h])
@@ -1163,10 +1290,14 @@ class WebNewForm(SageObject):
         thetas=dict()
         aps=list(); tps=list()
         k=self.weight()
+        E,v = self.f.compact_system_of_eigenvalues(ps)
+        ap_vec = E*v
         for j in range(degree):
             alphas[j]=dict(); thetas[j]=dict();
-        for p in ps:
-            ap=self.f.coefficients(ZZ(prec))[p]
+        for j in xrange(len(ps)):
+            p = ps[j]
+            ap = ap_vec[j]
+            #ap=self.f.coefficients(ZZ(prec))[p]
             if(K==QQ):
                 f1=QQ(4*p**(k-1)-ap**2)
                 alpha_p=(QQ(ap)+I*f1.sqrt())/QQ(2)
@@ -1176,8 +1307,8 @@ class WebNewForm(SageObject):
                 thetas[0][p]=t_p
                 alphas[0][p]=alpha_p
             else:
-                for j in range(degree):
-                    app=ap.complex_embeddings(bits)[j]
+                for jj in range(degree):
+                    app=ap.complex_embeddings(bits)[jj]
                     f1=(4*p**(k-1)-app**2)
                     alpha_p=(app+I*abs(f1).sqrt())/RealField(bits)(2)
                     ab=RF(p**((k-1)/2))
@@ -1185,8 +1316,8 @@ class WebNewForm(SageObject):
                     t_p=CF(norm_alpha).argument()
                     #tps.append(t_p)
                     #aps.append(alpha_p)
-                    alphas[j][p]=alpha_p
-                    thetas[j][p]=t_p
+                    alphas[jj][p]=alpha_p
+                    thetas[jj][p]=t_p
         self._satake['alphas']=alphas
         self._satake['thetas']=thetas
         return self._satake
@@ -1232,7 +1363,7 @@ class WebNewForm(SageObject):
         r""" Compute the number of Hecke eigenvalues (at primes) we need to check to identify twists of our given form with characters of conductor dividing the level.
         """
         ## initial bound
-        bd=self.f.parent().sturm_bound()
+        bd=self.f.sturm_bound()
         # we do not check primes dividing the level
         bd=bd+len(divisors(self.level()))
         return bd
@@ -1396,17 +1527,19 @@ class WebNewForm(SageObject):
         tbl['atts']="border=\"1\""
         tbl['data']=[0]
         tbl['data'][0]=list()
-        tbl['corner_label']="\( c \)"
+        tbl['corner_label']="\( Q \)  \([cusp]\)"
         tbl['headersv']=["\(\epsilon_{Q}\)"]
-        for Q in l.keys():
+        for c in l.keys():
             #print "Q=",Q
-            if(Q<>Cusp(Infinity)):
+            if(c<>Cusp(Infinity)):
                 #print "hej"
-                if( Q==0 ):
-                    tbl['headersh'].append('\('+str(Q)+'^{*}\)')
+                Q = l[c][0]
+                s = '\('+str(Q)+"\; ["+str(c)+"]\)"
+                if( c==0 ):
+                    tbl['headersh'].append(s+'\({}^{*}\)')
                 else:
-                    tbl['headersh'].append('\('+str(Q)+'\)')
-                tbl['data'][0].append(l[Q])
+                    tbl['headersh'].append(s)
+                tbl['data'][0].append(l[c][1])
         print tbl
         s=html_table(tbl)
         #s=s+"<br><small>* ) The Fricke involution</small>"
@@ -1534,7 +1667,7 @@ class WebNewForm(SageObject):
         # have to find whih form wee want
         NS.galois_decomposition()
         M = NS.sturm_bound() + len(divisors(new_level))
-        C = self.f.coefficients(M)
+        C = self.coefficients(range(M))
         for label in NS._galois_orbits_labels:
             print "label=",label
             FT = NS.f(label)
