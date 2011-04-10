@@ -4,6 +4,7 @@ import pymongo
 from flask import render_template, url_for, request, redirect, make_response,send_file
 from utilities import *
 
+
 def ConnectDB():
     import base
     return base.getDBConnection().MaassWaveForm
@@ -56,7 +57,9 @@ def getMaassfromById(DBname,MaassID):
 
 
 
-def get_maassform_by_id(maass_id):
+def get_maassform_by_id(maass_id,fields=None):
+    r"""
+    """
     ret = []
     db = ConnectDB() #Col = ConnectByName(DBname)
     try: 
@@ -70,11 +73,9 @@ def get_maassform_by_id(maass_id):
             for collection_name in db.collection_names():
                 c = pymongo.collection.Collection(db,collection_name)
                 data = c.find_one({"_id": obj})
-                print "c=",c
-                print "col=",collection_name
-                print "data=",data
                 if data <> None:
                     data['dbname']=collection_name
+                    data['num_coeffs']=len(data['Coefficient'])
                     raise StopIteration()
         except StopIteration:
             pass
@@ -106,8 +107,20 @@ def set_info_for_maass_form(data):
         ret.append(["Coefficients",ANs])
     return [title,ret]
 
-def download_coefficients(maass_id,number=100):
-    pass
+def make_table_of_coefficients(maass_id,number=100):
+    c = get_maassform_by_id(maass_id,fields=['Coefficient'])['Coefficient']
+    print "ID=",maass_id
+    print "number=",number
+    s="<table border=\"1\">\n<thead><tr><td>\(n\)</td>"
+    s+="<td>&nbsp;</td>"
+    s+="<td>\(a(n)\)</td></tr></thead>\n"
+    s+="<tbody>\n"
+    number = min(number,len(c))
+    for n in xrange(number):
+        s+="<tr><td> %s </td><td></td><td>%s </td> \n" % (n+1,c[n])
+    s+="</tbody></table>\n"
+    return s
+
 
 def getallgroupsLevel():
 	ret = []
@@ -284,3 +297,22 @@ def print_table_of_levels(start,stop):
         print "<a href=\"%s\">%s</a>" (url,N)
     s+="</td></tr></table>"
     return s
+
+
+def ajax_once(callback,*arglist,**kwds):
+    r"""
+    """
+    
+    text = kwds.get('text', 'more')
+    print "text=",text
+    print "arglist=",arglist
+    print "kwds=",kwds
+    #print "req=",request.args
+    nonce = hex(random.randint(0, 1<<128))
+    res = callback()
+    url = ajax_url(ajax_once,arglist,kwds,inline=True)
+    s0 = """<span id='%(nonce)s'>%(res)s """  % locals()
+    #	s1 = """[<a onclick="$('#%(nonce)s').load('%(url)s', {'level':22,'weight':4},function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'%(nonce)s']);}); return false;" href="#">%(text)s</a>""" % locals()
+    s1 = """[<a onclick="$('#%(nonce)s').load('%(url)s', {a:1},function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'%(nonce)s']);}); return false;" href="#">%(text)s</a>""" % locals()
+    return s0+s1
+

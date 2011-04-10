@@ -17,8 +17,9 @@
 {% for head,data in info.maass_data %}
 <h4>{{ head }}</h4>
 {% if head == "Coefficients" %}
-<table class="maass_coff">
-<tbody>
+{{ info.coefficients | safe }}
+
+<!--tbody>
 <tr><td>\(n\)</td><td>\(a_n\)</td></tr>
 {% set row_class = cycler('odd', 'even') %}
 {% for id,an in data %}
@@ -28,7 +29,7 @@
 </tr>
 {% endfor %}
 </tbody>
-</table>
+</table-->
 {% else %}
 <p>{{ data }}</p>
 {% endif %}

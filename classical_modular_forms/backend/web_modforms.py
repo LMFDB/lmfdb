@@ -661,7 +661,9 @@ class WebNewForm(SageObject):
     def character(self):
         if hasattr(self,'_character'):
             return self._character
-
+        else:
+            return trivial_character
+        
     def character_order(self):
         return self.parent.character_order()
 
@@ -729,9 +731,12 @@ class WebNewForm(SageObject):
             for n in range(ZZ(prec)):
                 cn=cc[n]
                 if(self.degree()>1):
-                    coeffs.append(cn.complex_embeddings(bitprec))
+                    if hasattr(cn,'complex_embeddings'):
+                        coeffs.append(cn.complex_embeddings(bitprec))
+                    else:
+                        coeffs.append([cn])
                 else:
-                    coeffs.append([cn.complex_embedding(bitprec)])
+                    coeffs.append([cn.n(bitprec)])
             self._embeddings=coeffs
         return self._embeddings
         
@@ -748,15 +753,17 @@ class WebNewForm(SageObject):
             return None
 
     def coefficient(self,n):
+        print "n=",n
         return self.coefficients([n,n+1])
 
     def coefficients(self,nrange=range(1,10)):
         r"""
-        Gives the coeffficients in a range.
+        Gives the coefficients in a range.
         We assume that the self._ap containing Hecke eigenvalues
         are stored.
 
         """
+        print "nrange=",nrange
         res = []
         if not isinstance(nrange,list):
             M = nrange
@@ -773,8 +780,11 @@ class WebNewForm(SageObject):
                 else:
                     # fill up the ap vector
                     prims = primes_first_n(len(self._ap))
+                    #print "ap=",self._ap
+                    #print "len=",len(self._ap)
+                    #print "prim=",primes_first_n(len(self._ap))
                     if len(prims)>0:
-                        ps = next_prime(primes_first_n(len(self._ap)))
+                        ps = next_prime(primes_first_n(len(self._ap))[-1])
                     else:
                         ps = ZZ(2)
                     #print "nprime=",ps
@@ -1242,13 +1252,16 @@ class WebNewForm(SageObject):
                     for prec in range(minprec,maxprec,10):
                         if(self._verbose>1):
                             print "prec=",prec
+                        c = self.coefficients(range(prec))
                         for h in range(degree):
                             fexp[h]=list()
                             v2[h]=0
                             for n in range(prec):
-                                #c=self.f.coefficients(ZZ(prec))[n]
-                                c=self.coefficient(n)
-                                cc=c.complex_embeddings(CF.prec())[h]
+                                cn = c[n]
+                                if hasattr(cn,'complex_embeddings'):
+                                    cc=cn.complex_embeddings(CF.prec())[h]
+                                else:
+                                    cc=CF(cn)
                                 v2[h]=v2[h]+cc*q**n
                             err[h]=abs(v2[h]-v1[h])
                             if(self._verbose>1):
@@ -1269,7 +1282,11 @@ class WebNewForm(SageObject):
     
     def satake_parameters(self,prec=10,bits=53):
         r""" Compute the Satake parameters and return an html-table.
-        
+
+        We only do satake parameters for primes p primitive to the level.
+        By defintion the S. parameters are given as the roots of
+         X^2 - c(p)X + chi(p)*p^(k-1)
+
         INPUT:
         -''prec'' -- compute parameters for p <=prec
         -''bits'' -- do real embedings intoi field of bits precision
@@ -1297,9 +1314,12 @@ class WebNewForm(SageObject):
         for j in xrange(len(ps)):
             p = ps[j]
             ap = ap_vec[j]
+            if p.divides(self.level()):
+                continue
+            chip = self.character()(p)
             #ap=self.f.coefficients(ZZ(prec))[p]
             if(K==QQ):
-                f1=QQ(4*p**(k-1)-ap**2)
+                f1=QQ(4*chip*p**(k-1)-ap**2)
                 alpha_p=(QQ(ap)+I*f1.sqrt())/QQ(2)
                 ab=RF(p**((k-1)/2))
                 norm_alpha=alpha_p/ab
@@ -1307,13 +1327,17 @@ class WebNewForm(SageObject):
                 thetas[0][p]=t_p
                 alphas[0][p]=alpha_p
             else:
+
+                
                 for jj in range(degree):
                     app=ap.complex_embeddings(bits)[jj]
-                    f1=(4*p**(k-1)-app**2)
-                    alpha_p=(app+I*abs(f1).sqrt())/RealField(bits)(2)
-                    ab=RF(p**((k-1)/2))
-                    norm_alpha=alpha_p/ab
-                    t_p=CF(norm_alpha).argument()
+                    f1=(4*CF(chip)*p**(k-1)-app**2)
+                    alpha_p=(app+I*abs(f1).sqrt())
+                    #ab=RF(/RF(2)))
+                    #alpha_p=alpha_p/RealField(bits)(2)
+
+                    alpha_p=alpha_p/RF(2)
+                    t_p=CF(alpha_p).argument()
                     #tps.append(t_p)
                     #aps.append(alpha_p)
                     alphas[jj][p]=alpha_p
@@ -1465,7 +1489,7 @@ class WebNewForm(SageObject):
         K = self.base_ring()
         if K == None:
             return ""
-        if(self.dimension()==1 or K==QQ):
+        if(self.dimension()==1 and K==QQ):
             if(K == QQ):
                 s = 'x'
             else:

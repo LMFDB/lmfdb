@@ -1005,7 +1005,7 @@ def set_info_for_one_modular_form(info,sbar): #level,weight,character,label,info
     #if(m):
     #	ss = re.sub('x','\\'+m.group(),info['polynomial'])
     #	info['polynomial'] = ss
-    if(WNF.dimension()>1):
+    if(WNF.dimension()>1 or WNF.base_ring()<>QQ):
         info['polynomial_st'] = 'where ' +'\('+	info['polynomial'] +'=0\)'
     else:
         info['polynomial_st'] = ''

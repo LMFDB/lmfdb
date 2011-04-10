@@ -201,6 +201,13 @@ def render_one_maass_waveform_wp(info):
     if not data.has_key('error'):
         [title,maass_info] =  set_info_for_maass_form(data)
         info["maass_data"] = maass_info
+        numc=data['num_coeffs']
+        largs = [{'maass_id':maass_id,'number':k} for k in range(10,numc,50)]
+        info['coefficients']=ajax_more(make_table_of_coefficients,*largs,text='more')
+        #info['list_spaces']=ajax_once(make_table_of_spaces_fixed_level,*largs,text='more',maass_id=maass_id)
+
+        #
+        #info["coefficients"]=table_of_coefficients(
         info["credit"] = GetNameOfPerson(data['dbname'])
         level = data['Level']
         R = data['Eigenvalue']
