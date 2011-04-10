@@ -52,8 +52,9 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
 	    return("0")
 # if we get this far, either pure real or pure imaginary
     ans=""
-    if seriescoefftype=="series":
-        ans=ans+" + "
+#    if seriescoefftype=="series":
+#        ans=ans+" + "
+#commenting out the above "if" code so as to fix + - problem
     if rp>truncation: 
         if float(abs(rp-1))<truncation:
             if seriescoefftype=="literal":
@@ -66,7 +67,7 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
                 return(ans + seriesvar(index,seriestype))
         else:
             if seriescoefftype=="series":
-                return(ans + truncatenumber(rp, precision) + seriesvar(index, seriestype))
+                return(" + " + ans + truncatenumber(rp, precision) + seriesvar(index, seriestype))
             elif seriescoefftype=="signed":
                 return(ans + "+"+truncatenumber(rp,precision))
             elif seriescoefftype=="literal" or seriescoefftype=="factor":
@@ -75,18 +76,21 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
     	if float(abs(rp+1))<truncation:
 	    if seriescoefftype == "literal":
 		return("-1" + seriesvar(index, seriestype))
-	    if seriescoefftype == "signed":
+	    elif seriescoefftype == "signed":
 		return("-1" + seriesvar(index, seriestype))
-	    if seriescoefftype == "factor":
+	    elif seriescoefftype == "factor":
 		return("-" + seriesvar(index, seriestype))
+ 	    elif seriescoefftype == "series":  # adding space between minus sign and value
+ 		return(" - " + seriesvar(index, seriestype))
 	    else:
 		return("-" + seriesvar(index, seriestype))
         else:
 	    if seriescoefftype=="series":
-                return(ans + truncatenumber(rp, precision) + seriesvar(index, seriestype))
+                return(ans + " - " + truncatenumber(float(abs(rp)), precision) + seriesvar(index, seriestype))
             elif seriescoefftype=="literal" or seriescoefftype=="factor":
                 return(ans + truncatenumber(rp,precision))
 
+# if we get this far, it is pure imaginary
     elif ip>truncation:
         if float(abs(ip-1))<truncation:
             if seriescoefftype=="literal":

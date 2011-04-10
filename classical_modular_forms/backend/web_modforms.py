@@ -173,8 +173,8 @@ class WebModFormSpace(Parent):
         return data
     
     def _repr_(self):
-        s = 'Space of Cusp forms on '+self.group()+' of weight'+self._k
-        s+=' and dimension'+self.dimension()
+        s = 'Space of Cusp forms on '+str(self.group())+' of weight'+str(self._k)
+        s+=' and dimension'+str(self.dimension())
         #return str(self._fullspace)
 
     # internal methods to generate properties of self
@@ -524,6 +524,11 @@ class WebNewForm(SageObject):
             j=-1 #raise ValueError,"The space is zero-dimensional!"
         if j < len(self._parent._newforms) and j>=0:
             self.f=self._parent._newforms[j]
+        else:
+            self.f = None
+            return 
+        ##
+        #self._name = str(N)+str(label)+str(num) +" (weight %s)" % k
         # a name is e.g. 11a (weight 2)
         self._name = str(N)+str(label) +" (weight %s)" % k
         if self.f == None:
@@ -874,7 +879,7 @@ class WebNewForm(SageObject):
     def atkin_lehner_at_cusp(self,cusp):
         r"""
         Return Atkin-Lehner eigenvalue of A-L involution 
-        which normalizes cusp if such an inolution exist.
+        which normalizes cusp if such an involution exist.
         """
         x= self.character()
         if( x <> 0 and not x.is_trivial()):
@@ -899,6 +904,11 @@ class WebNewForm(SageObject):
                     raise ArithmeticError,"Should be one Atkin-Lehner eigenvalue. Got: %s " % ev
             return (ZZ(d),ev[0])
             #return (ZZ(d),self.f.atkin_lehner_eigenvalue(ZZ(d)))
+#>>>>>>> variant B
+#            return (ZZ(d),self.f.atkin_lehner_eigenvalue(ZZ(d)))
+####### Ancestor
+#            return self.f.atkin_lehner_eigenvalue(ZZ(d))
+#======= end
         else:
             return None
 
