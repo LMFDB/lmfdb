@@ -75,8 +75,6 @@ class WebModFormSpace(Parent):
                 self._group = data['group']
             if data.has_key('character'):
                 self._character = data['character']
-            if data.has_key('fullspace'):
-                self._fullspace = data['fullspace']
             if data.has_key('modular_symbols'):
                  self._modular_symbols = data['modular_symbols']
             if data.has_key('newspace'):
@@ -106,7 +104,7 @@ class WebModFormSpace(Parent):
                     self._newspace=self._modular_symbols.new_submodule()
                 else:
                     self._newspace=self._modular_symbols
-                self._newform_eigenvalues=self._modular_symbols.ambient().compact_newform_eigenvalues(prime_range(prec),names='x')
+                self._ap=self._modular_symbols.ambient().compact_newform_eigenvalues(prime_range(prec),names='x')
                 self._newforms = list()
                 #self._fullspace.newforms(names='x')
                 #self._new_modular_symbols=self._modular_symbols.new_submodule()

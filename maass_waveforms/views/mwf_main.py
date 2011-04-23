@@ -20,7 +20,7 @@ from flask import render_template, url_for, request, redirect, make_response,sen
 import bson
 from sets import Set
 import pymongo
-
+from sage.all import is_odd,is_even
 mwf = flask.Module(__name__,'mwf')
 
 
@@ -28,18 +28,14 @@ mwf = flask.Module(__name__,'mwf')
 
 def render_maass_waveforms():
     info = get_args_mwf()
-    #level = args.get("level", None)
-    #weight = args.get("weight", None)
-    #character = args.get("character", None)
-    #MaassID = args.get("id", None)	
-    #DBname = args.get("db", None)
-    ##Search = args.get("search", None)
-    #SearchAll = args.get("search_all", None)
-    #eigenvalue = args.get("eigenvalue", None)
     print "INFO=",info
     info["credit"] = ""
     info["learnmore"]= []
     info["learnmore"].append(["Wiki","http://wiki.l-functions.org/ModularForms/MaassForms"])
+    # if we submit a search we search the database:
+    if info['search']:
+        search = get_search_parameters(info)
+        return render_search_results_wp(info,search)
     # If we have a fixed ID and Database we show that single Maass form
         
     if info['MaassID'] and info['DBname']:
@@ -201,9 +197,17 @@ def render_one_maass_waveform_wp(info):
     if not data.has_key('error'):
         [title,maass_info] =  set_info_for_maass_form(data)
         info["maass_data"] = maass_info
+        #rint "data=",info["maass_data"]
         numc=data['num_coeffs']
         largs = [{'maass_id':maass_id,'number':k} for k in range(10,numc,50)]
-        info['coefficients']=ajax_more(make_table_of_coefficients,*largs,text='more')
+        print "numc=",numc
+        if(numc>0):
+            info['coefficients']=ajax_more(make_table_of_coefficients,*largs,text='more')
+        else:
+            info["maass_data"].append(['Coefficients',''])
+            
+            s='No coefficients in the database for this form!'
+            info['coefficients']=s
         #info['list_spaces']=ajax_once(make_table_of_spaces_fixed_level,*largs,text='more',maass_id=maass_id)
 
         #
@@ -221,8 +225,63 @@ def render_one_maass_waveform_wp(info):
     return render_template("mwf/mwf_one_maass_form.html", info=info,title=title,bread=bread,properties=properties)
 
     
+
     
-    
+
+
+def render_search_results_wp(info,search):
+    # res contains a lst of Maass waveforms
+    print "info=",info
+    print "Search:",search
+    res =  search_for_eigenvalues(search)
+    print "res=",res
+    s="<table><tr>"
+    if search.has_key('more'):
+        info['more']=search['more']
+        if info['more']:
+            info['rec_start']=search['rec_start']+search['limit']
+            info['limit']=search['limit']
+    for name in res.keys():
+        if len(res[name])==0 or name=='weights':
+            continue
+        s+="<td valign=\"top\">"
+        s+="<table class=\"ntdata\"><thead>"
+        s+=" <tr><td>Collection:"+name
+        s+="     </td></tr>"
+        s+="<tr><td>R</td><td>Level</td>\n"
+        if len(res['weights'])>1:
+            s+="<td>Weight</td>\n"
+            s+="<td>Character</td>\n"
+        s+"</tr></thead>"
+        s+="<tbody>"
+        i=0
+        for rec in res[name]:
+            print "rec=",rec
+            R=my_get(rec,'Eigenvalue',None)
+            N=my_get(rec,'Level','',str)
+            k=my_get(rec,'Weight','',str)
+            ch=my_get(rec,'character','',str)
+            id=rec['_id']
+            if is_odd(i):
+                cl="odd"
+            else:
+                cl="even"
+            i+=1
+            url = url_for('mwf.render_one_maass_waveform',objectid=str(id),db=name)
+            if len(res['weights'])>1:
+                s+="<tr class=\"%s\"><td><a href=\"%s\">%s</a></td><td align=\"center\">%s</td><td>%s</td><td>%s</td></tr>\n" %(cl,url,R,N,k,ch)
+            else:
+                s+="<tr class=\"%s\"><td><a href=\"%s\">%s</a></td><td align=\"center\">%s</td></tr>\n" %(cl,url,R,N)
+        s+="</tbody>"
+        s+="</table>"
+        s+="</td>"
+    s+="</tr></table>"
+    #print "S=",s
+    info['table_of_eigenvalues']=s
+    title="Search Results"
+    bread=[('Maass waveforms',url_for('render_maass_waveforms'))]
+    return render_template("mwf/mwf_display_search_result.html", info=info,title=title,search=search)
+
 
 
 

@@ -106,7 +106,7 @@ function getAbsolutePath() {
   <tr>
     <td>
       <form name="browse" method = "get" action="{{url_for('render_maass_waveforms')}}">
-	<h3>Browse spaces of cuspforms</h3>
+	<h3>Browse spaces of Maass waveforms</h3>
 	<input type="hidden" name="weight" value=""/>
 	<input type="hidden" name="level" value=""/>
 	<table width="100%">
@@ -152,23 +152,50 @@ function getAbsolutePath() {
   <tr>
     <td>
       <form name="search" method = "post" action="{{url_for('render_maass_waveforms')}}">
+	<input type="hidden" name="search" value="true"> 
+	<input type="hidden" name="rec_start" value="0"> 
 	<h3>Search</h3>
 	<table class="">
 	  <tr>
-	    <td>Level:</td><td> <input type="text" name="level" value=""> <span class="formexample">e.g. 20</span></td>
+	    <td>Level in range:</td>
+	    <td> 
+	      <input type="text" name="level_lower" value=""> --
+	      <input type="text" name="level_upper" value=""> 
+	      <span class="formexample">e.g. 1 -- 10</span>
+	    </td>
 	  </tr>
 	  <tr>
-	    <td>Weight:</td><td> <input type="text" name="weight" value=""> <span class="formexample">e.g. 24</span></td>
+	    <td>R in range:</td>
+	    <td> 
+	      <input type="text" name="ev_lower" value=""> --
+	      <input type="text" name="ev_upper" value=""> 
+	      <span class="formexample">e.g. 9.5 -- 10.5</span> </td>
+	  </tr>
+
+	  <tr>
+	    <td>Weight:</td>
+	    <td> 
+	      <input type="text" name="weight" value=""> 
+	      <span class="formexample">e.g. 1 (leave blank for weight 0)</span>
+	    </td>
 	  </tr>
 	  <tr>
 	    <td>Character:</td><td> <input type="text" name="character" value=""> <span class="formexample">e.g. 1 (0 means trivial character, leave blank for all characters)</span></td>
 	  </tr>
 	  <tr>
-	    <td>R:</td><td> <input type="text" name="eigenvalue" value=""> <span class="formexample">e.g. 9.553</span> </td>
-	  </tr>
-	</table>
-	<input type="submit" name="Submit" value="Search">
-	<!--input type="button" name="Submit" value="Search" onclick="document.search.submit()"-->
+	    <td>
+	      <input type="submit" name="Submit" value="Search">
+	    </td>
+	    <td>
+	      Show number of records:
+	       <select name="limit">
+		<option value="20">20</option>
+		<option value="50">50</option>
+		<option value="100">100</option>
+		<option value="-1">all</option>
+	      </select>
+	    </td>
+       </tr>
       </form>
     </td>
   </tr>

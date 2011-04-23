@@ -1,0 +1,94 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<!--script type="text/javascript" src="{{ url_for('static', filename='classical_modular_form_util-functions.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='classical_modular_form_scripts.js') }}"></script-->
+
+
+
+{% if info.error is defined %}
+
+<h1>There was an error in meeting your previous request. Please change parameters.</h1>
+
+<div> 
+<h2> Error message: </h2>% extends "homepage.html" %}
+
+{{ info.error | safe }}
+</div>
+{% endif %}
+<!-- To make an interface that is easier to read we implement each case of input separately -->
+
+<!-- {{ info | safe }} $("div").data("option",{"start":1}); -->
+<h3>Display Search Results</h3>
+{{ info.table_of_eigenvalues  | safe  }}
+
+Showing records {{search.rec_start}}  to {{search.rec_stop}}
+ (out of {{search.num_recs }}).
+{% if info.more  %}
+
+<form name="hidden-search" method = "post" action="{{url_for('render_maass_waveforms')}}">
+
+  <input type="hidden" name="search" value="true"> 
+  <input type="hidden" name="level_lower" value="{{search.level_lower}}"> 
+  <input type="hidden" name="level_upper" value="{{search.level_upper}}">  
+  <input type="hidden" name="weight" value="{{search.weight}}"> 
+  <input type="hidden" name="character" value="{{search.character}}"> 
+  <input type="hidden" name="ev_lower" value="{{search.ev_lower}}"> 
+  <input type="hidden" name="ev_upper" value="{{search.ev_upper}}"> 
+  <input type="hidden" name="rec_start" value="{{info.rec_start}}"> 
+  <input type="hidden" name="limit" value="{{info.limit}}"> 
+  <input type="submit" value="Display Next {{info.limit}} records">
+</form>
+{% endif %}
+<h3>New Search</h3>
+   <form name="search" method = "post" action="{{url_for('render_maass_waveforms')}}">
+     <input type="hidden" name="search" value="true"> 
+     <input type="hidden" name="rec_start" value="1"> 
+     <h3>Search</h3>
+     <table class="">
+       <tr>
+	 <td>Level in range:</td>
+	 <td> 
+	   <input type="text" name="level_lower" value=""> --
+	   <input type="text" name="level_upper" value=""> 
+	   <span class="formexample">e.g. 1 -- 10</span>
+	 </td>
+       </tr>
+       <tr>
+	 <td>R in range:</td>
+	 <td> 
+	   <input type="text" name="ev_lower" value=""> --
+	   <input type="text" name="ev_upper" value=""> 
+	   <span class="formexample">e.g. 9.5 -- 10.5</span> </td>
+       </tr>
+       
+       <tr>
+	    <td>Weight:</td>
+	    <td> 
+	      <input type="text" name="weight" value=""> 
+	      <span class="formexample">e.g. 1 (leave blank for weight 0)</span>
+	    </td>
+       </tr>
+       <tr>
+	 <td>Character:</td><td> <input type="text" name="character" value=""> <span class="formexample">e.g. 1 (0 means trivial character, leave blank for all characters)</span></td>
+       </tr>
+       <tr>
+	 <td>
+	   <input type="submit" name="Submit" value="Search">
+	 </td>
+	 <td>
+	   Show number of records:
+	 <select name="limit">
+	   <option value="20">20</option>
+	   <option value="50">50</option>
+	   <option value="100">100</option>
+	   <option value="-1">all</option>
+	 </select>
+	 </td>
+       </tr>
+     </table>
+     <!--input type="button" name="Submit" value="Search" onclick="document.search.submit()"-->
+   </form>
+
+{% endblock content %}

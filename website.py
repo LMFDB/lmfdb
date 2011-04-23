@@ -10,7 +10,7 @@ import classical_modular_forms
 import elliptic_curve
 import quadratic_twists
 import Lfunction
-import maass_form
+#import maass_form
 import plot_example
 import number_field
 import lfunction_db
@@ -111,9 +111,9 @@ def ModularForm_GSp4_Q_top_level():
 #def render_classical_modular_form():
 #    return classical_modular_form.render_webpage(request.args)
 
-@app.route('/ModularForm/GL2/Q/Maass/')
-def render_maass_form():
-    return maass_form.render_webpage(request.args)
+#@app.route('/ModularForm/GL2/Q/Maass/')
+#def render_maass_form():
+#    return maass_form.render_webpage(request.args)
 
 @app.route('/example_plot')
 def render_example_plot():
