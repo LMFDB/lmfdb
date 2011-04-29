@@ -890,6 +890,69 @@ def getOneGraphHtmlChar(min_cond, max_cond, min_order, max_order):
 
 
 ## ============================================
+## Returns the contents (as a string) of the svg-file for
+## the L-functions of holomorphic cusp forms.
+## General code to be used with plotsector routine.
+## ============================================
+def paintSvgHoloGeneral(Nmin,Nmax,kmin,kmax,imagewidth,imageheight):
+    xfactor = 90
+    yfactor = 30
+    extraSpace = 20
+    ticlength = 4
+    radius = 3.3
+    xdotspacing = 0.11  # horizontal spacing of dots
+    ydotspacing = 0.28  # vertical spacing of dots
+    colourplus = signtocolour(1)
+    colourminus = signtocolour(-1)
+    maxdots = 5  # max number of dots to display
+
+    ans = "<svg  xmlns='http://www.w3.org/2000/svg'"
+    ans += " xmlns:xlink='http://www.w3.org/1999/xlink'>\n"
+
+    xMax = int(Nmax)
+    yMax = int(kmax)
+    width = xfactor *xMax + extraSpace
+    height = yfactor *yMax + extraSpace
+
+    ans += paintCSHolo(width, height, xMax, yMax, xfactor, yfactor, ticlength)
+
+    alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
+#loop over levels and weights
+    for x in range(int(Nmin), int(Nmax) + 1):  # x is the level
+        print "level = " + str(x)
+        for y in range(int(kmin), int(kmax) + 1, 2):  # y is the weight 
+           print "  weight = " + str(y)
+           lid = "(" + str(x) + "," + str(y) + ")"
+           linkurl = "/L/ModularForm/" + "GL2/Q/holomorphic?weight=" + str(y) +"&amp;level=" + str(x) + "&amp;character=0"
+           WS = WebModFormSpace(y,x)
+           numlabels = len(WS.galois_decomposition())  # one label per Galois orbit
+           thelabels = alphabet[0:numlabels]    # list of labels for the Galois orbits for weight y, level x
+           countplus = 0   # count how many Galois orbits have sign Plus (+ 1)
+           countminus = 0   # count how many Galois orbits have sign Minus (- 1)
+           ybaseplus = y  # baseline y-coord for plus cases
+           ybaseminus = y  # baseline y-coord for minus cases
+           numpluslabels=0
+           numminuslabels=0
+# create dimensioninfo and appearanceinfo 
+           dimensioninfo =  [] # 
+           appearanceinfo =  [] # 
+           for label in thelabels:  # looping over Galois orbit
+              #include urlinfo
+              urlinfo = []
+              ans += plotsector(dimensioninfo, appearanceinfo, urlinfo)
+        
+    ans += "</svg>"
+
+    #print ans
+ 
+    return(ans)
+
+
+
+#=====================
+
+
+## ============================================
 ## Plot the dots in a sector
 ## 
 ## We work in "working coordinates" and then convert to screen coordinates
@@ -912,7 +975,7 @@ def plotsector(dimensioninfo, appearanceinfo, urlinfo):
     for arg, val in urlinfo['space'].iteritems():
       urlbase += arg + "='" + str(val) + "'" + "&"
 
-# draw the edges of the sector (omit edge if edgelength is 0
+# draw the edges of the sector (omit edge if edgelength is 0)
     edgelength = dimensioninfo['edgelength']
     ans += myline(vertexlocation, scale, [0, 0], lincomb(1, [0, 0], parallelogramsize[0] * edgelength[0], edge[0]), appearanceinfo['edgewidth'], appearanceinfo['edgestyle'], appearanceinfo['edgecolor'])
     ans += myline(vertexlocation, scale, [0, 0], lincomb(1, [0, 0], parallelogramsize[1] * edgelength[1], edge[1]), appearanceinfo['edgewidth'], appearanceinfo['edgestyle'], appearanceinfo['edgecolor'])
@@ -923,7 +986,7 @@ def plotsector(dimensioninfo, appearanceinfo, urlinfo):
     for orbit in urlinput['orbits']:
       orbitcolor = appearanceinfo['orbitcolor']
       # first determine if we should draw a line connecting the dots in an orbit
-      # no line if 1 dot or >maxdots
+      # no line if only 1 dot or > maxdots
       if len(orbit) > 1 and len(orbit) <= maxdots:
          ans += myline(vertexlocation, scale, orbitbase, lincomb(1, orbitbase, (len(orbit) - 1), dotspacing), dimensioninfo['connectinglinewidth'], "", appearanceinfo['edgecolor'])
 
