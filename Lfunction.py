@@ -69,6 +69,17 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
         temp_args['type'] = 'sp4maass'
         temp_args['source'] = args['source']
 
+    elif arg1 == 'spin' and arg2 == 'ModularForm' and arg3 == 'GSp4'and arg4 == 'Q': # this means it's a holomorphic SMF
+        temp_args['type'] = 'siegel_modular'
+        temp_args['repn'] = 'spin'
+        temp_args['weight'] = args['weight']
+        temp_args['group'] = args['group']
+        temp_args['orbit'] = args['orbit']
+        temp_args['form'] = args['form']
+        try:
+            temp_args['number'] = args['number']
+        except KeyError:
+            temp_args['number'] = 0
     elif arg1 == 'ModularForm' and arg2 == 'GL4'and arg3 == 'Q' and arg4 == 'maass':
         temp_args['type'] = 'sl4maass'
         temp_args['source'] = args['source'] 
@@ -88,6 +99,7 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
 
     L = WebLfunction(temp_args)
     #return "23423"
+
    
     try:
         print temp_args
@@ -291,6 +303,14 @@ def initLfunction(L,args, request):
         label = str(L.label)
         number = str(L.number)
         info['friends'] = [('Modular Form','/ModularForm/GL2/Q/holomorphic/?weight='+weight+'&level='+level+'&character='+character +'&label='+label+'&number='+number)]
+
+    elif args['type'] == 'siegel_modular':
+        weight = str(L.weight)
+        group = str(L.group)
+        orbit = str(L.orbit)
+        form = str(L.form)
+        info['friends'] = [('Siegel Modular Form','/ModularForm/GSp4/Q?weight='+weight+'&group='+group+'&orbit='+orbit+'&form='+form+'&page=specimen')]
+
 
     elif args['source'] == 'db':
         info['bread'] = [('L-function','/L') ,

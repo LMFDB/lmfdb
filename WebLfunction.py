@@ -1,5 +1,5 @@
 import math
-from Lfunctionutilities import pair2complex, splitcoeff, seriescoeff
+from Lfunctionutilities import pair2complex, splitcoeff, seriescoeff, make_dirichlet_series
 from sage.all import *
 import sage.libs.lcalc.lcalc_Lfunction as lc
 import re
@@ -85,12 +85,30 @@ class WebLfunction:
 	    else:
 		self.numcoeff = 20 # set default to 20 coefficients
 	    self.dirichletL()
+        
+        elif self.type == 'siegel_modular':
+            self.repn = dict['repn']
+            self.group = dict['group']
+            self.weight = dict['weight']
+            self.form = dict['form']
+            self.orbit = dict['orbit']
+            self.number = dict['number']            
+            if self.group == 'Sp4Z':
+                url = "http://data.countnumber.de/Siegel-Modular-Forms/Sp4Z/eigenvalues/"+str(self.weight)+"_"+str(self.form)+"-ev.sobj"
+                self.evs = load(url)[1]
+                self.base_ring = parent(load(url)[0])
+                if "numcoeff" in dict.keys():
+	            self.numcoeff = int(dict['numcoeff'])
+       	        else:
+		    self.numcoeff = 20 # set default to 20 coefficients
+                self.level = 1
+	        self.smf_spinL()
 
         elif self.type=='dedekind':
-           # self.id = dict["id"]
-	    self.label = dict['label']
-	    self.dedekindL()
-
+            # self.id = dict["id"]
+	        self.label = dict['label']
+	        self.dedekindL()
+    
         else:
             raise KeyError 
 
@@ -373,6 +391,64 @@ class WebLfunction:
         self.texnamecompleted1ms = "\\xi(1-s)"
         self.credit = 'Sage'
 	self.title = "Riemann Zeta-function: $\\zeta(s)$"
+
+
+    def smf_spinL(self):
+        self.automorphyexp = float(self.weight) - 1.5#float(self.weight-1)/float(2)
+        self.Q_fe = float(sqrt(self.level)/(2*2*math.pi*math.pi))
+        if self.level == 1:  # For level 1, the sign is always plus
+            self.sign = (-1)**int(self.weight)
+        #else:  # for level not 1, calculate sign from Fricke involution and weight
+        #    self.sign = self.MF.atkin_lehner_eigenvalues()[self.level] * (-1)**(float(self.weight/2))
+        self.kappa_fe = [1, 1]
+        self.lambda_fe = [float(1/2), self.automorphyexp]
+        self.mu_fe = [0,0]
+        self.nu_fe = [self.automorphyexp]
+        self.selfdual = True
+        self.langlands = True
+        self.degree = 4
+        self.poles = []
+        self.residues = []
+        self.numcoeff = 5 #just testing
+        self.euler_factor_roots = []
+        # now, begin appending list of Dirichlet coefficients
+        from sage.rings.fast_arith import prime_range
+        from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
+        from sage.rings.complex_field import ComplexField 
+        from sage.rings.rational_field import RationalField
+        R = PolynomialRing(ComplexField(),'x')
+        x = R.gen()
+        roots = {}
+        k = int(self.weight)
+        for p in prime_range(self.numcoeff):
+            if self.base_ring == RationalField():
+                c = self.base_ring.complex_embedding()
+            else:
+                c = self.base_ring.complex_embeddings()[int(self.number)]
+            if p**2 in self.evs:
+                lp = c(self.evs[p])
+                lp2 = c(self.evs[p**2])
+                poly = 1 - lp*x/p**(k-1.5) + (lp**2-lp2-p**(2*k-4))*x**2/p**(2*k-3) - lp*p**(2*k-3)*x**3/p**(3*k-4.5) + x**4
+                tmp_roots = poly.roots()
+                roots[p] = []
+                for pair in tmp_roots:
+                    tmp = [pair[0]]*pair[1]
+                    roots[p].extend(tmp)
+        self.dirichlet_coefficients = make_dirichlet_series(roots)
+#FIX: These coefficients are wrong; too large and a1 is not 1
+        self.coefficient_period = 0
+        self.coefficient_type = 2
+        self.quasidegree = 1
+        self.checkselfdual()
+        self.texname = "L(s,f)"
+        self.texnamecompleteds = "\\Lambda(s,f)"
+        if self.selfdual:
+            self.texnamecompleted1ms = "\\Lambda(1-s,f)"
+        else:
+            self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{f})"
+        self.title = "Spin L-function of a holomorphic Siegel cusp form: $L(s,f)$, "+ "where $f$ is a holomorphic cusp form with weight "+str(self.weight)+" and level "+str(self.level)+" that is the image of complex embedding number "+str(self.number)
+
+
 
 #===========================
                                                

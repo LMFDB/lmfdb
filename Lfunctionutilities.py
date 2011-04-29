@@ -136,3 +136,54 @@ def seriesvar(index,seriestype):
         return("")
 
 
+def make_dirichlet_series(roots):
+    '''
+    I assume that roots has keys for every prime and allow the values
+    at prime keys to be empty lists 
+    '''
+    num_coeffs = next_prime(max(roots))
+    from sage.rings.power_series_ring import PowerSeriesRing
+    from sage.rings.complex_field import ComplexField 
+    PS = PowerSeriesRing(ComplexField(),'q')
+    q = PS.gen()
+    ds = {1:1}
+    print roots
+    for p in roots:
+        p_poly = 1
+        for alpha in roots[p]:
+            print alpha, p
+            p_poly = p_poly*(1-alpha*q)
+        p_factor = PS(1/p_poly)+O(q**num_coeffs)
+        p_coeffs = p_factor.coefficients()
+        for i in range(num_coeffs):
+            if p**i < num_coeffs: 
+                ds[p**i] = p_coeffs[i]
+    from sage.misc.misc import srange
+    for nn in srange(6, num_coeffs):
+        if not nn.is_prime_power():
+            nf = nn.factor()
+            ds[nn] = prod([ds[a[0]**a[1]] for a in nf])
+    list_ds = []
+    for nn in srange(1,num_coeffs): 
+        list_ds.append(ds[nn])
+    return list_ds
+
+
+def make_logarithmic_derivative(roots):
+    '''
+    I assume that roots has keys for every prime and allow the values
+    at prime keys to be empty lists 
+    '''
+    m = max(roots)
+    from sage.misc.misc import srange
+    for nn in srange(m, next_prime(m)):
+        if nn.is_prime_power():
+            m = nn
+    num_coeffs = m
+    ds = {}
+    for p in roots:
+        i = 1
+        while (p**i<num_coeffs):
+            ds[p**i] = log(p).n()*sum([alpha**i for alpha in roots[p]])
+            i = i+1
+    return ds
