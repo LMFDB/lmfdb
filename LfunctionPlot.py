@@ -53,15 +53,16 @@ def getAllMaassGraphHtml(degree):
         for docLevel in levels:
             l = math.trunc(docLevel['level'])
             print l
-            signs = collection.group(['sign'],{ 'degree': degree ,'group': g
-                                                ,'level': l},
-                              {'csum': 0},
-                              'function(obj,prev) { prev.csum += 1; }')
-            for docSign in signs:
-                s = docSign['sign']
-                print 'sign: ' + s
-                ans += getOneGraphHtml(g,l,s)
+            ans += getOneGraphHtml([g,l])
                     
+##            signs = collection.group(['sign'],{ 'degree': degree ,'group': g
+##                                                ,'level': l},
+##                              {'csum': 0},
+##                              'function(obj,prev) { prev.csum += 1; }')
+##            for docSign in signs:
+##                s = docSign['sign']
+##                print 'sign: ' + s
+            
     return(ans)
 
 ## ============================================
@@ -111,14 +112,18 @@ def getGroupHtml(group):
 ## the L-functions of the Maass forms for given group, level and
 ## sign (of the functional equation) (in html and MathJax)
 ## ============================================
-def getOneGraphHtml(group, level, sign):
-    ans = ("<h4>Maass cusp forms of level " + str(level) + " and sign " 
-          + str(sign) + "</h4>\n")
+def getOneGraphHtml(gls):
+    if len(gls) > 2:
+	ans = ("<h4>Maass cusp forms of level " + str(gls[1]) + " and sign " 
+		  + str(gls[2]) + "</h4>\n")
+    else:
+	ans = ("<h4>Maass cusp forms of level " + str(gls[1]) + "</h4>\n")
+	
     ans += "<div>The dots in the plot correspond to \\((\\mu_1,\\mu_2)\\) "
     ans += "in the \\(\\Gamma\\)-factors. These have been found by a computer "
     ans += "search. Click on any of the dots to get detailed information about "
     ans += "the L-function.</div>\n<br />"
-    graphInfo = getGraphInfo(group, level, sign)
+    graphInfo = getGraphInfo(gls)
     ans += ("<embed src='" + graphInfo['src'] + "' width='" + str(graphInfo['width']) + 
            "' height='" + str(graphInfo['height']) +
             "' type='image/svg+xml' " +
@@ -136,15 +141,20 @@ def getOneGraphHtml(group, level, sign):
 ## the L-functions of the Maass forms for given group, level and
 ## sign (of the functional equation).
 ## ============================================
-def getGraphInfo(group, level, sign):
-    (width,height) = getWidthAndHeight(group, level, sign)
+def getGraphInfo(gls):
+    (width,height) = getWidthAndHeight(gls)
 ##    url = url_for('browseGraph',group=group, level=level, sign=sign)
-    url = ('/browseGraph?group=' + group + '&level=' + str(level)
-           + '&sign=' + sign)
+    if len(gls) > 2:
+	url = ('/browseGraph?group=' + gls[0] + '&level=' + str(gls[1])
+		   + '&sign=' + gls[2])
+    else:
+	url = ('/browseGraph?group=' + gls[0] + '&level=' + str(gls[1]))
+	
     url =url.replace('+', '%2B')  ## + is a special character in urls
     ans = {'src': url}
     ans['width']= width
     ans['height']= height
+    
 
     return(ans)
 
@@ -175,12 +185,17 @@ def getGraphInfoHolo(Nmin, Nmax, kmin, kmax):
 ## the L-functions of the Maass forms for given group, level and
 ## sign (of the functional equation).
 ## ============================================
-def getWidthAndHeight(group, level, sign):
+def getWidthAndHeight(gls):
     conn = base.getDBConnection()
     db = conn.Lfunction
     collection = db.LemurellMaassHighDegree
-    LfunctionList = collection.find({'group':group, 'level': level, 'sign': sign}
+    if len(gls) > 2:
+        LfunctionList = collection.find({'group':group, 'level': level, 'sign': sign}
                                     , {'_id':True})
+    else:
+        LfunctionList = collection.find({'group': gls[0], 'level': gls[1]}
+                                    , {'_id':True, 'sign':True})
+
     index1 = 2
     index2 = 3
 
