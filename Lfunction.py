@@ -347,7 +347,10 @@ def render_plotLfunction(args):
 
 def render_browseGraph(args):
     print args
-    data = LfunctionPlot.paintSvgFile(args['group'], int(args['level']), args['sign'])
+    if 'sign' in args:
+      data = LfunctionPlot.paintSvgFileAll([[args['group'], int(args['level']), args['sign']]])
+    else:
+      data = LfunctionPlot.paintSvgFileAll([[args['group'], int(args['level'])]])
     response = make_response(data)
     response.headers['Content-type'] = 'image/svg+xml'
     return response
