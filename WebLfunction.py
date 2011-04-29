@@ -611,7 +611,7 @@ self.texnamecompleted1ms+"\n\\end{align}\n"
 	    ans = ans+":"
 	    if self.nu_fe != []:
 	        for nu in range(len(self.nu_fe)-1):
-		    ans=ans+str(self.mu_fe[nu])+", "
+		    ans=ans+str(self.nu_fe[nu])+", "
 	        ans=ans+str(self.nu_fe[-1])
 	    ans = ans+"), "
 	    ans = ans+seriescoeff(self.sign, 0, "literal","", -6,5)
