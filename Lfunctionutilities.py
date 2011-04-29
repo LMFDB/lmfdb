@@ -139,16 +139,19 @@ def make_dirichlet_series(roots):
     '''
     num_coeffs = next_prime(max(roots))
     from sage.rings.power_series_ring import PowerSeriesRing
-    PS = PowerSeriesRing(CC,'q')
+    from sage.rings.complex_field import ComplexField 
+    PS = PowerSeriesRing(ComplexField(),'q')
     q = PS.gen()
     ds = {1:1}
+    print roots
     for p in roots:
         p_poly = 1
         for alpha in roots[p]:
+            print alpha, p
             p_poly = p_poly*(1-alpha*q)
         p_factor = PS(1/p_poly)+O(q**num_coeffs)
         p_coeffs = p_factor.coefficients()
-        for i in range(len(p_coeffs)):
+        for i in range(num_coeffs):
             if p**i < num_coeffs: 
                 ds[p**i] = p_coeffs[i]
     from sage.misc.misc import srange
@@ -156,7 +159,10 @@ def make_dirichlet_series(roots):
         if not nn.is_prime_power():
             nf = nn.factor()
             ds[nn] = prod([ds[a[0]**a[1]] for a in nf])
-    return ds
+    list_ds = []
+    for nn in srange(1,num_coeffs): 
+        list_ds.append(ds[nn])
+    return list_ds
 
 
 def make_logarithmic_derivative(roots):
