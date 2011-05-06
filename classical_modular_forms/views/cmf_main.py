@@ -784,7 +784,7 @@ def print_list_of_coefficients(info):
         
 	WMFS = WebModFormSpace(weight,level,character)
 	if(info.has_key('number')):
-		number=int(info['number'][0])
+		number=int(info['number'])
 	else:
 		number=max(WMFS.sturm_bound()+1,20)
 	if(info.has_key('prec')):
@@ -848,16 +848,23 @@ def print_coefficients_for_one_form(F,number,format):
             s+=c+"\n"
     if format == "embeddings":
         embeddings = F.q_expansion_embeddings(number)
-        for j in range(F.degree()):
+        #print "F=",F
+        #print "EMBEDDINGS=",embeddings
+        #print "number = ",number
+        if F.degree() > 1:
+            for j in range(F.degree()):
+                for n in range(number):
+                    s+=str(n)+"\t"+str(embeddings[n][j])+"\n"
+        else:
             for n in range(number):
-                s+=str(n)+"\t"+embeddings[n][j]
+                s+=str(n)+"\t"+str(embeddings[n])+"\n"
     print s
     return s
 
 def render_fd_plot(level,info):
 	group = None
 	if(info.has_key('group')):
-		group = info['group'][0]
+		group = info['group']
 	# we only allow standard groups
 	if (group  not in ['Gamma0','Gamma','Gamma1']):
 		group = 'Gamma0'
@@ -998,7 +1005,7 @@ def set_info_for_one_modular_form(info,sbar): #level,weight,character,label,info
     #if(m):
     #	ss = re.sub('x','\\'+m.group(),info['polynomial'])
     #	info['polynomial'] = ss
-    if(WNF.dimension()>1):
+    if(WNF.dimension()>1 or WNF.base_ring()<>QQ):
         info['polynomial_st'] = 'where ' +'\('+	info['polynomial'] +'=0\)'
     else:
         info['polynomial_st'] = ''
@@ -1033,14 +1040,14 @@ def set_info_for_one_modular_form(info,sbar): #level,weight,character,label,info
     info['CM_values'] = WNF.print_values_at_cm_points()
     # properties for the sidebar
     if(info['twist_info'][0]):				
-        s='Is minimal<br>'
+        s='- Is minimal<br>'
     else:
-        s='Is a twist of lower level<br>'
+        s='- Is a twist of lower level<br>'
     properties.append(s)
     if(WNF.is_CM()[0]):				
-        s='* Is a CM-form'
+        s='- Is a CM-form'
     else:
-        s='* Is not a CM-form'
+        s='- Is not a CM-form'
     properties.append(s)
     
     #info['atkin_lehner'] = WNF.print_atkin_lehner_eigenvalues()

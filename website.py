@@ -10,7 +10,7 @@ import classical_modular_forms
 import elliptic_curve
 import quadratic_twists
 import Lfunction
-import maass_form
+#import maass_form
 import plot_example
 import number_field
 import lfunction_db
@@ -70,6 +70,7 @@ def form_example():
 @app.route("/L/")
 @app.route("/L/<arg1>") # arg1 is EllipticCurve, ModularForm, Character, etc
 @app.route("/L/<arg1>/<arg2>") # arg2 is field
+#@app.route("/L/<arg1>/<arg2>/") # arg2 is field
 @app.route("/L/<arg1>/<arg2>/<arg3>") #arg3 is label
 @app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>")
 @app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
@@ -110,9 +111,9 @@ def ModularForm_GSp4_Q_top_level():
 #def render_classical_modular_form():
 #    return classical_modular_form.render_webpage(request.args)
 
-@app.route('/ModularForm/GL2/Q/Maass/')
-def render_maass_form():
-    return maass_form.render_webpage(request.args)
+#@app.route('/ModularForm/GL2/Q/Maass/')
+#def render_maass_form():
+#    return maass_form.render_webpage(request.args)
 
 @app.route('/example_plot')
 def render_example_plot():

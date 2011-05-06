@@ -1,0 +1,42 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+
+{% if info.error is defined %}
+
+<h1>There was an error in meeting your previous request. Please change parameters.</h1>
+
+<div> 
+<h2> Error message: </h2>
+
+{{ info.error | safe }}
+</div>
+{% endif %}
+
+{% for head,data in info.maass_data %}
+<h4>{{ head }}</h4>
+{% if head == "Coefficients" %}
+{{ info.coefficients | safe }}
+
+<!--tbody>
+<tr><td>\(n\)</td><td>\(a_n\)</td></tr>
+{% set row_class = cycler('odd', 'even') %}
+{% for id,an in data %}
+<tr class="{{ row_class.next() }}">
+<td class="id">{{ id+1 }}</td>
+<td>{{ an }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table-->
+{% else %}
+<p>{{ data }}</p>
+{% endif %}
+{% endfor %}
+</div>
+
+
+
+
+{% endblock content %}
