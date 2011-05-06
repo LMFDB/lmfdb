@@ -27,7 +27,6 @@ curves.ensure_index('rank')
 curves.ensure_index('torsion')
 
 
-        
 def parse_tgens(s):
     r"""
     Converts projective coordinates to affine coordinates for generator
@@ -37,7 +36,7 @@ def parse_tgens(s):
     return str(tuple(g))
 
 
-def ainvs(s):
+def ainvs_1(s):
 #    return [int(a) for a in s[1:-1].split(',')]
     return [a for a in s[1:-1].split(',')]
 
@@ -55,11 +54,11 @@ def allbsd(line):
     """
     data = split(line)
     label = data[0] + data[1] + data[2]
-    return label, {
+    ainvs=ainvs_1(data[3])
+    return label,ainvs, {
         'conductor': int(data[0]),
         'iso': data[0]+data[1],
         'number': int(data[2]),
-        'ainvs': ainvs(data[3]),
         'rank': int(data[4]),
         'torsion': int(data[5]),
         'tamagawa_product': int(data[6]),
@@ -75,11 +74,11 @@ def allcurves(line):
     """
     data = split(line)
     label = data[0] + data[1] + data[2]
-    return label, {
+    ainvs=ainvs(data[3])
+    return label,ainvs, {
         'conductor': int(data[0]),
         'iso': data[0]+data[1],
         'number': int(data[2]),
-        'ainvs': ainvs(data[3]),
         'rank': int(data[4]),
         'torsion': int(data[5]),
     }
@@ -92,41 +91,40 @@ def allgens(line):
     label = data[0] + data[1] + data[2]
     rank=int(data[4])
     torsion=len(eval(data[5]))
-    #print line, type(eval(data[5]))
+    ainvs=ainvs(data[3])
     if torsion>0:
-        return label, {
+        return label,ainvs, {
             'conductor': int(data[0]),
             'iso': data[0]+data[1],
             'number': int(data[2]),
-            'ainvs': ainvs(data[3]),
             'rank': int(data[4]),
             'gens': ["(%s)" % gen[1:-1] for gen in data[6:6+rank]],
             'torsion_structure':["%s" %tor for tor in eval(data[5])],
             'torsion_generators':["%s" %parse_tgens(tgens[1:-1]) for tgens in data[6+rank:]],
         }
     else:
-        return label, {
+        return label,ainvs, {
             'conductor': int(data[0]),
             'iso': data[0]+data[1],
             'number': int(data[2]),
-            'ainvs': ainvs(data[3]),
             'rank': int(data[4]),
             'gens': ["(%s)" % gen[1:-1] for gen in data[6:6+rank]],
             'torsion_structure':[],
             'torsion_generators':["(%s)" %parse_tgens(tgens[1:-1]) for tgens in data[6+rank:]],
         }
         
-def degphi(line):
-    data=split(line)
-    label = data[0] + data[1] + data[2]
-    return label, {
-        'degree':data[3]
-    }
+#def degphi(line):
+#    data=split(line)
+#    label = data[0] + data[1] + data[2]
+#    return label, {
+#        'degree':data[3]
+#    }
     
 def allisog(line):
     data=split(line)
+    ainvs=ainvs(data[3])
     label = data[0] + data[1] + data[2]
-    return label, {
+    return label, ainvs,{
         'Curves_in_the_class':data[4],
         'Isogeny_matrix':data[5]
     } 
@@ -139,22 +137,30 @@ def intpts(line):
     """
     data=split(line)
     label=data[0]
-    return label, {
+    ainvs=ainvs(data[1])
+    return label, ainvs,{
     'x-coordinates_of_integral_points':data[2]
     }
         
-def lookup_or_create(label):
+def lookup_or_create(label, ainvs):
     r"""
     This function looks for the label, if there is an entry with that label then that entry is returned. If there is no entry with this label then a new 
     one is created and returned. 
     This prevents accidental duplications.
     """
-    item = curves.find_one({'label': label})
+    item=curves.find_one({'ainvs':ainvs})
     if item is None:
-        return {'label': label}
-    else:
+        return {'label':label,'ainvs':ainvs}
+    elif item['label']==label: 
+        print label
         return item
-
+    else:
+        print item['label'], label
+        swlabel=item['label']
+        item.update({'label':label, 'swlabel':swlabel})
+        curves.save(item)
+        return item
+        
 #this code actually reads all the files and calls the appropriate function. 
 for path in sys.argv[1:]:
     print path
@@ -168,8 +174,8 @@ for path in sys.argv[1:]:
         h = gzip.open(file) if filename[-3:] == '.gz' else open(file)
         t = time.time()
         for line in h.readlines():
-            label, data = parse(line)
-            info = lookup_or_create(label)
+            label, ainvs, data = parse(line)
+            info = lookup_or_create(label,ainvs)
             info.update(data)
             curves.save(info)
             if time.time() - t > 5:
