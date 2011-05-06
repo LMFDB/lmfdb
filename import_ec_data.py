@@ -5,8 +5,10 @@ This code checks if the entry exists, if so returns that and updates with new in
 returns that. 
 
 Initial version (Paris 2010)
-More tables Feb 2010 Gagan Sekhon
+More tables Feb 2011 Gagan Sekhon
 Needed importing code for Stein-Watkins 
+
+After running this script, please remember to run import_EC_isogeny_data.py
 """
 
 
@@ -181,3 +183,5 @@ for path in sys.argv[1:]:
             if time.time() - t > 5:
                 print "\t", label
                 t = time.time()
+
+
