@@ -56,14 +56,11 @@ for path in sys.argv[1:]:
             print "Ignoring", file
             continue
         parse = globals()[base]
-        print parse
         h = gzip.open(file) if filename[-3:] == '.gz' else open(file)
         t = time.time()
         for line in h.readlines():
             label,iso,data = parse(line)
-            print label
             c=curves.find_one({'label':label})
-            print c
             if c is None:
                 print 'c'
                 break
