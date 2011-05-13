@@ -196,6 +196,12 @@ def main():
 
 
 if __name__ == '__main__':
-
     main()
-
+else:
+    import logging
+    logfile = "flasklog"
+    file_handler = logging.FileHandler(logfile)
+    file_handler.setLevel(logging.WARNING)
+    import base
+    base._init(37010)
+    app.logger.addHandler(file_handler)

@@ -14,4 +14,4 @@ def _init(dbport):
 def getDBConnection():
   return _C
 
-app = Flask('__main__')
+app = Flask(__name__)
