@@ -1,5 +1,5 @@
 import random
-
+from flask import  jsonify
 from utilities import *
 
 
@@ -88,3 +88,50 @@ def ajax_once(callback,*arglist,**kwds):
     #	s1 = """[<a onclick="$('#%(nonce)s').load('%(url)s', {'level':22,'weight':4},function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'%(nonce)s']);}); return false;" href="#">%(text)s</a>""" % locals()
     s1 = """[<a onclick="$('#%(nonce)s').load('%(url)s', {a:1},function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'%(nonce)s']);}); return false;" href="#">%(text)s</a>""" % locals()
     return s0+s1
+
+
+def ajax_later(callback,*arglist,**kwds):
+    r"""
+    Try to make a function that gets called after displaying the page.
+    """
+    
+    text = kwds.get('text', 'more')
+    text = 'more'
+    print "text=",text
+    print "arglist=",arglist
+    print "kwds=",kwds
+    print "callback=",callback
+    #print "req=",request.args
+    nonce = hex(random.randint(0, 1<<128))
+    # do not call the first time around
+    if kwds.has_key("do_now"):
+        if kwds['do_now']==1:
+            do_now=0
+        else:
+            do_now=1
+    else:
+        do_now=0
+    if not do_now:
+        url = ajax_url(ajax_later,callback,*arglist,inline=True,do_now=do_now,_ajax_sticky=True)
+        print "ajax_url=",url
+        s0 = """<span id='%(nonce)s'></span>"""  % locals()
+        s1 = """<a class='later' href=# id='%(nonce)s' onclick='this_fun()'>%(text)s</a>""" % locals()
+        s2= """<script>
+        function this_fun(){
+        $.getJSON('%(url)s',{do_now:1},
+        function(data) {
+        $(\"span#%(nonce)s\").text(data.result);
+        });
+        return true;
+        };
+        </script>
+        
+        """ % locals()
+        print "s0+s1=",s2+s0
+        return s2+s0+s1
+    else:
+        res = callback(do_now=do_now)
+        return jsonify(result=res)
+
+
+

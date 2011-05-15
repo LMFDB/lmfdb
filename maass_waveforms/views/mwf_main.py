@@ -1,19 +1,26 @@
-#
-# Markus Fraczek <marekf@gmx.net>
-#
-# TODO: 
-# + show only 50 eigenvalues/coefficient pro page 
-# + improve search 
-#    - show additional information in search results (group,weight,character)
-#    - restrict search when items are selected
-# + extend database to include more informations (Artkin-Lenher Eigenvalues)
-# + implement checks on homepage of maass wave form
-# + provide API (class) for users (like L-functions guys) of database 
-#
-#
+r"""
 
+AUTHORS:
+
+ Markus Fraczek <marekf@gmx.net> (2010)
+ Fredrik Stroemberg (2011-)
+
+
+
+ TODO: 
+ + show only 50 eigenvalues/coefficient pro page 
+ + improve search 
+    - show additional information in search results (group,weght,character)
+    - restrict search when items are selected
+ + extend database to include more informations (Artkin-Lenhe Eigenvalues)
+ + implement checks on homepage of maass wave form
+ + provide API (class) for users (like L-functions guys) of database 
+
+
+"""
 
 from mwf_utils import *
+from mwf_upload_data import *
 
 import flask
 from flask import render_template, url_for, request, redirect, make_response,send_file
@@ -21,6 +28,8 @@ import bson
 from sets import Set
 import pymongo
 from sage.all import is_odd,is_even
+
+
 mwf = flask.Module(__name__,'mwf')
 
 
@@ -168,9 +177,28 @@ def render_maass_waveforms_for_one_group(level):
 
 @mwf.route("/<objectid>",methods=['GET','POST'])
 def render_one_maass_waveform(objectid):
-    info = get_args_mwf()
-    info['MaassID']=objectid
-    return render_one_maass_waveform_wp(info)
+    if objectid=='upload' or objectid=='Upload':
+        title="Upload Maass waveforms"
+        bread=[('Maass waveforms',url_for('render_maass_waveforms'))]
+        if request.method <> "GET":
+            info = get_args_upload()
+            #file = request.files['file']
+            print "INFO=",info
+            info['allowed_entries']=allowed_entries
+            remote_addr = request.remote_addr
+            print "remote addr:",remote_addr
+            check_data(info)
+            print "check_data:"
+            return render_template("mwf/mwf_upload_confirm.html", info=info,title=title,bread=bread)
+        else:
+            info = get_args_mwf()
+            info['allowed_entries']=allowed_entries
+            return render_template("mwf/mwf_upload.html", info=info,title=title,bread=bread)
+        #return upload_maass_waveforms(info)
+    else:
+        info = get_args_mwf()
+        info['MaassID']=objectid
+        return render_one_maass_waveform_wp(info)
     
 
 

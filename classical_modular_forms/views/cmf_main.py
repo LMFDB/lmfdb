@@ -8,6 +8,7 @@ from base import app, db
 from classical_modular_forms.backend.web_modforms import WebModFormSpace,WebNewForm
 from classical_modular_forms.backend.cmf_core import * #html_table
 from cmf_utils import *
+from plot_dom import draw_fundamental_domain
 
 CMF="cmf"
 cmf = flask.Module(__name__,'cmf')
@@ -250,8 +251,8 @@ def render_classical_modular_form_navigation_wp(**args):
 	## info['list_of_characters'] = 
     if level>0:
 	info['geometric'] = print_geometric_data_Gamma0N(level)
-	if info.has_key('plot'):
-	    return render_fd_plot(level,info)
+	#if info.has_key('plot'):
+        info['fd_plot'] = render_fd_plot(level,info)
     title = "Holomorphic Cusp Forms"
     bread =[('Modular Forms',url_for('.modular_form_toplevel'))]
     return render_template("cmf/cmf_navigation.html", info=info,title=title,bread=bread)
@@ -300,11 +301,13 @@ def browse_classical_modular_forms(**info):
     print "wt=",weight    
     if level:
         info['geometric'] = print_geometric_data_Gamma0N(level)
-        if info.has_key('plot'):
-            return render_fd_plot(level,info)
-
+        #if info.has_key('plot'):
+        grp=MyNewGrp(level,info)
+        plot=grp.plot
+        info['fd_plot']= image_src(grp)
+        print "PLOT:",info['fd_plot']
     if level and not weight:
-        print "here1!"
+        #print "here1!"
         title = "Holomorphic Cusp Forms of level %s " % level
         level = int(level)
         info['level_min']=level;info['level_max']=level
@@ -325,7 +328,6 @@ def browse_classical_modular_forms(**info):
 	#bread =[('Modular Forms',url_for('.modular_form_toplevel'))]
 	bread =[('Modular Forms',url_for('render_classical_modular_forms'))]
         info['browse_type']=" of weight %s " % weight
-        print "RENDER TEMPLATE!"
         return render_template(CMF+"/cmf_browse.html", info=info,title=title,bread=bread)
     print "here2!"
     info['level_min']=level;info['level_max']=level
@@ -346,6 +348,8 @@ def render_classical_modular_form_space_wp(info):
     sbar=(properties,parents,friends,siblings,lifts)
     if info.has_key('character') and info['character']=='*':
         return render_classical_modular_form_space_list_chars(level,weight)
+    ### This might take forever....
+    ### want to display 
     (info,sbar)=set_info_for_modular_form_space(info,sbar)
     print "HERE!!!!!!!!"
     print "keys=",info.keys()
@@ -358,10 +362,49 @@ def render_classical_modular_form_space_wp(info):
         info['level']=level; info['weight']=weight; info['label']='a'; info['character']=character
         # print "INFO=",info
         return redirect(url_for('cmf.render_one_classical_modular_form', **info))
+    #properties=[
+    s = """
+    Dimension: %s <br>
+    Sturm bound: %s <br>
+    """ %(info['dimension'],info['sturm_bound'])
     (properties,parents,friends,siblings,lifts)=sbar
+    properties=[s]
     title = "Holomorphic Cusp Forms of weight %s on \(\Gamma_{0}(%s)\)" %(weight,level)
     bread =[('Modular Forms',url_for('.modular_form_toplevel'))]
-    return render_template(CMF+"/cmf_space.html", info=info,title=title,bread=bread)
+    bread =[('Modular Forms',url_for('.modular_form_toplevel'))]
+    bread.append(("Level %s" %level,url_for('cmf.render_classical_modular_form_space2',level=level)))
+    bread.append(("Weight %s" %weight,url_for('cmf.render_classical_modular_form_browsing',level=level,weight=weight)))
+    print "friends=",friends
+    info['friends']=friends
+    #info['test']=ajax_later(_test)
+
+    return render_template(CMF+"/cmf_space.html", info=info,title=title,bread=bread,parents=parents,friends=friends,siblings=siblings,properties=properties)
+
+
+
+def _test(do_now=0):
+    print "do_now=",do_now
+    if do_now==0:
+        return ""
+    s="Testing!!"
+    print "in test!"
+    return s
+
+        #l.append(('Friend '+str(i),'/'))
+    ## print "keys=",info.keys()
+    ## print "dim=",info['dimension']
+    ## if info.has_key('download') and not info.has_key('error'):					
+    ##     return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
+    ## if info.has_key('dimension') and info['dimension']==1: # if there is only one orbit we list it
+    ##     print "Dimension is one!"
+    ##     info =dict()
+    ##     info['level']=level; info['weight']=weight; info['label']='a'; info['character']=character
+    ##     # print "INFO=",info
+    ##     return redirect(url_for('cmf.render_one_classical_modular_form', **info))
+    ## (properties,parents,friends,siblings,lifts)=sbar
+    ## title = "Holomorphic Cusp Forms of weight %s on \(\Gamma_{0}(%s)\)" %(weight,level)
+    ## bread =[('Modular Forms',url_for('.modular_form_toplevel'))]
+    ## return render_template(CMF+"/cmf_space.html", info=info,title=title,bread=bread)
 
 
 
@@ -382,7 +425,9 @@ def render_classical_modular_form_space_list_chars(level,weight):
     info['list_spaces']=s
     title = "Holomorphic Modular Cuspforms of level %s and weight %s " %(level,weight)
     bread =[('Modular Forms',url_for('.modular_form_toplevel'))]
+    bread.append(("Level %s" %level,url_for('cmf.render_classical_modular_form_space2',level=level)))
     info['browse_type']=" of level %s and weight %s " % (level,weight)
+    
     return render_template(CMF+"/cmf_browse.html", info=info,title=title,bread=bread)
 
 
@@ -861,21 +906,28 @@ def print_coefficients_for_one_form(F,number,format):
     print s
     return s
 
-def render_fd_plot(level,info):
-	group = None
-	if(info.has_key('group')):
-		group = info['group']
+class MyNewGrp (SageObject):
+    def __init__(self,level,info):
+        self._level=level
+        self._info=info
+    def plot(self,**kwds):
+        return render_fd_plot(self._level,self._info,**kwds)
+            
+def render_fd_plot(level,info,**kwds):
+    group = None
+    if(info.has_key('group')):
+        group = info['group']
 	# we only allow standard groups
-	if (group  not in ['Gamma0','Gamma','Gamma1']):
-		group = 'Gamma0'
-	fd = draw_fundamental_domain(level,group) 
-	fn = tempfile.mktemp(suffix=".png")
-	fd.save(filename = fn)
-	data = file(fn).read()
-	os.remove(fn)
-	response = make_response(data)
-	response.headers['Content-type'] = 'image/png'
-	return response
+    if (group  not in ['Gamma0','Gamma','Gamma1']):
+        group = 'Gamma0'
+    return draw_fundamental_domain(level,group,**kwds) 
+    #fn = tempfile.mktemp(suffix=".png")#
+    #fd.save(filename = fn)
+    #data = file(fn).read()
+    #os.remove(fn)
+    #response = make_response(data)
+    #response.headers['Content-type'] = 'image/png'
+    #return response
 
 
 def set_info_for_navigation(info,is_set,sbar):
@@ -972,13 +1024,15 @@ def set_info_for_one_modular_form(info,sbar): #level,weight,character,label,info
         print level,weight,character,label
         info['error']="Could not compute the desired function!"
     (properties,parents,friends,siblings,lifts)=sbar
+
     #print info.keys()
     #print "--------------------------------------------------------------------------------"
     #print WNF
-    if WNF==None or  WNF.f == None:
+    if WNF==None or  WNF._f == None:
         print "level=",level
+        print WNF
         info['error']="This space is empty!"
-		
+    print "info=",info
     D = DirichletGroup(level)
     if len(D.list())> character:
         x = D.list()[character]
@@ -1052,10 +1106,11 @@ def set_info_for_one_modular_form(info,sbar): #level,weight,character,label,info
     
     #info['atkin_lehner'] = WNF.print_atkin_lehner_eigenvalues()
     #info['atkin_lehner_cusps'] =
-    s = "<h5> Atkin-Lehner eigenvalues</h5>"
-    s = s+WNF.print_atkin_lehner_eigenvalues_for_all_cusps()
-    s+="<br><small>* ) The Fricke involution</small>"
-    properties.append(s)
+    if len(WNF.atkin_lehner_eigenvalues().keys())>0:
+        s = "<h5> Atkin-Lehner eigenvalues</h5>"
+        s = s+WNF.print_atkin_lehner_eigenvalues_for_all_cusps()
+        s+="<br><small>* ) The Fricke involution</small>"
+        properties.append(s)
     if(level==1):
         info['explicit_formula'] = WNF.print_as_polynomial_in_E4_and_E6()
     cur_url='?&level='+str(level)+'&weight='+str(weight)+'&character='+str(character)+'&label='+str(label)
@@ -1115,7 +1170,7 @@ def make_table_of_spaces_fixed_level(level=1,character=0,weight_block=0,**kwds):
         s+="<td> %s </td>" % weight
     s+="</tr><tr>"
     if character > 0 :
-        s+="<td>Dimension of \(S_{k}(%s),\chi_{%s}\):" % (level,character)
+        s+="<td>Dimension of  \(S_{k}(%s),\chi_{%s}\):" % (level,character)
     else:
         s+="<td>Dimension of \(S_{k}(%s)\):" % (level)
     for weight in weights:
@@ -1135,7 +1190,8 @@ def make_table_of_spaces_fixed_level(level=1,character=0,weight_block=0,**kwds):
             if character>0:
                 lab = "\(S_{%s}(%s,\chi_{%s})\)" %(weight,level,character)
             else:
-                lab = "\(S_{%s}(%s)\)" %(weight,level)
+                #lab = " \(S_{%s}(%s)\)" %(weight,level)
+                lab = " S<sub><small>%s</small></sub>(%s)" %(weight,level)
             links[weight]="<a  style=\"display:inline\" href=\"%s\">%s</a>" %(url,lab)
         else:
             links[weight]=""
@@ -1170,7 +1226,11 @@ def set_info_for_modular_form_space(info,sbar):
         if level > 0:
             try:
 		#print  "PARAM_S:",weight,level,character
-                WMFS = WebModFormSpace(weight,level,character)
+                #if level > 10 or weight > 30:
+                if True:
+                    WMFS = WebModFormSpace(weight,level,character,use_db=True)
+                else:
+                    WMFS = WebModFormSpace(weight,level,character)
                 if info.has_key('download') and info.has_key('tempfile'):
                     WNF._save_to_file(info['tempfile'])
                     info['filename']=str(weight)+'-'+str(level)+'-'+str(character)+'-'+label+'.sobj'
@@ -1210,11 +1270,11 @@ def set_info_for_modular_form_space(info,sbar):
 		info['error_note'] = "Could not construct oldspace!\n"+s
 	# properties for the sidebar
 	s='Dimension = '+str(info['dimension'])
-	properties.append((s,''))
+	properties.append(s)
 	s='Newspace dimension = '+str(WMFS.dimension_newspace())
-	properties.append((s,''))
+	properties.append(s)
 	s='Sturm bound = '+str(WMFS.sturm_bound())
-	properties.append((s,''))		
+	properties.append(s)		
 
 	## Make parent spaces of S_k(N,chi) for the sidebar
 	par_lbl='\( S_{*} (\Gamma_0(' + str(level) + '),\cdot )\)'
@@ -1245,7 +1305,6 @@ def set_info_for_modular_form_space(info,sbar):
 	lifts.append(('Siegel Modular Forms','/ModularForm/GSp4/Q'))
 	sbar=(properties,parents,friends,siblings,lifts)
 	return (info,sbar)
-
 
 
 def print_list_of_characters(level=1,weight=2):
