@@ -50,3 +50,38 @@ or
 prop = [ ( '<description>', '<value>'), ('<description>', '<value>'), ... ]
 you can mix list or non-list.
 
+
+Mercurial
+---------
+
+You can tell Mercurial about your password and nickname other repositories.
+Open .hg/hgrc and edit it like this:
+
+[paths]
+default = !!! ENTER YOUR URL !!!
+master  = http://lmfdb.googlecode.com/hg
+
+# infrastructure
+jonathan = http://jwbober-lmfdb.googlecode.com/hg
+harald = http://haraldschilly-lmfdb.googlecode.com/hg
+
+# l-functions
+stefan = http://sj-lmfdb2-lmfdb.googlecode.com/hg
+gagan = http://gagandsekhon-lmdb.googlecode.com/hg
+
+# maass forms
+fredrik = http://fredrik314-classicalandmaassforms.googlecode.com/hg
+
+dk = http://dkhuynhms-lmfdb.googlecode.com/hg
+cremona = http://johncremona-lmfdb.googlecode.com/hg
+voight = http://jvoight-lmfdb.googlecode.com/hg
+nils = http://nilsskoruppa-lmfdb.googlecode.com/hg
+rishi = http://rishikes-lmfdb.googlecode.com/hg
+nathan = http://nathancryan-lmfdb.googlecode.com/hg
+sally = http://koutslts-lmfdb.googlecode.com/hg
+michael = http://michaelorubinstein-lmfdb-frg-msri.googlecode.com/hg
+
+[auth]
+default.username = !!! ENTER YOUR GOOGLE ID EMAIL !!!
+default.password = !!! YOUR SPECIAL GOOGLE CODE/PROFILE/SETTINGS PASSWORD !!!
+
