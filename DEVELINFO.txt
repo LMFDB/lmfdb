@@ -58,7 +58,7 @@ You can tell Mercurial about your password and nickname other repositories.
 Open .hg/hgrc and edit it like this:
 
 [paths]
-default = !!! ENTER YOUR URL !!!
+default = !!! ENTER YOUR URL, https://... !!!
 master  = http://lmfdb.googlecode.com/hg
 
 # infrastructure

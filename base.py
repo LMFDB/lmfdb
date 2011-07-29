@@ -15,3 +15,7 @@ def getDBConnection():
   return _C
 
 app = Flask(__name__)
+
+from login import login_manager
+login_manager.setup_app(app)
+
