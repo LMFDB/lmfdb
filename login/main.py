@@ -1,12 +1,15 @@
+# -*- encoding: utf-8 -*-
+
 from base import app, getDBConnection
 from flask import render_template, request
 import pymongo
+import flask
 
 from flaskext.login import login_required, login_user
 
-mod = flask.Module(__name__, 'login')
+mod = flask.Module(__name__, 'user')
 
-@mod.route("/", methods= ["GET", "POST"]):
+@mod.route("/", methods = ["GET", "POST"])
 def login(**kwargs):
   form = LoginForm()
   if form.validate_on_submit():
@@ -17,7 +20,7 @@ def login(**kwargs):
     return redirect(request.args.get("next") or "/")
   return render_template("login.html", form=form)
 
-@mod.route("/logout"):
+@mod.route("/logout")
 @login_required
 def logout():
   logout_user()

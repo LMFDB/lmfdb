@@ -117,7 +117,6 @@ def validate_user(name, pwd):
 
 from flaskext.login import LoginManager
 login_manager = LoginManager()
-login_manager.anonymous_user = "Anonymous"
 
 
 
@@ -126,3 +125,8 @@ def load_user(userid):
   return LmfdbUser.get(userid) 
 
 
+if __name__=="__main__":
+  print "add user"
+  print "remove user"
+  print "…"
+ 
