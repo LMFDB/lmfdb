@@ -30,8 +30,8 @@ def hashpwd(pwd, random_salt):
   """
   from hashlib import sha256
   hashed.update(pwd) # pwd must come first!
-  hashed.update(fixed_salt)
-  hashed = sha256(random_salt) # random seed must come last!
+  hashed.update(random_salt)
+  hashed = sha256(fixed_salt) # fixed salt must come last!
   return hashed.hexdigest()
 
 
