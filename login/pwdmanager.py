@@ -58,6 +58,20 @@ class LmfdbUser(UserMixin):
     self.email = email
     self.password = password
     self.authenticated = False
+    self.full_name = None
+
+  def get_name(self):
+    return self.full_name or self.name
+
+  def set_full_name(self, full_name):
+    self.full_name = full_name
+    users.update({'_id' : self.name} ,
+                 {'$set' : { 'full_name' : full_name }})
+
+  def set_email(self, email):
+    self.email = email
+    users.update({'_id' : self.name},
+                 {'$set' : { 'email' : email }})
 
   def get_id(self):
     return self.name
@@ -97,6 +111,8 @@ class LmfdbUser(UserMixin):
     if not u:
       return None
     user = LmfdbUser(userid, u['email'], u['password'])
+    if u.has_key("full_name"):
+      user.full_name = u['full_name']
     return user
 
 

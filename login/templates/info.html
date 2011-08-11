@@ -5,27 +5,56 @@
 <div id="content">
 
 {% if info.user.is_authenticated() %}
-   <h1>You are {{ info.user.name }}</h1>
+   <h1>You are {{ info.user.get_name() }}</h1>
 {% else %}
    <h1>You are not logged in</h1>
 {% endif %}
 
-<div>
+<div id="flashes">
 {% for msg in get_flashed_messages() %}
-<p>{{ msg }}</p>
+{{ msg }}<br/>
 {% endfor %}
 </div>
 
-possible actions:
-<ul>
+<h2>Actions</h2>
+<div>
   {% if info.user.is_authenticated() %}
-    <li><a href="{{ info.logout }}">Logout</a></li>
+
+     <a href="{{ info.logout }}">Logout</a>
+
   {% else %}
-    <li><a href="{{ info.login }}">Login</a></li>
+
+    <form name="login" action="/user/login" method="post">
+      <table>
+        <tr><td>Name:</td><td><input name="name" /></td></tr>
+        <tr><td>Password:</td><td><input name="password" type="password" /></td></tr>
+        <tr><td colspan="2"><button name="submit" type="submit">Login</button></td></tr>
+      </table>
+    </form>
+
   {% endif %}
-</ul>
 </div>
 
+{% if info.user.is_authenticated() %}
+  <h2>Edit Details</h2>
+  <form action="/user/info" method="post" name="userinfo">
+    <table>
+      <tr>
+        <td>Full Name:</td>
+        <td><input name="full_name" value="{{info.user.full_name}}" /></td>
+      </tr>
+      <tr>
+        <td>E-Mail:</td>
+        <td><input name="email" value="{{info.user.email}}" /></td>
+      </tr>
+      <tr>
+        <td colspan="2">
+          <button type="submit">Save</button>
+        </td>
+      </tr>
+    </table>
+  </form>
+{% endif %}
 
 </div>
 

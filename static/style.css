@@ -100,7 +100,7 @@ a:hover { color: #000; }
     padding-top: 2px;
 }
 #header .userinfo {
-     border: 1px solid red; 
+    /* border: 1px solid red;  */
     font-family: sans-serif;
     min-height: 18px;
     font-size: 90%;
@@ -109,6 +109,13 @@ a:hover { color: #000; }
     top: 0px;
     right: 0px;
 }
+
+#flashes {
+  border-left: 15px solid #DDF;
+  padding-left: 5px;
+  background: #EEF;
+}
+
 
 
 #main {
