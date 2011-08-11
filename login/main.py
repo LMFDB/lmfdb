@@ -65,11 +65,11 @@ def login(**kwargs):
   next = request.form["next"]
   import pwdmanager
   user = pwdmanager.LmfdbUser.get(name)
-  if user and user.validate(password):
-    flask.flash("Login successful!")
+  if user and user.authenticate(password):
+    flask.flash("Hello %s, you login was successful!" % user.get_name())
     login_user(user, remember=True) 
     return flask.redirect(next or url_for("info"))
-  flask.flash("wrong username or password!", "error")
+  flask.flash("Oops! Wrong username or password!", "error")
   return flask.redirect(url_for("info"))
 
 @user_page.route("/register", methods = ['GET', 'POST'])
@@ -81,7 +81,7 @@ def register():
     pw1 = request.form['password1']
     pw2 = request.form['password2']
     if pw1 != pw2:
-      flask.flash("Passwords do not match!", "error")
+      flask.flash("Oops, passwords do not match!", "error")
       return flask.redirect(url_for("register"))
 
     full_name = request.form['full_name']
@@ -90,13 +90,13 @@ def register():
 
     import pwdmanager
     if pwdmanager.user_exists(name):
-      flask.flash("User '%s' already exists!" % name, "error")
+      flask.flash("Sorry, user '%s' already exists!" % name, "error")
       return flask.redirect(url_for("register"))
 
     newuser = pwdmanager.new_user(name, email, pw1)
     newuser.set_full_name(full_name)
     login_user(newuser, remember=True) 
-    flask.flash("Hello %s, you are a new user!" % newuser.get_name())
+    flask.flash("Hello %s! Congratulations, you are a new user!" % newuser.get_name())
     return flask.redirect(next or url_for("info"))
 
   info['next'] = request.referrer
@@ -107,6 +107,6 @@ def register():
 def logout():
   bread = base_bread() + [ ('Login', url_for('logout')) ]
   logout_user()
-  flask.flash("You are now logged out. Have a nice day!")
+  flask.flash("You are logged out now. Have a nice day!")
   return flask.redirect(request.args.get("next") or request.referrer or url_for('info'))
 

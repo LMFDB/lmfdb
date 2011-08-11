@@ -11,14 +11,18 @@ import os
 import base
 
 def get_users():
+  import base
   return base.getDBConnection().userdb.users
 
+# never narrow down this range, only increase it!
 rmin = -10000
 rmax =  10000
 
 def get_random_salt():
   """
-  generates a random salt
+  Generates a random salt.
+  This random_salt is a way to have the passwords and code public,
+  but still make it very hard to guess it.
   once computers are 10x faster, change the rmin,rmax limits
   """
   import random
@@ -26,7 +30,9 @@ def get_random_salt():
   
 def hashpwd(pwd, random_salt = None):
   """
-  globally unique routine how passwords are hashed
+  Globally unique routine how passwords are hashed.
+  Once in production, never ever change it - otherwise all
+  passwords are useless.
   """
   from hashlib import sha256
   hashed = sha256()
@@ -37,26 +43,25 @@ def hashpwd(pwd, random_salt = None):
   hashed.update(fixed_salt) # fixed salt must come last!
   return hashed.hexdigest()
 
-
+# Read about flask-login if you are unfamiliar with this UserMixin/Login 
 from flaskext.login import UserMixin
 
 class LmfdbUser(UserMixin):
   """
-  The User
+  The User Object
+
+  It is backed by MongoDB and all modifications are done
+  immideately via upserts.
   """
-  def __init__(self, name, email, password):
+  def __init__(self, name, password):
     if not name or not isinstance(name, basestring):
       raise Exception("Username is not a basestring")
-    if not email or not isinstance(email, basestring):
-      raise Exception("Email is not a basestring")
     if not password or not isinstance(password, basestring):
       raise Exception("Password is not a proper Hash (and not a basestring)")
-    if not self._validate_email(email):
-      raise Exception("Email <%s> is not valid!" % email)
 
     self.name = name
-    self.email = email
     self.password = password
+    self.email = None
     self.authenticated = False
     self.full_name = None
 
@@ -66,12 +71,14 @@ class LmfdbUser(UserMixin):
   def set_full_name(self, full_name):
     self.full_name = full_name
     get_users().update({'_id' : self.name} ,
-                 {'$set' : { 'full_name' : full_name }})
+                       {'$set' : { 'full_name' : full_name }})
 
   def set_email(self, email):
+    if not self._validate_email(email):
+      raise Exception("Email <%s> is not valid!" % email)
     self.email = email
     get_users().update({'_id' : self.name},
-                 {'$set' : { 'email' : email }})
+                       {'$set' : { 'email' : email }})
 
   def get_id(self):
     return self.name
@@ -83,36 +90,35 @@ class LmfdbUser(UserMixin):
     return not self.is_authenticated()
 
   def authenticate(self, pwd):
-    self.authenticated = validate(self.name, pwd) 
+    """
+    checks if the given password for the user is valid.
+    @return: True: OK, False: wrong password.
+    """
+    #from time import time
+    #t1 = time()
+    for i in range(rmin, rmax + 1):
+      if self.password == hashpwd(pwd, str(i)):
+        #log "AUTHENTICATED after %s!!" % (time() - t1)
+        self.authenticated = True
+        break
     return self.authenticated
 
   def _validate_email(self, email):
     """should do a regex match"""
     return True
 
-  def validate(self, pwd):
-    """
-    checks if the given password for the user is valid.
-    @return: True: OK, False: wrong password.
-    """
-    from time import time
-    t1 = time()
-    challange = self.password
-
-    for i in range(rmin, rmax + 1):
-      if challange == hashpwd(pwd, str(i)):
-        #log "AUTHENTICATED after %s!!" % (time() - t1)
-        return True
-    return False
-
   @staticmethod
   def get(userid):
+    """
+    De-Serializes the MongoDB entry to a LmfdbUser object,
+    or returns None.
+    """
     u = get_users().find_one({'_id' : userid})
     if not u:
       return None
-    user = LmfdbUser(userid, u['email'], u['password'])
-    if u.has_key("full_name"):
-      user.full_name = u['full_name']
+    user = LmfdbUser(userid, u['password'])
+    for key in ['full_name', 'email']:
+      if u.has_key(key): setattr(user, key, u[key])
     return user
 
 
