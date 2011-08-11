@@ -252,6 +252,13 @@ blockquote p {
    color: grey;
 }
 
+td.forminfo {
+   font-size: 80%;
+   font-style: italic;
+   color: grey;
+}
+
+
 table {
     border: 0;
     border-collapse:collapse;

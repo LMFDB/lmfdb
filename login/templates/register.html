@@ -1,0 +1,53 @@
+{% extends 'homepage.html' %}
+{% block content %}  
+
+<div id="content">
+
+<h1>Register</h1>
+
+<div id="flashes">
+{% for msg in get_flashed_messages() %}
+{{ msg }}<br/>
+{% endfor %}
+</div>
+
+    <form name="login" action="/user/register" method="post">
+      <table>
+        <tr><td>Name:</td><td><input name="name" /></td></tr>
+        <tr><td></td><td class="forminfo">You cannot change your login name later</td></tr>
+        <tr><td>Password:</td>
+            <td><input id="pw1" name="password1" type="password" /></td></tr>
+        <tr><td>Password (repeat):</td>
+            <td><input id="pw2" name="password2" type="password" /></td></tr>
+        <tr><td class="forminfo">Matching?</td><td class="forminfo" id="pwstatus">empty</td></tr>
+        <tr><td>Full Name:</td><td><input name="full_name" size="30" /></td></tr>
+        <tr><td>E-Mail:</td><td><input name="email" size="30" /></td></tr>
+        <tr><td colspan="2"><button name="submit" type="submit">Register</button></td></tr>
+      </table>
+    </form>
+
+</div>
+
+
+<script type="text/javascript">
+/* this tells the user if the passwords match */
+
+function checkpw() {
+  var match = "False";
+  if($("#pw1").val() == $("#pw2").val()) {
+    match = "True";
+  }
+  $("#pwstatus").html(match);
+}
+
+$(function () {
+  $("#pw1").keyup(function(evt) { evt.preventDefault(); checkpw(); });
+  $("#pw2").keyup(function(evt) { evt.preventDefault(); checkpw(); });
+  checkpw();
+})
+</script>
+
+
+{% endblock %}
+
+

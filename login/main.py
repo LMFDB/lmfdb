@@ -45,7 +45,7 @@ def set_info():
   return flask.redirect(url_for("info"))
 
 
-@user_page.route("/", methods = ['GET', 'POST'])
+@user_page.route("/")
 def info():
   info = {}
   info['login'] = url_for("login")
@@ -69,6 +69,35 @@ def login(**kwargs):
     return flask.redirect(request.args.get("next") or url_for("info"))
   flask.flash("wrong username or password!")
   return flask.redirect(url_for("info"))
+
+@user_page.route("/register", methods = ['GET', 'POST'])
+def register():
+  info = {} 
+  bread = base_bread() + [('Register', url_for("register"))]
+  if request.method == 'POST':
+    name = request.form['name']
+    pw1 = request.form['password1']
+    pw2 = request.form['password2']
+    if not pw1 == pw2:
+      flask.flash("Passwords do not match!")
+      return flask.redirect(url_for("register"))
+
+    full_name = request.form['full_name']
+    email = request.form['email']
+
+    import pwdmanager
+    # check if user exists
+    if pwdmanager.LmfdbUser.get(name):
+      flask.flash("User already exists!")
+      return flask.redirect(url_for("register"))
+
+    newuser = pwdmanager.new_user(name, email, pw1)
+    newuser.set_full_name(full_name)
+    login_user(newuser, remember=True) 
+    flask.flash("Hello %s, you are a new user!" % newuser.get_name())
+    return flask.redirect(url_for("info"))
+
+  return render_template("register.html", title="Register", bread=bread, info=info)
 
 @user_page.route("/logout")
 @login_required

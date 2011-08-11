@@ -117,19 +117,21 @@ class LmfdbUser(UserMixin):
 
 
 
-def new_user(name, email):
+def new_user(name, email, pwd = None):
   """
   generates a new user, asks for the password interactively,
   and stores it in the DB.
   """
-  from getpass import getpass
-  pwd_input = getpass( "Enter  Password: ")
-  pwd_input2 = getpass("Repeat Password: ")
-  if pwd_input != pwd_input2:
-    raise Exception("ERROR: Passwords do not match!")
+  if not pwd:
+    from getpass import getpass
+    pwd_input = getpass( "Enter  Password: ")
+    pwd_input2 = getpass("Repeat Password: ")
+    if pwd_input != pwd_input2:
+      raise Exception("ERROR: Passwords do not match!")
+    pwd = pwd_input
   if users.find({'_id' : name}).count() > 0:
     raise Exception("ERROR: User %s already exists" % name)
-  password = hashpwd(pwd_input)
+  password = hashpwd(pwd)
   users.save({'_id' : name, 
               'email' : email,
               'password' : password
