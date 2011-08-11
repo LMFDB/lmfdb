@@ -12,6 +12,7 @@
 </div>
 
     <form name="login" action="/user/register" method="post">
+      <input type="hidden" name="next" value="{{ info.next }}" />
       <table>
         <tr><td>Name:</td><td><input name="name" /></td></tr>
         <tr><td></td><td class="forminfo">You cannot change your login name later</td></tr>

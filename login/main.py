@@ -80,25 +80,26 @@ def register():
     name = request.form['name']
     pw1 = request.form['password1']
     pw2 = request.form['password2']
-    if not pw1 == pw2:
+    if pw1 != pw2:
       flask.flash("Passwords do not match!")
       return flask.redirect(url_for("register"))
 
     full_name = request.form['full_name']
     email = request.form['email']
+    next = request.form["next"]
 
     import pwdmanager
-    # check if user exists
-    if pwdmanager.LmfdbUser.get(name):
-      flask.flash("User already exists!")
+    if pwdmanager.user_exists(name):
+      flask.flash("User '%s' already exists!" % name)
       return flask.redirect(url_for("register"))
 
     newuser = pwdmanager.new_user(name, email, pw1)
     newuser.set_full_name(full_name)
     login_user(newuser, remember=True) 
     flask.flash("Hello %s, you are a new user!" % newuser.get_name())
-    return flask.redirect(url_for("info"))
+    return flask.redirect(next or url_for("info"))
 
+  info['next'] = request.referrer
   return render_template("register.html", title="Register", bread=bread, info=info)
 
 @user_page.route("/logout")

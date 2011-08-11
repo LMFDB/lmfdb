@@ -140,6 +140,8 @@ def new_user(name, email, pwd = None):
   return new_user
 
   
+def user_exists(name):
+  return users.find({'_id' : name}).count() > 0
 
 
 
