@@ -30,7 +30,12 @@
         {% endif %}
       </div>
       <div class="userinfo">
-        <a href="/user">{{ username }}</a>
+          {% if user.is_authenticated() %}
+            <a href="{{ url_for('.user.info') }}">{{ username }}</a> 
+            &middot; <a href="{{ url_for('.user.logout') }}">Logout</a>
+          {% else %}
+            <a href="{{ url_for('.user.info') }}">Login</a>
+          {% endif %}
       </div>
       <div class="title"> 
         {% if title %}{{ title }}

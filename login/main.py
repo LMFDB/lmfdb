@@ -21,7 +21,7 @@ app.register_blueprint(simple_page, url_prefix="/users")
 
 
 #user_page = Blueprint("user_page", __name__, template_folder='templates')
-user_page = flask.Module(__name__, 'user_page')
+user_page = flask.Module(__name__, 'user')
 
 @app.context_processor
 def ctx_proc_userdata():
@@ -51,6 +51,7 @@ def info():
   info['login'] = url_for("login")
   info['logout'] = url_for("logout")
   info['user'] = current_user
+  info['next'] = request.referrer
   return render_template("info.html", info = info, title="Userinfo", bread = base_bread())
 
 
@@ -61,12 +62,13 @@ def login(**kwargs):
   # remember = True sets a cookie to remmeber the user
   name = request.form["name"]
   password = request.form["password"]
+  next = request.form["next"]
   import pwdmanager
   user = pwdmanager.LmfdbUser.get(name)
   if user and user.validate(password):
     flask.flash("Login successful!")
     login_user(user, remember=True) 
-    return flask.redirect(request.args.get("next") or url_for("info"))
+    return flask.redirect(next or url_for("info"))
   flask.flash("wrong username or password!")
   return flask.redirect(url_for("info"))
 
@@ -104,5 +106,5 @@ def register():
 def logout():
   bread = base_bread() + [ ('Login', url_for('logout')) ]
   logout_user()
-  return flask.redirect(url_for('info'))
+  return flask.redirect(request.args.get("next") or request.referrer or url_for('info'))
 

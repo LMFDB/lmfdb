@@ -1,5 +1,5 @@
-{% extends 'homepage.html' %}                                                                                                                                                      
-                                                                                                                                                                                   
+{% extends 'homepage.html' %}
+
 {% block content %}  
 
 <div id="content">
@@ -25,6 +25,7 @@
   {% else %}
 
     <form name="login" action="/user/login" method="post">
+      <input type="hidden" name="next" value="{{ info.next }}" />
       <table>
         <tr><td>Name:</td><td><input name="name" /></td></tr>
         <tr><td>Password:</td><td><input name="password" type="password" /></td></tr>
