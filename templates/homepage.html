@@ -110,6 +110,14 @@
       </div>
     {% endif %}
 
+    {% with msgs = get_flashed_messages(with_categories=true) %}
+      <div id="flashes">
+        {% for cat, msg in msgs %}
+          <p class="{{ cat }}">{{ msg }}</p>
+        {% endfor %}
+      </div>
+    {% endwith %}
+
     {% block content %}
     There is nothing here. This is just a template.
     {% endblock content %}

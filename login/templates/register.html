@@ -5,12 +5,6 @@
 
 <h1>Register</h1>
 
-<div id="flashes">
-{% for msg in get_flashed_messages() %}
-{{ msg }}<br/>
-{% endfor %}
-</div>
-
     <form name="login" action="/user/register" method="post">
       <input type="hidden" name="next" value="{{ info.next }}" />
       <table>

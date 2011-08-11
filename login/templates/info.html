@@ -10,12 +10,6 @@
    <h1>You are not logged in</h1>
 {% endif %}
 
-<div id="flashes">
-{% for msg in get_flashed_messages() %}
-{{ msg }}<br/>
-{% endfor %}
-</div>
-
 <h2>Actions</h2>
 <div>
   {% if info.user.is_authenticated() %}

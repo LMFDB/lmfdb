@@ -8,10 +8,10 @@
 fixed_salt = '=tU\xfcn|\xab\x0b!\x08\xe3\x1d\xd8\xe8d\xb9\xcc\xc3fM\xe9O\xfb\x02\x9e\x00\x05`\xbb\xb9\xa7\x98'
 
 import os
-from pymongo import Connection
-C = Connection("localhost:40000")
-userdb = C.userdb
-users = userdb.users
+import base
+
+def get_users():
+  return base.getDBConnection().userdb.users
 
 rmin = -10000
 rmax =  10000
@@ -65,12 +65,12 @@ class LmfdbUser(UserMixin):
 
   def set_full_name(self, full_name):
     self.full_name = full_name
-    users.update({'_id' : self.name} ,
+    get_users().update({'_id' : self.name} ,
                  {'$set' : { 'full_name' : full_name }})
 
   def set_email(self, email):
     self.email = email
-    users.update({'_id' : self.name},
+    get_users().update({'_id' : self.name},
                  {'$set' : { 'email' : email }})
 
   def get_id(self):
@@ -107,7 +107,7 @@ class LmfdbUser(UserMixin):
 
   @staticmethod
   def get(userid):
-    u = users.find_one({'_id' : userid})
+    u = get_users().find_one({'_id' : userid})
     if not u:
       return None
     user = LmfdbUser(userid, u['email'], u['password'])
@@ -129,10 +129,10 @@ def new_user(name, email, pwd = None):
     if pwd_input != pwd_input2:
       raise Exception("ERROR: Passwords do not match!")
     pwd = pwd_input
-  if users.find({'_id' : name}).count() > 0:
+  if get_users().find({'_id' : name}).count() > 0:
     raise Exception("ERROR: User %s already exists" % name)
   password = hashpwd(pwd)
-  users.save({'_id' : name, 
+  get_users().save({'_id' : name, 
               'email' : email,
               'password' : password
               })
@@ -141,7 +141,7 @@ def new_user(name, email, pwd = None):
 
   
 def user_exists(name):
-  return users.find({'_id' : name}).count() > 0
+  return get_users().find({'_id' : name}).count() > 0
 
 
 
