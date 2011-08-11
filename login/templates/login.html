@@ -1,0 +1,23 @@
+{% extends 'homepage.html' %}                                                                                                                                                      
+{% block content %}  
+
+<div id="content">
+
+<div>
+{% for msg in get_flashed_messages() %}
+<p>{{ msg }}</p>
+{% endfor %}
+</div>
+
+<form name="login" action="/user/login" method="post">
+<table>
+<tr><td>Name:</td><td><input name="name" /></td></tr>
+<tr><td>Password:</td><td><input name="password" type="password" /></td></tr>
+<tr><td colspan="2"><button name="submit" type="submit">Login</button></td></tr>
+</table>
+</form>
+
+</div>
+{% endblock %}
+
+

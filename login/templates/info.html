@@ -1,0 +1,34 @@
+{% extends 'homepage.html' %}                                                                                                                                                      
+                                                                                                                                                                                   
+{% block content %}  
+
+<div id="content">
+
+{% if info.user.is_authenticated() %}
+   <h1>You are {{ info.user.name }}</h1>
+{% else %}
+   <h1>You are not logged in</h1>
+{% endif %}
+
+<div>
+{% for msg in get_flashed_messages() %}
+<p>{{ msg }}</p>
+{% endfor %}
+</div>
+
+possible actions:
+<ul>
+  {% if info.user.is_authenticated() %}
+    <li><a href="{{ info.logout }}">Logout</a></li>
+  {% else %}
+    <li><a href="{{ info.login }}">Login</a></li>
+  {% endif %}
+</ul>
+</div>
+
+
+</div>
+
+{% endblock %}
+
+

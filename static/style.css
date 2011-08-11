@@ -47,7 +47,7 @@ body
 #footer
 {
     clear: both;
-    margin-top: 25px;
+    margin-top: 0px;
     /* background-image: url(images/footer.png);
     background-repeat: repeat-x; */
     background-color: #bfb;
@@ -99,11 +99,22 @@ a:hover { color: #000; }
     font-size: 90%;
     padding-top: 2px;
 }
+#header .userinfo {
+     border: 1px solid red; 
+    font-family: sans-serif;
+    min-height: 18px;
+    font-size: 90%;
+    padding: 2px;
+    position: absolute;
+    top: 0px;
+    right: 0px;
+}
 
 
 #main {
 	margin: 0 0 0 200px;
-	padding: 0 0 10px 10px;
+	padding: 0 0 0px 10px;
+  min-height: 600px;
     /* border: 1px solid purple; */
 }
 
@@ -170,10 +181,11 @@ blockquote p {
 #sidebar {
     float: left;
     width: 200px;
-    padding: 15px 0px;
+    margin: 15px 0px 0px 0px;
     font-family: sans-serif;
     font-size: 85%;
     color: #390;
+    background: #EFE;
 }
 
 #sidebar h2 {

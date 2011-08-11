@@ -16,7 +16,7 @@ users = userdb.users
 rmin = -10000
 rmax =  10000
 
-def random_salt(rmin, rmax):
+def get_random_salt():
   """
   generates a random salt
   once computers are 10x faster, change the rmin,rmax limits
@@ -24,14 +24,17 @@ def random_salt(rmin, rmax):
   import random
   return str(random.randrange(rmin, rmax))
   
-def hashpwd(pwd, random_salt):
+def hashpwd(pwd, random_salt = None):
   """
   globally unique routine how passwords are hashed
   """
   from hashlib import sha256
+  hashed = sha256()
   hashed.update(pwd) # pwd must come first!
+  if not random_salt:
+    random_salt = get_random_salt()
   hashed.update(random_salt)
-  hashed = sha256(fixed_salt) # fixed salt must come last!
+  hashed.update(fixed_salt) # fixed salt must come last!
   return hashed.hexdigest()
 
 
@@ -41,16 +44,19 @@ class LmfdbUser(UserMixin):
   """
   The User
   """
-  def __init__(self, name, email):
+  def __init__(self, name, email, password):
     if not name or not isinstance(name, basestring):
       raise Exception("Username is not a basestring")
     if not email or not isinstance(email, basestring):
       raise Exception("Email is not a basestring")
+    if not password or not isinstance(password, basestring):
+      raise Exception("Password is not a proper Hash (and not a basestring)")
     if not self._validate_email(email):
       raise Exception("Email <%s> is not valid!" % email)
 
     self.name = name
     self.email = email
+    self.password = password
     self.authenticated = False
 
   def get_id(self):
@@ -63,19 +69,34 @@ class LmfdbUser(UserMixin):
     return not self.is_authenticated()
 
   def authenticate(self, pwd):
-    self.authenticated = validate_user(self.name, pwd) 
+    self.authenticated = validate(self.name, pwd) 
     return self.authenticated
 
-  def _validate_email(email):
+  def _validate_email(self, email):
     """should do a regex match"""
     return True
+
+  def validate(self, pwd):
+    """
+    checks if the given password for the user is valid.
+    @return: True: OK, False: wrong password.
+    """
+    from time import time
+    t1 = time()
+    challange = self.password
+
+    for i in range(rmin, rmax + 1):
+      if challange == hashpwd(pwd, str(i)):
+        #log "AUTHENTICATED after %s!!" % (time() - t1)
+        return True
+    return False
 
   @staticmethod
   def get(userid):
     u = users.find_one({'_id' : userid})
     if not u:
       return None
-    user = LmfdbUser(userid, u['email'])
+    user = LmfdbUser(userid, u['email'], u['password'])
     return user
 
 
@@ -86,33 +107,22 @@ def new_user(name, email):
   and stores it in the DB.
   """
   from getpass import getpass
-  pwd_input = getpass()
-  pwd_input2 = getpass("Repeat Password")
+  pwd_input = getpass( "Enter  Password: ")
+  pwd_input2 = getpass("Repeat Password: ")
   if pwd_input != pwd_input2:
     raise Exception("ERROR: Passwords do not match!")
   if users.find({'_id' : name}).count() > 0:
     raise Exception("ERROR: User %s already exists" % name)
-  new_user = LmfdbUser(name, email)
+  password = hashpwd(pwd_input)
+  users.save({'_id' : name, 
+              'email' : email,
+              'password' : password
+              })
+  new_user = LmfdbUser(name, email, password)
+  return new_user
+
   
 
-def validate_user(name, pwd):
-  """
-  checks if the given password for the user is valid.
-  @return: True: OK, False: wrong password.
-  """
-  from time import time
-  t1 = time()
-  
-  user = users.find_one({"_id" : name})
-  if not user:
-    raise Exception("User %s not found!" % user)
-  challange = user['pwd']
-
-  for i in range(rmin, rmax + 1):
-    if challange == hashpwd(pwd, str(i)):
-      #log "AUTHENTICATED after %s!!" % (time() - t1)
-      return True
-  return False
 
 
 from flaskext.login import LoginManager
