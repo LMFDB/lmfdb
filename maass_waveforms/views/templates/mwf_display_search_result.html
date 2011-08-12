@@ -27,7 +27,7 @@ Showing records {{search.rec_start}}  to {{search.rec_stop}}
  (out of {{search.num_recs }}).
 {% if info.more  %}
 
-<form name="hidden-search" method = "post" action="{{url_for('render_maass_waveforms')}}">
+<form name="hidden-search" method = "post" action="{{url_for('.render_maass_waveforms')}}">
 
   <input type="hidden" name="search" value="true"> 
   <input type="hidden" name="level_lower" value="{{search.level_lower}}"> 
@@ -42,7 +42,7 @@ Showing records {{search.rec_start}}  to {{search.rec_stop}}
 </form>
 {% endif %}
 <h3>New Search</h3>
-   <form name="search" method = "post" action="{{url_for('render_maass_waveforms')}}">
+   <form name="search" method = "post" action="{{url_for('.render_maass_waveforms')}}">
      <input type="hidden" name="search" value="true"> 
      <input type="hidden" name="rec_start" value="1"> 
      <h3>Search</h3>

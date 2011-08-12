@@ -35,7 +35,7 @@ def getMaassfromById(DBname,MaassID):
 	try: 
 		OBJ = bson.objectid.ObjectId(MaassID)
         except bson.errors.InvalidId:
-        	return render_template("mwf/mwf_browse.html", info=info)
+        	return render_template("mwf_browse.html", info=info)
 	data = Col.find_one({'_id':OBJ})
 	ret.append(["Eigenvalue","\(\\lambda=r^2 + \\frac{1}{4} \\ , \\quad r= \\ \)"+str(data['Eigenvalue'])])
 	if data['Symmetry'] <> "none":
@@ -66,7 +66,7 @@ def get_maassform_by_id(maass_id,fields=None):
         obj = bson.ObjectId(str(maass_id))
     except bson.errors.InvalidId:
         data['error']="Invalid id for object in database!"
-        #return render_template("mwf/mwf_browse.html", info=info)
+        #return render_template("mwf_browse.html", info=info)
     else:
         data = None
         try:
@@ -82,7 +82,7 @@ def get_maassform_by_id(maass_id,fields=None):
         if data == None:
             data=dict()
             data['error']="Invalid id for object in database!"
-        #return render_template("mwf/mwf_browse.html", info=info)
+        #return render_template("mwf_browse.html", info=info)
     return data
 
 def set_info_for_maass_form(data):

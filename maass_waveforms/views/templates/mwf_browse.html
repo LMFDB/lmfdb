@@ -2,8 +2,8 @@
 
 {% block content %}
 
-<!--script type="text/javascript" src="{{ url_for('.static', filename='classical_modular_form_util-functions.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('.static', filename='classical_modular_form_scripts.js') }}"></script-->
+<!--script type="text/javascript" src="{{ url_for('static', filename='classical_modular_form_util-functions.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='classical_modular_form_scripts.js') }}"></script-->
 
 
 
@@ -105,7 +105,7 @@ function getAbsolutePath() {
 <table>
   <tr>
     <td>
-      <form name="browse" method = "get" action="{{url_for('render_maass_waveforms')}}">
+      <form name="browse" method = "get" action="{{url_for('.render_maass_waveforms')}}">
 	<h3>Browse spaces of Maass waveforms</h3>
 	<input type="hidden" name="weight" value=""/>
 	<input type="hidden" name="level" value=""/>
@@ -144,14 +144,14 @@ function getAbsolutePath() {
     <td>
 
 	<h3>Jump to a specific Maass cusp form</h3>
-	<form name="search" method = "post" action="{{url_for('render_maass_waveforms')}}">	  <input type="text" name="jump_to" value=""> <span class="formexample">e.g. 1.12 (gives the 12th eigenvalue on the modular group)</span>
+	<form name="search" method = "post" action="{{url_for('.render_maass_waveforms')}}">	  <input type="text" name="jump_to" value=""> <span class="formexample">e.g. 1.12 (gives the 12th eigenvalue on the modular group)</span>
 	  <input type="submit" value="Jump">
 	</form>
     </td>
   </tr>
   <tr>
     <td>
-      <form name="search" method = "post" action="{{url_for('render_maass_waveforms')}}">
+      <form name="search" method = "post" action="{{url_for('.render_maass_waveforms')}}">
 	<input type="hidden" name="search" value="true"> 
 	<input type="hidden" name="rec_start" value="0"> 
 	<h3>Search</h3>

@@ -16,16 +16,22 @@
 from mwf_utils import *
 
 import flask
-from flask import render_template, url_for, request, redirect, make_response,send_file
+from flask import render_template, url_for, request, redirect, make_response
 import bson
 from sets import Set
 import pymongo
 from sage.all import is_odd,is_even
-mwf = flask.Module(__name__,'mwf')
+
+mwf = flask.Blueprint('mwf', __name__, template_folder="templates")
+
+# this is a blueprint specific default for the tempate system.
+# it identifies the body tag of the html website with class="wmf"
+@mwf.context_processor
+def body_class():
+  return { 'body_class' : 'mwf' }
 
 
 @mwf.route("/",methods=['GET','POST'])
-
 def render_maass_waveforms():
     info = get_args_mwf()
     print "INFO=",info
@@ -113,14 +119,14 @@ def render_maass_waveforms():
     info['list_of_levels']=get_all_levels()
     info['max_level']=max(info['list_of_levels'])
     #print_table_of_levels()
-    return render_template("mwf/mwf_browse.html", info=info,title=title)
+    return render_template("mwf_browse.html", info=info,title=title)
 
 
 @mwf.route("/<int:level>/<weight>/<character>/")
 def render_maass_waveform_space(level,weight,character):
     title="Space of Maass waveforms"
     info=dict()
-    return render_template("mwf/mwf_browse.html", info=info,title=title)
+    return render_template("mwf_browse.html", info=info,title=title)
 
 
 @mwf.route("/<int:level>/")
@@ -163,7 +169,7 @@ def render_maass_waveforms_for_one_group(level):
     info['table_of_eigenvalues']=s
     title="Maass waveforms for \(\Gamma_{0}("+str(level)+")\)"
     bread=[('Maass waveforms',url_for('render_maass_waveforms'))]
-    return render_template("mwf/mwf_one_group.html", info=info,title=title)
+    return render_template("mwf_one_group.html", info=info,title=title)
 
 
 @mwf.route("/<objectid>",methods=['GET','POST'])
@@ -222,7 +228,7 @@ def render_one_maass_waveform_wp(info):
         info['error']=data['error']
 
     bread=[('Maass waveforms',url_for('render_maass_waveforms'))]
-    return render_template("mwf/mwf_one_maass_form.html", info=info,title=title,bread=bread,properties=properties)
+    return render_template("mwf_one_maass_form.html", info=info,title=title,bread=bread,properties=properties)
 
     
 
@@ -280,7 +286,7 @@ def render_search_results_wp(info,search):
     info['table_of_eigenvalues']=s
     title="Search Results"
     bread=[('Maass waveforms',url_for('render_maass_waveforms'))]
-    return render_template("mwf/mwf_display_search_result.html", info=info,title=title,search=search,bread=bread)
+    return render_template("mwf_display_search_result.html", info=info,title=title,search=search,bread=bread)
 
 
 

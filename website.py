@@ -188,11 +188,17 @@ def main():
     import logging
     file_handler = logging.FileHandler(logfile)
     file_handler.setLevel(logging.WARNING)
+    app.logger.addHandler(file_handler)
     
     import base
     base._init(dbport)
    
-    app.logger.addHandler(file_handler)
+
+    # just for debugging
+    #import logging
+    #logging.getLogger().setLevel(logging.INFO)
+    #logging.info(str(app.url_map))
+
     app.run(**options)
 
 

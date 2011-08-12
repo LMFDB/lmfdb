@@ -33,7 +33,7 @@ table#maass_table_outer td {
 }
 </style>
 
-<a href="{{ url_for('render_maass_form') }}">CLEAR SELECTION</a>
+<a href="{{ url_for('.render_maass_form') }}">CLEAR SELECTION</a>
 
 <table id="maass_table_outer">
 <tr><td>
@@ -52,14 +52,14 @@ table#maass_table_outer td {
 {% else %}
 <td>
 {% endif %}
-<a href="{{ url_for('render_maass_form') }}?level={{level}}">\(\Gamma_0({{ level }})\)</a></td>
+<a href="{{ url_for('.render_maass_form') }}?level={{level}}">\(\Gamma_0({{ level }})\)</a></td>
 </tr>
 {% endfor %}
 </tbody>
 </table>
 
 <div> 
-<a href="{{ url_for('maass_form_picard')}}">\(PSL(Z[i]\)</a> <!-- added to include Holger Then's data on PSL(Z[i]) -->
+<a href="{{ url_for('.maass_form_picard')}}">\(PSL(Z[i]\)</a> <!-- added to include Holger Then's data on PSL(Z[i]) -->
 </div>
 
 </td>
@@ -80,7 +80,7 @@ table#maass_table_outer td {
 <td> 
 {% endif %}
 
-<a href="{{ url_for('render_maass_form') }}?level={{info.cur_level}}&weight={{weight}}">{{weight}}</a></td>
+<a href="{{ url_for('.render_maass_form') }}?level={{info.cur_level}}&weight={{weight}}">{{weight}}</a></td>
 </tr>
 {% endfor %}
 </tbody>
@@ -104,7 +104,7 @@ table#maass_table_outer td {
 {% else %}
 <td>
 {% endif %}
-<a href="{{ url_for('render_maass_form') }}?level={{info.cur_level}}&weight={{info.cur_weight}}&character={{character}}">{{character}}</a></td>
+<a href="{{ url_for('.render_maass_form') }}?level={{info.cur_level}}&weight={{info.cur_weight}}&character={{character}}">{{character}}</a></td>
 </tr>
 {% endfor %}
 </tbody>
@@ -115,11 +115,11 @@ table#maass_table_outer td {
 </tr>
 </table>
 
-<a href="{{ url_for('render_maass_form') }}">CLEAR SELECTION</a>
+<a href="{{ url_for('.render_maass_form') }}">CLEAR SELECTION</a>
 
 <h4>Eigenvalue \(\lambda = \frac{1}{4}+r^2\)</h4>
 <div>
-<form name="ev" action="{{ url_for('render_maass_form') }}" method="get">
+<form name="ev" action="{{ url_for('.render_maass_form') }}" method="get">
 Search for \(r\): 
 {% if info.search_for_ev %}
 <input name="eigenvalue" value="{{ info.search_for_ev}}" />
@@ -157,7 +157,7 @@ Search for \(r\):
 {% for sk in symkeys %}
 <td> 
 {% if sym == sk %}
-<a href="{{ url_for('render_maass_form') }}?db={{dbCollection}}&id={{CID}}">{{ ev }}</a>
+<a href="{{ url_for('.render_maass_form') }}?db={{dbCollection}}&id={{CID}}">{{ ev }}</a>
 {% endif %}
  </td> 
 {% endfor %}

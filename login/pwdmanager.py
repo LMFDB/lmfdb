@@ -76,7 +76,6 @@ class LmfdbUser(UserMixin):
   @full_name.setter
   def full_name(self, full_name):
     self._full_name = full_name
-    print self._full_name
     get_users().update({'_id' : self._name} ,
                        {'$set' : { 'full_name' : full_name }})
 
@@ -175,6 +174,7 @@ def load_user(userid):
 
 
 if __name__=="__main__":
+  print "Usage:"
   print "add user"
   print "remove user"
   print "…"

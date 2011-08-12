@@ -7,7 +7,11 @@ from copy import copy
 
 import pymongo
 
-mod = flask.Module(__name__, 'LfunctionDB')
+mod = flask.Blueprint('LfunctionDB', __name__, template_folder="templates")
+
+@mod.context_processor
+def body_class():
+  return { 'body_class' : 'LfunctionDB' }
 
 @mod.route("/")
 @mod.route("/<zero>")
@@ -27,7 +31,7 @@ def zero_search(**kwargs):
         #        printed_arrow = True
         #    result_string = result_string + str(x['zero']) + " " + str(x['modulus']) + " " + str(x['character']) + "<br>\n"
         #return result_string
-    return render_template('LfunctionDB/list.html', pagination=pagination, info = {})
+    return render_template('lf-list.html', pagination=pagination)
 
 @mod.route("/query")
 def query(**kwargs):
@@ -64,4 +68,4 @@ def query(**kwargs):
 
     query = C.test.Lfunctions_test2.find(filter).sort(sort, direction)
     pagination = LazyMongoDBPagination(query = query, per_page=50, page=request.args.get('page', 1), endpoint="query", endpoint_params=dict(request.args))
-    return render_template('LfunctionDB/list.html', pagination=pagination, info = {'blah' : 'blah'})
+    return render_template('lf-list.html', pagination=pagination)

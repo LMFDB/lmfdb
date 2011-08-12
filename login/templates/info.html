@@ -19,7 +19,7 @@
   {% else %}
 
     <div style="margin-bottom: 20px">New user? 
-       <a href="{{ url_for('register') }}">Register here</a>
+       <a href="{{ url_for('.register') }}">Register here</a>
     </div>
 
     <form name="login" action="/user/login" method="post">

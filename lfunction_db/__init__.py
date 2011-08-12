@@ -1,4 +1,4 @@
 from base import app
 
 import main
-app.register_module(main.mod, url_prefix="/LfunctionDB")
+app.register_blueprint(main.mod, url_prefix="/LfunctionDB")

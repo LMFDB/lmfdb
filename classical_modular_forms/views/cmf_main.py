@@ -10,7 +10,11 @@ from classical_modular_forms.backend.cmf_core import * #html_table
 from cmf_utils import *
 
 CMF="cmf"
-cmf = flask.Module(__name__,'cmf')
+cmf = flask.Blueprint(CMF, __name__, template_folder="templates")
+
+@cmf.context_processor
+def body_class():
+  return { 'body_class' : CMF }
 
 #import re
 ### Maximum values to be generated on the fly
@@ -23,11 +27,11 @@ k_max_db = 300000
 _verbose = 0
 
 #from jinja2 import Environment
-print "EN_V path:",app.jinja_loader.searchpath
+#print "EN_V path:",app.jinja_loader.searchpath
 l=app.jinja_env.list_templates()
 #for x in l:
 #    print x
-print "MODULES:",app.modules
+#print "MODULES:",app.modules
 #################
 # Top level
 #################
@@ -45,7 +49,7 @@ def render_classical_modular_forms():
     if info.has_key('download'):
         return get_downloads(info)
     print "MODULES:",app.modules
-    print "EN_V path:",app.modules['cmf'].jinja_loader.searchpath
+    #print "EN_V path:",app.blueprints['cmf'].jinja_loader.searchpath
     print "args=",request.args
     print "method=",request.method
     print "req.form=",request.form
@@ -188,7 +192,7 @@ def render_one_classical_modular_form_wp(info):
 
     #os.remove(fn) ## clears the temporary file					
     info['sidebar']=set_sidebar([properties,parents,siblings,friends,lifts])
-    template = CMF+"/cmf.html"
+    template = "cmf.html"
     title = "Cuspidal newform %s of weight %s for "%(label,weight)
     if level==1:
         title+="\(\mathrm{SL}_{2}(\mathbb{Z})\)"
@@ -232,7 +236,7 @@ def render_classical_modular_form_navigation_wp(**args):
 	
     if(info.has_key('get_table')): # we want a table
 	info = set_table(info,is_set)
-	page = CMF+"/cmf_table.html"
+	page = "cmf_table.html"
 	title = "Table of Classical Modular Forms Spaces"
 	return render_template(page, info=info,title=title)
     ## This is the list of weights we initially put on the form
@@ -253,8 +257,8 @@ def render_classical_modular_form_navigation_wp(**args):
 	if info.has_key('plot'):
 	    return render_fd_plot(level,info)
     title = "Holomorphic Cusp Forms"
-    bread =[('Modular Forms',url_for('.modular_form_toplevel'))]
-    return render_template("cmf/cmf_navigation.html", info=info,title=title,bread=bread)
+    bread =[('Modular Forms',url_for('modular_form_toplevel'))]
+    return render_template("cmf_navigation.html", info=info,title=title,bread=bread)
 
 
 def get_args():
@@ -287,7 +291,7 @@ def browse_classical_modular_forms(**info):
     label  = info.get('label', '')
     char  = info.get('character', '0')
     #bread =[('Modular Forms',url_for('.modular_form_toplevel'))]
-    bread =[('Modular Forms',url_for('render_classical_modular_forms'))]
+    bread =[('Modular Forms',url_for('.render_classical_modular_forms'))]
     if level <0:
         level=None
     if weight<0:
@@ -313,9 +317,9 @@ def browse_classical_modular_forms(**info):
         info['list_spaces']=ajax_more(make_table_of_spaces_fixed_level,*largs,text='more')
 	title = "Holomorphic Cusp Forms of level %s " % level
 	#bread =[('Modular Forms',url_for('.modular_form_toplevel'))]
-	bread =[('Modular Forms',url_for('render_classical_modular_forms'))]
+	bread =[('Modular Forms',url_for('.render_classical_modular_forms'))]
 	info['browse_type']=" of level %s " % level
-        return render_template(CMF+"/cmf_browse.html", info=info,title=title,bread=bread)
+        return render_template("cmf_browse.html", info=info,title=title,bread=bread)
     if weight and not level:
         print "here2!"
         info['level_min']=1;info['level_max']=50
@@ -323,10 +327,10 @@ def browse_classical_modular_forms(**info):
         info['list_spaces']=make_table_of_dimensions(weight_start=weight,weight_stop=weight,**info) #make_table_of_spaces(level=[10,20,30])
 	title = "Holomorphic Cusp Forms of weight %s" %weight
 	#bread =[('Modular Forms',url_for('.modular_form_toplevel'))]
-	bread =[('Modular Forms',url_for('render_classical_modular_forms'))]
+	bread =[('Modular Forms',url_for('.render_classical_modular_forms'))]
         info['browse_type']=" of weight %s " % weight
         print "RENDER TEMPLATE!"
-        return render_template(CMF+"/cmf_browse.html", info=info,title=title,bread=bread)
+        return render_template("cmf_browse.html", info=info,title=title,bread=bread)
     print "here2!"
     info['level_min']=level;info['level_max']=level
     info['weight_min']=weight;info['weight_max']=weight
@@ -361,7 +365,7 @@ def render_classical_modular_form_space_wp(info):
     (properties,parents,friends,siblings,lifts)=sbar
     title = "Holomorphic Cusp Forms of weight %s on \(\Gamma_{0}(%s)\)" %(weight,level)
     bread =[('Modular Forms',url_for('.modular_form_toplevel'))]
-    return render_template(CMF+"/cmf_space.html", info=info,title=title,bread=bread)
+    return render_template("cmf_space.html", info=info,title=title,bread=bread)
 
 
 
@@ -383,7 +387,7 @@ def render_classical_modular_form_space_list_chars(level,weight):
     title = "Holomorphic Modular Cuspforms of level %s and weight %s " %(level,weight)
     bread =[('Modular Forms',url_for('.modular_form_toplevel'))]
     info['browse_type']=" of level %s and weight %s " % (level,weight)
-    return render_template(CMF+"/cmf_browse.html", info=info,title=title,bread=bread)
+    return render_template("cmf_browse.html", info=info,title=title,bread=bread)
 
 
 

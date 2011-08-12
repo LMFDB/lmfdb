@@ -55,9 +55,9 @@ Zero upper bound: <input type="text" name="zeroupperbound" value={{request.args.
 <table class="ntdata">
     <thead>
     {% if request.args.direction=="up" %}
-    <tr><td><a href={{url_for("query", degree=request.args.degree, level=request.args.level, zerolowerbound=request.args.zerolowerbound, zeroupperbound=request.args.zeroupperbound, sort="first_zero", direction="down", page=request.args.get('page', 1))}}>First zero</a></td><td>Degree</td><td>&nbsp;level</td><td>Signature</td><td>Description</td></tr>
+    <tr><td><a href={{url_for(".query", degree=request.args.degree, level=request.args.level, zerolowerbound=request.args.zerolowerbound, zeroupperbound=request.args.zeroupperbound, sort="first_zero", direction="down", page=request.args.get('page', 1))}}>First zero</a></td><td>Degree</td><td>&nbsp;level</td><td>Signature</td><td>Description</td></tr>
     {% else %}
-    <tr><td><a href={{url_for("query", degree=request.args.degree, level=request.args.level, zerolowerbound=request.args.zerolowerbound, zeroupperbound=request.args.zeroupperbound, sort="first_zero", direction="up", page=request.args.get('page', 1))}}>First zero</a></td><td>Degree</td><td>&nbsp;level</td><td>Signature</td><td>Description</td></tr>
+    <tr><td><a href={{url_for(".query", degree=request.args.degree, level=request.args.level, zerolowerbound=request.args.zerolowerbound, zeroupperbound=request.args.zeroupperbound, sort="first_zero", direction="up", page=request.args.get('page', 1))}}>First zero</a></td><td>Degree</td><td>&nbsp;level</td><td>Signature</td><td>Description</td></tr>
     {% endif %}
     </thead>
     {% for L in pagination.entries %}

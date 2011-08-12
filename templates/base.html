@@ -7,8 +7,9 @@
 {% if title %}LMDB: {{ title }}{% else %}LMDB{% endif %}
 </title>
 
-<script type="text/javascript" src="{{ url_for('.static', filename='jquery.min.js') }}"></script>
-<link href="{{ url_for('.static', filename='style.css') }}" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="{{ url_for('static', filename='jquery.min.js') }}"></script>
+<link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet" type="text/css" />
+
 <script type="text/x-mathjax-config">
 MathJax.Hub.Config({
   extensions: ["tex2jax.js","TeX/AMSmath.js","TeX/AMSsymbols.js"],
@@ -21,9 +22,8 @@ MathJax.Hub.Config({
   menuSettings: { zoom: "Hover", zscale: "150%" }
 });
 </script>
-<!--
-<script type="text/javascript" src="{{ url_for('.static', filename='MathJax/MathJax.js',config='default') }}"></script>
--->
+
+<!-- <script type="text/javascript" src="{{ url_for('static', filename='MathJax/MathJax.js',config='default') }}"></script> -->
 <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 
 <script type="text/javascript">
@@ -42,12 +42,12 @@ _gaq.push(['_trackPageview']);
 
 <body class="{{ body_class }}">
 
-{% if false %}
+{# 
 <div style="width: 100%; background-color: #f88; text-align: center; padding: 3px;margin-bottom:0px; border-bottom: 2px solid red;">
 Pre-Release Version. Feedback via 
-<a href="mailto:farmer@aimath.org" subject="[LMDB] ">direct e-mail</a> or 
+<a href="mailto:farmer@aimath.org" subject="[LMFDB] ">direct e-mail</a> or 
 <a href="http://groups.google.com/group/lmdb" target="_blank">discuss online</a>.</div>
-{% endif %}
+#}
 
 {% block body %}
 
