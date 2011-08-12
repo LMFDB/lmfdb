@@ -40,10 +40,12 @@
             <a href="{{ url_for('login.info') }}">Login</a>
           {% endif %}
       </div>
-      <div class="title"> 
+      <div id="title"> 
+       <span id="title-content">
         {% if title %}{{ title }}
         {% else %}TITLE OF PAGE MISSING \( \chi^2 \) even more text and tex \( \frac{1}{1+x+x^2} \) and even more ...
         {% endif %}
+       </span>
       </div>
     </div>
 </div>

@@ -168,7 +168,7 @@ def render_maass_waveforms_for_one_group(level):
     #print "S=",s
     info['table_of_eigenvalues']=s
     title="Maass waveforms for \(\Gamma_{0}("+str(level)+")\)"
-    bread=[('Maass waveforms',url_for('render_maass_waveforms'))]
+    bread=[('Maass waveforms',url_for('.render_maass_waveforms'))]
     return render_template("mwf_one_group.html", info=info,title=title)
 
 
@@ -192,11 +192,11 @@ def render_one_maass_waveform_wp(info):
     maass_id = info['MaassID']
     #dbname=info['db']
     info["friends"]= []
-    info["friends"].append(["L-function","L/"+url_for('render_one_maass_waveform',objectid=maass_id)])
+    info["friends"].append(["L-function","L/"+url_for('.render_one_maass_waveform',objectid=maass_id)])
     info["downloads"]= []
     #info["downloads"].append(["Maass form data",url_for('not_yet_implemented')])
     
-    bread=[('Maass waveforms',url_for('render_maass_waveforms'))]
+    bread=[('Maass waveforms',url_for('.render_maass_waveforms'))]
 
     properties=[]
     data = get_maassform_by_id(maass_id)
@@ -227,7 +227,7 @@ def render_one_maass_waveform_wp(info):
         title="Could not find Maass this waveform in the database!"
         info['error']=data['error']
 
-    bread=[('Maass waveforms',url_for('render_maass_waveforms'))]
+    bread=[('Maass waveforms',url_for('.render_maass_waveforms'))]
     return render_template("mwf_one_maass_form.html", info=info,title=title,bread=bread,properties=properties)
 
     
@@ -285,7 +285,7 @@ def render_search_results_wp(info,search):
     #print "S=",s
     info['table_of_eigenvalues']=s
     title="Search Results"
-    bread=[('Maass waveforms',url_for('render_maass_waveforms'))]
+    bread=[('Maass waveforms',url_for('.render_maass_waveforms'))]
     return render_template("mwf_display_search_result.html", info=info,title=title,search=search,bread=bread)
 
 
@@ -294,7 +294,7 @@ def render_search_results_wp(info,search):
 """
 def write_eigenvalues(search,EVs,index):
 	for i in search:
-		link=url_for('render_maass_form',id=str(i['_id']))
+		link=url_for('.render_maass_form',id=str(i['_id']))
 		EVs.append([i['Eigenvalue'],index,i['Symmetry'], link])
 		index=index+1
 	return index
@@ -342,7 +342,7 @@ def render_webpage(args):
 		data=Collection.find_one({'_id':bson.objectid.ObjectId(maassID)})
 		info["info1"] += ", r="+str(data['Eigenvalue'])
 		info["info2"] = str(data['Symmetry'])+' r='+str(data['Eigenvalue'])
-		info["link"] = url_for('render_maass_form')
+		info["link"] = url_for('.render_maass_form')
 		info["info6"] = "\( \\quad \\lambda= \\frac{1}{4} + r^2 \\ , \\quad r= "+str(data['Eigenvalue'])+"\)"
 		info["info7"] = "Symmetry"
 		info["info8"] = str(data['Symmetry'])
@@ -353,15 +353,15 @@ def render_webpage(args):
 			id = id +1
 		info["an"]= ANs
 		info["check"]=[]
-		info["check"].append(["Hecke relation",url_for('render_maass_form', multicheck=maassID)])
-		info["check"].append(["Ramanujan-Petersson conjecture",url_for('render_maass_form', RPconj=maassID)])
+		info["check"].append(["Hecke relation",url_for('.render_maass_form', multicheck=maassID)])
+		info["check"].append(["Ramanujan-Petersson conjecture",url_for('.render_maass_form', RPconj=maassID)])
 		info["friends"]= []
-		info["friends"].append(["L-function",url_for('render_maass_form', Lfunction=maassID)])
+		info["friends"].append(["L-function",url_for('.render_maass_form', Lfunction=maassID)])
 #		info["learnmore"]= []
 #		info["learnmore"].append(["Wiki","http://wiki.l-functions.org/ModularForms/MaassForms"])
 #		info["learnmore"].append(["Literature","http://arxiv.org/abs/math-ph/0305047"])
 		info["downloads"]= []
-		info["downloads"].append(["Maass form data",url_for('render_maass_form', download=maassID)])
+		info["downloads"].append(["Maass form data",url_for('.render_maass_form', download=maassID)])
 		return render_template("maass_form2.html", info=info)
 	else:	
 		offset = maassID = args.get("id", 0)

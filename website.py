@@ -122,7 +122,7 @@ def render_example_plot():
 
 @app.route("/not_yet_implemented")
 def not_yet_implemented():
-    return render_template("not_yet_implemented.html")
+    return render_template("not_yet_implemented.html", title = "Not Yet Implemented")
 
 
 def usage():
@@ -186,18 +186,16 @@ def main():
             options["use_debugger"] = False
 
     import logging
+    logging.getLogger().setLevel(logging.INFO)
     file_handler = logging.FileHandler(logfile)
     file_handler.setLevel(logging.WARNING)
     app.logger.addHandler(file_handler)
     
     import base
     base._init(dbport)
-   
 
     # just for debugging
-    #import logging
-    #logging.getLogger().setLevel(logging.INFO)
-    #logging.info(str(app.url_map))
+    logging.info(str(app.url_map))
 
     app.run(**options)
 
@@ -205,6 +203,7 @@ def main():
 if __name__ == '__main__':
     main()
 else:
+    # HSY: what's this else part about? 
     import logging
     logfile = "flasklog"
     file_handler = logging.FileHandler(logfile)

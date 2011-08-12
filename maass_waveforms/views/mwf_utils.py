@@ -388,7 +388,7 @@ def print_table_of_levels(start,stop):
             continue
         if N > stop:
             exit
-        url = url_for("render_maass_waveformspace",level=N)
+        url = url_for(".render_maass_waveformspace",level=N)
         print "<a href=\"%s\">%s</a>" (url,N)
     s+="</td></tr></table>"
     return s

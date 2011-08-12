@@ -85,13 +85,20 @@ a:hover { color: #000; }
     margin-left: 210px;
     margin-top: 0px;
 }
-#header .title {
+#header #title {
     /* border: 1px solid green; */
     font-size: 170%;
     font-weight: bold;
     font-family: sans-serif;
     min-height: 80px;
+    position: relative;
 }
+
+#header #title-content {
+  position: absolute;
+  bottom: 10px;
+}
+
 #header .bread {
     /* border: 1px solid red; */
     font-family: sans-serif;
