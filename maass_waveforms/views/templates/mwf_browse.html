@@ -6,14 +6,15 @@
 <script type="text/javascript" src="{{ url_for('static', filename='classical_modular_form_scripts.js') }}"></script-->
 
 
+<div id="content">
 
 {% if info.error is defined %}
 
 <h1>There was an error in meeting your previous request. Please change parameters.</h1>
 
-<div> 
 <h2> Error message: </h2>% extends "homepage.html" %}
 
+<div>
 {{ info.error | safe }}
 </div>
 {% endif %}
@@ -159,8 +160,8 @@ function getAbsolutePath() {
 	  <tr>
 	    <td>Level in range:</td>
 	    <td> 
-	      <input type="text" name="level_lower" value=""> --
-	      <input type="text" name="level_upper" value=""> 
+	      <input type="text" name="level_lower" value="" /> --
+	      <input type="text" name="level_upper" value="" /> 
 	      <span class="formexample">e.g. 1 -- 10</span>
 	    </td>
 	  </tr>
@@ -169,18 +170,23 @@ function getAbsolutePath() {
 	    <td> 
 	      <input type="text" name="ev_lower" value=""> --
 	      <input type="text" name="ev_upper" value=""> 
-	      <span class="formexample">e.g. 9.5 -- 10.5</span> </td>
+	      <span class="formexample">e.g. 9.5 -- 10.5</span>
+      </td>
 	  </tr>
 
 	  <tr>
 	    <td>Weight:</td>
 	    <td> 
-	      <input type="text" name="weight" value=""> 
+	      <input type="text" name="weight" value="" /> 
 	      <span class="formexample">e.g. 1 (leave blank for weight 0)</span>
 	    </td>
 	  </tr>
 	  <tr>
-	    <td>Character:</td><td> <input type="text" name="character" value=""> <span class="formexample">e.g. 1 (0 means trivial character, leave blank for all characters)</span></td>
+	    <td>Character:</td>
+      <td>
+        <input type="text" name="character" value="" />
+          <span class="formexample">e.g. 1 (0 means trivial character, leave blank for all characters)</span>
+      </td>
 	  </tr>
 	  <tr>
 	    <td>
@@ -189,16 +195,19 @@ function getAbsolutePath() {
 	    <td>
 	      Show number of records:
 	       <select name="limit">
-		<option value="20">20</option>
-		<option value="50">50</option>
-		<option value="100">100</option>
-		<option value="-1">all</option>
+		       <option value="20">20</option>
+		       <option value="50">50</option>
+		       <option value="100">100</option>
+		       <option value="-1">all</option>
 	      </select>
 	    </td>
-       </tr>
-      </form>
-    </td>
+    </tr>
+   </form>
+   </table>
+   </td>
   </tr>
 </table>
+
+</div>
 
 {% endblock content %}
