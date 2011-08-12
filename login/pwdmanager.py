@@ -59,32 +59,45 @@ class LmfdbUser(UserMixin):
     if not password or not isinstance(password, basestring):
       raise Exception("Password is not a proper Hash (and not a basestring)")
 
-    self.name = name
-    self.password = password
-    self.email = None
-    self.authenticated = False
-    self.full_name = None
+    self._name = name
+    self._password = password
+    self._email = None
+    self._authenticated = False
+    self._full_name = None
 
-  def get_name(self):
-    return self.full_name or self.name
+  @property
+  def name(self):
+    return self._full_name or self._name
 
-  def set_full_name(self, full_name):
-    self.full_name = full_name
-    get_users().update({'_id' : self.name} ,
+  @property
+  def full_name(self):
+    return self._full_name
+
+  @full_name.setter
+  def full_name(self, full_name):
+    self._full_name = full_name
+    print self._full_name
+    get_users().update({'_id' : self._name} ,
                        {'$set' : { 'full_name' : full_name }})
 
-  def set_email(self, email):
+  @property
+  def email(self):
+    return self._email
+
+  @email.setter
+  def email(self, email):
     if not self._validate_email(email):
       raise Exception("Email <%s> is not valid!" % email)
-    self.email = email
-    get_users().update({'_id' : self.name},
+    self._email = email
+    get_users().update({'_id' : self._name},
                        {'$set' : { 'email' : email }})
 
-  def get_id(self):
-    return self.name
+  @property
+  def id(self):
+    return self._name
   
   def is_authenticate(self):
-    return self.authenticated 
+    return self._authenticated 
 
   def is_anonymous(self):
     return not self.is_authenticated()
@@ -97,11 +110,11 @@ class LmfdbUser(UserMixin):
     #from time import time
     #t1 = time()
     for i in range(rmin, rmax + 1):
-      if self.password == hashpwd(pwd, str(i)):
+      if self._password == hashpwd(pwd, str(i)):
         #log "AUTHENTICATED after %s!!" % (time() - t1)
-        self.authenticated = True
+        self._authenticated = True
         break
-    return self.authenticated
+    return self._authenticated
 
   def _validate_email(self, email):
     """should do a regex match"""
@@ -123,7 +136,7 @@ class LmfdbUser(UserMixin):
 
 
 
-def new_user(name, email, pwd = None):
+def new_user(name, pwd = None):
   """
   generates a new user, asks for the password interactively,
   and stores it in the DB.
@@ -142,7 +155,7 @@ def new_user(name, email, pwd = None):
               'email' : email,
               'password' : password
               })
-  new_user = LmfdbUser(name, email, password)
+  new_user = LmfdbUser(name, password)
   return new_user
 
   

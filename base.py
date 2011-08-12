@@ -17,3 +17,8 @@ def getDBConnection():
   return _C
 
 app = Flask(__name__)
+
+# insert an empty info={} as default
+@app.context_processor
+def ctx_proc_userdata():
+  return { 'info' : {} } 

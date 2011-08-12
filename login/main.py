@@ -26,7 +26,7 @@ user_page = flask.Module(__name__, 'user')
 @app.context_processor
 def ctx_proc_userdata():
   userdata = {'user' : current_user}
-  userdata['username'] = 'Anonymous' if current_user.is_anonymous() else current_user.get_name()
+  userdata['username'] = 'Anonymous' if current_user.is_anonymous() else current_user.name
   return userdata
 
 def base_bread():
@@ -34,14 +34,9 @@ def base_bread():
 
 @user_page.route("/info", methods = ['POST'])
 def set_info():
-  full_name = request.form['full_name']
-  current_user.set_full_name(full_name)
-  flask.flash("set your full_name to %s" % full_name)
-  
-  email = request.form['email']
-  current_user.set_email(email)
-  flask.flash("set your email to %s" % email)
-
+  current_user.full_name = request.form['full_name']
+  current_user.email = request.form['email']
+  flask.flash("Thank you for updating your details!")
   return flask.redirect(url_for("info"))
 
 
@@ -66,7 +61,7 @@ def login(**kwargs):
   import pwdmanager
   user = pwdmanager.LmfdbUser.get(name)
   if user and user.authenticate(password):
-    flask.flash("Hello %s, you login was successful!" % user.get_name())
+    flask.flash("Hello %s, you login was successful!" % user.name)
     login_user(user, remember=True) 
     return flask.redirect(next or url_for("info"))
   flask.flash("Oops! Wrong username or password!", "error")
@@ -74,7 +69,6 @@ def login(**kwargs):
 
 @user_page.route("/register", methods = ['GET', 'POST'])
 def register():
-  info = {} 
   bread = base_bread() + [('Register', url_for("register"))]
   if request.method == 'POST':
     name = request.form['name']
@@ -93,14 +87,14 @@ def register():
       flask.flash("Sorry, user '%s' already exists!" % name, "error")
       return flask.redirect(url_for("register"))
 
-    newuser = pwdmanager.new_user(name, email, pw1)
-    newuser.set_full_name(full_name)
+    newuser = pwdmanager.new_user(name, pw1)
+    newuser.full_name = full_name
+    newuser.email = email
     login_user(newuser, remember=True) 
     flask.flash("Hello %s! Congratulations, you are a new user!" % newuser.get_name())
     return flask.redirect(next or url_for("info"))
 
-  info['next'] = request.referrer
-  return render_template("register.html", title="Register", bread=bread, info=info)
+  return render_template("register.html", title="Register", bread=bread, next=request.referrer)
 
 @user_page.route("/logout")
 @login_required

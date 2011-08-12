@@ -5,7 +5,7 @@
 <div id="content">
 
 {% if info.user.is_authenticated() %}
-   <h1>You are {{ info.user.get_name() }}</h1>
+   <h1>You are {{ info.user.name }}</h1>
 {% else %}
    <h1>You are not logged in</h1>
 {% endif %}
