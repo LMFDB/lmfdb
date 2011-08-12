@@ -1,4 +1,5 @@
 import re
+import logging
 
 from flask import render_template, url_for, make_response
 from sage.all import *
@@ -9,7 +10,7 @@ import LfunctionNavigationProcessing
 import LfunctionPageProcessing
 import LfunctionComp
 import LfunctionPlot
-from utilities import to_dict
+from utils import to_dict
 #from elliptic_curve import by_cremona_label
 # just testing
 
@@ -60,7 +61,7 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic': # this has args: one for weight and one for level
         temp_args['type'] = 'gl2holomorphic'
-        print temp_args
+        logging.info(temp_args)
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2'and arg3 == 'Q' and arg4 == 'maass':
         temp_args['type'] = 'gl2maass'
@@ -90,7 +91,7 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
     #return "23423"
    
     try:
-        print temp_args
+        logging.info(temp_args)
         if temp_args['download'] == 'lcalcfile':
             return render_lcalcfile(L)
     except:
@@ -108,30 +109,24 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
    # put different types of L-functions into here
 #    temp_args = {}
 #    info = {}
-    #print arg1, arg2, args, len(args)
 #    for a in args:
 #        temp_args[a] = args[a]
-#    print temp_args
     #if temp_args.has_key('degree'):
          #d = temp_args['degree']  
-         #print d
          #info = { "degree" : int(d)}
          #info["key"] = 777
     #     return render_template("/lfunction_db/templates/list.html", info=info)
 #    if arg1 == 'Riemann':
 #        temp_args['type'] = 'riemann'
 #    elif len(args)==0 and arg1 == None: #this means I'm at the basic navigation page
-#        #print "start page"
 #        info = set_info_for_start_page()
 #        return render_template("LfunctionNavigate.html", info = info, title = 'L-functions')
 #    elif arg1 == 'Character' and arg2 == 'Dirichlet' and len(args)==0:
 #        info['title'] = 'Table of Dirichlet Characters'
-#        #print "here"
 #        info['contents'] = processDirichletNavigation(args)
 #        return render_template("LfunctionTable.html",info=info,
 #                               title=info['title'])
 #    elif arg1 == 'Character' and arg2 == 'Dirichlet' and args['characternumber'] and args['charactermodulus']:
-#        #print "inside if"
 #        temp_args['type'] = 'dirichlet'
 #    elif arg1 == 'EllipticCurve' and arg2 == 'Q' and arg3:
 #        temp_args['type'] = 'ellipticcurve'
@@ -152,10 +147,8 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
 #        temp_args['url'] = args['url'] 
 #
 #
-#        #print  "here",arg1,arg2,arg3,arg4,arg5,temp_args
 #        #info = getNavigationFromDb(temp_args, arg1, arg2, arg3, arg4, arg5)
 #        #info = processNavigationContents(info, temp_args, arg1, arg2, arg3, arg4, arg5)
-#        #print "here!!!"
 #        
 #    #else:
 #    #    info = getNavigationFromDb(temp_args, arg1, arg2, arg3, arg4, arg5)
@@ -199,7 +192,7 @@ def set_info_for_start_page():
 
 
 def getNavigationFromDb(args, family, group, field, objectName, level):
-    print str(family), str(group), str(field)
+    logging.info("%s %s %s" % (family,group,field))
     pageid = 'L'
     if family:
         pageid += '/' + family
@@ -220,7 +213,7 @@ def getNavigationFromDb(args, family, group, field, objectName, level):
 
 
 def processNavigationContents(info, args, arg1,arg2,arg3,arg4,arg5):
-    #print str(family), str(group), str(field)
+    #logging.info("%s %s %s" % (family,group,field))
     if arg4:
         None
     else:
@@ -353,14 +346,14 @@ def render_plotLfunction(args):
     return response
 
 def render_browseGraph(args):
-    print args
+    logging.info(args)
     data = LfunctionPlot.paintSvgFile(args['group'], int(args['level']), args['sign'])
     response = make_response(data)
     response.headers['Content-type'] = 'image/svg+xml'
     return response
 
 def render_browseGraphHolo(args):
-    print args
+    logging.info(args)
     data = LfunctionPlot.paintSvgHolo(args['Nmin'], args['Nmax'], args['kmin'], args['kmax'])
     response = make_response(data)
     response.headers['Content-type'] = 'image/svg+xml'
@@ -410,9 +403,9 @@ def render_showcollections_demo():
     return render_template("ShowCollectionDemo.html", info = info)
 
 def processDirichletNavigation(args):
-    print str(args)
+    logging.info(str(args))
     try:
-        print args['start']
+        logging.debug(args['start'])
         N = int(args['start'])
         if N < 3:
             N=3
@@ -457,7 +450,7 @@ def processDirichletNavigation(args):
 
 def processEllipticCurveNavigation(args):
     try:
-        print args['start']
+        logging.info(args['start'])
         N = int(args['start'])
         if N < 11:
             N=11
@@ -482,12 +475,12 @@ def processEllipticCurveNavigation(args):
     s += '<tr>\n<th scope="col">Conductor</th>\n'
     s += '<th scope="col">Isogeny Classes</th>\n</tr>\n'
     iso_dict.keys()
-    print iso_dict
+    logging.info(iso_dict)
     for cond in iso_dict.keys():
         s += '<tr>\n<th scope="row">' + str(cond) + '</th>\n'
         s += '<td>\n' 
         for iso in iso_dict[cond]:
-            print cond, iso
+            logging.info("%s %s" % (cond, iso))
             s += "<a href=\"EllipticCurve/Q/"+iso+"\">"
             s += iso
             s+= "</a>" 

@@ -1,6 +1,6 @@
 import random
 
-from utilities import *
+from utils import *
 
 
 def ajax_more2(callback, *arg_list, **kwds):

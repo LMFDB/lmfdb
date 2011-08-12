@@ -23,7 +23,7 @@ def characterlist(N,type):
 
 def charactertable(Nmin,Nmax,type):
          ans=[]
-         print 'min max', Nmin,Nmax
+         logging.info('min %s, max %s' % (Nmin,Nmax))
          for i in range(Nmin,Nmax+1):
                  ans.append([i,characterlist(i,type)])
          return(ans)

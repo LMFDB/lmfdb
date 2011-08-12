@@ -9,6 +9,7 @@ By convention a 'core function' starting with get_  returns a string.
 
 from sage.all import ZZ,Newform,is_squarefree,squarefree_part,factor,is_square,divisors,DirichletGroup,QQ,xgcd,prime_factors,Gamma0,html,I,ceil,ComplexField,RealField,dimension_cusp_forms,sturm_bound,latex,join
 import re
+import logging
 
 
 ####
@@ -177,18 +178,14 @@ def get_new_and_oldspace_decomposition(k,N,xi=0):
     for d in divisors(N):
         if(d==1):
             continue
-        #print "d=",d
         O=M.old_submodule(d); Od=O.dimension()
-        #print "O=",O
         if(d==N and k==2 or Od==0):
             continue
         S=ModularSymbols(ZZ(N/d),k,sign=1).cuspidal_submodule().new_submodule(); Sd=S.dimension()
-        #print "S=",S
-        #if(Sd==0):
-        #    print O,Od
-        #    print S,Sd
+        if(Sd==0):
+          logging.info("%s, %s" % (O,Od))
+          logging.info("%s, %s" % (S,Sd))
         mult=len(divisors(ZZ(d)))
-        #print "mult,N/d,Sd=",mult,ZZ(N/d),Sd
         check_dim=check_dim+mult*Sd
         L.append((ZZ(N/d),mult,Sd))
     check_dim=check_dim-M.dimension()
@@ -421,7 +418,7 @@ def get_fourier_coefficients_of_newform_embeddings(k,N=1,xi=0,fi=0,prec=10):
             row.append(coeffs[n][i])
         tbl['data'].append(row)
     #
-    #print tbl
+    #logging.debug(tbl)
     s=html_table(tbl)
     return s
 
@@ -506,8 +503,7 @@ def get_values_at_CM_points(k,N=1,chi=0,fi=0,digits=12,verbose=0):
     CF=ComplexField(bits)
     RF=ComplexField(bits)
     eps=RF(10**-(digits+1))
-    if(verbose>1):
-        print "eps=",eps
+    logging.debug("eps=" % eps)
     K=f.base_ring()
     cm_vals=dict()
     # the points we want are i and rho. More can be added later...
@@ -523,12 +519,10 @@ def get_values_at_CM_points(k,N=1,chi=0,fi=0,digits=12,verbose=0):
             v1=CF(0); v2=CF(1)
             try:
                 for prec in range(minprec,maxprec,10):
-                    if(verbose>1):
-                        print "prec=",prec
+                    logging.debug("prec=%s" % prec)
                     v2=f.q_expansion(prec)(q)
                     err=abs(v2-v1)
-                    if(verbose>1):
-                        print "err=",err
+                    logging.debug("err=%s"%err)
                     if(err< eps):
                         raise StopIteration()
                     v1=v2
@@ -545,8 +539,7 @@ def get_values_at_CM_points(k,N=1,chi=0,fi=0,digits=12,verbose=0):
                 v2[h]=0
             try:
                 for prec in range(minprec,maxprec,10):
-                    if(verbose>1):
-                        print "prec=",prec
+                    logging.debug("prec=%s"%prec)
                     for h in range(K.degree()):
                         fexp[h]=list()
                         v2[h]=0
@@ -555,10 +548,9 @@ def get_values_at_CM_points(k,N=1,chi=0,fi=0,digits=12,verbose=0):
                             cc=c.complex_embeddings(CF.prec())[h]
                             v2[h]=v2[h]+cc*q**n
                         err[h]=abs(v2[h]-v1[h])
-                        if(verbose>1):
-                            print "v1[",h,"]=",v1[h]
-                            print "v2[",h,"]=",v2[h]
-                            print "err[",h,"]=",err[h]
+                        logging.debug("v1[%s]=%s"% (h,v1[h]))
+                        logging.debug("v2[%s]=%s"% (h,v2[h]))
+                        logging.debug("err[%s]=%s"% (h,err[h]))
                         if(max(err.values()) < eps):             
                             raise StopIteration()
                         v1[h]=v2[h]
@@ -570,9 +562,8 @@ def get_values_at_CM_points(k,N=1,chi=0,fi=0,digits=12,verbose=0):
                 else:
                     cm_vals[tau][h]=""
 
-    if(verbose>2):
-        print "vals=",cm_vals
-        print "errs=",err
+    logging.debug("vals=%s"%cm_vals)
+    logging.debug("errs=%s"%err)
     tbl=dict()
     tbl['corner_label']=['$\tau$']
     tbl['headersh']=['$\\rho=\zeta_{3}$','$i$']
@@ -641,8 +632,6 @@ def get_satake_parameters(k,N=1,chi=0,fi=0,prec=10,bits=53,angles=False):
                 app=ap.complex_embeddings(bits)[j]
                 f1=(4*p**(k-1)-app**2)
                 alpha_p=(app+I*f1.sqrt())/RealField(bits)(2)
-                #print "alpha_p(",p,app,")=",alpha_p
-                #print "alpha_p(",p,app,")=",abs(alpha_p)
                 ab=RF(p**((k-1)/2))
                 norm_alpha=alpha_p/ab
                 t_p=CF(norm_alpha).argument()
@@ -664,7 +653,7 @@ def get_satake_parameters(k,N=1,chi=0,fi=0,prec=10,bits=53,angles=False):
         for j in ems.keys():
             tbl['headersv'].append(j)
             tbl['data'].append(ems[j])
-    #print tbl
+    #logging.debug(tbl)
     s=html_table(tbl)
     return s
 
@@ -753,8 +742,7 @@ def find_inverse_images_of_twists(k,N=1,chi=0,fi=0,prec=10,verbose=0):
     if(is_squarefree(ZZ(N))):
         return [True,f]
     # We need to check all square factors of N
-    if(verbose>0):
-        print "investigating: ",f
+    logging.info("investigating: %s" % f)
     N_sqfree=squarefree_part(ZZ(N))
     Nsq=ZZ(N/N_sqfree)
     twist_candidates=list()
@@ -770,15 +758,13 @@ def find_inverse_images_of_twists(k,N=1,chi=0,fi=0,prec=10,verbose=0):
         # check possible candidates to twist into f
         # g in S_k(M,chi) wit M=N/d^2
         M=ZZ(N/d**2)
-        if(verbose>0):
-            print "Checking level ",M
+        logging.info("Checking level %s"%M)
         for xig in range(euler_phi(M)):
             (t,glist) = _get_newform(k,M,xig)
             if(not t):
                 return glist
             for g in glist:
-                if(verbose>1):
-                    print "Comparing to function ",g
+                logging.debug("Comparing to function %s" %g)
                 KG=g.base_ring()
                 # we now see if twisting of g by xi in D gives us f
                 for xi in D:
@@ -830,7 +816,7 @@ def find_inverse_images_of_twists(k,N=1,chi=0,fi=0,prec=10,verbose=0):
                     except StopIteration:
                         # they are not equal
                         pass
-    #print "Candidates=",twist_candidates
+    #logging.debug("Candidates=%s" % twist_candidates)
     if(len(twist_candidates)==0):
         return (True,None)
     else:
@@ -878,7 +864,6 @@ def _get_newform(k,N,chi,fi):
 
      """
     t=False
-    #print k,N,fi
     try:
         if(chi==0):
             S=Newforms(N,k,names='x')
@@ -955,11 +940,11 @@ def html_table(tbl):
     nrows=len(tbl["headersv"])
     data=tbl['data']
     if(len(data)<>nrows):
-        print "wrong number of rows!"
+        logging.error("wrong number of rows!")
     for i in range(nrows):
-        print "len(",i,")=",len(data[i])
+        logging.info("len(%s)=%s" % (i,len(data[i])))
         if(len(data[i])<>ncols):
-            print "wrong number of cols!"        
+            logging.error("wrong number of cols [=%s]!" % ncols)
 
     if(tbl.has_key('atts')):
         s="<table "+str(tbl['atts'])+">\n"
@@ -991,7 +976,6 @@ def html_table(tbl):
                 l =len_as_printed(str(data[r][k]))
                 if l>maxw:
                     maxw = l
-                    #print "l=",l," max=",data[r][k]
         l = l*10.0 # use true font size?
         for k in range(ncols):
             col_width[k]=maxw
@@ -1001,8 +985,6 @@ def html_table(tbl):
             if tbl.has_key('col_width'):
                 if tbl['col_width'].has_key(i):
                     col_width[i]=tbl['col_width'][i]
-    #print "col width=",col_width
-    #print "format=",format
     if(tbl.has_key("corner_label")):
         l = len_as_printed(str(tbl["corner_label"]))*10
         row="<tr><td width=\"%s\">" % l
@@ -1016,14 +998,13 @@ def html_table(tbl):
     s=s+row
     for r in range(nrows):
         l = len_as_printed(str(tbl["headersv"][r]))*10
-        print "l=",l,"head=",tbl["headersv"]
+        logging.info("l=%s  head=%s" % (l,tbl["headersv"]))
         row="<tr><td width=\"%s\">" %l
         row+=sheaderv+str(tbl['headersv'][r])+"</td>"
         for k in range(ncols):
             wid = col_width[k]
             if format[k]=='html' or format[k]=='text':
                 row=row+"\t<td halign=\"center\" width=\""+str(wid)+"\">"
-                #print "HTML=",data[r][k]
                 if isinstance(data[r][k],list):
                     for ss in data[r][k]:
                         sss = str(ss)
@@ -1036,7 +1017,6 @@ def html_table(tbl):
             else:
                 row=row+"\t<td width=\""+str(wid)+"\">"
                 if isinstance(data[r][k],list):
-                    #print "LATEX list=",data[r][k]
                     for ss in data[r][k]:
                         sss = latex(ss)
                         if(len(sss)>0):
@@ -1065,7 +1045,7 @@ def len_as_printed(s,format='latex'):
     lensub=0.75
     ## remove all html first since it is not displayed
     ss = re.sub("<[^>]*>","",s)
-    #print "ss=",ss
+    logging.debug("ss=%s" % ss)
     ss = re.sub(" ","",ss)    # remove white-space
     ss = re.sub("\*","",ss)    # remove *
     num_exp = s.count("^")    # count number of exponents
@@ -1075,7 +1055,7 @@ def len_as_printed(s,format='latex'):
     subs = re.findall("_{?(\d*)",s) # a list of all  subscripts
     ssubs = "".join(subs)
     ss = re.sub("\^{?(\d*)}?","",ss)  # remove exponenents
-    #print join([ss,ssubs,sexps])
+    logging.debug(join([ss,ssubs,sexps]))
     tot_len=(ss.count(")")+ss.count("("))*lenpar
     tot_len+=ss.count("q")*lenq
     tot_len+=len(re.findall("\d",s))*lendig

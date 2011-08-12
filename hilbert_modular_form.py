@@ -7,7 +7,7 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 import sage.all
 from sage.all import ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi
 
-from utilities import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html
+from utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html
 
 from number_field import parse_field_string, field_pretty
 

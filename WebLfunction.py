@@ -1,4 +1,5 @@
 import math
+import logging
 from Lfunctionutilities import pair2complex, splitcoeff, seriescoeff
 from sage.all import *
 import sage.libs.lcalc.lcalc_Lfunction as lc
@@ -136,8 +137,7 @@ class WebLfunction:
            self.dirichlet_coefficients = self.MF.q_expansion_embeddings(self.numcoeff) #when coeffs are rational, q_expansion_embedding() is the list of Fourier coefficients
         else:
            for n in range(0,self.numcoeff):
-              print str(n)
-              print str(self.number)
+              logging.info("n=%s  self.number = %s" % (n, self.number))
               self.dirichlet_coefficients.append(self.MF.q_expansion_embeddings(self.numcoeff)[n][self.number])
         for n in range(0,len(self.dirichlet_coefficients)):
             an = self.dirichlet_coefficients[n]

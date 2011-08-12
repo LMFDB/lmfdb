@@ -25,3 +25,4 @@ app = Flask(__name__)
 @app.context_processor
 def ctx_proc_userdata():
   return { 'info' : {}, 'body_class' : '' } 
+

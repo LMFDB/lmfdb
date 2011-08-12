@@ -2,7 +2,7 @@ import flask
 import bson
 import pymongo
 from flask import render_template, url_for, request, redirect, make_response,send_file
-from utilities import *
+from utils import *
 from classical_modular_forms.backend.plot_dom import *
 
 def ConnectDB():
@@ -109,8 +109,8 @@ def set_info_for_maass_form(data):
 
 def make_table_of_coefficients(maass_id,number=100):
     c = get_maassform_by_id(maass_id,fields=['Coefficient'])['Coefficient']
-    print "ID=",maass_id
-    print "number=",number
+    logging.info("ID=%s" % maass_id)
+    logging.info("number=%s" % number)
     s="<table border=\"1\">\n<thead><tr><td>\(n\)</td>"
     s+="<td>&nbsp;</td>"
     s+="<td>\(a(n)\)</td></tr></thead>\n"

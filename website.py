@@ -186,7 +186,9 @@ def main():
             options["use_debugger"] = False
 
     import logging
+    logger = logging.getLogger("LMFDB")
     logging.getLogger().setLevel(logging.INFO)
+
     file_handler = logging.FileHandler(logfile)
     file_handler.setLevel(logging.WARNING)
     app.logger.addHandler(file_handler)

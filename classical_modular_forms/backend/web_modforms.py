@@ -23,7 +23,7 @@ from flask import url_for
 import re
 
 import pymongo 
-from utilities import pol_to_html 
+from utils import pol_to_html 
 dburl = 'localhost:27017'
 
 from pymongo.helpers import bson     
@@ -56,7 +56,6 @@ class WebModFormSpace(Parent):
         r"""
         Init self.
         """
-        #print "k=",k
         self._k = ZZ(k)
         self._N = ZZ(N)
         if chi=='trivial':
@@ -288,13 +287,13 @@ class WebModFormSpace(Parent):
         check_dim=self.dimension_newspace()
         if(check_dim==self.dimension()):
             return L
-        #print "check_dim=",check_dim
+        logging.debug("check_dim=%s" % check_dim)
         for d in divisors(N):
             if(d==1):
                 continue
             q = N.divide_knowing_divisible_by(d)
             if(self._verbose>1):
-                print "d=",d
+                logging.info("d=%s" % d)
             # since there is a bug in the current version of sage
             # we have to try this...
             try:
@@ -303,17 +302,15 @@ class WebModFormSpace(Parent):
                 O=M.zero_submodule()
             Od=O.dimension()
             if(self._verbose>1):
-                print "O=",O
-                print "Od=",Od
+                logging.info("O=%s"%O + "Od=%s"%Od)
             if(d==N and k==2 or Od==0):
                 continue
             if self._character.is_trivial():
                 #S=ModularSymbols(ZZ(N/d),k,sign=1).cuspidal_submodule().new_submodule(); Sd=S.dimension()
-                print "q=",q,type(q)
-                print "k=",k,type(k)
+                logging.info("q=%s, %s" % (q,type(q)) + "   k=%s, %s" % (k,type(k)))
                 Sd = dimension_new_cusp_forms(q,k)
                 if(self._verbose>1):
-                    print "Sd=",Sd
+                    logging.info("Sd=%s" % Sd)
                 if Sd > 0:
                     mult=len(divisors(ZZ(d)))
                     check_dim=check_dim+mult*Sd
@@ -330,8 +327,8 @@ class WebModFormSpace(Parent):
                             check_dim=check_dim+mult*Sd
                             L.append((q,x_k,mult,Sd))
             if(self._verbose>1):
-                print "mult,N/d,Sd=",mult,ZZ(N/d),Sd
-                print "check_dim=",check_dim
+                logging.info("mult,N/d,Sd=%s,%s,%s" % (mult,ZZ(N/d),Sd))
+                logging.info("check_dim=%s" % check_dim)
         check_dim=check_dim-M.dimension()
         if(check_dim<>0):
             raise ArithmeticError, "Something wrong! check_dim=%s" % check_dim
@@ -400,7 +397,7 @@ class WebModFormSpace(Parent):
             ss = "\("+my_latex_from_qexp(s)+"\)"
             ll=0
             if len(s)>qexp_max_len:
-                print "LEN > MAX!"
+                logging.warning("LEN > MAX!")
                 sl = ss.split('}')
                 for i in range(len(sl)-1):
                     sss = ''
@@ -416,7 +413,6 @@ class WebModFormSpace(Parent):
                         ll = 0
                         sss+="<br>"
                     slist.append(sss)
-                    #print i,sss
             else:
                 slist.append(ss)
 
@@ -548,7 +544,6 @@ class WebNewForm(SageObject):
         self._label=''
         self._fi=None
         self._atkin_lehner_eigenvalues={}
-        #print "f=",self.f
         if(label <> ''):
             self._label=label
         else:
@@ -756,7 +751,7 @@ class WebNewForm(SageObject):
             return None
 
     def coefficient(self,n):
-        print "n=",n
+        logging.info("n=%s" % n)
         return self.coefficients([n,n+1])
 
     def coefficients(self,nrange=range(1,10)):
@@ -766,7 +761,7 @@ class WebNewForm(SageObject):
         are stored.
 
         """
-        print "nrange=",nrange
+        logging.info("nrange=%s" % nrange)
         res = []
         if not isinstance(nrange,list):
             M = nrange
@@ -810,7 +805,7 @@ class WebNewForm(SageObject):
                 if self._coefficients.has_key(n):
                     an = self._coefficients[n]
                 else:
-                    print "n=",n
+                    logging.info("n=%s"%n)
                     an = self.f.eigenvalue(n,name='x')
                     self._coefficients[n]=an
                 res.append(an)
@@ -854,7 +849,7 @@ class WebNewForm(SageObject):
                 except:
                     pass
         self._atkin_lehner_eigenvalues=res
-        #print "res=",res
+        #logging.info("res=%s" % res)
         return res
 
     def atkin_lehner_eigenvalues_for_all_cusps(self):
@@ -867,7 +862,7 @@ class WebNewForm(SageObject):
             if c==Infinity:
                 continue
             l=self.atkin_lehner_at_cusp(c)
-            print "l=",c,l
+            logging.info("l=%s   %s" % (c,l))
             if(l):
                 (Q,ep)=l
                 res[c]=[Q,ep]
@@ -961,15 +956,13 @@ class WebNewForm(SageObject):
             # check possible candidates to twist into f
             # g in S_k(M,chi) wit M=N/d^2
             M=ZZ(N/d**2)
-            if(self._verbose>0):
-                print "Checking level ",M
+            logging.info("Checking level %s" % M)
             for xig in range(euler_phi(M)):
                 (t,glist) = _get_newform(k,M,xig)
                 if(not t):
                     return glist
                 for g in glist:
-                    if(self._verbose>1):
-                        print "Comparing to function ",g
+                    logging.debug("Comparing to function %s" % g)
                     KG=g.base_ring()
                     # we now see if twisting of g by xi in D gives us f
                     for xi in D:
@@ -1141,20 +1134,17 @@ class WebNewForm(SageObject):
         QQ['x']
         tab[0]=0*x**0
         tab[1]=X[0]*x**poldeg
-        #print "tab=",tab
         for ix in range(1,len(X)):
-            #print "X[ix]=",X[ix]
             tab[1]=tab[1]+QQ(X[ix])*x**monomials[ix][1]
         for n in range(1,N+1):
             tmp=-QQ(k+2*n-2)/QQ(12)*x*tab[n]+(x**2-QQ(1))/QQ(2)*((tab[n]).derivative())
             tab[n+1]=tmp-QQ((n-1)*(n+k-2))/QQ(144)*tab[n-1]
         res=0
-        #print "tab=",tab
         for n in range(1,N+1):
             term=(tab[n](x=0))*12**(floor(QQ(n-1)/QQ(2)))*x**(n-1)/factorial(n-1)
             res=res+term
-            #print "term(",n,")=",term
-            #print "res(",n,")=",res
+            #logging.info( "term(",n,")=",term
+            #logging.info( "res(",n,")=",res
         return res
     #,O(x^(N+1))))
     #return (sum(n=1,N,subst(tab[n],x,0)*
@@ -1211,10 +1201,9 @@ class WebNewForm(SageObject):
         CF=ComplexField(bits)
         RF=ComplexField(bits)
         eps=RF(10**-(digits+1))
-        if(self._verbose>1):
-            print "eps=",eps
+        logging.debug("eps=%s" % eps)
         K=self.base_ring()
-        print "K=",K
+        logging.info("K=%s" % K)
         # recall that 
         degree = K.degree()
         cm_vals=dict()
@@ -1237,12 +1226,10 @@ class WebNewForm(SageObject):
                 v1=CF(0); v2=CF(1)
                 try:
                     for prec in range(minprec,maxprec,10):
-                        if(self._verbose>1):
-                            print "prec=",prec
+                        logging.debug("prec=%s" % prec)
                         v2=self.f.q_eigenform(prec)(q)
                         err=abs(v2-v1)
-                        if(self._verbose>1):
-                            print "err=",err
+                        logging.debug("err=%s" % err)
                         if(err< eps):
                             raise StopIteration()
                         v1=v2
@@ -1258,8 +1245,7 @@ class WebNewForm(SageObject):
                     v2[h]=0
                 try:
                     for prec in range(minprec,maxprec,10):
-                        if(self._verbose>1):
-                            print "prec=",prec
+                        logging.debug("prec=%s" % prec)
                         c = self.coefficients(range(prec))
                         for h in range(degree):
                             fexp[h]=list()
@@ -1355,7 +1341,7 @@ class WebNewForm(SageObject):
         return self._satake
     
     def print_satake_parameters(self,stype=['alphas','thetas'],prec=10,bprec=53):
-        print "print_satake=",prec,bprec
+        logging.info("print_satake=%s  %s"  % (prec,bprec))
         if self.f == None:
             return ""
         satake=self.satake_parameters(prec,bprec)
@@ -1385,7 +1371,6 @@ class WebNewForm(SageObject):
                 for p in satake[type][j].keys():
                     row.append(satake[type][j][p])
                 tbl['data'].append(row)
-        #print tbl
         s=html_table(tbl)
         return s
 
@@ -1430,8 +1415,8 @@ class WebNewForm(SageObject):
             s = "\("+s+"\)"
         else:
             s = "\("+"\)<br>\(".join(sb)+"\)"
-        print "print_q_exp: prec=",prec
-        print "s=",s
+        logging.info("print_q_exp: prec=%s" % prec)
+        logging.info("                s=%s" % s)
         return s
 
     
@@ -1468,7 +1453,7 @@ class WebNewForm(SageObject):
         if(isinstance(coeffs,str)):
             return coeffs  ### we probably failed to compute the form
         # make a table of the coefficients
-        print "print_embeddings: prec=",prec,"bprec=",bprec
+        logging.info("print_embeddings: prec=%s, bprec=" % (prec,bprec))
         tbl=dict()
         tbl['atts']="border=\"1\""
         tbl['headersh']=list()
@@ -1562,9 +1547,7 @@ class WebNewForm(SageObject):
         tbl['corner_label']="\( Q \)  \([cusp]\)"
         tbl['headersv']=["\(\epsilon_{Q}\)"]
         for c in l.keys():
-            #print "Q=",Q
             if(c<>Cusp(Infinity)):
-                #print "hej"
                 Q = l[c][0]
                 s = '\('+str(Q)+"\; ["+str(c)+"]\)"
                 if( c==0 ):
@@ -1572,7 +1555,7 @@ class WebNewForm(SageObject):
                 else:
                     tbl['headersh'].append(s)
                 tbl['data'][0].append(l[c][1])
-        print tbl
+        logging.info(tbl)
         s=html_table(tbl)
         #s=s+"<br><small>* ) The Fricke involution</small>"
         return s
@@ -1701,7 +1684,7 @@ class WebNewForm(SageObject):
         M = NS.sturm_bound() + len(divisors(new_level))
         C = self.coefficients(range(M))
         for label in NS._galois_orbits_labels:
-            print "label=",label
+            logging.info("label=%s" % label)
             FT = NS.f(label)
             CT = FT.f.coefficients(M)
             print CT
@@ -1710,16 +1693,16 @@ class WebNewForm(SageObject):
                 for n in range(2,M):
                     if(new_level % n+1 ==0):
                         continue
-                    print "n=",n
+                    logging.info("n=%s" % n)
                     ct = CT[n]
                     c  = K(x(n))*K(C[n])
-                    print ct,c
+                    logging.info("%s, %s" % (ct, c))
                     if ct <> c:
                         raise StopIteration()
             except StopIteration:
                 pass
             else:
-                print  "Twist of f=",FT
+                logging.info("Twist of f=%s" % FT)
         return  FT
             
 ###

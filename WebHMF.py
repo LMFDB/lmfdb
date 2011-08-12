@@ -1,4 +1,5 @@
 import math
+import logging
 
 class WebHMF:
     """Class for presenting a Hilbert modular form on a web page
@@ -29,7 +30,7 @@ class WebHMF:
         elif self.type=='modularform':
             self.level = dict['level']
             self.weight = dict['weight']
-            print 'My level is', self.level, 'and my weight is', self.weight
+            logging.info('My level is ' + self.level + ' and my weight is + ' self.weight)
              
         else:
             raise KeyError 

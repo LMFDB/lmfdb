@@ -1,4 +1,5 @@
 from pymongo import Connection
+import logging
 import math
 import datetime
 from flask import url_for, make_response
@@ -43,22 +44,22 @@ def getAllMaassGraphHtml(degree):
     ans = ""
     for docGroup in groups:
         g = docGroup['group']
-##        print g
+##        logging.debug(g)
         ans += getGroupHtml(g)
         levels = collection.group(['level'],{ 'degree': degree ,'group': g },
                               {'csum': 0},
                               'function(obj,prev) { prev.csum += 1; }')
-##        print levels
+##        logging.debug(levels)
         for docLevel in levels:
             l = math.trunc(docLevel['level'])
-            print l
+            logging.info(l)
             signs = collection.group(['sign'],{ 'degree': degree ,'group': g
                                                 ,'level': l},
                               {'csum': 0},
                               'function(obj,prev) { prev.csum += 1; }')
             for docSign in signs:
                 s = docSign['sign']
-                print 'sign: ' + s
+                logging.info('sign: ' + s)
                 ans += getOneGraphHtml(g,l,s)
                     
     return(ans)
@@ -395,9 +396,9 @@ def paintSvgHolo(Nmin,Nmax,kmin,kmax):
     alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
 #loop over levels and weights
     for x in range(int(Nmin), int(Nmax) + 1):  # x is the level
-        print "level = " + str(x)
+        logging.info("level = %s" % x)
         for y in range(int(kmin), int(kmax) + 1, 2):  # y is the weight 
-           print "  weight = " + str(y)
+           logging.info("  weight = %s"%y)
            lid = "(" + str(x) + "," + str(y) + ")"
            linkurl = "/L/ModularForm/" + "GL2/Q/holomorphic?weight=" + str(y) +"&amp;level=" + str(x) + "&amp;character=0"
            WS = WebModFormSpace(y,x)
@@ -458,11 +459,11 @@ def paintSvgHolo(Nmin,Nmax,kmin,kmax):
                    firstcentery = ybase 
                    lastcenterx = xbase + (numberwithlabel * signfe * xdotspacing)
                    lastcentery = ybase
-                   ans += "<line x1='" +  str(float(firstcenterx)*xfactor)[0:7]
-                   ans += "' y1='" + str(float(height - firstcentery*yfactor))[0:7]
-                   ans += "' x2='" + str(float(lastcenterx)*xfactor)[0:7]
-                   ans += "' y2='" + str(float(height - lastcentery*yfactor))[0:7]
-                   ans += "' style='stroke:" + thiscolour + ";stroke-width:2.4'/>"
+                   ans += "<line x1='%s'" %  str(float(firstcenterx)*xfactor)[0:7]
+                   ans += "y1='%s'" % str(float(height - firstcentery*yfactor))[0:7]
+                   ans += "x2='%s'" % str(float(lastcenterx)*xfactor)[0:7]
+                   ans += "y2='%s'" % str(float(height - lastcentery*yfactor))[0:7]
+                   ans += "style='stroke:%s;stroke-width:2.4'/>" % thiscolour 
                  for number in range(0,numberwithlabel):
                    xbase += signfe * xdotspacing
                    ans += "<a xlink:href='" + linkurl + "&amp;number=" + str(number) + "' target='_top'>\n"
@@ -475,9 +476,9 @@ def paintSvgHolo(Nmin,Nmax,kmin,kmax):
 
     ans += "</svg>"
 
-    print ans
+    logging.info(ans)
  
-    return(ans)
+    return ans
 
 ## ============================================
 ## Returns the header, some information and the url for the svg-file for
@@ -515,7 +516,6 @@ def getGraphInfoChar(min_cond, max_cond, min_order, max_order):
     xfactor = 70
     yfactor = 30
     extraSpace = 30
-    #print min_cond,max_cond,min_order,max_order
     (width,height) = (2*extraSpace + xfactor*(max_order), 2*extraSpace + yfactor*(max_cond))
 ##    url = url_for('browseGraph',group=group, level=level, sign=sign)
     url = ('/browseGraphChar?min_cond=' + str(min_cond) + '&max_cond=' + str(max_cond) + '&min_order=' + str(min_order) + '&max_order=' + str(max_order))
@@ -523,7 +523,6 @@ def getGraphInfoChar(min_cond, max_cond, min_order, max_order):
     ans = {'src': url}
     ans['width']= width
     ans['height']= height
-    #print (width, height)
     return ans
 
 
@@ -776,10 +775,10 @@ def paintSvgChar(min_cond,max_cond,min_order,max_order):
                     ans += "<title>" + str((x,y)).replace("u", "").replace("'", "") + "</title>"
                     ans += "</circle></a>\n"
                     ans += "<a xlink:href='" + linkurl + "/" + str(cd[(x,y)][ii][1]) + "' target='_top'>\n"
-                    ans += "<circle cx='" + str(float(xbaseminus)*xfactor)[0:7]
-                    ans += "' cy='" +  str(height-(y*yfactor)+ 2*radius)[0:7]
-                    ans += "' r='" + str(radius)
-                    ans += "' style='fill:"+ thiscolour +"'>"
+                    ans += "<circle cx='%s'" % str(float(xbaseminus)*xfactor)[0:7]
+                    ans += "cy='%s'" %  str(height-(y*yfactor)+ 2*radius)[0:7]
+                    ans += "r='%s'" % radius
+                    ans += "style='fill:%s'>" % thiscolour 
                     ans += "<title>" + str((x,y)).replace("u", "").replace("'", "") + "</title>"
                     ans += "</circle></a>\n"
 
@@ -797,7 +796,7 @@ def paintSvgChar(min_cond,max_cond,min_order,max_order):
 def getOneGraphHtmlChar(min_cond, max_cond, min_order, max_order):
     ans = "<div>These L-functions have a functional equation of the form ...</div>\n"
     graphInfo = getGraphInfoChar(min_cond, max_cond, min_order, max_order)
-    print graphInfo
+    logging.info("graphInfo %s" % graphInfo)
 #    ans += ("<embed src='" + graphInfo['src'] + "' width='" + str(graphInfo['width']) +
     ans += ("<embed src='/static/images/browseGraphChar_1_35.svg' width='" + str(graphInfo['width']) +
            "' height='" + str(graphInfo['height']) +

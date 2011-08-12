@@ -7,7 +7,7 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 import sage.all
 from sage.all import ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, euler_phi
 
-from utilities import ajax_more, image_src, web_latex, to_dict, parse_range, coeff_to_poly, pol_to_html
+from utils import ajax_more, image_src, web_latex, to_dict, parse_range, coeff_to_poly, pol_to_html
 
 def field_pretty(field_str):
     d,r,D,i = field_str.split('.')

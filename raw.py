@@ -2,7 +2,7 @@ import json
 
 from base import app
 from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
-from utilities import to_dict, parse_range
+from utils import to_dict, parse_range
 import base
 
 def is_safe(name):
