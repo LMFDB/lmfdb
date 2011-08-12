@@ -275,7 +275,7 @@ td.forminfo {
    vertical-align: top;
 }
 
-form input {
+form input, form textarea {
   border: 1px solid #AAA;
   font-size: 110%;
   padding: 3px;

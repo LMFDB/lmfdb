@@ -53,6 +53,8 @@ class LmfdbUser(UserMixin):
   It is backed by MongoDB and all modifications are done
   immideately via upserts.
   """
+  properties = ('full_name', 'email', 'url', 'about')
+
   def __init__(self, name, password):
     if not name or not isinstance(name, basestring):
       raise Exception("Username is not a basestring")
@@ -64,6 +66,8 @@ class LmfdbUser(UserMixin):
     self._email = None
     self._authenticated = False
     self._full_name = None
+    self._url = None
+    self._about = None
 
   @property
   def name(self):
@@ -76,8 +80,7 @@ class LmfdbUser(UserMixin):
   @full_name.setter
   def full_name(self, full_name):
     self._full_name = full_name
-    get_users().update({'_id' : self._name} ,
-                       {'$set' : { 'full_name' : full_name }})
+    self._store_db("full_name", full_name)
 
   @property
   def email(self):
@@ -88,8 +91,25 @@ class LmfdbUser(UserMixin):
     if not self._validate_email(email):
       raise Exception("Email <%s> is not valid!" % email)
     self._email = email
-    get_users().update({'_id' : self._name},
-                       {'$set' : { 'email' : email }})
+    self._store_db("email", email)
+
+  @property
+  def about(self):
+    return self._about
+
+  @about.setter
+  def about(self, about):
+    self._about = about
+    self._store_db("about", about)
+
+  @property
+  def url(self):
+    return self._url
+
+  @url.setter
+  def url(self, url):
+    self._url = url
+    self._store_db("url", url)
 
   @property
   def id(self):
@@ -119,6 +139,9 @@ class LmfdbUser(UserMixin):
     """should do a regex match"""
     return True
 
+  def _store_db(self, key, value):
+    get_users().update({'_id' : self._name},
+                       {'$set' : { key : value }})
   @staticmethod
   def get(userid):
     """
@@ -129,7 +152,7 @@ class LmfdbUser(UserMixin):
     if not u:
       return None
     user = LmfdbUser(userid, u['password'])
-    for key in ['full_name', 'email']:
+    for key in LmfdbUser.properties:
       if u.has_key(key): setattr(user, key, u[key])
     return user
 

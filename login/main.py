@@ -41,8 +41,9 @@ def base_bread():
 @login_page.route("/info", methods = ['POST'])
 @login_required
 def set_info():
-  current_user.full_name = request.form['full_name']
-  current_user.email = request.form['email']
+  from pwdmanager import LmfdbUser
+  for f in LmfdbUser.properties:
+   setattr(current_user, f, request.form[f])
   flask.flash("Thank you for updating your details!")
   return flask.redirect(url_for(".info"))
 
@@ -56,6 +57,9 @@ def info():
   info['next'] = request.referrer
   return render_template("info.html", info = info, title="Userinfo", bread = base_bread())
 
+@login_page.route("/<userid>")
+def show_user(userid):
+  return userid
 
 @login_page.route("/login", methods = ["POST"])
 def login(**kwargs):

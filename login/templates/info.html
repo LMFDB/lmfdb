@@ -42,16 +42,33 @@
   <form action="/user/info" method="post" name="userinfo">
     <table>
       <tr>
+        <td>Your ID:</td>
+        <td><a href="{{ url_for(".show_user", userid=info.user.id)}}">{{info.user.id}}</a></td>
+      </tr>
+      <tr>
         <td>Full Name:</td>
-        <td><input name="full_name" value="{{info.user.full_name}}" /></td>
+        <td><input name="full_name" value="{{info.user.full_name}}" size="50" tabindex="1" /></td>
+        <td/>
       </tr>
       <tr>
         <td>E-Mail:</td>
-        <td><input name="email" value="{{info.user.email}}" /></td>
+        <td><input name="email" value="{{info.user.email}}" size="50" tabindex="2" /></td>
+        <td/>
       </tr>
       <tr>
-        <td colspan="2">
-          <button type="submit">Save</button>
+        <td>URL:</td>
+        <td><input name="url" id="url" value="{{info.user.url}}" size="50" tabindex="3" /></td>
+        <td id="urltest" />
+      </td>
+      <tr>
+        <td>About You:</td>
+        <td><textarea name="about" rows="4" cols="50" tabindex="4">{{info.user.about}}</textarea></td>
+        <td/>
+      </tr>
+        <tr><td colspan="3" class="spacing" /></tr>
+      <tr>
+        <td/><td colspan="2">
+          <button type="submit" tabindex="5">Save</button>
         </td>
       </tr>
     </table>
@@ -59,6 +76,22 @@
 {% endif %}
 
 </div>
+
+{# this script constructs a url and shows it as a link, just for testing #}
+<script type="text/javascript">
+function makelink() {
+   var url = $("#url").val();
+   if (url.substring(0,7) != "http://" && url.substring(0,8) != "https://") {
+     url = "http://" + url;  
+   }
+   $("#urltest").html("<a href='" + url + "' target='_blank'>test</a>");
+}
+
+$(function() {
+   $("#url").keyup(function(evt) { evt.preventDefault(); makelink()});
+});
+makelink();
+</script>
 
 {% endblock %}
 
