@@ -265,6 +265,16 @@ td.forminfo {
    font-size: 80%;
    font-style: italic;
    color: grey;
+   vertical-align: top;
+}
+
+form input {
+  border: 1px solid #AAA;
+  font-size: 110%;
+  padding: 3px;
+  border-radius: 5px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
 }
 
 
@@ -282,6 +292,10 @@ table a:hover {
     background: #afa;
 }
 
+
+table td.spacing {
+  height: 20px;
+}
 
 table.ntdata {
     width: 100%;

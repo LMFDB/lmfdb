@@ -10,24 +10,29 @@
    <h1>You are not logged in</h1>
 {% endif %}
 
-<h2>Actions</h2>
 <div>
   {% if info.user.is_authenticated() %}
+     <h2>Actions</h2>
 
      <a href="{{ info.logout }}">Logout</a>
 
   {% else %}
 
+    <div style="margin-bottom: 20px">New user? 
+       <a href="{{ url_for('register') }}">Register here</a>
+    </div>
+
     <form name="login" action="/user/login" method="post">
       <input type="hidden" name="next" value="{{ info.next }}" />
       <table>
-        <tr><td>Name:</td><td><input name="name" /></td></tr>
-        <tr><td>Password:</td><td><input name="password" type="password" /></td></tr>
-        <tr><td colspan="2"><button name="submit" type="submit">Login</button></td></tr>
+        <tr><td>Name:</td>
+            <td><input name="name" /></td></tr>
+        <tr><td>Password:</td>
+            <td><input name="password" type="password" /></td></tr>
+        <tr><td class="spacing" colspan="2"/></tr>
+        <tr><td /><td><button name="submit" type="submit">Login</button></td></tr>
       </table>
     </form>
-
-    <div>New user? <a href="{{ url_for('register') }}">Register here</a></div>
 
   {% endif %}
 </div>

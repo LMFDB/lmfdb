@@ -29,10 +29,15 @@ def ctx_proc_userdata():
   userdata['username'] = 'Anonymous' if current_user.is_anonymous() else current_user.name
   return userdata
 
+#@user_page.context_processor
+#def body_class():
+#  return { 'body_class' : 'login' }
+
 def base_bread():
   return [('User', url_for("info"))]
 
 @user_page.route("/info", methods = ['POST'])
+@login_required
 def set_info():
   current_user.full_name = request.form['full_name']
   current_user.email = request.form['email']
@@ -55,14 +60,14 @@ def login(**kwargs):
   bread = base_bread() + [ ('Login', url_for('login')) ]
   # login and validate the user …
   # remember = True sets a cookie to remmeber the user
-  name = request.form["name"]
-  password = request.form["password"]
-  next = request.form["next"]
+  name      = request.form["name"]
+  password  = request.form["password"]
+  next      = request.form["next"]
   import pwdmanager
-  user = pwdmanager.LmfdbUser.get(name)
+  user      = pwdmanager.LmfdbUser.get(name)
   if user and user.authenticate(password):
-    flask.flash("Hello %s, you login was successful!" % user.name)
     login_user(user, remember=True) 
+    flask.flash("Hello %s, you login was successful!" % user.name)
     return flask.redirect(next or url_for("info"))
   flask.flash("Oops! Wrong username or password!", "error")
   return flask.redirect(url_for("info"))
@@ -71,25 +76,25 @@ def login(**kwargs):
 def register():
   bread = base_bread() + [('Register', url_for("register"))]
   if request.method == 'POST':
-    name = request.form['name']
-    pw1 = request.form['password1']
-    pw2 = request.form['password2']
+    name   = request.form['name']
+    pw1    = request.form['password1']
+    pw2    = request.form['password2']
     if pw1 != pw2:
       flask.flash("Oops, passwords do not match!", "error")
       return flask.redirect(url_for("register"))
 
-    full_name = request.form['full_name']
-    email = request.form['email']
-    next = request.form["next"]
+    full_name  = request.form['full_name']
+    email      = request.form['email']
+    next       = request.form["next"]
 
     import pwdmanager
     if pwdmanager.user_exists(name):
       flask.flash("Sorry, user '%s' already exists!" % name, "error")
       return flask.redirect(url_for("register"))
 
-    newuser = pwdmanager.new_user(name, pw1)
-    newuser.full_name = full_name
-    newuser.email = email
+    newuser             = pwdmanager.new_user(name, pw1)
+    newuser.full_name   = full_name
+    newuser.email       = email
     login_user(newuser, remember=True) 
     flask.flash("Hello %s! Congratulations, you are a new user!" % newuser.get_name())
     return flask.redirect(next or url_for("info"))

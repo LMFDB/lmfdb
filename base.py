@@ -19,6 +19,9 @@ def getDBConnection():
 app = Flask(__name__)
 
 # insert an empty info={} as default
+# set the body class to some default, blueprints should
+# overwrite it with their name, using @<blueprint_object>.context_processor
+# see http://flask.pocoo.org/docs/api/?highlight=context_processor#flask.Blueprint.context_processor
 @app.context_processor
 def ctx_proc_userdata():
-  return { 'info' : {} } 
+  return { 'info' : {}, 'body_class' : '' } 
