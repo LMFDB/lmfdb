@@ -5,7 +5,11 @@ from flask import render_template, url_for, request, redirect, make_response,sen
 from utils import *
 from classical_modular_forms.backend.plot_dom import *
 #from psage.modform.maass.lpkbessel import *
-#from maass_waveforms.backend.lpkbessel import *
+try:
+  from maass_waveforms.backend.lpkbessel import *
+except Exception as ex:
+  import logging
+  logging.critical("maass_waveforms/views/mwf_utils.py: couldn't load backend. Exception: '%s'" % ex)
 
 def ConnectDB():
     import base
