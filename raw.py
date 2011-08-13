@@ -6,7 +6,7 @@ from utils import to_dict, parse_range
 import base
 
 def is_safe(name):
-    return name not in ('admin', 'local', 'system.indexes')
+    return name not in ('admin', 'local', 'system.indexes', 'users')
 
 @app.route("/raw")
 def database_list():
@@ -17,7 +17,7 @@ def database_list():
             continue
         db = getattr(C, db_name)
         all_db.append((db_name, filter(is_safe, db.collection_names())))
-    return render_template("raw/index.html", all_db = all_db, info={})
+    return render_template("raw/index.html", all_db = all_db, title="Number Theory Database")
 
 @app.route("/raw/<db_name>/<coll_name>")
 def database_query(db_name, coll_name):
