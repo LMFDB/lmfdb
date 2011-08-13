@@ -4,6 +4,8 @@ import pymongo
 from flask import render_template, url_for, request, redirect, make_response,send_file
 from utils import *
 from classical_modular_forms.backend.plot_dom import *
+#from psage.modform.maass.lpkbessel import *
+from maass_waveforms.backend.lpkbessel import *
 
 def ConnectDB():
     import base
@@ -340,10 +342,10 @@ def get_args_mwf():
     """
     if request.method == 'GET':
 	info   = to_dict(request.args)
-        print "req=",request.args
+        print "req:get=",request.args
     else:
 	info   = to_dict(request.form)
-        print "req=",request.form
+        print "req:post=",request.form
     # fix formatting of certain standard parameters
     level  = my_get(info,'level', None,int)
     weight = my_get(info,'weight',0,int) 
@@ -394,6 +396,8 @@ def print_table_of_levels(start,stop):
     return s
 
 
+
+
 def ajax_once(callback,*arglist,**kwds):
     r"""
     """
@@ -428,7 +432,6 @@ def my_get(dict,key,default,f=None):
 
    
 def eval_maass_form(R,C,M,x,y):
-    from psage.modform.maass.lpkbessel import *
     s=0
     twopi=RR(2*Pi)
     twopii=CC(I*2*Pi)
@@ -443,4 +446,6 @@ def plot_maass_form(R,N,C,**kwds):
     Plot a Maass waveform with eigenvalue R on Gamma_0(N), using coefficients from the vector C.
     
     """
-    
+
+
+

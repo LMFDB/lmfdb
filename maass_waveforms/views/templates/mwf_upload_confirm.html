@@ -1,0 +1,19 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+{% if info.error is defined %}
+
+<h1>There was an error in meeting your previous request. Please change parameters.</h1>
+
+<div> 
+<h2> Error message: </h2>% extends "homepage.html" %}
+
+{{ info.error | safe }}
+</div>
+{% endif %}
+<h2>Display Uploaded data / Verify that it is crrect before inserting it</h2>
+{{ info.uploaded_data }}
+
+
+{% endblock content %}

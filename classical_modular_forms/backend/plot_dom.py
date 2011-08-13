@@ -4,7 +4,7 @@ r"""
 import matplotlib.patches as patches
 import matplotlib.path as path
 
-from sage.all import I,Gamma0,Gamma1,Gamma,SL2Z,ZZ,RR,ceil,sqrt,CC,line,text,latex,exp,pi
+from sage.all import I,Gamma0,Gamma1,Gamma,SL2Z,ZZ,RR,ceil,sqrt,CC,line,text,latex,exp,pi,infinity
 
 def draw_fundamental_domain(N,group='Gamma0',model="H",axes=None,filename=None,**kwds):
         r""" Draw fundamental domain
@@ -38,7 +38,7 @@ def draw_fundamental_domain(N,group='Gamma0',model="H",axes=None,filename=None,*
         if(axes<>None):
             [x0,x1,y0,y1]=axes
         elif(model=="D"):
-            x0=-1 ; x1=1 ; y0=-1 ; y1=1 
+            x0=-1 ; x1=1 ; y0=-1.1 ; y1=1 
         else:
             # find the width of the fundamental domain
             w=0  #self.cusp_width(Cusp(Infinity))
@@ -68,8 +68,11 @@ def draw_fundamental_domain(N,group='Gamma0',model="H",axes=None,filename=None,*
         ## ticks
         ax = ax + line([[-0.5,-0.01],[-0.5,0.01]],color='black')
         ax = ax + line([[0.5,-0.01],[0.5,0.01]],color='black')
-        g = g + ax 
-        t = text(name, (0, -0.1), fontsize=16, color='black')
+        g = g + ax
+	if model=="H":
+		t = text(name, (0, -0.1), fontsize=16, color='black')
+	else:
+		t = text(name, (0, -1.1), fontsize=16, color='black')		
         g = g + t
         g.set_aspect_ratio(1)
         g.set_axes_range(x0,x1,y0,y1)
@@ -329,7 +332,7 @@ def _geodesic_between_two_points_d(x1,y1,x2,y2,z0=I):
     return _circ_arc(t1,t2,c,r)
 
 
-def _circ_arc(t0,t1,c,r,num_pts=100 ):
+def _circ_arc(t0,t1,c,r,num_pts=5000 ):
     r""" Circular arc
     INPUTS:
     - ''t0'' -- starting parameter

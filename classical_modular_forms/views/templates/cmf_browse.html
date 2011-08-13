@@ -4,9 +4,15 @@
 
 <script type="text/javascript" src="{{ url_for('static', filename='classical_modular_form_util-functions.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='classical_modular_form_scripts.js') }}"></script>
-
-
-
+<script>
+$(document).ready( function() {
+$("#wait").text("Plot of fundamental domain is loading!");
+$("#plot").load(function() {
+         $("#wait").text("");
+    });
+}
+);
+</script>
 {% if info.error is defined %}
 
 <h1>There was an error in meeting your previous request. Please change parameters.</h1>
@@ -27,13 +33,27 @@
   </tr>
 </table>
 <br>
-{% if info.geometric is defined %}
-{% if info.level > 1 %}
-<h3>Geometric information for \(\Gamma_{0}({{ info.level}})\)</h3>
-{% else %}
-<h3>Geometric information for \(PSL_{2}(\mathbb{Z}) \)</h3>
-{% endif %}
- {{ info.geometric | safe }}
-{% endif %}
+<table>
+  <tr>
+    {% if info.geometric is defined %}
+    <td valign="top">
+      {% if info.level > 1 %}
+      <h3>Geometric information for \(\Gamma_{0}({{ info.level}})\)</h3>
+      {% else %}
+      <h3>Geometric information for \(PSL_{2}(\mathbb{Z}) \)</h3>
+      {% endif %}
+      {{ info.geometric | safe }}
+    </td>
+    {% endif %}
+    {% if info.fd_plot is defined %}
+    <td>
+      <div>
+      <span id="wait">      </span>
+      <img id="plot" src="{{ info.fd_plot | safe }} " width="" height=""/>
+      </div>
+    </td>
+      {% endif %}
 
+  </tr>
+</table>
 {% endblock content %}
