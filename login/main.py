@@ -102,7 +102,7 @@ def register():
     newuser.full_name   = full_name
     newuser.email       = email
     login_user(newuser, remember=True) 
-    flask.flash("Hello %s! Congratulations, you are a new user!" % newuser.get_name())
+    flask.flash("Hello %s! Congratulations, you are a new user!" % newuser.name)
     return flask.redirect(next or url_for(".info"))
 
   return render_template("register.html", title="Register", bread=bread, next=request.referrer)

@@ -174,7 +174,6 @@ def new_user(name, pwd = None):
     raise Exception("ERROR: User %s already exists" % name)
   password = hashpwd(pwd)
   get_users().save({'_id' : name, 
-              'email' : email,
               'password' : password
               })
   new_user = LmfdbUser(name, password)
