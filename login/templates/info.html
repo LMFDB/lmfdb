@@ -4,20 +4,14 @@
 
 <div id="content">
 
-{% if info.user.is_authenticated() %}
-   <h1>You are {{ info.user.name }}</h1>
-{% else %}
-   <h1>You are not logged in</h1>
-{% endif %}
-
 <div>
   {% if info.user.is_authenticated() %}
+     <h1>You are {{ info.user.name }}</h1>
      <h2>Actions</h2>
-
      <a href="{{ info.logout }}">Logout</a>
 
   {% else %}
-
+    <h1>You are not logged in</h1>
     <div style="margin-bottom: 20px">New user? 
        <a href="{{ url_for('.register') }}">Register here</a>
     </div>
@@ -45,6 +39,9 @@
         <td>Your ID:</td>
         <td><a href="{{ url_for(".show_user", userid=info.user.id)}}">{{info.user.id}}</a></td>
       </tr>
+      <tr>
+        <td>Created:</td>
+        <td>{{ info.user.created|fmtdatetime }} UTC</td>
       <tr>
         <td>Full Name:</td>
         <td><input name="full_name" value="{{info.user.full_name}}" size="50" tabindex="1" /></td>

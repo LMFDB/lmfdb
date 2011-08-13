@@ -112,6 +112,14 @@ class LmfdbUser(UserMixin):
     self._store_db("url", url)
 
   @property
+  def created(self):
+    dbe = self._get_my_entry()
+    return dbe['created']
+
+  def _get_my_entry(self):
+    return get_users().find_one({'_id' : self._name})  
+
+  @property
   def id(self):
     return self._name
   
@@ -173,9 +181,12 @@ def new_user(name, pwd = None):
   if get_users().find({'_id' : name}).count() > 0:
     raise Exception("ERROR: User %s already exists" % name)
   password = hashpwd(pwd)
-  get_users().save({'_id' : name, 
-              'password' : password
-              })
+  from datetime import datetime
+  data = {'_id' : name, 'password' : password, 'created' : datetime.utcnow() }
+  # set defaults to empty strings
+  for key in LmfdbUser.properties:
+    data.update({key: ""})
+  get_users().save(data)
   new_user = LmfdbUser(name, password)
   return new_user
 

@@ -26,3 +26,12 @@ app = Flask(__name__)
 def ctx_proc_userdata():
   return { 'info' : {}, 'body_class' : '' } 
 
+# datetime format in jinja templates
+# you can now pass in a datetime.datetime python object and via
+# {{ <datetimeobject>|fmtdatetime }} you can format it right inside the template
+# if you want to do more than just the default, use it for example this way:
+# {{ <datetimeobject>|fmtdatetime('%H:%M:%S') }}
+def fmtdatetime(value, format='%Y-%m-%d %H:%M:%S'):
+    return value.strftime(format)
+
+app.jinja_env.filters['fmtdatetime'] = fmtdatetime
