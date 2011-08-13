@@ -89,7 +89,8 @@ def database_query(db_name, coll_name):
         info['default_fields'] = ['all']
         info['sep'] = ''
     else:
-        return render_template("raw/query.html", db=db_name, coll=coll_name, info=info, indices=indices, res=res)
+        title = "%s.%s" % (db_name, coll_name)
+        return render_template("raw/query.html", db=db_name, coll=coll_name, info=info, indices=indices, res=res, title = title)
     # not html
     response = make_response(render_template("raw/query_download.html", db=db_name, coll=coll_name, info=info, indices=indices, res=res))
     response.headers['Content-type'] = 'text/plain'
