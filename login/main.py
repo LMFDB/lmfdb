@@ -1,27 +1,26 @@
 # -*- encoding: utf-8 -*-
+# this holds all the flask-login specific logic (+ url mapping an rendering templates)
+# for the user management
+# author: harald schilly <harald.schilly@univie.ac.at>
 
+import logging
 import pymongo
 import flask
 from base import app, getDBConnection
 from flask import render_template, request, abort, Blueprint, url_for
-
-from jinja2 import TemplateNotFound
-
 from flaskext.login import login_required, login_user, current_user, logout_user
 
-"""
-from flask import Blueprint
-simple_page = Blueprint('simple_pages', __name__, template_folder="templates")
-@simple_page.route("/")
-def simple():
-  return "simple2"
-
-app.register_blueprint(simple_page, url_prefix="/users")
-"""
-
-
 login_page = Blueprint("login", __name__, template_folder='templates')
-#login = flask.Module(__name__, 'login')
+
+from flaskext.login import LoginManager
+login_manager = LoginManager()
+
+@login_manager.user_loader
+def load_user(userid):
+  from pwdmanager import LmfdbUser
+  return LmfdbUser.get(userid) 
+
+login_manager.login_view = "login.info"
 
 # globally define the user and username
 @app.context_processor
@@ -34,6 +33,18 @@ def ctx_proc_userdata():
 @login_page.context_processor
 def body_class():
   return { 'body_class' : 'login' }
+
+# the following doesn't work as it should, also depends on blinker python lib
+# flask signal when a user logs in. we record the last logins in the user's data
+# http://flask.pocoo.org/docs/signals/
+#def log_login_callback(cur_app, user = None):
+#  cur_user = user or current_user 
+#  logging.info(">> curr_app: %s   user: %s" % (cur_app, cur_user))
+#
+#from flaskext.login import user_logged_in, user_login_confirmed
+#user_logged_in.connect(log_login_callback)
+#user_login_confirmed.connect(log_login_callback)
+
 
 def base_bread():
   return [('User', url_for(".info"))]
@@ -58,6 +69,7 @@ def info():
   return render_template("info.html", info = info, title="Userinfo", bread = base_bread())
 
 @login_page.route("/<userid>")
+@login_required
 def show_user(userid):
   return userid
 

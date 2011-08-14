@@ -13,7 +13,7 @@ body
     background-color: white;
     /* max-width: 1200px; */
 }
-#Content > h1
+#content > h1
 {
     font-size: 200%;
     font-weight: bold;
@@ -23,7 +23,7 @@ body
     padding 5px 0 5px 0;
     margin: 0 0 30px 0;
 }
-#Content > h2
+#content > h2
 {
     font-family: sans-serif;
     text-decoration: none;
@@ -34,7 +34,7 @@ body
     padding 5px 0 5px 0;
     margin: 20px 0 20px 0;
 }
-#Content > h3 {
+#content > h3 {
     font-family: sans-serif;
     text-decoration: none;
     font-size: 115%;
@@ -92,6 +92,7 @@ a:hover { color: #000; }
     font-family: sans-serif;
     min-height: 100px;
     position: relative;
+    color: #060;
 }
 
 #header #title-content {
@@ -170,12 +171,12 @@ a:hover { color: #000; }
     padding: 0;
     margin-bottom: 0;
 }
-#Content {
+#content {
     margin-top: 10px;
     font-size: 95%;
 }
 
-#Content blockquote
+#content blockquote
 {
 /*
     margin: 10px;
@@ -242,6 +243,10 @@ blockquote p {
     padding: 5px;
     background: #efe;
 }
+
+/* highlighting menu entries (if their respective blueprint overwirtes the body_class variable!) */
+body.mwf #sidebar a.mwf { background: #BFB; }
+body.cmf #sidebar a.cmf { background: #BFB; }
 
 .visible {
 	visibility: visible;

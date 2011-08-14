@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from pwdmanager import login_manager
-from main import login_page
+from main import login_page, login_manager
 
 from base import app
 

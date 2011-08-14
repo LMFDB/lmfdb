@@ -22,7 +22,6 @@ MathJax.Hub.Config({
   menuSettings: { zoom: "Hover", zscale: "150%" }
 });
 </script>
-
 <!-- <script type="text/javascript" src="{{ url_for('static', filename='MathJax/MathJax.js',config='default') }}"></script> -->
 <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 
@@ -31,6 +30,7 @@ var _gaq = _gaq || [];
 _gaq.push(['_setAccount', 'UA-19138192-1']);
 _gaq.push(['_setDomainName', '.modform.org']);
 _gaq.push(['_trackPageview']);
+_gaq.push(['_trackPageLoadTime']);
 
 (function() {
  var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;

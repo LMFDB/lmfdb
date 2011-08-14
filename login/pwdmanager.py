@@ -3,6 +3,9 @@
 
 # store passwords, check users, ...
 # password hashing is done with fixed and variable salting
+# Author: Harald Schilly <harald.schilly@univie.ac.at>
+
+__all__ = [ 'LmfdbUser', 'user_exists' ]
 
 # never ever change the fixed_salt!
 fixed_salt = '=tU\xfcn|\xab\x0b!\x08\xe3\x1d\xd8\xe8d\xb9\xcc\xc3fM\xe9O\xfb\x02\x9e\x00\x05`\xbb\xb9\xa7\x98'
@@ -124,9 +127,11 @@ class LmfdbUser(UserMixin):
     return self._name
   
   def is_authenticate(self):
+    """required by flask-login user class"""
     return self._authenticated 
 
   def is_anonymous(self):
+    """required by flask-login user class"""
     return not self.is_authenticated()
 
   def authenticate(self, pwd):
@@ -194,16 +199,6 @@ def new_user(name, pwd = None):
 def user_exists(name):
   return get_users().find({'_id' : name}).count() > 0
 
-
-
-from flaskext.login import LoginManager
-login_manager = LoginManager()
-
-
-
-@login_manager.user_loader
-def load_user(userid):
-  return LmfdbUser.get(userid) 
 
 
 if __name__=="__main__":

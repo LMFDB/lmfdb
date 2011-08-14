@@ -31,7 +31,7 @@ print "EN_V path:",app.jinja_loader.searchpath
 l=app.jinja_env.list_templates()
 #for x in l:
 #    print x
-print "MODULES:",app.modules
+print "MODULES:",app.blueprints
 #################
 # Top level
 #################
