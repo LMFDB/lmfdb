@@ -4,7 +4,7 @@
 <h2> Browse by Isogeny </h2>
 <div>
  <table>
-  {% for row in info.isogeny_list|slice(5, '') %}
+  {% for row in info.isogeny_list|batch(7, '') %}
     <tr>
      {% for element in row %}
        <td align="right">
