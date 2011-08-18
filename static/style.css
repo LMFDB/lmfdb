@@ -92,7 +92,7 @@ a:hover { color: #000; }
     font-family: sans-serif;
     min-height: 100px;
     position: relative;
-    color: #060;
+    color: #006;
 }
 
 #header #title-content {
@@ -289,10 +289,40 @@ form input, form textarea {
   -moz-border-radius: 5px;
 }
 
+form button {
+  background: #DFD;
+  font-size: 110%;
+  border-radius: 5px;
+  -moz-border-radius:4px;
+  -webkit-border-radius:4px;
+  cursor: pointer;
+  border-top:    2px solid #BFB;
+  border-left:   2px solid #BFB;
+  border-right:  2px solid #ACA;
+  border-bottom: 2px solid #ACA;
+}
+
+form button:hover {
+  background:    #BEB;
+  border-top:    2px solid #BEB;
+  border-left:   2px solid #BEB;
+  border-right:  2px solid #ABA;
+  border-bottom: 2px solid #ABA;
+}
 
 table {
     border: 0;
     border-collapse:collapse;
+}
+
+table th {
+  border-bottom: 2px solid #9B9;
+  padding-bottom: 5px;
+}
+
+table th, table td {
+  padding-left:  10px;
+  padding-right: 10px;
 }
 
 table a {

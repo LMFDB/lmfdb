@@ -12,5 +12,4 @@ from login import login_manager
 login_manager.setup_app(app)
 
 app.register_blueprint(login_page, url_prefix="/user")
-#app.register_module(user_page, url_prefix="/user")
 

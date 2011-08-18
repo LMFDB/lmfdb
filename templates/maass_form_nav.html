@@ -126,7 +126,7 @@ Search for \(r\):
 {% else %}
 <input name="eigenvalue" />
 {% endif %}
-<input type="submit" value="search" />
+<button type="submit" value="search" />
 {% if info.cur_level %}
 <input type="hidden" name="level" value="{{info.cur_level}}" />
 {% endif %}
@@ -136,7 +136,7 @@ Search for \(r\):
 {% if info.cur_character %}
 <input type="hidden" name="character" value="{{info.cur_character}}" />
 {% endif %}
-<!-- <input type="submit" name="search" value="search in selected" /> -->
+{# <button type="submit" name="search" value="search in selected" /> #}
 </form>
 </div>
 
