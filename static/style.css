@@ -290,7 +290,7 @@ td.forminfo {
 }
 
 form input, form textarea {
-  border: 1px solid #AAA;
+  border: 2px solid #ACA;
   font-size: 110%;
   padding: 3px;
   border-radius: 5px;
@@ -298,25 +298,21 @@ form input, form textarea {
   -moz-border-radius: 5px;
 }
 
-form button {
+form button, form select {
+  padding: 3px 6px;
   background: #DFD;
   font-size: 110%;
-  border-radius: 5px;
+  border-radius: 4px;
   -moz-border-radius:4px;
   -webkit-border-radius:4px;
   cursor: pointer;
-  border-top:    2px solid #BFB;
-  border-left:   2px solid #BFB;
-  border-right:  2px solid #ACA;
-  border-bottom: 2px solid #ACA;
+  border: 2px solid #ADA;
+  min-width: 75px;
 }
 
-form button:hover {
-  background:    #BEB;
-  border-top:    2px solid #BEB;
-  border-left:   2px solid #BEB;
-  border-right:  2px solid #ABA;
-  border-bottom: 2px solid #ABA;
+form button:hover, form select:hover {
+  background:    #CFC;
+  border: 2px solid #9C9;
 }
 
 table {
