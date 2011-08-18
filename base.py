@@ -49,3 +49,12 @@ def fmtdatetime(value, format='%Y-%m-%d %H:%M:%S'):
     return value.strftime(format)
 
 app.jinja_env.filters['fmtdatetime'] = fmtdatetime
+
+def obfuscate_email(email):
+    """
+    obfuscating the email
+    TODO: doesn't work yet
+    """
+    return u"%s…@…%s" % (email[:2],email[-2:])
+
+app.jinja_env.filters['obfuscate_email'] = obfuscate_email

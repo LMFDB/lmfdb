@@ -1,0 +1,21 @@
+{% extends 'homepage.html' %}
+
+{% block content %}  
+
+<div id="content">
+
+{# <h1>{{ user.name }}</h1> #}
+
+<div>
+ <ul>
+   <li>ID: <a href="{{ url_for('.user_detail', userid=user.get_id()) }}">{{ user.get_id()}}</a></li>
+   <li>E-Mail: {{ user.email|obfuscate_email }}</li>
+   <li>URL: {% with url = user.url %}<a href="{{url}}">{{url}}</a>{% endwith %} </li>
+   <li>About: {{ user.about }}</li>
+  </ul>
+</div>
+
+
+</div>
+
+{% endblock %}
