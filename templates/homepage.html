@@ -71,23 +71,19 @@
 </div>
 {% endblock sidebar %}
 
-
-<div id="main">
-  <div id="content">
     {% if properties2 %}
-    <table>
-     {% for p in properties2 %}
-       <tr>
-        <td>{{p[0]}}</td>
-        <td>
-        {% if string(p[1]) %}
-            {{ p[1] }}
-        {% else %}
-            e|join('<br/>')
-        {% endif %}
-        </td>
-       </tr>
-     {% endfor %} 
+      <div id="properties">
+       {% for label, content in properties2 %}
+         {% if label %}<h2>{{ label }}</h2>{% endif %}
+        <div>
+          {% if content is string  %}
+            {{ content|safe }}
+          {% else %}
+            {{ p[1]|join('<br/>') }}
+          {% endif %}
+        </div>
+       {% endfor %} 
+      </div>
     {% endif %}
 
     {% if (citation or properties) %}
@@ -103,6 +99,9 @@
       </div>
     {% endif %}
 
+
+<div id="main">
+  <div id="content">
     {% with msgs = get_flashed_messages(with_categories=true) %}
       <div id="flashes">
         {% for cat, msg in msgs %}

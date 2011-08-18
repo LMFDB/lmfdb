@@ -123,7 +123,9 @@ def elliptic_curve_search(**args):
     info['format_ainvs'] = format_ainvs
     credit = 'John Cremona'
     t = 'Elliptic curves over \(\mathbb{Q}\)'
-    bread = [('Elliptic Curves', url_for("rational_elliptic_curves")),('Elliptic Curves over \(\mathbb{Q}\)', url_for("rational_elliptic_curves")),('search results',' ')]
+    bread = [('Elliptic Curves', url_for("rational_elliptic_curves")),
+             ('Elliptic Curves over \(\mathbb{Q}\)', url_for("rational_elliptic_curves")),
+             ('Search Results', '.')]
     return render_template("elliptic_curve/elliptic_curve_search.html",  info = info, credit=credit,bread=bread, title = t)
     
 
@@ -257,16 +259,21 @@ def render_curve_webpage_by_label(label):
     info['plot'] = image_src(plot)
     info['iso_class'] = data['iso']
     info['download_qexp_url'] = url_for('download_qexp', limit=100, ainvs=','.join([str(a) for a in ainvs]))
-    properties = ['<h2>%s</h2>' % label, ' <img src="%s" width="200" height="150"/><br/><br/>' % image_src(plot),'<h2>Conductor</h2>',
-    '\(%s\)<br/><br/>' % N, '<h2> Discriminant</h2>','\(%s\)<br/><br/>' % discriminant, '<h2>j-invariant</h2>','\(%s\)<br/><br/>' % j_invariant,
-     '<h2>Rank</h2>','\(%s\)<br/><br/>' % rank ,'<h2>Torsion Structure</h2>', '\(%s\)<br/><br/>' % tor_group
+    properties2 = [('Label', '%s' % label),
+                   (None, '<img src="%s" width="200" height="150"/>' % image_src(plot)),
+                   ('Conductor', '\(%s\)' % N), 
+                   ('Discriminant', '\(%s\)' % discriminant),
+                   ('j-invariant', '\(%s\)' % j_invariant),
+                   ('Rank', '\(%s\)' % rank),
+                   ('Torsion Structure', '\(%s\)' % tor_group)
     ]
     #properties.extend([ "prop %s = %s<br/>" % (_,_*1923) for _ in range(12) ])
     credit = 'John Cremona'
     t = "Elliptic Curve %s" % info['label']
     bread = [('Elliptic Curves ', url_for("rational_elliptic_curves")),('Elliptic Curves over \(\mathbb{Q}\)', url_for("rational_elliptic_curves")),('Elliptic curves %s' %info['label'],' ')]
 
-    return render_template("elliptic_curve/elliptic_curve.html", info=info, properties=properties, credit=credit,bread=bread, title = t)
+    return render_template("elliptic_curve/elliptic_curve.html", 
+         info=info, properties2=properties2, credit=credit,bread=bread, title = t)
 
 @app.route("/EllipticCurve/Q/padic_data")
 def padic_data():

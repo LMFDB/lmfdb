@@ -292,8 +292,8 @@ class WebLfunction:
         self.texnamecompleted1ms = "\\Lambda(1-s,E)"
         self.title = "L-function $L(s,E)$ for the Elliptic Curve over Q with label "+ self.E.label()
 
-        self.properties = ['Degree ','%s<br><br>' % self.degree]
-        self.properties.extend(['Level ', '%s' % self.level])
+        self.properties = [('Degree ','%s' % self.degree)]
+        self.properties.append(('Level', '%s' % self.level))
         self.credit = 'Sage'
 #        self.title = self.title+", where $\\chi$ is the character modulo "+\
 #str(self.charactermodulus) + ", number " + str(self.characternumber)
@@ -510,11 +510,11 @@ class WebLfunction:
             prim = 'Primitive'
         else:
             prim = 'Not primitive'
-        self.properties = ['Degree: ',deg]
-        self.properties.extend(['<br>', sd])
-        self.properties.extend(['<br>Level: ', ll])
-        self.properties.extend(['<br>Sign: ',sg])
-        self.properties.extend(['<br>',prim])
+        self.properties =    [ ('Degree',    deg)]
+        self.properties.append((None,        sd))
+        self.properties.append(('Level',     ll))
+        self.properties.append(('Sign',      sg))
+        self.properties.append((None,        prim))
 
 
 # 

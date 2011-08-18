@@ -44,16 +44,15 @@ body
     padding 5px 0 5px 0;
     margin: 15px 0 15px 0;
 }
-#footer
-{
+#footer {
     clear: both;
-    margin-top: 0px;
-    /* background-image: url(images/footer.png);
-    background-repeat: repeat-x; */
-    background-color: #bfb;
+    margin-top: 40px;
+    background-color: #dfd;
+    border-top: 2px solid #bfb;
     padding: 25px 10px;
     text-align: center;
     font-size: 75%;
+    color: #060;
 }
 
 
@@ -136,8 +135,8 @@ a:hover { color: #000; }
 
 
 #main {
-	margin: 0 0 0 200px;
-	padding: 0 0 0px 10px;
+	margin:  0px 0px 0px 200px;
+	padding: 0px 0px 0px 10px;
   min-height: 600px;
     /* border: 1px solid purple; */
 }
@@ -147,32 +146,42 @@ a:hover { color: #000; }
     font-family: sans-serif;
     float: right;
     clear: right;
-    margin: 0px 0 15px 15px;
+    margin: 20px 0px 15px 15px;
     /* width: 20%; */
-    background: #dfd;
+    background: #efe;
     border: 1px solid #474;
     border: 0;
-    padding: 15px 15px 15px 15px;
-    border-top-left-radius: 10px;
-    border-bottom-left-radius: 10px;
-    -moz-border-radius-bottomleft: 10px;
-    -moz-border-radius-topleft: 10px;
-    -moz-box-shadow:     5px 5px 4px #8a8;
-    -webkit-box-shadow:  5px 5px 4px #8a8;
-    box-shadow:          5px 5px 4px #8a8;
+    padding: 0px;
+    /* border-top-left-radius: 10px; */
+    /* border-bottom-left-radius: 10px; */
+    /* -moz-border-radius-bottomleft: 10px; */
+    /* -moz-border-radius-topleft: 10px; */
+    /* -moz-box-shadow:     5px 5px 4px #8a8; */
+    /* -webkit-box-shadow:  5px 5px 4px #8a8; */
+    /* box-shadow:          5px 5px 4px #8a8; */
+}
+#properties div, #properties p {
+  padding: 5px;
+}
+#properties h1, #properties h2 {
+    color: #050;
+    padding: 5px;
+    margin: 0;
+    margin-bottom: 0;
+    background: #bfb;
 }
 #properties h1 {
-    font-size: 110%;
-    padding: 0;
-    margin-bottom: 0;
+    font-size: 120%;
 }
 #properties h2 {
-    font-size: 100%;
-    padding: 0;
-    margin-bottom: 0;
-}
-#content {
+    font-size: 110%;
     margin-top: 10px;
+}
+#properties h2:first-child { margin-top: 0px; }
+
+
+#content {
+    margin-top: 20px;
     font-size: 95%;
 }
 
@@ -205,7 +214,7 @@ blockquote p {
 #sidebar {
     float: left;
     width: 200px;
-    margin: 15px 0px 0px 0px;
+    margin: 20px 0px 0px 0px;
     font-family: sans-serif;
     font-size: 85%;
     color: #390;
@@ -216,7 +225,7 @@ blockquote p {
     font-family: sans-serif;
     font-size: 100%;
     background-color: #bfb;
-    color: #292;
+    color: #050;
     padding: 5px;
     margin: 20px 0 0 0;
 }
@@ -408,4 +417,9 @@ div.literature {
 {
   border: 1px solid black;
   background-color: #45BDD7;
+}
+
+.highlight {
+  /* text-decoration: underline; */
+  font-weight: bold;
 }

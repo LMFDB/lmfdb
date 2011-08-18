@@ -101,7 +101,7 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
     info = initLfunction(L, temp_args, request)
 
     return render_template('Lfunction.html',info=info, title = info['title'],
-                           bread = info['bread'], properties = info['properties'],
+                           bread = info['bread'], properties2 = info['properties'],
                            citation = info['citation'], credit = info['credit'],
                            support = info['support'])
 
@@ -471,22 +471,18 @@ def processEllipticCurveNavigation(args):
     except:
         numcoeff = 50
     iso_dict = LfunctionComp.isogenyclasstable(N, N+length)
-    s = '<table>\n'
-    s += '<tr>\n<th scope="col">Conductor</th>\n'
+    s = '<table>'
+    s += '<tr><th scope="col">Conductor</th>\n'
     s += '<th scope="col">Isogeny Classes</th>\n</tr>\n'
     iso_dict.keys()
     logging.info(iso_dict)
     for cond in iso_dict.keys():
-        s += '<tr>\n<th scope="row">' + str(cond) + '</th>\n'
-        s += '<td>\n' 
+        s += '<tr>\n<td scope="row">%s</td>' % cond
         for iso in iso_dict[cond]:
             logging.info("%s %s" % (cond, iso))
-            s += "<a href=\"EllipticCurve/Q/"+iso+"\">"
-            s += iso
-            s+= "</a>" 
-            s += '</td>\n'
-        s += '\n</tr>\n'
+            s += '<td><a href="EllipticCurve/Q/%(iso)s">%(iso)s</a></td>' % { 'iso' : iso }
+        s += '</tr>\n'
     s += '</table>\n'
     return s
     #info['contents'] = s
-    #return info
+     #return info
