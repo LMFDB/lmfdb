@@ -45,11 +45,11 @@ def ctx_proc_userdata():
 # {{ <datetimeobject>|fmtdatetime }} you can format it right inside the template
 # if you want to do more than just the default, use it for example this way:
 # {{ <datetimeobject>|fmtdatetime('%H:%M:%S') }}
+@app.template_filter("fmtdatetime")
 def fmtdatetime(value, format='%Y-%m-%d %H:%M:%S'):
     return value.strftime(format)
 
-app.jinja_env.filters['fmtdatetime'] = fmtdatetime
-
+@app.template_filter('obfuscate_email')
 def obfuscate_email(email):
     """
     obfuscating the email
@@ -57,4 +57,3 @@ def obfuscate_email(email):
     """
     return u"%s…@…%s" % (email[:2],email[-2:])
 
-app.jinja_env.filters['obfuscate_email'] = obfuscate_email
