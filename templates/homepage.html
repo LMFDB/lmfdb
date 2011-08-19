@@ -14,6 +14,30 @@
 </ul>
 {%- endmacro %}
 
+{# 
+   the following LABEL macro enables to tag certain locations in the
+   HTML documents to reference to saved "Knowls". They contain all
+   the information and form the stored knowledge. The macro itself
+   is only there for the presentation of the data via suitable
+   HTML tags and associated javascript code.
+#}
+{% macro KNOWL(knowlid, tag='span', klass='knowl', title=True) -%}
+  {% with knowl = Knowl(knowlid) %}
+    {% if knowl is undefined %}
+      <{{tag}} class="{{klass}}">
+        {{ knowl.title }}
+      </{{tag}}>
+
+    {% else %} 
+      {# knowl does not exist. wrong knowlid or opportunity to create one! #}
+      <{{tag}} class="{{klass}} knowlerror">
+        <br/>[ERROR: Knowl with ID '{{knowlid}}' does not exist. Wrong ID or
+        <a href="{{ url_for('knowledge.edit', ID=knowlid) }}">create a new one</a>.]
+      </{{tag}}>
+    {% endif %}
+  {% endwith %}
+{%- endmacro %}
+
 {% block body %}
 
 <div id="header">

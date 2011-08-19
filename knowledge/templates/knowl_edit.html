@@ -1,0 +1,67 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+<div id="content">
+  <h1>Edit Knowl</h1>
+  <form action="{{ url_for('.save_form') }}" method="POST">
+    <table>
+     <tr>
+       <td>ID</td><td>{{ K.id }}</td>
+     </tr>
+     <tr>
+       <td>Title</td>
+       <td><input size="40" name="title" id="ktitle">{{ K.title }}</input></td>
+     </tr>
+     <tr>
+       <td>Content</td>
+       <td><textarea cols="40" rows="10"
+            name="content" id="kcontent">{{ K.content }}</textarea>
+       </td>
+     </tr>
+    </table>
+
+    <button id="knowl-edit-btn">Save</button>
+  </form>
+
+  <h1>Preview Knowl</h1>
+  <div id="knowl-preview" class="knowl">
+     <h1 id="knowl-title"></h1>
+     <div id="knowl-content"></div>
+  </div>
+
+</div>
+
+<script type="text/javascript">
+
+var $ktitle = $("#ktitle");
+var $kcontent = $("#kcontent");
+var $title = $("#knowl-title");
+var $content = $("#knowl-content");
+
+function update() {
+  //console.log("running update");
+  $title.html($ktitle.val());
+  $content.html($kcontent.val());
+  MathJax.Hub.Queue(["Typeset", MathJax.Hub, $title.get()]);
+  MathJax.Hub.Queue(["Typeset", MathJax.Hub, $content.get()]);
+  update_id = null;
+}
+
+var update_id = null;
+
+function update_delay() {
+  if (update_id) {
+    //console.log("clearing timeout " + update_id);
+    window.clearTimeout(update_id);
+    update_id = null;
+  }
+  update_id = window.setTimeout(update, 250);
+}
+
+$(function() {
+  $ktitle.keyup( function(evt) { update_delay(); });
+  $kcontent.keyup( function(evt) { update_delay(); });
+  update();
+});
+</script>
+{% endblock %}

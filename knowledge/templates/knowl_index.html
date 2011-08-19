@@ -1,0 +1,19 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+<div id="content">
+  <h1>Edit Knowl</h1>
+  <form action="{{ url_for('.edit_form') }}" method="POST">
+    Knowl ID: <input id="knowl-edit-id" name="id"></input>
+    <button id="knowl-edit-btn">Edit</button>
+  </form>
+
+  <h1>Read Knowl</h1>
+  <div>
+
+  list of knowl titles
+
+  </div>
+
+</div>
+{% endblock %}
