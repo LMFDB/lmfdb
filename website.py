@@ -31,10 +31,18 @@ def not_found(error):
 def index():
     return render_template('index.html', title ="Template Title")
 
-@app.route("/robots.txt")
-def robots():
-   import os
-   return open(os.path.join('.', "static","robots.txt")).read()
+def root_static_file(name):
+    @app.route("/%s" % name)
+    def robots():
+       import os
+       fn = os.path.join('.', "static",name)
+       print fn
+       if os.path.exists(fn):
+         return open(fn).read()
+       import logging
+       logging.warning("root_static_file: file %s not found!" % fn)
+       return ''
+map(root_static_file, [ 'robots.txt', 'favicon.ico' ])
 
 @app.route('/a/<int:a>')
 def a(a):
