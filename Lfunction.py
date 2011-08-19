@@ -1,7 +1,7 @@
 import re
 import logging
 
-from flask import render_template, url_for, make_response
+from flask import render_template, url_for, make_response, abort
 from sage.all import *
 import tempfile, os
 import pymongo
@@ -330,6 +330,10 @@ def parameterstringfromdict(dic):
 def plotLfunction(args):
     WebL = WebLfunction(args)
     L = WebL.sageLfunction
+    # HSY: I got exceptions that "L.hardy_z_function" doesn't exist
+    # TODO sort this out, do we need psage?!
+    if not hasattr(L, "hardy_z_function"):
+      return None
     #FIXME there could be a filename collission
     fn = tempfile.mktemp(suffix=".png")
     F=[(i,L.hardy_z_function(CC(.5,i)).real()) for i in srange(-30,30,.1)]
@@ -341,6 +345,9 @@ def plotLfunction(args):
 
 def render_plotLfunction(args):
     data = plotLfunction(args)
+    if not data:
+      # see not about missing "hardy_z_function" in plotLfunction()
+      return abort(404)
     response = make_response(data)
     response.headers['Content-type'] = 'image/png'
     return response
