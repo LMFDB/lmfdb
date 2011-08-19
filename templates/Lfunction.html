@@ -3,7 +3,7 @@
 {% block content %}
 <div id="content">
    <h2> Dirichlet series </h2>
-   <div> {{ info.dirichlet }} </div>
+   <div> {{ dirichlet }} </div>
 
    <h2>Functional equation</h2>
    
@@ -11,32 +11,32 @@
      <a id="functionalEqSelberg" href="#">Selberg</a>
      <a id="functionalEqAnalytic" class="highlight" href="#">Analytic</a>
    </div>
-   <div id="functionalEqText">{{ info.functionalequation }}</div>
+   <div id="functionalEqText">{{ functionalequation }}</div>
   
    <h2>Euler product</h2>
-   <div> {{ info.eulerproduct }} </div>
+   <div> {{ eulerproduct }} </div>
 
    <h2> Imaginary part of the first few zeroes on the critical line </h2>
 
-   {% if info.zeroeslink %}
+   {% if zeroeslink %}
        <div><span id="zeroes"></span></div>
    {% else %}
        <div>Not enough Dirichelet series coefficients to compute zeros.</div>
    {% endif %}
 
-   {% if info.sv1 and info.sv12 %}
+   {% if sv1 and sv12 %}
        <h2>Special Values</h2>
        <div>
-        {{ info.sv12 }}<br>
-        {{ info.sv1 }} <br>
+        {{ sv12 }}<br>
+        {{ sv1 }} <br>
        </div>
    {% else %}
         <div>Not enough Dirichelet series coefficients to compute special values.</div>
    {% endif %}
 
-   {% if info.plotlink %}
+   {% if plotlink %}
       <h2> Graph of the \(Z\)-function along the critical line </h2>
-      <img src="{{ info.plotlink|safe }}" >
+      <img src="{{ plotlink|safe }}" >
    {% else %}
       <div>Not enough Dirichelet series coefficients to make a graph.</div>
    {% endif %}

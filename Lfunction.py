@@ -1,7 +1,7 @@
 import re
 import logging
 
-from flask import render_template, url_for, make_response, abort
+from flask import render_template, url_for, make_response, abort, redirect
 from sage.all import *
 import tempfile, os
 import pymongo
@@ -85,7 +85,7 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
 
 
     else: # this means we're somewhere that requires args: db queries, holomorphic modular forms, custom,  maass forms, and maybe some others, all of which require a homepage.  
-        return "not yet implemented"
+        return redirect(url_for("not_yet_implemented"))
 
     L = WebLfunction(temp_args)
     #return "23423"
@@ -100,10 +100,19 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
 
     info = initLfunction(L, temp_args, request)
 
-    return render_template('Lfunction.html',info=info, title = info['title'],
-                           bread = info['bread'], properties2 = info['properties'],
-                           citation = info['citation'], credit = info['credit'],
-                           support = info['support'])
+    # HSY: when you do "**dictionary" in a function call (at the very end),
+    # you 'unpack' it. that saves you all this "title = info['title']" nonsense ;)
+
+    return render_template('Lfunction.html', info=info, **info)
+    
+                           # above's **info is equivalent to:
+
+                           #title   = info['title'],
+                           #bread   = info['bread'], 
+                           #properties2 = info['properties2'],
+                           #citation = info['citation'], 
+                           #credit   = info['credit'],
+                           #support  = info['support'])
 
 
    # put different types of L-functions into here
@@ -254,9 +263,9 @@ def initLfunction(L,args, request):
     info['zeroeslink'] = url_for('zeroesLfunction', **args)
     info['plotlink'] = url_for('plotLfunction', **args)
 
-#set info['bread'] and to be empty and set info['properties'], but exist (temp. fix by David & Sally)
+    #set info['bread'] and to be empty and set info['properties'], but exist (temp. fix by David & Sally)
     info['bread'] = []
-    info['properties'] = L.properties
+    info['properties2'] = L.properties
 
     if args['type'] == 'gl2maass':
         info['zeroeslink'] = ''
