@@ -10,9 +10,11 @@
 
   <h1>Read Knowl</h1>
   <div>
-
-  list of knowl titles
-
+    <ul>
+    {% for k in knowls %}
+      <li><a href="{{ url_for('.render', ID=k._id) }}">k.title</a></li>
+    {% endfor %}
+    </ul>
   </div>
 
 </div>

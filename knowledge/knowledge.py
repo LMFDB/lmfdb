@@ -25,8 +25,11 @@ knowledge_page = Blueprint("knowledge", __name__, template_folder='templates')
 def body_class():
   return { 'body_class' : 'knowl' }
 
-def bread_base():
-  return [("Knowledge", url_for(".index"))]
+def get_bread(breads):
+  bc = [("Knowledge", url_for(".index"))]
+  for b in breads:
+    bc.append(b)
+  return bc
 
 @knowledge_page.route("/test")
 def test():
@@ -34,16 +37,28 @@ def test():
   just a test page
   """
   return render_template("knowl-test.html",
-               bread=bread_base(), 
+               bread=get_bread([("Test", url_for(".test"))]), 
                title="Knowledge Test")
 
 @knowledge_page.route("/edit/<ID>")
 @login_required
 def edit(ID):
   knowl = Knowl(ID)
+  b = get_bread([("Edit '%s'"%ID, url_for('.edit', ID=ID))])
   return render_template("knowl-edit.html", 
          title="Edit Knowl '%s'" % ID,
-         k = knowl)
+         k = knowl,
+         bread = b)
+
+@knowledge_page.route("/show/<ID>")
+def show(ID):
+  k = Knowl(ID)
+  content = render(ID)
+  return render_template("knowl-show.html",
+         title = "Knowl '%s'" % k.id,
+         k = k,
+         content = content,
+         bread = get_bread([('Show %s'%k.id, url_for('.show', ID=ID))]))
 
 @knowledge_page.route("/edit", methods=["POST"])
 @login_required
@@ -54,7 +69,16 @@ def edit_form():
 @knowledge_page.route("/save", methods=["POST"])
 @login_required
 def save_form():
-  return "not saved"
+  ID = request.form['id']
+  if not ID:
+    raise Exception("no id")
+  k = Knowl(ID)
+  k.title = request.form['title']
+  k.content = request.form['content']
+  k.save()
+  return flask.redirect(url_for(".show", ID=ID))
+  
+  
 
 @knowledge_page.route("/render/<ID>")
 def render(ID):
@@ -73,8 +97,11 @@ def render(ID):
 
 @knowledge_page.route("/")
 def index():
+  from knowl import get_knowls
+  knowls = get_knowls().find(fields=['title'])
   return render_template("knowl-index.html", 
          title="Knowledge Database",
-         bread = bread_base())
+         bread = get_base(),
+         knowls = knowls)
 
 

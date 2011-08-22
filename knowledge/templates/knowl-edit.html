@@ -2,20 +2,21 @@
 
 {% block content %}
 <div id="content">
-  <h1>Edit Knowl</h1>
+  {# <h1>Edit Knowl '{{ k.id }}'</h1> #}
   <form action="{{ url_for('.save_form') }}" method="POST">
+    <input type="hidden" name="id" value="{{ k.id }}"/>
     <table>
      <tr>
-       <td>ID</td><td>{{ K.id }}</td>
+       <td>ID</td><td><a href="{{ url_for('.render', ID = k.id) }}">{{ k.id }}</a></td>
      </tr>
      <tr>
        <td>Title</td>
-       <td><input size="40" name="title" id="ktitle">{{ K.title }}</input></td>
+       <td><input size="40" name="title" id="ktitle" value="{{ k.title }}" /></td>
      </tr>
      <tr>
        <td>Content</td>
        <td><textarea cols="40" rows="10"
-            name="content" id="kcontent">{{ K.content }}</textarea>
+            name="content" id="kcontent">{{ k.content }}</textarea>
        </td>
      </tr>
     </table>

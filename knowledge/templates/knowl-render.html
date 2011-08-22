@@ -8,6 +8,5 @@
 
 <div class="knowl">
   <h1>{{ k.title|safe }}</h1>
-  {# assuming k.content inserts several <div></div> constructs #}
-  {{ k.content|safe }}
+  <div>{{ k.content|safe }}</div>
 </div>

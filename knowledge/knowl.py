@@ -6,11 +6,27 @@ def get_knowls():
   _C = getDBConnection()
   return _C.knowledge.knowls
 
+def get_knowl(ID, fields = None):
+  return get_knowls().find_one({'_id' : ID}, fields=fields)
+
 class Knowl(object):
   def __init__(self, ID):
     self._id = ID
-    self._title = None
-    self._content = None
+    data = get_knowl(ID)
+    if data:
+      self._title   = data.get('title', '')
+      self._content = data.get('content', '')
+    else:
+      self._title   = ''
+      self._content = ''
+
+  def save(self):
+    get_knowls().save({
+         '_id' : self.id,
+         'content' : self.content,
+         'title' : self.title
+        })
+        
 
   @property
   def id(self):
@@ -18,8 +34,6 @@ class Knowl(object):
 
   @property
   def content(self):
-    if not self._content:
-      self._content = self.data(fields=['content'])
     return self._content
 
   @content.setter
@@ -38,8 +52,6 @@ class Knowl(object):
     Example: KNOWL('algebra.dirichlet_series') should be replaced
     with "Dirichlet Series" and nothing else. 
     """
-    if not self._title:
-      self._title = self.data(fields=["title"])
     return self._title
 
   @title.setter
@@ -63,14 +75,14 @@ class Knowl(object):
     the given fields. 
     """
     if not self._title or not self._content:
-      if not fields:
-        fields = ['title', 'content']
-      data = get_knowls().find_one({'_id' : kid}, fields=fields)
-      self._title = data['title']
-      self._content = data['content']
-    else:
-      data = { 'title' : self._title, 
-               'content' : self._content}
+      data = get_knowl(self._id, fields=fields)
+      if data:
+        self._title = data['title']
+        self._content = data['content']
+        return data
+      
+    data = { 'title' : self._title, 
+             'content' : self._content}
     return data
 
   def __unicode__(self):

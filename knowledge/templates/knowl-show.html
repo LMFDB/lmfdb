@@ -1,0 +1,23 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+<div id="content">
+
+<h1>Actions</h1>
+ <ul>
+   <li><a href="{{ url_for('.render', ID=k.id) }}">render {{ k.id }}</a> as it will be used for transculsioins</li>
+   <li><a href="{{ url_for('.show', ID=k.id) }}">show {{ k.id }}</a> like a wiki</li>
+   {% if user.is_authenticated() %}
+     <li><a href="{{ url_for('.edit', ID=k.id) }}">edit {{ k.id }}</a></li>
+   {% endif %}
+</ul>
+
+<div class="knowl">
+  <h1>{{ k.title }}</h1>
+  <div>{{ content|safe }}</div>
+</div>
+  
+
+
+</div>
+{% endblock %}
