@@ -13,7 +13,7 @@ from flaskext.login import login_required, login_user, current_user, logout_user
 import pwdmanager
 from pwdmanager import LmfdbUser
 
-login_page = Blueprint("login", __name__, template_folder='templates')
+login_page = Blueprint("users", __name__, template_folder='templates')
 
 from flaskext.login import LoginManager
 login_manager = LoginManager()
@@ -23,7 +23,7 @@ def load_user(userid):
   from pwdmanager import LmfdbUser
   return LmfdbUser.get(userid) 
 
-login_manager.login_view = "login.info"
+login_manager.login_view = "users.info"
 
 # globally define the user and username
 @app.context_processor
@@ -50,7 +50,7 @@ def body_class():
 
 
 def base_bread():
-  return [('User', url_for(".info"))]
+  return [('Users', url_for(".list"))]
 
 @login_page.route("/")
 @login_required
@@ -58,7 +58,7 @@ def list():
   import pwdmanager
   users = pwdmanager.get_user_list()
   users = sorted(users, key=lambda x : x[1])
-  bread = base_bread() + [("List", url_for(".list"))]
+  bread = base_bread()
   return render_template("user-list.html", title="All Users", 
       users = users, bread = bread)
 
@@ -70,7 +70,8 @@ def info():
   info['user'] = current_user
   info['next'] = request.referrer
   return render_template("user-info.html", 
-      info = info, title="Userinfo", bread = base_bread())
+      info = info, title="Userinfo", 
+      bread = base_bread() + [("Myself", url_for(".info"))])
 
 # ./info again, but for POST!
 @login_page.route("/info", methods = ['POST'])
@@ -81,7 +82,7 @@ def set_info():
   flask.flash("Thank you for updating your details!")
   return flask.redirect(url_for(".info"))
 
-@login_page.route("/detail/<userid>")
+@login_page.route("/profile/<userid>")
 @login_required
 def user_detail(userid):
   user = LmfdbUser.get(userid)

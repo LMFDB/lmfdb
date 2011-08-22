@@ -164,7 +164,7 @@ def main():
         sys.exit(2)
 
     # default options to pass to the app.run()
-    options = { "port": 37777, "host": "127.0.0.1" }
+    options = { "port": 37777, "host": "127.0.0.1" , "debug" : False}
     logfile = "flasklog"
     dbport = 37010
 
@@ -207,7 +207,8 @@ def main():
     base._init(dbport)
 
     # just for debugging
-    logging.info(str(app.url_map))
+    if options["debug"]:
+      logging.info(str(app.url_map))
 
     app.run(**options)
 

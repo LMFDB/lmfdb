@@ -11,13 +11,18 @@ Raw:
 
 Accounts:
 <ul>
- <li>You are "{{username}}"</li>
- <li><a href="/user">User Management</a></li>
+ {% if user.is_authenticated() -%}
+   <li>You are "<a href="{{ url_for('users.info') }}">{{username}}</a>"</li>
+ {%- else -%}
+   <li>You are "{{username}}"</li>
+ {%- endif %}
+ <li><a href="{{ url_for("users.list") }}">User Management</a></li>
 </ul>
 
-Knowledge:
+Knowledge DB:
 <ul>
  <li><a href="{{ url_for("knowledge.index") }}">Knowledge</a></li>
+ <li><a href="{{ url_for("knowledge.test") }}">Testpage</a></li>
 </ul>
 
 {% endblock %}

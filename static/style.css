@@ -95,7 +95,7 @@ a:hover { color: #000; }
     font-family: sans-serif;
     min-height: 100px;
     position: relative;
-    color: #006;
+    color: #040;
 }
 
 #header #title-content {
@@ -112,6 +112,8 @@ a:hover { color: #000; }
 }
 #header .userinfo {
     /* border: 1px solid red;  */
+    white-space:nowrap; 
+    color: #060;
     font-family: sans-serif;
     min-height: 18px;
     font-size: 90%;
@@ -120,6 +122,10 @@ a:hover { color: #000; }
     top: 0px;
     right: 0px;
 }
+#header .userinfo a {
+    color: #060;
+}
+  
 
 #flashes p {
   border-left: 15px solid #DDF;
@@ -261,6 +267,7 @@ blockquote p {
 /* highlighting menu entries (if their respective blueprint overwirtes the body_class variable!) */
 body.mwf #sidebar a.mwf { background: #BFB; }
 body.cmf #sidebar a.cmf { background: #BFB; }
+body.knowl #sidebar a.knowl { background: #BBF; }
 
 .visible {
 	visibility: visible;
@@ -378,6 +385,7 @@ div.literature {
     margin-top: 10px;
     font-size: 90%;
     color: #111111;
+
 }
 
 .name {
@@ -397,14 +405,41 @@ div.literature {
 /** page wide defs for knowls, the *[knowl] is a selector for
  *  all elements, that have a knowl attribute set to any value */
 
-.knowl, *[knowl] {
-  border-bottom: 1px dotted #006;
+*[knowl] {
+  border-bottom: 2px dotted #66C;
+  cursor: pointer;
+}
+
+*[knowl]:hover {
+  border-bottom: 2px solid #66C;
+  color: #66C;
+}
+
+body.knowl #header {
+  background: #ddf; 
+}
+body.knowl #header #title {
+  color: #004;
+}
+body.knowl #content h1,
+body.knowl #content h2,
+body.knowl #content a {
+  color: #229;
+}
+body.knowl table a:hover {
+  background: #aaf;
+}
+
+div > *[knowl], p > *[knowl] {
+  color: #11A;
 }
 
 .knowlerror {
    color: red;
    border-bottom: 0;
 }
+/* end knowl */
+
 
 /*** Tables for the Siegel corner ***/
 

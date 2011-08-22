@@ -1,24 +1,27 @@
 {% extends 'homepage.html' %}
 
-
 {% block content %}
 <h2> Browse </h2>
 
-<h3>By degree</h3><table cellpadding = "10"><tr>
-{% for r in info.degree_list: %}
-<td><a href="degree{{r}}">{{r}}</a></td>
-{% endfor %}
-</tr>
+<h3>By degree</h3>
+<table>
+ <tr>
+  {% for r in info.degree_list: %}
+    <td style="text-align: center;">
+       <a style="width: 2em;" href="degree{{r}}">{{r}}</a>
+    </td>
+  {% endfor %}
+ </tr>
 </table>
 <p>
 
 <h3>By type</h3>
-<table cellpadding ="10">
+<table>
 {% for i in info.l: %}
 <tr>
-{% for t in info.type_table[i]: %}
-<td><a href="{{t.link}}">{{t.title|safe}}</a></td>
-{% endfor %}
+  {% for t in info.type_table[i]: %}
+  <td><a  style="padding: 5px;" href="{{t.link}}">{{t.title|safe}}</a></td>
+  {% endfor %}
 <tr>
 {% endfor %}
 </table>

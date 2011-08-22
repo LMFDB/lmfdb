@@ -10,5 +10,5 @@ app.secret_key = '9af"]ßÄ!_°$2ha€42~µ…010'
 
 login_manager.setup_app(app)
 
-app.register_blueprint(login_page, url_prefix="/user")
+app.register_blueprint(login_page, url_prefix="/users")
 
