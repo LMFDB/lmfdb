@@ -148,6 +148,7 @@ a:hover { color: #000; }
 #properties {
     font-size: 85%;
     font-family: sans-serif;
+    min-width: 200px;
     float: right;
     clear: right;
     margin: 20px 0px 15px 15px;
@@ -336,7 +337,7 @@ table th, table td {
 
 table a {
     display: block;
-    padding: 2px 0;
+    padding: 2px 5px;
 }
 
 table a:hover {

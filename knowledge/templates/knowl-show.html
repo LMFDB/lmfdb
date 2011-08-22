@@ -12,12 +12,7 @@
    {% endif %}
 </ul>
 
-<div class="knowl">
-  <h1>{{ k.title }}</h1>
-  <div>{{ content|safe }}</div>
-</div>
-  
-
+{{ render|safe }}  
 
 </div>
 {% endblock %}

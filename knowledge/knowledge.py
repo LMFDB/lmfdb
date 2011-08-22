@@ -53,11 +53,11 @@ def edit(ID):
 @knowledge_page.route("/show/<ID>")
 def show(ID):
   k = Knowl(ID)
-  content = render(ID)
+  r = render(ID)
   return render_template("knowl-show.html",
          title = "Knowl '%s'" % k.id,
          k = k,
-         content = content,
+         render = r,
          bread = get_bread([('Show %s'%k.id, url_for('.show', ID=ID))]))
 
 @knowledge_page.route("/edit", methods=["POST"])
