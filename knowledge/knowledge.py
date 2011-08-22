@@ -1,6 +1,14 @@
 # -*- coding: utf-8 -*-
 # This Blueprint is about adding a Knowledge Base to the LMFDB website.
 # referencing content, dynamically inserting information into the website, …
+# 
+# This is more than just a web of entries in a wiki, because content is "transcluded".
+# Transclusion is an actual concept, you can read about it here:
+# http://en.wikipedia.org/wiki/Transclusion
+#
+# a "Knowl" (see knowl.py) is our base class for any bit of "knowledge". we might
+# subclass it into "theorem", "proof", "description", and much more if necessary
+# (i.e. when it makes sense to add additional fields, e.g. for referencing each other)
 #
 # author: Harald Schilly <harald.schilly@univie.ac.at>
 
