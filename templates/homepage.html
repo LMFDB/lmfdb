@@ -1,43 +1,5 @@
 {% extends "base.html" %}
 
-{% macro index() -%}
-<ul>
-<li><a href="{{ url_for('EC_toplevel') }}  ">Elliptic Curves over Q</a>
-<li><a class="mwf" href="{{ url_for('mwf.render_maass_waveforms') }}">Maass cusp forms</a></li>
-<li><a href="{{ url_for('render_Lfunction') }}">L-functions</a> </li>
-<li><a href="{{ url_for('ModularForm_GSp4_Q_top_level') }}">Siegel modular forms</a> </li>
-<li><a class="cmf" href="{{ url_for('cmf.render_classical_modular_forms')  }}  ">Classical modular forms</a></li>
-<li><a href="{{ url_for('number_field_render_webpage') }}">Number Fields</a></li>
-<li><a href="{{ url_for('hilbert_modular_form_render_webpage') }}">Hilbert Modular Forms</a></li>
-<li><a href="{{ url_for('LfunctionDB.query', zerolowerbound=1.1, zeroupperbound=2.1) }}">First zero search example</a></li>
-<li><a href="{{ url_for('quadratic_twists') }}">Quadratic Twists</a></li>
-</ul>
-{%- endmacro %}
-
-{# 
-   the following LABEL macro enables to tag certain locations in the
-   HTML documents to reference to saved "Knowls". They contain all
-   the information and form the stored knowledge. The macro itself
-   is only there for the presentation of the data via suitable
-   HTML tags and associated javascript code.
-#}
-{% macro KNOWL(knowlid, tag='span', klass='knowl', title=True) -%}
-  {% with knowl = Knowl(knowlid) %}
-    {% if knowl is undefined %}
-      <{{tag}} class="{{klass}}">
-        {{ knowl.title }}
-      </{{tag}}>
-
-    {% else %} 
-      {# knowl does not exist. wrong knowlid or opportunity to create one! #}
-      <{{tag}} class="{{klass}} knowlerror">
-        <br/>[ERROR: Knowl with ID '{{knowlid}}' does not exist. Wrong ID or
-        <a href="{{ url_for('knowledge.edit', ID=knowlid) }}">create a new one</a>.]
-      </{{tag}}>
-    {% endif %}
-  {% endwith %}
-{%- endmacro %}
-
 {% block body %}
 
 <div id="header">

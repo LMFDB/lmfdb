@@ -1,0 +1,13 @@
+{# 
+  this is a very simple template based on no other template to render one single Knowl
+  for inserting into a website via AJAX or for server-side operations.
+#}
+
+{% include "knowl-defs.html" %}
+{% from "knowl-defs.html" import KNOWL with context %}
+
+<div class="knowl">
+  <h1>{{ k.title|safe }}</h1>
+  {# assuming k.content inserts several <div></div> constructs #}
+  {{ k.content|safe }}
+</div>

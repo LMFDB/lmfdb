@@ -1,0 +1,1 @@
+/* javascript code for the knowledge db features */

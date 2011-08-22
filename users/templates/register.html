@@ -5,7 +5,7 @@
 
 <h1>Register</h1>
 
-    <form name="login" action="/user/register" method="post">
+    <form name="login" action="{{ url_for('.register') }}" method="post">
       <input type="hidden" name="next" value="{{ next }}" />
       <table>
         <tr><td>Login ID:</td><td><input name="name" /></td></tr>
