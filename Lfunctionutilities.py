@@ -27,7 +27,7 @@ def splitcoeff(coeff):
 def truncatenumber(numb,precision):
     localprecision = precision
     if numb < 0:
-	localprecision = localprecision + 1	
+        localprecision = localprecision + 1        
     return(str(numb)[0:int(localprecision)])
 
 def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precision):
@@ -37,8 +37,8 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
 # below we use float(abs()) instead of abs() to avoid a sage bug
     if (float(abs(rp))>truncation) & (float(abs(ip))>truncation):
         ans = ""
-	if seriescoefftype=="series":
-	    ans +="+"
+        if seriescoefftype=="series":
+            ans +="+"
         ans +="("
         ans += truncatenumber(rp, precision)
         if ip>0:
@@ -46,10 +46,10 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
         ans += truncatenumber(ip, precision)+" i"
         return(ans+")" + seriesvar(index, seriestype))
     elif (float(abs(rp))<truncation) & (float(abs(ip))<truncation):
-	if seriescoefftype != "literal":
+        if seriescoefftype != "literal":
             return("")
-	else:
-	    return("0")
+        else:
+            return("0")
 # if we get this far, either pure real or pure imaginary
     ans=""
 #    if seriescoefftype=="series":
@@ -73,19 +73,19 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
             elif seriescoefftype=="literal" or seriescoefftype=="factor":
                 return(ans + truncatenumber(rp,precision))
     elif rp<-1*truncation:
-    	if float(abs(rp+1))<truncation:
-	    if seriescoefftype == "literal":
-		return("-1" + seriesvar(index, seriestype))
-	    elif seriescoefftype == "signed":
-		return("-1" + seriesvar(index, seriestype))
-	    elif seriescoefftype == "factor":
-		return("-" + seriesvar(index, seriestype))
- 	    elif seriescoefftype == "series":  # adding space between minus sign and value
- 		return(" - " + seriesvar(index, seriestype))
-	    else:
-		return("-" + seriesvar(index, seriestype))
+        if float(abs(rp+1))<truncation:
+            if seriescoefftype == "literal":
+                return("-1" + seriesvar(index, seriestype))
+            elif seriescoefftype == "signed":
+                return("-1" + seriesvar(index, seriestype))
+            elif seriescoefftype == "factor":
+                return("-" + seriesvar(index, seriestype))
+            elif seriescoefftype == "series":  # adding space between minus sign and value
+                return(" - " + seriesvar(index, seriestype))
+            else:
+                return("-" + seriesvar(index, seriestype))
         else:
-	    if seriescoefftype=="series":
+            if seriescoefftype=="series":
                 return(ans + " - " + truncatenumber(float(abs(rp)), precision) + seriesvar(index, seriestype))
             elif seriescoefftype=="literal" or seriescoefftype=="factor":
                 return(ans + truncatenumber(rp,precision))

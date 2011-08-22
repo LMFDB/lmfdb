@@ -29,7 +29,7 @@ def render_webpage(args = {}):
 
     if args['group']:
         
-	# Logic to set parameters depending on which group ---------
+        # Logic to set parameters depending on which group ---------
 
         if 'Sp4Z' == args['group']:
             info['parent_as_tex'] = 'M_*\\big({\\rm Sp}(4,\\mathbb{Z})\\big)'
@@ -62,17 +62,17 @@ def render_webpage(args = {}):
                                   ('Dimensions', url_for( 'ModularForm_GSp4_Q_top_level', group = group, page='dimensions'))]]
         sidebar = [info['special_side']]
         
-	# Logic to render pages ----------------
+        # Logic to render pages ----------------
 
         if page == 'basic':
             bread += [(sidebar[0][0], sidebar[0][1][0][1])]
             return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_basic.html", info = info, title = 'Basic information', sidebar = sidebar, bread = bread)
 
-	if page == 'gen_rel':
+        if page == 'gen_rel':
             bread += [(sidebar[0][0], sidebar[0][1][1][1])]
             return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_gen_rel.html", info = info, title = 'Generators and relations', sidebar = sidebar, bread = bread)
 
-	if page == 'forms':
+        if page == 'forms':
             try:
                 f = urllib.urlopen( DATA + group +'/available_eigenforms.p')
                 go = pickle.load(f)
@@ -86,7 +86,7 @@ def render_webpage(args = {}):
             bread += [(sidebar[0][0], sidebar[0][1][2][1])]
             return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_forms.html", info = info, title = 'Available forms', sidebar = sidebar, bread = bread)
 
-	if page == 'dimensions':
+        if page == 'dimensions':
             if not weight_range:
                 min_wt = 1; max_wt = 16
             elif not weight_range:
@@ -98,33 +98,33 @@ def render_webpage(args = {}):
                 try:
                     wr = map( int, wr)
                     min_wt = wr[0]
-		    if len(wr) == 1:
-			max_wt = min_wt
-			if min_wt > 1000000:
+                    if len(wr) == 1:
+                        max_wt = min_wt
+                        if min_wt > 1000000:
                             info['error'] = 'Input too large: Please enter a smaller number.'
-			    min_wt = 2; max_wt = 50
-		    else:
-			max_wt = wr[1]
-			if max_wt-min_wt >= 0 and  (max_wt-min_wt + 1)*max_wt > 1000000:
-			    min_wt = 2; max_wt = 50
-			    info['error'] = 'Input too large: Please enter a smaller range.'
-			    #raise ValueError('gaga')
+                            min_wt = 2; max_wt = 50
+                    else:
+                        max_wt = wr[1]
+                        if max_wt-min_wt >= 0 and  (max_wt-min_wt + 1)*max_wt > 1000000:
+                            min_wt = 2; max_wt = 50
+                            info['error'] = 'Input too large: Please enter a smaller range.'
+                            #raise ValueError('gaga')
                 except ValueError, e:
                     info['error'] = 'Invalid input: ' + e.message
                     min_wt = 2; max_wt =50
-	    if info['group'] == "Sp8Z":
+            if info['group'] == "Sp8Z":
               info['table_headers'] = ["Weight", "Total", "Ikeda Lifts", "Miyawaki Lifts", "Other"]
-	    elif info['group'] == "Kp":
+            elif info['group'] == "Kp":
               # The following needs to be changed to logically deduce whether it is weight or level
               weight_or_level= "weight or level"
               info['table_headers'] = [weight_or_level, "Total", "Gritsenko Lifts", "Nonlifts"]
-	    else:
+            else:
               info['table_headers'] = ["Weight", "Total", "Eisenstein", "Klingen", "Maass", "Interesting"]
 # The following should be changed to add any new groups implemented in the core
-	    if (group == 'Sp4Z') or (group == 'Sp8Z'):
-	      info['dimensions'] = [ (k, siegel_core.dimension( k, sage_group)) for k in range(min_wt, max_wt+1)]
+            if (group == 'Sp4Z') or (group == 'Sp8Z'):
+              info['dimensions'] = [ (k, siegel_core.dimension( k, sage_group)) for k in range(min_wt, max_wt+1)]
             bread += [(sidebar[0][0], sidebar[0][1][3][1])]
-	    return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_dimensions.html", info = info, title = 'Dimensions', sidebar = sidebar, bread = bread)
+            return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_dimensions.html", info = info, title = 'Dimensions', sidebar = sidebar, bread = bread)
 
         if page == 'specimen':
             info['weight'] = weight
@@ -156,7 +156,7 @@ def render_webpage(args = {}):
             bread += [(sidebar[0][0], sidebar[0][1][0][1]), ( weight + '_' + form, url_for( 'ModularForm_GSp4_Q_top_level', group = group, page='specimen', orbit = orbit, form = form))]
             return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_specimen.html", info = info,  title = 'Form ' + weight + '_' + form, sidebar = sidebar, bread = bread)            
 
-	else:
+        else:
             info = {}
             return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_navigation.html", info = info, title = 'Collections of Siegel Modular Forms', bread = bread)
 
