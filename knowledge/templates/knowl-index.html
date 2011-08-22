@@ -1,31 +1,29 @@
 {% extends "homepage.html" %}
 
-{% block content %}
-<div id="content">
-  <h1>Read Knowl</h1>
-  <div>
-    <table>
-    {% for krow in knowls|batch(3, '') -%}
-      <tr>
-        {% for k in krow -%}
-          <td>
-            {% if k -%}
-              <a href="{{ url_for('.show', ID=k._id) }}">{{ k.title }}</a></li>
-            {%- endif %}
-          </td>
-        {%- endfor %}
-      </tr>
-    {%- endfor %}
-    </table>
-    </ul>
-  </div>
-
-  {% if user.is_authenticated() %}
-    <h1>Edit Knowl</h1>
-    <form action="{{ url_for('.edit_form') }}" method="POST">
-      Knowl ID: <input id="knowl-edit-id" name="id"></input>
-      <button id="knowl-edit-btn">Edit</button>
-    </form>
-  {% endif %}
+{% block content -%}
+<h1>Read Knowl</h1>
+<div>
+  <table>
+  {% for krow in knowls|batch(3, '') -%}
+    <tr>
+      {% for k in krow -%}
+        <td>
+          {% if k -%}
+            <a href="{{ url_for('.show', ID=k._id) }}">{{ k.title }}</a></li>
+          {%- endif %}
+        </td>
+      {%- endfor %}
+    </tr>
+  {%- endfor %}
+  </table>
+  </ul>
 </div>
-{% endblock %}
+
+{% if user.is_authenticated() -%}
+  <h1>Edit Knowl</h1>
+  <form action="{{ url_for('.edit_form') }}" method="POST">
+    Knowl ID: <input id="knowl-edit-id" name="id"></input>
+    <button id="knowl-edit-btn">Edit</button>
+  </form>
+{%- endif %}
+{%- endblock %}

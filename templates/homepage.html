@@ -1,33 +1,31 @@
 {% extends "base.html" %}
-
-{% block body %}
-
+{% block body -%}
 <div id="header">
     <div class="logo"><a href="/"><img src="{{ url_for('static', filename='images/lmfdb-logo.png') }}" /></a></div>
     <div class="right">
       <div class="bread">
         <a href="/">Top</a>
-        {% for b in bread %}
+        {% for b in bread -%}
           &rarr; <a href="{{ b[1] }}">{{ b[0] }}</a>
-        {% endfor %}
+        {%- endfor %}
       </div>
       <div class="userinfo">
-          {% if user.is_authenticated() %}
+          {% if user.is_authenticated() -%}
             <a href="{{ url_for('login.info') }}">{{ username }}</a> 
             &middot;
             <a href="{{ url_for('login.logout') }}">Logout</a>
-          {% else %}
+          {%- else -%}
             <a href="{{ url_for('login.register') }}">Register</a>
             &middot;
             <a href="{{ url_for('login.info') }}">Login</a>
-          {% endif %}
+          {%- endif %}
       </div>
       {# this span inside a div thing is necessary to align it at the bottom, see css #}
       <div id="title"><span id="title-content">{{ title }}</span></div>
     </div>
 </div>
 
-{% block sidebar %} 
+{% block sidebar -%} 
 <div id="sidebar">
 
  {% macro entry(title, entries) -%}
@@ -48,14 +46,14 @@
  {{ entry("Learn more about", info.learnmore) }}
  {{ entry("Friends", info.friends) }}
 
- {% if sidebar %}
-  {% for topic, content in sidebar %}
+ {% if sidebar -%}
+  {% for topic, content in sidebar -%}
     {{ entry(topic, content) }}
-  {% endfor %}
- {% endif %}
+  {%- endfor %}
+ {%- endif %}
 
 </div>
-{% endblock sidebar %}
+{%- endblock sidebar %}
 
     {% if properties2 %}
       <div id="properties">
@@ -72,47 +70,47 @@
       </div>
     {% endif %}
 
-    {% if (citation or properties) %}
+    {% if (citation or properties) -%}
       <div id="properties">
-        {% if citation %}
+        {% if citation -%}
          <h1>Citation</h1>
          {{ citation }}
-        {% endif %} 
-        {% if properties %}
+        {%- endif %} 
+        {% if properties -%}
          <h1>Properties</h1>
-         {% for p in properties %}{{ p|safe }}{% endfor %}
-        {% endif %}
+         {% for p in properties -%}{{ p|safe }}{%- endfor %}
+        {%- endif %}
       </div>
-    {% endif %}
+    {%- endif %}
 
 
 <div id="main">
   <div id="content">
-    {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% with msgs = get_flashed_messages(with_categories=true) -%}
       <div id="flashes">
-        {% for cat, msg in msgs %}
+        {% for cat, msg in msgs -%}
           <p class="{{ cat }}">{{ msg }}</p>
-        {% endfor %}
+        {%- endfor %}
       </div>
-    {% endwith %}
+    {%- endwith %}
 
-    {% block content %}
+    {% block content -%}
     There is nothing here. This is just a template.
-    {% endblock content %}
+    {%- endblock content %}
   </div>
 </div>
 
 <div id="footer">
-    {% if credit %}
+    {% if credit -%}
       &copy; Data computed by {{ credit|safe }}.<br />
-    {% endif %}
+    {%- endif %}
     
-    {% if support %}
+    {% if support -%}
       {{ support|safe }}<br/>
-    {% else %}
+    {%- else -%}
        The creation of this website was supported by the NSF, AIM ...<br />
-    {% endif %}
+    {%- endif %}
     Number Theory, the Queen of Mathematics!
 </div>
 
-{% endblock body %}
+{%- endblock body %}

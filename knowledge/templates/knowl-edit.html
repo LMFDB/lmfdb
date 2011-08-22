@@ -1,35 +1,32 @@
 {% extends "homepage.html" %}
 
 {% block content %}
-<div id="content">
-  {# <h1>Edit Knowl '{{ k.id }}'</h1> #}
-  <form action="{{ url_for('.save_form') }}" method="POST">
-    <input type="hidden" name="id" value="{{ k.id }}"/>
-    <table>
-     <tr>
-       <td>ID</td><td><a href="{{ url_for('.render', ID = k.id) }}">{{ k.id }}</a></td>
-     </tr>
-     <tr>
-       <td>Title</td>
-       <td><input size="40" name="title" id="ktitle" value="{{ k.title }}" /></td>
-     </tr>
-     <tr>
-       <td>Content</td>
-       <td><textarea cols="40" rows="10"
-            name="content" id="kcontent">{{ k.content }}</textarea>
-       </td>
-     </tr>
-    </table>
+{# <h1>Edit Knowl '{{ k.id }}'</h1> #}
+<form action="{{ url_for('.save_form') }}" method="POST">
+  <input type="hidden" name="id" value="{{ k.id }}"/>
+  <table>
+   <tr>
+     <td>ID</td><td><a href="{{ url_for('.render', ID = k.id) }}">{{ k.id }}</a></td>
+   </tr>
+   <tr>
+     <td>Title</td>
+     <td><input size="40" name="title" id="ktitle" value="{{ k.title }}" /></td>
+   </tr>
+   <tr>
+     <td>Content</td>
+     <td><textarea cols="40" rows="10"
+          name="content" id="kcontent">{{ k.content }}</textarea>
+     </td>
+   </tr>
+  </table>
 
-    <button id="knowl-edit-btn">Save</button>
-  </form>
+  <button id="knowl-edit-btn">Save</button>
+</form>
 
-  <h1>Preview Knowl</h1>
-  <div id="knowl-preview" class="knowl">
-     <h1 id="knowl-title"></h1>
-     <div id="knowl-content"></div>
-  </div>
-
+<h1>Preview Knowl</h1>
+<div id="knowl-preview" class="knowl">
+   <h1 id="knowl-title"></h1>
+   <div id="knowl-content"></div>
 </div>
 
 <script type="text/javascript">

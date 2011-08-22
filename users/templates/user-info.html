@@ -1,37 +1,31 @@
 {% extends 'homepage.html' %}
-
 {% block content %}  
 
-<div id="content">
+{% if info.user.is_authenticated() %}
+   <h1>You are {{ info.user.name }}</h1>
+   <h2>Actions</h2>
+   <ul><li><a href="{{ info.logout }}">Logout</a></li></ul>
 
-<div>
-  {% if info.user.is_authenticated() %}
-     <h1>You are {{ info.user.name }}</h1>
-     <h2>Actions</h2>
-     <a href="{{ info.logout }}">Logout</a>
+{% else %}
+  <h1>You are not logged in</h1>
+  <div style="margin-bottom: 20px">New user? 
+     <a href="{{ url_for('.register') }}">Register here</a>
+  </div>
 
-  {% else %}
-    <h1>You are not logged in</h1>
-    <div style="margin-bottom: 20px">New user? 
-       <a href="{{ url_for('.register') }}">Register here</a>
-    </div>
-
-    <form name="login" action="{{ url_for('.login') }}" method="POST">
-      <input type="hidden" name="next" value="{{ info.next }}" /> 
-      <table>
-        <tr><td>Name:</td>
-            <td><input name="name" /></td></tr>
-        <tr><td>Password:</td>
-            <td><input name="password" type="password" /></td></tr>
-        <tr><td>Remember:</td>
-             <td><input type="checkbox" name="remember" checked>remember me for some time</td></tr>
-        <tr><td class="spacing" colspan="2"/></tr>
-        <tr><td /><td><button name="submit" type="submit">Login</button></td></tr>
-      </table>
-    </form>
-
-  {% endif %}
-</div>
+  <form name="login" action="{{ url_for('.login') }}" method="POST">
+    <input type="hidden" name="next" value="{{ info.next }}" /> 
+    <table>
+      <tr><td>Name:</td>
+          <td><input name="name" /></td></tr>
+      <tr><td>Password:</td>
+          <td><input name="password" type="password" /></td></tr>
+      <tr><td>Remember:</td>
+           <td><input type="checkbox" name="remember" checked>remember me for some time</td></tr>
+      <tr><td class="spacing" colspan="2"/></tr>
+      <tr><td /><td><button name="submit" type="submit">Login</button></td></tr>
+    </table>
+  </form>
+{% endif %}
 
 {% if info.user.is_authenticated() %}
   <h2>Edit Details</h2>
@@ -73,8 +67,6 @@
     </table>
   </form>
 {% endif %}
-
-</div>
 
 {# this script constructs a url and shows it as a link, just for testing #}
 <script type="text/javascript">

@@ -1,8 +1,5 @@
 {% extends 'homepage.html' %}
-
 {% block content %}  
-
-<div id="content">
 
 <table>
   {% for user_row in users|batch(5,'') %}
@@ -15,8 +12,4 @@
   </tr>
   {% endfor %}
 </table>
-</div>
-
-</div>
-
 {% endblock %}
