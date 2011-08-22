@@ -1,0 +1,21 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<div id="content">
+
+<form action="{{ url_for('.upload') }}" method="post">
+<table>
+  <tr>
+    <td>Name:</td>
+    <td><input name="name" value="" /></td>
+  </tr>
+  <tr>
+    <td/>
+    <td><button type="submit">Upload</button></td>
+  </tr>
+</table>
+</form>
+
+</div>
+{% endblock %}
