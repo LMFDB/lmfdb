@@ -19,7 +19,7 @@ def hilbert_modular_form_render_webpage():
     args = request.args
     if len(args) == 0:      
         info = {    }
-        credit = 'L. Dembele, S. Donnelly and J. Voight'	
+        credit = 'L. Dembele, S. Donnelly and J. Voight'
         t = 'Hilbert Modular Forms'
         bread = [('Hilbert Modular Forms', url_for("hilbert_modular_form_render_webpage"))]
         info['learnmore'] = []
@@ -109,7 +109,7 @@ def render_hmf_webpage(**args):
     bread = [('Hilbert Modular Forms', url_for("hilbert_modular_form_render_webpage")),('%s'%data['label'],' ')]
 
     t = "Hilbert Cusp Form %s" % info['label']
-    credit = 'L. Dembele, S. Donnelly and J. Voight'	
+    credit = 'L. Dembele, S. Donnelly and J. Voight'
 
     eigs = eval(data['hecke_eigenvalues'])
     primes = hmf_field['primes']

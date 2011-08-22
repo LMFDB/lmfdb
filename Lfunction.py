@@ -186,13 +186,13 @@ def set_info_for_start_page():
         'type_table': tt,
         'l':[1,2] #just for testing
     }
-    credit = ''	
+    credit = ''
     t = 'L-functions'
     info['bread'] = [('L-functions', url_for("render_Lfunction"))]
     info['learnmore'] = [('L-functions', 'http://wiki.l-functions.org/L-function')]
 #         explain=['Further information']
 #         explain.append(('Unique labels for number fields',url_for("render_labels_page")))
-# 	explain.append(('Unique labels for Galois groups',url_for("render_groups_page")))
+#         explain.append(('Unique labels for Galois groups',url_for("render_groups_page")))
 #         explain.append(('Discriminant ranges (not yet implemented)','/'))
 #         sidebar = set_sidebar([explain])
 

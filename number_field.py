@@ -59,23 +59,23 @@ def NF_redirect():
 
 # function copied from classical_modular_form.py
 def set_sidebar(l):
-	res=list()
-#	print "l=",l
-	for ll in l:
-		if(len(ll)>1):
-			content=list()
-			for n in range(1,len(ll)):
-				content.append(ll[n])
-			res.append([ll[0],content])
-#	print "res=",res
-	return res
+        res=list()
+#       print "l=",l
+        for ll in l:
+                if(len(ll)>1):
+                        content=list()
+                        for n in range(1,len(ll)):
+                                content.append(ll[n])
+                        res.append([ll[0],content])
+#       print "res=",res
+        return res
 
 
 @app.route("/NumberField/GaloisGroups")
 def render_groups_page():
     info = {}
     info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
-    credit = 'the PARI group and J. Voight'	
+    credit = 'the PARI group and J. Voight'        
     def gcmp(x,y):
         a = cmp(x['label'][0],y['label'][0])
         if a: return a
@@ -90,7 +90,7 @@ def render_groups_page():
 def render_labels_page():
     info = {}
     info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
-    credit = 'the PARI group and J. Voight'	
+    credit = 'the PARI group and J. Voight'        
     t = 'Number field labels'
     bread = [('Number Fields', url_for("number_field_render_webpage")),('Number field labels','')]
     return render_template("number_field/number_field_labels.html", info=info, credit=credit, title=t, bread=bread)
@@ -99,7 +99,7 @@ def render_labels_page():
 def render_discriminants_page():
     info = {}
     info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
-    credit = 'the PARI group and J. Voight'	
+    credit = 'the PARI group and J. Voight'        
     t = 'Number Field Discriminant Ranges'
     bread = [('Number Fields', url_for("number_field_render_webpage")),('Discriminant ranges',' ')]
     return render_template("number_field/discriminant_ranges.html", info=info, credit=credit, title=t, bread=bread)
@@ -118,7 +118,7 @@ def number_field_render_webpage():
         'class_number_list': range(1,6)+['6-10'],
         'discriminant_list': discriminant_list
     }
-        credit = 'the PARI group and J. Voight'	
+        credit = 'the PARI group and J. Voight'        
         t = 'Number Fields'
         bread = [('Number Fields', url_for("number_field_render_webpage"))]
         info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
@@ -242,7 +242,7 @@ def render_field_webpage(args):
     if data is None:
         return "No such field: " + label + " in the database"  
     info = {}
-    credit = 'the PARI group and J. Voight'	
+    credit = 'the PARI group and J. Voight'        
     try:
         info['count'] = args['count']
     except KeyError:
@@ -289,7 +289,7 @@ def render_field_webpage(args):
     bread = [('Number Fields', url_for("number_field_render_webpage")),('%s'%info['label'],' ')]
     t = "Number Field %s" % info['label']
 
-    credit = 'the PARI group and J. Voight'	
+    credit = 'the PARI group and J. Voight'        
 
     properties = ['<br>']
     properties.extend('<table>')
