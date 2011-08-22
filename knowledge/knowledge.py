@@ -25,7 +25,7 @@ knowledge_page = Blueprint("knowledge", __name__, template_folder='templates')
 def body_class():
   return { 'body_class' : 'knowl' }
 
-def get_bread(breads):
+def get_bread(breads = []):
   bc = [("Knowledge", url_for(".index"))]
   for b in breads:
     bc.append(b)
@@ -97,11 +97,12 @@ def render(ID):
 
 @knowledge_page.route("/")
 def index():
+  # bypassing the Knowl objects to speed things up
   from knowl import get_knowls
   knowls = get_knowls().find(fields=['title'])
   return render_template("knowl-index.html", 
          title="Knowledge Database",
-         bread = get_base(),
+         bread = get_bread(),
          knowls = knowls)
 
 

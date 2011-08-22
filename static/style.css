@@ -393,9 +393,10 @@ div.literature {
 }
 
 
-/** page wide defs for knowls */
+/** page wide defs for knowls, the *[knowl] is a selector for
+ *  all elements, that have a knowl attribute set to any value */
 
-.knowl {
+.knowl, *[knowl] {
   border-bottom: 1px dotted #006;
 }
 

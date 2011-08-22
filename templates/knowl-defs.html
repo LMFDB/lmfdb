@@ -1,6 +1,3 @@
-<script type="text/javascript" src="{{ url_for('static', filename='knowl.js') }}"></script>
-
-
 {# 
    the following KNOWL macro enables to tag certain locations in the
    HTML documents to reference to saved "Knowls". They contain all
@@ -8,23 +5,25 @@
    is only there for the presentation of the data via suitable
    HTML tags and associated javascript code.
 #}
-{% macro KNOWL(knowlid, tag='span', klass='knowl', title=True) -%}
-  {% with knowl = Knowl(knowlid) %}
-    {% if knowl.exists() %}
-      <{{tag}} class="{{klass}}">
-        {{ knowl.title }}
-      </{{tag}}>
+{% macro KNOWL(knowlid, tag='span', klass='knowl', title=None) -%}
+  {% with knowl = Knowl(knowlid) -%}
+    {% if knowl.exists() -%}
+        {% if title -%}{# custom title? #}
+          <{{tag}} knowl="{{ knowl.id }}">{{ title }}</{{tag}}>
+        {%- else -%}
+          <{{tag}} knowl="{{ knowl.id }}">{{ knowl.title }}</{{tag}}>
+        {%- endif %}
 
-    {% else %} 
+    {%- else -%}
       {# knowl does not exist. wrong knowlid or opportunity to create one! #}
       <{{tag}} class="{{klass}} knowlerror">
-        {% if user.is_authenticated() %}
-          <br/>[ERROR: Knowl with ID '{{knowlid}}' does not exist. Wrong ID or
+        {% if user.is_authenticated() -%}
+          [ERROR: Knowl with ID '{{knowlid}}' does not exist. Wrong ID or
           <a href="{{ url_for('knowledge.edit', ID=knowlid) }}">create a new one</a>.]
-        {% else %}
+        {%- else -%}
           ['{{knowlid}}' missing ]
-        {% endif %}
+        {%- endif %}
       </{{tag}}>
-    {% endif %}
-  {% endwith %}
+    {%- endif %}
+  {%- endwith %}
 {%- endmacro %}
