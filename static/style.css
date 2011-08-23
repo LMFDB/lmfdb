@@ -476,3 +476,22 @@ div > *[knowl], p > *[knowl] {
   border: 1px solid black;
   background-color: #45BDD7;
 }
+
+.watermark {
+  color: #999 !important;
+}
+
+
+.propertylist {
+  margin: 2em 0;
+  padding: 0;
+  border: 1px solid #999999;
+}
+
+.propertylist dt {
+  font-weight: bold;
+}
+
+.propertylist dd {
+  margin-bottom: 1em
+}

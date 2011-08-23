@@ -1,0 +1,87 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<h2>Awaiting approval</h2>
+
+{% for entry in unmoderated %}
+<dl class=propertylist>
+  <dt>Name</dt>
+  <dd>{{entry.metadata.name}}</dd>
+  <dt>Original file name</dt>
+  <dd>{{entry.metadata.original_file_name}}</dd>
+  <dt>Description</dt>
+  <dd>{{entry.metadata.full_description}}</dd>
+  <dt>Data format explanation</dt>
+  <dd>{{entry.metadata.data_format}}</dd>
+  <dt>Creator</dt>
+  <dd>{{entry.metadata.creator}}</dd>
+  <dt>Paper reference</dt>
+  <dd>{{entry.metadata.reference}}</dd>
+  <dt>Bibtex</dt>
+  <dd>{{entry.metadata.bibtex}}</dd>
+  <dt>Contents</dt>
+  <dd><pre>{{entry.read()}}</pre></dd>
+  <dt>Action</dt>
+  <dd>
+    <form action="{{ url_for('.admin_update') }}" method="post">
+      <input type="hidden" name="id" value="{{entry._id}}"/>
+      <button type="submit" name="approve" value="yes">Approve</button>
+      <button type="submit" name="disapprove" value="yes">Disapprove</button>
+    </form>
+  </dd>
+</dl>
+{% endfor %}
+
+
+<h2>Approved</h2>
+
+{% for entry in approved %}
+<dl class=propertylist>
+  <dt>Name</dt>
+  <dd>{{entry.metadata.name}}</dd>
+  <dt>Original file name</dt>
+  <dd>{{entry.metadata.original_file_name}}</dd>
+  <dt>Description</dt>
+  <dd>{{entry.metadata.full_description}}</dd>
+  <dt>Data format explanation</dt>
+  <dd>{{entry.metadata.data_format}}</dd>
+  <dt>Creator</dt>
+  <dd>{{entry.metadata.creator}}</dd>
+  <dt>Paper reference</dt>
+  <dd>{{entry.metadata.reference}}</dd>
+  <dt>Bibtex</dt>
+  <dd>{{entry.metadata.bibtex}}</dd>
+  <dt>Contents</dt>
+  <dd><pre>{{entry.read()}}</pre></dd>
+</dl>
+{% endfor %}
+
+
+
+<h2>Disapproved</h2>
+
+{% for entry in disapproved %}
+<dl class=propertylist>
+  <dt>Name</dt>
+  <dd>{{entry.metadata.name}}</dd>
+  <dt>Original file name</dt>
+  <dd>{{entry.metadata.original_file_name}}</dd>
+  <dt>Description</dt>
+  <dd>{{entry.metadata.full_description}}</dd>
+  <dt>Data format explanation</dt>
+  <dd>{{entry.metadata.data_format}}</dd>
+  <dt>Creator</dt>
+  <dd>{{entry.metadata.creator}}</dd>
+  <dt>Paper reference</dt>
+  <dd>{{entry.metadata.reference}}</dd>
+  <dt>Bibtex</dt>
+  <dd>{{entry.metadata.bibtex}}</dd>
+  <dt>Contents</dt>
+  <dd><pre>{{entry.read()}}</pre></dd>
+</dl>
+{% endfor %}
+
+
+
+{% endblock %}
