@@ -43,7 +43,7 @@ def upload():
     "reference": request.form['reference'],
     "bibtex": request.form['bibtex'],
     "uploader": current_user.name,
-    "time": str(datetime.datetime.utcnow()),
+    "time": datetime.datetime.utcnow(),
     "original_file_name": request.files['file'].filename,
     "status": "unmoderated",
     "version": "1"
