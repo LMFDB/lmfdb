@@ -9,6 +9,7 @@ LMFDB{% if title %}: {{ title }}{% endif %}
 
 <script type="text/javascript" src="{{ url_for('static', filename='jquery.min.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='jquery.watermark.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='lmfdb.js') }}"></script>
 <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet" type="text/css" />
 
 <script type="text/x-mathjax-config">
@@ -24,7 +25,7 @@ MathJax.Hub.Config({
 });
 </script>
 <!-- <script type="text/javascript" src="{{ url_for('static', filename='MathJax/MathJax.js',config='default') }}"></script> -->
-<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"></script>
 
 
 {# the defs for the knowls, needs to be after mathjax, before analytics #}
@@ -69,6 +70,6 @@ Pre-Release Version. Feedback via
 </ul>
 {%- endmacro %}
 
-{% block body %}{% endblock body %}
+{% block body -%}{%- endblock body %}
 </body>
 </html>

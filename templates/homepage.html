@@ -57,6 +57,8 @@
 
     {% if properties2 %}
       <div id="properties">
+       <h1 id="properties-header">Properties</h1>
+       <div id="properties-body">
        {% for label, content in properties2 %}
          {% if label %}<h2>{{ label }}</h2>{% endif %}
         <div>
@@ -68,10 +70,13 @@
         </div>
        {% endfor %} 
       </div>
+     </div>
     {% endif %}
 
     {% if (citation or properties) -%}
       <div id="properties">
+       <h1 id="properties-header">Properties</h1>
+       <div id="properties-body">
         {% if citation -%}
          <h1>Citation</h1>
          {{ citation }}
@@ -81,6 +86,7 @@
          {% for p in properties -%}{{ p|safe }}{%- endfor %}
         {%- endif %}
       </div>
+    </div>
     {%- endif %}
 
 

@@ -171,25 +171,37 @@ a:hover { color: #000; }
     /* -webkit-box-shadow:  5px 5px 4px #8a8; */
     /* box-shadow:          5px 5px 4px #8a8; */
 }
-#properties div, #properties p {
+#properties-body div, #properties-body p {
   padding: 5px;
 }
-#properties h1, #properties h2 {
+#properties-body h1, #properties-body h2 {
     color: #050;
     padding: 5px;
     margin: 0;
     margin-bottom: 0;
     background: #bfb;
 }
-#properties h1 {
+#properties-body h1 {
     font-size: 120%;
 }
-#properties h2 {
+#properties-body h2 {
     font-size: 110%;
     margin-top: 10px;
 }
-#properties h2:first-child { margin-top: 0px; }
+#properties-body h2:first-child { margin-top: 0px; }
 
+#properties-body {
+  margin: 0;
+  padding: 0;
+}
+#properties-header {
+  margin: 0;
+  padding: 5px;
+  color: #050;
+  background: #9d9;
+  font-size: 110%;
+  cursor: pointer;
+}
 
 #content {
     margin-top: 20px;
