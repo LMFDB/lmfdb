@@ -29,7 +29,7 @@
 
 {% if info.user.is_authenticated() %}
   <h2>Edit Details</h2>
-  <form action="/user/info" method="post" name="userinfo">
+  <form action="{{ url_for('.set_info') }}" method="post" name="userinfo">
     <table>
       <tr>
         <td>Your ID:</td>

@@ -58,7 +58,8 @@ def base_bread():
 def list():
   import pwdmanager
   users = pwdmanager.get_user_list()
-  users = sorted(users, key=lambda x : x[1])
+  # trying to be smart and sorting by last name
+  users = sorted(users, key=lambda x : x[1].split(" ")[-1].lower())
   bread = base_bread()
   return render_template("user-list.html", title="All Users", 
       users = users, bread = bread)
