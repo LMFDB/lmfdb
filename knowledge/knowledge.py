@@ -12,13 +12,14 @@
 #
 # author: Harald Schilly <harald.schilly@univie.ac.at>
 
-import logging
 import pymongo
 import flask
 from base import app, getDBConnection
 from flask import render_template, request, abort, Blueprint, url_for
 from flaskext.login import login_required, current_user
 from knowl import Knowl
+from utils import make_logger
+
 
 ASC = pymongo.ASCENDING
 
@@ -29,6 +30,7 @@ def ctx_knowledge():
   return {'Knowl' : Knowl}
 
 knowledge_page = Blueprint("knowledge", __name__, template_folder='templates')
+logging = make_logger(knowledge_page)
 
 # blueprint specific definition of the body_class variable
 @knowledge_page.context_processor
@@ -46,6 +48,7 @@ def test():
   """
   just a test page
   """
+  logging.info("test")
   return render_template("knowl-test.html",
                bread=get_bread([("Test", url_for(".test"))]), 
                title="Knowledge Test")

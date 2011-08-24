@@ -196,9 +196,14 @@ def main():
             options["use_debugger"] = False
 
     import logging
-    logger = logging.getLogger("LMFDB")
-    logging.getLogger().setLevel(logging.INFO)
-
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+    root_logger.name = "LMFDB"
+    formatter = logging.Formatter('%(levelname)s:%(name)s@%(asctime)s: %(message)s')
+    ch = logging.StreamHandler()
+    ch.setFormatter(formatter)
+    root_logger.addHandler(ch)
+    
     file_handler = logging.FileHandler(logfile)
     file_handler.setLevel(logging.WARNING)
     app.logger.addHandler(file_handler)
@@ -207,8 +212,8 @@ def main():
     base._init(dbport)
 
     # just for debugging
-    if options["debug"]:
-      logging.info(str(app.url_map))
+    #if options["debug"]:
+    #  logging.info(str(app.url_map))
 
     app.run(**options)
 

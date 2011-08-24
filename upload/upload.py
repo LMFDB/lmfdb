@@ -5,7 +5,6 @@
 #
 # author: 
 
-import logging
 import pymongo
 import flask
 import datetime
@@ -20,6 +19,8 @@ from users import admin_required
 
 
 upload_page = Blueprint("upload", __name__, template_folder='templates')
+import utils
+logging = utils.make_logger(upload_page)
 
 # blueprint specific definition of the body_class variable
 @upload_page.context_processor
@@ -37,6 +38,7 @@ def index():
 @upload_page.route("/upload", methods = ["POST"])
 @login_required
 def upload():
+  fn = request.files['file'].filename
   metadata = {
     "name": request.form['name'],
     "full_description": request.form['full_description'],
@@ -46,15 +48,17 @@ def upload():
     "bibtex": request.form['bibtex'],
     "uploader": current_user.name,
     "time": datetime.datetime.utcnow(),
-    "original_file_name": request.files['file'].filename,
+    "original_file_name": fn,
     "status": "unmoderated",
     "version": "1"
   }
-  flask.flash("Received file: " + request.files['file'].filename)
+  flask.flash("Received file: '%s'" + fn)
 
   upload_db = getDBConnection().upload
   upload_fs = GridFS(upload_db)
-  upload_fs.put(request.files['file'].read(), metadata = metadata, filename=request.files['file'].filename)
+  db_id = upload_fs.put(request.files['file'].read(), metadata = metadata, filename=fn)
+  
+  logging.info("file '%s' receieved and data with id '%s' stored" % (fn, db_id))
   
   return flask.redirect(url_for(".index"))
 

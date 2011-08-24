@@ -19,9 +19,6 @@ AUTHORS:
 
 """
 
-from mwf_utils import *
-from mwf_upload_data import *
-
 import flask
 from flask import render_template, url_for, request, redirect, make_response,send_file
 import bson
@@ -30,6 +27,11 @@ import pymongo
 from sage.all import is_odd,is_even
 
 mwf = flask.Blueprint('mwf', __name__, template_folder="templates")
+import utils
+mwf_logger = utils.make_logger(mwf)
+
+from mwf_utils import *
+from mwf_upload_data import *
 
 # this is a blueprint specific default for the tempate system.
 # it identifies the body tag of the html website with class="wmf"

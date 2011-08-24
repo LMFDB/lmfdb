@@ -1,7 +1,7 @@
 from flask import render_template, url_for, request, redirect, make_response,send_file
 import flask
 import tempfile, os,re
-from utils import ajax_more,ajax_result
+from utils import ajax_more,ajax_result,make_logger
 #from utils import ajax_result as a sajax_result #,ajax_url
 from sage.all import *
 from base import app, db
@@ -11,6 +11,7 @@ from cmf_utils import *
 
 CMF="cmf"
 cmf = flask.Blueprint(CMF, __name__, template_folder="templates")
+cmf_logger = make_logger(cmf)
 
 @cmf.context_processor
 def body_class():
@@ -27,11 +28,8 @@ k_max_db = 300000
 _verbose = 0
 
 #from jinja2 import Environment
-print "EN_V path:",app.jinja_loader.searchpath
+cmf_logger.info("EN_V path: %s" % app.jinja_loader.searchpath)
 l=app.jinja_env.list_templates()
-#for x in l:
-#    print x
-print "MODULES:",app.blueprints
 #################
 # Top level
 #################
@@ -48,14 +46,14 @@ def render_classical_modular_forms():
     info = get_args()
     if info.has_key('download'):
         return get_downloads(info)
-    print "MODULES:",app.modules
-    print "EN_V path:",app.modules['cmf'].jinja_loader.searchpath
-    print "args=",request.args
-    print "method=",request.method
-    print "req.form=",request.form
-    print "info=",info
+    cmf_logger.debug("MODULES:%s"%app.modules)
+    cmf_logger.debug("EN_V path:%s"%app.modules['cmf'].jinja_loader.searchpath)
+    cmf_logger.debug("args=%s"%request.args)
+    cmf_logger.debug("method=%s"%request.method)
+    cmf_logger.debug("req.form=%s"%request.form)
+    cmf_logger.debug("info=%s"%info)
     level = info['level']; weight=info['weight']; character=info['character']; label=info['label']
-    print "HERE1:::::::::::::::::::",level,weight,character,label
+    cmf_logger.debug("HERE1::::::::::::::::::: %s %s %s %s" %(level,weight,character,label))
     if level<=0:
         level=None
     if weight<=0:
@@ -84,17 +82,15 @@ def render_classical_modular_forms():
 	if len(test)>1: ## we also have character
 	    character = int(test[2])
 	    
-	print "label=",label
-	print "level=",level
-
-	    
-    print "HERE:::::::::::::::::::",level,weight,character,label
+	cmf_logger.debug("label=%s"%label)
+	cmf_logger.debug("level=%s"%level)
+    cmf_logger.debug("HERE::::::::::::::::::: %s %s %s %s" % (level,weight,character,label))
 
     # we see if we have submitted parameters
     if level and weight and character<>'' and label:
 		#return redirect(url_for("render_one_classical_modular_form", level,weight,character,label))
         info['level']=level; info['weight']=weight; info['label']=label; info['character']=character
-        print "WE ARE HERE!"
+        cmf_logger.debug("WE ARE HERE!")
         return redirect(url_for("cmf.render_one_classical_modular_form", level=level, weight=weight,character=character,label=label))
     if level and weight and character:
         info['level']=level; info['weight']=weight; info['label']=label; info['character']=character

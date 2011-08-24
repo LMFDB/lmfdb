@@ -28,6 +28,19 @@ def cached(timeout=15 * 60, key='cache::%s::%s'):
         return decorated_function
     return decorator
 
+def make_logger(blueprint):
+  import flask
+  assert type(blueprint) == flask.Blueprint
+  import logging
+  l = logging.getLogger(blueprint.name)
+  l.propagate = False
+  l.setLevel(logging.DEBUG)
+  formatter = logging.Formatter('%(levelname)s:%(name)s@%(asctime)s: %(message)s')
+  ch = logging.StreamHandler()
+  ch.setFormatter(formatter)
+  l.addHandler(ch)
+  return l
+
 class MongoDBPagination(object):
     def __init__(self, query, per_page, page, endpoint, endpoint_params):
         self.query = query
