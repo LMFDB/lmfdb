@@ -61,13 +61,24 @@ body
 
 
 a {
-    color: #292;
-    text-decoration: none;
-    font-family: sans-serif;
+  color: #292;
+  text-decoration: none;
+  font-family: sans-serif;
+  padding: 2px 2px;
+  border-radius: 3px;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
 }
 
 a:visited { color: #080; }
-a:hover { color: #000; }
+a:hover { 
+  color: #000; 
+  background: #afa;  
+}
+
+.logo a, .logo a:hover, body.knowl .logo a:hover {
+  background: none;
+}
 
 #header {
   /*border-bottom: 2px solid #4a4;*/
@@ -386,11 +397,6 @@ table a {
   -moz-border-radius: 3px;
 }
 
-table a:hover {
-    background: #afa;
-}
-
-
 table td.spacing {
   height: 20px;
 }
@@ -465,7 +471,7 @@ body.knowl #content h2,
 body.knowl #content a {
   color: #229;
 }
-body.knowl table a:hover {
+body.knowl a:hover {
   background: #aaf;
 }
 
