@@ -110,15 +110,28 @@ def login(**kwargs):
   flask.flash("Oops! Wrong username or password.", "error")
   return flask.redirect(url_for(".info"))
 
+import re
+allowed_usernames = re.compile("^[a-zA-Z0-9._-]+$")
+
 @login_page.route("/register", methods = ['GET', 'POST'])
 def register():
   bread = base_bread() + [('Register', url_for(".register"))]
   if request.method == 'POST':
     name   = request.form['name']
+    if not allowed_usernames.match(name):
+      flask.flash("""Oops, usename '%s' is not allowed.
+                  It must consist of lower/uppercase characters, 
+                  no spaces, numbers or '.', '_' and '-'.""" % name, "error")
+      return flask.redirect(url_for(".register"))
+    
     pw1    = request.form['password1']
     pw2    = request.form['password2']
     if pw1 != pw2:
       flask.flash("Oops, passwords do not match!", "error")
+      return flask.redirect(url_for(".register"))
+
+    if len(pw1) <= 3:
+      flask.flash("Oops, password too short. Minimum 4 characters please!", "error")
       return flask.redirect(url_for(".register"))
 
     full_name  = request.form['full_name']

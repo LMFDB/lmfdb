@@ -78,6 +78,13 @@ a:hover { color: #000; }
   box-shadow:          0px 5px 5px #8b8;
 }
 
+body.knowl #header {
+  background: #ddf;
+  -moz-box-shadow:     0px 5px 5px #88b;
+  -webkit-box-shadow:  0px 5px 5px #88b;
+  box-shadow:          0px 5px 5px #88b;
+}
+
 #header .logo {
     float: left;
     height: 120px;
@@ -334,9 +341,26 @@ form button, form select {
   min-width: 75px;
 }
 
-form button:hover, form select:hover {
+body.knowl form button, 
+body.knowl form select {
+  border: 2px solid #AAD;
+  background: #DDF;
+}
+body.knowl form textarea,
+body.knowl form input {
+  border: 2px solid #AAD;
+}
+
+form button:hover, 
+form select:hover {
   background:    #CFC;
   border: 2px solid #9C9;
+}
+
+body.knowl form button:hover,
+body.knowl form select:hover {
+  background:    #CCF;
+  border: 2px solid #99C;
 }
 
 table {
@@ -355,8 +379,11 @@ table th, table td {
 }
 
 table a {
-    display: block;
-    padding: 2px 5px;
+  display: block;
+  padding: 2px 5px;
+  border-radius: 3px;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
 }
 
 table a:hover {
@@ -381,11 +408,11 @@ table.ntdata thead tr {
 table.ntdata tbody tr {
 }
 
-table.ntdata tr.odd {
+table tr.odd {
     background: white;
 }
 
-table.ntdata tr.even {
+table tr.even {
  background: #eeffee;
 }
 
