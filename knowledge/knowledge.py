@@ -20,6 +20,8 @@ from flask import render_template, request, abort, Blueprint, url_for
 from flaskext.login import login_required, current_user
 from knowl import Knowl
 
+ASC = pymongo.ASCENDING
+
 # global (application wide) insertion of the variable "Knowl" to create
 # lightweight Knowl objects inside the templates.
 @app.context_processor
@@ -107,7 +109,7 @@ def render(ID):
 def index():
   # bypassing the Knowl objects to speed things up
   from knowl import get_knowls
-  knowls = get_knowls().find(fields=['title'])
+  knowls = get_knowls().find(fields=['title'], sort=[("title", ASC)])
   return render_template("knowl-index.html", 
          title="Knowledge Database",
          bread = get_bread(),
