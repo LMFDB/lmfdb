@@ -78,7 +78,8 @@ def show(ID):
 def delete(ID):
   k = Knowl(ID)
   k.delete()
-  return "Snif! Knowl %s deleted and gone forever :-(" % ID
+  flask.flash("Snif! Knowl %s deleted and gone forever :-(" % ID)
+  return flask.redirect(url_for(".index"))
 
 @knowledge_page.route("/edit", methods=["POST"])
 @login_required

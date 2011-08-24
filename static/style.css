@@ -387,7 +387,7 @@ table a {
 }
 
 table a:hover {
-    background: #afa;
+    background: #cfc;
 }
 
 
@@ -466,7 +466,7 @@ body.knowl #content a {
   color: #229;
 }
 body.knowl table a:hover {
-  background: #aaf;
+  background: #ccf;
 }
 
 div > *[knowl], p > *[knowl] {
