@@ -6,6 +6,7 @@
 import logging
 import pymongo
 import flask
+from functools import wraps
 from base import app, getDBConnection
 from flask import render_template, request, abort, Blueprint, url_for
 from flaskext.login import login_required, login_user, current_user, logout_user
@@ -144,4 +145,23 @@ def logout():
   logout_user()
   flask.flash("You are logged out now. Have a nice day!")
   return flask.redirect(request.args.get("next") or request.referrer or url_for('.info'))
+
+def admin_required(fn):
+  """
+  wrap this around those entry points where you need to be an admin.
+  """
+  @wraps(fn)
+  @login_required
+  def decorated_view(*args, **kwargs):
+    logging.info("admin access attempt by %s" % current_user.get_id())
+    if not current_user.is_admin():
+      return flask.abort(403) # 401 = access denied
+    return fn(*args, **kwargs)
+  return decorated_view
+
+@login_page.route("/admin")
+@login_required
+@admin_required
+def admin():
+  return "success: only admins can read this!"
 

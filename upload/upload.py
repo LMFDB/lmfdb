@@ -16,6 +16,8 @@ from flaskext.login import login_required, current_user
 from gridfs import GridFS
 from pymongo.objectid import ObjectId
 
+from users import admin_required
+
 
 upload_page = Blueprint("upload", __name__, template_folder='templates')
 
@@ -57,6 +59,7 @@ def upload():
   return flask.redirect(url_for(".index"))
 
 @upload_page.route("/admin", methods = ["POST"])
+@admin_required
 def admin_update():
 
   db = getDBConnection().upload
@@ -73,6 +76,7 @@ def admin_update():
 
 
 @upload_page.route("/admin", methods = ["GET"])
+@admin_required
 def admin():
 
   db = getDBConnection().upload

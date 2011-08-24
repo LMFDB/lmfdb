@@ -116,10 +116,10 @@ class LmfdbUser(UserMixin):
 
   @property
   def created(self):
-    dbe = self._get_my_entry()
+    dbe = self._my_entry()
     return dbe['created']
 
-  def _get_my_entry(self):
+  def _my_entry(self):
     return get_users().find_one({'_id' : self._name})  
 
   @property
@@ -133,6 +133,10 @@ class LmfdbUser(UserMixin):
   def is_anonymous(self):
     """required by flask-login user class"""
     return not self.is_authenticated()
+
+  def is_admin(self):
+    """true, iff has attribute admin set to True"""
+    return self._my_entry().get("admin", False)
 
   def authenticate(self, pwd):
     """
