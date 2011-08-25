@@ -2,13 +2,48 @@
 
 import sys
 import logging
+from time import sleep
 from flask import Flask, session, g, render_template, url_for, request, redirect
 from pymongo import Connection
+from pymongo.cursor import Cursor                                                             
+from pymongo.errors import AutoReconnect  
+from pymongo.connection import Connection
 from sage.all import *
 from functools import wraps
 from werkzeug.contrib.cache import SimpleCache
 
+# global db connection instance
 _C = None
+
+AUTO_RECONNECT_ATTEMPTS = 10                                                               
+AUTO_RECONNECT_DELAY = 0.2
+
+def _db_reconnect(func):
+  """
+  Wrapper to automatically reconnect when mongodb throws a AutoReconnect exception.
+
+  See 
+    * http://stackoverflow.com/questions/5287621/occasional-connectionerror-cannot-connect-to-the-database-to-mongo
+    * http://paste.pocoo.org/show/224441/
+  and similar workarounds
+  """
+  def retry(*args, **kwargs):                                                      
+    attempts = 0
+    while True:
+      try:
+        return func(*args, **kwargs)
+      except AutoReconnect, e:
+        attempts += 1
+        if attempts > AUTO_RECONNECT_ATTEMPTS:
+           raise
+        logging.warning('AutoReconnect #%d - %s raised [%s]' % (attempts, func.__name__, e))
+        sleep(AUTO_RECONNECT_DELAY)
+  return retry
+
+Cursor._Cursor__send_message = _db_reconnect(Cursor._Cursor__send_message)
+Connection._send_message = _db_reconnect(Connection._send_message)
+Connection._send_message_with_response = _db_reconnect(Connection._send_message_with_response)
+
  
 def _init(dbport):
   global _C
