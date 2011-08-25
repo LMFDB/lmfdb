@@ -135,9 +135,16 @@ def render(ID):
   {%% from "knowl-defs.html" import KNOWL with context %%}
 
   <div class="knowl">
-  <div>%s</div>
+  <div>%(content)s</div>
+  <div class="knowl-footer">
+    <a href="{{ url_for('.show', ID='%(ID)s') }}">permalink</a> 
+    {%% if user.is_authenticated() %%}
+      &middot;
+      <a href="{{ url_for('.edit', ID='%(ID)s') }}">edit</a> 
+    {%% endif %%}
   </div>
-  """ % k.content
+  </div>
+  """ % {'content' : k.content, 'ID' : k.id }
   #logger.debug("rendering template string:\n%s" % render_me)
 
   # TODO wrap this string-rendering into a try/catch and return a proper error message

@@ -3,6 +3,8 @@
 
 {% set col_knowl = '#229' %}
 {% set col_knowl_h = '#DDF' %}
+{% set col_knowl_d = '#88F' %}
+{% set col_knowl_dd = '#005' %}
 
 {# end defs #}
 
@@ -530,9 +532,30 @@ h2 > .knowl-qm {
 }
 .knowl-output {
   background: #EEE; 
-  border-left: 10px solid #8888FF;
-  padding: 10px;
+  border-left: 10px solid {{ col_knowl_d }};
+  padding: 5px 10px 0px 5px;
   display: none;
+}
+.knowl-output h1 {
+  color: {{ col_knowl_dd }};
+  margin: 5px 0px;
+}
+.knowl-output h2 {
+  color: {{ col_knowl_dd }};
+  margin: 5px 0px;
+}
+
+.knowl-footer {
+  border-top: 1px solid {{ col_knowl_d }};
+  margin-top: 20px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+.knowl-footer a {
+  color: {{ col_knowl_dd }};
+}
+.knowl-footer a:hover {
+  background: {{ col_knowl_h }};
 }
 
 /* end knowl */
