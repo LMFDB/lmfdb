@@ -45,6 +45,14 @@ def root_static_file(name):
        return ''
 map(root_static_file, [ 'robots.txt', 'favicon.ico' ])
 
+@app.route("/style.css")
+def css():
+  from flask import make_response
+  response = make_response(render_template("style.css"))
+  response.headers['Content-type'] = 'text/css'
+  response.headers['Cache-Control'] = 'public, max-age=600'
+  return response
+
 @app.route('/a/<int:a>')
 def a(a):
     a = Integer(a)
