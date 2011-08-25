@@ -6,6 +6,11 @@ def get_knowls():
   _C = getDBConnection()
   return _C.knowledge.knowls
 
+def get_deleted_knowls():
+  from base import getDBConnection
+  _C = getDBConnection()
+  return _C.knowledge.deleted_knowls
+
 def get_knowl(ID, fields = None):
   return get_knowls().find_one({'_id' : ID}, fields=fields)
 
@@ -29,6 +34,7 @@ class Knowl(object):
         
   def delete(self):
     """deletes this knowl from the db. (DANGEROUS, ADMIN ONLY!)"""
+    get_deleted_knowls().save(get_knowls().find_one({'_id' : self._id}))
     get_knowls().remove({'_id' : self._id})
 
   @property
