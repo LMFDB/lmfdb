@@ -3,7 +3,6 @@
 # for the user management
 # author: harald schilly <harald.schilly@univie.ac.at>
 
-import logging
 import pymongo
 import flask
 from functools import wraps
@@ -15,6 +14,8 @@ import pwdmanager
 from pwdmanager import LmfdbUser
 
 login_page = Blueprint("users", __name__, template_folder='templates')
+import utils
+logging = utils.make_logger(login_page)
 
 from flaskext.login import LoginManager
 login_manager = LoginManager()

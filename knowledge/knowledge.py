@@ -12,13 +12,14 @@
 #
 # author: Harald Schilly <harald.schilly@univie.ac.at>
 
-import logging
 import pymongo
 import flask
 from base import app, getDBConnection
-from flask import render_template, request, abort, Blueprint, url_for
+from flask import render_template, render_template_string, request, abort, Blueprint, url_for
 from flaskext.login import login_required, current_user
 from knowl import Knowl
+from utils import make_logger
+from users import admin_required
 
 ASC = pymongo.ASCENDING
 
@@ -29,6 +30,7 @@ def ctx_knowledge():
   return {'Knowl' : Knowl}
 
 knowledge_page = Blueprint("knowledge", __name__, template_folder='templates')
+logger = make_logger(knowledge_page)
 
 # blueprint specific definition of the body_class variable
 @knowledge_page.context_processor
@@ -46,6 +48,7 @@ def test():
   """
   just a test page
   """
+  logger.info("test")
   return render_template("knowl-test.html",
                bread=get_bread([("Test", url_for(".test"))]), 
                title="Knowledge Test")
@@ -70,6 +73,14 @@ def show(ID):
          render = r,
          bread = get_bread([('Show %s'%k.id, url_for('.show', ID=ID))]))
 
+@knowledge_page.route("/delete/<ID>")
+@admin_required
+def delete(ID):
+  k = Knowl(ID)
+  k.delete()
+  flask.flash("Snif! Knowl %s deleted and gone forever :-(" % ID)
+  return flask.redirect(url_for(".index"))
+
 @knowledge_page.route("/edit", methods=["POST"])
 @login_required
 def edit_form():
@@ -88,7 +99,6 @@ def save_form():
   k.save()
   return flask.redirect(url_for(".show", ID=ID))
   
-  
 
 @knowledge_page.route("/render/<ID>")
 def render(ID):
@@ -103,7 +113,21 @@ def render(ID):
   a small and simple html snippet!
   """
   k = Knowl(ID)
-  return render_template("knowl-render.html", k = k)
+  #this is a very simple template based on no other template to render one single Knowl
+  #for inserting into a website via AJAX or for server-side operations.
+  render_me = u"""\
+  {%% include "knowl-defs.html" %%}
+  {%% from "knowl-defs.html" import KNOWL with context %%}
+
+  <div class="knowl">
+  <div>%s</div>
+  </div>
+  """ % k.content
+  #logger.debug("rendering template string:\n%s" % render_me)
+
+  # TODO wrap this string-rendering into a try/catch and return a proper error message
+  # so that the user has a clue. Most likely, the {{ KNOWL('...') }} has the wrong syntax!
+  return render_template_string(render_me, k = k)
 
 @knowledge_page.route("/")
 def index():

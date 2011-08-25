@@ -8,6 +8,10 @@
    {% if user.is_authenticated() %}
      <li><a href="{{ url_for('.edit', ID=k.id) }}">edit {{ k.id }}</a></li>
    {% endif %}
+   {% if user.is_admin() %}
+     <li><a onclick='return confirm("Really delete Knowl {{ k.id }}? There is no way back!");'
+            href="{{ url_for('.delete', ID=k.id) }}">delete {{ k.id }}</a></li>
+   {% endif %}
 </ul>
 
 {{ render|safe }}  

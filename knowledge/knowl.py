@@ -27,6 +27,9 @@ class Knowl(object):
          'title' : self.title
         })
         
+  def delete(self):
+    """deletes this knowl from the db. (DANGEROUS, ADMIN ONLY!)"""
+    get_knowls().remove({'_id' : self._id})
 
   @property
   def id(self):

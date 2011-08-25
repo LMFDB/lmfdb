@@ -397,6 +397,11 @@ table a {
   -moz-border-radius: 3px;
 }
 
+table a:hover {
+    background: #cfc;
+}
+
+
 table td.spacing {
   height: 20px;
 }
