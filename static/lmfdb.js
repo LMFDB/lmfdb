@@ -31,14 +31,8 @@ function knowl_click_handler($el, evnt) {
  
   // if we already have the content, toggle visibility
   if ($output_id.length > 0) {
-    $output_id.slideToggle("slow");
+    $output_id.slideToggle("fast");
 
-    //if($output_id.is(":hidden")) {
-    //  $output_id.slideDown("slow");
-    //} else {
-    //  $output_id.slideUp("slow");
-    //}
- 
   // otherwise download it
   } else { 
     // create the element for the content, insert it after the one where the 
@@ -57,8 +51,6 @@ function knowl_click_handler($el, evnt) {
         $output.hide();
         MathJax.Hub.Queue(['Typeset', MathJax.Hub, output_id.substring(1)]);
         // inside the inserted knowl might be more references: process them, attach the handler!
-        // TODO the following might be useful to be in the MathJax.Hub, i.e. to reveal the 
-        // content with the rendered formulas only *after* finishing rendering to avoid jumpy layouts
         $output.find("*[knowl]").each(function() {
            var $knowl = $(this);
            $knowl.attr("knowl-uid", knowl_id_counter);
@@ -66,8 +58,8 @@ function knowl_click_handler($el, evnt) {
            $knowl.click(function(evnt) { knowl_click_handler($knowl, evnt) });
         });
       }
-      // in any case, reveal the new output
-      $output.slideDown("slow");  
+      // in any case, reveal the new output after mathjax has finished
+      MathJax.Hub.Queue([ function() { $output.slideDown("slow"); }]);
     });
   }
 } //~~ end click handler for *[knowl] elements

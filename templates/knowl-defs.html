@@ -8,9 +8,8 @@
 {% macro KNOWL(knowlid, tag='span', title=None) -%}
   {% with knowl = Knowl(knowlid) -%}
     {% if knowl.exists() -%}
-        <{{tag}} knowl="{{ knowl.id }}" class="knowl-title">
-          {% if title -%}{{ title }}{%- else -%}{{ knowl.title }}{%- endif %}
-        </{{tag}}>
+        <{{tag}} class="knowl-title">
+          {% if title -%}{{ title }}{%- else -%}{{ knowl.title }}{%- endif %}</{{tag}}>
         <span knowl="{{ knowl.id }}" class="knowl-qm">?</span>
 
     {%- else -%}
