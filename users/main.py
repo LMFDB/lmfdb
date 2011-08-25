@@ -11,7 +11,7 @@ from flask import render_template, request, abort, Blueprint, url_for
 from flaskext.login import login_required, login_user, current_user, logout_user
 
 import pwdmanager
-from pwdmanager import LmfdbUser
+from pwdmanager import LmfdbUser, LmfdbAnonymousUser
 
 login_page = Blueprint("users", __name__, template_folder='templates')
 import utils
@@ -26,6 +26,9 @@ def load_user(userid):
   return LmfdbUser.get(userid) 
 
 login_manager.login_view = "users.info"
+
+# this anonymous user has the is_admin() method
+login_manager.anonymous_user = LmfdbAnonymousUser
 
 # globally define the user and username
 @app.context_processor

@@ -215,6 +215,14 @@ def get_user_list():
     ret.append((e['_id'], name))
   return ret
 
+from flaskext.login import AnonymousUser
+class LmfdbAnonymousUser(AnonymousUser):
+  """
+  The sole purpose of this Anonymous User is the 'is_admin' method
+  and probably others.
+  """
+  def is_admin(self):
+    return False
 
 if __name__=="__main__":
   print "Usage:"

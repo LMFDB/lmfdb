@@ -23,6 +23,9 @@ from users import admin_required
 
 ASC = pymongo.ASCENDING
 
+import re
+allowed_knowl_id = re.compile("^[a-zA-Z0-9._-]+$")
+
 # global (application wide) insertion of the variable "Knowl" to create
 # lightweight Knowl objects inside the templates.
 @app.context_processor
@@ -56,6 +59,11 @@ def test():
 @knowledge_page.route("/edit/<ID>")
 @login_required
 def edit(ID):
+  if not allowed_knowl_id.match(ID):
+      flask.flash("""Oops, knowl id '%s' is not allowed.
+                  It must consist of lower/uppercase characters, 
+                  no spaces, numbers or '.', '_' and '-'.""" % ID, "error")
+      return flask.redirect(url_for(".index"))
   knowl = Knowl(ID)
   b = get_bread([("Edit '%s'"%ID, url_for('.edit', ID=ID))])
   return render_template("knowl-edit.html", 
@@ -93,6 +101,13 @@ def save_form():
   ID = request.form['id']
   if not ID:
     raise Exception("no id")
+
+  if not allowed_knowl_id.match(ID):
+      flask.flash("""Oops, knowl id '%s' is not allowed.
+                  It must consist of lower/uppercase characters, 
+                  no spaces, numbers or '.', '_' and '-'.""" % ID, "error")
+      return flask.redirect(url_for(".index"))
+
   k = Knowl(ID)
   k.title = request.form['title']
   k.content = request.form['content']

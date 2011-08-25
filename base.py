@@ -12,9 +12,12 @@ _C = None
  
 def _init(dbport):
   global _C
-  if not _C:
-    logging.info("establishing db connection at port %s" % dbport)
-    _C = Connection(port=dbport, network_timeout=1)
+  # always re-connecting, there are those "AutoReconnect/Connection refused" problems.
+  # maybe related?
+  #
+  #if not _C:
+  #  logging.info("establishing db connection at port %s" % dbport)
+  _C = Connection(port=dbport, network_timeout=1)
 
 def getDBConnection():
   return _C

@@ -73,7 +73,7 @@ a {
 a:visited { color: #080; }
 a:hover { 
   color: #000; 
-  background: #afa;  
+  background: #cfc;  
 }
 
 .logo a, .logo a:hover, body.knowl .logo a:hover {
@@ -477,7 +477,7 @@ body.knowl #content a {
   color: #229;
 }
 body.knowl a:hover {
-  background: #aaf;
+  background: #ccf;
 }
 
 div > *[knowl], p > *[knowl] {
