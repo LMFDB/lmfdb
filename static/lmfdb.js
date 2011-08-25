@@ -9,5 +9,10 @@ $(function() {
   });
 });
 
+/* providing watermark examples in those forms, that have an 'example=...' attribute */
+$(function () {
+    $('input[example]').each( function() { $(this).watermark($(this).attr('example')) } )
+    $('textarea[example]').each( function() { $(this).watermark($(this).attr('example'), {useNative:false}) } )
+});
 
 /* javascript code for the knowledge db features */

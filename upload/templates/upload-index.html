@@ -56,11 +56,6 @@ input, textarea { width: 50em }
     <button type="submit">Upload</button>
 </form>
 
-<script>
-$(function () {
-    $('input[example]').each( function() { $(this).watermark($(this).attr('example')) } )
-    $('textarea[example]').each( function() { $(this).watermark($(this).attr('example'), {useNative:false}) } )
-});
-</script>
+<!-- example/watermark script moved to global lmfdb.js -->
 
 {% endblock %}
