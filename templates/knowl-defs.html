@@ -5,18 +5,17 @@
    is only there for the presentation of the data via suitable
    HTML tags and associated javascript code.
 #}
-{% macro KNOWL(knowlid, tag='span', klass='knowl', title=None) -%}
+{% macro KNOWL(knowlid, tag='span', title=None) -%}
   {% with knowl = Knowl(knowlid) -%}
     {% if knowl.exists() -%}
-        {% if title -%}{# custom title? #}
-          <{{tag}} knowl="{{ knowl.id }}">{{ title }}</{{tag}}>
-        {%- else -%}
-          <{{tag}} knowl="{{ knowl.id }}">{{ knowl.title }}</{{tag}}>
-        {%- endif %}
+        <{{tag}} knowl="{{ knowl.id }}" class="knowl-title">
+          {% if title -%}{{ title }}{%- else -%}{{ knowl.title }}{%- endif %}
+        </{{tag}}>
+        <span knowl="{{ knowl.id }}" class="knowl-qm">?</span>
 
     {%- else -%}
       {# knowl does not exist. wrong knowlid or opportunity to create one! #}
-      <{{tag}} class="{{klass}} knowlerror">
+      <{{tag}} class="knowl knowl-error">
         {% if user.is_authenticated() -%}
           [ERROR: Knowl with ID '{{knowlid}}' does not exist. Wrong ID or
           <a href="{{ url_for('knowledge.edit', ID=knowlid) }}">create a new one</a>.]

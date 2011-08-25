@@ -456,13 +456,18 @@ div.literature {
  *  all elements, that have a knowl attribute set to any value */
 
 *[knowl] {
-  border-bottom: 2px dotted #66C;
-  cursor: pointer;
+  /* border-bottom: 2px dotted #66C; */
+  /* cursor: pointer; */
 }
 
 *[knowl]:hover {
-  border-bottom: 2px solid #66C;
-  color: #66C;
+  /* border-bottom: 2px solid #66C; */
+  /* color: #66C; */
+  /* background: #ccf; */
+}
+
+.knowl-title {
+  border-bottom: 1px dotted #66C;
 }
 
 body.knowl #header {
@@ -481,13 +486,37 @@ body.knowl a:hover {
 }
 
 div > *[knowl], p > *[knowl] {
-  color: #11A;
+  /* color: #11A; */
 }
 
 .knowlerror {
    color: red;
    border-bottom: 0;
 }
+
+.knowl-qm {
+  font-family: sans-serif;
+  font-weight: bold;
+  background: blue;
+  color: #fff; 
+  cursor: pointer;
+  padding: 0 7px;
+  border-radius: 12px;
+}
+h1 > .knowl-qm, h2 > .knowl-qm {
+  /** custom superscript */
+  font-size: 14px;
+  position: relative;
+  top: -1.1em;
+  left: -0.4em;
+}
+.knowl-output {
+  background: #EEE; 
+  border-left: 10px solid #8888FF;
+  padding: 10px;
+  display: none;
+}
+
 /* end knowl */
 
 

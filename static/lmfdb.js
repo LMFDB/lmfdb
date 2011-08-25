@@ -63,7 +63,7 @@ function knowl_click_handler($el, evnt) {
            var $knowl = $(this);
            $knowl.attr("knowl-uid", knowl_id_counter);
            knowl_id_counter++;
-           $knowl.click(function(evnt) { help_click_handler($knowl, evnt) });
+           $knowl.click(function(evnt) { knowl_click_handler($knowl, evnt) });
         });
       }
       // in any case, reveal the new output
@@ -81,7 +81,7 @@ $(function() {
     $(this).attr("knowl-uid", knowl_id_counter);
     knowl_id_counter++;
   });
-  $("*[knowl]").click(function(evt) {help_click_handler($(this), evt)});
+  $("*[knowl]").click(function(evt) {knowl_click_handler($(this), evt)});
 });
 
 //~~ end knowl js section
