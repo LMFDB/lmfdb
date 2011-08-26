@@ -8,12 +8,13 @@ function properties_collapser(evt) {
   evt.preventDefault();
   $pb = $("#properties-body");
   $pc = $("#properties-collapser");
+  $pc.html("&nbsp;");
   $pb.animate({height: "toggle", "width":  "toggle"}, "slow", "swing",
       function () {
         if ($pb.css("display") == "none") {
-          $pc.html("+");
+          $pc.html("&darr;");
         } else { 
-          $pc.html("-");
+          $pc.html("&uarr;");
         }
       }
   );

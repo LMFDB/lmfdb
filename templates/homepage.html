@@ -58,7 +58,7 @@
     {% if properties2 %}
       <div id="properties">
        <h1 id="properties-header">Properties</h1>
-       <div id="properties-collapser">-</div>
+       <div id="properties-collapser">&uarr;</div>
        <div id="properties-body">
        {% for label, content in properties2 %}
          {% if label %}<h2>{{ label }}</h2>{% endif %}
@@ -77,7 +77,7 @@
     {% if (citation or properties) -%}
       <div id="properties">
        <h1 id="properties-header">Properties</h1>
-       <div id="properties-collapser">+</div>
+       <div id="properties-collapser">&uarr;</div>
        <div id="properties-body">
         {% if citation -%}
          <h1>Citation</h1>
