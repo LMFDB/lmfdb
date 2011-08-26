@@ -51,45 +51,41 @@ var UPDATE_TIMEOUT = 5000;
 
 function update() {
   if (update_id) {
-    // this happens, when we click "refresh" while a timer is running.
+    // this case happens, when we click "refresh" while a timer is running.
     window.clearTimeout(update_id);
   }
   //console.log("running update");
-  /* $title.html($ktitle.val()); */
   $title.html("updating ...");
+
   /* markdown disabled */
   /* $content.html(converter.makeHtml($kcontent.val())); */
-  var content_esc = escape($kcontent.val());
-  var url_base = "{{ url_for('.render', ID=k.id)}}";
-  var url = url_base + "?footer=0&content=" + content_esc;
-
-  $content.load(url, function(response, status, xhr) {
-    if (status == "error") {
-      $title.html("ERROR");
-      return;
-    } else if (status == "timeout") {
-      $title.html("TIMEOUT");
-      return;
-    }
-    $title.html("Processing ...");
-    MathJax.Hub.Queue(["Typeset", MathJax.Hub, $title.get()]);
-    MathJax.Hub.Queue(["Typeset", MathJax.Hub, $content.get()]);
-    MathJax.Hub.Queue(function () {  
-      update_id = null;
-      // MathJax tells us it is done.
-      // has there been a call in the meantime and we have to do this again?
-      if (reparse_latex) {
-        /* console.log("reparse_latex == true"); */
-        reparse_latex = false;
-        update();
-      } 
-    });
-    MathJax.Hub.Queue(function() {$title.html($ktitle.val())});
-    $update.fadeOut();
-  });
+  
+  var url = "{{ url_for('.render', ID=k.id)}}";
+  $.post(url, { "content" : $kcontent.val(), "footer" : "0" },
+    function(data) {
+      $title.html("Processing ...");
+      $content.html(data);
+      MathJax.Hub.Queue(["Typeset", MathJax.Hub, $title.get()]);
+      MathJax.Hub.Queue(["Typeset", MathJax.Hub, $content.get()]);
+      MathJax.Hub.Queue(function () {  
+        update_id = null;
+        // MathJax tells us it is done.
+        // has there been a call in the meantime and we have to do this again?
+        if (reparse_latex) {
+          /* console.log("reparse_latex == true"); */
+          reparse_latex = false;
+          update();
+        } 
+      });
+      /* finally, set the title and hide the refresh link */
+      MathJax.Hub.Queue(function() {$title.html($ktitle.val())});
+      $update.fadeOut();
+    })
+  .error(function() { $title.html("ERROR"); })
+  .timeout(function() { $title.html("TIMEOUT");});
 }
 
-// if nothing scheduled, update in 250ms
+// if nothing scheduled, update delayed
 // otherwise tell it to reparse the latex
 function update_delay() {
   $update.fadeIn();

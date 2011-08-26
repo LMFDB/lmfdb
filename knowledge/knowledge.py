@@ -116,7 +116,7 @@ def save_form():
   return flask.redirect(url_for(".show", ID=ID))
   
 
-@knowledge_page.route("/render/<ID>")
+@knowledge_page.route("/render/<ID>", methods = ["GET", "POST"])
 def render(ID, footer=None):
   """
   this method renders the given Knowl (ID) to insert it
@@ -131,9 +131,11 @@ def render(ID, footer=None):
   k = Knowl(ID)
   #this is a very simple template based on no other template to render one single Knowl
   #for inserting into a website via AJAX or for server-side operations.
-  
-  con = request.args.get("content", k.content)
-  foot = footer or request.args.get("footer", "1") 
+  if 'content' in request.form:
+    con = request.form['content']
+  else:
+    con = request.args.get("content", k.content)
+  foot = footer or request.form['footer'] or request.args.get("footer", "1") 
 
   render_me = u"""\
   {%% include "knowl-defs.html" %%}
