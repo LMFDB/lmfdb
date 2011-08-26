@@ -6,10 +6,16 @@ from utils import *
 from classical_modular_forms.backend.plot_dom import *
 from mwf_main import mwf_logger as logger
 #from psage.modform.maass.lpkbessel import *
+# build extensions
+
 try:
   from maass_waveforms.backend.lpkbessel import *
 except Exception as ex:
-  logger.critical("maass_waveforms/views/mwf_utils.py: couldn't load backend. Exception: '%s'" % ex)
+  try:
+    # Builds the kbessel extension build_ext --inplace $*
+    execfile("setup.py") 
+  except Exception as ex1:
+    logger.critical("maass_waveforms/views/mwf_utils.py: couldn't load backend. Exception: '%s'" % ex1)
 
 def ConnectDB():
     import base

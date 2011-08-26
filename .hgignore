@@ -1,6 +1,9 @@
 syntax:glob
 
 *.pyc
+*.so
+*.o
+*.c
 *.swp
 *~
 
