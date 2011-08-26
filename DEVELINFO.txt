@@ -63,7 +63,7 @@ master  = http://lmfdb.googlecode.com/hg
 
 # infrastructure
 jonathan = http://jwbober-lmfdb.googlecode.com/hg
-harald = http://haraldschilly-lmfdb.googlecode.com/hg
+harald = http://haraldschilly-content.googlecode.com/hg
 
 # l-functions
 stefan = http://sj-lmfdb2-lmfdb.googlecode.com/hg

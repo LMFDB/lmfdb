@@ -131,11 +131,12 @@ def render(ID, footer=None):
   k = Knowl(ID)
   #this is a very simple template based on no other template to render one single Knowl
   #for inserting into a website via AJAX or for server-side operations.
-  if 'content' in request.form:
+  if request.method == "POST":
     con = request.form['content']
+    foot = footer or request.form['footer']
   else:
     con = request.args.get("content", k.content)
-  foot = footer or request.form['footer'] or request.args.get("footer", "1") 
+    foot = footer or request.args.get("footer", "1") 
 
   render_me = u"""\
   {%% include "knowl-defs.html" %%}
