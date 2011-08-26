@@ -188,7 +188,7 @@ body.knowl #header {
     margin: 20px 0px 15px 15px;
     /* width: 20%; */
     /* background: #9d9; */
-  position: relative;
+    position: relative;
     border: 1px solid #474;
     border: 0;
     padding: 0px;
@@ -236,6 +236,7 @@ body.knowl #header {
 }
 #properties-collapser {
   cursor: pointer;
+  color: #050;
   font-size: 17px;
   font-weight: bold;
   text-align: center;
@@ -558,11 +559,12 @@ h2 > .knowl-qm {
   left: -0.4em;
 }
 .knowl-output {
-  background: #EEE; 
-  border-left: 10px solid {{ col_knowl_d }};
+  background: {{ col_knowl_ll }}; 
+  border-left: 10px solid {{ col_knowl_l }};
   padding: 0px;
   display: none;
-  margin-bottom: 10px;
+  margin-top: 20px;
+  margin-bottom: 25px;
 }
 .knowl-output h1, .knowl-output h2 {
   margin: 5px 0;
@@ -577,17 +579,17 @@ h2 > .knowl-qm {
 .knowl-footer {
   font-size: x-small;
   /* border-top: 1px solid {{ col_knowl_d }}; */
-  background: {{ col_knowl_d }};
-  color: {{ col_knowl_l }};
+  background: {{ col_knowl_l }};
+  color: {{ col_knowl_ll }};
   padding: 1px 0 1px 10px;
   margin:  0 0 0 0;
 }
 .knowl-footer a {
-  color: {{ col_knowl_ll }};
+  color: {{ col_knowl_d }};
 }
 .knowl-footer a:hover {
   background: none;
-  color: {{ col_knowl_l }};
+  color: {{ col_knowl }};
 }
 
 /* end knowl */

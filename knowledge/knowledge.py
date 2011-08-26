@@ -133,7 +133,6 @@ def render(ID):
   #for inserting into a website via AJAX or for server-side operations.
   
   con = request.args.get("content", k.content)
-  logger.info("con = %s" % con)
 
   render_me = u"""\
   {%% include "knowl-defs.html" %%}
