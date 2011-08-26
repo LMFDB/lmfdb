@@ -20,7 +20,7 @@ from flaskext.login import login_required, current_user
 from knowl import Knowl
 from utils import make_logger
 from users import admin_required
-from markdown import markdown
+# from markdown import markdown
 
 ASC = pymongo.ASCENDING
 
@@ -145,7 +145,9 @@ def render(ID):
     {%% endif %%}
   </div>
   </div>
-  """ % {'content' : markdown(k.content.replace("\\","\\\\"), ['wikilinks(base_url=http://wiki.l-functions.org/,end_url=)']), 'ID' : k.id }
+  """ % {'content' : k.content, 'ID' : k.id }
+  # markdown disabled
+  # {'content' : markdown(k.content.replace("\\","\\\\"), ['wikilinks(base_url=http://wiki.l-functions.org/,end_url=)']), 'ID' : k.id }
   # Pass the text on to markdown.  Note, backslashes need to be escaped for this, but not for the javascript markdown parser
 
   #logger.debug("rendering template string:\n%s" % render_me)

@@ -10,7 +10,8 @@ LMFDB{% if title %}: {{ title }}{% endif %}
 <script type="text/javascript" src="{{ url_for('static', filename='jquery.min.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='jquery.watermark.min.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='lmfdb.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('static', filename='showdown.min.js') }}"></script>
+{#  markdown disabled
+    <script type="text/javascript" src="{{ url_for('static', filename='showdown.min.js') }}"></script> #}
 {# <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet" type="text/css" /> #}
 <link href="{{ url_for('css') }}" rel="stylesheet" type="text/css" /> 
 
