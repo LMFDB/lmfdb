@@ -72,7 +72,7 @@ def render_isogeny_class(label):
         return "No such curves"
     data['download_Rub_data_100']=url_for('download_Rub_data', label=str(label), limit=100)
     data['download_Rub_data']=url_for('download_Rub_data', label=str(label))
-    if 'related_to' in info:
+    if info and 'related_to' in info:
         data['related_to']=info['related_to']
     else:
         data['related_to']=''

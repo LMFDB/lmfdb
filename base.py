@@ -15,8 +15,9 @@ from werkzeug.contrib.cache import SimpleCache
 # global db connection instance
 _C = None
 
-AUTO_RECONNECT_ATTEMPTS = 10                                                               
-AUTO_RECONNECT_DELAY = 0.2
+AUTO_RECONNECT_MAX = 10
+AUTO_RECONNECT_DELAY = 1
+AUTO_RECONNECT_ATTEMPTS = 0
 
 def _db_reconnect(func):
   """
@@ -27,16 +28,19 @@ def _db_reconnect(func):
     * http://paste.pocoo.org/show/224441/
   and similar workarounds
   """
-  def retry(*args, **kwargs):                                                      
-    attempts = 0
+  def retry(*args, **kwargs):
+    global AUTO_RECONNECT_ATTEMPTS
     while True:
       try:
         return func(*args, **kwargs)
       except AutoReconnect, e:
-        attempts += 1
-        if attempts > AUTO_RECONNECT_ATTEMPTS:
+        AUTO_RECONNECT_ATTEMPTS += 1
+        if AUTO_RECONNECT_ATTEMPTS > AUTO_RECONNECT_MAX:
+           AUTO_RECONNECT_ATTEMPTS = 0
+           import flask
+           flask.flash("AutoReconnect failed to reconnect", "error")
            raise
-        logging.warning('AutoReconnect #%d - %s raised [%s]' % (attempts, func.__name__, e))
+        logging.warning('AutoReconnect #%d - %s raised [%s]' % (AUTO_RECONNECT_ATTEMPTS, func.__name__, e))
         sleep(AUTO_RECONNECT_DELAY)
   return retry
 
@@ -47,12 +51,8 @@ Connection._send_message_with_response = _db_reconnect(Connection._send_message_
  
 def _init(dbport):
   global _C
-  # always re-connecting, there are those "AutoReconnect/Connection refused" problems.
-  # maybe related?
-  #
-  #if not _C:
-  #  logging.info("establishing db connection at port %s" % dbport)
-  _C = Connection(port=dbport, network_timeout=1)
+  logging.info("establishing db connection at port %s" % dbport)
+  _C = Connection(port=dbport)
 
 def getDBConnection():
   return _C

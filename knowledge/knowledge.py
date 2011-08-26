@@ -20,7 +20,7 @@ from flaskext.login import login_required, current_user
 from knowl import Knowl
 from utils import make_logger
 from users import admin_required
-from markdown import markdown
+# from markdown import markdown
 
 ASC = pymongo.ASCENDING
 
@@ -131,12 +131,15 @@ def render(ID):
   k = Knowl(ID)
   #this is a very simple template based on no other template to render one single Knowl
   #for inserting into a website via AJAX or for server-side operations.
+  
+  con = request.args.get("content", k.content)
+
   render_me = u"""\
   {%% include "knowl-defs.html" %%}
   {%% from "knowl-defs.html" import KNOWL with context %%}
 
   <div class="knowl">
-  <div>%(content)s</div>
+  <div class="knowl-content">%(content)s</div>
   <div class="knowl-footer">
     <a href="{{ url_for('.show', ID='%(ID)s') }}">permalink</a> 
     {%% if user.is_authenticated() %%}
@@ -145,7 +148,9 @@ def render(ID):
     {%% endif %%}
   </div>
   </div>
-  """ % {'content' : markdown(k.content.replace("\\","\\\\"), ['wikilinks(base_url=http://wiki.l-functions.org/,end_url=)']), 'ID' : k.id }
+  """ % {'content' : con, 'ID' : k.id }
+  # markdown disabled
+  # {'content' : markdown(k.content.replace("\\","\\\\"), ['wikilinks(base_url=http://wiki.l-functions.org/,end_url=)']), 'ID' : k.id }
   # Pass the text on to markdown.  Note, backslashes need to be escaped for this, but not for the javascript markdown parser
 
   #logger.debug("rendering template string:\n%s" % render_me)

@@ -5,12 +5,17 @@
    is only there for the presentation of the data via suitable
    HTML tags and associated javascript code.
 #}
-{% macro KNOWL(knowlid, tag='span', title=None) -%}
+{% macro KNOWL(knowlid, tag='span', title=none) -%}
   {% with knowl = Knowl(knowlid) -%}
     {% if knowl.exists() -%}
-        <{{tag}} class="knowl-title">
-          {% if title -%}{{ title }}{%- else -%}{{ knowl.title }}{%- endif %}</{{tag}}>
-        <span knowl="{{ knowl.id }}" class="knowl-qm">?</span>
+      {% if title is none -%}
+         <{{tag}} class="knowl-title">{{ knowl.title }}</{{tag}}>
+      {%- else -%}
+        {% if title|length > 0 -%}
+         <{{tag}} class="knowl-title">{{ title }}</{{tag}}>
+        {%- endif %}
+      {%- endif %}
+      <span knowl="{{ knowl.id }}" class="knowl-qm">?</span>
 
     {%- else -%}
       {# knowl does not exist. wrong knowlid or opportunity to create one! #}

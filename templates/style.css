@@ -2,7 +2,8 @@
 {% set col_main = '#292' %}
 
 {% set col_knowl = '#229' %}
-{% set col_knowl_h = '#DDF' %}
+{% set col_knowl_l = '#DDF' %}
+{% set col_knowl_ll = '#EEF' %}
 {% set col_knowl_d = '#88F' %}
 {% set col_knowl_dd = '#005' %}
 
@@ -100,7 +101,7 @@ a:hover {
 }
 
 body.knowl #header {
-  background: {{ col_knowl_h }};
+  background: {{ col_knowl_l }};
   -moz-box-shadow:     0px 5px 5px #88b;
   -webkit-box-shadow:  0px 5px 5px #88b;
   box-shadow:          0px 5px 5px #88b;
@@ -182,12 +183,12 @@ body.knowl #header {
 #properties {
     font-size: 85%;
     font-family: sans-serif;
-    min-width: 200px;
     float: right;
     clear: right;
     margin: 20px 0px 15px 15px;
     /* width: 20%; */
-    background: #efe;
+    /* background: #9d9; */
+    position: relative;
     border: 1px solid #474;
     border: 0;
     padding: 0px;
@@ -221,19 +222,40 @@ body.knowl #header {
 #properties-body {
   margin: 0;
   padding: 0;
+  background: #efe;
+  min-width: 200px;
 }
 #properties-header {
   margin: 0;
   padding: 5px;
   color: #050;
   background: #9d9;
-  font-size: 110%;
+  font-size: 14px;
   cursor: pointer;
+  padding-right: 30px;
+}
+#properties-collapser {
+  cursor: pointer;
+  color: #050;
+  font-size: 17px;
+  font-weight: bold;
+  text-align: center;
+  border: 1px solid ;
+  width: 20px;
+  height: 17px;
+  position: absolute;
+  top:   3px;
+  right: 3px;
+
+  border-radius: 2px;
+  -webkit-border-radius: 2px;
+  -moz-border-radius: 2px;
 }
 
+
 #content {
-    margin-top: 20px;
-    font-size: 95%;
+  margin-top: 20px;
+  font-size: 95%;
 }
 
 #content blockquote
@@ -464,10 +486,16 @@ div.literature {
 
 /** page wide defs for knowls, the *[knowl] is a selector for
  *  all elements, that have a knowl attribute set to any value */
-
+.knowl {
+  padding: 0;
+}
+.knowl-content {
+  padding: 10px 5px 15px 10px;
+}
 *[knowl] {
   /* border-bottom: 2px dotted #66C; */
   /* cursor: pointer; */
+  margin-bottom: 0px;
 }
 
 *[knowl]:hover {
@@ -481,7 +509,7 @@ div.literature {
 }
 
 body.knowl #header {
-  background: {{ col_knowl_h }}; 
+  background: {{ col_knowl_l }}; 
 }
 body.knowl #header #title {
   color: #004;
@@ -531,31 +559,37 @@ h2 > .knowl-qm {
   left: -0.4em;
 }
 .knowl-output {
-  background: #EEE; 
-  border-left: 10px solid {{ col_knowl_d }};
-  padding: 5px 10px 0px 5px;
+  background: {{ col_knowl_ll }}; 
+  border-left: 10px solid {{ col_knowl_l }};
+  padding: 0px;
   display: none;
+  margin-top: 20px;
+  margin-bottom: 25px;
+}
+.knowl-output h1, .knowl-output h2 {
+  margin: 5px 0;
 }
 .knowl-output h1 {
   color: {{ col_knowl_dd }};
-  margin: 5px 0px;
 }
 .knowl-output h2 {
   color: {{ col_knowl_dd }};
-  margin: 5px 0px;
 }
 
 .knowl-footer {
-  border-top: 1px solid {{ col_knowl_d }};
-  margin-top: 20px;
-  padding-top: 5px;
-  padding-bottom: 5px;
+  font-size: x-small;
+  /* border-top: 1px solid {{ col_knowl_d }}; */
+  background: {{ col_knowl_l }};
+  color: {{ col_knowl_ll }};
+  padding: 1px 0 1px 10px;
+  margin:  0 0 0 0;
 }
 .knowl-footer a {
-  color: {{ col_knowl_dd }};
+  color: {{ col_knowl_d }};
 }
 .knowl-footer a:hover {
-  background: {{ col_knowl_h }};
+  background: none;
+  color: {{ col_knowl }};
 }
 
 /* end knowl */

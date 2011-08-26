@@ -2,11 +2,28 @@
    it's just one file for faster page loading */
 
 /* code for the properties sidepanel on the right */
+/** collapser: first, store current width (probably more than min-width!),
+ * then do the animation. */
+function properties_collapser(evt) {
+  evt.preventDefault();
+  $pb = $("#properties-body");
+  $pc = $("#properties-collapser");
+  $pc.html("&nbsp;");
+  $pb.animate({height: "toggle", "width":  "toggle"}, "slow", "swing",
+      function () {
+        if ($pb.css("display") == "none") {
+          $pc.html("&darr;");
+        } else { 
+          $pc.html("&uarr;");
+        }
+      }
+  );
+}
+
+
 $(function() {
- $("#properties-header").click(function(evt) {
-    evt.preventDefault();
-    $("#properties-body").slideToggle("slow");
-  });
+ $("#properties-header").click(function(evt) { properties_collapser(evt); });
+ $("#properties-collapser").click(function(evt) { properties_collapser(evt); });
 });
 
 /* providing watermark examples in those forms, that have an 'example=...' attribute */
@@ -37,7 +54,8 @@ function knowl_click_handler($el, evnt) {
   } else { 
     // create the element for the content, insert it after the one where the 
     // knowl element is included (e.g. inside a <h1> tag) (sibling in DOM)
-    $el.parent().after("<div class='knowl-output' id='"+output_id.substring(1)+"'>loading ...</div>");
+    var idtag = "id='"+output_id.substring(1) + "'";
+    $el.parent().after("<div class='knowl-output'" +idtag+ ">loading ...</div>");
  
     // "select" where the output is and get a hold of it 
     var $output = $(output_id);
