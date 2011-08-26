@@ -136,7 +136,7 @@ def render(ID):
   {%% from "knowl-defs.html" import KNOWL with context %%}
 
   <div class="knowl">
-  <div>%(content)s</div>
+  <div class="knowl-content">%(content)s</div>
   <div class="knowl-footer">
     <a href="{{ url_for('.show', ID='%(ID)s') }}">permalink</a> 
     {%% if user.is_authenticated() %%}

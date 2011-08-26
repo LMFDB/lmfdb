@@ -53,7 +53,8 @@ function knowl_click_handler($el, evnt) {
   } else { 
     // create the element for the content, insert it after the one where the 
     // knowl element is included (e.g. inside a <h1> tag) (sibling in DOM)
-    $el.parent().after("<div class='knowl-output' id='"+output_id.substring(1)+"'>loading ...</div>");
+    var idtag = "id='"+output_id.substring(1) + "'";
+    $el.parent().after("<div class='knowl-output'" +idtag+ ">loading ...</div>");
  
     // "select" where the output is and get a hold of it 
     var $output = $(output_id);
