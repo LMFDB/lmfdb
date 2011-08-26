@@ -17,6 +17,7 @@ _C = None
 
 AUTO_RECONNECT_ATTEMPTS = 10                                                               
 AUTO_RECONNECT_DELAY = 0.2
+AUTO_RECONNECT_ATTEMPTS = 0
 
 def _db_reconnect(func):
   """
@@ -27,14 +28,17 @@ def _db_reconnect(func):
     * http://paste.pocoo.org/show/224441/
   and similar workarounds
   """
-  def retry(*args, **kwargs):                                                      
-    attempts = 0
+  def retry(*args, **kwargs):
+    global AUTO_RECONNECT_ATTEMPTS
     while True:
       try:
         return func(*args, **kwargs)
       except AutoReconnect, e:
-        attempts += 1
+        AUTO_RECONNECT_ATTEMPTS += 1
         if attempts > AUTO_RECONNECT_ATTEMPTS:
+           AUTO_RECONNECT_ATTEMPTS = 0
+           import flask
+           flask.flash("AutoReconnect failed to reconnect", "error")
            raise
         logging.warning('AutoReconnect #%d - %s raised [%s]' % (attempts, func.__name__, e))
         sleep(AUTO_RECONNECT_DELAY)
