@@ -31,7 +31,7 @@ import os, sys
 sys.argv=['setup.py']
 sys.argv.append('build_ext')
 sys.argv.append('--inplace')
-print "PARAM:", sys.argv 
+#print "PARAM:", sys.argv 
 import build_system
 from sage.misc.package import is_package_installed
 

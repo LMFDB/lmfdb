@@ -11,11 +11,12 @@ from mwf_main import mwf_logger as logger
 try:
   from maass_waveforms.backend.lpkbessel import *
 except Exception as ex:
-  try:
-    # Builds the kbessel extension build_ext --inplace $*
-    execfile("setup.py") 
-  except Exception as ex1:
-    logger.critical("maass_waveforms/views/mwf_utils.py: couldn't load backend. Exception: '%s'" % ex1)
+  logger.critical("maass_waveforms/views/mwf_utils.py: couldn't load backend. Exception: '%s'" % ex)
+  #try:
+  #  # Builds the kbessel extension build_ext --inplace $*
+  #  execfile("setup.py") 
+  #except Exception as ex1:
+
 
 def ConnectDB():
     import base
