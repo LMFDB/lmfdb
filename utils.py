@@ -3,6 +3,8 @@
 # @app.route(....)
 # @cached()
 # def func(): ...
+import logging
+
 from flask import request, make_response
 from functools import wraps
 from werkzeug.contrib.cache import SimpleCache
@@ -28,14 +30,30 @@ def cached(timeout=15 * 60, key='cache::%s::%s'):
         return decorated_function
     return decorator
 
+class LmfdbFormatter(logging.Formatter):
+  """
+  This Formatter adds some colors, in the future it might do even more ;)
+  """
+  def __init__(self, *args, **kwargs):
+    logging.Formatter.__init__(self, *args, **kwargs)
+  def format(self, record):
+    if record.levelno >= logging.CRITICAL:
+      record.levelname = '\033[91m%s\033[0m' % record.levelname
+    elif record.levelno >= logging.WARNING:
+      record.levelname = '\033[93m%s\033[0m' % record.levelname
+    elif record.levelno <= logging.DEBUG:
+      record.levelname = '\033[94m%s\033[0m' % record.levelname
+    elif record.levelno <= logging.INFO:
+      record.levelname = '\033[92m%s\033[0m' % record.levelname
+    return logging.Formatter.format(self, record)
+
 def make_logger(blueprint):
   import flask
   assert type(blueprint) == flask.Blueprint
-  import logging
   l = logging.getLogger(blueprint.name)
   l.propagate = False
   l.setLevel(logging.DEBUG)
-  formatter = logging.Formatter('%(levelname)s:%(name)s@%(asctime)s: %(message)s')
+  formatter = LmfdbFormatter('%(levelname)s:%(name)s@%(asctime)s: %(message)s')
   ch = logging.StreamHandler()
   ch.setFormatter(formatter)
   l.addHandler(ch)
