@@ -1,7 +1,9 @@
 {% extends "homepage.html" %}
 
 {% block content %}
-{# <h1>Edit Knowl '{{ k.id }}'</h1> #}
+{% from "knowl-defs.html" import knowlbar with context %}
+{{ knowlbar() }}
+
 <form action="{{ url_for('.save_form') }}" method="POST">
   <input type="hidden" name="id" value="{{ k.id }}"/>
   <table>
@@ -20,10 +22,12 @@
    </tr>
   </table>
    <button type="submit" id="knowl-edit-btn">Save</button>
-   <a id="knowl-update" style="display: none; margin-left: 20px;" onclick="update();" href="#">update preview</a>
 </form>
 
-<h1>Preview Knowl</h1>
+<div class="knowl-preview-sep">
+  Preview of Knowl '{{ k.id }}'
+   <a id="knowl-update" style="display: none; margin-left: 20px;" onclick="update();" href="#">refresh preview</a>
+</div>
 <div id="knowl-preview" class="knowl">
    <h1 id="knowl-title"></h1>
    <div id="knowl-content"></div>
@@ -46,6 +50,10 @@ var UPDATE_TIMEOUT = 5000;
 /* var converter = new Showdown.converter(); */
 
 function update() {
+  if (update_id) {
+    // this happens, when we click "refresh" while a timer is running.
+    window.clearTimeout(update_id);
+  }
   //console.log("running update");
   /* $title.html($ktitle.val()); */
   $title.html("updating ...");
@@ -53,7 +61,7 @@ function update() {
   /* $content.html(converter.makeHtml($kcontent.val())); */
   var content_esc = escape($kcontent.val());
   var url_base = "{{ url_for('.render', ID=k.id)}}";
-  var url = url_base + "?content=" + content_esc;
+  var url = url_base + "?footer=0&content=" + content_esc;
 
   $content.load(url, function(response, status, xhr) {
     if (status == "error") {
@@ -86,8 +94,6 @@ function update() {
 function update_delay() {
   $update.fadeIn();
   if (update_id) {
-    //console.log("clearing timeout " + update_id);
-    // window.clearTimeout(update_id);
     reparse_latex = true;
   } else {
     update_id = window.setTimeout(update, UPDATE_TIMEOUT);

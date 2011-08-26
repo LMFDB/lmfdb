@@ -30,3 +30,23 @@
     {%- endif %}
   {%- endwith %}
 {%- endmacro %}
+
+{# for the bar when editing or showing knowls #}
+{% macro knowlbar() -%}
+ <div class="knowl-bar">
+   Actions: 
+   <a title="as it will be used for transculsioins" href="{{ url_for('.render', ID=k.id) }}">render</a> 
+   &middot;
+   <a title="like as a wiki would" href="{{ url_for('.show', ID=k.id) }}">show</a>
+   {% if user.is_authenticated() %}
+     &middot;
+     <a href="{{ url_for('.edit', ID=k.id) }}">edit</a>
+   {% endif %}
+   {% if user.is_admin() %}
+     &middot;
+     <a onclick='return confirm("Really delete Knowl {{ k.id }}? There is no way back!");'
+            href="{{ url_for('.delete', ID=k.id) }}">delete</a>
+   {% endif %}
+</div>
+{%- endmacro %}
+

@@ -486,6 +486,20 @@ div.literature {
 
 /** page wide defs for knowls, the *[knowl] is a selector for
  *  all elements, that have a knowl attribute set to any value */
+.knowl-bar {
+  background: {{ col_knowl_ll}};
+  padding: 5px 10px;
+  margin-bottom: 30px;
+  border-bottom: 1px solid {{ col_knowl_d }};
+}
+.knowl-preview-sep {
+  padding: 5px;
+  margin: 30px 0;
+  border-bottom: 1px solid {{ col_knowl_d }};
+  background: {{ col_knowl_ll}};
+  color: {{ col_knowl_dd}};
+  font-weight: bold;
+}
 .knowl {
   padding: 0;
 }

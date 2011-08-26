@@ -15,7 +15,7 @@
 import pymongo
 import flask
 from base import app, getDBConnection
-from flask import render_template, render_template_string, request, abort, Blueprint, url_for
+from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
 from flaskext.login import login_required, current_user
 from knowl import Knowl
 from utils import make_logger
@@ -75,7 +75,7 @@ def edit(ID):
 @knowledge_page.route("/show/<ID>")
 def show(ID):
   k = Knowl(ID)
-  r = render(ID)
+  r = render(ID, footer="0")
   return render_template("knowl-show.html",
          title = "Knowl '%s'" % k.id,
          k = k,
@@ -117,7 +117,7 @@ def save_form():
   
 
 @knowledge_page.route("/render/<ID>")
-def render(ID):
+def render(ID, footer=None):
   """
   this method renders the given Knowl (ID) to insert it
   dynamically in a website. It is intended to be used 
@@ -133,22 +133,25 @@ def render(ID):
   #for inserting into a website via AJAX or for server-side operations.
   
   con = request.args.get("content", k.content)
+  foot = footer or request.args.get("footer", "1") 
 
   render_me = u"""\
   {%% include "knowl-defs.html" %%}
   {%% from "knowl-defs.html" import KNOWL with context %%}
 
   <div class="knowl">
-  <div class="knowl-content">%(content)s</div>
+  <div class="knowl-content">%(content)s</div>"""
+  if foot == "1": 
+    render_me += """\
   <div class="knowl-footer">
     <a href="{{ url_for('.show', ID='%(ID)s') }}">permalink</a> 
     {%% if user.is_authenticated() %%}
       &middot;
       <a href="{{ url_for('.edit', ID='%(ID)s') }}">edit</a> 
     {%% endif %%}
-  </div>
-  </div>
-  """ % {'content' : con, 'ID' : k.id }
+  </div>"""
+  render_me += "</div>"
+  render_me = render_me % {'content' : con, 'ID' : k.id }
   # markdown disabled
   # {'content' : markdown(k.content.replace("\\","\\\\"), ['wikilinks(base_url=http://wiki.l-functions.org/,end_url=)']), 'ID' : k.id }
   # Pass the text on to markdown.  Note, backslashes need to be escaped for this, but not for the javascript markdown parser
