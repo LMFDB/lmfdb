@@ -20,7 +20,7 @@
    </tr>
   </table>
    <button type="submit" id="knowl-edit-btn">Save</button>
-   <a style="margin-left: 20px;" onclick="update();" href="#">Preview</a>
+   <a id="knowl-update" style="display: none; margin-left: 20px;" onclick="update();" href="#">update preview</a>
 </form>
 
 <h1>Preview Knowl</h1>
@@ -35,6 +35,7 @@ var $ktitle    = $("#ktitle");
 var $kcontent  = $("#kcontent");
 var $title     = $("#knowl-title");
 var $content   = $("#knowl-content");
+var $update    = $("#knowl-update");
 // state flags
 var update_id     = null;
 var reparse_latex = false;
@@ -76,12 +77,14 @@ function update() {
       } 
     });
     MathJax.Hub.Queue(function() {$title.html($ktitle.val())});
+    $update.fadeOut();
   });
 }
 
 // if nothing scheduled, update in 250ms
 // otherwise tell it to reparse the latex
 function update_delay() {
+  $update.fadeIn();
   if (update_id) {
     //console.log("clearing timeout " + update_id);
     // window.clearTimeout(update_id);
