@@ -40,10 +40,12 @@ var $content = $("#knowl-content");
 var update_id = null;
 var reparse_latex = false;
 
+var converter = new Showdown.converter();
+
 function update() {
   //console.log("running update");
   $title.html($ktitle.val());
-  $content.html($kcontent.val());
+  $content.html(converter.makeHtml($kcontent.val()));
   MathJax.Hub.Queue(["Typeset", MathJax.Hub, $title.get()]);
   MathJax.Hub.Queue(["Typeset", MathJax.Hub, $content.get()]);
   MathJax.Hub.Queue(function () {  
