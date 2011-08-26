@@ -182,12 +182,12 @@ body.knowl #header {
 #properties {
     font-size: 85%;
     font-family: sans-serif;
-    min-width: 200px;
     float: right;
     clear: right;
     margin: 20px 0px 15px 15px;
     /* width: 20%; */
-    background: #efe;
+    /* background: #9d9; */
+  position: relative;
     border: 1px solid #474;
     border: 0;
     padding: 0px;
@@ -221,19 +221,41 @@ body.knowl #header {
 #properties-body {
   margin: 0;
   padding: 0;
+  background: #efe;
+  min-width: 200px;
 }
 #properties-header {
   margin: 0;
   padding: 5px;
   color: #050;
   background: #9d9;
-  font-size: 110%;
+  font-size: 14px;
   cursor: pointer;
+  padding-right: 30px;
+}
+#properties-collapser {
+  /*display: inline;*/
+  cursor: pointer;
+  font-size: 17px;
+  font-weight: bold;
+  text-align: center;
+  vertical-align: center;
+  border: 1px solid ;
+  width: 18px;
+  height: 18px;
+  position: absolute;
+  top:   3px;
+  right: 5px;
+
+  border-radius: 2px;
+  -webkit-border-radius: 2px;
+  -moz-border-radius: 2px;
 }
 
+
 #content {
-    margin-top: 20px;
-    font-size: 95%;
+  margin-top: 20px;
+  font-size: 95%;
 }
 
 #content blockquote
