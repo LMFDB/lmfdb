@@ -15,8 +15,8 @@ from werkzeug.contrib.cache import SimpleCache
 # global db connection instance
 _C = None
 
-AUTO_RECONNECT_ATTEMPTS = 10                                                               
-AUTO_RECONNECT_DELAY = 0.2
+AUTO_RECONNECT_MAX = 10
+AUTO_RECONNECT_DELAY = 1
 AUTO_RECONNECT_ATTEMPTS = 0
 
 def _db_reconnect(func):
@@ -35,12 +35,12 @@ def _db_reconnect(func):
         return func(*args, **kwargs)
       except AutoReconnect, e:
         AUTO_RECONNECT_ATTEMPTS += 1
-        if attempts > AUTO_RECONNECT_ATTEMPTS:
+        if AUTO_RECONNECT_ATTEMPTS > AUTO_RECONNECT_MAX:
            AUTO_RECONNECT_ATTEMPTS = 0
            import flask
            flask.flash("AutoReconnect failed to reconnect", "error")
            raise
-        logging.warning('AutoReconnect #%d - %s raised [%s]' % (attempts, func.__name__, e))
+        logging.warning('AutoReconnect #%d - %s raised [%s]' % (AUTO_RECONNECT_ATTEMPTS, func.__name__, e))
         sleep(AUTO_RECONNECT_DELAY)
   return retry
 
