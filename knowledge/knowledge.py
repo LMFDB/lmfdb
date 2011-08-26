@@ -131,6 +131,10 @@ def render(ID):
   k = Knowl(ID)
   #this is a very simple template based on no other template to render one single Knowl
   #for inserting into a website via AJAX or for server-side operations.
+  
+  con = request.args.get("content", k.content)
+  logger.info("con = %s" % con)
+
   render_me = u"""\
   {%% include "knowl-defs.html" %%}
   {%% from "knowl-defs.html" import KNOWL with context %%}
@@ -145,7 +149,7 @@ def render(ID):
     {%% endif %%}
   </div>
   </div>
-  """ % {'content' : k.content, 'ID' : k.id }
+  """ % {'content' : con, 'ID' : k.id }
   # markdown disabled
   # {'content' : markdown(k.content.replace("\\","\\\\"), ['wikilinks(base_url=http://wiki.l-functions.org/,end_url=)']), 'ID' : k.id }
   # Pass the text on to markdown.  Note, backslashes need to be escaped for this, but not for the javascript markdown parser

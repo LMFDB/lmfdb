@@ -19,8 +19,8 @@
      </td>
    </tr>
   </table>
-
-  <button id="knowl-edit-btn">Save</button>
+   <button type="submit" id="knowl-edit-btn">Save</button>
+   <a style="margin-left: 20px;" onclick="update();" href="#">Preview</a>
 </form>
 
 <h1>Preview Knowl</h1>
@@ -31,37 +31,51 @@
 
 <script type="text/javascript">
 // the dom fields we are working with
-// (only look them up once!)
-var $ktitle = $("#ktitle");
-var $kcontent = $("#kcontent");
-var $title = $("#knowl-title");
-var $content = $("#knowl-content");
+var $ktitle    = $("#ktitle");
+var $kcontent  = $("#kcontent");
+var $title     = $("#knowl-title");
+var $content   = $("#knowl-content");
 // state flags
-var update_id = null;
+var update_id     = null;
 var reparse_latex = false;
+// parameters
+var UPDATE_TIMEOUT = 5000;
 
 /* markdown disabled */
 /* var converter = new Showdown.converter(); */
 
 function update() {
   //console.log("running update");
-  $title.html($ktitle.val());
+  /* $title.html($ktitle.val()); */
+  $title.html("updating ...");
   /* markdown disabled */
   /* $content.html(converter.makeHtml($kcontent.val())); */
-  MathJax.Hub.Queue(["Typeset", MathJax.Hub, $title.get()]);
-  MathJax.Hub.Queue(["Typeset", MathJax.Hub, $content.get()]);
-  MathJax.Hub.Queue(function () {  
-    update_id = null;
-    // MathJax tells us it is done.
-    // was there a call and we have to do this again?
-    if (reparse_latex) {
-      console.log("reparse_latex == true");
-      reparse_latex = false;
-      update();
-    } else {
-      // otherwise we finish.
-      update_id = null;
+  var content_esc = escape($kcontent.val());
+  var url_base = "{{ url_for('.render', ID=k.id)}}";
+  var url = url_base + "?content=" + content_esc;
+
+  $content.load(url, function(response, status, xhr) {
+    if (status == "error") {
+      $title.html("ERROR");
+      return;
+    } else if (status == "timeout") {
+      $title.html("TIMEOUT");
+      return;
     }
+    $title.html("Processing ...");
+    MathJax.Hub.Queue(["Typeset", MathJax.Hub, $title.get()]);
+    MathJax.Hub.Queue(["Typeset", MathJax.Hub, $content.get()]);
+    MathJax.Hub.Queue(function () {  
+      update_id = null;
+      // MathJax tells us it is done.
+      // has there been a call in the meantime and we have to do this again?
+      if (reparse_latex) {
+        /* console.log("reparse_latex == true"); */
+        reparse_latex = false;
+        update();
+      } 
+    });
+    MathJax.Hub.Queue(function() {$title.html($ktitle.val())});
   });
 }
 
@@ -73,7 +87,7 @@ function update_delay() {
     // window.clearTimeout(update_id);
     reparse_latex = true;
   } else {
-    update_id = window.setTimeout(update, 250);
+    update_id = window.setTimeout(update, UPDATE_TIMEOUT);
   }
 }
 
