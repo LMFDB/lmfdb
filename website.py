@@ -37,11 +37,10 @@ def root_static_file(name):
     def robots():
        import os
        fn = os.path.join('.', "static",name)
-       print fn
        if os.path.exists(fn):
          return open(fn).read()
        import logging
-       logging.warning("root_static_file: file %s not found!" % fn)
+       logging.critical("root_static_file: file %s not found!" % fn)
        return ''
 map(root_static_file, [ 'robots.txt', 'favicon.ico' ])
 
