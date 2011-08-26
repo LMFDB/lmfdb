@@ -4,13 +4,15 @@ import tempfile, os,re
 from utils import ajax_more,ajax_result,make_logger
 #from utils import ajax_result as a sajax_result #,ajax_url
 from sage.all import *
+from  sage.modular.dirichlet import DirichletGroup
 from base import app, db
 from classical_modular_forms.backend.web_modforms import WebModFormSpace,WebNewForm
 from classical_modular_forms.backend.cmf_core import * #html_table
+from classical_modular_forms.backend.plot_dom import * #html_table
 from cmf_utils import *
 
 CMF="cmf"
-cmf = flask.Blueprint(CMF, __name__, template_folder="templates")
+cmf = flask.Blueprint(CMF, __name__, template_folder="templates",static_folder="static")
 cmf_logger = make_logger(cmf)
 
 @cmf.context_processor
@@ -70,16 +72,17 @@ def render_classical_modular_forms():
 	test = re.findall("[a-z]+",s)
 	if len(test)==1: 
 	    label = test[0]
+        else:
+          label=''
 	print "label1=",label
-        
 	# the first string of integers should be the level
-	test = re.findall("^\d+",s)
+	test = re.findall("\d+",s)
 	print "level mat=",test
 	if test:
 	    level = int(test[0])
 	if len(test)>1: ## we also have weight
 	    weight = int(test[1])
-	if len(test)>1: ## we also have character
+	if len(test)>2: ## we also have character
 	    character = int(test[2])
 	    
 	cmf_logger.debug("label=%s"%label)
@@ -327,7 +330,7 @@ def browse_classical_modular_forms(**info):
 	#bread =[('Modular Forms',url_for('modular_form_toplevel'))]
 	bread =[('Modular Forms',url_for('.render_classical_modular_forms'))]
         info['browse_type']=" of weight %s " % weight
-        return render_template(CMF+"/cmf_browse.html", info=info,title=title,bread=bread)
+        return render_template("cmf_browse.html", info=info,title=title,bread=bread)
     print "here2!"
     info['level_min']=level;info['level_max']=level
     info['weight_min']=weight;info['weight_max']=weight
@@ -352,11 +355,10 @@ def render_classical_modular_form_space_wp(info):
     (info,sbar)=set_info_for_modular_form_space(info,sbar)
     print "HERE!!!!!!!!"
     print "keys=",info.keys()
-    print "dim=",info['dimension']
     if info.has_key('download') and not info.has_key('error'):					
 	return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
-    if info.has_key('dimension') and info['dimension']==1: # if there is only one orbit we list it
-	print "Dimension is one!"
+    if info.has_key('dimension_newspace') and info['dimension_newspace']==1: # if there is only one orbit we list it
+	print "Dimension of newforms is one!"
         info =dict()
         info['level']=level; info['weight']=weight; info['label']='a'; info['character']=character
         # print "INFO=",info
@@ -366,8 +368,11 @@ def render_classical_modular_form_space_wp(info):
     Dimension: %s <br>
     Sturm bound: %s <br>
     """ %(info['dimension'],info['sturm_bound'])
+    print "prop1=",properties
     (properties,parents,friends,siblings,lifts)=sbar
-    properties=[s]
+    print "prop2=",properties
+    if not properties:
+      properties=[s]
     title = "Holomorphic Cusp Forms of weight %s on \(\Gamma_{0}(%s)\)" %(weight,level)
     bread =[('Modular Forms',url_for('modular_form_toplevel'))]
     bread =[('Modular Forms',url_for('modular_form_toplevel'))]
@@ -376,8 +381,8 @@ def render_classical_modular_form_space_wp(info):
     print "friends=",friends
     info['friends']=friends
     #info['test']=ajax_later(_test)
-
-    return render_template(CMF+"/cmf_space.html", info=info,title=title,bread=bread,parents=parents,friends=friends,siblings=siblings,properties=properties)
+    
+    return render_template("cmf_space.html", info=info,title=title,bread=bread,parents=parents,friends=friends,siblings=siblings,properties2=properties)
 
 
 
@@ -403,7 +408,7 @@ def _test(do_now=0):
     ## (properties,parents,friends,siblings,lifts)=sbar
     ## title = "Holomorphic Cusp Forms of weight %s on \(\Gamma_{0}(%s)\)" %(weight,level)
     ## bread =[('Modular Forms',url_for('modular_form_toplevel'))]
-    ## return render_template(CMF+"/cmf_space.html", info=info,title=title,bread=bread)
+    ## return render_template("cmf_space.html", info=info,title=title,bread=bread)
 
 
 
@@ -425,6 +430,7 @@ def render_classical_modular_form_space_list_chars(level,weight):
     title = "Holomorphic Modular Cuspforms of level %s and weight %s " %(level,weight)
     bread =[('Modular Forms',url_for('modular_form_toplevel'))]
     bread.append(("Level %s" %level,url_for('cmf.render_classical_modular_form_space2',level=level)))
+    
     info['browse_type']=" of level %s and weight %s " % (level,weight)
     return render_template("cmf_browse.html", info=info,title=title,bread=bread)
 
@@ -461,7 +467,7 @@ def make_table_of_characters(level,weight,**kwds):
     ii=0
     dims = dict()
     for chi in range(0,len(D.list())):
-        x=D[chi]; S=CuspForms(x,weight); d=S.dimension()
+        x=D[chi]; d=dimension_new_cusp_forms(x,weight)
         dims[chi]=d
     num_non_zero = (map(lambda x:  x>0,dims.values())).count(True)
     print "Number of non_zer0",num_non_zero
@@ -897,7 +903,7 @@ def print_coefficients_for_one_form(F,number,format):
         if F.degree() > 1:
             for j in range(F.degree()):
                 for n in range(number):
-                    s+=str(n)+"\t"+str(embeddings[n][j])+"\n"
+                  s+=str(n)+"\t"+str(embeddings[n][j])+"\n"
         else:
             for n in range(number):
                 s+=str(n)+"\t"+str(embeddings[n])+"\n"
@@ -1110,7 +1116,7 @@ def set_info_for_one_modular_form(info,sbar): #level,weight,character,label,info
         s+="<br><small>* ) The Fricke involution</small>"
         properties.append(s)
     if(level==1):
-        info['explicit_formula'] = WNF.print_as_polynomial_in_E4_and_E6()
+        info['explicit_formulas'] = WNF.print_as_polynomial_in_E4_and_E6()
     cur_url='?&level='+str(level)+'&weight='+str(weight)+'&character='+str(character)+'&label='+str(label)
     if(len(WNF.parent().galois_decomposition())>1):
         for label_other in WNF.parent()._galois_orbits_labels:
@@ -1146,6 +1152,7 @@ def make_table_of_spaces_fixed_level(level=1,character=0,weight_block=0,**kwds):
     r"""
     """
     wlen=15
+    print "make table: ",level,character,weight_block
     w_start = wlen*weight_block
     w_stop  = wlen*(weight_block+1)
     s="<table><thead></thead><tbody>\n"
@@ -1168,14 +1175,14 @@ def make_table_of_spaces_fixed_level(level=1,character=0,weight_block=0,**kwds):
         s+="<td> %s </td>" % weight
     s+="</tr><tr>"
     if character > 0 :
-        s+="<td>Dimension of  \(S_{k}(%s),\chi_{%s}\):" % (level,character)
+        s+="<td>Dimension:" # of  \(S^{\\textrm{new}}_{k}(%s),\chi_{%s}\):" % (level,character)
     else:
-        s+="<td>Dimension of \(S_{k}(%s)\):" % (level)
+        s+="<td>Dimension:" # of \(S^{\\textrm{new}}_{k}(%s)\):" % (level)
     for weight in weights:
         if character > 0 :
-            dims[weight]=dimension_cusp_forms(x,weight)
+            dims[weight]=dimension_new_cusp_forms(x,weight)
         else:
-            dims[weight]=dimension_cusp_forms(level,weight)
+            dims[weight]=dimension_new_cusp_forms(level,weight)
         s+="<td> %s </td>" % dims[weight]
     j = 0 # we display ony even weight if the character is even
     print "w_start=",w_start
@@ -1186,10 +1193,10 @@ def make_table_of_spaces_fixed_level(level=1,character=0,weight_block=0,**kwds):
         if dims[weight]>0:
             url = url_for('cmf.render_classical_modular_form_browsing',level=level,weight=weight)
             if character>0:
-                lab = "\(S_{%s}(%s,\chi_{%s})\)" %(weight,level,character)
+                lab = "\(S^{\\textrm{}}_{%s}(%s,\chi_{%s})\)" %(weight,level,character)
             else:
                 #lab = " \(S_{%s}(%s)\)" %(weight,level)
-                lab = " S<sub><small>%s</small></sub>(%s)" %(weight,level)
+                lab = " S<sup><small></small></sup><sub><small>%s</small></sub>(%s)" %(weight,level)
             links[weight]="<a  style=\"display:inline\" href=\"%s\">%s</a>" %(url,lab)
         else:
             links[weight]=""
@@ -1239,7 +1246,12 @@ def set_info_for_modular_form_space(info,sbar):
             info['error']="Got wrong level: %s " %level
 	if(info.has_key('error')):
 		return (info,sbar)
-	info['dimension'] = WMFS.dimension()
+	info['dimension_cusp_forms'] = WMFS.dimension_cusp_forms()
+        info['dimension_mod_forms'] = WMFS.dimension_modular_forms()
+        info['dimension_new_cusp_forms'] = WMFS.dimension_new_cusp_forms()
+        info['dimension_newspace'] = WMFS.dimension_newspace()
+        info['dimension_oldspace'] = WMFS.dimension_oldspace()
+        info['dimension'] = WMFS.dimension()
 	info['sturm_bound'] = WMFS.sturm_bound()
 	info['new_decomposition'] = WMFS.print_galois_orbits()
 	print "new_decomp=",info['new_decomposition']
@@ -1267,11 +1279,18 @@ def set_info_for_modular_form_space(info,sbar):
 
 		info['error_note'] = "Could not construct oldspace!\n"+s
 	# properties for the sidebar
-	s='Dimension = '+str(info['dimension'])
-	properties.append(s)
-	s='Newspace dimension = '+str(WMFS.dimension_newspace())
-	properties.append(s)
-	s='Sturm bound = '+str(WMFS.sturm_bound())
+        if WMFS._cuspidal==1:
+          #s='<b>Dimensions</b><br>'
+          s= '-newforms : '+str(info['dimension_newspace'])+"<br>"
+          s+='-oldforms : '+str(info['dimension_oldspace'])+"<br>"
+        else:
+          #s='<b>Dimensions</b><br>'
+          s= '-modular forms: '+str(info['dimension_mod_forms'])+"<br>"
+          s+='-cusp forms   : '+str(info['dimension_cusp_forms'])+"<br>"
+	properties.append(('Dimensions',s))
+	#s='Newspace dimension = '+str(WMFS.dimension_newspace())
+	#properties.append(s)
+	s=('Other properties',"Sturm bound :"+str(WMFS.sturm_bound()))
 	properties.append(s)		
 
 	## Make parent spaces of S_k(N,chi) for the sidebar

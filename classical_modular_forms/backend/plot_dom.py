@@ -3,7 +3,7 @@ r""" Excerpt from my MySubgroup class. Contains routines to draw fundamental dom
 r"""
 import matplotlib.patches as patches
 import matplotlib.path as path
-
+import logging 
 from sage.all import I,Gamma0,Gamma1,Gamma,SL2Z,ZZ,RR,ceil,sqrt,CC,line,text,latex,exp,pi,infinity
 
 def draw_fundamental_domain(N,group='Gamma0',model="H",axes=None,filename=None,**kwds):
@@ -24,7 +24,11 @@ def draw_fundamental_domain(N,group='Gamma0',model="H",axes=None,filename=None,*
 
         """
         G=eval(group+'('+str(N)+')')
-        name ="$"+latex(G)+"$"
+	s="$"+latex(G)+"$"
+	s=s.replace("mbox","mathrm")
+	s=s.replace("Bold","mathbb")
+        name = s
+	#name ="$\mbox{SL}_{2}(\mathbb{Z})$"
         ## need a "nice" set of coset representatives to draw a connected fundamental domain. Only implemented for Gamma_0(N)
         coset_reps = nice_coset_reps(G)
         #if(group=='Gamma0'):

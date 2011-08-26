@@ -14,7 +14,7 @@ Fix complex characters. I.e. embedddings and galois conjugates in a consistent w
 
 """
 from sage.all import ZZ,QQ,DirichletGroup,CuspForms,Gamma0,ModularSymbols,Newforms,trivial_character,is_squarefree,divisors,RealField,ComplexField,prime_range,I,join,gcd,Cusp,Infinity,ceil,CyclotomicField,exp,pi,primes_first_n,euler_phi,RR,prime_divisors
-from sage.all import Parent,SageObject,dimension_new_cusp_forms,vector,dimension_modular_forms,EisensteinForms,Matrix,floor,denominator,latex,is_prime,prime_pi,next_prime,primes_first_n,previous_prime
+from sage.all import Parent,SageObject,dimension_new_cusp_forms,vector,dimension_modular_forms,dimension_cusp_forms,EisensteinForms,Matrix,floor,denominator,latex,is_prime,prime_pi,next_prime,primes_first_n,previous_prime
 from plot_dom import draw_fundamental_domain
 from cmf_core import html_table,len_as_printed
 #from sage.monoids.all import AlphabeticStrings
@@ -42,12 +42,17 @@ class WebModFormSpace(Parent):
  
 
     """
-    def __init__(self,k,N=1,chi=0,prec=10,bitprec=53,data=None,compute=None,use_db=True,verbose=0):
+    def __init__(self,k,N=1,chi=0,cuspidal=1,prec=10,bitprec=53,data=None,compute=None,use_db=True,verbose=0):
         r"""
         Init self.
-        INPUT:
         
+        INPUT:
+        - 'k' -- weight
+        - 'N' -- level
+        - 'chi' -- character
+        - 'cuspidal' -- 1 if space of cuspforms, 0 if all modforms 
         """
+        self._cuspidal=1
         #print "k=",k
         self._k = ZZ(k)
         self._N = ZZ(N)
@@ -125,6 +130,12 @@ class WebModFormSpace(Parent):
             except RuntimeError:
             
                 raise RuntimeError, "Could not construct space for (k=%s,N=%s,chi=%s)=" % (k,N,self._chi)
+        ### If we can we set these dimensions using formulas
+        self._dimension_newspace = None
+        self._dimension_cusp_forms = None
+        self._dimension_modular_forms = None
+        self._dimension_new_cusp_forms = None
+        
         self._verbose=0
         if(self.dimension()==self.dimension_newspace()):
             self._is_new=True
@@ -255,14 +266,60 @@ class WebModFormSpace(Parent):
         return self._galois_orbits_labels[j]
 
     # return specific properties of self
-    def dimension_newspace(self):
-        return self._newspace.dimension()
 
-    def dimension_cuspforms(self):
-        return self._modular_symbols.cuspidal_submodule().dimension()
+    ## By old and newforms we check if self is cuspidal or not
+    def dimension_newspace(self):
+        if self._dimension_newspace==None:
+            if self._cuspidal==1:
+                self._dimension_newspace= self.dimension_new_cusp_forms()
+            else:
+                #
+                self._dimension_newspace=self._newspace.dimension()
+        return self._dimension_newspace
+
+    def dimension_oldspace(self):
+        if self._dimension_newspace==None:
+            self._dimension_newspace=self.dimension_newspace()
+        return self.dimension_modular_forms()-self._dimension_newspace
+
+    def dimension_cusp_forms(self):
+        if self._dimension_cusp_forms==None:
+            if self._chi<>0:
+                self._dimension_cusp_forms=dimension_cusp_forms(self._character,self._k)
+            else:
+                self._dimension_cusp_forms=dimension_cusp_forms(self._N,self._k)
+            #self._modular_symbols.cuspidal_submodule().dimension()
+        return self._dimension_cusp_forms
+
+    def dimension_modular_forms(self):
+        if self._dimension_modular_forms==None:
+            if self._chi<>0:
+                self._dimension_modular_forms=dimension_modular_forms(self._character,self._k)
+            else:
+                self._dimension_modular_forms=dimension_modular_forms(self._N,self._k)
+            #self._dimension_modular_forms=self._modular_symbols.dimension()
+        return self._dimension_modular_forms
+
+
+    def dimension_new_cusp_forms(self):
+        if self._dimension_new_cusp_forms==None:
+            if self._chi<>0:
+                self._dimension_new_cusp_forms=dimension_new_cusp_forms(self._character,self._k)
+            else:
+                self._dimension_new_cusp_forms=dimension_new_cusp_forms(self._N,self._k) 
+            #self._dimension_new_cusp_forms=self._newspace.cuspidal_submodule().dimension()
+        return self._dimension_new_cusp_forms
 
     def dimension(self):
-        return self._modular_symbols.dimension()
+        r"""
+        By default return old and newspace together
+        """
+        if self._cuspidal==1:
+            return self.dimension_cusp_forms()
+        elif self._cuspidal==0:
+            return self.dimension_modular_forms()
+        else:
+            raise ValueError,"Do not know the dimension of space of type {0}".format(self._cuspidal)
 
     def weight(self):
         return self._k
@@ -571,30 +628,41 @@ class WebNewForm(SageObject):
         self._coefficients = dict() # list of Fourier coefficients (should not be long)
         self._atkin_lehner_eigenvalues={}
         # print "DATA=",data
-        print "DATA=",data
+        if self._verbose>0:
+            print "DATA=",data
         if isinstance(data,dict) and len(data.keys())>0:
             self._from_dict(data)
         else:
             self._from_dict({})
-        print "self.f=",self._f
+        if self._verbose>0:
+            print "self.f=",self._f
         if self._parent==None:
-            print "compute parent!"
+            if self._verbose>0:
+                print "compute parent!"
+                print "label=",label
+                print "fi=",fi
             if label<>'':
                 self._parent=WebModFormSpace(k,N,chi,compute=label)
-            else:
+            elif fi>0:
                 self._parent=WebModFormSpace(k,N,chi,compute=fi)
-            print "finished computing parent"
+            else:
+                self._parent=WebModFormSpace(k,N,chi,compute='all')
+            if self._verbose>0:
+                print "finished computing parent"
             j = self._get_index_of_self_in_parent()
-            print "j=",j
+            if self._verbose>0:
+                print "j=",j
             if len(self._parent._newforms) and j>=0:
                 new_data=self._parent.f(j)._to_dict()
                 self._from_dict(new_data)
             else:
                 return None
-        print "parent=",self._parent
+        if self._verbose>0:
+            print "parent=",self._parent
         j = self._get_index_of_self_in_parent()
-        print "j=",j
-        print "newforms=",self._parent._newforms
+        if self._verbose>0:
+            print "j=",j
+            print "newforms=",self._parent._newforms
         if self._f == None:
             if j < len(self._parent._newforms) and j>=0:
                 self._f=self._parent._newforms[j]
@@ -603,7 +671,7 @@ class WebNewForm(SageObject):
                 return 
 
 
-        self._name = str(self._N)+str(self._label) +" (weight %s)" % k
+        self._name = str(self._N)+"."+str(self._k)+str(self._label) +" (weight %s)" % k
         if self._f == None:
             if(self._verbose>=0):
                 raise IndexError,"Requested function does not exist!"
@@ -1182,7 +1250,7 @@ class WebNewForm(SageObject):
             raise NotImplementedError,"Only implemented for SL(2,Z). Need more generators in general."
         if(self._as_polynomial_in_E4_and_E6<>None and self._as_polynomial_in_E4_and_E6<>''):
             return self._as_polynomial_in_E4_and_E6
-        d=self._parent.dimension() # dimension of space of modular forms
+        d=self._parent.dimension_modforms() # dimension of space of modular forms
         k=self.weight()
         K=self.base_ring()
         l=list()
@@ -1216,8 +1284,9 @@ class WebNewForm(SageObject):
         if (col<>d):
             raise ArithmeticError,"bug dimension"
         #return [m,v]
-        print "m=",m,type(m)
-        print "v=",v,type(v)
+        if self._verbose>0:
+            print "m=",m,type(m)
+            print "v=",v,type(v)
         try:
             X=m.solve_right(v)
         except:
@@ -1294,7 +1363,7 @@ class WebNewForm(SageObject):
                 s=s+e6+"^{"+str(d6)+"}"
             if(d4>0):
                 s=s+e4+"^{"+str(d4)+"}"
-        s=s+"\right)"
+        s=s+"\\right)"
         return "\("+s+"\)"
     
     def cm_values(self,digits=12):
