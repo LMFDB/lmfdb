@@ -33,27 +33,56 @@ def cached(timeout=15 * 60, key='cache::%s::%s'):
 class LmfdbFormatter(logging.Formatter):
   """
   This Formatter adds some colors, in the future it might do even more ;)
+
+  TODO: the _hl highlighting condition could be a function 
+        evaluating to true or false
   """
+  fmtString = '%(levelname)s:%(name)s@%(asctime)s: %(message)s [%(pathname)s]'
+
   def __init__(self, *args, **kwargs):
-    logging.Formatter.__init__(self, *args, **kwargs)
+    self._hl = kwargs.pop('hl', None)
+    self._fmt_orig  = kwargs.pop('fmt', None)
+    logging.Formatter.__init__(self, self._fmt_orig, *args, **kwargs)
+
   def format(self, record):
+    """modify the _mft string, call superclasses format method"""
+    # reset fmt string
+    self._fmt = self._fmt_orig or LmfdbFormatter.fmtString
+    fn = os.path.split(record.pathname)[-1]
+    record.pathname = "%s:%s" % (fn, record.lineno)
+
+    # some colors for severity level
     if record.levelno >= logging.CRITICAL:
-      record.levelname = '\033[91m%s\033[0m' % record.levelname
+      self._fmt = '\033[91m' + self._fmt
     elif record.levelno >= logging.WARNING:
-      record.levelname = '\033[93m%s\033[0m' % record.levelname
+      self._fmt = '\033[93m' + self._fmt
     elif record.levelno <= logging.DEBUG:
-      record.levelname = '\033[94m%s\033[0m' % record.levelname
+      self._fmt = '\033[94m' + self._fmt
     elif record.levelno <= logging.INFO:
-      record.levelname = '\033[92m%s\033[0m' % record.levelname
+      self._fmt = '\033[92m' + self._fmt
+
+    # bold, if module name matches
+    if record.name == self._hl:
+      self._fmt = "\033[1m" + self._fmt
+
+    # reset, to unaffect the next line
+    self._fmt += '\033[0m'
+
     return logging.Formatter.format(self, record)
 
-def make_logger(blueprint):
+def make_logger(blueprint = None, name=None, hl = False):
+  """
+  creates a logger for the given blueprint. if hl is set
+  to true, the corresponding lines will be bold.
+  """
   import flask
-  assert type(blueprint) == flask.Blueprint
-  l = logging.getLogger(blueprint.name)
+  if type(blueprint) == flask.Blueprint:
+    name = blueprint.name
+  assert name != None
+  l = logging.getLogger(name)
   l.propagate = False
   l.setLevel(logging.DEBUG)
-  formatter = LmfdbFormatter('%(levelname)s:%(name)s@%(asctime)s: %(message)s')
+  formatter = LmfdbFormatter(hl=name if hl else None)
   ch = logging.StreamHandler()
   ch.setFormatter(formatter)
   l.addHandler(ch)

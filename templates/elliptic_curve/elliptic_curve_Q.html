@@ -2,11 +2,7 @@
 
 {% block content %}
 
-
-
-<div id = "content">
 <h2> Browse </h2>
-
 
 <p>
 By conductor : 
@@ -39,25 +35,21 @@ By size of torsion subgroup:
 <h2> Search </h2>
 
 <form>
-<table>
-<tr>
-<td>Conductor</td><td> <input type='text' name='conductor'></td><td><span class="formexample"> e.g. 389 </span></td>
-</tr>
-<tr>
-<td>Torsion Order</td><td> <input type='text' name='torsion'></td><td><span class="formexample"> e.g. 2 </span></td>
-</tr>
-<tr>
-<td>Rank </td><td><input type='text' name='rank'></td><td><span class="formexample"> e.g. 0 </span></td>
-</tr>
-<tr>
-<td>Optimal </td><td><input type='checkbox' name='optimal'></td>
-</tr>
-</table>
+  <table>
+    <tr>
+      <td>Conductor</td><td> <input type='text' name='conductor'></td><td><span class="formexample"> e.g. 389 </span></td>
+    </tr>
+    <tr>
+      <td>Torsion Order</td><td> <input type='text' name='torsion'></td><td><span class="formexample"> e.g. 2 </span></td>
+    </tr>
+    <tr>
+      <td>Rank </td><td><input type='text' name='rank'></td><td><span class="formexample"> e.g. 0 </span></td>
+    </tr>
+    <tr>
+      <td>Optimal </td><td><input type='checkbox' name='optimal'></td>
+    </tr>
+  </table>
 <td><button type='submit' value='Search'>Search</td>
 
 </form>
-
-
-</div>
-
 {% endblock %}

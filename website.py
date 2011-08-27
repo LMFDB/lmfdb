@@ -206,7 +206,8 @@ def main():
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.INFO)
     root_logger.name = "LMFDB"
-    formatter = logging.Formatter('%(levelname)s:%(name)s@%(asctime)s: %(message)s')
+    import utils
+    formatter = logging.Formatter(utils.LmfdbFormatter.fmtString.split(r'[')[0])
     ch = logging.StreamHandler()
     ch.setFormatter(formatter)
     root_logger.addHandler(ch)

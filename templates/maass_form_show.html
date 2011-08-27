@@ -1,17 +1,10 @@
-{% extends 'base.html' %}
-{% include 'sidebar.html' %}
+{% extends 'homepage.html' %}
 
 {% block title %}Maass Form Page{% endblock %}
 
-{% block body %}
+{% block content %}
 
-<div id = "header">
-<h1>{{ info.info1 }}</h1>
-</div>
-
-<div id = "content">
 <p><a href="{{ info.back }}">Back to main page</a></p>
-
 
 <style type="text/css">
 table.maass_coff td {
@@ -47,7 +40,5 @@ table.maass_coff td.id {
 {% endif %}
 {% endfor %}
 </div>
-
-{% include 'footer.html' %}
 
 {% endblock %}

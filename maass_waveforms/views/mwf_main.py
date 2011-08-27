@@ -28,7 +28,7 @@ from sage.all import is_odd,is_even
 
 mwf = flask.Blueprint('mwf', __name__, template_folder="templates",static_folder="static")
 import utils
-mwf_logger = utils.make_logger(mwf)
+mwf_logger = utils.make_logger(mwf, True)
 
 from mwf_utils import *
 from mwf_upload_data import *

@@ -1,22 +1,40 @@
 /* this file contains global javascript code for all parts of the lmfdb website
    it's just one file for faster page loading */
 
+/* only show main content after processing all the latex */
+$(function() {
+  MathJax.Hub.Queue(function() {
+    $("#content").show();
+    $("#mathjax-info").hide();
+  });
+}); 
+
 /* code for the properties sidepanel on the right */
 /** collapser: first, store current width (probably more than min-width!),
  * then do the animation. */
 function properties_collapser(evt) {
   evt.preventDefault();
-  $pb = $("#properties-body");
-  $pc = $("#properties-collapser");
-  $pc.html("&nbsp;");
-  $pb.animate({height: "toggle", "width":  "toggle"}, "slow", "swing",
-      function () {
+  var $pb = $("#properties-body");
+  var pb_h = $pb.width();
+  var $pc = $("#properties-collapser");
+  $pb.animate({height: "toggle", "width":  "toggle"}, 
+    { duration: 2.5 * $pb.height(),
+      step: function(now) { 
+       var rot = 180 - 180 * (now/pb_h);
+       $pc.css("-webkit-transform", "rotate("+rot+"deg)" );
+       $pc.css("-moz-transform", "rotate("+rot+"deg)" );
+       $pc.css("-o-transform", "rotate("+rot+"deg)" );
+      },
+      complete: function () {
         if ($pb.css("display") == "none") {
-          $pc.html("&darr;");
+          $pc.css("-webkit-transform", "rotate(180deg)" );
+          //$pc.html("&darr;");
         } else { 
-          $pc.html("&uarr;");
+          $pc.css("-webkit-transform", "rotate(0deg)" );
+          //$pc.html("&uarr;");
         }
       }
+    }
   );
 }
 

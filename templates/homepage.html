@@ -94,6 +94,11 @@
 
 
 <div id="main">
+  <div id="mathjax-info">
+    <img src="{{ url_for('static', filename='images/progress-green.gif') }}" />
+    <br/>
+    Loading website and processing LaTeX ...
+  </div>
   <div id="content">
     {% with msgs = get_flashed_messages(with_categories=true) -%}
       <div id="flashes">
@@ -102,7 +107,7 @@
         {%- endfor %}
       </div>
     {%- endwith %}
-
+    
     {% block content -%}
     There is nothing here. This is just a template.
     {%- endblock content %}
