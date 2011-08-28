@@ -24,8 +24,6 @@ import re
 
 import pymongo 
 from utils import pol_to_html 
-#dburl = 'localhost:27017'
-dburl = 'localhost:37010'
 db_name = 'modularforms'
 import gridfs
 from pymongo.helpers import bson     
@@ -162,9 +160,10 @@ class WebModFormSpace(Parent):
         self._from_db=0
         if use_db:
             try: 
-                C = pymongo.Connection(dburl)
+                import base
+                C = base.getDBConnection()
             except:
-                raise ValueError,"Check that a mongodb is running at %s !" % dburl
+                raise ValueError,"Check that a mongodb is running or you are connected via ssh!"
             files = C[db_name][get_what].files
             if chi==0:
                 key = {'k':int(k),'N':int(N)}

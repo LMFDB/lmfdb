@@ -9,8 +9,8 @@ By convention a 'core function' starting with get_  returns a string.
 
 from sage.all import ZZ,Newform,is_squarefree,squarefree_part,factor,is_square,divisors,DirichletGroup,QQ,xgcd,prime_factors,Gamma0,html,I,ceil,ComplexField,RealField,dimension_cusp_forms,sturm_bound,latex,join
 import re
-import logging
 
+from classical_modular_forms import cmf_logger as logger
 
 ####
 #### Core functions for spaces of cuspforms
@@ -183,8 +183,8 @@ def get_new_and_oldspace_decomposition(k,N,xi=0):
             continue
         S=ModularSymbols(ZZ(N/d),k,sign=1).cuspidal_submodule().new_submodule(); Sd=S.dimension()
         if(Sd==0):
-          logging.info("%s, %s" % (O,Od))
-          logging.info("%s, %s" % (S,Sd))
+          logger.info("%s, %s" % (O,Od))
+          logger.info("%s, %s" % (S,Sd))
         mult=len(divisors(ZZ(d)))
         check_dim=check_dim+mult*Sd
         L.append((ZZ(N/d),mult,Sd))
@@ -418,7 +418,7 @@ def get_fourier_coefficients_of_newform_embeddings(k,N=1,xi=0,fi=0,prec=10):
             row.append(coeffs[n][i])
         tbl['data'].append(row)
     #
-    #logging.debug(tbl)
+    #logger.debug(tbl)
     s=html_table(tbl)
     return s
 
@@ -503,7 +503,7 @@ def get_values_at_CM_points(k,N=1,chi=0,fi=0,digits=12,verbose=0):
     CF=ComplexField(bits)
     RF=ComplexField(bits)
     eps=RF(10**-(digits+1))
-    logging.debug("eps=" % eps)
+    logger.debug("eps=" % eps)
     K=f.base_ring()
     cm_vals=dict()
     # the points we want are i and rho. More can be added later...
@@ -519,10 +519,10 @@ def get_values_at_CM_points(k,N=1,chi=0,fi=0,digits=12,verbose=0):
             v1=CF(0); v2=CF(1)
             try:
                 for prec in range(minprec,maxprec,10):
-                    logging.debug("prec=%s" % prec)
+                    logger.debug("prec=%s" % prec)
                     v2=f.q_expansion(prec)(q)
                     err=abs(v2-v1)
-                    logging.debug("err=%s"%err)
+                    logger.debug("err=%s"%err)
                     if(err< eps):
                         raise StopIteration()
                     v1=v2
@@ -539,7 +539,7 @@ def get_values_at_CM_points(k,N=1,chi=0,fi=0,digits=12,verbose=0):
                 v2[h]=0
             try:
                 for prec in range(minprec,maxprec,10):
-                    logging.debug("prec=%s"%prec)
+                    logger.debug("prec=%s"%prec)
                     for h in range(K.degree()):
                         fexp[h]=list()
                         v2[h]=0
@@ -548,9 +548,9 @@ def get_values_at_CM_points(k,N=1,chi=0,fi=0,digits=12,verbose=0):
                             cc=c.complex_embeddings(CF.prec())[h]
                             v2[h]=v2[h]+cc*q**n
                         err[h]=abs(v2[h]-v1[h])
-                        logging.debug("v1[%s]=%s"% (h,v1[h]))
-                        logging.debug("v2[%s]=%s"% (h,v2[h]))
-                        logging.debug("err[%s]=%s"% (h,err[h]))
+                        logger.debug("v1[%s]=%s"% (h,v1[h]))
+                        logger.debug("v2[%s]=%s"% (h,v2[h]))
+                        logger.debug("err[%s]=%s"% (h,err[h]))
                         if(max(err.values()) < eps):             
                             raise StopIteration()
                         v1[h]=v2[h]
@@ -562,8 +562,8 @@ def get_values_at_CM_points(k,N=1,chi=0,fi=0,digits=12,verbose=0):
                 else:
                     cm_vals[tau][h]=""
 
-    logging.debug("vals=%s"%cm_vals)
-    logging.debug("errs=%s"%err)
+    logger.debug("vals=%s"%cm_vals)
+    logger.debug("errs=%s"%err)
     tbl=dict()
     tbl['corner_label']=['$\tau$']
     tbl['headersh']=['$\\rho=\zeta_{3}$','$i$']
@@ -653,7 +653,7 @@ def get_satake_parameters(k,N=1,chi=0,fi=0,prec=10,bits=53,angles=False):
         for j in ems.keys():
             tbl['headersv'].append(j)
             tbl['data'].append(ems[j])
-    #logging.debug(tbl)
+    #logger.debug(tbl)
     s=html_table(tbl)
     return s
 
@@ -742,7 +742,7 @@ def find_inverse_images_of_twists(k,N=1,chi=0,fi=0,prec=10,verbose=0):
     if(is_squarefree(ZZ(N))):
         return [True,f]
     # We need to check all square factors of N
-    logging.info("investigating: %s" % f)
+    logger.info("investigating: %s" % f)
     N_sqfree=squarefree_part(ZZ(N))
     Nsq=ZZ(N/N_sqfree)
     twist_candidates=list()
@@ -758,13 +758,13 @@ def find_inverse_images_of_twists(k,N=1,chi=0,fi=0,prec=10,verbose=0):
         # check possible candidates to twist into f
         # g in S_k(M,chi) wit M=N/d^2
         M=ZZ(N/d**2)
-        logging.info("Checking level %s"%M)
+        logger.info("Checking level %s"%M)
         for xig in range(euler_phi(M)):
             (t,glist) = _get_newform(k,M,xig)
             if(not t):
                 return glist
             for g in glist:
-                logging.debug("Comparing to function %s" %g)
+                logger.debug("Comparing to function %s" %g)
                 KG=g.base_ring()
                 # we now see if twisting of g by xi in D gives us f
                 for xi in D:
@@ -816,7 +816,7 @@ def find_inverse_images_of_twists(k,N=1,chi=0,fi=0,prec=10,verbose=0):
                     except StopIteration:
                         # they are not equal
                         pass
-    #logging.debug("Candidates=%s" % twist_candidates)
+    #logger.debug("Candidates=%s" % twist_candidates)
     if(len(twist_candidates)==0):
         return (True,None)
     else:
@@ -940,11 +940,11 @@ def html_table(tbl):
     nrows=len(tbl["headersv"])
     data=tbl['data']
     if(len(data)<>nrows):
-        logging.error("wrong number of rows!")
+        logger.error("wrong number of rows!")
     for i in range(nrows):
-        logging.info("len(%s)=%s" % (i,len(data[i])))
+        logger.info("len(%s)=%s" % (i,len(data[i])))
         if(len(data[i])<>ncols):
-            logging.error("wrong number of cols [=%s]!" % ncols)
+            logger.error("wrong number of cols [=%s]!" % ncols)
 
     if(tbl.has_key('atts')):
         s="<table "+str(tbl['atts'])+">\n"
@@ -998,7 +998,7 @@ def html_table(tbl):
     s=s+row
     for r in range(nrows):
         l = len_as_printed(str(tbl["headersv"][r]))*10
-        logging.info("l=%s  head=%s" % (l,tbl["headersv"]))
+        logger.info("l=%s  head=%s" % (l,tbl["headersv"]))
         row="<tr><td width=\"%s\">" %l
         row+=sheaderv+str(tbl['headersv'][r])+"</td>"
         for k in range(ncols):
@@ -1045,7 +1045,7 @@ def len_as_printed(s,format='latex'):
     lensub=0.75
     ## remove all html first since it is not displayed
     ss = re.sub("<[^>]*>","",s)
-    logging.debug("ss=%s" % ss)
+    logger.debug("ss=%s" % ss)
     ss = re.sub(" ","",ss)    # remove white-space
     ss = re.sub("\*","",ss)    # remove *
     num_exp = s.count("^")    # count number of exponents
@@ -1055,7 +1055,7 @@ def len_as_printed(s,format='latex'):
     subs = re.findall("_{?(\d*)",s) # a list of all  subscripts
     ssubs = "".join(subs)
     ss = re.sub("\^{?(\d*)}?","",ss)  # remove exponenents
-    logging.debug(join([ss,ssubs,sexps]))
+    logger.debug(join([ss,ssubs,sexps]))
     tot_len=(ss.count(")")+ss.count("("))*lenpar
     tot_len+=ss.count("q")*lenq
     tot_len+=len(re.findall("\d",s))*lendig

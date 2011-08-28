@@ -1,8 +1,15 @@
 from base import app
-import backend
+from utils import make_logger
+import flask 
+
+CMF="cmf"
+cmf = flask.Blueprint(CMF, __name__, template_folder="views/templates",static_folder="views/static")
+
+cmf_logger = make_logger(cmf)
+
 import views
+import backend
 from backend import *
 
-#app.register_module(views.cmf_main.cmf, url_prefix="/ModularForm/GL2/Q/holomorphic")
-app.register_blueprint(views.cmf_main.cmf, url_prefix="/ModularForm/GL2/Q/holomorphic")
-
+# registering the blueprint must come *after* defining all the url mappings in views!
+app.register_blueprint(cmf, url_prefix="/ModularForm/GL2/Q/holomorphic")

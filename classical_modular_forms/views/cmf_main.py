@@ -11,9 +11,8 @@ from classical_modular_forms.backend.cmf_core import * #html_table
 from classical_modular_forms.backend.plot_dom import * #html_table
 from cmf_utils import *
 
-CMF="cmf"
-cmf = flask.Blueprint(CMF, __name__, template_folder="templates",static_folder="static")
-cmf_logger = make_logger(cmf)
+from classical_modular_forms import CMF, cmf_logger, cmf
+logger = cmf_logger
 
 @cmf.context_processor
 def body_class():
@@ -30,7 +29,7 @@ k_max_db = 300000
 _verbose = 0
 
 #from jinja2 import Environment
-cmf_logger.info("EN_V path: %s" % app.jinja_loader.searchpath)
+cmf_logger.debug("EN_V path: %s" % app.jinja_loader.searchpath)
 l=app.jinja_env.list_templates()
 #################
 # Top level
@@ -177,7 +176,7 @@ def render_one_classical_modular_form_wp(info):
     sbar=(properties,parents,friends,siblings,lifts)
     (info,sbar)=set_info_for_one_modular_form(info,sbar)
 
-    print "INFO111=",info
+    logger.debug("INFO111: %s" % info)
 
 
     err = info.get('error','')
@@ -282,9 +281,9 @@ def browse_classical_modular_forms(**info):
     r"""
     Renders the webpage for browsing modular forms of given level and/or weight.
     """
-    print "BROWSE HERE!!!!!!!!!!!!!!"
+    cmf_logger.debug("BROWSE HERE!!!!!!!!!!!!!!")
     info   = to_dict(info)
-    print "info=",info
+    cmf_logger.debug("info: %s" % info)
     level  = _my_get(info,'level', '-1',int)
     weight = _my_get(info,'weight', '-1',int)
     label  = info.get('label', '')
@@ -299,15 +298,15 @@ def browse_classical_modular_forms(**info):
         info['list_chars']='0'
     else:
         info['list_chars']='1'
-    print "level=",level
-    print "wt=",weight    
+    cmf_logger.info("level=%s"%level)
+    cmf_logger.info("wt=%s"%weight) 
     if level:
         info['geometric'] = print_geometric_data_Gamma0N(level)
         #if info.has_key('plot'):
         grp=MyNewGrp(level,info)
         plot=grp.plot
         info['fd_plot']= image_src(grp)
-        print "PLOT:",info['fd_plot']
+        cmf_logger.info("PLOT: %s" % info['fd_plot'])
     if level and not weight:
         #print "here1!"
         title = "Holomorphic Cusp Forms of level %s " % level
@@ -331,7 +330,7 @@ def browse_classical_modular_forms(**info):
 	bread =[('Modular Forms',url_for('.render_classical_modular_forms'))]
         info['browse_type']=" of weight %s " % weight
         return render_template("cmf_browse.html", info=info,title=title,bread=bread)
-    print "here2!"
+    cmf_logger.debug("here2!")
     info['level_min']=level;info['level_max']=level
     info['weight_min']=weight;info['weight_max']=weight
     return render_classical_modular_form_space_list_chars(level,weight) 
