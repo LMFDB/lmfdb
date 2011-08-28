@@ -30,18 +30,18 @@ def not_found(error):
 
 @app.route("/")
 def index():
-    return render_template('index.html', title ="Template Title")
+    return render_template('index.html', title ="Index")
 
 def root_static_file(name):
-    @app.route("/%s" % name)
-    def robots():
+    def static_fn():
        import os
-       fn = os.path.join('.', "static",name)
+       fn = os.path.join('.', "static", name)
        if os.path.exists(fn):
          return open(fn).read()
        import logging
        logging.critical("root_static_file: file %s not found!" % fn)
        return ''
+    app.add_url_rule('/%s'%name, 'static_%s'%name, static_fn)
 map(root_static_file, [ 'robots.txt', 'favicon.ico' ])
 
 @app.route("/style.css")
