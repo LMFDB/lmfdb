@@ -24,10 +24,14 @@ body {
     /* max-width: 1200px; */
 }
 #mathjax-info {
+  position: absolute;
+  z-index: 99;
+  width: 600px;
+  height: 600%;
   padding-top: 150px;
   line-height: 20px;
   text-align: center;
-  font-size: x-small;
+  font-size: small;
   color: grey;
 }
 #content > h1

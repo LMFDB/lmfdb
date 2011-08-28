@@ -46,14 +46,16 @@
       $("#zeroes").load("{{ info.zeroeslink|safe }}");
   });
 
-  $("#functionalEqSelberg").click(function() {
+  $("#functionalEqSelberg").click(function(e) {
+    e.preventDefault();
     $(this).addClass("highlight");
     $("#functionalEqAnalytic").removeClass("highlight");
     var math = MathJax.Hub.getAllJax("functionalEqText")[0];
     MathJax.Hub.Queue(["Text",math, "{{ info.functionalequationSelberg|safe }}"]);
   });
     
-  $("#functionalEqAnalytic").click(function() {
+  $("#functionalEqAnalytic").click(function(e) {
+    e.preventDefault();
     $(this).addClass("highlight");
     $("#functionalEqSelberg").removeClass("highlight");
     var math = MathJax.Hub.getAllJax("functionalEqText")[0];

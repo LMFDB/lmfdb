@@ -1,14 +1,33 @@
 /* this file contains global javascript code for all parts of the lmfdb website
    it's just one file for faster page loading */
 
+/* global logger */
+function log(msg) {
+  if(console) { console.log(msg); }
+}
+
+function error(msg) {
+  if(console) { console.error(msg); }
+}
+
 /* only show main content after processing all the latex */
 $(function() {
   function show_content() {
-    $("#content").show();
+    $("#content").css("opacity", "1").show();
     $("#mathjax-info").hide();
   }
-  MathJax.Hub.Queue(function() {show_content()});
+  MathJax.Hub.Queue(function() {show_content()}); 
   $("#mathjax-info").click(function() {show_content()});
+
+  /* delay some secs and tell the user, that it is
+   * still loading and clicking removes the banner */
+  window.setTimeout(function() {
+    /* still waiting? */
+    if($("#content").css("display") == "none") {
+      $("#content").css("opacity", "0.2").show();
+      $("#mathjax-log").html("<strong>Still loading, click banner to hide it.</strong>");
+    }
+  }, 5000);
 
   /* 
   var $mjlog = $("#mathjax-log");
@@ -29,7 +48,9 @@ function properties_collapser(evt) {
   var $ph = $("#properties-header");
   var pb_w = $pb.width();
   $pb.animate({"height": "toggle", "width":  "toggle"}, 
-    { duration: 2 * $pb.height(),
+    { 
+      duration: 100 + 100 * Math.log($pb.height()),
+      /* synchronize icon rotation effect */
       step: function(now) { 
        var rot = 180 - 180 * (now/pb_w);
        $pc.css("-webkit-transform", "rotate("+rot+"deg)" );
@@ -49,25 +70,24 @@ function properties_collapser(evt) {
 
 
 $(function() {
+ /* properties box collapsable click handlers */
  $("#properties-header").click(function(evt) { properties_collapser(evt); });
  $("#properties-collapser").click(function(evt) { properties_collapser(evt); });
-});
-
-/* providing watermark examples in those forms, that have an 'example=...' attribute */
-$(function () {
-  $('input[example]').watermark($(this).attr('example'));
-  $('textarea[example]').watermark($(this).attr('example'), {useNative:false});
+ /* providing watermark examples in those forms, that have an 'example=...' attribute */
+ $('input[example]').watermark($(this).attr('example'));
+ $('textarea[example]').watermark($(this).attr('example'), {useNative:false});
 });
 
 /* javascript code for the knowledge db features */
-// global counter, used to uniquely identify each help-output element
-// that's necessary because the same knowl could be referenced several times
-// on the same page
+/* global counter, used to uniquely identify each help-output element
+ * that's necessary because the same knowl could be referenced several times
+ * on the same page */
 var knowl_id_counter = 0;
+/* site wide cache, TODO html5 local storage to cover whole domain
+ * /w a freshness timeout of about 10 minutes */
+var knowl_cache = {};
  
-function knowl_click_handler($el, evnt) {
-  evnt.preventDefault();
-  
+function knowl_click_handler($el) {
   // the knowl attribute holds the id of the knowl
   var knowl_id = $el.attr("knowl");
   // the uid is necessary if we want to reference the same content several times
@@ -80,52 +100,66 @@ function knowl_click_handler($el, evnt) {
     $output_id.slideToggle("fast");
     $el.toggleClass("active");
 
-  // otherwise download it
+  // otherwise download it or get it from the cache
   } else { 
     $el.addClass("active");
     // create the element for the content, insert it after the one where the 
     // knowl element is included (e.g. inside a <h1> tag) (sibling in DOM)
-    var idtag = "id='"+output_id.substring(1) + "'";
-    $el.parent().after("<div class='knowl-output loading'" +idtag+ ">loading '"+knowl_id+"' …</div>");
+     var idtag = "id='"+output_id.substring(1) + "'";
+    $el.parent().after("<div class='knowl-output'" +idtag+ ">loading '"+knowl_id+"' …</div>");
  
     // "select" where the output is and get a hold of it 
     var $output = $(output_id);
-    $output.show();
- 
-    $output.load('/knowledge/render/' + knowl_id, function(response, status, xhr) { 
-      $output.removeClass("loading");
-      if (status == "error") {
-        $el.removeClass("active");
-        $output.html("<div class='knowl-output error'>ERROR: " + xhr.status + " " + xhr.statusText + '</div>');
-      } else if (status == "timeout") {
-        $el.removeClass("active");
-        $output.html("<div class='knowl-output error'>ERROR: timeout. " + xhr.status + " " + xhr.statusText + '</div>');
-      } else {
-        $output.hide();
-        MathJax.Hub.Queue(['Typeset', MathJax.Hub, output_id.substring(1)]);
-        // inside the inserted knowl might be more references: process them, attach the handler!
-        $output.find("*[knowl]").each(function() {
-           var $knowl = $(this);
-           $knowl.attr("knowl-uid", knowl_id_counter);
-           knowl_id_counter++;
-           $knowl.click(function(evnt) { knowl_click_handler($knowl, evnt) });
-        });
-      }
-      // in any case, reveal the new output after mathjax has finished
+
+    // cached?
+    if(knowl_id in knowl_cache) {
+      log("cache hit: " + knowl_id);
+      $output.hide();
+      $output.html(knowl_cache[knowl_id]);
+      MathJax.Hub.Queue(['Typeset', MathJax.Hub, $output.get(0)]);
       MathJax.Hub.Queue([ function() { $output.slideDown("slow"); }]);
-    });
+
+    } else {
+      $output.addClass("loading");
+      $output.show();
+      log("downloading knowl: " + knowl_id);
+      $output.load('/knowledge/render/' + knowl_id, function(response, status, xhr) { 
+        $output.removeClass("loading");
+        if (status == "error") {
+          $el.removeClass("active");
+          $output.html("<div class='knowl-output error'>ERROR: " + xhr.status + " " + xhr.statusText + '</div>');
+        } else if (status == "timeout") {
+          $el.removeClass("active");
+          $output.html("<div class='knowl-output error'>ERROR: timeout. " + xhr.status + " " + xhr.statusText + '</div>');
+        } else {
+          knowl_cache[knowl_id] = $output.html();
+          $output.hide();
+        }
+        // in any case, reveal the new output after mathjax has finished
+        MathJax.Hub.Queue(['Typeset', MathJax.Hub, $output.get(0)]);
+        MathJax.Hub.Queue([ function() { $output.slideDown("slow"); }]);
+      });
+    } /* ~~ end not cached */
   }
 } //~~ end click handler for *[knowl] elements
 
-/** for each one register a click handler that does the 
- *  download/show/hide magic. also register a unique ID to 
- *  avoid wrong behaviour if the same reference is used several times. */
+/** register a click handler for each element with the knowl attribute 
+ * @see jquery's doc about 'live'! the handler function does the 
+ *  download/show/hide magic. also add a unique ID, 
+ *  necessary when the same reference is used several times. */
 $(function() {
-  $("*[knowl]").each(function() { 
-    $(this).attr("knowl-uid", knowl_id_counter);
-    knowl_id_counter++;
+  $("*[knowl]").live({
+    click: function(evt) {
+      evt.preventDefault();
+      var $knowl = $(this);
+      if(!$knowl.attr("knowl-uid")) {
+        log("knowl-uid = " + knowl_id_counter);
+        $knowl.attr("knowl-uid", knowl_id_counter);
+        knowl_id_counter++;
+      }
+      knowl_click_handler($knowl, evt);
+    }
   });
-  $("*[knowl]").click(function(evt) {knowl_click_handler($(this), evt)});
 });
 
 //~~ end knowl js section
