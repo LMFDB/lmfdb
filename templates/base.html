@@ -3,17 +3,13 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
-<title>
-LMFDB{% if title %}: {{ title }}{% endif %}
-</title>
+<title>LMFDB{% if title %}: {{ title }}{% endif %}</title>
+<link href="{{ url_for('css') }}" rel="stylesheet" type="text/css" /> 
 
 <script type="text/javascript" src="{{ url_for('static', filename='jquery.min.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='jquery.watermark.min.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='lmfdb.js') }}"></script>
-{#  markdown disabled
-    <script type="text/javascript" src="{{ url_for('static', filename='showdown.min.js') }}"></script> #}
-{# <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet" type="text/css" /> #}
-<link href="{{ url_for('css') }}" rel="stylesheet" type="text/css" /> 
+<script type="text/javascript" src="{{ url_for('static', filename='showdown.min.js') }}"></script>
 
 <script type="text/x-mathjax-config">
 MathJax.Hub.Config({
@@ -27,11 +23,10 @@ MathJax.Hub.Config({
   menuSettings: { zoom: "Hover", zscale: "150%" }
 });
 </script>
-<!-- <script type="text/javascript" src="{{ url_for('static', filename='MathJax/MathJax.js',config='default') }}"></script> -->
-<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"></script>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+{# append this: ?config=default if the script complains about a missing config #}
 
-
-{# the defs for the knowls, needs to be after mathjax, before analytics #}
+{# the defs for the knowls, need to be after mathjax, before analytics #}
 {% include "knowl-defs.html" %}
 {% from "knowl-defs.html" import KNOWL with context %}
 
@@ -46,7 +41,7 @@ _gaq.push(['_trackPageLoadTime']);
  var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
  ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
  var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
- })();
+})();
 </script>
 </head>
 

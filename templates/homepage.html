@@ -98,6 +98,8 @@
     <img src="{{ url_for('static', filename='images/progress-green.gif') }}" />
     <br/>
     Loading website and processing LaTeX ...
+    <br>
+    <span id="mathjax-log"></span>
   </div>
   <div id="content">
     {% with msgs = get_flashed_messages(with_categories=true) -%}

@@ -304,7 +304,7 @@ def initLfunction(L,args, request):
     info['eulerproduct'] = L.lfuncEPtex("abstract")
     info['functionalequation'] = L.lfuncFEtex("analytic")
     info['functionalequationAnalytic'] = L.lfuncFEtex("analytic").replace('\\','\\\\').replace('\n','')
-    info['functionalequationSelberg'] = L.lfuncFEtex("selberg").replace('\\','\\\\')
+    info['functionalequationSelberg'] = L.lfuncFEtex("selberg").replace('\\','\\\\').replace('\n','')
 
     
 #LfunctionPageProcessing.setPageLinks(info, L, args)

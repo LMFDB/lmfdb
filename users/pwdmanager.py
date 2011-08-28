@@ -7,11 +7,12 @@
 
 __all__ = [ 'LmfdbUser', 'user_exists' ]
 
-# never ever change the fixed_salt!
+# NEVER EVER change the fixed_salt!
 fixed_salt = '=tU\xfcn|\xab\x0b!\x08\xe3\x1d\xd8\xe8d\xb9\xcc\xc3fM\xe9O\xfb\x02\x9e\x00\x05`\xbb\xb9\xa7\x98'
 
 import os
 import base
+from main import logger
 
 def get_users():
   import base
@@ -53,78 +54,74 @@ class LmfdbUser(UserMixin):
   """
   The User Object
 
-  It is backed by MongoDB and all modifications are done
-  immideately via upserts.
+  It is backed by MongoDB.
   """
-  properties = ('full_name', 'email', 'url', 'about')
+  properties = ('full_name', 'email', 'url', 'about', 'created')
 
-  def __init__(self, name, password):
-    if not name or not isinstance(name, basestring):
+  def __init__(self, uid):
+    if not isinstance(uid, basestring):
       raise Exception("Username is not a basestring")
-    if not password or not isinstance(password, basestring):
-      raise Exception("Password is not a proper Hash (and not a basestring)")
 
-    self._name = name
-    self._password = password
-    self._email = None
     self._authenticated = False
-    self._full_name = None
-    self._url = None
-    self._about = None
+    self._dirty = False #flag if we have to save
+    self._data = dict([(_,None) for _ in LmfdbUser.properties])
+
+    u = get_users().find_one({'_id' : uid})
+    if u:
+      self._data.update(u)
 
   @property
   def name(self):
-    return self._full_name or self._name
+    return self.full_name or self._data['_id']
 
   @property
   def full_name(self):
-    return self._full_name
+    return self._data['full_name']
 
   @full_name.setter
   def full_name(self, full_name):
-    self._full_name = full_name
-    self._store_db("full_name", full_name)
+    self._data['full_name'] = full_name
+    self._dirty = True
 
   @property
   def email(self):
-    return self._email
+    return self._data['email']
 
   @email.setter
   def email(self, email):
     if not self._validate_email(email):
       raise Exception("Email <%s> is not valid!" % email)
-    self._email = email
-    self._store_db("email", email)
+    self._data['email'] = email
+    self._dirty = True
 
   @property
   def about(self):
-    return self._about
+    return self._data['about']
 
   @about.setter
   def about(self, about):
-    self._about = about
-    self._store_db("about", about)
+    self._data['about'] = about
+    self._dirty = True
 
   @property
   def url(self):
-    return self._url
+    return self._data['url']
 
   @url.setter
   def url(self, url):
-    self._url = url
-    self._store_db("url", url)
+    self._data['url'] = url
+    self._dirty = True
 
   @property
   def created(self):
-    dbe = self._my_entry()
-    return dbe['created']
+    return self._data['created']
 
-  def _my_entry(self):
-    return get_users().find_one({'_id' : self._name})  
+  #def _my_entry(self):
+  #  return get_users().find_one({'_id' : self._name})  
 
   @property
   def id(self):
-    return self._name
+    return self._data['_id']
   
   def is_authenticate(self):
     """required by flask-login user class"""
@@ -136,7 +133,7 @@ class LmfdbUser(UserMixin):
 
   def is_admin(self):
     """true, iff has attribute admin set to True"""
-    return self._my_entry().get("admin", False)
+    return self._data.get("admin", False)
 
   def authenticate(self, pwd):
     """
@@ -145,8 +142,11 @@ class LmfdbUser(UserMixin):
     """
     #from time import time
     #t1 = time()
+    if not 'password' in self._data: 
+      logger.warning("no password data in db for '%s'!" % self.id)
+      return False
     for i in range(rmin, rmax + 1):
-      if self._password == hashpwd(pwd, str(i)):
+      if self._data['password'] == hashpwd(pwd, str(i)):
         #log "AUTHENTICATED after %s!!" % (time() - t1)
         self._authenticated = True
         break
@@ -156,26 +156,13 @@ class LmfdbUser(UserMixin):
     """should do a regex match"""
     return True
 
-  def _store_db(self, key, value):
-    get_users().update({'_id' : self._name},
-                       {'$set' : { key : value }})
-  @staticmethod
-  def get(userid):
-    """
-    De-Serializes the MongoDB entry to a LmfdbUser object,
-    or returns None.
-    """
-    u = get_users().find_one({'_id' : userid})
-    if not u:
-      return None
-    user = LmfdbUser(userid, u['password'])
-    for key in LmfdbUser.properties:
-      if u.has_key(key): setattr(user, key, u[key])
-    return user
+  def save(self):
+    if not self._dirty: return
+    logger.debug("saving '%s': %s" % (self.id, self._data))
+    get_users().save(self._data)
 
 
-
-def new_user(name, pwd = None):
+def new_user(uid, pwd = None):
   """
   generates a new user, asks for the password interactively,
   and stores it in the DB.
@@ -187,21 +174,21 @@ def new_user(name, pwd = None):
     if pwd_input != pwd_input2:
       raise Exception("ERROR: Passwords do not match!")
     pwd = pwd_input
-  if get_users().find({'_id' : name}).count() > 0:
-    raise Exception("ERROR: User %s already exists" % name)
+  if get_users().find({'_id' : uid}).count() > 0:
+    raise Exception("ERROR: User %s already exists" % uid)
   password = hashpwd(pwd)
   from datetime import datetime
-  data = {'_id' : name, 'password' : password, 'created' : datetime.utcnow() }
+  data = {'_id' : uid, 'password' : password, 'created' : datetime.utcnow() }
   # set defaults to empty strings
   for key in LmfdbUser.properties:
     data.update({key: ""})
   get_users().save(data)
-  new_user = LmfdbUser(name, password)
+  new_user = LmfdbUser(uid)
   return new_user
 
   
-def user_exists(name):
-  return get_users().find({'_id' : name}).count() > 0
+def user_exists(uid):
+  return get_users().find({'_id' : uid}).count() > 0
 
 def get_user_list():
   """
@@ -211,7 +198,7 @@ def get_user_list():
   users_cursor = get_users().find(fields=["full_name"])
   ret = []
   for e in users_cursor:
-    name = e['full_name'] if e['full_name'] else e['_id']
+    name = e['full_name'] or e['_id']
     ret.append((e['_id'], name))
   return ret
 

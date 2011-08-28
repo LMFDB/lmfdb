@@ -10,20 +10,20 @@ from base import app, getDBConnection
 from flask import render_template, request, abort, Blueprint, url_for
 from flaskext.login import login_required, login_user, current_user, logout_user
 
-import pwdmanager
-from pwdmanager import LmfdbUser, LmfdbAnonymousUser
-
 login_page = Blueprint("users", __name__, template_folder='templates')
 import utils
-logging = utils.make_logger(login_page)
+logger = utils.make_logger(login_page)
 
 from flaskext.login import LoginManager
 login_manager = LoginManager()
 
+import pwdmanager
+from pwdmanager import LmfdbUser, LmfdbAnonymousUser
+
 @login_manager.user_loader
 def load_user(userid):
   from pwdmanager import LmfdbUser
-  return LmfdbUser.get(userid) 
+  return LmfdbUser(userid) 
 
 login_manager.login_view = "users.info"
 
@@ -47,7 +47,7 @@ def body_class():
 # http://flask.pocoo.org/docs/signals/
 #def log_login_callback(cur_app, user = None):
 #  cur_user = user or current_user 
-#  logging.info(">> curr_app: %s   user: %s" % (cur_app, cur_user))
+#  logger.info(">> curr_app: %s   user: %s" % (cur_app, cur_user))
 #
 #from flaskext.login import user_logged_in, user_login_confirmed
 #user_logged_in.connect(log_login_callback)
@@ -83,15 +83,16 @@ def info():
 @login_page.route("/info", methods = ['POST'])
 @login_required
 def set_info():
-  for f in LmfdbUser.properties:
-    setattr(current_user, f, request.form[f])
+  for k,v in request.form.iteritems():
+    setattr(current_user, k, v)
+  current_user.save()
   flask.flash("Thank you for updating your details!")
   return flask.redirect(url_for(".info"))
 
 @login_page.route("/profile/<userid>")
 @login_required
 def user_detail(userid):
-  user = LmfdbUser.get(userid)
+  user = LmfdbUser(userid)
   bread = base_bread() + [(user.name, url_for('.user_detail', userid=user.get_id()))]
   return render_template("user-detail.html", user=user, 
       title="%s" % user.name, bread= bread)
@@ -105,11 +106,11 @@ def login(**kwargs):
   password  = request.form["password"]
   next      = request.form["next"]
   remember  = True if request.form["remember"] == "on" else False
-  user      = LmfdbUser.get(name)
+  user      = LmfdbUser(name)
   if user and user.authenticate(password):
     login_user(user, remember=remember) 
     flask.flash("Hello %s, your login was successful!" % user.name)
-    logging.info("login: '%s' - '%s'" % (user.get_id(), user.name))
+    logger.info("login: '%s' - '%s'" % (user.get_id(), user.name))
     return flask.redirect(next or url_for(".info"))
   flask.flash("Oops! Wrong username or password.", "error")
   return flask.redirect(url_for(".info"))
@@ -151,7 +152,7 @@ def register():
     newuser.email       = email
     login_user(newuser, remember=True) 
     flask.flash("Hello %s! Congratulations, you are a new user!" % newuser.name)
-    logging.info("new user: '%s' - '%s'" % (newuser.get_id(), newuser.name))
+    logger.info("new user: '%s' - '%s'" % (newuser.get_id(), newuser.name))
     return flask.redirect(next or url_for(".info"))
 
   return render_template("register.html", title="Register", bread=bread, next=request.referrer)
@@ -171,7 +172,7 @@ def admin_required(fn):
   @wraps(fn)
   @login_required
   def decorated_view(*args, **kwargs):
-    logging.info("admin access attempt by %s" % current_user.get_id())
+    logger.info("admin access attempt by %s" % current_user.get_id())
     if not current_user.is_admin():
       return flask.abort(403) # 401 = access denied
     return fn(*args, **kwargs)

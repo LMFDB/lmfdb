@@ -28,6 +28,7 @@ body {
   line-height: 20px;
   text-align: center;
   font-size: x-small;
+  color: grey;
 }
 #content > h1
 {
@@ -515,7 +516,6 @@ div.literature {
 *[knowl] {
   /* border-bottom: 2px dotted #66C; */
   /* cursor: pointer; */
-  margin-bottom: 0px;
 }
 
 *[knowl]:hover {
@@ -544,7 +544,7 @@ body.knowl a:hover {
 }
 
 div > *[knowl], p > *[knowl] {
-  /* color: #11A; */
+  position: relative;
 }
 
 .knowl-error {
@@ -555,25 +555,37 @@ div > *[knowl], p > *[knowl] {
 .knowl-qm {
   font-family: sans-serif;
   font-weight: bold;
-  background: #99d;
-  color: #fff; 
+  border: 1px solid {{ col_knowl }};
+  background: transparent;
+  color: {{ col_knowl }}; 
   cursor: pointer;
-  padding: 0 7px;
-  border-radius: 12px;
+  padding: 0 0.4em;
+  border-radius: 0.8em;
+  font-size: 0.9em;
+  top: -0.4em;
+  left: -0.1em;
 }
-.knowl-qm:hover {
+.knowl-qm:hover,
+.knowl-qm.active {
   background: #66d;
+  color: white
+}
+.knowl-qm.active:hover {
+  background: transparent;
+  color: {{ col_knowl }}; 
 }
 h1 > .knowl-qm {
   /** custom superscript */
-  font-size: 16px;
+  font-size: 0.6em;
+  border-radius: 0.6em;
   position: relative;
-  top: -1.0em;
-  left: -0.6em;
+  top: -0.8em;
+  left: -0.3em;
 }
 h2 > .knowl-qm {
   /** custom superscript */
-  font-size: 14px;
+  font-size: 0.7em;
+  border-radius: 0.7em;
   position: relative;
   top: -0.6em;
   left: -0.4em;
@@ -585,6 +597,11 @@ h2 > .knowl-qm {
   display: none;
   margin-top: 20px;
   margin-bottom: 25px;
+}
+.knowl-output.loading {
+ color: grey;
+ font-style: italic;
+ font-size: small;
 }
 .knowl-output h1, .knowl-output h2 {
   margin: 5px 0;

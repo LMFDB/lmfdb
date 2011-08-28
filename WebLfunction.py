@@ -1,5 +1,4 @@
 import math
-import logging
 from Lfunctionutilities import pair2complex, splitcoeff, seriescoeff
 from sage.all import *
 import sage.libs.lcalc.lcalc_Lfunction as lc
@@ -7,7 +6,10 @@ import re
 import pymongo
 import bson
 #import web_modforms
+import utils
 from classical_modular_forms.backend.web_modforms import *
+
+logger = utils.make_logger("LF")
 
 class WebLfunction:
     """Class for presenting an L-function on a web page
@@ -137,7 +139,7 @@ class WebLfunction:
            self.dirichlet_coefficients = self.MF.q_expansion_embeddings(self.numcoeff) #when coeffs are rational, q_expansion_embedding() is the list of Fourier coefficients
         else:
            for n in range(0,self.numcoeff):
-              logging.info("n=%s  self.number = %s" % (n, self.number))
+              logger.info("n=%s  self.number = %s" % (n, self.number))
               self.dirichlet_coefficients.append(self.MF.q_expansion_embeddings(self.numcoeff)[n][self.number])
         for n in range(0,len(self.dirichlet_coefficients)):
             an = self.dirichlet_coefficients[n]
@@ -590,31 +592,32 @@ class WebLfunction:
         ans=""
         if fmt=="analytic":
             ans="\\begin{align}\n"+self.texnamecompleteds+"=\\mathstrut &"
-        if self.level>1:
-            ans=ans+latex(self.level)+"^{\\frac{s}{2}}"
+            if self.level>1:
+                ans+=latex(self.level)+"^{\\frac{s}{2}}"
             for mu in self.mu_fe:
-               ans=ans+"\Gamma_R(s"+seriescoeff(mu,0,"signed","",-6,5)+")"
+               ans += "\Gamma_R(s"+seriescoeff(mu,0,"signed","",-6,5)+")"
             for nu in self.nu_fe:
-               ans=ans+"\Gamma_C(s"+seriescoeff(nu,0,"signed","",-6,5)+")"
-            ans=ans+" \\cdot "+self.texname+"\\cr\n"
-            ans=ans+"=\\mathstrut & "+seriescoeff(self.sign,0,"factor","",-6,5)+\
-        self.texnamecompleted1ms+"\n\\end{align}\n"
+               ans += "\Gamma_C(s"+seriescoeff(nu,0,"signed","",-6,5)+")"
+            ans += " \\cdot "+self.texname+"\\cr\n"
+            ans += "=\\mathstrut & "+seriescoeff(self.sign,0,"factor","",-6,5)
+            ans += self.texnamecompleted1ms+"\n\\end{align}\n"
         elif fmt=="selberg":
-            ans=ans+"("+str(int(self.degree))+","
-            ans=ans+str(int(self.level))+","
-            ans=ans+"("
+            ans+="("+str(int(self.degree))+","
+            ans+=str(int(self.level))+","
+            ans+="("
             if self.mu_fe != []:
                 for mu in range(len(self.mu_fe)-1):
-                    ans=ans+seriescoeff(self.mu_fe[mu],0,"literal","",-6,5)+", "
-                    ans=ans+seriescoeff(self.mu_fe[-1],0,"literal","",-6,5)
+                    ans+=seriescoeff(self.mu_fe[mu],0,"literal","",-6,5)+", "
+                    ans+=seriescoeff(self.mu_fe[-1],0,"literal","",-6,5)
             ans = ans+":"
             if self.nu_fe != []:
                 for nu in range(len(self.nu_fe)-1):
-                    ans=ans+str(self.mu_fe[nu])+", "
-                    ans=ans+str(self.nu_fe[-1])
-            ans = ans+"), "
-            ans = ans+seriescoeff(self.sign, 0, "literal","", -6,5)
-            ans = ans+")"
+                    ans+=str(self.mu_fe[nu])+", "
+                    ans+=str(self.nu_fe[-1])
+            ans+="), "
+            ans+=seriescoeff(self.sign, 0, "literal","", -6,5)
+            ans+=")"
+        logger.debug("latex %s: %s" % (fmt, ans))
         return(ans)
                            
 #++++++++++++++++++++++++++++++

@@ -2,7 +2,7 @@
 
 {% block content %}
  <h2> Dirichlet series {{ KNOWL('alg.dirichlet_series') }}</h2>
- <div> {{ dirichlet }} </div>
+ <div>\[{{ dirichlet }}\]</div>
 
  <h2>Functional equation {{ KNOWL('alg.functional_equation') }}</h2>
  
@@ -11,10 +11,10 @@
    &middot;
    <a id="functionalEqAnalytic" class="highlight" href="#">Analytic</a>
  </div>
- <div id="functionalEqText">{{ functionalequation }}</div>
+ <div id="functionalEqText">\({{ functionalequation }}\)</div>
  
  <h2>Euler product {{ KNOWL('alg.euler_prod') }}</h2>
- <div> {{ eulerproduct }} </div>
+ <div>\[{{ eulerproduct }}\]</div>
 
  <h2> Imaginary part of the first few zeroes on the {{ KNOWL('alg.critical_line') }}</h2>
 
@@ -28,7 +28,7 @@
      <h2>Special Values</h2>
      <div>
       {{ sv12 }}<br>
-      {{ sv1 }} <br>
+      {{ sv1 }}<br>
      </div>
  {% else %}
       <div>Not enough Dirichelet series coefficients to compute special values.</div>

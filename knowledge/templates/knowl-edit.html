@@ -21,7 +21,7 @@
      </td>
    </tr>
   </table>
-   <button type="submit" id="knowl-edit-btn">Save</button>
+   <button type="submit" id="knowl-edit-btn" onclick="unsaved = false;">Save</button>
 </form>
 
 <div class="knowl-preview-sep">
@@ -34,16 +34,16 @@
 </div>
 
 <script type="text/javascript">
-// the dom fields we are working with
+/* the dom fields we are working with */
 var $ktitle    = $("#ktitle");
 var $kcontent  = $("#kcontent");
 var $title     = $("#knowl-title");
 var $content   = $("#knowl-content");
 var $update    = $("#knowl-update");
-// state flags
+/* state flags */
 var update_id     = null;
 var reparse_latex = false;
-// parameters
+/* parameters */
 var UPDATE_TIMEOUT = 5000;
 
 /* markdown disabled */
@@ -51,7 +51,7 @@ var UPDATE_TIMEOUT = 5000;
 
 function update() {
   if (update_id) {
-    // this case happens, when we click "refresh" while a timer is running.
+    /* this case happens, when we click "refresh" while a timer is running. */
     window.clearTimeout(update_id);
   }
   //console.log("running update");
@@ -80,13 +80,11 @@ function update() {
       /* finally, set the title and hide the refresh link */
       MathJax.Hub.Queue(function() {$title.html($ktitle.val())});
       $update.fadeOut();
-    })
-  .error(function() { $title.html("ERROR"); })
-  .timeout(function() { $title.html("TIMEOUT");});
+    }).error(function() { $title.html("ERROR"); })
 }
 
-// if nothing scheduled, update delayed
-// otherwise tell it to reparse the latex
+/* if nothing scheduled, update delayed
+   otherwise tell it to reparse the latex */
 function update_delay() {
   $update.fadeIn();
   if (update_id) {
@@ -96,11 +94,19 @@ function update_delay() {
   }
 }
 
-// register keyhandlers
+/* register keyhandlers */
 $(function() {
   $ktitle.keyup(   function(evt) { update_delay(); });
   $kcontent.keyup( function(evt) { update_delay(); });
   update();
 });
+
+/* prevent accidental closing of browser window */
+var unsaved = false;
+window.onbeforeunload = function() {
+  if(unsaved) {
+    return "There are unsaved edits. Really close?";
+  }
+}
 </script>
 {% endblock %}

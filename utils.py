@@ -70,15 +70,17 @@ class LmfdbFormatter(logging.Formatter):
 
     return logging.Formatter.format(self, record)
 
-def make_logger(blueprint = None, name=None, hl = False):
+def make_logger(bp_or_name, hl = False):
   """
   creates a logger for the given blueprint. if hl is set
   to true, the corresponding lines will be bold.
   """
   import flask
-  if type(blueprint) == flask.Blueprint:
-    name = blueprint.name
-  assert name != None
+  if type(bp_or_name) == flask.Blueprint:
+    name = bp_or_name.name
+  else:
+    assert isinstance(bp_or_name, basestring) 
+    name = bp_or_name
   l = logging.getLogger(name)
   l.propagate = False
   l.setLevel(logging.DEBUG)
