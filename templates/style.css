@@ -24,6 +24,7 @@ body {
     /* max-width: 1200px; */
 }
 #mathjax-info {
+  display: none;
   position: absolute;
   z-index: 99;
   width: 600px;
@@ -264,7 +265,6 @@ body.knowl #header {
 
 
 #content {
-  display: none;
   margin-top: 20px;
   font-size: 95%;
 }

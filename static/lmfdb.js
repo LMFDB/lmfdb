@@ -12,20 +12,31 @@ function error(msg) {
 
 /* only show main content after processing all the latex */
 $(function() {
+  if ($("body").hasClass("knowl") || $("body").hasClass("users")) return;
+  var revealed = false;
   function show_content() {
+    revealed = true;
     $("#content").css("opacity", "1").show();
     $("#mathjax-info").hide();
   }
   MathJax.Hub.Queue(function() {show_content()}); 
   $("#mathjax-info").click(function() {show_content()});
 
+  window.setTimeout(function() {
+    if(!revealed) {
+      $("#mathjax-info").show();
+      $("#content").hide();
+    }
+  }, 250);
+
   /* delay some secs and tell the user, that it is
    * still loading and clicking removes the banner */
   window.setTimeout(function() {
     /* still waiting? */
+    if(revealed) return;
     if($("#content").css("display") == "none") {
       $("#content").css("opacity", "0.2").show();
-      $("#mathjax-log").html("<strong>Still loading, click banner to hide it.</strong>");
+      $("#mathjax-log").html("<strong>Still loading, click here to show it.</strong>");
     }
   }, 5000);
 
@@ -40,6 +51,12 @@ $(function() {
 }); 
 
 /* code for the properties sidepanel on the right */
+/* jquery helper function, rotates element via css3 */
+$.fn.rotate = function(rot) {
+  this.css("-webkit-transform", "rotate("+rot+"deg)" );
+  this.css("-moz-transform", "rotate("+rot+"deg)" );
+  this.css("-o-transform", "rotate("+rot+"deg)" );
+}
 /** collapser: stored height is used to track progress. */
 function properties_collapser(evt) {
   evt.preventDefault();
@@ -50,18 +67,16 @@ function properties_collapser(evt) {
   $pb.animate({"height": "toggle", "width":  "toggle"}, 
     { 
       duration: 100 + 100 * Math.log($pb.height()),
-      /* synchronize icon rotation effect */
       step: function(now) { 
+       /* synchronize icon rotation effect */
        var rot = 180 - 180 * (now/pb_w);
-       $pc.css("-webkit-transform", "rotate("+rot+"deg)" );
-       $pc.css("-moz-transform", "rotate("+rot+"deg)" );
-       $pc.css("-o-transform", "rotate("+rot+"deg)" );
+       $pc.rotate(rot);
       },
       complete: function () {
         if ($pb.css("display") == "none") {
-          $pc.css("-webkit-transform", "rotate(180deg)" );
+          $pc.rotate(180);
         } else { 
-          $pc.css("-webkit-transform", "rotate(0deg)" );
+          $pc.rotate(0);
         }
       }
     }
