@@ -57,24 +57,34 @@ $.fn.rotate = function(rot) {
   this.css("-moz-transform", "rotate("+rot+"deg)" );
   this.css("-o-transform", "rotate("+rot+"deg)" );
 }
+
+/* jquery helper function, bottom left round corner */
+$.fn.round_bl = function(val) {
+  this.css("border-bottom-left-radius", val + "px");
+  this.css("-moz-border-radius-bottomleft", val + "px");
+}
+
 /** collapser: stored height is used to track progress. */
 function properties_collapser(evt) {
   evt.preventDefault();
   var $pb = $("#properties-body");
   var $pc = $("#properties-collapser");
   var $ph = $("#properties-header");
-  var pb_w = $pb.width();
-  $pb.animate({"height": "toggle", "width":  "toggle"}, 
+  var pb_h = $pb.height();
+  $pb.animate({"height": "toggle", "opacity" : "toggle"}, 
     { 
       duration: 100 + 100 * Math.log($pb.height()),
-      step: function(now) { 
+      step: function() { 
        /* synchronize icon rotation effect */
-       var rot = 180 - 180 * (now/pb_w);
+       var val = $pb.height() / pb_h;
+       var rot = 180 - 180 * val;
        $pc.rotate(rot);
+       $ph.round_bl(0);
       },
       complete: function () {
         if ($pb.css("display") == "none") {
           $pc.rotate(180);
+          $ph.round_bl(10);
         } else { 
           $pc.rotate(0);
         }
@@ -183,11 +193,12 @@ $(function() {
 $(function() {
   var clear_timeout_id = null;
   var start_time = null;
-  function clear(hideit) {
+  function clear(hideit, hideimg) {
     if(clear_timeout_id) {
       window.clearTimeout(clear_timeout_id);
       clear_timeout_id = null;
     }
+    if (hideimg) $("#communication-img").hide();
     if (hideit) {
       $("#communication").append(" ["+((new Date()).getTime() - start_time) + "ms]");
       clear_timeout_id = window.setTimeout(
@@ -201,12 +212,13 @@ $(function() {
   $('#communication')
     .bind("ajaxSend", 
       function() { 
+         $("#communication-img").fadeIn("slow");
          start_time = (new Date()).getTime(); 
-         $(this).text("loading"); clear(false); })
+         $(this).text("loading"); clear(false, false); })
     .bind("ajaxComplete", 
-      function() { $(this).text("done"); clear(true); })
+      function() { $(this).text("done"); clear(true, true); })
     .bind("ajaxError",
-      function() { $(this).text("error");   clear(false); })
+      function() { $(this).text("error"); clear(false, true); })
     .bind("ajaxStop",
-      function() { $(this).text("done"); clear(true); });
+      function() { $(this).text("done"); clear(true, true); });
 });

@@ -103,7 +103,8 @@ import unittest
 class LmfdbTest(unittest.TestCase):
   def setUp(self):
     app.config['TESTING'] = True
-    self.app = app.test_client()
+    self.app = app
+    self.tc = app.test_client()
     import website
     self.C = getDBConnection()
 

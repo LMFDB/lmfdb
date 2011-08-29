@@ -13,7 +13,7 @@ class UsersTestCase(LmfdbTest):
     self.users.remove("$test_user")
     self.test_user = new_user("$test_user", "testpw")
 
-    self.app.post('/users/login', data = dict(
+    self.tc.post('/users/login', data = dict(
             name = '$test_user',
             password = 'testpw'
     ))
@@ -37,19 +37,20 @@ class UsersTestCase(LmfdbTest):
     assert me != None
 
   def test_myself(self):
-    p = self.app.get("/users/myself")
-    print p.data
+    return
+    p = self.tc.get("/users/myself")
     assert '$test_user' in p.data
 
   def test_info(self):
     return
-    self.app.post('/users/info', data = dict(
-          full_name = "test_full_name",
-          url = "test_url",
-          about = "test_about")
+    c.post('/users/info', data = dict(
+        full_name = "test_full_name",
+        url = "test_url",
+        about = "test_about")
     )
     me = self.get_me()
     print me
     assert me['url'] == 'test_url'
     assert me['about'] == 'test_about'
     assert me['full_name'] == "full_name"
+

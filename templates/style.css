@@ -87,6 +87,8 @@ a {
   text-decoration: none;
   font-family: sans-serif;
   padding: 2px 2px;
+}
+#content a {
   border-radius: 3px;
   -webkit-border-radius: 3px;
   -moz-border-radius: 3px;
@@ -196,6 +198,7 @@ body.knowl #header {
 }
 
 #properties {
+    z-index: 99;
     font-size: 85%;
     font-family: sans-serif;
     float: right;
@@ -207,13 +210,6 @@ body.knowl #header {
     border: 1px solid #474;
     border: 0;
     padding: 0px;
-    /* border-top-left-radius: 10px; */
-    /* border-bottom-left-radius: 10px; */
-    /* -moz-border-radius-bottomleft: 10px; */
-    /* -moz-border-radius-topleft: 10px; */
-    /* -moz-box-shadow:     5px 5px 4px #8a8; */
-    /* -webkit-box-shadow:  5px 5px 4px #8a8; */
-    /* box-shadow:          5px 5px 4px #8a8; */
 }
 #properties-body div, #properties-body p {
   padding: 5px;
@@ -239,8 +235,12 @@ body.knowl #header {
   padding: 0;
   background: #efe;
   min-width: 200px;
+  border-bottom-left-radius: 10px;
+  -moz-border-radius-bottomleft: 10px;
 }
 #properties-header {
+  border-top-left-radius: 10px;
+  -moz-border-radius-topleft: 10px;
   margin: 0;
   padding: 5px;
   color: #050;
@@ -300,13 +300,17 @@ blockquote p {
 */
 
 #sidebar {
-    float: left;
-    width: 200px;
-    margin: 20px 0px 0px 0px;
-    font-family: sans-serif;
-    font-size: 85%;
-    color: #390;
-    background: #EFE;
+  float: left;
+  width: 200px;
+  margin: 20px 0px 0px 0px;
+  font-family: sans-serif;
+  font-size: 85%;
+  color: #390;
+  background: #EFE;
+  border-top-right-radius: 10px;
+  -moz-border-radius-topright: 10px;
+  border-bottom-right-radius: 10px;
+  -moz-border-radius-bottomright: 10px;
 }
 
 #sidebar h2 {
@@ -319,9 +323,15 @@ blockquote p {
 }
 
 #sidebar h2#top {
-    margin: 0;
+  margin: 0;
+  border-top-right-radius: 10px;
+  -moz-border-radius-topright: 10px;
 }
-
+#sidebar ul:last-child li:last-child,
+#sidebar ul:last-child li:last-child a {
+  border-bottom-right-radius: 10px;
+  -moz-border-radius-bottomright: 10px;
+}
 #sidebar ul {
     margin: 0px;
     padding: 0px;
@@ -519,7 +529,9 @@ div.literature {
   padding: 0;
 }
 .knowl-content {
-  padding: 10px 5px 15px 10px;
+  padding: 10px 0px 15px 10px;
+  border-bottom-left-radius: 10px;
+  -moz-border-radius-bottomleft: 10px;
 }
 *[knowl] {
   /* border-bottom: 2px dotted #66C; */
@@ -601,6 +613,9 @@ h2 > .knowl-qm {
 .knowl-output {
   background: {{ col_knowl_ll }}; 
   border-left: 10px solid {{ col_knowl_l }};
+  border-bottom: 10px solid {{ col_knowl_l }};
+  border-bottom-left-radius: 10px;
+  -moz-border-radius-bottomleft: 10px;
   padding: 0px;
   display: none;
   margin-top: 20px;
@@ -622,6 +637,8 @@ h2 > .knowl-qm {
 }
 
 .knowl-footer {
+  position: relative;
+  bottom: -10px;
   font-size: x-small;
   /* border-top: 1px solid {{ col_knowl_d }}; */
   background: {{ col_knowl_l }};

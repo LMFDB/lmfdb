@@ -5,7 +5,7 @@ import os
 
 try:
   import unittest2
-  ts = unittest2.defaultTestLoader.discover(".")
+  ts = unittest2.defaultTestLoader.discover(".", pattern="test_*.py")
   runner = unittest2.runner.TextTestRunner()
   runner.run(ts)
 except:

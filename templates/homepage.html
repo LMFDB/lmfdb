@@ -21,7 +21,11 @@
             <a href="{{ url_for('users.info') }}">Login</a>
           {%- endif %}
           <br/>
-          <span id="communication-wrapper">Ajax: <span id="communication"></span></span>
+          <span id="communication-wrapper">
+            <img id="communication-img" src="{{ url_for('static', filename='images/progress-green.gif') }}" />
+            Ajax:
+            <span id="communication"></span>
+          </span>
       </div>
       {# this span inside a div thing is necessary to align it at the bottom, see css #}
       <div id="title"><span id="title-content">{{ title }}</span></div>
@@ -87,7 +91,6 @@
          {{ citation }}
         {%- endif %} 
         {% if properties -%}
-         <h1>Properties</h1>
          {% for p in properties -%}{{ p|safe }}{%- endfor %}
         {%- endif %}
       </div>
