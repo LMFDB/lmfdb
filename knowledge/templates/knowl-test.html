@@ -3,6 +3,18 @@
 {% block content %}
 <h1>Title {{ KNOWL("test.1") }}</h1>
 
+<h2>Testing Knowl filter "knowl_type"</h2>
+<div>
+<ul>
+  <li>This should be true:
+    {% if k1 is knowl_type %}true{% else %}false{% endif %}
+  </li>
+  <li>This should be false:
+    {% if info is knowl_type %}true{% else %}false{% endif %}
+  </li>
+</ul>
+</div>
+
 {{ lipsum(1) }}
 <div>Some other {{ KNOWL("test.text") }} you should read.</div>
 {{ lipsum(1) }}

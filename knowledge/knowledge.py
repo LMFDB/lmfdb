@@ -33,6 +33,12 @@ allowed_knowl_id = re.compile("^[a-zA-Z0-9._-]+$")
 def ctx_knowledge():
   return {'Knowl' : Knowl}
 
+# a jinja test for figuring out if this is a knowl or not
+# usage: {% if K is knowl_type %} ... {% endif %}
+def test_knowl_type(k):
+  return isinstance(k, Knowl)
+app.jinja_env.tests['knowl_type'] = test_knowl_type
+
 knowledge_page = Blueprint("knowledge", __name__, template_folder='templates')
 logger = make_logger(knowledge_page)
 
@@ -55,7 +61,8 @@ def test():
   logger.info("test")
   return render_template("knowl-test.html",
                bread=get_bread([("Test", url_for(".test"))]), 
-               title="Knowledge Test")
+               title="Knowledge Test",
+               k1 = Knowl("k1"))
 
 @knowledge_page.route("/edit/<ID>")
 @login_required
