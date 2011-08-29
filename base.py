@@ -98,3 +98,12 @@ def obfuscate_email(email):
     """
     return u"%s…@…%s" % (email[:2],email[-2:])
 
+### for testing.py ###
+import unittest
+class LmfdbTest(unittest.TestCase):
+  def setUp(self):
+    app.config['TESTING'] = True
+    self.app = app.test_client()
+    import website
+    self.C = getDBConnection()
+

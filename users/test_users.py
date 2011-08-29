@@ -1,11 +1,9 @@
 # -*- coding: utf8 -*-
 # testing users blueprint
-import unittest
+from base import LmfdbTest
 from main import login_page
 
-print "loaded test_users"
-
-class UsersTestCase(unittest.TestCase):
+class UsersTestCase(LmfdbTest):
   def test_1(self):
     self.assertTrue(True)
 
