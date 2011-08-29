@@ -177,4 +177,36 @@ $(function() {
   });
 });
 
-//~~ end knowl js section
+/*** end knowl js section ***/
+
+/* global ajax event hook, for top right corner */
+$(function() {
+  var clear_timeout_id = null;
+  var start_time = null;
+  function clear(hideit) {
+    if(clear_timeout_id) {
+      window.clearTimeout(clear_timeout_id);
+      clear_timeout_id = null;
+    }
+    if (hideit) {
+      $("#communication").append(" ["+((new Date()).getTime() - start_time) + "ms]");
+      clear_timeout_id = window.setTimeout(
+         function() {
+           $("#communication-wrapper").fadeOut("slow");
+         }, 1000);
+    } else {
+           $("#communication-wrapper").fadeIn("fast");
+    }
+  }
+  $('#communication')
+    .bind("ajaxSend", 
+      function() { 
+         start_time = (new Date()).getTime(); 
+         $(this).text("loading"); clear(false); })
+    .bind("ajaxComplete", 
+      function() { $(this).text("done"); clear(true); })
+    .bind("ajaxError",
+      function() { $(this).text("error");   clear(false); })
+    .bind("ajaxStop",
+      function() { $(this).text("done"); clear(true); });
+});

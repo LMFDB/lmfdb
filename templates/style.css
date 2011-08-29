@@ -37,7 +37,7 @@ body {
 }
 #content > h1
 {
-    font-size: 200%;
+    font-size: 180%;
     font-weight: bold;
     color: {{ green }};
     font-family: sans-serif;
@@ -150,22 +150,26 @@ body.knowl #header {
     font-size: 90%;
     padding-top: 2px;
 }
-#header .userinfo {
-    /* border: 1px solid red;  */
-    white-space:nowrap; 
-    color: #060;
-    font-family: sans-serif;
-    min-height: 18px;
-    font-size: 90%;
-    padding: 2px 5px;
-    position: absolute;
-    top: 0px;
-    right: 0px;
+#header .topright {
+  /* border: 1px solid red;  */
+  text-align: right;
+  white-space:nowrap; 
+  color: #060;
+  font-family: sans-serif;
+  min-height: 18px;
+  font-size: 90%;
+  padding: 2px 5px;
+  position: absolute;
+  top: 0px;
+  right: 0px;
 }
-#header .userinfo a {
-    color: #060;
+#header .topright a {
+  color: #060;
 }
-  
+#header .topright #communication-wrapper {  
+  display: none;
+  padding: 4px;
+}
 
 #flashes p {
   border-left: 15px solid #DDF;

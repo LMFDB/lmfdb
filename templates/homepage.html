@@ -10,7 +10,7 @@
           &rarr; <a href="{{ b[1] }}">{{ b[0] }}</a>
         {%- endfor %}
       </div>
-      <div class="userinfo">
+      <div class="topright">
           {% if user.is_authenticated() -%}
             <a href="{{ url_for('users.info') }}">{{ username }}</a> 
             &middot;
@@ -20,6 +20,8 @@
             &middot;
             <a href="{{ url_for('users.info') }}">Login</a>
           {%- endif %}
+          <br/>
+          <span id="communication-wrapper">Ajax: <span id="communication"></span></span>
       </div>
       {# this span inside a div thing is necessary to align it at the bottom, see css #}
       <div id="title"><span id="title-content">{{ title }}</span></div>
