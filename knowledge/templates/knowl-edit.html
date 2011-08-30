@@ -4,7 +4,18 @@
 {% from "knowl-defs.html" import knowlbar with context %}
 {{ knowlbar() }}
 
-<form action="{{ url_for('.save_form') }}" method="POST">
+<script type="text/javascript" src="{{ url_for('static', filename='jquery.markitup.js')}}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='jquery.markitup.markdown.js')}}"></script>
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='markitup.css')}}" />
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='markdown.css')}}" />
+
+<script language="javascript">
+$(document).ready(function()	{
+    $('#kcontent').markItUp(myMarkdownSettings);
+});
+</script>
+
+<form action="{{ url_for('.save_form') }}" method="POST" id=>
   <input type="hidden" name="id" value="{{ k.id }}"/>
   <table>
    <tr>
