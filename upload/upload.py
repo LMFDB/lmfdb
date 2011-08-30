@@ -50,7 +50,8 @@ def upload():
     "time": datetime.datetime.utcnow(),
     "original_file_name": fn,
     "status": "unmoderated",
-    "version": "1"
+    "version": "1",
+    "content_type": request.files['file'].content_type
   }
   flask.flash("Received file: '%s'" + fn)
 
@@ -91,3 +92,19 @@ def admin():
   disapproved = [ fs.get(x['_id']) for x in db.fs.files.find({"metadata.status" : "disapproved"}) ]
 
   return render_template("upload-admin.html", title = "Data Upload", bread = get_bread(), unmoderated=unmoderated, approved=approved, disapproved=disapproved)
+
+@upload_page.route("/download/<id>/<filename>", methods = ["GET"])
+def download(id, filename):
+  file = GridFS(getDBConnection().upload).get(ObjectId(id))
+  response = flask.make_response(file.read())
+  response.content_type=file.metadata['content_type']
+  return response
+
+@upload_page.route("/updateMetadata", methods = ["GET"])
+def updateMetadata():
+  db = getDBConnection().upload
+  id = request.values['id']
+  property = request.values['property']
+  value = request.values['value']
+  db.fs.files.update({"_id" : ObjectId(id)}, {"$set": {"metadata."+property : value}})
+  return getDBConnection().upload.fs.files.find_one({"_id" : ObjectId(id)})['metadata'][property]
