@@ -20,12 +20,28 @@ from flaskext.login import login_required, current_user
 from knowl import Knowl
 from utils import make_logger
 from users import admin_required
-# from markdown import markdown
+import markdown
 
 ASC = pymongo.ASCENDING
 
 import re
 allowed_knowl_id = re.compile("^[a-zA-Z0-9._-]+$")
+
+# Tell markdown to not escape or format inside a given block
+class IgnorePattern(markdown.inlinepatterns.Pattern):
+    def __init__(self, re):
+        markdown.inlinepatterns.Pattern.__init__(self, re);
+    def handleMatch(self, m):
+        return markdown.AtomicString(m.group(2))
+
+# Initialise the markdown converter, sending a wikilink [[topic]] to the L-functions wiki
+md = markdown.Markdown(extensions=['wikilinks'],
+    extension_configs = {'wikilinks': [('base_url', 'http://wiki.l-functions.org/')]})
+# Prevent $..$, $$..$$, \(..\), \[..\] blocks from being processed by Markdown
+md.inlinePatterns.add('mathjax$', IgnorePattern(r'(?<![\\\$])(\$.+?\$)'), '<escape')
+md.inlinePatterns.add('mathjax$$', IgnorePattern(r'(?<![\\])(\$\$.+?\$\$)'), '<escape')
+md.inlinePatterns.add('mathjax\\(', IgnorePattern(r'(\\\(.+?\\\))'), '<escape')
+md.inlinePatterns.add('mathjax\\[', IgnorePattern(r'(\\\[.+?\\\])'), '<escape')
 
 # global (application wide) insertion of the variable "Knowl" to create
 # lightweight Knowl objects inside the templates.
@@ -161,9 +177,9 @@ def render(ID, footer=None):
     {%% endif %%}
   </div>"""
   render_me += "</div>"
-  render_me = render_me % {'content' : con, 'ID' : k.id }
-  # markdown disabled
-  # {'content' : markdown(k.content.replace("\\","\\\\"), ['wikilinks(base_url=http://wiki.l-functions.org/,end_url=)']), 'ID' : k.id }
+  # render_me = render_me % {'content' : con, 'ID' : k.id }
+  # markdown enabled
+  render_me = render_me % {'content' : md.convert(con), 'ID' : k.id }
   # Pass the text on to markdown.  Note, backslashes need to be escaped for this, but not for the javascript markdown parser
 
   #logger.debug("rendering template string:\n%s" % render_me)
