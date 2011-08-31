@@ -2,6 +2,14 @@
 
 {% block content %}
 
+<script type="text/javascript" src="/static/jquery.tablesorter.js"></script> 
+<script type="text/javascript" src="/static/jquery.dataTables.js"></script> 
+<script type="text/javascript" src="/static/jquery-ui-1.8.14.custom.min.js"></script> 
+<script type="text/javascript" src="https://www.google.com/jsapi"></script> 
+ 
+<link rel="stylesheet" href="/static/jquery-ui-1.8.14.custom.css" type="text/css"/> 
+
+
 <style>
   input.editable {
     border: 1px ;
@@ -19,7 +27,75 @@
     width:100%;
     font-family: monospace;
   }
+/* tables */
+table.tablesorter {
+	font-family:arial;
+	background-color: #CDCDCD;
+	margin:10px 0pt 15px;
+	font-size: 8pt;
+	width: 100%;
+	text-align: left;
+}
+table.tablesorter thead tr th, table.tablesorter tfoot tr th {
+	background-color: #e6EEEE;
+	border: 1px solid #FFF;
+	font-size: 8pt;
+	padding: 4px;
+}
+table.tablesorter thead tr .header {
+	background-image: url(bg.gif);
+	background-repeat: no-repeat;
+	background-position: center right;
+	cursor: pointer;
+}
+table.tablesorter tbody td {
+	color: #3D3D3D;
+	padding: 4px;
+	background-color: #FFF;
+	vertical-align: top;
+}
+table.tablesorter tbody tr.odd td {
+	background-color:#F0F0F6;
+}
+table.tablesorter thead tr .headerSortUp {
+	background-image: url(asc.gif);
+}
+table.tablesorter thead tr .headerSortDown {
+	background-image: url(desc.gif);
+}
+table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSortUp {
+background-color: #8dbdd8;
+}
 </style>
+
+<script> 
+function parseJsonTable(url, out) {
+	jQuery.get(url, function(txt) { parseJsonTable2(txt,out); });
+}
+function parseJsonTable2(txt, out) {
+	var value = JSON.parse(txt.trim().replace(/\n/g, "\\n"));
+	var html = '';
+	for(var name in value) {
+		html += '<h3>' + name + '</h3>';
+		html += '<table id="thetable'+name+'" class="tablesorter display" cellpadding="0" cellspacing="0" border="0"></table>';
+	}
+	//$('#tableContainer').html(html);
+	out.html(html);
+	for(var name in value) {
+		var data = value[name].split(/\n/);
+		for(var i=0; i<data.length; i++) {
+			data[i] = data[i].split(' ');
+		}
+		var columns = [];
+		for(var i=0; i<data[0].length; i++) {
+			columns[i] = { "sTitle": "Column " + (i+1) };
+		}
+		$('#thetable'+name).dataTable( {
+		"aaData": data,
+		"aoColumns": columns } );	
+	}
+}
+</script>
 
 <script>
   function updateMetadata(id, property, value) {
@@ -36,7 +112,6 @@
 {{entry.metadata[property]}}
   </textarea>
 {% endmacro %}
-
 
 
 {% macro render_uploadlist(title, list) -%}
@@ -61,10 +136,17 @@
   <dd>{{editableTextarea(entry,'bibtex')}}</pre></dd>
   <dt>Contents</dt>
   <dd>
+
     <a href="download/{{entry._id}}/{{entry.filename}}">
       Download {{entry.filename}}
     </a>
     <br/>
+    <a onclick="parseJsonTable('download/{{entry._id}}/{{entry.filename}}', $('#div{{entry._id}}'))">
+      Parse Json from {{entry.filename}}
+    </a>
+
+    <div id="div{{entry._id}}">
+    </div>
     {% if entry.metadata.content_type == 'text/plain' %}
       <pre>
 {{entry.read()}}
