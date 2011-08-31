@@ -1,0 +1,20 @@
+{% extends 'homepage.html' %}
+
+
+{% block content %}
+
+<table align="left" cellpadding="4">
+<tr>
+{% for r in range(info.conductor_start,info.conductor_end+1) %}
+<td><a href="conductor{{r}}.1">{{r}}</a></td>
+{% if loop.index%20 == 0 %}
+</tr>
+<tr>
+{% endif %}
+{% endfor %}
+</table>
+
+
+{% endblock %}
+
+

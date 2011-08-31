@@ -19,7 +19,7 @@ import maass_waveforms
 import users 
 import knowledge
 import upload
-
+import DirichletCharacter
 import raw
 
 import sys
@@ -78,6 +78,12 @@ def form_example():
     sidebar = [ ('topic1' , [ ("abc", "#"), ("def", "#")]), ("topic2" , [ ("ghi", "#"), ("jkl", "#") ] ) ]
     info = {'sidebar' : sidebar}
     return render_template("form.html", info=info)
+
+@app.route("/Character/Dirichlet/")
+@app.route("/Character/Dirichlet/<arg1>")
+@app.route("/Character/Dirichlet/<arg1>/<arg2>")
+def render_Character(arg1 = None, arg2 = None):
+    return DirichletCharacter.render_webpage(request,arg1,arg2)
 
 @app.route("/Lfunction/")
 @app.route("/Lfunction/<arg1>")

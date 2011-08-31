@@ -1,0 +1,31 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+{% if info.order == 2 %}
+{% if info.kronecker == 'False' %}
+<p>
+<i><font size="3"> Alternate representation: </font></i>
+<a href="kronecker.{{info.pagenumber}}"> Kronecker symbol representation</a>
+</p>
+{% else %}
+<p>
+<i><font size="3"> Alternate representation: </font></i>
+<a href="order{{info.order}}.{{info.pagenumber}}"> Character representation </a>
+</p>
+{% endif %}
+{% endif %}
+Color Scheme:
+<ul>
+    <li>
+    Red indicates <a style="color:red"> non-primitive </a> characters.
+    </br>
+    <li>
+    Green indicates <a style="color:green"> primitive </a> characters.
+</ul>
+
+{{info.contents|safe}}
+
+{% endblock %}
+
+

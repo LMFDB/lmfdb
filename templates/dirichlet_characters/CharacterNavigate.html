@@ -1,0 +1,78 @@
+{% extends 'homepage.html' %}
+
+
+{% block content %}
+
+<h3> Browse </h3>
+
+<p>
+By modulus:
+<a href="modsearch={{'1-199'}}">{{'1-199'}}</a>
+<a href="modsearch={{'200-399'}}">{{'200-399'}}</a>
+<a href="modsearch={{'400-599'}}">{{'400-599'}}</a>
+<a href="modsearch={{'600-799'}}">{{'600-799'}}</a>
+<a href="modsearch={{'800-999'}}">{{'800-999'}}</a>
+</p>
+
+<p>
+By conductor:
+<a href="condsearch={{'1-199'}}">{{'1-199'}}</a>
+<a href="condsearch={{'200-399'}}">{{'200-399'}}</a>
+<a href="condsearch={{'400-599'}}">{{'400-599'}}</a>
+<a href="condsearch={{'600-799'}}">{{'600-799'}}</a>
+<a href="condsearch={{'800-999'}}">{{'800-999'}}</a>
+</p>
+
+<p>
+By order:
+<a href="ordsearch={{'1-19'}}">{{'1-19'}}</a>
+<a href="ordsearch={{'20-39'}}">{{'20-39'}}</a>
+<a href="ordsearch={{'40-59'}}">{{'40-59'}}</a>
+<a href="ordsearch={{'60-79'}}">{{'60-79'}}</a>
+<a href="ordsearch={{'80-99'}}">{{'80-99'}}</a>
+</p>
+
+<h3> Go to a specific character </h3>
+
+<form>
+Label:&nbsp;&nbsp;
+<input type='text' name='natural' size=10>
+<input type='submit' name='search' value='Go'>
+<td><span class="formexample"> 13.2</span></td>
+</form>
+
+<h3> Search for characters </h3>
+<!--<form action="{{url_for(".LfunctionDB.query")}}" method=get>-->
+<form>
+<p>
+Enter criteria into one or more boxes to restrict the search.&nbsp;&nbsp;
+<table border=0 cellpadding=5>
+<tr>
+    <td align=left>Modulus <td><input type='text' name='modulus' size = '10'></td>
+<td><span class="formexample"> e.g. 13 </span></td>
+</tr>
+
+<tr>
+    <td align=left>Conductor</td><td> <input type='text' name='conductor' size = '10'></td><td><span class="formexample"> e.g. 5 </span></td>
+</tr>
+
+<tr>
+<td>Order</td><td> <input type='text' name='order' size = '10'></td><td><span class="formexample"> e.g. 2 </span></td>
+</tr>
+
+<!--<tr>
+    <td>Parity</td><td> <input type='text' name='parity' size = '10'></td><td><span class="formexample"> e.g. Even or Odd </span></td>
+</tr>-->
+
+
+<tr>
+<td>
+<input type='submit' value='Search' >
+</td>
+</tr>
+</table>
+</form>
+
+{% endblock %}
+
+
