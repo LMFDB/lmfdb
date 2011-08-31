@@ -1,0 +1,56 @@
+<!-- character_search.html -->
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+<!--{{ info.query }}-->
+
+<h2> Further refine search </h2>
+
+
+<table border=0  >
+
+<tr>
+<form>
+<td align=center> Modulus <input typ = 'text' name = 'modulus' size=10 value={{info.modulus}}></td>
+<td align=center> Conductor <input type='text' name='conductor' size=10 value={{info.conductor}}></td>
+<td align=center>Order <input type='text' name='order'size=10 value={{info.order}}></td>
+<!--<td align=center>Parity <input type='text' name='parity' size=10 value={{info.parity}}>-->
+</tr>
+
+<tr>
+<td>
+<input type='submit' value='refine'></td>
+</tr>
+</form>
+<tr>
+<td><h2>Results</h2></td>
+<tr>
+<td align=center>Character</td>
+<td align=center>Modulus</td>
+<td align=center>Conductor</td>
+<td align=center>Order</td>
+<td align=center>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Parity</td>
+</tr>
+
+{% for j in range(0,info.len): %}
+<tr>
+{% if info.characters[j].is_primitive() %}
+<td align=center><a href="/Character/Dirichlet/{{info.characters[j].modulus()}}/{{info.number[j]}}">{{info.texname[j]}}</a>
+{% else %}
+<td align=center><a href="/Character/Dirichlet/{{info.characters[j].modulus()}}/{{info.number[j]}}"><font color="red">{{info.texname[j]}}</font></a>
+{% endif %}
+</td>
+<td align=center><a href="/Character/Dirichlet/?modulus={{info.characters[j].modulus()}}&conductor={{info.conductor}}&order={{info.order}}&parity={{info.parity}}">{{info.characters[j].modulus()}}</a></td>
+    <td align=center><a href="/Character/Dirichlet/?modulus={{info.modulus}}&conductor={{info.characters[j].conductor()}}&order={{info.order}}&parity={{info.parity}}">{{info.characters[j].conductor()}}</a></td>
+    <td align=center><a href="/Character/Dirichlet/?modulus={{info.modulus}}&conductor={{info.conductor}}&order={{info.characters[j].order()}}&parity={{info.parity}}">{{info.characters[j].multiplicative_order()}}</a></td>
+{% if info.characters[j].is_even() %}
+<td align=center>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Even</td>
+{% else %}
+<td align=center>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Odd<td >
+{% endif %}
+</tr>
+{% endfor %}
+</table>
+
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends 'homepage.html' %}
+
+
+{% block content %}
+
+<table align="left" cellpadding="4">
+<tr>
+{% for r in range(info.order_start,info.order_end+1) %}
+<td><a href="order{{r}}.1">{{r}}</a></td>
+{% if loop.index%20 == 0 %}
+</tr>
+<tr>
+{% endif %}
+{% endfor %}
+</table>
+
+
+{% endblock %}
+
+
