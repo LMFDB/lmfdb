@@ -3,11 +3,11 @@
 
 /* global logger */
 function log(msg) {
-  if(console) { console.log(msg); }
+  if(window.console != undefined) { console.log(msg); }
 }
 
 function error(msg) {
-  if(console) { console.error(msg); }
+  if(window.console != undefined) { console.error(msg); }
 }
 
 /* only show main content after processing all the latex */

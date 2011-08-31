@@ -89,9 +89,9 @@ a {
   padding: 2px 2px;
 }
 #content a {
-  border-radius: 3px;
-  -webkit-border-radius: 3px;
-  -moz-border-radius: 3px;
+  border-radius: 0px;
+  -webkit-border-radius: 0px;
+  -moz-border-radius: 0px;
 }
 
 a:visited { color: #080; }
@@ -544,7 +544,7 @@ div.literature {
   /* background: #ccf; */
 }
 
-.knowl-title {
+.knowl-title, .knowl-title a {
   border-bottom: 1px dotted {{ col_knowl }};
   cursor: pointer;
   border-radius: 0;
