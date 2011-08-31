@@ -27,7 +27,7 @@ $(function() {
       $("#mathjax-info").show();
       $("#content").hide();
     }
-  }, 250);
+  }, 100);
 
   /* delay some secs and tell the user, that it is
    * still loading and clicking removes the banner */
@@ -90,14 +90,13 @@ function properties_collapser(evt) {
         }
       }
     }
-  );
+  ); //~~ end animate
 }
 
 
 $(function() {
  /* properties box collapsable click handlers */
- $("#properties-header").click(function(evt) { properties_collapser(evt); });
- $("#properties-collapser").click(function(evt) { properties_collapser(evt); });
+ $("#properties-header,#properties-collapser").click(function(evt) { properties_collapser(evt); });
  /* providing watermark examples in those forms, that have an 'example=...' attribute */
  $('input[example]').watermark($(this).attr('example'));
  $('textarea[example]').watermark($(this).attr('example'), {useNative:false});
@@ -216,7 +215,7 @@ $(function() {
          start_time = (new Date()).getTime(); 
          $(this).text("loading"); clear(false, false); })
     .bind("ajaxComplete", 
-      function() { $(this).text("done"); clear(true, true); })
+      function() { $(this).text("success"); clear(true, true); })
     .bind("ajaxError",
       function() { $(this).text("error"); clear(false, true); })
     .bind("ajaxStop",

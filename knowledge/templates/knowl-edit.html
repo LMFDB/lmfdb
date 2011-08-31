@@ -26,6 +26,17 @@ $(document).ready(function()	{
      <td><input size="40" name="title" id="ktitle" value="{{ k.title }}" /></td>
    </tr>
    <tr>
+     <td>Quality</td>
+     <td>
+      {{ k.quality }} <span style="margin-left: 50px;">change:</span>
+      <select name="quality">
+        <option value="">-- change --</option>
+        <option value="beta">Beta</option>
+        <option value="ok">Ok</option>
+        <option value="reviewed">Reviewed</option>
+      </select>
+     </td>
+   <tr>
      <td>Content</td>
      <td><textarea cols="40" rows="10"
           name="content" id="kcontent">{{ k.content }}</textarea>
