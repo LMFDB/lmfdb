@@ -18,9 +18,9 @@ from base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
 from flaskext.login import login_required, current_user
 from knowl import Knowl
-from utils import make_logger
 from users import admin_required
 import markdown
+from knowledge import logger
 
 ASC = pymongo.ASCENDING
 

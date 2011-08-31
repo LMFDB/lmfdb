@@ -545,7 +545,15 @@ div.literature {
 }
 
 .knowl-title {
-  border-bottom: 1px dotted #66C;
+  border-bottom: 1px dotted {{ col_knowl }};
+  cursor: pointer;
+  border-radius: 0;
+  -webkit-border-radius: 0;
+  -moz-border-radius: 0;
+}
+.knowl-title:hover,
+.knowl-title.active {
+  border-bottom: 2px solid {{ col_knowl }};
 }
 
 body.knowl #header {
