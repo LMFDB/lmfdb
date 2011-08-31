@@ -650,7 +650,7 @@ function parseJsonTable2(txt, out) {
       Download {{entry.filename}}
     </a>
     <br/>
-    <a onclick="parseJsonTable('download/{{entry._id}}/{{entry.filename}}', $('#div{{entry._id}}'))">
+    <a href="#" onclick="parseJsonTable('download/{{entry._id}}/{{entry.filename}}', $('#div{{entry._id}}'));return false">
       Parse Json from {{entry.filename}}
     </a>
 
