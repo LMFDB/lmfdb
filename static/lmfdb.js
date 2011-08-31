@@ -99,8 +99,8 @@ $(function() {
  $("#properties-header").click(function(evt) { properties_collapser(evt); });
  $("#properties-collapser").click(function(evt) { properties_collapser(evt); });
  /* providing watermark examples in those forms, that have an 'example=...' attribute */
- $('input[example]').watermark($(this).attr('example'));
- $('textarea[example]').watermark($(this).attr('example'), {useNative:false});
+ $('input[example]').each(function(a,b) { $(b).watermark($(b).attr('example')  ) } )
+ $('textarea[example]').each(function(a,b) { $(b).watermark($(b).attr('example'), {useNative:false}  ) } )
 });
 
 /* javascript code for the knowledge db features */
