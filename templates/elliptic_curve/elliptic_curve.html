@@ -25,13 +25,13 @@ function show_code(system) {
     </div>
     <div></div>
     
-    <h2> Minimal Weierstrass equation </h2>
+    <h2> {{ KNOWL('EC.minimal_weierstrass_equation') }} </h2>
     <div class='sage nodisplay code'>sage: E = EllipticCurve({{info.ainvs}})</div>
     <div class='pari nodisplay code'>? E = ellinit({{info.ainvs}})</div>
     <div class='magma nodisplay code'>&gt; E := EllipticCurve({{info.ainvs}});</div>
     <p> {{ info.equation }} </p>
 
-    <h2> Mordell-Weil Group structure</h2>
+    <h2> {{ KNOWL('EC.mordell-weil') }} structure</h2>
    <div>{% if info.rank==1 %}{% if info.torsion!=1 %} \(\mathbb{Z}\times {{info.tor_structure}}\) 
     {%endif%}  {%endif%}     </div>
 
@@ -64,7 +64,7 @@ function show_code(system) {
     <div class='magma nodisplay code'>&gt; ;</div>
     <p> {{ info.xintegral_points}} </p>
     
-    <h2> Invariants </h2>
+    <h2> {{ KNOWL('EC.invariants') }}  </h2>
         <table>
 
         <tr>
@@ -103,7 +103,7 @@ function show_code(system) {
 
        </table>
 
-    <h2> BSD invariants </h2>
+    <h2> {{ KNOWL('EC.bsd_invariants') }} </h2>
     <div></div>
     <p>
         <table>
@@ -177,7 +177,7 @@ function show_code(system) {
         </table>
     </p>
 
-    <h2> Modular form </h2>
+    <h2> {{KNOWL('EC.modular_form')}} </h2>
     <div class='sage nodisplay code'>sage: E.q_eigenform(10)</div>
     <div class='pari nodisplay code'></div>
     <div class='magma nodisplay code'>&gt; ModularForm(E);</div>
