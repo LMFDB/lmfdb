@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # the basic knowlege object, with database awareness, …
+from knowledge import logger
 
 def get_knowls():
   from base import getDBConnection
@@ -21,15 +22,18 @@ class Knowl(object):
     if data:
       self._title   = data.get('title', '')
       self._content = data.get('content', '')
+      self._quality = data.get('quality', 'beta')
     else:
       self._title   = ''
       self._content = ''
+      self._quality = 'beta'
 
   def save(self):
     get_knowls().save({
          '_id' : self.id,
          'content' : self.content,
-         'title' : self.title
+         'title' : self.title,
+         'quality': self.quality
         })
         
   def delete(self):
@@ -52,6 +56,19 @@ class Knowl(object):
       raise Exception("content has to be of type 'basestring'")
     self._content = content
     self._store_db("content", content)
+
+  @property
+  def quality(self):
+    return self._quality
+ 
+  @quality.setter
+  def quality(self, quality):
+    """a measurment information, if this is just "beta", or reviewed ..."""
+    if len(quality) == 0: return
+    if not quality in ['beta', 'ok', 'reviewed']:
+      logger.warning("quality '%s' is not allowed")
+      return
+    self._quality = quality
 
   @property
   def title(self):

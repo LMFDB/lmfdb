@@ -1,0 +1,113 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+    <!--<div id="header">
+        <div class="logo">
+            <a href="/Character/Dirichlet">{{ info.title }} home</a>
+        </div>
+        <div class="banner">
+            <span>The logo of the portal could go here... </span>
+        </div>
+    </div>-->
+
+<script>
+var cur_system = null;
+function show_code(system) {
+    $('.sage').hide();
+    $('.pari').hide();
+    $('.magma').hide();
+    if (cur_system == null) {
+      $('.'+system).show();
+      cur_system = system;
+    } else {
+      $('.'+system).hide();
+      cur_system = null;
+    }
+}
+</script>
+
+<!--<div id="Content">-->
+        
+        
+            <div>
+              <i><font size="3">Display code for creating this Dirichlet character in:</font></i>
+                <a onclick="show_code('sage'); return false" href='#'>sage</a>
+                <!--<a onclick="show_code('pari'); return false" href='#'>pari</a>
+                <a onclick="show_code('magma'); return false" href='#'>magma</a>-->
+            </div>
+
+            
+
+
+        <h2>
+            Sage Output
+        </h2>
+        <div class='sage nodisplay code'>sage: G = DirichletGroup({{info.modulus}}).{{info.number}}</div>
+        <p>
+            {{ info.sagechar }}
+        </p>
+
+        {% if info.order == 2 %}
+        <h2>
+            Character in terms of Kronecker Symbol
+        </h2>
+        <p>
+            {{ info.kronsymbol }}
+        </p>
+        {% endif %}
+
+        {% if info.primitive == info.primtf %}
+        <h2>
+            Inducing Primitive Character
+        </h2>
+        <div class = 'sage nodisplay code'>sage: G.primitive_character()</div>
+        <p>
+            {{ info.primchar }} &nbsp; : &nbsp;
+            <a href="{{info.primcharmodulus}}/{{info.primcharnumber}}">{{info.primchartex}}</a>&nbsp;&nbsp;
+        </p>
+        {% endif %}
+
+        {% if (info.lth < info.bound) or (info.lth < info.len) %}
+        <h2>
+            Values 
+        </h2>
+        <div class = 'sage nodisplay code'>sage: G.values()</div>
+        <p>
+            {{ info.valstex }}
+        </p>
+        {% endif %}
+        <h2>
+            Values on Generators
+        </h2>
+        <div class = 'sage nodisplay code'>sage: G.values_on_gens()</div>
+        <p>
+            {{ info.chivalstex }}
+        </p>
+        <h2>
+            Gauss Sum
+        </h2>
+        <div class = 'sage nodisplay code'>sage: G.gauss_sum(a)</div>
+        <p>
+            {{ info.gauss_sum }}
+        </p>
+        <h2>
+            Jacobi Sum
+        </h2>
+        <div class = 'sage nodisplay code'>sage: G.jacobi_sum(\(\psi\))</div>
+        <p>
+            {{ info.jacobi_sum }}
+        </p>
+        <h2>
+            Kloosterman Sum
+        </h2>
+        <div class = 'sage nodisplay code'>sage: G.kloosterman_sum(a,b)</div>
+        <p>
+            {{ info.kloosterman_sum }}
+        </p>
+        <!--</div>-->
+
+    <div class="spacer">
+        &nbsp;</div>
+
+{% endblock %}
+

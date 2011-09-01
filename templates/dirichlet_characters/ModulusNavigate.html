@@ -1,0 +1,21 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+<!--<h2>List of Characters modulo {{info.modulus|safe}}</h2>-->
+Color Scheme:
+<ul>
+    <li>
+        Red indicates <a style="color:red"> non-primitive </a> characters.
+    </br>
+    <li>
+        Green indicates <a style="color:green"> primitive </a> characters.
+</ul>
+
+{{info.contents|safe}}
+
+<!--<div style="position: absolute; bottom: 0; right: 0; width: 100px; text-align:right;">
+    <a href="modulus{{info.modulus}}">-->
+{% endblock %}
+
+
