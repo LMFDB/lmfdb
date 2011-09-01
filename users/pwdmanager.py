@@ -73,7 +73,7 @@ class LmfdbUser(UserMixin):
 
   @property
   def name(self):
-    return self.full_name or self._data['_id']
+    return self.full_name or self._data.get('_id', None)
 
   @property
   def full_name(self):
@@ -110,6 +110,8 @@ class LmfdbUser(UserMixin):
 
   @url.setter
   def url(self, url):
+    if not url.startswith("http://") or not url.startswith("https://"):
+      url = "http://" + url
     self._data['url'] = url
     self._dirty = True
 
