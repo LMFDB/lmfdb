@@ -11,8 +11,6 @@ import LfunctionPageProcessing
 import LfunctionComp
 import LfunctionPlot
 from utils import to_dict
-#from elliptic_curve import by_cremona_label
-# just testing
 
 ##import upload2Db.py
 
@@ -35,7 +33,6 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
                 info["contents"] = [LfunctionPlot.getOneGraphHtmlChar(1,35,1,13)]
                 info['friends'] = [('Dirichlet Characters', '/Character/Dirichlet/')]
             elif degree == 2:
-#                info["contents"] = [processEllipticCurveNavigation(args),"holomorphic here"]
                 info["contents"] = [processEllipticCurveNavigation(args), LfunctionPlot.getOneGraphHtmlHolo(1, 22, 2, 14)]
             elif degree == 3 or degree == 4:
                 info["contents"] = LfunctionPlot.getAllMaassGraphHtml(degree)
