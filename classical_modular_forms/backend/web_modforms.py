@@ -28,6 +28,7 @@ db_name = 'modularforms'
 import gridfs
 from pymongo.helpers import bson     
 from bson import BSON
+from classical_modular_forms import cmf_logger
 
 class WebModFormSpace(Parent):
     r"""
@@ -51,7 +52,6 @@ class WebModFormSpace(Parent):
         - 'cuspidal' -- 1 if space of cuspforms, 0 if all modforms 
         """
         self._cuspidal=1
-        #print "k=",k
         self._k = ZZ(k)
         self._N = ZZ(N)
         if chi=='trivial':
@@ -62,6 +62,7 @@ class WebModFormSpace(Parent):
         self.prec = ZZ(prec)
         self._ap = list()
         self._verbose=verbose
+        self._bitprec=bitprec
         # check what is in the database
 
         if isinstance(data,dict):
@@ -100,33 +101,13 @@ class WebModFormSpace(Parent):
                 self._galois_decomposition=[]
                 self._oldspace_decomposition=[]
                 self._galois_orbits_labels=[]
-                l = len(self.galois_decomposition())
                 self._newforms=list()
+                l = len(self.galois_decomposition())
                 for i in range(l):
                     self._newforms.append(None)
                 if compute<>'':
-                    #i = 0
-                    print "Computing! : ",compute
-
-                    for i in range(l):
-                        label = self._galois_orbits_labels[i]
-                        print "t1=",compute==i
-                        print "t2=",compute=='all'
-                        print "t3=",compute==label
-                        if compute==i or compute=='all' or compute==label:
-                            f_data=dict()
-                            f_data['parent']=self
-                            f_data['f']=self.galois_decomposition()[i]
-                            if len(self._ap)<i:
-                                f_data['ap']=self._ap[i]
-                            F=WebNewForm(self._k,self._N,self._chi,label=label,fi=i,prec=prec,bitprec=bitprec,verbose=verbose,data=f_data,parent=self,compute='all')
-                            self._newforms[i]=F
-                        
-
-
-                
+                    self._compute_newforms(compute)                    
             except RuntimeError:
-            
                 raise RuntimeError, "Could not construct space for (k=%s,N=%s,chi=%s)=" % (k,N,self._chi)
         ### If we can we set these dimensions using formulas
         self._dimension_newspace = None
@@ -139,6 +120,30 @@ class WebModFormSpace(Parent):
             self._is_new=True
         else:
             self._is_new=False
+
+    def _compute_newforms(self,compute='all'):
+        r"""
+        Populates self with newforms.
+        """
+        cmf_logger.debug("Computing! : {0}".format(compute))
+        l = len(self.galois_decomposition())
+        for i in range(l):
+            label = self._galois_orbits_labels[i]
+            if compute==i or compute=='all' or compute==label:
+                f_data=dict()
+                f_data['parent']=self
+                f_data['f']=self.galois_decomposition()[i]
+                cmf_logger.debug("f_data={0}".format(f_data['f']))
+                cmf_logger.debug("self_ap={0}".format(self._ap))
+                if len(self._ap)<=i:
+                    f_data['ap']=self._ap[i]
+                cmf_logger.debug("Actually getting F {0},{1}".format(label,i))
+                F=WebNewForm(self._k,self._N,self._chi,label=label,fi=i,prec=self._prec,bitprec=self._bitprec,verbose=self._verbose,data=f_data,parent=self,compute=i)
+                self._newforms[i]=F
+                        
+
+
+
 
 
     def _get_character(self,k):
@@ -175,12 +180,12 @@ class WebModFormSpace(Parent):
             if get_what=='ap':
                 finds=finds.sort("prec")
             if self._verbose > 1:
-                print "files=",files
-                print "key=",key
-                print "finds=",finds
+                cmf_logger.debug("files={0}".format(files))
+                cmf_logger.debug("key={0}".format(key))
+                cmf_logger.debug("finds={0}".format(finds))
             if finds and finds.count()>0:
                 rec=finds[0]
-                print "rec=",rec
+                cmf_logger.debug("rec={0}".format(rec))
                 filename = rec['filename']
                 fs = gridfs.GridFS(C[db_name],get_what)
                 f = fs.get_version(filename)
@@ -327,7 +332,7 @@ class WebModFormSpace(Parent):
         return self._N
 
     def character(self):
-        return self._chi
+        return self._character
     
     def character_order(self):
         if(self._character<>0):
@@ -375,11 +380,15 @@ class WebModFormSpace(Parent):
                 ii =  self._galois_orbits_labels.index(i)
             else:
                 ii=i
-            print "ii=",ii
+            cmf_logger.debug("print ii={0}".format(ii))
             if ii>=0 and ii <=len(self._newforms):
-                print "set F!"
+                #print "set F!"
                 F = self._newforms[ii]
-        print "returning F! :",F
+                if not F: # then we have to compute something.
+                    cmf_logger.debug("compute F")
+                    self._compute_newforms(compute=ii)
+                    F = self._newforms[ii]
+        cmf_logger.debug("returning F! :{0}".format(F))
         return F
         
     def galois_orbit(self,orbit,prec=None):
@@ -405,13 +414,13 @@ class WebModFormSpace(Parent):
         if(check_dim==self.dimension()):
             return L
         if(self._verbose>1):
-            print "check_dim:=",check_dim
+             cmf_logger.debug("check_dim:={0}".format(check_dim))
         for d in divisors(N):
             if(d==1):
                 continue
             q = N.divide_knowing_divisible_by(d)
             if(self._verbose>1):
-                print "d=",d
+                 cmf_logger.debug("d={0}".format(d))
             # since there is a bug in the current version of sage
             # we have to try this...
             try:
@@ -420,17 +429,17 @@ class WebModFormSpace(Parent):
                 O=M.zero_submodule()
             Od=O.dimension()
             if(self._verbose>1):
-                print "O=",O
-                print "Od=",Od
+                cmf_logger.debug("O={0}".format(O))
+                cmf_logger.debug("Od={0}".format(Od))
             if(d==N and k==2 or Od==0):
                 continue
             if self._character.is_trivial():
                 #S=ModularSymbols(ZZ(N/d),k,sign=1).cuspidal_submodule().new_submodule(); Sd=S.dimension()
-                print "q=",q,type(q)
-                print "k=",k,type(k)
+                cmf_logger.debug("q={0},{1}".format(q,type(q)))
+                cmf_logger.debug("k={0},{1}".format(k,type(k)))
                 Sd = dimension_new_cusp_forms(q,k)
                 if(self._verbose>1):
-                    print "Sd=",Sd
+                    cmf_logger.debug("Sd={0}".format(Sd))
                 if Sd > 0:
                     mult=len(divisors(ZZ(d)))
                     check_dim=check_dim+mult*Sd
@@ -447,8 +456,8 @@ class WebModFormSpace(Parent):
                             check_dim=check_dim+mult*Sd
                             L.append((q,x_k,mult,Sd))
             if(self._verbose>1):
-                print "mult,N/d,Sd=",mult,ZZ(N/d),Sd
-                print "check_dim=",check_dim
+                cmf_logger.debug("mult={0},N/d={1},Sd={2}".format(mult,ZZ(N/d),Sd))
+                cmf_logger.debug("check_dim={0}".format(check_dim))
         check_dim=check_dim-M.dimension()
         if(check_dim<>0):
             raise ArithmeticError, "Something wrong! check_dim=%s" % check_dim
@@ -517,7 +526,7 @@ class WebModFormSpace(Parent):
             ss = "\("+my_latex_from_qexp(s)+"\)"
             ll=0
             if len(s)>qexp_max_len:
-                print "LEN > MAX!"
+                cmf_logger.debug("LEN > MAX!")
                 sl = ss.split('}')
                 for i in range(len(sl)-1):
                     sss = ''
@@ -608,11 +617,13 @@ class WebNewForm(SageObject):
             chi=ZZ(chi)
         t=False
         self._chi=ZZ(chi)
-        if(self._chi<>0):
-            self._character=self._parent._character
-        else:
-            self._character=trivial_character(N)
         self._parent=parent; self.f=None
+        self._character=trivial_character(N)
+        if self._chi<>0:
+            if self._parent and self._parent._character:
+                self._character=self._parent._character
+            else:
+                self._character=DirichletGroup(N)[0]
         self.f=None
         self._label = label
         self._fi=fi
@@ -626,20 +637,19 @@ class WebNewForm(SageObject):
         self._ap = list()    # List of Hecke eigenvalues (can be long)
         self._coefficients = dict() # list of Fourier coefficients (should not be long)
         self._atkin_lehner_eigenvalues={}
-        # print "DATA=",data
         if self._verbose>0:
-            print "DATA=",data
+             cmf_logger.debug("DATA={0}".format(data))
         if isinstance(data,dict) and len(data.keys())>0:
             self._from_dict(data)
         else:
             self._from_dict({})
         if self._verbose>0:
-            print "self.f=",self._f
+            cmf_logger.debug("self.f={0}".format(self._f))
         if self._parent==None:
             if self._verbose>0:
-                print "compute parent!"
-                print "label=",label
-                print "fi=",fi
+                cmf_logger.debug("compute parent!")
+                cmf_logger.debug("label={0}".format(label))
+                cmf_logger.debug("fi={0}".format(fi))
             if label<>'':
                 self._parent=WebModFormSpace(k,N,chi,compute=label)
             elif fi>0:
@@ -647,21 +657,21 @@ class WebNewForm(SageObject):
             else:
                 self._parent=WebModFormSpace(k,N,chi,compute='all')
             if self._verbose>0:
-                print "finished computing parent"
+                 cmf_logger.debug("finished computing parent")
             j = self._get_index_of_self_in_parent()
             if self._verbose>0:
-                print "j=",j
+                cmf_logger.debug("j={0}".format(j))
             if len(self._parent._newforms) and j>=0:
                 new_data=self._parent.f(j)._to_dict()
                 self._from_dict(new_data)
             else:
                 return None
         if self._verbose>0:
-            print "parent=",self._parent
+             cmf_logger.debug("parent={0}".format(self._parent))
         j = self._get_index_of_self_in_parent()
         if self._verbose>0:
-            print "j=",j
-            print "newforms=",self._parent._newforms
+            cmf_logger.debug("j={0}".format(j))
+            cmf_logger.debug("newforms={0}".format(self._parent._newforms))
         if self._f == None:
             if j < len(self._parent._newforms) and j>=0:
                 self._f=self._parent._newforms[j]
@@ -842,7 +852,7 @@ class WebNewForm(SageObject):
         else:
             j=-1 #raise ValueError,"The space is zero-dimensional!"
         if self._verbose>1:
-            print "J=",j
+            cmf_logger.debug("J={0}".format(j))
         return j
 
     def dimension(self):
@@ -910,7 +920,7 @@ class WebNewForm(SageObject):
             return None
 
     def coefficient(self,n):
-        print "n=",n
+        cmf_logger.debug("n={0}".format(n))
         return self.coefficients([n,n+1])
 
     def coefficients(self,nrange=range(1,10)):
@@ -920,7 +930,6 @@ class WebNewForm(SageObject):
         are stored.
 
         """
-        #print "nrange=",nrange
         res = []
         if not isinstance(nrange,list):
             M = nrange
@@ -937,20 +946,15 @@ class WebNewForm(SageObject):
                 else:
                     # fill up the ap vector
                     prims = primes_first_n(len(self._ap))
-                    #print "ap=",self._ap
-                    #print "len=",len(self._ap)
-                    #print "prim=",primes_first_n(len(self._ap))
                     if len(prims)>0:
                         ps = next_prime(primes_first_n(len(self._ap))[-1])
                     else:
                         ps = ZZ(2)
-                    #print "nprime=",ps
                     mn = max(nrange)
                     if is_prime(mn):
                         pe = mn
                     else:
                         pe = previous_prime(mn)
-                    #print "ps,pe=",ps,pe
                     E,v = self._f.compact_system_of_eigenvalues(prime_range(ps,pe+1),names='x')
                     c = E*v
                     for app in c:
@@ -964,7 +968,6 @@ class WebNewForm(SageObject):
                 if self._coefficients.has_key(n):
                     an = self._coefficients[n]
                 else:
-                    #print "n=",n,type(n)
                     try:
                         an = self._f.eigenvalue(n,'x')
                     except IndexError:
@@ -1003,7 +1006,7 @@ class WebNewForm(SageObject):
         if(len(self._atkin_lehner_eigenvalues.keys())>0):
             return self._atkin_lehner_eigenvalues
         if(self._chi<>0):
-            return ""
+            return {}
         res=dict()
         for Q in divisors(self.level()):
             if(Q==1):
@@ -1021,7 +1024,6 @@ class WebNewForm(SageObject):
                 except:
                     pass
         self._atkin_lehner_eigenvalues=res
-        #print "res=",res
         return res
 
     def atkin_lehner_eigenvalues_for_all_cusps(self):
@@ -1034,7 +1036,7 @@ class WebNewForm(SageObject):
             if c==Infinity:
                 continue
             l=self.atkin_lehner_at_cusp(c)
-            print "l=",c,l
+            cmf_logger.debug("l={0},{0}".format(c,l))
             if(l):
                 (Q,ep)=l
                 res[c]=[Q,ep]
@@ -1125,14 +1127,14 @@ class WebNewForm(SageObject):
             # g in S_k(M,chi) wit M=N/d^2
             M=ZZ(N/d**2)
             if(self._verbose>0):
-                print "Checking level ",M
+                cmf_logger.debug("Checking level {0}".format(M))
             for xig in range(euler_phi(M)):
                 (t,glist) = _get_newform(k,M,xig)
                 if(not t):
                     return glist
                 for g in glist:
                     if(self._verbose>1):
-                        print "Comparing to function ",g
+                        cmf_logger.debug("Comparing to function {0}".format(g))
                     KG=g.base_ring()
                     # we now see if twisting of g by xi in D gives us f
                     for xi in D:
@@ -1184,7 +1186,7 @@ class WebNewForm(SageObject):
                         except StopIteration:
                             # they are not equal
                             pass
-        # print "Candidates=",twist_candidates
+        cmf_logger.debug("Candidates=v{0}".format(twist_candidates))
         self._twist_info =  (False,twist_candidates)
         if(len(twist_candidates)==0):
             self._twist_info =  [True,self._f]
@@ -1284,8 +1286,8 @@ class WebNewForm(SageObject):
             raise ArithmeticError,"bug dimension"
         #return [m,v]
         if self._verbose>0:
-            print "m=",m,type(m)
-            print "v=",v,type(v)
+            cmf_logger.debug("m={0}".format(m,type(m)))
+            cmf_logger.debug("v={0}".format(v,type(v)))
         try:
             X=m.solve_right(v)
         except:
@@ -1310,20 +1312,15 @@ class WebNewForm(SageObject):
         QQ['x']
         tab[0]=0*x**0
         tab[1]=X[0]*x**poldeg
-        #print "tab=",tab
         for ix in range(1,len(X)):
-            #print "X[ix]=",X[ix]
             tab[1]=tab[1]+QQ(X[ix])*x**monomials[ix][1]
         for n in range(1,N+1):
             tmp=-QQ(k+2*n-2)/QQ(12)*x*tab[n]+(x**2-QQ(1))/QQ(2)*((tab[n]).derivative())
             tab[n+1]=tmp-QQ((n-1)*(n+k-2))/QQ(144)*tab[n-1]
         res=0
-        #print "tab=",tab
         for n in range(1,N+1):
             term=(tab[n](x=0))*12**(floor(QQ(n-1)/QQ(2)))*x**(n-1)/factorial(n-1)
             res=res+term
-            #print "term(",n,")=",term
-            #print "res(",n,")=",res
         return res
     #,O(x^(N+1))))
     #return (sum(n=1,N,subst(tab[n],x,0)*
@@ -1384,9 +1381,9 @@ class WebNewForm(SageObject):
         RF=ComplexField(bits)
         eps=RF(10**-(digits+1))
         if(self._verbose>1):
-            print "eps=",eps
+            cmf_logger.debug("eps={0}".format(eps))
         K=self.base_ring()
-        print "K=",K
+        print "K={0}".format(K)
         # recall that 
         degree = K.degree()
         cm_vals=dict()
@@ -1410,11 +1407,11 @@ class WebNewForm(SageObject):
                 try:
                     for prec in range(minprec,maxprec,10):
                         if(self._verbose>1):
-                            print "prec=",prec
+                             cmf_logger.debug("prec={0}".format(prec))
                         v2=self._f.q_eigenform(prec)(q)
                         err=abs(v2-v1)
                         if(self._verbose>1):
-                            print "err=",err
+                            cmf_logger.debug("err={0}".format(err))
                         if(err< eps):
                             raise StopIteration()
                         v1=v2
@@ -1431,7 +1428,7 @@ class WebNewForm(SageObject):
                 try:
                     for prec in range(minprec,maxprec,10):
                         if(self._verbose>1):
-                            print "prec=",prec
+                            cmf_logger.debug("prec={0}".format(prec))
                         c = self.coefficients(range(prec))
                         for h in range(degree):
                             fexp[h]=list()
@@ -1445,9 +1442,9 @@ class WebNewForm(SageObject):
                                 v2[h]=v2[h]+cc*q**n
                             err[h]=abs(v2[h]-v1[h])
                             if(self._verbose>1):
-                                print "v1[",h,"]=",v1[h]
-                                print "v2[",h,"]=",v2[h]
-                                print "err[",h,"]=",err[h]
+                                cmf_logger.debug("v1[{0}".format(h,"]={0}".format(v1[h])))
+                                cmf_logger.debug("v2[{0}".format(h,"]={0}".format(v2[h])))
+                                cmf_logger.debug("err[{0}".format(h,"]={0}".format(err[h])))
                             if(max(err.values()) < eps):          
                                 raise StopIteration()
                             v1[h]=v2[h]
@@ -1496,8 +1493,8 @@ class WebNewForm(SageObject):
             ap_vec = E*v
         else:
             ap_vec=self._ap
-        print "AP=",ap_vec
-        print "K=",K
+        cmf_logger.debug("AP={0}".format(ap_vec))
+        cmf_logger.debug("K={0}".format(K))
         for j in range(degree):
             alphas[j]=dict(); thetas[j]=dict();
         for j in xrange(len(ps)):
@@ -1539,7 +1536,7 @@ class WebNewForm(SageObject):
         return self._satake
     
     def print_satake_parameters(self,stype=['alphas','thetas'],prec=10,bprec=53):
-        print "print_satake=",prec,bprec
+        cmf_logger.debug("print_satake={0},{1}".format(prec,bprec))
         if self._f == None:
             return ""
         if len(self.coefficients())<prec:
@@ -1548,13 +1545,13 @@ class WebNewForm(SageObject):
             prec=next_prime(self.level())+1
             
         satake=self.satake_parameters(prec,bprec)
-        print "satake=",satake
+        cmf_logger.debug("satake={0}".format(satake))
         tbl=dict()
         if not isinstance(stype,list):
             stype = [stype]
-        print "type=",stype
-        print "sat[type]=",satake[stype[0]]
-        print "sat[type]=",satake[stype[0]].keys()
+        cmf_logger.debug("type={0}".format(stype))
+        cmf_logger.debug("sat[type]={0}".format(satake[stype[0]]))
+        cmf_logger.debug("sat[type]={0}".format(satake[stype[0]].keys()))
         tbl['headersh']=satake[stype[0]][0].keys()
         tbl['atts']="border=\"1\""
         tbl['data']=list()
@@ -1578,7 +1575,7 @@ class WebNewForm(SageObject):
                 for p in satake[type][j].keys():
                     row.append(satake[type][j][p])
                 tbl['data'].append(row)
-        print "tbl=",tbl
+        cmf_logger.debug("tbl={0}".format(tbl))
         s=html_table(tbl)
         return s
 
@@ -1623,8 +1620,8 @@ class WebNewForm(SageObject):
             s = "\("+s+"\)"
         else:
             s = "\("+"\)<br>\("+join(sb,"",)+"\)"
-        print "print_q_exp: prec=",prec
-        print "s=",s
+        cmf_logger.debug("print_q_exp: prec=".format(prec))
+        cmf_logger.debug("s={0}".format(s))
         return s
 
     
@@ -1661,7 +1658,7 @@ class WebNewForm(SageObject):
         if(isinstance(coeffs,str)):
             return coeffs  ### we probably failed to compute the form
         # make a table of the coefficients
-        print "print_embeddings: prec=",prec,"bprec=",bprec
+        cmf_logger.debug("print_embeddings: prec={0} bprec={1}".format(prec,bprec))
         tbl=dict()
         tbl['atts']="border=\"1\""
         tbl['headersh']=list()
@@ -1673,11 +1670,11 @@ class WebNewForm(SageObject):
         for i in range(len(coeffs[0])):
             tbl['headersv'].append("\(v_{%s}(a(n)) \)" % i)
             row=list()
-            print "len=",len(coeffs)
+            cmf_logger.debug("len={0}".format(len(coeffs)))
             for n in range(len(coeffs)-1):
-                print "n=",n
+                cmf_logger.debug("n={0}".format(n))
                 if i<len(coeffs[n]):
-                    print "i=",i,coeffs[n+1][i]
+                    cmf_logger.debug("i={0} {1}".format(i,coeffs[n+1][i]))
                     row.append(coeffs[n+1][i])
                 else:
                     row.append("")
@@ -1758,9 +1755,7 @@ class WebNewForm(SageObject):
         tbl['corner_label']="\( Q \)  \([cusp]\)"
         tbl['headersv']=["\(\epsilon_{Q}\)"]
         for c in l.keys():
-            #print "Q=",Q
             if(c<>Cusp(Infinity)):
-                #print "hej"
                 Q = l[c][0]
                 s = '\('+str(Q)+"\; ["+str(c)+"]\)"
                 if( c==0 ):
@@ -1768,7 +1763,7 @@ class WebNewForm(SageObject):
                 else:
                     tbl['headersh'].append(s)
                 tbl['data'][0].append(l[c][1])
-        print tbl
+        cmf_logger.debug("{0}".format(tbl))
         s=html_table(tbl)
         #s=s+"<br><small>* ) The Fricke involution</small>"
         return s
@@ -1841,8 +1836,8 @@ class WebNewForm(SageObject):
         K=self.base_ring()
         degree = _degree(K)
         if(self._verbose>2):
-            print "vals=",cm_vals
-            print "errs=",err
+            cmf_logger.debug("vals={0}".format(cm_vals))
+            cmf_logger.debug("errs={0}".format(err))
         tbl=dict()
         tbl['corner_label']="\(\\tau\)"
         tbl['headersh']=['\(\\rho=\zeta_{3}\)','\(i\)']
@@ -1867,8 +1862,6 @@ class WebNewForm(SageObject):
                 else:
                     row.append("")
             tbl['data'].append(row)
-        #print tbl
-        #print 
         s=html_table(tbl)
         # s=html.table([cm_vals.keys(),cm_vals.values()])
         return s
@@ -1897,25 +1890,25 @@ class WebNewForm(SageObject):
         M = NS.sturm_bound() + len(divisors(new_level))
         C = self.coefficients(range(M))
         for label in NS._galois_orbits_labels:
-            print "label=",label
+            cmf_logger.debug("label={0}".format(label))
             FT = NS.f(label)
             CT = FT.f.coefficients(M)
-            print CT
+            cmf_logger.debug("{0}".format(CT))
             K = FT.f.hecke_eigenvalue_field()
             try:
                 for n in range(2,M):
                     if(new_level % n+1 ==0):
                         continue
-                    print "n=",n
+                    cmf_logger.debug("n={0}".format(n))
                     ct = CT[n]
                     c  = K(x(n))*K(C[n])
-                    print ct,c
+                    cmf_logger.debug("{0} {1}".format(ct,c))
                     if ct <> c:
                         raise StopIteration()
             except StopIteration:
                 pass
             else:
-                print  "Twist of f=",FT
+                cmf_logger.debug("Twist of f={0}".format(FT))
         return  FT
             
 ###
@@ -1937,7 +1930,7 @@ def my_latex_from_qexp(s):
     ss=re.sub('zeta(\d+)','zeta_{\\1}',ss)
     ss=re.sub('zeta','\zeta',ss)  
     ss += ""
-    print "ss=",ss
+    #cmf_logger.debug("ss=",ss
     return ss
 
 
@@ -1964,20 +1957,16 @@ def break_line_at(s,brpt=20):
 
     # sl now contains a split  e.g. into terms in the q-expansion
     # we now have to join as many as fits on the line
-    #print "sl=",sl
     res = list()
     stmp=''
     for j in range(len(sl)):
         l = len_as_printed(stmp)+len_as_printed(sl[j])
-        print "l=",l
-        #print join([stmp,sl[j]])
-        #print "len(stmp)+len(sl[j])=",len(stmp)+len(sl[j])
+        cmf_logger.debug("l={0}".format(l))
         if l<brpt:
             stmp = join([stmp,sl[j]])
         else:
             res.append(stmp)
             stmp = sl[j]
-        #print "stmp=",stmp
         if j == len(sl)-1:
             res.append(stmp)
     return res

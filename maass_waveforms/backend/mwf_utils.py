@@ -4,14 +4,14 @@ import pymongo
 from flask import render_template, url_for, request, redirect, make_response,send_file
 from utils import *
 from classical_modular_forms.backend.plot_dom import *
-from mwf_main import mwf_logger as logger
+from maass_waveforms import MWF,mwf_logger, mwf
 #from psage.modform.maass.lpkbessel import *
 # build extensions
 
 try:
   from maass_waveforms.backend.lpkbessel import *
 except Exception as ex:
-  logger.critical("maass_waveforms/views/mwf_utils.py: couldn't load backend. Exception: '%s'" % ex)
+  logger.critical("maass_waveforms/views/mwf_utils.py: couldn't load backend. Exception: '%s' To enable full Maass waveform functionality: compile the cython file lpkbessel.pyx with sage -c create_local_so('lpkbessel.pyx')" % ex)
   #try:
   #  # Builds the kbessel extension build_ext --inplace $*
   #  execfile("setup.py") 

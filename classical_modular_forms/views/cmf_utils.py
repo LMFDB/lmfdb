@@ -1,7 +1,8 @@
 import random
 from flask import  jsonify
 from utils import *
-
+from classical_modular_forms import CMF,cmf, cmf_logger
+logger = cmf_logger
 
 def ajax_more2(callback, *arg_list, **kwds):
     r"""
@@ -12,29 +13,28 @@ def ajax_more2(callback, *arg_list, **kwds):
     """
     inline = kwds.get('inline', True)
     text = kwds.get('text', 'more')
-    print "inline=",inline
-    
-    print "text=",text
+    cmf_logger.debug("inline={0}".format(inline))
+    cmf_logger.debug("text={0}".format(text))
     text0 = text[0]
     text1 = text[1]
-    print "arglist=",arg_list
+    cmf_logger.debug("arglist={0}".format(arg_list))
     nonce = hex(random.randint(0, 1<<128))
     if inline:
         args = arg_list[0]
-        print "args=",args
+        cmf_logger.debug("args={0}".format(args))
         key1,key2=args.keys()
         l1=args[key1]
         l2=args[key2]
-        print "key1=",key1
-        print "key2=",key2
-        print "l1=",l1
-        print "l2=",l2
+        cmf_logger.debug("key1={0}".format(key1))
+        cmf_logger.debug("key2={0}".format(key2))
+        cmf_logger.debug("l1={0}".format(l1))
+        cmf_logger.debug("l2={0}".format(l2))
         args={key1:l1[0],key2:l2[0]}
         l11=l1[1:]; l21=l2[1:]
         #arg_list = arg_list[1:]
         arg_list1 = {key1:l1,key2:l21}
         arg_list2 = {key1:l11,key2:l2}
-        #print "arglist1=",arg_list
+        #cmf_logger.debug("arglist1={0}".format(arg_list))
         if isinstance(args, tuple):
             res = callback(*arg_list)
         elif isinstance(args, dict):
@@ -44,15 +44,15 @@ def ajax_more2(callback, *arg_list, **kwds):
             res = web_latex(res)
     else:
         res = ''
-    print "arg_list1=",arg_list1
-    print "arg_list2=",arg_list2
+    cmf_logger.debug("arg_list1={0}".format(arg_list1))
+    cmf_logger.debug("arg_list2={0}".format(arg_list2))
     arg_list1=(arg_list1,)
     arg_list2=(arg_list2,)
     if arg_list1 or arg_list2:
         url1 = ajax_url(ajax_more2, callback, *arg_list1, inline=True, text=text)
         url2 = ajax_url(ajax_more2, callback, *arg_list2, inline=True, text=text)
-        print "arg_list1=",url1
-        print "arg_list2=",url2
+        cmf_logger.debug("arg_list1={0}".format(url1))
+        cmf_logger.debug("arg_list2={0}".format(url2))
         s0 = """<span id='%(nonce)s'>%(res)s """  % locals()
         s1 = """[<a onclick="$('#%(nonce)s').load('%(url1)s', function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'%(nonce)s']);}); return false;" href="#">%(text0)s</a>""" % locals()
         t = """| <a onclick="$('#%(nonce)s').load('%(url2)s', function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'%(nonce)s']);}); return false;" href="#">%(text1)s</a>]</span>""" % locals()
@@ -77,10 +77,10 @@ def ajax_once(callback,*arglist,**kwds):
     """
     
     text = kwds.get('text', 'more')
-    print "text=",text
-    print "arglist=",arglist
-    print "kwds=",kwds
-    #print "req=",request.args
+    cmf_logger.debug("text={0}".format(text))
+    cmf_logger.debug("arglist={0}".format(arglist))
+    cmf_logger.debug("kwds={0}".format(kwds))
+    #cmf_logger.debug("req={0}".format(request.args
     nonce = hex(random.randint(0, 1<<128))
     res = callback()
     url = ajax_url(ajax_once,arglist,kwds,inline=True)
@@ -97,11 +97,11 @@ def ajax_later(callback,*arglist,**kwds):
     
     text = kwds.get('text', 'more')
     text = 'more'
-    print "text=",text
-    print "arglist=",arglist
-    print "kwds=",kwds
-    print "callback=",callback
-    #print "req=",request.args
+    cmf_logger.debug("text={0}".format(text))
+    cmf_logger.debug("arglist={0}".format(arglist))
+    cmf_logger.debug("kwds={0}".format(kwds))
+    cmf_logger.debug("callback={0}".format(callback))
+    #cmf_logger.debug("req={0}".format(request.args
     nonce = hex(random.randint(0, 1<<128))
     # do not call the first time around
     if kwds.has_key("do_now"):
@@ -113,7 +113,7 @@ def ajax_later(callback,*arglist,**kwds):
         do_now=0
     if not do_now:
         url = ajax_url(ajax_later,callback,*arglist,inline=True,do_now=do_now,_ajax_sticky=True)
-        print "ajax_url=",url
+        cmf_logger.debug("ajax_url={0}".format(url))
         s0 = """<span id='%(nonce)s'></span>"""  % locals()
         s1 = """<a class='later' href=# id='%(nonce)s' onclick='this_fun()'>%(text)s</a>""" % locals()
         s2= """<script>
@@ -127,7 +127,7 @@ def ajax_later(callback,*arglist,**kwds):
         </script>
         
         """ % locals()
-        print "s0+s1=",s2+s0
+        cmf_logger.debug("s0+s1={0}".format(s2+s0))
         return s2+s0+s1
     else:
         res = callback(do_now=do_now)

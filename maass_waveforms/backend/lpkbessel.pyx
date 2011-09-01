@@ -3,6 +3,11 @@ include "interrupt.pxi"  # ctrl-c interrupt block support
 include "stdsage.pxi"  # ctrl-c interrupt block support
 
 include "cdefs.pxi"
+
+include "interrupt.pxi"  # ctrl-c interrupt block support
+include "stdsage.pxi"  # ctrl-c interrupt block support
+
+include "cdefs.pxi"
 # -*- coding=utf-8 -*-
 #*****************************************************************************
 #ö  Copyright (C) 2010  Fredrik Strömberg <stroemberg@mathematik.tu-darmstadt.de>
