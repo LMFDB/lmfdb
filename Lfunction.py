@@ -6,8 +6,6 @@ from sage.all import *
 import tempfile, os
 import pymongo
 from WebLfunction import *
-import LfunctionNavigationProcessing
-import LfunctionPageProcessing
 import LfunctionComp
 import LfunctionPlot
 from utils import to_dict
@@ -87,7 +85,6 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
         return redirect(url_for("not_yet_implemented"))
 
     L = WebLfunction(temp_args)
-    #return "23423"
    
     try:
         logging.info(temp_args)
@@ -112,56 +109,6 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
                            #citation = info['citation'], 
                            #credit   = info['credit'],
                            #support  = info['support'])
-
-
-   # put different types of L-functions into here
-#    temp_args = {}
-#    info = {}
-#    for a in args:
-#        temp_args[a] = args[a]
-    #if temp_args.has_key('degree'):
-         #d = temp_args['degree']  
-         #info = { "degree" : int(d)}
-         #info["key"] = 777
-    #     return render_template("/lfunction_db/templates/list.html", info=info)
-#    if arg1 == 'Riemann':
-#        temp_args['type'] = 'riemann'
-#    elif len(args)==0 and arg1 == None: #this means I'm at the basic navigation page
-#        info = set_info_for_start_page()
-#        return render_template("LfunctionNavigate.html", info = info, title = 'L-functions')
-#    elif arg1 == 'Character' and arg2 == 'Dirichlet' and len(args)==0:
-#        info['title'] = 'Table of Dirichlet Characters'
-#        info['contents'] = processDirichletNavigation(args)
-#        return render_template("LfunctionTable.html",info=info,
-#                               title=info['title'])
-#    elif arg1 == 'Character' and arg2 == 'Dirichlet' and args['characternumber'] and args['charactermodulus']:
-#        temp_args['type'] = 'dirichlet'
-#    elif arg1 == 'EllipticCurve' and arg2 == 'Q' and arg3:
-#        temp_args['type'] = 'ellipticcurve'
-#        temp_args['label'] = str(arg3) 
-#    elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic':
-#        temp_args['type'] = 'gl2holomorphic'
-#
-#    elif arg1 and arg1.startswith("degree"):
-#        degree = int(arg1[6])
-#        info = { "degree" : degree }
-#        info["key"] = 777
-#        return render_template("DegreeNavigateL.html", info=info,
-#                               title = 'Degree ' + str(degree)+ ' L-functions')
-
-#David and Sally added the following case to handle Stefan's L-functions
-#    elif args['type'] and args['type'] == 'lcalcurl':
-#        temp_args['type'] = args['type']
-#        temp_args['url'] = args['url'] 
-#
-#
-#        #info = getNavigationFromDb(temp_args, arg1, arg2, arg3, arg4, arg5)
-#        #info = processNavigationContents(info, temp_args, arg1, arg2, arg3, arg4, arg5)
-#        
-#    #else:
-#    #    info = getNavigationFromDb(temp_args, arg1, arg2, arg3, arg4, arg5)
-#    #    info = processNavigationContents(info, args, arg1, arg2, arg3, arg4, arg5)
-#        
 
 
 
@@ -196,49 +143,6 @@ def set_info_for_start_page():
 #         sidebar = set_sidebar([explain])
 
     return info
-#        return number_field_search(**args)
-
-
-def getNavigationFromDb(args, family, group, field, objectName, level):
-    logging.info("%s %s %s" % (family,group,field))
-    pageid = 'L'
-    if family:
-        pageid += '/' + family
-        if group:
-            pageid += '/' + group
-            if field:
-                pageid += '/' + field
-                if objectName:
-                    pageid += '/' + objectName
-                    if level:
-                        pageid += '/' + level
-
-    import base
-    connection = base.getDBConnection()
-    db = connection.Lfunction
-    collection = db.LNavigation
-    return collection.find_one({'id': pageid})
-
-
-def processNavigationContents(info, args, arg1,arg2,arg3,arg4,arg5):
-    #logging.info("%s %s %s" % (family,group,field))
-    if arg4:
-        None
-    else:
-        if arg3:
-            None
-        else:
-            if arg2:
-                if arg2 == 'dirichlet':
-                    info = LfunctionNavigationProcessing.processDirichletNavigation(info, args)
-            else:
-                if arg1:
-                    None
-                else:
-                    None
-                    #This is the top page
-    return info
-
     
 
 def initLfunction(L,args, request):
@@ -262,7 +166,8 @@ def initLfunction(L,args, request):
     info['zeroeslink'] = url_for('zeroesLfunction', **args)
     info['plotlink'] = url_for('plotLfunction', **args)
 
-    #set info['bread'] and to be empty and set info['properties'], but exist (temp. fix by David & Sally)
+    # set info['bread'] and to be empty and set info['properties'],
+    # but exist (temp. fix by David & Sally)
     info['bread'] = []
     info['properties2'] = L.properties
 
@@ -309,8 +214,6 @@ def initLfunction(L,args, request):
     info['functionalequationSelberg'] = L.lfuncFEtex("selberg").replace('\\','\\\\').replace('\n','')
 
     
-#LfunctionPageProcessing.setPageLinks(info, L, args)
-
     info['learnmore'] = [('L-functions', 'http://wiki.l-functions.org/L-functions') ]
     if len(request.args)==0:
         lcalcUrl = request.url + '?download=lcalcfile'
@@ -342,7 +245,7 @@ def plotLfunction(args):
     WebL = WebLfunction(args)
     L = WebL.sageLfunction
     # HSY: I got exceptions that "L.hardy_z_function" doesn't exist
-    # TODO sort this out, do we need psage?!
+    # SL: Reason, it's not in the distribution of Sage
     if not hasattr(L, "hardy_z_function"):
       return None
     #FIXME there could be a filename collission
@@ -505,5 +408,3 @@ def processEllipticCurveNavigation(args):
         s += '</tr>\n'
     s += '</table>\n'
     return s
-    #info['contents'] = s
-     #return info
