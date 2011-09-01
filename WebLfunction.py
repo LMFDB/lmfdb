@@ -5,7 +5,6 @@ import sage.libs.lcalc.lcalc_Lfunction as lc
 import re
 import pymongo
 import bson
-#import web_modforms
 import utils
 from classical_modular_forms.backend.web_modforms import *
 
@@ -297,8 +296,6 @@ class WebLfunction:
         self.properties = [('Degree ','%s' % self.degree)]
         self.properties.append(('Level', '%s' % self.level))
         self.credit = 'Sage'
-        #        self.title = self.title+", where $\\chi$ is the character modulo "+\
-        #str(self.charactermodulus) + ", number " + str(self.characternumber)
         self.specialvalues =  'test'#'L(1/2) = '+str(self.sageLfunction.value(.5))
         
 
@@ -308,7 +305,6 @@ class WebLfunction:
         chi = DirichletGroup(self.charactermodulus)[self.characternumber]
         # Warning: will give nonsense if character is not primitive
         aa = int((1-chi(-1))/2)   # usually denoted \frak a
-        # self.coefficient_type = 0
         self.quasidegree = 1
         self.Q_fe = float(sqrt(self.charactermodulus)/sqrt(math.pi))
         self.sign = 1/(I**aa * float(sqrt(self.charactermodulus))/(chi.gauss_sum_numerical()))
