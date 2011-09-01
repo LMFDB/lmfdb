@@ -49,7 +49,7 @@ function show_code(system) {
 
         {% if info.order == 2 %}
         <h2>
-            Character in terms of Kronecker Symbol
+            Character in terms of {{ KNOWL('dirichlet_character.kronecker_symbol') }} 
         </h2>
         <p>
             {{ info.kronsymbol }}
@@ -58,8 +58,7 @@ function show_code(system) {
 
         {% if info.primitive == info.primtf %}
         <h2>
-            Inducing Primitive Character
-        </h2>
+            Inducing {{ KNOWL('dirichlet_character.primitive_character') }}           </h2>
         <div class = 'sage nodisplay code'>sage: G.primitive_character()</div>
         <p>
             {{ info.primchar }} &nbsp; : &nbsp;
@@ -69,7 +68,7 @@ function show_code(system) {
 
         {% if (info.lth < info.bound) or (info.lth < info.len) %}
         <h2>
-            Values 
+            {{ KNOWL('dirichlet_character.values') }}
         </h2>
         <div class = 'sage nodisplay code'>sage: G.values()</div>
         <p>
@@ -77,33 +76,27 @@ function show_code(system) {
         </p>
         {% endif %}
         <h2>
-            Values on Generators
+            {{ KNOWL('dirichlet_character.values_on_gens') }}
         </h2>
         <div class = 'sage nodisplay code'>sage: G.values_on_gens()</div>
         <p>
             {{ info.chivalstex }}
         </p>
         <h2>
-            Gauss Sum
+            {{ KNOWL('dirichlet_character.gauss_sum') }}
         </h2>
+        <form> {{ info.gauss_sum }} <input typ = 'text' name = 'gauss_value' size=10></form>
         <div class = 'sage nodisplay code'>sage: G.gauss_sum(a)</div>
-        <p>
-            {{ info.gauss_sum }}
-        </p>
         <h2>
-            Jacobi Sum
+            {{ KNOWL('dirichlet_character.jacobi_sum') }}
         </h2>
         <div class = 'sage nodisplay code'>sage: G.jacobi_sum(\(\psi\))</div>
-        <p>
-            {{ info.jacobi_sum }}
-        </p>
+        <form> {{ info.jacobi_sum }} <input typ = 'text' name = 'jacobi_character' size=10></form>
         <h2>
-            Kloosterman Sum
+            {{ KNOWL('dirichlet_character.kloosterman_sum') }}
         </h2>
         <div class = 'sage nodisplay code'>sage: G.kloosterman_sum(a,b)</div>
-        <p>
-            {{ info.kloosterman_sum }}
-        </p>
+        <form> {{ info.kloosterman_sum }} <input typ = 'text' name = 'kloosterman_values' size=10></form>
         <!--</div>-->
 
     <div class="spacer">
