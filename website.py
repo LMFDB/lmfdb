@@ -69,9 +69,9 @@ def modular_form_toplevel():
     return redirect(url_for("render_classical_modular_forms"))
     #return render_template("modular_form_space.html", info = { })
     
-@app.route("/calc")
-def calc():
-    return request.args['ep']
+@app.route("/about")
+def about():
+    return render_template("about.html", title="About")
 
 @app.route("/form")
 def form_example():

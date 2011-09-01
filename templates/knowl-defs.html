@@ -41,6 +41,13 @@
   {%- endwith %}
 {%- endmacro %}
 
+{# for inserting "normal" links to knowl pages #}
+{% macro KNOWL_LINK(ID) -%}
+ {% with k = Knowl(ID) -%}
+  <a href='{{ url_for("knowledge.show", ID=k.id) }}'>{{ k.title }}</a>
+ {%- endwith %}
+{%- endmacro %}
+
 {# for the bar when editing or showing knowls #}
 {% macro knowlbar() -%}
  <div class="knowl-bar">
