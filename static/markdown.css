@@ -2,7 +2,7 @@
 // markItUp!
 // By Jay Salvat - http://markitup.jaysalvat.com/
 // ------------------------------------------------------------------*/
-.markItUp .markItUpButton1 a:before {
+.markItUp .markItUpButton1 a {
 	background-image:url(images/h1.png); 
 }
 .markItUp .markItUpButton2 a {
