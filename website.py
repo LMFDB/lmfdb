@@ -9,7 +9,7 @@ import siegel_modular_form
 import classical_modular_forms
 import elliptic_curve
 import quadratic_twists
-import Lfunction
+import renderLfunction
 #import maass_form
 import plot_example
 import number_field
@@ -105,27 +105,27 @@ def render_Character(arg1 = None, arg2 = None):
 @app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>")
 @app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
 def render_Lfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = None):
-    return Lfunction.render_webpage(request, arg1, arg2, arg3, arg4, arg5)
+    return renderLfunction.render_webpage(request, arg1, arg2, arg3, arg4, arg5)
 
 @app.route("/plotLfunction")
 def plotLfunction():
-    return Lfunction.render_plotLfunction(request.args)
+    return renderLfunction.render_plotLfunction(request.args)
 
 @app.route("/browseGraph")
 def browseGraph():
-    return Lfunction.render_browseGraph(request.args)
+    return renderLfunction.render_browseGraph(request.args)
 
 @app.route("/browseGraphHolo")
 def browseGraphHolo():
-    return Lfunction.render_browseGraphHolo(request.args)
+    return renderLfunction.render_browseGraphHolo(request.args)
 
 @app.route("/browseGraphChar")
 def browseGraphChar():
-    return Lfunction.render_browseGraphHolo(request.args)
+    return renderLfunction.render_browseGraphHolo(request.args)
 
 @app.route("/zeroesLfunction")
 def zeroesLfunction():
-    return Lfunction.render_zeroesLfunction(request.args)
+    return renderLfunction.render_zeroesLfunction(request.args)
 
 @app.route('/ModularForm/GSp4/Q')
 def ModularForm_GSp4_Q_top_level():

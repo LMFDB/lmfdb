@@ -7,11 +7,6 @@ from sage.all import *
 import tempfile, os
 import pymongo
 from WebCharacter import *
-import Lfunction
-import LfunctionNavigationProcessing
-import LfunctionPageProcessing
-import LfunctionComp
-import LfunctionPlot
 from utils import to_dict
 
 def characterlist_modulus(N,type):
