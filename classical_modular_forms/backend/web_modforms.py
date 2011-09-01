@@ -1,4 +1,18 @@
-
+# -*- coding: utf-8 -*-
+#*****************************************************************************
+#  Copyright (C) 2010 Fredrik Strömberg <fredrik314@gmail.com>,
+#
+#  Distributed under the terms of the GNU General Public License (GPL)
+#
+#    This code is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    General Public License for more details.
+#
+#  The full text of the GPL is available at:
+#
+#                  http://www.gnu.org/licenses/
+#*****************************************************************************
 r""" Class for newforms in format which can be presented on the web easily
 
 
@@ -6,7 +20,6 @@ r""" Class for newforms in format which can be presented on the web easily
 AUTHORS:
 
  - Fredrik Stroemberg
- - Aurel Page
 
 
 TODO:
@@ -14,21 +27,26 @@ Fix complex characters. I.e. embedddings and galois conjugates in a consistent w
 
 """
 from sage.all import ZZ,QQ,DirichletGroup,CuspForms,Gamma0,ModularSymbols,Newforms,trivial_character,is_squarefree,divisors,RealField,ComplexField,prime_range,I,join,gcd,Cusp,Infinity,ceil,CyclotomicField,exp,pi,primes_first_n,euler_phi,RR,prime_divisors
-from sage.all import Parent,SageObject,dimension_new_cusp_forms,vector,dimension_modular_forms,dimension_cusp_forms,EisensteinForms,Matrix,floor,denominator,latex,is_prime,prime_pi,next_prime,primes_first_n,previous_prime
-from plot_dom import draw_fundamental_domain
-from cmf_core import html_table,len_as_printed
-#from sage.monoids.all import AlphabeticStrings
-from sage.all import factor,loads
-from flask import url_for
+from sage.all import Parent,SageObject,dimension_new_cusp_forms,vector,dimension_modular_forms,dimension_cusp_forms,EisensteinForms,Matrix,floor,denominator,latex,is_prime,prime_pi,next_prime,primes_first_n,previous_prime,factor,loads
 import re
 
+from flask import url_for
+
+
+## DB modules
 import pymongo 
 from utils import pol_to_html 
-db_name = 'modularforms'
 import gridfs
 from pymongo.helpers import bson     
 from bson import BSON
+# local imports 
+import base
 from classical_modular_forms import cmf_logger
+from plot_dom import draw_fundamental_domain
+from cmf_core import html_table,len_as_printed
+db_name = 'modularforms'
+dbport = 37010
+
 
 class WebModFormSpace(Parent):
     r"""
@@ -163,35 +181,43 @@ class WebModFormSpace(Parent):
         elif get_what=='ap':
             prec=10
         self._from_db=0
-        if use_db:
-            try: 
-                import base
+        try:
+            if use_db:
+                cmf_logger.debug("dbport={0}".format(dbport))
+                base._init(dbport)
                 C = base.getDBConnection()
-            except:
-                raise ValueError,"Check that a mongodb is running or you are connected via ssh!"
-            files = C[db_name][get_what].files
-            if chi==0:
-                key = {'k':int(k),'N':int(N)}
-            else:
-                key = {'k':int(k),'N':int(N),'chi':int(chi)}
-            if get_what=='ap':
-                key['prec']={"$gt": prec-1}
-            finds = files.find(key)
-            if get_what=='ap':
-                finds=finds.sort("prec")
-            if self._verbose > 1:
-                cmf_logger.debug("files={0}".format(files))
-                cmf_logger.debug("key={0}".format(key))
-                cmf_logger.debug("finds={0}".format(finds))
-            if finds and finds.count()>0:
-                rec=finds[0]
-                cmf_logger.debug("rec={0}".format(rec))
-                filename = rec['filename']
-                fs = gridfs.GridFS(C[db_name],get_what)
-                f = fs.get_version(filename)
-                res = loads(f.read())
-                self._from_db=1
-                self._id=rec['_id']
+                cmf_logger.debug("C={0}".format(C))
+                if not C:
+                    raise ValueError
+                if not db_name in C.database_names():
+                    raise ValueError
+                if not get_what in C[db_name].collection_names():
+                    raise ValueError
+                files = C[db_name][get_what].files
+                if chi==0:
+                    key = {'k':int(k),'N':int(N)}
+                else:
+                    key = {'k':int(k),'N':int(N),'chi':int(chi)}
+                if get_what=='ap':
+                    key['prec']={"$gt": prec-1}
+                finds = files.find(key)
+                if get_what=='ap':
+                    finds=finds.sort("prec")
+                if self._verbose > 1:
+                    cmf_logger.debug("files={0}".format(files))
+                    cmf_logger.debug("key={0}".format(key))
+                    cmf_logger.debug("finds={0}".format(finds))
+                if finds and finds.count()>0:
+                    rec=finds[0]
+                    cmf_logger.debug("rec={0}".format(rec))
+                    filename = rec['filename']
+                    fs = gridfs.GridFS(C[db_name],get_what)
+                    f = fs.get_version(filename)
+                    res = loads(f.read())
+                    self._from_db=1
+                    self._id=rec['_id']
+        except:
+            pass
         if not res:
             if get_what=='MS':
                 if chi==0:
