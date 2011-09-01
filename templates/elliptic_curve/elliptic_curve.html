@@ -50,7 +50,7 @@ function show_code(system) {
     {%endif %}
     
     {% if info.torsion!=1 %}    
-    <p><h3> Torsion generators </h3>
+    <p><h2> {{ KNOWL('EC.torsion_generators') }}</h2>
     <div class='sage nodisplay code'>sage: E.torsion_subgroup()</div>
     <div class='pari nodisplay code'>? elltors(E) </div>
     <div class='magma nodisplay code'>&gt; TorsionSubgroup(E);</div>
@@ -58,7 +58,7 @@ function show_code(system) {
     {%endif %}
 
 
-    <h2> Integral points </h2>
+    <p><h2> {{ KNOWL('EC.integral_points') }}</h2>
     <div class='sage nodisplay code'>sage: E.integral_points()</div>
     <div class='pari nodisplay code'> </div>
     <div class='magma nodisplay code'>&gt; ;</div>
