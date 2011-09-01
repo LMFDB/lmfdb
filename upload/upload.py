@@ -102,6 +102,8 @@ def download(id, filename):
   file = GridFS(getDBConnection().upload).get(ObjectId(id))
   response = flask.Response(file.__iter__())
   response.content_type=file.metadata['content_type']
+  response.content_length=file.length
+  
   return response
 
 @upload_page.route("/view/<id>", methods = ["GET"])
