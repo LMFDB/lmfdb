@@ -476,6 +476,9 @@ table.ntdata thead tr {
 table.ntdata tbody tr {
 }
 
+table.ntdata tbody th {
+}
+
 table tr.odd {
     background: white;
 }
@@ -676,7 +679,7 @@ h2 > .knowl-qm {
 .box1 {
     margin: 20px 5px 20px 5px;
     padding: 1px;
-    max-width: 600px;
+    max-width: 800px;
     overflow: auto;
 }
 

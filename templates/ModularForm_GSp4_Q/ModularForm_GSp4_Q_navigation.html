@@ -1,100 +1,79 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<h2>Browse</h2>
+<h2>Browse Siegel modular forms of degree 2</h2>
 
-
-<h4><a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', group = 'Sp4Z', page = 'forms') }}">
-    <script type="math/tex">M_*({\rm Sp}(4,\mathbb{Z}))</script>
-  </a>
-</h4>
-<p>The ring of Siegel modular forms of degree 2 with respect to the full modular group.</p>
-<div class="literature">
-  <ul>
-    <li><span class="name">J.-I. Igusa:</span> On Siegel modular forms of genus two. Amer. J. Math. 84 (1962), 175-200, <a href="http://www.ams.org/mathscinet-getitem?mr==0141643">MR0141643</a></li>
-  </ul>
-</div>
-
-
-<h4><a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', group = 'Kp', page = 'forms') }}">
-    <script type="math/tex">S_*(K(p))</script>
-  </a>
-</h4>
 <p>
-  The ring of paramodular cusp forms
-  <script type="math/tex">\ S_*(K(p)) \ (p \rm{\ prime)}</script>.
+  Integral weight by group and character:
+  &nbsp;&nbsp;
+  <a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', group = 'Sp4Z', page = 'forms') }}">
+    <script type="math/tex">{\rm Sp}(4,\mathbb{Z})</script>
+  </a>
+  &nbsp;&nbsp;
+  <a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', group = 'Kp', page = 'forms') }}">
+    <script type="math/tex">K(p)</script>
+  </a>
+  &nbsp;&nbsp;
+  <a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', group = 'Gamma0_2', page = 'forms') }}">
+    <script type="math/tex">\Gamma_0(2)</script>
+  </a>
+  &nbsp;&nbsp;
+  <a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', group = 'Gamma0_3_psi_3', page = 'forms') }}">
+    <script type="math/tex">\Gamma_0(3),\psi_3</script>
+  </a>
+  &nbsp;&nbsp;
+  <a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', group = 'Gamma0_4_psi_4', page = 'forms') }}">
+    <script type="math/tex">\Gamma_0(4),\psi_4</script>
+  </a>
 </p>
-<div class="literature">
-  <ul>
-    <li><span class="name">T. Ibukiyama:</span>
-      Dimension formulas of Siegel modular forms of weight 3 and supersingular abelian surfaces, Siegel Modular Forms and Abelian Varieties, Proceedings of the 4-th Spring Conference on Modular Forms and Related Topics (2007) 39-60.
-      <a></a></li>
-    <li><span class="name">C. Poor and D. S. Yuen:</span> Paramodular cusp forms, <a href="http://arxiv.org/abs/0912.0049">arXiv:1004.4699</a></li>
-  </ul>
-</div>
 
+<p>
+  Half integral weight by group and character:
+  <a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', group = 'Gamma0_4_', page = 'forms') }}">
+    <script type="math/tex">\Gamma_0(4),\left(\frac{-4}{*}\right)\</script>
+ . </a>
+</p>
 
-<h4><a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', group = 'Gamma0_2', page = 'forms') }}">
-    <script type="math/tex">M_*(\Gamma_0(2))</script>
+<p>
+  C[X,Y]-valued of integral weight by group:
+  &nbsp;&nbsp;
+  <a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', group = 'Sp4Z_2', page = 'forms') }}">
+    <script type="math/tex">{\rm Sp}(4,\mathbb{Z})</script>
   </a>
-</h4>
-<p>The ring of Siegel modular forms of degree 2 with respect to <script type="math/tex">\Gamma_0(2)</script>.</p>
-<div class="literature">
-  <ul>
-    <li><span class="name">T.Ibukiyama:</span> On Siegel modular varieties of level 3. Internat. J. Math. 2 (1991), 17-35, <a href="http://www.ams.org/mathscinet-getitem?mr==0141643">MR1082834</a></li>
-  </ul>
-</div>
+</p>
 
+<br/><br/>
 
-<h4><a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', group = 'Gamma0_3_psi_3', page = 'forms') }}">
-    <script type="math/tex">M_*(\Gamma_0(3),\psi_3)</script>
-  </a>
-</h4>
-<p>The ring of Siegel modular forms of degree 2 with respect to <script type="math/tex">\Gamma_0(2)</script> and character <script type="math/tex">\psi_3</script>.</p>
-<div class="literature">
-  <ul>
-    <li><span class="name">H. Aoki, T.Ibukiyama: </span>Simple graded rings of Siegel modular forms, differential operators and Borcherds products. Internat. J. Math. 16 (2005), 249-279, <a href="http://www.ams.org/mathscinet-getitem?mr==2130626">MR2130626</a></li>
-  </ul>
-</div>
+<h2>Search Siegel modular forms of degree 2</h2>
 
+<p>
+  <form action="/LfunctionDB/query" method=get> 
+    <table> 
+      <tr> 
+	<td>Group and character</td>
+	<td>
+	  <select>
+	    <option><script type="math/tex">{\rm Sp}(4,\mathbb{Z})</script></option>
+	    <option><script type="math/tex">K(p)</script></option>
+	    <option><script type="math/tex">\Gamma_0(2)</script></option>
+	    <option><script type="math/tex">\Gamma_0(3),\psi_3</script></option>
+	    <option><script type="math/tex">\Gamma_0(4),\psi_4</script></option>
+	    <option><script type="math/tex">\Gamma_0(4),\left(\frac{-4}{*}\right)\</script></option>
+	  </select>
+	</td>
+      </tr>
 
-<h4><a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', group = 'Gamma0_4_psi_4', page = 'forms') }}">
-    <script type="math/tex">M_*(\Gamma_0(4),\psi_4)</script>
-  </a>
-</h4>
-<p>The ring of Siegel modular forms of degree 2 with respect to <script type="math/tex">\Gamma_0(4)</script> and character <script type="math/tex">\psi_4</script>.</p>
-<div class="literature">
-  <ul>
-    <li><span class="name">H. Aoki, T.Ibukiyama: </span>Simple graded rings of Siegel modular forms, differential operators and Borcherds products. Internat. J. Math. 16 (2005), 249-279, <a href="http://www.ams.org/mathscinet-getitem?mr==2130626">MR2130626</a></li>
-  </ul>
-</div>
-
-
-<h4><a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', group = 'Sp4Z_2', page = 'forms') }}">
-    <script type="math/tex">M_{*,2}({\rm Sp}(4,\mathbb{Z}))</script>
-  </a>
-</h4>
-<p>The module of vector-valued Siegel modular forms of degree 2, taking values in a three-dimensional space, with respect to the full modular group.</p>
-<div class="literature">
-  <ul>
-    <li><span class="name">T. Satoh:</span> Construction of certain vector valued Siegel modular forms of degree two. Proc. Japan Acad. Ser. A Math. Sci. 61 (1985), 225-227, <a href="http://www.ams.org/mathscinet-getitem?mr==0816719">MR0816719</a></li>
-  </ul>
-</div>
-
-
-<h4><a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', group = 'Sp8Z', page = 'forms') }}">
-    <script type="math/tex">S_*({\rm Sp}(8,\mathbb{Z}))</script>
-  </a>
-</h4>
-<p>The ring of Siegel cusp forms of degree 4 with respect to the full modular group.</p>
-<div class="literature">
-  <ul>
-    <li><span class="name">C. Poor and D. S. Yuen:</span>
-      Computations of spaces of Siegel modular cusp forms, J. Math.
-      Soc. Japan 59 1 (2007), 185-222,
-      <a href="http://www.ams.org/mathscinet-getitem?mr==2302669">MR2302669</a></li>
-  </ul>
-</div>
-
+      <tr> 
+	<td>Weight</td><td> <input type='text' name='weight' size = '4'></td><td><span class="formexample"> e.g. 2 or 3/2 or 2,1</span></td> 
+      </tr> 
+      
+      <tr> 
+	<td> 
+	  <input type='submit' value='Search' > 
+	</td> 
+      </tr> 
+    </table> 
+  </form> 
+</p>
 
 {% endblock %}
