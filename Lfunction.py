@@ -14,6 +14,7 @@ from utils import to_dict
 #from elliptic_curve import by_cremona_label
 # just testing
 
+##import upload2Db.py
 
 
 cremona_label_regex = re.compile(r'(\d+)([a-z])+(\d*)')

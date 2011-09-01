@@ -57,6 +57,14 @@ def getAllMaassGraphHtml(degree):
             logging.debug(l)
             ans += getOneGraphHtml([g,l])
                     
+##            signs = collection.group(['sign'],{ 'degree': degree ,'group': g
+##                                                ,'level': l},
+##                              {'csum': 0},
+##                              'function(obj,prev) { prev.csum += 1; }')
+##            for docSign in signs:
+##                s = docSign['sign']
+##                print 'sign: ' + s
+            
     return(ans)
 
 ## ============================================
@@ -112,7 +120,6 @@ def getOneGraphHtml(gls):
                   + str(gls[2]) + "</h4>\n")
     else:
         ans = ("<h4>Maass cusp forms of level " + str(gls[1]) + "</h4>\n")
-        
     ans += "<div>The dots in the plot correspond to \\((\\mu_1,\\mu_2)\\) "
     ans += "in the \\(\\Gamma\\)-factors. These have been found by a computer "
     ans += "search. Click on any of the dots to get detailed information about "
@@ -126,6 +133,10 @@ def getOneGraphHtml(gls):
         
     return(ans)
 
+#============
+# url to add all degree-3, level-4 dots on one plot
+#   http://localhost:37777/browseGraph?group=GL3&level=4
+#=========
     
 ## ============================================
 ## Returns the url and width and height of the svg-file for
@@ -140,7 +151,6 @@ def getGraphInfo(gls):
                    + '&sign=' + gls[2])
     else:
         url = ('/browseGraph?group=' + gls[0] + '&level=' + str(gls[1]))
-        
     url =url.replace('+', '%2B')  ## + is a special character in urls
     ans = {'src': url}
     ans['width']= width
@@ -332,6 +342,7 @@ def paintSvgFileAll(glslist):  # list of group, level, and sign
     return(ans)
 
 
+
 ## ============================================
 ## Returns the svg-code for a simple coordinate system.
 ## width = width of the system
@@ -453,7 +464,6 @@ def signtocolour(sign):
     b = int(255.0 * (math.cos(argument/2.0))**2)
     return("rgb("+str(r)+","+str(g)+","+str(b)+")")
 
-
 ## ============================================
 ## Returns the contents (as a string) of the svg-file for
 ## the L-functions of holomorphic cusp forms.
@@ -466,8 +476,10 @@ def paintSvgHolo(Nmin,Nmax,kmin,kmax):
     radius = 3.3
     xdotspacing = 0.11  # horizontal spacing of dots
     ydotspacing = 0.28  # vertical spacing of dots
-    colourplus = "rgb(0,0,255)"
-    colourminus = "rgb(204,0,0)"
+    colourplus = signtocolour(1)
+    colourminus = signtocolour(-1)
+#    colourplus = "rgb(0,0,200)"
+#    colourminus = "rgb(200,200,0)"
     maxdots = 5  # max number of dots to display
 
     ans = "<svg  xmlns='http://www.w3.org/2000/svg'"
@@ -780,8 +792,10 @@ def paintSvgChar(min_cond,max_cond,min_order,max_order):
     radius = 3
     xdotspacing = 0.10  # horizontal spacing of dots
     ydotspacing = 0.16  # vertical spacing of dots
-    colourplus = "rgb(0,0,255)"
-    colourminus = "rgb(204,0,0)"
+    colourplus = signtocolour(1)
+    colourminus = signtocolour(-1)
+#    colourplus = "rgb(0,0,255)"
+#    colourminus = "rgb(204,0,0)"
     maxdots = 1  # max number of dots to display
 
     ans = "<svg  xmlns='http://www.w3.org/2000/svg'"
@@ -892,3 +906,148 @@ def getOneGraphHtmlChar(min_cond, max_cond, min_order, max_order):
     ans += "<br/>\n"
 
     return(ans)
+
+
+## ============================================
+## Plot the dots in a sector
+## 
+## We work in "working coordinates" and then convert to screen coordinates
+## via the scoord function
+##
+## ToDo: list of definitions/inputs, and check that they are called correctly
+## ============================================
+def plotsector(dimensioninfo, appearanceinfo, urlinfo):
+    ans = ""
+    scale = dimensioninfo['scale']
+    offset = dimensioninfo['vertexlocation']
+    vertexlocation = offset;
+    maxdots = dimensioninfo['maxdots']
+    dotspacing = dimensioninfo['dotspacing']
+    parallelogramsize = [1 + maxdots, 1 + maxdots]
+    edge = dimensioninfo['edge']
+
+    urlbase = urlinfo['base']
+    urlbase += "?"
+    for arg, val in urlinfo['space'].iteritems():
+      urlbase += arg + "='" + str(val) + "'" + "&"
+
+# draw the edges of the sector (omit edge if edgelength is 0
+    edgelength = dimensioninfo['edgelength']
+    ans += myline(vertexlocation, scale, [0, 0], lincomb(1, [0, 0], parallelogramsize[0] * edgelength[0], edge[0]), appearanceinfo['edgewidth'], appearanceinfo['edgestyle'], appearanceinfo['edgecolor'])
+    ans += myline(vertexlocation, scale, [0, 0], lincomb(1, [0, 0], parallelogramsize[1] * edgelength[1], edge[1]), appearanceinfo['edgewidth'], appearanceinfo['edgestyle'], appearanceinfo['edgecolor'])
+
+ # now iterate over the orbits
+ # "orbitbase" is the starting point of an orbit, which initially is the "firstdotoffset"
+    orbitbase = dimensioninfo['firstdotoffset']
+    for orbit in urlinput['orbits']:
+      orbitcolor = appearanceinfo['orbitcolor']
+      # first determine if we should draw a line connecting the dots in an orbit
+      # no line if 1 dot or >maxdots
+      if len(orbit) > 1 and len(orbit) <= maxdots:
+         ans += myline(vertexlocation, scale, orbitbase, lincomb(1, orbitbase, (len(orbit) - 1), dotspacing), dimensioninfo['connectinglinewidth'], "", appearanceinfo['edgecolor'])
+
+      elif len(orbit) > maxdots:
+         ans += "<a xlink:href='/not_yet_implemented' target='_top'>"
+         ans += mytext(len(orbit),vertexlocation, scale, orbitbase,"",appearanceinfo['fontsize'],appearanceinfo['fontweight'],orbitcolor)
+         ans += "</a>"
+      dotlocation = orbitbase
+      for orbitelem in orbit:  # loop through the elements in an orbit, drawing a dot and making a link
+         url = urlbase
+         for arg, val in orbitelem['urlinfo'].iteritems():
+            url += arg + "='" + str(val) + "'" + "&"
+         ans += "<a xlink:href='" + url + "' target='_top'>"
+         ans += mydot(vertexlocation, scale, dotlocation, dimensioninfo['dotradius'], orbitcolor,"",orbitelem['title'])
+         ans += "</a>"
+         dotlocation = lincomb(1, dotlocation, dotspacing[1], edge[1])
+      orbitbase = lincomb(1, orbitbase, dotspacing[0], edge[0])
+
+## ==================
+## addlists:  adds two lists as if they were vectors
+## ===================
+def addlists(list1, list2):
+    return([ list1[j] + list2[j] for j in range(len(list1)) ])
+
+## ==================
+## lincomb:  adds a v1 + b v2 as if lists v1, v2 were vectors
+## ===================
+def lincomb(scalar1, list1, scalar2, list2):
+    return([ scalar1 * list1[j] + scalar2 * list2[j] for j in range(len(list1)) ])
+
+
+
+## ============================================
+## mydot: Draw a dot
+## ============================================
+def mydot(offset, scale, startpt, radius, color, shape, title):
+    ans = "<circle "
+    mystartpt = scoord(offset, scale, startpt)
+    ans += "cx='"+str(mystartpt[0])+"' "
+    ans += "cy='"+str(mystartpt[1])+"' "
+    ans += "r='"+str(radius)+"' "
+    ans += "style='fill: "+color+";'"
+    ans += ">"
+    ans += "<title>"+str(title)+"</title>"
+    ans += "</circle>"
+    return(ans)
+    
+
+## ============================================
+## mytext: Place text in an svg, taking as input the offset and scale of the
+##    of the output coordinates, and the local coordinates of the
+##    location of the text
+## ============================================
+def mytext(thetext, offset, scale, startpt, endpt, fontsize, fontweight, fontcolor):
+    ans = "<text "
+    mystartpt = scoord(offset, scale, startpt)
+    ans += "x='"+str(mystartpt[0])+"' "
+    ans += "y='"+str(mystartpt[1])+"' "
+    ans += "style='fill: "+fontcolor+"; "
+    ans += "font-size: "+str(fontsize)+"; "
+    ans += "font-weight: "+fontweight+"; "
+    ans += "'"
+    ans += ">"
+    ans += str(thetext)
+    ans +="</text>"
+    return(ans)
+    
+
+
+## ============================================
+## myline: Draw a line, taking as input the offset and scale of the
+##    of the output coordinates, and the local coordinates of the
+##    start and end points, and some information about the appearance
+##    of the line 
+## ============================================
+def myline(offset, scale, startpt, endpt, width, style, color):
+    if startpt == endpt:
+       return("")
+    ans = "<line "
+    mystartpt = scoord(offset, scale, startpt)
+    ans += "x1='"+str(mystartpt[0])+"' "
+    ans += "y1='"+str(mystartpt[1])+"' "
+    myendpt = scoord(offset, scale, endpt)
+    ans += "x2='"+str(myendpt[0])+"' "
+    ans += "y2='"+str(myendpt[1])+"' "
+    ans += "style='stroke: "+color+"; "
+    if width:
+       ans += "stroke-width:  "+str(width)+"; "
+    if style:
+       ans += style+"; "
+    ans += "'"
+    ans += "/>"
+    return(ans)
+
+
+
+
+
+## =================
+## scoord: convert from working coordinates to screen coordinates
+##  base + scale * localcoord
+##  since vec1 * vec2 does not do coordinatewise multiplication,
+##  we have to do it by hand
+## ================
+def scoord(base, scale, wc):
+    rescaled = [ base[j] + scale[j]*wc[j] for j in range(len(scale)) ]
+    return(rescaled)
+
