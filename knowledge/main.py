@@ -38,7 +38,7 @@ class IgnorePattern(markdown.inlinepatterns.Pattern):
 md = markdown.Markdown(extensions=['wikilinks'],
     extension_configs = {'wikilinks': [('base_url', 'http://wiki.l-functions.org/')]})
 # Prevent $..$, $$..$$, \(..\), \[..\] blocks from being processed by Markdown
-md.inlinePatterns.add('mathjax$', IgnorePattern(r'(?<![\\\$])(\$.+?\$)'), '<escape')
+md.inlinePatterns.add('mathjax$', IgnorePattern(r'(?<![\\\$])(\$[^\$].*?\$)'), '<escape')
 md.inlinePatterns.add('mathjax$$', IgnorePattern(r'(?<![\\])(\$\$.+?\$\$)'), '<escape')
 md.inlinePatterns.add('mathjax\\(', IgnorePattern(r'(\\\(.+?\\\))'), '<escape')
 md.inlinePatterns.add('mathjax\\[', IgnorePattern(r'(\\\[.+?\\\])'), '<escape')
