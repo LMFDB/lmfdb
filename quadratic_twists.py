@@ -98,6 +98,7 @@ def download_Rub_data():
     if limit is None:
         response = flask.Response(d.__iter__())
         response.headers['Content-disposition'] = 'attachment; filename=%s' % label
+	response.content_length=d.length
     else: 
         limit=eval(limit)
         response = make_response(''.join(str(d.readline()) for i in srange(limit)))
