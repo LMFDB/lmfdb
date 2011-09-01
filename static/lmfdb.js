@@ -12,7 +12,7 @@ function error(msg) {
 
 /* only show main content after processing all the latex */
 $(function() {
-  if ($("body").hasClass("knowl") || $("body").hasClass("users")) return;
+  if (window.location.pathname == "/" || $("body").hasClass("users")) return;
   var revealed = false;
   function show_content() {
     revealed = true;

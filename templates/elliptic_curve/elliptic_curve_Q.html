@@ -37,7 +37,11 @@ By size of torsion subgroup:
 <form>
   <table>
     <tr>
-      <td>Conductor</td><td> <input type='text' name='conductor'></td><td><span class="formexample"> e.g. 389 </span></td>
+      <td>Conductor</td>
+     <td>
+       <input type='text' name='conductor' example="389" />
+     </td>
+     <td><span class="formexample"> e.g. 389 </span></td>
     </tr>
     <tr>
       <td>Torsion Order</td><td> <input type='text' name='torsion'></td><td><span class="formexample"> e.g. 2 </span></td>
@@ -46,7 +50,13 @@ By size of torsion subgroup:
       <td>Rank </td><td><input type='text' name='rank'></td><td><span class="formexample"> e.g. 0 </span></td>
     </tr>
     <tr>
-      <td>Optimal </td><td><input type='checkbox' name='optimal'></td>
+      <td>Optimal</td>
+      <td>
+         <select name='optimal'>
+           <option value="">No</option>
+           <option value="on">Yes</option>
+         </select>
+      </td>
     </tr>
   </table>
 <td><button type='submit' value='Search'>Search</td>

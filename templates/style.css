@@ -1,5 +1,6 @@
 {# template defs #}
 {% set col_main = '#292' %}
+{% set col_main_l = '#bfb' %}
 
 {% set col_knowl = '#229' %}
 {% set col_knowl_l = '#DDF' %}
@@ -42,7 +43,6 @@ body {
     color: {{ green }};
     font-family: sans-serif;
     text-decoration: none;
-    padding 5px 0 5px 0;
     margin: 15px 0;
 }
 #content > h1:first-child {
@@ -57,7 +57,7 @@ body {
     text-align: left;
     font-weight: bold;
     color: #292;
-    padding 5px 0 5px 0;
+    padding: 5px 0 5px 0;
     margin: 20px 0 20px 0;
 }
 #content > h3 {
@@ -67,7 +67,6 @@ body {
     text-align: left;
     font-weight: bold;
     color: #181;
-    padding 5px 0 5px 0;
     margin: 15px 0 15px 0;
 }
 #footer {
@@ -92,6 +91,20 @@ a {
   border-radius: 0px;
   -webkit-border-radius: 0px;
   -moz-border-radius: 0px;
+}
+#content .announce {
+  font-size: 1.2em;
+  margin: 40px;
+  padding: 20px;
+  border: 1px solid {{ col_main }};
+
+  border-radius: 10px;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+
+  -webkit-box-shadow: inset 0px 0px 15px 5px {{ col_main_l }};
+  -moz-box-shadow:    inset 0px 0px 15px 5px {{ col_main_l }};
+  box-shadow:         inset 0px 0px 15px 5px {{ col_main_l }};
 }
 
 a:visited { color: #080; }
@@ -453,6 +466,9 @@ table a {
   -webkit-border-radius: 3px;
   -moz-border-radius: 3px;
 }
+table td {
+  vertical-align:top;
+}
 
 table a:hover {
     background: #cfc;
@@ -474,6 +490,9 @@ table.ntdata thead tr {
 }
 
 table.ntdata tbody tr {
+}
+
+table.ntdata tbody th {
 }
 
 table tr.odd {
@@ -516,6 +535,8 @@ div.literature {
   padding: 5px 10px;
   margin-bottom: 30px;
   border-bottom: 1px solid {{ col_knowl_d }};
+  border-top-left-radius: 10px;
+  -moz-border-radius-topleft: 10px;
 }
 .knowl-preview-sep {
   padding: 5px;
@@ -676,7 +697,7 @@ h2 > .knowl-qm {
 .box1 {
     margin: 20px 5px 20px 5px;
     padding: 1px;
-    max-width: 600px;
+    max-width: 800px;
     overflow: auto;
 }
 

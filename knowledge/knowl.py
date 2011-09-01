@@ -69,6 +69,7 @@ class Knowl(object):
       logger.warning("quality '%s' is not allowed")
       return
     self._quality = quality
+    self._store_db("quality", quality)
 
   @property
   def title(self):
