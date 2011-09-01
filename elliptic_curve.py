@@ -86,8 +86,8 @@ def rational_elliptic_curves():
         'conductor_list': conductor_list,
     }
     credit = 'John Cremona'
-    t = 'Elliptic curves over \(\mathbb{Q}\)'
-    bread = [('Elliptic Curves', url_for("rational_elliptic_curves")),('Elliptic curves over \(\mathbb{Q}\)',' ')]
+    t = 'Elliptic curves'
+    bread = [('Elliptic Curves', url_for("rational_elliptic_curves")),('Elliptic curves',' ')]
     return render_template("elliptic_curve/elliptic_curve_Q.html", info = info, credit=credit, title = t,bread=bread)
 
 @app.route("/EllipticCurve/Q/<int:conductor>")
@@ -123,9 +123,8 @@ def elliptic_curve_search(**args):
     info['curves'] = res
     info['format_ainvs'] = format_ainvs
     credit = 'John Cremona'
-    t = 'Elliptic curves over \(\mathbb{Q}\)'
+    t = 'Elliptic curves)'
     bread = [('Elliptic Curves', url_for("rational_elliptic_curves")),
-             ('Elliptic Curves over \(\mathbb{Q}\)', url_for("rational_elliptic_curves")),
              ('Search Results', '.')]
     return render_template("elliptic_curve/elliptic_curve_search.html",  info = info, credit=credit,bread=bread, title = t)
     
@@ -197,7 +196,7 @@ def render_isogeny_class(iso_class):
     info['friends'] = friends
 
     t= "Elliptic Curve Isogeny Class %s" % info['label']
-    bread = [('Elliptic Curves ', url_for("rational_elliptic_curves")),('Elliptic Curves over \(\mathbb{Q}\)',url_for("rational_elliptic_curves")),('isogeny class %s' %info['label'],' ')]
+    bread = [('Elliptic Curves ', url_for("rational_elliptic_curves")),('isogeny class %s' %info['label'],' ')]
 
     return render_template("elliptic_curve/iso_class.html", info = info,bread=bread, credit=credit,title = t)
 
@@ -290,7 +289,7 @@ def render_curve_webpage_by_label(label):
     #properties.extend([ "prop %s = %s<br/>" % (_,_*1923) for _ in range(12) ])
     credit = 'John Cremona'
     t = "Elliptic Curve %s" % info['label']
-    bread = [('Elliptic Curves ', url_for("rational_elliptic_curves")),('Elliptic Curves over \(\mathbb{Q}\)', url_for("rational_elliptic_curves")),('Elliptic curves %s' %info['label'],' ')]
+    bread = [('Elliptic Curves ', url_for("rational_elliptic_curves")),('Elliptic curves %s' %info['label'],' ')]
 
     return render_template("elliptic_curve/elliptic_curve.html", 
          info=info, properties2=properties2, credit=credit,bread=bread, title = t)

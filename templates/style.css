@@ -42,7 +42,6 @@ body {
     color: {{ green }};
     font-family: sans-serif;
     text-decoration: none;
-    padding 5px 0 5px 0;
     margin: 15px 0;
 }
 #content > h1:first-child {
@@ -57,7 +56,7 @@ body {
     text-align: left;
     font-weight: bold;
     color: #292;
-    padding 5px 0 5px 0;
+    padding: 5px 0 5px 0;
     margin: 20px 0 20px 0;
 }
 #content > h3 {
@@ -67,7 +66,6 @@ body {
     text-align: left;
     font-weight: bold;
     color: #181;
-    padding 5px 0 5px 0;
     margin: 15px 0 15px 0;
 }
 #footer {
@@ -453,6 +451,9 @@ table a {
   -webkit-border-radius: 3px;
   -moz-border-radius: 3px;
 }
+table td {
+  vertical-align:top;
+}
 
 table a:hover {
     background: #cfc;
@@ -519,6 +520,8 @@ div.literature {
   padding: 5px 10px;
   margin-bottom: 30px;
   border-bottom: 1px solid {{ col_knowl_d }};
+  border-top-left-radius: 10px;
+  -moz-border-radius-topleft: 10px;
 }
 .knowl-preview-sep {
   padding: 5px;
