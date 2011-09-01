@@ -144,8 +144,8 @@ def updateMappingRule():
     for i in range(len(rules)/2):
       if re.search(rules[i+i], child[1]) is not None:
         url = re.sub(rules[i+i], rules[i+i+1], child[1])
-        db.fs.files.update({"_id": child[0]}, {"$set": {"metadata.related_to": url}})
         break
+    db.fs.files.update({"_id": child[0]}, {"$set": {"metadata.related_to": url}})
     print child[0], child[1], url
         
   return "resp"
