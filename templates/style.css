@@ -1,4 +1,5 @@
 {# template defs #}
+{% set col_error = '#922' %}
 {% set col_main = '#292' %}
 {% set col_main_l = '#bfb' %}
 
@@ -101,6 +102,12 @@ a {
   -webkit-box-shadow: inset 0px 0px 15px 5px {{ col_main_l }};
   -moz-box-shadow:    inset 0px 0px 15px 5px {{ col_main_l }};
   box-shadow:         inset 0px 0px 15px 5px {{ col_main_l }};
+}
+#content .announce.error {
+  border: 1px solid {{ col_error }};
+  -webkit-box-shadow: inset 0px 0px 15px 5px {{ col_error }};
+  -moz-box-shadow:    inset 0px 0px 15px 5px {{ col_error }};
+  box-shadow:         inset 0px 0px 15px 5px {{ col_error }};
 }
 
 a:visited { color: #080; }
