@@ -102,7 +102,7 @@ def show(ID):
          title = "Knowl '%s'" % k.id,
          k = k,
          render = r,
-         bread = get_bread([('Show %s'%k.id, url_for('.show', ID=ID))]))
+         bread = get_bread([('%s'%k.id, url_for('.show', ID=ID))]))
 
 @knowledge_page.route("/delete/<ID>")
 @admin_required
