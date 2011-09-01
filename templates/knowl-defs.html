@@ -97,6 +97,10 @@
      <a onclick='return confirm("Really delete Knowl {{ k.id }}? There is no way back!");'
             href="{{ url_for('.delete', ID=k.id) }}">delete</a>
    {% endif %}
+   <span style="margin-left: 30px;">Navigate:</span>
+   <a href="{{ url_for('.show', ID='wiki.index') }}">Knoiki</a>
+   &middot;
+   <a href="{{ url_for('.index') }}">Overview</a>
 </div>
 {%- endmacro %}
 

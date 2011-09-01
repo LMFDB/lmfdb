@@ -85,12 +85,8 @@ a {
   color: #292;
   text-decoration: none;
   font-family: sans-serif;
-  padding: 2px 2px;
 }
 #content a {
-  border-radius: 0px;
-  -webkit-border-radius: 0px;
-  -moz-border-radius: 0px;
 }
 #content .announce {
   font-size: 1.2em;
@@ -533,10 +529,13 @@ div.literature {
 .knowl-bar {
   background: {{ col_knowl_ll}};
   padding: 5px 10px;
-  margin-bottom: 30px;
+  margin-bottom: 5px;
   border-bottom: 1px solid {{ col_knowl_d }};
   border-top-left-radius: 10px;
   -moz-border-radius-topleft: 10px;
+}
+.knowl-bar a {
+  padding: 2px 5px;
 }
 .knowl-preview-sep {
   padding: 5px;
@@ -553,6 +552,12 @@ div.literature {
   padding: 10px 0px 15px 10px;
   border-bottom-left-radius: 10px;
   -moz-border-radius-bottomleft: 10px;
+}
+.knowl-content h1 {
+  margin: 0px 0px 10px 0px;
+}
+.knowl-content h2 {
+  margin: 0px 0px 5px 0px;
 }
 *[knowl] {
   /* border-bottom: 2px dotted #66C; */
