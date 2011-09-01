@@ -554,6 +554,8 @@ div.literature {
 .knowl-title:hover,
 .knowl-title.active {
   border-bottom: 2px solid {{ col_knowl }};
+  background: {{ col_knowl_l }};
+  color: {{ col_knowl_dd }};
 }
 
 body.knowl #header {

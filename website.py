@@ -30,7 +30,7 @@ def not_found(error):
 
 @app.route("/")
 def index():
-    return render_template('index.html', title ="Index")
+    return render_template('index.html', title ="Homepage", bread=None)
 
 def root_static_file(name):
     def static_fn():
@@ -224,6 +224,7 @@ def main():
     
     import base
     base._init(dbport)
+    logging.info("... done.")
 
     # just for debugging
     #if options["debug"]:

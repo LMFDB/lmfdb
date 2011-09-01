@@ -1,9 +1,16 @@
 {# 
    the following KNOWL macro enables to tag certain locations in the
    HTML documents to reference to saved "Knowls". They contain all
-   the information and form the stored knowledge. The macro itself
-   is only there for the presentation of the data via suitable
-   HTML tags and associated javascript code.
+   the information and form the stored knowledge. 
+    * the knowl's title ends up in the page
+    * the content is either revealed or immediately included, depends on
+      what the macro does.
+   The macro itself is only there for the presentation of the data via suitable
+   HTML tags and associated javascript code. 
+   
+   Arguments: 
+    * title: to overwrite the knowl's title, usually just leave it 
+             to its default None.
 #}
 {% macro KNOWL(knowlid, title=none) -%}
   {% with knowl = Knowl(knowlid) -%}
@@ -19,12 +26,15 @@
 
     {%- else -%}
       {# knowl does not exist. wrong knowlid or opportunity to create one! #}
-      <span class="knowl knowl-error">
         {% if user.is_authenticated() -%}
-          [ERROR: Knowl with ID '{{knowlid}}' does not exist. Wrong ID or
-          <a href="{{ url_for('knowledge.edit', ID=knowlid) }}">create a new one</a>.]
+        <span class="knowl knowl-error">
+          Knowl '{{knowlid}}' missing or wrong ID. 
+          <a href="{{ url_for('knowledge.edit', ID=knowlid) }}">Create it</a>.
+        </span> 
         {%- else -%}
-          ['{{knowlid}}' missing ]
+        <span class="knowl knowl-error">
+          '{{knowlid}}'
+        </span> 
         {%- endif %}
       </span>
     {%- endif %}

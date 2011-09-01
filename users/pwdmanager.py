@@ -56,12 +56,13 @@ class LmfdbUser(UserMixin):
 
   It is backed by MongoDB.
   """
-  properties = ('full_name', 'email', 'url', 'about', 'created')
+  properties = ('full_name', 'email', 'url', 'about')
 
   def __init__(self, uid):
     if not isinstance(uid, basestring):
       raise Exception("Username is not a basestring")
 
+    self._uid = uid
     self._authenticated = False
     self._dirty = False #flag if we have to save
     self._data = dict([(_,None) for _ in LmfdbUser.properties])
@@ -72,7 +73,7 @@ class LmfdbUser(UserMixin):
 
   @property
   def name(self):
-    return self.full_name or self._data['_id']
+    return self.full_name or self._data.get('_id', None)
 
   @property
   def full_name(self):
@@ -109,6 +110,8 @@ class LmfdbUser(UserMixin):
 
   @url.setter
   def url(self, url):
+    if not url.startswith("http://") or not url.startswith("https://"):
+      url = "http://" + url
     self._data['url'] = url
     self._dirty = True
 
@@ -143,7 +146,7 @@ class LmfdbUser(UserMixin):
     #from time import time
     #t1 = time()
     if not 'password' in self._data: 
-      logger.warning("no password data in db for '%s'!" % self.id)
+      logger.warning("no password data in db for '%s'!" % self._uid)
       return False
     for i in range(rmin, rmax + 1):
       if self._data['password'] == hashpwd(pwd, str(i)):
