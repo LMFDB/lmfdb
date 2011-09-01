@@ -243,3 +243,6 @@ else:
     import base
     base._init(37010)
     app.logger.addHandler(file_handler)
+
+def getDownloadsFor(path):
+  return "bar"

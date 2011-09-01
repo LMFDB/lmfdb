@@ -18,9 +18,9 @@ from base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
 from flaskext.login import login_required, current_user
 from knowl import Knowl
-from utils import make_logger
 from users import admin_required
 import markdown
+from knowledge import logger
 
 ASC = pymongo.ASCENDING
 
@@ -55,8 +55,7 @@ def test_knowl_type(k):
   return isinstance(k, Knowl)
 app.jinja_env.tests['knowl_type'] = test_knowl_type
 
-knowledge_page = Blueprint("knowledge", __name__, template_folder='templates')
-logger = make_logger(knowledge_page)
+from knowledge import knowledge_page
 
 # blueprint specific definition of the body_class variable
 @knowledge_page.context_processor
@@ -135,6 +134,7 @@ def save_form():
   k = Knowl(ID)
   k.title = request.form['title']
   k.content = request.form['content']
+  k.quality = request.form['quality']
   k.save()
   return flask.redirect(url_for(".show", ID=ID))
   

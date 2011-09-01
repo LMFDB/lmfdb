@@ -5,7 +5,8 @@ from pymongo import ASCENDING
 import base
 from base import app
 from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
-
+import tempfile
+import os
 
 from utils import ajax_more, image_src, web_latex, to_dict, parse_range
 import sage.all 
@@ -143,7 +144,25 @@ def by_ec_label(label):
         return render_curve_webpage_by_label(label=label)
     else:
         return render_isogeny_class(label)
+
+@app.route("/EllipticCurve/Q/plot/<label>")
+def plot_ec(label):
+    C = base.getDBConnection()
+    data = C.ellcurves.curves.find_one({'label': label})
+    if data is None:
+        return "No such curve"    
+    ainvs = [int(a) for a in data['ainvs']]
+    E = EllipticCurve(ainvs)
+    P = E.plot()
+    _, filename = tempfile.mkstemp('.png')
+    P.save(filename)
+    data = open(filename).read()
+    os.unlink(filename)
+    response = make_response(data)
+    response.headers['Content-type'] = 'image/png'
+    return response
     
+
 def render_isogeny_class(iso_class):
     info = {}
     credit = 'John Cremona'
@@ -214,7 +233,7 @@ def render_curve_webpage_by_label(label):
     iso_class = data['iso']
     rank = data['rank']
     j_invariant=E.j_invariant()
-    plot=E.plot()
+    #plot=E.plot()
     discriminant=E.discriminant()
     xintpoints_projective=[E.lift_x(x) for x in xintegral_point(data['x-coordinates_of_integral_points'])]
     xintpoints=proj_to_aff(xintpoints_projective)
@@ -256,11 +275,12 @@ def render_curve_webpage_by_label(label):
                        ('Modular Form', url_for("cmf.render_classical_modular_form_from_label",label="%s" %(iso_class))),
                        ('L-function', "/L/EllipticCurve/Q/%s" % label)]
     info['learnmore'] = [('Elliptic Curves', url_for("not_yet_implemented"))]
-    info['plot'] = image_src(plot)
+    #info['plot'] = image_src(plot)
+    info['plot'] = url_for('plot_ec', label=label)
     info['iso_class'] = data['iso']
     info['download_qexp_url'] = url_for('download_qexp', limit=100, ainvs=','.join([str(a) for a in ainvs]))
     properties2 = [('Label', '%s' % label),
-                   (None, '<img src="%s" width="200" height="150"/>' % image_src(plot)),
+                   (None, '<img src="%s" width="200" height="150"/>' % url_for('plot_ec', label=label) ),
                    ('Conductor', '\(%s\)' % N), 
                    ('Discriminant', '\(%s\)' % discriminant),
                    ('j-invariant', '\(%s\)' % j_invariant),
