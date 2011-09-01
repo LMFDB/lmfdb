@@ -1,6 +1,7 @@
 #DirichletCharacter.py
 
 import re
+import logging 
 
 from base import app
 from flask import Flask, session, g, render_template, url_for, make_response, request, redirect
@@ -215,7 +216,9 @@ def initCharacterInfo(chi,args, request):
         info['vals'] = str(chi.vals)
         info['valstex'] = str(chi.valstex)
         info['bound'] = int(chi.bound)
+        print chi.bound
         info['lth'] = int(chi.lth)
+        print chi.lth
         info['primchar'] = str(chi.primchar)
         info['primcharmodulus'] = str(chi.primcharmodulus)
         info['primcharconductor'] = str(chi.primcharconductor)

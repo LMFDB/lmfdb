@@ -344,7 +344,7 @@ class WebLfunction:
         else:
             self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{\\chi})"
             self.credit = 'Sage'
-            self.title = "Dirichlet L-function: $L(s,\\chi)$"
+        self.title = "Dirichlet L-function: $L(s,\\chi)$"
         self.title = (self.title+", where $\\chi$ is the character modulo "+
                           str(self.charactermodulus) + ", number " +
                           str(self.characternumber))

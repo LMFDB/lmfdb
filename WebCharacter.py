@@ -125,37 +125,50 @@ class WebCharacter:
             #    t.append(j)
             #    chiv.append(str("\(\\zeta\)"))
         #self.chival = chiv
+        chizero = DirichletGroup(self.modulus)[0]
+        self.gauss_sum = chi.gauss_sum(1)
+        self.jacobi_sum = chi.jacobi_sum(chizero)
+        self.kloosterman_sum = chi.kloosterman_sum(1,1)
         self.texname = "\(\\chi_{%s}\)" %(self.number)
         self.credit = 'Sage'
         self.title = "Dirichlet Character: \(\chi_{%s}\\!\\!\pmod{%s}\)" %(self.number,self.modulus)
 
 #================
     def gauss_sum_tex(self):
-        ans = "For \(a \\in \\mathbb{Z}\\;\)  and "
-        ans += "\(\\;\\zeta = e^{2\\pi i/%s}\)" %(self.modulus)
-        ans += " a primitive \(%s\)th root of unity, " %(self.modulus)
-        ans += "the \(\\textbf{Gauss sum}\) associated to "
-        ans += "\(\\chi_{%s}\) and \(a\) is given by" %(self.number)
-        ans += "\\begin{equation} \n \\tau_{a}(\\chi_{%s}) = \\sum_{r \\,\\in\\, \\mathbb{Z}/%s\\mathbb{Z}} \\chi_{%s}(r) \\zeta^{ar}. \n \\end{equation} \n" %(self.number,self.modulus,self.number)
+        ans = "\\begin{equation} \\tau(\\chi_{%s}) = \\tau_1(\\chi_{%s}) = %s.\\end{equation} " %(self.number,self.number,latex(self.gauss_sum))
+        ans += "Compute other Gauss sums: \(\\qquad\\qquad\) "
+        ans += "\(\\tau_a(\\chi_{%s})\), \(\\;\) for \(a = \)" %(self.number)
+        #ans = "For \(a \\in \\mathbb{Z}\\;\)  and "
+        #ans += "\(\\;\\zeta = e^{2\\pi i/%s}\)" %(self.modulus)
+        #ans += " a primitive \(%s\)th root of unity, " %(self.modulus)
+        #ans += "the \(\\textbf{Gauss sum}\) associated to "
+        #ans += "\(\\chi_{%s}\) and \(a\) is given by" %(self.number)
+        #ans += "\\begin{equation} \n \\tau_{a}(\\chi_{%s}) = \\sum_{r \\,\\in\\, \\mathbb{Z}/%s\\mathbb{Z}} \\chi_{%s}(r) \\zeta^{ar}. \n \\end{equation} \n" %(self.number,self.modulus,self.number)
         return(ans)
 #================
 
     def jacobi_sum_tex(self):
-        ans = "For \(\\psi\) a Dirichlet character modulo \(%s\), " %(self.modulus)
-        ans += "the \(\\textbf{Jacobi sum}\) associated to "
-        ans += "\(\\chi_{%s}\) and \(\\psi\) is given by" %(self.number)
-        ans += "\\begin{equation} \n J(\\chi_{%s},\\psi) = \\sum_{r \\,\\in\\,\\mathbb{Z}/%s\\mathbb{Z}} \\chi_{%s}(r) \\psi(1-r). \n \\end{equation} \n" %(self.number,self.modulus,self.number)
+        ans = "\\begin{equation} J(\\chi_{%s},\\chi_{0}) = %s.\\end{equation}" %(self.number,latex(self.jacobi_sum))
+        ans += "Compute other jacobi sum at other characters, \(\\psi\), modulo \(%s\): \(\\qquad\\qquad\)  " %(self.modulus)
+        ans += "\(J(\\chi_{%s},\\psi)\), \(\\;\) where \(\\psi =\)" %(self.number)
+        #ans = "For \(\\psi\) a Dirichlet character modulo \(%s\), " %(self.modulus)
+        #ans += "the \(\\textbf{Jacobi sum}\) associated to "
+        #ans += "\(\\chi_{%s}\) and \(\\psi\) is given by" %(self.number)
+        #ans += "\\begin{equation} \n J(\\chi_{%s},\\psi) = \\sum_{r \\,\\in\\,\\mathbb{Z}/%s\\mathbb{Z}} \\chi_{%s}(r) \\psi(1-r). \n \\end{equation} \n" %(self.number,self.modulus,self.number)
         return(ans)
 
 #================
 
     def kloosterman_sum_tex(self):
-        ans = "The \(\\textbf{Kloosterman sum}\) associated to "
-        ans += "\(\\chi_{%s}\) and the integers \(a,b\) " %(self.number)
-        ans += "\\begin{equation} \n K(a,b,\\chi_{%s}) = \\sum_{r \\,\\in\\,\\mathbb{Z}/%s\\mathbb{Z}} \\chi_{%s}(r) \\zeta^{ar+ br^{-1}}, \n \end{equation} \n" %(self.number,self.modulus,self.number)
-        ans += "where \(\\zeta = e^{2 \\pi i/%s}\) is " %(self.modulus)
-        ans += "a primitive \(%s\)th root of unity. " %(self.modulus)
-        ans += "This reduces to the Gauss sum if \(b=0\)."
+        ans = "\\begin{equation} K(1,1,\\chi_{%s}) = %s.\\end{equation}" %(self.number,latex(self.kloosterman_sum))
+        ans += "Compute other Kloosterman sums: \(\\qquad \\qquad\)"
+        ans += "\(K(a,b,\\chi_{%s})\), \(\\;\) where \(a,b =\)" %(self.number)
+        #ans = "The \(\\textbf{Kloosterman sum}\) associated to "
+        #ans += "\(\\chi_{%s}\) and the integers \(a,b\) " %(self.number)
+        #ans += "\\begin{equation} \n K(a,b,\\chi_{%s}) = \\sum_{r \\,\\in\\,\\left(\\mathbb{Z}/%s\\mathbb{Z}\\right)^{\\times}} \\chi_{%s}(r) \\zeta^{ar+ br^{-1}}, \n \end{equation} \n" %(self.number,self.modulus,self.number)
+        #ans += "where \(\\zeta = e^{2 \\pi i/%s}\) is " %(self.modulus)
+        #ans += "a primitive \(%s\)th root of unity. " %(self.modulus)
+        #ans += "This reduces to the Gauss sum if \(b=0\)."
         return(ans)
 
     def _set_properties(self):
