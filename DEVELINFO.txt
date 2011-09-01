@@ -15,12 +15,34 @@ A template has several variables:
  * credit - small credits note at the bottom
  * support - either a default or a line that says who has supported this. 
 
+For more details read templates/homepage.html
+
 
 The idea is to extend "homepage.html" and replace the content block:
 {% block content %}
    ... your stuff ...
 {% endblock %}
 
+
+Code Organization / Blueprints
+------------------------------
+
+Each part of the website should be a Python module [1] and a
+proper flask Blueprint [2]. Look at how /knowledge/ is done,
+especially knowledge/__init__.py and knowledge/main.py. 
+Also, templates and static files specific to the module
+should be in their respective "templates" and "static"
+folders, e.g. /knowledge/templates/. 
+
+[1] http://docs.python.org/tutorial/modules.html
+[2] http://flask.pocoo.org/docs/blueprints/
+
+
+Code Attribution
+----------------
+Each file should begin with a short copyright information,
+mentioning the people who are mainly involved in coding
+this particular python file. 
 
 
 List-table should always be like
