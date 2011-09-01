@@ -62,6 +62,7 @@ class LmfdbUser(UserMixin):
     if not isinstance(uid, basestring):
       raise Exception("Username is not a basestring")
 
+    self._uid = uid
     self._authenticated = False
     self._dirty = False #flag if we have to save
     self._data = dict([(_,None) for _ in LmfdbUser.properties])
@@ -143,7 +144,7 @@ class LmfdbUser(UserMixin):
     #from time import time
     #t1 = time()
     if not 'password' in self._data: 
-      logger.warning("no password data in db for '%s'!" % self.id)
+      logger.warning("no password data in db for '%s'!" % self._uid)
       return False
     for i in range(rmin, rmax + 1):
       if self._data['password'] == hashpwd(pwd, str(i)):
