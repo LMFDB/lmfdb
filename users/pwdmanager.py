@@ -56,7 +56,7 @@ class LmfdbUser(UserMixin):
 
   It is backed by MongoDB.
   """
-  properties = ('full_name', 'email', 'url', 'about', 'created')
+  properties = ('full_name', 'email', 'url', 'about')
 
   def __init__(self, uid):
     if not isinstance(uid, basestring):
