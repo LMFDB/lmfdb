@@ -30,7 +30,7 @@
           </span>
       </div>
       {# this span inside a div thing is necessary to align it at the bottom, see css #}
-      <div id="title"><span id="title-content">{{ title }}</span></div>
+      <div id="title"><span id="title-content">{{ title|safe }}</span></div>
     </div>
 </div>
 

@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
-<title>LMFDB{% if title %}: {{ title }}{% endif %}</title>
+<title>LMFDB{% if title %}: {{ title|striptags }}{% endif %}</title>
 <link href="{{ url_for('css') }}" rel="stylesheet" type="text/css" /> 
 
 <script type="text/javascript" src="{{ url_for('static', filename='jquery.min.js') }}"></script>

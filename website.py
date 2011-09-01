@@ -26,11 +26,16 @@ import sys
 
 @app.errorhandler(404)
 def not_found(error):
-    return "404", 404
+  return render_template("404.html", title="404 Error"), 404
+
+@app.errorhandler(500)
+def not_found(error):
+  return render_template("500.html", title="500 Error"), 500
 
 @app.route("/")
 def index():
-    return render_template('index.html', title ="Homepage", bread=None)
+  t = "The <b>L</b>-function and <b>M</b>odular <b>F</b>orms <b>D</b>ata<b>B</b>ase"
+  return render_template('index.html', title = t, bread=None)
 
 def root_static_file(name):
     def static_fn():

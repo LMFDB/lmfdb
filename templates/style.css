@@ -1,5 +1,6 @@
 {# template defs #}
 {% set col_main = '#292' %}
+{% set col_main_l = '#bfb' %}
 
 {% set col_knowl = '#229' %}
 {% set col_knowl_l = '#DDF' %}
@@ -90,6 +91,20 @@ a {
   border-radius: 0px;
   -webkit-border-radius: 0px;
   -moz-border-radius: 0px;
+}
+#content .announce {
+  font-size: 1.2em;
+  margin: 40px;
+  padding: 20px;
+  border: 1px solid {{ col_main }};
+
+  border-radius: 10px;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+
+  -webkit-box-shadow: inset 0px 0px 15px 5px {{ col_main_l }};
+  -moz-box-shadow:    inset 0px 0px 15px 5px {{ col_main_l }};
+  box-shadow:         inset 0px 0px 15px 5px {{ col_main_l }};
 }
 
 a:visited { color: #080; }
