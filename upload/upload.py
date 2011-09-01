@@ -33,7 +33,10 @@ def get_bread():
 @upload_page.route("/")
 @login_required
 def index():
-  return render_template("upload-index.html", title = "Data Upload", bread = get_bread())
+  related_to = "";
+  if request.values.has_key('related_to'):
+    related_to = request.values['related_to']
+  return render_template("upload-index.html", title = "Data Upload", bread = get_bread(), related_to = related_to)
 
 @upload_page.route("/upload", methods = ["POST"])
 @login_required
@@ -42,6 +45,7 @@ def upload():
   metadata = {
     "name": request.form['name'],
     "full_description": request.form['full_description'],
+    "related_to": request.form['related_to'],
     "data_format": request.form['data_format'],
     "creator": request.form['creator'],
     "reference": request.form['reference'],
@@ -91,14 +95,23 @@ def admin():
   approved = [ fs.get(x['_id']) for x in db.fs.files.find({"metadata.status" : "approved"}) ]
   disapproved = [ fs.get(x['_id']) for x in db.fs.files.find({"metadata.status" : "disapproved"}) ]
 
-  return render_template("upload-admin.html", title = "Data Upload", bread = get_bread(), unmoderated=unmoderated, approved=approved, disapproved=disapproved)
+  return render_template("upload-view.html", title = "Data Upload", bread = get_bread(), unmoderated=unmoderated, approved=approved, disapproved=disapproved)
 
 @upload_page.route("/download/<id>/<filename>", methods = ["GET"])
 def download(id, filename):
   file = GridFS(getDBConnection().upload).get(ObjectId(id))
-  response = flask.make_response(file.read())
+  response = flask.Response(file.__iter__())
   response.content_type=file.metadata['content_type']
+  response.content_length=file.length
+  
   return response
+
+@upload_page.route("/view/<id>", methods = ["GET"])
+def view(id):
+  file = GridFS(getDBConnection().upload).get(ObjectId(id))
+  return render_template("upload-view.html", title = "View file", bread = get_bread(), file = file)
+
+
 
 @upload_page.route("/updateMetadata", methods = ["GET"])
 def updateMetadata():
@@ -108,3 +121,14 @@ def updateMetadata():
   value = request.values['value']
   db.fs.files.update({"_id" : ObjectId(id)}, {"$set": {"metadata."+property : value}})
   return getDBConnection().upload.fs.files.find_one({"_id" : ObjectId(id)})['metadata'][property]
+
+def getUploadedFor(path):
+  files = getDBConnection().upload.fs.files.find({"metadata.related_to": path})
+  ret =  [ [x['metadata']['name'], "/upload/view/%s" % x['_id']] for x in files ]
+  ret.insert(0, ["Upload your data", url_for("upload.index") + "?related_to=" + request.path ])
+  return ret
+
+@app.context_processor
+def ctx_knowledge():
+  return {'getUploadedFor' : getUploadedFor}
+

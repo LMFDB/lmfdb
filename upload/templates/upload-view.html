@@ -608,7 +608,7 @@ function parseJsonTable2(txt, out) {
 
 <script>
   function updateMetadata(id, property, value) {
-    jQuery.get("updateMetadata", {id: id, property: property, value: value});
+    jQuery.get("/upload/updateMetadata", {id: id, property: property, value: value});
   }
 </script>
 
@@ -623,14 +623,15 @@ function parseJsonTable2(txt, out) {
 {% endmacro %}
 
 
-{% macro render_uploadlist(title, list) -%}
-
+{% macro render_uploadlist(title, list) %}
 <h2> {{ title }} </h2>
 
 {% for entry in list %}
 <dl class=propertylist>
   <dt>Name</dt>
   <dd>{{editable(entry,'name')}}</dd>
+  <dt>Related to</dt>
+  <dd>{{editable(entry,'related_to')}}</dd>
   <dt>Original file name</dt>
   <dd>{{editable(entry,'original_file_name')}}</dd>
   <dt>Description</dt>
@@ -667,9 +668,15 @@ function parseJsonTable2(txt, out) {
   {{ caller(entry) }}
 </dl>
 {% endfor %}
-{%- endmacro %}
+{% endmacro %}
+
+{% if file is defined %}
+{% call(entry) render_uploadlist("View file", [file]) %}
+{% endcall %}
+{% endif %}
 
 
+{% if unmoderated is defined %}
 {% call(entry) render_uploadlist('Awaiting approval', unmoderated) %}
   <dt>Action</dt>
   <dd>
@@ -680,11 +687,20 @@ function parseJsonTable2(txt, out) {
     </form>
   </dd>
 {% endcall %}
+{% endif %}
 
 
-{% call(entry) render_uploadlist('Approved', approved) %}
-{% endcall %}
-{% call(entry) render_uploadlist('Disapproved', disapproved) %}
-{% endcall %}
+{% if approved is defined %}
+  {% call(entry) render_uploadlist('Approved', approved) %}
+
+  {% endcall %}
+{% endif %}
+{% if disapproved is defined %}
+  {% call(entry) render_uploadlist('Disapproved', disapproved) %}
+
+  {% endcall %}
+{% endif %}
+
+
 
 {% endblock %}

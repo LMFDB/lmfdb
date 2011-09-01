@@ -5,6 +5,7 @@ from pymongo import ASCENDING
 import base
 from base import app
 from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
+import flask
 
 
 from utils import ajax_more, image_src, web_latex, to_dict, parse_range
@@ -94,8 +95,9 @@ def download_Rub_data():
     isogeny=C.quadratic_twists.isogeny.files
     filename=isogeny.find_one({'label':label})['filename']
     d= fs.get_last_version(filename)
-    if limit==None:
-        response = make_response(d.read())
+    if limit is None:
+        response = flask.Response(d.__iter__())
+        response.headers['Content-disposition'] = 'attachment; filename=%s' % label
     else: 
         limit=eval(limit)
         response = make_response(''.join(str(d.readline()) for i in srange(limit)))
