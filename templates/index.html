@@ -1,34 +1,37 @@
 {% extends "homepage.html" %}
-{% block body %}
+{% block content %}
 
-Examples:
+<h2>Sections</h2>
 {{ index() }}
 
-Raw:
+<h2>Knowledge Database</h2>
 <ul>
-<li><a href="/raw">raw</a>
 </ul>
 
-Accounts:
-<ul>
- {% if user.is_authenticated() -%}
-   <li>You are "<a href="{{ url_for('users.info') }}">{{username}}</a>"</li>
- {%- else -%}
-   <li>You are "{{username}}"</li>
- {%- endif %}
- <li><a href="{{ url_for("users.list") }}">User Management</a></li>
-</ul>
-
-Knowledge DB:
+<h2>Additional Pages</h2>
 <ul>
  <li><a href="{{ url_for("knowledge.index") }}">Knowledge</a></li>
- <li><a href="{{ url_for("knowledge.test") }}">Testpage</a></li>
+ <li>{{ KNOWL_LINK("wiki.index") }}.</li>
+ <li>What is a {{ KNOWL("wiki.knowl") }}? Click on it!</li>
+ <li><a href="{{ url_for("users.list") }}">User Management</a>:
+ {% if user.is_authenticated() -%}
+   you are "<a href="{{ url_for('users.info') }}">{{username}}</a>"
+ {%- endif %}
+ </li>
+ <li><a href="{{ url_for("about") }}">About</a></li>
 </ul>
 
-Data uploading:
+{% if user.is_authenticated() %}
+<h2>Data Uploading</h2>
 <ul>
  <li><a href="{{ url_for("upload.index") }}">Upload data</a></li>
  <li><a href="{{ url_for("upload.admin") }}">View uploaded files and moderate</a></li>
 </ul>
+
+<h2>Raw</h2>
+<ul>
+<li><a href="/raw">raw</a>
+</ul>
+{% endif %}
 
 {% endblock %}

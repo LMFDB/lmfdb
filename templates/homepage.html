@@ -5,10 +5,12 @@
     <div class="logo"><a href="/"><img src="{{ url_for('static', filename='images/lmfdb-logo.png') }}" /></a></div>
     <div class="right">
       <div class="bread">
-        <a href="/">Top</a>
-        {% for b in bread -%}
-          &rarr; <a href="{{ b[1] }}">{{ b[0] }}</a>
-        {%- endfor %}
+        {% if bread %}
+          <a href="/">Top</a>
+          {% for b in bread -%}
+            &rarr; <a href="{{ b[1] }}">{{ b[0] }}</a>
+          {%- endfor %}
+         {% endif %}
       </div>
       <div class="topright">
           {% if user.is_authenticated() -%}

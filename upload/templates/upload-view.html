@@ -2,7 +2,6 @@
 
 {% block content %}
 
-<script type="text/javascript" src="/static/jquery.tablesorter.js"></script> 
 <script type="text/javascript" src="/static/jquery.dataTables.js"></script> 
 <script type="text/javascript" src="/static/jquery-ui-1.8.14.custom.min.js"></script> 
 <script type="text/javascript" src="https://www.google.com/jsapi"></script> 
@@ -138,28 +137,10 @@ background-color: #8dbdd8;
 	background-image: url('/static/images/forward_enabled.jpg');
 }
 
-
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * DataTables display
- */
 table.display {
 	margin: 0 auto;
 	clear: both;
 	width: 100%;
-	
-	/* Note Firefox 3.5 and before have a bug with border-collapse
-	 * ( https://bugzilla.mozilla.org/show%5Fbug.cgi?id=155955 ) 
-	 * border-spacing: 0; is one possible option. Conditional-css.com is
-	 * useful for this kind of thing
-	 *
-	 * Further note IE 6/7 has problems when calculating widths with border width.
-	 * It subtracts one px relative to the other browsers from the first column, and
-	 * adds one to the end...
-	 *
-	 * If you want that effect I'd suggest setting a border-top/left on th/td's and 
-	 * then filling in the gaps with other borders.
-	 */
 }
 
 table.display thead th {
@@ -188,12 +169,6 @@ table.display td.center {
 	text-align: center;
 }
 
-
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * DataTables sorting
- */
-
 .sorting_asc {
 	background: url('/static/images/sort_asc.png') no-repeat center right;
 }
@@ -214,13 +189,6 @@ table.display td.center {
 	background: url('/static/images/sort_desc_disabled.png') no-repeat center right;
 }
 
-
-
-
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * DataTables row classes
- */
 table.display tr.odd.gradeA {
 	background-color: #ddffdd;
 }
@@ -253,22 +221,6 @@ table.display tr.even.gradeU {
 	background-color: #eee;
 }
 
-
-tr.odd {
-	background-color: #E2E4FF;
-}
-
-tr.even {
-	background-color: white;
-}
-
-
-
-
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * Misc
- */
 .dataTables_scroll {
 	clear: both;
 }
@@ -358,11 +310,6 @@ table.display tr.odd.row_selected td {
 	background-color: #9FAFD1;
 }
 
-
-/*
- * Sorting classes for columns
- */
-/* For the standard odd/even */
 tr.odd td.sorting_1 {
 	background-color: #D3D6FF;
 }
@@ -387,17 +334,6 @@ tr.even td.sorting_3 {
 	background-color: #F9F9FF;
 }
 
-
-/* For the Conditional-CSS grading rows */
-/*
- 	Colour calculations (based off the main row colours)
-  Level 1:
-		dd > c4
-		ee > d5
-	Level 2:
-	  dd > d1
-	  ee > e2
- */
 tr.odd.gradeA td.sorting_1 {
 	background-color: #c4ffc4;
 }
@@ -494,10 +430,6 @@ tr.even.gradeU td.sorting_3 {
 	background-color: #e2e2e2;
 }
 
-
-/*
- * Row highlighting example
- */
 .ex_highlight #example tbody tr.even:hover, #example tbody tr.even td.highlighted {
 	background-color: #ECFFB3;
 }
@@ -538,10 +470,6 @@ tr.even.gradeU td.sorting_3 {
 	background-color: #DBFF70;
 }
 
-
-/*
- * KeyTable
- */
 table.KeyTable td {
 	border: 3px solid transparent;
 }
@@ -588,7 +516,6 @@ function parseJsonTable2(txt, out) {
 		html += '<h3>' + name + '</h3>';
 		html += '<table id="thetable'+name+'" class="tablesorter display" cellpadding="0" cellspacing="0" border="0"></table>';
 	}
-	//$('#tableContainer').html(html);
 	out.html(html);
 	for(var name in value) {
 		var data = value[name].split(/\n/);
@@ -604,13 +531,34 @@ function parseJsonTable2(txt, out) {
 		"aoColumns": columns } );	
 	}
 }
+
+function updateMetadata(id, property, value) {
+  jQuery.get("/upload/updateMetadata", {id: id, property: property, value: value});
+}
+
+function updateMappingRules(data, id) {
+  rules = $('#regexp'+id).val().split(/\n/).filter(function(x) { return x.trim() != ""})
+
+  for(var i=0; i<data.length; i++) {
+    data[i][2] = "";
+    for(var j=0; j<rules.length/2; j++) {
+      re = new RegExp(rules[j+j]);
+      sub = rules[j+j+1];
+      if(re.test(data[i][1])) {
+        data[i][2]=data[i][1].replace(re, sub);
+        break;
+      }
+    }
+  }
+  $('#table'+id).dataTable( {
+    "aaData" : data,
+    "aoColumns" : [ {"sTitle" : ""}, {"sTitle" : "Filename"}, {"sTitle" : "Related-to web page"} ],
+    "bDestroy" : true
+  });
+}
+
 </script>
 
-<script>
-  function updateMetadata(id, property, value) {
-    jQuery.get("/upload/updateMetadata", {id: id, property: property, value: value});
-  }
-</script>
 
 {% macro editable(entry, property) %}
   <input class=editable value="{{entry.metadata[property]}}" onchange="updateMetadata('{{entry._id}}', '{{property}}', this.value)"/>
@@ -632,6 +580,10 @@ function parseJsonTable2(txt, out) {
   <dd>{{editable(entry,'name')}}</dd>
   <dt>Related to</dt>
   <dd>{{editable(entry,'related_to')}}</dd>
+  {% if entry.metadata.parent_archive_id is defined %}
+    <dt>Contained in archive</dt>
+    <dd><a href="/upload/view/{{entry.metadata.parent_archive_id}}">{{entry.metadata.parent_archive_filename}}</a></dd>
+  {% endif %}
   <dt>Original file name</dt>
   <dd>{{editable(entry,'original_file_name')}}</dd>
   <dt>Description</dt>
@@ -663,6 +615,27 @@ function parseJsonTable2(txt, out) {
       </pre>
     {% elif entry.metadata.content_type == 'image/jpeg' %}
       <img src="download/{{entry._id}}/{{entry.filename}}"/>
+    {% endif %}
+
+    {% if entry.metadata.child_index is defined %}
+      <h3>{{KNOWL('uploader.mapping_rules')}} (regular expressions)</h3>
+      <textarea cols=100 rows=5 id="regexp{{entry._id}}" onkeyup="updateMappingRules(data{{entry._id}}, '{{entry._id}}')" onchange="updateMappingRules(data{{entry._id}}, '{{entry._id}}')"></textarea>
+      <input type=button onclick="jQuery.post('/upload/updateMappingRule', {'id': '{{entry._id}}', 'rule':$('#regexp{{entry._id}}').val().trim().replace(/\$(.)/g,'\\$1')})" value="Update mapping rule">
+      
+      <table id="table{{entry._id}}" cellpadding="0" cellspacing="0" border="0" class="tablesorter display"></table>
+      <script>
+        $(document).ready(function() {
+          data{{entry._id}} = [
+            {% for child in entry.metadata.child_index %}
+              [ "<A HREF='/upload/download/{{child[0]|safe}}/{{entry.filename}}/{{child[1]}}'>Link</A>",
+                "{{child[1] | safe}}",
+                ""],
+            {% endfor %}
+          ];
+          updateMappingRules(data{{entry._id}}, "{{entry._id}}");
+        });
+
+      </script>
     {% endif %}
   </dd>
   {{ caller(entry) }}

@@ -98,11 +98,12 @@ def edit(ID):
 def show(ID):
   k = Knowl(ID)
   r = render(ID, footer="0")
+  b = get_bread([('Wiki', url_for('.show', ID='wiki.index')), ('%s'%k.id, url_for('.show', ID=ID))])
   return render_template("knowl-show.html",
-         title = "Knowl '%s'" % k.id,
+         title = k.title,
          k = k,
          render = r,
-         bread = get_bread([('Show %s'%k.id, url_for('.show', ID=ID))]))
+         bread = b)
 
 @knowledge_page.route("/delete/<ID>")
 @admin_required
@@ -164,6 +165,7 @@ def render(ID, footer=None):
   render_me = u"""\
   {%% include "knowl-defs.html" %%}
   {%% from "knowl-defs.html" import KNOWL with context %%}
+  {%% from "knowl-defs.html" import KNOWL_LINK with context %%}
 
   <div class="knowl">
   <div class="knowl-content">%(content)s</div>"""
