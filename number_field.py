@@ -134,16 +134,16 @@ def sig2sign(sig):
     return [1,-1][sig[1]%2]
 
 group_names = {}
-group_names[(1, 1, 1, 1)] = ('S1','C1','D1','A1','A2')
+group_names[(1, 1, 1, 1)] = ('S1','S1','C1','A1','A2')
 
-group_names[(2, 2, -1, 1)] = ('S2','C2')
+group_names[(2, 2, -1, 1)] = ('S2','S2','C2','D1','2')
 
-group_names[(3, 6, -1, 1)] = ('S3','D3')
-group_names[(3, 3, 1, 2)] = ('A3','C3')
+group_names[(3, 6, -1, 1)] = ('S3','S3','D3')
+group_names[(3, 3, 1, 2)] = ('A3','A3','C3','3')
 
 group_names[(4, 8, -1, 1)] = ('D(4)','D4')
-group_names[(4, 4, -1, 1)] = ('C(4) = 4','C4')
-group_names[(4, 4, 1, 1)] = ('E(4) = 2[x]2','V4', 'D2')
+group_names[(4, 4, -1, 1)] = ('C(4) = 4','C4','4')
+group_names[(4, 4, 1, 1)] = ('E(4) = 2[x]2','V4', 'D2', 'C2xC2')
 group_names[(4, 24, -1, 1)] = ('S4','S4')
 group_names[(4, 12, 1, 1)] = ('A4','A4')
 
@@ -151,31 +151,33 @@ group_names[(5, 120, -1, 1)] = ('S5','S5')
 group_names[(5, 10, 1, 1)] = ('D(5) = 5:2','D5')
 group_names[(5, 60, 1, 1)] = ('A5','A5')
 group_names[(5, 20, -1, 1)] = ('F(5) = 5:4','F5')
-group_names[(5, 5, 1, 1)] = ('C(5) = 5','C5')
+group_names[(5, 5, 1, 1)] = ('C(5) = 5','C5','5')
 
-group_names[(6, 18, -1, 1)] = ('F_18(6) = [3^2]2 = 3 wr 2','?')
-group_names[(6, 48, -1, 1)] = ('2S_4(6) = [2^3]S(3) = 2 wr S(3)','?')
-group_names[(6, 72, -1, 1)] = ('F_36(6):2 = [S(3)^2]2 = S(3) wr 2','?')
-group_names[(6, 6, -1, 2)] = ('D_6(6) = [3]2','?')
+group_names[(6, 18, -1, 1)] = ('F_18(6) = [3^2]2 = 3 wr 2','C3xS3')
+group_names[(6, 48, -1, 1)] = ('2S_4(6) = [2^3]S(3) = 2 wr S(3)','S4xC2')
+group_names[(6, 72, -1, 1)] = ('F_36(6):2 = [S(3)^2]2 = S(3) wr 2','(C3xC3):D4', '3^2:D4')
+group_names[(6, 6, -1, 2)] = ('D_6(6) = [3]2','S3gal')
 group_names[(6, 12, -1, 1)] = ('D(6) = S(3)[x]2','D6')
 group_names[(6, 720, -1, 1)] = ('S6','S6')
-group_names[(6, 6, -1, 1)] = ('C(6) = 6 = 3[x]2','C6')
-group_names[(6, 24, -1, 1)] = ('S_4(6c) = 1/2[2^3]S(3)','?')
-group_names[(6, 24, -1, 2)] = ('2A_4(6) = [2^3]3 = 2 wr 3','?')
-group_names[(6, 24, 1, 1)] = ('S_4(6d) = [2^2]S(3)','?')
-group_names[(6, 12, 1, 1)] = ('A_4(6) = [2^2]3','?')
-group_names[(6, 36, -1, 1)] = ('F_18(6):2 = [1/2.S(3)^2]2','?')
+group_names[(6, 6, -1, 1)] = ('C(6) = 6 = 3[x]2','C6','6')
+group_names[(6, 24, -1, 1)] = ('S_4(6c) = 1/2[2^3]S(3)','S4(6)')
+group_names[(6, 24, -1, 2)] = ('2A_4(6) = [2^3]3 = 2 wr 3','A4xC2')
+group_names[(6, 24, 1, 1)] = ('S_4(6d) = [2^2]S(3)','S4+')
+group_names[(6, 12, 1, 1)] = ('A_4(6) = [2^2]3','A4(6)')
+group_names[(6, 36, -1, 1)] = ('F_18(6):2 = [1/2.S(3)^2]2','S3xS3')
 group_names[(6, 360, 1, 1)] = ('A6','A6')
-group_names[(6, 60, 1, 1)] = ('L(6) = PSL(2,5) = A_5(6)','?')
-# 2 more degree 6 fields exist, not yet in the database
+group_names[(6, 60, 1, 1)] = ('L(6) = PSL(2,5) = A_5(6)','PSL(2,5)')
+group_names[(6, 120, -1, 1)] = ('L(6):2 = PGL(2,5) = S_5(6)','S5(6)', 'PGL(2,5)')
+group_names[(6, 36, 1, 1)] = ('F_36(6) = 1/2[S(3)^2]2','3^2:4')
 
 group_names[(7, 5040, -1, 1)] = ('S7','S7')
 group_names[(7, 14, -1, 1)] = ('D(7) = 7:2','D7')
 group_names[(7, 7, 1, 1)] = ('C(7) = 7','C7')
 group_names[(7, 2520, 1, 1)] = ('A7','A7')
+group_names[(7, 21, 1, 1)] = ('F_21(7) = 7:3','7:3')
+group_names[(7, 42, -1, 1)] = ('F_42(7) = 7:6','7:6')
+group_names[(7, 168, 1, 1)] = ('L(7) = L(3,2)','GL(3,2)')
 # We converted [14, -1, 2, 'D(7) = 7:2'] and [5040, -1, 7, 'S7'] on import
-
-# 3 more degree 7 fields exist, not yet in the database
 
 group_names[(8, 1152, -1, 47)] = ('[S(4)^2]2','?')
 group_names[(8, 128, -1, 35)] = ('[2^4]D(4)','?')
@@ -210,7 +212,7 @@ group_names[(10, 3840, -1, 39)] = ('[2^5]S(5)','?')
 group_names[(10, 3628800, -1, 45)] = ('S10','S10')
 group_names[(10, 240, -1, 22)] = ('S(5)[x]2','?')
 
-groups = [{'label':list(g),'gap_name':group_names[g][0],'human_name':group_names[g][1]} for g in group_names.keys()]
+groups = [{'label':list(g),'gap_name':group_names[g][0],'human_name':', '.join(group_names[g][1:])} for g in group_names.keys()]
 
 abelian_group_names = ('S1','C1','D1','A1','A2') + ('S2','C2') + ('A3','C3') + ('C(4) = 4','C4') + ('C(5) = 5','C5') + ('C(6) = 6 = 3[x]2','C6') + ('C(7) = 7','C7') + ('C(8)=8','C8') + ('4[x]2',) + ('C(9)=9','C9') + ('S10','S10')
 
