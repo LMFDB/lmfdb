@@ -1,0 +1,57 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+<script type="text/javascript" src="{{ url_for('static', filename='elliptic_modular_form_util-functions.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='elliptic_modular_form_scripts.js') }}"></script>
+<script>
+$(document).ready(function() {
+$(".later").trigger("click",1);
+});
+
+</script>
+<H1>
+Cusp forms of weight {{ info.weight }} for 
+\({% if info.level==1 %} 
+	\mathrm{SL}_{2}(\mathbb{Z}) 
+{% else %} 
+	\Gamma_0({{ info.level }})  
+{% endif %}\)
+{% if info.character is defined and info.character>0 %} 
+with character \( \chi_{ {{ info.character }} }\) modulo \( {{ info.level }}\) with  <span style="white-space:nowrap">order \( {{ info.character_order }}\) </span> and <span style="white-space:nowrap">conductor \( {{ info.character_conductor }}\)</span>
+{% else %} 
+   with trivial character.
+{% endif %}
+{% if info.extra_info is defined %}
+<span style="font-size:50%">({{ info.extra_info |safe }})</span>
+{% endif %}
+</H1>
+
+
+{% if info.error is defined %}
+{{ info.error |safe }}
+
+
+<br>
+{{ info.sage_version | safe}}
+{% else %}
+	{% if info.nontrivial_new %}
+		<h3>
+		Decomposition of \(S_{ {{ info.weight }} }^{new}({{ info.level }})\) into galois orbits
+		</h3>
+		{{ info.new_decomposition | safe }}
+	{% else %}
+		\[S_{ {{ info.weight }} }^{new}({{ info.level }})=\{0\}\]
+ 	{% endif %}
+
+	{% if info.old_decomposition != "" %}
+		<h3>
+		Decomposition of \(S_{ {{ info.weight }} }^{old}({{ info.level }})\) into lower level spaces
+		</h3>
+		{{ info.old_decomposition | safe }}
+	{% endif %}
+	
+{% endif %}
+{{ info.test | safe }}
+
+{% endblock %}

@@ -7,7 +7,7 @@ import pymongo
 import bson
 #import web_modforms
 import utils
-from classical_modular_forms.backend.web_modforms import *
+from modular_forms.elliptic_modular_forms.backend.web_modforms import *
 
 logger = utils.make_logger("LF")
 
