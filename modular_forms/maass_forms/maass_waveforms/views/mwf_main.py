@@ -54,10 +54,15 @@ def render_maass_waveforms():
     if info['search']:
         search = get_search_parameters(info)
         return render_search_results_wp(info,search)
-    # If we have a fixed ID and Database we show that single Maass form
-        
+
+
+    # If we have a fixed ID and Database we show that single Maass form      
     if info['MaassID'] and info['DBname']:
         return render_one_maass_waveform_wp(info)
+
+    if not info['collection'] or info['collection']=='all':
+      # list the collections
+      md = get_collections_info()
 
     level = info['level']; weight=info['weight']; character=info['character']
     eigenvalue=info['eigenvalue']
@@ -115,12 +120,14 @@ def render_maass_waveforms():
                 
                 info['maass_group'] = getallgroupsLevel()
     title='Maass waveforms'
-    
     info['list_of_levels']=get_all_levels()
-    info['max_level']=max(info['list_of_levels'])
+    if info['list_of_levels']:
+        info['max_level']=max(info['list_of_levels'])
+    else:
+        info['max_level']=0
     mwf_logger.debug("info3=%s"%info)
     #print_table_of_levels()
-    return render_template("mwf_browse.html", info=info,title=title)
+    #return render_template("mwf_browse.html", info=info,title=title)
     info['cur_character'] = character
     #info["info1"] = MakeTitle(level,weight,character)  
     if level:
@@ -169,10 +176,15 @@ def render_maass_waveforms():
     title='Maass waveforms'
     
     info['list_of_levels']=get_all_levels()
-    info['max_level']=max(info['list_of_levels'])
+    if info['list_of_levels']:
+        info['max_level']=max(info['list_of_levels'])
+    else:
+        info['max_level']=0
     mwf_logger.debug("info3=%s"%info)
-    #print_table_of_levels()
-    return render_template("mwf_browse.html", info=info,title=title)
+    if level or eigenvalue:
+        return render_template("mwf_navigate.html", info=info,title=title)
+    else:
+        return render_template("mwf_browse.html", info=info,title=title)
 
 
 @mwf.route("/<int:level>/<weight>/<character>/")
@@ -184,7 +196,7 @@ def render_maass_waveform_space(level,weight,character):
 
 @mwf.route("/<int:level>/")
 def render_maass_waveforms_for_one_group(level):
-    DB = ConnectDB()
+    DB = connect_db()
     res  = dict()
     info=dict()
     mwf_logger.debug("collections {0}".format(DB.collection_names()))
@@ -365,7 +377,18 @@ def render_search_results_wp(info,search):
     return render_template("mwf_display_search_result.html", info=info,title=title,search=search,bread=bread)
 
 
+def render_browse_maass_waveforms(info):
+    r"""
+    Render a page for browsing Maass forms.
+    """
+    ## Paging parameters
+    level_range=10
+    ev_range = 20
+    s = print_table_of_maass_waveforms(info['collection'],lrange=[1,10],erange=[1,10])
+    info['table']=s
+    return render_template("mwf_browse.html", info=info,title=title,bread=bread)
 
+    
 
 """
 def write_eigenvalues(search,EVs,index):

@@ -18,64 +18,37 @@ except Exception as ex:
   #  execfile("setup.py") 
   #except Exception as ex1:
 
+mwf_dbname = 'MaassWaveForm'
 
-def ConnectDB():
+def connect_db():
     import base
-    return base.getDBConnection().MaassWaveForm
+    return base.getDBConnection().mwf_dbname
 
-def ConnectToFS():
-	return ConnectDB().FS
+def get_collection(collection=''):
+    db = connect_db()
+    if collection in db.collection_names():
+        return db.collection
+    else:
+        return None #raise ValueError,"Need Collection in :",db.collection_names()
 
-def ConnectToHT():	
-	return ConnectDB().HT
+def get_collections_info():
+    db = connect_db()
+    for c in db.collection_names():
+        metadata=db.metadata[c]
+        mwf_logger.debug("METADATA: {0}".formst(metadata))
 
-def ConnectByName(name):
-	if name == "FS":
-		return ConnectToFS()
-	elif name == "HT":
-		return ConnectToHT()
-	return None
-
-def GetNameOfPerson(DBname):
-	if DBname == "FS":
-		return "Fredrik Str&ouml;mberg"
-	elif DBname == "HT":
-		return "Holger Then"
-	return None
-
-def getMaassfromById(DBname,MaassID):
-	ret = []
-	Col = ConnectByName(DBname)
-	try: 
-		OBJ = bson.objectid.ObjectId(MaassID)
-        except bson.errors.InvalidId:
-        	return render_template("mwf_browse.html", info=info)
-	data = Col.find_one({'_id':OBJ})
-	ret.append(["Eigenvalue","\(\\lambda=r^2 + \\frac{1}{4} \\ , \\quad r= \\ \)"+str(data['Eigenvalue'])])
-	if data['Symmetry'] <> "none":
-		ret.append(["Symmetry",data['Symmetry']])
-	if DBname == "HT":
-		Title = MakeTitle("1","0","0") 
-	else:
-		Title = MakeTitle(str(data['Level']),str(data['Weight']),str(data['Character']))
-	if data['Coefficient']:
-		idx = 0
-		ANs = []
-		for a in data['Coefficient']:
- 			ANs.append([idx,a])
-			idx = idx +1
-		ret.append(["Coefficients",ANs])
-        ret['Eigenvalue']=data['Eigenvalue']
-        ret['Level']=data['Level']
-	return [Title,ret]
-
-
+#def GetNameOfPerson(DBname):
+#    if DBname == "FS":
+#        return "Fredrik Str&ouml;mberg"
+#    elif DBname == "HT":
+#        return "Holger Then"
+#    return None
 
 def get_maassform_by_id(maass_id,fields=None):
     r"""
     """
     ret = []
-    db = ConnectDB() #Col = ConnectByName(DBname)
+    db = connect_db() #Col = ConnectByName(DBname)
     try: 
         obj = bson.ObjectId(str(maass_id))
     except bson.errors.InvalidId:
@@ -101,8 +74,6 @@ def get_maassform_by_id(maass_id,fields=None):
 
 def set_info_for_maass_form(data):
     ret = []
-    #print "data=",data
-    #print "EV=",data["Eigenvalue"]
     ret.append(["Eigenvalue","\(\\lambda=r^2 + \\frac{1}{4} \\ , \\quad r= \\ \)"+str(data['Eigenvalue'])])
     if data['Symmetry'] <> "none":
         ret.append(["Symmetry",data['Symmetry']])
@@ -136,39 +107,33 @@ def make_table_of_coefficients(maass_id,number=100):
     return s
 
 
-def getallgroupsLevel():
-	ret = []
-	ret.append(str(1))	
-	Col = ConnectToFS()
-	for N in Col.find({},{'Level':1},sort=[('Level',1)]):
-		ret.append(str(N['Level']))
-	return set(ret)
 
 def get_all_levels():
-	ret = []
-	ret.append(1)	
-	Col = ConnectToFS()
-	for N in Col.find({},{'Level':1},sort=[('Level',1)]):
-		ret.append(int(N['Level']))
-        s = set(ret)
-        ret = list(s)
-        ret.sort()
-	return ret
-    
+    ret = []
+    db = connect_db()
+    for c in db.collection_names():
+        Col = db[c]
+        for N in Col.find({},{'Level':1},sort=[('Level',1)]):
+            print "N=",N
+            ret.append(int(N['Level']))
+    #s = set(ret)
+    #ret = list(s)
+    ret.sort()
+    return ret
 
 def getallweights(Level):
-	ret = []
-	Col = ConnectToFS()
-	for w in (Col.find({'Level':Level},{'Weight':1},sort=[('Weight',1)])):
-		ret.append(str(w['Weight']))
-	return set(ret)
+    ret = []
+    Col = ConnectToFS()
+    for w in (Col.find({'Level':Level},{'Weight':1},sort=[('Weight',1)])):
+        ret.append(str(w['Weight']))
+    return set(ret)
 
 def getallcharacters(Level,Weight):
-	ret = []
-	Col = ConnectToFS()
-	for c in (Col.find({'Level':Level,'Weight':Weight},{'Character':1},sort=[('Weight',1)])):
-                ret.append(str(c['Character']))
-	return set(ret)
+    ret = []
+    Col = ConnectToFS()
+    for c in (Col.find({'Level':Level,'Weight':Weight},{'Character':1},sort=[('Weight',1)])):
+        ret.append(str(c['Character']))
+    return set(ret)
 
 def get_search_parameters(info):
     ret=dict()
@@ -180,87 +145,123 @@ def get_search_parameters(info):
     ret['rec_start']=my_get(info,'rec_start',1,int)
     ret['limit']=my_get(info,'limit',20,int)
     ret['weight']=my_get(info,'weight',0,int)
-    ret['ev_lower']=my_get(info,'ev_lower',None)
-    ret['ev_upper']=my_get(info,'ev_upper',None)
-    if ret['ev_upper'] and not ret['ev_lower']:
-        ret['ev_lower']=ret['ev_upper']
-    if ret['ev_lower'] and not ret['ev_upper']:
-        ret['ev_upper']=ret['ev_lower']        
+    ev_range = my_get(info,'ev_range','').split('-')
+    if len(ev_range)==0:
+        ret['ev_lower']=0
+        ret['ev_upper']=0
+    elif len(ev_range)==1:
+        ret['ev_lower']=ev_range[0]
+        ret['ev_upper']=ev_range[0]
+    else:
+        ret['ev_lower']=ev_range[0] #my_get(info,'ev_lower',None)
+        ret['ev_upper']=ev_range[1] #my_get(info,'ev_upper',None)
     return ret
 
+
+def print_table_of_maass_waveforms(collection,lrange=[],erange=[]):
+    r"""
+    Print table of Maass waveforms
+    """
+    tbl="<table><tr>"
+    skip = erange[0]
+    limit= erange[1]-erange[0]
+    cols = get_collection(collection)
+    if not cols:
+        cols=list()
+        for c in connect_db().collection_names():
+            cols.append[connect_db()[c]]
+    print "Collections:",cols
+    tbl+="<td valign=\"top\"><table>"
+    for N in range(lrange[0],lrange[1]):
+        #tbl+="<tr><td>"
+        
+        evs=list()
+        for c in cols:
+            finds=c.find({'Level':1}).skip(skip).limit(limit)
+            for f in finds:
+                maass_id = f['_id']
+                R = f['Eigenvalue']
+                #k = f['Weight']
+                url = url_for('mwf.render_one_maass_waveform',objectid=str(maass_id),db=c.name)
+                s="<tr class=\"%s\"><td><a href=\"%s\">%s</a></td></tr>\n" %(c.name,url,R)
+                evs.append([R,s])
+        evs.sort()
+        tbl_one_level=""
+        for R,s in evs:
+            tbl_one_level+=s
+        mwf_logger.debug("Tbl for {0} is {1}".format(N,tbl_one_level))
+        tbl+=tbl_one_level
+    return tbl
+          
 def searchinDB(search,coll,filds):
-	return coll.find(search,filds,sort=[('Eigenvalue',1)])
+    return coll.find(search,filds,sort=[('Eigenvalue',1)])
 
 def WriteEVtoTable(SearchResult,EV_Result,index):
-	for ev in SearchResult:
-		EV_Result.append([ev['Eigenvalue'],index,ev['Symmetry'],str(ev['_id'])])
-		index=index+1
-	return index
+    for ev in SearchResult:
+        EV_Result.append([ev['Eigenvalue'],index,ev['Symmetry'],str(ev['_id'])])
+        index=index+1
+    return index
 
 def getEivenvalues(search,coll,index):
-	ret = []
-	sr = searchinDB(search,coll,{'Eigenvalue':1,'Symmetry':1})
-	WriteEVtoTable(sr,ret,index)
-#	for ev in sr:
-#                       ret.append([ev['Eigenvalue'],index,ev['Symmetry'],str(ev['_id'])])
-#                        index=index+1	
-	return [sr.distinct('Symmetry'),ret]
+    ret = []
+    sr = searchinDB(search,coll,{'Eigenvalue':1,'Symmetry':1})
+    WriteEVtoTable(sr,ret,index)
+    #	for ev in sr:
+    #                       ret.append([ev['Eigenvalue'],index,ev['Symmetry'],str(ev['_id'])])
+    #                        index=index+1	
+    return [sr.distinct('Symmetry'),ret]
 
 def getEigenvaluesFS(Level,Weight,Character,index):
-	return getEivenvalues({'Level':Level,'Weight':Weight,'Character':Character},ConnectToFS(),index)
+    return getEivenvalues({'Level':Level,'Weight':Weight,'Character':Character},ConnectToFS(),index)
 	
 def getEigenvaluesHT(Level,Weight,Character,index):
-	if Level != 1 or Weight != 0.0 or Character != 0:
-		return [0,[]]
-	return getEivenvalues({},ConnectToHT(),index)
-
+    if Level != 1 or Weight != 0.0 or Character != 0:
+        return [0,[]]
+    return getEivenvalues({},ConnectToHT(),index)
+    
 def getData(search,coll,index):
-	ret = []
-        sr = searchinDB(search,coll,{})
-        for ev in sr:
-		ret.append([ev['Eigenvalue'],index,ev['Symmetry'],str(ev['_id'])])
-		index=index+1
-        return [sr.distinct('Symmetry'),ret]
+    ret = []
+    sr = searchinDB(search,coll,{})
+    for ev in sr:
+        ret.append([ev['Eigenvalue'],index,ev['Symmetry'],str(ev['_id'])])
+        index=index+1
+    return [sr.distinct('Symmetry'),ret]
 
 #def SearchEigenvaluesFS(Level,Weight,Character,index,eigenvalue):
 	
 
 
 def MakeTitle(level,weight,character):
-	ret = "Maass cusp forms for "
-	if level:
-		if level == "1":
-			ret += "\(PSL(2,Z)\)"
-		else:
-			ret += "\(\Gamma_0("+str(level)+")\)"
-	else:
-		ret += "\(\Gamma_0(n)\)"
-	
-	if weight:
-		if float(weight) <> 0:
-			ret += ",k="+weight
-
-	if character:
-		if character <> "0":
-			ret += ",\(\chi_"+character+"\) (according to SAGE)"
-	
-	return ret
+    ret = "Maass cusp forms for "
+    if level:
+        if level == "1":
+            ret += "\(PSL(2,Z)\)"
+        else:
+            ret += "\(\Gamma_0("+str(level)+")\)"
+    else:
+        ret += "\(\Gamma_0(n)\)"
+    if weight:
+        if float(weight) <> 0:
+            ret += ",k="+weight
+    if character:
+        if character <> "0":
+            ret += ",\(\chi_"+character+"\) (according to SAGE)"
+    return ret
 
 
 def searchforEV(eigenvalue,DBname):
-	ret = []
-	SearchLimit = 5
-	Col = ConnectByName(DBname)
-	ev = float(eigenvalue)
-#	return getEivenvalues({'Level':Level,'Weight':Weight,'Character':Character},ConnectToFS(),index)
-	index = 0
-	search1 = Col.find({"Eigenvalue" : {"$gte" : ev}},{'Eigenvalue':1,'Symmetry':1},sort=[('Eigenvalue',1)],limit=SearchLimit)
-	index = WriteEVtoTable(search1,ret,index)	
+    ret = []
+    SearchLimit = 5
+    Col = ConnectByName(DBname)
+    ev = float(eigenvalue)
+    #	return getEivenvalues({'Level':Level,'Weight':Weight,'Character':Character},ConnectToFS(),index)
+    index = 0
+    search1 = Col.find({"Eigenvalue" : {"$gte" : ev}},{'Eigenvalue':1,'Symmetry':1},sort=[('Eigenvalue',1)],limit=SearchLimit)
+    index = WriteEVtoTable(search1,ret,index)	
 	
-	search2 = Col.find({"Eigenvalue" : {"$lte" : ev}},{'Eigenvalue':1,'Symmetry':1},sort=[('Eigenvalue',-1)],limit=SearchLimit)
-	index = WriteEVtoTable(search2,ret,index)	
-	
-	return [set(search1.distinct('Symmetry')+search2.distinct('Symmetry')),ret];
+    search2 = Col.find({"Eigenvalue" : {"$lte" : ev}},{'Eigenvalue':1,'Symmetry':1},sort=[('Eigenvalue',-1)],limit=SearchLimit)
+    index = WriteEVtoTable(search2,ret,index)	
+    return [set(search1.distinct('Symmetry')+search2.distinct('Symmetry')),ret];
 
 """
 search1 = Collection.find({"Eigenvalue" : {"$gte" : ev}},{'Eigenvalue':1,'Symmetry':1},sort=[('Eigenvalue',1)],limit=2)
@@ -367,12 +368,14 @@ def get_args_mwf():
     search = my_get(info,"search", '',str)
     SearchAll = my_get(info,"search_all", '',str)
     eigenvalue = my_get(info,"eigenvalue", '',str)
+    collection = my_get(info,"collection", 'all',str)
 #int(info.get('weight',0))
     #label  = info.get('label', '')
     info['level']=level; info['weight']=weight; info['character']=character
     info['MaassID']=MaassID
     info['DBname']=DBname
     info['search']=search
+    info['collection']=collection
     info['SearchAll']=SearchAll
     info['eigenvalue']=eigenvalue
     return info
@@ -428,19 +431,19 @@ def ajax_once(callback,*arglist,**kwds):
     return s0+s1
 
 def my_get(dict,key,default,f=None):
-	r"""
-	Improved version of dict.get where an empty string also gives default.
-	and before returning we apply f on the result.
-	"""
-	x = dict.get(key,default)
-	if x=='':
-		x=default
-	if f<>None:
-		try:
-			x = f(x)
-		except:
-			pass
-	return x
+    r"""
+    Improved version of dict.get where an empty string also gives default.
+    and before returning we apply f on the result.
+    """
+    x = dict.get(key,default)
+    if x=='':
+        x=default
+    if f<>None:
+        try:
+            x = f(x)
+        except:
+            pass
+    return x
 
    
 def eval_maass_form(R,C,M,x,y):
