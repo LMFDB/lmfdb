@@ -24,9 +24,16 @@ def field_pretty(field_str):
 #    TODO:  pretty-printing of more fields of higher degree
 
 def poly_to_field_label(pol):
-    R = pol.parent()
-    pol = R(pari(pol).polredabs())
-    query = {'degree':pol.degree(), 'coefficients':[int(c) for c in pol.coeffs()]}
+    try:
+        pol=PolynomialRing(QQ,'x')(str(pol))
+        pol *= pol.denominator()
+        R = pol.parent()
+        pol = R(pari(pol).polredabs())
+    except:
+        return None
+    coeffs = [int(c) for c in pol.coeffs()]
+    d = int(pol.degree())
+    query = {'degree': d, 'coefficients': coeffs}
     import base
     C = base.getDBConnection()
     one = C.numberfields.fields.find_one(query)
@@ -69,11 +76,8 @@ def parse_field_string(F): # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
     F=F.replace('X','x')
     if 'x' in F:
         F=F.replace('^','**')
-        try:
-            pol=PolynomialRing(ZZ,'x')(str(F))
-        except ValueError:
-            return fail_string
-        F = poly_to_field_label(pol)
+        print F
+        F = poly_to_field_label(F)
         if F:
             return F
         return fail_string
