@@ -206,7 +206,7 @@ function show_code(system) {
         <a  href='{{info.download_qexp_url}}' target='_blank' >download coefficients</a>
     </p>
 
-    <h2> {{KNOWL('EC.special_value')}} attached to the curve </h2>
+    <h2> {{KNOWL('EC.special_value', special_value = info.special_value)}} attached to the curve </h2>
         \( {{ info.lder }} = {{ info.special_value}} \)
     </p>
     
