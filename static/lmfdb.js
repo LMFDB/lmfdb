@@ -146,8 +146,10 @@ function knowl_click_handler($el) {
     } else {
       $output.addClass("loading");
       $output.show();
-      log("downloading knowl: " + knowl_id);
-      $output.load('/knowledge/render/' + knowl_id, function(response, status, xhr) { 
+      var kwargs = $el.attr("kwargs");
+      log("downloading knowl: " + knowl_id + " /w kwargs: " + kwargs);
+      $output.load('/knowledge/render/' + knowl_id + "?" + kwargs,
+       function(response, status, xhr) { 
         $output.removeClass("loading");
         if (status == "error") {
           $el.removeClass("active");

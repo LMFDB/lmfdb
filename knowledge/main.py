@@ -155,6 +155,11 @@ def render(ID, footer=None):
   a small and simple html snippet!
   """
   k = Knowl(ID)
+
+  #logger.debug("kwargs: %s", request.args)
+  kwargs = dict(((k, v) for k,v in request.args.iteritems()))
+  logger.debug("kwargs: %s" , kwargs)
+
   #this is a very simple template based on no other template to render one single Knowl
   #for inserting into a website via AJAX or for server-side operations.
   if request.method == "POST":
@@ -198,7 +203,8 @@ def render(ID, footer=None):
 
   # TODO wrap this string-rendering into a try/catch and return a proper error message
   # so that the user has a clue. Most likely, the {{ KNOWL('...') }} has the wrong syntax!
-  return render_template_string(render_me, k = k)
+  logger.debug("kwargs: %s" % k.template_kwargs)
+  return render_template_string(render_me, k = k, **kwargs)
 
 @knowledge_page.route("/")
 def index():
