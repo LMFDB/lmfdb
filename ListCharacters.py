@@ -117,7 +117,7 @@ def characterlist_conductor(N,pagenumber,type):
     s += str(N)
     s += '.'
     s += str(pagenumber+1)
-    s += '"><u><font color="blue">click here for higher moduli</font></u></a>'
+    s += '"><font color="blue">higher moduli &rarr;</font></a>'
     s += '</table>'
 
     if type == "primitive":
@@ -204,7 +204,7 @@ def characterlist_order(N,kronecker,pagenumber,type):
         s += str(N)
     s += '.'
     s += str(pagenumber+1)
-    s += '"><u><font color="blue">click here for higher moduli</font></u></a>'
+    s += '"><font color="blue">higher moduli &rarr;</font></a>'
     s += '</table>'
 
     if type == "primitive":

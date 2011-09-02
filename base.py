@@ -74,7 +74,7 @@ def ctx_proc_userdata():
 
   # insert the default bread crumb hierarchy
   # overwrite this variable when you want to customize it
-  vars['bread'] = [ ('Bread', '.'), ('Crumb', '.'), ('Hierarchy', '.')]
+  vars['bread'] = None #[ ('Bread', '.'), ('Crumb', '.'), ('Hierarchy', '.')]
   
   # default title
   vars['title'] = r'Title variable "title" has not been set. This is a test: \( \LaTeX \) and \( \frac{1}{1+x+x^2} \) and more ...'

@@ -83,7 +83,7 @@ def upload():
         child_index.append([id, tarinfo.name]);
     upload_db.fs.files.update({"_id": db_id}, {"$set": {"metadata.child_index": child_index}})
   
-  return flask.redirect(url_for(".index"))
+  return flask.redirect("/upload/view/"+str(db_id))
 
 @upload_page.route("/admin", methods = ["POST"])
 @admin_required

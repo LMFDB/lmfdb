@@ -13,32 +13,72 @@
              to its default None.
 #}
 {% macro KNOWL(knowlid, title=none) -%}
-  {% with knowl = Knowl(knowlid) -%}
-    {% if knowl.exists() -%}
-      {% if title is none -%}
-         <a class="knowl-title" knowl="{{ knowl.id }}">{{ knowl.title }}</a>
-      {%- else -%}
-        {% if title|length > 0 -%}
-         <a class="knowl-title" knowl="{{ knowl.id }}">{{ title }}</a>
-        {%- endif %}
-      {%- endif %}
-      {# <span knowl="{{ knowl.id }}" class="knowl-qm">?</span> #}
-
-    {%- else -%}
-      {# knowl does not exist. wrong knowlid or opportunity to create one! #}
-        {% if user.is_authenticated() -%}
-        <span class="knowl knowl-error">
-          Knowl '{{knowlid}}' missing or wrong ID. 
-          <a href="{{ url_for('knowledge.edit', ID=knowlid) }}">Create it</a>.
-        </span> 
-        {%- else -%}
-        <span class="knowl knowl-error">
-          '{{knowlid}}'
-        </span> 
-        {%- endif %}
-      </span>
+{% with knowl = Knowl(knowlid) -%}
+{% if knowl.exists() -%}
+  {% if title is none -%}
+     <a class="knowl-title" knowl="{{ knowl.id }}">{{ knowl.title }}</a>
+  {%- else -%}
+    {% if title|length > 0 -%}
+     <a class="knowl-title" knowl="{{ knowl.id }}">{{ title }}</a>
     {%- endif %}
-  {%- endwith %}
+  {%- endif %}
+  {# <span knowl="{{ knowl.id }}" class="knowl-qm">?</span> #}
+
+{%- else -%}
+  {# knowl does not exist. wrong knowlid or opportunity to create one! #}
+    {% if user.is_authenticated() -%}
+      <span class="knowl knowl-error">
+      Knowl '{{knowlid}}' missing or wrong ID. 
+      <a href="{{ url_for('knowledge.edit', ID=knowlid) }}">Create it</a>.
+    </span> 
+    {%- else -%}
+      {% if title is none -%}
+        <span class="knowl knowl-error">'{{knowlid}}'</span> 
+      {%- else -%}
+        {{title}}
+      {%- endif %}
+    {%- endif %}
+  </span>
+{%- endif %}
+{%- endwith %}
+{%- endmacro %}
+
+{% macro KNOWL_INC( knowlid, title=none, htag="h1") -%}
+{% with knowl = Knowl(knowlid) -%}
+{% if knowl.exists() -%}
+  {% if title is none -%}
+    <{{htag}}>{{knowl.title}}</{{htag}}>
+  {%- else -%}
+    <{{htag}}>{{title}}</{{htag}}>
+  {%- endif %}
+  {{knowl.content}}
+{%- else -%}
+
+  {# knowl does not exist. wrong knowlid or opportunity to create one! #}
+    {% if user.is_authenticated() -%}
+      <div class="knowl knowl-error">
+       Knowl '{{knowlid}}' missing or wrong ID. 
+       <a href="{{ url_for('knowledge.edit', ID=knowlid) }}">Create it</a>.
+      </div> 
+    {%- else -%}
+      {% if title is none -%}
+        <{{htag}} class="knowl knowl-error">'{{knowlid}}'</{{htag}}> 
+      {%- else -%}
+        <{{htag}}>{{title}}</{{htag}}>
+      {%- endif %}
+      <div>No content.</div>
+    {%- endif %}
+  </span>
+
+{%- endif %}
+{%- endwith %}
+{%- endmacro %}
+
+{# for inserting "normal" links to knowl pages #}
+{% macro KNOWL_LINK(ID) -%}
+ {% with k = Knowl(ID) -%}
+  <a href='{{ url_for("knowledge.show", ID=k.id) }}'>{{ k.title }}</a>
+ {%- endwith %}
 {%- endmacro %}
 
 {# for the bar when editing or showing knowls #}
@@ -57,6 +97,10 @@
      <a onclick='return confirm("Really delete Knowl {{ k.id }}? There is no way back!");'
             href="{{ url_for('.delete', ID=k.id) }}">delete</a>
    {% endif %}
+   <span style="margin-left: 30px;">Navigate:</span>
+   <a href="{{ url_for('.show', ID='wiki.index') }}">Knoiki</a>
+   &middot;
+   <a href="{{ url_for('.index') }}">Overview</a>
 </div>
 {%- endmacro %}
 

@@ -30,7 +30,7 @@ function show_code(system) {
         <div class='magma nodisplay code'>&gt; K&lt;a&gt; := NumberField(PolynomialRing(Rationals())!{{info.coefficients}});</div>
         </p>
 
-    <h2> {{ KNOWL('NF.defining_polynomial') }} </h2>
+        <p><h2> {{ KNOWL('NF.defining_polynomial') }}</h2>
         <div class='sage nodisplay code'>sage: K.defining_polynomial()</div>
         <div class='pari nodisplay code'>pari: K.pol</div>
         <div class='magma nodisplay code'>&gt; DefiningPolynomial(K);</div>
@@ -38,9 +38,7 @@ function show_code(system) {
             {{ info.polynomial }}
         </p>
 
-
-    <h2> {{ KNOWL('NF.integral_basis')  }} (with respect to field generator \(a\)) </h2>
-
+        <p><h2> {{ KNOWL('NF.integral_basis') }} (with respect to field generator \(a\))</h2>
         <div class='sage nodisplay code'>sage: K.integral_basis()</div>
         <div class='pari nodisplay code'>pari: K.zk</div>
         <div class='magma nodisplay code'>&gt; IntegralBasis(K);</div>
@@ -48,7 +46,7 @@ function show_code(system) {
             {{ info.integral_basis}}
         </p>
 
-    <h2> {{ KNOWL('NF.class_group')  }} </h2>
+        <p><h2> {{ KNOWL('NF.class_group') }}</h2>
         <div class='sage nodisplay code'>sage: K.class_group().invariants()</div>
         <div class='pari nodisplay code'>pari: K.clgp</div>
         <div class='magma nodisplay code'>&gt; ClassGroup(K);</div>
@@ -57,7 +55,7 @@ function show_code(system) {
         </p>
 
 
-    <h2> {{ KNOWL('NF.unit_group')  }} </h2>
+        <p><h2> {{ KNOWL('NF.unit_group') }}</h2>
         <div class='sage nodisplay code'>sage: UK = K.unit_group()</div>
         <div class='sage nodisplay code'>sage: UK.rank()</div>
         <div class='sage nodisplay code'>sage: UK.torsion_generator()</div>
@@ -88,7 +86,7 @@ function show_code(system) {
         </p>
 
 
-    <h2> {{ KNOWL('NF.galois_group')  }} </h2>
+        <p><h2> {{ KNOWL('NF.galois_group') }}</h2>
         <div class='sage nodisplay code'>sage: K.class_group().isomorphism_type_info_simple_group()</div>
         <div class='pari nodisplay code'>pari: polgalois(pol)</div>
         <div class='magma nodisplay code'>&gt; GaloisGroup(K);</div>
