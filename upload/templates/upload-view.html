@@ -613,7 +613,7 @@ function updateMappingRules(data, id) {
     </div>
     {% if entry.metadata.content_type == 'text/plain' %}
       <pre>
-{{entry.read()}}
+{{entry.read(10000)}}
       </pre>
     {% elif entry.metadata.content_type == 'image/jpeg' %}
       <img src="download/{{entry._id}}/{{entry.filename}}"/>
