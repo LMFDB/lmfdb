@@ -8,7 +8,7 @@
 <th>Label</th>
 <th>Polynomial</th>
 <th>Discriminant</th>
-<th>Class number</th>
+<th>Galois group</th>
 <th>Class group</th>
 </tr>
 {% for field in info.fields: %}
@@ -16,8 +16,13 @@
 <td align='left'><a href="/NumberField/{{field.label}}">{{field.label}}</a></td>
 <td>{{info.format_coeffs(field.coefficients)|safe}}</td>
 <td>{{field.discriminant}}</td>
-<td>{{field.class_number}}</td>
+<td>{{field.galois_group[3]}}</td>
+{% if field.class_group==[] %}
+<td> Trivial </td>
+{% endif %}
+{% if field.class_group!=[] %}
 <td>{{field.class_group}}</td>
+{% endif %}
 </tr>
 {% endfor %}
 </table>

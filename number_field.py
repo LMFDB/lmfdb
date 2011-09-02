@@ -5,7 +5,7 @@ from base import app
 from flask import Flask, session, g, render_template, url_for, request, redirect
 
 import sage.all
-from sage.all import ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, euler_phi, SR
+from sage.all import ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, euler_phi, pari
 
 from utils import ajax_more, image_src, web_latex, to_dict, parse_range, coeff_to_poly, pol_to_html
 
@@ -24,6 +24,8 @@ def field_pretty(field_str):
 #    TODO:  pretty-printing of more fields of higher degree
 
 def poly_to_field_label(pol):
+    R = pol.parent()
+    pol = R(pari(pol).polredabs())
     query = {'degree':pol.degree(), 'coefficients':[int(c) for c in pol.coeffs()]}
     import base
     C = base.getDBConnection()
@@ -39,7 +41,7 @@ def parse_field_string(F): # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
     if F[0]=='Q':
         if F[1:5] in ['sqrt','root']:
             try:
-                d=ZZ(eval(F[5:])).squarefree_part()
+                d=ZZ(str(F[5:])).squarefree_part()
             except ValueError:
                 return fail_string
             if d%4 in [2,3]:
@@ -51,25 +53,24 @@ def parse_field_string(F): # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
             return '2.%s.%s.1'%(s,str(absD))
         if F[1:5]=='zeta':
             try:
-                d=ZZ(eval(F[5:]))
+                d=ZZ(str(F[5:]))
             except ValueError:
                 return fail_string
             if d<1: return fail_string
             if d%4==2: d/=2  # Q(zeta_6)=Q(zeta_3), etc)
             if d==1: return '1.1.1.1'
             deg = euler_phi(d)
+            if deg>20:
+                return fail_string
             adisc = CyclotomicField(d).discriminant().abs() # uses formula!
             return '%s.0.%s.1'%(deg,adisc)
         return fail_string
     # check if a polynomial was entered
-    if F[0] in ['X','x']:
-        F=F.replace('X','x')
+    F=F.replace('X','x')
+    if 'x' in F:
         F=F.replace('^','**')
-        # no conversion from strings to polynomials directly, but OK via Symbolic Ring
         try:
-            #pol=PolynomialRing(ZZ,'x')(SR(F))
-            x=PolynomialRing(ZZ,'x').gen()
-            pol=eval(F)
+            pol=PolynomialRing(ZZ,'x')(str(F))
         except ValueError:
             return fail_string
         F = poly_to_field_label(pol)
