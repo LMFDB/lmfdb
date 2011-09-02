@@ -6,7 +6,7 @@ from base import *
 
 import hilbert_modular_form
 import siegel_modular_form
-import classical_modular_forms
+import modular_forms
 import elliptic_curve
 import quadratic_twists
 import Lfunction
@@ -14,8 +14,8 @@ import Lfunction
 import plot_example
 import number_field
 import lfunction_db
-import maass_form_picard
-import maass_waveforms
+#import maass_form_picard
+#import maass_waveforms
 import users 
 import knowledge
 import upload
@@ -71,7 +71,7 @@ def example(blah = None):
 @app.route("/ModularForm/")
 @app.route("/AutomorphicForm/")
 def modular_form_toplevel():
-    return redirect(url_for("render_classical_modular_forms"))
+    return redirect(url_for("mf.render_modular_form_main_page"))
     #return render_template("modular_form_space.html", info = { })
     
 @app.route("/about")
