@@ -123,7 +123,7 @@ def elliptic_curve_search(**args):
     info['curves'] = res
     info['format_ainvs'] = format_ainvs
     credit = 'John Cremona'
-    t = 'Elliptic curves)'
+    t = 'Elliptic curves'
     bread = [('Elliptic Curves', url_for("rational_elliptic_curves")),
              ('Search Results', '.')]
     return render_template("elliptic_curve/elliptic_curve_search.html",  info = info, credit=credit,bread=bread, title = t)

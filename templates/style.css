@@ -157,7 +157,7 @@ body.knowl #header {
 }
 
 #header #title-content {
-  position: absolute;
+  position: absolute;3
   bottom: 4px;
 }
 
@@ -533,6 +533,9 @@ div.literature {
 
 /** page wide defs for knowls, the *[knowl] is a selector for
  *  all elements, that have a knowl attribute set to any value */
+table .knowl-link {
+  display: inline;
+}
 .knowl-bar {
   background: {{ col_knowl_ll}};
   padding: 5px 10px;

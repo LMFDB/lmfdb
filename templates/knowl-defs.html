@@ -1,4 +1,4 @@
-{# 
+#{# 
    the following KNOWL macro enables to tag certain locations in the
    HTML documents to reference to saved "Knowls". They contain all
    the information and form the stored knowledge. 
@@ -77,7 +77,7 @@
 {# for inserting "normal" links to knowl pages #}
 {% macro KNOWL_LINK(ID) -%}
  {% with k = Knowl(ID) -%}
-  <a href='{{ url_for("knowledge.show", ID=k.id) }}'>{{ k.title }}</a>
+  <a class="knowl-link" href='{{ url_for("knowledge.show", ID=k.id) }}'>{{ k.title }}</a>
  {%- endwith %}
 {%- endmacro %}
 
