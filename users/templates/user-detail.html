@@ -12,4 +12,14 @@
    <li>About: {{ user.about }}</li>
   </ul>
 </div>
+
+<h2>Knwols</h2>
+<div>{{ user.name }} has contributed to these Knowls:
+ <ul>
+ {% for k in userknowls %}
+   <li><a href="{{ url_for('knowledge.show', ID=k['_id']) }}">{{ k['title'] }}</a></li>
+ {% endfor %}
+ </ul>
+</div>
+
 {% endblock %}
