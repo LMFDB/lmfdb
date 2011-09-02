@@ -555,6 +555,12 @@ table .knowl-link {
   color: {{ col_knowl_dd}};
   font-weight: bold;
 }
+.knowl-inc-edit {
+  margin-top: 20px;
+  background: {{ col_knowl_ll}};
+  font-size: x-small;
+  text-align: right;
+}
 .knowl {
   padding: 0;
 }

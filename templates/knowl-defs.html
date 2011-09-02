@@ -51,6 +51,10 @@
     <{{htag}}>{{title}}</{{htag}}>
   {%- endif %}
   {{knowl.content}}
+  {% if user.is_authenticated() -%}
+    <div class="knowl-inc-edit"><a href="{{ url_for('knowledge.edit', ID=knowlid) }}">edit '{{knowlid}}'</a></div>
+  {%- endif %}
+
 {%- else -%}
 
   {# knowl does not exist. wrong knowlid or opportunity to create one! #}
