@@ -9,6 +9,7 @@ from Lfunction import *
 import LfunctionComp
 import LfunctionPlot
 from utils import to_dict
+from Lfunctionutilities import lfuncDStex, lfuncEPtex, lfuncFEtex
 
 ##import upload2Db.py
 
@@ -43,49 +44,12 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
     # args may or may not be empty
     # what follows are all things that need homepages
 
-    if arg1 == 'Riemann':
-        temp_args['type'] = 'riemann'
-    elif arg1 == 'Character' and arg2 == 'Dirichlet' and arg3 == '1' and arg4 == '0':
-        temp_args['type'] = 'riemann'
-    elif arg1 == 'Character' and arg2 == 'Dirichlet':
-        temp_args['type'] = 'dirichlet'
-        temp_args['charactermodulus'] = arg3
-        temp_args['characternumber'] = arg4 
-
-    elif arg1 == 'EllipticCurve' and arg2 == 'Q':
-        temp_args['type'] = 'ellipticcurve'
-        temp_args['label'] = str(arg3) 
-
-    elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic': # this has args: one for weight and one for level
-        temp_args['type'] = 'gl2holomorphic'
-        logging.info(temp_args)
-
-    elif arg1 == 'ModularForm' and arg2 == 'GL2'and arg3 == 'Q' and arg4 == 'maass':
-        temp_args['type'] = 'gl2maass'
-    
-    elif arg1 == 'ModularForm' and arg2 == 'GSp4'and arg3 == 'Q' and arg4 == 'maass':
-        temp_args['type'] = 'sp4maass'
-        temp_args['source'] = args['source']
-
-    elif arg1 == 'ModularForm' and arg2 == 'GL4'and arg3 == 'Q' and arg4 == 'maass':
-        temp_args['type'] = 'sl4maass'
-        temp_args['source'] = args['source'] 
-
-    elif arg1 == 'ModularForm' and arg2 == 'GL3'and arg3 == 'Q' and arg4 == 'maass':
-        temp_args['type'] = 'sl3maass'
-        temp_args['source'] = args['source'] 
-
-    elif arg1 == 'NumberField':
-        temp_args['type'] = 'dedekind'
-        temp_args['label'] = str(arg2)
-        temp_args['source'] = ""  # it's a bug to require this to be defined
-
-
-    else: # this means we're somewhere that requires args: db queries, holomorphic modular forms, custom,  maass forms, and maybe some others, all of which require a homepage.  
+    try:
+        L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, temp_args)
+        
+    except:
         return redirect(url_for("not_yet_implemented"))
-
-    L = WebLfunction(temp_args)
-   
+    
     try:
         logging.info(temp_args)
         if temp_args['download'] == 'lcalcfile':
@@ -94,6 +58,7 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
         1
         #Do nothing
 
+    temp_args.append(( 'Ltype', L.Ltype))
     info = initLfunction(L, temp_args, request)
 
     # HSY: when you do "**dictionary" in a function call (at the very end),
@@ -109,6 +74,37 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
                            #citation = info['citation'], 
                            #credit   = info['credit'],
                            #support  = info['support'])
+
+
+def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, temp_args):
+    if arg1 == 'Riemann' or (arg1 == 'Character' and arg2 == 'Dirichlet' and arg3 == '1' and arg4 == '0'):
+        return RiemannZeta()
+
+    elif arg1 == 'Character' and arg2 == 'Dirichlet':
+        return Lfunction_Dirichlet( charactermodulus = arg3, characternumber = arg4)
+
+    elif arg1 == 'EllipticCurve' and arg2 == 'Q':
+        return Lfunction_EC( label = arg3)
+
+    elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic': # this has args: one for weight and one for level
+        return Lfunction_EMF( temp_args)
+        logging.info(temp_args)
+
+    elif arg1 == 'ModularForm' and arg2 == 'GL2'and arg3 == 'Q' and arg4 == 'maass':
+        return Lfunction_Maass( temp_args)
+    
+    elif arg1 == 'ModularForm' and (arg2 == 'GSp4' or arg2 == 'GL4' or  arg2 == 'GL3') and arg3 == 'Q' and arg4 == 'maass':
+        return Lfunction_Maass( dbid = temp_args['id'], dbName = 'Lfunction', dbColl = 'LemurellMaassHighDegree')
+        temp_args.append(( 'dbid', L.dbid))
+        temp_args.append(( 'dbName', L.dbName))
+        temp_args.append(( 'dbColl', L.dbColl))
+
+    elif arg1 == 'NumberField':
+        return Lfunction_Dedekind( label = str(arg2))
+        temp_args.append(( 'label', L.label))
+
+    elif arg1 == 'Lcalcurl':
+        return Lfunction( Ltype = arg1, url = arg2)
 
 
 
@@ -163,23 +159,29 @@ def initLfunction(L,args, request):
 
     info['degree'] = int(L.degree)
 
-    info['zeroeslink'] = url_for('zeroesLfunction', **args)
-    info['plotlink'] = url_for('plotLfunction', **args)
+    print args
+    info['zeroeslink'] = (request.url.replace('/L/', '/zeroesLfunction/').
+                          replace('/Lfunction/', '/zeroesLfunction/').
+                          replace('/L-function/', '/zeroesLfunction/') ) #url_for('zeroesLfunction',  **args)
+    info['plotlink'] = (request.url.replace('/L/', '/plotLfunction/').
+                          replace('/Lfunction/', '/plotLfunction/').
+                          replace('/L-function/', '/plotLfunction/') ) #info['plotlink'] = url_for('plotLfunction',  **args)
+    print info['zeroeslink']
 
     # set info['bread'] and to be empty and set info['properties'],
     # but exist (temp. fix by David & Sally)
     info['bread'] = []
-    info['properties2'] = L.properties
+    info['properties2'] = set_gaga_properties(L)
 
-    if args['type'] == 'gl2maass':
-        info['zeroeslink'] = ''
-        info['plotlink'] = ''
-#        info['bread'] = [('L-function','/L'),('GL(2) Maass','/L/ModularForm/GL2/Q/maass')]
+    if L.Ltype == 'maass':
+        if L.group == 'GL2':
+            info['zeroeslink'] = ''
+            info['plotlink'] = ''
 
-    elif args['type'] == 'riemann':
+    elif L.Ltype  == 'riemann':
         info['bread'] = [('L-function','/L'),('Riemann Zeta','/L/Riemann')]
 
-    elif args['type'] == 'dirichlet':
+    elif L.Ltype  == 'dirichlet':
         snum = str(L.characternumber)
         smod = str(L.charactermodulus)
         info['bread'] = [('L-function','/L'),('Dirichlet Character','/L/degree1#Dirichlet'),('Character Number '+snum+' of Modulus '+ smod,'/L/Character/Dirichlet/'+smod+'/'+snum)]
@@ -187,13 +189,13 @@ def initLfunction(L,args, request):
         info['friends'] = [('Dirichlet Character '+str(charname), '/Character/Dirichlet/'+smod+'/'+snum)]
                 
 
-    elif args['type'] == 'ellipticcurve':
+    elif L.Ltype  == 'ellipticcurve':
         label = L.label
         info['friends'] = [('Elliptic Curve', url_for('by_label',label=label)),('Modular Form', url_for('not_yet_implemented'))]
         info['bread'] = [('L-function','/L'),('Elliptic Curve','/L/degree2#EllipticCurve_Q'),
                          (label,url_for('render_Lfunction',arg1='EllipticCurve',arg2='Q',arg3= label))]
 
-    elif args['type'] == 'gl2holomorphic':
+    elif L.Ltype == 'ellipticmodularform':
         weight = str(L.weight)
         level = str(L.level)
         character = str(L.character)
@@ -201,17 +203,17 @@ def initLfunction(L,args, request):
         number = str(L.number)
         info['friends'] = [('Modular Form','/ModularForm/GL2/Q/holomorphic/?weight='+weight+'&level='+level+'&character='+character +'&label='+label+'&number='+number)]
 
-    elif args['source'] == 'db':
+    elif L.Ltype == 'db':
         info['bread'] = [('L-function','/L') ,
                          ('Degree ' + str(L.degree),'/L/degree' +
                           str(L.degree)),
                          (L.id, request.url )]
 
-    info['dirichlet'] = L.lfuncDStex("analytic")
-    info['eulerproduct'] = L.lfuncEPtex("abstract")
-    info['functionalequation'] = L.lfuncFEtex("analytic")
-    info['functionalequationAnalytic'] = L.lfuncFEtex("analytic").replace('\\','\\\\').replace('\n','')
-    info['functionalequationSelberg'] = L.lfuncFEtex("selberg").replace('\\','\\\\').replace('\n','')
+    info['dirichlet'] = lfuncDStex(L, "analytic")
+    info['eulerproduct'] = lfuncEPtex(L, "abstract")
+    info['functionalequation'] = lfuncFEtex(L, "analytic")
+    info['functionalequationAnalytic'] = lfuncFEtex(L, "analytic").replace('\\','\\\\').replace('\n','')
+    info['functionalequationSelberg'] = lfuncFEtex(L, "selberg").replace('\\','\\\\').replace('\n','')
 
     
     info['learnmore'] = [('L-functions', 'http://wiki.l-functions.org/L-functions') ]
@@ -225,6 +227,27 @@ def initLfunction(L,args, request):
     info['check'] = [('Riemann hypothesis', '/L/TODO') ,('Functional equation', '/L/TODO') \
                        ,('Euler product', '/L/TODO')]
     return info
+
+def set_gaga_properties(L):
+    ans = [ ('Degree',    str(L.degree))]
+
+    if L.selfdual:
+        sd = 'Self dual'
+    else:
+        sd = 'Not self dual'
+    ans.append((None,        sd))
+
+    ans.append(('Level',     str(L.level)))
+    ans.append(('Sign',      str(L.sign)))
+
+    if L.primitive:
+        prim = 'Primitive'
+    else:
+        prim = 'Not primitive'
+    ans.append((None,        prim))
+
+    return ans
+
 
 def specialValueString(sageL, s, sLatex):
     val = sageL.value(s)
@@ -241,9 +264,9 @@ def parameterstringfromdict(dic):
     return answer[0:len(answer)-1]
          
 
-def plotLfunction(args):
-    WebL = WebLfunction(args)
-    L = WebL.sageLfunction
+def plotLfunction(request, arg1, arg2, arg3, arg4, arg5):
+    pythonL = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, to_dict(request.args))
+    L = pythonL.sageLfunction
     # HSY: I got exceptions that "L.hardy_z_function" doesn't exist
     # SL: Reason, it's not in the distribution of Sage
     if not hasattr(L, "hardy_z_function"):
@@ -257,8 +280,8 @@ def plotLfunction(args):
     os.remove(fn)
     return data
 
-def render_plotLfunction(args):
-    data = plotLfunction(args)
+def render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5):
+    data = plotLfunction(request, arg1, arg2, arg3, arg4, arg5)
     if not data:
       # see not about missing "hardy_z_function" in plotLfunction()
       return abort(404)
@@ -289,9 +312,9 @@ def render_browseGraphChar(args):
     respone.headers['Content-type'] = 'image/svg+xml'
     return response
 
-def render_zeroesLfunction(args):
-    WebL = WebLfunction(args)
-    s = str(WebL.sageLfunction.find_zeros(-15,15,0.1))
+def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5):
+    L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, to_dict(request.args))
+    s = str(L.sageLfunction.find_zeros(-15,15,0.1))
     return s[1:len(s)-1]
 
 def render_lcalcfile(L):
