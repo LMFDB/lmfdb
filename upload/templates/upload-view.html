@@ -578,6 +578,8 @@ function updateMappingRules(data, id) {
 <dl class=propertylist>
   <dt>Name</dt>
   <dd>{{editable(entry,'name')}}</dd>
+  <dt>Status</dt>
+  <dd>{{entry.metadata.status}}</dd>
   <dt>Related to</dt>
   <dd>{{editable(entry,'related_to')}}</dd>
   {% if entry.metadata.parent_archive_id is defined %}
