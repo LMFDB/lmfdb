@@ -469,7 +469,7 @@ table a {
   -webkit-border-radius: 3px;
   -moz-border-radius: 3px;
 }
-table td {
+table td.top {
   vertical-align:top;
 }
 
