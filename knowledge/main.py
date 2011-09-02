@@ -98,7 +98,8 @@ def edit(ID):
 def show(ID):
   k = Knowl(ID)
   r = render(ID, footer="0")
-  b = get_bread([('Wiki', url_for('.show', ID='wiki.index')), ('%s'%k.id, url_for('.show', ID=ID))])
+  b = get_bread([('%s'%k.title, url_for('.show', ID=ID))])
+    
   return render_template("knowl-show.html",
          title = k.title,
          k = k,
@@ -136,7 +137,7 @@ def save_form():
   k.title = request.form['title']
   k.content = request.form['content']
   k.quality = request.form['quality']
-  k.save()
+  k.save(who=current_user.get_id())
   return flask.redirect(url_for(".show", ID=ID))
   
 
@@ -153,6 +154,11 @@ def render(ID, footer=None):
   a small and simple html snippet!
   """
   k = Knowl(ID)
+
+  #logger.debug("kwargs: %s", request.args)
+  kwargs = dict(((k, v) for k,v in request.args.iteritems()))
+  logger.debug("kwargs: %s" , kwargs)
+
   #this is a very simple template based on no other template to render one single Knowl
   #for inserting into a website via AJAX or for server-side operations.
   if request.method == "POST":
@@ -161,6 +167,11 @@ def render(ID, footer=None):
   else:
     con = request.args.get("content", k.content)
     foot = footer or request.args.get("footer", "1") 
+
+  authors = []
+  for a in k.author_links():
+    authors.append("<a href='%s'>%s</a>" % (url_for('users.profile', userid=a['_id']), a['full_name']))
+  authors = ', '.join(authors)
 
   render_me = u"""\
   {%% include "knowl-defs.html" %%}
@@ -178,18 +189,21 @@ def render(ID, footer=None):
       &middot;
       <a href="{{ url_for('.edit', ID='%(ID)s') }}">edit</a> 
     {%% endif %%}
+    &middot;
+    Authors: %(authors)s
   </div>"""
   render_me += "</div>"
   # render_me = render_me % {'content' : con, 'ID' : k.id }
   # markdown enabled
-  render_me = render_me % {'content' : md.convert(con), 'ID' : k.id }
+  render_me = render_me % {'content' : md.convert(con), 'ID' : k.id, 'authors' : authors }
   # Pass the text on to markdown.  Note, backslashes need to be escaped for this, but not for the javascript markdown parser
 
   #logger.debug("rendering template string:\n%s" % render_me)
 
   # TODO wrap this string-rendering into a try/catch and return a proper error message
   # so that the user has a clue. Most likely, the {{ KNOWL('...') }} has the wrong syntax!
-  return render_template_string(render_me, k = k)
+  logger.debug("kwargs: %s" % k.template_kwargs)
+  return render_template_string(render_me, k = k, **kwargs)
 
 @knowledge_page.route("/")
 def index():

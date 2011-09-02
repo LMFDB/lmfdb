@@ -5,8 +5,7 @@ import cmath
 import datetime
 from flask import url_for, make_response
 import base
-from classical_modular_forms.backend.web_modforms import *
-
+from modular_forms.elliptic_modular_forms.backend.web_modforms import *
 
 
 

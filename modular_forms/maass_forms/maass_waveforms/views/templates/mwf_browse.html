@@ -1,0 +1,122 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<script type="text/javascript" src="{{ url_for('mwf.static', filename='classical_modular_form_util-functions.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('mwf.static', filename='classical_modular_form_scripts.js') }}"></script>
+
+
+{% if info.error is defined %}
+
+<h1>There was an error in meeting your previous request. Please change parameters.</h1>
+
+<h2> Error message: </h2>% extends "homepage.html" %}
+
+<div>
+{{ info.error | safe }}
+</div>
+{% endif %}
+<!-- To make an interface that is easier to read we implement each case of input separately -->
+
+<!-- {{ info | safe }} $("div").data("option",{"start":1}); -->
+
+<script>
+allowed_levels= {{info.list_of_levels}} <!-- these are the levels which are in the database-->
+
+$(document).ready(function() {
+$("#l_list").data("start",1); $("#l_list").data("len",20); $("#l_list").data("min",1);
+$("#l_list").data("name","level");
+$("#w_list").data("start",1); $("#w_list").data("len",20); $("#w_list").data("min",1);
+$("#w_list").data("name","weight");
+$("#char_selection").data("char",0);
+ print_list("#l_list");
+ print_list("#w_list");
+ });
+
+
+
+
+function shift(id,lr) {
+   var start = $(id).data("start");
+   var min = $(id).data("min");
+   var len = $(id).data("len");
+   if (lr == "left")
+      start = start - len;
+   if (lr == "right")
+      start = start + len;
+   if (start <= min) {
+      start = min;
+   }
+   $(id).contents().detach();
+   $(id).data("start",start);
+   $(id).data("min",min);
+   $(id).data("len",len);
+ /*alert("start:"+$(id).data("start")+" "+len+" "+min); */
+   print_list(id);
+
+}
+
+function print_list(id) {
+    var min = $(id).data("min");
+    var start = $(id).data("start");
+    var len = $(id).data("len");
+    var name = $(id).data("name");
+    var url = getAbsolutePath();
+    if (start > min) {
+       $(id).append("<a id='go_left' href='#' onclick=\"shift('"+id+"','left')\" style=\"display:inline\"><small>&lt;&lt;</small></a>");
+    };
+    var char = $("#char_selection").data("char");
+    if (char == 0) {
+       s = "&character=0"
+    } else {
+       s = "&character=all"
+    }
+    for (var i = start; i < len+start; i++) {
+        /*s = "<a href="+url+"?"+name+"="+i+" style=\"display:inline\">" + i + "</a> ";*/
+	/*s = "<a href='' onclick='set_value(\""+id+"\","+i+");document.browse.submit()' >" + i + "</a> ";*/
+	if (name=="level" && jQuery.inArray(i, allowed_levels) > -1) {
+	    s = "<a href=\"javascript:set_value('"+id+"',"+i+")\" style=\"display:inline\">" + i + "</a> ";
+	    $(id).append(s);
+	}
+    }
+    if(i < {{info.max_level}} ){
+	   $(id).append("<a id='go_right' href='#' onclick=\"shift('"+id+"','right')\" style=\"display:inline\"><small>&gt;&gt;</small></a>");
+    }
+
+};
+
+function set_value(id,val) {
+  var name = $(id).data("name"); 			   
+  document.forms.browse[name].value=val;
+  $(id).data("value",val);
+  document.browse.submit();			   
+}
+
+function getAbsolutePath() {
+    var loc = window.location;
+    var pathName = loc.pathname.substring(0, loc.pathname.lastIndexOf('/') + 1);
+    return loc.href.substring(0, loc.href.length - ((loc.pathname + loc.search + loc.hash).length - pathName.length));
+}
+
+</script>
+
+
+<table>
+  <tr>
+    <td>
+      <form name="browse" method = "get" action="{{url_for('.render_maass_waveforms')}}">
+	<h3>Browse spaces of Maass waveforms</h3>
+        {% if info.table is defined %}
+        {{ info.table | safe }}
+        {% else %}
+        There are no Maass Forms in the database satisfying the provided criteria.
+        {% endif %}
+      </form>
+    </td>
+  </tr>
+  <tr>
+</table>
+
+</div>
+
+{% endblock content %}

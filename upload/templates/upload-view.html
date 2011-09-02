@@ -540,19 +540,19 @@ function updateMappingRules(data, id) {
   rules = $('#regexp'+id).val().split(/\n/).filter(function(x) { return x.trim() != ""})
 
   for(var i=0; i<data.length; i++) {
-    data[i][2] = "";
+    data[i][3] = "";
     for(var j=0; j<rules.length/2; j++) {
       re = new RegExp(rules[j+j]);
       sub = rules[j+j+1];
-      if(re.test(data[i][1])) {
-        data[i][2]=data[i][1].replace(re, sub);
+      if(re.test(data[i][2])) {
+        data[i][3]=data[i][2].replace(re, sub);
         break;
       }
     }
   }
   $('#table'+id).dataTable( {
     "aaData" : data,
-    "aoColumns" : [ {"sTitle" : ""}, {"sTitle" : "Filename"}, {"sTitle" : "Related-to web page"} ],
+    "aoColumns" : [ {"sTitle" : ""}, {"sTitle" : ""}, {"sTitle" : "Filename"}, {"sTitle" : "Related-to web page"} ],
     "bDestroy" : true
   });
 }
@@ -578,6 +578,8 @@ function updateMappingRules(data, id) {
 <dl class=propertylist>
   <dt>Name</dt>
   <dd>{{editable(entry,'name')}}</dd>
+  <dt>Status</dt>
+  <dd>{{entry.metadata.status}}</dd>
   <dt>Related to</dt>
   <dd>{{editable(entry,'related_to')}}</dd>
   {% if entry.metadata.parent_archive_id is defined %}
@@ -599,11 +601,11 @@ function updateMappingRules(data, id) {
   <dt>Contents</dt>
   <dd>
 
-    <a href="download/{{entry._id}}/{{entry.filename}}">
+    <a href="/upload/download/{{entry._id}}/{{entry.filename}}">
       Download {{entry.filename}}
     </a>
     <br/>
-    <a href="#" onclick="parseJsonTable('download/{{entry._id}}/{{entry.filename}}', $('#div{{entry._id}}'));return false">
+    <a href="#" onclick="parseJsonTable('/upload/download/{{entry._id}}/{{entry.filename}}', $('#div{{entry._id}}'));return false">
       Parse Json from {{entry.filename}}
     </a>
 
@@ -611,10 +613,10 @@ function updateMappingRules(data, id) {
     </div>
     {% if entry.metadata.content_type == 'text/plain' %}
       <pre>
-{{entry.read()}}
+{{entry.read(10000)}}
       </pre>
     {% elif entry.metadata.content_type == 'image/jpeg' %}
-      <img src="download/{{entry._id}}/{{entry.filename}}"/>
+      <img src="/upload/download/{{entry._id}}/{{entry.filename}}"/>
     {% endif %}
 
     {% if entry.metadata.child_index is defined %}
@@ -627,7 +629,8 @@ function updateMappingRules(data, id) {
         $(document).ready(function() {
           data{{entry._id}} = [
             {% for child in entry.metadata.child_index %}
-              [ "<A HREF='/upload/download/{{child[0]|safe}}/{{entry.filename}}/{{child[1]}}'>Link</A>",
+              [ "<A HREF='/upload/download/{{child[0]|safe}}/{{entry.filename}}/{{child[1]}}'>Download</A>",
+                "<A HREF='/upload/view/{{child[0]|safe}}'>View</A>",
                 "{{child[1] | safe}}",
                 ""],
             {% endfor %}
