@@ -1,3 +1,25 @@
+# -*- coding: utf-8 -*-
+#*****************************************************************************
+#  Copyright (C) 2010 Fredrik Strömberg <fredrik314@gmail.com>,
+#
+#  Distributed under the terms of the GNU General Public License (GPL)
+#
+#    This code is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    General Public License for more details.
+#
+#  The full text of the GPL is available at:
+#
+#                  http://www.gnu.org/licenses/
+#*****************************************************************************
+r"""
+Main file for viewing classical (holomorhic) modular forms.
+
+AUTHOR: Fredrik Strömberg
+
+
+"""
 from flask import render_template, url_for, request, redirect, make_response,send_file
 import flask
 import tempfile, os,re
@@ -29,7 +51,7 @@ k_max_db = 300000
 _verbose = 0
 
 #from jinja2 import Environment
-cmf_logger.debug("EN_V path: %s" % app.jinja_loader.searchpath)
+#cmf_logger.debug("EN_V path: %s" % app.jinja_loader.searchpath)
 l=app.jinja_env.list_templates()
 #################
 # Top level
@@ -47,8 +69,8 @@ def render_classical_modular_forms():
     info = get_args()
     if info.has_key('download'):
         return get_downloads(info)
-    cmf_logger.debug("MODULES:%s"%app.modules)
-    cmf_logger.debug("EN_V path:%s"%app.modules['cmf'].jinja_loader.searchpath)
+    #cmf_logger.debug("MODULES:%s"%app.modules)
+    #cmf_logger.debug("EN_V path:%s"%app.modules['cmf'].jinja_loader.searchpath)
     cmf_logger.debug("args=%s"%request.args)
     cmf_logger.debug("method=%s"%request.method)
     cmf_logger.debug("req.form=%s"%request.form)
@@ -72,11 +94,11 @@ def render_classical_modular_forms():
         if len(test)==1: 
             label = test[0]
         else:
-          label=''
-        print "label1=",label
+            label=''
+        cmf_logger.debug("label1={0}".format(label))
         # the first string of integers should be the level
         test = re.findall("\d+",s)
-        print "level mat=",test
+        cmf_logger.debug("level mat={0}".format(test))
         if test:
             level = int(test[0])
         if len(test)>1: ## we also have weight
@@ -90,7 +112,7 @@ def render_classical_modular_forms():
 
     # we see if we have submitted parameters
     if level and weight and character<>'' and label:
-                #return redirect(url_for("render_one_classical_modular_form", level,weight,character,label))
+        #return redirect(url_for("render_one_classical_modular_form", level,weight,character,label))
         info['level']=level; info['weight']=weight; info['label']=label; info['character']=character
         cmf_logger.debug("WE ARE HERE!")
         return redirect(url_for("cmf.render_one_classical_modular_form", level=level, weight=weight,character=character,label=label))
@@ -102,15 +124,17 @@ def render_classical_modular_forms():
         return redirect(url_for("cmf.render_classical_modular_form_browsing", **info))
     if level:
         info['level']=level
-        print "Have level only!"
+        cmf_logger.debug("Have level only!")
         return redirect(url_for("cmf.render_classical_modular_form_space2", **info))
     if weight:
-        print "Have weight only!"
+        cmf_logger.debug("Have weight only!")
         return browse_classical_modular_forms(**info)
-    if request.method == 'GET':
-        return render_classical_modular_form_navigation_wp(**info) #request.args)
-    else:
-        return render_classical_modular_form_navigation_wp(**info) #request.form)  
+    #if request.method == 'GET':
+    cmf_logger.debug("to do navigation!")
+    return render_classical_modular_form_navigation_wp(**info) #request.args)
+    #else:
+    #    cmf_logger.debug("to do navigation!")
+    #    return render_classical_modular_form_navigation_wp(**info) #request.form)  
 
 
 #@cmf.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<label>/")
@@ -121,12 +145,12 @@ def render_one_classical_modular_form(level,weight,character,label):
      """
     info = get_args() # in case we have extra args
     info['level']=level; info['weight']=weight; info['character']=character; info['label']=label
-    print "info=",info
+    cmf_logger.debug("info={0}".format(info))
     return render_one_classical_modular_form_wp(info) #level,weight,character,label,info)
 
 @cmf.route("/<int:level>/<int:weight>/<int:character>/")
 def render_classical_modular_form_space(level,weight,character,**kwds):
-    print "render_classical_modular_form_space::",level,weight
+    cmf_logger.debug("render_classical_modular_form_space::%s %s " %(level,weight))
     info = get_args()
     info['level']=level; info['weight']=weight; info['character']=character
     if info['label']<>'':
@@ -143,7 +167,7 @@ def render_classical_modular_form_browsing(level,weight):
 
 @cmf.route("/<int:level>/")
 def render_classical_modular_form_space2(level):
-    print "render_classical_modular_form_space2::",level
+    cmf_logger.debug("render_classical_modular_form_space2::{0}".format(level))
     info=get_args()
     info['level']=level; info['weight']=None
     return browse_classical_modular_forms(**info)
@@ -183,7 +207,7 @@ def render_one_classical_modular_form_wp(info):
     info['parents']=parents
     info['siblings']=siblings
     info['friends']=friends
-    print "friends=",friends
+    cmf_logger.debug("friends={0}".format(friends))
     ## Check if we want to download either file of the function or Fourier coefficients
     if info.has_key('download') and not info.has_key('error'):                                  
         return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
@@ -219,6 +243,7 @@ def render_classical_modular_form_navigation_wp(**args):
     Renders the webpage for the navigational page.
     
     """
+    cmf_logger.debug("render_c_m_f_n_wp")
     info = to_dict(args)
     level  = _my_get(info,'level', 0,int)
     weight = _my_get(info,'weight', 0,int)
@@ -238,18 +263,10 @@ def render_classical_modular_form_navigation_wp(**args):
         title = "Table of Classical Modular Forms Spaces"
         return render_template(page, info=info,title=title)
     ## This is the list of weights we initially put on the form
-        ## List of weights and levels we initially put on the form
-        ## This is the list of weights we initially put on the form
-        ## This is the list of weights we initially put on the form
     weight = int (weight)
-    #info['initial_list_of_weights'] = print_list_of_weights()
-    #info['initial_list_of_levels']=range(1,30+1)
-        
     #url1 = ajax_url(ajax_more2, print_list_of_characters, *arg_list1, inline=True, text='List Characters')
-
     info['list_chars']=ajax_once(print_list_of_characters,text='print list of characters!')
     ## t = """| <a onclick="$('#%(nonce)s').load('%(url2)s', function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'%(nonce)s']);}); return false;" href="#">%(text1)s</a>]</span>""" % locals()
-        ## info['list_of_characters'] = 
     if level>0:
         info['geometric'] = print_geometric_data_Gamma0N(level)
         #if info.has_key('plot'):
@@ -265,10 +282,10 @@ def get_args():
     """
     if request.method == 'GET':
         info   = to_dict(request.args)
-        print "req=",request.args
+        cmf_logger.debug("req={0}".format(request.args))
     else:
         info   = to_dict(request.form)
-        print "req=",request.form
+        cmf_logger.debug("req={0}".format(request.form))
     # fix formatting of certain standard parameters
     level  = _my_get(info,'level', -1,int)
     weight = _my_get(info,'weight',-1,int) 
@@ -321,7 +338,7 @@ def browse_classical_modular_forms(**info):
         info['browse_type']=" of level %s " % level
         return render_template("cmf_browse.html", info=info,title=title,bread=bread)
     if weight and not level:
-        print "here2!"
+        cmf_logger.debug("here2!")
         info['level_min']=1;info['level_max']=50
         info['weight_min']=weight;info['weight_max']=weight
         info['list_spaces']=make_table_of_dimensions(weight_start=weight,weight_stop=weight,**info) #make_table_of_spaces(level=[10,20,30])
@@ -352,24 +369,24 @@ def render_classical_modular_form_space_wp(info):
     ### This might take forever....
     ### want to display 
     (info,sbar)=set_info_for_modular_form_space(info,sbar)
-    print "HERE!!!!!!!!"
-    print "keys=",info.keys()
+    cmf_logger.debug("HERE!!!!!!!!")
+    cmf_logger.debug("keys={0}".format(info.keys()))
     if info.has_key('download') and not info.has_key('error'):                                  
         return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
     if info.has_key('dimension_newspace') and info['dimension_newspace']==1: # if there is only one orbit we list it
-        print "Dimension of newforms is one!"
+        cmf_logger.debug("Dimension of newforms is one!")
         info =dict()
         info['level']=level; info['weight']=weight; info['label']='a'; info['character']=character
-        # print "INFO=",info
+
         return redirect(url_for('cmf.render_one_classical_modular_form', **info))
     #properties=[
     s = """
     Dimension: %s <br>
     Sturm bound: %s <br>
     """ %(info['dimension'],info['sturm_bound'])
-    print "prop1=",properties
+    cmf_logger.debug("prop1={0}".format(properties))
     (properties,parents,friends,siblings,lifts)=sbar
-    print "prop2=",properties
+    cmf_logger.debug("prop2={0}".format(properties))
     if not properties:
       properties=[s]
     title = "Holomorphic Cusp Forms of weight %s on \(\Gamma_{0}(%s)\)" %(weight,level)
@@ -377,7 +394,7 @@ def render_classical_modular_form_space_wp(info):
     bread =[('Modular Forms',url_for('modular_form_toplevel'))]
     bread.append(("Level %s" %level,url_for('cmf.render_classical_modular_form_space2',level=level)))
     bread.append(("Weight %s" %weight,url_for('cmf.render_classical_modular_form_browsing',level=level,weight=weight)))
-    print "friends=",friends
+    cmf_logger.debug("friends={0}".format(friends))
     info['friends']=friends
     #info['test']=ajax_later(_test)
     
@@ -417,7 +434,8 @@ def render_classical_modular_form_space_list_chars(level,weight):
     level and weight (list all characters) 
     """
     info = dict()
-    D = DirichletGroup(level)
+    #if level<>0:
+    #  D = sage.modular.dirichlet.DirichletGroup(Integer(level))
     #s = make_table_of_dimensions(level_start=level,level_stop=level,weight_start=weight,weight_stop=weight,char=1)
     s = make_table_of_characters(level,weight)
     info['level']=level; info['weight']=weight
@@ -428,7 +446,7 @@ def render_classical_modular_form_space_list_chars(level,weight):
     info['list_spaces']=s
     title = "Holomorphic Modular Cuspforms of level %s and weight %s " %(level,weight)
     bread =[('Modular Forms',url_for('modular_form_toplevel'))]
-    bread.append(("Level %s" %level,url_for('cmf.render_classical_modular_form_space2',level=level)))
+    bread.append(("Level %s" %level,url_for("cmf.render_classical_modular_form_space2",level=level)))
     
     info['browse_type']=" of level %s and weight %s " % (level,weight)
     return render_template("cmf_browse.html", info=info,title=title,bread=bread)
@@ -450,8 +468,11 @@ def set_sidebar(l):
 def make_table_of_characters(level,weight,**kwds):
     r""" Make a table of spaces S_k(N,\chi) for all compatible characters chi.
     """
-    D=DirichletGroup(level)
-    print "D=",D
+    if level>0:
+      D=DirichletGroup(level); l=D.list()
+    else:
+      D=list(); l=[]
+    #print "D=",D
     s = "List of \(S_{%s} (%s, \chi_{n}) \)" %(weight,level)
     s+="<a name=\"#"+str(level)+"\"></a>"
     tbl=dict()
@@ -465,7 +486,7 @@ def make_table_of_characters(level,weight,**kwds):
     rowlen = 25
     ii=0
     dims = dict()
-    for chi in range(0,len(D.list())):
+    for chi in range(0,len(l)):
         x=D[chi]; d=dimension_new_cusp_forms(x,weight)
         dims[chi]=d
     num_non_zero = (map(lambda x:  x>0,dims.values())).count(True)
@@ -477,13 +498,13 @@ def make_table_of_characters(level,weight,**kwds):
     numrows = ceil(map(lambda x: x>0,dims).count(True)/rowlen)
     tbl['col_width']=dict()
     ci=0
-    for chi in range(0,len(D.list())):
+    for chi in range(0,len(l)):
         d = dims[chi]
         if d==0:
             continue
         tbl['headersh'].append(chi)
         tbl['col_width'][ii]=["100"]
-        x = D.list()[chi]
+        x = l[chi]
         order = x.order()
         #st = " %s (order %s) " %(chi,order)
         ii=ii+1
@@ -502,7 +523,7 @@ def make_table_of_characters(level,weight,**kwds):
 
     row = list()
     ii=0
-    for chi in range(0,len(D.list())):
+    for chi in range(0,len(l)):
         d = dims[chi]
         if d==0:
             continue
@@ -1327,6 +1348,7 @@ def print_list_of_characters(level=1,weight=2):
         r"""
         Prints a list of characters compatible with the weight and level.
         """
+        cmf_logger.debug("print_list_of_chars")
         D = DirichletGroup(level)
         res=list()
         for j in range(len(D.list())):

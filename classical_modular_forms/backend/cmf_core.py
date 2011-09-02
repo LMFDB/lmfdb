@@ -1,9 +1,27 @@
+# -*- coding: utf-8 -*-
+#*****************************************************************************
+#  Copyright (C) 2010 Fredrik Strömberg <fredrik314@gmail.com>,
+#
+#  Distributed under the terms of the GNU General Public License (GPL)
+#
+#    This code is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    General Public License for more details.
+#
+#  The full text of the GPL is available at:
+#
+#                  http://www.gnu.org/licenses/
+#*****************************************************************************
 """
 Core functions for generating the necessary data corresponding to GL(2):
  - spaces of cusp forms
  - indivdual cuspforms
 
 By convention a 'core function' starting with get_  returns a string.
+
+AUTHOR: Fredrik Stroemberg
+
 
 """
 
