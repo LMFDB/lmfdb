@@ -688,7 +688,7 @@ h2 > .knowl-qm {
   font-size: x-small;
   /* border-top: 1px solid {{ col_knowl_d }}; */
   background: {{ col_knowl_l }};
-  color: {{ col_knowl_ll }};
+  color: grey;
   padding: 1px 0 1px 10px;
   margin:  0 0 0 0;
 }
