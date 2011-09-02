@@ -170,7 +170,8 @@ def render(ID, footer=None):
 
   authors = []
   for a in k.author_links():
-    authors.append("<a href='%s'>%s</a>" % (url_for('users.profile', userid=a['_id']), a['full_name']))
+    authors.append("<a href='%s'>%s</a>" % 
+      (url_for('users.profile', userid=a['_id']), a['full_name'] or a['_id'] ))
   authors = ', '.join(authors)
 
   render_me = u"""\

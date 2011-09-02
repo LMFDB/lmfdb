@@ -35,7 +35,7 @@ def get_collections_info():
     db = connect_db()
     for c in db.collection_names():
         metadata=db.metadata[c]
-        mwf_logger.debug("METADATA: {0}".formst(metadata))
+        mwf_logger.debug("METADATA: {0}".format(metadata))
 
 #def GetNameOfPerson(DBname):
 #    if DBname == "FS":
