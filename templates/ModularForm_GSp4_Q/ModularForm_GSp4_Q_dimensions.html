@@ -1,6 +1,67 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
+{% if info.error %}
+<div class="error">Error: {{  info.error }}</div>
+
+{% elif not info.dimensions %}
+<p>Dimension table to be implemented</p>
+
+{% else %}
+
+<p>
+  The table shows, for each weight,
+  the dimensions of the following subspaces of
+
+  {% if info.group=='Sp8Z' %}
+  \(S_k({\rm Sp}(8,Z))\):
+  <ul>
+    <li><span class="emph">Total</span>: The full space \(S_k({\rm Sp}(8,Z))\).</li>
+    <li><span class="emph">Ikeda lifts</span>: The subspace of Ikeda lifts.</li>
+    <li><span class="emph">Miyawaki lifts</span>: The subspace of Miyawaki lifts.</li>
+    <li><span class="emph">Other</span>: The subspace that are not Ikeda or Miyawaki lifts.</li>
+  </ul>
+
+  {% elif info.group=='Kp' %}
+  \(S_k({\rm K}({{ info.level }}))\):
+  <ul>
+    <li><span class="emph">Total</span>: The full space \(S_k({\rm K}({{ info.level }}))\).</li>
+    <li><span class="emph">Lifts</span>: The subspace of Gritsenko lifts.</li>
+    <li><span class="emph">Nonlifts</span>: The subspace of nonlifts.</li>
+  </ul>
+
+  {% else %}
+  \({{ info.parent_as_tex }}\):
+  <ul>
+    <li><span class="emph">Total</span>: The full space
+      \({{ info.parent_as_tex }}\).</li>
+    <li><span class="emph">Eisenstein</span>: The subspace of Siegel Eisenstein series.</li>
+    <li><span class="emph">Klingen</span>: The subspace of Klingen Eisenstein series.</li>
+    <li><span class="emph">Maass</span>: The subspace of Maass liftings.</li>
+    <li><span class="emph">Interesting</span>: The subspace spanned by cuspidal eigenforms that are not Maass liftings.</li>
+  </ul>
+  {% endif %}
+</p>  
+
+<table>
+  <thead>
+    <tr>
+      {% for header in info.table_headers %}
+      <th>{{ header }}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  {% for k,dims in info.dimensions %}
+  <tr class = "{{ loop.cycle( 'odd', 'even') }}">
+    <td>{{ k }}</td>
+    {% for d in dims %}
+    <td>{{ d }}</td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+
 <script>
   function validate_weight()
   {
@@ -45,115 +106,45 @@
   }
 </script>
 
-
-{% if info.group=='Sp8Z' %}
-Only weights up to 16 is available.
-{% else %}
-
-{% if info.group=='Kp' %}
-Enter a prime level and a range of weights
-or a weight and a range of levels. Example for range: 2-50.
-{% else %}
-Enter a weight or a range of weights. Example for range: 2-50.
-{% endif %}
-<form id="kform" action="{{ url_for( 'ModularForm_GSp4_Q_top_level') }}" method="get" style="margin-left:100px;margin: 15px 10px 15px 100px;" onSubmit="return validate_weight()">
-  <input type="hidden" name="group" value="{{ info.group }}" />
-  <input type="hidden" name="page" value="dimensions" />
-
-  <table>
-    {% if info.group=='Kp' %}
-    <tr><td>
-	prime level(s):</td><td> <input type="text" name="level" id="weight_range" size="8" class="enternumber"
-					{% if info.level_range %}
-					value = '{{ info.level_range }}'
-					{% endif %}
-					></td><td></td></tr>
-    {% endif %}
-    <tr><td>
-	weight(s):</td><td><input type="text" name="weight_range" id="weight_range" size="8" class="enternumber"
-				  {% if info.weight_range %}
-				  value = '{{ info.weight_range }}'
-				  {% endif %}
-				  >
-	
-      </td><td>
-	&nbsp;&nbsp;&nbsp;<input type="submit" value="Submit" class="submitbutton" onmouseover="this.style.backgroundColor='#83D9EB'" onmouseout="this.style.backgroundColor='#45BDD7'" />
-  </td></tr></table>
-</form>
-{% endif %}
-
-
-{% if info.error %}
-<div class="error">Error: {{  info.error }}</div>
-{% else %}
-
-{% if info.group=='Sp8Z' %}
-
-This will generate a table which shows for each weight,
-the dimensions of the following subspaces of
-\(S_k({\rm Sp}(8,Z))\):
-<ul>
-  <li><span class="emph">Total</span>: The full space \(S_k({\rm Sp}(8,Z))\).</li>
-  <li><span class="emph">Ikeda lifts</span>: The subspace of Ikeda lifts.</li>
-  <li><span class="emph">Miyawaki lifts</span>: The subspace of Miyawaki lifts.</li>
-  <li><span class="emph">Other</span>: The subspace that are not Ikeda or Miyawaki lifts.</li>
-</ul>
-
-{% elif info.group=='Kp' %}
-
-This will generate a table which shows for each weight and level,
-the dimensions of the following subspaces of
-\(S_k({\rm K}(p))\):
-<ul>
-  <li><span class="emph">Total</span>: The full space \(S_k({\rm K}(p))\).</li>
-  <li><span class="emph">Lifts</span>: The subspace of Gritsenko lifts.</li>
-  <li><span class="emph">Nonlifts</span>: The subspace of nonlifts.</li>
-</ul>
-
-{% else %}
-
-This will generate a table which shows for each weight
-the dimensions of the following subspaces of
-\({{ info.parent_as_tex }}\):
-<ul>
-  <li><span class="emph">Total</span>: The full space
-    \({{ info.parent_as_tex }}\).</li>
-  <li><span class="emph">Eisenstein</span>: The subspace of Siegel Eisenstein series.</li>
-  <li><span class="emph">Klingen</span>: The subspace of Klingen Eisenstein series.</li>
-  <li><span class="emph">Maass</span>: The subspace of Maass liftings.</li>
-  <li><span class="emph">Interesting</span>: The subspace spanned by cuspidal eigenforms that are not Maass liftings.</li>
-</ul>
-
-{% endif %}
-
-<div class="box1">
-  <table>
-    <thead>
-      <tr>
-	{% for header in info.table_headers %}
-	<th>{{ header }}</th>
-	{% endfor %}
-      </tr>
-    </thead>
-    {% if info.dimensions %}
-    
-    {% for k,dims in info.dimensions %}
-    <tr class = "{{ loop.cycle( 'odd', 'even') }}">
-      <td>{{ k }}</td>
-      {% for d in dims %}
-      <td>{{ d }}</td>
-      {% endfor %}
-    </tr>
-    {% endfor %}
-  </table>
-
+<p>
+  {% if info.group=='Sp8Z' %}
+  Only weights up to 16 is available.
+  {% elif info.group=='Kp' %}
+  Enter new prime level and range of weights
+  or a weight and a range of levels.
   {% else %}
-
-  </table>
-  Dimension table to be implemented
+  Enter a new weight or a range of weights.
   {% endif %}
-<div>
+</p>
 
-{% endif %}
-
+<form action="/ModularForm/GSp4/Q" method="get" onSubmit="return validate_weight()"> 
+  <input type="hidden" name="group" value="{{ info.group }}" />
+  <input type="hidden" name="page" value="dimensions" /> 
+  <table> 
+    <tr>
+      {% if info.group=='Kp' %}
+      <td>
+	<label>prime level(s)</label>
+	<input type="text"
+	       name="level"
+	       {% if info.level %}value='{{ info.level }}'{% endif %}
+	       >
+	<span class="formexample">e.g. 3</span>
+      </td>
+      {% endif %}
+      <td> 
+	<label>weight(s)</label>
+	<input type="text"
+	       name="weight_range"
+	       {% if info.weight_range %}placeholder='{{ info.weight_range }}'{% endif %}
+	       >
+	<span class="formexample">e.g. 2 or 20-40</span>
+      </td>
+      <td> 
+	<button type="submit" value="submit">Submit</button>
+      </td>
+    </tr>
+  </table> 
+</form> 
+{{ info.weight_range }}
 {% endblock %}

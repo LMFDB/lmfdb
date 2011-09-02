@@ -19,6 +19,7 @@ def render_webpage(args = {}):
     group = args.get('group')
     character = args.get('character')
     weight = args.get('weight')
+    level = args.get('level')
     form = args.get('form')
     page = args.get('page')
     orbit = args.get('orbit')
@@ -26,6 +27,7 @@ def render_webpage(args = {}):
     info['group'] = group
     info['form'] = form
     info['orbit']= orbit
+    info['level']= level
 
     if args['group']:
         
@@ -92,8 +94,6 @@ def render_webpage(args = {}):
         if page == 'dimensions':
             if not weight_range:
                 min_wt = 1; max_wt = 16
-            elif not weight_range:
-                min_wt = 2; max_wt = 50
             else:
                 info['weight_range'] = weight_range
                 # parse weight_range
@@ -120,14 +120,20 @@ def render_webpage(args = {}):
             elif info['group'] == "Kp":
               # The following needs to be changed to logically deduce whether it is weight or level
               weight_or_level= "weight or level"
-              info['table_headers'] = [weight_or_level, "Total", "Gritsenko Lifts", "Nonlifts"]
+              info['table_headers'] = [weight_or_level, "Total", "Gritsenko Lifts", "Nonlifts", "Oldforms"]
             else:
-              info['table_headers'] = ["Weight", "Total", "Eisenstein", "Klingen", "Maass", "Interesting"]
-# The following should be changed to add any new groups implemented in the core
+                info['table_headers'] = ["Weight", "Total", "Eisenstein", "Klingen", "Maass", "Interesting"]
+            # The following should be changed to add any new groups implemented in the core
             if (group == 'Sp4Z') or (group == 'Sp8Z'):
-              info['dimensions'] = [ (k, siegel_core.dimension( k, sage_group)) for k in range(min_wt, max_wt+1)]
+                info['dimensions'] = [ (k, siegel_core.dimension( k, sage_group)) for k in range(min_wt, max_wt+1)]
+            elif group == 'Kp':
+                print '...------------------------------------->',level, type(level)
+                info['dimensions'] = [ (k, siegel_core.dimension( k, sage_group, tp = int(level))) for k in range(min_wt, max_wt+1)]
             bread += [(sidebar[0][0], sidebar[0][1][3][1])]
-            return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_dimensions.html", info = info, title = 'Dimensions', sidebar = sidebar, bread = bread)
+            return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_dimensions.html", \
+                                   info = info, \
+                                   title = 'Dimensions of subspaces of Siegel modular forms in ' + ' \(' + info['parent_as_tex'] + '\)', \
+                                   sidebar = sidebar, bread = bread)
 
         if page == 'specimen':
             info['weight'] = weight
