@@ -2,6 +2,10 @@
 {% block content %}
 
 
+<p>
+A number field is a field which is an extension of finite degree of the field $\mathbb{Q}$  of rational numbers.
+</p>
+
 <h3> Browse </h3>
 
 <ul>
@@ -32,7 +36,7 @@ By class number:
 <form>
 <table border=0 cellpadding=5>
 <tr>
-<td>Label:&nbsp;&nbsp;</td>
+<td>Field:&nbsp;&nbsp;</td>
 <td><input type='text' name='natural' size=10 example='Qsqrt5'> </td>
 <td><button type='submit' name='search' value='Go'>Go</button></td>
 <td rowspan=3><span class="formexample"> either: a field label, e.g. 2.2.5.1 for
@@ -59,8 +63,8 @@ Enter values into one or more boxes to restrict the search.&nbsp;&nbsp;
 </tr>
 <tr>
 <td align=left>Discriminant 
-<td colspan=4><input type='text' name='discriminant' size=10 size=10 example='-1000--1'> 
-<span class="formexample"> e.g. -3, or a range such as 1000-2000 or -1000--1</span></td>
+<td colspan=4><input type='text' name='discriminant' size=10 size=10 example='-1000..-1'> 
+<span class="formexample"> e.g. -3, or a range such as 1000..2000 or 1000-2000 or -1000..-1</span></td>
 </tr>
 <tr>
 <td align=left>Class Number <td><input type='text' name='class_number' size=10 example='5'>

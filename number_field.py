@@ -141,11 +141,11 @@ def number_field_render_webpage():
     sig_list = sig_list[:10]
     if len(args) == 0:      
         discriminant_list_endpoints = [-10000,-1000,-100,0,100,1000,10000]
-        discriminant_list = ["%s-%s" % (start,end-1) for start, end in zip(discriminant_list_endpoints[:-1], discriminant_list_endpoints[1:])]
+        discriminant_list = ["%s..%s" % (start,end-1) for start, end in zip(discriminant_list_endpoints[:-1], discriminant_list_endpoints[1:])]
         info = {
         'degree_list': range(1,11),
         'signature_list': sig_list, 
-        'class_number_list': range(1,6)+['6-10'],
+        'class_number_list': range(1,6)+['6..10'],
         'discriminant_list': discriminant_list
     }
         credit = 'the PARI group and J. Voight'        
@@ -399,6 +399,9 @@ def render_field_webpage(args):
     D = data['discriminant']
     h = data['class_number']
     data['galois_group'] = str(data['galois_group'][3])
+    data['class_group_invs'] = data['class_group']
+    if data['class_group_invs']==[]:
+        data['class_group_invs']='Trivial'
     data['class_group'] = str(AbelianGroup(data['class_group']))
     sig = data['signature']
     D = ZZ(data['discriminant'])
@@ -421,6 +424,7 @@ def render_field_webpage(args):
     info.update({
         'label': field_pretty(label),
         'polynomial': web_latex(K.defining_polynomial()),
+        'ram_primes': ram_primes,
         'integral_basis': web_latex(K.integral_basis()),
         'regulator': web_latex(reg),
         'unit_rank': unit_rank,
@@ -447,8 +451,12 @@ def render_field_webpage(args):
     if npr==1:
         properties.extend('<tr><td align=left><b>Ramified prime:</b><td align=left>%s</td>'%ram_primes)
     else:
-        properties.extend('<tr><td align=left><b>Ramified primes:</b><td align=left>%s</td>'%ram_primes)
+        if npr==0:
+            properties.extend('<tr><td align=left><b>Ramified primes:</b><td align=left>%s</td>'%"None")
+        else:
+            properties.extend('<tr><td align=left><b>Ramified primes:</b><td align=left>%s</td>'%ram_primes)
     properties.extend('<tr><td align=left><b>Class number:</b><td align=left>%s</td>'%data['class_number'])
+    properties.extend('<tr><td align=left><b>Class group:</b><td align=left>%s</td>'%data['class_group_invs'])
     properties.extend('<tr><td align=left><b>Galois group:</b><td align=left>%s</td>'%data['galois_group'])
     properties.extend('</table>')
     return render_template("number_field/number_field.html", info = info, properties=properties, credit=credit, title = t, bread=bread)
@@ -470,7 +478,7 @@ def number_fields():
 def by_label(label):
     return render_field_webpage({'label' : label})
 
-def parse_list(L):
+def parse_list(L):  
     return [int(a) for a in str(L)[1:-1].split(',')]
     # return eval(str(L)) works but using eval() is insecure
 
@@ -489,7 +497,9 @@ def number_field_search(**args):
                 if field == 'galois_group':
                     query[field] = complete_group_code(info[field])
                 else:
-                    query[field] = parse_range(info[field])
+                    ran = info[field]
+                    ran = ran.replace('..','-')
+                    query[field] = parse_range(ran)
     if info.get('ur_primes'):
         ur_primes = [int(a) for a in str(info['ur_primes']).split(',')]
     else:
