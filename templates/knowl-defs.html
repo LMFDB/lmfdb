@@ -80,7 +80,7 @@
 {# for inserting "normal" links to knowl pages #}
 {% macro KNOWL_LINK(ID) -%}
  {% with k = Knowl(ID) -%}
-  <a class="knowl-link" href='{{ url_for("knowledge.show", ID=k.id) }}'>{{ k.title }}</a>
+  <a class="knowl-link" href='{{ url_for("knowledge.show", ID=k.id) }}?{{kwargs|urlencode}}'>{{ k.title }}</a>
  {%- endwith %}
 {%- endmacro %}
 
