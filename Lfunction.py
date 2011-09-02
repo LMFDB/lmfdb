@@ -191,12 +191,13 @@ class Lfunction_EC(Lfunction):
             raise Exception("You have to supply a label for an elliptic curve L-function")
         
         # Initialize default values
-        Lfunction.__init__(self, dict())
         self.Ltype = 'ellipticcurve'
         self.numcoeff = 20 # set default to 20 coefficients
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
+        self.numcoeff = int(self.numcoeff)
+
 
         # Create the elliptic curve
         self.E = EllipticCurve(str(self.label))
@@ -224,6 +225,7 @@ class Lfunction_EC(Lfunction):
         self.residues = []
         self.coefficient_period = 0
         self.selfdual = True
+        self.primitive = True
         self.coefficient_type = 2
         self.texname = "L(s,E)"
         self.texnamecompleteds = "\\Lambda(s,E)"
@@ -233,6 +235,7 @@ class Lfunction_EC(Lfunction):
         self.properties = [('Degree ','%s' % self.degree)]
         self.properties.append(('Level', '%s' % self.level))
         self.credit = 'Sage'
+        self.citation = ''
         
         self.generateSageLfunction()
 
@@ -259,7 +262,6 @@ class Lfunction_EMF(Lfunction):
             raise KeyError, "You have to supply weight and level for an elliptic modular form L-function"
         
         # Initialize default values
-        Lfunction.__init__(self, dict())
         self.Ltype = 'ellipticmodularform'
         self.character = 0  # Trivial character is default
         self.label=''       # No label, is OK If space is one-dimensional
@@ -267,6 +269,10 @@ class Lfunction_EMF(Lfunction):
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
+        self.weight = int(self.weight)
+        self.level = int(self.level)
+        self.character = int(self.character)
+        self.number = int(self.number)
 
         # Create the modular form
         self.MF = WebNewForm(self.weight, self.level, self.character, self.label)
@@ -286,6 +292,7 @@ class Lfunction_EMF(Lfunction):
         self.nu_fe = [self.automorphyexp]
         self.selfdual = True
         self.langlands = True
+        self.primitive = True
         self.degree = 2
         self.poles = []
         self.residues = []
@@ -318,7 +325,10 @@ class Lfunction_EMF(Lfunction):
         else:
             self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{f})"
         self.title = "L-function of a holomorphic cusp form: $L(s,f)$, "+ "where $f$ is a holomorphic cusp form with weight "+str(self.weight)+", level "+str(self.level)+", and character "+str(self.character)
-        
+
+        self.citation = ''
+        self.credit = ''
+       
         self.generateSageLfunction()
 
 
@@ -339,6 +349,7 @@ class RiemannZeta(Lfunction):
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
+        self.numcoeff = int(self.numcoeff)
 
         self.coefficient_type = 1
         self.quasidegree = 1
@@ -381,18 +392,20 @@ class Lfunction_Dirichlet(Lfunction):
     """
     
     def __init__(self, **args):
-
+        print args.keys()
         #Check for compulsory arguments
         if not ('charactermodulus' in args.keys() and 'characternumber' in args.keys()):
             raise KeyError, "You have to supply charactermodulus and characternumber for the L-function of a Dirichlet character"
         
         # Initialize default values
-        Lfunction.__init__(self, dict())
         self.Ltype = 'dirichlet'
         self.numcoeff = 30    # set default to 30 coefficients
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
+        self.charactermodulus = int(self.charactermodulus)
+        self.characternumber = int(self.characternumber)
+        self.numcoeff = int(self.numcoeff)
 
         # Create the Dirichlet character
         chi = DirichletGroup(self.charactermodulus)[self.characternumber]
@@ -408,6 +421,7 @@ class Lfunction_Dirichlet(Lfunction):
         self.mu_fe = [aa]
         self.nu_fe = []
         self.langlands = True
+        self.primitive = True
         self.degree = 1
         self.level = self.charactermodulus
 
@@ -440,6 +454,7 @@ class Lfunction_Dirichlet(Lfunction):
             self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{\\chi})"
 
         self.credit = 'Sage'
+        self.citation = ''
         self.title = "Dirichlet L-function: $L(s,\\chi)$"
         self.title = (self.title+", where $\\chi$ is the character modulo "+
                           str(self.charactermodulus) + ", number " +
@@ -460,13 +475,13 @@ class Lfunction_Maass(Lfunction):
     """
     
     def __init__(self, **args):
+        print "In LfunctionMAsss"
 
         #Check for compulsory arguments
         if not 'dbid' in args.keys():
             raise KeyError, "You have to supply dbid for the L-function of a Maass form"
         
         # Initialize default values
-        Lfunction.__init__(self, dict())
         self.Ltype = 'maass'
         self.dbName = 'MaassWaveForm'    # Set default database
         self.dbColl = 'HT'               # Set default collection    
@@ -476,10 +491,13 @@ class Lfunction_Maass(Lfunction):
 
         # Fetch the information from the database
         import base
+        print self.dbName
+        print self.dbColl
         connection = base.getDBConnection()
         db = pymongo.database.Database(connection, self.dbName)
         collection = pymongo.collection.Collection(db, self.dbColl)
-        dbEntry = collection.find_one({'_id': self.dbid}) 
+        dbEntry = collection.find_one({'_id': self.dbid})
+        print dbEntry
 
         if dbName == 'Lfunction':  # Data from Lemurell
             
@@ -521,6 +539,7 @@ class Lfunction_Maass(Lfunction):
             # Set properties of the L-function
             self.coefficient_type = 2
             self.selfdual = True
+            self.primitive = True
             self.quasidegree = 2
             self.Q_fe = float(sqrt(self.level))/float(math.pi)
             
@@ -558,6 +577,8 @@ class Lfunction_Maass(Lfunction):
                 self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{f})"
                 
             self.title = "$L(s,f)$, where $f$ is a Maass cusp form with level "+str(self.level)+", and eigenvalue "+str(self.eigenvalue)
+            self.citation = ''
+            self.credit = ''
         
         self.generateSageLfunction()
 
@@ -577,7 +598,6 @@ class DedekindZeta(Lfunction):   # added by DK
             raise Exception("You have to supply a label for a Dedekind zeta function")
         
         # Initialize default values
-        Lfunction.__init__(self, dict())
         self.Ltype = 'dedekind'
 
         # Put the arguments into the object dictionary
@@ -618,6 +638,7 @@ class DedekindZeta(Lfunction):   # added by DK
         self.residues = [self.res,-self.res]
         self.coefficient_period = 0
         self.selfdual = True
+        self.primitive = True
         self.coefficient_type = 0
         self.texname = "\\zeta_K(s)"
         self.texnamecompleteds = "\\Lambda_K(s)"
@@ -627,7 +648,6 @@ class DedekindZeta(Lfunction):   # added by DK
             self.texnamecompleted1ms = "\\Lambda_K(1-s)"
         self.title = "Dedekind zeta-function: $\\zeta_K(s)$"
         self.title = self.title+", where $K$ is the "+ str(self.NF)
-        self._set_properties()
         self.credit = 'Sage'
         self.citation = ''
         

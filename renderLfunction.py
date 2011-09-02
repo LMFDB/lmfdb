@@ -44,11 +44,11 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
     # args may or may not be empty
     # what follows are all things that need homepages
 
-    try:
-        L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, temp_args)
+    #try:
+    L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, temp_args)
         
-    except:
-        return redirect(url_for("not_yet_implemented"))
+##    except:
+##        return redirect(url_for("not_yet_implemented"))
     
     try:
         logging.info(temp_args)
@@ -58,7 +58,6 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
         1
         #Do nothing
 
-    temp_args.append(( 'Ltype', L.Ltype))
     info = initLfunction(L, temp_args, request)
 
     # HSY: when you do "**dictionary" in a function call (at the very end),
@@ -88,20 +87,15 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, temp_args):
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic': # this has args: one for weight and one for level
         return Lfunction_EMF( temp_args)
-        logging.info(temp_args)
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2'and arg3 == 'Q' and arg4 == 'maass':
         return Lfunction_Maass( temp_args)
     
     elif arg1 == 'ModularForm' and (arg2 == 'GSp4' or arg2 == 'GL4' or  arg2 == 'GL3') and arg3 == 'Q' and arg4 == 'maass':
         return Lfunction_Maass( dbid = temp_args['id'], dbName = 'Lfunction', dbColl = 'LemurellMaassHighDegree')
-        temp_args.append(( 'dbid', L.dbid))
-        temp_args.append(( 'dbName', L.dbName))
-        temp_args.append(( 'dbColl', L.dbColl))
 
     elif arg1 == 'NumberField':
         return Lfunction_Dedekind( label = str(arg2))
-        temp_args.append(( 'label', L.label))
 
     elif arg1 == 'Lcalcurl':
         return Lfunction( Ltype = arg1, url = arg2)
@@ -159,14 +153,12 @@ def initLfunction(L,args, request):
 
     info['degree'] = int(L.degree)
 
-    print args
     info['zeroeslink'] = (request.url.replace('/L/', '/zeroesLfunction/').
                           replace('/Lfunction/', '/zeroesLfunction/').
                           replace('/L-function/', '/zeroesLfunction/') ) #url_for('zeroesLfunction',  **args)
     info['plotlink'] = (request.url.replace('/L/', '/plotLfunction/').
                           replace('/Lfunction/', '/plotLfunction/').
                           replace('/L-function/', '/plotLfunction/') ) #info['plotlink'] = url_for('plotLfunction',  **args)
-    print info['zeroeslink']
 
     # set info['bread'] and to be empty and set info['properties'],
     # but exist (temp. fix by David & Sally)
@@ -191,7 +183,7 @@ def initLfunction(L,args, request):
 
     elif L.Ltype  == 'ellipticcurve':
         label = L.label
-        info['friends'] = [('Elliptic Curve', url_for('by_label',label=label)),('Modular Form', url_for('not_yet_implemented'))]
+        info['friends'] = [('Elliptic Curve', '/EllipticCurve/Q/' + str(label)),('Modular Form', url_for('not_yet_implemented'))]
         info['bread'] = [('L-function','/L'),('Elliptic Curve','/L/degree2#EllipticCurve_Q'),
                          (label,url_for('render_Lfunction',arg1='EllipticCurve',arg2='Q',arg3= label))]
 
