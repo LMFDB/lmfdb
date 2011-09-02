@@ -6,4 +6,13 @@
 
 {{ render|safe }}  
 
+<div style="margin-top: 30px;">
+  <strong>Authors:</strong>
+  <ul>
+  {% for a in authors %}
+    <li><a href="{{ url_for('users.user_detail', userid=a['_id']) }}">{{ a['full_name'] }}</a></li>
+  {% endfor %}
+  </ul>
+</div>
+
 {% endblock %}

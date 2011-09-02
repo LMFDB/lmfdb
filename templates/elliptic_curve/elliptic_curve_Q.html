@@ -27,28 +27,47 @@ By size of torsion subgroup:
 
 <h2> Jump to a specific curve or isogeny class</h2>
 <form>
-<input type='text' name='label' size=25>
+<input type='text' name='label' size=25 placeholder="11a2">
 <button type='submit' name='jump' value='label or isogeny class' >label or isogeny class</button>
 <br><span class="formexample">e.g. 11a2 or 389a </span>
 </form>
 
 <h2> Search </h2>
-
+Please enter a value or leave blank:
+<p></p>
 <form>
   <table>
     <tr>
       <td>Conductor</td>
      <td>
-       <input type='text' name='conductor' example="389" />
+       <input type='text' name='conductor' placeholder="389" />
      </td>
-     <td><span class="formexample"> e.g. 389 </span></td>
+     <td><span class="formexample"> e.g. 389 or 100-200</span></td>
     </tr>
+
     <tr>
-      <td>Torsion Order</td><td> <input type='text' name='torsion'></td><td><span class="formexample"> e.g. 2 </span></td>
-    </tr>
+       <td>
+       Torsion Order
+       </td>
+          <td> 
+          <input type='text' name='torsion' placeholder="2">
+          </td>
+          <td>
+          <span class="formexample"> e.g. 2 </span>
+          </td>
+      </tr>
+
     <tr>
-      <td>Rank </td><td><input type='text' name='rank'></td><td><span class="formexample"> e.g. 0 </span></td>
+        <td>
+        Rank
+        </td>
+           <td>
+           <input type='text' name='rank' placeholder="0">
+           </td>
+           <td><span class="formexample"> e.g. 0 </span>
+           </td>
     </tr>
+
     <tr>
       <td>Optimal</td>
       <td>
@@ -59,6 +78,7 @@ By size of torsion subgroup:
       </td>
     </tr>
   </table>
+<p></p>
 <td><button type='submit' value='Search'>Search</td>
 
 </form>

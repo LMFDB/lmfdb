@@ -40,22 +40,22 @@
         <p>
             {{ info.f | safe }}
         </p>
-         <p align="right">
+         <p align="left">
         <a  href='{{info.download_qexp_url}}' target='_blank' >download coefficients</a>
     </p>
-    <h2>Isogeny Matrix</h2>
+    <h2>Isogeny matrix</h2>
     <p>
     \({{info.isogeny_matrix}}\)
     </p>
         <h2>
-            Isogeny graph.
+            Isogeny graph
         </h2>
         <div class='sage nodisplay code'>sage: E.isogeny_graph().plot(edge_labels=True,layout='circular',vertex_size=250,)<br>(Note: the following graph has been relabeled<br>to respect the Cremona labeling)</div>
         <center>
         <img width="300" height="300" src="{{info.graph_img}}" />
         </center>
     <h2>Download Stuff </h2>
-    <p align="right">
+    <p align="left">
         <a  href='{{info.download_all_url}}' target='_blank' >download all</a>
     </p>
     {% endblock %}

@@ -6,7 +6,8 @@ import re
 import pymongo
 import bson
 #import web_modforms
-from classical_modular_forms.backend.web_modforms import *
+from modular_forms.elliptic_modular_forms.backend.web_modforms import *
+#from classical_modular_forms.backend.web_modforms import *
 
 class WebCharacter:
     """Class for presenting a Character on a web page

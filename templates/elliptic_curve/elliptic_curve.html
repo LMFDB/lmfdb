@@ -109,15 +109,18 @@ function show_code(system) {
         <table>
 
         <tr>
-        <td>
+        <td colspan="4">
             <span class='sage nodisplay code'>sage: E.rank()</span>
             <span class='pari nodisplay code'></span>
             <span class='magma nodisplay code'>&gt; Rank(E);</span>
         </td>
-        <td align='center'>\( r \)</td>
-        <td>=</td>
-        <td>{{ info.rank }}</td>
+        </tr>
         <tr>
+        <td colspan="4">
+            {{ KNOWL_LINK('EC.rank') }} r = {{ info.rank }}
+        </td>
+        </tr>
+
 
         <tr>
         <td>
@@ -176,6 +179,8 @@ function show_code(system) {
 
         </table>
     </p>
+
+<!-- %%%%%%%%%%%%%%%% END OF TABLE %%%%%%%%%%%%%%%%%%% -->
 
     <h2> {{KNOWL('EC.modular_form')}} </h2>
     <div class='sage nodisplay code'>sage: E.q_eigenform(10)</div>
