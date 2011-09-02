@@ -192,7 +192,7 @@ def render_isogeny_class(iso_class):
     info['download_all_url'] = url_for('download_all', label=str(label))
     friends=[('Elliptic Curve %s' % l , "/EllipticCurve/Q/%s" % l) for l in data['label_of_curves_in_the_class']]
     friends.append(('Quadratic Twist', "/quadratic_twists/%s" % (label)))
-    friends.append(('Modular Form', url_for("cmf.render_classical_modular_form_from_label",label="%s" %(label))))
+    friends.append(('Modular Form', url_for("emf.render_classical_modular_form_from_label",label="%s" %(label))))
     info['friends'] = friends
 
     t= "Elliptic Curve Isogeny Class %s" % info['label']

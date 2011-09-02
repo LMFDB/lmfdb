@@ -1,0 +1,21 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+{% if info.error is defined %}
+
+<h1>There was an error in meeting your previous request. Please change parameters.</h1>
+
+<div> 
+<h2> Error message: </h2>
+{{ info.error | safe }}
+</div>
+{% endif %}
+
+<h1>Modular Forms</h1>
+<ul>
+  <li><a href="{{ url_for('emf.render_elliptic_modular_forms') }}">Elliptic Modular Forms</li>
+  <li><a href="{{ url_for('maassf.maass_forms_main_page') }}">Maass Forms</a></li>
+
+
+{% endblock content %}
