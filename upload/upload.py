@@ -60,7 +60,7 @@ def upload():
     "version": "1",
     "content_type": request.files['file'].content_type
   }
-  flask.flash("Received file: '%s'" % fn)
+  flask.flash("Received file '%s' and awaiting moderation from an administrator" % fn)
 
   upload_db = getDBConnection().upload
   upload_fs = GridFS(upload_db)
@@ -163,8 +163,13 @@ def updateMetadata():
 def getUploadedFor(path):
   files = getDBConnection().upload.fs.files.find({"metadata.related_to": path, "metadata.status": "approved"})
   ret =  [ [x['metadata']['name'], "/upload/view/%s" % x['_id']] for x in files ]
-  ret.insert(0, ["Upload your data", url_for("upload.index") + "?related_to=" + request.path ])
+  ret.insert(0, ["Upload your data here", url_for("upload.index") + "?related_to=" + request.path ])
   return ret
+
+def queryUploadDatabase(filename, path):
+  file = getDBConnection().upload.fs.files.find_one({"metadata.related_to": path, "filename": filename})
+  upload_fs = GridFS(getDBConnection().upload)
+  return upload_fs.get(file['_id']).read()
 
 def getFilenamesFromTar(file):
   tar = tarfile.open(mode="r", fileobj=file)
@@ -173,5 +178,5 @@ def getFilenamesFromTar(file):
 @app.context_processor
 def ctx_knowledge():
   return {'getUploadedFor' : getUploadedFor,
+          'queryUploadDatabase' : queryUploadDatabase,
           'getFilenamesFromTar' : getFilenamesFromTar }
-
