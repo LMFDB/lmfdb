@@ -1,4 +1,4 @@
-#{# 
+{# 
    the following KNOWL macro enables to tag certain locations in the
    HTML documents to reference to saved "Knowls". They contain all
    the information and form the stored knowledge. 
@@ -13,7 +13,7 @@
              to its default None.
 #}
 {% macro KNOWL(knowlid, title=none) -%}
-{% with knowl = Knowl(knowlid) -%}
+{% with knowl = Knowl(knowlid, kwargs) -%}
 {% if knowl.exists() -%}
   {% if title is none -%}
      <a class="knowl-title" knowl="{{ knowl.id }}">{{ knowl.title }}</a>

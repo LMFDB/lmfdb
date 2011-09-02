@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
 # the basic knowlege object, with database awareness, …
 from knowledge import logger
+from base import getDBConnection
 
 def get_knowls():
-  from base import getDBConnection
   _C = getDBConnection()
   knowls = _C.knowledge.knowls
   knowls.ensure_index('authors')
   return knowls
 
 def get_deleted_knowls():
-  from base import getDBConnection
   _C = getDBConnection()
   return _C.knowledge.deleted_knowls
 
@@ -18,7 +17,14 @@ def get_knowl(ID, fields = None):
   return get_knowls().find_one({'_id' : ID}, fields=fields)
 
 class Knowl(object):
-  def __init__(self, ID):
+  def __init__(self, ID, template_kwargs = None):
+    """
+    template_kwars is the list of additional parameters that
+    are passed into the knowl the point where the knowl is 
+    included in the template.
+    """
+    self.template_kwargs = template_kwargs or {}
+
     self._id = ID
     data = get_knowl(ID)
     if data:
@@ -53,6 +59,14 @@ class Knowl(object):
   @property
   def authors(self):
     return self._authors
+
+  def author_links(self):
+     a_query = [{'_id': _} for _ in self.authors]
+     a = []
+     if len(a_query) > 0:
+       users = getDBConnection().userdb.users
+       a = users.find({"$or" : a_query}, fields=["full_name"])
+     return a
 
   @property
   def id(self):

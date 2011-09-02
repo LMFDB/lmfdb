@@ -3,6 +3,10 @@
 {% block content %}
 <h1>Title {{ KNOWL("test.1") }}</h1>
 
+<h2>Testing Knowl Parameters</h2>
+<div>Expand this "{{ KNOWL("test.knowlparam", x=1, user=user) }}" Knowl
+which gets x=1 and user = user  as parameters and does something with it.</div>
+
 <h2>Testing Knowl filter "knowl_type"</h2>
 <div>
 <ul>

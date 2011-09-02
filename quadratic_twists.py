@@ -100,7 +100,7 @@ def download_Rub_data():
         response.headers['Content-disposition'] = 'attachment; filename=%s' % label
 	response.content_length=d.length
     else: 
-        limit=eval(limit)
+        limit=int(limit)
         response = make_response(''.join(str(d.readline()) for i in srange(limit)))
     response.headers['Content-type'] = 'text/plain'
     return response

@@ -100,20 +100,12 @@ def show(ID):
   r = render(ID, footer="0")
   b = get_bread([#('Wiki', url_for('.show', ID='wiki.index')), 
                  ('%s'%k.title, url_for('.show', ID=ID))])
-  a_query = [{'_id': _} for _ in k.authors]
-  if len(a_query) > 0:
-    users = getDBConnection().userdb.users
-    cur = users.find({"$or" : a_query}, fields=["full_name"])
-    a = cur
-  else:
-    a = []
     
   return render_template("knowl-show.html",
          title = k.title,
          k = k,
          render = r,
-         bread = b,
-         authors = a)
+         bread = b)
 
 @knowledge_page.route("/delete/<ID>")
 @admin_required
@@ -172,6 +164,11 @@ def render(ID, footer=None):
     con = request.args.get("content", k.content)
     foot = footer or request.args.get("footer", "1") 
 
+  authors = []
+  for a in k.author_links():
+    authors.append("<a href='%s'>%s</a>" % (url_for('users.profile', userid=a['_id']), a['full_name']))
+  authors = ', '.join(authors)
+
   render_me = u"""\
   {%% include "knowl-defs.html" %%}
   {%% from "knowl-defs.html" import KNOWL with context %%}
@@ -188,11 +185,13 @@ def render(ID, footer=None):
       &middot;
       <a href="{{ url_for('.edit', ID='%(ID)s') }}">edit</a> 
     {%% endif %%}
+    &middot;
+    Authors: %(authors)s
   </div>"""
   render_me += "</div>"
   # render_me = render_me % {'content' : con, 'ID' : k.id }
   # markdown enabled
-  render_me = render_me % {'content' : md.convert(con), 'ID' : k.id }
+  render_me = render_me % {'content' : md.convert(con), 'ID' : k.id, 'authors' : authors }
   # Pass the text on to markdown.  Note, backslashes need to be escaped for this, but not for the javascript markdown parser
 
   #logger.debug("rendering template string:\n%s" % render_me)

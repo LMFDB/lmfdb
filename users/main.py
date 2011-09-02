@@ -92,9 +92,9 @@ def set_info():
 
 @login_page.route("/profile/<userid>")
 @login_required
-def user_detail(userid):
+def profile(userid):
   user = LmfdbUser(userid)
-  bread = base_bread() + [(user.name, url_for('.user_detail', userid=user.get_id()))]
+  bread = base_bread() + [(user.name, url_for('.profile', userid=user.get_id()))]
   userknowls = getDBConnection().knowledge.knowls.find({'authors' : userid}, fields=['title']).sort([('title', ASC)])
   return render_template("user-detail.html", user=user, 
       title="%s" % user.name, bread= bread, userknowls = userknowls)
