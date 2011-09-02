@@ -1,5 +1,7 @@
 {# template defs #}
+{% set col_error = '#922' %}
 {% set col_main = '#292' %}
+{% set col_main_l = '#bfb' %}
 
 {% set col_knowl = '#229' %}
 {% set col_knowl_l = '#DDF' %}
@@ -84,12 +86,28 @@ a {
   color: #292;
   text-decoration: none;
   font-family: sans-serif;
-  padding: 2px 2px;
 }
 #content a {
-  border-radius: 0px;
-  -webkit-border-radius: 0px;
-  -moz-border-radius: 0px;
+}
+#content .announce {
+  font-size: 1.2em;
+  margin: 40px;
+  padding: 20px;
+  border: 1px solid {{ col_main }};
+
+  border-radius: 10px;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+
+  -webkit-box-shadow: inset 0px 0px 15px 5px {{ col_main_l }};
+  -moz-box-shadow:    inset 0px 0px 15px 5px {{ col_main_l }};
+  box-shadow:         inset 0px 0px 15px 5px {{ col_main_l }};
+}
+#content .announce.error {
+  border: 1px solid {{ col_error }};
+  -webkit-box-shadow: inset 0px 0px 15px 5px {{ col_error }};
+  -moz-box-shadow:    inset 0px 0px 15px 5px {{ col_error }};
+  box-shadow:         inset 0px 0px 15px 5px {{ col_error }};
 }
 
 a:visited { color: #080; }
@@ -451,7 +469,7 @@ table a {
   -webkit-border-radius: 3px;
   -moz-border-radius: 3px;
 }
-table td {
+table td.top {
   vertical-align:top;
 }
 
@@ -518,10 +536,13 @@ div.literature {
 .knowl-bar {
   background: {{ col_knowl_ll}};
   padding: 5px 10px;
-  margin-bottom: 30px;
+  margin-bottom: 5px;
   border-bottom: 1px solid {{ col_knowl_d }};
   border-top-left-radius: 10px;
   -moz-border-radius-topleft: 10px;
+}
+.knowl-bar a {
+  padding: 2px 5px;
 }
 .knowl-preview-sep {
   padding: 5px;
@@ -538,6 +559,12 @@ div.literature {
   padding: 10px 0px 15px 10px;
   border-bottom-left-radius: 10px;
   -moz-border-radius-bottomleft: 10px;
+}
+.knowl-content h1 {
+  margin: 0px 0px 10px 0px;
+}
+.knowl-content h2 {
+  margin: 0px 0px 5px 0px;
 }
 *[knowl] {
   /* border-bottom: 2px dotted #66C; */

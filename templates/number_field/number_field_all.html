@@ -30,11 +30,17 @@ By class number:
 <h3>Go to a specific field</h3>
 
 <form>
-Label:&nbsp;&nbsp;
-<input type='text' name='natural' size=10> 
-<button type='submit' name='search' value='Go'>Go</button>
-<td><span class="formexample"> either a field label, e.g. 2.2.5.1 for
-    \(\mathbb{Q}(\sqrt{5})\), or a nickname, e.g. Q or Qsqrt5 or Qzeta7</span></td>
+<table border=0 cellpadding=5>
+<tr>
+<td>Label:&nbsp;&nbsp;</td>
+<td><input type='text' name='natural' size=10 example='Qsqrt5'> </td>
+<td><button type='submit' name='search' value='Go'>Go</button></td>
+<td rowspan=3><span class="formexample"> either: a field label, e.g. 2.2.5.1 for
+    \(\mathbb{Q}(\sqrt{5})\); <br>or: a nickname, e.g. Q or Qsqrt5 or Qzeta7;<br> or: a polynomial in x, e.g. x^2+1</span></td>
+</tr>
+<tr></tr>
+<tr></tr>
+</table>
 </form>
 
 <h3> Search for fields </h3>
@@ -45,35 +51,34 @@ Enter values into one or more boxes to restrict the search.&nbsp;&nbsp;
 </p>
 <table border=0 cellpadding=5>
 <tr>
-<td align=left>Degree <td><input type='text' name='degree' size=10> 
+<td align=left>Degree <td><input type='text' name='degree' size=10 example='3'> 
 <span class="formexample"> e.g. 3</span></td>
 <td>
-<td align=left>Signature <td><input type='text' name='signature' size=10> 
+<td align=left>Signature <td><input type='text' name='signature' size=10 example='[1,1]'> 
 <span class="formexample"> e.g. [1,1]</span></td>
 </tr>
 <tr>
 <td align=left>Discriminant 
-<td colspan=4><input type='text' name='discriminant' size=10 size=10> 
+<td colspan=4><input type='text' name='discriminant' size=10 size=10 example='-1000--1'> 
 <span class="formexample"> e.g. -3, or a range such as 1000-2000 or -1000--1</span></td>
 </tr>
 <tr>
-<td align=left>Class number <td><input type='text' name='class_number' size=10>
+<td align=left>Class Number <td><input type='text' name='class_number' size=10 example='5'>
 <span class="formexample"> e.g. 5</span></td>
 <td>
-<td align=left>Class group structure<td><input type='text' name='class_group' size=10>
+<td align=left>Class Group structure<td><input type='text' name='class_group' size=10 example='[2,2]'>
 <span class="formexample"> e.g. [], [3], or [2,2]</span></td>
-<font color=gray>(e.g. )</font>
 </tr>
 <tr>
-<td align=left>Galois group <td><input type='text' name='galois_group' size=10>
+<td align=left>Galois Group <td><input type='text' name='galois_group' size=10 example='C5'>
 <span class="formexample"> e.g. C5</span></td>
 <td>
-<td align=left>Unramified primes <td><input type='text'
-                                            name='ur_primes' size=10>
+<td align=left>Unramified Primes <td><input type='text'
+                                            name='ur_primes' size=10 example='2,3'>
 <span class="formexample"> e.g. 2,3</span></td>
 </tr>
 <tr>
-<td align=left colspan=3>Maximum number of fields to display <input type='text'
+<td align=left colspan=4>Maximum number of fields to display <input type='text'
                                                    name='count'
                                                    value=10 size=10>
 </td>

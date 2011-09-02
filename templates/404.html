@@ -1,0 +1,18 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<div class="announce">
+<div>Ooops! Even the best website for mathematical objects 
+is allowed to have loose ends.</div>
+
+{% if request.referrer %}
+<div>The page you are looking for does not exist and if you think
+accessing "{{ request.referrer }}" is an error, please report that URL!
+</div>
+{% endif %}
+<div>Thank You for your understanding!</div>
+
+<div><a href="{{ request.referrer }}">jump back</a></div>
+</div>
+
+{% endblock %}

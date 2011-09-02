@@ -1,0 +1,22 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<div class="announce error">
+<div>Oh nooeess! We are so ashamed. This page is the living proof that
+calculations on the best mathematical website in the world 
+sometimes still go awfully wrong.</div>
+
+{% if request.referrer %}
+<div>The page you are looking for has produced a severe error and
+if you want to help improving the page behind  "{{ request.referrer }}",
+please report that URL!
+</div>
+{% endif %}
+
+<div>Please keep your faith in mathematics!</div>
+
+<div><a href="{{ request.referrer }}">jump back</a></div>
+
+</div>
+
+{% endblock %}

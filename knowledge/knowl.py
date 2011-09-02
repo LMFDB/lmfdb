@@ -5,7 +5,9 @@ from knowledge import logger
 def get_knowls():
   from base import getDBConnection
   _C = getDBConnection()
-  return _C.knowledge.knowls
+  knowls = _C.knowledge.knowls
+  knowls.ensure_index('authors')
+  return knowls
 
 def get_deleted_knowls():
   from base import getDBConnection
@@ -23,23 +25,34 @@ class Knowl(object):
       self._title   = data.get('title', '')
       self._content = data.get('content', '')
       self._quality = data.get('quality', 'beta')
+      self._authors = data.get('authors', [])
     else:
       self._title   = ''
       self._content = ''
       self._quality = 'beta'
+      self._authors = []
 
-  def save(self):
+  def save(self, who):
+    """who is the ID of the user, who wants to save the knowl"""
     get_knowls().save({
          '_id' : self.id,
          'content' : self.content,
          'title' : self.title,
          'quality': self.quality
         })
+    if who:
+      get_knowls().update(
+         { '_id':self.id }, 
+         { "$addToSet" : { "authors" : who }})
         
   def delete(self):
     """deletes this knowl from the db. (DANGEROUS, ADMIN ONLY!)"""
     get_deleted_knowls().save(get_knowls().find_one({'_id' : self._id}))
     get_knowls().remove({'_id' : self._id})
+
+  @property
+  def authors(self):
+    return self._authors
 
   @property
   def id(self):
