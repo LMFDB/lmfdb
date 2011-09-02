@@ -1,23 +1,24 @@
-<p>The following table shows,
+<p>The following table shows certain Siegel modular cusp forms of weight 2 on
+  <a class="knowl-title" knowl="smf.paramodular_group">paramodular groups</a>
+  of prime levels. More precisely, it shows
   <ul>
-    <li>in level 277, the nonlift,</li>
+    <li>in level 277, the <a class="knowl-title" knowl="smf.paramodular_group_newform">nonlift</a>,</li>
     <li>in levels 349, 353, 389, 461, 523, 587,
       the <em>conjectured</em> nonlifts.</li>
   </ul>
   The number (#) next to each orbit denotes the number of eigenforms in the orbit.
 </p>
 
-{{ info.forms }}
 <div class="box1">
-  <table class="ntdata">
+  <table>
     <thead>
-      <tr><td>Weight</td><td>Level</td><td>Galois-Orbits of nonlifts</td></tr>
+      <tr><th>Weight</th><th>Level</th><th>Galois-Orbits of nonlifts</th></tr>
     </thead>
     {% for wt,forms in  info.forms %}
       {% for form,dim in forms|sort  %}
     <tr class = "{{ loop.cycle( 'odd', 'even') }}">
       <td>{{ wt }}</td>
-      <td>???</td>
+      <td>{{ form|replace('PY2_','')|replace('_minus','')|replace('_plus','') }}</td>
       <td>
 	<a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', group='Kp', form = form, weight = wt, page = 'specimen', orbit = form) }}">{{ form }} ({{ dim }})</a>
       </td>

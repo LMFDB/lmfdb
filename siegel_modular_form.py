@@ -12,7 +12,7 @@ def render_webpage(args = {}):
         info = {}
         return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_navigation.html", \
                                    info = info, \
-                                   title = 'Collections of Siegel Modular Forms', \
+                                   title = 'Siegel Modular Forms of Degree 2', \
                                    bread = bread)
 
     info = dict(args)
@@ -84,7 +84,10 @@ def render_webpage(args = {}):
             if True == forms_exist:
                 info['forms'] = [ (k,[(form,go[k][form]) for form in go[k]]) for k in go]
             bread += [(sidebar[0][0], sidebar[0][1][2][1])]
-            return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_forms.html", info = info, title = 'Available forms', sidebar = sidebar, bread = bread)
+            return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_forms.html", \
+                                   info = info, \
+                                   title = 'Siegel modular forms in' + ' \(' + info['parent_as_tex'] + '\)', \
+                                   sidebar = sidebar, bread = bread)
 
         if page == 'dimensions':
             if not weight_range:
@@ -132,6 +135,8 @@ def render_webpage(args = {}):
             f_url = DATA + group + '/eigenforms/' + file_name
             f =load(f_url)
             f_keys = f[2].keys()
+            if  'Sp4Z' == group and 'E' != form and 'Klingen' != form:
+                f_keys = filter( lambda (a,b,c): b^2<4*a*c, f_keys) 
             # we sort the table of Fourier coefficients by discriminant, forms in increasing lexicographic order
             our_cmp = lambda (a,b,c), (A,B,C) : cmp( (4*a*c - b**2,a,b,c), (4*A*C - B**2, A,B,C) )
             f_keys.sort( cmp = our_cmp)

@@ -1,0 +1,160 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<script type="text/javascript" src="{{url_for('emf.static', filename='elliptic_modular_form_util-functions.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('emf.static', filename='elliptic_modular_form_scripts.js') }}"></script>
+
+
+
+{% if info.error is defined %}
+
+<h1>There was an error in meeting your previous request. Please change parameters.</h1>
+
+<div> 
+<h2> Error message: </h2>
+{{ info.error | safe }}
+</div>
+{% endif %}
+<!-- To make an interface that is easier to read we implement each case of input separately -->
+
+<!-- {{ info | safe }} $("div").data("option",{"start":1}); -->
+
+<script>
+$(document).ready(function() {
+$("#l_list").data("start",1); $("#l_list").data("len",20); $("#l_list").data("min",1);
+$("#l_list").data("name","level");
+$("#w_list").data("start",1); $("#w_list").data("len",20); $("#w_list").data("min",1);
+$("#w_list").data("name","weight");
+$("#char_selection").data("char",0);
+ print_list("#l_list");
+ print_list("#w_list");
+ });
+
+function shift(id,lr) {
+   var start = $(id).data("start");
+   var min = $(id).data("min");
+   var len = $(id).data("len");
+   if (lr == "left")
+      start = start - len;
+   if (lr == "right")
+      start = start + len;
+   if (start <= min) {
+      start = min;
+   }
+   $(id).contents().detach();
+   $(id).data("start",start);
+   $(id).data("min",min);
+   $(id).data("len",len);
+ /*alert("start:"+$(id).data("start")+" "+len+" "+min); */
+   print_list(id);
+
+}
+
+function print_list(id) {
+    var min = $(id).data("min");
+    var start = $(id).data("start");
+    var len = $(id).data("len");
+    var name = $(id).data("name");
+    var url = getAbsolutePath();
+    if (start > min) {
+       $(id).append("<a id='go_left' href='#' onclick=\"shift('"+id+"','left')\" style=\"display:inline\"><small>&lt;&lt;</small></a>");
+    };
+    var char = $("#char_selection").data("char");
+    if (char == 0) {
+       s = "&character=0"
+    } else {
+       s = "&character=all"
+    }
+    for (var i = start; i < len+start; i++) {
+        /*s = "<a href="+url+"?"+name+"="+i+" style=\"display:inline\">" + i + "</a> ";*/
+  /*s = "<a href='' onclick='set_value(\""+id+"\","+i+");document.browse.submit()' >" + i + "</a> ";*/
+        s = "<a href=\"javascript:set_value('"+id+"',"+i+")\" style=\"display:inline\">" + i + "</a> ";
+	$(id).append(s);
+    }
+    $(id).append("<a id='go_right' href='#' onclick=\"shift('"+id+"','right')\" style=\"display:inline\"><small>&gt;&gt;</small></a>");
+
+};
+
+function set_value(id,val) {
+  var name = $(id).data("name"); 			   
+  document.forms.browse[name].value=val;
+  $(id).data("value",val);
+  document.browse.submit();			   
+}
+</script>
+
+
+<table>
+  <tr>
+    <td>
+      <form name="browse" method = "get" action="{{url_for('.render_elliptic_modular_forms')}}">
+	<h3>Browse spaces of cuspforms</h3>
+	<input type="hidden" name="weight" value=""/>
+	<input type="hidden" name="level" value=""/>
+	<table width="100%">
+	  <tr>
+	    <td valign="top">Level:</td>
+	    <td>
+	      <div id="l_list" data-hidden="true" data-start='' data-len='' data-value='' data-name=''></div>
+	    </td>
+	  </tr>
+	  <tr>
+	  <tr>
+	    <td valign="top">Weight:</td>
+	    <td>
+	      <div id="w_list" data-hidden="true" data-start='' data-len='' data-value='' data-name=''></div>
+	    </td>
+	  </tr>
+        </table>
+	<table>
+	  <tr>
+            <td valign="top">  
+  	      <span title="We use the Sage ordering to name the characters. The trivial character is nr. 0"> 
+	      </span>
+	      Character:
+	      <div id="char_selection" data-char="0"></div>
+	      <input  type="radio" name="character" value="0" checked/>Trivial character
+	      <input type="radio" name="character" value="1" />All characters
+	    </td>
+	  </tr>		
+        </table>
+      </form>
+    </td>
+  </tr>
+  <tr>
+  <tr>
+    <td>
+
+	<h3>Jump to a specific cusp form</h3>
+	<form name="search" method = "post" action="{{url_for('.render_elliptic_modular_forms')}}">	  <input type="text" name="jump_to" value=""> <span class="formexample">e.g. 1.12</span>
+	  <input type="submit" value="Jump">
+	</form>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <form name="search" method = "post" action="{{url_for('.render_elliptic_modular_forms')}}">
+	<h3>Search</h3>
+	<table class="">
+	  <tr>
+	    <td>Level:</td><td> <input type="text" name="level" value=""> <span class="formexample">e.g. 20</span></td>
+	  </tr>
+	  <tr>
+	    <td>Weight:</td><td> <input type="text" name="weight" value=""> <span class="formexample">e.g. 24</span></td>
+	  </tr>
+	  <tr>
+	    <td>Character:</td><td> <input type="text" name="character" value=""> <span class="formexample">e.g. 1 (0 means trivial character, leave blank for all characters)</span></td>
+	  </tr>
+	  <tr>
+	    <td>Dimension of Galois Orbit:</td><td> <input type="text" name="gdim" value=""> <span class="formexample">e.g. 1 (i.e. the rational field)</span> </td>
+	  </tr>
+	</table>
+	<input type="submit" name="Submit" value="Search">
+	<!--input type="button" name="Submit" value="Search" onclick="document.search.submit()"-->
+      </form>
+    </td>
+  </tr>
+</table>
+
+{% endblock content %}

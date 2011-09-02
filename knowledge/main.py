@@ -100,11 +100,20 @@ def show(ID):
   r = render(ID, footer="0")
   b = get_bread([#('Wiki', url_for('.show', ID='wiki.index')), 
                  ('%s'%k.title, url_for('.show', ID=ID))])
+  a_query = [{'_id': _} for _ in k.authors]
+  if len(a_query) > 0:
+    users = getDBConnection().userdb.users
+    cur = users.find({"$or" : a_query}, fields=["full_name"])
+    a = cur
+  else:
+    a = []
+    
   return render_template("knowl-show.html",
          title = k.title,
          k = k,
          render = r,
-         bread = b)
+         bread = b,
+         authors = a)
 
 @knowledge_page.route("/delete/<ID>")
 @admin_required
@@ -137,7 +146,7 @@ def save_form():
   k.title = request.form['title']
   k.content = request.form['content']
   k.quality = request.form['quality']
-  k.save()
+  k.save(who=current_user.get_id())
   return flask.redirect(url_for(".show", ID=ID))
   
 
