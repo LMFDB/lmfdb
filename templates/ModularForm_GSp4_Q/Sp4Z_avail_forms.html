@@ -1,38 +1,52 @@
 <p>
-  The following table shows, for each even weight between 4 and 58, the Galois orbits of Hecke eigenforms in the space \(M_*({\rm Sp}(4,\mathbb{Z}))\).
+  The following table shows, for each even weight between 4 and 58, the  <a class="knowl-title" knowl="smf.galois_orbit">Galois orbits</a> of Hecke eigenforms
+  <a class ="knowl-title" knowl="smf.symplectic_group_integral">in the space \(M_*({\rm Sp}(4,\mathbb{Z}))\)</a>.
   The number (#) next to each orbit denotes the number of eigenforms in the orbit.
   <ul>
     <li>
-      <span class="emph">E</span> denotes an orbit consisting of Siegel Eisenstein series,
+      <span class="emph">E</span> denotes an orbit consisting of <a class="knowl-title" knowl="smf.Eisenstein_series">Siegel Eisenstein series</a>,
     </li>
     <li>
-      <span class="emph">Klingen</span> denotes an orbit consisting of Klingen Eisenstein series,
+      <span class="emph">Klingen</span> denotes an orbit consisting of <a class="knowl-title" knowl="smf.Klingen_Eisenstein_series">Klingen Eisenstein series</a>,
     </li>
     <li>
-      <span class="emph">Maass</span> denotes an orbit consisting of Maass liftings,
+      <span class="emph">Maass</span> denotes an orbit consisting of <a class="knowl-title" knowl="smf.Maass_lifting">Maass liftings</a>,
     </li>
     <li>
-      <span class="emph">Ups</span> denotes an orbit consisting of cusp forms which are neither Eisenstein series nor Maass liftings.
+      <span class="emph">\(\Upsilon\)</span> denotes an orbit consisting of cusp forms which are neither Eisenstein series nor Maass liftings.
     </li>
   </ul>
-  You can click on an orbit to get Fourier coefficient, Hecke eigenvalues,
-  and other information.
 </p>
 
-<div class = "box1">
-  <table class="ntdata">
+<div>
+  <table>
     <thead>
-      <tr><td>Weight</td><td>Galois orbits (number of orbits)</td></tr>
+      <tr><th>Weight</th><th colspan=5>Galois orbits (number of eigenforms)</th></tr>
     </thead>
     <tbody>
       {% for wt,forms in  info.forms %}
       <tr class = "{{ loop.cycle( 'odd', 'even') }}">
 	<td>{{ wt }}</td>
+        {% for form,dim in forms|sort %}
 	<td>
-          {% for form,dim in forms|sort %}
-	  <a style="display: inline;" href="{{ url_for( 'ModularForm_GSp4_Q_top_level', group='Sp4Z', form = form, weight = wt, page = 'specimen', orbit = form ) }}">{{ form }} ({{ dim }})</a>
-          {% endfor %}
-	</td>
+	  <a style="display: inline;" href="{{ url_for( 'ModularForm_GSp4_Q_top_level', group='Sp4Z', form = form, weight = wt, page = 'specimen', orbit = form ) }}">
+	    {% if form=="Ups" %}
+	    \(\Upsilon\)
+	    {% elif form=="Ups_I" %}
+	    \(\Upsilon_1\)
+	    {% elif form=="Ups_II" %}
+	    \(\Upsilon_2\)
+	    {% else %}
+	    {{ form }}
+	      {% endif %}
+	    ({{ dim }})
+	  </a>
+	  {% if wt <= 8 %}</td><td></td><td></td><td></td><td>{% endif %}
+          {% if (wt == 10 or wt == 14) and form == "E" %}</td><td>{% endif %}
+          {% if wt >= 10 and wt <= 18 and form == "Maass" %}</td><td></td><td>{% endif %}
+	  {% if form == "Ups" %}</td><td>{% endif %}
+	</td>  
+	{% endfor %}
       </tr>
       {% endfor %}
     </tbody>

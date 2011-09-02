@@ -13,9 +13,19 @@ import LfunctionPlot
 from utils import to_dict
 #from elliptic_curve import by_cremona_label
 # just testing
+from base import app, getDBConnection
 
 ##import upload2Db.py
 
+def getUploadedData() :
+  files = getDBConnection().upload.fs.files.find({"metadata.related_to": "/L-function/EllipticCurve/Q/11a"})
+  if files.count() > 0:
+    return {'data.tgz': 'Extra data'}
+  return {}
+
+@app.context_processor
+def ctx_knowledge():
+  return {'getUploadedData' : getUploadedData}
 
 cremona_label_regex = re.compile(r'(\d+)([a-z])+(\d*)')
 

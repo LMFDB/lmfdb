@@ -20,7 +20,7 @@ MathJax.Hub.Config({
     processEscapes: true,
   },
   "HTML-CSS": { scale: 85 },
-  menuSettings: { zoom: "Hover", zscale: "150%" }
+  menuSettings: { zscale: "150%", zoom: "Double-Click" }
 });
 </script>
 <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
@@ -31,6 +31,11 @@ MathJax.Hub.Config({
 {% from "knowl-defs.html" import KNOWL with context %}
 {% from "knowl-defs.html" import KNOWL_LINK with context %}
 {% from "knowl-defs.html" import KNOWL_INC with context %}
+
+{# The defs for database queries #}
+{% macro DATA(filename, path) -%}
+  {{ queryUploadDatabase(filename, path) }}
+{%- endmacro %}
 
 
 <script type="text/javascript">
