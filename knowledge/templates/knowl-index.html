@@ -4,12 +4,18 @@
 <style text="text/css">
 #knowls a {
   display: block;
-  margin: 0px 5px 0px 0px;
-  width: 140px;
+  margin: 0px 10px 0px 0px;
+  width: 160px;
+}
+#knowls a > span:last-child {
+  font-size: xx-small;
+  color: grey;
+  position: relative;
+  top: -0.7em;
 }
 #knowls td div {
   display: inline;
-  width: 150px;
+  width: 165px;
   float: left;
 }
 #knowls td { 
@@ -19,7 +25,7 @@
   width: 50px;
   vertical-align: middle;
   text-align: center;
-  font-size: large;
+  font-size: x-large;
 }
 </style>
 <h1>Read Knowls</h1>
@@ -29,7 +35,8 @@
     <td>{{ c }}</td>
     <td>
       {% for k in ks %}
-        <div><a href="{{ url_for('.show', ID=k._id) }}">{{ k.title }}</a></div>
+        <div><a href="{{ url_for('.show', ID=k._id) }}">{{ k.title }}<br/>
+             <span>{{ k._id }}</span></a></div>
       {% endfor %}
      </td>
    </tr>
