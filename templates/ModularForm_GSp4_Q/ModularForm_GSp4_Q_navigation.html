@@ -1,10 +1,22 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<h2>Browse Siegel modular forms of degree 2</h2>
+<p>
+  A
+  <a class="knowl-title" knowl="smf.siegel_modular_form">
+    Siegel modular form
+  </a>
+  of degree 2 is a holomorphic function on the Siegel upper half plane of complex two by two matrices
+  whose imaginary part is strictly positive definite which satisfies an invariance property with respect to
+  arithmetic subgroups of <script type="math/tex">{\rm GSp}(4)</script> such as the ones listed below.
+</p>
+
+<br/>
+
+<h2>Browse</h2>
 
 <p>
-  Integral weight by group and character:
+  Integral weight by group:
   &nbsp;&nbsp;
   <a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', group = 'Sp4Z', page = 'forms') }}">
     <script type="math/tex">{\rm Sp}(4,\mathbb{Z})</script>
@@ -28,23 +40,28 @@
 </p>
 
 <p>
-  Half integral weight by group and character:
+  Half integral weight by group:
+  &nbsp;&nbsp;
   <a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', group = 'Gamma0_4_', page = 'forms') }}">
-    <script type="math/tex">\Gamma_0(4),\left(\frac{-4}{*}\right)\</script>
- . </a>
+    <script type="math/tex">\Gamma_0(4),\left(\frac{-4}{*}\right)</script>
+  </a>
 </p>
 
 <p>
-  C[X,Y]-valued of integral weight by group:
+  <script type="math/tex">\mathbb{C}[X,Y]</script>-valued and integral weight by group:
   &nbsp;&nbsp;
   <a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', group = 'Sp4Z_2', page = 'forms') }}">
     <script type="math/tex">{\rm Sp}(4,\mathbb{Z})</script>
   </a>
 </p>
 
-<br/><br/>
+<br/>
 
-<h2>Search Siegel modular forms of degree 2</h2>
+<h2>Look up dimensions</h2>
+
+<br/>
+
+<h2>Search</h2>
 
 <p>
   <form action="/LfunctionDB/query" method=get> 
@@ -69,7 +86,7 @@
       
       <tr> 
 	<td> 
-	  <input type='submit' value='Search' > 
+	  <button type='submit' name='search' value='Search'/> 
 	</td> 
       </tr> 
     </table> 

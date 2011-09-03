@@ -1,4 +1,5 @@
 {# template defs #}
+{% set col_error = '#922' %}
 {% set col_main = '#292' %}
 {% set col_main_l = '#bfb' %}
 
@@ -101,6 +102,12 @@ a {
   -webkit-box-shadow: inset 0px 0px 15px 5px {{ col_main_l }};
   -moz-box-shadow:    inset 0px 0px 15px 5px {{ col_main_l }};
   box-shadow:         inset 0px 0px 15px 5px {{ col_main_l }};
+}
+#content .announce.error {
+  border: 1px solid {{ col_error }};
+  -webkit-box-shadow: inset 0px 0px 15px 5px {{ col_error }};
+  -moz-box-shadow:    inset 0px 0px 15px 5px {{ col_error }};
+  box-shadow:         inset 0px 0px 15px 5px {{ col_error }};
 }
 
 a:visited { color: #080; }
@@ -462,7 +469,7 @@ table a {
   -webkit-border-radius: 3px;
   -moz-border-radius: 3px;
 }
-table td {
+table td.top {
   vertical-align:top;
 }
 
@@ -526,6 +533,9 @@ div.literature {
 
 /** page wide defs for knowls, the *[knowl] is a selector for
  *  all elements, that have a knowl attribute set to any value */
+table .knowl-link {
+  display: inline;
+}
 .knowl-bar {
   background: {{ col_knowl_ll}};
   padding: 5px 10px;
@@ -544,6 +554,12 @@ div.literature {
   background: {{ col_knowl_ll}};
   color: {{ col_knowl_dd}};
   font-weight: bold;
+}
+.knowl-inc-edit {
+  margin-top: 20px;
+  background: {{ col_knowl_ll}};
+  font-size: x-small;
+  text-align: right;
 }
 .knowl {
   padding: 0;
@@ -678,7 +694,7 @@ h2 > .knowl-qm {
   font-size: x-small;
   /* border-top: 1px solid {{ col_knowl_d }}; */
   background: {{ col_knowl_l }};
-  color: {{ col_knowl_ll }};
+  color: grey;
   padding: 1px 0 1px 10px;
   margin:  0 0 0 0;
 }

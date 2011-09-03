@@ -8,6 +8,7 @@ fields.ensure_index('discriminant')
 fields.ensure_index('class_number')
 fields.ensure_index([('degree',pymongo.ASCENDING),('discriminant',pymongo.DESCENDING)])
 fields.ensure_index([('degree',pymongo.ASCENDING),('discriminant',pymongo.ASCENDING)])
+fields.ensure_index('coefficients')
 
 
 
