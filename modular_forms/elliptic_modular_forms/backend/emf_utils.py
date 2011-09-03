@@ -174,7 +174,7 @@ class ClassicalMFDisplay(ModularFormDisplay):
         ModularFormDisplay.__init__(self,dbname)
         
     
-    def set_table(self,skip=[0,0],limit=[(2,12),(1,30)],keys=['Weight','Level'],character=0,dimension_fun=dimension_new_cusp_forms,title='Dimension of newforms'):
+    def set_table(self,skip=[0,0],limit=[(2,16),(1,50)],keys=['Weight','Level'],character=0,dimension_fun=dimension_new_cusp_forms,title='Dimension of newforms'):
         r"""
         Table of Holomorphic modular forms spaces.
         Skip tells you how many chunks of data you want to skip (from the geginning) and limit tells you how large each chunk is.
@@ -202,8 +202,8 @@ class ClassicalMFDisplay(ModularFormDisplay):
         if level_ll<1: level_l=1
         self._table={}
         self._table['rows']=[]
-        #self._table['col_heads']=range(wt_ll,wt_ul+1)
-        #self._table['row_heads']=range(level_ll,level_ul+1)
+        self._table['col_heads']=[] #range(wt_ll,wt_ul+1)
+        self._table['row_heads']=[] #range(level_ll,level_ul+1)
         logger.debug("wt_range: {0} -- {1}".format(wt_ll,wt_ul))
         logger.debug("level_range: {0} -- {1}".format(level_ll,level_ul))
         if character in [0,1]:

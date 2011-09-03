@@ -262,7 +262,8 @@ def render_elliptic_modular_form_navigation_wp(**args):
     disp.set_table()
     info['browse_table']=disp._table
 
-    return render_template("emf_navigation.html", info=info,title=title,bread=bread)
+#    return render_template("emf_navigation.html", info=info,title=title,bread=bread)
+    return render_template("emf_browse.html", info=info,title=title,bread=bread)
 
 
 def get_args():
