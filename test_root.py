@@ -24,8 +24,25 @@ class RootTest(LmfdbTest):
       assert dbn in known_dbnames, 'db "%s" missing' % dbn
 
   def test_url_map(self):
+    """
+      
+    """
     for rule in self.app.url_map.iter_rules():
       if "GET" in rule.methods:
         tc = self.app.test_client()
         res = tc.get(rule.rule)
-        assert "LMFDB" in res.data, "rule %s failed" % rule
+        assert "LMFDB" in res.data, "rule %s failed " % rule
+          
+
+  def test_some_latex_error(self):
+    """
+      Tests for latex errors, but fails at the moment because of other errors
+    """
+    for rule in self.app.url_map.iter_rules():
+      if "GET" in rule.methods:
+        tc = self.app.test_client()
+        res = tc.get(rule.rule)
+        try:
+          assert not ("Undefined control sequence" in res.data), "rule %s failed" % rule
+        except KeyError:
+          pass

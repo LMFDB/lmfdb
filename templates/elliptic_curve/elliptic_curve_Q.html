@@ -2,32 +2,32 @@
 
 {% block content %}
 
-An elliptic curve is a curve of genus one with a distinguished base point,  usually given as a plane curve with a {{ KNOWL('EC.minimal_weierstrass_equation')}}. 
+<div>An elliptic curve is a {{KNOWL('EC.curve',title="curve")}} of {{KNOWL('EC.genus', title="genus 1")}}  with a {{KNOWL('EC.base_point', title= "distinguished base point")}},  usually given as a plane curve with a {{ KNOWL('EC.minimal_weierstrass_equation', title='minimal Weierstrass equation')}}. </div>
 
 <h2> Browse </h2>
 
 <p>
-By {{ KNOWL('EC.conductor') }}:
+By {{ KNOWL('EC.conductor', title = "conductor" )}}:
 <a href="?conductor={{'1-99'}}">{{'1-99'}}</a>
 <a href="?conductor={{'100-199'}}">{{'100-199'}}</a>
 <a href="?conductor={{'200-299'}}">{{'200-299'}}</a>
 <a href="?conductor={{'300-399'}}">{{'300-399'}}</a>
 </p>
 <p>
-By {{ KNOWL('EC.rank') }}:
+By {{ KNOWL('EC.rank', title="rank") }}:
 {% for r in info.rank_list: %}
 <a href="?rank={{r}}">{{r}}</a>
 {% endfor %}
 </p>
 <p>
-By {{ KNOWL('EC.torsion_order', torsion=t) }}:
+By {{ KNOWL('EC.torsion_order', torsion=t, title="torsion order") }}:
 {% for t in info.torsion_list: %}
 <a href="?torsion={{t}}">{{t}}</a>
 {% endfor %}
 </p>
 
 
-<h2> Jump to a specific curve or {{ KNOWL('EC.isogeny_class') }}</h2>
+<h2> Find a specific curve or {{ KNOWL('EC.isogeny_class') }}</h2>
 <form>
 <input type='text' name='label' size=25 placeholder="11a2">
 <button type='submit' name='jump' value='label or isogeny class' >label or isogeny class</button>
