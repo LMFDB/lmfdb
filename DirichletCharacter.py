@@ -37,15 +37,14 @@ def render_webpage(request,arg1,arg2):
 
             return render_template("dirichlet_characters/ModulusNavigate.html", info=info, title = 'Dirichlet Characters modulo ' + str(modulus), bread = info["bread"],credit=info['credit'])
         
-        elif arg1.startswith("modsearch"):
+        elif arg1.startswith("modbrowse"):
             modulus_start = int(arg1.partition('-')[0][10:])
             modulus_end = int(arg1.partition('-')[2])
             info = {}
-            info['modulus_start'] = modulus_start
-            info['modulus_end'] = modulus_end
-            info["bread"] = [('Dirichlet Characters', url_for("render_Character")), ('Modulus '+str(modulus_start) + ' to ' + str(modulus_end), '/Character/Dirichlet/modsearch='+str(modulus_start)+'-'+str(modulus_end))]
+            info["bread"] = [('Dirichlet Characters', url_for("render_Character")), ('Moduli '+str(modulus_start) + '-' + str(modulus_end), '/Character/Dirichlet/modbrowse='+str(modulus_start)+'-'+str(modulus_end))]
             title = 'Moduli ' +str(modulus_start)+'-'+str(modulus_end)
             info['credit'] = 'Matthew Alderson'
+            info['contents'] = ListCharacters.get_character_modulus(modulus_start,modulus_end)
             return render_template("dirichlet_characters/ModulusList.html", info=info,title=title,bread=info["bread"],credit=info['credit'])
 
         elif arg1.startswith("conductor"):
@@ -64,15 +63,16 @@ def render_webpage(request,arg1,arg2):
             info['credit'] = 'Matthew Alderson'
             return render_template("dirichlet_characters/ConductorNavigate.html", info=info, title = title, bread = info["bread"], credit=info['credit'])
 
-        elif arg1.startswith("condsearch"):
+        elif arg1.startswith("condbrowse"):
             conductor_start = int(arg1.partition('-')[0][11:])
             conductor_end = int(arg1.partition('-')[2])
             info = {}
             info['conductor_start'] = conductor_start
             info['conductor_end'] = conductor_end
-            info["bread"] = [('Dirichlet Characters', url_for("render_Character")), ('Conductor '+str(conductor_start) + ' to ' + str(conductor_end), '/Character/Dirichlet/condsearch='+str(conductor_start)+'-'+str(conductor_end))]
+            info["bread"] = [('Dirichlet Characters', url_for("render_Character")), ('Conductor '+str(conductor_start) + '-' + str(conductor_end), '/Character/Dirichlet/condsearch='+str(conductor_start)+'-'+str(conductor_end))]
             title = 'Conductors ' +str(conductor_start)+'-'+str(conductor_end)
             info['credit'] = 'Matthew Alderson'
+            info['contents'] = ListCharacters.get_character_conductor(conductor_start,conductor_end+1)
             return render_template("dirichlet_characters/ConductorList.html", info=info,title=title,bread=info["bread"], credit=info['credit'])
 
         elif arg1.startswith("order"):
@@ -106,15 +106,16 @@ def render_webpage(request,arg1,arg2):
             return render_template("dirichlet_characters/OrderNavigate.html", info=info, title = title , bread = info["bread"], credit=info['credit'])
        
         
-        elif arg1.startswith("ordsearch"):
+        elif arg1.startswith("ordbrowse"):
             order_start = int(arg1.partition('-')[0][10:])
             order_end = int(arg1.partition('-')[2])
             info = {}
             info['order_start'] = order_start
             info['order_end'] = order_end
-            info["bread"] = [('Dirichlet Characters', url_for("render_Character")), ('Order '+str(order_start) + ' to ' + str(order_end), '/Character/Dirichlet/ordsearch='+str(order_start)+'-'+str(order_end))]
-            title = 'Orders ' +str(order_start)+'-'+str(order_end)
+            info["bread"] = [('Dirichlet Characters', url_for("render_Character")), ('Order '+str(order_start) + '-' + str(order_end), '/Character/Dirichlet/ordbrowse='+str(order_start)+'-'+str(order_end))]
+            title = 'Order ' +str(order_start)+'-'+str(order_end)
             info['credit'] = 'Matthew Alderson'
+            info['contents'] = ListCharacters.get_character_order(order_start, order_end+1)
             return render_template("dirichlet_characters/OrderList.html", info=info,title=title,bread=info["bread"],credit=info['credit'])
 
         elif arg1.startswith("kronecker"):
@@ -206,14 +207,16 @@ def initCharacterInfo(chi,args, request):
         info['conductor'] = int(chi.conductor)
         info['order'] = int(chi.order)
         info['primitive'] = str(chi.primitive)
-        info['chivals'] = str(chi.chivalues)
-        info['chivalstex'] = str(chi.chivaluestex)
+        info['genvals'] = str(chi.genvalues)
+        info['genvalstex'] = str(chi.genvaluestex)
         info['vals'] = str(chi.vals)
         info['valstex'] = str(chi.valstex)
+        info['unitgens'] = str(chi.unitgens)
+        #print chi.unitgens
         info['bound'] = int(chi.bound)
-        print chi.bound
+        #print chi.bound
         info['lth'] = int(chi.lth)
-        print chi.lth
+        #print chi.lth
         info['primchar'] = str(chi.primchar)
         info['primcharmodulus'] = str(chi.primcharmodulus)
         info['primcharconductor'] = str(chi.primcharconductor)
@@ -225,7 +228,7 @@ def initCharacterInfo(chi,args, request):
         info['jacobi_sum'] = chi.jacobi_sum_tex()
         info['kloosterman_sum'] = chi.kloosterman_sum_tex()
         info['learnmore'] = [('Dirichlet Characters', 'http://wiki.l-functions.org/L-functions') ] 
-        info['friends'] = [('Dirichlet L-functions', '/L/Character/Dirichlet/'+smod+'/'+snum)]
+        info['friends'] = [('Dirichlet L-function', '/L/Character/Dirichlet/'+smod+'/'+snum)]
 
     return info
 
