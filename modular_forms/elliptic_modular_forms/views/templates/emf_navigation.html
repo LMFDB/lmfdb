@@ -89,7 +89,45 @@ function set_value(id,val) {
   <tr>
     <td>
       <form name="browse" method = "get" action="{{url_for('.render_elliptic_modular_forms')}}">
-	<h3>Browse spaces of cuspforms</h3>
+	<h1>Browse Cusp Forms</h1>
+        {% if info.browse_table.rows is defined %}
+        {{Knowl('emf.emf_browse.all.info') }}
+        In the table below you can brose spaces of Holomorphic Cusp Forms with
+        given level and weight. The entry in the table is the dimension of the space.
+        {% set table = info.browse_table %}
+        {% set rows = info.browse_table.rows %}
+        {% set row_class = cycler('odd', 'even') %}
+        <table class="ntdata">
+          <thead>
+            <tr>
+              <th width="10px" style="">
+                Level/Weight
+              </th>
+              {% for k in table.col_heads  %}
+              <th>{{k}}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows  %}
+            <tr class="{{row_class.next() }}">
+              <th width="0%" style="background:#afa; border-right: 1px solid black">
+                {{ table.row_heads[loop.index-1] }}
+              </th>
+              {% for cell in row  %}
+              <td align="center">
+                <a style="display:inline" href="{{cell.url}}">{{cell.dim}}</a>
+              </td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% endif %}
+
+
+
+
 	<input type="hidden" name="weight" value=""/>
 	<input type="hidden" name="level" value=""/>
 	<table width="100%">
@@ -125,8 +163,7 @@ function set_value(id,val) {
   <tr>
   <tr>
     <td>
-
-	<h3>Jump to a specific cusp form</h3>
+	<h2>Jump to a specific cusp form</h2>
 	<form name="search" method = "post" action="{{url_for('.render_elliptic_modular_forms')}}">	  <input type="text" name="jump_to" value=""> <span class="formexample">e.g. 1.12</span>
 	  <input type="submit" value="Jump">
 	</form>
@@ -135,13 +172,13 @@ function set_value(id,val) {
   <tr>
     <td>
       <form name="search" method = "post" action="{{url_for('.render_elliptic_modular_forms')}}">
-	<h3>Search</h3>
+	<h2>Search</h2>
 	<table class="">
 	  <tr>
-	    <td>Level:</td><td> <input type="text" name="level" value=""> <span class="formexample">e.g. 20</span></td>
+	    <td>Level:</td><td> <input type="text" name="level" value="" example="20"></td><td></td> <!--span class="formexample">e.g. 20</span></td-->
 	  </tr>
 	  <tr>
-	    <td>Weight:</td><td> <input type="text" name="weight" value=""> <span class="formexample">e.g. 24</span></td>
+	    <td>Weight:</td><td> <input type="text" name="weight" value=""></td><td></td> <!--span class="formexample">e.g. 24</span></td-->
 	  </tr>
 	  <tr>
 	    <td>Character:</td><td> <input type="text" name="character" value=""> <span class="formexample">e.g. 1 (0 means trivial character, leave blank for all characters)</span></td>

@@ -18,8 +18,7 @@ AUTHORS:
 
 
 """
-
-import flask
+from base import app
 from flask import render_template, url_for, request, redirect, make_response,send_file
 import bson
 from sets import Set
@@ -51,6 +50,9 @@ def render_maass_waveforms():
     mwf_logger.debug("method=%s"%request.method)
     mwf_logger.debug("req.form=%s"%request.form)
     mwf_logger.debug("info=%s"%info)
+    if info['browse']:
+        return render_browse_maass_waveforms(info=info,title='Maass Forms')
+
     if info['search']:
         search = get_search_parameters(info)
         return render_search_results_wp(info,search)
@@ -174,17 +176,15 @@ def render_maass_waveforms():
                 
                 info['maass_group'] = getallgroupsLevel()
     title='Maass waveforms'
-    
     info['list_of_levels']=get_all_levels()
     if info['list_of_levels']:
         info['max_level']=max(info['list_of_levels'])
     else:
         info['max_level']=0
     mwf_logger.debug("info3=%s"%info)
-    if level or eigenvalue:
-        return render_template("mwf_navigate.html", info=info,title=title)
-    else:
-        return render_template("mwf_browse.html", info=info,title=title)
+    return render_template("mwf_navigate.html", info=info,title=title)
+    #return render_browse_maass_waveforms(info=info,title=title)
+    #return render_template("mwf_browse.html", info=info,title=title)
 
 
 @mwf.route("/<int:level>/<weight>/<character>/")
@@ -377,15 +377,31 @@ def render_search_results_wp(info,search):
     return render_template("mwf_display_search_result.html", info=info,title=title,search=search,bread=bread)
 
 
-def render_browse_maass_waveforms(info):
+def render_browse_maass_waveforms(info,title):
     r"""
     Render a page for browsing Maass forms.
     """
     ## Paging parameters
-    level_range=10
+    level_range=6
     ev_range = 20
-    s = print_table_of_maass_waveforms(info['collection'],lrange=[1,10],erange=[1,10])
-    info['table']=s
+    if info['level_skip']:
+        level_skip=info['level_skip']*level_range
+    else:
+        level_skip=0
+    if info['ev_skip']:
+        ev_skip=info['ev_skip']*ev_range
+    else:
+        ev_skip=0        
+    lrange=[level_skip+1,level_skip+level_range]
+    erange=[ev_skip+1,ev_skip+ev_range]
+
+    TT=MWFTable(mwf_dbname,collection='all',skip=[0,0],limit=[6,10],keys=['Level','Eigenvalue'])
+    TT.set_table()
+    TT.get_metadata()
+    info['table']=TT
+    #s = print_table_of_maass_waveforms(info['collection'],lrange=lrange,erange=erange)
+    #info['table']=s
+    bread=[('Modular forms',url_for('mf.modular_form_main_page')),('Maass waveforms',url_for('.render_maass_waveforms'))]
     return render_template("mwf_browse.html", info=info,title=title,bread=bread)
 
     

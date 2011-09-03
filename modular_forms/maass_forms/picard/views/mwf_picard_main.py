@@ -11,7 +11,7 @@ import modular_forms.maass_forms
 # see main mwf blueprint for details
 @mwfp.context_processor
 def body_class():
-  return { 'body_class' : 'mwf' }
+  return { 'body_class' : 'mwfp' }
 
 
 #@base.app.route("/ModularForm/GL2/C/Maass/")
@@ -23,4 +23,4 @@ def render_picard_maass_forms():
    data = None
    if docid:
      data = htp.find_one({'_id' : docid })
-   return render_template("maass_form_picard.html", title = "Maass cusp forms on PSL(2,Z[i])", data = data, id=docid, ds=ds)
+   return render_template("mwfp.maass_form_picard.html", title = "Maass cusp forms on PSL(2,Z[i])", data = data, id=docid, ds=ds)

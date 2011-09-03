@@ -10,7 +10,7 @@ $(".later").trigger("click",1);
 });
 
 </script>
-<H1>
+<h1>
 Cusp forms of weight {{ info.weight }} for 
 \({% if info.level==1 %} 
 	\mathrm{SL}_{2}(\mathbb{Z}) 
@@ -36,18 +36,18 @@ with character \( \chi_{ {{ info.character }} }\) modulo \( {{ info.level }}\) w
 {{ info.sage_version | safe}}
 {% else %}
 	{% if info.nontrivial_new %}
-		<h3>
+		<h2>
 		Decomposition of \(S_{ {{ info.weight }} }^{new}({{ info.level }})\) into galois orbits
-		</h3>
+		</h2>
 		{{ info.new_decomposition | safe }}
 	{% else %}
 		\[S_{ {{ info.weight }} }^{new}({{ info.level }})=\{0\}\]
  	{% endif %}
 
 	{% if info.old_decomposition != "" %}
-		<h3>
+		<h2>
 		Decomposition of \(S_{ {{ info.weight }} }^{old}({{ info.level }})\) into lower level spaces
-		</h3>
+		</h2>
 		{{ info.old_decomposition | safe }}
 	{% endif %}
 	
