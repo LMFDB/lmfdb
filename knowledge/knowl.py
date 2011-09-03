@@ -48,13 +48,13 @@ class Knowl(object):
     new_history_item = get_knowl(self.id)
     get_knowls().update({'_id' : self.id},
         {"$set": {
-         'content' : self.content,
-         'title' : self.title,
-         'quality': self.quality,
-	 'last_author': who,
-	 'timestamp': self.timestamp
-	 } ,
-	"$push": {"history": new_history_item}})
+           'content' : self.content,
+           'title' : self.title,
+           'quality': self.quality,
+	       'last_author': who,
+	       'timestamp': self.timestamp
+	     } ,
+	     "$push": {"history": new_history_item}})
     if who:
       get_knowls().update(
          { '_id':self.id }, 

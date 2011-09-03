@@ -19,7 +19,7 @@
   </ul>
 </div>
 
-{% if user.is_authenticated() -%}
+{% if user_is_authenticated -%}
   <h1>Edit Knowl</h1>
   <form action="{{ url_for('.edit_form') }}" method="POST">
     Knowl ID: <input id="knowl-edit-id" name="id"></input>

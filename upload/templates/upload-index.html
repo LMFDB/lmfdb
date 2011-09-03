@@ -37,6 +37,8 @@ input, textarea { width: 50em }
     <td>Paper reference:</td>
     <td><input name="reference" example="Roots of the derivative of the {R}iemann-zeta function and of characteristic polynomials "/></td>
   </tr>
+
+
   <tr>
     <td>Bibtex entries:</td>
     <td><textarea name="bibtex" rows=10 example=
@@ -62,13 +64,20 @@ input, textarea { width: 50em }
   </tr>
 
   <tr>
+    <td>Further commments if any:</td>
+    <td><textarea name="comments" rows=5></textarea></td>
+  </tr>
+
+
+
+  <tr>
     <td>Upload from file:</td>
     <td><input type="file" name="file"/></td>
   </tr>
 
   <tr>
     <td>Or from URL:</td>
-    <td><input type="text" name="url" example="http://math.stanford.edu/~ralphf/data.tgz"/></td>
+    <td><input type="text" name="url" example="http://stanford.edu/~rfurman/data.tgz"/></td>
   </tr>
 
   <tr><td colspan="2" class="forminfo">Only enter one of file or URL.  Maximum size: 1GB</td></tr> 
