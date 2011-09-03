@@ -1,16 +1,18 @@
 # This builds a database of L-functions that occur (maybe on the fly) on the website
 # 
-
-from Lfunction import Lfunction
+import pymongo
 import base
 
-db = base.getDBConnection()
+C = base.getDBConnection()
+db = C.Lfunctions
+
+from Lfunction import Lfunction, Lfunction_Dirichlet
 
 # Iterators over L-functions. It would be nice to have all of the types of forms that appear on the site
 def Dirichlet_Lfunctions_iterator(qMax):
-    for q in range(qMax):
-        for n in range(len(DirichletGroup(q)):
-            yield Lfunction_Dirichlet(q,n)
+    for q in [3..qMax]:
+        for n in range(len(DirichletGroup(q))):
+            yield Lfunction_Dirichlet(charactermodulus = q, characternumber = n)
  
 def EC_iterator():
     data = set(_["label"] for _ in Lfunctions.ellcurves.curves.find({},fields=["label"]))
@@ -24,15 +26,15 @@ def Lfunction_iterator(dirichlet_max = 100):
     for curve in EC_iterator():
         yield L
 
-def inject_Lfunctions():
-    for L in Lfunction_iterator():
-        L.inject_database([Lfunction.math_id, Lfunction.level])
+def inject_Lfunctions(it):
+    for L in it:
+        L.inject_database(["original_mathematical_object()"])
     
 def build_indices():
-    db.Lfunctions.create_index("level", "self_dual")
+    db.full_collection.create_index("level", "self_dual")
 
 if __name__=="__main__":
     #build_indices()
     #remove_all()
-    inject_Lfunctions()
+    inject_Lfunctions(Dirichlet_Lfunctions_iterator(10))
     

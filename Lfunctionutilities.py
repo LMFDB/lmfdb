@@ -217,9 +217,9 @@ def lfuncFEtex(L,fmt):
         if L.level>1:
             ans+=latex(L.level)+"^{\\frac{s}{2}}"
         for mu in L.mu_fe:
-           ans += "\Gamma_R(s"+seriescoeff(mu,0,"signed","",-6,5)+")"
+           ans += "\Gamma_{\mathbb{R}}(s"+seriescoeff(mu,0,"signed","",-6,5)+")"
         for nu in L.nu_fe:
-           ans += "\Gamma_C(s"+seriescoeff(nu,0,"signed","",-6,5)+")"
+           ans += "\Gamma_{\mathbb{C}}(s"+seriescoeff(nu,0,"signed","",-6,5)+")"
         ans += " \\cdot "+L.texname+"\\cr\n"
         ans += "=\\mathstrut & "+seriescoeff(L.sign,0,"factor","",-6,5)
         ans += L.texnamecompleted1ms+"\n\\end{align}\n"

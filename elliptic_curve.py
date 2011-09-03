@@ -271,6 +271,13 @@ def render_curve_webpage_by_label(label):
         info['tor_structure'] = tor_group
         
     info.update(data)
+    if rank >=2:
+        lder_tex = "L%s(E,1)" % ("^{("+str(rank)+")}")
+    elif rank ==1:
+        lder_tex = "L%s(E,1)" % ("'"*rank)
+    else:
+        assert rank == 0
+        lder_tex = "L(E,1)"
     info.update({
         'conductor': N,
         'disc_factor': latex(discriminant.factor()),
@@ -280,7 +287,7 @@ def render_curve_webpage_by_label(label):
         'equation': web_latex(E),
         'f': ajax_more(E.q_eigenform, 10, 20, 50, 100, 250),
         'generators':','.join(web_latex(g) for g in generator) if 'gens' in data else ' ',
-        'lder'  : "L%s(1)" % ("'"*rank),
+        'lder'  : lder_tex,
         'p_adic_primes': [p for p in sage.all.prime_range(5,100) if E.is_ordinary(p) and not p.divides(N)],
         'ainvs': format_ainvs(data['ainvs']),
         'tamagawa_numbers': r' \cdot '.join(str(sage.all.factor(c)) for c in E.tamagawa_numbers()),
