@@ -4,7 +4,7 @@ class RootTest(LmfdbTest):
 
   def test_root(self):
     root = self.tc.get("/")
-    assert "Index" in root.data
+    assert "DataBase" in root.data
 
   def test_robots(self):
     r = self.tc.get("/robots.txt")
@@ -23,3 +23,9 @@ class RootTest(LmfdbTest):
     for dbn in expected_dbnames:
       assert dbn in known_dbnames, 'db "%s" missing' % dbn
 
+  def test_url_map(self):
+    for rule in self.app.url_map.iter_rules():
+      if "GET" in rule.methods:
+        tc = self.app.test_client()
+        res = tc.get(rule.rule)
+        assert "LMFDB" in res.data, "rule %s failed" % rule

@@ -54,6 +54,7 @@ def upload():
     "reference": request.form['reference'],
     "bibtex": request.form['bibtex'],
     "uploader": current_user.name,
+    "uploader_id": current_user.id,
     "time": datetime.datetime.utcnow(),
     "original_file_name": fn,
     "status": "unmoderated",
@@ -95,7 +96,7 @@ def admin_update():
 
   if request.form.has_key('approve'):
     db.fs.files.update({"_id" : ObjectId(id)}, {"$set": {"metadata.status" : "approved"}})
-    db.fs.files.update({"metadata.parent_archive_id" : ObjectId(id)}, {"$set": {"metadata.status" : "approved"}}, multi=1)
+    db.fs.files.update({"metadata.parent_archive_id" : ObjectId(id)}, {"$set": {"metadata.status" : "approvedchild"}}, multi=1)
     flask.flash('Approved')
   if request.form.has_key('disapprove'):
     db.fs.files.update({"_id" : ObjectId(id)}, {"$set": {"metadata.status" : "disapproved"}})
@@ -116,7 +117,21 @@ def admin():
   approved = [ fs.get(x['_id']) for x in db.fs.files.find({"metadata.status" : "approved"}) ]
   disapproved = [ fs.get(x['_id']) for x in db.fs.files.find({"metadata.status" : "disapproved"}) ]
 
-  return render_template("upload-view.html", title = "Data Upload", bread = get_bread(), unmoderated=unmoderated, approved=approved, disapproved=disapproved)
+  return render_template("upload-view.html", title = "Moderate uploaded data", bread = get_bread(), unmoderated=unmoderated)#, approved=approved, disapproved=disapproved)
+
+@upload_page.route("/viewAll", methods = ["GET"])
+def viewAll():
+
+  db = getDBConnection().upload
+  fs = GridFS(db)
+
+  approved = [ fs.get(x['_id']) for x in db.fs.files.find({"metadata.status" : "approved"}) ]
+
+  return render_template("upload-view.html", title = "Uploaded data", bread = get_bread(), approved=approved)
+
+
+
+
 
 @upload_page.route("/download/<id>/<path:filename>", methods = ["GET"])
 def download(id, filename):
@@ -133,6 +148,7 @@ def view(id):
   return render_template("upload-view.html", title = "View file", bread = get_bread(), file = file)
 
 @upload_page.route("/updateMappingRule", methods = ["POST"])
+@login_required
 def updateMappingRule():
   id = request.form['id']
   print id
@@ -152,16 +168,19 @@ def updateMappingRule():
 
 
 @upload_page.route("/updateMetadata", methods = ["GET"])
+@login_required
 def updateMetadata():
   db = getDBConnection().upload
   id = request.values['id']
   property = request.values['property']
   value = request.values['value']
   db.fs.files.update({"_id" : ObjectId(id)}, {"$set": {"metadata."+property : value}})
+  if property == "status":
+    db.fs.files.update({"metadata.parent_archive_id" : ObjectId(id)}, {"$set": {"metadata.status" : value+"child"}}, multi=1)
   return getDBConnection().upload.fs.files.find_one({"_id" : ObjectId(id)})['metadata'][property]
 
 def getUploadedFor(path):
-  files = getDBConnection().upload.fs.files.find({"metadata.related_to": path, "metadata.status": "approved"})
+  files = getDBConnection().upload.fs.files.find({"metadata.related_to": path, "$or" : [{"metadata.status": "approved"}, {"metadata.status": "approvedchild"}]})
   ret =  [ [x['metadata']['name'], "/upload/view/%s" % x['_id']] for x in files ]
   ret.insert(0, ["Upload your data here", url_for("upload.index") + "?related_to=" + request.path ])
   return ret
