@@ -31,12 +31,7 @@ MathJax.Hub.Config({
 {% from "knowl-defs.html" import KNOWL with context %}
 {% from "knowl-defs.html" import KNOWL_LINK with context %}
 {% from "knowl-defs.html" import KNOWL_INC with context %}
-
-{# The defs for database queries #}
-{% macro DATA(filename, path) -%}
-  {{ queryUploadDatabase(filename, path) }}
-{%- endmacro %}
-
+{% from "knowl-defs.html" import TEXT_DATA with context %}
 
 <script type="text/javascript">
 var _gaq = _gaq || [];

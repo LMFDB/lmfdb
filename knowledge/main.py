@@ -174,6 +174,7 @@ def render(ID, footer=None):
   {%% from "knowl-defs.html" import KNOWL with context %%}
   {%% from "knowl-defs.html" import KNOWL_LINK with context %%}
   {%% from "knowl-defs.html" import KNOWL_INC with context %%}
+  {%% from "knowl-defs.html" import TEXT_DATA with context %%}
 
   <div class="knowl">
   <div class="knowl-content">%(content)s</div>"""

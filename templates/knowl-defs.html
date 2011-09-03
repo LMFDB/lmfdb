@@ -104,3 +104,7 @@
 </div>
 {%- endmacro %}
 
+{# The defs for database queries #}
+{% macro TEXT_DATA(filename, path) -%}
+  {{ queryUploadDatabase(filename, path or request.path) }}
+{%- endmacro %}
