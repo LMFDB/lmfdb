@@ -15,6 +15,7 @@
 import pymongo
 import flask
 from base import app, getDBConnection
+from datetime import datetime
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
 from flaskext.login import login_required, current_user
 from knowl import Knowl
@@ -137,6 +138,7 @@ def save_form():
   k.title = request.form['title']
   k.content = request.form['content']
   k.quality = request.form['quality']
+  k.timestamp = datetime.now()
   k.save(who=current_user.get_id())
   return flask.redirect(url_for(".show", ID=ID))
   
@@ -157,7 +159,7 @@ def render(ID, footer=None):
 
   #logger.debug("kwargs: %s", request.args)
   kwargs = dict(((k, v) for k,v in request.args.iteritems()))
-  logger.debug("kwargs: %s" , kwargs)
+  #logger.debug("kwargs: %s" , kwargs)
 
   #this is a very simple template based on no other template to render one single Knowl
   #for inserting into a website via AJAX or for server-side operations.

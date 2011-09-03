@@ -371,6 +371,7 @@ blockquote p {
 body.mwf #sidebar a.mwf { background: #BFB; }
 body.cmf #sidebar a.cmf { background: #BFB; }
 body.knowl #sidebar a.knowl { background: #BBF; }
+body.local_fields #sidebar a.local_fields { background: #BFB; }
 
 .visible {
 	visibility: visible;
@@ -535,6 +536,10 @@ div.literature {
  *  all elements, that have a knowl attribute set to any value */
 table .knowl-link {
   display: inline;
+  border-bottom: 1px dotted {{ col_knowl_dd }};
+  border-radius: 0px;
+  -moz-border-radius: 0px;
+  padding: 1px;
 }
 .knowl-bar {
   background: {{ col_knowl_ll}};

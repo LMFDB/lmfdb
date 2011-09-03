@@ -86,16 +86,16 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, temp_args):
         return Lfunction_EC( label = arg3)
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic': # this has args: one for weight and one for level
-        return Lfunction_EMF( temp_args)
+        return Lfunction_EMF( **temp_args)
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2'and arg3 == 'Q' and arg4 == 'maass':
-        return Lfunction_Maass( temp_args)
+        return Lfunction_Maass( **temp_args)
     
     elif arg1 == 'ModularForm' and (arg2 == 'GSp4' or arg2 == 'GL4' or  arg2 == 'GL3') and arg3 == 'Q' and arg4 == 'maass':
         return Lfunction_Maass( dbid = temp_args['id'], dbName = 'Lfunction', dbColl = 'LemurellMaassHighDegree')
 
     elif arg1 == 'NumberField':
-        return Lfunction_Dedekind( label = str(arg2))
+        return DedekindZeta( label = str(arg2))
 
     elif arg1 == 'Lcalcurl':
         return Lfunction( Ltype = arg1, url = arg2)
@@ -126,11 +126,6 @@ def set_info_for_start_page():
     t = 'L-functions'
     info['bread'] = [('L-functions', url_for("render_Lfunction"))]
     info['learnmore'] = [('L-functions', 'http://wiki.l-functions.org/L-function')]
-#         explain=['Further information']
-#         explain.append(('Unique labels for number fields',url_for("render_labels_page")))
-#         explain.append(('Unique labels for Galois groups',url_for("render_groups_page")))
-#         explain.append(('Discriminant ranges (not yet implemented)','/'))
-#         sidebar = set_sidebar([explain])
 
     return info
     
@@ -139,12 +134,12 @@ def initLfunction(L,args, request):
     info = {'title': L.title}
     info['citation'] = ''
     info['support'] = ''
-    info['sv12'] = specialValueString(L.sageLfunction, 0.5, '\\frac12')
+    info['sv12'] = specialValueString(L.sageLfunction, 0.5, '1/2')
     info['sv1'] = specialValueString(L.sageLfunction, 1, '1')
     info['args'] = args
 
     info['credit'] = L.credit
-    info['citation'] = L.citation
+    #info['citation'] = L.citation
 
     try:
         info['url'] = L.url

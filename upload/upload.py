@@ -16,7 +16,10 @@ from base import app, getDBConnection, fmtdatetime
 from flask import render_template, request, abort, Blueprint, url_for
 from flaskext.login import login_required, current_user
 from gridfs import GridFS
+from os import path
 from pymongo.objectid import ObjectId
+from urlparse import urlparse
+from urllib import urlopen
 
 from users import admin_required
 
@@ -39,12 +42,27 @@ def index():
   related_to = "";
   if request.values.has_key('related_to'):
     related_to = request.values['related_to']
+    if related_to == "/" or \
+       re.match("^/upload", related_to) or \
+       re.match("^/user", related_to) : related_to=""
   return render_template("upload-index.html", title = "Data Upload", bread = get_bread(), related_to = related_to)
 
 @upload_page.route("/upload", methods = ["POST"])
 @login_required
 def upload():
-  fn = request.files['file'].filename
+
+  stream = None
+  fn = None
+  content_type = None
+  if request.form['url'] != "":
+    stream = urlopen(request.form['url'])
+    fn = path.basename(urlparse(request.form['url']).path)
+    content_type = stream.info().gettype()
+  else:
+    stream = request.files['file']
+    fn = request.files['file'].filename
+    content_type = request.files['file'].content_type
+
   metadata = {
     "name": request.form['name'],
     "full_description": request.form['full_description'],
@@ -59,13 +77,14 @@ def upload():
     "original_file_name": fn,
     "status": "unmoderated",
     "version": "1",
-    "content_type": request.files['file'].content_type
+    "file_url": request.form['url'],
+    "content_type": content_type
   }
   flask.flash("Received file '%s' and awaiting moderation from an administrator" % fn)
 
   upload_db = getDBConnection().upload
   upload_fs = GridFS(upload_db)
-  db_id = upload_fs.put(request.files['file'].read(), metadata = metadata, filename=fn)
+  db_id = upload_fs.put(stream.read(), metadata = metadata, filename=fn)
   
   logging.info("file '%s' receieved and data with id '%s' stored" % (fn, db_id))
 
