@@ -2,11 +2,12 @@
 
 
 {% block content %}
+A {{ KNOWL('dirichlet_character.definition') }} is an arithmetic function with certain properties.
 
 <h3> Browse </h3>
 
 <p>
-By modulus:
+By {{ KNOWL('dirichlet_character.modulus') }}:
 <a href="modbrowse={{'1-25'}}">{{'1-25'}}</a>
 <a href="modbrowse={{'26-50'}}">{{'26-50'}}</a>
 <a href="modbrowse={{'51-75'}}">{{'51-75'}}</a>
@@ -14,7 +15,7 @@ By modulus:
 </p>
 
 <p>
-By conductor:
+By {{ KNOWL('dirichlet_character.conductor') }}:
 <a href="condbrowse={{'1-5'}}">{{'1-5'}}</a>
 <a href="condbrowse={{'6-10'}}">{{'6-10'}}</a>
 <a href="condbrowse={{'11-15'}}">{{'11-15'}}</a>
@@ -22,7 +23,7 @@ By conductor:
 </p>
 
 <p>
-By order:
+By {{ KNOWL('dirichlet_character.order') }}:
 <a href="ordbrowse={{'1-5'}}">{{'1-5'}}</a>
 <a href="ordbrowse={{'6-10'}}">{{'6-10'}}</a>
 <a href="ordbrowse={{'11-15'}}">{{'11-15'}}</a>
@@ -45,16 +46,16 @@ Label:&nbsp;&nbsp;
 Enter criteria into one or more boxes to restrict the search.&nbsp;&nbsp;
 <table border=0 cellpadding=5>
 <tr>
-    <td align=left>Modulus <td><input type='text' name='modulus' size = '10'></td>
+    <td align=left>{{ KNOWL_LINK('dirichlet_character.modulus') }} <td><input type='text' name='modulus' size = '10'></td>
 <td><span class="formexample"> e.g. 13 </span></td>
 </tr>
 
 <tr>
-    <td align=left>Conductor</td><td> <input type='text' name='conductor' size = '10'></td><td><span class="formexample"> e.g. 5 </span></td>
+    <td align=left>{{ KNOWL_LINK('dirichlet_character.conductor') }}</td><td> <input type='text' name='conductor' size = '10'></td><td><span class="formexample"> e.g. 5 </span></td>
 </tr>
 
 <tr>
-<td>Order</td><td> <input type='text' name='order' size = '10'></td><td><span class="formexample"> e.g. 2 </span></td>
+<td>{{ KNOWL_LINK('dirichlet_character.order') }}</td><td> <input type='text' name='order' size = '10'></td><td><span class="formexample"> e.g. 2 </span></td>
 </tr>
 
 <!--<tr>
