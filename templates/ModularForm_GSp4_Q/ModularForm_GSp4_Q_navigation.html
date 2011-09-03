@@ -59,38 +59,84 @@
 
 <h2>Look up dimensions</h2>
 
+<script> 
+  function validate_weight()
+  {
+  var input = document.getElementById("weight_range").value;
+  if(input == '')
+  {  return false;  }
+  if(input.match(/^\d+$/))  // Only digits.
+  {
+  if(input > 1000000)
+  {
+  alert("Please enter a smaller number.");
+  return false;
+  }
+  else
+  {  return true;  }
+  }
+  else if(input.match(/^\d+\-\d+$/))  // Range, like 2-50
+  {
+  min_wt = parseInt(input.split("-")[0]);
+  max_wt = parseInt(input.split("-")[1]);
+  if(min_wt > max_wt)
+  {
+  alert("Your first weight cannot be larger than the second weight.")
+  return false;
+  }
+  else
+  {
+  if ((max_wt-min_wt + 1)*max_wt > 1000000)
+  {
+  alert("Please enter a smaller range (output would take too long to compute).");
+  return false;
+  }
+  else
+  {  return true;  }
+  }
+  }
+  else
+  {
+  alert("Please enter either a weight or a range of weights (in the form '2-50', with no spaces).");
+  return false;
+  }
+  }
+</script> 
+ 
+<form action="/ModularForm/GSp4/Q" method="get" onSubmit="return validate_weight()"> 
+  <input type="hidden" name="page" value="dimensions" /> 
+  <input type="hidden" name="level" value="17" />
+  <table> 
+    <tr>
+      <td>
+	<label>Group</label>
+	<select name="group">
+	  <option value="Sp4Z">\({\rm Sp}(4,\mathbb{Z})\)</option>
+	  <option value="Kp">\(K(p)\)</option>
+	  <option value="Gamma0_2">\(\Gamma_0(2)\)</option>
+	  <option value="Gamma0_3_psi_3">\(\Gamma_0(3),\psi_3\)</option>
+	  <option value="Gamma0_4_psi_4">\(\Gamma_0(4),\psi_4\)</option>
+	  <option value="">\(\Gamma_0(4),\left(\frac{-4}{*}\right)\)</option>
+	</select>
+      </td>
+      <td> 
+	<label>weight(s)</label>
+	<input type="text" name="weight_range" placeholder="20-30" />
+	<span class="formexample">e.g. 2 or 20-40</span>
+      </td>
+      <td> 
+	<button type="submit" value="submit">Submit</button>
+      </td>
+    </tr>
+  </table> 
+</form> 
+
 <br/>
 
 <h2>Search</h2>
 
 <p>
-  <form action="/LfunctionDB/query" method=get> 
-    <table> 
-      <tr> 
-	<td>Group and character</td>
-	<td>
-	  <select>
-	    <option><script type="math/tex">{\rm Sp}(4,\mathbb{Z})</script></option>
-	    <option><script type="math/tex">K(p)</script></option>
-	    <option><script type="math/tex">\Gamma_0(2)</script></option>
-	    <option><script type="math/tex">\Gamma_0(3),\psi_3</script></option>
-	    <option><script type="math/tex">\Gamma_0(4),\psi_4</script></option>
-	    <option><script type="math/tex">\Gamma_0(4),\left(\frac{-4}{*}\right)\</script></option>
-	  </select>
-	</td>
-      </tr>
-
-      <tr> 
-	<td>Weight</td><td> <input type='text' name='weight' size = '4'></td><td><span class="formexample"> e.g. 2 or 3/2 or 2,1</span></td> 
-      </tr> 
-      
-      <tr> 
-	<td> 
-	  <button type='submit' name='search' value='Search'/> 
-	</td> 
-      </tr> 
-    </table> 
-  </form> 
+  Stay tuned. Soon available.
 </p>
 
 {% endblock %}
