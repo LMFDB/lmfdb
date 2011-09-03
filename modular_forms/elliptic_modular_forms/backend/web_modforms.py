@@ -536,7 +536,7 @@ class WebModFormSpace(Parent):
         for j in range(len(self._galois_decomposition)):
             label=self._galois_orbits_labels[j]
             #url="?weight="+str(self.weight())+"&level="+str(self.level())+"&character="+str(self.character())+"&label="+label
-            url=url_for('emf.render_one_elliptic_modular_form',level=self.level(),weight=self.weight(),label=label,character=self.character())
+            url=url_for('emf.render_one_elliptic_modular_form',level=self.level(),weight=self.weight(),label=label,character=self._chi)
             header="<a href=\""+url+"\">"+label+"</a>"
             tbl['headersv'].append(header)
             dim=self._galois_decomposition[j].dimension()
@@ -1038,17 +1038,21 @@ class WebNewForm(SageObject):
             if(Q==1):
                 continue
             if(gcd(Q,ZZ(self.level()/Q))==1):
+                emf_logger.debug("Q={0}".format(Q))
+                #M=self._f.atkin_lehner_operator(ZZ(Q)).matrix()
+
+                M=self._f._compute_atkin_lehner_matrix(ZZ(Q))
                 try:
-                    #M=self._f.atkin_lehner_operator(ZZ(Q)).matrix()
-                    M=self._f._compute_atkin_lehner_matrix(ZZ(Q)).matrix()
                     ev = M.eigenvalues()
-                    if len(ev)>1:
-                        if len(set(ev))>1:
-                            raise ArithmeticError,"Should be one Atkin-Lehner eigenvalue. Got: %s " % ev
-                    res[Q]=ev[0]
-                    #res[Q]=self._f.atkin_lehner_eigenvalue(ZZ(Q))
                 except:
-                    pass
+                    emf_logger.critical("Could not get Atkin-Lehner eigenvalues!")
+                    self._atkin_lehner_eigenvalues={}
+                    return {}
+                emf_logger.debug("eigenvalues={0}".format(ev))
+                if len(ev)>1:
+                    if len(set(ev))>1:
+                        emf_logger.critical("Should be one Atkin-Lehner eigenvalue. Got: {0}".format(ev))
+                res[Q]=ev[0]
         self._atkin_lehner_eigenvalues=res
         return res
 
@@ -1277,7 +1281,7 @@ class WebNewForm(SageObject):
             raise NotImplementedError,"Only implemented for SL(2,Z). Need more generators in general."
         if(self._as_polynomial_in_E4_and_E6<>None and self._as_polynomial_in_E4_and_E6<>''):
             return self._as_polynomial_in_E4_and_E6
-        d=self._parent.dimension_modforms() # dimension of space of modular forms
+        d=self._parent.dimension_modular_forms() # dimension of space of modular forms
         k=self.weight()
         K=self.base_ring()
         l=list()
