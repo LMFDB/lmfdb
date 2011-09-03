@@ -328,7 +328,8 @@ def paintCS(width, height, xMax, yMax, xfactor, yfactor,ticlength):
     return(xmlText)
 
 ## ============================================
-## Returns the svg-code for a simple coordinate system.
+## Returns the svg-code for a simple coordinate system
+## INCLUDING a grid at the even lattice points.
 ## width = width of the system
 ## height = height of the system
 ## xMax = maximum in first (x) coordinate
@@ -384,8 +385,69 @@ def paintCSHolo(width, height, xMax, yMax, xfactor, yfactor,ticlength):
 
     return(xmlText)
 
+## ============================================
+#
+#
+## ============================================
+## Returns the svg-code for a simple coordinate system.
+## width = width of the system
+## height = height of the system
+## xMax = maximum in first (x) coordinate
+## yMax = maximum in second (y) coordinate
+## xfactor = the number of pixels per unit in x
+## yfactor = the number of pixels per unit in y
+## ticlength = the length of the tickmarks
+## ============================================
+# ============================================
+def paintCSHoloTMP(width, height, xMax, yMax, xfactor, yfactor,ticlength):
+    xmlText = ("<line x1='0' y1='" + str(height) + "' x2='" +
+               str(width) + "' y2='" + str(height) +
+               "' style='stroke:rgb(0,0,0);'/>\n")
+    xmlText = xmlText + ("<line x1='0' y1='" + str(height) +
+                         "' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n")
+    for i in range( 1,  xMax + 1):
+        xmlText = xmlText + ("<line x1='" + str(i*xfactor) + "' y1='" +
+                             str(height - ticlength) + "' x2='" +
+                             str(i*xfactor) + "' y2='" + str(height) +
+                             "' style='stroke:rgb(0,0,0);'/>\n")
+
+    for i in range( 1,  xMax + 1, 1):
+        digitoffset = 6
+        if i < 10:
+           digitoffset = 3
+        xmlText = xmlText + ("<text x='" + str(i*xfactor - digitoffset) + "' y='" +
+                             str(height - 2 * ticlength) +
+                             "' style='fill:rgb(102,102,102);font-size:11px;'>"
+                             + str(i) + "</text>\n")
+
+#       xmlText = xmlText + ("<line y1='0' x1='" + str(i*xfactor) +
+#                        "' y2='" + str(height) + "' x2='" +
+#                        str(i*xfactor) +
+#                        "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+
+    for i in range( 1,  yMax + 1):
+        xmlText = xmlText + ("<line x1='0' y1='" +
+                             str(height - i*yfactor) + "' x2='" +
+                             str(ticlength) + "' y2='" +
+                             str(height - i*yfactor) +
+                             "' style='stroke:rgb(0,0,0);'/>\n")
+
+    for i in range( 2,  yMax + 1, 2):
+        xmlText = xmlText + ("<text x='5' y='" +
+                             str(height - i*yfactor + 3) +
+                             "' style='fill:rgb(102,102,102);font-size:11px;'>" +
+                             str(i) + "</text>\n")
+
+#       if i%4==0 :  #  put dahes every four units
+#          xmlText = xmlText + ("<line x1='0' y1='" +
+#                        str(height - i*yfactor) + "' x2='" + str(width) +
+#                        "' y2='" + str(height - i*yfactor) +
+#                        "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+
+    return(xmlText)
+
 ##================================================
-##
+#+++++++++++++++++++++++++++++++++++++++++++++++++
 ##
 ##================================================
 def signtocolour(sign):
@@ -539,7 +601,7 @@ def paintSvgHoloGeneral(Nmin,Nmax,kmin,kmax,imagewidth,imageheight):
     height = yfactor *yMax + extraSpace
 
     # make the coordinate system
-    ans += paintCSHolo(width, height, xMax, yMax, xfactor, yfactor, ticlength)
+    ans += paintCSHoloTMP(width, height, xMax, yMax, xfactor, yfactor, ticlength)
     alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
 
 # create appearanceinfo, common to all points
@@ -577,10 +639,10 @@ def paintSvgHoloGeneral(Nmin,Nmax,kmin,kmax,imagewidth,imageheight):
            dimensioninfo['firstdotoffset'] = [0.05,0.07]
            #dimensioninfo['firstdotoffset'] = [0.5 * (dimensioninfo['dotspacing'][0] * dimensioninfo['edge'][0,0] + dimensioninfo['dotspacing'][1] * dimensioninfo['edge'][1,0]), 0.5 * (dimensioninfo['dotspacing'][1] * dimensioninfo['edge'][0,1] + dimensioninfo['dotspacing'][1] * dimensioninfo['edge'][1,1])]
            dimensioninfo['dotradius'] = radius
-           dimensioninfo['connectinglinewidth'] = dimensioninfo['dotradius']/3.0
+           dimensioninfo['connectinglinewidth'] = dimensioninfo['dotradius']/2.0
 #
            appearanceinfo = {}
-           appearanceinfo['edgewidth'] = dimensioninfo['dotspacing'][0]/10.0  #just a guess
+           appearanceinfo['edgewidth'] = dimensioninfo['dotspacing'][0]/1.0  #just a guess
            appearanceinfo['edgestyle'] = 'stroke-dasharray:3,3'
            appearanceinfo['edgecolor'] = 'rgb(202,202,102)'
            appearanceinfo['fontsize'] = 'font-size:11px'
@@ -590,28 +652,36 @@ def paintSvgHoloGeneral(Nmin,Nmax,kmin,kmax,imagewidth,imageheight):
            urlinfo['space'] = {'weight': y}
            urlinfo['space']['level'] = x
            urlinfo['space']['character'] = 0
-#          urlinfo['space']['orbits'] = [[{'label':'a','number':0}]]  # initialise an empty list
 #
            scale = 1
-           for label in thelabels:  # looping over Galois orbit: one label per orbit
-              urlinfo['space']['orbits'] = [[{'label':label,'number':0}]]  # initialise an empty list
-              MF = WebNewForm(y,x,0,label)   # one of the Galois orbits for weight y, level x
-              numberwithlabel = MF.degree()  # number of forms in the Galois orbit
-              if x == 1: # For level 1, the sign is always plus
-                 signfe = 1
-              else:
-                 frickeeigenvalue = MF.atkin_lehner_eigenvalues()[x] # gives Fricke eigenvalue
-                 signfe = frickeeigenvalue * (-1)**float(y/2)  # sign of functional equation
-              urlinfo['space']['orbits'][0]['color'] = signtocolour(signfe)
-              #include urlinfo
-              #urlinfo['space']['orbits'].append({'label':label,'number':0})  # each orbit is a dictionery, so begin with an empty dictionery for this orbit
-              #urlinfo['space']['orbits'].append({})  # each orbit is a dictionery, so begin with an empty dictionery for this orbit
-              #urlinfo['space']['orbits'][0]['label'] = label   # telling url the label of this orbit
-              #urlinfo['space']['orbits'][0]['number'] = 0      # TMP: assume only one dot per orbit
-              #ans += mytext(str(x) + "," + str(y),[0, height], [xfactor, -1 * yfactor], [x,y],"",appearanceinfo['fontsize'],"",appearanceinfo['orbitcolor'])
-              #ans += mytext(len(orbit),vertexlocation, scale, orbitbase,"",appearanceinfo['fontsize'],appearanceinfo['fontweight'],orbitcolor)
-              appearanceinfo['orbitcolor'] = 'rgb(102,102,102)'
-              ans += plotsector(dimensioninfo, appearanceinfo, urlinfo)
+           #Symmetry types: +1 or -1
+           symmetrytype = [1,-1]
+           for signtmp in symmetrytype:
+              #urlinfo['space']['orbits'] = [ [] for label in thelabels ] # initialise an empty list for each orbit
+              urlinfo['space']['orbits'] = []
+              for label in thelabels:  # looping over Galois orbit: one label per orbit
+                 # do '+' case first
+                 MF = WebNewForm(y,x,0,label)   # one of the Galois orbits for weight y, level x
+                 numberwithlabel = MF.degree()  # number of forms in the Galois orbit
+                 if x == 1: # For level 1, the sign is always plus
+                    signfe = 1
+                 else:
+                    signfe = -1
+                    #frickeeigenvalue = MF.atkin_lehner_eigenvalues()[x] # gives Fricke eigenvalue
+                    #signfe = frickeeigenvalue * (-1)**float(y/2)  # sign of functional equation
+                 if signfe == signtmp:  # we find an orbit with sign of "signtmp"
+                    signcolour = signtocolour(signfe)
+                    orbitdescriptionlist = []
+                    for n in range(numberwithlabel):
+                       orbitdescriptionlist.append({'label':label,'number':n,'color':signcolour})
+                    urlinfo['space']['orbits'].append(orbitdescriptionlist) 
+                  
+#
+#
+#
+              #urlinfo['space']['orbits'][0][0]['color'] = signtocolour(-1)
+              #appearanceinfo['orbitcolor'] = 'rgb(102,102,102)'
+                 ans += plotsector(dimensioninfo, appearanceinfo, urlinfo)
 
     ans += "</svg>"
 
@@ -956,7 +1026,6 @@ def plotsector(dimensioninfo, appearanceinfo, urlinfo):
     print(vertexlocation)
     print(dimensioninfo['firstdotoffset'])
     for orbit in urlinfo['space']['orbits']:
-      orbitcolor = orbit['color']
       # first determine if we should draw a line connecting the dots in an orbit, since want line beneath dots
       # no line if 1 dot or >maxdots
       if len(orbit) > 1 and len(orbit) <= maxdots:
@@ -970,6 +1039,7 @@ def plotsector(dimensioninfo, appearanceinfo, urlinfo):
          break   # we are done with this orbit if there are more than maxdots cuspforms in the orbit (re-check)***
       dotlocation = orbitbase
       for orbitelem in orbit:  # loop through the elements in an orbit, drawing a dot and making a link
+         orbitcolor = orbitelem['color']
          url = urlbase
          #for arg, val in orbitelem['urlinfo'].iteritems():  # think this is an error
          for arg, val in orbitelem.iteritems():
