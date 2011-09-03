@@ -44,7 +44,7 @@ def poly_to_field_label(pol):
     
 def parse_field_string(F): # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
     if F=='Q': return '1.1.1.1'
-    fail_string = str(F + ' is not a valid field label or string')
+    fail_string = str(F + ' is not a valid field label or name or polynomial, or is not ')
     if F[0]=='Q':
         if F[1:5] in ['sqrt','root']:
             try:
