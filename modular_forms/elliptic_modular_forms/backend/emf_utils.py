@@ -157,3 +157,79 @@ def ajax_later(callback,*arglist,**kwds):
 
 
 
+class EmfTable(object):
+    def __init__(self,db_name,skip=[0,0],limit=[6,10],keys=['Level','Eigenvalue'],weight=0):
+        r"""
+        Table of HOlomorphic modular forms spaces.
+        Skip tells you how many chunks of data you want to skip (from the geginning) and limit tells you how large each chunk is.
+        """
+        self.keys=keys
+        self.skip=skip
+        self.limit=limit
+        self.db = connect_db()
+        self.metadata=[]
+        self.title=''
+        self.cols=[]
+        self.get_collections()
+        self.table=[]
+        self.wt=weight
+
+    def shift(self,i=1,key='Level'):
+        if not key in self._keys:
+            logger.warning("{0} not a valid key in {1}".format(key,self._keys))
+        else:
+            ix = self._keys.index[key]
+            self.skip[ix]+=i
+
+    def get_collections(self):
+        cols = get_collection(self.collection)        
+        if not cols:
+            cols=list()
+            for c in self.db.collection_names():
+                if c<>'system.indexes' and c<>'metadata':
+                    print "cc=",c
+                cols.append(self.db[c])        
+        self.cols=cols
+
+    def get_metadata(self):
+        if not self.cols:
+            self.get_collections()
+        metadata=list()
+        for c in self.cols:
+            f=self.db.metadata.find({'c_name':c.name})
+            for x in f:
+                print "x=",x
+                metadata.append(x)
+        self.metadata=metadata
+        
+
+    def set_table(self):
+        logger.debug("skip= {0}".format(self.skip))
+        logger.debug("limit= {0}".format(self.limit))
+        self.table=[]
+        level_ll=(self.skip[self.keys.index('Level')])*self.limit[self.keys.index('Level')]
+        level_ul=(self.skip[self.keys.index('Level')]+1)*self.limit[self.keys.index('Level')]
+        ev_limit=self.limit[self.keys.index('Eigenvalue')]
+        ev_skip=self.skip[self.keys.index('Eigenvalue')]*ev_limit
+        for N in get_all_levels():
+            N=int(N)
+            if N<level_ll:
+                continue
+            if N>level_ul:
+                break
+            evs=[]
+            for c in self.cols:
+                finds=c.find({'Level':N,'Weight':self.wt}).sort('Eigenvalue',1).skip(ev_skip).limit(ev_limit);
+                for f in finds:
+                    _id = f['_id']
+                    R = f['Eigenvalue']
+                    url = url_for('mwf.render_one_maass_waveform',objectid=str(_id),db=c.name)
+                    evs.append([R,url,c.name])
+            evs.sort()
+            # If we have too many we delete the 
+            while len(evs)>ev_limit:
+                t=evs.pop()
+                logger.debug("removes {0}".format(t))
+            #logger.debug("found eigenvalues in {0} is {1}".format(c.name,evs))
+            self.table.append({'N':N,'evs':evs})
+        

@@ -12,13 +12,20 @@
 </div>
 {% endif %}
 
-<h1>Modular Forms</h1>
-<ul>
-  <li><a href="{{ url_for('emf.render_elliptic_modular_forms') }}">Elliptic Modular Forms</a>{{KNOWL('mf.emf',title='Elliptic Modular Forms') }}</li>
-<li><a href="{{ url_for('hilbert_modular_form_render_webpage') }}">Hilbert Modular Forms</a> {{KNOWL('mf.hilbert',title='Hilbert Modular Forms') }}</li>
-  <li><a href="{{ url_for('mwf.render_maass_waveforms') }}">Maass Forms on \(\mathrm{GL}_{2}(\mathbb{Q}) \)</a>{{KNOWL('mf.maassf.mwf',title='Maass Forms over GL_2(Q)') }}</a></li>
-  <li><a href="{{ url_for('mwfp.render_picard_maass_forms') }}">Maass Forms on the Picard group \(\mathrm{SL}_{2}(\mathbb{Z}[i])\)</a>{{KNOWL('mf.maassf.picard',title='Maass Forms over GL_2(Q)') }}</a></li>
-<li><a href="{{ url_for('ModularForm_GSp4_Q_top_level') }}">Siegel modular forms</a> {{KNOWL('mf.siegel',title='Siegel Modular Forms') }} </li>
+<p>
+<a href="{{ url_for('emf.render_elliptic_modular_forms') }}">Classical Holomorphic (Elliptic) Modular Forms</a>
+</p>
+<p>
+<a href="{{ url_for('hilbert_modular_form_render_webpage') }}">Hilbert Modular Forms</a>
+</p>
+<p>
+<a href="{{ url_for('mwf.render_maass_waveforms') }}">Maass Forms on \(\mathrm{GL}_{2}(\mathbb{Q}) \)</a>
+</p>
+<p>
+<a href="{{ url_for('mwfp.render_picard_maass_forms') }}">Maass Forms on the Picard group \(\mathrm{SL}_{2}(\mathbb{Z}[i])\)</a>
+</p>
+<p><a href="{{ url_for('ModularForm_GSp4_Q_top_level') }}">Siegel Modular Forms</a> 
+</p>
 
 </ul>
 

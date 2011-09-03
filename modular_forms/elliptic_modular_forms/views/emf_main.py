@@ -18,7 +18,6 @@ Main file for viewing elliptical modular forms.
 
 AUTHOR: Fredrik Strömberg
 
-
 """
 from flask import render_template, url_for, request, redirect, make_response,send_file
 import flask
@@ -30,8 +29,9 @@ from  sage.modular.dirichlet import DirichletGroup
 from base import app, db
 from modular_forms.elliptic_modular_forms.backend.web_modforms import WebModFormSpace,WebNewForm
 from modular_forms.elliptic_modular_forms.backend.emf_core import * #html_table
+from modular_forms.elliptic_modular_forms.backend.emf_utils import * #html_table
 from modular_forms.elliptic_modular_forms.backend.plot_dom import * #html_table
-from emf_utils import *
+#from emf_utils import *
 #from modular_forms import mf
 from modular_forms.elliptic_modular_forms import EMF, emf_logger, emf
 logger = emf_logger
@@ -50,16 +50,11 @@ k_max_db = 300000
 
 _verbose = 0
 
-#from jinja2 import Environment
-#emf_logger.debug("EN_V path: %s" % app.jinja_loader.searchpath)
-l=app.jinja_env.list_templates()
+#l=app.jinja_env.list_templates()
 #################
 # Top level
 #################
 
-#def render_elliptic_modular_form():#
-#       #return render_webpage(**request.args)
-#       return elliptic_modular_forms(**request.args)
 ###########################################
 # Search / Navigate
 ###########################################
@@ -69,8 +64,6 @@ def render_elliptic_modular_forms():
     info = get_args()
     if info.has_key('download'):
         return get_downloads(info)
-    #emf_logger.debug("MODULES:%s"%app.modules)
-    #emf_logger.debug("EN_V path:%s"%app.modules['cmf'].jinja_loader.searchpath)
     emf_logger.debug("args=%s"%request.args)
     emf_logger.debug("method=%s"%request.method)
     emf_logger.debug("req.form=%s"%request.form)
@@ -109,12 +102,9 @@ def render_elliptic_modular_forms():
         emf_logger.debug("label=%s"%label)
         emf_logger.debug("level=%s"%level)
     emf_logger.debug("HERE::::::::::::::::::: %s %s %s %s" % (level,weight,character,label))
-
     # we see if we have submitted parameters
     if level and weight and character<>'' and label:
-        #return redirect(url_for("render_one_elliptic_modular_form", level,weight,character,label))
         info['level']=level; info['weight']=weight; info['label']=label; info['character']=character
-        emf_logger.debug("WE ARE HERE!")
         return redirect(url_for("emf.render_one_elliptic_modular_form", level=level, weight=weight,character=character,label=label))
     if level and weight and character:
         info['level']=level; info['weight']=weight; info['label']=label; info['character']=character
@@ -132,9 +122,7 @@ def render_elliptic_modular_forms():
     #if request.method == 'GET':
     emf_logger.debug("to do navigation!")
     return render_elliptic_modular_form_navigation_wp(**info) #request.args)
-    #else:
-    #    emf_logger.debug("to do navigation!")
-    #    return render_elliptic_modular_form_navigation_wp(**info) #request.form)  
+
 
 
 #@emf.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<label>/")
@@ -256,7 +244,6 @@ def render_elliptic_modular_form_navigation_wp(**args):
         is_set['weight']=True
     if level<>0:
         is_set['level']=True
-        
     if(info.has_key('get_table')): # we want a table
         info = set_table(info,is_set)
         page = "emf_table.html"
@@ -264,12 +251,9 @@ def render_elliptic_modular_form_navigation_wp(**args):
         return render_template(page, info=info,title=title)
     ## This is the list of weights we initially put on the form
     weight = int (weight)
-    #url1 = ajax_url(ajax_more2, print_list_of_characters, *arg_list1, inline=True, text='List Characters')
     info['list_chars']=ajax_once(print_list_of_characters,text='print list of characters!')
-    ## t = """| <a onclick="$('#%(nonce)s').load('%(url2)s', function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'%(nonce)s']);}); return false;" href="#">%(text1)s</a>]</span>""" % locals()
     if level>0:
         info['geometric'] = print_geometric_data_Gamma0N(level)
-        #if info.has_key('plot'):
         info['fd_plot'] = render_fd_plot(level,info)
     title = "Holomorphic Cusp Forms"
     bread =[('Modular Forms',url_for('modular_form_toplevel'))]

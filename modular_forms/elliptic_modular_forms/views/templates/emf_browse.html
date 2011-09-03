@@ -23,24 +23,18 @@ $("#plot").load(function() {
 </div>
 {% endif %}
 
-<table>
-  <tr>
-    <td>
-      <h3>Browse spaces of {{ KNOWL('cmf.newform',title='new') }} {{ KNOWL('cmf.cuspform',title='cusp forms') }} {{info.browse_type | safe}}</h3>
+      <h1>{{ KNOWL('cmf.newform',title='Newforms') }} {{info.browse_type | safe}}</h1>
       
       {{info.list_spaces| safe }}
-    </td>
-  </tr>
-</table>
-<br>
+
 <table>
   <tr>
     {% if info.geometric is defined %}
     <td valign="top">
       {% if info.level > 1 %}
-      <h3>Geometric information for \(\Gamma_{0}({{ info.level}})\)</h3>
+      <h2>Geometric information for \(\Gamma_{0}({{ info.level}})\)</h2>
       {% else %}
-      <h3>Geometric information for \(PSL_{2}(\mathbb{Z}) \)</h3>
+      <h2>Geometric information for \(PSL_{2}(\mathbb{Z}) \)</h2>
       {% endif %}
       {{ info.geometric | safe }}
     </td>
