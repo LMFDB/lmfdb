@@ -2,26 +2,30 @@
 {% block content %}
 
 
+<p>
+A number field is a field which is an extension of finite degree of the field $\mathbb{Q}$  of rational numbers.
+</p>
+
 <h3> Browse </h3>
 
 <ul>
 <li>
-By degree:
+By {{KNOWL('NF.degree')}}:
 {% for r in info.degree_list: %}
 <a href="?degree={{r}}">{{r}}</a>&nbsp;&nbsp;
 {% endfor %}
 <li>
-By discriminant range: 
+By {{KNOWL('NF.discriminant')}} range: 
 {% for r in info.discriminant_list: %}
 <a href="?discriminant={{r}}">{{r}}</a>&nbsp;&nbsp;
 {% endfor %}
 <li>
-By signature: 
+By {{KNOWL('NF.signature')}}: 
 {% for t in info.signature_list: %}
 <a href="?signature={{t}}">{{t}}</a>&nbsp;&nbsp;
 {% endfor %}
 <li>
-By class number: 
+By {{KNOWL('NF.class_number')}}: 
 {% for r in info.class_number_list: %}
 <a href="?class_number={{r}}">{{r}}</a>&nbsp;&nbsp;
 {% endfor %}
@@ -32,7 +36,7 @@ By class number:
 <form>
 <table border=0 cellpadding=5>
 <tr>
-<td>Label:&nbsp;&nbsp;</td>
+<td>Field:&nbsp;&nbsp;</td>
 <td><input type='text' name='natural' size=10 example='Qsqrt5'> </td>
 <td><button type='submit' name='search' value='Go'>Go</button></td>
 <td rowspan=3><span class="formexample"> either: a field label, e.g. 2.2.5.1 for
@@ -51,26 +55,26 @@ Enter values into one or more boxes to restrict the search.&nbsp;&nbsp;
 </p>
 <table border=0 cellpadding=5>
 <tr>
-<td align=left>Degree <td><input type='text' name='degree' size=10 example='3'> 
+<td align=left>{{KNOWL('NF.degree')}} <td><input type='text' name='degree' size=10 example='3'> 
 <span class="formexample"> e.g. 3</span></td>
 <td>
-<td align=left>Signature <td><input type='text' name='signature' size=10 example='[1,1]'> 
+<td align=left>{{KNOWL('NF.signature')}} <td><input type='text' name='signature' size=10 example='[1,1]'> 
 <span class="formexample"> e.g. [1,1]</span></td>
 </tr>
 <tr>
-<td align=left>Discriminant 
-<td colspan=4><input type='text' name='discriminant' size=10 size=10 example='-1000--1'> 
-<span class="formexample"> e.g. -3, or a range such as 1000-2000 or -1000--1</span></td>
+<td align=left>{{KNOWL('NF.discriminant')}}
+<td colspan=4><input type='text' name='discriminant' size=10 size=10 example='-1000..-1'> 
+<span class="formexample"> e.g. -3, or a range such as 1000..2000 or 1000-2000 or -1000..-1</span></td>
 </tr>
 <tr>
-<td align=left>Class Number <td><input type='text' name='class_number' size=10 example='5'>
+<td align=left>{{KNOWL('NF.class_number')}} <td><input type='text' name='class_number' size=10 example='5'>
 <span class="formexample"> e.g. 5</span></td>
 <td>
-<td align=left>Class Group structure<td><input type='text' name='class_group' size=10 example='[2,2]'>
+<td align=left>{{KNOWL('NF.class_group')}} structure<td><input type='text' name='class_group' size=10 example='[2,2]'>
 <span class="formexample"> e.g. [], [3], or [2,2]</span></td>
 </tr>
 <tr>
-<td align=left>Galois Group <td><input type='text' name='galois_group' size=10 example='C5'>
+<td align=left>{{KNOWL('NF.galois_group')}} <td><input type='text' name='galois_group' size=10 example='C5'>
 <span class="formexample"> e.g. C5</span></td>
 <td>
 <td align=left>Unramified Primes <td><input type='text'

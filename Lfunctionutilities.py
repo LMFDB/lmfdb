@@ -135,4 +135,111 @@ def seriesvar(index,seriestype):
     else:
         return("")
 
+def lfuncDStex(L ,fmt):
+    """ Returns the LaTex for displaying the Dirichlet series of the L-function L.
+        fmt could be any of the values: "analytic", "langlands", "abstract"
+    """
+    
+    numperline = 3
+    numcoeffs=min(10,len(L.dirichlet_coefficients))
+    if L.selfdual:
+        numperline = 7
+        numcoeffs=min(20,len(L.dirichlet_coefficients))
+        ans=""
+    if fmt=="analytic" or fmt=="langlands":
+        ans="\\begin{align}\n"
+        ans=ans+L.texname+"="+seriescoeff(L.dirichlet_coefficients[0],0,"literal","",-6,5)+"\\mathstrut&"
+        for n in range(1,numcoeffs):
+            ans=ans+seriescoeff(L.dirichlet_coefficients[n],n+1,"series","dirichlet",-6,5)
+            if(n % numperline ==0):
+                ans=ans+"\\cr\n"
+                ans=ans+"&"
+        ans=ans+" + \\ \\cdots\n\\end{align}"
+
+    elif fmt=="abstract":
+       if L.Ltype=="riemann":
+        ans="\\begin{equation} \n \\zeta(s) = \\sum_{n=1}^{\\infty} n^{-s} \n \\end{equation} \n"
+
+       elif L.Ltype=="dirichlet":
+        ans="\\begin{equation} \n L(s,\\chi) = \\sum_{n=1}^{\\infty} \\chi(n) n^{-s} \n \\end{equation}"
+        ans = ans+"where $\\chi$ is the character modulo "+ str(L.charactermodulus)
+        ans = ans+", number "+str(L.characternumber)+"." 
+
+       else:
+        ans="\\begin{equation} \n "+L.texname+" = \\sum_{n=1}^{\\infty} a(n) n^{-s} \n \\end{equation}"
+    return(ans)
+
+#---------
+
+def lfuncEPtex(L,fmt):
+    """ Returns the LaTex for displaying the Euler product of the L-function L.
+        fmt could be any of the values: "abstract"
+    """
+    
+    ans=""
+    if fmt=="abstract":
+        ans="\\begin{equation} \n "+L.texname+" = "
+        if L.Ltype=="riemann":
+             ans= ans+"\\prod_p (1 - p^{-s})^{-1}"
+        elif L.Ltype=="dirichlet":
+             ans= ans+"\\prod_p (1- \\chi(p) p^{-s})^{-1}"
+
+        elif L.Ltype=="maass":
+            if L.group == 'GL2':
+                ans= ans+"\\prod_p (1- a(p) p^{-s} + p^{-2s})^{-1}"
+            elif L.group == 'GL3':
+                ans= ans+"\\prod_p (1- a(p) p^{-s} + \\overline{a(p)} p^{-2s} - p^{-3s})^{-1}"
+            else:
+                ans= ans+"\\prod_p \\ \\prod_{j=1}^{"+str(L.degree)+"} (1 - \\alpha_{j,p}\\,  p^{-s})^{-1}"
+                
+        elif L.langlands:
+                ans= ans+"\\prod_p \\ \\prod_{j=1}^{"+str(L.degree)+"} (1 - \\alpha_{j,p}\\,  p^{-s})^{-1}"
+          
+        else:
+            return("No information is available about the Euler product.")
+        ans=ans+" \n \\end{equation}"
+        return(ans)
+    else:
+        return("No information is available about the Euler product.")
+
+
+#---------
+
+
+def lfuncFEtex(L,fmt):
+    """ Returns the LaTex for displaying the Functional equation of the L-function L.
+        fmt could be any of the values: "analytic", "selberg"
+    """
+    
+    ans=""
+    if fmt=="analytic":
+        ans="\\begin{align}\n"+L.texnamecompleteds+"=\\mathstrut &"
+        if L.level>1:
+            ans+=latex(L.level)+"^{\\frac{s}{2}}"
+        for mu in L.mu_fe:
+           ans += "\Gamma_R(s"+seriescoeff(mu,0,"signed","",-6,5)+")"
+        for nu in L.nu_fe:
+           ans += "\Gamma_C(s"+seriescoeff(nu,0,"signed","",-6,5)+")"
+        ans += " \\cdot "+L.texname+"\\cr\n"
+        ans += "=\\mathstrut & "+seriescoeff(L.sign,0,"factor","",-6,5)
+        ans += L.texnamecompleted1ms+"\n\\end{align}\n"
+    elif fmt=="selberg":
+        ans+="("+str(int(L.degree))+","
+        ans+=str(int(L.level))+","
+        ans+="("
+        if L.mu_fe != []:
+            for mu in range(len(L.mu_fe)-1):
+                ans+=seriescoeff(L.mu_fe[mu],0,"literal","",-6,5)+", "
+                ans+=seriescoeff(L.mu_fe[-1],0,"literal","",-6,5)
+        ans = ans+":"
+        if L.nu_fe != []:
+            for nu in range(len(L.nu_fe)-1):
+                ans+=str(L.mu_fe[nu])+", "
+                ans+=str(L.nu_fe[-1])
+        ans+="), "
+        ans+=seriescoeff(L.sign, 0, "literal","", -6,5)
+        ans+=")"
+
+    return(ans)
+                       
 

@@ -1,16 +1,18 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<p>The database consists of fields from two sources:
-<ul>
+<p>The database consists of fields from three sources:
+<ol>
 <li>The PARI database from the Bordeaux PARI group
 <li>Additional totally real fields of degrees from 6 to 10 computed by
   John Voight.
-</ul>
+<li>Additional fields from John Jones's database (work in progress).
+</ol>
 </p>
 
+<h3>Details of the fields contained in the database</h3>
 <p>
-<ul>
+<ol>
 <li>PARI database discriminant ranges.  It is possible that the
   discriminant range depends further on the signature, but this is not
   shown here.
@@ -49,7 +51,8 @@
 <tr class="{{ row_class.next() }}"><td>10<td>\(1\)<td>\(7623696325213\)</tr>
 </table>
 </p>
-</ul>
+<li>Jones database additional fields (work in progress).
+</ol>
 </p>
 
 {% endblock %}

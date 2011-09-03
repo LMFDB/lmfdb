@@ -9,6 +9,8 @@ from sage.all import ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex
 
 from utils import ajax_more, image_src, web_latex, to_dict, parse_range, coeff_to_poly, pol_to_html
 
+NF_credit = 'the PARI group,  J. Voight and J. Jones'
+
 def field_pretty(field_str):
     d,r,D,i = field_str.split('.')
     if d == '1':  # Q
@@ -24,9 +26,16 @@ def field_pretty(field_str):
 #    TODO:  pretty-printing of more fields of higher degree
 
 def poly_to_field_label(pol):
-    R = pol.parent()
-    pol = R(pari(pol).polredabs())
-    query = {'degree':pol.degree(), 'coefficients':[int(c) for c in pol.coeffs()]}
+    try:
+        pol=PolynomialRing(QQ,'x')(str(pol))
+        pol *= pol.denominator()
+        R = pol.parent()
+        pol = R(pari(pol).polredabs())
+    except:
+        return None
+    coeffs = [int(c) for c in pol.coeffs()]
+    d = int(pol.degree())
+    query = {'degree': d, 'coefficients': coeffs}
     import base
     C = base.getDBConnection()
     one = C.numberfields.fields.find_one(query)
@@ -37,7 +46,7 @@ def poly_to_field_label(pol):
     
 def parse_field_string(F): # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
     if F=='Q': return '1.1.1.1'
-    fail_string = str(F + ' is not a valid field label or string')
+    fail_string = str(F + ' is not a valid field label or name or polynomial, or is not ')
     if F[0]=='Q':
         if F[1:5] in ['sqrt','root']:
             try:
@@ -69,11 +78,8 @@ def parse_field_string(F): # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
     F=F.replace('X','x')
     if 'x' in F:
         F=F.replace('^','**')
-        try:
-            pol=PolynomialRing(ZZ,'x')(str(F))
-        except ValueError:
-            return fail_string
-        F = poly_to_field_label(pol)
+        print F
+        F = poly_to_field_label(F)
         if F:
             return F
         return fail_string
@@ -101,7 +107,6 @@ def set_sidebar(l):
 def render_groups_page():
     info = {}
     info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
-    credit = 'the PARI group and J. Voight'        
     def gcmp(x,y):
         a = cmp(x['label'][0],y['label'][0])
         if a: return a
@@ -110,25 +115,23 @@ def render_groups_page():
     groups.sort(cmp=gcmp)
     t = 'Galois group labels'
     bread = [('Number Fields', url_for("number_field_render_webpage")),('Galois group labels',' ')]
-    return render_template("number_field/galois_groups.html", groups=groups, info=info, credit=credit, title=t, bread=bread)
+    return render_template("number_field/galois_groups.html", groups=groups, info=info, credit=NF_credit, title=t, bread=bread)
 
 @app.route("/NumberField/FieldLabels")
 def render_labels_page():
     info = {}
     info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
-    credit = 'the PARI group and J. Voight'        
     t = 'Number field labels'
     bread = [('Number Fields', url_for("number_field_render_webpage")),('Number field labels','')]
-    return render_template("number_field/number_field_labels.html", info=info, credit=credit, title=t, bread=bread)
+    return render_template("number_field/number_field_labels.html", info=info, credit=NF_credit, title=t, bread=bread)
 
 @app.route("/NumberField/Discriminants")
 def render_discriminants_page():
     info = {}
     info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
-    credit = 'the PARI group and J. Voight'        
     t = 'Number Field Discriminant Ranges'
     bread = [('Number Fields', url_for("number_field_render_webpage")),('Discriminant ranges',' ')]
-    return render_template("number_field/discriminant_ranges.html", info=info, credit=credit, title=t, bread=bread)
+    return render_template("number_field/discriminant_ranges.html", info=info, credit=NF_credit, title=t, bread=bread)
 
 @app.route("/NumberField")
 def number_field_render_webpage():
@@ -137,19 +140,18 @@ def number_field_render_webpage():
     sig_list = sig_list[:10]
     if len(args) == 0:      
         discriminant_list_endpoints = [-10000,-1000,-100,0,100,1000,10000]
-        discriminant_list = ["%s-%s" % (start,end-1) for start, end in zip(discriminant_list_endpoints[:-1], discriminant_list_endpoints[1:])]
+        discriminant_list = ["%s..%s" % (start,end-1) for start, end in zip(discriminant_list_endpoints[:-1], discriminant_list_endpoints[1:])]
         info = {
         'degree_list': range(1,11),
         'signature_list': sig_list, 
-        'class_number_list': range(1,6)+['6-10'],
+        'class_number_list': range(1,6)+['6..10'],
         'discriminant_list': discriminant_list
     }
-        credit = 'the PARI group and J. Voight'        
         t = 'Number Fields'
         bread = [('Number Fields', url_for("number_field_render_webpage"))]
         info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
 
-        return render_template("number_field/number_field_all.html", info = info, credit=credit, title=t, bread=bread)
+        return render_template("number_field/number_field_all.html", info = info, credit=NF_credit, title=t, bread=bread)
     else:
         return number_field_search(**args)
 
@@ -386,7 +388,7 @@ def render_field_webpage(args):
     if data is None:
         return "No such field: " + label + " in the database"  
     info = {}
-    credit = 'the PARI group and J. Voight'        
+
     try:
         info['count'] = args['count']
     except KeyError:
@@ -395,6 +397,9 @@ def render_field_webpage(args):
     D = data['discriminant']
     h = data['class_number']
     data['galois_group'] = str(data['galois_group'][3])
+    data['class_group_invs'] = data['class_group']
+    if data['class_group_invs']==[]:
+        data['class_group_invs']='Trivial'
     data['class_group'] = str(AbelianGroup(data['class_group']))
     sig = data['signature']
     D = ZZ(data['discriminant'])
@@ -417,11 +422,11 @@ def render_field_webpage(args):
     info.update({
         'label': field_pretty(label),
         'polynomial': web_latex(K.defining_polynomial()),
+        'ram_primes': ram_primes,
         'integral_basis': web_latex(K.integral_basis()),
         'regulator': web_latex(reg),
         'unit_rank': unit_rank,
         'root_of_unity': web_latex(UK.torsion_generator()),
-#        'fund_units': web_latex(UK.fundamental_units()),
         'fund_units': ',&nbsp; '.join([web_latex(u) for u in UK.fundamental_units()]),
         'Gorder': Gorder, 'Gsign': Gsign, 'Gab': Gab
         })
@@ -433,8 +438,6 @@ def render_field_webpage(args):
     bread = [('Number Fields', url_for("number_field_render_webpage")),('%s'%info['label'],' ')]
     t = "Number Field %s" % info['label']
 
-    credit = 'the PARI group and J. Voight'        
-
     properties = ['<br>']
     properties.extend('<table>')
     properties.extend('<tr><td align=left><b>Degree:</b><td align=left> %s</td>'%data['degree'])
@@ -443,11 +446,15 @@ def render_field_webpage(args):
     if npr==1:
         properties.extend('<tr><td align=left><b>Ramified prime:</b><td align=left>%s</td>'%ram_primes)
     else:
-        properties.extend('<tr><td align=left><b>Ramified primes:</b><td align=left>%s</td>'%ram_primes)
+        if npr==0:
+            properties.extend('<tr><td align=left><b>Ramified primes:</b><td align=left>%s</td>'%"None")
+        else:
+            properties.extend('<tr><td align=left><b>Ramified primes:</b><td align=left>%s</td>'%ram_primes)
     properties.extend('<tr><td align=left><b>Class number:</b><td align=left>%s</td>'%data['class_number'])
+    properties.extend('<tr><td align=left><b>Class group:</b><td align=left>%s</td>'%data['class_group_invs'])
     properties.extend('<tr><td align=left><b>Galois group:</b><td align=left>%s</td>'%data['galois_group'])
     properties.extend('</table>')
-    return render_template("number_field/number_field.html", info = info, properties=properties, credit=credit, title = t, bread=bread)
+    return render_template("number_field/number_field.html", info = info, properties=properties, credit=NF_credit, title = t, bread=bread)
 
 def format_coeffs(coeffs):
     return pol_to_html(str(coeff_to_poly(coeffs)))
@@ -466,7 +473,7 @@ def number_fields():
 def by_label(label):
     return render_field_webpage({'label' : label})
 
-def parse_list(L):
+def parse_list(L):  
     return [int(a) for a in str(L)[1:-1].split(',')]
     # return eval(str(L)) works but using eval() is insecure
 
@@ -485,7 +492,9 @@ def number_field_search(**args):
                 if field == 'galois_group':
                     query[field] = complete_group_code(info[field])
                 else:
-                    query[field] = parse_range(info[field])
+                    ran = info[field]
+                    ran = ran.replace('..','-')
+                    query[field] = parse_range(ran)
     if info.get('ur_primes'):
         ur_primes = [int(a) for a in str(info['ur_primes']).split(',')]
     else:

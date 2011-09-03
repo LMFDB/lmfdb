@@ -2,31 +2,59 @@
 
 
 {% block content %}
-<!--    <div id="header">
-        <div class="logo">
-            <a href="/Character/Dirichlet">{{ info.objecttitle }} home</a>
-        </div>
-        <div class="banner">
-            <span>The logo of the portal could go here... </span>
-        </div>
-    </div>
-    <div id="Content">
-        <h1>
-            {{ info.title }}
-        </h1>-->
-        <!--{{ info.modulus_list|safe }}-->
 
-<table align="left" cellpadding="4">
-<tr>
-{% for r in range(info.modulus_start,info.modulus_end+1) %}
-<td><a href="modulus{{r}}.1">{{r}}</a></td>
-{% if loop.index%20 == 0 %}
-</tr>
-<tr>
-{% endif %}
-{% endfor %}
+<style>
+.chi {
+    padding: 5px 5px;
+    width: 2em;
+    float: left;
+    display: inline;
+}
+.chi a { display: inline; }
+.primitive {
+  color:green;
+}
+.nonprimitive {
+    color:blue;
+}
+</style>
+
+<table>
+<thead align="left">
+    <tr>
+        <th>
+            <font color = "blue"> Non-primitive </font> characters.</br>
+            <font color = "green"> Primitive </font> characters. 
+        </th>
+    <tr/>
+</thead>
 </table>
+<br/>
 
+<div>
+<table class="ntdata">
+    <thead align="center">
+    <tr>
+        <th>Modulus</th>
+        <th>Characters</th>
+    </tr>
+</thead>
+<tbody>
+    {% for line in info.contents %}
+    <tr><td align="center" style="4em"> \( {{ line[0] }} \)</td>
+    <td>
+        {% for chi in line[1] %}
+        <div class="chi">
+            <!--<a class="{% if chi[1] -%}primitive{%- else -%}nonprimitive{%- endif %}"  href="{{ line[0] }}/{{chi[0]}}">\(\chi_{ {{chi[0]}} }\)</a>-->
+            <a href="{{ line[0] }}/{{chi[0]}}">{% if chi[1] %}<font color="green">{% else %}<font color="blue">{% endif %}\(\chi_{ {{chi[0]}} }\)</font></a>
+            
+       </div>
+    {% endfor %}
+    </td></tr>
+{% endfor %}
+<tbody>
+</table>
+</div>
 
 {% endblock %}
 

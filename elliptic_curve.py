@@ -117,11 +117,31 @@ def elliptic_curve_search(**args):
     if 'optimal' in info:
         query['number'] = 1
     info['query'] = query
+
+    count_default=100
+    if info.get('count'):        
+        try:
+            count = int(info['count'])
+        except:
+            count = count_default
+    else:
+        info['count'] = count_default
+        count = count_default
+
     res = (base.getDBConnection().ellcurves.curves.find(query)
         .sort([('conductor', ASCENDING), ('iso', ASCENDING), ('number', ASCENDING)])
-        .limit(500)) # TOOD: pages
+        .limit(count)) # TOOD: pages
+    nres = res.count()
     info['curves'] = res
     info['format_ainvs'] = format_ainvs
+    info['number'] = nres
+    if nres==1:
+        info['report'] = 'unique match'
+    else:
+        if nres>count:
+            info['report'] = 'displaying first %s of %s matches'%(count,nres)
+        else:
+            info['report'] = 'displaying all %s matches'%nres
     credit = 'John Cremona'
     t = 'Elliptic Curves'
     bread = [('Elliptic Curves', url_for("rational_elliptic_curves")),

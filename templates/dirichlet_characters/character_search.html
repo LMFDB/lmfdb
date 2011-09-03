@@ -38,7 +38,7 @@
 {% if info.characters[j].is_primitive() %}
 <td align=center><a href="/Character/Dirichlet/{{info.characters[j].modulus()}}/{{info.number[j]}}">{{info.texname[j]}}</a>
 {% else %}
-<td align=center><a href="/Character/Dirichlet/{{info.characters[j].modulus()}}/{{info.number[j]}}"><font color="red">{{info.texname[j]}}</font></a>
+<td align=center><a href="/Character/Dirichlet/{{info.characters[j].modulus()}}/{{info.number[j]}}"><font color="blue">{{info.texname[j]}}</font></a>
 {% endif %}
 </td>
 <td align=center><a href="/Character/Dirichlet/?modulus={{info.characters[j].modulus()}}&conductor={{info.conductor}}&order={{info.order}}&parity={{info.parity}}">{{info.characters[j].modulus()}}</a></td>

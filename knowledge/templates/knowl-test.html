@@ -3,6 +3,17 @@
 {% block content %}
 <h1>Title {{ KNOWL("test.1") }}</h1>
 
+<h2>Testing KNOWL inside a table td</h2>
+
+<table>
+<tr><th>table th</th><th>th 2</th></tr>
+<tr><td>table td {{ KNOWL('test.knowlparam') }}</td><td>x</td></tr>
+<tr><td style="border: 1px solid pink;" colspan="2"><div>knowlspot</div></td></tr>
+<tr><td>another row</td><td>y</td></tr>
+</table>
+
+<div>div after the table</div>
+
 <h2>Testing KNOWL_LINK /w Parameters</h2>
 
 <div>Linking to Knowl with parameters x=42 and yy="Number Theory": 
