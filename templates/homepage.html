@@ -13,6 +13,10 @@
          {% endif %}
       </div>
       <div class="topright">
+          {% if user_is_admin -%}
+            <a href="{{ url_for('users.register') }}">Registertokens</a>
+            &middot;
+          {% endif %}
           {% if user_is_authenticated -%}
             <a href="{{ url_for('users.info') }}">{{ username }}</a> 
             &middot;

@@ -8,7 +8,7 @@ ASC = pymongo.ASCENDING
 import flask
 from functools import wraps
 from base import app, getDBConnection
-from flask import render_template, request, abort, Blueprint, url_for
+from flask import render_template, request, abort, Blueprint, url_for, make_response
 from flaskext.login import login_required, login_user, current_user, logout_user
 
 login_page = Blueprint("users", __name__, template_folder='templates')
@@ -148,17 +148,22 @@ def register_new():
   return "You have to contact one of the Admins: %s" % admins
 
 @login_page.route("/register/new")
+@login_page.route("/register/new/<int:N>")
 @admin_required
-def register():
+def register(N = 10):
+  N = 100 if N > 100 else N
   from datetime import datetime, timedelta
   now    = datetime.utcnow()
   tdelta = timedelta(days=1)
   exp    = now + tdelta
   import random
-  token  = str(random.randrange(1e20,1e21))
-  get_user_token_coll().save({'_id' : token, 'expire':exp})
-  url    = url_for(".register_token", token = token)
-  return '<a href="%s%s">%s</a>' % (base_url, url, token)
+  tokens = [ str(random.randrange(1e20,1e21)) for _ in range(N) ]
+  for t in tokens:
+    get_user_token_coll().save({'_id' : t, 'expire':exp})
+  urls   = [ "%s%s" % (base_url, url_for(".register_token", token = _)) for _ in tokens ]
+  resp = make_response('\n'.join(urls))
+  resp.headers['Content-type'] = 'text/plain'
+  return resp
 
 def delete_old_tokens():
   from datetime import datetime, timedelta
