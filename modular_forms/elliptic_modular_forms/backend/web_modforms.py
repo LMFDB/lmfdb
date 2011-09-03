@@ -1038,17 +1038,21 @@ class WebNewForm(SageObject):
             if(Q==1):
                 continue
             if(gcd(Q,ZZ(self.level()/Q))==1):
+                emf_logger.debug("Q={0}".format(Q))
+                #M=self._f.atkin_lehner_operator(ZZ(Q)).matrix()
+
+                M=self._f._compute_atkin_lehner_matrix(ZZ(Q))
                 try:
-                    #M=self._f.atkin_lehner_operator(ZZ(Q)).matrix()
-                    M=self._f._compute_atkin_lehner_matrix(ZZ(Q)).matrix()
                     ev = M.eigenvalues()
-                    if len(ev)>1:
-                        if len(set(ev))>1:
-                            raise ArithmeticError,"Should be one Atkin-Lehner eigenvalue. Got: %s " % ev
-                    res[Q]=ev[0]
-                    #res[Q]=self._f.atkin_lehner_eigenvalue(ZZ(Q))
                 except:
-                    pass
+                    emf_logger.critical("Could not get Atkin-Lehner eigenvalues!")
+                    self._atkin_lehner_eigenvalues={}
+                    return {}
+                emf_logger.debug("eigenvalues={0}".format(ev))
+                if len(ev)>1:
+                    if len(set(ev))>1:
+                        emf_logger.critical("Should be one Atkin-Lehner eigenvalue. Got: {0}".format(ev))
+                res[Q]=ev[0]
         self._atkin_lehner_eigenvalues=res
         return res
 

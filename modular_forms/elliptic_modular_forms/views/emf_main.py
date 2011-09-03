@@ -236,6 +236,8 @@ def render_elliptic_modular_form_navigation_wp(**args):
     level  = _my_get(info,'level', 0,int)
     weight = _my_get(info,'weight', 0,int)
     label  = info.get('label', '')
+    disp = ClassicalMFDisplay('modularforms')
+    
     if(info.has_key('plot') and level <> None):
         return render_fd_plot(level,info)
     is_set=dict()
@@ -257,6 +259,9 @@ def render_elliptic_modular_form_navigation_wp(**args):
         info['fd_plot'] = render_fd_plot(level,info)
     title = "Holomorphic Cusp Forms"
     bread =[('Modular Forms',url_for('modular_form_toplevel'))]
+    disp.set_table()
+    info['browse_table']=disp._table
+
     return render_template("emf_navigation.html", info=info,title=title,bread=bread)
 
 

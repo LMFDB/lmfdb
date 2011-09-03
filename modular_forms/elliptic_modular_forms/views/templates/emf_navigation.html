@@ -90,6 +90,36 @@ function set_value(id,val) {
     <td>
       <form name="browse" method = "get" action="{{url_for('.render_elliptic_modular_forms')}}">
 	<h1>Browse spaces of cuspforms</h1>
+        {% if info.browse_table.rows is defined %}
+        {% set table = info.browse_table %}
+        {% set rows = info.browse_table.rows %}
+        {% set row_class = cycler('odd', 'even') %}
+        {% set row_head = cycler(table.row_heads) %}
+        <table class="ntdata" border="1">
+          <thead>
+            <tr>
+              <td></td>
+              {% for N in table.col_heads  %}
+              <td>{{N}}</td>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows  %}
+            <tr>
+              <td>
+                {{ row.0.0 }}
+              </td>
+              {% for cell in row  %}
+              <td>
+                <a style="display:inline" href="{{cell.url}}">{{ cell.k }}: {{cell.N }}: {{cell.dim}}</a>
+              </td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% endif %}
 	<input type="hidden" name="weight" value=""/>
 	<input type="hidden" name="level" value=""/>
 	<table width="100%">

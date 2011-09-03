@@ -25,6 +25,7 @@ from flask import  jsonify
 from utils import *
 from modular_forms.elliptic_modular_forms import EMF,emf, emf_logger
 logger = emf_logger
+from sage.all import dimension_new_cusp_forms,vector,dimension_modular_forms,dimension_cusp_forms,is_odd
 
 def ajax_more2(callback, *arg_list, **kwds):
     r"""
@@ -156,80 +157,77 @@ def ajax_later(callback,*arglist,**kwds):
         return jsonify(result=res)
 
 
+emf_dbname = 'modularforms'
 
-class EmfTable(object):
-    def __init__(self,db_name,skip=[0,0],limit=[6,10],keys=['Level','Eigenvalue'],weight=0):
+def connect_db():
+    import base
+    return base.getDBConnection()[emf_dbname]
+def connect_mf_db():
+    return 
+
+from modular_forms.backend import  ModularFormDisplay
+
+
+class ClassicalMFDisplay(ModularFormDisplay):
+
+    def __init__(self,dbname=''):
+        ModularFormDisplay.__init__(self,dbname)
+        
+    
+    def set_table(self,skip=[0,0],limit=[(2,12),(1,30)],keys=['Weight','Level'],character=0,dimension_fun=dimension_new_cusp_forms,title='Dimension of newforms'):
         r"""
-        Table of HOlomorphic modular forms spaces.
+        Table of Holomorphic modular forms spaces.
         Skip tells you how many chunks of data you want to skip (from the geginning) and limit tells you how large each chunk is.
+        INPUT:
+        - dimension_fun should be a function which gives you the desired dimensions, as functions of level N and weight k
+        - character = 0 for trivial character and 1 for Kronecker symbol.
+          set to 'all' for all characters.
         """
-        self.keys=keys
-        self.skip=skip
-        self.limit=limit
-        self.db = connect_db()
-        self.metadata=[]
-        self.title=''
-        self.cols=[]
-        self.get_collections()
-        self.table=[]
-        self.wt=weight
-
-    def shift(self,i=1,key='Level'):
-        if not key in self._keys:
-            logger.warning("{0} not a valid key in {1}".format(key,self._keys))
-        else:
-            ix = self._keys.index[key]
-            self.skip[ix]+=i
-
-    def get_collections(self):
-        cols = get_collection(self.collection)        
-        if not cols:
-            cols=list()
-            for c in self.db.collection_names():
-                if c<>'system.indexes' and c<>'metadata':
-                    print "cc=",c
-                cols.append(self.db[c])        
-        self.cols=cols
-
-    def get_metadata(self):
-        if not self.cols:
-            self.get_collections()
-        metadata=list()
-        for c in self.cols:
-            f=self.db.metadata.find({'c_name':c.name})
-            for x in f:
-                print "x=",x
-                metadata.append(x)
-        self.metadata=metadata
-        
-
-    def set_table(self):
-        logger.debug("skip= {0}".format(self.skip))
-        logger.debug("limit= {0}".format(self.limit))
-        self.table=[]
-        level_ll=(self.skip[self.keys.index('Level')])*self.limit[self.keys.index('Level')]
-        level_ul=(self.skip[self.keys.index('Level')]+1)*self.limit[self.keys.index('Level')]
-        ev_limit=self.limit[self.keys.index('Eigenvalue')]
-        ev_skip=self.skip[self.keys.index('Eigenvalue')]*ev_limit
-        for N in get_all_levels():
-            N=int(N)
-            if N<level_ll:
+        self._keys=keys
+        self._skip=skip
+        self._limit=limit
+        self._metadata=[]
+        self._title=''
+        self._cols=[]
+        self.table={}
+        logger.debug("skip= {0}".format(self._skip))
+        logger.debug("limit= {0}".format(self._limit))
+        il  = self._keys.index('Level')
+        iwt = self._keys.index('Weight')
+        level_len = self._limit[il][1]-self._limit[il][0]+1
+        level_ll=self._skip[il]*level_len+self._limit[il][0]
+        level_ul=self._skip[il]*level_len+self._limit[il][1]
+        wt_len = self._limit[iwt][1]-self._limit[iwt][0]+1
+        wt_ll=self._skip[iwt]*wt_len+self._limit[iwt][0]
+        wt_ul=self._skip[iwt]*wt_len+self._limit[iwt][1]
+        if level_ll<1:
+            level_l=1
+        #wt_limit= self._limit[iw]
+        #wt_skip = self._skip[iw]
+        #wt_ll   = wt_skip*wt_limit
+        #wt_ul   = (wt_skip+1)*wt_limit
+        self._table={}
+        self._table['rows']=[]
+        self._table['col_heads']=range(wt_ll,wt_ul+1)
+        self._table['row_heads']=range(level_ll,level_ul+1)
+        logger.debug("wt_range: {0} -- {1}".format(wt_ll,wt_ul))
+        logger.debug("level_range: {0} -- {1}".format(level_ll,level_ul))
+        for N in range(level_ll,level_ul+1):
+            if character ==0 and is_odd(k):
                 continue
-            if N>level_ul:
-                break
-            evs=[]
-            for c in self.cols:
-                finds=c.find({'Level':N,'Weight':self.wt}).sort('Eigenvalue',1).skip(ev_skip).limit(ev_limit);
-                for f in finds:
-                    _id = f['_id']
-                    R = f['Eigenvalue']
-                    url = url_for('mwf.render_one_maass_waveform',objectid=str(_id),db=c.name)
-                    evs.append([R,url,c.name])
-            evs.sort()
-            # If we have too many we delete the 
-            while len(evs)>ev_limit:
-                t=evs.pop()
-                logger.debug("removes {0}".format(t))
-            #logger.debug("found eigenvalues in {0} is {1}".format(c.name,evs))
-            self.table.append({'N':N,'evs':evs})
-        
+            row=[]
+            for k in range(wt_ll,wt_ul+1):
+                try:
+                    if character==1:
+                        x = kronecker_character_upside_down(N)
+                        d = dimension_fun(x)
+                    else:
+                        d = dimension_fun(N,k)
+                except:
+                    d = "?"
+                url = url_for('emf.render_elliptic_modular_form_browsing',level=N,weight=k)
+                
+                row.append({'N':N,'k':k,'url':url,'dim':d})
+            self._table['rows'].append(row)
+
+
