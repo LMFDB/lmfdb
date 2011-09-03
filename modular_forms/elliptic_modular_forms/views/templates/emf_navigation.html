@@ -95,12 +95,14 @@ function set_value(id,val) {
         {% set rows = info.browse_table.rows %}
         {% set row_class = cycler('odd', 'even') %}
         {% set row_head = cycler(table.row_heads) %}
+        ROW HEADS:{{ table.row_heads }}
+        COL HEADS:{{ table.col_heads }}
         <table class="ntdata" border="1">
           <thead>
             <tr>
               <td></td>
-              {% for N in table.col_heads  %}
-              <td>{{N}}</td>
+              {% for k in table.col_heads  %}
+              <td>{{k}}</td>
               {% endfor %}
             </tr>
           </thead>
