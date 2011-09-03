@@ -36,6 +36,10 @@ def index():
 def about():
     return render_template("about.html", title="About")
 
+@app.route("/acknowledgment")
+def acknowledgment():
+  return render_template("acknowledgment.html", title="Acknowledgment")
+
 def root_static_file(name):
     def static_fn():
        import os
