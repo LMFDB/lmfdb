@@ -95,7 +95,7 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, temp_args):
         return Lfunction_Maass( dbid = temp_args['id'], dbName = 'Lfunction', dbColl = 'LemurellMaassHighDegree')
 
     elif arg1 == 'NumberField':
-        return Lfunction_Dedekind( label = str(arg2))
+        return DedekindZeta( label = str(arg2))
 
     elif arg1 == 'Lcalcurl':
         return Lfunction( Ltype = arg1, url = arg2)

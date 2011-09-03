@@ -31,6 +31,10 @@ class LfunctionTest(LmfdbTest):
     L = self.tc.get('/L/ModularForm/GL4/Q/maass?id=GL4Maass_1_17.6101_7.81101_-6.0675')
     assert 'Functional' in L.data
 
+  def test_Ldedekind(self):
+    L = self.tc.get('/L/NumberField/3.1.23.1')
+    assert 'Functional' in L.data
+
   def test_Lmain(self):
     L = self.tc.get('/L')
     assert 'Riemann' in L.data
