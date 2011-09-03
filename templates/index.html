@@ -2,7 +2,7 @@
 {% block content %}
 
 <div class="announce">
-Welcome! The <b>L</b>-functions and <b>M</b>odular 
+Welcome! The <b>L</b>-function and <b>M</b>odular 
 <b>F</b>orms <b>D</b>ata<b>B</b>ase 
 project is a collaborative
 effort by Number Theorists to share, contextualize and improve data
@@ -65,19 +65,6 @@ and theorems.
  {% endif %}
 {% endif %}
 </ul>
-<h2>Documentation</h2>
-<ul>
-<li><a href="{{ url_for("upload.viewAll")}}">View uploaded data</a></li>
-{% if user.is_authenticated() %}
- <li><a href="{{ url_for("upload.index") }}">Upload data</a></li>
- {% if user.is_admin() %}
-  <li><a href="{{ url_for("upload.admin") }}">Moderate uploaded files</a></li>
- {% endif %}
-{% endif %}
-</ul>
-<h2>{{ KNOWL_LINK("wiki.knowl") }}</h2>
-
-
 
 {% if user_is_authenticated %}
 <h1>Raw</h1>

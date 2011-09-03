@@ -2,6 +2,9 @@
 
 {% block content %}
 {% from "knowl-defs.html" import knowlbar with context %}
+
+{{KNOWL("wiki.syntax",title="Syntax")}}
+
 {{ knowlbar() }}
 
 <script type="text/javascript" src="{{ url_for('static', filename='jquery.markitup.js')}}"></script>
@@ -9,11 +12,14 @@
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='markitup.css')}}" />
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='markdown.css')}}" />
 
+
 <script language="javascript">
 $(document).ready(function()	{
     $('#kcontent').markItUp(myMarkdownSettings);
 });
 </script>
+
+
 
 <form action="{{ url_for('.save_form') }}" method="POST" id=>
   <input type="hidden" name="id" value="{{ k.id }}"/>
@@ -31,6 +37,7 @@ $(document).ready(function()	{
       {{ k.quality }} <span style="margin-left: 50px;">change:</span>
       <select name="quality">
         <option value="">-- change --</option>
+        <option value="stub">Stub</option>
         <option value="beta">Beta</option>
         <option value="ok">Ok</option>
         <option value="reviewed">Reviewed</option>
