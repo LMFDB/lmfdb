@@ -46,7 +46,6 @@
         {% for chi in line[1] %}
         <div class="chi">
             <a href="{{ chi[0] }}/{{chi[1]}}">{% if chi[2] %}<font color="green">{% else %}<font color="blue">{% endif %}\(\chi_{ {{chi[1]}} } \pmod{ {{chi[0]}} }\)</font></a>
-            <!--<a class="{% if chi[2] -%}primitive{%- else -%}nonprimitive{%- endif %}"  href="{{ chi[0] }}/{{chi[1]}}">\(\chi_{ {{chi[1]}} } \pmod{ {{chi[0]}} }\)</a>-->
         </div>
     {% endfor %}
     </td></tr>

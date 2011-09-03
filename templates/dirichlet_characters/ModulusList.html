@@ -45,9 +45,7 @@
     <td>
         {% for chi in line[1] %}
         <div class="chi">
-            <!--<a class="{% if chi[1] -%}primitive{%- else -%}nonprimitive{%- endif %}"  href="{{ line[0] }}/{{chi[0]}}">\(\chi_{ {{chi[0]}} }\)</a>-->
             <a href="{{ line[0] }}/{{chi[0]}}">{% if chi[1] %}<font color="green">{% else %}<font color="blue">{% endif %}\(\chi_{ {{chi[0]}} }\)</font></a>
-            
        </div>
     {% endfor %}
     </td></tr>
