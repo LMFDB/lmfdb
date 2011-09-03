@@ -7,17 +7,50 @@ from sage.all_cmdline import *
 DATA = 'http://data.countnumber.de/Siegel-Modular-Forms/'
 
 
-def render_webpage(args = {}):
-    bread = [('Siegel modular forms', url_for( 'ModularForm_GSp4_Q_top_level'))]
+def __trace( page, args = {}):
+    """
+    Return the path leading to the queried page
+    in the form [(symbolic name 1, URL), (symbolic name 2, URL), ...]
+    """
+    parent = ''
+    page = args.get('page')
+    trace = [('Siegel modular forms', url_for( 'ModularForm_GSp4_Q_top_level'))]
+    if 'forms' == page:
+        trace += [( 'Spaces \(' + parent + '\)', \
+                        url_for( 'ModularForm_GSp4_Q_top_level', page=page, group=args.get('group')))]
+    elif 'basic' == page:
+        trace += [( 'Spaces \(' + parent + '\)', \
+                        url_for( 'ModularForm_GSp4_Q_top_level', page='forms', group=args.get('group')))]
+        trace += [( 'Basic Information', \
+                        url_for( 'ModularForm_GSp4_Q_top_level', page=page, group=args.get('group')))]
+    elif 'dimensions' == page:
+        trace += [( 'Spaces \(' + parent + '\)', \
+                        url_for( 'ModularForm_GSp4_Q_top_level', page='forms', group=args.get('group')))]
+        trace += [( 'Dimensions', \
+                        url_for( 'ModularForm_GSp4_Q_top_level', page=page, group=args.get('group')))]
+    elif 'specimen' == page:
+        trace += [( 'Spaces \(' + parent + '\)', \
+                        url_for( 'ModularForm_GSp4_Q_top_level', page='forms', group=args.get('group')))]
+        trace += [( 'Form', \
+                        url_for( 'ModularForm_GSp4_Q_top_level', page=page, group=args.get('group'), \
+                        orbit=args.get('orbit'), form=args.get('form')))]
+    return trace
+    
+
+def render_webpage( args = {}):
+    """
+    Configure and return a template for the Siegel modular forms pages.
+    """
+    info = dict(args)
+    info['learnmore'] = [ ('Siegel modular forms', 'http://en.wikipedia.org/wiki/Siegel_modular_form')]
 
     if len(args) == 0:
-        info = {}
         return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_navigation.html", \
                                    info = info, \
                                    title = 'Siegel Modular Forms of Degree 2', \
-                                   bread = bread)
+                                   bread = __trace( None))
 
-    info = dict(args)
+    # possible keys for the URL
     group = args.get('group')
     character = args.get('character')
     weight = args.get('weight')
@@ -26,17 +59,19 @@ def render_webpage(args = {}):
     page = args.get('page')
     orbit = args.get('orbit')
     weight_range = args.get('weight_range')
+
+    # set info
     info['group'] = group
     info['form'] = form
     info['orbit']= orbit
     info['level']= level
 
-    if args['group']:
-        
-        # Logic to set parameters depending on which group ---------
+    # Logic to set parameters depending on which group ---------
 
+    if args['group']:
         if 'Sp4Z' == args['group']:
             info['parent_as_tex'] = 'M_*\\big({\\rm Sp}(4,\\mathbb{Z})\\big)'
+            info['learnmore'] += [ ('Modular forms on \(\\text{Sp}(4,\\mathbb{Z})\)', url_for( 'ModularForm_GSp4_Q_top_level', group = group, page='basic'))]
             sage_group ='Sp(4,Z)';
             info['generators'] = 'smf.Igusa_generators'
         elif 'Gamma0_2' == args['group']:
@@ -53,6 +88,7 @@ def render_webpage(args = {}):
             sage_group ='Sp(4,Z)_2';
         elif 'Kp' == args['group']:
             info['parent_as_tex'] = 'S_*\\big(K(p)\\big)'
+            info['learnmore'] += [ ('Paramodular forms', 'http://math.lfc.edu/~yuen/paramodular/')]
             info['generators'] = 'smf.Kp_generators'
             sage_group ='K(p)';
         elif 'Sp8Z' == args['group']:
@@ -61,21 +97,7 @@ def render_webpage(args = {}):
         else:
             return render_template("ModularForm_GSp4_Q/None.html")
         
-        sidebar = [['\(' + info['parent_as_tex'] + '\)', \
-                    [ ('Basic information', url_for( 'ModularForm_GSp4_Q_top_level', group = group, page='basic')),\
-                      ('Available forms', url_for( 'ModularForm_GSp4_Q_top_level', group = group, page='forms')),\
-                      ('Dimensions', url_for( 'ModularForm_GSp4_Q_top_level', group = group, page='dimensions'))]]]
-#        info['special_side'] = sidebar[0]
-        
         # Logic to render pages ----------------
-
-        if page == 'basic':
-            bread += [(sidebar[0][0], sidebar[0][1][0][1])]
-            return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_basic.html", info = info, title = 'Basic information', sidebar = sidebar, bread = bread)
-
-        if page == 'gen_rel':
-            bread += [(sidebar[0][0], sidebar[0][1][1][1])]
-            return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_gen_rel.html", info = info, title = 'Generators and relations', sidebar = sidebar, bread = bread)
 
         if page == 'forms':
             try:
@@ -85,15 +107,18 @@ def render_webpage(args = {}):
                 forms_exist = True
             except (IOError, EOFError, KeyError ):
                 forms_exist = False
-            # order alphabetically and supress 0 dimension
             if True == forms_exist:
                 info['forms'] = [ (k,[(form,go[k][form]) for form in go[k]]) for k in go]
-            bread += [(sidebar[0][0], sidebar[0][1][2][1])]
-            return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_forms.html", \
-                                   info = info, \
-                                   title = 'Siegel modular forms in' + ' \(' + info['parent_as_tex'] + '\)', \
-                                   sidebar = sidebar, bread = bread)
+            return render_template( "ModularForm_GSp4_Q/ModularForm_GSp4_Q_forms.html", \
+                                        info = info, \
+                                        title = 'Siegel modular forms spaces \(' + info['parent_as_tex'] + '\)', \
+                                        bread = __trace( page, args))
 
+        if page == 'basic':
+            return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_basic.html", info = info, \
+                                       title = 'Siegel modular forms basic information', \
+                                       bread = __trace( page, args))
+        
         if page == 'dimensions':
             if not weight_range:
                 min_wt = 1; max_wt = 16
@@ -127,15 +152,14 @@ def render_webpage(args = {}):
             else:
                 info['table_headers'] = ["Weight", "Total", "Eisenstein", "Klingen", "Maass", "Interesting"]
             # The following should be changed to add any new groups implemented in the core
-            if (group == 'Sp4Z') or (group == 'Sp8Z'):
+            if group == 'Sp4Z':
                 info['dimensions'] = [ (k, siegel_core.dimension( k, sage_group)) for k in range(min_wt, max_wt+1)]
             elif group == 'Kp':
                 info['dimensions'] = [ (k, siegel_core.dimension( k, sage_group, tp = int(level))) for k in range(min_wt, max_wt+1)]
-            bread += [(sidebar[0][0], sidebar[0][1][3][1])]
-            return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_dimensions.html", \
-                                   info = info, \
-                                   title = 'Dimensions of subspaces of Siegel modular forms in ' + ' \(' + info['parent_as_tex'] + '\)', \
-                                   sidebar = sidebar, bread = bread)
+            return render_template( "ModularForm_GSp4_Q/ModularForm_GSp4_Q_dimensions.html", \
+                                        info = info, \
+                                        title = 'Siegel modular forms dimensions \(' + info['parent_as_tex'] + '\)', \
+                                        bread = __trace( page, args))
 
         if page == 'specimen':
             info['weight'] = weight
@@ -160,18 +184,14 @@ def render_webpage(args = {}):
 ##             info['friends'] = [ ('Spin L-function', url_for('not_yet_implemented')), \
 ##                                 ('Standard L-function', url_for('not_yet_implemented')), \
 ##                                 ('First Fourier-Jacobi coefficient', url_for('not_yet_implemented'))]
-            if group=="Kp":
-              info['learnmore'] = [ ('Poor-Yuen paramodular forms website', 'http://math.lfc.edu/~yuen/paramodular/')]
-##             else:
-##               info['learnmore'] = [ ('Siegel modular forms', url_for('not_yet_implemented'))]
-##             info['downloads'] = [ ('Fourier coefficients', f_url), ('Hecke eigenvalues', g_url)]
               
-            bread += [(sidebar[0][0], sidebar[0][1][0][1]), ( weight + '_' + form, url_for( 'ModularForm_GSp4_Q_top_level', group = group, page='specimen', orbit = orbit, form = form))]
-            return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_specimen.html", info = info,  title = 'Form ' + weight + '_' + form, sidebar = sidebar, bread = bread)            
+            return render_template( "ModularForm_GSp4_Q/ModularForm_GSp4_Q_specimen.html", \
+                                        info = info,  \
+                                        title = 'Siegel modular form ' + weight + '_' + form, \
+                                        bread = __trace( page, args))            
 
         else:
-            info = {}
-            return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_navigation.html", info = info, title = 'Collections of Siegel Modular Forms', bread = bread)
+            return render_webpage()
 
     else:
         return render_template("ModularForm_GSp4_Q/None.html")
