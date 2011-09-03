@@ -1,522 +1,664 @@
-import re
-import logging
-
-from flask import render_template, url_for, make_response, abort, redirect
+# -*- coding: utf-8 -*-
+import math
+from Lfunctionutilities import pair2complex, splitcoeff, seriescoeff
 from sage.all import *
-import tempfile, os
+import sage.libs.lcalc.lcalc_Lfunction as lc
+import re
 import pymongo
-from WebLfunction import *
-import LfunctionNavigationProcessing
-import LfunctionPageProcessing
-import LfunctionComp
-import LfunctionPlot
-from utils import to_dict
-#from elliptic_curve import by_cremona_label
-# just testing
-from base import app, getDBConnection
+import bson
+import utils
+from classical_modular_forms.backend.web_modforms import *
 
-##import upload2Db.py
+logger = utils.make_logger("LF")
 
-def getUploadedData() :
-  files = getDBConnection().upload.fs.files.find({"metadata.related_to": "/L-function/EllipticCurve/Q/11a"})
-  if files.count() > 0:
-    return {'data.tgz': 'Extra data'}
-  return {}
+##================================================================================
 
-@app.context_processor
-def ctx_knowledge():
-  return {'getUploadedData' : getUploadedData}
-
-cremona_label_regex = re.compile(r'(\d+)([a-z])+(\d*)')
-
-def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
-    args = request.args
-    temp_args = to_dict(args)
-    if len(args) == 0: 
-        if arg1 == None: # this means we're at the start page
-            info = set_info_for_start_page()
-            return render_template("LfunctionNavigate.html", info = info, title = 'L-functions', bread=info['bread'])
-        elif arg1.startswith("degree"):
-            degree = int(arg1[6:])
-            info = { "degree" : degree }
-            info["key"] = 777
-            info["bread"] =  [('L-functions', url_for("render_Lfunction")), ('Degree '+str(degree), '/L/degree'+str(degree))]
-            if degree == 1:
-                info["contents"] = [LfunctionPlot.getOneGraphHtmlChar(1,35,1,13)]
-                info['friends'] = [('Dirichlet Characters', '/Character/Dirichlet/')]
-            elif degree == 2:
-#                info["contents"] = [processEllipticCurveNavigation(args),"holomorphic here"]
-                info["contents"] = [processEllipticCurveNavigation(args), LfunctionPlot.getOneGraphHtmlHolo(1, 22, 2, 14)]
-            elif degree == 3 or degree == 4:
-                info["contents"] = LfunctionPlot.getAllMaassGraphHtml(degree)
-                
-            return render_template("DegreeNavigateL.html", info=info, title = 'Degree ' + str(degree)+ ' L-functions', bread = info["bread"])
-            
-        elif arg1 == 'custom': # need a better name
-            return "not yet implemented"
-            
-    # args may or may not be empty
-    # what follows are all things that need homepages
-
-    if arg1 == 'Riemann':
-        temp_args['type'] = 'riemann'
-    elif arg1 == 'Character' and arg2 == 'Dirichlet' and arg3 == '1' and arg4 == '0':
-        temp_args['type'] = 'riemann'
-    elif arg1 == 'Character' and arg2 == 'Dirichlet':
-        temp_args['type'] = 'dirichlet'
-        temp_args['charactermodulus'] = arg3
-        temp_args['characternumber'] = arg4 
-
-    elif arg1 == 'EllipticCurve' and arg2 == 'Q':
-        temp_args['type'] = 'ellipticcurve'
-        temp_args['label'] = str(arg3) 
-
-    elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic': # this has args: one for weight and one for level
-        temp_args['type'] = 'gl2holomorphic'
-        logging.info(temp_args)
-
-    elif arg1 == 'ModularForm' and arg2 == 'GL2'and arg3 == 'Q' and arg4 == 'maass':
-        temp_args['type'] = 'gl2maass'
+class Lfunction:
+    """Class representing a general L-function
+    It can be called with a dictionary of these forms:
     
-    elif arg1 == 'ModularForm' and arg2 == 'GSp4'and arg3 == 'Q' and arg4 == 'maass':
-        temp_args['type'] = 'sp4maass'
-        temp_args['source'] = args['source']
-
-    elif arg1 == 'ModularForm' and arg2 == 'GL4'and arg3 == 'Q' and arg4 == 'maass':
-        temp_args['type'] = 'sl4maass'
-        temp_args['source'] = args['source'] 
-
-    elif arg1 == 'ModularForm' and arg2 == 'GL3'and arg3 == 'Q' and arg4 == 'maass':
-        temp_args['type'] = 'sl3maass'
-        temp_args['source'] = args['source'] 
-
-    elif arg1 == 'NumberField':
-        temp_args['type'] = 'dedekind'
-        temp_args['label'] = str(arg2)
-        temp_args['source'] = ""  # it's a bug to require this to be defined
-
-
-    else: # this means we're somewhere that requires args: db queries, holomorphic modular forms, custom,  maass forms, and maybe some others, all of which require a homepage.  
-        return redirect(url_for("not_yet_implemented"))
-
-    L = WebLfunction(temp_args)
-    #return "23423"
-   
-    try:
-        logging.info(temp_args)
-        if temp_args['download'] == 'lcalcfile':
-            return render_lcalcfile(L)
-    except:
-        1
-        #Do nothing
-
-    info = initLfunction(L, temp_args, request)
-
-    # HSY: when you do "**dictionary" in a function call (at the very end),
-    # you 'unpack' it. that saves you all this "title = info['title']" nonsense ;)
-
-    return render_template('Lfunction.html', info=info, **info)
+    dict = { 'Ltype': 'lcalcurl', 'url': ... }  url is any url for an lcalcfile
+    dict = { 'Ltype': 'lcalcfile', 'filecontens': ... }  filecontens is the
+           contents of an lcalcfile
     
-                           # above's **info is equivalent to:
-
-                           #title   = info['title'],
-                           #bread   = info['bread'], 
-                           #properties2 = info['properties2'],
-                           #citation = info['citation'], 
-                           #credit   = info['credit'],
-                           #support  = info['support'])
-
-
-   # put different types of L-functions into here
-#    temp_args = {}
-#    info = {}
-#    for a in args:
-#        temp_args[a] = args[a]
-    #if temp_args.has_key('degree'):
-         #d = temp_args['degree']  
-         #info = { "degree" : int(d)}
-         #info["key"] = 777
-    #     return render_template("/lfunction_db/templates/list.html", info=info)
-#    if arg1 == 'Riemann':
-#        temp_args['type'] = 'riemann'
-#    elif len(args)==0 and arg1 == None: #this means I'm at the basic navigation page
-#        info = set_info_for_start_page()
-#        return render_template("LfunctionNavigate.html", info = info, title = 'L-functions')
-#    elif arg1 == 'Character' and arg2 == 'Dirichlet' and len(args)==0:
-#        info['title'] = 'Table of Dirichlet Characters'
-#        info['contents'] = processDirichletNavigation(args)
-#        return render_template("LfunctionTable.html",info=info,
-#                               title=info['title'])
-#    elif arg1 == 'Character' and arg2 == 'Dirichlet' and args['characternumber'] and args['charactermodulus']:
-#        temp_args['type'] = 'dirichlet'
-#    elif arg1 == 'EllipticCurve' and arg2 == 'Q' and arg3:
-#        temp_args['type'] = 'ellipticcurve'
-#        temp_args['label'] = str(arg3) 
-#    elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic':
-#        temp_args['type'] = 'gl2holomorphic'
-#
-#    elif arg1 and arg1.startswith("degree"):
-#        degree = int(arg1[6])
-#        info = { "degree" : degree }
-#        info["key"] = 777
-#        return render_template("DegreeNavigateL.html", info=info,
-#                               title = 'Degree ' + str(degree)+ ' L-functions')
-
-#David and Sally added the following case to handle Stefan's L-functions
-#    elif args['type'] and args['type'] == 'lcalcurl':
-#        temp_args['type'] = args['type']
-#        temp_args['url'] = args['url'] 
-#
-#
-#        #info = getNavigationFromDb(temp_args, arg1, arg2, arg3, arg4, arg5)
-#        #info = processNavigationContents(info, temp_args, arg1, arg2, arg3, arg4, arg5)
-#        
-#    #else:
-#    #    info = getNavigationFromDb(temp_args, arg1, arg2, arg3, arg4, arg5)
-#    #    info = processNavigationContents(info, args, arg1, arg2, arg3, arg4, arg5)
-#        
-
-
-
-def set_info_for_start_page():
-    tl = [{'title':'Riemann','link':'Riemann'},
-          {'title':'Dirichlet','link':'degree1#Dirichlet'}, {'title':'','link':''}] #make the degree 1 ones, should be url_fors
-
-    tt = {1: tl}
-
-    tl = [{'title':'Elliptic Curve','link':'degree2#EllipticCurve_Q'},
-          {'title':'Holomorphic SL2 Cusp Form', 'link':'degree2#GL2_Q_Holomorphic'},
-          {'title':'Maass GL2 Form', 'link':'degree2#GL2_Q_Maass'}]
-
-    tt[2] = tl
-
-    info = {
-        'degree_list': range(1,6),
-        #'signature_list': sum([[[d-2*r2,r2] for r2 in range(1+(d//2))] for d in range(1,11)],[]), 
-        #'class_number_list': range(1,11)+['11-1000000'],
-        #'discriminant_list': discriminant_list
-        'type_table': tt,
-        'l':[1,2] #just for testing
-    }
-    credit = ''
-    t = 'L-functions'
-    info['bread'] = [('L-functions', url_for("render_Lfunction"))]
-    info['learnmore'] = [('L-functions', 'http://wiki.l-functions.org/L-function')]
-#         explain=['Further information']
-#         explain.append(('Unique labels for number fields',url_for("render_labels_page")))
-#         explain.append(('Unique labels for Galois groups',url_for("render_groups_page")))
-#         explain.append(('Discriminant ranges (not yet implemented)','/'))
-#         sidebar = set_sidebar([explain])
-
-    return info
-#        return number_field_search(**args)
-
-
-def getNavigationFromDb(args, family, group, field, objectName, level):
-    logging.info("%s %s %s" % (family,group,field))
-    pageid = 'L'
-    if family:
-        pageid += '/' + family
-        if group:
-            pageid += '/' + group
-            if field:
-                pageid += '/' + field
-                if objectName:
-                    pageid += '/' + objectName
-                    if level:
-                        pageid += '/' + level
-
-    import base
-    connection = base.getDBConnection()
-    db = connection.Lfunction
-    collection = db.LNavigation
-    return collection.find_one({'id': pageid})
-
-
-def processNavigationContents(info, args, arg1,arg2,arg3,arg4,arg5):
-    #logging.info("%s %s %s" % (family,group,field))
-    if arg4:
-        None
-    else:
-        if arg3:
-            None
-        else:
-            if arg2:
-                if arg2 == 'dirichlet':
-                    info = LfunctionNavigationProcessing.processDirichletNavigation(info, args)
-            else:
-                if arg1:
-                    None
-                else:
-                    None
-                    #This is the top page
-    return info
-
+    """
     
-
-def initLfunction(L,args, request):
-    info = {'title': L.title}
-    info['citation'] = ''
-    info['support'] = ''
-    info['sv12'] = specialValueString(L.sageLfunction, 0.5, '\\frac12')
-    info['sv1'] = specialValueString(L.sageLfunction, 1, '1')
-    info['args'] = args
-
-    info['credit'] = L.credit
-    info['citation'] = L.citation
-
-    try:
-        info['url'] = L.url
-    except:
-        info['url'] =''
-
-    info['degree'] = int(L.degree)
-
-    info['zeroeslink'] = url_for('zeroesLfunction', **args)
-    info['plotlink'] = url_for('plotLfunction', **args)
-
-    #set info['bread'] and to be empty and set info['properties'], but exist (temp. fix by David & Sally)
-    info['bread'] = []
-    info['properties2'] = L.properties
-
-    if args['type'] == 'gl2maass':
-        info['zeroeslink'] = ''
-        info['plotlink'] = ''
-#        info['bread'] = [('L-function','/L'),('GL(2) Maass','/L/ModularForm/GL2/Q/maass')]
-
-    elif args['type'] == 'riemann':
-        info['bread'] = [('L-function','/L'),('Riemann Zeta','/L/Riemann')]
-
-    elif args['type'] == 'dirichlet':
-        snum = str(L.characternumber)
-        smod = str(L.charactermodulus)
-        info['bread'] = [('L-function','/L'),('Dirichlet Character','/L/degree1#Dirichlet'),('Character Number '+snum+' of Modulus '+ smod,'/L/Character/Dirichlet/'+smod+'/'+snum)]
-        charname = '\(\\chi_{%s}\\!\\!\\pmod{%s}\)' %(snum,smod)
-        info['friends'] = [('Dirichlet Character '+str(charname), '/Character/Dirichlet/'+smod+'/'+snum)]
-                
-
-    elif args['type'] == 'ellipticcurve':
-        label = L.label
-        info['friends'] = [('Elliptic Curve', url_for('by_label',label=label)),('Modular Form', url_for('not_yet_implemented'))]
-        info['bread'] = [('L-function','/L'),('Elliptic Curve','/L/degree2#EllipticCurve_Q'),
-                         (label,url_for('render_Lfunction',arg1='EllipticCurve',arg2='Q',arg3= label))]
-
-    elif args['type'] == 'gl2holomorphic':
-        weight = str(L.weight)
-        level = str(L.level)
-        character = str(L.character)
-        label = str(L.label)
-        number = str(L.number)
-        info['friends'] = [('Modular Form','/ModularForm/GL2/Q/holomorphic/?weight='+weight+'&level='+level+'&character='+character +'&label='+label+'&number='+number)]
-
-    elif args['source'] == 'db':
-        info['bread'] = [('L-function','/L') ,
-                         ('Degree ' + str(L.degree),'/L/degree' +
-                          str(L.degree)),
-                         (L.id, request.url )]
-
-    info['dirichlet'] = L.lfuncDStex("analytic")
-    info['eulerproduct'] = L.lfuncEPtex("abstract")
-    info['functionalequation'] = L.lfuncFEtex("analytic")
-    info['functionalequationAnalytic'] = L.lfuncFEtex("analytic").replace('\\','\\\\').replace('\n','')
-    info['functionalequationSelberg'] = L.lfuncFEtex("selberg").replace('\\','\\\\').replace('\n','')
-
-    
-#LfunctionPageProcessing.setPageLinks(info, L, args)
-
-    info['learnmore'] = [('L-functions', 'http://wiki.l-functions.org/L-functions') ]
-    if len(request.args)==0:
-        lcalcUrl = request.url + '?download=lcalcfile'
-    else:
-        lcalcUrl = request.url + '&download=lcalcfile'
+    def __init__(self, **args):
         
-    info['downloads'] = [('Lcalcfile', lcalcUrl) ]
+        # Initialize some default values
+        self.coefficient_period = 0
+        self.poles = []
+        self.residues = []
+        self.kappa_fe = []
+        self.lambda_fe =[]
+        self.mu_fe = []
+        self.nu_fe = []
+        self.selfdual = False
+        self.langlands = True
+        self.texname = "L(s)"  # default name.  will be set later, for most L-functions
+        self.texnamecompleteds = "\\Lambda(s)"  # default name.  will be set later, for most L-functions
+        self.texnamecompleted1ms = "\\overline{\\Lambda(1-\\overline{s})}"  # default name.  will be set later, for most L-functions
+        self.primitive = True # should be changed later
+        self.citation = ''
+        self.credit = ''
+
+        # Initialize from an lcalcfile if it's not a subclass
+        if 'Ltype' in args.keys():
+
+            # Put the args into the object dictionary
+            self.__dict__.update(args)
+        
+            # Get the lcalcfile from the web
+            if self.Ltype=='lcalcurl':
+                if 'url' in args.keys():
+                    try:
+                        import urllib
+                        self.filecontents = urllib.urlopen(self.url).read()
+                    except:
+                        raise Exception("Wasn't able to read the file at the url")
+                else:
+                    raise Exception("You forgot to supply an url.")           
+
+            # Parse the Lcalcfile
+            self.parseLcalcfile()
+
+            # Check if self dual
+            self.checkselfdual()
+  
+            if self.selfdual:
+                self.texnamecompleted1ms = "\\Lambda(1-s)"
+
+            try:
+                self.originalfile = re.match(".*/([^/]+)$", self.url)
+                self.originalfile = self.originalfile.group(1)
+                self.title = "An L-function generated by an Lcalc file: "+self.originalfile
+
+            except:
+                self.originalfile = ''
+                self.title = "An L-function generated by an Lcalc file."
+
+            self.generateSageLfunction()
+
+
+    def parseLcalcfile(self, filecontents):
+        """ Extracts informtion from the lcalcfile
+        """
+        
+        lines = filecontents.split('\n',6)
+        self.coefficient_type = int(lines[0])
+        self.quasidegree = int(lines[4])
+        lines = self.lcalcfile.split('\n',8+2*self.quasidegree)
+        self.Q_fe = float(lines[5+2*self.quasidegree])
+        self.sign = pair2complex(lines[6+2*self.quasidegree])
+
+        self.kappa_fe = []
+        self.lambda_fe = []
+        self.mu_fe = []
+        self.nu_fe = []
+
+        for i in range(self.quasidegree):
+            localdegree = float(lines[5+2*i])
+            self.kappa_fe.append(localdegree)
+            locallambda = pair2complex(lines[6+2*i])
+            self.lambda_fe.append(locallambda)
+            if math.fabs(localdegree-0.5)<0.00001:
+                self.mu_fe.append(2*locallambda)
+            elif math.fabs(localdegree-1)<0.00001:
+                self.nu_fe.append(locallambda)
+            else:
+                self.nu_fe.append(locallambda)
+                self.langlands = False
+
+        """ Do poles here later
+        """
+        
+        self.degree = int(round(2*sum(self.kappa_fe)))
+
+        self.level = int(round(math.pi**float(self.degree) * 4**len(self.nu_fe) * self.Q_fe**2 ))
+        # note:  math.pi was not compatible with the sage type of degree
+
+        self.dirichlet_coefficients = splitcoeff(lines[-1])
+        
+
+    def checkselfdual(self):
+        """ Checks whether coefficients are real to determine
+            whether L-function is selfdual
+        """
+
+        self.selfdual = True
+        for n in range(1,min(8,len(self.dirichlet_coefficients))):
+            if abs(imag_part(self.dirichlet_coefficients[n]/self.dirichlet_coefficients[0])) > 0.00001:
+                self.selfdual = False
+
+    def generateSageLfunction(self):
+        """ Generate a SageLfunction to do computations
+        """
+        self.sageLfunction = lc.Lfunction_C(self.title, self.coefficient_type,
+                                            self.dirichlet_coefficients,
+                                            self.coefficient_period,
+                                            self.Q_fe, self.sign ,
+                                            self.kappa_fe, self.lambda_fe ,
+                                            self.poles, self.residues)
+
+    def createLcalcfile(self):
+        thefile="";
+        if self.selfdual:
+            thefile += "2\n"  # 2 means real coefficients
+        else:
+            thefile += "3\n"  # 3 means complex coefficients
+
+        thefile += "0\n"  # 0 means unknown type
+
+        thefile += str(len(self.dirichlet_coefficients)) + "\n"  
+
+        thefile += "0\n"  # assume the coefficients are not periodic
+        
+        thefile += str(self.quasidegree) + "\n"  # number of actual Gamma functions
+
+        for n in range(0,self.quasidegree):
+            thefile = thefile + str(self.kappa_fe[n]) + "\n"
+            thefile = thefile + str(real_part(self.lambda_fe[n])) + " " + str(imag_part(self.lambda_fe[n])) + "\n"
+        
+        thefile += str(real_part(self.Q_fe)) +  "\n"
+
+        thefile += str(real_part(self.sign)) + " " + str(imag_part(self.sign)) + "\n"
+
+        thefile += str(len(self.poles)) + "\n"  # counts number of poles
+
+        for n in range(0,len(self.poles)):
+            thefile += str(real_part(self.poles[n])) + " " + str(imag_part(self.poles[n])) + "\n" #pole location
+            thefile += str(real_part(self.residues[n])) + " " + str(imag_part(self.residues[n])) + "\n" #residue at pole
+
+        for n in range(0,len(self.dirichlet_coefficients)):
+            thefile += str(real_part(self.dirichlet_coefficients[n]))   # add real part of Dirichlet coefficient
+            if not self.selfdual:  # if not selfdual
+                thefile += " " + str(imag_part(self.dirichlet_coefficients[n]))   # add imaginary part of Dirichlet coefficient
+            thefile += "\n" 
+        
+        return(thefile)
+
+
+##================================================================================
+
+class Lfunction_EC(Lfunction):
+    """Class representing an elliptic curve L-function
+    It can be called with a dictionary of these forms:
     
-    info['check'] = [('Riemann hypothesis', '/L/TODO') ,('Functional equation', '/L/TODO') \
-                       ,('Euler product', '/L/TODO')]
-    return info
+    dict = { 'label': ... }  label is the Cremona label of the elliptic curve
+    dict = { 'label': ... , 'numcoeff': ...  }  numcoeff is the number of
+           coefficients to use when computing
+    """
+    
+    def __init__(self, **args):
 
-def specialValueString(sageL, s, sLatex):
-    val = sageL.value(s)
-    return '\(L\left(' + sLatex + '\\right)=' + latex(round(val.real(),4)+round(val.imag(),4)*I) + '\)'
+        #Check for compulsory arguments
+        if not 'label' in args.keys():
+            raise Exception("You have to supply a label for an elliptic curve L-function")
+        
+        # Initialize default values
+        self.Ltype = 'ellipticcurve'
+        self.numcoeff = 20 # set default to 20 coefficients
 
-
-def parameterstringfromdict(dic):
-    answer = ''
-    for k, v in dic.iteritems():
-        answer += k
-        answer += '='
-        answer += v
-        answer += '&'
-    return answer[0:len(answer)-1]
-         
-
-def plotLfunction(args):
-    WebL = WebLfunction(args)
-    L = WebL.sageLfunction
-    # HSY: I got exceptions that "L.hardy_z_function" doesn't exist
-    # TODO sort this out, do we need psage?!
-    if not hasattr(L, "hardy_z_function"):
-      return None
-    #FIXME there could be a filename collission
-    fn = tempfile.mktemp(suffix=".png")
-    F=[(i,L.hardy_z_function(CC(.5,i)).real()) for i in srange(-30,30,.1)]
-    p = line(F)
-    p.save(filename = fn)
-    data = file(fn).read()
-    os.remove(fn)
-    return data
-
-def render_plotLfunction(args):
-    data = plotLfunction(args)
-    if not data:
-      # see not about missing "hardy_z_function" in plotLfunction()
-      return abort(404)
-    response = make_response(data)
-    response.headers['Content-type'] = 'image/png'
-    return response
-
-def render_browseGraph(args):
-    logging.info(args)
-    if 'sign' in args:
-      data = LfunctionPlot.paintSvgFileAll([[args['group'], int(args['level']), args['sign']]])
-    else:
-      data = LfunctionPlot.paintSvgFileAll([[args['group'], int(args['level'])]])
-    response = make_response(data)
-    response.headers['Content-type'] = 'image/svg+xml'
-    return response
-
-def render_browseGraphHolo(args):
-    logging.info(args)
-    data = LfunctionPlot.paintSvgHolo(args['Nmin'], args['Nmax'], args['kmin'], args['kmax'])
-    response = make_response(data)
-    response.headers['Content-type'] = 'image/svg+xml'
-    return response
-
-def render_browseGraphChar(args):
-    data = LfunctionPlot.paintSvgChar(args['min_cond'], args['max_cond'], args['min_order'], arg['max_order'])
-    response = make_response(data)
-    respone.headers['Content-type'] = 'image/svg+xml'
-    return response
-
-def render_zeroesLfunction(args):
-    WebL = WebLfunction(args)
-    s = str(WebL.sageLfunction.find_zeros(-15,15,0.1))
-    return s[1:len(s)-1]
-
-def render_lcalcfile(L):
-    try:
-        response = make_response(L.lcalcfile)
-    except:
-        response = make_response(L.createLcalcfile())
-
-    response.headers['Content-type'] = 'text/plain'
-    return response
+        # Put the arguments into the object dictionary
+        self.__dict__.update(args)
+        self.numcoeff = int(self.numcoeff)
 
 
-def render_showcollections_demo():
-    connection = pymongo.Connection()
-    dbNames = connection.database_names()
-    dbList = []
-    for dbName in dbNames:
-        db = pymongo.database.Database(connection, dbName)
-        dbMeta = connection.Metadata
-        collectionNames = db.collection_names()
-        collList = []
-        for collName in collectionNames:
-            if not collName == 'system.indexes': 
-                collMeta = pymongo.collection.Collection(dbMeta,'collection_data')
-                infoMeta = collMeta.find_one({'db': dbName, 'collection': collName})
-                try:
-                    info = infoMeta['description']
-                except:
-                    info = ''
-                collList.append( (collName, info) )
-        dbList.append( (str(db.name), collList) )
-    info = {'collections' : dbList}
-    return render_template("ShowCollectionDemo.html", info = info)
+        # Create the elliptic curve
+        self.E = EllipticCurve(str(self.label))
 
-def processDirichletNavigation(args):
-    logging.info(str(args))
-    try:
-        logging.debug(args['start'])
-        N = int(args['start'])
-        if N < 3:
-            N=3
-        elif N > 100:
-            N=100
-    except:
-        N = 3
-    try:
-        length = int(args['length'])
-        if length < 1:
-            length = 1
-        elif length > 20:
-            length = 20
-    except:
-        length = 10
-    try:
-        numcoeff = int(args['numcoeff'])
-    except:
-        numcoeff = 50
-    chars = LfunctionComp.charactertable(N, N+length,'primitive')
-    s = '<table>\n'
-    s += '<tr>\n<th scope="col">Conductor</th>\n'
-    s += '<th scope="col">Primitive characters</th>\n</tr>\n'
-    for i in range(N,N+length):
-        s += '<tr>\n<th scope="row">' + str(i) + '</th>\n'
-        s += '<td>\n'
-        j = i-N
-        for k in range(len(chars[j][1])):
-            s += '<a style=\'display:inline\' href="Character/Dirichlet/'
-            s += str(i)
-            s += '/'
-            s += str(chars[j][1][k])
-            s += '/&numcoeff='
-            s += str(numcoeff)
-            s += '">'
-            s += '\(\chi_{' + str(chars[j][1][k]) + '}\)</a> '
-        s += '</td>\n</tr>\n'
-    s += '</table>\n'
-    return s
-    #info['contents'] = s
-    #return info
+        # Extract the L-function information from the elliptic curve
+        self.quasidegree = 1
+        self.level = self.E.conductor()
+        self.Q_fe = float(sqrt(self.level)/(2*math.pi))
+        self.sign = self.E.lseries().dokchitser().eps
+        self.kappa_fe = [1]
+        self.lambda_fe = [0.5]
+        self.mu_fe = []
+        self.nu_fe = [0.5]
+        self.langlands = True
+        self.degree = 2
+        
+        self.dirichlet_coefficients = self.E.anlist(self.numcoeff)[1:]  #remove a0
 
-def processEllipticCurveNavigation(args):
-    try:
-        logging.info(args['start'])
-        N = int(args['start'])
-        if N < 11:
-            N=11
-        elif N > 100:
-            N=100
-    except:
-        N = 11
-    try:
-        length = int(args['length'])
-        if length < 1:
-            length = 1
-        elif length > 20:
-            length = 20
-    except:
-        length = 10
-    try:
-        numcoeff = int(args['numcoeff'])
-    except:
-        numcoeff = 50
-    iso_dict = LfunctionComp.isogenyclasstable(N, N+length)
-    s = '<table>'
-    s += '<tr><th scope="col">Conductor</th>\n'
-    s += '<th scope="col">Isogeny Classes</th>\n</tr>\n'
-    iso_dict.keys()
-    logging.info(iso_dict)
-    for cond in iso_dict.keys():
-        s += '<tr>\n<td scope="row">%s</td>' % cond
-        for iso in iso_dict[cond]:
-            logging.info("%s %s" % (cond, iso))
-            s += '<td><a href="EllipticCurve/Q/%(iso)s">%(iso)s</a></td>' % { 'iso' : iso }
-        s += '</tr>\n'
-    s += '</table>\n'
-    return s
-    #info['contents'] = s
-     #return info
+        # Renormalize the coefficients
+        for n in range(0,len(self.dirichlet_coefficients)-1):
+           an = self.dirichlet_coefficients[n]
+           self.dirichlet_coefficients[n]=float(an)/float(sqrt(n+1))
+       
+        self.poles = []
+        self.residues = []
+        self.coefficient_period = 0
+        self.selfdual = True
+        self.primitive = True
+        self.coefficient_type = 2
+        self.texname = "L(s,E)"
+        self.texnamecompleteds = "\\Lambda(s,E)"
+        self.texnamecompleted1ms = "\\Lambda(1-s,E)"
+        self.title = "L-function $L(s,E)$ for the Elliptic Curve over Q with label "+ self.E.label()
+
+        self.properties = [('Degree ','%s' % self.degree)]
+        self.properties.append(('Level', '%s' % self.level))
+        self.credit = 'Sage'
+        self.citation = ''
+        
+        self.generateSageLfunction()
+
+
+
+##================================================================================
+
+class Lfunction_EMF(Lfunction):
+    """Class representing an elliptic modular form L-function
+
+    Compulsory parameters: weight
+                           level
+
+    Possible parameters: character
+                         label
+                         number
+    
+    """
+    
+    def __init__(self, **args):
+        print "EMF"
+
+        #Check for compulsory arguments
+        if not ('weight' in args.keys() and 'level' in args.keys()):
+            raise KeyError, "You have to supply weight and level for an elliptic modular form L-function"
+        
+        # Initialize default values
+        self.Ltype = 'ellipticmodularform'
+        self.character = 0  # Trivial character is default
+        self.label=''       # No label, is OK If space is one-dimensional
+        self.number = 1     # Default choice of embedding of the coefficients
+
+        # Put the arguments into the object dictionary
+        self.__dict__.update(args)
+        self.weight = int(self.weight)
+        self.level = int(self.level)
+        self.character = int(self.character)
+        self.number = int(self.number)
+
+        # Create the modular form
+        self.MF = WebNewForm(self.weight, self.level, self.character, self.label)
+
+        # Extract the L-function information from the elliptic modular form
+        self.automorphyexp = float(self.weight-1)/float(2)
+        self.Q_fe = float(sqrt(self.level)/(2*math.pi))
+                            
+        if self.level == 1:  # For level 1, the sign is always plus
+            self.sign = 1
+        else:  # for level not 1, calculate sign from Fricke involution and weight
+            self.sign = self.MF.atkin_lehner_eigenvalues()[self.level] * (-1)**(float(self.weight/2))
+                            
+        self.kappa_fe = [1]
+        self.lambda_fe = [self.automorphyexp]
+        self.mu_fe = []
+        self.nu_fe = [self.automorphyexp]
+        self.selfdual = True
+        self.langlands = True
+        self.primitive = True
+        self.degree = 2
+        self.poles = []
+        self.residues = []
+        self.numcoeff = 30 #just testing  NB: Need to learn how to use more coefficients
+        self.dirichlet_coefficients = []
+                            
+        # Appending list of Dirichlet coefficients
+        GaloisDegree = self.MF.degree()  #number of forms in the Galois orbit
+        if GaloisDegree == 1:
+           self.dirichlet_coefficients = self.MF.q_expansion_embeddings(self.numcoeff) #when coeffs are rational, q_expansion_embedding() is the list of Fourier coefficients
+        else:
+           for n in range(0,self.numcoeff):
+              logger.info("n=%s  self.number = %s" % (n, self.number))
+              self.dirichlet_coefficients.append(self.MF.q_expansion_embeddings(self.numcoeff)[n][self.number])
+        for n in range(0,len(self.dirichlet_coefficients)):
+            an = self.dirichlet_coefficients[n]
+            self.dirichlet_coefficients[n]=float(an)/float((n+1)**self.automorphyexp)
+#FIX: These coefficients are wrong; too large and a1 is not 1
+                            
+        self.coefficient_period = 0
+        self.coefficient_type = 2
+        self.quasidegree = 1
+        
+        self.checkselfdual()
+
+        self.texname = "L(s,f)"
+        self.texnamecompleteds = "\\Lambda(s,f)"
+        if self.selfdual:
+            self.texnamecompleted1ms = "\\Lambda(1-s,f)"
+        else:
+            self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{f})"
+        self.title = "L-function of a holomorphic cusp form: $L(s,f)$, "+ "where $f$ is a holomorphic cusp form with weight "+str(self.weight)+", level "+str(self.level)+", and character "+str(self.character)
+
+        self.citation = ''
+        self.credit = ''
+       
+        self.generateSageLfunction()
+
+
+##================================================================================
+
+class RiemannZeta(Lfunction):
+    """Class representing the Riemann zeta fucntion
+
+    Possible parameters: numcoeff  (the number of coefficients when computing)
+
+    """
+    
+    def __init__(self, **args):
+
+        # Initialize default values
+        self.Ltype = 'riemann'
+        self.numcoeff = 30 # set default to 30 coefficients
+
+        # Put the arguments into the object dictionary
+        self.__dict__.update(args)
+        self.numcoeff = int(self.numcoeff)
+
+        self.coefficient_type = 1
+        self.quasidegree = 1
+        self.Q_fe = float(1/sqrt(math.pi))
+        self.sign = 1
+        self.kappa_fe = [0.5]
+        self.lambda_fe = [0]
+        self.mu_fe = [0]
+        self.nu_fe = []
+        self.langlands = True
+        self.degree = 1
+        self.level = 1
+        self.dirichlet_coefficients = []
+        for n in range(self.numcoeff):
+            self.dirichlet_coefficients.append(1)
+        self.poles = [0,1]
+        self.residues = [-1,1]
+        self.coefficient_period = 0
+        self.selfdual = True
+        self.texname = "\\zeta(s)"
+        self.texnamecompleteds = "\\xi(s)"
+        self.texnamecompleted1ms = "\\xi(1-s)"
+        self.credit = 'Sage'
+        self.primitive = True
+        self.citation = ''
+        self.title = "Riemann Zeta-function: $\\zeta(s)$"
+        
+        self.generateSageLfunction()
+
+##================================================================================
+
+class Lfunction_Dirichlet(Lfunction):
+    """Class representing the L-function of a Dirichlet character
+
+    Compulsory parameters: charactermodulus
+                           characternumber
+
+    Possible parameters: numcoeff  (the number of coefficients when computing)
+    
+    """
+    
+    def __init__(self, **args):
+        print args.keys()
+        #Check for compulsory arguments
+        if not ('charactermodulus' in args.keys() and 'characternumber' in args.keys()):
+            raise KeyError, "You have to supply charactermodulus and characternumber for the L-function of a Dirichlet character"
+        
+        # Initialize default values
+        self.Ltype = 'dirichlet'
+        self.numcoeff = 30    # set default to 30 coefficients
+
+        # Put the arguments into the object dictionary
+        self.__dict__.update(args)
+        self.charactermodulus = int(self.charactermodulus)
+        self.characternumber = int(self.characternumber)
+        self.numcoeff = int(self.numcoeff)
+
+        # Create the Dirichlet character
+        chi = DirichletGroup(self.charactermodulus)[self.characternumber]
+
+        # Extract the L-function information from the Dirichlet character
+        # Warning: will give nonsense if character is not primitive
+        aa = int((1-chi(-1))/2)   # usually denoted \frak a
+        self.quasidegree = 1
+        self.Q_fe = float(sqrt(self.charactermodulus)/sqrt(math.pi))
+        self.sign = 1/(I**aa * float(sqrt(self.charactermodulus))/(chi.gauss_sum_numerical()))
+        self.kappa_fe = [0.5]
+        self.lambda_fe = [0.5*aa]
+        self.mu_fe = [aa]
+        self.nu_fe = []
+        self.langlands = True
+        self.primitive = True
+        self.degree = 1
+        self.level = self.charactermodulus
+
+        self.dirichlet_coefficients = []
+        for n in range(1,self.numcoeff):
+            self.dirichlet_coefficients.append(chi(n).n())
+                            
+        self.poles = []
+        self.residues = []
+        self.coefficient_period = self.charactermodulus
+
+        # Determine if the character is real (i.e., if the L-function is selfdual)
+        chivals=chi.values_on_gens()
+        self.selfdual = True
+        for v in chivals:
+            if abs(imag_part(v)) > 0.0001:
+                self.selfdual = False
+  
+        if self.selfdual:
+            self.coefficient_type = 1
+        else:
+            self.coefficient_type = 2
+
+        self.texname = "L(s,\\chi)"
+        self.texnamecompleteds = "\\Lambda(s,\\chi)"
+                            
+        if self.selfdual:
+            self.texnamecompleted1ms = "\\Lambda(1-s,\\chi)"
+        else:
+            self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{\\chi})"
+
+        self.credit = 'Sage'
+        self.citation = ''
+        self.title = "Dirichlet L-function: $L(s,\\chi)$"
+        self.title = (self.title+", where $\\chi$ is the character modulo "+
+                          str(self.charactermodulus) + ", number " +
+                          str(self.characternumber))
+        
+        self.generateSageLfunction()
+
+##================================================================================
+
+class Lfunction_Maass(Lfunction):
+    """Class representing the L-function of a Maass form 
+
+    Compulsory parameters: dbid
+
+    Possible parameters: dbName  (the name of the database for the Maass form)
+                         dbColl  (the name of the collection for the Maass form)
+    
+    """
+    
+    def __init__(self, **args):
+        print "In LfunctionMAsss"
+
+        #Check for compulsory arguments
+        if not 'dbid' in args.keys():
+            raise KeyError, "You have to supply dbid for the L-function of a Maass form"
+        
+        # Initialize default values
+        self.Ltype = 'maass'
+        self.dbName = 'MaassWaveForm'    # Set default database
+        self.dbColl = 'HT'               # Set default collection    
+
+        # Put the arguments into the object dictionary
+        self.__dict__.update(args)
+
+        # Fetch the information from the database
+        import base
+        connection = base.getDBConnection()
+        db = pymongo.database.Database(connection, self.dbName)
+        collection = pymongo.collection.Collection(db, self.dbColl)
+        dbEntry = collection.find_one({'_id': self.dbid})
+        print dbEntry
+
+        if self.dbName == 'Lfunction':  # Data from Lemurell
+            
+            # Extract the L-function information from the database entry
+            self.__dict__.update(dbEntry)
+
+            self.coefficient_period = 0
+            self.poles = []
+            self.residues = []
+
+            # Extract the L-function information from the lcalfile in the database
+            self.parseLcalcfile(self.lcalcfile)  
+
+        else: # GL2 data from Then or Stromberg
+
+            self.group = 'GL2'
+            
+            # Extract the L-function information from the database entry
+            self.symmetry = dbEntry['Symmetry']
+            self.eigenvalue = float(dbEntry['Eigenvalue'])
+            self.norm = dbEntry['Norm']
+            self.dirichlet_coefficients = dbEntry['Coefficient']
+            
+            if 'Level' in dbEntry.keys():
+                self.level = int(dbEntry['Level'])
+            else:
+                self.level = 1
+            self.charactermodulus = self.level
+            
+            if 'Weight' in dbEntry.keys():
+                self.weight = int(dbEntry['Weight'])
+            else:
+                self.weight = 0
+                
+            if 'Character' in dbEntry.keys():
+                self.characternumber = int(dbEntry['Character'])
+                
+            if self.level > 1:
+                self.fricke = dbEntry['Fricke']  #no fricke for level 1
+
+
+            # Set properties of the L-function
+            self.coefficient_type = 2
+            self.selfdual = True
+            self.primitive = True
+            self.quasidegree = 2
+            self.Q_fe = float(sqrt(self.level))/float(math.pi)
+            
+            if self.symmetry =="odd":
+                aa=1
+            else:
+                aa=0
+                
+            if aa==0:
+                self.sign = 1
+            else:
+                self.sign = -1
+                
+            if self.level > 1:
+                self.sign = self.fricke * self.sign
+                
+            self.kappa_fe = [0.5,0.5]
+            self.lambda_fe = [0.5*aa + self.eigenvalue*I, 0,5*aa - self.eigenvalue*I]
+            self.mu_fe = [aa + 2*self.eigenvalue*I, aa -2*self.eigenvalue*I]
+            self.nu_fe = []
+            self.langlands = True
+            self.degree = 2
+            self.poles = []
+            self.residues = []
+            self.coefficient_period = 0
+
+            self.checkselfdual()
+            
+            self.texname = "L(s,f)"
+            self.texnamecompleteds = "\\Lambda(s,f)"
+            
+            if self.selfdual:
+                self.texnamecompleted1ms = "\\Lambda(1-s,f)"
+            else:
+                self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{f})"
+                
+            self.title = "$L(s,f)$, where $f$ is a Maass cusp form with level "+str(self.level)+", and eigenvalue "+str(self.eigenvalue)
+            self.citation = ''
+            self.credit = ''
+        
+        self.generateSageLfunction()
+
+##================================================================================
+
+class DedekindZeta(Lfunction):   # added by DK
+    """Class representing the Dedekind zeta-fucntion
+
+    Compulsory parameters: label
+    
+    """
+    
+    def __init__(self, **args):
+
+        #Check for compulsory arguments
+        if not 'label' in args.keys():
+            raise Exception("You have to supply a label for a Dedekind zeta function")
+        
+        # Initialize default values
+        self.Ltype = 'dedekind'
+
+        # Put the arguments into the object dictionary
+        self.__dict__.update(args)
+
+        # Fetch the polynomial of the field from the database
+        import base
+        connection = base.getDBConnection()
+        db = connection.numberfields.fields
+        poly_coeffs = db.find_one({'label':self.label})['coefficients']
+
+        # Extract the L-function information from the polynomial
+        R = QQ['x']; (x,) = R._first_ngens(1)
+        self.polynomial = sum([poly_coeffs[i]*x**i for i in range(len(poly_coeffs))])
+        self.NF = NumberField(self.polynomial, 'a')
+        self.signature = self.NF.signature()
+        self.sign = 1
+        self.quasidegree = sum(self.signature)
+        self.level = self.NF.discriminant().abs()
+        self.degreeofN = self.NF.degree()
+
+        self.Q_fe = float(sqrt(self.level)/(2**(self.signature[1]) * (math.pi)**(float(self.degreeofN)/2.0)))
+
+        self.kappa_fe = self.signature[0]* [0.5] + self.signature[1] * [1]
+        self.lambda_fe = self.quasidegree * [0]
+        self.mu_fe = self.signature[0]*[0] # not in use?
+        self.nu_fe = self.signature[1]*[0] # not in use?
+        self.langlands = True
+        self.degree = self.signature[0] + 2 * self.signature[1] # N = r1 +2r2
+        self.dirichlet_coefficients = [Integer(x) for x in self.NF.zeta_coefficients(5000)]
+        self.h=self.NF.class_number()
+        self.R=self.NF.regulator()
+        self.w=len(self.NF.roots_of_unity())
+        self.h=self.NF.class_number()
+        self.res=RR(2**self.signature[0]*self.h*self.R/self.w) #r1 = self.signature[0]
+
+        self.poles = [1,0]
+        self.residues = [self.res,-self.res]
+        self.coefficient_period = 0
+        self.selfdual = True
+        self.primitive = True
+        self.coefficient_type = 0
+        self.texname = "\\zeta_K(s)"
+        self.texnamecompleteds = "\\Lambda_K(s)"
+        if self.selfdual:
+            self.texnamecompleted1ms = "\\Lambda_K(1-s)"
+        else:
+            self.texnamecompleted1ms = "\\Lambda_K(1-s)"
+        self.title = "Dedekind zeta-function: $\\zeta_K(s)$"
+        self.title = self.title+", where $K$ is the "+ str(self.NF)
+        self.credit = 'Sage'
+        self.citation = ''
+        
+        self.generateSageLfunction()
+
+
+

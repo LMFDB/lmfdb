@@ -7,11 +7,11 @@
  <h2>{{ KNOWL('alg.functional_equation') }}</h2>
  
  <div class="LfunctionFooter">
-   <a id="functionalEqSelberg" href="#">Selberg</a>{{ KNOWL('alg.selberg', title="") }}
+   <a id="functionalEqSelberg" href="#">Selberg data</a>{{ KNOWL('L.selbergdata', title="") }}
    &middot;
    <a id="functionalEqAnalytic" class="highlight" href="#">Analytic</a>
  </div>
- <div id="functionalEqText">\({{ functionalequation }}\)</div>
+ <div id="functionalEqText">\[{{ functionalequation }}\]</div>
  
  <h2>{{ KNOWL('alg.euler_prod') }}</h2>
  <div>\[{{ eulerproduct }}\]</div>
@@ -25,7 +25,7 @@
  {% endif %}
 
  {% if sv1 and sv12 %}
-     <h2>Special Values</h2>
+     <h2> {{ KNOWL('L.special_values') }} </h2>
      <div>
       {{ sv12 }}<br>
       {{ sv1 }}<br>
@@ -35,7 +35,7 @@
  {% endif %}
 
  {% if plotlink %}
-    <h2> Graph of the \(Z\)-function along the {{ KNOWL('alg.critical_line') }} </h2>
+    <h2> Graph of the {{ KNOWL('L.Zfunction') }} along the {{ KNOWL('alg.critical_line') }} </h2>
     <img src="{{ plotlink|safe }}" >
  {% else %}
     <div>Not enough Dirichelet series coefficients to make a graph.</div>
