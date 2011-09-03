@@ -43,8 +43,9 @@ def my_find_update(the_coll, search_dict, update_dict):
 
 def constructor_logger(object, args):
     logging.info(str(object.__class__)+str(args))
-    object.inject_database(["original_mathematical_object()", "poles", "residues", "kappa_fe", 
-        "lambda_fe", "mu_fe", "nu_fe"])
+    #object.inject_database(["original_mathematical_object()", "poles",  "kappa_fe", 
+    #    "lambda_fe", "mu_fe", "nu_fe", "dirichlet_coefficients"])
+        
 class Lfunction:
     """Class representing a general L-function
     It can be called with a dictionary of these forms:
@@ -168,6 +169,7 @@ class Lfunction:
                                             self.Q_fe, self.sign ,
                                             self.kappa_fe, self.lambda_fe ,
                                             self.poles, self.residues)
+        # This should be heavily overloaded depeding on the type of L-function
 
     def createLcalcfile(self):
         thefile="";
@@ -230,29 +232,30 @@ class Lfunction:
     #==============
             
     def inject_database(self, relevant_info, time_limit = None):
-        #   relevant_methods are text strings 
-        #    desired_database_fields = [Lfunction.original_mathematical_object, Lfunction.level]
-        #    also zeroes, degree, conductor, type, real_coeff, rational_coeff, algebraic_coeff, critical_value, value_at_1, sign
-        #    ok_methods = [Lfunction.math_id, Lfunction.level]
-        #   
-        # Is used to inject the data in relevant_fields
+        """
+            Is used to inject the L function into the database of all L-functions
+        """
+        #   Would like to have
+        #   level, zeroes, degree, conductor, type, real_coeff, 
+        #   has rational_coeff, algebraic_coeff, critical_value, value_at_1, sign
         
         logging.info("Trying to inject")
         import base
-        db = base.getDBConnection().Lfunctions
-        Lfunctions = db.full_collection
+        connection = base.getDBConnection()
+        db = connection.Lfunctions
+        full_collection = db.full_collection
         update_dict = dict([(method_name,get_attr_or_method(self,method_name)) for method_name in relevant_info])
         
         logging.info("injecting " + str(update_dict))
         search_dict = {"original_mathematical_object()": get_attr_or_method(self, "original_mathematical_object()")}
         
-        my_find_update(Lfunctions, search_dict, update_dict)
+        my_find_update(full_collection, search_dict, update_dict)
         
 
 ##================================================================================
 
 class Lfunction_EC(Lfunction):
-    """Class representing an elliptic curve L-function
+    """Class representing an elliptic curve L-function over Q
     It can be called with a dictionary of these forms:
     
     dict = { 'label': ... }  label is the Cremona label of the elliptic curve
@@ -312,8 +315,6 @@ class Lfunction_EC(Lfunction):
         self.citation = ''
         
         self.generateSageLfunction()
-
-        logging.info("I am now proud to have ", str(self.__dict__))
         constructor_logger(self,args)
 
     def Ltype(self):
@@ -432,8 +433,6 @@ class RiemannZeta(Lfunction):
     """
     
     def __init__(self, **args):
-        constructor_logger(self,args)
-
         # Initialize default values
         self.numcoeff = 30 # set default to 30 coefficients
 
@@ -468,7 +467,8 @@ class RiemannZeta(Lfunction):
         self.title = "Riemann Zeta-function: $\\zeta(s)$"
         
         self.generateSageLfunction()
-    
+        constructor_logger(self,args)
+
     def Ltype(self):
         return "riemann"
 
@@ -578,7 +578,6 @@ class Lfunction_Maass(Lfunction):
     """
     
     def __init__(self, **args):
-        constructor_logger(self,args)
 
         #Check for compulsory arguments
         if not 'dbid' in args.keys():
@@ -683,12 +682,13 @@ class Lfunction_Maass(Lfunction):
             self.credit = ''
         
         self.generateSageLfunction()
+        constructor_logger(self,args)
 
     def Ltype(self):
         return "maass"
 ##================================================================================
 
-class DedekindZeta(Lfunction):   # added by DK
+class Lfunction_Dedekind(Lfunction):   # added by DK
     """Class representing the Dedekind zeta-fucntion
 
     Compulsory parameters: label
@@ -696,7 +696,6 @@ class DedekindZeta(Lfunction):   # added by DK
     """
     
     def __init__(self, **args):
-        constructor_logger(self,args)
 
         #Check for compulsory arguments
         if not 'label' in args.keys():
@@ -736,7 +735,7 @@ class DedekindZeta(Lfunction):   # added by DK
         self.R=self.NF.regulator()
         self.w=len(self.NF.roots_of_unity())
         self.h=self.NF.class_number()
-        self.res=RR(2**self.signature[0]*self.h*self.R/self.w) #r1 = self.signature[0]
+        self.res = RR(2**self.signature[0]*self.h*self.R/self.w) #r1 = self.signature[0]
 
         self.poles = [1,0]
         self.residues = [self.res,-self.res]
@@ -756,6 +755,12 @@ class DedekindZeta(Lfunction):   # added by DK
         self.citation = ''
         
         self.generateSageLfunction()
+        constructor_logger(self,args)
+        
+    def original_mathematical_object(self):
+        return [self.Ltype(), self.label]
 
+    def Ltype(self):
+        return "dedekind"
 
 
