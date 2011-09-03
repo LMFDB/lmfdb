@@ -12,10 +12,15 @@ input, textarea { width: 50em }
     <td>Name:</td>
     <td><input name="name" example="zeros of zeta "/></td>
   </tr>
+
   <tr>
     <td>Related to url:</td>
     <td><input name="related_to" example="/L/Riemann " value="{{related_to}}"></td>
   </tr>
+  <tr><td colspan="2" class="forminfo">This is the page on this website where your files will be displayed once approved</td></tr> 
+  <tr><td colspan="2" class="spacing" /></tr> 
+
+  
   <tr>
     <td>Description:</td>
     <td><textarea name="full_description" rows=3 example="Zeros of the derivative of the Riemann zeta function having imaginary part between 1,000,000 and 1,000,100.  A total of 179 zeros "></textarea></td>
@@ -55,8 +60,21 @@ input, textarea { width: 50em }
 }
 "></textarea></td>
   </tr>
+
+  <tr>
+    <td>Upload from file:</td>
+    <td><input type="file" name="file"/></td>
+  </tr>
+
+  <tr>
+    <td>Or from URL:</td>
+    <td><input type="text" name="url" example="http://math.stanford.edu/~ralphf/data.tgz"/></td>
+  </tr>
+
+  <tr><td colspan="2" class="forminfo">Only enter one of file or URL.  Maximum size: 1GB</td></tr> 
+  <tr><td colspan="2" class="spacing" /></tr> 
+
 </table>
-<input type="file" name="file"/><br/>
     <button type="submit">Upload</button>
 </form>
 

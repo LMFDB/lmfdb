@@ -15,6 +15,7 @@
 import pymongo
 import flask
 from base import app, getDBConnection
+from datetime import datetime
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
 from flaskext.login import login_required, current_user
 from knowl import Knowl
@@ -137,6 +138,7 @@ def save_form():
   k.title = request.form['title']
   k.content = request.form['content']
   k.quality = request.form['quality']
+  k.timestamp = datetime.now()
   k.save(who=current_user.get_id())
   return flask.redirect(url_for(".show", ID=ID))
   
@@ -179,6 +181,7 @@ def render(ID, footer=None):
   {%% from "knowl-defs.html" import KNOWL with context %%}
   {%% from "knowl-defs.html" import KNOWL_LINK with context %%}
   {%% from "knowl-defs.html" import KNOWL_INC with context %%}
+  {%% from "knowl-defs.html" import TEXT_DATA with context %%}
 
   <div class="knowl">
   <div class="knowl-content">%(content)s</div>"""

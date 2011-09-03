@@ -11,14 +11,19 @@
 <table border="0">
 
 <tr>
-<td align=center> {{ KNOWL_LINK('EC.conductor') }} <input type='text' name='conductor' size=10 value={{info.conductor}}></td>
-<td align=center>{{ KNOWL_LINK('EC.rank') }}<input type='text' name='rank'size=1 value={{info.rank}}></td>
-<td align=center>{{ KNOWL_LINK('EC.torsion_order') }} <input type='text' name='torsion' size=1 value={{info.torsion}}> 
+<td align=left> {{ KNOWL_LINK('EC.conductor') }} <input type='text' name='conductor' size=10 value={{info.conductor}}></td>
+<td align=left>{{ KNOWL_LINK('EC.rank') }}<input type='text' name='rank'size=1 value={{info.rank}}></td>
+<td align=left>{{ KNOWL_LINK('EC.torsion_order') }} <input type='text' name='torsion' size=1 value={{info.torsion}}> </td>
+<td align=left>
 Optimal 
 <select name='optimal'>
   <option value="">No</option>
   <option value="on">Yes</option>
 </select>
+</td>
+</tr>
+<tr>
+<td align=left colspan=4>Maximum number of curves to display <input type='text' name='count' value={{info.count}} size=10>
 </td>
 </tr>
 
@@ -38,7 +43,7 @@ table td.params {
 }
 </style>
 
-<h2>Results</h2>
+<h2> Results ({{info.report}})</h2>
 <table>
 <tr>
   <th class="center">{{ KNOWL_LINK('EC.isogeny_class') }}</th>
