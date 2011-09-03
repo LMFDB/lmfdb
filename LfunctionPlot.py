@@ -328,7 +328,8 @@ def paintCS(width, height, xMax, yMax, xfactor, yfactor,ticlength):
     return(xmlText)
 
 ## ============================================
-## Returns the svg-code for a simple coordinate system.
+## Returns the svg-code for a simple coordinate system
+## INCLUDING a grid at the even lattice points.
 ## width = width of the system
 ## height = height of the system
 ## xMax = maximum in first (x) coordinate
@@ -384,8 +385,69 @@ def paintCSHolo(width, height, xMax, yMax, xfactor, yfactor,ticlength):
 
     return(xmlText)
 
+## ============================================
+#
+#
+## ============================================
+## Returns the svg-code for a simple coordinate system.
+## width = width of the system
+## height = height of the system
+## xMax = maximum in first (x) coordinate
+## yMax = maximum in second (y) coordinate
+## xfactor = the number of pixels per unit in x
+## yfactor = the number of pixels per unit in y
+## ticlength = the length of the tickmarks
+## ============================================
+# ============================================
+def paintCSHoloTMP(width, height, xMax, yMax, xfactor, yfactor,ticlength):
+    xmlText = ("<line x1='0' y1='" + str(height) + "' x2='" +
+               str(width) + "' y2='" + str(height) +
+               "' style='stroke:rgb(0,0,0);'/>\n")
+    xmlText = xmlText + ("<line x1='0' y1='" + str(height) +
+                         "' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n")
+    for i in range( 1,  xMax + 1):
+        xmlText = xmlText + ("<line x1='" + str(i*xfactor) + "' y1='" +
+                             str(height - ticlength) + "' x2='" +
+                             str(i*xfactor) + "' y2='" + str(height) +
+                             "' style='stroke:rgb(0,0,0);'/>\n")
+
+    for i in range( 1,  xMax + 1, 1):
+        digitoffset = 6
+        if i < 10:
+           digitoffset = 3
+        xmlText = xmlText + ("<text x='" + str(i*xfactor - digitoffset) + "' y='" +
+                             str(height - 2 * ticlength) +
+                             "' style='fill:rgb(102,102,102);font-size:11px;'>"
+                             + str(i) + "</text>\n")
+
+#       xmlText = xmlText + ("<line y1='0' x1='" + str(i*xfactor) +
+#                        "' y2='" + str(height) + "' x2='" +
+#                        str(i*xfactor) +
+#                        "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+
+    for i in range( 1,  yMax + 1):
+        xmlText = xmlText + ("<line x1='0' y1='" +
+                             str(height - i*yfactor) + "' x2='" +
+                             str(ticlength) + "' y2='" +
+                             str(height - i*yfactor) +
+                             "' style='stroke:rgb(0,0,0);'/>\n")
+
+    for i in range( 2,  yMax + 1, 2):
+        xmlText = xmlText + ("<text x='5' y='" +
+                             str(height - i*yfactor + 3) +
+                             "' style='fill:rgb(102,102,102);font-size:11px;'>" +
+                             str(i) + "</text>\n")
+
+#       if i%4==0 :  #  put dahes every four units
+#          xmlText = xmlText + ("<line x1='0' y1='" +
+#                        str(height - i*yfactor) + "' x2='" + str(width) +
+#                        "' y2='" + str(height - i*yfactor) +
+#                        "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+
+    return(xmlText)
+
 ##================================================
-##
+#+++++++++++++++++++++++++++++++++++++++++++++++++
 ##
 ##================================================
 def signtocolour(sign):
@@ -509,6 +571,126 @@ def paintSvgHolo(Nmin,Nmax,kmin,kmax):
     logging.info(ans)
  
     return ans
+
+#=====================
+
+
+## ============================================
+## Returns the contents (as a string) of the svg-file for
+## the L-functions of holomorphic cusp forms.
+## General code to be used with plotsector routine.
+## ============================================
+def paintSvgHoloGeneral(Nmin,Nmax,kmin,kmax,imagewidth,imageheight):
+    xfactor = 90
+    yfactor = 30
+    extraSpace = 20
+    ticlength = 4
+    radius = 3.3
+    xdotspacing = 0.11  # horizontal spacing of dots
+    ydotspacing = 0.28  # vertical spacing of dots
+    colourplus = signtocolour(1)
+    colourminus = signtocolour(-1)
+    maxdots = 5  # max number of dots to display
+
+    ans = "<svg  xmlns='http://www.w3.org/2000/svg'"
+    ans += " xmlns:xlink='http://www.w3.org/1999/xlink'>\n"
+
+    xMax = int(Nmax)
+    yMax = int(kmax)
+    width = xfactor *xMax + extraSpace    
+    height = yfactor *yMax + extraSpace
+
+    # make the coordinate system
+    ans += paintCSHoloTMP(width, height, xMax, yMax, xfactor, yfactor, ticlength)
+    alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
+
+# create appearanceinfo, common to all points
+    appearanceinfo =  []
+
+# loop over levels and weights, using plotsector to put the appropriate dots at each lattice point
+    for x in range(int(Nmin), int(Nmax) + 1):  # x is the level
+        print "level = " + str(x)
+        for y in range(int(kmin), int(kmax) + 1, 2):  # y is the weight 
+           print "  weight = " + str(y)
+           lid = "(" + str(x) + "," + str(y) + ")"
+           linkurl = "/L/ModularForm/" + "GL2/Q/holomorphic?weight=" + str(y) +"&amp;level=" + str(x) + "&amp;character=0"
+           WS = WebModFormSpace(y,x) # space of modular forms of weight y, level x
+           galois_orbits = WS.galois_decomposition()   # make a list of Galois orbits
+           numlabels = len(galois_orbits)  # one label per Galois orbit
+           thelabels = alphabet[0:numlabels]    # list of labels for the Galois orbits for weight y, level x
+           countplus = 0   # count how many Galois orbits have sign Plus (+ 1)
+           countminus = 0   # count how many Galois orbits have sign Minus (- 1)
+           ybaseplus = y  # baseline y-coord for plus cases
+           ybaseminus = y  # baseline y-coord for minus cases
+           numpluslabels=0
+           numminuslabels=0
+#plotsector requires three dictionaries: dimensioninfo, appearanceinfo, and urlinfo
+# create dimensioninfo
+           dimensioninfo =  {} 
+           dimensioninfo['offset'] = [0, height]
+           dimensioninfo['scale'] = [xfactor, -1 * yfactor]
+           dimensioninfo['vertexlocation'] = [x,y]
+           dimensioninfo['maxdots'] = maxdots
+           dimensioninfo['dotspacing'] = [xdotspacing, ydotspacing]
+           dimensioninfo['edge'] = [[0,1],[1,1]]     # unit vectors defining edges of sector
+           dimensioninfo['edgelength'] = [float(dimensioninfo['scale'][0])/float(Nmax), float(dimensioninfo['scale'][1])/float(kmax)] #add comment
+           print('edgelength = ',dimensioninfo['edgelength']) 
+           dimensioninfo['edgelength'] = [0.5,0.5]
+           dimensioninfo['firstdotoffset'] = [0.05,0.07]
+           #dimensioninfo['firstdotoffset'] = [0.5 * (dimensioninfo['dotspacing'][0] * dimensioninfo['edge'][0,0] + dimensioninfo['dotspacing'][1] * dimensioninfo['edge'][1,0]), 0.5 * (dimensioninfo['dotspacing'][1] * dimensioninfo['edge'][0,1] + dimensioninfo['dotspacing'][1] * dimensioninfo['edge'][1,1])]
+           dimensioninfo['dotradius'] = radius
+           dimensioninfo['connectinglinewidth'] = dimensioninfo['dotradius']/2.0
+#
+           appearanceinfo = {}
+           appearanceinfo['edgewidth'] = dimensioninfo['dotspacing'][0]/1.0  #just a guess
+           appearanceinfo['edgestyle'] = 'stroke-dasharray:3,3'
+           appearanceinfo['edgecolor'] = 'rgb(202,202,102)'
+           appearanceinfo['fontsize'] = 'font-size:11px'
+           appearanceinfo['fontweight'] = ""
+#
+           urlinfo = {'base':'/L/ModularForm/GL2/Q/holomorphic?'}
+           urlinfo['space'] = {'weight': y}
+           urlinfo['space']['level'] = x
+           urlinfo['space']['character'] = 0
+#
+           scale = 1
+           #Symmetry types: +1 or -1
+           symmetrytype = [1,-1]
+           for signtmp in symmetrytype:
+              #urlinfo['space']['orbits'] = [ [] for label in thelabels ] # initialise an empty list for each orbit
+              urlinfo['space']['orbits'] = []
+              for label in thelabels:  # looping over Galois orbit: one label per orbit
+                 # do '+' case first
+                 MF = WebNewForm(y,x,0,label)   # one of the Galois orbits for weight y, level x
+                 numberwithlabel = MF.degree()  # number of forms in the Galois orbit
+                 if x == 1: # For level 1, the sign is always plus
+                    signfe = 1
+                 else:
+                    signfe = -1
+                    #frickeeigenvalue = MF.atkin_lehner_eigenvalues()[x] # gives Fricke eigenvalue
+                    #signfe = frickeeigenvalue * (-1)**float(y/2)  # sign of functional equation
+                 if signfe == signtmp:  # we find an orbit with sign of "signtmp"
+                    signcolour = signtocolour(signfe)
+                    orbitdescriptionlist = []
+                    for n in range(numberwithlabel):
+                       orbitdescriptionlist.append({'label':label,'number':n,'color':signcolour})
+                    urlinfo['space']['orbits'].append(orbitdescriptionlist) 
+                  
+#
+#
+#
+              #urlinfo['space']['orbits'][0][0]['color'] = signtocolour(-1)
+              #appearanceinfo['orbitcolor'] = 'rgb(102,102,102)'
+                 ans += plotsector(dimensioninfo, appearanceinfo, urlinfo)
+
+    ans += "</svg>"
+
+    #print ans
+
+    return(ans)
+
+#=====================
+
 
 ## ============================================
 ## Returns the header, some information and the url for the svg-file for
@@ -819,47 +1001,58 @@ def getOneGraphHtmlChar(min_cond, max_cond, min_order, max_order):
 def plotsector(dimensioninfo, appearanceinfo, urlinfo):
     ans = ""
     scale = dimensioninfo['scale']
-    offset = dimensioninfo['vertexlocation']
-    vertexlocation = offset;
+    vertexlocation = dimensioninfo['vertexlocation']
+    offset = dimensioninfo['offset']
     maxdots = dimensioninfo['maxdots']
     dotspacing = dimensioninfo['dotspacing']
     parallelogramsize = [1 + maxdots, 1 + maxdots]
     edge = dimensioninfo['edge']
 
     urlbase = urlinfo['base']
-    urlbase += "?"
-    for arg, val in urlinfo['space'].iteritems():
-      urlbase += arg + "='" + str(val) + "'" + "&"
+    for arg, val in urlinfo['space'].iteritems():   # this does things like: level=4&weight=8&character=0
+      if type(val).__name__ != 'dict' and type(val).__name__ != 'list':
+         urlbase += arg + "='" + str(val) + "'" + "&amp;"
 
-# draw the edges of the sector (omit edge if edgelength is 0
+# draw the edges of the sector (omit edge if edgelength is 0)
     edgelength = dimensioninfo['edgelength']
-    ans += myline(vertexlocation, scale, [0, 0], lincomb(1, [0, 0], parallelogramsize[0] * edgelength[0], edge[0]), appearanceinfo['edgewidth'], appearanceinfo['edgestyle'], appearanceinfo['edgecolor'])
-    ans += myline(vertexlocation, scale, [0, 0], lincomb(1, [0, 0], parallelogramsize[1] * edgelength[1], edge[1]), appearanceinfo['edgewidth'], appearanceinfo['edgestyle'], appearanceinfo['edgecolor'])
+    ans += myline(offset, scale, vertexlocation, lincomb(1, [0, 0], parallelogramsize[0] * edgelength[0], edge[0]), appearanceinfo['edgewidth'], appearanceinfo['edgestyle'], appearanceinfo['edgecolor'])
+    ans += "\n"
+    ans += myline(offset, scale, vertexlocation, lincomb(1, [0, 0], parallelogramsize[1] * edgelength[1], edge[1]), appearanceinfo['edgewidth'], appearanceinfo['edgestyle'], appearanceinfo['edgecolor'])
+    ans += "\n"
 
  # now iterate over the orbits
  # "orbitbase" is the starting point of an orbit, which initially is the "firstdotoffset"
-    orbitbase = dimensioninfo['firstdotoffset']
-    for orbit in urlinput['orbits']:
-      orbitcolor = appearanceinfo['orbitcolor']
-      # first determine if we should draw a line connecting the dots in an orbit
+    orbitbase = lincomb(1,vertexlocation,1,dimensioninfo['firstdotoffset'])  
+    print(vertexlocation)
+    print(dimensioninfo['firstdotoffset'])
+    for orbit in urlinfo['space']['orbits']:
+      # first determine if we should draw a line connecting the dots in an orbit, since want line beneath dots
       # no line if 1 dot or >maxdots
       if len(orbit) > 1 and len(orbit) <= maxdots:
-         ans += myline(vertexlocation, scale, orbitbase, lincomb(1, orbitbase, (len(orbit) - 1), dotspacing), dimensioninfo['connectinglinewidth'], "", appearanceinfo['edgecolor'])
-
+         ans += myline(offset, scale, orbitbase, lincomb(1, orbitbase, (len(orbit) - 1), dotspacing), dimensioninfo['connectinglinewidth'], "", appearanceinfo['edgecolor'])
+         ans += "\n"
       elif len(orbit) > maxdots:
          ans += "<a xlink:href='/not_yet_implemented' target='_top'>"
-         ans += mytext(len(orbit),vertexlocation, scale, orbitbase,"",appearanceinfo['fontsize'],appearanceinfo['fontweight'],orbitcolor)
+         ans += mytext(len(orbit),offset, scale, orbitbase,"",appearanceinfo['fontsize'],appearanceinfo['fontweight'],orbitcolor)
          ans += "</a>"
+         ans += "\n"
+         break   # we are done with this orbit if there are more than maxdots cuspforms in the orbit (re-check)***
       dotlocation = orbitbase
       for orbitelem in orbit:  # loop through the elements in an orbit, drawing a dot and making a link
+         orbitcolor = orbitelem['color']
          url = urlbase
-         for arg, val in orbitelem['urlinfo'].iteritems():
-            url += arg + "='" + str(val) + "'" + "&"
-         ans += "<a xlink:href='" + url + "' target='_top'>"
-         ans += mydot(vertexlocation, scale, dotlocation, dimensioninfo['dotradius'], orbitcolor,"",orbitelem['title'])
+         #for arg, val in orbitelem['urlinfo'].iteritems():  # think this is an error
+         for arg, val in orbitelem.iteritems():
+            url += arg + "='" + str(val) + "'" + "&amp;"
+         ans += '<a xlink:href="' + url + '" target="_top">'
+         ans += "\n"
+         #ans += mydot(vertexlocation, scale, dotlocation, dimensioninfo['dotradius'], orbitcolor,"",orbitelem['title'])
+         ans += mydot(offset, scale, dotlocation, dimensioninfo['dotradius'], orbitcolor,"","test title")
          ans += "</a>"
+         ans += "\n"
          dotlocation = lincomb(1, dotlocation, dotspacing[1], edge[1])
       orbitbase = lincomb(1, orbitbase, dotspacing[0], edge[0])
+    return(ans)
 
 ## ==================
 ## addlists:  adds two lists as if they were vectors
