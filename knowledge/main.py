@@ -50,6 +50,27 @@ md.inlinePatterns.add('mathjax\\[', IgnorePattern(r'(\\\[.+?\\\])'), '<escape')
 def ctx_knowledge():
   return {'Knowl' : Knowl}
 
+@app.template_filter("render_knowl")
+def render_knowl_in_template(knowl_content, **kwargs):
+  """
+  This function does the actual rendering, for render and the template_filter
+  render_knowl_in_template (ultimately for KNOWL_INC)
+  """
+  render_me = u"""\
+  {%% include "knowl-defs.html" %%}
+  {%% from "knowl-defs.html" import KNOWL with context %%}
+  {%% from "knowl-defs.html" import KNOWL_LINK with context %%}
+  {%% from "knowl-defs.html" import KNOWL_INC with context %%}
+  {%% from "knowl-defs.html" import TEXT_DATA with context %%}
+
+  %(content)s
+  """
+  # markdown enabled
+  render_me = render_me % {'content' : md.convert(knowl_content) }
+  # Pass the text on to markdown.  Note, backslashes need to be escaped for this, but not for the javascript markdown parser
+  return render_template_string(render_me, **kwargs)
+  
+
 # a jinja test for figuring out if this is a knowl or not
 # usage: {% if K is knowl_type %} ... {% endif %}
 def test_knowl_type(k):
@@ -144,7 +165,7 @@ def save_form():
   
 
 @knowledge_page.route("/render/<ID>", methods = ["GET", "POST"])
-def render(ID, footer=None):
+def render(ID, footer=None, kwargs = None):
   """
   this method renders the given Knowl (ID) to insert it
   dynamically in a website. It is intended to be used 
@@ -158,7 +179,7 @@ def render(ID, footer=None):
   k = Knowl(ID)
 
   #logger.debug("kwargs: %s", request.args)
-  kwargs = dict(((k, v) for k,v in request.args.iteritems()))
+  kwargs = kwargs or dict(((k, v) for k,v in request.args.iteritems()))
   #logger.debug("kwargs: %s" , kwargs)
 
   #this is a very simple template based on no other template to render one single Knowl
@@ -166,7 +187,7 @@ def render(ID, footer=None):
   if request.method == "POST":
     con = request.form['content']
     foot = footer or request.form['footer']
-  else:
+  elif request.method == "GET":
     con = request.args.get("content", k.content)
     foot = footer or request.args.get("footer", "1") 
 

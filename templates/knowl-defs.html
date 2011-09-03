@@ -50,7 +50,7 @@
   {%- else -%}
     <{{htag}}>{{title}}</{{htag}}>
   {%- endif %}
-  {{knowl.content}}
+  {{knowl.content|render_knowl|safe }}
   {% if user_is_authenticated -%}
     <div class="knowl-inc-edit"><a href="{{ url_for('knowledge.edit', ID=knowlid) }}">edit '{{knowlid}}'</a></div>
   {%- endif %}
