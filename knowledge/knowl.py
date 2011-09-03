@@ -53,8 +53,8 @@ class Knowl(object):
            'quality': self.quality,
 	       'last_author': who,
 	       'timestamp': self.timestamp
-	     } ,
-	     "$push": {"history": new_history_item}})
+	       } ,
+	     "$push": {"history": new_history_item}}, upsert=True)
     if who:
       get_knowls().update(
          { '_id':self.id }, 
