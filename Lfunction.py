@@ -258,7 +258,7 @@ def initLfunction(L,args, request):
     info = {'title': L.title}
     info['citation'] = ''
     info['support'] = ''
-    info['sv12'] = specialValueString(L.sageLfunction, 0.5, '\\frac12')
+    info['sv12'] = specialValueString(L.sageLfunction, 0.5, '1/2')
     info['sv1'] = specialValueString(L.sageLfunction, 1, '1')
     info['args'] = args
 
