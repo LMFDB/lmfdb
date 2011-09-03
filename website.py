@@ -120,6 +120,10 @@ def plotLfunction():
 def browseGraph():
     return renderLfunction.render_browseGraph(request.args)
 
+@app.route("/browseGraphTMP")
+def browseGraphTMP():
+    return renderLfunction.render_browseGraphTMP(request.args)
+
 @app.route("/browseGraphHolo")
 def browseGraphHolo():
     return renderLfunction.render_browseGraphHolo(request.args)
