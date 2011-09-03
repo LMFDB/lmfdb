@@ -1,7 +1,7 @@
 {% extends 'homepage.html' %}
 {% block content %}  
 
-{% if info.user.is_authenticated() %}
+{% if user_is_authenticated %}
    <h1>You are {{ info.user.name }}</h1>
    <h2>Actions</h2>
    <ul><li><a href="{{ info.logout }}">Logout</a></li></ul>
@@ -27,7 +27,7 @@
   </form>
 {% endif %}
 
-{% if info.user.is_authenticated() %}
+{% if user_is_authenticated %}
   <h2>Edit Details</h2>
   <form action="{{ url_for('.set_info') }}" method="post" name="userinfo">
     <table>

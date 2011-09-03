@@ -13,7 +13,7 @@
          {% endif %}
       </div>
       <div class="topright">
-          {% if user.is_authenticated() -%}
+          {% if user_is_authenticated -%}
             <a href="{{ url_for('users.info') }}">{{ username }}</a> 
             &middot;
             <a href="{{ url_for('users.logout') }}">Logout</a>

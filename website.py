@@ -27,8 +27,10 @@ import sys
 
 try:
     import password
+    logging.info("password imported")
     readwrite_password = password.readwrite_password
 except:
+    logging.warning("no password!")
     readwrite_password = ''
 
 @app.errorhandler(404)
