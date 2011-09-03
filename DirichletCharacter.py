@@ -9,11 +9,6 @@ from sage.all import *
 import tempfile, os
 from pymongo import ASCENDING
 from WebCharacter import *
-import Lfunction
-import LfunctionNavigationProcessing
-import LfunctionPageProcessing
-import LfunctionComp
-import LfunctionPlot
 from utils import to_dict, parse_range
 import ListCharacters
 
