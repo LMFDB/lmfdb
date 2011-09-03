@@ -9,7 +9,7 @@ import siegel_modular_form
 import modular_forms
 import elliptic_curve
 import quadratic_twists
-import Lfunction
+import renderLfunction
 #import maass_form
 import plot_example
 import number_field
@@ -26,16 +26,19 @@ import sys
 
 @app.errorhandler(404)
 def not_found(error):
-  return render_template("404.html", title="404 Error"), 404
-
-@app.errorhandler(500)
-def not_found(error):
-  return render_template("500.html", title="500 Error"), 500
+    return "404", 404
 
 @app.route("/")
 def index():
-  t = "The <b>L</b>-function and <b>M</b>odular <b>F</b>orms <b>D</b>ata<b>B</b>ase"
-  return render_template('index.html', title = t, bread=None)
+    return render_template('index.html', title ="Homepage", bread=None)
+
+@app.route("/about")
+def about():
+    return render_template("about.html", title="About")
+
+@app.route("/acknowledgment")
+def acknowledgment():
+  return render_template("acknowledgment.html", title="Acknowledgment")
 
 def root_static_file(name):
     def static_fn():
@@ -74,9 +77,9 @@ def modular_form_toplevel():
     return redirect(url_for("mf.render_modular_form_main_page"))
     #return render_template("modular_form_space.html", info = { })
     
-@app.route("/about")
-def about():
-    return render_template("about.html", title="About")
+@app.route("/calc")
+def calc():
+    return request.args['ep']
 
 @app.route("/form")
 def form_example():
@@ -110,27 +113,37 @@ def render_Character(arg1 = None, arg2 = None):
 @app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>")
 @app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
 def render_Lfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = None):
-    return Lfunction.render_webpage(request, arg1, arg2, arg3, arg4, arg5)
+    return renderLfunction.render_webpage(request, arg1, arg2, arg3, arg4, arg5)
 
 @app.route("/plotLfunction")
-def plotLfunction():
-    return Lfunction.render_plotLfunction(request.args)
+@app.route("/plotLfunction/<arg1>")
+@app.route("/plotLfunction/<arg1>/<arg2>")
+@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>")
+@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/<arg4>")
+@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
+def plotLfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = None):
+    return renderLfunction.render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5)
 
 @app.route("/browseGraph")
 def browseGraph():
-    return Lfunction.render_browseGraph(request.args)
+    return renderLfunction.render_browseGraph(request.args)
 
 @app.route("/browseGraphHolo")
 def browseGraphHolo():
-    return Lfunction.render_browseGraphHolo(request.args)
+    return renderLfunction.render_browseGraphHolo(request.args)
 
 @app.route("/browseGraphChar")
 def browseGraphChar():
-    return Lfunction.render_browseGraphHolo(request.args)
+    return renderLfunction.render_browseGraphHolo(request.args)
 
 @app.route("/zeroesLfunction")
-def zeroesLfunction():
-    return Lfunction.render_zeroesLfunction(request.args)
+@app.route("/zeroesLfunction/<arg1>")
+@app.route("/zeroesLfunction/<arg1>/<arg2>")
+@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>")
+@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>")
+@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
+def zeroesLfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = None):
+    return renderLfunction.render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5)
 
 @app.route('/ModularForm/GSp4/Q')
 def ModularForm_GSp4_Q_top_level():
