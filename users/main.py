@@ -205,6 +205,7 @@ def register_token(token):
     newuser             = pwdmanager.new_user(name, pw1)
     newuser.full_name   = full_name
     newuser.email       = email
+    newuser.save()
     login_user(newuser, remember=True) 
     flask.flash("Hello %s! Congratulations, you are a new user!" % newuser.name)
     get_user_token_coll().remove({'_id' : token})
