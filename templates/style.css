@@ -687,6 +687,7 @@ h2 > .knowl-qm {
 .knowl-output h2 {
   color: {{ col_knowl_dd }};
 }
+.knowl-output a { display: inline; }
 
 .knowl-footer {
   position: relative;
