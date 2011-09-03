@@ -7,12 +7,44 @@ import re
 import pymongo
 import bson
 import utils
-from classical_modular_forms.backend.web_modforms import *
+import logging
 
 logger = utils.make_logger("LF")
 
+def get_attr_or_method(thiswillbeexecuted, attr_or_method_name):
+    """
+        Given an object O and a string "text", this returns O.text() or O.text depending on
+        whether text is an attribute or a method of O itself _or one of its superclasses_, which I will
+        only know at running time. I think I need an eval for that.   POD
+        
+    """
+    # I don't see a way around using eval for what I want to be able to do
+    # Because of inheritance, which method should be called depends on self
+    try:
+        return eval("thiswillbeexecuted."+attr_or_method_name)
+    except:
+        return None
+
+import logging
+def my_find_update(the_coll, search_dict, update_dict):
+    """ This performs a search using search_dict, and updates each find in  
+    the_coll using update_dict. If there are none, update_dict is actually inserted.
+    """
+    x = the_coll.find(search_dict,limit=1)
+    if x.count() == 0:
+        the_coll.insert(update_dict)
+    else:
+        for x in the_coll.find(search_dict):
+            x.update(update_dict)
+            the_coll.save(x)
+        
+        
 ##================================================================================
 
+def constructor_logger(object, args):
+    logging.info(str(object.__class__)+str(args))
+    object.inject_database(["original_mathematical_object()", "poles", "residues", "kappa_fe", 
+        "lambda_fe", "mu_fe", "nu_fe"])
 class Lfunction:
     """Class representing a general L-function
     It can be called with a dictionary of these forms:
@@ -24,7 +56,7 @@ class Lfunction:
     """
     
     def __init__(self, **args):
-        
+        constructor_logger(self,args)
         # Initialize some default values
         self.coefficient_period = 0
         self.poles = []
@@ -44,7 +76,7 @@ class Lfunction:
 
         # Initialize from an lcalcfile if it's not a subclass
         if 'Ltype' in args.keys():
-
+            self._Ltype = args.pop("Ltype")
             # Put the args into the object dictionary
             self.__dict__.update(args)
         
@@ -79,6 +111,8 @@ class Lfunction:
 
             self.generateSageLfunction()
 
+    def Ltype(self):
+        return self._Ltype
 
     def parseLcalcfile(self, filecontents):
         """ Extracts informtion from the lcalcfile
@@ -172,6 +206,48 @@ class Lfunction:
         
         return(thefile)
 
+    #==================================================
+    # other useful methods
+    #==================================================
+    
+    def original_mathematical_object(self):
+        raise Error("not all L-function have a mathematical object tag defined atm")
+        
+    def initial_zeroes(self, numzeroes=0):
+        pass
+
+    def critical_value(self):
+        pass
+        
+    def value_at_1(self):
+        pass
+        
+    def conductor(self, advocate):
+        # Advocate could be IK, CFKRS or B
+        pass
+        
+    #============== Injects into the database of all the L-functions
+    #==============
+            
+    def inject_database(self, relevant_info, time_limit = None):
+        #   relevant_methods are text strings 
+        #    desired_database_fields = [Lfunction.original_mathematical_object, Lfunction.level]
+        #    also zeroes, degree, conductor, type, real_coeff, rational_coeff, algebraic_coeff, critical_value, value_at_1, sign
+        #    ok_methods = [Lfunction.math_id, Lfunction.level]
+        #   
+        # Is used to inject the data in relevant_fields
+        
+        logging.info("Trying to inject")
+        import base
+        db = base.getDBConnection().Lfunctions
+        Lfunctions = db.full_collection
+        update_dict = dict([(method_name,get_attr_or_method(self,method_name)) for method_name in relevant_info])
+        
+        logging.info("injecting " + str(update_dict))
+        search_dict = {"original_mathematical_object()": get_attr_or_method(self, "original_mathematical_object()")}
+        
+        my_find_update(Lfunctions, search_dict, update_dict)
+        
 
 ##================================================================================
 
@@ -185,13 +261,11 @@ class Lfunction_EC(Lfunction):
     """
     
     def __init__(self, **args):
-
         #Check for compulsory arguments
         if not 'label' in args.keys():
             raise Exception("You have to supply a label for an elliptic curve L-function")
         
         # Initialize default values
-        self.Ltype = 'ellipticcurve'
         self.numcoeff = 20 # set default to 20 coefficients
 
         # Put the arguments into the object dictionary
@@ -239,8 +313,20 @@ class Lfunction_EC(Lfunction):
         
         self.generateSageLfunction()
 
+        logging.info("I am now proud to have ", str(self.__dict__))
+        constructor_logger(self,args)
 
-
+    def Ltype(self):
+        return "ellipticcurve"
+        
+    def ground_field(self):
+        return "Q"
+        # At the moment
+    
+    def original_mathematical_object(self):
+        return [self.Ltype(), self.ground_field(), self.label]
+        
+            
 ##================================================================================
 
 class Lfunction_EMF(Lfunction):
@@ -262,7 +348,6 @@ class Lfunction_EMF(Lfunction):
             raise KeyError, "You have to supply weight and level for an elliptic modular form L-function"
         
         # Initialize default values
-        self.Ltype = 'ellipticmodularform'
         self.character = 0  # Trivial character is default
         self.label=''       # No label, is OK If space is one-dimensional
         self.number = 1     # Default choice of embedding of the coefficients
@@ -330,6 +415,11 @@ class Lfunction_EMF(Lfunction):
         self.credit = ''
        
         self.generateSageLfunction()
+        constructor_logger(self,args)
+
+
+    def Ltype(self):
+        return "ellipticmodularform"
 
 
 ##================================================================================
@@ -342,9 +432,9 @@ class RiemannZeta(Lfunction):
     """
     
     def __init__(self, **args):
+        constructor_logger(self,args)
 
         # Initialize default values
-        self.Ltype = 'riemann'
         self.numcoeff = 30 # set default to 30 coefficients
 
         # Put the arguments into the object dictionary
@@ -378,6 +468,12 @@ class RiemannZeta(Lfunction):
         self.title = "Riemann Zeta-function: $\\zeta(s)$"
         
         self.generateSageLfunction()
+    
+    def Ltype(self):
+        return "riemann"
+
+    def original_mathematical_object(self):
+        return ["riemann"]
 
 ##================================================================================
 
@@ -398,7 +494,6 @@ class Lfunction_Dirichlet(Lfunction):
             raise KeyError, "You have to supply charactermodulus and characternumber for the L-function of a Dirichlet character"
         
         # Initialize default values
-        self.Ltype = 'dirichlet'
         self.numcoeff = 30    # set default to 30 coefficients
 
         # Put the arguments into the object dictionary
@@ -461,6 +556,14 @@ class Lfunction_Dirichlet(Lfunction):
                           str(self.characternumber))
         
         self.generateSageLfunction()
+        constructor_logger(self,args)
+
+    def Ltype(self):
+        return "dirichlet"
+
+    def original_mathematical_object(self):
+        return [self.Ltype(), self.charactermodulus, self.characternumber]
+
 
 ##================================================================================
 
@@ -475,14 +578,13 @@ class Lfunction_Maass(Lfunction):
     """
     
     def __init__(self, **args):
-        print "In LfunctionMAsss"
+        constructor_logger(self,args)
 
         #Check for compulsory arguments
         if not 'dbid' in args.keys():
             raise KeyError, "You have to supply dbid for the L-function of a Maass form"
         
         # Initialize default values
-        self.Ltype = 'maass'
         self.dbName = 'MaassWaveForm'    # Set default database
         self.dbColl = 'HT'               # Set default collection    
 
@@ -582,6 +684,8 @@ class Lfunction_Maass(Lfunction):
         
         self.generateSageLfunction()
 
+    def Ltype(self):
+        return "maass"
 ##================================================================================
 
 class DedekindZeta(Lfunction):   # added by DK
@@ -592,13 +696,13 @@ class DedekindZeta(Lfunction):   # added by DK
     """
     
     def __init__(self, **args):
+        constructor_logger(self,args)
 
         #Check for compulsory arguments
         if not 'label' in args.keys():
             raise Exception("You have to supply a label for a Dedekind zeta function")
         
         # Initialize default values
-        self.Ltype = 'dedekind'
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
