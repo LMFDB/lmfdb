@@ -98,7 +98,7 @@ nils = http://nilsskoruppa-lmfdb.googlecode.com/hg
 rishi = http://rishikes-lmfdb.googlecode.com/hg
 nathan = http://nathancryan-lmfdb.googlecode.com/hg
 sally = http://koutslts-lmfdb.googlecode.com/hg
-michael = http://michaelorubinstein-lmfdb-frg-msri.googlecode.com/hg
+michael = http://michaelorubinstein-lmfdb.googlecode.com/hg
 
 [auth]
 default.username = !!! ENTER YOUR GOOGLE ID EMAIL !!!
