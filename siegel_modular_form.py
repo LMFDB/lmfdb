@@ -6,8 +6,10 @@ from sage.all_cmdline import *
 
 DATA = 'http://data.countnumber.de/Siegel-Modular-Forms/'
 
+
 def render_webpage(args = {}):
     bread = [('Siegel modular forms', url_for( 'ModularForm_GSp4_Q_top_level'))]
+
     if len(args) == 0:
         info = {}
         return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_navigation.html", \
@@ -36,6 +38,7 @@ def render_webpage(args = {}):
         if 'Sp4Z' == args['group']:
             info['parent_as_tex'] = 'M_*\\big({\\rm Sp}(4,\\mathbb{Z})\\big)'
             sage_group ='Sp(4,Z)';
+            info['generators'] = 'smf.Igusa_generators'
         elif 'Gamma0_2' == args['group']:
             info['parent_as_tex'] = 'M_*\\big(\\Gamma_0(2)\\big)'
             sage_group ='Gamma_0(2)';
@@ -50,6 +53,7 @@ def render_webpage(args = {}):
             sage_group ='Sp(4,Z)_2';
         elif 'Kp' == args['group']:
             info['parent_as_tex'] = 'S_*\\big(K(p)\\big)'
+            info['generators'] = 'smf.Kp_generators'
             sage_group ='K(p)';
         elif 'Sp8Z' == args['group']:
             info['parent_as_tex'] = 'S_*\\big({\\rm Sp}(8,\\mathbb{Z})\\big)'
@@ -57,12 +61,11 @@ def render_webpage(args = {}):
         else:
             return render_template("ModularForm_GSp4_Q/None.html")
         
-        info['special_side'] = ['\(' + info['parent_as_tex'] + '\)', \
-                                [ ('Basic information', url_for( 'ModularForm_GSp4_Q_top_level', group = group, page='basic')),\
-                                  ('Generators and relations', url_for( 'ModularForm_GSp4_Q_top_level', group = group, page='gen_rel')),\
-                                  ('Available forms', url_for( 'ModularForm_GSp4_Q_top_level', group = group, page='forms')),\
-                                  ('Dimensions', url_for( 'ModularForm_GSp4_Q_top_level', group = group, page='dimensions'))]]
-        sidebar = [info['special_side']]
+        sidebar = [['\(' + info['parent_as_tex'] + '\)', \
+                    [ ('Basic information', url_for( 'ModularForm_GSp4_Q_top_level', group = group, page='basic')),\
+                      ('Available forms', url_for( 'ModularForm_GSp4_Q_top_level', group = group, page='forms')),\
+                      ('Dimensions', url_for( 'ModularForm_GSp4_Q_top_level', group = group, page='dimensions'))]]]
+#        info['special_side'] = sidebar[0]
         
         # Logic to render pages ----------------
 
@@ -127,7 +130,6 @@ def render_webpage(args = {}):
             if (group == 'Sp4Z') or (group == 'Sp8Z'):
                 info['dimensions'] = [ (k, siegel_core.dimension( k, sage_group)) for k in range(min_wt, max_wt+1)]
             elif group == 'Kp':
-                print '...------------------------------------->',level, type(level)
                 info['dimensions'] = [ (k, siegel_core.dimension( k, sage_group, tp = int(level))) for k in range(min_wt, max_wt+1)]
             bread += [(sidebar[0][0], sidebar[0][1][3][1])]
             return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_dimensions.html", \

@@ -136,7 +136,7 @@
 	<label>weight(s)</label>
 	<input type="text"
 	       name="weight_range"
-	       {% if info.weight_range %}placeholder='{{ info.weight_range }}'{% endif %}
+	       {% if info.weight_range %}value='{{ info.weight_range }}'{% endif %}
 	       >
 	<span class="formexample">e.g. 2 or 20-40</span>
       </td>
@@ -146,5 +146,5 @@
     </tr>
   </table> 
 </form> 
-{{ info.weight_range }}
+
 {% endblock %}
