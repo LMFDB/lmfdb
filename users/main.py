@@ -173,7 +173,7 @@ def register_token(token):
   token_exists = get_user_token_coll().find({'_id' : token}).count() == 1
   if not token_exists:
     flask.abort(401)
-  bread = base_bread() + [('Register', url_for(".register"))]
+  bread = base_bread() + [('Register', url_for(".register_new"))]
   if request.method == "GET":
     return render_template("register.html", title="Register", bread=bread, next=request.referrer or "/", token=token)
   elif request.method == 'POST':
@@ -182,17 +182,17 @@ def register_token(token):
       flask.flash("""Oops, usename '%s' is not allowed.
                   It must consist of lower/uppercase characters, 
                   no spaces, numbers or '.', '_' and '-'.""" % name, "error")
-      return flask.redirect(url_for(".register"))
+      return flask.redirect(url_for(".register_new"))
     
     pw1    = request.form['password1']
     pw2    = request.form['password2']
     if pw1 != pw2:
       flask.flash("Oops, passwords do not match!", "error")
-      return flask.redirect(url_for(".register"))
+      return flask.redirect(url_for(".register_new"))
 
     if len(pw1) <= 3:
       flask.flash("Oops, password too short. Minimum 4 characters please!", "error")
-      return flask.redirect(url_for(".register"))
+      return flask.redirect(url_for(".register_new"))
 
     full_name  = request.form['full_name']
     email      = request.form['email']
@@ -200,7 +200,7 @@ def register_token(token):
 
     if pwdmanager.user_exists(name):
       flask.flash("Sorry, user ID '%s' already exists!" % name, "error")
-      return flask.redirect(url_for(".register"))
+      return flask.redirect(url_for(".register_new"))
 
     newuser             = pwdmanager.new_user(name, pw1)
     newuser.full_name   = full_name

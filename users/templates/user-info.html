@@ -9,7 +9,7 @@
 {% else %}
   <h1>You are not logged in</h1>
   <div style="margin-bottom: 20px">New user? 
-     <a href="{{ url_for('.register') }}">Register here</a>
+     <a href="{{ url_for('.register_new') }}">Register here</a>
   </div>
 
   <form name="login" action="{{ url_for('.login') }}" method="POST">
