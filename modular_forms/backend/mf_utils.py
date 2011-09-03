@@ -10,7 +10,7 @@ class ModularFormDisplay(object):
     Main class for displaying Modular forms objects.
     """
 
-    def __init__(self,dbname=''):
+    def __init__(self,dbname='',**kwds):
         self._dbname = dbname
         self.db=None
         self._keys=[]

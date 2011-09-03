@@ -706,7 +706,7 @@ class WebNewForm(SageObject):
                 return 
 
 
-        self._name = str(self._N)+"."+str(self._k)+str(self._label) +" (weight %s)" % k
+        self._name = str(self._N)+"."+str(self._k)+str(self._label)
         if self._f == None:
             if(self._verbose>=0):
                 raise IndexError,"Requested function does not exist!"
