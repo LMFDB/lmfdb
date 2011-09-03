@@ -592,7 +592,7 @@ function updateMappingRules(data, id) {
   <dd>{{editable(entry,'name')}}</dd>
 
   <dt>Status</dt>
-  {% if current_user.is_admin() or current_user.id == entry.uploader_id %}
+  {% if current_user.is_admin() %}
     <select onchange="updateMetadata('{{entry._id}}', 'status', this.value)">
       <option value="approve" {%if entry.metadata.status[0]=='a'%}selected{%endif%}>Approved</option>
       <option value="disapproved" {%if entry.metadata.status[0]=='d'%}selected{%endif%}>Disapproved</option>
@@ -620,6 +620,8 @@ function updateMappingRules(data, id) {
   <dd>{{editable(entry,'reference')}}</dd>
   <dt>BibTeX</dt>
   <dd>{{editableTextarea(entry,'bibtex')}}</pre></dd>
+  <dt>Comments</dt>
+  <dd>{{editableTextarea(entry,'comments')}}</pre></dd>
   <dt>Contents</dt>
   <dd>
 

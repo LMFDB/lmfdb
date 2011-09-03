@@ -4,8 +4,8 @@
 
 <div>Local Fields Page</div>
 
-<form action="{{ url_for('.search') }}" method="POST">
-<input name="val" value="123" />
+<form action="{{ url_for('.search') }}" method="GET">
+<input name="val" placeholder="123" />
 <button type="submit">Search</button>
 </form>
 

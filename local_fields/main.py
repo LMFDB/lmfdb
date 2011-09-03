@@ -11,6 +11,9 @@ from local_fields import local_fields_page, logger, logger
 
 def get_bread(breads = []):
   bc = [("Local Field", url_for(".index"))]
+  for b in breads:
+    bc.append(b)
+  return bc
 
 @local_fields_page.route("/")
 def index():
@@ -20,11 +23,11 @@ def index():
 @local_fields_page.route("/search", methods = ["GET", "POST"])
 def search():
   if request.method == "GET":
-    bread = get_bread(("Search", url_for('.search')))
-    return render_template("lf-search.html", val="no value", title="Local Fields Search", bread = bread)
+    val = request.args.get("val", "no value")
+    bread = get_bread([("Search for '%s'" % val, url_for('.search'))])
+    return render_template("lf-search.html", title="Local Fields Search", bread = bread, val = val)
   elif request.method == "POST":
-    val = request.form['val']
-    return render_template("lf-search.html", val = val)
+    return "ERROR: we aloways do http get to explicitly display the search parameters"
   else:
     return flask.redirect(404)
 

@@ -15,6 +15,7 @@
 import pymongo
 import flask
 from base import app, getDBConnection
+from datetime import datetime
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
 from flaskext.login import login_required, current_user
 from knowl import Knowl
@@ -137,6 +138,7 @@ def save_form():
   k.title = request.form['title']
   k.content = request.form['content']
   k.quality = request.form['quality']
+  k.timestamp = datetime.now()
   k.save(who=current_user.get_id())
   return flask.redirect(url_for(".show", ID=ID))
   
@@ -187,7 +189,7 @@ def render(ID, footer=None):
     render_me += """\
   <div class="knowl-footer">
     <a href="{{ url_for('.show', ID='%(ID)s') }}">permalink</a> 
-    {%% if user.is_authenticated() %%}
+    {%% if user_is_authenticated %%}
       &middot;
       <a href="{{ url_for('.edit', ID='%(ID)s') }}">edit</a> 
     {%% endif %%}

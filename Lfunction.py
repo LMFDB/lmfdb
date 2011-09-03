@@ -153,6 +153,11 @@ class Lfunction(object):
         self.Q_fe = float(lines[5+2*self.quasidegree])
         self.sign = pair2complex(lines[6+2*self.quasidegree])
 
+        self.kappa_fe = []
+        self.lambda_fe = []
+        self.mu_fe = []
+        self.nu_fe = []
+
         for i in range(self.quasidegree):
             localdegree = float(lines[5+2*i])
             self.kappa_fe.append(localdegree)
@@ -520,7 +525,7 @@ class Lfunction_Dirichlet(Lfunction):
     """
     
     def __init__(self, **args):
-        print args.keys()
+
         #Check for compulsory arguments
         if not ('charactermodulus' in args.keys() and 'characternumber' in args.keys()):
             raise KeyError, "You have to supply charactermodulus and characternumber for the L-function of a Dirichlet character"
@@ -624,21 +629,21 @@ class Lfunction_Maass(Lfunction):
 
         # Fetch the information from the database
         import base
-        print self.dbName
-        print self.dbColl
         connection = base.getDBConnection()
         db = pymongo.database.Database(connection, self.dbName)
         collection = pymongo.collection.Collection(db, self.dbColl)
         dbEntry = collection.find_one({'_id': self.dbid})
-        print dbEntry
 
-        if dbName == 'Lfunction':  # Data from Lemurell
+        if self.dbName == 'Lfunction':  # Data from Lemurell
             
             # Extract the L-function information from the database entry
             self.__dict__.update(dbEntry)
 
+            self.coefficient_period = 0
+            self.poles = []
+            self.residues = []
+
             # Extract the L-function information from the lcalfile in the database
-            # TODO: Probably not necessary since everything should be in the database
             self.parseLcalcfile(self.lcalcfile)  
 
         else: # GL2 data from Then or Stromberg
