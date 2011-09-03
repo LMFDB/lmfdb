@@ -1,26 +1,50 @@
 {% extends "homepage.html" %}
 
 {% block content -%}
-<h1>Read Knowl</h1>
-<div>
-  <table>
-  {% for krow in knowls|batch(5, '') -%}
-    <tr>
-      {% for k in krow -%}
-        <td>
-          {% if k -%}
-            <a href="{{ url_for('.show', ID=k._id) }}">{{ k.title }}</a></li>
-          {%- endif %}
-        </td>
-      {%- endfor %}
-    </tr>
+<style text="text/css">
+#knowls a {
+  display: block;
+  margin: 0px 10px 0px 0px;
+  width: 160px;
+}
+#knowls a > span:last-child {
+  font-size: xx-small;
+  color: grey;
+  position: relative;
+  top: -0.7em;
+}
+#knowls td div {
+  display: inline;
+  width: 165px;
+  float: left;
+}
+#knowls td { 
+  padding: 10px 0px;
+}
+#knowls tr td:first-child {
+  width: 50px;
+  vertical-align: middle;
+  text-align: center;
+  font-size: x-large;
+}
+</style>
+<h1>Read Knowls</h1>
+<table id="knowls" class="ntdata">
+  {% for c, ks in knowls -%}
+   <tr>
+    <td>{{ c }}</td>
+    <td>
+      {% for k in ks %}
+        <div><a href="{{ url_for('.show', ID=k._id) }}">{{ k.title }}<br/>
+             <span>{{ k._id }}</span></a></div>
+      {% endfor %}
+     </td>
+   </tr>
   {%- endfor %}
-  </table>
-  </ul>
-</div>
+</table>
 
 {% if user_is_authenticated -%}
-  <h1>Edit Knowl</h1>
+  <h1 style="clear: both;">Edit Knowl</h1>
   <form action="{{ url_for('.edit_form') }}" method="POST">
     Knowl ID: <input id="knowl-edit-id" name="id"></input>
     <button id="knowl-edit-btn">Edit</button>

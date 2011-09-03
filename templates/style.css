@@ -520,12 +520,14 @@ table.ntdata tbody tr {
 table.ntdata tbody th {
 }
 
-table tr.odd {
-    background: white;
+table tr.odd,
+table tr:nth-child(odd) {
+ background: white;
 }
 
-table tr.even {
- background: #eeffee;
+table tr.even,
+table tr:nth-child(odd)  {
+ background: #EFE;
 }
 
 table.ntdata tr.line {
