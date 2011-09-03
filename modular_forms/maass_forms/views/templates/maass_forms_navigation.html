@@ -1,0 +1,20 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+{% if info.error is defined %}
+
+<h1>There was an error in meeting your previous request. Please change parameters.</h1>
+
+<div> 
+<h2> Error message: </h2>
+{{ info.error | safe }}
+</div>
+{% endif %}
+
+<h1>Maass Forms</h1>
+<ul>
+  <li><a href="{{ url_for('mwf.render_maass_waveforms') }}">Maass Waveforms on subgroups of \(SL_{2}(\mathbb(Z))\)</a></li>
+  <li><a href="{{ url_for('mwfp.render_picard_maass_forms') }}">Maass Forms on the Picard group \(SL_2(\mathbb{Z}[i])\)</li>
+
+{% endblock content %}

@@ -3,17 +3,57 @@
 
 {% block content %}
 
-<table align="left" cellpadding="4">
-<tr>
-{% for r in range(info.order_start,info.order_end+1) %}
-<td><a href="order{{r}}.1">{{r}}</a></td>
-{% if loop.index%20 == 0 %}
-</tr>
-<tr>
-{% endif %}
-{% endfor %}
-</table>
+<style>
+.chi {
+    padding: 10px 10px;
+    width: 7em;
+    float: left;
+    display: inline;
+}
+.chi a { display: inline; }
+.primitive {
+  color:green;
+}
+.nonprimitive {
+    color:blue;
+}
+</style>
 
+<table>
+<thead align="left">
+    <tr>
+        <th>
+            <font color = "blue"> Non-primitive </font> characters.</br>
+            <font color = "green"> Primitive </font> characters. 
+        </th>
+    <tr/>
+</thead>
+</table>
+<br/>
+
+<div>
+<table class="ntdata">
+    <thead align="center">
+    <tr>
+        <th>Order</th>
+        <th>Characters</th>
+    </tr>
+</thead>
+<tbody>
+    {% for line in info.contents %}
+    <tr><td align="center" style="4em"> \( {{ line[0] }} \)</td>
+    <td>
+        {% for chi in line[1] %}
+        <div class="chi">
+            <a href="{{ chi[0] }}/{{chi[1]}}">{% if chi[2] %}<font color="green">{% else %}<font color="blue">{% endif %}\(\chi_{ {{chi[1]}} } \pmod{ {{chi[0]}} }\)</font></a>
+            <!--<a class="{% if chi[2] -%}primitive{%- else -%}nonprimitive{%- endif %}"  href="{{ chi[0] }}/{{chi[1]}}">\(\chi_{ {{chi[1]}} } \pmod{ {{chi[0]}} }\)</a>-->
+        </div>
+    {% endfor %}
+    </td></tr>
+{% endfor %}
+<tbody>
+</table>
+</div>
 
 {% endblock %}
 

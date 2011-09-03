@@ -130,7 +130,17 @@ function knowl_click_handler($el) {
     // create the element for the content, insert it after the one where the 
     // knowl element is included (e.g. inside a <h1> tag) (sibling in DOM)
      var idtag = "id='"+output_id.substring(1) + "'";
-    $el.parent().after("<div class='knowl-output'" +idtag+ ">loading '"+knowl_id+"' …</div>");
+    
+    // check, if the knowl is inside a td or th in a table. otherwise assume its
+    // properly sitting inside a <div> or <p>
+    if($el.parents().is("table")) {
+      // assume we are in a td or th tag, go 2 levels up
+      var cols = $el.parent().parent().children().length;
+      $el.parent().parent().after(
+          "<tr><td colspan='"+cols+"'><div class='knowl-output'" +idtag+ ">loading '"+knowl_id+"' …</div></td></tr>");
+    } else {
+      $el.parent().after("<div class='knowl-output'" +idtag+ ">loading '"+knowl_id+"' …</div>");
+    }
  
     // "select" where the output is and get a hold of it 
     var $output = $(output_id);
@@ -146,8 +156,10 @@ function knowl_click_handler($el) {
     } else {
       $output.addClass("loading");
       $output.show();
-      log("downloading knowl: " + knowl_id);
-      $output.load('/knowledge/render/' + knowl_id, function(response, status, xhr) { 
+      var kwargs = $el.attr("kwargs");
+      log("downloading knowl: " + knowl_id + " /w kwargs: " + kwargs);
+      $output.load('/knowledge/render/' + knowl_id + "?" + kwargs,
+       function(response, status, xhr) { 
         $output.removeClass("loading");
         if (status == "error") {
           $el.removeClass("active");

@@ -59,10 +59,7 @@ List-table should always be like
   </tbody>
 </table>
 
-
-use jinja's engine to do the even/odd formatting. 
-TODO there will also be a MACRO inside the template engine doing all the rendering.
-
+... we might also switch to CSS3's nth-element selector and forget about this.
 
 Properties
 ----------

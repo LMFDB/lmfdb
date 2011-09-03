@@ -4,6 +4,7 @@
 # author: harald schilly <harald.schilly@univie.ac.at>
 
 import pymongo
+ASC = pymongo.ASCENDING
 import flask
 from functools import wraps
 from base import app, getDBConnection
@@ -91,11 +92,12 @@ def set_info():
 
 @login_page.route("/profile/<userid>")
 @login_required
-def user_detail(userid):
+def profile(userid):
   user = LmfdbUser(userid)
-  bread = base_bread() + [(user.name, url_for('.user_detail', userid=user.get_id()))]
+  bread = base_bread() + [(user.name, url_for('.profile', userid=user.get_id()))]
+  userknowls = getDBConnection().knowledge.knowls.find({'authors' : userid}, fields=['title']).sort([('title', ASC)])
   return render_template("user-detail.html", user=user, 
-      title="%s" % user.name, bread= bread)
+      title="%s" % user.name, bread= bread, userknowls = userknowls)
 
 @login_page.route("/login", methods = ["POST"])
 def login(**kwargs):

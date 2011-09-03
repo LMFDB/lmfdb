@@ -5,8 +5,7 @@ import cmath
 import datetime
 from flask import url_for, make_response
 import base
-from classical_modular_forms.backend.web_modforms import *
-#import runningWindow
+from modular_forms.elliptic_modular_forms.backend.web_modforms import *
 
 
 
@@ -56,15 +55,7 @@ def getAllMaassGraphHtml(degree):
             l = math.trunc(docLevel['level'])
             logging.debug(l)
             ans += getOneGraphHtml([g,l])
-                    
-##            signs = collection.group(['sign'],{ 'degree': degree ,'group': g
-##                                                ,'level': l},
-##                              {'csum': 0},
-##                              'function(obj,prev) { prev.csum += 1; }')
-##            for docSign in signs:
-##                s = docSign['sign']
-##                print 'sign: ' + s
-            
+                                
     return(ans)
 
 ## ============================================
@@ -145,18 +136,16 @@ def getOneGraphHtml(gls):
 ## ============================================
 def getGraphInfo(gls):
     (width,height) = getWidthAndHeight(gls)
-##    url = url_for('browseGraph',group=group, level=level, sign=sign)
     if len(gls) > 2:
-        url = ('/browseGraph?group=' + gls[0] + '&level=' + str(gls[1])
-                   + '&sign=' + gls[2])
+        url = url_for('browseGraph',group=gls[0], level=gls[1], sign=gls[2])
+        url =url.replace('+', '%2B')  ## + is a special character in urls
     else:
-        url = ('/browseGraph?group=' + gls[0] + '&level=' + str(gls[1]))
-    url =url.replace('+', '%2B')  ## + is a special character in urls
+        url = url_for('browseGraph',group=gls[0], level=gls[1])
+    
     ans = {'src': url}
     ans['width']= width
     ans['height']= height
     
-
     return(ans)
 
 
@@ -165,16 +154,14 @@ def getGraphInfo(gls):
 ## the L-functions of holomorphic cusp form.
 ## ============================================
 def getGraphInfoHolo(Nmin, Nmax, kmin, kmax):
-#    (width,height) = getWidthAndHeight(group, level, sign)
     xfactor = 90
     yfactor = 30
     extraSpace = 30
 
     (width,height) = (extraSpace + xfactor*(Nmax), extraSpace + yfactor*(kmax))
-##    url = url_for('browseGraph',group=group, level=level, sign=sign)
-    url = ('/browseGraphHolo?Nmin=' + str(Nmin) + '&Nmax=' + str(Nmax)
-           + '&kmin=' + str(kmin) + '&kmax=' + str(kmax))
-#    url =url.replace('+', '%2B')  ## + is a special character in urls
+    url = url_for('browseGraphHolo',Nmin=str(Nmin), Nmax=str(Nmax),
+                  kmin= str(kmin), kmax= str(kmax))
+
     ans = {'src': url}
     ans['width']= width
     ans['height']= height
@@ -224,65 +211,10 @@ def getWidthAndHeight(gls):
 
 ## ============================================
 ## Returns the contents (as a string) of the svg-file for
-## the L-functions of the Maass forms for given group, level and
-## sign (of the functional equation).
-## ============================================
-def paintSvgFile(group, level, sign):
-    conn = base.getDBConnection()
-    db = conn.Lfunction
-    collection = db.LemurellMaassHighDegree
-    LfunctionList = collection.find({'group':group, 'level': level, 'sign': sign}
-                                    , {'_id':True})
-    index1 = 2
-    index2 = 3
-
-    xfactor = 20
-    yfactor = 20
-    extraSpace = 20
-    ticlength = 4
-    radius = 3
-
-    ans = "<svg  xmlns='http://www.w3.org/2000/svg'"
-    ans += " xmlns:xlink='http://www.w3.org/1999/xlink'>\n"
-
-    paralist = []
-    xMax = 0
-    yMax = 0
-    for l in LfunctionList:
-        splitId = l['_id'].split("_")
-        paralist.append((splitId[index1],splitId[index2],l['_id']))
-        if float(splitId[index1])>xMax:
-            xMax = float(splitId[index1])
-        if float(splitId[index2])>yMax:
-            yMax = float(splitId[index2])
-
-    xMax = int(math.ceil(xMax))
-    yMax = int(math.ceil(yMax))
-    width = xfactor *xMax + extraSpace
-    height = yfactor *yMax + extraSpace
-
-    ans += paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength)
-
-    for (x,y,lid) in paralist:
-        linkurl = "/L/ModularForm/" + group + "/Q/maass?source=db&amp;id=" + lid
-        ans += "<a xlink:href='" + linkurl + "' target='_top'>\n"
-        ans += "<circle cx='" + str(float(x)*xfactor)[0:7]
-        ans += "' cy='" +  str(height- float(y)*yfactor)[0:7]
-        ans += "' r='" + str(radius)
-        ans += "' style='fill:rgb(0,204,0)'>"
-        ans += "<title>" + str((x,y)).replace("u", "").replace("'", "") + "</title>"
-        ans += "</circle></a>\n"
-
-    ans += "</svg>"
-    
-    return(ans)
-
-## ============================================
-## Returns the contents (as a string) of the svg-file for
 ## the L-functions of the Maass forms for a set of given groups, levels and
 ## signs (of the functional equation).
 ## ============================================
-def paintSvgFileAll(glslist):  # list of group, level, and sign
+def paintSvgFileAll(glslist):  # list of group, level, and (maybe) sign
     from sage.misc.sage_eval import sage_eval
     index1 = 2
     index2 = 3
@@ -332,7 +264,6 @@ def paintSvgFileAll(glslist):  # list of group, level, and sign
         ans += "<circle cx='" + str(float(x)*xfactor)[0:7]
         ans += "' cy='" +  str(height- float(y)*yfactor)[0:7]
         ans += "' r='" + str(radius)
-#       ans += "' style='fill:rgb(0,204,0)'>"
         ans += "' style='fill:"+signtocolour(sage_eval(sign))+"'>"
         ans += "<title>" + str((x,y)).replace("u", "").replace("'", "") + "</title>"
         ans += "</circle></a>\n"
@@ -478,8 +409,6 @@ def paintSvgHolo(Nmin,Nmax,kmin,kmax):
     ydotspacing = 0.28  # vertical spacing of dots
     colourplus = signtocolour(1)
     colourminus = signtocolour(-1)
-#    colourplus = "rgb(0,0,200)"
-#    colourminus = "rgb(200,200,0)"
     maxdots = 5  # max number of dots to display
 
     ans = "<svg  xmlns='http://www.w3.org/2000/svg'"
@@ -493,6 +422,7 @@ def paintSvgHolo(Nmin,Nmax,kmin,kmax):
     ans += paintCSHolo(width, height, xMax, yMax, xfactor, yfactor, ticlength)
 
     alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
+    
 #loop over levels and weights
     for x in range(int(Nmin), int(Nmax) + 1):  # x is the level
         logging.info("level = %s" % x)
@@ -540,8 +470,9 @@ def paintSvgHolo(Nmin,Nmax,kmin,kmax):
                    if (signfe > 0 and numpluslabels>1) or (signfe < 0 and numminuslabels>1):
                        ybase += ydotspacing
                    ans += "<a xlink:href='" + url_for('not_yet_implemented') + "' target='_top'>\n"
-#                  ans += "<a xlink:href='" + linkurl + "&amp;number=" + str(number) + "' target='_top'>\n"
-#   url_for("not_yet_implemented")
+                   
+#  TODO: Implement when there is more than maxdots forms
+
                    ans += ("<text x='" + str(float(xbase)*xfactor)[0:7] + "' y='" +
                              str(height- float(ybase)*yfactor)[0:7] +
                              "' style='fill:" + thiscolour + ";font-size:14px;font-weight:bold;'>"
@@ -552,26 +483,26 @@ def paintSvgHolo(Nmin,Nmax,kmin,kmax):
                    else:
                       ybaseplus +=  1.5 * ydotspacing
                else:  # otherwise, use one dot per form in orbit, connected with a line 
-                 if numberwithlabel > 1:  # join dots if there are at least two
+                   if numberwithlabel > 1:  # join dots if there are at least two
 # add lines first and then dots to prevent line from hiding link
-                   firstcenterx = xbase + signfe * xdotspacing
-                   firstcentery = ybase 
-                   lastcenterx = xbase + (numberwithlabel * signfe * xdotspacing)
-                   lastcentery = ybase
-                   ans += "<line x1='%s'" %  str(float(firstcenterx)*xfactor)[0:7]
-                   ans += "y1='%s'" % str(float(height - firstcentery*yfactor))[0:7]
-                   ans += "x2='%s'" % str(float(lastcenterx)*xfactor)[0:7]
-                   ans += "y2='%s'" % str(float(height - lastcentery*yfactor))[0:7]
-                   ans += "style='stroke:%s;stroke-width:2.4'/>" % thiscolour 
-                 for number in range(0,numberwithlabel):
-                   xbase += signfe * xdotspacing
-                   ans += "<a xlink:href='" + linkurl + "&amp;number=" + str(number) + "' target='_top'>\n"
-                   ans += "<circle cx='" + str(float(xbase)*xfactor)[0:7]
-                   ans += "' cy='" +  str(height- float(ybase)*yfactor)[0:7]
-                   ans += "' r='" + str(radius)
-                   ans += "' style='fill:"+ thiscolour +"'>"
-                   ans += "<title>" + str((x,y)).replace("u", "").replace("'", "") + "</title>"
-                   ans += "</circle></a>\n"
+                       firstcenterx = xbase + signfe * xdotspacing
+                       firstcentery = ybase 
+                       lastcenterx = xbase + (numberwithlabel * signfe * xdotspacing)
+                       lastcentery = ybase
+                       ans += "<line x1='%s'" %  str(float(firstcenterx)*xfactor)[0:7]
+                       ans += "y1='%s'" % str(float(height - firstcentery*yfactor))[0:7]
+                       ans += "x2='%s'" % str(float(lastcenterx)*xfactor)[0:7]
+                       ans += "y2='%s'" % str(float(height - lastcentery*yfactor))[0:7]
+                       ans += "style='stroke:%s;stroke-width:2.4'/>" % thiscolour 
+                   for number in range(0,numberwithlabel):
+                       xbase += signfe * xdotspacing
+                       ans += "<a xlink:href='" + linkurl + "&amp;number=" + str(number) + "' target='_top'>\n"
+                       ans += "<circle cx='" + str(float(xbase)*xfactor)[0:7]
+                       ans += "' cy='" +  str(height- float(ybase)*yfactor)[0:7]
+                       ans += "' r='" + str(radius)
+                       ans += "' style='fill:"+ thiscolour +"'>"
+                       ans += "<title>" + str((x,y)).replace("u", "").replace("'", "") + "</title>"
+                       ans += "</circle></a>\n"
 
     ans += "</svg>"
 
@@ -595,7 +526,7 @@ def getOneGraphHtmlHolo(Nmin, Nmax, kmin, kmax):
     ans += "The horizontal grouping indicates the degree of the field containing "
     ans += "the arithmetically normalized coefficients.\n<br/><br/></div>\n"
     graphInfo = getGraphInfoHolo(Nmin, Nmax, kmin, kmax)
-#    ans += ("<embed src='" + graphInfo['src'] + "' width='" + str(graphInfo['width']) +
+# To generate the graph:   ans += ("<embed src='" + graphInfo['src'] + "' width='" + str(graphInfo['width']) +  
     ans += ("<embed src='/static/images/browseGraphHolo_22_14_3a.svg' width='" + str(graphInfo['width']) +
            "' height='" + str(graphInfo['height']) +
             "' type='image/svg+xml' " +
@@ -611,14 +542,12 @@ def getOneGraphHtmlHolo(Nmin, Nmax, kmin, kmax):
 ## Dirichlet L-functions.
 ## ============================================
 def getGraphInfoChar(min_cond, max_cond, min_order, max_order):
-#    (width,height) = getWidthAndHeight(group, level, sign)
     xfactor = 70
     yfactor = 30
     extraSpace = 30
     (width,height) = (2*extraSpace + xfactor*(max_order), 2*extraSpace + yfactor*(max_cond))
 ##    url = url_for('browseGraph',group=group, level=level, sign=sign)
     url = ('/browseGraphChar?min_cond=' + str(min_cond) + '&max_cond=' + str(max_cond) + '&min_order=' + str(min_order) + '&max_order=' + str(max_order))
-#    url =url.replace('+', '%2B')  ## + is a special character in urls
     ans = {'src': url}
     ans['width']= width
     ans['height']= height
@@ -751,33 +680,6 @@ def reindex_characters(min_mod, max_mod):
                 cd[(k[0],k[1])] = ll                         
     return cd
 
-'''
-def reindex_characters(min_cond, max_cond):
-    from sage.modular.dirichlet import DirichletGroup
-    char_dict = {}
-    for N in range(min_cond, max_cond + 1):
-        DGN = DirichletGroup(N)
-        for ii in range(len(DGN)):
-            chi = DGN[ii]
-            ord = chi.order()
-            parity = 1 # even
-            if chi.is_odd():
-                parity = -1 #odd
-            if ord < 7:
-                try:
-                    char_dict[(ord,N)].append((ii,parity))
-                except KeyError:
-                    char_dict[(ord,N)] = []
-                    char_dict[(ord,N)].append((ii,parity))
-            else:
-                try:
-                    char_dict[(7,N)].append((ii,parity))
-                except KeyError:
-                    char_dict[(7,N)] = []
-                    char_dict[(7,N)].append((ii,parity))
-    return char_dict
-'''
-
 
 ## ============================================
 ## Returns the contents (as a string) of the svg-file for
@@ -794,8 +696,6 @@ def paintSvgChar(min_cond,max_cond,min_order,max_order):
     ydotspacing = 0.16  # vertical spacing of dots
     colourplus = signtocolour(1)
     colourminus = signtocolour(-1)
-#    colourplus = "rgb(0,0,255)"
-#    colourminus = "rgb(204,0,0)"
     maxdots = 1  # max number of dots to display
 
     ans = "<svg  xmlns='http://www.w3.org/2000/svg'"

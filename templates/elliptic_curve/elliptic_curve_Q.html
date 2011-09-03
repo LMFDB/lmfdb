@@ -2,53 +2,77 @@
 
 {% block content %}
 
+An elliptic curve is a curve of genus one with a distinguished base point,  usually given as a plane curve with a {{ KNOWL('EC.minimal_weierstrass_equation')}}. 
+
 <h2> Browse </h2>
 
 <p>
-By conductor : 
+By {{ KNOWL('EC.conductor') }}:
 <a href="?conductor={{'1-99'}}">{{'1-99'}}</a>
 <a href="?conductor={{'100-199'}}">{{'100-199'}}</a>
 <a href="?conductor={{'200-299'}}">{{'200-299'}}</a>
 <a href="?conductor={{'300-399'}}">{{'300-399'}}</a>
 </p>
 <p>
-By rank:
+By {{ KNOWL('EC.rank') }}:
 {% for r in info.rank_list: %}
 <a href="?rank={{r}}">{{r}}</a>
 {% endfor %}
 </p>
 <p>
-By size of torsion subgroup: 
+By {{ KNOWL('EC.torsion_order', torsion=t) }}:
 {% for t in info.torsion_list: %}
 <a href="?torsion={{t}}">{{t}}</a>
 {% endfor %}
 </p>
 
 
-<h2> Jump to a specific curve or isogeny class</h2>
+<h2> Jump to a specific curve or {{ KNOWL('EC.isogeny_class') }}</h2>
 <form>
-<input type='text' name='label' size=25>
+<input type='text' name='label' size=25 placeholder="11a2">
 <button type='submit' name='jump' value='label or isogeny class' >label or isogeny class</button>
 <br><span class="formexample">e.g. 11a2 or 389a </span>
 </form>
 
 <h2> Search </h2>
-
+Please enter a value or leave blank:
+<p></p>
 <form>
   <table>
     <tr>
-      <td>Conductor</td>
+      <td>{{ KNOWL_LINK('EC.conductor') }}</td>
      <td>
-       <input type='text' name='conductor' example="389" />
+       <input type='text' name='conductor' placeholder="389" size=10/>
      </td>
-     <td><span class="formexample"> e.g. 389 </span></td>
+     <td><span class="formexample"> e.g. 389 or 100-200</span></td>
     </tr>
+
+
+   <tr>
+   <td>
+    {{ KNOWL_LINK('EC.rank') }}
+    </td>
+           <td>
+           <input type='text' name='rank' placeholder="0" size=10>
+           </td>
+           <td><span class="formexample"> e.g. 0 </span>
+           </td>
+    </tr>
+
     <tr>
-      <td>Torsion Order</td><td> <input type='text' name='torsion'></td><td><span class="formexample"> e.g. 2 </span></td>
-    </tr>
-    <tr>
-      <td>Rank </td><td><input type='text' name='rank'></td><td><span class="formexample"> e.g. 0 </span></td>
-    </tr>
+       <td>
+       {{ KNOWL_LINK('EC.torsion_order') }}
+       </td>
+          <td> 
+          <input type='text' name='torsion' placeholder="2" size=10/>
+          </td>
+          <td>
+          <span class="formexample"> e.g. 2 </span>
+          </td>
+      </tr>
+
+
+
     <tr>
       <td>Optimal</td>
       <td>
@@ -58,7 +82,15 @@ By size of torsion subgroup:
          </select>
       </td>
     </tr>
+
+<tr>
+<td align=left colspan=4>Maximum number of curves to display <input type='text' name='count' value=100 size=10>
+</td>
+</tr>
+
+
   </table>
+<p></p>
 <td><button type='submit' value='Search'>Search</td>
 
 </form>

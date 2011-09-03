@@ -1,14 +1,20 @@
 {% extends "homepage.html" %}
 {% block content %}
 
+<div class="announce">
+Welcome! The <b>L</b>-function and <b>M</b>odular 
+<b>F</b>orms <b>D</b>ata<b>B</b>ase 
+project is a collaborative
+effort by Number Theorists to share, contextualize and improve data
+and theorems.
+</div>
+
+{#
 <h2>Sections</h2>
 {{ index() }}
+#}
 
-<h2>Knowledge Database</h2>
-<ul>
-</ul>
-
-<h2>Additional Pages</h2>
+<h2>Misc Pages</h2>
 <ul>
  <li><a href="{{ url_for("knowledge.index") }}">Knowledge</a></li>
  <li>{{ KNOWL_LINK("wiki.index") }}.</li>
@@ -19,15 +25,21 @@
  {%- endif %}
  </li>
  <li><a href="{{ url_for("about") }}">About</a></li>
+ <li><a href="{{ url_for("acknowledgment") }}">Acknowledgment</a></li>
+</ul>
+
+<h2>Data Uploading</h2>
+<ul>
+<li><a href="{{ url_for("upload.viewAll")}}">View uploaded data</a></li>
+{% if user.is_authenticated() %}
+ <li><a href="{{ url_for("upload.index") }}">Upload data</a></li>
+ {% if user.is_admin() %}
+  <li><a href="{{ url_for("upload.admin") }}">Moderate uploaded files</a></li>
+ {% endif %}
+{% endif %}
 </ul>
 
 {% if user.is_authenticated() %}
-<h2>Data Uploading</h2>
-<ul>
- <li><a href="{{ url_for("upload.index") }}">Upload data</a></li>
- <li><a href="{{ url_for("upload.admin") }}">View uploaded files and moderate</a></li>
-</ul>
-
 <h2>Raw</h2>
 <ul>
 <li><a href="/raw">raw</a>

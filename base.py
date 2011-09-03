@@ -51,7 +51,7 @@ Connection._send_message_with_response = _db_reconnect(Connection._send_message_
  
 def _init(dbport):
   global _C
-  logging.info("establishing db connection at port %s" % dbport)
+  logging.info("establishing db connection at port %s ..." % dbport)
   _C = Connection(port=dbport)
 
 def getDBConnection():
@@ -74,7 +74,7 @@ def ctx_proc_userdata():
 
   # insert the default bread crumb hierarchy
   # overwrite this variable when you want to customize it
-  vars['bread'] = [ ('Bread', '.'), ('Crumb', '.'), ('Hierarchy', '.')]
+  vars['bread'] = None #[ ('Bread', '.'), ('Crumb', '.'), ('Hierarchy', '.')]
   
   # default title
   vars['title'] = r'Title variable "title" has not been set. This is a test: \( \LaTeX \) and \( \frac{1}{1+x+x^2} \) and more ...'
@@ -97,6 +97,11 @@ def obfuscate_email(email):
     TODO: doesn't work yet
     """
     return u"%s…@…%s" % (email[:2],email[-2:])
+
+@app.template_filter('urlencode')
+def urlencode(kwargs):
+  import urllib
+  return urllib.urlencode(kwargs)
 
 ### for testing.py ###
 import unittest
