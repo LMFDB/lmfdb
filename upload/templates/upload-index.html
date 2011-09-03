@@ -60,8 +60,21 @@ input, textarea { width: 50em }
 }
 "></textarea></td>
   </tr>
+
+  <tr>
+    <td>Upload from file:</td>
+    <td><input type="file" name="file"/></td>
+  </tr>
+
+  <tr>
+    <td>Or from URL:</td>
+    <td><input type="text" name="url" example="http://math.stanford.edu/~ralphf/data.tgz"/></td>
+  </tr>
+
+  <tr><td colspan="2" class="forminfo">Only enter one of file or URL.  Maximum size: 1GB</td></tr> 
+  <tr><td colspan="2" class="spacing" /></tr> 
+
 </table>
-<input type="file" name="file"/><br/>
     <button type="submit">Upload</button>
 </form>
 
