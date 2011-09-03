@@ -20,6 +20,7 @@ import users
 import knowledge
 import upload
 import DirichletCharacter
+import local_fields
 import raw
 
 import sys

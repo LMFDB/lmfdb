@@ -371,6 +371,7 @@ blockquote p {
 body.mwf #sidebar a.mwf { background: #BFB; }
 body.cmf #sidebar a.cmf { background: #BFB; }
 body.knowl #sidebar a.knowl { background: #BBF; }
+body.local_fields #sidebar a.local_fields { background: #BFB; }
 
 .visible {
 	visibility: visible;

@@ -1,0 +1,12 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<div>Local Fields Page</div>
+
+<form action="{{ url_for('.search') }}" method="POST">
+<input name="val" value="123" />
+<button type="submit">Search</button>
+</form>
+
+{% endblock %}

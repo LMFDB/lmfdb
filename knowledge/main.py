@@ -157,7 +157,7 @@ def render(ID, footer=None):
 
   #logger.debug("kwargs: %s", request.args)
   kwargs = dict(((k, v) for k,v in request.args.iteritems()))
-  logger.debug("kwargs: %s" , kwargs)
+  #logger.debug("kwargs: %s" , kwargs)
 
   #this is a very simple template based on no other template to render one single Knowl
   #for inserting into a website via AJAX or for server-side operations.
