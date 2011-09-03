@@ -5,6 +5,7 @@ import sage.libs.lcalc.lcalc_Lfunction as lc
 import re
 import pymongo
 import bson
+from utils import parse_range
 #import web_modforms
 from classical_modular_forms.backend.web_modforms import *
 
@@ -29,7 +30,9 @@ class WebCharacter:
 
 
     def dirichletcharacter(self):
-        chi = DirichletGroup(self.modulus)[self.number]
+        G = DirichletGroup(self.modulus)
+        chi = G[self.number]
+        #print chi
         self.sagechar = str(chi)
 # Warning: will give nonsense if character is not primitive
         self.primitive = chi.is_primitive()
@@ -40,27 +43,35 @@ class WebCharacter:
         self.vals = chi.values()
         count = 0
         counter = 1
-        self.valstex = "\\begin{align}\n[\\mathstrut&"
+        self.valstex = ""
         for v in chi.values():
-            sv = str(v).partition('^')[0]
-            if (sv.startswith("zeta")) and (counter == 1):
-                rootunity = int(sv[4:])
-                counter += 1
-            elif (sv.startswith("-zeta")) and (counter == 1):
-                rootunity = int(sv[5:])
-                counter += 1
+            sv = str(v).partition("zeta")[2]
+            if counter == 1:
+                if sv.find('^') != -1:
+                    rootunity = int(sv.partition('^')[0])
+                    counter += 1
+                elif sv.find('+') != -1:
+                    rootunity = int(sv.partition('+')[0])
+                    counter += 1
+                elif sv.find('-') != -1:
+                    rootunity = int(sv.partition('-')[0])
+                    counter += 1
+        if (counter == 2):
+            self.valstex = "For \(\\zeta_{%s}\) is a primitive \(%s\)-th root of unity." %(rootunity,rootunity)
+        self.valstex += "\\begin{align}\n(\\mathstrut&"
+        for v in chi.values():
             count += 1
             if(count == len(chi.values())):
                 self.valstex += str(latex(v))
             else:
-                if(count%20 == 0):
+                if(count%15 == 0):
                     self.valstex += "\\cr\n"
                     self.valstex += "&"
                 else:
                     self.valstex += str(latex(v)) + "\\,,\\,"
-        self.valstex += "]\n\\end{align}"
-        if(counter == 2):
-            self.valstex += "where \(\\zeta_{%s}\) is a primitive \(%s\)th root of unity." %(rootunity,rootunity)
+        self.valstex += ")\n\\end{align}"
+        #if(counter == 2):
+        #    self.valstex += "where \(\\zeta_{%s}\) is a primitive \(%s\)th root of unity." %(rootunity,rootunity)
         #self.valstex = "\("+ str(latex(chi.values())) + "\)"
         self.bound = 5*1024
         if chi.is_even():
@@ -70,11 +81,11 @@ class WebCharacter:
         self.primchar = chi.primitive_character()
         self.primcharmodulus = self.primchar.modulus()
         self.primcharconductor = self.primchar.conductor()
-        G = DirichletGroup(self.primcharmodulus)
-        for i in range(0,len(G)):
-            if G[i] == self.primchar:
+        F = DirichletGroup(self.primcharmodulus)
+        for i in range(len(F)):
+            if F[i] == self.primchar:
                 self.primcharnumber = i
-                break
+                break 
         self.primchartex = "\(\\chi_{%s}\\!\\!\\pmod{%s}\)" %(self.primcharnumber,self.primcharmodulus)
         if self.primitive == 'True':
             self.primtf = True
@@ -101,9 +112,26 @@ class WebCharacter:
                 self.kronsymbol += "\n \\end{equation}"
 
         self.level = self.modulus
-        self.chivalues = chi.values_on_gens()
-        self.chivaluestex = "\(" + str(latex(chi.values_on_gens())) + "\)"
+        self.genvalues = chi.values_on_gens()
+        if len(chi.values_on_gens()) == 1:
+            self.genvaluestex = "\(" + str(latex(chi.values_on_gens()[0])) + "\)"
+        else:
+            self.genvaluestex = "\(" + str(latex(chi.values_on_gens())) + "\)"
         chivals = chi.values_on_gens()
+        Gunits = G.unit_gens()
+        if len(Gunits) != 1:
+            self.unitgens = "("
+        else:
+            self.unitgens = ""
+        count = 0
+        for g in Gunits:
+            if count != len(Gunits)-1:
+                self.unitgens += str(latex(g)) + ","
+            else:
+                self.unitgens += str(latex(g))
+            count += 1
+        if len(Gunits) != 1:
+            self.unitgens += ")"
         self.lth = len(self.vals)
         #chiv = []
     #determine if the character is real
@@ -111,64 +139,45 @@ class WebCharacter:
         for v in chivals:
             if abs(imag_part(v)) > 0.0001:
                 self.sign = False
-            #t = str(v).split('+')
-            #for j in t:
-            #    if j.startswith("-zeta"):
-            #        rest = j[5:]
-            #        rootunity = '\(-\\zeta\)' 
-            #    elif j.startswith("zeta"):
-            #        rest = j[4:]
-            #    else:
-            #        rest = j
-            #        j = "\(\\chi_{%s}\)" %(self.number)
-            #        j += rest
-            #    t.append(j)
-            #    chiv.append(str("\(\\zeta\)"))
-        #self.chival = chiv
-        chizero = DirichletGroup(self.modulus)[0]
+        chizero = G[0]
         self.gauss_sum = chi.gauss_sum(1)
+        if chi.gauss_sum(1) != 0:
+            self.gauss_sum_numerical = chi.gauss_sum_numerical(20,1)
         self.jacobi_sum = chi.jacobi_sum(chizero)
+        self.jacobi_sum_numerical = CC(self.jacobi_sum)
         self.kloosterman_sum = chi.kloosterman_sum(1,1)
+        if chi.kloosterman_sum(1,1) != 0:
+            self.kloosterman_sum_numerical = chi.kloosterman_sum_numerical(20,1,1)
         self.texname = "\(\\chi_{%s}\)" %(self.number)
         self.credit = 'Sage'
         self.title = "Dirichlet Character: \(\chi_{%s}\\!\\!\pmod{%s}\)" %(self.number,self.modulus)
 
 #================
     def gauss_sum_tex(self):
-        ans = "\\begin{equation} \\tau(\\chi_{%s}) = \\tau_1(\\chi_{%s}) = %s.\\end{equation} " %(self.number,self.number,latex(self.gauss_sum))
-        ans += "Compute other Gauss sums: \(\\qquad\\qquad\) "
-        ans += "\(\\tau_a(\\chi_{%s})\), \(\\;\) for \(a = \)" %(self.number)
-        #ans = "For \(a \\in \\mathbb{Z}\\;\)  and "
-        #ans += "\(\\;\\zeta = e^{2\\pi i/%s}\)" %(self.modulus)
-        #ans += " a primitive \(%s\)th root of unity, " %(self.modulus)
-        #ans += "the \(\\textbf{Gauss sum}\) associated to "
-        #ans += "\(\\chi_{%s}\) and \(a\) is given by" %(self.number)
-        #ans += "\\begin{equation} \n \\tau_{a}(\\chi_{%s}) = \\sum_{r \\,\\in\\, \\mathbb{Z}/%s\\mathbb{Z}} \\chi_{%s}(r) \\zeta^{ar}. \n \\end{equation} \n" %(self.number,self.modulus,self.number)
+        ans = "\(\\tau_a(\\chi_{%s})\) at \(a = \)" %(self.number)
+        #if self.gauss_sum != 0:
+        #    ans += "\\begin{equation} \\tau_1(\\chi_{%s}) = %s = %s.\\end{equation} " %(self.number,latex(self.gauss_sum),latex(self.gauss_sum_numerical))
+        #else:
+        #    ans += "\\begin{equation} \\tau_1(\\chi_{%s}) = %s.\\end{equation} " %(self.number,latex(self.gauss_sum))
+        #ans += "Compute Gauss sum \(\\tau_a(\\chi_{%s})\) at \(a = \)" %(self.number)
         return(ans)
 #================
 
     def jacobi_sum_tex(self):
-        ans = "\\begin{equation} J(\\chi_{%s},\\chi_{0}) = %s.\\end{equation}" %(self.number,latex(self.jacobi_sum))
-        ans += "Compute other jacobi sum at other characters, \(\\psi\), modulo \(%s\): \(\\qquad\\qquad\)  " %(self.modulus)
-        ans += "\(J(\\chi_{%s},\\psi)\), \(\\;\) where \(\\psi =\)" %(self.number)
-        #ans = "For \(\\psi\) a Dirichlet character modulo \(%s\), " %(self.modulus)
-        #ans += "the \(\\textbf{Jacobi sum}\) associated to "
-        #ans += "\(\\chi_{%s}\) and \(\\psi\) is given by" %(self.number)
-        #ans += "\\begin{equation} \n J(\\chi_{%s},\\psi) = \\sum_{r \\,\\in\\,\\mathbb{Z}/%s\\mathbb{Z}} \\chi_{%s}(r) \\psi(1-r). \n \\end{equation} \n" %(self.number,self.modulus,self.number)
+        ans = "\(J(\\chi_{%s},\\psi)\) for \(\\psi = \)" %(self.number)
+        #ans = "\\begin{equation} J(\\chi_{%s},\\chi_{0}) = %s.\\end{equation}" %(self.number,latex(self.jacobi_sum))
+        #ans += "Compute Jacobi sum \(J(\\chi_{%s},\\psi)\) at \(\\psi = \)" %(self.number)
         return(ans)
 
 #================
 
     def kloosterman_sum_tex(self):
-        ans = "\\begin{equation} K(1,1,\\chi_{%s}) = %s.\\end{equation}" %(self.number,latex(self.kloosterman_sum))
-        ans += "Compute other Kloosterman sums: \(\\qquad \\qquad\)"
-        ans += "\(K(a,b,\\chi_{%s})\), \(\\;\) where \(a,b =\)" %(self.number)
-        #ans = "The \(\\textbf{Kloosterman sum}\) associated to "
-        #ans += "\(\\chi_{%s}\) and the integers \(a,b\) " %(self.number)
-        #ans += "\\begin{equation} \n K(a,b,\\chi_{%s}) = \\sum_{r \\,\\in\\,\\left(\\mathbb{Z}/%s\\mathbb{Z}\\right)^{\\times}} \\chi_{%s}(r) \\zeta^{ar+ br^{-1}}, \n \end{equation} \n" %(self.number,self.modulus,self.number)
-        #ans += "where \(\\zeta = e^{2 \\pi i/%s}\) is " %(self.modulus)
-        #ans += "a primitive \(%s\)th root of unity. " %(self.modulus)
-        #ans += "This reduces to the Gauss sum if \(b=0\)."
+        ans = "\(K(a,b,\\chi_{%s})\) at \(a,b = \)" %(self.number)
+        #if self.kloosterman_sum != 0:
+        #    ans = "\\begin{equation} K(1,1,\\chi_{%s}) = %s = %s.\\end{equation}" %(self.number,latex(self.kloosterman_sum),latex(self.kloosterman_sum_numerical))
+        #else:
+        #    ans = "\\begin{equation} K(1,1,\\chi_{%s}) = %s.\\end{equation}" %(s+ elf.number,latex(self.kloosterman_sum))
+        #ans += "Compute Kloosterman sum \(K(a,b,\\chi_{%s})\) at \(a,b = \)" %(self.number)
         return(ans)
 
     def _set_properties(self):
@@ -186,8 +195,8 @@ class WebCharacter:
         self.properties = ['<br><table><tr><td align=left><b>Conductor:</b>','<td align=left> %s</td>'%(conductor)]
         self.properties.extend(['<tr><td align=left><b>Order:</b>', '<td align=left>%s</td>'%(order)])
         self.properties.extend(['<tr><td align=left><b>Parity:</b>', '<td align=left>%s</td>'%(self.parity)])
-        self.properties.extend(['<tr><td align=left><b>Sign:</b>', '<td align=left>%s</td>'%(sign)])
-        self.properties.extend(['<tr><td align=left><b>Primitivity:&nbsp;&nbsp;</b>', '<td align=left>%s</td></table>'%(prim)])
+        self.properties.extend(['<tr><td align=left>%s'%(sign), '</td>'])
+        self.properties.extend(['<tr><td align=left>%s'%(prim), '</td></table>'])
 
 
 

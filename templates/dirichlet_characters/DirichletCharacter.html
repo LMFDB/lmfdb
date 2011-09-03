@@ -29,8 +29,8 @@ function show_code(system) {
 <!--<div id="Content">-->
         
         
-            <div>
-              <i><font size="3">Display code for creating this Dirichlet character in:</font></i>
+            <div align="right">
+              <font size="3">Show commands for:</font>
                 <a onclick="show_code('sage'); return false" href='#'>sage</a>
                 <!--<a onclick="show_code('pari'); return false" href='#'>pari</a>
                 <a onclick="show_code('magma'); return false" href='#'>magma</a>-->
@@ -39,18 +39,19 @@ function show_code(system) {
             
 
 
-        <h2>
+        <!--<h2>
             Sage Output
-        </h2>
-        <div class='sage nodisplay code'>sage: G = DirichletGroup({{info.modulus}}).{{info.number}}</div>
-        <p>
+        </h2>-->
+        <div class='sage nodisplay code'>sage: chi = DirichletGroup({{info.modulus}})[{{info.number}}]</div>
+        <!--<p>
             {{ info.sagechar }}
-        </p>
+            </p>-->
 
         {% if info.order == 2 %}
         <h2>
             Character in terms of {{ KNOWL('dirichlet_character.kronecker_symbol') }} 
         </h2>
+        <div class = 'sage nodisplay code'>sage: a.kronecker({{info.conductor}})</div>
         <p>
             {{ info.kronsymbol }}
         </p>
@@ -59,9 +60,8 @@ function show_code(system) {
         {% if info.primitive == info.primtf %}
         <h2>
             Inducing {{ KNOWL('dirichlet_character.primitive_character') }}           </h2>
-        <div class = 'sage nodisplay code'>sage: G.primitive_character()</div>
+        <div class = 'sage nodisplay code'>sage: chi.primitive_character()</div>
         <p>
-            {{ info.primchar }} &nbsp; : &nbsp;
             <a href="{{info.primcharmodulus}}/{{info.primcharnumber}}">{{info.primchartex}}</a>&nbsp;&nbsp;
         </p>
         {% endif %}
@@ -70,32 +70,32 @@ function show_code(system) {
         <h2>
             {{ KNOWL('dirichlet_character.values') }}
         </h2>
-        <div class = 'sage nodisplay code'>sage: G.values()</div>
-        <p>
+        <div class = 'sage nodisplay code'>sage: chi.values()</div>
+        <p align="left"> 
             {{ info.valstex }}
         </p>
         {% endif %}
         <h2>
             {{ KNOWL('dirichlet_character.values_on_gens') }}
         </h2>
-        <div class = 'sage nodisplay code'>sage: G.values_on_gens()</div>
+        <div class = 'sage nodisplay code'>sage: chi.values_on_gens()</div>
         <p>
-            {{ info.chivalstex }}
+            {{ info.unitgens }} &rarr; {{ info.genvalstex }}
         </p>
         <h2>
             {{ KNOWL('dirichlet_character.gauss_sum') }}
         </h2>
+        <div class = 'sage nodisplay code'>sage: chi.gauss_sum()</div>
         <form> {{ info.gauss_sum }} <input typ = 'text' name = 'gauss_value' size=10></form>
-        <div class = 'sage nodisplay code'>sage: G.gauss_sum(a)</div>
         <h2>
             {{ KNOWL('dirichlet_character.jacobi_sum') }}
         </h2>
-        <div class = 'sage nodisplay code'>sage: G.jacobi_sum(\(\psi\))</div>
+        <div class = 'sage nodisplay code'>sage: chi.jacobi_sum()</div>
         <form> {{ info.jacobi_sum }} <input typ = 'text' name = 'jacobi_character' size=10></form>
         <h2>
             {{ KNOWL('dirichlet_character.kloosterman_sum') }}
         </h2>
-        <div class = 'sage nodisplay code'>sage: G.kloosterman_sum(a,b)</div>
+        <div class = 'sage nodisplay code'>sage: chi.kloosterman_sum(,)</div>
         <form> {{ info.kloosterman_sum }} <input typ = 'text' name = 'kloosterman_values' size=10></form>
         <!--</div>-->
 
