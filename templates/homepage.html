@@ -13,12 +13,12 @@
          {% endif %}
       </div>
       <div class="topright">
-          {% if user.is_authenticated() -%}
+          {% if user_is_authenticated -%}
             <a href="{{ url_for('users.info') }}">{{ username }}</a> 
             &middot;
             <a href="{{ url_for('users.logout') }}">Logout</a>
           {%- else -%}
-            <a href="{{ url_for('users.register') }}">Register</a>
+            <a href="{{ url_for('users.register_new') }}">Register</a>
             &middot;
             <a href="{{ url_for('users.info') }}">Login</a>
           {%- endif %}

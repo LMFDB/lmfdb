@@ -1,7 +1,7 @@
 {% extends 'homepage.html' %}
 {% block content %}  
 
-{% if info.user.is_authenticated() %}
+{% if user_is_authenticated %}
    <h1>You are {{ info.user.name }}</h1>
    <h2>Actions</h2>
    <ul><li><a href="{{ info.logout }}">Logout</a></li></ul>
@@ -9,7 +9,7 @@
 {% else %}
   <h1>You are not logged in</h1>
   <div style="margin-bottom: 20px">New user? 
-     <a href="{{ url_for('.register') }}">Register here</a>
+     <a href="{{ url_for('.register_new') }}">Register here</a>
   </div>
 
   <form name="login" action="{{ url_for('.login') }}" method="POST">
@@ -27,7 +27,7 @@
   </form>
 {% endif %}
 
-{% if info.user.is_authenticated() %}
+{% if user_is_authenticated %}
   <h2>Edit Details</h2>
   <form action="{{ url_for('.set_info') }}" method="post" name="userinfo">
     <table>

@@ -189,7 +189,7 @@ def render(ID, footer=None):
     render_me += """\
   <div class="knowl-footer">
     <a href="{{ url_for('.show', ID='%(ID)s') }}">permalink</a> 
-    {%% if user.is_authenticated() %%}
+    {%% if user_is_authenticated %%}
       &middot;
       <a href="{{ url_for('.edit', ID='%(ID)s') }}">edit</a> 
     {%% endif %%}
