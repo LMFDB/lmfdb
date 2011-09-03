@@ -141,6 +141,12 @@ def admin_required(fn):
 def get_user_token_coll():
   return getDBConnection().userdb.tokens
 
+@login_page.route("/register")
+def register_new():
+  q_admins = getDBConnection().userdb.users.find({'admin' : True})
+  admins =', '.join((_['full_name'] or _['_id'] for _ in q_admins))
+  return "You have to contact one of the Admins: %s" % admins
+
 @login_page.route("/register/new")
 @admin_required
 def register():
@@ -151,7 +157,7 @@ def register():
   import random
   token  = str(random.randrange(1e20,1e21))
   get_user_token_coll().save({'_id' : token, 'expire':exp})
-  url    = url_for(".register_new", token = token)
+  url    = url_for(".register_token", token = token)
   return '<a href="%s%s">%s</a>' % (base_url, url, token)
 
 def delete_old_tokens():
@@ -162,13 +168,15 @@ def delete_old_tokens():
   get_user_token_coll().remove({'expire': { '$gt' : exp}})
 
 @login_page.route("/register/<token>", methods = ['GET', 'POST'])
-def register_new(token):
+def register_token(token):
   delete_old_tokens()
   token_exists = get_user_token_coll().find({'_id' : token}).count() == 1
   if not token_exists:
     flask.abort(401)
   bread = base_bread() + [('Register', url_for(".register"))]
-  if request.method == 'POST':
+  if request.method == "GET":
+    return render_template("register.html", title="Register", bread=bread, next=request.referrer or "/", token=token)
+  elif request.method == 'POST':
     name   = request.form['name']
     if not allowed_usernames.match(name):
       flask.flash("""Oops, usename '%s' is not allowed.
@@ -199,10 +207,11 @@ def register_new(token):
     newuser.email       = email
     login_user(newuser, remember=True) 
     flask.flash("Hello %s! Congratulations, you are a new user!" % newuser.name)
+    get_user_token_coll().remove({'_id' : token})
+    logger.debug("removed login token '%s'" % token)
     logger.info("new user: '%s' - '%s'" % (newuser.get_id(), newuser.name))
     return flask.redirect(next or url_for(".info"))
 
-  return render_template("register.html", title="Register", bread=bread, next=request.referrer)
 
 @login_page.route("/logout")
 @login_required

@@ -33,7 +33,7 @@ and theorems.
 <li><a href="{{ url_for("upload.viewAll")}}">View uploaded data</a></li>
 {% if user_is_authenticated %}
  <li><a href="{{ url_for("upload.index") }}">Upload data</a></li>
- {% if user.is_admin() %}
+ {% if user_is_admin %}
   <li><a href="{{ url_for("upload.admin") }}">Moderate uploaded files</a></li>
  {% endif %}
 {% endif %}
