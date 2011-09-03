@@ -2,6 +2,7 @@
 # the basic knowlege object, with database awareness, …
 from knowledge import logger
 from base import getDBConnection
+from datetime import datetime
 
 def get_knowls():
   _C = getDBConnection()
@@ -13,7 +14,7 @@ def get_deleted_knowls():
   _C = getDBConnection()
   return _C.knowledge.deleted_knowls
 
-def get_knowl(ID, fields = None):
+def get_knowl(ID, fields = { "history": 0 }):
   return get_knowls().find_one({'_id' : ID}, fields=fields)
 
 class Knowl(object):
@@ -32,20 +33,28 @@ class Knowl(object):
       self._content = data.get('content', '')
       self._quality = data.get('quality', 'beta')
       self._authors = data.get('authors', [])
+      self._last_author = data.get('last_author', '')
+      self._timestamp = data.get('timestamp', datetime.now())
     else:
       self._title   = ''
       self._content = ''
       self._quality = 'beta'
       self._authors = []
+      self._last_author = ''
+      self._timestamp = datetime.now()
 
   def save(self, who):
     """who is the ID of the user, who wants to save the knowl"""
-    get_knowls().save({
-         '_id' : self.id,
+    new_history_item = get_knowl(self.id)
+    get_knowls().update({'_id' : self.id},
+        {"$set": {
          'content' : self.content,
          'title' : self.title,
-         'quality': self.quality
-        })
+         'quality': self.quality,
+	 'last_author': who,
+	 'timestamp': self.timestamp
+	 } ,
+	"$push": {"history": new_history_item}})
     if who:
       get_knowls().update(
          { '_id':self.id }, 
