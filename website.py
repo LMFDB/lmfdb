@@ -32,6 +32,10 @@ def not_found(error):
 def index():
     return render_template('index.html', title ="Homepage", bread=None)
 
+@app.route("/about")
+def about():
+    return render_template("about.html", title="About")
+
 def root_static_file(name):
     def static_fn():
        import os
