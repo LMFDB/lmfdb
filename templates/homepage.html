@@ -35,8 +35,6 @@
 </div>
 
 {% block sidebar -%} 
-<div id="sidebar">
-
  {% macro entry(title, entries) -%}
    {% if entries %}
     <h2>{{ title }}</h2>
@@ -48,13 +46,45 @@
    {% endif %}
  {%- endmacro %}
 
- <h2 id="top">Navigation</h2>
- {{ index() }}
+<div id="sidebar">
 
- {{ entry("Learn more about", info.learnmore) }}
- {{ entry("Friends", info.friends) }}
- {{ entry("Downloads", info.downloads) }}
- {{ entry("Related Data", getUploadedFor(request.path) ) }}
+  <h2 class="link">
+   <a href="{{ url_for('render_Lfunction') }}">L-functions and Zeta-functions</a>
+  </h2>
+
+  <h2>Elliptic Curves</h2>
+  <ul>
+   <li><a href="{{ url_for('EC_toplevel') }}  ">Elliptic curves/\(\mathbb Q\)</a>
+  </ul>
+
+  <h2 class="link"><a href="{{ url_for('number_field_render_webpage') }}">Number Fields</a></h2>
+
+  <h2>Characters</h2>
+  <ul>
+   <li><a href="{{ url_for('render_Character') }} ">Dirichlet Characters</a></li>
+  </ul>
+
+  <h2 class="link">
+       <a class="mf"    href="{{ url_for('mf.modular_form_main_page') }}">Modular Forms</a></h2>
+  <ul>
+   <li><a class="emf"  href="{{ url_for('emf.render_elliptic_modular_forms') }}">Holomorphic Cusp Forms</a></li>
+   <li><a class="mwf"  href="{{ url_for('mwf.render_maass_waveforms') }}">Maass Forms</a></li>
+   <li><a              href="{{ url_for('ModularForm_GSp4_Q_top_level') }}">Siegel modular forms</a> </li>
+   <li><a class="mwfp" href="{{ url_for('mwfp.render_picard_maass_forms') }}">Maass Forms on \(SL_2(Z[i])\)</a></li>
+   <li><a              href="{{ url_for('hilbert_modular_form_render_webpage') }}">Hilbert Modular Forms</a></li>
+  </ul>
+   {# <li><a href="{{ url_for('quadratic_twists') }}">Quadratic Twists</a></li> #}
+   {# <li><a class="local_fields" href="{{ url_for('local_fields.index') }}">Local Fields</a></li> #}
+
+  <h2>Search</h2>
+   <ul>
+    <li><a href="{{ url_for('LfunctionDB.query', zerolowerbound=1.1, zeroupperbound=2.1) }}">Search L-functions</a></li>
+   </ul>
+  
+   {{ entry("Learn more about", info.learnmore) }}
+   {{ entry("Friends", info.friends) }}
+   {{ entry("Downloads", info.downloads) }}
+   {{ entry("Related Data", getUploadedFor(request.path) ) }}
 
  {% if sidebar -%}
   {% for topic, content in sidebar -%}
