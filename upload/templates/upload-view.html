@@ -560,15 +560,26 @@ function updateMappingRules(data, id) {
 </script>
 
 
-{% macro editable(entry, property) %}
-  <input class=editable value="{{entry.metadata[property]}}" onchange="updateMetadata('{{entry._id}}', '{{property}}', this.value)"/>
-{% endmacro %}
+{% macro editable(entry, property) -%}
+  {% if current_user.is_admin() or current_user.id == entry.uploader_id -%}
+    <input class=editable value="{{entry.metadata[property]}}" onchange="updateMetadata('{{entry._id}}', '{{property}}', this.value)"/>
+  {% else %}
+    {{entry.metadata[property]}}
+{%- endif %}
+{%- endmacro %}
 
-{% macro editableTextarea(entry, property) %}
-  <textarea rows={{entry.metadata[property].count('\n')+1}} class=editable onchange="updateMetadata('{{entry._id}}', '{{property}}', this.value)">
+{% macro editableTextarea(entry, property) -%}
+  {% if current_user.is_admin() or current_user.id == entry.uploader_id -%}
+    <textarea rows={{entry.metadata[property].count('\n')+1}} class=editable
+        onchange="updateMetadata('{{entry._id}}', '{{property}}', this.value)">
 {{entry.metadata[property]}}
-  </textarea>
-{% endmacro %}
+    </textarea>
+  {% else %}
+    <textarea rows={{entry.metadata[property].count('\n')+1}} cols=100>
+{{entry.metadata[property]}}
+    </textarea>
+  {%- endif %}
+{%- endmacro %}
 
 
 {% macro render_uploadlist(title, list) %}
@@ -576,10 +587,21 @@ function updateMappingRules(data, id) {
 
 {% for entry in list %}
 <dl class=propertylist>
+
   <dt>Name</dt>
   <dd>{{editable(entry,'name')}}</dd>
+
   <dt>Status</dt>
-  <dd>{{entry.metadata.status}}</dd>
+  {% if current_user.is_admin() or current_user.id == entry.uploader_id %}
+    <select onchange="updateMetadata('{{entry._id}}', 'status', this.value)">
+      <option value="approve" {%if entry.metadata.status[0]=='a'%}selected{%endif%}>Approved</option>
+      <option value="disapproved" {%if entry.metadata.status[0]=='d'%}selected{%endif%}>Disapproved</option>
+      <option value="unmoderated" {%if entry.metadata.status[0]=='u'%}selected{%endif%}>Unmoderated</option>
+    </select>
+  {% else %}
+    <dd>{{entry.metadata.status}}</dd>
+  {% endif %}
+
   <dt>Related to</dt>
   <dd>{{editable(entry,'related_to')}}</dd>
   {% if entry.metadata.parent_archive_id is defined %}
@@ -653,10 +675,34 @@ function updateMappingRules(data, id) {
 
 
 {% if unmoderated is defined %}
+
+<!--
+<script>
+  /* attach a submit handler to the form */
+  $(document).ready(function() {
+   $(".bgpost").submit(function(event) {
+
+    /* stop form from submitting normally */
+    event.preventDefault(); 
+        
+    /* get some values from elements on the page: */
+    var $form = $( this ),
+        id = $form.find( 'input[name="id"]' ).val();
+    alert(this.name)
+
+    /* Send the data using post and put the results in a div */
+    //$.post( url, { s: term });
+   })})
+</script>
+-->
+
+
+
 {% call(entry) render_uploadlist('Awaiting approval', unmoderated) %}
+
   <dt>Action</dt>
   <dd>
-    <form action="{{ url_for('.admin_update') }}" method="post">
+    <form class="bgpost" action="{{ url_for('.admin_update') }}" method="post">
       <input type="hidden" name="id" value="{{entry._id}}"/>
       <button type="submit" name="approve" value="yes">Approve</button>
       <button type="submit" name="disapprove" value="yes">Disapprove</button>

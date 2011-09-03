@@ -98,6 +98,11 @@ def obfuscate_email(email):
     """
     return u"%s…@…%s" % (email[:2],email[-2:])
 
+@app.template_filter('urlencode')
+def urlencode(kwargs):
+  import urllib
+  return urllib.urlencode(kwargs)
+
 ### for testing.py ###
 import unittest
 class LmfdbTest(unittest.TestCase):

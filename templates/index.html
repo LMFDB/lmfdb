@@ -27,13 +27,18 @@ and theorems.
  <li><a href="{{ url_for("about") }}">About</a></li>
 </ul>
 
-{% if user.is_authenticated() %}
 <h2>Data Uploading</h2>
 <ul>
+<li><a href="{{ url_for("upload.viewAll")}}">View uploaded data</a></li>
+{% if user.is_authenticated() %}
  <li><a href="{{ url_for("upload.index") }}">Upload data</a></li>
- <li><a href="{{ url_for("upload.admin") }}">View uploaded files and moderate</a></li>
+ {% if user.is_admin() %}
+  <li><a href="{{ url_for("upload.admin") }}">Moderate uploaded files</a></li>
+ {% endif %}
+{% endif %}
 </ul>
 
+{% if user.is_authenticated() %}
 <h2>Raw</h2>
 <ul>
 <li><a href="/raw">raw</a>

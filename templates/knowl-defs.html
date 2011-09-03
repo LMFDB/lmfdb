@@ -16,13 +16,12 @@
 {% with knowl = Knowl(knowlid, kwargs) -%}
 {% if knowl.exists() -%}
   {% if title is none -%}
-     <a class="knowl-title" knowl="{{ knowl.id }}">{{ knowl.title }}</a>
+     <a class="knowl-title" knowl="{{ knowl.id }}" kwargs="{{ kwargs|urlencode }}">{{ knowl.title }}</a>
   {%- else -%}
     {% if title|length > 0 -%}
-     <a class="knowl-title" knowl="{{ knowl.id }}">{{ title }}</a>
+     <a class="knowl-title" knowl="{{ knowl.id }}" kwargs="{{ kwargs|urlencode }}">{{ title }}</a>
     {%- endif %}
   {%- endif %}
-  {# <span knowl="{{ knowl.id }}" class="knowl-qm">?</span> #}
 
 {%- else -%}
   {# knowl does not exist. wrong knowlid or opportunity to create one! #}
@@ -52,6 +51,10 @@
     <{{htag}}>{{title}}</{{htag}}>
   {%- endif %}
   {{knowl.content}}
+  {% if user.is_authenticated() -%}
+    <div class="knowl-inc-edit"><a href="{{ url_for('knowledge.edit', ID=knowlid) }}">edit '{{knowlid}}'</a></div>
+  {%- endif %}
+
 {%- else -%}
 
   {# knowl does not exist. wrong knowlid or opportunity to create one! #}
@@ -77,7 +80,7 @@
 {# for inserting "normal" links to knowl pages #}
 {% macro KNOWL_LINK(ID) -%}
  {% with k = Knowl(ID) -%}
-  <a class="knowl-link" href='{{ url_for("knowledge.show", ID=k.id) }}'>{{ k.title }}</a>
+  <a class="knowl-link" href='{{ url_for("knowledge.show", ID=k.id) }}?{{kwargs|urlencode}}'>{{ k.title }}</a>
  {%- endwith %}
 {%- endmacro %}
 
@@ -104,3 +107,7 @@
 </div>
 {%- endmacro %}
 
+{# The defs for database queries #}
+{% macro TEXT_DATA(filename, path) -%}
+  {{ queryUploadDatabase(filename, path or request.path) }}
+{%- endmacro %}
