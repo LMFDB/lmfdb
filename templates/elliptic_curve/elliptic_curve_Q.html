@@ -2,7 +2,7 @@
 
 {% block content %}
 
-{{ KNOWL_INC('EC.elliptic_curve.intro',title="") }} 
+An elliptic curve is a curve of genus one with a distinguished base point,  usually given as a plane curve with a {{ KNOWL('EC.minimal_weierstrass_equation')}}. 
 
 <h2> Browse </h2>
 
@@ -42,7 +42,7 @@ Please enter a value or leave blank:
     <tr>
       <td>{{ KNOWL_LINK('EC.conductor') }}</td>
      <td>
-       <input type='text' name='conductor' placeholder="389" />
+       <input type='text' name='conductor' placeholder="389" size=10/>
      </td>
      <td><span class="formexample"> e.g. 389 or 100-200</span></td>
     </tr>
@@ -53,7 +53,7 @@ Please enter a value or leave blank:
     {{ KNOWL_LINK('EC.rank') }}
     </td>
            <td>
-           <input type='text' name='rank' placeholder="0">
+           <input type='text' name='rank' placeholder="0" size=10>
            </td>
            <td><span class="formexample"> e.g. 0 </span>
            </td>
@@ -64,7 +64,7 @@ Please enter a value or leave blank:
        {{ KNOWL_LINK('EC.torsion_order') }}
        </td>
           <td> 
-          <input type='text' name='torsion' placeholder="2">
+          <input type='text' name='torsion' placeholder="2" size=10/>
           </td>
           <td>
           <span class="formexample"> e.g. 2 </span>
@@ -82,6 +82,13 @@ Please enter a value or leave blank:
          </select>
       </td>
     </tr>
+
+<tr>
+<td align=left colspan=4>Maximum number of curves to display <input type='text' name='count' value=100 size=10>
+</td>
+</tr>
+
+
   </table>
 <p></p>
 <td><button type='submit' value='Search'>Search</td>
