@@ -15,11 +15,17 @@ login_page = Blueprint("users", __name__, template_folder='templates')
 import utils
 logger = utils.make_logger(login_page)
 
+import re
+allowed_usernames = re.compile("^[a-zA-Z0-9._-]+$")
+
 from flaskext.login import LoginManager
 login_manager = LoginManager()
 
 import pwdmanager
 from pwdmanager import LmfdbUser, LmfdbAnonymousUser
+
+# TODO update this url, needed for the user login token
+base_url = "http://www.l-functions.org"
 
 @login_manager.user_loader
 def load_user(userid):
@@ -34,8 +40,10 @@ login_manager.anonymous_user = LmfdbAnonymousUser
 # globally define the user and username
 @app.context_processor
 def ctx_proc_userdata():
-  userdata = {'user' : current_user}
+  userdata = {}
   userdata['username'] = 'Anonymous' if current_user.is_anonymous() else current_user.name
+  userdata['user_is_authenticated'] =  current_user.is_authenticated()
+  userdata['user_is_admin'] = current_user.is_admin()
   return userdata
 
 # blueprint specific definition of the body_class variable
@@ -117,11 +125,48 @@ def login(**kwargs):
   flask.flash("Oops! Wrong username or password.", "error")
   return flask.redirect(url_for(".info"))
 
-import re
-allowed_usernames = re.compile("^[a-zA-Z0-9._-]+$")
+def admin_required(fn):
+  """
+  wrap this around those entry points where you need to be an admin.
+  """
+  @wraps(fn)
+  @login_required
+  def decorated_view(*args, **kwargs):
+    logger.info("admin access attempt by %s" % current_user.get_id())
+    if not current_user.is_admin():
+      return flask.abort(403) # 401 = access denied
+    return fn(*args, **kwargs)
+  return decorated_view
 
-@login_page.route("/register", methods = ['GET', 'POST'])
+def get_user_token_coll():
+  return getDBConnection().userdb.tokens
+
+@login_page.route("/register/new")
+@admin_required
 def register():
+  from datetime import datetime, timedelta
+  now    = datetime.utcnow()
+  tdelta = timedelta(days=1)
+  exp    = now + tdelta
+  import random
+  token  = str(random.randrange(1e20,1e21))
+  get_user_token_coll().save({'_id' : token, 'expire':exp})
+  url    = url_for(".register_new", token = token)
+  return '<a href="%s%s">%s</a>' % (base_url, url, token)
+
+def delete_old_tokens():
+  from datetime import datetime, timedelta
+  now    = datetime.utcnow()
+  tdelta = timedelta(days=8)
+  exp    = now + tdelta
+  get_user_token_coll().remove({'expire': { '$gt' : exp}})
+
+@login_page.route("/register/<token>", methods = ['GET', 'POST'])
+def register_new(token):
+  delete_old_tokens()
+  token_exists = get_user_token_coll().find({'_id' : token}).count() == 1
+  if not token_exists:
+    flask.abort(401)
   bread = base_bread() + [('Register', url_for(".register"))]
   if request.method == 'POST':
     name   = request.form['name']
@@ -166,19 +211,6 @@ def logout():
   logout_user()
   flask.flash("You are logged out now. Have a nice day!")
   return flask.redirect(request.args.get("next") or request.referrer or url_for('.info'))
-
-def admin_required(fn):
-  """
-  wrap this around those entry points where you need to be an admin.
-  """
-  @wraps(fn)
-  @login_required
-  def decorated_view(*args, **kwargs):
-    logger.info("admin access attempt by %s" % current_user.get_id())
-    if not current_user.is_admin():
-      return flask.abort(403) # 401 = access denied
-    return fn(*args, **kwargs)
-  return decorated_view
 
 @login_page.route("/admin")
 @login_required

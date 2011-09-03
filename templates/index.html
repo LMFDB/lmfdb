@@ -20,7 +20,7 @@ and theorems.
  <li>{{ KNOWL_LINK("wiki.index") }}.</li>
  <li>What is a {{ KNOWL("wiki.knowl") }}? Click on it!</li>
  <li><a href="{{ url_for("users.list") }}">User Management</a>:
- {% if user.is_authenticated() -%}
+ {% if user_is_authenticated -%}
    you are "<a href="{{ url_for('users.info') }}">{{username}}</a>"
  {%- endif %}
  </li>
@@ -31,7 +31,7 @@ and theorems.
 <h2>Data Uploading</h2>
 <ul>
 <li><a href="{{ url_for("upload.viewAll")}}">View uploaded data</a></li>
-{% if user.is_authenticated() %}
+{% if user_is_authenticated %}
  <li><a href="{{ url_for("upload.index") }}">Upload data</a></li>
  {% if user.is_admin() %}
   <li><a href="{{ url_for("upload.admin") }}">Moderate uploaded files</a></li>
@@ -39,7 +39,7 @@ and theorems.
 {% endif %}
 </ul>
 
-{% if user.is_authenticated() %}
+{% if user_is_authenticated %}
 <h2>Raw</h2>
 <ul>
 <li><a href="/raw">raw</a>

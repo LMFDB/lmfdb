@@ -25,7 +25,7 @@
 
 {%- else -%}
   {# knowl does not exist. wrong knowlid or opportunity to create one! #}
-    {% if user.is_authenticated() -%}
+    {% if user_is_authenticated -%}
       <span class="knowl knowl-error">
       Knowl '{{knowlid}}' missing or wrong ID. 
       <a href="{{ url_for('knowledge.edit', ID=knowlid) }}">Create it</a>.
@@ -51,14 +51,14 @@
     <{{htag}}>{{title}}</{{htag}}>
   {%- endif %}
   {{knowl.content}}
-  {% if user.is_authenticated() -%}
+  {% if user_is_authenticated -%}
     <div class="knowl-inc-edit"><a href="{{ url_for('knowledge.edit', ID=knowlid) }}">edit '{{knowlid}}'</a></div>
   {%- endif %}
 
 {%- else -%}
 
   {# knowl does not exist. wrong knowlid or opportunity to create one! #}
-    {% if user.is_authenticated() -%}
+    {% if user_is_authenticated -%}
       <div class="knowl knowl-error">
        Knowl '{{knowlid}}' missing or wrong ID. 
        <a href="{{ url_for('knowledge.edit', ID=knowlid) }}">Create it</a>.
@@ -91,11 +91,11 @@
    <a title="as it will be used for transculsioins" href="{{ url_for('.render', ID=k.id) }}">render</a> 
    &middot;
    <a title="like as a wiki would" href="{{ url_for('.show', ID=k.id) }}">show</a>
-   {% if user.is_authenticated() %}
+   {% if user_is_authenticated %}
      &middot;
      <a href="{{ url_for('.edit', ID=k.id) }}">edit</a>
    {% endif %}
-   {% if user.is_admin() %}
+   {% if user_is_admin %}
      &middot;
      <a onclick='return confirm("Really delete Knowl {{ k.id }}? There is no way back!");'
             href="{{ url_for('.delete', ID=k.id) }}">delete</a>
