@@ -19,9 +19,9 @@ def render_webpage( args = {}):
     
     if len(args) == 0:
         return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_navigation.html", \
-                                   info = info, \
-                                   title = 'Siegel Modular Forms', \
-                                   bread = bread)
+                               title = 'Siegel Modular Forms', \
+                               bread = bread, \
+                               **info)
 
     # possible keys for the URL
     group = args.get('group')
@@ -94,7 +94,7 @@ def render_webpage( args = {}):
 
         else:
             info['error'] = 'Request for unvalid type of Siegel modular form'
-            return render_template("ModularForm_GSp4_Q/None.html", info=info)
+            return render_template("ModularForm_GSp4_Q/None.html", **info)
 
         info['learnmore'] += [ ('The spaces \('+info['parent_as_tex']+'\)', url_for( 'ModularForm_GSp4_Q_top_level', group = group, page='basic'))]
         bread += [( '\('+info['parent_as_tex']+'\)', url_for( 'ModularForm_GSp4_Q_top_level', group=group, page='forms'))]
@@ -118,16 +118,15 @@ def render_webpage( args = {}):
         if True == forms_exist:
             info['forms'] = [ (k,[(form,go[k][form]) for form in go[k]]) for k in go]
         return render_template( "ModularForm_GSp4_Q/ModularForm_GSp4_Q_forms.html", \
-                                learnmore = info['learnmore'], info = info, \
                                 title = 'Siegel modular forms \(' + info['parent_as_tex'] + '\)', \
-                                bread = bread)
+                                bread = bread, **info)
 
 
     if page == 'basic':
         bread += [( 'Basic information', url_for( 'ModularForm_GSp4_Q_top_level', group=group, page=page) )]
-        return render_template( "ModularForm_GSp4_Q/ModularForm_GSp4_Q_basic.html", learnmore=info["learnmore"], info = info, \
+        return render_template( "ModularForm_GSp4_Q/ModularForm_GSp4_Q_basic.html", \
                                 title = 'Siegel modular forms basic information', \
-                                bread = bread)
+                                bread = bread, **info)
 
         
     if page == 'dimensions':
@@ -183,9 +182,8 @@ def render_webpage( args = {}):
             info['table_headers'] = ["Weight", "Total", "Eisenstein", "Klingen", "Maass", "Interesting"]
 
         return render_template( "ModularForm_GSp4_Q/ModularForm_GSp4_Q_dimensions.html", \
-                                learnmore=info["learnmore"], info = info, \
                                 title = 'Siegel modular forms dimensions \(' + info['parent_as_tex'] + '\)', \
-                                bread = bread)
+                                bread = bread, **info)
 
 
     if page == 'specimen':
@@ -218,9 +216,8 @@ def render_webpage( args = {}):
 
         bread += [( 'Basic information', url_for( 'ModularForm_GSp4_Q_top_level', group=group, page=page, weight=weight, form=form) )]
         return render_template( "ModularForm_GSp4_Q/ModularForm_GSp4_Q_specimen.html", \
-                                    learnmore=info["learnmore"], info = info,  \
                                     title = 'Siegel modular form ' + weight + '_' + form, \
-                                    bread = bread)            
+                                    bread = bread, **info)            
 
     # if a nonexisting page was requested return the homepage of Siegel modular forms
     return render_webpage()

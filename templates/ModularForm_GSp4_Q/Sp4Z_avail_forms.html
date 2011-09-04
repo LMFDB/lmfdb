@@ -24,7 +24,7 @@
       <tr><th>Weight</th><th colspan=5>Galois orbits (number of eigenforms)</th></tr>
     </thead>
     <tbody>
-      {% for wt,forms in  info.forms %}
+      {% for wt,forms in  forms %}
       <tr class = "{{ loop.cycle( 'odd', 'even') }}">
 	<td>{{ wt }}</td>
         {% for form,dim in forms|sort %}

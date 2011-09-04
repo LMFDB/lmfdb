@@ -14,7 +14,7 @@
     <thead>
       <tr><th>Weight</th><th>Level</th><th>Galois-Orbits of nonlifts</th></tr>
     </thead>
-    {% for wt,forms in  info.forms %}
+    {% for wt,forms in  forms %}
       {% for form,dim in forms|sort  %}
     <tr class = "{{ loop.cycle( 'odd', 'even') }}">
       <td>{{ wt }}</td>
