@@ -400,16 +400,23 @@ def paintCSHolo(width, height, xMax, yMax, xfactor, yfactor,ticlength):
 ## ============================================
 # ============================================
 def paintCSHoloTMP(width, height, xMax, yMax, xfactor, yfactor,ticlength):
-    xmlText = ("<line x1='0' y1='" + str(height) + "' x2='" +
+    xmlText = ("<line x1='-50' y1='" + str(height) + "' x2='" +
                str(width) + "' y2='" + str(height) +
-               "' style='stroke:rgb(0,0,0);'/>\n")
-    xmlText = xmlText + ("<line x1='0' y1='" + str(height) +
-                         "' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n")
+               "' style='stroke:rgb(0,0,0);'/>\n")   # draw horizontal axis
+#     xmlText += mytext("level", [0,height], [xfactor, yfactor], [0.4, 0.7], "", "", "", 'rgb(0,0,0)')
+#    xmlText += '<text x="18" y="395" style="stroke:none" font-style = "italic";>level</text>'
+    xmlText = xmlText + ("<line x1='0' y1='" + str(height) + "' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n")  # draw vertical axis
+    xmlText +="<text x='50.0' y='491.0' font-style='italic'>level</text>"
+#
+    #xmlText += mytext("level", [0,height], [xfactor, yfactor], [0.2, 0.7], "", 'font-size:11px', "", 'rgb(0,0,0)')
+    xmlText += "<text x='33.0' y='411.0' transform='rotate(270 33, 411)' font-style='italic'>weight</text>"
+    #xmlText += '<text x="118"  y="365" transform="rotate(90 118, 365)" style="stroke:none" font-style="italic";>weight</text>'
+    #xmlText += '<text x="118"  y="365" transform="rotate(-90 118, 365)" style="stroke:none" font-style = "italic";>weight</text>'
     for i in range( 1,  xMax + 1):
         xmlText = xmlText + ("<line x1='" + str(i*xfactor) + "' y1='" +
                              str(height - ticlength) + "' x2='" +
                              str(i*xfactor) + "' y2='" + str(height) +
-                             "' style='stroke:rgb(0,0,0);'/>\n")
+                             "' style='stroke:rgb(0,0,0);'/>\n")   
 
     for i in range( 1,  xMax + 1, 1):
         digitoffset = 6
@@ -420,10 +427,10 @@ def paintCSHoloTMP(width, height, xMax, yMax, xfactor, yfactor,ticlength):
                              "' style='fill:rgb(102,102,102);font-size:11px;'>"
                              + str(i) + "</text>\n")
 
-#       xmlText = xmlText + ("<line y1='0' x1='" + str(i*xfactor) +
-#                        "' y2='" + str(height) + "' x2='" +
-#                        str(i*xfactor) +
-#                        "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+        xmlText = xmlText + ("<line y1='0' x1='" + str(i*xfactor) +
+                         "' y2='" + str(height) + "' x2='" +
+                         str(i*xfactor) +
+                         "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
     for i in range( 1,  yMax + 1):
         xmlText = xmlText + ("<line x1='0' y1='" +
@@ -438,11 +445,11 @@ def paintCSHoloTMP(width, height, xMax, yMax, xfactor, yfactor,ticlength):
                              "' style='fill:rgb(102,102,102);font-size:11px;'>" +
                              str(i) + "</text>\n")
 
-#       if i%4==0 :  #  put dahes every four units
-#          xmlText = xmlText + ("<line x1='0' y1='" +
-#                        str(height - i*yfactor) + "' x2='" + str(width) +
-#                        "' y2='" + str(height - i*yfactor) +
-#                        "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+        if i%4==0 :  #  put dahes every four units
+           xmlText = xmlText + ("<line x1='0' y1='" +
+                         str(height - i*yfactor) + "' x2='" + str(width) +
+                         "' y2='" + str(height - i*yfactor) +
+                         "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
     return(xmlText)
 
@@ -586,8 +593,8 @@ def paintSvgHoloGeneral(Nmin,Nmax,kmin,kmax,imagewidth,imageheight):
     extraSpace = 20
     ticlength = 4
     radius = 3.3
-    xdotspacing = 0.11  # horizontal spacing of dots
-    ydotspacing = 0.28  # vertical spacing of dots
+    xdotspacing = 0.30  # horizontal spacing of dots
+    ydotspacing = 0.15  # vertical spacing of dots
     colourplus = signtocolour(1)
     colourminus = signtocolour(-1)
     maxdots = 5  # max number of dots to display
@@ -632,17 +639,17 @@ def paintSvgHoloGeneral(Nmin,Nmax,kmin,kmax,imagewidth,imageheight):
            dimensioninfo['vertexlocation'] = [x,y]
            dimensioninfo['maxdots'] = maxdots
            dimensioninfo['dotspacing'] = [xdotspacing, ydotspacing]
-           dimensioninfo['edge'] = [[0,1],[1,1]]     # unit vectors defining edges of sector
-           dimensioninfo['edgelength'] = [float(dimensioninfo['scale'][0])/float(Nmax), float(dimensioninfo['scale'][1])/float(kmax)] #add comment
-           print('edgelength = ',dimensioninfo['edgelength']) 
+           dimensioninfo['edge'] = [[0,1],[1,0]]     # unit vectors defining edges of sector
+           #dimensioninfo['edgelength'] = [float(dimensioninfo['scale'][0])/float(Nmax), float(dimensioninfo['scale'][1])/float(kmax)] #add comment
+           #print('edgelength = ',dimensioninfo['edgelength']) 
            dimensioninfo['edgelength'] = [0.5,0.5]
-           dimensioninfo['firstdotoffset'] = [0.05,0.07]
-           #dimensioninfo['firstdotoffset'] = [0.5 * (dimensioninfo['dotspacing'][0] * dimensioninfo['edge'][0,0] + dimensioninfo['dotspacing'][1] * dimensioninfo['edge'][1,0]), 0.5 * (dimensioninfo['dotspacing'][1] * dimensioninfo['edge'][0,1] + dimensioninfo['dotspacing'][1] * dimensioninfo['edge'][1,1])]
            dimensioninfo['dotradius'] = radius
            dimensioninfo['connectinglinewidth'] = dimensioninfo['dotradius']/2.0
+           dimensioninfo['firstdotoffset'] = [0.0,0.0]
 #
            appearanceinfo = {}
-           appearanceinfo['edgewidth'] = dimensioninfo['dotspacing'][0]/1.0  #just a guess
+           #appearanceinfo['edgewidth'] = dimensioninfo['dotspacing'][0]/1.0  #just a guess
+           appearanceinfo['edgewidth'] = [0,0]  # remove the sector edges
            appearanceinfo['edgestyle'] = 'stroke-dasharray:3,3'
            appearanceinfo['edgecolor'] = 'rgb(202,202,102)'
            appearanceinfo['fontsize'] = 'font-size:11px'
@@ -666,11 +673,15 @@ def paintSvgHoloGeneral(Nmin,Nmax,kmin,kmax,imagewidth,imageheight):
                  if x == 1: # For level 1, the sign is always plus
                     signfe = 1
                  else:
-                    signfe = -1
-                    #frickeeigenvalue = MF.atkin_lehner_eigenvalues()[x] # gives Fricke eigenvalue
-                    #signfe = frickeeigenvalue * (-1)**float(y/2)  # sign of functional equation
+                    #signfe = -1
+                    frickeeigenvalue = MF.atkin_lehner_eigenvalues()[x] # gives Fricke eigenvalue
+                    signfe = frickeeigenvalue * (-1)**float(y/2)  # sign of functional equation
                  if signfe == signtmp:  # we find an orbit with sign of "signtmp"
+                    dimensioninfo['dotspacing'] = [signfe * xdotspacing, ydotspacing]
+                    dimensioninfo['firstdotoffset'] = [signfe * 0.5 * (dimensioninfo['dotspacing'][0] * dimensioninfo['edge'][0][0] + dimensioninfo['dotspacing'][1] * dimensioninfo['edge'][1][0]), 0.5 * (dimensioninfo['dotspacing'][1] * dimensioninfo['edge'][0][1] + dimensioninfo['dotspacing'][1] * dimensioninfo['edge'][1][1])]
+                    #dimensioninfo['firstdotoffset'] = [0.05,0.07]
                     signcolour = signtocolour(signfe)
+                    appearanceinfo['edgecolor'] = signcolour
                     orbitdescriptionlist = []
                     for n in range(numberwithlabel):
                        orbitdescriptionlist.append({'label':label,'number':n,'color':signcolour})
@@ -1005,31 +1016,32 @@ def plotsector(dimensioninfo, appearanceinfo, urlinfo):
     offset = dimensioninfo['offset']
     maxdots = dimensioninfo['maxdots']
     dotspacing = dimensioninfo['dotspacing']
-    parallelogramsize = [1 + maxdots, 1 + maxdots]
+    parallelogramsize = [1, 1]
+    #parallelogramsize = [1 + maxdots, 1 + maxdots]
     edge = dimensioninfo['edge']
 
     urlbase = urlinfo['base']
     for arg, val in urlinfo['space'].iteritems():   # this does things like: level=4&weight=8&character=0
       if type(val).__name__ != 'dict' and type(val).__name__ != 'list':
-         urlbase += arg + "='" + str(val) + "'" + "&amp;"
+         urlbase += arg + "=" + str(val) + "&amp;"
 
 # draw the edges of the sector (omit edge if edgelength is 0)
     edgelength = dimensioninfo['edgelength']
-    ans += myline(offset, scale, vertexlocation, lincomb(1, [0, 0], parallelogramsize[0] * edgelength[0], edge[0]), appearanceinfo['edgewidth'], appearanceinfo['edgestyle'], appearanceinfo['edgecolor'])
-    ans += "\n"
-    ans += myline(offset, scale, vertexlocation, lincomb(1, [0, 0], parallelogramsize[1] * edgelength[1], edge[1]), appearanceinfo['edgewidth'], appearanceinfo['edgestyle'], appearanceinfo['edgecolor'])
-    ans += "\n"
+    #ans += myline(offset, scale, vertexlocation, lincomb(1, vertexlocation, parallelogramsize[0] * edgelength[0], edge[0]), appearanceinfo['edgewidth'], appearanceinfo['edgestyle'], appearanceinfo['edgecolor'])
+    #ans += "\n"
+    #ans += myline(offset, scale, vertexlocation, lincomb(1, vertexlocation, parallelogramsize[1] * edgelength[1], edge[1]), appearanceinfo['edgewidth'], appearanceinfo['edgestyle'], appearanceinfo['edgecolor'])
+    #ans += "\n"
 
  # now iterate over the orbits
  # "orbitbase" is the starting point of an orbit, which initially is the "firstdotoffset"
     orbitbase = lincomb(1,vertexlocation,1,dimensioninfo['firstdotoffset'])  
-    print(vertexlocation)
-    print(dimensioninfo['firstdotoffset'])
+    print('firstDOToffset:',dimensioninfo['firstdotoffset'])
     for orbit in urlinfo['space']['orbits']:
+      print('orbit', orbit)
       # first determine if we should draw a line connecting the dots in an orbit, since want line beneath dots
       # no line if 1 dot or >maxdots
       if len(orbit) > 1 and len(orbit) <= maxdots:
-         ans += myline(offset, scale, orbitbase, lincomb(1, orbitbase, (len(orbit) - 1), dotspacing), dimensioninfo['connectinglinewidth'], "", appearanceinfo['edgecolor'])
+         ans += myline(offset, scale, orbitbase, lincomb(1, orbitbase, (len(orbit) - 1)*dotspacing[1], edge[1]), dimensioninfo['connectinglinewidth'], "", appearanceinfo['edgecolor'])
          ans += "\n"
       elif len(orbit) > maxdots:
          ans += "<a xlink:href='/not_yet_implemented' target='_top'>"
@@ -1038,19 +1050,28 @@ def plotsector(dimensioninfo, appearanceinfo, urlinfo):
          ans += "\n"
          break   # we are done with this orbit if there are more than maxdots cuspforms in the orbit (re-check)***
       dotlocation = orbitbase
+      print('entering orbit loop', len(orbit))
       for orbitelem in orbit:  # loop through the elements in an orbit, drawing a dot and making a link
          orbitcolor = orbitelem['color']
          url = urlbase
          #for arg, val in orbitelem['urlinfo'].iteritems():  # think this is an error
          for arg, val in orbitelem.iteritems():
-            url += arg + "='" + str(val) + "'" + "&amp;"
+            #url += arg + "='" + str(val) + "'" + "&amp;"  #trying to fix ticks in url
+            url += arg + "=" + str(val) +  "&amp;"
          ans += '<a xlink:href="' + url + '" target="_top">'
          ans += "\n"
          #ans += mydot(vertexlocation, scale, dotlocation, dimensioninfo['dotradius'], orbitcolor,"",orbitelem['title'])
-         ans += mydot(offset, scale, dotlocation, dimensioninfo['dotradius'], orbitcolor,"","test title")
+         print('dotlocation_bef:', dotlocation)
+         #ans += mydot(offset, scale, dotlocation, dimensioninfo['dotradius'], orbitcolor,"","test title")
+         ans += mydot(offset, scale, dotlocation, dimensioninfo['dotradius'], orbitcolor,"","")
          ans += "</a>"
          ans += "\n"
+         print('orbitcolor:', orbitcolor)
+         print('dotlocation:', dotlocation)
+         print('dotspacing:', dotspacing)
+         print('edge:', edge)
          dotlocation = lincomb(1, dotlocation, dotspacing[1], edge[1])
+         print('dotlocation_aft:', dotlocation)
       orbitbase = lincomb(1, orbitbase, dotspacing[0], edge[0])
     return(ans)
 
