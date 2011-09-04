@@ -35,7 +35,7 @@
     <td>{{ c }}</td>
     <td>
       {% for k in ks %}
-        <div><a href="{{ url_for('.show', ID=k._id) }}">{{ k.title }}<br/>
+        <div><a href="{{ url_for('.show', ID=k._id) }}">{{ k.title|safe }}<br/>
              <span>{{ k._id }}</span></a></div>
       {% endfor %}
      </td>
