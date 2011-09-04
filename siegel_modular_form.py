@@ -5,7 +5,7 @@ import urllib
 from sage.all_cmdline import *
 
 #DATA = 'http://data.countnumber.de/Siegel-Modular-Forms/'
-DATA = 'ups'
+DATA = '/media/data/home/nils/Sandbox/super_current/nilsskoruppa-lmfdb/db/'
     
 
 def render_webpage( args = {}):
@@ -81,7 +81,9 @@ def render_webpage( args = {}):
         elif 'Gamma0_4' == args['group']:
             info['parent_as_tex'] = 'M_k\\big(\\Gamma_0(4)\\big)'
             dimension = siegel_core._dimension_Gamma0_4
-
+            file_name = weight + '_' + form + '-ev.sobj'
+            g_url = DATA + group +'/eigenvalues/' + file_name
+            g =load( g_url)
         elif 'Gamma0_4_psi_4' == args['group']:
             info['parent_as_tex'] = 'M_k\\big(\\Gamma_0(4,\\psi_4)\\big)'
             dimension = siegel_core._dimension_Gamma0_4_psi_4
@@ -116,14 +118,14 @@ def render_webpage( args = {}):
         if True == forms_exist:
             info['forms'] = [ (k,[(form,go[k][form]) for form in go[k]]) for k in go]
         return render_template( "ModularForm_GSp4_Q/ModularForm_GSp4_Q_forms.html", \
-                                info = info, \
+                                learnmore = info['learnmore'], info = info, \
                                 title = 'Siegel modular forms \(' + info['parent_as_tex'] + '\)', \
                                 bread = bread)
 
 
     if page == 'basic':
         bread += [( 'Basic information', url_for( 'ModularForm_GSp4_Q_top_level', group=group, page=page) )]
-        return render_template( "ModularForm_GSp4_Q/ModularForm_GSp4_Q_basic.html", info = info, \
+        return render_template( "ModularForm_GSp4_Q/ModularForm_GSp4_Q_basic.html", learnmore=info["learnmore"], info = info, \
                                 title = 'Siegel modular forms basic information', \
                                 bread = bread)
 
@@ -181,7 +183,7 @@ def render_webpage( args = {}):
             info['table_headers'] = ["Weight", "Total", "Eisenstein", "Klingen", "Maass", "Interesting"]
 
         return render_template( "ModularForm_GSp4_Q/ModularForm_GSp4_Q_dimensions.html", \
-                                info = info, \
+                                learnmore=info["learnmore"], info = info, \
                                 title = 'Siegel modular forms dimensions \(' + info['parent_as_tex'] + '\)', \
                                 bread = bread)
 
@@ -191,32 +193,32 @@ def render_webpage( args = {}):
         file_name = weight + '_' + form + '.sobj'
         f_url = DATA + group + '/eigenforms/' + file_name
         try:
-            f =load(f_url)
+            f = load(f_url)
             f_keys = f[2].keys()
 
             if  'Sp4Z' == group and 'E' != form and 'Klingen' != form:
                 f_keys = filter( lambda (a,b,c): b^2<4*a*c, f_keys) 
-                # we sort the table of Fourier coefficients by discriminant, forms in increasing lexicographic order
-                our_cmp = lambda (a,b,c), (A,B,C) : cmp( (4*a*c - b**2,a,b,c), (4*A*C - B**2, A,B,C) )
-                f_keys.sort( cmp = our_cmp)
+            # we sort the table of Fourier coefficients by discriminant, forms in increasing lexicographic order
+            our_cmp = lambda (a,b,c), (A,B,C) : cmp( (4*a*c - b**2,a,b,c), (4*A*C - B**2, A,B,C) )
+            f_keys.sort( cmp = our_cmp)
 
-                file_name = weight + '_' + form + '-ev.sobj'
-                g_url = DATA + group +'/eigenvalues/' + file_name
-                g =load( g_url)
+            file_name = weight + '_' + form + '-ev.sobj'
+            g_url = DATA + group +'/eigenvalues/' + file_name
+            g =load( g_url)
 
-                info['form'] = [ f[0].parent(), f[1], \
-                                 [ (l,g[1][l]) for l in g[1]], \
-                                 [(i,f[2][i]) for i in f_keys], \
-                                     f_url, g_url]
+            info['form'] = [ f[0].parent(), f[1], \
+                             [ (l,g[1][l]) for l in g[1]], \
+                             [(i,f[2][i]) for i in f_keys], \
+                             f_url, g_url]
 ##             info['friends'] = [ ('Spin L-function', url_for('not_yet_implemented')), \
 ##                                 ('Standard L-function', url_for('not_yet_implemented')), \
 ##                                 ('First Fourier-Jacobi coefficient', url_for('not_yet_implemented'))]
         except:
-            inf['error'] = 'Data not available'
+            info['error'] = 'Data not available'
 
         bread += [( 'Basic information', url_for( 'ModularForm_GSp4_Q_top_level', group=group, page=page, weight=weight, form=form) )]
         return render_template( "ModularForm_GSp4_Q/ModularForm_GSp4_Q_specimen.html", \
-                                    info = info,  \
+                                    learnmore=info["learnmore"], info = info,  \
                                     title = 'Siegel modular form ' + weight + '_' + form, \
                                     bread = bread)            
 

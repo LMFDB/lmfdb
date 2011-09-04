@@ -1,6 +1,8 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
+{% if not info.error %}
+
 <h2>Galois orbit</h2>
 <h4>Weight: {{ info['weight'] }}&nbsp;&nbsp;&nbsp;&nbsp;
   
@@ -58,5 +60,10 @@
     {% endfor %}
   </table>
 </div></div>
+
+{% else %}
+{% include 'ModularForm_GSp4_Q/None.html' %}
+{% endif %}
+
 {% endblock %}
 
