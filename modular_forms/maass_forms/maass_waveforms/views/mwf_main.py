@@ -394,8 +394,8 @@ def render_browse_maass_waveforms(info,title):
         ev_skip=0        
     lrange=[level_skip+1,level_skip+level_range]
     erange=[ev_skip+1,ev_skip+ev_range]
-
-    TT=MWFTable(mwf_dbname,collection='all',skip=[0,0],limit=[6,10],keys=['Level','Eigenvalue'])
+    weight=info.get('weight',0)
+    TT=MWFTable(mwf_dbname,collection='all',skip=[0,0],limit=[6,10],keys=['Level','Eigenvalue'],weight=weight)
     TT.set_table()
     TT.get_metadata()
     info['table']=TT

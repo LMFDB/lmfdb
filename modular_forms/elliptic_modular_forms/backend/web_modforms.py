@@ -81,8 +81,15 @@ class WebModFormSpace(Parent):
         self._ap = list()
         self._verbose=verbose
         self._bitprec=bitprec
+        self._dimension_newspace = None
+        self._dimension_cusp_forms = None
+        self._dimension_modular_forms = None
+        self._dimension_new_cusp_forms = None
         # check what is in the database
-
+        ## dO A SIMPLE TEST TO SEE IF WE EXIST OR NOT.
+        if N<0 or chi>euler_phi(N) or chi<0:
+            emf_logger.critical("Could not construct WMFS with: {0}.{1}.{2}".format(k,N,chi))
+            return None
         if isinstance(data,dict):
             if data.has_key('ap'):
                 self._ap = data['ap']
@@ -128,12 +135,7 @@ class WebModFormSpace(Parent):
             except RuntimeError:
                 raise RuntimeError, "Could not construct space for (k=%s,N=%s,chi=%s)=" % (k,N,self._chi)
         ### If we can we set these dimensions using formulas
-        self._dimension_newspace = None
-        self._dimension_cusp_forms = None
-        self._dimension_modular_forms = None
-        self._dimension_new_cusp_forms = None
-        
-        self._verbose=0
+
         if(self.dimension()==self.dimension_newspace()):
             self._is_new=True
         else:
@@ -169,8 +171,14 @@ class WebModFormSpace(Parent):
         Returns character nr. k acting on the ambient space of self.
 
         """
-        return DirichletGroup(self.group().level())[k]
+        D = DirichletGroup(self.group().level()).list()
+        try:
+            return D[k]
+        except IndexError:
+            emf_logger.critical("Got character no. {0}, which are outside the scope of characters mod {1}!".format(k,self.group().level()))
+            return trivial_character(self.group().level())
 
+        
     def _get_objects(self,k,N,chi,use_db=True,get_what='MS',**kwds):
         r"""
         Getting the space of modular symbols from the database if it exists. Otherise compute it and insert it into the database.

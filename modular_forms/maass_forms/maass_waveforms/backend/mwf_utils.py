@@ -234,6 +234,9 @@ class MWFTable(object):
         level_ul=(self.skip[self.keys.index('Level')]+1)*self.limit[self.keys.index('Level')]
         ev_limit=self.limit[self.keys.index('Eigenvalue')]
         ev_skip=self.skip[self.keys.index('Eigenvalue')]*ev_limit
+        #self.table=dict()
+        #self.table['table']=[]
+        new_cols=[]
         for N in get_all_levels():
             N=int(N)
             if N<level_ll:
@@ -243,19 +246,24 @@ class MWFTable(object):
             evs=[]
             for c in self.cols:
                 finds=c.find({'Level':N,'Weight':self.wt}).sort('Eigenvalue',1).skip(ev_skip).limit(ev_limit);
+                i=0
                 for f in finds:
+                    i=i+1
                     _id = f['_id']
                     R = f['Eigenvalue']
                     url = url_for('mwf.render_one_maass_waveform',objectid=str(_id),db=c.name)
                     evs.append([R,url,c.name])
+                if i>0 and c not in new_cols:
+                    new_cols.append(c)
             evs.sort()
             # If we have too many we delete the 
             while len(evs)>ev_limit:
                 t=evs.pop()
                 logger.debug("removes {0}".format(t))
             #logger.debug("found eigenvalues in {0} is {1}".format(c.name,evs))
-            self.table.append({'N':N,'evs':evs})
-        
+            if len(evs)>0:
+                self.table.append({'N':N,'evs':evs})
+        self.cols=new_cols
 
     ## def print_table(self):
     ##     r"""

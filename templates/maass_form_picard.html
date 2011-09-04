@@ -3,6 +3,10 @@
 
 <h1>{{ title }}</h1>
 
+<p>
+This is a table of eigenvalues for {{KNOWL('mf.maassf.picard',title='Mass Forms on the Picard group \(\mathrm{SL}_{2}(\mathbb{Z}[i])\)') }}
+</p>
+
 <div style="font-size: 75%">
 {% for i in ds %}
 <a href="?id={{ i[0] }}">{{ "%5.2f"|format(i[1])}}</a> 
@@ -20,6 +24,7 @@
            <td>a(beta)</td>
 <!--           <td>symmetry type</td>-->
 </tr>
+
 </thead>
 <tbody>
 {% for i in data.coef %}
@@ -35,6 +40,6 @@
 
 {% endif %}
 
-<div>computed by Holger Then</div>
+<div>Computed by {{ KNOWL('mwfp.contributor.HT',title='Holger Then')}}</div>
 
 {% endblock %}

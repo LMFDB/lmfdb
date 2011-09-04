@@ -30,7 +30,7 @@ function set_value(name,val) {
 
 </script>
 {#{ info | safe } #}
-Here you can browse {{KNOWL('mwf.maass_waaveform',title='Maass Forms')}} over \( \mathrm{GL}_{2}(\mathbb{Q}\)\) 
+Here you can browse {{KNOWL('mwf.maass_waveforms',title='Maass Forms')}} over \( \mathrm{GL}_{2}(\mathbb{Q})\) 
 
 <h1>Browse</h1>
 <form name="browse" method="get" action="{{url_for('.render_maass_waveforms')}}">
@@ -52,24 +52,11 @@ Here you can browse {{KNOWL('mwf.maass_waaveform',title='Maass Forms')}} over \(
 <table>
   <tr>
     <td>
-	<table width="100%">
-	  <tr>
-	    <td valign="top">Level:</td>
-	    <td>
-	      <div id="l_list" data-hidden="true" data-start='' data-len='' data-value='' data-name=''></div>
-	    </td>
-	  </tr>
-	  <tr>
-        </table>
-    </td>
-  </tr>
-  <tr>
-  <tr>
-    <td>
-      <h2>Find a specific Maass form</h2>
-	<form name="search" method = "post" action="{{url_for('.render_maass_waveforms')}}">	  <input type="text" name="jump_to" value=""> <span class="formexample">e.g. 1.12 (gives the 12th eigenvalue on the modular group)</span>
-	  <button type="submit" value="Jump">Find</button>
-	</form>
+      <h1>Find a specific Maass form</h1>
+      <form name="search" method = "post" action="{{url_for('.render_maass_waveforms')}}">	  <input type="text" name="jump_to" value="" placeholder="1.12"> <span class="formexample">(gives the 12th eigenvalue on the modular group)</span>
+        
+	<button type="submit" value="Jump">Find</button>
+      </form>
     </td>
   </tr>
   <tr>
@@ -77,7 +64,7 @@ Here you can browse {{KNOWL('mwf.maass_waaveform',title='Maass Forms')}} over \(
       <form name="search" method = "post" action="{{url_for('.render_maass_waveforms')}}">
 	<input type="hidden" name="search" value="true"> 
 	<input type="hidden" name="rec_start" value="0"> 
-	<h2>Search</h2>
+	<h1>Search</h1>
 	<table class="">
 	  <tr>
 	    <td>Level in range:</td>

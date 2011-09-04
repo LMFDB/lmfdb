@@ -13,7 +13,6 @@ import modular_forms.maass_forms
 def body_class():
   return { 'body_class' : 'mwfp' }
 
-
 #@base.app.route("/ModularForm/GL2/C/Maass/")
 @mwfp.route("/",methods=['GET','POST'])
 def render_picard_maass_forms():
@@ -23,4 +22,4 @@ def render_picard_maass_forms():
     data = None
     if docid:
         data = htp.find_one({'_id' : docid })
-    return render_template("maass_form_picard.html", title = "Maass cusp forms on PSL(2,Z[i])", data = data, id=docid, ds=ds)
+    return render_template("/maass_form_picard.html", title = "Maass cusp forms on \(\mathrm{PSL}(2,\mathbb{Z}[i])\)", data = data, id=docid, ds=ds)

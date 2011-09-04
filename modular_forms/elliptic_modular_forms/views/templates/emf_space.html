@@ -22,6 +22,8 @@ with character \( \chi_{ {{ info.character }} }\) modulo \( {{ info.level }}\) w
 {% else %} 
    with trivial character.
 {% endif %}
+{% if info.is_empty is not defined %}
+
 {% if info.extra_info is defined %}
 <span style="font-size:50%">({{ info.extra_info |safe }})</span>
 {% endif %}
@@ -53,5 +55,7 @@ with character \( \chi_{ {{ info.character }} }\) modulo \( {{ info.level }}\) w
 	
 {% endif %}
 {{ info.test | safe }}
-
+{% else %}
+<h2>This space is empty!</h2>
+{% endif %}
 {% endblock %}

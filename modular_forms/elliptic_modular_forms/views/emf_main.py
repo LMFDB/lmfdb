@@ -260,17 +260,18 @@ def render_elliptic_modular_form_navigation_wp(**args):
         return render_template(page, info=info,title=title)
     ## This is the list of weights we initially put on the form
     weight = int (weight)
-    info['list_chars']=ajax_once(print_list_of_characters,text='print list of characters!')
+    #info['list_chars']=ajax_once(print_list_of_characters,text='print list of characters!')
     if level>0:
         info['geometric'] = print_geometric_data_Gamma0N(level)
         info['fd_plot'] = render_fd_plot(level,info)
     title = "Holomorphic Cusp Forms"
     bread =[('Modular Forms',url_for('modular_form_toplevel'))]
-    disp.set_table_browsing()
+    #disp.set_table_browsing()
+    disp.set_table_browsing(limit=[(1,36),(1,10)],keys=['Weight','Level'],character=0,dimension_fun=dimension_new_cusp_forms,title='Browse Holomorphic Modular Forms')
     info['browse_table']=disp._table
 
-#    return render_template("emf_navigation.html", info=info,title=title,bread=bread)
-    return render_template("emf_browse.html", info=info,title=title,bread=bread)
+    return render_template("emf_navigation.html", info=info,title=title,bread=bread)
+#    return render_template("emf_browse.html", info=info,title=title,bread=bread)
 
 
 def get_args():
@@ -399,10 +400,10 @@ def render_elliptic_modular_form_space_wp(info):
     emf_logger.debug("friends={0}".format(friends))
     info['friends']=friends
     #info['test']=ajax_later(_test)
-    
-    return render_template("emf_space.html", info=info,title=title,bread=bread,parents=parents,friends=friends,siblings=siblings,properties2=properties)
-
-
+    if info['dimension_newspace']==0:
+        return render_template("emf_space.html", info=info,title=title,bread=bread,parents=parents,friends=friends,siblings=siblings)
+    else:
+        return render_template("emf_space.html", info=info,title=title,bread=bread,parents=parents,friends=friends,siblings=siblings,properties2=properties)
 
 def _test(do_now=0):
     print "do_now=",do_now
@@ -837,6 +838,8 @@ def print_list_of_coefficients(info):
             return "Need to specify a modular form completely!!"
         
         WMFS = WebModFormSpace(weight,level,character)
+        if not WMFS:
+            return ""
         if(info.has_key('number')):
                 number=int(info['number'])
         else:
@@ -1251,6 +1254,7 @@ def set_info_for_modular_form_space(info,sbar):
         (properties,parents,friends,siblings,lifts)=sbar
         if(level > N_max_comp or weight > k_max_comp):
             info['error']="Will take too long to compute!"
+        WMFS=None
         if level > 0:
             try:
                 #print  "PARAM_S:",weight,level,character
@@ -1275,8 +1279,17 @@ def set_info_for_modular_form_space(info,sbar):
         info['dimension_newspace'] = WMFS.dimension_newspace()
         info['dimension_oldspace'] = WMFS.dimension_oldspace()
         info['dimension'] = WMFS.dimension()
+        if WMFS.dimension()==0: # we don't need to work with an empty space
+            info['sturm_bound'] =0
+            info['new_decomposition'] = ''
+            info['is_empty']=1
+            lifts.append(('Half-Integral Weight Forms','/ModularForm/Mp2/Q'))
+            lifts.append(('Siegel Modular Forms','/ModularForm/GSp4/Q'))
+            sbar=(properties,parents,friends,siblings,lifts)
+            return (info,sbar)
         info['sturm_bound'] = WMFS.sturm_bound()
         info['new_decomposition'] = WMFS.print_galois_orbits()
+
         print "new_decomp=",info['new_decomposition']
         info['nontrivial_new'] = len(info['new_decomposition'])
         ## we try to catch well-known bugs...
