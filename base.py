@@ -66,15 +66,15 @@ def _init(dbport, readwrite_password):
     _C = Connection(port=dbport)
     for db in readonly_dbs:
         _C[db].authenticate(readonly_username, readonly_password)
-        print "authenticated readonly on database %s" % db
+        logging.info("authenticated readonly on database %s" % db)
     if readwrite_password == '':
         for db in readwrite_dbs:
             _C[db].authenticate(readonly_username, readonly_password)
-            print "authenticated readonly on database %s" % db
+            logging.info("authenticated readonly on database %s" % db)
     else:
         for db in readwrite_dbs:
             _C[db].authenticate(readwrite_username, readwrite_password)
-            print "authenticated readwrite on database %s" % db
+            logging.info("authenticated readwrite on database %s" % db)
 
 def getDBConnection():
   return _C
