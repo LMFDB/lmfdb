@@ -561,7 +561,7 @@ function updateMappingRules(data, id) {
 
 
 {% macro editable(entry, property) -%}
-  {% if current_user.is_admin() or current_user.id == entry.uploader_id -%}
+  {% if current_user.is_admin() or username == entry.metadata['uploader'] -%}
     <input class=editable value="{{entry.metadata[property]}}" onchange="updateMetadata('{{entry._id}}', '{{property}}', this.value)"/>
   {% else %}
     {{entry.metadata[property]}}
@@ -569,7 +569,7 @@ function updateMappingRules(data, id) {
 {%- endmacro %}
 
 {% macro editableTextarea(entry, property) -%}
-  {% if current_user.is_admin() or current_user.id == entry.uploader_id -%}
+  {% if current_user.is_admin() or username == entry.metadata['uploader'] -%}
     <textarea rows={{entry.metadata[property].count('\n')+1}} class=editable
         onchange="updateMetadata('{{entry._id}}', '{{property}}', this.value)">
 {{entry.metadata[property]}}

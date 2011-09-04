@@ -30,10 +30,16 @@ allowed_knowl_id = re.compile("^[A-Za-z0-9._-]+$")
 
 # Tell markdown to not escape or format inside a given block
 class IgnorePattern(markdown.inlinepatterns.Pattern):
-    def __init__(self, re):
-        markdown.inlinepatterns.Pattern.__init__(self, re);
     def handleMatch(self, m):
         return markdown.AtomicString(m.group(2))
+
+class HashTagPattern(markdown.inlinepatterns.Pattern):
+    def handleMatch(self, m):
+	el = markdown.etree.Element("a")
+        el.set('href', url_for('.index')+'?search=%23'+m.group(2))
+        el.text = '#' + markdown.AtomicString(m.group(2))
+        return el
+
 
 # Initialise the markdown converter, sending a wikilink [[topic]] to the L-functions wiki
 md = markdown.Markdown(extensions=['wikilinks'],
@@ -43,6 +49,9 @@ md.inlinePatterns.add('mathjax$', IgnorePattern(r'(?<![\\\$])(\$[^\$].*?\$)'), '
 md.inlinePatterns.add('mathjax$$', IgnorePattern(r'(?<![\\])(\$\$.+?\$\$)'), '<escape')
 md.inlinePatterns.add('mathjax\\(', IgnorePattern(r'(\\\(.+?\\\))'), '<escape')
 md.inlinePatterns.add('mathjax\\[', IgnorePattern(r'(\\\[.+?\\\])'), '<escape')
+
+# Tell markdown to turn hashtags into search urls
+md.inlinePatterns.add('hashtag', HashTagPattern(r'#([a-zA-Z][a-zA-Z0-9-]{2,})\b'), '<hashheader')
 
 # global (application wide) insertion of the variable "Knowl" to create
 # lightweight Knowl objects inside the templates.
