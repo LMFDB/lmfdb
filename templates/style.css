@@ -584,11 +584,18 @@ table .knowl-link {
   font-weight: bold;
 }
 .knowl-inc-edit {
-  margin-top: 20px;
-  background: {{ col_knowl_ll}};
+  margin-top: 10px;
+  border-bottom: 2px solid {{ col_knowl_l}};
   font-size: x-small;
   text-align: right;
 }
+.knowl-inc-edit a {
+  padding: 3px 5px 1px 5px;
+  color: {{ col_knowl }};
+  background: {{ col_knowl_l }};
+  border-top-left-radius: 5px;
+  -moz-border-radius-topleft: 5px;
+} 
 .knowl {
   padding: 0;
 }
