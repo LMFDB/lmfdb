@@ -12,7 +12,6 @@ from WebCharacter import *
 from utils import to_dict, parse_range
 import ListCharacters
 
-@app.route("/Character/Dirichlet")
 def render_webpage(request,arg1,arg2):
     args = request.args
     temp_args = to_dict(args)
@@ -20,48 +19,19 @@ def render_webpage(request,arg1,arg2):
         if arg1 == None: # this means we're at the start page
             info = set_info_for_start_page() # sets info for character navigate
             info['credit'] = 'Matthew Alderson'
-            return render_template("dirichlet_characters/CharacterNavigate.html", info = info, title = 'Dirichlet Characters', credit = info['credit'],bread = info['bread'])
-        
-        elif arg1.startswith("modulus"):
-            modulus = int(arg1.partition('.')[0][7:])
-            info = {}
-            info["modulus"] = modulus
-            info["key"] = 777
-            info["bread"] = [('Dirichlet Characters', url_for("render_Character")), ('Modulus '+str(modulus), '/Character/Dirichlet/modulus'+str(modulus))]
-            info["contents"] = ListCharacters.characterlist_modulus(modulus,'list')
-            eulerphi = euler_phi(modulus)
-            info['properties'] = ['<table><tr><td align=left>\(\\phi(%s)\) = '%(modulus),'<td align=left> %s</td>'%(eulerphi)] 
-            info['credit'] = 'Matthew Alderson'
-            #lra = "\(\\longrightarrow\)"
-            #info["properties"] = "Color Scheme:<ul><li> Red " + str(lra) + " <font color=red> non-primitive</font> characters </br><li> Green " +  str(lra) + " <font color=green> primitive </font> characters </ul>"
+            return render_template("dirichlet_characters/CharacterNavigate.html", **info)
 
-            return render_template("dirichlet_characters/ModulusNavigate.html", info=info, title = 'Dirichlet Characters modulo ' + str(modulus), bread = info["bread"],credit=info['credit'])
-        
         elif arg1.startswith("modbrowse"):
+            print "Check2"
             modulus_start = int(arg1.partition('-')[0][10:])
             modulus_end = int(arg1.partition('-')[2])
             info = {}
             info["bread"] = [('Dirichlet Characters', url_for("render_Character")), ('Moduli '+str(modulus_start) + '-' + str(modulus_end), '/Character/Dirichlet/modbrowse='+str(modulus_start)+'-'+str(modulus_end))]
-            title = 'Moduli ' +str(modulus_start)+'-'+str(modulus_end)
+            info['title'] = 'Moduli ' +str(modulus_start)+'-'+str(modulus_end)
             info['credit'] = 'Matthew Alderson'
             info['contents'] = ListCharacters.get_character_modulus(modulus_start,modulus_end)
-            return render_template("dirichlet_characters/ModulusList.html", info=info,title=title,bread=info["bread"],credit=info['credit'])
+            return render_template("dirichlet_characters/ModulusList.html", **info)
 
-        elif arg1.startswith("conductor"):
-            conductor = int(arg1.partition('.')[0][9:])
-            pagenumber = int(arg1.partition('.')[2])
-            M = 200
-            info = {}
-            info["pgplusone"] = pagenumber+1
-            info["conductor"] = conductor
-            info["bread"] = [('Dirichlet Characters', url_for("render_Character")), ('Conductor '+str(conductor), '/Character/Dirichlet/conductor'+str(conductor))]
-            if(pagenumber == 1):
-                title = 'Dirichlet Characters of conductor ' + str(conductor) +', up to modulus ' + str(M)
-            else:
-                title = 'Dirichlet Characters of conductor ' + str(conductor) + ', moduli from ' + str((pagenumber-1)*M) + ' to ' + str(pagenumber*M) 
-            info["contents"] = ListCharacters.characterlist_conductor(conductor,pagenumber,'list')
-            info['credit'] = 'Matthew Alderson'
-            return render_template("dirichlet_characters/ConductorNavigate.html", info=info, title = title, bread = info["bread"], credit=info['credit'])
 
         elif arg1.startswith("condbrowse"):
             conductor_start = int(arg1.partition('-')[0][11:])
@@ -70,42 +40,11 @@ def render_webpage(request,arg1,arg2):
             info['conductor_start'] = conductor_start
             info['conductor_end'] = conductor_end
             info["bread"] = [('Dirichlet Characters', url_for("render_Character")), ('Conductor '+str(conductor_start) + '-' + str(conductor_end), '/Character/Dirichlet/condsearch='+str(conductor_start)+'-'+str(conductor_end))]
-            title = 'Conductors ' +str(conductor_start)+'-'+str(conductor_end)
+            info['title'] = 'Conductors ' +str(conductor_start)+'-'+str(conductor_end)
             info['credit'] = 'Matthew Alderson'
             info['contents'] = ListCharacters.get_character_conductor(conductor_start,conductor_end+1)
-            return render_template("dirichlet_characters/ConductorList.html", info=info,title=title,bread=info["bread"], credit=info['credit'])
+            return render_template("dirichlet_characters/ConductorList.html", **info)
 
-        elif arg1.startswith("order"):
-            order = int(arg1.partition('.')[0][5:])
-            pagenumber = int(arg1.partition('.')[2])
-            info = {}
-            M = 100
-            kronecker = 'False'
-            info["pagenumber"] = pagenumber
-            info["kronecker"] = kronecker
-            info["order"] = order
-            if order == 2:
-                if(pagenumber==1):
-                    title = 'Quadratic Characters, up to modulus ' + str(M)
-                else:
-                    title = 'Quadratic Characters, moduli from ' + str((pagenumber-1)*M) + ' to ' + str(pagenumber*M)
-            elif order == 3:
-                if(pagenumber==1):
-                    title = 'Cubic Characters, up to modulus ' + str(M)
-                else:
-                    title = 'Cubic Characters,  moduli from ' + str((pagenumber-1)*M) + ' to ' + str(pagenumber*M)
-            else:
-                if(pagenumber==1):
-                    title = 'Characters of order ' + str(order) + ', up to modulus ' + str(M)
-                else:
-                    title = 'Characters of order ' + str(order) + ', moduli from ' + str((pagenumber-1)*M) + ' to ' + str(pagenumber*M)
-
-            info["bread"] = [('Dirichlet Characters', url_for("render_Character")), ('Order ' +str(order), '/Character/Dirichlet/order'+str(order))]
-            info["contents"] = ListCharacters.characterlist_order(order,kronecker,pagenumber,'list')
-            info['credit'] = 'Matthew Alderson'
-            return render_template("dirichlet_characters/OrderNavigate.html", info=info, title = title , bread = info["bread"], credit=info['credit'])
-       
-        
         elif arg1.startswith("ordbrowse"):
             order_start = int(arg1.partition('-')[0][10:])
             order_end = int(arg1.partition('-')[2])
@@ -113,57 +52,35 @@ def render_webpage(request,arg1,arg2):
             info['order_start'] = order_start
             info['order_end'] = order_end
             info["bread"] = [('Dirichlet Characters', url_for("render_Character")), ('Order '+str(order_start) + '-' + str(order_end), '/Character/Dirichlet/ordbrowse='+str(order_start)+'-'+str(order_end))]
-            title = 'Order ' +str(order_start)+'-'+str(order_end)
+            info['title'] = 'Order ' +str(order_start)+'-'+str(order_end)
             info['credit'] = 'Matthew Alderson'
             info['contents'] = ListCharacters.get_character_order(order_start, order_end+1)
-            return render_template("dirichlet_characters/OrderList.html", info=info,title=title,bread=info["bread"],credit=info['credit'])
+            return render_template("dirichlet_characters/OrderList.html", **info)
 
-        elif arg1.startswith("kronecker"):
-            order = 2
-            #if(len(arg1.partition('.')[2]) == 0):
-            #    pagenumber = 1
-            #else:
-            pagenumber = int(arg1.partition('.')[2])
-            M = 100
-            info = {}
-            info["pagenumber"] = pagenumber
-            kronecker = 'True'
-            info["kronecker"] = kronecker
-            info["order"] = order
-            if(pagenumber == 1):
-                title = 'Kronecker symbols, up to modulus ' + str(M)
-            else:
-                title = 'Kronecker symbols, moduli from ' + str((pagenumber-1)*M) + ' to ' + str(pagenumber*M)
-            info["bread"] = [('Dirichlet Characters', url_for("render_Character")), ('Kronecker symbols', '/Character/Dirichlet/kronecker')]
-            info["contents"] = ListCharacters.characterlist_order(order,kronecker,pagenumber,'list')
-            info['credit'] = 'Matthew Alderson'
-            return render_template("dirichlet_characters/OrderNavigate.html", info=info, title = title, bread = info["bread"], credit=info['credit'])
-        
+
         elif arg1 == 'custom':
             return "not yet implemented"
-        
-    else:
-        return character_search(**args)
-        
-    temp_args['type'] = 'dirichlet' # set type and input
-    temp_args['modulus'] = arg1
-    temp_args['number'] = arg2
+       
+        temp_args['type'] = 'dirichlet' # set type and input
+        temp_args['modulus'] = arg1
+        temp_args['number'] = arg2
             #elif arg1 == 'Hecke':
             #    temp_args['type'] = 'hecke'
     
-    chi = WebCharacter(temp_args)
+        chi = WebCharacter(temp_args)
 
-    print chi
+        print chi
 
-    try:
-        print temp_args
-    except:
-        1
+        try:
+            print temp_args
+        except:
+            1
 
-    info = initCharacterInfo(chi, temp_args, request) # sets the various properties of chi to be displayed in DirichletCharacter.html
+        info = initCharacterInfo(chi, temp_args, request) # sets the various properties of chi to be displayed in DirichletCharacter.html
 
-    return render_template('dirichlet_characters/DirichletCharacter.html', info = info, title = info['title'], bread = info['bread'], properties = info['properties'], citation = info['citation'], credit = info['credit'], support = info['support'])
-
+        return render_template('dirichlet_characters/DirichletCharacter.html', **info)
+    else:
+        return character_search(**args)
 
 def set_info_for_start_page():
     tl = [{'title':'Dirichlet','link':'degree#1Dirichlet'},
@@ -175,6 +92,7 @@ def set_info_for_start_page():
     modulus_list = ["%s-%s" %(start,end-1) for start,end in zip(modulus_list_endpoints[:-1], modulus_list_endpoints[1:])]
     info = {'modulus_list': modulus_list, 'conductor_list': range(1,181), 'order_list': range(2,21), 'type_table': tt, 'l':[1]}
     credit = 'Matthew Alderson'
+    info['title'] = 'Dirichlet Characters'
     info['bread'] = [('Dirichlet Characters', url_for("render_Character"))]
     info['learnmore'] = [('Dirichlet Characters', 'http://wiki.l-functions.org/L-function')]
     info['friends'] = [('Dirichlet L-functions', '/Lfunction/degree1#Dirichlet')]
@@ -207,10 +125,13 @@ def initCharacterInfo(chi,args, request):
         info['conductor'] = int(chi.conductor)
         info['order'] = int(chi.order)
         info['primitive'] = str(chi.primitive)
+        info['zetaorder'] = chi.zetaorder
         info['genvals'] = str(chi.genvalues)
         info['genvalstex'] = str(chi.genvaluestex)
-        info['vals'] = str(chi.vals)
-        info['valstex'] = str(chi.valstex)
+        info['parity'] = chi.parity
+        info['sign'] = chi.sign
+        info['vals'] = latex(chi.vals)
+        info['valstex'] = chi.valstex
         info['unitgens'] = str(chi.unitgens)
         #print chi.unitgens
         info['bound'] = int(chi.bound)
@@ -254,37 +175,21 @@ def character_search(**args):
         for field in ['modulus', 'conductor', 'order']:
             if info.get(field):
                 query[field] = parse_range(info[field])
-        #print query['modulus'], len(query), query['modulus']['$gte']
-        #print "Check 2 = " + str(
         info["bread"] = [('Dirichlet Characters', url_for("render_Character")), ('search results', ' ')]
         info['credit'] = 'Matthew Alderson'
         if (len(query) != 0):
             from sage.modular.dirichlet import DirichletGroup
-            #if ('modulus' in query) and (len(query['modulus']) == 2):
-            #    info['start'] = int(query['modulus']['$gte'])
-            #    info['end'] = int(query['modulus']['$lte']
-            #    info['list'] = 'True'
             t,texname,number,length  = charactertable(query)
             info['characters'] = t
             info['texname'] = texname
             info['number'] = number
             info['len'] = length
-            #print t
-            #print texname
-            return render_template("dirichlet_characters/character_search.html", info=info, title = 'Dirichlet Characters', bread = info["bread"], credit = info['credit'])
+            info['title'] = 'Dirichlet Characters'
+            return render_template("dirichlet_characters/character_search.html", **info)
 
 def charactertable(query):
     if(len(query) == 1):
         if 'modulus' in query:
-            #if (len(query['modulus']) == 2):
-            #    chartable_modulus = []
-            #    start = int(query['modulus']['$gte'])
-                #info['start'] = start
-            #    end = int(query['modulus']['$lte'])
-                #info['end'] = end
-            #    for modulus in range(start,end+1):
-            #        return chartable_modulus.append(charactertable_modulus(modulus))
-           # else:
             modulus = query['modulus']
             return charactertable_modulus(modulus)
         elif 'conductor' in query:

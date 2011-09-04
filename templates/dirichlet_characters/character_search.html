@@ -3,54 +3,88 @@
 
 {% block content %}
 
-<!--{{ info.query }}-->
 
 <h2> Further refine search </h2>
 
+<style>
+.modulus {
+    font-family: serif;
+    vertical-align: top;
+    padding-top: 1em;
+    border-right: 2px solid #8a8;
+}
+.modulus a { display: inline; font-family: serif; }
+.modulus font { display: inline; font-family: serif }
+.chi {
+    padding: 30px 30px;
+    font-family: serif;
+    width: 7em;
+    display: inline;
+    white-space:nowrap;}
+.chi a { display: inline; font-family: serif;}
+.primitive {
+  color:green;
+}
+.nonprimitive {
+    color:blue;
+}
+.heading {
+    padding: 30px 30px
+}
+</style>
 
-<table border=0  >
 
-<tr>
 <form>
-<td align=center> Modulus <input type = 'text' name = 'modulus' size=10 value={{info.modulus}}></td>
-<td align=center> Conductor <input type='text' name='conductor' size=10 value={{info.conductor}}></td>
-<td align=center>Order <input type='text' name='order'size=10 value={{info.order}}></td>
-<!--<td align=center>Parity <input type='text' name='parity' size=10 value={{info.parity}}>-->
-</tr>
+<table>
 
 <tr>
+<td align=center> Modulus <input type = 'text' name = 'modulus' size=10 value={{modulus}}></td>
+<td align=center> Conductor <input type='text' name='conductor' size=10 value={{conductor}}></td>
+<td align=center>Order <input type='text' name='order'size=10 value={{order}}></td>
+<!--<td align=center>Parity <input type='text' name='parity' size=10 value={{parity}}>-->
+</tr>
+</table>
+<p></p>
 <td>
-<input type='submit' value='refine'></td>
-</tr>
-</form>
-<tr>
-<td><h2>Results</h2></td>
-<tr>
-<td align=center>Character</td>
-<td align=center>Modulus</td>
-<td align=center>Conductor</td>
-<td align=center>Order</td>
-<td align=center>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Parity</td>
-</tr>
-
-{% for j in range(0,info.len): %}
-<tr>
-{% if info.characters[j].is_primitive() %}
-<td align=center><a href="/Character/Dirichlet/{{info.characters[j].modulus()}}/{{info.number[j]}}">{{info.texname[j]}}</a>
-{% else %}
-<td align=center><a href="/Character/Dirichlet/{{info.characters[j].modulus()}}/{{info.number[j]}}"><font color="blue">{{info.texname[j]}}</font></a>
-{% endif %}
+    <button type='submit' value='refine'>Refine</button>
 </td>
-<td align=center><a href="/Character/Dirichlet/?modulus={{info.characters[j].modulus()}}&conductor={{info.conductor}}&order={{info.order}}&parity={{info.parity}}">{{info.characters[j].modulus()}}</a></td>
-    <td align=center><a href="/Character/Dirichlet/?modulus={{info.modulus}}&conductor={{info.characters[j].conductor()}}&order={{info.order}}&parity={{info.parity}}">{{info.characters[j].conductor()}}</a></td>
-    <td align=center><a href="/Character/Dirichlet/?modulus={{info.modulus}}&conductor={{info.conductor}}&order={{info.characters[j].order()}}&parity={{info.parity}}">{{info.characters[j].multiplicative_order()}}</a></td>
-{% if info.characters[j].is_even() %}
-<td align=center>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Even</td>
-{% else %}
-<td align=center>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Odd<td >
-{% endif %}
-</tr>
-{% endfor %}
+</form>
+
+<h2> Results </h2>
+
+<table class="ntdata" style="table-layout:fixed">
+    <thead class="heading" align="center">
+    <tr>
+        <th>Character</th>
+        <th>Modulus</th>
+        <th>Conductor</th>
+        <th>Order</th>
+        <th>Parity</th>
+    </tr>
+    </thead>
+    <tbody>
+        {% set row_class = cycler('odd', 'even') %}
+        {% for j in range(0,len): %}
+        <tr class="{{ row_class.next() }}">
+             <td class="modulus" align="center">
+                <a href="/Character/Dirichlet/{{characters[j].modulus()}}/{{number[j]}}">{% if characters[j].is_primitive() %}<font color="green">{% else %}<font color="blue">{% endif %}&chi;<sub>{{j}}</sub></font></a>
+            </td>
+            <div class="chi">
+            <td align=center>
+                <a href="/Character/Dirichlet/?modulus={{characters[j].modulus()}}&conductor={{conductor}}&order={{order}}&parity={{parity}}">{{characters[j].modulus()}}</a>
+            </td>
+            <td align=center>
+                <a href="/Character/Dirichlet/?modulus={{modulus}}&conductor={{characters[j].conductor()}}&order={{order}}&parity={{parity}}">{{characters[j].conductor()}}</a>
+            </td>
+            <td align=center>
+            <a href="/Character/Dirichlet/?modulus={{modulus}}&conductor={{conductor}}&order={{characters[j].order()}}&parity={{parity}}">{{characters[j].multiplicative_order()}}</a>
+            </td>
+            <td  align=center>{% if characters[j].is_even() %}Even{% else %}Odd{% endif %}
+            </td>
+        </div>
+        </tr>
+    {% endfor %}
+    </tbody>
 </table>
 
 {% endblock %}
