@@ -137,6 +137,10 @@ def plotLfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = Non
 def browseGraph():
     return renderLfunction.render_browseGraph(request.args)
 
+@app.route("/browseGraphTMP")
+def browseGraphTMP():
+    return renderLfunction.render_browseGraphTMP(request.args)
+
 @app.route("/browseGraphHolo")
 def browseGraphHolo():
     return renderLfunction.render_browseGraphHolo(request.args)

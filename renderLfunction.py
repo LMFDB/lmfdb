@@ -306,6 +306,13 @@ def render_browseGraph(args):
     response.headers['Content-type'] = 'image/svg+xml'
     return response
 
+def render_browseGraphTMP(args):
+    logging.info(args)
+    data = LfunctionPlot.paintSvgHoloGeneral(int(args['Nmin']), int(args['Nmax']),int(args['kmin']),int(args['kmax']),int(args['imagewidth']),int(args['imageheight']))
+    response = make_response(data)
+    response.headers['Content-type'] = 'image/svg+xml'
+    return response
+
 def render_browseGraphHolo(args):
     logging.info(args)
     data = LfunctionPlot.paintSvgHolo(args['Nmin'], args['Nmax'], args['kmin'], args['kmax'])

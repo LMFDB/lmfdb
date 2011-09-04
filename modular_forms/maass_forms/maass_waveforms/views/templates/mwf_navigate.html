@@ -2,8 +2,8 @@
 
 {% block content %}
 
-<script type="text/javascript" src="{{ url_for('mwf.static', filename='classical_modular_form_util-functions.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('mwf.static', filename='classical_modular_form_scripts.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('emf.static', filename='elliptic_modular_form_util-functions.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('emf.static', filename='elliptic_modular_form_scripts.js') }}"></script>
 
 
 {% if info.error is defined %}
@@ -23,90 +23,34 @@
 <script>
 allowed_levels= {{info.list_of_levels}} <!-- these are the levels which are in the database-->
 
-$(document).ready(function() {
-$("#l_list").data("start",1); $("#l_list").data("len",20); $("#l_list").data("min",1);
-$("#l_list").data("name","level");
-$("#w_list").data("start",1); $("#w_list").data("len",20); $("#w_list").data("min",1);
-$("#w_list").data("name","weight");
-$("#char_selection").data("char",0);
- print_list("#l_list");
- print_list("#w_list");
- });
-
-
-
-
-function shift(id,lr) {
-   var start = $(id).data("start");
-   var min = $(id).data("min");
-   var len = $(id).data("len");
-   if (lr == "left")
-      start = start - len;
-   if (lr == "right")
-      start = start + len;
-   if (start <= min) {
-      start = min;
-   }
-   $(id).contents().detach();
-   $(id).data("start",start);
-   $(id).data("min",min);
-   $(id).data("len",len);
- /*alert("start:"+$(id).data("start")+" "+len+" "+min); */
-   print_list(id);
-
-}
-
-function print_list(id) {
-    var min = $(id).data("min");
-    var start = $(id).data("start");
-    var len = $(id).data("len");
-    var name = $(id).data("name");
-    var url = getAbsolutePath();
-    if (start > min) {
-       $(id).append("<a id='go_left' href='#' onclick=\"shift('"+id+"','left')\" style=\"display:inline\"><small>&lt;&lt;</small></a>");
-    };
-    var char = $("#char_selection").data("char");
-    if (char == 0) {
-       s = "&character=0"
-    } else {
-       s = "&character=all"
-    }
-    for (var i = start; i < len+start; i++) {
-        /*s = "<a href="+url+"?"+name+"="+i+" style=\"display:inline\">" + i + "</a> ";*/
-	/*s = "<a href='' onclick='set_value(\""+id+"\","+i+");document.browse.submit()' >" + i + "</a> ";*/
-	if (name=="level" && jQuery.inArray(i, allowed_levels) > -1) {
-	    s = "<a href=\"javascript:set_value('"+id+"',"+i+")\" style=\"display:inline\">" + i + "</a> ";
-	    $(id).append(s);
-	}
-    }
-    if(i < {{info.max_level}} ){
-	   $(id).append("<a id='go_right' href='#' onclick=\"shift('"+id+"','right')\" style=\"display:inline\"><small>&gt;&gt;</small></a>");
-    }
-
-};
-
-function set_value(id,val) {
-  var name = $(id).data("name"); 			   
+function set_value(name,val) {
   document.forms.browse[name].value=val;
-  $(id).data("value",val);
-  document.browse.submit();			   
-}
-
-function getAbsolutePath() {
-    var loc = window.location;
-    var pathName = loc.pathname.substring(0, loc.pathname.lastIndexOf('/') + 1);
-    return loc.href.substring(0, loc.href.length - ((loc.pathname + loc.search + loc.hash).length - pathName.length));
+  document.forms.browse.submit();			   
 }
 
 </script>
 {{ info | safe }}
+<h1>Maass waveforms</h1>
+<h2>Browse</h2>
+<form name="browse" method="get" action="{{url_for('.render_maass_waveforms')}}">
+        
+  <input type="hidden" name="weight" value=""/>
+  <input type="hidden" name="level" value=""/>
+  <input type="hidden" name="browse" value="1"/>
+  <ul>
+    <li>
+      <a href="javascript:set_value('weight',0);">Browse weight 0</a>
+    </li>
+    <li>
+      <a href="javascript:set_value('weight',1);">Browse weight 1</a>
+    </li>
+  </ul>
+  <button type="submit" name="Browse" value="Search">Browse</button>
+</form>
+
 <table>
   <tr>
     <td>
-      <form name="browse" method = "get" action="{{url_for('.render_maass_waveforms')}}">
-	<h1>Browse Maass waveforms</h1>
-	<input type="hidden" name="weight" value=""/>
-	<input type="hidden" name="level" value=""/>
 	<table width="100%">
 	  <tr>
 	    <td valign="top">Level:</td>
@@ -116,14 +60,12 @@ function getAbsolutePath() {
 	  </tr>
 	  <tr>
         </table>
-      </form>
     </td>
   </tr>
   <tr>
   <tr>
     <td>
-
-	<h3>Find a specific Maass form</h3>
+      <h2>Find a specific Maass form</h2>
 	<form name="search" method = "post" action="{{url_for('.render_maass_waveforms')}}">	  <input type="text" name="jump_to" value=""> <span class="formexample">e.g. 1.12 (gives the 12th eigenvalue on the modular group)</span>
 	  <button type="submit" value="Jump">Jump</button>
 	</form>
@@ -134,7 +76,7 @@ function getAbsolutePath() {
       <form name="search" method = "post" action="{{url_for('.render_maass_waveforms')}}">
 	<input type="hidden" name="search" value="true"> 
 	<input type="hidden" name="rec_start" value="0"> 
-	<h3>Search</h3>
+	<h2>Search</h2>
 	<table class="">
 	  <tr>
 	    <td>Level in range:</td>
@@ -147,8 +89,8 @@ function getAbsolutePath() {
 	  <tr>
 	    <td>R in range:</td>
 	    <td> 
-	      <input type="text" name="ev_lower" value=""> --
-	      <input type="text" name="ev_upper" value=""> 
+	      <input type="text" name="ev_range" value="">
+	      <!--input type="text" name="ev_upper" value="" --> 
 	      <span class="formexample">e.g. 9.5 -- 10.5</span>
       </td>
 	  </tr>

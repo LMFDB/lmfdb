@@ -2,8 +2,8 @@
 
 {% block content %}
 
-<!--script type="text/javascript" src="{{ url_for('static', filename='classical_modular_form_util-functions.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('static', filename='classical_modular_form_scripts.js') }}"></script-->
+<!--script type="text/javascript" src="{{ url_for('emf.static', filename='elliptic_modular_form_util-functions.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('emf.static', filename='elliptic_modular_form_scripts.js') }}"></script-->
 
 
 
@@ -20,7 +20,7 @@
 <!-- To make an interface that is easier to read we implement each case of input separately -->
 
 <!-- {{ info | safe }} $("div").data("option",{"start":1}); -->
-<h3>Display Search Results</h3>
+<h1>Display Search Results</h1>
 {{ info.table_of_eigenvalues  | safe  }}
 
 Showing records {{search.rec_start}}  to {{search.rec_stop}}
@@ -41,7 +41,7 @@ Showing records {{search.rec_start}}  to {{search.rec_stop}}
   <input type="submit" value="Display Next {{info.limit}} records">
 </form>
 {% endif %}
-<h3>New Search</h3>
+<h2>New Search</h2>
    <form name="search" method = "post" action="{{url_for('.render_maass_waveforms')}}">
      <input type="hidden" name="search" value="true"> 
      <input type="hidden" name="rec_start" value="1"> 

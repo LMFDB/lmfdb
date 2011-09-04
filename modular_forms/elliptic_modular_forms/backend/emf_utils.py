@@ -25,6 +25,7 @@ from flask import  jsonify
 from utils import *
 from modular_forms.elliptic_modular_forms import EMF,emf, emf_logger
 logger = emf_logger
+from sage.all import dimension_new_cusp_forms,vector,dimension_modular_forms,dimension_cusp_forms,is_odd
 
 def ajax_more2(callback, *arg_list, **kwds):
     r"""
@@ -155,5 +156,78 @@ def ajax_later(callback,*arglist,**kwds):
         res = callback(do_now=do_now)
         return jsonify(result=res)
 
+
+emf_dbname = 'modularforms'
+
+def connect_db():
+    import base
+    return base.getDBConnection()[emf_dbname]
+def connect_mf_db():
+    return 
+
+from modular_forms.backend import  ModularFormDisplay
+
+
+class ClassicalMFDisplay(ModularFormDisplay):
+
+    def __init__(self,dbname=''):
+        ModularFormDisplay.__init__(self,dbname)
+        
+    
+    def set_table(self,skip=[0,0],limit=[(2,12),(1,30)],keys=['Weight','Level'],character=0,dimension_fun=dimension_new_cusp_forms,title='Dimension of newforms'):
+        r"""
+        Table of Holomorphic modular forms spaces.
+        Skip tells you how many chunks of data you want to skip (from the geginning) and limit tells you how large each chunk is.
+        INPUT:
+        - dimension_fun should be a function which gives you the desired dimensions, as functions of level N and weight k
+        - character = 0 for trivial character and 1 for Kronecker symbol.
+          set to 'all' for all characters.
+        """
+        self._keys=keys
+        self._skip=skip
+        self._limit=limit
+        self._metadata=[]
+        self._title=''
+        self._cols=[]
+        self.table={}
+        logger.debug("skip= {0}".format(self._skip))
+        logger.debug("limit= {0}".format(self._limit))
+        il  = self._keys.index('Level')
+        iwt = self._keys.index('Weight')
+        level_len = self._limit[il][1]-self._limit[il][0]+1
+        level_ll=self._skip[il]*level_len+self._limit[il][0]
+        level_ul=self._skip[il]*level_len+self._limit[il][1]
+        wt_len = self._limit[iwt][1]-self._limit[iwt][0]+1
+        wt_ll=self._skip[iwt]*wt_len+self._limit[iwt][0]
+        wt_ul=self._skip[iwt]*wt_len+self._limit[iwt][1]
+        if level_ll<1:
+            level_l=1
+        #wt_limit= self._limit[iw]
+        #wt_skip = self._skip[iw]
+        #wt_ll   = wt_skip*wt_limit
+        #wt_ul   = (wt_skip+1)*wt_limit
+        self._table={}
+        self._table['rows']=[]
+        self._table['col_heads']=range(wt_ll,wt_ul+1)
+        self._table['row_heads']=range(level_ll,level_ul+1)
+        logger.debug("wt_range: {0} -- {1}".format(wt_ll,wt_ul))
+        logger.debug("level_range: {0} -- {1}".format(level_ll,level_ul))
+        for N in range(level_ll,level_ul+1):
+            if character ==0 and is_odd(k):
+                continue
+            row=[]
+            for k in range(wt_ll,wt_ul+1):
+                try:
+                    if character==1:
+                        x = kronecker_character_upside_down(N)
+                        d = dimension_fun(x)
+                    else:
+                        d = dimension_fun(N,k)
+                except:
+                    d = "?"
+                url = url_for('emf.render_elliptic_modular_form_browsing',level=N,weight=k)
+                
+                row.append({'N':N,'k':k,'url':url,'dim':d})
+            self._table['rows'].append(row)
 
 

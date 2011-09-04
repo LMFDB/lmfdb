@@ -1,18 +1,14 @@
 {% extends 'homepage.html' %}
 
 {% block content %}
- <h2> {{ KNOWL('alg.dirichlet_series') }}</h2>
+ <h2> {{ KNOWL('alg.dirichlet_series', title='Dirichlet series') }}</h2>
  <div>\[{{ dirichlet }}\]</div>
 
- <h2>{{ KNOWL('lfunction.functional_equation', title = "Functional Equation") }}</h2>
+ <h2>{{ KNOWL('alg.functional_equation',title='Functional equation') }}</h2>
  
- 
- <div class="LfunctionFooter">
-   <a id="functionalEqSelberg" href="#">Selberg data</a>
-   &middot;
-   <a id="functionalEqAnalytic" class="highlight" href="#">Analytic</a>
- </div>
  <div id="functionalEqText">\[{{ functionalequation }}\]</div>
+ <div>
+   {{ KNOWL('lfunction.selbergdata', title="Selberg data") }}: ${{ info.functionalequationSelberg }}$</div>
  
  
  
@@ -21,7 +17,7 @@
  <h2>{{ KNOWL('alg.euler_prod') }}</h2>
  <div>\[{{ eulerproduct }}\]</div>
 
- <h2> Imaginary part of the first few zeroes on the {{ KNOWL('alg.critical_line', title = "critical line") }}</h2>
+ <h2> Imaginary part of the first few zeroes on the {{ KNOWL('lfunction.critical_line', title='critical line') }}</h2>
 
  {% if zeroeslink %}
      <div><span id="zeroes"></span></div>
@@ -40,7 +36,7 @@
  {% endif %}
 
  {% if plotlink %}
-    <h2> Graph of the \(Z\)-function along the {{ KNOWL('alg.critical_line') }} </h2>
+    <h2> Graph of the {{ KNOWL('L.Zfunction') }} along the {{ KNOWL('lfunction.critical_line', title='critical line') }} </h2>
     <img src="{{ plotlink|safe }}" >
  {% else %}
     <div>Not enough Dirichlet series coefficients to make a graph.</div>
