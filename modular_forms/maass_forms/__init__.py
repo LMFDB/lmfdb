@@ -13,7 +13,7 @@ import views
 import maass_waveforms
 import picard
 
-from  modular_forms.maass_forms.maass_waveforms import mwf
-from  modular_forms.maass_forms.picard import mwfp
+from  modular_forms.maass_forms.maass_waveforms import *
+from  modular_forms.maass_forms.picard import *
 app.register_blueprint(mwf, url_prefix="/ModularForm/GL2/Q/Maass")
 app.register_blueprint(mwfp, url_prefix="/ModularForm/GL2/C/Maass")
