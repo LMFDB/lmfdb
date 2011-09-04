@@ -2,11 +2,17 @@
 
 {% block content %}
 {% from "knowl-defs.html" import knowlbar with context %}
+The editing in a Knowl works as per usual in a wiki, and you can use a graphical interface via the icon bar.
 
-{% if not "wiki.syntax" in  k.id %}
-  {{KNOWL_INC("wiki.syntax",title="")}}
-{% endif %}  
+To create a link to another Knowl, use the icon in the bar or consider the following example
 
+<br>
+I DON T KNOW HOW TO ENCAPSULATE KNOWL TEMPLATE
+<br>
+which gives
+<br>
+the {{ KNOWL("EC.discriminant",title="discriminant")}} of an {{KNOWL("ec.def",title="elliptic curve")}} is an invariant
+<br>
 {{ knowlbar() }}
 
 <script type="text/javascript" src="{{ url_for('static', filename='jquery.markitup.js')}}"></script>

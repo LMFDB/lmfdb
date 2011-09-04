@@ -3,7 +3,7 @@
 {% block content %}
 
 <div>
-An {{KNOWL("ec", title="elliptic curve")}} is a {{KNOWL("ag.curve.smooth",title="smooth")}} {{KNOWL("ag.curve.projective","projective")}}, {{KNOWL("ag.curve","curve")}} of {{KNOWL("ag.curve.genus",title="genus")}} 1. More data is available {{KNOWL("ec.q",title="when the base field is $\mathbb{Q}$")}}. 
+An elliptic curve is a curve of genus one with a distinguished base point,  usually given as a plane curve with a {{ KNOWL('EC.minimal_weierstrass_equation', title = "Weierstrass equation")}}. 
 </div>
 
 <h2> Browse </h2>
@@ -42,7 +42,7 @@ Please enter a value or leave blank:
 <form>
   <table>
     <tr>
-      <td>{{ KNOWL('ec.q.conductor',title = "conductor") }}</td>
+      <td>{{ KNOWL_LINK('ec.conductor',title = "Conductor") }}</td>
      <td>
        <input type='text' name='conductor' placeholder="389" size=10/>
      </td>
@@ -52,7 +52,7 @@ Please enter a value or leave blank:
 
    <tr>
    <td>
-    {{ KNOWL('ec.q.rank',title="rank") }}
+    {{ KNOWL_LINK('ec.rank') }}
     </td>
            <td>
            <input type='text' name='rank' placeholder="0" size=10>
@@ -62,28 +62,27 @@ Please enter a value or leave blank:
     </tr>
 
     <tr>
-          <td>
-          {{ KNOWL('ec.q.torsion_order',title="torsion order") }}
-          </td>
+       <td>
+       {{ KNOWL_LINK('ec.torsion_order') }}
+       </td>
           <td> 
           <input type='text' name='torsion' placeholder="2" size=10/>
           </td>
           <td>
           <span class="formexample"> e.g. 2 </span>
-          </td>   
+          </td>
       </tr>
 
 
+
     <tr>
-      <td>{{ KNOWL('ec.q.optimal',title="Optimal") }}</td>
+      <td>Optimal</td>
       <td>
          <select name='optimal'>
            <option value="">No</option>
            <option value="on">Yes</option>
          </select>
       </td>
-
-      
     </tr>
 
 <tr>
