@@ -150,8 +150,9 @@ body.knowl #header {
     margin: 0px;
 }
 #header .right {
-    margin-left: 210px;
-    margin-top: 0px;
+  margin-left: 210px;
+  margin-top: 0px;
+  position: relative;
 }
 #header #title {
     /* border: 1px solid green; */
@@ -194,6 +195,15 @@ body.knowl #header {
 #header .topright #communication-wrapper {  
   display: none;
   padding: 4px;
+}
+#header #navi {
+  white-space: nowrap;
+  font-size: 90%;
+  padding: 2px 5px;
+  position: absolute;
+  bottom: 0px;
+  right: 0px;  
+  z-index: 5;
 }
 
 #flashes p {
@@ -486,7 +496,8 @@ table th, table td {
 
 table a.knowl-link, 
 table a.knowl-title {
-    display: inline;
+  display: inline;
+  padding: 0;
 }
 
 table a {

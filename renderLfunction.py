@@ -44,12 +44,18 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
     # args may or may not be empty
     # what follows are all things that need homepages
 
-    #try:
-    L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, temp_args)
+    try:
+        L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, temp_args)
         
-##    except:
-##        return redirect(url_for("not_yet_implemented"))
-    
+    except Exception as inst:   # There was an exception when creating the page
+        error_message = ('There was an error loading this page. Please report the ' +
+                         'address of this page and the following error message: ' +
+                         inst.args[0])
+        
+        info = { 'content': error_message, 'title': 'Error' }
+        return render_template('LfunctionSimple.html', info=info, **info)
+
+
     try:
         logging.info(temp_args)
         if temp_args['download'] == 'lcalcfile':
@@ -62,6 +68,8 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
 
     # HSY: when you do "**dictionary" in a function call (at the very end),
     # you 'unpack' it. that saves you all this "title = info['title']" nonsense ;)
+
+
 
     return render_template('Lfunction.html', info=info, **info)
     
@@ -83,6 +91,7 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, temp_args):
         return Lfunction_Dirichlet( charactermodulus = arg3, characternumber = arg4)
 
     elif arg1 == 'EllipticCurve' and arg2 == 'Q':
+        print "Starting to generate EC", arg3
         return Lfunction_EC( label = arg3)
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic': # this has args: one for weight and one for level
@@ -103,26 +112,20 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, temp_args):
 
 
 def set_info_for_start_page():
-    tl = [{'title':'Riemann','link':'Riemann'},
-          {'title':'Dirichlet','link':'degree1#Dirichlet'},
-          {'title':'GL2 Maass Form','link':'degree2#GL2_Q_Maass'},
-          {'title':'GL4 Maass Form', 'link':'degree4#GL4_Q_Maass'}] #make the degree 1 ones, should be url_fors
+    tt = [[{'title':'Riemann','link':'Riemann'},
+           {'title':'Dirichlet','link':'degree1#Dirichlet'}],
 
-    tt = {1: tl}
+          [{'title':'Elliptic Curve','link':'degree2#EllipticCurve_Q'},
+           {'title':'GL2 Cusp Form', 'link':'degree2#GL2_Q_Holomorphic'},
+           {'title':'GL2 Maass Form','link':'degree2#GL2_Q_Maass'}],
 
-    tl = [{'title':'Elliptic Curve','link':'degree2#EllipticCurve_Q'},
-          {'title':'GL2 Cusp Form', 'link':'degree2#GL2_Q_Holomorphic'},
-          {'title':'GL3 Maass Form', 'link':'degree3#GL3_Q_Maass'}]
-
-    tt[2] = tl
+          [{'title':'GL3 Maass Form', 'link':'degree3#GL3_Q_Maass'},
+           {'title':'GL4 Maass Form', 'link':'degree4#GL4_Q_Maass'}]]
 
     info = {
-        'degree_list': range(1,6),
-        #'signature_list': sum([[[d-2*r2,r2] for r2 in range(1+(d//2))] for d in range(1,11)],[]), 
-        #'class_number_list': range(1,11)+['11-1000000'],
-        #'discriminant_list': discriminant_list
+        'degree_list': range(1,5),
         'type_table': tt,
-        'l':[1,2] #just for testing
+        'l':[0,1,2] #just for testing
     }
     credit = ''
     t = 'L-functions'
@@ -201,8 +204,8 @@ def initLfunction(L,args, request):
     info['dirichlet'] = lfuncDStex(L, "analytic")
     info['eulerproduct'] = lfuncEPtex(L, "abstract")
     info['functionalequation'] = lfuncFEtex(L, "analytic")
-    info['functionalequationAnalytic'] = lfuncFEtex(L, "analytic").replace('\\','\\\\').replace('\n','')
-    info['functionalequationSelberg'] = lfuncFEtex(L, "selberg").replace('\\','\\\\').replace('\n','')
+    #info['functionalequationAnalytic'] = lfuncFEtex(L, "analytic").replace('\\','\\\\').replace('\n','')
+    info['functionalequationSelberg'] = lfuncFEtex(L, "selberg")
 
     
     info['learnmore'] = [('L-functions', 'http://wiki.l-functions.org/L-functions') ]
@@ -239,8 +242,9 @@ def set_gaga_properties(L):
 
 
 def specialValueString(sageL, s, sLatex):
+    number_of_decimals = 10
     val = sageL.value(s)
-    return '\(L\left(' + sLatex + '\\right)=' + latex(round(val.real(),4)+round(val.imag(),4)*I) + '\)'
+    return '\(L\left(' + sLatex + '\\right)\\approx ' + latex(round(val.real(), number_of_decimals)+round(val.imag(), number_of_decimals)*I) + '\)'
 
 
 def parameterstringfromdict(dic):
@@ -281,17 +285,18 @@ def render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5):
 def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5):
     L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, to_dict(request.args))
 
-    if L.degree > 2:  # Too slow to be rigorous here
+    if L.degree > 2 or L.Ltype()=="ellipticmodularform":  # Too slow to be rigorous here
+        search_step = 0.05
         if L.selfdual:
-            s = str(L.sageLfunction.find_zeros(0,20,0.1))
+            s = str(L.sageLfunction.find_zeros(-search_step/2 , 20,search_step))
         else:
-            s = str(L.sageLfunction.find_zeros(-15,15,0.1))
+            s = str(L.sageLfunction.find_zeros(-15,15,search_step))
 
     else:
         if L.selfdual:
-            number_of_zeros = 8
+            number_of_zeros = 6
         else:
-            number_of_zeros = 12
+            number_of_zeros = 8
         s = str(L.sageLfunction.find_zeros_via_N(number_of_zeros, not L.selfdual))
 
     return s[1:len(s)-1]
@@ -302,13 +307,6 @@ def render_browseGraph(args):
       data = LfunctionPlot.paintSvgFileAll([[args['group'], int(args['level']), args['sign']]])
     else:
       data = LfunctionPlot.paintSvgFileAll([[args['group'], int(args['level'])]])
-    response = make_response(data)
-    response.headers['Content-type'] = 'image/svg+xml'
-    return response
-
-def render_browseGraphTMP(args):
-    logging.info(args)
-    data = LfunctionPlot.paintSvgHoloGeneral(int(args['Nmin']), int(args['Nmax']),int(args['kmin']),int(args['kmax']),int(args['imagewidth']),int(args['imageheight']))
     response = make_response(data)
     response.headers['Content-type'] = 'image/svg+xml'
     return response
