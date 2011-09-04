@@ -64,7 +64,7 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
             elif seriescoefftype=="factor":
                 return("")
             elif seriescoefftype=="series":
-                return(ans + "+" + seriesvar(index,seriestype))
+                return(ans + " + " + seriesvar(index,seriestype))
         else:
             if seriescoefftype=="series":
                 return(" + " + ans + truncatenumber(rp, precision) + seriesvar(index, seriestype))
