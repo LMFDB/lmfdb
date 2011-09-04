@@ -101,7 +101,7 @@ class Knowl(object):
   def quality(self, quality):
     """a measurment information, if this is just "beta", or reviewed ..."""
     if len(quality) == 0: return
-    if not quality in ['beta', 'ok', 'reviewed']:
+    if not quality in ['beta', 'ok', 'reviewed', 'stub']:
       logger.warning("quality '%s' is not allowed")
       return
     self._quality = quality

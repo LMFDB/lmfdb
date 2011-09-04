@@ -3,7 +3,9 @@
 {% block content %}
 {% from "knowl-defs.html" import knowlbar with context %}
 
-{{KNOWL("wiki.syntax",title="Syntax")}}
+{% if not "wiki.syntax" in  k.id %}
+  {{KNOWL_INC("wiki.syntax",title="")}}
+{% endif %}  
 
 {{ knowlbar() }}
 

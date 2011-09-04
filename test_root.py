@@ -40,9 +40,11 @@ class RootTest(LmfdbTest):
     """
     for rule in self.app.url_map.iter_rules():
       if "GET" in rule.methods:
-        tc = self.app.test_client()
-        res = tc.get(rule.rule)
         try:
+          tc = self.app.test_client()
+          res = tc.get(rule.rule)        
           assert not ("Undefined control sequence" in res.data), "rule %s failed" % rule
         except KeyError:
           pass
+
+  random_urls = ["/ModularForm/GL2/Q/Maass/"]
