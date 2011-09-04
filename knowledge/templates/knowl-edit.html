@@ -2,19 +2,31 @@
 
 {% block content %}
 {% from "knowl-defs.html" import knowlbar with context %}
-The editing in a Knowl works as per usual in a wiki, and you can use a graphical interface via the icon bar.
 
-To create a link to another Knowl, use the icon in the bar or consider the following example
-
+The general editing inside a {{KNOWL("doc.knowl", title="Knowl")}} works as per usual in a {{KNOWL("doc.wiki",title="wiki")}}.
+The main difference is that a {{KNOWL("doc.knowl", title="Knowl")}} is {{KNOWL("doc.context_free", title="context free")}}.
 <br>
-I DON T KNOW HOW TO ENCAPSULATE KNOWL TEMPLATE
+To get you started, here is an example for the syntax inside a typical Knowl:
+<br>
+    <blockquote>
+{% raw %}
+... the {{ KNOWL("lfunction.RH.proof",title="proof")}} of the {{KNOWL("lfunction.RH",title="Riemann hypothesis")}} was found in ...
+{% endraw %}
+    </blockquote>
 <br>
 which gives
 <br>
-the {{ KNOWL("EC.discriminant",title="discriminant")}} of an {{KNOWL("ec.def",title="elliptic curve")}} is an invariant
+    <blockquote>
+... the {{ KNOWL("lfunction.RH.proof",title="proof")}} of the {{KNOWL("lfunction.RH",title="Riemann hypothesis")}} was found in ...
+    </blockquote>
 <br>
-{{ knowlbar() }}
+    As you can see the {{ KNOWL("lfunction.RH.proof", title="Riemann Hypothesis Knowl")}} is currently missing, but would be {{KNOWL("doc.knowl.implicit", title="implicitly created")}} once someone edits it.
+    <br>
+    Please follow our {{ KNOWL("doc.knowl.naming_conventions",title="naming conventions")}} and {{ KNOWL("doc.knowl.naming_suggestions",title="naming suggestions")}}
+    for the {{KNOWL("doc.knowl.description",title="description")}} and {{KNOWL("doc.knowl.identifier",title="identifier")}} fields of Knowls.
+    <br>
 
+{{ knowlbar() }}
 <script type="text/javascript" src="{{ url_for('static', filename='jquery.markitup.js')}}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='jquery.markitup.markdown.js')}}"></script>
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='markitup.css')}}" />
