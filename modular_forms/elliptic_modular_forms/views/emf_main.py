@@ -18,7 +18,6 @@ Main file for viewing elliptical modular forms.
 
 AUTHOR: Fredrik Strömberg
 
-
 """
 from flask import render_template, url_for, request, redirect, make_response,send_file
 import flask
@@ -29,11 +28,13 @@ from sage.all import *
 from  sage.modular.dirichlet import DirichletGroup
 from base import app, db
 from modular_forms.elliptic_modular_forms.backend.web_modforms import WebModFormSpace,WebNewForm
+from modular_forms.elliptic_modular_forms.backend.emf_classes import * #html_table
 from modular_forms.elliptic_modular_forms.backend.emf_core import * #html_table
+from modular_forms.elliptic_modular_forms.backend.emf_utils import * #html_table
 from modular_forms.elliptic_modular_forms.backend.plot_dom import * #html_table
-from emf_utils import *
+#from emf_utils import *
 #from modular_forms import mf
-from modular_forms.elliptic_modular_forms import EMF, emf_logger, emf
+from modular_forms.elliptic_modular_forms import EMF, emf_logger, emf,FULLNAME
 logger = emf_logger
 
 @emf.context_processor
@@ -50,16 +51,11 @@ k_max_db = 300000
 
 _verbose = 0
 
-#from jinja2 import Environment
-#emf_logger.debug("EN_V path: %s" % app.jinja_loader.searchpath)
-l=app.jinja_env.list_templates()
+#l=app.jinja_env.list_templates()
 #################
 # Top level
 #################
 
-#def render_elliptic_modular_form():#
-#       #return render_webpage(**request.args)
-#       return elliptic_modular_forms(**request.args)
 ###########################################
 # Search / Navigate
 ###########################################
@@ -69,8 +65,6 @@ def render_elliptic_modular_forms():
     info = get_args()
     if info.has_key('download'):
         return get_downloads(info)
-    #emf_logger.debug("MODULES:%s"%app.modules)
-    #emf_logger.debug("EN_V path:%s"%app.modules['cmf'].jinja_loader.searchpath)
     emf_logger.debug("args=%s"%request.args)
     emf_logger.debug("method=%s"%request.method)
     emf_logger.debug("req.form=%s"%request.form)
@@ -81,7 +75,7 @@ def render_elliptic_modular_forms():
         level=None
     if weight<=0:
         weight=None
-    if info.has_key('jump_to'):  # try to find out where we want to jump
+    if info.has_key('jump_to'):  # try to find out which form we want to jump
         s = _my_get(info,'jump_to','',str)
         info.pop('jump_to')
         weight = 2  # this is default for jumping
@@ -109,12 +103,11 @@ def render_elliptic_modular_forms():
         emf_logger.debug("label=%s"%label)
         emf_logger.debug("level=%s"%level)
     emf_logger.debug("HERE::::::::::::::::::: %s %s %s %s" % (level,weight,character,label))
-
     # we see if we have submitted parameters
+    disp = ClassicalMFDisplay('modularforms',**info)
+    
     if level and weight and character<>'' and label:
-        #return redirect(url_for("render_one_elliptic_modular_form", level,weight,character,label))
         info['level']=level; info['weight']=weight; info['label']=label; info['character']=character
-        emf_logger.debug("WE ARE HERE!")
         return redirect(url_for("emf.render_one_elliptic_modular_form", level=level, weight=weight,character=character,label=label))
     if level and weight and character:
         info['level']=level; info['weight']=weight; info['label']=label; info['character']=character
@@ -132,9 +125,7 @@ def render_elliptic_modular_forms():
     #if request.method == 'GET':
     emf_logger.debug("to do navigation!")
     return render_elliptic_modular_form_navigation_wp(**info) #request.args)
-    #else:
-    #    emf_logger.debug("to do navigation!")
-    #    return render_elliptic_modular_form_navigation_wp(**info) #request.form)  
+
 
 
 #@emf.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<label>/")
@@ -160,7 +151,9 @@ def render_elliptic_modular_form_space(level,weight,character,**kwds):
 
 @emf.route("/<int:level>/<int:weight>/")
 def render_elliptic_modular_form_browsing(level,weight):
+    emf_logger.debug("in render browsing: {0},{1}".format(level,weight))
     info = get_args()
+    emf_logger.debug("in render browsing info: {0}".format(info))
     info['level']=level; info['weight']=weight
     return browse_elliptic_modular_forms(**info)
 
@@ -190,52 +183,54 @@ def render_one_elliptic_modular_form_wp(info):
     
     """
     #info['level']=level; info['weight']=weight; info['character']=character; info['label']=label
-    properties=list(); parents=list(); siblings=list(); friends=list()
+    properties2=list(); parents=list(); siblings=list(); friends=list()
     level  = _my_get(info,'level', -1,int)
     weight = _my_get(info,'weight',-1,int) 
     character = _my_get(info,'character', '',str) #int(info.get('weight',0))
     label  = info.get('label', '')
     citation = ['Sage:'+version()]
-    lifts=['Lifts / Correspondences'] #list()
-    sbar=(properties,parents,friends,siblings,lifts)
-    (info,sbar)=set_info_for_one_modular_form(info,sbar)
-
+    #sbar=(properties2,parents,friends,siblings,lifts)
+    res=set_info_for_one_modular_form(info)
+    info=res[0]
+    sbar=res[1]
+    #sbar['lifts'].insert('Lifts / Correspondences')
+    print "SBAR=",sbar
     logger.debug("INFO111: %s" % info)
-
-
+    logger.debug("prop2: %s" % properties2)
     err = info.get('error','')
-    info['parents']=parents
-    info['siblings']=siblings
-    info['friends']=friends
-    emf_logger.debug("friends={0}".format(friends))
+    #info['parents']=parents
+    #info['siblings']=siblings
+    #info['friends']=friends
+    emf_logger.debug("friends={0}".format(sbar['friends']))
     ## Check if we want to download either file of the function or Fourier coefficients
     if info.has_key('download') and not info.has_key('error'):                                  
         return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
-
-    #os.remove(fn) ## clears the temporary file                                 
-    info['sidebar']=set_sidebar([properties,parents,siblings,friends,lifts])
     template = "emf.html"
-    title = "Cuspidal newform %s of weight %s for "%(label,weight)
+    title = 'Modular Form '+info['name']
+    name = "Cuspidal newform %s of weight %s for "%(label,weight)
     if level==1:
-        title+="\(\mathrm{SL}_{2}(\mathbb{Z})\)"
+        name+="\(\mathrm{SL}_{2}(\mathbb{Z})\)"
     else:
-        title+="\(\Gamma_0(%s)\)" %(level)
-    if character>0:
-        title+=" with character \(\chi_{%s}\) mod %s" %(character,level)
-        title+=" of order %s and conductor %s" %(info['character_order'],info['character_conductor'])
+        name+="\(\Gamma_0(%s)\)" %(level)
+    if int(character)<>0:
+        name+=" with character \(\chi_{%s}\) mod %s" %(character,level)
+        name+=" of order %s and conductor %s" %(info['character_order'],info['character_conductor'])
     else:
-        title+=" with trivial character!"
+        name+=" with trivial character!"
+    info['name']=name
     url1 = url_for("emf.render_elliptic_modular_forms")
-    url2 = url_for("emf.render_elliptic_modular_form_space",level=level,weight=weight,character=character) 
-    url3 = url_for("emf.render_elliptic_modular_form_space",level=level,weight=weight,character=character) 
+    url2 = url_for("emf.render_elliptic_modular_form_space2",level=level) 
+    url3 = url_for("emf.render_elliptic_modular_form_browsing",level=level,weight=weight)
+    url4 = url_for("emf.render_elliptic_modular_form_space",level=level,weight=weight,character=character) 
     bread = [('Holomorphic Modular Forms',url1)]
     bread.append(("of level %s" % level,url2))
     bread.append(("weight %s" % weight,url3))
-    if character == 0 :
-        bread.append(("and trivial character",url3))
+    if int(character) == 0 :
+        bread.append(("and trivial character",url4))
     else:
-        bread.append(("and character \(\chi_{%s}\)" % character,url3))
-    return render_template(template, info=info,title=title,bread=bread,properties=properties)   
+        bread.append(("and character \(\chi_{%s}\)" % character,url4))
+    return render_template(template, info=info,title=title,bread=bread,**sbar)
+
 
                 
 def render_elliptic_modular_form_navigation_wp(**args):
@@ -248,6 +243,8 @@ def render_elliptic_modular_form_navigation_wp(**args):
     level  = _my_get(info,'level', 0,int)
     weight = _my_get(info,'weight', 0,int)
     label  = info.get('label', '')
+    disp = ClassicalMFDisplay('modularforms')
+    
     if(info.has_key('plot') and level <> None):
         return render_fd_plot(level,info)
     is_set=dict()
@@ -256,7 +253,6 @@ def render_elliptic_modular_form_navigation_wp(**args):
         is_set['weight']=True
     if level<>0:
         is_set['level']=True
-        
     if(info.has_key('get_table')): # we want a table
         info = set_table(info,is_set)
         page = "emf_table.html"
@@ -264,16 +260,18 @@ def render_elliptic_modular_form_navigation_wp(**args):
         return render_template(page, info=info,title=title)
     ## This is the list of weights we initially put on the form
     weight = int (weight)
-    #url1 = ajax_url(ajax_more2, print_list_of_characters, *arg_list1, inline=True, text='List Characters')
-    info['list_chars']=ajax_once(print_list_of_characters,text='print list of characters!')
-    ## t = """| <a onclick="$('#%(nonce)s').load('%(url2)s', function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'%(nonce)s']);}); return false;" href="#">%(text1)s</a>]</span>""" % locals()
+    #info['list_chars']=ajax_once(print_list_of_characters,text='print list of characters!')
     if level>0:
         info['geometric'] = print_geometric_data_Gamma0N(level)
-        #if info.has_key('plot'):
         info['fd_plot'] = render_fd_plot(level,info)
     title = "Holomorphic Cusp Forms"
     bread =[('Modular Forms',url_for('modular_form_toplevel'))]
+    #disp.set_table_browsing()
+    disp.set_table_browsing(limit=[(1,36),(1,10)],keys=['Weight','Level'],character=0,dimension_fun=dimension_new_cusp_forms,title='Browse Holomorphic Modular Forms')
+    info['browse_table']=disp._table
+
     return render_template("emf_navigation.html", info=info,title=title,bread=bread)
+#    return render_template("emf_browse.html", info=info,title=title,bread=bread)
 
 
 def get_args():
@@ -318,7 +316,7 @@ def browse_elliptic_modular_forms(**info):
     emf_logger.info("level=%s"%level)
     emf_logger.info("wt=%s"%weight) 
     if level:
-        info['geometric'] = print_geometric_data_Gamma0N(level)
+        info['geometric'] = get_geometric_data_Gamma0N(level)
         #if info.has_key('plot'):
         grp=MyNewGrp(level,info)
         plot=grp.plot
@@ -331,12 +329,17 @@ def browse_elliptic_modular_forms(**info):
         info['level_min']=level;info['level_max']=level
         info['weight_min']=1;info['weight_max']=36
         largs = [ {'level':level,'character':char,'weight_block':k} for k in range(100)]
-        info['list_spaces']=ajax_more(make_table_of_spaces_fixed_level,*largs,text='more')
+        disp = ClassicalMFDisplay('modularforms')
+        disp.set_table_browsing(limit=[(1,36),(level,level)],keys=['Weight','Level'],character='all',dimension_fun=dimension_new_cusp_forms,title='Dimension of newforms')
+        info['show_all_characters']=1
+        info['browse_table']=disp._table
+        
+        #info['list_spaces']=ajax_more(make_table_of_spaces_fixed_level,*largs,text='more')
         title = "Holomorphic Cusp Forms of level %s " % level
         #bread =[('Modular Forms',url_for('modular_form_toplevel'))]
         bread =[('Modular Forms',url_for('.render_elliptic_modular_forms'))]
         info['browse_type']=" of level %s " % level
-        return render_template("emf_browse.html", info=info,title=title,bread=bread)
+        return render_template("emf_browse_fixed_level.html", info=info,title=title,bread=bread)
     if weight and not level:
         emf_logger.debug("here2!")
         info['level_min']=1;info['level_max']=50
@@ -346,7 +349,7 @@ def browse_elliptic_modular_forms(**info):
         #bread =[('Modular Forms',url_for('modular_form_toplevel'))]
         bread =[('Modular Forms',url_for('.render_elliptic_modular_forms'))]
         info['browse_type']=" of weight %s " % weight
-        return render_template("emf_browse.html", info=info,title=title,bread=bread)
+        return render_template("emf_browse_fixed_level.html", info=info,title=title,bread=bread)
     emf_logger.debug("here2!")
     info['level_min']=level;info['level_max']=level
     info['weight_min']=weight;info['weight_max']=weight
@@ -367,9 +370,9 @@ def render_elliptic_modular_form_space_wp(info):
     if info.has_key('character') and info['character']=='*':
         return render_elliptic_modular_form_space_list_chars(level,weight)
     ### This might take forever....
-    ### want to display 
+
     (info,sbar)=set_info_for_modular_form_space(info,sbar)
-    emf_logger.debug("HERE!!!!!!!!")
+ 
     emf_logger.debug("keys={0}".format(info.keys()))
     if info.has_key('download') and not info.has_key('error'):                                  
         return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
@@ -397,10 +400,10 @@ def render_elliptic_modular_form_space_wp(info):
     emf_logger.debug("friends={0}".format(friends))
     info['friends']=friends
     #info['test']=ajax_later(_test)
-    
-    return render_template("emf_space.html", info=info,title=title,bread=bread,parents=parents,friends=friends,siblings=siblings,properties2=properties)
-
-
+    if info['dimension_newspace']==0:
+        return render_template("emf_space.html", info=info,title=title,bread=bread,parents=parents,friends=friends,siblings=siblings)
+    else:
+        return render_template("emf_space.html", info=info,title=title,bread=bread,parents=parents,friends=friends,siblings=siblings,properties2=properties)
 
 def _test(do_now=0):
     print "do_now=",do_now
@@ -410,22 +413,7 @@ def _test(do_now=0):
     print "in test!"
     return s
 
-        #l.append(('Friend '+str(i),'/'))
-    ## print "keys=",info.keys()
-    ## print "dim=",info['dimension']
-    ## if info.has_key('download') and not info.has_key('error'):                                       
-    ##     return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
-    ## if info.has_key('dimension') and info['dimension']==1: # if there is only one orbit we list it
-    ##     print "Dimension is one!"
-    ##     info =dict()
-    ##     info['level']=level; info['weight']=weight; info['label']='a'; info['character']=character
-    ##     # print "INFO=",info
-    ##     return redirect(url_for('emf.render_one_elliptic_modular_form', **info))
-    ## (properties,parents,friends,siblings,lifts)=sbar
-    ## title = "Holomorphic Cusp Forms of weight %s on \(\Gamma_{0}(%s)\)" %(weight,level)
-    ## bread =[('Modular Forms',url_for('modular_form_toplevel'))]
-    ## return render_template("emf_space.html", info=info,title=title,bread=bread)
-
+ 
 
 
 def render_elliptic_modular_form_space_list_chars(level,weight):
@@ -434,9 +422,6 @@ def render_elliptic_modular_form_space_list_chars(level,weight):
     level and weight (list all characters) 
     """
     info = dict()
-    #if level<>0:
-    #  D = sage.modular.dirichlet.DirichletGroup(Integer(level))
-    #s = make_table_of_dimensions(level_start=level,level_stop=level,weight_start=weight,weight_stop=weight,char=1)
     s = make_table_of_characters(level,weight)
     info['level']=level; info['weight']=weight
     if not isinstance(s,str):
@@ -449,10 +434,11 @@ def render_elliptic_modular_form_space_list_chars(level,weight):
     bread.append(("Level %s" %level,url_for("emf.render_elliptic_modular_form_space2",level=level)))
     
     info['browse_type']=" of level %s and weight %s " % (level,weight)
-    return render_template("emf_browse.html", info=info,title=title,bread=bread)
-
-
-
+    disp = ClassicalMFDisplay('modularforms')
+    disp.set_table_browsing(limit=[(weight,weight),(level,level)],keys=['Weight','Level'],character='all',dimension_fun=dimension_new_cusp_forms,title='Dimension of newforms')
+    info['show_all_characters']=1
+    info['browse_table']=disp._table    
+    return render_template("emf_browse_fixed_level.html", info=info,title=title,bread=bread)
 
 def set_sidebar(l):
         res=list()
@@ -852,6 +838,8 @@ def print_list_of_coefficients(info):
             return "Need to specify a modular form completely!!"
         
         WMFS = WebModFormSpace(weight,level,character)
+        if not WMFS:
+            return ""
         if(info.has_key('number')):
                 number=int(info['number'])
         else:
@@ -1021,7 +1009,7 @@ def print_list_of_weights(kstart=0,klen=20):
 #__main__.WebModFormSpace=WebModFormSpace
 #__main__.WebNewForm=WebNewForm
 
-def set_info_for_one_modular_form(info,sbar): #level,weight,character,label,info,sbar):
+def set_info_for_one_modular_form(info): #level,weight,character,label,info,sbar):
     r"""
     Set the info for on modular form.
     
@@ -1047,8 +1035,7 @@ def set_info_for_one_modular_form(info,sbar): #level,weight,character,label,info
         print "Could not compute the desired function!"
         print level,weight,character,label
         info['error']="Could not compute the desired function!"
-    (properties,parents,friends,siblings,lifts)=sbar
-
+    properties2=list(); parents=list(); siblings=list(); friends=list()
     #print info.keys()
     #print "--------------------------------------------------------------------------------"
     #print WNF
@@ -1069,7 +1056,7 @@ def set_info_for_one_modular_form(info,sbar): #level,weight,character,label,info
         return (info,sbar)              
     info['name']=WNF._name
     #info['embeddings'] =  ajax_more2(WNF.print_q_expansion_embeddings,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more coeffs.','more precision'])
-    info['satake'] = ajax_more2(WNF.print_satake_parameters,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more parameters','more precision'])
+    info['satake'] = ajax_more2(WNF.print_satake_parameters,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more parameters','higher precision'])
     info['polynomial'] = WNF.polynomial()
     #info['q_exp'] = "\["+WNF.print_q_expansion()+"\]"
     #old_break = WNF._break_line_at
@@ -1101,40 +1088,52 @@ def set_info_for_one_modular_form(info,sbar): #level,weight,character,label,info
         print s
         #args = 
         #info['embeddings'] =  ajax_more2(WNF.print_q_expansion_embeddings,{'prec':5,'bprec':bprec},{'prec':10,'bprec':bprec},{'prec':25,'bprec':bprec},{'prec':50,'bprec':bprec},text='More coefficients')
-        info['embeddings'] =  ajax_more2(WNF.print_q_expansion_embeddings,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more coeffs.','more precision'])
+        info['embeddings'] =  ajax_more2(WNF.print_q_expansion_embeddings,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more coeffs.','higher precision'])
     elif(int(info['degree'])>1):
         s = 'There are '+str(info['degree'])+' embeddings into \( \mathbb{C} \):'
         bprec = 26
         print s
-        info['embeddings'] =  ajax_more2(WNF.print_q_expansion_embeddings,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more coeffs.','more precision'])
+        info['embeddings'] =  ajax_more2(WNF.print_q_expansion_embeddings,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more coeffs.','higher precision'])
         #info['embeddings'] = ajax_more2(WNF.print_q_expansion_embeddings,{'prec':5,'bprec':bprec},{'prec':10,'bprec':bprec},{'prec':25,'bprec':bprec},{'prec':50,'bprec':bprec})
-
     else:
         info['embeddings'] = ''                 
-    #info['atkin_lehner'] = WNF.print_atkin_lehner_eigenvalues()
-    #info['atkin_lehner_cusps'] = WNF.print_atkin_lehner_eigenvalues_for_all_cusps()
     info['twist_info'] = WNF.print_twist_info()
+    info['is_cm']=WNF.is_CM()
+    info['is_minimal']=info['twist_info'][0]
     info['CM'] = WNF.print_is_CM()
-    info['CM_values'] = WNF.print_values_at_cm_points()
+    #args=[{'digits':5},{'digits':10},{'digits':10},{'digits':10},
+    args=list()
+    for x in range(5,200,10): args.append({'digits':x})
+    info['CM_values'] = WNF.cm_values(digits=12)
+    #ajax_more(WNF.cm_values,text=['higher precision'],*args)
+    #WNF.cm_values()
+
+    #get_values_at_cm_points()
     # properties for the sidebar
     if(info['twist_info'][0]):                          
         s='- Is minimal<br>'
     else:
         s='- Is a twist of lower level<br>'
-    properties.append(s)
+    properties2=[('Twist info',s)]
     if(WNF.is_CM()[0]):                         
-        s='- Is a CM-form'
+        s='- Is a CM-form<br>'
     else:
-        s='- Is not a CM-form'
-    properties.append(s)
-    
+        s='- Is not a CM-form<br>'
+    properties2.append(('CM info',s))
     #info['atkin_lehner'] = WNF.print_atkin_lehner_eigenvalues()
     #info['atkin_lehner_cusps'] =
-    if len(WNF.atkin_lehner_eigenvalues().keys())>0:
-        s = "<h5> Atkin-Lehner eigenvalues</h5>"
-        s = s+WNF.print_atkin_lehner_eigenvalues_for_all_cusps()
-        s+="<br><small>* )  {{KNOWL('emf.fricke_involution',title='The Fricke involution')}}</small>"
-        properties.append(s)
+    alev=WNF.atkin_lehner_eigenvalues()
+    if len(alev.keys())>0:
+        s1 = " Atkin-Lehner eigenvalues "
+        #s = s+WNF.print_atkin_lehner_eigenvalues_for_all_cusps()
+        #s+="<br><small>* )The Fricke involution</small>"
+        s2=""
+        for Q in alev.keys():
+            s2+="\( \omega_{ %s } \) : %s <br>" % (Q,alev[Q])
+        properties2.append((s1,s2))
+        #properties.append(s)
+    emf_logger.debug("properties={0}".format(properties2))
+    info['atkinlehner']=WNF.print_atkin_lehner_eigenvalues_for_all_cusps()
     if(level==1):
         info['explicit_formulas'] = WNF.print_as_polynomial_in_E4_and_E6()
     cur_url='?&level='+str(level)+'&weight='+str(weight)+'&character='+str(character)+'&label='+str(label)
@@ -1147,7 +1146,6 @@ def set_info_for_one_modular_form(info,sbar): #level,weight,character,label,info
             s=s+str(level)+str(label_other)
             url = url_for('emf.render_one_elliptic_modular_form',level=level,weight=weight,character=character,label=label_other)                 
             friends.append((s,url))
-
     #    label = str(label)+str(j+1)
     s = 'L-Function '+str(level)+label
     url = "/L/ModularForm/GL2/Q/holomorphic?level=%s&weight=%s&character=%s&label=%s&number=%s" %(level,weight,character,label,0)
@@ -1163,8 +1161,16 @@ def set_info_for_one_modular_form(info,sbar): #level,weight,character,label,info
 
     space_url='?&level='+str(level)+'&weight='+str(weight)+'&character='+str(character)
     parents.append(('\( S_{k} (\Gamma_0(' + str(level) + '),\chi )\)',space_url))
-    info['sidebar']=set_sidebar([properties,parents,siblings,friends,lifts])
-    return (info,sbar)
+    #info['sidebar']=(properties2,parents,siblings,friends,lifts)
+    #    sbar = (properties2,parents,siblings,friends,lifts)
+    #    emf_logger.debug("properties={0}".format(properties2))
+    sbar=dict()
+    sbar['properties2']=properties2
+    sbar['parents']=parents
+    sbar['siblings']=siblings
+    sbar['friends']=friends
+    #sbar['lifts']=lifts
+    return info,sbar
 
 
 
@@ -1248,6 +1254,7 @@ def set_info_for_modular_form_space(info,sbar):
         (properties,parents,friends,siblings,lifts)=sbar
         if(level > N_max_comp or weight > k_max_comp):
             info['error']="Will take too long to compute!"
+        WMFS=None
         if level > 0:
             try:
                 #print  "PARAM_S:",weight,level,character
@@ -1272,8 +1279,17 @@ def set_info_for_modular_form_space(info,sbar):
         info['dimension_newspace'] = WMFS.dimension_newspace()
         info['dimension_oldspace'] = WMFS.dimension_oldspace()
         info['dimension'] = WMFS.dimension()
+        if WMFS.dimension()==0: # we don't need to work with an empty space
+            info['sturm_bound'] =0
+            info['new_decomposition'] = ''
+            info['is_empty']=1
+            lifts.append(('Half-Integral Weight Forms','/ModularForm/Mp2/Q'))
+            lifts.append(('Siegel Modular Forms','/ModularForm/GSp4/Q'))
+            sbar=(properties,parents,friends,siblings,lifts)
+            return (info,sbar)
         info['sturm_bound'] = WMFS.sturm_bound()
         info['new_decomposition'] = WMFS.print_galois_orbits()
+
         print "new_decomp=",info['new_decomposition']
         info['nontrivial_new'] = len(info['new_decomposition'])
         ## we try to catch well-known bugs...

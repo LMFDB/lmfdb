@@ -1,8 +1,11 @@
 {% extends 'homepage.html' %}
 
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='browse_table.css')}}" type="text/css"/> 
 
+<script type="text/javascript" src="{{ url_for('static', filename='browse_table.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='elliptic_modular_form_util-functions.js') }}"></script>
+
 <script type="text/javascript" src="{{ url_for('static', filename='elliptic_modular_form_scripts.js') }}"></script>
 <script>
 $(document).ready( function() {
@@ -10,9 +13,17 @@ $("#wait").text("Plot of fundamental domain is loading!");
 $("#plot").load(function() {
          $("#wait").text("");
     });
-}
+};
 );
+$(document).ready(function() {
+	$('#example').dataTable();
+} );
+
 </script>
+
+
+
+
 {% if info.error is defined %}
 
 <h1>There was an error in meeting your previous request. Please change parameters.</h1>
@@ -23,37 +34,76 @@ $("#plot").load(function() {
 </div>
 {% endif %}
 
-<table>
-  <tr>
-    <td>
-      <h3>Browse spaces of {{ KNOWL('cmf.newform',title='new') }} {{ KNOWL('cmf.cuspform',title='cusp forms') }} {{info.browse_type | safe}}</h3>
-      
-      {{info.list_spaces| safe }}
-    </td>
-  </tr>
-</table>
-<br>
-<table>
-  <tr>
-    {% if info.geometric is defined %}
-    <td valign="top">
-      {% if info.level > 1 %}
-      <h3>Geometric information for \(\Gamma_{0}({{ info.level}})\)</h3>
-      {% else %}
-      <h3>Geometric information for \(PSL_{2}(\mathbb{Z}) \)</h3>
+      <h1>{{ KNOWL('cmf.newform',title='Newforms') }} {{info.browse_type | safe}}</h1>
+      {# { info | safe } #}
+      {% if info.browse_table is defined %}
+      {% if info.browse_table.rows is defined %}
+      {# {KNOWL('emf.emf_browse.all.info') } #}
+      <p>
+      In the table below you can brose spaces of Newforms {{KNOWL('emf.newforms',title='Holomorphic Newforms')}} of a given level and weight. 
+      The entry in the table is the dimension of the space.
+      </p>
+      {% set table = info.browse_table %}
+      {% set rows = info.browse_table.rows %}
+      {% set row_class = cycler('odd', 'even') %}
+      <table class="ntdata">
+        <thead>
+          <tr>
+            <th width="20px" style="border-right:1px solid black">
+              Level&nbsp;\&nbsp;Weight
+            </th>
+            {% for k in table.col_heads  %}
+            <th>{{k}}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows  %}
+          <tr class="{{row_class.next() }}">
+            <th width="0%" style="background:#afa; border-right: 1px solid black">
+              {{ table.row_heads[loop.index-1] }}
+            </th>
+            {% for cell in row  %}
+            <td align="center">
+              <a style="display:inline" href="{{cell.url}}">{{cell.dim}}</a>
+            </td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
       {% endif %}
-      {{ info.geometric | safe }}
-    </td>
-    {% endif %}
-    {% if info.fd_plot is defined %}
-    <td>
-      <div>
-      <span id="wait">      </span>
-      <img id="plot" src="{{ info.fd_plot | safe }} " width="" height=""/>
-      </div>
-    </td>
       {% endif %}
 
-  </tr>
-</table>
-{% endblock content %}
+      {% if info.geometric is defined %}
+      {% set G = info.geometric %}
+      <table>
+        <tr>
+          <td valign="top">
+            {% if info.level > 1 %}
+            <h2>Geometric information for \(\Gamma_{0}({{ info.level}})\)</h2>
+            {% else %}
+            <h2>Geometric information for \(PSL_{2}(\mathbb{Z}) \)</h2>
+            {% endif %}
+            
+            <table>
+              <tr><td>{{KNOWL('emf.gamma0N.index',title='index')}}</td><td>{{G.index}}</td></tr>
+              <tr><td>{{KNOWL('emf.gamma0N.genus',title='genus')}}</td><td>{{G.genus}}</td></tr>
+              <tr><td>{{KNOWL('emf.gamma0N.cusps',title='index')}}</td><td>{{G.cusps}}</td></tr>
+              <tr><td colspan="2">Number of {{KNOWL('emf.gammaN.ellipticfxpts',title='elliptic fixed points')}}</td></tr>
+              <tr><td>order 2</td><td>{{G.nu2}}</td></tr>
+              <tr><td>order 3</td><td>{{G.nu2}}</td></tr>
+            </table>
+          </td>
+          {% endif %}
+          {% if info.fd_plot is defined %}
+          <td>
+            <div>
+              <span id="wait">      </span>
+              <img id="plot" src="{{ info.fd_plot | safe }} " width="" height="75%"/>
+            </div>
+          </td>
+          </tr>
+        </table>
+      {% endif %}
+      {% endblock content %}

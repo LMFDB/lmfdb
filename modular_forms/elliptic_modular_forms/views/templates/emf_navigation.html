@@ -84,74 +84,79 @@ function set_value(id,val) {
 }
 </script>
 
-
 <table>
   <tr>
     <td>
-      <form name="browse" method = "get" action="{{url_for('.render_elliptic_modular_forms')}}">
-	<h3>{{KNOWL("holomorphic.cuspforms",title ="Browse spaces of cusp forms")}}</h3>
-	<input type="hidden" name="weight" value=""/>
-	<input type="hidden" name="level" value=""/>
-	<table width="100%">
-	  <tr>
-	    <td valign="top">Level:</td>
-	    <td>
-	      <div id="l_list" data-hidden="true" data-start='' data-len='' data-value='' data-name=''></div>
-	    </td>
-	  </tr>
-	  <tr>
-	  <tr>
-	    <td valign="top">Weight:</td>
-	    <td>
-	      <div id="w_list" data-hidden="true" data-start='' data-len='' data-value='' data-name=''></div>
-	    </td>
-	  </tr>
-        </table>
-	<table>
-	  <tr>
-            <td valign="top">  
-  	      <span title="We use the Sage ordering to name the characters. The trivial character is nr. 0"> 
-	      </span>
-	      {{KNOWL("character.dirichlet",title="Character")}}:
-	      <div id="char_selection" data-char="0">
-	      <input  type="radio" name="character" value="0" checked/>Trivial character
-	      <input type="radio" name="character" value="1" />All characters</div>
-	    </td>
-	  </tr>		
-        </table>
-      </form>
-    </td>
+      <h1>Browse</h1>
+      {% if info.browse_table.rows is defined %}
+      {#{KNOWLl('mf.elliptic.browse.all.info') } #}
+      In the table below you can brose spaces of Holomorphic Cusp Forms with
+      given level and weight. The entry in the table is the dimension of the space.
+      {% set table = info.browse_table %}
+      {% set rows = info.browse_table.rows %}
+      {% set row_class = cycler('odd', 'even') %}
+      <p>
+      <table class="ntdata">
+        <thead>
+          <tr>
+            <th width="10px" style="">
+              Level&nbsp;\&nbsp;Weight
+            </th>
+            {% for k in table.col_heads  %}
+            <th>{{k}}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows  %}
+          <tr class="{{row_class.next() }}">
+            <th width="0%" style="background:#afa; border-right: 1px solid black">
+              {{ table.row_heads[loop.index-1] }}
+            </th>
+            {% for cell in row  %}
+            <td align="center">
+              <a style="display:inline" href="{{cell.url}}">{{cell.dim}}</a>
+            </td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </p>
+      {% endif %}
+    </td>  
+    <form name="browse" method = "get" action="{{url_for('.render_elliptic_modular_forms')}}">
+    </form>
   </tr>
   <tr>
-  <tr>
     <td>
-
-	<h3>Find a specific {{KNOWL("holomorphic.cuspforms",title ="cusp form")}}</h3>
-	<form name="search" method = "post" action="{{url_for('.render_elliptic_modular_forms')}}">	  <input type="text" name="jump_to" value=""> <span class="formexample">e.g. 1.12</span>
-	  <input type="submit" value="Find">
-	</form>
+      <h1>Find a specific cusp form</h1>
+      <form name="search" method = "post" action="{{url_for('.render_elliptic_modular_forms')}}">	  
+        <input type="text" name="jump_to" value="" placeholder="1.12"> 
+	<input type="submit" value="Find">
+      </form>
     </td>
   </tr>
   <tr>
     <td>
       <form name="search" method = "post" action="{{url_for('.render_elliptic_modular_forms')}}">
-	<h3>Search</h3>
+	<h1>Search</h1>
 	<table class="">
 	  <tr>
-	    <td>{{KNOWL("cuspforms.level",title ="Level")}}:</td><td> <input type="text" name="level" value=""> <span class="formexample">e.g. 20</span></td>
+	    <td>Level:</td><td><input type="text" name="level" value="" example="4"></td>
 	  </tr>
 	  <tr>
-	    <td>{{KNOWL("cuspforms.weight",title ="Weight")}}:</td><td> <input type="text" name="weight" value=""> <span class="formexample">e.g. 24</span></td>
+	    <td>Weight:</td><td><input type="text" name="weight" value="" placeholder="12"></td>
 	  </tr>
 	  <tr>
-	    <td>{{KNOWL("character.dirichlet",title ="Dirichlet character")}}:</td><td> <input type="text" name="character" value=""> <span class="formexample">e.g. 1 (0 means trivial character, leave blank for all characters)</span></td>
+	    <td>Character:</td><td><input type="text" name="character" value="" placeholder="0"></td> 
 	  </tr>
-	  <tr>
-	    <td>{{KNOWL("cuspform.galois_orbit",title ="Dimension of Galois orbit")}}:</td><td> <input type="text" name="gdim" value=""> <span class="formexample">e.g. 1 (i.e. the rational field)</span> </td>
-	  </tr>
+	  <!--tr>
+	    <td>Dimension of Galois Orbit:</td><td><input type="text" name="gdim" value="" placeholder="1"> 
+<span class="formexample">(i.e. the rational field)</span></td>
+	  </tr-->
 	</table>
 	<input type="submit" name="Submit" value="Search">
-	<!--input type="button" name="Submit" value="Search" onclick="document.search.submit()"-->
       </form>
     </td>
   </tr>
