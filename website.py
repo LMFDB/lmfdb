@@ -25,6 +25,14 @@ import raw
 
 import sys
 
+try:
+    import password
+    logging.info("password imported")
+    readwrite_password = password.readwrite_password
+except:
+    logging.warning("no password!")
+    readwrite_password = ''
+
 @app.errorhandler(404)
 def not_found(error):
     return "404", 404
@@ -242,7 +250,7 @@ def main():
     app.logger.addHandler(file_handler)
     
     import base
-    base._init(dbport)
+    base._init(dbport, readwrite_password)
     logging.info("... done.")
 
     # just for debugging
@@ -255,13 +263,14 @@ def main():
 if __name__ == '__main__':
     main()
 else:
-    # HSY: what's this else part about? 
+    # this bit is so that we can import website.py to use
+    # with gunicorn.
     import logging
     logfile = "flasklog"
     file_handler = logging.FileHandler(logfile)
     file_handler.setLevel(logging.WARNING)
     import base
-    base._init(37010)
+    base._init(37010, readwrite_password)
     app.logger.addHandler(file_handler)
 
 def getDownloadsFor(path):
