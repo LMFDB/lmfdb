@@ -28,8 +28,8 @@ def render_picard_maass_forms():
         return render_picard_maass_forms_get_one(docid)
     ds = [ (_['_id'], _['ev']) for _ in htp.find(fields=['ev'], sort=[('ev', 1)]) ]
     data = None
-    TT= MaassformsPicardDisplay(mwfp_dbname,collection='all',skip=[0],limit=[10],keys=['Eigenvalue'])
-    TT.set_table_browsing()
+    #TT= MaassformsPicardDisplay(mwfp_dbname,collection='all',skip=[0],limit=[10],keys=['Eigenvalue'])
+    #TT.set_table_browsing()
     #TT.get_metadata()
     if docid:
         data = htp.find_one({'_id' : docid })
@@ -57,8 +57,9 @@ def render_picard_test():
     ds = [ (_['_id'], _['ev']) for _ in htp.find(fields=['ev'], sort=[('ev', 1)]) ]
     data = None
     TT= MaassformsPicardDisplay(mwfp_dbname,collection='all',skip=[0],limit=[10],keys=['Eigenvalue'])
-    TT.set_table()
-    TT.get_metadata()
+    TT= MaassformsPicardDisplay(mwfp_dbname,collection='all',skip=[0],limit=[10],keys=['Eigenvalue'])
+    TT.set_table_browsing()
+    info['table']=TT.table_browsing()
     if docid:
         data = htp.find_one({'_id' : docid })
     return render_template("maass_form_picard_test.html", title = "Maass cusp forms on \(\mathrm{PSL}(2,\mathbb{Z}[i])\)", data = data, id=docid, ds=ds)

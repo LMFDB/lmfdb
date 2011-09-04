@@ -61,8 +61,8 @@ class MaassformsPicardDisplay(ModularFormDisplay):
         self.table={}
         self._row_limit=10
         self._character = character
-        emf_logger.debug("skip= {0}".format(self._skip))
-        emf_logger.debug("limit= {0}".format(self._limit))
+        mwfp_logger.debug("skip= {0}".format(self._skip))
+        mwfp_logger.debug("limit= {0}".format(self._limit))
         iev  = 0 
         ev_len = self._limit[iev][1]-self._limit[iev][0]+1
         self._table={}
