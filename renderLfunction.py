@@ -280,7 +280,20 @@ def render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5):
 
 def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5):
     L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, to_dict(request.args))
-    s = str(L.sageLfunction.find_zeros_via_N(6,not L.selfdual))
+
+    if L.degree > 2:  # Too slow to be rigorous here
+        if L.selfdual:
+            s = str(L.sageLfunction.find_zeros(0,20,0.1))
+        else:
+            s = str(L.sageLfunction.find_zeros(-15,15,0.1))
+
+    else:
+        if L.selfdual:
+            number_of_zeros = 8
+        else:
+            number_of_zeros = 12
+        s = str(L.sageLfunction.find_zeros_via_N(number_of_zeros, not L.selfdual))
+
     return s[1:len(s)-1]
 
 def render_browseGraph(args):
