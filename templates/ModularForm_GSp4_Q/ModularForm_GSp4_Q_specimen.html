@@ -15,7 +15,7 @@
 <h2>Number field containing all coefficients</h2>
 <div class="box1"><div class="small">{{ info['form'][0] }}</div></div>
 
-<h2>As polynomial in <a class="knowl-title" knowl="smf.Igusa_generators">generators</a></h2>
+<h2>As polynomial in <a class="knowl-title" knowl="{{ info.generators }}">generators</a></h2>
 {% if info.form[1] %} 
 <div class="box1"><div class="small">{{ info['form'][1] }}</div></div>
 {% else %}
