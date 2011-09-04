@@ -1,6 +1,8 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
+{% if not info.error %}
+
 <h2>Galois orbit</h2>
 <h4>Weight: {{ info['weight'] }}&nbsp;&nbsp;&nbsp;&nbsp;
   
@@ -15,7 +17,7 @@
 <h2>Number field containing all coefficients</h2>
 <div class="box1"><div class="small">{{ info['form'][0] }}</div></div>
 
-<h2>As polynomial in <a class="knowl-title" knowl="smf.Igusa_generators">generators</a></h2>
+<h2>As polynomial in <a class="knowl-title" knowl="{{ info.generators }}">generators</a></h2>
 {% if info.form[1] %} 
 <div class="box1"><div class="small">{{ info['form'][1] }}</div></div>
 {% else %}
@@ -58,5 +60,10 @@
     {% endfor %}
   </table>
 </div></div>
+
+{% else %}
+{% include 'ModularForm_GSp4_Q/None.html' %}
+{% endif %}
+
 {% endblock %}
 
