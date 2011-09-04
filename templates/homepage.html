@@ -85,9 +85,9 @@
     <li><a href="{{ url_for('LfunctionDB.query', zerolowerbound=1.1, zeroupperbound=2.1) }}">Search L-functions</a></li>
    </ul>
   
-   {{ entry("Learn more about", info.learnmore) }}
-   {{ entry("Friends", info.friends) }}
-   {{ entry("Downloads", info.downloads) }}
+   {{ entry("Learn more about", learnmore) }}
+   {{ entry("Friends", friends) }}
+   {{ entry("Downloads", downloads) }}
    {{ entry("Related Data", getUploadedFor(request.path) ) }}
 
  {% if sidebar -%}

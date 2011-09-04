@@ -18,7 +18,7 @@ def render_webpage(request,arg1,arg2):
     if len(args) == 0: # no arguments set yet
         if arg1 == None: # this means we're at the start page
             info = set_info_for_start_page() # sets info for character navigate
-            info['credit'] = 'Matthew Alderson'
+            info['credit'] = 'Sage'
             return render_template("dirichlet_characters/CharacterNavigate.html", **info)
 
         elif arg1.startswith("modbrowse"):
@@ -28,7 +28,7 @@ def render_webpage(request,arg1,arg2):
             info = {}
             info["bread"] = [('Dirichlet Characters', url_for("render_Character")), ('Moduli '+str(modulus_start) + '-' + str(modulus_end), '/Character/Dirichlet/modbrowse='+str(modulus_start)+'-'+str(modulus_end))]
             info['title'] = 'Moduli ' +str(modulus_start)+'-'+str(modulus_end)
-            info['credit'] = 'Matthew Alderson'
+            info['credit'] = 'Sage'
             info['contents'] = ListCharacters.get_character_modulus(modulus_start,modulus_end)
             return render_template("dirichlet_characters/ModulusList.html", **info)
 
@@ -41,7 +41,7 @@ def render_webpage(request,arg1,arg2):
             info['conductor_end'] = conductor_end
             info["bread"] = [('Dirichlet Characters', url_for("render_Character")), ('Conductor '+str(conductor_start) + '-' + str(conductor_end), '/Character/Dirichlet/condsearch='+str(conductor_start)+'-'+str(conductor_end))]
             info['title'] = 'Conductors ' +str(conductor_start)+'-'+str(conductor_end)
-            info['credit'] = 'Matthew Alderson'
+            info['credit'] = 'Sage'
             info['contents'] = ListCharacters.get_character_conductor(conductor_start,conductor_end+1)
             return render_template("dirichlet_characters/ConductorList.html", **info)
 
@@ -53,7 +53,7 @@ def render_webpage(request,arg1,arg2):
             info['order_end'] = order_end
             info["bread"] = [('Dirichlet Characters', url_for("render_Character")), ('Order '+str(order_start) + '-' + str(order_end), '/Character/Dirichlet/ordbrowse='+str(order_start)+'-'+str(order_end))]
             info['title'] = 'Order ' +str(order_start)+'-'+str(order_end)
-            info['credit'] = 'Matthew Alderson'
+            info['credit'] = 'Sage'
             info['contents'] = ListCharacters.get_character_order(order_start, order_end+1)
             return render_template("dirichlet_characters/OrderList.html", **info)
 
@@ -91,7 +91,7 @@ def set_info_for_start_page():
     modulus_list_endpoints = [1,100,1000,5000] + range(10000,130001,10000)
     modulus_list = ["%s-%s" %(start,end-1) for start,end in zip(modulus_list_endpoints[:-1], modulus_list_endpoints[1:])]
     info = {'modulus_list': modulus_list, 'conductor_list': range(1,181), 'order_list': range(2,21), 'type_table': tt, 'l':[1]}
-    credit = 'Matthew Alderson'
+    info['credit'] = 'Sage'
     info['title'] = 'Dirichlet Characters'
     info['bread'] = [('Dirichlet Characters', url_for("render_Character"))]
     info['learnmore'] = [('Dirichlet Characters', 'http://wiki.l-functions.org/L-function')]
@@ -104,7 +104,7 @@ def initCharacterInfo(chi,args, request):
     info['support'] = ''
     info['args'] = args
 
-    info['credit'] = 'Matthew Alderson'
+    info['credit'] = 'Sage'
     info['citation'] = chi.citation
 
     try:
@@ -124,7 +124,7 @@ def initCharacterInfo(chi,args, request):
         info['sagechar'] = str(chi.sagechar)
         info['conductor'] = int(chi.conductor)
         info['order'] = int(chi.order)
-        info['primitive'] = str(chi.primitive)
+        info['primitive'] = chi.primitive
         info['zetaorder'] = chi.zetaorder
         info['genvals'] = str(chi.genvalues)
         info['genvalstex'] = str(chi.genvaluestex)
@@ -176,7 +176,7 @@ def character_search(**args):
             if info.get(field):
                 query[field] = parse_range(info[field])
         info["bread"] = [('Dirichlet Characters', url_for("render_Character")), ('search results', ' ')]
-        info['credit'] = 'Matthew Alderson'
+        info['credit'] = 'Sage'
         if (len(query) != 0):
             from sage.modular.dirichlet import DirichletGroup
             t,texname,number,length  = charactertable(query)

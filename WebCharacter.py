@@ -34,7 +34,10 @@ class WebCharacter:
         self.zetaorder = G.zeta_order()
         chi = G[self.number]
         self.sagechar = str(chi)
-        self.primitive = chi.is_primitive()
+        if chi.is_primitive():
+            self.primitive = True
+        else:
+            self.primitive = False
         self.conductor = chi.conductor()
         self.order = chi.multiplicative_order()
         self.vals = chi.values()
@@ -121,7 +124,7 @@ class WebCharacter:
 
 #================
     def gauss_sum_tex(self):
-        ans = "\(\\tau_a(\\chi_{%s})\) at \(a = \)" %(self.number)
+        ans = "\(\\tau_a(\\chi_{%s}) \\;\) at \(\\; a = \)" %(self.number)
         #if self.gauss_sum != 0:
         #    ans += "\\begin{equation} \\tau_1(\\chi_{%s}) = %s = %s.\\end{equation} " %(self.number,latex(self.gauss_sum),latex(self.gauss_sum_numerical))
         #else:
@@ -131,14 +134,14 @@ class WebCharacter:
 #================
 
     def jacobi_sum_tex(self):
-        ans = "\(J(\\chi_{%s},\\psi)\) for \(\\psi = \)" %(self.number)
+        ans = "\(J(\\chi_{%s},\\psi) \\;\) for \(\\; \\psi = \)" %(self.number)
         #ans = "\\begin{equation} J(\\chi_{%s},\\chi_{0}) = %s.\\end{equation}" %(self.number,latex(self.jacobi_sum))
         #ans += "Compute Jacobi sum \(J(\\chi_{%s},\\psi)\) at \(\\psi = \)" %(self.number)
         return(ans)
 
 #================
     def kloosterman_sum_tex(self):
-        ans = "\(K(a,b,\\chi_{%s})\) at \(a,b = \)" %(self.number)
+        ans = "\(K(a,b,\\chi_{%s}) \\;\) at \(\\; a,b = \)" %(self.number)
         #if self.kloosterman_sum != 0:
         #    ans = "\\begin{equation} K(1,1,\\chi_{%s}) = %s = %s.\\end{equation}" %(self.number,latex(self.kloosterman_sum),latex(self.kloosterman_sum_numerical))
         #else:

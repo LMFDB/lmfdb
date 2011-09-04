@@ -38,9 +38,9 @@
 <table>
 
 <tr>
-<td align=center> Modulus <input type = 'text' name = 'modulus' size=10 value={{modulus}}></td>
-<td align=center> Conductor <input type='text' name='conductor' size=10 value={{conductor}}></td>
-<td align=center>Order <input type='text' name='order'size=10 value={{order}}></td>
+    <td align=center> {{ KNOWL('dirichlet_character.modulus', title="Modulus") }}  <input type = 'text' name = 'modulus' size=10 value={{modulus}}></td>
+    <td align=center> {{ KNOWL('dirichlet_character.conductor', title="Conductor") }} <input type='text' name='conductor' size=10 value={{conductor}}></td>
+    <td align=center> {{ KNOWL('dirichlet_character.order', title="Order") }} <input type='text' name='order'size=10 value={{order}}></td>
 <!--<td align=center>Parity <input type='text' name='parity' size=10 value={{parity}}>-->
 </tr>
 </table>
@@ -55,11 +55,11 @@
 <table class="ntdata" style="table-layout:fixed">
     <thead class="heading" align="center">
     <tr>
-        <th>Character</th>
-        <th>Modulus</th>
-        <th>Conductor</th>
-        <th>Order</th>
-        <th>Parity</th>
+        <th> {{ KNOWL('dirichlet_character.definition', title="Character") }}</th>
+        <th> {{ KNOWL('dirichlet_character.modulus', title="Modulus") }}</th>
+        <th> {{ KNOWL('dirichlet_character.conductor', title="Conductor") }}</th>
+        <th> {{ KNOWL('dirichlet_character.order', title="Order") }}</th>
+        <th> {{ KNOWL('dirichlet_character.parity') }}</th>
     </tr>
     </thead>
     <tbody>

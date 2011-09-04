@@ -46,9 +46,8 @@
     </tr>
 </thead>
 <tbody>
-    {% set row_class = cycler('odd', 'even') %}
     {% for line in contents %}
-    <tr class="{{ row_class.next() }}"><td class="modulus"align="center" style="4em"> {{ line[0] }} </td>
+    <tr><td class="modulus"align="center" style="4em"> {{ line[0] }} </td>
     <td>
         {% for chi in line[1] %}
         <div class="chi">
