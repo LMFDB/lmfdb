@@ -29,9 +29,10 @@ function set_value(name,val) {
 }
 
 </script>
-{{ info | safe }}
-<h1>Maass waveforms</h1>
-<h2>Browse</h2>
+{#{ info | safe } #}
+Here you can browse {{KNOWL('mwf.maass_waaveform',title='Maass Forms')}} over \( \mathrm{GL}_{2}(\mathbb{Q}\)\) 
+
+<h1>Browse</h1>
 <form name="browse" method="get" action="{{url_for('.render_maass_waveforms')}}">
         
   <input type="hidden" name="weight" value=""/>
@@ -39,10 +40,10 @@ function set_value(name,val) {
   <input type="hidden" name="browse" value="1"/>
   <ul>
     <li>
-      <a href="javascript:set_value('weight',0);">Browse weight 0</a>
+      <a href="javascript:set_value('weight',0);">Browse Maass Forms of weight 0</a>
     </li>
     <li>
-      <a href="javascript:set_value('weight',1);">Browse weight 1</a>
+      <a href="javascript:set_value('weight',1);">Browse Maass Forms of weight 1</a>
     </li>
   </ul>
   <button type="submit" name="Browse" value="Search">Browse</button>
@@ -67,7 +68,7 @@ function set_value(name,val) {
     <td>
       <h2>Find a specific Maass form</h2>
 	<form name="search" method = "post" action="{{url_for('.render_maass_waveforms')}}">	  <input type="text" name="jump_to" value=""> <span class="formexample">e.g. 1.12 (gives the 12th eigenvalue on the modular group)</span>
-	  <button type="submit" value="Jump">Jump</button>
+	  <button type="submit" value="Jump">Find</button>
 	</form>
     </td>
   </tr>
@@ -81,32 +82,28 @@ function set_value(name,val) {
 	  <tr>
 	    <td>Level in range:</td>
 	    <td> 
-	      <input type="text" name="level_lower" value="" /> --
-	      <input type="text" name="level_upper" value="" /> 
-	      <span class="formexample">e.g. 1 -- 10</span>
+	      <input type="text" name="level_range" value="" placeholder="1..10"> 
 	    </td>
 	  </tr>
 	  <tr>
 	    <td>R in range:</td>
 	    <td> 
-	      <input type="text" name="ev_range" value="">
-	      <!--input type="text" name="ev_upper" value="" --> 
-	      <span class="formexample">e.g. 9.5 -- 10.5</span>
-      </td>
+	      <input type="text" name="ev_range" value="" placeholder="9.5..10.5">
+            </td>
 	  </tr>
 
 	  <tr>
 	    <td>Weight:</td>
 	    <td> 
-	      <input type="text" name="weight" value="" /> 
-	      <span class="formexample">e.g. 1 (leave blank for weight 0)</span>
+	      <input type="text" name="weight" value="" placeholder="0"/> 
+	      <span class="formexample"> (leave blank for weight 0)</span>
 	    </td>
 	  </tr>
 	  <tr>
 	    <td>Character:</td>
       <td>
-        <input type="text" name="character" value="" />
-          <span class="formexample">e.g. 1 (0 means trivial character, leave blank for all characters)</span>
+        <input type="text" name="character" value="" placeholder="0"/>
+          <span class="formexample">(0 means trivial character, leave blank for all characters)</span>
       </td>
 	  </tr>
 	  <tr>

@@ -136,13 +136,29 @@ def get_search_parameters(info):
     ret=dict()
     if not info.has_key('search') or not info['search']:
         return ret
-    
-    ret['level_lower']=my_get(info,'level_lower',-1,int)
-    ret['level_upper']=my_get(info,'level_upper',-1,int)
+    #ret['level_lower']=my_get(info,'level_lower',-1,int)
+    #ret['level_upper']=my_get(info,'level_upper',-1,int)
+    level_range = my_get(info,'level_range','').split('..')
+    if len(level_range)==0:
+        ret['level_lower']=0
+        ret['level_upper']=0
+    elif len(level_range)==1:
+        ret['level_lower']=level_range[0]
+        ret['level_upper']=level_range[0]
+    else:
+        ret['level_lower']=level_range[0] #my_get(info,'ev_lower',None)
+        ret['level_upper']=level_range[1] #my_get(info,'ev_upper',None)
+    if ret['level_lower']>0 and ret['level_upper']>0:
+        level_range={"$gte" : ret['level_lower'],"$lte":ret['level_upper']}
+    elif ret['level_upper']>0:
+        level_range={"$lte":ret['level_upper']}
+    elif ret['level_lower']>0:
+        level_range={"$gte":ret['level_lower']}        
+
     ret['rec_start']=my_get(info,'rec_start',1,int)
     ret['limit']=my_get(info,'limit',20,int)
     ret['weight']=my_get(info,'weight',0,int)
-    ev_range = my_get(info,'ev_range','').split('-')
+    ev_range = my_get(info,'ev_range','').split('..')
     if len(ev_range)==0:
         ret['ev_lower']=0
         ret['ev_upper']=0
@@ -365,28 +381,27 @@ search1 = Collection.find({"Eigenvalue" : {"$gte" : ev}},{'Eigenvalue':1,'Symmet
 def search_for_eigenvalues(search):
     ev_l=float(search['ev_lower'])
     ev_u=float(search['ev_upper'])
-    if ev_l and ev_u:
-        ev_range={"$gte" : ev_l,"$lte":ev_u}
-    elif ev_u:
-        ev_range={"$lte":ev_u}
-    elif ev_l:
-        ev_range={"$gte":ev_l}
-    level_l=int(search['level_lower'])
-    level_u=int(search['level_upper'])
-    level_range=None
+    level_l=float(search['level_lower'])
+    level_u=float(search['level_upper'])
     if level_l>0 and level_u>0:
         level_range={"$gte" : level_l,"$lte":level_u}
     elif level_u>0:
         level_range={"$lte":level_u}
     elif level_l>0:
         level_range={"$gte":level_l}        
+    if ev_l>0 and ev_u>0:
+        ev_range={"$gte" : ev_l,"$lte":ev_u}
+    elif ev_u>0:
+        ev_range={"$lte":ev_u}
+    elif ev_l>0:
+        ev_range={"$gte":ev_l}        
     weight=float(search['weight'])
     rec_start=search['rec_start']
     limit=search['limit']
     res = dict()
     res['weights']=[]
     #SearchLimit = limit_u
-    db = ConnectDB()
+    db = connect_db()
     index = 0
     data = None
     searchp={'fields':['Eigenvalue','Symmetry','Level','Character','Weight','_id'],

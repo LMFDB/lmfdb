@@ -372,7 +372,7 @@ def render_search_results_wp(info,search):
     s+="</tr></table>"
     #print "S=",s
     info['table_of_eigenvalues']=s
-    title="Search Results"
+    title="Maass Forms"
     bread=[('Maass waveforms',url_for('.render_maass_waveforms'))]
     return render_template("mwf_display_search_result.html", info=info,title=title,search=search,bread=bread)
 

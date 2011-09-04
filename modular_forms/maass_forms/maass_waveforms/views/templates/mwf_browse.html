@@ -53,9 +53,13 @@
       {% if info.table.metadata is defined %}
       Contributors to data on this page is:
       <ul>
+
         {% for rec in info.table.metadata %}
-        <li>{{ rec.c_name }} : 
-          {{ KNOWL(rec.knowl,title=rec.contributor) }}
+        {{ rec }}
+        {% set name = rec.contributor %}
+        {% set knowl = rec["knowl-tag"] %}
+        <li>
+          {{ KNOWL(knowl,title=name) }}
         </li>
         {% endfor %}
       </ul>

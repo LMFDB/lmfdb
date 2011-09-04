@@ -1053,7 +1053,7 @@ def set_info_for_one_modular_form(info): #level,weight,character,label,info,sbar
         return (info,sbar)              
     info['name']=WNF._name
     #info['embeddings'] =  ajax_more2(WNF.print_q_expansion_embeddings,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more coeffs.','more precision'])
-    info['satake'] = ajax_more2(WNF.print_satake_parameters,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more parameters','more precision'])
+    info['satake'] = ajax_more2(WNF.print_satake_parameters,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more parameters','higher precision'])
     info['polynomial'] = WNF.polynomial()
     #info['q_exp'] = "\["+WNF.print_q_expansion()+"\]"
     #old_break = WNF._break_line_at
@@ -1085,12 +1085,12 @@ def set_info_for_one_modular_form(info): #level,weight,character,label,info,sbar
         print s
         #args = 
         #info['embeddings'] =  ajax_more2(WNF.print_q_expansion_embeddings,{'prec':5,'bprec':bprec},{'prec':10,'bprec':bprec},{'prec':25,'bprec':bprec},{'prec':50,'bprec':bprec},text='More coefficients')
-        info['embeddings'] =  ajax_more2(WNF.print_q_expansion_embeddings,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more coeffs.','more precision'])
+        info['embeddings'] =  ajax_more2(WNF.print_q_expansion_embeddings,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more coeffs.','higher precision'])
     elif(int(info['degree'])>1):
         s = 'There are '+str(info['degree'])+' embeddings into \( \mathbb{C} \):'
         bprec = 26
         print s
-        info['embeddings'] =  ajax_more2(WNF.print_q_expansion_embeddings,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more coeffs.','more precision'])
+        info['embeddings'] =  ajax_more2(WNF.print_q_expansion_embeddings,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more coeffs.','higher precision'])
         #info['embeddings'] = ajax_more2(WNF.print_q_expansion_embeddings,{'prec':5,'bprec':bprec},{'prec':10,'bprec':bprec},{'prec':25,'bprec':bprec},{'prec':50,'bprec':bprec})
     else:
         info['embeddings'] = ''                 
@@ -1098,7 +1098,14 @@ def set_info_for_one_modular_form(info): #level,weight,character,label,info,sbar
     info['is_cm']=WNF.is_CM()
     info['is_minimal']=info['twist_info'][0]
     info['CM'] = WNF.print_is_CM()
-    info['CM_values'] = WNF.print_values_at_cm_points()
+    #args=[{'digits':5},{'digits':10},{'digits':10},{'digits':10},
+    args=list()
+    for x in range(5,200,10): args.append({'digits':x})
+    info['CM_values'] = WNF.cm_values(digits=12)
+    #ajax_more(WNF.cm_values,text=['higher precision'],*args)
+    #WNF.cm_values()
+
+    #get_values_at_cm_points()
     # properties for the sidebar
     if(info['twist_info'][0]):                          
         s='- Is minimal<br>'

@@ -1404,9 +1404,9 @@ class WebNewForm(SageObject):
 
         TODO: Get explicit, algebraic values if possible!
         """
-
         
-        bits=max(53,ceil(digits*4))
+        emf_logger.debug("in cm_values with digits={0}".format(digits))
+        bits=max(int(53),ceil(int(digits)*int(4)))
         CF=ComplexField(bits)
         RF=ComplexField(bits)
         eps=RF(10**-(digits+1))
@@ -1485,7 +1485,14 @@ class WebNewForm(SageObject):
                         cm_vals[tau][h]=v2[h]
                     else:
                         cm_vals[tau][h]=None
-        return cm_vals
+        res = dict()
+        res['embeddings']=range(degree)
+        res['tau_latex']=dict()
+        for tau in points:
+            res['tau_latex'][tau]="\("+latex(tau)+"\)"
+        res['tau']=points
+        res['cm_vals']=cm_vals
+        return res
     
     def satake_parameters(self,prec=10,bits=53):
         r""" Compute the Satake parameters and return an html-table.
@@ -1862,7 +1869,7 @@ class WebNewForm(SageObject):
     def print_values_at_cm_points(self):
         r"""
         """
-        cm_vals=self.cm_values()
+        cm_vals=self.cm_values()['cm_values']
         K=self.base_ring()
         degree = _degree(K)
         if(self._verbose>2):
