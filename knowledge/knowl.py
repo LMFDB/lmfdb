@@ -8,6 +8,8 @@ def get_knowls():
   _C = getDBConnection()
   knowls = _C.knowledge.knowls
   knowls.ensure_index('authors')
+  # _keywords is used for the full text search
+  knowls.ensure_index('_keywords')
   return knowls
 
 def get_deleted_knowls():
@@ -16,6 +18,20 @@ def get_deleted_knowls():
 
 def get_knowl(ID, fields = { "history": 0 }):
   return get_knowls().find_one({'_id' : ID}, fields=fields)
+
+import re
+valid_keywords = re.compile(r"\b[a-zA-Z-]{4,}\b")
+
+def make_keywords(string, kid, title):
+  """
+  this function is used to create the keywords for the
+  full text search. tokenizes them and returns a list
+  of the id, the title and content string.
+  """
+  kws = [ kid ] # always included
+  kws += valid_keywords.finall(title)
+  kws += valid_keywords.finall(string)
+  return kws
 
 class Knowl(object):
   def __init__(self, ID, template_kwargs = None):
@@ -46,13 +62,15 @@ class Knowl(object):
   def save(self, who):
     """who is the ID of the user, who wants to save the knowl"""
     new_history_item = get_knowl(self.id)
+    search_keywords = make_keywords(self.content)
     get_knowls().update({'_id' : self.id},
         {"$set": {
-           'content' : self.content,
-           'title' : self.title,
-           'quality': self.quality,
+           'content' :    self.content,
+           'title' :      self.title,
+           'quality':     self.quality,
 	       'last_author': who,
-	       'timestamp': self.timestamp
+	       'timestamp':   self.timestamp,
+           '_keywords' :  search_keywords
 	       } ,
 	     "$push": {"history": new_history_item}}, upsert=True)
     if who:
