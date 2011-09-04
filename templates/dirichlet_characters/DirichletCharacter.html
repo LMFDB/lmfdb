@@ -41,7 +41,7 @@ table.navi td {
                         <font size="3">Show commands for:</font></td>
                     <td align="center"><a onclick="show_code('sage'); return false" href='#'>sage</a></td></tr>
                 <tr><td><font size="3">Next character:</font></td>
-                    <td align="center">{% if number == eulerphi %}<a href="{{nextmodulus}}/0">\(\chi_{0} (mod {{nextmodulus}})\) </a>{% else %}<a href="{{nextnumber}}"> \(\chi_{ {{nextnumber}} }\) </a>{% endif %}  </td></tr>
+                    <td align="center">{% if number|int == eulerphi|int %}<a href="{{ url_for('character_next_modulus', modulus=nextmodulus, number=0) }}">\(\chi_{0} (\text{mod} {{nextmodulus}}\) ) </a>{% else %}<a href="{{nextnumber}}"> \(\chi_{ {{nextnumber}} }\) </a>{% endif %}  </td></tr>
             </table>
         </div>
  
@@ -68,7 +68,7 @@ table.navi td {
             Inducing {{ KNOWL('character.dirichlet.primitive_character', title="Primitive") }}           </h2>
         <div class = 'sage nodisplay code'>sage: chi.primitive_character()</div>
         <p>
-        <a href="{{primcharmodulus}}/{{primcharnumber}}">{{primchartex}}</a>
+        &nbsp;&nbsp;&nbsp;&nbsp;<a href="{{ url_for('character_next_modulus', modulus=primcharmodulus, number=primcharnumber)}}">{{primchartex}}</a>
         </p>
         {% endif %}
 
@@ -76,12 +76,12 @@ table.navi td {
             {{ KNOWL('character.dirichlet.values', title="Values") }}
         </h2>
         <div class = 'sage nodisplay code'>sage: chi.values()</div>
-        {% if zetaorder > 2 %} &nbsp;&nbsp;For \(\zeta_{ {{ zetaorder }} }\) a primitive \( {{ zetaorder }} \)-th root of unity<br><br/> {% endif %}
+        {% if number|int >  2 %} &nbsp;&nbsp;&nbsp;&nbsp;For \(\zeta_{ {{ zetaorder }} }\) a primitive \( {{ zetaorder }} \)-th root of unity<br><br/> {% endif %}
         <table>
         <tr>
             <td>   
                 <div align="left"> 
-                    &nbsp;&nbsp;[\({{ valstex|join("\) , \(") }}\)]
+                    [\({{ valstex|join("\) , \(") }}\)]
                 </div>
             </td>
         </tr>
@@ -91,7 +91,7 @@ table.navi td {
         </h2>
         <div class = 'sage nodisplay code'>sage: chi.values_on_gens()</div>
         <p>
-           &nbsp;&nbsp;\( {{ unitgens }} \) &rarr; \( {{ genvalstex }} \)
+           &nbsp;&nbsp;&nbsp;&nbsp;\( {{ unitgens }} \) &rarr; \( {{ genvalstex }} \)
         </p>
 
         <h2> Basic Properties </h2>
@@ -153,7 +153,7 @@ table.navi td {
             {{ KNOWL('character.dirichlet.gauss_sum') }}
         </h2>
         <div class = 'sage nodisplay code'>sage: chi.gauss_sum()</div>
-        <form> &nbsp;&nbsp;{{ gauss_sum }} 
+        <form> &nbsp;&nbsp;&nbsp;{{ gauss_sum }} 
             <input id="calc-gauss-input" size=10 placeholder="2">
             <button id="calc-gauss-go">Go</button>
             <span class="formexample"> e.g. 2 </span>
@@ -163,7 +163,7 @@ table.navi td {
             {{ KNOWL('character.dirichlet.jacobi_sum') }}
         </h2>
         <div class = 'sage nodisplay code'>sage: chi.jacobi_sum()</div>
-        <form> &nbsp;&nbsp;{{ jacobi_sum }} 
+        <form> &nbsp;&nbsp;&nbsp;{{ jacobi_sum }} 
             <input id="calc-jacobi-input" size="10" placeholder="13.2">
             <button id="calc-jacobi-go"> Go </button>
             <span class="formexample"> e.g. 13.2 </span>
@@ -173,7 +173,7 @@ table.navi td {
             {{ KNOWL('character.dirichlet.kloosterman_sum') }}
         </h2>
         <div class = 'sage nodisplay code'>sage: chi.kloosterman_sum(,)</div>
-        <form> &nbsp;&nbsp;{{ kloosterman_sum }} 
+        <form> &nbsp;&nbsp;&nbsp;{{ kloosterman_sum }} 
             <input id="calc-kloosterman-input" size=10 placeholder="1,2">
             <button id="calc-kloosterman-go"> Go </button>
             <span class="formexample"> e.g. 1,2</span>

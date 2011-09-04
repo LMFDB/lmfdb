@@ -141,12 +141,12 @@ def initCharacterInfo(chi,args, request):
         #print chi.bound
         info['lth'] = int(chi.lth)
         #print chi.lth
-        info['primchar'] = str(chi.primchar)
-        info['primcharmodulus'] = str(chi.primcharmodulus)
-        info['primcharconductor'] = str(chi.primcharconductor)
-        info['primcharnumber'] = str(chi.primcharnumber)
-        info['primchartex'] = str(chi.primchartex)
-        info['primtf'] = str(chi.primtf)
+        info['primchar'] = chi.primchar
+        info['primcharmodulus'] = chi.primcharmodulus
+        info['primcharconductor'] = chi.primcharconductor
+        info['primcharnumber'] = chi.primcharnumber
+        info['primchartex'] = chi.primchartex
+        info['primtf'] = chi.primtf
         info['nextnumber'] = chi.number+1
         info['kronsymbol'] = str(chi.kronsymbol)
         info['gauss_sum'] = chi.gauss_sum_tex()
@@ -156,6 +156,10 @@ def initCharacterInfo(chi,args, request):
         info['friends'] = [('Dirichlet L-function', '/L/Character/Dirichlet/'+smod+'/'+snum)]
 
     return info
+
+@app.route("/Character/Dirichlet/<modulus>/<number>")
+def character_next_modulus(modulus,number):
+    return render_webpage(request,modulus,number)
 
 @app.route("/Character/Dirichlet/<modulus>/<number>")
 def render_webpage_label(modulus,number):
@@ -205,9 +209,9 @@ def dc_calc_kloosterman(modulus,number):
     except Exception, e:
         return "<span style='color:red;'>ERROR: %s</span>" % e
 
-@app.route("/Character/Dirichlet/<modulus>/<conductor>/<number>")
-def induced_character(modulus,conductor,number):
-    return render_webpage(request,conductor,number)
+@app.route("/Character/Dirichlet/<modulus>/<number>")
+def redirect_character(modulus,number):
+    return render_webpage(request,modulus,number)
 
 def character_search(**args):
     #import base
