@@ -594,7 +594,7 @@ def paintSvgHoloGeneral(Nmin,Nmax,kmin,kmax,imagewidth,imageheight):
     ticlength = 4
     radius = 3.3
     xdotspacing = 0.30  # horizontal spacing of dots
-    ydotspacing = 0.15  # vertical spacing of dots
+    ydotspacing = 0.11  # vertical spacing of dots
     colourplus = signtocolour(1)
     colourminus = signtocolour(-1)
     maxdots = 5  # max number of dots to display
@@ -644,7 +644,7 @@ def paintSvgHoloGeneral(Nmin,Nmax,kmin,kmax,imagewidth,imageheight):
            #print('edgelength = ',dimensioninfo['edgelength']) 
            dimensioninfo['edgelength'] = [0.5,0.5]
            dimensioninfo['dotradius'] = radius
-           dimensioninfo['connectinglinewidth'] = dimensioninfo['dotradius']/2.0
+           dimensioninfo['connectinglinewidth'] = dimensioninfo['dotradius']/1.5
            dimensioninfo['firstdotoffset'] = [0.0,0.0]
 #
            appearanceinfo = {}
@@ -677,9 +677,14 @@ def paintSvgHoloGeneral(Nmin,Nmax,kmin,kmax,imagewidth,imageheight):
                     frickeeigenvalue = MF.atkin_lehner_eigenvalues()[x] # gives Fricke eigenvalue
                     signfe = frickeeigenvalue * (-1)**float(y/2)  # sign of functional equation
                  if signfe == signtmp:  # we find an orbit with sign of "signtmp"
+                    if signfe == 1:
+                       dimensioninfo['edge'] = [[0,1],[1,0]]     # unit vectors defining edges of sector for signfe positive
+                    else:
+                       #dimensioninfo['edge'] = [[0,1],[-1,0]]     # unit vectors defining edges of sector for signfe negative
+                       dimensioninfo['edge'] = [[0,-1],[-1,0]]     # unit vectors defining edges of sector for signfe negative
                     dimensioninfo['dotspacing'] = [signfe * xdotspacing, ydotspacing]
-                    dimensioninfo['firstdotoffset'] = [signfe * 0.5 * (dimensioninfo['dotspacing'][0] * dimensioninfo['edge'][0][0] + dimensioninfo['dotspacing'][1] * dimensioninfo['edge'][1][0]), 0.5 * (dimensioninfo['dotspacing'][1] * dimensioninfo['edge'][0][1] + dimensioninfo['dotspacing'][1] * dimensioninfo['edge'][1][1])]
-                    #dimensioninfo['firstdotoffset'] = [0.05,0.07]
+                    #dimensioninfo['firstdotoffset'] = [0.5 * (dimensioninfo['dotspacing'][0] * dimensioninfo['edge'][0][0] + dimensioninfo['dotspacing'][1] * dimensioninfo['edge'][1][0]), 0.5 * (dimensioninfo['dotspacing'][1] * dimensioninfo['edge'][0][1] + dimensioninfo['dotspacing'][1] * dimensioninfo['edge'][1][1])]
+                    dimensioninfo['firstdotoffset'] = [0.5 * (dimensioninfo['dotspacing'][0] * dimensioninfo['edge'][0][0] + dimensioninfo['dotspacing'][1] * dimensioninfo['edge'][1][0]), 0]
                     signcolour = signtocolour(signfe)
                     appearanceinfo['edgecolor'] = signcolour
                     orbitdescriptionlist = []
@@ -1044,7 +1049,10 @@ def plotsector(dimensioninfo, appearanceinfo, urlinfo):
          ans += myline(offset, scale, orbitbase, lincomb(1, orbitbase, (len(orbit) - 1)*dotspacing[1], edge[1]), dimensioninfo['connectinglinewidth'], "", appearanceinfo['edgecolor'])
          ans += "\n"
       elif len(orbit) > maxdots:
+         orbitelem = orbit[0]
+         orbitcolor = orbitelem['color']
          ans += "<a xlink:href='/not_yet_implemented' target='_top'>"
+         orbitbase = lincomb(1, orbitbase, -0.5 * dotspacing[0], edge[0])
          ans += mytext(len(orbit),offset, scale, orbitbase,"",appearanceinfo['fontsize'],appearanceinfo['fontweight'],orbitcolor)
          ans += "</a>"
          ans += "\n"
