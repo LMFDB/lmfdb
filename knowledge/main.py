@@ -11,7 +11,7 @@
 # (i.e. when it makes sense to add additional fields, e.g. for referencing each other)
 #
 # author: Harald Schilly <harald.schilly@univie.ac.at>
-
+import string
 import pymongo
 import flask
 from base import app, getDBConnection
@@ -26,7 +26,7 @@ from knowledge import logger
 ASC = pymongo.ASCENDING
 
 import re
-allowed_knowl_id = re.compile("^[a-zA-Z0-9._-]+$")
+allowed_knowl_id = re.compile("^[A-Za-z0-9._-]+$")
 
 # Tell markdown to not escape or format inside a given block
 class IgnorePattern(markdown.inlinepatterns.Pattern):
@@ -234,7 +234,15 @@ def render(ID, footer=None, kwargs = None):
 def index():
   # bypassing the Knowl objects to speed things up
   from knowl import get_knowls
-  knowls = get_knowls().find(fields=['title'], sort=[("title", ASC)])
+  knowls = get_knowls().find(fields=['title'])
+  def first_char(k):
+    t = k['title']
+    if len(t) == 0: return "?"
+    if t[0] not in string.ascii_letters: return "?"
+    return t[0].upper()
+  knowls = sorted(knowls, key = lambda x : x['title'].lower())
+  from itertools import groupby
+  knowls = groupby(knowls, first_char)
   return render_template("knowl-index.html", 
          title="Knowledge Database",
          bread = get_bread(),

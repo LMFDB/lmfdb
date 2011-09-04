@@ -31,14 +31,14 @@
       {{ sv1 }}<br>
      </div>
  {% else %}
-      <div>Not enough Dirichelet series coefficients to compute special values.</div>
+      <div>Not enough Dirichlet series coefficients to compute special values.</div>
  {% endif %}
 
  {% if plotlink %}
     <h2> Graph of the {{ KNOWL('L.Zfunction') }} along the {{ KNOWL('alg.critical_line') }} </h2>
     <img src="{{ plotlink|safe }}" >
  {% else %}
-    <div>Not enough Dirichelet series coefficients to make a graph.</div>
+    <div>Not enough Dirichlet series coefficients to make a graph.</div>
  {% endif %}
 
 <script type="text/javascript">
