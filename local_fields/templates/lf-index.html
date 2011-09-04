@@ -2,8 +2,33 @@
 
 {% block content %}
 
-<div>Local Fields Page</div>
+<div>Local Fields</div>
 
+<h2>Browse</h2>
+
+<table border=1 cellpadding=5 class='right_align_table'>
+<tr>
+<th>p\\n</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+</tr>
+<tr>
+<th>2</th> <td>7</td> <td>2</td> <td>59</td>
+</tr>
+<tr>
+<th>3</th> <td>3</td> <td>10</td> <td>5</td>
+</tr>
+<tr>
+<th>5</th> <td>3</td> <td>2</td> <td>7</td>
+</tr>
+<tr>
+<th>7</th> <td>3</td> <td>4</td> <td>5</td>
+</tr>
+
+</table>
+
+<h2>Search</h2>
 <form action="{{ url_for('.search') }}" method="GET">
 <input name="val" placeholder="123" />
 <button type="submit">Search</button>
