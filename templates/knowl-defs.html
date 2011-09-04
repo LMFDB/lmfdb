@@ -16,10 +16,10 @@
 {% with knowl = Knowl(knowlid, kwargs) -%}
 {% if knowl.exists() -%}
   {% if title is none -%}
-     <a class="knowl-title" knowl="{{ knowl.id }}" kwargs="{{ kwargs|urlencode }}">{{ knowl.title }}</a>
+     <a class="knowl-title" knowl="{{ knowl.id }}" kwargs="{{ kwargs|urlencode }}">{{ knowl.title|safe }}</a>
   {%- else -%}
     {% if title|length > 0 -%}
-     <a class="knowl-title" knowl="{{ knowl.id }}" kwargs="{{ kwargs|urlencode }}">{{ title }}</a>
+     <a class="knowl-title" knowl="{{ knowl.id }}" kwargs="{{ kwargs|urlencode }}">{{ title|safe }}</a>
     {%- endif %}
   {%- endif %}
 
