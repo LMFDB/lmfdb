@@ -235,8 +235,11 @@ def index():
   # bypassing the Knowl objects to speed things up
   from knowl import get_knowls
   get_knowls().ensure_index('_keywords')
-  keyword = request.args.get("search", "")
-  s_query = {'_keywords' : keyword } if keyword else {}
+  keyword = request.args.get("search", "").lower()
+  keywords = filter(lambda _:len(_) >= 3, keyword.split(" "))
+  logger.debug("keywords: %s" % keywords)
+  keyword_q = {'_keywords' : { "$all" : keywords}}
+  s_query = keyword_q if keyword else {}
   knowls = get_knowls().find(s_query, fields=['title'])
 
   def first_char(k):

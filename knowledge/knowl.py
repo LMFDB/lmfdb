@@ -20,7 +20,7 @@ def get_knowl(ID, fields = { "history": 0, "_keywords" : 0 }):
   return get_knowls().find_one({'_id' : ID}, fields=fields)
 
 import re
-valid_keywords = re.compile(r"\b[a-zA-Z0-9-]{3,}\b")
+valid_keywords = re.compile(r"[#]?\b[a-zA-Z0-9-]{3,}\b")
 html_keywords  = re.compile(r"&[a-zA-Z0-9]+;")
 
 def make_keywords(content, kid, title):
