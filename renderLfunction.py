@@ -45,6 +45,7 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
     # what follows are all things that need homepages
 
     try:
+        print "Starting to generate"
         L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, temp_args)
         
     except Exception as inst:   # There was an exception when creating the page
@@ -239,7 +240,7 @@ def set_gaga_properties(L):
 def specialValueString(sageL, s, sLatex):
     number_of_decimals = 10
     val = sageL.value(s)
-    return '\(L\left(' + sLatex + '\\right)\\approx' + latex(round(val.real(), number_of_decimals)+round(val.imag(), number_of_decimals)*I) + '\)'
+    return '\(L\left(' + sLatex + '\\right)\\approx ' + latex(round(val.real(), number_of_decimals)+round(val.imag(), number_of_decimals)*I) + '\)'
 
 
 def parameterstringfromdict(dic):
@@ -302,13 +303,6 @@ def render_browseGraph(args):
       data = LfunctionPlot.paintSvgFileAll([[args['group'], int(args['level']), args['sign']]])
     else:
       data = LfunctionPlot.paintSvgFileAll([[args['group'], int(args['level'])]])
-    response = make_response(data)
-    response.headers['Content-type'] = 'image/svg+xml'
-    return response
-
-def render_browseGraphTMP(args):
-    logging.info(args)
-    data = LfunctionPlot.paintSvgHoloGeneral(int(args['Nmin']), int(args['Nmax']),int(args['kmin']),int(args['kmax']),int(args['imagewidth']),int(args['imageheight']))
     response = make_response(data)
     response.headers['Content-type'] = 'image/svg+xml'
     return response
