@@ -8,7 +8,6 @@ import bson
 from utils import parse_range
 #import web_modforms
 from modular_forms.elliptic_modular_forms.backend.web_modforms import *
-#from classical_modular_forms.backend.web_modforms import *
 
 class WebCharacter:
     """Class for presenting a Character on a web page
@@ -32,48 +31,15 @@ class WebCharacter:
 
     def dirichletcharacter(self):
         G = DirichletGroup(self.modulus)
+        self.zetaorder = G.zeta_order()
         chi = G[self.number]
-        #print chi
         self.sagechar = str(chi)
-# Warning: will give nonsense if character is not primitive
         self.primitive = chi.is_primitive()
-#	self.primitive = chi.primitive_character()
         self.conductor = chi.conductor()
-        #self.unit_generators = chi.unit_gens()
         self.order = chi.multiplicative_order()
         self.vals = chi.values()
-        count = 0
-        counter = 1
-        self.valstex = ""
-        for v in chi.values():
-            sv = str(v).partition("zeta")[2]
-            if counter == 1:
-                if sv.find('^') != -1:
-                    rootunity = int(sv.partition('^')[0])
-                    counter += 1
-                elif sv.find('+') != -1:
-                    rootunity = int(sv.partition('+')[0])
-                    counter += 1
-                elif sv.find('-') != -1:
-                    rootunity = int(sv.partition('-')[0])
-                    counter += 1
-        if (counter == 2):
-            self.valstex = "For \(\\zeta_{%s}\) is a primitive \(%s\)-th root of unity." %(rootunity,rootunity)
-        self.valstex += "\\begin{align}\n(\\mathstrut&"
-        for v in chi.values():
-            count += 1
-            if(count == len(chi.values())):
-                self.valstex += str(latex(v))
-            else:
-                if(count%15 == 0):
-                    self.valstex += "\\cr\n"
-                    self.valstex += "&"
-                else:
-                    self.valstex += str(latex(v)) + "\\,,\\,"
-        self.valstex += ")\n\\end{align}"
-        #if(counter == 2):
-        #    self.valstex += "where \(\\zeta_{%s}\) is a primitive \(%s\)th root of unity." %(rootunity,rootunity)
-        #self.valstex = "\("+ str(latex(chi.values())) + "\)"
+        list  = [latex(_) for _ in chi.values()]
+        self.valstex = list
         self.bound = 5*1024
         if chi.is_even():
             self.parity = 'Even'
@@ -86,7 +52,7 @@ class WebCharacter:
         for i in range(len(F)):
             if F[i] == self.primchar:
                 self.primcharnumber = i
-                break 
+                break
         self.primchartex = "\(\\chi_{%s}\\!\\!\\pmod{%s}\)" %(self.primcharnumber,self.primcharmodulus)
         if self.primitive == 'True':
             self.primtf = True
@@ -115,9 +81,9 @@ class WebCharacter:
         self.level = self.modulus
         self.genvalues = chi.values_on_gens()
         if len(chi.values_on_gens()) == 1:
-            self.genvaluestex = "\(" + str(latex(chi.values_on_gens()[0])) + "\)"
+            self.genvaluestex = latex(chi.values_on_gens()[0])
         else:
-            self.genvaluestex = "\(" + str(latex(chi.values_on_gens())) + "\)"
+            self.genvaluestex = latex(chi.values_on_gens())
         chivals = chi.values_on_gens()
         Gunits = G.unit_gens()
         if len(Gunits) != 1:
@@ -127,9 +93,9 @@ class WebCharacter:
         count = 0
         for g in Gunits:
             if count != len(Gunits)-1:
-                self.unitgens += str(latex(g)) + ","
+                self.unitgens += latex(g) + ","
             else:
-                self.unitgens += str(latex(g))
+                self.unitgens += latex(g)
             count += 1
         if len(Gunits) != 1:
             self.unitgens += ")"
@@ -171,7 +137,6 @@ class WebCharacter:
         return(ans)
 
 #================
-
     def kloosterman_sum_tex(self):
         ans = "\(K(a,b,\\chi_{%s})\) at \(a,b = \)" %(self.number)
         #if self.kloosterman_sum != 0:

@@ -71,6 +71,7 @@ def upload():
     "creator": request.form['creator'],
     "reference": request.form['reference'],
     "bibtex": request.form['bibtex'],
+    "comments": request.form['comments'],
     "uploader": current_user.name,
     "uploader_id": current_user.id,
     "time": datetime.datetime.utcnow(),
