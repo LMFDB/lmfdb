@@ -480,8 +480,8 @@ table th {
 }
 
 table th, table td {
-  padding-left:  10px;
-  padding-right: 10px;
+  padding-left:  20px;
+  padding-right: 20px;
 }
 
 table a {
@@ -505,6 +505,7 @@ table td.spacing {
 }
 
 table.ntdata {
+    width: auto;
     border: 0;
 }
 
@@ -583,8 +584,8 @@ table .knowl-link {
   font-weight: bold;
 }
 .knowl-inc-edit {
-  margin-top: 10px;
-  border-bottom: 2px solid {{ col_knowl_l}};
+  margin-top: 20px;
+  background: {{ col_knowl_ll}};
   font-size: x-small;
   text-align: right;
 }
