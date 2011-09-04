@@ -293,9 +293,7 @@ class Lfunction_EC(Lfunction):
         self.langlands = True
         self.degree = 2
         
-        print "Initiating EC start"
         self.dirichlet_coefficients = self.E.anlist(self.numcoeff)[1:]  #remove a0
-        print "Initiating EC done"
 
         # Renormalize the coefficients
         for n in range(0,len(self.dirichlet_coefficients)-1):
@@ -317,10 +315,9 @@ class Lfunction_EC(Lfunction):
         self.properties.append(('Level', '%s' % self.level))
         self.credit = 'Sage'
         self.citation = ''
-        print "Initiating EC start"
         
         self.sageLfunction = lc.Lfunction_from_elliptic_curve(self.E, self.numcoeff)
-        print "Initiating EC done"
+
         logging.info("I am now proud to have ", str(self.__dict__))
         constructor_logger(self,args)
 
@@ -358,7 +355,7 @@ class Lfunction_EMF(Lfunction):
         # Initialize default values
         self.character = 0  # Trivial character is default
         self.label=''       # No label, is OK If space is one-dimensional
-        self.number = 1     # Default choice of embedding of the coefficients
+        self.number = 0     # Default choice of embedding of the coefficients
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
@@ -389,7 +386,7 @@ class Lfunction_EMF(Lfunction):
         self.degree = 2
         self.poles = []
         self.residues = []
-        self.numcoeff = 50 #just testing  NB: Need to learn how to use more coefficients
+        self.numcoeff = int(math.ceil(self.weight * sqrt(self.level))) #just testing  NB: Need to learn how to use more coefficients
         self.dirichlet_coefficients = []
                             
         # Appending list of Dirichlet coefficients
@@ -400,21 +397,17 @@ class Lfunction_EMF(Lfunction):
                                                    #is the list of Fourier coefficients
         else:
            for n in range(1,self.numcoeff+1):
-              logger.info("n=%s  self.number = %s" % (n, self.number))
-              self.dirichlet_coefficients.append(self.MF.q_expansion_embeddings(self.numcoeff)[n][self.number])
-        for n in range(1,len(self.dirichlet_coefficients)):
+              self.dirichlet_coefficients.append(self.MF.q_expansion_embeddings(self.numcoeff+1)[n][self.number])
+        for n in range(1,len(self.dirichlet_coefficients)+1):
             an = self.dirichlet_coefficients[n-1]
-            self.dirichlet_coefficients[n]=float(an)/float(n**self.automorphyexp)
+            self.dirichlet_coefficients[n-1]=float(an)/float(n**self.automorphyexp)
 #FIX: These coefficients are wrong; too large and a1 is not 1
-            print n,an,self.dirichlet_coefficients[n]
                             
         self.coefficient_period = 0
         self.coefficient_type = 2
         self.quasidegree = 1
         
-        print "Start to generate"
         self.checkselfdual()
-        print "End to generate"
 
         self.texname = "L(s,f)"
         self.texnamecompleteds = "\\Lambda(s,f)"
@@ -422,15 +415,13 @@ class Lfunction_EMF(Lfunction):
             self.texnamecompleted1ms = "\\Lambda(1-s,f)"
         else:
             self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{f})"
-        self.title = "L-function of a holomorphic cusp form: $L(s,f)$, "+ "where $f$ is a holomorphic cusp form with weight "+str(self.weight)+", level "+str(self.level)+", and character "+str(self.character)
+        self.title = "$L(s,f)$, "+ "where $f$ is a holomorphic cusp form with weight "+str(self.weight)+", level "+str(self.level)+", and character "+str(self.character)
 
         self.citation = ''
         self.credit = ''
        
-        print "Start to generate"
         self.generateSageLfunction()
         constructor_logger(self,args)
-        print "Done with the construction"
 
 
     def Ltype(self):
