@@ -516,10 +516,10 @@ def paintSvgHolo(Nmin,Nmax,kmin,kmax):
 ## ============================================
 def getOneGraphHtmlHolo(Nmin, Nmax, kmin, kmax):
     ans = "<div>These L-functions have a functional equation of the form \n<br/>"
-    ans += "\\begin{equation}\n \\Lambda(s) := N^{s/2} \\Gamma_C"
-    ans += "\\left(s + \\frac{k-1}{2} \\right) L(s) "
-    ans += "=\\pm \\Lambda(1-s)\n\\end{equation}\n<br/>"
-    ans += "If \\(L(s) = \\sum a_n n^{-s} \\) then \\(a_n n^{\\frac{k-1}{2}} \\) "
+    ans += "\\begin{equation}\n \\Lambda_f(s) := N^{s/2} \\Gamma_{\mathbb{C}}"
+    ans += "\\left(s + \\frac{k-1}{2} \\right) L(s, f) "
+    ans += "=\\pm \\Lambda_f(1-s)\n\\end{equation}\n<br/>"
+    ans += "If \\(L(s) = \sum a_n n^{-s} \) then \(a_n n^{\\frac{k-1}{2}} \) "
     ans += "is an algebraic integer. <p/> </div>\n"
     ans += "<div>This plot shows \((N,k)\) for such L-functions. "
     ans += "The color indicates the sign of the functional equation.  "

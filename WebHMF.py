@@ -30,7 +30,7 @@ class WebHMF:
         elif self.type=='modularform':
             self.level = dict['level']
             self.weight = dict['weight']
-            logging.info('My level is ' + self.level + ' and my weight is + ' self.weight)
+            logging.info('My level is ' + self.level + ' and my weight is' +  self.weight)
              
         else:
             raise KeyError 
@@ -102,9 +102,9 @@ class WebHMF:
             ans="\\begin{align}\n\\Lambda(s)=&"
             ans=ans+latex(self.level)+"^{-\\frac{s}{2}}"
             for mu in self.mu_fe:
-               ans=ans+"\Gamma_R(s+"+latex(mu)+")"
+               ans=ans+"\Gamma_{\mathbb{R}}(s+"+latex(mu)+")"
             for nu in self.nu_fe:
-               ans=ans+"\Gamma_C(s+"+latex(nu)+")"
+               ans=ans+"\Gamma_{\mathbb{C}}(s+"+latex(nu)+")"
             ans=ans+"\\cdot L(s)\\cr\n"
             ans=ans+"=\\mathstrut & "+latex(self.sign)+\
 "\\overline{\\Lambda(1-\\overline{s})}\n\\end{align}\n"
