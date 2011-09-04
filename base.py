@@ -64,7 +64,6 @@ def _init(dbport, readwrite_password):
     global _C
     logging.info("establishing db connection at port %s ..." % dbport)
     _C = Connection(port=dbport)
-    return _C
     for db in readonly_dbs:
         _C[db].authenticate(readonly_username, readonly_password)
         logging.info("authenticated readonly on database %s" % db)
