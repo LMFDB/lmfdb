@@ -8,7 +8,7 @@
         {% if bread %}
           <a href="/">Top</a>
           {% for b in bread -%}
-            &rarr; <a href="{{ b[1] }}">{{ b[0] }}</a>
+            &rarr; <a href="{{ b[1] }}">{{ b[0]|striptags }}</a>
           {%- endfor %}
          {% endif %}
       </div>
@@ -33,6 +33,14 @@
             <span id="communication"></span>
           </span>
       </div>
+      {% if navi is defined -%}
+      <div id="navi">
+       {% for txt, u in navi -%}
+        <a href="{{ u }}">{{ txt }}</a>
+        {% if not loop.last -%}&middot;{%- endif %}
+       {%- endfor %}
+      </div>
+      {%- endif %} 
       {# this span inside a div thing is necessary to align it at the bottom, see css #}
       <div id="title"><span id="title-content">{{ title|safe }}</span></div>
     </div>

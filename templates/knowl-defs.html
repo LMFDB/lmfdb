@@ -27,9 +27,9 @@
   {# knowl does not exist. wrong knowlid or opportunity to create one! #}
     {% if user_is_authenticated -%}
       <span class="knowl knowl-error">
-      Knowl '{{knowlid}}' missing or wrong ID. 
+      '{{knowlid}}'
       <a href="{{ url_for('knowledge.edit', ID=knowlid) }}">Create it</a>.
-    </span> 
+      </span> 
     {%- else -%}
       {% if title is none -%}
         <span class="knowl knowl-error">'{{knowlid}}'</span> 
@@ -37,7 +37,6 @@
         {{title}}
       {%- endif %}
     {%- endif %}
-  </span>
 {%- endif %}
 {%- endwith %}
 {%- endmacro %}
@@ -56,32 +55,36 @@
   {%- endif %}
 
 {%- else -%}
-
   {# knowl does not exist. wrong knowlid or opportunity to create one! #}
     {% if user_is_authenticated -%}
-      <div class="knowl knowl-error">
-       Knowl '{{knowlid}}' missing or wrong ID. 
-       <a href="{{ url_for('knowledge.edit', ID=knowlid) }}">Create it</a>.
-      </div> 
+      <span class="knowl knowl-error">
+      '{{knowlid}}'
+      <a href="{{ url_for('knowledge.edit', ID=knowlid) }}">Create it</a>.
+      </span> 
     {%- else -%}
-      {% if title is none -%}
-        <{{htag}} class="knowl knowl-error">'{{knowlid}}'</{{htag}}> 
-      {%- else -%}
-        <{{htag}}>{{title}}</{{htag}}>
-      {%- endif %}
-      <div>No content.</div>
+       <span class="knowl knowl-error">'{{knowlid}}'</span> 
     {%- endif %}
-  </span>
-
 {%- endif %}
 {%- endwith %}
 {%- endmacro %}
 
 {# for inserting "normal" links to knowl pages #}
-{% macro KNOWL_LINK(ID) -%}
- {% with k = Knowl(ID) -%}
+{% macro KNOWL_LINK(knowlid) -%}
+{% with k = Knowl(knowlid) -%}
+{% if k.exists() -%}
   <a class="knowl-link" href='{{ url_for("knowledge.show", ID=k.id) }}?{{kwargs|urlencode}}'>{{ k.title }}</a>
- {%- endwith %}
+{%- else -%}
+  {# knowl does not exist. wrong knowlid or opportunity to create one! #}
+    {% if user_is_authenticated -%}
+      <div class="knowl knowl-error">
+       '{{knowlid}}'
+       <a class="knowl-link" href="{{ url_for('knowledge.edit', ID=knowlid) }}">Create it</a>.
+      </div> 
+    {%- else -%}
+      <span class="knowl knowl-error">'{{knowlid}}'</span> 
+    {%- endif %}
+{%- endif %}
+{%- endwith %}
 {%- endmacro %}
 
 {# for the bar when editing or showing knowls #}
