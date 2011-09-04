@@ -3,71 +3,67 @@
 
 {% block content %}
 
-<h3> Browse </h3>
-
+<h2> Browse </h2>
 <p>
-By modulus:
-<a href="modbrowse={{'1-25'}}">{{'1-25'}}</a>
-<a href="modbrowse={{'26-50'}}">{{'26-50'}}</a>
-<a href="modbrowse={{'51-75'}}">{{'51-75'}}</a>
-<a href="modbrowse={{'76-100'}}">{{'76-100'}}</a>
+&nbsp;&nbsp;By modulus:
+&nbsp;&nbsp;<a href="modbrowse=1-25">1&mdash;25</a>
+&nbsp;&nbsp;<a href="modbrowse=26-50">26&mdash;50</a>
+&nbsp;&nbsp;<a href="modbrowse=51-75">51&mdash;75</a>
+&nbsp;&nbsp;<a href="modbrowse=76-100">76&mdash;100</a>
 </p>
 
 <p>
-By conductor:
-<a href="condbrowse={{'1-5'}}">{{'1-5'}}</a>
-<a href="condbrowse={{'6-10'}}">{{'6-10'}}</a>
-<a href="condbrowse={{'11-15'}}">{{'11-15'}}</a>
-<a href="condbrowse={{'16-20'}}">{{'16-20'}}</a>
+&nbsp;&nbsp;By conductor:
+&nbsp;&nbsp;<a href="condbrowse=1-5">1&mdash;5</a>
+&nbsp;&nbsp;<a href="condbrowse=6-10">6&mdash;10</a>
+&nbsp;&nbsp;<a href="condbrowse=11-15">11&mdash;15</a>
+
+&nbsp;&nbsp;<a href="condbrowse=16-20">16&mdash;20</a>
 </p>
 
 <p>
-By order:
-<a href="ordbrowse={{'1-5'}}">{{'1-5'}}</a>
-<a href="ordbrowse={{'6-10'}}">{{'6-10'}}</a>
-<a href="ordbrowse={{'11-15'}}">{{'11-15'}}</a>
-<a href="ordbrowse={{'16-20'}}">{{'16-20'}}</a>
+&nbsp;&nbsp;By order:</td>
+&nbsp;&nbsp;<a href="ordbrowse=1-5">1&mdash;5</a>
+&nbsp;&nbsp;<a href="ordbrowse=6-10">6&mdash;10</a>
+&nbsp;&nbsp;<a href="ordbrowse=11-15">11&mdash;15</a>
+&nbsp;&nbsp;<a href="ordbrowse=16-20">16&mdash;20</a>
 </p>
 
-<h3> Go to a specific character </h3>
-
+<h2> Jump to a specific Dirichlet character </h2>
 <form>
-Label:&nbsp;&nbsp;
-<input type='text' name='natural' size=10>
-<input type='submit' name='search' value='Go'>
-<td><span class="formexample"> 13.2</span></td>
+<input type='text' name='natural' size=10 placeholder="13.2">
+<button type='submit' name='search' value='Go'> Go </button>
+<br><span class="formexample"> e.g. 13.2</span>
 </form>
 
-<h3> Search for characters </h3>
+<h2> Search for characters </h2>
 <!--<form action="{{url_for(".LfunctionDB.query")}}" method=get>-->
+Enter criteria into one or more boxes to restrict the search.
+<p></p>
 <form>
-<p>
-Enter criteria into one or more boxes to restrict the search.&nbsp;&nbsp;
 <table border=0 cellpadding=5>
 <tr>
-    <td align=left>Modulus <td><input type='text' name='modulus' size = '10'></td>
+    <td align=left>Modulus <td><input type='text' name='modulus' size = '10' placeholder="13"></td>
 <td><span class="formexample"> e.g. 13 </span></td>
 </tr>
 
 <tr>
-    <td align=left>Conductor</td><td> <input type='text' name='conductor' size = '10'></td><td><span class="formexample"> e.g. 5 </span></td>
+    <td align=left>Conductor</td><td> <input type='text' name='conductor' size = '10' placeholder="5"></td><td><span class="formexample"> e.g. 5 </span></td>
 </tr>
 
 <tr>
-<td>Order</td><td> <input type='text' name='order' size = '10'></td><td><span class="formexample"> e.g. 2 </span></td>
+<td>Order</td><td> <input type='text' name='order' size = '10' placeholder="2"></td><td><span class="formexample"> e.g. 2 </span></td>
 </tr>
 
 <!--<tr>
     <td>Parity</td><td> <input type='text' name='parity' size = '10'></td><td><span class="formexample"> e.g. Even or Odd </span></td>
 </tr>-->
 
-
-<tr>
-<td>
-<input type='submit' value='Search' >
-</td>
-</tr>
 </table>
+<p></p>
+<td>
+    <button type='submit' value='Search' > Search </button>
+</td>
 </form>
 
 {% endblock %}
