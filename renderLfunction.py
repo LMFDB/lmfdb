@@ -104,13 +104,15 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, temp_args):
 
 def set_info_for_start_page():
     tl = [{'title':'Riemann','link':'Riemann'},
-          {'title':'Dirichlet','link':'degree1#Dirichlet'}, {'title':'','link':''}] #make the degree 1 ones, should be url_fors
+          {'title':'Dirichlet','link':'degree1#Dirichlet'},
+          {'title':'GL2 Maass Form','link':'degree2#GL2_Q_Maass'},
+          {'title':'GL4 Maass Form', 'link':'degree4#GL4_Q_Maass'}] #make the degree 1 ones, should be url_fors
 
     tt = {1: tl}
 
     tl = [{'title':'Elliptic Curve','link':'degree2#EllipticCurve_Q'},
-          {'title':'Holomorphic SL2 Cusp Form', 'link':'degree2#GL2_Q_Holomorphic'},
-          {'title':'Maass GL2 Form', 'link':'degree2#GL2_Q_Maass'}]
+          {'title':'GL2 Cusp Form', 'link':'degree2#GL2_Q_Holomorphic'},
+          {'title':'GL3 Maass Form', 'link':'degree3#GL3_Q_Maass'}]
 
     tt[2] = tl
 
@@ -270,11 +272,29 @@ def plotLfunction(request, arg1, arg2, arg3, arg4, arg5):
 def render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5):
     data = plotLfunction(request, arg1, arg2, arg3, arg4, arg5)
     if not data:
-      # see not about missing "hardy_z_function" in plotLfunction()
+      # see note about missing "hardy_z_function" in plotLfunction()
       return abort(404)
     response = make_response(data)
     response.headers['Content-type'] = 'image/png'
     return response
+
+def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5):
+    L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, to_dict(request.args))
+
+    if L.degree > 2:  # Too slow to be rigorous here
+        if L.selfdual:
+            s = str(L.sageLfunction.find_zeros(0,20,0.1))
+        else:
+            s = str(L.sageLfunction.find_zeros(-15,15,0.1))
+
+    else:
+        if L.selfdual:
+            number_of_zeros = 8
+        else:
+            number_of_zeros = 12
+        s = str(L.sageLfunction.find_zeros_via_N(number_of_zeros, not L.selfdual))
+
+    return s[1:len(s)-1]
 
 def render_browseGraph(args):
     logging.info(args)
@@ -298,11 +318,6 @@ def render_browseGraphChar(args):
     response = make_response(data)
     respone.headers['Content-type'] = 'image/svg+xml'
     return response
-
-def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5):
-    L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, to_dict(request.args))
-    s = str(L.sageLfunction.find_zeros(-15,15,0.1))
-    return s[1:len(s)-1]
 
 def render_lcalcfile(L):
     try:
