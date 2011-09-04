@@ -29,13 +29,14 @@
         {% if info.CM_values is defined %}
         <h2>Special Values</h2>
 	Values at some  {{ KNOWL('emf.cm-points',title='CM points')}}
+        
         <p>
-        <table class="ntdata" style="width:auto">
+        <table class="ntdata" style="width:50%">
           <thead>
             <tr>
-              <th width="10px" style="border-right:1px solid black">Point &nbsp;\&nbsp;Embedding</th>
+              <th width="20px" style="border-right:1px solid black">Point&nbsp;\&nbsp;Embedding</th>
               {% for h in info.CM_values.embeddings  %}
-              <th>{{ h |safe }}</th>
+              <th width="{{ info.CM_values.max_width }}">{{ h |safe }}</th>
               {% endfor %}
             </tr>
           </thead>
@@ -46,7 +47,7 @@
                 {{ info.CM_values.tau_latex[tau] |  safe }}
               </th>
               {% for h in info.CM_values.cm_vals[tau]  %}
-              {% set vals =info.CM_values.cm_vals[tau] %}
+              {% set vals =info.CM_values.cm_vals_latex[tau] %}
               <td width="50px">{{ vals[h] }}</td>
               {% endfor %}
             {% endfor %}            
@@ -80,12 +81,14 @@
           {% endif %}
           {{KNOWL('emf.minimal',title='minimal')}}.
         </div>
+        {% if info.atkinlehner is defined and info.atkinlehner %}
         <div>
           The function has {{KNOWL('emf.atkinlehner',title='Atkin-Lehner')}} eigenvalues given by 
           <p>
-          {{ info.atkinlehner | safe }}.
+            {{ info.atkinlehner | safe }}.
           </p>
         </div>
+        {% endif %}
 
         <h2>Get more coefficients</h2>
 	<form name="get_coefficients" method="post"  action="{{url_for('.render_elliptic_modular_forms')}}">

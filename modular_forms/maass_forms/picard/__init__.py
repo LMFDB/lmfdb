@@ -8,6 +8,7 @@ mwfp = Blueprint(MWFP, __name__, template_folder="views/templates",static_folder
 mwfp_logger=make_logger(mwfp)
 
 import views
+import backend
 #from views import *
 
 
