@@ -1,31 +1,31 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<h2> Browse </h2>
+<h2> Browse {{ KNOWL('mf.hilbert.definition') }} </h2>
 
-<h2> Search </h2>
+<!-- <h2> Search </h2> -->
 
 <form>
 <table>
 <tr>
 <td>Field</td>  
-<td><input type='text' name='field_label' size=10>
+<td><input type='text' name='field_label' placeholder='2.2.5.1' size=10>
 <td><span class="formexample"> either a field label, e.g. 2.2.5.1 for
     \(\mathbb{Q}(\sqrt{5})\), or a nickname, e.g. Q or Qsqrt5 </span></td>
 </tr>
 <tr>
-<td>Weight vector</td>
-<td><input type='text' name='weight' size=10>
+<td>{{ KNOWL('mf.hilbert.weight_vector') }}</td>
+<td><input type='text' name='weight' placeholder='[2,2]' size=10>
 <td><span class="formexample"> e.g. [2,2]</td>
 </tr>
 <tr>
-<td>Level norm</td>
-<td><input type='text' name='level_norm' size=10>
+<td>{{ KNOWL('mf.hilbert.level_norm') }}</td>
+<td><input type='text' name='level_norm' placeholder='1' size=10>
 <td><span class="formexample"> e.g. 1</td>
 </tr>
 <tr>
-<td>Dimension</td>
-<td><input type='text' name='dimension' size=10>
+<td>{{ KNOWL('mf.hilbert.dimension') }}</td>
+<td><input type='text' name='dimension' placeholder='1' size=10>
 <td><span class="formexample"> e.g. 1</td>
 </tr>
 <tr>
