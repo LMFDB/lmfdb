@@ -104,13 +104,15 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, temp_args):
 
 def set_info_for_start_page():
     tl = [{'title':'Riemann','link':'Riemann'},
-          {'title':'Dirichlet','link':'degree1#Dirichlet'}, {'title':'','link':''}] #make the degree 1 ones, should be url_fors
+          {'title':'Dirichlet','link':'degree1#Dirichlet'},
+          {'title':'GL2 Maass Form','link':'degree2#GL2_Q_Maass'},
+          {'title':'GL4 Maass Form', 'link':'degree4#GL4_Q_Maass'}] #make the degree 1 ones, should be url_fors
 
     tt = {1: tl}
 
     tl = [{'title':'Elliptic Curve','link':'degree2#EllipticCurve_Q'},
-          {'title':'Holomorphic SL2 Cusp Form', 'link':'degree2#GL2_Q_Holomorphic'},
-          {'title':'Maass GL2 Form', 'link':'degree2#GL2_Q_Maass'}]
+          {'title':'GL2 Cusp Form', 'link':'degree2#GL2_Q_Holomorphic'},
+          {'title':'GL3 Maass Form', 'link':'degree3#GL3_Q_Maass'}]
 
     tt[2] = tl
 
