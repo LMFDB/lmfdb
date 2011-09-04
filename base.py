@@ -15,6 +15,17 @@ from werkzeug.contrib.cache import SimpleCache
 # global db connection instance
 _C = None
 
+readonly_dbs = [ 'HTPicard', 'Lfunction', 'Lfunctions', 'MaassWaveForm',
+        'ellcurves', 'hmfs', 'modularforms', 'modularforms_2010',
+        'mwf_dbname', 'numberfields', 'quadratic_twists', 'test', 'test_pdehaye']
+
+readwrite_dbs = ['userdb', 'upload', 'knowledge']
+
+readonly_username = 'lmfdb'
+readonly_password = 'readonly'
+
+readwrite_username = 'lmfdb_website'
+
 AUTO_RECONNECT_MAX = 10
 AUTO_RECONNECT_DELAY = 1
 AUTO_RECONNECT_ATTEMPTS = 0
@@ -49,10 +60,21 @@ Connection._send_message = _db_reconnect(Connection._send_message)
 Connection._send_message_with_response = _db_reconnect(Connection._send_message_with_response)
 
  
-def _init(dbport):
-  global _C
-  logging.info("establishing db connection at port %s ..." % dbport)
-  _C = Connection(port=dbport)
+def _init(dbport, readwrite_password):
+    global _C
+    logging.info("establishing db connection at port %s ..." % dbport)
+    _C = Connection(port=dbport)
+    for db in readonly_dbs:
+        _C[db].authenticate(readonly_username, readonly_password)
+        logging.info("authenticated readonly on database %s" % db)
+    if readwrite_password == '':
+        for db in readwrite_dbs:
+            _C[db].authenticate(readonly_username, readonly_password)
+            logging.info("authenticated readonly on database %s" % db)
+    else:
+        for db in readwrite_dbs:
+            _C[db].authenticate(readwrite_username, readwrite_password)
+            logging.info("authenticated readwrite on database %s" % db)
 
 def getDBConnection():
   return _C

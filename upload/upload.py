@@ -99,6 +99,7 @@ def upload():
         metadata2['status'] = "unmoderatedchild"
         metadata2['original_file_name'] = fn+"/"+tarinfo.name
         metadata2['related_to'] = ""
+        metadata2['content_type'] = ""
         id = upload_fs.put( tar.extractfile(tarinfo).read(), metadata = metadata2, filename=fn+"/"+tarinfo.name )
         child_index.append([id, tarinfo.name]);
     upload_db.fs.files.update({"_id": db_id}, {"$set": {"metadata.child_index": child_index}})

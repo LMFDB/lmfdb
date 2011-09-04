@@ -717,7 +717,7 @@ def getOneGraphHtmlHolo(Nmin, Nmax, kmin, kmax):
     ans += "\\begin{equation}\n \\Lambda(s) := N^{s/2} \\Gamma_C"
     ans += "\\left(s + \\frac{k-1}{2} \\right) L(s) "
     ans += "=\\pm \\Lambda(1-s)\n\\end{equation}\n<br/>"
-    ans += "If \\(L(s) = \sum a_n n^{-s} \) then \(a_n n^{\frac{k-1}{2}} \) "
+    ans += "If \\(L(s) = \\sum a_n n^{-s} \\) then \\(a_n n^{\\frac{k-1}{2}} \\) "
     ans += "is an algebraic integer. <p/> </div>\n"
     ans += "<div>This plot shows \((N,k)\) for such L-functions. "
     ans += "The color indicates the sign of the functional equation.  "
