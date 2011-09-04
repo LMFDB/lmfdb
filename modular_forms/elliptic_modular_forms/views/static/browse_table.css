@@ -2,300 +2,296 @@
 
 {% block content %}
 
-<script type="text/javascript" src="/static/jquery.dataTables.js"></script> 
-<script type="text/javascript" src="/static/jquery-ui-1.8.14.custom.min.js"></script> 
+<script type="text/javascript" src="{{url_for('',filename='/static/jquery.dataTables.js')}}"></script> 
+<script type="text/javascript" src="{{url_for('',filename='/static/jquery-ui-1.8.14.custom.min.js')}}"></script> 
 <script type="text/javascript" src="https://www.google.com/jsapi"></script> 
- 
 <link rel="stylesheet" href="/static/jquery-ui-1.8.14.custom.css" type="text/css"/> 
-
-
-<style>
-  input.editable {
+input.editable {
     border: 1px ;
     text-decoration:none; 
     font-family: sans-serif;
     font-size: 11pt;
     width:100%
-  }
-  *.editable:hover {
+}
+*.editable:hover {
     background-color: #ffffcc;
-  }
-  textarea.editable {
+}
+textarea.editable {
     border: 1px ;
     text-decoration:none;
     width:100%;
     font-family: monospace;
-  }
+}
 /* tables */
 table.tablesorter {
-	font-family:arial;
-	background-color: #CDCDCD;
-	margin:10px 0pt 15px;
-	font-size: 8pt;
-	width: 100%;
-	text-align: left;
+    font-family:arial;
+    background-color: #CDCDCD;
+    margin:10px 0pt 15px;
+    font-size: 8pt;
+    width: 100%;
+    text-align: left;
 }
 table.tablesorter thead tr th, table.tablesorter tfoot tr th {
-	background-color: #e6EEEE;
-	border: 1px solid #FFF;
-	font-size: 8pt;
-	padding: 4px;
+    background-color: #e6EEEE;
+    border: 1px solid #FFF;
+    font-size: 8pt;
+    padding: 4px;
 }
 table.tablesorter thead tr .header {
-	background-image: url(bg.gif);
-	background-repeat: no-repeat;
-	background-position: center right;
-	cursor: pointer;
+    background-image: url(bg.gif);
+    background-repeat: no-repeat;
+    background-position: center right;
+    cursor: pointer;
 }
 table.tablesorter tbody td {
-	color: #3D3D3D;
-	padding: 4px;
-	background-color: #FFF;
-	vertical-align: top;
+    color: #3D3D3D;
+    padding: 4px;
+    background-color: #FFF;
+    vertical-align: top;
 }
 table.tablesorter tbody tr.odd td {
-	background-color:#F0F0F6;
+    background-color:#F0F0F6;
 }
 table.tablesorter thead tr .headerSortUp {
-	background-image: url(asc.gif);
+    background-image: url(asc.gif);
 }
 table.tablesorter thead tr .headerSortDown {
-	background-image: url(desc.gif);
+    background-image: url(desc.gif);
 }
 table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSortUp {
-background-color: #8dbdd8;
+    background-color: #8dbdd8;
 }
 
 .dataTables_wrapper {
-	position: relative;
-	min-height: 302px;
-	clear: both;
-	_height: 302px;
-	zoom: 1; /* Feeling sorry for IE */
+    position: relative;
+    min-height: 302px;
+    clear: both;
+    _height: 302px;
+    zoom: 1; /* Feeling sorry for IE */
 }
 
 .dataTables_processing {
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	width: 250px;
-	height: 30px;
-	margin-left: -125px;
-	margin-top: -15px;
-	padding: 14px 0 2px 0;
-	border: 1px solid #ddd;
-	text-align: center;
-	color: #999;
-	font-size: 14px;
-	background-color: white;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 250px;
+    height: 30px;
+    margin-left: -125px;
+    margin-top: -15px;
+    padding: 14px 0 2px 0;
+    border: 1px solid #ddd;
+    text-align: center;
+    color: #999;
+    font-size: 14px;
+    background-color: white;
 }
 
 .dataTables_length {
-	width: 40%;
-	float: left;
+    width: 40%;
+    float: left;
 }
 
 .dataTables_filter {
-	width: 50%;
-	float: right;
-	text-align: right;
+    width: 50%;
+    float: right;
+    text-align: right;
 }
 
 .dataTables_info {
-	width: 60%;
-	float: left;
+    width: 60%;
+    float: left;
 }
 
 .dataTables_paginate {
-	width: 44px;
-	* width: 50px;
-	float: right;
-	text-align: right;
+    width: 44px;
+    * width: 50px;
+    float: right;
+    text-align: right;
 }
 
 /* Pagination nested */
 .paginate_disabled_previous, .paginate_enabled_previous, .paginate_disabled_next, .paginate_enabled_next {
-	height: 19px;
-	width: 19px;
-	margin-left: 3px;
-	float: left;
+    height: 19px;
+    width: 19px;
+    margin-left: 3px;
+    float: left;
 }
 
 .paginate_disabled_previous {
-	background-image: url('/static/images/back_disabled.jpg');
+    background-image: url('/static/images/back_disabled.jpg');
 }
 
 .paginate_enabled_previous {
-	background-image: url('/static/images/back_enabled.jpg');
+    background-image: url('/static/images/back_enabled.jpg');
 }
 
 .paginate_disabled_next {
-	background-image: url('/static/images/forward_disabled.jpg');
+    background-image: url('/static/images/forward_disabled.jpg');
 }
 
 .paginate_enabled_next {
-	background-image: url('/static/images/forward_enabled.jpg');
+    background-image: url('/static/images/forward_enabled.jpg');
 }
 
 table.display {
-	margin: 0 auto;
-	clear: both;
-	width: 100%;
+    margin: 0 auto;
+    clear: both;
+    width: 100%;
 }
 
 table.display thead th {
-	padding: 3px 18px 3px 10px;
-	border-bottom: 1px solid black;
-	font-weight: bold;
-	cursor: pointer;
-	* cursor: hand;
+    padding: 3px 18px 3px 10px;
+    border-bottom: 1px solid black;
+    font-weight: bold;
+    cursor: pointer;
+    * cursor: hand;
 }
 
 table.display tfoot th {
-	padding: 3px 18px 3px 10px;
-	border-top: 1px solid black;
-	font-weight: bold;
+    padding: 3px 18px 3px 10px;
+    border-top: 1px solid black;
+    font-weight: bold;
 }
 
 table.display tr.heading2 td {
-	border-bottom: 1px solid #aaa;
+    border-bottom: 1px solid #aaa;
 }
 
 table.display td {
-	padding: 3px 10px;
+    padding: 3px 10px;
 }
 
 table.display td.center {
-	text-align: center;
+    text-align: center;
 }
 
 .sorting_asc {
-	background: url('/static/images/sort_asc.png') no-repeat center right;
+    background: url('/static/images/sort_asc.png') no-repeat center right;
 }
 
 .sorting_desc {
-	background: url('/static/images/sort_desc.png') no-repeat center right;
+    background: url('/static/images/sort_desc.png') no-repeat center right;
 }
 
 .sorting {
-	background: url('/static/images/sort_both.png') no-repeat center right;
+    background: url('/static/images/sort_both.png') no-repeat center right;
 }
 
 .sorting_asc_disabled {
-	background: url('/static/images/sort_asc_disabled.png') no-repeat center right;
+    background: url('/static/images/sort_asc_disabled.png') no-repeat center right;
 }
 
 .sorting_desc_disabled {
-	background: url('/static/images/sort_desc_disabled.png') no-repeat center right;
+    background: url('/static/images/sort_desc_disabled.png') no-repeat center right;
 }
 
 table.display tr.odd.gradeA {
-	background-color: #ddffdd;
+    background-color: #ddffdd;
 }
 
 table.display tr.even.gradeA {
-	background-color: #eeffee;
+    background-color: #eeffee;
 }
 
 table.display tr.odd.gradeC {
-	background-color: #ddddff;
+    background-color: #ddddff;
 }
 
 table.display tr.even.gradeC {
-	background-color: #eeeeff;
+    background-color: #eeeeff;
 }
 
 table.display tr.odd.gradeX {
-	background-color: #ffdddd;
+    background-color: #ffdddd;
 }
 
 table.display tr.even.gradeX {
-	background-color: #ffeeee;
+    background-color: #ffeeee;
 }
 
 table.display tr.odd.gradeU {
-	background-color: #ddd;
+    background-color: #ddd;
 }
 
 table.display tr.even.gradeU {
-	background-color: #eee;
+    background-color: #eee;
 }
 
 .dataTables_scroll {
-	clear: both;
+    clear: both;
 }
 
 .dataTables_scrollBody {
-	*margin-top: -1px;
+    *margin-top: -1px;
 }
 
 .top, .bottom {
-	padding: 15px;
-	background-color: #F5F5F5;
-	border: 1px solid #CCCCCC;
+    padding: 15px;
+    background-color: #F5F5F5;
+    border: 1px solid #CCCCCC;
 }
 
 .top .dataTables_info {
-	float: none;
+    float: none;
 }
 
 .clear {
-	clear: both;
+    clear: both;
 }
 
 .dataTables_empty {
-	text-align: center;
+    text-align: center;
 }
 
 tfoot input {
-	margin: 0.5em 0;
-	width: 100%;
-	color: #444;
+    margin: 0.5em 0;
+    width: 100%;
+    color: #444;
 }
 
 tfoot input.search_init {
-	color: #999;
+    color: #999;
 }
 
 td.group {
-	background-color: #d1cfd0;
-	border-bottom: 2px solid #A19B9E;
-	border-top: 2px solid #A19B9E;
+    background-color: #d1cfd0;
+    border-bottom: 2px solid #A19B9E;
+    border-top: 2px solid #A19B9E;
 }
 
 td.details {
-	background-color: #d1cfd0;
-	border: 2px solid #A19B9E;
+    background-color: #d1cfd0;
+    border: 2px solid #A19B9E;
 }
 
 
 .example_alt_pagination div.dataTables_info {
-	width: 40%;
+    width: 40%;
 }
 
 .paging_full_numbers {
-	width: 400px;
-	height: 22px;
-	line-height: 22px;
+    width: 400px;
+    height: 22px;
+    line-height: 22px;
 }
 
 .paging_full_numbers span.paginate_button,
- 	.paging_full_numbers span.paginate_active {
-	border: 1px solid #aaa;
-	-webkit-border-radius: 5px;
-	-moz-border-radius: 5px;
-	padding: 2px 5px;
-	margin: 0 3px;
-	cursor: pointer;
-	*cursor: hand;
+.paging_full_numbers span.paginate_active {
+    border: 1px solid #aaa;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    padding: 2px 5px;
+    margin: 0 3px;
+    cursor: pointer;
+    *cursor: hand;
 }
 
 .paging_full_numbers span.paginate_button {
-	background-color: #ddd;
+    background-color: #ddd;
 }
 
 .paging_full_numbers span.paginate_button:hover {
-	background-color: #ccc;
+    background-color: #ccc;
 }
 
 .paging_full_numbers span.paginate_active {
@@ -503,143 +499,6 @@ div.box {
 }
 
 
-</style>
-
-<script> 
-function parseJsonTable(url, out) {
-	jQuery.get(url, function(txt) { parseJsonTable2(txt,out); });
-}
-function parseJsonTable2(txt, out) {
-	var value = JSON.parse(txt.trim().replace(/\n/g, "\\n"));
-	var html = '';
-	for(var name in value) {
-		html += '<h3>' + name + '</h3>';
-		html += '<table id="thetable'+name+'" class="tablesorter display" cellpadding="0" cellspacing="0" border="0"></table>';
-	}
-	out.html(html);
-	for(var name in value) {
-		var data = value[name].split(/\n/);
-		for(var i=0; i<data.length; i++) {
-			data[i] = data[i].split(' ');
-		}
-		var columns = [];
-		for(var i=0; i<data[0].length; i++) {
-			columns[i] = { "sTitle": "Column " + (i+1) };
-		}
-		$('#thetable'+name).dataTable( {
-		"aaData": data,
-		"aoColumns": columns } );	
-	}
-}
-
-function updateMetadata(id, property, value) {
-  jQuery.get("/upload/updateMetadata", {id: id, property: property, value: value});
-}
-
-function updateMappingRules(data, id) {
-  rules = $('#regexp'+id).val().split(/\n/).filter(function(x) { return x.trim() != ""})
-
-  for(var i=0; i<data.length; i++) {
-    data[i][3] = "";
-    for(var j=0; j<rules.length/2; j++) {
-      re = new RegExp(rules[j+j]);
-      sub = rules[j+j+1];
-      if(re.test(data[i][2])) {
-        data[i][3]=data[i][2].replace(re, sub);
-        break;
-      }
-    }
-  }
-  $('#table'+id).dataTable( {
-    "aaData" : data,
-    "aoColumns" : [ {"sTitle" : ""}, {"sTitle" : ""}, {"sTitle" : "Filename"}, {"sTitle" : "Related-to web page"} ],
-    "bDestroy" : true
-  });
-}
-
-</script>
-
-
-{% macro editable(entry, property) -%}
-  {% if current_user.is_admin() or current_user.id == entry.uploader_id -%}
-    <input class=editable value="{{entry.metadata[property]}}" onchange="updateMetadata('{{entry._id}}', '{{property}}', this.value)"/>
-  {% else %}
-    {{entry.metadata[property]}}
-{%- endif %}
-{%- endmacro %}
-
-{% macro editableTextarea(entry, property) -%}
-  {% if current_user.is_admin() or current_user.id == entry.uploader_id -%}
-    <textarea rows={{entry.metadata[property].count('\n')+1}} class=editable
-        onchange="updateMetadata('{{entry._id}}', '{{property}}', this.value)">
-{{entry.metadata[property]}}
-    </textarea>
-  {% else %}
-    <textarea rows={{entry.metadata[property].count('\n')+1}} cols=100>
-{{entry.metadata[property]}}
-    </textarea>
-  {%- endif %}
-{%- endmacro %}
-
-
-{% macro render_uploadlist(title, list) %}
-<h2> {{ title }} </h2>
-
-{% for entry in list %}
-<dl class=propertylist>
-
-  <dt>Name</dt>
-  <dd>{{editable(entry,'name')}}</dd>
-
-  <dt>Status</dt>
-  {% if current_user.is_admin() or current_user.id == entry.uploader_id %}
-    <select onchange="updateMetadata('{{entry._id}}', 'status', this.value)">
-      <option value="approve" {%if entry.metadata.status[0]=='a'%}selected{%endif%}>Approved</option>
-      <option value="disapproved" {%if entry.metadata.status[0]=='d'%}selected{%endif%}>Disapproved</option>
-      <option value="unmoderated" {%if entry.metadata.status[0]=='u'%}selected{%endif%}>Unmoderated</option>
-    </select>
-  {% else %}
-    <dd>{{entry.metadata.status}}</dd>
-  {% endif %}
-
-  <dt>Related to</dt>
-  <dd>{{editable(entry,'related_to')}}</dd>
-  {% if entry.metadata.parent_archive_id is defined %}
-    <dt>Contained in archive</dt>
-    <dd><a href="/upload/view/{{entry.metadata.parent_archive_id}}">{{entry.metadata.parent_archive_filename}}</a></dd>
-  {% endif %}
-  <dt>Original file name</dt>
-  <dd>{{editable(entry,'original_file_name')}}</dd>
-  <dt>Description</dt>
-  <dd>{{editable(entry,'full_description')}}</dd>
-  <dt>Data format explanation</dt>
-  <dd>{{editable(entry,'data_format')}}</dd>
-  <dt>Creator</dt>
-  <dd>{{editable(entry,'creator')}}</dd>
-  <dt>Paper reference</dt>
-  <dd>{{editable(entry,'reference')}}</dd>
-  <dt>BibTeX</dt>
-  <dd>{{editableTextarea(entry,'bibtex')}}</pre></dd>
-  <dt>Contents</dt>
-  <dd>
-
-    <a href="/upload/download/{{entry._id}}/{{entry.filename}}">
-      Download {{entry.filename}}
-    </a>
-    <br/>
-    <a href="#" onclick="parseJsonTable('/upload/download/{{entry._id}}/{{entry.filename}}', $('#div{{entry._id}}'));return false">
-      Parse Json from {{entry.filename}}
-    </a>
-
-    <div id="div{{entry._id}}">
-    </div>
-    {% if entry.metadata.content_type == 'text/plain' %}
-      <pre>
-{{entry.read(10000)}}
-      </pre>
-    {% elif entry.metadata.content_type == 'image/jpeg' %}
-      <img src="/upload/download/{{entry._id}}/{{entry.filename}}"/>
-    {% endif %}
 
     {% if entry.metadata.child_index is defined %}
       <h3>{{KNOWL('uploader.mapping_rules')}} (regular expressions)</h3>
