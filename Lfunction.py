@@ -293,7 +293,9 @@ class Lfunction_EC(Lfunction):
         self.langlands = True
         self.degree = 2
         
+        print "Initiating EC start"
         self.dirichlet_coefficients = self.E.anlist(self.numcoeff)[1:]  #remove a0
+        print "Initiating EC done"
 
         # Renormalize the coefficients
         for n in range(0,len(self.dirichlet_coefficients)-1):
@@ -315,9 +317,10 @@ class Lfunction_EC(Lfunction):
         self.properties.append(('Level', '%s' % self.level))
         self.credit = 'Sage'
         self.citation = ''
+        print "Initiating EC start"
         
         self.sageLfunction = lc.Lfunction_from_elliptic_curve(self.E, self.numcoeff)
-
+        print "Initiating EC done"
         logging.info("I am now proud to have ", str(self.__dict__))
         constructor_logger(self,args)
 

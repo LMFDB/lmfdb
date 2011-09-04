@@ -12,6 +12,16 @@ from sage.all import *
 from functools import wraps
 from werkzeug.contrib.cache import SimpleCache
 
+# logfocus
+logfocus = None
+def set_logfocus(lf):
+  global logfocus
+  logfocus = lf
+
+def get_logfocus():
+  global logfocus
+  return logfocus
+
 # global db connection instance
 _C = None
 

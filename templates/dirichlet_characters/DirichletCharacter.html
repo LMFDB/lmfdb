@@ -26,19 +26,25 @@ function show_code(system) {
 }
 </script>
 
-<!--<div id="Content">-->
-        
-        
-            <div align="right">
-              <font size="3">Show commands for:</font>
-                <a onclick="show_code('sage'); return false" href='#'>sage</a>
-                <!--<a onclick="show_code('pari'); return false" href='#'>pari</a>
-                <a onclick="show_code('magma'); return false" href='#'>magma</a>-->
-            </div>
-
-            
-
-
+<style>
+.output {
+    margin:20px 0;
+    text-align: center;
+}
+table.navi td {
+    padding: 0;
+}
+</style>
+        <div align="right">
+            <table class="navi" cellspacing="0">
+                <tr><td>
+                        <font size="3">Show commands for:</font></td>
+                    <td align="center"><a onclick="show_code('sage'); return false" href='#'>sage</a></td></tr>
+                <tr><td><font size="3">Next character:</font></td>
+                    <td align="center">{% if number == eulerphi %}<a href="{{nextmodulus}}/0">\(\chi_{0} (mod {{nextmodulus}})\) </a>{% else %}<a href="{{nextnumber}}"> \(\chi_{ {{nextnumber}} }\) </a>{% endif %}  </td></tr>
+            </table>
+        </div>
+ 
         <!--<h2>
             Sage Output
         </h2>-->
@@ -49,7 +55,7 @@ function show_code(system) {
 
         {% if order == 2 %}
         <h2>
-            {{ KNOWL('dirichlet_character.kronecker_symbol') }} Representation 
+            {{ KNOWL('character.dirichlet.kronecker_symbol') }} Representation 
         </h2>
         <div class = 'sage nodisplay code'>sage: a.kronecker({{conductor}})</div>
         <p>
@@ -59,7 +65,7 @@ function show_code(system) {
 
         {% if primitive == primtf %}
         <h2>
-            Inducing {{ KNOWL('dirichlet_character.primitive_character', title="Primitive") }}           </h2>
+            Inducing {{ KNOWL('character.dirichlet.primitive_character', title="Primitive") }}           </h2>
         <div class = 'sage nodisplay code'>sage: chi.primitive_character()</div>
         <p>
         <a href="{{primcharmodulus}}/{{primcharnumber}}">{{primchartex}}</a>
@@ -67,7 +73,7 @@ function show_code(system) {
         {% endif %}
 
         <h2>
-            {{ KNOWL('dirichlet_character.values', title="Values") }}
+            {{ KNOWL('character.dirichlet.values', title="Values") }}
         </h2>
         <div class = 'sage nodisplay code'>sage: chi.values()</div>
         {% if zetaorder > 2 %} &nbsp;&nbsp;For \(\zeta_{ {{ zetaorder }} }\) a primitive \( {{ zetaorder }} \)-th root of unity<br><br/> {% endif %}
@@ -81,7 +87,7 @@ function show_code(system) {
         </tr>
         </table>
         <h2>
-            {{ KNOWL('dirichlet_character.values_on_gens', title="Values on Generators") }}
+            {{ KNOWL('character.dirichlet.values_on_gens', title="Values on Generators") }}
         </h2>
         <div class = 'sage nodisplay code'>sage: chi.values_on_gens()</div>
         <p>
@@ -97,7 +103,7 @@ function show_code(system) {
         </td>
         </tr>
         <tr>
-        <td colspan="4">{{ KNOWL('dirichlet_character.conductor', title="Conductor") }}</td>
+        <td colspan="4">{{ KNOWL('character.dirichlet.conductor', title="Conductor") }}</td>
         <td>=</td>
         <td>\({{ conductor }}\)</td>
         </tr>
@@ -108,7 +114,7 @@ function show_code(system) {
         </td>
         </tr>
         <tr>
-        <td colspan="4"> {{ KNOWL('dirichlet_character.order', title="Order") }}</td>
+        <td colspan="4"> {{ KNOWL('character.dirichlet.order', title="Order") }}</td>
         <td>=</td>
         <td>\({{ order }} \)</td>
         </tr>
@@ -119,14 +125,14 @@ function show_code(system) {
         </td>
         </tr>
         <tr>
-        <td colspan="4"> {{ KNOWL('dirichlet_character.parity', title="Parity") }} </td>
+        <td colspan="4"> {{ KNOWL('character.dirichlet.parity', title="Parity") }} </td>
         <td>=</td>
         <td> {{ parity }}</td>
         </tr>
 
         <tr>
-        {% if sign=="False" %} <td colspan="4"> {{ KNOWL('dirichlet_character.complex', title="Complex") }} </td>
-        {% else %} <td colspan="4"> {{ KNOWL('dirichlet_character.real', title="Real") }} </td>
+        {% if sign=="False" %} <td colspan="4"> {{ KNOWL('character.dirichlet.complex', title="Complex") }} </td>
+        {% else %} <td colspan="4"> {{ KNOWL('character.dirichlet.real', title="Real") }} </td>
         {% endif %}
         </tr>
 
@@ -136,45 +142,90 @@ function show_code(system) {
             </td>
         </tr>
         <tr>
-        {% if primitive=="False" %} <td colspan="4"> {{ KNOWL('dirichlet_character.nonprimitive', title="Non-primitive") }} </td> 
-        {% else %} <td colspan="4"> {{ KNOWL('dirichlet_character.primitive', title="Primitive") }} </td>
+        {% if primitive=="False" %} <td colspan="4"> {{ KNOWL('character.dirichlet.nonprimitive', title="Non-primitive") }} </td> 
+        {% else %} <td colspan="4"> {{ KNOWL('character.dirichlet.primitive', title="Primitive") }} </td>
         {% endif %}
         </tr>
 
        </table>
 
         <h2>
-            {{ KNOWL('dirichlet_character.gauss_sum') }}
+            {{ KNOWL('character.dirichlet.gauss_sum') }}
         </h2>
         <div class = 'sage nodisplay code'>sage: chi.gauss_sum()</div>
         <form> &nbsp;&nbsp;{{ gauss_sum }} 
-            <input type = 'text' name = 'gauss_sum' size=10 placeholder="2">
-            <button type='submit' name='search' value='Go'> Go </button>
+            <input id="calc-gauss-input" size=10 placeholder="2">
+            <button id="calc-gauss-go">Go</button>
             <span class="formexample"> e.g. 2 </span>
         </form>
+        <div class="output"><span id="calc-gauss-output"></span></div>
         <h2>
-            {{ KNOWL('dirichlet_character.jacobi_sum') }}
+            {{ KNOWL('character.dirichlet.jacobi_sum') }}
         </h2>
         <div class = 'sage nodisplay code'>sage: chi.jacobi_sum()</div>
         <form> &nbsp;&nbsp;{{ jacobi_sum }} 
-            <input type = 'text' name = 'jacobi_sum' size=10 placeholder="13.2">
-            <button type='submit' name='search' value='Go'> Go </button>
+            <input id="calc-jacobi-input" size="10" placeholder="13.2">
+            <button id="calc-jacobi-go"> Go </button>
             <span class="formexample"> e.g. 13.2 </span>
         </form>
+        <div class="output"><span id="calc-jacobi-output"></span></div>
         <h2>
-            {{ KNOWL('dirichlet_character.kloosterman_sum') }}
+            {{ KNOWL('character.dirichlet.kloosterman_sum') }}
         </h2>
         <div class = 'sage nodisplay code'>sage: chi.kloosterman_sum(,)</div>
         <form> &nbsp;&nbsp;{{ kloosterman_sum }} 
-            <input type = 'text' name = 'kloosterman_sum' size=10 placeholder="1,2">
-            <button type='submit' name='search' value='Go'> Go </button>
+            <input id="calc-kloosterman-input" size=10 placeholder="1,2">
+            <button id="calc-kloosterman-go"> Go </button>
             <span class="formexample"> e.g. 1,2</span>
         </form>
+        <div class="output"><span id="calc-kloosterman-output"></span></div>
 
-        <!--</div>-->
+<script type="text/javascript">
+function gauss_handler(evt) {
+   evt.preventDefault();
+   var val = $("#calc-gauss-input").val();
+   $("#calc-gauss-output").load("{{ url_for('dc_calc_gauss', modulus=modulus,number=number) }}" + "?val=" + val, 
+     function() {
+       {# tell mathjx to render the output #}
+       MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-gauss-output"]);
+     });
+}
 
-    <div class="spacer">
-        &nbsp;</div>
+function jacobi_handler(evt) {
+   evt.preventDefault();
+   var val = $("#calc-jacobi-input").val();
+   $("#calc-jacobi-output").load("{{ url_for('dc_calc_jacobi', modulus=modulus,number=number) }}" + "?val=" + val,
+     function() {
+       {# tell mathjx to render the output #}
+       MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-jacobi-output"]);
+     });
+}
 
+function kloosterman_handler(evt) {
+   evt.preventDefault();
+   var val = $("#calc-kloosterman-input").val();
+   $("#calc-kloosterman-output").load("{{ url_for('dc_calc_kloosterman', modulus=modulus,number=number) }}" + "?val=" + val,
+     function() {
+       {# tell mathjx to render the output #}
+       MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-kloosterman-output"]);
+     });
+}
+
+$(function() {
+    $("#calc-gauss-go").click(function(e) {gauss_handler(e)});
+    $("#calc-jacobi-go").click(function(e) {jacobi_handler(e)});
+    $("#calc-kloosterman-go").click(function(e) {gauss_handler(e)});
+    $("#calc-gauss-input").keypress(function(e) {
+      if (e.which == 13) gauss_handler(e);
+    });
+    $("#calc-jacobi-input").keypress(function(e) {
+        if (e.which == 13) jacobi_handler(e);
+    });
+    $("#calc-kloosterman-input").keypress(function(e) {
+        if (e.which == 13) kloosterman_handler(e);
+    });
+});
+
+</script>
 {% endblock %}
 

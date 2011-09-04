@@ -2,10 +2,11 @@
 
 
 {% block content %}
+A {{ KNOWL('dirichlet_character.definition') }} is an arithmetic function with certain properties.
 
 <h2> Browse </h2>
 <p>
-&nbsp;&nbsp;By {{ KNOWL('dirichlet_character.modulus', title="modulus") }}:
+&nbsp;&nbsp;By {{ KNOWL('character.dirichlet.modulus', title="modulus") }}:
 &nbsp;&nbsp;<a href="modbrowse=1-25">1&mdash;25</a>
 &nbsp;&nbsp;<a href="modbrowse=26-50">26&mdash;50</a>
 &nbsp;&nbsp;<a href="modbrowse=51-75">51&mdash;75</a>
@@ -13,7 +14,7 @@
 </p>
 
 <p>
-&nbsp;&nbsp;By {{ KNOWL('dirichlet_character.conductor', title="conductor") }}:
+&nbsp;&nbsp;By {{ KNOWL('character.dirichlet.conductor', title="conductor") }}:
 &nbsp;&nbsp;<a href="condbrowse=1-5">1&mdash;5</a>
 &nbsp;&nbsp;<a href="condbrowse=6-10">6&mdash;10</a>
 &nbsp;&nbsp;<a href="condbrowse=11-15">11&mdash;15</a>
@@ -22,38 +23,37 @@
 </p>
 
 <p>
-&nbsp;&nbsp;By {{ KNOWL('dirichlet_character.order', title="order") }}:</td>
+&nbsp;&nbsp;By {{ KNOWL('character.dirichlet.order', title="order") }}:</td>
 &nbsp;&nbsp;<a href="ordbrowse=1-5">1&mdash;5</a>
 &nbsp;&nbsp;<a href="ordbrowse=6-10">6&mdash;10</a>
 &nbsp;&nbsp;<a href="ordbrowse=11-15">11&mdash;15</a>
 &nbsp;&nbsp;<a href="ordbrowse=16-20">16&mdash;20</a>
 </p>
 
-<h2> Find a specific {{ KNOWL('dirichlet_character.definition') }} </h2>
+<h2> Find a specific {{ KNOWL('character.dirichlet') }} </h2>
 <form>
 <input type='text' name='natural' size=10 placeholder="13.2">
 <button type='submit' name='search' value='Go'> Go </button>
 <br><span class="formexample"> e.g. 13.2</span>
 </form>
 
-<h2> Search </h2>
-<!--<form action="{{url_for(".LfunctionDB.query")}}" method=get>-->
+<h2> Search for characters </h2>
 Enter criteria into one or more boxes to restrict the search.
 <p></p>
 <form>
 <table>
 <tr>    
-    <td> {{ KNOWL('dirichlet_character.modulus', title="Modulus") }} </td>
+    <td> {{ KNOWL('character.dirichlet.modulus', title="Modulus") }} </td>
     <td> <input type='text' name='modulus' size = '10' placeholder="13"></td>
     <td><span class="formexample"> e.g. 5 </span></td>
 </tr>
 
 <tr>
-    <td> {{ KNOWL('dirichlet_character.conductor', title="Conductor") }} </td><td> <input type='text' name='conductor' size = '10' placeholder="5"></td><td><span class="formexample"> e.g. 5 </span></td>
+    <td> {{ KNOWL('character.dirichlet.conductor', title="Conductor") }} </td><td> <input type='text' name='conductor' size = '10' placeholder="5"></td><td><span class="formexample"> e.g. 5 </span></td>
 </tr>
 
 <tr>
-    <td> {{ KNOWL('dirichlet_character.order', title="Order") }} </td><td> <input type='text' name='order' size = '10' placeholder="2"></td><td><span class="formexample"> e.g. 2 </span></td>
+    <td> {{ KNOWL('character.dirichlet.order', title="Order") }} </td><td> <input type='text' name='order' size = '10' placeholder="2"></td><td><span class="formexample"> e.g. 2 </span></td>
 </tr>
 
 <!--<tr>
