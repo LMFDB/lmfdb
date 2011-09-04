@@ -73,7 +73,7 @@ function properties_collapser(evt) {
   var pb_h = $pb.height();
   $pb.animate({"height": "toggle", "opacity" : "toggle"}, 
     { 
-      duration: 100 + 100 * Math.log($pb.height()),
+      duration: 50 + 100 * Math.log(100 + $pb.height()),
       step: function() { 
        /* synchronize icon rotation effect */
        var val = $pb.height() / pb_h;
