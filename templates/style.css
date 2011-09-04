@@ -459,8 +459,8 @@ table th {
 }
 
 table th, table td {
-  padding-left:  10px;
-  padding-right: 10px;
+  padding-left:  20px;
+  padding-right: 20px;
 }
 
 table a {
@@ -484,7 +484,7 @@ table td.spacing {
 }
 
 table.ntdata {
-    width: 100%;
+    width: auto;
     border: 0;
 }
 

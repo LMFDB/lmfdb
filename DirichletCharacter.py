@@ -12,7 +12,6 @@ from WebCharacter import *
 from utils import to_dict, parse_range
 import ListCharacters
 
-@app.route("/Character/Dirichlet")
 def render_webpage(request,arg1,arg2):
     args = request.args
     temp_args = to_dict(args)
@@ -23,6 +22,7 @@ def render_webpage(request,arg1,arg2):
             return render_template("dirichlet_characters/CharacterNavigate.html", **info)
 
         elif arg1.startswith("modbrowse"):
+            print "Check2"
             modulus_start = int(arg1.partition('-')[0][10:])
             modulus_end = int(arg1.partition('-')[2])
             info = {}
@@ -61,27 +61,26 @@ def render_webpage(request,arg1,arg2):
         elif arg1 == 'custom':
             return "not yet implemented"
        
-        return character_search(**args)
-        
-    temp_args['type'] = 'dirichlet' # set type and input
-    temp_args['modulus'] = arg1
-    temp_args['number'] = arg2
+        temp_args['type'] = 'dirichlet' # set type and input
+        temp_args['modulus'] = arg1
+        temp_args['number'] = arg2
             #elif arg1 == 'Hecke':
             #    temp_args['type'] = 'hecke'
     
-    chi = WebCharacter(temp_args)
+        chi = WebCharacter(temp_args)
 
-    print chi
+        print chi
 
-    try:
-        print temp_args
-    except:
-        1
+        try:
+            print temp_args
+        except:
+            1
 
-    info = initCharacterInfo(chi, temp_args, request) # sets the various properties of chi to be displayed in DirichletCharacter.html
+        info = initCharacterInfo(chi, temp_args, request) # sets the various properties of chi to be displayed in DirichletCharacter.html
 
-    return render_template('dirichlet_characters/DirichletCharacter.html', info = info, title = info['title'], bread = info['bread'], properties = info['properties'], citation = info['citation'], credit = info['credit'], support = info['support'])#, **info)
-
+        return render_template('dirichlet_characters/DirichletCharacter.html', **info)
+    else:
+        return character_search(**args)
 
 def set_info_for_start_page():
     tl = [{'title':'Dirichlet','link':'degree#1Dirichlet'},
@@ -126,10 +125,12 @@ def initCharacterInfo(chi,args, request):
         info['conductor'] = int(chi.conductor)
         info['order'] = int(chi.order)
         info['primitive'] = str(chi.primitive)
+        info['zetaorder'] = chi.zetaorder
         info['genvals'] = str(chi.genvalues)
         info['genvalstex'] = str(chi.genvaluestex)
+        info['parity'] = chi.parity
+        info['sign'] = chi.sign
         info['vals'] = latex(chi.vals)
-        info['primline'] = str(chi.primline)
         info['valstex'] = chi.valstex
         info['unitgens'] = str(chi.unitgens)
         #print chi.unitgens
@@ -183,7 +184,8 @@ def character_search(**args):
             info['texname'] = texname
             info['number'] = number
             info['len'] = length
-            return render_template("dirichlet_characters/character_search.html", info=info, title = 'Dirichlet Characters', bread = info["bread"], credit = info['credit'])
+            info['title'] = 'Dirichlet Characters'
+            return render_template("dirichlet_characters/character_search.html", **info)
 
 def charactertable(query):
     if(len(query) == 1):

@@ -31,53 +31,15 @@ class WebCharacter:
 
     def dirichletcharacter(self):
         G = DirichletGroup(self.modulus)
+        self.zetaorder = G.zeta_order()
         chi = G[self.number]
-        #print chi
         self.sagechar = str(chi)
-# Warning: will give nonsense if character is not primitive
         self.primitive = chi.is_primitive()
-#	self.primitive = chi.primitive_character()
         self.conductor = chi.conductor()
-        #self.unit_generators = chi.unit_gens()
         self.order = chi.multiplicative_order()
         self.vals = chi.values()
-        count = 0
-        counter = 1
-        #self.valstex = ""
-        for v in chi.values():
-            sv = str(v).partition("zeta")[2]
-            if counter == 1:
-                if sv.find('^') != -1:
-                    rootunity = int(sv.partition('^')[0])
-                    counter += 1
-                elif sv.find('+') != -1:
-                    rootunity = int(sv.partition('+')[0])
-                    counter += 1
-                elif sv.find('-') != -1:
-                    rootunity = int(sv.partition('-')[0])
-                    counter += 1
-        if (counter == 2):
-            self.primline = "For \(\\zeta_{%s}\) is a primitive \(%s\)-th root of unity," %(rootunity,rootunity)
         list  = [latex(_) for _ in chi.values()]
-        #print list
-        #l = " , ".join(list)
         self.valstex = list
-        #print self.valstex
-        #self.valstex += "\\begin{align}\n(\\mathstrut&"
-        #for v in chi.values():
-        #    count += 1
-        #    if(count == len(chi.values())):
-        #        self.valstex += str(latex(v))
-        #    else:
-        #        if(count%15 == 0):
-        #            self.valstex += "\\cr\n"
-        #            self.valstex += "&"
-        #        else:
-        #            self.valstex += str(latex(v)) + "\\,,\\,"
-        #self.valstex += ")\n\\end{align}"
-        #if(counter == 2):
-        #    self.valstex += "where \(\\zeta_{%s}\) is a primitive \(%s\)th root of unity." %(rootunity,rootunity)
-        #self.valstex = "\("+ str(latex(chi.values())) + "\)"
         self.bound = 5*1024
         if chi.is_even():
             self.parity = 'Even'
@@ -119,9 +81,9 @@ class WebCharacter:
         self.level = self.modulus
         self.genvalues = chi.values_on_gens()
         if len(chi.values_on_gens()) == 1:
-            self.genvaluestex = "\(" + latex(chi.values_on_gens()[0]) + "\)"
+            self.genvaluestex = latex(chi.values_on_gens()[0])
         else:
-            self.genvaluestex = "\(" + latex(chi.values_on_gens()) + "\)"
+            self.genvaluestex = latex(chi.values_on_gens())
         chivals = chi.values_on_gens()
         Gunits = G.unit_gens()
         if len(Gunits) != 1:
