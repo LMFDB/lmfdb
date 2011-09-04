@@ -156,9 +156,10 @@ def getGraphInfo(gls):
 def getGraphInfoHolo(Nmin, Nmax, kmin, kmax):
     xfactor = 90
     yfactor = 30
-    extraSpace = 30
+    x_extraSpace = 50
+    y_extraSpace = 80
 
-    (width,height) = (extraSpace + xfactor*(Nmax), extraSpace + yfactor*(kmax))
+    (width,height) = (x_extraSpace + xfactor*(Nmax), y_extraSpace + yfactor*(kmax))
     url = url_for('browseGraphHolo',Nmin=str(Nmin), Nmax=str(Nmax),
                   kmin= str(kmin), kmax= str(kmax))
 
@@ -714,7 +715,7 @@ def paintSvgHoloGeneral(Nmin,Nmax,kmin,kmax,imagewidth,imageheight):
 ## ============================================
 def getOneGraphHtmlHolo(Nmin, Nmax, kmin, kmax):
     ans = "<div>These L-functions have a functional equation of the form \n<br/>"
-    ans += "\\begin{equation}\n \\Lambda(s) := N^{s/2} \\Gamma_C"
+    ans += "\\begin{equation}\n \\Lambda(s) := N^{s/2} \\Gamma_{\mathbb C}"
     ans += "\\left(s + \\frac{k-1}{2} \\right) L(s) "
     ans += "=\\pm \\Lambda(1-s)\n\\end{equation}\n<br/>"
     ans += "If \\(L(s) = \\sum a_n n^{-s} \\) then \\(a_n n^{\\frac{k-1}{2}} \\) "
@@ -1061,12 +1062,9 @@ def plotsector(dimensioninfo, appearanceinfo, urlinfo):
       print('entering orbit loop', len(orbit))
       for orbitelem in orbit:  # loop through the elements in an orbit, drawing a dot and making a link
          orbitcolor = orbitelem['color']
-         url = urlbase
-         #for arg, val in orbitelem['urlinfo'].iteritems():  # think this is an error
-         for arg, val in orbitelem.iteritems():
-            #url += arg + "='" + str(val) + "'" + "&amp;"  #trying to fix ticks in url
-            url += arg + "=" + str(val) +  "&amp;"
-         ans += '<a xlink:href="' + url + '" target="_top">'
+         urlbase += 'label' + "='" + str(orbitelem['label']) + "'&amp;"
+         urlbase += 'number' + "=" + str(orbitelem['number']) 
+         ans += '<a xlink:href="' + urlbase + '" target="_top">'
          ans += "\n"
          #ans += mydot(vertexlocation, scale, dotlocation, dimensioninfo['dotradius'], orbitcolor,"",orbitelem['title'])
          print('dotlocation_bef:', dotlocation)
