@@ -2,29 +2,32 @@
 
 {% block content %}
 {% from "knowl-defs.html" import knowlbar with context %}
-
+<div>
 The general editing inside a {{KNOWL("doc.knowl", title="Knowl")}} works as per usual in a {{KNOWL("doc.wiki",title="wiki")}}.
-The main difference is that a {{KNOWL("doc.knowl", title="Knowl")}} is {{KNOWL("doc.context_free", title="context free")}}.
+The main difference is that a {{KNOWL("doc.knowl", title="Knowl")}} is {{KNOWL("doc.knowl.context_free", title="context-free")}}.
+</div>
 <br>
 To get you started, here is an example for the syntax inside a typical Knowl:
 <br>
     <blockquote>
 {% raw %}
-... the {{ KNOWL("lfunction.RH.proof",title="proof")}} of the {{KNOWL("lfunction.RH",title="Riemann hypothesis")}} was found in ...
+... the {{ KNOWL("lfunction.rh.proof",title="proof")}} of the {{KNOWL("lfunction.rh",title="Riemann hypothesis")}} was found in ...
 {% endraw %}
     </blockquote>
-<br>
 which gives
-<br>
     <blockquote>
-... the {{ KNOWL("lfunction.RH.proof",title="proof")}} of the {{KNOWL("lfunction.RH",title="Riemann hypothesis")}} was found in ...
+... the {{ KNOWL("lfunction.rh.proof",title="proof")}} of the {{KNOWL("lfunction.rh",title="Riemann hypothesis")}} was found in ...
     </blockquote>
-<br>
-    As you can see the {{ KNOWL("lfunction.RH.proof", title="Riemann Hypothesis Knowl")}} is currently missing, but would be {{KNOWL("doc.knowl.implicit", title="implicitly created")}} once someone edits it.
     <br>
+<div>
+    As you can see the Knowl {{ KNOWL("lfunction.rh.proof", title="Riemann Hypothesis Knowl")}} is currently missing, but would be {{KNOWL("doc.knowl.implicit", title="implicitly created")}} once someone edits it.
+</div>
+<br>
+<div>
     Please follow our {{ KNOWL("doc.knowl.naming_conventions",title="naming conventions")}} and {{ KNOWL("doc.knowl.naming_suggestions",title="naming suggestions")}}
     for the {{KNOWL("doc.knowl.description",title="description")}} and {{KNOWL("doc.knowl.identifier",title="identifier")}} fields of Knowls.
-    <br>
+</div>
+<br>
 
 {{ knowlbar() }}
 <script type="text/javascript" src="{{ url_for('static', filename='jquery.markitup.js')}}"></script>
@@ -45,10 +48,10 @@ $(document).ready(function()	{
   <input type="hidden" name="id" value="{{ k.id }}"/>
   <table>
    <tr>
-     <td>ID</td><td><a href="{{ url_for('.render', ID = k.id) }}">{{ k.id }}</a></td>
+     <td>{{KNOWL("doc.knowl.identifier",title="Identifier")}}</td><td><a href="{{ url_for('.render', ID = k.id) }}">{{ k.id }}</a></td>
    </tr>
    <tr>
-     <td>Title</td>
+     <td>{{KNOWL("doc.knowl.description",title="Description")}}</td>
      <td><input size="40" name="title" id="ktitle" value="{{ k.title }}" /></td>
    </tr>
    <tr>
