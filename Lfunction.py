@@ -25,7 +25,6 @@ def get_attr_or_method(thiswillbeexecuted, attr_or_method_name):
     except:
         return None
 
-import logging
 def my_find_update(the_coll, search_dict, update_dict):
     """ This performs a search using search_dict, and updates each find in  
     the_coll using update_dict. If there are none, update_dict is actually inserted.
@@ -271,7 +270,7 @@ class Lfunction_EC(Lfunction):
             raise Exception("You have to supply a label for an elliptic curve L-function")
         
         # Initialize default values
-        self.numcoeff = 20 # set default to 20 coefficients
+        self.numcoeff = 500 # set default to 500 coefficients
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
@@ -316,7 +315,7 @@ class Lfunction_EC(Lfunction):
         self.credit = 'Sage'
         self.citation = ''
         
-        self.generateSageLfunction()
+        self.sageLfunction = lc.Lfunction_from_elliptic_curve(self.E, self.numcoeff)
 
         logging.info("I am now proud to have ", str(self.__dict__))
         constructor_logger(self,args)
@@ -472,7 +471,7 @@ class RiemannZeta(Lfunction):
         self.citation = ''
         self.title = "Riemann Zeta-function: $\\zeta(s)$"
         
-        self.generateSageLfunction()
+        self.sageLfunction = lc.Lfunction_Zeta()
     
     def Ltype(self):
         return "riemann"
@@ -560,7 +559,7 @@ class Lfunction_Dirichlet(Lfunction):
                           str(self.charactermodulus) + ", number " +
                           str(self.characternumber))
         
-        self.generateSageLfunction()
+        self.sageLfunction = lc.Lfunction_from_character(chi)
         constructor_logger(self,args)
 
     def Ltype(self):

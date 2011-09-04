@@ -272,11 +272,16 @@ def plotLfunction(request, arg1, arg2, arg3, arg4, arg5):
 def render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5):
     data = plotLfunction(request, arg1, arg2, arg3, arg4, arg5)
     if not data:
-      # see not about missing "hardy_z_function" in plotLfunction()
+      # see note about missing "hardy_z_function" in plotLfunction()
       return abort(404)
     response = make_response(data)
     response.headers['Content-type'] = 'image/png'
     return response
+
+def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5):
+    L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, to_dict(request.args))
+    s = str(L.sageLfunction.find_zeros_via_N(6,not L.selfdual))
+    return s[1:len(s)-1]
 
 def render_browseGraph(args):
     logging.info(args)
@@ -300,11 +305,6 @@ def render_browseGraphChar(args):
     response = make_response(data)
     respone.headers['Content-type'] = 'image/svg+xml'
     return response
-
-def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5):
-    L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, to_dict(request.args))
-    s = str(L.sageLfunction.find_zeros(-15,15,0.1))
-    return s[1:len(s)-1]
 
 def render_lcalcfile(L):
     try:
