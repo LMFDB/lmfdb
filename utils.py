@@ -78,7 +78,6 @@ def make_logger(bp_or_name, hl = False):
   import flask
   import base
   logfocus = base.get_logfocus()
-  print "LOGFOCUS: ", logfocus
   if type(bp_or_name) == flask.Blueprint:
     name = bp_or_name.name
   else:

@@ -8,7 +8,7 @@
         {% if bread %}
           <a href="/">Top</a>
           {% for b in bread -%}
-            &rarr; <a href="{{ b[1] }}">{{ b[0] }}</a>
+            &rarr; <a href="{{ b[1] }}">{{ b[0]|striptags }}</a>
           {%- endfor %}
          {% endif %}
       </div>
