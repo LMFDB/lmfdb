@@ -237,8 +237,9 @@ def set_gaga_properties(L):
 
 
 def specialValueString(sageL, s, sLatex):
+    number_of_decimals = 10
     val = sageL.value(s)
-    return '\(L\left(' + sLatex + '\\right)=' + latex(round(val.real(),4)+round(val.imag(),4)*I) + '\)'
+    return '\(L\left(' + sLatex + '\\right)\\approx' + latex(round(val.real(), number_of_decimals)+round(val.imag(), number_of_decimals)*I) + '\)'
 
 
 def parameterstringfromdict(dic):
