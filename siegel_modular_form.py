@@ -4,8 +4,8 @@ import pickle
 import urllib
 from sage.all_cmdline import *
 
-DATA = 'http://data.countnumber.de/Siegel-Modular-Forms/'
-#DATA = 'ups'
+#DATA = 'http://data.countnumber.de/Siegel-Modular-Forms/'
+DATA = 'ups'
     
 
 def render_webpage( args = {}):
@@ -20,7 +20,7 @@ def render_webpage( args = {}):
     if len(args) == 0:
         return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_navigation.html", \
                                    info = info, \
-                                   title = 'Siegel Modular Forms of Degree 2', \
+                                   title = 'Siegel Modular Forms', \
                                    bread = bread)
 
     # possible keys for the URL
@@ -44,39 +44,51 @@ def render_webpage( args = {}):
     if args['group']:
         
         if 'Sp4Z' == args['group']:
-            info['parent_as_tex'] = 'M_*\\big({\\rm Sp}(4,\\mathbb{Z})\\big)'
-            sage_group ='Sp(4,Z)';
+            info['parent_as_tex'] = 'M_k\\big({\\rm Sp}(4,\\mathbb{Z})\\big)'
+            dimension = siegel_core._dimension_Sp4Z
             info['generators'] = 'smf.Igusa_generators'
-            
-        elif 'Gamma0_2' == args['group']:
-            info['parent_as_tex'] = 'M_*\\big(\\Gamma_0(2)\\big)'
-            sage_group ='Gamma_0(2)';
-
-        elif 'Gamma0_3_psi_3' == args['group']:
-            info['parent_as_tex'] = 'M_*\\big(\\Gamma_0(3,\\psi_3)\\big)'
-            sage_group ='Gamma_0(3, psi_3)';
-
-        elif 'Gamma0_4_psi_4' == args['group']:
-            info['parent_as_tex'] = 'M_*\\big(\\Gamma_0(4,\\psi_3)\\big)'
-            sage_group ='Gamma_0(4, psi_4)';
 
         elif 'Sp4Z_2' == args['group']:
-            info['parent_as_tex'] = 'M_{*,2}\\big({\\rm Sp}(4,\\mathbb{Z})\\big)'
-            sage_group ='Sp(4,Z)_2';
-
+            info['parent_as_tex'] = 'M_{k,2}\\big({\\rm Sp}(4,\\mathbb{Z})\\big)'           
+            dimension = siegel_core._dimension_Sp4Z_2
+            
+        elif 'Sp6Z' == args['group']:
+            info['parent_as_tex'] = 'M_k\\big({\\rm Sp}(6,\\mathbb{Z})\\big)'
+            dimension = siegel_core._dimension_Sp6Z
+            
+        elif 'Sp8Z' == args['group']:
+            info['parent_as_tex'] = 'M_k\\big({\\rm Sp}(8,\\mathbb{Z})\\big)'
+            dimension = siegel_core._dimension_Sp8Z
+            
         elif 'Kp' == args['group']:
-            info['parent_as_tex'] = 'S_*\\big(K(p)\\big)'
+            info['parent_as_tex'] = 'M_k\\big(K(p)\\big)'
             info['learnmore'] += [ ('Paramodular forms', 'http://math.lfc.edu/~yuen/paramodular/')]
             info['generators'] = 'smf.Kp_generators'
-            sage_group ='K(p)';
+            dimension = siegel_core._dimension_Kp
 
-        elif 'Sp8Z' == args['group']:
-            info['parent_as_tex'] = 'S_*\\big({\\rm Sp}(8,\\mathbb{Z})\\big)'
-            sage_group ='Sp(8,Z)';
+        elif 'Gamma0_2' == args['group']:
+            info['parent_as_tex'] = 'M_k\\big(\\Gamma_0(2)\\big)'
+            dimension = siegel_core._dimension_Gamma0_2
+            
+        elif 'Gamma0_3' == args['group']:
+            info['parent_as_tex'] = 'M_k\\big(\\Gamma_0(3,\\psi_3)\\big)'
+            dimension = siegel_core._dimension_Gamma0_3
+            
+        elif 'Gamma0_3_psi_3' == args['group']:
+            info['parent_as_tex'] = 'M_k\\big(\\Gamma_0(3,\\psi_3)\\big)'
+            dimension = siegel_core._dimension_Gamma0_3_psi_3
+            
+        elif 'Gamma0_4' == args['group']:
+            info['parent_as_tex'] = 'M_k\\big(\\Gamma_0(4)\\big)'
+            dimension = siegel_core._dimension_Gamma0_4
 
-        elif 'Gamma0_4_' == group:
-            info['parent_as_tex'] =  'M_{*/2}\\big(\\Gamma_0(4,\\big(frac{-4}*\\big))\\big)'
-            sage_group ='Gamma_0(4 (-4/*))_*/2';
+        elif 'Gamma0_4_psi_4' == args['group']:
+            info['parent_as_tex'] = 'M_k\\big(\\Gamma_0(4,\\psi_4)\\big)'
+            dimension = siegel_core._dimension_Gamma0_4_psi_4
+
+        elif 'Gamma0_4_half' == group:
+            info['parent_as_tex'] =  'M_{k-1/2}\\big(\\Gamma_0(4)\\big)'
+            dimension = siegel_core._dimension_Gamma0_4_half
 
         else:
             info['error'] = 'Request for unvalid type of Siegel modular form'
@@ -146,24 +158,27 @@ def render_webpage( args = {}):
 
         try:
             if 'Kp' == group:
-                info['dimensions'] = [ (k, siegel_core.dimension( k, sage_group, tp = int(level))) for k in range(min_wt, max_wt+1)]
+                info['dimensions'] = [ (k, dimension( k, tp = int(level))) for k in range(min_wt, max_wt+1)]
                 bread += [( 'Dimensions', \
                             url_for( 'ModularForm_GSp4_Q_top_level', group=group, page=page, level=level, weight_range = weight_range))]
             else:
-                info['dimensions'] = [ (k, siegel_core.dimension( k, sage_group)) for k in range(min_wt, max_wt+1)]
+                info['dimensions'] = [ (k, dimension( k)) for k in range(min_wt, max_wt+1)]
                 bread += [( 'Dimensions', \
                             url_for( 'ModularForm_GSp4_Q_top_level', group=group, page=page, weight_range = weight_range))]
         except:
             info['error'] = 'Functional error'
-
-        if group == 'Sp4Z':
-            info['table_headers'] = ["Weight", "Total", "Eisenstein", "Klingen", "Maass", "Interesting"]
+        
+        if 'Sp8Z' == group:
+            info['table_headers'] = ['Weight', 'Total', 'Ikeda lifts', 'Miyawaki lifts', 'Other']
 
         elif group == 'Kp':
-            info['table_headers'] = ["weight or level", "Total", "Gritsenko Lifts", "Nonlifts", "Oldforms"]
+            info['table_headers'] = ["Weight", "Total", "Gritsenko Lifts", "Nonlifts", "Oldforms"]
 
+        elif 'Gamma0_4_half' == group:
+            info['table_headers'] = ['Weight', 'Total', 'Non cusp', 'Cusp']
+            
         else:
-            info['table_headers'] = []
+            info['table_headers'] = ["Weight", "Total", "Eisenstein", "Klingen", "Maass", "Interesting"]
 
         return render_template( "ModularForm_GSp4_Q/ModularForm_GSp4_Q_dimensions.html", \
                                 info = info, \
