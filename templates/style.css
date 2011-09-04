@@ -520,13 +520,13 @@ table.ntdata tbody tr {
 table.ntdata tbody th {
 }
 
-table tr.odd,
-table tr:nth-child(odd) {
+table.ntdata tr.odd,
+table.ntdata tr:nth-child(odd) {
  background: white;
 }
 
-table tr.even,
-table tr:nth-child(odd)  {
+table.ntdata tr.even,
+table.ntdata tr:nth-child(odd)  {
  background: #EFE;
 }
 

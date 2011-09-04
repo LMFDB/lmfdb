@@ -26,7 +26,7 @@ from knowledge import logger
 ASC = pymongo.ASCENDING
 
 import re
-allowed_knowl_id = re.compile("^[a-z0-9._-]+$")
+allowed_knowl_id = re.compile("^[A-Za-z0-9._-]+$")
 
 # Tell markdown to not escape or format inside a given block
 class IgnorePattern(markdown.inlinepatterns.Pattern):
