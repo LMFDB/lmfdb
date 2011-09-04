@@ -4,6 +4,7 @@ import re
 import logging 
 
 from base import app
+import flask
 from flask import Flask, session, g, render_template, url_for, make_response, request, redirect
 from sage.all import *
 import tempfile, os
@@ -124,6 +125,8 @@ def initCharacterInfo(chi,args, request):
         info['sagechar'] = str(chi.sagechar)
         info['conductor'] = int(chi.conductor)
         info['order'] = int(chi.order)
+        info['eulerphi'] = euler_phi(chi.modulus)-1
+        info['nextmodulus'] = chi.modulus+1
         info['primitive'] = chi.primitive
         info['zetaorder'] = chi.zetaorder
         info['genvals'] = str(chi.genvalues)
@@ -144,6 +147,7 @@ def initCharacterInfo(chi,args, request):
         info['primcharnumber'] = str(chi.primcharnumber)
         info['primchartex'] = str(chi.primchartex)
         info['primtf'] = str(chi.primtf)
+        info['nextnumber'] = chi.number+1
         info['kronsymbol'] = str(chi.kronsymbol)
         info['gauss_sum'] = chi.gauss_sum_tex()
         info['jacobi_sum'] = chi.jacobi_sum_tex()
@@ -156,6 +160,50 @@ def initCharacterInfo(chi,args, request):
 @app.route("/Character/Dirichlet/<modulus>/<number>")
 def render_webpage_label(modulus,number):
     return render_webpage(request,modulus,number)
+
+@app.route("/Character/Dirichlet/calc_gauss/<int:modulus>/<int:number>")
+def dc_calc_gauss(modulus,number):
+    arg = request.args.get("val", [])
+    if not arg:
+        return flask.abort(404)
+    try:
+        from sage.modular.dirichlet import DirichletGroup
+        chi = DirichletGroup(modulus)[number]
+        gauss_sum_numerical = chi.gauss_sum_numerical(100,int(arg))
+        return "\(%s\)" %(latex(gauss_sum_numerical))
+    except Exception, e:
+        return "<span style='color:red;'>ERROR: %s</span>" % e
+
+@app.route("/Character/Dirichlet/calc_jacobi/<int:modulus>/<int:number>")
+def dc_calc_jacobi(modulus,number):
+    arg = request.args.get("val", [])
+    if not arg:
+        return flask.abort(404)
+    arg = map(int,arg.split('.'))
+    try:
+        mod = arg[0]
+        num = arg[1]
+        from sage.modular.dirichlet import DirichletGroup
+        chi = DirichletGroup(modulus)[number]
+        psi = DirichletGroup(mod)[num]
+        jacobi_sum = chi.jacobi_sum(psi)
+        return "\(%s\)" %(latex(jacobi_sum))
+    except Exception, e:
+        return "<span style='color:red;'>ERROR: %s</span>" % e
+
+@app.route("/Character/Dirichlet/calc_kloosterman/<int:modulus>/<int:number>")
+def dc_calc_kloosterman(modulus,number):
+    arg = request.args.get("val", [])
+    if not arg:
+        return flask.abort(404)
+    arg = map(int,arg.split(','))
+    try:
+        from sage.modular.dirichlet import DirichletGroup
+        chi = DirichletGroup(modulus)[number]
+        kloosterman_sum_numerical = chi.kloosterman_sum_numerical(100,arg[0],arg[1])
+        return "\(%s\)" %(latex(kloosterman_sum_numerical))
+    except Exception, e:
+        return "<span style='color:red;'>ERROR: %s</span>" % e
 
 @app.route("/Character/Dirichlet/<modulus>/<conductor>/<number>")
 def induced_character(modulus,conductor,number):
