@@ -484,6 +484,11 @@ table th, table td {
   padding-right: 20px;
 }
 
+table a.knowl-link, 
+table a.knowl-title {
+    display: inline;
+}
+
 table a {
   display: block;
   padding: 2px 5px;
@@ -521,12 +526,13 @@ table.ntdata tbody th {
 }
 
 table.ntdata tr.odd,
-table.ntdata tr:nth-child(odd) {
+table.ntdata tr:nth-child(odd),
+table.ntdata tr:first-child {
  background: white;
 }
 
 table.ntdata tr.even,
-table.ntdata tr:nth-child(odd)  {
+table.ntdata tr:nth-child(even) {
  background: #EFE;
 }
 

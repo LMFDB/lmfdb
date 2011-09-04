@@ -49,7 +49,7 @@ function show_code(system) {
 
         {% if order == 2 %}
         <h2>
-            Character in terms of {{ KNOWL('dirichlet_character.kronecker_symbol') }} 
+            {{ KNOWL('dirichlet_character.kronecker_symbol') }} Representation 
         </h2>
         <div class = 'sage nodisplay code'>sage: a.kronecker({{conductor}})</div>
         <p>
@@ -59,7 +59,7 @@ function show_code(system) {
 
         {% if primitive == primtf %}
         <h2>
-            Inducing {{ KNOWL('dirichlet_character.primitive_character') }}           </h2>
+            Inducing {{ KNOWL('dirichlet_character.primitive_character', title="Primitive") }}           </h2>
         <div class = 'sage nodisplay code'>sage: chi.primitive_character()</div>
         <p>
         <a href="{{primcharmodulus}}/{{primcharnumber}}">{{primchartex}}</a>
@@ -67,25 +67,25 @@ function show_code(system) {
         {% endif %}
 
         <h2>
-            {{ KNOWL('dirichlet_character.values') }}
+            {{ KNOWL('dirichlet_character.values', title="Values") }}
         </h2>
         <div class = 'sage nodisplay code'>sage: chi.values()</div>
-        {% if zetaorder > 2 %} For \(\zeta_{ {{ zetaorder }} }\) a primitive \( {{ zetaorder }} \)-th root of unity<br><br/> {% endif %}
+        {% if zetaorder > 2 %} &nbsp;&nbsp;For \(\zeta_{ {{ zetaorder }} }\) a primitive \( {{ zetaorder }} \)-th root of unity<br><br/> {% endif %}
         <table>
         <tr>
             <td>   
                 <div align="left"> 
-                    [\({{ valstex|join("\) , \(") }}\)]
+                    &nbsp;&nbsp;[\({{ valstex|join("\) , \(") }}\)]
                 </div>
             </td>
         </tr>
         </table>
         <h2>
-            {{ KNOWL('dirichlet_character.values_on_gens') }}
+            {{ KNOWL('dirichlet_character.values_on_gens', title="Values on Generators") }}
         </h2>
         <div class = 'sage nodisplay code'>sage: chi.values_on_gens()</div>
         <p>
-           \( {{ unitgens }} \) &rarr; \( {{ genvalstex }} \)
+           &nbsp;&nbsp;\( {{ unitgens }} \) &rarr; \( {{ genvalstex }} \)
         </p>
 
         <h2> Basic Properties </h2>
@@ -97,8 +97,7 @@ function show_code(system) {
         </td>
         </tr>
         <tr>
-        <td colspan="4">{{ KNOWL_LINK('dirichlet_character.conductor') }}
-         \(q_0 \)</td>
+        <td colspan="4">{{ KNOWL('dirichlet_character.conductor', title="Conductor") }}</td>
         <td>=</td>
         <td>\({{ conductor }}\)</td>
         </tr>
@@ -109,30 +108,25 @@ function show_code(system) {
         </td>
         </tr>
         <tr>
-        <td colspan="4"> {{ KNOWL_LINK('dirichlet_character.order') }}</td>
+        <td colspan="4"> {{ KNOWL('dirichlet_character.order', title="Order") }}</td>
         <td>=</td>
         <td>\({{ order }} \)</td>
         </tr>
 
         <tr>
         <td colspan="4">
-            <span class='sage nodisplay code'>sage: chi.is_even()</span><br><br/>
-            <span class='sage nodisplay code'>sage: chi.is_odd()</span>
+            <span class='sage nodisplay code'>sage: chi.is_even() or chi.is_odd()</span>
         </td>
         </tr>
         <tr>
-        <td colspan="4"> {{ KNOWL_LINK('dirichlet_character.parity') }} </td>
+        <td colspan="4"> {{ KNOWL('dirichlet_character.parity', title="Parity") }} </td>
         <td>=</td>
         <td> {{ parity }}</td>
         </tr>
 
         <tr>
-        {% if not sign %} <td colspan="4"> {{ KNOWL_LINK('dirichlet_character.complex') }} </td>
-        <td>=</td>
-        <td> Complex </td>
-        {% else %} <td colspan="4"> {{ KNOWL_LINK('dirichlet_character.real') }} </td>
-        <td>=</td>
-        <td> Real </td>
+        {% if sign=="False" %} <td colspan="4"> {{ KNOWL('dirichlet_character.complex', title="Complex") }} </td>
+        {% else %} <td colspan="4"> {{ KNOWL('dirichlet_character.real', title="Real") }} </td>
         {% endif %}
         </tr>
 
@@ -141,9 +135,10 @@ function show_code(system) {
                 <span class='sage nodisplay code'>sage: chi.is_primitive()</span>
             </td>
         </tr>
-
         <tr>
-            <td colspan="4"> {{ KNOWL_LINK('dirichlet_character.primitive') }} </td> 
+        {% if primitive=="False" %} <td colspan="4"> {{ KNOWL('dirichlet_character.nonprimitive', title="Non-primitive") }} </td> 
+        {% else %} <td colspan="4"> {{ KNOWL('dirichlet_character.primitive', title="Primitive") }} </td>
+        {% endif %}
         </tr>
 
        </table>
@@ -152,7 +147,7 @@ function show_code(system) {
             {{ KNOWL('dirichlet_character.gauss_sum') }}
         </h2>
         <div class = 'sage nodisplay code'>sage: chi.gauss_sum()</div>
-        <form> {{ gauss_sum }} 
+        <form> &nbsp;&nbsp;{{ gauss_sum }} 
             <input type = 'text' name = 'gauss_sum' size=10 placeholder="2">
             <button type='submit' name='search' value='Go'> Go </button>
             <span class="formexample"> e.g. 2 </span>
@@ -161,7 +156,7 @@ function show_code(system) {
             {{ KNOWL('dirichlet_character.jacobi_sum') }}
         </h2>
         <div class = 'sage nodisplay code'>sage: chi.jacobi_sum()</div>
-        <form> {{ jacobi_sum }} 
+        <form> &nbsp;&nbsp;{{ jacobi_sum }} 
             <input type = 'text' name = 'jacobi_sum' size=10 placeholder="13.2">
             <button type='submit' name='search' value='Go'> Go </button>
             <span class="formexample"> e.g. 13.2 </span>
@@ -170,7 +165,7 @@ function show_code(system) {
             {{ KNOWL('dirichlet_character.kloosterman_sum') }}
         </h2>
         <div class = 'sage nodisplay code'>sage: chi.kloosterman_sum(,)</div>
-        <form> {{ kloosterman_sum }} 
+        <form> &nbsp;&nbsp;{{ kloosterman_sum }} 
             <input type = 'text' name = 'kloosterman_sum' size=10 placeholder="1,2">
             <button type='submit' name='search' value='Go'> Go </button>
             <span class="formexample"> e.g. 1,2</span>
