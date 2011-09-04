@@ -109,7 +109,7 @@ class Lfunction(object):
             self.__dict__.update(args)
         
             # Get the lcalcfile from the web
-            if self.Ltype=='lcalcurl':
+            if self._Ltype=='lcalcurl':
                 if 'url' in args.keys():
                     try:
                         import urllib
@@ -304,7 +304,7 @@ class Lfunction_EC(Lfunction):
             raise Exception("You have to supply a label for an elliptic curve L-function")
         
         # Initialize default values
-        self.numcoeff = 20 # set default to 20 coefficients
+        self.numcoeff = 500 # set default to 500 coefficients, TODO: FIX THIS!
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
@@ -351,7 +351,7 @@ class Lfunction_EC(Lfunction):
         self.credit = 'Sage'
         self.citation = ''
         
-        self.generateSageLfunction()
+        self.sageLfunction = lc.Lfunction_from_elliptic_curve(self.E, self.numcoeff)
         constructor_logger(self,args)
 
     def Ltype(self):
@@ -503,7 +503,7 @@ class RiemannZeta(Lfunction):
         self.citation = ''
         self.title = "Riemann Zeta-function: $\\zeta(s)$"
         
-        self.generateSageLfunction()
+        self.sageLfunction = lc.Lfunction_Zeta()
         constructor_logger(self,args)
 
     def Ltype(self):
@@ -542,57 +542,65 @@ class Lfunction_Dirichlet(Lfunction):
         # Create the Dirichlet character
         chi = DirichletGroup(self.charactermodulus)[self.characternumber]
 
-        # Extract the L-function information from the Dirichlet character
-        # Warning: will give nonsense if character is not primitive
-        aa = int((1-chi(-1))/2)   # usually denoted \frak a
-        self.quasidegree = 1
-        self.Q_fe = float(sqrt(self.charactermodulus)/sqrt(math.pi))
-        self.sign = 1/(I**aa * float(sqrt(self.charactermodulus))/(chi.gauss_sum_numerical()))
-        self.kappa_fe = [0.5]
-        self.lambda_fe = [0.5*aa]
-        self.mu_fe = [aa]
-        self.nu_fe = []
-        self.langlands = True
-        self.primitive = True
-        self.degree = 1
-        self.level = self.charactermodulus
+        if chi.is_primitive():
 
-        self.dirichlet_coefficients = []
-        for n in range(1,self.numcoeff):
-            self.dirichlet_coefficients.append(chi(n).n())
-                            
-        self.poles = []
-        self.residues = []
-        self.coefficient_period = self.charactermodulus
+            # Extract the L-function information from the Dirichlet character
+            # Warning: will give nonsense if character is not primitive
+            aa = int((1-chi(-1))/2)   # usually denoted \frak a
+            self.quasidegree = 1
+            self.Q_fe = float(sqrt(self.charactermodulus)/sqrt(math.pi))
+            self.sign = 1/(I**aa * float(sqrt(self.charactermodulus))/(chi.gauss_sum_numerical()))
+            self.kappa_fe = [0.5]
+            self.lambda_fe = [0.5*aa]
+            self.mu_fe = [aa]
+            self.nu_fe = []
+            self.langlands = True
+            self.primitive = True
+            self.degree = 1
+            self.level = self.charactermodulus
 
-        # Determine if the character is real (i.e., if the L-function is selfdual)
-        chivals=chi.values_on_gens()
-        self.selfdual = True
-        for v in chivals:
-            if abs(imag_part(v)) > 0.0001:
-                self.selfdual = False
-  
-        if self.selfdual:
-            self.coefficient_type = 1
-        else:
-            self.coefficient_type = 2
+            self.dirichlet_coefficients = []
+            for n in range(1,self.numcoeff):
+                self.dirichlet_coefficients.append(chi(n).n())
+                                
+            self.poles = []
+            self.residues = []
+            self.coefficient_period = self.charactermodulus
 
-        self.texname = "L(s,\\chi)"
-        self.texnamecompleteds = "\\Lambda(s,\\chi)"
-                            
-        if self.selfdual:
-            self.texnamecompleted1ms = "\\Lambda(1-s,\\chi)"
-        else:
-            self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{\\chi})"
+            # Determine if the character is real (i.e., if the L-function is selfdual)
+            chivals=chi.values_on_gens()
+            self.selfdual = True
+            for v in chivals:
+                if abs(imag_part(v)) > 0.0001:
+                    self.selfdual = False
+      
+            if self.selfdual:
+                self.coefficient_type = 1
+            else:
+                self.coefficient_type = 2
 
-        self.credit = 'Sage'
-        self.citation = ''
-        self.title = "Dirichlet L-function: $L(s,\\chi)$"
-        self.title = (self.title+", where $\\chi$ is the character modulo "+
-                          str(self.charactermodulus) + ", number " +
-                          str(self.characternumber))
-        
-        self.generateSageLfunction()
+            self.texname = "L(s,\\chi)"
+            self.texnamecompleteds = "\\Lambda(s,\\chi)"
+                                
+            if self.selfdual:
+                self.texnamecompleted1ms = "\\Lambda(1-s,\\chi)"
+            else:
+                self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{\\chi})"
+
+            self.credit = 'Sage'
+            self.citation = ''
+            self.title = "Dirichlet L-function: $L(s,\\chi)$"
+            self.title = (self.title+", where $\\chi$ is the character modulo "+
+                              str(self.charactermodulus) + ", number " +
+                              str(self.characternumber))
+            
+            self.sageLfunction = lc.Lfunction_from_character(chi)
+
+        else:  #Character not primitive
+            raise Exception("The dirichlet character you choose is " +
+                            "not primitive so it's Dirichlet series " +
+                            "is not an L-function.")
+
         constructor_logger(self,args)
 
     def Ltype(self):
