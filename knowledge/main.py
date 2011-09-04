@@ -234,18 +234,31 @@ def render(ID, footer=None, kwargs = None):
 def index():
   # bypassing the Knowl objects to speed things up
   from knowl import get_knowls
-  knowls = get_knowls().find(fields=['title'])
+  get_knowls().ensure_index('_keywords')
+  keyword = request.args.get("search", "")
+  s_query = {'_keywords' : keyword } if keyword else {}
+  knowls = get_knowls().find(s_query, fields=['title'])
+
   def first_char(k):
     t = k['title']
     if len(t) == 0: return "?"
     if t[0] not in string.ascii_letters: return "?"
     return t[0].upper()
+
+  # way to additionally narrow down the search
+  # def incl(knwl):
+  #   if keyword in knwl['_id'].lower():   return True
+  #   if keyword in knwl['title'].lower(): return True
+  #   return False
+  # if keyword: knowls = filter(incl, knowls)
+
   knowls = sorted(knowls, key = lambda x : x['title'].lower())
   from itertools import groupby
   knowls = groupby(knowls, first_char)
   return render_template("knowl-index.html", 
-         title="Knowledge Database",
-         bread = get_bread(),
-         knowls = knowls)
+         title  = "Knowledge Database",
+         bread  = get_bread(),
+         knowls = knowls,
+         search = keyword)
 
 

@@ -29,6 +29,15 @@
 }
 </style>
 <h1>Read Knowls</h1>
+
+<div style="margin-bottom: 20px">
+  <form action="{{ url_for('.index') }}" method="GET">
+  Search in title, ID and full text:
+  <input name="search" value="{{ search }}" placeholder="modular" />
+  <button type="submit">Search</button>
+  </form>
+</div>
+
 <table id="knowls" class="ntdata">
   {% for c, ks in knowls -%}
    <tr>
