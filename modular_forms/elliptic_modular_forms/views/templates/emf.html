@@ -4,15 +4,14 @@
 <script type="text/javascript" src="{{ url_for('static', filename='elliptic_modular_form_util-functions.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='elliptic_modular_form_scripts.js') }}"></script>
 
-
-
   <!--a href="/ModularForm/">Modular Forms</a><a href="/ModularForm/GL2/"> on GL(2)</a><a href="/ModularForm/GL2/Q"> over \( \mathbb{Q} \)</a> : Holomorphic Cuspforms
 -->
+
 {% if info.error is defined %}
    {{ info.error | safe }}
 {% else %}
 <h1> {{ info.name | safe }}
-<h2> {{ KNOWL('cmf.q-expansion',title='q-expansion')}}</h2>
+<h2> {{ KNOWL('emf.q-expansion',title='q-expansion')}}</h2>
 	<br>
 	{{ info.q_exp | safe }}
 	<br>
@@ -22,36 +21,77 @@
 	<br -->
 	<br>
 	{{ info.embeddings | safe }}
-<h2> Detailed data</h2>
-	The first few {{KNOWL('cmf.satake_parameters',title='Satake parameters')}} \(\alpha_p\) and angles \(\theta_p = \textrm{Arg}(\alpha_p) \) are
+        
+        <h2> Detailed data</h2>
+	The first few {{KNOWL('emf.satake_parameters',title='Satake parameters')}} \(\alpha_p\) and angles \(\theta_p = \textrm{Arg}(\alpha_p) \) are
 	<br>
 	{{ info.satake | safe }}
-	<!--br>
-	{% if info.atkin_lehner != "" %}
-		<br>
-		The Atkin-Lehner eigenvalues are
-		<br>
-		{{ info.atkin_lehner | safe }}
-		<br>
-		The Atkin-Lehner eigenvalues corresponding to cusps are
-		<br>
-		{{ info.atkin_lehner_cusps | safe }}
-		<br><small>* ) {{KNOWL('cmf.fricke_involution',title='The Fricke involution')}} </small>
-	{% endif %}
-		< -->
-<h2>Special Values</h2>
-	Values at some CM points:
-	{{ info.CM_values | safe }}
+
+        {% if info.CM_values is defined %}
+        <h2>Special Values</h2>
+	Values at some  {{ KNOWL('emf.cm-points',title='CM points')}}
+        
+        <p>
+        <table class="ntdata" style="width:50%">
+          <thead>
+            <tr>
+              <th width="20px" style="border-right:1px solid black">Point&nbsp;\&nbsp;Embedding</th>
+              {% for h in info.CM_values.embeddings  %}
+              <th width="{{ info.CM_values.max_width }}">{{ h |safe }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for tau in info.CM_values.tau %}
+            <tr>
+              <th width="10px" style="border-right: 1px solid black">
+                {{ info.CM_values.tau_latex[tau] |  safe }}
+              </th>
+              {% for h in info.CM_values.cm_vals[tau]  %}
+              {% set vals =info.CM_values.cm_vals_latex[tau] %}
+              <td width="50px">{{ vals[h] }}</td>
+              {% endfor %}
+            {% endfor %}            
+            </tr>
+          </tbody>
+        </table>
+        </p>
+        {% endif %}
 
 	{% if info.explicit_formulas is defined %}
-<h2>Explicit Formulas</h2>
+        <h2> {{KNOWL('emf.explicitformulas',title='')}}Explicit Formulas</h2>
 	
-	 {{info.explicit_formulas }}
+        {{info.explicit_formulas }}
 	{% endif %}
 
 	<!-- h2>Explicit Formulas</h2 -->
 	{% if  true%}
-<h2>Get more coefficients</h2>
+
+        <h2>Further Properties</h2>
+        <div>
+          {% if info.is_cm is defined %}
+          This newform is 
+          {% if not info.is_cm %}
+          not
+          {% endif %}
+          a {{KNOWL('emf.cm_form',title='CM form')}}.
+          {% endif %}
+          It is 
+          {% if not info.is_minimal %}
+          not
+          {% endif %}
+          {{KNOWL('emf.minimal',title='minimal')}}.
+        </div>
+        {% if info.atkinlehner is defined and info.atkinlehner %}
+        <div>
+          The function has {{KNOWL('emf.atkinlehner',title='Atkin-Lehner')}} eigenvalues given by 
+          <p>
+            {{ info.atkinlehner | safe }}.
+          </p>
+        </div>
+        {% endif %}
+
+        <h2>Get more coefficients</h2>
 	<form name="get_coefficients" method="post"  action="{{url_for('.render_elliptic_modular_forms')}}">
 	  <input type="hidden" name="download" value="coefficients">
 	  Get / compute  <input type="text" size="10" name="number" value="10"> 
@@ -75,7 +115,7 @@
 	  <input type="button" name="Submit" value="Get coefficients" onclick="check_coefficient_form()">
 	  </form>
 
-<h2>Download as Sage Object</h2>
+<h2>Download as {{KNOWL('sage',title='Sage')}} Object</h2>
 <form name="download_object_form" method="post"  action="{{url_for('.render_elliptic_modular_forms')}}">
   <input type="hidden" name="download" value="object">
   <input type="hidden" name="level" value="{{info.level }}">

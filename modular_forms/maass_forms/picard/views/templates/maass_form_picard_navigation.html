@@ -1,0 +1,46 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<h1>Browse</h1>
+
+<p>
+This is a table of eigenvalues for {{KNOWL('mf.maassf.picard',title='Mass Forms on the Picard group \(\mathrm{SL}_{2}(\mathbb{Z}[i])\)') }}
+</p>
+
+<table class="ntdata">
+  <thead>
+    <tr>
+      <th width="10px" style="">
+        Level&nbsp;\&nbsp;Weight
+      </th>
+      {% for k in table.col_heads  %}
+      <th>{{k}}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in rows  %}
+    <tr class="{{row_class.next() }}">
+      <th width="0%" style="background:#afa; border-right: 1px solid black">
+        {{ table.row_heads[loop.index-1] }}
+      </th>
+      {% for cell in row  %}
+      <td align="center">
+        <a style="display:inline" href="{{cell.url}}">{{cell.dim}}</a>
+      </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+      </table>
+
+<div style="font-size: 75%">
+{% for i in ds %}
+<table 
+<a href="?id={{ i[0] }}">{{ "%5.2f"|format(i[1])}}</a> 
+{% endfor %}
+</div>
+
+<div>Computed by {{ KNOWL('mwfp.contributor.HT',title='Holger Then')}}</div>
+
+{% endblock %}

@@ -81,8 +81,20 @@ class WebModFormSpace(Parent):
         self._ap = list()
         self._verbose=verbose
         self._bitprec=bitprec
+        self._dimension_newspace = None
+        self._dimension_cusp_forms = None
+        self._dimension_modular_forms = None
+        self._dimension_new_cusp_forms = None
+        self._character = None
         # check what is in the database
-
+        ## dO A SIMPLE TEST TO SEE IF WE EXIST OR NOT.
+        if N<0 or int(chi)>int(euler_phi(N)) or chi<0:
+            print "1:",N<0
+            print "2:",int(chi)>int(euler_phi(N)) 
+            print "3:",chi<0
+            
+            emf_logger.critical("Could not construct WMFS with: {0}.{1}.{2} and eulerphi-{3}".format(k,N,chi,euler_phi(N)))
+            return None
         if isinstance(data,dict):
             if data.has_key('ap'):
                 self._ap = data['ap']
@@ -128,12 +140,6 @@ class WebModFormSpace(Parent):
             except RuntimeError:
                 raise RuntimeError, "Could not construct space for (k=%s,N=%s,chi=%s)=" % (k,N,self._chi)
         ### If we can we set these dimensions using formulas
-        self._dimension_newspace = None
-        self._dimension_cusp_forms = None
-        self._dimension_modular_forms = None
-        self._dimension_new_cusp_forms = None
-        
-        self._verbose=0
         if(self.dimension()==self.dimension_newspace()):
             self._is_new=True
         else:
@@ -169,8 +175,14 @@ class WebModFormSpace(Parent):
         Returns character nr. k acting on the ambient space of self.
 
         """
-        return DirichletGroup(self.group().level())[k]
+        D = DirichletGroup(self.group().level()).list()
+        try:
+            return D[k]
+        except IndexError:
+            emf_logger.critical("Got character no. {0}, which are outside the scope of characters mod {1}!".format(k,self.group().level()))
+            return trivial_character(self.group().level())
 
+        
     def _get_objects(self,k,N,chi,use_db=True,get_what='MS',**kwds):
         r"""
         Getting the space of modular symbols from the database if it exists. Otherise compute it and insert it into the database.
@@ -706,7 +718,7 @@ class WebNewForm(SageObject):
                 return 
 
 
-        self._name = str(self._N)+"."+str(self._k)+str(self._label) +" (weight %s)" % k
+        self._name = str(self._N)+"."+str(self._k)+str(self._label)
         if self._f == None:
             if(self._verbose>=0):
                 raise IndexError,"Requested function does not exist!"
@@ -1404,9 +1416,9 @@ class WebNewForm(SageObject):
 
         TODO: Get explicit, algebraic values if possible!
         """
-
         
-        bits=max(53,ceil(digits*4))
+        emf_logger.debug("in cm_values with digits={0}".format(digits))
+        bits=max(int(53),ceil(int(digits)*int(4)))
         CF=ComplexField(bits)
         RF=ComplexField(bits)
         eps=RF(10**-(digits+1))
@@ -1485,7 +1497,26 @@ class WebNewForm(SageObject):
                         cm_vals[tau][h]=v2[h]
                     else:
                         cm_vals[tau][h]=None
-        return cm_vals
+        res = dict()
+        res['embeddings']=range(degree)
+        res['tau_latex']=dict()
+        res['cm_vals_latex']=dict()
+        maxl=0
+        for tau in points:
+            if tau == zi:
+                res['tau_latex'][tau]="\("+latex(I)+"\)"
+            else:
+                res['tau_latex'][tau]="\("+latex(tau)+"\)"
+            res['cm_vals_latex'][tau]=dict()
+            for h in cm_vals[tau].keys():
+                res['cm_vals_latex'][tau][h]="\("+latex(cm_vals[tau][h])+"\)"
+                l =len_as_printed(res['cm_vals_latex'][tau][h],False)
+                if  l>maxl:
+                    maxl=l
+        res['tau']=points
+        res['cm_vals']=cm_vals
+        res['max_width']=maxl
+        return res
     
     def satake_parameters(self,prec=10,bits=53):
         r""" Compute the Satake parameters and return an html-table.
@@ -1862,7 +1893,7 @@ class WebNewForm(SageObject):
     def print_values_at_cm_points(self):
         r"""
         """
-        cm_vals=self.cm_values()
+        cm_vals=self.cm_values()['cm_values']
         K=self.base_ring()
         degree = _degree(K)
         if(self._verbose>2):
