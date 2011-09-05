@@ -112,16 +112,23 @@
        <h1 id="properties-header">Properties</h1>
        <div id="properties-collapser">&uarr;</div>
        <div id="properties-body">
-       {% for label, content in properties2 %}
-         {% if label %}<h2>{{ label }}</h2>{% endif %}
-        <div>
-          {% if content is string  %}
-            {{ content|safe }}
-          {% else %}
-            {{ p[1]|join('<br/>') }}
-          {% endif %}
-        </div>
-       {% endfor %} 
+       <table>
+       {% for label, content in properties2 -%}
+         {% if label %}
+           <tr><td class="label">{{label|safe}}</td><td>
+         {% else %}
+           <tr><td colspan="2">
+         {% endif %}
+         {% if content is string  -%}
+             {{ content|safe }}</td></tr>
+         {%- else -%}
+           {% for c in content -%}
+            {% if not loop.first -%}<tr><td></td>{%- endif %}
+              {{c|safe}}</td></tr>
+           {%- endfor %}
+         {%- endif %}
+       {%- endfor %} 
+      </table>
       </div>
      </div>
     {% endif %}
@@ -131,6 +138,8 @@
        <h1 id="properties-header">Properties</h1>
        <div id="properties-collapser">&uarr;</div>
        <div id="properties-body">
+         <h1 style="background: red">DEPRECATED!</h1>
+         <div style="background:orange;font-size:x-small;">your use of properties is deprecated.<br> please switch to properties2<br> with the correct datastructure:<br>[(.,[…]),…]</div>
         {% if citation -%}
          <h1>Citation</h1>
          {{ citation }}

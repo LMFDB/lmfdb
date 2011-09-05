@@ -198,6 +198,9 @@ body.knowl #header {
 }
 #header #navi {
   white-space: nowrap;
+  text-align: right;
+  color: #060;
+  font-family: sans-serif;
   font-size: 90%;
   padding: 2px 5px;
   position: absolute;
@@ -262,12 +265,15 @@ body.knowl #header {
     margin-top: 10px;
 }
 #properties-body h2:first-child { margin-top: 0px; }
-
+#properties-body .label {
+  font-weight: bold;
+}
 #properties-body {
   margin: 0;
   padding: 0;
   background: #efe;
   min-width: 200px;
+  padding-bottom: 10px;
   border-bottom-left-radius: 10px;
   -moz-border-radius-bottomleft: 10px;
 }
