@@ -216,9 +216,9 @@ class Lfunction:
 ### Returns the Lcalcfile, version 2
 ############################################################################
 
-    def createLcalcfile_ver2(self):
+    def createLcalcfile_ver2(self, url):
         thefile=""
-        thefile += "### lcalc file for the url: HOW TO GET THE ASSOCIATED URL?\n\n"
+        thefile += "### lcalc file for the url: " + url + "\n\n"
         thefile += "lcalcfile_version = 2    ### lcalc files should have a version number to allow for future enhancements\n\n"
 
         thefile += """\

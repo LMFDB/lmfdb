@@ -57,7 +57,7 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
     try:
         logging.info(temp_args)
         if temp_args['download'] == 'lcalcfile':
-            return render_lcalcfile(L)
+            return render_lcalcfile(L, request.url)
     except:
         1
         #Do nothing
@@ -319,11 +319,11 @@ def render_browseGraphChar(args):
     respone.headers['Content-type'] = 'image/svg+xml'
     return response
 
-def render_lcalcfile(L):
+def render_lcalcfile(L, url):
     try:
         response = make_response(L.lcalcfile)
     except:
-        response = make_response(L.createLcalcfile_ver2())
+        response = make_response(L.createLcalcfile_ver2(url))
 
     response.headers['Content-type'] = 'text/plain'
     return response
