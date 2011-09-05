@@ -18,6 +18,7 @@ from maass_forms.maass_waveforms import mwf
 from maass_forms.picard import mwfp
 
 app.register_blueprint(mf, url_prefix="/ModularForm/")
+app.register_blueprint(mf, url_prefix="/AutomorphicForm/")
 app.register_blueprint(emf, url_prefix="/ModularForm/GL2/Q/holomorphic")
 app.register_blueprint(maassf, url_prefix="/ModularForm/Maass")
 app.register_blueprint(mwf, url_prefix="/ModularForm/GL2/Q/Maass")

@@ -1,0 +1,80 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+
+{% if info.error is defined %}
+
+<h1>There was an error in meeting your previous request. Please change parameters.</h1>
+
+<div> 
+<h2> Error message: </h2>
+
+{{ info.error | safe }}
+</div>
+{% endif %}
+
+<h1> A {{KNOWL('mf.maass.mwf',title='Maass waveform')}} on  \(\Gamma_{0}({{ Level }} )\) with {{KNOWL('mf.maass.mwf.spectralparameter',title='spectral parameter')}} R= {{Eigenvalue}}</h1>
+<p>
+A {{KNOWL('mf.maass.mwf',title='Maass waveform')}} on the group \( \Gamma_{0}( {{ Level }} ) \) is....
+</p>
+
+<h2>Properties</h2>
+<table>
+{% if Eigenvalue is defined %}
+
+{# The eigenvalue of the {{KNOWL('mf.maass.mwf.laplacian',title='Laplacian')}} is:{{ Eigenvalue } #}
+{% endif %}
+
+</div>
+<div>Symmetry type: {{ Symmetry }}</div>
+</table>
+
+<h2>Fourier Coefficients</h2>
+
+{% if table is defined and nrows > 0%}
+<table class="ntdata">
+  <thead>
+    <tr>
+      <th> n </th>
+      <th>C(n) </th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in range(0,nrows) %}
+    <tr>
+      <th style="border-right: 1px solid black">{{ row_heads[r] }}</th>
+      {% for k in range(0,ncols)  %}
+          {% set val = "" %}
+          {% if table[r] is defined and table[r][k] is defined %}
+             {% if table[r][k]['value'] is defined %}
+               {% set val  = table[r][k]['value'] %}
+             {% endif %}
+          {% endif %}
+           <td> {{val | safe }}</td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+   </tbody>
+</table>
+<form name="search" method = "get" action="{{url_for('mwf.render_one_maass_waveform',id=maassid)}}">
+  <input type="hidden" name="id" value="{{maassid}}">
+  More Coefficients:
+  <select name="limit">
+    <option value="20">20</option>
+    <option value="50">50</option>
+    <option value="100">100</option>
+    <option value="-1">all</option>
+  </select>
+  <button type="submit" name="Submit" value="Get more">Get more</button>	
+</form>
+<p>
+{{ KNOWL('metadata.knowl-tag') }}
+</p>
+{% else %}
+There are no Fourier coefficients supplied for this Maass form.
+{% endif %}
+
+
+
+{% endblock content %}

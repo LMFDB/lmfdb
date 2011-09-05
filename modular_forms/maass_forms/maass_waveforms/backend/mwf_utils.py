@@ -171,6 +171,8 @@ def get_search_parameters(info):
     return ret
 
 
+
+
 #from base import getDBConnection
 
 class MWFTable(object):
@@ -249,7 +251,7 @@ class MWFTable(object):
                     i=i+1
                     _id = f['_id']
                     R = f['Eigenvalue']
-                    url = url_for('mwf.render_one_maass_waveform',objectid=str(_id),db=c.name)
+                    url = url_for('mwf.render_one_maass_waveform',id=str(_id),db=c.name)
                     evs.append([R,url,c.name])
                 if i>0 and c not in new_cols:
                     new_cols.append(c)
@@ -294,7 +296,7 @@ class MWFTable(object):
     ##             cl="even"
     ##         else:
     ##             cl="odd"
-    ##         url = url_for('mwf.render_one_maass_waveform',objectid=str(_id),db=name)
+    ##         url = url_for('mwf.render_one_maass_waveform',id=str(_id),db=name)
     ##         s="<tr class=\"{0}\"><td><a href=\"{1}\">{2}</a> ".format(cl,url,R)
     ##         #s+="{{{{Knowl('mwf.collections.{0}')}}}}</td></tr>\n".format(name)
     ##         s+=str(col_info[name])+"</td></tr>\n"
@@ -475,7 +477,7 @@ def get_args_mwf():
     level  = my_get(info,'level', None,int)
     weight = my_get(info,'weight',0,int) 
     character = my_get(info,'character', '',str)
-    MaassID = my_get(info,"id", '',int)	
+    maass_id = my_get(info,"id", '',int)	
     DBname = my_get(info,"db",'',str)
     search = my_get(info,"search", '',str)
     SearchAll = my_get(info,"search_all", '',str)
@@ -489,7 +491,7 @@ def get_args_mwf():
 #int(info.get('weight',0))
     #label  = info.get('label', '')
     info['level']=level; info['weight']=weight; info['character']=character
-    info['MaassID']=MaassID
+    info['maass_id']=maass_id
     info['DBname']=DBname
     info['search']=search
     info['collection']=collection

@@ -1,4 +1,4 @@
-import mwf_picard_main 
+import mwfp_main 
 
 
 

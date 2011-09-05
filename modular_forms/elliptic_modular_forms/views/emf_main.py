@@ -26,7 +26,7 @@ from sage.all import *
 from  sage.modular.dirichlet import DirichletGroup
 from base import app, db
 from modular_forms.elliptic_modular_forms.backend.web_modforms import WebModFormSpace,WebNewForm
-from modular_forms.elliptic_modular_forms.backend.emf_classes import *
+from modular_forms.elliptic_modular_forms.backend.emf_classes import ClassicalMFDisplay
 from modular_forms.elliptic_modular_forms.backend.emf_core import * 
 from modular_forms.elliptic_modular_forms.backend.emf_utils import *
 from modular_forms.elliptic_modular_forms.backend.plot_dom import * 
@@ -36,6 +36,12 @@ logger = emf_logger
 @emf.context_processor
 def body_class():
   return { 'body_class' : EMF }
+
+### Names to use for bread crumbs.
+
+MF_TOP = "Modular Forms"
+EMF_TOP       = "Holomorphic Modular Forms"
+
 
 ### Maximum values to be generated on the fly
 N_max_comp = 100
@@ -208,13 +214,15 @@ def render_one_elliptic_modular_form_wp(info):
         name+=" with character \(\chi_{%s}\) mod %s" %(character,level)
         name+=" of order %s and conductor %s" %(info['character_order'],info['character_conductor'])
     else:
-        name+=" with trivial character!"
+        name+=" with trivial character"
     info['name']=name
+    url0 = url_for('mf.modular_form_main_page')
     url1 = url_for("emf.render_elliptic_modular_forms")
     url2 = url_for("emf.render_elliptic_modular_form_space2",level=level) 
     url3 = url_for("emf.render_elliptic_modular_form_browsing",level=level,weight=weight)
     url4 = url_for("emf.render_elliptic_modular_form_space",level=level,weight=weight,character=character) 
-    bread = [('Holomorphic Modular Forms',url1)]
+    bread = [(MF_TOP,url0)]
+    bread.append((EMF_TOP,url1))
     bread.append(("of level %s" % level,url2))
     bread.append(("weight %s" % weight,url3))
     if int(character) == 0 :
@@ -256,13 +264,19 @@ def render_elliptic_modular_form_navigation_wp(**args):
         info['geometric'] = print_geometric_data_Gamma0N(level)
         info['fd_plot'] = render_fd_plot(level,info)
     title = "Holomorphic Cusp Forms"
-    bread =[('Modular Forms',url_for('modular_form_toplevel'))]
-    #disp.set_table_browsing()
+    bread =[(MF_TOP,url_for('mf.modular_form_main_page'))]
+    #table_type= _my_get(info,'type', '',str)
+    #if not table_type:
+    #  fun = dimension_new_cusp_forms
+    #  title = 'Newforms on \(\Gamma_{0}(N)\) with trivial character'
+    #elif table_type=='cuspforms':
+    #  fun = dimension_new_cusp_forms
+    #  title = 'Newforms'
     disp.set_table_browsing(limit=[(1,36),(1,10)],keys=['Weight','Level'],character=0,dimension_fun=dimension_new_cusp_forms,title='Browse Holomorphic Modular Forms')
     info['browse_table']=disp._table
 
     return render_template("emf_navigation.html", info=info,title=title,bread=bread)
-#    return render_template("emf_browse.html", info=info,title=title,bread=bread)
+
 
 
 def get_args():
@@ -294,8 +308,8 @@ def browse_elliptic_modular_forms(**info):
     weight = _my_get(info,'weight', '-1',int)
     label  = info.get('label', '')
     char  = info.get('character', '0')
-    #bread =[('Modular Forms',url_for('modular_form_toplevel'))]
-    bread =[('Modular Forms',url_for('.render_elliptic_modular_forms'))]
+    bread = [(MF_TOP,url_for('mf.modular_form_main_page'))]
+    bread.append((EMF_TOP,url_for('emf.render_elliptic_modular_forms')))
     if level <0:
         level=None
     if weight<0:
@@ -327,8 +341,8 @@ def browse_elliptic_modular_forms(**info):
         
         #info['list_spaces']=ajax_more(make_table_of_spaces_fixed_level,*largs,text='more')
         title = "Holomorphic Cusp Forms of level %s " % level
-        #bread =[('Modular Forms',url_for('modular_form_toplevel'))]
-        bread =[('Modular Forms',url_for('.render_elliptic_modular_forms'))]
+        bread =[(MF_TOP,url_for('mf.modular_form_main_page'))]
+        bread.append((EMF_TOP,url_for('emf.render_elliptic_modular_forms')))
         info['browse_type']=" of level %s " % level
         return render_template("emf_browse_fixed_level.html", info=info,title=title,bread=bread)
     if weight and not level:
@@ -337,8 +351,7 @@ def browse_elliptic_modular_forms(**info):
         info['weight_min']=weight;info['weight_max']=weight
         info['list_spaces']=make_table_of_dimensions(weight_start=weight,weight_stop=weight,**info) #make_table_of_spaces(level=[10,20,30])
         title = "Holomorphic Cusp Forms of weight %s" %weight
-        #bread =[('Modular Forms',url_for('modular_form_toplevel'))]
-        bread =[('Modular Forms',url_for('.render_elliptic_modular_forms'))]
+        bread =[(MF_TOP,url_for('mf.modular_forms_main_page'))]
         info['browse_type']=" of weight %s " % weight
         return render_template("emf_browse_fixed_level.html", info=info,title=title,bread=bread)
     emf_logger.debug("here2!")
@@ -384,8 +397,8 @@ def render_elliptic_modular_form_space_wp(info):
     if not properties:
       properties=[s]
     title = "Holomorphic Cusp Forms of weight %s on \(\Gamma_{0}(%s)\)" %(weight,level)
-    bread =[('Modular Forms',url_for('modular_form_toplevel'))]
-    bread =[('Modular Forms',url_for('modular_form_toplevel'))]
+    bread =[(MF_TOP,url_for('mf.modular_form_main_page'))]
+    bread.append((EMF_TOP,url_for('emf.render_elliptic_modular_forms')))
     bread.append(("Level %s" %level,url_for('emf.render_elliptic_modular_form_space2',level=level)))
     bread.append(("Weight %s" %weight,url_for('emf.render_elliptic_modular_form_browsing',level=level,weight=weight)))
     emf_logger.debug("friends={0}".format(friends))
@@ -420,8 +433,9 @@ def render_elliptic_modular_form_space_list_chars(level,weight):
         #info['extra_info']="This is the only space of level %s and weight %s." %(level,weight)
         return redirect(url_for("emf.render_elliptic_modular_form_space", **info))
     info['list_spaces']=s
-    title = "Holomorphic Modular Cuspforms of level %s and weight %s " %(level,weight)
-    bread =[('Modular Forms',url_for('modular_form_toplevel'))]
+    title = "Holomorphic Cuspforms of level %s and weight %s " %(level,weight)
+    bread =[(MF_TOP,url_for('mf.modular_form_main_page'))]
+    bread.append((EMF_TOP,url_for('emf.render_elliptic_modular_forms')))
     bread.append(("Level %s" %level,url_for("emf.render_elliptic_modular_form_space2",level=level)))
     
     info['browse_type']=" of level %s and weight %s " % (level,weight)

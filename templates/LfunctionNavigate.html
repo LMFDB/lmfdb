@@ -1,7 +1,7 @@
 {% extends 'homepage.html' %}
 
 {% block content %}
-<h2> Browse {{KNOWL('lfunction', title='L-functions')}} by {{KNOWL("lfunction.type",title="type")}}</h2>
+<h2> Browse {{KNOWL('lfunction', title='L-functions')}} by {{KNOWL("lfunction.underlying_object",title="underlying object")}}</h2>
 <table>
 {% for i in type_row_list: %}
 <tr>
@@ -48,10 +48,10 @@ Enter values into one or more boxes to restrict the search.
 <tr>
 
 <tr>
-<td>{{ KNOWL('lfunction.zeros', title='Lowest Zero') }} is greater than</td><td> <input type='text' size='4' name='zerolowerbound' placeHolder='1.1'></td><td> and less than </td><td><input type='text' size='4' name='zeroupperbound' placeHolder='2.1'></td><td><span class="formexample"> e.g. 1.1 and 2.1 </span></td>
+<td>{{ KNOWL('lfunction.zeros', title='Lowest zero') }} is greater than</td><td> <input type='text' size='4' name='zerolowerbound' placeHolder='1.1'></td><td> and less than </td><td><input type='text' size='4' name='zeroupperbound' placeHolder='2.1'></td><td><span class="formexample"> e.g. 1.1 and 2.1 </span></td>
 </tr>
 <tr>
-<td>{{ KNOWL('lfunction.critical_value', title='Critical Value') }} is around</td><td> <input type='text' name='critical_value' size='4' placeHolder='0.5'></td><td><span class="formexample"> e.g. 0.5 </span></td>
+<td>{{ KNOWL('lfunction.central_value', title='Central value') }} is around</td><td> <input type='text' name='critical_value' size='4' placeHolder='0.5'></td><td><span class="formexample"> e.g. 0.5 </span></td>
 </tr>
 
 <tr>

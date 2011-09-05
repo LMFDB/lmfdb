@@ -34,13 +34,13 @@ $(document).ready(function() {
 </div>
 {% endif %}
 
-      <h1>{{ KNOWL('cmf.newform',title='Newforms') }} {{info.browse_type | safe}}</h1>
+      <h1>{{ KNOWL('mf.elliptic.newform',title='Newforms') }} {{info.browse_type | safe}}</h1>
       {# { info | safe } #}
       {% if info.browse_table is defined %}
       {% if info.browse_table.rows is defined %}
-      {# {KNOWL('emf.emf_browse.all.info') } #}
+      {# {KNOWL('mf.ellipticemf_browse.all.info') } #}
       <p>
-      In the table below you can brose spaces of Newforms {{KNOWL('emf.newforms',title='Holomorphic Newforms')}} of a given level and weight. 
+      In the table below you can brose spaces of Newforms {{KNOWL('mf.ellipticnewforms',title='Holomorphic Newforms')}} of a given level and weight. 
       The entry in the table is the dimension of the space.
       </p>
       {% set table = info.browse_table %}
@@ -61,7 +61,9 @@ $(document).ready(function() {
           {% for row in rows  %}
           <tr class="{{row_class.next() }}">
             <th width="0%" style="background:#afa; border-right: 1px solid black">
-              {{ table.row_heads[loop.index-1] }}
+              {% set N = table.row_heads[loop.index-1] %}
+              {% set row_url = url_for('emf.render_elliptic_modular_form_space2',level=N) %}
+              <a href="{{ row_url }}">{{ N }}</a>
             </th>
             {% for cell in row  %}
             <td align="center">
@@ -87,10 +89,10 @@ $(document).ready(function() {
             {% endif %}
             
             <table>
-              <tr><td>{{KNOWL('emf.gamma0N.index',title='index')}}</td><td>{{G.index}}</td></tr>
-              <tr><td>{{KNOWL('emf.gamma0N.genus',title='genus')}}</td><td>{{G.genus}}</td></tr>
-              <tr><td>{{KNOWL('emf.gamma0N.cusps',title='index')}}</td><td>{{G.cusps}}</td></tr>
-              <tr><td colspan="2">Number of {{KNOWL('emf.gammaN.ellipticfxpts',title='elliptic fixed points')}}</td></tr>
+              <tr><td>{{KNOWL('mf.ellipticgamma0N.index',title='index')}}</td><td>{{G.index}}</td></tr>
+              <tr><td>{{KNOWL('mf.ellipticgamma0N.genus',title='genus')}}</td><td>{{G.genus}}</td></tr>
+              <tr><td>{{KNOWL('mf.ellipticgamma0N.cusps',title='index')}}</td><td>{{G.cusps}}</td></tr>
+              <tr><td colspan="2">Number of {{KNOWL('mf.ellipticgammaN.ellipticfxpts',title='elliptic fixed points')}}</td></tr>
               <tr><td>order 2</td><td>{{G.nu2}}</td></tr>
               <tr><td>order 3</td><td>{{G.nu2}}</td></tr>
             </table>
