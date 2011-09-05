@@ -1,0 +1,57 @@
+{% extends 'homepage.html' %}
+{% block content %}
+{% set cell_class=cycler("even","odd") %}
+
+<h1>{{ title }}</h1>
+
+
+<p>
+A Maass Form \(F\) on the {{KNOWL('mf.maass.picard',title='Mass Forms on the Picard group \(\mathrm{SL}_{2}(\mathbb{Z}[i])\)') }}
+</p>
+{# Should be used to display one single Maass Form #}
+
+{% if table is defined %}
+<h2>Properties</h2>
+
+{% if ev is defined %}
+The eigenvalue of the {{KNOWL('mf.maass.picard.laplacian',title='Laplacian')}} is:{{ ev }}
+{% endif %}
+</div>
+<div>symmetry type: {{ sym|join(" ")}}</div>
+
+The {{KNOWL('mf.maass.picard.fourier_expansion',title='Fourier expansion')}} has coefficients \( c(n) \) with \(n = a+bi\) and \( m,n  \in \mathbb{Z} \). 
+
+<h2>Fourier Coefficients</h2>
+
+<table class="ntdata">
+  <thead>
+    <tr>
+      <th>a&nbsp;\&nbsp;b</th>
+      {% for b in col_heads %}
+      <th> {{ b }} </th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for a in row_heads %}
+    {% if ncols is even %}
+    {% set tmp = cell_class.next() %}
+    {% endif %}
+    <tr>
+      <th style="border-right: 1px solid black">{{ a }}</td>
+      {% for b in col_heads %}
+      {% set val = table[a][b].value %}
+      <td class="{{ cell_class.next() }}">\({{val | safe }}\)</td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+   </tbody>
+</table>
+<p>
+The {{KNOWL('mf.maassf.picard.data.accuracy',title='accuracy')}} of the presented data is {{ prec}}
+</p>
+<p>
+Computed by {{ KNOWL('mf.maassf.picard.data.contributor.HT',title='Holger Then')}}
+</p>
+{% endif %}
+{% endblock %}

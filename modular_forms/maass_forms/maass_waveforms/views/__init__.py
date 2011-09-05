@@ -1,3 +1,3 @@
-from mwf_main import *
+import mwf_main
 
 

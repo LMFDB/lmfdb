@@ -73,7 +73,7 @@ function properties_collapser(evt) {
   var pb_h = $pb.height();
   $pb.animate({"height": "toggle", "opacity" : "toggle"}, 
     { 
-      duration: 100 + 100 * Math.log($pb.height()),
+      duration: 50 + 100 * Math.log(100 + $pb.height()),
       step: function() { 
        /* synchronize icon rotation effect */
        var val = $pb.height() / pb_h;
@@ -234,3 +234,19 @@ $(function() {
     .bind("ajaxStop",
       function() { $(this).text("done"); clear(true, true); });
 });
+
+function decrease_start_by_count_and_submit_form() {
+  startelem = $('input[name=start]');
+  count = parseInt($('input[name=count]').val());
+  newstart = parseInt(startelem.val())-count;
+  if(newstart>=0) {
+    startelem.val(parseInt(startelem.val())-count);
+    $('form')[0].submit();
+  }
+}
+function increase_start_by_count_and_submit_form() {
+  startelem = $('input[name=start]');
+  count = parseInt($('input[name=count]').val());
+  startelem.val(parseInt(startelem.val())+count);
+  $('form')[0].submit();
+}

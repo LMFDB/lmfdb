@@ -5,6 +5,7 @@
 
 
 <form>
+<input type="hidden" name="start" value="{{info.start}}"/>
 <table border="0">
 
 <tr>
@@ -53,6 +54,11 @@
 </tr>
 {% endfor %}
 </table>
+
+<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form();return false">Previous</A>
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form();return false">Next</A></td>
+
+
 
 <br>
 <p>

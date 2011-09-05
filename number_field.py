@@ -509,6 +509,17 @@ def number_field_search(**args):
         info['count'] = 10
         count = 10
 
+    if info.get('start'):
+        try:
+            start = int(info['start'])
+            if(start < 0): start += (1-(start+1)/count)*count
+        except:
+            start = 0
+    else:
+        start = 0
+
+
+
     info['query'] = dict(query)
     if 'lucky' in args:
         import base
@@ -548,15 +559,19 @@ def number_field_search(**args):
     if ur_primes:
         res = filter_ur_primes(res, ur_primes)
 
-    res = iter_limit(res,count)
+    if(start>=nres): start-=(1+(start-nres)/count)*count
+    if(start<0): start=0
+
+    res = iter_limit(res,count,start)
         
     info['fields'] = res
     info['number'] = nres
+    info['start'] = start
     if nres==1:
         info['report'] = 'unique match'
     else:
-        if nres>count:
-            info['report'] = 'displaying first %s of %s matches'%(count,nres)
+        if nres>count or start!=0:
+            info['report'] = 'displaying matches %s-%s of %s'%(start+1,min(nres,start+count),nres)
         else:
             info['report'] = 'displaying all %s matches'%nres
     info['format_coeffs'] = format_coeffs
@@ -567,7 +582,11 @@ def number_field_search(**args):
     return render_template("number_field/number_field_search.html", info = info, title=t, properties=properties, bread=bread)
 
 
-def iter_limit(it,lim):
+def iter_limit(it,lim,skip):
+    count = 0
+    while count<skip:
+        it.next()
+        count += 1
     count = 0
     while count<lim:
         yield it.next()

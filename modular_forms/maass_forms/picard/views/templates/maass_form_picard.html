@@ -1,28 +1,27 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<h1>{{ title }}</h1>
+<h1>{{ title }} HERE!</h1>
+
 
 <p>
-This is a table of eigenvalues for {{KNOWL('mf.maassf.picard',title='Mass Forms on the Picard group \(\mathrm{SL}_{2}(\mathbb{Z}[i])\)') }}
+A Maass Form on the {{KNOWL('mf.maass.picard',title='Mass Forms on the Picard group \(\mathrm{SL}_{2}(\mathbb{Z}[i])\)') }}
 </p>
+{# Should be used to display one single Maass Form #}
 
-<div style="font-size: 75%">
-{% for i in ds %}
-<a href="?id={{ i[0] }}">{{ "%5.2f"|format(i[1])}}</a> 
-{% endfor %}
-</div>
+{{ data | safe }}
+{{ bread | safe }}
+{{ title | safe }}
 
-{% if id %}
+{% if data is defined %}
 <div>eigenvalue = {{ data.ev }}</div>
-<div>symmetry type: {{data.sym|join(" ")}}</div>
-<div>accuracy: {{data.prec}}</div>
+<div>symmetry type: {{ data.sym|join(" ")}}</div>
+<div>accuracy: {{ data.prec}}</div>
 
 <table class="ntdata">
 <thead><tr><td>real(beta)</td>
            <td>imag(beta)</td>
            <td>a(beta)</td>
-<!--           <td>symmetry type</td>-->
 </tr>
 
 </thead>
@@ -32,7 +31,7 @@ This is a table of eigenvalues for {{KNOWL('mf.maassf.picard',title='Mass Forms 
    {% for v in i %}
      <td>{{ v }}</td>
    {% endfor %}
-{#   <td>{{data.sym|join(" ")}}</td> #}
+{#   <td>{{ data.sym|join(" ")}}</td> #}
    </tr>
 {% endfor %}
 </tbody>
@@ -40,6 +39,6 @@ This is a table of eigenvalues for {{KNOWL('mf.maassf.picard',title='Mass Forms 
 
 {% endif %}
 
-<div>Computed by {{ KNOWL('mwfp.contributor.HT',title='Holger Then')}}</div>
+<div>Computed by {{ KNOWL('mf.picard.contributor.HT',title='Holger Then')}}</div>
 
 {% endblock %}
