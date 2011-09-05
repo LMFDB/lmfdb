@@ -428,10 +428,10 @@ def paintCSHoloTMP(width, height, xMax, yMax, xfactor, yfactor,ticlength):
                              "' style='fill:rgb(102,102,102);font-size:11px;'>"
                              + str(i) + "</text>\n")
 
-        xmlText = xmlText + ("<line y1='0' x1='" + str(i*xfactor) +
-                         "' y2='" + str(height) + "' x2='" +
-                         str(i*xfactor) +
-                         "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+        #xmlText = xmlText + ("<line y1='0' x1='" + str(i*xfactor) +
+        #                 "' y2='" + str(height) + "' x2='" +
+        #                 str(i*xfactor) +
+        #                 "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
     for i in range( 1,  yMax + 1):
         xmlText = xmlText + ("<line x1='0' y1='" +
@@ -446,11 +446,11 @@ def paintCSHoloTMP(width, height, xMax, yMax, xfactor, yfactor,ticlength):
                              "' style='fill:rgb(102,102,102);font-size:11px;'>" +
                              str(i) + "</text>\n")
 
-        if i%4==0 :  #  put dahes every four units
-           xmlText = xmlText + ("<line x1='0' y1='" +
-                         str(height - i*yfactor) + "' x2='" + str(width) +
-                         "' y2='" + str(height - i*yfactor) +
-                         "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+        #if i%4==0 :  #  put dahes every four units
+        #   xmlText = xmlText + ("<line x1='0' y1='" +
+        #                 str(height - i*yfactor) + "' x2='" + str(width) +
+        #                 "' y2='" + str(height - i*yfactor) +
+        #                 "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
     return(xmlText)
 
@@ -589,16 +589,16 @@ def paintSvgHolo(Nmin,Nmax,kmin,kmax):
 ## General code to be used with plotsector routine.
 ## ============================================
 def paintSvgHoloGeneral(Nmin,Nmax,kmin,kmax,imagewidth,imageheight):
-    xfactor = 90
+    xfactor = 90 #CHANGE BACK TO 90 in a bit
     yfactor = 30
     extraSpace = 20
     ticlength = 4
     radius = 3.3
-    xdotspacing = 0.30  # horizontal spacing of dots
-    ydotspacing = 0.11  # vertical spacing of dots
+    xdotspacing = 0.30  # horizontal spacing of dots  CHANGE TO 0.30 in a bit
+    ydotspacing = 0.11  # vertical spacing of dots  CHANGE TO 0.11 in a bit
     colourplus = signtocolour(1)
     colourminus = signtocolour(-1)
-    maxdots = 5  # max number of dots to display
+    maxdots = 0.5  # max number of dots to display  #CHANGE BACK TO 5 in a bit
 
     ans = "<svg  xmlns='http://www.w3.org/2000/svg'"
     ans += " xmlns:xlink='http://www.w3.org/1999/xlink'>\n"
@@ -684,7 +684,6 @@ def paintSvgHoloGeneral(Nmin,Nmax,kmin,kmax,imagewidth,imageheight):
                        #dimensioninfo['edge'] = [[0,1],[-1,0]]     # unit vectors defining edges of sector for signfe negative
                        dimensioninfo['edge'] = [[0,-1],[-1,0]]     # unit vectors defining edges of sector for signfe negative
                     dimensioninfo['dotspacing'] = [signfe * xdotspacing, ydotspacing]
-                    #dimensioninfo['firstdotoffset'] = [0.5 * (dimensioninfo['dotspacing'][0] * dimensioninfo['edge'][0][0] + dimensioninfo['dotspacing'][1] * dimensioninfo['edge'][1][0]), 0.5 * (dimensioninfo['dotspacing'][1] * dimensioninfo['edge'][0][1] + dimensioninfo['dotspacing'][1] * dimensioninfo['edge'][1][1])]
                     dimensioninfo['firstdotoffset'] = [0.5 * (dimensioninfo['dotspacing'][0] * dimensioninfo['edge'][0][0] + dimensioninfo['dotspacing'][1] * dimensioninfo['edge'][1][0]), 0]
                     signcolour = signtocolour(signfe)
                     appearanceinfo['edgecolor'] = signcolour
