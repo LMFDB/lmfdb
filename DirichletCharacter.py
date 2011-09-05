@@ -135,6 +135,7 @@ def initCharacterInfo(chi,args, request):
         info['sign'] = chi.sign
         info['vals'] = latex(chi.vals)
         info['valstex'] = chi.valstex
+        info['root_unity'] =  any(map(lambda x : r"\zeta" in x,  chi.valstex))
         info['unitgens'] = str(chi.unitgens)
         #print chi.unitgens
         info['bound'] = int(chi.bound)
@@ -154,12 +155,19 @@ def initCharacterInfo(chi,args, request):
         info['kloosterman_sum'] = chi.kloosterman_sum_tex()
         info['learnmore'] = [('Dirichlet Characters', 'http://wiki.l-functions.org/L-functions') ] 
         info['friends'] = [('Dirichlet L-function', '/L/Character/Dirichlet/'+smod+'/'+snum)]
+        nmore = int(snum) + 1
+        nless = int(snum) - 1
+        mmore = int(smod) + 1
+        mless = int(smod) - 1
+        url_ch = url_for("render_Character", arg1=smod,arg2=str(nmore))
+        if chi.number == 0:
+            info['navi'] = [(r"\(\chi_{" + str(nmore) + r"} \left( \text{mod}\; " + smod+ r"\right) \)" ,url_ch), (r"\(\chi_{" + str(euler_phi(chi.modulus)-1) + r"} \left( \text{mod}\;" + str(mless)+ r"\right) \)",url_for("render_Character", arg1=str(mless),arg2=str(euler_phi(chi.modulus)-1)))]
+        elif chi.number == euler_phi(chi.modulus)-1:
+            info['navi'] = [(r"\(\chi_{" + str(nmore) + r"} \left( \text{mod}\;" + str(mmore)+ r"\right) \)",url_for("render_Character", arg1=str(mmore),arg2=str(0))), (r"\(\chi_{" + str(nless) + r"} \left( \text{mod}\;" + smod+ r"\right) \)",url_for("render_Character", arg1=smod,arg2=str(nless)))]
+        else:
+            info['navi'] = [(r"\(\chi_{" + str(nmore) + r"} \left( \text{mod}\;" + smod+ r"\right) \)",url_for("render_Character", arg1=smod,arg2=str(nmore))), (r"\(\chi_{" + str(nless) + r"} \left( \text{mod}\; " + smod+ r"\right) \)",url_for("render_Character", arg1=smod,arg2=str(nless)))]
 
     return info
-
-@app.route("/Character/Dirichlet/<modulus>/<number>")
-def character_next_modulus(modulus,number):
-    return render_webpage(request,modulus,number)
 
 @app.route("/Character/Dirichlet/<modulus>/<number>")
 def render_webpage_label(modulus,number):
