@@ -60,15 +60,22 @@
    {% endif %}
  {%- endmacro %}
 
-<div id="sidebar">
 
+<div id="sidebar">
   <h2 class="link">
    <a href="{{ url_for('render_Lfunction') }}">L-functions</a>
   </h2>
+  <div>
+    Degree:
+    <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree1')}}">1</a>
+    <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree2')}}">2</a>
+    <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree3')}}">3</a>
+    <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree4')}}">4</a><
+  </div>
 
   <h2>Elliptic Curves</h2>
   <ul>
-   <li><a href="{{ url_for('EC_toplevel') }}  ">Elliptic curves/\(\mathbb Q\)</a>
+   <li><a href="{{ url_for('EC_toplevel') }}  ">Elliptic Curves/\(\mathbb Q\)</a>
   </ul>
 
   <h2 class="link"><a href="{{ url_for('number_field_render_webpage') }}">Number Fields</a></h2>
@@ -83,7 +90,7 @@
   <ul>
    <li><a class="emf"  href="{{ url_for('emf.render_elliptic_modular_forms') }}">Holomorphic Cusp Forms</a></li>
    <li><a class="mwf"  href="{{ url_for('mwf.render_maass_waveforms') }}">Maass Forms</a></li>
-   <li><a              href="{{ url_for('ModularForm_GSp4_Q_top_level') }}">Siegel modular forms</a> </li>
+   <li><a              href="{{ url_for('ModularForm_GSp4_Q_top_level') }}">Siegel Modular Forms</a> </li>
    <li><a class="mwfp" href="{{ url_for('mwfp.render_picard_maass_forms') }}">Maass Forms on \(SL_2(Z[i])\)</a></li>
    <li><a              href="{{ url_for('hilbert_modular_form_render_webpage') }}">Hilbert Modular Forms</a></li>
   </ul>
@@ -185,7 +192,8 @@
     {% if support -%}
       {{ support|safe }}<br/>
     {%- else -%}
-       The creation of this website was supported by the NSF, AIM ...<br />
+       <h4>This project is supported by the <a href="http://www.nsf.gov">National Science Foundation</a> under FRG Grant No. DMS-0757627, which is administered from the <a href="http://www.aimath.org">American Institute of Mathematics</a>. </h4>
+<br />
     {%- endif %}
     Number Theory, the Queen of Mathematics!
 </div>
