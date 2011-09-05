@@ -442,7 +442,7 @@ td.forminfo {
    vertical-align: top;
 }
 
-form input, form textarea {
+input, textarea {
   border: 2px solid #ACA;
   font-size: 110%;
   padding: 3px;
@@ -594,6 +594,10 @@ table .knowl-link {
   border-bottom: 1px solid {{ col_knowl_d }};
   border-top-left-radius: 10px;
   -moz-border-radius-topleft: 10px;
+}
+#knowl-search input {
+  font-size: small;
+  background: {{ col_knowl_ll }};
 }
 .knowl-bar a {
   padding: 2px 5px;
@@ -837,4 +841,11 @@ a.navlink {
   text-decoration: none;
   margin-left: 1px;
   margin-top: 10px
+}
+hr {
+  border: 2px solid {{ col_main_l }};
+  margin: 15px 0;
+}
+body.knowl hr {
+  border: 2px solid {{ col_knowl_l }};
 }

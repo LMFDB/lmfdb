@@ -53,7 +53,10 @@ class WebCharacter:
         self.primcharconductor = self.primchar.conductor()
         F = DirichletGroup(self.primcharmodulus)
         for i in range(len(F)):
-            if F[i] == self.primchar:
+            if i == 0:
+                self.primcharnumber = 0
+                break
+            elif F[i] == self.primchar:
                 self.primcharnumber = i
                 break
         self.primchartex = "\(\\chi_{%s}\\!\\!\\pmod{%s}\)" %(self.primcharnumber,self.primcharmodulus)

@@ -34,12 +34,14 @@
           </span>
       </div>
       {% if navi is defined -%}
-      <div id="navi">
-       {% for txt, u in navi -%}
-        <a href="{{ u }}">{{ txt|safe }}</a>
-        {% if not loop.last -%}&middot;{%- endif %}
-       {%- endfor %}
-      </div>
+        <div id="navi">
+         {% for txt, u in navi -%}
+          <a href="{{ u }}">{{ txt|safe }}</a>
+          {% if not loop.last -%}&middot;{%- endif %}
+         {%- endfor %}
+        </div>
+      {%- elif navi_raw is defined -%}
+        <div id="navi">{{ navi_raw|safe }}</div>
       {%- endif %} 
       {# this span inside a div thing is necessary to align it at the bottom, see css #}
       <div id="title"><span id="title-content">{{ title|safe }}</span></div>

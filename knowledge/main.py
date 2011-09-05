@@ -131,12 +131,17 @@ def show(ID):
   k = Knowl(ID)
   r = render(ID, footer="0")
   b = get_bread([('%s'%k.title, url_for('.show', ID=ID))])
+  searchbox = u"""\
+    <form id='knowl-search' action="%s" method="GET">
+      <input name="search" />
+    </form>""" % url_for(".index")
     
   return render_template("knowl-show.html",
          title = k.title,
          k = k,
          render = r,
-         bread = b)
+         bread = b,
+         navi_raw = searchbox)
 
 @knowledge_page.route("/delete/<ID>")
 @admin_required
