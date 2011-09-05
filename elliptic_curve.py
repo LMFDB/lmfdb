@@ -86,8 +86,8 @@ def rational_elliptic_curves():
         'conductor_list': conductor_list,
     }
     credit = 'John Cremona'
-    t = 'Elliptic curves'
-    bread = [('Elliptic Curves', url_for("rational_elliptic_curves")),('Elliptic curves',' ')]
+    t = 'Elliptic curves/$\mathbb{Q}$'
+    bread = [('Elliptic Curves', url_for("rational_elliptic_curves")),('Elliptic curves/$\mathbb{Q}$',' ')]
     return render_template("elliptic_curve/elliptic_curve_Q.html", info = info, credit=credit, title = t,bread=bread)
 
 @app.route("/EllipticCurve/Q/<int:conductor>")
