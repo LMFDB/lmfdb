@@ -48,22 +48,26 @@ class WebCharacter:
             self.parity = 'Even'
         else:
             self.parity = 'Odd'
-        self.primchar = chi.primitive_character()
-        self.primcharmodulus = self.primchar.modulus()
-        self.primcharconductor = self.primchar.conductor()
-        F = DirichletGroup(self.primcharmodulus)
-        for i in range(len(F)):
-            if i == 0:
-                self.primcharnumber = 0
-                break
-            elif F[i] == self.primchar:
-                self.primcharnumber = i
-                break
-        self.primchartex = "\(\\chi_{%s}\\!\\!\\pmod{%s}\)" %(self.primcharnumber,self.primcharmodulus)
-        if self.primitive == 'True':
-            self.primtf = True
-        else:
-            self.primtf = False
+        self.inducedchar = chi.primitive_character()
+        self.inducedchar_isprim = self.inducedchar.is_primitive()
+        self.inducedchar_modulus = self.inducedchar.modulus()
+        self.inducedchar_conductor = self.inducedchar.conductor()
+        F = DirichletGroup(self.inducedchar_modulus)
+        if not self.primitive:
+            if self.number == 0:
+                self.inducedchar_number = 0
+            else:
+                for i in range(1,len(F)):
+                    if F[i] == self.inducedchar:
+                        self.inducedchar_number = i
+                        break
+            self.inducedchar_tex = "\(\\chi_{%s}\\!\\!\\pmod{%s}\)" %(self.inducedchar_number,self.inducedchar_modulus)
+       
+       # if self.primitive == 'True':
+       #     self.primtf = True
+       # else:
+       #     self.primtf = False
+       
         if self.conductor%2 == 1:
             self.kronsymbol = "\\begin{equation} \n\\chi_{%s}(a) = " %(self.number)
             self.kronsymbol += "\\begin{cases}\\left(\\frac{a}{%s}\\right) \\qquad" %(self.conductor)
@@ -164,11 +168,12 @@ class WebCharacter:
             sign = 'Real'
         else: 
             sign = 'Complex'
-        self.properties = ['<br><table><tr><td align=left><b>Conductor:</b>','<td align=left> %s</td>'%(conductor)]
-        self.properties.extend(['<tr><td align=left><b>Order:</b>', '<td align=left>%s</td>'%(order)])
-        self.properties.extend(['<tr><td align=left><b>Parity:</b>', '<td align=left>%s</td>'%(self.parity)])
-        self.properties.extend(['<tr><td align=left>%s'%(sign), '</td>'])
-        self.properties.extend(['<tr><td align=left>%s'%(prim), '</td></table>'])
+        self.properties = [("Conductor", [conductor]), ("Order", [order]), ("Parity", [self.parity]), (sign, [""]), (prim, [""])]
+        #self.properties = ['<br><table><tr><td align=left><b>Conductor:</b>','<td align=left> %s</td>'%(conductor)]
+        #self.properties.extend(['<tr><td align=left><b>Order:</b>', '<td align=left>%s</td>'%(order)])
+        #self.properties.extend(['<tr><td align=left><b>Parity:</b>', '<td align=left>%s</td>'%(self.parity)])
+        #self.properties.extend(['<tr><td align=left>%s'%(sign), '</td>'])
+        #self.properties.extend(['<tr><td align=left>%s'%(prim), '</td></table>'])
 
 
 

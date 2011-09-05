@@ -36,13 +36,8 @@ table.navi td {
 }
 </style>
         <div align="right">
-            <table class="navi" cellspacing="0">
-                <tr><td>
-                        <font size="3">Show commands for:</font></td>
-                    <td align="center"><a onclick="show_code('sage'); return false" href='#'>sage</a></td></tr>
-                <tr><td><font size="3">Next character:</font></td>
-                    <td align="center">{% if number|int == eulerphi|int %}<a href="{{ url_for('render_webpage_label', modulus=nextmodulus, number=0) }}">\(\chi_{0} (\text{mod} {{nextmodulus}}\) ) </a>{% else %}<a href="{{nextnumber}}"> \(\chi_{ {{nextnumber}} }\) </a>{% endif %}  </td></tr>
-            </table>
+            <font size="3">Show commands for:</font>
+            <a onclick="show_code('sage'); return false" href='#'>sage</a>
         </div>
  
         <!--<h2>
@@ -64,12 +59,12 @@ table.navi td {
         {% endif %}
 
 
-        {% if primitive == primtf %}
+        {% if not primitive %}
         <h2>
-            Inducing {{ KNOWL('character.dirichlet.primitive_character', title="Primitive") }}           </h2>
+            Inducing {{ KNOWL('character.dirichlet.induced_character', title="Primitive") }}           </h2>
         <div class = 'sage nodisplay code'>sage: chi.primitive_character()</div>
         <p>
-        &nbsp;&nbsp;&nbsp;&nbsp;<a href="{{ url_for('render_webpage_label', modulus=primcharmodulus, number=primcharnumber)}}">{{primchartex}}</a>
+        &nbsp;&nbsp;&nbsp;&nbsp;<a href="{{ url_for('render_webpage_label', modulus=inducedchar_modulus, number=inducedchar_number)}}">{{inducedchar_tex}}</a>
         </p>
         {% endif %}
 
