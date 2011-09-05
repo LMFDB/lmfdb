@@ -4,8 +4,8 @@ import pickle
 import urllib
 from sage.all_cmdline import *
 
-#DATA = 'http://data.countnumber.de/Siegel-Modular-Forms/'
-DATA = '/media/data/home/nils/Sandbox/super_current/nilsskoruppa-lmfdb/db/'
+DATA = 'http://data.countnumber.de/Siegel-Modular-Forms/'
+#DATA = '/media/data/home/nils/Sandbox/super_current/nilsskoruppa-lmfdb/db/'
     
 
 def render_webpage( args = {}):
@@ -72,7 +72,7 @@ def render_webpage( args = {}):
             dimension = siegel_core._dimension_Gamma0_2
             
         elif 'Gamma0_3' == args['group']:
-            info['parent_as_tex'] = 'M_k\\big(\\Gamma_0(3,\\psi_3)\\big)'
+            info['parent_as_tex'] = 'M_k\\big(\\Gamma_0(3)\\big)'
             dimension = siegel_core._dimension_Gamma0_3
             
         elif 'Gamma0_3_psi_3' == args['group']:
