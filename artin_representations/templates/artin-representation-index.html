@@ -1,0 +1,12 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<div>Artin Representations Page</div>
+
+<form action="{{ url_for('.search') }}" method="GET">
+<input name="val" placeholder="123" />
+<button type="submit">Search</button>
+</form>
+
+{% endblock %}
