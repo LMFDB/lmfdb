@@ -564,7 +564,7 @@ function updateMappingRules(data, id) {
   {% if current_user.is_admin() or username == entry.metadata['uploader'] -%}
     <input class=editable value="{{entry.metadata[property]}}" onchange="updateMetadata('{{entry._id}}', '{{property}}', this.value)"/>
   {% else %}
-    {{entry.metadata[property]}}
+    <span class="tex2jax_ignore">{{entry.metadata[property]}}</span>
 {%- endif %}
 {%- endmacro %}
 
@@ -575,9 +575,9 @@ function updateMappingRules(data, id) {
 {{entry.metadata[property]}}
     </textarea>
   {% else %}
-    <textarea rows={{entry.metadata[property].count('\n')+1}} cols=100>
+    <pre>
 {{entry.metadata[property]}}
-    </textarea>
+    </pre>
   {%- endif %}
 {%- endmacro %}
 
@@ -720,14 +720,19 @@ function updateMappingRules(data, id) {
 
 {% if approved is defined %}
   {% call(entry) render_uploadlist('Approved', approved, 'none') %}
-
   {% endcall %}
 {% endif %}
+
 {% if disapproved is defined %}
   {% call(entry) render_uploadlist('Disapproved', disapproved, 'none') %}
-
   {% endcall %}
 {% endif %}
+
+{% if unmoderated2 is defined %}
+  {% call(entry) render_uploadlist('Awaiting moderation', unmoderated2, 'none') %}
+  {% endcall %}
+{% endif %}
+
 
 
 
