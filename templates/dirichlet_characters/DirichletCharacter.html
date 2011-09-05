@@ -34,6 +34,9 @@ function show_code(system) {
 table.navi td {
     padding: 0;
 }
+table.props tr td:first-child {
+    width: 5em;
+}
 </style>
         <div align="right">
             <font size="3">Show commands for:</font>
@@ -90,61 +93,62 @@ table.navi td {
            &nbsp;&nbsp;&nbsp;&nbsp;\( {{ unitgens }} \) &rarr; \( {{ genvalstex }} \)
         </p>
 
-        <h2> Basic Properties </h2>
-        <table>
+        <h2> {{ KNOWL('character.dirichlet.basic_properties', title="Basic properties") }} </h2>
+        
+        <table class="props">
 
         <tr>
-        <td colspan="4">
+        <td>
             <span class='sage nodisplay code'>sage: chi.conductor()</span>
         </td>
         </tr>
         <tr>
-        <td colspan="4">{{ KNOWL('character.dirichlet.conductor', title="Conductor") }}</td>
+        <td>Conductor</td>
         <td>=</td>
         <td>\({{ conductor }}\)</td>
         </tr>
 
         <tr>
-        <td colspan="4">
+        <td>
             <span class='sage nodisplay code'>sage: chi.order()</span>
         </td>
         </tr>
         <tr>
-        <td colspan="4"> {{ KNOWL('character.dirichlet.order', title="Order") }}</td>
+        <td> Order </td>
         <td>=</td>
         <td>\({{ order }} \)</td>
         </tr>
 
         <tr>
-        <td colspan="4">
+        <td>
             <span class='sage nodisplay code'>sage: chi.is_even() or chi.is_odd()</span>
         </td>
         </tr>
         <tr>
-        <td colspan="4"> {{ KNOWL('character.dirichlet.parity', title="Parity") }} </td>
+        <td> Parity </td>
         <td>=</td>
         <td> {{ parity }}</td>
         </tr>
 
         <tr>
-        {% if sign=="False" %} <td colspan="4"> {{ KNOWL('character.dirichlet.complex', title="Complex") }} </td>
-        {% else %} <td colspan="4"> {{ KNOWL('character.dirichlet.real', title="Real") }} </td>
-        {% endif %}
+        <td> Real </td>
+        <td>=</td>
+        {% if sign %}<td> {{real}}</td>{% else %}<td> {{real}} </td>{% endif %}
         </tr>
 
         <tr>
-            <td colspan="4">
+            <td>
                 <span class='sage nodisplay code'>sage: chi.is_primitive()</span>
             </td>
         </tr>
         <tr>
-        {% if primitive=="False" %} <td colspan="4"> {{ KNOWL('character.dirichlet.primitive', title="Non-primitive") }} </td> 
-        {% else %} <td colspan="4"> {{ KNOWL('character.dirichlet.primitive', title="Primitive") }} </td>
-        {% endif %}
+            <td> Primitive </td>
+        <td>=</td>
+        {% if primitive %}<td>{{prim}}</td> {% else %}<td> {{prim}}</td>  {% endif %}
         </tr>
 
-       </table>
-
+        </table>
+        </form>
         <h2>
             {{ KNOWL('character.dirichlet.gauss_sum') }}
         </h2>
