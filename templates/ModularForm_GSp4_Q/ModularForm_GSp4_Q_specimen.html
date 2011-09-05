@@ -48,6 +48,17 @@
   \[
   f(\tau,z,\tau')=\sum_{T=(n,r,m)}a(T)\;e^{2\pi i(n\tau+rz+m\tau')}.
   \]
+  <form action="/ModularForm/GSp4/Q" method="get">
+    <input type="hidden" name="group" value="{{ group }}" />
+    <input type="hidden" name="page" value="specimen" /> 
+    <input type="hidden" name="form" value="{{ form_name }}" /> 
+    <input type="hidden" name="weight" value="{{ weight }}" /> 
+    <input type="hidden" name="orbit" value="{{ form_name }}" /> 
+    <label>The coefficients are shown reduced modulo</label>
+    <input type="text" name="modulus" value="{{ modulus }}" size=5 maxlength=5/>
+    <span class="formexample">e.g. 17 (0 means no reduction)</span>
+    <button type="submit" value="reduce"> Reduce again</button>
+  </form>
 </p>
 <div class="box1">
 <div class="small">

@@ -32,6 +32,7 @@ def render_webpage( args = {}):
     page = args.get('page')
     orbit = args.get('orbit')
     weight_range = args.get('weight_range')
+    modulus = args.get('modulus')
 
     # set info
     info['group'] = group
@@ -81,9 +82,7 @@ def render_webpage( args = {}):
         elif 'Gamma0_4' == args['group']:
             info['parent_as_tex'] = 'M_k\\big(\\Gamma_0(4)\\big)'
             dimension = siegel_core._dimension_Gamma0_4
-            file_name = weight + '_' + form + '-ev.sobj'
-            g_url = DATA + group +'/eigenvalues/' + file_name
-            g =load( g_url)
+
         elif 'Gamma0_4_psi_4' == args['group']:
             info['parent_as_tex'] = 'M_k\\big(\\Gamma_0(4,\\psi_4)\\big)'
             dimension = siegel_core._dimension_Gamma0_4_psi_4
@@ -199,10 +198,19 @@ def render_webpage( args = {}):
             # we sort the table of Fourier coefficients by discriminant, forms in increasing lexicographic order
             our_cmp = lambda (a,b,c), (A,B,C) : cmp( (4*a*c - b**2,a,b,c), (4*A*C - B**2, A,B,C) )
             f_keys.sort( cmp = our_cmp)
-
+            if not modulus:
+                m = 17
+            else:
+                m = int( modulus)
+            info['modulus'] = m
+            if m != 0:
+                for i in f_keys:
+                    f[2][i] = f[2][i]%m
+            
             file_name = weight + '_' + form + '-ev.sobj'
             g_url = DATA + group +'/eigenvalues/' + file_name
-            g =load( g_url)
+##             g =load( g_url)
+            g = [45,{2:3}]
 
             info['form'] = [ f[0].parent(), f[1], \
                              [ (l,g[1][l]) for l in g[1]], \
@@ -214,7 +222,9 @@ def render_webpage( args = {}):
         except:
             info['error'] = 'Data not available'
 
-        bread += [( 'Basic information', url_for( 'ModularForm_GSp4_Q_top_level', group=group, page=page, weight=weight, form=form) )]
+        location = url_for( 'ModularForm_GSp4_Q_top_level', group=group, page=page, weight=weight, form=form)
+        info['form_name'] = form
+        bread += [( weight + '_' + form, location)]
         return render_template( "ModularForm_GSp4_Q/ModularForm_GSp4_Q_specimen.html", \
                                     title = 'Siegel modular form ' + weight + '_' + form, \
                                     bread = bread, **info)            
