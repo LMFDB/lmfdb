@@ -568,7 +568,7 @@ class Lfunction_Dirichlet(Lfunction):
         else:  #Character not primitive
             raise Exception("The dirichlet character you choose is " +
                             "not primitive so it's Dirichlet series " +
-                            "is not an L-function.")
+                            "is not an L-function." ,"UserError")
 
         constructor_logger(self,args)
 

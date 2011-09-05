@@ -8,13 +8,13 @@
  
  <div id="functionalEqText">\[{{ functionalequation }}\]</div>
  <div>
-   {{ KNOWL('lfunction.selbergdata', title="Selberg data") }}: ${{ info.functionalequationSelberg }}$</div>
+   {{ KNOWL('lfunction.selbergdata', title="Selberg data") }}: ${{ functionalequationSelberg }}$</div>
  
  
  
 
  
- <h2>{{ KNOWL('alg.euler_prod') }}</h2>
+ <h2>{{ KNOWL('lfunction.euler_product') }}</h2>
  <div>\[{{ eulerproduct }}\]</div>
 
  <h2> Imaginary part of the first few zeroes on the {{ KNOWL('lfunction.critical_line', title='critical line') }}</h2>
@@ -44,23 +44,7 @@
 
 <script type="text/javascript">
   $(function() {
-      $("#zeroes").load("{{ info.zeroeslink|safe }}");
-  });
-
-  $("#functionalEqSelberg").click(function(e) {
-    e.preventDefault();
-    $(this).addClass("highlight");
-    $("#functionalEqAnalytic").removeClass("highlight");
-    var math = MathJax.Hub.getAllJax("functionalEqText")[0];
-    MathJax.Hub.Queue(["Text",math, "{{ info.functionalequationSelberg|safe }}"]);
-  });
-    
-  $("#functionalEqAnalytic").click(function(e) {
-    e.preventDefault();
-    $(this).addClass("highlight");
-    $("#functionalEqSelberg").removeClass("highlight");
-    var math = MathJax.Hub.getAllJax("functionalEqText")[0];
-    MathJax.Hub.Queue(["Text",math, "{{ info.functionalequationAnalytic|safe }}"]);
+      $("#zeroes").load("{{ zeroeslink|safe }}");
   });
 </script>
 
