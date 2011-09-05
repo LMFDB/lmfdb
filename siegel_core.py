@@ -121,7 +121,7 @@ def _dimension_Kp(wt, tp):
         p=tp
         total=0
         one=QQ(1)
-        print one/8
+
         total += p*p/576 +p/8 -143*one/576
         total += kronecker_symbol(-1,p)*(p/96-one/8)
         total += kronecker_symbol(2,p)*one/8

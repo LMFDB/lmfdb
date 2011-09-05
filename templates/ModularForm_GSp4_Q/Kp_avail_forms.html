@@ -14,8 +14,8 @@
     <thead>
       <tr><th>Weight</th><th>Level</th><th>Galois-Orbits of nonlifts</th></tr>
     </thead>
-    {% for wt,forms in  forms %}
-      {% for form,dim in forms|sort  %}
+    {% for wt,forms1 in forms %}
+      {% for form,dim in forms1|sort  %}
     <tr class = "{{ loop.cycle( 'odd', 'even') }}">
       <td>{{ wt }}</td>
       <td>{{ form|replace('PY2_','')|replace('_minus','')|replace('_plus','') }}</td>

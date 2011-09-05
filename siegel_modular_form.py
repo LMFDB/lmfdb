@@ -187,30 +187,43 @@ def render_webpage( args = {}):
 
     if page == 'specimen':
         info['weight'] = weight
-        file_name = weight + '_' + form + '.sobj'
-        f_url = DATA + group + '/eigenforms/' + file_name
-        try:
-            f = load(f_url)
-            f_keys = f[2].keys()
 
-            if  'Sp4Z' == group and 'E' != form and 'Klingen' != form:
-                f_keys = filter( lambda (a,b,c): b^2<4*a*c, f_keys) 
-            # we sort the table of Fourier coefficients by discriminant, forms in increasing lexicographic order
-            our_cmp = lambda (a,b,c), (A,B,C) : cmp( (4*a*c - b**2,a,b,c), (4*A*C - B**2, A,B,C) )
-            f_keys.sort( cmp = our_cmp)
-            if not modulus:
-                m = 17
-            else:
-                m = int( modulus)
-            info['modulus'] = m
-            if m != 0:
-                for i in f_keys:
-                    f[2][i] = f[2][i]%m
-            
+        # try to load data
+        try:
+            file_name = weight + '_' + form + '.sobj'
+            f_url = DATA + group + '/eigenforms/' + file_name
+            f = load(f_url)
             file_name = weight + '_' + form + '-ev.sobj'
             g_url = DATA + group +'/eigenvalues/' + file_name
-##             g =load( g_url)
-            g = [45,{2:3}]
+            g =load( g_url)
+            loaded = True
+        except:
+            info['error'] = 'Data not available'
+            loaded = False
+
+        if True == loaded:
+
+            # throw out disc = 0 keys for cusp forms
+            f_keys = f[2].keys()
+            if  'Sp4Z' == group and 'E' != form and 'Klingen' != form:
+                f_keys = filter( lambda (a,b,c): b^2<4*a*c, f_keys)
+                
+            # sort the table of Fourier coefficients by discriminant, forms in increasing lexicographic order
+            if 'Sp8Z' != group: 
+                our_cmp = lambda (a,b,c), (A,B,C) : cmp( (4*a*c - b**2,a,b,c), (4*A*C - B**2, A,B,C) )
+                f_keys.sort( cmp = our_cmp)
+
+            try:
+                if not modulus:
+                    m = 17
+                else:
+                    m = int( modulus)
+                info['modulus'] = m
+                if m != 0:
+                    for i in f_keys:
+                        f[2][i] = f[2][i]%m
+            except:
+                pass
 
             info['form'] = [ f[0].parent(), f[1], \
                              [ (l,g[1][l]) for l in g[1]], \
@@ -219,8 +232,7 @@ def render_webpage( args = {}):
 ##             info['friends'] = [ ('Spin L-function', url_for('not_yet_implemented')), \
 ##                                 ('Standard L-function', url_for('not_yet_implemented')), \
 ##                                 ('First Fourier-Jacobi coefficient', url_for('not_yet_implemented'))]
-        except:
-            info['error'] = 'Data not available'
+
 
         location = url_for( 'ModularForm_GSp4_Q_top_level', group=group, page=page, weight=weight, form=form)
         info['form_name'] = form
