@@ -212,6 +212,14 @@ def web_latex(x):
     else:
         return "\( %s \)" % sage.all.latex(x)
 
+def web_latex_split_on_pm(x):
+    if isinstance(x, (str, unicode)):
+        return x
+    else:
+        A = "\( %s \)" % sage.all.latex(x)
+        A = A.replace('+', '\) + \(')
+        A = A.replace('-', '\) - \(')
+        return A
 
 class LinkedList(object):
     __slots__ = ('value', 'next', 'timestamp')

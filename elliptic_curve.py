@@ -8,7 +8,7 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 import tempfile
 import os
 
-from utils import ajax_more, image_src, web_latex, to_dict, parse_range
+from utils import ajax_more, image_src, web_latex, to_dict, parse_range, web_latex_split_on_pm
 import sage.all 
 from sage.all import ZZ, EllipticCurve, latex, matrix,srange
 q = ZZ['x'].gen()
@@ -214,7 +214,8 @@ def render_isogeny_class(iso_class):
     info['rank'] = data['rank'] 
     info['isogeny_matrix']=latex(matrix(eval(data['isogeny_matrix'])))
     info['modular_degree']=data['degree']
-    info['f'] = ajax_more(E.q_eigenform, 10, 20, 50, 100, 250)
+    #info['f'] = ajax_more(E.q_eigenform, 10, 20, 50, 100, 250)
+    info['f'] = web_latex(E.q_eigenform(10))
     G = E.isogeny_graph(); n = G.num_verts()
     G.relabel(range(1,n+1)) # proper cremona labels...
     info['graph_img'] = image_src(G.plot(edge_labels=True))
@@ -232,7 +233,24 @@ def render_isogeny_class(iso_class):
 
     return render_template("elliptic_curve/iso_class.html", info = info,bread=bread, credit=credit,title = t)
 
-
+@app.route("/EllipticCurve/Q/modular_form_display/<label>/<number>")
+def modular_form_display(label, number):
+    number = int(number)
+    if number > 1000:
+        number = 1000
+    E = EllipticCurve(str(label))
+    modform = E.q_eigenform(number)
+    modform_string = web_latex_split_on_pm(modform)
+    return modform_string
+    #url_for_more = url_for('modular_form_coefficients_more', label = label, number = number * 2)
+    #return """
+    #    <span id='modular_form_more'> %(modform_string)s 
+    #    <a onclick="$('modular_form_more').load(
+    #            '%(url_for_more)s', function() { 
+    #                MathJax.Hub.Queue(['Typeset',MathJax.Hub,'modular_form_more']);
+    #            });
+    #            return false;" href="#">more</a></span>
+    #""" % { 'modform_string' : modform_string, 'url_for_more' : url_for_more }
 #@app.route("/EllipticCurve/Q/<label>")
 #def by_cremona_label(label):
 #    try:
@@ -297,7 +315,8 @@ def render_curve_webpage_by_label(label):
         'label': label,
         'isogeny':iso_class,
         'equation': web_latex(E),
-        'f': ajax_more(E.q_eigenform, 10, 20, 50, 100, 250),
+        #'f': ajax_more(E.q_eigenform, 10, 20, 50, 100, 250),
+        'f' : web_latex(E.q_eigenform(10)),
         'generators':','.join(web_latex(g) for g in generator) if 'gens' in data else ' ',
         'lder'  : lder_tex,
         'p_adic_primes': [p for p in sage.all.prime_range(5,100) if E.is_ordinary(p) and not p.divides(N)],
