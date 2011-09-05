@@ -344,8 +344,9 @@ class Lfunction:
 
         return(thefile)
 
+
     ############################################################################
-    # other useful methods
+    ### other useful methods
     ############################################################################
     
     def original_mathematical_object(self):
