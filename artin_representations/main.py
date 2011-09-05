@@ -15,12 +15,12 @@ def get_bread(breads = []):
     bc.append(b)
   return bc
 
-@local_fields_page.route("/")
+@artin_representations_page.route("/")
 def index():
   bread = get_bread()
   return render_template("artin-representation-index.html", title ="Artin Representations", bread = bread)
 
-@local_fields_page.route("/search", methods = ["GET", "POST"])
+@artin_representations_page.route("/search", methods = ["GET", "POST"])
 def search():
   if request.method == "GET":
     val = request.args.get("val", "no value")

@@ -1,0 +1,28 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<div>Integer Sequences Page</div>
+
+<form action="{{ url_for('.search') }}" method="GET">
+<input name="val" placeholder="123" />
+<button type="submit">Find</button>
+</form>
+
+
+<h2> Find</h2>
+Find integer sequence by {{KNOWL("oeis.index",title="encyclopedia index")}}
+
+
+<form action="" method=get>
+<div>
+Enter integer sequence or a {{KNOWL("oeis.index",title="encyclopedia index")}}:
+</div>
+<p>
+<input type='submit' value='Find' >
+</p>
+</form>
+
+
+
+{% endblock %}
