@@ -236,6 +236,22 @@ def render_isogeny_class(iso_class):
 @app.route("/EllipticCurve/Q/modular_form_display/<label>/<number>")
 def modular_form_display(label, number):
     number = int(number)
+    if number < 10:
+        number = 10
+    if number > 100000:
+        number = 20
+    if number > 50000:
+        return "OK, I give up."
+    if number > 20000:
+        return "This incident will be reported to the appropriate authorities."
+    if number > 9600:
+        return "You have been banned from this website."
+    if number > 4800:
+        return "Seriously."
+    if number > 2400:
+        return "I mean it."
+    if number > 1200:
+        return "Please stop poking me."
     if number > 1000:
         number = 1000
     E = EllipticCurve(str(label))
