@@ -51,7 +51,8 @@ md.inlinePatterns.add('mathjax\\(', IgnorePattern(r'(\\\(.+?\\\))'), '<escape')
 md.inlinePatterns.add('mathjax\\[', IgnorePattern(r'(\\\[.+?\\\])'), '<escape')
 
 # Tell markdown to turn hashtags into search urls
-md.inlinePatterns.add('hashtag', HashTagPattern(r'#([a-zA-Z][a-zA-Z0-9-]{2,})\b'), '<escape')
+hashtag_keywords_rex = r'#([a-zA-Z][a-zA-Z0-9-_]{1,})\b'
+md.inlinePatterns.add('hashtag', HashTagPattern(hashtag_keywords_rex), '<escape')
 
 # global (application wide) insertion of the variable "Knowl" to create
 # lightweight Knowl objects inside the templates.
