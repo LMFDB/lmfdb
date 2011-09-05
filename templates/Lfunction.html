@@ -36,7 +36,7 @@
  {% endif %}
 
  {% if plotlink %}
-    <h2> Graph of the {{ KNOWL('L.Zfunction') }} along the {{ KNOWL('lfunction.critical_line', title='critical line') }} </h2>
+    <h2> Graph of the {{ KNOWL('lfunction.zfunction', title='$Z$-function') }} along the {{ KNOWL('lfunction.critical_line', title='critical line') }} </h2>
     <img src="{{ plotlink|safe }}" >
  {% else %}
     <div>Not enough Dirichlet series coefficients to make a graph.</div>
