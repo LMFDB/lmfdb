@@ -3,29 +3,29 @@
 
 
 <p>
-A number field is a field which is an extension of finite degree of the field $\mathbb{Q}$  of rational numbers.
+A {{KNOWL('nf', title='number field')}} is a field which is an extension of finite degree of the field $\mathbb{Q}$  of rational numbers.
 </p>
 
 <h3> Browse </h3>
 
 <ul>
 <li>
-By {{KNOWL('NF.degree')}}:
+By {{KNOWL('nf.degree', title='degree')}}:
 {% for r in info.degree_list: %}
 <a href="?degree={{r}}">{{r}}</a>&nbsp;&nbsp;
 {% endfor %}
 <li>
-By {{KNOWL('NF.discriminant')}} range: 
+By {{KNOWL('nf.discriminant', title='discriminant')}} range: 
 {% for r in info.discriminant_list: %}
 <a href="?discriminant={{r}}">{{r}}</a>&nbsp;&nbsp;
 {% endfor %}
 <li>
-By {{KNOWL('NF.signature')}}: 
+By {{KNOWL('nf.signature', title='signature')}}: 
 {% for t in info.signature_list: %}
 <a href="?signature={{t}}">{{t}}</a>&nbsp;&nbsp;
 {% endfor %}
 <li>
-By {{KNOWL('NF.class_number')}}: 
+By {{KNOWL('nf.class_number', title='class number')}}: 
 {% for r in info.class_number_list: %}
 <a href="?class_number={{r}}">{{r}}</a>&nbsp;&nbsp;
 {% endfor %}
@@ -55,29 +55,29 @@ Enter values into one or more boxes to restrict the search.&nbsp;&nbsp;
 </p>
 <table border=0 cellpadding=5>
 <tr>
-<td align=left>{{KNOWL('NF.degree')}} <td><input type='text' name='degree' size=10 example='3'> 
+<td align=left>{{KNOWL('nf.degree', title='degree')}} <td><input type='text' name='degree' size=10 example='3'> 
 <span class="formexample"> e.g. 3</span></td>
 <td>
-<td align=left>{{KNOWL('NF.signature')}} <td><input type='text' name='signature' size=10 example='[1,1]'> 
+<td align=left>{{KNOWL('nf.signature', title='signature')}} <td><input type='text' name='signature' size=10 example='[1,1]'> 
 <span class="formexample"> e.g. [1,1]</span></td>
 </tr>
 <tr>
-<td align=left>{{KNOWL('NF.discriminant')}}
+<td align=left>{{KNOWL('nf.discriminant', title='discriminant')}}
 <td colspan=4><input type='text' name='discriminant' size=10 size=10 example='-1000..-1'> 
 <span class="formexample"> e.g. -3, or a range such as 1000..2000 or 1000-2000 or -1000..-1</span></td>
 </tr>
 <tr>
-<td align=left>{{KNOWL('NF.class_number')}} <td><input type='text' name='class_number' size=10 example='5'>
+<td align=left>{{KNOWL('nf.class_number', title='class number')}} <td><input type='text' name='class_number' size=10 example='5'>
 <span class="formexample"> e.g. 5</span></td>
 <td>
-<td align=left>{{KNOWL('NF.class_group')}} structure<td><input type='text' name='class_group' size=10 example='[2,2]'>
+<td align=left>{{KNOWL('nf.ideal_class_group', title = 'class group')}} structure<td><input type='text' name='class_group' size=10 example='[2,2]'>
 <span class="formexample"> e.g. [], [3], or [2,2]</span></td>
 </tr>
 <tr>
-<td align=left>{{KNOWL('NF.galois_group')}} <td><input type='text' name='galois_group' size=10 example='C5'>
+<td align=left>{{KNOWL('nf.galois_group', title='Galois group')}} <td><input type='text' name='galois_group' size=10 example='C5'>
 <span class="formexample"> e.g. C5</span></td>
 <td>
-<td align=left>Unramified Primes <td><input type='text'
+<td align=left>{{KNOWL('nf.unramified_prime', title='unramified primes')}} <td><input type='text'
                                             name='ur_primes' size=10 example='2,3'>
 <span class="formexample"> e.g. 2,3</span></td>
 </tr>
