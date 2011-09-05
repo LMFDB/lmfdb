@@ -41,7 +41,7 @@ table.navi td {
                         <font size="3">Show commands for:</font></td>
                     <td align="center"><a onclick="show_code('sage'); return false" href='#'>sage</a></td></tr>
                 <tr><td><font size="3">Next character:</font></td>
-                    <td align="center">{% if number|int == eulerphi|int %}<a href="{{ url_for('character_next_modulus', modulus=nextmodulus, number=0) }}">\(\chi_{0} (\text{mod} {{nextmodulus}}\) ) </a>{% else %}<a href="{{nextnumber}}"> \(\chi_{ {{nextnumber}} }\) </a>{% endif %}  </td></tr>
+                    <td align="center">{% if number|int == eulerphi|int %}<a href="{{ url_for('render_webpage_label', modulus=nextmodulus, number=0) }}">\(\chi_{0} (\text{mod} {{nextmodulus}}\) ) </a>{% else %}<a href="{{nextnumber}}"> \(\chi_{ {{nextnumber}} }\) </a>{% endif %}  </td></tr>
             </table>
         </div>
  
@@ -55,7 +55,7 @@ table.navi td {
 
         {% if order == 2 %}
         <h2>
-            {{ KNOWL('character.dirichlet.kronecker_symbol') }} Representation 
+            {{ KNOWL('character.dirichlet.kronecker_symbol') }} Representation
         </h2>
         <div class = 'sage nodisplay code'>sage: a.kronecker({{conductor}})</div>
         <p>
@@ -63,12 +63,13 @@ table.navi td {
         </p>
         {% endif %}
 
+
         {% if primitive == primtf %}
         <h2>
             Inducing {{ KNOWL('character.dirichlet.primitive_character', title="Primitive") }}           </h2>
         <div class = 'sage nodisplay code'>sage: chi.primitive_character()</div>
         <p>
-        &nbsp;&nbsp;&nbsp;&nbsp;<a href="{{ url_for('character_next_modulus', modulus=primcharmodulus, number=primcharnumber)}}">{{primchartex}}</a>
+        &nbsp;&nbsp;&nbsp;&nbsp;<a href="{{ url_for('render_webpage_label', modulus=primcharmodulus, number=primcharnumber)}}">{{primchartex}}</a>
         </p>
         {% endif %}
 
@@ -76,7 +77,7 @@ table.navi td {
             {{ KNOWL('character.dirichlet.values', title="Values") }}
         </h2>
         <div class = 'sage nodisplay code'>sage: chi.values()</div>
-        {% if number|int >  2 %} &nbsp;&nbsp;&nbsp;&nbsp;For \(\zeta_{ {{ zetaorder }} }\) a primitive \( {{ zetaorder }} \)-th root of unity<br><br/> {% endif %}
+        {% if root_unity %} &nbsp;&nbsp;&nbsp;For \(\zeta_{ {{ zetaorder }} }\) a primitive \( {{ zetaorder }} \)-th root of unity<br><br/> {% endif %}
         <table>
         <tr>
             <td>   
