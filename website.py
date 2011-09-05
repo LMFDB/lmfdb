@@ -103,61 +103,6 @@ def form_example():
 def render_Character(arg1 = None, arg2 = None):
     return DirichletCharacter.render_webpage(request,arg1,arg2)
 
-@app.route("/Lfunction/")
-@app.route("/Lfunction/<arg1>")
-@app.route("/Lfunction/<arg1>/<arg2>")
-@app.route("/Lfunction/<arg1>/<arg2>/<arg3>")
-@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>")
-@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
-@app.route("/L/")
-@app.route("/L/<arg1>") # arg1 is EllipticCurve, ModularForm, Character, etc
-@app.route("/L/<arg1>/<arg2>") # arg2 is field
-#@app.route("/L/<arg1>/<arg2>/") # arg2 is field
-@app.route("/L/<arg1>/<arg2>/<arg3>") #arg3 is label
-@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>")
-@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
-@app.route("/L-function/")
-@app.route("/L-function/<arg1>")
-@app.route("/L-function/<arg1>/<arg2>")
-@app.route("/L-function/<arg1>/<arg2>/<arg3>")
-@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>")
-@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
-def render_Lfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = None):
-    return renderLfunction.render_webpage(request, arg1, arg2, arg3, arg4, arg5)
-
-@app.route("/plotLfunction")
-@app.route("/plotLfunction/<arg1>")
-@app.route("/plotLfunction/<arg1>/<arg2>")
-@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>")
-@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/<arg4>")
-@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
-def plotLfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = None):
-    return renderLfunction.render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5)
-
-@app.route("/browseGraph")
-def browseGraph():
-    return renderLfunction.render_browseGraph(request.args)
-
-@app.route("/browseGraphTMP")
-def browseGraphTMP():
-    return renderLfunction.render_browseGraphTMP(request.args)
-
-@app.route("/browseGraphHolo")
-def browseGraphHolo():
-    return renderLfunction.render_browseGraphHolo(request.args)
-
-@app.route("/browseGraphChar")
-def browseGraphChar():
-    return renderLfunction.render_browseGraphHolo(request.args)
-
-@app.route("/zeroesLfunction")
-@app.route("/zeroesLfunction/<arg1>")
-@app.route("/zeroesLfunction/<arg1>/<arg2>")
-@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>")
-@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>")
-@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
-def zeroesLfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = None):
-    return renderLfunction.render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5)
 
 @app.route('/ModularForm/GSp4/Q')
 def ModularForm_GSp4_Q_top_level():
