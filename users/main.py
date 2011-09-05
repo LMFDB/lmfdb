@@ -101,6 +101,7 @@ def set_info():
 @login_page.route("/profile/<userid>")
 @login_required
 def profile(userid):
+  getDBConnection().knowledge.knowls.ensure_index('title')
   user = LmfdbUser(userid)
   bread = base_bread() + [(user.name, url_for('.profile', userid=user.get_id()))]
   userknowls = getDBConnection().knowledge.knowls.find({'authors' : userid}, fields=['title']).sort([('title', ASC)])

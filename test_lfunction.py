@@ -36,7 +36,7 @@ class LfunctionTest(LmfdbTest):
     assert 'Functional' in L.data
 
   def test_Lmain(self):
-    L = self.tc.get('/L')
+    L = self.tc.get('/L/')
     assert 'Riemann' in L.data
 
   def test_Ldegree1(self):

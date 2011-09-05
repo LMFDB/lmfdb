@@ -30,7 +30,7 @@ function show_code(system) {
   <div class='magma nodisplay code'>&gt; K&lt;a&gt; := NumberField(PolynomialRing(Rationals())!{{info.coefficients}});</div>
 </p>
 
-        <p><h2> {{ KNOWL('NF.defining_polynomial') }}</h2>
+        <p><h2> {{ KNOWL('nf.defining_polynomial', title='Defining polynomial') }}</h2>
         <div class='sage nodisplay code'>sage: K.defining_polynomial()</div>
         <div class='pari nodisplay code'>pari: K.pol</div>
         <div class='magma nodisplay code'>&gt; DefiningPolynomial(K);</div>
@@ -38,7 +38,7 @@ function show_code(system) {
             {{ info.polynomial }}
         </p>
 
-        <p><h2> {{ KNOWL('NF.invariants') }}</h2>
+        <p><h2> {{ KNOWL('nf.invariants', title='Invariants') }}</h2>
         <div class='sage nodisplay code'>sage: K.degree()</div>
         <div class='sage nodisplay code'>sage: K.signature()</div>
         <div class='sage nodisplay code'>sage: K.disc()</div>
@@ -61,10 +61,10 @@ function show_code(system) {
         </p>
 
 {% if info.degree==1 %}
-        <p><h2> {{ KNOWL('NF.integral_basis') }} </h2>
+        <p><h2> {{ KNOWL('nf.integral_basis', title='Integral basis') }} </h2>
 {% endif %}
 {% if info.degree!=1 %}
-        <p><h2> {{ KNOWL('NF.integral_basis') }} (with respect to {{ KNOWL('NF.field_generator') }} \(a\))</h2>
+        <p><h2> {{ KNOWL('nf.integral_basis', title='Integral basis') }} (with respect to {{ KNOWL('nf.field_generator', title='field generator') }} \(a\))</h2>
 {% endif %}
         <div class='sage nodisplay code'>sage: K.integral_basis()</div>
         <div class='pari nodisplay code'>pari: K.zk</div>
@@ -73,7 +73,7 @@ function show_code(system) {
             {{ info.integral_basis}}
         </p>
 
-        <p><h2> {{ KNOWL('NF.class_group') }} and  {{ KNOWL('NF.class_number') }}</h2>
+        <p><h2> {{ KNOWL('nf.ideal_class_group', title='Class group') }} and  {{ KNOWL('nf.class_number', title='class number') }}</h2>
         <div class='sage nodisplay code'>sage: K.class_group().invariants()</div>
         <div class='pari nodisplay code'>pari: K.clgp</div>
         <div class='magma nodisplay code'>&gt; ClassGroup(K);</div>
@@ -82,7 +82,7 @@ function show_code(system) {
         </p>
 
 
-        <p><h2> {{ KNOWL('NF.unit_group') }}</h2>
+        <p><h2> {{ KNOWL('nf.unit_group', title='Unit group') }}</h2>
         <div class='sage nodisplay code'>sage: UK = K.unit_group()</div>
         <div class='sage nodisplay code'>sage: UK.rank()</div>
         <div class='sage nodisplay code'>sage: UK.torsion_generator()</div>
@@ -113,7 +113,7 @@ function show_code(system) {
         </p>
 
 
-        <p><h2> {{ KNOWL('NF.galois_group') }}</h2>
+        <p><h2> {{ KNOWL('nf.galois_group', title='Galois group') }}</h2>
         <div class='sage nodisplay code'>sage: K.class_group().isomorphism_type_info_simple_group()</div>
         <div class='pari nodisplay code'>pari: polgalois(pol)</div>
         <div class='magma nodisplay code'>&gt; GaloisGroup(K);</div>

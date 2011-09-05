@@ -5,7 +5,7 @@ from flask import render_template, url_for, request, redirect, make_response,sen
 from utils import *
 from modular_forms.elliptic_modular_forms.backend.plot_dom import *
 from modular_forms.maass_forms.maass_waveforms import MWF,mwf_logger, mwf
-from knowledge.knowl import Knowl
+#from knowledge.knowl import Knowl
 #from psage.modform.maass.lpkbessel import *
 # build extensions
 
@@ -38,12 +38,12 @@ def get_collections_info():
         metadata=db.metadata[c]
         mwf_logger.debug("METADATA: {0}".format(metadata))
 
-#def GetNameOfPerson(DBname):
-#    if DBname == "FS":
-#        return "Fredrik Str&ouml;mberg"
-#    elif DBname == "HT":
-#        return "Holger Then"
-#    return None
+def GetNameOfPerson(DBname):
+    if DBname == "FS":
+        return "Fredrik Str&ouml;mberg"
+    elif DBname == "HT":
+        return "Holger Then"
+    return None
 
 def get_maassform_by_id(maass_id,fields=None):
     r"""
@@ -95,8 +95,8 @@ def set_info_for_maass_form(data):
 
 def make_table_of_coefficients(maass_id,number=100):
     c = get_maassform_by_id(maass_id,fields=['Coefficient'])['Coefficient']
-    logger.info("ID=%s" % maass_id)
-    logger.info("number=%s" % number)
+    mwf_logger.info("ID=%s" % maass_id)
+    mwf_logger.info("number=%s" % number)
     s="<table border=\"1\">\n<thead><tr><td>\(n\)</td>"
     s+="<td>&nbsp;</td>"
     s+="<td>\(a(n)\)</td></tr></thead>\n"
@@ -170,8 +170,8 @@ def get_search_parameters(info):
         ret['ev_upper']=ev_range[1] #my_get(info,'ev_upper',None)
     return ret
 
-from knowledge import logger
-from base import getDBConnection
+
+#from base import getDBConnection
 
 class MWFTable(object):
     def __init__(self,db_name,collection='all',skip=[0,0],limit=[6,10],keys=['Level','Eigenvalue'],weight=0):
@@ -199,7 +199,7 @@ class MWFTable(object):
         
     def shift(self,i=1,key='Level'):
         if not key in self._keys:
-            logger.warning("{0} not a valid key in {1}".format(key,self._keys))
+            mwf_logger.warning("{0} not a valid key in {1}".format(key,self._keys))
         else:
             ix = self._keys.index[key]
             self.skip[ix]+=i
@@ -227,8 +227,8 @@ class MWFTable(object):
         
 
     def set_table(self):
-        logger.debug("skip= {0}".format(self.skip))
-        logger.debug("limit= {0}".format(self.limit))
+        mwf_logger.debug("skip= {0}".format(self.skip))
+        mwf_logger.debug("limit= {0}".format(self.limit))
         self.table=[]
         level_ll=(self.skip[self.keys.index('Level')])*self.limit[self.keys.index('Level')]
         level_ul=(self.skip[self.keys.index('Level')]+1)*self.limit[self.keys.index('Level')]
@@ -257,7 +257,7 @@ class MWFTable(object):
             # If we have too many we delete the 
             while len(evs)>ev_limit:
                 t=evs.pop()
-                logger.debug("removes {0}".format(t))
+                mwf_logger.debug("removes {0}".format(t))
             #logger.debug("found eigenvalues in {0} is {1}".format(c.name,evs))
             if len(evs)>0:
                 self.table.append({'N':N,'evs':evs})
@@ -270,12 +270,12 @@ class MWFTable(object):
     ##     # def print_table_of_maass_waveforms(collection,lrange=[],erange=[],wt=0):
 
 
-    ##     logger.debug("names={0}".format(db.collection_names()))
+    ##     mwf_logger.debug("names={0}".format(db.collection_names()))
 
     ##     tbl="<table class=\"ntdata\"><thead><tr><td></td></tr></thead>"
     ##     tbl+="<tbody><tr>" 
     ##     levels = get_all_levels(); levels.sort()
-    ##     mwf_logger.debug("levels= {0}".format(levels))
+    ##     mwf_mwf_logger.debug("levels= {0}".format(levels))
     ##     col_info=dict()
     ##     for c in db.collection_names():
     ##         k=Knowl("mwf.collections.{0}".format(c))

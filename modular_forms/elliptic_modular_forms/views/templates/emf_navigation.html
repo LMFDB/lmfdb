@@ -58,7 +58,7 @@ function print_list(id) {
     var name = $(id).data("name");
     var url = getAbsolutePath();
     if (start > min) {
-       $(id).append("<a id='go_left' href='#' onclick=\"shift('"+id+"','left')\" style=\"display:inline\"><small>&lt;&lt;</small></a>");
+       $(id).append("<a id='go_left' href='#' onclick=\"shift('"+id+"','left')\" style=\"\"><small>&lt;&lt;</small></a>");
     };
     var char = $("#char_selection").data("char");
     if (char == 0) {
@@ -115,7 +115,7 @@ function set_value(id,val) {
             </th>
             {% for cell in row  %}
             <td align="center">
-              <a style="display:inline" href="{{cell.url}}">{{cell.dim}}</a>
+              <a style="" href="{{cell.url}}">{{cell.dim}}</a>
             </td>
             {% endfor %}
           </tr>
