@@ -4,10 +4,12 @@
 
 <!--{{ info.query }}-->
 
+
 <h2> Further refine search </h2>
 
 
 <form>
+<input type="hidden" name="start" value="{{info.start}}"/>
 <table border="0">
 
 <tr>
@@ -41,6 +43,7 @@ table td.params {
   text-align: left;
   font-family: monospace;
 }
+
 </style>
 
 <h2> Results ({{info.report}})</h2>
@@ -62,5 +65,9 @@ table td.params {
 </tr>
 {% endfor %}
 </table>
+
+<hr>
+<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form();return false">Previous</A>
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form();return false">Next</A></td>
 
 {% endblock %}
