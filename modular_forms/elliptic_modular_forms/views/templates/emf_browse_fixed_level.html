@@ -52,7 +52,7 @@ given level and weight. The entry in the table is the dimension of the space.
       </th>
       {% for ix in table.col_heads  %}
       <th width="10px">
-        <a href="{{url_for('render_webpage_label',modulus=info.level,number=ix) }}" style="display:inline">{{ix}}</a></th>
+        <a href="{{url_for('render_webpage_label',modulus=info.level,number=ix) }}" style="">{{ix}}</a></th>
       {% endfor %}
     </tr>
   </thead>
@@ -65,7 +65,7 @@ given level and weight. The entry in the table is the dimension of the space.
       </th>
       {% for cell in row  %}
       <td align="center" width="0%">
-        <a style="display:inline" href="{{cell.url}}">{{cell.dim}}</a>
+        <a style="" href="{{cell.url}}">{{cell.dim}}</a>
       </td>
       {% endfor %}
     </tr>

@@ -1,17 +1,16 @@
-import flask
+#import flask
 import bson
 import pymongo
 from flask import render_template, url_for, request, redirect, make_response,send_file
-from utils import *
+#from utils import *
 from modular_forms.elliptic_modular_forms.backend.plot_dom import *
 from modular_forms.maass_forms.picard import MWFP,mwfp_logger, mwfp
-from knowledge.knowl import Knowl
 from modular_forms.backend.mf_utils import *
 from sage.all import dimension_new_cusp_forms,vector,dimension_modular_forms,dimension_cusp_forms,is_odd,DirichletGroup,is_even
 
-def connect_db():
+def connect_db(dbname):
     import base
-    return base.getDBConnection()[mwf_dbname]
+    return base.getDBConnection()[dbname]
 
 def get_collection(collection=''):
     db = connect_db()
