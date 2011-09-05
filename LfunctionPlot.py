@@ -1,12 +1,13 @@
 from pymongo import Connection
-import logging
 import math
 import cmath
 import datetime
 from flask import url_for, make_response
 import base
 from modular_forms.elliptic_modular_forms.backend.web_modforms import *
+from utils import make_logger
 
+logger = make_logger("LF")
 
 
 ## ============================================
@@ -45,15 +46,15 @@ def getAllMaassGraphHtml(degree):
     ans = ""
     for docGroup in groups:
         g = docGroup['group']
-        logging.debug(g)
+        logger.debug(g)
         ans += getGroupHtml(g)
         levels = collection.group(['level'],{ 'degree': degree ,'group': g },
                               {'csum': 0},
                               'function(obj,prev) { prev.csum += 1; }')
-        logging.debug(levels)
+        logger.debug(levels)
         for docLevel in levels:
             l = math.trunc(docLevel['level'])
-            logging.debug(l)
+            logger.debug(l)
             ans += getOneGraphHtml([g,l])
                                 
     return(ans)
@@ -260,7 +261,7 @@ def paintSvgFileAll(glslist):  # list of group, level, and (maybe) sign
     ans += paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength)
 
     for (x,y,lid,group,level,sign) in paralist:
-        linkurl = "/L/ModularForm/" + group + "/Q/maass?source=db&amp;id=" + lid
+        linkurl = "/L/ModularForm/" + group + "/Q/maass/" + lid
         ans += "<a xlink:href='" + linkurl + "' target='_top'>\n"
         ans += "<circle cx='" + str(float(x)*xfactor)[0:7]
         ans += "' cy='" +  str(height- float(y)*yfactor)[0:7]
@@ -378,7 +379,7 @@ def paintCSHolo(width, height, xMax, yMax, xfactor, yfactor,ticlength):
                              "' style='fill:rgb(102,102,102);font-size:11px;'>" +
                              str(i) + "</text>\n")
 
-        if i%4==0 :  #  put dahes every four units
+        if i%4==0 :  #  put dashes every four units
            xmlText = xmlText + ("<line x1='0' y1='" +
                          str(height - i*yfactor) + "' x2='" + str(width) +
                          "' y2='" + str(height - i*yfactor) +
@@ -495,11 +496,11 @@ def paintSvgHolo(Nmin,Nmax,kmin,kmax):
     
 #loop over levels and weights
     for x in range(int(Nmin), int(Nmax) + 1):  # x is the level
-        logging.info("level = %s" % x)
+        logger.info("level = %s" % x)
         for y in range(int(kmin), int(kmax) + 1, 2):  # y is the weight 
-           logging.info("  weight = %s"%y)
+           logger.info("  weight = %s"%y)
            lid = "(" + str(x) + "," + str(y) + ")"
-           linkurl = "/L/ModularForm/" + "GL2/Q/holomorphic?weight=" + str(y) +"&amp;level=" + str(x) + "&amp;character=0"
+           linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(y) +"/" + str(x) + "/0/"
            WS = WebModFormSpace(y,x)
            numlabels = len(WS.galois_decomposition())  # one label per Galois orbit
            thelabels = alphabet[0:numlabels]    # list of labels for the Galois orbits for weight y, level x
@@ -510,8 +511,7 @@ def paintSvgHolo(Nmin,Nmax,kmin,kmax):
            numpluslabels=0
            numminuslabels=0
            for label in thelabels:  # looping over Galois orbit
-               linkurl = "/L/ModularForm/" + "GL2/Q/holomorphic?weight=" + str(y) +"&amp;level=" + str(x) + "&amp;character=0"
-               linkurl += "&amp;label=" + label
+               linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(y) +"/" + str(x) + "/0/" + label
                MF = WebNewForm(y,x,0,label)   # one of the Galois orbits for weight y, level x
                numberwithlabel = MF.degree()  # number of forms in the Galois orbit
                if x == 1: # For level 1, the sign is always plus
@@ -559,14 +559,14 @@ def paintSvgHolo(Nmin,Nmax,kmin,kmax):
                        firstcentery = ybase 
                        lastcenterx = xbase + (numberwithlabel * signfe * xdotspacing)
                        lastcentery = ybase
-                       ans += "<line x1='%s'" %  str(float(firstcenterx)*xfactor)[0:7]
-                       ans += "y1='%s'" % str(float(height - firstcentery*yfactor))[0:7]
-                       ans += "x2='%s'" % str(float(lastcenterx)*xfactor)[0:7]
-                       ans += "y2='%s'" % str(float(height - lastcentery*yfactor))[0:7]
+                       ans += "<line x1='%s' " %  str(float(firstcenterx)*xfactor)[0:7]
+                       ans += "y1='%s' " % str(float(height - firstcentery*yfactor))[0:7]
+                       ans += "x2='%s' " % str(float(lastcenterx)*xfactor)[0:7]
+                       ans += "y2='%s' " % str(float(height - lastcentery*yfactor))[0:7]
                        ans += "style='stroke:%s;stroke-width:2.4'/>" % thiscolour 
                    for number in range(0,numberwithlabel):
                        xbase += signfe * xdotspacing
-                       ans += "<a xlink:href='" + linkurl + "&amp;number=" + str(number) + "' target='_top'>\n"
+                       ans += "<a xlink:href='" + linkurl + "/" + str(number) + "' target='_top'>\n"
                        ans += "<circle cx='" + str(float(xbase)*xfactor)[0:7]
                        ans += "' cy='" +  str(height- float(ybase)*yfactor)[0:7]
                        ans += "' r='" + str(radius)
@@ -576,7 +576,7 @@ def paintSvgHolo(Nmin,Nmax,kmin,kmax):
 
     ans += "</svg>"
 
-    logging.info(ans)
+    logger.info(ans)
  
     return ans
 
@@ -621,7 +621,7 @@ def paintSvgHoloGeneral(Nmin,Nmax,kmin,kmax,imagewidth,imageheight):
         for y in range(int(kmin), int(kmax) + 1, 2):  # y is the weight 
            print "  weight = " + str(y)
            lid = "(" + str(x) + "," + str(y) + ")"
-           linkurl = "/L/ModularForm/" + "GL2/Q/holomorphic?weight=" + str(y) +"&amp;level=" + str(x) + "&amp;character=0"
+           linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(y) +"/" + str(x) + "/0/"
            WS = WebModFormSpace(y,x) # space of modular forms of weight y, level x
            galois_orbits = WS.galois_decomposition()   # make a list of Galois orbits
            numlabels = len(galois_orbits)  # one label per Galois orbit
@@ -724,8 +724,8 @@ def getOneGraphHtmlHolo(Nmin, Nmax, kmin, kmax):
     ans += "The horizontal grouping indicates the degree of the field containing "
     ans += "the arithmetically normalized coefficients.\n<br/><br/></div>\n"
     graphInfo = getGraphInfoHolo(Nmin, Nmax, kmin, kmax)
-# To generate the graph:   ans += ("<embed src='" + graphInfo['src'] + "' width='" + str(graphInfo['width']) +  
-    ans += ("<embed src='/static/images/browseGraphHolo_22_14_3a.svg' width='" + str(graphInfo['width']) +
+# To  generate the graph:    ans += ("<embed src='" + graphInfo['src'] + "' width='" + str(graphInfo['width']) +  
+    ans += ("<embed src='/static/images/browseGraphHolo_22_14_4a.svg' width='" + str(graphInfo['width']) +
            "' height='" + str(graphInfo['height']) +
             "' type='image/svg+xml' " +
             "pluginspage='http://www.adobe.com/svg/viewer/install/'/>\n")
@@ -995,7 +995,7 @@ def paintSvgChar(min_cond,max_cond,min_order,max_order):
 def getOneGraphHtmlChar(min_cond, max_cond, min_order, max_order):
     ans = "<div>These L-functions have a functional equation of the form ...</div>\n"
     graphInfo = getGraphInfoChar(min_cond, max_cond, min_order, max_order)
-    logging.info("graphInfo %s" % graphInfo)
+    logger.info("graphInfo %s" % graphInfo)
 #    ans += ("<embed src='" + graphInfo['src'] + "' width='" + str(graphInfo['width']) +
     ans += ("<embed src='/static/images/browseGraphChar_1_35.svg' width='" + str(graphInfo['width']) +
            "' height='" + str(graphInfo['height']) +

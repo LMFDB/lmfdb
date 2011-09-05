@@ -7,7 +7,6 @@ import re
 import pymongo
 import bson
 import utils
-import logging
 from modular_forms.elliptic_modular_forms.backend.web_modforms import *
 
 logger = utils.make_logger("LF")
@@ -42,7 +41,7 @@ def my_find_update(the_coll, search_dict, update_dict):
 #############################################################################
 
 def constructor_logger(object, args):
-    logging.info(str(object.__class__)+str(args))
+    logger.info(str(object.__class__)+str(args))
     object.inject_database(["original_mathematical_object()", "poles", "residues", "kappa_fe", 
         "lambda_fe", "mu_fe", "nu_fe"])
 class Lfunction:
@@ -377,13 +376,13 @@ class Lfunction:
         #   
         # Is used to inject the data in relevant_fields
         
-        logging.info("Trying to inject")
+        logger.info("Trying to inject")
         import base
         db = base.getDBConnection().Lfunctions
         Lfunctions = db.full_collection
         update_dict = dict([(method_name,get_attr_or_method(self,method_name)) for method_name in relevant_info])
         
-        logging.info("injecting " + str(update_dict))
+        logger.info("injecting " + str(update_dict))
         search_dict = {"original_mathematical_object()": get_attr_or_method(self, "original_mathematical_object()")}
         
         my_find_update(Lfunctions, search_dict, update_dict)
@@ -453,7 +452,7 @@ class Lfunction_EC(Lfunction):
         
         self.sageLfunction = lc.Lfunction_from_elliptic_curve(self.E, self.numcoeff)
 
-        logging.info("I am now proud to have ", str(self.__dict__))
+        logger.info("I am now proud to have ", str(self.__dict__))
         constructor_logger(self,args)
 
     def Ltype(self):
@@ -486,14 +485,18 @@ class Lfunction_EMF(Lfunction):
         #Check for compulsory arguments
         if not ('weight' in args.keys() and 'level' in args.keys()):
             raise KeyError, "You have to supply weight and level for an elliptic modular form L-function"
-        
+        print args, args.keys()
         # Initialize default values
-        self.character = 0  # Trivial character is default
-        self.label=''       # No label, is OK If space is one-dimensional
-        self.number = 0     # Default choice of embedding of the coefficients
+        if not args['character']:
+            args['character'] = 0  # Trivial character is default
+        if not args['label']:
+            args['label']='a'      # No label, is OK If space is one-dimensional
+        if not args['number']:
+            args['number'] = 0     # Default choice of embedding of the coefficients
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
+        print self.character, self.label, self.number
         self.weight = int(self.weight)
         self.level = int(self.level)
         self.character = int(self.character)
