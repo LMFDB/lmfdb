@@ -582,11 +582,15 @@ function updateMappingRules(data, id) {
 {%- endmacro %}
 
 
-{% macro render_uploadlist(title, list) %}
+{% macro render_uploadlist(title, list, display) %}
 <h2> {{ title }} </h2>
 
 {% for entry in list %}
-<dl class=propertylist>
+<p>
+<A HREF="#" onclick="$('#display{{entry._id}}').toggle()">{{entry.metadata['name']}}</a>
+(uploaded by <A HREF="/users/profile/{{entry.metadata['uploader_id']}}">{{entry.metadata['uploader']}}</A>)<br/>
+<dl class=propertylist style="display:{{display}}" id="display{{entry._id}}">
+</p>
 
   <dt>Name</dt>
   <dd>{{editable(entry,'name')}}</dd>
@@ -671,7 +675,7 @@ function updateMappingRules(data, id) {
 {% endmacro %}
 
 {% if file is defined %}
-{% call(entry) render_uploadlist("View file", [file]) %}
+{% call(entry) render_uploadlist("View file", [file], '') %}
 {% endcall %}
 {% endif %}
 
@@ -700,7 +704,7 @@ function updateMappingRules(data, id) {
 
 
 
-{% call(entry) render_uploadlist('Awaiting approval', unmoderated) %}
+{% call(entry) render_uploadlist('Awaiting approval', unmoderated, 'none') %}
 
   <dt>Action</dt>
   <dd>
@@ -715,12 +719,12 @@ function updateMappingRules(data, id) {
 
 
 {% if approved is defined %}
-  {% call(entry) render_uploadlist('Approved', approved) %}
+  {% call(entry) render_uploadlist('Approved', approved, 'none') %}
 
   {% endcall %}
 {% endif %}
 {% if disapproved is defined %}
-  {% call(entry) render_uploadlist('Disapproved', disapproved) %}
+  {% call(entry) render_uploadlist('Disapproved', disapproved, 'none') %}
 
   {% endcall %}
 {% endif %}

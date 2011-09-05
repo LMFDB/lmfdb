@@ -4,17 +4,14 @@
  <h2> {{ KNOWL('alg.dirichlet_series', title='Dirichlet series') }}</h2>
  <div>\[{{ dirichlet }}\]</div>
 
- <h2>{{ KNOWL('alg.functional_equation',title='Functional equation') }}</h2>
+ <h2>{{ KNOWL('lfunction.functional_equation',title='Functional equation') }}</h2>
  
  <div id="functionalEqText">\[{{ functionalequation }}\]</div>
  <div>
    {{ KNOWL('lfunction.selbergdata', title="Selberg data") }}: ${{ functionalequationSelberg }}$</div>
  
  
- 
-
- 
- <h2>{{ KNOWL('lfunction.euler_product') }}</h2>
+ <h2>{{ KNOWL('lfunction.euler_product', title='Euler product') }}</h2>
  <div>\[{{ eulerproduct }}\]</div>
 
  <h2> Imaginary part of the first few zeroes on the {{ KNOWL('lfunction.critical_line', title='critical line') }}</h2>
@@ -36,7 +33,7 @@
  {% endif %}
 
  {% if plotlink %}
-    <h2> Graph of the {{ KNOWL('L.Zfunction') }} along the {{ KNOWL('lfunction.critical_line', title='critical line') }} </h2>
+    <h2> Graph of the {{ KNOWL('lfunction.zfunction', title='$Z$-function') }} along the {{ KNOWL('lfunction.critical_line', title='critical line') }} </h2>
     <img src="{{ plotlink|safe }}" >
  {% else %}
     <div>Not enough Dirichlet series coefficients to make a graph.</div>

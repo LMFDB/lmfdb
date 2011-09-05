@@ -69,10 +69,12 @@
 {%- endmacro %}
 
 {# for inserting "normal" links to knowl pages #}
-{% macro KNOWL_LINK(knowlid) -%}
+{% macro KNOWL_LINK(knowlid, title=none) -%}
 {% with k = Knowl(knowlid) -%}
 {% if k.exists() -%}
-  <a class="knowl-link" href='{{ url_for("knowledge.show", ID=k.id) }}?{{kwargs|urlencode}}'>{{ k.title }}</a>
+  <a class="knowl-link" href='{{ url_for("knowledge.show", ID=k.id) }}?{{kwargs|urlencode}}'>
+  {% if title is none -%}{{ k.title }}{%- else -%}{{ title }}{%- endif -%}
+ </a>
 {%- else -%}
   {# knowl does not exist. wrong knowlid or opportunity to create one! #}
     {% if user_is_authenticated -%}

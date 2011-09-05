@@ -323,7 +323,7 @@ def render_lcalcfile(L):
     try:
         response = make_response(L.lcalcfile)
     except:
-        response = make_response(L.createLcalcfile())
+        response = make_response(L.createLcalcfile_ver2())
 
     response.headers['Content-type'] = 'text/plain'
     return response

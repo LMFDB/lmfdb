@@ -51,7 +51,8 @@ md.inlinePatterns.add('mathjax\\(', IgnorePattern(r'(\\\(.+?\\\))'), '<escape')
 md.inlinePatterns.add('mathjax\\[', IgnorePattern(r'(\\\[.+?\\\])'), '<escape')
 
 # Tell markdown to turn hashtags into search urls
-md.inlinePatterns.add('hashtag', HashTagPattern(r'#([a-zA-Z][a-zA-Z0-9-]{2,})\b'), '<escape')
+hashtag_keywords_rex = r'#([a-zA-Z][a-zA-Z0-9-_]{1,})\b'
+md.inlinePatterns.add('hashtag', HashTagPattern(hashtag_keywords_rex), '<escape')
 
 # global (application wide) insertion of the variable "Knowl" to create
 # lightweight Knowl objects inside the templates.
@@ -130,12 +131,17 @@ def show(ID):
   k = Knowl(ID)
   r = render(ID, footer="0")
   b = get_bread([('%s'%k.title, url_for('.show', ID=ID))])
+  searchbox = u"""\
+    <form id='knowl-search' action="%s" method="GET">
+      <input name="search" />
+    </form>""" % url_for(".index")
     
   return render_template("knowl-show.html",
          title = k.title,
          k = k,
          render = r,
-         bread = b)
+         bread = b,
+         navi_raw = searchbox)
 
 @knowledge_page.route("/delete/<ID>")
 @admin_required
