@@ -255,6 +255,7 @@ def index():
   logger.debug("keywords: %s" % keywords)
   keyword_q = {'_keywords' : { "$all" : keywords}}
   s_query = keyword_q if keyword else {}
+  s_query['title'] = { "$exists" : True }
   knowls = get_knowls().find(s_query, fields=['title'])
 
   def first_char(k):

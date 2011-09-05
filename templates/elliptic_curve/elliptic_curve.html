@@ -25,13 +25,13 @@ function show_code(system) {
     </div>
     <div></div>
     
-    <h2> {{ KNOWL('ec.q.minimal_weierstrass_equation') }} </h2>
+    <h2> {{ KNOWL('ec.q.minimal_weierstrass_equation', title='Minimal Weierstrass equation') }} </h2>
     <div class='sage nodisplay code'>sage: E = EllipticCurve({{info.ainvs}})</div>
     <div class='pari nodisplay code'>? E = ellinit({{info.ainvs}})</div>
     <div class='magma nodisplay code'>&gt; E := EllipticCurve({{info.ainvs}});</div>
     <p> {{ info.equation }} </p>
 
-    <h2> {{ KNOWL('ec.q.mordell-weil') }} structure</h2>
+    <h2> {{ KNOWL('ec.q.mordell-weil', title='Mordel-Weil group') }} structure</h2>
    <div>{% if info.rank==1 %}{% if info.torsion!=1 %} \(\mathbb{Z}\times {{info.tor_structure}}\) 
     {%endif%}  {%endif%}     </div>
 
@@ -50,7 +50,7 @@ function show_code(system) {
     {%endif %}
     
     {% if info.torsion!=1 %}    
-    <p><h2> {{ KNOWL('ec.q.torsion_generators') }}</h2>
+    <p><h2> {{ KNOWL('ec.q.torsion_generators', title='Torsion generators') }}</h2>
     <div class='sage nodisplay code'>sage: E.torsion_subgroup()</div>
     <div class='pari nodisplay code'>? elltors(E) </div>
     <div class='magma nodisplay code'>&gt; TorsionSubgroup(E);</div>
@@ -58,13 +58,13 @@ function show_code(system) {
     {%endif %}
 
 
-    <p><h2> {{ KNOWL('ec.q.integral_points') }}</h2>
+    <p><h2> {{ KNOWL('ec.q.integral_points', title='Integral points') }}</h2>
     <div class='sage nodisplay code'>sage: E.integral_points()</div>
     <div class='pari nodisplay code'> </div>
     <div class='magma nodisplay code'>&gt; ;</div>
     <p> {{ info.xintegral_points}} </p>
     
-    <h2> {{ KNOWL('ec.q.invariants') }}  </h2>
+    <h2> {{ KNOWL('ec.q.invariants', title='Invariants') }}  </h2>
         <table>
 
         <tr>
@@ -75,7 +75,7 @@ function show_code(system) {
         </td>
         </tr>
         <tr>
-        <td colspan="4">Conductor
+        <td colspan="4">
          \(N \)</td>
         <td>=</td>
         <td>\({{ info.cond_factor }}\)</td>
@@ -89,7 +89,7 @@ function show_code(system) {
         </td>
         </tr>
         <tr>
-        <td colspan="4"> Discriminant \(\Delta \)</td>
+        <td colspan="4"> \(\Delta \)</td>
         <td>=</td>
         <td>\({{ info.disc_factor }} \)</td>
         </tr>
@@ -102,7 +102,7 @@ function show_code(system) {
         </td>
         </tr>
         <tr>
-        <td colspan="4"> j-invariant \(j \)</td>
+        <td colspan="4"> \(j \)</td>
         <td>=</td>
         <td>\({{ info.j_invar_factor }}\)</td>
         </tr>
@@ -110,7 +110,7 @@ function show_code(system) {
 
        </table>
 
-    <h2> {{ KNOWL('ec.q.bsd_invariants') }} </h2>
+    <h2> {{ KNOWL('ec.q.bsd_invariants', title='BSD invariants') }} </h2>
     <div></div>
     <p>
         <table>
@@ -124,7 +124,7 @@ function show_code(system) {
         </tr>
         <tr>
         <td colspan="4">
-            Rank \( r \) </td><td>=</td><td> {{ info.rank }}
+            \( r \) </td><td>=</td><td> {{ info.rank }}
         </td>
         </tr>
 
@@ -138,7 +138,7 @@ function show_code(system) {
         </tr>
         <tr>
         <td colspan="4"> 
-           Regulator \( \text{Reg} \) </td><td>=</td><td> {{ info.regulator }}</td>
+           \( \text{Reg} \) </td><td>=</td><td> {{ info.regulator }}</td>
         </tr>
 
         <tr>
@@ -150,7 +150,7 @@ function show_code(system) {
         </tr>
         <tr>
         <td colspan="4">
-           Real period \( \Omega \) </td><td>=</td><td> {{ info.real_period }}</td>
+           \( \Omega \) </td><td>=</td><td> {{ info.real_period }}</td>
         </tr>
 
         <tr>
@@ -162,7 +162,7 @@ function show_code(system) {
         </tr>
         <tr>
         <td colspan="4">
-         Product of Tamagawa numbers \( \prod_p c_p \)</td><td>=</td><td>\( {{ info.tamagawa_numbers }} \)</td>
+         \( \prod_p c_p \)</td><td>=</td><td>\( {{ info.tamagawa_numbers }} \)</td>
         </tr>
 
         <tr>
@@ -173,7 +173,7 @@ function show_code(system) {
         </td>
         </tr>
         <tr>
-        <td colspan="4"> Torsion order \( \#E_{tor} \)</td>
+        <td colspan="4"> \( \#E_{tor} \)</td>
         <td>=</td><td>{{ info.torsion }}</td>
         </tr>
 
@@ -185,7 +185,7 @@ function show_code(system) {
         </td>
         </tr>
         <tr>
-        <td colspan="4"> Analytic order of &#1064;\(_{an} \) </td>
+        <td colspan="4"> &#1064;\(_{an} \) </td>
         <td>=</td>
         <td>{{ info.sha_an }}</td>
         </tr>
@@ -195,7 +195,7 @@ function show_code(system) {
 
 <!-- %%%%%%%%%%%%%%%% END OF TABLE %%%%%%%%%%%%%%%%%%% -->
 
-    <h2> {{KNOWL('ec.q.modular_form')}} </h2>
+    <h2> {{KNOWL('ec.q.modular_form', title='Modular form')}} </h2>
     <div class='sage nodisplay code'>sage: E.q_eigenform(10)</div>
     <div class='pari nodisplay code'></div>
     <div class='magma nodisplay code'>&gt; ModularForm(E);</div>
@@ -206,7 +206,7 @@ function show_code(system) {
         <a  href='{{info.download_qexp_url}}' target='_blank' >download coefficients</a>
     </p>
 
-    <h2> {{KNOWL('ec.q.special_value', special_value = info.special_value)}} attached to the curve </h2>
+    <h2> {{KNOWL('ec.q.special_value', title='Special $L$-values', special_value = info.special_value)}} attached to the curve </h2>
         \( {{ info.lder }} = {{ info.special_value}} \)
     </p>
     

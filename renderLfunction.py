@@ -1,7 +1,8 @@
-import re
 import logging
 
-from flask import render_template, url_for, make_response, abort, redirect
+from base import *
+from flask import Flask, session, g, render_template, url_for, request, redirect, make_response, abort
+
 from sage.all import *
 import tempfile, os
 import pymongo
@@ -14,15 +15,92 @@ from Lfunctionutilities import lfuncDStex, lfuncEPtex, lfuncFEtex
 ##import upload2Db.py
 
 
-cremona_label_regex = re.compile(r'(\d+)([a-z])+(\d*)')
+###########################################################################
+#   Route functions
+###########################################################################
 
-def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
+@app.route("/Lfunction/")
+@app.route("/Lfunction/<arg1>")
+@app.route("/Lfunction/<arg1>/<arg2>")
+@app.route("/Lfunction/<arg1>/<arg2>/<arg3>")
+@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>")
+@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
+@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>")
+@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>")
+@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>")
+def render_Lfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = None, arg6 = None, arg7 = None, arg8 = None):
+    return render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+
+@app.route("/L/")
+@app.route("/L/<arg1>") # arg1 is EllipticCurve, ModularForm, Character, etc
+@app.route("/L/<arg1>/<arg2>") # arg2 is field
+@app.route("/L/<arg1>/<arg2>/<arg3>") #arg3 is label
+@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>")
+@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
+@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>")
+@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>")
+@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>")
+@app.route("/L-function/")
+@app.route("/L-function/<arg1>")
+@app.route("/L-function/<arg1>/<arg2>")
+@app.route("/L-function/<arg1>/<arg2>/<arg3>")
+@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>")
+@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
+@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>")
+@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>")
+@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>")
+def render_Lfunction_redirect(**args):
+    args.update(request.args)
+    return redirect(url_for("render_Lfunction", **args), code=301)
+
+@app.route("/plotLfunction")
+@app.route("/plotLfunction/<arg1>")
+@app.route("/plotLfunction/<arg1>/<arg2>")
+@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>")
+@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/<arg4>")
+@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
+def plotLfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = None):
+    return render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5)
+
+@app.route("/browseGraph")
+def browseGraph():
+    return render_browseGraph(request.args)
+
+@app.route("/browseGraphTMP")
+def browseGraphTMP():
+    return render_browseGraphTMP(request.args)
+
+@app.route("/browseGraphHolo")
+def browseGraphHolo():
+    return render_browseGraphHolo(request.args)
+
+@app.route("/browseGraphChar")
+def browseGraphChar():
+    return render_browseGraphHolo(request.args)
+
+@app.route("/zeroesLfunction")
+@app.route("/zeroesLfunction/<arg1>")
+@app.route("/zeroesLfunction/<arg1>/<arg2>")
+@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>")
+@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>")
+@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
+def zeroesLfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = None):
+    return render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5)
+
+###########################################################################
+#   Functions for rendering the web pages
+###########################################################################
+
+
+
+
+def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8):
     args = request.args
     temp_args = to_dict(args)
     if len(args) == 0: 
         if arg1 == None: # this means we're at the start page
             info = set_info_for_start_page()
-            return render_template("LfunctionNavigate.html", info = info, title = 'L-functions', bread=info['bread'])
+            return render_template("LfunctionNavigate.html", **info)
         elif arg1.startswith("degree"):
             degree = int(arg1[6:])
             info = { "degree" : degree }
@@ -41,16 +119,17 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
         elif arg1 == 'custom': # need a better name
             return "not yet implemented"
             
-    # args may or may not be empty
-    # what follows are all things that need homepages
-
     try:
         L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, temp_args)
         
     except Exception as inst:   # There was an exception when creating the page
         error_message = ('There was an error loading this page. Please report the ' +
                          'address of this page and the following error message: ' +
-                         inst.args[0])
+                         str(inst.args))
+        if len(inst.args) >1:
+            if inst.args[1]== "UserError":
+                error_message = inst.args[0]
+            
         
         info = { 'content': error_message, 'title': 'Error' }
         return render_template('LfunctionSimple.html', info=info, **info)
@@ -59,29 +138,15 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5):
     try:
         logging.info(temp_args)
         if temp_args['download'] == 'lcalcfile':
-            return render_lcalcfile(L)
+            return render_lcalcfile(L, request.url)
     except:
         1
         #Do nothing
 
     info = initLfunction(L, temp_args, request)
 
-    # HSY: when you do "**dictionary" in a function call (at the very end),
-    # you 'unpack' it. that saves you all this "title = info['title']" nonsense ;)
-
-
-
-    return render_template('Lfunction.html', info=info, **info)
+    return render_template('Lfunction.html', **info)
     
-                           # above's **info is equivalent to:
-
-                           #title   = info['title'],
-                           #bread   = info['bread'], 
-                           #properties2 = info['properties2'],
-                           #citation = info['citation'], 
-                           #credit   = info['credit'],
-                           #support  = info['support'])
-
 
 def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, temp_args):
     if arg1 == 'Riemann' or (arg1 == 'Character' and arg2 == 'Dirichlet' and arg3 == '1' and arg4 == '0'):
@@ -91,7 +156,6 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, temp_args):
         return Lfunction_Dirichlet( charactermodulus = arg3, characternumber = arg4)
 
     elif arg1 == 'EllipticCurve' and arg2 == 'Q':
-        print "Starting to generate EC", arg3
         return Lfunction_EC( label = arg3)
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic': # this has args: one for weight and one for level
@@ -110,8 +174,10 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, temp_args):
         return Lfunction( Ltype = arg1, url = arg2)
 
 
-
 def set_info_for_start_page():
+    ''' Sets the properties of the top L-function page.
+    '''
+    
     tt = [[{'title':'Riemann','link':'Riemann'},
            {'title':'Dirichlet','link':'degree1#Dirichlet'}],
 
@@ -125,10 +191,10 @@ def set_info_for_start_page():
     info = {
         'degree_list': range(1,5),
         'type_table': tt,
-        'l':[0,1,2] #just for testing
+        'type_row_list':[0,1,2] 
     }
-    credit = ''
-    t = 'L-functions'
+
+    info['title'] = 'L-functions'
     info['bread'] = [('L-functions', url_for("render_Lfunction"))]
     info['learnmore'] = [('L-functions', 'http://wiki.l-functions.org/L-function')]
 
@@ -139,8 +205,8 @@ def initLfunction(L,args, request):
     info = {'title': L.title}
     info['citation'] = ''
     info['support'] = ''
-    info['sv12'] = specialValueString(L.sageLfunction, 0.5, '1/2')
-    info['sv1'] = specialValueString(L.sageLfunction, 1, '1')
+    info['sv12'] = specialValueString(L, 0.5, '1/2')
+    info['sv1'] = specialValueString(L, 1, '1')
     info['args'] = args
 
     info['credit'] = L.credit
@@ -156,59 +222,68 @@ def initLfunction(L,args, request):
     info['zeroeslink'] = (request.url.replace('/L/', '/zeroesLfunction/').
                           replace('/Lfunction/', '/zeroesLfunction/').
                           replace('/L-function/', '/zeroesLfunction/') ) #url_for('zeroesLfunction',  **args)
+
     info['plotlink'] = (request.url.replace('/L/', '/plotLfunction/').
                           replace('/Lfunction/', '/plotLfunction/').
                           replace('/L-function/', '/plotLfunction/') ) #info['plotlink'] = url_for('plotLfunction',  **args)
 
-    # set info['bread'] and to be empty and set info['properties'],
-    # but exist (temp. fix by David & Sally)
     info['bread'] = []
     info['properties2'] = set_gaga_properties(L)
 
-    if L.Ltype == 'maass':
+    friendlink = request.url.replace('/L/','/').replace('/L-function/','/').replace('/Lfunction/','/')
+
+    if L.Ltype() == 'maass':
         if L.group == 'GL2':
             info['zeroeslink'] = ''
             info['plotlink'] = ''
+            info['bread'] = [('L-function','/L') ,('Degree 2',
+                             '/L/degree2'),
+                             ('\('+L.texname+'\)', request.url )]
+            info['friends'] = [('Dirichlet Character '+str(charname), friendlink)]
+        else:
+            info['bread'] = [('L-function','/L') ,('Degree ' + str(L.degree),
+                             '/L/degree' +  str(L.degree)), (L.dbid, request.url )]
 
-    elif L.Ltype  == 'riemann':
+    elif L.Ltype()  == 'riemann':
         info['bread'] = [('L-function','/L'),('Riemann Zeta','/L/Riemann')]
+        info['friends'] = [('\(\mathbb Q\)','/NumberField/1.1.1.1')]
 
-    elif L.Ltype  == 'dirichlet':
+    elif L.Ltype()  == 'dirichlet':
         snum = str(L.characternumber)
         smod = str(L.charactermodulus)
-        info['bread'] = [('L-function','/L'),('Dirichlet Character','/L/degree1#Dirichlet'),('Character Number '+snum+' of Modulus '+ smod,'/L/Character/Dirichlet/'+smod+'/'+snum)]
         charname = '\(\\chi_{%s}\\!\\!\\pmod{%s}\)' %(snum,smod)
-        info['friends'] = [('Dirichlet Character '+str(charname), '/Character/Dirichlet/'+smod+'/'+snum)]
+        info['bread'] = [('L-function','/L'),('Dirichlet Character','/L/degree1#Dirichlet'),(charname, '/L/Character/Dirichlet/'+smod+'/'+snum)]
+        info['friends'] = [('Dirichlet Character '+str(charname), friendlink)]
                 
 
-    elif L.Ltype  == 'ellipticcurve':
+    elif L.Ltype()  == 'ellipticcurve':
         label = L.label
-        info['friends'] = [('Elliptic Curve', '/EllipticCurve/Q/' + str(label)),('Modular Form', url_for('not_yet_implemented'))]
+        info['friends'] = [('Elliptic Curve', friendlink)]
         info['bread'] = [('L-function','/L'),('Elliptic Curve','/L/degree2#EllipticCurve_Q'),
                          (label,url_for('render_Lfunction',arg1='EllipticCurve',arg2='Q',arg3= label))]
 
-    elif L.Ltype == 'ellipticmodularform':
+    elif L.Ltype() == 'ellipticmodularform':
         weight = str(L.weight)
         level = str(L.level)
         character = str(L.character)
         label = str(L.label)
         number = str(L.number)
-        info['friends'] = [('Modular Form','/ModularForm/GL2/Q/holomorphic/?weight='+weight+'&level='+level+'&character='+character +'&label='+label+'&number='+number)]
+        info['friends'] = [('Modular Form', friendlink)]
 
-    elif L.Ltype == 'db':
-        info['bread'] = [('L-function','/L') ,
-                         ('Degree ' + str(L.degree),'/L/degree' +
-                          str(L.degree)),
-                         (L.id, request.url )]
+    elif L.Ltype() == 'dedekindzeta':
+        info['friends'] = [('Number Field', friendlink)]
+
+    elif L.Ltype() in ['lcalcurl', 'lcalcfile']:
+        info['bread'] = [('L-function','/L')]
+        
 
     info['dirichlet'] = lfuncDStex(L, "analytic")
     info['eulerproduct'] = lfuncEPtex(L, "abstract")
     info['functionalequation'] = lfuncFEtex(L, "analytic")
-    #info['functionalequationAnalytic'] = lfuncFEtex(L, "analytic").replace('\\','\\\\').replace('\n','')
     info['functionalequationSelberg'] = lfuncFEtex(L, "selberg")
 
-    
     info['learnmore'] = [('L-functions', 'http://wiki.l-functions.org/L-functions') ]
+    
     if len(request.args)==0:
         lcalcUrl = request.url + '?download=lcalcfile'
     else:
@@ -216,21 +291,20 @@ def initLfunction(L,args, request):
         
     info['downloads'] = [('Lcalcfile', lcalcUrl) ]
     
-    info['check'] = [('Riemann hypothesis', '/L/TODO') ,('Functional equation', '/L/TODO') \
-                       ,('Euler product', '/L/TODO')]
     return info
+
 
 def set_gaga_properties(L):
     ans = [ ('Degree',    str(L.degree))]
+
+    ans.append(('Level',     str(L.level)))
+    ans.append(('Sign',      str(L.sign)))
 
     if L.selfdual:
         sd = 'Self dual'
     else:
         sd = 'Not self dual'
     ans.append((None,        sd))
-
-    ans.append(('Level',     str(L.level)))
-    ans.append(('Sign',      str(L.sign)))
 
     if L.primitive:
         prim = 'Primitive'
@@ -241,10 +315,11 @@ def set_gaga_properties(L):
     return ans
 
 
-def specialValueString(sageL, s, sLatex):
+def specialValueString(L, s, sLatex):
     number_of_decimals = 10
-    val = sageL.value(s)
-    return '\(L\left(' + sLatex + '\\right)\\approx ' + latex(round(val.real(), number_of_decimals)+round(val.imag(), number_of_decimals)*I) + '\)'
+    val = L.sageLfunction.value(s)
+    lfuncion_value_tex = L.texname.replace('(s', '(' + sLatex)
+    return '\(' + lfuncion_value_tex +'\\approx ' + latex(round(val.real(), number_of_decimals)+round(val.imag(), number_of_decimals)*I) + '\)'
 
 
 def parameterstringfromdict(dic):
@@ -283,6 +358,7 @@ def render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5):
     return response
 
 def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5):
+    print arg1, arg2, request.args
     L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, to_dict(request.args))
 
     if L.degree > 2 or L.Ltype()=="ellipticmodularform":  # Too slow to be rigorous here
@@ -318,17 +394,24 @@ def render_browseGraphHolo(args):
     response.headers['Content-type'] = 'image/svg+xml'
     return response
 
+def render_browseGraphTMP(args):
+    logging.info(args)
+    data = LfunctionPlot.paintSvgHoloGeneral(args['Nmin'], args['Nmax'], args['kmin'], args['kmax'],args['imagewidth'], args['imageheight'])
+    response = make_response(data)
+    response.headers['Content-type'] = 'image/svg+xml'
+    return response
+
 def render_browseGraphChar(args):
     data = LfunctionPlot.paintSvgChar(args['min_cond'], args['max_cond'], args['min_order'], arg['max_order'])
     response = make_response(data)
     respone.headers['Content-type'] = 'image/svg+xml'
     return response
 
-def render_lcalcfile(L):
+def render_lcalcfile(L, url):
     try:
         response = make_response(L.lcalcfile)
     except:
-        response = make_response(L.createLcalcfile_ver2())
+        response = make_response(L.createLcalcfile_ver2(url))
 
     response.headers['Content-type'] = 'text/plain'
     return response

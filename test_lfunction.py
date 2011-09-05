@@ -19,9 +19,9 @@ class LfunctionTest(LmfdbTest):
     L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic?weight=12&level=1&character=0&label=a&number=0')
     assert 'Functional' in L.data
 
-  def test_Lgl2maass(self):
-    L = self.tc.get('/L/ModularForm/GL2/Q/Maass/4cb8503a58bca91458000001?db=HT')
-    assert 'Functional' in L.data
+##  def test_Lgl2maass(self):
+##    L = self.tc.get('/L/ModularForm/GL2/Q/Maass/4cb8503a58bca91458000001?db=HT')
+##    assert 'Functional' in L.data
 
   def test_Lgl3maass(self):
     L = self.tc.get('/L/ModularForm/GL3/Q/maass?id=GL3Maass_4_19.9942_2.27431')

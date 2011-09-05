@@ -216,9 +216,9 @@ class Lfunction:
 ### Returns the Lcalcfile, version 2
 ############################################################################
 
-    def createLcalcfile_ver2(self):
+    def createLcalcfile_ver2(self, url):
         thefile=""
-        thefile += "### lcalc file for the url: HOW TO GET THE ASSOCIATED URL?\n\n"
+        thefile += "### lcalc file for the url: " + url + "\n\n"
         thefile += "lcalcfile_version = 2    ### lcalc files should have a version number to allow for future enhancements\n\n"
 
         thefile += """\
@@ -703,7 +703,7 @@ class Lfunction_Dirichlet(Lfunction):
         else:  #Character not primitive
             raise Exception("The dirichlet character you choose is " +
                             "not primitive so it's Dirichlet series " +
-                            "is not an L-function.")
+                            "is not an L-function." ,"UserError")
 
         constructor_logger(self,args)
 

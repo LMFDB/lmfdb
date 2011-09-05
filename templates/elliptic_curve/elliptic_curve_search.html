@@ -17,7 +17,7 @@
 <td align=left>{{ KNOWL_LINK('ec.q.rank', title='rank') }}<input type='text' name='rank'size=1 value={{info.rank}}></td>
 <td align=left>{{ KNOWL_LINK('ec.field.torsion_order', title='torsion order') }} <input type='text' name='torsion' size=1 value={{info.torsion}}> </td>
 <td align=left>
-Optimal 
+<td align=left>{{ KNOWL_LINK('ec.q.optimal', title='Optimal') }}
 <select name='optimal'>
   <option value="">No</option>
   <option value="on">Yes</option>
@@ -30,7 +30,7 @@ Optimal
 </tr>
 
 <tr> <td>
-<button type='submit' value='refine'>Refine</button>
+<button type='submit' value='refine'>Search again</button>
 </td> </tr>
 </table>
 </form>
@@ -49,7 +49,7 @@ table td.params {
 <h2> Results ({{info.report}})</h2>
 <table>
 <tr>
-  <th class="center">{{ KNOWL_LINK('ec.q.isogeny_class', title='isogeny class') }}</th>
+  <th class="center">{{ KNOWL_LINK('ec.isogeny_class', title='isogeny class') }}</th>
   <th class="center">{{ KNOWL_LINK('ec.q.cremona_label', title='Cremona label') }}</th>
   <th align="left">[a<sub>1</sub>,  a<sub>2</sub>, a<sub>3</sub>, a<sub>4</sub>, a<sub>6</sub>]</th>
   <th class="center">{{ KNOWL_LINK('ec.q.rank', title='rank') }}</th>
