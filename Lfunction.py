@@ -39,7 +39,7 @@ def my_find_update(the_coll, search_dict, update_dict):
             the_coll.save(x)
         
         
-##================================================================================
+#############################################################################
 
 def constructor_logger(object, args):
     logging.info(str(object.__class__)+str(args))
@@ -211,9 +211,141 @@ class Lfunction:
         
         return(thefile)
 
-    #==================================================
+
+############################################################################
+### Returns the Lcalcfile, version 2
+############################################################################
+
+    def createLcalcfile_ver2(self):
+        thefile=""
+        thefile += "### lcalc file for the url: HOW TO GET THE ASSOCIATED URL?\n\n"
+        thefile += "lcalcfile_version = 2    ### lcalc files should have a version number to allow for future enhancements\n\n"
+
+        thefile += """\
+############################################################################
+### Specify the functional equation using the Gamma_R and Gamma_C
+### notation. Let Gamma_R = pi^(-s/2) Gamma(s/2), and  Gamma_C= (2 pi)^(-s) Gamma(s).
+###
+### Let Lambda(s) :=
+###
+###                  a
+###               --------'
+###              '  |  |
+###          s      |  |
+###   sqrt(N)       |  |   Gamma_{R or C}(s + lambda_j)  L(s)
+###                 |  |
+###                j = 1
+###
+###                          ___________
+###                                    _
+### satisfy Lambda(s) = omega Lambda(1-s), where N is a positive integer, |omega|=1,
+### Each of the Gamma factors can be a Gamma_R or Gamma_C.
+###
+### Specify the conductor, omega, and Gamma_R and Gamma_C factors:"""
+
+        thefile += "\n\n"
+        thefile += "N = " + str(self.level) + "    ### other possible keywords: conductor, level.\n\n"
+
+        thefile += "omega = " + str(self.sign) + "\n"
+        thefile += "### sign of the functional equation. Complex numbers should be specified as:\n"
+        thefile += "### omega = (Re(omega),Im(omega)). Other possible keyword: sign\n\n"
+
+        thefile += "Gamma_R_list = " +  str(self.mu_fe) + "\n"
+        thefile += "Gamma_C_list = " +  str(self.nu_fe) + "\n"
+        thefile += "### Gamma_{R or C}_list lists the associated lambda_j's. Lines with empty lists can be omitted.\n\n"
+
+        thefile += """\
+############################################################################
+### Specify, as lists, the poles and residues of L(s) in Re(s)>1/2 (i.e. assumes that there
+### are no poles on s=1/2). Also assumes that the poles are simple. Lines with empty lists can be omitted."""
+        thefile += "\n\n"
+        thefile += "pole_list = " +  str(self.poles) + "\n"
+        thefile += "residue_list = " +  str(self.residues) + "\n\n"
+        thefile += "### FIX: OUTPUT POLES AND RESIDUES OF L(s) not Lambda(s)\n\n"
+
+        thefile += """\
+############################################################################
+### Optional:"""
+
+        thefile += "\n\n"
+        thefile += "name = SHOULD GET FROM THE URL\n\n"
+        thefile += "kind = SHOULD GET FROM THE URL\n\n"
+
+        thefile += """\
+############################################################################
+### Specify the Dirichlet coefficients, whether they are periodic
+### (relevant for Dirichlet L-functions), and whether to normalize them
+### if needed to get a functional equation s <--> 1-s
+###
+
+### periodic should be set to either true (in the case of Dirichlet L-functions,
+### for instance), or false. If true, then lcalc assumes that the coefficients
+### given, a[0]...a[N], specify all a[n] with a[n]=a[m] if n=m mod (N+1).
+### For example, for the real character mod 4, one should,
+### have periodic = true and at the bottom of this file, then specify:
+### dirichlet_coefficient =[
+### 0,
+### 1,
+### 0,
+### -1
+### ]
+###
+### False is the default, but there's no harm in specifying it even if false:"""
+        thefile += "\n\n"
+        if(self.coefficient_period==0):
+            thefile += "periodic = false\n\n"
+        else:
+            thefile += "periodic = true\n\n"
+
+
+        thefile += """\
+### The default is to assume that the Dirichlet coefficients are provided
+### normalized so that the functional equation is s <--> 1-s, i.e. `normalize_by'
+### is set to 0 by default.
+###
+### Sometimes, such as in this example, it is more convenient to record the
+### Dirichlet coefficients normalized differently, for example, as integers
+### rather than as floating point approximations.
+###
+### For example, an elliptic curve L-function is assumed by lcalc to be of the
+### form:
+###
+###     L(s) = sum (a(n)/n^(1/2)) n^(-s),
+###
+### i.e. to have Dirichlet coefficients a(n)/n^(1/2) rather than a(n),
+### where a(p) = p+1-#E(F_p), and functional equation of the form
+###
+###     Lambda(s):=(sqrt(N)/(2 pi))^s Gamma(s+1/2) L(s) = omega Lambda(1-s),
+###
+### where omega = \pm 1.
+###
+### So, the normalize_by variable is meant to allow the convenience, for example,
+### of listing the a(n)'s rather than the a(n)/sqrt(n)'s."""
+        thefile += "\n\n"
+        thefile += "normalize_by = 1/2 ### XXXXXXXXX normalize_by = .5 would be fine too. Normalize, below, the n-th Dirichlet\n### coefficient by n^(1/2)\n\n"
+
+        thefile += """\
+### The last entry must be the dirichlet_coefficient list, one coefficient per
+### line, separated # by commas. The 0-th entry is ignored unless the Dirichlet
+### coefficients are periodic. One should always include it, however, because, in
+### computer languages such as python, the 0-th entry is the `first' entry of an
+### array. Since this file is meant to be compatible also with python, we assume
+### that the 0-th entry is also listed.
+###
+### Complex numbers should be entered, as usual as a pair of numbers, separated
+### by a comma. If no complex numbers appear amongst the Dirichlet coefficients,
+### lcalc will assume the L-function is self-dual."""
+        thefile += "\n\n"
+
+        thefile += "Dirichlet_coefficient = [\n"
+        for n in range(0,len(self.dirichlet_coefficients)):
+            thefile += str(self.dirichlet_coefficients[n]) + ",\n"
+        thefile += "]\n"
+
+        return(thefile)
+    ############################################################################
     # other useful methods
-    #==================================================
+    ############################################################################
     
     def original_mathematical_object(self):
         raise Error("not all L-function have a mathematical object tag defined atm")
@@ -231,8 +363,9 @@ class Lfunction:
         # Advocate could be IK, CFKRS or B
         pass
         
-    #============== Injects into the database of all the L-functions
-    #==============
+    ############################################################################
+    ### Injects into the database of all the L-functions
+    ############################################################################
             
     def inject_database(self, relevant_info, time_limit = None):
         #   relevant_methods are text strings 
@@ -254,7 +387,7 @@ class Lfunction:
         my_find_update(Lfunctions, search_dict, update_dict)
         
 
-##================================================================================
+#############################################################################
 
 class Lfunction_EC(Lfunction):
     """Class representing an elliptic curve L-function
@@ -332,7 +465,7 @@ class Lfunction_EC(Lfunction):
         return [self.Ltype(), self.ground_field(), self.label]
         
             
-##================================================================================
+#############################################################################
 
 class Lfunction_EMF(Lfunction):
     """Class representing an elliptic modular form L-function
@@ -428,7 +561,7 @@ class Lfunction_EMF(Lfunction):
         return "ellipticmodularform"
 
 
-##================================================================================
+#############################################################################
 
 class RiemannZeta(Lfunction):
     """Class representing the Riemann zeta fucntion
@@ -481,7 +614,7 @@ class RiemannZeta(Lfunction):
     def original_mathematical_object(self):
         return ["riemann"]
 
-##================================================================================
+#############################################################################
 
 class Lfunction_Dirichlet(Lfunction):
     """Class representing the L-function of a Dirichlet character
@@ -579,7 +712,7 @@ class Lfunction_Dirichlet(Lfunction):
         return [self.Ltype(), self.charactermodulus, self.characternumber]
 
 
-##================================================================================
+#############################################################################
 
 class Lfunction_Maass(Lfunction):
     """Class representing the L-function of a Maass form 
@@ -700,7 +833,7 @@ class Lfunction_Maass(Lfunction):
 
     def Ltype(self):
         return "maass"
-##================================================================================
+#############################################################################
 
 class DedekindZeta(Lfunction):   # added by DK
     """Class representing the Dedekind zeta-fucntion
