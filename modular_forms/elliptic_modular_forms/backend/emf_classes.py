@@ -4,7 +4,7 @@ Contains basic classes for displaying holomorphic modular forms.
 
 """
 from sage.all import dimension_new_cusp_forms,vector,dimension_modular_forms,dimension_cusp_forms,is_odd,DirichletGroup,is_even
-from modular_forms.backend import  ModularFormDisplay
+from modular_forms.backend.mf_classes import  MFDisplay,MFDataTable
 emf_dbname = 'modularforms'
 from utils import *
 from modular_forms.elliptic_modular_forms import emf_logger, emf
@@ -18,10 +18,10 @@ def connect_mf_db():
 
 
 
-class ClassicalMFDisplay(ModularFormDisplay):
+class ClassicalMFDisplay(MFDisplay):
 
     def __init__(self,dbname='',**kwds):
-        ModularFormDisplay.__init__(self,dbname,**kwds)
+        MFDisplay.__init__(self,dbname,**kwds)
         
     
     def set_table_browsing(self,skip=[0,0],limit=[(2,16),(1,50)],keys=['Weight','Level'],character=0,dimension_fun=dimension_new_cusp_forms,title='Dimension of newforms'):

@@ -1,89 +1,13 @@
-import flask
-import bson
-import pymongo
-from flask import render_template, url_for, request, redirect, make_response,send_file
-from utils import *
-from modular_forms.elliptic_modular_forms.backend.plot_dom import *
+#from utils import *
 from modular_forms.maass_forms.picard import * #MWFP,mwfp_logger, mwfp
 from modular_forms.backend.mf_utils import * 
-from sage.all import dimension_new_cusp_forms,vector,dimension_modular_forms,dimension_cusp_forms,is_odd,DirichletGroup,is_even
-import base
-
-class MyDataTable(object):
-    def __init__(self,dbname='',**kwds):
-        r"""
-        For 'one-dimensiona' data sets the second skip parameter does not have a meaning but should be present anyway...
-
-        """
-        self._skip = kwds.get('skip',[])
-        self._limit= kwds.get('limit',[])
-        self._keys= kwds.get('keys',[])
-        self._db = base.getDBConnection()[dbname]
-        self._collection_name=kwds.get('collection','all')
-        self._collection = []
-        self._skip_rec=0
-        self._props = {}
-        if self._limit and self._skip:
-            self._nrows = self._limit[0]
-            self._ncols = self._limit[1]
-            if len(self._skip)==2:
-                self._skip_rows=self._skip[0]
-                self._skip_cols=self._skip[1]
-            else:
-                self._skip_rec = self._skip[0]
-        self._table=dict()
-        self._is_set=False
-        self._set_collection()
-        self._row_heads=[]
-        self._col_heads=[]
-
-    def ncols(self):
-        return self._ncols
-    def nrows(self):
-        return self._nrows 
-    def get_element(self,i,j):
-        return self._table[i][j]
-    def set_table(self,**kwds):
-        raise NotImplementedError,"Method needs to be implemented in subclasses!"
-
-    def _set_collection(self):
-        mwfp_logger.debug("Available collections : {0}".format(self._db.collection_names()))
-        mwfp_logger.debug("Want : {0}".format(self._collection_name))
-        if self._collection_name in self._db.collection_names():
-            self._collection = [self._db[self._collection_name] ]
-        else:
-            self._collection = list()
-            for name in self._db.collection_names():
-                if name in ['system.indexes','system.users']: continue
-                self._collection.append(self._db[name])
-
-    def collection(self):
-        if not self._collection:
-            self._set_collection()
-        return self._collection
-        
-    def table(self):
-        if not self._is_set:
-            self.set_table()
-        return self._table
-
-    def row_heads(self):
-        return self._row_heads
-
-    def col_heads(self):
-        return self._col_heads
-
-    def prop(self,name=''):
-        if name in self._props.keys():
-            return self._props[name]
-        else:
-            return ''
-
+from modular_forms.backend.mf_classes import MFDataTable
+from flask import url_for
 
     
-class PicardDataTable(MyDataTable):
+class PicardDataTable(MFDataTable):
     def __init__(self,dbname='HTPicard',**kwds):
-        MyDataTable.__init__(self,dbname,**kwds)    
+        MFDataTable.__init__(self,dbname,**kwds)    
 
     def set_table(self,**kwds):
         self._name = kwds.get('name','')
@@ -116,12 +40,12 @@ class PicardDataTable(MyDataTable):
             i = i+1
         self._is_set=True
 
-class PicardFormTable(MyDataTable):
+class PicardFormTable(MFDataTable):
     r"""
     To Display one form
     """
     def __init__(self,dbname='HTPicard',**kwds):
-        MyDataTable.__init__(self,dbname,**kwds)    
+        MFDataTable.__init__(self,dbname,**kwds)    
         self._docid = kwds.get('docid',None)
         if not self._docid:
             mwfp_logger.critical("You must supply an id!")
@@ -164,6 +88,7 @@ class PicardFormTable(MyDataTable):
             if a not in self._row_heads: self._row_heads.append(a)
             if b not in self._col_heads: self._col_heads.append(b)
             mwfp_logger.debug("a,b={0},{1}".format(a,b))
-            self._table[a][b]={'value':latex(val)}
+            val = str(val).replace(' ', '')
+            self._table[a][b]={'value':val}
         self._row_heads.sort()
         self._col_heads.sort()

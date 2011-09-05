@@ -28,6 +28,7 @@ from sage.all import is_odd,is_even
 import utils
 from  modular_forms.maass_forms.maass_waveforms import MWF,mwf_logger, mwf
 from modular_forms.maass_forms.maass_waveforms.backend.mwf_utils import *
+from modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import MaassFormTable
 from mwf_upload_data import *
 logger = mwf_logger
 
@@ -59,7 +60,7 @@ def render_maass_waveforms():
 
 
     # If we have a fixed ID and Database we show that single Maass form      
-    if info['MaassID'] and info['DBname']:
+    if info['maass_id'] and info['DBname']:
         return render_one_maass_waveform_wp(info)
 
     if not info['collection'] or info['collection']=='all':
@@ -240,9 +241,9 @@ def render_maass_waveforms_for_one_group(level):
     return render_template("mwf_one_group.html", info=info,title=title)
 
 
-@mwf.route("/<objectid>",methods=['GET','POST'])
-def render_one_maass_waveform(objectid):
-    if objectid=='upload' or objectid=='Upload':
+@mwf.route("/<id>",methods=['GET','POST'])
+def render_one_maass_waveform(id):
+    if id=='upload' or id=='Upload':
         title="Upload Maass waveforms"
         bread=[('Maass waveforms',url_for('render_maass_waveforms'))]
         if request.method <> "GET":
@@ -262,39 +263,77 @@ def render_one_maass_waveform(objectid):
         #return upload_maass_waveforms(info)
     else:
         info = get_args_mwf()
-        info['MaassID']=objectid
+        info['id']=id
+        mwf_logger.debug("id1={0}".format(id))
         return render_one_maass_waveform_wp(info)
+
     
-
-
 def render_one_maass_waveform_wp(info):
     r"""
     Render the webpage of one Maass waveform.
     """
-    #if not info.has_key('MaassID'):
-    #    return redirect(url_for('mwf.render_maass_waveforms'))
     info["check"]=[]
     #info["check"].append(["Hecke relation",url_for('not_yet_implemented')])
     #info["check"].append(["Ramanujan-Petersson conjecture",url_for('not_yet_implemented')])
-    maass_id = info['MaassID']
+    maass_id = info['id']
+    mwf_logger.debug("id1={0}".format(id))
+    info["friends"]= [("L-function","L/"+url_for('mwf.render_one_maass_waveform',id=maass_id))]
+    info['bread']=[('Maass waveforms',url_for('.render_maass_waveforms'))]
+    info["downloads"]= []
+    #info["downloads"].append(["Maass form data",url_for('not_yet_implemented')])
+    #data = get_maassform_by_id(maass_id)
+    lenc = 20
+    MWT = MaassFormTable(mwf_dbname,id=maass_id,skip=[0],limit=[20],keys=['Coefficient'],collection=info['db'])
+    if MWT.table():
+        info['table']=MWT.table()
+    info['col_heads']=MWT.col_heads()
+    info['row_heads']=MWT.row_heads()
+    info['ncols']=MWT.ncols()
+    info['nrows']=MWT.nrows()
+    info['Eigenvalue']=MWT.prop('Eigenvalue')
+    info['Symmetry']=MWT.prop('Symmetry')
+    info['Weight']=MWT.prop('Weight')
+    info['Character']=MWT.prop('Character')
+    info['Level']=MWT.prop('Level')
+    properties =    [('Level',[info['Level']]),('Symmetry',[info['Symmetry']])]
+    properties.append(('Weight',[info['Weight']]))
+    properties.append(('Character',[info['Character']]))
+    info['title']="Maass waveforms on \(\Gamma_{0}( %s )\)" % (info['Level'])
+    info['metadata']=MWT.prop('metadata')
+    info['properties2']=properties
+    return render_template("mwf_one_form.html",**info)
+
+
+def render_one_maass_waveform_wp_old(info):
+    r"""
+    Render the webpage of one Maass waveform.
+    """
+    info["check"]=[]
+    #info["check"].append(["Hecke relation",url_for('not_yet_implemented')])
+    #info["check"].append(["Ramanujan-Petersson conjecture",url_for('not_yet_implemented')])
+    maass_id = info['maass_id']
     #dbname=info['db']
     info["friends"]= []
-    info["friends"].append(["L-function","L/"+url_for('.render_one_maass_waveform',objectid=maass_id)])
+    info["friends"].append(["L-function","L/"+url_for('.render_one_maass_waveform',id=maass_id)])
     info["downloads"]= []
     #info["downloads"].append(["Maass form data",url_for('not_yet_implemented')])
     bread=[('Maass waveforms',url_for('.render_maass_waveforms'))]
     properties=[]
     data = get_maassform_by_id(maass_id)
+    lenc = 20
     if not data.has_key('error'):
         [title,maass_info] =  set_info_for_maass_form(data)
         info["maass_data"] = maass_info
         #rint "data=",info["maass_data"]
         numc=data['num_coeffs']
-        largs = [{'maass_id':maass_id,'number':k} for k in range(10,numc,50)]
-        mwf_logger.error("numc={0}".format(numc))
-        mwf_logger.error("largs={0}".format(largs))
+        mwf_logger.debug("numc={0}".format(numc))
         if(numc>0):
-            info['coefficients']=ajax_once(make_table_of_coefficients,largs,text='more')
+            #if numc > 10:
+                #largs = [{'maass_id':maass_id,'number':k} for k in range(10,numc,50)]
+                #mwf_logger.debug("largs={0}".format(largs))
+            info['coefficients']=make_table_of_coefficients(maass_id,len,offest) #,largs,text='more')
+            #else:
+            #    info['coefficients']=make_table_of_coefficients(maass_id)
         else:
             info["maass_data"].append(['Coefficients',''])
             
@@ -361,7 +400,7 @@ def render_search_results_wp(info,search):
             else:
                 cl="even"
             i+=1
-            url = url_for('mwf.render_one_maass_waveform',objectid=str(id),db=name)
+            url = url_for('mwf.render_one_maass_waveform',id=str(id),db=name)
             if len(res['weights'])>1:
                 s+="<tr class=\"%s\"><td><a href=\"%s\">%s</a></td><td align=\"center\">%s</td><td>%s</td><td>%s</td></tr>\n" %(cl,url,R,N,k,ch)
             else:

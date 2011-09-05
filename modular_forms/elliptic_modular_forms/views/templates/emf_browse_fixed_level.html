@@ -24,14 +24,14 @@ $("#plot").load(function() {
 {% endif %}
 
 {% if info.weight is defined %}
-<h1>{{ KNOWL('cmf.newform',title='Newforms') }} of {{KNOWL('emf.level',title='level')}} {{info.level}} and {{KNOWL('emf.weight',title='weight')}} {{info.weight}}</h1>
+<h1>{{ KNOWL('mf.elliptic.newform',title='Newforms') }} of {{KNOWL('mf.elliptic.level',title='level')}} {{info.level}} and {{KNOWL('mf.elliptic.weight',title='weight')}} {{info.weight}}</h1>
 {% else %}
-<h1>{{ KNOWL('cmf.newform',title='Newforms') }} of {{KNOWL('emf.level',title='level')}} {{info.level}}</h1>
+<h1>{{ KNOWL('mf.elliptic.newform',title='Newforms') }} of {{KNOWL('mf.elliptic.level',title='level')}} {{info.level}}</h1>
 {% endif %}
 
 {% if info.browse_table is defined %}
 {% if info.browse_table.rows is defined %}
-{#{KNOWL('emf.emf_browse.all.info',title='Write about browsing') }#}
+{#{KNOWL('mf.ellipticemf_browse.all.info',title='Write about browsing') }#}
 <p>
 In the table below you can brose spaces of Holomorphic Cusp Forms with
 given level and weight. The entry in the table is the dimension of the space.
@@ -89,16 +89,21 @@ given level and weight. The entry in the table is the dimension of the space.
         <tr>
           <td valign="top">
             {% if info.level > 1 %}
-            <h2>Geometric information for \(\Gamma_{0}({{ info.level}})\)</h2>
+            {% set level = info.level %}
+            {% set ti = "\(\Gamma_{0}( " ~ level  ~ ") \)" %} 
+            <h2>Geometric information for {{KNOWL('mf.sl2.subgroup.gamma0N',title=ti)}}</h2>
             {% else %}
-            <h2>Geometric information for \(PSL_{2}(\mathbb{Z}) \)</h2>
+            <h2>Geometric information for {{KNOWL('mf.sl2z',title='\(PSL_{2}(\mathbb{Z}) \)')}}</h2>
             {% endif %}
-            
+          </td>
+        </tr>
+        <tr>
+          <td>
             <table>
-              <tr><th>{{KNOWL('emf.gamma0N.index',title='index')}}</th><td>{{G.index}}</td></tr>
-              <tr><th>{{KNOWL('emf.gamma0N.genus',title='genus')}}</th><td>{{G.genus}}</td></tr>
-              <tr><th>{{KNOWL('emf.gamma0N.cusps',title='index')}}</th><td>{{G.cusps}}</td></tr>
-              <tr><th colspan="2">Number of {{KNOWL('emf.gammaN.ellipticfxpts',title='elliptic fixed points')}}</th></tr>
+              <tr><th>{{KNOWL('mf.sl2z.subgroup.index',title='index')}}</th><td>{{G.index}}</td></tr>
+              <tr><th>{{KNOWL('mf.sl2z.subgroup.genus',title='genus')}}</th><td>{{G.genus}}</td></tr>
+              <tr><th>{{KNOWL('mf.sl2z.subgroup.cusps',title='index')}}</th><td>{{G.cusps}}</td></tr>
+              <tr><th colspan="2">Number of {{KNOWL('mf.sl2z.subgroup.ellipticfxpts',title='elliptic fixed points')}}</th></tr>
               <tr><th>order 2</th><td>{{G.nu2}}</td></tr>
               <tr><th>order 3</th><td>{{G.nu2}}</td></tr>
             </table>
@@ -111,8 +116,8 @@ given level and weight. The entry in the table is the dimension of the space.
               <img id="plot" src="{{ info.fd_plot | safe }} " width="" height="75%"/>
             </div>
           </td>
-          </tr>
-        </table>
+        </tr>
+      </table>
       {% endif %}
 
 {% endblock content %}

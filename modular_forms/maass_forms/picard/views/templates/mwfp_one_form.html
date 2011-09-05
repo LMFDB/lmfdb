@@ -1,6 +1,6 @@
 {% extends 'homepage.html' %}
 {% block content %}
-{% set cell_class=cycler("even","odd") %}
+{% set row_class=cycler("even","odd") %}
 
 <h1>{{ title }}</h1>
 
@@ -35,23 +35,24 @@ The {{KNOWL('mf.maass.picard.fourier_expansion',title='Fourier expansion')}} has
   <tbody>
     {% for a in row_heads %}
     {% if ncols is even %}
-    {% set tmp = cell_class.next() %}
+    {% set tmp = row_class.next() %}
     {% endif %}
     <tr>
       <th style="border-right: 1px solid black">{{ a }}</td>
       {% for b in col_heads %}
       {% set val = table[a][b].value %}
-      <td class="{{ cell_class.next() }}">\({{val | safe }}\)</td>
+      <td class="{{ row_class.next() }}" style="white-space:nowrap;">{{val | safe }}</td>
       {% endfor %}
     </tr>
     {% endfor %}
    </tbody>
 </table>
 <p>
-The {{KNOWL('mf.maassf.picard.data.accuracy',title='accuracy')}} of the presented data is {{ prec}}
+The {{KNOWL('mf.maass.mwf.data.accuracy',title='accuracy')}} of the presented data is {{ prec}}
 </p>
 <p>
-Computed by {{ KNOWL('mf.maassf.picard.data.contributor.HT',title='Holger Then')}}
+{{ metadata }}
+
 </p>
 {% endif %}
 {% endblock %}
