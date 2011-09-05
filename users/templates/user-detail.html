@@ -11,12 +11,34 @@
   </ul>
 </div>
 
-<h2>Knwols</h2>
+<h2>Knowls</h2>
 <div>{{ user.name }} has contributed to these Knowls:
  {% for k in userknowls %}
    <a href="{{ url_for('knowledge.show', ID=k['_id']) }}">
   {{ k['title'] }}</a>{% if not loop.last -%},{%- endif %}
  {% endfor %}
 </div>
+
+<h2>Uploaded data</h2>
+{% if userfiles.count() > 0 %}
+<div>{{ user.name }} has uploaded the following files:
+<ul>
+ {% for f in userfiles %}
+   <li><a href="{{ url_for('upload.view', id=f['_id']) }}"> {{ f['metadata']['name'] }}</a>
+ {% endfor %}
+</ul>
+{% endif %}
+{% if userfilesmod.count() > 0 %}
+{{ user.name }} has the following files awaiting moderation:
+<ul>
+ {% for f in userfilesmod %}
+   <li><a href="{{ url_for('upload.view', id=f['_id']) }}"> {{ f['metadata']['name'] }}</a>
+ {% endfor %}
+</ul>
+{% endif %}
+
+</div>
+
+
 
 {% endblock %}

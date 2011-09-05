@@ -206,10 +206,10 @@ def getUploadedFor(path):
   ret.insert(0, ["Upload your data here", url_for("upload.index") + "?related_to=" + request.path ])
   return ret
 
-def queryUploadDatabase(filename, path):
+def queryUploadDatabase(filename, path, limit=0):
   file = getDBConnection().upload.fs.files.find_one({"metadata.related_to": path, "filename": filename})
   upload_fs = GridFS(getDBConnection().upload)
-  return upload_fs.get(file['_id']).read()
+  return upload_fs.get(file['_id']).read(limit)
 
 def getFilenamesFromTar(file):
   tar = tarfile.open(mode="r", fileobj=file)
