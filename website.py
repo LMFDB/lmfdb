@@ -21,6 +21,8 @@ import knowledge
 import upload
 import DirichletCharacter
 import local_fields
+import oeis
+
 import raw
 from modular_forms.maass_forms.picard import mwfp
 
