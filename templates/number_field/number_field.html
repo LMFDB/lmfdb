@@ -100,7 +100,7 @@ function show_code(system) {
         <div class='magma nodisplay code'>&gt; Regulator(K);</div>
         <p>
           <table>
-            <tr><td>Rank:<td>&nbsp;&nbsp;<td>{{info.unit_rank}}</tr>
+            <tr><td>Rank:<td>&nbsp;&nbsp;<td>${{info.unit_rank}}$</tr>
             <tr><td>Torsion generator:<td>&nbsp;&nbsp;<td>{{info.root_of_unity}}</tr>
 {% if info.unit_rank==1 %}
             <tr><td>Fundamental unit:<td>&nbsp;&nbsp;<td>{{info.fund_units|safe}}</tr>
