@@ -15,6 +15,7 @@
   display: inline;
   width: 165px;
   float: left;
+  min-height: 4em;
 }
 #knowls td { 
   padding: 10px 0px;
@@ -27,6 +28,15 @@
   color: #006;
 }
 </style>
+{% if user_is_authenticated -%}
+  <h2>Edit/Create Knowls</h2>
+  <form action="{{ url_for('.edit_form') }}" method="POST">
+    Knowl ID: <input id="knowl-edit-id" name="id"></input>
+    <button id="knowl-edit-btn">Edit</button>
+  </form>
+  <hr/>
+{%- endif %}
+
 <h1>Read Knowls</h1>
 
 <div style="margin-bottom: 20px">
@@ -50,16 +60,4 @@
    </tr>
   {%- endfor %}
 </table>
-
-{% if user_is_authenticated -%}
-  <h1 style="clear: both;">Edit Knowl</h1>
-  <form action="{{ url_for('.edit_form') }}" method="POST">
-    Knowl ID: <input id="knowl-edit-id" name="id"></input>
-    <button id="knowl-edit-btn">Edit</button>
-  </form>
-  <h2>Test</h2>
-  <ul>
-    <li><a href="{{ url_for('.test') }}">Testpage 1</a></li>
-  </ul>
-{%- endif %}
 {%- endblock %}
