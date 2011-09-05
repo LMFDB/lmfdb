@@ -34,7 +34,7 @@ html_keywords  = re.compile(r"&[a-zA-Z0-9]+;")
 # this one is different from the hashtag regex in main.py,
 # because of the match-group ( ... ) 
 hashtag_keywords = re.compile(r'#[a-zA-Z][a-zA-Z0-9-_]{1,}\b')
-common_words = set(['and', 'an', 'or', 'some', 'many', 'has', 'have', 'not', 'too' ])
+common_words = set(['and', 'an', 'or', 'some', 'many', 'has', 'have', 'not', 'too', 'mathbb', 'title', 'for' ])
 
 def make_keywords(content, kid, title):
   """
