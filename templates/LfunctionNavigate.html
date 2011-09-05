@@ -3,9 +3,9 @@
 {% block content %}
 <h2> Browse {{KNOWL('lfunction', title='L-functions')}} by {{KNOWL("lfunction.type",title="type")}}</h2>
 <table>
-{% for i in info.l: %}
+{% for i in type_row_list: %}
 <tr>
-  {% for t in info.type_table[i]: %}
+  {% for t in type_table[i]: %}
   <td><a  style="padding: 5px;" href="{{t.link}}">{{t.title|safe}}</a></td>
   {% endfor %}
 <tr>
@@ -15,7 +15,7 @@
 <h2> Browse {{KNOWL('lfunction', title='L-functions')}} by {{KNOWL('lfunction.degree', title='degree') }}</h2>
 <table>
  <tr>
-  {% for r in info.degree_list: %}
+  {% for r in degree_list: %}
     <td style="text-align: center;">
        <a style="width: 2em;" href="degree{{r}}">{{r}}</a>
     </td>
