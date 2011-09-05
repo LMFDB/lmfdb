@@ -1,3 +1,4 @@
-from mwf_picard_main import *
+import mwf_picard_main 
+
 
 

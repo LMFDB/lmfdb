@@ -1,78 +1,34 @@
 {% extends 'homepage.html' %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('emf.static', filename='browse_table.css')}}" type="text/css"/> 
 
-<script type="text/javascript" src="{{ url_for('emf.static', filename='browse_table.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('emf.static', filename='elliptic_modular_form_util-functions.js') }}"></script>
+<h1>{{title}}</h1>
 
-<script type="text/javascript" src="{{ url_for('emf.static', filename='elliptic_modular_form_scripts.js') }}"></script>
-<script>
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.0/jquery.js"></script>
-<!--script language="javascript" src="dataTables.js"></script-->
-<!--style type="text/css" title="currentStyle"> 
-    @import "demo_page.css";
-    @import "demo_table.css";
-</style-->
-<script type="text/javascript" charset="utf-8">
-    $(document).ready(function() {
-       $('#displayData').dataTable( {
-           "bProcessing": true,
-           "bStateSave": true,
-           "bServerSide": true,
-           "sAjaxSource": "handler.cfm",
-           "aoColumns": [ 
-              {"sName": "id", "sTitle": "ID", "sWidth": "20%", "bSortable": "true"},
-              {"sName": "varCode", "sTitle": "Code", "sWidth": "40%", "bSortable": "true"},
-              {"sName": "VarLocation", "sTitle": "Location", "sWidth": "40%", "bSortable": "true"}
-           ],
-           "sPaginationType": "full_numbers",
-           "aaSorting": [[1,'asc']],
-           "oLanguage": {
-               "sLengthMenu": "Page length: _MENU_",
-               "sSearch": "Filter:",
-               "sZeroRecords": "No matching records found"
-               "fnServerData": function ( sSource, aoData, fnCallback ) {
-                   aoData.push(
-                     { "name": "table", "value": "ukLocationCodes" },
-                     { "name": "sql", "value": "SELECT [id], [varCode], [varLocation]" }
-                   );
-               $.ajax( {"dataType": 'json',
-                    "type": "POST",
-                    "url": sSource,
-                    "data": aoData,
-                    "success": fnCallback} );
-// $.getJSON( sSource, aoData, function (json) {fnCallback(json)} );
-                        }
-                } );
-            } );
-</script>      
 
-<h2>Data Tables Example</h2>
+{% if table is defined %}
 
-<p>This is the front end template for a data Tables example. It is handling the data(Json) from an AJAX post, and displaying it in a tabular view below. 
-    All changes are made inline, so there are no refreshes.</p>
-<br/>
+{{ table | safe }}
+ <table class="ntdata">
+   <thead>
+     <tr><th>Eigenvalues </th></tr>
+     {% for i in range(0,nrows-1) %}
+     <tr>
+       {% for j in range(0,ncols-1) %}
+       {% set elt = table[i][j] %}
+       <td><a href="{{ elt['url'] }}">{{elt['name']}}</a></td>
+       {% endfor %}
+     </tr>
+     {% endfor %}
+   </thead>
+   <tbody>
 
-<table cellpadding="0" cellspacing="0" border="0" class="display" id="displayData"> 
-    <thead>
-        <tr>
-            <th align="left">ID</th>
-            <th align="left">Code</th>
-            <th align="left">Location</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td colspan="3" class="dataTables_empty">Loading data from server</td> 
-        </tr>
-    </tbody>
-</table>
-
-<h1>Browse</h1>
+   </tbody>
+ </table>
 
 
 
+
+{% endif %}
 
 
 

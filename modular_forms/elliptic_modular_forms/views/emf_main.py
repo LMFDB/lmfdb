@@ -20,28 +20,23 @@ AUTHOR: Fredrik Strömberg
 
 """
 from flask import render_template, url_for, request, redirect, make_response,send_file
-import flask
 import tempfile, os,re
 from utils import ajax_more,ajax_result,make_logger
-#from utils import ajax_result as a sajax_result #,ajax_url
 from sage.all import *
 from  sage.modular.dirichlet import DirichletGroup
 from base import app, db
 from modular_forms.elliptic_modular_forms.backend.web_modforms import WebModFormSpace,WebNewForm
-from modular_forms.elliptic_modular_forms.backend.emf_classes import * #html_table
-from modular_forms.elliptic_modular_forms.backend.emf_core import * #html_table
-from modular_forms.elliptic_modular_forms.backend.emf_utils import * #html_table
-from modular_forms.elliptic_modular_forms.backend.plot_dom import * #html_table
-#from emf_utils import *
-#from modular_forms import mf
-from modular_forms.elliptic_modular_forms import EMF, emf_logger, emf,FULLNAME
+from modular_forms.elliptic_modular_forms.backend.emf_classes import *
+from modular_forms.elliptic_modular_forms.backend.emf_core import * 
+from modular_forms.elliptic_modular_forms.backend.emf_utils import *
+from modular_forms.elliptic_modular_forms.backend.plot_dom import * 
+from modular_forms.elliptic_modular_forms import EMF, emf_logger, emf
 logger = emf_logger
 
 @emf.context_processor
 def body_class():
   return { 'body_class' : EMF }
 
-#import re
 ### Maximum values to be generated on the fly
 N_max_comp = 100
 k_max_comp = 30
@@ -49,9 +44,6 @@ k_max_comp = 30
 N_max_db = 1000000 
 k_max_db = 300000
 
-_verbose = 0
-
-#l=app.jinja_env.list_templates()
 #################
 # Top level
 #################
@@ -59,8 +51,8 @@ _verbose = 0
 ###########################################
 # Search / Navigate
 ###########################################
-#@app.route("/ModularForm/GL2/Q/holomorphic/")
-@emf.route("/",methods=['GET','POST']) #'/ModularForm/GL2/Q/holomorphic/')
+
+@emf.route("/",methods=['GET','POST'])
 def render_elliptic_modular_forms():
     info = get_args()
     if info.has_key('download'):

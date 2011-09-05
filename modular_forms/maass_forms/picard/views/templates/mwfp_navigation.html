@@ -1,0 +1,82 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+A {{KNOWL('mf.maass.picard',title='Mass Forms on the Picard group \(\mathrm{SL}_{2}(\mathbb{Z}[i])\)')}} is...
+
+<h1>Browse</h1>
+{% if table is defined %}
+
+{#{ table | safe }#}
+<table class="ntdata">
+  <thead>
+    <tr><th>Eigenvalues </th></tr>
+    {% for i in range(0,nrows-1) %}
+    <tr>
+      {% for j in range(0,ncols-1) %}
+       {% set elt = table[i][j] %}
+      <td><a href="{{ elt['url'] }}">{{elt['name']}}</a></td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+   </thead>
+   <tbody>
+
+   </tbody>
+ </table>
+
+{% endif %}
+<table>
+  <tr>
+    <td>
+      <h1>Find a specific Maass Form</h1>
+      <form name="search" method = "post" action="{{url_for('.render_picard_maass_forms')}}">	  
+        <input type="text" name="jump_to" value="" placeholder="13"> <span class="formexample">(gives the 13th eigenvalue)</span>
+        <button type="submit" value="Jump">Find</button>
+      </form>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <form name="search" method = "post" action="{{url_for('.render_picard_maass_forms')}}">
+	<input type="hidden" name="search" value="true"> 
+	<input type="hidden" name="rec_start" value="0"> 
+	<h1>Search</h1>
+	<table class="">
+	  <tr>
+	    <td>Eigenvaue in range:</td>
+	    <td> 
+	      <input type="text" name="ev_range" value="" placeholder="9.5..10.5">
+            </td>
+	  </tr>
+	  <tr>
+	    <td>Fourier coefficient nr. (a,b):</td>
+	    <td> 
+	      <input type="text" name="fouriier_p" value="" placeholder="2,2">
+            </td>
+	    <td> 
+              in range
+	      <input type="text" name="coeff_range" value="" placeholder="1.5..1.75">
+            </td>
+	  </tr>
+          <tr>
+	    <td>
+	      <button type="submit" name="Submit" value="Search">Search</button>
+	    </td>
+	    <td>
+	      Show number of records:
+	      <select name="limit">
+		<option value="20">20</option>
+		<option value="50">50</option>
+		<option value="100">100</option>
+		<option value="-1">all</option>
+	      </select>
+	    </td>
+          </tr>
+        </table>
+    </td>
+  </tr>
+</table>
+
+
+{% endblock %}

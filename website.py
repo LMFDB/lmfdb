@@ -22,6 +22,7 @@ import upload
 import DirichletCharacter
 import local_fields
 import raw
+from modular_forms.maass_forms.picard import mwfp
 
 import sys
 
