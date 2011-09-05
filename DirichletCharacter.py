@@ -114,14 +114,14 @@ def initCharacterInfo(chi,args, request):
         info['url'] =''
 
     info['bread'] = []
-    info['properties'] = chi.properties
+    info['properties2'] = chi.properties
 
     if args['type'] == 'dirichlet':
         snum = str(chi.number)
         info['number'] = snum
         smod = str(chi.modulus)
         info['modulus'] = smod
-        info['bread'] = [('Characters','/Characters'),('Dirichlet Characters','/Character/Dirichlet'),('Character '+snum+ ' modulo '+smod,'/Character/Dirichlet/'+smod+'/'+snum)]
+        info['bread'] = [('Dirichlet Characters','/Character/Dirichlet'),('Character '+snum+ ' modulo '+smod,'/Character/Dirichlet/'+smod+'/'+snum)]
         info['sagechar'] = str(chi.sagechar)
         info['conductor'] = int(chi.conductor)
         info['order'] = int(chi.order)
@@ -142,30 +142,33 @@ def initCharacterInfo(chi,args, request):
         #print chi.bound
         info['lth'] = int(chi.lth)
         #print chi.lth
-        info['primchar'] = chi.primchar
-        info['primcharmodulus'] = chi.primcharmodulus
-        info['primcharconductor'] = chi.primcharconductor
-        info['primcharnumber'] = chi.primcharnumber
-        info['primchartex'] = chi.primchartex
-        info['primtf'] = chi.primtf
+        if not chi.primitive:
+            info['inducedchar'] = chi.inducedchar
+            info['inducedchar_modulus'] = chi.inducedchar_modulus
+            info['inducedchar_conductor'] = chi.inducedchar_conductor
+            info['inducedchar_number'] = chi.inducedchar_number
+            info['inducedchar_tex'] = chi.inducedchar_tex
+            info['inducedchar_isprim'] = chi.inducedchar_isprim
+        #info['primtf'] = chi.primtf
         info['nextnumber'] = chi.number+1
         info['kronsymbol'] = str(chi.kronsymbol)
         info['gauss_sum'] = chi.gauss_sum_tex()
         info['jacobi_sum'] = chi.jacobi_sum_tex()
         info['kloosterman_sum'] = chi.kloosterman_sum_tex()
         info['learnmore'] = [('Dirichlet Characters', 'http://wiki.l-functions.org/L-functions') ] 
-        info['friends'] = [('Dirichlet L-function', '/L/Character/Dirichlet/'+smod+'/'+snum)]
+        if chi.primitive:
+            info['friends'] = [('Dirichlet L-function', '/L/Character/Dirichlet/'+smod+'/'+snum)]
         nmore = int(snum) + 1
         nless = int(snum) - 1
         mmore = int(smod) + 1
         mless = int(smod) - 1
         url_ch = url_for("render_Character", arg1=smod,arg2=str(nmore))
         if chi.number == 0:
-            info['navi'] = [(r"\(\chi_{" + str(nmore) + r"} \left( \text{mod}\; " + smod+ r"\right) \)" ,url_ch), (r"\(\chi_{" + str(euler_phi(chi.modulus)-1) + r"} \left( \text{mod}\;" + str(mless)+ r"\right) \)",url_for("render_Character", arg1=str(mless),arg2=str(euler_phi(chi.modulus)-1)))]
+            info['navi'] = [(r"&larr;\(\chi_{" + str(euler_phi(chi.modulus)-1) + r"} \left( \text{mod}\;" + str(mless)+ r"\right) \)",url_for("render_Character", arg1=str(mless),arg2=str(euler_phi(chi.modulus)-1))), (r"\(\chi_{" + str(nmore) + r"} \left( \text{mod}\;" + smod+ r"\right) \)&rarr;" ,url_ch)]
         elif chi.number == euler_phi(chi.modulus)-1:
-            info['navi'] = [(r"\(\chi_{" + str(nmore) + r"} \left( \text{mod}\;" + str(mmore)+ r"\right) \)",url_for("render_Character", arg1=str(mmore),arg2=str(0))), (r"\(\chi_{" + str(nless) + r"} \left( \text{mod}\;" + smod+ r"\right) \)",url_for("render_Character", arg1=smod,arg2=str(nless)))]
+            info['navi'] = [(r"&larr;\(\chi_{" + str(nless) + r"} \left( \text{mod}\;" + smod+ r"\right) \)",url_for("render_Character", arg1=smod,arg2=str(nless))), (r"\(\chi_{" + str(nmore) + r"} \left( \text{mod}\;" + str(mmore)+ r"\right) \)&rarr;",url_for("render_Character", arg1=str(mmore),arg2=str(0)))]
         else:
-            info['navi'] = [(r"\(\chi_{" + str(nmore) + r"} \left( \text{mod}\;" + smod+ r"\right) \)",url_for("render_Character", arg1=smod,arg2=str(nmore))), (r"\(\chi_{" + str(nless) + r"} \left( \text{mod}\; " + smod+ r"\right) \)",url_for("render_Character", arg1=smod,arg2=str(nless)))]
+            info['navi'] = [(r"&larr;\(\chi_{" + str(nless) + r"} \left( \text{mod}\; " + smod+ r"\right) \)",url_for("render_Character", arg1=smod,arg2=str(nless))), (r"\(\chi_{" + str(nmore) + r"} \left( \text{mod}\;"+ smod+ r"\right) \)&rarr;",url_for("render_Character", arg1=smod,arg2=str(nmore)))]
 
     return info
 
@@ -191,15 +194,15 @@ def dc_calc_jacobi(modulus,number):
     arg = request.args.get("val", [])
     if not arg:
         return flask.abort(404)
-    arg = map(int,arg.split('.'))
     try:
+        arg = map(int,arg.split('.'))
         mod = arg[0]
         num = arg[1]
         from sage.modular.dirichlet import DirichletGroup
         chi = DirichletGroup(modulus)[number]
         psi = DirichletGroup(mod)[num]
         jacobi_sum = chi.jacobi_sum(psi)
-        return "\(%s\)" %(latex(jacobi_sum))
+        return "\(%s\)" %(latex(jacobi_sum))  
     except Exception, e:
         return "<span style='color:red;'>ERROR: %s</span>" % e
 
@@ -208,8 +211,8 @@ def dc_calc_kloosterman(modulus,number):
     arg = request.args.get("val", [])
     if not arg:
         return flask.abort(404)
-    arg = map(int,arg.split(','))
     try:
+        arg = map(int,arg.split(','))
         from sage.modular.dirichlet import DirichletGroup
         chi = DirichletGroup(modulus)[number]
         kloosterman_sum_numerical = chi.kloosterman_sum_numerical(100,arg[0],arg[1])
