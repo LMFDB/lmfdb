@@ -65,13 +65,15 @@
   <h2 class="link">
    <a href="{{ url_for('render_Lfunction') }}">L-functions</a>
   </h2>
-  <div>
+  <ul class="list">
+   <li>
     Degree:
     <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree1')}}">1</a>
     <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree2')}}">2</a>
     <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree3')}}">3</a>
-    <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree4')}}">4</a><
-  </div>
+    <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree4')}}">4</a>
+   </li>
+  </ul>
 
   <h2>Elliptic Curves</h2>
   <ul>

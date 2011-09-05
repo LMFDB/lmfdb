@@ -351,6 +351,13 @@ blockquote p {
   border-bottom-right-radius: 10px;
   -moz-border-radius-bottomright: 10px;
 }
+#sidebar .list li {
+  padding: 5px;
+}
+#sidebar .list a {
+  display: inline;
+  padding: 5px;
+}
 
 #sidebar h2 {
     font-family: sans-serif;
