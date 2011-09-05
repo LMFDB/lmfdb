@@ -82,7 +82,7 @@ def __JacobiDimension(k, m):
             x+=(__S1k(k+2*j) - ((j*j)//(4*m)))
         return x
     x=0
-    for j in range(1, m+1):
+    for j in range(1, m):
         x+=( __S1k(k+2*j-1) - ((j*j)//(4*m)))
     return x
 
@@ -96,13 +96,16 @@ def _dimension_Kp(wt, tp):
         ("Total", "Gritsenko Lifts", "Nonlifts", "Oldforms")
     """
     if not is_prime(tp):
-       raise ValueError, "Not yet implemented for nonprime Kp levels"
+        return (uk, grits, uk, uk)
+
+    p=tp
+    one=QQ(1)
+    oldforms=0
+    grits=__JacobiDimension(wt, tp)
 
     if wt <= 1:
         return (0, 0,0,0);
-    grits=__JacobiDimension(wt, tp)
     if wt == 2:
-        oldforms=0
         newforms='?'
         total='' + str(grits) + ' - ?'
         if tp < 600:
@@ -117,16 +120,33 @@ def _dimension_Kp(wt, tp):
                total = '' + str(grits) + ' - ' + str(grits+1)
         return (total, grits, newforms, oldforms)
     if wt ==4:
-        oldforms=0
+      total=0
+      if p>=5:    
+        total += one*p*p/576 +one*p/8 -143*one/576
+        total += one*kronecker_symbol(-1,p)*(p*one/96-one/8)
+        total += one*kronecker_symbol(2,p)*one/8
+        total += one*kronecker_symbol(3,p)*one/12
+        total += one*kronecker_symbol(-3,p)*p*one/36
+        newforms = total - grits - oldforms
+        return (total, grits, newforms, oldforms)
+
+    if wt ==3:
         p=tp
-        total=0
-        one=QQ(1)
-        print one/8
-        total += p*p/576 +p/8 -143*one/576
-        total += kronecker_symbol(-1,p)*(p/96-one/8)
-        total += kronecker_symbol(2,p)*one/8
-        total += kronecker_symbol(3,p)*one/12
-        total += kronecker_symbol(-3,p)*p/36
+        if (p==2) or (p==3):
+            return(0,0,0,0)
+        total=0;
+        total=-1+one/2880*(p**2 -1)+one/64*(p+1)*(1-kronecker_symbol(-1,p))
+        total+=5*one/192*(p-1)*(1+kronecker_symbol(-1,p))
+        total+=one/72*(p+1)*(1-kronecker_symbol(-3,p))
+        total+=one/36*(p-1)*(1+kronecker_symbol(-3,p))
+        pmod5 = p % 5
+        if pmod5==0:
+            total+=one/5
+        if (pmod5==2) or (pmod5==3):
+            total+=2*one/5
+        if (p % 12)==5:
+            total+=one/6
+        total+=one/8*(1-kronecker_symbol(2,p))
         newforms = total - grits - oldforms
         return (total, grits, newforms, oldforms)
 
