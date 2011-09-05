@@ -127,19 +127,31 @@ def elliptic_curve_search(**args):
     else:
         info['count'] = count_default
         count = count_default
+    
+    start_default=0
+    if info.get('start'):
+        try:
+            start = int(info['start'])
+            if(start < 0): start += (1-(start+1)/count)*count
+        except:
+            start = start_default
+    else:
+        start = start_default
 
-    res = (base.getDBConnection().ellcurves.curves.find(query)
-        .sort([('conductor', ASCENDING), ('iso', ASCENDING), ('number', ASCENDING)])
-        .limit(count)) # TOOD: pages
-    nres = res.count()
+    cursor = base.getDBConnection().ellcurves.curves.find(query)
+    nres = cursor.count()
+    if(start>=nres): start-=(1+(start-nres)/count)*count
+    if(start<0): start=0
+    res = cursor.sort([('conductor', ASCENDING), ('iso', ASCENDING), ('number', ASCENDING)]).skip(start).limit(count)
     info['curves'] = res
     info['format_ainvs'] = format_ainvs
     info['number'] = nres
+    info['start'] = start
     if nres==1:
         info['report'] = 'unique match'
     else:
-        if nres>count:
-            info['report'] = 'displaying first %s of %s matches'%(count,nres)
+        if nres>count or start!=0:
+            info['report'] = 'displaying matches %s-%s of %s'%(start+1,min(nres,start+count),nres)
         else:
             info['report'] = 'displaying all %s matches'%nres
     credit = 'John Cremona'

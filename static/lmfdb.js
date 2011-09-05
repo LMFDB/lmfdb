@@ -234,3 +234,19 @@ $(function() {
     .bind("ajaxStop",
       function() { $(this).text("done"); clear(true, true); });
 });
+
+function decrease_start_by_count_and_submit_form() {
+  startelem = $('input[name=start]');
+  count = parseInt($('input[name=count]').val());
+  newstart = parseInt(startelem.val())-count;
+  if(newstart>=0) {
+    startelem.val(parseInt(startelem.val())-count);
+    $('form')[0].submit();
+  }
+}
+function increase_start_by_count_and_submit_form() {
+  startelem = $('input[name=start]');
+  count = parseInt($('input[name=count]').val());
+  startelem.val(parseInt(startelem.val())+count);
+  $('form')[0].submit();
+}

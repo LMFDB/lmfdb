@@ -816,3 +816,19 @@ h2 > .knowl-qm {
 .propertylist dd {
   margin-bottom: 1em
 }
+
+a.navlink {
+  color: white;
+  background-color: #4a4;
+  font-weight: bold;
+  font-size: 11px;
+  text-align: center;
+  padding: 5px;
+  padding-top: 3px;
+  padding-bottom: 4px;
+  border: 1px solid white;
+  outline: 1px solid #4a4;
+  text-decoration: none;
+  margin-left: 1px;
+  margin-top: 10px
+}
