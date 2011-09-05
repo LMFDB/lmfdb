@@ -99,6 +99,10 @@
    {# <li><a href="{{ url_for('quadratic_twists') }}">Quadratic Twists</a></li> #}
    {# <li><a class="local_fields" href="{{ url_for('local_fields.index') }}">Local Fields</a></li> #}
 
+  <h2 class="link knowl">
+     <a href="{{ url_for("knowledge.index") }}">Knowledge</a>
+  </h2>
+
   <h2>Search</h2>
    <ul>
     <li><a href="{{ url_for('LfunctionDB.query', zerolowerbound=1.1, zeroupperbound=2.1) }}">Search L-functions</a></li>

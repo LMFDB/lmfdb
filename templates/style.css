@@ -5,7 +5,7 @@
 {% set col_main_l = '#bfb' %}
 {% set col_main_ll = '#efe' %}
 
-{% set col_knowl = '#229' %}
+{% set col_knowl = '#AAF' %}
 {% set col_knowl_l = '#DDF' %}
 {% set col_knowl_ll = '#EEF' %}
 {% set col_knowl_d = '#88F' %}
@@ -358,6 +358,15 @@ blockquote p {
   display: inline;
   padding: 5px;
 }
+#sidebar h2.knowl {
+  background: {{ col_knowl_l }};
+}
+#sidebar h2.knowl a {
+  color: {{ col_knowl_dd }};
+}
+#sidebar h2.knowl a:hover {
+  background: {{ col_knowl }};
+}
 
 #sidebar h2 {
     font-family: sans-serif;
@@ -678,7 +687,7 @@ body.knowl #header #title {
 body.knowl #content h1,
 body.knowl #content h2,
 body.knowl #content a {
-  color: {{ col_knowl }};
+  color: {{ col_knowl_d }};
 }
 body.knowl a:hover {
   background: #ccf;
