@@ -315,14 +315,13 @@ class WebModFormSpace(Parent):
             if self._cuspidal==1:
                 self._dimension_newspace= self.dimension_new_cusp_forms()
             else:
-                #
                 self._dimension_newspace=self._newspace.dimension()
         return self._dimension_newspace
 
     def dimension_oldspace(self):
-        if self._dimension_newspace==None:
-            self._dimension_newspace=self.dimension_newspace()
-        return self.dimension_modular_forms()-self._dimension_newspace
+        if self._cuspidal==1:            
+            return self.dimension_cusp_forms()-self.dimension_new_cusp_forms()
+        return self.dimension_modular_forms()-self.dimension_newspace()
 
     def dimension_cusp_forms(self):
         if self._dimension_cusp_forms==None:
@@ -349,8 +348,9 @@ class WebModFormSpace(Parent):
                 self._dimension_new_cusp_forms=dimension_new_cusp_forms(self._character,self._k)
             else:
                 self._dimension_new_cusp_forms=dimension_new_cusp_forms(self._N,self._k) 
-            #self._dimension_new_cusp_forms=self._newspace.cuspidal_submodule().dimension()
         return self._dimension_new_cusp_forms
+
+
 
     def dimension(self):
         r"""
@@ -528,6 +528,33 @@ class WebModFormSpace(Parent):
         s=s+"\]"
         return s
 
+    def get_all_galois_orbit_info(self,prec=10,qexp_max_len=50):
+        r"""
+        Set the info for all galois orbits (newforms) in list of  dictionaries.
+        """
+        from sage.monoids.all import AlphabeticStrings
+        L=self.galois_decomposition()
+        if(len(L)==0):
+            self._orbit_info=[]
+        x=AlphabeticStrings().gens()
+        res = []
+        for j in range(len(self._galois_decomposition)):
+            o = dict()
+            label = self._galois_orbits_labels[j]
+            o['label']= label
+            full_label = "{0}.{1}.{2}".format(self.level(),self.weight(),self._chi)
+            full_label=full_label+label
+            o['full_label']=full_label
+            o['url']  = url_for('emf.render_one_elliptic_modular_form',level=self.level(),weight=self.weight(),label=o['label'],character=self._chi)
+            o['dim']  = self._galois_decomposition[j].dimension()
+            poly,disc,is_relative = self.galois_orbit_poly_info(j,prec)
+            o['poly']="\( {0} \)".format(latex(poly))
+            o['disc']="\( {0} \)".format(latex(disc))
+            o['is_relative']=is_relative
+            o['qexp'] = self.qexp_orbit_as_string(j,prec,qexp_max_len)
+            res.append(o)
+        return res
+    
     def print_galois_orbits(self,prec=10,qexp_max_len=50):
         r"""
         Print the Galois orbits of self.
@@ -605,6 +632,56 @@ class WebModFormSpace(Parent):
             s = s + "<br><small>For relative number fields we list the absolute norm of the discriminant)</small>"
         return s
 
+    def qexp_orbit_as_string(self,orbitnr,prec=20,qexp_max_len=50):
+        orbit=self.galois_orbit(orbitnr,prec)
+        if not orbit: return ''
+        # if it is too long
+        cc = orbit.coefficients()
+        slist = list()
+        i = 1
+        # try to split up the orbit if too long
+        s = str(orbit)
+        ss = "\("+my_latex_from_qexp(s)+"\)"
+        ll=0
+        if len(s)>qexp_max_len:
+            emf_logger.debug("LEN > MAX!")
+            sl = ss.split('}')
+            for i in range(len(sl)-1):
+                sss = ''
+                if i>0 and i<len(sl)-1:
+                    sss = '\('
+                sss += sl[i]
+                if i < len(sl)-2:
+                    sss += '}\)'
+                else:
+                    sss += '})\)'
+                ll = ll+len(str(sl[i]))
+                if ll>qexp_max_len:
+                    ll = 0
+                    sss+="<br>"
+                slist.append(sss)
+        else:
+            slist.append(ss)
+        return ss
+
+
+    def galois_orbit_poly_info(self,orbitnr,prec=10):
+        orbit=self.galois_orbit(orbitnr,prec)
+        if not orbit: return ''
+        K=orbit.base_ring()
+        is_relative = False
+        disc = 1
+        if(K==QQ):
+            poly=ZZ['x'].gen()
+            disc='1'
+        else:
+            poly=K.defining_polynomial()
+            if(K.is_relative()):
+                disc=factor(K.relative_discriminant().absolute_norm())
+                is_relative = True
+            else:
+                disc=factor(K.discriminant())
+        return poly,disc,is_relative
 
     def print_geometric_data(self):
         r""" Print data about the underlying group.
@@ -938,8 +1015,11 @@ class WebNewForm(SageObject):
                 if(self.degree()>1):
                     if hasattr(cn,'complex_embeddings'):
                         coeffs.append(cn.complex_embeddings(bitprec))
-                    else:
-                        coeffs.append([cn])
+                    else: # real coefficients are repeated for consistency
+                        ccn=[]
+                        for j in range(self.degree()):
+                            ccn.append(cn)
+                        coeffs.append(ccn)
                 else:
                     coeffs.append([cn.n(bitprec)])
             self._embeddings=coeffs
@@ -958,7 +1038,9 @@ class WebNewForm(SageObject):
             return None
 
     def coefficient(self,n):
-        emf_logger.debug("n={0}".format(n))
+        emf_logger.debug("In coefficient: n={0}".format(n))
+        if not isinstance(n,[int,Integer]):
+            return self.coefficients(n)
         return self.coefficients([n,n+1])
 
     def coefficients(self,nrange=range(1,10)):
@@ -1051,8 +1133,6 @@ class WebNewForm(SageObject):
                 continue
             if(gcd(Q,ZZ(self.level()/Q))==1):
                 emf_logger.debug("Q={0}".format(Q))
-                #M=self._f.atkin_lehner_operator(ZZ(Q)).matrix()
-
                 M=self._f._compute_atkin_lehner_matrix(ZZ(Q))
                 try:
                     ev = M.eigenvalues()
@@ -1106,14 +1186,12 @@ class WebNewForm(SageObject):
         p=cusp.numerator()
         d=ZZ(cusp*N)
         if(d.divides(N) and gcd(ZZ(N/d),ZZ(d))==1):
-            M = self._f.atkin_lehner_operator(ZZ(d))
+            M=self._f._compute_atkin_lehner_matrix(ZZ(d))
             ev = M.eigenvalues()
             if len(ev)>1:
                 if len(set(ev))>1:
-                    raise ArithmeticError,"Should be one Atkin-Lehner eigenvalue. Got: %s " % ev
+                    emf_logger.critical("Should be one Atkin-Lehner eigenvalue. Got: {0} ".format(ev))
             return (ZZ(d),ev[0])
-            #return (ZZ(d),self._f.atkin_lehner_eigenvalue(ZZ(d)))
-            return self._f.atkin_lehner_eigenvalue(ZZ(d))
         else:
             return None
 
@@ -1544,6 +1622,7 @@ class WebNewForm(SageObject):
         RF=RealField(bits)
         CF=ComplexField(bits)
         ps=prime_range(prec)
+        self._satake['ps']=[]
         alphas=dict()
         thetas=dict()
         aps=list(); tps=list()
@@ -1562,9 +1641,8 @@ class WebNewForm(SageObject):
             p = ps[j]
             ap = ap_vec[j]
             if p.divides(self.level()):
-                #thetas[0][p]=RR(0)
-                #alphas[0][p]=RR(0)
                 continue
+            self._satake['ps'].append(p)
             chip = self.character()(p)
             #ap=self._f.coefficients(ZZ(prec))[p]
             if(K==QQ):
@@ -1577,8 +1655,6 @@ class WebNewForm(SageObject):
                 alphas[0][p]=(alpha_p/ab).n(bits)
                 #print "adding thetas=",thetas
             else:
-
-                
                 for jj in range(degree):
                     app=ap.complex_embeddings(bits)[jj]
                     f1=(4*CF(chip)*p**(k-1)-app**2)
@@ -1716,10 +1792,10 @@ class WebNewForm(SageObject):
 
         """
         coeffs=self.q_expansion_embeddings(prec,bprec)
-        if(isinstance(coeffs,str)):
+        if isinstance(coeffs,str):
             return coeffs  ### we probably failed to compute the form
         # make a table of the coefficients
-        emf_logger.debug("print_embeddings: prec={0} bprec={1}".format(prec,bprec))
+        emf_logger.debug("print_embeddings: prec={0} bprec={1} coefs={0}".format(prec,bprec,coeffs))
         tbl=dict()
         tbl['atts']="border=\"1\""
         tbl['headersh']=list()

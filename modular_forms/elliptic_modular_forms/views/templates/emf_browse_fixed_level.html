@@ -33,8 +33,9 @@ $("#plot").load(function() {
 {% if info.browse_table.rows is defined %}
 {#{KNOWL('mf.ellipticemf_browse.all.info',title='Write about browsing') }#}
 <p>
-In the table below you can brose spaces of Holomorphic Cusp Forms with
-given level and weight. The entry in the table is the dimension of the space.
+The table below gives the dimensions of the space of holomorphic cusp
+forms of specified level, weight, and character.  By clicking on an
+entry you access information about the forms in the specified space.
 </p>
 {% set table = info.browse_table %}
 {% set rows = info.browse_table.rows %}

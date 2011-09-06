@@ -15,13 +15,15 @@
 {% macro KNOWL(knowlid, title=none) -%}
 {% with knowl = Knowl(knowlid, kwargs) -%}
 {% if knowl.exists() -%}
+ {% with hover = "%s [%s]"|format(knowl.title, knowl.id) %}
   {% if title is none -%}
-     <a class="knowl-title" knowl="{{ knowl.id }}" kwargs="{{ kwargs|urlencode }}">{{ knowl.title|safe }}</a>
+     <a class="knowl-title" title="{{ hover }}" knowl="{{ knowl.id }}" kwargs="{{ kwargs|urlencode }}">{{ knowl.title|safe }}</a>
   {%- else -%}
     {% if title|length > 0 -%}
-     <a class="knowl-title" knowl="{{ knowl.id }}" kwargs="{{ kwargs|urlencode }}">{{ title|safe }}</a>
+     <a class="knowl-title" title="{{ hover }}" knowl="{{ knowl.id }}" kwargs="{{ kwargs|urlencode }}">{{ title|safe }}</a>
     {%- endif %}
   {%- endif %}
+ {% endwith %}
 
 {%- else -%}
   {# knowl does not exist. wrong knowlid or opportunity to create one! #}
@@ -105,7 +107,7 @@
      <a onclick='return confirm("Really delete Knowl {{ k.id }}? There is no way back!");'
             href="{{ url_for('.delete', ID=k.id) }}">delete</a>
    {% endif %}
-   <a style="margin-left: 20px;" href="{{ url_for('.index') }}">Overview</a>
+   <a style="margin-left: 20px;" href="{{ url_for('.index') }}">All knowls</a>
    &middot; <a href="{{ url_for('.index', category=k.category) }}">Up</a>
    &middot; Search: 
    <form id='knowl-search' action="{{ url_for('.index') }}" method="GET">

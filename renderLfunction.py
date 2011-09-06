@@ -289,7 +289,7 @@ def initLfunction(L,args, request):
         character = str(L.character)
         label = str(L.label)
         number = str(L.number)
-        info['friends'] = [('Modular Form', friendlink)]
+        info['friends'] = [('Modular Form', friendlink.rpartition('/')[0])] 
 
     elif L.Ltype() == 'dedekindzeta':
         info['friends'] = [('Number Field', friendlink)]

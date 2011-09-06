@@ -1,10 +1,10 @@
-from utils import make_logger
-from flask import Blueprint
+import utils
+import flask
 
 EMF="emf"
-emf = Blueprint(EMF, __name__, template_folder="views/templates",static_folder="views/static")
-emf_logger = make_logger(emf)
+emf = flask.Blueprint(EMF, __name__, template_folder="views/templates",static_folder="views/static")
+emf_logger = utils.make_logger(emf)
 
 import views
 import backend
-
+from backend import *
