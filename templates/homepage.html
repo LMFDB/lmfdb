@@ -96,7 +96,7 @@
    <li><a class="emf"  href="{{ url_for('emf.render_elliptic_modular_forms') }}">Holomorphic Cusp Forms</a></li>
    <li><a class="mwf"  href="{{ url_for('mwf.render_maass_waveforms') }}">Maass Forms</a></li>
    <li><a              href="{{ url_for('ModularForm_GSp4_Q_top_level') }}">Siegel Modular Forms</a> </li>
-   <li><a class="mwfp" href="{{ url_for('mwfp.render_picard_maass_forms') }}">Maass Forms on \(SL_2(Z[i])\)</a></li>
+   <li><a class="mwfp" href="{{ url_for('mwfp.render_picard_maass_forms') }}">Maass Forms on \(PSL(2,\mathbb{Z}[i])\)</a></li>
    <li><a              href="{{ url_for('hilbert_modular_form_render_webpage') }}">Hilbert Modular Forms</a></li>
   </ul>
    {# <li><a href="{{ url_for('quadratic_twists') }}">Quadratic Twists</a></li> #}
@@ -108,7 +108,7 @@
 
   <h2>Search</h2>
    <ul>
-    <li><a href="{{ url_for('LfunctionDB.query', zerolowerbound=1.1, zeroupperbound=2.1) }}">Search L-functions</a></li>
+    <li><a href="{{ url_for('LfunctionDB.query', zerolowerbound=1.1, zeroupperbound=2.1) }}">Zeros of L-functions</a></li>
    </ul>
   
    {{ entry("Learn more about", learnmore) }}
