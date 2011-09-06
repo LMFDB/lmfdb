@@ -428,7 +428,7 @@ blockquote p {
 /* highlighting menu entries (if their respective blueprint overwirtes the body_class variable!) */
 body.mwf #sidebar a.mwf { background: #BFB; }
 body.cmf #sidebar a.cmf { background: #BFB; }
-body.knowl #sidebar a.knowl { background: #BBF; }
+body.knowl #sidebar a.knowl { background: {{ col_knowl_d }}; }
 body.local_fields #sidebar a.local_fields { background: #BFB; }
 
 .visible {

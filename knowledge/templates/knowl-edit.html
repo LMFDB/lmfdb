@@ -58,7 +58,7 @@ $(document).ready(function()	{
    <tr>
      <td>Quality</td>
      <td>
-      {{ k.quality }} <span style="margin-left: 50px;">change:</span>
+      {{ k.quality }} <span style="margin-left: 50px;">change to:</span>
       <select name="quality">
         <option value="">-- change --</option>
         <option value="stub">Stub</option>
@@ -69,8 +69,7 @@ $(document).ready(function()	{
      </td>
    </tr>
    <tr>
-     <td>Content</td>
-     <td><textarea cols="40" rows="10"
+     <td colspan="2"><textarea cols="40" rows="10"
           name="content" id="kcontent">{{ k.content }}</textarea>
      </td>
    </tr>
