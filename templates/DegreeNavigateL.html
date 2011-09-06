@@ -24,11 +24,11 @@ prime numbers in arithmetic progressions.
 <h2>Automorphic Objects</h2>
 
 <div>There are two known types of primitive degree 2 L-functions that arise from automorphic objects:</div>
-<ul>
+<ol>
 <li><a href="degree2#GL2_Q_Holomorphic">$L(s, f)$: the L-function of a holomorphic newform in $S_k(\Gamma_0(N))$</a>
 </li>
 <li><a href="degree2#GL2_Q_Maass">$L(s, f)$: the L-function of a Maass cusp form on  $\Gamma_0(N)$</a></li>
-</ul>
+</ol>
 
 <h2>Geometric Objects</h2>
 
@@ -40,6 +40,24 @@ prime numbers in arithmetic progressions.
 <h2>Available Examples</h2>
 
 <h3 id="GL2_Q_Holomorphic">L-functions of holomorphic cusp forms with trivial character</h3>
+
+<div>
+These L-functions have a functional equation of the form 
+\begin{equation} 
+\Lambda_f(s) := N^{s/2} \Gamma_{\mathbb{C}}
+\left(s + \frac{k-1}{2} \right) L(s, f) 
+\pm \Lambda_f(1-s)
+\end{equation}
+If \(L(s) = \sum a_n n^{-s} \) then \(a_n n^{\frac{k-1}{2}} \) 
+is an algebraic integer. 
+The pairs \((N,k)\) for such L-functions are shown in the plot below.
+<p>
+<i>The color indicates the sign of the functional equation.  
+The horizontal grouping indicates the degree of the field containing 
+the arithmetically normalized coefficients. </i>
+See the{{ KNOWL('lfunction.degree2holo.key', title='legend') }} for more details.
+</div>
+
 
 {{info.contents[1]|safe}}
 

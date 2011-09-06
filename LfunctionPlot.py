@@ -589,16 +589,16 @@ def paintSvgHolo(Nmin,Nmax,kmin,kmax):
 ## General code to be used with plotsector routine.
 ## ============================================
 def paintSvgHoloGeneral(Nmin,Nmax,kmin,kmax,imagewidth,imageheight):
-    xfactor = 90 #CHANGE BACK TO 90 in a bit
+    xfactor = 90 
     yfactor = 30
     extraSpace = 20
     ticlength = 4
     radius = 3.3
-    xdotspacing = 0.30  # horizontal spacing of dots  CHANGE TO 0.30 in a bit
-    ydotspacing = 0.11  # vertical spacing of dots  CHANGE TO 0.11 in a bit
+    xdotspacing = 0.30  # horizontal spacing of dots  
+    ydotspacing = 0.11  # vertical spacing of dots  
     colourplus = signtocolour(1)
     colourminus = signtocolour(-1)
-    maxdots = 0.5  # max number of dots to display  #CHANGE BACK TO 5 in a bit
+    maxdots = 5  # max number of dots to display  
 
     ans = "<svg  xmlns='http://www.w3.org/2000/svg'"
     ans += " xmlns:xlink='http://www.w3.org/1999/xlink'>\n"
@@ -713,19 +713,9 @@ def paintSvgHoloGeneral(Nmin,Nmax,kmin,kmax,imagewidth,imageheight):
 ## the L-functions of holomorphic cusp forms.
 ## ============================================
 def getOneGraphHtmlHolo(Nmin, Nmax, kmin, kmax):
-    ans = "<div>These L-functions have a functional equation of the form \n<br/>"
-    ans += "\\begin{equation}\n \\Lambda_f(s) := N^{s/2} \\Gamma_{\mathbb{C}}"
-    ans += "\\left(s + \\frac{k-1}{2} \\right) L(s, f) "
-    ans += "=\\pm \\Lambda_f(1-s)\n\\end{equation}\n<br/>"
-    ans += "If \\(L(s) = \sum a_n n^{-s} \) then \(a_n n^{\\frac{k-1}{2}} \) "
-    ans += "is an algebraic integer. <p/> </div>\n"
-    ans += "<div>This plot shows \((N,k)\) for such L-functions. "
-    ans += "The color indicates the sign of the functional equation.  "
-    ans += "The horizontal grouping indicates the degree of the field containing "
-    ans += "the arithmetically normalized coefficients.\n<br/><br/></div>\n"
     graphInfo = getGraphInfoHolo(Nmin, Nmax, kmin, kmax)
 # To generate the graph:   ans += ("<embed src='" + graphInfo['src'] + "' width='" + str(graphInfo['width']) +  
-    ans += ("<embed src='/static/images/browseGraphHolo_22_14_3a.svg' width='" + str(graphInfo['width']) +
+    ans = ("<embed src='/static/images/browseGraphHolo_22_14_3a.svg' width='" + str(graphInfo['width']) +
            "' height='" + str(graphInfo['height']) +
             "' type='image/svg+xml' " +
             "pluginspage='http://www.adobe.com/svg/viewer/install/'/>\n")
