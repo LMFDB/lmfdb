@@ -500,7 +500,7 @@ def paintSvgHolo(Nmin,Nmax,kmin,kmax):
         for y in range(int(kmin), int(kmax) + 1, 2):  # y is the weight 
            logger.info("  weight = %s"%y)
            lid = "(" + str(x) + "," + str(y) + ")"
-           linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(y) +"/" + str(x) + "/0/"
+           linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(x) +"/" + str(y) + "/0/"
            WS = WebModFormSpace(y,x)
            numlabels = len(WS.galois_decomposition())  # one label per Galois orbit
            thelabels = alphabet[0:numlabels]    # list of labels for the Galois orbits for weight y, level x
@@ -511,7 +511,7 @@ def paintSvgHolo(Nmin,Nmax,kmin,kmax):
            numpluslabels=0
            numminuslabels=0
            for label in thelabels:  # looping over Galois orbit
-               linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(y) +"/" + str(x) + "/0/" + label
+               linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(x) +"/" + str(y) + "/0/" + label
                MF = WebNewForm(y,x,0,label)   # one of the Galois orbits for weight y, level x
                numberwithlabel = MF.degree()  # number of forms in the Galois orbit
                if x == 1: # For level 1, the sign is always plus
@@ -725,7 +725,7 @@ def getOneGraphHtmlHolo(Nmin, Nmax, kmin, kmax):
     ans += "the arithmetically normalized coefficients.\n<br/><br/></div>\n"
     graphInfo = getGraphInfoHolo(Nmin, Nmax, kmin, kmax)
 # To  generate the graph:    ans += ("<embed src='" + graphInfo['src'] + "' width='" + str(graphInfo['width']) +  
-    ans += ("<embed src='/static/images/browseGraphHolo_22_14_4a.svg' width='" + str(graphInfo['width']) +
+    ans += ("<embed src='/static/images/browseGraphHolo_22_14_5a.svg' width='" + str(graphInfo['width']) +
            "' height='" + str(graphInfo['height']) +
             "' type='image/svg+xml' " +
             "pluginspage='http://www.adobe.com/svg/viewer/install/'/>\n")
@@ -1040,7 +1040,6 @@ def plotsector(dimensioninfo, appearanceinfo, urlinfo):
  # now iterate over the orbits
  # "orbitbase" is the starting point of an orbit, which initially is the "firstdotoffset"
     orbitbase = lincomb(1,vertexlocation,1,dimensioninfo['firstdotoffset'])  
-    print('firstDOToffset:',dimensioninfo['firstdotoffset'])
     for orbit in urlinfo['space']['orbits']:
       print('orbit', orbit)
       # first determine if we should draw a line connecting the dots in an orbit, since want line beneath dots

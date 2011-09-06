@@ -485,7 +485,7 @@ class Lfunction_EMF(Lfunction):
         #Check for compulsory arguments
         if not ('weight' in args.keys() and 'level' in args.keys()):
             raise KeyError, "You have to supply weight and level for an elliptic modular form L-function"
-        print args, args.keys()
+        logger.debug(str(args))
         # Initialize default values
         if not args['character']:
             args['character'] = 0  # Trivial character is default
@@ -496,7 +496,7 @@ class Lfunction_EMF(Lfunction):
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
-        print self.character, self.label, self.number
+        logger.debug(str(self.character)+str(self.label)+str(self.number))
         self.weight = int(self.weight)
         self.level = int(self.level)
         self.character = int(self.character)
@@ -504,7 +504,7 @@ class Lfunction_EMF(Lfunction):
 
         # Create the modular form
         self.MF = WebNewForm(self.weight, self.level, self.character, self.label)
-
+        logger.debug(str(self.MF))
         # Extract the L-function information from the elliptic modular form
         self.automorphyexp = float(self.weight-1)/float(2)
         self.Q_fe = float(sqrt(self.level)/(2*math.pi))
