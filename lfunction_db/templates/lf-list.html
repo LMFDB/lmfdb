@@ -21,10 +21,17 @@
 
 {% macro Lfunction_to_html_in_table(L): -%}
 {% if L.special.type == "dirichlet" %}
-<td><a href=/Lfunction/Character/Lfunction?type=dirichlet&charactermodulus={{L.special.modulus}}&characternumber={{L.special.number}}&numcoeff=50>{{L.first_zero}}</a></td>
-<td>{{L.degree}}</td><td>{{L.level}}</td><td>{{L.signature}}</td><td>{{L.description}}</td>
-{% else %}
-<td>{{L.first_zero}}</td><td>{{L.degree}}</td><td>{{L.level}}</td><td>{{L.signature}}</td><td>{{L.description}}</td>
+    <td><a href=/Lfunction/Character/Dirichlet/{{L.special.number}}/{{L.special.modulus}}>{{L.first_zero}}</a></td>
+    <td>{{L.degree}}</td>
+    <td>{{L.level}}</td>
+    <td>{{L.signature}}</td>
+    <td>Dirichlet character <a href="/Character/Dirichlet/{{L.special.modulus}}/{{L.special.number}}/"</a> number {{L.special.number}} mod {{L.special.modulus}}</a></td>
+{% elif L.special.type == "elliptic" %}
+    <td><a href={{url_for("render_Lfunction", arg1="EllipticCurve", arg2="Q", arg3=L.special.label)}}>{{L.first_zero}}</a></td>
+    <td>{{L.degree}}</td>
+    <td>{{L.level}}</td>
+    <td>{{L.signature}}</td>
+    <td>Elliptic curve isogeny class <a href="{{url_for("by_ec_label", label=L.special.label)}}">{{L.special.label}}</a></td>
 {% endif %}
 {%- endmacro %}
 
@@ -32,7 +39,7 @@
 {% block content %}
 <form>
 Degree: <input type="text" name="degree" value={{request.args.degree}}>
-Level: <input type="text" name="level" value={{request.args.level}}>
+Level: <input type="text" name="level" value={{request.args.level}}><br>
 Zero lower bound: <input type="text" name="zerolowerbound" value={{request.args.zerolowerbound}}>
 Zero upper bound: <input type="text" name="zeroupperbound" value={{request.args.zeroupperbound}}>
 <input type="submit" value="Filter">
@@ -51,21 +58,19 @@ Zero upper bound: <input type="text" name="zeroupperbound" value={{request.args.
    <span class="inactive">Next &raquo;</span>
   {% endif %}
 </div>
-
-<table class="ntdata">
+<style>
+.zerosearch a {display:inline;}
+</style>
+<table class="ntdata zerosearch">
     <thead>
     {% if request.args.direction=="up" %}
-    <tr><td><a href={{url_for(".query", degree=request.args.degree, level=request.args.level, zerolowerbound=request.args.zerolowerbound, zeroupperbound=request.args.zeroupperbound, sort="first_zero", direction="down", page=request.args.get('page', 1))}}>First zero</a></td><td>Degree</td><td>&nbsp;level</td><td>Signature</td><td>Description</td></tr>
+    <tr><td><a href={{url_for(".query", degree=request.args.degree, level=request.args.level, zerolowerbound=request.args.zerolowerbound, zeroupperbound=request.args.zeroupperbound, sort="first_zero", direction="down", page=request.args.get('page', 1))}}>First zero</a></td><td>Degree</td><td>&nbsp;level</td><td>Signature</td><td>Underlying object</td></tr>
     {% else %}
-    <tr><td><a href={{url_for(".query", degree=request.args.degree, level=request.args.level, zerolowerbound=request.args.zerolowerbound, zeroupperbound=request.args.zeroupperbound, sort="first_zero", direction="up", page=request.args.get('page', 1))}}>First zero</a></td><td>Degree</td><td>&nbsp;level</td><td>Signature</td><td>Description</td></tr>
+    <tr><td><a href={{url_for(".query", degree=request.args.degree, level=request.args.level, zerolowerbound=request.args.zerolowerbound, zeroupperbound=request.args.zeroupperbound, sort="first_zero", direction="up", page=request.args.get('page', 1))}}>First zero</a></td><td>Degree</td><td>&nbsp;level</td><td>Signature</td><td>Underlying object</td></tr>
     {% endif %}
     </thead>
     {% for L in pagination.entries %}
-        {% if request.args.direction=="up" %}
-            <tr class="{{loop.cycle('0', '0', '0', '0', 'line')}}">
-        {% else %}
-            <tr class="{{loop.cycle('odd', 'even')}}">
-        {% endif %}
+        <tr class="{{loop.cycle('odd', 'even')}}">
         {#<tr class="{{loop.cycle('odd', 'odd', 'odd', 'odd', 'odd', 'even', 'even', 'even', 'even', 'even')}}">#}
         {{Lfunction_to_html_in_table(L)}}
         </tr>

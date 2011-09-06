@@ -17,17 +17,17 @@ $(function() {
   function show_content() {
     revealed = true;
     $("#content").css("opacity", "1").show();
-    $("#mathjax-info").hide();
+    $("#mathjax-info").fadeOut('fast');
   }
   MathJax.Hub.Queue(function() {show_content()}); 
   $("#mathjax-info").click(function() {show_content()});
 
   window.setTimeout(function() {
     if(!revealed) {
-      $("#mathjax-info").show();
-      $("#content").hide();
+      $("#mathjax-info").fadeIn('fast');
+      $("#content").fadeOut('fast');
     }
-  }, 100);
+  }, 500);
 
   /* delay some secs and tell the user, that it is
    * still loading and clicking removes the banner */

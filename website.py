@@ -63,7 +63,17 @@ def root_static_file(name):
        logging.critical("root_static_file: file %s not found!" % fn)
        return ''
     app.add_url_rule('/%s'%name, 'static_%s'%name, static_fn)
-map(root_static_file, [ 'robots.txt', 'favicon.ico' ])
+map(root_static_file, [ 'favicon.ico' ])
+
+@app.route("/robots.txt")
+def robots_txt():
+  if "l-functions.org".lower() in request.url_root.lower():
+    fn = os.path.join('.', "static", "robots.txt")
+    if os.path.exists(fn):
+      return open(fn).read()
+  else:
+    return "User-agent: *\nDisallow: / \n"
+
 
 @app.route("/style.css")
 def css():

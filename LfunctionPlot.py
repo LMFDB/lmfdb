@@ -65,7 +65,7 @@ def getAllMaassGraphHtml(degree):
 ## ============================================
 def getGroupHtml(group):
     if group == 'GSp4':
-        ans = "<h3>Maass cusp forms for GSp(4)</h3>\n"
+        ans = "<h3 id='GSp4_Q_Maass'>Maass cusp forms for GSp(4)</h3>\n"
         ans += "<div>These satisfy a functional equation with \\(\\Gamma\\)-factors\n"
         ans += "\\begin{equation}"
         ans += "\\Gamma_R(s + i \\mu_1)"
@@ -76,7 +76,7 @@ def getGroupHtml(group):
         ans += "with \\(0 \\le \\mu_2 \\le \\mu_1\\).</div>\n"
 
     elif group == 'GL4':
-        ans = "<h3>Maass cusp forms for GL(4)</h3>\n"
+        ans = "<h3 id='GL4_Q_Maass'>Maass cusp forms for GL(4)</h3>\n"
         ans += "<div>These satisfy a functional equation with \\(\\Gamma\\)-factors\n"
         ans += "\\begin{equation}"
         ans += "\\Gamma_R(s + i \\mu_1)"
@@ -87,7 +87,7 @@ def getGroupHtml(group):
         ans += "where \\(\\mu_1 + \\mu_2 = \\mu_3 + \\mu_4\\).</div>\n"
 
     elif group == 'GL3':
-        ans = "<h3>Maass cusp forms for GL(3)</h3>\n"
+        ans = "<h3 id='GL3_Q_Maass'>Maass cusp forms for GL(3)</h3>\n"
         ans += "<div>These satisfy a functional equation with \\(\\Gamma\\)-factors\n"
         ans += "\\begin{equation}"
         ans += "\\Gamma_R(s + i \\mu_1)"

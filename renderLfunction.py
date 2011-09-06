@@ -116,10 +116,10 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
             degree = int(arg1[6:])
             info = { "degree" : degree }
             info["key"] = 777
-            info["bread"] =  [('L-functions', url_for("render_Lfunction")), ('Degree '+str(degree), '/L/degree'+str(degree))]
+            info["bread"] =  [('L-functions', url_for("render_Lfunction")), ('Degree '+str(degree), url_for('render_Lfunction', arg1=str(degree)))]
             if degree == 1:
                 info["contents"] = [LfunctionPlot.getOneGraphHtmlChar(1,35,1,13)]
-                info['friends'] = [('Dirichlet Characters', '/Character/Dirichlet/')]
+                info['friends'] = [('Dirichlet Characters', url_for('render_Character'))]
             elif degree == 2:
                 info["contents"] = [processEllipticCurveNavigation(11,65), LfunctionPlot.getOneGraphHtmlHolo(1, 6, 2, 14),
                                     processMaassNavigation()]
@@ -195,15 +195,16 @@ def set_info_for_start_page():
     ''' Sets the properties of the top L-function page.
     '''
     
-    tt = [[{'title':'Riemann','link':'Riemann'},
-           {'title':'Dirichlet','link':'degree1#Dirichlet'}],
+    tt = [[{'title':'Riemann','link': url_for('render_Lfunction', arg1='Riemann')},
+           {'title':'Dirichlet','link': url_for('render_Lfunction', arg1='degree1') + '#Dirichlet'}],
 
-          [{'title':'Elliptic Curve','link':'degree2#EllipticCurve_Q'},
-           {'title':'GL2 Cusp Form', 'link':'degree2#GL2_Q_Holomorphic'},
-           {'title':'GL2 Maass Form','link':'degree2#GL2_Q_Maass'}],
+          [{'title':'Elliptic Curve','link': url_for('render_Lfunction', arg1='degree2') + '#EllipticCurve_Q'},
+           {'title':'GL2 Cusp Form', 'link': url_for('render_Lfunction', arg1='degree2') + '#GL2_Q_Holomorphic'},
+           {'title':'GL2 Maass Form','link': url_for('render_Lfunction', arg1='degree2') + '#GL2_Q_Maass'}],
 
-          [{'title':'GL3 Maass Form', 'link':'degree3#GL3_Q_Maass'},
-           {'title':'GL4 Maass Form', 'link':'degree4#GL4_Q_Maass'}]]
+          [{'title':'GL3 Maass Form', 'link': url_for('render_Lfunction', arg1='degree3') + '#GL3_Q_Maass'},
+           {'title':'GL4 Maass Form', 'link': url_for('render_Lfunction', arg1='degree4') + '#GL4_Q_Maass'},
+           {'title':'GSp4 Maass Form', 'link': url_for('render_Lfunction', arg1='degree4') + '#GSp4_Q_Maass'}]]
 
     info = {
         'degree_list': range(1,5),
@@ -248,35 +249,38 @@ def initLfunction(L,args, request):
     info['properties2'] = set_gaga_properties(L)
 
     friendlink = request.url.replace('/L/','/').replace('/L-function/','/').replace('/Lfunction/','/')
+    friendlink = friendlink[0:len(friendlink)-1]
 
     if L.Ltype() == 'maass':
         if L.group == 'GL2':
             info['zeroeslink'] = ''
             info['plotlink'] = ''
             info['bread'] = [('L-function','/L') ,('Degree 2',
-                             '/L/degree2'),
+                              url_for('render_Lfunction', arg1='degree2')),
                              ('\('+L.texname+'\)', request.url )]
             info['friends'] = [('Dirichlet Character '+str(charname), friendlink)]
         else:
             info['bread'] = [('L-function','/L') ,('Degree ' + str(L.degree),
-                             '/L/degree' +  str(L.degree)), (L.dbid, request.url )]
+                             url_for('render_Lfunction', arg1= str(L.degree))), (L.dbid, request.url)]
 
     elif L.Ltype()  == 'riemann':
-        info['bread'] = [('L-function','/L'),('Riemann Zeta','/L/Riemann')]
-        info['friends'] = [('\(\mathbb Q\)','/NumberField/1.1.1.1'),  ('Dirichlet Character \(\\chi_{0}\\!\\!\\pmod{1}\)', '/Character/Dirichlet/1/0')]
+        info['bread'] = [('L-function','/L'),('Riemann Zeta',request.url)]
+        info['friends'] = [('\(\mathbb Q\)', url_for('by_label', label='1.1.1.1')),  ('Dirichlet Character \(\\chi_{0}\\!\\!\\pmod{1}\)',
+                                                                       url_for('render_Character', arg1=1, arg2=0))]
 
     elif L.Ltype()  == 'dirichlet':
         snum = str(L.characternumber)
         smod = str(L.charactermodulus)
         charname = '\(\\chi_{%s}\\!\\!\\pmod{%s}\)' %(snum,smod)
-        info['bread'] = [('L-function','/L'),('Dirichlet Character','/L/degree1#Dirichlet'),(charname, '/L/Character/Dirichlet/'+smod+'/'+snum)]
+        info['bread'] = [('L-function','/L'),('Dirichlet Character',url_for('render_Lfunction', arg1='degree1') +'#Dirichlet'),
+                         (charname, request.url)]
         info['friends'] = [('Dirichlet Character '+str(charname), friendlink)]
                 
 
     elif L.Ltype()  == 'ellipticcurve':
         label = L.label
-        info['friends'] = [('Elliptic Curve', friendlink)]
-        info['bread'] = [('L-function','/L'),('Elliptic Curve','/L/degree2#EllipticCurve_Q'),
+        info['friends'] = [('Elliptic Curve', friendlink )]
+        info['bread'] = [('L-function','/L'),('Elliptic Curve',url_for('render_Lfunction', arg1='/L/degree2#EllipticCurve_Q')),
                          (label,url_for('render_Lfunction',arg1='EllipticCurve',arg2='Q',arg3= label))]
 
     elif L.Ltype() == 'ellipticmodularform':
@@ -285,13 +289,13 @@ def initLfunction(L,args, request):
         character = str(L.character)
         label = str(L.label)
         number = str(L.number)
-        info['friends'] = [('Modular Form', friendlink)]
+        info['friends'] = [('Modular Form', friendlink.rpartition('/')[0])] 
 
     elif L.Ltype() == 'dedekindzeta':
         info['friends'] = [('Number Field', friendlink)]
 
     elif L.Ltype() in ['lcalcurl', 'lcalcfile']:
-        info['bread'] = [('L-function','/L')]
+        info['bread'] = [('L-function',url_for('render_Lfunction'))]
         
 
     info['dirichlet'] = lfuncDStex(L, "analytic")
@@ -527,7 +531,7 @@ def processEllipticCurveNavigation(startCond, endCond):
             s += '<tr>'
             
         counter += 1
-        s += '<td><a href="/L/EllipticCurve/Q/%s/">%s</a></td>\n' % (label,label)
+        s += '<td><a href="' + url_for('render_Lfunction', arg1='EllipticCurve', arg2='Q', arg3=label)+ '">%s</a></td>\n' % label
             
         if counter == nr_of_columns:
             s += '</tr>\n'
