@@ -12,6 +12,6 @@ def body_class():
 
 import main 
 
-app.register_blueprint(artin_representations_page, url_prefix="/ArtinRepresentations????")
+app.register_blueprint(artin_representations_page, url_prefix="/ArtinRepresentation")
 
 

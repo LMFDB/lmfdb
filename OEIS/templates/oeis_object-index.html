@@ -22,7 +22,55 @@ Enter integer sequence or a {{KNOWL("oeis.index",title="encyclopedia index")}}:
 <input type='submit' value='Find' >
 </p>
 </form>
+<script>
+var cur_system = null;
+function show_code(system) {
+    $('.sage').hide();
+    $('.pari').hide();
+    $('.magma').hide();
+    if (cur_system == null) {
+      $('.'+system).show();
+      cur_system = system;
+    } else {
+      $('.'+system).hide();
+      cur_system = null;
+    }
+}
+</script>
 
+<style>
+.output {
+    margin:20px 0;
+    text-align: center;
+}
+table.navi td {
+    padding: 0;
+}
+</style>
 
+        <div align="right">
+            <font size="3">Show commands for:</font>
+            <a onclick="show_code('sage'); return false" href='#'>sage</a>
+        </div>
+ 
+        <!--<h2>
+            Sage Output
+        </h2>-->
+        <div class='sage nodisplay code'>sage: chi = DirichletGroup({{modulus}})[{{number}}]</div>
+        <!--<p>
+            {{ sagechar }}
+        </p>-->
+
+        {% if root_unity %} &nbsp;&nbsp;&nbsp;For \(\zeta_{ {{ zetaorder }} }\) a primitive \( {{ zetaorder }} \)-th root of unity<br><br/> {% endif %}
+        <table>
+        <tr>
+            <td>   
+                <div align="left"> 
+                    [\({{ valstex|join("\) , \(") }}\)]
+                </div>
+            </td>
+        </tr>
+        </table>
+ 
 
 {% endblock %}
