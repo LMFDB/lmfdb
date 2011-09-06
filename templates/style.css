@@ -924,6 +924,7 @@ background-color: #8dbdd8;
 }
 
 .dataTables_wrapper {
+    width: 557px;
 	/*position: relative;
 	min-height: 302px;
 	clear: both;
@@ -949,12 +950,10 @@ background-color: #8dbdd8;
 
 .dataTables_length {
 	width: 40%;
-	float: left;
 }
 
 .dataTables_filter {
 	width: 50%;
-	float: right;
 	text-align: right;
 }
 
