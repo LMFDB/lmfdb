@@ -240,19 +240,24 @@ class Lfunction:
 ###                                    _
 ### satisfy Lambda(s) = omega Lambda(1-s), where N is a positive integer, |omega|=1,
 ### Each of the Gamma factors can be a Gamma_R or Gamma_C.
-###
-### Specify the conductor, omega, and Gamma_R and Gamma_C factors:"""
+
+### Specify the conductor. Other possible keywords: N, level."""
+
+
+#omega, and Gamma_R and Gamma_C factors:"""
 
         thefile += "\n\n"
-        thefile += "N = " + str(self.level) + "    ### other possible keywords: conductor, level.\n\n"
+        thefile += "conductor = " + str(self.level) + "\n\n"
 
-        thefile += "omega = " + str(self.sign) + "\n"
-        thefile += "### sign of the functional equation. Complex numbers should be specified as:\n"
+        thefile += "### Specify the sign of the functional equation.\n"
+        thefile += "### Complex numbers should be specified as:\n"
         thefile += "### omega = (Re(omega),Im(omega)). Other possible keyword: sign\n\n"
+        thefile += "omega = " + str(self.sign) + "\n\n"
 
+
+        thefile += "### Gamma_{R or C}_list lists the associated lambda_j's. Lines with empty lists can be omitted.\n\n"
         thefile += "Gamma_R_list = " +  str(self.mu_fe) + "\n"
         thefile += "Gamma_C_list = " +  str(self.nu_fe) + "\n"
-        thefile += "### Gamma_{R or C}_list lists the associated lambda_j's. Lines with empty lists can be omitted.\n\n"
 
         thefile += """\
 ############################################################################
@@ -268,8 +273,9 @@ class Lfunction:
 ### Optional:"""
 
         thefile += "\n\n"
-        thefile += "name = SHOULD GET FROM THE URL\n\n"
-        thefile += "kind = SHOULD GET FROM THE URL\n\n"
+
+        thefile += "name = " + url.partition('/Lfunction/')[2].partition('?download')[0] + "\n\n"
+        thefile += "kind = " + url.partition('/Lfunction/')[2].partition('?download')[0].partition('/')[0] + "\n\n"
 
         thefile += """\
 ############################################################################
