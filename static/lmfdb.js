@@ -24,8 +24,10 @@ $(function() {
 
   window.setTimeout(function() {
     if(!revealed) {
-      $("#mathjax-info").fadeIn('fast');
-      $("#content").fadeOut('fast');
+      //$("#mathjax-info").fadeIn('fast');
+      //$("#content").fadeOut('fast');
+      $("#mathjax-info").show();
+      $("#content").hide();
     }
   }, 500);
 
