@@ -62,7 +62,7 @@ table.props tr td:first-child {
         {% endif %}
 
 
-        {% if not primitive %}
+        {% if primitive=="False" %}
         <h2>
             Inducing {{ KNOWL('character.dirichlet.induced_character', title="Primitive") }}           </h2>
         <div class = 'sage nodisplay code'>sage: chi.primitive_character()</div>
@@ -75,7 +75,7 @@ table.props tr td:first-child {
             {{ KNOWL('character.dirichlet.values', title="Values") }}
         </h2>
         <div class = 'sage nodisplay code'>sage: chi.values()</div>
-        {% if root_unity %} &nbsp;&nbsp;&nbsp;For \(\zeta_{ {{ zetaorder }} }\) a primitive \( {{ zetaorder }} \)-th root of unity<br><br/> {% endif %}
+        {% if root_unity=="True" %} &nbsp;&nbsp;&nbsp;For \(\zeta_{ {{ zetaorder }} }\) a primitive \( {{ zetaorder }} \)-th root of unity<br><br/> {% endif %}
         <table>
         <tr>
             <td>   
@@ -84,7 +84,7 @@ table.props tr td:first-child {
                 </div>
             </td>
         </tr>
-        </table>
+    </table>
         <h2>
             {{ KNOWL('character.dirichlet.values_on_gens', title="Values on Generators") }}
         </h2>
@@ -133,7 +133,7 @@ table.props tr td:first-child {
         <tr>
         <td> Real </td>
         <td>=</td>
-        {% if sign %}<td> {{real}}</td>{% else %}<td> {{real}} </td>{% endif %}
+        {% if sign=="True" %}<td> Yes</td>{% else %}<td> No </td>{% endif %}
         </tr>
 
         <tr>
@@ -144,7 +144,7 @@ table.props tr td:first-child {
         <tr>
             <td> Primitive </td>
         <td>=</td>
-        {% if primitive %}<td>{{prim}}</td> {% else %}<td> {{prim}}</td>  {% endif %}
+        {% if primitive=="True" %}<td>Yes</td> {% else %}<td> No</td>  {% endif %}
         </tr>
 
         </table>
@@ -153,9 +153,9 @@ table.props tr td:first-child {
             {{ KNOWL('character.dirichlet.gauss_sum') }}
         </h2>
         <div class = 'sage nodisplay code'>sage: chi.gauss_sum()</div>
-        <form> &nbsp;&nbsp;&nbsp;{{ gauss_sum }} 
+        <form> &nbsp;&nbsp;&nbsp; \( \tau_{ a }( \chi_{ {{number}} } )\;\)  at \(\;a = \)
             <input id="calc-gauss-input" size=10 placeholder="2">
-            <button id="calc-gauss-go">Go</button>
+            <button id="calc-gauss-go"> Compute </button>
             <span class="formexample"> e.g. 2 </span>
         </form>
         <div class="output"><span id="calc-gauss-output"></span></div>
@@ -163,9 +163,9 @@ table.props tr td:first-child {
             {{ KNOWL('character.dirichlet.jacobi_sum') }}
         </h2>
         <div class = 'sage nodisplay code'>sage: chi.jacobi_sum()</div>
-        <form> &nbsp;&nbsp;&nbsp;{{ jacobi_sum }} 
+        <form> &nbsp;&nbsp;&nbsp; \( J(\chi_{ {{number}} },\psi) \;\) for \( \;\psi = \)
             <input id="calc-jacobi-input" size="10" placeholder="13.2">
-            <button id="calc-jacobi-go"> Go </button>
+            <button id="calc-jacobi-go"> Compute  </button>
             <span class="formexample"> e.g. 13.2 </span>
         </form>
         <div class="output"><span id="calc-jacobi-output"></span></div>
@@ -173,9 +173,9 @@ table.props tr td:first-child {
             {{ KNOWL('character.dirichlet.kloosterman_sum') }}
         </h2>
         <div class = 'sage nodisplay code'>sage: chi.kloosterman_sum(,)</div>
-        <form> &nbsp;&nbsp;&nbsp;{{ kloosterman_sum }} 
+        <form> &nbsp;&nbsp;&nbsp; \(K(a,b,\chi_{ {{number}} }) \;\) at \(\; a,b = \)
             <input id="calc-kloosterman-input" size=10 placeholder="1,2">
-            <button id="calc-kloosterman-go"> Go </button>
+            <button id="calc-kloosterman-go"> Compute </button>
             <span class="formexample"> e.g. 1,2</span>
         </form>
         <div class="output"><span id="calc-kloosterman-output"></span></div>

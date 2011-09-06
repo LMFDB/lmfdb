@@ -1,16 +1,18 @@
 #DirichletCharacter.py
 
 import re
-import logging 
 
-from base import app
+from base import app, r
 import flask
 from flask import Flask, session, g, render_template, url_for, make_response, request, redirect
 from sage.all import *
 import tempfile, os
 from pymongo import ASCENDING
 from WebCharacter import *
-from utils import to_dict, parse_range
+from renderLfunction import render_Lfunction
+from utils import to_dict, parse_range, make_logger
+logger = make_logger("DC")
+
 import ListCharacters
 
 def render_webpage(request,arg1,arg2):
@@ -23,7 +25,6 @@ def render_webpage(request,arg1,arg2):
             return render_template("dirichlet_characters/CharacterNavigate.html", **info)
 
         elif arg1.startswith("modbrowse"):
-            print "Check2"
             modulus_start = int(arg1.partition('-')[0][10:])
             modulus_end = int(arg1.partition('-')[2])
             info = {}
@@ -61,7 +62,7 @@ def render_webpage(request,arg1,arg2):
 
         elif arg1 == 'custom':
             return "not yet implemented"
-       
+
         temp_args['type'] = 'dirichlet' # set type and input
         temp_args['modulus'] = arg1
         temp_args['number'] = arg2
@@ -77,7 +78,7 @@ def render_webpage(request,arg1,arg2):
         except:
             1
 
-        info = initCharacterInfo(chi, temp_args, request) # sets the various properties of chi to be displayed in DirichletCharacter.html
+        info = initCharacterInfo(chi, temp_args, request) # sets the various properties of chi to be displayed in DirichletCharacter.htiml
 
         return render_template('dirichlet_characters/DirichletCharacter.html', **info)
     else:
@@ -95,8 +96,8 @@ def set_info_for_start_page():
     info['credit'] = 'Sage'
     info['title'] = 'Dirichlet Characters'
     info['bread'] = [('Dirichlet Characters', url_for("render_Character"))]
-    info['learnmore'] = [('Dirichlet Characters', 'http://wiki.l-functions.org/L-function')]
-    info['friends'] = [('Dirichlet L-functions', '/Lfunction/degree1#Dirichlet')]
+    info['learnmore'] = [('Dirichlet Characters', url_for("knowledge.show", ID="character.dirichlet.learn_more_about"))]
+    info['friends'] = [('Dirichlet L-functions', url_for("render_Lfunction", arg1="degree1"))]
     return info
 
 def initCharacterInfo(chi,args, request):
@@ -137,40 +138,30 @@ def initCharacterInfo(chi,args, request):
         info['prim'] = chi.prim
         info['vals'] = latex(chi.vals)
         info['valstex'] = chi.valstex
-        info['root_unity'] =  any(map(lambda x : r"\zeta" in x,  chi.valstex))
+        info['root_unity'] =  str(any(map(lambda x : r"\zeta" in x,  chi.valstex)))
         info['unitgens'] = str(chi.unitgens)
-        #print chi.unitgens
         info['bound'] = int(chi.bound)
-        #print chi.bound
-        info['lth'] = int(chi.lth)
-        #print chi.lth
-        if not chi.primitive:
+        if chi.primitive=="False":
             info['inducedchar'] = chi.inducedchar
             info['inducedchar_modulus'] = chi.inducedchar_modulus
             info['inducedchar_conductor'] = chi.inducedchar_conductor
             info['inducedchar_number'] = chi.inducedchar_number
             info['inducedchar_tex'] = chi.inducedchar_tex
-            info['inducedchar_isprim'] = chi.inducedchar_isprim
-        #info['primtf'] = chi.primtf
         info['nextnumber'] = chi.number+1
         info['kronsymbol'] = str(chi.kronsymbol)
-        info['gauss_sum'] = chi.gauss_sum_tex()
-        info['jacobi_sum'] = chi.jacobi_sum_tex()
-        info['kloosterman_sum'] = chi.kloosterman_sum_tex()
-        info['learnmore'] = [('Dirichlet Characters', 'http://wiki.l-functions.org/L-functions') ] 
-        if chi.primitive:
-            info['friends'] = [('Dirichlet L-function', '/L/Character/Dirichlet/'+smod+'/'+snum)]
+        info['learnmore'] = [('Dirichlet Characters', url_for("knowledge.show", ID="character.dirichlet.learn_more_about"))] 
+        info['friends'] = [('Dirichlet L-function', '/L/Character/Dirichlet/'+smod+'/'+snum)]
         nmore = int(snum) + 1
         nless = int(snum) - 1
         mmore = int(smod) + 1
         mless = int(smod) - 1
         url_ch = url_for("render_Character", arg1=smod,arg2=str(nmore))
         if chi.number == 0:
-            info['navi'] = [(r"&larr;\(\chi_{" + str(euler_phi(chi.modulus)-1) + r"} \left( \text{mod}\;" + str(mless)+ r"\right) \)",url_for("render_Character", arg1=str(mless),arg2=str(euler_phi(chi.modulus)-1))), (r"\(\chi_{" + str(nmore) + r"} \left( \text{mod}\;" + smod+ r"\right) \)&rarr;" ,url_ch)]
+            info['navi'] = [(r"\(\chi_{" + str(nmore) + r"} \left( \text{mod}\; " + smod+ r"\right) \)" ,url_ch), (r"\(\chi_{" + str(euler_phi(chi.modulus)-1) + r"} \left( \text{mod}\;" + str(mless)+ r"\right) \)",url_for("render_Character", arg1=str(mless),arg2=str(euler_phi(chi.modulus)-1)))]
         elif chi.number == euler_phi(chi.modulus)-1:
-            info['navi'] = [(r"&larr;\(\chi_{" + str(nless) + r"} \left( \text{mod}\;" + smod+ r"\right) \)",url_for("render_Character", arg1=smod,arg2=str(nless))), (r"\(\chi_{" + str(nmore) + r"} \left( \text{mod}\;" + str(mmore)+ r"\right) \)&rarr;",url_for("render_Character", arg1=str(mmore),arg2=str(0)))]
+            info['navi'] = [(r"\(\chi_{" + str(nmore) + r"} \left( \text{mod}\;" + str(mmore)+ r"\right) \)",url_for("render_Character", arg1=str(mmore),arg2=str(0))), (r"\(\chi_{" + str(nless) + r"} \left( \text{mod}\;" + smod+ r"\right) \)",url_for("render_Character", arg1=smod,arg2=str(nless)))]
         else:
-            info['navi'] = [(r"&larr;\(\chi_{" + str(nless) + r"} \left( \text{mod}\; " + smod+ r"\right) \)",url_for("render_Character", arg1=smod,arg2=str(nless))), (r"\(\chi_{" + str(nmore) + r"} \left( \text{mod}\;"+ smod+ r"\right) \)&rarr;",url_for("render_Character", arg1=smod,arg2=str(nmore)))]
+            info['navi'] = [(r"\(\chi_{" + str(nmore) + r"} \left( \text{mod}\;" + smod+ r"\right) \)",url_for("render_Character", arg1=smod,arg2=str(nmore))), (r"\(\chi_{" + str(nless) + r"} \left( \text{mod}\; " + smod+ r"\right) \)",url_for("render_Character", arg1=smod,arg2=str(nless)))]
 
     return info
 
@@ -196,8 +187,8 @@ def dc_calc_jacobi(modulus,number):
     arg = request.args.get("val", [])
     if not arg:
         return flask.abort(404)
+    arg = map(int,arg.split('.'))
     try:
-        arg = map(int,arg.split('.'))
         mod = arg[0]
         num = arg[1]
         from sage.modular.dirichlet import DirichletGroup
@@ -213,8 +204,8 @@ def dc_calc_kloosterman(modulus,number):
     arg = request.args.get("val", [])
     if not arg:
         return flask.abort(404)
+    arg = map(int,arg.split(','))
     try:
-        arg = map(int,arg.split(','))
         from sage.modular.dirichlet import DirichletGroup
         chi = DirichletGroup(modulus)[number]
         kloosterman_sum_numerical = chi.kloosterman_sum_numerical(100,arg[0],arg[1])
@@ -231,7 +222,6 @@ def character_search(**args):
     info = to_dict(args)
     query = {}
     print args
-
     if 'natural' in args:
         label = info.get('natural', '')
         modulus = int(str(label).partition('.')[0])
@@ -244,44 +234,13 @@ def character_search(**args):
         info["bread"] = [('Dirichlet Characters', url_for("render_Character")), ('search results', ' ')]
         info['credit'] = 'Sage'
         if (len(query) != 0):
-            count_default=100
-            if info.get('count'):
-                try:
-                    count = int(info['count'])
-                except:
-                    count = count_default
-            else:
-                info['count'] = count_default
-                count = count_default
-
-            start_default=0
-            if info.get('start'):
-                try:
-                    print "Check"
-                    start = int(info['start'])
-                    if(start < 0): 
-                        print "Check1"
-                        start += (1-(start+1)/count)*count
-                except:
-                    print "Check2"
-                    start = start_default
-            else:
-                start = start_default
             from sage.modular.dirichlet import DirichletGroup
             t,texname,number,length  = charactertable(query)
             info['characters'] = t
             info['texname'] = texname
             info['number'] = number
             info['len'] = length
-            if(start>=length): 
-                print "Check3"
-                start-=(1+(start-length)/count)*count
-            if(start<0):
-                print "Check4"
-                start=0
-            info['start'] = start
             info['title'] = 'Dirichlet Characters'
-            print start, count, length
             return render_template("dirichlet_characters/character_search.html", **info)
 
 def charactertable(query):
