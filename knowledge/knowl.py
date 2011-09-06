@@ -87,16 +87,18 @@ class Knowl(object):
     self._id = ID
     data = get_knowl(ID)
     if data:
-      self._title   = data.get('title', '')
-      self._content = data.get('content', '')
-      self._quality = data.get('quality', 'beta')
-      self._authors = data.get('authors', [])
+      self._title       = data.get('title', '')
+      self._content     = data.get('content', '')
+      self._quality     = data.get('quality', 'beta')
+      self._authors     = data.get('authors', [])
+      self._category    = data.get('cat', extract_cat(ID))
       self._last_author = data.get('last_author', '')
-      self._timestamp = data.get('timestamp', datetime.now())
+      self._timestamp   = data.get('timestamp', datetime.now())
     else:
       self._title   = ''
       self._content = ''
       self._quality = 'beta'
+      self._category = extract_cat(ID)
       self._authors = []
       self._last_author = ''
       self._timestamp = datetime.now()
@@ -161,6 +163,10 @@ class Knowl(object):
       raise Exception("content has to be of type 'basestring'")
     self._content = content
     self._store_db("content", content)
+
+  @property
+  def category(self):
+    return self._category
 
   @property
   def quality(self):
