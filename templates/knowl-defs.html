@@ -107,7 +107,7 @@
      <a onclick='return confirm("Really delete Knowl {{ k.id }}? There is no way back!");'
             href="{{ url_for('.delete', ID=k.id) }}">delete</a>
    {% endif %}
-   <a style="margin-left: 20px;" href="{{ url_for('.index') }}">Overview</a>
+   <a style="margin-left: 20px;" href="{{ url_for('.index') }}">All knowls</a>
    &middot; <a href="{{ url_for('.index', category=k.category) }}">Up</a>
    &middot; Search: 
    <form id='knowl-search' action="{{ url_for('.index') }}" method="GET">
