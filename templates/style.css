@@ -9,7 +9,7 @@
 {% set col_knowl_l = '#DDF' %}
 {% set col_knowl_ll = '#EEF' %}
 {% set col_knowl_d = '#88F' %}
-{% set col_knowl_dd = '#005' %}
+{% set col_knowl_dd = '#006' %}
 
 {# end defs #}
 
@@ -225,12 +225,11 @@ body.knowl #header {
 }
 
 
-
 #main {
-	margin:  0px 0px 0px 200px;
-	padding: 0px 0px 0px 10px;
-  min-height: 600px;
-    /* border: 1px solid purple; */
+  margin:  0px 0px 0px 200px;
+  padding: 0px 0px 0px 10px;
+  min-height: 700px;
+  /* border: 1px solid purple; */
 }
 
 #properties {
@@ -265,6 +264,11 @@ body.knowl #header {
     margin-top: 10px;
 }
 #properties-body h2:first-child { margin-top: 0px; }
+#properties-body table th, 
+#properties-body table td {
+  padding-left: 10px;
+  padding-right: 10px;
+}
 #properties-body .label {
   font-weight: bold;
 }
@@ -281,7 +285,7 @@ body.knowl #header {
   border-top-left-radius: 10px;
   -moz-border-radius-topleft: 10px;
   margin: 0;
-  padding: 5px;
+  padding: 5px 10px;
   color: #050;
   background: #9d9;
   font-size: 14px;
@@ -346,6 +350,7 @@ blockquote p {
   font-size: 85%;
   color: #390;
   background: #EFE;
+  margin-bottom: 100px;
   border-top-right-radius: 10px;
   -moz-border-radius-topright: 10px;
   border-bottom-right-radius: 10px;
@@ -623,7 +628,7 @@ table .knowl-link {
   margin: 30px 0;
   border-bottom: 1px solid {{ col_knowl_d }};
   background: {{ col_knowl_ll}};
-  color: {{ col_knowl_dd}};
+  color: {{ col_knowl_dd }};
   font-weight: bold;
 }
 .knowl-inc-edit {
@@ -643,7 +648,7 @@ table .knowl-link {
   padding: 0;
 }
 .knowl-content {
-  padding: 10px 0px 15px 10px;
+  padding: 10px;
   border-bottom-left-radius: 10px;
   -moz-border-radius-bottomleft: 10px;
 }
@@ -694,7 +699,7 @@ body.knowl #header #title {
 body.knowl #content h1,
 body.knowl #content h2,
 body.knowl #content a {
-  color: {{ col_knowl_d }};
+  color: {{ col_knowl_dd }};
 }
 body.knowl a:hover {
   background: #ccf;
@@ -762,6 +767,12 @@ h2 > .knowl-qm {
   margin-bottom: 15px;
   margin-right: 10px;
 }
+.knowl-output .knowl-output,
+.knowl-output .knowl-output.loading {
+ margin-left: 0;
+ margin-right: 0;
+ border-right: 0;
+}
 .knowl-output.loading {
  color: grey;
  font-style: italic;
@@ -789,11 +800,11 @@ h2 > .knowl-qm {
   margin:  0 0 0 0;
 }
 .knowl-footer a {
-  color: {{ col_knowl_d }};
+  color: {{ col_knowl_dd }};
 }
 .knowl-footer a:hover {
   background: none;
-  color: {{ col_knowl }};
+  color: {{ col_knowl_d }};
 }
 
 /* end knowl */
@@ -827,12 +838,6 @@ h2 > .knowl-qm {
 .enternumber
 {
   border: 1px solid black;
-}
-
-.submitbutton
-{
-  border: 1px solid black;
-  background-color: #45BDD7;
 }
 
 .watermark {
@@ -919,7 +924,7 @@ background-color: #8dbdd8;
 }
 
 .dataTables_wrapper {
-    width: 516px;
+    width: 557px;
 	/*position: relative;
 	min-height: 302px;
 	clear: both;
