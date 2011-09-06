@@ -217,7 +217,9 @@ class Lfunction:
 
     def createLcalcfile_ver2(self, url):
         thefile=""
-        thefile += "### lcalc file for the url: " + url + "\n\n"
+        thefile +="#################################################################################################\n"
+        thefile += "### lcalc file for the url: " + url + "\n"
+        thefile +="#################################################################################################\n\n"
         thefile += "lcalcfile_version = 2    ### lcalc files should have a version number to allow for future enhancements\n\n"
 
         thefile += """\
@@ -263,9 +265,8 @@ class Lfunction:
 ### Specify, as lists, the poles and residues of L(s) in Re(s)>1/2 (i.e. assumes that there
 ### are no poles on s=1/2). Also assumes that the poles are simple. Lines with empty lists can be omitted."""
         thefile += "\n\n"
-        thefile += "pole_list = " +  str(self.poles) + "\n"
-        thefile += "residue_list = " +  str(self.residues) + "\n\n"
-        thefile += "### FIX: OUTPUT POLES AND RESIDUES OF L(s) not Lambda(s)\n\n"
+        thefile += "pole_list = " +  str(self.poles_L) + "\n"
+        thefile += "residue_list = " +  str(self.residues_L) + "\n\n"
 
         thefile += """\
 #################################################################################################
@@ -273,8 +274,14 @@ class Lfunction:
 
         thefile += "\n\n"
 
-        thefile += "name = " + url.partition('/L/')[2].partition('?download')[0] + "\n\n"
-        thefile += "kind = " + url.partition('/L/')[2].partition('?download')[0].partition('/')[0] + "\n\n"
+        thefile += "name = " + url.partition('/L/')[2].partition('?download')[0].strip('/') + "\n"
+        kind = url.partition('/L/')[2].partition('?download')[0].partition('/')[0]
+        kind_of_L = url.partition('/L/')[2].partition('?download')[0].split('/')
+        #thefile += str(kind_of_L) + "\n\n\n\n"
+        if len(kind_of_L)>2:
+            thefile += "kind = " + kind_of_L[0] + "/" + kind_of_L[1] + "\n\n"
+        elif len(kind_of_L)==2:
+            thefile += "kind = " + kind_of_L[0] + "\n\n"
 
         thefile += """\
 #################################################################################################
@@ -282,7 +289,6 @@ class Lfunction:
 ### (relevant for Dirichlet L-functions), and whether to normalize them
 ### if needed to get a functional equation s <--> 1-s
 ###
-
 ### periodic should be set to either true (in the case of Dirichlet L-functions,
 ### for instance), or false (the default). If true, then lcalc assumes that the coefficients
 ### given, a[0]...a[N], specify all a[n] with a[n]=a[m] if n=m mod (N+1).
@@ -303,7 +309,9 @@ class Lfunction:
             thefile += "periodic = true\n\n"
 
 
-        thefile += """\
+        if hasattr(self, 'normalize_by'):
+            thefile += """\
+#################################################################################################
 ### The default is to assume that the Dirichlet coefficients are provided
 ### normalized so that the functional equation is s <--> 1-s, i.e. `normalize_by'
 ### is set to 0 by default.
@@ -326,10 +334,12 @@ class Lfunction:
 ###
 ### So, the normalize_by variable is meant to allow the convenience, for example,
 ### of listing the a(n)'s rather than the a(n)/sqrt(n)'s."""
-        thefile += "\n\n"
-        thefile += "normalize_by = 1/2 ### XXXXXXXXX normalize_by = .5 would be fine too. Normalize, below, the n-th Dirichlet\n### coefficient by n^(1/2)\n\n"
+            thefile += "\n\n"
+            thefile += "### Normalize, below, the n-th Dirichlet coefficient by n^(" +str(self.normalize_by) + ")\n"
+            thefile += "normalize_by = " + str(self.normalize_by) +  "    ### floating point is also okay. \n\n"
 
         thefile += """\
+#################################################################################################
 ### The last entry must be the dirichlet_coefficient list, one coefficient per
 ### line, separated # by commas. The 0-th entry is ignored unless the Dirichlet
 ### coefficients are periodic. One should always include it, however, because, in
@@ -409,12 +419,12 @@ class Lfunction_EC(Lfunction):
     dict = { 'label': ... , 'numcoeff': ...  }  numcoeff is the number of
            coefficients to use when computing
     """
-    
+
     def __init__(self, **args):
         #Check for compulsory arguments
         if not 'label' in args.keys():
             raise Exception("You have to supply a label for an elliptic curve L-function")
-        
+
         # Initialize default values
         self.numcoeff = 500 # set default to 500 coefficients
 
@@ -437,14 +447,15 @@ class Lfunction_EC(Lfunction):
         self.nu_fe = [0.5]
         self.langlands = True
         self.degree = 2
-        
+
         self.dirichlet_coefficients = self.E.anlist(self.numcoeff)[1:]  #remove a0
+        self.dirichlet_coefficients_unnormalized = self.dirichlet_coefficients[:]
 
         # Renormalize the coefficients
         for n in range(0,len(self.dirichlet_coefficients)-1):
            an = self.dirichlet_coefficients[n]
            self.dirichlet_coefficients[n]=float(an)/float(sqrt(n+1))
-       
+
         self.poles = []
         self.residues = []
         self.coefficient_period = 0
@@ -612,6 +623,8 @@ class RiemannZeta(Lfunction):
             self.dirichlet_coefficients.append(1)
         self.poles = [0,1]
         self.residues = [-1,1]
+        self.poles_L = [1] # poles of L(s)
+        self.residues_L = [1] # residues of L(s)
         self.coefficient_period = 0
         self.selfdual = True
         self.texname = "\\zeta(s)"
@@ -901,8 +914,12 @@ class DedekindZeta(Lfunction):   # added by DK
         self.h=self.NF.class_number()
         self.res=RR(2**self.signature[0]*self.h*self.R/self.w) #r1 = self.signature[0]
 
-        self.poles = [1,0]
-        self.residues = [self.res,-self.res]
+        self.poles = [1,0] # poles of the Lambda(s) function
+        self.residues = [self.res,-self.res] # residues of the Lambda(s) function
+
+        self.poles_L = [1] # poles of L(s)
+        self.residues_L = [1234] # residues of L(s)
+
         self.coefficient_period = 0
         self.selfdual = True
         self.primitive = True
