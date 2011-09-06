@@ -23,9 +23,11 @@ $(function() {
   $("#mathjax-info").click(function() {show_content()});
 
   window.setTimeout(function() {
-    if(!revealed) {
-      $("#mathjax-info").fadeIn('fast');
-      $("#content").fadeOut('fast');
+    MathJax.Hub.Queue(function() {
+      if(!revealed) {
+        $("#mathjax-info").fadeIn('fast');
+        $("#content").fadeOut('fast');
+      }
     }
   }, 200);
 
