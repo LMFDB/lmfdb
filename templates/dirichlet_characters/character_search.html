@@ -40,7 +40,7 @@ table td.params {
 
 <h2> Further refine search </h2>
 <form>
-<input type="hidden" name="start" value="{{start}}"/>
+    {#<input type="hidden" name="start" value="{{start}}"/>#}
 <table border="0">
 <tr>
     <td align=left> {{ KNOWL('character.dirichlet.modulus', title="modulus") }}  <input type = 'text' name = 'modulus' size=10 value={{modulus}}></td>
@@ -48,7 +48,7 @@ table td.params {
     <td align=left> {{ KNOWL('character.dirichlet.order', title="order") }} <input type='text' name='order'size=10 value={{order}}></td>
 <!--<td align=center>Parity <input type='text' name='parity' size=10 value={{parity}}>-->
 </tr>
-<td align=left colspan=4>Maximum number of characters to display <input type='text' name='count' value={{count}} size=10>
+{#<td align=left colspan=4>Maximum number of characters to display <input type='text' name='count' value={{count}} size=10>#}
 </table>
 <p></p>
 <td>
@@ -60,10 +60,12 @@ table td.params {
 
 <script>
  $(document).ready(function() {
- $('#characterTable').dataTable();
-});
+     $('#characterTable').dataTable({"bFilter":false,"aoColumnDefs": [
+         { "iDataSort": 1, "aTargets": [0] },
+         { "bSort":false, "aTargets": [0] }
+     ] } );
+} );
 </script>
-
 <table class="ntdata" style="table-layout:fixed" id="characterTable">
     <thead class="heading" align="center">
     <tr>
@@ -81,7 +83,7 @@ table td.params {
              <td class="modulus" align="center">
                 <a href="/Character/Dirichlet/{{characters[j].modulus()}}/{{number[j]}}">{% if characters[j].is_primitive() %}<font color="green">{% else %}<font color="blue">{% endif %}&chi;<sub>{{j}}</sub></font></a>
             </td>
-            <td align=center class="chi">
+            <td align=center>
                 <a href="/Character/Dirichlet/?modulus={{characters[j].modulus()}}&conductor={{conductor}}&order={{order}}&parity={{parity}}">{{characters[j].modulus()}}</a>
             </td>
             <td align=center>
@@ -97,8 +99,8 @@ table td.params {
     </tbody>
 </table>
 
-<hr>
+{#<hr>
 <a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form();return false">Previous</A>
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form();return false">Next</A></td>
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form();return false">Next</A></td>#}
 
 {% endblock %}
