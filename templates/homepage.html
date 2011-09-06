@@ -111,7 +111,7 @@
    {{ entry("Learn more about", learnmore) }}
    {{ entry("Friends", friends) }}
    {{ entry("Downloads", downloads) }}
-   {{ entry("Related Data", getUploadedFor(request.path) ) }}
+   {{ entry("Data", getUploadedFor(request.path) ) }}
 
  {% if sidebar -%}
   {% for topic, content in sidebar -%}

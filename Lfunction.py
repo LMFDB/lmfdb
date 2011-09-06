@@ -221,7 +221,7 @@ class Lfunction:
         thefile += "lcalcfile_version = 2    ### lcalc files should have a version number to allow for future enhancements\n\n"
 
         thefile += """\
-############################################################################
+#################################################################################################
 ### Specify the functional equation using the Gamma_R and Gamma_C
 ### notation. Let Gamma_R = pi^(-s/2) Gamma(s/2), and  Gamma_C= (2 pi)^(-s) Gamma(s).
 ###
@@ -256,10 +256,10 @@ class Lfunction:
 
         thefile += "### Gamma_{R or C}_list lists the associated lambda_j's. Lines with empty lists can be omitted.\n\n"
         thefile += "Gamma_R_list = " +  str(self.mu_fe) + "\n"
-        thefile += "Gamma_C_list = " +  str(self.nu_fe) + "\n"
+        thefile += "Gamma_C_list = " +  str(self.nu_fe) + "\n\n"
 
         thefile += """\
-############################################################################
+#################################################################################################
 ### Specify, as lists, the poles and residues of L(s) in Re(s)>1/2 (i.e. assumes that there
 ### are no poles on s=1/2). Also assumes that the poles are simple. Lines with empty lists can be omitted."""
         thefile += "\n\n"
@@ -268,23 +268,23 @@ class Lfunction:
         thefile += "### FIX: OUTPUT POLES AND RESIDUES OF L(s) not Lambda(s)\n\n"
 
         thefile += """\
-############################################################################
+#################################################################################################
 ### Optional:"""
 
         thefile += "\n\n"
 
-        thefile += "name = " + url.partition('/Lfunction/')[2].partition('?download')[0] + "\n\n"
-        thefile += "kind = " + url.partition('/Lfunction/')[2].partition('?download')[0].partition('/')[0] + "\n\n"
+        thefile += "name = " + url.partition('/L/')[2].partition('?download')[0] + "\n\n"
+        thefile += "kind = " + url.partition('/L/')[2].partition('?download')[0].partition('/')[0] + "\n\n"
 
         thefile += """\
-############################################################################
+#################################################################################################
 ### Specify the Dirichlet coefficients, whether they are periodic
 ### (relevant for Dirichlet L-functions), and whether to normalize them
 ### if needed to get a functional equation s <--> 1-s
 ###
 
 ### periodic should be set to either true (in the case of Dirichlet L-functions,
-### for instance), or false. If true, then lcalc assumes that the coefficients
+### for instance), or false (the default). If true, then lcalc assumes that the coefficients
 ### given, a[0]...a[N], specify all a[n] with a[n]=a[m] if n=m mod (N+1).
 ### For example, for the real character mod 4, one should,
 ### have periodic = true and at the bottom of this file, then specify:
@@ -295,7 +295,7 @@ class Lfunction:
 ### -1
 ### ]
 ###
-### False is the default, but there's no harm in specifying it even if false:"""
+### Specify whether Dirichlet coefficients are periodic:"""
         thefile += "\n\n"
         if(self.coefficient_period==0):
             thefile += "periodic = false\n\n"
@@ -308,9 +308,9 @@ class Lfunction:
 ### normalized so that the functional equation is s <--> 1-s, i.e. `normalize_by'
 ### is set to 0 by default.
 ###
-### Sometimes, such as in this example, it is more convenient to record the
-### Dirichlet coefficients normalized differently, for example, as integers
-### rather than as floating point approximations.
+### Sometimes, such as for an elliptic curve L-function, it is more convenient to
+### record the Dirichlet coefficients normalized differently, for example, as 
+### integers rather than as floating point approximations.
 ###
 ### For example, an elliptic curve L-function is assumed by lcalc to be of the
 ### form:
@@ -343,8 +343,13 @@ class Lfunction:
         thefile += "\n\n"
 
         thefile += "Dirichlet_coefficient = [\n"
+        thefile += "[0,   ### set Dirichlet_coefficient[0]\n"
         for n in range(0,len(self.dirichlet_coefficients)):
-            thefile += str(self.dirichlet_coefficients[n]) + ",\n"
+            thefile += str(self.dirichlet_coefficients[n])
+            if n<5:
+                thefile += ",    ### set Dirichletcoefficient[" + str(n+1) +"]\n"
+            else:
+                thefile += ",\n"
         thefile += "]\n"
 
         return(thefile)
