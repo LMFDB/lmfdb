@@ -71,7 +71,18 @@ table td.params {
          var y = b.replace( /.*<sub>(.*)<\/sub>.*/, '$1' ) * 1;
          return ((x < y) ?  1 : ((x > y) ? -1 : 0));
      };     
-     $('#characterTable').dataTable({"bFilter":false,"bLengthChange":false, "aoColumnDefs": [ { "sType": 'html-character-index', "aTargets": [0] }
+     jQuery.fn.dataTableExt.oSort['html-conductor-index-asc']  = function(a,b) {
+         var x = a.replace(/.*(.*).*/, "") * 1;
+         var y = b.replace( /.*(.*).*/, "") * 1;
+         return ((x < y) ? -1 : ((x > y) ?  1 : 0));
+     };
+
+     jQuery.fn.dataTableExt.oSort['html-conductor-index-desc'] = function(a,b) {
+         var x = a.replace( /.*(.*).*/, '$1') * 1;
+         var y = b.replace( /.*(.*).*/, '$1') * 1;
+         return ((x < y) ?  1 : ((x > y) ? -1 : 0));
+     };     
+     $('#characterTable').dataTable({"bFilter":false, "aoColumnDefs": [ { "sType": 'html-character-index', "aTargets": [0] }, { "sType": 'html-conductor-index', "aTargets": [0]}
          ] });
 } );
 </script>
@@ -90,7 +101,7 @@ table td.params {
         {% for j in range(0,len): %}
         <tr class="{{ row_class.next() }}">
              <td class="modulus" align="center">
-                <a href="/Character/Dirichlet/{{characters[j].modulus()}}/{{number[j]}}">{% if characters[j].is_primitive() %}<font color="green">{% else %}<font color="blue">{% endif %}&chi;<sub>{{j}}</sub></font></a>
+                 <a href="/Character/Dirichlet/{{characters[j].modulus()}}/{{number[j]}}">{% if characters[j].is_primitive() %}<font color="green">{% else %}<font color="blue">{% endif %}&chi;<sub>{{number[j]}}</sub></font></a>
             </td>
             <td align=center>
                 <a href="/Character/Dirichlet/?modulus={{characters[j].modulus()}}&conductor={{conductor}}&order={{order}}&parity={{parity}}">{{characters[j].modulus()}}</a>
