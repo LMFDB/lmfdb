@@ -84,10 +84,10 @@ Category:
 
 {% if user_is_authenticated -%}
   <hr/>
-  <h2>Edit/Create Knowls</h2>
+  <h2>Create Knowl</h2>
   <form action="{{ url_for('.edit_form') }}" method="POST">
     Knowl ID: <input id="knowl-edit-id" name="id"></input>
-    <button id="knowl-edit-btn">Edit</button>
+    <button id="knowl-edit-btn">Create</button>
   </form>
 {%- endif %}
 
