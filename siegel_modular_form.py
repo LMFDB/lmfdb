@@ -6,7 +6,7 @@ from sage.all_cmdline import *
 
 DATA = 'http://data.countnumber.de/Siegel-Modular-Forms/'
 #DATA = '/media/data/home/nils/Sandbox/super_current/nilsskoruppa-lmfdb/db/'
-    
+#DATA = '/media/data/home/nils/Sandbox/super_current/Siegel-Modular-Forms/'
 
 def render_webpage( args = {}):
     """
@@ -213,15 +213,22 @@ def render_webpage( args = {}):
                 our_cmp = lambda (a,b,c), (A,B,C) : cmp( (4*a*c - b**2,a,b,c), (4*A*C - B**2, A,B,C) )
                 f_keys.sort( cmp = our_cmp)
 
+            if 'Sp8Z' == group:
+                # matrix index is given as [m11 m22 m33 m44 m12 m13 m23 m14 m24 m34]
+                __mat = lambda (m11, m22, m33, m44, m12, m13, m23, m14, m24, m34): \
+                        matrix( ZZ, 4,4, [m11,m12,m13,m14, m12,m22,m23,m24, m13,m23,m33,m34, m14,m24,m34,m44])
+                __cmp = lambda f1, f2: cmp( [__mat(f1).det()]+list(f1), [__mat(f2).det()]+list(f2))
+                f_keys.sort( cmp = __cmp)
+
             try:
                 if not modulus:
-                    m = 17
+                    m = 0
                 else:
                     m = int( modulus)
                 info['modulus'] = m
                 if m != 0:
                     for i in f_keys:
-                        f[2][i] = f[2][i]%m
+                        f[2][i] = Integer(f[2][i])%m
             except:
                 pass
 
