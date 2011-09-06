@@ -184,6 +184,9 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
 
     elif arg1 == 'Lcalcurl':
         return Lfunction( Ltype = arg1, url = arg2)
+    
+    else:
+        return flask.redirect(403)
 
 
 def set_info_for_start_page():
@@ -208,7 +211,7 @@ def set_info_for_start_page():
 
     info['title'] = 'L-functions'
     info['bread'] = [('L-functions', url_for("render_Lfunction"))]
-    info['learnmore'] = [('L-functions', 'http://wiki.l-functions.org/L-function')]
+    info['learnmore'] = [('Lmfdb-wiki', 'http://wiki.l-functions.org/L-function')]
 
     return info
     

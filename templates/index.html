@@ -43,8 +43,7 @@ and theorems.
 <h1>Misc Pages</h1>
 <ul>
  <li><a href="{{ url_for("knowledge.index") }}">Knowledge</a></li>
- <li>{{ KNOWL_LINK("wiki.index") }}.</li>
- <li>What is a {{ KNOWL("wiki.knowl") }}? Click on it!</li>
+ <li>What is a {{ KNOWL("doc.knowl") }}? Click on it!</li>
  <li><a href="{{ url_for("users.list") }}">User Management</a>:
  {% if user_is_authenticated -%}
    you are "<a href="{{ url_for('users.info') }}">{{username}}</a>"
