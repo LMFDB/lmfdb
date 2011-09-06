@@ -27,10 +27,14 @@
   font-size: x-large;
   color: #006;
 }
+a.curcat {
+  font-weight: bold;
+  border-bottom: 1px solid #006;
+}
 </style>
 
-{% if not searchmode %}
-<div style="margin-bottom: 20px">
+{% if not searchmode and not categorymode %}
+<div style="margin-bottom: 10px">
   <form method="GET" action="{{ url_for('.index') }}">
     {% for kq in knowl_qualities -%}
       <input type="checkbox" id="{{ kq }}" name="{{ kq }}" {% if filters[loop.index0] -%}checked{%- endif %} />
@@ -40,6 +44,17 @@
   </form>
   </div>
 {% endif %}
+
+<div style="margin-bottom: 10px">
+Category:
+{% for cat in categories -%}
+ <a 
+  {% if cur_cat == cat -%}class='curcat'{%- endif %}
+  href="{{ url_for('.index', category = cat) }}">{{cat}}</a>
+   {# {% if not loop.last -%} &middot; {%- endif %} #}
+{%- endfor %}
+&mdash; <strong><a href="{{ url_for('.index') }}">clear</a></strong>
+</div>
 
 <table id="knowls" class="ntdata">
   {% for c, ks in knowls -%}
