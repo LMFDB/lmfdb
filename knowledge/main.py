@@ -107,6 +107,7 @@ def searchbox(q="", clear=False):
       <input name="search" value="%s" />"""
   if clear:
     searchbox += '<a href="%s">clear</a>' % url_for(".index")
+  searchbox += '<button type="submit">Go</button>'
   searchbox += "</form>" 
   return searchbox % (url_for(".index"), q)
 
@@ -146,8 +147,7 @@ def show(ID):
          title = k.title,
          k = k,
          render = r,
-         bread = b,
-         navi_raw = searchbox())
+         bread = b)
 
 @knowledge_page.route("/delete/<ID>")
 @admin_required
@@ -255,34 +255,40 @@ def index():
   # bypassing the Knowl objects to speed things up
   from knowl import get_knowls
   get_knowls().ensure_index('_keywords')
-  keyword = request.args.get("search", "").lower()
-  keywords = filter(lambda _:len(_) >= 3, keyword.split(" "))
-  #logger.debug("keywords: %s" % keywords)
-  keyword_q = {'_keywords' : { "$all" : keywords}}
+  get_knowls().ensure_index('cat')
 
   cur_cat = request.args.get("category", "")
   
   qualities = []
-  defaults = "filter" not in request.args
-  searchmode = "search" in request.args
-  categorymode = "category" in request.args
+  defaults      = "filter" not in request.args
+  filtermode    = "filter" in request.args
+  searchmode    = "search" in request.args
+  categorymode  = "category" in request.args
 
   from knowl import knowl_qualities
   # TODO wrap this into a loop:
-  reviewed = request.args.get("reviewed", "") == "on" or defaults or searchmode
-  ok       = request.args.get("ok", "") == "on"       or defaults or searchmode
-  beta     = request.args.get("beta", "") == "on"     or defaults or searchmode
+  reviewed = request.args.get("reviewed", "") == "on" or defaults
+  ok       = request.args.get("ok", "") == "on"       or defaults
+  beta     = request.args.get("beta", "") == "on"     or defaults
 
   if reviewed: qualities.append("reviewed")
   if ok:       qualities.append("ok")
   if beta:     qualities.append("beta")
 
-  quality_q = { '$in' : qualities }
 
   s_query = {}
   s_query['title'] = { "$exists" : True }
-  if searchmode:
+
+  if filtermode:
+    quality_q = { '$in' : qualities }
     s_query['quality'] = quality_q
+  
+  keyword = request.args.get("search", "").lower()
+  if searchmode:
+    keywords = filter(lambda _:len(_) >= 3, keyword.split(" "))
+    #logger.debug("keywords: %s" % keywords)
+    keyword_q = {'_keywords' : { "$all" : keywords}}
+    s_query.update(keyword_q)
 
   if categorymode:
     s_query['_id'] = { "$regex" : r"^%s\..+" % cur_cat }
@@ -314,7 +320,7 @@ def index():
          bread  = get_bread(),
          knowls = knowls,
          search = keyword,
-         navi_raw = searchbox(request.args.get("search", ""), searchmode),
+         searchbox = searchbox(request.args.get("search", ""), searchmode),
          knowl_qualities = knowl_qualities,
          searchmode = searchmode,
          filters = (beta, ok, reviewed),

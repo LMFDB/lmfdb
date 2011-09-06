@@ -472,7 +472,7 @@ input, textarea {
   -moz-border-radius: 5px;
 }
 
-form button, form select {
+button, select {
   padding: 3px 6px;
   background: #DFD;
   font-size: 110%;
@@ -609,12 +609,20 @@ table .knowl-link {
   padding: 1px;
 }
 .knowl-bar {
+  white-space: nowrap;
   background: {{ col_knowl_ll}};
   padding: 5px 10px;
   margin-bottom: 5px;
   border-bottom: 1px solid {{ col_knowl_d }};
   border-top-left-radius: 10px;
   -moz-border-radius-topleft: 10px;
+}
+.knowl-bar button, 
+.knowl-bar input,
+.knowl-bar form {
+  font-size: small;
+  display: inline;
+  margin: 0px 2px;
 }
 #knowl-search input {
   font-size: small;

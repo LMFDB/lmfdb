@@ -33,9 +33,19 @@ a.curcat {
 }
 </style>
 
+<div>
+  <form id='knowl-search' action="{{ url_for('.index') }}" method="GET">
+    Search (ID, description, #hashtag, or full text):
+    <input name="search" value="{{ search }}" />
+    {% if search|length > 0 -%}<a href="{{url_for('.index')}}">clear</a>{%- endif %}
+    <button type="submit">Go</button>
+  </form>
+</div>
+
 {% if not searchmode and not categorymode %}
 <div style="margin-bottom: 10px">
   <form method="GET" action="{{ url_for('.index') }}">
+    Quality level: 
     {% for kq in knowl_qualities -%}
       <input type="checkbox" id="{{ kq }}" name="{{ kq }}" {% if filters[loop.index0] -%}checked{%- endif %} />
         <label for="{{ kq }}">{{ kq|capitalize }}</label>
@@ -53,7 +63,9 @@ Category:
   href="{{ url_for('.index', category = cat) }}">{{cat}}</a>
    {# {% if not loop.last -%} &middot; {%- endif %} #}
 {%- endfor %}
-&mdash; <strong><a href="{{ url_for('.index') }}">clear</a></strong>
+{% if categorymode -%}
+  &mdash; <strong><a href="{{ url_for('.index') }}">clear</a></strong>
+{%- endif %}
 </div>
 
 <table id="knowls" class="ntdata">
