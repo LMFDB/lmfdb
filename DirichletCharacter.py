@@ -133,6 +133,8 @@ def initCharacterInfo(chi,args, request):
         info['genvalstex'] = str(chi.genvaluestex)
         info['parity'] = chi.parity
         info['sign'] = chi.sign
+        info['real'] = chi.real
+        info['prim'] = chi.prim
         info['vals'] = latex(chi.vals)
         info['valstex'] = chi.valstex
         info['root_unity'] =  any(map(lambda x : r"\zeta" in x,  chi.valstex))
@@ -229,6 +231,7 @@ def character_search(**args):
     info = to_dict(args)
     query = {}
     print args
+
     if 'natural' in args:
         label = info.get('natural', '')
         modulus = int(str(label).partition('.')[0])
@@ -241,13 +244,44 @@ def character_search(**args):
         info["bread"] = [('Dirichlet Characters', url_for("render_Character")), ('search results', ' ')]
         info['credit'] = 'Sage'
         if (len(query) != 0):
+            count_default=100
+            if info.get('count'):
+                try:
+                    count = int(info['count'])
+                except:
+                    count = count_default
+            else:
+                info['count'] = count_default
+                count = count_default
+
+            start_default=0
+            if info.get('start'):
+                try:
+                    print "Check"
+                    start = int(info['start'])
+                    if(start < 0): 
+                        print "Check1"
+                        start += (1-(start+1)/count)*count
+                except:
+                    print "Check2"
+                    start = start_default
+            else:
+                start = start_default
             from sage.modular.dirichlet import DirichletGroup
             t,texname,number,length  = charactertable(query)
             info['characters'] = t
             info['texname'] = texname
             info['number'] = number
             info['len'] = length
+            if(start>=length): 
+                print "Check3"
+                start-=(1+(start-length)/count)*count
+            if(start<0):
+                print "Check4"
+                start=0
+            info['start'] = start
             info['title'] = 'Dirichlet Characters'
+            print start, count, length
             return render_template("dirichlet_characters/character_search.html", **info)
 
 def charactertable(query):

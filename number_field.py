@@ -454,7 +454,8 @@ def render_field_webpage(args):
     properties.extend('<tr><td align=left><b>Class group:</b><td align=left>%s</td>'%data['class_group_invs'])
     properties.extend('<tr><td align=left><b>Galois group:</b><td align=left>%s</td>'%data['galois_group'])
     properties.extend('</table>')
-    return render_template("number_field/number_field.html", info = info, properties=properties, credit=NF_credit, title = t, bread=bread)
+    del info['_id']
+    return render_template("number_field/number_field.html", properties=properties, credit=NF_credit, title = t, bread=bread, friends=info.pop('friends'), info=info )
 
 def format_coeffs(coeffs):
     return pol_to_html(str(coeff_to_poly(coeffs)))

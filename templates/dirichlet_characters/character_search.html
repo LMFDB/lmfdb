@@ -3,10 +3,15 @@
 
 {% block content %}
 
+<style type="text/css">
+table td.center {
+    text-align: center;
+}
+table td.params {
+    text-align: left;
+    font-family: monospace;
+}
 
-<h2> Further refine search </h2>
-
-<style>
 .modulus {
     font-family: serif;
     vertical-align: top;
@@ -33,16 +38,17 @@
 }
 </style>
 
-
+<h2> Further refine search </h2>
 <form>
-<table>
-
+    {#<input type="hidden" name="start" value="{{start}}"/>#}
+<table border="0">
 <tr>
-    <td align=center> {{ KNOWL('character.dirichlet.modulus', title="Modulus") }}  <input type = 'text' name = 'modulus' size=10 value={{modulus}}></td>
-    <td align=center> {{ KNOWL('character.dirichlet.conductor', title="Conductor") }} <input type='text' name='conductor' size=10 value={{conductor}}></td>
-    <td align=center> {{ KNOWL('character.dirichlet.order', title="Order") }} <input type='text' name='order'size=10 value={{order}}></td>
+    <td align=left> {{ KNOWL('character.dirichlet.modulus', title="modulus") }}  <input type = 'text' name = 'modulus' size=10 value={{modulus}}></td>
+    <td align=left> {{ KNOWL('character.dirichlet.conductor', title="conductor") }} <input type='text' name='conductor' size=10 value={{conductor}}></td>
+    <td align=left> {{ KNOWL('character.dirichlet.order', title="order") }} <input type='text' name='order'size=10 value={{order}}></td>
 <!--<td align=center>Parity <input type='text' name='parity' size=10 value={{parity}}>-->
 </tr>
+{#<td align=left colspan=4>Maximum number of characters to display <input type='text' name='count' value={{count}} size=10>#}
 </table>
 <p></p>
 <td>
@@ -52,14 +58,22 @@
 
 <h2> Results </h2>
 
-<table class="ntdata" style="table-layout:fixed">
+<script>
+ $(document).ready(function() {
+     $('#characterTable').dataTable({"bFilter":false,"aoColumnDefs": [
+         { "iDataSort": 1, "aTargets": [0] },
+         { "bSort":false, "aTargets": [0] }
+     ] } );
+} );
+</script>
+<table class="ntdata" style="table-layout:fixed" id="characterTable">
     <thead class="heading" align="center">
     <tr>
-        <th> {{ KNOWL('character.dirichlet', title="Character") }}</th>
-        <th> {{ KNOWL('character.dirichlet.modulus', title="Modulus") }}</th>
-        <th> {{ KNOWL('character.dirichlet.conductor', title="Conductor") }}</th>
-        <th> {{ KNOWL('character.dirichlet.order', title="Order") }}</th>
-        <th> {{ KNOWL('character.dirichlet.parity') }}</th>
+        <th> {{ KNOWL('character.dirichlet', title="character") }}</th>
+        <th> {{ KNOWL('character.dirichlet.modulus', title="modulus") }}</th>
+        <th> {{ KNOWL('character.dirichlet.conductor', title="conductor") }}</th>
+        <th> {{ KNOWL('character.dirichlet.order', title="order") }}</th>
+        <th> {{ KNOWL('character.dirichlet.parity', title="parity") }}</th>
     </tr>
     </thead>
     <tbody>
@@ -69,7 +83,6 @@
              <td class="modulus" align="center">
                 <a href="/Character/Dirichlet/{{characters[j].modulus()}}/{{number[j]}}">{% if characters[j].is_primitive() %}<font color="green">{% else %}<font color="blue">{% endif %}&chi;<sub>{{j}}</sub></font></a>
             </td>
-            <div class="chi">
             <td align=center>
                 <a href="/Character/Dirichlet/?modulus={{characters[j].modulus()}}&conductor={{conductor}}&order={{order}}&parity={{parity}}">{{characters[j].modulus()}}</a>
             </td>
@@ -81,10 +94,13 @@
             </td>
             <td  align=center>{% if characters[j].is_even() %}Even{% else %}Odd{% endif %}
             </td>
-        </div>
         </tr>
     {% endfor %}
     </tbody>
 </table>
+
+{#<hr>
+<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form();return false">Previous</A>
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form();return false">Next</A></td>#}
 
 {% endblock %}

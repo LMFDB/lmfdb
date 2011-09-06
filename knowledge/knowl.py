@@ -55,6 +55,9 @@ def make_keywords(content, kid, title):
   kws = filter(lambda _:_ not in common_words, kws)
   return kws
 
+# allowed qualities for knowls
+knowl_qualities = ['beta', 'ok', 'reviewed']
+
 class Knowl(object):
   def __init__(self, ID, template_kwargs = None):
     """
@@ -147,7 +150,7 @@ class Knowl(object):
   def quality(self, quality):
     """a measurment information, if this is just "beta", or reviewed ..."""
     if len(quality) == 0: return
-    if not quality in ['beta', 'ok', 'reviewed']:
+    if not quality in knowl_qualities:
       logger.warning("quality '%s' is not allowed")
       return
     self._quality = quality

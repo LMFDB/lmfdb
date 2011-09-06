@@ -1,5 +1,3 @@
-import logging
-
 from base import *
 from flask import Flask, session, g, render_template, url_for, request, redirect, make_response, abort
 
@@ -9,8 +7,10 @@ import pymongo
 from Lfunction import *
 import LfunctionComp
 import LfunctionPlot
-from utils import to_dict
+from utils import to_dict, make_logger
 from Lfunctionutilities import lfuncDStex, lfuncEPtex, lfuncFEtex
+
+logger = make_logger("LF")
 
 ##import upload2Db.py
 
@@ -18,6 +18,19 @@ from Lfunctionutilities import lfuncDStex, lfuncEPtex, lfuncFEtex
 ###########################################################################
 #   Route functions
 ###########################################################################
+
+@app.route("/L/")
+@app.route("/L/<arg1>/") # arg1 is EllipticCurve, ModularForm, Character, etc
+@app.route("/L/<arg1>/<arg2>/") # arg2 is field
+@app.route("/L/<arg1>/<arg2>/<arg3>/") #arg3 is label
+@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/")
+@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/")
+@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/")
+@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/")
+@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/")
+@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>/")
+def render_Lfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = None, arg6 = None, arg7 = None, arg8 = None, arg9 = None):
+    return render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
 
 @app.route("/Lfunction/")
 @app.route("/Lfunction/<arg1>")
@@ -28,18 +41,7 @@ from Lfunctionutilities import lfuncDStex, lfuncEPtex, lfuncFEtex
 @app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>")
 @app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>")
 @app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>")
-def render_Lfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = None, arg6 = None, arg7 = None, arg8 = None):
-    return render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
-
-@app.route("/L/")
-@app.route("/L/<arg1>") # arg1 is EllipticCurve, ModularForm, Character, etc
-@app.route("/L/<arg1>/<arg2>") # arg2 is field
-@app.route("/L/<arg1>/<arg2>/<arg3>") #arg3 is label
-@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>")
-@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
-@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>")
-@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>")
-@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>")
+@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>")
 @app.route("/L-function/")
 @app.route("/L-function/<arg1>")
 @app.route("/L-function/<arg1>/<arg2>")
@@ -49,6 +51,7 @@ def render_Lfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = 
 @app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>")
 @app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>")
 @app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>")
+@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>")
 def render_Lfunction_redirect(**args):
     args.update(request.args)
     return redirect(url_for("render_Lfunction", **args), code=301)
@@ -59,8 +62,25 @@ def render_Lfunction_redirect(**args):
 @app.route("/plotLfunction/<arg1>/<arg2>/<arg3>")
 @app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/<arg4>")
 @app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
-def plotLfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = None):
-    return render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5)
+@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>")
+@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>")
+@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>")
+@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>")
+def plotLfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = None, arg6 = None, arg7 = None, arg8 = None, arg9 = None):
+    return render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+
+@app.route("/zeroesLfunction")
+@app.route("/zeroesLfunction/<arg1>")
+@app.route("/zeroesLfunction/<arg1>/<arg2>")
+@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>")
+@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>")
+@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
+@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>")
+@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>")
+@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>")
+@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>")
+def zeroesLfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = None, arg6 = None, arg7 = None, arg8 = None, arg9 = None):
+    return render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
 
 @app.route("/browseGraph")
 def browseGraph():
@@ -78,29 +98,20 @@ def browseGraphHolo():
 def browseGraphChar():
     return render_browseGraphHolo(request.args)
 
-@app.route("/zeroesLfunction")
-@app.route("/zeroesLfunction/<arg1>")
-@app.route("/zeroesLfunction/<arg1>/<arg2>")
-@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>")
-@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>")
-@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
-def zeroesLfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = None):
-    return render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5)
 
 ###########################################################################
 #   Functions for rendering the web pages
 ###########################################################################
 
-
-
-
-def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8):
+def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9):
     args = request.args
     temp_args = to_dict(args)
-    if len(args) == 0: 
-        if arg1 == None: # this means we're at the start page
+    
+    if len(args) == 0:  #This ensures it's a navigation page 
+        if not arg1: # this means we're at the start page
             info = set_info_for_start_page()
             return render_template("LfunctionNavigate.html", **info)
+        
         elif arg1.startswith("degree"):
             degree = int(arg1[6:])
             info = { "degree" : degree }
@@ -118,9 +129,9 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8):
             
         elif arg1 == 'custom': # need a better name
             return "not yet implemented"
-            
+        
     try:
-        L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, temp_args)
+        L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, temp_args)
         
     except Exception as inst:   # There was an exception when creating the page
         error_message = ('There was an error loading this page. Please report the ' +
@@ -136,7 +147,7 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8):
 
 
     try:
-        logging.info(temp_args)
+        logger.info(temp_args)
         if temp_args['download'] == 'lcalcfile':
             return render_lcalcfile(L, request.url)
     except:
@@ -148,8 +159,9 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8):
     return render_template('Lfunction.html', **info)
     
 
-def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, temp_args):
-    if arg1 == 'Riemann' or (arg1 == 'Character' and arg2 == 'Dirichlet' and arg3 == '1' and arg4 == '0'):
+def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, temp_args):
+    if (arg1 == 'Riemann' or (arg1 == 'Character' and arg2 == 'Dirichlet' and arg3 == '1' and arg4 == '0')
+        or (arg1 == 'NumberField' and arg2 == '1.1.1.1')):
         return RiemannZeta()
 
     elif arg1 == 'Character' and arg2 == 'Dirichlet':
@@ -159,13 +171,13 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, temp_args):
         return Lfunction_EC( label = arg3)
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic': # this has args: one for weight and one for level
-        return Lfunction_EMF( **temp_args)
+        return Lfunction_EMF( level = arg5, weight = arg6, character = arg7, label = arg8, number = arg9)
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2'and arg3 == 'Q' and arg4 == 'maass':
         return Lfunction_Maass( **temp_args)
     
     elif arg1 == 'ModularForm' and (arg2 == 'GSp4' or arg2 == 'GL4' or  arg2 == 'GL3') and arg3 == 'Q' and arg4 == 'maass':
-        return Lfunction_Maass( dbid = temp_args['id'], dbName = 'Lfunction', dbColl = 'LemurellMaassHighDegree')
+        return Lfunction_Maass( dbid = arg5, dbName = 'Lfunction', dbColl = 'LemurellMaassHighDegree')
 
     elif arg1 == 'NumberField':
         return DedekindZeta( label = str(arg2))
@@ -249,7 +261,7 @@ def initLfunction(L,args, request):
 
     elif L.Ltype()  == 'riemann':
         info['bread'] = [('L-function','/L'),('Riemann Zeta','/L/Riemann')]
-        info['friends'] = [('\(\mathbb Q\)','/NumberField/1.1.1.1')]
+        info['friends'] = [('\(\mathbb Q\)','/NumberField/1.1.1.1'),  ('Dirichlet Character \(\\chi_{0}\\!\\!\\pmod{1}\)', '/Character/Dirichlet/1/0')]
 
     elif L.Ltype()  == 'dirichlet':
         snum = str(L.characternumber)
@@ -298,15 +310,18 @@ def initLfunction(L,args, request):
 
 
 def set_gaga_properties(L):
+    ''' Sets the properties in the properties box in the
+        upper right corner
+    '''
     ans = [ ('Degree',    str(L.degree))]
 
     ans.append(('Level',     str(L.level)))
     ans.append(('Sign',      str(L.sign)))
 
     if L.selfdual:
-        sd = 'Self dual'
+        sd = 'Self-dual'
     else:
-        sd = 'Not self dual'
+        sd = 'Not self-dual'
     ans.append((None,        sd))
 
     if L.primitive:
@@ -325,18 +340,8 @@ def specialValueString(L, s, sLatex):
     return '\(' + lfuncion_value_tex +'\\approx ' + latex(round(val.real(), number_of_decimals)+round(val.imag(), number_of_decimals)*I) + '\)'
 
 
-def parameterstringfromdict(dic):
-    answer = ''
-    for k, v in dic.iteritems():
-        answer += k
-        answer += '='
-        answer += v
-        answer += '&'
-    return answer[0:len(answer)-1]
-         
-
-def plotLfunction(request, arg1, arg2, arg3, arg4, arg5):
-    pythonL = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, to_dict(request.args))
+def plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9):
+    pythonL = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
     L = pythonL.sageLfunction
     # HSY: I got exceptions that "L.hardy_z_function" doesn't exist
     # SL: Reason, it's not in the distribution of Sage
@@ -351,18 +356,17 @@ def plotLfunction(request, arg1, arg2, arg3, arg4, arg5):
     os.remove(fn)
     return data
 
-def render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5):
-    data = plotLfunction(request, arg1, arg2, arg3, arg4, arg5)
+def render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9):
+    data = plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
     if not data:
-      # see note about missing "hardy_z_function" in plotLfunction()
-      return abort(404)
+        # see note about missing "hardy_z_function" in plotLfunction()
+        return abort(404)
     response = make_response(data)
     response.headers['Content-type'] = 'image/png'
     return response
 
-def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5):
-    print arg1, arg2, request.args
-    L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, to_dict(request.args))
+def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9):
+    L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
 
     if L.degree > 2 or L.Ltype()=="ellipticmodularform":  # Too slow to be rigorous here
         search_step = 0.05
@@ -381,7 +385,7 @@ def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5):
     return s[1:len(s)-1]
 
 def render_browseGraph(args):
-    logging.info(args)
+    logger.info(args)
     if 'sign' in args:
       data = LfunctionPlot.paintSvgFileAll([[args['group'], int(args['level']), args['sign']]])
     else:
@@ -391,14 +395,14 @@ def render_browseGraph(args):
     return response
 
 def render_browseGraphHolo(args):
-    logging.info(args)
+    logger.info(args)
     data = LfunctionPlot.paintSvgHolo(args['Nmin'], args['Nmax'], args['kmin'], args['kmax'])
     response = make_response(data)
     response.headers['Content-type'] = 'image/svg+xml'
     return response
 
 def render_browseGraphTMP(args):
-    logging.info(args)
+    logger.info(args)
     data = LfunctionPlot.paintSvgHoloGeneral(args['Nmin'], args['Nmax'], args['kmin'], args['kmax'],args['imagewidth'], args['imageheight'])
     response = make_response(data)
     response.headers['Content-type'] = 'image/svg+xml'
@@ -443,9 +447,9 @@ def render_showcollections_demo():
     return render_template("ShowCollectionDemo.html", info = info)
 
 def processDirichletNavigation(args):
-    logging.info(str(args))
+    logger.info(str(args))
     try:
-        logging.debug(args['start'])
+        logger.debug(args['start'])
         N = int(args['start'])
         if N < 3:
             N=3
@@ -490,7 +494,7 @@ def processDirichletNavigation(args):
 
 def processEllipticCurveNavigation(args):
     try:
-        logging.info(args['start'])
+        logger.info(args['start'])
         N = int(args['start'])
         if N < 11:
             N=11
@@ -515,11 +519,11 @@ def processEllipticCurveNavigation(args):
     s += '<tr><th scope="col">Conductor</th>\n'
     s += '<th scope="col">Isogeny Classes</th>\n</tr>\n'
     iso_dict.keys()
-    logging.info(iso_dict)
+    logger.info(iso_dict)
     for cond in iso_dict.keys():
         s += '<tr>\n<td scope="row">%s</td>' % cond
         for iso in iso_dict[cond]:
-            logging.info("%s %s" % (cond, iso))
+            logger.info("%s %s" % (cond, iso))
             s += '<td><a href="EllipticCurve/Q/%(iso)s">%(iso)s</a></td>' % { 'iso' : iso }
         s += '</tr>\n'
     s += '</table>\n'

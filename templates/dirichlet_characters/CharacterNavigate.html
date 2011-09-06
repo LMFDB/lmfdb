@@ -2,7 +2,7 @@
 
 
 {% block content %}
-<div> A {{ KNOWL('character.dirichlet') }} is an arithmetic function with certain properties. </div>
+<div> A {{ KNOWL('character.dirichlet', title="Dirichlet character") }} is an arithmetic function with certain properties. </div>
 
 <h2> Browse </h2>
 <p>
@@ -30,7 +30,7 @@
 &nbsp;&nbsp;<a href="ordbrowse=16-20">16&mdash;20</a>
 </p>
 
-<h2> Find a specific {{ KNOWL('character.dirichlet') }} </h2>
+<h2> Find a specific {{ KNOWL('character.dirichlet', title="Dirichlet character") }} </h2>
 <form>
 <input type='text' name='natural' size=10 placeholder="13.2">
 <button type='submit' name='search' value='Go'> Go </button>
@@ -43,17 +43,17 @@ Enter criteria into one or more boxes to restrict the search.
 <form>
 <table>
 <tr>    
-    <td> {{ KNOWL('character.dirichlet.modulus', title="Modulus") }} </td>
+    <td> {{ KNOWL('character.dirichlet.modulus', title="modulus") }} </td>
     <td> <input type='text' name='modulus' size = '10' placeholder="13"></td>
     <td><span class="formexample"> e.g. 5 </span></td>
 </tr>
 
 <tr>
-    <td> {{ KNOWL('character.dirichlet.conductor', title="Conductor") }} </td><td> <input type='text' name='conductor' size = '10' placeholder="5"></td><td><span class="formexample"> e.g. 5 </span></td>
+    <td> {{ KNOWL('character.dirichlet.conductor', title="conductor") }} </td><td> <input type='text' name='conductor' size = '10' placeholder="5"></td><td><span class="formexample"> e.g. 5 </span></td>
 </tr>
 
 <tr>
-    <td> {{ KNOWL('character.dirichlet.order', title="Order") }} </td><td> <input type='text' name='order' size = '10' placeholder="2"></td><td><span class="formexample"> e.g. 2 </span></td>
+    <td> {{ KNOWL('character.dirichlet.order', title="order") }} </td><td> <input type='text' name='order' size = '10' placeholder="2"></td><td><span class="formexample"> e.g. 2 </span></td>
 </tr>
 
 <!--<tr>
