@@ -428,7 +428,7 @@ blockquote p {
 /* highlighting menu entries (if their respective blueprint overwirtes the body_class variable!) */
 body.mwf #sidebar a.mwf { background: #BFB; }
 body.cmf #sidebar a.cmf { background: #BFB; }
-body.knowl #sidebar a.knowl { background: #BBF; }
+body.knowl #sidebar a.knowl { background: {{ col_knowl_d }}; }
 body.local_fields #sidebar a.local_fields { background: #BFB; }
 
 .visible {
@@ -771,7 +771,6 @@ h2 > .knowl-qm {
 .knowl-output .knowl-output.loading {
  margin-left: 0;
  margin-right: 0;
- border-right: 0;
 }
 .knowl-output.loading {
  color: grey;
@@ -924,6 +923,7 @@ background-color: #8dbdd8;
 }
 
 .dataTables_wrapper {
+    width: 557px;
 	/*position: relative;
 	min-height: 302px;
 	clear: both;
@@ -949,12 +949,10 @@ background-color: #8dbdd8;
 
 .dataTables_length {
 	width: 40%;
-	float: left;
 }
 
 .dataTables_filter {
 	width: 50%;
-	float: right;
 	text-align: right;
 }
 

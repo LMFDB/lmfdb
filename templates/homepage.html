@@ -13,6 +13,9 @@
          {% endif %}
       </div>
       <div class="topright">
+          <a href="https://docs.google.com/spreadsheet/viewform?formkey=dDJXYXBleU1BMTFERFFIdjVXVmJqdlE6MQ" target="_blank">
+             Report a Problem</a>
+            &middot;
           {% if user_is_admin -%}
             <a href="{{ url_for('users.register') }}">Registertokens</a>
             &middot;
@@ -22,8 +25,8 @@
             &middot;
             <a href="{{ url_for('users.logout') }}">Logout</a>
           {%- else -%}
-            <a href="{{ url_for('users.register_new') }}">Register</a>
-            &middot;
+            {# <a href="{{ url_for('users.register_new') }}">Register</a>
+            &middot; #}
             <a href="{{ url_for('users.info') }}">Login</a>
           {%- endif %}
           <br/>
@@ -100,7 +103,7 @@
    {# <li><a class="local_fields" href="{{ url_for('local_fields.index') }}">Local Fields</a></li> #}
 
   <h2 class="link knowl">
-     <a href="{{ url_for("knowledge.index") }}">Knowledge</a>
+     <a class="knowl" href="{{ url_for("knowledge.index") }}">Knowledge</a>
   </h2>
 
   <h2>Search</h2>

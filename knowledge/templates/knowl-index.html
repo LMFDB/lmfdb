@@ -27,24 +27,33 @@
   font-size: x-large;
   color: #006;
 }
+a.curcat {
+  font-weight: bold;
+  border-bottom: 1px solid #006;
+}
 </style>
-{% if user_is_authenticated -%}
-  <h2>Edit/Create Knowls</h2>
-  <form action="{{ url_for('.edit_form') }}" method="POST">
-    Knowl ID: <input id="knowl-edit-id" name="id"></input>
-    <button id="knowl-edit-btn">Edit</button>
-  </form>
-  <hr/>
-{%- endif %}
 
-<h1>Read Knowls</h1>
-
-<div style="margin-bottom: 20px">
-  <form action="{{ url_for('.index') }}" method="GET">
-  Search in title, ID and full text:
-  <input name="search" value="{{ search }}" placeholder="modular" />
-  <button type="submit">Search</button>
+{% if not searchmode and not categorymode %}
+<div style="margin-bottom: 10px">
+  <form method="GET" action="{{ url_for('.index') }}">
+    {% for kq in knowl_qualities -%}
+      <input type="checkbox" id="{{ kq }}" name="{{ kq }}" {% if filters[loop.index0] -%}checked{%- endif %} />
+        <label for="{{ kq }}">{{ kq|capitalize }}</label>
+    {%- endfor %}
+    <button type="submit" name="filter">Filter</button>
   </form>
+  </div>
+{% endif %}
+
+<div style="margin-bottom: 10px">
+Category:
+{% for cat in categories -%}
+ <a 
+  {% if cur_cat == cat -%}class='curcat'{%- endif %}
+  href="{{ url_for('.index', category = cat) }}">{{cat}}</a>
+   {# {% if not loop.last -%} &middot; {%- endif %} #}
+{%- endfor %}
+&mdash; <strong><a href="{{ url_for('.index') }}">clear</a></strong>
 </div>
 
 <table id="knowls" class="ntdata">
@@ -60,4 +69,14 @@
    </tr>
   {%- endfor %}
 </table>
+
+{% if user_is_authenticated -%}
+  <hr/>
+  <h2>Edit/Create Knowls</h2>
+  <form action="{{ url_for('.edit_form') }}" method="POST">
+    Knowl ID: <input id="knowl-edit-id" name="id"></input>
+    <button id="knowl-edit-btn">Edit</button>
+  </form>
+{%- endif %}
+
 {%- endblock %}

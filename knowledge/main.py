@@ -100,6 +100,16 @@ def get_bread(breads = []):
     bc.append(b)
   return bc
 
+def searchbox(q="", clear=False):
+  """returns the searchbox"""
+  searchbox = u"""\
+    <form id='knowl-search' action="%s" method="GET">
+      <input name="search" value="%s" />"""
+  if clear:
+    searchbox += '<a href="%s">clear</a>' % url_for(".index")
+  searchbox += "</form>" 
+  return searchbox % (url_for(".index"), q)
+
 @knowledge_page.route("/test")
 def test():
   """
@@ -131,17 +141,13 @@ def show(ID):
   k = Knowl(ID)
   r = render(ID, footer="0")
   b = get_bread([('%s'%k.title, url_for('.show', ID=ID))])
-  searchbox = u"""\
-    <form id='knowl-search' action="%s" method="GET">
-      <input name="search" />
-    </form>""" % url_for(".index")
     
   return render_template("knowl-show.html",
          title = k.title,
          k = k,
          render = r,
          bread = b,
-         navi_raw = searchbox)
+         navi_raw = searchbox())
 
 @knowledge_page.route("/delete/<ID>")
 @admin_required
@@ -206,11 +212,11 @@ def render(ID, footer=None, kwargs = None):
     con = request.args.get("content", k.content)
     foot = footer or request.args.get("footer", "1") 
 
-  authors = []
-  for a in k.author_links():
-    authors.append("<a href='%s'>%s</a>" % 
-      (url_for('users.profile', userid=a['_id']), a['full_name'] or a['_id'] ))
-  authors = ', '.join(authors)
+  #authors = []
+  #for a in k.author_links():
+  #  authors.append("<a href='%s'>%s</a>" % 
+  #    (url_for('users.profile', userid=a['_id']), a['full_name'] or a['_id'] ))
+  #authors = ', '.join(authors)
 
   render_me = u"""\
   {%% include "knowl-defs.html" %%}
@@ -229,13 +235,12 @@ def render(ID, footer=None, kwargs = None):
       &middot;
       <a href="{{ url_for('.edit', ID='%(ID)s') }}">edit</a> 
     {%% endif %%}
-    &middot;
-    Authors: %(authors)s
   </div>"""
+  # """ &middot; Authors: %(authors)s """
   render_me += "</div>"
   # render_me = render_me % {'content' : con, 'ID' : k.id }
   # markdown enabled
-  render_me = render_me % {'content' : md.convert(con), 'ID' : k.id, 'authors' : authors }
+  render_me = render_me % {'content' : md.convert(con), 'ID' : k.id } #, 'authors' : authors }
   # Pass the text on to markdown.  Note, backslashes need to be escaped for this, but not for the javascript markdown parser
 
   #logger.debug("rendering template string:\n%s" % render_me)
@@ -252,10 +257,37 @@ def index():
   get_knowls().ensure_index('_keywords')
   keyword = request.args.get("search", "").lower()
   keywords = filter(lambda _:len(_) >= 3, keyword.split(" "))
-  logger.debug("keywords: %s" % keywords)
+  #logger.debug("keywords: %s" % keywords)
   keyword_q = {'_keywords' : { "$all" : keywords}}
-  s_query = keyword_q if keyword else {}
+
+  cur_cat = request.args.get("category", "")
+  
+  qualities = []
+  defaults = "filter" not in request.args
+  searchmode = "search" in request.args
+  categorymode = "category" in request.args
+
+  from knowl import knowl_qualities
+  # TODO wrap this into a loop:
+  reviewed = request.args.get("reviewed", "") == "on" or defaults or searchmode
+  ok       = request.args.get("ok", "") == "on"       or defaults or searchmode
+  beta     = request.args.get("beta", "") == "on"     or defaults or searchmode
+
+  if reviewed: qualities.append("reviewed")
+  if ok:       qualities.append("ok")
+  if beta:     qualities.append("beta")
+
+  quality_q = { '$in' : qualities }
+
+  s_query = {}
   s_query['title'] = { "$exists" : True }
+  if searchmode:
+    s_query['quality'] = quality_q
+
+  if categorymode:
+    s_query['_id'] = { "$regex" : r"^%s\..+" % cur_cat }
+
+  logger.debug("search query: %s" % s_query)
   knowls = get_knowls().find(s_query, fields=['title'])
 
   def first_char(k):
@@ -270,6 +302,9 @@ def index():
   #   if keyword in knwl['title'].lower(): return True
   #   return False
   # if keyword: knowls = filter(incl, knowls)
+  
+  from knowl import get_categories 
+  cats = get_categories()
 
   knowls = sorted(knowls, key = lambda x : x['title'].lower())
   from itertools import groupby
@@ -278,6 +313,13 @@ def index():
          title  = "Knowledge Database",
          bread  = get_bread(),
          knowls = knowls,
-         search = keyword)
+         search = keyword,
+         navi_raw = searchbox(request.args.get("search", ""), searchmode),
+         knowl_qualities = knowl_qualities,
+         searchmode = searchmode,
+         filters = (beta, ok, reviewed),
+         categories = cats,
+         cur_cat = cur_cat,
+         categorymode = categorymode)
 
 
