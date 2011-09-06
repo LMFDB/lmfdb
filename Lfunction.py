@@ -485,6 +485,7 @@ class Lfunction_EMF(Lfunction):
         #Check for compulsory arguments
         if not ('weight' in args.keys() and 'level' in args.keys()):
             raise KeyError, "You have to supply weight and level for an elliptic modular form L-function"
+        print 'HERE IS THE START'
         logger.debug(str(args))
         # Initialize default values
         if not args['character']:
