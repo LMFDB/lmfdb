@@ -771,7 +771,6 @@ h2 > .knowl-qm {
 .knowl-output .knowl-output.loading {
  margin-left: 0;
  margin-right: 0;
- border-right: 0;
 }
 .knowl-output.loading {
  color: grey;

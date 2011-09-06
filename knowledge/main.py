@@ -212,11 +212,11 @@ def render(ID, footer=None, kwargs = None):
     con = request.args.get("content", k.content)
     foot = footer or request.args.get("footer", "1") 
 
-  authors = []
-  for a in k.author_links():
-    authors.append("<a href='%s'>%s</a>" % 
-      (url_for('users.profile', userid=a['_id']), a['full_name'] or a['_id'] ))
-  authors = ', '.join(authors)
+  #authors = []
+  #for a in k.author_links():
+  #  authors.append("<a href='%s'>%s</a>" % 
+  #    (url_for('users.profile', userid=a['_id']), a['full_name'] or a['_id'] ))
+  #authors = ', '.join(authors)
 
   render_me = u"""\
   {%% include "knowl-defs.html" %%}
@@ -235,13 +235,12 @@ def render(ID, footer=None, kwargs = None):
       &middot;
       <a href="{{ url_for('.edit', ID='%(ID)s') }}">edit</a> 
     {%% endif %%}
-    &middot;
-    Authors: %(authors)s
   </div>"""
+  # """ &middot; Authors: %(authors)s """
   render_me += "</div>"
   # render_me = render_me % {'content' : con, 'ID' : k.id }
   # markdown enabled
-  render_me = render_me % {'content' : md.convert(con), 'ID' : k.id, 'authors' : authors }
+  render_me = render_me % {'content' : md.convert(con), 'ID' : k.id } #, 'authors' : authors }
   # Pass the text on to markdown.  Note, backslashes need to be escaped for this, but not for the javascript markdown parser
 
   #logger.debug("rendering template string:\n%s" % render_me)
