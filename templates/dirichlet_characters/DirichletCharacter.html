@@ -37,6 +37,7 @@ table.navi td {
 table.props tr td:first-child {
     width: 5em;
 }
+
 </style>
         <div align="right">
             <font size="3">Show commands for:</font>
@@ -157,6 +158,7 @@ table.props tr td:first-child {
             <input id="calc-gauss-input" size=10 placeholder="2">
             <button id="calc-gauss-go">Go</button>
             <span class="formexample"> e.g. 2 </span>
+            <div class="slider" id="slider-gauss"></div>
         </form>
         <div class="output"><span id="calc-gauss-output"></span></div>
         <h2>
@@ -164,9 +166,10 @@ table.props tr td:first-child {
         </h2>
         <div class = 'sage nodisplay code'>sage: chi.jacobi_sum()</div>
         <form> &nbsp;&nbsp;&nbsp;{{ jacobi_sum }} 
-            <input id="calc-jacobi-input" size="10" placeholder="13.2">
+            <input id="calc-jacobi-input" size="10" placeholder="{{modulus}}.{{number|int - 1}}">
             <button id="calc-jacobi-go"> Go </button>
-            <span class="formexample"> e.g. 13.2 </span>
+            <span class="formexample"> e.g. {{modulus}}.{{number|int - 1}}</span>
+            <div class="slider" id="slider-jacobi-b"></div>
         </form>
         <div class="output"><span id="calc-jacobi-output"></span></div>
         <h2>
@@ -177,6 +180,8 @@ table.props tr td:first-child {
             <input id="calc-kloosterman-input" size=10 placeholder="1,2">
             <button id="calc-kloosterman-go"> Go </button>
             <span class="formexample"> e.g. 1,2</span>
+            <div class="slider" id="slider-kloosterman-a"></div>
+            <div class="slider" id="slider-kloosterman-b"></div>
         </form>
         <div class="output"><span id="calc-kloosterman-output"></span></div>
 
@@ -224,8 +229,47 @@ $(function() {
     $("#calc-kloosterman-input").keypress(function(e) {
         if (e.which == 13) kloosterman_handler(e);
     });
-});
 
+    $( "#slider-gauss" ).slider({ value:2, min: 1, max: 5000, step: 1,
+        change: function( event, ui ) {
+          $( "#calc-gauss-input" ).val(ui.value );
+          gauss_handler(event);
+        }
+     });
+
+    function jacobi_slider_handler(event, ui) {
+      var a = {{ modulus }};
+      var b = $("#slider-jacobi-b").slider("value");
+      $( "#calc-jacobi-input" ).val(a+"."+b);
+      jacobi_handler(event);
+    }; 
+
+    $( "#slider-jacobi-b").slider({ value:{{ number|int - 1 }}, min: 0, max: {{eulerphi}}, step: 1,
+        change: function( event, ui ) {
+          jacobi_slider_handler(event);
+        }
+     });
+
+    function kloosterman_slider_handler(event, ui) {
+      var a = $("#slider-kloosterman-a").slider("value");
+      var b = $("#slider-kloosterman-b").slider("value");
+      $( "#calc-kloosterman-input" ).val(""+a+","+b);
+      kloosterman_handler(event);
+    }; 
+
+    $( "#slider-kloosterman-a" ).slider({ value:1, min: 1, max: 5000, step: 1,
+      change: function( event, ui ) {
+        kloosterman_slider_handler(event, ui);
+       }
+     });
+
+    $( "#slider-kloosterman-b" ).slider({ value:2, min: 1, max: 5000, step: 1,
+      change: function( event, ui ) {
+        kloosterman_slider_handler(event, ui);
+      }
+     });
+
+});
 </script>
 {% endblock %}
 
