@@ -131,6 +131,7 @@ class Knowl(object):
     """deletes this knowl from the db. (DANGEROUS, ADMIN ONLY!)"""
     get_deleted_knowls().save(get_knowls().find_one({'_id' : self._id}))
     get_knowls().remove({'_id' : self._id})
+    refresh_knowl_categories()
 
   @property
   def authors(self):
