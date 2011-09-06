@@ -33,68 +33,68 @@ def render_Lfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = 
     return render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
 
 @app.route("/Lfunction/")
-@app.route("/Lfunction/<arg1>")
-@app.route("/Lfunction/<arg1>/<arg2>")
-@app.route("/Lfunction/<arg1>/<arg2>/<arg3>")
-@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>")
-@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
-@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>")
-@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>")
-@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>")
-@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>")
+@app.route("/Lfunction/<arg1>/")
+@app.route("/Lfunction/<arg1>/<arg2>/")
+@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/")
+@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>/")
+@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/")
+@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/")
+@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/")
+@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/")
+@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>/")
 @app.route("/L-function/")
-@app.route("/L-function/<arg1>")
-@app.route("/L-function/<arg1>/<arg2>")
-@app.route("/L-function/<arg1>/<arg2>/<arg3>")
-@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>")
-@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
-@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>")
-@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>")
-@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>")
-@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>")
+@app.route("/L-function/<arg1>/")
+@app.route("/L-function/<arg1>/<arg2>/")
+@app.route("/L-function/<arg1>/<arg2>/<arg3>/")
+@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/")
+@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/")
+@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/")
+@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/")
+@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/")
+@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>/")
 def render_Lfunction_redirect(**args):
     args.update(request.args)
     return redirect(url_for("render_Lfunction", **args), code=301)
 
-@app.route("/plotLfunction")
-@app.route("/plotLfunction/<arg1>")
-@app.route("/plotLfunction/<arg1>/<arg2>")
-@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>")
-@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/<arg4>")
-@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
-@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>")
-@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>")
-@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>")
-@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>")
+@app.route("/plotLfunction/")
+@app.route("/plotLfunction/<arg1>/")
+@app.route("/plotLfunction/<arg1>/<arg2>/")
+@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/")
+@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/<arg4>/")
+@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/")
+@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/")
+@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/")
+@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/")
+@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>/")
 def plotLfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = None, arg6 = None, arg7 = None, arg8 = None, arg9 = None):
     return render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
 
-@app.route("/zeroesLfunction")
-@app.route("/zeroesLfunction/<arg1>")
-@app.route("/zeroesLfunction/<arg1>/<arg2>")
-@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>")
-@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>")
-@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
-@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>")
-@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>")
-@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>")
-@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>")
+@app.route("/zeroesLfunction/")
+@app.route("/zeroesLfunction/<arg1>/")
+@app.route("/zeroesLfunction/<arg1>/<arg2>/")
+@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/")
+@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>/")
+@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/")
+@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/")
+@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/")
+@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/")
+@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>/")
 def zeroesLfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = None, arg6 = None, arg7 = None, arg8 = None, arg9 = None):
     return render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
 
-@app.route("/browseGraph")
+@app.route("/browseGraph/")
 def browseGraph():
     return render_browseGraph(request.args)
 
-@app.route("/browseGraphTMP")
+@app.route("/browseGraphTMP/")
 def browseGraphTMP():
     return render_browseGraphTMP(request.args)
 
-@app.route("/browseGraphHolo")
+@app.route("/browseGraphHolo/")
 def browseGraphHolo():
     return render_browseGraphHolo(request.args)
 
-@app.route("/browseGraphChar")
+@app.route("/browseGraphChar/")
 def browseGraphChar():
     return render_browseGraphHolo(request.args)
 
@@ -121,11 +121,12 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
                 info["contents"] = [LfunctionPlot.getOneGraphHtmlChar(1,35,1,13)]
                 info['friends'] = [('Dirichlet Characters', '/Character/Dirichlet/')]
             elif degree == 2:
-                info["contents"] = [processEllipticCurveNavigation(args), LfunctionPlot.getOneGraphHtmlHolo(1, 22, 2, 14)]
+                info["contents"] = [processEllipticCurveNavigation(11,65), LfunctionPlot.getOneGraphHtmlHolo(1, 6, 2, 14),
+                                    processMaassNavigation()]
             elif degree == 3 or degree == 4:
                 info["contents"] = LfunctionPlot.getAllMaassGraphHtml(degree)
                 
-            return render_template("DegreeNavigateL.html", info=info, title = 'Degree ' + str(degree)+ ' L-functions', bread = info["bread"])
+            return render_template("DegreeNavigateL.html", title = 'Degree ' + str(degree)+ ' L-functions', **info)
             
         elif arg1 == 'custom': # need a better name
             return "not yet implemented"
@@ -171,6 +172,7 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         return Lfunction_EC( label = arg3)
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic': # this has args: one for weight and one for level
+        logger.debug(arg5+arg6+arg7+arg8+arg9)
         return Lfunction_EMF( level = arg5, weight = arg6, character = arg7, label = arg8, number = arg9)
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2'and arg3 == 'Q' and arg4 == 'maass':
@@ -446,85 +448,99 @@ def render_showcollections_demo():
     info = {'collections' : dbList}
     return render_template("ShowCollectionDemo.html", info = info)
 
-def processDirichletNavigation(args):
-    logger.info(str(args))
-    try:
-        logger.debug(args['start'])
-        N = int(args['start'])
-        if N < 3:
-            N=3
-        elif N > 100:
-            N=100
-    except:
-        N = 3
-    try:
-        length = int(args['length'])
-        if length < 1:
-            length = 1
-        elif length > 20:
-            length = 20
-    except:
-        length = 10
-    try:
-        numcoeff = int(args['numcoeff'])
-    except:
-        numcoeff = 50
-    chars = LfunctionComp.charactertable(N, N+length,'primitive')
-    s = '<table>\n'
-    s += '<tr>\n<th scope="col">Conductor</th>\n'
-    s += '<th scope="col">Primitive characters</th>\n</tr>\n'
-    for i in range(N,N+length):
-        s += '<tr>\n<th scope="row">' + str(i) + '</th>\n'
-        s += '<td>\n'
-        j = i-N
-        for k in range(len(chars[j][1])):
-            s += '<a style=\'display:inline\' href="Character/Dirichlet/'
-            s += str(i)
-            s += '/'
-            s += str(chars[j][1][k])
-            s += '/&numcoeff='
-            s += str(numcoeff)
-            s += '">'
-            s += '\(\chi_{' + str(chars[j][1][k]) + '}\)</a> '
-        s += '</td>\n</tr>\n'
-    s += '</table>\n'
-    return s
-    #info['contents'] = s
-    #return info
+## NOT USED
+##def processDirichletNavigation(args):
+##    logger.info(str(args))
+##    try:
+##        logger.debug(args['start'])
+##        N = int(args['start'])
+##        if N < 3:
+##            N=3
+##        elif N > 100:
+##            N=100
+##    except:
+##        N = 3
+##    try:
+##        length = int(args['length'])
+##        if length < 1:
+##            length = 1
+##        elif length > 20:
+##            length = 20
+##    except:
+##        length = 10
+##    try:
+##        numcoeff = int(args['numcoeff'])
+##    except:
+##        numcoeff = 50
+##    chars = LfunctionComp.charactertable(N, N+length,'primitive')
+##    s = '<table>\n'
+##    s += '<tr>\n<th scope="col">Conductor</th>\n'
+##    s += '<th scope="col">Primitive characters</th>\n</tr>\n'
+##    for i in range(N,N+length):
+##        s += '<tr>\n<th scope="row">' + str(i) + '</th>\n'
+##        s += '<td>\n'
+##        j = i-N
+##        for k in range(len(chars[j][1])):
+##            s += '<a style=\'display:inline\' href="Character/Dirichlet/'
+##            s += str(i)
+##            s += '/'
+##            s += str(chars[j][1][k])
+##            s += '/&numcoeff='
+##            s += str(numcoeff)
+##            s += '">'
+##            s += '\(\chi_{' + str(chars[j][1][k]) + '}\)</a> '
+##        s += '</td>\n</tr>\n'
+##    s += '</table>\n'
+##    return s
+##    #info['contents'] = s
+##    #return info
 
-def processEllipticCurveNavigation(args):
+def processEllipticCurveNavigation(startCond, endCond):
     try:
-        logger.info(args['start'])
-        N = int(args['start'])
+        N = startCond
         if N < 11:
             N=11
         elif N > 100:
             N=100
     except:
         N = 11
+        
     try:
-        length = int(args['length'])
-        if length < 1:
-            length = 1
-        elif length > 20:
-            length = 20
+        if endCond > 500:
+            end = 500
+        else:
+            end = endCond
+            
     except:
-        length = 10
-    try:
-        numcoeff = int(args['numcoeff'])
-    except:
-        numcoeff = 50
-    iso_dict = LfunctionComp.isogenyclasstable(N, N+length)
-    s = '<table>'
-    s += '<tr><th scope="col">Conductor</th>\n'
-    s += '<th scope="col">Isogeny Classes</th>\n</tr>\n'
-    iso_dict.keys()
-    logger.info(iso_dict)
-    for cond in iso_dict.keys():
-        s += '<tr>\n<td scope="row">%s</td>' % cond
-        for iso in iso_dict[cond]:
-            logger.info("%s %s" % (cond, iso))
-            s += '<td><a href="EllipticCurve/Q/%(iso)s">%(iso)s</a></td>' % { 'iso' : iso }
+        end = 100
+        
+    iso_list = LfunctionComp.isogenyclasstable(N, end)
+    s = '<h5>Examples of L-functions attached to isogeny classes of elliptic curves</h5>'
+    s += '<table>'
+    
+    logger.debug(iso_list)
+
+    counter = 0
+    nr_of_columns = 10
+    for label in iso_list:
+        if counter==0:
+            s += '<tr>'
+            
+        counter += 1
+        s += '<td><a href="/L/EllipticCurve/Q/%s/">%s</a></td>\n' % (label,label)
+            
+        if counter == nr_of_columns:
+            s += '</tr>\n'
+            counter = 0
+
+    if counter>0:
         s += '</tr>\n'
+        
     s += '</table>\n'
     return s
+
+def processMaassNavigation():
+    s = "Yes, this is in the pipeline."
+
+    return s
+
