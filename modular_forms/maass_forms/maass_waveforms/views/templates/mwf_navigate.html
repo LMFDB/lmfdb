@@ -30,7 +30,7 @@ function set_value(name,val) {
 
 </script>
 {#{ info | safe } #}
-Here you can browse {{KNOWL('mwf.maass_waveforms',title='Maass Forms')}} over \( \mathrm{GL}_{2}(\mathbb{Q})\) 
+Here you can browse {{KNOWL('mf.maass.mwf',title='Maass Forms')}} over \( \mathrm{GL}_{2}(\mathbb{Q})\) 
 
 <h1>Browse</h1>
 <form name="browse" method="get" action="{{url_for('.render_maass_waveforms')}}">
@@ -53,9 +53,13 @@ Here you can browse {{KNOWL('mwf.maass_waveforms',title='Maass Forms')}} over \(
   <tr>
     <td>
       <h1>Find a specific Maass form</h1>
-      <form name="search" method = "post" action="{{url_for('.render_maass_waveforms')}}">	  <input type="text" name="jump_to" value="" placeholder="1.12"> <span class="formexample">(gives the 12th eigenvalue on the modular group)</span>
-        
+      <form name="search" method = "post" action="{{url_for('.render_maass_waveforms')}}">	  
+        <input type="text" name="jump_to" value="" placeholder="1.12"> 
 	<button type="submit" value="Jump">Find</button>
+        <br>
+        <span class="formexample">(gives the 12th eigenvalue on the modular group)</span>
+        
+
       </form>
     </td>
   </tr>

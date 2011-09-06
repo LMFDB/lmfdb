@@ -112,10 +112,10 @@ class WebCharacter:
         self.lth = len(self.vals)
         #chiv = []
     #determine if the character is real
-        self.sign = True
+        self.sign = "True"
         for v in chivals:
             if abs(imag_part(v)) > 0.0001:
-                self.sign = False
+                self.sign = "False"
         chizero = G[0]
         self.gauss_sum = chi.gauss_sum(1)
         if chi.gauss_sum(1) != 0:
@@ -160,15 +160,15 @@ class WebCharacter:
         conductor = str(self.conductor)
         primitive = self.primitive
         if primitive:
-            prim = 'Primitive'
+            self.prim = "Yes"
         else:
-            prim = 'Non-primitive'
+            self.prim = "No"
         order = str(self.order)
         if self.sign:
-            sign = 'Real'
+            self.real = "Yes"
         else: 
-            sign = 'Complex'
-        self.properties = [("Conductor", [conductor]), ("Order", [order]), ("Parity", [self.parity]), (sign, [""]), (prim, [""])]
+            self.real = "No"
+        self.properties = [("Conductor", [conductor]), ("Order", [order]), ("Parity", [self.parity]), ("Real", [self.real]), ("Primitive", [self.prim])]
         #self.properties = ['<br><table><tr><td align=left><b>Conductor:</b>','<td align=left> %s</td>'%(conductor)]
         #self.properties.extend(['<tr><td align=left><b>Order:</b>', '<td align=left>%s</td>'%(order)])
         #self.properties.extend(['<tr><td align=left><b>Parity:</b>', '<td align=left>%s</td>'%(self.parity)])

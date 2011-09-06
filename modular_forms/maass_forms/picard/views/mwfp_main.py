@@ -1,15 +1,15 @@
 import flask
 from flask import render_template,url_for,request,render_template_string
-import bson
+#import bson
 #import base
-from base import app
+#from base import app
 #from  modular_forms.maass_forms.picard import MWFP,mwfp,mwfp_logger
 #logger = mwfp_logger
 #from  modular_forms.maass_forms.maass_waveform import MWFTable
-import modular_forms.maass_forms
-from modular_forms.maass_forms.picard.backend.mwf_picard_utils import *
-from modular_forms.maass_forms.picard.backend.mwfp_class import *
-import jinja2
+#import modular_forms.maass_forms
+#from modular_forms.maass_forms.picard.backend.mwfp_utils import *
+from modular_forms.maass_forms.picard.backend.mwfp_classes import *
+#import jinja2
 from flask import Blueprint
 
 
@@ -26,7 +26,7 @@ def body_class():
 @mwfp.route("/",methods=['GET','POST'])
 def render_picard_maass_forms():
     return render_picard_test()
-    htp = connect_db('HTPicard').picard #base.getDBConnection().HTPicard.picard
+    htp = connect_db('HTPicard').picard #base.getDBConnection().HTPicard.picard
     docid = request.args.get('id', None)   
     test =  request.args.get('test', None)   
     if test:

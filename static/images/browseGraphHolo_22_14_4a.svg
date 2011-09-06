@@ -1,0 +1,992 @@
+<svg  xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>
+<line x1='0' y1='440' x2='2000' y2='440' style='stroke:rgb(0,0,0);'/>
+<line x1='0' y1='440' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>
+<line x1='90' y1='436' x2='90' y2='440' style='stroke:rgb(0,0,0);'/>
+<line x1='180' y1='436' x2='180' y2='440' style='stroke:rgb(0,0,0);'/>
+<line x1='270' y1='436' x2='270' y2='440' style='stroke:rgb(0,0,0);'/>
+<line x1='360' y1='436' x2='360' y2='440' style='stroke:rgb(0,0,0);'/>
+<line x1='450' y1='436' x2='450' y2='440' style='stroke:rgb(0,0,0);'/>
+<line x1='540' y1='436' x2='540' y2='440' style='stroke:rgb(0,0,0);'/>
+<line x1='630' y1='436' x2='630' y2='440' style='stroke:rgb(0,0,0);'/>
+<line x1='720' y1='436' x2='720' y2='440' style='stroke:rgb(0,0,0);'/>
+<line x1='810' y1='436' x2='810' y2='440' style='stroke:rgb(0,0,0);'/>
+<line x1='900' y1='436' x2='900' y2='440' style='stroke:rgb(0,0,0);'/>
+<line x1='990' y1='436' x2='990' y2='440' style='stroke:rgb(0,0,0);'/>
+<line x1='1080' y1='436' x2='1080' y2='440' style='stroke:rgb(0,0,0);'/>
+<line x1='1170' y1='436' x2='1170' y2='440' style='stroke:rgb(0,0,0);'/>
+<line x1='1260' y1='436' x2='1260' y2='440' style='stroke:rgb(0,0,0);'/>
+<line x1='1350' y1='436' x2='1350' y2='440' style='stroke:rgb(0,0,0);'/>
+<line x1='1440' y1='436' x2='1440' y2='440' style='stroke:rgb(0,0,0);'/>
+<line x1='1530' y1='436' x2='1530' y2='440' style='stroke:rgb(0,0,0);'/>
+<line x1='1620' y1='436' x2='1620' y2='440' style='stroke:rgb(0,0,0);'/>
+<line x1='1710' y1='436' x2='1710' y2='440' style='stroke:rgb(0,0,0);'/>
+<line x1='1800' y1='436' x2='1800' y2='440' style='stroke:rgb(0,0,0);'/>
+<line x1='1890' y1='436' x2='1890' y2='440' style='stroke:rgb(0,0,0);'/>
+<line x1='1980' y1='436' x2='1980' y2='440' style='stroke:rgb(0,0,0);'/>
+<text x='87' y='432' style='fill:rgb(102,102,102);font-size:11px;'>1</text>
+<line y1='0' x1='90' y2='440' x2='90' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>
+<text x='177' y='432' style='fill:rgb(102,102,102);font-size:11px;'>2</text>
+<line y1='0' x1='180' y2='440' x2='180' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>
+<text x='267' y='432' style='fill:rgb(102,102,102);font-size:11px;'>3</text>
+<line y1='0' x1='270' y2='440' x2='270' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>
+<text x='357' y='432' style='fill:rgb(102,102,102);font-size:11px;'>4</text>
+<line y1='0' x1='360' y2='440' x2='360' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>
+<text x='447' y='432' style='fill:rgb(102,102,102);font-size:11px;'>5</text>
+<line y1='0' x1='450' y2='440' x2='450' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>
+<text x='537' y='432' style='fill:rgb(102,102,102);font-size:11px;'>6</text>
+<line y1='0' x1='540' y2='440' x2='540' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>
+<text x='627' y='432' style='fill:rgb(102,102,102);font-size:11px;'>7</text>
+<line y1='0' x1='630' y2='440' x2='630' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>
+<text x='717' y='432' style='fill:rgb(102,102,102);font-size:11px;'>8</text>
+<line y1='0' x1='720' y2='440' x2='720' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>
+<text x='807' y='432' style='fill:rgb(102,102,102);font-size:11px;'>9</text>
+<line y1='0' x1='810' y2='440' x2='810' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>
+<text x='894' y='432' style='fill:rgb(102,102,102);font-size:11px;'>10</text>
+<line y1='0' x1='900' y2='440' x2='900' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>
+<text x='984' y='432' style='fill:rgb(102,102,102);font-size:11px;'>11</text>
+<line y1='0' x1='990' y2='440' x2='990' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>
+<text x='1074' y='432' style='fill:rgb(102,102,102);font-size:11px;'>12</text>
+<line y1='0' x1='1080' y2='440' x2='1080' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>
+<text x='1164' y='432' style='fill:rgb(102,102,102);font-size:11px;'>13</text>
+<line y1='0' x1='1170' y2='440' x2='1170' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>
+<text x='1254' y='432' style='fill:rgb(102,102,102);font-size:11px;'>14</text>
+<line y1='0' x1='1260' y2='440' x2='1260' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>
+<text x='1344' y='432' style='fill:rgb(102,102,102);font-size:11px;'>15</text>
+<line y1='0' x1='1350' y2='440' x2='1350' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>
+<text x='1434' y='432' style='fill:rgb(102,102,102);font-size:11px;'>16</text>
+<line y1='0' x1='1440' y2='440' x2='1440' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>
+<text x='1524' y='432' style='fill:rgb(102,102,102);font-size:11px;'>17</text>
+<line y1='0' x1='1530' y2='440' x2='1530' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>
+<text x='1614' y='432' style='fill:rgb(102,102,102);font-size:11px;'>18</text>
+<line y1='0' x1='1620' y2='440' x2='1620' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>
+<text x='1704' y='432' style='fill:rgb(102,102,102);font-size:11px;'>19</text>
+<line y1='0' x1='1710' y2='440' x2='1710' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>
+<text x='1794' y='432' style='fill:rgb(102,102,102);font-size:11px;'>20</text>
+<line y1='0' x1='1800' y2='440' x2='1800' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>
+<text x='1884' y='432' style='fill:rgb(102,102,102);font-size:11px;'>21</text>
+<line y1='0' x1='1890' y2='440' x2='1890' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>
+<text x='1974' y='432' style='fill:rgb(102,102,102);font-size:11px;'>22</text>
+<line y1='0' x1='1980' y2='440' x2='1980' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>
+<line x1='0' y1='410' x2='4' y2='410' style='stroke:rgb(0,0,0);'/>
+<line x1='0' y1='380' x2='4' y2='380' style='stroke:rgb(0,0,0);'/>
+<line x1='0' y1='350' x2='4' y2='350' style='stroke:rgb(0,0,0);'/>
+<line x1='0' y1='320' x2='4' y2='320' style='stroke:rgb(0,0,0);'/>
+<line x1='0' y1='290' x2='4' y2='290' style='stroke:rgb(0,0,0);'/>
+<line x1='0' y1='260' x2='4' y2='260' style='stroke:rgb(0,0,0);'/>
+<line x1='0' y1='230' x2='4' y2='230' style='stroke:rgb(0,0,0);'/>
+<line x1='0' y1='200' x2='4' y2='200' style='stroke:rgb(0,0,0);'/>
+<line x1='0' y1='170' x2='4' y2='170' style='stroke:rgb(0,0,0);'/>
+<line x1='0' y1='140' x2='4' y2='140' style='stroke:rgb(0,0,0);'/>
+<line x1='0' y1='110' x2='4' y2='110' style='stroke:rgb(0,0,0);'/>
+<line x1='0' y1='80' x2='4' y2='80' style='stroke:rgb(0,0,0);'/>
+<line x1='0' y1='50' x2='4' y2='50' style='stroke:rgb(0,0,0);'/>
+<line x1='0' y1='20' x2='4' y2='20' style='stroke:rgb(0,0,0);'/>
+<text x='5' y='383' style='fill:rgb(102,102,102);font-size:11px;'>2</text>
+<text x='5' y='323' style='fill:rgb(102,102,102);font-size:11px;'>4</text>
+<line x1='0' y1='320' x2='2000' y2='320' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>
+<text x='5' y='263' style='fill:rgb(102,102,102);font-size:11px;'>6</text>
+<text x='5' y='203' style='fill:rgb(102,102,102);font-size:11px;'>8</text>
+<line x1='0' y1='200' x2='2000' y2='200' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>
+<text x='5' y='143' style='fill:rgb(102,102,102);font-size:11px;'>10</text>
+<text x='5' y='83' style='fill:rgb(102,102,102);font-size:11px;'>12</text>
+<line x1='0' y1='80' x2='2000' y2='80' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>
+<text x='5' y='23' style='fill:rgb(102,102,102);font-size:11px;'>14</text>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/1/0/a/0' target='_top'>
+<circle cx='94.95' cy='80.0' r='3.3' style='fill:rgb(63,63,255)'><title>(1, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/2/0/a/0' target='_top'>
+<circle cx='184.95' cy='200.0' r='3.3' style='fill:rgb(63,63,255)'><title>(2, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/2/0/a/0' target='_top'>
+<circle cx='184.95' cy='140.0' r='3.3' style='fill:rgb(63,63,255)'><title>(2, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/2/0/a/0' target='_top'>
+<circle cx='175.05' cy='20.0' r='3.3' style='fill:rgb(191,191,0)'><title>(2, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/2/0/b/0' target='_top'>
+<circle cx='184.95' cy='20.0' r='3.3' style='fill:rgb(63,63,255)'><title>(2, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/3/0/a/0' target='_top'>
+<circle cx='274.95' cy='260.0' r='3.3' style='fill:rgb(63,63,255)'><title>(3, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/3/0/a/0' target='_top'>
+<circle cx='274.95' cy='200.0' r='3.3' style='fill:rgb(63,63,255)'><title>(3, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/3/0/a/0' target='_top'>
+<circle cx='265.05' cy='140.0' r='3.3' style='fill:rgb(191,191,0)'><title>(3, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/3/0/b/0' target='_top'>
+<circle cx='274.95' cy='140.0' r='3.3' style='fill:rgb(63,63,255)'><title>(3, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/3/0/a/0' target='_top'>
+<circle cx='274.95' cy='80.0' r='3.3' style='fill:rgb(63,63,255)'><title>(3, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/3/0/a/0' target='_top'>
+<circle cx='265.05' cy='20.0' r='3.3' style='fill:rgb(191,191,0)'><title>(3, 14)</title></circle></a>
+<line x1='274.95' y1='20.0' x2='284.85' y2='20.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/3/0/b/0' target='_top'>
+<circle cx='274.95' cy='20.0' r='3.3' style='fill:rgb(63,63,255)'><title>(3, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/3/0/b/1' target='_top'>
+<circle cx='284.85' cy='20.0' r='3.3' style='fill:rgb(63,63,255)'><title>(3, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/4/0/a/0' target='_top'>
+<circle cx='364.95' cy='260.0' r='3.3' style='fill:rgb(63,63,255)'><title>(4, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/4/0/a/0' target='_top'>
+<circle cx='364.95' cy='140.0' r='3.3' style='fill:rgb(63,63,255)'><title>(4, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/4/0/a/0' target='_top'>
+<circle cx='355.05' cy='80.0' r='3.3' style='fill:rgb(191,191,0)'><title>(4, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/4/0/a/0' target='_top'>
+<circle cx='364.95' cy='20.0' r='3.3' style='fill:rgb(63,63,255)'><title>(4, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/5/0/a/0' target='_top'>
+<circle cx='454.95' cy='320.0' r='3.3' style='fill:rgb(63,63,255)'><title>(5, 4)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/5/0/a/0' target='_top'>
+<circle cx='454.95' cy='260.0' r='3.3' style='fill:rgb(63,63,255)'><title>(5, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/5/0/a/0' target='_top'>
+<circle cx='445.05' cy='200.0' r='3.3' style='fill:rgb(191,191,0)'><title>(5, 8)</title></circle></a>
+<line x1='454.95' y1='200.0' x2='464.85' y2='200.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/5/0/b/0' target='_top'>
+<circle cx='454.95' cy='200.0' r='3.3' style='fill:rgb(63,63,255)'><title>(5, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/5/0/b/1' target='_top'>
+<circle cx='464.85' cy='200.0' r='3.3' style='fill:rgb(63,63,255)'><title>(5, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/5/0/a/0' target='_top'>
+<circle cx='445.05' cy='140.0' r='3.3' style='fill:rgb(191,191,0)'><title>(5, 10)</title></circle></a>
+<line x1='454.95' y1='140.0' x2='464.85' y2='140.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/5/0/b/0' target='_top'>
+<circle cx='454.95' cy='140.0' r='3.3' style='fill:rgb(63,63,255)'><title>(5, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/5/0/b/1' target='_top'>
+<circle cx='464.85' cy='140.0' r='3.3' style='fill:rgb(63,63,255)'><title>(5, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/5/0/a/0' target='_top'>
+<circle cx='445.05' cy='80.0' r='3.3' style='fill:rgb(191,191,0)'><title>(5, 12)</title></circle></a>
+<line x1='454.95' y1='80.0' x2='464.85' y2='80.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/5/0/b/0' target='_top'>
+<circle cx='454.95' cy='80.0' r='3.3' style='fill:rgb(63,63,255)'><title>(5, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/5/0/b/1' target='_top'>
+<circle cx='464.85' cy='80.0' r='3.3' style='fill:rgb(63,63,255)'><title>(5, 12)</title></circle></a>
+<line x1='445.05' y1='20.0' x2='435.15' y2='20.0' style='stroke:rgb(191,191,0);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/5/0/a/0' target='_top'>
+<circle cx='445.05' cy='20.0' r='3.3' style='fill:rgb(191,191,0)'><title>(5, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/5/0/a/1' target='_top'>
+<circle cx='435.15' cy='20.0' r='3.3' style='fill:rgb(191,191,0)'><title>(5, 14)</title></circle></a>
+<line x1='454.95' y1='20.0' x2='474.75' y2='20.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/5/0/b/0' target='_top'>
+<circle cx='454.95' cy='20.0' r='3.3' style='fill:rgb(63,63,255)'><title>(5, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/5/0/b/1' target='_top'>
+<circle cx='464.85' cy='20.0' r='3.3' style='fill:rgb(63,63,255)'><title>(5, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/5/0/b/2' target='_top'>
+<circle cx='474.75' cy='20.0' r='3.3' style='fill:rgb(63,63,255)'><title>(5, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/6/0/a/0' target='_top'>
+<circle cx='544.95' cy='320.0' r='3.3' style='fill:rgb(63,63,255)'><title>(6, 4)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/6/0/a/0' target='_top'>
+<circle cx='544.95' cy='260.0' r='3.3' style='fill:rgb(63,63,255)'><title>(6, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/6/0/a/0' target='_top'>
+<circle cx='544.95' cy='200.0' r='3.3' style='fill:rgb(63,63,255)'><title>(6, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/6/0/a/0' target='_top'>
+<circle cx='544.95' cy='140.0' r='3.3' style='fill:rgb(63,63,255)'><title>(6, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/6/0/a/0' target='_top'>
+<circle cx='544.95' cy='80.0' r='3.3' style='fill:rgb(63,63,255)'><title>(6, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/6/0/b/0' target='_top'>
+<circle cx='535.05' cy='80.0' r='3.3' style='fill:rgb(191,191,0)'><title>(6, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/6/0/c/0' target='_top'>
+<circle cx='544.95' cy='71.6' r='3.3' style='fill:rgb(63,63,255)'><title>(6, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/6/0/a/0' target='_top'>
+<circle cx='544.95' cy='20.0' r='3.3' style='fill:rgb(63,63,255)'><title>(6, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/7/0/a/0' target='_top'>
+<circle cx='634.95' cy='320.0' r='3.3' style='fill:rgb(63,63,255)'><title>(7, 4)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/7/0/a/0' target='_top'>
+<circle cx='625.05' cy='260.0' r='3.3' style='fill:rgb(191,191,0)'><title>(7, 6)</title></circle></a>
+<line x1='634.95' y1='260.0' x2='644.85' y2='260.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/7/0/b/0' target='_top'>
+<circle cx='634.95' cy='260.0' r='3.3' style='fill:rgb(63,63,255)'><title>(7, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/7/0/b/1' target='_top'>
+<circle cx='644.85' cy='260.0' r='3.3' style='fill:rgb(63,63,255)'><title>(7, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/7/0/a/0' target='_top'>
+<circle cx='625.05' cy='200.0' r='3.3' style='fill:rgb(191,191,0)'><title>(7, 8)</title></circle></a>
+<line x1='634.95' y1='200.0' x2='644.85' y2='200.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/7/0/b/0' target='_top'>
+<circle cx='634.95' cy='200.0' r='3.3' style='fill:rgb(63,63,255)'><title>(7, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/7/0/b/1' target='_top'>
+<circle cx='644.85' cy='200.0' r='3.3' style='fill:rgb(63,63,255)'><title>(7, 8)</title></circle></a>
+<line x1='625.05' y1='140.0' x2='615.15' y2='140.0' style='stroke:rgb(191,191,0);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/7/0/a/0' target='_top'>
+<circle cx='625.05' cy='140.0' r='3.3' style='fill:rgb(191,191,0)'><title>(7, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/7/0/a/1' target='_top'>
+<circle cx='615.15' cy='140.0' r='3.3' style='fill:rgb(191,191,0)'><title>(7, 10)</title></circle></a>
+<line x1='634.95' y1='140.0' x2='654.75' y2='140.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/7/0/b/0' target='_top'>
+<circle cx='634.95' cy='140.0' r='3.3' style='fill:rgb(63,63,255)'><title>(7, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/7/0/b/1' target='_top'>
+<circle cx='644.85' cy='140.0' r='3.3' style='fill:rgb(63,63,255)'><title>(7, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/7/0/b/2' target='_top'>
+<circle cx='654.75' cy='140.0' r='3.3' style='fill:rgb(63,63,255)'><title>(7, 10)</title></circle></a>
+<line x1='625.05' y1='80.0' x2='615.15' y2='80.0' style='stroke:rgb(191,191,0);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/7/0/a/0' target='_top'>
+<circle cx='625.05' cy='80.0' r='3.3' style='fill:rgb(191,191,0)'><title>(7, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/7/0/a/1' target='_top'>
+<circle cx='615.15' cy='80.0' r='3.3' style='fill:rgb(191,191,0)'><title>(7, 12)</title></circle></a>
+<line x1='634.95' y1='80.0' x2='654.75' y2='80.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/7/0/b/0' target='_top'>
+<circle cx='634.95' cy='80.0' r='3.3' style='fill:rgb(63,63,255)'><title>(7, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/7/0/b/1' target='_top'>
+<circle cx='644.85' cy='80.0' r='3.3' style='fill:rgb(63,63,255)'><title>(7, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/7/0/b/2' target='_top'>
+<circle cx='654.75' cy='80.0' r='3.3' style='fill:rgb(63,63,255)'><title>(7, 12)</title></circle></a>
+<line x1='625.05' y1='20.0' x2='605.25' y2='20.0' style='stroke:rgb(191,191,0);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/7/0/a/0' target='_top'>
+<circle cx='625.05' cy='20.0' r='3.3' style='fill:rgb(191,191,0)'><title>(7, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/7/0/a/1' target='_top'>
+<circle cx='615.15' cy='20.0' r='3.3' style='fill:rgb(191,191,0)'><title>(7, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/7/0/a/2' target='_top'>
+<circle cx='605.25' cy='20.0' r='3.3' style='fill:rgb(191,191,0)'><title>(7, 14)</title></circle></a>
+<line x1='634.95' y1='20.0' x2='664.65' y2='20.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/7/0/b/0' target='_top'>
+<circle cx='634.95' cy='20.0' r='3.3' style='fill:rgb(63,63,255)'><title>(7, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/7/0/b/1' target='_top'>
+<circle cx='644.85' cy='20.0' r='3.3' style='fill:rgb(63,63,255)'><title>(7, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/7/0/b/2' target='_top'>
+<circle cx='654.75' cy='20.0' r='3.3' style='fill:rgb(63,63,255)'><title>(7, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/7/0/b/3' target='_top'>
+<circle cx='664.65' cy='20.0' r='3.3' style='fill:rgb(63,63,255)'><title>(7, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/8/0/a/0' target='_top'>
+<circle cx='724.95' cy='320.0' r='3.3' style='fill:rgb(63,63,255)'><title>(8, 4)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/8/0/a/0' target='_top'>
+<circle cx='724.95' cy='260.0' r='3.3' style='fill:rgb(63,63,255)'><title>(8, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/8/0/a/0' target='_top'>
+<circle cx='715.05' cy='200.0' r='3.3' style='fill:rgb(191,191,0)'><title>(8, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/8/0/b/0' target='_top'>
+<circle cx='724.95' cy='200.0' r='3.3' style='fill:rgb(63,63,255)'><title>(8, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/8/0/a/0' target='_top'>
+<circle cx='715.05' cy='140.0' r='3.3' style='fill:rgb(191,191,0)'><title>(8, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/8/0/b/0' target='_top'>
+<circle cx='724.95' cy='140.0' r='3.3' style='fill:rgb(63,63,255)'><title>(8, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/8/0/a/0' target='_top'>
+<circle cx='715.05' cy='80.0' r='3.3' style='fill:rgb(191,191,0)'><title>(8, 12)</title></circle></a>
+<line x1='724.95' y1='80.0' x2='734.85' y2='80.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/8/0/b/0' target='_top'>
+<circle cx='724.95' cy='80.0' r='3.3' style='fill:rgb(63,63,255)'><title>(8, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/8/0/b/1' target='_top'>
+<circle cx='734.85' cy='80.0' r='3.3' style='fill:rgb(63,63,255)'><title>(8, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/8/0/a/0' target='_top'>
+<circle cx='715.05' cy='20.0' r='3.3' style='fill:rgb(191,191,0)'><title>(8, 14)</title></circle></a>
+<line x1='724.95' y1='20.0' x2='734.85' y2='20.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/8/0/b/0' target='_top'>
+<circle cx='724.95' cy='20.0' r='3.3' style='fill:rgb(63,63,255)'><title>(8, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/8/0/b/1' target='_top'>
+<circle cx='734.85' cy='20.0' r='3.3' style='fill:rgb(63,63,255)'><title>(8, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/9/0/a/0' target='_top'>
+<circle cx='814.95' cy='320.0' r='3.3' style='fill:rgb(63,63,255)'><title>(9, 4)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/9/0/a/0' target='_top'>
+<circle cx='814.95' cy='260.0' r='3.3' style='fill:rgb(63,63,255)'><title>(9, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/9/0/a/0' target='_top'>
+<circle cx='805.05' cy='200.0' r='3.3' style='fill:rgb(191,191,0)'><title>(9, 8)</title></circle></a>
+<line x1='814.95' y1='200.0' x2='824.85' y2='200.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/9/0/b/0' target='_top'>
+<circle cx='814.95' cy='200.0' r='3.3' style='fill:rgb(63,63,255)'><title>(9, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/9/0/b/1' target='_top'>
+<circle cx='824.85' cy='200.0' r='3.3' style='fill:rgb(63,63,255)'><title>(9, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/9/0/a/0' target='_top'>
+<circle cx='814.95' cy='140.0' r='3.3' style='fill:rgb(63,63,255)'><title>(9, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/9/0/b/0' target='_top'>
+<circle cx='805.05' cy='140.0' r='3.3' style='fill:rgb(191,191,0)'><title>(9, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/9/0/c/0' target='_top'>
+<circle cx='814.95' cy='131.6' r='3.3' style='fill:rgb(63,63,255)'><title>(9, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/9/0/a/0' target='_top'>
+<circle cx='805.05' cy='80.0' r='3.3' style='fill:rgb(191,191,0)'><title>(9, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/9/0/b/0' target='_top'>
+<circle cx='805.05' cy='71.6' r='3.3' style='fill:rgb(191,191,0)'><title>(9, 12)</title></circle></a>
+<line x1='814.95' y1='80.0' x2='824.85' y2='80.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/9/0/c/0' target='_top'>
+<circle cx='814.95' cy='80.0' r='3.3' style='fill:rgb(63,63,255)'><title>(9, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/9/0/c/1' target='_top'>
+<circle cx='824.85' cy='80.0' r='3.3' style='fill:rgb(63,63,255)'><title>(9, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/9/0/a/0' target='_top'>
+<circle cx='814.95' cy='20.0' r='3.3' style='fill:rgb(63,63,255)'><title>(9, 14)</title></circle></a>
+<line x1='805.05' y1='20.0' x2='795.15' y2='20.0' style='stroke:rgb(191,191,0);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/9/0/b/0' target='_top'>
+<circle cx='805.05' cy='20.0' r='3.3' style='fill:rgb(191,191,0)'><title>(9, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/9/0/b/1' target='_top'>
+<circle cx='795.15' cy='20.0' r='3.3' style='fill:rgb(191,191,0)'><title>(9, 14)</title></circle></a>
+<line x1='814.95' y1='11.6' x2='824.85' y2='11.6' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/9/0/c/0' target='_top'>
+<circle cx='814.95' cy='11.6' r='3.3' style='fill:rgb(63,63,255)'><title>(9, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/9/0/c/1' target='_top'>
+<circle cx='824.85' cy='11.6' r='3.3' style='fill:rgb(63,63,255)'><title>(9, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/10/0/a/0' target='_top'>
+<circle cx='904.95' cy='320.0' r='3.3' style='fill:rgb(63,63,255)'><title>(10, 4)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/10/0/a/0' target='_top'>
+<circle cx='895.05' cy='260.0' r='3.3' style='fill:rgb(191,191,0)'><title>(10, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/10/0/b/0' target='_top'>
+<circle cx='904.95' cy='260.0' r='3.3' style='fill:rgb(63,63,255)'><title>(10, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/10/0/c/0' target='_top'>
+<circle cx='904.95' cy='251.6' r='3.3' style='fill:rgb(63,63,255)'><title>(10, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/10/0/a/0' target='_top'>
+<circle cx='904.95' cy='200.0' r='3.3' style='fill:rgb(63,63,255)'><title>(10, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/10/0/a/0' target='_top'>
+<circle cx='904.95' cy='140.0' r='3.3' style='fill:rgb(63,63,255)'><title>(10, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/10/0/b/0' target='_top'>
+<circle cx='895.05' cy='140.0' r='3.3' style='fill:rgb(191,191,0)'><title>(10, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/10/0/c/0' target='_top'>
+<circle cx='904.95' cy='131.6' r='3.3' style='fill:rgb(63,63,255)'><title>(10, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/10/0/a/0' target='_top'>
+<circle cx='895.05' cy='80.0' r='3.3' style='fill:rgb(191,191,0)'><title>(10, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/10/0/b/0' target='_top'>
+<circle cx='904.95' cy='80.0' r='3.3' style='fill:rgb(63,63,255)'><title>(10, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/10/0/c/0' target='_top'>
+<circle cx='895.05' cy='71.6' r='3.3' style='fill:rgb(191,191,0)'><title>(10, 12)</title></circle></a>
+<line x1='904.95' y1='71.6' x2='914.85' y2='71.6' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/10/0/d/0' target='_top'>
+<circle cx='904.95' cy='71.6' r='3.3' style='fill:rgb(63,63,255)'><title>(10, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/10/0/d/1' target='_top'>
+<circle cx='914.85' cy='71.6' r='3.3' style='fill:rgb(63,63,255)'><title>(10, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/10/0/a/0' target='_top'>
+<circle cx='895.05' cy='20.0' r='3.3' style='fill:rgb(191,191,0)'><title>(10, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/10/0/b/0' target='_top'>
+<circle cx='904.95' cy='20.0' r='3.3' style='fill:rgb(63,63,255)'><title>(10, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/10/0/c/0' target='_top'>
+<circle cx='904.95' cy='11.6' r='3.3' style='fill:rgb(63,63,255)'><title>(10, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/2/11/0/a/0' target='_top'>
+<circle cx='994.95' cy='380.0' r='3.3' style='fill:rgb(63,63,255)'><title>(11, 2)</title></circle></a>
+<line x1='994.95' y1='320.0' x2='1004.85' y2='320.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/11/0/a/0' target='_top'>
+<circle cx='994.95' cy='320.0' r='3.3' style='fill:rgb(63,63,255)'><title>(11, 4)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/11/0/a/1' target='_top'>
+<circle cx='1004.85' cy='320.0' r='3.3' style='fill:rgb(63,63,255)'><title>(11, 4)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/11/0/a/0' target='_top'>
+<circle cx='985.05' cy='260.0' r='3.3' style='fill:rgb(191,191,0)'><title>(11, 6)</title></circle></a>
+<line x1='994.95' y1='260.0' x2='1014.75' y2='260.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/11/0/b/0' target='_top'>
+<circle cx='994.95' cy='260.0' r='3.3' style='fill:rgb(63,63,255)'><title>(11, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/11/0/b/1' target='_top'>
+<circle cx='1004.85' cy='260.0' r='3.3' style='fill:rgb(63,63,255)'><title>(11, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/11/0/b/2' target='_top'>
+<circle cx='1014.75' cy='260.0' r='3.3' style='fill:rgb(63,63,255)'><title>(11, 6)</title></circle></a>
+<line x1='985.05' y1='200.0' x2='975.15' y2='200.0' style='stroke:rgb(191,191,0);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/11/0/a/0' target='_top'>
+<circle cx='985.05' cy='200.0' r='3.3' style='fill:rgb(191,191,0)'><title>(11, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/11/0/a/1' target='_top'>
+<circle cx='975.15' cy='200.0' r='3.3' style='fill:rgb(191,191,0)'><title>(11, 8)</title></circle></a>
+<line x1='994.95' y1='200.0' x2='1024.65' y2='200.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/11/0/b/0' target='_top'>
+<circle cx='994.95' cy='200.0' r='3.3' style='fill:rgb(63,63,255)'><title>(11, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/11/0/b/1' target='_top'>
+<circle cx='1004.85' cy='200.0' r='3.3' style='fill:rgb(63,63,255)'><title>(11, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/11/0/b/2' target='_top'>
+<circle cx='1014.75' cy='200.0' r='3.3' style='fill:rgb(63,63,255)'><title>(11, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/11/0/b/3' target='_top'>
+<circle cx='1024.65' cy='200.0' r='3.3' style='fill:rgb(63,63,255)'><title>(11, 8)</title></circle></a>
+<line x1='985.05' y1='140.0' x2='965.25' y2='140.0' style='stroke:rgb(191,191,0);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/11/0/a/0' target='_top'>
+<circle cx='985.05' cy='140.0' r='3.3' style='fill:rgb(191,191,0)'><title>(11, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/11/0/a/1' target='_top'>
+<circle cx='975.15' cy='140.0' r='3.3' style='fill:rgb(191,191,0)'><title>(11, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/11/0/a/2' target='_top'>
+<circle cx='965.25' cy='140.0' r='3.3' style='fill:rgb(191,191,0)'><title>(11, 10)</title></circle></a>
+<line x1='994.95' y1='140.0' x2='1034.55' y2='140.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/11/0/b/0' target='_top'>
+<circle cx='994.95' cy='140.0' r='3.3' style='fill:rgb(63,63,255)'><title>(11, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/11/0/b/1' target='_top'>
+<circle cx='1004.85' cy='140.0' r='3.3' style='fill:rgb(63,63,255)'><title>(11, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/11/0/b/2' target='_top'>
+<circle cx='1014.75' cy='140.0' r='3.3' style='fill:rgb(63,63,255)'><title>(11, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/11/0/b/3' target='_top'>
+<circle cx='1024.65' cy='140.0' r='3.3' style='fill:rgb(63,63,255)'><title>(11, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/11/0/b/4' target='_top'>
+<circle cx='1034.55' cy='140.0' r='3.3' style='fill:rgb(63,63,255)'><title>(11, 10)</title></circle></a>
+<line x1='985.05' y1='80.0' x2='965.25' y2='80.0' style='stroke:rgb(191,191,0);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/11/0/a/0' target='_top'>
+<circle cx='985.05' cy='80.0' r='3.3' style='fill:rgb(191,191,0)'><title>(11, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/11/0/a/1' target='_top'>
+<circle cx='975.15' cy='80.0' r='3.3' style='fill:rgb(191,191,0)'><title>(11, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/11/0/a/2' target='_top'>
+<circle cx='965.25' cy='80.0' r='3.3' style='fill:rgb(191,191,0)'><title>(11, 12)</title></circle></a>
+<line x1='994.95' y1='80.0' x2='1034.55' y2='80.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/11/0/b/0' target='_top'>
+<circle cx='994.95' cy='80.0' r='3.3' style='fill:rgb(63,63,255)'><title>(11, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/11/0/b/1' target='_top'>
+<circle cx='1004.85' cy='80.0' r='3.3' style='fill:rgb(63,63,255)'><title>(11, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/11/0/b/2' target='_top'>
+<circle cx='1014.75' cy='80.0' r='3.3' style='fill:rgb(63,63,255)'><title>(11, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/11/0/b/3' target='_top'>
+<circle cx='1024.65' cy='80.0' r='3.3' style='fill:rgb(63,63,255)'><title>(11, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/11/0/b/4' target='_top'>
+<circle cx='1034.55' cy='80.0' r='3.3' style='fill:rgb(63,63,255)'><title>(11, 12)</title></circle></a>
+<line x1='985.05' y1='20.0' x2='945.45' y2='20.0' style='stroke:rgb(191,191,0);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/11/0/a/0' target='_top'>
+<circle cx='985.05' cy='20.0' r='3.3' style='fill:rgb(191,191,0)'><title>(11, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/11/0/a/1' target='_top'>
+<circle cx='975.15' cy='20.0' r='3.3' style='fill:rgb(191,191,0)'><title>(11, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/11/0/a/2' target='_top'>
+<circle cx='965.25' cy='20.0' r='3.3' style='fill:rgb(191,191,0)'><title>(11, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/11/0/a/3' target='_top'>
+<circle cx='955.35' cy='20.0' r='3.3' style='fill:rgb(191,191,0)'><title>(11, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/11/0/a/4' target='_top'>
+<circle cx='945.45' cy='20.0' r='3.3' style='fill:rgb(191,191,0)'><title>(11, 14)</title></circle></a>
+<a xlink:href='/not_yet_implemented' target='_top'>
+<text x='999.9' y='24.2' style='fill:rgb(63,63,255);font-size:14px;font-weight:bold;'>7</text>
+</a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/12/0/a/0' target='_top'>
+<circle cx='1084.95' cy='320.0' r='3.3' style='fill:rgb(63,63,255)'><title>(12, 4)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/12/0/a/0' target='_top'>
+<circle cx='1075.05' cy='200.0' r='3.3' style='fill:rgb(191,191,0)'><title>(12, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/12/0/b/0' target='_top'>
+<circle cx='1084.95' cy='200.0' r='3.3' style='fill:rgb(63,63,255)'><title>(12, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/12/0/a/0' target='_top'>
+<circle cx='1084.95' cy='140.0' r='3.3' style='fill:rgb(63,63,255)'><title>(12, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/12/0/a/0' target='_top'>
+<circle cx='1075.05' cy='80.0' r='3.3' style='fill:rgb(191,191,0)'><title>(12, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/12/0/b/0' target='_top'>
+<circle cx='1084.95' cy='80.0' r='3.3' style='fill:rgb(63,63,255)'><title>(12, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/12/0/a/0' target='_top'>
+<circle cx='1084.95' cy='20.0' r='3.3' style='fill:rgb(63,63,255)'><title>(12, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/12/0/b/0' target='_top'>
+<circle cx='1075.05' cy='20.0' r='3.3' style='fill:rgb(191,191,0)'><title>(12, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/13/0/a/0' target='_top'>
+<circle cx='1165.05' cy='320.0' r='3.3' style='fill:rgb(191,191,0)'><title>(13, 4)</title></circle></a>
+<line x1='1174.95' y1='320.0' x2='1184.85' y2='320.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/13/0/b/0' target='_top'>
+<circle cx='1174.95' cy='320.0' r='3.3' style='fill:rgb(63,63,255)'><title>(13, 4)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/13/0/b/1' target='_top'>
+<circle cx='1184.85' cy='320.0' r='3.3' style='fill:rgb(63,63,255)'><title>(13, 4)</title></circle></a>
+<line x1='1165.05' y1='260.0' x2='1155.15' y2='260.0' style='stroke:rgb(191,191,0);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/13/0/a/0' target='_top'>
+<circle cx='1165.05' cy='260.0' r='3.3' style='fill:rgb(191,191,0)'><title>(13, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/13/0/a/1' target='_top'>
+<circle cx='1155.15' cy='260.0' r='3.3' style='fill:rgb(191,191,0)'><title>(13, 6)</title></circle></a>
+<line x1='1174.95' y1='260.0' x2='1194.75' y2='260.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/13/0/b/0' target='_top'>
+<circle cx='1174.95' cy='260.0' r='3.3' style='fill:rgb(63,63,255)'><title>(13, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/13/0/b/1' target='_top'>
+<circle cx='1184.85' cy='260.0' r='3.3' style='fill:rgb(63,63,255)'><title>(13, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/13/0/b/2' target='_top'>
+<circle cx='1194.75' cy='260.0' r='3.3' style='fill:rgb(63,63,255)'><title>(13, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/13/0/a/0' target='_top'>
+<circle cx='1165.05' cy='200.0' r='3.3' style='fill:rgb(191,191,0)'><title>(13, 8)</title></circle></a>
+<line x1='1165.05' y1='191.6' x2='1155.15' y2='191.6' style='stroke:rgb(191,191,0);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/13/0/b/0' target='_top'>
+<circle cx='1165.05' cy='191.6' r='3.3' style='fill:rgb(191,191,0)'><title>(13, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/13/0/b/1' target='_top'>
+<circle cx='1155.15' cy='191.6' r='3.3' style='fill:rgb(191,191,0)'><title>(13, 8)</title></circle></a>
+<line x1='1174.95' y1='200.0' x2='1204.65' y2='200.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/13/0/c/0' target='_top'>
+<circle cx='1174.95' cy='200.0' r='3.3' style='fill:rgb(63,63,255)'><title>(13, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/13/0/c/1' target='_top'>
+<circle cx='1184.85' cy='200.0' r='3.3' style='fill:rgb(63,63,255)'><title>(13, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/13/0/c/2' target='_top'>
+<circle cx='1194.75' cy='200.0' r='3.3' style='fill:rgb(63,63,255)'><title>(13, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/13/0/c/3' target='_top'>
+<circle cx='1204.65' cy='200.0' r='3.3' style='fill:rgb(63,63,255)'><title>(13, 8)</title></circle></a>
+<line x1='1165.05' y1='140.0' x2='1135.35' y2='140.0' style='stroke:rgb(191,191,0);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/13/0/a/0' target='_top'>
+<circle cx='1165.05' cy='140.0' r='3.3' style='fill:rgb(191,191,0)'><title>(13, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/13/0/a/1' target='_top'>
+<circle cx='1155.15' cy='140.0' r='3.3' style='fill:rgb(191,191,0)'><title>(13, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/13/0/a/2' target='_top'>
+<circle cx='1145.25' cy='140.0' r='3.3' style='fill:rgb(191,191,0)'><title>(13, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/13/0/a/3' target='_top'>
+<circle cx='1135.35' cy='140.0' r='3.3' style='fill:rgb(191,191,0)'><title>(13, 10)</title></circle></a>
+<line x1='1174.95' y1='140.0' x2='1214.55' y2='140.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/13/0/b/0' target='_top'>
+<circle cx='1174.95' cy='140.0' r='3.3' style='fill:rgb(63,63,255)'><title>(13, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/13/0/b/1' target='_top'>
+<circle cx='1184.85' cy='140.0' r='3.3' style='fill:rgb(63,63,255)'><title>(13, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/13/0/b/2' target='_top'>
+<circle cx='1194.75' cy='140.0' r='3.3' style='fill:rgb(63,63,255)'><title>(13, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/13/0/b/3' target='_top'>
+<circle cx='1204.65' cy='140.0' r='3.3' style='fill:rgb(63,63,255)'><title>(13, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/13/0/b/4' target='_top'>
+<circle cx='1214.55' cy='140.0' r='3.3' style='fill:rgb(63,63,255)'><title>(13, 10)</title></circle></a>
+<line x1='1165.05' y1='80.0' x2='1125.45' y2='80.0' style='stroke:rgb(191,191,0);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/13/0/a/0' target='_top'>
+<circle cx='1165.05' cy='80.0' r='3.3' style='fill:rgb(191,191,0)'><title>(13, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/13/0/a/1' target='_top'>
+<circle cx='1155.15' cy='80.0' r='3.3' style='fill:rgb(191,191,0)'><title>(13, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/13/0/a/2' target='_top'>
+<circle cx='1145.25' cy='80.0' r='3.3' style='fill:rgb(191,191,0)'><title>(13, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/13/0/a/3' target='_top'>
+<circle cx='1135.35' cy='80.0' r='3.3' style='fill:rgb(191,191,0)'><title>(13, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/13/0/a/4' target='_top'>
+<circle cx='1125.45' cy='80.0' r='3.3' style='fill:rgb(191,191,0)'><title>(13, 12)</title></circle></a>
+<a xlink:href='/not_yet_implemented' target='_top'>
+<text x='1179.9' y='84.2' style='fill:rgb(63,63,255);font-size:14px;font-weight:bold;'>6</text>
+</a>
+<a xlink:href='/not_yet_implemented' target='_top'>
+<text x='1150.2' y='24.2' style='fill:rgb(191,191,0);font-size:14px;font-weight:bold;'>6</text>
+</a>
+<a xlink:href='/not_yet_implemented' target='_top'>
+<text x='1179.9' y='24.2' style='fill:rgb(63,63,255);font-size:14px;font-weight:bold;'>7</text>
+</a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/2/14/0/a/0' target='_top'>
+<circle cx='1264.95' cy='380.0' r='3.3' style='fill:rgb(63,63,255)'><title>(14, 2)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/14/0/a/0' target='_top'>
+<circle cx='1264.95' cy='320.0' r='3.3' style='fill:rgb(63,63,255)'><title>(14, 4)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/14/0/b/0' target='_top'>
+<circle cx='1264.95' cy='311.6' r='3.3' style='fill:rgb(63,63,255)'><title>(14, 4)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/14/0/a/0' target='_top'>
+<circle cx='1264.95' cy='260.0' r='3.3' style='fill:rgb(63,63,255)'><title>(14, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/14/0/b/0' target='_top'>
+<circle cx='1264.95' cy='251.6' r='3.3' style='fill:rgb(63,63,255)'><title>(14, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/14/0/a/0' target='_top'>
+<circle cx='1264.95' cy='200.0' r='3.3' style='fill:rgb(63,63,255)'><title>(14, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/14/0/b/0' target='_top'>
+<circle cx='1255.05' cy='200.0' r='3.3' style='fill:rgb(191,191,0)'><title>(14, 8)</title></circle></a>
+<line x1='1264.95' y1='191.6' x2='1274.85' y2='191.6' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/14/0/c/0' target='_top'>
+<circle cx='1264.95' cy='191.6' r='3.3' style='fill:rgb(63,63,255)'><title>(14, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/14/0/c/1' target='_top'>
+<circle cx='1274.85' cy='191.6' r='3.3' style='fill:rgb(63,63,255)'><title>(14, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/14/0/a/0' target='_top'>
+<circle cx='1255.05' cy='140.0' r='3.3' style='fill:rgb(191,191,0)'><title>(14, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/14/0/b/0' target='_top'>
+<circle cx='1264.95' cy='140.0' r='3.3' style='fill:rgb(63,63,255)'><title>(14, 10)</title></circle></a>
+<line x1='1264.95' y1='131.6' x2='1274.85' y2='131.6' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/14/0/c/0' target='_top'>
+<circle cx='1264.95' cy='131.6' r='3.3' style='fill:rgb(63,63,255)'><title>(14, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/14/0/c/1' target='_top'>
+<circle cx='1274.85' cy='131.6' r='3.3' style='fill:rgb(63,63,255)'><title>(14, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/14/0/a/0' target='_top'>
+<circle cx='1255.05' cy='80.0' r='3.3' style='fill:rgb(191,191,0)'><title>(14, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/14/0/b/0' target='_top'>
+<circle cx='1255.05' cy='71.6' r='3.3' style='fill:rgb(191,191,0)'><title>(14, 12)</title></circle></a>
+<line x1='1264.95' y1='80.0' x2='1274.85' y2='80.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/14/0/c/0' target='_top'>
+<circle cx='1264.95' cy='80.0' r='3.3' style='fill:rgb(63,63,255)'><title>(14, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/14/0/c/1' target='_top'>
+<circle cx='1274.85' cy='80.0' r='3.3' style='fill:rgb(63,63,255)'><title>(14, 12)</title></circle></a>
+<line x1='1264.95' y1='71.6' x2='1274.85' y2='71.6' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/14/0/d/0' target='_top'>
+<circle cx='1264.95' cy='71.6' r='3.3' style='fill:rgb(63,63,255)'><title>(14, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/14/0/d/1' target='_top'>
+<circle cx='1274.85' cy='71.6' r='3.3' style='fill:rgb(63,63,255)'><title>(14, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/14/0/a/0' target='_top'>
+<circle cx='1255.05' cy='20.0' r='3.3' style='fill:rgb(191,191,0)'><title>(14, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/14/0/b/0' target='_top'>
+<circle cx='1255.05' cy='11.6' r='3.3' style='fill:rgb(191,191,0)'><title>(14, 14)</title></circle></a>
+<line x1='1264.95' y1='20.0' x2='1274.85' y2='20.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/14/0/c/0' target='_top'>
+<circle cx='1264.95' cy='20.0' r='3.3' style='fill:rgb(63,63,255)'><title>(14, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/14/0/c/1' target='_top'>
+<circle cx='1274.85' cy='20.0' r='3.3' style='fill:rgb(63,63,255)'><title>(14, 14)</title></circle></a>
+<line x1='1264.95' y1='11.6' x2='1274.85' y2='11.6' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/14/0/d/0' target='_top'>
+<circle cx='1264.95' cy='11.6' r='3.3' style='fill:rgb(63,63,255)'><title>(14, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/14/0/d/1' target='_top'>
+<circle cx='1274.85' cy='11.6' r='3.3' style='fill:rgb(63,63,255)'><title>(14, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/2/15/0/a/0' target='_top'>
+<circle cx='1354.95' cy='380.0' r='3.3' style='fill:rgb(63,63,255)'><title>(15, 2)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/15/0/a/0' target='_top'>
+<circle cx='1354.95' cy='320.0' r='3.3' style='fill:rgb(63,63,255)'><title>(15, 4)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/15/0/b/0' target='_top'>
+<circle cx='1354.95' cy='311.6' r='3.3' style='fill:rgb(63,63,255)'><title>(15, 4)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/15/0/a/0' target='_top'>
+<circle cx='1345.05' cy='260.0' r='3.3' style='fill:rgb(191,191,0)'><title>(15, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/15/0/b/0' target='_top'>
+<circle cx='1354.95' cy='260.0' r='3.3' style='fill:rgb(63,63,255)'><title>(15, 6)</title></circle></a>
+<line x1='1354.95' y1='251.6' x2='1364.85' y2='251.6' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/15/0/c/0' target='_top'>
+<circle cx='1354.95' cy='251.6' r='3.3' style='fill:rgb(63,63,255)'><title>(15, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/15/0/c/1' target='_top'>
+<circle cx='1364.85' cy='251.6' r='3.3' style='fill:rgb(63,63,255)'><title>(15, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/15/0/a/0' target='_top'>
+<circle cx='1345.05' cy='200.0' r='3.3' style='fill:rgb(191,191,0)'><title>(15, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/15/0/b/0' target='_top'>
+<circle cx='1354.95' cy='200.0' r='3.3' style='fill:rgb(63,63,255)'><title>(15, 8)</title></circle></a>
+<line x1='1354.95' y1='191.6' x2='1364.85' y2='191.6' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/15/0/c/0' target='_top'>
+<circle cx='1354.95' cy='191.6' r='3.3' style='fill:rgb(63,63,255)'><title>(15, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/15/0/c/1' target='_top'>
+<circle cx='1364.85' cy='191.6' r='3.3' style='fill:rgb(63,63,255)'><title>(15, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/15/0/a/0' target='_top'>
+<circle cx='1345.05' cy='140.0' r='3.3' style='fill:rgb(191,191,0)'><title>(15, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/15/0/b/0' target='_top'>
+<circle cx='1345.05' cy='131.6' r='3.3' style='fill:rgb(191,191,0)'><title>(15, 10)</title></circle></a>
+<line x1='1354.95' y1='140.0' x2='1364.85' y2='140.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/15/0/c/0' target='_top'>
+<circle cx='1354.95' cy='140.0' r='3.3' style='fill:rgb(63,63,255)'><title>(15, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/15/0/c/1' target='_top'>
+<circle cx='1364.85' cy='140.0' r='3.3' style='fill:rgb(63,63,255)'><title>(15, 10)</title></circle></a>
+<line x1='1354.95' y1='131.6' x2='1364.85' y2='131.6' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/15/0/d/0' target='_top'>
+<circle cx='1354.95' cy='131.6' r='3.3' style='fill:rgb(63,63,255)'><title>(15, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/15/0/d/1' target='_top'>
+<circle cx='1364.85' cy='131.6' r='3.3' style='fill:rgb(63,63,255)'><title>(15, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/15/0/a/0' target='_top'>
+<circle cx='1345.05' cy='80.0' r='3.3' style='fill:rgb(191,191,0)'><title>(15, 12)</title></circle></a>
+<line x1='1345.05' y1='71.6' x2='1335.15' y2='71.6' style='stroke:rgb(191,191,0);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/15/0/b/0' target='_top'>
+<circle cx='1345.05' cy='71.6' r='3.3' style='fill:rgb(191,191,0)'><title>(15, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/15/0/b/1' target='_top'>
+<circle cx='1335.15' cy='71.6' r='3.3' style='fill:rgb(191,191,0)'><title>(15, 12)</title></circle></a>
+<line x1='1354.95' y1='80.0' x2='1364.85' y2='80.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/15/0/c/0' target='_top'>
+<circle cx='1354.95' cy='80.0' r='3.3' style='fill:rgb(63,63,255)'><title>(15, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/15/0/c/1' target='_top'>
+<circle cx='1364.85' cy='80.0' r='3.3' style='fill:rgb(63,63,255)'><title>(15, 12)</title></circle></a>
+<line x1='1354.95' y1='71.6' x2='1374.75' y2='71.6' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/15/0/d/0' target='_top'>
+<circle cx='1354.95' cy='71.6' r='3.3' style='fill:rgb(63,63,255)'><title>(15, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/15/0/d/1' target='_top'>
+<circle cx='1364.85' cy='71.6' r='3.3' style='fill:rgb(63,63,255)'><title>(15, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/15/0/d/2' target='_top'>
+<circle cx='1374.75' cy='71.6' r='3.3' style='fill:rgb(63,63,255)'><title>(15, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/15/0/a/0' target='_top'>
+<circle cx='1345.05' cy='20.0' r='3.3' style='fill:rgb(191,191,0)'><title>(15, 14)</title></circle></a>
+<line x1='1345.05' y1='11.6' x2='1335.15' y2='11.6' style='stroke:rgb(191,191,0);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/15/0/b/0' target='_top'>
+<circle cx='1345.05' cy='11.6' r='3.3' style='fill:rgb(191,191,0)'><title>(15, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/15/0/b/1' target='_top'>
+<circle cx='1335.15' cy='11.6' r='3.3' style='fill:rgb(191,191,0)'><title>(15, 14)</title></circle></a>
+<line x1='1354.95' y1='20.0' x2='1364.85' y2='20.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/15/0/c/0' target='_top'>
+<circle cx='1354.95' cy='20.0' r='3.3' style='fill:rgb(63,63,255)'><title>(15, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/15/0/c/1' target='_top'>
+<circle cx='1364.85' cy='20.0' r='3.3' style='fill:rgb(63,63,255)'><title>(15, 14)</title></circle></a>
+<line x1='1354.95' y1='11.6' x2='1374.75' y2='11.6' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/15/0/d/0' target='_top'>
+<circle cx='1354.95' cy='11.6' r='3.3' style='fill:rgb(63,63,255)'><title>(15, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/15/0/d/1' target='_top'>
+<circle cx='1364.85' cy='11.6' r='3.3' style='fill:rgb(63,63,255)'><title>(15, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/15/0/d/2' target='_top'>
+<circle cx='1374.75' cy='11.6' r='3.3' style='fill:rgb(63,63,255)'><title>(15, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/16/0/a/0' target='_top'>
+<circle cx='1444.95' cy='320.0' r='3.3' style='fill:rgb(63,63,255)'><title>(16, 4)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/16/0/a/0' target='_top'>
+<circle cx='1435.05' cy='260.0' r='3.3' style='fill:rgb(191,191,0)'><title>(16, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/16/0/b/0' target='_top'>
+<circle cx='1444.95' cy='260.0' r='3.3' style='fill:rgb(63,63,255)'><title>(16, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/16/0/a/0' target='_top'>
+<circle cx='1444.95' cy='200.0' r='3.3' style='fill:rgb(63,63,255)'><title>(16, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/16/0/b/0' target='_top'>
+<circle cx='1435.05' cy='200.0' r='3.3' style='fill:rgb(191,191,0)'><title>(16, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/16/0/c/0' target='_top'>
+<circle cx='1444.95' cy='191.6' r='3.3' style='fill:rgb(63,63,255)'><title>(16, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/16/0/a/0' target='_top'>
+<circle cx='1444.95' cy='140.0' r='3.3' style='fill:rgb(63,63,255)'><title>(16, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/16/0/b/0' target='_top'>
+<circle cx='1435.05' cy='140.0' r='3.3' style='fill:rgb(191,191,0)'><title>(16, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/16/0/c/0' target='_top'>
+<circle cx='1435.05' cy='131.6' r='3.3' style='fill:rgb(191,191,0)'><title>(16, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/16/0/d/0' target='_top'>
+<circle cx='1444.95' cy='131.6' r='3.3' style='fill:rgb(63,63,255)'><title>(16, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/16/0/a/0' target='_top'>
+<circle cx='1435.05' cy='80.0' r='3.3' style='fill:rgb(191,191,0)'><title>(16, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/16/0/b/0' target='_top'>
+<circle cx='1444.95' cy='80.0' r='3.3' style='fill:rgb(63,63,255)'><title>(16, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/16/0/c/0' target='_top'>
+<circle cx='1435.05' cy='71.6' r='3.3' style='fill:rgb(191,191,0)'><title>(16, 12)</title></circle></a>
+<line x1='1444.95' y1='71.6' x2='1454.85' y2='71.6' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/16/0/d/0' target='_top'>
+<circle cx='1444.95' cy='71.6' r='3.3' style='fill:rgb(63,63,255)'><title>(16, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/16/0/d/1' target='_top'>
+<circle cx='1454.85' cy='71.6' r='3.3' style='fill:rgb(63,63,255)'><title>(16, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/16/0/a/0' target='_top'>
+<circle cx='1444.95' cy='20.0' r='3.3' style='fill:rgb(63,63,255)'><title>(16, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/16/0/b/0' target='_top'>
+<circle cx='1444.95' cy='11.6' r='3.3' style='fill:rgb(63,63,255)'><title>(16, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/16/0/c/0' target='_top'>
+<circle cx='1435.05' cy='20.0' r='3.3' style='fill:rgb(191,191,0)'><title>(16, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/16/0/d/0' target='_top'>
+<circle cx='1444.95' cy='3.2' r='3.3' style='fill:rgb(63,63,255)'><title>(16, 14)</title></circle></a>
+<line x1='1435.05' y1='11.6' x2='1425.15' y2='11.6' style='stroke:rgb(191,191,0);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/16/0/e/0' target='_top'>
+<circle cx='1435.05' cy='11.6' r='3.3' style='fill:rgb(191,191,0)'><title>(16, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/16/0/e/1' target='_top'>
+<circle cx='1425.15' cy='11.6' r='3.3' style='fill:rgb(191,191,0)'><title>(16, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/2/17/0/a/0' target='_top'>
+<circle cx='1534.95' cy='380.0' r='3.3' style='fill:rgb(63,63,255)'><title>(17, 2)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/17/0/a/0' target='_top'>
+<circle cx='1525.05' cy='320.0' r='3.3' style='fill:rgb(191,191,0)'><title>(17, 4)</title></circle></a>
+<line x1='1534.95' y1='320.0' x2='1554.75' y2='320.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/17/0/b/0' target='_top'>
+<circle cx='1534.95' cy='320.0' r='3.3' style='fill:rgb(63,63,255)'><title>(17, 4)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/17/0/b/1' target='_top'>
+<circle cx='1544.85' cy='320.0' r='3.3' style='fill:rgb(63,63,255)'><title>(17, 4)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/17/0/b/2' target='_top'>
+<circle cx='1554.75' cy='320.0' r='3.3' style='fill:rgb(63,63,255)'><title>(17, 4)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/17/0/a/0' target='_top'>
+<circle cx='1525.05' cy='260.0' r='3.3' style='fill:rgb(191,191,0)'><title>(17, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/17/0/b/0' target='_top'>
+<circle cx='1525.05' cy='251.6' r='3.3' style='fill:rgb(191,191,0)'><title>(17, 6)</title></circle></a>
+<line x1='1534.95' y1='260.0' x2='1564.65' y2='260.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/17/0/c/0' target='_top'>
+<circle cx='1534.95' cy='260.0' r='3.3' style='fill:rgb(63,63,255)'><title>(17, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/17/0/c/1' target='_top'>
+<circle cx='1544.85' cy='260.0' r='3.3' style='fill:rgb(63,63,255)'><title>(17, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/17/0/c/2' target='_top'>
+<circle cx='1554.75' cy='260.0' r='3.3' style='fill:rgb(63,63,255)'><title>(17, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/17/0/c/3' target='_top'>
+<circle cx='1564.65' cy='260.0' r='3.3' style='fill:rgb(63,63,255)'><title>(17, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/17/0/a/0' target='_top'>
+<circle cx='1525.05' cy='200.0' r='3.3' style='fill:rgb(191,191,0)'><title>(17, 8)</title></circle></a>
+<line x1='1525.05' y1='191.6' x2='1505.25' y2='191.6' style='stroke:rgb(191,191,0);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/17/0/b/0' target='_top'>
+<circle cx='1525.05' cy='191.6' r='3.3' style='fill:rgb(191,191,0)'><title>(17, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/17/0/b/1' target='_top'>
+<circle cx='1515.15' cy='191.6' r='3.3' style='fill:rgb(191,191,0)'><title>(17, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/17/0/b/2' target='_top'>
+<circle cx='1505.25' cy='191.6' r='3.3' style='fill:rgb(191,191,0)'><title>(17, 8)</title></circle></a>
+<a xlink:href='/not_yet_implemented' target='_top'>
+<text x='1539.9' y='204.2' style='fill:rgb(63,63,255);font-size:14px;font-weight:bold;'>6</text>
+</a>
+<line x1='1525.05' y1='140.0' x2='1485.45' y2='140.0' style='stroke:rgb(191,191,0);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/17/0/a/0' target='_top'>
+<circle cx='1525.05' cy='140.0' r='3.3' style='fill:rgb(191,191,0)'><title>(17, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/17/0/a/1' target='_top'>
+<circle cx='1515.15' cy='140.0' r='3.3' style='fill:rgb(191,191,0)'><title>(17, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/17/0/a/2' target='_top'>
+<circle cx='1505.25' cy='140.0' r='3.3' style='fill:rgb(191,191,0)'><title>(17, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/17/0/a/3' target='_top'>
+<circle cx='1495.35' cy='140.0' r='3.3' style='fill:rgb(191,191,0)'><title>(17, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/17/0/a/4' target='_top'>
+<circle cx='1485.45' cy='140.0' r='3.3' style='fill:rgb(191,191,0)'><title>(17, 10)</title></circle></a>
+<a xlink:href='/not_yet_implemented' target='_top'>
+<text x='1539.9' y='144.2' style='fill:rgb(63,63,255);font-size:14px;font-weight:bold;'>7</text>
+</a>
+<a xlink:href='/not_yet_implemented' target='_top'>
+<text x='1510.2' y='84.2' style='fill:rgb(191,191,0);font-size:14px;font-weight:bold;'>6</text>
+</a>
+<a xlink:href='/not_yet_implemented' target='_top'>
+<text x='1539.9' y='84.2' style='fill:rgb(63,63,255);font-size:14px;font-weight:bold;'>8</text>
+</a>
+<a xlink:href='/not_yet_implemented' target='_top'>
+<text x='1510.2' y='24.2' style='fill:rgb(191,191,0);font-size:14px;font-weight:bold;'>8</text>
+</a>
+<a xlink:href='/not_yet_implemented' target='_top'>
+<text x='1539.9' y='24.2' style='fill:rgb(63,63,255);font-size:14px;font-weight:bold;'>10</text>
+</a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/18/0/a/0' target='_top'>
+<circle cx='1624.95' cy='320.0' r='3.3' style='fill:rgb(63,63,255)'><title>(18, 4)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/18/0/a/0' target='_top'>
+<circle cx='1615.05' cy='260.0' r='3.3' style='fill:rgb(191,191,0)'><title>(18, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/18/0/b/0' target='_top'>
+<circle cx='1624.95' cy='260.0' r='3.3' style='fill:rgb(63,63,255)'><title>(18, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/18/0/c/0' target='_top'>
+<circle cx='1624.95' cy='251.6' r='3.3' style='fill:rgb(63,63,255)'><title>(18, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/18/0/a/0' target='_top'>
+<circle cx='1615.05' cy='200.0' r='3.3' style='fill:rgb(191,191,0)'><title>(18, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/18/0/b/0' target='_top'>
+<circle cx='1624.95' cy='200.0' r='3.3' style='fill:rgb(63,63,255)'><title>(18, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/18/0/a/0' target='_top'>
+<circle cx='1624.95' cy='140.0' r='3.3' style='fill:rgb(63,63,255)'><title>(18, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/18/0/b/0' target='_top'>
+<circle cx='1615.05' cy='140.0' r='3.3' style='fill:rgb(191,191,0)'><title>(18, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/18/0/c/0' target='_top'>
+<circle cx='1615.05' cy='131.6' r='3.3' style='fill:rgb(191,191,0)'><title>(18, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/18/0/d/0' target='_top'>
+<circle cx='1624.95' cy='131.6' r='3.3' style='fill:rgb(63,63,255)'><title>(18, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/18/0/a/0' target='_top'>
+<circle cx='1615.05' cy='80.0' r='3.3' style='fill:rgb(191,191,0)'><title>(18, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/18/0/b/0' target='_top'>
+<circle cx='1624.95' cy='80.0' r='3.3' style='fill:rgb(63,63,255)'><title>(18, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/18/0/c/0' target='_top'>
+<circle cx='1624.95' cy='71.6' r='3.3' style='fill:rgb(63,63,255)'><title>(18, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/18/0/d/0' target='_top'>
+<circle cx='1615.05' cy='71.6' r='3.3' style='fill:rgb(191,191,0)'><title>(18, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/18/0/e/0' target='_top'>
+<circle cx='1624.95' cy='63.2' r='3.3' style='fill:rgb(63,63,255)'><title>(18, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/18/0/a/0' target='_top'>
+<circle cx='1624.95' cy='20.0' r='3.3' style='fill:rgb(63,63,255)'><title>(18, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/18/0/b/0' target='_top'>
+<circle cx='1615.05' cy='20.0' r='3.3' style='fill:rgb(191,191,0)'><title>(18, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/18/0/c/0' target='_top'>
+<circle cx='1624.95' cy='11.6' r='3.3' style='fill:rgb(63,63,255)'><title>(18, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/18/0/d/0' target='_top'>
+<circle cx='1615.05' cy='11.6' r='3.3' style='fill:rgb(191,191,0)'><title>(18, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/18/0/e/0' target='_top'>
+<circle cx='1624.95' cy='3.2' r='3.3' style='fill:rgb(63,63,255)'><title>(18, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/2/19/0/a/0' target='_top'>
+<circle cx='1714.95' cy='380.0' r='3.3' style='fill:rgb(63,63,255)'><title>(19, 2)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/19/0/a/0' target='_top'>
+<circle cx='1705.05' cy='320.0' r='3.3' style='fill:rgb(191,191,0)'><title>(19, 4)</title></circle></a>
+<line x1='1714.95' y1='320.0' x2='1734.75' y2='320.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/19/0/b/0' target='_top'>
+<circle cx='1714.95' cy='320.0' r='3.3' style='fill:rgb(63,63,255)'><title>(19, 4)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/19/0/b/1' target='_top'>
+<circle cx='1724.85' cy='320.0' r='3.3' style='fill:rgb(63,63,255)'><title>(19, 4)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/19/0/b/2' target='_top'>
+<circle cx='1734.75' cy='320.0' r='3.3' style='fill:rgb(63,63,255)'><title>(19, 4)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/19/0/a/0' target='_top'>
+<circle cx='1714.95' cy='260.0' r='3.3' style='fill:rgb(63,63,255)'><title>(19, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/19/0/b/0' target='_top'>
+<circle cx='1705.05' cy='260.0' r='3.3' style='fill:rgb(191,191,0)'><title>(19, 6)</title></circle></a>
+<line x1='1705.05' y1='251.6' x2='1695.15' y2='251.6' style='stroke:rgb(191,191,0);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/19/0/c/0' target='_top'>
+<circle cx='1705.05' cy='251.6' r='3.3' style='fill:rgb(191,191,0)'><title>(19, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/19/0/c/1' target='_top'>
+<circle cx='1695.15' cy='251.6' r='3.3' style='fill:rgb(191,191,0)'><title>(19, 6)</title></circle></a>
+<line x1='1714.95' y1='251.6' x2='1744.65' y2='251.6' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/19/0/d/0' target='_top'>
+<circle cx='1714.95' cy='251.6' r='3.3' style='fill:rgb(63,63,255)'><title>(19, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/19/0/d/1' target='_top'>
+<circle cx='1724.85' cy='251.6' r='3.3' style='fill:rgb(63,63,255)'><title>(19, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/19/0/d/2' target='_top'>
+<circle cx='1734.75' cy='251.6' r='3.3' style='fill:rgb(63,63,255)'><title>(19, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/19/0/d/3' target='_top'>
+<circle cx='1744.65' cy='251.6' r='3.3' style='fill:rgb(63,63,255)'><title>(19, 6)</title></circle></a>
+<line x1='1705.05' y1='200.0' x2='1675.35' y2='200.0' style='stroke:rgb(191,191,0);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/19/0/a/0' target='_top'>
+<circle cx='1705.05' cy='200.0' r='3.3' style='fill:rgb(191,191,0)'><title>(19, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/19/0/a/1' target='_top'>
+<circle cx='1695.15' cy='200.0' r='3.3' style='fill:rgb(191,191,0)'><title>(19, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/19/0/a/2' target='_top'>
+<circle cx='1685.25' cy='200.0' r='3.3' style='fill:rgb(191,191,0)'><title>(19, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/19/0/a/3' target='_top'>
+<circle cx='1675.35' cy='200.0' r='3.3' style='fill:rgb(191,191,0)'><title>(19, 8)</title></circle></a>
+<a xlink:href='/not_yet_implemented' target='_top'>
+<text x='1719.9' y='204.2' style='fill:rgb(63,63,255);font-size:14px;font-weight:bold;'>6</text>
+</a>
+<a xlink:href='/not_yet_implemented' target='_top'>
+<text x='1690.2' y='144.2' style='fill:rgb(191,191,0);font-size:14px;font-weight:bold;'>6</text>
+</a>
+<a xlink:href='/not_yet_implemented' target='_top'>
+<text x='1719.9' y='144.2' style='fill:rgb(63,63,255);font-size:14px;font-weight:bold;'>8</text>
+</a>
+<a xlink:href='/not_yet_implemented' target='_top'>
+<text x='1690.2' y='84.2' style='fill:rgb(191,191,0);font-size:14px;font-weight:bold;'>7</text>
+</a>
+<a xlink:href='/not_yet_implemented' target='_top'>
+<text x='1719.9' y='84.2' style='fill:rgb(63,63,255);font-size:14px;font-weight:bold;'>9</text>
+</a>
+<a xlink:href='/not_yet_implemented' target='_top'>
+<text x='1690.2' y='24.2' style='fill:rgb(191,191,0);font-size:14px;font-weight:bold;'>9</text>
+</a>
+<a xlink:href='/not_yet_implemented' target='_top'>
+<text x='1719.9' y='24.2' style='fill:rgb(63,63,255);font-size:14px;font-weight:bold;'>11</text>
+</a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/2/20/0/a/0' target='_top'>
+<circle cx='1804.95' cy='380.0' r='3.3' style='fill:rgb(63,63,255)'><title>(20, 2)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/20/0/a/0' target='_top'>
+<circle cx='1804.95' cy='320.0' r='3.3' style='fill:rgb(63,63,255)'><title>(20, 4)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/20/0/a/0' target='_top'>
+<circle cx='1804.95' cy='260.0' r='3.3' style='fill:rgb(63,63,255)'><title>(20, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/20/0/a/0' target='_top'>
+<circle cx='1795.05' cy='200.0' r='3.3' style='fill:rgb(191,191,0)'><title>(20, 8)</title></circle></a>
+<line x1='1804.95' y1='200.0' x2='1814.85' y2='200.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/20/0/b/0' target='_top'>
+<circle cx='1804.95' cy='200.0' r='3.3' style='fill:rgb(63,63,255)'><title>(20, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/20/0/b/1' target='_top'>
+<circle cx='1814.85' cy='200.0' r='3.3' style='fill:rgb(63,63,255)'><title>(20, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/20/0/a/0' target='_top'>
+<circle cx='1795.05' cy='140.0' r='3.3' style='fill:rgb(191,191,0)'><title>(20, 10)</title></circle></a>
+<line x1='1804.95' y1='140.0' x2='1814.85' y2='140.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/20/0/b/0' target='_top'>
+<circle cx='1804.95' cy='140.0' r='3.3' style='fill:rgb(63,63,255)'><title>(20, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/20/0/b/1' target='_top'>
+<circle cx='1814.85' cy='140.0' r='3.3' style='fill:rgb(63,63,255)'><title>(20, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/20/0/a/0' target='_top'>
+<circle cx='1795.05' cy='80.0' r='3.3' style='fill:rgb(191,191,0)'><title>(20, 12)</title></circle></a>
+<line x1='1804.95' y1='80.0' x2='1814.85' y2='80.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/20/0/b/0' target='_top'>
+<circle cx='1804.95' cy='80.0' r='3.3' style='fill:rgb(63,63,255)'><title>(20, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/20/0/b/1' target='_top'>
+<circle cx='1814.85' cy='80.0' r='3.3' style='fill:rgb(63,63,255)'><title>(20, 12)</title></circle></a>
+<line x1='1795.05' y1='20.0' x2='1785.15' y2='20.0' style='stroke:rgb(191,191,0);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/20/0/a/0' target='_top'>
+<circle cx='1795.05' cy='20.0' r='3.3' style='fill:rgb(191,191,0)'><title>(20, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/20/0/a/1' target='_top'>
+<circle cx='1785.15' cy='20.0' r='3.3' style='fill:rgb(191,191,0)'><title>(20, 14)</title></circle></a>
+<line x1='1804.95' y1='20.0' x2='1824.75' y2='20.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/20/0/b/0' target='_top'>
+<circle cx='1804.95' cy='20.0' r='3.3' style='fill:rgb(63,63,255)'><title>(20, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/20/0/b/1' target='_top'>
+<circle cx='1814.85' cy='20.0' r='3.3' style='fill:rgb(63,63,255)'><title>(20, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/20/0/b/2' target='_top'>
+<circle cx='1824.75' cy='20.0' r='3.3' style='fill:rgb(63,63,255)'><title>(20, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/2/21/0/a/0' target='_top'>
+<circle cx='1894.95' cy='380.0' r='3.3' style='fill:rgb(63,63,255)'><title>(21, 2)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/21/0/a/0' target='_top'>
+<circle cx='1885.05' cy='320.0' r='3.3' style='fill:rgb(191,191,0)'><title>(21, 4)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/21/0/b/0' target='_top'>
+<circle cx='1894.95' cy='320.0' r='3.3' style='fill:rgb(63,63,255)'><title>(21, 4)</title></circle></a>
+<line x1='1894.95' y1='311.6' x2='1904.85' y2='311.6' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/21/0/c/0' target='_top'>
+<circle cx='1894.95' cy='311.6' r='3.3' style='fill:rgb(63,63,255)'><title>(21, 4)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/21/0/c/1' target='_top'>
+<circle cx='1904.85' cy='311.6' r='3.3' style='fill:rgb(63,63,255)'><title>(21, 4)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/21/0/a/0' target='_top'>
+<circle cx='1894.95' cy='260.0' r='3.3' style='fill:rgb(63,63,255)'><title>(21, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/21/0/b/0' target='_top'>
+<circle cx='1885.05' cy='260.0' r='3.3' style='fill:rgb(191,191,0)'><title>(21, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/21/0/c/0' target='_top'>
+<circle cx='1894.95' cy='251.6' r='3.3' style='fill:rgb(63,63,255)'><title>(21, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/21/0/d/0' target='_top'>
+<circle cx='1894.95' cy='243.2' r='3.3' style='fill:rgb(63,63,255)'><title>(21, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/21/0/a/0' target='_top'>
+<circle cx='1885.05' cy='200.0' r='3.3' style='fill:rgb(191,191,0)'><title>(21, 8)</title></circle></a>
+<line x1='1885.05' y1='191.6' x2='1875.15' y2='191.6' style='stroke:rgb(191,191,0);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/21/0/b/0' target='_top'>
+<circle cx='1885.05' cy='191.6' r='3.3' style='fill:rgb(191,191,0)'><title>(21, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/21/0/b/1' target='_top'>
+<circle cx='1875.15' cy='191.6' r='3.3' style='fill:rgb(191,191,0)'><title>(21, 8)</title></circle></a>
+<line x1='1894.95' y1='200.0' x2='1904.85' y2='200.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/21/0/c/0' target='_top'>
+<circle cx='1894.95' cy='200.0' r='3.3' style='fill:rgb(63,63,255)'><title>(21, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/21/0/c/1' target='_top'>
+<circle cx='1904.85' cy='200.0' r='3.3' style='fill:rgb(63,63,255)'><title>(21, 8)</title></circle></a>
+<line x1='1894.95' y1='191.6' x2='1914.75' y2='191.6' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/21/0/d/0' target='_top'>
+<circle cx='1894.95' cy='191.6' r='3.3' style='fill:rgb(63,63,255)'><title>(21, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/21/0/d/1' target='_top'>
+<circle cx='1904.85' cy='191.6' r='3.3' style='fill:rgb(63,63,255)'><title>(21, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/21/0/d/2' target='_top'>
+<circle cx='1914.75' cy='191.6' r='3.3' style='fill:rgb(63,63,255)'><title>(21, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/21/0/a/0' target='_top'>
+<circle cx='1885.05' cy='140.0' r='3.3' style='fill:rgb(191,191,0)'><title>(21, 10)</title></circle></a>
+<line x1='1885.05' y1='131.6' x2='1875.15' y2='131.6' style='stroke:rgb(191,191,0);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/21/0/b/0' target='_top'>
+<circle cx='1885.05' cy='131.6' r='3.3' style='fill:rgb(191,191,0)'><title>(21, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/21/0/b/1' target='_top'>
+<circle cx='1875.15' cy='131.6' r='3.3' style='fill:rgb(191,191,0)'><title>(21, 10)</title></circle></a>
+<line x1='1894.95' y1='140.0' x2='1904.85' y2='140.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/21/0/c/0' target='_top'>
+<circle cx='1894.95' cy='140.0' r='3.3' style='fill:rgb(63,63,255)'><title>(21, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/21/0/c/1' target='_top'>
+<circle cx='1904.85' cy='140.0' r='3.3' style='fill:rgb(63,63,255)'><title>(21, 10)</title></circle></a>
+<line x1='1894.95' y1='131.6' x2='1914.75' y2='131.6' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/21/0/d/0' target='_top'>
+<circle cx='1894.95' cy='131.6' r='3.3' style='fill:rgb(63,63,255)'><title>(21, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/21/0/d/1' target='_top'>
+<circle cx='1904.85' cy='131.6' r='3.3' style='fill:rgb(63,63,255)'><title>(21, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/21/0/d/2' target='_top'>
+<circle cx='1914.75' cy='131.6' r='3.3' style='fill:rgb(63,63,255)'><title>(21, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/21/0/a/0' target='_top'>
+<circle cx='1885.05' cy='80.0' r='3.3' style='fill:rgb(191,191,0)'><title>(21, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/21/0/b/0' target='_top'>
+<circle cx='1885.05' cy='71.6' r='3.3' style='fill:rgb(191,191,0)'><title>(21, 12)</title></circle></a>
+<line x1='1894.95' y1='80.0' x2='1914.75' y2='80.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/21/0/c/0' target='_top'>
+<circle cx='1894.95' cy='80.0' r='3.3' style='fill:rgb(63,63,255)'><title>(21, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/21/0/c/1' target='_top'>
+<circle cx='1904.85' cy='80.0' r='3.3' style='fill:rgb(63,63,255)'><title>(21, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/21/0/c/2' target='_top'>
+<circle cx='1914.75' cy='80.0' r='3.3' style='fill:rgb(63,63,255)'><title>(21, 12)</title></circle></a>
+<line x1='1885.05' y1='63.2' x2='1865.25' y2='63.2' style='stroke:rgb(191,191,0);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/21/0/d/0' target='_top'>
+<circle cx='1885.05' cy='63.2' r='3.3' style='fill:rgb(191,191,0)'><title>(21, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/21/0/d/1' target='_top'>
+<circle cx='1875.15' cy='63.2' r='3.3' style='fill:rgb(191,191,0)'><title>(21, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/21/0/d/2' target='_top'>
+<circle cx='1865.25' cy='63.2' r='3.3' style='fill:rgb(191,191,0)'><title>(21, 12)</title></circle></a>
+<line x1='1894.95' y1='71.6' x2='1924.65' y2='71.6' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/21/0/e/0' target='_top'>
+<circle cx='1894.95' cy='71.6' r='3.3' style='fill:rgb(63,63,255)'><title>(21, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/21/0/e/1' target='_top'>
+<circle cx='1904.85' cy='71.6' r='3.3' style='fill:rgb(63,63,255)'><title>(21, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/21/0/e/2' target='_top'>
+<circle cx='1914.75' cy='71.6' r='3.3' style='fill:rgb(63,63,255)'><title>(21, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/21/0/e/3' target='_top'>
+<circle cx='1924.65' cy='71.6' r='3.3' style='fill:rgb(63,63,255)'><title>(21, 12)</title></circle></a>
+<line x1='1885.05' y1='20.0' x2='1875.15' y2='20.0' style='stroke:rgb(191,191,0);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/21/0/a/0' target='_top'>
+<circle cx='1885.05' cy='20.0' r='3.3' style='fill:rgb(191,191,0)'><title>(21, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/21/0/a/1' target='_top'>
+<circle cx='1875.15' cy='20.0' r='3.3' style='fill:rgb(191,191,0)'><title>(21, 14)</title></circle></a>
+<line x1='1885.05' y1='11.6' x2='1865.25' y2='11.6' style='stroke:rgb(191,191,0);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/21/0/b/0' target='_top'>
+<circle cx='1885.05' cy='11.6' r='3.3' style='fill:rgb(191,191,0)'><title>(21, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/21/0/b/1' target='_top'>
+<circle cx='1875.15' cy='11.6' r='3.3' style='fill:rgb(191,191,0)'><title>(21, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/21/0/b/2' target='_top'>
+<circle cx='1865.25' cy='11.6' r='3.3' style='fill:rgb(191,191,0)'><title>(21, 14)</title></circle></a>
+<line x1='1894.95' y1='20.0' x2='1914.75' y2='20.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/21/0/c/0' target='_top'>
+<circle cx='1894.95' cy='20.0' r='3.3' style='fill:rgb(63,63,255)'><title>(21, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/21/0/c/1' target='_top'>
+<circle cx='1904.85' cy='20.0' r='3.3' style='fill:rgb(63,63,255)'><title>(21, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/21/0/c/2' target='_top'>
+<circle cx='1914.75' cy='20.0' r='3.3' style='fill:rgb(63,63,255)'><title>(21, 14)</title></circle></a>
+<line x1='1894.95' y1='11.6' x2='1924.65' y2='11.6' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/21/0/d/0' target='_top'>
+<circle cx='1894.95' cy='11.6' r='3.3' style='fill:rgb(63,63,255)'><title>(21, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/21/0/d/1' target='_top'>
+<circle cx='1904.85' cy='11.6' r='3.3' style='fill:rgb(63,63,255)'><title>(21, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/21/0/d/2' target='_top'>
+<circle cx='1914.75' cy='11.6' r='3.3' style='fill:rgb(63,63,255)'><title>(21, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/21/0/d/3' target='_top'>
+<circle cx='1924.65' cy='11.6' r='3.3' style='fill:rgb(63,63,255)'><title>(21, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/22/0/a/0' target='_top'>
+<circle cx='1975.05' cy='320.0' r='3.3' style='fill:rgb(191,191,0)'><title>(22, 4)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/22/0/b/0' target='_top'>
+<circle cx='1984.95' cy='320.0' r='3.3' style='fill:rgb(63,63,255)'><title>(22, 4)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/4/22/0/c/0' target='_top'>
+<circle cx='1984.95' cy='311.6' r='3.3' style='fill:rgb(63,63,255)'><title>(22, 4)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/22/0/a/0' target='_top'>
+<circle cx='1984.95' cy='260.0' r='3.3' style='fill:rgb(63,63,255)'><title>(22, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/22/0/b/0' target='_top'>
+<circle cx='1975.05' cy='260.0' r='3.3' style='fill:rgb(191,191,0)'><title>(22, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/22/0/c/0' target='_top'>
+<circle cx='1975.05' cy='251.6' r='3.3' style='fill:rgb(191,191,0)'><title>(22, 6)</title></circle></a>
+<line x1='1984.95' y1='251.6' x2='1994.85' y2='251.6' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/22/0/d/0' target='_top'>
+<circle cx='1984.95' cy='251.6' r='3.3' style='fill:rgb(63,63,255)'><title>(22, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/6/22/0/d/1' target='_top'>
+<circle cx='1994.85' cy='251.6' r='3.3' style='fill:rgb(63,63,255)'><title>(22, 6)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/22/0/a/0' target='_top'>
+<circle cx='1975.05' cy='200.0' r='3.3' style='fill:rgb(191,191,0)'><title>(22, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/22/0/b/0' target='_top'>
+<circle cx='1984.95' cy='200.0' r='3.3' style='fill:rgb(63,63,255)'><title>(22, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/22/0/c/0' target='_top'>
+<circle cx='1975.05' cy='191.6' r='3.3' style='fill:rgb(191,191,0)'><title>(22, 8)</title></circle></a>
+<line x1='1984.95' y1='191.6' x2='1994.85' y2='191.6' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/22/0/d/0' target='_top'>
+<circle cx='1984.95' cy='191.6' r='3.3' style='fill:rgb(63,63,255)'><title>(22, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/8/22/0/d/1' target='_top'>
+<circle cx='1994.85' cy='191.6' r='3.3' style='fill:rgb(63,63,255)'><title>(22, 8)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/22/0/a/0' target='_top'>
+<circle cx='1975.05' cy='140.0' r='3.3' style='fill:rgb(191,191,0)'><title>(22, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/22/0/b/0' target='_top'>
+<circle cx='1984.95' cy='140.0' r='3.3' style='fill:rgb(63,63,255)'><title>(22, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/22/0/c/0' target='_top'>
+<circle cx='1984.95' cy='131.6' r='3.3' style='fill:rgb(63,63,255)'><title>(22, 10)</title></circle></a>
+<line x1='1984.95' y1='123.2' x2='1994.85' y2='123.2' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/22/0/d/0' target='_top'>
+<circle cx='1984.95' cy='123.2' r='3.3' style='fill:rgb(63,63,255)'><title>(22, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/22/0/d/1' target='_top'>
+<circle cx='1994.85' cy='123.2' r='3.3' style='fill:rgb(63,63,255)'><title>(22, 10)</title></circle></a>
+<line x1='1975.05' y1='131.6' x2='1965.15' y2='131.6' style='stroke:rgb(191,191,0);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/22/0/e/0' target='_top'>
+<circle cx='1975.05' cy='131.6' r='3.3' style='fill:rgb(191,191,0)'><title>(22, 10)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/10/22/0/e/1' target='_top'>
+<circle cx='1965.15' cy='131.6' r='3.3' style='fill:rgb(191,191,0)'><title>(22, 10)</title></circle></a>
+<line x1='1975.05' y1='80.0' x2='1965.15' y2='80.0' style='stroke:rgb(191,191,0);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/22/0/a/0' target='_top'>
+<circle cx='1975.05' cy='80.0' r='3.3' style='fill:rgb(191,191,0)'><title>(22, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/22/0/a/1' target='_top'>
+<circle cx='1965.15' cy='80.0' r='3.3' style='fill:rgb(191,191,0)'><title>(22, 12)</title></circle></a>
+<line x1='1975.05' y1='71.6' x2='1955.25' y2='71.6' style='stroke:rgb(191,191,0);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/22/0/b/0' target='_top'>
+<circle cx='1975.05' cy='71.6' r='3.3' style='fill:rgb(191,191,0)'><title>(22, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/22/0/b/1' target='_top'>
+<circle cx='1965.15' cy='71.6' r='3.3' style='fill:rgb(191,191,0)'><title>(22, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/22/0/b/2' target='_top'>
+<circle cx='1955.25' cy='71.6' r='3.3' style='fill:rgb(191,191,0)'><title>(22, 12)</title></circle></a>
+<line x1='1984.95' y1='80.0' x2='2004.75' y2='80.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/22/0/c/0' target='_top'>
+<circle cx='1984.95' cy='80.0' r='3.3' style='fill:rgb(63,63,255)'><title>(22, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/22/0/c/1' target='_top'>
+<circle cx='1994.85' cy='80.0' r='3.3' style='fill:rgb(63,63,255)'><title>(22, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/22/0/c/2' target='_top'>
+<circle cx='2004.75' cy='80.0' r='3.3' style='fill:rgb(63,63,255)'><title>(22, 12)</title></circle></a>
+<line x1='1984.95' y1='71.6' x2='2004.75' y2='71.6' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/22/0/d/0' target='_top'>
+<circle cx='1984.95' cy='71.6' r='3.3' style='fill:rgb(63,63,255)'><title>(22, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/22/0/d/1' target='_top'>
+<circle cx='1994.85' cy='71.6' r='3.3' style='fill:rgb(63,63,255)'><title>(22, 12)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/12/22/0/d/2' target='_top'>
+<circle cx='2004.75' cy='71.6' r='3.3' style='fill:rgb(63,63,255)'><title>(22, 12)</title></circle></a>
+<line x1='1975.05' y1='20.0' x2='1965.15' y2='20.0' style='stroke:rgb(191,191,0);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/22/0/a/0' target='_top'>
+<circle cx='1975.05' cy='20.0' r='3.3' style='fill:rgb(191,191,0)'><title>(22, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/22/0/a/1' target='_top'>
+<circle cx='1965.15' cy='20.0' r='3.3' style='fill:rgb(191,191,0)'><title>(22, 14)</title></circle></a>
+<line x1='1984.95' y1='20.0' x2='1994.85' y2='20.0' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/22/0/b/0' target='_top'>
+<circle cx='1984.95' cy='20.0' r='3.3' style='fill:rgb(63,63,255)'><title>(22, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/22/0/b/1' target='_top'>
+<circle cx='1994.85' cy='20.0' r='3.3' style='fill:rgb(63,63,255)'><title>(22, 14)</title></circle></a>
+<line x1='1975.05' y1='11.6' x2='1965.15' y2='11.6' style='stroke:rgb(191,191,0);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/22/0/c/0' target='_top'>
+<circle cx='1975.05' cy='11.6' r='3.3' style='fill:rgb(191,191,0)'><title>(22, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/22/0/c/1' target='_top'>
+<circle cx='1965.15' cy='11.6' r='3.3' style='fill:rgb(191,191,0)'><title>(22, 14)</title></circle></a>
+<line x1='1984.95' y1='11.6' x2='2004.75' y2='11.6' style='stroke:rgb(63,63,255);stroke-width:2.4'/><a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/22/0/d/0' target='_top'>
+<circle cx='1984.95' cy='11.6' r='3.3' style='fill:rgb(63,63,255)'><title>(22, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/22/0/d/1' target='_top'>
+<circle cx='1994.85' cy='11.6' r='3.3' style='fill:rgb(63,63,255)'><title>(22, 14)</title></circle></a>
+<a xlink:href='/L/ModularForm/GL2/Q/holomorphic/14/22/0/d/2' target='_top'>
+<circle cx='2004.75' cy='11.6' r='3.3' style='fill:rgb(63,63,255)'><title>(22, 14)</title></circle></a>
+</svg>

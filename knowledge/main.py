@@ -100,6 +100,16 @@ def get_bread(breads = []):
     bc.append(b)
   return bc
 
+def searchbox(q="", clear=False):
+  """returns the searchbox"""
+  searchbox = u"""\
+    <form id='knowl-search' action="%s" method="GET">
+      <input name="search" value="%s" />"""
+  if clear:
+    searchbox += '<a href="%s">clear</a>' % url_for(".index")
+  searchbox += "</form>" 
+  return searchbox % (url_for(".index"), q)
+
 @knowledge_page.route("/test")
 def test():
   """
@@ -131,17 +141,13 @@ def show(ID):
   k = Knowl(ID)
   r = render(ID, footer="0")
   b = get_bread([('%s'%k.title, url_for('.show', ID=ID))])
-  searchbox = u"""\
-    <form id='knowl-search' action="%s" method="GET">
-      <input name="search" />
-    </form>""" % url_for(".index")
     
   return render_template("knowl-show.html",
          title = k.title,
          k = k,
          render = r,
          bread = b,
-         navi_raw = searchbox)
+         navi_raw = searchbox())
 
 @knowledge_page.route("/delete/<ID>")
 @admin_required
@@ -252,10 +258,29 @@ def index():
   get_knowls().ensure_index('_keywords')
   keyword = request.args.get("search", "").lower()
   keywords = filter(lambda _:len(_) >= 3, keyword.split(" "))
-  logger.debug("keywords: %s" % keywords)
+  #logger.debug("keywords: %s" % keywords)
   keyword_q = {'_keywords' : { "$all" : keywords}}
+  
+  qualities = []
+  defaults = "filter" not in request.args
+  searchmode = "search" in request.args
+
+  from knowl import knowl_qualities
+  # TODO wrap this into a loop:
+  reviewed = request.args.get("reviewed", "") == "on" or defaults or searchmode
+  ok = request.args.get("ok", "") == "on" or defaults or searchmode
+  beta = request.args.get("beta", "") == "on" or searchmode
+
+  if reviewed: qualities.append("reviewed")
+  if ok:       qualities.append("ok")
+  if beta:     qualities.append("beta")
+
+  quality_q = { '$in' : qualities }
+  logger.debug("quality_q: %s" % quality_q)
+
   s_query = keyword_q if keyword else {}
   s_query['title'] = { "$exists" : True }
+  s_query['quality'] = quality_q
   knowls = get_knowls().find(s_query, fields=['title'])
 
   def first_char(k):
@@ -278,6 +303,10 @@ def index():
          title  = "Knowledge Database",
          bread  = get_bread(),
          knowls = knowls,
-         search = keyword)
+         search = keyword,
+         navi_raw = searchbox(request.args.get("search", ""), searchmode),
+         knowl_qualities = knowl_qualities,
+         searchmode = searchmode,
+         filters = (beta, ok, reviewed))
 
 

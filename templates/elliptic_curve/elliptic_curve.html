@@ -200,7 +200,11 @@ function show_code(system) {
     <div class='pari nodisplay code'></div>
     <div class='magma nodisplay code'>&gt; ModularForm(E);</div>
     <p>
-        {{ info.f | safe }}
+    <form>
+        <div class="output"><span id="modform_output">{{ info.f | safe }}</span></div>
+        <div class="emptyspace"><br></div>
+        <button id="morebutton">More</button>
+    </form>
     </p>
     <p align="left">
         <a  href='{{info.download_qexp_url}}' target='_blank' >download coefficients</a>
@@ -229,7 +233,22 @@ function show_code(system) {
     <center>
     <img src="{{info.plot}}" />
     </center>
-    
+
+<script type="text/javascript">
+var number_of_coefficients = 10;
+function more_handler(evt) {
+    number_of_coefficients += number_of_coefficients;
+    evt.preventDefault();
+    $("#modform_output").load("/EllipticCurve/Q/modular_form_display/{{info.label}}/"+number_of_coefficients,
+        function() {
+            {# tell mathjx to render the output #}
+            MathJax.Hub.Queue(['Typeset', MathJax.Hub, "modform_output"]);
+        });
+}
+$(function() {
+    $("#morebutton").click(function(e) {more_handler(e)});
+});
+</script>
     
         
 {% endblock %}

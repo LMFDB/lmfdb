@@ -1,1 +1,1 @@
-from mwfp_class import MyDataTable,PicardDataTable,PicardFormTable
+from mwfp_classes import PicardDataTable,PicardFormTable
