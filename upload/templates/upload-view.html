@@ -116,7 +116,7 @@ function updateMappingRules(data, id) {
   <dt>Status</dt>
   {% if current_user.is_admin() %}
     <select onchange="updateMetadata('{{entry._id}}', 'status', this.value)">
-      <option value="approve" {%if entry.metadata.status[0]=='a'%}selected{%endif%}>Approved</option>
+      <option value="approved" {%if entry.metadata.status[0]=='a'%}selected{%endif%}>Approved</option>
       <option value="disapproved" {%if entry.metadata.status[0]=='d'%}selected{%endif%}>Disapproved</option>
       <option value="unmoderated" {%if entry.metadata.status[0]=='u'%}selected{%endif%}>Unmoderated</option>
     </select>
