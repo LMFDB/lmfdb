@@ -3,6 +3,7 @@ import math
 from Lfunctionutilities import pair2complex, splitcoeff, seriescoeff
 from sage.all import *
 import sage.libs.lcalc.lcalc_Lfunction as lc
+from sage.rings.rational import Rational
 import re
 import pymongo
 import bson
@@ -42,8 +43,8 @@ def my_find_update(the_coll, search_dict, update_dict):
 
 def constructor_logger(object, args):
     logger.info(str(object.__class__)+str(args))
-    object.inject_database(["original_mathematical_object()", "poles", "residues", "kappa_fe", 
-        "lambda_fe", "mu_fe", "nu_fe"])
+    #object.inject_database(["original_mathematical_object()", "poles", "residues", "kappa_fe",
+    #    "lambda_fe", "mu_fe", "nu_fe"])  #Paul Dehaye put this here for debugging
 class Lfunction:
     """Class representing a general L-function
     It can be called with a dictionary of these forms:
@@ -265,8 +266,15 @@ class Lfunction:
 ### Specify, as lists, the poles and residues of L(s) in Re(s)>1/2 (i.e. assumes that there
 ### are no poles on s=1/2). Also assumes that the poles are simple. Lines with empty lists can be omitted."""
         thefile += "\n\n"
-        thefile += "pole_list = " +  str(self.poles_L) + "\n"
-        thefile += "residue_list = " +  str(self.residues_L) + "\n\n"
+        if hasattr(self, 'poles_L'):
+            thefile += "pole_list = " +  str(self.poles_L) + "\n"
+        else:
+            thefile += "pole_list = []\n"
+
+        if hasattr(self, 'residues_L'):
+            thefile += "residue_list = " +  str(self.residues_L) + "\n\n"
+        else:
+            thefile += "residue_list = []\n\n"
 
         thefile += """\
 #################################################################################################
@@ -303,14 +311,13 @@ class Lfunction:
 ###
 ### Specify whether Dirichlet coefficients are periodic:"""
         thefile += "\n\n"
-        if(self.coefficient_period==0):
-            thefile += "periodic = false\n\n"
-        else:
+        if(self.coefficient_period!=0 or hasattr(self, 'is_zeta')):
             thefile += "periodic = true\n\n"
+        else:
+            thefile += "periodic = false\n\n"
 
 
-        if hasattr(self, 'normalize_by'):
-            thefile += """\
+        thefile += """\
 #################################################################################################
 ### The default is to assume that the Dirichlet coefficients are provided
 ### normalized so that the functional equation is s <--> 1-s, i.e. `normalize_by'
@@ -334,9 +341,13 @@ class Lfunction:
 ###
 ### So, the normalize_by variable is meant to allow the convenience, for example,
 ### of listing the a(n)'s rather than the a(n)/sqrt(n)'s."""
-            thefile += "\n\n"
-            thefile += "### Normalize, below, the n-th Dirichlet coefficient by n^(" +str(self.normalize_by) + ")\n"
-            thefile += "normalize_by = " + str(self.normalize_by) +  "    ### floating point is also okay. \n\n"
+        thefile += "\n\n"
+
+        if hasattr(self, 'normalize_by'):
+            thefile += "normalize_by = " + str(self.normalize_by) +  "    ### floating point is also okay.\n"
+            thefile += "### Normalize, below, the n-th Dirichlet coefficient by n^(" +str(self.normalize_by) + ")\n\n"
+        else:
+            thefile += "normalize_by = 0    # the default, i.e. no normalizing\n\n"
 
         thefile += """\
 #################################################################################################
@@ -353,14 +364,29 @@ class Lfunction:
         thefile += "\n\n"
 
         thefile += "Dirichlet_coefficient = [\n"
-        thefile += "[0,   ### set Dirichlet_coefficient[0]\n"
-        for n in range(0,len(self.dirichlet_coefficients)):
-            thefile += str(self.dirichlet_coefficients[n])
-            if n<5:
-                thefile += ",    ### set Dirichletcoefficient[" + str(n+1) +"]\n"
+
+        if hasattr(self, 'is_zeta'):
+            thefile += "1    ### the Dirichlet coefficients of zeta are all 1\n]\n"
+        elif hasattr(self, 'is_Dirichlet_L'):
+            thefile += "TO BE DONE\n]\n"
+        else:
+            thefile += "0,\t\t\t### set Dirichlet_coefficient[0]\n"
+            if hasattr(self, 'dirichlet_coefficients_unnormalized'):
+                for n in range(0,len(self.dirichlet_coefficients_unnormalized)):
+                    thefile += str(self.dirichlet_coefficients_unnormalized[n])
+                    if n<5:
+                        thefile += ",\t\t\t### set Dirichlet_coefficient[" + str(n+1) +"]\n"
+                    else:
+                        thefile += ",\n"
             else:
-                thefile += ",\n"
-        thefile += "]\n"
+                for n in range(0,len(self.dirichlet_coefficients)):
+                    thefile += str(self.dirichlet_coefficients[n])
+                    if n<5:
+                        thefile += ",\t\t\t### set Dirichlet_coefficient[" + str(n+1) +"]\n"
+                    else:
+                        thefile += ",\n"
+            thefile = thefile[:-2]
+            thefile += "]\n"
 
         return(thefile)
 
@@ -368,53 +394,53 @@ class Lfunction:
     ############################################################################
     ### other useful methods
     ############################################################################
-    
+
     def original_mathematical_object(self):
         raise Error("not all L-function have a mathematical object tag defined atm")
-        
+
     def initial_zeroes(self, numzeroes=0):
         pass
 
     def critical_value(self):
         pass
-        
+
     def value_at_1(self):
         pass
-        
+
     def conductor(self, advocate):
         # Advocate could be IK, CFKRS or B
         pass
-        
+
     ############################################################################
     ### Injects into the database of all the L-functions
     ############################################################################
-            
+
     def inject_database(self, relevant_info, time_limit = None):
         #   relevant_methods are text strings 
         #    desired_database_fields = [Lfunction.original_mathematical_object, Lfunction.level]
         #    also zeroes, degree, conductor, type, real_coeff, rational_coeff, algebraic_coeff, critical_value, value_at_1, sign
         #    ok_methods = [Lfunction.math_id, Lfunction.level]
-        #   
+        #
         # Is used to inject the data in relevant_fields
-        
+
         logger.info("Trying to inject")
         import base
         db = base.getDBConnection().Lfunctions
         Lfunctions = db.full_collection
         update_dict = dict([(method_name,get_attr_or_method(self,method_name)) for method_name in relevant_info])
-        
+
         logger.info("injecting " + str(update_dict))
         search_dict = {"original_mathematical_object()": get_attr_or_method(self, "original_mathematical_object()")}
-        
+
         my_find_update(Lfunctions, search_dict, update_dict)
-        
+
 
 #############################################################################
 
 class Lfunction_EC(Lfunction):
     """Class representing an elliptic curve L-function
     It can be called with a dictionary of these forms:
-    
+
     dict = { 'label': ... }  label is the Cremona label of the elliptic curve
     dict = { 'label': ... , 'numcoeff': ...  }  numcoeff is the number of
            coefficients to use when computing
@@ -444,12 +470,13 @@ class Lfunction_EC(Lfunction):
         self.kappa_fe = [1]
         self.lambda_fe = [0.5]
         self.mu_fe = []
-        self.nu_fe = [0.5]
+        self.nu_fe = [Rational('1/2')]
         self.langlands = True
         self.degree = 2
 
         self.dirichlet_coefficients = self.E.anlist(self.numcoeff)[1:]  #remove a0
         self.dirichlet_coefficients_unnormalized = self.dirichlet_coefficients[:]
+        self.normalize_by = Rational('1/2')
 
         # Renormalize the coefficients
         for n in range(0,len(self.dirichlet_coefficients)-1):
@@ -530,12 +557,12 @@ class Lfunction_EMF(Lfunction):
         # Extract the L-function information from the elliptic modular form
         self.automorphyexp = float(self.weight-1)/float(2)
         self.Q_fe = float(sqrt(self.level)/(2*math.pi))
-                            
+
         if self.level == 1:  # For level 1, the sign is always plus
             self.sign = 1
         else:  # for level not 1, calculate sign from Fricke involution and weight
             self.sign = self.MF.atkin_lehner_eigenvalues()[self.level] * (-1)**(float(self.weight/2))
-                            
+
         self.kappa_fe = [1]
         self.lambda_fe = [self.automorphyexp]
         self.mu_fe = []
@@ -623,8 +650,8 @@ class RiemannZeta(Lfunction):
             self.dirichlet_coefficients.append(1)
         self.poles = [0,1]
         self.residues = [-1,1]
-        self.poles_L = [1] # poles of L(s)
-        self.residues_L = [1] # residues of L(s)
+        self.poles_L = [1] # poles of L(s), used by createLcalcfile_ver2
+        self.residues_L = [1] # residues of L(s) createLcalcfile_ver2
         self.coefficient_period = 0
         self.selfdual = True
         self.texname = "\\zeta(s)"
@@ -634,9 +661,10 @@ class RiemannZeta(Lfunction):
         self.primitive = True
         self.citation = ''
         self.title = "Riemann Zeta-function: $\\zeta(s)$"
-        
+        self.is_zeta = True
+
         self.sageLfunction = lc.Lfunction_Zeta()
-    
+
     def Ltype(self):
         return "riemann"
 
@@ -917,8 +945,8 @@ class DedekindZeta(Lfunction):   # added by DK
         self.poles = [1,0] # poles of the Lambda(s) function
         self.residues = [self.res,-self.res] # residues of the Lambda(s) function
 
-        self.poles_L = [1] # poles of L(s)
-        self.residues_L = [1234] # residues of L(s)
+        self.poles_L = [1] # poles of L(s) used by createLcalcfile_ver2
+        self.residues_L = [1234] # residues of L(s) used by createLcalcfile_ver2, XXXXXXXXXXXX needs to be set
 
         self.coefficient_period = 0
         self.selfdual = True
