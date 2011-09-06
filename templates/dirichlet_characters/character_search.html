@@ -60,10 +60,19 @@ table td.params {
 
 <script>
  $(document).ready(function() {
-     $('#characterTable').dataTable({"bFilter":false,"aoColumnDefs": [
-         { "iDataSort": 1, "aTargets": [0] },
-         { "bSort":false, "aTargets": [0] }
-     ] } );
+     jQuery.fn.dataTableExt.oSort['html-character-index-asc']  = function(a,b) {
+         var x = a.replace( /.*<sub>(.*)<\/sub>.*/, '$1' ) * 1;
+         var y = b.replace( /.*<sub>(.*)<\/sub>.*/, '$1') * 1;
+         return ((x < y) ? -1 : ((x > y) ?  1 : 0));
+     };
+
+     jQuery.fn.dataTableExt.oSort['html-character-index-desc'] = function(a,b) {
+         var x = a.replace( /.*<sub>(.*)<\/sub>.*/, '$1' ) * 1;
+         var y = b.replace( /.*<sub>(.*)<\/sub>.*/, '$1' ) * 1;
+         return ((x < y) ?  1 : ((x > y) ? -1 : 0));
+     };     
+     $('#characterTable').dataTable({"bFilter":false,"bLengthChange":false, "aoColumnDefs": [ { "sType": 'html-character-index', "aTargets": [0] }
+         ] });
 } );
 </script>
 <table class="ntdata" style="table-layout:fixed" id="characterTable">
