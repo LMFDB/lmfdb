@@ -1,0 +1,30 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<h2> Results: ({{info.report}}) </h2>
+
+<table border=1 cellpadding=5 class='right_align_table'>
+<tr>
+<th>Label</th>
+<th>Degree</th>
+<th>$p$</th>
+<th>$c$</th>
+<th>Galois group</th>
+</tr>
+
+{% for field in info.fields: %}
+<tr>
+<td align='left'><a href="/LocalField/{{field.label}}">{{field.label}}</a></td>
+<td>{{field.n}}</td>
+<td>{{field.p}}</td>
+<td>{{field.c}}</td>
+<td>{{field.gal[2]}}</td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+
+{% endblock %}
