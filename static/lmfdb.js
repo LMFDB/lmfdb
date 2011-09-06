@@ -23,13 +23,11 @@ $(function() {
   $("#mathjax-info").click(function() {show_content()});
 
   window.setTimeout(function() {
-    MathJax.Hub.Queue(function() {
-      if(!revealed) {
-        $("#mathjax-info").fadeIn('fast');
-        $("#content").fadeOut('fast');
-      }
+    if(!revealed) {
+      $("#mathjax-info").fadeIn('fast');
+      $("#content").fadeOut('fast');
     }
-  }, 200);
+  }, 500);
 
   /* delay some secs and tell the user, that it is
    * still loading and clicking removes the banner */
