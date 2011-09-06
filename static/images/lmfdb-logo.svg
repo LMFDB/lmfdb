@@ -14,7 +14,7 @@
    height="120"
    id="svg2"
    version="1.1"
-   inkscape:version="0.48.1 r9760"
+   inkscape:version="0.48+devel r10186"
    sodipodi:docname="lmfdb-logo.svg"
    inkscape:export-filename="/home/harri/Programming/lmfdb/static/images/lmfdb-logo.png"
    inkscape:export-xdpi="90"
@@ -294,16 +294,16 @@
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:zoom="2.61"
-     inkscape:cx="135.5211"
+     inkscape:cx="186.97318"
      inkscape:cy="60.852093"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
-     inkscape:window-width="1024"
-     inkscape:window-height="532"
-     inkscape:window-x="0"
-     inkscape:window-y="21"
-     inkscape:window-maximized="1">
+     inkscape:window-width="1321"
+     inkscape:window-height="621"
+     inkscape:window-x="16"
+     inkscape:window-y="18"
+     inkscape:window-maximized="0">
     <inkscape:grid
        type="xygrid"
        id="grid3630"
@@ -328,7 +328,7 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(0,-932.36218)">
+     transform="translate(0, -932.362)">
     <path
        id="path2820"
        style="font-size:56px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#107010;fill-opacity:1;stroke:#000000;font-family:FreeSans;-inkscape-font-specification:FreeSans Bold;filter:url(#filter3952);stroke-opacity:1;stroke-linejoin:round;stroke-linecap:round"
@@ -356,57 +356,18 @@
        sodipodi:nodetypes="cssscsssc"
        inkscape:export-xdpi="99.999985"
        inkscape:export-ydpi="99.999985" />
-    <g
-       id="g3794"
-       transform="matrix(0.98064155,0.19581156,-0.19581156,0.98064155,208.36049,30.645449)"
-       style="filter:url(#filter3857)">
-      <text
-         sodipodi:linespacing="100%"
-         id="text3020"
-         y="1009.3622"
-         x="-118"
-         style="font-size:57.40678024px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ff0000;fill-opacity:1;stroke:none;font-family:FreeSans;-inkscape-font-specification:AlArabiya"
-         xml:space="preserve"><tspan
-           y="1009.3622"
-           x="-118"
-           id="tspan3022"
-           sodipodi:role="line">β</tspan></text>
-      <path
-         transform="matrix(0.875,0,0,0.875,-16.598322,935.15957)"
-         d="m -60,65 c 0,22.09139 -17.90861,40 -40,40 -22.09139,0 -40,-17.90861 -40,-40 0,-22.09139 17.90861,-40 40,-40 22.09139,0 40,17.90861 40,40 z"
-         sodipodi:ry="40"
-         sodipodi:rx="40"
-         sodipodi:cy="65"
-         sodipodi:cx="-100"
-         id="path3024"
-         style="fill:none;stroke:#ff0000;stroke-width:5;stroke-linecap:butt;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
-         sodipodi:type="arc" />
-    </g>
-    <g
-       id="g3794-5"
-       transform="matrix(1.1428572,0.22820229,-0.22820229,1.1428572,477.367,-127.63619)"
-       style="filter:url(#filter3857-6)">
-      <text
-         sodipodi:linespacing="100%"
-         id="text3020-2"
-         y="1009.3622"
-         x="-118"
-         style="font-size:57.40678024px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ff0000;fill-opacity:1;stroke:none;font-family:FreeSans;-inkscape-font-specification:AlArabiya"
-         xml:space="preserve"><tspan
-           y="1009.3622"
-           x="-118"
-           id="tspan3022-5"
-           sodipodi:role="line">β</tspan></text>
-      <path
-         transform="matrix(0.875,0,0,0.875,-16.598322,935.15957)"
-         d="m -60,65 c 0,22.09139 -17.90861,40 -40,40 -22.09139,0 -40,-17.90861 -40,-40 0,-22.09139 17.90861,-40 40,-40 22.09139,0 40,17.90861 40,40 z"
-         sodipodi:ry="40"
-         sodipodi:rx="40"
-         sodipodi:cy="65"
-         sodipodi:cx="-100"
-         id="path3024-4"
-         style="fill:none;stroke:#ff0000;stroke-width:5;stroke-linecap:butt;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
-         sodipodi:type="arc" />
-    </g>
+    <text
+       xml:space="preserve"
+       style="font-size:67.98415375000000438px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#d40000;fill-opacity:1;stroke:none;font-family:PortagoITC TT;-inkscape-font-specification:PortagoITC TT"
+       x="-200.2618"
+       y="1839.2244"
+       id="text67"
+       sodipodi:linespacing="125%"
+       transform="matrix(1.7872061,-0.62333901,0.19731639,0.49071285,0,0)"><tspan
+         sodipodi:role="line"
+         id="tspan69"
+         x="-200.2618"
+         y="1839.2244"
+         style="fill:#d40000">BETA</tspan></text>
   </g>
 </svg>
