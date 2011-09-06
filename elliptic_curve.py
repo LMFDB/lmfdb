@@ -225,13 +225,14 @@ def render_isogeny_class(iso_class):
     info['download_all_url'] = url_for('download_all', label=str(label))
     friends=[('Elliptic Curve %s' % l , "/EllipticCurve/Q/%s" % l) for l in data['label_of_curves_in_the_class']]
     friends.append(('Quadratic Twist', "/quadratic_twists/%s" % (label)))
-    friends.append(('Modular Form', url_for("emf.render_classical_modular_form_from_label",label="%s" %(label))))
+    friends.append(('L-function', url_for("render_Lfunction", arg1='EllipticCurve', arg2='Q', arg3=label)))
+####  THIS DOESN'T WORK AT THE MOMENT /Lemurell                           friends.append(('Modular Form', url_for("emf.render_classical_modular_form_from_label",label="%s" %(label))))
     info['friends'] = friends
 
     t= "Elliptic Curve Isogeny Class %s" % info['label']
     bread = [('Elliptic Curves ', url_for("rational_elliptic_curves")),('isogeny class %s' %info['label'],' ')]
 
-    return render_template("elliptic_curve/iso_class.html", info = info,bread=bread, credit=credit,title = t)
+    return render_template("elliptic_curve/iso_class.html", info=info, bread=bread, credit=credit,title = t, friends=info['friends'])
 
 @app.route("/EllipticCurve/Q/modular_form_display/<label>/<number>")
 def modular_form_display(label, number):
@@ -345,8 +346,8 @@ def render_curve_webpage_by_label(label):
     info['downloads_visible'] = True
     info['downloads'] = [('worksheet', url_for("not_yet_implemented"))]
     info['friends'] = [('Isogeny class', "/EllipticCurve/Q/%s" % iso_class),
-                       ('Modular Form', url_for("emf.render_elliptic_modular_form_from_label",label="%s" %(iso_class))),
-                       ('L-function', "/L/EllipticCurve/Q/%s" % label)]
+####  THIS DOESN'T WORK AT THE MOMENT /Lemurell                       ('Modular Form', url_for("emf.render_elliptic_modular_form_from_label",label="%s" %(iso_class))),
+                       ('L-function', url_for("render_Lfunction", arg1='EllipticCurve', arg2='Q', arg3=label))]
     info['learnmore'] = [('Elliptic Curves', url_for("not_yet_implemented"))]
     #info['plot'] = image_src(plot)
     info['plot'] = url_for('plot_ec', label=label)
@@ -366,7 +367,7 @@ def render_curve_webpage_by_label(label):
     bread = [('Elliptic Curves ', url_for("rational_elliptic_curves")),('Elliptic curves %s' %info['label'],' ')]
 
     return render_template("elliptic_curve/elliptic_curve.html", 
-         info=info, properties2=properties2, credit=credit,bread=bread, title = t)
+          properties2=properties2, credit=credit,bread=bread, title = t, info=info, friends = info['friends'])
 
 @app.route("/EllipticCurve/Q/padic_data")
 def padic_data():
