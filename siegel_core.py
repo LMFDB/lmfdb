@@ -31,9 +31,20 @@ def _dimension_Sp4Z_2(wt):
     of weight integral,2.
     
     OUTPUT
-        ("Total", "Eisenstein", "Klingen", "Maass", "Interesting")
+        ("Total", "Non-cusp", "Cusp")
+
+    REMARK
+        Satoh's paper does not have a description of the cusp forms.
     """
-    raise NotImplementedError
+    if not is_even(wt):
+         return (uk,uk,uk)
+    R = PowerSeriesRing(ZZ, default_prec = wt + 1 , names=('x',))
+    (x,) = R._first_ngens(1)
+    H  = 1/(1 - x**4)/(1 - x**6)/(1 - x**10)/(1 - x**12)
+    V  = 1/(1 - x**6)/(1 - x**10)/(1 - x**12)
+    W  = 1/(1 - x**10)/(1 - x**12)
+    a = H[wt - 10]+H[wt - 14]+H[wt - 16]+V[wt - 16]+V[wt - 18]+V[wt - 22]
+    return (a, uk, uk)
 
     
 def _dimension_Sp6Z(wt):
@@ -95,13 +106,13 @@ def _dimension_Kp(wt, tp):
     OUTPUT
         ("Total", "Gritsenko Lifts", "Nonlifts", "Oldforms")
     """
-    if not is_prime(tp):
-        return (uk, grits, uk, uk)
-
     p=tp
     one=QQ(1)
     oldforms=0
     grits=__JacobiDimension(wt, tp)
+
+    if not is_prime(tp):
+        return (uk, grits, uk, uk)
 
     if wt <= 1:
         return (0, 0,0,0);
@@ -150,7 +161,7 @@ def _dimension_Kp(wt, tp):
         newforms = total - grits - oldforms
         return (total, grits, newforms, oldforms)
 
-    return ( tbi, grits, uk , uk);
+    return ( tbi, grits, tbi, 0);
 
 
 def _dimension_Gamma0_2(wt):
@@ -273,25 +284,29 @@ def _dimension_Gamma0_4_psi_4(wt):
         a = H_all_even[wt]
         return ( a, tbi, tbi, tbi, tbi)
     else:
-        return ( tbi, tbi, tbi, tbi, tbi)
+        return ( uk, uk, uk, uk, uk)
 
 
-def _dimension_Gamma0_4_half(wtMinusHalf):
+def _dimension_Gamma0_4_half(k):
     """
     Return the dimensions of subspaces of Siegel modular forms$Gamma0(4)$
-    of half integral weight.
+    of half integral weight  k - 1/2.
 
     INPUT
-        The realweight is wtMinusHalf+1/2
+        The realweight is k-1/2
 
     OUTPUT
         ('Total', 'Non cusp', 'Cusp')
+
+    REMARK
+        Note that formula from Hayashida's and Ibukiyama's paper has formula
+        that coefficient of x^w is for weight (w+1/2). So here w=k-1.
     """
-    R = PowerSeriesRing(ZZ, default_prec = wtMinusHalf + 1 , names=('x',))
+    R = PowerSeriesRing(ZZ, default_prec = k , names=('x',))
     (x,) = R._first_ngens(1)
     H_all= 1/(1-x)/(1 - x**2)**2/(1 - x**3)
     H_cusp= (2*x**5+x**7+ x**9 -2*x**11 +4*x**6 -x**8 +x**10 -3*x**12 +x**14)/(1 - x**2)**2/(1 - x**6)
-    a,c = H_all[wtMinusHalf], H_cusp[wtMinusHalf]
+    a,c = H_all[k-1], H_cusp[k-1]
     return (a,a-c,c)
 
 
