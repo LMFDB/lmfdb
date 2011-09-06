@@ -1,0 +1,35 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+<h1>{{title}}</h1>
+
+
+{% if table is defined %}
+
+{{ table | safe }}
+ <table class="ntdata">
+   <thead>
+     <tr><th>Eigenvalues </th></tr>
+     {% for i in range(0,nrows-1) %}
+     <tr>
+       {% for j in range(0,ncols-1) %}
+       {% set elt = table[i][j] %}
+       <td><a href="{{ elt['url'] }}">{{elt['name']}}</a></td>
+       {% endfor %}
+     </tr>
+     {% endfor %}
+   </thead>
+   <tbody>
+
+   </tbody>
+ </table>
+
+
+
+
+{% endif %}
+
+
+
+{% endblock %}

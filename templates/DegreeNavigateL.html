@@ -3,56 +3,91 @@
 {% block content %}
 
 
-{% if info.degree==1 %}
-<p>There are only two types of degree 1 L-functions:</p>
-<h3>The {{ KNOWL('L.riemann_zeta_function') }}</h3>
- This wonderful function, <a href="/L/Riemann">$\zeta(s)$</a>, was introduced by {{ KNOWL('bio.riemann') }} in the middle of the 1800's to study prime numbers.
- Take a look at its <a href="/L/Riemann">homepage</a>.
-</p>
+{% if degree==1 %}
+<div>There are only {{ KNOWL('lfunction.alldegree1.proof', title='two types') }} of degree 1 L-functions:</div>
+<h3>1. The <a href="/L/Riemann">Riemann zeta function</a></h3>
+<div>
+The {{ KNOWL('lfunction.riemann', title='Riemann zeta function,') }}
+<a href="/L/Riemann">$\zeta(s)$</a>, was introduced by {{ KNOWL('bio.riemann', title='Riemann') }} in the mid-1800s as a tool to study
+the distribution of prime numbers.
+</div>
 
-<h3>{{ KNOWL('L.dirichlet', title='Dirichlet L-functions') }} associated to a primitive {{ KNOWL('dirichlet_character') }}</h3>
+<h3>2. Dirichlet L-functions associated to a primitive {{ KNOWL('character.dirichlet', title='Dirichlet character') }}</h3>
+<div>
+{{ KNOWL('lfunction.dirichlet', title='Dirichlet L-functions') }} were introduced by {{ KNOWL('bio.dirichlet', title='Dirichlet') }} in the mid-1800s as a tool to study
+prime numbers in arithmetic progressions.
+</div>
+<div>
+These L-functions have a functional equation of the form 
+\[
+\Lambda(s,\chi) = q^{s/2} \Gamma_{\mathbb R} (s+a) L(s,\chi) = \varepsilon_\chi \overline{\Lambda}(1-s),
+\]
+where $q$ is the conductor of $\chi$.
+</div>
+<div>
+The table below shows the primitive characters arranged by the conductor and the order of the
+character, with color indicating the sign of the functional equation.
+</div>
 
-{{info.contents[0]|safe}}
+{{contents[0]|safe}}
 
 {% endif %}
 
-{% if info.degree==2 %}
+{% if degree==2 %}
 
 <h2>Automorphic Objects</h2>
 
 <div>There are two known types of primitive degree 2 L-functions that arise from automorphic objects:</div>
-<ul>
+<ol>
 <li><a href="degree2#GL2_Q_Holomorphic">$L(s, f)$: the L-function of a holomorphic newform in $S_k(\Gamma_0(N))$</a>
 </li>
 <li><a href="degree2#GL2_Q_Maass">$L(s, f)$: the L-function of a Maass cusp form on  $\Gamma_0(N)$</a></li>
-</ul>
+</ol>
 
 <h2>Geometric Objects</h2>
 
 <div>There is one known type of primitive degree 2 L-function that arises from a geometric object:</div>
 <ul>
 <li>
-<a href="degree2#EllipticCurve_Q">$L(s, E)$: the L-function of an elliptic curve $E$ over $\mathbb{Q}$.</a></li>
+<a href="#EllipticCurve_Q">$L(s, E)$: the L-function of an elliptic curve $E$ over $\mathbb{Q}$.</a></li>
 </ul>
 <h2>Available Examples</h2>
 
 <h3 id="GL2_Q_Holomorphic">L-functions of holomorphic cusp forms with trivial character</h3>
 
-{{info.contents[1]|safe}}
+<div>
+These L-functions have a functional equation of the form 
+\begin{equation} 
+\Lambda_f(s) := N^{s/2} \Gamma_{\mathbb{C} }
+\left(s + \frac{k-1}{2} \right) L(s, f) 
+\pm \Lambda_f(1-s)
+\end{equation}
+If \(L(s) = \sum a_n n^{-s} \) then \(a_n n^{\frac{k-1}{2} } \) 
+is an algebraic integer. 
+The pairs \((N,k)\) for such L-functions are shown in the plot below.
+<p>
+<i>The color indicates the sign of the functional equation.  
+The horizontal grouping indicates the degree of the field containing 
+the arithmetically normalized coefficients. </i>
+See the{{ KNOWL('lfunction.degree2holo.key', title='legend') }} for more details.
+</div>
+
+
+{{contents[1]|safe}}
 
 <h3 id="GL2_Q_Maass">Maass cusp forms on GL(2,$\mathbb{Z}$)</h3>
 
-{{info.contents[2]|safe}}
+{{contents[2]|safe}}
 
 <h3 id="EllipticCurve_Q">Elliptic Curves over $\mathbb{Q}$</h3>
 
-{{info.contents[0]|safe}}
+{{contents[0]|safe}}
 
 
 
 {% endif %}
 
-{% if info.degree==3 %}
+{% if degree==3 %}
 <div>The known types of primitive degree 3 L-functions are:</div>
 <p>
 <div>$L(s, f, \mathrm{sym}^2)$: the symmetric square of a degree 2 L-function</div>
@@ -62,11 +97,11 @@
 
 <h2>Available Examples:</h2>
 
-{{info.contents|safe}}
+{{contents|safe}}
 
 {% endif %}
  
-{% if info.degree==4 %}
+{% if degree==4 %}
 <div>The known types of primitive degree 4 L-functions are:</div>
 <p>
 <div>$L(s, f, \mathrm{sym}^3)$: the symmetric cube L-function of a cusp form on GL(2)</div>
@@ -118,7 +153,7 @@ where $\mu_1 + \mu_2 = \mu_3 + \mu_4$.
 which have been found by a computer search.</div>
 <embed src="/static/images/SL4.svg" width="520" height="360"> -->
 
-{{info.contents|safe}}
+{{contents|safe}}
 
 {% endif %}
  

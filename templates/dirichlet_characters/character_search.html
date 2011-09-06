@@ -3,54 +3,113 @@
 
 {% block content %}
 
-<!--{{ info.query }}-->
+<style type="text/css">
+table td.center {
+    text-align: center;
+}
+table td.params {
+    text-align: left;
+    font-family: monospace;
+}
+
+.modulus {
+    font-family: serif;
+    vertical-align: top;
+    padding-top: 1em;
+    border-right: 2px solid #8a8;
+}
+.modulus a { display: inline; font-family: serif; }
+.modulus font { display: inline; font-family: serif }
+.chi {
+    padding: 30px 30px;
+    font-family: serif;
+    width: 7em;
+    display: inline;
+    white-space:nowrap;}
+.chi a { display: inline; font-family: serif;}
+.primitive {
+  color:green;
+}
+.nonprimitive {
+    color:blue;
+}
+.heading {
+    padding: 30px 30px
+}
+</style>
 
 <h2> Further refine search </h2>
-
-
-<table border=0  >
-
-<tr>
 <form>
-<td align=center> Modulus <input type = 'text' name = 'modulus' size=10 value={{info.modulus}}></td>
-<td align=center> Conductor <input type='text' name='conductor' size=10 value={{info.conductor}}></td>
-<td align=center>Order <input type='text' name='order'size=10 value={{info.order}}></td>
-<!--<td align=center>Parity <input type='text' name='parity' size=10 value={{info.parity}}>-->
-</tr>
-
+    {#<input type="hidden" name="start" value="{{start}}"/>#}
+<table border="0">
 <tr>
-<td>
-<input type='submit' value='refine'></td>
+    <td align=left> {{ KNOWL('character.dirichlet.modulus', title="modulus") }}  <input type = 'text' name = 'modulus' size=10 value={{modulus}}></td>
+    <td align=left> {{ KNOWL('character.dirichlet.conductor', title="conductor") }} <input type='text' name='conductor' size=10 value={{conductor}}></td>
+    <td align=left> {{ KNOWL('character.dirichlet.order', title="order") }} <input type='text' name='order'size=10 value={{order}}></td>
+<!--<td align=center>Parity <input type='text' name='parity' size=10 value={{parity}}>-->
 </tr>
-</form>
-<tr>
-<td><h2>Results</h2></td>
-<tr>
-<td align=center>Character</td>
-<td align=center>Modulus</td>
-<td align=center>Conductor</td>
-<td align=center>Order</td>
-<td align=center>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Parity</td>
-</tr>
-
-{% for j in range(0,info.len): %}
-<tr>
-{% if info.characters[j].is_primitive() %}
-<td align=center><a href="/Character/Dirichlet/{{info.characters[j].modulus()}}/{{info.number[j]}}">{{info.texname[j]}}</a>
-{% else %}
-<td align=center><a href="/Character/Dirichlet/{{info.characters[j].modulus()}}/{{info.number[j]}}"><font color="blue">{{info.texname[j]}}</font></a>
-{% endif %}
-</td>
-<td align=center><a href="/Character/Dirichlet/?modulus={{info.characters[j].modulus()}}&conductor={{info.conductor}}&order={{info.order}}&parity={{info.parity}}">{{info.characters[j].modulus()}}</a></td>
-    <td align=center><a href="/Character/Dirichlet/?modulus={{info.modulus}}&conductor={{info.characters[j].conductor()}}&order={{info.order}}&parity={{info.parity}}">{{info.characters[j].conductor()}}</a></td>
-    <td align=center><a href="/Character/Dirichlet/?modulus={{info.modulus}}&conductor={{info.conductor}}&order={{info.characters[j].order()}}&parity={{info.parity}}">{{info.characters[j].multiplicative_order()}}</a></td>
-{% if info.characters[j].is_even() %}
-<td align=center>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Even</td>
-{% else %}
-<td align=center>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Odd<td >
-{% endif %}
-</tr>
-{% endfor %}
+{#<td align=left colspan=4>Maximum number of characters to display <input type='text' name='count' value={{count}} size=10>#}
 </table>
+<p></p>
+<td>
+    <button type='submit' value='refine'>Refine</button>
+</td>
+</form>
+
+<h2> Results </h2>
+
+<script>
+ $(document).ready(function() {
+     jQuery.fn.dataTableExt.oSort['html-character-index-asc']  = function(a,b) {
+         var x = a.replace( /.*<sub>(.*)<\/sub>.*/, '$1' ) * 1;
+         var y = b.replace( /.*<sub>(.*)<\/sub>.*/, '$1') * 1;
+         return ((x < y) ? -1 : ((x > y) ?  1 : 0));
+     };
+
+     jQuery.fn.dataTableExt.oSort['html-character-index-desc'] = function(a,b) {
+         var x = a.replace( /.*<sub>(.*)<\/sub>.*/, '$1' ) * 1;
+         var y = b.replace( /.*<sub>(.*)<\/sub>.*/, '$1' ) * 1;
+         return ((x < y) ?  1 : ((x > y) ? -1 : 0));
+     };     
+     $('#characterTable').dataTable({"bFilter":false,"bLengthChange":false, "aoColumnDefs": [ { "sType": 'html-character-index', "aTargets": [0] }
+         ] });
+} );
+</script>
+<table class="ntdata" style="table-layout:fixed" id="characterTable">
+    <thead class="heading" align="center">
+    <tr>
+        <th> {{ KNOWL('character.dirichlet', title="character") }}</th>
+        <th> {{ KNOWL('character.dirichlet.modulus', title="modulus") }}</th>
+        <th> {{ KNOWL('character.dirichlet.conductor', title="conductor") }}</th>
+        <th> {{ KNOWL('character.dirichlet.order', title="order") }}</th>
+        <th> {{ KNOWL('character.dirichlet.parity', title="parity") }}</th>
+    </tr>
+    </thead>
+    <tbody>
+        {% set row_class = cycler('odd', 'even') %}
+        {% for j in range(0,len): %}
+        <tr class="{{ row_class.next() }}">
+             <td class="modulus" align="center">
+                <a href="/Character/Dirichlet/{{characters[j].modulus()}}/{{number[j]}}">{% if characters[j].is_primitive() %}<font color="green">{% else %}<font color="blue">{% endif %}&chi;<sub>{{j}}</sub></font></a>
+            </td>
+            <td align=center>
+                <a href="/Character/Dirichlet/?modulus={{characters[j].modulus()}}&conductor={{conductor}}&order={{order}}&parity={{parity}}">{{characters[j].modulus()}}</a>
+            </td>
+            <td align=center>
+                <a href="/Character/Dirichlet/?modulus={{modulus}}&conductor={{characters[j].conductor()}}&order={{order}}&parity={{parity}}">{{characters[j].conductor()}}</a>
+            </td>
+            <td align=center>
+            <a href="/Character/Dirichlet/?modulus={{modulus}}&conductor={{conductor}}&order={{characters[j].order()}}&parity={{parity}}">{{characters[j].multiplicative_order()}}</a>
+            </td>
+            <td  align=center>{% if characters[j].is_even() %}Even{% else %}Odd{% endif %}
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+{#<hr>
+<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form();return false">Previous</A>
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form();return false">Next</A></td>#}
 
 {% endblock %}

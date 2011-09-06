@@ -1,0 +1,44 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<h1>{{ title }} HERE!</h1>
+
+
+<p>
+A Maass Form on the {{KNOWL('mf.maass.picard',title='Mass Forms on the Picard group \(\mathrm{SL}_{2}(\mathbb{Z}[i])\)') }}
+</p>
+{# Should be used to display one single Maass Form #}
+
+{{ data | safe }}
+{{ bread | safe }}
+{{ title | safe }}
+
+{% if data is defined %}
+<div>eigenvalue = {{ data.ev }}</div>
+<div>symmetry type: {{ data.sym|join(" ")}}</div>
+<div>accuracy: {{ data.prec}}</div>
+
+<table class="ntdata">
+<thead><tr><td>real(beta)</td>
+           <td>imag(beta)</td>
+           <td>a(beta)</td>
+</tr>
+
+</thead>
+<tbody>
+{% for i in data.coef %}
+   <tr>
+   {% for v in i %}
+     <td>{{ v }}</td>
+   {% endfor %}
+{#   <td>{{ data.sym|join(" ")}}</td> #}
+   </tr>
+{% endfor %}
+</tbody>
+</table>
+
+{% endif %}
+
+<div>Computed by {{ KNOWL('mf.maass.picard.contributor.HT',title='Holger Then')}}</div>
+
+{% endblock %}

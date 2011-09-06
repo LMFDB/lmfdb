@@ -454,7 +454,8 @@ def render_field_webpage(args):
     properties.extend('<tr><td align=left><b>Class group:</b><td align=left>%s</td>'%data['class_group_invs'])
     properties.extend('<tr><td align=left><b>Galois group:</b><td align=left>%s</td>'%data['galois_group'])
     properties.extend('</table>')
-    return render_template("number_field/number_field.html", info = info, properties=properties, credit=NF_credit, title = t, bread=bread)
+    del info['_id']
+    return render_template("number_field/number_field.html", properties=properties, credit=NF_credit, title = t, bread=bread, friends=info.pop('friends'), info=info )
 
 def format_coeffs(coeffs):
     return pol_to_html(str(coeff_to_poly(coeffs)))
@@ -509,6 +510,17 @@ def number_field_search(**args):
         info['count'] = 10
         count = 10
 
+    if info.get('start'):
+        try:
+            start = int(info['start'])
+            if(start < 0): start += (1-(start+1)/count)*count
+        except:
+            start = 0
+    else:
+        start = 0
+
+
+
     info['query'] = dict(query)
     if 'lucky' in args:
         import base
@@ -548,15 +560,19 @@ def number_field_search(**args):
     if ur_primes:
         res = filter_ur_primes(res, ur_primes)
 
-    res = iter_limit(res,count)
+    if(start>=nres): start-=(1+(start-nres)/count)*count
+    if(start<0): start=0
+
+    res = iter_limit(res,count,start)
         
     info['fields'] = res
     info['number'] = nres
+    info['start'] = start
     if nres==1:
         info['report'] = 'unique match'
     else:
-        if nres>count:
-            info['report'] = 'displaying first %s of %s matches'%(count,nres)
+        if nres>count or start!=0:
+            info['report'] = 'displaying matches %s-%s of %s'%(start+1,min(nres,start+count),nres)
         else:
             info['report'] = 'displaying all %s matches'%nres
     info['format_coeffs'] = format_coeffs
@@ -567,7 +583,11 @@ def number_field_search(**args):
     return render_template("number_field/number_field_search.html", info = info, title=t, properties=properties, bread=bread)
 
 
-def iter_limit(it,lim):
+def iter_limit(it,lim,skip):
+    count = 0
+    while count<skip:
+        it.next()
+        count += 1
     count = 0
     while count<lim:
         yield it.next()

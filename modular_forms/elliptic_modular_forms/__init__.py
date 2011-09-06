@@ -1,15 +1,10 @@
-from base import app
-from utils import make_logger
-import flask 
+import utils
+import flask
 
 EMF="emf"
 emf = flask.Blueprint(EMF, __name__, template_folder="views/templates",static_folder="views/static")
-
-emf_logger = make_logger(emf)
+emf_logger = utils.make_logger(emf)
 
 import views
-#import backend
+import backend
 from backend import *
-
-# registering the blueprint must come *after* defining all the url mappings in views!
-#app.register_blueprint(emf, url_prefix="/ModularForm/GL2/Q/holomorphic")

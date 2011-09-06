@@ -147,8 +147,9 @@ def viewAll():
   fs = GridFS(db)
 
   approved = [ fs.get(x['_id']) for x in db.fs.files.find({"metadata.status" : "approved"}) ]
+  unmoderated = [ fs.get(x['_id']) for x in db.fs.files.find({"metadata.status" : "unmoderated"}) ]
 
-  return render_template("upload-view.html", title = "Uploaded data", bread = get_bread(), approved=approved)
+  return render_template("upload-view.html", title = "Uploaded data", bread = get_bread(), approved=approved, unmoderated2=unmoderated)
 
 
 
@@ -206,10 +207,10 @@ def getUploadedFor(path):
   ret.insert(0, ["Upload your data here", url_for("upload.index") + "?related_to=" + request.path ])
   return ret
 
-def queryUploadDatabase(filename, path):
+def queryUploadDatabase(filename, path, limit=0):
   file = getDBConnection().upload.fs.files.find_one({"metadata.related_to": path, "filename": filename})
   upload_fs = GridFS(getDBConnection().upload)
-  return upload_fs.get(file['_id']).read()
+  return upload_fs.get(file['_id']).read(limit)
 
 def getFilenamesFromTar(file):
   tar = tarfile.open(mode="r", fileobj=file)

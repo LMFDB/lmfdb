@@ -1085,7 +1085,15 @@ def len_as_printed(s,format='latex'):
     #tot_len = len(ss)+ceil((len(ssubs)+len(sexps))*0.67)
     return tot_len
     
-
+def get_geometric_data_Gamma0N(N):
+    res=dict()
+    G=Gamma0(N)
+    res['index']=G.index()
+    res['genus']= G.genus()
+    res['cusps']=G.cusps()
+    res['nu2']=G.nu2()
+    res['nu3']=G.nu3()
+    return res
 
 def print_geometric_data_Gamma0N(N):
         r""" Print data about Gamma0(N).

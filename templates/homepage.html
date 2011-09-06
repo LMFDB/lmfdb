@@ -8,11 +8,14 @@
         {% if bread %}
           <a href="/">Top</a>
           {% for b in bread -%}
-            &rarr; <a href="{{ b[1] }}">{{ b[0] }}</a>
+            &rarr; <a href="{{ b[1] }}">{{ b[0]|striptags }}</a>
           {%- endfor %}
          {% endif %}
       </div>
       <div class="topright">
+          <a href="https://docs.google.com/spreadsheet/viewform?formkey=dDJXYXBleU1BMTFERFFIdjVXVmJqdlE6MQ" target="_blank">
+             Report a Problem</a>
+            &middot;
           {% if user_is_admin -%}
             <a href="{{ url_for('users.register') }}">Registertokens</a>
             &middot;
@@ -22,8 +25,8 @@
             &middot;
             <a href="{{ url_for('users.logout') }}">Logout</a>
           {%- else -%}
-            <a href="{{ url_for('users.register_new') }}">Register</a>
-            &middot;
+            {# <a href="{{ url_for('users.register_new') }}">Register</a>
+            &middot; #}
             <a href="{{ url_for('users.info') }}">Login</a>
           {%- endif %}
           <br/>
@@ -33,6 +36,16 @@
             <span id="communication"></span>
           </span>
       </div>
+      {% if navi is defined -%}
+        <div id="navi">
+         {% for txt, u in navi -%}
+          <a href="{{ u }}">{{ txt|safe }}</a>
+          {% if not loop.last -%}&middot;{%- endif %}
+         {%- endfor %}
+        </div>
+      {%- elif navi_raw is defined -%}
+        <div id="navi">{{ navi_raw|safe }}</div>
+      {%- endif %} 
       {# this span inside a div thing is necessary to align it at the bottom, see css #}
       <div id="title"><span id="title-content">{{ title|safe }}</span></div>
     </div>
@@ -50,15 +63,24 @@
    {% endif %}
  {%- endmacro %}
 
-<div id="sidebar">
 
+<div id="sidebar">
   <h2 class="link">
    <a href="{{ url_for('render_Lfunction') }}">L-functions</a>
   </h2>
+  <ul class="list">
+   <li>
+    Degree:
+    <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree1')}}">1</a>
+    <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree2')}}">2</a>
+    <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree3')}}">3</a>
+    <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree4')}}">4</a>
+   </li>
+  </ul>
 
   <h2>Elliptic Curves</h2>
   <ul>
-   <li><a href="{{ url_for('EC_toplevel') }}  ">Elliptic curves/\(\mathbb Q\)</a>
+   <li><a href="{{ url_for('EC_toplevel') }}  ">Elliptic Curves/\(\mathbb Q\)</a>
   </ul>
 
   <h2 class="link"><a href="{{ url_for('number_field_render_webpage') }}">Number Fields</a></h2>
@@ -72,23 +94,27 @@
        <a class="mf"    href="{{ url_for('mf.modular_form_main_page') }}">Modular Forms</a></h2>
   <ul>
    <li><a class="emf"  href="{{ url_for('emf.render_elliptic_modular_forms') }}">Holomorphic Cusp Forms</a></li>
-   <li><a class="mwf"  href="{{ url_for('mwf.render_maass_waveforms') }}">Maass Forms</a></li>
-   <li><a              href="{{ url_for('ModularForm_GSp4_Q_top_level') }}">Siegel modular forms</a> </li>
-   <li><a class="mwfp" href="{{ url_for('mwfp.render_picard_maass_forms') }}">Maass Forms on \(SL_2(Z[i])\)</a></li>
+   <li><a class="mwf"  href="{{ url_for('mwf.render_maass_waveforms') }}">Maass Forms  on \(\mathrm{GL}_{2}(\mathbb{Q}) \)</a></li>
+   <li><a              href="{{ url_for('ModularForm_GSp4_Q_top_level') }}">Siegel Modular Forms</a> </li>
+   <li><a class="mwfp" href="{{ url_for('mwfp.render_picard_maass_forms') }}">Maass Forms on \(\mathrm{SL}_{2}(\mathbb{Z}[i])\)</a></li>
    <li><a              href="{{ url_for('hilbert_modular_form_render_webpage') }}">Hilbert Modular Forms</a></li>
   </ul>
    {# <li><a href="{{ url_for('quadratic_twists') }}">Quadratic Twists</a></li> #}
    {# <li><a class="local_fields" href="{{ url_for('local_fields.index') }}">Local Fields</a></li> #}
+
+  <h2 class="link knowl">
+     <a class="knowl" href="{{ url_for("knowledge.index") }}">Knowledge</a>
+  </h2>
 
   <h2>Search</h2>
    <ul>
     <li><a href="{{ url_for('LfunctionDB.query', zerolowerbound=1.1, zeroupperbound=2.1) }}">Search L-functions</a></li>
    </ul>
   
-   {{ entry("Learn more about", info.learnmore) }}
-   {{ entry("Friends", info.friends) }}
-   {{ entry("Downloads", info.downloads) }}
-   {{ entry("Related Data", getUploadedFor(request.path) ) }}
+   {{ entry("Learn more about", learnmore) }}
+   {{ entry("Friends", friends) }}
+   {{ entry("Downloads", downloads) }}
+   {{ entry("Data", getUploadedFor(request.path) ) }}
 
  {% if sidebar -%}
   {% for topic, content in sidebar -%}
@@ -104,16 +130,23 @@
        <h1 id="properties-header">Properties</h1>
        <div id="properties-collapser">&uarr;</div>
        <div id="properties-body">
-       {% for label, content in properties2 %}
-         {% if label %}<h2>{{ label }}</h2>{% endif %}
-        <div>
-          {% if content is string  %}
-            {{ content|safe }}
-          {% else %}
-            {{ p[1]|join('<br/>') }}
-          {% endif %}
-        </div>
-       {% endfor %} 
+       <table>
+       {% for label, content in properties2 -%}
+         {% if label %}
+           <tr><td class="label">{{label|safe}}</td><td>
+         {% else %}
+           <tr><td colspan="2">
+         {% endif %}
+         {% if content is string  -%}
+             {{ content|safe }}</td></tr>
+         {%- else -%}
+           {% for c in content -%}
+            {% if not loop.first -%}<tr><td></td>{%- endif %}
+              {{c|safe}}</td></tr>
+           {%- endfor %}
+         {%- endif %}
+       {%- endfor %} 
+      </table>
       </div>
      </div>
     {% endif %}
@@ -123,6 +156,8 @@
        <h1 id="properties-header">Properties</h1>
        <div id="properties-collapser">&uarr;</div>
        <div id="properties-body">
+         <h1 style="background: red">DEPRECATED!</h1>
+         <div style="background:orange;font-size:x-small;">your use of properties is deprecated.<br> please switch to properties2<br> with the correct datastructure:<br>[(.,[…]),…]</div>
         {% if citation -%}
          <h1>Citation</h1>
          {{ citation }}
@@ -166,7 +201,8 @@
     {% if support -%}
       {{ support|safe }}<br/>
     {%- else -%}
-       The creation of this website was supported by the NSF, AIM ...<br />
+       <h4>This project is supported by the <a href="http://www.nsf.gov">National Science Foundation</a> under FRG Grant No. DMS-0757627, which is administered from the <a href="http://www.aimath.org">American Institute of Mathematics</a>. </h4>
+<br />
     {%- endif %}
     Number Theory, the Queen of Mathematics!
 </div>

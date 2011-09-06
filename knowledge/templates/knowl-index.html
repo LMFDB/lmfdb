@@ -4,8 +4,6 @@
 <style text="text/css">
 #knowls a {
   display: block;
-  margin: 0px 10px 0px 0px;
-  width: 160px;
 }
 #knowls a > span:last-child {
   font-size: xx-small;
@@ -17,18 +15,59 @@
   display: inline;
   width: 165px;
   float: left;
+  min-height: 4em;
 }
 #knowls td { 
   padding: 10px 0px;
 }
 #knowls tr td:first-child {
   width: 50px;
-  vertical-align: middle;
+  vertical-align: top;
   text-align: center;
   font-size: x-large;
+  color: #006;
+}
+a.curcat {
+  font-weight: bold;
+  border-bottom: 1px solid #006;
 }
 </style>
-<h1>Read Knowls</h1>
+
+<div>
+  <form id='knowl-search' action="{{ url_for('.index') }}" method="GET">
+    Search (ID, description, #hashtag, or full text):
+    <input name="search" value="{{ search }}" />
+    {% if search|length > 0 -%}<a href="{{url_for('.index')}}">clear</a>{%- endif %}
+    <button type="submit">Go</button>
+  </form>
+</div>
+
+{% if not searchmode and not categorymode %}
+<div style="margin-bottom: 10px">
+  <form method="GET" action="{{ url_for('.index') }}">
+    Quality level: 
+    {% for kq in knowl_qualities -%}
+      <input type="checkbox" id="{{ kq }}" name="{{ kq }}" {% if filters[loop.index0] -%}checked{%- endif %} />
+        <label for="{{ kq }}">{{ kq|capitalize }}</label>
+    {%- endfor %}
+    <button type="submit" name="filter">Filter</button>
+  </form>
+  </div>
+{% endif %}
+
+<div style="margin-bottom: 10px">
+Category:
+{% for cat in categories -%}
+ <a 
+  {% if cur_cat == cat -%}class='curcat'{%- endif %}
+  href="{{ url_for('.index', category = cat) }}">{{cat}}</a>
+   {# {% if not loop.last -%} &middot; {%- endif %} #}
+{%- endfor %}
+{% if categorymode -%}
+  &mdash; <strong><a href="{{ url_for('.index') }}">clear</a></strong>
+{%- endif %}
+</div>
+
 <table id="knowls" class="ntdata">
   {% for c, ks in knowls -%}
    <tr>
@@ -44,14 +83,12 @@
 </table>
 
 {% if user_is_authenticated -%}
-  <h1 style="clear: both;">Edit Knowl</h1>
+  <hr/>
+  <h2>Create Knowl</h2>
   <form action="{{ url_for('.edit_form') }}" method="POST">
     Knowl ID: <input id="knowl-edit-id" name="id"></input>
-    <button id="knowl-edit-btn">Edit</button>
+    <button id="knowl-edit-btn">Create</button>
   </form>
-  <h2>Test</h2>
-  <ul>
-    <li><a href="{{ url_for('.test') }}">Testpage 1</a></li>
-  </ul>
 {%- endif %}
+
 {%- endblock %}

@@ -25,6 +25,7 @@ from flask import  jsonify
 from utils import *
 from modular_forms.elliptic_modular_forms import EMF,emf, emf_logger
 logger = emf_logger
+from sage.all import dimension_new_cusp_forms,vector,dimension_modular_forms,dimension_cusp_forms,is_odd
 
 def ajax_more2(callback, *arg_list, **kwds):
     r"""
@@ -154,6 +155,5 @@ def ajax_later(callback,*arglist,**kwds):
     else:
         res = callback(do_now=do_now)
         return jsonify(result=res)
-
 
 

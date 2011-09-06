@@ -8,7 +8,7 @@ from copy import copy
 import pymongo
 
 mod = flask.Blueprint('LfunctionDB', __name__, template_folder="templates")
-title = "First Zero Search Example"
+title = "L-function search"
 
 @mod.context_processor
 def body_class():

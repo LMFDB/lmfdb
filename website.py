@@ -21,7 +21,11 @@ import knowledge
 import upload
 import DirichletCharacter
 import local_fields
+import OEIS
+import artin_representations
+
 import raw
+from modular_forms.maass_forms.picard import mwfp
 
 import sys
 
@@ -59,7 +63,17 @@ def root_static_file(name):
        logging.critical("root_static_file: file %s not found!" % fn)
        return ''
     app.add_url_rule('/%s'%name, 'static_%s'%name, static_fn)
-map(root_static_file, [ 'robots.txt', 'favicon.ico' ])
+map(root_static_file, [ 'favicon.ico' ])
+
+@app.route("/robots.txt")
+def robots_txt():
+  if "l-functions.org".lower() in request.url_root.lower():
+    fn = os.path.join('.', "static", "robots.txt")
+    if os.path.exists(fn):
+      return open(fn).read()
+  else:
+    return "User-agent: *\nDisallow: / \n"
+
 
 @app.route("/style.css")
 def css():
@@ -102,57 +116,6 @@ def form_example():
 def render_Character(arg1 = None, arg2 = None):
     return DirichletCharacter.render_webpage(request,arg1,arg2)
 
-@app.route("/Lfunction/")
-@app.route("/Lfunction/<arg1>")
-@app.route("/Lfunction/<arg1>/<arg2>")
-@app.route("/Lfunction/<arg1>/<arg2>/<arg3>")
-@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>")
-@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
-@app.route("/L/")
-@app.route("/L/<arg1>") # arg1 is EllipticCurve, ModularForm, Character, etc
-@app.route("/L/<arg1>/<arg2>") # arg2 is field
-#@app.route("/L/<arg1>/<arg2>/") # arg2 is field
-@app.route("/L/<arg1>/<arg2>/<arg3>") #arg3 is label
-@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>")
-@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
-@app.route("/L-function/")
-@app.route("/L-function/<arg1>")
-@app.route("/L-function/<arg1>/<arg2>")
-@app.route("/L-function/<arg1>/<arg2>/<arg3>")
-@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>")
-@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
-def render_Lfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = None):
-    return renderLfunction.render_webpage(request, arg1, arg2, arg3, arg4, arg5)
-
-@app.route("/plotLfunction")
-@app.route("/plotLfunction/<arg1>")
-@app.route("/plotLfunction/<arg1>/<arg2>")
-@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>")
-@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/<arg4>")
-@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
-def plotLfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = None):
-    return renderLfunction.render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5)
-
-@app.route("/browseGraph")
-def browseGraph():
-    return renderLfunction.render_browseGraph(request.args)
-
-@app.route("/browseGraphHolo")
-def browseGraphHolo():
-    return renderLfunction.render_browseGraphHolo(request.args)
-
-@app.route("/browseGraphChar")
-def browseGraphChar():
-    return renderLfunction.render_browseGraphHolo(request.args)
-
-@app.route("/zeroesLfunction")
-@app.route("/zeroesLfunction/<arg1>")
-@app.route("/zeroesLfunction/<arg1>/<arg2>")
-@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>")
-@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>")
-@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
-def zeroesLfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = None):
-    return renderLfunction.render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5)
 
 @app.route('/ModularForm/GSp4/Q')
 def ModularForm_GSp4_Q_top_level():
@@ -179,12 +142,13 @@ def usage():
     print """
 Usage: %s [OPTION]...
 
-  -p, --port=NUM    bind to port NUM (default 37777)
-  -h, --host=HOST   bind to host HOST (default "127.0.0.1")
-  -l, --log=FILE    log to FILE (default "flasklog")
-      --dbport=NUM  bind the MongoDB to the given port (default 37010)
-      --debug       enable debug mode
-      --help        show this help
+  -p, --port=NUM      bind to port NUM (default 37777)
+  -h, --host=HOST     bind to host HOST (default "127.0.0.1")
+  -l, --log=FILE      log to FILE (default "flasklog")
+      --dbport=NUM    bind the MongoDB to the given port (default 37010)
+      --debug         enable debug mode
+      --logfocus=NAME enter name of logger to focus on
+      --help          show this help
 """ % sys.argv[0]
 
 def main():
@@ -193,7 +157,7 @@ def main():
     try:
         opts, args = getopt.getopt(sys.argv[1:],
                 "p:h:l:",
-                [ "port=", "host=", "dbport=", "log=", "debug", "help",
+                [ "port=", "host=", "dbport=", "log=", "logfocus=", "debug", "help",
                 # undocumented, see below
                 "enable-reloader", "disable-reloader",
                 "enable-debugger", "disable-debugger",
@@ -205,6 +169,9 @@ def main():
 
     # default options to pass to the app.run()
     options = { "port": 37777, "host": "127.0.0.1" , "debug" : False}
+    # the logfocus can be set to the string-name of a logger you want
+    # follow on the debug level and all others will be set to warning
+    logfocus = None
     logfile = "flasklog"
     dbport = 37010
 
@@ -222,6 +189,8 @@ def main():
             dbport = int(arg)
         elif opt == "--debug":
             options["debug"] = True
+        elif opt == "--logfocus":
+            logfocus = arg
         # undocumented: the following allow changing the defaults for
         # these options to werkzeug (they both default to False unless
         # --debug is set, in which case they default to True but can
@@ -251,6 +220,7 @@ def main():
     
     import base
     base._init(dbport, readwrite_password)
+    base.set_logfocus(logfocus)
     logging.info("... done.")
 
     # just for debugging

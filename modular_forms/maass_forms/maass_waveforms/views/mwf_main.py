@@ -18,8 +18,7 @@ AUTHORS:
 
 
 """
-
-import flask
+from base import app
 from flask import render_template, url_for, request, redirect, make_response,send_file
 import bson
 from sets import Set
@@ -29,6 +28,7 @@ from sage.all import is_odd,is_even
 import utils
 from  modular_forms.maass_forms.maass_waveforms import MWF,mwf_logger, mwf
 from modular_forms.maass_forms.maass_waveforms.backend.mwf_utils import *
+from modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import MaassFormTable
 from mwf_upload_data import *
 logger = mwf_logger
 
@@ -51,13 +51,16 @@ def render_maass_waveforms():
     mwf_logger.debug("method=%s"%request.method)
     mwf_logger.debug("req.form=%s"%request.form)
     mwf_logger.debug("info=%s"%info)
+    if info['browse']:
+        return render_browse_maass_waveforms(info=info,title='Maass Forms')
+
     if info['search']:
         search = get_search_parameters(info)
         return render_search_results_wp(info,search)
 
 
     # If we have a fixed ID and Database we show that single Maass form      
-    if info['MaassID'] and info['DBname']:
+    if info['maass_id'] and info['DBname']:
         return render_one_maass_waveform_wp(info)
 
     if not info['collection'] or info['collection']=='all':
@@ -174,17 +177,15 @@ def render_maass_waveforms():
                 
                 info['maass_group'] = getallgroupsLevel()
     title='Maass waveforms'
-    
     info['list_of_levels']=get_all_levels()
     if info['list_of_levels']:
         info['max_level']=max(info['list_of_levels'])
     else:
         info['max_level']=0
     mwf_logger.debug("info3=%s"%info)
-    if level or eigenvalue:
-        return render_template("mwf_navigate.html", info=info,title=title)
-    else:
-        return render_template("mwf_browse.html", info=info,title=title)
+    return render_template("mwf_navigate.html", info=info,title=title)
+    #return render_browse_maass_waveforms(info=info,title=title)
+    #return render_template("mwf_browse.html", info=info,title=title)
 
 
 @mwf.route("/<int:level>/<weight>/<character>/")
@@ -240,9 +241,9 @@ def render_maass_waveforms_for_one_group(level):
     return render_template("mwf_one_group.html", info=info,title=title)
 
 
-@mwf.route("/<objectid>",methods=['GET','POST'])
-def render_one_maass_waveform(objectid):
-    if objectid=='upload' or objectid=='Upload':
+@mwf.route("/<id>",methods=['GET','POST'])
+def render_one_maass_waveform(id):
+    if id=='upload' or id=='Upload':
         title="Upload Maass waveforms"
         bread=[('Maass waveforms',url_for('render_maass_waveforms'))]
         if request.method <> "GET":
@@ -262,39 +263,77 @@ def render_one_maass_waveform(objectid):
         #return upload_maass_waveforms(info)
     else:
         info = get_args_mwf()
-        info['MaassID']=objectid
+        info['id']=id
+        mwf_logger.debug("id1={0}".format(id))
         return render_one_maass_waveform_wp(info)
+
     
-
-
 def render_one_maass_waveform_wp(info):
     r"""
     Render the webpage of one Maass waveform.
     """
-    #if not info.has_key('MaassID'):
-    #    return redirect(url_for('mwf.render_maass_waveforms'))
     info["check"]=[]
     #info["check"].append(["Hecke relation",url_for('not_yet_implemented')])
     #info["check"].append(["Ramanujan-Petersson conjecture",url_for('not_yet_implemented')])
-    maass_id = info['MaassID']
+    maass_id = info['id']
+    mwf_logger.debug("id1={0}".format(id))
+    info["friends"]= [("L-function","L/"+url_for('mwf.render_one_maass_waveform',id=maass_id))]
+    info['bread']=[('Maass waveforms',url_for('.render_maass_waveforms'))]
+    info["downloads"]= []
+    #info["downloads"].append(["Maass form data",url_for('not_yet_implemented')])
+    #data = get_maassform_by_id(maass_id)
+    lenc = 20
+    MWT = MaassFormTable(mwf_dbname,id=maass_id,skip=[0],limit=[20],keys=['Coefficient'],collection=info['db'])
+    if MWT.table():
+        info['table']=MWT.table()
+    info['col_heads']=MWT.col_heads()
+    info['row_heads']=MWT.row_heads()
+    info['ncols']=MWT.ncols()
+    info['nrows']=MWT.nrows()
+    info['Eigenvalue']=MWT.prop('Eigenvalue')
+    info['Symmetry']=MWT.prop('Symmetry')
+    info['Weight']=MWT.prop('Weight')
+    info['Character']=MWT.prop('Character')
+    info['Level']=MWT.prop('Level')
+    properties =    [('Level',[info['Level']]),('Symmetry',[info['Symmetry']])]
+    properties.append(('Weight',[info['Weight']]))
+    properties.append(('Character',[info['Character']]))
+    info['title']="Maass waveforms on \(\Gamma_{0}( %s )\)" % (info['Level'])
+    info['metadata']=MWT.prop('metadata')
+    info['properties2']=properties
+    return render_template("mwf_one_form.html",**info)
+
+
+def render_one_maass_waveform_wp_old(info):
+    r"""
+    Render the webpage of one Maass waveform.
+    """
+    info["check"]=[]
+    #info["check"].append(["Hecke relation",url_for('not_yet_implemented')])
+    #info["check"].append(["Ramanujan-Petersson conjecture",url_for('not_yet_implemented')])
+    maass_id = info['maass_id']
     #dbname=info['db']
     info["friends"]= []
-    info["friends"].append(["L-function","L/"+url_for('.render_one_maass_waveform',objectid=maass_id)])
+    info["friends"].append(["L-function","L/"+url_for('.render_one_maass_waveform',id=maass_id)])
     info["downloads"]= []
     #info["downloads"].append(["Maass form data",url_for('not_yet_implemented')])
     bread=[('Maass waveforms',url_for('.render_maass_waveforms'))]
     properties=[]
     data = get_maassform_by_id(maass_id)
+    lenc = 20
     if not data.has_key('error'):
         [title,maass_info] =  set_info_for_maass_form(data)
         info["maass_data"] = maass_info
         #rint "data=",info["maass_data"]
         numc=data['num_coeffs']
-        largs = [{'maass_id':maass_id,'number':k} for k in range(10,numc,50)]
-        mwf_logger.error("numc={0}".format(numc))
-        mwf_logger.error("largs={0}".format(largs))
+        mwf_logger.debug("numc={0}".format(numc))
         if(numc>0):
-            info['coefficients']=ajax_once(make_table_of_coefficients,largs,text='more')
+            #if numc > 10:
+                #largs = [{'maass_id':maass_id,'number':k} for k in range(10,numc,50)]
+                #mwf_logger.debug("largs={0}".format(largs))
+            info['coefficients']=make_table_of_coefficients(maass_id,len,offest) #,largs,text='more')
+            #else:
+            #    info['coefficients']=make_table_of_coefficients(maass_id)
         else:
             info["maass_data"].append(['Coefficients',''])
             
@@ -361,7 +400,7 @@ def render_search_results_wp(info,search):
             else:
                 cl="even"
             i+=1
-            url = url_for('mwf.render_one_maass_waveform',objectid=str(id),db=name)
+            url = url_for('mwf.render_one_maass_waveform',id=str(id),db=name)
             if len(res['weights'])>1:
                 s+="<tr class=\"%s\"><td><a href=\"%s\">%s</a></td><td align=\"center\">%s</td><td>%s</td><td>%s</td></tr>\n" %(cl,url,R,N,k,ch)
             else:
@@ -372,20 +411,36 @@ def render_search_results_wp(info,search):
     s+="</tr></table>"
     #print "S=",s
     info['table_of_eigenvalues']=s
-    title="Search Results"
+    title="Maass Forms"
     bread=[('Maass waveforms',url_for('.render_maass_waveforms'))]
     return render_template("mwf_display_search_result.html", info=info,title=title,search=search,bread=bread)
 
 
-def render_browse_maass_waveforms(info):
+def render_browse_maass_waveforms(info,title):
     r"""
     Render a page for browsing Maass forms.
     """
     ## Paging parameters
-    level_range=10
+    level_range=6
     ev_range = 20
-    s = print_table_of_maass_waveforms(info['collection'],lrange=[1,10],erange=[1,10])
-    info['table']=s
+    if info['level_skip']:
+        level_skip=info['level_skip']*level_range
+    else:
+        level_skip=0
+    if info['ev_skip']:
+        ev_skip=info['ev_skip']*ev_range
+    else:
+        ev_skip=0        
+    lrange=[level_skip+1,level_skip+level_range]
+    erange=[ev_skip+1,ev_skip+ev_range]
+    weight=info.get('weight',0)
+    TT=MWFTable(mwf_dbname,collection='all',skip=[0,0],limit=[6,10],keys=['Level','Eigenvalue'],weight=weight)
+    TT.set_table()
+    TT.get_metadata()
+    info['table']=TT
+    #s = print_table_of_maass_waveforms(info['collection'],lrange=lrange,erange=erange)
+    #info['table']=s
+    bread=[('Modular forms',url_for('mf.modular_form_main_page')),('Maass waveforms',url_for('.render_maass_waveforms'))]
     return render_template("mwf_browse.html", info=info,title=title,bread=bread)
 
     

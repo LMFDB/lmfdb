@@ -64,7 +64,7 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
             elif seriescoefftype=="factor":
                 return("")
             elif seriescoefftype=="series":
-                return(ans + "+" + seriesvar(index,seriestype))
+                return(ans + " + " + seriesvar(index,seriestype))
         else:
             if seriescoefftype=="series":
                 return(" + " + ans + truncatenumber(rp, precision) + seriesvar(index, seriestype))
@@ -157,10 +157,10 @@ def lfuncDStex(L ,fmt):
         ans=ans+" + \\ \\cdots\n\\end{align}"
 
     elif fmt=="abstract":
-       if L.Ltype=="riemann":
+       if L.Ltype()=="riemann":
         ans="\\begin{equation} \n \\zeta(s) = \\sum_{n=1}^{\\infty} n^{-s} \n \\end{equation} \n"
 
-       elif L.Ltype=="dirichlet":
+       elif L.Ltype()=="dirichlet":
         ans="\\begin{equation} \n L(s,\\chi) = \\sum_{n=1}^{\\infty} \\chi(n) n^{-s} \n \\end{equation}"
         ans = ans+"where $\\chi$ is the character modulo "+ str(L.charactermodulus)
         ans = ans+", number "+str(L.characternumber)+"." 
@@ -179,16 +179,19 @@ def lfuncEPtex(L,fmt):
     ans=""
     if fmt=="abstract":
         ans="\\begin{equation} \n "+L.texname+" = "
-        if L.Ltype=="riemann":
+        if L.Ltype()=="riemann":
              ans= ans+"\\prod_p (1 - p^{-s})^{-1}"
-        elif L.Ltype=="dirichlet":
+        elif L.Ltype()=="dirichlet":
              ans= ans+"\\prod_p (1- \\chi(p) p^{-s})^{-1}"
-
-        elif L.Ltype=="maass":
+        elif L.Ltype()=="ellipticmodularform":
+            ans= ans+"\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1} \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + p^{-2s})^{-1}"
+        elif L.Ltype()=="ellipticcurve":
+            ans= ans+"\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1} \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + p^{-2s})^{-1}"
+        elif L.Ltype()=="maass":
             if L.group == 'GL2':
                 ans= ans+"\\prod_p (1- a(p) p^{-s} + p^{-2s})^{-1}"
             elif L.group == 'GL3':
-                ans= ans+"\\prod_p (1- a(p) p^{-s} + \\overline{a(p)} p^{-2s} - p^{-3s})^{-1}"
+                ans= ans+"\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1}  \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + \\overline{a(p)} p^{-2s} - p^{-3s})^{-1}"
             else:
                 ans= ans+"\\prod_p \\ \\prod_{j=1}^{"+str(L.degree)+"} (1 - \\alpha_{j,p}\\,  p^{-s})^{-1}"
                 
@@ -217,9 +220,9 @@ def lfuncFEtex(L,fmt):
         if L.level>1:
             ans+=latex(L.level)+"^{\\frac{s}{2}}"
         for mu in L.mu_fe:
-           ans += "\Gamma_R(s"+seriescoeff(mu,0,"signed","",-6,5)+")"
+           ans += "\Gamma_{\mathbb{R}}(s"+seriescoeff(mu,0,"signed","",-6,5)+")"
         for nu in L.nu_fe:
-           ans += "\Gamma_C(s"+seriescoeff(nu,0,"signed","",-6,5)+")"
+           ans += "\Gamma_{\mathbb{C}}(s"+seriescoeff(nu,0,"signed","",-6,5)+")"
         ans += " \\cdot "+L.texname+"\\cr\n"
         ans += "=\\mathstrut & "+seriescoeff(L.sign,0,"factor","",-6,5)
         ans += L.texnamecompleted1ms+"\n\\end{align}\n"
@@ -230,12 +233,12 @@ def lfuncFEtex(L,fmt):
         if L.mu_fe != []:
             for mu in range(len(L.mu_fe)-1):
                 ans+=seriescoeff(L.mu_fe[mu],0,"literal","",-6,5)+", "
-                ans+=seriescoeff(L.mu_fe[-1],0,"literal","",-6,5)
+            ans+=seriescoeff(L.mu_fe[-1],0,"literal","",-6,5)
         ans = ans+":"
         if L.nu_fe != []:
             for nu in range(len(L.nu_fe)-1):
                 ans+=str(L.mu_fe[nu])+", "
-                ans+=str(L.nu_fe[-1])
+            ans+=str(L.nu_fe[-1])
         ans+="), "
         ans+=seriescoeff(L.sign, 0, "literal","", -6,5)
         ans+=")"

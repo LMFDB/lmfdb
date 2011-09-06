@@ -12,6 +12,16 @@ from sage.all import *
 from functools import wraps
 from werkzeug.contrib.cache import SimpleCache
 
+# logfocus
+logfocus = None
+def set_logfocus(lf):
+  global logfocus
+  logfocus = lf
+
+def get_logfocus():
+  global logfocus
+  return logfocus
+
 # global db connection instance
 _C = None
 
@@ -110,7 +120,11 @@ def ctx_proc_userdata():
 # {{ <datetimeobject>|fmtdatetime('%H:%M:%S') }}
 @app.template_filter("fmtdatetime")
 def fmtdatetime(value, format='%Y-%m-%d %H:%M:%S'):
+  import datetime
+  if isinstance(value, datetime.datetime):
     return value.strftime(format)
+  else:
+    return "-"
 
 @app.template_filter('obfuscate_email')
 def obfuscate_email(email):

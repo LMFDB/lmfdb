@@ -1,13 +1,12 @@
-from base import app
 from utils import make_logger
-import flask 
+from flask import Blueprint
 
-MWFP="mwfp" # Maass waveforms on the Picard group SL(2,Z[i])
-mwfp = flask.Blueprint(MWFP, __name__, template_folder="views/templates",static_folder="views/static")
-
+MWFP="mwfp" 
+mwfp = Blueprint(MWFP, __name__, template_folder="views/templates")
 mwfp_logger=make_logger(mwfp)
+mwfp_dbname = 'HTPicard'
 
 import views
-
+import backend
 
 

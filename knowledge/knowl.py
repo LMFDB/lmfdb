@@ -8,14 +8,72 @@ def get_knowls():
   _C = getDBConnection()
   knowls = _C.knowledge.knowls
   knowls.ensure_index('authors')
+  # _keywords is used for the full text search
+  knowls.ensure_index('title')
+  knowls.ensure_index('cat')
+  knowls.ensure_index('_keywords')
   return knowls
 
 def get_deleted_knowls():
   _C = getDBConnection()
   return _C.knowledge.deleted_knowls
 
-def get_knowl(ID, fields = { "history": 0 }):
+def get_knowl(ID, fields = { "history": 0, "_keywords" : 0 }):
   return get_knowls().find_one({'_id' : ID}, fields=fields)
+
+def extract_cat(kid):
+  return kid.split(".")[0]
+
+def refresh_knowl_categories():
+  """
+  when saving, we refresh the knowl categories
+  (actually, this should only happen if it is a new knowl!)
+  """
+  cats = set([ extract_cat(_['_id']) for _ in get_knowls().find(fields=[]) ])
+  # there should only be *one* document with the field named categories
+  get_knowls().update({'categories' : { "$exists" : True }}, 
+                      {'categories' : sorted(cats), 
+                       'title' : 'Categories (internal data)'}, upsert=True)
+  return cats
+
+def get_categories():
+  c_doc = get_knowls().find_one({'categories' : { "$exists" : True }})
+  return c_doc['categories'] if c_doc else []
+
+def get_knowls_by_category(cat):
+  """searching for IDs that start with cat and continue with a dot + at least one char"""
+  # TODO later on search for the knowl field 'cat'
+  return get_knowls().find({'_id' : { "$regex" : r"^%s\..+" % cat }}, fields=['title'])
+
+import re
+valid_keywords = re.compile(r"\b[a-zA-Z0-9-]{3,}\b")
+html_keywords  = re.compile(r"&[a-zA-Z0-9]+;")
+# this one is different from the hashtag regex in main.py,
+# because of the match-group ( ... ) 
+hashtag_keywords = re.compile(r'#[a-zA-Z][a-zA-Z0-9-_]{1,}\b')
+common_words = set(['and', 'an', 'or', 'some', 'many', 'has', 'have', 'not', 'too', 'mathbb', 'title', 'for' ])
+
+def make_keywords(content, kid, title):
+  """
+  this function is used to create the keywords for the
+  full text search. tokenizes them and returns a list
+  of the id, the title and content string.
+  """
+  kws = [ kid ] # always included
+  kws += kid.split(".")
+  kws += valid_keywords.findall(title)
+  kws += valid_keywords.findall(content)
+  kws += html_keywords.findall(title)
+  kws += html_keywords.findall(content)
+  kws += hashtag_keywords.findall(title)
+  kws += hashtag_keywords.findall(content)
+  kws = [ k.lower() for k in kws ]
+  kws = set(kws)
+  kws = filter(lambda _:_ not in common_words, kws)
+  return kws
+
+# allowed qualities for knowls
+knowl_qualities = ['beta', 'ok', 'reviewed']
 
 class Knowl(object):
   def __init__(self, ID, template_kwargs = None):
@@ -29,47 +87,61 @@ class Knowl(object):
     self._id = ID
     data = get_knowl(ID)
     if data:
-      self._title   = data.get('title', '')
-      self._content = data.get('content', '')
-      self._quality = data.get('quality', 'beta')
-      self._authors = data.get('authors', [])
+      self._title       = data.get('title', '')
+      self._content     = data.get('content', '')
+      self._quality     = data.get('quality', 'beta')
+      self._authors     = data.get('authors', [])
+      self._category    = data.get('cat', extract_cat(ID))
       self._last_author = data.get('last_author', '')
-      self._timestamp = data.get('timestamp', datetime.now())
+      self._timestamp   = data.get('timestamp', datetime.now())
     else:
       self._title   = ''
       self._content = ''
       self._quality = 'beta'
+      self._category = extract_cat(ID)
       self._authors = []
       self._last_author = ''
       self._timestamp = datetime.now()
 
   def save(self, who):
     """who is the ID of the user, who wants to save the knowl"""
+    new_knowl = get_knowls().find({'_id' : self.id}).count() == 0
     new_history_item = get_knowl(self.id)
+    search_keywords = make_keywords(self.content, self.id, self.title)
+    cat = extract_cat(self.id)
     get_knowls().update({'_id' : self.id},
         {"$set": {
-           'content' : self.content,
-           'title' : self.title,
-           'quality': self.quality,
+           'content' :    self.content,
+           'title' :      self.title,
+           'cat' :        cat,
+           'quality':     self.quality,
 	       'last_author': who,
-	       'timestamp': self.timestamp
+	       'timestamp':   self.timestamp,
+           '_keywords' :  search_keywords
 	       } ,
 	     "$push": {"history": new_history_item}}, upsert=True)
     if who:
       get_knowls().update(
          { '_id':self.id }, 
          { "$addToSet" : { "authors" : who }})
+    # TODO only do this if its a new one
+    if new_knowl: refresh_knowl_categories()
         
   def delete(self):
     """deletes this knowl from the db. (DANGEROUS, ADMIN ONLY!)"""
     get_deleted_knowls().save(get_knowls().find_one({'_id' : self._id}))
     get_knowls().remove({'_id' : self._id})
+    refresh_knowl_categories()
 
   @property
   def authors(self):
     return self._authors
 
   def author_links(self):
+     """
+     Basically finds all full names for all the referenced authors.
+     (lookup for all full names in just *one* query, hence the or)
+     """
      a_query = [{'_id': _} for _ in self.authors]
      a = []
      if len(a_query) > 0:
@@ -94,6 +166,10 @@ class Knowl(object):
     self._store_db("content", content)
 
   @property
+  def category(self):
+    return self._category
+
+  @property
   def quality(self):
     return self._quality
  
@@ -101,7 +177,7 @@ class Knowl(object):
   def quality(self, quality):
     """a measurment information, if this is just "beta", or reviewed ..."""
     if len(quality) == 0: return
-    if not quality in ['beta', 'ok', 'reviewed']:
+    if not quality in knowl_qualities:
       logger.warning("quality '%s' is not allowed")
       return
     self._quality = quality

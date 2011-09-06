@@ -30,10 +30,16 @@ allowed_knowl_id = re.compile("^[A-Za-z0-9._-]+$")
 
 # Tell markdown to not escape or format inside a given block
 class IgnorePattern(markdown.inlinepatterns.Pattern):
-    def __init__(self, re):
-        markdown.inlinepatterns.Pattern.__init__(self, re);
     def handleMatch(self, m):
         return markdown.AtomicString(m.group(2))
+
+class HashTagPattern(markdown.inlinepatterns.Pattern):
+    def handleMatch(self, m):
+	el = markdown.etree.Element("a")
+        el.set('href', url_for('.index')+'?search=%23'+m.group(2))
+        el.text = '#' + markdown.AtomicString(m.group(2))
+        return el
+
 
 # Initialise the markdown converter, sending a wikilink [[topic]] to the L-functions wiki
 md = markdown.Markdown(extensions=['wikilinks'],
@@ -43,6 +49,10 @@ md.inlinePatterns.add('mathjax$', IgnorePattern(r'(?<![\\\$])(\$[^\$].*?\$)'), '
 md.inlinePatterns.add('mathjax$$', IgnorePattern(r'(?<![\\])(\$\$.+?\$\$)'), '<escape')
 md.inlinePatterns.add('mathjax\\(', IgnorePattern(r'(\\\(.+?\\\))'), '<escape')
 md.inlinePatterns.add('mathjax\\[', IgnorePattern(r'(\\\[.+?\\\])'), '<escape')
+
+# Tell markdown to turn hashtags into search urls
+hashtag_keywords_rex = r'#([a-zA-Z][a-zA-Z0-9-_]{1,})\b'
+md.inlinePatterns.add('hashtag', HashTagPattern(hashtag_keywords_rex), '<escape')
 
 # global (application wide) insertion of the variable "Knowl" to create
 # lightweight Knowl objects inside the templates.
@@ -89,6 +99,17 @@ def get_bread(breads = []):
   for b in breads:
     bc.append(b)
   return bc
+
+def searchbox(q="", clear=False):
+  """returns the searchbox"""
+  searchbox = u"""\
+    <form id='knowl-search' action="%s" method="GET">
+      <input name="search" value="%s" />"""
+  if clear:
+    searchbox += '<a href="%s">clear</a>' % url_for(".index")
+  searchbox += '<button type="submit">Go</button>'
+  searchbox += "</form>" 
+  return searchbox % (url_for(".index"), q)
 
 @knowledge_page.route("/test")
 def test():
@@ -191,11 +212,11 @@ def render(ID, footer=None, kwargs = None):
     con = request.args.get("content", k.content)
     foot = footer or request.args.get("footer", "1") 
 
-  authors = []
-  for a in k.author_links():
-    authors.append("<a href='%s'>%s</a>" % 
-      (url_for('users.profile', userid=a['_id']), a['full_name'] or a['_id'] ))
-  authors = ', '.join(authors)
+  #authors = []
+  #for a in k.author_links():
+  #  authors.append("<a href='%s'>%s</a>" % 
+  #    (url_for('users.profile', userid=a['_id']), a['full_name'] or a['_id'] ))
+  #authors = ', '.join(authors)
 
   render_me = u"""\
   {%% include "knowl-defs.html" %%}
@@ -214,13 +235,12 @@ def render(ID, footer=None, kwargs = None):
       &middot;
       <a href="{{ url_for('.edit', ID='%(ID)s') }}">edit</a> 
     {%% endif %%}
-    &middot;
-    Authors: %(authors)s
   </div>"""
+  # """ &middot; Authors: %(authors)s """
   render_me += "</div>"
   # render_me = render_me % {'content' : con, 'ID' : k.id }
   # markdown enabled
-  render_me = render_me % {'content' : md.convert(con), 'ID' : k.id, 'authors' : authors }
+  render_me = render_me % {'content' : md.convert(con), 'ID' : k.id } #, 'authors' : authors }
   # Pass the text on to markdown.  Note, backslashes need to be escaped for this, but not for the javascript markdown parser
 
   #logger.debug("rendering template string:\n%s" % render_me)
@@ -234,18 +254,78 @@ def render(ID, footer=None, kwargs = None):
 def index():
   # bypassing the Knowl objects to speed things up
   from knowl import get_knowls
-  knowls = get_knowls().find(fields=['title'])
+  get_knowls().ensure_index('_keywords')
+  get_knowls().ensure_index('cat')
+
+  cur_cat = request.args.get("category", "")
+  
+  qualities = []
+  defaults      = "filter" not in request.args
+  filtermode    = "filter" in request.args
+  searchmode    = "search" in request.args
+  categorymode  = "category" in request.args
+
+  from knowl import knowl_qualities
+  # TODO wrap this into a loop:
+  reviewed = request.args.get("reviewed", "") == "on" or defaults
+  ok       = request.args.get("ok", "") == "on"       or defaults
+  beta     = request.args.get("beta", "") == "on"     or defaults
+
+  if reviewed: qualities.append("reviewed")
+  if ok:       qualities.append("ok")
+  if beta:     qualities.append("beta")
+
+
+  s_query = {}
+  s_query['title'] = { "$exists" : True }
+
+  if filtermode:
+    quality_q = { '$in' : qualities }
+    s_query['quality'] = quality_q
+  
+  keyword = request.args.get("search", "").lower()
+  if searchmode:
+    keywords = filter(lambda _:len(_) >= 3, keyword.split(" "))
+    #logger.debug("keywords: %s" % keywords)
+    keyword_q = {'_keywords' : { "$all" : keywords}}
+    s_query.update(keyword_q)
+
+  if categorymode:
+    s_query['_id'] = { "$regex" : r"^%s\..+" % cur_cat }
+
+  logger.debug("search query: %s" % s_query)
+  knowls = get_knowls().find(s_query, fields=['title'])
+
   def first_char(k):
     t = k['title']
     if len(t) == 0: return "?"
     if t[0] not in string.ascii_letters: return "?"
     return t[0].upper()
+
+  # way to additionally narrow down the search
+  # def incl(knwl):
+  #   if keyword in knwl['_id'].lower():   return True
+  #   if keyword in knwl['title'].lower(): return True
+  #   return False
+  # if keyword: knowls = filter(incl, knowls)
+  
+  from knowl import get_categories 
+  cats = get_categories()
+
   knowls = sorted(knowls, key = lambda x : x['title'].lower())
   from itertools import groupby
   knowls = groupby(knowls, first_char)
   return render_template("knowl-index.html", 
-         title="Knowledge Database",
-         bread = get_bread(),
-         knowls = knowls)
+         title  = "Knowledge Database",
+         bread  = get_bread(),
+         knowls = knowls,
+         search = keyword,
+         searchbox = searchbox(request.args.get("search", ""), searchmode),
+         knowl_qualities = knowl_qualities,
+         searchmode = searchmode,
+         filters = (beta, ok, reviewed),
+         categories = cats,
+         cur_cat = cur_cat,
+         categorymode = categorymode)
 
 

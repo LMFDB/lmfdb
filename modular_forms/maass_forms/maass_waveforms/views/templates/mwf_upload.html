@@ -83,17 +83,17 @@ function one_select_row(i) {
 {{ info.error | safe }}
 </div>
 {% endif %}
-<h2>Insert Maass waveforms into database</h2>
+<h1>Insert Maass waveforms into database</h1>
 <table>
   <tr>
     <td>
       <form name="upload" method = "post" enctype="multipart/form-data" action="{{url_for('render_maass_waveforms')}}upload">
-	<h3>Insert Eigenvalues into database</h3>
+	<h2>Insert Eigenvalues into database</h2>
 	<div id="#disp"></div>
 	<table width="100%">
 	  <tr>
 	    <td>
-	      <h4>Filename / url</h4>
+	      <h3>Filename / url</h3>
 	      file:<input type=file name="file">
 	      url:<input type="text" name="url" wdth="50" value=""/>
 
@@ -101,7 +101,7 @@ function one_select_row(i) {
 	    </tr>
 	  <tr>
 	    <td>
-	      <h4>Format of the file:</h4>
+	      <h3>Format of the file:</h3>
 	      <br>
 	      Separator:<input type="text" name="separator" value=" "> 
 	      <table id="format_flds" data-len="">
@@ -122,7 +122,7 @@ function one_select_row(i) {
 	</td>
     <tr>
       <td>
-	<h4>Explanation of the assumed format of the fields:</h4>
+	<h3>Explanation of the assumed format of the fields:</h3>
 	<table>
 	  <thead>
 	    <tr>

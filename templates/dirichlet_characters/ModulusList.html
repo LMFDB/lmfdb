@@ -4,13 +4,19 @@
 {% block content %}
 
 <style>
+.modulus {
+    vertical-align: top;
+    padding-top: 1em;
+    border-right: 2px solid #8a8;
+}
 .chi {
     padding: 5px 5px;
     width: 2em;
     float: left;
     display: inline;
+    white-space:nowrap;
 }
-.chi a { display: inline; }
+.chi a { display: inline; font-family: serif;}
 .primitive {
   color:green;
 }
@@ -40,14 +46,15 @@
     </tr>
 </thead>
 <tbody>
-    {% for line in info.contents %}
-    <tr><td align="center" style="4em"> \( {{ line[0] }} \)</td>
+    {% for line in contents %}
+    <tr><td class="modulus"align="center" style="4em"> {{ line[0] }} </td>
     <td>
         {% for chi in line[1] %}
         <div class="chi">
-            <!--<a class="{% if chi[1] -%}primitive{%- else -%}nonprimitive{%- endif %}"  href="{{ line[0] }}/{{chi[0]}}">\(\chi_{ {{chi[0]}} }\)</a>-->
-            <a href="{{ line[0] }}/{{chi[0]}}">{% if chi[1] %}<font color="green">{% else %}<font color="blue">{% endif %}\(\chi_{ {{chi[0]}} }\)</font></a>
-            
+            <a href="{{ line[0] }}/{{chi[0]}}">{% if chi[1] %}
+                <font color="green">{% else %}
+                    <font color="blue">{% endif %}&chi;<sub>{{chi[0]}}</sub></font>
+            </a>
        </div>
     {% endfor %}
     </td></tr>

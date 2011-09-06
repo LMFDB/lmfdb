@@ -76,6 +76,8 @@ def make_logger(bp_or_name, hl = False):
   to true, the corresponding lines will be bold.
   """
   import flask
+  import base
+  logfocus = base.get_logfocus()
   if type(bp_or_name) == flask.Blueprint:
     name = bp_or_name.name
   else:
@@ -83,7 +85,10 @@ def make_logger(bp_or_name, hl = False):
     name = bp_or_name
   l = logging.getLogger(name)
   l.propagate = False
-  l.setLevel(logging.DEBUG)
+  if logfocus == None or logfocus == name:
+    l.setLevel(logging.DEBUG)
+  else:
+    l.setLevel(logging.WARNING)
   formatter = LmfdbFormatter(hl=name if hl else None)
   ch = logging.StreamHandler()
   ch.setFormatter(formatter)
@@ -207,6 +212,14 @@ def web_latex(x):
     else:
         return "\( %s \)" % sage.all.latex(x)
 
+def web_latex_split_on_pm(x):
+    if isinstance(x, (str, unicode)):
+        return x
+    else:
+        A = "\( %s \)" % sage.all.latex(x)
+        A = A.replace('+', '\) + \(')
+        A = A.replace('-', '\) - \(')
+        return A
 
 class LinkedList(object):
     __slots__ = ('value', 'next', 'timestamp')
