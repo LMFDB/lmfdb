@@ -169,6 +169,15 @@ def view(id):
   file = GridFS(getDBConnection().upload).get(ObjectId(id))
   return render_template("upload-view.html", title = "View file", bread = get_bread(), file = file)
 
+@upload_page.route("/displayParsed/<id>", methods = ["GET"])
+def displayParsed(id):
+  #file = GridFS(getDBConnection().upload).get(ObjectId(id))
+  #return file.read()
+  entry = getDBConnection().upload.fs.files.find_one({"_id":ObjectId(id)}, {"_id":1, "metadata":1})
+  table = getDBConnection().contrib[entry['metadata']['uploader_id']+str(entry['_id'])]
+  for row in table.find(): pass
+  return str(table.find()[0])
+
 @upload_page.route("/updateMappingRule", methods = ["POST"])
 @login_required
 def updateMappingRule():

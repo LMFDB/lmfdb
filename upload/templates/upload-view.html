@@ -105,7 +105,7 @@ function updateMappingRules(data, id) {
 
 {% for entry in list %}
 <p>
-<A HREF="#" onclick="$('#display{{entry._id}}').toggle()">{{entry.metadata['name']}}</a>
+<A HREF="#" onclick="$('#display{{entry._id}}').toggle()">+{{entry.metadata['name']}}</a>
 (uploaded by <A HREF="/users/profile/{{entry.metadata['uploader_id']}}">{{entry.metadata['uploader']}}</A>)<br/>
 <dl class=propertylist style="display:{{display}}" id="display{{entry._id}}">
 </p>
@@ -123,7 +123,6 @@ function updateMappingRules(data, id) {
   {% else %}
     <dd>{{entry.metadata.status}}</dd>
   {% endif %}
-
   <dt>Related to</dt>
   <dd>{{editable(entry,'related_to')}}</dd>
   {% if entry.metadata.parent_archive_id is defined %}
@@ -144,16 +143,21 @@ function updateMappingRules(data, id) {
   <dd>{{editableTextarea(entry,'bibtex')}}</pre></dd>
   <dt>Comments</dt>
   <dd>{{editableTextarea(entry,'comments')}}</pre></dd>
+  <dt>Internal id</dt>
+  <dd>{{entry['_id']}}</dd>
   <dt>Contents</dt>
   <dd>
 
-    <a href="/upload/download/{{entry._id}}/{{entry.filename}}">
+    <a href="{{url_for('.download', id=entry._id, filename=entry.filename)}}">
       Download {{entry.filename}}
     </a>
     <br/>
-    <a href="#" onclick="parseJsonTable('/upload/download/{{entry._id}}/{{entry.filename}}', $('#div{{entry._id}}'));return false">
+    <!--<a href="#" onclick="parseJsonTable('/upload/download/{{entry._id}}/{{entry.filename}}', $('#div{{entry._id}}'));return false">
       Parse Json from {{entry.filename}}
-    </a>
+    </a>-->
+    <!--<a href="#" onclick="$('#div{{entry._id}}').load('{{url_for('.displayParsed',id=entry._id)}}');return false">
+      Show automatically parsed data
+    </a>-->
 
     <div id="div{{entry._id}}">
     </div>
