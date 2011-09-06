@@ -9,6 +9,8 @@ def get_knowls():
   knowls = _C.knowledge.knowls
   knowls.ensure_index('authors')
   # _keywords is used for the full text search
+  knowls.ensure_index('title')
+  knowls.ensure_index('cat')
   knowls.ensure_index('_keywords')
   return knowls
 
@@ -19,14 +21,29 @@ def get_deleted_knowls():
 def get_knowl(ID, fields = { "history": 0, "_keywords" : 0 }):
   return get_knowls().find_one({'_id' : ID}, fields=fields)
 
+def extract_cat(kid):
+  return kid.split(".")[0]
+
 def refresh_knowl_categories():
   """
   when saving, we refresh the knowl categories
   (actually, this should only happen if it is a new knowl!)
   """
-  #cats = set([ _['_id'].split(".")[0] for _ in get_knowls().find(fields=[]) ])
-  #get_knowls().update({'categories' : { "$has" : True }}, {'categories' : sorted(cats)}, upsert=True)
-  pass
+  cats = set([ extract_cat(_['_id']) for _ in get_knowls().find(fields=[]) ])
+  # there should only be *one* document with the field named categories
+  get_knowls().update({'categories' : { "$exists" : True }}, 
+                      {'categories' : sorted(cats), 
+                       'title' : 'Categories (internal data)'}, upsert=True)
+  return cats
+
+def get_categories():
+  c_doc = get_knowls().find_one({'categories' : { "$exists" : True }})
+  return c_doc['categories'] if c_doc else []
+
+def get_knowls_by_category(cat):
+  """searching for IDs that start with cat and continue with a dot + at least one char"""
+  # TODO later on search for the knowl field 'cat'
+  return get_knowls().find({'_id' : { "$regex" : r"^%s\..+" % cat }}, fields=['title'])
 
 import re
 valid_keywords = re.compile(r"\b[a-zA-Z0-9-]{3,}\b")
@@ -86,12 +103,15 @@ class Knowl(object):
 
   def save(self, who):
     """who is the ID of the user, who wants to save the knowl"""
+    new_knowl = get_knowls().find({'_id' : self.id}).count() == 0
     new_history_item = get_knowl(self.id)
     search_keywords = make_keywords(self.content, self.id, self.title)
+    cat = extract_cat(self.id)
     get_knowls().update({'_id' : self.id},
         {"$set": {
            'content' :    self.content,
            'title' :      self.title,
+           'cat' :        cat,
            'quality':     self.quality,
 	       'last_author': who,
 	       'timestamp':   self.timestamp,
@@ -103,7 +123,7 @@ class Knowl(object):
          { '_id':self.id }, 
          { "$addToSet" : { "authors" : who }})
     # TODO only do this if its a new one
-    refresh_knowl_categories()
+    if new_knowl: refresh_knowl_categories()
         
   def delete(self):
     """deletes this knowl from the db. (DANGEROUS, ADMIN ONLY!)"""

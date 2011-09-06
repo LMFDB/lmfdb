@@ -212,11 +212,11 @@ def render(ID, footer=None, kwargs = None):
     con = request.args.get("content", k.content)
     foot = footer or request.args.get("footer", "1") 
 
-  authors = []
-  for a in k.author_links():
-    authors.append("<a href='%s'>%s</a>" % 
-      (url_for('users.profile', userid=a['_id']), a['full_name'] or a['_id'] ))
-  authors = ', '.join(authors)
+  #authors = []
+  #for a in k.author_links():
+  #  authors.append("<a href='%s'>%s</a>" % 
+  #    (url_for('users.profile', userid=a['_id']), a['full_name'] or a['_id'] ))
+  #authors = ', '.join(authors)
 
   render_me = u"""\
   {%% include "knowl-defs.html" %%}
@@ -235,13 +235,12 @@ def render(ID, footer=None, kwargs = None):
       &middot;
       <a href="{{ url_for('.edit', ID='%(ID)s') }}">edit</a> 
     {%% endif %%}
-    &middot;
-    Authors: %(authors)s
   </div>"""
+  # """ &middot; Authors: %(authors)s """
   render_me += "</div>"
   # render_me = render_me % {'content' : con, 'ID' : k.id }
   # markdown enabled
-  render_me = render_me % {'content' : md.convert(con), 'ID' : k.id, 'authors' : authors }
+  render_me = render_me % {'content' : md.convert(con), 'ID' : k.id } #, 'authors' : authors }
   # Pass the text on to markdown.  Note, backslashes need to be escaped for this, but not for the javascript markdown parser
 
   #logger.debug("rendering template string:\n%s" % render_me)
@@ -260,27 +259,35 @@ def index():
   keywords = filter(lambda _:len(_) >= 3, keyword.split(" "))
   #logger.debug("keywords: %s" % keywords)
   keyword_q = {'_keywords' : { "$all" : keywords}}
+
+  cur_cat = request.args.get("category", "")
   
   qualities = []
   defaults = "filter" not in request.args
   searchmode = "search" in request.args
+  categorymode = "category" in request.args
 
   from knowl import knowl_qualities
   # TODO wrap this into a loop:
   reviewed = request.args.get("reviewed", "") == "on" or defaults or searchmode
-  ok = request.args.get("ok", "") == "on" or defaults or searchmode
-  beta = request.args.get("beta", "") == "on" or searchmode
+  ok       = request.args.get("ok", "") == "on"       or defaults or searchmode
+  beta     = request.args.get("beta", "") == "on"     or defaults or searchmode
 
   if reviewed: qualities.append("reviewed")
   if ok:       qualities.append("ok")
   if beta:     qualities.append("beta")
 
   quality_q = { '$in' : qualities }
-  logger.debug("quality_q: %s" % quality_q)
 
-  s_query = keyword_q if keyword else {}
+  s_query = {}
   s_query['title'] = { "$exists" : True }
-  s_query['quality'] = quality_q
+  if searchmode:
+    s_query['quality'] = quality_q
+
+  if categorymode:
+    s_query['_id'] = { "$regex" : r"^%s\..+" % cur_cat }
+
+  logger.debug("search query: %s" % s_query)
   knowls = get_knowls().find(s_query, fields=['title'])
 
   def first_char(k):
@@ -295,6 +302,9 @@ def index():
   #   if keyword in knwl['title'].lower(): return True
   #   return False
   # if keyword: knowls = filter(incl, knowls)
+  
+  from knowl import get_categories 
+  cats = get_categories()
 
   knowls = sorted(knowls, key = lambda x : x['title'].lower())
   from itertools import groupby
@@ -307,6 +317,9 @@ def index():
          navi_raw = searchbox(request.args.get("search", ""), searchmode),
          knowl_qualities = knowl_qualities,
          searchmode = searchmode,
-         filters = (beta, ok, reviewed))
+         filters = (beta, ok, reviewed),
+         categories = cats,
+         cur_cat = cur_cat,
+         categorymode = categorymode)
 
 

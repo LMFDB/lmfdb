@@ -114,7 +114,7 @@ def elliptic_curve_search(**args):
             query[field] = parse_range(info[field])
     #if info.get('iso'):
         #query['isogeny'] = parse_range(info['isogeny'], str)
-    if 'optimal' in info:
+    if 'optimal' in info and info['optimal']=='on':
         query['number'] = 1
     info['query'] = query
 
