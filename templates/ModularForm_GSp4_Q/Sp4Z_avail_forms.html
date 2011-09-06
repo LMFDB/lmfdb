@@ -1,16 +1,16 @@
 <p>
-  The following table shows, for each even weight between 4 and 58, the  <a class="knowl-title" knowl="smf.galois_orbit">Galois orbits</a> of Hecke eigenforms
-  <a class ="knowl-title" knowl="smf.symplectic_group_integral">in the space \(M_*({\rm Sp}(4,\mathbb{Z}))\)</a>.
+  The following table shows, for each even weight between 4 and 58, the  <a class="knowl-title" knowl="mf.siegel.galois_orbit">Galois orbits</a> of Hecke eigenforms
+  <a class ="knowl-title" knowl="mf.siegel.group.symplectic">in the space \(M_*({\rm Sp}(4,\mathbb{Z}))\)</a>.
   The number (#) next to each orbit denotes the number of eigenforms in the orbit.
   <ul>
     <li>
-      <span class="emph">E</span> denotes an orbit consisting of <a class="knowl-title" knowl="smf.Eisenstein_series">Siegel Eisenstein series</a>,
+      <span class="emph">E</span> denotes an orbit consisting of <a class="knowl-title" knowl="mf.siegel.eisenstein_series">Siegel Eisenstein series</a>,
     </li>
     <li>
-      <span class="emph">Klingen</span> denotes an orbit consisting of <a class="knowl-title" knowl="smf.Klingen_Eisenstein_series">Klingen Eisenstein series</a>,
+      <span class="emph">Klingen</span> denotes an orbit consisting of <a class="knowl-title" knowl="mf.siegel.klingen_eisenstein_series">Klingen Eisenstein series</a>,
     </li>
     <li>
-      <span class="emph">Maass</span> denotes an orbit consisting of <a class="knowl-title" knowl="smf.Maass_lifting">Maass liftings</a>,
+      <span class="emph">Maass</span> denotes an orbit consisting of <a class="knowl-title" knowl="mf.siegel.lift.maass">Maass liftings</a>,
     </li>
     <li>
       <span class="emph">\(\Upsilon\)</span> denotes an orbit consisting of cusp forms which are neither Eisenstein series nor Maass liftings.
@@ -24,7 +24,7 @@
       <tr><th>Weight</th><th colspan=5>Galois orbits (number of eigenforms)</th></tr>
     </thead>
     <tbody>
-      {% for wt,forms in  info.forms %}
+      {% for wt,forms in  forms %}
       <tr class = "{{ loop.cycle( 'odd', 'even') }}">
 	<td>{{ wt }}</td>
         {% for form,dim in forms|sort %}

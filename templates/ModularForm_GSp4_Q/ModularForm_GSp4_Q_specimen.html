@@ -1,13 +1,13 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-{% if not info.error %}
+{% if not error %}
 
 <h2>Galois orbit</h2>
-<h4>Weight: {{ info['weight'] }}&nbsp;&nbsp;&nbsp;&nbsp;
+<h4>Weight: {{ weight }}&nbsp;&nbsp;&nbsp;&nbsp;
   
-  {% if info.orbit %}
-  [{{ info['orbit'] }}]
+  {% if orbit %}
+  [{{ orbit }}]
   {% else %}
   [Need to indicate Maass, Interesting, etc. here]
   {% endif %}
@@ -15,48 +15,93 @@
 </h4>
 
 <h2>Number field containing all coefficients</h2>
-<div class="box1"><div class="small">{{ info['form'][0] }}</div></div>
+<div class="box1"><div class="small">{{ form[0] }}</div></div>
 
-<h2>As polynomial in <a class="knowl-title" knowl="{{ info.generators }}">generators</a></h2>
-{% if info.form[1] %} 
-<div class="box1"><div class="small">{{ info['form'][1] }}</div></div>
+<h2>As polynomial in <a class="knowl-title" knowl="{{ generators }}">generators</a></h2>
+{% if form[1] %} 
+<div class="box1"><div class="small">{{ form[1] }}</div></div>
 {% else %}
 <div class="box1"><div class="small">Not applicable</div></div>
 {% endif %}
 
 <h2>Hecke eigenvalues
-  <button name="Eigenvalues" value="Download" onclick="window.location.href = '{{ info['form'][5] }}'">Download</button>
+  <button name="Eigenvalues" value="Download" onclick="window.location.href = '{{ form[5] }}'">Download</button>
 </h2>
+  <form action="/ModularForm/GSp4/Q" method="get">
+    <input type="hidden" name="group" value="{{ group }}" />
+    <input type="hidden" name="page" value="specimen" /> 
+    <input type="hidden" name="form" value="{{ form_name }}" /> 
+    <input type="hidden" name="weight" value="{{ weight }}" /> 
+    <input type="hidden" name="orbit" value="{{ form_name }}" /> 
+    <label>The eigenvalues are shown reduced modulo</label>
+    <input type="text" name="ev_modulus" value="{{ ev_modulus }}" size=10 maxlength=10/>
+    <span class="formexample">e.g. 17 (0 means no reduction)</span>
+    <button type="submit" value="reduce"> Reduce again</button>
+  </form>
 <div class="box1">
 <div class="small">
   <table>
     <thead>
       <tr><th>n</th><th>&lambda;(n)</th></tr>
     </thead>
-    {% for l,val in info['form'][2] %}
+    {% for l,val in form[2] %}
     <tr class = "{{ loop.cycle( 'odd', 'even') }}"><td>{{ l }}</td><td>{{ val }}</td></tr>
     {% endfor %}
   </table>
 </div></div>
 
 <h2>Fourier coefficients
-  <button name="Fourier coefficients" value="Download" onclick="window.location.href = '{{ info['form'][4] }}'">Download</button>
+  <button name="Fourier coefficients" value="Download" onclick="window.location.href = '{{ form[4] }}'">Download</button>
 </h2>
+{% if 'Sp8Z' == group %}
+<p>
+  In this table a tuple \((m_{11} m_{22} m_{33} m_{44} m_{12} m_{13} m_{23} m_{14} m_{24} m_{34})\ \) stands for the quadratic form
+  \(T = \begin{bmatrix}
+  m_{11} & m_{12} & m_{13} & m_{14}
+  \\
+  m_{21} & m_{22} & m_{23} & m_{24}
+  \\
+  m_{31} & m_{32} & m_{33} & m_{34}
+  \\
+  m_{41} & m_{42}& m_{43}& m_{44}
+  \end{bmatrix}\)
+  of discriminant \(D = {\rm det}(T)\).
+  The Fourier expansion of the modular form is given as
+  \[
+  f(Z)=\sum_{T}a(T)\;e^{2\pi i\big(({\rm trace}(TZ)\big)}.
+  \]
+  {% if form_name != 'Ikeda' %}
+  Coefficients for only very few forms are known. The table lists only the known ones. In particular, it is by no means complete for a
+  given discriminant \(D\).
+  {% endif %}
+{% else %}
 <p>
   In this table a triple \((n,r,m)\) stands for the quadratic form \(\begin{bmatrix}n&r/2\\r/2&m\end{bmatrix}\) of discriminant \(D = r^2-4nm\).
   The Fourier expansion of the modular form is given as
   \[
   f(\tau,z,\tau')=\sum_{T=(n,r,m)}a(T)\;e^{2\pi i(n\tau+rz+m\tau')}.
   \]
+{% endif %}
+  <form action="/ModularForm/GSp4/Q" method="get">
+    <input type="hidden" name="group" value="{{ group }}" />
+    <input type="hidden" name="page" value="specimen" /> 
+    <input type="hidden" name="form" value="{{ form_name }}" /> 
+    <input type="hidden" name="weight" value="{{ weight }}" /> 
+    <input type="hidden" name="orbit" value="{{ form_name }}" /> 
+    <label>The coefficients are shown reduced modulo</label>
+    <input type="text" name="fc_modulus" value="{{ fc_modulus }}" size=5 maxlength=5/>
+    <span class="formexample">e.g. 17 (0 means no reduction)</span>
+    <button type="submit" value="reduce"> Reduce again</button>
+  </form>
 </p>
 <div class="box1">
 <div class="small">
   <table>
     <thead>
-      <tr><th>|D|</th><th>T=(n,r,m)</th><th>a(T)</th></tr>
+      <tr><th>\(|D|\)</th><th>\(T=(n,r,m)\)</th><th>\(a(T)\)</th></tr>
     </thead>
-    {% for l,val in info['form'][3] %}
-    <tr class = "{{ loop.cycle( 'odd', 'even') }}"><td>{{ 4*l[0]*l[2]-l[1]*l[1]}}</td><td nowrap=''>{{ l }}</td><td>{{ val }}</td></tr>
+    {% for l,val,disc in form[3] %}
+    <tr class = "{{ loop.cycle( 'odd', 'even') }}"><td>{{ disc }}</td><td nowrap=''>{{ l }}</td><td>{{ val }}</td></tr>
     {% endfor %}
   </table>
 </div></div>

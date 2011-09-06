@@ -4,9 +4,9 @@ import pickle
 import urllib
 from sage.all_cmdline import *
 
-#DATA = 'http://data.countnumber.de/Siegel-Modular-Forms/'
-DATA = '/media/data/home/nils/Sandbox/super_current/nilsskoruppa-lmfdb/db/'
-    
+DATA = 'http://data.countnumber.de/Siegel-Modular-Forms/'
+#DATA = '/media/data/home/nils/Sandbox/super_current/nilsskoruppa-lmfdb/db/'
+#DATA = '/media/data/home/nils/Sandbox/super_current/Siegel-Modular-Forms/'
 
 def render_webpage( args = {}):
     """
@@ -19,9 +19,9 @@ def render_webpage( args = {}):
     
     if len(args) == 0:
         return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_navigation.html", \
-                                   info = info, \
-                                   title = 'Siegel Modular Forms', \
-                                   bread = bread)
+                               title = 'Siegel Modular Forms', \
+                               bread = bread, \
+                               **info)
 
     # possible keys for the URL
     group = args.get('group')
@@ -32,6 +32,8 @@ def render_webpage( args = {}):
     page = args.get('page')
     orbit = args.get('orbit')
     weight_range = args.get('weight_range')
+    ev_modulus = args.get('ev_modulus')
+    fc_modulus = args.get('fc_modulus')
 
     # set info
     info['group'] = group
@@ -71,7 +73,7 @@ def render_webpage( args = {}):
             dimension = siegel_core._dimension_Gamma0_2
             
         elif 'Gamma0_3' == args['group']:
-            info['parent_as_tex'] = 'M_k\\big(\\Gamma_0(3,\\psi_3)\\big)'
+            info['parent_as_tex'] = 'M_k\\big(\\Gamma_0(3)\\big)'
             dimension = siegel_core._dimension_Gamma0_3
             
         elif 'Gamma0_3_psi_3' == args['group']:
@@ -81,9 +83,7 @@ def render_webpage( args = {}):
         elif 'Gamma0_4' == args['group']:
             info['parent_as_tex'] = 'M_k\\big(\\Gamma_0(4)\\big)'
             dimension = siegel_core._dimension_Gamma0_4
-            file_name = weight + '_' + form + '-ev.sobj'
-            g_url = DATA + group +'/eigenvalues/' + file_name
-            g =load( g_url)
+
         elif 'Gamma0_4_psi_4' == args['group']:
             info['parent_as_tex'] = 'M_k\\big(\\Gamma_0(4,\\psi_4)\\big)'
             dimension = siegel_core._dimension_Gamma0_4_psi_4
@@ -94,7 +94,7 @@ def render_webpage( args = {}):
 
         else:
             info['error'] = 'Request for unvalid type of Siegel modular form'
-            return render_template("ModularForm_GSp4_Q/None.html", info=info)
+            return render_template("ModularForm_GSp4_Q/None.html", **info)
 
         info['learnmore'] += [ ('The spaces \('+info['parent_as_tex']+'\)', url_for( 'ModularForm_GSp4_Q_top_level', group = group, page='basic'))]
         bread += [( '\('+info['parent_as_tex']+'\)', url_for( 'ModularForm_GSp4_Q_top_level', group=group, page='forms'))]
@@ -118,16 +118,15 @@ def render_webpage( args = {}):
         if True == forms_exist:
             info['forms'] = [ (k,[(form,go[k][form]) for form in go[k]]) for k in go]
         return render_template( "ModularForm_GSp4_Q/ModularForm_GSp4_Q_forms.html", \
-                                learnmore = info['learnmore'], info = info, \
                                 title = 'Siegel modular forms \(' + info['parent_as_tex'] + '\)', \
-                                bread = bread)
+                                bread = bread, **info)
 
 
     if page == 'basic':
         bread += [( 'Basic information', url_for( 'ModularForm_GSp4_Q_top_level', group=group, page=page) )]
-        return render_template( "ModularForm_GSp4_Q/ModularForm_GSp4_Q_basic.html", learnmore=info["learnmore"], info = info, \
+        return render_template( "ModularForm_GSp4_Q/ModularForm_GSp4_Q_basic.html", \
                                 title = 'Siegel modular forms basic information', \
-                                bread = bread)
+                                bread = bread, **info)
 
         
     if page == 'dimensions':
@@ -176,51 +175,108 @@ def render_webpage( args = {}):
         elif group == 'Kp':
             info['table_headers'] = ["Weight", "Total", "Gritsenko Lifts", "Nonlifts", "Oldforms"]
 
-        elif 'Gamma0_4_half' == group:
+        elif 'Sp4Z_2' == group or 'Gamma0_4_half' == group:
             info['table_headers'] = ['Weight', 'Total', 'Non cusp', 'Cusp']
             
         else:
             info['table_headers'] = ["Weight", "Total", "Eisenstein", "Klingen", "Maass", "Interesting"]
 
         return render_template( "ModularForm_GSp4_Q/ModularForm_GSp4_Q_dimensions.html", \
-                                learnmore=info["learnmore"], info = info, \
                                 title = 'Siegel modular forms dimensions \(' + info['parent_as_tex'] + '\)', \
-                                bread = bread)
+                                bread = bread, **info)
 
 
     if page == 'specimen':
         info['weight'] = weight
-        file_name = weight + '_' + form + '.sobj'
-        f_url = DATA + group + '/eigenforms/' + file_name
+
+        # try to load data
         try:
+            file_name = weight + '_' + form + '.sobj'
+            f_url = DATA + group + '/eigenforms/' + file_name
             f = load(f_url)
-            f_keys = f[2].keys()
-
-            if  'Sp4Z' == group and 'E' != form and 'Klingen' != form:
-                f_keys = filter( lambda (a,b,c): b^2<4*a*c, f_keys) 
-            # we sort the table of Fourier coefficients by discriminant, forms in increasing lexicographic order
-            our_cmp = lambda (a,b,c), (A,B,C) : cmp( (4*a*c - b**2,a,b,c), (4*A*C - B**2, A,B,C) )
-            f_keys.sort( cmp = our_cmp)
-
             file_name = weight + '_' + form + '-ev.sobj'
             g_url = DATA + group +'/eigenvalues/' + file_name
             g =load( g_url)
+            loaded = True
+        except:
+            info['error'] = 'Data not available'
+            loaded = False
+
+        if True == loaded:
+
+            # throw out disc = 0 keys for cusp forms
+            f_keys = f[2].keys()
+            if  'Sp4Z' == group and 'E' != form and 'Klingen' != form:
+                f_keys = filter( lambda (a,b,c): b^2<4*a*c, f_keys)
+                
+            # sort the table of Fourier coefficients by discriminant, forms in increasing lexicographic order
+            if 'Sp8Z' != group:
+                __disc = lambda (a,b,c): 4*a*c - b**2
+                __cmp = lambda (a,b,c), (A,B,C) : cmp( (4*a*c - b**2,a,b,c), (4*A*C - B**2, A,B,C) )
+                f_keys.sort( cmp = __cmp)
+
+            if 'Sp8Z' == group:
+                # matrix index is given as [m11 m22 m33 m44 m12 m13 m23 m14 m24 m34]
+                __mat = lambda (m11, m22, m33, m44, m12, m13, m23, m14, m24, m34): \
+                        matrix( ZZ, 4,4, [m11,m12,m13,m14, m12,m22,m23,m24, m13,m23,m33,m34, m14,m24,m34,m44])
+                __disc = lambda i: __mat(i).det()
+                __cmp = lambda f1, f2: cmp( [__mat(f1).det()]+list(f1), [__mat(f2).det()]+list(f2))
+                print 'before: ', f_keys
+                f_keys.sort( cmp = __cmp)
+                print f_keys
+
+            try:
+                if not ev_modulus:
+                    m = 0
+                else:
+                    m = int( ev_modulus)
+                info['ev_modulus'] = m
+                K = g[0].parent().fraction_field()
+                if m != 0:
+                    if QQ == K:
+                        for i in g[1]:
+                            g[1][i] = Integer(g[1][i])%m
+                    else:
+                        I = K.ideal(m)
+                        for i in g[1]:
+                            g[1][i] = I.reduce(g[1][i])
+                        
+            except:
+                pass
+
+            try:
+                if not fc_modulus:
+                    m = 0
+                else:
+                    m = int( fc_modulus)
+                info['fc_modulus'] = m
+                K = g[0].parent().fraction_field()
+                if m != 0:
+                    if QQ == K:
+                        for i in f_keys:
+                            f[2][i] = Integer(f[2][i])%m
+                    else:
+                        I = K.ideal(m)
+                        for i in f_keys:
+                            f[2][i] = I.reduce(f[2][i])                        
+            except:
+                pass
 
             info['form'] = [ f[0].parent(), f[1], \
                              [ (l,g[1][l]) for l in g[1]], \
-                             [(i,f[2][i]) for i in f_keys], \
+                             [(i,f[2][i],__disc(i)) for i in f_keys], \
                              f_url, g_url]
 ##             info['friends'] = [ ('Spin L-function', url_for('not_yet_implemented')), \
 ##                                 ('Standard L-function', url_for('not_yet_implemented')), \
 ##                                 ('First Fourier-Jacobi coefficient', url_for('not_yet_implemented'))]
-        except:
-            info['error'] = 'Data not available'
 
-        bread += [( 'Basic information', url_for( 'ModularForm_GSp4_Q_top_level', group=group, page=page, weight=weight, form=form) )]
+
+        location = url_for( 'ModularForm_GSp4_Q_top_level', group=group, page=page, weight=weight, form=form)
+        info['form_name'] = form
+        bread += [( weight + '_' + form, location)]
         return render_template( "ModularForm_GSp4_Q/ModularForm_GSp4_Q_specimen.html", \
-                                    learnmore=info["learnmore"], info = info,  \
                                     title = 'Siegel modular form ' + weight + '_' + form, \
-                                    bread = bread)            
+                                    bread = bread, **info)            
 
     # if a nonexisting page was requested return the homepage of Siegel modular forms
     return render_webpage()
