@@ -21,11 +21,11 @@
 
 {% macro Lfunction_to_html_in_table(L): -%}
 {% if L.special.type == "dirichlet" %}
-    <td><a href=/Lfunction/Character/Dirichlet/{{L.special.number}}/{{L.special.modulus}}>{{L.first_zero}}</a></td>
+    <td><a href=/Lfunction/Character/Dirichlet/{{L.special.modulus}}/{{L.special.number}}>{{L.first_zero}}</a></td>
     <td>{{L.degree}}</td>
     <td>{{L.level}}</td>
     <td>{{L.signature}}</td>
-    <td>Dirichlet character <a href="/Character/Dirichlet/{{L.special.modulus}}/{{L.special.number}}/"</a> number {{L.special.number}} mod {{L.special.modulus}}</a></td>
+    <td>Dirichlet character <a href="/Character/Dirichlet/{{L.special.modulus}}/{{L.special.number}}"</a> number {{L.special.number}} mod {{L.special.modulus}}</a></td>
 {% elif L.special.type == "elliptic" %}
     <td><a href={{url_for("render_Lfunction", arg1="EllipticCurve", arg2="Q", arg3=L.special.label)}}>{{L.first_zero}}</a></td>
     <td>{{L.degree}}</td>
