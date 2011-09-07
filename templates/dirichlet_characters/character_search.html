@@ -56,7 +56,13 @@ table td.params {
 </td>
 </form>
 
-<h2> Results </h2>
+<h2>
+    {% if order|int == 2 %} 
+    Results for quadratic characters (given as {{ KNOWL('character.dirichlet.kronecker_symbol') }} )
+    {% else %} 
+    Results
+    {% endif %} 
+</h2>
 
 <script>
  $(document).ready(function() {
@@ -71,9 +77,31 @@ table td.params {
          var y = b.replace( /.*<sub>(.*)<\/sub>.*/, '$1' ) * 1;
          return ((x < y) ?  1 : ((x > y) ? -1 : 0));
      };     
-     $('#characterTable').dataTable({"bFilter":false,"bLengthChange":false, "aoColumnDefs": [ { "sType": 'html-character-index', "aTargets": [0] }
-         ] });
-} );
+     jQuery.fn.dataTableExt.oSort['html-conductor-index-asc']  = function(a,b) {
+         var x = a.replace(/.*(.*).*/, "") * 1;
+         var y = b.replace( /.*(.*).*/, "") * 1;
+         return ((x < y) ? -1 : ((x > y) ?  1 : 0));
+     };
+
+     jQuery.fn.dataTableExt.oSort['html-conductor-index-desc'] = function(a,b) {
+         var x = a.replace( /.*(.*).*/, '$1') * 1;
+         var y = b.replace( /.*(.*).*/, '$1') * 1;
+         return ((x < y) ?  1 : ((x > y) ? -1 : 0));
+     };     
+     $('#characterTable').dataTable({
+          "bFilter":false, 
+          "aoColumnDefs": [ 
+           { "sType": 'html-character-index', 
+             "aTargets": [0] }, 
+          { "sType": 'html-conductor-index', "aTargets": [0]}
+          ],
+          "fnRowCallback": function( row, data, index ){ 
+             MathJax.Hub.Queue(['Typeset', MathJax.Hub, row]);
+             return row;
+         }
+
+    });
+});
 </script>
 <table class="ntdata" style="table-layout:fixed" id="characterTable">
     <thead class="heading" align="center">
@@ -87,10 +115,10 @@ table td.params {
     </thead>
     <tbody>
         {% set row_class = cycler('odd', 'even') %}
-        {% for j in range(0,len): %}
+        {% for j in range(len): %}
         <tr class="{{ row_class.next() }}">
              <td class="modulus" align="center">
-                <a href="/Character/Dirichlet/{{characters[j].modulus()}}/{{number[j]}}">{% if characters[j].is_primitive() %}<font color="green">{% else %}<font color="blue">{% endif %}&chi;<sub>{{j}}</sub></font></a>
+                 <a href="/Character/Dirichlet/{{characters[j].modulus()}}/{{number[j]}}">{% if characters[j].is_primitive() == "True"%}<font color="green">{% else %}<font color="blue">{% endif %}{% if order|int == 2 %} {{kronsymbol[j]}} {% else %}&chi;<sub>{{number[j]}}</sub>{% endif %}</font></a>
             </td>
             <td align=center>
                 <a href="/Character/Dirichlet/?modulus={{characters[j].modulus()}}&conductor={{conductor}}&order={{order}}&parity={{parity}}">{{characters[j].modulus()}}</a>
@@ -107,9 +135,4 @@ table td.params {
     {% endfor %}
     </tbody>
 </table>
-
-{#<hr>
-<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form();return false">Previous</A>
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form();return false">Next</A></td>#}
-
 {% endblock %}

@@ -22,18 +22,20 @@ def get_character_conductor(a,b):
         l = []
         count = 0
         modulus = N
-        while count < 24:
+        while count < 8:
             if modulus%N == 0:
                 G = DirichletGroup(modulus)
-                chi_count = 0
+                #chi_count = 0
                 for j in range(len(G)):
-                    if G[j].conductor() == N:
+                    if count == 8:
+                        break
+                    elif G[j].conductor() == N:
                         l.append((modulus,j,G[j].is_primitive()))
-                        chi_count += 1
-            count += chi_count
+                        count += 1
             modulus += N
             if count == 0:
                 break
+        print count
         return l 
     return [(_,line(_)) for _ in range(a,b)]
 
@@ -44,14 +46,13 @@ def get_character_order(a,b):
         count = 0
         for modulus in range(N,250):
             G = DirichletGroup(modulus)
-            chi_count = 0
             for j in range(len(G)):
-                if G[j].multiplicative_order() == N:
+                if count == 8:
+                    break
+                elif G[j].multiplicative_order() == N:
                     l.append((modulus,j,G[j].is_primitive()))
                     count += 1
-                    if count >= 24:
-                        break
-            if count >= 24:
+            if count == 8:
                 break
         return l
     return [(_,line(_)) for _ in range(a,b)]
