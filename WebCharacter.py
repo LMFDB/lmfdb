@@ -72,26 +72,21 @@ class WebCharacter:
        #     self.primtf = True
        # else:
        #     self.primtf = False
-        if self.conductor%2 == 1:
-            self.kronsymbol = "\\begin{equation} \n\\chi_{%s}(a) = " %(self.number)
-            self.kronsymbol += "\\begin{cases}\\left(\\frac{a}{%s}\\right) \\qquad" %(self.conductor)
-            self.kronsymbol += "&\\text{if gcd\((a,%s) = 1\)} \\cr\\cr\n" %(self.modulus)
-            self.kronsymbol += "\\;\\;\\;\\;\\; 0 \\qquad &\\text{otherwise}. \\end{cases}"
-            self.kronsymbol += "\n \\end{equation}"
-        else:
-            if chi.is_even():
-                self.kronsymbol = "\\begin{equation} \n \\chi_{%s}(a) = " %(self.number)
-                self.kronsymbol += "\\begin{cases} \\left(\\frac{a}{%s}\\right)\\qquad " %(self.conductor)
-                self.kronsymbol += "&\\text{if gcd\((a,%s) = 1\)} \\cr\\cr\n" %(self.modulus)
-                self.kronsymbol += "\\;\\;\\;\\;\\; 0 \\qquad &\\text{otherwise}. \\end{cases}"
-                self.kronsymbol += "\n \\end{equation}"
+        if self.order == 2:
+            logger.debug( "CHECK" )
+            if self.conductor%2 == 1:
+                self.kronsymbol = r"\begin{equation} \chi_{%s}(a) = " %(self.number)
+                self.kronsymbol += r"\left(\frac{a}{%s}\right)" %(self.conductor)
+                self.kronsymbol += r"\end{equation}"
             else:
-                self.kronsymbol = "\\begin{equation} \n \\chi_{%s}(a) = " %(self.number)
-                self.kronsymbol += "\\begin{cases} \\left(\\frac{a}{%s}\\right)\\cdot\\left(\\frac{-1}{a}\\right) \\qquad" %(self.conductor)
-                self.kronsymbol += "&\\text{if gcd\((a,%s) = 1\)} \\cr\\cr\n" %(self.modulus)
-                self.kronsymbol += "\\qquad \\;\\;\\;\\;\\;\\, 0 \\qquad &\\text{otherwise}. \\end{cases}"
-                self.kronsymbol += "\n \\end{equation}"
-        logger.debug( "Check4" )
+                if chi.is_even():
+                    self.kronsymbol = r"\begin{equation}  \chi_{%s}(a) = " %(self.number)
+                    self.kronsymbol += r"\left(\frac{a}{%s}\right)" %(self.conductor)
+                    self.kronsymbol += r"\end{equation}"
+                else:
+                    self.kronsymbol = r"\begin{equation}  \chi_{%s}(a) = " %(self.number)
+                    self.kronsymbol += r"\left(\frac{a}{%s}\right)" %(self.conductor)
+                    self.kronsymbol += r"\end{equation}"
 
         self.level = self.modulus
         self.genvalues = chi.values_on_gens()
