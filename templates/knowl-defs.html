@@ -17,7 +17,11 @@
 {% if knowl.exists() -%}
  {% with hover = "%s [%s]"|format(knowl.title, knowl.id) -%}
   {% if title is none -%}
+    {% if knowl.title|length > 0 -%}
      <a class="knowl-title" title="{{ hover }}" knowl="{{ knowl.id }}" kwargs="{{ kwargs|urlencode }}">{{ knowl.title|safe }}</a>
+    {%- else -%}
+     <a class="knowl-title" title="{{ hover }}" knowl="{{ knowl.id }}" kwargs="{{ kwargs|urlencode }}">{{ knowl.id|safe }}</a>
+    {%- endif %}
   {%- else -%}
     {% if title|length > 0 -%}
      <a class="knowl-title" title="{{ hover }}" knowl="{{ knowl.id }}" kwargs="{{ kwargs|urlencode }}">{{ title|safe }}</a>

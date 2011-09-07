@@ -35,11 +35,18 @@ class IgnorePattern(markdown.inlinepatterns.Pattern):
 
 class HashTagPattern(markdown.inlinepatterns.Pattern):
     def handleMatch(self, m):
-	el = markdown.etree.Element("a")
-        el.set('href', url_for('.index')+'?search=%23'+m.group(2))
-        el.text = '#' + markdown.AtomicString(m.group(2))
-        return el
+      el = markdown.etree.Element("a")
+      el.set('href', url_for('.index')+'?search=%23'+m.group(2))
+      el.text = '#' + markdown.AtomicString(m.group(2))
+      return el
 
+class KnowlTagPattern(markdown.inlinepatterns.Pattern):
+  def handleMatch(self, m):
+    kid = m.group(2)
+    #el = markdown.etree.Element("span")
+    #el.text = markdown.AtomicString("{{ KNOWL('%s') }}" % kid)
+    #return el
+    return "{{ KNOWL('%s') }}" % kid
 
 # Initialise the markdown converter, sending a wikilink [[topic]] to the L-functions wiki
 md = markdown.Markdown(extensions=['wikilinks'],
@@ -53,6 +60,10 @@ md.inlinePatterns.add('mathjax\\[', IgnorePattern(r'(\\\[.+?\\\])'), '<escape')
 # Tell markdown to turn hashtags into search urls
 hashtag_keywords_rex = r'#([a-zA-Z][a-zA-Z0-9-_]{1,})\b'
 md.inlinePatterns.add('hashtag', HashTagPattern(hashtag_keywords_rex), '<escape')
+
+# Tell markdown to do some magic for including knowls
+knowltag_regex = r'\[\[[ ]*([a-z.-_]+)[ ]*\]\]'
+md.inlinePatterns.add('knowltag', KnowlTagPattern(knowltag_regex),'<escape')
 
 # global (application wide) insertion of the variable "Knowl" to create
 # lightweight Knowl objects inside the templates.
