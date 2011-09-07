@@ -37,13 +37,10 @@ table.navi td {
 table.props tr td:first-child {
     width: 5em;
 }
-<<<<<<< local
 #content p, #content form, #content div {
     margin-left: 20px;
 }
-=======
 
->>>>>>> other
 </style>
         <div align="right">
             <font size="3">Show commands for:</font>
@@ -216,7 +213,7 @@ function gauss_handler(evt) {
    $("#calc-gauss-output").load("{{ url_for('dc_calc_gauss', modulus=modulus,number=number) }}" + "?val=" + val, 
      function() {
        {# tell mathjx to render the output #}
-i       MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-gauss-output"]);
+        MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-gauss-output"]);
      });
 }
 
