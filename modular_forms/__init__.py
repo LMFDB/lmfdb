@@ -3,6 +3,7 @@ import base
 import utils
 import flask
 
+MF_TOP = "Modular Forms"
 MF = "mf"
 mf = flask.Blueprint(MF, __name__, template_folder="views/templates",static_folder="views/static")
 mf_logger=utils.make_logger(mf)
@@ -12,12 +13,6 @@ import backend
 import elliptic_modular_forms 
 import maass_forms
 from elliptic_modular_forms  import *
-#import maass_forms.picard
-
-#from elliptic_modular_forms import emf
-#from maass_forms import maassf
-#from maass_forms.maass_waveforms import mwf
-#from maass_forms.picard import mwfp
 
 base.app.register_blueprint(mf, url_prefix="/ModularForm/")
 base.app.register_blueprint(mf, url_prefix="/AutomorphicForm/")
