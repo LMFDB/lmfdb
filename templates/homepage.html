@@ -71,17 +71,32 @@
   <ul class="list">
    <li>
     Degree:
-    {% if user_is_authenticated and (username == 'MichaelRubinstein' or username == 'Jonathon Bober') %}
+    {% if user_is_authenticated and (username == 'MichaelRubinstein' or username == 'Jonathon Bober' or username == 'Ralph Furmaniak' or username == 'Harald Schilly') %}
+      <span id="span1" style="position:relative;display:none">
       <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree1')}}"><img src="/static/images/1dot.svg"/></a>
       <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree2')}}"><img src="/static/images/2dot.svg"/></a>
       <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree3')}}"><img src="/static/images/3dot.svg"/></a>
       <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree4')}}"><img src="/static/images/4dot.svg"/></a>
-    {% else %}
-      <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree1')}}">1</a>
-      <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree2')}}">2</a>
-      <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree3')}}">3</a>
-      <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree4')}}">4</a>
+      </span>
+      <script>
+        if(Math.random()<0.1) {
+        $().ready(function() {
+	  $('#span2').hide();
+	  $('#span1').show();
+	  setTimeout(function() {
+	    $('#span1').hide();
+	    $('#span2').show();
+	  }, 10000);
+	});
+	}
+      </script>
     {% endif %}
+    <span id="span2">
+    <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree1')}}">1</a>
+    <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree2')}}">2</a>
+    <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree3')}}">3</a>
+    <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree4')}}">4</a>
+    </span>
    </li>
   </ul>
 
