@@ -2,8 +2,10 @@
 
 {% block content %}
 
-<script type="text/javascript" src="{{ url_for('static', filename='elliptic_modular_form_util-functions.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('static', filename='elliptic_modular_form_scripts.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('.static', filename='elliptic_modular_form_util-functions.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('.static', filename='elliptic_modular_form_scripts.js') }}"></script>
+
+
 <script>
 $(document).ready( function() {
 $("#wait").text("Plot of fundamental domain is loading!");
@@ -12,6 +14,7 @@ $("#plot").load(function() {
     });
 }
 );
+
 </script>
 {% if info.error is defined %}
 
@@ -53,7 +56,8 @@ entry you access information about the forms in the specified space.
       </th>
       {% for ix in table.col_heads  %}
       <th width="10px">
-        <a href="{{url_for('render_webpage_label',modulus=level,number=ix) }}" style="">{{ix}}</a></th>
+        <!--a href="{{url_for('render_webpage_label',modulus=level,number=ix) }}" style="">{{ix}}</a-->
+      </th>
       {% endfor %}
     </tr>
   </thead>
@@ -61,6 +65,7 @@ entry you access information about the forms in the specified space.
     {% for row in rows  %}
     <tr class="{{row_class.next() }}">
       <th width="10px" style="background:#afa; border-right: 1px solid black">
+
         {{ table.row_heads[loop.index-1] }}
 
       </th>
@@ -86,15 +91,6 @@ entry you access information about the forms in the specified space.
 
    {% if geometric is defined %}
       {% set G = geometric %}
-     <div>
-     {% if level > 1 %}
-     {% set level = level %}
-      {% set ti = "\(\Gamma_{0}( " ~ level  ~ ") \)" %} 
-          <h2>Geometric information for {{KNOWL('mf.sl2.subgroup.gamma0N',title=ti)}}</h2>
-      {% else %}
-          <h2>Geometric information for {{KNOWL('mf.sl2z',title='\(PSL_{2}(\mathbb{Z}) \)')}}</h2>
-      {% endif %}
-      </div>
       <table width="100%">
         <tr>
           <td valign="top">
@@ -104,18 +100,18 @@ entry you access information about the forms in the specified space.
             {% set ti = "\(\Gamma_{0}( " ~ level  ~ ") \)" %} 
             <h2>Geometric information for {{KNOWL('mf.sl2.subgroup.gamma0N',title=ti)}}</h2>
             {% else %}
-            <h2>Geometric information for {{KNOWL('mf.sl2z',title='\(PSL_{2}(\mathbb{Z}) \)')}}</h2>
+            <h2>Geometric information for {{KNOWL('mf.sl2z',title='PSL<sub>2</sub>\( (\mathbb{Z}) \)')}}</h2>
             {% endif %}
             </div>
           </td>
         </tr>
         <tr>
-          <td>
+          <td valign="top">
             <table>
               <tr><th>{{KNOWL('mf.sl2z.subgroup.index',title='index')}}</th><td>{{G.index}}</td></tr>
               <tr><th>{{KNOWL('mf.sl2z.subgroup.genus',title='genus')}}</th><td>{{G.genus}}</td></tr>
               <tr><th>{{KNOWL('mf.sl2z.subgroup.cusps',title='cusps')}}</th><td>{{G.cusps}}</td></tr>
-              <tr><th colspan="2">Number of {{KNOWL('mf.sl2z.subgroup.ellipticfxpts',title='elliptic fixed points')}}</th></tr>
+              <tr><th colspan="2">Number of {{KNOWL('mf.sl2z.subgroup.ellipticfxpts',title='elliptic fixed points')}} of </th></tr>
               <tr><th>order 2</th><td>{{G.nu2}}</td></tr>
               <tr><th>order 3</th><td>{{G.nu2}}</td></tr>
             </table>

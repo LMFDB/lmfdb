@@ -91,12 +91,15 @@ def draw_fundamental_domain(N,group='Gamma0',model="H",axes=None,filename=None,*
         g = g + ax
 	if model=="H":
 		t = text(name, (0, -0.1), fontsize=16, color='black')
+                t = t+ text("$ -\\frac{1}{2} $", (-0.5,-0.1), fontsize=12, color='black')
+                t = t + text("$ \\frac{1}{2} $", (0.5, -0.1), fontsize=12, color='black')
 	else:
 		t = text(name, (0, -1.1), fontsize=16, color='black')		
-        g = g + t
+        g = g + t 
         g.set_aspect_ratio(1)
         g.set_axes_range(x0,x1,y0,y1)
         g.axes(False)
+        
         if(filename<>None):
             fig = g.matplotlib()
             fig.set_canvas(FigureCanvasAgg(fig))

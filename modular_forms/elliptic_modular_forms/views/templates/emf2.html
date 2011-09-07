@@ -1,42 +1,71 @@
 {% extends 'homepage.html' %}
 
 {% block content %}
+
+<style>
+.output {
+    margin:20px 0;
+    text-align: center;
+}
+</style>
+
 <script type="text/javascript" src="{{ url_for('emf.static', filename='elliptic_modular_form_util-functions.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('emf.static', filename='elliptic_modular_form_scripts.js') }}"></script>
+
+<script type="text/javascript">
+$(document).ready(function() {
+ $("#calc-qexp-output").text(" {{ qexp }} ");
+MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-qexp-output"]);
+});
+</script>
+<script type="text/javascript">
+function qexp_handler(evt) {
+   evt.preventDefault();
+   var val = $("#qexp-input").val();
+   $("#qexp-output").load("{{ url_for('emf.get_qexp', level=level,weight=weight,character=character,label=label)}}" + "?prec=" + val, 
+     function() {
+       {# tell mathjx to render the output #}
+       MathJax.Hub.Queue(['Typeset', MathJax.Hub, "qexp-output"]);
+     });
+}
+$(function() {
+  $("#calc-qexp-go").click(function(e) {qexp_handler(e)});
+  $("#calc-qexp-input").keypress(function(e) {
+    if (e.which == 13) qexp_handler(e);
+  });
+  $( "#slider-qexp" ).slider({ value:2, min: 1, max: 5000, step: 1,
+     change: function( event, ui ) {
+               $( "#calc-qexp-input" ).val(ui.value );
+  qexp_handler(event);
+ }
+  });
+}
+
+
+</script>
+
+
 {% if error is defined %}
    {{ error | safe }}
 {% else %}
 <h1> {{ name | safe }} </h1>
-<div id="qexp">
+
 <h2> {{ KNOWL('mf.elliptic.q-expansion',title='q-expansion')}}</h2>
-{# { q_exp | safe }#}
-<br>
-{# Get the q-expansion #}
-<span id="qexp">
-\( 
-{% if c[0] and not c[0][0] == '0' %}
-  {% set nstart=0 %}
-{% else %}
-  {% set nstart=1 %}
-{% endif %} 
-{% for n in range(nstart,maxc) %}
-  {% if not c[n][0] == '1' %}
-    {{ c[n] }} 
-  {% endif %}
-  {% if n==1 %} 
-   q
-  {% else %}
-   q^{  {{n}} } 
-  {% endif %}
-    
-  {% if n < maxc-1 and not c[n+1][0]=='-' %}
-  + 
- {% endif %}
-{% endfor %}
- + O(q^{ {{maxc}} })
-\) 
-</span>
-</div>
+
+  <div class="output">
+    <span id="calc-qexp-output">
+  </span>
+  </div>
+ <form>
+{# action="{{url_for('emf.get_qexp', level=level,weight=weight,character=character,label=label)}}"> #}
+   <input id="calc-qexp-input" name="prec" size=10 placeholder="10" value="10">
+   <button id="calc-qexp-go">Go</button>
+   <div class="slider" id="slider-qexp"></div>
+ </form>
+<p>
+
+
+<p>
 {{ polynomial_st | safe }}
 <br>
 {% if is_rational==0 %}
@@ -153,57 +182,52 @@ in the field of complex numbers. The values are shown in the table below.
 
 <h2>Further Properties</h2>
 <div>
-  {% if is_cm is defined or is_minimal is defined %}
-  <ul>
   {% if is_cm is defined %}
-  <li>
-    This newform is 
-    {% if not is_cm[0] %}
-    not
-    {% endif %}
-    a {{KNOWL('mf.elliptic.cm_form',title='CM form')}}.
-    {% endif %}
-    </li>
-  {% if is_minimal is defined %}
-  <li>
-    It is 
-    {% if not is_minimal %}
-    not
-    {% endif %}
-    {{KNOWL('mf.elliptic.minimal',title='minimal')}}.
-  </li>
+  This newform is 
+  {% if not is_cm[0] %}
+  not
   {% endif %}
-  {% if atkinlehner is defined and atkinlehner%}
-  <li>
-    The function has {{KNOWL('mf.elliptic.atkinlehner',title='Atkin-Lehner')}} eigenvalues given by 
-    <table class="ntdata">
-      <thead>
-        <tr>
-          <th> \( Q \) </th>
-        <th> Cusp </th>
-          <th>Eigenvalue
-        </tr>
-      </thead>
-      <tbody>
-        {% for Q,c,ev in atkinlehner %}
-        <tr>
-          <th> {{Q}} </th>
-          <th> {{ c }} </th>
-          <td> {{ev}}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </li>
+  a {{KNOWL('mf.elliptic.cm_form',title='CM form')}}.
   {% endif %}
-  </ul>
+  It is 
+  {% if not is_minimal %}
+  not
+  {% endif %}
+  {{KNOWL('mf.elliptic.minimal',title='minimal')}}.
 </div>
-  {% endif %}
+{% if atkinlehner is defined and atkinlehner%}
+<div>
+  The function has {{KNOWL('mf.elliptic.atkinlehner',title='Atkin-Lehner')}} eigenvalues given by 
+  <table class="ntdata">
+    <thead>
+      <tr>
+        <th> \( Q \) </th>
+        <th> Cusp </th>
+        <th>Eigenvalue
+      </tr>
+    </thead>
+    <tbody>
+      {% for Q,c,ev in atkinlehner %}
+      <tr>
+        <th> {{Q}} </th>
+        <th> {{ c }} </th>
+        <td> {{ev}}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
 <h2>Download Fourier coefficients</h2>
-<form name="get_coefficients" method="post"  action="{{url_for('.get_downloads',level=level,weight=weight,character=character,label=label)}}">
-  <input type="hidden" name="download" value="coefficients"/>
-  Get / compute  <input type="text" size="10" name="number" value="10"/> 
+<form name="get_coefficients" method="post"  action="{{url_for('.render_elliptic_modular_forms')}}">
+  <input type="hidden" name="download" value="coefficients">
+  Get / compute  <input type="text" size="10" name="number" value="10"> 
   coefficients in the following format:
+  <input type="hidden" name="level" value="{{level }}">
+  <input type="hidden" name="character" value="{{character }}">
+  <input type="hidden" name="weight" value="{{weight }}">
+  <input type="hidden" name="label" value="{{label }}">
   <ul>
     <li> 
       <label><input type=radio name="format" checked value="q_expansion_one_line" onclick="return selectCFormat(event)"> q-expansion (on one line)</label>
@@ -213,11 +237,10 @@ in the field of complex numbers. The values are shown in the table below.
     </li>
     <li>
       <label><input type=radio name="format" value="embeddings" onclick="return selectCFormat(event)"> Complex embeddings </label>
-      with <input type="text" size="10" name="prec" value="15"> digits precision.     
+      with <input type="text" size="10" name="prec" value="15"> digits precision. 
     </li>
   </ul>
-{#  <input type="button" name="Submit" value="Get coefficients"> #}
- <input type="submit" name="Submit" value="Get coefficients">
+  <input type="button" name="Submit" value="Get coefficients" onclick="check_coefficient_form()">
 </form>
 
 <h2>Download as {{KNOWL('sage',title='Sage')}} Object</h2>

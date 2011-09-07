@@ -84,21 +84,21 @@ function set_value(id,val) {
 }
 </script>
 
-<h1>Browse</h1>
-<table>
-  <tr>
-    <td>
+<h1>Browse holomorphic {{KNOWL('mf.elliptic.cusp_form',title='cusp forms')}}</h1>
+
       {% if info.browse_table.rows is defined %}
       {#{KNOWLl('mf.elliptic.browse.all.info') } #}
-The table below gives the dimensions of the space of holomorphic cusp
-forms of specified level and weight, with trivial character.  By
+The table below gives the dimensions of the space of holomorphic 
+{{KNOWL('mf.elliptic.cusp_form',title='cusp forms')}} of specified 
+{{KNOWL('mf.elliptic.level',title='level')}} and 
+{{KNOWL('mf.elliptic.weight',title='weight')}}, with trivial 
+{{KNOWL('character.dirichlet',title='character')}}.  By
 clicking on an entry you can access information about the cusp forms
 with trivial or nontrivial characters of the specified level, or level and
 weight.
       {% set table = info.browse_table %}
       {% set rows = info.browse_table.rows %}
       {% set row_class = cycler('odd', 'even') %}
-      <p>
       <table class="ntdata">
         <thead>
           <tr>
@@ -127,16 +127,12 @@ weight.
           {% endfor %}
         </tbody>
       </table>
-      </p>
       {% endif %}
     </td>  
     <form name="browse" method = "get" action="{{url_for('.render_elliptic_modular_forms')}}">
     </form>
-  </tr>
-<h1>Find a specific cusp form</h1>
-  <tr>
-    <td>
-
+    
+  <h1>Find a specific cusp form</h1>
       Search by {{KNOWL('mf.elliptic.label',title="label")}} 
       <div>
         <form name="search" method = "post" action="{{url_for('.render_elliptic_modular_forms')}}">	  
@@ -144,37 +140,31 @@ weight.
 	  <button type="submit" value="Find">Find</button>
         </form>
       </div>
-    </td>
-  </tr>
+
 <h1>Search</h1>
-  <tr>
-    <td>
-      <form name="search" method = "post" action="{{url_for('.render_elliptic_modular_forms')}}">
-	<table class="">
-	  <tr>
-	    <td>
-            {{KNOWL('mf.elliptic.level',title='Level')}}:
-            </td><td><input type="text" name="level" value="" example="4"></td>
-	  </tr>
-	  <tr>
-	    <td>
-              {{KNOWL('mf.elliptic.weight',title='Weight')}}:
-            </td><td><input type="text" name="weight" value="" placeholder="12"></td>
-	  </tr>
-	  <tr>
-	    <td>
-              {{KNOWL('mf.elliptic.character',title='Character')}}:
-            </td><td><input type="text" name="character" value="" placeholder="0"></td> 
-	  </tr>
-	  <!--tr>
-	    <td>Dimension of Galois Orbit:</td><td><input type="text" name="gdim" value="" placeholder="1"> 
-<span class="formexample">(i.e. the rational field)</span></td>
-	  </tr-->
-	</table>
-	<button type="submit" name="Submit" value="Search">Search</button>
-      </form>
-    </td>
-  </tr>
-</table>
+<form name="search" method = "post" action="{{url_for('.render_elliptic_modular_forms')}}">
+  <table class="">
+    <tr>
+      <td>
+        {{KNOWL('mf.elliptic.level',title='Level')}}:
+      </td><td><input type="text" name="level" value="" example="4"></td>
+    </tr>
+    <tr>
+      <td>
+        {{KNOWL('mf.elliptic.weight',title='Weight')}}:
+      </td><td><input type="text" name="weight" value="" placeholder="12"></td>
+    </tr>
+    <tr>
+      <td>
+        {{KNOWL('mf.elliptic.character',title='Character')}}:
+      </td><td><input type="text" name="character" value="" placeholder="0"></td> 
+    </tr>
+    <!--tr>
+	<td>Dimension of Galois Orbit:</td><td><input type="text" name="gdim" value="" placeholder="1"> 
+      <span class="formexample">(i.e. the rational field)</span></td>
+    </tr-->
+  </table>
+  <button type="submit" name="Submit" value="Search">Search</button>
+</form>
 
 {% endblock content %}

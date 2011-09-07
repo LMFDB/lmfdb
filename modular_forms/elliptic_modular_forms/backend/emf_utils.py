@@ -27,6 +27,7 @@ from modular_forms.elliptic_modular_forms import EMF,emf, emf_logger
 logger = emf_logger
 from sage.all import dimension_new_cusp_forms,vector,dimension_modular_forms,dimension_cusp_forms,is_odd
 from modular_forms.backend.mf_utils import my_get
+from plot_dom import draw_fundamental_domain
 
 def extract_data_from_jump_to(s):
     label=None;weight=None;character=None;label=None
@@ -40,7 +41,7 @@ def extract_data_from_jump_to(s):
     if len(test)==1: 
         label = test[0]
     else:
-        label=''
+        label='a'  # the default is the first one
     #emf_logger.debug("label1={0}".format(label))
     # the first string of integers should be the level
     test = re.findall("\d+",s)
@@ -188,3 +189,20 @@ def ajax_later(callback,*arglist,**kwds):
         return jsonify(result=res)
 
 
+
+
+class MyNewGrp (object):
+    def __init__(self,level,info):
+        self._level=level
+        self._info=info
+    def plot(self,**kwds):
+        return render_fd_plot(self._level,self._info,**kwds)
+            
+def render_fd_plot(level,info,**kwds):
+    group = None
+    if(info.has_key('group')):
+        group = info['group']
+        # we only allow standard groups
+    if (group  not in ['Gamma0','Gamma','Gamma1']):
+        group = 'Gamma0'
+    return draw_fundamental_domain(level,group,**kwds) 

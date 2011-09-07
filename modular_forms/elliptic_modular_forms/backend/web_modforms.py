@@ -86,6 +86,7 @@ class WebModFormSpace(Parent):
         self._dimension_modular_forms = None
         self._dimension_new_cusp_forms = None
         self._character = None
+        self._got_ap_from_db=False
         # check what is in the database
         ## dO A SIMPLE TEST TO SEE IF WE EXIST OR NOT.
         if N<0 or int(chi)>int(euler_phi(N)) or chi<0:
@@ -120,7 +121,7 @@ class WebModFormSpace(Parent):
             try:
                 self._group=Gamma0(N)
                 self._character=self._get_character(self._chi)
-                MS=self._get_objects(k,N,chi,use_db,'MS')
+                MS=self._get_objects(k,N,chi,use_db,'Modular_symbols')
                 self._modular_symbols=MS
                 #self._modular_symbols_cuspidal_new_submodule=MS.cuspidal_submodule().new_submodule()
                 self._newspace=self._modular_symbols.cuspidal_submodule().new_submodule()
@@ -183,10 +184,13 @@ class WebModFormSpace(Parent):
             return trivial_character(self.group().level())
 
         
-    def _get_objects(self,k,N,chi,use_db=True,get_what='MS',**kwds):
+    def _get_objects(self,k,N,chi,use_db=True,get_what='Modular_symbols.files',**kwds):
         r"""
         Getting the space of modular symbols from the database if it exists. Otherise compute it and insert it into the database.
         """
+        collection = get_what+'.files'
+        if not get_what in ['ap','Modular_symbols']:
+            emf_logger.critical("Collection {0} is not implemented!".format(get_what))
         res=None
         if kwds.has_key('prec'):
             prec=kwds['prec']
@@ -196,16 +200,15 @@ class WebModFormSpace(Parent):
         try:
             if use_db:
                 emf_logger.debug("dbport={0}".format(dbport))
-                base._init(dbport)
                 C = base.getDBConnection()
                 emf_logger.debug("C={0}".format(C))
                 if not C:
-                    raise ValueError
+                    emf_logger.critical("Could not connect to Database! C={0}".format(C))
                 if not db_name in C.database_names():
-                    raise ValueError
-                if not get_what in C[db_name].collection_names():
-                    raise ValueError
-                files = C[db_name][get_what].files
+                    emf_logger.critical("Incorrect database name {0}. \n Available databases are:{1}".format(db_name,C.database_names()))
+                if not collection in C[db_name].collection_names():
+                    emf_logger.critical("Incorrect collection {0} in database {1}. \n Available collections are:{2}".format(collection,db_name,C[db_name].collection_names()))
+                files = C[db_name][collection].files
                 if chi==0:
                     key = {'k':int(k),'N':int(N)}
                 else:
@@ -223,15 +226,17 @@ class WebModFormSpace(Parent):
                     rec=finds[0]
                     emf_logger.debug("rec={0}".format(rec))
                     filename = rec['filename']
-                    fs = gridfs.GridFS(C[db_name],get_what)
+                    fs = gridfs.GridFS(C[db_name],collection)
                     f = fs.get_version(filename)
                     res = loads(f.read())
                     self._from_db=1
                     self._id=rec['_id']
-        except:
-            pass
+                self._got_ap_from_db=True
+        except Exception as e:
+            emf_logger.critical("Error: {0}".format(e))
+            #pass
         if not res:
-            if get_what=='MS':
+            if get_what=='Modular_symbols':
                 if chi==0:
                     res=ModularSymbols(N,k,sign=1)
                 else:

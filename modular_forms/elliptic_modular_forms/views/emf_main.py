@@ -36,7 +36,8 @@ from modular_forms.elliptic_modular_forms.backend.plot_dom import *
 from modular_forms.elliptic_modular_forms import EMF, emf_logger, emf
 from emf_render_one_form import render_one_elliptic_modular_form#,get_qexp
 from emf_render_elliptic_modular_form_space import render_elliptic_modular_form_space
-
+from emf_render_browsing import *
+import StringIO
 logger = emf_logger
 
 @emf.context_processor
@@ -64,13 +65,16 @@ met = ['GET','POST']
 @emf.route("/<int:level>/<int:weight>/<int:character>/",methods=met)
 @emf.route("/<int:level>/<int:weight>/<int:character>/<label>",methods=met)
 @emf.route("/<int:level>/<int:weight>/<int:character>/<label>/",methods=met)
-def render_elliptic_modular_forms(level=None,weight=None,character=None,label=None):
+def render_elliptic_modular_forms(level=None,weight=None,character=None,label=None,**kwds):
     emf_logger.debug("In render: level={0},weight={1},character={2},label={3}".format(level,weight,character,label))
-    if request.method == 'GET':
-        info = to_dict(request.args)
-    else:
-        info = to_dict(request.form)
-    info['level']=level; info['weight']=weight; info['character']=character; info['label']=label
+    emf_logger.debug("args={0}".format(request.args))
+    emf_logger.debug("args={0}".format(request.form))
+    emf_logger.debug("met={0}".format(request.method))
+    info = get_args(request,level,weight,character,label)
+    level=info['level']; weight=info['weight']; character=info['character']; label=info['label']
+    emf_logger.debug("info={0}".format(info))
+    emf_logger.info("level=%s, %s"%(level,type(level)))
+    emf_logger.info("wt=%s, %s"% (weight,type(weight)) )
     if info.has_key('download'):
         return get_downloads(info)
     emf_logger.debug("info=%s"%info)
@@ -101,6 +105,22 @@ def redirect_false_route(test=None):
     args=extract_data_from_jump_to(s)
     redirect(url_for("render_elliptic_modular_forms", **args), code=301)
     #return render_elliptic_modular_form_navigation_wp(**info) 
+
+
+
+
+
+def get_args(request,level=None,weight=None,character=None,label=None):    
+    if request.method == 'GET':
+        dd = to_dict(request.args)
+    else:
+        dd = to_dict(request.form)
+    info = dict()
+    info['level']=my_get(dd,'level',level,int)
+    info['weight']=my_get(dd,'weight',weight,int)
+    info['character']=my_get(dd,'character',character,int)
+    info['label']=my_get(dd,'label',label,str)
+    return info
 
 
 ###
@@ -147,70 +167,17 @@ def render_elliptic_modular_form_navigation_wp(**args):
 
     return render_template("emf_navigation.html", info=info,title=title,bread=bread)
 
-def browse_elliptic_modular_forms(level=None,weight=None,character=None,label=None,**kwds):
-    r"""
-    Renders the webpage for browsing modular forms of given level and/or weight.
-    """
-    emf_logger.debug("In browse_elliptic_modular_forms kwds: {0}".format(kwds))
-    emf_logger.debug("Input: level={0},weight={1},character={2},label={3}".format(level,weight,character,label))
-    bread = [(MF_TOP,url_for('mf.modular_form_main_page'))]
-    bread.append((EMF_TOP,url_for('emf.render_elliptic_modular_forms')))
-    if level <0:
-        level=None
-    if weight<0:
-        weight=None
-    info=dict()
-    if character=='0':
-        info['list_chars']='0'
-    else:
-        info['list_chars']='1'
-    emf_logger.info("level=%s"%level)
-    emf_logger.info("wt=%s"%weight) 
-    if level:
-        info['geometric'] = get_geometric_data_Gamma0N(level)
-        #if info.has_key('plot'):
-        grp=MyNewGrp(level,info)
-        plot=grp.plot
-        info['fd_plot']= image_src(grp)
-        emf_logger.info("PLOT: %s" % info['fd_plot'])
-    if level<>None and weight==None:
-        #print "here1!"
-        title = "Holomorphic Cusp Forms of level %s " % level
-        level = int(level)
-        info['level_min']=level;info['level_max']=level
-        info['weight_min']=1;info['weight_max']=36
-        largs = [ {'level':level,'character':character,'weight_block':k} for k in range(100)]
-        disp = ClassicalMFDisplay('modularforms')
-        disp.set_table_browsing(limit=[(1,36),(level,level)],keys=['Weight','Level'],character='all',dimension_fun=dimension_new_cusp_forms,title='Dimension of newforms')
-        info['show_all_characters']=1
-        info['browse_table']=disp._table
-        
-        #info['list_spaces']=ajax_more(make_table_of_spaces_fixed_level,*largs,text='more')
-        title = "Holomorphic Cusp Forms of level %s " % level
-        bread =[(MF_TOP,url_for('mf.modular_form_main_page'))]
-        bread.append((EMF_TOP,url_for('emf.render_elliptic_modular_forms')))
-        info['browse_type']=" of level %s " % level
-        info['title']=title;  info['bread']=bread
-        info['level']=level
-        return render_template("emf_browse_fixed_level.html", **info)
-    if weight and not level:
-        emf_logger.debug("here2!")
-        info['level_min']=1;info['level_max']=50
-        info['weight_min']=weight;info['weight_max']=weight
-        info['list_spaces']=make_table_of_dimensions(weight_start=weight,weight_stop=weight,**info) #make_table_of_spaces(level=[10,20,30])
-        title = "Holomorphic Cusp Forms of weight %s" %weight
-        bread =[(MF_TOP,url_for('mf.modular_forms_main_page'))]
-        info['browse_type']=" of weight %s " % weight
-        info['title']=title;  info['bread']=bread
-        return render_template("emf_browse_fixed_level.html", **info)
-    emf_logger.debug("here2!")
-    info['level_min']=level;info['level_max']=level
-    info['weight_min']=weight;info['weight_max']=weight
-    return render_elliptic_modular_form_space_list_chars(level,weight) 
-    
 
+met = ['GET','POST']
+@emf.route("/Download/<int:level>/<int:weight>/<int:character>/<label>",methods=['GET','POST'])
 
-def get_downloads(info):
+def get_downloads(level=None,weight=None,character=None,label=None,**kwds):
+    info = to_dict(request.form)
+    info['level']=level; info['weight']=weight; info['character']=character; info['label']=label
+    if not info.has_key('download'):
+        emf_logger.critical("Download called without specifying what to download!")
+        return ""
+    emf_logger.debug("in get_downloads: info={0}".format(info))
     if info['download']=='file':
         # there are only a certain number of fixed files that we want people to download
         filename=info['download_file']
@@ -233,20 +200,28 @@ def get_downloads(info):
             # download a space
 
 def get_coefficients(info):
-    print "IN GET_COEFFICIENTS!!!"
+    emf_logger.debug("IN GET_COEFFICIENTS!!!")
     level  = my_get(info,'level', -1,int)
     weight = my_get(info,'weight',-1,int) 
     character = my_get(info,'character', '',str) #int(info.get('weight',0))
+    emf_logger.debug("info={0}".format(info))
     if character=='':
         character=0
     label  = info.get('label', '')
     # we only want one form or one embedding
     s = print_list_of_coefficients(info)
-    fp=open(info['tempfile'],"w")
-    fp.write(s)
-    fp.close()
-    info['filename']=str(weight)+'-'+str(level)+'-'+str(character)+'-'+label+'coefficients-1to'+info['number']+'.txt'
-    return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
+    #fp=open(info['tempfile'],"w")
+    #fp.write(s)
+    #fp.close()
+    info['filename']=str(weight)+'-'+str(level)+'-'+str(character)+'-'+label+'coefficients-0to'+info['number']+'.txt'
+    #return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
+    strIO = StringIO.StringIO()
+    strIO.write(s)
+    strIO.seek(0)
+    return send_file(strIO,
+                     attachment_filename=info["filename"],
+                     as_attachment=True)
+#return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
         
     # first check database.
 
@@ -256,122 +231,86 @@ def get_coefficients(info):
 ######### OBSOLETE
 
 
-def render_elliptic_modular_form_space_list_chars(level,weight):
-    r"""
-    Renders a page with list of spaces of elliptic forms of given 
-    level and weight (list all characters) 
-    """
-    info = dict()
-    s = make_table_of_characters(level,weight)
-    info['level']=level; info['weight']=weight
-    if not isinstance(s,str):
-        info['character'] = s
-        #info['extra_info']="This is the only space of level %s and weight %s." %(level,weight)
-        return redirect(url_for("emf.render_elliptic_modular_forms", **info))
-    info['list_spaces']=s
-    title = "Holomorphic Cuspforms of level %s and weight %s " %(level,weight)
-    bread =[(MF_TOP,url_for('mf.modular_form_main_page'))]
-    bread.append((EMF_TOP,url_for('emf.render_elliptic_modular_forms')))
-    bread.append(("Level %s" %level,url_for("emf.render_elliptic_modular_forms",level=level)))
-    
-    info['browse_type']=" of level %s and weight %s " % (level,weight)
-    disp = ClassicalMFDisplay('modularforms')
-    disp.set_table_browsing(limit=[(weight,weight),(level,level)],keys=['Weight','Level'],character='all',dimension_fun=dimension_new_cusp_forms,title='Dimension of newforms')
-    info['show_all_characters']=1
-    info['browse_table']=disp._table    
-    return render_template("emf_browse_fixed_level.html", info=info,title=title,bread=bread)
+## def make_table_of_characters(level,weight,**kwds):
+##     r""" Make a table of spaces S_k(N,\chi) for all compatible characters chi.
+##     """
+##     if level>0:
+##       D=DirichletGroup(level); l=D.list()
+##     else:
+##       D=list(); l=[]
+##     #print "D=",D
+##     s = "List of \(S_{%s} (%s, \chi_{n}) \)" %(weight,level)
+##     s+="<a name=\"#"+str(level)+"\"></a>"
+##     tbl=dict()
+##     tbl['headersv']=['order of \(\chi_{n}\):','dimension:']
+##     tbl['headersh']=list()
+##     tbl['corner_label']="\( n \):"
+##     tbl['data']=list()
+##     tbl['atts']="class=\"nt_data\" border=\"0\" padding=\"25\""
+##     tbl['data_format']='html'
+##     row=list()
+##     rowlen = 25
+##     ii=0
+##     dims = dict()
+##     for chi in range(0,len(l)):
+##         x=D[chi]; d=dimension_new_cusp_forms(x,weight)
+##         dims[chi]=d
+##     num_non_zero = (map(lambda x:  x>0,dims.values())).count(True)
+##     print "Number of non_zer0",num_non_zero
+##     if num_non_zero == 1:
+##         d = max(dims.values())
+##         chi = dims.keys()[dims.values().index(d)]
+##         return chi
+##     numrows = ceil(map(lambda x: x>0,dims).count(True)/rowlen)
+##     tbl['col_width']=dict()
+##     ci=0
+##     for chi in range(0,len(l)):
+##         d = dims[chi]
+##         if d==0:
+##             continue
+##         tbl['headersh'].append(chi)
+##         tbl['col_width'][ii]=["100"]
+##         x = l[chi]
+##         order = x.order()
+##         #st = " %s (order %s) " %(chi,order)
+##         ii=ii+1
+##         row.append(order)
+##         if(ii>rowlen and len(row)>0):
+##             print "appending row:",row
+##             tbl['data'].append(row)
+##             s=s+html_table(tbl)
+##             tbl['headersh']=list(); tbl['data']=list(); row=list()
+##             ii=0
+##     if(len(row)>0):
+##         tbl['data'].append(row)
+##         #if (len(row)>0 or len(tbl['data'])>0): 
+##         #    ss=html_table(tbl)
+##         #    s=s+ss
 
-def set_sidebar(l):
-        res=list()
-        #print "l=",l
-        for ll in l:
-                if(len(ll)>1):
-                        content=list()
-                        for n in range(1,len(ll)):
-                                content.append(ll[n])
-                        res.append([ll[0],content])
-        return res
+##     row = list()
+##     ii=0
+##     for chi in range(0,len(l)):
+##         d = dims[chi]
+##         if d==0:
+##             continue
+##         url = url_for('emf.render_elliptic_modular_forms',level=level,weight=weight,character=chi) 
+##         row.append("<a href=\""+url+"\">"+str(d)+"</a>")
+##         ii=ii+1
+##         if(ii>rowlen and len(row)>0):
+##             print "appending row:",row
+##             tbl['data'].append(row)
+##             s=s+html_table(tbl)
+##             tbl['headersh']=list(); tbl['data']=list(); row=list()
+##             ii=0
 
-def make_table_of_characters(level,weight,**kwds):
-    r""" Make a table of spaces S_k(N,\chi) for all compatible characters chi.
-    """
-    if level>0:
-      D=DirichletGroup(level); l=D.list()
-    else:
-      D=list(); l=[]
-    #print "D=",D
-    s = "List of \(S_{%s} (%s, \chi_{n}) \)" %(weight,level)
-    s+="<a name=\"#"+str(level)+"\"></a>"
-    tbl=dict()
-    tbl['headersv']=['order of \(\chi_{n}\):','dimension:']
-    tbl['headersh']=list()
-    tbl['corner_label']="\( n \):"
-    tbl['data']=list()
-    tbl['atts']="class=\"nt_data\" border=\"0\" padding=\"25\""
-    tbl['data_format']='html'
-    row=list()
-    rowlen = 25
-    ii=0
-    dims = dict()
-    for chi in range(0,len(l)):
-        x=D[chi]; d=dimension_new_cusp_forms(x,weight)
-        dims[chi]=d
-    num_non_zero = (map(lambda x:  x>0,dims.values())).count(True)
-    print "Number of non_zer0",num_non_zero
-    if num_non_zero == 1:
-        d = max(dims.values())
-        chi = dims.keys()[dims.values().index(d)]
-        return chi
-    numrows = ceil(map(lambda x: x>0,dims).count(True)/rowlen)
-    tbl['col_width']=dict()
-    ci=0
-    for chi in range(0,len(l)):
-        d = dims[chi]
-        if d==0:
-            continue
-        tbl['headersh'].append(chi)
-        tbl['col_width'][ii]=["100"]
-        x = l[chi]
-        order = x.order()
-        #st = " %s (order %s) " %(chi,order)
-        ii=ii+1
-        row.append(order)
-        if(ii>rowlen and len(row)>0):
-            print "appending row:",row
-            tbl['data'].append(row)
-            s=s+html_table(tbl)
-            tbl['headersh']=list(); tbl['data']=list(); row=list()
-            ii=0
-    if(len(row)>0):
-        tbl['data'].append(row)
-        #if (len(row)>0 or len(tbl['data'])>0): 
-        #    ss=html_table(tbl)
-        #    s=s+ss
-
-    row = list()
-    ii=0
-    for chi in range(0,len(l)):
-        d = dims[chi]
-        if d==0:
-            continue
-        url = url_for('emf.render_elliptic_modular_forms',level=level,weight=weight,character=chi) 
-        row.append("<a href=\""+url+"\">"+str(d)+"</a>")
-        ii=ii+1
-        if(ii>rowlen and len(row)>0):
-            print "appending row:",row
-            tbl['data'].append(row)
-            s=s+html_table(tbl)
-            tbl['headersh']=list(); tbl['data']=list(); row=list()
-            ii=0
-
-    if(len(row)>0):
-        tbl['data'].append(row)
-        if (len(row)>0 or len(tbl['data'])>0): 
-            ss=html_table(tbl)
-            s=s+ss
-        else:
-            s="All spaces are zero-dimensional!"
-    return s
+##     if(len(row)>0):
+##         tbl['data'].append(row)
+##         if (len(row)>0 or len(tbl['data'])>0): 
+##             ss=html_table(tbl)
+##             s=s+ss
+##         else:
+##             s="All spaces are zero-dimensional!"
+##     return s
 
 def make_table_of_dimensions(level_start=1,level_stop=50,weight_start=1,weight_stop=24,char=0,**kwds):
     r"""
@@ -668,47 +607,24 @@ def print_list_of_coefficients(info):
                 else:
                     coefs+=F.label()
             coefs+=print_coefficients_for_one_form(F,number,info['format'])
-
         ss=coefs
-        ##      shead="Functions: <ul>"
-        ##      for F in FS:
-        ##              shead=shead+"<li><a href=\"#"+F.label()+"\">"+F.label()+"</a>"
-        ##              if(F.dimension()==1):
-        ##                      shead=shead+"</li> \n"
-        ##              else:
-        ##                      shead=shead+"Embeddings: <ul>"
-        ##                      for j in range(1,F.dimension()):
-        ##                              shead=shead+"<li><a href=\"#"+F.label()+"\">"+F.label()+"</a>"
-
-        ##      for F in FS:
-        ##              c=F.print_q_expansion_embeddings(number,bprec)
-        ##              s=s+"<a name=\""+F.label()+"\"></a>\n"
-        ##              for j in range(F.dimension()):
-        ##                      s=s+"<a name=\""+str(j)+"\"></a>\n"
-        ##                      for n in range(len(c)): 
-        ##                              s=s+str(j)+" "+str(c[n][j])
-
-        ## ss= shead+"\n"+s 
-        ## #info['popup_table']=ss
         return ss
 
 
-def print_coefficients_for_one_form(F,number,format):
+def print_coefficients_for_one_form(F,number,fmt):
+    emf_logger.debug("in print coef 1 form: format={0}".format(fmt))
     s=""
-    if format == "q_expansion_one_line":
+    if fmt == "q_expansion_one_line":
         s += F.print_q_expansion(number)
-    if format == "q_expansion_table":
+    if fmt == "q_expansion_table":
         qe = F.q_expansion(number).list()
         if F.dimension()>1:
             s+=F.polynomial()
         s+="\n"
         for c in qe:
-            s+=c+"\n"
-    if format == "embeddings":
+            s+=str(c)+"\n"
+    if fmt == "embeddings":
         embeddings = F.q_expansion_embeddings(number)
-        #print "F=",F
-        #print "EMBEDDINGS=",embeddings
-        #print "number = ",number
         if F.degree() > 1:
             for j in range(F.degree()):
                 for n in range(number):
@@ -716,24 +632,10 @@ def print_coefficients_for_one_form(F,number,format):
         else:
             for n in range(number):
                 s+=str(n)+"\t"+str(embeddings[n])+"\n"
-    print s
+    emf_logger.debug("s={0}".format(s))
     return s
 
-class MyNewGrp (SageObject):
-    def __init__(self,level,info):
-        self._level=level
-        self._info=info
-    def plot(self,**kwds):
-        return render_fd_plot(self._level,self._info,**kwds)
-            
-def render_fd_plot(level,info,**kwds):
-    group = None
-    if(info.has_key('group')):
-        group = info['group']
-        # we only allow standard groups
-    if (group  not in ['Gamma0','Gamma','Gamma1']):
-        group = 'Gamma0'
-    return draw_fundamental_domain(level,group,**kwds) 
+
     #fn = tempfile.mktemp(suffix=".png")#
     #fd.save(filename = fn)
     #data = file(fn).read()
