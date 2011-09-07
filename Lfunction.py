@@ -9,6 +9,8 @@ import pymongo
 import bson
 import utils
 from modular_forms.elliptic_modular_forms.backend.web_modforms import *
+import time ### for printing the date on an lcalc file
+import socket ### for printing the machine used to generate the lcalc file
 
 logger = utils.make_logger("LF")
 
@@ -17,7 +19,7 @@ def get_attr_or_method(thiswillbeexecuted, attr_or_method_name):
         Given an object O and a string "text", this returns O.text() or O.text depending on
         whether text is an attribute or a method of O itself _or one of its superclasses_, which I will
         only know at running time. I think I need an eval for that.   POD
-        
+
     """
     # I don't see a way around using eval for what I want to be able to do
     # Because of inheritance, which method should be called depends on self
@@ -37,8 +39,8 @@ def my_find_update(the_coll, search_dict, update_dict):
         for x in the_coll.find(search_dict):
             x.update(update_dict)
             the_coll.save(x)
-        
-        
+
+
 #############################################################################
 
 def constructor_logger(object, args):
@@ -79,7 +81,7 @@ class Lfunction:
             self._Ltype = args.pop("Ltype")
             # Put the args into the object dictionary
             self.__dict__.update(args)
-        
+
             # Get the lcalcfile from the web
             if self._Ltype=='lcalcurl':
                 if 'url' in args.keys():
@@ -89,14 +91,14 @@ class Lfunction:
                     except:
                         raise Exception("Wasn't able to read the file at the url")
                 else:
-                    raise Exception("You forgot to supply an url.")           
+                    raise Exception("You forgot to supply an url.")
 
             # Parse the Lcalcfile
             self.parseLcalcfile()
 
             # Check if self dual
             self.checkselfdual()
-  
+
             if self.selfdual:
                 self.texnamecompleted1ms = "\\Lambda(1-s)"
 
@@ -117,7 +119,7 @@ class Lfunction:
     def parseLcalcfile(self, filecontents):
         """ Extracts informtion from the lcalcfile
         """
-        
+
         lines = filecontents.split('\n',6)
         self.coefficient_type = int(lines[0])
         self.quasidegree = int(lines[4])
@@ -145,14 +147,14 @@ class Lfunction:
 
         """ Do poles here later
         """
-        
+
         self.degree = int(round(2*sum(self.kappa_fe)))
 
         self.level = int(round(math.pi**float(self.degree) * 4**len(self.nu_fe) * self.Q_fe**2 ))
         # note:  math.pi was not compatible with the sage type of degree
 
         self.dirichlet_coefficients = splitcoeff(lines[-1])
-        
+
 
     def checkselfdual(self):
         """ Checks whether coefficients are real to determine
@@ -186,13 +188,13 @@ class Lfunction:
         thefile += str(len(self.dirichlet_coefficients)) + "\n"  
 
         thefile += "0\n"  # assume the coefficients are not periodic
-        
+
         thefile += str(self.quasidegree) + "\n"  # number of actual Gamma functions
 
         for n in range(0,self.quasidegree):
             thefile = thefile + str(self.kappa_fe[n]) + "\n"
             thefile = thefile + str(real_part(self.lambda_fe[n])) + " " + str(imag_part(self.lambda_fe[n])) + "\n"
-        
+
         thefile += str(real_part(self.Q_fe)) +  "\n"
 
         thefile += str(real_part(self.sign)) + " " + str(imag_part(self.sign)) + "\n"
@@ -207,8 +209,8 @@ class Lfunction:
             thefile += str(real_part(self.dirichlet_coefficients[n]))   # add real part of Dirichlet coefficient
             if not self.selfdual:  # if not selfdual
                 thefile += " " + str(imag_part(self.dirichlet_coefficients[n]))   # add imaginary part of Dirichlet coefficient
-            thefile += "\n" 
-        
+            thefile += "\n"
+
         return(thefile)
 
 
@@ -216,17 +218,23 @@ class Lfunction:
 ### Returns the Lcalcfile, version 2
 ############################################################################
 
+    def parse_complex_number(z):
+        z_parsed = "hello"
+        return z_parsed
+
     def createLcalcfile_ver2(self, url):
         thefile=""
-        thefile += "#################################################################################################\n"
+        thefile += "##########################################################################################################\n"
         thefile += "###\n"
         thefile += "### lcalc file for the url: " + url + "\n"
+        thefile += "### This file assembled: " + time.asctime()  + "\n"
+        thefile += "### on machine: " + socket.gethostname()  + "\n"
         thefile += "###\n"
-        thefile += "#################################################################################################\n\n"
+        thefile += "##########################################################################################################\n\n"
         thefile += "lcalcfile_version = 2    ### lcalc files should have a version number for future enhancements\n\n"
 
         thefile += """\
-#################################################################################################
+##########################################################################################################
 ### Specify the functional equation using the Gamma_R and Gamma_C
 ### notation. Let Gamma_R = pi^(-s/2) Gamma(s/2), and  Gamma_C = (2 pi)^(-s) Gamma(s).
 ###
@@ -264,9 +272,9 @@ class Lfunction:
         thefile += "Gamma_C_list = " +  str(self.nu_fe) + "\n\n"
 
         thefile += """\
-#################################################################################################
-### Specify, as lists, the poles and residues of L(s) in Re(s)>1/2 (i.e. assumes that there
-### are no poles on s=1/2). Also assumes that the poles are simple. Lines with empty lists can be omitted."""
+##########################################################################################################
+### Specify, as lists, the poles and residues of L(s) in Re(s)>1/2 (i.e. assumes that there are no
+### poles on s=1/2). Also assumes that the poles are simple. Lines with empty lists can be omitted."""
         thefile += "\n\n"
         if hasattr(self, 'poles_L'):
             thefile += "pole_list = " +  str(self.poles_L) + "\n"
@@ -279,7 +287,7 @@ class Lfunction:
             thefile += "residue_list = []\n\n"
 
         thefile += """\
-#################################################################################################
+##########################################################################################################
 ### Optional:"""
 
         thefile += "\n\n"
@@ -294,7 +302,7 @@ class Lfunction:
             thefile += "kind = " + kind_of_L[0] + "\n\n"
 
         thefile += """\
-#################################################################################################
+##########################################################################################################
 ### Specify the Dirichlet coefficients, whether they are periodic
 ### (relevant for Dirichlet L-functions), and whether to normalize them
 ### if needed to get a functional equation s <--> 1-s
@@ -320,13 +328,13 @@ class Lfunction:
 
 
         thefile += """\
-#################################################################################################
+##########################################################################################################
 ### The default is to assume that the Dirichlet coefficients are provided
 ### normalized so that the functional equation is s <--> 1-s, i.e. `normalize_by'
 ### is set to 0 by default.
 ###
 ### Sometimes, such as for an elliptic curve L-function, it is more convenient to
-### record the Dirichlet coefficients normalized differently, for example, as 
+### record the Dirichlet coefficients normalized differently, for example, as
 ### integers rather than as floating point approximations.
 ###
 ### For example, an elliptic curve L-function is assumed by lcalc to be of the
@@ -352,7 +360,7 @@ class Lfunction:
             thefile += "normalize_by = 0    # the default, i.e. no normalizing\n\n"
 
         thefile += """\
-#################################################################################################
+##########################################################################################################
 ### The last entry must be the dirichlet_coefficient list, one coefficient per
 ### line, separated # by commas. The 0-th entry is ignored unless the Dirichlet
 ### coefficients are periodic. One should always include it, however, because, in
@@ -375,14 +383,20 @@ class Lfunction:
             thefile += "0,\t\t\t### set Dirichlet_coefficient[0]\n"
             if hasattr(self, 'dirichlet_coefficients_unnormalized'):
                 for n in range(0,len(self.dirichlet_coefficients_unnormalized)):
-                    thefile += str(self.dirichlet_coefficients_unnormalized[n])
+                    if self.selfdual:
+                        thefile += str(self.dirichlet_coefficients_unnormalized[n])
+                    else:
+                        thefile += parse_complex_number(self.dirichlet_coefficients_unnormalized[n])
                     if n<5:
                         thefile += ",\t\t\t### set Dirichlet_coefficient[" + str(n+1) +"]\n"
                     else:
                         thefile += ",\n"
             else:
                 for n in range(0,len(self.dirichlet_coefficients)):
-                    thefile += str(self.dirichlet_coefficients[n])
+                    if self.selfdual:
+                        thefile += str(self.dirichlet_coefficients[n])
+                    else:
+                        thefile += parse_complex_number(self.dirichlet_coefficients[n])
                     if n<5:
                         thefile += ",\t\t\t### set Dirichlet_coefficient[" + str(n+1) +"]\n"
                     else:
@@ -806,7 +820,7 @@ class Lfunction_Maass(Lfunction):
         dbEntry = collection.find_one({'_id': self.dbid})
 
         if self.dbName == 'Lfunction':  # Data from Lemurell
-            
+
             # Extract the L-function information from the database entry
             self.__dict__.update(dbEntry)
 
@@ -815,32 +829,32 @@ class Lfunction_Maass(Lfunction):
             self.residues = []
 
             # Extract the L-function information from the lcalfile in the database
-            self.parseLcalcfile(self.lcalcfile)  
+            self.parseLcalcfile(self.lcalcfile)
 
         else: # GL2 data from Then or Stromberg
 
             self.group = 'GL2'
-            
+
             # Extract the L-function information from the database entry
             self.symmetry = dbEntry['Symmetry']
             self.eigenvalue = float(dbEntry['Eigenvalue'])
             self.norm = dbEntry['Norm']
             self.dirichlet_coefficients = dbEntry['Coefficient']
-            
+
             if 'Level' in dbEntry.keys():
                 self.level = int(dbEntry['Level'])
             else:
                 self.level = 1
             self.charactermodulus = self.level
-            
+
             if 'Weight' in dbEntry.keys():
                 self.weight = int(dbEntry['Weight'])
             else:
                 self.weight = 0
-                
+
             if 'Character' in dbEntry.keys():
                 self.characternumber = int(dbEntry['Character'])
-                
+
             if self.level > 1:
                 self.fricke = dbEntry['Fricke']  #no fricke for level 1
 
@@ -851,20 +865,20 @@ class Lfunction_Maass(Lfunction):
             self.primitive = True
             self.quasidegree = 2
             self.Q_fe = float(sqrt(self.level))/float(math.pi)
-            
+
             if self.symmetry =="odd":
                 aa=1
             else:
                 aa=0
-                
+
             if aa==0:
                 self.sign = 1
             else:
                 self.sign = -1
-                
+
             if self.level > 1:
                 self.sign = self.fricke * self.sign
-                
+
             self.kappa_fe = [0.5,0.5]
             self.lambda_fe = [0.5*aa + self.eigenvalue*I, 0,5*aa - self.eigenvalue*I]
             self.mu_fe = [aa + 2*self.eigenvalue*I, aa -2*self.eigenvalue*I]
@@ -876,19 +890,19 @@ class Lfunction_Maass(Lfunction):
             self.coefficient_period = 0
 
             self.checkselfdual()
-            
+
             self.texname = "L(s,f)"
             self.texnamecompleteds = "\\Lambda(s,f)"
-            
+
             if self.selfdual:
                 self.texnamecompleted1ms = "\\Lambda(1-s,f)"
             else:
                 self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{f})"
-                
+
             self.title = "$L(s,f)$, where $f$ is a Maass cusp form with level "+str(self.level)+", and eigenvalue "+str(self.eigenvalue)
             self.citation = ''
             self.credit = ''
-        
+
         self.generateSageLfunction()
 
     def Ltype(self):
@@ -899,16 +913,16 @@ class DedekindZeta(Lfunction):   # added by DK
     """Class representing the Dedekind zeta-fucntion
 
     Compulsory parameters: label
-    
+
     """
-    
+
     def __init__(self, **args):
         constructor_logger(self,args)
 
         #Check for compulsory arguments
         if not 'label' in args.keys():
             raise Exception("You have to supply a label for a Dedekind zeta function")
-        
+
         # Initialize default values
 
         # Put the arguments into the object dictionary
