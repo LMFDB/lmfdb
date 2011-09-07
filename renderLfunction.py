@@ -334,7 +334,7 @@ def set_gaga_properties(L):
         prim = 'Primitive'
     else:
         prim = 'Not primitive'
-    ans.append((None,        prim))
+#    ans.append((None,        prim))    Disabled until fixed
 
     return ans
 
