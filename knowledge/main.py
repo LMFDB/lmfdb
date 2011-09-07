@@ -242,7 +242,7 @@ def render(ID, footer=None, kwargs = None):
   # markdown enabled
   render_me = render_me % {'content' : md.convert(con), 'ID' : k.id } #, 'authors' : authors }
   # Pass the text on to markdown.  Note, backslashes need to be escaped for this, but not for the javascript markdown parser
-
+  
   #logger.debug("rendering template string:\n%s" % render_me)
 
   # TODO wrap this string-rendering into a try/catch and return a proper error message
