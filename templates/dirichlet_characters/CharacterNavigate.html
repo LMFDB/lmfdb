@@ -23,17 +23,17 @@
 
 <p>
 &nbsp;&nbsp;By {{ KNOWL('character.dirichlet.order', title="order") }}:</td>
-&nbsp;&nbsp;<a href="ordbrowse=1-5">1&mdash;10</a>
-&nbsp;&nbsp;<a href="ordbrowse=6-10">6&mdash;20</a>
-&nbsp;&nbsp;<a href="ordbrowse=11-15">11&mdash;15</a>
-&nbsp;&nbsp;<a href="ordbrowse=16-20">16&mdash;20</a>
+&nbsp;&nbsp;<a href="ordbrowse=1-10">1&mdash;10</a>
+&nbsp;&nbsp;<a href="ordbrowse=11-20">11&mdash;20</a>
+&nbsp;&nbsp;<a href="ordbrowse=21-30">21&mdash;30</a>
+&nbsp;&nbsp;<a href="ordbrowse=31-40">31&mdash;40</a>
 </p>
 
 <h2> Find a specific {{ KNOWL('character.dirichlet', title="Dirichlet character") }} </h2>
 <form>
 <input type='text' name='natural' size=10 placeholder="13.2">
-<button type='submit' name='search' value='Go'> Go </button>
-<br><span class="formexample"> e.g. 13.2</span>
+<button type='submit' name='search' value='Go'> Find  </button>
+<span class="formexample"> e.g. 13.2 -- represents the sage command DirichletGroup(13)[2].</span>
 </form>
 
 <h2> Search for characters </h2>
@@ -44,7 +44,7 @@ Enter criteria into one or more boxes to restrict the search.
 <tr>    
     <td> {{ KNOWL('character.dirichlet.modulus', title="modulus") }} </td>
     <td> <input type='text' name='modulus' size = '10' placeholder="13"></td>
-    <td><span class="formexample"> e.g. 5 </span></td>
+    <td><span class="formexample"> e.g. 13 </span></td>
 </tr>
 
 <tr>
