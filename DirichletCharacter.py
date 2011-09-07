@@ -248,13 +248,12 @@ def character_search(**args):
         info['credit'] = 'Sage'
         if (len(query) != 0):
             from sage.modular.dirichlet import DirichletGroup
-            chi,texname,number,length,kronsymbol  = charactertable(query)
-            info['characters'] = chi
-            info['texname'] = texname
-            info['number'] = number
-            info['len'] = length
-            info['kronsymbol'] = kronsymbol
-            logger.debug( length )
+            info['contents'] = charactertable(query)
+            #info['chars'] = chi
+            #info['tex'] = texname
+            #info['number'] = number
+            #info['len'] = length
+            #logger.debug( length )
             info['title'] = 'Dirichlet Characters'
             return render_template("dirichlet_characters/character_search.html", **info)
 
@@ -265,60 +264,48 @@ def charactertable(query):
             order=query.get('order',None))
 
 def render_character_table(modulus=None,conductor=None,order=None):
-    texname = []
-    chars = []
-    number = []
-    kronsymbol = []
-    count = 0
     start = 1
     end = 201
     stepsize = 1
     if modulus:
-        Gmod = DirichletGroup(modulus)
-        end = len(Gmod)
-    if conductor:
+        start = modulus
+        end = modulus+1
+    elif conductor:
         start = conductor
         stepsize = conductor
-    for a in range(start,end,stepsize):
-        print a
-        G = DirichletGroup(a)
-        for j in range(len(G)):
-            if conductor or order:
-                if G[j].conductor()==conductor or G[j].order()==order:
-                    count += 1
-                    number.append(j)
-                    s = r"\(\chi_{" + str(j) + r"}\)"
-                    texname.append(s)
-                    chars.append(G[j])
-                    if order == 2:
-                        kronsymbol.append(kronecker_symbol(G[j]))
-            else: #conductor and order = None
-                count += 1
-                number.append(j)
-                s = r"\(\chi_{" + str(j) + r"}\)"
-                texname.append(s)
-                chars.append(G[j])
-                if order == 2:
-                    kronsymbol.append(kronecker_symbol(G[j]))
 
-    return chars,texname,number,len(G),kronsymbol
+    def row(N):
+        G = DirichletGroup(N)
+        ret = []
+        for _ in range(len(G)):
+            add = True
+            add &= not conductor or G[_].conductor() == conductor
+            add &= not order     or G[_].order() == order
+            if add:
+                if G[_].order() == 2 and kronecker_symbol(G[_]) != None:
+                    ret.append([(_, kronecker_symbol(G[_]), G[_].modulus(), G[_].conductor(), G[_].order(), G[_].is_primitive(), G[_].is_even())])
+                else:
+                    ret.append([(_,G[_], G[_].modulus(), G[_].conductor(), G[_].order(), G[_].is_primitive(), G[_].is_even())])
+        return ret
+
+    return [row(_) for _ in range(start,end,stepsize)]
 
 def kronecker_symbol(chi):
+    m = chi.conductor()/4
     if chi.conductor()%2 == 1:
         if chi.conductor()%4 == 1:
-            kron = r"\begin{equation} \left(\frac{%s}{n}\right) \end{equation}" %(chi.conductor())
+            return r"\(\displaystyle\left(\frac{%s}{n}\right)\)" %(chi.conductor())
         else:
-            kron = r"\begin{equation} \left(\frac{-%s}{n}\right) \end{equation}" %(chi.conductor())  
+            return r"\(\displaystyle\left(\frac{-%s}{n}\right)\)" %(chi.conductor())  
+    elif chi.conductor()%8 == 4:
+        if m%4 == 1:
+            return r"\(\displaystyle\left(\frac{-%s}{n}\right)\)" %(chi.conductor())
+        elif m%4 == 3:
+            return r"\(\displaystyle\left(\frac{%s}{n}\right)\)" %(chi.conductor())
+    elif chi.conductor()%16 == 8:
+        if chi.is_even():
+            return r"\(\displaystyle\left(\frac{%s}{n}\right)\)" %(chi.conductor())
+        else:
+            return r"\(\displaystyle\left(\frac{-%s}{n}\right)\)" %(chi.conductor()) 
     else:
-        if chi.conductor()%8 != 0:
-            m = chi.conductor()/4
-            if m%4 == 1:
-                kron = r"\begin{equation}  \left(\frac{%s}{n}\right) \end{equation}" %(chi.conductor())
-            elif m%4 == 3:
-                kron = r"\begin{equation}  \left(\frac{-%s}{n}\right) \end{equation}" %(chi.conductor())
-        else:
-            if chi.is_even():
-                kron = r"\begin{equation}  \left(\frac{%s}{n}\right) \end{equation}" %(chi.conductor())
-            else:
-                kron = r"\begin{equation}  \left(\frac{-%s}{n}\right) \end{equation}" %(chi.conductor()) 
-    return kron
+        return None
