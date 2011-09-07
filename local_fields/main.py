@@ -11,6 +11,8 @@ from flask import render_template, render_template_string, request, abort, Bluep
 from utils import ajax_more, image_src, web_latex, to_dict, parse_range, coeff_to_poly, pol_to_html
 from local_fields import local_fields_page, logger, logger
 
+LF_credit = 'J. Jones and D. Roberts'
+
 def get_bread(breads = []):
   bc = [("Local Field", url_for(".index"))]
   for b in breads:
@@ -25,6 +27,10 @@ def index():
   #info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
   return render_template("lf-index.html", title ="Local Fields", bread = bread)
 
+@local_fields_page.route("/<label>")
+def by_label(label):
+    return render_field_webpage({'label' : label})
+
 @local_fields_page.route("/search", methods = ["GET", "POST"])
 def search():
   if request.method == "GET":
@@ -32,7 +38,7 @@ def search():
     bread = get_bread([("Search for '%s'" % val, url_for('.search'))])
     return render_template("lf-search.html", title="Local Field Search", bread = bread, val = val)
   elif request.method == "POST":
-    return "ERROR: we aloways do http get to explicitly display the search parameters"
+    return "ERROR: we always do http get to explicitly display the search parameters"
   else:
     return flask.redirect(404)
 
@@ -54,5 +60,25 @@ def local_field_search(**args):
   info['fields'] = res
   info['report'] = "found %s fields"%nres
 
-  return render_template("lf-plain.html", info = info, title="Local Field Search Result", bread=bread)
+  return render_template("lf-search.html", info = info, title="Local Field Search Result", bread=bread)
   
+def render_field_webpage(args):
+  data = None
+  bread = get_bread()
+  if 'label' in args:
+    label = str(args['label'])
+    C = base.getDBConnection()
+    data = C.localfields.fields.find_one({'label': label})
+    if data is None:
+        return "Field: " + label + " not found in the database"
+    info = {}
+    title = 'Local field:' + label
+    polynomial = coeff_to_poly(data['coeffs'])
+    info.update({
+      'polynomial': web_latex(polynomial)
+      })
+
+
+    return render_template("lf-show-field.html", credit=LF_credit, title = title, bread = bread, info = info )
+
+

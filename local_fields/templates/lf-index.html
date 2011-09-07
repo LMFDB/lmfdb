@@ -2,10 +2,12 @@
 
 {% block content %}
 
-<div>Local Fields</div>
+<table>
+  <tr>
+    <td>
+      <h1>Browse</h1>
 
-<h2>Browse</h2>
-
+The table gives
 <table border=1 cellpadding=5 class='right_align_table'>
 <tr>
 <th>$p$ \ $n$</th>
@@ -50,10 +52,45 @@
 
 </table>
 
-<h2>Search</h2>
-<form action="{{ url_for('.search') }}" method="GET">
-<input name="val" placeholder="123" />
-<button type="submit">Search</button>
-</form>
+</td>
+</tr>
+
+<tr>
+  <td>
+    <h1>Find a specific local field</h1>
+
+  Search by {{KNOWL('lf.field.label',title="label")}}
+  <div>
+        <form name="search" method = "get" action="{{search}}">      
+          <input type="text" name="jump_to" value="" placeholder="2.3.5"> 
+          <input type="submit" value="Find">
+        </form>
+      </div>
+    </td>
+</tr>
+
+<tr>
+    <td>
+      <form name="search" method = "get" action="{{search}}">
+        <h1>Search</h1>
+        <table class="">
+          <tr>
+            <td>
+          {{KNOWL('mf.elliptic.level',title='Degree')}}:
+            </td><td><input type="text" name="degree" value="" example="4"></td>
+          </tr>
+          <tr>
+            <td>
+              {{KNOWL('mf.elliptic.weight',title='Weight')}}:
+            </td><td><input type="text" name="weight" value="" placeholder="12"></td>
+          </tr>
+  </table>
+        <input type="submit" name="Submit" value="Search">
+      </form>
+    </td>
+  </tr>
+</table>
+
+
 
 {% endblock %}
