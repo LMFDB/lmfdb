@@ -71,7 +71,7 @@
   <ul class="list">
    <li>
     Degree:
-    {% if user_is_authenticated and (username == 'MichaelRubinstein' or username == 'Jonathon Bober' or username == 'Ralph Furmaniak' or username == 'Harald Schilly') %}
+    {% if user_is_authenticated and (username == 'MichaelRubinstein' or username == 'Jonathan Bober' or username == 'Ralph Furmaniak' or username == 'Harald Schilly') %}
       <span id="span1" style="position:relative;display:none">
       <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree1')}}"><img src="/static/images/1dot.svg"/></a>
       <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree2')}}"><img src="/static/images/2dot.svg"/></a>
