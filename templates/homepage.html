@@ -14,7 +14,7 @@
       </div>
       <div class="topright">
           <a href="https://docs.google.com/spreadsheet/viewform?formkey=dDJXYXBleU1BMTFERFFIdjVXVmJqdlE6MQ" target="_blank">
-             Report a Problem</a>
+             Feedback</a>
             &middot;
           {% if user_is_admin -%}
             <a href="{{ url_for('users.register') }}">Registertokens</a>
@@ -32,7 +32,6 @@
           <br/>
           <span id="communication-wrapper">
             <img id="communication-img" src="{{ url_for('static', filename='images/progress-green.gif') }}" />
-            Ajax:
             <span id="communication"></span>
           </span>
       </div>
@@ -71,10 +70,32 @@
   <ul class="list">
    <li>
     Degree:
+    {% if user_is_authenticated and (username == 'MichaelRubinstein' or username == 'Jonathan Bober' or username == 'Ralph Furmaniak' or username == 'Harald Schilly') %}
+      <span id="span1" style="position:relative;display:none">
+      <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree1')}}"><img src="/static/images/1dot.svg"/></a>
+      <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree2')}}"><img src="/static/images/2dot.svg"/></a>
+      <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree3')}}"><img src="/static/images/3dot.svg"/></a>
+      <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree4')}}"><img src="/static/images/4dot.svg"/></a>
+      </span>
+      <script>
+        if(Math.random()<0.1) {
+        $().ready(function() {
+	  $('#span2').hide();
+	  $('#span1').show();
+	  setTimeout(function() {
+	    $('#span1').hide();
+	    $('#span2').show();
+	  }, 10000);
+	});
+	}
+      </script>
+    {% endif %}
+    <span id="span2">
     <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree1')}}">1</a>
     <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree2')}}">2</a>
     <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree3')}}">3</a>
     <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree4')}}">4</a>
+    </span>
    </li>
   </ul>
 
@@ -204,7 +225,10 @@
        <h4>This project is supported by the <a href="http://www.nsf.gov">National Science Foundation</a> under FRG Grant No. DMS-0757627, which is administered from the <a href="http://www.aimath.org">American Institute of Mathematics</a>. </h4>
 <br />
     {%- endif %}
-    Number Theory, the Queen of Mathematics!
+    <div>
+      <a href="{{ 'acknowledgment' }}">Acknowledgment</a> - 
+      <a href="{{ 'about' }}">About</a>  
+    </div>
 </div>
 
 {%- endblock body %}

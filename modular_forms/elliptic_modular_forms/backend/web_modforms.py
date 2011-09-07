@@ -542,10 +542,12 @@ class WebModFormSpace(Parent):
             o = dict()
             label = self._galois_orbits_labels[j]
             o['label']= label
-            full_label = "{0}.{1}.{2}".format(self.level(),self.weight(),self._chi)
+            full_label = "{0}.{1}".format(self.level(),self.weight())
+            if self._chi<>0:
+                full_label=full_label+".{0}".format(self._chi)
             full_label=full_label+label
             o['full_label']=full_label
-            o['url']  = url_for('emf.render_one_elliptic_modular_form',level=self.level(),weight=self.weight(),label=o['label'],character=self._chi)
+            o['url']  = url_for('emf.render_elliptic_modular_forms',level=self.level(),weight=self.weight(),label=o['label'],character=self._chi)
             o['dim']  = self._galois_decomposition[j].dimension()
             poly,disc,is_relative = self.galois_orbit_poly_info(j,prec)
             o['poly']="\( {0} \)".format(latex(poly))
@@ -575,7 +577,7 @@ class WebModFormSpace(Parent):
         for j in range(len(self._galois_decomposition)):
             label=self._galois_orbits_labels[j]
             #url="?weight="+str(self.weight())+"&level="+str(self.level())+"&character="+str(self.character())+"&label="+label
-            url=url_for('emf.render_one_elliptic_modular_form',level=self.level(),weight=self.weight(),label=label,character=self._chi)
+            url=url_for('emf.render_elliptic_modular_forms',level=self.level(),weight=self.weight(),label=label,character=self._chi)
             header="<a href=\""+url+"\">"+label+"</a>"
             tbl['headersv'].append(header)
             dim=self._galois_decomposition[j].dimension()
@@ -802,13 +804,15 @@ class WebNewForm(SageObject):
             else:
                 return 
 
+        emf_logger.debug("name={0}".format(self._name))
 
+        emf_logger.debug("data: {0}".format(data))
         if isinstance(data,dict) and len(data.keys())>0:
-            #self._data = data
             self._from_dict(data)
+
         elif compute=='all':
+            emf_logger.debug("compute")
             self.q_expansion_embeddings(prec,bitprec)
-            #self._embeddings=[]            
             if self._N==1:
                 self.as_polynomial_in_E4_and_E6()
             #self._as_polynomial_in_E4_and_E6=None
@@ -828,9 +832,11 @@ class WebNewForm(SageObject):
             self._is_CM = []
             self._satake = {}
             self._dimension = 1 # None
-
+        emf_logger.debug("before end of __init__ prec={0}".format(prec))
+        emf_logger.debug("before end of __init__ f={0}".format(self._f))
+        emf_logger.debug("before end of __init__ type(f)={0}".format(type(self._f)))
         self._base_ring = self._f.q_eigenform(prec,names='x').base_ring()
-
+        emf_logger.debug("done __init__")
 
         ## we shold figure out which complex embeddings preserve the character
         
@@ -1496,7 +1502,8 @@ class WebNewForm(SageObject):
         """
         
         emf_logger.debug("in cm_values with digits={0}".format(digits))
-        bits=max(int(53),ceil(int(digits)*int(4)))
+        #bits=max(int(53),ceil(int(digits)*int(4)))
+        bits=ceil(int(digits)*int(4))
         CF=ComplexField(bits)
         RF=ComplexField(bits)
         eps=RF(10**-(digits+1))
@@ -1670,6 +1677,20 @@ class WebNewForm(SageObject):
                     thetas[jj][p]=t_p
         self._satake['alphas']=alphas
         self._satake['thetas']=thetas
+        self._satake['alphas_latex']=dict()
+        self._satake['thetas_latex']=dict()
+        for j in self._satake['alphas'].keys():
+            self._satake['alphas_latex'][j]=dict()
+            for p in self._satake['alphas'][j].keys():
+                s = latex(self._satake['alphas'][j][p])
+                self._satake['alphas_latex'][j][p]=s
+        for j in self._satake['thetas'].keys():
+            self._satake['thetas_latex'][j]=dict()
+            for p in self._satake['thetas'][j].keys():
+                s = latex(self._satake['thetas'][j][p])
+                self._satake['thetas_latex'][j][p]=s
+                
+        emf_logger.debug("satake=".format(self._satake))
         return self._satake
     
     def print_satake_parameters(self,stype=['alphas','thetas'],prec=10,bprec=53):
@@ -1750,15 +1771,13 @@ class WebNewForm(SageObject):
             prec=self._prec
         s = my_latex_from_qexp(str(self.q_expansion(prec)))
         sb = list()
-        #brpt
         if br > 0:
             sb = break_line_at(s,br)
         if len(sb)<=1:
-            s = "\("+s+"\)"
+            s = r"\\("+s+r"\\)"
         else:
-            s = "\("+"\)<br>\("+join(sb,"",)+"\)"
+            s = r"\\("+join(sb,"",)+r"\\)"
         emf_logger.debug("print_q_exp: prec=".format(prec))
-        emf_logger.debug("s={0}".format(s))
         return s
 
     

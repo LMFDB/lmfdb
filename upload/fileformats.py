@@ -132,8 +132,7 @@ def guessParsing(file1):
 
   if len(ret)==1:
     ret = ret[0]
-
-  if all([len(row)==1 for row in ret]):
+  elif all([len(row)==1 for row in ret]):
     ret = [ row[0] for row in ret]
 
   return ret

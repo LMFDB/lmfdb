@@ -1,17 +1,29 @@
 #DirichletCharacter.py
 
 import re
-import logging 
 
-from base import app
+from base import app, r
 import flask
 from flask import Flask, session, g, render_template, url_for, make_response, request, redirect
 from sage.all import *
 import tempfile, os
 from pymongo import ASCENDING
 from WebCharacter import *
-from utils import to_dict, parse_range
+from renderLfunction import render_Lfunction
+from utils import to_dict, parse_range, make_logger
 import ListCharacters
+
+logger = make_logger("DC")
+
+###############################################################################
+#   Route functions
+###############################################################################
+
+@app.route("/Character/Dirichlet/")
+@app.route("/Character/Dirichlet/<arg1>")
+@app.route("/Character/Dirichlet/<arg1>/<arg2>")
+def render_Character(arg1 = None, arg2 = None):
+    return DirichletCharacter.render_webpage(request,arg1,arg2)
 
 def render_webpage(request,arg1,arg2):
     args = request.args
@@ -23,7 +35,6 @@ def render_webpage(request,arg1,arg2):
             return render_template("dirichlet_characters/CharacterNavigate.html", **info)
 
         elif arg1.startswith("modbrowse"):
-            print "Check2"
             modulus_start = int(arg1.partition('-')[0][10:])
             modulus_end = int(arg1.partition('-')[2])
             info = {}
@@ -42,7 +53,7 @@ def render_webpage(request,arg1,arg2):
             info['conductor_end'] = conductor_end
             info["bread"] = [('Dirichlet Characters', url_for("render_Character")), ('Conductor '+str(conductor_start) + '-' + str(conductor_end), '/Character/Dirichlet/condsearch='+str(conductor_start)+'-'+str(conductor_end))]
             info['title'] = 'Conductors ' +str(conductor_start)+'-'+str(conductor_end)
-            info['credit'] = 'Sage'
+            info['credit'] = "Sage"
             info['contents'] = ListCharacters.get_character_conductor(conductor_start,conductor_end+1)
             return render_template("dirichlet_characters/ConductorList.html", **info)
 
@@ -61,7 +72,7 @@ def render_webpage(request,arg1,arg2):
 
         elif arg1 == 'custom':
             return "not yet implemented"
-       
+
         temp_args['type'] = 'dirichlet' # set type and input
         temp_args['modulus'] = arg1
         temp_args['number'] = arg2
@@ -77,7 +88,7 @@ def render_webpage(request,arg1,arg2):
         except:
             1
 
-        info = initCharacterInfo(chi, temp_args, request) # sets the various properties of chi to be displayed in DirichletCharacter.html
+        info = initCharacterInfo(chi, temp_args, request) # sets the various properties of chi to be displayed in DirichletCharacter.htiml
 
         return render_template('dirichlet_characters/DirichletCharacter.html', **info)
     else:
@@ -95,8 +106,8 @@ def set_info_for_start_page():
     info['credit'] = 'Sage'
     info['title'] = 'Dirichlet Characters'
     info['bread'] = [('Dirichlet Characters', url_for("render_Character"))]
-    info['learnmore'] = [('Dirichlet Characters', 'http://wiki.l-functions.org/L-function')]
-    info['friends'] = [('Dirichlet L-functions', '/Lfunction/degree1#Dirichlet')]
+    info['learnmore'] = [('Dirichlet Characters', url_for("knowledge.show", ID="character.dirichlet.learn_more_about"))]
+    info['friends'] = [('Dirichlet L-functions', url_for("render_Lfunction", arg1="degree1"))]
     return info
 
 def initCharacterInfo(chi,args, request):
@@ -117,10 +128,12 @@ def initCharacterInfo(chi,args, request):
     info['properties2'] = chi.properties
 
     if args['type'] == 'dirichlet':
+        from sage.modular.dirichlet import DirichletGroup
         snum = str(chi.number)
         info['number'] = snum
         smod = str(chi.modulus)
         info['modulus'] = smod
+        G = DirichletGroup(chi.modulus)
         info['bread'] = [('Dirichlet Characters','/Character/Dirichlet'),('Character '+snum+ ' modulo '+smod,'/Character/Dirichlet/'+smod+'/'+snum)]
         info['sagechar'] = str(chi.sagechar)
         info['conductor'] = int(chi.conductor)
@@ -137,40 +150,31 @@ def initCharacterInfo(chi,args, request):
         info['prim'] = chi.prim
         info['vals'] = latex(chi.vals)
         info['valstex'] = chi.valstex
-        info['root_unity'] =  any(map(lambda x : r"\zeta" in x,  chi.valstex))
+        info['root_unity'] =  str(any(map(lambda x : r"\zeta" in x,  chi.valstex)))
         info['unitgens'] = str(chi.unitgens)
-        #print chi.unitgens
         info['bound'] = int(chi.bound)
-        #print chi.bound
-        info['lth'] = int(chi.lth)
-        #print chi.lth
-        if not chi.primitive:
+        if chi.order == 2:
+            info['kronsymbol'] = r"\(\displaystyle %s\)" %(kronecker_symbol(G[chi.number]))
+        if chi.primitive=="False":
             info['inducedchar'] = chi.inducedchar
             info['inducedchar_modulus'] = chi.inducedchar_modulus
             info['inducedchar_conductor'] = chi.inducedchar_conductor
             info['inducedchar_number'] = chi.inducedchar_number
             info['inducedchar_tex'] = chi.inducedchar_tex
-            info['inducedchar_isprim'] = chi.inducedchar_isprim
-        #info['primtf'] = chi.primtf
         info['nextnumber'] = chi.number+1
-        info['kronsymbol'] = str(chi.kronsymbol)
-        info['gauss_sum'] = chi.gauss_sum_tex()
-        info['jacobi_sum'] = chi.jacobi_sum_tex()
-        info['kloosterman_sum'] = chi.kloosterman_sum_tex()
-        info['learnmore'] = [('Dirichlet Characters', 'http://wiki.l-functions.org/L-functions') ] 
-        if chi.primitive:
-            info['friends'] = [('Dirichlet L-function', '/L/Character/Dirichlet/'+smod+'/'+snum)]
+        info['learnmore'] = [('Dirichlet Characters', url_for("knowledge.show", ID="character.dirichlet.learn_more_about"))] 
+        info['friends'] = [('Dirichlet L-function', '/L/Character/Dirichlet/'+smod+'/'+snum)]
         nmore = int(snum) + 1
         nless = int(snum) - 1
         mmore = int(smod) + 1
         mless = int(smod) - 1
         url_ch = url_for("render_Character", arg1=smod,arg2=str(nmore))
         if chi.number == 0:
-            info['navi'] = [(r"&larr;\(\chi_{" + str(euler_phi(chi.modulus)-1) + r"} \left( \text{mod}\;" + str(mless)+ r"\right) \)",url_for("render_Character", arg1=str(mless),arg2=str(euler_phi(chi.modulus)-1))), (r"\(\chi_{" + str(nmore) + r"} \left( \text{mod}\;" + smod+ r"\right) \)&rarr;" ,url_ch)]
+            info['navi'] = [(r"\(\chi_{" + str(nmore) + r"} \left( \text{mod}\; " + smod+ r"\right) \)" ,url_ch), (r"\(\chi_{" + str(euler_phi(chi.modulus)-1) + r"} \left( \text{mod}\;" + str(mless)+ r"\right) \)",url_for("render_Character", arg1=str(mless),arg2=str(euler_phi(chi.modulus)-1)))]
         elif chi.number == euler_phi(chi.modulus)-1:
-            info['navi'] = [(r"&larr;\(\chi_{" + str(nless) + r"} \left( \text{mod}\;" + smod+ r"\right) \)",url_for("render_Character", arg1=smod,arg2=str(nless))), (r"\(\chi_{" + str(nmore) + r"} \left( \text{mod}\;" + str(mmore)+ r"\right) \)&rarr;",url_for("render_Character", arg1=str(mmore),arg2=str(0)))]
+            info['navi'] = [(r"\(\chi_{" + str(nmore) + r"} \left( \text{mod}\;" + str(mmore)+ r"\right) \)",url_for("render_Character", arg1=str(mmore),arg2=str(0))), (r"\(\chi_{" + str(nless) + r"} \left( \text{mod}\;" + smod+ r"\right) \)",url_for("render_Character", arg1=smod,arg2=str(nless)))]
         else:
-            info['navi'] = [(r"&larr;\(\chi_{" + str(nless) + r"} \left( \text{mod}\; " + smod+ r"\right) \)",url_for("render_Character", arg1=smod,arg2=str(nless))), (r"\(\chi_{" + str(nmore) + r"} \left( \text{mod}\;"+ smod+ r"\right) \)&rarr;",url_for("render_Character", arg1=smod,arg2=str(nmore)))]
+            info['navi'] = [(r"\(\chi_{" + str(nmore) + r"} \left( \text{mod}\;" + smod+ r"\right) \)",url_for("render_Character", arg1=smod,arg2=str(nmore))), (r"\(\chi_{" + str(nless) + r"} \left( \text{mod}\; " + smod+ r"\right) \)",url_for("render_Character", arg1=smod,arg2=str(nless)))]
 
     return info
 
@@ -196,8 +200,8 @@ def dc_calc_jacobi(modulus,number):
     arg = request.args.get("val", [])
     if not arg:
         return flask.abort(404)
+    arg = map(int,arg.split('.'))
     try:
-        arg = map(int,arg.split('.'))
         mod = arg[0]
         num = arg[1]
         from sage.modular.dirichlet import DirichletGroup
@@ -213,8 +217,8 @@ def dc_calc_kloosterman(modulus,number):
     arg = request.args.get("val", [])
     if not arg:
         return flask.abort(404)
+    arg = map(int,arg.split(','))
     try:
-        arg = map(int,arg.split(','))
         from sage.modular.dirichlet import DirichletGroup
         chi = DirichletGroup(modulus)[number]
         kloosterman_sum_numerical = chi.kloosterman_sum_numerical(100,arg[0],arg[1])
@@ -231,7 +235,6 @@ def character_search(**args):
     info = to_dict(args)
     query = {}
     print args
-
     if 'natural' in args:
         label = info.get('natural', '')
         modulus = int(str(label).partition('.')[0])
@@ -244,195 +247,78 @@ def character_search(**args):
         info["bread"] = [('Dirichlet Characters', url_for("render_Character")), ('search results', ' ')]
         info['credit'] = 'Sage'
         if (len(query) != 0):
-            count_default=100
-            if info.get('count'):
-                try:
-                    count = int(info['count'])
-                except:
-                    count = count_default
-            else:
-                info['count'] = count_default
-                count = count_default
-
-            start_default=0
-            if info.get('start'):
-                try:
-                    print "Check"
-                    start = int(info['start'])
-                    if(start < 0): 
-                        print "Check1"
-                        start += (1-(start+1)/count)*count
-                except:
-                    print "Check2"
-                    start = start_default
-            else:
-                start = start_default
             from sage.modular.dirichlet import DirichletGroup
-            t,texname,number,length  = charactertable(query)
-            info['characters'] = t
+            chi,texname,number,length,kronsymbol  = charactertable(query)
+            info['characters'] = chi
             info['texname'] = texname
             info['number'] = number
             info['len'] = length
-            if(start>=length): 
-                print "Check3"
-                start-=(1+(start-length)/count)*count
-            if(start<0):
-                print "Check4"
-                start=0
-            info['start'] = start
+            info['kronsymbol'] = kronsymbol
+            logger.debug( length )
             info['title'] = 'Dirichlet Characters'
-            print start, count, length
             return render_template("dirichlet_characters/character_search.html", **info)
 
 def charactertable(query):
-    if(len(query) == 1):
-        if 'modulus' in query:
-            modulus = query['modulus']
-            return charactertable_modulus(modulus)
-        elif 'conductor' in query:
-            conductor = query['conductor'] 
-            return charactertable_conductor(conductor)
-        elif 'order' in query:
-            order = query['order']
-            return charactertable_order(order)
-    elif (len(query) == 2):
-        if ('modulus' in query) and ('conductor' in query):
-            modulus = query['modulus']
-            conductor = query['conductor']
-            return charactertable_modcond(modulus,conductor)
-        elif ('modulus' in query) and ('order' in query):
-            modulus = query['modulus']
-            order = query['order']
-            return charactertable_modorder(modulus,order)
-        else:
-            conductor = query['conductor']
-            order = query['order']
-            return charactertable_condorder(conductor,order)
-    elif (len(query) == 3):
-        modulus = query['modulus']
-        conductor = query['conductor']
-        order = query['order']
-        return charactertable_modcondorder(modulus,conductor,order)
+    return render_character_table(
+            modulus=query.get('modulus',None),
+            conductor=query.get('conductor',None),
+            order=query.get('order',None))
 
-def charactertable_modulus(N):
-    G = DirichletGroup(N)
+def render_character_table(modulus=None,conductor=None,order=None):
     texname = []
     chars = []
     number = []
-    j = 0
-    for v in G:
-        number.append(j)
-        s = "\(\\chi_{" + str(j) + "}\)"
-        texname.append(s)
-        chars.append(v)
-        j += 1
-    return chars,texname,number,len(G)
-
-def charactertable_conductor(N):
-    #print N
-    texname = []
-    chars = []
-    number = []
+    kronsymbol = []
     count = 0
-    for a in range(N,201): #TODO FIX THIS TO TAKE INTERVALS
-        if a%N == 0:
-            G = DirichletGroup(a)
-            j = 0
-            for chi in G:
-                if chi.conductor() == N:
+    start = 1
+    end = 201
+    stepsize = 1
+    if modulus:
+        Gmod = DirichletGroup(modulus)
+        end = len(Gmod)
+    if conductor:
+        start = conductor
+        stepsize = conductor
+    for a in range(start,end,stepsize):
+        print a
+        G = DirichletGroup(a)
+        for j in range(len(G)):
+            if conductor or order:
+                if G[j].conductor()==conductor or G[j].order()==order:
                     count += 1
                     number.append(j)
-                    s = "\(\\chi_{" + str(j) + "}\)"
+                    s = r"\(\chi_{" + str(j) + r"}\)"
                     texname.append(s)
-                    chars.append(chi)
-                j += 1
-    return chars,texname,number,count
-
-def charactertable_order(N):
-    texname = []
-    chars = []
-    number = []
-    count = 0
-    for a in range(2,200):
-        G = DirichletGroup(a)
-        j=0
-        for chi in G:
-            if chi.multiplicative_order() == N:
+                    chars.append(G[j])
+                    if order == 2:
+                        kronsymbol.append(kronecker_symbol(G[j]))
+            else: #conductor and order = None
                 count += 1
                 number.append(j)
-                s = "\(\\chi_{" + str(j) + "}\)"
+                s = r"\(\chi_{" + str(j) + r"}\)"
                 texname.append(s)
-                chars.append(chi)
-            j += 1
-    return chars,texname,number,count
+                chars.append(G[j])
+                if order == 2:
+                    kronsymbol.append(kronecker_symbol(G[j]))
 
-def charactertable_modcond(N,M):
-    G = DirichletGroup(N)
-    texname = []
-    chars = []
-    number = []
-    j = 0
-    count = 0
-    for chi in G:
-        if chi.conductor() == M:
-            count += 1
-            number.append(j)
-            s = "\(\\chi_{" + str(j) + "}\)"
-            texname.append(s)
-            chars.append(chi)
-        j += 1
-    return chars,texname,number,count
+    return chars,texname,number,len(G),kronsymbol
 
-def charactertable_modorder(N,M):
-    G = DirichletGroup(N)
-    texname = []
-    chars = []
-    number = []
-    j = 0
-    count = 0
-    for chi in G:
-        if chi.multiplicative_order() == M:
-            count += 1
-            number.append(j)
-            s = "\(\\chi_{" + str(j) + "}\)"
-            texname.append(s)
-            chars.append(chi)
-        j += 1
-    return chars,texname,number,count
-
-def charactertable_condorder(N,M):
-    texname = []
-    chars = []
-    number = []
-    count = 0
-    for a in range(N,201): #TODO FIX THIS TO TAKE INTERVALS
-        if a%N == 0:
-            G = DirichletGroup(a)
-            j = 0
-            for chi in G:
-                if (chi.conductor() == N) and (chi.multiplicative_order() == M):
-                    count += 1
-                    number.append(j)
-                    s = "\(\\chi_{" + str(j) + "}\)"
-                    texname.append(s)
-                    chars.append(chi)
-                j += 1
-    return chars,texname,number,count
-
-def charactertable_modcondorder(N,M,O):
-    G = DirichletGroup(N)
-    texname = []
-    chars = []
-    number = []
-    j = 0
-    count = 0
-    for chi in G:
-        if (chi.conductor() == M) and (chi.multiplicative_order() == O):
-            count += 1
-            number.append(j)
-            s = "\(\\chi_{" + str(j) + "}\)"
-            texname.append(s)
-            chars.append(chi)
-        j += 1
-    return chars,texname,number,count
-
+def kronecker_symbol(chi):
+    if chi.conductor()%2 == 1:
+        if chi.conductor()%4 == 1:
+            kron = r"\begin{equation} \left(\frac{%s}{n}\right) \end{equation}" %(chi.conductor())
+        else:
+            kron = r"\begin{equation} \left(\frac{-%s}{n}\right) \end{equation}" %(chi.conductor())  
+    else:
+        if chi.conductor()%8 != 0:
+            m = chi.conductor()/4
+            if m%4 == 1:
+                kron = r"\begin{equation}  \left(\frac{%s}{n}\right) \end{equation}" %(chi.conductor())
+            elif m%4 == 3:
+                kron = r"\begin{equation}  \left(\frac{-%s}{n}\right) \end{equation}" %(chi.conductor())
+        else:
+            if chi.is_even():
+                kron = r"\begin{equation}  \left(\frac{%s}{n}\right) \end{equation}" %(chi.conductor())
+            else:
+                kron = r"\begin{equation}  \left(\frac{-%s}{n}\right) \end{equation}" %(chi.conductor()) 
+    return kron
