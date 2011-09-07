@@ -3,13 +3,13 @@
 {% block content %}
 
 
-<h1>Browse {{KNOWL('mf.maass.picard',title='Maass forms on \(\mathrm{PSL}_{2}(\mathbb{Z}[i])\)')}}</h1>
+<h1>Browse {{KNOWL('mf.maass.picard',title='Maass forms on \(\mathrm{PSL}(2,\mathbb{Z}[i])\)')}}</h1>
 {% if table is defined %}
 
 {#{ table | safe }#}
+<h2>{{KNOWL('mf.maass.picard.eigenvalue',title='Eigenvalues:')}}</h2>
 <table class="ntdata">
   <thead>
-    <tr><th>{{KNOWL('mf.maass.picard.eigenvalue',title='Eigenvalues')}} </th></tr>
     {% for i in range(0,nrows-1) %}
     <tr>
       {% for j in range(0,ncols-1) %}
@@ -51,7 +51,7 @@
             </td>
 	  </tr>
 	  <tr>
-	    <td>{{KNOWL('mf.maass.picard.fourierexpansion',title='Fourier coefficient')}} (a,b):</td>
+	    <td>{{KNOWL('mf.maass.picard.fourierexpansion',title='Fourier coefficient')}} :{{KNOWL('mf.maass.picard.search.coefficients', title='$\Re(n),\Im(n)$')}}</td>
 	    <td> 
 	      <input type="text" name="fouriier_p" value="" placeholder="2,2">
             </td>

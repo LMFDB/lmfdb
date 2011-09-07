@@ -438,24 +438,23 @@ def render_field_webpage(args):
     bread = [('Number Fields', url_for("number_field_render_webpage")),('%s'%info['label'],' ')]
     t = "Number Field %s" % info['label']
 
-    properties = ['<br>']
-    properties.extend('<table>')
-    properties.extend('<tr><td align=left><b>Degree:</b><td align=left> %s</td>'%data['degree'])
-    properties.extend('<tr><td align=left><b>Signature:</b><td align=left>%s</td>'%data['signature'])
-    properties.extend('<tr><td align=left><b>Discriminant:</b><td align=left>%s</td>'%data['discriminant'])
     if npr==1:
-        properties.extend('<tr><td align=left><b>Ramified prime:</b><td align=left>%s</td>'%ram_primes)
+         primes='prime'
     else:
-        if npr==0:
-            properties.extend('<tr><td align=left><b>Ramified primes:</b><td align=left>%s</td>'%"None")
-        else:
-            properties.extend('<tr><td align=left><b>Ramified primes:</b><td align=left>%s</td>'%ram_primes)
-    properties.extend('<tr><td align=left><b>Class number:</b><td align=left>%s</td>'%data['class_number'])
-    properties.extend('<tr><td align=left><b>Class group:</b><td align=left>%s</td>'%data['class_group_invs'])
-    properties.extend('<tr><td align=left><b>Galois group:</b><td align=left>%s</td>'%data['galois_group'])
-    properties.extend('</table>')
+         primes='primes'
+
+    properties2 = [('Degree:', '%s' %data['degree']),
+                   ('Signature:', '%s' %data['signature']),
+                   ('Discriminant', '%s' %data['discriminant']),
+                   ('Ramified '+primes+':', '%s' %ram_primes),
+                   ('Class number:', '%s' %data['class_number']),
+                   ('Class group:', '%s' %data['class_group_invs']),
+                   ('Galois Group:', '%s' %data['galois_group'])
+    ]
+
+
     del info['_id']
-    return render_template("number_field/number_field.html", properties=properties, credit=NF_credit, title = t, bread=bread, friends=info.pop('friends'), info=info )
+    return render_template("number_field/number_field.html", properties2=properties2, credit=NF_credit, title = t, bread=bread, friends=info.pop('friends'), info=info )
 
 def format_coeffs(coeffs):
     return pol_to_html(str(coeff_to_poly(coeffs)))

@@ -31,7 +31,7 @@ function set_value(name,val) {
 </script>
 {#{ info | safe } #}
 
-<h1>Browse {{KNOWL('mf.maass.mwf',title='Maass forms')}} over \( \mathrm{GL}_{2}(\mathbb{Q})\)') </h1>
+<h1>Browse {{KNOWL('mf.maass.mwf',title='Maass forms')}} over \( \mathrm{GL}_{2}(\mathbb{Q})\) </h1>
 <form name="browse" method="get" action="{{url_for('.render_maass_waveforms')}}">
         
   <input type="hidden" name="weight" value=""/>
@@ -39,10 +39,10 @@ function set_value(name,val) {
   <input type="hidden" name="browse" value="1"/>
   <ul>
     <li>
-      <a href="javascript:set_value('weight',0);">Browse Maass Forms of weight 0</a>
+      <a href="javascript:set_value('weight',0);">Browse Maass forms of weight 0</a>
     </li>
     <li>
-      <a href="javascript:set_value('weight',1);">Browse Maass Forms of weight 1</a>
+      <a href="javascript:set_value('weight',1);">Browse Maass forms of weight 1</a>
     </li>
   </ul>
   <button type="submit" name="Browse" value="Search">Browse</button>
@@ -56,7 +56,7 @@ function set_value(name,val) {
         <input type="text" name="jump_to" value="" placeholder="1.12"> 
 	<button type="submit" value="Jump">Find</button>
         <br>
-        <span class="formexample">(gives the 12th eigenvalue on the modular group)</span>
+        <span class="formexample">(1.12 gives the 12th entry of level 1)</span>
         
 
       </form>

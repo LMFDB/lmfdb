@@ -214,7 +214,7 @@ def set_info_for_start_page():
 
     info['title'] = 'L-functions'
     info['bread'] = [('L-functions', url_for("render_Lfunction"))]
-    info['learnmore'] = [('Lmfdb-wiki', 'http://wiki.l-functions.org/L-function')]
+#   info['learnmore'] = [('Lmfdb-wiki', 'http://wiki.l-functions.org/L-function')]
 
     return info
     
