@@ -155,9 +155,9 @@ function updateMappingRules(data, id) {
     <!--<a href="#" onclick="parseJsonTable('/upload/download/{{entry._id}}/{{entry.filename}}', $('#div{{entry._id}}'));return false">
       Parse Json from {{entry.filename}}
     </a>-->
-    <!--<a href="#" onclick="$('#div{{entry._id}}').load('{{url_for('.displayParsed',id=entry._id)}}');return false">
+    <a href="#" onclick="$('#div{{entry._id}}').load('{{url_for('.displayParsed',id=entry._id)}}');return false">
       Show automatically parsed data
-    </a>-->
+    </a>
 
     <div id="div{{entry._id}}">
     </div>
