@@ -8,9 +8,35 @@
    {{ error | safe }}
 {% else %}
 <h1> {{ name | safe }} </h1>
+<div id="qexp">
 <h2> {{ KNOWL('mf.elliptic.q-expansion',title='q-expansion')}}</h2>
-<div>
-{{ q_exp | safe }}
+{# { q_exp | safe }#}
+<br>
+{# Get the q-expansion #}
+<span id="qexp">
+\( 
+{% if c[0] and not c[0][0] == '0' %}
+  {% set nstart=0 %}
+{% else %}
+  {% set nstart=1 %}
+{% endif %} 
+{% for n in range(nstart,maxc) %}
+  {% if not c[n][0] == '1' %}
+    {{ c[n] }} 
+  {% endif %}
+  {% if n==1 %} 
+   q
+  {% else %}
+   q^{  {{n}} } 
+  {% endif %}
+    
+  {% if n < maxc-1 and not c[n+1][0]=='-' %}
+  + 
+ {% endif %}
+{% endfor %}
+ + O(q^{ {{maxc}} })
+\) 
+</span>
 </div>
 {{ polynomial_st | safe }}
 <br>
@@ -69,7 +95,7 @@ in the field of complex numbers. The values are shown in the table below.
         \(\alpha_{p}\)
       </th>
       {% for ps in satake.ps %}
-      <td>\( {{satake.alphas[h][ps]}} \)</td>
+      <td>\( {{satake.alphas_latex[h][ps]}} \)</td>
       {% endfor %}
     </tr>
     <tr>
@@ -77,7 +103,7 @@ in the field of complex numbers. The values are shown in the table below.
         \(\theta_{p}\)
       </th>
       {% for ps in satake.ps %}
-      <td> \( {{satake.thetas[h][ps]}} \)</td>
+      <td> \( {{satake.thetas_latex[h][ps]}} \)</td>
       {% endfor %}
     </tr>
     {% endfor %}

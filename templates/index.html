@@ -2,43 +2,47 @@
 {% block content %}
 
 <div class="announce">
-<div>
-Welcome! The {{KNOWL("lfunction",title="<b>L</b>-functions")}} and {{KNOWL("mf",title="<b>M</b>odular <b>F</b>orms")}}
-{{KNOWL("doc.lmfdb.database", title = "<b>D</b>ata<b>B</b>ase")}} is a {{KNOWL("doc.lmfdb.project", title="collaborative")}} 
-effort by Number Theorists to {{KNOWL("doc.lmfdb.share", title="share")}}, {{KNOWL("doc.lmfdb.contextualize", title="contextualize")}} and {{KNOWL("doc.lmfdb.improve", title="improve")}} data
-and theorems.
-</div>
+{{description}}
 </div>
 
 <h1>Sections</h1>
 
  <ul>
-  <li><a href="{{ url_for('render_Lfunction') }}">$L$-functions and Zeta-functions</a></li>
-  <li>Elliptic Curves</li>
+  <li><a href="{{ url_for('render_Lfunction') }}">L-functions and Zeta-functions</a></li>
+  <li>Elliptic Curves
   <ul>
    <li><a href="{{ url_for('EC_toplevel') }}  ">Elliptic Curves/\(\mathbb Q\)</a></li>
   </ul>
+  </li>
 
   <li><a href="{{ url_for('number_field_render_webpage') }}">Number Fields</a></li>
 
-  <li>Characters</li>
+  <li>Characters
   <ul>
    <li><a href="{{ url_for('render_Character') }} ">Dirichlet Characters</a></li>
   </ul>
+  </li>
 
-  <li><a class="mf"    href="{{ url_for('mf.modular_form_main_page') }}">Modular Forms</a></li>
+  <li><a class="mf"    href="{{ url_for('mf.modular_form_main_page') }}">Holomorphic Modular Forms</a>
   <ul>
    <li><a class="emf"  href="{{ url_for('emf.render_elliptic_modular_forms') }}">Holomorphic Cusp Forms  on \(\mathrm{GL}(2)\)</a></li>
-   <li><a class="mwf"  href="{{ url_for('mwf.render_maass_waveforms') }}">Maass Forms on \(\mathrm{GL}(2)\)</a></li>
    <li><a              href="{{ url_for('ModularForm_GSp4_Q_top_level') }}">Siegel Modular forms</a> </li>
-   <li><a class="mwfp" href="{{ url_for('mwfp.render_picard_maass_forms') }}">Maass Forms on the Picard Group, \(\mathrm{PSL}(2,\mathbb{Z}[i])\)</a></li>
    <li><a              href="{{ url_for('hilbert_modular_form_render_webpage') }}">Hilbert Modular Forms</a></li>
   </ul>
+  </li>
+
+  <li><a class="mf"    href="{{ url_for('mf.modular_form_main_page') }}">Maass Forms</a>
+  <ul>
+   <li><a class="mwf"  href="{{ url_for('mwf.render_maass_waveforms') }}">Maass Forms on \(\mathrm{GL}(2)\)</a></li>
+   <li><a class="mwfp" href="{{ url_for('mwfp.render_picard_maass_forms') }}">Maass Forms on the Picard Group, \(\mathrm{PSL}(2,\mathbb{Z}[i])\)</a></li>
+  </ul>
+  </li>
+
  </ul>
 
 <h1>Search</h1>
  <ul>
-  <li><a href="{{ url_for('LfunctionDB.query', zerolowerbound=1.1, zeroupperbound=2.1) }}">Search $L$-functions</a></li>
+  <li><a href="{{ url_for('LfunctionDB.query', zerolowerbound=1.1, zeroupperbound=2.1) }}">Zeros of $L$-functions</a></li>
  </ul>
 
 <h1>Misc Pages</h1>

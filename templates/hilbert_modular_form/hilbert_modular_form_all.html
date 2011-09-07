@@ -1,7 +1,7 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<h2> Browse {{ KNOWL('mf.hilbert') }} </h2>
+<h2> Browse {{ KNOWL('mf.hilbert', title='Hilbert modular forms') }} </h2>
 
 <!-- <h2> Search </h2> -->
 
@@ -34,7 +34,7 @@
 <td><span class="formexample"> &nbsp;</td>
 </tr>
 <tr>
-<td colspan=3><input type='submit' value='Search'>
+<td colspan=3><button type='submit' value='Search'>Search</button>
 </td>
 </tr>
 </table>

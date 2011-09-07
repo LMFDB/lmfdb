@@ -24,23 +24,23 @@ $("#plot").load(function() {
 {% endif %}
 
 {% if info.weight is defined %}
-<h1>{{ KNOWL('mf.elliptic.newform',title='Newforms') }} of {{KNOWL('mf.elliptic.level',title='level')}} {{info.level}} and {{KNOWL('mf.elliptic.weight',title='weight')}} {{info.weight}}</h1>
+<h1>{{ KNOWL('mf.elliptic.newform',title='Newforms') }} of {{KNOWL('mf.elliptic.level',title='level')}} {{level}} and {{KNOWL('mf.elliptic.weight',title='weight')}} {{weight}}</h1>
 {% else %}
-<h1>{{ KNOWL('mf.elliptic.newform',title='Newforms') }} of {{KNOWL('mf.elliptic.level',title='level')}} {{info.level}}</h1>
+<h1>{{ KNOWL('mf.elliptic.newform',title='Newforms') }} of {{KNOWL('mf.elliptic.level',title='level')}} {{level}}</h1>
 {% endif %}
 
-{% if info.browse_table is defined %}
-{% if info.browse_table.rows is defined %}
+{% if browse_table is defined %}
+{% if browse_table.rows is defined %}
 {#{KNOWL('mf.ellipticemf_browse.all.info',title='Write about browsing') }#}
 <p>
 The table below gives the dimensions of the space of holomorphic cusp
 forms of specified level, weight, and character.  By clicking on an
 entry you access information about the forms in the specified space.
 </p>
-{% set table = info.browse_table %}
-{% set rows = info.browse_table.rows %}
+{% set table = browse_table %}
+{% set rows = browse_table.rows %}
 {% set row_class = cycler('odd', 'even') %}
-{% if info.show_all_characters is defined %}
+{% if show_all_characters is defined %}
 {% set len = table.col_heads | length %}
 {% set wid = 10*len +20 %}
 <table class="ntdata" width="{{wid}}px">
@@ -53,7 +53,7 @@ entry you access information about the forms in the specified space.
       </th>
       {% for ix in table.col_heads  %}
       <th width="10px">
-        <a href="{{url_for('render_webpage_label',modulus=info.level,number=ix) }}" style="">{{ix}}</a></th>
+        <a href="{{url_for('render_webpage_label',modulus=level,number=ix) }}" style="">{{ix}}</a></th>
       {% endfor %}
     </tr>
   </thead>
@@ -75,27 +75,38 @@ entry you access information about the forms in the specified space.
 </table>
 {% endif %}
 {% endif %}
-{% elif info.list_spaces is defined %}
+{% elif list_spaces is defined %}
 
-{{ info.list_spaces | safe }}
+{{ list_spaces | safe }}
 
 
 
 
 {% endif %}
 
-   {% if info.geometric is defined %}
-      {% set G = info.geometric %}
-      <table>
+   {% if geometric is defined %}
+      {% set G = geometric %}
+     <div>
+     {% if level > 1 %}
+     {% set level = level %}
+      {% set ti = "\(\Gamma_{0}( " ~ level  ~ ") \)" %} 
+          <h2>Geometric information for {{KNOWL('mf.sl2.subgroup.gamma0N',title=ti)}}</h2>
+      {% else %}
+          <h2>Geometric information for {{KNOWL('mf.sl2z',title='\(PSL_{2}(\mathbb{Z}) \)')}}</h2>
+      {% endif %}
+      </div>
+      <table width="100%">
         <tr>
           <td valign="top">
-            {% if info.level > 1 %}
-            {% set level = info.level %}
+            <div>
+            {% if level > 1 %}
+            {% set level = level %}
             {% set ti = "\(\Gamma_{0}( " ~ level  ~ ") \)" %} 
             <h2>Geometric information for {{KNOWL('mf.sl2.subgroup.gamma0N',title=ti)}}</h2>
             {% else %}
             <h2>Geometric information for {{KNOWL('mf.sl2z',title='\(PSL_{2}(\mathbb{Z}) \)')}}</h2>
             {% endif %}
+            </div>
           </td>
         </tr>
         <tr>
@@ -103,18 +114,18 @@ entry you access information about the forms in the specified space.
             <table>
               <tr><th>{{KNOWL('mf.sl2z.subgroup.index',title='index')}}</th><td>{{G.index}}</td></tr>
               <tr><th>{{KNOWL('mf.sl2z.subgroup.genus',title='genus')}}</th><td>{{G.genus}}</td></tr>
-              <tr><th>{{KNOWL('mf.sl2z.subgroup.cusps',title='index')}}</th><td>{{G.cusps}}</td></tr>
+              <tr><th>{{KNOWL('mf.sl2z.subgroup.cusps',title='cusps')}}</th><td>{{G.cusps}}</td></tr>
               <tr><th colspan="2">Number of {{KNOWL('mf.sl2z.subgroup.ellipticfxpts',title='elliptic fixed points')}}</th></tr>
               <tr><th>order 2</th><td>{{G.nu2}}</td></tr>
               <tr><th>order 3</th><td>{{G.nu2}}</td></tr>
             </table>
           </td>
           {% endif %}
-          {% if info.fd_plot is defined %}
+          {% if fd_plot is defined %}
           <td>
             <div>
               <span id="wait">      </span>
-              <img id="plot" src="{{ info.fd_plot | safe }} " width="" height="75%"/>
+              <img id="plot" src="{{ fd_plot | safe }} " width="" height="75%"/>
             </div>
           </td>
         </tr>

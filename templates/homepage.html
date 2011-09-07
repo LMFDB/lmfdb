@@ -14,7 +14,7 @@
       </div>
       <div class="topright">
           <a href="https://docs.google.com/spreadsheet/viewform?formkey=dDJXYXBleU1BMTFERFFIdjVXVmJqdlE6MQ" target="_blank">
-             Report a Problem</a>
+             Feedback</a>
             &middot;
           {% if user_is_admin -%}
             <a href="{{ url_for('users.register') }}">Registertokens</a>
@@ -32,7 +32,6 @@
           <br/>
           <span id="communication-wrapper">
             <img id="communication-img" src="{{ url_for('static', filename='images/progress-green.gif') }}" />
-            Ajax:
             <span id="communication"></span>
           </span>
       </div>
@@ -113,16 +112,22 @@
   </ul>
 
   <h2 class="link">
-       <a class="mf"    href="{{ url_for('mf.modular_form_main_page') }}">Modular Forms</a></h2>
+       <a class="mf"    href="{{ url_for('mf.modular_form_main_page') }}">Holomorphic Modular Forms</a></h2>
   <ul>
-   <li><a class="emf"  href="{{ url_for('emf.render_elliptic_modular_forms') }}">Holomorphic Cusp Forms</a></li>
-   <li><a class="mwf"  href="{{ url_for('mwf.render_maass_waveforms') }}">Maass Forms  on \(\mathrm{GL}_{2}(\mathbb{Q}) \)</a></li>
-   <li><a              href="{{ url_for('ModularForm_GSp4_Q_top_level') }}">Siegel Modular Forms</a> </li>
-   <li><a class="mwfp" href="{{ url_for('mwfp.render_picard_maass_forms') }}">Maass Forms on \(\mathrm{PSL}(2,\mathbb{Z}[i])\)</a></li>
-   <li><a              href="{{ url_for('hilbert_modular_form_render_webpage') }}">Hilbert Modular Forms</a></li>
+   <li><a class="emf"  href="{{ url_for('emf.render_elliptic_modular_forms') }}">Classical, GL(2)</a></li>
+   <li><a              href="{{ url_for('ModularForm_GSp4_Q_top_level') }}">Siegel</a> </li>
+   <li><a              href="{{ url_for('hilbert_modular_form_render_webpage') }}">Hilbert</a></li>
   </ul>
    {# <li><a href="{{ url_for('quadratic_twists') }}">Quadratic Twists</a></li> #}
    {# <li><a class="local_fields" href="{{ url_for('local_fields.index') }}">Local Fields</a></li> #}
+
+  <h2 class="link">
+       <a class="mf"    href="{{ url_for('mf.modular_form_main_page') }}">Maass Forms</a></h2>
+  <ul>
+   <li><a class="mwf"  href="{{ url_for('mwf.render_maass_waveforms') }}">Classical, GL(2)</a></li>
+   <li><a class="mwfp" href="{{ url_for('mwfp.render_picard_maass_forms') }}">for \(\mathrm{PSL}(2,\mathbb{Z}[i])\)</a></li>
+  </ul>
+
 
   <h2 class="link knowl">
      <a class="knowl" href="{{ url_for("knowledge.index") }}">Knowledge</a>
@@ -223,10 +228,13 @@
     {% if support -%}
       {{ support|safe }}<br/>
     {%- else -%}
-       <h4>This project is supported by the <a href="http://www.nsf.gov">National Science Foundation</a> under FRG Grant No. DMS-0757627, which is administered from the <a href="http://www.aimath.org">American Institute of Mathematics</a>. </h4>
+        <h4>{{shortthanks|safe}}</h4>
 <br />
     {%- endif %}
-    Number Theory, the Queen of Mathematics!
+    <div>
+      <a href="{{ 'acknowledgment' }}">Acknowledgments</a>
+      {# <a href="{{ 'about' }}">About</a> #}
+    </div>
 </div>
 
 {%- endblock body %}
