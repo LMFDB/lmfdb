@@ -78,7 +78,10 @@ def render_knowl_in_template(knowl_content, **kwargs):
   # markdown enabled
   render_me = render_me % {'content' : md.convert(knowl_content) }
   # Pass the text on to markdown.  Note, backslashes need to be escaped for this, but not for the javascript markdown parser
-  return render_template_string(render_me, **kwargs)
+  try:
+    return render_template_string(render_me, **kwargs)
+  except Exception, e:
+    return "ERROR in the template: %s. Please edit it to resolve the problem." % e
   
 
 # a jinja test for figuring out if this is a knowl or not
@@ -248,7 +251,10 @@ def render(ID, footer=None, kwargs = None):
   # TODO wrap this string-rendering into a try/catch and return a proper error message
   # so that the user has a clue. Most likely, the {{ KNOWL('...') }} has the wrong syntax!
   logger.debug("kwargs: %s" % k.template_kwargs)
-  return render_template_string(render_me, k = k, **kwargs)
+  try:
+    return render_template_string(render_me, k = k, **kwargs)
+  except Exception, e:
+    return "ERROR in the template: %s. Please edit it to resolve the problem." % e
 
 @knowledge_page.route("/")
 def index():
