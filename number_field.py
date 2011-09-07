@@ -16,7 +16,7 @@ def field_pretty(field_str):
     if d == '1':  # Q
         return '\( {\mathbb Q} \)'
     if d == '2':  # quadratic field
-        D = ZZ(D).squarefree_part()
+        D = ZZ(int(D)).squarefree_part()
         if r=='0': D = -D
         return '\( {\mathbb Q}(\sqrt{' + str(D) + '}) \)'
     for n in [5,7,8,9,10]: 
