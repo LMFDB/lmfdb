@@ -121,6 +121,7 @@ def ctx_proc_userdata():
   
   # default title
   vars['title'] = r'Title variable "title" has not been set. This is a test: \( \LaTeX \) and \( \frac{1}{1+x+x^2} \) and more ...'
+  vars['description'] = r'The L-functions and Modular Forms Database project makes large amounts of data available to the research mathematics community.'
   return vars
 
 
