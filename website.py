@@ -43,7 +43,7 @@ def not_found(error):
 
 @app.route("/")
 def index():
-    return render_template('index.html', title ="Homepage", bread=None)
+    return render_template('index.html', title ="", bread=None)
 
 @app.route("/about")
 def about():
@@ -51,7 +51,7 @@ def about():
 
 @app.route("/acknowledgment")
 def acknowledgment():
-  return render_template("acknowledgment.html", title="Acknowledgment")
+  return render_template("acknowledgment.html", title="Acknowledgments")
 
 def root_static_file(name):
     def static_fn():
