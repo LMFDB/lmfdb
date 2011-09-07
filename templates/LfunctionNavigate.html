@@ -29,9 +29,13 @@
 
 
 <form action="{{url_for(".LfunctionDB.query")}}" method=get>
-<div>
+<p>
+NOTE: This is only a beta version with a small selection of L-functions
+included.
+</p>
+<p>
 Enter values into one or more boxes to restrict the search.
-</div>
+</p>
 <table>
 <tr>
 <td>{{ KNOWL('lfunction.degree', title='Degree') }}</td><td> <input type='text' name='degree' size = "4" placeHolder='2'></td><td><span class="formexample"> e.g. 2 </span></td>
