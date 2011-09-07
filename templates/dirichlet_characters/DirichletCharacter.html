@@ -37,22 +37,24 @@ table.navi td {
 table.props tr td:first-child {
     width: 5em;
 }
+<<<<<<< local
+#content p, #content form, #content div {
+    margin-left: 20px;
+}
+=======
 
+>>>>>>> other
 </style>
         <div align="right">
             <font size="3">Show commands for:</font>
             <a onclick="show_code('sage'); return false" href='#'>sage</a>
         </div>
  
-        <!--<h2>
-            Sage Output
-        </h2>-->
         <div class='sage nodisplay code'>sage: chi = DirichletGroup({{modulus}})[{{number}}]</div>
-        <!--<p>
-            {{ sagechar }}
-            </p>-->
 
-        {% if order == 2 %}
+        {# Kronecker symbol #}
+
+        {% if order|int == 2 %}
         <h2>
             {{ KNOWL('character.dirichlet.kronecker_symbol') }} Representation
         </h2>
@@ -62,123 +64,145 @@ table.props tr td:first-child {
         </p>
         {% endif %}
 
+        {# Induced character #}
 
-        {% if not primitive %}
+        {% if primitive=="False" %}
         <h2>
-            Inducing {{ KNOWL('character.dirichlet.induced_character', title="Primitive") }}           </h2>
+            Inducing {{ KNOWL('character.dirichlet.induced_character', title="Primitive") }}
+        </h2>
         <div class = 'sage nodisplay code'>sage: chi.primitive_character()</div>
         <p>
-        &nbsp;&nbsp;&nbsp;&nbsp;<a href="{{ url_for('render_webpage_label', modulus=inducedchar_modulus, number=inducedchar_number)}}">{{inducedchar_tex}}</a>
+        <a href="{{ url_for('render_webpage_label', 
+            modulus = inducedchar_modulus, 
+            number  = inducedchar_number)}}">
+            {{inducedchar_tex}}
+        </a>
         </p>
         {% endif %}
 
+        {# Values #}
+        
         <h2>
             {{ KNOWL('character.dirichlet.values', title="Values") }}
         </h2>
         <div class = 'sage nodisplay code'>sage: chi.values()</div>
-        {% if root_unity %} &nbsp;&nbsp;&nbsp;For \(\zeta_{ {{ zetaorder }} }\) a primitive \( {{ zetaorder }} \)-th root of unity<br><br/> {% endif %}
-        <table>
-        <tr>
-            <td>   
-                <div align="left"> 
-                    [\({{ valstex|join("\) , \(") }}\)]
-                </div>
-            </td>
-        </tr>
-        </table>
+        <p>
+            {% if root_unity=="True" %} 
+            For \(\zeta_{ {{ zetaorder }} }\) a primitive 
+            \( {{ zetaorder }} \)-th root of unity
+            <br><br/> 
+            {% endif %}
+        </p>
+        <div align="left"> 
+            [\({{ valstex|join("\) , \(") }}\)]
+        </div>
+        
+        {# Values on generators #}
+
         <h2>
             {{ KNOWL('character.dirichlet.values_on_gens', title="Values on Generators") }}
         </h2>
         <div class = 'sage nodisplay code'>sage: chi.values_on_gens()</div>
         <p>
-           &nbsp;&nbsp;&nbsp;&nbsp;\( {{ unitgens }} \) &rarr; \( {{ genvalstex }} \)
+            \( {{ unitgens }} \) &rarr; \( {{ genvalstex }} \)
         </p>
 
         <h2> {{ KNOWL('character.dirichlet.basic_properties', title="Basic properties") }} </h2>
-        
+
+        {# Basic properties #}
         <table class="props">
-
-        <tr>
-        <td>
-            <span class='sage nodisplay code'>sage: chi.conductor()</span>
-        </td>
-        </tr>
-        <tr>
-        <td>Conductor</td>
-        <td>=</td>
-        <td>\({{ conductor }}\)</td>
-        </tr>
-
-        <tr>
-        <td>
-            <span class='sage nodisplay code'>sage: chi.order()</span>
-        </td>
-        </tr>
-        <tr>
-        <td> Order </td>
-        <td>=</td>
-        <td>\({{ order }} \)</td>
-        </tr>
-
-        <tr>
-        <td>
-            <span class='sage nodisplay code'>sage: chi.is_even() or chi.is_odd()</span>
-        </td>
-        </tr>
-        <tr>
-        <td> Parity </td>
-        <td>=</td>
-        <td> {{ parity }}</td>
-        </tr>
-
-        <tr>
-        <td> Real </td>
-        <td>=</td>
-        {% if sign %}<td> {{real}}</td>{% else %}<td> {{real}} </td>{% endif %}
-        </tr>
-
-        <tr>
-            <td>
-                <span class='sage nodisplay code'>sage: chi.is_primitive()</span>
-            </td>
-        </tr>
-        <tr>
-            <td> Primitive </td>
-        <td>=</td>
-        {% if primitive %}<td>{{prim}}</td> {% else %}<td> {{prim}}</td>  {% endif %}
-        </tr>
-
+            <tr>
+                <td>
+                    <span class='sage nodisplay code'>sage: chi.conductor()</span>
+                </td>
+            </tr>
+            <tr>
+                <td>Conductor</td>
+                <td>=</td>
+                <td>\({{ conductor }}\)</td>
+            </tr>
+            <tr>
+                <td>
+                    <span class='sage nodisplay code'>sage: chi.order()</span>
+                </td>
+            </tr>
+            <tr>
+                <td> Order </td>
+                <td>=</td>
+                <td>\({{ order }} \)</td>
+            </tr>
+            <tr>
+                <td>
+                    <span class='sage nodisplay code'>sage: chi.is_even() or chi.is_odd()</span>
+                </td>
+            </tr>
+            <tr>
+                <td> Parity </td>
+                <td>=</td>
+                <td> {{ parity }}</td>
+            </tr>
+            <tr>
+                <td> Real </td>
+                <td>=</td>
+                    {% if sign=="True" %}
+                    <td> Yes</td>
+                    {% else %}
+                    <td> No </td>
+                    {% endif %}
+            </tr>
+            <tr>
+                <td>
+                    <span class='sage nodisplay code'>sage: chi.is_primitive()</span>
+                </td>
+            </tr>
+            <tr>
+                <td> Primitive </td>
+                <td>=</td>
+                    {% if primitive=="True" %}
+                    <td>Yes</td> 
+                    {% else %}
+                    <td> No</td>  
+                    {% endif %}
+            </tr>
         </table>
-        </form>
+        
+        {# Gauss sum #}
+
         <h2>
             {{ KNOWL('character.dirichlet.gauss_sum') }}
         </h2>
         <div class = 'sage nodisplay code'>sage: chi.gauss_sum()</div>
-        <form> &nbsp;&nbsp;&nbsp;{{ gauss_sum }} 
+        <form> \( \tau_{ a }( \chi_{ {{number}} } )\;\)  at \(\;a = \)
             <input id="calc-gauss-input" size=10 placeholder="2">
-            <button id="calc-gauss-go">Go</button>
+            <button id="calc-gauss-go"> Compute </button>
             <span class="formexample"> e.g. 2 </span>
             <div class="slider" id="slider-gauss"></div>
         </form>
         <div class="output"><span id="calc-gauss-output"></span></div>
+
+        {# Jacobi sum #}
+
         <h2>
             {{ KNOWL('character.dirichlet.jacobi_sum') }}
         </h2>
         <div class = 'sage nodisplay code'>sage: chi.jacobi_sum()</div>
-        <form> &nbsp;&nbsp;&nbsp;{{ jacobi_sum }} 
+        <form> \( J(\chi_{ {{number}} },\psi) \;\) for \( \;\psi = \)
             <input id="calc-jacobi-input" size="10" placeholder="{{modulus}}.{{number|int - 1}}">
-            <button id="calc-jacobi-go"> Go </button>
+            <button id="calc-jacobi-go"> Compute </button>
             <span class="formexample"> e.g. {{modulus}}.{{number|int - 1}}</span>
             <div class="slider" id="slider-jacobi-b"></div>
         </form>
         <div class="output"><span id="calc-jacobi-output"></span></div>
+        
+        {# Kloosterman sum #}
+
         <h2>
             {{ KNOWL('character.dirichlet.kloosterman_sum') }}
         </h2>
         <div class = 'sage nodisplay code'>sage: chi.kloosterman_sum(,)</div>
-        <form> &nbsp;&nbsp;&nbsp;{{ kloosterman_sum }} 
+        <form> \(K(a,b,\chi_{ {{number}} }) \;\) at \(\; a,b = \)
             <input id="calc-kloosterman-input" size=10 placeholder="1,2">
-            <button id="calc-kloosterman-go"> Go </button>
+            <button id="calc-kloosterman-go"> Compute </button>
             <span class="formexample"> e.g. 1,2</span>
             <div class="slider" id="slider-kloosterman-a"></div>
             <div class="slider" id="slider-kloosterman-b"></div>
@@ -192,7 +216,7 @@ function gauss_handler(evt) {
    $("#calc-gauss-output").load("{{ url_for('dc_calc_gauss', modulus=modulus,number=number) }}" + "?val=" + val, 
      function() {
        {# tell mathjx to render the output #}
-       MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-gauss-output"]);
+i       MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-gauss-output"]);
      });
 }
 
@@ -221,7 +245,7 @@ $(function() {
     $("#calc-jacobi-go").click(function(e) {jacobi_handler(e)});
     $("#calc-kloosterman-go").click(function(e) {gauss_handler(e)});
     $("#calc-gauss-input").keypress(function(e) {
-      if (e.which == 13) gauss_handler(e);
+        if (e.which == 13) gauss_handler(e);
     });
     $("#calc-jacobi-input").keypress(function(e) {
         if (e.which == 13) jacobi_handler(e);

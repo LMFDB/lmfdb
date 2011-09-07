@@ -52,7 +52,7 @@
     <td>
         {% for chi in line[1] %}
         <div class="chi">
-            <a href="{{ chi[0] }}/{{chi[1]}}">{% if chi[2] %}<font color="green">{% else %}<font color="blue">{% endif %}&chi;<sub>{{chi[1]}}</sub> (mod {{chi[0]}})</font></a>
+            <a href="{{ chi[0] }}/{{chi[1]}}">{% if chi[2] %}<font color="green">{% else %}<font color="blue">{% endif %}{% if order|int == 2 %}{ &chi;<sub>{{chi[1]}}</sub> (mod {{chi[0]}})</font></a>
         </div>
     {% endfor %}
     </td></tr>
