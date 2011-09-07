@@ -100,10 +100,10 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
             elif seriescoefftype=="factor":
                 return("i")
             elif seriescoefftype=="series":
-                return(ans + "i" + seriesvar(index,seriestype))
+                return(ans + " + i" + seriesvar(index,seriestype))
         else:
             if seriescoefftype=="series":
-                return(ans + truncatenumber(ip,precision) + "i" + seriesvar(index, seriestype))
+                return(ans + truncatenumber(ip,precision) + " + i" + seriesvar(index, seriestype))
             elif seriescoefftype=="signed":
                 return(ans + "+"+truncatenumber(ip,precision) + "i")
             elif seriescoefftype=="literal" or seriescoefftype=="factor":

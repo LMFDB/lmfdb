@@ -4,8 +4,8 @@ import pickle
 import urllib
 from sage.all_cmdline import *
 
-#DATA = 'http://data.countnumber.de/Siegel-Modular-Forms/'
-DATA = '/media/data/home/nils/Sandbox/super_current/nilsskoruppa-lmfdb/db/'
+DATA = 'http://www.l-functions.org/data/Siegel-Modular-Forms/'
+#DATA = '/media/data/home/nils/Sandbox/super_current/nilsskoruppa-lmfdb/db/'
     
 
 def render_webpage( args = {}):

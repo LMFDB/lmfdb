@@ -115,23 +115,39 @@ table td.params {
     </thead>
     <tbody>
         {% set row_class = cycler('odd', 'even') %}
-        {% for j in range(len): %}
+        {% for line in contents %}
+        {% for l in line %}
+        {% for chi in l %}
         <tr class="{{ row_class.next() }}">
              <td class="modulus" align="center">
-                 <a href="/Character/Dirichlet/{{characters[j].modulus()}}/{{number[j]}}">{% if characters[j].is_primitive() == "True"%}<font color="green">{% else %}<font color="blue">{% endif %}{% if order|int == 2 %} {{kronsymbol[j]}} {% else %}&chi;<sub>{{number[j]}}</sub>{% endif %}</font></a>
+                 <a href="/Character/Dirichlet/{{chi[2]}}/{{chi[0]}}">
+                     {% if chi[5] == "True"%}
+                        <font color="green">
+                     {% else %}
+                        <font color="blue">
+                     {% endif %} 
+                     {% if chi[4] == 2 %}
+                        {{ chi[1] }}
+                     {% else %}
+                        \({\displaystyle \chi_{ {{ chi[0] }} } }\)
+                     {% endif %}
+                        </font>
+                </a>
             </td>
             <td align=center>
-                <a href="/Character/Dirichlet/?modulus={{characters[j].modulus()}}&conductor={{conductor}}&order={{order}}&parity={{parity}}">{{characters[j].modulus()}}</a>
+                <a href="/Character/Dirichlet/?modulus={{chi[2]}}&conductor={{conductor}}&order={{order}}&parity={{parity}}">{{chi[2]}}</a>
             </td>
             <td align=center>
-                <a href="/Character/Dirichlet/?modulus={{modulus}}&conductor={{characters[j].conductor()}}&order={{order}}&parity={{parity}}">{{characters[j].conductor()}}</a>
+                <a href="/Character/Dirichlet/?modulus={{modulus}}&conductor={{chi[3]}}&order={{order}}&parity={{parity}}">{{chi[3]}}</a>
             </td>
             <td align=center>
-            <a href="/Character/Dirichlet/?modulus={{modulus}}&conductor={{conductor}}&order={{characters[j].order()}}&parity={{parity}}">{{characters[j].multiplicative_order()}}</a>
+                <a href="/Character/Dirichlet/?modulus={{modulus}}&conductor={{conductor}}&order={{chi[4]}}&parity={{parity}}">{{chi[4]}}</a>
             </td>
-            <td  align=center>{% if characters[j].is_even() %}Even{% else %}Odd{% endif %}
+            <td  align=center>{% if chi[6] == "True" %}Even{% else %}Odd{% endif %}
             </td>
         </tr>
+    {% endfor %}
+    {% endfor %}
     {% endfor %}
     </tbody>
 </table>

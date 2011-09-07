@@ -51,15 +51,22 @@
             </td>
 	  </tr>
 	  <tr>
-	    <td>{{KNOWL('mf.maass.picard.fourierexpansion',title='Fourier coefficient')}} :{{KNOWL('mf.maass.picard.search.coefficients', title='$\Re(n),\Im(n)$')}}</td>
+	    <td>{{KNOWL('mf.maass.picard.fourierexpansion',title='Fourier coefficient')}}</td>
 	    <td> 
-	      <input type="text" name="fouriier_p" value="" placeholder="2,2">
+	      <input type="text" name="fouriier_p" value="" placeholder="2+3i">
             </td>
 	    <td align="left"> 
-              in range
+              in range:
 	      <input type="text" name="coeff_range" value="" placeholder="1.5..1.75">
             </td>
 	  </tr>
+         <tr>
+          <td></td>
+           <td scope="col" colspan="2">
+            <span class="formexample">(2+3i in range 1.5..1.75 means $1.5\le a(2+3i)\le1.75$)</span> 
+          </td>
+         </tr>
+         <tr><td>&nbsp;</td></tr>
           <tr>
 	    <td>
 	      <button type="submit" name="Submit" value="Search">Search</button>
