@@ -14,7 +14,7 @@
       </div>
       <div class="topright">
           <a href="https://docs.google.com/spreadsheet/viewform?formkey=dDJXYXBleU1BMTFERFFIdjVXVmJqdlE6MQ" target="_blank">
-             Report a Problem</a>
+             Feedback</a>
             &middot;
           {% if user_is_admin -%}
             <a href="{{ url_for('users.register') }}">Registertokens</a>
@@ -32,7 +32,6 @@
           <br/>
           <span id="communication-wrapper">
             <img id="communication-img" src="{{ url_for('static', filename='images/progress-green.gif') }}" />
-            Ajax:
             <span id="communication"></span>
           </span>
       </div>
@@ -226,7 +225,10 @@
        <h4>This project is supported by the <a href="http://www.nsf.gov">National Science Foundation</a> under FRG Grant No. DMS-0757627, which is administered from the <a href="http://www.aimath.org">American Institute of Mathematics</a>. </h4>
 <br />
     {%- endif %}
-    Number Theory, the Queen of Mathematics!
+    <div>
+      <a href="{{ 'acknowledgment' }}">Acknowledgment</a> - 
+      <a href="{{ 'about' }}">About</a>  
+    </div>
 </div>
 
 {%- endblock body %}

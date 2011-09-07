@@ -41,6 +41,10 @@ def my_find_update(the_coll, search_dict, update_dict):
             the_coll.save(x)
 
 
+def parse_complex_number(z):
+    z_parsed = "(" + str(real_part(z)) + "," +str(imag_part(z)) + ")"
+    return z_parsed
+
 #############################################################################
 
 def constructor_logger(object, args):
@@ -218,10 +222,6 @@ class Lfunction:
 ### Returns the Lcalcfile, version 2
 ############################################################################
 
-    def parse_complex_number(z):
-        z_parsed = "hello"
-        return z_parsed
-
     def createLcalcfile_ver2(self, url):
         thefile=""
         thefile += "##########################################################################################################\n"
@@ -264,7 +264,10 @@ class Lfunction:
         thefile += "### Specify the sign of the functional equation.\n"
         thefile += "### Complex numbers should be specified as:\n"
         thefile += "### omega = (Re(omega),Im(omega)). Other possible keyword: sign\n\n"
-        thefile += "omega = " + str(self.sign) + "\n\n"
+        if self.selfdual:
+            thefile += "omega = " + str(self.sign) + "\n\n"
+        else:
+            thefile += "omega = " + parse_complex_number(self.sign) + "\n\n"
 
 
         thefile += "### Gamma_{R or C}_list lists the associated lambda_j's. Lines with empty lists can be omitted.\n\n"
@@ -307,11 +310,11 @@ class Lfunction:
 ### (relevant for Dirichlet L-functions), and whether to normalize them
 ### if needed to get a functional equation s <--> 1-s
 ###
-### periodic should be set to either true (in the case of Dirichlet L-functions,
-### for instance), or false (the default). If true, then lcalc assumes that the coefficients
+### periodic should be set to either True (in the case of Dirichlet L-functions,
+### for instance), or False (the default). If True, then lcalc assumes that the coefficients
 ### given, a[0]...a[N], specify all a[n] with a[n]=a[m] if n=m mod (N+1).
 ### For example, for the real character mod 4, one should,
-### have periodic = true and at the bottom of this file, then specify:
+### have periodic = True and at the bottom of this file, then specify:
 ### dirichlet_coefficient =[
 ### 0,
 ### 1,
@@ -322,9 +325,9 @@ class Lfunction:
 ### Specify whether Dirichlet coefficients are periodic:"""
         thefile += "\n\n"
         if(self.coefficient_period!=0 or hasattr(self, 'is_zeta')):
-            thefile += "periodic = true\n\n"
+            thefile += "periodic = True\n\n"
         else:
-            thefile += "periodic = false\n\n"
+            thefile += "periodic = False\n\n"
 
 
         thefile += """\

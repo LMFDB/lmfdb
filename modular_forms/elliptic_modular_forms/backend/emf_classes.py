@@ -23,6 +23,7 @@ class ClassicalMFDisplay(MFDisplay):
     def __init__(self,dbname='',**kwds):
         MFDisplay.__init__(self,dbname,**kwds)
         
+
     
     def set_table_browsing(self,skip=[0,0],limit=[(2,16),(1,50)],keys=['Weight','Level'],character=0,dimension_fun=dimension_new_cusp_forms,title='Dimension of newforms'):
         r"""
@@ -76,7 +77,7 @@ class ClassicalMFDisplay(MFDisplay):
                             d = dimension_fun(x,k)
                     except Exception as ex:
                         emf_logger.critical("Exception: {0}. \n Could not compute the dimension with function {0}".format(ex,dimension_fun))
-                    url = url_for('emf.render_elliptic_modular_form_browsing',level=N,weight=k)
+                    url = url_for('emf.render_elliptic_modular_forms',level=N,weight=k)
                     if not k in self._table['col_heads']:
                         self._table['col_heads'].append(k)
                     row.append({'N':N,'k':k,'url':url,'dim':d})
@@ -97,7 +98,7 @@ class ClassicalMFDisplay(MFDisplay):
                                 d = dimension_fun(x,k)
                         except Exception as ex:
                             emf_logger.critical("Exception: {0}. \n Could not compute the dimension with function {0}".format(ex,dimension_fun))
-                        url = url_for('emf.render_elliptic_modular_form_browsing',level=N,weight=k)
+                        url = url_for('emf.render_elliptic_modular_forms',level=N,weight=k)
                         if not k in self._table['col_heads']:
                             self._table['col_heads'].append(k)
                         row.append({'N':N,'k':k,'url':url,'dim':d})
@@ -122,7 +123,7 @@ class ClassicalMFDisplay(MFDisplay):
                         except Exception as ex:
                             emf_logger.critical("Exception: {0} \n Could not compute the dimension with function {0}".format(ex,dimension_fun))
                             d = -1
-                        url = url_for('emf.render_elliptic_modular_form_space',level=N,weight=k,character=xi)
+                        url = url_for('emf.render_elliptic_modular_forms',level=N,weight=k,character=xi)
                         row.append({'N':N,'k':k,'chi':xi,'url':url,'dim':d})
                     self._table['rows'].append(row)                            
             else:
@@ -146,7 +147,7 @@ class ClassicalMFDisplay(MFDisplay):
                                 d = dimension_fun(x,k)
                             except Exception as ex:
                                 emf_logger.critical("Exception: {0} \n Could not compute the dimension with function {0}".format(ex,dimension_fun))
-                            url = url_for('emf.render_elliptic_modular_form_browsing',level=N,weight=k)
+                            url = url_for('emf.render_elliptic_modular_forms',level=N,weight=k)
                         if not k in self._table['col_heads']:
                             self._table['col_heads'].append(k)
                         tbl.append({'N':N,'k':k,'chi':xi,'url':url,'dim':d})

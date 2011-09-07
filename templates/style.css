@@ -683,7 +683,7 @@ table .knowl-link {
   border-radius: 0;
   -webkit-border-radius: 0;
   -moz-border-radius: 0;
-  margin: 3px 3px 0 3px;
+  margin: 3px 0 0 0;
 }
 .knowl-title:hover,
 .knowl-title.active {
@@ -691,7 +691,7 @@ table .knowl-link {
   background: {{ col_knowl_l }};
   color: {{ col_knowl_dd }};
   margin: 0;
-  padding: 3px 3px 0 3px;
+  padding: 3px 0 0 0;
   border-top-left-radius: 3px;
   -moz-border-radius-topleft: 3px;
   border-top-right-radius: 3px;
