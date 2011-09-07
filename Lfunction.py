@@ -51,16 +51,17 @@ def constructor_logger(object, args):
     logger.info(str(object.__class__)+str(args))
     #object.inject_database(["original_mathematical_object()", "poles", "residues", "kappa_fe",
     #    "lambda_fe", "mu_fe", "nu_fe"])  #Paul Dehaye put this here for debugging
+
 class Lfunction:
     """Class representing a general L-function
     It can be called with a dictionary of these forms:
-    
+
     dict = { 'Ltype': 'lcalcurl', 'url': ... }  url is any url for an lcalcfile
     dict = { 'Ltype': 'lcalcfile', 'filecontens': ... }  filecontens is the
            contents of an lcalcfile
-    
+
     """
-    
+
     def __init__(self, **args):
         constructor_logger(self,args)
         # Initialize some default values
@@ -295,14 +296,14 @@ class Lfunction:
 
         thefile += "\n\n"
 
-        thefile += "name = " + url.partition('/L/')[2].partition('?download')[0].strip('/') + "\n"
+        thefile += "name = \"" + url.partition('/L/')[2].partition('?download')[0].strip('/') + "\"\n"
         kind = url.partition('/L/')[2].partition('?download')[0].partition('/')[0]
         kind_of_L = url.partition('/L/')[2].partition('?download')[0].split('/')
         #thefile += str(kind_of_L) + "\n\n\n\n"
         if len(kind_of_L)>2:
-            thefile += "kind = " + kind_of_L[0] + "/" + kind_of_L[1] + "\n\n"
+            thefile += "kind = \"" + kind_of_L[0] + "/" + kind_of_L[1] + "\"\n\n"
         elif len(kind_of_L)==2:
-            thefile += "kind = " + kind_of_L[0] + "\n\n"
+            thefile += "kind = \"" + kind_of_L[0] + "\"\n\n"
 
         thefile += """\
 ##########################################################################################################
@@ -376,12 +377,12 @@ class Lfunction:
 ### lcalc will assume the L-function is self-dual."""
         thefile += "\n\n"
 
+
         thefile += "Dirichlet_coefficient = [\n"
 
         if hasattr(self, 'is_zeta'):
             thefile += "1    ### the Dirichlet coefficients of zeta are all 1\n]\n"
-        elif hasattr(self, 'is_Dirichlet_L'):
-            thefile += "TO BE DONE\n]\n"
+
         else:
             thefile += "0,\t\t\t### set Dirichlet_coefficient[0]\n"
             if hasattr(self, 'dirichlet_coefficients_unnormalized'):
@@ -390,8 +391,8 @@ class Lfunction:
                         thefile += str(self.dirichlet_coefficients_unnormalized[n])
                     else:
                         thefile += parse_complex_number(self.dirichlet_coefficients_unnormalized[n])
-                    if n<5:
-                        thefile += ",\t\t\t### set Dirichlet_coefficient[" + str(n+1) +"]\n"
+                    if n<2:
+                        thefile += ",\t\t\t### set Dirichlet_coefficient[" + str(n+1) +"] \n"
                     else:
                         thefile += ",\n"
             else:
@@ -400,8 +401,8 @@ class Lfunction:
                         thefile += str(self.dirichlet_coefficients[n])
                     else:
                         thefile += parse_complex_number(self.dirichlet_coefficients[n])
-                    if n<5:
-                        thefile += ",\t\t\t### set Dirichlet_coefficient[" + str(n+1) +"]\n"
+                    if n<2:
+                        thefile += ",\t\t\t### set Dirichlet_coefficient[" + str(n+1) +"] \n"
                     else:
                         thefile += ",\n"
             thefile = thefile[:-2]
@@ -595,7 +596,7 @@ class Lfunction_EMF(Lfunction):
         self.residues = []
         self.numcoeff = int(math.ceil(self.weight * sqrt(self.level))) #just testing  NB: Need to learn how to use more coefficients
         self.dirichlet_coefficients = []
-                            
+
         # Appending list of Dirichlet coefficients
         GaloisDegree = self.MF.degree()  #number of forms in the Galois orbit
         if GaloisDegree == 1:
@@ -609,11 +610,11 @@ class Lfunction_EMF(Lfunction):
             an = self.dirichlet_coefficients[n-1]
             self.dirichlet_coefficients[n-1]=float(an)/float(n**self.automorphyexp)
 #FIX: These coefficients are wrong; too large and a1 is not 1
-                            
+
         self.coefficient_period = 0
         self.coefficient_type = 2
         self.quasidegree = 1
-        
+
         self.checkselfdual()
 
         self.texname = "L(s,f)"
@@ -626,7 +627,7 @@ class Lfunction_EMF(Lfunction):
 
         self.citation = ''
         self.credit = ''
-       
+
         self.generateSageLfunction()
         constructor_logger(self,args)
 
@@ -643,7 +644,7 @@ class RiemannZeta(Lfunction):
     Possible parameters: numcoeff  (the number of coefficients when computing)
 
     """
-    
+ 
     def __init__(self, **args):
         constructor_logger(self,args)
 
@@ -736,15 +737,16 @@ class Lfunction_Dirichlet(Lfunction):
             self.langlands = True
             self.primitive = True
             self.degree = 1
+            self.coefficient_period = self.charactermodulus
             self.level = self.charactermodulus
+            self.numcoeff = self.coefficient_period
 
             self.dirichlet_coefficients = []
             for n in range(1,self.numcoeff):
                 self.dirichlet_coefficients.append(chi(n).n())
-                                
+
             self.poles = []
             self.residues = []
-            self.coefficient_period = self.charactermodulus
 
             # Determine if the character is real (i.e., if the L-function is selfdual)
             chivals=chi.values_on_gens()
@@ -752,15 +754,17 @@ class Lfunction_Dirichlet(Lfunction):
             for v in chivals:
                 if abs(imag_part(v)) > 0.0001:
                     self.selfdual = False
-      
+
             if self.selfdual:
                 self.coefficient_type = 1
+                for n in range(0,self.numcoeff-1):
+                    self.dirichlet_coefficients[n]= int(round(self.dirichlet_coefficients[n]))
             else:
                 self.coefficient_type = 2
 
             self.texname = "L(s,\\chi)"
             self.texnamecompleteds = "\\Lambda(s,\\chi)"
-                                
+
             if self.selfdual:
                 self.texnamecompleted1ms = "\\Lambda(1-s,\\chi)"
             else:
@@ -772,7 +776,7 @@ class Lfunction_Dirichlet(Lfunction):
             self.title = (self.title+", where $\\chi$ is the character modulo "+
                               str(self.charactermodulus) + ", number " +
                               str(self.characternumber))
-            
+
             self.sageLfunction = lc.Lfunction_from_character(chi)
 
         else:  #Character not primitive
