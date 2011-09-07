@@ -184,9 +184,9 @@ table.props tr td:first-child {
         </h2>
         <div class = 'sage nodisplay code'>sage: chi.jacobi_sum()</div>
         <form> \( J(\chi_{ {{number}} },\psi) \;\) for \( \;\psi = \)
-            <input id="calc-jacobi-input" size="10" placeholder="{{modulus}}.{{number|int - 1}}">
+            <input id="calc-jacobi-input" size="10" placeholder="{{modulus}}.0">
             <button id="calc-jacobi-go"> Compute </button>
-            <span class="formexample"> e.g. {{modulus}}.{{number|int - 1}}</span>
+            <span class="formexample"> e.g. {{modulus}}.0</span>
             <div class="slider" id="slider-jacobi-b"></div>
         </form>
         <div class="output"><span id="calc-jacobi-output"></span></div>
@@ -265,7 +265,7 @@ $(function() {
       jacobi_handler(event);
     }; 
 
-    $( "#slider-jacobi-b").slider({ value:{{ number|int - 1 }}, min: 0, max: {{eulerphi}}, step: 1,
+    $( "#slider-jacobi-b").slider({ value:0, min: 0, max: {{eulerphi}}, step: 1,
         change: function( event, ui ) {
           jacobi_slider_handler(event);
         }
