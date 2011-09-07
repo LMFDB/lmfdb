@@ -10,10 +10,10 @@ function error(msg) {
   if(window.console != undefined) { console.error(msg); }
 }
 
+var revealed = false;
 /* only show main content after processing all the latex */
 $(function() {
   if (window.location.pathname == "/" || $("body").hasClass("users")) return;
-  var revealed = false;
   function show_content() {
     revealed = true;
     $("#content").css("opacity", "1").show();
@@ -24,8 +24,10 @@ $(function() {
 
   window.setTimeout(function() {
     if(!revealed) {
-      $("#mathjax-info").fadeIn('fast');
-      $("#content").fadeOut('fast');
+      //$("#mathjax-info").fadeIn('fast');
+      //$("#content").fadeOut('fast');
+      $("#mathjax-info").show();
+      $("#content").hide();
     }
   }, 500);
 

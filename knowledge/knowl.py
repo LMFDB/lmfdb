@@ -29,7 +29,7 @@ def refresh_knowl_categories():
   when saving, we refresh the knowl categories
   (actually, this should only happen if it is a new knowl!)
   """
-  cats = set([ extract_cat(_['_id']) for _ in get_knowls().find(fields=[]) ])
+  cats = set([ extract_cat(_['_id']) for _ in get_knowls().find({'categories' : { "$exists" : False }}, fields=[]) ])
   # there should only be *one* document with the field named categories
   get_knowls().update({'categories' : { "$exists" : True }}, 
                       {'categories' : sorted(cats), 

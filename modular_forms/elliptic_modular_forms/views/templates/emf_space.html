@@ -15,16 +15,14 @@ with character \( \chi_{ {{ character }} }\) modulo \( {{ level }}\) with  <span
 {% if extra_info is defined %}
 <span style="font-size:50%">({{ extra_info |safe }})</span>
 {% endif %}
-</H1>
-
+</h1>
 
 {% if error is defined %}
 {{ error |safe }}
-
-
 <br>
 {{ sage_version | safe}}
 {% else %}
+
 {% if nontrivial_new %}
 <h2>
   Decomposition of {{name_new}} into galois orbits

@@ -169,6 +169,55 @@ def view(id):
   file = GridFS(getDBConnection().upload).get(ObjectId(id))
   return render_template("upload-view.html", title = "View file", bread = get_bread(), file = file)
 
+def renderJson(data):
+  if data is None: return "";
+  if type(data) is dict:
+    #return str(data.keys())
+    if data.keys()==[u"_id",u"data"]:
+      return renderJson(data['data'])
+    ret = "<dl>";
+    for key,value in data.items():
+      ret += "<dt>"+key+"<dd>"+renderJson(value)
+    return ret + "</dl>"
+  if type(data) is list:
+    if type(data[0]) is list:
+      ret = "<table border=1>"
+      for i in data:
+        ret += "<tr>"
+        for j in i:
+          ret += "<td>" + renderJson(j) + "</td>"
+        ret += "</tr>"
+      return ret + "</table>"
+    elif type(data[0]) is dict and data[0].keys()==[u"_id",u"data"]:
+      ret = "<table border=1>"
+      for i in data:
+        ret += "<tr>"
+        for j in i['data']:
+          ret += "<td>" + renderJson(j) + "</td>"
+        ret += "</tr>"
+      return ret + "</table>"
+    else:
+      ret = "<table border=1>"
+      for i in data:
+        ret += "<td>" + renderJson(i) + "</td>"
+      return ret + "</tr></table>"
+  else:
+    return str(data)
+
+@upload_page.route("/displayParsed/<id>", methods = ["GET"])
+def displayParsed(id):
+  #file = GridFS(getDBConnection().upload).get(ObjectId(id))
+  #return file.read()
+  entry = getDBConnection().upload.fs.files.find_one({"_id":ObjectId(id)})
+  if entry['metadata'].has_key("child_index"):
+    ret = ""
+    for i in entry['metadata']['child_index']:
+      ret += displayParsed(str(i[0])) + "<br/>";
+    return ret
+  table = getDBConnection().contrib[entry['metadata']['uploader_id']+str(entry['_id'])]
+  
+  return "Show first 10 results of " + entry['filename'] + "<br/>" + renderJson(list(table.find().limit(10)))
+
 @upload_page.route("/updateMappingRule", methods = ["POST"])
 @login_required
 def updateMappingRule():
