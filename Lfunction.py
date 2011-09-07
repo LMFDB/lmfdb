@@ -218,15 +218,17 @@ class Lfunction:
 
     def createLcalcfile_ver2(self, url):
         thefile=""
-        thefile +="#################################################################################################\n"
+        thefile += "#################################################################################################\n"
+        thefile += "###\n"
         thefile += "### lcalc file for the url: " + url + "\n"
-        thefile +="#################################################################################################\n\n"
-        thefile += "lcalcfile_version = 2    ### lcalc files should have a version number to allow for future enhancements\n\n"
+        thefile += "###\n"
+        thefile += "#################################################################################################\n\n"
+        thefile += "lcalcfile_version = 2    ### lcalc files should have a version number for future enhancements\n\n"
 
         thefile += """\
 #################################################################################################
 ### Specify the functional equation using the Gamma_R and Gamma_C
-### notation. Let Gamma_R = pi^(-s/2) Gamma(s/2), and  Gamma_C= (2 pi)^(-s) Gamma(s).
+### notation. Let Gamma_R = pi^(-s/2) Gamma(s/2), and  Gamma_C = (2 pi)^(-s) Gamma(s).
 ###
 ### Let Lambda(s) :=
 ###
