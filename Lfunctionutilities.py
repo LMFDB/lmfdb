@@ -218,7 +218,8 @@ def lfuncFEtex(L,fmt):
     if fmt=="analytic":
         ans="\\begin{align}\n"+L.texnamecompleteds+"=\\mathstrut &"
         if L.level>1:
-            ans+=latex(L.level)+"^{\\frac{s}{2}}"
+            #ans+=latex(L.level)+"^{\\frac{s}{2}}"
+            ans+=latex(L.level)+"^{s/2}"
         for mu in L.mu_fe:
            ans += "\Gamma_{\mathbb{R}}(s"+seriescoeff(mu,0,"signed","",-6,5)+")"
         for nu in L.nu_fe:
