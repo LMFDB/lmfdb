@@ -26,6 +26,37 @@ from utils import *
 from modular_forms.elliptic_modular_forms import EMF,emf, emf_logger
 logger = emf_logger
 from sage.all import dimension_new_cusp_forms,vector,dimension_modular_forms,dimension_cusp_forms,is_odd
+from modular_forms.backend.mf_utils import my_get
+
+def extract_data_from_jump_to(s):
+    label=None;weight=None;character=None;label=None
+    weight = 2  # this is default for jumping
+    character = 0 # this is default for jumping
+    if s == 'delta':
+        weight = 12; level = 1; label = "a"
+        exit
+    # first see if we have a label or not, i.e. if we have precisely one string of letters at the end
+    test = re.findall("[a-z]+",s)
+    if len(test)==1: 
+        label = test[0]
+    else:
+        label=''
+    #emf_logger.debug("label1={0}".format(label))
+    # the first string of integers should be the level
+    test = re.findall("\d+",s)
+    emf_logger.debug("level mat={0}".format(test))
+    if test:
+        level = int(test[0])
+    if len(test)>1: ## we also have weight
+        weight = int(test[1])
+    if len(test)>2: ## we also have character
+        character = int(test[2])
+    emf_logger.debug("label=%s"%label)
+    emf_logger.debug("level=%s"%level)
+    args=dict()
+    args['level']=int(level); args['weight']=int(weight)
+    args['character']=int(character); args['label']=label
+    return args
 
 def ajax_more2(callback, *arg_list, **kwds):
     r"""
