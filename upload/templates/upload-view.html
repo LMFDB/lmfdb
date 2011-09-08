@@ -105,7 +105,7 @@ function updateMappingRules(data, id) {
 
 {% for entry in list %}
 <p>
-<A HREF="#" onclick="$('#display{{entry._id}}').toggle()">+{{entry.metadata['name']}}</a>
+<A HREF="#" onclick="$('#display{{entry._id}}').toggle();return false">+{{entry.metadata['name']}}</a>
 (uploaded by <A HREF="/users/profile/{{entry.metadata['uploader_id']}}">{{entry.metadata['uploader']}}</A>)<br/>
 <dl class=propertylist style="display:{{display}}" id="display{{entry._id}}">
 </p>
