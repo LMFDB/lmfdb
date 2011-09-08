@@ -22,28 +22,31 @@ def get_knowl(ID, fields = { "history": 0, "_keywords" : 0 }):
   return get_knowls().find_one({'_id' : ID}, fields=fields)
 
 def extract_cat(kid):
+  if not hasattr(kid, 'split'): return None
   return kid.split(".")[0]
+
+CAT_ID = 'internal.categories.top'
 
 def refresh_knowl_categories():
   """
   when saving, we refresh the knowl categories
   (actually, this should only happen if it is a new knowl!)
   """
-  cats = set([ extract_cat(_['_id']) for _ in get_knowls().find({'categories' : { "$exists" : False }}, fields=[]) ])
+  # assumes that all actual knowls have a title field
+  cats = set([ extract_cat(_['_id']) for _ in get_knowls().find({'title' : {"$exists":True}}, fields=[]) ])
   # there should only be *one* document with the field named categories
-  get_knowls().update({'categories' : { "$exists" : True }}, 
-                      {'categories' : sorted(cats), 
-                       'title' : 'Categories (internal data)'}, upsert=True)
+  get_knowls().save({'_id' : CAT_ID, 'categories' : sorted(cats)})
   return cats
 
 def get_categories():
-  c_doc = get_knowls().find_one({'categories' : { "$exists" : True }})
-  return c_doc['categories'] if c_doc else []
+  c_doc = get_knowls().find_one(CAT_ID)
+  return c_doc.get('categories', []) if c_doc else []
 
 def get_knowls_by_category(cat):
   """searching for IDs that start with cat and continue with a dot + at least one char"""
   # TODO later on search for the knowl field 'cat'
-  return get_knowls().find({'_id' : { "$regex" : r"^%s\..+" % cat }}, fields=['title'])
+  # return get_knowls().find({'_id' : { "$regex" : r"^%s\..+" % cat }}, fields=['title'])
+  return get_knowls().find({'cat' : cat}, fields=['title'])
 
 import re
 valid_keywords = re.compile(r"\b[a-zA-Z0-9-]{3,}\b")
