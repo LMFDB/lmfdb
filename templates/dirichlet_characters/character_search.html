@@ -66,34 +66,11 @@ table td.params {
 
 <script>
  $(document).ready(function() {
-     jQuery.fn.dataTableExt.oSort['html-character-index-asc']  = function(a,b) {
-         var x = a.replace( /.*<sub>(.*)<\/sub>.*/, '$1' ) * 1;
-         var y = b.replace( /.*<sub>(.*)<\/sub>.*/, '$1') * 1;
-         return ((x < y) ? -1 : ((x > y) ?  1 : 0));
-     };
-
-     jQuery.fn.dataTableExt.oSort['html-character-index-desc'] = function(a,b) {
-         var x = a.replace( /.*<sub>(.*)<\/sub>.*/, '$1' ) * 1;
-         var y = b.replace( /.*<sub>(.*)<\/sub>.*/, '$1' ) * 1;
-         return ((x < y) ?  1 : ((x > y) ? -1 : 0));
-     };     
-     jQuery.fn.dataTableExt.oSort['html-conductor-index-asc']  = function(a,b) {
-         var x = a.replace(/.*(.*).*/, "") * 1;
-         var y = b.replace( /.*(.*).*/, "") * 1;
-         return ((x < y) ? -1 : ((x > y) ?  1 : 0));
-     };
-
-     jQuery.fn.dataTableExt.oSort['html-conductor-index-desc'] = function(a,b) {
-         var x = a.replace( /.*(.*).*/, '$1') * 1;
-         var y = b.replace( /.*(.*).*/, '$1') * 1;
-         return ((x < y) ?  1 : ((x > y) ? -1 : 0));
-     };     
      $('#characterTable').dataTable({
           "bFilter":false, 
           "aoColumnDefs": [ 
-           { "sType": 'html-character-index', 
+           { "sType": 'title-numeric',
              "aTargets": [0] }, 
-          { "sType": 'html-conductor-index', "aTargets": [0]}
           ],
           "fnRowCallback": function( row, data, index ){ 
              MathJax.Hub.Queue(['Typeset', MathJax.Hub, row]);
@@ -115,12 +92,18 @@ table td.params {
     </thead>
     <tbody>
         {% set row_class = cycler('odd', 'even') %}
+	{# Keep track of the row number when iterating
+	   A jinja bug prevents just using set on a variable
+	   xrange is lazy, so as long as there is no penalty to having
+	     a large list.  This will work as long as there are no more than
+	     1000000 elements in the range #}
+	{% set counter = range(1000000).__iter__() %}
         {% for line in contents %}
         {% for l in line %}
         {% for chi in l %}
         <tr class="{{ row_class.next() }}">
              <td class="modulus" align="center">
-                 <a href="/Character/Dirichlet/{{chi[2]}}/{{chi[0]}}">
+                 <a href="/Character/Dirichlet/{{chi[2]}}/{{chi[0]}}" title="{{counter.next()}}">
                      {% if chi[5] == "True"%}
                         <font color="green">
                      {% else %}
