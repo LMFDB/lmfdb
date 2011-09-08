@@ -308,7 +308,7 @@ def index():
     s_query.update(keyword_q)
 
   if categorymode:
-    s_query['_id'] = { "$regex" : r"^%s\..+" % cur_cat }
+    s_query.update({ 'cat' : cur_cat }) #{ "$regex" : r"^%s\..+" % cur_cat }
 
   logger.debug("search query: %s" % s_query)
   knowls = get_knowls().find(s_query, fields=['title'])
