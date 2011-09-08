@@ -166,7 +166,7 @@ function updateMappingRules(data, id) {
 {{entry.read(10000)}}
       </pre>
     {% elif entry.metadata.content_type == 'image/jpeg' %}
-      <img src="/upload/download/{{entry._id}}/{{entry.filename}}"/>
+      <img src="{{url_for('.download', id=entry._id, filename=entry.filename)}}"/>
     {% endif %}
 
     {% if entry.metadata.child_index is defined %}
@@ -179,7 +179,7 @@ function updateMappingRules(data, id) {
         $(document).ready(function() {
           data{{entry._id}} = [
             {% for child in entry.metadata.child_index %}
-              [ "<A HREF='/upload/download/{{child[0]|safe}}/{{entry.filename}}/{{child[1]}}'>Download</A>",
+              [ "<A HREF='{{url_for('.download', id=entry._id, filename=entry.filename+'/'+child[1])}}'>Download</A>",
                 "<A HREF='/upload/view/{{child[0]|safe}}'>View</A>",
                 "{{child[1] | safe}}",
                 ""],
