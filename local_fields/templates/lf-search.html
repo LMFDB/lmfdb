@@ -2,6 +2,31 @@
 
 {% block content %}
 
-Value: {{ val }}
+<h2> Results: ({{info.report}}) </h2>
+
+<table border=1 cellpadding=5 class='right_align_table'>
+<tr>
+<th>Polynomial</th>
+<th>$p$</th>
+<th>$e$</th>
+<th>$f$</th>
+<th>$c$</th>
+<th>Galois group</th>
+</tr>
+
+{% for field in info.fields: %}
+<tr>
+<td align='left'><a href="/LocalField/{{field.label}}">{{info.display_poly(field.coeffs)|safe}}</a></td>
+<td>{{field.p}}</td>
+<td>{{field.e}}</td>
+<td>{{field.f}}</td>
+<td>{{field.c}}</td>
+<td>{{info.group_display(field.gal[2])}}</td>
+</tr>
+
+{% endfor %}
+
+</table>
+
 
 {% endblock %}
