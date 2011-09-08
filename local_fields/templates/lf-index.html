@@ -7,7 +7,9 @@
     <td>
       <h1>Browse</h1>
 
-The table gives
+The table gives for each $p$ and $n$ shown, the number of degree $n$ extensions
+of $\mathbb{Q}_p$ up to isomorphism.
+<p>
 <table border=1 cellpadding=5 class='right_align_table'>
 <tr>
 <th>$p$ \ $n$</th>
@@ -62,7 +64,7 @@ The table gives
   Search by {{KNOWL('lf.field.label',title="label")}}
   <div>
         <form name="search" method = "get" action="{{search}}">      
-          <input type="text" name="jump_to" value="" placeholder="2.3.5"> 
+          <input type="text" name="jump_to" value="" placeholder="2.4.6.7"> 
           <input type="submit" value="Find">
         </form>
       </div>
@@ -76,13 +78,22 @@ The table gives
         <table class="">
           <tr>
             <td>
-          {{KNOWL('mf.elliptic.level',title='Degree')}}:
-            </td><td><input type="text" name="degree" value="" example="4"></td>
+          {{KNOWL('lf.degree',title='Degree')}}:
+            </td><td><input type="text" name="n" value="" example="6"></td>
           </tr>
           <tr>
             <td>
-              {{KNOWL('mf.elliptic.weight',title='Weight')}}:
-            </td><td><input type="text" name="weight" value="" placeholder="12"></td>
+              Base $\mathbb{Q}_p$ for $p$:
+            </td><td><input type="text" name="p" value="" placeholder="3"></td>
+          </tr>
+          <tr>
+            <td>
+              {{KNOWL('lf.discriminant_exponent',title='Discriminant exponent')}}:
+            </td><td><input type="text" name="c" value="" placeholder="8"></td>
+          </tr>
+            <td>
+              {{KNOWL('lf.ramification_index',title='Ramification index')}}:
+            </td><td><input type="text" name="e" value="" placeholder="3"></td>
           </tr>
   </table>
         <input type="submit" name="Submit" value="Search">
