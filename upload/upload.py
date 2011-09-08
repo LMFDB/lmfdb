@@ -180,7 +180,7 @@ def renderJson(data):
       ret += "<dt>"+key+"<dd>"+renderJson(value)
     return ret + "</dl>"
   if type(data) is list:
-    if type(data[0]) is list:
+    if len(data)>0 and type(data[0]) is list:
       ret = "<table border=1>"
       for i in data:
         ret += "<tr>"
@@ -188,7 +188,7 @@ def renderJson(data):
           ret += "<td>" + renderJson(j) + "</td>"
         ret += "</tr>"
       return ret + "</table>"
-    elif type(data[0]) is dict and data[0].keys()==[u"_id",u"data"]:
+    elif len(data)>0 and type(data[0]) is dict and data[0].keys()==[u"_id",u"data"]:
       ret = "<table border=1>"
       for i in data:
         ret += "<tr>"
