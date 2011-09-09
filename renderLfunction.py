@@ -8,6 +8,7 @@ from Lfunction import *
 import LfunctionComp
 import LfunctionPlot
 from utils import to_dict, make_logger
+import bson
 from Lfunctionutilities import lfuncDStex, lfuncEPtex, lfuncFEtex
 
 logger = make_logger("LF")
@@ -131,20 +132,20 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
         elif arg1 == 'custom': # need a better name
             return "not yet implemented"
         
-    try:
-        L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, temp_args)
+##    try:
+    L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, temp_args)
         
-    except Exception as inst:   # There was an exception when creating the page
-        error_message = ('There was an error loading this page. Please report the ' +
-                         'address of this page and the following error message: ' +
-                         str(inst.args))
-        if len(inst.args) >1:
-            if inst.args[1]== "UserError":
-                error_message = inst.args[0]
-            
-        
-        info = { 'content': error_message, 'title': 'Error' }
-        return render_template('LfunctionSimple.html', info=info, **info)
+##    except Exception as inst:   # There was an exception when creating the page
+##        error_message = ('There was an error loading this page. Please report the ' +
+##                         'address of this page and the following error message: ' +
+##                         str(inst.args))
+##        if len(inst.args) >1:
+##            if inst.args[1]== "UserError":
+##                error_message = inst.args[0]
+##            
+##        
+##        info = { 'content': error_message, 'title': 'Error' }
+##        return render_template('LfunctionSimple.html', info=info, **info)
 
 
     try:
@@ -172,11 +173,12 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         return Lfunction_EC( label = arg3)
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic': # this has args: one for weight and one for level
-        logger.debug(arg5+arg6+arg7+arg8+arg9)
+        logger.info(arg5+arg6+str(arg7)+str(arg8)+str(arg9))
         return Lfunction_EMF( level = arg5, weight = arg6, character = arg7, label = arg8, number = arg9)
 
-    elif arg1 == 'ModularForm' and arg2 == 'GL2'and arg3 == 'Q' and arg4 == 'maass':
-        return Lfunction_Maass( **temp_args)
+    elif arg1 == 'ModularForm' and arg2 == 'GL2'and arg3 == 'Q' and arg4 == 'Maass':
+        logger.info(db)
+        return Lfunction_Maass(dbid = bson.objectid.ObjectId(arg5), dbName = 'MaassWaveForm', dbColl = temp_args['db'])
     
     elif arg1 == 'ModularForm' and (arg2 == 'GSp4' or arg2 == 'GL4' or  arg2 == 'GL3') and arg3 == 'Q' and arg4 == 'maass':
         return Lfunction_Maass( dbid = arg5, dbName = 'Lfunction', dbColl = 'LemurellMaassHighDegree')
@@ -188,7 +190,7 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         return Lfunction( Ltype = arg1, url = arg2)
     
     else:
-        return flask.redirect(403)
+        return Flask.redirect(403)
 
 
 def set_info_for_start_page():
@@ -248,17 +250,22 @@ def initLfunction(L,args, request):
     info['bread'] = []
     info['properties2'] = set_gaga_properties(L)
 
+
+    # Create friendlink by removing 'L/' and ending '/'
     friendlink = request.url.replace('/L/','/').replace('/L-function/','/').replace('/Lfunction/','/')
-    friendlink = friendlink[0:len(friendlink)-1]
+    splitlink = friendlink.rpartition('/')
+    friendlink = splitlink[0] + splitlink[2]
 
     if L.Ltype() == 'maass':
         if L.group == 'GL2':
-            info['zeroeslink'] = ''
-            info['plotlink'] = ''
+            minNumberOfCoefficients = 20 # TODO: Fix this to take level into account
+            if len(L.dirichlet_coefficients)< minNumberOfCoefficients:
+                info['zeroeslink'] = ''
+                info['plotlink'] = ''
             info['bread'] = [('L-function','/L') ,('Degree 2',
                               url_for('render_Lfunction', arg1='degree2')),
                              ('\('+L.texname+'\)', request.url )]
-            info['friends'] = [('Dirichlet Character '+str(charname), friendlink)]
+            info['friends'] = [('Maass Form ', friendlink)]
         else:
             info['bread'] = [('L-function','/L') ,('Degree ' + str(L.degree),
                              url_for('render_Lfunction', arg1= str(L.degree))), (L.dbid, request.url)]
@@ -374,7 +381,7 @@ def render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8
 def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9):
     L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
 
-    if L.degree > 2 or L.Ltype()=="ellipticmodularform":  # Too slow to be rigorous here
+    if L.degree > 2 or L.Ltype()=="ellipticmodularform"  or L.Ltype()=="maass":  # Too slow to be rigorous here
         search_step = 0.05
         if L.selfdual:
             s = str(L.sageLfunction.find_zeros(-search_step/2 , 20,search_step))
@@ -421,7 +428,7 @@ def render_browseGraphChar(args):
     return response
 
 def render_lcalcfile(L, url):
-    try:
+    try:  #First check if the Lcalc file is stored in the database
         response = make_response(L.lcalcfile)
     except:
         response = make_response(L.createLcalcfile_ver2(url))
@@ -544,7 +551,38 @@ def processEllipticCurveNavigation(startCond, endCond):
     return s
 
 def processMaassNavigation():
-    s = "Yes, this is in the pipeline."
+    s = '<h5>Examples of L-functions attached to Maass forms on Hecke congruence groups $\Gamma_0(N)$</h5>'
+    s += '<table>\n'
+
+    s += '<tr>\n'
+    s += '<td><bold>N=3:</bold></td>\n'
+    s += '<td><a href="' + url_for('render_Lfunction', arg1='ModularForm', arg2='GL2', arg3='Q',
+                                   arg4='Maass', arg5='4cb8502658bca9141c00002a', db='FS')+ '">4.38805356322</a></td>\n' 
+    s += '<td><a href="' + url_for('render_Lfunction', arg1='ModularForm', arg2='GL2', arg3='Q',
+                                   arg4='Maass', arg5='4cb8502658bca9141c00002b', db='FS')+ '">5.09874190873</a></td>\n' 
+    s += '<td><a href="' + url_for('render_Lfunction', arg1='ModularForm', arg2='GL2', arg3='Q',
+                                   arg4='Maass', arg5='4cb8502658bca9141c00002c', db='FS')+ '">6.12057553309</a></td>\n' 
+    s += '<td><a href="' + url_for('render_Lfunction', arg1='ModularForm', arg2='GL2', arg3='Q',
+                                   arg4='Maass', arg5='4cb8502658bca9141c00002d', db='FS')+ '">6.75741527775</a></td>\n' 
+    s += '<td><a href="' + url_for('render_Lfunction', arg1='ModularForm', arg2='GL2', arg3='Q',
+                                   arg4='Maass', arg5='4cb8502658bca9141c00002e', db='FS')+ '">7.75813319502</a></td>\n' 
+    s += '</tr>\n'
+    
+    s += '<tr>\n'
+    s += '<td><bold>N=5:</bold></td>\n'
+    s += '<td><a href="' + url_for('render_Lfunction', arg1='ModularForm', arg2='GL2', arg3='Q',
+                                   arg4='Maass', arg5='4cb8502658bca9141c000036', db='FS')+ '">3.02837629307</a></td>\n' 
+    s += '<td><a href="' + url_for('render_Lfunction', arg1='ModularForm', arg2='GL2', arg3='Q',
+                                   arg4='Maass', arg5='4cb8502658bca9141c000039', db='FS')+ '">4.89723501573</a></td>\n' 
+    s += '<td><a href="' + url_for('render_Lfunction', arg1='ModularForm', arg2='GL2', arg3='Q',
+                                   arg4='Maass', arg5='4cb8502658bca9141c00003b', db='FS')+ '">5.70582652719</a></td>\n' 
+    s += '<td><a href="' + url_for('render_Lfunction', arg1='ModularForm', arg2='GL2', arg3='Q',
+                                   arg4='Maass', arg5='4cb8502658bca9141c00003c', db='FS')+ '">6.05402838077</a></td>\n' 
+    s += '<td><a href="' + url_for('render_Lfunction', arg1='ModularForm', arg2='GL2', arg3='Q',
+                                   arg4='Maass', arg5='4cb8502658bca9141c00003d', db='FS')+ '">6.45847643848</a></td>\n' 
+    s += '</tr>\n'
+    
+    s += '</table>\n'
 
     return s
 

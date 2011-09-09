@@ -554,7 +554,6 @@ class Lfunction_EMF(Lfunction):
         #Check for compulsory arguments
         if not ('weight' in args.keys() and 'level' in args.keys()):
             raise KeyError, "You have to supply weight and level for an elliptic modular form L-function"
-        print 'HERE IS THE START'
         logger.debug(str(args))
         # Initialize default values
         if not args['character']:
@@ -824,7 +823,7 @@ class Lfunction_Maass(Lfunction):
         connection = base.getDBConnection()
         db = pymongo.database.Database(connection, self.dbName)
         collection = pymongo.collection.Collection(db, self.dbColl)
-        dbEntry = collection.find_one({'_id': self.dbid})
+        dbEntry = collection.find_one({'_id':self.dbid})
 
         if self.dbName == 'Lfunction':  # Data from Lemurell
 
@@ -863,8 +862,11 @@ class Lfunction_Maass(Lfunction):
                 self.characternumber = int(dbEntry['Character'])
 
             if self.level > 1:
-                self.fricke = dbEntry['Fricke']  #no fricke for level 1
-
+                try:
+                    self.fricke = dbEntry['Fricke']  #no fricke for level 1
+                except:
+                    logger.critical('No Fricke information for Maass form')
+                    self.fricke = 1
 
             # Set properties of the L-function
             self.coefficient_type = 2

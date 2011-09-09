@@ -139,6 +139,9 @@ def lfuncDStex(L ,fmt):
     """ Returns the LaTex for displaying the Dirichlet series of the L-function L.
         fmt could be any of the values: "analytic", "langlands", "abstract"
     """
+
+    if len(L.dirichlet_coefficients)==0:
+        return '\\text{No Dirichlet coefficients supplied.}'
     
     numperline = 3
     numcoeffs=min(10,len(L.dirichlet_coefficients))
@@ -189,7 +192,7 @@ def lfuncEPtex(L,fmt):
             ans= ans+"\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1} \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + p^{-2s})^{-1}"
         elif L.Ltype()=="maass":
             if L.group == 'GL2':
-                ans= ans+"\\prod_p (1- a(p) p^{-s} + p^{-2s})^{-1}"
+                ans= ans+"\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1} \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + p^{-2s})^{-1}"
             elif L.group == 'GL3':
                 ans= ans+"\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1}  \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + \\overline{a(p)} p^{-2s} - p^{-3s})^{-1}"
             else:

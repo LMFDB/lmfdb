@@ -236,7 +236,10 @@ def render_isogeny_class(iso_class):
 
 @app.route("/EllipticCurve/Q/modular_form_display/<label>/<number>")
 def modular_form_display(label, number):
-    number = int(number)
+    try:
+        number = int(number)
+    except:
+        number = 10
     if number < 10:
         number = 10
     if number > 100000:

@@ -2,7 +2,7 @@
 from base import LmfdbTest
 from flask import request
 
-from elliptic_modular_forms.views.emf_main import *
+from views.emf_main import *
 
 class CmfTest(LmfdbTest):
   def test_get_args(self):
