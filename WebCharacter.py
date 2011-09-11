@@ -30,7 +30,6 @@ class WebCharacter:
 
 
     def dirichletcharacter(self):
-        logger.debug( "Check" )
         G = DirichletGroup(self.modulus)
         self.zetaorder = G.zeta_order()
         chi = G[self.number]
@@ -42,9 +41,7 @@ class WebCharacter:
         self.conductor = chi.conductor()
         self.order = chi.multiplicative_order()
         self.vals = chi.values()
-        logger.debug(DirichletGroup(1)[0].values())
         list  = [latex(_) for _ in chi.values()]
-        logger.debug( "Check2" )
         self.valstex = list
         self.bound = 5*1024
         if chi.is_even():
@@ -57,7 +54,6 @@ class WebCharacter:
             self.inducedchar_modulus = self.inducedchar.modulus()
             self.inducedchar_conductor = self.inducedchar.conductor()
             F = DirichletGroup(self.inducedchar_modulus)
-            logger.debug("primitive")
             if self.number == 0:
                 self.inducedchar_number = 0
             else:
@@ -66,14 +62,12 @@ class WebCharacter:
                         self.inducedchar_number = i
                         break
             self.inducedchar_tex = "\(\\chi_{%s}\\!\\!\\pmod{%s}\)" %(self.inducedchar_number,self.inducedchar_modulus)
-            logger.debug( "Check3" )
        
        # if self.primitive == 'True':
        #     self.primtf = True
        # else:
        #     self.primtf = False
         if self.order == 2:
-            logger.debug( "CHECK" )
             if self.conductor%2 == 1:
                 self.kronsymbol = r"\begin{equation} \chi_{%s}(a) = " %(self.number)
                 self.kronsymbol += r"\left(\frac{a}{%s}\right)" %(self.conductor)
