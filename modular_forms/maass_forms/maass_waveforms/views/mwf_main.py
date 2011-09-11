@@ -277,7 +277,11 @@ def render_one_maass_waveform_wp(info):
     #info["check"].append(["Ramanujan-Petersson conjecture",url_for('not_yet_implemented')])
     maass_id = info['id']
     mwf_logger.debug("id1={0}".format(id))
-    info["friends"]= [("L-function","L/"+url_for('mwf.render_one_maass_waveform',id=maass_id))]
+    
+    # Create the link to the L-function (put in '/L' at the beginning and '/' before '?'
+    Llink = "/L"+url_for('mwf.render_one_maass_waveform',id=maass_id) + '/?db=' + info['db']
+    
+    info["friends"]= [("L-function",Llink)]
     info['bread']=[('Maass waveforms',url_for('.render_maass_waveforms'))]
     info["downloads"]= []
     #info["downloads"].append(["Maass form data",url_for('not_yet_implemented')])

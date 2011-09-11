@@ -4,7 +4,7 @@ class RootTest(LmfdbTest):
 
   def test_root(self):
     root = self.tc.get("/")
-    assert "DataBase" in root.data
+    assert "Database" in root.data
 
   def test_robots(self):
     r = self.tc.get("/robots.txt")
@@ -31,7 +31,7 @@ class RootTest(LmfdbTest):
       if "GET" in rule.methods:
         tc = self.app.test_client()
         res = tc.get(rule.rule)
-        assert "LMFDB" in res.data, "rule %s failed " % rule
+        assert "Database" in res.data, "rule %s failed " % rule
           
 
   def test_some_latex_error(self):
