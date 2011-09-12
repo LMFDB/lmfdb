@@ -71,8 +71,7 @@ def robots_txt():
     fn = os.path.join('.', "static", "robots.txt")
     if os.path.exists(fn):
       return open(fn).read()
-  else:
-    return "User-agent: *\nDisallow: / \n"
+  return "User-agent: *\nDisallow: / \n"
 
 
 @app.route("/style.css")
