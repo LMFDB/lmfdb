@@ -11,12 +11,12 @@
 }
 .chi {
     padding: 5px 5px;
-    width: 2em;
+    width: 3em;
     float: left;
     display: inline;
     white-space:nowrap;
 }
-.chi a { display: inline; font-family: serif;}
+.chi a { display: inline; text-align: center; font-family: serif;}
 .primitive {
   color:green;
 }
@@ -25,8 +25,8 @@
 }
 </style>
 
-<table>
-<thead align="left">
+<table>    
+    <thead align="left">
     <tr>
         <th>
             <font color = "blue"> Non-primitive </font> characters.</br>
@@ -39,26 +39,38 @@
 
 <div>
 <table class="ntdata">
-    <thead align="center">
+<thead align="center">
     <tr>
         <th>Modulus</th>
         <th>Characters</th>
     </tr>
 </thead>
+
 <tbody>
     {% for line in contents %}
-    <tr><td class="modulus"align="center" style="4em"> {{ line[0] }} </td>
-    <td>
-        {% for chi in line[1] %}
-        <div class="chi">
-            <a href="{{ line[0] }}/{{chi[0]}}">{% if chi[1] %}
-                <font color="green">{% else %}
-                    <font color="blue">{% endif %}&chi;<sub>{{chi[0]}}</sub></font>
-            </a>
-       </div>
+        <tr>
+            <td class="modulus"align="center" style="4em"> {{ line[0] }} </td>
+            <td>
+                {% for chi in line[1] %}
+                    <div class="chi" align="center">
+                    <a href="{{ line[0] }}/{{chi[0]}}">
+                        {% if chi[1] %}
+                            <font color="green">
+                        {% else %}
+                            <font color="blue">
+                        {% endif %}
+                        {#{% if chi[2] == 2 %}
+                            {{ chi[3] }}
+                        {% else %}#}
+                        &chi;<sub>{{chi[0]}}</sub>
+                        {#{% endif %}#}    
+                    </font>
+                    </a>
+                    </div>
+                {% endfor %}
+            </td>
+        </tr>
     {% endfor %}
-    </td></tr>
-{% endfor %}
 <tbody>
 </table>
 </div>

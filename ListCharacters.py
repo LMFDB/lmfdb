@@ -11,27 +11,29 @@ from utils import to_dict
 
 def get_character_modulus(a,b):
     from sage.modular.dirichlet import DirichletGroup
+    from DirichletCharacter import kronecker_symbol as k
     def line(N):
         G = DirichletGroup(N)
-        return [(_, G[_].is_primitive()) for _ in range(len(G))]
+        return [(j, G[j].is_primitive(),G[j].order(),k(G[j])) for j in range(len(G))]
     return [(_,line(_)) for _ in range(a,b+1)]
 
 def get_character_conductor(a,b):
     from sage.modular.dirichlet import DirichletGroup
+    from DirichletCharacter import kronecker_symbol as k
     def line(N):
         l = []
         count = 0
         modulus = N
-        while count < 8:
+        while count < 7:
             if modulus%N == 0:
                 G = DirichletGroup(modulus)
                 #chi_count = 0
                 for j in range(len(G)):
-                    if count == 8:
+                    if count == 7:
                         break
                     elif G[j].conductor() == N:
-                        l.append((modulus,j,G[j].is_primitive()))
                         count += 1
+                        l.append((modulus,j,G[j].is_primitive(),G[j].order(),k(G[j])))
             modulus += N
             if count == 0:
                 break
@@ -41,6 +43,7 @@ def get_character_conductor(a,b):
 
 def get_character_order(a,b):
     from sage.modular.dirichlet import DirichletGroup
+    from DirichletCharacter import kronecker_symbol as k
     def line(N):
         l = []
         count = 0
@@ -50,8 +53,8 @@ def get_character_order(a,b):
                 if count == 8:
                     break
                 elif G[j].multiplicative_order() == N:
-                    l.append((modulus,j,G[j].is_primitive()))
                     count += 1
+                    l.append((modulus,j,G[j].is_primitive(),G[j].order(), k(G[j])))
             if count == 8:
                 break
         return l

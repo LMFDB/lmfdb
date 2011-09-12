@@ -154,7 +154,7 @@ def initCharacterInfo(chi,args, request):
         info['unitgens'] = str(chi.unitgens)
         info['bound'] = int(chi.bound)
         if chi.order == 2:
-            info['kronsymbol'] = r"\(\displaystyle %s\)" %(kronecker_symbol(G[chi.number]))
+            info['kronsymbol'] = "%s" %(kronecker_symbol(G[chi.number]))
         if chi.primitive=="False":
             info['inducedchar'] = chi.inducedchar
             info['inducedchar_modulus'] = chi.inducedchar_modulus
@@ -169,12 +169,17 @@ def initCharacterInfo(chi,args, request):
         mmore = int(smod) + 1
         mless = int(smod) - 1
         url_ch = url_for("render_Character", arg1=smod,arg2=str(nmore))
-        if chi.number == 0:
-            info['navi'] = [(r"\(\chi_{" + str(nmore) + r"} \left( \text{mod}\; " + smod+ r"\right) \)" ,url_ch), (r"\(\chi_{" + str(euler_phi(chi.modulus)-1) + r"} \left( \text{mod}\;" + str(mless)+ r"\right) \)",url_for("render_Character", arg1=str(mless),arg2=str(euler_phi(chi.modulus)-1)))]
-        elif chi.number == euler_phi(chi.modulus)-1:
-            info['navi'] = [(r"\(\chi_{" + str(nmore) + r"} \left( \text{mod}\;" + str(mmore)+ r"\right) \)",url_for("render_Character", arg1=str(mmore),arg2=str(0))), (r"\(\chi_{" + str(nless) + r"} \left( \text{mod}\;" + smod+ r"\right) \)",url_for("render_Character", arg1=smod,arg2=str(nless)))]
+        if chi.modulus == 1:
+             info['navi'] = [(r"\(\chi_{" + str(0) + r"} \left( \text{mod}\; " + str(2)+ r"\right) \)" ,url_for("render_Character", arg1=str(2),arg2=str(0))), ("", "")]
+        elif chi.modulus == 2:
+             info['navi'] = [(r"\(\chi_{" + str(0) + r"} \left( \text{mod}\; " + str(3)+ r"\right) \)" ,url_for("render_Character", arg1=str(3),arg2=str(0))), (r"\(\chi_{" + str(0) + r"} \left( \text{mod}\;" + str(1)+ r"\right) \)",url_for("render_Character", arg1=str(1),arg2=str(0)))]
         else:
-            info['navi'] = [(r"\(\chi_{" + str(nmore) + r"} \left( \text{mod}\;" + smod+ r"\right) \)",url_for("render_Character", arg1=smod,arg2=str(nmore))), (r"\(\chi_{" + str(nless) + r"} \left( \text{mod}\; " + smod+ r"\right) \)",url_for("render_Character", arg1=smod,arg2=str(nless)))]
+            if chi.number == 0:
+                info['navi'] = [(r"\(\chi_{" + str(nmore) + r"} \left( \text{mod}\; " + smod+ r"\right) \)" ,url_ch), (r"\(\chi_{" + str(euler_phi(chi.modulus -1)-1) + r"} \left( \text{mod}\;" + str(mless)+ r"\right) \)",url_for("render_Character", arg1=str(mless),arg2=str(euler_phi(chi.modulus -1)-1)))]
+            elif chi.number == euler_phi(chi.modulus)-1:
+                info['navi'] = [(r"\(\chi_{" + str(0) + r"} \left( \text{mod}\;" + str(mmore)+ r"\right) \)",url_for("render_Character", arg1=str(mmore),arg2=str(0))), (r"\(\chi_{" + str(nless) + r"} \left( \text{mod}\;" + smod+ r"\right) \)",url_for("render_Character", arg1=smod,arg2=str(nless)))]
+            else:
+                info['navi'] = [(r"\(\chi_{" + str(nmore) + r"} \left( \text{mod}\;" + smod+ r"\right) \)",url_for("render_Character", arg1=smod,arg2=str(nmore))), (r"\(\chi_{" + str(nless) + r"} \left( \text{mod}\; " + smod+ r"\right) \)",url_for("render_Character", arg1=smod,arg2=str(nless)))]
 
     return info
 
@@ -191,7 +196,21 @@ def dc_calc_gauss(modulus,number):
         from sage.modular.dirichlet import DirichletGroup
         chi = DirichletGroup(modulus)[number]
         gauss_sum_numerical = chi.gauss_sum_numerical(100,int(arg))
-        return "\(%s\)" %(latex(gauss_sum_numerical))
+        if int(arg) == 0:
+            zeta = ""
+        elif int(arg) == 1:
+            zeta = "\zeta^{r}"
+        else:
+            zeta = "\zeta^{%s r}" %(int(arg))
+        if modulus == 1:
+            zeta_subscript = "1st"
+        if modulus == 2:
+            zeta_subscript = "2nd"
+        elif modulus == 3:
+            zeta_subscript = "3rd"
+        else:
+            zeta_subscript = str(modulus)+"th"
+        return r"\begin{equation} \tau_{%s}(\chi_{%s}) = \sum_{r\in \mathbb{Z}/%s\mathbb{Z}} \chi_{%s}(r) %s = %s, \end{equation} where \(\zeta\) is a primitive %s root of unity." %(int(arg),number,modulus,number,zeta,latex(gauss_sum_numerical),zeta_subscript)
     except Exception, e:
         return "<span style='color:red;'>ERROR: %s</span>" % e
 
@@ -202,13 +221,12 @@ def dc_calc_jacobi(modulus,number):
         return flask.abort(404)
     arg = map(int,arg.split('.'))
     try:
-        mod = arg[0]
-        num = arg[1]
+        num = arg[0]
         from sage.modular.dirichlet import DirichletGroup
         chi = DirichletGroup(modulus)[number]
-        psi = DirichletGroup(mod)[num]
+        psi = DirichletGroup(modulus)[num]
         jacobi_sum = chi.jacobi_sum(psi)
-        return "\(%s\)" %(latex(jacobi_sum))  
+        return r"\begin{equation} J(\chi_{%s},\chi_{%s}) = \sum_{r\in \mathbb{Z}/%s\mathbb{Z}} \chi_{%s}(r) \chi_{%s}(1-r) = %s,\end{equation} where <a href='/Character/Dirichlet/%s/%s'> \(\chi_{%s}\) </a> is character \(%s\) modulo \(%s\)." %(number,num,modulus,number,num,latex(jacobi_sum),modulus,num,num,num,modulus)  
     except Exception, e:
         return "<span style='color:red;'>ERROR: %s</span>" % e
 
@@ -222,7 +240,15 @@ def dc_calc_kloosterman(modulus,number):
         from sage.modular.dirichlet import DirichletGroup
         chi = DirichletGroup(modulus)[number]
         kloosterman_sum_numerical = chi.kloosterman_sum_numerical(100,arg[0],arg[1])
-        return "\(%s\)" %(latex(kloosterman_sum_numerical))
+        if modulus == 1:
+            zeta_subscript = "1st"
+        if modulus == 2:
+            zeta_subscript = "2nd"
+        elif modulus == 3:
+            zeta_subscript = "3rd"
+        else:
+            zeta_subscript = str(modulus)+"th"
+        return r"\begin{equation} K(%s,%s,\chi_{%s}) = \sum_{r \in \mathbb{Z}/%s\mathbb{Z}} \chi_{%s}(r) \zeta^{%s r + %s r^{-1}} = %s, \end{equation} where \(\zeta\) is a primitive %s root of unity." %(int(arg[0]),int(arg[1]),number, modulus, number,int(arg[0]),int(arg[1]),latex(kloosterman_sum_numerical),zeta_subscript)
     except Exception, e:
         return "<span style='color:red;'>ERROR: %s</span>" % e
 
@@ -249,11 +275,6 @@ def character_search(**args):
         if (len(query) != 0):
             from sage.modular.dirichlet import DirichletGroup
             info['contents'] = charactertable(query)
-            #info['chars'] = chi
-            #info['tex'] = texname
-            #info['number'] = number
-            #info['len'] = length
-            #logger.debug( length )
             info['title'] = 'Dirichlet Characters'
             return render_template("dirichlet_characters/character_search.html", **info)
 
@@ -275,8 +296,8 @@ def render_character_table(modulus=None,conductor=None,order=None):
         stepsize = conductor
 
     def row(N):
-        G = DirichletGroup(N)
         ret = []
+        G = DirichletGroup(N)
         for _ in range(len(G)):
             add = True
             add &= not conductor or G[_].conductor() == conductor
@@ -287,25 +308,25 @@ def render_character_table(modulus=None,conductor=None,order=None):
                 else:
                     ret.append([(_,G[_], G[_].modulus(), G[_].conductor(), G[_].order(), G[_].is_primitive(), G[_].is_even())])
         return ret
-
     return [row(_) for _ in range(start,end,stepsize)]
+
 
 def kronecker_symbol(chi):
     m = chi.conductor()/4
     if chi.conductor()%2 == 1:
         if chi.conductor()%4 == 1:
-            return r"\(\displaystyle\left(\frac{%s}{n}\right)\)" %(chi.conductor())
+            return r"\(\displaystyle\left(\frac{%s}{\bullet}\right)\)" %(chi.conductor())
         else:
-            return r"\(\displaystyle\left(\frac{-%s}{n}\right)\)" %(chi.conductor())  
+            return r"\(\displaystyle\left(\frac{-%s}{\bullet}\right)\)" %(chi.conductor())  
     elif chi.conductor()%8 == 4:
         if m%4 == 1:
-            return r"\(\displaystyle\left(\frac{-%s}{n}\right)\)" %(chi.conductor())
+            return r"\(\displaystyle\left(\frac{-%s}{\bullet}\right)\)" %(chi.conductor())
         elif m%4 == 3:
-            return r"\(\displaystyle\left(\frac{%s}{n}\right)\)" %(chi.conductor())
+            return r"\(\displaystyle\left(\frac{%s}{\bullet}\right)\)" %(chi.conductor())
     elif chi.conductor()%16 == 8:
         if chi.is_even():
-            return r"\(\displaystyle\left(\frac{%s}{n}\right)\)" %(chi.conductor())
+            return r"\(\displaystyle\left(\frac{%s}{\bullet}\right)\)" %(chi.conductor())
         else:
-            return r"\(\displaystyle\left(\frac{-%s}{n}\right)\)" %(chi.conductor()) 
+            return r"\(\displaystyle\left(\frac{-%s}{\bullet}\right)\)" %(chi.conductor()) 
     else:
         return None
