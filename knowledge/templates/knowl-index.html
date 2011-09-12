@@ -16,6 +16,7 @@
   width: 165px;
   float: left;
   min-height: 4em;
+  overflow: hidden;
 }
 #knowls td { 
   padding: 10px 0px;
@@ -74,7 +75,8 @@ Category:
     <td>{{ c }}</td>
     <td>
       {% for k in ks %}
-        <div><a href="{{ url_for('.show', ID=k._id) }}">{{ k.title|safe }}<br/>
+        <div><a href="{{ url_for('.show', ID=k._id) }}" title="{{k.title|striptags}} [{{k._id}}]">
+             {{ k.title|safe }}<br/>
              <span>{{ k._id }}</span></a></div>
       {% endfor %}
      </td>
