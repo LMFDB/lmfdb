@@ -25,7 +25,8 @@ def extract_cat(kid):
   if not hasattr(kid, 'split'): return None
   return kid.split(".")[0]
 
-CAT_ID = 'internal.categories.top'
+# categories, level 0, never change this id
+CAT_ID = 'internal.categories.0'
 
 def refresh_knowl_categories():
   """
@@ -33,10 +34,10 @@ def refresh_knowl_categories():
   (actually, this should only happen if it is a new knowl!)
   """
   # assumes that all actual knowls have a title field
-  cats = set([ extract_cat(_['_id']) for _ in get_knowls().find({'title' : {"$exists":True}}, fields=[]) ])
+  cats = set(( extract_cat(_['_id']) for _ in get_knowls().find({'title' : {"$exists":True}}, fields=[]) ))
   # there should only be *one* document with the field named categories
   get_knowls().save({'_id' : CAT_ID, 'categories' : sorted(cats)})
-  return cats
+  return str(cats)
 
 def get_categories():
   c_doc = get_knowls().find_one(CAT_ID)
@@ -118,11 +119,11 @@ class Knowl(object):
            'title' :      self.title,
            'cat' :        cat,
            'quality':     self.quality,
-	       'last_author': who,
-	       'timestamp':   self.timestamp,
+           'last_author': who,
+           'timestamp':   self.timestamp,
            '_keywords' :  search_keywords
-	       } ,
-	     "$push": {"history": new_history_item}}, upsert=True)
+         } ,
+       "$push": {"history": new_history_item}}, upsert=True)
     if who:
       get_knowls().update(
          { '_id':self.id }, 

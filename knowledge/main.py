@@ -26,7 +26,7 @@ from knowledge import logger
 ASC = pymongo.ASCENDING
 
 import re
-allowed_knowl_id = re.compile("^[A-Za-z0-9._-]+$")
+allowed_knowl_id = re.compile("^[a-z0-9._-]+$")
 
 # Tell markdown to not escape or format inside a given block
 class IgnorePattern(markdown.inlinepatterns.Pattern):
@@ -266,6 +266,29 @@ def render(ID, footer=None, kwargs = None):
     return render_template_string(render_me, k = k, **kwargs)
   except Exception, e:
     return "ERROR in the template: %s. Please edit it to resolve the problem." % e
+
+@knowledge_page.route("/reindex")
+@admin_required
+def reindex():
+  """
+  reindexes knowls, also the list of categories.
+  this is an internal task just for admins!
+  """
+  from knowl import refresh_knowl_categories, extract_cat, make_keywords, get_knowls
+  cats = refresh_knowl_categories()
+  knowls = get_knowls()
+  q_knowls = knowls.find({'title' : {"$exists":True}}, fields=['content', 'title'])
+  for k in q_knowls:
+    kid = k['_id']
+    cat = extract_cat(kid)
+    search_keywords = make_keywords(k['content'], kid, k['title'])
+    knowls.update({'_id' : kid}, 
+                  {"$set": { 
+                     'cat' : cat,
+                     '_keywords' :  search_keywords
+                   }})
+
+  return "categories: %s <br/>reindexed %s knowls" % (cats, q_knowls.count())
 
 @knowledge_page.route("/")
 def index():
