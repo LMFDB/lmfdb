@@ -655,6 +655,52 @@ table .knowl-link {
 .knowl {
   padding: 0;
 }
+/* knowl-index is the big table on the main knowledge page */
+#knowl-index td div > a {
+  display: block;
+  padding: 0px;
+  position: absolute;
+  top: 12px;
+}
+#knowl-index td div > span {
+  font-size: xx-small;
+  color: grey;
+  position: absolute;
+  top: 12px;
+}
+#knowl-index td div {
+  position: relative;
+  display: inline;
+  width: 170px;
+  height: 70px;
+  float: left;
+  min-height: 4em;
+  overflow: hidden;
+  padding: 2px;
+  margin: 1px;
+  /* border: 1px solid {{ col_knowl_l }}; */
+  border-radius: 2px;
+  -webkit-border-radius: 2px;
+  -moz-border-radius: 2px;
+}
+#knowl-index td div:hover {
+  background: {{ col_knowl_l }};
+  cursor: pointer;
+}
+#knowl-index td { 
+  padding: 0;
+}
+#knowl-index tr td:first-child {
+  width: 50px;
+  vertical-align: top;
+  text-align: center;
+  font-size: x-large;
+  color: #006;
+  padding-top: 12px;
+}
+#knowl-index tr:nth-child(odd) {
+ background: {{ col_knowl_ll }};
+}
 .knowl-content {
   padding: 10px;
   border-bottom-left-radius: 10px;
@@ -710,7 +756,7 @@ body.knowl #content a {
   color: {{ col_knowl_dd }};
 }
 body.knowl a:hover {
-  background: #ccf;
+  background: {{ col_knowl_l }};
 }
 
 div > *[knowl], p > *[knowl] {

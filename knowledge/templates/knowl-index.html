@@ -1,38 +1,20 @@
 {% extends "homepage.html" %}
 
 {% block content -%}
-<style text="text/css">
-#knowls a {
-  display: block;
-}
-#knowls a > span:last-child {
-  font-size: xx-small;
-  color: grey;
-  position: relative;
-  top: -0.7em;
-}
-#knowls td div {
-  display: inline;
-  width: 165px;
-  float: left;
-  min-height: 4em;
-  overflow: hidden;
-}
-#knowls td { 
-  padding: 10px 0px;
-}
-#knowls tr td:first-child {
-  width: 50px;
-  vertical-align: top;
-  text-align: center;
-  font-size: x-large;
-  color: #006;
-}
+<style type="text/css">
 a.curcat {
   font-weight: bold;
   border-bottom: 1px solid #006;
 }
 </style>
+<script type="text/javascript">
+$(function() {
+  $("*[kid]").bind('click', function(e) {
+   e.preventDefault();
+   window.location = "{{ url_for('.show', ID='') }}" + $(this).attr('kid');
+  });
+});
+</script>
 
 <div>
   <form id='knowl-search' action="{{ url_for('.index') }}" method="GET">
@@ -69,15 +51,16 @@ Category:
 {%- endif %}
 </div>
 
-<table id="knowls" class="ntdata">
+<table id="knowl-index">
   {% for c, ks in knowls -%}
    <tr>
     <td>{{ c }}</td>
     <td>
       {% for k in ks %}
-        <div><a href="{{ url_for('.show', ID=k._id) }}" title="{{k.title|striptags}} [{{k._id}}]">
-             {{ k.title|safe }}<br/>
-             <span>{{ k._id }}</span></a></div>
+        <div title="{{k.title|striptags}} [{{k._id}}]" kid="{{k._id}}">
+          <span>{{ k._id }}</span>
+          <a href="{{ url_for('.show', ID=k._id) }}" >{{ k.title|safe }}</a>
+        </div>
       {% endfor %}
      </td>
    </tr>
