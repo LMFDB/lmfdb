@@ -106,12 +106,11 @@ table td.params {
 	     1000000 elements in the range #}
 	{% set counter = range(1000000).__iter__() %}
         {% for line in contents %}
-<<<<<<< local
             {% for l in line %}
                 {% for chi in l %}
                     <tr class="{{ row_class.next() }}">
                         <td class="modulus" align="center">
-                            <a href="/Character/Dirichlet/{{chi[2]}}/{{chi[0]}}">
+                            <a href="/Character/Dirichlet/{{chi[2]}}/{{chi[0]}}" title="{{counter.next()}}">
                                 {% if chi[5] == "True"%}
                                     <font color="green">
                                 {% else %}
@@ -146,40 +145,6 @@ table td.params {
                     </tr>
                 {% endfor %}
             {% endfor %}
-=======
-        {% for l in line %}
-        {% for chi in l %}
-        <tr class="{{ row_class.next() }}">
-             <td class="modulus" align="center">
-                 <a href="/Character/Dirichlet/{{chi[2]}}/{{chi[0]}}" title="{{counter.next()}}">
-                     {% if chi[5] == "True"%}
-                        <font color="green">
-                     {% else %}
-                        <font color="blue">
-                     {% endif %} 
-                     {% if chi[4] == 2 %}
-                        {{ chi[1] }}
-                     {% else %}
-                        \({\displaystyle \chi_{ {{ chi[0] }} } }\)
-                     {% endif %}
-                        </font>
-                </a>
-            </td>
-            <td align=center>
-                <a href="/Character/Dirichlet/?modulus={{chi[2]}}&conductor={{conductor}}&order={{order}}&parity={{parity}}">{{chi[2]}}</a>
-            </td>
-            <td align=center>
-                <a href="/Character/Dirichlet/?modulus={{modulus}}&conductor={{chi[3]}}&order={{order}}&parity={{parity}}">{{chi[3]}}</a>
-            </td>
-            <td align=center>
-                <a href="/Character/Dirichlet/?modulus={{modulus}}&conductor={{conductor}}&order={{chi[4]}}&parity={{parity}}">{{chi[4]}}</a>
-            </td>
-            <td  align=center>{% if chi[6] == "True" %}Even{% else %}Odd{% endif %}
-            </td>
-        </tr>
-    {% endfor %}
-    {% endfor %}
->>>>>>> other
     {% endfor %}
     </tbody>
 </table>
