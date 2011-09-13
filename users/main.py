@@ -137,8 +137,21 @@ def admin_required(fn):
   def decorated_view(*args, **kwargs):
     logger.info("admin access attempt by %s" % current_user.get_id())
     if not current_user.is_admin():
-      return flask.abort(403) # 401 = access denied
+      return flask.abort(403) # access denied
     return fn(*args, **kwargs)
+  return decorated_view
+
+def housekeeping(fn):
+  """
+  wrap this around maintenance calls, they are only accessible for
+  admins and for localhost
+  """
+  @wraps(fn)
+  def decorated_view(*args, **kwargs):
+    logger.info("housekeeping access attempt by %s" % request.remote_addr)
+    if request.remote_addr in [ "127.0.0.1", "localhost"]:
+      return fn(*args, **kwargs)
+    return admin_required(fn(*args, **kwargs))
   return decorated_view
 
 def get_user_token_coll():

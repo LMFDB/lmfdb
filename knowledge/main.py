@@ -19,7 +19,7 @@ from datetime import datetime
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
 from flaskext.login import login_required, current_user
 from knowl import Knowl, knowl_title
-from users import admin_required
+from users import admin_required, housekeeping
 import markdown
 from knowledge import logger
 
@@ -275,11 +275,11 @@ def render(ID, footer=None, kwargs = None, raw = False):
   except Exception, e:
     return "ERROR in the template: %s. Please edit it to resolve the problem." % e
 
-@knowledge_page.route("/reindex")
-@admin_required
-def reindex():
+@knowledge_page.route("/_cleanup")
+@housekeeping
+def cleanup():
   """
-  reindexes knowls, also the list of categories.
+  reindexes knowls, also the list of categories. prunes history.
   this is an internal task just for admins!
   """
   from knowl import refresh_knowl_categories, extract_cat, make_keywords, get_knowls
@@ -296,7 +296,16 @@ def reindex():
                      '_keywords' :  search_keywords
                    }})
 
-  return "categories: %s <br/>reindexed %s knowls" % (cats, q_knowls.count())
+  hcount = 0
+  # max allowed history length
+  max_h = 30 
+  q_knowls = knowls.find({'history' : {'$exists' : True}}, fields=['history'])
+  for k in q_knowls:
+    if len(k['history']) <= max_h: continue
+    hcount += 1
+    knowls.update({'_id':k['_id']}, {'$set' : {'history' : k['history'][-max_h:]}})
+
+  return "categories: %s <br/>reindexed %s knowls<br/>pruned %s histories" % (cats, q_knowls.count(), hcount)
 
 @knowledge_page.route("/")
 def index():
