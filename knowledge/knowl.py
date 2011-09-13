@@ -21,6 +21,14 @@ def get_deleted_knowls():
 def get_knowl(ID, fields = { "history": 0, "_keywords" : 0 }):
   return get_knowls().find_one({'_id' : ID}, fields=fields)
 
+def knowl_title(kid):
+  """
+  just the title, used in the knowls in the templates for the pages.
+  returns None, if knowl does not exist.
+  """
+  k = get_knowl(kid, fields= ['title'])
+  return k['title'] if k else None
+
 def extract_cat(kid):
   if not hasattr(kid, 'split'): return None
   return kid.split(".")[0]

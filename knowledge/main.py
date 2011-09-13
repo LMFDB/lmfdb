@@ -18,7 +18,7 @@ from base import app, getDBConnection
 from datetime import datetime
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
 from flaskext.login import login_required, current_user
-from knowl import Knowl
+from knowl import Knowl, knowl_title
 from users import admin_required
 import markdown
 from knowledge import logger
@@ -69,7 +69,7 @@ md.inlinePatterns.add('knowltag', KnowlTagPattern(knowltag_regex),'<escape')
 # lightweight Knowl objects inside the templates.
 @app.context_processor
 def ctx_knowledge():
-  return {'Knowl' : Knowl}
+  return {'Knowl' : Knowl, 'knowl_title' : knowl_title}
 
 @app.template_filter("render_knowl")
 def render_knowl_in_template(knowl_content, **kwargs):
@@ -154,7 +154,7 @@ def edit(ID):
 @knowledge_page.route("/show/<ID>")
 def show(ID):
   k = Knowl(ID)
-  r = render(ID, footer="0")
+  r = render(ID, footer="0", raw=True)
   b = get_bread([('%s'%k.title, url_for('.show', ID=ID))])
     
   return render_template("knowl-show.html",
@@ -200,7 +200,7 @@ def save_form():
   
 
 @knowledge_page.route("/render/<ID>", methods = ["GET", "POST"])
-def render(ID, footer=None, kwargs = None):
+def render(ID, footer=None, kwargs = None, raw = False):
   """
   this method renders the given Knowl (ID) to insert it
   dynamically in a website. It is intended to be used 
@@ -210,6 +210,9 @@ def render(ID, footer=None, kwargs = None):
   Note, that the used knowl-render.html template is *not*
   based on any globally defined website and just creates
   a small and simple html snippet!
+
+  the keyword 'raw' is used in knowledge.show and knowl_inc to
+  include *just* the string and not the response object.
   """
   k = Knowl(ID)
 
@@ -261,9 +264,14 @@ def render(ID, footer=None, kwargs = None):
 
   # TODO wrap this string-rendering into a try/catch and return a proper error message
   # so that the user has a clue. Most likely, the {{ KNOWL('...') }} has the wrong syntax!
-  logger.debug("kwargs: %s" % k.template_kwargs)
   try:
-    return render_template_string(render_me, k = k, **kwargs)
+    data = render_template_string(render_me, k = k, **kwargs)
+    if raw: return data
+    resp = make_response(data)
+    # cache 10 minutes if it is a usual GET
+    if request.method == 'GET':
+      resp.headers['Cache-Control'] = 'max-age=%s, public' % (10 * 60)
+    return resp
   except Exception, e:
     return "ERROR in the template: %s. Please edit it to resolve the problem." % e
 

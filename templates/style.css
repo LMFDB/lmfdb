@@ -11,11 +11,15 @@
 {% set col_knowl_d = '#88F' %}
 {% set col_knowl_dd = '#006' %}
 
+{%- macro BORDER_RADIUS(R) -%}
+  border-radius: {{R}}px;
+  -webkit-border-radius: {{R}}px;
+  -moz-border-radius: {{R}}px;
+{%- endmacro -%}
+
 {# end defs #}
 
-* {
-zoom: 0;
-}
+* { zoom: 0; }
 
 img { border: 0; }
 
@@ -101,11 +105,7 @@ a {
   margin: 40px;
   padding: 20px;
   border: 1px solid {{ col_main }};
-
-  border-radius: 10px;
-  -webkit-border-radius: 10px;
-  -moz-border-radius: 10px;
-
+  {{ BORDER_RADIUS(10) }}
   -webkit-box-shadow: inset 0px 0px 15px 5px {{ col_main_l }};
   -moz-box-shadow:    inset 0px 0px 15px 5px {{ col_main_l }};
   box-shadow:         inset 0px 0px 15px 5px {{ col_main_l }};
@@ -304,10 +304,7 @@ body.knowl #header {
   position: absolute;
   top:   3px;
   right: 3px;
-
-  border-radius: 20px;
-  -webkit-border-radius: 20px;
-  -moz-border-radius: 20px;
+  {{ BORDER_RADIUS(20) }}
 }
 
 
@@ -522,7 +519,7 @@ table th, table td {
 }
 
 table a.knowl-link, 
-table a.knowl-title {
+table a.[knowl] {
   display: inline;
   padding: 0;
 }
@@ -640,8 +637,8 @@ table .knowl-link {
   font-weight: bold;
 }
 .knowl-inc-edit {
-  margin-top: 20px;
-  background: {{ col_knowl_ll}};
+  margin-bottom: 10px;
+  border-bottom: 2px solid {{ col_knowl_l}};
   font-size: x-small;
   text-align: right;
 }
@@ -712,18 +709,8 @@ table .knowl-link {
 .knowl-content h2 {
   margin: 0px 0px 5px 0px;
 }
+
 *[knowl] {
-  /* border-bottom: 2px dotted #66C; */
-  /* cursor: pointer; */
-}
-
-*[knowl]:hover {
-  /* border-bottom: 2px solid #66C; */
-  /* color: #66C; */
-  /* background: #ccf; */
-}
-
-.knowl-title, .knowl-title a {
   border-bottom: 1px dotted {{ col_knowl }};
   cursor: pointer;
   border-radius: 0;
@@ -731,8 +718,8 @@ table .knowl-link {
   -moz-border-radius: 0;
   margin: 3px 0 0 0;
 }
-.knowl-title:hover,
-.knowl-title.active {
+*[knowl]:hover,
+*[knowl].active {
   border-bottom: 2px solid {{ col_knowl }};
   background: {{ col_knowl_l }};
   color: {{ col_knowl_dd }};

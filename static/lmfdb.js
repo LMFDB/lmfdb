@@ -114,7 +114,7 @@ $(function() {
 });
 
 /* javascript code for the knowledge db features */
-/* global counter, used to uniquely identify each help-output element
+/* global counter, used to uniquely identify each knowl-output element
  * that's necessary because the same knowl could be referenced several times
  * on the same page */
 var knowl_id_counter = 0;
@@ -155,9 +155,10 @@ function knowl_click_handler($el) {
  
     // "select" where the output is and get a hold of it 
     var $output = $(output_id);
+    var kwargs = $el.attr("kwargs");
 
     // cached?
-    if(knowl_id in knowl_cache) {
+    if(kwargs.length == 0 && knowl_id in knowl_cache) {
       log("cache hit: " + knowl_id);
       $output.hide();
       $output.html(knowl_cache[knowl_id]);
@@ -167,7 +168,6 @@ function knowl_click_handler($el) {
     } else {
       $output.addClass("loading");
       $output.show();
-      var kwargs = $el.attr("kwargs");
       log("downloading knowl: " + knowl_id + " /w kwargs: " + kwargs);
       $output.load('/knowledge/render/' + knowl_id + "?" + kwargs,
        function(response, status, xhr) { 
@@ -186,7 +186,7 @@ function knowl_click_handler($el) {
         MathJax.Hub.Queue(['Typeset', MathJax.Hub, $output.get(0)]);
         MathJax.Hub.Queue([ function() { $output.slideDown("slow"); }]);
       });
-    } /* ~~ end not cached */
+    } // ~~ end not cached
   }
 } //~~ end click handler for *[knowl] elements
 
