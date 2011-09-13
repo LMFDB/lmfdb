@@ -32,9 +32,8 @@ $(function() {
   $("#mathjax-info").click(function() {show_content()});
 
   window.setTimeout(function() {
-    if(!revealed) {
-      //$("#mathjax-info").fadeIn('fast');
-      //$("#content").fadeOut('fast');
+    if(!revealed) { 
+      /* no animation, remember the odd race condition! */
       $("#mathjax-info").show();
       $("#content").hide();
     }

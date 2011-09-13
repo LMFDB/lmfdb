@@ -102,6 +102,9 @@ def getDBConnection():
 
 app = Flask(__name__)
 
+# tell jinja to remove linebreaks
+app.jinja_env.trim_blocks = True
+
 # the following context processor inserts
 #  * empty info={} dict variable
 #  * body_class = ''
