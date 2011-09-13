@@ -9,7 +9,7 @@ import base
 from base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
 from utils import ajax_more, image_src, web_latex, to_dict, parse_range, coeff_to_poly, pol_to_html
-from sage.all import ZZ
+from sage.all import ZZ, var, PolynomialRing, QQ
 from local_fields import local_fields_page, logger, logger
 
 from transitive_group import group_display_short, group_display_long, group_display_inertia
@@ -72,8 +72,9 @@ def local_field_search(**args):
       ran = ran.replace('..','-')
       query[param] = parse_range(ran)
 
-  res = C.localfields.fields.find(query).sort([('p',pymongo.ASCENDING),('n',pymongo.ASCENDING),('c',pymongo.ASCENDING)])
+  res = C.localfields.fields.find(query).sort([('p',pymongo.ASCENDING),('n',pymongo.ASCENDING),('c',pymongo.ASCENDING),('label', pymongo.ASCENDING)])
   nres = res.count()
+#  res = iter_limit(res, count, start)
   info['fields'] = res
   info['group_display'] = group_display_shortC(C)
   info['display_poly'] = format_coeffs
@@ -81,6 +82,20 @@ def local_field_search(**args):
 
   bread = get_bread([("Search results", url_for('.search'))])
   return render_template("lf-search.html", info = info, title="Local Field Search Result", bread=bread, credit=LF_credit)
+
+# probably not needed any more
+def iter_limit(it,lim,skip):
+    count = 0
+    while count<skip:
+        it.next()
+        count += 1
+    count = 0
+    while count<lim:
+        yield it.next()
+        count += 1
+    return
+
+
   
 def render_field_webpage(args):
   data = None
@@ -110,6 +125,10 @@ def render_field_webpage(args):
              ('c', '\(%s\)' % cc),
              ('Galois group', group_display_short(gn, gt, C)),
              ]
+    Pt = PolynomialRing(QQ, 't')
+    Pyt = PolynomialRing(Pt, 'y')
+    eisenp = Pyt(str(data['eisen']))
+    unramp = Pyt(str(data['unram']))
     info.update({
       'polynomial': web_latex(polynomial),
       'n': data['n'],
@@ -124,8 +143,8 @@ def render_field_webpage(args):
       'slopes': show_slopes(data['slopes']),
       'gal': group_display_long(gn, gt, C),
       'inertia': group_display_inertia(data['inertia'], C),
-      'unram': web_latex(data['unram']),
-      'eisen': web_latex(data['eisen']),
+      'unram': web_latex(unramp),
+      'eisen': web_latex(eisenp),
       'gms': data['gms'],
       'aut': data['aut'],
       })

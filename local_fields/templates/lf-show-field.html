@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<p><h2> {{ KNOWL('nf.defining_polynomial', title='Defining polynomial') }}</h2>
+<p><h2> {{ KNOWL('lf.defining_polynomial', title='Defining polynomial') }}</h2>
 
 <p>
   <p>
@@ -14,24 +14,24 @@
 <p><h2> {{ KNOWL('lf.invariants', title='Invariants') }}</h2>
   <p>
     <table>
-      <tr><td>Base field:<td>&nbsp;&nbsp;<td>$\mathbb{Q}_{{info.p}}$</tr>
+      <tr><td>Base field:<td>&nbsp;&nbsp;<td>$\mathbb{Q}_{ {{info.p}} }$</tr>
       <tr><td>Degree:<td>&nbsp;&nbsp;<td>{{info.n}}</tr>
-      <tr><td>Ramification exponent $e$:<td>&nbsp;&nbsp;<td>{{info.e}}</tr>
-      <tr><td>Residue field degree $f$:<td>&nbsp;&nbsp;<td>{{info.f}}</tr>
-      <tr><td>Discriminant exponent:<td>&nbsp;&nbsp;<td>{{info.c}}</tr>
+      <tr><td>Ramification exponent $e$ :<td>&nbsp;&nbsp;<td>{{info.e}}</tr>
+      <tr><td>Residue field degree $f$ :<td>&nbsp;&nbsp;<td>{{info.f}}</tr>
+      <tr><td>Discriminant exponent $c$ :<td>&nbsp;&nbsp;<td>{{info.c}}</tr>
       <tr><td>Discriminant root field:<td>&nbsp;&nbsp;<td>{{info.rf}}</tr>
       <tr><td>Root number:<td>&nbsp;&nbsp;<td>{{info.hw}}</tr>
-      <tr><td> $|\textrm{Aut}(K/\mathbb{Q}_{{info.p}})|$:<td>&nbsp;&nbsp;<td>{{info.aut}}</tr>
+      <tr><td> $|\textrm{Aut}(K/\mathbb{Q}_{ {{info.p}} })|$:<td>&nbsp;&nbsp;<td>{{info.aut}}</tr>
     </table>
   </p>
 
-  <p><h2>Unramified/totally ramified tower</h2>
+  <p><h2>{{ KNOWL('lf.unramified_totally_ramified_tower', title='Unramified/totally ramified tower') }}</h2>
     <table>
       <tr><td>Unramified subfield:<td>&nbsp;&nbsp;<td>{{info.unram}}</tr>
       <tr><td>Relative Eisenstein polynomial:<td>&nbsp;&nbsp;<td>{{info.eisen}}</tr>
     </table>
   </p>
-  <p><h2>Invariants of the Galois closure</h2>
+  <p><h2>{{ KNOWL('lf.galois_invariants', title='Invariants of the Galois closure') }}</h2>
     <table>
       <tr><td>Galois group:<td>&nbsp;&nbsp;<td>{{info.gal}}</tr>
       <tr><td>Inertia group:<td>&nbsp;&nbsp;<td>{{info.inertia}}</tr>
