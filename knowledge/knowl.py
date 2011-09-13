@@ -40,6 +40,9 @@ def refresh_knowl_categories():
   """
   when saving, we refresh the knowl categories
   (actually, this should only happen if it is a new knowl!)
+
+  TODO this should only be called by a housekeeping task, saving a new
+  knowl should be a simple set union with the existing list of categories
   """
   # assumes that all actual knowls have a title field
   cats = set(( extract_cat(_['_id']) for _ in get_knowls().find({'title' : {"$exists":True}}, fields=[]) ))
@@ -136,7 +139,9 @@ class Knowl(object):
       get_knowls().update(
          { '_id':self.id }, 
          { "$addToSet" : { "authors" : who }})
-    # TODO only do this if its a new one
+    # TODO instead of refreshing all knowl categories, just do a 
+    # set union with the existing categories list and the one from
+    # this new knowl!
     if new_knowl: refresh_knowl_categories()
         
   def delete(self):
