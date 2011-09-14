@@ -17,7 +17,7 @@
 <td align='left'><a href="{{url_for('render_hmf_webpage',field_label=form.field_label,label=form.label)}}">
     {{form.label}} </a></td>
 <td>{{form.level_norm}}</td>
-<td>{{form.level_ideal}}</td>
+<td>{{form.level_ideal|join(', ')}}</td>
 <td>{{form.dimension}}</td>
 </tr>
 {% endfor %}
