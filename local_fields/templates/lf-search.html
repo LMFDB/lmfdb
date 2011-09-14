@@ -27,15 +27,15 @@
 </td>
 
 <td align=left> 
-Base $\mathbb{Q}_p$ for $p$:<td align=left> <input type="text" name="p" size="3" value="{{info.p}}" ></td>
+Prime $p$ for base field $\mathbb{Q}_p$:<td align=left> <input type="text" name="p" size="3" value="{{info.p}}" ></td>
 </tr>
 <tr>
 <td align=left> 
-{{KNOWL('lf.discriminant_exponent',title='Discriminant exponent')}}
+{{KNOWL('lf.discriminant_exponent',title='Discriminant exponent')}} $c$:
 <td align=left> <input type="text" name="c" size="3" value="{{info.c}}" >
 </td>
 <td align=left> 
-{{KNOWL('lf.ramification_index',title='Ramification index')}}:
+{{KNOWL('lf.ramification_index',title='Ramification index')}} $e$:
 <td align=left> 
 <input type="text" name="e" size="3" value={{info.e}} >
 </tr>
@@ -64,7 +64,7 @@ Base $\mathbb{Q}_p$ for $p$:<td align=left> <input type="text" name="p" size="3"
 
 {% for field in info.fields: %}
 <tr>
-<td align='left'><a href="/LocalField/{{field.label}}">{{info.display_poly(field.coeffs)|safe}}</a></td>
+<td align='left'><a href="/LocalNumberField/{{field.label}}">{{info.display_poly(field.coeffs)|safe}}</a></td>
 <td>{{field.p}}</td>
 <td>{{field.e}}</td>
 <td>{{field.f}}</td>
