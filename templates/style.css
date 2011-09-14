@@ -558,6 +558,7 @@ table.ntdata tbody tr {
 }
 
 table.ntdata tbody th {
+  text-align: left;
 }
 
 table.ntdata tr.odd,
