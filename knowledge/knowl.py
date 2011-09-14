@@ -52,7 +52,7 @@ def refresh_knowl_categories():
   knowl should be a simple set union with the existing list of categories
   """
   # assumes that all actual knowls have a title field
-  cats = set(( extract_cat(_['_id']) for _ in get_knowls().find({'title' : {"$exists":True}}, fields=[]) ))
+  cats = set(( extract_cat(_['_id']) for _ in get_knowls().find(fields=[]) ))
   # set the categories list in the categories document in the 'meta' collection
   get_meta().save({'_id' : CAT_ID, 'categories' : sorted(cats)})
   return str(cats)

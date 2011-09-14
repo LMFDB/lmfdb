@@ -285,7 +285,7 @@ def cleanup():
   from knowl import refresh_knowl_categories, extract_cat, make_keywords, get_knowls
   cats = refresh_knowl_categories()
   knowls = get_knowls()
-  q_knowls = knowls.find({'title' : {"$exists":True}}, fields=['content', 'title'])
+  q_knowls = knowls.find(fields=['content', 'title'])
   for k in q_knowls:
     kid = k['_id']
     cat = extract_cat(kid)
@@ -298,7 +298,7 @@ def cleanup():
 
   hcount = 0
   # max allowed history length
-  max_h = 30 
+  max_h = 50 
   q_knowls = knowls.find({'history' : {'$exists' : True}}, fields=['history'])
   for k in q_knowls:
     if len(k['history']) <= max_h: continue
@@ -334,7 +334,6 @@ def index():
 
 
   s_query = {}
-  s_query['title'] = { "$exists" : True }
 
   if filtermode:
     quality_q = { '$in' : qualities }
