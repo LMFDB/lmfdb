@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# This Blueprint is about Local Fields
+# This Blueprint is about Local Number Fields
 # Author: John Jones
 
 import pymongo
@@ -17,7 +17,7 @@ from transitive_group import group_display_short, group_display_long, group_disp
 LF_credit = 'J. Jones and D. Roberts'
 
 def get_bread(breads = []):
-  bc = [("Local Field", url_for(".index"))]
+  bc = [("Local Number Fields", url_for(".index"))]
   for b in breads:
     bc.append(b)
   return bc
@@ -40,7 +40,7 @@ def index():
   if len(request.args) != 0:
     return local_field_search(**request.args)
   #info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
-  return render_template("lf-index.html", title ="Local Fields", bread = bread)
+  return render_template("lf-index.html", title ="Local Number Fields", bread = bread)
 
 @local_fields_page.route("/<label>")
 def by_label(label):

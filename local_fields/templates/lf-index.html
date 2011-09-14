@@ -3,11 +3,8 @@
 {% block content %}
 
 <p>
-A local number field is a finite extension field of a field
-{{KNOWL('lf.qp', title="$\mathbb{Q}_p$")}} where $p$ is a prime number.
 
-
-      <h2>Browse</h2>
+      <h2>Browse {{KNOWL('lf', title="local number fields")}}</h2>
 <p>
 
 The table gives for each $p$ and $n$ shown, the number of degree $n$ extensions
@@ -58,7 +55,7 @@ of $\mathbb{Q}_p$ up to isomorphism.
 </table>
 <p>
 
-    <h2>Find a specific local field</h2>
+    <h2>Find a specific local number field</h2>
 
     <form name="search" method = "get" action="{{search}}">      
 	  Search by {{KNOWL('lf.field.label',title="label")}}
@@ -78,7 +75,7 @@ of $\mathbb{Q}_p$ up to isomorphism.
           </tr>
           <tr>
             <td>
-              Base $\mathbb{Q}_p$ for $p$:
+              Prime $p$ for base field  {{KNOWL('lf.qp',title='$\mathbb{Q}_p$')}}:
             </td><td><input type="text" name="p" value="" example="3"></td>
           </tr>
           <tr>
