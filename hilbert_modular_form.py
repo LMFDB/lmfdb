@@ -122,7 +122,7 @@ def render_hmf_webpage(**args):
     properties2 = [('Field', '%s' % data['field_label']),
                    ('Weight', '%s' % data['weight']),
                    ('Level Norm', '%s' % data['level_norm']),
-                   ('Level', '%s' % data['level_ideal']),
+                   ('Level', ', '.join(map(str, data['level_ideal']))),
                    ('Label', '%s' % data['label_suffix']),
                    ('Dimension', '%s' % data['dimension'])
     ]
