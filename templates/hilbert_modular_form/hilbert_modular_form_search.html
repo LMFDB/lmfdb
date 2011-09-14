@@ -1,27 +1,33 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
+<style type="text/css">
+table td.center {
+  text-align: center;
+}
+table td.params {
+  text-align: left;
+  font-family: monospace;
+}
+</style>
+
 <h2> Results ({{info.report}})</h2>
 
-<table border=1 cellpadding=5 class='right_align_table'>
+<table>
 <tr>
-<th>Complete Label</th>
 <th>Field</th>
-<th>Field label</th>
-<th>Norm(Level)</th>
-<th>Level</th>
 <th>Label</th>
+<th>Level Norm</th>
+<th>Level</th>
 <th>Dimension</th>
 </tr>
 {% for form in info.forms: %}
 <tr>
-<td align='left'><a href="{{url_for('render_hmf_webpage',field_label=form.field_label,label=form.label)}}">
-    {{ form.label}} </a></td>
 <td>{{info.field_pretty_name|safe}}</td>
-<td>{{form.field_label}}</td>
+<td align='left'><a href="{{url_for('render_hmf_webpage',field_label=form.field_label,label=form.label)}}">
+    {{form.label}} </a></td>
 <td>{{form.level_norm}}</td>
 <td>{{form.level_ideal}}</td>
-<td>{{form.label_suffix}}</td>
 <td>{{form.dimension}}</td>
 </tr>
 {% endfor %}
