@@ -41,7 +41,7 @@ def extract_cat(kid):
   return kid.split(".")[0]
 
 # categories, level 0, never change this id
-CAT_ID = 'internal.categories.0'
+CAT_ID = 'categories'
 
 def refresh_knowl_categories():
   """
@@ -53,7 +53,7 @@ def refresh_knowl_categories():
   """
   # assumes that all actual knowls have a title field
   cats = set(( extract_cat(_['_id']) for _ in get_knowls().find({'title' : {"$exists":True}}, fields=[]) ))
-  # there should only be *one* document with the field named categories
+  # set the categories list in the categories document in the 'meta' collection
   get_meta().save({'_id' : CAT_ID, 'categories' : sorted(cats)})
   return str(cats)
 
