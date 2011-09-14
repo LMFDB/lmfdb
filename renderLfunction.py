@@ -132,29 +132,21 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
         elif arg1 == 'custom': # need a better name
             return "not yet implemented"
         
-##    try:
-    L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, temp_args)
+    try:
+      L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, temp_args)
+    except Exception as e:
+      # throw exception if not UserError
+      if len(e.args) > 1 and e.args[1] != 'UserError': raise
+      info = { 'content': 'Sorry, there has been a problem: %s' % e.args[0], 'title': 'Error' }
+      return render_template('LfunctionSimple.html', info=info, **info)
         
-##    except Exception as inst:   # There was an exception when creating the page
-##        error_message = ('There was an error loading this page. Please report the ' +
-##                         'address of this page and the following error message: ' +
-##                         str(inst.args))
-##        if len(inst.args) >1:
-##            if inst.args[1]== "UserError":
-##                error_message = inst.args[0]
-##            
-##        
-##        info = { 'content': error_message, 'title': 'Error' }
-##        return render_template('LfunctionSimple.html', info=info, **info)
-
 
     try:
         logger.info(temp_args)
         if temp_args['download'] == 'lcalcfile':
             return render_lcalcfile(L, request.url)
     except:
-        1
-        #Do nothing
+        pass #Do nothing
 
     info = initLfunction(L, temp_args, request)
 
