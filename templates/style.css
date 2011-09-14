@@ -5,6 +5,9 @@
 {% set col_main_l = '#bfb' %}
 {% set col_main_ll = '#efe' %}
 
+{% set col_ntdata_border = '#9b9' %}
+{% set col_ntdata_bkg = '#afa' %}
+
 {% set col_knowl = '#AAF' %}
 {% set col_knowl_l = '#DDF' %}
 {% set col_knowl_ll = '#EEF' %}
@@ -509,17 +512,17 @@ table {
 }
 
 table th {
-  border-bottom: 2px solid #9B9;
+  border-bottom: 2px solid {{ col_ntdata_border }};
   padding-bottom: 5px;
 }
 
 table th, table td {
-  padding-left:  20px;
-  padding-right: 20px;
+  padding-left:  10px;
+  padding-right: 10px;
 }
 
 table a.knowl-link, 
-table a.[knowl] {
+table a[knowl] {
   display: inline;
   padding: 0;
 }
@@ -545,19 +548,22 @@ table td.spacing {
 }
 
 table.ntdata {
-    width: auto;
-    border: 0;
+  width: auto;
+  border: 0;
+  margin-top: 15px;
+  margin-bottom: 15px;
 }
 
 table.ntdata thead tr {
-    background: #afa;
-    border-bottom: 1px solid black;
+  background: {{ col_ntdata_bkg }};
+  border-bottom: 2px solid {{ col_ntdata_border }};
 }
 
-table.ntdata tbody tr {
+table.ntdata tr {
 }
 
-table.ntdata tbody th {
+table.ntdata th {
+  text-align: left;
 }
 
 table.ntdata tr.odd,

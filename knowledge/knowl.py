@@ -14,6 +14,13 @@ def get_knowls():
   knowls.ensure_index('_keywords')
   return knowls
 
+def get_meta():
+  """
+  collection of meta-documents, like categories
+  """
+  _C = getDBConnection()
+  return _C.knowledge.meta
+
 def get_deleted_knowls():
   _C = getDBConnection()
   return _C.knowledge.deleted_knowls
@@ -34,7 +41,7 @@ def extract_cat(kid):
   return kid.split(".")[0]
 
 # categories, level 0, never change this id
-CAT_ID = 'internal.categories.0'
+CAT_ID = 'categories'
 
 def refresh_knowl_categories():
   """
@@ -45,13 +52,13 @@ def refresh_knowl_categories():
   knowl should be a simple set union with the existing list of categories
   """
   # assumes that all actual knowls have a title field
-  cats = set(( extract_cat(_['_id']) for _ in get_knowls().find({'title' : {"$exists":True}}, fields=[]) ))
-  # there should only be *one* document with the field named categories
-  get_knowls().save({'_id' : CAT_ID, 'categories' : sorted(cats)})
+  cats = set(( extract_cat(_['_id']) for _ in get_knowls().find(fields=[]) ))
+  # set the categories list in the categories document in the 'meta' collection
+  get_meta().save({'_id' : CAT_ID, 'categories' : sorted(cats)})
   return str(cats)
 
 def get_categories():
-  c_doc = get_knowls().find_one(CAT_ID)
+  c_doc = get_meta().find_one(CAT_ID)
   return c_doc.get('categories', []) if c_doc else []
 
 def get_knowls_by_category(cat):
@@ -61,8 +68,7 @@ def get_knowls_by_category(cat):
   return get_knowls().find({'cat' : cat}, fields=['title'])
 
 import re
-valid_keywords = re.compile(r"\b[a-zA-Z0-9-]{3,}\b")
-html_keywords  = re.compile(r"&[a-zA-Z0-9]+;")
+text_keywords = re.compile(r"\b[a-zA-Z0-9-]{3,}\b")
 # this one is different from the hashtag regex in main.py,
 # because of the match-group ( ... ) 
 hashtag_keywords = re.compile(r'#[a-zA-Z][a-zA-Z0-9-_]{1,}\b')
@@ -76,10 +82,8 @@ def make_keywords(content, kid, title):
   """
   kws = [ kid ] # always included
   kws += kid.split(".")
-  kws += valid_keywords.findall(title)
-  kws += valid_keywords.findall(content)
-  kws += html_keywords.findall(title)
-  kws += html_keywords.findall(content)
+  kws += text_keywords.findall(title)
+  kws += text_keywords.findall(content)
   kws += hashtag_keywords.findall(title)
   kws += hashtag_keywords.findall(content)
   kws = [ k.lower() for k in kws ]
