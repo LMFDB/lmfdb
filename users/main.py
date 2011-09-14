@@ -151,7 +151,7 @@ def housekeeping(fn):
     logger.info("housekeeping access attempt by %s" % request.remote_addr)
     if request.remote_addr in [ "127.0.0.1", "localhost"]:
       return fn(*args, **kwargs)
-    return admin_required(fn(*args, **kwargs))
+    return admin_required(fn)(*args, **kwargs)
   return decorated_view
 
 def get_user_token_coll():

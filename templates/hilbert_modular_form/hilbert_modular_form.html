@@ -19,7 +19,7 @@
 {% for entry in info.eigs: %}
 <tr>
 <td>{{entry.prime_norm}}</td>
-<td>{{entry.prime_ideal}}</td>
+<td>{{entry.prime_ideal}|join(', ')}</td>
 <td>{{entry.eigenvalue}}</td>
 </tr>
 {% endfor %}

@@ -519,7 +519,7 @@ table th, table td {
 }
 
 table a.knowl-link, 
-table a.[knowl] {
+table a[knowl] {
   display: inline;
   padding: 0;
 }
@@ -558,6 +558,7 @@ table.ntdata tbody tr {
 }
 
 table.ntdata tbody th {
+  text-align: left;
 }
 
 table.ntdata tr.odd,

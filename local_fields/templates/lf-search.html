@@ -2,9 +2,55 @@
 
 {% block content %}
 
+<script>
+ $(document).ready(function() {
+     $('#fieldTab').dataTable({
+       "bFilter":false, 
+       "aaSorting": [[1, 'asc'], [2, 'asc'], [4, 'asc']],
+       "aLengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+       "fnRowCallback": function( row, data, index ){ 
+             MathJax.Hub.Queue(['Typeset', MathJax.Hub, row]);
+             return row;
+         }
+
+     });
+ });
+</script>
+
+
+<form>
+<table border="0">
+
+<tr>
+<td align=left> 
+{{KNOWL('lf.degree',title='Degree')}}<td align=left> <input type='text' name='n' size=3 value="{{info.n}}">
+</td>
+
+<td align=left> 
+Base $\mathbb{Q}_p$ for $p$:<td align=left> <input type="text" name="p" size="3" value="{{info.p}}" ></td>
+</tr>
+<tr>
+<td align=left> 
+{{KNOWL('lf.discriminant_exponent',title='Discriminant exponent')}}
+<td align=left> <input type="text" name="c" size="3" value="{{info.c}}" >
+</td>
+<td align=left> 
+{{KNOWL('lf.ramification_index',title='Ramification index')}}:
+<td align=left> 
+<input type="text" name="e" size="3" value={{info.e}} >
+</tr>
+<tr>
+<td align=left colspan="2"> 
+<button type='submit' value='refine'>Search again</button>
+</td></tr>
+</table>
+</form>
+
+
 <h2> Results: ({{info.report}}) </h2>
 
-<table border=1 cellpadding=5 class='right_align_table'>
+<table border=1 cellpadding=5 class="ntdata" id="fieldTab">
+<thead>
 <tr>
 <th>Polynomial</th>
 <th>$p$</th>
@@ -13,6 +59,8 @@
 <th>$c$</th>
 <th>Galois group</th>
 </tr>
+</thead>
+<tbody>
 
 {% for field in info.fields: %}
 <tr>
@@ -26,7 +74,9 @@
 
 {% endfor %}
 
+</tbody>
 </table>
+
 
 
 {% endblock %}
