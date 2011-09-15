@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# This Blueprint is about Local Fields
+# This Blueprint is about Local Number Fields
 # Author: John Jones
 
 import pymongo
@@ -17,7 +17,7 @@ from transitive_group import group_display_short, group_display_long, group_disp
 LF_credit = 'J. Jones and D. Roberts'
 
 def get_bread(breads = []):
-  bc = [("Local Field", url_for(".index"))]
+  bc = [("Local Number Fields", url_for(".index"))]
   for b in breads:
     bc.append(b)
   return bc
@@ -40,7 +40,7 @@ def index():
   if len(request.args) != 0:
     return local_field_search(**request.args)
   #info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
-  return render_template("lf-index.html", title ="Local Fields", bread = bread)
+  return render_template("lf-index.html", title ="Local Number Fields", bread = bread)
 
 @local_fields_page.route("/<label>")
 def by_label(label):
@@ -51,7 +51,7 @@ def search():
   if request.method == "GET":
     val = request.args.get("val", "no value")
     bread = get_bread([("Search for '%s'" % val, url_for('.search'))])
-    return render_template("lf-search.html", title="Local Field Search", bread = bread, val = val)
+    return render_template("lf-search.html", title="Local Number Field Search", bread = bread, val = val)
   elif request.method == "POST":
     return "ERROR: we always do http get to explicitly display the search parameters"
   else:
@@ -81,7 +81,7 @@ def local_field_search(**args):
   info['report'] = "found %s fields"%nres
 
   bread = get_bread([("Search results", url_for('.search'))])
-  return render_template("lf-search.html", info = info, title="Local Field Search Result", bread=bread, credit=LF_credit)
+  return render_template("lf-search.html", info = info, title="Local Number Field Search Result", bread=bread, credit=LF_credit)
 
 # probably not needed any more
 def iter_limit(it,lim,skip):
@@ -107,8 +107,8 @@ def render_field_webpage(args):
     if data is None:
         bread = get_bread([("Search error", url_for('.search'))])
         info['msg'] = "Field " + label + " was not found in the database."
-        return render_template("lf-error.html", info=info, title="Local Field Search Error", bread=bread, credit=LF_credit) 
-    title = 'Local field:' + label
+        return render_template("lf-error.html", info=info, title="Local Number Field Search Error", bread=bread, credit=LF_credit) 
+    title = 'Local Number Field:' + label
     polynomial = coeff_to_poly(data['coeffs'])
     p = data['p']
     e = data['e']
@@ -154,7 +154,7 @@ def render_field_webpage(args):
     return render_template("lf-show-field.html", credit=LF_credit, title = title, bread = bread, info = info, properties2=prop2 )
 
 def show_slopes(sl):
-  if len(sl)==0:
+  if str(sl)=="[]":
     return "None"
   return(sl)
 
