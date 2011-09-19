@@ -181,6 +181,11 @@ function knowl_click_handler($el) {
         } else {
           knowl_cache[knowl_id] = $output.html();
           $output.hide();
+
+         // if it is the outermost knowl, limit its height of the content to 600px
+         if ($output.parents('.knowl-output').length == 0) {
+           $(output_id + " div.knowl-content").first().addClass("limit-height");
+         }
         }
         // in any case, reveal the new output after mathjax has finished
         MathJax.Hub.Queue(['Typeset', MathJax.Hub, $output.get(0)]);
