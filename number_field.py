@@ -9,7 +9,7 @@ from sage.all import ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex
 
 from utils import ajax_more, image_src, web_latex, to_dict, parse_range, coeff_to_poly, pol_to_html
 
-NF_credit = 'the PARI group,  J. Voight and J. Jones'
+NF_credit = 'the PARI group,  J. Voight, J. Jones, and D. Roberts'
 
 def field_pretty(field_str):
     d,r,D,i = field_str.split('.')
