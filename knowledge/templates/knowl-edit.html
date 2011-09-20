@@ -77,6 +77,7 @@ $(document).ready(function()	{
    </tr>
   </table>
    <button type="submit" id="knowl-edit-btn" onclick="unsaved = false;">Save</button>
+   <a style="margin-left: 30px" onclick="unsaved = false;" href="{{ url_for('.index') }}">cancel</a>
 </form>
 
 <div class="knowl-preview-sep">
@@ -101,9 +102,6 @@ var reparse_latex = false;
 /* parameters */
 var UPDATE_TIMEOUT = 5000;
 
-/* markdown disabled */
-/* var converter = new Showdown.converter(); */
-
 function update() {
   if (update_id) {
     /* this case happens, when we click "refresh" while a timer is running. */
@@ -112,9 +110,6 @@ function update() {
   //console.log("running update");
   $title.html("updating ...");
 
-  /* markdown disabled */
-  /* $content.html(converter.makeHtml($kcontent.val())); */
-  
   var url = "{{ url_for('.render', ID=k.id)}}";
   $.post(url, { "content" : $kcontent.val(), "footer" : "0" },
     function(data) {
@@ -141,6 +136,7 @@ function update() {
 /* if nothing scheduled, update delayed
    otherwise tell it to reparse the latex */
 function update_delay() {
+  unsaved = true;
   $update.fadeIn();
   if (update_id) {
     reparse_latex = true;

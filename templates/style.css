@@ -824,6 +824,10 @@ h2 > .knowl-qm {
  font-style: italic;
  font-size: small;
 }
+.knowl-content.limit-height {
+  max-height: 600px;
+  overflow-y: auto;
+}
 .knowl-output h1, .knowl-output h2 {
   margin: 5px 0;
 }

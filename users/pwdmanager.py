@@ -172,7 +172,7 @@ def new_user(uid, pwd = None):
   """
   if not pwd:
     from getpass import getpass
-    pwd_input = getpass( "Enter  Password: ")
+    pwd_input  = getpass("Enter  Password: ")
     pwd_input2 = getpass("Repeat Password: ")
     if pwd_input != pwd_input2:
       raise Exception("ERROR: Passwords do not match!")
@@ -189,6 +189,10 @@ def new_user(uid, pwd = None):
   new_user = LmfdbUser(uid)
   return new_user
 
+def change_password(uid, newpwd):
+  p = hashpwd(newpwd)
+  get_users().update({'_id' : uid}, { '$set' : { 'password' : p }})
+  logger.info("password for %s changed!" % uid)
   
 def user_exists(uid):
   return get_users().find({'_id' : uid}).count() > 0

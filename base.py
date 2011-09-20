@@ -65,9 +65,10 @@ def _db_reconnect(func):
         sleep(AUTO_RECONNECT_DELAY)
   return retry
 
-Cursor._Cursor__send_message = _db_reconnect(Cursor._Cursor__send_message)
-Connection._send_message = _db_reconnect(Connection._send_message)
-Connection._send_message_with_response = _db_reconnect(Connection._send_message_with_response)
+# disabling this reconnect thing, doesn't really help anyways
+#Cursor._Cursor__send_message = _db_reconnect(Cursor._Cursor__send_message)
+#Connection._send_message = _db_reconnect(Connection._send_message)
+#Connection._send_message_with_response = _db_reconnect(Connection._send_message_with_response)
 
  
 def _init(dbport, readwrite_password):

@@ -124,12 +124,11 @@ class Knowl(object):
 
   def save(self, who):
     """who is the ID of the user, who wants to save the knowl"""
-    new_knowl = get_knowls().find({'_id' : self.id}).count() == 0
     new_history_item = get_knowl(self.id)
+    new_knowl = new_history_item == None
     search_keywords = make_keywords(self.content, self.id, self.title)
     cat = extract_cat(self.id)
-    get_knowls().update({'_id' : self.id},
-        {"$set": {
+    update_op = {"$set": {
            'content' :    self.content,
            'title' :      self.title,
            'cat' :        cat,
@@ -137,12 +136,12 @@ class Knowl(object):
            'last_author': who,
            'timestamp':   self.timestamp,
            '_keywords' :  search_keywords
-         } ,
-       "$push": {"history": new_history_item}}, upsert=True)
+         }}
+    if not new_knowl:
+      update_op["$push"] = {"history": new_history_item}
     if who:
-      get_knowls().update(
-         { '_id':self.id }, 
-         { "$addToSet" : { "authors" : who }})
+      update_op['$addToSet'] = { "authors" : who }
+    get_knowls().update({'_id' : self.id}, update_op, upsert=True)
     # TODO instead of refreshing all knowl categories, just do a 
     # set union with the existing categories list and the one from
     # this new knowl!

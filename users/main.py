@@ -234,6 +234,24 @@ def register_token(token):
     logger.info("new user: '%s' - '%s'" % (newuser.get_id(), newuser.name))
     return flask.redirect(next or url_for(".info"))
 
+@login_page.route("/change_password", methods = ['POST'])
+@login_required
+def change_password():
+  uid = current_user.get_id()
+  pw_old = request.form['oldpwd']
+  if not current_user.authenticate(pw_old):
+    flask.flash("Ooops, old password is wrong!", "error")
+    return flask.redirect(url_for(".info"))
+
+  pw1    = request.form['password1']
+  pw2    = request.form['password2']
+  if pw1 != pw2:
+    flask.flash("Oops, new passwords do not match!", "error")
+    return flask.redirect(url_for(".info"))
+
+  pwdmanager.change_password(uid, pw1)
+  flask.flash("Your password has been changed.")
+  return flask.redirect(url_for(".info"))
 
 @login_page.route("/logout")
 @login_required
