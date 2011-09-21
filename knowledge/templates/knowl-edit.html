@@ -1,6 +1,25 @@
 {% extends "homepage.html" %}
 
 {% block content %}
+
+{% if lock %}
+    <div style="color: red; font-weight: bold; font-size: 200%;">Concurrent Edit!!!</div>
+
+    <div>
+     The Knowl {{ k.title }} is currently or has been recently edited by 
+     <a href="{{ url_for('users.profile', userid = lock.who) }}">{{ get_username(lock.who) }}</a>
+     at {{ lock.time|fmtdatetime }}. There might be a conflict!
+    </div>
+
+    <div style="margin-top: 30px">
+     <a href="{{ url_for('.edit', ID=k.id, lock='ignore') }}">Continue</a>
+    </div>
+
+    <div style="margin-top: 30px">
+     <a href="{{ request.referrer }}">Abort</a>
+    </div>
+{% else %}
+
 {% from "knowl-defs.html" import knowlbar with context %}
 <div>
 The general editing inside a {{KNOWL("doc.knowl", title="Knowl")}} works as per usual in a {{KNOWL("doc.wiki",title="wiki")}}.
@@ -160,4 +179,6 @@ window.onbeforeunload = function() {
   }
 }
 </script>
+
+{% endif %} {# concurrent edit warning at the top #}
 {% endblock %}

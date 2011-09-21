@@ -475,7 +475,6 @@ input, textarea {
 button, select {
   padding: 3px 6px;
   background: #DFD;
-  font-size: 110%;
   border-radius: 4px;
   -moz-border-radius:4px;
   -webkit-border-radius:4px;
@@ -528,11 +527,13 @@ table a[knowl] {
 }
 
 table a {
-  display: block;
   padding: 2px 5px;
   border-radius: 3px;
   -webkit-border-radius: 3px;
   -moz-border-radius: 3px;
+}
+table.ntdata a {
+  display: block;
 }
 table td.top {
   vertical-align:top;
@@ -552,6 +553,9 @@ table.ntdata {
   border: 0;
   margin-top: 15px;
   margin-bottom: 15px;
+}
+table.ntdata a {
+  display: block;
 }
 
 table.ntdata thead tr {

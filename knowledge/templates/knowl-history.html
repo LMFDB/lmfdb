@@ -1,0 +1,23 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<div>
+ <table class="ntdata">
+  <tr>
+    <th>Timestamp</th>
+    <th>Who</th>
+    <th>Knowl</th>
+  </tr>
+
+  {% for h in history %}
+  <tr>
+   <td>{{ h.time|fmtdatetime }}</td>
+   <td>{{ h.who }}</td>
+   <td><a href="{{url_for('.show', ID=h['_id'])}}">{{ h.title }}</a></td>
+  </tr>
+  {% endfor %}
+ </table>
+</div>
+
+{% endblock %}
