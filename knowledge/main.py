@@ -169,7 +169,8 @@ def edit(ID):
 def show(ID):
   k = Knowl(ID)
   r = render(ID, footer="0", raw=True)
-  b = get_bread([('%s'%k.title, url_for('.show', ID=ID))])
+  title = k.title or "'%s'" % k.id
+  b = get_bread([('%s'%title, url_for('.show', ID=ID))])
     
   return render_template("knowl-show.html",
          title = k.title,
