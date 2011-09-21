@@ -258,7 +258,8 @@ def initLfunction(L,args, request):
 
     if L.Ltype() == 'maass':
         if L.group == 'GL2':
-            minNumberOfCoefficients = 20 # TODO: Fix this to take level into account
+            minNumberOfCoefficients = 1000000 # TODO: Fix this to take level into account
+                                              # At the moment error in computation 
             if len(L.dirichlet_coefficients)< minNumberOfCoefficients:
                 info['zeroeslink'] = ''
                 info['plotlink'] = ''
