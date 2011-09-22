@@ -30,7 +30,7 @@ body {
     margin: 0px;
     padding: 0px;
     font-family: sans-serif;
-    color: #111;
+    color: black;
     background-color: white;
     /* max-width: 1200px; */
 }
@@ -714,9 +714,7 @@ body.knowl table.ntdata tr:nth-child(even) {
  background: white;
 }
 .knowl-content {
-  padding: 10px;
-  border-bottom-left-radius: 10px;
-  -moz-border-radius-bottomleft: 10px;
+  padding: 0 10px;
 }
 .knowl-content h1 {
   margin: 0px 0px 10px 0px;
@@ -810,13 +808,14 @@ h2 > .knowl-qm {
 }
 .knowl-output {
   background: {{ col_knowl_ll }}; 
-  border-left: 10px solid {{ col_knowl_l }};
-  border-right: 10px solid {{ col_knowl_l }};
-  border-bottom: 10px solid {{ col_knowl_l }};
-  border-bottom-left-radius: 10px;
+  border: 10px solid {{ col_knowl_l }};
+  /* border-right: 10px solid {{ col_knowl_l }};
+  border-bottom: 10px solid {{ col_knowl_l }}; */
+  /* border-bottom-left-radius: 10px;
   -moz-border-radius-bottomleft: 10px;
   border-bottom-right-radius: 10px;
-  -moz-border-radius-bottomright: 10px;
+  -moz-border-radius-bottomright: 10px; */
+  {{ BORDER_RADIUS(10) }}
   padding: 0px;
   display: none;
   margin-top: 10px;
@@ -833,7 +832,7 @@ h2 > .knowl-qm {
  font-style: italic;
  font-size: small;
 }
-.knowl-content.limit-height {
+div.limit-height {
   max-height: 600px;
   overflow-y: auto;
 }
@@ -852,15 +851,25 @@ h2 > .knowl-qm {
   position: relative;
   bottom: -10px;
   font-size: x-small;
-  /* border-top: 1px solid {{ col_knowl_d }}; */
   background: {{ col_knowl_l }};
   color: grey;
   padding: 1px 0 1px 10px;
   margin:  0 0 0 0;
 }
+.knowl-header {
+  position: relative;
+  top: -10px;
+  font-size: x-small;
+  background: {{ col_knowl_l }};
+  color: grey;
+  padding: 1px 0 1px 10px;
+  margin:  0 0 0 0;
+}
+.knowl-header a,
 .knowl-footer a {
   color: {{ col_knowl_dd }};
 }
+.knowl-header a:hover,
 .knowl-footer a:hover {
   background: none;
   color: {{ col_knowl_d }};

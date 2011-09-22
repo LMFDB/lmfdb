@@ -268,8 +268,15 @@ def render(ID, footer=None, kwargs = None, raw = False):
   {%% from "knowl-defs.html" import KNOWL_INC with context %%}
   {%% from "knowl-defs.html" import TEXT_DATA with context %%}
 
-  <div class="knowl">
-  <div class="knowl-content">%(content)s</div>"""
+  <div class="knowl">"""
+  if foot == "1":
+    render_me += """\
+  <div class="knowl-header">
+    <a href="{{ url_for('.show', ID='%(ID)s') }}">%(title)s</a> 
+  </div>""" % { 'ID' : k.id, 'title' : (k.title or k.id) }
+
+  render_me += """<div><div class="knowl-content">%(content)s</div></div>"""
+
   if foot == "1": 
     render_me += """\
   <div class="knowl-footer">
