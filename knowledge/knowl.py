@@ -34,6 +34,7 @@ def save_history(knowl, who):
   each entry has the _id of the updated knowl and at least a timestamp
   and a reference to who has edtited it. also, the title is nice to
   avoid an additional lookup when listing the history!
+  'state' can either be 'saved' (for the recent changes list) or 'locked'.
   TODO also calculate a diff with python's difflib and store it here.
   """
   history = getDBConnection().knowledge.history
@@ -41,7 +42,8 @@ def save_history(knowl, who):
   h_item = { '_id'   : knowl.id,
              'title' : knowl.title,
              'time'  : datetime.utcnow(),
-             'who'   : who}
+             'who'   : who,
+             'state' : 'saved'}
   history.save(h_item)
 
 def get_history(limit = 25):
@@ -49,7 +51,7 @@ def get_history(limit = 25):
   returns the last @limit history items
   """
   history = getDBConnection().knowledge.history
-  return history.find(sort=[('time', DSC)], limit = limit)
+  return history.find({'state' : 'saved'}, sort=[('time', DSC)], limit = limit)
 
 def is_locked(knowlid, delta_min=10):
   """
@@ -60,21 +62,24 @@ def is_locked(knowlid, delta_min=10):
   now    = datetime.utcnow()
   tdelta = timedelta(minutes=delta_min)
   time   = now - tdelta
-  locks = getDBConnection().knowledge.locks
-  locks.remove({'time' : { '$lt' : time }})
-  lock = locks.find_one(knowlid)
+  history = getDBConnection().knowledge.history
+  history.remove({'state' : 'locked', 'time' : { '$lt' : time }})
+  # search for both: either locked OR has been saved in the last 10 min
+  lock = history.find_one({'_id' : knowlid, 'time' : { '$gte' : time }})
   return lock or False
 
 def set_locked(knowl, who):
   """
   when a knowl is edited, a lock is created. who is the user id.
   """
-  locks = getDBConnection().knowledge.locks
-  locks.ensure_index("time")
-  lock_item = { '_id'  : knowl.id,
-                'time' : datetime.utcnow(),
-                'who'  : who }
-  locks.save(lock_item)
+  history = getDBConnection().knowledge.history
+  history.ensure_index("time")
+  lock_item = { '_id'   : knowl.id,
+                'title' : knowl.title,
+                'time'  : datetime.utcnow(),
+                'who'   : who,
+                'state' : 'locked' }
+  history.save(lock_item)
 
 
 def get_knowl(ID, fields = { "history": 0, "_keywords" : 0 }):

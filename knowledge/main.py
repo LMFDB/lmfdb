@@ -220,8 +220,8 @@ def save_form():
   k.quality = request.form['quality']
   k.timestamp = datetime.now()
   k.save(who=current_user.get_id())
-  from knowl import set_locked
-  set_locked(k, current_user.get_id())
+  from knowl import save_history
+  save_history(k, current_user.get_id())
   return flask.redirect(url_for(".show", ID=ID))
   
 

@@ -50,8 +50,9 @@ $(function() {
  <td></td>
  <td>
   <form method="GET" action="{{ url_for('.index') }}">
+    Quality:
     {% for kq in knowl_qualities -%}
-     Quality: <input type="checkbox" id="{{ kq }}" name="{{ kq }}" {% if filters[loop.index0] -%}checked{%- endif %} />
+     <input type="checkbox" id="{{ kq }}" name="{{ kq }}" {% if filters[loop.index0] -%}checked{%- endif %} />
         <label for="{{ kq }}">{{ kq|capitalize }}</label>
     {%- endfor %}
     <button type="submit" name="filter">Filter</button>
@@ -63,7 +64,7 @@ $(function() {
 <tr>
  <td>More</td>
  <td> 
-   <a href="{{ url_for('.history') }}">Changelog History</a></td>
+   <a href="{{ url_for('.history') }}">Recently modified Knowls</a></td>
 </tr>
 </table>
 
