@@ -607,7 +607,6 @@ def merge_sort(it1,it2):
     try:
         b = it2.next()
     except StopIteration:
-        a = it1.next()
         while True:
             yield a
             a = it1.next()
