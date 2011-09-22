@@ -475,7 +475,7 @@ def by_label(label):
 
 def parse_list(L):  
     L=str(L)
-    if re.search("\d", L): 
+    if re.search("\\d", L): 
       return [int(a) for a in L[1:-1].split(',')]
     return []
     # return eval(str(L)) works but using eval() is insecure
