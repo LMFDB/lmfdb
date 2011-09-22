@@ -218,6 +218,9 @@ class LmfdbAnonymousUser(AnonymousUser):
   def is_admin(self):
     return False
 
+  def name(self):
+    return "Anonymous"
+
 if __name__=="__main__":
   print "Usage:"
   print "add user"

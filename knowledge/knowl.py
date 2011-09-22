@@ -3,6 +3,9 @@
 from knowledge import logger
 from base import getDBConnection
 from datetime import datetime
+import pymongo
+ASC = pymongo.ASCENDING
+DSC = pymongo.DESCENDING
 
 def get_knowls():
   _C = getDBConnection()
@@ -24,6 +27,60 @@ def get_meta():
 def get_deleted_knowls():
   _C = getDBConnection()
   return _C.knowledge.deleted_knowls
+
+def save_history(knowl, who):
+  """
+  saves history tokens in a collection "history".
+  each entry has the _id of the updated knowl and at least a timestamp
+  and a reference to who has edtited it. also, the title is nice to
+  avoid an additional lookup when listing the history!
+  'state' can either be 'saved' (for the recent changes list) or 'locked'.
+  TODO also calculate a diff with python's difflib and store it here.
+  """
+  history = getDBConnection().knowledge.history
+  history.ensure_index("time")
+  h_item = { '_id'   : knowl.id,
+             'title' : knowl.title,
+             'time'  : datetime.utcnow(),
+             'who'   : who,
+             'state' : 'saved'}
+  history.save(h_item)
+
+def get_history(limit = 25):
+  """
+  returns the last @limit history items
+  """
+  history = getDBConnection().knowledge.history
+  return history.find({'state' : 'saved'}, sort=[('time', DSC)], limit = limit)
+
+def is_locked(knowlid, delta_min=10):
+  """
+  returns a lock (as True), if there has been a lock in the last @delta_min minutes; else False.
+  attention, it discardes all locks prior to @delta_min!
+  """
+  from datetime import datetime, timedelta
+  now    = datetime.utcnow()
+  tdelta = timedelta(minutes=delta_min)
+  time   = now - tdelta
+  history = getDBConnection().knowledge.history
+  history.remove({'state' : 'locked', 'time' : { '$lt' : time }})
+  # search for both: either locked OR has been saved in the last 10 min
+  lock = history.find_one({'_id' : knowlid, 'time' : { '$gte' : time }})
+  return lock or False
+
+def set_locked(knowl, who):
+  """
+  when a knowl is edited, a lock is created. who is the user id.
+  """
+  history = getDBConnection().knowledge.history
+  history.ensure_index("time")
+  lock_item = { '_id'   : knowl.id,
+                'title' : knowl.title,
+                'time'  : datetime.utcnow(),
+                'who'   : who,
+                'state' : 'locked' }
+  history.save(lock_item)
+
 
 def get_knowl(ID, fields = { "history": 0, "_keywords" : 0 }):
   return get_knowls().find_one({'_id' : ID}, fields=fields)
@@ -56,6 +113,14 @@ def refresh_knowl_categories():
   # set the categories list in the categories document in the 'meta' collection
   get_meta().save({'_id' : CAT_ID, 'categories' : sorted(cats)})
   return str(cats)
+
+def update_knowl_categories(cat):
+  """
+  when a new knowl is saved, it's category could be new. this function
+  ensures that we know it. this is much more efficient than the
+  refresh variant.
+  """
+  get_meta().update({'_id' : CAT_ID}, {'$addToSet' : {'categories' : cat}})
 
 def get_categories():
   c_doc = get_meta().find_one(CAT_ID)
@@ -112,7 +177,7 @@ class Knowl(object):
       self._authors     = data.get('authors', [])
       self._category    = data.get('cat', extract_cat(ID))
       self._last_author = data.get('last_author', '')
-      self._timestamp   = data.get('timestamp', datetime.now())
+      self._timestamp   = data.get('timestamp', datetime.utcnow())
     else:
       self._title   = ''
       self._content = ''
@@ -120,7 +185,7 @@ class Knowl(object):
       self._category = extract_cat(ID)
       self._authors = []
       self._last_author = ''
-      self._timestamp = datetime.now()
+      self._timestamp = datetime.utcnow()
 
   def save(self, who):
     """who is the ID of the user, who wants to save the knowl"""
@@ -145,7 +210,9 @@ class Knowl(object):
     # TODO instead of refreshing all knowl categories, just do a 
     # set union with the existing categories list and the one from
     # this new knowl!
-    if new_knowl: refresh_knowl_categories()
+    if new_knowl: update_knowl_categories(cat)
+    save_history(self, who)
+    
         
   def delete(self):
     """deletes this knowl from the db. (DANGEROUS, ADMIN ONLY!)"""

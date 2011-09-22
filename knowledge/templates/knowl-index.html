@@ -16,42 +16,59 @@ $(function() {
 });
 </script>
 
-<div>
-  <form id='knowl-search' action="{{ url_for('.index') }}" method="GET">
-    Search (ID, description, #hashtag, or full text):
-    <input name="search" value="{{ search }}" />
+<table>
+<tr>
+ <td>Search</td>
+ <td> 
+ <form id='knowl-search' action="{{ url_for('.index') }}" method="GET">
+    <input name="search" value="{{ search }}" size="40" placeholder="ID, description, #hashtag, or full text"/>
     {% if search|length > 0 -%}<a href="{{url_for('.index')}}">clear</a>{%- endif %}
     <button type="submit">Go</button>
   </form>
-</div>
+ </td>
+</tr>
+
+<tr>
+ <td>Filter</td>
+ <td>Category: 
+    {% for cat in categories -%}
+     <a 
+      {% if cur_cat == cat -%}class='curcat'{%- endif %}
+      href="{{ url_for('.index', category = cat) }}">{{cat}}</a>
+       {# {% if not loop.last -%} &middot; {%- endif %} #}
+    {%- endfor %}
+    {% if categorymode -%}
+    </td></tr>
+    <tr><td/><td>
+     <strong><a href="{{ url_for('.index') }}">clear category filter</a></strong>
+    {%- endif %}
+ </td>
+</tr>
 
 {% if not searchmode and not categorymode %}
-<div style="margin-bottom: 10px">
+<tr>
+ <td></td>
+ <td>
   <form method="GET" action="{{ url_for('.index') }}">
-    Quality level: 
+    Quality:
     {% for kq in knowl_qualities -%}
-      <input type="checkbox" id="{{ kq }}" name="{{ kq }}" {% if filters[loop.index0] -%}checked{%- endif %} />
+     <input type="checkbox" id="{{ kq }}" name="{{ kq }}" {% if filters[loop.index0] -%}checked{%- endif %} />
         <label for="{{ kq }}">{{ kq|capitalize }}</label>
     {%- endfor %}
     <button type="submit" name="filter">Filter</button>
-  </form>
-  </div>
+   </form>
+  </td>
+</tr>
 {% endif %}
 
-<div style="margin-bottom: 10px">
-Category:
-{% for cat in categories -%}
- <a 
-  {% if cur_cat == cat -%}class='curcat'{%- endif %}
-  href="{{ url_for('.index', category = cat) }}">{{cat}}</a>
-   {# {% if not loop.last -%} &middot; {%- endif %} #}
-{%- endfor %}
-{% if categorymode -%}
-  &mdash; <strong><a href="{{ url_for('.index') }}">clear</a></strong>
-{%- endif %}
-</div>
+<tr>
+ <td>More</td>
+ <td> 
+   <a href="{{ url_for('.history') }}">Recently modified Knowls</a></td>
+</tr>
+</table>
 
-<table id="knowl-index">
+<table id="knowl-index" class="ntdata" style="margin-top: 50px;">
   {% for c, ks in knowls -%}
    <tr>
     <td>{{ c }}</td>

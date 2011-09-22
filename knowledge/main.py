@@ -18,12 +18,13 @@ from base import app, getDBConnection
 from datetime import datetime
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
 from flaskext.login import login_required, current_user
-from knowl import Knowl, knowl_title
+from knowl import Knowl, knowl_title, get_history
 from users import admin_required, housekeeping
 import markdown
 from knowledge import logger
 
 ASC = pymongo.ASCENDING
+DSC = pymongo.DESCENDING
 
 import re
 allowed_knowl_id = re.compile("^[a-z0-9._-]+$")
@@ -145,23 +146,46 @@ def edit(ID):
                   no spaces, numbers or '.', '_' and '-'.""" % ID, "error")
       return flask.redirect(url_for(".index"))
   knowl = Knowl(ID)
+
+  from knowl import is_locked, set_locked
+  lock = False
+  if request.args.get("lock", "") != 'ignore':
+    lock = is_locked(knowl.id)
+  # lock, if either lock is false or (lock is active), current user is editing again
+  author_edits = lock and lock['who'] == current_user.get_id()
+  logger.debug(author_edits)
+  if not lock or author_edits:
+    set_locked(knowl, current_user.get_id())
+  if author_edits: lock = False
+    
   b = get_bread([("Edit '%s'"%ID, url_for('.edit', ID=ID))])
   return render_template("knowl-edit.html", 
          title="Edit Knowl '%s'" % ID,
          k = knowl,
-         bread = b)
+         bread = b,
+         lock = lock)
 
 @knowledge_page.route("/show/<ID>")
 def show(ID):
   k = Knowl(ID)
   r = render(ID, footer="0", raw=True)
-  b = get_bread([('%s'%k.title, url_for('.show', ID=ID))])
+  title = k.title or "'%s'" % k.id
+  b = get_bread([('%s'%title, url_for('.show', ID=ID))])
     
   return render_template("knowl-show.html",
          title = k.title,
          k = k,
          render = r,
          bread = b)
+
+@knowledge_page.route("/history")
+def history():
+  h_items = get_history()
+  bread = get_bread([("History", url_for('.history'))])
+  return render_template("knowl-history.html", 
+                         title="Knowledge History",
+                         bread = bread,
+                         history = h_items)
 
 @knowledge_page.route("/delete/<ID>")
 @admin_required
@@ -196,6 +220,8 @@ def save_form():
   k.quality = request.form['quality']
   k.timestamp = datetime.now()
   k.save(who=current_user.get_id())
+  from knowl import save_history
+  save_history(k, current_user.get_id())
   return flask.redirect(url_for(".show", ID=ID))
   
 
@@ -242,8 +268,15 @@ def render(ID, footer=None, kwargs = None, raw = False):
   {%% from "knowl-defs.html" import KNOWL_INC with context %%}
   {%% from "knowl-defs.html" import TEXT_DATA with context %%}
 
-  <div class="knowl">
-  <div class="knowl-content">%(content)s</div>"""
+  <div class="knowl">"""
+  if foot == "1":
+    render_me += """\
+  <div class="knowl-header">
+    <a href="{{ url_for('.show', ID='%(ID)s') }}">%(title)s</a> 
+  </div>""" % { 'ID' : k.id, 'title' : (k.title or k.id) }
+
+  render_me += """<div><div class="knowl-content">%(content)s</div></div>"""
+
   if foot == "1": 
     render_me += """\
   <div class="knowl-footer">
@@ -332,7 +365,6 @@ def index():
   if ok:       qualities.append("ok")
   if beta:     qualities.append("beta")
 
-
   s_query = {}
 
   if filtermode:
@@ -340,7 +372,7 @@ def index():
     s_query['quality'] = quality_q
   
   keyword = request.args.get("search", "").lower()
-  if searchmode:
+  if searchmode and keyword:
     keywords = filter(lambda _:len(_) >= 3, keyword.split(" "))
     #logger.debug("keywords: %s" % keywords)
     keyword_q = {'_keywords' : { "$all" : keywords}}

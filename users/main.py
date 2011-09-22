@@ -37,13 +37,18 @@ login_manager.login_view = "users.info"
 # this anonymous user has the is_admin() method
 login_manager.anonymous_user = LmfdbAnonymousUser
 
-# globally define the user and username
+def get_username(uid):
+  """returns the name of user @uid"""
+  return LmfdbUser(uid).name
+
+# globally define user properties and username
 @app.context_processor
 def ctx_proc_userdata():
   userdata = {}
   userdata['username'] = 'Anonymous' if current_user.is_anonymous() else current_user.name
   userdata['user_is_authenticated'] =  current_user.is_authenticated()
   userdata['user_is_admin'] = current_user.is_admin()
+  userdata['get_username'] = get_username
   return userdata
 
 # blueprint specific definition of the body_class variable

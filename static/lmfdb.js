@@ -157,8 +157,8 @@ function knowl_click_handler($el) {
     var $output = $(output_id);
     var kwargs = $el.attr("kwargs");
 
-    // cached?
-    if(kwargs.length == 0 && knowl_id in knowl_cache) {
+    // cached? (no kwargs or empty string AND kid in cache)
+    if((!kwargs || kwargs.length == 0) && (knowl_id in knowl_cache)) {
       log("cache hit: " + knowl_id);
       $output.hide();
       $output.html(knowl_cache[knowl_id]);
@@ -184,7 +184,7 @@ function knowl_click_handler($el) {
 
          // if it is the outermost knowl, limit its height of the content to 600px
          if ($output.parents('.knowl-output').length == 0) {
-           $(output_id + " div.knowl-content").first().addClass("limit-height");
+           $(output_id + " div.knowl-content").first().parent().addClass("limit-height");
          }
         }
         // in any case, reveal the new output after mathjax has finished
