@@ -106,7 +106,7 @@ def set_sidebar(l):
 @app.route("/NumberField/GaloisGroups")
 def render_groups_page():
     info = {}
-    info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
+    info['learnmore'] = [('Global Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
     def gcmp(x,y):
         a = cmp(x['label'][0],y['label'][0])
         if a: return a
@@ -114,23 +114,23 @@ def render_groups_page():
         return a
     groups.sort(cmp=gcmp)
     t = 'Galois group labels'
-    bread = [('Number Fields', url_for("number_field_render_webpage")),('Galois group labels',' ')]
+    bread = [('Global Number Fields', url_for("number_field_render_webpage")),('Galois group labels',' ')]
     return render_template("number_field/galois_groups.html", groups=groups, info=info, credit=NF_credit, title=t, bread=bread)
 
 @app.route("/NumberField/FieldLabels")
 def render_labels_page():
     info = {}
-    info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
+    info['learnmore'] = [('Global Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
     t = 'Number field labels'
-    bread = [('Number Fields', url_for("number_field_render_webpage")),('Number field labels','')]
+    bread = [('Global Number Fields', url_for("number_field_render_webpage")),('Number field labels','')]
     return render_template("number_field/number_field_labels.html", info=info, credit=NF_credit, title=t, bread=bread)
 
 @app.route("/NumberField/Discriminants")
 def render_discriminants_page():
     info = {}
-    info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
-    t = 'Number Field Discriminant Ranges'
-    bread = [('Number Fields', url_for("number_field_render_webpage")),('Discriminant ranges',' ')]
+    info['learnmore'] = [('Global Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
+    t = 'Global Number Field Discriminant Ranges'
+    bread = [('Global Number Fields', url_for("number_field_render_webpage")),('Discriminant ranges',' ')]
     return render_template("number_field/discriminant_ranges.html", info=info, credit=NF_credit, title=t, bread=bread)
 
 @app.route("/NumberField")
@@ -147,9 +147,9 @@ def number_field_render_webpage():
         'class_number_list': range(1,6)+['6..10'],
         'discriminant_list': discriminant_list
     }
-        t = 'Number Fields'
-        bread = [('Number Fields', url_for("number_field_render_webpage"))]
-        info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
+        t = 'Global Number Fields'
+        bread = [('Global Number Fields', url_for("number_field_render_webpage"))]
+        info['learnmore'] = [('Global Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
 
         return render_template("number_field/number_field_all.html", info = info, credit=NF_credit, title=t, bread=bread)
     else:
@@ -434,9 +434,9 @@ def render_field_webpage(args):
     info['downloads'] = [('worksheet', '/')]
 #    info['friends'] = [('L-function', '/')]
     info['friends'] = [('L-function', "/L/NumberField/%s" % label)]
-    info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
-    bread = [('Number Fields', url_for("number_field_render_webpage")),('%s'%info['label'],' ')]
-    t = "Number Field %s" % info['label']
+    info['learnmore'] = [('Global Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
+    bread = [('Global Number Fields', url_for("number_field_render_webpage")),('%s'%info['label'],' ')]
+    t = "Global Number Field %s" % info['label']
 
     if npr==1:
          primes='prime'
@@ -465,7 +465,7 @@ def format_coeffs(coeffs):
 def number_fields():
     if len(request.args) != 0:
         return number_field_search(**request.args)
-    info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
+    info['learnmore'] = [('Global Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
     return render_template("number_field/number_field_all.html", info = info)
     
 
@@ -578,9 +578,9 @@ def number_field_search(**args):
         else:
             info['report'] = 'displaying all %s matches'%nres
     info['format_coeffs'] = format_coeffs
-    info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
-    t = 'Number Field search results'
-    bread = [('Number Fields', url_for("number_field_render_webpage")),('Search results',' ')]
+    info['learnmore'] = [('Global Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
+    t = 'Global Number Field search results'
+    bread = [('Global Number Fields', url_for("number_field_render_webpage")),('Search results',' ')]
     properties = []
     return render_template("number_field/number_field_search.html", info = info, title=t, properties=properties, bread=bread)
 

@@ -15,7 +15,12 @@
   </ul>
   </li>
 
-  <li><a href="{{ url_for('number_field_render_webpage') }}">Number Fields</a></li>
+  <li>Fields
+    <ul>
+      <li><a href="{{ url_for('number_field_render_webpage') }}">Global Number Fields</a></li>
+      <li><a href="{{ url_for('local_fields.index') }}">Local Number Fields</a></li>
+    </ul>
+  </li>
 
   <li>Characters
   <ul>

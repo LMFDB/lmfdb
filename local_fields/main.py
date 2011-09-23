@@ -39,7 +39,6 @@ def index():
   bread = get_bread()
   if len(request.args) != 0:
     return local_field_search(**request.args)
-  #info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
   return render_template("lf-index.html", title ="Local Number Fields", bread = bread)
 
 @local_fields_page.route("/<label>")
