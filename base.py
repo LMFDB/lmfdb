@@ -124,9 +124,9 @@ def ctx_proc_userdata():
   vars['bread'] = None #[ ('Bread', '.'), ('Crumb', '.'), ('Hierarchy', '.')]
   
   # default title
-  vars['title'] = r'Title variable "title" has not been set. This is a test: \( \LaTeX \) and \( \frac{1}{1+x+x^2} \) and more ...'
-  vars['description'] = r'The L-functions and Modular Forms Database project makes large amounts of data available to the research mathematics community.'
-  vars['shortthanks'] = r'This project is supported by the <a href="http://www.nsf.gov">National Science Foundation</a> under FRG Grant No. DMS-0757627.'
+  vars['title'] = r'LMFDB'
+  vars['description'] = r'Welcome to the LMFDB, a database of L-functions, modular forms, and related objects.'
+  vars['shortthanks'] = r'This project is supported by <a href="%s">grants</a> from the National Science Foundation.'% (url_for('acknowledgment') + "#sponsers")
   return vars
 
 

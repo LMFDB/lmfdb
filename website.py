@@ -43,7 +43,7 @@ def not_found(error):
 
 @app.route("/")
 def index():
-    return render_template('index.html', title ="", bread=None)
+    return render_template('index.html', title ="The L-functions and modular forms database", bread=None)
 
 @app.route("/about")
 def about():

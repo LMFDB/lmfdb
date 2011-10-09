@@ -6,7 +6,7 @@
 <meta http-equiv="Content-Language" Content="en">
 <meta name="description" content="{{description|striptags}}"/>
 
-<title>{% if title %}{{ title|striptags }} - {% endif %}LMFDB</title>
+<title>LMFDB{% if title %} - {{ title|striptags }}{% endif %}</title>
 <link href="{{ url_for('css') }}" rel="stylesheet" type="text/css" /> 
 
 <script type="text/javascript" src="{{ url_for('static', filename='jquery.min.js') }}"></script>
