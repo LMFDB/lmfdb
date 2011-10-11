@@ -41,12 +41,13 @@ class HashTagPattern(markdown.inlinepatterns.Pattern):
       el.text = '#' + markdown.AtomicString(m.group(2))
       return el
 
-class KnowlTagPattern(markdown.inlinepatterns.Pattern):
+class KnowlTagPatternWithTitle(markdown.inlinepatterns.Pattern):
   def handleMatch(self, m):
-    kid = m.group(2)
-    #el = markdown.etree.Element("span")
-    #el.text = markdown.AtomicString("{{ KNOWL('%s') }}" % kid)
-    #return el
+    tokens = m.group(2).split("|")
+    kid = tokens[0].strip()
+    if len(tokens) > 1:
+      tit = ''.join(tokens[1:])
+      return "{{ KNOWL('%s', title='%s') }}" % (kid, tit.strip())
     return "{{ KNOWL('%s') }}" % kid
 
 # Initialise the markdown converter, sending a wikilink [[topic]] to the L-functions wiki
@@ -62,9 +63,10 @@ md.inlinePatterns.add('mathjax\\[', IgnorePattern(r'(\\\[.+?\\\])'), '<escape')
 hashtag_keywords_rex = r'#([a-zA-Z][a-zA-Z0-9-_]{1,})\b'
 md.inlinePatterns.add('hashtag', HashTagPattern(hashtag_keywords_rex), '<escape')
 
-# Tell markdown to do some magic for including knowls
-knowltag_regex = r'\[\[[ ]*([a-z.-_]+)[ ]*\]\]'
-md.inlinePatterns.add('knowltag', KnowlTagPattern(knowltag_regex),'<escape')
+# Tells markdown to process "wikistyle" knowls with optional title
+# should cover [[[ KID ]]] and [[[ KID | title ]]]
+knowltagtitle_regex = r'\[\[\[[ ]*([^\]]+)[ ]*\]\]\]'
+md.inlinePatterns.add('knowltagtitle', KnowlTagPatternWithTitle(knowltagtitle_regex),'<escape')
 
 # global (application wide) insertion of the variable "Knowl" to create
 # lightweight Knowl objects inside the templates.
