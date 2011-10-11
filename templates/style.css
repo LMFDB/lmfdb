@@ -39,7 +39,7 @@ body {
   position: absolute;
   z-index: 99;
   width: 600px;
-  height: 600%;
+  height: 600px;
   padding-top: 150px;
   line-height: 20px;
   text-align: center;
@@ -833,7 +833,7 @@ h2 > .knowl-qm {
  font-size: small;
 }
 div.limit-height {
-  max-height: 600px;
+  max-height: 500px;
   overflow-y: auto;
 }
 .knowl-output h1, .knowl-output h2 {
