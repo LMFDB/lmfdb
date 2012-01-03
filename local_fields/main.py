@@ -12,7 +12,7 @@ from utils import ajax_more, image_src, web_latex, to_dict, parse_range, coeff_t
 from sage.all import ZZ, var, PolynomialRing, QQ
 from local_fields import local_fields_page, logger, logger
 
-from transitive_group import group_display_short, group_display_long, group_display_inertia
+from transitive_group import group_display_short, group_display_long, group_display_inertia, group_knowl_guts
 
 LF_credit = 'J. Jones and D. Roberts'
 
@@ -21,6 +21,14 @@ def get_bread(breads = []):
   for b in breads:
     bc.append(b)
   return bc
+
+def galois_group_data(n, t):
+  C = base.getDBConnection()
+  return group_knowl_guts(n, t, C)
+
+@app.context_processor
+def ctx_galois_groups():
+  return {'galois_group_data': galois_group_data }
 
 def display_poly(coeffs):
   return web_latex(coeff_to_poly(coeffs))
@@ -141,6 +149,7 @@ def render_field_webpage(args):
       'hw': data['hw'],
       'slopes': show_slopes(data['slopes']),
       'gal': group_display_long(gn, gt, C),
+      'gt': gt,
       'inertia': group_display_inertia(data['inertia'], C),
       'unram': web_latex(unramp),
       'eisen': web_latex(eisenp),
