@@ -1,0 +1,53 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<p>
+
+      <h2>Browse {{KNOWL('galois_group', title="Galois groups")}}</h2>
+<p>
+
+Browse by degree $n$:
+{% for n in info.degree_list: %}
+<a href="?n={{n}}">{{n}}</a>
+{% endfor %}
+
+<p>
+
+    <h2>Find a specific Galois group</h2>
+
+    <form name="search" method = "get" action="{{search}}">      
+	  Search by {{KNOWL('tg.label',title="label")}}
+          <input type="text" name="jump_to" value="" placeholder="2.4"> 
+          <input type="submit" value="Find">
+        </form>
+    </td>
+</tr>
+
+        <h2>Search</h2>
+      <form name="search" method = "get" action="{{search}}">
+        <table class="">
+          <tr>
+            <td>
+          {{KNOWL('tg.degree',title='Degree')}}:
+            </td><td><input type="text" name="n" value="" example="6"></td>
+          </tr>
+          <tr>
+            <td>
+              {{KNOWL('tg.tnumber',title='$t$')}}:
+            </td><td><input type="text" name="t" value="" example="3"></td>
+          </tr>
+<!--      
+          <tr>
+          <td>
+              Maximum number of fields to display:
+            </td><td><input type="text" name="count" value="25"></td>
+          </tr>
+-->
+  </table>
+        <input type="submit" name="Submit" value="Search">
+      </form>
+
+
+
+{% endblock %}
