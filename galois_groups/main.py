@@ -8,11 +8,20 @@ import flask
 import base
 from base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
-from utils import ajax_more, image_src, web_latex, to_dict, parse_range
-import re
+from utils import ajax_more, image_src, web_latex, to_dict, parse_range, make_logger
+import os, re
 from galois_groups import galois_groups_page, logger
 import sage.all
 from sage.all import ZZ, latex, gap
+
+# Test to see if this gap installation knows about transitive groups
+logger = make_logger("GG")
+
+try:
+  G = gap.TransitiveGroup(9,2)
+except:
+  logger.info("It looks like the spkg gap_packages-4.4.12.p0 is not installed on the server.  Please install it and try again.")
+  exit()
 
 from transitive_group import group_display_short, group_display_long, group_display_inertia, group_knowl_guts, subfield_display, otherrep_display, resolve_display
 
