@@ -12,7 +12,7 @@ from utils import ajax_more, image_src, web_latex, to_dict, parse_range, coeff_t
 from sage.all import ZZ, var, PolynomialRing, QQ
 from local_fields import local_fields_page, logger, logger
 
-from transitive_group import group_display_short, group_display_long, group_display_inertia, group_knowl_guts
+from transitive_group import group_display_short, group_display_long, group_display_inertia, group_knowl_guts, group_display_knowl
 
 LF_credit = 'J. Jones and D. Roberts'
 
@@ -148,7 +148,7 @@ def render_field_webpage(args):
       'rf': printquad(data['rf'], p),
       'hw': data['hw'],
       'slopes': show_slopes(data['slopes']),
-      'gal': group_display_long(gn, gt, C),
+      'gal': group_display_knowl(gn, gt, C),
       'gt': gt,
       'inertia': group_display_inertia(data['inertia'], C),
       'unram': web_latex(unramp),
