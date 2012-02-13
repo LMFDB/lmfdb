@@ -1,0 +1,19 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+    <p>
+    <center>
+    <table class="ntdata">
+        <thead>
+            <td>Index </td><td>Polynomial of Artin field $K$</td><td>Size</td><td>Abstract isomorphism type</td><td>Character values on conjugacy classes </td>
+        </thead>
+        <tbody>
+        <p>  {% for artin in object %}
+             <tr>  <td> <a href="{{artin.url_for()}}">${{ artin.index() }}$</a></td><td>${{artin.number_field_galois_group().polynomial().latex()}}$</td><td>${{artin.number_field_galois_group().size()}}$</td><td>${{artin.number_field_galois_group().G_name()}}$</td><td>${{artin.character().display()}}$</td></tr>
+        {% endfor  %}
+        </tbody>
+    </table>
+    </center>
+    </p>
+            
+{% endblock %}
