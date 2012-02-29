@@ -35,7 +35,7 @@ $(function() {
     if(!revealed) { 
       /* no animation, remember the odd race condition! */
       $("#mathjax-info").show();
-      $("#content").hide();
+      $("#content").css("opacity", "0");
     }
   }, 500);
 
@@ -44,7 +44,7 @@ $(function() {
   window.setTimeout(function() {
     /* still waiting? */
     if(revealed) return;
-    if($("#content").css("display") == "none") {
+    if($("#content").css("opacity") == "0") {
       $("#content").css("opacity", "0.2").show();
       $("#mathjax-log").html("<strong>Still loading, click here to show it.</strong>");
     }
