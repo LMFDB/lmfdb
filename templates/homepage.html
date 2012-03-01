@@ -107,7 +107,8 @@
   <h2> Fields</h2>
     <ul>
       <li><a href="{{ url_for('number_field_render_webpage') }}">Global Number Fields</a></li>
-      <li><a href="{{ url_for('local_fields.index') }}">Local Number Fields</a></li> 
+      <li><a href="{{ url_for('local_fields.index') }}">Local Number Fields</a></li>
+      <li><a class = "number_field_galois_groups" href="{{ url_for('number_field_galois_groups.index') }}">Galois Groups</a></li>
     </ul>
 
   <h2>Characters</h2>
@@ -130,6 +131,9 @@
    <li><a class="mwf"  href="{{ url_for('mwf.render_maass_waveforms') }}">Classical, $\mathrm{GL}(2)$</a></li>
    <li><a class="mwfp" href="{{ url_for('mwfp.render_picard_maass_forms') }}">for \(\mathrm{PSL}(2,\mathbb{Z}[i])\)</a></li>
   </ul>
+  <h2 class="link">
+       <a class="artin_representations" href="{{ url_for('artin_representations.index') }}">Artin Representations</a></h2>
+  
 
 
   <h2 class="link knowl">

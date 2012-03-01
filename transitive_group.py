@@ -5,23 +5,30 @@ from base import app, getDBConnection
 from flask import Flask, session, g, render_template, url_for, request, redirect
 
 import sage.all
-from sage.all import ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, euler_phi, pari
+from sage.all import ZZ, latex, AbelianGroup, pari
 
 from utils import ajax_more, image_src, web_latex, to_dict, parse_range
 
 from pymongo.connection import Connection
 
+MAX_GROUP_DEGREE = 13
+
 def base_label(n,t):
   return str(n)+"T"+str(t)
 
-def group_display_short(n,t, C):
+def group_display_short(n, t, C):
   label = base_label(n,t)
   group = C.transitivegroups.groups.find_one({'label': label})
   if group['pretty']:
     return group['pretty']
   return group['name']
 
-def group_display_long(n,t, C):
+def group_display_knowl(n, t, C, name=None):
+  if not name:
+    name = group_display_short(n, t, C)
+  return '<a title = "'+ name + ' [nf.galois_group.data]" knowl="nf.galois_group.data" kwargs="n='+ str(n) + '&t='+ str(t) +'">'+name+'</a>'
+
+def group_display_long(n, t, C):
   label = base_label(n,t)
   group = C.transitivegroups.groups.find_one({'label': label})
   inf = "Group "+str(group['n'])+"T"+str(group['t'])
@@ -45,10 +52,100 @@ def group_display_long(n,t, C):
     return group['pretty']+inf
   return group['name']+inf
 
+def group_knowl_guts(n,t, C):
+  label = base_label(n,t)
+  group = C.transitivegroups.groups.find_one({'label': label})
+  inf = "Group "+str(group['n'])+"T"+str(group['t'])
+  inf += ", order "+str(group['order'])
+  inf += ", parity "+str(group['parity'])
+  if group['cyc']==1:
+    inf += ", cyclic"
+  elif group['ab']==1:
+    inf += ", abelian"
+  elif group['solv']==1:
+    inf += ", non-abelian solvable"
+  else:
+    inf += ", non-solvable"
+  if group['prim']==1:
+    inf += ", primitive"
+  else:
+    inf += ", imprimitive"
+
+  inf = "  ("+inf+")"
+  rest = '<div><h3>Subfields</h3><blockquote>'
+  rest += subfield_display(C, n, group['subs'])
+  rest += '</blockquote></div>'
+  rest += '<div><h3>Other representations</h3><blockquote>'
+  rest += otherrep_display(C, group['repns'])
+  rest += '</blockquote></div>'
+  
+  if group['pretty']:
+    return group['pretty']+inf+rest
+  return group['name']+inf+rest
+
+def subfield_display(C, n, subs):
+  if n==1:
+    return 'Degree 1 - None'
+  degs = ZZ(str(n)).divisors()[1:-1]
+  if len(degs)==0:
+    return 'Prime degree - none'
+  ans = ''
+  substrs = {}
+  for deg in degs:
+    substrs[deg] = ''
+  for k in subs:
+    if substrs[k[0]] != '':
+      substrs[k[0]] += ', '
+    if k[0] <= MAX_GROUP_DEGREE:
+      substrs[k[0]] += group_display_knowl(k[0], k[1], C)
+    else:
+      substrs[k[0]] += str(k[0])+'T'+str(k[1])
+  for deg in degs:
+    ans += '<p>Degree '+str(deg)+': '
+    if substrs[deg] == '':
+      substrs[deg] = 'None'
+    ans += substrs[deg]+'</p>'
+  return ans
+
+def otherrep_display(C, reps):
+  ans = ''
+  for k in reps:
+    if ans != '':
+      ans += ', '
+    name = str(k[0])+'T'+str(k[1])
+    if k[0] <= MAX_GROUP_DEGREE:
+      ans += group_display_knowl(k[0], k[1], C, name)
+    else:
+      ans += name
+  if ans == '':
+    ans = 'None'
+  return ans
+
+def resolve_display(C, resolves):
+  ans = ''
+  old_deg = -1
+  for j in resolves:
+    if j[0] != old_deg:
+      if old_deg<0:
+        ans += '<table>'
+      else: 
+        ans += '</td></tr>'
+      old_deg = j[0]
+      ans += '<tr><td>'+str(j[0])+': </td><td>'
+    else: ans += ', '
+    k = j[1]
+    name = str(k[0])+'T'+str(k[1])
+    if k[0] <= MAX_GROUP_DEGREE:
+      ans += group_display_knowl(k[0], k[1], C, name)
+    else:
+      ans += name
+  if ans != '': ans += '</td></tr></table>'
+  else:         ans = 'None'
+  return ans
 
 def group_display_inertia(code, C):
   if str(code[1]) == "t":
-    return group_display_short(code[2][0], code[2][1], C)
+    return group_display_knowl(code[2][0], code[2][1], C)
   ans = "Intransitive group isomorphic to "
   if len(code[2])>1:
     ans += group_display_short(code[2][0], code[2][1], C)
@@ -72,41 +169,41 @@ group_names[(3, 6, -1, 1)] = ('S3','S3','D3', '3T2')
 group_names[(3, 3, 1, 2)] = ('A3','A3','C3','3', '3T1')
 
 group_names[(4, 4, -1, 1)] = ('C(4) = 4','C4','4', '4T1')
-group_names[(4, 4, 1, 1)] = ('E(4) = 2[x]2','V4', 'D2', 'C2xC2', '4T2')
-group_names[(4, 8, -1, 1)] = ('D(4)','D4', '4T3')
-group_names[(4, 12, 1, 1)] = ('A4','A4', '4T4')
-group_names[(4, 24, -1, 1)] = ('S4','S4', '4T5')
+group_names[(4, 4, 1, 2)] = ('E(4) = 2[x]2','V4', 'D2', 'C2xC2', '4T2')
+group_names[(4, 8, -1, 3)] = ('D(4)','D4', '4T3')
+group_names[(4, 12, 1, 4)] = ('A4','A4', '4T4')
+group_names[(4, 24, -1, 5)] = ('S4','S4', '4T5')
 
 group_names[(5, 5, 1, 1)] = ('C(5) = 5','C5','5','5T1')
-group_names[(5, 10, 1, 1)] = ('D(5) = 5:2','D5','5T2')
-group_names[(5, 20, -1, 1)] = ('F(5) = 5:4','F5','5T3')
-group_names[(5, 60, 1, 1)] = ('A5','A5','5T4')
-group_names[(5, 120, -1, 1)] = ('S5','S5','5T5')
+group_names[(5, 10, 1, 2)] = ('D(5) = 5:2','D5','5T2')
+group_names[(5, 20, -1, 3)] = ('F(5) = 5:4','F5','5T3')
+group_names[(5, 60, 1, 4)] = ('A5','A5','5T4')
+group_names[(5, 120, -1, 5)] = ('S5','S5','5T5')
 
 group_names[(6, 6, -1, 1)] = ('C(6) = 6 = 3[x]2','C6','6','6T1')
 group_names[(6, 6, -1, 2)] = ('D_6(6) = [3]2','S3gal','6T2')
-group_names[(6, 12, -1, 1)] = ('D(6) = S(3)[x]2','D6','6T3')
-group_names[(6, 12, 1, 1)] = ('A_4(6) = [2^2]3','A4(6)','6T4')
-group_names[(6, 18, -1, 1)] = ('F_18(6) = [3^2]2 = 3 wr 2','(C3xS3)(6)', '3 wr 2', '6T5')
-group_names[(6, 24, -1, 2)] = ('2A_4(6) = [2^3]3 = 2 wr 3','(A4xC2)(6)','6T6')
-group_names[(6, 24, 1, 1)] = ('S_4(6d) = [2^2]S(3)','S4+','6T7')
-group_names[(6, 24, -1, 1)] = ('S_4(6c) = 1/2[2^3]S(3)','S4(6)','6T8')
-group_names[(6, 36, -1, 1)] = ('F_18(6):2 = [1/2.S(3)^2]2','(S3xS3)(6)','6T9')
-group_names[(6, 36, 1, 1)] = ('F_36(6) = 1/2[S(3)^2]2','3^2:4','6T10')
-group_names[(6, 48, -1, 1)] = ('2S_4(6) = [2^3]S(3) = 2 wr S(3)','(S4xC2)(6)','6T11')
-group_names[(6, 60, 1, 1)] = ('L(6) = PSL(2,5) = A_5(6)','PSL(2,5)','6T12')
-group_names[(6, 72, -1, 1)] = ('F_36(6):2 = [S(3)^2]2 = S(3) wr 2','(C3xC3):D4', '3^2:D4','6T13')
-group_names[(6, 120, -1, 1)] = ('L(6):2 = PGL(2,5) = S_5(6)','S5(6)', 'PGL(2,5)','6T14')
-group_names[(6, 360, 1, 1)] = ('A6','A6', '6T15')
-group_names[(6, 720, -1, 1)] = ('S6','S6','6T16')
+group_names[(6, 12, -1, 3)] = ('D(6) = S(3)[x]2','D6','6T3')
+group_names[(6, 12, 1, 4)] = ('A_4(6) = [2^2]3','A4(6)','6T4')
+group_names[(6, 18, -1, 5)] = ('F_18(6) = [3^2]2 = 3 wr 2','(C3xS3)(6)', '3 wr 2', '6T5')
+group_names[(6, 24, -1, 6)] = ('2A_4(6) = [2^3]3 = 2 wr 3','(A4xC2)(6)','6T6')
+group_names[(6, 24, 1, 7)] = ('S_4(6d) = [2^2]S(3)','S4+','6T7')
+group_names[(6, 24, -1, 8)] = ('S_4(6c) = 1/2[2^3]S(3)','S4(6)','6T8')
+group_names[(6, 36, -1, 9)] = ('F_18(6):2 = [1/2.S(3)^2]2','(S3xS3)(6)','6T9')
+group_names[(6, 36, 1, 10)] = ('F_36(6) = 1/2[S(3)^2]2','3^2:4','6T10')
+group_names[(6, 48, -1, 11)] = ('2S_4(6) = [2^3]S(3) = 2 wr S(3)','(S4xC2)(6)','6T11')
+group_names[(6, 60, 1, 12)] = ('L(6) = PSL(2,5) = A_5(6)','PSL(2,5)','6T12')
+group_names[(6, 72, -1, 13)] = ('F_36(6):2 = [S(3)^2]2 = S(3) wr 2','(C3xC3):D4', '3^2:D4','6T13')
+group_names[(6, 120, -1, 14)] = ('L(6):2 = PGL(2,5) = S_5(6)','S5(6)', 'PGL(2,5)','6T14')
+group_names[(6, 360, 1, 15)] = ('A6','A6', '6T15')
+group_names[(6, 720, -1, 16)] = ('S6','S6','6T16')
 
 group_names[(7, 7, 1, 1)] = ('C(7) = 7','C7','7T1')
-group_names[(7, 14, -1, 1)] = ('D(7) = 7:2','D7','7T2')
-group_names[(7, 21, 1, 1)] = ('F_21(7) = 7:3','7:3','7T3')
-group_names[(7, 42, -1, 1)] = ('F_42(7) = 7:6','7:6','7T4')
-group_names[(7, 168, 1, 1)] = ('L(7) = L(3,2)','GL(3,2)','7T5')
-group_names[(7, 2520, 1, 1)] = ('A7','A7','7T6')
-group_names[(7, 5040, -1, 1)] = ('S7','S7','7T7')
+group_names[(7, 14, -1, 2)] = ('D(7) = 7:2','D7','7T2')
+group_names[(7, 21, 1, 3)] = ('F_21(7) = 7:3','7:3','7T3')
+group_names[(7, 42, -1, 4)] = ('F_42(7) = 7:6','7:6','7T4')
+group_names[(7, 168, 1, 5)] = ('L(7) = L(3,2)','GL(3,2)','7T5')
+group_names[(7, 2520, 1, 6)] = ('A7','A7','7T6')
+group_names[(7, 5040, -1, 7)] = ('S7','S7','7T7')
 # We converted [14, -1, 2, 'D(7) = 7:2'] and [5040, -1, 7, 'S7'] on import
 
 
@@ -248,7 +345,7 @@ group_names[(10, 1814400, 1, 44)] = ('A10', 'A10', '10T44')
 group_names[(10, 3628800, -1, 45)] = ('S10', 'S10', '10T45')
 
 # Degree 11:
-group_names[(11, 11, 1, 1)] = ('C(11)=11', 'C11', '11', '11T1')
+group_names[(11, 11, 1, 1)] = ('C(11)=11', 'C11', '11T1')
 group_names[(11, 22, -1, 2)] = ('D(11)=11:2', 'D11', '11T2')
 group_names[(11, 55, 1, 3)] = ('F_55(11)=11:5', '11:5','11T3')
 group_names[(11, 110, -1, 4)] = ('F_110(11)=11:10', 'F11','11:10', '11T4')
@@ -286,4 +383,11 @@ def GG_data(GGlabel):
 #        Gab='abelian'
 #    else:
 #        Gab='non-abelian'
+
+#for j in group_names.keys():
+#  for k in group_names[j]:
+#    if re.search('^\s*\d+T\d+\s*$', k) == None and re.search('^\s*\d+\s*$',k) ==  None:
+#      newv = (j[0], j[3])
+#      print "aliases['"+str(k)+"'] = ", newv
+
 

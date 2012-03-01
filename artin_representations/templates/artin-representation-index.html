@@ -2,7 +2,24 @@
 
 {% block content %}
 
-<div>Artin Representations Page</div>
+
+<h2>
+    This index page is not done
+</h2>
+Only examples can be browsed so far, by modifying directly the URL and then clicking on the "Friends" section, or in the hyperlinked table. For instance, try:
+<table>
+    <tr><td><a href = {{url_for('.by_data', dim=1,conductor=1,index=1)}}>Artin representation of dimension 1, conductor 1 and index 1</a></td></tr>
+    <tr><td><a href = {{url_for('.by_data', dim=1,conductor=17,index=1)}}>Artin representation of dimension 1, conductor 17 and index 1</a></td></tr>
+    <tr><td><a href = {{url_for('.by_partial_data', dim=1,conductor=17)}}>Artin representations of dimension 1 and conductor 17 </a></td></tr>
+    <tr><td><a href = {{url_for('.by_data', dim = 3, conductor = 113337, index = 1 )}}>Artin representation of dimension 3, conductor 1133337 and index 1</a></td></tr>
+    <tr><td><a href = {{url_for('.by_partial_data', dim=1,conductor=1)}}>Artin representations of dimension 1 and conductor 1 </a></td></tr>
+    <tr><td><a href = {{url_for('.by_partial_data', dim=2,conductor=22356)}}>Artin representations of dimension 2 and conductor 22356 </a></td></tr>
+    <tr><td><a href = {{url_for('.by_partial_data', dim=4,conductor=136480336)}}>Artin representations of dimension 4 and conductor 136480336 </a></td></tr>
+    
+</table>
+
+
+<!--
 
 <form action="{{ url_for('.search') }}" method="GET">
 <input name="val" placeholder="123" />
@@ -40,5 +57,5 @@ Find Artin representation by <div>{{KNOWL("artin.conductor",title="conductor")}}
 <input type='submit' value='Find' >
 </p>
 </form>
-
+-->
 {% endblock %}

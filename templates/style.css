@@ -598,6 +598,10 @@ div.literature {
     font-style: italic;
 }
 
+.redhighlight {
+  color: red;
+}
+
 .highlight {
   /* text-decoration: underline; */
   font-weight: bold;

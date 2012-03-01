@@ -21,6 +21,8 @@ import knowledge
 import upload
 import DirichletCharacter
 import local_fields
+import galois_groups
+import number_field_galois_groups
 import OEIS
 import artin_representations
 
