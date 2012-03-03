@@ -1,16 +1,6 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<style type="text/css">
-table td.center {
-  text-align: center;
-}
-table td.params {
-  text-align: left;
-  font-family: monospace;
-}
-</style>
-
 <h2> Results ({{info.report}})</h2>
 
 <table class="ntdata">
@@ -27,7 +17,7 @@ table td.params {
 <td align='left'><a href="{{url_for('render_hmf_webpage',field_label=form.field_label,label=form.label)}}">
     {{form.label}} </a></td>
 <td>{{form.level_norm}}</td>
-<td>{{form.level_ideal}}</td>
+<td>{{form.level_ideal|join(', ')}}</td>
 <td>{{form.dimension}}</td>
 </tr>
 {% endfor %}

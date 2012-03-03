@@ -10,7 +10,7 @@
 
   <h2>  Hecke eigenvalues  </h2>
 
-<table class="ntdata">
+<table class="ntdata" cellpadding=5>
 <tr>
 <th>Norm</th>
 <th>Prime</th>
@@ -19,7 +19,7 @@
 {% for entry in info.eigs: %}
 <tr>
 <td>{{entry.prime_norm}}</td>
-<td>{{entry.prime_ideal|join(', ')}}</td>
+<td>{{entry.prime_ideal}|join(', ')}</td>
 <td>{{entry.eigenvalue}}</td>
 </tr>
 {% endfor %}
