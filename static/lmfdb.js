@@ -19,46 +19,46 @@ $(function() {
   }, 2000);
 });
 
-var revealed = false;
-/* only show main content after processing all the latex */
-$(function() {
-  if (window.location.pathname == "/" || $("body").hasClass("users")) return;
-  function show_content() {
-    revealed = true;
-    $("#content").css("opacity", "1").show();
-    $("#mathjax-info").fadeOut('fast');
-  }
-  MathJax.Hub.Queue(function() {show_content()}); 
-  $("#mathjax-info").click(function() {show_content()});
-
-  window.setTimeout(function() {
-    if(!revealed) { 
-      /* no animation, remember the odd race condition! */
-      $("#mathjax-info").show();
-      $("#content").hide();
-    }
-  }, 500);
-
-  /* delay some secs and tell the user, that it is
-   * still loading and clicking removes the banner */
-  window.setTimeout(function() {
-    /* still waiting? */
-    if(revealed) return;
-    if($("#content").css("display") == "none") {
-      $("#content").css("opacity", "0.2").show();
-      $("#mathjax-log").html("<strong>Still loading, click here to show it.</strong>");
-    }
-  }, 5000);
-
-  /* 
-  var $mjlog = $("#mathjax-log");
-  MathJax.Hub.Register.MessageHook("New Math",function (msg) {
-    var script = MathJax.Hub.getJaxFor(message[1]).SourceElement();
-    var txt = msg.join(" ")+": '"+script.text+"'";
-    $mjlog.html(txt);
-  });
-  */
-}); 
+//var revealed = false;
+///* only show main content after processing all the latex */
+//$(function() {
+//  if (window.location.pathname == "/" || $("body").hasClass("users")) return;
+//  function show_content() {
+//    revealed = true;
+//    $("#content").css("opacity", "1").show();
+//    $("#mathjax-info").fadeOut('fast');
+//  }
+//  MathJax.Hub.Queue(function() {show_content()}); 
+//  $("#mathjax-info").click(function() {show_content()});
+//
+//  window.setTimeout(function() {
+//    if(!revealed) { 
+//      /* no animation, remember the odd race condition! */
+//      $("#mathjax-info").show();
+//      $("#content").css("opacity", "0");
+//    }
+//  }, 500);
+//
+//  /* delay some secs and tell the user, that it is
+//   * still loading and clicking removes the banner */
+//  window.setTimeout(function() {
+//    /* still waiting? */
+//    if(revealed) return;
+//    if($("#content").css("opacity") == "0") {
+//      $("#content").css("opacity", "0.2").show();
+//      $("#mathjax-log").html("<strong>Still loading, click here to show it.</strong>");
+//    }
+//  }, 5000);
+//
+//  /* 
+//  var $mjlog = $("#mathjax-log");
+//  MathJax.Hub.Register.MessageHook("New Math",function (msg) {
+//    var script = MathJax.Hub.getJaxFor(message[1]).SourceElement();
+//    var txt = msg.join(" ")+": '"+script.text+"'";
+//    $mjlog.html(txt);
+//  });
+//  */
+//});
 
 /* code for the properties sidepanel on the right */
 /* jquery helper function, rotates element via css3 */
