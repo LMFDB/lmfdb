@@ -35,7 +35,7 @@ $(document).ready(function() {
 {% endif %}
 
       <h1>{{ KNOWL('mf.elliptic.newform',title='Newforms') }} {{info.browse_type | safe}}</h1>
-      {# { info | safe } #}
+      {% { table | safe } %}
       {% if info.browse_table is defined %}
       {% if info.browse_table.rows is defined %}
       <p>
@@ -49,7 +49,7 @@ $(document).ready(function() {
         <thead>
           <tr>
             <th width="20px" style="border-right:1px solid black">
-              Level&nbsp;\&nbsp;Weight
+              Level&nbsp;&nbsp;Weight
             </th>
             {% for k in table.col_heads  %}
             <th>{{k}}</th>

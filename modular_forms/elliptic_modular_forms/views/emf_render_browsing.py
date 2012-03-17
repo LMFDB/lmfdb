@@ -81,7 +81,7 @@ def render_table(level,**kwds):
     
 
 
-def browse_elliptic_modular_forms(level=None,weight=None,character=None,label=None,**kwds):
+def browse_elliptic_modular_forms(level=0,weight=0,character=-1,label='',**kwds):
     r"""
     Renders the webpage for browsing modular forms of given level and/or weight.
     """
@@ -89,10 +89,10 @@ def browse_elliptic_modular_forms(level=None,weight=None,character=None,label=No
     emf_logger.debug("Input: level={0},weight={1},character={2},label={3}".format(level,weight,character,label))
     bread = [(MF_TOP,url_for('mf.modular_form_main_page'))]
     bread.append((EMF_TOP,url_for('emf.render_elliptic_modular_forms')))
-    if level <0:
-        level=None
-    if weight<0:
-        weight=None
+    #if level <0:
+    #    level=None
+    #if weight<0:
+    #    weight=None
     info=dict()
     if character=='0':
         info['list_chars']='0'
@@ -100,14 +100,14 @@ def browse_elliptic_modular_forms(level=None,weight=None,character=None,label=No
         info['list_chars']='1'
     emf_logger.info("level=%s, %s"%(level,type(level)))
     emf_logger.info("wt=%s, %s"% (weight,type(weight)) )
-    if level:
+    if level>0:
         info['geometric'] = get_geometric_data_Gamma0N(level)
         #if info.has_key('plot'):
         grp=MyNewGrp(level,info)
         plot=grp.plot
         info['fd_plot']= image_src(grp)
         emf_logger.info("PLOT: %s" % info['fd_plot'])
-    if level<>None and weight==None:
+    if level>0 and weight==0:
         #print "here1!"
         title = "Holomorphic Cusp Forms of level %s " % level
         level = int(level)
@@ -127,7 +127,7 @@ def browse_elliptic_modular_forms(level=None,weight=None,character=None,label=No
         info['title']=title;  info['bread']=bread
         info['level']=level
         return render_template("emf_browse_fixed_level.html", **info)
-    if weight and not level:
+    if weight>0 and level==0:
         #disp = ClassicalMFDisplay('modularforms')
         #disp.set_table_browsing(limit=[(weight,weight),(1,50)],keys=['Weight','Level'],character='all',dimension_fun=dimension_new_cusp_forms,title='Dimension of newforms')
         info['show_all_characters']=1

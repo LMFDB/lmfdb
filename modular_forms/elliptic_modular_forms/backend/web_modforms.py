@@ -240,6 +240,8 @@ class WebModFormSpace(Parent):
                 if chi==0:
                     res=ModularSymbols(N,k,sign=1)
                 else:
+                    emf_logger.debug("character: {0}".format(self._character))
+                    emf_logger.debug("weight: {0}".format(k))
                     res=ModularSymbols(self._character,k,sign=1)
             elif get_what=='ap':
                 res=self._modular_symbols.ambient().compact_newform_eigenvalues(prime_range(prec),names='x')

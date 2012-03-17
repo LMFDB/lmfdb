@@ -23,92 +23,92 @@ import logging
 from sage.all import I,Gamma0,Gamma1,Gamma,SL2Z,ZZ,RR,ceil,sqrt,CC,line,text,latex,exp,pi,infinity
 
 def draw_fundamental_domain(N,group='Gamma0',model="H",axes=None,filename=None,**kwds):
-        r""" Draw fundamental domain
-        INPUT:
-         - ''model'' -- (default ''H'')
-             = ''H'' -- Upper halfplane
-             = ''D'' -- Disk model
-         - ''filename''-- filename to print to
-         - ''**kwds''-- additional arguments to matplotlib 
-         - ''axes''  -- set geometry of output
-             =[x0,x1,y0,y1] -- restrict figure to [x0,x1]x[y0,y1]
+    r""" Draw fundamental domain
+    INPUT:
+    - ''model'' -- (default ''H'')
+    = ''H'' -- Upper halfplane
+    = ''D'' -- Disk model
+    - ''filename''-- filename to print to
+    - ''**kwds''-- additional arguments to matplotlib 
+    - ''axes''  -- set geometry of output
+    =[x0,x1,y0,y1] -- restrict figure to [x0,x1]x[y0,y1]
 
-        EXAMPLES::
+    EXAMPLES::
+    
+    sage: G=MySubgroup(Gamma0(3))
+    sage: G.draw_fundamental_domain()
 
-            sage: G=MySubgroup(Gamma0(3))
-            sage: G.draw_fundamental_domain()
-
-        """
-        G=eval(group+'('+str(N)+')')
-	s="$"+latex(G)+"$"
-	s=s.replace("mbox","mathrm")
-	s=s.replace("Bold","mathbb")
-        name = s
-	#name ="$\mbox{SL}_{2}(\mathbb{Z})$"
-        ## need a "nice" set of coset representatives to draw a connected fundamental domain. Only implemented for Gamma_0(N)
-        coset_reps = nice_coset_reps(G)
-        #if(group=='Gamma0'):
-        #else:
-        #coset_reps = list(G.coset_reps())
-        from matplotlib.backends.backend_agg import FigureCanvasAgg
-        if(model=="D"):
-            g=_draw_funddom_d(coset_reps,format,I)
-        else:
-            g=_draw_funddom(coset_reps,format)
-        if(axes<>None):
-            [x0,x1,y0,y1]=axes
-        elif(model=="D"):
-            x0=-1 ; x1=1 ; y0=-1.1 ; y1=1 
-        else:
-            # find the width of the fundamental domain
-            w=0  #self.cusp_width(Cusp(Infinity))
-            wmin=0 ; wmax=1
-            max_x = RR(0.55)
-            rho = CC( exp(2*pi*I/3))
-            for V in coset_reps:
-                ## we also compare the real parts of where rho and infinity are mapped
-                r1 = (V.acton(rho)).real()
-                if(V[1,0]<>0):
-                    inf1 = RR(V[0,0] / V[1,0])
-                else:
-                    inf1 = 0
-                if(V[1 ,0 ]==0  and V[0 ,0 ]==1 ):
-                    if(V[0 ,1 ]>wmax):
-                        wmax=V[0 ,1 ]
-                    if(V[0 ,1 ]<wmin):
-                        wmin=V[0 ,1 ]
-                if( max(r1,inf1) > max_x):
-                    max_x = max(r1,inf1)
+    """
+    G=eval(group+'('+str(N)+')')
+    s="$"+latex(G)+"$"
+    s=s.replace("mbox","mathrm")
+    s=s.replace("Bold","mathbb")
+    name = s
+    #name ="$\mbox{SL}_{2}(\mathbb{Z})$"
+    ## need a "nice" set of coset representatives to draw a connected fundamental domain. Only implemented for Gamma_0(N)
+    coset_reps = nice_coset_reps(G)
+    #if(group=='Gamma0'):
+    #else:
+    #coset_reps = list(G.coset_reps())
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+    if(model=="D"):
+        g=_draw_funddom_d(coset_reps,format,I)
+    else:
+        g=_draw_funddom(coset_reps,format)
+    if(axes<>None):
+        [x0,x1,y0,y1]=axes
+    elif(model=="D"):
+        x0=-1 ; x1=1 ; y0=-1.1 ; y1=1 
+    else:
+        # find the width of the fundamental domain
+        w=0  #self.cusp_width(Cusp(Infinity))
+        wmin=0 ; wmax=1
+        max_x = RR(0.55)
+        rho = CC( exp(2*pi*I/3))
+        for V in coset_reps:
+            ## we also compare the real parts of where rho and infinity are mapped
+            r1 = (V.acton(rho)).real()
+            if(V[1,0]<>0):
+                inf1 = RR(V[0,0] / V[1,0])
+            else:
+                inf1 = 0
+            if(V[1 ,0 ]==0  and V[0 ,0 ]==1 ):
+                if(V[0 ,1 ]>wmax):
+                    wmax=V[0 ,1 ]
+                if(V[0 ,1 ]<wmin):
+                    wmin=V[0 ,1 ]
+            if( max(r1,inf1) > max_x):
+                max_x = max(r1,inf1)
             logging.debug("wmin,wmax=%s,%s" % (wmin,wmax))
-            #x0=-1; x1=1; y0=-0.2; y1=1.5
-            x0=RR(-max_x) ; x1=RR(max_x) ; y0=RR(-0.15) ; y1=RR(1.5) 
+        #x0=-1; x1=1; y0=-0.2; y1=1.5
+        x0=RR(-max_x) ; x1=RR(max_x) ; y0=RR(-0.15) ; y1=RR(1.5) 
         ## Draw the axes manually (since  can't figure out how to do it automatically)
-        ax = line([[x0,0.0],[x1,0.0]],color='black')
-        #ax = ax + line([[0.0,y0],[0.0,y1]],color='black')
-        ## ticks
-        ax = ax + line([[-0.5,-0.01],[-0.5,0.01]],color='black')
-        ax = ax + line([[0.5,-0.01],[0.5,0.01]],color='black')
-        g = g + ax
-	if model=="H":
-		t = text(name, (0, -0.1), fontsize=16, color='black')
-                t = t+ text("$ -\\frac{1}{2} $", (-0.5,-0.1), fontsize=12, color='black')
-                t = t + text("$ \\frac{1}{2} $", (0.5, -0.1), fontsize=12, color='black')
-	else:
-		t = text(name, (0, -1.1), fontsize=16, color='black')		
-        g = g + t 
-        g.set_aspect_ratio(1)
-        g.set_axes_range(x0,x1,y0,y1)
-        g.axes(False)
+    ax = line([[x0,0.0],[x1,0.0]],color='black')
+    #ax = ax + line([[0.0,y0],[0.0,y1]],color='black')
+    ## ticks
+    ax = ax + line([[-0.5,-0.01],[-0.5,0.01]],color='black')
+    ax = ax + line([[0.5,-0.01],[0.5,0.01]],color='black')
+    g = g + ax
+    if model=="H":
+        t = text(name, (0, -0.1), fontsize=16, color='black')
+        t = t+ text("$ -\\frac{1}{2} $", (-0.5,-0.1), fontsize=12, color='black')
+        t = t + text("$ \\frac{1}{2} $", (0.5, -0.1), fontsize=12, color='black')
+    else:
+        t = text(name, (0, -1.1), fontsize=16, color='black')       
+    g = g + t 
+    g.set_aspect_ratio(1)
+    g.set_axes_range(x0,x1,y0,y1)
+    g.axes(False)
         
-        if(filename<>None):
-            fig = g.matplotlib()
-            fig.set_canvas(FigureCanvasAgg(fig))
-            axes = fig.get_axes()[0]
-            axes.minorticks_off()
-            axes.set_yticks([])
-            fig.savefig(filename,**kwds)
-        else:
-            return g
+    if(filename<>None):
+        fig = g.matplotlib()
+        fig.set_canvas(FigureCanvasAgg(fig))
+        axes = fig.get_axes()[0]
+        axes.minorticks_off()
+        axes.set_yticks([])
+        fig.savefig(filename,**kwds)
+    else:
+        return g
 #        g.show(figsize=[5,5])
 
 def _draw_funddom(coset_reps,format="S"):
