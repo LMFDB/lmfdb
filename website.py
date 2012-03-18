@@ -22,8 +22,10 @@ import upload
 import DirichletCharacter
 import local_fields
 import galois_groups
+import number_field_galois_groups
 import OEIS
 import artin_representations
+import zeros
 
 import raw
 from modular_forms.maass_forms.picard import mwfp
