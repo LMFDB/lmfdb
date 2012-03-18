@@ -20,7 +20,7 @@ logger = make_logger("GG")
 try:
   G = gap.TransitiveGroup(9,2)
 except:
-  logger.info("It looks like the spkg gap_packages-4.4.12.p0 is not installed on the server.  Please install it and try again.")
+  logger.fatal("It looks like the SPKGes gap_packages and database_gap are not installed on the server.  Please install them via 'sage -i ...' and try again.")
   exit()
 
 from transitive_group import group_display_short, group_display_long, group_display_inertia, group_knowl_guts, subfield_display, otherrep_display, resolve_display
