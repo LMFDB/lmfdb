@@ -22,7 +22,7 @@ def draw_table(nrows=None,ncols=None,**kwds):
     if nrows==None or ncols==None:
         return emf_error("Please supply level weight (and optional character)!")
     ttype = my_get(info,'ttype','new',str)
-    ttype = my_get(kwds,'ttype',info['ttype'],str)
+    ttype = my_get(kwds,'ttype',info.get('ttype'),str)
     info = to_dict(kwds)
     ttype = my_get(kwds,'ttype','new',str)
     info['title']='Title of table'
@@ -44,8 +44,7 @@ def return_dimension(level=None,weight=None,chi=None,**kwds):
     chi = my_get(info,'chi',chi,int)
     if level==None or weight==None:
         return emf_error("Please supply level weight (and optional character)!")
-    ttype = my_get(info,'ttype','new',str)
-    ttype = my_get(kwds,'ttype',info['ttype'],str)
+    ttype = my_get(kwds,'ttype',info.get('ttype','new'),str)
     emf_logger.debug("level,weight,chi: {0},{1},{2}, type={3}".format(level,weight,chi,ttype))
     if chi==0 or chi==None:
         x = level
@@ -78,6 +77,7 @@ def render_table(level,**kwds):
     nrows = my_get(kwds,'nrows',10,int)
     ncols = my_get(kwds,'ncols',10,int)
     ttype = my_get(kwds,'ttype','newforms',str)
+    
     
 
 
@@ -156,13 +156,13 @@ def browse_elliptic_modular_forms(level=0,weight=0,character=-1,label='',**kwds)
                 table[i][j]={"dim":d,"url":url}
                 j = j+1
             i = i + 1
-        info['table']=table
+        info['browse_table']=table
         info['nrows']=len(row_heads)
         info['ncols']=len(col_heads)
         info['title']=title;  info['bread']=bread
         info['row_heads']=row_heads
         info['col_heads']=col_heads
-        return render_template("emf_browse_fixed_weight.html", **info)
+        return render_template("emf_browse_fixed_level.html", **info)
     emf_logger.debug("here2!")
     info['level_min']=level;info['level_max']=level
     info['weight_min']=weight;info['weight_max']=weight

@@ -355,7 +355,7 @@ def _geodesic_between_two_points_d(x1,y1,x2,y2,z0=I):
     return _circ_arc(t1,t2,c,r)
 
 
-def _circ_arc(t0,t1,c,r,num_pts=5000 ):
+def _circ_arc(t0,t1,c,r,num_pts=500):
     r""" Circular arc
     INPUTS:
     - ''t0'' -- starting parameter
@@ -373,8 +373,9 @@ def _circ_arc(t0,t1,c,r,num_pts=5000 ):
         sage: ca=_circ_arc(0.1,0.2,0.0,1.0,100)
     
     """
-    from sage.plot.plot import line
+    from sage.plot.plot import line,parametric_plot
     from sage.functions.trig import (cos,sin)
+    from sage.all import var
     t00=t0; t11=t1
     ## To make sure the line is correct we reduce all arguments to the same branch,
     ## e.g. [0,2pi]
@@ -390,8 +391,12 @@ def _circ_arc(t0,t1,c,r,num_pts=5000 ):
 
     xc=CC(c).real()
     yc=CC(c).imag()
-    L0 = [[RR(r*cos(t00+i*(t11-t00)/num_pts))+xc,RR(r*sin(t00+i*(t11-t00)/num_pts))+yc] for i in range(0 ,num_pts)]
-    ca=line(L0)
+    #L0 = [[RR(r*cos(t00+i*(t11-t00)/num_pts))+xc,RR(r*sin(t00+i*(t11-t00)/num_pts))+yc] for i in range(0 ,num_pts)]
+    t = var('t')
+    if t11>t00:
+        ca = parametric_plot((r*cos(t)+xc, r*sin(t)+yc), (t, t00,t11))
+    else:
+        ca = parametric_plot((r*cos(t)+xc, r*sin(t)+yc), (t, t11,t00))  
     return ca
 
 
