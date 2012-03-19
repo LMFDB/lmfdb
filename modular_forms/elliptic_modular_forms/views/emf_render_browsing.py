@@ -22,7 +22,7 @@ def draw_table(nrows=None,ncols=None,**kwds):
     if nrows==None or ncols==None:
         return emf_error("Please supply level weight (and optional character)!")
     ttype = my_get(info,'ttype','new',str)
-    ttype = my_get(kwds,'ttype',info['ttype'],str)
+    ttype = my_get(kwds,'ttype',info.get('ttype'),str)
     info = to_dict(kwds)
     ttype = my_get(kwds,'ttype','new',str)
     info['title']='Title of table'
@@ -44,8 +44,7 @@ def return_dimension(level=None,weight=None,chi=None,**kwds):
     chi = my_get(info,'chi',chi,int)
     if level==None or weight==None:
         return emf_error("Please supply level weight (and optional character)!")
-    ttype = my_get(info,'ttype','new',str)
-    ttype = my_get(kwds,'ttype',info['ttype'],str)
+    ttype = my_get(kwds,'ttype',info.get('ttype','new'),str)
     emf_logger.debug("level,weight,chi: {0},{1},{2}, type={3}".format(level,weight,chi,ttype))
     if chi==0 or chi==None:
         x = level
@@ -79,9 +78,10 @@ def render_table(level,**kwds):
     ncols = my_get(kwds,'ncols',10,int)
     ttype = my_get(kwds,'ttype','newforms',str)
     
+    
 
 
-def browse_elliptic_modular_forms(level=None,weight=None,character=None,label=None,**kwds):
+def browse_elliptic_modular_forms(level=0,weight=0,character=-1,label='',**kwds):
     r"""
     Renders the webpage for browsing modular forms of given level and/or weight.
     """
@@ -89,10 +89,10 @@ def browse_elliptic_modular_forms(level=None,weight=None,character=None,label=No
     emf_logger.debug("Input: level={0},weight={1},character={2},label={3}".format(level,weight,character,label))
     bread = [(MF_TOP,url_for('mf.modular_form_main_page'))]
     bread.append((EMF_TOP,url_for('emf.render_elliptic_modular_forms')))
-    if level <0:
-        level=None
-    if weight<0:
-        weight=None
+    #if level <0:
+    #    level=None
+    #if weight<0:
+    #    weight=None
     info=dict()
     if character=='0':
         info['list_chars']='0'
@@ -100,14 +100,14 @@ def browse_elliptic_modular_forms(level=None,weight=None,character=None,label=No
         info['list_chars']='1'
     emf_logger.info("level=%s, %s"%(level,type(level)))
     emf_logger.info("wt=%s, %s"% (weight,type(weight)) )
-    if level:
+    if level>0:
         info['geometric'] = get_geometric_data_Gamma0N(level)
         #if info.has_key('plot'):
         grp=MyNewGrp(level,info)
         plot=grp.plot
         info['fd_plot']= image_src(grp)
         emf_logger.info("PLOT: %s" % info['fd_plot'])
-    if level<>None and weight==None:
+    if level>0 and weight==0:
         #print "here1!"
         title = "Holomorphic Cusp Forms of level %s " % level
         level = int(level)
@@ -127,7 +127,7 @@ def browse_elliptic_modular_forms(level=None,weight=None,character=None,label=No
         info['title']=title;  info['bread']=bread
         info['level']=level
         return render_template("emf_browse_fixed_level.html", **info)
-    if weight and not level:
+    if weight>0 and level==0:
         #disp = ClassicalMFDisplay('modularforms')
         #disp.set_table_browsing(limit=[(weight,weight),(1,50)],keys=['Weight','Level'],character='all',dimension_fun=dimension_new_cusp_forms,title='Dimension of newforms')
         info['show_all_characters']=1
@@ -156,13 +156,13 @@ def browse_elliptic_modular_forms(level=None,weight=None,character=None,label=No
                 table[i][j]={"dim":d,"url":url}
                 j = j+1
             i = i + 1
-        info['table']=table
+        info['browse_table']=table
         info['nrows']=len(row_heads)
         info['ncols']=len(col_heads)
         info['title']=title;  info['bread']=bread
         info['row_heads']=row_heads
         info['col_heads']=col_heads
-        return render_template("emf_browse_fixed_weight.html", **info)
+        return render_template("emf_browse_fixed_level.html", **info)
     emf_logger.debug("here2!")
     info['level_min']=level;info['level_max']=level
     info['weight_min']=weight;info['weight_max']=weight

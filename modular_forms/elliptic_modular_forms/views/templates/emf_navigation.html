@@ -132,7 +132,7 @@ table.ntdata th.weight {
         <tbody>
           {% for row in rows  %}
           <tr>
-            <th class="left"
+            <th class="left">
               {% set N = table.row_heads[loop.index-1] %}
               {% set row_url = url_for('emf.render_elliptic_modular_forms',level=N) %}
               <a href="{{ row_url }}">{{ N }}</a>

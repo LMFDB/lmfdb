@@ -65,7 +65,10 @@ met = ['GET','POST']
 @emf.route("/<int:level>/<int:weight>/<int:character>/",methods=met)
 @emf.route("/<int:level>/<int:weight>/<int:character>/<label>",methods=met)
 @emf.route("/<int:level>/<int:weight>/<int:character>/<label>/",methods=met)
-def render_elliptic_modular_forms(level=None,weight=None,character=None,label=None,**kwds):
+def render_elliptic_modular_forms(level=0,weight=0,character=-1,label='',**kwds):
+    r"""
+    Default input of same type as required. Note that for holomorphic modular forms: level=0 or weight=0 are non-existent.
+    """
     emf_logger.debug("In render: level={0},weight={1},character={2},label={3}".format(level,weight,character,label))
     emf_logger.debug("args={0}".format(request.args))
     emf_logger.debug("args={0}".format(request.form))
@@ -74,26 +77,30 @@ def render_elliptic_modular_forms(level=None,weight=None,character=None,label=No
     level=info['level']; weight=info['weight']; character=info['character']; label=info['label']
     emf_logger.debug("info={0}".format(info))
     emf_logger.info("level=%s, %s"%(level,type(level)))
+    emf_logger.info("label=%s, %s"%(label,type(label)))
     emf_logger.info("wt=%s, %s"% (weight,type(weight)) )
     if info.has_key('download'):
         return get_downloads(info)
     emf_logger.debug("info=%s"%info)
     ## Consistency of arguments>
-    if level<=0:  level=None
-    if weight<=0:  weight=None
+    #if level<=0:  level=None
+    #if weight<=0:  weight=None
     if info.has_key('jump_to'):  # try to find out which form we want to jump
-        s = my_get(info,'jump_to','',str); info.pop('jump_to')
+        s = my_get(info,'jump_to','',str)
+        emf_logger.info("info.keys1={0}".format(info.keys()) )        
+        info.pop('jump_to')
+        emf_logger.info("info.keys2={0}".format(info.keys()) )        
         args=extract_data_from_jump_to(s)
         emf_logger.debug("args=%s"%args)
         return redirect(url_for("emf.render_elliptic_modular_forms", **args), code=301)
         #return render_elliptic_modular_forms(**args)
-    if level<>None and weight<>None and character<>None and label<>None:
+    if level>0 and weight>0 and character>-1 and label<>'':
         return render_one_elliptic_modular_form(**info)
-    if level<>None and weight<>None and character<>None:
+    if level>0 and weight>0 and character>-1:
         return render_elliptic_modular_form_space(**info)
-    if level<>None and weight<>None:
+    if level>0 and weight>0:
         return browse_elliptic_modular_forms(**info)
-    if (level<>None and weight==None) or (weight<>None and level==None):
+    if (level>0 and weight==0) or (weight>0 and level==0):
         emf_logger.debug("Have level or weight only!")
         return browse_elliptic_modular_forms(**info)
     # Otherwise we go to the main navigation page
@@ -110,7 +117,10 @@ def redirect_false_route(test=None):
 
 
 
-def get_args(request,level=None,weight=None,character=None,label=None):    
+def get_args(request,level=0,weight=0,character=-1,label=''):    
+    r"""
+    Use default input of the same type as desired output.
+    """
     if request.method == 'GET':
         dd = to_dict(request.args)
     else:
@@ -120,6 +130,8 @@ def get_args(request,level=None,weight=None,character=None,label=None):
     info['weight']=my_get(dd,'weight',weight,int)
     info['character']=my_get(dd,'character',character,int)
     info['label']=my_get(dd,'label',label,str)
+    if dd.has_key('jump_to'):
+        info['jump_to']=dd['jump_to']
     return info
 
 
