@@ -27,6 +27,26 @@
    </blockquote>
    </p>
 
+  <p><h2>{{ KNOWL('gg.conjugacy_classes', title='Conjugacy Classes') }}</h2>
+   <p>
+
+   <table class="ntdata">
+      <thead><tr><td>Cycle Type</td><td>Size</td><td>Order</td><td>Representative</td></tr></thead>
+      <tbody>
+        {% for c in info.cclasses %}
+           <tr><td> ${{c[3]}}$</td>
+              <td> ${{c[2]}}$</td>
+              <td> ${{c[1]}}$</td>
+              <td> ${{c[0]}}$</td>
+           </tr>
+        {% endfor %}
+      </tbody>
+      </table>
+
+
+   </p>
+
+
 <p><h2> {{ KNOWL('gg.invariants', title='Group invariants') }}</h2>
   <p>
     <table>
