@@ -152,5 +152,8 @@ def conjclasses(g, n):
   ccn = [x.Size() for x in cc]
   cc = [x.Representative() for x in cc]
   cc2 = [x.cycletype(n) for x in cc]
+  cc2 = [str(x) for x in cc2]
+  cc2 = map(lambda x: re.sub("\[",'', x),  cc2)
+  cc2 = map(lambda x: re.sub("\]",'', x),  cc2)
   ans = [[cc[j], cc[j].Order(), ccn[j], cc2[j]] for j in range(len(ccn))]
   return(ans)

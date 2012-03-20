@@ -4,7 +4,7 @@
 
 <p>
 
-      <h2>Browse {{KNOWL('galois_group', title="Galois groups")}}</h2>
+      <h2>Browse {{KNOWL('gg.galois_group', title="Galois groups")}}</h2>
 <p>
 
 Browse by degree $n$:
@@ -17,8 +17,8 @@ Browse by degree $n$:
     <h2>Find a specific Galois group</h2>
 
     <form name="search" method = "get" action="{{search}}">      
-	  Search by {{KNOWL('tg.label',title="label")}}
-          <input type="text" name="jump_to" value="" placeholder="2.4"> 
+	  Search by {{KNOWL('gg.label',title="label")}}
+          <input type="text" name="jump_to" value="" placeholder="8T14"> 
           <input type="submit" value="Find">
         </form>
     </td>
@@ -29,12 +29,12 @@ Browse by degree $n$:
         <table class="">
           <tr>
             <td>
-          {{KNOWL('tg.degree',title='Degree')}}:
+          {{KNOWL('gg.degree',title='Degree')}}:
             </td><td><input type="text" name="n" value="" example="6"></td>
           </tr>
           <tr>
             <td>
-              {{KNOWL('tg.tnumber',title='$t$')}}:
+              {{KNOWL('gg.tnumber',title='$t$')}}:
             </td><td><input type="text" name="t" value="" example="3"></td>
           </tr>
 <!--      
