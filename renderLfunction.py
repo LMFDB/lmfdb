@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from base import *
 from flask import Flask, session, g, render_template, url_for, request, redirect, make_response, abort
 
@@ -22,16 +23,16 @@ logger = make_logger("LF")
 
 @app.route("/L/")
 @app.route("/L/<arg1>/") # arg1 is EllipticCurve, ModularForm, Character, etc
-@app.route("/L/<arg1>/<arg2>/") # arg2 is field
-@app.route("/L/<arg1>/<arg2>/<arg3>/") #arg3 is label
-@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/")
-@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/")
-@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/")
-@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/")
-@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/")
-@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>/")
-def render_Lfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = None, arg6 = None, arg7 = None, arg8 = None, arg9 = None):
-    return render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+@app.route("/L/<arg1>/<field>/") # arg2 is field
+@app.route("/L/<arg1>/<field>/<label>/") #arg3 is label
+@app.route("/L/<arg1>/<field>/<label>/<arg4>/")
+@app.route("/L/<arg1>/<field>/<label>/<arg4>/<arg5>/")
+@app.route("/L/<arg1>/<field>/<label>/<arg4>/<arg5>/<arg6>/")
+@app.route("/L/<arg1>/<field>/<label>/<arg4>/<arg5>/<arg6>/<arg7>/")
+@app.route("/L/<arg1>/<field>/<label>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/")
+@app.route("/L/<arg1>/<field>/<label>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>/")
+def render_Lfunction(arg1 = None, field = None, label = None, arg4 = None, arg5 = None, arg6 = None, arg7 = None, arg8 = None, arg9 = None):
+    return render_webpage(request, arg1, field, label, arg4, arg5, arg6, arg7, arg8, arg9)
 
 @app.route("/Lfunction/")
 @app.route("/Lfunction/<arg1>/")
