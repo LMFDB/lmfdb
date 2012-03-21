@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import math
 #from Lfunctionutilities import pair2complex, splitcoeff, seriescoeff
 from sage.all import *
@@ -61,7 +62,7 @@ class WebCharacter:
                     if F[i] == self.inducedchar:
                         self.inducedchar_number = i
                         break
-            self.inducedchar_tex = "\(\\chi_{%s}\\!\\!\\pmod{%s}\)" %(self.inducedchar_number,self.inducedchar_modulus)
+            self.inducedchar_tex = r"\(\chi_{%s}\!\!\pmod{%s}\)" %(self.inducedchar_number,self.inducedchar_modulus)
        
        # if self.primitive == 'True':
        #     self.primtf = True
@@ -108,7 +109,7 @@ class WebCharacter:
             self.sign = "False"
         chizero = G[0]
         self.credit = "Sage"
-        self.title = "Dirichlet Character: \(\chi_{%s}\\!\\!\pmod{%s}\)" %(self.number,self.modulus)
+        self.title = r"Dirichlet Character: \(\chi_{%s}\!\!\pmod{%s}\)" %(self.number,self.modulus)
 
     def gauss_sum_tex(self):
         ans = "\(\\tau_a(\\chi_{%s}) \\;\) at \(\\; a = \)" %(self.number)

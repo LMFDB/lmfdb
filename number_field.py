@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import re
 import pymongo
 
@@ -578,6 +579,7 @@ def number_field_search(**args):
         nres_pos = res_pos.count()
         # TODO: pages
 
+        # TODO HSY: why is there a merge_sort? a sorted(key=lambda _: ...) would be much much faster
         res = merge_sort(iter(res_neg),iter(res_pos))
         nres = nres_pos+nres_neg
         

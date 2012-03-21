@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+
+### THIS IS JUST FOR DEMO PURPOSES ###
+
 from flask import make_response
 
 import tempfile
