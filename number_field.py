@@ -6,8 +6,9 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 
 import sage.all
 from sage.all import ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, euler_phi, pari
+from sage.rings.arith import primes
 
-from transitive_group import group_display_knowl, group_knowl_guts
+from transitive_group import group_display_knowl, group_knowl_guts, group_display_short
 
 from utils import ajax_more, image_src, web_latex, to_dict, parse_range, coeff_to_poly, pol_to_html
 
@@ -406,7 +407,15 @@ def render_field_webpage(args):
     K = coeff_to_nf(data['coefficients'])
     D = data['discriminant']
     h = data['class_number']
-    data['galois_grou'] = group_display_knowl(8,13,C)
+    if data['degree']<8:
+      oldgcode = data['galois_group']
+      oldgcode = (data['degree'], oldgcode[0],oldgcode[1],oldgcode[2])
+      oldgcode = group_names[oldgcode][-1]
+      oldgcode = re.sub('^.*T','',oldgcode)
+      t = int(oldgcode)
+    else:
+      t = data['galois_group'][2]
+    data['galois_grou'] = group_display_knowl(data['degree'],t,C)
     data['galois_group'] = str(data['galois_group'][3])
     data['class_group_invs'] = data['class_group']
     if data['class_group_invs']==[]:
@@ -417,6 +426,7 @@ def render_field_webpage(args):
     ram_primes = D.prime_factors()
     npr = len(ram_primes)
     ram_primes = str(ram_primes)[1:-1]
+    data['frob_data'] = frobs(K)
     #Gorder,Gsign,Gab = GG_data(data['galois_group'])
     #if Gab:
     #    Gab='abelian'
@@ -447,7 +457,7 @@ def render_field_webpage(args):
     info['friends'] = [('L-function', "/L/NumberField/%s" % label)]
     info['learnmore'] = [('Global Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
     bread = [('Global Number Fields', url_for("number_field_render_webpage")),('%s'%info['label'],' ')]
-    t = "Global Number Field %s" % info['label']
+    title = "Global Number Field %s" % info['label']
 
     if npr==1:
          primes='prime'
@@ -460,12 +470,13 @@ def render_field_webpage(args):
                    ('Ramified '+primes+':', '%s' %ram_primes),
                    ('Class number:', '%s' %data['class_number']),
                    ('Class group:', '%s' %data['class_group_invs']),
-                   ('Galois Group:', '%s' %data['galois_group'])
+#                   ('Galois Group:', '%s' %data['galois_group'])
+                   ('Galois Group:', group_display_short(data['degree'], t, C))
     ]
 
 
     del info['_id']
-    return render_template("number_field/number_field.html", properties2=properties2, credit=NF_credit, title = t, bread=bread, friends=info.pop('friends'), info=info )
+    return render_template("number_field/number_field.html", properties2=properties2, credit=NF_credit, title = title, bread=bread, friends=info.pop('friends'), info=info )
 
 def format_coeffs(coeffs):
     return pol_to_html(str(coeff_to_poly(coeffs)))
@@ -665,7 +676,36 @@ def filter_ur_primes(it, ur_primes):
         a = it.next()
         D = a['discriminant']
     return
-    
+
+# Compute Frobenius cycle types
+def frobs(K):
+  k1 = pari(K)
+  D = K.disc()
+  ans = []
+  for p in primes(2,60):
+    if not ZZ(p).divides(D):
+      dec = k1.idealprimedec(p)
+      dec = [z[3] for z in dec]
+      vals = list(set(dec))
+      vals = sorted(vals, reverse=True)
+      dec = [[x, dec.count(x)] for x in vals]
+      dec2 = ["$"+str(x[0]) + ('^{'+str(x[1])+'}$' if x[1]>1 else '$') for x in dec]
+      s = '$'
+      old=2
+      for j in dec:
+        if old==1: s += '\: '
+        s += str(j[0])
+        if j[1]>1:
+          s += '^{'+str(j[1])+'}'
+        old = j[1]
+      s += '$'
+      ans.append([p, s])
+    else:
+      ans.append([p, 'R'])
+  return(ans)
+
+
+
 # obsolete old function:                    
 def old_merge(it1,it2,lim):
     count=0
