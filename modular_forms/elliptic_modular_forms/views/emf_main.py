@@ -19,7 +19,7 @@ Main file for viewing elliptical modular forms.
 AUTHOR: Fredrik Strömberg
 
 """
-from flask import render_template, url_for, request, redirect, make_response,send_file
+from flask import render_template, url_for, request, redirect, make_response,send_file,send_from_directory
 import tempfile, os,re
 from utils import ajax_more,ajax_result,make_logger
 from sage.all import *
@@ -73,14 +73,15 @@ def render_elliptic_modular_forms(level=0,weight=0,character=-1,label='',**kwds)
     emf_logger.debug("args={0}".format(request.args))
     emf_logger.debug("args={0}".format(request.form))
     emf_logger.debug("met={0}".format(request.method))
-    info = get_args(request,level,weight,character,label)
+    keys=['download','jump_to']
+    info = get_args(request,level,weight,character,label,keys=keys)
     level=info['level']; weight=info['weight']; character=info['character']; label=info['label']
     emf_logger.debug("info={0}".format(info))
     emf_logger.info("level=%s, %s"%(level,type(level)))
     emf_logger.info("label=%s, %s"%(label,type(label)))
     emf_logger.info("wt=%s, %s"% (weight,type(weight)) )
     if info.has_key('download'):
-        return get_downloads(info)
+        return get_downloads(**info)
     emf_logger.debug("info=%s"%info)
     ## Consistency of arguments>
     #if level<=0:  level=None
@@ -117,7 +118,7 @@ def redirect_false_route(test=None):
 
 
 
-def get_args(request,level=0,weight=0,character=-1,label=''):    
+def get_args(request,level=0,weight=0,character=-1,label='',keys=[]):    
     r"""
     Use default input of the same type as desired output.
     """
@@ -130,8 +131,9 @@ def get_args(request,level=0,weight=0,character=-1,label=''):
     info['weight']=my_get(dd,'weight',weight,int)
     info['character']=my_get(dd,'character',character,int)
     info['label']=my_get(dd,'label',label,str)
-    if dd.has_key('jump_to'):
-        info['jump_to']=dd['jump_to']
+    for key in keys:
+        if dd.has_key(key):
+            info[key]=my_get(dd,key,'',str)
     return info
 
 
@@ -184,8 +186,10 @@ met = ['GET','POST']
 @emf.route("/Download/<int:level>/<int:weight>/<int:character>/<label>",methods=['GET','POST'])
 
 def get_downloads(level=None,weight=None,character=None,label=None,**kwds):
-    info = to_dict(request.form)
-    info['level']=level; info['weight']=weight; info['character']=character; info['label']=label
+    keys=['download','download_file','tempfile','format','number']
+    info = get_args(request,level,weight,character,label,keys=keys)
+    #info = to_dict(request.form)
+    #info['level']=level; info['weight']=weight; info['character']=character; info['label']=label
     if not info.has_key('download'):
         emf_logger.critical("Download called without specifying what to download!")
         return ""
@@ -193,23 +197,26 @@ def get_downloads(level=None,weight=None,character=None,label=None,**kwds):
     if info['download']=='file':
         # there are only a certain number of fixed files that we want people to download
         filename=info['download_file']
-        if(filename=="web_modforms.py"):
-            full_filename=os.curdir+"/elliptic_modular_forms/backend/web_modforms.py"
-            try: 
-                return send_file(full_filename, as_attachment=True, attachment_filename=filename)
+        if filename=="web_modforms.py":
+            dirname=emf.app.root_static_folder
+            try:
+                emf_logger.debug("Dirname:{0}, Filename:{1}".format(dirname,filename))
+                return send_from_directory(dirname,filename, as_attachment=True,attachment_filename=filename)
             except IOError:
                 info['error']="Could not find  file! "
     if info['download']=='coefficients':
         info['tempfile'] = "/tmp/tmp_web_mod_form.txt"
         return get_coefficients(info)
     if info['download']=='object':
-        info['tempfile'] = "/tmp/tmp_web_mod_form.sobj"
-        if label<>'':
-            # download a function
-            render_one_elliptic_modular_form_wp(info)
-        else:
-            render_one_elliptic_modular_form_space_wp(info)
-            # download a space
+        return download_web_modform(info)
+
+        info['error']="Could not find  file! "
+        #if label<>'':
+        #    # download a function
+        #    render_one_elliptic_modular_form_wp(info)
+        #else:
+        #    render_one_elliptic_modular_form_space_wp(info)
+        #    # download a space
 
 def get_coefficients(info):
     emf_logger.debug("IN GET_COEFFICIENTS!!!")
@@ -222,9 +229,6 @@ def get_coefficients(info):
     label  = info.get('label', '')
     # we only want one form or one embedding
     s = print_list_of_coefficients(info)
-    #fp=open(info['tempfile'],"w")
-    #fp.write(s)
-    #fp.close()
     info['filename']=str(weight)+'-'+str(level)+'-'+str(character)+'-'+label+'coefficients-0to'+info['number']+'.txt'
     #return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
     strIO = StringIO.StringIO()
@@ -233,6 +237,47 @@ def get_coefficients(info):
     return send_file(strIO,
                      attachment_filename=info["filename"],
                      as_attachment=True)
+
+
+
+def download_web_modform(info):
+    emf_logger.debug("IN GET_WEB_MODFORM!!! info={0}".format(info))
+    level  = my_get(info,'level', -1,int)
+    weight = my_get(info,'weight',-1,int)
+    character = my_get(info,'character', '',str) #int(info.get('weight',0))
+    emf_logger.debug("info={0}".format(info))
+    if character=='':
+        character=0
+    label  = info.get('label', '')
+    # we only want one form or one embedding
+    if label<>'':
+        if format=='sage':
+            if character<>0:
+                D = DirichletGroup(level)
+                x = D[character]
+                X = Newforms(x,weight,names='a')
+            else:
+                X = Newforms(level,weight,names='a')
+        else: # format=='web_new':
+            X = WebNewForm(weight,level,character,label)
+    s = X.dumps()
+    name = "{0}-{1}-{2}-{3}-web_newform.sobj".format(weight,level,character,label)
+    emf_logger.debug("name={0}".format(name))
+    info['filename']=name
+    strIO = StringIO.StringIO()
+    strIO.write(s)
+    strIO.seek(0)
+    try:
+        return send_file(strIO,
+                         attachment_filename=info["filename"],
+                         as_attachment=True)
+    except IOError:
+        info['error']="Could not send file!"
+
+        
+
+
+
 #return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
         
     # first check database.

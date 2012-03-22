@@ -35,7 +35,6 @@ from flask import url_for
 
 ## DB modules
 import pymongo 
-from utils import pol_to_html 
 import gridfs
 from pymongo.helpers import bson     
 from bson import BSON
@@ -69,7 +68,7 @@ class WebModFormSpace(Parent):
         - 'chi' -- character
         - 'cuspidal' -- 1 if space of cuspforms, 0 if all modforms 
         """
-        self._cuspidal=1
+        self._cuspidal=cuspidal
         self._k = ZZ(k)
         self._N = ZZ(N)
         if chi=='trivial':
@@ -85,6 +84,9 @@ class WebModFormSpace(Parent):
         self._dimension_cusp_forms = None
         self._dimension_modular_forms = None
         self._dimension_new_cusp_forms = None
+        self._dimension_new_modular_symbols = None
+        self._galois_decomposition=[]
+        self._newspace=None
         self._character = None
         self._got_ap_from_db=False
         # check what is in the database
@@ -255,7 +257,7 @@ class WebModFormSpace(Parent):
         """
         data = self.to_dict()
         #return(WebModFormSpace,(self._k,self._N,self._chi,self.prec,data))
-	return(unpickle_wmfs_v1,(self._k,self._N,self._chi,self.prec,data))   
+	return(unpickle_wmfs_v1,(self._k,self._N,self._chi,self._cuspidal,self.prec,self._bitprec,data))   
 
     def _save_to_file(self,file):
         r"""
@@ -272,9 +274,10 @@ class WebModFormSpace(Parent):
         data['character'] = self._character 
         #data['fullspace'] = self._fullspace
         data['modular_symbols'] = self._modular_symbols
-        #data['newspace'] = self._newspace
+        data['newspace'] = self._newspace
         data['newforms'] = self._newforms
-        data['new_modular_symbols'] = self._new_modular_symbols
+        if hasattr(self,"_new_modular_symbols"):
+            data['new_modular_symbols'] = self._new_modular_symbols
         data['galois_decomposition'] = self._galois_decomposition
         data['galois_orbits_labels'] = self._galois_orbits_labels
         data['oldspace_decomposition'] = self._oldspace_decomposition
@@ -731,7 +734,7 @@ class WebNewForm(SageObject):
     r"""
     Class for representing a (cuspidal) newform on the web.
     """
-    def __init__(self,k,N,chi=0,label='',fi=-1,prec=10,bitprec=53,verbose=-1,parent=None,data=None,compute=None):
+    def __init__(self,k,N,chi=0,label='',fi=-1,prec=10,bitprec=53,parent=None,data=None,compute=None,verbose=-1):
         r"""
         Init self as form number fi in S_k(N,chi)
         """
@@ -741,7 +744,8 @@ class WebNewForm(SageObject):
             chi=ZZ(chi)
         t=False
         self._chi=ZZ(chi)
-        self._parent=parent; self.f=None
+        self._parent=parent
+        self.f=None
         self._character=trivial_character(N)
         if self._chi<>0:
             if self._parent and self._parent._character:
@@ -845,7 +849,6 @@ class WebNewForm(SageObject):
         self._base_ring = self._f.q_eigenform(prec,names='x').base_ring()
         emf_logger.debug("done __init__")
 
-        ## we shold figure out which complex embeddings preserve the character
         
     def __eq__(self,other):
         if not isinstance(other,type(self)):
@@ -867,14 +870,14 @@ class WebNewForm(SageObject):
             return ""
 
 
-
         
     def __reduce__(self):
         r"""
         Reduce self for pickling.
         """
         data=self._to_dict()
-        return(unpickle_wnf_v1,(self._k,self._N,self._chi,self._label,self._fi,self._prec,self._bitprec,self._verbose,data))
+        return(unpickle_wnf_v1,(self._k,self._N,self._chi,self._label,
+                                self._fi,self._prec,self._bitprec,data))
 
 
     def _to_dict(self):
@@ -925,7 +928,7 @@ class WebNewForm(SageObject):
 
     def label(self):
         if(not self._label):
-            self._label = self.parent().labels()[self._fi]
+            self._label = self._parent().labels()[self._fi]
         return self._label
 
     def weight(self):
@@ -939,10 +942,10 @@ class WebNewForm(SageObject):
             return trivial_character
         
     def character_order(self):
-        return self.parent.character_order()
+        return self._parent.character_order()
 
     def character_conductor(self):
-        return self.parent.character_conductor()
+        return self._parent.character_conductor()
 
     def chi(self):
         if hasattr(self,'_chi'):
@@ -1517,7 +1520,7 @@ class WebNewForm(SageObject):
         if(self._verbose>1):
             emf_logger.debug("eps={0}".format(eps))
         K=self.base_ring()
-        print "K={0}".format(K)
+        #print "K={0}".format(K)
         # recall that 
         degree = K.degree()
         cm_vals=dict()
@@ -2207,11 +2210,21 @@ def _degree(K):
         return  -1 ##  exit silently
         
 
-def unpickle_wnf_v1(k,N,chi,label,fi,prec,bitprec,verbose,data):
-    F = WebNewForm(k,N,chi,label,fi,prec,bitprec,verbose,data)
+def unpickle_wnf_v1(k,N,chi,label,fi,prec,bitprec,data):
+    F = WebNewForm(k=k,N=N,chi=chi,label=label,fi=fi,prec=prec,bitprec=bitprec,data=data)
     return F
 
-def unpickle_wmfs_v1(k,N,chi,prec,data):
-    M = WebModFormSpace(k,N,chi,prec,data)
+def unpickle_wmfs_v1(k,N,chi,cuspidal,prec,bitprec,data):
+    M = WebModFormSpace(k,N,chi,cuspidal,prec,bitprec,data)
     return M
 
+def pol_to_html(p):
+   r"""
+   Convert polynomial p to html.
+   """
+   s = str(p)
+   s = re.sub("\^(\d*)","<sup>\\1</sup>",s)
+   s = re.sub("\_(\d*)","<sub>\\1</sub>",s)
+   s = re.sub("\*","",s)
+   s = re.sub("x","<i>x</i>",s)
+   return s
