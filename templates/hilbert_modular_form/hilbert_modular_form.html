@@ -3,14 +3,73 @@
 
 
 
-  <h2>  Hecke field  </h2>
+  <h2>  Base Field  </h2>
+<p>
+<table>
+<tr><td>Base field label:<td><A HREF="/NumberField/{{info.field_label }}">{{info.field_label}}</A> </tr>
+<tr><td>Base field degree:<td> {{ info.field_degree }} </tr>
+<tr><td>Base field discriminant:<td> {{ info.field_disc }} </tr>
+<tr><td>Base field defining polynomial:<td> ${{ info.field_poly }}$ </tr>
+</table>
+</p>
 
-  <p> Degree: {{ info.dimension }} </p>
-  <p> Defining polynomial: {{ info.hecke_polynomial }} </p>
+  <h2>  Form  </h2>
+
+<p>
+<table>
+<tr><td> Level norm:<td> {{ info.level_norm }} </tr>
+<tr><td> Level:<td> ${{ info.level_ideal }}$ </tr>
+<tr><td> Dimension:<td> {{ info.dimension }} </tr>
+<tr><td> Is CM?:<td> {{ info.is_CM }} </tr>
+<tr><td> Is base change?:<td> {{ info.is_base_change }} </tr>
+</table>
+</p>
+
+<p><a href='{{ info.label }}/download/magma' target='_blank'>Download to Magma</a></p>
+<p><a href='{{ info.label }}/download/sage' target='_blank'>Download to Sage</a></p>
+
+  <h2>  $q$-expansion  </h2>
+
+<p>
+{% for entry in info.q_expansions: %}
+${% for term in entry: %}
+{{term[1]}} q^{\mathrm{Tr} ({{term[0]}})z} + 
+{% endfor %} \dots$
+{% endfor %}
+</P>
+
+  <h2>  Atkin-Lehner eigenvalues  </h2>
+
+{% if info.AL_eigs_count %} 
+<p>
+<table class="ntdata" cellpadding=5>
+<tr>
+<th>Norm</th>
+<th>Prime</th>
+<th>Eigenvalue</th>
+</tr>
+{% for entry in info.AL_eigs: %}
+<tr>
+<td>{{entry.prime_norm}}</td>
+<td>${{entry.prime_ideal}}$</td>
+<td>${{entry.eigenvalue}}$</td>
+</tr>
+{% endfor %}
+</table>
+</p>
+{% else %}
+<p>None</P> 
+{% endif %}
 
   <h2>  Hecke eigenvalues  </h2>
 
-<table class="ntdata">
+<p>
+<table>
+<tr><td> $e$ is a root of the defining polynomial: <td> ${{ info.hecke_polynomial }}$ </tr>
+</table>
+</p>
+
+<table class="ntdata" cellpadding=5>
 <tr>
 <th>Norm</th>
 <th>Prime</th>
@@ -19,8 +78,8 @@
 {% for entry in info.eigs: %}
 <tr>
 <td>{{entry.prime_norm}}</td>
-<td>{{entry.prime_ideal|join(', ')}}</td>
-<td>{{entry.eigenvalue}}</td>
+<td>${{entry.prime_ideal}}$</td>
+<td>${{entry.eigenvalue}}$</td>
 </tr>
 {% endfor %}
 </table>
