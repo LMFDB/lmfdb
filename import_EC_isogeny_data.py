@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 r"""
 Import data from cremona tables and merging or updating existing database. 
 Before running this script run import_ec_data.py

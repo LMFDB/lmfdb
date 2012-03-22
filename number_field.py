@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import re
 import pymongo
 
@@ -7,9 +8,19 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 import sage.all
 from sage.all import ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, euler_phi, pari
 
+from transitive_group import group_display_knowl, group_knowl_guts
+
 from utils import ajax_more, image_src, web_latex, to_dict, parse_range, coeff_to_poly, pol_to_html
 
-NF_credit = 'the PARI group,  J. Voight, J. Jones, and D. Roberts'
+NF_credit = 'the PARI group, J. Voight, J. Jones, and D. Roberts'
+
+def galois_group_data(n, t):
+  C = base.getDBConnection()
+  return group_knowl_guts(n, t, C)
+
+@app.context_processor
+def ctx_galois_groups():
+  return {'galois_group_data': galois_group_data }
 
 def field_pretty(field_str):
     d,r,D,i = field_str.split('.')
@@ -380,10 +391,10 @@ def GG_data(GGlabel):
  
 def render_field_webpage(args):
     data = None
+    import base
+    C = base.getDBConnection()
     if 'label' in args:
         label = str(args['label'])
-        import base
-        C = base.getDBConnection()
         data = C.numberfields.fields.find_one({'label': label})
     if data is None:
         return "No such field: " + label + " in the database"  
@@ -396,6 +407,7 @@ def render_field_webpage(args):
     K = coeff_to_nf(data['coefficients'])
     D = data['discriminant']
     h = data['class_number']
+    data['galois_grou'] = group_display_knowl(8,13,C)
     data['galois_group'] = str(data['galois_group'][3])
     data['class_group_invs'] = data['class_group']
     if data['class_group_invs']==[]:
@@ -406,11 +418,11 @@ def render_field_webpage(args):
     ram_primes = D.prime_factors()
     npr = len(ram_primes)
     ram_primes = str(ram_primes)[1:-1]
-    Gorder,Gsign,Gab = GG_data(data['galois_group'])
-    if Gab:
-        Gab='abelian'
-    else:
-        Gab='non-abelian'
+    #Gorder,Gsign,Gab = GG_data(data['galois_group'])
+    #if Gab:
+    #    Gab='abelian'
+    #else:
+    #    Gab='non-abelian'
     unit_rank = sig[0]+sig[1]-1
     if unit_rank==0:
         reg = 1
@@ -427,8 +439,8 @@ def render_field_webpage(args):
         'regulator': web_latex(reg),
         'unit_rank': unit_rank,
         'root_of_unity': web_latex(UK.torsion_generator()),
-        'fund_units': ',&nbsp; '.join([web_latex(u) for u in UK.fundamental_units()]),
-        'Gorder': Gorder, 'Gsign': Gsign, 'Gab': Gab
+        'fund_units': ',&nbsp; '.join([web_latex(u) for u in UK.fundamental_units()])
+    #    'Gorder': Gorder, 'Gsign': Gsign, 'Gab': Gab
         })
     info['downloads_visible'] = True
     info['downloads'] = [('worksheet', '/')]
@@ -556,6 +568,7 @@ def number_field_search(**args):
         nres_pos = res_pos.count()
         # TODO: pages
 
+        # TODO HSY: why is there a merge_sort? a sorted(key=lambda _: ...) would be much much faster
         res = merge_sort(iter(res_neg),iter(res_pos))
         nres = nres_pos+nres_neg
         

@@ -125,6 +125,7 @@ def render_group_webpage(args):
     chartable = re.sub("^.*\n", '', chartable)
     chartable = re.sub("^.*\n", '', chartable)
     data['chartable'] = chartable
+    data['cclasses'] = conjclasses(G, n)
     data['subinfo'] = subfield_display(C, n, data['subs'])
     data['resolve'] = resolve_display(C, data['resolve'])
 #    if len(data['resolve']) == 0: data['resolve'] = 'None'
@@ -145,3 +146,14 @@ def render_group_webpage(args):
     bread = get_bread([(label, ' ')])
     return render_template("gg-show-group.html", credit=GG_credit, title = title, bread = bread, info = info, properties2=prop2 )
 
+def conjclasses(g, n):
+  gap.set('cycletype', 'function(el, n) local ct; ct := CycleLengths(el, [1..n]); ct := ShallowCopy(ct); Sort(ct); ct := Reversed(ct); return(ct); end;')
+  cc = g.ConjugacyClasses()
+  ccn = [x.Size() for x in cc]
+  cc = [x.Representative() for x in cc]
+  cc2 = [x.cycletype(n) for x in cc]
+  cc2 = [str(x) for x in cc2]
+  cc2 = map(lambda x: re.sub("\[",'', x),  cc2)
+  cc2 = map(lambda x: re.sub("\]",'', x),  cc2)
+  ans = [[cc[j], cc[j].Order(), ccn[j], cc2[j]] for j in range(len(ccn))]
+  return(ans)

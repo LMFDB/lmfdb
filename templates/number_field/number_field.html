@@ -118,8 +118,7 @@ function show_code(system) {
         <div class='pari nodisplay code'>pari: polgalois(pol)</div>
         <div class='magma nodisplay code'>&gt; GaloisGroup(K);</div>
         <p>
-            {{ info.galois_group }} (order {{ info.Gorder }}, sign {{
-            info.Gsign}}, {{ info.Gab }})
+            {{ info.galois_grou | safe }} 
         </p>
 
 
