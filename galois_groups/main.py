@@ -8,7 +8,7 @@ import flask
 import base
 from base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
-from utils import ajax_more, image_src, web_latex, to_dict, parse_range, make_logger
+from utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, make_logger
 import os, re
 from galois_groups import galois_groups_page, logger
 import sage.all
@@ -83,7 +83,17 @@ def galois_group_search(**args):
     if info.get(param):
       ran = info[param]
       ran = ran.replace('..','-')
-      query[param] = parse_range(ran)
+      tmp = parse_range2(ran, param)
+      # work around syntax for $or
+      # we have to foil out multiple or conditions
+      if tmp[0]=='$or' and query.has_key('$or'):
+        newors = []
+        for y in tmp[1]:
+          oldors = [dict.copy(x) for x in query['$or']]
+          for x in oldors: x.update(y)
+          newors.extend(oldors)
+        tmp[1] = newors
+      query[tmp[0]] = tmp[1]
 
   res = C.transitivegroups.groups.find(query).sort([('n',pymongo.ASCENDING),('t',pymongo.ASCENDING)])
   nres = res.count()

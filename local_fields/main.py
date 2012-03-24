@@ -80,6 +80,7 @@ def local_field_search(**args):
       ran = ran.replace('..','-')
       tmp = parse_range2(ran, param)
       # work around syntax for $or
+      # we have to foil out multiple or conditions
       if tmp[0]=='$or' and query.has_key('$or'):
         newors = []
         for y in tmp[1]:
