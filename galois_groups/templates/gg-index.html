@@ -16,13 +16,21 @@ Browse by degree $n$:
 
     <h2>Find a specific Galois group</h2>
 
-    <form name="search" method = "get" action="{{search}}">      
-	  Search by {{KNOWL('gg.label',title="label")}}
-          <input type="text" name="jump_to" value="" placeholder="8T14"> 
-          <input type="submit" value="Find">
+
+    <form name="search" method = "get" action="{{search}}">
+        <table class="">
+	  <tr>
+	    <td>
+	      Search by {{KNOWL('gg.label',title="label")}}
+	      <input type="text" name="jump_to" value="" placeholder="8T14"> 
+	      <input type="submit" value="Find">
+	    </td>
+	    <td>
+	      <span class="formexample">a Galois group label, e.g. 6T3</span>
+	    </td>
+	  </tr>
+	</table>
         </form>
-    </td>
-</tr>
 
         <h2>Search</h2>
       <form name="search" method = "get" action="{{search}}">
@@ -30,21 +38,14 @@ Browse by degree $n$:
           <tr>
             <td>
           {{KNOWL('gg.degree',title='Degree')}}:
-            </td><td><input type="text" name="n" value="" example="6"></td>
+            </td><td><input type="text" name="n" value="" placeholder="6"></td>
           </tr>
           <tr>
             <td>
               {{KNOWL('gg.tnumber',title='$t$')}}:
-            </td><td><input type="text" name="t" value="" example="3"></td>
+            </td><td><input type="text" name="t" value="" placeholder="3"></td>
           </tr>
-<!--      
-          <tr>
-          <td>
-              Maximum number of fields to display:
-            </td><td><input type="text" name="count" value="25"></td>
-          </tr>
--->
-  </table>
+	</table>
         <input type="submit" name="Submit" value="Search">
       </form>
 
