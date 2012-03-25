@@ -4,7 +4,7 @@ from modular_forms import mf_logger
 class MFDataTable(object):
     def __init__(self,dbname='',**kwds):
         r"""
-        For 'one-dimensiona' data sets the second skip parameter does not have a meaning but should be present anyway...
+        For 'one-dimensional' data sets the second skip parameter does not have a meaning but should be present anyway...
 
         """
         self._skip = kwds.get('skip',[])

@@ -110,13 +110,15 @@ class ClassicalMFDisplay(MFDisplay):
                 N = level_ll
                 D = DirichletGroup(N)
                 emf_logger.debug("I am here!")
-                self._table['rowhead']='Character&nbsp;\&nbspWeight'
+                self._table['rowhead']='Character&nbsp;\\&nbsp;Weight'
                 for x in D:
                     xi = D.list().index(x)
                     row=[]
                     self._table['row_heads'].append(xi)
                     for k in range(wt_ll,wt_ul+1):
-                        if not k in self._table['col_heads']:              
+                        if not k in self._table['col_heads']:
+                            #emf_logger.debug("Adding to col_heads:{0}s".format(k))
+                            
                             self._table['col_heads'].append(k)
                         try:
                             d = dimension_fun(x,k)

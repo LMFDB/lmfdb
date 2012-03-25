@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 r"""
 Import data from Cremona tables.
 Note: This code can be run on all files in any order. Even if you rerun this code on previously entered files, it should have no affect. 

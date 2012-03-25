@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os.path, sys
 from sage.all import SQLDatabase
 import base

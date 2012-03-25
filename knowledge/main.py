@@ -12,6 +12,7 @@
 #
 # author: Harald Schilly <harald.schilly@univie.ac.at>
 import string
+import re
 import pymongo
 import flask
 from base import app, getDBConnection
@@ -26,19 +27,26 @@ from knowledge import logger
 ASC = pymongo.ASCENDING
 DSC = pymongo.DESCENDING
 
-import re
+# just for those, who still use an older markdown
+try:
+  markdown.util.etree
+except:
+  logger.fatal("You need to update the markdown python utility: sage -sh -> easy_install -U markdown flask-markdown")
+  exit()
+
+# know IDs are restricted by this regex
 allowed_knowl_id = re.compile("^[a-z0-9._-]+$")
 
 # Tell markdown to not escape or format inside a given block
 class IgnorePattern(markdown.inlinepatterns.Pattern):
     def handleMatch(self, m):
-        return markdown.AtomicString(m.group(2))
+        return m.group(2) 
 
 class HashTagPattern(markdown.inlinepatterns.Pattern):
     def handleMatch(self, m):
-      el = markdown.etree.Element("a")
+      el = markdown.util.etree.Element("a")
       el.set('href', url_for('.index')+'?search=%23'+m.group(2))
-      el.text = '#' + markdown.AtomicString(m.group(2))
+      el.text = '#' + m.group(2) 
       return el
 
 class KnowlTagPatternWithTitle(markdown.inlinepatterns.Pattern):

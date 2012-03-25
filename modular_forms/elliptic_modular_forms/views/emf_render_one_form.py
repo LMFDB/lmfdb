@@ -41,7 +41,9 @@ def render_one_elliptic_modular_form(level,weight,character,label,**kwds):
     
     """
     citation = ['Sage:'+version()]
-    info=set_info_for_one_modular_form(level,weight,character,label,**kwds)
+    info=set_info_for_one_modular_form(level,weight,
+                                       character,label,**kwds)
+    emf_logger.debug("info={0}".format(info))
     err = info.get('error','')
     ## Check if we want to download either file of the function or Fourier coefficients
     if info.has_key('download') and not info.has_key('error'):                           return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
@@ -90,10 +92,10 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
     bprec = my_get(info,'prec',default_bprec,int)
     try:
         WNF = WebNewForm(weight,level,character,label)
-        if info.has_key('download') and info.has_key('tempfile'):
-            WNF._save_to_file(info['tempfile'])
-            info['filename']=str(weight)+'-'+str(level)+'-'+str(character)+'-'+label+'.sobj'
-            return info
+        # if info.has_key('download') and info.has_key('tempfile'):
+        #     WNF._save_to_file(info['tempfile'])
+        #     info['filename']=str(weight)+'-'+str(level)+'-'+str(character)+'-'+label+'.sobj'
+        #     return info
     except IndexError:
         WNF = None
         print "Could not compute the desired function!"

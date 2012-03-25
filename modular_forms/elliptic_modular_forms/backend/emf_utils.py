@@ -30,7 +30,7 @@ from modular_forms.backend.mf_utils import my_get
 from plot_dom import draw_fundamental_domain
 
 def extract_data_from_jump_to(s):
-    label=None;weight=None;character=None;label=None
+    label=None;weight=None;character=None;level=None
     weight = 2  # this is default for jumping
     character = 0 # this is default for jumping
     if s == 'delta':

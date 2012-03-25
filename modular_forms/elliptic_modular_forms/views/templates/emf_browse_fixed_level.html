@@ -56,6 +56,7 @@ entry you access information about the forms in the specified space.
       </th>
       {% for ix in table.col_heads  %}
       <th width="10px">
+        {{ ix }}
         <!--a href="{{url_for('render_webpage_label',modulus=level,number=ix) }}" style="">{{ix}}</a-->
       </th>
       {% endfor %}
@@ -118,10 +119,10 @@ entry you access information about the forms in the specified space.
           </td>
           {% endif %}
           {% if fd_plot is defined %}
-          <td>
+          <td> <!--Fundamental domain:-->
             <div>
               <span id="wait">      </span>
-              <img id="plot" src="{{ fd_plot | safe }} " width="" height="75%"/>
+              <img id="plot" src="{{ fd_plot | safe }} " width="50%" height="100%"/>
             </div>
           </td>
         </tr>

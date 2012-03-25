@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os.path, gzip, re, sys, time
 import pymongo
 import base

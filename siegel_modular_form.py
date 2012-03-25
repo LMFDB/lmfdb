@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from flask import render_template, url_for
 import siegel_core
 import pickle

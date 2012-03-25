@@ -118,10 +118,27 @@ function show_code(system) {
         <div class='pari nodisplay code'>pari: polgalois(pol)</div>
         <div class='magma nodisplay code'>&gt; GaloisGroup(K);</div>
         <p>
-            {{ info.galois_group }} (order {{ info.Gorder }}, sign {{
-            info.Gsign}}, {{ info.Gab }})
+            {{ info.galois_grou | safe }} 
         </p>
 
+        <p><h2> {{ KNOWL('nf.frobenius_cycle_types', title='Frobenius cycle types') }}</h2>
+        <p>
+           <table class="ntdata" rules="all">
+             <tr><th>$p$</th>
+            {% for p in info.frob_data %}
+            <td>{{ p[0] | safe }} </td>
+            {% endfor %}
+             </tr>
+             <tr><th>Cycle type</th>
+            {% for p in info.frob_data %}
+            <td>{{ p[1] | safe }} </td>
+            {% endfor %}
+             </tr>
+           </table>
+        </p>
+        <p>
+          In the table, <i>R</i> denotes a ramified prime.  Cycle lengths which are repeated in a cycle type are indicated
+          by exponents.
 
 
 {% endblock %}

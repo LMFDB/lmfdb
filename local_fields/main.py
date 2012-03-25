@@ -8,9 +8,9 @@ import flask
 import base
 from base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
-from utils import ajax_more, image_src, web_latex, to_dict, parse_range, coeff_to_poly, pol_to_html
+from utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger
 from sage.all import ZZ, var, PolynomialRing, QQ
-from local_fields import local_fields_page, logger, logger
+from local_fields import local_fields_page, logger
 
 from transitive_group import group_display_short, group_display_long, group_display_inertia, group_knowl_guts, group_display_knowl
 
@@ -73,11 +73,23 @@ def local_field_search(**args):
   if 'jump_to' in info:
     return render_field_webpage({'label' : info['jump_to']})
 
+  logger = make_logger("LF")
   for param in ['p', 'n', 'c', 'e']:
     if info.get(param):
       ran = info[param]
       ran = ran.replace('..','-')
-      query[param] = parse_range(ran)
+      tmp = parse_range2(ran, param)
+      # work around syntax for $or
+      # we have to foil out multiple or conditions
+      if tmp[0]=='$or' and query.has_key('$or'):
+        newors = []
+        for y in tmp[1]:
+          oldors = [dict.copy(x) for x in query['$or']]
+          for x in oldors: x.update(y) 
+          newors.extend(oldors)
+        tmp[1] = newors
+      query[tmp[0]] = tmp[1]
+
 
   res = C.localfields.fields.find(query).sort([('p',pymongo.ASCENDING),('n',pymongo.ASCENDING),('c',pymongo.ASCENDING),('label', pymongo.ASCENDING)])
   nres = res.count()
