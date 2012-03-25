@@ -102,7 +102,8 @@ def browseGraphChar():
 
 
 ###########################################################################
-#   Functions for rendering the web pages
+#   Functions for rendering the L-function web pages including, both browsing
+#   and individual home pages.
 ###########################################################################
 
 def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9):
@@ -155,6 +156,10 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
     
 
 def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, temp_args):
+    ''' Returns the L-function object corresponding to the supplied argumnents
+        from the url. temp_args contains possible arguments after a question mark.
+    '''
+
     if (arg1 == 'Riemann' or (arg1 == 'Character' and arg2 == 'Dirichlet' and arg3 == '1' and arg4 == '0')
         or (arg1 == 'NumberField' and arg2 == '1.1.1.1')):
         return RiemannZeta()
@@ -215,6 +220,9 @@ def set_info_for_start_page():
     
 
 def initLfunction(L,args, request):
+    ''' Sets the properties to show on the homepage of an L-function page.
+    '''
+    
     info = {'title': L.title}
     info['citation'] = ''
     info['support'] = ''
@@ -251,7 +259,8 @@ def initLfunction(L,args, request):
 
     if L.Ltype() == 'maass':
         if L.group == 'GL2':
-            minNumberOfCoefficients = 20 # TODO: Fix this to take level into account
+            minNumberOfCoefficients = 1000000 # TODO: Fix this to take level into account
+                                              # At the moment error in computation 
             if len(L.dirichlet_coefficients)< minNumberOfCoefficients:
                 info['zeroeslink'] = ''
                 info['plotlink'] = ''
@@ -340,11 +349,18 @@ def set_gaga_properties(L):
 
 
 def specialValueString(L, s, sLatex):
+    ''' Returns the LaTex to dislpay for L(s) 
+    '''
+    
     number_of_decimals = 10
     val = L.sageLfunction.value(s)
     lfuncion_value_tex = L.texname.replace('(s', '(' + sLatex)
     return '\(' + lfuncion_value_tex +'\\approx ' + latex(round(val.real(), number_of_decimals)+round(val.imag(), number_of_decimals)*I) + '\)'
 
+
+###########################################################################
+#   Functions for rendering the plot of an L-function.
+###########################################################################
 
 def plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9):
     pythonL = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
@@ -371,6 +387,9 @@ def render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8
     response.headers['Content-type'] = 'image/png'
     return response
 
+###########################################################################
+#   Functions for rendering a few of the zeros of an L-function.
+###########################################################################
 def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9):
     L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
 
@@ -390,6 +409,10 @@ def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, ar
 
     return s[1:len(s)-1]
 
+
+###########################################################################
+#   Functions for rendering graphs for browsing L-functions.
+###########################################################################
 def render_browseGraph(args):
     logger.info(args)
     if 'sign' in args:
@@ -420,6 +443,9 @@ def render_browseGraphChar(args):
     respone.headers['Content-type'] = 'image/svg+xml'
     return response
 
+###########################################################################
+#   Function for rendering the lcalc file of an L-function.
+###########################################################################
 def render_lcalcfile(L, url):
     try:  #First check if the Lcalc file is stored in the database
         response = make_response(L.lcalcfile)
@@ -430,6 +456,9 @@ def render_lcalcfile(L, url):
     return response
 
 
+###########################################################################
+#   A demo for showing metadata of the collections in the database.
+###########################################################################
 def render_showcollections_demo():
     connection = pymongo.Connection()
     dbNames = connection.database_names()
@@ -452,53 +481,12 @@ def render_showcollections_demo():
     info = {'collections' : dbList}
     return render_template("ShowCollectionDemo.html", info = info)
 
-## NOT USED
-##def processDirichletNavigation(args):
-##    logger.info(str(args))
-##    try:
-##        logger.debug(args['start'])
-##        N = int(args['start'])
-##        if N < 3:
-##            N=3
-##        elif N > 100:
-##            N=100
-##    except:
-##        N = 3
-##    try:
-##        length = int(args['length'])
-##        if length < 1:
-##            length = 1
-##        elif length > 20:
-##            length = 20
-##    except:
-##        length = 10
-##    try:
-##        numcoeff = int(args['numcoeff'])
-##    except:
-##        numcoeff = 50
-##    chars = LfunctionComp.charactertable(N, N+length,'primitive')
-##    s = '<table>\n'
-##    s += '<tr>\n<th scope="col">Conductor</th>\n'
-##    s += '<th scope="col">Primitive characters</th>\n</tr>\n'
-##    for i in range(N,N+length):
-##        s += '<tr>\n<th scope="row">' + str(i) + '</th>\n'
-##        s += '<td>\n'
-##        j = i-N
-##        for k in range(len(chars[j][1])):
-##            s += '<a style=\'display:inline\' href="Character/Dirichlet/'
-##            s += str(i)
-##            s += '/'
-##            s += str(chars[j][1][k])
-##            s += '/&numcoeff='
-##            s += str(numcoeff)
-##            s += '">'
-##            s += '\(\chi_{' + str(chars[j][1][k]) + '}\)</a> '
-##        s += '</td>\n</tr>\n'
-##    s += '</table>\n'
-##    return s
-##    #info['contents'] = s
-##    #return info
 
+
+###########################################################################
+#   Functions for displaying examples of degree 2 L-functions on the
+#   degree browsing page.
+###########################################################################
 def processEllipticCurveNavigation(startCond, endCond):
     try:
         N = startCond
@@ -579,3 +567,50 @@ def processMaassNavigation():
 
     return s
 
+
+## NOT USED
+##def processDirichletNavigation(args):
+##    logger.info(str(args))
+##    try:
+##        logger.debug(args['start'])
+##        N = int(args['start'])
+##        if N < 3:
+##            N=3
+##        elif N > 100:
+##            N=100
+##    except:
+##        N = 3
+##    try:
+##        length = int(args['length'])
+##        if length < 1:
+##            length = 1
+##        elif length > 20:
+##            length = 20
+##    except:
+##        length = 10
+##    try:
+##        numcoeff = int(args['numcoeff'])
+##    except:
+##        numcoeff = 50
+##    chars = LfunctionComp.charactertable(N, N+length,'primitive')
+##    s = '<table>\n'
+##    s += '<tr>\n<th scope="col">Conductor</th>\n'
+##    s += '<th scope="col">Primitive characters</th>\n</tr>\n'
+##    for i in range(N,N+length):
+##        s += '<tr>\n<th scope="row">' + str(i) + '</th>\n'
+##        s += '<td>\n'
+##        j = i-N
+##        for k in range(len(chars[j][1])):
+##            s += '<a style=\'display:inline\' href="Character/Dirichlet/'
+##            s += str(i)
+##            s += '/'
+##            s += str(chars[j][1][k])
+##            s += '/&numcoeff='
+##            s += str(numcoeff)
+##            s += '">'
+##            s += '\(\chi_{' + str(chars[j][1][k]) + '}\)</a> '
+##        s += '</td>\n</tr>\n'
+##    s += '</table>\n'
+##    return s
+##    #info['contents'] = s
+##    #return info
