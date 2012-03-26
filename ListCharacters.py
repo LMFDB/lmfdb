@@ -22,15 +22,29 @@ def get_character_modulus(a,b):
     for row in rows:
         G = DirichletGroup_conrey(row)
         for chi in G:
-            j = chi.number()
             multorder = chi.multiplicative_order()
-            el = (j, chi.is_primitive(), multorder)
+            el = chi 
             col = multorder 
             entry = entries.get((row, col), [])
             entry.append(el)
             entries[(row, col)] = entry
+    
+    entries2 = {}
+    out = lambda chi : (chi.number(), chi.is_primitive(), chi.multiplicative_order())
+    for k, v in entries.iteritems():
+        l = []
+        v = sorted(v)
+        while v:
+           e1 = v.pop(0)
+           inv = ~e1
+           if e1 == inv:
+             l.append((out(e1),))
+           else:
+             l.append((out(e1), out(inv)))
+             v.remove(inv)
+        entries2[k] = l
     cols = headers
-    return headers, entries, rows, cols
+    return headers, entries2, rows, cols
 
 def get_character_conductor(a,b):
     from dirichlet_conrey import DirichletGroup_conrey

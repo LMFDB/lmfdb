@@ -6,7 +6,8 @@
 <style>
 .modulus {
     vertical-align: top;
-    padding-top: 1em;
+    padding-top:    .5em;
+    padding-bottom: .5em;
     border-right: 2px solid #8a8;
 }
 .chi {
@@ -17,6 +18,8 @@
     white-space:nowrap;
 }
 .chi a { display: inline; text-align: center; font-family: serif;}
+#chitable td div { float: left; padding-right: 10px; }
+#chitable td { vertical-align: middle; }
 .primitive {
   color:green;
 }
@@ -38,7 +41,7 @@
 <br/>
 
 <div>
-<table class="ntdata">
+<table class="ntdata" id="chitable">
 <thead align="center">
     <tr>
         <th>Modulus</th>
@@ -53,7 +56,14 @@
   {% if col == "more"  %}
     LIST
   {% else %}
-    {% for e in entry %}{{ e[0] }}, {% endfor %}
+    {% for e in entry %}
+    <div>
+      {% for chi in e %}
+        {% if not loop.first %}<br/>{% endif %}
+        {{ chi[0] }}
+      {% endfor %}
+    </div>
+    {% endfor %}
   {% endif %}
 {% endif %}
 {%- endmacro %}
