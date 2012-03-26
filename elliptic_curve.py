@@ -212,9 +212,9 @@ def render_isogeny_class(iso_class):
         info['imag']=data['imag']
     if 'real' in data:
         info['real']=data['real']
-    info['rank'] = data['rank'] 
+    info['rank'] = web_latex(data['rank'])
     info['isogeny_matrix']=latex(matrix(eval(data['isogeny_matrix'])))
-    info['modular_degree']=data['degree']
+    info['modular_degree']=web_latex(data['degree'])
     #info['f'] = ajax_more(E.q_eigenform, 10, 20, 50, 100, 250)
     info['f'] = web_latex(E.q_eigenform(10))
     G = E.isogeny_graph(); n = G.num_verts()
@@ -345,17 +345,19 @@ def render_curve_webpage_by_label(label):
         'tamagawa_numbers': r' \cdot '.join(str(sage.all.factor(c)) for c in E.tamagawa_numbers()),
         'cond_factor':latex(N.factor()),
         'xintegral_points':','.join(web_latex(i_p) for i_p in xintpoints),
-        'tor_gens':','.join(web_latex(eval(g)) for g in data['torsion_generators']) if 'torsion_generators' in data else list(G)
+        'tor_gens':','.join(web_latex(eval(g)) for g in data['torsion_generators']) if False else ','.join(web_latex(P.element().xy()) for P in list(G))
+        # Database has errors when torsion generators not integral
+        # 'tor_gens':','.join(web_latex(eval(g)) for g in data['torsion_generators']) if 'torsion_generators' in data else [P.element().xy() for P in list(G)]
                         })
     info['downloads_visible'] = True
     info['downloads'] = [('worksheet', url_for("not_yet_implemented"))]
-    info['friends'] = [('Isogeny class', "/EllipticCurve/Q/%s" % iso_class),
+    info['friends'] = [('Isogeny class', "/EllipticCurve/Q/%s%s" % (str(N),iso_class)),
 ####  THIS DOESN'T WORK AT THE MOMENT /Lemurell                       ('Modular Form', url_for("emf.render_elliptic_modular_form_from_label",label="%s" %(iso_class))),
                        ('L-function', url_for("render_Lfunction", arg1='EllipticCurve', arg2='Q', arg3=label))]
     info['learnmore'] = [('Elliptic Curves', url_for("not_yet_implemented"))]
     #info['plot'] = image_src(plot)
     info['plot'] = url_for('plot_ec', label=label)
-    info['iso_class'] = data['iso']
+    info['iso_class'] = str(data['conductor'])+data['iso']
     info['download_qexp_url'] = url_for('download_qexp', limit=100, ainvs=','.join([str(a) for a in ainvs]))
     properties2 = [('Label', '%s' % label),
                    (None, '<img src="%s" width="200" height="150"/>' % url_for('plot_ec', label=label) ),
