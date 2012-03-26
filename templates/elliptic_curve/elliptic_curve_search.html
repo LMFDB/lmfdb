@@ -57,7 +57,7 @@ table td.params {
 </tr>
 {% for curve in info.curves: %}
 <tr>
-<td class="center"><a href="/EllipticCurve/Q/{{curve.iso}}">{{curve.iso}}</a></td>
+<td class="center"><a href="/EllipticCurve/Q/{{curve.conductor}}{{curve.iso}}">{{curve.conductor}}{{curve.iso}}</a></td>
 <td class="center"><a href="/EllipticCurve/Q/{{curve.label}}">{{curve.label}}</a></td>
 <td class="params">{{info.format_ainvs(curve.ainvs)}}</td>
 <td class="center"><a href="/EllipticCurve/Q?conductor={{info.conductor}}&rank={{curve.rank}}&torsion={{info.torsion}}">{{curve.rank}}</a></td>
