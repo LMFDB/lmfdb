@@ -148,6 +148,7 @@ def render_field_webpage(args):
     Pyt = PolynomialRing(Pt, 'y')
     eisenp = Pyt(str(data['eisen']))
     unramp = Pyt(str(data['unram']))
+    
     info.update({
       'polynomial': web_latex(polynomial),
       'n': data['n'],
@@ -168,10 +169,10 @@ def render_field_webpage(args):
       'gms': data['gms'],
       'aut': data['aut'],
       })
-    
+    friends = [('Galois group', "/GaloisGroup/%dT%d" % (gn, gt))]
 
     bread = get_bread([(label, ' ')])
-    return render_template("lf-show-field.html", credit=LF_credit, title = title, bread = bread, info = info, properties2=prop2 )
+    return render_template("lf-show-field.html", credit=LF_credit, title = title, bread = bread, info = info, properties2=prop2, friends = friends )
 
 def show_slopes(sl):
   if str(sl)=="[]":
