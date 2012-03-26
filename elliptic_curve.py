@@ -55,7 +55,7 @@ def parse_gens(s):
     fulllist=[]
     for g in s:
         g1=g.replace('(', ' ').replace(')',' ').split(':')
-        x,y,z = [ZZ(c) for c in g1]
+        x,y,z = [ZZ(str(c)) for c in g1]
         fulllist.append((x/z,y/z))
     return fulllist
     
