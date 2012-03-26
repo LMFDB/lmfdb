@@ -42,16 +42,26 @@
 <thead align="center">
     <tr>
         <th>Modulus</th>
-        <th> 1 </th>
-        <th> 2 </th>
+        {% for h in headers %}
+          <th>{{h}}</th>
+        {% endfor %}
     </tr>
 </thead>
 
 <tbody>
     {% for line in contents %}
+{% for row in rows %}
+
         <tr>
-            <td class="modulus"align="center" style="4em"> {{ line[0] }} </td>
-            <td>
+            <td class="modulus"align="center" style="4em"> {{ row }} </td>
+
+     {% for col in cols %}
+       <td>
+         {{ contents[(row, col)] }} 
+       </td>
+     {% endfor %}
+
+{#
                 {% for chi in line[1] %}
                     <div class="chi" align="center">
                     <a href="{{ line[0] }}/{{chi[0]}}">
@@ -60,18 +70,15 @@
                         {% else %}
                             <font color="blue">
                         {% endif %}
-                        {#{% if chi[2] == 2 %}
-                            {{ chi[3] }}
-                        {% else %}#}
                         &chi;<sub>{{line[0]}}</sub>({{chi[0]}})
-                        {#{% endif %}#}    
                     </font>
                     </a>
                     </div>
                 {% endfor %}
             </td>
+#}
         </tr>
-    {% endfor %}
+{% endfor %}
 <tbody>
 </table>
 </div>
