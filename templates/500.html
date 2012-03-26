@@ -15,7 +15,9 @@ please report that URL!
 
 <div>Please keep your faith in mathematics!</div>
 
+{% if request.referrer %}
 <div><a href="{{ request.referrer }}">jump back</a></div>
+{% endif %}
 
 </div>
 
