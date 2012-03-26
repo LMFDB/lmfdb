@@ -93,7 +93,6 @@ def local_field_search(**args):
 
   res = C.localfields.fields.find(query).sort([('p',pymongo.ASCENDING),('n',pymongo.ASCENDING),('c',pymongo.ASCENDING),('label', pymongo.ASCENDING)])
   nres = res.count()
-#  res = iter_limit(res, count, start)
   info['fields'] = res
   info['group_display'] = group_display_shortC(C)
   info['display_poly'] = format_coeffs
@@ -102,20 +101,6 @@ def local_field_search(**args):
   bread = get_bread([("Search results", url_for('.search'))])
   return render_template("lf-search.html", info = info, title="Local Number Field Search Result", bread=bread, credit=LF_credit)
 
-# probably not needed any more
-def iter_limit(it,lim,skip):
-    count = 0
-    while count<skip:
-        it.next()
-        count += 1
-    count = 0
-    while count<lim:
-        yield it.next()
-        count += 1
-    return
-
-
-  
 def render_field_webpage(args):
   data = None
   info = {}
@@ -148,6 +133,20 @@ def render_field_webpage(args):
     Pyt = PolynomialRing(Pt, 'y')
     eisenp = Pyt(str(data['eisen']))
     unramp = Pyt(str(data['unram']))
+    # Look up the unram poly so we can link to it
+    unramdata = C.localfields.fields.find_one({'p': p, 'n': f, 'c': 0 })
+    logger = make_logger("LF")
+    if len(unramdata)>0:
+      unramfriend = "/LocalNumberField/%s" % unramdata['label']
+    else:
+      logger.fatal("Cannot find unramified field!")
+      unramfriend = ''
+    rfdata = C.localfields.fields.find_one({'p': p, 'n': {'$in': [1,2]}, 'rf': data['rf'] })
+    if rfdata is None:
+      logger.fatal("Cannot find discriminant root field!")
+      rffriend = ''
+    else:
+      rffriend = "/LocalNumberField/%s" % rfdata['label']
     
     info.update({
       'polynomial': web_latex(polynomial),
@@ -170,6 +169,10 @@ def render_field_webpage(args):
       'aut': data['aut'],
       })
     friends = [('Galois group', "/GaloisGroup/%dT%d" % (gn, gt))]
+    if unramfriend != '':
+      friends.append(('Unramified subfield', unramfriend))
+    if rffriend != '':
+      friends.append(('Discriminant root field', rffriend))
 
     bread = get_bread([(label, ' ')])
     return render_template("lf-show-field.html", credit=LF_credit, title = title, bread = bread, info = info, properties2=prop2, friends = friends )
