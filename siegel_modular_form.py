@@ -225,6 +225,14 @@ def render_webpage( args = {}):
                 f_keys.sort( cmp = __cmp)
                 print f_keys
 
+            # make the coefficients of the M_k(Sp(4,Z)) forms integral
+            if 'Sp4Z' == group:
+                d = lcm( map( lambda n: denominator(n), f[1].coefficients()))
+                f = list(f)
+                f[1] *= d
+                for k in f[2]:
+                    f[2][k] *= d
+
             try:
                 if not ev_modulus:
                     m = 0
