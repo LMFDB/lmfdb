@@ -22,11 +22,18 @@ def get_character_modulus(a,b):
     for row in rows:
         G = DirichletGroup_conrey(row)
         for chi in G:
+<<<<<<< local
+            j = chi.number()
+            order = chi.multiplicative_order()
+            element = (j, chi.is_primitive(), order)
+            col = order 
+=======
             multorder = chi.multiplicative_order()
             el = chi 
             col = multorder 
+>>>>>>> other
             entry = entries.get((row, col), [])
-            entry.append(el)
+            entry.append(element)
             entries[(row, col)] = entry
     
     entries2 = {}

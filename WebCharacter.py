@@ -102,7 +102,8 @@ class WebCharacter:
                 if self.number == 0:
                     self.inducedchar_number = 0
                 else:
-                    for j,chi in enumerate(F):
+                    for chi in F:
+                        j = chi.number()
                         if chi == self.inducedchar:
                             self.inducedchar_number = j
                             break
