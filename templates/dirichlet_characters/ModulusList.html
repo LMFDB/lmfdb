@@ -48,35 +48,27 @@
     </tr>
 </thead>
 
+{% macro show_character(entry, col) -%}
+{% if not entry is none %}
+  {% if col == "more"  %}
+    LIST
+  {% else %}
+    {% for e in entry %}{{ e[0] }}, {% endfor %}
+  {% endif %}
+{% endif %}
+{%- endmacro %}
+
 <tbody>
 {% for row in rows %}
 
-        <tr>
-            <td class="modulus"align="center" style="4em"> {{ row }} </td>
+	<tr>
+	<td class="modulus"align="center" style="4em"> {{ row }} </td>
 
-     {% for col in cols %}
-       <td>
-         {{ contents[(row, col)] }} 
-       </td>
-     {% endfor %}
+	{% for col in cols %}
+	<td> {{ show_character(contents[(row, col)], col) }} </td>
+	{% endfor %}
 
-{#
-                {% for chi in line[1] %}
-                    <div class="chi" align="center">
-                    <a href="{{ line[0] }}/{{chi[0]}}">
-                        {% if chi[1] %}
-                            <font color="green">
-                        {% else %}
-                            <font color="blue">
-                        {% endif %}
-                        &chi;<sub>{{line[0]}}</sub>({{chi[0]}})
-                    </font>
-                    </a>
-                    </div>
-                {% endfor %}
-            </td>
-#}
-        </tr>
+	</tr>
 {% endfor %}
 <tbody>
 </table>

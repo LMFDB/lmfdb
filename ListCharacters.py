@@ -23,15 +23,11 @@ def get_character_modulus(a,b):
         G = DirichletGroup_conrey(row)
         for j, chi  in enumerate(G):
             multorder = chi.multiplicative_order()
-            el = (j, chi.is_primitive(), multorder)
+            el = (j+1, chi.is_primitive(), multorder)
             col = multorder 
-            if multorder > 6:
-               col = "more"
-               entry = entries.get((row, col), [])
-               entry.append(el)
-               entries[(row, col)] = entry
-            else:
-               entries[(row, col)] = el
+            entry = entries.get((row, col), [])
+            entry.append(el)
+            entries[(row, col)] = entry
     cols = headers
     return headers, entries, rows, cols
 
