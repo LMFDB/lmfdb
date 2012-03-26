@@ -12,7 +12,7 @@ import quadratic_twists
 import renderLfunction
 #import maass_form
 import plot_example
-import number_field
+import number_fields
 import lfunction_db
 #import maass_form_picard
 #import maass_waveforms
