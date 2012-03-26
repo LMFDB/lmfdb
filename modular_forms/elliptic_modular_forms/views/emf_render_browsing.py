@@ -20,7 +20,7 @@ def draw_table(nrows=None,ncols=None,**kwds):
     ncols = my_get(info,'ncols',ncols,int)
     nrows = my_get(info,'nrows',nrows,int)
     if nrows==None or ncols==None:
-        return emf_error("Please supply level weight (and optional character)!")
+        return emf_error("Please supply level weight (and optional character)!"), 500
     ttype = my_get(info,'ttype','new',str)
     ttype = my_get(kwds,'ttype',info.get('ttype'),str)
     info = to_dict(kwds)
@@ -43,7 +43,7 @@ def return_dimension(level=None,weight=None,chi=None,**kwds):
     weight = my_get(info,'weight',weight,int)
     chi = my_get(info,'chi',chi,int)
     if level==None or weight==None:
-        return emf_error("Please supply level weight (and optional character)!")
+        return emf_error("Please supply level weight (and optional character)!"), 500
     ttype = my_get(kwds,'ttype',info.get('ttype','new'),str)
     emf_logger.debug("level,weight,chi: {0},{1},{2}, type={3}".format(level,weight,chi,ttype))
     if chi==0 or chi==None:
@@ -59,7 +59,7 @@ def return_dimension(level=None,weight=None,chi=None,**kwds):
     if ttype=='eisenstein':
         return str(dimension_eis(x,weight))
     s = "Please use one of the available table types: 'new', 'cusp','modular', 'eisenstein' Got:{0}".format(ttype)
-    return emf_error(s)
+    return emf_error(s), 500
 
 
 def emf_error(s):

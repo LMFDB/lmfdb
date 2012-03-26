@@ -121,7 +121,7 @@ def render_group_webpage(args):
     if data is None:
         bread = get_bread([("Search error", url_for('.search'))])
         info['msg'] = "Group " + label + " was not found in the database."
-        return render_template("gg-error.html", info=info, title="Galois Group Search Error", bread=bread, credit=GG_credit) 
+        return render_template("gg-error.html", info=info, title="Galois Group Search Error", bread=bread, credit=GG_credit), 404
     title = 'Galois Group:' + label
     n = data['n']
     t = data['t']
