@@ -8,17 +8,20 @@ import tempfile, os
 import pymongo
 from WebCharacter import *
 from utils import to_dict
+from sage.rings.arith import euler_phi
+ 
+#from dirichlet_conrey import *
 
 def get_character_modulus(a,b):
-    from sage.modular.dirichlet import DirichletGroup
+    from dirichlet_conrey import DirichletGroup_conrey
     from DirichletCharacter import kronecker_symbol as k
     def line(N):
-        G = DirichletGroup(N)
-        return [(j, G[j].is_primitive(),G[j].order(),k(G[j])) for j in range(len(G))]
+        G = DirichletGroup_conrey(N)
+        return [(j, chi.is_primitive(),chi.multiplicative_order(),k(chi)) for j,chi in enumerate(G)]
     return [(_,line(_)) for _ in range(a,b+1)]
 
 def get_character_conductor(a,b):
-    from sage.modular.dirichlet import DirichletGroup
+    from dirichlet_conrey import DirichletGroup_conrey
     from DirichletCharacter import kronecker_symbol as k
     def line(N):
         l = []
@@ -26,14 +29,14 @@ def get_character_conductor(a,b):
         modulus = N
         while count < 7:
             if modulus%N == 0:
-                G = DirichletGroup(modulus)
+                G = DirichletGroup_conrey(modulus)
                 #chi_count = 0
-                for j in range(len(G)):
-                    if count == 7:
-                        break
-                    elif G[j].conductor() == N:
-                        count += 1
-                        l.append((modulus,j,G[j].is_primitive(),G[j].order(),k(G[j])))
+                for j,chi in enumerate(G):
+                        if count == 7:
+                            break
+                        elif chi.conductor() == N:
+                            count += 1
+                            l.append((modulus,j,chi.is_primitive(),chi.multiplicative_order(),k(chi)))
             modulus += N
             if count == 0:
                 break
@@ -42,19 +45,19 @@ def get_character_conductor(a,b):
     return [(_,line(_)) for _ in range(a,b)]
 
 def get_character_order(a,b):
-    from sage.modular.dirichlet import DirichletGroup
+    from dirichlet_conrey import DirichletGroup_conrey
     from DirichletCharacter import kronecker_symbol as k
     def line(N):
         l = []
         count = 0
         for modulus in range(N,250):
-            G = DirichletGroup(modulus)
-            for j in range(len(G)):
-                if count == 8:
-                    break
-                elif G[j].multiplicative_order() == N:
-                    count += 1
-                    l.append((modulus,j,G[j].is_primitive(),G[j].order(), k(G[j])))
+            G = DirichletGroup_conrey(modulus)
+            for j,chi in enumerate(G):
+                    if count == 8:
+                        break
+                    elif chi.multiplicative_order() == N:
+                        count += 1
+                        l.append((modulus,j,chi.is_primitive(),chi.multiplicative_order(), k(chi)))
             if count == 8:
                 break
         return l
@@ -68,10 +71,9 @@ def charactertable(Nmin, Nmax, type):
     return(ans)
 
 def processDirichletNavigation(args):
-    from sage.rings.arith import euler_phi
     s = '<table>\n'
     s += '<tr>\n<th scope="col">Characters</th>\n</tr>\n'
-    for i in range(0,len(G)):
+    for i in range(0,euler_phi(modulus)):
         s += '<tr>\n<th scope="row">' + str(i) + '</th>\n'
         s += '<td>\n'
         j = i-N
