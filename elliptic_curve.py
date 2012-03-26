@@ -357,7 +357,7 @@ def render_curve_webpage_by_label(label):
     info['learnmore'] = [('Elliptic Curves', url_for("not_yet_implemented"))]
     #info['plot'] = image_src(plot)
     info['plot'] = url_for('plot_ec', label=label)
-    info['iso_class'] = data['iso']
+    info['iso_class'] = str(data['conductor'])+data['iso']
     info['download_qexp_url'] = url_for('download_qexp', limit=100, ainvs=','.join([str(a) for a in ainvs]))
     properties2 = [('Label', '%s' % label),
                    (None, '<img src="%s" width="200" height="150"/>' % url_for('plot_ec', label=label) ),
