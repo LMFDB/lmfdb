@@ -10,7 +10,11 @@ from utils import parse_range, make_logger
 logger = make_logger("DC")
 #import web_modforms
 from modular_forms.elliptic_modular_forms.backend.web_modforms import *
-from dirichlet_conrey import *
+try:
+  from dirichlet_conrey import *
+except:
+  logger.critical("dirichlet_conrey.pyx cython file is not available ...")
+
 
 class WebCharacter:
     """Class for presenting a Character on a web page

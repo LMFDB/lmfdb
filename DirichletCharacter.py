@@ -14,7 +14,11 @@ from renderLfunction import render_Lfunction
 from utils import to_dict, parse_range, make_logger
 import ListCharacters
 
-from dirichlet_conrey import *
+try:
+  from dirichlet_conrey import *
+except:
+  logger.critical("dirichlet_conrey.pyx cython file is not available ...")
+
 
 logger = make_logger("DC")
 
