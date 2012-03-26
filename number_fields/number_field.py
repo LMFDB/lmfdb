@@ -460,7 +460,7 @@ def render_field_webpage(args):
     info['downloads_visible'] = True
     info['downloads'] = [('worksheet', '/')]
 #    info['friends'] = [('L-function', '/')]
-    info['friends'] = [('L-function', "/L/NumberField/%s" % label)]
+    info['friends'] = [('L-function', "/L/NumberField/%s" % label), ('Galois group', "/GaloisGroup/%dT%d" % (data['degree'], t))]
     info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), ('Discriminant ranges',url_for(".render_discriminants_page"))]
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")),('%s'%info['label'],' ')]
     title = "Global Number Field %s" % info['label']
