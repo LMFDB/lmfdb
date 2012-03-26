@@ -14,11 +14,22 @@ from sage.rings.arith import euler_phi
 
 def get_character_modulus(a,b):
     from dirichlet_conrey import DirichletGroup_conrey
-    from DirichletCharacter import kronecker_symbol as k
-    def line(N):
-        G = DirichletGroup_conrey(N)
-        return [(j, chi.is_primitive(),chi.multiplicative_order(),k(chi)) for j,chi in enumerate(G)]
-    return [(_,line(_)) for _ in range(a,b+1)]
+    #from DirichletCharacter import kronecker_symbol as k
+    headers = range(1,7)
+    headers.append("more")
+    entries = {}
+    rows = range(a, b+1)
+    for row in rows:
+        G = DirichletGroup_conrey(row)
+        for j, chi  in enumerate(G):
+            multorder = chi.multiplicative_order()
+            el = (j+1, chi.is_primitive(), multorder)
+            col = multorder 
+            entry = entries.get((row, col), [])
+            entry.append(el)
+            entries[(row, col)] = entry
+    cols = headers
+    return headers, entries, rows, cols
 
 def get_character_conductor(a,b):
     from dirichlet_conrey import DirichletGroup_conrey

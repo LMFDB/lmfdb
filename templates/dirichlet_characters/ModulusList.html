@@ -42,36 +42,34 @@
 <thead align="center">
     <tr>
         <th>Modulus</th>
-        <th> 1 </th>
-        <th> 2 </th>
+        {% for h in headers %}
+          <th>{{h}}</th>
+        {% endfor %}
     </tr>
 </thead>
 
+{% macro show_character(entry, col) -%}
+{% if not entry is none %}
+  {% if col == "more"  %}
+    LIST
+  {% else %}
+    {% for e in entry %}{{ e[0] }}, {% endfor %}
+  {% endif %}
+{% endif %}
+{%- endmacro %}
+
 <tbody>
-    {% for line in contents %}
-        <tr>
-            <td class="modulus"align="center" style="4em"> {{ line[0] }} </td>
-            <td>
-                {% for chi in line[1] %}
-                    <div class="chi" align="center">
-                    <a href="{{ line[0] }}/{{chi[0]}}">
-                        {% if chi[1] %}
-                            <font color="green">
-                        {% else %}
-                            <font color="blue">
-                        {% endif %}
-                        {#{% if chi[2] == 2 %}
-                            {{ chi[3] }}
-                        {% else %}#}
-                        &chi;<sub>{{line[0]}}</sub>({{chi[0]}})
-                        {#{% endif %}#}    
-                    </font>
-                    </a>
-                    </div>
-                {% endfor %}
-            </td>
-        </tr>
-    {% endfor %}
+{% for row in rows %}
+
+	<tr>
+	<td class="modulus"align="center" style="4em"> {{ row }} </td>
+
+	{% for col in cols %}
+	<td> {{ show_character(contents[(row, col)], col) }} </td>
+	{% endfor %}
+
+	</tr>
+{% endfor %}
 <tbody>
 </table>
 </div>
