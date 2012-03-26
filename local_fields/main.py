@@ -126,7 +126,7 @@ def render_field_webpage(args):
     if data is None:
         bread = get_bread([("Search error", url_for('.search'))])
         info['msg'] = "Field " + label + " was not found in the database."
-        return render_template("lf-error.html", info=info, title="Local Number Field Search Error", bread=bread, credit=LF_credit) 
+        return render_template("lf-error.html", info=info, title="Local Number Field Search Error", bread=bread, credit=LF_credit), 404
     title = 'Local Number Field:' + label
     polynomial = coeff_to_poly(data['coeffs'])
     p = data['p']
