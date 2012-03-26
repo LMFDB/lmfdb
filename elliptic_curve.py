@@ -345,7 +345,9 @@ def render_curve_webpage_by_label(label):
         'tamagawa_numbers': r' \cdot '.join(str(sage.all.factor(c)) for c in E.tamagawa_numbers()),
         'cond_factor':latex(N.factor()),
         'xintegral_points':','.join(web_latex(i_p) for i_p in xintpoints),
-        'tor_gens':','.join(web_latex(eval(g)) for g in data['torsion_generators']) if 'torsion_generators' in data else list(G)
+        'tor_gens':','.join(web_latex(eval(g)) for g in data['torsion_generators']) if False else ','.join(web_latex(P.element().xy()) for P in list(G))
+        # Database has errors when torsion generators not integral
+        # 'tor_gens':','.join(web_latex(eval(g)) for g in data['torsion_generators']) if 'torsion_generators' in data else [P.element().xy() for P in list(G)]
                         })
     info['downloads_visible'] = True
     info['downloads'] = [('worksheet', url_for("not_yet_implemented"))]
