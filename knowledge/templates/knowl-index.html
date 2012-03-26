@@ -1,81 +1,83 @@
 {% extends "homepage.html" %}
 
 {% block content -%}
-<style text="text/css">
-#knowls a {
-  display: block;
-}
-#knowls a > span:last-child {
-  font-size: xx-small;
-  color: grey;
-  position: relative;
-  top: -0.7em;
-}
-#knowls td div {
-  display: inline;
-  width: 165px;
-  float: left;
-  min-height: 4em;
-}
-#knowls td { 
-  padding: 10px 0px;
-}
-#knowls tr td:first-child {
-  width: 50px;
-  vertical-align: top;
-  text-align: center;
-  font-size: x-large;
-  color: #006;
-}
+<style type="text/css">
 a.curcat {
   font-weight: bold;
   border-bottom: 1px solid #006;
 }
 </style>
+<script type="text/javascript">
+$(function() {
+  $("*[kid]").bind('click', function(e) {
+   e.preventDefault();
+   window.location = "{{ url_for('.show', ID='') }}" + $(this).attr('kid');
+  });
+});
+</script>
 
-<div>
-  <form id='knowl-search' action="{{ url_for('.index') }}" method="GET">
-    Search (ID, description, #hashtag, or full text):
-    <input name="search" value="{{ search }}" />
+<table>
+<tr>
+ <td>Search</td>
+ <td> 
+ <form id='knowl-search' action="{{ url_for('.index') }}" method="GET">
+    <input name="search" value="{{ search }}" size="40" placeholder="ID, description, #hashtag, or full text"/>
     {% if search|length > 0 -%}<a href="{{url_for('.index')}}">clear</a>{%- endif %}
     <button type="submit">Go</button>
   </form>
-</div>
+ </td>
+</tr>
+
+<tr>
+ <td>Filter</td>
+ <td>Category: 
+    {% for cat in categories -%}
+     <a 
+      {% if cur_cat == cat -%}class='curcat'{%- endif %}
+      href="{{ url_for('.index', category = cat) }}">{{cat}}</a>
+       {# {% if not loop.last -%} &middot; {%- endif %} #}
+    {%- endfor %}
+    {% if categorymode -%}
+    </td></tr>
+    <tr><td/><td>
+     <strong><a href="{{ url_for('.index') }}">clear category filter</a></strong>
+    {%- endif %}
+ </td>
+</tr>
 
 {% if not searchmode and not categorymode %}
-<div style="margin-bottom: 10px">
+<tr>
+ <td></td>
+ <td>
   <form method="GET" action="{{ url_for('.index') }}">
-    Quality level: 
+    Quality:
     {% for kq in knowl_qualities -%}
-      <input type="checkbox" id="{{ kq }}" name="{{ kq }}" {% if filters[loop.index0] -%}checked{%- endif %} />
+     <input type="checkbox" id="{{ kq }}" name="{{ kq }}" {% if filters[loop.index0] -%}checked{%- endif %} />
         <label for="{{ kq }}">{{ kq|capitalize }}</label>
     {%- endfor %}
     <button type="submit" name="filter">Filter</button>
-  </form>
-  </div>
+   </form>
+  </td>
+</tr>
 {% endif %}
 
-<div style="margin-bottom: 10px">
-Category:
-{% for cat in categories -%}
- <a 
-  {% if cur_cat == cat -%}class='curcat'{%- endif %}
-  href="{{ url_for('.index', category = cat) }}">{{cat}}</a>
-   {# {% if not loop.last -%} &middot; {%- endif %} #}
-{%- endfor %}
-{% if categorymode -%}
-  &mdash; <strong><a href="{{ url_for('.index') }}">clear</a></strong>
-{%- endif %}
-</div>
+<tr>
+ <td>More</td>
+ <td> 
+   <a href="{{ url_for('.history') }}">Recently modified Knowls</a></td>
+</tr>
+</table>
 
-<table id="knowls" class="ntdata">
+<table id="knowl-index" class="ntdata" style="margin-top: 50px;">
   {% for c, ks in knowls -%}
    <tr>
     <td>{{ c }}</td>
     <td>
       {% for k in ks %}
-        <div><a href="{{ url_for('.show', ID=k._id) }}">{{ k.title|safe }}<br/>
-             <span>{{ k._id }}</span></a></div>
+        <div title="{{k.title|striptags}} [{{k._id}}]" kid="{{k._id}}">
+          <span>{{ k._id }}</span>
+          <a href="{{ url_for('.show', ID=k._id) }}" >{{ k.title|safe }}</a>
+        </div>
       {% endfor %}
      </td>
    </tr>

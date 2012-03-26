@@ -3,6 +3,9 @@
 from knowledge import logger
 from base import getDBConnection
 from datetime import datetime
+import pymongo
+ASC = pymongo.ASCENDING
+DSC = pymongo.DESCENDING
 
 def get_knowls():
   _C = getDBConnection()
@@ -14,40 +17,123 @@ def get_knowls():
   knowls.ensure_index('_keywords')
   return knowls
 
+def get_meta():
+  """
+  collection of meta-documents, like categories
+  """
+  _C = getDBConnection()
+  return _C.knowledge.meta
+
 def get_deleted_knowls():
   _C = getDBConnection()
   return _C.knowledge.deleted_knowls
 
+def save_history(knowl, who):
+  """
+  saves history tokens in a collection "history".
+  each entry has the _id of the updated knowl and at least a timestamp
+  and a reference to who has edtited it. also, the title is nice to
+  avoid an additional lookup when listing the history!
+  'state' can either be 'saved' (for the recent changes list) or 'locked'.
+  TODO also calculate a diff with python's difflib and store it here.
+  """
+  history = getDBConnection().knowledge.history
+  history.ensure_index("time")
+  h_item = { '_id'   : knowl.id,
+             'title' : knowl.title,
+             'time'  : datetime.utcnow(),
+             'who'   : who,
+             'state' : 'saved'}
+  history.save(h_item)
+
+def get_history(limit = 25):
+  """
+  returns the last @limit history items
+  """
+  history = getDBConnection().knowledge.history
+  return history.find({'state' : 'saved'}, sort=[('time', DSC)], limit = limit)
+
+def is_locked(knowlid, delta_min=10):
+  """
+  returns a lock (as True), if there has been a lock in the last @delta_min minutes; else False.
+  attention, it discardes all locks prior to @delta_min!
+  """
+  from datetime import datetime, timedelta
+  now    = datetime.utcnow()
+  tdelta = timedelta(minutes=delta_min)
+  time   = now - tdelta
+  history = getDBConnection().knowledge.history
+  history.remove({'state' : 'locked', 'time' : { '$lt' : time }})
+  # search for both: either locked OR has been saved in the last 10 min
+  lock = history.find_one({'_id' : knowlid, 'time' : { '$gte' : time }})
+  return lock or False
+
+def set_locked(knowl, who):
+  """
+  when a knowl is edited, a lock is created. who is the user id.
+  """
+  history = getDBConnection().knowledge.history
+  history.ensure_index("time")
+  lock_item = { '_id'   : knowl.id,
+                'title' : knowl.title,
+                'time'  : datetime.utcnow(),
+                'who'   : who,
+                'state' : 'locked' }
+  history.save(lock_item)
+
+
 def get_knowl(ID, fields = { "history": 0, "_keywords" : 0 }):
   return get_knowls().find_one({'_id' : ID}, fields=fields)
 
+def knowl_title(kid):
+  """
+  just the title, used in the knowls in the templates for the pages.
+  returns None, if knowl does not exist.
+  """
+  k = get_knowl(kid, fields= ['title'])
+  return k['title'] if k else None
+
 def extract_cat(kid):
+  if not hasattr(kid, 'split'): return None
   return kid.split(".")[0]
+
+# categories, level 0, never change this id
+CAT_ID = 'categories'
 
 def refresh_knowl_categories():
   """
   when saving, we refresh the knowl categories
   (actually, this should only happen if it is a new knowl!)
+
+  TODO this should only be called by a housekeeping task, saving a new
+  knowl should be a simple set union with the existing list of categories
   """
-  cats = set([ extract_cat(_['_id']) for _ in get_knowls().find({'categories' : { "$exists" : False }}, fields=[]) ])
-  # there should only be *one* document with the field named categories
-  get_knowls().update({'categories' : { "$exists" : True }}, 
-                      {'categories' : sorted(cats), 
-                       'title' : 'Categories (internal data)'}, upsert=True)
-  return cats
+  # assumes that all actual knowls have a title field
+  cats = set(( extract_cat(_['_id']) for _ in get_knowls().find(fields=[]) ))
+  # set the categories list in the categories document in the 'meta' collection
+  get_meta().save({'_id' : CAT_ID, 'categories' : sorted(cats)})
+  return str(cats)
+
+def update_knowl_categories(cat):
+  """
+  when a new knowl is saved, it's category could be new. this function
+  ensures that we know it. this is much more efficient than the
+  refresh variant.
+  """
+  get_meta().update({'_id' : CAT_ID}, {'$addToSet' : {'categories' : cat}})
 
 def get_categories():
-  c_doc = get_knowls().find_one({'categories' : { "$exists" : True }})
-  return c_doc['categories'] if c_doc else []
+  c_doc = get_meta().find_one(CAT_ID)
+  return c_doc.get('categories', []) if c_doc else []
 
 def get_knowls_by_category(cat):
   """searching for IDs that start with cat and continue with a dot + at least one char"""
   # TODO later on search for the knowl field 'cat'
-  return get_knowls().find({'_id' : { "$regex" : r"^%s\..+" % cat }}, fields=['title'])
+  # return get_knowls().find({'_id' : { "$regex" : r"^%s\..+" % cat }}, fields=['title'])
+  return get_knowls().find({'cat' : cat}, fields=['title'])
 
 import re
-valid_keywords = re.compile(r"\b[a-zA-Z0-9-]{3,}\b")
-html_keywords  = re.compile(r"&[a-zA-Z0-9]+;")
+text_keywords = re.compile(r"\b[a-zA-Z0-9-]{3,}\b")
 # this one is different from the hashtag regex in main.py,
 # because of the match-group ( ... ) 
 hashtag_keywords = re.compile(r'#[a-zA-Z][a-zA-Z0-9-_]{1,}\b')
@@ -61,10 +147,8 @@ def make_keywords(content, kid, title):
   """
   kws = [ kid ] # always included
   kws += kid.split(".")
-  kws += valid_keywords.findall(title)
-  kws += valid_keywords.findall(content)
-  kws += html_keywords.findall(title)
-  kws += html_keywords.findall(content)
+  kws += text_keywords.findall(title)
+  kws += text_keywords.findall(content)
   kws += hashtag_keywords.findall(title)
   kws += hashtag_keywords.findall(content)
   kws = [ k.lower() for k in kws ]
@@ -93,7 +177,7 @@ class Knowl(object):
       self._authors     = data.get('authors', [])
       self._category    = data.get('cat', extract_cat(ID))
       self._last_author = data.get('last_author', '')
-      self._timestamp   = data.get('timestamp', datetime.now())
+      self._timestamp   = data.get('timestamp', datetime.utcnow())
     else:
       self._title   = ''
       self._content = ''
@@ -101,31 +185,34 @@ class Knowl(object):
       self._category = extract_cat(ID)
       self._authors = []
       self._last_author = ''
-      self._timestamp = datetime.now()
+      self._timestamp = datetime.utcnow()
 
   def save(self, who):
     """who is the ID of the user, who wants to save the knowl"""
-    new_knowl = get_knowls().find({'_id' : self.id}).count() == 0
     new_history_item = get_knowl(self.id)
+    new_knowl = new_history_item == None
     search_keywords = make_keywords(self.content, self.id, self.title)
     cat = extract_cat(self.id)
-    get_knowls().update({'_id' : self.id},
-        {"$set": {
+    update_op = {"$set": {
            'content' :    self.content,
            'title' :      self.title,
            'cat' :        cat,
            'quality':     self.quality,
-	       'last_author': who,
-	       'timestamp':   self.timestamp,
+           'last_author': who,
+           'timestamp':   self.timestamp,
            '_keywords' :  search_keywords
-	       } ,
-	     "$push": {"history": new_history_item}}, upsert=True)
+         }}
+    if not new_knowl:
+      update_op["$push"] = {"history": new_history_item}
     if who:
-      get_knowls().update(
-         { '_id':self.id }, 
-         { "$addToSet" : { "authors" : who }})
-    # TODO only do this if its a new one
-    if new_knowl: refresh_knowl_categories()
+      update_op['$addToSet'] = { "authors" : who }
+    get_knowls().update({'_id' : self.id}, update_op, upsert=True)
+    # TODO instead of refreshing all knowl categories, just do a 
+    # set union with the existing categories list and the one from
+    # this new knowl!
+    if new_knowl: update_knowl_categories(cat)
+    save_history(self, who)
+    
         
   def delete(self):
     """deletes this knowl from the db. (DANGEROUS, ADMIN ONLY!)"""

@@ -6,20 +6,22 @@
 
 
 <p>
-A Maass Form \(F\) on the {{KNOWL('mf.maass.picard',title='Mass Forms on the Picard group \(\mathrm{SL}_{2}(\mathbb{Z}[i])\)') }}
+A Maass form \(f\) on the {{KNOWL('mf.maass.picard',title='Maass Forms on the Picard group \(\mathrm{SL}_{2}(\mathbb{Z}[i])\)') }}
 </p>
 {# Should be used to display one single Maass Form #}
 
 {% if table is defined %}
 <h2>Properties</h2>
-
+<div>
 {% if ev is defined %}
 The eigenvalue of the {{KNOWL('mf.maass.picard.laplacian',title='Laplacian')}} is:{{ ev }}
 {% endif %}
 </div>
+</div>
 <div>symmetry type: {{ sym|join(" ")}}</div>
-
-The {{KNOWL('mf.maass.picard.fourier_expansion',title='Fourier expansion')}} has coefficients \( c(n) \) with \(n = a+bi\) and \( m,n  \in \mathbb{Z} \). 
+<div>
+The {{KNOWL('mf.maass.picard.fourierexpansion',title='Fourier expansion')}} has coefficients \( c(n) \) with \(n = a+bi\) and \( m,n  \in \mathbb{Z} \). 
+</div>
 
 <h2>Fourier Coefficients</h2>
 
@@ -48,7 +50,7 @@ The {{KNOWL('mf.maass.picard.fourier_expansion',title='Fourier expansion')}} has
    </tbody>
 </table>
 <p>
-The {{KNOWL('mf.maass.mwf.data.accuracy',title='accuracy')}} of the presented data is {{ prec}}
+The accuracy of the presented data is {{ prec}}.
 </p>
 <p>
 {{ metadata }}

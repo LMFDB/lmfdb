@@ -12,34 +12,51 @@
 #
 # author: Harald Schilly <harald.schilly@univie.ac.at>
 import string
+import re
 import pymongo
 import flask
 from base import app, getDBConnection
 from datetime import datetime
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
 from flaskext.login import login_required, current_user
-from knowl import Knowl
-from users import admin_required
+from knowl import Knowl, knowl_title, get_history
+from users import admin_required, housekeeping
 import markdown
 from knowledge import logger
 
 ASC = pymongo.ASCENDING
+DSC = pymongo.DESCENDING
 
-import re
-allowed_knowl_id = re.compile("^[A-Za-z0-9._-]+$")
+# just for those, who still use an older markdown
+try:
+  markdown.util.etree
+except:
+  logger.fatal("You need to update the markdown python utility: sage -sh -> easy_install -U markdown flask-markdown")
+  exit()
+
+# know IDs are restricted by this regex
+allowed_knowl_id = re.compile("^[a-z0-9._-]+$")
 
 # Tell markdown to not escape or format inside a given block
 class IgnorePattern(markdown.inlinepatterns.Pattern):
     def handleMatch(self, m):
-        return markdown.AtomicString(m.group(2))
+        return m.group(2) 
 
 class HashTagPattern(markdown.inlinepatterns.Pattern):
     def handleMatch(self, m):
-	el = markdown.etree.Element("a")
-        el.set('href', url_for('.index')+'?search=%23'+m.group(2))
-        el.text = '#' + markdown.AtomicString(m.group(2))
-        return el
+      el = markdown.util.etree.Element("a")
+      el.set('href', url_for('.index')+'?search=%23'+m.group(2))
+      el.text = '#' + m.group(2) 
+      return el
 
+class KnowlTagPatternWithTitle(markdown.inlinepatterns.Pattern):
+  def handleMatch(self, m):
+    tokens = m.group(2).split("|")
+    kid = tokens[0].strip()
+    if len(tokens) > 1:
+      tit = ''.join(tokens[1:])
+      return "{{ KNOWL('%s', title='%s') }}" % (kid, tit.strip())
+    return "{{ KNOWL('%s') }}" % kid
 
 # Initialise the markdown converter, sending a wikilink [[topic]] to the L-functions wiki
 md = markdown.Markdown(extensions=['wikilinks'],
@@ -54,11 +71,16 @@ md.inlinePatterns.add('mathjax\\[', IgnorePattern(r'(\\\[.+?\\\])'), '<escape')
 hashtag_keywords_rex = r'#([a-zA-Z][a-zA-Z0-9-_]{1,})\b'
 md.inlinePatterns.add('hashtag', HashTagPattern(hashtag_keywords_rex), '<escape')
 
+# Tells markdown to process "wikistyle" knowls with optional title
+# should cover [[[ KID ]]] and [[[ KID | title ]]]
+knowltagtitle_regex = r'\[\[\[[ ]*([^\]]+)[ ]*\]\]\]'
+md.inlinePatterns.add('knowltagtitle', KnowlTagPatternWithTitle(knowltagtitle_regex),'<escape')
+
 # global (application wide) insertion of the variable "Knowl" to create
 # lightweight Knowl objects inside the templates.
 @app.context_processor
 def ctx_knowledge():
-  return {'Knowl' : Knowl}
+  return {'Knowl' : Knowl, 'knowl_title' : knowl_title}
 
 @app.template_filter("render_knowl")
 def render_knowl_in_template(knowl_content, **kwargs):
@@ -78,7 +100,10 @@ def render_knowl_in_template(knowl_content, **kwargs):
   # markdown enabled
   render_me = render_me % {'content' : md.convert(knowl_content) }
   # Pass the text on to markdown.  Note, backslashes need to be escaped for this, but not for the javascript markdown parser
-  return render_template_string(render_me, **kwargs)
+  try:
+    return render_template_string(render_me, **kwargs)
+  except Exception, e:
+    return "ERROR in the template: %s. Please edit it to resolve the problem." % e
   
 
 # a jinja test for figuring out if this is a knowl or not
@@ -131,23 +156,46 @@ def edit(ID):
                   no spaces, numbers or '.', '_' and '-'.""" % ID, "error")
       return flask.redirect(url_for(".index"))
   knowl = Knowl(ID)
+
+  from knowl import is_locked, set_locked
+  lock = False
+  if request.args.get("lock", "") != 'ignore':
+    lock = is_locked(knowl.id)
+  # lock, if either lock is false or (lock is active), current user is editing again
+  author_edits = lock and lock['who'] == current_user.get_id()
+  logger.debug(author_edits)
+  if not lock or author_edits:
+    set_locked(knowl, current_user.get_id())
+  if author_edits: lock = False
+    
   b = get_bread([("Edit '%s'"%ID, url_for('.edit', ID=ID))])
   return render_template("knowl-edit.html", 
          title="Edit Knowl '%s'" % ID,
          k = knowl,
-         bread = b)
+         bread = b,
+         lock = lock)
 
 @knowledge_page.route("/show/<ID>")
 def show(ID):
   k = Knowl(ID)
-  r = render(ID, footer="0")
-  b = get_bread([('%s'%k.title, url_for('.show', ID=ID))])
+  r = render(ID, footer="0", raw=True)
+  title = k.title or "'%s'" % k.id
+  b = get_bread([('%s'%title, url_for('.show', ID=ID))])
     
   return render_template("knowl-show.html",
          title = k.title,
          k = k,
          render = r,
          bread = b)
+
+@knowledge_page.route("/history")
+def history():
+  h_items = get_history()
+  bread = get_bread([("History", url_for('.history'))])
+  return render_template("knowl-history.html", 
+                         title="Knowledge History",
+                         bread = bread,
+                         history = h_items)
 
 @knowledge_page.route("/delete/<ID>")
 @admin_required
@@ -182,11 +230,13 @@ def save_form():
   k.quality = request.form['quality']
   k.timestamp = datetime.now()
   k.save(who=current_user.get_id())
+  from knowl import save_history
+  save_history(k, current_user.get_id())
   return flask.redirect(url_for(".show", ID=ID))
   
 
 @knowledge_page.route("/render/<ID>", methods = ["GET", "POST"])
-def render(ID, footer=None, kwargs = None):
+def render(ID, footer=None, kwargs = None, raw = False):
   """
   this method renders the given Knowl (ID) to insert it
   dynamically in a website. It is intended to be used 
@@ -196,6 +246,9 @@ def render(ID, footer=None, kwargs = None):
   Note, that the used knowl-render.html template is *not*
   based on any globally defined website and just creates
   a small and simple html snippet!
+
+  the keyword 'raw' is used in knowledge.show and knowl_inc to
+  include *just* the string and not the response object.
   """
   k = Knowl(ID)
 
@@ -225,8 +278,15 @@ def render(ID, footer=None, kwargs = None):
   {%% from "knowl-defs.html" import KNOWL_INC with context %%}
   {%% from "knowl-defs.html" import TEXT_DATA with context %%}
 
-  <div class="knowl">
-  <div class="knowl-content">%(content)s</div>"""
+  <div class="knowl">"""
+  if foot == "1":
+    render_me += """\
+  <div class="knowl-header">
+    <a href="{{ url_for('.show', ID='%(ID)s') }}">%(title)s</a> 
+  </div>""" % { 'ID' : k.id, 'title' : (k.title or k.id) }
+
+  render_me += """<div><div class="knowl-content">%(content)s</div></div>"""
+
   if foot == "1": 
     render_me += """\
   <div class="knowl-footer">
@@ -242,13 +302,53 @@ def render(ID, footer=None, kwargs = None):
   # markdown enabled
   render_me = render_me % {'content' : md.convert(con), 'ID' : k.id } #, 'authors' : authors }
   # Pass the text on to markdown.  Note, backslashes need to be escaped for this, but not for the javascript markdown parser
-
+  
   #logger.debug("rendering template string:\n%s" % render_me)
 
   # TODO wrap this string-rendering into a try/catch and return a proper error message
   # so that the user has a clue. Most likely, the {{ KNOWL('...') }} has the wrong syntax!
-  logger.debug("kwargs: %s" % k.template_kwargs)
-  return render_template_string(render_me, k = k, **kwargs)
+  try:
+    data = render_template_string(render_me, k = k, **kwargs)
+    if raw: return data
+    resp = make_response(data)
+    # cache 10 minutes if it is a usual GET
+    if request.method == 'GET':
+      resp.headers['Cache-Control'] = 'max-age=%s, public' % (10 * 60)
+    return resp
+  except Exception, e:
+    return "ERROR in the template: %s. Please edit it to resolve the problem." % e
+
+@knowledge_page.route("/_cleanup")
+@housekeeping
+def cleanup():
+  """
+  reindexes knowls, also the list of categories. prunes history.
+  this is an internal task just for admins!
+  """
+  from knowl import refresh_knowl_categories, extract_cat, make_keywords, get_knowls
+  cats = refresh_knowl_categories()
+  knowls = get_knowls()
+  q_knowls = knowls.find(fields=['content', 'title'])
+  for k in q_knowls:
+    kid = k['_id']
+    cat = extract_cat(kid)
+    search_keywords = make_keywords(k['content'], kid, k['title'])
+    knowls.update({'_id' : kid}, 
+                  {"$set": { 
+                     'cat' : cat,
+                     '_keywords' :  search_keywords
+                   }})
+
+  hcount = 0
+  # max allowed history length
+  max_h = 50 
+  q_knowls = knowls.find({'history' : {'$exists' : True}}, fields=['history'])
+  for k in q_knowls:
+    if len(k['history']) <= max_h: continue
+    hcount += 1
+    knowls.update({'_id':k['_id']}, {'$set' : {'history' : k['history'][-max_h:]}})
+
+  return "categories: %s <br/>reindexed %s knowls<br/>pruned %s histories" % (cats, q_knowls.count(), hcount)
 
 @knowledge_page.route("/")
 def index():
@@ -275,23 +375,21 @@ def index():
   if ok:       qualities.append("ok")
   if beta:     qualities.append("beta")
 
-
   s_query = {}
-  s_query['title'] = { "$exists" : True }
 
   if filtermode:
     quality_q = { '$in' : qualities }
     s_query['quality'] = quality_q
   
   keyword = request.args.get("search", "").lower()
-  if searchmode:
+  if searchmode and keyword:
     keywords = filter(lambda _:len(_) >= 3, keyword.split(" "))
     #logger.debug("keywords: %s" % keywords)
     keyword_q = {'_keywords' : { "$all" : keywords}}
     s_query.update(keyword_q)
 
   if categorymode:
-    s_query['_id'] = { "$regex" : r"^%s\..+" % cur_cat }
+    s_query.update({ 'cat' : cur_cat }) #{ "$regex" : r"^%s\..+" % cur_cat }
 
   logger.debug("search query: %s" % s_query)
   knowls = get_knowls().find(s_query, fields=['title'])

@@ -41,40 +41,51 @@ table td.params {
 <h2> Further refine search </h2>
 <form>
     {#<input type="hidden" name="start" value="{{start}}"/>#}
-<table border="0">
-<tr>
-    <td align=left> {{ KNOWL('character.dirichlet.modulus', title="modulus") }}  <input type = 'text' name = 'modulus' size=10 value={{modulus}}></td>
-    <td align=left> {{ KNOWL('character.dirichlet.conductor', title="conductor") }} <input type='text' name='conductor' size=10 value={{conductor}}></td>
-    <td align=left> {{ KNOWL('character.dirichlet.order', title="order") }} <input type='text' name='order'size=10 value={{order}}></td>
-<!--<td align=center>Parity <input type='text' name='parity' size=10 value={{parity}}>-->
-</tr>
+    <table border="0">
+        <tr>
+            <td align=left> {{ KNOWL('character.dirichlet.modulus', title="modulus") }}  
+                <input type = 'text' name = 'modulus' size=10 value={{modulus}}>
+            </td>
+            <td align=left> {{ KNOWL('character.dirichlet.conductor', title="conductor") }} 
+                <input type='text' name='conductor' size=10 value={{conductor}}>
+            </td>
+            <td align=left> {{ KNOWL('character.dirichlet.order', title="order") }} 
+                <input type='text' name='order'size=10 value={{order}}>
+            </td>
+        </tr>
 {#<td align=left colspan=4>Maximum number of characters to display <input type='text' name='count' value={{count}} size=10>#}
-</table>
-<p></p>
-<td>
-    <button type='submit' value='refine'>Search again</button>
-</td>
+    </table>
+    <p></p>
+    <td>
+        <button type='submit' value='refine'>Search again</button>
+    </td>
 </form>
 
-<h2> Results </h2>
+<h2>
+    {% if order|int == 2 %} 
+        Results for quadratic characters (given as {{ KNOWL('character.dirichlet.kronecker_symbol') }} )
+    {% else %} 
+        Results
+    {% endif %} 
+</h2>
 
 <script>
  $(document).ready(function() {
-     jQuery.fn.dataTableExt.oSort['html-character-index-asc']  = function(a,b) {
-         var x = a.replace( /.*<sub>(.*)<\/sub>.*/, '$1' ) * 1;
-         var y = b.replace( /.*<sub>(.*)<\/sub>.*/, '$1') * 1;
-         return ((x < y) ? -1 : ((x > y) ?  1 : 0));
-     };
+     $('#characterTable').dataTable({
+          "bFilter":false, 
+          "aoColumnDefs": [ 
+           { "sType": 'title-numeric',
+             "aTargets": [0] }, 
+          ],
+          "fnRowCallback": function( row, data, index ){ 
+             MathJax.Hub.Queue(['Typeset', MathJax.Hub, row]);
+             return row;
+         }
 
-     jQuery.fn.dataTableExt.oSort['html-character-index-desc'] = function(a,b) {
-         var x = a.replace( /.*<sub>(.*)<\/sub>.*/, '$1' ) * 1;
-         var y = b.replace( /.*<sub>(.*)<\/sub>.*/, '$1' ) * 1;
-         return ((x < y) ?  1 : ((x > y) ? -1 : 0));
-     };     
-     $('#characterTable').dataTable({"bFilter":false,"bLengthChange":false, "aoColumnDefs": [ { "sType": 'html-character-index', "aTargets": [0] }
-         ] });
-} );
+    });
+});
 </script>
+
 <table class="ntdata" style="table-layout:fixed" id="characterTable">
     <thead class="heading" align="center">
     <tr>
@@ -85,31 +96,56 @@ table td.params {
         <th> {{ KNOWL('character.dirichlet.parity', title="parity") }}</th>
     </tr>
     </thead>
+    
     <tbody>
         {% set row_class = cycler('odd', 'even') %}
-        {% for j in range(0,len): %}
-        <tr class="{{ row_class.next() }}">
-             <td class="modulus" align="center">
-                <a href="/Character/Dirichlet/{{characters[j].modulus()}}/{{number[j]}}">{% if characters[j].is_primitive() %}<font color="green">{% else %}<font color="blue">{% endif %}&chi;<sub>{{j}}</sub></font></a>
-            </td>
-            <td align=center>
-                <a href="/Character/Dirichlet/?modulus={{characters[j].modulus()}}&conductor={{conductor}}&order={{order}}&parity={{parity}}">{{characters[j].modulus()}}</a>
-            </td>
-            <td align=center>
-                <a href="/Character/Dirichlet/?modulus={{modulus}}&conductor={{characters[j].conductor()}}&order={{order}}&parity={{parity}}">{{characters[j].conductor()}}</a>
-            </td>
-            <td align=center>
-            <a href="/Character/Dirichlet/?modulus={{modulus}}&conductor={{conductor}}&order={{characters[j].order()}}&parity={{parity}}">{{characters[j].multiplicative_order()}}</a>
-            </td>
-            <td  align=center>{% if characters[j].is_even() %}Even{% else %}Odd{% endif %}
-            </td>
-        </tr>
+	{# Keep track of the row number when iterating
+	   A jinja bug prevents just using set on a variable
+	   xrange is lazy, so as long as there is no penalty to having
+	     a large list.  This will work as long as there are no more than
+	     1000000 elements in the range #}
+	{% set counter = range(1000000).__iter__() %}
+        {% for line in contents %}
+            {% for l in line %}
+                {% for chi in l %}
+                    <tr class="{{ row_class.next() }}">
+                        <td class="modulus" align="center">
+                            <a href="/Character/Dirichlet/{{chi[2]}}/{{chi[0]}}" title="{{counter.next()}}">
+                                {% if chi[5] == "True"%}
+                                    <font color="green">
+                                {% else %}
+                                    <font color="blue">
+                                {% endif %} 
+                                {% if chi[4] == 2 %}
+                                    {{ chi[1] }}
+                                {% else %}
+                                    \({\displaystyle \chi_{ {{ chi[0] }} } }\)
+                                {% endif %}
+                                </font>
+                            </a>
+                        </td>
+                        <td align=center>
+                            <a href="/Character/Dirichlet/?modulus={{chi[2]}}&conductor={{conductor}}&order={{order}}&parity={{parity}}">
+                                {{chi[2]}}
+                            </a>
+                        </td>
+                        <td align=center>
+                            <a href="/Character/Dirichlet/?modulus={{modulus}}&conductor={{chi[3]}}&order={{order}}&parity={{parity}}">{{chi[3]}}</a>
+                        </td>
+                        <td align=center>
+                            <a href="/Character/Dirichlet/?modulus={{modulus}}&conductor={{conductor}}&order={{chi[4]}}&parity={{parity}}">{{chi[4]}}</a>
+                        </td>
+                        <td  align=center>
+                            {% if chi[6] == "True" %}
+                                Even
+                            {% else %}
+                                Odd
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% endfor %}
     {% endfor %}
     </tbody>
 </table>
-
-{#<hr>
-<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form();return false">Previous</A>
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form();return false">Next</A></td>#}
-
 {% endblock %}

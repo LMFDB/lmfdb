@@ -40,7 +40,12 @@ class MaassFormTable(MFDataTable):
         self._props['Eigenvalue'] = f['Eigenvalue']
         self._props['Symmetry'] = f['Symmetry']
         self._props['Weight'] = f['Weight']
-        self._props['Character'] = f['Character']
+        
+        try:
+            self._props['Character'] = f['Character']
+        except:  # Trivial charcter default
+            self._props['Character'] = 0
+            
         self._props['Level'] = f['Level']        
         #self._props['prec'] = f['prec']
         metadata=dict()

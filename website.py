@@ -21,8 +21,11 @@ import knowledge
 import upload
 import DirichletCharacter
 import local_fields
+import galois_groups
+import number_field_galois_groups
 import OEIS
 import artin_representations
+import zeros
 
 import raw
 from modular_forms.maass_forms.picard import mwfp
@@ -43,7 +46,7 @@ def not_found(error):
 
 @app.route("/")
 def index():
-    return render_template('index.html', title ="Homepage", bread=None)
+    return render_template('index.html', titletag ="The L-functions and modular forms database", title="", bread=None)
 
 @app.route("/about")
 def about():
@@ -51,7 +54,7 @@ def about():
 
 @app.route("/acknowledgment")
 def acknowledgment():
-  return render_template("acknowledgment.html", title="Acknowledgment")
+  return render_template("acknowledgment.html", title="Acknowledgments")
 
 def root_static_file(name):
     def static_fn():
@@ -71,8 +74,7 @@ def robots_txt():
     fn = os.path.join('.', "static", "robots.txt")
     if os.path.exists(fn):
       return open(fn).read()
-  else:
-    return "User-agent: *\nDisallow: / \n"
+  return "User-agent: *\nDisallow: / \n"
 
 
 @app.route("/style.css")

@@ -1,6 +1,25 @@
 {% extends "homepage.html" %}
 
 {% block content %}
+
+{% if lock %}
+    <div style="color: red; font-weight: bold; font-size: 200%;">Concurrent Edit!!!</div>
+
+    <div>
+     The Knowl {{ k.title }} is currently or has been recently edited by 
+     <a href="{{ url_for('users.profile', userid = lock.who) }}">{{ get_username(lock.who) }}</a>
+     at {{ lock.time|fmtdatetime }}. There might be a conflict!
+    </div>
+
+    <div style="margin-top: 30px">
+     <a href="{{ url_for('.edit', ID=k.id, lock='ignore') }}">Continue</a>
+    </div>
+
+    <div style="margin-top: 30px">
+     <a href="{{ request.referrer }}">Abort</a>
+    </div>
+{% else %}
+
 {% from "knowl-defs.html" import knowlbar with context %}
 <div>
 The general editing inside a {{KNOWL("doc.knowl", title="Knowl")}} works as per usual in a {{KNOWL("doc.wiki",title="wiki")}}.
@@ -64,7 +83,6 @@ $(document).ready(function()	{
       {{ k.quality }} <span style="margin-left: 50px;">change to:</span>
       <select name="quality">
         <option value="">-- change --</option>
-        <option value="stub">Stub</option>
         <option value="beta">Beta</option>
         <option value="ok">Ok</option>
         <option value="reviewed">Reviewed</option>
@@ -78,11 +96,12 @@ $(document).ready(function()	{
    </tr>
   </table>
    <button type="submit" id="knowl-edit-btn" onclick="unsaved = false;">Save</button>
+   <a style="margin-left: 30px" onclick="unsaved = false;" href="{{ url_for('.index') }}">cancel</a>
 </form>
 
 <div class="knowl-preview-sep">
   Preview of Knowl '{{ k.id }}'
-   <a id="knowl-update" style="display: none; margin-left: 20px;" onclick="update();" href="#">refresh preview</a>
+   <a id="knowl-update" style="display: none; margin-left: 20px;" onclick="update();return false;" href="#">refresh preview</a>
 </div>
 <div id="knowl-preview" class="knowl">
    <h1 id="knowl-title"></h1>
@@ -102,9 +121,6 @@ var reparse_latex = false;
 /* parameters */
 var UPDATE_TIMEOUT = 5000;
 
-/* markdown disabled */
-/* var converter = new Showdown.converter(); */
-
 function update() {
   if (update_id) {
     /* this case happens, when we click "refresh" while a timer is running. */
@@ -113,9 +129,6 @@ function update() {
   //console.log("running update");
   $title.html("updating ...");
 
-  /* markdown disabled */
-  /* $content.html(converter.makeHtml($kcontent.val())); */
-  
   var url = "{{ url_for('.render', ID=k.id)}}";
   $.post(url, { "content" : $kcontent.val(), "footer" : "0" },
     function(data) {
@@ -142,6 +155,7 @@ function update() {
 /* if nothing scheduled, update delayed
    otherwise tell it to reparse the latex */
 function update_delay() {
+  unsaved = true;
   $update.fadeIn();
   if (update_id) {
     reparse_latex = true;
@@ -165,4 +179,6 @@ window.onbeforeunload = function() {
   }
 }
 </script>
+
+{% endif %} {# concurrent edit warning at the top #}
 {% endblock %}

@@ -1,4 +1,4 @@
-# -*- encoding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import sys
 import logging
@@ -65,31 +65,46 @@ def _db_reconnect(func):
         sleep(AUTO_RECONNECT_DELAY)
   return retry
 
-Cursor._Cursor__send_message = _db_reconnect(Cursor._Cursor__send_message)
-Connection._send_message = _db_reconnect(Connection._send_message)
-Connection._send_message_with_response = _db_reconnect(Connection._send_message_with_response)
+# disabling this reconnect thing, doesn't really help anyways
+#Cursor._Cursor__send_message = _db_reconnect(Cursor._Cursor__send_message)
+#Connection._send_message = _db_reconnect(Connection._send_message)
+#Connection._send_message_with_response = _db_reconnect(Connection._send_message_with_response)
 
  
 def _init(dbport, readwrite_password):
     global _C
     logging.info("establishing db connection at port %s ..." % dbport)
     _C = Connection(port=dbport)
-    for db in readonly_dbs:
-        _C[db].authenticate(readonly_username, readonly_password)
-        logging.info("authenticated readonly on database %s" % db)
-    if readwrite_password == '':
-        for db in readwrite_dbs:
+    
+    def db_auth_task(db, readonly=False):
+        if readonly or readwrite_password == '':
             _C[db].authenticate(readonly_username, readonly_password)
             logging.info("authenticated readonly on database %s" % db)
-    else:
-        for db in readwrite_dbs:
+        else:
             _C[db].authenticate(readwrite_username, readwrite_password)
             logging.info("authenticated readwrite on database %s" % db)
+
+    import threading
+    tasks = []
+    for db in readwrite_dbs:
+      t = threading.Thread(target=db_auth_task, args=(db,))
+      t.start()
+      tasks.append(t)
+    for db in readonly_dbs:
+      t = threading.Thread(target=db_auth_task, args=(db,True))
+      t.start()
+      tasks.append(t)
+
+    for t in tasks: t.join(timeout=15)
+    logging.info(">>> db auth done")
 
 def getDBConnection():
   return _C
 
 app = Flask(__name__)
+
+# tell jinja to remove linebreaks
+app.jinja_env.trim_blocks = True
 
 # the following context processor inserts
 #  * empty info={} dict variable
@@ -109,7 +124,9 @@ def ctx_proc_userdata():
   vars['bread'] = None #[ ('Bread', '.'), ('Crumb', '.'), ('Hierarchy', '.')]
   
   # default title
-  vars['title'] = r'Title variable "title" has not been set. This is a test: \( \LaTeX \) and \( \frac{1}{1+x+x^2} \) and more ...'
+  vars['title'] = r'LMFDB'
+  vars['description'] = r'Welcome to the LMFDB, a database of L-functions, modular forms, and related objects.'
+  vars['shortthanks'] = r'This project is supported by <a href="%s">grants</a> from the National Science Foundation.'% (url_for('acknowledgment') + "#sponsers")
   return vars
 
 

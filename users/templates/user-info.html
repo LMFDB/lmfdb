@@ -66,6 +66,27 @@
       </tr>
     </table>
   </form>
+
+  <h2>Change Password</h2>
+
+  <form action="{{ url_for('.change_password') }}" method="POST" name="changepassword">
+   <table>
+    <tr>
+     <td>Old Password:</td>
+     <td><input name="oldpwd" type="password" /></td>
+     <tr><td>New Password:</td>
+         <td><input id="pw1" name="password1" type="password" /></td></tr>
+     <tr><td>New Password (repeat):</td>
+         <td><input id="pw2" name="password2" type="password" /></td></tr>
+     <tr><td class="forminfo">Matching?</td>
+         <td class="forminfo" id="pwstatus">empty</td></tr>
+     <tr><td colspan="2" class="forminfo" style="color: red;">Don't use your usual password due to security concerns!</td></tr>
+     <tr><td colspan="2" class="spacing" /></tr>
+     <tr><td/>
+         <td><button name="submit" type="submit">Change Password</button></td>
+    </tr>
+   </table>
+  </form>
 {% endif %}
 
 {# this script constructs a url and shows it as a link, just for testing #}
@@ -82,6 +103,22 @@ $(function() {
    $("#url").keyup(function(evt) { evt.preventDefault(); makelink()});
 });
 makelink();
+
+/* this tells the user if the passwords match */
+
+function checkpw() {
+  var match = "False";
+  if($("#pw1").val() == $("#pw2").val()) {
+    match = "True";
+  }
+  $("#pwstatus").html(match);
+}
+
+$(function () {
+  $("#pw1").keyup(function(evt) { evt.preventDefault(); checkpw(); });
+  $("#pw2").keyup(function(evt) { evt.preventDefault(); checkpw(); });
+  checkpw();
+})
 </script>
 
 {% endblock %}

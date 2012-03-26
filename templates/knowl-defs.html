@@ -12,33 +12,37 @@
     * title: to overwrite the knowl's title, usually just leave it 
              to its default None.
 #}
-{% macro KNOWL(knowlid, title=none) -%}
-{% with knowl = Knowl(knowlid, kwargs) -%}
-{% if knowl.exists() -%}
- {% with hover = "%s [%s]"|format(knowl.title, knowl.id) %}
-  {% if title is none -%}
-     <a class="knowl-title" title="{{ hover }}" knowl="{{ knowl.id }}" kwargs="{{ kwargs|urlencode }}">{{ knowl.title|safe }}</a>
+{% macro KNOWL(kid, title=none) -%}
+{% with ktitle = knowl_title(kid) -%}
+{% if ktitle is none -%}
+ {# knowl does not exist. wrong knowlid or opportunity to create one! #}
+  {% if user_is_authenticated -%}
+    <span class="knowl knowl-error">
+    '{{kid}}'
+    <a href="{{ url_for('knowledge.edit', ID=kid) }}">Create it</a>.
+    </span> 
   {%- else -%}
-    {% if title|length > 0 -%}
-     <a class="knowl-title" title="{{ hover }}" knowl="{{ knowl.id }}" kwargs="{{ kwargs|urlencode }}">{{ title|safe }}</a>
+    {% if title is none -%}
+      <span class="knowl knowl-error">'{{knowlid}}'</span> 
+    {%- else -%}
+      {{title|safe}}
     {%- endif %}
   {%- endif %}
- {% endwith %}
 
 {%- else -%}
-  {# knowl does not exist. wrong knowlid or opportunity to create one! #}
-    {% if user_is_authenticated -%}
-      <span class="knowl knowl-error">
-      '{{knowlid}}'
-      <a href="{{ url_for('knowledge.edit', ID=knowlid) }}">Create it</a>.
-      </span> 
+ {% with hover = "%s [%s]"|format(ktitle, kid) -%}
+  {% if title is none -%}
+    {% if ktitle|length > 0 -%}
+     <a title="{{ hover }}" knowl="{{ kid }}" kwargs="{{ kwargs|urlencode }}">{{ ktitle|safe }}</a>
     {%- else -%}
-      {% if title is none -%}
-        <span class="knowl knowl-error">'{{knowlid}}'</span> 
-      {%- else -%}
-        {{title|safe}}
-      {%- endif %}
+     <a title="{{ hover }}" knowl="{{ kid }}" kwargs="{{ kwargs|urlencode }}">{{ kid }}</a>
     {%- endif %}
+  {%- else -%}
+    {% if title|length > 0 -%}
+     <a title="{{ hover }}" knowl="{{ kid }}" kwargs="{{ kwargs|urlencode }}">{{ title|safe }}</a>
+    {%- endif %}
+  {%- endif %}
+ {%- endwith %}
 {%- endif %}
 {%- endwith %}
 {%- endmacro %}
@@ -53,7 +57,8 @@
   {%- endif %}
   {{knowl.content|render_knowl|safe }}
   {% if user_is_authenticated -%}
-    <div class="knowl-inc-edit"><a href="{{ url_for('knowledge.edit', ID=knowlid) }}">edit '{{knowlid}}'</a></div>
+    <div class="knowl-inc-edit"><a href="{{ url_for('knowledge.edit', ID=knowlid) }}">edit
+    '{%- if title is none -%}{{knowl.title|safe}}{%- else -%}{{ title|safe }}{%- endif -%}'</a></div>
   {%- endif %}
 
 {%- else -%}
@@ -71,22 +76,22 @@
 {%- endmacro %}
 
 {# for inserting "normal" links to knowl pages #}
-{% macro KNOWL_LINK(knowlid, title=none) -%}
-{% with k = Knowl(knowlid) -%}
-{% if k.exists() -%}
-  <a class="knowl-link" href='{{ url_for("knowledge.show", ID=k.id) }}?{{kwargs|urlencode}}'>
-  {% if title is none -%}{{ k.title }}{%- else -%}{{ title }}{%- endif -%}
- </a>
-{%- else -%}
+{% macro KNOWL_LINK(kid, title=none) -%}
+{% with ktitle = knowl_title(kid) -%}
+{% if ktitle is none -%}
   {# knowl does not exist. wrong knowlid or opportunity to create one! #}
     {% if user_is_authenticated -%}
       <div class="knowl knowl-error">
        '{{knowlid}}'
-       <a class="knowl-link" href="{{ url_for('knowledge.edit', ID=knowlid) }}">Create it</a>.
+       <a class="knowl-link" href="{{ url_for('knowledge.edit', ID=kid) }}">Create it</a>.
       </div> 
     {%- else -%}
-      <span class="knowl knowl-error">'{{knowlid}}'</span> 
+      <span class="knowl knowl-error">'{{kid}}'</span> 
     {%- endif %}
+{%- else -%}
+  <a class="knowl-link" href='{{ url_for("knowledge.show", ID=kid) }}?{{kwargs|urlencode}}'>
+  {% if title is none -%}{{ ktitle|safe }}{%- else -%}{{ title|safe }}{%- endif -%}
+ </a>
 {%- endif %}
 {%- endwith %}
 {%- endmacro %}
@@ -94,9 +99,7 @@
 {# for the bar when editing or showing knowls #}
 {% macro knowlbar() -%}
  <div class="knowl-bar">
-   Actions: 
-   <a title="as it will be used for transculsioins" href="{{ url_for('.render', ID=k.id) }}">render</a> 
-   &middot;
+   actions: 
    <a title="like as a wiki would" href="{{ url_for('.show', ID=k.id) }}">show</a>
    {% if user_is_authenticated %}
      &middot;
@@ -107,12 +110,12 @@
      <a onclick='return confirm("Really delete Knowl {{ k.id }}? There is no way back!");'
             href="{{ url_for('.delete', ID=k.id) }}">delete</a>
    {% endif %}
-   <a style="margin-left: 20px;" href="{{ url_for('.index') }}">All knowls</a>
-   &middot; <a href="{{ url_for('.index', category=k.category) }}">Up</a>
-   &middot; Search: 
+   <a style="margin-left: 30px;" href="{{ url_for('.index') }}">all knowls</a>
+   &middot; <a href="{{ url_for('.index', category=k.category) }}">up</a>
+   &middot; search: 
    <form id='knowl-search' action="{{ url_for('.index') }}" method="GET">
      <input size="20" name="search" placeholder="modular" />
-     <button type="submit">Go</button>
+     <button type="submit">go</button>
    </form>
 </div>
 {%- endmacro %}

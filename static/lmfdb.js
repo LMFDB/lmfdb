@@ -10,47 +10,55 @@ function error(msg) {
   if(window.console != undefined) { console.error(msg); }
 }
 
-var revealed = false;
-/* only show main content after processing all the latex */
+/* beta logo displayed /w delay, -beta is default, so that it shows up when js
+ * is disabled */
 $(function() {
-  if (window.location.pathname == "/" || $("body").hasClass("users")) return;
-  function show_content() {
-    revealed = true;
-    $("#content").css("opacity", "1").show();
-    $("#mathjax-info").fadeOut('fast');
-  }
-  MathJax.Hub.Queue(function() {show_content()}); 
-  $("#mathjax-info").click(function() {show_content()});
-
+  $("#logo img").attr("src", '/static/images/lmfdb-logo.png');
   window.setTimeout(function() {
-    if(!revealed) {
-      //$("#mathjax-info").fadeIn('fast');
-      //$("#content").fadeOut('fast');
-      $("#mathjax-info").show();
-      $("#content").hide();
-    }
-  }, 500);
+    $("#logo img").attr("src", '/static/images/lmfdb-logo-beta.png');
+  }, 2000);
+});
 
-  /* delay some secs and tell the user, that it is
-   * still loading and clicking removes the banner */
-  window.setTimeout(function() {
-    /* still waiting? */
-    if(revealed) return;
-    if($("#content").css("display") == "none") {
-      $("#content").css("opacity", "0.2").show();
-      $("#mathjax-log").html("<strong>Still loading, click here to show it.</strong>");
-    }
-  }, 5000);
-
-  /* 
-  var $mjlog = $("#mathjax-log");
-  MathJax.Hub.Register.MessageHook("New Math",function (msg) {
-    var script = MathJax.Hub.getJaxFor(message[1]).SourceElement();
-    var txt = msg.join(" ")+": '"+script.text+"'";
-    $mjlog.html(txt);
-  });
-  */
-}); 
+//var revealed = false;
+///* only show main content after processing all the latex */
+//$(function() {
+//  if (window.location.pathname == "/" || $("body").hasClass("users")) return;
+//  function show_content() {
+//    revealed = true;
+//    $("#content").css("opacity", "1").show();
+//    $("#mathjax-info").fadeOut('fast');
+//  }
+//  MathJax.Hub.Queue(function() {show_content()}); 
+//  $("#mathjax-info").click(function() {show_content()});
+//
+//  window.setTimeout(function() {
+//    if(!revealed) { 
+//      /* no animation, remember the odd race condition! */
+//      $("#mathjax-info").show();
+//      $("#content").css("opacity", "0");
+//    }
+//  }, 500);
+//
+//  /* delay some secs and tell the user, that it is
+//   * still loading and clicking removes the banner */
+//  window.setTimeout(function() {
+//    /* still waiting? */
+//    if(revealed) return;
+//    if($("#content").css("opacity") == "0") {
+//      $("#content").css("opacity", "0.2").show();
+//      $("#mathjax-log").html("<strong>Still loading, click here to show it.</strong>");
+//    }
+//  }, 5000);
+//
+//  /* 
+//  var $mjlog = $("#mathjax-log");
+//  MathJax.Hub.Register.MessageHook("New Math",function (msg) {
+//    var script = MathJax.Hub.getJaxFor(message[1]).SourceElement();
+//    var txt = msg.join(" ")+": '"+script.text+"'";
+//    $mjlog.html(txt);
+//  });
+//  */
+//});
 
 /* code for the properties sidepanel on the right */
 /* jquery helper function, rotates element via css3 */
@@ -106,7 +114,7 @@ $(function() {
 });
 
 /* javascript code for the knowledge db features */
-/* global counter, used to uniquely identify each help-output element
+/* global counter, used to uniquely identify each knowl-output element
  * that's necessary because the same knowl could be referenced several times
  * on the same page */
 var knowl_id_counter = 0;
@@ -147,9 +155,10 @@ function knowl_click_handler($el) {
  
     // "select" where the output is and get a hold of it 
     var $output = $(output_id);
+    var kwargs = $el.attr("kwargs");
 
-    // cached?
-    if(knowl_id in knowl_cache) {
+    // cached? (no kwargs or empty string AND kid in cache)
+    if((!kwargs || kwargs.length == 0) && (knowl_id in knowl_cache)) {
       log("cache hit: " + knowl_id);
       $output.hide();
       $output.html(knowl_cache[knowl_id]);
@@ -159,7 +168,6 @@ function knowl_click_handler($el) {
     } else {
       $output.addClass("loading");
       $output.show();
-      var kwargs = $el.attr("kwargs");
       log("downloading knowl: " + knowl_id + " /w kwargs: " + kwargs);
       $output.load('/knowledge/render/' + knowl_id + "?" + kwargs,
        function(response, status, xhr) { 
@@ -173,12 +181,17 @@ function knowl_click_handler($el) {
         } else {
           knowl_cache[knowl_id] = $output.html();
           $output.hide();
+
+         // if it is the outermost knowl, limit its height of the content to 600px
+         if ($output.parents('.knowl-output').length == 0) {
+           $(output_id + " div.knowl-content").first().parent().addClass("limit-height");
+         }
         }
         // in any case, reveal the new output after mathjax has finished
         MathJax.Hub.Queue(['Typeset', MathJax.Hub, $output.get(0)]);
         MathJax.Hub.Queue([ function() { $output.slideDown("slow"); }]);
       });
-    } /* ~~ end not cached */
+    } // ~~ end not cached
   }
 } //~~ end click handler for *[knowl] elements
 

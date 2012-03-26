@@ -100,10 +100,10 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
             elif seriescoefftype=="factor":
                 return("i")
             elif seriescoefftype=="series":
-                return(ans + "i" + seriesvar(index,seriestype))
+                return(ans + " + i" + seriesvar(index,seriestype))
         else:
             if seriescoefftype=="series":
-                return(ans + truncatenumber(ip,precision) + "i" + seriesvar(index, seriestype))
+                return(ans + truncatenumber(ip,precision) + " + i" + seriesvar(index, seriestype))
             elif seriescoefftype=="signed":
                 return(ans + "+"+truncatenumber(ip,precision) + "i")
             elif seriescoefftype=="literal" or seriescoefftype=="factor":
@@ -139,6 +139,9 @@ def lfuncDStex(L ,fmt):
     """ Returns the LaTex for displaying the Dirichlet series of the L-function L.
         fmt could be any of the values: "analytic", "langlands", "abstract"
     """
+
+    if len(L.dirichlet_coefficients)==0:
+        return '\\text{No Dirichlet coefficients supplied.}'
     
     numperline = 3
     numcoeffs=min(10,len(L.dirichlet_coefficients))
@@ -189,7 +192,7 @@ def lfuncEPtex(L,fmt):
             ans= ans+"\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1} \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + p^{-2s})^{-1}"
         elif L.Ltype()=="maass":
             if L.group == 'GL2':
-                ans= ans+"\\prod_p (1- a(p) p^{-s} + p^{-2s})^{-1}"
+                ans= ans+"\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1} \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + p^{-2s})^{-1}"
             elif L.group == 'GL3':
                 ans= ans+"\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1}  \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + \\overline{a(p)} p^{-2s} - p^{-3s})^{-1}"
             else:
@@ -218,7 +221,8 @@ def lfuncFEtex(L,fmt):
     if fmt=="analytic":
         ans="\\begin{align}\n"+L.texnamecompleteds+"=\\mathstrut &"
         if L.level>1:
-            ans+=latex(L.level)+"^{\\frac{s}{2}}"
+            #ans+=latex(L.level)+"^{\\frac{s}{2}}"
+            ans+=latex(L.level)+"^{s/2}"
         for mu in L.mu_fe:
            ans += "\Gamma_{\mathbb{R}}(s"+seriescoeff(mu,0,"signed","",-6,5)+")"
         for nu in L.nu_fe:

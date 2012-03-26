@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from main import login_page, login_manager, admin_required
+from main import login_page, login_manager, admin_required, housekeeping
 
 from base import app
 

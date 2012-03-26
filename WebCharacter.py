@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import math
 #from Lfunctionutilities import pair2complex, splitcoeff, seriescoeff
 from sage.all import *
@@ -5,7 +6,8 @@ import sage.libs.lcalc.lcalc_Lfunction as lc
 import re
 import pymongo
 import bson
-from utils import parse_range
+from utils import parse_range, make_logger
+logger = make_logger("DC")
 #import web_modforms
 from modular_forms.elliptic_modular_forms.backend.web_modforms import *
 
@@ -25,7 +27,6 @@ class WebCharacter:
             self.dirichletcharacter()
             self._set_properties()
 
-
 #===================  Set all the properties for different types of Characters
 
 
@@ -35,9 +36,9 @@ class WebCharacter:
         chi = G[self.number]
         self.sagechar = str(chi)
         if chi.is_primitive():
-            self.primitive = True
+            self.primitive = "True"
         else:
-            self.primitive = False
+            self.primitive = "False"
         self.conductor = chi.conductor()
         self.order = chi.multiplicative_order()
         self.vals = chi.values()
@@ -48,12 +49,12 @@ class WebCharacter:
             self.parity = 'Even'
         else:
             self.parity = 'Odd'
-        self.inducedchar = chi.primitive_character()
-        self.inducedchar_isprim = self.inducedchar.is_primitive()
-        self.inducedchar_modulus = self.inducedchar.modulus()
-        self.inducedchar_conductor = self.inducedchar.conductor()
-        F = DirichletGroup(self.inducedchar_modulus)
-        if not self.primitive:
+        if self.primitive=="False":
+            self.inducedchar = chi.primitive_character()
+            self.inducedchar_isprim = self.inducedchar.is_primitive()
+            self.inducedchar_modulus = self.inducedchar.modulus()
+            self.inducedchar_conductor = self.inducedchar.conductor()
+            F = DirichletGroup(self.inducedchar_modulus)
             if self.number == 0:
                 self.inducedchar_number = 0
             else:
@@ -61,32 +62,26 @@ class WebCharacter:
                     if F[i] == self.inducedchar:
                         self.inducedchar_number = i
                         break
-            self.inducedchar_tex = "\(\\chi_{%s}\\!\\!\\pmod{%s}\)" %(self.inducedchar_number,self.inducedchar_modulus)
+            self.inducedchar_tex = r"\(\chi_{%s}\!\!\pmod{%s}\)" %(self.inducedchar_number,self.inducedchar_modulus)
        
        # if self.primitive == 'True':
        #     self.primtf = True
        # else:
        #     self.primtf = False
-       
-        if self.conductor%2 == 1:
-            self.kronsymbol = "\\begin{equation} \n\\chi_{%s}(a) = " %(self.number)
-            self.kronsymbol += "\\begin{cases}\\left(\\frac{a}{%s}\\right) \\qquad" %(self.conductor)
-            self.kronsymbol += "&\\text{if gcd\((a,%s) = 1\)} \\cr\\cr\n" %(self.modulus)
-            self.kronsymbol += "\\;\\;\\;\\;\\; 0 \\qquad &\\text{otherwise}. \\end{cases}"
-            self.kronsymbol += "\n \\end{equation}"
-        else:
-            if chi.is_even():
-                self.kronsymbol = "\\begin{equation} \n \\chi_{%s}(a) = " %(self.number)
-                self.kronsymbol += "\\begin{cases} \\left(\\frac{a}{%s}\\right)\\qquad " %(self.conductor)
-                self.kronsymbol += "&\\text{if gcd\((a,%s) = 1\)} \\cr\\cr\n" %(self.modulus)
-                self.kronsymbol += "\\;\\;\\;\\;\\; 0 \\qquad &\\text{otherwise}. \\end{cases}"
-                self.kronsymbol += "\n \\end{equation}"
+        if self.order == 2:
+            if self.conductor%2 == 1:
+                self.kronsymbol = r"\begin{equation} \chi_{%s}(a) = " %(self.number)
+                self.kronsymbol += r"\left(\frac{a}{%s}\right)" %(self.conductor)
+                self.kronsymbol += r"\end{equation}"
             else:
-                self.kronsymbol = "\\begin{equation} \n \\chi_{%s}(a) = " %(self.number)
-                self.kronsymbol += "\\begin{cases} \\left(\\frac{a}{%s}\\right)\\cdot\\left(\\frac{-1}{a}\\right) \\qquad" %(self.conductor)
-                self.kronsymbol += "&\\text{if gcd\((a,%s) = 1\)} \\cr\\cr\n" %(self.modulus)
-                self.kronsymbol += "\\qquad \\;\\;\\;\\;\\;\\, 0 \\qquad &\\text{otherwise}. \\end{cases}"
-                self.kronsymbol += "\n \\end{equation}"
+                if chi.is_even():
+                    self.kronsymbol = r"\begin{equation}  \chi_{%s}(a) = " %(self.number)
+                    self.kronsymbol += r"\left(\frac{a}{%s}\right)" %(self.conductor)
+                    self.kronsymbol += r"\end{equation}"
+                else:
+                    self.kronsymbol = r"\begin{equation}  \chi_{%s}(a) = " %(self.number)
+                    self.kronsymbol += r"\left(\frac{a}{%s}\right)" %(self.conductor)
+                    self.kronsymbol += r"\end{equation}"
 
         self.level = self.modulus
         self.genvalues = chi.values_on_gens()
@@ -109,71 +104,38 @@ class WebCharacter:
             count += 1
         if len(Gunits) != 1:
             self.unitgens += ")"
-        self.lth = len(self.vals)
-        #chiv = []
-    #determine if the character is real
         self.sign = "True"
-        for v in chivals:
-            if abs(imag_part(v)) > 0.0001:
-                self.sign = "False"
+        if self.zetaorder >= 2:
+            self.sign = "False"
         chizero = G[0]
-        self.gauss_sum = chi.gauss_sum(1)
-        if chi.gauss_sum(1) != 0:
-            self.gauss_sum_numerical = chi.gauss_sum_numerical(20,1)
-        self.jacobi_sum = chi.jacobi_sum(chizero)
-        self.jacobi_sum_numerical = CC(self.jacobi_sum)
-        self.kloosterman_sum = chi.kloosterman_sum(1,1)
-        if chi.kloosterman_sum(1,1) != 0:
-            self.kloosterman_sum_numerical = chi.kloosterman_sum_numerical(20,1,1)
-        self.texname = "\(\\chi_{%s}\)" %(self.number)
-        self.credit = 'Sage'
-        self.title = "Dirichlet Character: \(\chi_{%s}\\!\\!\pmod{%s}\)" %(self.number,self.modulus)
+        self.credit = "Sage"
+        self.title = r"Dirichlet Character: \(\chi_{%s}\!\!\pmod{%s}\)" %(self.number,self.modulus)
 
-#================
     def gauss_sum_tex(self):
         ans = "\(\\tau_a(\\chi_{%s}) \\;\) at \(\\; a = \)" %(self.number)
-        #if self.gauss_sum != 0:
-        #    ans += "\\begin{equation} \\tau_1(\\chi_{%s}) = %s = %s.\\end{equation} " %(self.number,latex(self.gauss_sum),latex(self.gauss_sum_numerical))
-        #else:
-        #    ans += "\\begin{equation} \\tau_1(\\chi_{%s}) = %s.\\end{equation} " %(self.number,latex(self.gauss_sum))
-        #ans += "Compute Gauss sum \(\\tau_a(\\chi_{%s})\) at \(a = \)" %(self.number)
         return(ans)
-#================
 
     def jacobi_sum_tex(self):
         ans = "\(J(\\chi_{%s},\\psi) \\;\) for \(\\; \\psi = \)" %(self.number)
-        #ans = "\\begin{equation} J(\\chi_{%s},\\chi_{0}) = %s.\\end{equation}" %(self.number,latex(self.jacobi_sum))
-        #ans += "Compute Jacobi sum \(J(\\chi_{%s},\\psi)\) at \(\\psi = \)" %(self.number)
         return(ans)
 
-#================
     def kloosterman_sum_tex(self):
         ans = "\(K(a,b,\\chi_{%s}) \\;\) at \(\\; a,b = \)" %(self.number)
-        #if self.kloosterman_sum != 0:
-        #    ans = "\\begin{equation} K(1,1,\\chi_{%s}) = %s = %s.\\end{equation}" %(self.number,latex(self.kloosterman_sum),latex(self.kloosterman_sum_numerical))
-        #else:
-        #    ans = "\\begin{equation} K(1,1,\\chi_{%s}) = %s.\\end{equation}" %(s+ elf.number,latex(self.kloosterman_sum))
-        #ans += "Compute Kloosterman sum \(K(a,b,\\chi_{%s})\) at \(a,b = \)" %(self.number)
         return(ans)
 
     def _set_properties(self):
         conductor = str(self.conductor)
         primitive = self.primitive
-        if primitive:
+        if primitive=="True":
             self.prim = "Yes"
         else:
             self.prim = "No"
         order = str(self.order)
-        if self.sign:
+        if self.sign=="True":
             self.real = "Yes"
         else: 
             self.real = "No"
         self.properties = [("Conductor", [conductor]), ("Order", [order]), ("Parity", [self.parity]), ("Real", [self.real]), ("Primitive", [self.prim])]
-        #self.properties = ['<br><table><tr><td align=left><b>Conductor:</b>','<td align=left> %s</td>'%(conductor)]
-        #self.properties.extend(['<tr><td align=left><b>Order:</b>', '<td align=left>%s</td>'%(order)])
-        #self.properties.extend(['<tr><td align=left><b>Parity:</b>', '<td align=left>%s</td>'%(self.parity)])
-        #self.properties.extend(['<tr><td align=left>%s'%(sign), '</td>'])
-        #self.properties.extend(['<tr><td align=left>%s'%(prim), '</td></table>'])
 
 
 

@@ -122,7 +122,7 @@ def render_maass_waveforms():
                 info["credit"] += " and "+ GetNameOfPerson("HT")
                 
                 info['maass_group'] = getallgroupsLevel()
-    title='Maass waveforms'
+    title='Maass forms'
     info['list_of_levels']=get_all_levels()
     if info['list_of_levels']:
         info['max_level']=max(info['list_of_levels'])
@@ -176,7 +176,7 @@ def render_maass_waveforms():
                 info["credit"] += " and "+ GetNameOfPerson("HT")
                 
                 info['maass_group'] = getallgroupsLevel()
-    title='Maass waveforms'
+    title='Maass forms'
     info['list_of_levels']=get_all_levels()
     if info['list_of_levels']:
         info['max_level']=max(info['list_of_levels'])
@@ -190,7 +190,7 @@ def render_maass_waveforms():
 
 @mwf.route("/<int:level>/<weight>/<character>/")
 def render_maass_waveform_space(level,weight,character):
-    title="Space of Maass waveforms"
+    title="Space of Maass forms"
     info=dict()
     return render_template("mwf_browse.html", info=info,title=title)
 
@@ -236,16 +236,16 @@ def render_maass_waveforms_for_one_group(level):
     s+="</tr></table>"
     #print "S=",s
     info['table_of_eigenvalues']=s
-    title="Maass waveforms for \(\Gamma_{0}("+str(level)+")\)"
-    bread=[('Maass waveforms',url_for('.render_maass_waveforms'))]
+    title="Maass forms for \(\Gamma_{0}("+str(level)+")\)"
+    bread=[('Maass forms',url_for('.render_maass_waveforms'))]
     return render_template("mwf_one_group.html", info=info,title=title)
 
 
 @mwf.route("/<id>",methods=['GET','POST'])
 def render_one_maass_waveform(id):
     if id=='upload' or id=='Upload':
-        title="Upload Maass waveforms"
-        bread=[('Maass waveforms',url_for('render_maass_waveforms'))]
+        title="Upload Maass forms"
+        bread=[('Maass forms',url_for('render_maass_waveforms'))]
         if request.method <> "GET":
             info = get_args_upload()
             #file = request.files['file']
@@ -277,7 +277,11 @@ def render_one_maass_waveform_wp(info):
     #info["check"].append(["Ramanujan-Petersson conjecture",url_for('not_yet_implemented')])
     maass_id = info['id']
     mwf_logger.debug("id1={0}".format(id))
-    info["friends"]= [("L-function","L/"+url_for('mwf.render_one_maass_waveform',id=maass_id))]
+    
+    # Create the link to the L-function (put in '/L' at the beginning and '/' before '?'
+    Llink = "/L"+url_for('mwf.render_one_maass_waveform',id=maass_id) + '/?db=' + info['db']
+    
+    info["friends"]= [("L-function",Llink)]
     info['bread']=[('Maass waveforms',url_for('.render_maass_waveforms'))]
     info["downloads"]= []
     #info["downloads"].append(["Maass form data",url_for('not_yet_implemented')])
@@ -298,7 +302,7 @@ def render_one_maass_waveform_wp(info):
     properties =    [('Level',[info['Level']]),('Symmetry',[info['Symmetry']])]
     properties.append(('Weight',[info['Weight']]))
     properties.append(('Character',[info['Character']]))
-    info['title']="Maass waveforms on \(\Gamma_{0}( %s )\)" % (info['Level'])
+    info['title']="Maass forms on \(\Gamma_{0}( %s )\)" % (info['Level'])
     info['metadata']=MWT.prop('metadata')
     info['properties2']=properties
     return render_template("mwf_one_form.html",**info)
@@ -317,7 +321,7 @@ def render_one_maass_waveform_wp_old(info):
     info["friends"].append(["L-function","L/"+url_for('.render_one_maass_waveform',id=maass_id)])
     info["downloads"]= []
     #info["downloads"].append(["Maass form data",url_for('not_yet_implemented')])
-    bread=[('Maass waveforms',url_for('.render_maass_waveforms'))]
+    bread=[('Maass forms',url_for('.render_maass_waveforms'))]
     properties=[]
     data = get_maassform_by_id(maass_id)
     lenc = 20
@@ -344,17 +348,17 @@ def render_one_maass_waveform_wp_old(info):
         info["credit"] = GetNameOfPerson(data['dbname'])
         level = data['Level']
         R = data['Eigenvalue']
-        title="Maass waveforms on \(\Gamma_{0}(%s)\) with R=%s" %(level,R)
+        title="Maass forms on \(\Gamma_{0}(%s)\) with R=%s" %(level,R)
         ## We see if there is a plot file associated to this waveform
         if data.has_key('plot'):
             mwf_logger.error("file={0}".format(data['plot']))
     else:
         print "data=",data
-        title="Could not find Maass this waveform in the database!"
+        title="Could not find this Maass form in the database!"
         info['error']=data['error']
 
 
-    bread=[('Maass waveforms',url_for('.render_maass_waveforms'))]
+    bread=[('Maass forms',url_for('.render_maass_waveforms'))]
     return render_template("mwf_one_maass_form.html", info=info,title=title,bread=bread,properties=properties)
 
     
@@ -412,7 +416,7 @@ def render_search_results_wp(info,search):
     #print "S=",s
     info['table_of_eigenvalues']=s
     title="Maass Forms"
-    bread=[('Maass waveforms',url_for('.render_maass_waveforms'))]
+    bread=[('Maass forms',url_for('.render_maass_waveforms'))]
     return render_template("mwf_display_search_result.html", info=info,title=title,search=search,bread=bread)
 
 
@@ -440,7 +444,7 @@ def render_browse_maass_waveforms(info,title):
     info['table']=TT
     #s = print_table_of_maass_waveforms(info['collection'],lrange=lrange,erange=erange)
     #info['table']=s
-    bread=[('Modular forms',url_for('mf.modular_form_main_page')),('Maass waveforms',url_for('.render_maass_waveforms'))]
+    bread=[('Modular forms',url_for('mf.modular_form_main_page')),('Maass forms',url_for('.render_maass_waveforms'))]
     return render_template("mwf_browse.html", info=info,title=title,bread=bread)
 
     

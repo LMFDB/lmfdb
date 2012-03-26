@@ -35,10 +35,9 @@ $(document).ready(function() {
 {% endif %}
 
       <h1>{{ KNOWL('mf.elliptic.newform',title='Newforms') }} {{info.browse_type | safe}}</h1>
-      {# { info | safe } #}
+      {% { table | safe } %}
       {% if info.browse_table is defined %}
       {% if info.browse_table.rows is defined %}
-      {# {KNOWL('mf.ellipticemf_browse.all.info') } #}
       <p>
       In the table below you can browse spaces of Newforms {{KNOWL('mf.ellipticnewforms',title='Holomorphic Newforms')}} of a given level and weight. 
       The entry in the table is the dimension of the space.
@@ -50,7 +49,7 @@ $(document).ready(function() {
         <thead>
           <tr>
             <th width="20px" style="border-right:1px solid black">
-              Level&nbsp;\&nbsp;Weight
+              Level&nbsp;&nbsp;Weight
             </th>
             {% for k in table.col_heads  %}
             <th>{{k}}</th>
@@ -62,7 +61,7 @@ $(document).ready(function() {
           <tr class="{{row_class.next() }}">
             <th width="0%" style="background:#afa; border-right: 1px solid black">
               {% set N = table.row_heads[loop.index-1] %}
-              {% set row_url = url_for('emf.render_elliptic_modular_form_space2',level=N) %}
+              {% set row_url = url_for('emf.render_elliptic_modular_forms',level=N) %}
               <a href="{{ row_url }}">{{ N }}</a>
             </th>
             {% for cell in row  %}
@@ -91,7 +90,7 @@ $(document).ready(function() {
             <table>
               <tr><td>{{KNOWL('mf.ellipticgamma0N.index',title='index')}}</td><td>{{G.index}}</td></tr>
               <tr><td>{{KNOWL('mf.ellipticgamma0N.genus',title='genus')}}</td><td>{{G.genus}}</td></tr>
-              <tr><td>{{KNOWL('mf.ellipticgamma0N.cusps',title='index')}}</td><td>{{G.cusps}}</td></tr>
+              <tr><td>{{KNOWL('mf.ellipticgamma0N.cusps',title='cusps')}}</td><td>{{G.cusps}}</td></tr>
               <tr><td colspan="2">Number of {{KNOWL('mf.ellipticgammaN.ellipticfxpts',title='elliptic fixed points')}}</td></tr>
               <tr><td>order 2</td><td>{{G.nu2}}</td></tr>
               <tr><td>order 3</td><td>{{G.nu2}}</td></tr>

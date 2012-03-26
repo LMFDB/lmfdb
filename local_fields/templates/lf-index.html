@@ -2,11 +2,128 @@
 
 {% block content %}
 
-<div>Local Fields Page</div>
+<p>
 
-<form action="{{ url_for('.search') }}" method="GET">
-<input name="val" placeholder="123" />
-<button type="submit">Search</button>
-</form>
+      <h2>Browse {{KNOWL('lf', title="local number fields")}}</h2>
+<p>
+
+The table gives for each $p$ and $n$ shown, the number of degree $n$ extensions
+of $\mathbb{Q}_p$ up to isomorphism.
+<p>
+<table border=1 cellpadding=5 class='right_align_table'>
+<tr>
+<th>$p$ \ $n$</th>
+<th>2</th> <th>3</th> <th>4</th> <th>5</th> <th>6</th>
+<th>7</th> <th>8</th> <th>9</th> <th>10</th> <th>11</th>
+</tr>
+<tr>
+<th>2</th> <td><a href="?p=2&n=2">7</a></td> <td><a href="?p=2&n=3">2</a></td> <td><a href="?p=2&n=4">59</a></td> <td><a href="?p=2&n=5">2</a></td> <td><a href="?p=2&n=6">47</a></td> <td><a href="?p=2&n=7">2</a></td> <td><a href="?p=2&n=8">1823</a></td> <td><a href="?p=2&n=9">3</a></td> <td><a href="?p=2&n=10">158</a></td> <td><a href="?p=2&n=11">2</a></td>
+</tr>
+<tr>
+<th>3</th>
+<td><a href="?p=3&n=2">3</a></td> <td><a href="?p=3&n=3">10</a></td> <td><a href="?p=3&n=4">5</a></td> <td><a href="?p=3&n=5">2</a></td> <td><a href="?p=3&n=6">75</a></td> <td><a href="?p=3&n=7">2</a></td> <td><a href="?p=3&n=8">8</a></td> <td><a href="?p=3&n=9">795</a></td> <td><a href="?p=3&n=10">6</a></td> <td><a href="?p=3&n=11">2</a></td>
+</tr>
+<tr>
+<th>5</th>
+<td><a href="?p=5&n=2">3</a></td> <td><a href="?p=5&n=3">2</a></td> <td><a href="?p=5&n=4">7</a></td> <td><a href="?p=5&n=5">26</a></td> <td><a href="?p=5&n=6">7</a></td> <td><a href="?p=5&n=7">2</a></td> <td><a href="?p=5&n=8">11</a></td> <td><a href="?p=5&n=9">3</a></td> <td><a href="?p=5&n=10">258</a></td> <td><a href="?p=5&n=11">2</a></td>
+</tr>
+<tr>
+<th>7</th>
+<td><a href="?p=7&n=2">3</a></td> <td><a href="?p=7&n=3">4</a></td> <td><a href="?p=7&n=4">5</a></td> <td><a href="?p=7&n=5">2</a></td> <td><a href="?p=7&n=6">12</a></td> <td><a href="?p=7&n=7">50</a></td> <td><a href="?p=7&n=8">8</a></td> <td><a href="?p=7&n=9">7</a></td> <td><a href="?p=7&n=10">6</a></td> <td><a href="?p=7&n=11">2</a></td> 
+</tr>
+<tr>
+<th>11</th>
+<td><a href="?p=11&n=2">3</a></td> <td><a href="?p=11&n=3">2</a></td> <td><a href="?p=11&n=4">5</a></td> <td><a href="?p=11&n=5">6</a></td> <td><a href="?p=11&n=6">7</a></td> <td><a href="?p=11&n=7">2</a></td> <td><a href="?p=11&n=8">8</a></td> <td><a href="?p=11&n=9">3</a></td> <td><a href="?p=11&n=10">18</a></td> <td><a href="?p=11&n=11">122</a></td> 
+</tr>
+<tr>
+<th>13</th>
+<td><a href="?p=13&n=2">3</a></td> <td><a href="?p=13&n=3">4</a></td> <td><a href="?p=13&n=4">7</a></td> <td><a href="?p=13&n=5">2</a></td> <td><a href="?p=13&n=6">12</a></td> <td><a href="?p=13&n=7">2</a></td> <td><a href="?p=13&n=8">11</a></td> <td><a href="?p=13&n=9">7</a></td> <td><a href="?p=13&n=10">6</a></td> <td><a href="?p=13&n=11">2</a></td>
+</tr>
+<tr>
+<th>17</th>
+<td><a href="?p=17&n=2">3</a></td> <td><a href="?p=17&n=3">2</a></td> <td><a href="?p=17&n=4">7</a></td> <td><a href="?p=17&n=5">2</a></td> <td><a href="?p=17&n=6">7</a></td> <td><a href="?p=17&n=7">2</a></td> <td><a href="?p=17&n=8">15</a></td> <td><a href="?p=17&n=9">3</a></td> <td><a href="?p=17&n=10">6</a></td> <td><a href="?p=17&n=11">2</a></td>
+</tr>
+<tr>
+<th>19</th>
+<td><a href="?p=19&n=2">3</a></td> <td><a href="?p=19&n=3">4</a></td> <td><a href="?p=19&n=4">5</a></td> <td><a href="?p=19&n=5">2</a></td> <td><a href="?p=19&n=6">12</a></td> <td><a href="?p=19&n=7">2</a></td> <td><a href="?p=19&n=8">8</a></td> <td><a href="?p=19&n=9">13</a></td> <td><a href="?p=19&n=10">8</a></td> <td><a href="?p=19&n=11">2</a></td>
+</tr>
+<tr>
+<th>23</th>
+<td><a href="?p=23&n=2">3</a></td> <td><a href="?p=23&n=3">2</a></td> <td><a href="?p=23&n=4">5</a></td> <td><a href="?p=23&n=5">2</a></td> <td><a href="?p=23&n=6">7</a></td> <td><a href="?p=23&n=7">2</a></td> <td><a href="?p=23&n=8">8</a></td> <td><a href="?p=23&n=9">3</a></td> <td><a href="?p=23&n=10">6</a></td> <td><a href="?p=23&n=11">12</a></td> 
+</tr>
+
+</table>
+<p>
+
+    <h2>Find a specific local number field</h2>
+
+    <form name="search" method = "get" action="{{search}}">
+        <table class="">
+	  <tr>
+	    <td>
+	  Search by {{KNOWL('lf.field.label',title="label")}}
+          <input type="text" name="jump_to" value=""
+        placeholder="2.4.6.7">
+	    </td>
+	    <td>
+          <input type="submit" value="Find">
+	      </td>
+	      <td>
+		<span class="formexample">a field label, e.g. 2.4.6.7</span>
+	      </td>
+	    </tr>
+	  </table>
+	  </form>
+
+        <h2>Search</h2>
+      <form name="search" method = "get" action="{{search}}">
+        <table class="">
+          <tr>
+            <td>
+          {{KNOWL('lf.degree',title='Degree')}}:
+            </td><td><input type="text" name="n" value=""
+      placeholder="6"></td>
+      <td>
+	<span class="formexample">e.g. 6, or a range like 3..5</span>
+      </td>
+          </tr>
+          <tr>
+            <td>
+              Prime $p$ for base field  {{KNOWL('lf.qp',title='$\mathbb{Q}_p$')}}:
+            </td><td><input type="text" name="p" value="" placeholder="3"></td>
+      <td>
+	<span class="formexample">e.g. 3, or a range like 3..7</span>
+      </td>
+          </tr>
+          <tr>
+            <td>
+              {{KNOWL('lf.discriminant_exponent',title='Discriminant
+              exponent')}} $c$:
+            </td><td><input type="text" name="c" value="" placeholder="8"></td>
+      <td>
+	<span class="formexample">e.g. 8, or a range like 2..6</span>
+      </td>
+          </tr>
+          <tr>
+            <td>
+              {{KNOWL('lf.ramification_index',title='Ramification
+              index')}} $e$:
+            </td><td><input type="text" name="e" value="" placeholder="3"></td>
+      <td>
+	<span class="formexample">e.g. 3, or a range like 2..6</span>
+      </td>
+          </tr>
+<!--      
+          <tr>
+          <td>
+              Maximum number of fields to display:
+            </td><td><input type="text" name="count" value="25"></td>
+          </tr>
+-->
+  </table>
+        <input type="submit" name="Submit" value="Search">
+      </form>
+
+
 
 {% endblock %}

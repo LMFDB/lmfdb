@@ -12,6 +12,6 @@ def body_class():
 
 import main 
 
-app.register_blueprint(local_fields_page, url_prefix="/LocalField")
+app.register_blueprint(local_fields_page, url_prefix="/LocalNumberField")
 
 

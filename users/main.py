@@ -37,13 +37,18 @@ login_manager.login_view = "users.info"
 # this anonymous user has the is_admin() method
 login_manager.anonymous_user = LmfdbAnonymousUser
 
-# globally define the user and username
+def get_username(uid):
+  """returns the name of user @uid"""
+  return LmfdbUser(uid).name
+
+# globally define user properties and username
 @app.context_processor
 def ctx_proc_userdata():
   userdata = {}
   userdata['username'] = 'Anonymous' if current_user.is_anonymous() else current_user.name
   userdata['user_is_authenticated'] =  current_user.is_authenticated()
   userdata['user_is_admin'] = current_user.is_admin()
+  userdata['get_username'] = get_username
   return userdata
 
 # blueprint specific definition of the body_class variable
@@ -137,8 +142,21 @@ def admin_required(fn):
   def decorated_view(*args, **kwargs):
     logger.info("admin access attempt by %s" % current_user.get_id())
     if not current_user.is_admin():
-      return flask.abort(403) # 401 = access denied
+      return flask.abort(403) # access denied
     return fn(*args, **kwargs)
+  return decorated_view
+
+def housekeeping(fn):
+  """
+  wrap this around maintenance calls, they are only accessible for
+  admins and for localhost
+  """
+  @wraps(fn)
+  def decorated_view(*args, **kwargs):
+    logger.info("housekeeping access attempt by %s" % request.remote_addr)
+    if request.remote_addr in [ "127.0.0.1", "localhost"]:
+      return fn(*args, **kwargs)
+    return admin_required(fn)(*args, **kwargs)
   return decorated_view
 
 def get_user_token_coll():
@@ -221,6 +239,24 @@ def register_token(token):
     logger.info("new user: '%s' - '%s'" % (newuser.get_id(), newuser.name))
     return flask.redirect(next or url_for(".info"))
 
+@login_page.route("/change_password", methods = ['POST'])
+@login_required
+def change_password():
+  uid = current_user.get_id()
+  pw_old = request.form['oldpwd']
+  if not current_user.authenticate(pw_old):
+    flask.flash("Ooops, old password is wrong!", "error")
+    return flask.redirect(url_for(".info"))
+
+  pw1    = request.form['password1']
+  pw2    = request.form['password2']
+  if pw1 != pw2:
+    flask.flash("Oops, new passwords do not match!", "error")
+    return flask.redirect(url_for(".info"))
+
+  pwdmanager.change_password(uid, pw1)
+  flask.flash("Your password has been changed.")
+  return flask.redirect(url_for(".info"))
 
 @login_page.route("/logout")
 @login_required

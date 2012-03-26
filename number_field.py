@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import re
 import pymongo
 
@@ -6,17 +7,28 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 
 import sage.all
 from sage.all import ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, euler_phi, pari
+from sage.rings.arith import primes
+
+from transitive_group import group_display_knowl, group_knowl_guts, group_display_short
 
 from utils import ajax_more, image_src, web_latex, to_dict, parse_range, coeff_to_poly, pol_to_html
 
-NF_credit = 'the PARI group,  J. Voight and J. Jones'
+NF_credit = 'the PARI group, J. Voight, J. Jones, and D. Roberts'
+
+def galois_group_data(n, t):
+  C = base.getDBConnection()
+  return group_knowl_guts(n, t, C)
+
+@app.context_processor
+def ctx_galois_groups():
+  return {'galois_group_data': galois_group_data }
 
 def field_pretty(field_str):
     d,r,D,i = field_str.split('.')
     if d == '1':  # Q
         return '\( {\mathbb Q} \)'
     if d == '2':  # quadratic field
-        D = ZZ(D).squarefree_part()
+        D = ZZ(int(D)).squarefree_part()
         if r=='0': D = -D
         return '\( {\mathbb Q}(\sqrt{' + str(D) + '}) \)'
     for n in [5,7,8,9,10]: 
@@ -106,7 +118,7 @@ def set_sidebar(l):
 @app.route("/NumberField/GaloisGroups")
 def render_groups_page():
     info = {}
-    info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
+    info['learnmore'] = [('Global Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
     def gcmp(x,y):
         a = cmp(x['label'][0],y['label'][0])
         if a: return a
@@ -114,23 +126,23 @@ def render_groups_page():
         return a
     groups.sort(cmp=gcmp)
     t = 'Galois group labels'
-    bread = [('Number Fields', url_for("number_field_render_webpage")),('Galois group labels',' ')]
+    bread = [('Global Number Fields', url_for("number_field_render_webpage")),('Galois group labels',' ')]
     return render_template("number_field/galois_groups.html", groups=groups, info=info, credit=NF_credit, title=t, bread=bread)
 
 @app.route("/NumberField/FieldLabels")
 def render_labels_page():
     info = {}
-    info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
+    info['learnmore'] = [('Global Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
     t = 'Number field labels'
-    bread = [('Number Fields', url_for("number_field_render_webpage")),('Number field labels','')]
+    bread = [('Global Number Fields', url_for("number_field_render_webpage")),('Number field labels','')]
     return render_template("number_field/number_field_labels.html", info=info, credit=NF_credit, title=t, bread=bread)
 
 @app.route("/NumberField/Discriminants")
 def render_discriminants_page():
     info = {}
-    info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
-    t = 'Number Field Discriminant Ranges'
-    bread = [('Number Fields', url_for("number_field_render_webpage")),('Discriminant ranges',' ')]
+    info['learnmore'] = [('Global Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
+    t = 'Global Number Field Discriminant Ranges'
+    bread = [('Global Number Fields', url_for("number_field_render_webpage")),('Discriminant ranges',' ')]
     return render_template("number_field/discriminant_ranges.html", info=info, credit=NF_credit, title=t, bread=bread)
 
 @app.route("/NumberField")
@@ -147,9 +159,9 @@ def number_field_render_webpage():
         'class_number_list': range(1,6)+['6..10'],
         'discriminant_list': discriminant_list
     }
-        t = 'Number Fields'
-        bread = [('Number Fields', url_for("number_field_render_webpage"))]
-        info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
+        t = 'Global Number Fields'
+        bread = [('Global Number Fields', url_for("number_field_render_webpage"))]
+        info['learnmore'] = [('Global Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
 
         return render_template("number_field/number_field_all.html", info = info, credit=NF_credit, title=t, bread=bread)
     else:
@@ -380,10 +392,10 @@ def GG_data(GGlabel):
  
 def render_field_webpage(args):
     data = None
+    import base
+    C = base.getDBConnection()
     if 'label' in args:
         label = str(args['label'])
-        import base
-        C = base.getDBConnection()
         data = C.numberfields.fields.find_one({'label': label})
     if data is None:
         return "No such field: " + label + " in the database"  
@@ -396,6 +408,15 @@ def render_field_webpage(args):
     K = coeff_to_nf(data['coefficients'])
     D = data['discriminant']
     h = data['class_number']
+    if data['degree']<8:
+      oldgcode = data['galois_group']
+      oldgcode = (data['degree'], oldgcode[0],oldgcode[1],oldgcode[2])
+      oldgcode = group_names[oldgcode][-1]
+      oldgcode = re.sub('^.*T','',oldgcode)
+      t = int(oldgcode)
+    else:
+      t = data['galois_group'][2]
+    data['galois_grou'] = group_display_knowl(data['degree'],t,C)
     data['galois_group'] = str(data['galois_group'][3])
     data['class_group_invs'] = data['class_group']
     if data['class_group_invs']==[]:
@@ -406,11 +427,12 @@ def render_field_webpage(args):
     ram_primes = D.prime_factors()
     npr = len(ram_primes)
     ram_primes = str(ram_primes)[1:-1]
-    Gorder,Gsign,Gab = GG_data(data['galois_group'])
-    if Gab:
-        Gab='abelian'
-    else:
-        Gab='non-abelian'
+    data['frob_data'] = frobs(K)
+    #Gorder,Gsign,Gab = GG_data(data['galois_group'])
+    #if Gab:
+    #    Gab='abelian'
+    #else:
+    #    Gab='non-abelian'
     unit_rank = sig[0]+sig[1]-1
     if unit_rank==0:
         reg = 1
@@ -427,35 +449,35 @@ def render_field_webpage(args):
         'regulator': web_latex(reg),
         'unit_rank': unit_rank,
         'root_of_unity': web_latex(UK.torsion_generator()),
-        'fund_units': ',&nbsp; '.join([web_latex(u) for u in UK.fundamental_units()]),
-        'Gorder': Gorder, 'Gsign': Gsign, 'Gab': Gab
+        'fund_units': ',&nbsp; '.join([web_latex(u) for u in UK.fundamental_units()])
+    #    'Gorder': Gorder, 'Gsign': Gsign, 'Gab': Gab
         })
     info['downloads_visible'] = True
     info['downloads'] = [('worksheet', '/')]
 #    info['friends'] = [('L-function', '/')]
     info['friends'] = [('L-function', "/L/NumberField/%s" % label)]
-    info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
-    bread = [('Number Fields', url_for("number_field_render_webpage")),('%s'%info['label'],' ')]
-    t = "Number Field %s" % info['label']
+    info['learnmore'] = [('Global Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
+    bread = [('Global Number Fields', url_for("number_field_render_webpage")),('%s'%info['label'],' ')]
+    title = "Global Number Field %s" % info['label']
 
-    properties = ['<br>']
-    properties.extend('<table>')
-    properties.extend('<tr><td align=left><b>Degree:</b><td align=left> %s</td>'%data['degree'])
-    properties.extend('<tr><td align=left><b>Signature:</b><td align=left>%s</td>'%data['signature'])
-    properties.extend('<tr><td align=left><b>Discriminant:</b><td align=left>%s</td>'%data['discriminant'])
     if npr==1:
-        properties.extend('<tr><td align=left><b>Ramified prime:</b><td align=left>%s</td>'%ram_primes)
+         primes='prime'
     else:
-        if npr==0:
-            properties.extend('<tr><td align=left><b>Ramified primes:</b><td align=left>%s</td>'%"None")
-        else:
-            properties.extend('<tr><td align=left><b>Ramified primes:</b><td align=left>%s</td>'%ram_primes)
-    properties.extend('<tr><td align=left><b>Class number:</b><td align=left>%s</td>'%data['class_number'])
-    properties.extend('<tr><td align=left><b>Class group:</b><td align=left>%s</td>'%data['class_group_invs'])
-    properties.extend('<tr><td align=left><b>Galois group:</b><td align=left>%s</td>'%data['galois_group'])
-    properties.extend('</table>')
+         primes='primes'
+
+    properties2 = [('Degree:', '%s' %data['degree']),
+                   ('Signature:', '%s' %data['signature']),
+                   ('Discriminant', '%s' %data['discriminant']),
+                   ('Ramified '+primes+':', '%s' %ram_primes),
+                   ('Class number:', '%s' %data['class_number']),
+                   ('Class group:', '%s' %data['class_group_invs']),
+#                   ('Galois Group:', '%s' %data['galois_group'])
+                   ('Galois Group:', group_display_short(data['degree'], t, C))
+    ]
+
+
     del info['_id']
-    return render_template("number_field/number_field.html", properties=properties, credit=NF_credit, title = t, bread=bread, friends=info.pop('friends'), info=info )
+    return render_template("number_field/number_field.html", properties2=properties2, credit=NF_credit, title = title, bread=bread, friends=info.pop('friends'), info=info )
 
 def format_coeffs(coeffs):
     return pol_to_html(str(coeff_to_poly(coeffs)))
@@ -466,7 +488,7 @@ def format_coeffs(coeffs):
 def number_fields():
     if len(request.args) != 0:
         return number_field_search(**request.args)
-    info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
+    info['learnmore'] = [('Global Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
     return render_template("number_field/number_field_all.html", info = info)
     
 
@@ -475,7 +497,10 @@ def by_label(label):
     return render_field_webpage({'label' : label})
 
 def parse_list(L):  
-    return [int(a) for a in str(L)[1:-1].split(',')]
+    L=str(L)
+    if re.search("\\d", L): 
+      return [int(a) for a in L[1:-1].split(',')]
+    return []
     # return eval(str(L)) works but using eval() is insecure
 
 def number_field_search(**args):
@@ -554,6 +579,7 @@ def number_field_search(**args):
         nres_pos = res_pos.count()
         # TODO: pages
 
+        # TODO HSY: why is there a merge_sort? a sorted(key=lambda _: ...) would be much much faster
         res = merge_sort(iter(res_neg),iter(res_pos))
         nres = nres_pos+nres_neg
         
@@ -576,9 +602,9 @@ def number_field_search(**args):
         else:
             info['report'] = 'displaying all %s matches'%nres
     info['format_coeffs'] = format_coeffs
-    info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
-    t = 'Number Field search results'
-    bread = [('Number Fields', url_for("number_field_render_webpage")),('Search results',' ')]
+    info['learnmore'] = [('Global Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
+    t = 'Global Number Field search results'
+    bread = [('Global Number Fields', url_for("number_field_render_webpage")),('Search results',' ')]
     properties = []
     return render_template("number_field/number_field_search.html", info = info, title=t, properties=properties, bread=bread)
 
@@ -608,7 +634,6 @@ def merge_sort(it1,it2):
     try:
         b = it2.next()
     except StopIteration:
-        a = it1.next()
         while True:
             yield a
             a = it1.next()
@@ -653,7 +678,36 @@ def filter_ur_primes(it, ur_primes):
         a = it.next()
         D = a['discriminant']
     return
-    
+
+# Compute Frobenius cycle types
+def frobs(K):
+  k1 = pari(K)
+  D = K.disc()
+  ans = []
+  for p in primes(2,60):
+    if not ZZ(p).divides(D):
+      dec = k1.idealprimedec(p)
+      dec = [z[3] for z in dec]
+      vals = list(set(dec))
+      vals = sorted(vals, reverse=True)
+      dec = [[x, dec.count(x)] for x in vals]
+      dec2 = ["$"+str(x[0]) + ('^{'+str(x[1])+'}$' if x[1]>1 else '$') for x in dec]
+      s = '$'
+      old=2
+      for j in dec:
+        if old==1: s += '\: '
+        s += str(j[0])
+        if j[1]>1:
+          s += '^{'+str(j[1])+'}'
+        old = j[1]
+      s += '$'
+      ans.append([p, s])
+    else:
+      ans.append([p, 'R'])
+  return(ans)
+
+
+
 # obsolete old function:                    
 def old_merge(it1,it2,lim):
     count=0

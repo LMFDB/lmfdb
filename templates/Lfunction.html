@@ -32,8 +32,9 @@
       <div>Not enough Dirichlet series coefficients to compute special values.</div>
  {% endif %}
 
+    <h2> Graph of the {{ KNOWL('lfunction.zfunction', title='$Z$-function') }} along center part of the {{ KNOWL('lfunction.critical_line', title='critical line') }} </h2>
+
  {% if plotlink %}
-    <h2> Graph of the {{ KNOWL('lfunction.zfunction', title='$Z$-function') }} along the {{ KNOWL('lfunction.critical_line', title='critical line') }} </h2>
     <img src="{{ plotlink|safe }}" >
  {% else %}
     <div>Not enough Dirichlet series coefficients to make a graph.</div>

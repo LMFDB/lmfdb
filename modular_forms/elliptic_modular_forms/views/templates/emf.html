@@ -1,16 +1,41 @@
 {% extends 'homepage.html' %}
 
 {% block content %}
-<script type="text/javascript" src="{{ url_for('static', filename='elliptic_modular_form_util-functions.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('static', filename='elliptic_modular_form_scripts.js') }}"></script>
-
+<script type="text/javascript" src="{{ url_for('emf.static', filename='elliptic_modular_form_util-functions.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('emf.static', filename='elliptic_modular_form_scripts.js') }}"></script>
 {% if error is defined %}
    {{ error | safe }}
 {% else %}
 <h1> {{ name | safe }} </h1>
+<div id="qexp">
 <h2> {{ KNOWL('mf.elliptic.q-expansion',title='q-expansion')}}</h2>
-<div>
-{{ q_exp | safe }}
+{# { q_exp | safe }#}
+<br>
+{# Get the q-expansion #}
+<span id="qexp">
+\( 
+{% if c[0] and not c[0][0] == '0' %}
+  {% set nstart=0 %}
+{% else %}
+  {% set nstart=1 %}
+{% endif %} 
+{% for n in range(nstart,maxc) %}
+  {% if not c[n][0] == '1' %}
+    {{ c[n] }} 
+  {% endif %}
+  {% if n==1 %} 
+   q
+  {% else %}
+   q^{  {{n}} } 
+  {% endif %}
+    
+  {% if n < maxc-1 and not c[n+1][0]=='-' %}
+  + 
+ {% endif %}
+{% endfor %}
+ + O(q^{ {{maxc}} })
+\) 
+</span>
 </div>
 {{ polynomial_st | safe }}
 <br>
@@ -69,7 +94,7 @@ in the field of complex numbers. The values are shown in the table below.
         \(\alpha_{p}\)
       </th>
       {% for ps in satake.ps %}
-      <td>\( {{satake.alphas[h][ps]}} \)</td>
+      <td>\( {{satake.alphas_latex[h][ps]}} \)</td>
       {% endfor %}
     </tr>
     <tr>
@@ -77,7 +102,7 @@ in the field of complex numbers. The values are shown in the table below.
         \(\theta_{p}\)
       </th>
       {% for ps in satake.ps %}
-      <td> \( {{satake.thetas[h][ps]}} \)</td>
+      <td> \( {{satake.thetas_latex[h][ps]}} \)</td>
       {% endfor %}
     </tr>
     {% endfor %}
@@ -94,7 +119,7 @@ in the field of complex numbers. The values are shown in the table below.
   <table class="ntdata" style="width:50%">
     <thead>
       <tr>
-        <th width="20px" style="border-right:1px solid black">Point&nbsp;\&nbsp;Embedding</th>
+        <th width="20px" style="border-right:1px solid black">Point&nbsp;&nbsp;Embedding</th>
         {% for h in CM_values.embeddings  %}
         <th width="{{ CM_values.max_width }}">{{ h |safe }}</th>
         {% endfor %}
@@ -128,52 +153,57 @@ in the field of complex numbers. The values are shown in the table below.
 
 <h2>Further Properties</h2>
 <div>
+  {% if is_cm is defined or is_minimal is defined %}
+  <ul>
   {% if is_cm is defined %}
-  This newform is 
-  {% if not is_cm[0] %}
-  not
+  <li>
+    This newform is 
+    {% if not is_cm[0] %}
+    not
+    {% endif %}
+    a {{KNOWL('mf.elliptic.cm_form',title='CM form')}}.
+    {% endif %}
+    </li>
+  {% if is_minimal is defined %}
+  <li>
+    It is 
+    {% if not is_minimal %}
+    not
+    {% endif %}
+    {{KNOWL('mf.elliptic.minimal',title='minimal')}}.
+  </li>
   {% endif %}
-  a {{KNOWL('mf.elliptic.cm_form',title='CM form')}}.
-  {% endif %}
-  It is 
-  {% if not is_minimal %}
-  not
-  {% endif %}
-  {{KNOWL('mf.elliptic.minimal',title='minimal')}}.
-</div>
-{% if atkinlehner is defined and atkinlehner%}
-<div>
-  The function has {{KNOWL('mf.elliptic.atkinlehner',title='Atkin-Lehner')}} eigenvalues given by 
-  <table class="ntdata">
-    <thead>
-      <tr>
-        <th> \( Q \) </th>
+  {% if atkinlehner is defined and atkinlehner%}
+  <li>
+    The function has {{KNOWL('mf.elliptic.atkinlehner',title='Atkin-Lehner')}} eigenvalues given by 
+    <table class="ntdata">
+      <thead>
+        <tr>
+          <th> \( Q \) </th>
         <th> Cusp </th>
-        <th>Eigenvalue
-      </tr>
-    </thead>
-    <tbody>
-      {% for Q,c,ev in atkinlehner %}
-      <tr>
-        <th> {{Q}} </th>
-        <th> {{ c }} </th>
-        <td> {{ev}}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+          <th>Eigenvalue
+        </tr>
+      </thead>
+      <tbody>
+        {% for Q,c,ev in atkinlehner %}
+        <tr>
+          <th> {{Q}} </th>
+          <th> {{ c }} </th>
+          <td> {{ev}}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </li>
+  {% endif %}
+  </ul>
 </div>
-{% endif %}
-
+  {% endif %}
 <h2>Download Fourier coefficients</h2>
-<form name="get_coefficients" method="post"  action="{{url_for('.render_elliptic_modular_forms')}}">
-  <input type="hidden" name="download" value="coefficients">
-  Get / compute  <input type="text" size="10" name="number" value="10"> 
+<form name="get_coefficients" method="post"  action="{{url_for('.get_downloads',level=level,weight=weight,character=character,label=label)}}">
+  <input type="hidden" name="download" value="coefficients"/>
+  Get / compute  <input type="text" size="10" name="number" value="10"/> 
   coefficients in the following format:
-  <input type="hidden" name="level" value="{{level }}">
-  <input type="hidden" name="character" value="{{character }}">
-  <input type="hidden" name="weight" value="{{weight }}">
-  <input type="hidden" name="label" value="{{label }}">
   <ul>
     <li> 
       <label><input type=radio name="format" checked value="q_expansion_one_line" onclick="return selectCFormat(event)"> q-expansion (on one line)</label>
@@ -183,10 +213,11 @@ in the field of complex numbers. The values are shown in the table below.
     </li>
     <li>
       <label><input type=radio name="format" value="embeddings" onclick="return selectCFormat(event)"> Complex embeddings </label>
-      with <input type="text" size="10" name="prec" value="15"> digits precision. 
+      with <input type="text" size="10" name="prec" value="15"> digits precision.     
     </li>
   </ul>
-  <input type="button" name="Submit" value="Get coefficients" onclick="check_coefficient_form()">
+{#  <input type="button" name="Submit" value="Get coefficients"> #}
+ <input type="submit" name="Submit" value="Get coefficients">
 </form>
 
 <h2>Download as {{KNOWL('sage',title='Sage')}} Object</h2>
@@ -199,12 +230,15 @@ in the field of complex numbers. The values are shown in the table below.
   <input type="submit" name="Submit" value="Download" Onclick="document.download.submit()">
 </form>
 <div class="formexample"> 
-<form name="download_file" method="post"  action="{{url_for('.render_elliptic_modular_forms')}}">
-  Note: In order to use this data file you need to download and import
+  Note: In order to use this data file you currently need to download
+  and import the entire lmfdb from: 
+<a href="http://code.google.com/p/lmfdb/">lmfdb at google code</a>. <!--form name="download_file" method="post"  action="{{url_for('.render_elliptic_modular_forms')}}">
+  Note: In order to use this data file you currently need to download
   <input type="hidden" name="download" value="file">
   <input type="hidden" name="download_file" value="web_modforms.py">
-  <a href="javascript:void(0);" OnClick="document.download_file.submit()">web_modforms.py</a>
- </form>
+  <a href="javascript:void(0);"
+  OnClick="document.download_file.submit()">web_modforms.py</a>
+ </form -->
 </div>
 {% endif %}
 {% endif %}

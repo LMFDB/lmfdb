@@ -1,9 +1,16 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<h2> Browse {{ KNOWL('mf.hilbert') }} </h2>
+<h2> Browse {{ KNOWL('mf.hilbert', title='Hilbert cusp forms') }} </h2>
 
-<!-- <h2> Search </h2> -->
+<p>
+By field:
+<a href="?field_label={{'Qsqrt5'}}">{{'Qsqrt5'}}</a>
+<a href="?field_label={{'Qsqrt8'}}">{{'Qsqrt8'}}</a>
+</p>
+
+
+<h2> Search </h2>
 
 <form>
 <table>
@@ -14,27 +21,27 @@
     \(\mathbb{Q}(\sqrt{5})\), or a nickname, e.g. Q or Qsqrt5 </span></td>
 </tr>
 <tr>
-<td>{{ KNOWL('mf.hilbert.weight_vector') }}</td>
+<td>{{ KNOWL('mf.hilbert.weight_vector', title='Weight vector') }}</td>
 <td><input type='text' name='weight' placeholder='[2,2]' size=10>
-<td><span class="formexample"> e.g. [2,2]</td>
+<td><span class="formexample"> e.g. 2 or [2,2]</td>
 </tr>
 <tr>
-<td>{{ KNOWL('mf.hilbert.level_norm') }}</td>
+<td>{{ KNOWL('mf.hilbert.level_norm', title='Level norm') }}</td>
 <td><input type='text' name='level_norm' placeholder='1' size=10>
 <td><span class="formexample"> e.g. 1</td>
 </tr>
 <tr>
-<td>{{ KNOWL('mf.hilbert.dimension') }}</td>
+<td>{{ KNOWL('mf.hilbert.dimension', title='Dimension') }}</td>
 <td><input type='text' name='dimension' placeholder='1' size=10>
 <td><span class="formexample"> e.g. 1</td>
 </tr>
 <tr>
 <td>Maximum number of forms</td>
-<td><input type='text' name='count' value=10 size=10></td>
+<td><input type='text' name='count' value=100 size=10></td>
 <td><span class="formexample"> &nbsp;</td>
 </tr>
 <tr>
-<td colspan=3><input type='submit' value='Search'>
+<td colspan=3><button type='submit' value='Search'>Search</button>
 </td>
 </tr>
 </table>

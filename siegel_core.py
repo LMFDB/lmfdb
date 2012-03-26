@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from sage.all_cmdline import *
 
 tbi = 't.b.i.'

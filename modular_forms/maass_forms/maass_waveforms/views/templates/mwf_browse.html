@@ -20,7 +20,7 @@
   <tr>
     <td>
       {% if info.weight is defined %}
-      <h1>Maass waveforms of weight {{info.weight}}</h1>
+      <h1>{{KNOWL('mf.maass.mwf',title='Maass forms')}} of {{KNOWL('mf.maass.weight',title='weight')}} {{info.weight}}</h1>
       {% else %}
       <h1>Maass waveforms</h1>
       {% endif %}
@@ -50,15 +50,20 @@
       <p>
       <div>        
       {% if info.table.metadata is defined %}
-      Contributors to data on this page is:
+<div>
+More data can be accessed by searching.
+</div>
+<p>
+      Contributors to data on this page:
       <ul>
-
+          
         {% for rec in info.table.metadata %}
         {% set name = rec.contributor %}
         {% set knowl = rec["knowl-tag"] %}
         <li>
           {# Note that this KNOWL is stored in the database #}
-          {{ KNOWL(knowl,title=name) }}
+          {# {{ KNOWL(knowl,title=name) }}  #}
+         {{name}}
         </li>
         {% endfor %}
       </ul>

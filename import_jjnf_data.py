@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import sys, time
 
 from pymongo.connection import Connection
@@ -32,11 +33,14 @@ def lookup_or_create(label):
     else:
         return item
 
-from done2  import quads # this reads in the list called quads
+from done2  import li # this reads in the list called quads
+
+quads = li
 
 print "finished importing quads, number = %s"%len(quads)
 
 for F in quads:
+#for F in quads[0:1]:
     print F
     t = time.time()
     d, sig, D, coeffs, h, cyc, GG = F

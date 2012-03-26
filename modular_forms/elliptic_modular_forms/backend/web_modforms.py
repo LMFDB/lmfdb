@@ -35,7 +35,6 @@ from flask import url_for
 
 ## DB modules
 import pymongo 
-from utils import pol_to_html 
 import gridfs
 from pymongo.helpers import bson     
 from bson import BSON
@@ -69,7 +68,7 @@ class WebModFormSpace(Parent):
         - 'chi' -- character
         - 'cuspidal' -- 1 if space of cuspforms, 0 if all modforms 
         """
-        self._cuspidal=1
+        self._cuspidal=cuspidal
         self._k = ZZ(k)
         self._N = ZZ(N)
         if chi=='trivial':
@@ -85,7 +84,11 @@ class WebModFormSpace(Parent):
         self._dimension_cusp_forms = None
         self._dimension_modular_forms = None
         self._dimension_new_cusp_forms = None
+        self._dimension_new_modular_symbols = None
+        self._galois_decomposition=[]
+        self._newspace=None
         self._character = None
+        self._got_ap_from_db=False
         # check what is in the database
         ## dO A SIMPLE TEST TO SEE IF WE EXIST OR NOT.
         if N<0 or int(chi)>int(euler_phi(N)) or chi<0:
@@ -120,7 +123,7 @@ class WebModFormSpace(Parent):
             try:
                 self._group=Gamma0(N)
                 self._character=self._get_character(self._chi)
-                MS=self._get_objects(k,N,chi,use_db,'MS')
+                MS=self._get_objects(k,N,chi,use_db,'Modular_symbols')
                 self._modular_symbols=MS
                 #self._modular_symbols_cuspidal_new_submodule=MS.cuspidal_submodule().new_submodule()
                 self._newspace=self._modular_symbols.cuspidal_submodule().new_submodule()
@@ -183,10 +186,13 @@ class WebModFormSpace(Parent):
             return trivial_character(self.group().level())
 
         
-    def _get_objects(self,k,N,chi,use_db=True,get_what='MS',**kwds):
+    def _get_objects(self,k,N,chi,use_db=True,get_what='Modular_symbols.files',**kwds):
         r"""
         Getting the space of modular symbols from the database if it exists. Otherise compute it and insert it into the database.
         """
+        collection = get_what+'.files'
+        if not get_what in ['ap','Modular_symbols']:
+            emf_logger.critical("Collection {0} is not implemented!".format(get_what))
         res=None
         if kwds.has_key('prec'):
             prec=kwds['prec']
@@ -196,16 +202,15 @@ class WebModFormSpace(Parent):
         try:
             if use_db:
                 emf_logger.debug("dbport={0}".format(dbport))
-                base._init(dbport)
                 C = base.getDBConnection()
                 emf_logger.debug("C={0}".format(C))
                 if not C:
-                    raise ValueError
+                    emf_logger.critical("Could not connect to Database! C={0}".format(C))
                 if not db_name in C.database_names():
-                    raise ValueError
-                if not get_what in C[db_name].collection_names():
-                    raise ValueError
-                files = C[db_name][get_what].files
+                    emf_logger.critical("Incorrect database name {0}. \n Available databases are:{1}".format(db_name,C.database_names()))
+                if not collection in C[db_name].collection_names():
+                    emf_logger.critical("Incorrect collection {0} in database {1}. \n Available collections are:{2}".format(collection,db_name,C[db_name].collection_names()))
+                files = C[db_name][collection].files
                 if chi==0:
                     key = {'k':int(k),'N':int(N)}
                 else:
@@ -223,18 +228,22 @@ class WebModFormSpace(Parent):
                     rec=finds[0]
                     emf_logger.debug("rec={0}".format(rec))
                     filename = rec['filename']
-                    fs = gridfs.GridFS(C[db_name],get_what)
+                    fs = gridfs.GridFS(C[db_name],collection)
                     f = fs.get_version(filename)
                     res = loads(f.read())
                     self._from_db=1
                     self._id=rec['_id']
-        except:
-            pass
+                self._got_ap_from_db=True
+        except Exception as e:
+            emf_logger.critical("Error: {0}".format(e))
+            #pass
         if not res:
-            if get_what=='MS':
+            if get_what=='Modular_symbols':
                 if chi==0:
                     res=ModularSymbols(N,k,sign=1)
                 else:
+                    emf_logger.debug("character: {0}".format(self._character))
+                    emf_logger.debug("weight: {0}".format(k))
                     res=ModularSymbols(self._character,k,sign=1)
             elif get_what=='ap':
                 res=self._modular_symbols.ambient().compact_newform_eigenvalues(prime_range(prec),names='x')
@@ -248,7 +257,7 @@ class WebModFormSpace(Parent):
         """
         data = self.to_dict()
         #return(WebModFormSpace,(self._k,self._N,self._chi,self.prec,data))
-	return(unpickle_wmfs_v1,(self._k,self._N,self._chi,self.prec,data))   
+	return(unpickle_wmfs_v1,(self._k,self._N,self._chi,self._cuspidal,self.prec,self._bitprec,data))   
 
     def _save_to_file(self,file):
         r"""
@@ -265,9 +274,10 @@ class WebModFormSpace(Parent):
         data['character'] = self._character 
         #data['fullspace'] = self._fullspace
         data['modular_symbols'] = self._modular_symbols
-        #data['newspace'] = self._newspace
+        data['newspace'] = self._newspace
         data['newforms'] = self._newforms
-        data['new_modular_symbols'] = self._new_modular_symbols
+        if hasattr(self,"_new_modular_symbols"):
+            data['new_modular_symbols'] = self._new_modular_symbols
         data['galois_decomposition'] = self._galois_decomposition
         data['galois_orbits_labels'] = self._galois_orbits_labels
         data['oldspace_decomposition'] = self._oldspace_decomposition
@@ -542,10 +552,12 @@ class WebModFormSpace(Parent):
             o = dict()
             label = self._galois_orbits_labels[j]
             o['label']= label
-            full_label = "{0}.{1}.{2}".format(self.level(),self.weight(),self._chi)
+            full_label = "{0}.{1}".format(self.level(),self.weight())
+            if self._chi<>0:
+                full_label=full_label+".{0}".format(self._chi)
             full_label=full_label+label
             o['full_label']=full_label
-            o['url']  = url_for('emf.render_one_elliptic_modular_form',level=self.level(),weight=self.weight(),label=o['label'],character=self._chi)
+            o['url']  = url_for('emf.render_elliptic_modular_forms',level=self.level(),weight=self.weight(),label=o['label'],character=self._chi)
             o['dim']  = self._galois_decomposition[j].dimension()
             poly,disc,is_relative = self.galois_orbit_poly_info(j,prec)
             o['poly']="\( {0} \)".format(latex(poly))
@@ -575,7 +587,7 @@ class WebModFormSpace(Parent):
         for j in range(len(self._galois_decomposition)):
             label=self._galois_orbits_labels[j]
             #url="?weight="+str(self.weight())+"&level="+str(self.level())+"&character="+str(self.character())+"&label="+label
-            url=url_for('emf.render_one_elliptic_modular_form',level=self.level(),weight=self.weight(),label=label,character=self._chi)
+            url=url_for('emf.render_elliptic_modular_forms',level=self.level(),weight=self.weight(),label=label,character=self._chi)
             header="<a href=\""+url+"\">"+label+"</a>"
             tbl['headersv'].append(header)
             dim=self._galois_decomposition[j].dimension()
@@ -722,7 +734,7 @@ class WebNewForm(SageObject):
     r"""
     Class for representing a (cuspidal) newform on the web.
     """
-    def __init__(self,k,N,chi=0,label='',fi=-1,prec=10,bitprec=53,verbose=-1,parent=None,data=None,compute=None):
+    def __init__(self,k,N,chi=0,label='',fi=-1,prec=10,bitprec=53,parent=None,data=None,compute=None,verbose=-1):
         r"""
         Init self as form number fi in S_k(N,chi)
         """
@@ -732,7 +744,8 @@ class WebNewForm(SageObject):
             chi=ZZ(chi)
         t=False
         self._chi=ZZ(chi)
-        self._parent=parent; self.f=None
+        self._parent=parent
+        self.f=None
         self._character=trivial_character(N)
         if self._chi<>0:
             if self._parent and self._parent._character:
@@ -802,13 +815,15 @@ class WebNewForm(SageObject):
             else:
                 return 
 
+        emf_logger.debug("name={0}".format(self._name))
 
+        emf_logger.debug("data: {0}".format(data))
         if isinstance(data,dict) and len(data.keys())>0:
-            #self._data = data
             self._from_dict(data)
+
         elif compute=='all':
+            emf_logger.debug("compute")
             self.q_expansion_embeddings(prec,bitprec)
-            #self._embeddings=[]            
             if self._N==1:
                 self.as_polynomial_in_E4_and_E6()
             #self._as_polynomial_in_E4_and_E6=None
@@ -828,11 +843,12 @@ class WebNewForm(SageObject):
             self._is_CM = []
             self._satake = {}
             self._dimension = 1 # None
-
+        emf_logger.debug("before end of __init__ prec={0}".format(prec))
+        emf_logger.debug("before end of __init__ f={0}".format(self._f))
+        emf_logger.debug("before end of __init__ type(f)={0}".format(type(self._f)))
         self._base_ring = self._f.q_eigenform(prec,names='x').base_ring()
+        emf_logger.debug("done __init__")
 
-
-        ## we shold figure out which complex embeddings preserve the character
         
     def __eq__(self,other):
         if not isinstance(other,type(self)):
@@ -854,14 +870,14 @@ class WebNewForm(SageObject):
             return ""
 
 
-
         
     def __reduce__(self):
         r"""
         Reduce self for pickling.
         """
         data=self._to_dict()
-        return(unpickle_wnf_v1,(self._k,self._N,self._chi,self._label,self._fi,self._prec,self._bitprec,self._verbose,data))
+        return(unpickle_wnf_v1,(self._k,self._N,self._chi,self._label,
+                                self._fi,self._prec,self._bitprec,data))
 
 
     def _to_dict(self):
@@ -912,7 +928,7 @@ class WebNewForm(SageObject):
 
     def label(self):
         if(not self._label):
-            self._label = self.parent().labels()[self._fi]
+            self._label = self._parent().labels()[self._fi]
         return self._label
 
     def weight(self):
@@ -926,10 +942,10 @@ class WebNewForm(SageObject):
             return trivial_character
         
     def character_order(self):
-        return self.parent.character_order()
+        return self._parent.character_order()
 
     def character_conductor(self):
-        return self.parent.character_conductor()
+        return self._parent.character_conductor()
 
     def chi(self):
         if hasattr(self,'_chi'):
@@ -1496,14 +1512,15 @@ class WebNewForm(SageObject):
         """
         
         emf_logger.debug("in cm_values with digits={0}".format(digits))
-        bits=max(int(53),ceil(int(digits)*int(4)))
+        #bits=max(int(53),ceil(int(digits)*int(4)))
+        bits=ceil(int(digits)*int(4))
         CF=ComplexField(bits)
         RF=ComplexField(bits)
         eps=RF(10**-(digits+1))
         if(self._verbose>1):
             emf_logger.debug("eps={0}".format(eps))
         K=self.base_ring()
-        print "K={0}".format(K)
+        #print "K={0}".format(K)
         # recall that 
         degree = K.degree()
         cm_vals=dict()
@@ -1670,6 +1687,20 @@ class WebNewForm(SageObject):
                     thetas[jj][p]=t_p
         self._satake['alphas']=alphas
         self._satake['thetas']=thetas
+        self._satake['alphas_latex']=dict()
+        self._satake['thetas_latex']=dict()
+        for j in self._satake['alphas'].keys():
+            self._satake['alphas_latex'][j]=dict()
+            for p in self._satake['alphas'][j].keys():
+                s = latex(self._satake['alphas'][j][p])
+                self._satake['alphas_latex'][j][p]=s
+        for j in self._satake['thetas'].keys():
+            self._satake['thetas_latex'][j]=dict()
+            for p in self._satake['thetas'][j].keys():
+                s = latex(self._satake['thetas'][j][p])
+                self._satake['thetas_latex'][j][p]=s
+                
+        emf_logger.debug("satake=".format(self._satake))
         return self._satake
     
     def print_satake_parameters(self,stype=['alphas','thetas'],prec=10,bprec=53):
@@ -1750,15 +1781,13 @@ class WebNewForm(SageObject):
             prec=self._prec
         s = my_latex_from_qexp(str(self.q_expansion(prec)))
         sb = list()
-        #brpt
         if br > 0:
             sb = break_line_at(s,br)
         if len(sb)<=1:
-            s = "\("+s+"\)"
+            s = r"\\("+s+r"\\)"
         else:
-            s = "\("+"\)<br>\("+join(sb,"",)+"\)"
+            s = r"\\("+join(sb,"",)+r"\\)"
         emf_logger.debug("print_q_exp: prec=".format(prec))
-        emf_logger.debug("s={0}".format(s))
         return s
 
     
@@ -2181,11 +2210,21 @@ def _degree(K):
         return  -1 ##  exit silently
         
 
-def unpickle_wnf_v1(k,N,chi,label,fi,prec,bitprec,verbose,data):
-    F = WebNewForm(k,N,chi,label,fi,prec,bitprec,verbose,data)
+def unpickle_wnf_v1(k,N,chi,label,fi,prec,bitprec,data):
+    F = WebNewForm(k=k,N=N,chi=chi,label=label,fi=fi,prec=prec,bitprec=bitprec,data=data)
     return F
 
-def unpickle_wmfs_v1(k,N,chi,prec,data):
-    M = WebModFormSpace(k,N,chi,prec,data)
+def unpickle_wmfs_v1(k,N,chi,cuspidal,prec,bitprec,data):
+    M = WebModFormSpace(k,N,chi,cuspidal,prec,bitprec,data)
     return M
 
+def pol_to_html(p):
+   r"""
+   Convert polynomial p to html.
+   """
+   s = str(p)
+   s = re.sub("\^(\d*)","<sup>\\1</sup>",s)
+   s = re.sub("\_(\d*)","<sub>\\1</sub>",s)
+   s = re.sub("\*","",s)
+   s = re.sub("x","<i>x</i>",s)
+   return s

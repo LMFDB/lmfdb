@@ -2,7 +2,7 @@
 
 {% block body -%}
 <div id="header">
-    <div class="logo"><a href="/"><img src="{{ url_for('static', filename='images/lmfdb-logo.png') }}" /></a></div>
+    <div id="logo"><a href="/"><img src="{{ url_for('static', filename='images/lmfdb-logo.png') }}" /></a></div>
     <div class="right">
       <div class="bread">
         {% if bread %}
@@ -14,7 +14,7 @@
       </div>
       <div class="topright">
           <a href="https://docs.google.com/spreadsheet/viewform?formkey=dDJXYXBleU1BMTFERFFIdjVXVmJqdlE6MQ" target="_blank">
-             Report a Problem</a>
+             Feedback</a>
             &middot;
           {% if user_is_admin -%}
             <a href="{{ url_for('users.register') }}">Registertokens</a>
@@ -32,7 +32,6 @@
           <br/>
           <span id="communication-wrapper">
             <img id="communication-img" src="{{ url_for('static', filename='images/progress-green.gif') }}" />
-            Ajax:
             <span id="communication"></span>
           </span>
       </div>
@@ -71,10 +70,32 @@
   <ul class="list">
    <li>
     Degree:
+    {% if user_is_authenticated and (username == 'MichaelRubinstein' or username == 'Jonathan Bober' or username == 'Ralph Furmaniak' or username == 'Harald Schilly') %}
+      <span id="span1" style="position:relative;display:none">
+      <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree1')}}"><img src="/static/images/1dot.svg"/></a>
+      <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree2')}}"><img src="/static/images/2dot.svg"/></a>
+      <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree3')}}"><img src="/static/images/3dot.svg"/></a>
+      <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree4')}}"><img src="/static/images/4dot.svg"/></a>
+      </span>
+      <script>
+        if(Math.random()<0.1) {
+        $().ready(function() {
+	  $('#span2').hide();
+	  $('#span1').show();
+	  setTimeout(function() {
+	    $('#span1').hide();
+	    $('#span2').show();
+	  }, 10000);
+	});
+	}
+      </script>
+    {% endif %}
+    <span id="span2">
     <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree1')}}">1</a>
     <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree2')}}">2</a>
     <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree3')}}">3</a>
     <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree4')}}">4</a>
+    </span>
    </li>
   </ul>
 
@@ -83,7 +104,13 @@
    <li><a href="{{ url_for('EC_toplevel') }}  ">Elliptic Curves/\(\mathbb Q\)</a>
   </ul>
 
-  <h2 class="link"><a href="{{ url_for('number_field_render_webpage') }}">Number Fields</a></h2>
+  <h2> Fields</h2>
+    <ul>
+      <li><a href="{{ url_for('number_field_render_webpage') }}">Global Number Fields</a></li>
+      <li><a href="{{ url_for('local_fields.index') }}">Local Number Fields</a></li>
+      <li><a class = "number_field_galois_groups" href="{{ url_for('number_field_galois_groups.index') }}">Galois Groups</a></li>
+      <li><a href="{{ url_for('galois_groups.index') }}">Galois Groups 2</a></li>
+    </ul>
 
   <h2>Characters</h2>
   <ul>
@@ -91,16 +118,24 @@
   </ul>
 
   <h2 class="link">
-       <a class="mf"    href="{{ url_for('mf.modular_form_main_page') }}">Modular Forms</a></h2>
+       <a class="mf"    href="{{ url_for('mf.modular_form_main_page') }}">Holomorphic Modular Forms</a></h2>
   <ul>
-   <li><a class="emf"  href="{{ url_for('emf.render_elliptic_modular_forms') }}">Holomorphic Cusp Forms</a></li>
-   <li><a class="mwf"  href="{{ url_for('mwf.render_maass_waveforms') }}">Maass Forms  on \(\mathrm{GL}_{2}(\mathbb{Q}) \)</a></li>
-   <li><a              href="{{ url_for('ModularForm_GSp4_Q_top_level') }}">Siegel Modular Forms</a> </li>
-   <li><a class="mwfp" href="{{ url_for('mwfp.render_picard_maass_forms') }}">Maass Forms on \(\mathrm{PSL}(2,\mathbb{Z}[i])\)</a></li>
-   <li><a              href="{{ url_for('hilbert_modular_form_render_webpage') }}">Hilbert Modular Forms</a></li>
+   <li><a class="emf"  href="{{ url_for('emf.render_elliptic_modular_forms') }}">Classical, $\mathrm{GL}(2)$</a></li>
+   <li><a              href="{{ url_for('ModularForm_GSp4_Q_top_level') }}">Siegel</a> </li>
+   <li><a              href="{{ url_for('hilbert_modular_form_render_webpage') }}">Hilbert</a></li>
   </ul>
    {# <li><a href="{{ url_for('quadratic_twists') }}">Quadratic Twists</a></li> #}
-   {# <li><a class="local_fields" href="{{ url_for('local_fields.index') }}">Local Fields</a></li> #}
+
+  <h2 class="link">
+       <a class="mf"    href="{{ url_for('mf.modular_form_main_page') }}">Maass Forms</a></h2>
+  <ul>
+   <li><a class="mwf"  href="{{ url_for('mwf.render_maass_waveforms') }}">Classical, $\mathrm{GL}(2)$</a></li>
+   <li><a class="mwfp" href="{{ url_for('mwfp.render_picard_maass_forms') }}">for \(\mathrm{PSL}(2,\mathbb{Z}[i])\)</a></li>
+  </ul>
+  <h2 class="link">
+       <a class="artin_representations" href="{{ url_for('artin_representations.index') }}">Artin Representations</a></h2>
+  
+
 
   <h2 class="link knowl">
      <a class="knowl" href="{{ url_for("knowledge.index") }}">Knowledge</a>
@@ -171,13 +206,13 @@
 
 
 <div id="main">
-  <div id="mathjax-info">
+  <!-- <div id="mathjax-info">
     <img src="{{ url_for('static', filename='images/progress-green.gif') }}" />
     <br/>
     Loading website and processing LaTeX ...
     <br>
     <span id="mathjax-log"></span>
-  </div>
+  </div> --!>
   <div id="content">
     {% with msgs = get_flashed_messages(with_categories=true) -%}
       <div id="flashes">
@@ -201,10 +236,13 @@
     {% if support -%}
       {{ support|safe }}<br/>
     {%- else -%}
-       <h4>This project is supported by the <a href="http://www.nsf.gov">National Science Foundation</a> under FRG Grant No. DMS-0757627, which is administered from the <a href="http://www.aimath.org">American Institute of Mathematics</a>. </h4>
+        <h4>{{shortthanks|safe}}</h4>
 <br />
     {%- endif %}
-    Number Theory, the Queen of Mathematics!
+    <div>
+      <a href="{{ url_for('acknowledgment') }}">Acknowledgments</a>
+      {# <a href="{{ 'about' }}">About</a> #}
+    </div>
 </div>
 
 {%- endblock body %}
