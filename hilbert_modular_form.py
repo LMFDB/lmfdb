@@ -12,7 +12,7 @@ from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicFie
 
 from utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html
 
-from number_field import parse_field_string, field_pretty
+from number_fields.number_field import parse_field_string, field_pretty
 
 def parse_list(L): # parse a string like '[2,2]' without just calling eval()
     return [int(a) for a in str(L)[1:-1].split(',')]
