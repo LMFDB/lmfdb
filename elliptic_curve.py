@@ -351,7 +351,7 @@ def render_curve_webpage_by_label(label):
                         })
     info['downloads_visible'] = True
     info['downloads'] = [('worksheet', url_for("not_yet_implemented"))]
-    info['friends'] = [('Isogeny class', "/EllipticCurve/Q/%s" % iso_class),
+    info['friends'] = [('Isogeny class', "/EllipticCurve/Q/%s%s" % (str(N),iso_class)),
 ####  THIS DOESN'T WORK AT THE MOMENT /Lemurell                       ('Modular Form', url_for("emf.render_elliptic_modular_form_from_label",label="%s" %(iso_class))),
                        ('L-function', url_for("render_Lfunction", arg1='EllipticCurve', arg2='Q', arg3=label))]
     info['learnmore'] = [('Elliptic Curves', url_for("not_yet_implemented"))]
