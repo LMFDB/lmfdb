@@ -60,7 +60,9 @@
     <div>
       {% for chi in e %}
         {% if not loop.first %}<br/>{% endif %}
-        {{ chi[0] }}
+            <font color="{% if chi[1] -%}green{%- else -%}blue{%- endif %}">
+                {{ chi[0] }}
+            </font>
       {% endfor %}
     </div>
     {% endfor %}
