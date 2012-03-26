@@ -48,7 +48,7 @@ def render_webpage(request,arg1,arg2):
             info["bread"] = [('Dirichlet Characters', url_for("render_Character")), ('Moduli '+str(modulus_start) + '-' + str(modulus_end), '/Character/Dirichlet/modbrowse='+str(modulus_start)+'-'+str(modulus_end))]
             info['title'] = 'Moduli ' +str(modulus_start)+'-'+str(modulus_end)
             info['credit'] = 'Sage'
-            c, h, rows, cols = ListCharacters.get_character_modulus(modulus_start,modulus_end)
+            h, c, rows, cols = ListCharacters.get_character_modulus(modulus_start,modulus_end)
             info['contents'] = c 
             info['headers']  = h
             info['rows'] = rows

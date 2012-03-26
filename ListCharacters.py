@@ -14,16 +14,16 @@ from sage.rings.arith import euler_phi
 
 def get_character_modulus(a,b):
     from dirichlet_conrey import DirichletGroup_conrey
-    from DirichletCharacter import kronecker_symbol as k
-    headers = range(7)
+    #from DirichletCharacter import kronecker_symbol as k
+    headers = range(1,7)
     headers.append("more")
     entries = {}
-    rows = range(a, b+1):
+    rows = range(a, b+1)
     for row in rows:
-        G = DirichletGroup_conrey(N)
+        G = DirichletGroup_conrey(row)
         for j, chi  in enumerate(G):
             multorder = chi.multiplicative_order()
-            el = (j, chi.is_primitive(), multorder, k(chi))
+            el = (j, chi.is_primitive(), multorder)
             col = multorder 
             if multorder > 6:
                col = "more"
