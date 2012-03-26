@@ -51,7 +51,7 @@
     </tr>
 </thead>
 
-{% macro show_character(entry, col) -%}
+{% macro show_character(entry, col, row) -%}
 {% if not entry is none %}
   {% if col == "more"  %}
     LIST
@@ -60,9 +60,11 @@
     <div>
       {% for chi in e %}
         {% if not loop.first %}<br/>{% endif %}
+        <a href="{{url_for('render_Character', arg1=row, arg2=chi[0])}}"> 
             <font color="{% if chi[1] -%}green{%- else -%}blue{%- endif %}">
                 {{ chi[0] }}
-            </font>
+        </font>
+        </a>
       {% endfor %}
     </div>
     {% endfor %}
@@ -77,7 +79,7 @@
 	<td class="modulus"align="center" style="4em"> {{ row }} </td>
 
 	{% for col in cols %}
-	<td> {{ show_character(contents[(row, col)], col) }} </td>
+	<td> {{ show_character(contents[(row, col)], col, row) }} </td>
 	{% endfor %}
 
 	</tr>
