@@ -212,7 +212,7 @@ def render_isogeny_class(iso_class):
         info['imag']=data['imag']
     if 'real' in data:
         info['real']=data['real']
-    info['rank'] = web_latex(data['rank'])
+    info['rank'] = data['rank']
     info['isogeny_matrix']=latex(matrix(eval(data['isogeny_matrix'])))
     info['modular_degree']=web_latex(data['degree'])
     #info['f'] = ajax_more(E.q_eigenform, 10, 20, 50, 100, 250)
