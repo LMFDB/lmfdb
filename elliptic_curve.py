@@ -70,6 +70,14 @@ def parse_gens(s):
         x,y,z = [ZZ(str(c)) for c in g1]
         fulllist.append((x/z,y/z))
     return fulllist
+
+def cmp_label(lab1,lab2):
+    from sage.databases.cremona import parse_cremona_label, class_to_int
+    a,b,c = parse_cremona_label(lab1)
+    id1 = int(a),class_to_int(b),int(c)
+    a,b,c = parse_cremona_label(lab2)
+    id2 = int(a),class_to_int(b),int(c)
+    return cmp(id1,id2)
     
 #########################
 #    Top level
@@ -155,6 +163,7 @@ def elliptic_curve_search(**args):
     else:
         start = start_default
 
+    print query
     cursor = base.getDBConnection().ellcurves.curves.find(query)
     nres = cursor.count()
     if(start>=nres): start-=(1+(start-nres)/count)*count
@@ -235,13 +244,16 @@ def render_isogeny_class(iso_class):
     info['f'] = web_latex(E.q_eigenform(10))
     G = E.isogeny_graph(); n = G.num_verts()
     G.relabel(range(1,n+1)) # proper cremona labels...
-    info['graph_img'] = image_src(G.plot(edge_labels=True))
+    info['graph_img'] = image_src(G.plot(edge_labels=True, layout='spring'))
     curves = data['label_of_curves_in_the_class']
-    info['curves'] = list(curves)
+    curves.sort(cmp=cmp_label)
+    ecurves = [EllipticCurve(c) for c in curves]
+    info['curves'] = [[c.label(),str(list(c.ainvs())),c.torsion_order(),c.modular_degree()] for c in ecurves]
     info['download_qexp_url'] = url_for('download_qexp', limit=100, ainvs=','.join([str(a) for a in ainvs]))
     info['download_all_url'] = url_for('download_all', label=str(label))
-    friends=[('Elliptic Curve %s' % l , "/EllipticCurve/Q/%s" % l) for l in data['label_of_curves_in_the_class']]
-    friends.append(('Quadratic Twist', "/quadratic_twists/%s" % (label)))
+    friends=[]
+#    friends=[('Elliptic Curve %s' % l , "/EllipticCurve/Q/%s" % l) for l in data['label_of_curves_in_the_class']]
+#    friends.append(('Quadratic Twist', "/quadratic_twists/%s" % (label)))
     friends.append(('L-function', url_for("render_Lfunction", arg1='EllipticCurve', arg2='Q', arg3=label)))
 ####  THIS DOESN'T WORK AT THE MOMENT /Lemurell                           friends.append(('Modular Form', url_for("emf.render_classical_modular_form_from_label",label="%s" %(label))))
     info['friends'] = friends
@@ -419,7 +431,7 @@ def padic_data():
 def download_qexp():
     ainvs = request.args.get('ainvs')
     E = EllipticCurve([int(a) for a in ainvs.split(',')])
-    response = make_response('\n'.join(str(an) for an in E.anlist(int(request.args.get('limit', 100)), python_ints=True)))
+    response = make_response(' '.join(str(an) for an in E.anlist(int(request.args.get('limit', 100)), python_ints=True)))
     response.headers['Content-type'] = 'text/plain'
     return response
 
@@ -428,11 +440,13 @@ def download_all():
     label=(request.args.get('label'))
     C = base.getDBConnection()
     data = C.ellcurves.isogeny.find_one({'label': label})
-    #all data about this isogeny
-    data1=[str(c)+'='+str(data[c]) for c in data]
+    #all data about this isogeny class
     curves=data['label_of_curves_in_the_class']
+    curves.sort(cmp=cmp_label)
+
+    data1=[str(c)+'='+str(data[c]) for c in data]
     #titles of all entries of curves
-    lab=curves[0]
+    lab=curves[-1]
     titles_curves=[str(c) for c in C.ellcurves.curves.find_one({'label': lab})]
     data1.append(titles_curves)
     for lab in curves:
