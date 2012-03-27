@@ -163,6 +163,7 @@ def initCharacterInfo(web_chi,args, request):
         info['real'] = web_chi.real
         info['prim'] = web_chi.prim
         info['vals'] = web_chi.vals
+        info['logvals'] = web_chi.logvals
         #info['valstex'] = web_chi.valstex
         #info['root_unity'] =  str(any(map(lambda x : r"\zeta" in x,  web_chi.vals)))
         info['unitgens'] = str(web_chi.unitgens)

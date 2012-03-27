@@ -23,6 +23,7 @@
 #chitable td { vertical-align: middle;  white-space: nowrap; }
 #chitable td.a { background: #DFD; }
 #chitable td.b { background: none; }
+#chitable th { text-align: center; }
 table.ntdata tr.even, table.ntdata tr:nth-child(even) { background: none; }
 
 .primitive {
@@ -37,7 +38,9 @@ table.ntdata tr.even, table.ntdata tr:nth-child(even) { background: none; }
     <thead align="left">
     <tr>
         <th>
-            The following table displays Dirichlet characters. Each integer q in the table represents the Dirichlet character &chi;<sub>q</sub>.</br> The characters are grouped with respect to order and stacked integers indicate multiplicative inverses.</br></br> 
+            The following table displays Dirichlet characters. If q is the modulus, then each integer n </br>
+            in the qth row represents the Dirichlet character &chi;<sub>q</sub>(n,&middot;). The characters are grouped </br>
+            with respect to order and stacked integers indicate multiplicative inverses.</br></br> 
             <font color = "blue"> Imprimitive </font> characters.</br>
             <font color = "green"> Primitive </font> characters. 
         </th>
@@ -50,7 +53,7 @@ table.ntdata tr.even, table.ntdata tr:nth-child(even) { background: none; }
 <table class="ntdata" id="chitable">
 <thead align="center">
     <tr>
-        <th>M\O</th>
+        <th class="modulus">M\O</th>
         {% for h in headers %}
         <th>{{h}}</th>
         {% endfor %}

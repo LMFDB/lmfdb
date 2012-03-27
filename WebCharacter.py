@@ -79,7 +79,12 @@ class WebCharacter:
                 self.primitive = "False"
             self.conductor = chi.conductor()
             self.order = chi.multiplicative_order()
-            self.vals = chi_sage.values()
+            self.vals = chi.values()
+            l = []
+            #phi = euler_phi(self.modulus)
+            for j in range(1,self.modulus+1):
+                l.append(chi.logvalue(j))
+            self.logvals = l
             self.bound = 5*1024
             if chi.is_even():
                 self.parity = 'Even'
@@ -99,8 +104,7 @@ class WebCharacter:
                         if chi == self.inducedchar:
                             self.inducedchar_number = j
                             break
-                self.inducedchar_tex = r"\(\chi_{%s}\!\!\pmod{%s}\)" %(self.inducedchar_number,self.inducedchar_modulus)
-       
+                self.inducedchar_tex = r"\(\chi_{%s}\!\!\pmod{%s}\)" %(self.inducedchar_number,self.inducedchar_modulus) 
        # if self.primitive == 'True':
        #     self.primtf = True
        # else:
@@ -121,7 +125,7 @@ class WebCharacter:
                         self.kronsymbol += r"\end{equation}"
 
         self.credit = "Sage"
-        self.title = r"Dirichlet Character: \(\chi_{%s}\!\!\pmod{%s}\)" %(self.number,self.modulus)
+        self.title = r"Dirichlet Character: \(\chi_{%s}(%s,\cdot)\)" %(self.modulus,self.number)
     
         return chi
     def gauss_sum_tex(self):
