@@ -21,7 +21,6 @@ try:
   G = gap.TransitiveGroup(9,2)
 except:
   logger.fatal("It looks like the SPKGes gap_packages and database_gap are not installed on the server.  Please install them via 'sage -i ...' and try again.")
-  exit()
 
 from transitive_group import group_display_short, group_display_long, group_display_inertia, group_knowl_guts, subfield_display, otherrep_display, resolve_display, conjclasses, generators
 
@@ -37,9 +36,9 @@ def galois_group_data(n, t):
   C = base.getDBConnection()
   return group_knowl_guts(n, t, C)
 
-@app.context_processor
-def ctx_galois_groups():
-  return {'galois_group_data': galois_group_data }
+#@app.context_processor
+#def ctx_galois_groups():
+#  return {'galois_group_data': galois_group_data }
 
 def group_display_shortC(C):
   def gds(nt):
