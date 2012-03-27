@@ -44,7 +44,7 @@ class WebCharacter:
         G = DirichletGroup_conrey(self.modulus)
         G_sage = G.standard_dirichlet_group()
         self.level = self.modulus
-        if self.number%self.modulus != 0:
+        if self.modulus == 1 or self.number%self.modulus != 0:
             chi = G[self.number]
             chi_sage = chi.sage_character()
             self.zetaorder = G_sage.zeta_order()
