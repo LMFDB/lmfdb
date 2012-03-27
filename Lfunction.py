@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import base
 import math
 from Lfunctionutilities import pair2complex, splitcoeff, seriescoeff
 from sage.all import *
@@ -9,6 +10,8 @@ import pymongo
 import bson
 import utils
 from modular_forms.elliptic_modular_forms.backend.web_modforms import *
+from modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import MaassDB
+from modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaassForm
 import time ### for printing the date on an lcalc file
 import socket ### for printing the machine used to generate the lcalc file
 
@@ -827,13 +830,13 @@ class Lfunction_Maass(Lfunction):
         self.__dict__.update(args)
 
         # Fetch the information from the database
-        import base
-        connection = base.getDBConnection()
-        db = pymongo.database.Database(connection, self.dbName)
-        collection = pymongo.collection.Collection(db, self.dbColl)
-        dbEntry = collection.find_one({'_id':self.dbid})
 
         if self.dbName == 'Lfunction':  # Data from Lemurell
+
+            connection = base.getDBConnection()
+            db = pymongo.database.Database(connection, self.dbName)
+            collection = pymongo.collection.Collection(db, self.dbColl)
+            dbEntry = collection.find_one({'_id':self.dbid})
 
             # Extract the L-function information from the database entry
             self.__dict__.update(dbEntry)
@@ -847,40 +850,39 @@ class Lfunction_Maass(Lfunction):
 
         else: # GL2 data from Then or Stromberg
 
+            host  = base.getDBConnection().host
+            port  = base.getDBConnection().port
+            DB=MaassDB(host=host,port=port)
+            logger.debug("count={0}".format(DB.count()))
+            self.mf = WebMaassForm(DB,self.dbid)
             self.group = 'GL2'
 
-            # Extract the L-function information from the database entry
-            self.symmetry = dbEntry['Symmetry']
-            self.eigenvalue = float(dbEntry['Eigenvalue'])
-            self.norm = dbEntry['Norm']
-            self.dirichlet_coefficients = dbEntry['Coefficient']
+            # Extract the L-function information from the Maass form object
+            self.symmetry = self.mf.symmetry
+            self.eigenvalue = float(self.mf.R)
 
-            if 'Level' in dbEntry.keys():
-                self.level = int(dbEntry['Level'])
-            else:
-                self.level = 1
+            self.level = int(self.mf.level)
             self.charactermodulus = self.level
 
-            if 'Weight' in dbEntry.keys():
-                self.weight = int(dbEntry['Weight'])
-            else:
-                self.weight = 0
+            self.weight = int(self.mf.weight)
+            self.characternumber = int(self.mf.character)
 
-            if 'Character' in dbEntry.keys():
-                logger.critical('TODO L-function of Maass form with non-trivial character not implemented. ')
-                self.characternumber = int(dbEntry['Character'])
+            if self.characternumber > 0:
+                raise KeyError, 'TODO L-function of Maass form with non-trivial character not implemented. '
 
-            if self.level > 1: 
-                try:
-                    cuspEvs = dbEntry['Cusp_evs']
-                    self.fricke = cuspEvs[1]  
-                    logger.info('Fricke: ' + self.fricke)
-                except:
-                    logger.critical('No Fricke information for Maass form')
-                    self.fricke = 1
-            else:  #no fricke for level 1
-                self.fricke = 1
+            self.fricke = 1
+##            if self.level > 1: 
+##                try:
+##                    self.fricke = self.mf.cusp_evs[1]  
+##                    logger.info('Fricke: ' + self.fricke)
+##                except:
+##                    raise KeyError, 'No Fricke information available for Maass form so not able to compute the L-function. '
+##            else:  #no fricke for level 1
+##                self.fricke = 1
 
+            self.dirichlet_coefficients = self.mf.coeffs
+            logger.info("Third coefficient: {0}".format(self.dirichlet_coefficients[3]))
+            
             # Set properties of the L-function
             self.coefficient_type = 2
             self.selfdual = True
