@@ -569,6 +569,8 @@ class Lfunction_EMF(Lfunction):
         self.weight = int(self.weight)
         self.level = int(self.level)
         self.character = int(self.character)
+        if self.character > 0:
+            raise KeyError, "The L-function of a modular form with non-trivial character has not been implemented yet."
         self.number = int(self.number)
 
         # Create the modular form
@@ -577,11 +579,13 @@ class Lfunction_EMF(Lfunction):
         # Extract the L-function information from the elliptic modular form
         self.automorphyexp = float(self.weight-1)/float(2)
         self.Q_fe = float(sqrt(self.level)/(2*math.pi))
+        logger.debug("ALeigen: " + str(self.MF.atkin_lehner_eigenvalues()))
 
         if self.level == 1:  # For level 1, the sign is always plus
             self.sign = 1
         else:  # for level not 1, calculate sign from Fricke involution and weight
             self.sign = self.MF.atkin_lehner_eigenvalues()[self.level] * (-1)**(float(self.weight/2))
+        logger.debug("Sign: " + str(self.sign))
 
         self.kappa_fe = [1]
         self.lambda_fe = [self.automorphyexp]
@@ -593,18 +597,22 @@ class Lfunction_EMF(Lfunction):
         self.degree = 2
         self.poles = []
         self.residues = []
-        self.numcoeff = int(math.ceil(self.weight * sqrt(self.level))) #just testing  NB: Need to learn how to use more coefficients
+        self.numcoeff = 20 + int(5 * math.ceil(self.weight * sqrt(self.level))) #just testing  NB: Need to learn how to use more coefficients
         self.dirichlet_coefficients = []
 
         # Appending list of Dirichlet coefficients
         GaloisDegree = self.MF.degree()  #number of forms in the Galois orbit
+        logger.debug("Galois degree: " + str(GaloisDegree))
         if GaloisDegree == 1:
            self.dirichlet_coefficients = self.MF.q_expansion_embeddings(
                self.numcoeff+1)[1:self.numcoeff+1] #when coeffs are rational, q_expansion_embedding()
                                                    #is the list of Fourier coefficients
         else:
+           logger.debug("Start computing coefficients.")
            for n in range(1,self.numcoeff+1):
               self.dirichlet_coefficients.append(self.MF.q_expansion_embeddings(self.numcoeff+1)[n][self.number])
+           logger.debug("Done computing coefficients.")
+              
         for n in range(1,len(self.dirichlet_coefficients)+1):
             an = self.dirichlet_coefficients[n-1]
             self.dirichlet_coefficients[n-1]=float(an)/float(n**self.automorphyexp)
@@ -859,14 +867,19 @@ class Lfunction_Maass(Lfunction):
                 self.weight = 0
 
             if 'Character' in dbEntry.keys():
+                logger.critical('TODO L-function of Maass form with non-trivial character not implemented. ')
                 self.characternumber = int(dbEntry['Character'])
 
-            if self.level > 1:
+            if self.level > 1: 
                 try:
-                    self.fricke = dbEntry['Fricke']  #no fricke for level 1
+                    cuspEvs = dbEntry['Cusp_evs']
+                    self.fricke = cuspEvs[1]  
+                    logger.info('Fricke: ' + self.fricke)
                 except:
                     logger.critical('No Fricke information for Maass form')
                     self.fricke = 1
+            else:  #no fricke for level 1
+                self.fricke = 1
 
             # Set properties of the L-function
             self.coefficient_type = 2
@@ -875,7 +888,7 @@ class Lfunction_Maass(Lfunction):
             self.quasidegree = 2
             self.Q_fe = float(sqrt(self.level))/float(math.pi)
 
-            if self.symmetry =="odd":
+            if self.symmetry =="odd" or self.symmetry == "1":
                 aa=1
             else:
                 aa=0
@@ -985,7 +998,7 @@ class DedekindZeta(Lfunction):   # added by DK
         else:
             self.texnamecompleted1ms = "\\Lambda_K(1-s)"
         self.title = "Dedekind zeta-function: $\\zeta_K(s)$"
-        self.title = self.title+", where $K$ is the "+ str(self.NF)
+        self.title = self.title+", where $K$ is the "+ str(self.NF).replace("in a ","")
         self.credit = 'Sage'
         self.citation = ''
         

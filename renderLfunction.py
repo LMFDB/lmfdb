@@ -8,11 +8,10 @@ import pymongo
 from Lfunction import *
 import LfunctionComp
 import LfunctionPlot
-from utils import to_dict, make_logger
+from utils import to_dict
 import bson
 from Lfunctionutilities import lfuncDStex, lfuncEPtex, lfuncFEtex
 
-logger = make_logger("LF")
 
 ##import upload2Db.py
 
