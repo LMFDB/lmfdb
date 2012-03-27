@@ -62,14 +62,16 @@ The degree of a field is given by \(n\).
 <tr class="{{ row_class.next() }}"><td>Fields ramified at only one prime \(p\) with \(p<200\) with \(n\leq 9\) </tr>
 <tr class="{{ row_class.next() }}"><td>Fields ramified at only two primes \(p\lt q \leq 5\) with \(n\leq 8\) </tr>
 </table>
-</ol>
+</p>
+<p>
 The remaining cases, the bound depends on the Galois group.  Galois groups
 are given in the form \(n\)T\(t\) where \(n\) is the degree and \(t\)
 it the T-number.  The bound \(B\) is for the root discriminant, so a
 bound of \(B\) means the discriminant \(D\) satisfies \(|D|\leq B^n\).
+</p>
+<p>
 <table>
 {% set row_class = cycler("odd", "even") %}
-<tr class="{{ row_class.next() }}"><td>Fields unramified outside \(\{2,3\}\)
 <tr>
 <th>\(n\)T\(t\)</th>
 <th>\(B\)</th>
@@ -78,7 +80,16 @@ bound of \(B\) means the discriminant \(D\) satisfies \(|D|\leq B^n\).
 <tr class="{{ row_class.next() }}"><td>7T5<td>\(38\)</tr>
 <tr class="{{ row_class.next() }}"><td>8T3<td>\(20\)</tr>
 <tr class="{{ row_class.next() }}"><td>8T5<td>\(50\)</tr>
+<tr class="{{ row_class.next() }}"><td>8T15<td>\(15\)</tr>
+<tr class="{{ row_class.next() }}"><td>8T18<td>\(15\)</tr>
+<tr class="{{ row_class.next() }}"><td>8T22<td>\(15\)</tr>
+<tr class="{{ row_class.next() }}"><td>8T26<td>\(15\)</tr>
+<tr class="{{ row_class.next() }}"><td>8T29<td>\(15\)</tr>
+<tr class="{{ row_class.next() }}"><td>8T32<td>\(15\)</tr>
+<tr class="{{ row_class.next() }}"><td>8T34<td>\(15\)</tr>
+<tr class="{{ row_class.next() }}"><td>8T36<td>\(15\)</tr>
 </table>
+</ol>
 </p>
 
 {% endblock %}

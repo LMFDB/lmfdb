@@ -28,6 +28,34 @@ def group_display_knowl(n, t, C, name=None):
     name = group_display_short(n, t, C)
   return '<a title = "'+ name + ' [nf.galois_group.data]" knowl="nf.galois_group.data" kwargs="n='+ str(n) + '&t='+ str(t) +'">'+name+'</a>'
 
+def cclasses_display_knowl(n, t, C, name=None):
+  if not name:
+    name = 'Conjugacy class representatives for '
+    name += group_display_short(n, t, C)
+  return '<a title = "'+ name + ' [gg.conjugacy_classes.data]" knowl="gg.conjugacy_classes.data" kwargs="n='+ str(n) + '&t='+ str(t) +'">'+name+'</a>'
+
+def character_table_display_knowl(n, t, C, name=None):
+  if not name:
+    name = 'Character table for '
+    name += group_display_short(n, t, C)
+  return '<a title = "'+ name + ' [gg.character_table.data]" knowl="gg.character_table.data" kwargs="n='+ str(n) + '&t='+ str(t) +'">'+name+'</a>'
+
+def group_phrase(n,t,C):
+  label = base_label(n,t)
+  group = C.transitivegroups.groups.find_one({'label': label})
+  inf = ''
+  if group['cyc']==1:
+    inf += "A cyclic"
+  elif group['ab']==1:
+    inf += "An abelian"
+  elif group['solv']==1:
+    inf += "A solvable"
+  else:
+    inf += "A non-solvable"
+  inf += ' group of order '
+  inf += str(group['order'])
+  return(inf)
+
 def group_display_long(n, t, C):
   label = base_label(n,t)
   group = C.transitivegroups.groups.find_one({'label': label})
@@ -72,24 +100,49 @@ def group_knowl_guts(n,t, C):
     inf += ", imprimitive"
 
   inf = "  ("+inf+")"
-  rest = '<div><h3>Subfields</h3><blockquote>'
+  rest = '<div><h3>Generators</h3><blockquote>'
+  rest += generators(n, t)
+  rest += '</blockquote></div>'
+  
+  rest += '<div><h3>Subfields</h3><blockquote>'
   rest += subfield_display(C, n, group['subs'])
   rest += '</blockquote></div>'
   rest += '<div><h3>Other representations</h3><blockquote>'
   rest += otherrep_display(C, group['repns'])
   rest += '</blockquote></div>'
 
-  rest += '<div><h3>Generators</h3><blockquote>'
-  rest += generators(n, t)
-  rest += '</blockquote></div>'
-  
-  rest += '<div><h3>Conjugacy Classes</h3><blockquote>'
-  rest += cclasses(n, t)
-  rest += '</blockquote></div>'
-  
   if group['pretty']:
     return group['pretty']+inf+rest
   return group['name']+inf+rest
+
+def group_cclasses_knowl_guts(n,t, C):
+  label = base_label(n,t)
+  group = C.transitivegroups.groups.find_one({'label': label})
+  gname = group['name']
+  if group['pretty']:
+    gname = group['pretty']
+  rest = '<div>Conjugacy class representatives for '
+  rest += gname
+  rest += '<blockquote>'
+  rest += cclasses(n, t)
+  rest += '</blockquote></div>'
+  return(rest)
+  
+def group_character_table_knowl_guts(n,t, C):
+  label = base_label(n,t)
+  group = C.transitivegroups.groups.find_one({'label': label})
+  gname = group['name']
+  if group['pretty']:
+    gname = group['pretty']
+  inf = '<div>Character table for '
+  inf += gname
+  inf += '<blockquote>'
+  inf += '<pre>'
+  inf += chartable(n, t)
+  inf += '</pre>'
+  inf += '</blockquote></div>'
+  return(inf)
+
 
 def subfield_display(C, n, subs):
   if n==1:
@@ -196,6 +249,15 @@ def cclasses (n, t):
              </table>
           """
   return html
+
+def chartable (n, t):
+  G = gap.TransitiveGroup(n,t)
+  CT = G.CharacterTable()
+  ctable = gap.eval("Display(%s)"%CT.name())
+  ctable = re.sub("^.*\n", '', ctable)
+  ctable = re.sub("^.*\n", '', ctable)
+  return ctable
+
 
 def generators (n, t):
   G = gap.TransitiveGroup(n,t)

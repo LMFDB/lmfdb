@@ -22,7 +22,7 @@ try:
 except:
   logger.fatal("It looks like the SPKGes gap_packages and database_gap are not installed on the server.  Please install them via 'sage -i ...' and try again.")
 
-from transitive_group import group_display_short, group_display_long, group_display_inertia, group_knowl_guts, subfield_display, otherrep_display, resolve_display, conjclasses, generators
+from transitive_group import group_display_short, group_display_long, group_display_inertia, group_knowl_guts, subfield_display, otherrep_display, resolve_display, conjclasses, generators, chartable
 
 GG_credit = 'GAP and J. Jones'
 
@@ -129,12 +129,13 @@ def render_group_webpage(args):
     data['orderfac'] = latex(ZZ(order).factor())
     pgroup = len(ZZ(order).prime_factors())<2
     G = gap.TransitiveGroup(n,t)
-    CT = G.CharacterTable()
-    chartable = gap.eval("Display(%s)"%CT.name())
-    chartable = re.sub("^.*\n", '', chartable)
-    chartable = re.sub("^.*\n", '', chartable)
+    ctable = chartable(n,t)
+    #CT = G.CharacterTable()
+    #chartable = gap.eval("Display(%s)"%CT.name())
+    #chartable = re.sub("^.*\n", '', chartable)
+    #chartable = re.sub("^.*\n", '', chartable)
     data['gens'] = generators(n,t)
-    data['chartable'] = chartable
+    data['chartable'] = ctable
     data['cclasses'] = conjclasses(G, n)
     data['subinfo'] = subfield_display(C, n, data['subs'])
     data['resolve'] = resolve_display(C, data['resolve'])
