@@ -687,6 +687,7 @@ table .knowl-link {
   color: grey;
   position: absolute;
   top: 2px;
+  line-height: 1em;
 }
 #knowl-index td div {
   position: relative;
