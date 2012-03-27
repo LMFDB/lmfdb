@@ -12,7 +12,7 @@ import quadratic_twists
 import renderLfunction
 #import maass_form
 import plot_example
-import number_field
+import number_fields
 import lfunction_db
 #import maass_form_picard
 #import maass_waveforms
@@ -23,7 +23,6 @@ import DirichletCharacter
 import local_fields
 import galois_groups
 import number_field_galois_groups
-import OEIS
 import artin_representations
 import zeros
 
