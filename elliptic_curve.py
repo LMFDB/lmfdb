@@ -17,6 +17,18 @@ q = ZZ['x'].gen()
 #   Utility functions
 #########################
 
+ncurves = max_N = max_rank = None
+init_ecdb_flag = False
+
+def init_ecdb_count():
+    global ncurves, max_N, max_rank, init_ecdb_flag
+    if not init_ecdb_flag:
+        ecdb = base.getDBConnection().ellcurves.curves
+        ncurves = ecdb.count()
+        max_N = max(ecdb.distinct('conductor'))
+        max_rank = max(ecdb.distinct('rank'))
+        init_ecdb_flag = True
+
 cremona_label_regex = re.compile(r'(\d+)([a-z])+(\d*)')
 sw_label_regex=re.compile(r'sw(\d+)(\.)(\d+)(\.*)(\d*)')
 
@@ -81,10 +93,14 @@ def rational_elliptic_curves():
         return elliptic_curve_search(**request.args)
     conductor_list_endpoints = [1,100,1000,5000] + range(10000,130001,10000)
     conductor_list = ["%s-%s" % (start,end-1) for start, end in zip(conductor_list_endpoints[:-1], conductor_list_endpoints[1:])]
+    init_ecdb_count()
     info = {
         'rank_list': range(6),
         'torsion_list': [1,2,3,4,5,6,7,8,9,10,12,16], 
         'conductor_list': conductor_list,
+        'ncurves': ncurves,
+        'max_N': max_N,
+        'max_rank': max_rank
     }
     credit = 'John Cremona'
     t = 'Elliptic curves/$\mathbb{Q}$'
@@ -110,7 +126,7 @@ def elliptic_curve_search(**args):
                 return render_isogeny_class(str(N)+iso)
         else:
             query['label'] = label
-    for field in ['conductor', 'torsion', 'rank']:
+    for field in ['conductor', 'torsion', 'rank', 'sha_an']:
         if info.get(field):
             query[field] = parse_range(info[field])
     #if info.get('iso'):
