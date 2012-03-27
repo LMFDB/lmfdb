@@ -3,10 +3,22 @@
 {% block content %}
 
 
-<h2>
-    This index page is not done
-</h2>
-Only examples can be browsed so far, by modifying directly the URL and then clicking on the "Friends" section, or in the hyperlinked table. For instance, try:
+<h1>
+    <br>
+    This index/search page is not done. The main reason is that it is not clear to me yet how people might want to search on Artin representations.
+    
+    <br>
+    Should be included:
+        - 
+        - 
+        -
+    
+    <br>
+    If you have an opinion, let me (Paul) know!
+</h1>
+Meanwhile, here are some examples. You can browse more of them by directly changing the url, or by accessing them from the number field pages (bottom).
+However, the database only include a very thin slice of the data that will be available in the end, so it s likely you will follow broken links. 
+
 <table>
     <tr><td><a href = {{url_for('.by_data', dim=1,conductor=1,index=1)}}>Artin representation of dimension 1, conductor 1 and index 1</a></td></tr>
     <tr><td><a href = {{url_for('.by_data', dim=1,conductor=17,index=1)}}>Artin representation of dimension 1, conductor 17 and index 1</a></td></tr>
