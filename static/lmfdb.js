@@ -77,9 +77,9 @@ $.fn.round_bl = function(val) {
 /** collapser: stored height is used to track progress. */
 function properties_collapser(evt) {
   evt.preventDefault();
-  var $pb = $("#properties-body");
+  var $pb = $(".properties-body");
   var $pc = $("#properties-collapser");
-  var $ph = $("#properties-header");
+  var $ph = $(".properties-header");
   var pb_h = $pb.height();
   $pb.animate({"height": "toggle", "opacity" : "toggle"}, 
     { 
