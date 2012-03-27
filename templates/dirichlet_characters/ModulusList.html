@@ -6,7 +6,8 @@
 <style>
 .modulus {
     vertical-align: top;
-    padding-top: 1em;
+    padding-top:    .5em;
+    padding-bottom: .5em;
     border-right: 2px solid #8a8;
 }
 .chi {
@@ -17,6 +18,13 @@
     white-space:nowrap;
 }
 .chi a { display: inline; text-align: center; font-family: serif;}
+#chitable td div { float: left; padding-left: .5em; padding-right: .5em; }
+#chitable td div>a { text-align: right; }
+#chitable td { vertical-align: middle;  white-space: nowrap; }
+#chitable td.a { background: #EFE; }
+#chitable td.b { background: none; }
+table.ntdata tr.even, table.ntdata tr:nth-child(even) { background: none; }
+
 .primitive {
   color:green;
 }
@@ -38,40 +46,50 @@
 <br/>
 
 <div>
-<table class="ntdata">
+<table class="ntdata" id="chitable">
 <thead align="center">
     <tr>
         <th>Modulus</th>
-        <th> 1 </th>
-        <th> 2 </th>
+        {% for h in headers %}
+          <th>{{h}}</th>
+        {% endfor %}
     </tr>
 </thead>
 
-<tbody>
-    {% for line in contents %}
-        <tr>
-            <td class="modulus"align="center" style="4em"> {{ line[0] }} </td>
-            <td>
-                {% for chi in line[1] %}
-                    <div class="chi" align="center">
-                    <a href="{{ line[0] }}/{{chi[0]}}">
-                        {% if chi[1] %}
-                            <font color="green">
-                        {% else %}
-                            <font color="blue">
-                        {% endif %}
-                        {#{% if chi[2] == 2 %}
-                            {{ chi[3] }}
-                        {% else %}#}
-                        &chi;<sub>{{line[0]}}</sub>({{chi[0]}})
-                        {#{% endif %}#}    
-                    </font>
-                    </a>
-                    </div>
-                {% endfor %}
-            </td>
-        </tr>
+{% macro show_character(entry, col, row) -%}
+{% if not entry is none %}
+  {% if col == "more"  %}
+    LIST
+  {% else %}
+    {% for e in entry %}
+    <div>
+      {% for chi in e %}
+        {#{% if not loop.first %}<br/>{% endif %}#}
+        <a href="{{url_for('render_Character', arg1=row, arg2=chi[0])}}"> 
+            <font color="{% if chi[1] -%}green{%- else -%}blue{%- endif %}">
+                {{ chi[0] }}
+        </font>
+        </a>
+      {% endfor %}
+    </div>
     {% endfor %}
+  {% endif %}
+{% endif %}
+{%- endmacro %}
+
+{% set row_class = cycler('a', 'b') %}
+<tbody>
+{% for row in rows %}
+
+	<tr>
+	<td class="modulus"align="center" style="4em"> {{ row }} </td>
+
+	{% for col in cols %}
+	<td class="{{ row_class.next() }}"> {{ show_character(contents[(row, col)], col, row) }} </td>
+	{% endfor %}
+
+	</tr>
+{% endfor %}
 <tbody>
 </table>
 </div>
