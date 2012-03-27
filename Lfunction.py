@@ -870,18 +870,17 @@ class Lfunction_Maass(Lfunction):
             if self.characternumber > 0:
                 raise KeyError, 'TODO L-function of Maass form with non-trivial character not implemented. '
 
-            self.fricke = 1
-##            if self.level > 1: 
-##                try:
-##                    self.fricke = self.mf.cusp_evs[1]  
-##                    logger.info('Fricke: ' + self.fricke)
-##                except:
-##                    raise KeyError, 'No Fricke information available for Maass form so not able to compute the L-function. '
-##            else:  #no fricke for level 1
-##                self.fricke = 1
+            if self.level > 1: 
+                try:
+                    self.fricke = self.mf.cusp_evs[1]  
+                    logger.info("Fricke: {0}".format(self.fricke))
+                except:
+                    raise KeyError, 'No Fricke information available for Maass form so not able to compute the L-function. '
+            else:  #no fricke for level 1
+                self.fricke = 1
 
             self.dirichlet_coefficients = self.mf.coeffs
-            logger.info("Third coefficient: {0}".format(self.dirichlet_coefficients[3]))
+            logger.info("Third coefficient: {0}".format(self.dirichlet_coefficients[2]))
             
             # Set properties of the L-function
             self.coefficient_type = 2
@@ -890,18 +889,18 @@ class Lfunction_Maass(Lfunction):
             self.quasidegree = 2
             self.Q_fe = float(sqrt(self.level))/float(math.pi)
 
-            if self.symmetry =="odd" or self.symmetry == "1":
-                aa=1
-            else:
-                aa=0
-
-            if aa==0:
-                self.sign = 1
-            else:
+            logger.info("Symmetry: {0}".format(self.symmetry))
+            if self.symmetry =="odd" or self.symmetry == 1:
                 self.sign = -1
+                aa = 1
+            else:
+                self.sign = 1
+                aa = 0
 
+            logger.info("Sign (without Fricke): {0}".format(self.sign))
             if self.level > 1:
                 self.sign = self.fricke * self.sign
+            logger.info("Sign: {0}".format(self.sign))
 
             self.kappa_fe = [0.5,0.5]
             self.lambda_fe = [0.5*aa + self.eigenvalue*I, 0,5*aa - self.eigenvalue*I]

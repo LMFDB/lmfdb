@@ -174,7 +174,7 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2'and arg3 == 'Q' and arg4 == 'Maass':
         logger.info(db)
-        return Lfunction_Maass(dbid = bson.objectid.ObjectId(arg5), dbName = 'MaassWaveForm', dbColl = temp_args['db'])
+        return Lfunction_Maass(dbid = bson.objectid.ObjectId(arg5))
     
     elif arg1 == 'ModularForm' and (arg2 == 'GSp4' or arg2 == 'GL4' or  arg2 == 'GL3') and arg3 == 'Q' and arg4 == 'maass':
         return Lfunction_Maass( dbid = arg5, dbName = 'Lfunction', dbColl = 'LemurellMaassHighDegree')
@@ -256,8 +256,9 @@ def initLfunction(L,args, request):
 
     if L.Ltype() == 'maass':
         if L.group == 'GL2':
-            minNumberOfCoefficients = 1000000 # TODO: Fix this to take level into account
-                                              # At the moment error in computation 
+            minNumberOfCoefficients = 100     # TODO: Fix this to take level into account
+            logger.info("# of coef: {0}".format(len(L.dirichlet_coefficients)))
+                            
             if len(L.dirichlet_coefficients)< minNumberOfCoefficients:
                 info['zeroeslink'] = ''
                 info['plotlink'] = ''
@@ -271,7 +272,7 @@ def initLfunction(L,args, request):
 
     elif L.Ltype()  == 'riemann':
         info['bread'] = [('L-function','/L'),('Riemann Zeta',request.url)]
-        info['friends'] = [('\(\mathbb Q\)', url_for('number_fields.by_label', label='1.1.1.1')),  ('Dirichlet Character \(\\chi_{0}\\!\\!\\pmod{1}\)',
+        info['friends'] = [('\(\mathbb Q\)', url_for('by_label', label='1.1.1.1')),  ('Dirichlet Character \(\\chi_{0}\\!\\!\\pmod{1}\)',
                                                                        url_for('render_Character', arg1=1, arg2=0))]
 
     elif L.Ltype()  == 'dirichlet':
@@ -390,21 +391,41 @@ def render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8
 def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9):
     L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
 
-    if L.degree > 2 or L.Ltype()=="ellipticmodularform"  or L.Ltype()=="maass":  # Too slow to be rigorous here
+    # Compute the first few zeros
+    if L.degree > 2 or L.Ltype()=="ellipticmodularform" or L.Ltype()=="maass":  # Too slow to be rigorous here  ()
         search_step = 0.05
         if L.selfdual:
-            s = str(L.sageLfunction.find_zeros(-search_step/2 , 20,search_step))
+            allZeros = L.sageLfunction.find_zeros(-search_step/2 , 20 ,search_step)
         else:
-            s = str(L.sageLfunction.find_zeros(-15,15,search_step))
+            allZeros = L.sageLfunction.find_zeros(-15,15,search_step)
 
     else:
         if L.selfdual:
             number_of_zeros = 6
         else:
             number_of_zeros = 8
-        s = str(L.sageLfunction.find_zeros_via_N(number_of_zeros, not L.selfdual))
+        allZeros = L.sageLfunction.find_zeros_via_N(number_of_zeros, not L.selfdual)
 
-    return s[1:len(s)-1]
+    # Sort the zeros and divide them into negative and positive ones
+    allZeros.sort()
+    logger.info("allZeros: {0}".format(allZeros))
+    positiveZeros = []
+    negativeZeros = []
+    
+    for zero in allZeros:
+        if zero < 0:
+            negativeZeros.append(zero)
+        else:
+            positiveZeros.append(zero)
+
+    #Format the html string to render 
+    positiveZeros = str(positiveZeros)
+    negativeZeros = str(negativeZeros)
+    if len(positiveZeros) > 2 and len(negativeZeros) > 2:  # Add comma and empty space between negative and positive
+        negativeZeros = negativeZeros.replace("]", ", ]")
+    
+    return "<span class='redhighlight'>{0}</span><span class='bluehighlight'>{1}</span>".format(
+        negativeZeros[1:len(negativeZeros)-1], positiveZeros[1:len(positiveZeros)-1])
 
 
 ###########################################################################
@@ -535,79 +556,31 @@ def processMaassNavigation():
     s += '<tr>\n'
     s += '<td><bold>N=3:</bold></td>\n'
     s += '<td><a href="' + url_for('render_Lfunction', arg1='ModularForm', arg2='GL2', arg3='Q',
-                                   arg4='Maass', arg5='4cb8502658bca9141c00002a', db='FS')+ '">4.38805356322</a></td>\n' 
+                                   arg4='Maass', arg5='4cb8502658bca9141c00002a')+ '">4.38805356322</a></td>\n' 
     s += '<td><a href="' + url_for('render_Lfunction', arg1='ModularForm', arg2='GL2', arg3='Q',
-                                   arg4='Maass', arg5='4cb8502658bca9141c00002b', db='FS')+ '">5.09874190873</a></td>\n' 
+                                   arg4='Maass', arg5='4cb8502658bca9141c00002b')+ '">5.09874190873</a></td>\n' 
     s += '<td><a href="' + url_for('render_Lfunction', arg1='ModularForm', arg2='GL2', arg3='Q',
-                                   arg4='Maass', arg5='4cb8502658bca9141c00002c', db='FS')+ '">6.12057553309</a></td>\n' 
+                                   arg4='Maass', arg5='4cb8502658bca9141c00002c')+ '">6.12057553309</a></td>\n' 
     s += '<td><a href="' + url_for('render_Lfunction', arg1='ModularForm', arg2='GL2', arg3='Q',
-                                   arg4='Maass', arg5='4cb8502658bca9141c00002d', db='FS')+ '">6.75741527775</a></td>\n' 
+                                   arg4='Maass', arg5='4cb8502658bca9141c00002d')+ '">6.75741527775</a></td>\n' 
     s += '<td><a href="' + url_for('render_Lfunction', arg1='ModularForm', arg2='GL2', arg3='Q',
-                                   arg4='Maass', arg5='4cb8502658bca9141c00002e', db='FS')+ '">7.75813319502</a></td>\n' 
+                                   arg4='Maass', arg5='4cb8502658bca9141c00002e')+ '">7.75813319502</a></td>\n' 
     s += '</tr>\n'
     
     s += '<tr>\n'
     s += '<td><bold>N=5:</bold></td>\n'
     s += '<td><a href="' + url_for('render_Lfunction', arg1='ModularForm', arg2='GL2', arg3='Q',
-                                   arg4='Maass', arg5='4cb8502658bca9141c000036', db='FS')+ '">3.02837629307</a></td>\n' 
+                                   arg4='Maass', arg5='4cb8502658bca9141c000036')+ '">3.02837629307</a></td>\n' 
     s += '<td><a href="' + url_for('render_Lfunction', arg1='ModularForm', arg2='GL2', arg3='Q',
-                                   arg4='Maass', arg5='4cb8502658bca9141c000039', db='FS')+ '">4.89723501573</a></td>\n' 
+                                   arg4='Maass', arg5='4cb8502658bca9141c000039')+ '">4.89723501573</a></td>\n' 
     s += '<td><a href="' + url_for('render_Lfunction', arg1='ModularForm', arg2='GL2', arg3='Q',
-                                   arg4='Maass', arg5='4cb8502658bca9141c00003b', db='FS')+ '">5.70582652719</a></td>\n' 
+                                   arg4='Maass', arg5='4cb8502658bca9141c00003b')+ '">5.70582652719</a></td>\n' 
     s += '<td><a href="' + url_for('render_Lfunction', arg1='ModularForm', arg2='GL2', arg3='Q',
-                                   arg4='Maass', arg5='4cb8502658bca9141c00003c', db='FS')+ '">6.05402838077</a></td>\n' 
+                                   arg4='Maass', arg5='4cb8502658bca9141c00003c')+ '">6.05402838077</a></td>\n' 
     s += '<td><a href="' + url_for('render_Lfunction', arg1='ModularForm', arg2='GL2', arg3='Q',
-                                   arg4='Maass', arg5='4cb8502658bca9141c00003d', db='FS')+ '">6.45847643848</a></td>\n' 
+                                   arg4='Maass', arg5='4cb8502658bca9141c00003d')+ '">6.45847643848</a></td>\n' 
     s += '</tr>\n'
     
     s += '</table>\n'
 
     return s
-
-
-## NOT USED
-##def processDirichletNavigation(args):
-##    logger.info(str(args))
-##    try:
-##        logger.debug(args['start'])
-##        N = int(args['start'])
-##        if N < 3:
-##            N=3
-##        elif N > 100:
-##            N=100
-##    except:
-##        N = 3
-##    try:
-##        length = int(args['length'])
-##        if length < 1:
-##            length = 1
-##        elif length > 20:
-##            length = 20
-##    except:
-##        length = 10
-##    try:
-##        numcoeff = int(args['numcoeff'])
-##    except:
-##        numcoeff = 50
-##    chars = LfunctionComp.charactertable(N, N+length,'primitive')
-##    s = '<table>\n'
-##    s += '<tr>\n<th scope="col">Conductor</th>\n'
-##    s += '<th scope="col">Primitive characters</th>\n</tr>\n'
-##    for i in range(N,N+length):
-##        s += '<tr>\n<th scope="row">' + str(i) + '</th>\n'
-##        s += '<td>\n'
-##        j = i-N
-##        for k in range(len(chars[j][1])):
-##            s += '<a style=\'display:inline\' href="Character/Dirichlet/'
-##            s += str(i)
-##            s += '/'
-##            s += str(chars[j][1][k])
-##            s += '/&numcoeff='
-##            s += str(numcoeff)
-##            s += '">'
-##            s += '\(\chi_{' + str(chars[j][1][k]) + '}\)</a> '
-##        s += '</td>\n</tr>\n'
-##    s += '</table>\n'
-##    return s
-##    #info['contents'] = s
-##    #return info
