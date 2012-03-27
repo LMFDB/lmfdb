@@ -1,6 +1,5 @@
 {% extends 'homepage.html' %}
 
-
 {% block content %}
 
 <style>
@@ -18,8 +17,8 @@
     white-space:nowrap;
 }
 .chi a { display: inline; text-align: center; font-family: serif;}
-#chitable td div { float: left; padding-right: 10px; }
-#chitable td { vertical-align: middle; }
+#chitable td div { float: left}
+#chitable td div { vertical-align: middle; }
 .primitive {
   color:green;
 }
@@ -44,9 +43,9 @@
 <table class="ntdata" id="chitable">
 <thead align="center">
     <tr>
-        <th>Modulus</th>
+        <th>M\O</th>
         {% for h in headers %}
-          <th>{{h}}</th>
+        <th>{{h}}</th>
         {% endfor %}
     </tr>
 </thead>
@@ -59,7 +58,7 @@
     {% for e in entry %}
     <div>
       {% for chi in e %}
-        {% if not loop.first %}<br/>{% endif %}
+      {#{% if not loop.first %}<br/>{% endif %}#}
         <a href="{{url_for('render_Character', arg1=row, arg2=chi[0])}}"> 
             <font color="{% if chi[1] -%}green{%- else -%}blue{%- endif %}">
                 {{ chi[0] }}
