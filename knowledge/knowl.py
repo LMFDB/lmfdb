@@ -93,6 +93,12 @@ def knowl_title(kid):
   k = get_knowl(kid, fields= ['title'])
   return k['title'] if k else None
 
+def knowl_exists(kid):
+  """
+  checks, if the given knowl with ID=@kid exists
+  """
+  return get_knowl(kid, fields = {}) is not None
+
 def extract_cat(kid):
   if not hasattr(kid, 'split'): return None
   return kid.split(".")[0]
