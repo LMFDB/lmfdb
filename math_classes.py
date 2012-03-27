@@ -68,7 +68,7 @@ class ArtinRepresentation(object):
 class CharacterValues(list):
     def display(self):
         # The character values can be large, do not convert to int!
-        return "["+",".join([str(x) for x in self])+"]"
+        return "["+",".join([x.latex() for x in self])+"]"
     
 class ConjugacyClass(object):
     def __init__(self,G,data):

@@ -129,7 +129,7 @@ function show_code(system) {
 
         <p><h2> {{ KNOWL('nf.frobenius_cycle_types', title='Frobenius cycle types') }}</h2>
         <p>
-           <table class="ntdata" rules="all">
+           <table class="ntdata" >
              <tr><th>$p$</th>
             {% for p in info.frob_data %}
             <td>{{ p[0] | safe }} </td>
