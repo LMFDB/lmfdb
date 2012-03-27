@@ -193,15 +193,17 @@ def render_webpage( args = {}):
         try:
             file_name = weight + '_' + form + '.sobj'
             f_url = DATA + group + '/eigenforms/' + file_name
+            # print 'fafaf %s'%f_url
             f = load(f_url)
             file_name = weight + '_' + form + '-ev.sobj'
             g_url = DATA + group +'/eigenvalues/' + file_name
+            # print 'gagag %s'%g_url
             g =load( g_url)
             loaded = True
         except:
             info['error'] = 'Data not available'
             loaded = False
-
+        # print 'hahahah %s'%loaded
         if True == loaded:
 
             # throw out disc = 0 keys for cusp forms
@@ -210,7 +212,7 @@ def render_webpage( args = {}):
                 f_keys = filter( lambda (a,b,c): b^2<4*a*c, f_keys)
                 
             # sort the table of Fourier coefficients by discriminant, forms in increasing lexicographic order
-            if 'Sp8Z' != group:
+            if 'Sp8Z' != group and 'Sp6Z' != group:
                 __disc = lambda (a,b,c): 4*a*c - b**2
                 __cmp = lambda (a,b,c), (A,B,C) : cmp( (4*a*c - b**2,a,b,c), (4*A*C - B**2, A,B,C) )
                 f_keys.sort( cmp = __cmp)
@@ -221,9 +223,27 @@ def render_webpage( args = {}):
                         matrix( ZZ, 4,4, [m11,m12,m13,m14, m12,m22,m23,m24, m13,m23,m33,m34, m14,m24,m34,m44])
                 __disc = lambda i: __mat(i).det()
                 __cmp = lambda f1, f2: cmp( [__mat(f1).det()]+list(f1), [__mat(f2).det()]+list(f2))
-                print 'before: ', f_keys
+                # print 'before: ', f_keys
                 f_keys.sort( cmp = __cmp)
-                print f_keys
+                # print f_keys
+
+            if 'Sp6Z' == group:
+                # matrix index is given as [m11/2 m22/2 m33/2 m12 m13 m23]
+                __mat = lambda (a,b,c,d,e,f): \
+                        matrix( ZZ, 3,3, [2*a,d,e, d,2*b,f, e,f,2*c])
+                __disc = lambda i: __mat(i).det()
+                __cmp = lambda f1, f2: cmp( [__mat(f1).det()]+list(f1), [__mat(f2).det()]+list(f2))
+                # print 'before: ', f_keys
+                f_keys.sort( cmp = __cmp)
+                # print f_keys
+
+            # make the coefficients of the M_k(Sp(4,Z)) forms integral
+            if 'Sp4Z' == group:
+                d = lcm( map( lambda n: denominator(n), f[1].coefficients()))
+                f = list(f)
+                f[1] *= d
+                for k in f[2]:
+                    f[2][k] *= d
 
             try:
                 if not ev_modulus:

@@ -241,7 +241,7 @@ body.knowl #header {
     font-family: sans-serif;
     float: right;
     clear: right;
-    margin: 20px 0px 15px 15px;
+    margin: 10px 0px 15px 15px;
     /* width: 20%; */
     /* background: #9d9; */
     position: relative;
@@ -249,33 +249,43 @@ body.knowl #header {
     border: 0;
     padding: 0px;
 }
-#properties-body div, #properties-body p {
+.properties-body div, .properties-body p {
   padding: 5px;
 }
-#properties-body h1, #properties-body h2 {
+.properties-body h1, .properties-body h2 {
     color: #050;
     padding: 5px;
     margin: 0;
     margin-bottom: 0;
     background: {{ col_main_l }};
 }
-#properties-body h1 {
+.properties-body h1 {
     font-size: 120%;
 }
-#properties-body h2 {
+.properties-body h2 {
     font-size: 110%;
     margin-top: 10px;
 }
-#properties-body h2:first-child { margin-top: 0px; }
-#properties-body table th, 
-#properties-body table td {
+.properties-body h2:first-child { margin-top: 0px; }
+.properties-body table th, 
+.properties-body table td {
   padding-left: 10px;
   padding-right: 10px;
 }
-#properties-body .label {
+.properties-body .label {
   font-weight: bold;
 }
-#properties-body {
+.properties-body ul {
+  margin: 0px;
+  padding: 0px;
+}
+.properties-body li {
+  display: block;
+  padding: 5px;
+  font-weight: bold;
+  margin-left: 5px;
+}
+.properties-body {
   margin: 0;
   padding: 0;
   background: #efe;
@@ -284,10 +294,11 @@ body.knowl #header {
   border-bottom-left-radius: 10px;
   -moz-border-radius-bottomleft: 10px;
 }
-#properties-header {
+.properties-header {
   border-top-left-radius: 10px;
   -moz-border-radius-topleft: 10px;
   margin: 0;
+  margin-top: 10px;
   padding: 5px 10px;
   color: #050;
   background: #9d9;
@@ -305,11 +316,10 @@ body.knowl #header {
   width: 20px;
   height: 17px;
   position: absolute;
-  top:   3px;
+  top:   12px;
   right: 3px;
   {{ BORDER_RADIUS(20) }}
 }
-
 
 #content {
   margin-top: 20px;

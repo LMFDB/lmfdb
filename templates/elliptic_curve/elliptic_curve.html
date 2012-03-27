@@ -7,14 +7,14 @@ function show_code(system) {
     $('.sage').hide();
     $('.pari').hide();
     $('.magma').hide();
-    if (cur_system == null) {
-      $('.'+system).show();
-      cur_system = system;
-    } else {
+    if (cur_system == system) {
       $('.'+system).hide();
       cur_system = null;
+      } else {
+      $('.'+system).show();
+      cur_system = system;
     }
-}
+  }
 </script>
 
 
