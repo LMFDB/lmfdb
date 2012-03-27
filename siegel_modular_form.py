@@ -172,6 +172,10 @@ def render_webpage( args = {}):
         if 'Sp8Z' == group:
             info['table_headers'] = ['Weight', 'Total', 'Ikeda lifts', 'Miyawaki lifts', 'Other']
 
+        elif 'Sp6Z' == group:
+            info['table_headers'] = ['Weight', 'Total', 'Miyawaki lifts I', 'Miyawaki lifts II', 'Other']
+
+
         elif group == 'Kp':
             info['table_headers'] = ["Weight", "Total", "Gritsenko Lifts", "Nonlifts", "Oldforms"]
 
