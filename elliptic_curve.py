@@ -259,7 +259,12 @@ def modular_form_display(label, number):
         return "Please stop poking me."
     if number > 1000:
         number = 1000
-    E = EllipticCurve(str(label))
+    C = base.getDBConnection()
+    data = C.ellcurves.curves.find_one({'label': label})
+    if data is None:
+        return "No such curve"
+    ainvs = [int(a) for a in data['ainvs']]
+    E = EllipticCurve(ainvs)
     modform = E.q_eigenform(number)
     modform_string = web_latex_split_on_pm(modform)
     return modform_string
