@@ -89,7 +89,7 @@ function show_code(system) {
         <tr>
         <td colspan="4">
             <span class='sage nodisplay code'>sage: E.discriminant().factor()</span>
-            <span class='pari nodisplay code'>? E[12]</span>
+            <span class='pari nodisplay code'>? E.disc</span>
             <span class='magma nodisplay code'>&gt; Discriminant(E);</span>
         </td>
         </tr>
@@ -102,7 +102,7 @@ function show_code(system) {
         <tr>
         <td colspan="4">
             <span class='sage nodisplay code'>sage: E.j_invariant().factor()</span>
-            <span class='pari nodisplay code'>? E[13]</span>
+            <span class='pari nodisplay code'>? E.j</span>
             <span class='magma nodisplay code'>&gt; jInvariant(E);</span>
         </td>
         </tr>
@@ -149,7 +149,7 @@ function show_code(system) {
         <tr>
         <td colspan="4">
             <span class='sage nodisplay code'>sage: E.period_lattice().omega()</span>
-            <span class='pari nodisplay code'></span>
+            <span class='pari nodisplay code'>? E.omega[1]</span>
             <span class='magma nodisplay code'>&gt; RealPeriod(E);</span>
         </td>
         </tr>
