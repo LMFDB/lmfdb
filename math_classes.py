@@ -134,7 +134,8 @@ class NumberFieldGaloisGroup():
             R = pol.parent()
             from sage.all import pari
             pol = R(pari(pol).polredabs())
-            return pol
+            self._data["polredabs"] = pol
+            return self._data["polredabs"]
     
     def label(self):
         if "label" in self._data.keys():

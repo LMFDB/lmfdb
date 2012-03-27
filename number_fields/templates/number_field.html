@@ -144,11 +144,11 @@ function show_code(system) {
         </p>
         <p>
           In the table, <i>R</i> denotes a ramified prime.  Cycle lengths which are repeated in a cycle type are indicated
-          by exponents.
-	
+          by exponents .
+	{% if "tim_number_field" in info.keys() %}
 	{% if user_is_authenticated %}
 	<p><h2> {{ KNOWL('artin', title='Artin representations') }} (only logged in)</h2>
-	    This is wrong (unless the field is 2.2.37.1), but merely serves a as mockup.
+	    This might be wrong at the moment, or lead to broken links, but merely serves a as mockup.
         <div>
 	<center>
 	<table class="ntdata">
@@ -161,6 +161,7 @@ function show_code(system) {
 	</table>
 	</center>
 	</div>
+	{% endif %}
 	{% endif %}
 
 

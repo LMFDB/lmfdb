@@ -2,7 +2,7 @@
 
 {% block content %}
 
-
+{% if user_is_authenticated %}
 <h1>
     <br>
     This index/search page is not done. The main reason is that it is not fully clear to me yet how people might want to search on Artin representations.
@@ -35,6 +35,10 @@ However, the database only include a very thin slice of the data that will be av
     <tr><td><a href = {{url_for('.by_partial_data', dim=4,conductor=136480336)}}>Artin representations of dimension 4 and conductor 136480336 </a></td></tr>
     
 </table>
+{% endif %}
+{% if not user_is_authenticated %}
+    Please log in to see more
+{% endif %}
 
 
 <!--

@@ -485,9 +485,10 @@ def render_field_webpage(args):
                    ('Galois Group:', group_display_short(data['degree'], t, C))
     ]
     from math_classes import NumberFieldGaloisGroup
-
-    info["tim_number_field"] = NumberFieldGaloisGroup.find_one({"label":"2.2.37.1"})
-    
+    try:
+      info["tim_number_field"] = NumberFieldGaloisGroup.find_one({"label":label})
+    except AttributeError:
+      pass
     del info['_id']
     return render_template("number_field.html", properties2=properties2, credit=NF_credit, title = title, bread=bread, friends=info.pop('friends'), learnmore=info.pop('learnmore'), info=info )
 
