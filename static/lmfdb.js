@@ -200,8 +200,7 @@ function knowl_click_handler($el) {
  *  download/show/hide magic. also add a unique ID, 
  *  necessary when the same reference is used several times. */
 $(function() {
-  $("*[knowl]").live({
-    click: function(evt) {
+  $("body").on("click", "*[knowl]", function(evt) {
       evt.preventDefault();
       var $knowl = $(this);
       if(!$knowl.attr("knowl-uid")) {
@@ -210,7 +209,6 @@ $(function() {
         knowl_id_counter++;
       }
       knowl_click_handler($knowl, evt);
-    }
   });
 });
 
