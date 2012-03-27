@@ -36,58 +36,55 @@ class WebCharacter:
 
 
     def dirichletcharacter(self):
-        
-        #######################################################################################
-        ## Sage's naming convention for Dirichlet characters
-        #######################################################################################
-
-        G_sage = DirichletGroup(self.modulus)
-        chi_sage = G_sage[self.number]
-        self.zetaorder = G_sage.zeta_order()
-        self.level = self.modulus
-        self.genvalues = chi_sage.values_on_gens()
-        if len(chi_sage.values_on_gens()) == 1:
-            self.genvaluestex = latex(chi_sage.values_on_gens()[0])
-        else:
-            self.genvaluestex = latex(chi_sage.values_on_gens())
-        chivals = chi_sage.values_on_gens()
-        Gunits = G_sage.unit_gens()
-        if len(Gunits) != 1:
-            self.unitgens = "("
-        else:
-            self.unitgens = ""
-        count = 0
-        for g in Gunits:
-            if count != len(Gunits)-1:
-                self.unitgens += latex(g) + ","
-            else:
-                self.unitgens += latex(g)
-            count += 1
-        if len(Gunits) != 1:
-            self.unitgens += ")"
-        self.sign = "True"
-        if self.zetaorder >= 2:
-            self.sign = "False"
-        chizero = G_sage[0]
-        self.credit = "Sage"
-        self.title = r"Dirichlet Character: \(\chi_{%s}\!\!\pmod{%s}\)" %(self.number,self.modulus)
 
         #######################################################################################
         ##  Conrey's naming convention for Dirichlet Characters
         #######################################################################################
-        
+
         G = DirichletGroup_conrey(self.modulus)
-        if self.number%self.modulus != 0:
+        G_sage = G.standard_dirichlet_group()
+        self.level = self.modulus
+        if self.modulus == 1 or self.number%self.modulus != 0:
             chi = G[self.number]
+            chi_sage = chi.sage_character()
+            self.zetaorder = G_sage.zeta_order()
+            self.genvalues = chi_sage.values_on_gens()
+            if len(chi_sage.values_on_gens()) == 1:
+                self.genvaluestex = latex(chi_sage.values_on_gens()[0])
+            else:
+                self.genvaluestex = latex(chi_sage.values_on_gens())
+            chivals = chi_sage.values_on_gens()
+            Gunits = G_sage.unit_gens()
+            if len(Gunits) != 1:
+                self.unitgens = "("
+            else:
+                self.unitgens = ""
+            count = 0
+            for g in Gunits:
+                if count != len(Gunits)-1:
+                    self.unitgens += latex(g) + ","
+                else:
+                    self.unitgens += latex(g)
+                count += 1
+            if len(Gunits) != 1:
+                self.unitgens += ")"
+            self.sign = "True"
+            if self.zetaorder >= 2:
+                self.sign = "False"
+            chizero = G_sage[0]
             self.char = str(chi)
             if chi.is_primitive():
                 self.primitive = "True"
             else:
                 self.primitive = "False"
             self.conductor = chi.conductor()
-            if self.number%self.modulus != 0:
-                self.order = chi.multiplicative_order()
+            self.order = chi.multiplicative_order()
             self.vals = chi.values()
+            l = []
+            #phi = euler_phi(self.modulus)
+            for j in range(1,self.modulus+1):
+                l.append(chi.logvalue(j))
+            self.logvals = l
             self.bound = 5*1024
             if chi.is_even():
                 self.parity = 'Even'
@@ -102,12 +99,12 @@ class WebCharacter:
                 if self.number == 0:
                     self.inducedchar_number = 0
                 else:
-                    for j,chi in enumerate(F):
+                    for chi in F:
+                        j = chi.number()
                         if chi == self.inducedchar:
                             self.inducedchar_number = j
                             break
-                self.inducedchar_tex = r"\(\chi_{%s}\!\!\pmod{%s}\)" %(self.inducedchar_number,self.inducedchar_modulus)
-       
+                self.inducedchar_tex = r"\(\chi_{%s}\!\!\pmod{%s}\)" %(self.inducedchar_number,self.inducedchar_modulus) 
        # if self.primitive == 'True':
        #     self.primtf = True
        # else:
@@ -127,7 +124,10 @@ class WebCharacter:
                         self.kronsymbol += r"\left(\frac{a}{%s}\right)" %(self.conductor)
                         self.kronsymbol += r"\end{equation}"
 
-
+        self.credit = "Sage"
+        self.title = r"Dirichlet Character: \(\chi_{%s}(%s,\cdot)\)" %(self.modulus,self.number)
+    
+        return chi
     def gauss_sum_tex(self):
         ans = "\(\\tau_a(\\chi_{%s}) \\;\) at \(\\; a = \)" %(self.number)
         return(ans)

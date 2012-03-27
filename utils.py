@@ -387,3 +387,11 @@ def coeff_to_poly(c):
     from sage.all import PolynomialRing, QQ
     return PolynomialRing(QQ, 'x')(c)
 
+from flask import current_app
+def debug():
+    """
+    this triggers the debug environment on purpose. you have to start
+    the server via website.py --debug
+    don't forget to remove the debug() from your code!!!
+    """
+    assert current_app.debug == False, "Don't panic! You're here by request of debug()"
