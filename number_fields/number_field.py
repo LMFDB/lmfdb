@@ -12,7 +12,7 @@ from number_fields import nf_page, nf_logger
 import re
 
 import sage.all
-from sage.all import ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, euler_phi, pari
+from sage.all import ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, euler_phi, pari, prod
 from sage.rings.arith import primes
 
 from transitive_group import group_display_knowl, group_knowl_guts, group_display_short
@@ -495,11 +495,29 @@ def number_fields():
         return number_field_search(**request.args)
     info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), ('Discriminant ranges',url_for(".render_discriminants_page"))]
     return render_template("number_field_all.html", info = info)
-    
 
+def split_label(label):
+  """
+    Parses number field labels. Allows for 3.1.4!1x11!1.1
+  """
+  tmp = label.split(".")
+  tmp[2] = parse_product(tmp[2])
+  return ".".join(tmp)
+  
+def parse_product(symbol):
+  tmp = symbol.split("x")
+  return str(prod(parse_power(pair) for pair in tmp))
+
+def parse_power(pair):
+  try:
+    tmp = pair.split("!")
+    return int(tmp[0])**int(tmp[1])
+  except:
+    return int(pair)
+  
 @nf_page.route("/<label>")
 def by_label(label):
-    return render_field_webpage({'label' : label})
+    return render_field_webpage({'label' : split_label(label)})
 
 def parse_list(L):  
     L=str(L)
