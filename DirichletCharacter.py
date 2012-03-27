@@ -14,6 +14,12 @@ from renderLfunction import render_Lfunction
 from utils import to_dict, parse_range, make_logger
 import ListCharacters
 
+try:
+  from dirichlet_conrey import *
+except:
+  logger.critical("dirichlet_conrey.pyx cython file is not available ...")
+
+
 logger = make_logger("DC")
 
 ###############################################################################
@@ -136,7 +142,7 @@ def initCharacterInfo(chi,args, request):
         info['modulus'] = smod
         G = DirichletGroup(chi.modulus)
         info['bread'] = [('Dirichlet Characters','/Character/Dirichlet'),('Character '+snum+ ' modulo '+smod,'/Character/Dirichlet/'+smod+'/'+snum)]
-        info['sagechar'] = str(chi.sagechar)
+        info['char'] = str(chi.char)
         info['conductor'] = int(chi.conductor)
         info['order'] = int(chi.order)
         info['eulerphi'] = euler_phi(chi.modulus)-1
@@ -149,9 +155,9 @@ def initCharacterInfo(chi,args, request):
         info['sign'] = chi.sign
         info['real'] = chi.real
         info['prim'] = chi.prim
-        info['vals'] = latex(chi.vals)
-        info['valstex'] = chi.valstex
-        info['root_unity'] =  str(any(map(lambda x : r"\zeta" in x,  chi.valstex)))
+        info['vals'] = chi.vals
+        #info['valstex'] = chi.valstex
+        #info['root_unity'] =  str(any(map(lambda x : r"\zeta" in x,  chi.vals)))
         info['unitgens'] = str(chi.unitgens)
         info['bound'] = int(chi.bound)
         if chi.order == 2:
@@ -286,6 +292,7 @@ def charactertable(query):
             order=query.get('order',None))
 
 def render_character_table(modulus=None,conductor=None,order=None):
+    from dirichlet_conrey import DirichletGroup_conrey
     start = 1
     end = 201
     stepsize = 1
@@ -298,16 +305,16 @@ def render_character_table(modulus=None,conductor=None,order=None):
 
     def row(N):
         ret = []
-        G = DirichletGroup(N)
-        for _ in range(len(G)):
+        G = DirichletGroup_conrey(N)
+        for _,chi in emumerate(G):
             add = True
-            add &= not conductor or G[_].conductor() == conductor
-            add &= not order     or G[_].order() == order
+            add &= not conductor or chi.conductor() == conductor
+            add &= not order     or chi.order() == order
             if add:
-                if G[_].order() == 2 and kronecker_symbol(G[_]) != None:
-                    ret.append([(_, kronecker_symbol(G[_]), G[_].modulus(), G[_].conductor(), G[_].order(), G[_].is_primitive(), G[_].is_even())])
+                if chi.order() == 2 and kronecker_symbol(chi) != None:
+                    ret.append([(_, kronecker_symbol(chi), chi.modulus(), chi.conductor(), chi.order(), chi.is_primitive(), chi.is_even())])
                 else:
-                    ret.append([(_,G[_], G[_].modulus(), G[_].conductor(), G[_].order(), G[_].is_primitive(), G[_].is_even())])
+                    ret.append([(_,chi, chi.modulus(), chi.conductor(), chi.order(), chi.is_primitive(), chi.is_even())])
         return ret
     return [row(_) for _ in range(start,end,stepsize)]
 

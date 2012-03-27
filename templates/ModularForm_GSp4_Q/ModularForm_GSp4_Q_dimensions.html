@@ -1,10 +1,10 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-{% if info.error %}
-<div class="announce error">Error: {{  info.error }}</div>
+{% if error %}
+<div class="announce error">Error: {{  error }}</div>
 
-{% elif not info.dimensions %}
+{% elif not dimensions %}
 <p>Dimension table to be implemented</p>
 
 {% else %}
@@ -13,7 +13,7 @@
   The table shows, for each weight,
   the dimensions of the following subspaces of
 
-  {% if info.group=='Sp8Z' %}
+  {% if group=='Sp8Z' %}
   \(S_k({\rm Sp}(8,Z))\):
   <ul>
     <li><span class="emph">Total</span>: The full space \(S_k({\rm Sp}(8,Z))\).</li>
@@ -22,19 +22,19 @@
     <li><span class="emph">Other</span>: The subspace that are not Ikeda or Miyawaki lifts.</li>
   </ul>
 
-  {% elif info.group=='Kp' %}
-  \(S_k({\rm K}({{ info.level }}))\):
+  {% elif group=='Kp' %}
+  \(S_k({\rm K}({{ level }}))\):
   <ul>
-    <li><span class="emph">Total</span>: The full space \(S_k({\rm K}({{ info.level }}))\).</li>
+    <li><span class="emph">Total</span>: The full space \(S_k({\rm K}({{ level }}))\).</li>
     <li><span class="emph">Lifts</span>: The subspace of Gritsenko lifts.</li>
     <li><span class="emph">Nonlifts</span>: The subspace of nonlifts.</li>
   </ul>
 
   {% else %}
-  \({{ info.parent_as_tex }}\):
+  \({{ parent_as_tex }}\):
   <ul>
     <li><span class="emph">Total</span>: The full space
-      \({{ info.parent_as_tex }}\).</li>
+      \({{ parent_as_tex }}\).</li>
     <li><span class="emph">Eisenstein</span>: The subspace of Siegel Eisenstein series.</li>
     <li><span class="emph">Klingen</span>: The subspace of Klingen Eisenstein series.</li>
     <li><span class="emph">Maass</span>: The subspace of Maass liftings.</li>
@@ -46,12 +46,12 @@
 <table>
   <thead>
     <tr>
-      {% for header in info.table_headers %}
+      {% for header in table_headers %}
       <th>{{ header }}</th>
       {% endfor %}
     </tr>
   </thead>
-  {% for k,dims in info.dimensions %}
+  {% for k,dims in dimensions %}
   <tr class = "{{ loop.cycle( 'odd', 'even') }}">
     <td>{{ k }}</td>
     {% for d in dims %}
@@ -107,9 +107,9 @@
 </script>
 
 <p>
-  {% if info.group=='Sp8Z' %}
+  {% if group=='Sp8Z' %}
   Only weights up to 16 is available.
-  {% elif info.group=='Kp' %}
+  {% elif group=='Kp' %}
   Enter new prime level and range of weights
   or a weight and a range of levels.
   {% else %}
@@ -118,16 +118,16 @@
 </p>
 
 <form action="/ModularForm/GSp4/Q" method="get" onSubmit="return validate_weight()"> 
-  <input type="hidden" name="group" value="{{ info.group }}" />
+  <input type="hidden" name="group" value="{{ group }}" />
   <input type="hidden" name="page" value="dimensions" /> 
   <table> 
     <tr>
-      {% if info.group=='Kp' %}
+      {% if group=='Kp' %}
       <td>
 	<label>prime level(s)</label>
 	<input type="text"
 	       name="level"
-	       {% if info.level %}value='{{ info.level }}'{% endif %}
+	       {% if level %}value='{{ level }}'{% endif %}
 	       >
 	<span class="formexample">e.g. 3</span>
       </td>
@@ -136,7 +136,7 @@
 	<label>weight(s)</label>
 	<input type="text"
 	       name="weight_range"
-	       {% if info.weight_range %}value='{{ info.weight_range }}'{% endif %}
+	       {% if weight_range %}value='{{ weight_range }}'{% endif %}
 	       >
 	<span class="formexample">e.g. 2 or 20-40</span>
       </td>

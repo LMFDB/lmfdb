@@ -1,6 +1,6 @@
 """
 start this via $ sage -python website.py --port <portnumber>
-add --debug if you are debugging
+add --debug if you are developing (auto-restart, full stacktrace in browser, ...)
 """
 from base import *
 
@@ -12,7 +12,7 @@ import quadratic_twists
 import renderLfunction
 #import maass_form
 import plot_example
-import number_field
+import number_fields
 import lfunction_db
 #import maass_form_picard
 #import maass_waveforms
@@ -23,7 +23,6 @@ import DirichletCharacter
 import local_fields
 import galois_groups
 import number_field_galois_groups
-import OEIS
 import artin_representations
 import zeros
 
@@ -42,7 +41,11 @@ except:
 
 @app.errorhandler(404)
 def not_found(error):
-    return "404", 404
+    return render_template("404.html"), 404
+
+@app.errorhandler(500)
+def not_found(error):
+    return render_template("500.html"), 500
 
 @app.route("/")
 def index():
@@ -64,7 +67,7 @@ def root_static_file(name):
          return open(fn).read()
        import logging
        logging.critical("root_static_file: file %s not found!" % fn)
-       return ''
+       return flask.redirect(404)
     app.add_url_rule('/%s'%name, 'static_%s'%name, static_fn)
 map(root_static_file, [ 'favicon.ico' ])
 

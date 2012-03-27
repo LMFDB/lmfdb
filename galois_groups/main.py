@@ -23,7 +23,7 @@ except:
   logger.fatal("It looks like the SPKGes gap_packages and database_gap are not installed on the server.  Please install them via 'sage -i ...' and try again.")
   exit()
 
-from transitive_group import group_display_short, group_display_long, group_display_inertia, group_knowl_guts, subfield_display, otherrep_display, resolve_display
+from transitive_group import group_display_short, group_display_long, group_display_inertia, group_knowl_guts, subfield_display, otherrep_display, resolve_display, conjclasses, generators
 
 GG_credit = 'GAP and J. Jones'
 
@@ -121,7 +121,7 @@ def render_group_webpage(args):
     if data is None:
         bread = get_bread([("Search error", url_for('.search'))])
         info['msg'] = "Group " + label + " was not found in the database."
-        return render_template("gg-error.html", info=info, title="Galois Group Search Error", bread=bread, credit=GG_credit) 
+        return render_template("gg-error.html", info=info, title="Galois Group Search Error", bread=bread, credit=GG_credit), 404
     title = 'Galois Group:' + label
     n = data['n']
     t = data['t']
@@ -134,6 +134,7 @@ def render_group_webpage(args):
     chartable = gap.eval("Display(%s)"%CT.name())
     chartable = re.sub("^.*\n", '', chartable)
     chartable = re.sub("^.*\n", '', chartable)
+    data['gens'] = generators(n,t)
     data['chartable'] = chartable
     data['cclasses'] = conjclasses(G, n)
     data['subinfo'] = subfield_display(C, n, data['subs'])
@@ -156,14 +157,3 @@ def render_group_webpage(args):
     bread = get_bread([(label, ' ')])
     return render_template("gg-show-group.html", credit=GG_credit, title = title, bread = bread, info = info, properties2=prop2 )
 
-def conjclasses(g, n):
-  gap.set('cycletype', 'function(el, n) local ct; ct := CycleLengths(el, [1..n]); ct := ShallowCopy(ct); Sort(ct); ct := Reversed(ct); return(ct); end;')
-  cc = g.ConjugacyClasses()
-  ccn = [x.Size() for x in cc]
-  cc = [x.Representative() for x in cc]
-  cc2 = [x.cycletype(n) for x in cc]
-  cc2 = [str(x) for x in cc2]
-  cc2 = map(lambda x: re.sub("\[",'', x),  cc2)
-  cc2 = map(lambda x: re.sub("\]",'', x),  cc2)
-  ans = [[cc[j], cc[j].Order(), ccn[j], cc2[j]] for j in range(len(ccn))]
-  return(ans)
