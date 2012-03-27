@@ -14,11 +14,11 @@ from math import log, floor
 import mpmath
 mpmath.mp.prec = 300
 
-data_location = '/zeros/zeta/'
+data_location = os.path.expanduser('~/data/zeros/zeta/')
 try:
     # the server will still load if the database doesn't exist,
     # but none of these pages will work...
-    db = sqlite3.connect('/zeros/zeta/index.db')
+    db = sqlite3.connect(data_location + 'index.db')
     c = db.cursor()
 except:
     pass
