@@ -2,6 +2,61 @@
 
 {% block content %}
 
+ <script src="{{ url_for('static', filename='jquery.column.min.js')}}"
+ type="text/javascript" charset="utf-8"></script>
+
+ <script src="{{ url_for('mwf.static', filename='maass_scripts.js')}}" type="text/javascript" charset="utf-8"></script>
+
+ <script type="text/javascript" charset="utf-8">
+ $(document).ready(function() {
+
+jQuery('table:has(col)').each(alignColumns);
+$("table#coeffs").dataTable(
+{
+    "aoColumns":[{"aaSorting":"asc","sWidth": "10%", "bSortable": true,
+                  "bSearchable": false ,"sType":"numeric" },
+                 {"sWidth": "90%", "bSortable": true, "bSearchable": true, 
+                "sClass": "alignLeft" },
+],
+//  "aaSorting":[[0,"asc"],[1,"asc"]],
+  "bSort":true,
+        iDisplayLength: 25,    
+        iDisplayStart: 3,
+        "oLanguage": {
+            "sZeroRecords": "There are no records that match your search criterion",
+            "sLengthMenu": "Display _MENU_ records per page",
+            "sInfo": "Displaying _START_ to _END_ of _TOTAL_ coefficients",
+            "sInfoEmpty": "Showing 0 to 0 of 0 records",
+            "sInfoFiltered": "(filtered from _MAX_ total coefficients)"
+        }, 
+        sScorollX: "300px", 
+        sPagination: "full_numbers",
+        bStateSave: true,
+        "bAutoWidth": false,
+        bScrollInfinite:true, 
+        oSearch: { "sSearch": "Type here...", "bRegex": false, "bSmart": true },
+  "sDom": '<"title">lt<"bottom"pf><"bottom"i>'
+
+ });
+}
+)
+</script>
+ 
+<style type="text/css">
+ .dataTables_wrapper { height: 100px; class:"ntdata"}
+ .dataTables_wrapper:after {
+    content: ".";
+    display: block;
+    clear: both;
+    visibility: hidden;
+    line-height: 0;
+    height: 0;
+ td.sorting_1 {}
+.alignLeft  {text-align:left}
+}
+</style>
+
+
 
 {% if info.error is defined %}
 
@@ -16,32 +71,43 @@
 
 <h1> A {{KNOWL('mf.maass.mwf',title='Maass waveform')}} on  \(\Gamma_{0}({{ MF.level }} )\) with {{KNOWL('mf.maass.mwf.spectralparameter',title='spectral parameter')}} R= {{MF.R}}</h1>
 
-<h2>Properties</h2>
-<table>
 {% if MF is defined %}
 {% set table = MF.table %}
 {% set nrows = table.nrows %}
 {% set ncols = table.ncols %}
 {% set data = table.data %}
+
+<!-- h2>Properties</h2>
+<table>
+
 {# The eigenvalue of the {{KNOWL('mf.maass.mwf.laplacian',title='Laplacian')}} is:{{ Eigenvalue } #}
 
 </div>
-<!--div>Symmetry type: {{ MF.symmetry }}</div-->
+<div>Symmetry type: {{ MF.symmetry }}</div>
 
-</table>
+</table-->
 
 <h2>Fourier Coefficients</h2>
-
 {% if MF.coeffs is defined and MF.num_coeff > 0%}
-<table class="ntdata">
+<!--table class="ntdata" id="coeffs" valign="top" border="1"-->
+<table>
+<tr><td>
+<table class="ntdata" id="coeffs">
+  <colgroup>
+    <col/>
+    <col align="char" char="."/>
+  </colgroup>
   <thead>
     <tr>
-      <th> n </th>
-      <th>C(n) </th>
+      <th> n </th><th>C(n) </th>
     </tr>
   </thead>
   <tbody>
-    {% for r in range(0,nrows) %}
+    {% set nnrows = 200 %}
+    {%if nrows < nnrows %}
+     {% set nnrows = nrows %}
+    {%endif%}
+    {% for r in range(0,nnrows) %}
     <tr>
       {% if table.negc is defined and table.negc == 0 %}
           {% for k in range(0,ncols)  %}
@@ -50,9 +116,9 @@
                {% set n,c  = data[r][k] %}
              {% endif %}
           {% endif %}
-           <th style="border-right: 1px solid black">{{n}}</th>
+           <td style="border-right: 1px solid black">{{n}}</td>
            <td>{{c}}</td>
-      {% endfor %}
+          {% endfor %}
 
      {%else%}
           {% for k in range(0,ncols)  %} 
@@ -61,16 +127,19 @@
                {% set n,cp,cn  = data[r][k] %}
              {% endif %}
           {% endif %}
-          <th style="border-right: 1px solid black">{{n}}</th>
-          <td>{{cp}}</td>
-          <th style="border-right: 1px solid black">{{-n}}</th>
-          <td>{{cn}}</td>
+           <td style="border-right: 1px solid black">{{n}}</td>
+           <td>{{cp}}</td>
+           <td style="border-right: 1px solid black">{{-n}}</td>
+           <td>{{cn}}</td>
          {% endfor %}
       {%endif%}
     </tr>
     {% endfor %}
    </tbody>
 </table>
+</td></tr>
+<tr><td>
+<p>
 <form name="search" method = "get" action="{{url_for('mwf.render_one_maass_waveform',maass_id=maassid)}}">
   <input type="hidden" name="id" value="{{maassid}}">
   More Coefficients:
@@ -80,8 +149,9 @@
     <option value="100">100</option>
     <option value="-1">all</option>
   </select>
-  <button type="submit" name="Submit" value="Get more">Get more</button>	
+  <!--button type="submit" name="Submit" value="Get more">Get more</button-->	
 </form>
+</td></tr></table>
 <p>
 {{ KNOWL('metadata.knowl-tag') }}
 </p>

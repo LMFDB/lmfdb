@@ -107,6 +107,8 @@ class WebMaassForm(object):
         self.symmetry=f.get('Symmetry',-1)
         self.weight=f.get('Weight',0)
         self.character=f.get('Character',0)
+        self.cusp_evs=f.get('Cusp_evs',[])
+        self.error=f.get('Error',[])
         self.level=f.get('Level',None)
         if self.R ==None or self.level==None:
             return
