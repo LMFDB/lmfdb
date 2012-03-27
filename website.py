@@ -4,6 +4,7 @@ add --debug if you are developing (auto-restart, full stacktrace in browser, ...
 """
 from base import *
 
+import intro
 import hilbert_modular_form
 import siegel_modular_form
 import modular_forms
