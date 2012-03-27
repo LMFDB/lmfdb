@@ -59,7 +59,7 @@ table.ntdata tr.even, table.ntdata tr:nth-child(even) { background: none; }
 {% macro show_character(entry, col, row) -%}
 {% if not entry is none %}
   {% if col == "more"  %}
-    LIST
+    {{ entry }}
   {% else %}
     {% for e in entry %}
     <div>

@@ -1,3 +1,4 @@
+# -*- coding: utf8 -*-
 #ListCharacters.py
 
 import re
@@ -25,6 +26,7 @@ def get_character_modulus(a,b):
             multorder = chi.multiplicative_order()
             el = chi 
             col = multorder 
+            col = col if col <= 6 else 'more'
             entry = entries.get((row, col), [])
             entry.append(el)
             entries[(row, col)] = entry
@@ -44,6 +46,7 @@ def get_character_modulus(a,b):
              v.remove(inv)
         entries2[k] = l
     cols = headers
+    #from utils import debug; debug()
     return headers, entries2, rows, cols
 
 def get_character_conductor(a,b):
