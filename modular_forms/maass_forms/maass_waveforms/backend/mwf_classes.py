@@ -11,7 +11,8 @@ class MaassFormTable(MFDataTable):
         self._id = kwds.get('id',None)
         if not self._id:
             mwf_logger.critical("You must supply an id!")
-    
+
+            
     def set_table(self,**kwds):
         self._name = kwds.get('name','')
         self._table=dict()
@@ -78,3 +79,80 @@ class MaassFormTable(MFDataTable):
 
 
 
+class WebMaassForm(object):
+    def __init__(self,db,maassid):
+        r"""
+        Setup a Maass form from maassid in the database db
+        of the type MaassDB.
+        """
+        self._db=db
+        self.R=None; self.symmetry=-1
+        self.weight=0; self.character=0; self.level=1
+        self.table={}
+        if not isinstance(maassid,(bson.objectid.ObjectId,str)):
+            ids=db.find_Maass_form_id(id=maassid)
+            if len(ids)==0:
+                return
+            mwf_logger.debug("maassid is not an objectid! {0}".format(maassid))
+            maassid=ids[0]
+        self._maassid=bson.objectid.ObjectId(maassid)
+        mwf_logger.debug("_id={0}".format(self._maassid))
+        ff=db.get_Maass_forms(id=self._maassid)
+        print "ff=",ff
+        if len(ff)==0:
+            return
+        f=ff[0]
+        print "f here=",f
+        self.R=f.get('Eigenvalue',None)
+        self.symmetry=f.get('Symmetry',-1)
+        self.weight=f.get('Weight',0)
+        self.character=f.get('Character',0)
+        self.level=f.get('Level',None)
+        if self.R ==None or self.level==None:
+            return
+        
+        self.coeffs=f.get('Coefficient',[])
+        coeff_id=f.get('coeff_id',None)
+        if self.coeffs==[] and coeff_id:
+            ## Let's see if we have coefficients stored
+            C = DB.get_coefficients({"_id":self._maassid})
+            nc = Gamma0(self.level).ncusps()
+            if len(C.keys())==nc:
+                self.coeffs = C[0]
+            else:
+                self.coeffs=C
+        self.nc = 1 #len(self.coeffs.keys())
+        if isinstance(self.coeffs,list):
+            self.num_coeff=len(self.coeffs)
+        elif isinstance(self.coeffs,dict):
+            self.num_coeff=len(self.coeffs.keys())
+        else:
+            self.num_coeff=0
+        self.set_table()
+        
+    def set_table(self):
+        table={'nrows':self.num_coeff,
+               'ncols':1}
+        table['data']=[]
+        if self.symmetry<>-1:
+            table['negc']=0
+            for n in range(self.num_coeff):
+                row=[]
+                for k in range(table['ncols']):
+                    row.append((n,self.coeffs[n]))
+                table['data'].append(row)
+        else:
+            table['negc']=1
+            # in this case we need to have coeffs as dict.
+            if not isinstance(self.coeffs,dict):
+                self.table={}
+                return
+            for n in range(len(self.coeffs.keys()/2)):
+                row=[]
+                for k in range(table['ncols']):
+                   cp = self.coeffs.get(n,0)
+                   cn = self.coeffs.get(-n,0)
+                   row.append((n,cp,cn))
+                table['data'].append(row)
+        self.table=table
+                    

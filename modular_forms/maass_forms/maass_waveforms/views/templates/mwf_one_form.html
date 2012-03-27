@@ -14,22 +14,25 @@
 </div>
 {% endif %}
 
-<h1> A {{KNOWL('mf.maass.mwf',title='Maass waveform')}} on  \(\Gamma_{0}({{ Level }} )\) with {{KNOWL('mf.maass.mwf.spectralparameter',title='spectral parameter')}} R= {{Eigenvalue}}</h1>
+<h1> A {{KNOWL('mf.maass.mwf',title='Maass waveform')}} on  \(\Gamma_{0}({{ MF.level }} )\) with {{KNOWL('mf.maass.mwf.spectralparameter',title='spectral parameter')}} R= {{MF.R}}</h1>
 
 <h2>Properties</h2>
 <table>
-{% if Eigenvalue is defined %}
-
+{% if MF is defined %}
+{% set table = MF.table %}
+{% set nrows = table.nrows %}
+{% set ncols = table.ncols %}
+{% set data = table.data %}
 {# The eigenvalue of the {{KNOWL('mf.maass.mwf.laplacian',title='Laplacian')}} is:{{ Eigenvalue } #}
-{% endif %}
 
 </div>
-<div>Symmetry type: {{ Symmetry }}</div>
+<!--div>Symmetry type: {{ MF.symmetry }}</div-->
+
 </table>
 
 <h2>Fourier Coefficients</h2>
 
-{% if table is defined and nrows > 0%}
+{% if MF.coeffs is defined and MF.num_coeff > 0%}
 <table class="ntdata">
   <thead>
     <tr>
@@ -40,21 +43,35 @@
   <tbody>
     {% for r in range(0,nrows) %}
     <tr>
-      <th style="border-right: 1px solid black">{{ row_heads[r] }}</th>
-      {% for k in range(0,ncols)  %}
-          {% set val = "" %}
-          {% if table[r] is defined and table[r][k] is defined %}
-             {% if table[r][k]['value'] is defined %}
-               {% set val  = table[r][k]['value'] %}
+      {% if table.negc is defined and table.negc == 0 %}
+          {% for k in range(0,ncols)  %}
+          {% if data[r] is defined and data[r][k] is defined %}
+             {% if data[r][k] is defined %}
+               {% set n,c  = data[r][k] %}
              {% endif %}
           {% endif %}
-           <td> {{val | safe }}</td>
+           <th style="border-right: 1px solid black">{{n}}</th>
+           <td>{{c}}</td>
       {% endfor %}
+
+     {%else%}
+          {% for k in range(0,ncols)  %} 
+          {% if data[r] is defined and data[r][k] is defined %}
+             {% if data[r][k] is defined %}
+               {% set n,cp,cn  = data[r][k] %}
+             {% endif %}
+          {% endif %}
+          <th style="border-right: 1px solid black">{{n}}</th>
+          <td>{{cp}}</td>
+          <th style="border-right: 1px solid black">{{-n}}</th>
+          <td>{{cn}}</td>
+         {% endfor %}
+      {%endif%}
     </tr>
     {% endfor %}
    </tbody>
 </table>
-<form name="search" method = "get" action="{{url_for('mwf.render_one_maass_waveform',id=maassid)}}">
+<form name="search" method = "get" action="{{url_for('mwf.render_one_maass_waveform',maass_id=maassid)}}">
   <input type="hidden" name="id" value="{{maassid}}">
   More Coefficients:
   <select name="limit">
@@ -72,6 +89,10 @@
 There are no Fourier coefficients supplied for this Maass form.
 {% endif %}
 
+{% else %}
+There is no Maass waveform supplied.
+
+{% endif %}
 
 
 {% endblock content %}
