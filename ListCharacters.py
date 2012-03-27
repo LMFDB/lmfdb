@@ -44,6 +44,8 @@ def get_character_modulus(a,b):
            else:
              l.append((out(e1), out(inv)))
              v.remove(inv)
+        if k[1] == "more":
+           l = sorted(l, key = lambda e:e[0][2])
         entries2[k] = l
     cols = headers
     #from utils import debug; debug()

@@ -59,12 +59,21 @@ table.ntdata tr.even, table.ntdata tr:nth-child(even) { background: none; }
 {% macro show_character(entry, col, row) -%}
 {% if not entry is none %}
   {% if col == "more"  %}
-    {{ entry }}
+    {% for e in entry %}
+    <div>
+      {% for chi in e %}
+        <a href="{{url_for('render_Character', arg1=row, arg2=chi[0])}}"> 
+            <font color="{% if chi[1] -%}green{%- else -%}blue{%- endif %}">
+                {{ chi[0] }}
+        </font>
+        </a>
+      {% endfor %}
+    </div>
+    {% endfor %}
   {% else %}
     {% for e in entry %}
     <div>
       {% for chi in e %}
-        {#{% if not loop.first %}<br/>{% endif %}#}
         <a href="{{url_for('render_Character', arg1=row, arg2=chi[0])}}"> 
             <font color="{% if chi[1] -%}green{%- else -%}blue{%- endif %}">
                 {{ chi[0] }}
