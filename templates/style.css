@@ -324,6 +324,7 @@ body.knowl #header {
 #content {
   margin-top: 20px;
   font-size: 95%;
+  line-height: 135%;
 }
 
 #content blockquote
