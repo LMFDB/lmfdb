@@ -19,6 +19,7 @@
 }
 .chi a { display: inline; text-align: center; font-family: serif;}
 #chitable td div { float: left; padding-left: .5em; padding-right: .5em; }
+#chitable td div>a { text-align: right; }
 #chitable td { vertical-align: middle;  white-space: nowrap; }
 #chitable td.a { background: #EFE; }
 #chitable td.b { background: none; }
@@ -55,7 +56,7 @@ table.ntdata tr.even, table.ntdata tr:nth-child(even) { background: none; }
     </tr>
 </thead>
 
-{% macro show_character(entry, col) -%}
+{% macro show_character(entry, col, row) -%}
 {% if not entry is none %}
   {% if col == "more"  %}
     LIST
@@ -63,10 +64,12 @@ table.ntdata tr.even, table.ntdata tr:nth-child(even) { background: none; }
     {% for e in entry %}
     <div>
       {% for chi in e %}
-        {% if not loop.first %}<br/>{% endif %}
+        {#{% if not loop.first %}<br/>{% endif %}#}
+        <a href="{{url_for('render_Character', arg1=row, arg2=chi[0])}}"> 
             <font color="{% if chi[1] -%}green{%- else -%}blue{%- endif %}">
                 {{ chi[0] }}
-            </font>
+        </font>
+        </a>
       {% endfor %}
     </div>
     {% endfor %}
@@ -82,7 +85,7 @@ table.ntdata tr.even, table.ntdata tr:nth-child(even) { background: none; }
 	<td class="modulus"align="center" style="4em"> {{ row }} </td>
 
 	{% for col in cols %}
-	<td class="{{ row_class.next() }}"> {{ show_character(contents[(row, col)], col) }} </td>
+	<td class="{{ row_class.next() }}"> {{ show_character(contents[(row, col)], col, row) }} </td>
 	{% endfor %}
 
 	</tr>
