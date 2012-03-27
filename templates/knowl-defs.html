@@ -51,7 +51,7 @@
 {% with knowl = Knowl(knowlid) -%}
 {% if knowl.exists() -%}
   {% if title is none -%}
-    <{{htag}}>{{knowl.title}}</{{htag}}>
+    {# <{{htag}}>{{knowl.title}}</{{htag}}> #}
   {%- else -%}
     <{{htag}}>{{title}}</{{htag}}>
   {%- endif %}
