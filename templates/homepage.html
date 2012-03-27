@@ -147,7 +147,6 @@
    </ul>
   
    {{ entry("Learn more about", learnmore) }}
-   {{ entry("Friends", friends) }}
    {{ entry("Downloads", downloads) }}
    {{ entry("Data", getUploadedFor(request.path) ) }}
 
@@ -160,11 +159,12 @@
 </div>
 {%- endblock sidebar %}
 
-    {% if properties2 %}
+    {% if (properties2 or friends) %}
       <div id="properties">
-       <h1 id="properties-header">Properties</h1>
+    {% if properties2 %}
+       <h1 class="properties-header">Properties</h1>
        <div id="properties-collapser">&uarr;</div>
-       <div id="properties-body">
+       <div class="properties-body">
        <table>
        {% for label, content in properties2 -%}
          {% if label %}
@@ -183,11 +183,22 @@
        {%- endfor %} 
       </table>
       </div>
-     </div>
     {% endif %}
+    {% if friends -%}
+      <h1 class="properties-header">Related objects</h1>
+      <div class="properties-body">
+        <ul>
+          {% for text,url in friends %}
+          <li><a href="{{ url }}">{{ text }}</a></li>
+          {% endfor %}
+        </ul>
+      </div>
+    {%- endif %}
+    </div>
+    {%- endif %}
 
     {% if (citation or properties) -%}
-      <div id="properties">
+    <div id="properties">
        <h1 id="properties-header">Properties</h1>
        <div id="properties-collapser">&uarr;</div>
        <div id="properties-body">
@@ -203,8 +214,7 @@
       </div>
     </div>
     {%- endif %}
-
-
+    
 <div id="main">
   <!-- <div id="mathjax-info">
     <img src="{{ url_for('static', filename='images/progress-green.gif') }}" />
