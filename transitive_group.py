@@ -5,7 +5,7 @@ from base import app, getDBConnection
 from flask import Flask, session, g, render_template, url_for, request, redirect
 
 import sage.all
-from sage.all import ZZ, latex, AbelianGroup, pari
+from sage.all import ZZ, latex, AbelianGroup, pari, gap
 
 from utils import ajax_more, image_src, web_latex, to_dict, parse_range
 
@@ -77,6 +77,14 @@ def group_knowl_guts(n,t, C):
   rest += '</blockquote></div>'
   rest += '<div><h3>Other representations</h3><blockquote>'
   rest += otherrep_display(C, group['repns'])
+  rest += '</blockquote></div>'
+
+  rest += '<div><h3>Generators</h3><blockquote>'
+  rest += generators(n, t)
+  rest += '</blockquote></div>'
+  
+  rest += '<div><h3>Conjugacy Classes</h3><blockquote>'
+  rest += cclasses(n, t)
   rest += '</blockquote></div>'
   
   if group['pretty']:
@@ -159,6 +167,42 @@ def group_display_inertia(code, C):
     return group['pretty']
   return group['name']
 
+def conjclasses(g, n):
+  gap.set('cycletype', 'function(el, n) local ct; ct := CycleLengths(el, [1..n]); ct := ShallowCopy(ct); Sort(ct); ct := Reversed(ct); return(ct); end;')
+  cc = g.ConjugacyClasses()
+  ccn = [x.Size() for x in cc]
+  cc = [x.Representative() for x in cc]
+  cc2 = [x.cycletype(n) for x in cc]
+  cc2 = [str(x) for x in cc2]
+  cc2 = map(lambda x: re.sub("\[",'', x),  cc2)
+  cc2 = map(lambda x: re.sub("\]",'', x),  cc2)
+  ans = [[cc[j], cc[j].Order(), ccn[j], cc2[j]] for j in range(len(ccn))]
+  return(ans)
+
+def cclasses (n, t):
+  G = gap.TransitiveGroup(n,t)
+  cc = conjclasses(G, n)
+  html = """<div>
+            <table class="ntdata">
+            <thead><tr><td>Cycle Type</td><td>Size</td><td>Order</td><td>Representative</td></tr></thead>
+            <tbody>
+         """
+  for c in cc:
+    html += '<tr><td>' + str(c[3]) +'</td>'
+    html += '<td>' + str(c[2]) +'</td>'
+    html += '<td>' + str(c[1]) +'</td>'
+    html += '<td>' + str(c[0]) +'</td>'
+  html += """</tr></tbody>
+             </table>
+          """
+  return html
+
+def generators (n, t):
+  G = gap.TransitiveGroup(n,t)
+  gens = G.SmallGeneratingSet()
+  gens = str(gens)
+  gens = re.sub("[\[\]]", '', gens)
+  return gens
 
 group_names = {}
 group_names[(1, 1, 1, 1)] = ('S1','S1','C1','A1','A2','1T1')

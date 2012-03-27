@@ -10,6 +10,11 @@ from utils import parse_range, make_logger
 logger = make_logger("DC")
 #import web_modforms
 from modular_forms.elliptic_modular_forms.backend.web_modforms import *
+try:
+  from dirichlet_conrey import *
+except:
+  logger.critical("dirichlet_conrey.pyx cython file is not available ...")
+
 
 class WebCharacter:
     """Class for presenting a Character on a web page
@@ -31,86 +36,98 @@ class WebCharacter:
 
 
     def dirichletcharacter(self):
-        G = DirichletGroup(self.modulus)
-        self.zetaorder = G.zeta_order()
-        chi = G[self.number]
-        self.sagechar = str(chi)
-        if chi.is_primitive():
-            self.primitive = "True"
-        else:
-            self.primitive = "False"
-        self.conductor = chi.conductor()
-        self.order = chi.multiplicative_order()
-        self.vals = chi.values()
-        list  = [latex(_) for _ in chi.values()]
-        self.valstex = list
-        self.bound = 5*1024
-        if chi.is_even():
-            self.parity = 'Even'
-        else:
-            self.parity = 'Odd'
-        if self.primitive=="False":
-            self.inducedchar = chi.primitive_character()
-            self.inducedchar_isprim = self.inducedchar.is_primitive()
-            self.inducedchar_modulus = self.inducedchar.modulus()
-            self.inducedchar_conductor = self.inducedchar.conductor()
-            F = DirichletGroup(self.inducedchar_modulus)
-            if self.number == 0:
-                self.inducedchar_number = 0
+
+        #######################################################################################
+        ##  Conrey's naming convention for Dirichlet Characters
+        #######################################################################################
+
+        G = DirichletGroup_conrey(self.modulus)
+        G_sage = G.standard_dirichlet_group()
+        self.level = self.modulus
+        if self.modulus == 1 or self.number%self.modulus != 0:
+            chi = G[self.number]
+            chi_sage = chi.sage_character()
+            self.zetaorder = G_sage.zeta_order()
+            self.genvalues = chi_sage.values_on_gens()
+            if len(chi_sage.values_on_gens()) == 1:
+                self.genvaluestex = latex(chi_sage.values_on_gens()[0])
             else:
-                for i in range(1,len(F)):
-                    if F[i] == self.inducedchar:
-                        self.inducedchar_number = i
-                        break
-            self.inducedchar_tex = r"\(\chi_{%s}\!\!\pmod{%s}\)" %(self.inducedchar_number,self.inducedchar_modulus)
-       
+                self.genvaluestex = latex(chi_sage.values_on_gens())
+            chivals = chi_sage.values_on_gens()
+            Gunits = G_sage.unit_gens()
+            if len(Gunits) != 1:
+                self.unitgens = "("
+            else:
+                self.unitgens = ""
+            count = 0
+            for g in Gunits:
+                if count != len(Gunits)-1:
+                    self.unitgens += latex(g) + ","
+                else:
+                    self.unitgens += latex(g)
+                count += 1
+            if len(Gunits) != 1:
+                self.unitgens += ")"
+            self.sign = "True"
+            if self.zetaorder >= 2:
+                self.sign = "False"
+            chizero = G_sage[0]
+            self.char = str(chi)
+            if chi.is_primitive():
+                self.primitive = "True"
+            else:
+                self.primitive = "False"
+            self.conductor = chi.conductor()
+            self.order = chi.multiplicative_order()
+            self.vals = chi.values()
+            l = []
+            #phi = euler_phi(self.modulus)
+            for j in range(1,self.modulus+1):
+                l.append(chi.logvalue(j))
+            self.logvals = l
+            self.bound = 5*1024
+            if chi.is_even():
+                self.parity = 'Even'
+            else:
+                self.parity = 'Odd'
+            if self.primitive=="False":
+                self.inducedchar = chi.primitive_character()
+                self.inducedchar_isprim = self.inducedchar.is_primitive()
+                self.inducedchar_modulus = self.inducedchar.modulus()
+                self.inducedchar_conductor = self.inducedchar.conductor()
+                F = DirichletGroup_conrey(self.inducedchar_modulus)
+                if self.number == 0:
+                    self.inducedchar_number = 0
+                else:
+                    for chi in F:
+                        j = chi.number()
+                        if chi == self.inducedchar:
+                            self.inducedchar_number = j
+                            break
+                self.inducedchar_tex = r"\(\chi_{%s}\!\!\pmod{%s}\)" %(self.inducedchar_number,self.inducedchar_modulus) 
        # if self.primitive == 'True':
        #     self.primtf = True
        # else:
        #     self.primtf = False
-        if self.order == 2:
-            if self.conductor%2 == 1:
-                self.kronsymbol = r"\begin{equation} \chi_{%s}(a) = " %(self.number)
-                self.kronsymbol += r"\left(\frac{a}{%s}\right)" %(self.conductor)
-                self.kronsymbol += r"\end{equation}"
-            else:
-                if chi.is_even():
-                    self.kronsymbol = r"\begin{equation}  \chi_{%s}(a) = " %(self.number)
+            if self.order == 2:
+                if self.conductor%2 == 1:
+                    self.kronsymbol = r"\begin{equation} \chi_{%s}(a) = " %(self.number)
                     self.kronsymbol += r"\left(\frac{a}{%s}\right)" %(self.conductor)
                     self.kronsymbol += r"\end{equation}"
                 else:
-                    self.kronsymbol = r"\begin{equation}  \chi_{%s}(a) = " %(self.number)
-                    self.kronsymbol += r"\left(\frac{a}{%s}\right)" %(self.conductor)
-                    self.kronsymbol += r"\end{equation}"
+                    if chi.is_even():
+                        self.kronsymbol = r"\begin{equation}  \chi_{%s}(a) = " %(self.number)
+                        self.kronsymbol += r"\left(\frac{a}{%s}\right)" %(self.conductor)
+                        self.kronsymbol += r"\end{equation}"
+                    else:
+                        self.kronsymbol = r"\begin{equation}  \chi_{%s}(a) = " %(self.number)
+                        self.kronsymbol += r"\left(\frac{a}{%s}\right)" %(self.conductor)
+                        self.kronsymbol += r"\end{equation}"
 
-        self.level = self.modulus
-        self.genvalues = chi.values_on_gens()
-        if len(chi.values_on_gens()) == 1:
-            self.genvaluestex = latex(chi.values_on_gens()[0])
-        else:
-            self.genvaluestex = latex(chi.values_on_gens())
-        chivals = chi.values_on_gens()
-        Gunits = G.unit_gens()
-        if len(Gunits) != 1:
-            self.unitgens = "("
-        else:
-            self.unitgens = ""
-        count = 0
-        for g in Gunits:
-            if count != len(Gunits)-1:
-                self.unitgens += latex(g) + ","
-            else:
-                self.unitgens += latex(g)
-            count += 1
-        if len(Gunits) != 1:
-            self.unitgens += ")"
-        self.sign = "True"
-        if self.zetaorder >= 2:
-            self.sign = "False"
-        chizero = G[0]
         self.credit = "Sage"
-        self.title = r"Dirichlet Character: \(\chi_{%s}\!\!\pmod{%s}\)" %(self.number,self.modulus)
-
+        self.title = r"Dirichlet Character: \(\chi_{%s}(%s,\cdot)\)" %(self.modulus,self.number)
+    
+        return chi
     def gauss_sum_tex(self):
         ans = "\(\\tau_a(\\chi_{%s}) \\;\) at \(\\; a = \)" %(self.number)
         return(ans)

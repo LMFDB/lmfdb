@@ -23,16 +23,16 @@ logger = make_logger("LF")
 
 @app.route("/L/")
 @app.route("/L/<arg1>/") # arg1 is EllipticCurve, ModularForm, Character, etc
-@app.route("/L/<arg1>/<field>/") # arg2 is field
-@app.route("/L/<arg1>/<field>/<label>/") #arg3 is label
-@app.route("/L/<arg1>/<field>/<label>/<arg4>/")
-@app.route("/L/<arg1>/<field>/<label>/<arg4>/<arg5>/")
-@app.route("/L/<arg1>/<field>/<label>/<arg4>/<arg5>/<arg6>/")
-@app.route("/L/<arg1>/<field>/<label>/<arg4>/<arg5>/<arg6>/<arg7>/")
-@app.route("/L/<arg1>/<field>/<label>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/")
-@app.route("/L/<arg1>/<field>/<label>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>/")
-def render_Lfunction(arg1 = None, field = None, label = None, arg4 = None, arg5 = None, arg6 = None, arg7 = None, arg8 = None, arg9 = None):
-    return render_webpage(request, arg1, field, label, arg4, arg5, arg6, arg7, arg8, arg9)
+@app.route("/L/<arg1>/<arg2>/") # arg2 is field
+@app.route("/L/<arg1>/<arg2>/<arg3>/") #arg3 is label
+@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/")
+@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/")
+@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/")
+@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/")
+@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/")
+@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>/")
+def render_Lfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = None, arg6 = None, arg7 = None, arg8 = None, arg9 = None):
+    return render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
 
 @app.route("/Lfunction/")
 @app.route("/Lfunction/<arg1>/")
@@ -139,9 +139,8 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
       # throw exception if not UserError
       if len(e.args) > 1 and e.args[1] != 'UserError': raise
       info = { 'content': 'Sorry, there has been a problem: %s' % e.args[0], 'title': 'Error' }
-      return render_template('LfunctionSimple.html', info=info, **info)
-        
-
+      return render_template('LfunctionSimple.html', info=info, **info), 500
+   
     try:
         logger.info(temp_args)
         if temp_args['download'] == 'lcalcfile':
@@ -182,8 +181,7 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
     elif arg1 == 'Lcalcurl':
         return Lfunction( Ltype = arg1, url = arg2)
     
-    else:
-        return Flask.redirect(403)
+    raise Exception("Not Found")
 
 
 def set_info_for_start_page():
@@ -265,7 +263,7 @@ def initLfunction(L,args, request):
 
     elif L.Ltype()  == 'riemann':
         info['bread'] = [('L-function','/L'),('Riemann Zeta',request.url)]
-        info['friends'] = [('\(\mathbb Q\)', url_for('by_label', label='1.1.1.1')),  ('Dirichlet Character \(\\chi_{0}\\!\\!\\pmod{1}\)',
+        info['friends'] = [('\(\mathbb Q\)', url_for('number_fields.by_label', label='1.1.1.1')),  ('Dirichlet Character \(\\chi_{0}\\!\\!\\pmod{1}\)',
                                                                        url_for('render_Character', arg1=1, arg2=0))]
 
     elif L.Ltype()  == 'dirichlet':
@@ -366,7 +364,7 @@ def render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8
     data = plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
     if not data:
         # see note about missing "hardy_z_function" in plotLfunction()
-        return abort(404)
+        return redirect(404)
     response = make_response(data)
     response.headers['Content-type'] = 'image/png'
     return response

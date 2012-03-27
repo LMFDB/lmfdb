@@ -14,6 +14,12 @@ from renderLfunction import render_Lfunction
 from utils import to_dict, parse_range, make_logger
 import ListCharacters
 
+try:
+  from dirichlet_conrey import *
+except:
+  logger.critical("dirichlet_conrey.pyx cython file is not available ...")
+
+
 logger = make_logger("DC")
 
 ###############################################################################
@@ -42,7 +48,11 @@ def render_webpage(request,arg1,arg2):
             info["bread"] = [('Dirichlet Characters', url_for("render_Character")), ('Moduli '+str(modulus_start) + '-' + str(modulus_end), '/Character/Dirichlet/modbrowse='+str(modulus_start)+'-'+str(modulus_end))]
             info['title'] = 'Moduli ' +str(modulus_start)+'-'+str(modulus_end)
             info['credit'] = 'Sage'
-            info['contents'] = ListCharacters.get_character_modulus(modulus_start,modulus_end)
+            h, c, rows, cols = ListCharacters.get_character_modulus(modulus_start,modulus_end)
+            info['contents'] = c 
+            info['headers']  = h
+            info['rows'] = rows
+            info['cols'] = cols
             return render_template("dirichlet_characters/ModulusList.html", **info)
 
 
@@ -80,16 +90,17 @@ def render_webpage(request,arg1,arg2):
             #elif arg1 == 'Hecke':
             #    temp_args['type'] = 'hecke'
     
-        chi = WebCharacter(temp_args)
+        web_chi = WebCharacter(temp_args)
+        #chi = web_chi.dirichletcharacter()
 
-        print chi
+        #print chi
 
         try:
             print temp_args
         except:
             1
 
-        info = initCharacterInfo(chi, temp_args, request) # sets the various properties of chi to be displayed in DirichletCharacter.htiml
+        info = initCharacterInfo(web_chi, temp_args, request) # sets the various properties of chi to be displayed in DirichletCharacter.htiml
 
         return render_template('dirichlet_characters/DirichletCharacter.html', **info)
     else:
@@ -111,58 +122,61 @@ def set_info_for_start_page():
     info['friends'] = [('Dirichlet L-functions', url_for("render_Lfunction", arg1="degree1"))]
     return info
 
-def initCharacterInfo(chi,args, request):
-    info = {'title': chi.title}
+def initCharacterInfo(web_chi,args, request):
+    chi = web_chi.dirichletcharacter()
+    info = {'title': web_chi.title}
     info['citation'] = ''
     info['support'] = ''
     info['args'] = args
 
     info['credit'] = 'Sage'
-    info['citation'] = chi.citation
+    info['citation'] = web_chi.citation
 
     try:
-        info['url'] = chi.url
+        info['url'] = web_chi.url
     except:
         info['url'] =''
 
     info['bread'] = []
-    info['properties2'] = chi.properties
+    info['properties2'] = web_chi.properties
 
     if args['type'] == 'dirichlet':
-        from sage.modular.dirichlet import DirichletGroup
-        snum = str(chi.number)
+        #from dirichlet_conrey import *
+        chi_sage = chi.sage_character()
+        snum = str(web_chi.number)
         info['number'] = snum
-        smod = str(chi.modulus)
+        smod = str(web_chi.modulus)
         info['modulus'] = smod
-        G = DirichletGroup(chi.modulus)
+        #G = DirichletGroup(web_chi.modulus)
         info['bread'] = [('Dirichlet Characters','/Character/Dirichlet'),('Character '+snum+ ' modulo '+smod,'/Character/Dirichlet/'+smod+'/'+snum)]
-        info['sagechar'] = str(chi.sagechar)
-        info['conductor'] = int(chi.conductor)
-        info['order'] = int(chi.order)
-        info['eulerphi'] = euler_phi(chi.modulus)-1
-        info['nextmodulus'] = chi.modulus+1
-        info['primitive'] = chi.primitive
-        info['zetaorder'] = chi.zetaorder
-        info['genvals'] = str(chi.genvalues)
-        info['genvalstex'] = str(chi.genvaluestex)
-        info['parity'] = chi.parity
-        info['sign'] = chi.sign
-        info['real'] = chi.real
-        info['prim'] = chi.prim
-        info['vals'] = latex(chi.vals)
-        info['valstex'] = chi.valstex
-        info['root_unity'] =  str(any(map(lambda x : r"\zeta" in x,  chi.valstex)))
-        info['unitgens'] = str(chi.unitgens)
-        info['bound'] = int(chi.bound)
-        if chi.order == 2:
-            info['kronsymbol'] = "%s" %(kronecker_symbol(G[chi.number]))
-        if chi.primitive=="False":
-            info['inducedchar'] = chi.inducedchar
-            info['inducedchar_modulus'] = chi.inducedchar_modulus
-            info['inducedchar_conductor'] = chi.inducedchar_conductor
-            info['inducedchar_number'] = chi.inducedchar_number
-            info['inducedchar_tex'] = chi.inducedchar_tex
-        info['nextnumber'] = chi.number+1
+        info['char'] = str(web_chi.char)
+        info['conductor'] = int(web_chi.conductor)
+        info['order'] = int(web_chi.order)
+        info['euerphi'] = euler_phi(web_chi.modulus)-1
+        info['nextmodulus'] = web_chi.modulus+1
+        info['primitive'] = web_chi.primitive
+        info['zetaorder'] = web_chi.zetaorder
+        info['genvals'] = str(web_chi.genvalues)
+        info['genvalstex'] = str(web_chi.genvaluestex)
+        info['parity'] = web_chi.parity
+        info['sign'] = web_chi.sign
+        info['real'] = web_chi.real
+        info['prim'] = web_chi.prim
+        info['vals'] = web_chi.vals
+        info['logvals'] = web_chi.logvals
+        #info['valstex'] = web_chi.valstex
+        #info['root_unity'] =  str(any(map(lambda x : r"\zeta" in x,  web_chi.vals)))
+        info['unitgens'] = str(web_chi.unitgens)
+        info['bound'] = int(web_chi.bound)
+        if web_chi.order == 2:
+            info['kronsymbol'] = "%s" %(kronecker_symbol(chi_sage))
+        if web_chi.primitive=="False":
+            info['inducedchar'] = web_chi.inducedchar
+            info['inducedchar_modulus'] = web_chi.inducedchar_modulus
+            info['inducedchar_conductor'] = web_chi.inducedchar_conductor
+            info['inducedchar_number'] = web_chi.inducedchar_number
+            info['inducedchar_tex'] = web_chi.inducedchar_tex
+        info['nextnumber'] = web_chi.number+1
         info['learnmore'] = [('Dirichlet Characters', url_for("knowledge.show", ID="character.dirichlet.learn_more_about"))] 
         info['friends'] = [('Dirichlet L-function', '/L/Character/Dirichlet/'+smod+'/'+snum)]
         nmore = int(snum) + 1
@@ -170,14 +184,14 @@ def initCharacterInfo(chi,args, request):
         mmore = int(smod) + 1
         mless = int(smod) - 1
         url_ch = url_for("render_Character", arg1=smod,arg2=str(nmore))
-        if chi.modulus == 1:
+        if web_chi.modulus == 1:
              info['navi'] = [(r"\(\chi_{" + str(0) + r"} \left( \text{mod}\; " + str(2)+ r"\right) \)" ,url_for("render_Character", arg1=str(2),arg2=str(0))), ("", "")]
-        elif chi.modulus == 2:
+        elif web_chi.modulus == 2:
              info['navi'] = [(r"\(\chi_{" + str(0) + r"} \left( \text{mod}\; " + str(3)+ r"\right) \)" ,url_for("render_Character", arg1=str(3),arg2=str(0))), (r"\(\chi_{" + str(0) + r"} \left( \text{mod}\;" + str(1)+ r"\right) \)",url_for("render_Character", arg1=str(1),arg2=str(0)))]
         else:
-            if chi.number == 0:
-                info['navi'] = [(r"\(\chi_{" + str(nmore) + r"} \left( \text{mod}\; " + smod+ r"\right) \)" ,url_ch), (r"\(\chi_{" + str(euler_phi(chi.modulus -1)-1) + r"} \left( \text{mod}\;" + str(mless)+ r"\right) \)",url_for("render_Character", arg1=str(mless),arg2=str(euler_phi(chi.modulus -1)-1)))]
-            elif chi.number == euler_phi(chi.modulus)-1:
+            if web_chi.number == 0:
+                info['navi'] = [(r"\(\chi_{" + str(nmore) + r"} \left( \text{mod}\; " + smod+ r"\right) \)" ,url_ch), (r"\(\chi_{" + str(euler_phi(web_chi.modulus -1)-1) + r"} \left( \text{mod}\;" + str(mless)+ r"\right) \)",url_for("render_Character", arg1=str(mless),arg2=str(euler_phi(web_chi.modulus -1)-1)))]
+            elif web_chi.number == euler_phi(web_chi.modulus)-1:
                 info['navi'] = [(r"\(\chi_{" + str(0) + r"} \left( \text{mod}\;" + str(mmore)+ r"\right) \)",url_for("render_Character", arg1=str(mmore),arg2=str(0))), (r"\(\chi_{" + str(nless) + r"} \left( \text{mod}\;" + smod+ r"\right) \)",url_for("render_Character", arg1=smod,arg2=str(nless)))]
             else:
                 info['navi'] = [(r"\(\chi_{" + str(nmore) + r"} \left( \text{mod}\;" + smod+ r"\right) \)",url_for("render_Character", arg1=smod,arg2=str(nmore))), (r"\(\chi_{" + str(nless) + r"} \left( \text{mod}\; " + smod+ r"\right) \)",url_for("render_Character", arg1=smod,arg2=str(nless)))]
@@ -286,6 +300,7 @@ def charactertable(query):
             order=query.get('order',None))
 
 def render_character_table(modulus=None,conductor=None,order=None):
+    from dirichlet_conrey import DirichletGroup_conrey
     start = 1
     end = 201
     stepsize = 1
@@ -298,16 +313,17 @@ def render_character_table(modulus=None,conductor=None,order=None):
 
     def row(N):
         ret = []
-        G = DirichletGroup(N)
-        for _ in range(len(G)):
+        G = DirichletGroup_conrey(N)
+        for chi in G:
+            j = chi.number()
             add = True
-            add &= not conductor or G[_].conductor() == conductor
-            add &= not order     or G[_].order() == order
+            add &= not conductor or chi.conductor() == conductor
+            add &= not order     or chi.order() == order
             if add:
-                if G[_].order() == 2 and kronecker_symbol(G[_]) != None:
-                    ret.append([(_, kronecker_symbol(G[_]), G[_].modulus(), G[_].conductor(), G[_].order(), G[_].is_primitive(), G[_].is_even())])
+                if chi.order() == 2 and kronecker_symbol(chi) != None:
+                    ret.append([(j, kronecker_symbol(chi), chi.modulus(), chi.conductor(), chi.order(), chi.is_primitive(), chi.is_even())])
                 else:
-                    ret.append([(_,G[_], G[_].modulus(), G[_].conductor(), G[_].order(), G[_].is_primitive(), G[_].is_even())])
+                    ret.append([(j,chi, chi.modulus(), chi.conductor(), chi.order(), chi.is_primitive(), chi.is_even())])
         return ret
     return [row(_) for _ in range(start,end,stepsize)]
 
