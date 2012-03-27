@@ -316,7 +316,7 @@ body.knowl #header {
   width: 20px;
   height: 17px;
   position: absolute;
-  top:   15px;
+  top:   12px;
   right: 3px;
   {{ BORDER_RADIUS(20) }}
 }

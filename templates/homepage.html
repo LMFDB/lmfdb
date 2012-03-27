@@ -161,9 +161,9 @@
 
     {% if (properties2 or friends) %}
       <div id="properties">
+       <div id="properties-collapser">&uarr;</div>
     {% if properties2 %}
        <h1 class="properties-header">Properties</h1>
-       <div id="properties-collapser">&uarr;</div>
        <div class="properties-body">
        <table>
        {% for label, content in properties2 -%}
