@@ -5,8 +5,6 @@ ASC = pymongo.ASCENDING
 import flask
 from base import app, getDBConnection, url_for
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, redirect, g, session, Flask
-from number_field_galois_groups import nfgg_page, nfgg_logger
-from math_classes import *
 from number_fields import nf_page, nf_logger
 
 import re
@@ -479,8 +477,10 @@ def render_field_webpage(args):
 #                   ('Galois Group:', '%s' %data['galois_group'])
                    ('Galois Group:', group_display_short(data['degree'], t, C))
     ]
+    from math_classes import NumberFieldGaloisGroup
 
-
+    info["tim_number_field"] = NumberFieldGaloisGroup.find_one({"label":"2.2.37.1"})
+    
     del info['_id']
     return render_template("number_field.html", properties2=properties2, credit=NF_credit, title = title, bread=bread, friends=info.pop('friends'), info=info )
 
