@@ -14,7 +14,8 @@
 <tr>
 <td align=left> {{ KNOWL_LINK('ec.q.conductor', title='conductor') }} <input type='text' name='conductor' size=10 value={{info.conductor}}></td>
 <td align=left>{{ KNOWL_LINK('ec.q.rank', title='rank') }}<input type='text' name='rank'size=1 value={{info.rank}}></td>
-<td align=left>{{ KNOWL_LINK('ec.field.torsion_order', title='torsion order') }} <input type='text' name='torsion' size=1 value={{info.torsion}}> </td>
+<td align=left>{{ KNOWL_LINK('ec.q.torsion_order', title='torsion order') }} <input type='text' name='torsion' size=1 value={{info.torsion}}> </td>
+<td align=left>{{ KNOWL_LINK('ec.q.torsion_subgroup', title='torsion structure') }} <input type='text' name='torsion_structure' size=1 value={{info.torsion_structure}}> </td>
 <td align=left>{{ KNOWL_LINK('ec.q.analytic_sha_order', title='analytic order of &#1064;\(_{an} \)') }} <input type='text' name='sha_an' size=1 value={{info.sha_an}}> </td>
 <td align=left>
 <td align=left>{{ KNOWL_LINK('ec.q.optimal', title='Optimal') }}
@@ -57,7 +58,7 @@ table td.params {
 </tr>
 {% for curve in info.curves: %}
 <tr>
-<td class="center"><a href="/EllipticCurve/Q/{{curve.conductor}}{{curve.iso}}">{{curve.conductor}}{{curve.iso}}</a></td>
+<td class="center"><a href="/EllipticCurve/Q/{{curve.iso}}">{{curve.iso}}</a></td>
 <td class="center"><a href="/EllipticCurve/Q/{{curve.label}}">{{curve.label}}</a></td>
 <td class="params">{{info.format_ainvs(curve.ainvs)}}</td>
 <td class="center"><a href="/EllipticCurve/Q?conductor={{info.conductor}}&rank={{curve.rank}}&torsion={{info.torsion}}">{{curve.rank}}</a></td>
@@ -69,5 +70,9 @@ table td.params {
 <hr>
 <a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form();return false">Previous</A>
 <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form();return false">Next</A></td>
+
+{% if 0 %}
+Query was: {{info.query}}
+{% endif %}
 
 {% endblock %}
