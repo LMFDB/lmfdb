@@ -3,6 +3,7 @@
 from base import getDBConnection, app
 from utils import url_for
 from databases.Dokchitser_databases import Dokchitser_ArtinRepresentation_Collection, Dokchitser_NumberFieldGaloisGroup_Collection
+from sage.all import PolynomialRing, QQ
 
 class ArtinRepresentation(object):
     @staticmethod
@@ -46,16 +47,15 @@ class ArtinRepresentation(object):
     
     def __str__(self):
         try:
-            return "Artin representation of index "+str(self.index())+ \
-                    " among representations of conductor "+\
+            return "An Artin representation of conductor "+\
                     str(self.conductor())+" and dimension "+str(self.dimension())
+            #+", "+str(self.index())
         except:
             return "An Artin representation"
 
     def title(self):
         try:
-            return "Artin representation of index $"+str(self.index())+ \
-                    "$ among representations of conductor $"+\
+            return "An Artin representation of conductor $"+\
                     str(self.conductor())+"$ and dimension $"+str(self.dimension())+"$"
         except:
             return "An Artin representation"
@@ -68,7 +68,7 @@ class ArtinRepresentation(object):
 class CharacterValues(list):
     def display(self):
         # The character values can be large, do not convert to int!
-        return "["+",".join([str(x) for x in self])+"]"
+        return "["+",".join([x.latex() for x in self])+"]"
     
 class ConjugacyClass(object):
     def __init__(self,G,data):
@@ -104,12 +104,10 @@ class NumberFieldGaloisGroup():
     def collection(source = "Dokchitser"):
         if source == "Dokchitser":
             tmp = Dokchitser_NumberFieldGaloisGroup_Collection(getDBConnection())
-            print "This seems to work:", tmp, type(tmp)
             return tmp
             
     
     def __init__(self, *x, **data_dict):
-        print "ENTERING CONSTRUCTOR", x, data_dict
         self._data = data_dict["data"]
             
     @classmethod
@@ -126,6 +124,31 @@ class NumberFieldGaloisGroup():
     
     def polynomial(self):
         return self._data["Polynomial"]
+                
+    def polredabs(self):
+        if "polredabs" in self._data.keys():
+            return self._data["polredabs"]
+        else:
+            pol=PolynomialRing(QQ,'x')(str(self.polynomial()))
+            pol *= pol.denominator()
+            R = pol.parent()
+            from sage.all import pari
+            pol = R(pari(pol).polredabs())
+            self._data["polredabs"] = pol
+            return self._data["polredabs"]
+    
+    def label(self):
+        if "label" in self._data.keys():
+            return self._data["label"]
+        else:
+            from number_fields.number_field import poly_to_field_label
+            self._data["label"] = poly_to_field_label(self.polynomial())
+            return self._data["label"]
+    
+    def url_for(self):
+        from number_fields import nf_page
+        from number_fields.number_field import *
+        return url_for("number_fields.by_label", label = self.label())        
     
     def size(self):
         return self._data["Size"]
@@ -161,7 +184,7 @@ class NumberFieldGaloisGroup():
         return self._data["QpRts-minpoly"]
 
     def computation_roots(self):
-        tmp =  [x.sage()  for x in self._data["QpRts"]]
+        tmp =  [str(x)  for x in self._data["QpRts"]]
         return tmp
         
     def complex_conjugation(self):
@@ -180,7 +203,6 @@ class NumberFieldGaloisGroup():
         x = [ArtinRepresentation.find_one(dict([("Dim",item["Degree"]),\
             ("Conductor",str(item["Conductor"])), ("DBIndex",item["Index"])]))\
                 for item in self._data["ArtinReps"]]
-        print "FOUND ", x
         return x
         
 #    def sage_object(self):
@@ -198,7 +220,3 @@ class NumberFieldGaloisGroup():
     def display_title(self):
         return "The Galois group of the number field $\mathbb{Q}[x]/(%s)"%self.polynomial().latex()+"$"
     
-    def url_for(self):
-        from number_field_galois_groups import nfgg_page
-        from number_field_galois_groups.main import *
-        return url_for("number_field_galois_groups.by_data", degree = self.degree(), size = self.size(), index = self.index())

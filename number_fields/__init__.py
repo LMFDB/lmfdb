@@ -11,7 +11,7 @@ nf_logger = make_logger(nf_page)
 def body_class():
   return { 'body_class' : 'nf' }
 
-import number_field
+from number_field import *
 
 app.register_blueprint(nf_page, url_prefix="/NumberField")
 
