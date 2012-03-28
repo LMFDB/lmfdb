@@ -12,7 +12,7 @@ from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicFie
 
 from utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, parse_range
 
-from number_field import parse_list, parse_field_string, field_pretty
+from number_fields.number_field import parse_list, parse_field_string, field_pretty
 
 def teXify_pol(pol_str): # TeXify a polynomial (or other string containing polynomials)
     o_str = pol_str.replace('*','')
