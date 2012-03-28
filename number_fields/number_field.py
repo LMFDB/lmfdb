@@ -143,7 +143,7 @@ def render_groups_page():
     groups.sort(cmp=gcmp)
     t = 'Galois group labels'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")),('Galois group labels',' ')]
-    return render_template("galois_groups.html", groups=groups, info=info, credit=NF_credit, title=t, bread=bread)
+    return render_template("galois_groups.html", groups=groups, info=info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
 
 @nf_page.route("/FieldLabels")
 def render_labels_page():
@@ -151,7 +151,7 @@ def render_labels_page():
     info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), ('Discriminant ranges',url_for(".render_discriminants_page"))]
     t = 'Number field labels'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")),('Number field labels','')]
-    return render_template("number_field_labels.html", info=info, credit=NF_credit, title=t, bread=bread)
+    return render_template("number_field_labels.html", info=info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
 
 @nf_page.route("/Discriminants")
 def render_discriminants_page():
@@ -159,7 +159,7 @@ def render_discriminants_page():
     info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), ('Discriminant ranges',url_for(".render_discriminants_page"))]
     t = 'Global Number Field Discriminant Ranges'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")),('Discriminant ranges',' ')]
-    return render_template("discriminant_ranges.html", info=info, credit=NF_credit, title=t, bread=bread)
+    return render_template("discriminant_ranges.html", info=info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
 
 @nf_page.route("/")
 def number_field_render_webpage():
@@ -178,7 +178,7 @@ def number_field_render_webpage():
         t = 'Global Number Fields'
         bread = [('Global Number Fields', url_for(".number_field_render_webpage"))]
         info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), ('Discriminant ranges',url_for(".render_discriminants_page"))]
-        return render_template("number_field_all.html", info = info, credit=NF_credit, title=t, bread=bread)
+        return render_template("number_field_all.html", info = info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
     else:
         return number_field_search(**args)
 
@@ -426,6 +426,7 @@ def render_field_webpage(args):
     h = data['class_number']
     t = data['T']
     n = data['degree']
+    data['rawpoly'] = rawpoly
     data['galois_grou'] = group_display_knowl(n,t,C)
     data['cclasses'] = cclasses_display_knowl(n,t,C)
     data['character_table'] = character_table_display_knowl(n,t,C)

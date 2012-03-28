@@ -25,8 +25,8 @@ function show_code(system) {
     <div></div>
 
 <p>
-  <div class='sage nodisplay code'>sage: K = NumberField(PolynomialRing(QQ,'x')({{info.coefficients}}),'a')</div>
-  <div class='pari nodisplay code'>pari: K = bnfinit(Polrev({{info.coefficients}}))</div>
+  <div class='sage nodisplay code'>sage: K = NumberField({{info.rawpoly}},'a')</div>
+  <div class='pari nodisplay code'>pari: K = bnfinit({{info.rawpoly}})</div>
   <div class='magma nodisplay code'>&gt; K&lt;a&gt; := NumberField(PolynomialRing(Rationals())!{{info.coefficients}});</div>
 </p>
 
@@ -142,9 +142,21 @@ function show_code(system) {
              </tr>
            </table>
         </p>
+<p>
+   In the table, <i>R</i> denotes a ramified prime.  Cycle lengths 
+   which are repeated in a cycle type are indicated by exponents.
         <p>
-          In the table, <i>R</i> denotes a ramified prime.  Cycle lengths which are repeated in a cycle type are indicated
-          by exponents.
+  <div class='pari nodisplay code'>
+   To obtain a list of [\(e_i, f_i\)] for the factorization of the ideal
+ \(p\mathcal{O}_K\) <br>
+pari: 
+<br>
+  p = 7;  \\ set a prime
+<br>
+  tmp = idealprimedec(K, p); \\ get the data
+<br>
+  vector(length(tmp), j, [tmp[j][3], tmp[j][4]])
+</div>
 
 
 {% endblock %}
