@@ -63,10 +63,10 @@ function show_code(system) {
     <p><h2> {{ KNOWL('ec.q.integral_points', title='Integral points') }}</h2>
     <div class='sage nodisplay code'>sage: E.integral_points()</div>
     <div class='pari nodisplay code'> </div>
-    <div class='magma nodisplay code'>&gt; ;</div>
+    <div class='magma nodisplay code'>&gt; IntegralPoints(E);</div>
     {% if info.xintegral_points!='' %}    
-    <div> Note: If $P$ is integral, then so is $-P$, and only one of those points is listed. </div>
     <p> {{ info.xintegral_points}} </p>
+    <div> Note: only one of each pair $\pm P$ is listed. </div>
     {%else %}
     <div> None </div> 
     {%endif %}
@@ -217,12 +217,49 @@ function show_code(system) {
         <a  href='{{info.download_qexp_url}}' target='_blank' >download coefficients</a>
     </p>
 
-    <h2> {{KNOWL('ec.q.special_value', title='Special $L$-values', special_value = info.special_value)}} attached to the curve </h2>
+    <h2> {{KNOWL('ec.q.special_value', title='Special L-value', special_value = info.special_value)}} attached to the curve </h2>
         \( {{ info.lder }} = {{ info.special_value}} \)
     </p>
     
+    <h2> Local data </h2>
+
+<table>
+<tr>
+<th>prime</th>
+<th>{{KNOWL('ec.q.Tamagawa_numbers', title='Tamagawa number')}}</th>
+<th>{{KNOWL('ec.q.kodaira_symbol', title='Kodaira symbol')}}</th>
+<th>{{KNOWL('ec.q.reduction_type', title='Reduction type')}}</th>
+</tr>
+{% for pr in info.local_data %}
+<tr>
+<td align=center> \({{pr.p}}\)</td>
+<td align=center>\({{pr.tamagawa_number}}\)</td>
+<td align=center>{{pr.kodaira_symbol}}</td>
+<td align=center>
+{% if pr.reduction_type==0 %}
+ Additive
+ {% elif pr.reduction_type==1 %}
+  Split multiplicative
+  {% elif pr.reduction_type==-1 %}
+   Non-split multiplicative
+{% endif %}
+</td>
+</tr>
+{% endfor %}
+</table>
+
+
+
     <h2> \( p \)-adic data </h2>
     <p>
+{% if info.rank==0 %}
+All \(p\)-adic regulators are identically \(1\) since the rank is \(0\).
+{% else %}
+{% if info.p_adic_data_exists %}
+<p>
+Note: \(p\)-adic data only exists for primes \(p\ge5\) of good ordinary
+reduction.
+</p>
         <select onchange="$('#padic').load('{{url_for('padic_data', label=info.label, p='xxx', rank=info.rank).replace('xxx', "'+this.value+'")}}', function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'padic']);}); ">
         <option value=''>Choose a prime...</option>
         {% for p in info.p_adic_primes %}
@@ -231,14 +268,20 @@ function show_code(system) {
         </select>
         <div id='padic'>
         </div>
+{% else %}
+No \(p\)-adic data exists for this curve.
+{% endif %}
+{% endif %}
     </p>
 
+<!---
     <h2> Plot of real points</h2>
     <div class='sage nodisplay code'>sage: E.plot()</div>
     <div class='pari nodisplay code'> </div>
     <div class='magma nodisplay code'> </div>
     <center>
     <img src="{{info.plot}}" />
+--->
     </center>
 
 <script type="text/javascript">

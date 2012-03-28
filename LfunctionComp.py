@@ -2,8 +2,7 @@ import re
 import base
 from pymongo import ASCENDING
 
-
-cremona_label_regex = re.compile(r'(\d+)([a-z])+(\d*)')
+from elliptic_curve import cremona_label_regex
 
 def characterlist(N,type):
      from sage.modular.dirichlet import DirichletGroup
