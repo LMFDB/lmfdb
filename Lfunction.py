@@ -627,7 +627,7 @@ class Lfunction_EMF(Lfunction):
 #FIX: These coefficients are wrong; too large and a1 is not 1
 
         self.coefficient_period = 0
-        self.coefficient_type = 2
+        self.coefficient_type = 0
         self.quasidegree = 1
 
         self.checkselfdual()
@@ -891,7 +891,7 @@ class Lfunction_Maass(Lfunction):
             logger.info("Third coefficient: {0}".format(self.dirichlet_coefficients[2]))
             
             # Set properties of the L-function
-            self.coefficient_type = 2
+            self.coefficient_type = 0
             self.selfdual = True
             self.primitive = True
             self.quasidegree = 2
@@ -911,7 +911,7 @@ class Lfunction_Maass(Lfunction):
             logger.info("Sign: {0}".format(self.sign))
 
             self.kappa_fe = [0.5,0.5]
-            self.lambda_fe = [0.5*aa + self.eigenvalue*I, 0,5*aa - self.eigenvalue*I]
+            self.lambda_fe = [0.5*aa + self.eigenvalue*I, 0.5*aa - self.eigenvalue*I]
             self.mu_fe = [aa + 2*self.eigenvalue*I, aa -2*self.eigenvalue*I]
             self.nu_fe = []
             self.langlands = True
