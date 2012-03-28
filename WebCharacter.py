@@ -116,8 +116,8 @@ class WebCharacter:
                 self.inducedchar_modulus = self.inducedchar.modulus()
                 self.inducedchar_conductor = self.inducedchar.conductor()
                 F = DirichletGroup_conrey(self.inducedchar_modulus)
-                if self.number == 0:
-                    self.inducedchar_number = 0
+                if self.number == 1:
+                    self.inducedchar_number = 1
                 else:
                     for chi in F:
                         j = chi.number()
