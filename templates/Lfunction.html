@@ -1,16 +1,22 @@
 {% extends 'homepage.html' %}
 
 {% block content %}
+
+
+ {% if Ltype!="maass" %}
+     <h2>{{ KNOWL_INC('historical'+request.path.lower().replace('/','_'), title='Historical Information') }}</h2>
+ {% endif %}
+
  <h2> {{ KNOWL('lfunction.dirichlet_series', title='Dirichlet series') }}</h2>
  <div>\[{{ dirichlet }}\]</div>
 
  <h2>{{ KNOWL('lfunction.functional_equation',title='Functional equation') }}</h2>
- 
+
  <div id="functionalEqText">\[{{ functionalequation }}\]</div>
  <div>
    {{ KNOWL('lfunction.selbergdata', title="Selberg data") }}: ${{ functionalequationSelberg }}$</div>
- 
- 
+
+
  <h2>{{ KNOWL('lfunction.euler_product', title='Euler product') }}</h2>
  <div>\[{{ eulerproduct }}\]</div>
 
@@ -26,7 +32,9 @@
      <h2>Special Values</h2>
      <div>
       {{ sv12 }}<br>
-      {{ sv1 }}<br>
+      {% if Ltype!="riemann" and Ltype!="dedekindzeta" %}
+          {{ sv1 }}<br>
+      {% endif %}
      </div>
  {% else %}
       <div>Not enough Dirichlet series coefficients to compute special values.</div>
@@ -39,6 +47,12 @@
  {% else %}
     <div>Not enough Dirichlet series coefficients to make a graph.</div>
  {% endif %}
+
+
+ {% if Ltype!="maass" %}
+     <h2>{{ KNOWL_INC('misc'+request.path.lower().replace('/','_'), title='Misc') }}</h2>
+ {% endif %}
+
 
 <script type="text/javascript">
   $(function() {
