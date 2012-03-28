@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import base
 import math
-from Lfunctionutilities import pair2complex, splitcoeff, seriescoeff
+from Lfunctionutilities import pair2complex, splitcoeff, seriescoeff, compute_local_roots_SMF2_scalar_valued, compute_dirichlet_series
 from sage.all import *
 import sage.libs.lcalc.lcalc_Lfunction as lc
 from sage.rings.rational import Rational
@@ -9,10 +9,12 @@ import re
 import pymongo
 import bson
 import utils
+
 from modular_forms.elliptic_modular_forms.backend.web_modforms import *
 from modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import MaassDB
 from modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaassForm
 from WebCharacter import WebCharacter
+
 import time ### for printing the date on an lcalc file
 import socket ### for printing the machine used to generate the lcalc file
 
@@ -1025,7 +1027,6 @@ class ArtinLfunction(Lfunction):
     
     def __init__(self, **args):
         constructor_logger(self,args)
-
         #Check for compulsory arguments
         if not 'tim_index' in args.keys() or not 'conductor' in args.keys() or not 'degree' in args.keys():
             raise Exception("You have to supply a conductor, a degree, and an index in Tim Dokchitser's database")
@@ -1034,10 +1035,10 @@ class ArtinLfunction(Lfunction):
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
+
         from math_classes import ArtinRepresentation
         
         self.artin = ArtinRepresentation(args["dimension"], args["conductor"], args["index"])
-
         self.title = "L function for the Artin representation of dimension" + str(args["dimension"]) + \
             ", conductor "+ str(args["conductor"]) + " and index in Tim's database"+ str(args["index"])
                 
@@ -1055,34 +1056,27 @@ class ArtinLfunction(Lfunction):
 
         self.credit = 'Sage, lcalc, and data precomputed in Magma by Tim Dokchitser'
         self.citation = ''
-        
-        self.generateSageLfunction()
+
+
+
 
 class SymmetricPowerLfunction(Lfunction):
     def Ltype(self):
         return "SymmetricPower"
 
     def __init__(self, *args):
-        """
-        """
-        constructor_logger(self,args)
         try:
             self.m=Integer(args[0])
         except TypeError:
             raise TypeError, "The power has to be an integer"
-
         if args[1][0] != 'EllipticCurve' or args[1][1] != 'Q':
             raise TypeError, "The symmetric L functions have been implemented only for Elliptic Curves over Q"
-
 
         try:
             self.E=EllipticCurve(args[1][2])
         except  AttributeError:
             raise AttributeError, "This elliptic curve does not exist in cremona's database"
-
-
         from symL.symL import SymmetricPowerLFunction
-
         self.S=SymmetricPowerLFunction(self.E,self.m)
 
         self.title = "The symmetric power $L$-function $L(s, Symm^%d E)$ of Elliptic curve %s"% (self.m,self.E.cremona_label())
@@ -1114,3 +1108,94 @@ class SymmetricPowerLfunction(Lfunction):
         self.level=self.S.conductor
 
 
+
+
+class Lfunction_SMF2_scalar_valued(Lfunction):
+    """Class representing an L-function for a scalar valued Siegel modular form of degree 2
+
+    Compulsory parameters: weight
+                           orbit
+                           
+    Optional parameters: number                       
+                           
+
+    
+    """
+    
+    def __init__(self, **args):
+
+        #Check for compulsory arguments
+        if not ('weight' in args.keys() and 'orbit' in args.keys()):
+            raise KeyError, "You have to supply weight and orbit for a Siegel modular form L-function"
+        #logger.debug(str(args))
+
+        if not args['number']:
+            args['number'] = 0     # Default choice of embedding of the coefficients
+
+        self.__dict__.update(args)
+        self.weight = int(self.weight)
+        self.number = int(self.number)
+        # Load the eigenvalues
+        loc = "http://data.countnumber.de/Siegel-Modular-Forms/Sp4Z/xeigenvalues/"+str(self.weight)+"_"+self.orbit+"-ev.sobj"
+
+        self.ev_data = load(loc)
+
+        self.automorphyexp = float(self.weight)-float(1.5)
+        self.Q_fe = float(1/(4*math.pi**2)) # the Q in the FE as in lcalc
+
+        self.sign = (-1)**float(self.weight)
+
+        self.level = 1
+        self.degree = 4
+        #logger.debug(str(self.degree))
+        roots = compute_local_roots_SMF2_scalar_valued(self.ev_data, self.weight) # compute the roots of the Euler factors
+        #logger.debug(str(self.ev_data))
+        self.numcoeff = max([a[0] for a in roots]) # include a_0 = 0
+        self.dirichlet_coefficients = compute_dirichlet_series(roots, self.numcoeff) # these are in the arithmetic normalization
+        self.kappa_fe = [1,1] # the coefficients from Gamma(ks+lambda)
+        self.lambda_fe = [float(1)/float(2), self.automorphyexp] # the coefficients from Gamma(ks+lambda)
+        self.mu_fe = [] # the shifts of the Gamma_R to print
+
+
+        self.nu_fe = [float(1)/float(2), self.automorphyexp] # the shift of the Gamma_C to print
+        self.selfdual = True 
+        if self.orbit[0] == 'U': # if the form isn't a lift 
+            self.poles = [] # the L-function is entire
+            self.residues = []
+            self.langlands = True
+            self.primitive = True # and primitive
+
+
+        # FIX the coefficients by applying the analytic normalization and
+
+        K = self.ev_data[0].parent().fraction_field()
+        if K == QQ:
+            d = self.dirichlet_coefficients
+            self.dirichlet_coefficients = [ d[i]/float(i)**self.automorphyexp for i in range(1,len(d)) ]
+        else:
+            emb = K.complex_embeddings()[self.number]
+            d = self.dirichlet_coefficients
+            self.dirichlet_coefficients = [ emb(d[i])/float(i)**self.automorphyexp for i in range(1,len(d)) ]
+        self.coefficient_period = 0
+        self.coefficient_type = 2
+        self.quasidegree = 1
+
+        self.checkselfdual()
+
+        self.texname = "L(s,F)"
+        self.texnamecompleteds = "\\Lambda(s,F)"
+        if self.selfdual:
+            self.texnamecompleted1ms = "\\Lambda(1-s,F)"
+        else:
+            self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{F})"
+        self.title = "$L(s,F)$, "+ "where $F$ is a scalar-valued Siegel modular form of weight "+str(self.weight)+"."
+
+        self.citation = ''
+        self.credit = ''
+
+        self.generateSageLfunction()
+
+
+    def Ltype(self):
+        if self.orbit[0] == 'U':
+            return "siegelnonlift"
