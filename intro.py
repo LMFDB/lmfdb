@@ -15,3 +15,7 @@ def introduction_features():
 @app.route("/intro/tutorial")
 def introduction_tutorial():
     return render_template("intro.html", title="Gentle Introduction - Tutorial", kid='intro.tutorial', body_class=_bc)
+
+@app.route("/bigpicture")
+def bigpicture():
+    return render_template("bigpicture.html", title="Big Picture", body_class="bigpicture")
