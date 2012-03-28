@@ -41,3 +41,10 @@ class AlgebraicNumberString_Root(String):
     def eval(self):
         tmp = self.replace("^","**")
         return eval(tmp,{"__builtins__":None},{"z":AlgebraicNumberString_Root.z})
+    
+    def __str__(self):
+        return self.replace("*"," ")
+    
+    def latex(self):
+        return self.replace("*","\cdot ")
+    

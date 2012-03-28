@@ -2,17 +2,26 @@
 
 {% block content %}
 
-    <script>
-    function show_code(system) {
-        $('.sage').hide()
-        $('.'+system).show()
+<script>
+var cur_system = null;
+function show_code(system) {
+    $('.sage').hide();
+    $('.pari').hide();
+    $('.magma').hide();
+    if (cur_system == null) {
+      $('.'+system).show();
+      cur_system = system;
+    } else {
+      $('.'+system).hide();
+      cur_system = null;
     }
-    </script>
+}
+</script>
 
         <h1>
             {{ info.label }}</h1>
             <div>
-                <a onclick="show_code('sage'); return false" href='#'>sage</a>
+      Show commands for:  <a onclick="show_code('sage'); return false" href='#'>sage</a>
             </div>
         <div class='sage nodisplay code'>sage: E = EllipticCurve('{{info.label}}1')<br>sage: E.isogeny_class()</div>
         
