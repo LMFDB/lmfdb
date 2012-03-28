@@ -118,8 +118,14 @@ function show_code(system) {
         <div class='pari nodisplay code'>pari: polgalois(pol)</div>
         <div class='magma nodisplay code'>&gt; GaloisGroup(K);</div>
         <p>
-            {{ info.galois_grou | safe }} 
-        </p>
+            {{ info.galois_grou | safe }}:
+          <table>
+            <tr><td>{{ info.phrase }}</tr>
+            <tr><td>
+            {{ info.cclasses | safe }}</tr>
+            <tr><td>
+            {{ info.character_table | safe }}</tr>
+          </table>
 
         <p><h2> {{ KNOWL('nf.frobenius_cycle_types', title='Frobenius cycle types') }}</h2>
         <p>

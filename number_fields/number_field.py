@@ -15,19 +15,29 @@ import sage.all
 from sage.all import ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, euler_phi, pari, prod
 from sage.rings.arith import primes
 
-from transitive_group import group_display_knowl, group_knowl_guts, group_display_short
+from transitive_group import group_display_knowl, group_knowl_guts, group_display_short, group_cclasses_knowl_guts, group_phrase, cclasses_display_knowl, character_table_display_knowl, group_character_table_knowl_guts
 
 from utils import ajax_more, image_src, web_latex, to_dict, parse_range, coeff_to_poly, pol_to_html
 
 NF_credit = 'the PARI group, J. Voight, J. Jones, and D. Roberts'
 
 def galois_group_data(n, t):
-  C = base.getDBConnection()
+  C = getDBConnection()
   return group_knowl_guts(n, t, C)
 
-@nf_page.context_processor
+def group_cclasses_data(n, t):
+  C = getDBConnection()
+  return group_cclasses_knowl_guts(n,t,C)
+
+def group_character_table_data(n, t):
+  C = getDBConnection()
+  return group_character_table_knowl_guts(n,t,C)
+
+@app.context_processor
 def ctx_galois_groups():
-  return {'galois_group_data': galois_group_data }
+  return {'galois_group_data': galois_group_data, 
+          'group_cclasses_data': group_cclasses_data,
+          'group_character_table_data': group_character_table_data }
 
 def field_pretty(field_str):
     d,r,D,i = field_str.split('.')
@@ -410,18 +420,15 @@ def render_field_webpage(args):
         info['count'] = args['count']
     except KeyError:
         info['count'] = 10
-    K = coeff_to_nf(data['coefficients'])
+    rawpoly = coeff_to_poly(data['coefficients'])
+    K = NumberField(rawpoly, 'a')
     D = data['discriminant']
     h = data['class_number']
-    if data['degree']<8:
-      oldgcode = data['galois_group']
-      oldgcode = (data['degree'], oldgcode[0],oldgcode[1],oldgcode[2])
-      oldgcode = group_names[oldgcode][-1]
-      oldgcode = re.sub('^.*T','',oldgcode)
-      t = int(oldgcode)
-    else:
-      t = data['galois_group'][2]
-    data['galois_grou'] = group_display_knowl(data['degree'],t,C)
+    t = data['T']
+    n = data['degree']
+    data['galois_grou'] = group_display_knowl(n,t,C)
+    data['cclasses'] = cclasses_display_knowl(n,t,C)
+    data['character_table'] = character_table_display_knowl(n,t,C)
     data['galois_group'] = str(data['galois_group'][3])
     data['class_group_invs'] = data['class_group']
     if data['class_group_invs']==[]:
@@ -433,6 +440,7 @@ def render_field_webpage(args):
     npr = len(ram_primes)
     ram_primes = str(ram_primes)[1:-1]
     data['frob_data'] = frobs(K)
+    data['phrase'] = group_phrase(n,t,C)
     #Gorder,Gsign,Gab = GG_data(data['galois_group'])
     #if Gab:
     #    Gab='abelian'
@@ -459,8 +467,7 @@ def render_field_webpage(args):
         })
     info['downloads_visible'] = True
     info['downloads'] = [('worksheet', '/')]
-#    info['friends'] = [('L-function', '/')]
-    info['friends'] = [('L-function', "/L/NumberField/%s" % label), ('Galois group', "/GaloisGroup/%dT%d" % (data['degree'], t))]
+    info['friends'] = [('L-function', "/L/NumberField/%s" % label), ('Galois group', "/GaloisGroup/%dT%d" % (n, t))]
     info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), ('Discriminant ranges',url_for(".render_discriminants_page"))]
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")),('%s'%info['label'],' ')]
     title = "Global Number Field %s" % info['label']
@@ -482,7 +489,7 @@ def render_field_webpage(args):
 
 
     del info['_id']
-    return render_template("number_field.html", properties2=properties2, credit=NF_credit, title = title, bread=bread, friends=info.pop('friends'), info=info )
+    return render_template("number_field.html", properties2=properties2, credit=NF_credit, title = title, bread=bread, friends=info.pop('friends'), learnmore=info.pop('learnmore'), info=info )
 
 def format_coeffs(coeffs):
     return pol_to_html(str(coeff_to_poly(coeffs)))
