@@ -35,7 +35,7 @@ except:
   exit()
 
 # know IDs are restricted by this regex
-allowed_knowl_id = re.compile("^[a-zA-Z0-9._-]+$")
+allowed_knowl_id = re.compile("^[a-z0-9._-]+$")
 
 # Tell markdown to not escape or format inside a given block
 class IgnorePattern(markdown.inlinepatterns.Pattern):
