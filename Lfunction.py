@@ -12,6 +12,7 @@ import utils
 from modular_forms.elliptic_modular_forms.backend.web_modforms import *
 from modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import MaassDB
 from modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaassForm
+from WebCharacter import WebCharacter
 import time ### for printing the date on an lcalc file
 import socket ### for printing the machine used to generate the lcalc file
 
@@ -181,6 +182,14 @@ class Lfunction:
     def generateSageLfunction(self):
         """ Generate a SageLfunction to do computations
         """
+        logger.debug("coefficient_type: {0}".format(self.coefficient_type))
+        logger.debug("dirichlet_coefficients: {0}".format(len(self.dirichlet_coefficients)))
+        logger.debug("coefficient_period: {0}".format(self.coefficient_period))
+        logger.debug("Q_fe: {0}".format(self.Q_fe))
+        logger.debug("sign: {0}".format(self.sign))
+        logger.debug("kappa_fe: {0}".format(self.kappa_fe))
+        logger.debug("lambda_fe: {0}".format(self.lambda_fe))
+
         self.sageLfunction = lc.Lfunction_C(self.title, self.coefficient_type,
                                             self.dirichlet_coefficients,
                                             self.coefficient_period,
@@ -572,7 +581,6 @@ class Lfunction_EMF(Lfunction):
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
-        logger.debug(str(self.character)+str(self.label)+str(self.number))
         self.weight = int(self.weight)
         self.level = int(self.level)
         self.character = int(self.character)
@@ -582,17 +590,15 @@ class Lfunction_EMF(Lfunction):
 
         # Create the modular form
         self.MF = WebNewForm(self.weight, self.level, self.character, self.label)
-        logger.debug(str(self.MF))
+
         # Extract the L-function information from the elliptic modular form
         self.automorphyexp = float(self.weight-1)/float(2)
         self.Q_fe = float(sqrt(self.level)/(2*math.pi))
-        logger.debug("ALeigen: " + str(self.MF.atkin_lehner_eigenvalues()))
 
         if self.level == 1:  # For level 1, the sign is always plus
             self.sign = 1
         else:  # for level not 1, calculate sign from Fricke involution and weight
             self.sign = self.MF.atkin_lehner_eigenvalues()[self.level] * (-1)**(float(self.weight/2))
-        logger.debug("Sign: " + str(self.sign))
 
         self.kappa_fe = [1]
         self.lambda_fe = [self.automorphyexp]
@@ -609,24 +615,25 @@ class Lfunction_EMF(Lfunction):
 
         # Appending list of Dirichlet coefficients
         GaloisDegree = self.MF.degree()  #number of forms in the Galois orbit
-        logger.debug("Galois degree: " + str(GaloisDegree))
+        logger.debug("Galois degree: {0}".format(GaloisDegree))
         if GaloisDegree == 1:
            self.dirichlet_coefficients = self.MF.q_expansion_embeddings(
                self.numcoeff+1)[1:self.numcoeff+1] #when coeffs are rational, q_expansion_embedding()
                                                    #is the list of Fourier coefficients
+           logger.debug("Coef: {0}".format(self.dirichlet_coefficients[0:20]))
         else:
-           logger.debug("Start computing coefficients.")
            for n in range(1,self.numcoeff+1):
               self.dirichlet_coefficients.append(self.MF.q_expansion_embeddings(self.numcoeff+1)[n][self.number])
-           logger.debug("Done computing coefficients.")
               
         for n in range(1,len(self.dirichlet_coefficients)+1):
             an = self.dirichlet_coefficients[n-1]
             self.dirichlet_coefficients[n-1]=float(an)/float(n**self.automorphyexp)
 #FIX: These coefficients are wrong; too large and a1 is not 1
 
+        logger.debug("Coef: {0}".format(self.dirichlet_coefficients[0:50]))
+        logger.debug("# of Coef: {0}".format(len(self.dirichlet_coefficients)))
         self.coefficient_period = 0
-        self.coefficient_type = 2
+        self.coefficient_type = 0
         self.quasidegree = 1
 
         self.checkselfdual()
@@ -734,7 +741,10 @@ class Lfunction_Dirichlet(Lfunction):
         self.numcoeff = int(self.numcoeff)
 
         # Create the Dirichlet character
-        chi = DirichletGroup(self.charactermodulus)[self.characternumber]
+        web_chi = WebCharacter({ 'type': 'dirichlet',
+                                 'modulus': self.charactermodulus,
+                                 'number': self.characternumber})
+        chi = web_chi.chi_sage
 
         if chi.is_primitive():
 
@@ -877,23 +887,21 @@ class Lfunction_Maass(Lfunction):
             if self.level > 1: 
                 try:
                     self.fricke = self.mf.cusp_evs[1]  
-                    logger.info("Fricke: {0}".format(self.fricke))
+                    logger.debug("Fricke: {0}".format(self.fricke))
                 except:
                     raise KeyError, 'No Fricke information available for Maass form so not able to compute the L-function. '
             else:  #no fricke for level 1
                 self.fricke = 1
 
             self.dirichlet_coefficients = self.mf.coeffs
-            logger.info("Third coefficient: {0}".format(self.dirichlet_coefficients[2]))
             
             # Set properties of the L-function
-            self.coefficient_type = 2
+            self.coefficient_type = 0
             self.selfdual = True
             self.primitive = True
             self.quasidegree = 2
             self.Q_fe = float(sqrt(self.level))/float(math.pi)
 
-            logger.info("Symmetry: {0}".format(self.symmetry))
             if self.symmetry =="odd" or self.symmetry == 1:
                 self.sign = -1
                 aa = 1
@@ -901,13 +909,11 @@ class Lfunction_Maass(Lfunction):
                 self.sign = 1
                 aa = 0
 
-            logger.info("Sign (without Fricke): {0}".format(self.sign))
             if self.level > 1:
                 self.sign = self.fricke * self.sign
-            logger.info("Sign: {0}".format(self.sign))
 
             self.kappa_fe = [0.5,0.5]
-            self.lambda_fe = [0.5*aa + self.eigenvalue*I, 0,5*aa - self.eigenvalue*I]
+            self.lambda_fe = [0.5*aa + self.eigenvalue*I, 0.5*aa - self.eigenvalue*I]
             self.mu_fe = [aa + 2*self.eigenvalue*I, aa -2*self.eigenvalue*I]
             self.nu_fe = []
             self.langlands = True
