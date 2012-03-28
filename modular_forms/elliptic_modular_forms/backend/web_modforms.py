@@ -128,7 +128,6 @@ class WebModFormSpace(Parent):
                 #self._modular_symbols_cuspidal_new_submodule=MS.cuspidal_submodule().new_submodule()
                 self._newspace=self._modular_symbols.cuspidal_submodule().new_submodule()
                 self._ap = self._get_objects(k,N,chi,use_db,'ap',prec=prec)
-                self._newforms = list()
                 #self._fullspace.newforms(names='x')
                 #self._new_modular_symbols=self._modular_symbols.new_submodule()
                 self._galois_decomposition=[]
@@ -1289,7 +1288,7 @@ class WebNewForm(SageObject):
                             for p in primes_first_n(max_nump):
                                 if(ZZ(p).divides(ZZ(N))):
                                     continue
-                                bf=self._f.q_eigenform(maxp+1)[p]
+                                bf=self._f.q_eigenform(maxp+1,names='x')[p]
                                 bg=g.q_expansion(maxp+1)[p]
                                 if(bf == 0 and bg == 0):
                                     continue
