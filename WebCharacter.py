@@ -47,6 +47,7 @@ class WebCharacter:
         if self.modulus == 1 or self.number%self.modulus != 0:
             chi = G[self.number]
             chi_sage = chi.sage_character()
+            self.chi_sage = chi_sage
             self.zetaorder = G_sage.zeta_order()
             self.genvalues = chi_sage.values_on_gens()
             if len(chi_sage.values_on_gens()) == 1:

@@ -155,6 +155,8 @@ def initCharacterInfo(web_chi,args, request):
         indices = []
         info['bread'] = [('Dirichlet Characters','/Character/Dirichlet'),('Character '+snum+ ' modulo '+smod,'/Character/Dirichlet/'+smod+'/'+snum)]
         info['char'] = str(web_chi.char)
+        info['chisage'] = str(web_chi.chi_sage)
+        print web_chi.chi_sage
         info['conductor'] = int(web_chi.conductor)
         info['order'] = int(web_chi.order)
         info['euerphi'] = euler_phi(web_chi.modulus)-1
