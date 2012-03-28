@@ -613,6 +613,12 @@ div.literature {
   color: red;
 }
 
+.bluehighlight {
+  color: blue;
+}
+
+
+
 .highlight {
   /* text-decoration: underline; */
   font-weight: bold;
