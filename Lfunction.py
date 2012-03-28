@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import base
 import math
 from Lfunctionutilities import pair2complex, splitcoeff, seriescoeff
 from sage.all import *
@@ -9,6 +10,8 @@ import pymongo
 import bson
 import utils
 from modular_forms.elliptic_modular_forms.backend.web_modforms import *
+from modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import MaassDB
+from modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaassForm
 import time ### for printing the date on an lcalc file
 import socket ### for printing the machine used to generate the lcalc file
 
@@ -569,6 +572,8 @@ class Lfunction_EMF(Lfunction):
         self.weight = int(self.weight)
         self.level = int(self.level)
         self.character = int(self.character)
+        if self.character > 0:
+            raise KeyError, "The L-function of a modular form with non-trivial character has not been implemented yet."
         self.number = int(self.number)
 
         # Create the modular form
@@ -577,11 +582,13 @@ class Lfunction_EMF(Lfunction):
         # Extract the L-function information from the elliptic modular form
         self.automorphyexp = float(self.weight-1)/float(2)
         self.Q_fe = float(sqrt(self.level)/(2*math.pi))
+        logger.debug("ALeigen: " + str(self.MF.atkin_lehner_eigenvalues()))
 
         if self.level == 1:  # For level 1, the sign is always plus
             self.sign = 1
         else:  # for level not 1, calculate sign from Fricke involution and weight
             self.sign = self.MF.atkin_lehner_eigenvalues()[self.level] * (-1)**(float(self.weight/2))
+        logger.debug("Sign: " + str(self.sign))
 
         self.kappa_fe = [1]
         self.lambda_fe = [self.automorphyexp]
@@ -593,18 +600,22 @@ class Lfunction_EMF(Lfunction):
         self.degree = 2
         self.poles = []
         self.residues = []
-        self.numcoeff = int(math.ceil(self.weight * sqrt(self.level))) #just testing  NB: Need to learn how to use more coefficients
+        self.numcoeff = 20 + int(5 * math.ceil(self.weight * sqrt(self.level))) #just testing  NB: Need to learn how to use more coefficients
         self.dirichlet_coefficients = []
 
         # Appending list of Dirichlet coefficients
         GaloisDegree = self.MF.degree()  #number of forms in the Galois orbit
+        logger.debug("Galois degree: " + str(GaloisDegree))
         if GaloisDegree == 1:
            self.dirichlet_coefficients = self.MF.q_expansion_embeddings(
                self.numcoeff+1)[1:self.numcoeff+1] #when coeffs are rational, q_expansion_embedding()
                                                    #is the list of Fourier coefficients
         else:
+           logger.debug("Start computing coefficients.")
            for n in range(1,self.numcoeff+1):
               self.dirichlet_coefficients.append(self.MF.q_expansion_embeddings(self.numcoeff+1)[n][self.number])
+           logger.debug("Done computing coefficients.")
+              
         for n in range(1,len(self.dirichlet_coefficients)+1):
             an = self.dirichlet_coefficients[n-1]
             self.dirichlet_coefficients[n-1]=float(an)/float(n**self.automorphyexp)
@@ -819,13 +830,13 @@ class Lfunction_Maass(Lfunction):
         self.__dict__.update(args)
 
         # Fetch the information from the database
-        import base
-        connection = base.getDBConnection()
-        db = pymongo.database.Database(connection, self.dbName)
-        collection = pymongo.collection.Collection(db, self.dbColl)
-        dbEntry = collection.find_one({'_id':self.dbid})
 
         if self.dbName == 'Lfunction':  # Data from Lemurell
+
+            connection = base.getDBConnection()
+            db = pymongo.database.Database(connection, self.dbName)
+            collection = pymongo.collection.Collection(db, self.dbColl)
+            dbEntry = collection.find_one({'_id':self.dbid})
 
             # Extract the L-function information from the database entry
             self.__dict__.update(dbEntry)
@@ -839,35 +850,38 @@ class Lfunction_Maass(Lfunction):
 
         else: # GL2 data from Then or Stromberg
 
+            host  = base.getDBConnection().host
+            port  = base.getDBConnection().port
+            DB=MaassDB(host=host,port=port)
+            logger.debug("count={0}".format(DB.count()))
+            self.mf = WebMaassForm(DB,self.dbid)
             self.group = 'GL2'
 
-            # Extract the L-function information from the database entry
-            self.symmetry = dbEntry['Symmetry']
-            self.eigenvalue = float(dbEntry['Eigenvalue'])
-            self.norm = dbEntry['Norm']
-            self.dirichlet_coefficients = dbEntry['Coefficient']
+            # Extract the L-function information from the Maass form object
+            self.symmetry = self.mf.symmetry
+            self.eigenvalue = float(self.mf.R)
 
-            if 'Level' in dbEntry.keys():
-                self.level = int(dbEntry['Level'])
-            else:
-                self.level = 1
+            self.level = int(self.mf.level)
             self.charactermodulus = self.level
 
-            if 'Weight' in dbEntry.keys():
-                self.weight = int(dbEntry['Weight'])
-            else:
-                self.weight = 0
+            self.weight = int(self.mf.weight)
+            self.characternumber = int(self.mf.character)
 
-            if 'Character' in dbEntry.keys():
-                self.characternumber = int(dbEntry['Character'])
+            if self.characternumber > 0:
+                raise KeyError, 'TODO L-function of Maass form with non-trivial character not implemented. '
 
-            if self.level > 1:
+            if self.level > 1: 
                 try:
-                    self.fricke = dbEntry['Fricke']  #no fricke for level 1
+                    self.fricke = self.mf.cusp_evs[1]  
+                    logger.info("Fricke: {0}".format(self.fricke))
                 except:
-                    logger.critical('No Fricke information for Maass form')
-                    self.fricke = 1
+                    raise KeyError, 'No Fricke information available for Maass form so not able to compute the L-function. '
+            else:  #no fricke for level 1
+                self.fricke = 1
 
+            self.dirichlet_coefficients = self.mf.coeffs
+            logger.info("Third coefficient: {0}".format(self.dirichlet_coefficients[2]))
+            
             # Set properties of the L-function
             self.coefficient_type = 2
             self.selfdual = True
@@ -875,18 +889,18 @@ class Lfunction_Maass(Lfunction):
             self.quasidegree = 2
             self.Q_fe = float(sqrt(self.level))/float(math.pi)
 
-            if self.symmetry =="odd":
-                aa=1
-            else:
-                aa=0
-
-            if aa==0:
-                self.sign = 1
-            else:
+            logger.info("Symmetry: {0}".format(self.symmetry))
+            if self.symmetry =="odd" or self.symmetry == 1:
                 self.sign = -1
+                aa = 1
+            else:
+                self.sign = 1
+                aa = 0
 
+            logger.info("Sign (without Fricke): {0}".format(self.sign))
             if self.level > 1:
                 self.sign = self.fricke * self.sign
+            logger.info("Sign: {0}".format(self.sign))
 
             self.kappa_fe = [0.5,0.5]
             self.lambda_fe = [0.5*aa + self.eigenvalue*I, 0,5*aa - self.eigenvalue*I]
@@ -985,7 +999,7 @@ class DedekindZeta(Lfunction):   # added by DK
         else:
             self.texnamecompleted1ms = "\\Lambda_K(1-s)"
         self.title = "Dedekind zeta-function: $\\zeta_K(s)$"
-        self.title = self.title+", where $K$ is the "+ str(self.NF)
+        self.title = self.title+", where $K$ is the "+ str(self.NF).replace("in a ","")
         self.credit = 'Sage'
         self.citation = ''
         
