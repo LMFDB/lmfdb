@@ -182,6 +182,14 @@ class Lfunction:
     def generateSageLfunction(self):
         """ Generate a SageLfunction to do computations
         """
+        logger.debug("coefficient_type: {0}".format(self.coefficient_type))
+        logger.debug("dirichlet_coefficients: {0}".format(len(self.dirichlet_coefficients)))
+        logger.debug("coefficient_period: {0}".format(self.coefficient_period))
+        logger.debug("Q_fe: {0}".format(self.Q_fe))
+        logger.debug("sign: {0}".format(self.sign))
+        logger.debug("kappa_fe: {0}".format(self.kappa_fe))
+        logger.debug("lambda_fe: {0}".format(self.lambda_fe))
+
         self.sageLfunction = lc.Lfunction_C(self.title, self.coefficient_type,
                                             self.dirichlet_coefficients,
                                             self.coefficient_period,
@@ -607,10 +615,12 @@ class Lfunction_EMF(Lfunction):
 
         # Appending list of Dirichlet coefficients
         GaloisDegree = self.MF.degree()  #number of forms in the Galois orbit
+        logger.debug("Galois degree: {0}".format(GaloisDegree))
         if GaloisDegree == 1:
            self.dirichlet_coefficients = self.MF.q_expansion_embeddings(
                self.numcoeff+1)[1:self.numcoeff+1] #when coeffs are rational, q_expansion_embedding()
                                                    #is the list of Fourier coefficients
+           logger.debug("Coef: {0}".format(self.dirichlet_coefficients[0:20]))
         else:
            for n in range(1,self.numcoeff+1):
               self.dirichlet_coefficients.append(self.MF.q_expansion_embeddings(self.numcoeff+1)[n][self.number])
@@ -620,6 +630,8 @@ class Lfunction_EMF(Lfunction):
             self.dirichlet_coefficients[n-1]=float(an)/float(n**self.automorphyexp)
 #FIX: These coefficients are wrong; too large and a1 is not 1
 
+        logger.debug("Coef: {0}".format(self.dirichlet_coefficients[0:50]))
+        logger.debug("# of Coef: {0}".format(len(self.dirichlet_coefficients)))
         self.coefficient_period = 0
         self.coefficient_type = 0
         self.quasidegree = 1
