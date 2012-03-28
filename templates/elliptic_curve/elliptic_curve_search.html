@@ -7,7 +7,6 @@
 
 <h2> Further refine search </h2>
 
-
 <form>
 <input type="hidden" name="start" value="{{info.start}}"/>
 <table border="0">
@@ -16,6 +15,7 @@
 <td align=left> {{ KNOWL_LINK('ec.q.conductor', title='conductor') }} <input type='text' name='conductor' size=10 value={{info.conductor}}></td>
 <td align=left>{{ KNOWL_LINK('ec.q.rank', title='rank') }}<input type='text' name='rank'size=1 value={{info.rank}}></td>
 <td align=left>{{ KNOWL_LINK('ec.field.torsion_order', title='torsion order') }} <input type='text' name='torsion' size=1 value={{info.torsion}}> </td>
+<td align=left>{{ KNOWL_LINK('ec.q.analytic_sha_order', title='analytic order of &#1064;\(_{an} \)') }} <input type='text' name='sha_an' size=1 value={{info.sha_an}}> </td>
 <td align=left>
 <td align=left>{{ KNOWL_LINK('ec.q.optimal', title='Optimal') }}
 <select name='optimal'>
@@ -57,7 +57,7 @@ table td.params {
 </tr>
 {% for curve in info.curves: %}
 <tr>
-<td class="center"><a href="/EllipticCurve/Q/{{curve.iso}}">{{curve.iso}}</a></td>
+<td class="center"><a href="/EllipticCurve/Q/{{curve.conductor}}{{curve.iso}}">{{curve.conductor}}{{curve.iso}}</a></td>
 <td class="center"><a href="/EllipticCurve/Q/{{curve.label}}">{{curve.label}}</a></td>
 <td class="params">{{info.format_ainvs(curve.ainvs)}}</td>
 <td class="center"><a href="/EllipticCurve/Q?conductor={{info.conductor}}&rank={{curve.rank}}&torsion={{info.torsion}}">{{curve.rank}}</a></td>

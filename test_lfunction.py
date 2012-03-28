@@ -20,7 +20,7 @@ class LfunctionTest(LmfdbTest):
     assert 'Graph' in L.data
 
   def test_Lgl2maass(self):
-    L = self.tc.get('L/ModularForm/GL2/Q/Maass/4cb8502658bca9141c00002a/?db=FS')
+    L = self.tc.get('L/ModularForm/GL2/Q/Maass/4cb8502658bca9141c00002a/')
     assert 'Graph' in L.data
 
   def test_Lgl3maass(self):

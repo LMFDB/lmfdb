@@ -361,7 +361,37 @@ def parse_range(arg, parse_singleton=int):
         return parse_singleton(arg)
 
 
+# version above does not produce legal results when there is a comma
+# to deal with $or, we return [key, value]
+def parse_range2(arg, key, parse_singleton=int):
+    if type(arg)==parse_singleton:
+        return [key, arg]
+    if ',' in arg:
+        tmp = [parse_range2(a, key) for a in arg.split(',')]
+        tmp = [{a[0]: a[1]} for a in tmp]
+        return ['$or', tmp]
+    elif '-' in arg[1:]:
+        ix = arg.index('-', 1)
+        start, end = arg[:ix], arg[ix+1:]
+        q = {}
+        if start:
+            q['$gte'] = parse_singleton(start)
+        if end:
+            q['$lte'] = parse_singleton(end)
+        return [key, q]
+    else:
+        return [key, parse_singleton(arg)]
+
+
 def coeff_to_poly(c):
     from sage.all import PolynomialRing, QQ
     return PolynomialRing(QQ, 'x')(c)
 
+from flask import current_app
+def debug():
+    """
+    this triggers the debug environment on purpose. you have to start
+    the server via website.py --debug
+    don't forget to remove the debug() from your code!!!
+    """
+    assert current_app.debug == False, "Don't panic! You're here by request of debug()"

@@ -8,9 +8,9 @@ import flask
 import base
 from base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
-from utils import ajax_more, image_src, web_latex, to_dict, parse_range, coeff_to_poly, pol_to_html
+from utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger
 from sage.all import ZZ, var, PolynomialRing, QQ
-from local_fields import local_fields_page, logger, logger
+from local_fields import local_fields_page, logger
 
 from transitive_group import group_display_short, group_display_long, group_display_inertia, group_knowl_guts, group_display_knowl
 
@@ -26,9 +26,9 @@ def galois_group_data(n, t):
   C = base.getDBConnection()
   return group_knowl_guts(n, t, C)
 
-@app.context_processor
-def ctx_galois_groups():
-  return {'galois_group_data': galois_group_data }
+#@app.context_processor
+##def ctx_galois_groups():
+#  return {'galois_group_data': galois_group_data }
 
 def display_poly(coeffs):
   return web_latex(coeff_to_poly(coeffs))
@@ -73,15 +73,26 @@ def local_field_search(**args):
   if 'jump_to' in info:
     return render_field_webpage({'label' : info['jump_to']})
 
+  logger = make_logger("LF")
   for param in ['p', 'n', 'c', 'e']:
     if info.get(param):
       ran = info[param]
       ran = ran.replace('..','-')
-      query[param] = parse_range(ran)
+      tmp = parse_range2(ran, param)
+      # work around syntax for $or
+      # we have to foil out multiple or conditions
+      if tmp[0]=='$or' and query.has_key('$or'):
+        newors = []
+        for y in tmp[1]:
+          oldors = [dict.copy(x) for x in query['$or']]
+          for x in oldors: x.update(y) 
+          newors.extend(oldors)
+        tmp[1] = newors
+      query[tmp[0]] = tmp[1]
+
 
   res = C.localfields.fields.find(query).sort([('p',pymongo.ASCENDING),('n',pymongo.ASCENDING),('c',pymongo.ASCENDING),('label', pymongo.ASCENDING)])
   nres = res.count()
-#  res = iter_limit(res, count, start)
   info['fields'] = res
   info['group_display'] = group_display_shortC(C)
   info['display_poly'] = format_coeffs
@@ -90,20 +101,6 @@ def local_field_search(**args):
   bread = get_bread([("Search results", url_for('.search'))])
   return render_template("lf-search.html", info = info, title="Local Number Field Search Result", bread=bread, credit=LF_credit)
 
-# probably not needed any more
-def iter_limit(it,lim,skip):
-    count = 0
-    while count<skip:
-        it.next()
-        count += 1
-    count = 0
-    while count<lim:
-        yield it.next()
-        count += 1
-    return
-
-
-  
 def render_field_webpage(args):
   data = None
   info = {}
@@ -114,7 +111,7 @@ def render_field_webpage(args):
     if data is None:
         bread = get_bread([("Search error", url_for('.search'))])
         info['msg'] = "Field " + label + " was not found in the database."
-        return render_template("lf-error.html", info=info, title="Local Number Field Search Error", bread=bread, credit=LF_credit) 
+        return render_template("lf-error.html", info=info, title="Local Number Field Search Error", bread=bread, credit=LF_credit), 404
     title = 'Local Number Field:' + label
     polynomial = coeff_to_poly(data['coeffs'])
     p = data['p']
@@ -136,6 +133,21 @@ def render_field_webpage(args):
     Pyt = PolynomialRing(Pt, 'y')
     eisenp = Pyt(str(data['eisen']))
     unramp = Pyt(str(data['unram']))
+    # Look up the unram poly so we can link to it
+    unramdata = C.localfields.fields.find_one({'p': p, 'n': f, 'c': 0 })
+    logger = make_logger("LF")
+    if len(unramdata)>0:
+      unramfriend = "/LocalNumberField/%s" % unramdata['label']
+    else:
+      logger.fatal("Cannot find unramified field!")
+      unramfriend = ''
+    rfdata = C.localfields.fields.find_one({'p': p, 'n': {'$in': [1,2]}, 'rf': data['rf'] })
+    if rfdata is None:
+      logger.fatal("Cannot find discriminant root field!")
+      rffriend = ''
+    else:
+      rffriend = "/LocalNumberField/%s" % rfdata['label']
+    
     info.update({
       'polynomial': web_latex(polynomial),
       'n': data['n'],
@@ -156,10 +168,14 @@ def render_field_webpage(args):
       'gms': data['gms'],
       'aut': data['aut'],
       })
-    
+    friends = [('Galois group', "/GaloisGroup/%dT%d" % (gn, gt))]
+    if unramfriend != '':
+      friends.append(('Unramified subfield', unramfriend))
+    if rffriend != '':
+      friends.append(('Discriminant root field', rffriend))
 
     bread = get_bread([(label, ' ')])
-    return render_template("lf-show-field.html", credit=LF_credit, title = title, bread = bread, info = info, properties2=prop2 )
+    return render_template("lf-show-field.html", credit=LF_credit, title = title, bread = bread, info = info, properties2=prop2, friends = friends )
 
 def show_slopes(sl):
   if str(sl)=="[]":

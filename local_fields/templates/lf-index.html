@@ -57,13 +57,23 @@ of $\mathbb{Q}_p$ up to isomorphism.
 
     <h2>Find a specific local number field</h2>
 
-    <form name="search" method = "get" action="{{search}}">      
+    <form name="search" method = "get" action="{{search}}">
+        <table class="">
+	  <tr>
+	    <td>
 	  Search by {{KNOWL('lf.field.label',title="label")}}
-          <input type="text" name="jump_to" value="" placeholder="2.4.6.7"> 
+          <input type="text" name="jump_to" value=""
+        placeholder="2.4.6.7">
+	    </td>
+	    <td>
           <input type="submit" value="Find">
-        </form>
-    </td>
-</tr>
+	      </td>
+	      <td>
+		<span class="formexample">a field label, e.g. 2.4.6.7</span>
+	      </td>
+	    </tr>
+	  </table>
+	  </form>
 
         <h2>Search</h2>
       <form name="search" method = "get" action="{{search}}">
@@ -71,24 +81,37 @@ of $\mathbb{Q}_p$ up to isomorphism.
           <tr>
             <td>
           {{KNOWL('lf.degree',title='Degree')}}:
-            </td><td><input type="text" name="n" value="" example="6"></td>
+            </td><td><input type="text" name="n" value=""
+      placeholder="6"></td>
+      <td>
+	<span class="formexample">e.g. 6, or a range like 3..5</span>
+      </td>
           </tr>
           <tr>
             <td>
               Prime $p$ for base field  {{KNOWL('lf.qp',title='$\mathbb{Q}_p$')}}:
-            </td><td><input type="text" name="p" value="" example="3"></td>
+            </td><td><input type="text" name="p" value="" placeholder="3"></td>
+      <td>
+	<span class="formexample">e.g. 3, or a range like 3..7</span>
+      </td>
           </tr>
           <tr>
             <td>
               {{KNOWL('lf.discriminant_exponent',title='Discriminant
               exponent')}} $c$:
-            </td><td><input type="text" name="c" value="" example="8"></td>
+            </td><td><input type="text" name="c" value="" placeholder="8"></td>
+      <td>
+	<span class="formexample">e.g. 8, or a range like 2..6</span>
+      </td>
           </tr>
           <tr>
             <td>
               {{KNOWL('lf.ramification_index',title='Ramification
               index')}} $e$:
-            </td><td><input type="text" name="e" value="" example="3"></td>
+            </td><td><input type="text" name="e" value="" placeholder="3"></td>
+      <td>
+	<span class="formexample">e.g. 3, or a range like 2..6</span>
+      </td>
           </tr>
 <!--      
           <tr>

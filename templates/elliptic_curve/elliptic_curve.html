@@ -7,14 +7,14 @@ function show_code(system) {
     $('.sage').hide();
     $('.pari').hide();
     $('.magma').hide();
-    if (cur_system == null) {
-      $('.'+system).show();
-      cur_system = system;
-    } else {
+    if (cur_system == system) {
       $('.'+system).hide();
       cur_system = null;
+      } else {
+      $('.'+system).show();
+      cur_system = system;
     }
-}
+  }
 </script>
 
 
@@ -24,14 +24,16 @@ function show_code(system) {
         <a onclick="show_code('magma'); return false" href='#'>magma</a>
     </div>
     <div></div>
-    
+
+    <h2>{{ KNOWL_INC('historical'+request.path.lower().replace('/','_'), title='Historical Information') }}</h2>
+
     <h2> {{ KNOWL('ec.q.minimal_weierstrass_equation', title='Minimal Weierstrass equation') }} </h2>
     <div class='sage nodisplay code'>sage: E = EllipticCurve({{info.ainvs}})</div>
     <div class='pari nodisplay code'>? E = ellinit({{info.ainvs}})</div>
     <div class='magma nodisplay code'>&gt; E := EllipticCurve({{info.ainvs}});</div>
     <p> {{ info.equation }} </p>
 
-    <h2> {{ KNOWL('ec.q.mordell-weil', title='Mordel-Weil group') }} structure</h2>
+    <h2> {{ KNOWL('ec.q.mordell-weil', title='Mordell-Weil group') }} structure</h2>
    <div>{% if info.rank==1 %}{% if info.torsion!=1 %} \(\mathbb{Z}\times {{info.tor_structure}}\) 
     {%endif%}  {%endif%}     </div>
 
@@ -59,11 +61,15 @@ function show_code(system) {
 
 
     <p><h2> {{ KNOWL('ec.q.integral_points', title='Integral points') }}</h2>
-    <div> Note: If $P$ is integral, then so is $-P$, and only one of those points is listed. </div>
     <div class='sage nodisplay code'>sage: E.integral_points()</div>
     <div class='pari nodisplay code'> </div>
     <div class='magma nodisplay code'>&gt; ;</div>
+    {% if info.xintegral_points!='' %}    
+    <div> Note: If $P$ is integral, then so is $-P$, and only one of those points is listed. </div>
     <p> {{ info.xintegral_points}} </p>
+    {%else %}
+    <div> None </div> 
+    {%endif %}
     
     <h2> {{ KNOWL('ec.q.invariants', title='Invariants') }}  </h2>
         <table>
@@ -71,8 +77,8 @@ function show_code(system) {
         <tr>
         <td colspan="4">
             <span class='sage nodisplay code'>sage: E.conductor().factor()</span>
-            <span class='pari nodisplay code'></span>
-            <span class='magma nodisplay code'></span>
+            <span class='pari nodisplay code'>? ellglobalred(E)[1]</span>
+            <span class='magma nodisplay code'>&gt; Conductor(E);</span>
         </td>
         </tr>
         <tr>
@@ -85,7 +91,7 @@ function show_code(system) {
         <tr>
         <td colspan="4">
             <span class='sage nodisplay code'>sage: E.discriminant().factor()</span>
-            <span class='pari nodisplay code'>? E[12]</span>
+            <span class='pari nodisplay code'>? E.disc</span>
             <span class='magma nodisplay code'>&gt; Discriminant(E);</span>
         </td>
         </tr>
@@ -98,7 +104,7 @@ function show_code(system) {
         <tr>
         <td colspan="4">
             <span class='sage nodisplay code'>sage: E.j_invariant().factor()</span>
-            <span class='pari nodisplay code'>? E[13]</span>
+            <span class='pari nodisplay code'>? E.j</span>
             <span class='magma nodisplay code'>&gt; jInvariant(E);</span>
         </td>
         </tr>
@@ -125,7 +131,7 @@ function show_code(system) {
         </tr>
         <tr>
         <td colspan="4">
-            \( r \) </td><td>=</td><td> {{ info.rank }}
+            \( r \) </td><td>=</td><td> \({{ info.rank }}\)
         </td>
         </tr>
 
@@ -139,19 +145,19 @@ function show_code(system) {
         </tr>
         <tr>
         <td colspan="4"> 
-           \( \text{Reg} \) </td><td>=</td><td> {{ info.regulator }}</td>
+           \( \text{Reg} \) </td><td>=</td><td> \({{ info.regulator }}\)</td>
         </tr>
 
         <tr>
         <td colspan="4">
             <span class='sage nodisplay code'>sage: E.period_lattice().omega()</span>
-            <span class='pari nodisplay code'></span>
+            <span class='pari nodisplay code'>? E.omega[1]</span>
             <span class='magma nodisplay code'>&gt; RealPeriod(E);</span>
         </td>
         </tr>
         <tr>
         <td colspan="4">
-           \( \Omega \) </td><td>=</td><td> {{ info.real_period }}</td>
+           \( \Omega \) </td><td>=</td><td> \({{ info.real_period }}\)</td>
         </tr>
 
         <tr>
@@ -175,7 +181,7 @@ function show_code(system) {
         </tr>
         <tr>
         <td colspan="4"> \( \#E_{tor} \)</td>
-        <td>=</td><td>{{ info.torsion }}</td>
+        <td>=</td><td>\({{ info.torsion }}\)</td>
         </tr>
 
         <tr>
@@ -188,7 +194,7 @@ function show_code(system) {
         <tr>
         <td colspan="4"> &#1064;\(_{an} \) </td>
         <td>=</td>
-        <td>{{ info.sha_an }}</td>
+        <td>\({{ info.sha_an }}\)</td>
         </tr>
 
         </table>
@@ -251,5 +257,6 @@ $(function() {
 });
 </script>
     
-        
+
+    <h2>{{ KNOWL_INC('misc'+request.path.lower().replace('/','_'), title='Misc') }}</h2>
 {% endblock %}

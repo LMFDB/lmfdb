@@ -3,29 +3,29 @@
 {% block content %}
 
 
-    <h2> {{ KNOWL('artin.dimension', title='Dimension') }} </h2>
+    <h1> {{ KNOWL('artin.dimension', title='Dimension') }} </h1>
     <p> ${{ object.dimension() }}$ </p>
 
-    <h2> {{ KNOWL('artin.conductor', title='Artin conductor') }} </h2>
+    <h1> {{ KNOWL('artin.conductor', title='Artin conductor') }} </h1>
     <p> ${{ object.conductor() }} $</p>
 
-    <h2> {{ KNOWL('artin.number_field', title='Artin number field') }} </h2>
+    <h1> {{ KNOWL('artin.number_field', title='Artin number field') }} </h1>
     <p> $\mathbb{Q}[x]/({{ object.number_field_galois_group().polynomial().latex()}})$ </p>
     
-    <h2> Associated group action </h2>
+    <h1> Associated group action </h1>
     <h3> Abstract isomorphism type</h3>
     <p> {{ object.number_field_galois_group().G_name() }}, of size  ${{ object.number_field_galois_group().size() }}$.</p>
     
-    <h3> Generators of the permutation group</h3>
+    <h3> Generators of the action on the roots $r_1 \cdots r_{{object.number_field_galois_group().degree()}}$ of $f ={{object.number_field_galois_group().polynomial().latex()}} $</h3>
     <center>
     <table class="ntdata">
         <thead>
-          <tr><td>Positional notation</td><td>Cycle notation</td>
+          <tr><td>Cycle notation</td>
           </tr>
         </thead>
       <tbody>
         {% for gen in object.number_field_galois_group().G_gens()%}
-        <tr> <td>${{gen}}$</td><td>${{gen.cycle_string()}}$</td></tr>
+        <tr> <td>${{gen.cycle_string()}}$</td></tr>
         {% endfor %}
       </tbody>
       </table>
@@ -34,16 +34,42 @@
     
     <h3> Conjugacy classes and associated representation</h3>
     <p> <center><table class="ntdata">
-      <thead><tr><td>Index</td><td>Size</td><td>Order</td><td>Action on $r_1 \cdots r_{ {{object.number_field_galois_group().degree()}} }$</td><td>Action on $r_1 \cdots r_{ {{object.number_field_galois_group().degree()}} }$</td><td>Character value</td></tr></thead>
+      <thead><tr><td></td><td>Size</td><td>Order</td><td>Action on $r_1 \cdots r_{ {{object.number_field_galois_group().degree()}} }$</td><td>Character value</td></tr></thead>
 
       <tbody>
         {% for gen in object.number_field_galois_group().conjugacy_classes()%}
-            <tr {% if loop.index == object.number_field_galois_group().complex_conjugation()%}class="redhighlight"{%endif%}> <td>${{loop.index}}$</td><td>${{gen.size()}}$</td><td>${{gen.order()}}$</td><td>${{gen.representative()}}$</td><td>${{gen.representative().cycle_string()}}$</td><td>${{ object.character()[loop.index - 1] }}$ </td></tr>
+            <tr {% if loop.index == object.number_field_galois_group().complex_conjugation()%}class="redhighlight"{%endif%}> <td>${{loop.index}}$</td><td>${{gen.size()}}$</td><td>${{gen.order()}}$</td><td>${{gen.representative().cycle_string()}}$</td><td>${{ object.character()[loop.index - 1] }}$ </td></tr>
         {% endfor %}
       </tbody>
       </table>
       </center>
        The red line marks the conjugacy class containing complex conjugation.
     </p>
+    
+     
+    <h1> Roots of defining polynomial</h1>
+    <p>
+    The roots of $f$ are computed over $\mathbb{Q}_{ {{object.number_field_galois_group().residue_characteristic()}} }$ to precision {{object.number_field_galois_group().computation_precision()}}.
+    </p>
+    <p>
+    Minimal polynomial of a generator $a$ of $K$ over $\mathbb{Q}_{ {{object.number_field_galois_group().residue_characteristic()}} }$: ${{object.number_field_galois_group().computation_minimal_polynomial().latex()}}$
+    </p>
+    <p>
+    Roots:
+    <center>
+      <table class="ntdata">
+      <tbody>
+        {% for root in object.number_field_galois_group().computation_roots()%}
+          <tr> <td>$r_{{loop.index}}$</td><td>{{root}}</td></tr>
+        {% endfor %}
         
+      </tbody>
+      </table>
+      </center>
+       
+    </p>
+    </p>
+    
 {% endblock %}
+
+

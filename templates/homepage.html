@@ -13,7 +13,7 @@
          {% endif %}
       </div>
       <div class="topright">
-          <a href="https://docs.google.com/spreadsheet/viewform?formkey=dDJXYXBleU1BMTFERFFIdjVXVmJqdlE6MQ" target="_blank">
+          <a href="{{ feedbackpage }}" target="_blank">
              Feedback</a>
             &middot;
           {% if user_is_admin -%}
@@ -106,10 +106,12 @@
 
   <h2> Fields</h2>
     <ul>
-      <li><a href="{{ url_for('number_field_render_webpage') }}">Global Number Fields</a></li>
+      <li><a class = "number_fields" href="{{ url_for('number_fields.number_field_render_webpage') }}">Global Number Fields</a></li>
       <li><a href="{{ url_for('local_fields.index') }}">Local Number Fields</a></li>
-      <li><a class = "number_field_galois_groups" href="{{ url_for('number_field_galois_groups.index') }}">Galois Groups</a></li>
-      <li><a href="{{ url_for('galois_groups.index') }}">Galois Groups 2</a></li>
+      <li><a href="{{ url_for('galois_groups.index') }}">Galois Groups</a></li>
+      {% if user_is_authenticated %}
+          <li><a class = "number_field_galois_groups" href="{{ url_for('number_field_galois_groups.index') }}">Galois Groups (only logged in)</a></li>
+      {% endif %}
     </ul>
 
   <h2>Characters</h2>
@@ -147,7 +149,6 @@
    </ul>
   
    {{ entry("Learn more about", learnmore) }}
-   {{ entry("Friends", friends) }}
    {{ entry("Downloads", downloads) }}
    {{ entry("Data", getUploadedFor(request.path) ) }}
 
@@ -160,11 +161,12 @@
 </div>
 {%- endblock sidebar %}
 
-    {% if properties2 %}
+    {% if (properties2 or friends) %}
       <div id="properties">
-       <h1 id="properties-header">Properties</h1>
        <div id="properties-collapser">&uarr;</div>
-       <div id="properties-body">
+    {% if properties2 %}
+       <h1 class="properties-header">Properties</h1>
+       <div class="properties-body">
        <table>
        {% for label, content in properties2 -%}
          {% if label %}
@@ -183,11 +185,22 @@
        {%- endfor %} 
       </table>
       </div>
-     </div>
     {% endif %}
+    {% if friends -%}
+      <h1 class="properties-header">Related objects</h1>
+      <div class="properties-body">
+        <ul>
+          {% for text,url in friends %}
+          <li><a href="{{ url }}">{{ text }}</a></li>
+          {% endfor %}
+        </ul>
+      </div>
+    {%- endif %}
+    </div>
+    {%- endif %}
 
     {% if (citation or properties) -%}
-      <div id="properties">
+    <div id="properties">
        <h1 id="properties-header">Properties</h1>
        <div id="properties-collapser">&uarr;</div>
        <div id="properties-body">
@@ -203,8 +216,7 @@
       </div>
     </div>
     {%- endif %}
-
-
+    
 <div id="main">
   <!-- <div id="mathjax-info">
     <img src="{{ url_for('static', filename='images/progress-green.gif') }}" />

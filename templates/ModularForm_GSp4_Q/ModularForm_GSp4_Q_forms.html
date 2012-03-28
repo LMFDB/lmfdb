@@ -1,8 +1,8 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-{% if not info.error %}
-{% include ['ModularForm_GSp4_Q/', info.group, '_avail_forms.html']|join %}
+{% if not error %}
+{% include ['ModularForm_GSp4_Q/', group, '_avail_forms.html']|join %}
 {% else %}
 {% include 'ModularForm_GSp4_Q/None.html' %}
 {% endif %}

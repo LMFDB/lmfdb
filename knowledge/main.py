@@ -19,7 +19,7 @@ from base import app, getDBConnection
 from datetime import datetime
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
 from flaskext.login import login_required, current_user
-from knowl import Knowl, knowl_title, get_history
+from knowl import Knowl, knowl_title, get_history, knowl_exists
 from users import admin_required, housekeeping
 import markdown
 from knowledge import logger
@@ -80,7 +80,7 @@ md.inlinePatterns.add('knowltagtitle', KnowlTagPatternWithTitle(knowltagtitle_re
 # lightweight Knowl objects inside the templates.
 @app.context_processor
 def ctx_knowledge():
-  return {'Knowl' : Knowl, 'knowl_title' : knowl_title}
+  return {'Knowl' : Knowl, 'knowl_title' : knowl_title, "KNOWL_EXISTS" : knowl_exists}
 
 @app.template_filter("render_knowl")
 def render_knowl_in_template(knowl_content, **kwargs):
@@ -104,7 +104,7 @@ def render_knowl_in_template(knowl_content, **kwargs):
     return render_template_string(render_me, **kwargs)
   except Exception, e:
     return "ERROR in the template: %s. Please edit it to resolve the problem." % e
-  
+
 
 # a jinja test for figuring out if this is a knowl or not
 # usage: {% if K is knowl_type %} ... {% endif %}
@@ -152,7 +152,7 @@ def test():
 def edit(ID):
   if not allowed_knowl_id.match(ID):
       flask.flash("""Oops, knowl id '%s' is not allowed.
-                  It must consist of lower/uppercase characters, 
+                  It must consist of lowercase characters, 
                   no spaces, numbers or '.', '_' and '-'.""" % ID, "error")
       return flask.redirect(url_for(".index"))
   knowl = Knowl(ID)

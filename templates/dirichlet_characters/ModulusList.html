@@ -6,7 +6,8 @@
 <style>
 .modulus {
     vertical-align: top;
-    padding-top: 1em;
+    padding-top:    .5em;
+    padding-bottom: .5em;
     border-right: 2px solid #8a8;
 }
 .chi {
@@ -17,6 +18,14 @@
     white-space:nowrap;
 }
 .chi a { display: inline; text-align: center; font-family: serif;}
+#chitable td div { float: left; padding-left: .5em; padding-right: .5em; }
+#chitable td div>a { text-align: right; }
+#chitable td { vertical-align: middle;  white-space: nowrap; }
+#chitable td.a { background: #DFD; }
+#chitable td.b { background: none; }
+#chitable th { text-align: center; }
+table.ntdata tr.even, table.ntdata tr:nth-child(even) { background: none; }
+
 .primitive {
   color:green;
 }
@@ -25,11 +34,25 @@
 }
 </style>
 
+<script type="text/javascript">
+$(function() {
+  var lastcols = $("#chitable tr th:last-child, #chitable tr td:last-child");
+  lastcols.hide();
+  $("#showlastcols").click(function () {
+    lastcols.show("slow");
+    $(this).hide();
+  });
+});
+</script>
+
 <table>    
     <thead align="left">
     <tr>
         <th>
-            <font color = "blue"> Non-primitive </font> characters.</br>
+            The following table displays Dirichlet characters. If q is the modulus, then each integer n </br>
+            in the qth row represents the Dirichlet character \(\chi_{q}(n,&middot;)\). The characters are grouped </br>
+            with respect to order and stacked integers indicate multiplicative inverses.</br></br> 
+            <font color = "blue"> Imprimitive </font> characters.</br>
             <font color = "green"> Primitive </font> characters. 
         </th>
     <tr/>
@@ -38,39 +61,64 @@
 <br/>
 
 <div>
-<table class="ntdata">
+<table class="ntdata" id="chitable">
 <thead align="center">
     <tr>
-        <th>Modulus</th>
-        <th>Characters</th>
+     <td colspan="6" style="text-align: right;"></td>
+     <td><a href="#" id="showlastcols">show more &rarr;</a></td>
+     <td></td>
+    </tr>
+    <tr>
+        <th class="modulus">M\O</th>
+        {% for h in headers %}
+        <th>{{h}}</th>
+        {% endfor %}
     </tr>
 </thead>
 
-<tbody>
-    {% for line in contents %}
-        <tr>
-            <td class="modulus"align="center" style="4em"> {{ line[0] }} </td>
-            <td>
-                {% for chi in line[1] %}
-                    <div class="chi" align="center">
-                    <a href="{{ line[0] }}/{{chi[0]}}">
-                        {% if chi[1] %}
-                            <font color="green">
-                        {% else %}
-                            <font color="blue">
-                        {% endif %}
-                        {#{% if chi[2] == 2 %}
-                            {{ chi[3] }}
-                        {% else %}#}
-                        &chi;<sub>{{chi[0]}}</sub>
-                        {#{% endif %}#}    
-                    </font>
-                    </a>
-                    </div>
-                {% endfor %}
-            </td>
-        </tr>
+{% macro show_character(entry, col, row) -%}
+{% if not entry is none %}
+  {% if col == "more"  %}
+    {% for e in entry %}
+    <div>
+      {% for chi in e %}
+        <a href="{{url_for('render_Character', arg1=row, arg2=chi[0])}}"> 
+            <font color="{% if chi[1] -%}green{%- else -%}blue{%- endif %}">
+                {{ chi[0] }}
+        </font>
+        </a>
+      {% endfor %}
+    </div>
     {% endfor %}
+  {% else %}
+    {% for e in entry %}
+    <div>
+      {% for chi in e %}
+        <a href="{{url_for('render_Character', arg1=row, arg2=chi[0])}}"> 
+            <font color="{% if chi[1] -%}green{%- else -%}blue{%- endif %}">
+                {{ chi[0] }}
+        </font>
+        </a>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  {% endif %}
+{% endif %}
+{%- endmacro %}
+
+{% set row_class = cycler('a', 'b') %}
+<tbody>
+{% for row in rows %}
+
+	<tr>
+	<td class="modulus"align="center" style="4em"> {{ row }} </td>
+
+	{% for col in cols %}
+	<td class="{{ row_class.next() }}"> {{ show_character(contents[(row, col)], col, row) }} </td>
+	{% endfor %}
+
+	</tr>
+{% endfor %}
 <tbody>
 </table>
 </div>
