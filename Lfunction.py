@@ -736,7 +736,7 @@ class Lfunction_Dirichlet(Lfunction):
 
         # Create the Dirichlet character
         web_chi = WebCharacter({ 'type': 'dirichlet',
-                                 'modulus': self.charactermodulus
+                                 'modulus': self.charactermodulus,
                                  'number': self.characternumber})
         chi = web_chi.chi_sage
 
