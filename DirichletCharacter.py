@@ -149,6 +149,7 @@ def initCharacterInfo(web_chi,args, request):
         smod = str(web_chi.modulus)
         info['modulus'] = smod
         G = DirichletGroup_conrey(web_chi.modulus)
+        G_prev = DirichletGroup_conrey(web_chi.modulus -1)
         chi = G[web_chi.number]
         #print chi
         chi_sage = chi.sage_character()
@@ -156,7 +157,7 @@ def initCharacterInfo(web_chi,args, request):
         info['bread'] = [('Dirichlet Characters','/Character/Dirichlet'),('Character '+snum+ ' modulo '+smod,'/Character/Dirichlet/'+smod+'/'+snum)]
         info['char'] = str(web_chi.char)
         info['chisage'] = str(web_chi.chi_sage)
-        print web_chi.chi_sage
+        #print web_chi.chi_sage
         info['conductor'] = int(web_chi.conductor)
         info['order'] = int(web_chi.order)
         info['euerphi'] = euler_phi(web_chi.modulus)-1
@@ -189,37 +190,69 @@ def initCharacterInfo(web_chi,args, request):
         #l = []
         #for chi in G:
         #    l.append(chi.number())
-        next = next_index(chi)
-        if next == None:
-            nmore = 1
+        next = next_index(chi) 
+        if web_chi.number == 1:
+            prev = prev_function(web_chi.modulus - 1, web_chi.modulus-1)
         else:
-            nmore = next 
-        #print nmore
-        nless = int(snum) - 1
+            prev = prev_index(chi)
         mmore = int(smod) + 1
         mless = int(smod) - 1
-        url_ch = url_for("render_Character", arg1=smod,arg2=str(nmore))
+        name_pattern = r"\(\chi_{%s}(%s,&middot;)\)"
         if web_chi.modulus == 1:
-             info['navi'] = [(r"\(\chi_{" + str(2) + r"}(" + str(1) + r",&middot;)\)" ,url_for("render_Character", arg1=str(2),arg2=str(1))), ("", "")]
+             n1 = name_pattern % (2,1)
+             url1 = url_for("render_Character", arg1=2,arg2=1)
+             info['navi'] = [(n1,url1),("", "")]
         elif web_chi.modulus == 2:
-             info['navi'] = [(r"\(\chi_{" + str(3) + r"} \left( " + str(1)+ r",&middot;\right) \)" ,url_for("render_Character", arg1=str(3),arg2=str(1))), (r"\(\chi_{" + str(1) + r"} \left( " + str(1)+ r",&middot;\right) \)",url_for("render_Character", arg1=str(1),arg2=str(1)))]
+             n2 = name_pattern % (3,1)
+             url2 = url_for("render_Character", arg1=3,arg2=1)
+             n3 = name_pattern % (1,1)
+             url3 = url_for("render_Character", arg1=1,arg2=1)
+             info['navi'] = [(n2,url2),(n3,url3)]
         else:
             if web_chi.number == 1:
-                info['navi'] = [(r"\(\chi_{" + smod + r"} \left(  " + str(nmore)+ r",&middot;\right) \)" ,url_ch), (r"\(\chi_{" + str(mless) + r"}\left( " + str(euler_phi(web_chi.modulus -1)) + r",&middot;\right) \)",url_for("render_Character", arg1=str(mless),arg2=str(euler_phi(web_chi.modulus -1))))]
-            elif web_chi.number == euler_phi(web_chi.modulus):
-                info['navi'] = [(r"\(\chi_{" + str(mmore) + r"} \left( " + str(1)+ r",&middot;\right) \)",url_for("render_Character", arg1=str(mmore),arg2=str(1))), (r"\(\chi_{" + smod + r"} \left( " + str(nless)+ r",&middot;\right) \)",url_for("render_Character", arg1=smod,arg2=str(nless)))]
+                n4 = name_pattern % (smod,next)
+                url4 = url_for("render_Character", arg1=smod,arg2=next)
+                n5 = name_pattern % (mless,prev)
+                url5 = url_for("render_Character", arg1=mless,arg2=prev)
+                info['navi'] = [(n4,url4),(n5,url5)] 
+            elif web_chi.number == web_chi.modulus - 1:
+                n6 = name_pattern % (mmore, 1) 
+                url6 = url_for("render_Character", arg1=mmore,arg2=1)
+                n7 = name_pattern % (smod,prev)
+                url7 = url_for("render_Character", arg1=smod,arg2=prev)
+                info['navi'] = [(n6,url6),(n7,url7)]
             else:
-                info['navi'] = [(r"\(\chi_{" + smod + r"} \left( " + str(nmore)+ r", &middot;\right) \)",url_for("render_Character", arg1=smod,arg2=str(nmore))), (r"\(\chi_{" + smod + r"} \left( " + str(nless)+ r", &middot;\right) \)",url_for("render_Character", arg1=smod,arg2=str(nless)))]
+                n8 = name_pattern % (smod,next)
+                url8 = url_for("render_Character", arg1=smod,arg2=next)
+                n9 = name_pattern % (smod,prev)
+                url9 = url_for("render_Character", arg1=smod,arg2=prev)
+                info['navi'] = [(n8,url8),(n9,url9)]
 
     return info
-
-def next_index(chi):
-    from sage.all import Integer
-    mod = chi.modulus()
-    index = chi.number()
+def next_function(mod,index):
+    from sage.all import Integer 
     for j in range(index+1,mod):
         if Integer(j).gcd(mod) == 1:
             return j
+    return 1
+    
+def next_index(chi):
+    mod = chi.modulus()
+    index = chi.number()
+    return next_function(mod,index)
+
+def prev_function(mod,index):
+    from sage.all import Integer 
+    for j in range(index-1,0,-1):
+        if Integer(j).gcd(mod) == 1:
+            return j
+
+def prev_index(chi):
+    mod = chi.modulus()
+    index = chi.number()
+    return prev_function(mod,index) 
+    
+
 
 #def prev_index(chi):
     
