@@ -6,8 +6,8 @@
 <h2>Galois orbit</h2>
 <h4>Weight: {{ weight }}&nbsp;&nbsp;&nbsp;&nbsp;
   
-  {% if orbit %}
-  [{{ orbit }}]
+  {% if form %}
+  [{{ form }}]
   {% else %}
   [Need to indicate Maass, Interesting, etc. here]
   {% endif %}
@@ -15,24 +15,23 @@
 </h4>
 
 <h2>Number field containing all coefficients</h2>
-<div class="box1"><div class="small">{{ form[0] }}</div></div>
+<div class="box1"><div class="small">{{ the_form[0] }}</div></div>
 
 <h2>As polynomial in <a class="knowl-title" knowl="{{ generators }}">generators</a></h2>
-{% if form[1] %} 
-<div class="box1"><div class="small">{{ form[1] }}</div></div>
+{% if the_form[1] %} 
+<div class="box1"><div class="small">{{ the_form[1] }}</div></div>
 {% else %}
 <div class="box1"><div class="small">Not applicable</div></div>
 {% endif %}
 
 <h2>Hecke eigenvalues
-  <button name="Eigenvalues" value="Download" onclick="window.location.href = '{{ form[5] }}'">Download</button>
+  <button name="Eigenvalues" value="Download" onclick="window.location.href = '{{ the_form[5] }}'">Download</button>
 </h2>
   <form action="/ModularForm/GSp4/Q" method="get">
     <input type="hidden" name="group" value="{{ group }}" />
     <input type="hidden" name="page" value="specimen" /> 
     <input type="hidden" name="form" value="{{ form_name }}" /> 
     <input type="hidden" name="weight" value="{{ weight }}" /> 
-    <input type="hidden" name="orbit" value="{{ form_name }}" /> 
     <label>The eigenvalues are shown reduced modulo</label>
     <input type="text" name="ev_modulus" value="{{ ev_modulus }}" size=10 maxlength=10/>
     <span class="formexample">e.g. 17 (0 means no reduction)</span>
@@ -44,14 +43,14 @@
     <thead>
       <tr><th>n</th><th>&lambda;(n)</th></tr>
     </thead>
-    {% for l,val in form[2] %}
+    {% for l,val in the_form[2] %}
     <tr class = "{{ loop.cycle( 'odd', 'even') }}"><td>{{ l }}</td><td>{{ val }}</td></tr>
     {% endfor %}
   </table>
 </div></div>
 
 <h2>Fourier coefficients
-  <button name="Fourier coefficients" value="Download" onclick="window.location.href = '{{ form[4] }}'">Download</button>
+  <button name="Fourier coefficients" value="Download" onclick="window.location.href = '{{ the_form[4] }}'">Download</button>
 </h2>
 {% if 'Sp8Z' == group %}
 {% set form_index = '\(T=(m_{11}, m_{22}, \dots, m_{34})\)' %}
@@ -105,7 +104,6 @@
     <input type="hidden" name="page" value="specimen" /> 
     <input type="hidden" name="form" value="{{ form_name }}" /> 
     <input type="hidden" name="weight" value="{{ weight }}" /> 
-    <input type="hidden" name="orbit" value="{{ form_name }}" /> 
     <label>The coefficients are shown reduced modulo</label>
     <input type="text" name="fc_modulus" value="{{ fc_modulus }}" size=5 maxlength=5/>
     <span class="formexample">e.g. 17 (0 means no reduction)</span>
@@ -118,7 +116,7 @@
     <thead>
       <tr><th>\(|D|\)</th><th>{{ form_index }}</th><th>\(a(T)\)</th></tr>
     </thead>
-    {% for l,val,disc in form[3] %}
+    {% for l,val,disc in the_form[3] %}
     <tr class = "{{ loop.cycle( 'odd', 'even') }}"><td>{{ disc }}</td><td nowrap=''>{{ l }}</td><td>{{ val }}</td></tr>
     {% endfor %}
   </table>

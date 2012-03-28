@@ -30,7 +30,6 @@ def render_webpage( args = {}):
     level = args.get('level')
     form = args.get('form')
     page = args.get('page')
-    orbit = args.get('orbit')
     weight_range = args.get('weight_range')
     ev_modulus = args.get('ev_modulus')
     fc_modulus = args.get('fc_modulus')
@@ -38,7 +37,6 @@ def render_webpage( args = {}):
     # set info
     info['group'] = group
     info['form'] = form
-    info['orbit']= orbit
     info['level']= level
 
     # We check first the key 'group' since it is needed always
@@ -286,7 +284,7 @@ def render_webpage( args = {}):
             except:
                 pass
 
-            info['form'] = [ f[0].parent(), f[1], \
+            info['the_form'] = [ f[0].parent(), f[1], \
                              [ (l,g[1][l]) for l in g[1]], \
                              [(i,f[2][i],__disc(i)) for i in f_keys], \
                              f_url, g_url]
