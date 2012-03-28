@@ -170,11 +170,11 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         return Lfunction_EC( label = arg3)
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic': # this has args: one for weight and one for level
-        logger.info(arg5+arg6+str(arg7)+str(arg8)+str(arg9))
+        logger.debug(arg5+arg6+str(arg7)+str(arg8)+str(arg9))
         return Lfunction_EMF( level = arg5, weight = arg6, character = arg7, label = arg8, number = arg9)
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2'and arg3 == 'Q' and arg4 == 'Maass':
-        logger.info(db)
+        logger.debug(db)
         return Lfunction_Maass(dbid = bson.objectid.ObjectId(arg5))
     
     elif arg1 == 'ModularForm' and (arg2 == 'GSp4' or arg2 == 'GL4' or  arg2 == 'GL3') and arg3 == 'Q' and arg4 == 'maass':
@@ -268,7 +268,6 @@ def initLfunction(L,args, request):
     if L.Ltype() == 'maass':
         if L.group == 'GL2':
             minNumberOfCoefficients = 100     # TODO: Fix this to take level into account
-            logger.info("# of coef: {0}".format(len(L.dirichlet_coefficients)))
                             
             if len(L.dirichlet_coefficients)< minNumberOfCoefficients:
                 info['zeroeslink'] = ''
@@ -419,7 +418,6 @@ def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, ar
 
     # Sort the zeros and divide them into negative and positive ones
     allZeros.sort()
-    logger.info("allZeros: {0}".format(allZeros))
     positiveZeros = []
     negativeZeros = []
     

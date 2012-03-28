@@ -573,7 +573,6 @@ class Lfunction_EMF(Lfunction):
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
-        logger.debug(str(self.character)+str(self.label)+str(self.number))
         self.weight = int(self.weight)
         self.level = int(self.level)
         self.character = int(self.character)
@@ -583,17 +582,15 @@ class Lfunction_EMF(Lfunction):
 
         # Create the modular form
         self.MF = WebNewForm(self.weight, self.level, self.character, self.label)
-        logger.debug(str(self.MF))
+
         # Extract the L-function information from the elliptic modular form
         self.automorphyexp = float(self.weight-1)/float(2)
         self.Q_fe = float(sqrt(self.level)/(2*math.pi))
-        logger.debug("ALeigen: " + str(self.MF.atkin_lehner_eigenvalues()))
 
         if self.level == 1:  # For level 1, the sign is always plus
             self.sign = 1
         else:  # for level not 1, calculate sign from Fricke involution and weight
             self.sign = self.MF.atkin_lehner_eigenvalues()[self.level] * (-1)**(float(self.weight/2))
-        logger.debug("Sign: " + str(self.sign))
 
         self.kappa_fe = [1]
         self.lambda_fe = [self.automorphyexp]
@@ -610,16 +607,13 @@ class Lfunction_EMF(Lfunction):
 
         # Appending list of Dirichlet coefficients
         GaloisDegree = self.MF.degree()  #number of forms in the Galois orbit
-        logger.debug("Galois degree: " + str(GaloisDegree))
         if GaloisDegree == 1:
            self.dirichlet_coefficients = self.MF.q_expansion_embeddings(
                self.numcoeff+1)[1:self.numcoeff+1] #when coeffs are rational, q_expansion_embedding()
                                                    #is the list of Fourier coefficients
         else:
-           logger.debug("Start computing coefficients.")
            for n in range(1,self.numcoeff+1):
               self.dirichlet_coefficients.append(self.MF.q_expansion_embeddings(self.numcoeff+1)[n][self.number])
-           logger.debug("Done computing coefficients.")
               
         for n in range(1,len(self.dirichlet_coefficients)+1):
             an = self.dirichlet_coefficients[n-1]
@@ -881,14 +875,13 @@ class Lfunction_Maass(Lfunction):
             if self.level > 1: 
                 try:
                     self.fricke = self.mf.cusp_evs[1]  
-                    logger.info("Fricke: {0}".format(self.fricke))
+                    logger.debug("Fricke: {0}".format(self.fricke))
                 except:
                     raise KeyError, 'No Fricke information available for Maass form so not able to compute the L-function. '
             else:  #no fricke for level 1
                 self.fricke = 1
 
             self.dirichlet_coefficients = self.mf.coeffs
-            logger.info("Third coefficient: {0}".format(self.dirichlet_coefficients[2]))
             
             # Set properties of the L-function
             self.coefficient_type = 0
@@ -897,7 +890,6 @@ class Lfunction_Maass(Lfunction):
             self.quasidegree = 2
             self.Q_fe = float(sqrt(self.level))/float(math.pi)
 
-            logger.info("Symmetry: {0}".format(self.symmetry))
             if self.symmetry =="odd" or self.symmetry == 1:
                 self.sign = -1
                 aa = 1
@@ -905,10 +897,8 @@ class Lfunction_Maass(Lfunction):
                 self.sign = 1
                 aa = 0
 
-            logger.info("Sign (without Fricke): {0}".format(self.sign))
             if self.level > 1:
                 self.sign = self.fricke * self.sign
-            logger.info("Sign: {0}".format(self.sign))
 
             self.kappa_fe = [0.5,0.5]
             self.lambda_fe = [0.5*aa + self.eigenvalue*I, 0.5*aa - self.eigenvalue*I]
