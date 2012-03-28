@@ -128,19 +128,24 @@ function show_code(system) {
           </table>
 
         <p><h2> {{ KNOWL('nf.frobenius_cycle_types', title='Frobenius cycle types') }}</h2>
-        <p>
+        <p><center>
            <table class="ntdata" >
+	    <thead>
              <tr><th>$p$</th>
             {% for p in info.frob_data %}
             <td>{{ p[0] | safe }} </td>
             {% endfor %}
              </tr>
+	    </thead>
+	    <tbody>
              <tr><th>Cycle type</th>
             {% for p in info.frob_data %}
             <td>{{ p[1] | safe }} </td>
             {% endfor %}
              </tr>
+	     </tbody>
            </table>
+	   </center>
         </p>
         <p>
           In the table, <i>R</i> denotes a ramified prime.  Cycle lengths which are repeated in a cycle type are indicated
