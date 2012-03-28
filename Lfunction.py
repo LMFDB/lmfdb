@@ -1079,7 +1079,7 @@ class SymmetricPowerLfunction(Lfunction):
 
         self.S=SymmetricPowerLFunction(self.E,self.m)
 
-        self.title = "The symmetric power $L$-function $L(s, Symm^%d E)$ of %s"% (self.m,self.E)
+        self.title = "The symmetric power $L$-function $L(s, Symm^%d E)$ of Elliptic curve %s"% (self.m,self.E.cremona_label())
 
         self.dirichlet_coefficients = self.S._coeffs
 
@@ -1099,15 +1099,12 @@ class SymmetricPowerLfunction(Lfunction):
         self.sign = self.S.root_number
         self.selfdual = True
         self.langlands = True
-        self.texname = "$L(s, Symm^2E)$"  # default name.  will be set later, for most L-functions
+        self.texname = "L(s, Symm^%dE)"%self.m  # default name.  will be set later, for most L-functions
         self.texnamecompleteds = "\\Lambda_{Symm^2 E}(s)"  # default name.  will be set later, for most L-functions
         self.texnamecompleted1ms = "\\Lambda(1-{s})}"  # default name.  will be set later, for most L-functions
         self.primitive = True # should be changed later
         self.citation = ' '
         self.credit = ' '
         self.level=self.S.conductor
-
-
-
 
 

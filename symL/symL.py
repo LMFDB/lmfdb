@@ -1,42 +1,8 @@
 r"""
-Watkins Symmetric Power `L`-function Calculator
-
-SYMPOW is a package to compute special values of symmetric power
-elliptic curve L-functions. It can compute up to about 64 digits of
-precision. This interface provides complete access to sympow, which
-is a standard part of Sage (and includes the extra data files).
-
-.. note::
-
-   Each call to ``sympow`` runs a complete
-   ``sympow`` process. This incurs about 0.2 seconds
-   overhead.
 
 AUTHORS:
 
-- Mark Watkins (2005-2006): wrote and released sympow
-
-- William Stein (2006-03-05): wrote Sage interface
-
-ACKNOWLEDGEMENT (from sympow readme):
-
-
--  The quad-double package was modified from David Bailey's
-   package: http://crd.lbl.gov/~dhbailey/mpdist/
-
--  The ``squfof`` implementation was modified from
-   Allan Steel's version of Arjen Lenstra's original LIP-based code.
-
--  The ``ec_ap`` code was originally written for the
-   kernel of MAGMA, but was modified to use small integers when
-   possible.
-
--  SYMPOW was originally developed using PARI, but due to licensing
-   difficulties, this was eliminated. SYMPOW also does not use the
-   standard math libraries unless Configure is run with the -lm
-   option. SYMPOW still uses GP to compute the meshes of inverse
-   Mellin transforms (this is done when a new symmetric power is added
-   to datafiles).
+- Rishikesh, Mark Watkins 2012
 """
 
 ########################################################################
@@ -125,12 +91,8 @@ class SymmetricPowerLFunction(SageObject):
         result = upperbound *[1]
 
         for p in prime_l:
-            #pp= self.eulerFactor(p)
-            #print pp
-            #euler_factor =  1/sum([x**i * pp[i] for i in range(len(pp))])
-            #print self.eulerFactor(p)
             euler_factor =  (1/(PP(self.eulerFactor(p)))).padded_list()
-            #print euler_factor
+            
             if len(euler_factor) == 1:
                 for j in range(1+ upperbound // p):
                     result[j*p -1]=0
@@ -144,7 +106,6 @@ class SymmetricPowerLFunction(SageObject):
                     if j % p == 0:
                         continue
                     result[j* p**k -1] *= euler_factor[k]
-                    #print result
 
                 k += 1
 
