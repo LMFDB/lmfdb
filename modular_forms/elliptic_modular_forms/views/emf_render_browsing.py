@@ -2,7 +2,7 @@ from utils import to_dict,image_src
 from sage.all import dimension_new_cusp_forms,dimension_cusp_forms,dimension_eis,dimension_modular_forms
 from modular_forms.elliptic_modular_forms import EMF, emf_logger, emf,EMF_TOP
 from modular_forms.elliptic_modular_forms.backend.emf_core import get_geometric_data_Gamma0N
-from modular_forms.elliptic_modular_forms.backend.emf_utils import MyNewGrp,my_get
+from modular_forms.elliptic_modular_forms.backend.emf_utils import MyNewGrp,my_get,parse_range,extract_limits_as_tuple
 from modular_forms.backend.mf_utils import my_get
 from modular_forms import MF_TOP
 from flask import render_template, url_for, request, redirect, make_response,send_file
@@ -77,11 +77,66 @@ def render_table(level,**kwds):
     nrows = my_get(kwds,'nrows',10,int)
     ncols = my_get(kwds,'ncols',10,int)
     ttype = my_get(kwds,'ttype','newforms',str)
-    
+
+@emf.route("/ranges", methods=["GET"])
+def browse_elliptic_modular_forms_ranges(**kwds):
+    r"""
+    Renders the webpage for browsing modular forms of given level and/or weight ranges.
+    """
+    emf_logger.debug("In browse_elliptic_modular_forms_ranges kwds: {0}".format(kwds))
+    emf_logger.debug("args={0}".format(request.args))
+    default={}
+    default['level']='1-12'
+    default['weight']='2-36'
+    default['character']=0
+    info=dict()
+    args=to_dict(request.args)
+    emf_logger.debug("args={0}".format(args))
+    for field in ['level', 'weight', 'character']:
+        if args.get(field):
+            info[field]=parse_range(args[field])
+        else:
+            info[field]=parse_range(default[field])
+    if info['weight'] == 1:
+        info['weight'] = 2
+    elif (type(info['weight']) == dict) and info['weight'].get('min')==1:
+        info['weight']['min']=2
+        
+    emf_logger.debug("Input: info={0}".format(info))
+    bread = [(MF_TOP,url_for('mf.modular_form_main_page'))]
+    bread.append((EMF_TOP,url_for('emf.render_elliptic_modular_forms')))
+    disp = ClassicalMFDisplay('modularforms')
+    limits_weight = extract_limits_as_tuple(info,'weight')
+    limits_level  = extract_limits_as_tuple(info,'level')
+    if info['character']==-1:
+        info['show_all_characters']=1
+    if limits_level[0]==limits_level[1]:
+        level = limits_level[0]
+        info['geometric'] = get_geometric_data_Gamma0N(level)
+        #if info.has_key('plot'):
+        grp=MyNewGrp(level,info)
+        plot=grp.plot
+        info['fd_plot']= image_src(grp)
+        emf_logger.info("PLOT: %s" % info['fd_plot'])
+    disp.set_table_browsing(limit=[limits_weight,limits_level],
+                            keys=['Weight','Level'],character=info['character'],dimension_fun=dimension_new_cusp_forms,title='Dimension of newforms')
+    info['browse_table']=disp._table
+    title = "Holomorphic Cusp Forms"
+    info['browse_type']=""
+    info['title']=title;  info['bread']=bread
+    if info['character']==0:
+        info['grouptype']=0
+        info['groupother']=1
+    else:
+        info['grouptype']=1
+        info['groupother']=0
+    #info['level']=level
+    if limits_weight[0]!=limits_weight[1] and limits_level[0]!=limits_level[1]:
+        return render_template("emf_navigation.html", info=info,title=title,bread=bread)
+    return render_template("emf_browse_range.html", **info)
     
 
-
-def browse_elliptic_modular_forms(level=0,weight=0,character=-1,label='',**kwds):
+def browse_elliptic_modular_forms(level=0,weight=0,character=-1,label='',limits=None,**kwds):
     r"""
     Renders the webpage for browsing modular forms of given level and/or weight.
     """
@@ -104,7 +159,6 @@ def browse_elliptic_modular_forms(level=0,weight=0,character=-1,label='',**kwds)
         info['geometric'] = get_geometric_data_Gamma0N(level)
         #if info.has_key('plot'):
         grp=MyNewGrp(level,info)
-        plot=grp.plot
         info['fd_plot']= image_src(grp)
         emf_logger.info("PLOT: %s" % info['fd_plot'])
     if level>0 and weight==0:
@@ -113,55 +167,18 @@ def browse_elliptic_modular_forms(level=0,weight=0,character=-1,label='',**kwds)
         level = int(level)
         info['level_min']=level;info['level_max']=level
         info['weight_min']=1;info['weight_max']=36
-        largs = [ {'level':level,'character':character,'weight_block':k} for k in range(100)]
+        #largs = [ {'level':level,'character':character,'weight_block':k} for k in range(100)]
         disp = ClassicalMFDisplay('modularforms')
-        disp.set_table_browsing(limit=[(1,36),(level,level)],keys=['Weight','Level'],character='all',dimension_fun=dimension_new_cusp_forms,title='Dimension of newforms')
+        disp.set_table_browsing(limit=[(1,36),(level,level)],keys=['Weight','Level'],character=character,dimension_fun=dimension_new_cusp_forms,title='Dimension of cusp forms')
         info['show_all_characters']=1
         info['browse_table']=disp._table
         
         #info['list_spaces']=ajax_more(make_table_of_spaces_fixed_level,*largs,text='more')
-        title = "Holomorphic Cusp Forms of level %s " % level
         bread =[(MF_TOP,url_for('mf.modular_form_main_page'))]
         bread.append((EMF_TOP,url_for('emf.render_elliptic_modular_forms')))
         info['browse_type']=" of level %s " % level
         info['title']=title;  info['bread']=bread
         info['level']=level
-        return render_template("emf_browse_fixed_level.html", **info)
-    if weight>0 and level==0:
-        #disp = ClassicalMFDisplay('modularforms')
-        #disp.set_table_browsing(limit=[(weight,weight),(1,50)],keys=['Weight','Level'],character='all',dimension_fun=dimension_new_cusp_forms,title='Dimension of newforms')
-        info['show_all_characters']=1
-        #info['browse_table']=disp._table
-        emf_logger.debug("here2!")
-        info['level_min']=1;info['level_max']=50
-        info['weight_min']=weight;info['weight_max']=weight
-        #info['list_spaces']=make_table_of_dimensions(weight_start=weight,weight_stop=weight,**info) #make_table_of_spaces(level=[10,20,30])
-        title = "Holomorphic Cusp Forms of weight %s" %weight
-        bread =[(MF_TOP,url_for('mf.modular_form_main_page'))]
-        info['browse_type']=" of weight %s " % weight
-        table=dict()
-        row_heads=list()
-        col_heads=list()
-        i  = 0 
-        for N in range(info['level_min'],info['level_max']+1):
-            row_heads.append(N)
-            D = DirichletGroup(N).list()
-            table[i]=dict()
-            j = 0
-            for x in range(len(D)):
-                if x not in col_heads:
-                    col_heads.append(x)
-                url = url_for('emf.render_elliptic_modular_forms',level=N,weight=weight,character=x)
-                d = dimension_cusp_forms(D[x],weight)
-                table[i][j]={"dim":d,"url":url}
-                j = j+1
-            i = i + 1
-        info['browse_table']=table
-        info['nrows']=len(row_heads)
-        info['ncols']=len(col_heads)
-        info['title']=title;  info['bread']=bread
-        info['row_heads']=row_heads
-        info['col_heads']=col_heads
         return render_template("emf_browse_fixed_level.html", **info)
     emf_logger.debug("here2!")
     info['level_min']=level;info['level_max']=level
