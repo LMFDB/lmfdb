@@ -1,0 +1,24 @@
+  <h1>Browse other spaces of modular forms</h1>
+  <form name="browse" method = "get" action="{{url_for('.browse_elliptic_modular_forms_ranges')}}">
+    <table>
+      <tr>
+	<td>{{KNOWL('mf.elliptic.level',title='Level')}} range:</td>
+	<td><input type="text" name="level" example="1-12"></td>
+      </tr>
+      <tr>
+	<td>{{KNOWL('mf.elliptic.level',title='Weight')}} range:</td>
+	<td><input type="text" name="weight" example="2-36"></td>
+      </tr>
+      <tr>
+	<td>Group:</td>
+	{% if info.grouptype is defined %}
+	<td><input type="radio" name="character" {% if info.grouptype == 0 %} checked="checked" {% endif %} value="0">\(\Gamma_0(N)\)
+	    &nbsp;<input type="radio" name="character" {% if info.grouptype == 1 %} checked="checked" {% endif %}  value="-1">\(\Gamma_1(N)\)</td>
+	{% else %}
+	<td><input type="radio" name="character" checked="checked" value="0">\(\Gamma_0(N)\)
+	  &nbsp;<input type="radio" name="character" value="-1">\(\Gamma_1(N)\)</td>
+	{% endif %}
+      </tr>
+    </table>
+      <button type="submit" name="Submit" value="Search">Browse</button>
+  </form>

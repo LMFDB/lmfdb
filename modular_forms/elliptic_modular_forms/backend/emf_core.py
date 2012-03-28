@@ -1084,7 +1084,7 @@ def len_as_printed(s,format='latex'):
     #
     #tot_len = len(ss)+ceil((len(ssubs)+len(sexps))*0.67)
     return tot_len
-    
+            
 def get_geometric_data_Gamma0N(N):
     res=dict()
     G=Gamma0(N)
@@ -1109,7 +1109,6 @@ def print_geometric_data_Gamma0N(N):
         s+="<tr><td>order 3:</td><td>%s</td></tr>" % G.nu3()
         s+="</table>"
         return s
-
 
 def pol_to_html(p):
     r"""
