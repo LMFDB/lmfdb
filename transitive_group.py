@@ -59,9 +59,7 @@ def group_phrase(n,t,C):
 def group_display_long(n, t, C):
   label = base_label(n,t)
   group = C.transitivegroups.groups.find_one({'label': label})
-  inf = "Group "+str(group['n'])+"T"+str(group['t'])
-  inf += ", order "+str(group['order'])
-  inf += ", parity "+str(group['parity'])
+  inf = "Group %sT%s, order %s, parity %s" % (group['n'], group['t'], group['order'], group['parity'])
   if group['cyc']==1:
     inf += ", cyclic"
   elif group['ab']==1:
@@ -75,7 +73,7 @@ def group_display_long(n, t, C):
   else:
     inf += ", imprimitive"
 
-  inf = "  ("+inf+")"
+  inf = "  (%s)" % inf
   if group['pretty']:
     return group['pretty']+inf
   return group['name']+inf
