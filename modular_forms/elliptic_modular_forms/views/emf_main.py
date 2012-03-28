@@ -193,7 +193,7 @@ def render_elliptic_modular_form_navigation_wp(**args):
     if is_set['level']:
         level_range=(level,level)
     else:
-        level_range=(1,12)
+        level_range=(1,20)
     if character==0:
         info['grouptype']=0
         info['groupother']=1

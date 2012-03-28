@@ -181,7 +181,7 @@ class ClassicalMFDisplay(MFDisplay):
                             emf_logger.debug("Computing dimension of new forms of weight {0} for {1}".format(k,Gamma1(N)))
                     except Exception as ex:
                         emf_logger.critical("Exception: {0}. \n Could not compute the dimension with function {0}".format(ex,dimension_fun))
-                    emf_logger.debug("N,k,char,dim: {0},{1},{2},{3}".format(N,k,character,d))
+                    #emf_logger.debug("N,k,char,dim: {0},{1},{2},{3}".format(N,k,character,d))
                     if character == 0 or character == 1:
                         url = url_for('emf.render_elliptic_modular_forms',level=N,weight=k, character=character)
                     else:

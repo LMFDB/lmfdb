@@ -1775,17 +1775,17 @@ class WebNewForm(SageObject):
 
 
         """
-        
         if(prec==None):
             prec=self._prec
         s = my_latex_from_qexp(str(self.q_expansion(prec)))
         sb = list()
         if br > 0:
             sb = break_line_at(s,br)
+            emf_logger.debug("print_q_exp: sb=".format(sb))
         if len(sb)<=1:
-            s = r"\\("+s+r"\\)"
+            s = r"\("+s+r"\)"
         else:
-            s = r"\\("+join(sb,"",)+r"\\)"
+            s = r"\("+join(sb,"",)+r"\)"
         emf_logger.debug("print_q_exp: prec=".format(prec))
         return s
 
