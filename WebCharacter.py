@@ -69,7 +69,7 @@ class WebCharacter:
             if len(Gunits) != 1:
                 self.unitgens += ")"
             self.sign = "True"
-            if self.zetaorder >= 2:
+            if self.zetaorder > 2:
                 self.sign = "False"
             chizero = G_sage[0]
             self.char = str(chi)
@@ -82,8 +82,28 @@ class WebCharacter:
             self.vals = chi.values()
             l = []
             #phi = euler_phi(self.modulus)
+            #from sage.rings.rational.Rational import numer, denom
             for j in range(1,self.modulus+1):
-                l.append(chi.logvalue(j))
+                logvalue = chi.logvalue(j)
+                n = logvalue.numer()
+                d = logvalue.denom()
+                if n == 0:
+                    s = "1"
+                elif n == 1:
+                    if d == 2:
+                        s = "-1"
+                    if d == 4:
+                        s = "i"
+                elif n == 3:
+                    if d == 4:
+                        s = "-i"
+                else:
+                    s = r"\(e\left(\frac{%s}{%s}\right)\)" %(n,d) 
+                    #s = r"\(\displaystyle\frac{%s}{%s}\)" %(n,d) 
+                    #s = r"\(e(%s)\)" %(chi.logvalue(j))
+                #import utils; utils.debug()
+                #import utils; utils.debug()
+                l.append(s)
             self.logvals = l
             self.bound = 5*1024
             if chi.is_even():
@@ -104,7 +124,7 @@ class WebCharacter:
                         if chi == self.inducedchar:
                             self.inducedchar_number = j
                             break
-                self.inducedchar_tex = r"\(\chi_{%s}\!\!\pmod{%s}\)" %(self.inducedchar_number,self.inducedchar_modulus) 
+                self.inducedchar_tex = r"\(\chi_{%s}(%s,\cdot)\)" %(self.inducedchar_modulus,self.inducedchar_number) 
        # if self.primitive == 'True':
        #     self.primtf = True
        # else:
