@@ -186,7 +186,7 @@ table.props tr td:first-child {
         </h2>
         <div class = 'sage nodisplay code'>sage: chi.jacobi_sum()</div>
         {% set jacobi_default = 1 %}
-        <form> \( J(\chi_{ {{number}} },\psi) \;\) for \( \;\psi = {{modulus}}.\)
+        <form> \( J(\chi_{ {{modulus}} }({{number}},&middot;),\psi) \;\) for \( \;\psi = {{modulus}}.\)
             <input id="calc-jacobi-input" size="10" placeholder={{jacobi_default}}>
             <button id="calc-jacobi-go"> Compute </button>
             <span class="formexample"> n.b., takes values 0--{{eulerphi}}</span>
@@ -202,7 +202,7 @@ table.props tr td:first-child {
         <div class = 'sage nodisplay code'>sage: chi.kloosterman_sum(,)</div>
         {% set kloosterman_default_a = 1 %}
         {% set kloosterman_default_b = 2 %} 
-        <form> \(K(a,b,\chi_{ {{number}} }) \;\) at \(\; a,b = \)
+        <form> \(K(a,b,\chi_{ {{modulus}} }({{number}},&middot;)) \;\) at \(\; a,b = \)
             <input id="calc-kloosterman-input" size=10 placeholder={{kloosterman_default_a}},{{kloosterman_default_b}}>
             <button id="calc-kloosterman-go"> Compute </button>
             <span class="formexample"> e.g. {{kloosterman_default_a}},{{kloosterman_default_b}}</span>
