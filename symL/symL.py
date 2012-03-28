@@ -70,7 +70,7 @@ class SymmetricPowerLFunction(SageObject):
 
     def __init__(self,E,m):
         if E.has_cm():
-            raise ValueError "E should not be cm"
+            raise ValueError, "E should not be cm"
 
         from sympowlmfdb import sympowlmfdb 
         bad_primes,conductor, root_number=sympowlmfdb.local_data(E,m)
@@ -83,6 +83,7 @@ class SymmetricPowerLFunction(SageObject):
         self.conductor=conductor
         self.root_number = root_number
         self.E= E
+        self._construct_L()
 
 
 
@@ -155,6 +156,11 @@ class SymmetricPowerLFunction(SageObject):
         Construct L function
 
         """ 
+        try:
+            return self._L
+        except AttributeError:
+            pass
+
         import sage.libs.lcalc.lcalc_Lfunction as lcalc
         RR=sage.rings.all.RealField()
         halfm=RR(self.m)/2.0
@@ -190,13 +196,15 @@ class SymmetricPowerLFunction(SageObject):
 
         
         #generate data for renderer
+        self._Q_fe=Q
         self._coeffs=coeffs
         self._poles=poles
         self._residues=residues
-        self._mu_fe=self.gamm
+        self._mu_fe=gamm
         self._nu_fe=[]
 
-        return lcalc.Lfunction_D("", 0,coeffs,0,Q, self.root_number, kapp, gamm,poles,residues)
+        self._L = lcalc.Lfunction_D("", 0,coeffs,0,Q, self.root_number, kapp, gamm,poles,residues)
+        return self._L
 
 
 

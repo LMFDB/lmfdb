@@ -1077,36 +1077,35 @@ class SymmetricPowerLfunction(Lfunction):
 
         from symL.symL import SymmetricPowerLFunction
 
-        self.S=SymmetricPowerLFunction(E,m)
+        self.S=SymmetricPowerLFunction(self.E,self.m)
 
         self.title = "The symmetric power $L$-function $L(s, Symm^%d E)$ of %s"% (self.m,self.E)
 
-        self.dirichlet_coefficients = 
+        self.dirichlet_coefficients = self.S._coeffs
 
-        self.sageLfunction = self.S._contruct_L()
+        self.sageLfunction = self.S._construct_L()
 
 
         # Initialize some default values
         self.coefficient_period = 0
+        self.degree = self.m+1
         self.Q_fe = self.S._Q_fe
         self.poles = self.S._poles
         self.residues = self.S._residues
-        #self.kappa_fe = []
-        #self.lambda_fe =[]
         self.mu_fe = self.S._mu_fe
         self.nu_fe = self.S._nu_fe
-        self.sign = self.S.root_number()
+        self.kappa_fe = self.mu_fe
+        self.lambda_fe = self.nu_fe
+        self.sign = self.S.root_number
         self.selfdual = True
         self.langlands = True
         self.texname = "$L(s, Symm^2E)$"  # default name.  will be set later, for most L-functions
         self.texnamecompleteds = "\\Lambda_{Symm^2 E}(s)"  # default name.  will be set later, for most L-functions
         self.texnamecompleted1ms = "\\Lambda(1-{s})}"  # default name.  will be set later, for most L-functions
         self.primitive = True # should be changed later
-        self.citation = ''
-        self.credit = ''
-
-
-
+        self.citation = ' '
+        self.credit = ' '
+        self.level=self.S.conductor
 
 
 
