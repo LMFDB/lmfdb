@@ -34,6 +34,17 @@ table.ntdata tr.even, table.ntdata tr:nth-child(even) { background: none; }
 }
 </style>
 
+<script type="text/javascript">
+$(function() {
+  var lastcols = $("#chitable tr th:last-child, #chitable tr td:last-child");
+  lastcols.hide();
+  $("#showlastcols").click(function () {
+    lastcols.show("slow");
+    $(this).hide();
+  });
+});
+</script>
+
 <table>    
     <thead align="left">
     <tr>
@@ -52,6 +63,11 @@ table.ntdata tr.even, table.ntdata tr:nth-child(even) { background: none; }
 <div>
 <table class="ntdata" id="chitable">
 <thead align="center">
+    <tr>
+     <td colspan="6" style="text-align: right;"></td>
+     <td><a href="#" id="showlastcols">show more &rarr;</a></td>
+     <td></td>
+    </tr>
     <tr>
         <th class="modulus">M\O</th>
         {% for h in headers %}
