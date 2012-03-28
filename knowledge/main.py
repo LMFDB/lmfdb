@@ -104,7 +104,7 @@ def render_knowl_in_template(knowl_content, **kwargs):
     return render_template_string(render_me, **kwargs)
   except Exception, e:
     return "ERROR in the template: %s. Please edit it to resolve the problem." % e
-  
+
 
 # a jinja test for figuring out if this is a knowl or not
 # usage: {% if K is knowl_type %} ... {% endif %}

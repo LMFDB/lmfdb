@@ -108,12 +108,12 @@ def browseGraphChar():
 def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9):
     args = request.args
     temp_args = to_dict(args)
-    
+
     if len(args) == 0:  #This ensures it's a navigation page 
         if not arg1: # this means we're at the start page
             info = set_info_for_start_page()
             return render_template("LfunctionNavigate.html", **info)
-        
+
         elif arg1.startswith("degree"):
             degree = int(arg1[6:])
             info = { "degree" : degree }
@@ -139,8 +139,9 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
       # throw exception if not UserError
       if len(e.args) > 1 and e.args[1] != 'UserError': raise
       info = { 'content': 'Sorry, there has been a problem: %s' % e.args[0], 'title': 'Error' }
-      return render_template('LfunctionSimple.html', info=info, **info), 500
-   
+      return render_template('LfunctionSimple.html', info=info, **info)
+        
+
     try:
         logger.info(temp_args)
         if temp_args['download'] == 'lcalcfile':
@@ -151,7 +152,7 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
     info = initLfunction(L, temp_args, request)
 
     return render_template('Lfunction.html', **info)
-    
+
 
 def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, temp_args):
     if (arg1 == 'Riemann' or (arg1 == 'Character' and arg2 == 'Dirichlet' and arg3 == '1' and arg4 == '0')
@@ -171,7 +172,7 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
     elif arg1 == 'ModularForm' and arg2 == 'GL2'and arg3 == 'Q' and arg4 == 'Maass':
         logger.info(db)
         return Lfunction_Maass(dbid = bson.objectid.ObjectId(arg5), dbName = 'MaassWaveForm', dbColl = temp_args['db'])
-    
+
     elif arg1 == 'ModularForm' and (arg2 == 'GSp4' or arg2 == 'GL4' or  arg2 == 'GL3') and arg3 == 'Q' and arg4 == 'maass':
         return Lfunction_Maass( dbid = arg5, dbName = 'Lfunction', dbColl = 'LemurellMaassHighDegree')
 
@@ -180,14 +181,15 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
 
     elif arg1 == 'Lcalcurl':
         return Lfunction( Ltype = arg1, url = arg2)
-    
-    raise Exception("Not Found")
+
+    else:
+        return Flask.redirect(403)
 
 
 def set_info_for_start_page():
     ''' Sets the properties of the top L-function page.
     '''
-    
+
     tt = [[{'title':'Riemann','link': url_for('render_Lfunction', arg1='Riemann')},
            {'title':'Dirichlet','link': url_for('render_Lfunction', arg1='degree1') + '#Dirichlet'}],
 
@@ -202,7 +204,7 @@ def set_info_for_start_page():
     info = {
         'degree_list': range(1,5),
         'type_table': tt,
-        'type_row_list':[0,1,2] 
+        'type_row_list':[0,1,2]
     }
 
     info['title'] = 'L-functions'
@@ -210,7 +212,7 @@ def set_info_for_start_page():
 #   info['learnmore'] = [('Lmfdb-wiki', 'http://wiki.l-functions.org/L-function')]
 
     return info
-    
+
 
 def initLfunction(L,args, request):
     info = {'title': L.title}
@@ -219,6 +221,9 @@ def initLfunction(L,args, request):
     info['sv12'] = specialValueString(L, 0.5, '1/2')
     info['sv1'] = specialValueString(L, 1, '1')
     info['args'] = args
+    info['Ltype'] = L.Ltype()
+    info['URL'] = request.path
+
 
     info['credit'] = L.credit
     #info['citation'] = L.citation
@@ -364,7 +369,7 @@ def render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8
     data = plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
     if not data:
         # see note about missing "hardy_z_function" in plotLfunction()
-        return redirect(404)
+        return abort(404)
     response = make_response(data)
     response.headers['Content-type'] = 'image/png'
     return response

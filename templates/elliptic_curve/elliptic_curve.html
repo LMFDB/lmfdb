@@ -24,7 +24,9 @@ function show_code(system) {
         <a onclick="show_code('magma'); return false" href='#'>magma</a>
     </div>
     <div></div>
-    
+
+    <h2>{{ KNOWL_INC('historical'+request.path.lower().replace('/','_'), title='Historical Information') }}</h2>
+
     <h2> {{ KNOWL('ec.q.minimal_weierstrass_equation', title='Minimal Weierstrass equation') }} </h2>
     <div class='sage nodisplay code'>sage: E = EllipticCurve({{info.ainvs}})</div>
     <div class='pari nodisplay code'>? E = ellinit({{info.ainvs}})</div>
@@ -255,5 +257,6 @@ $(function() {
 });
 </script>
     
-        
+
+    <h2>{{ KNOWL_INC('misc'+request.path.lower().replace('/','_'), title='Misc') }}</h2>
 {% endblock %}
