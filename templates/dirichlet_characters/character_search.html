@@ -4,7 +4,8 @@
 {% block content %}
 
 <style type="text/css">
-table td.center {
+    #characterTable {width:auto;}
+    table td.center {
     text-align: center;
 }
 table td.params {
@@ -72,7 +73,8 @@ table td.params {
 <script>
  $(document).ready(function() {
      $('#characterTable').dataTable({
-          "bFilter":false, 
+         "bFilter":false,
+         "bAutoWidth": false, 
           "aoColumnDefs": [ 
            { "sType": 'title-numeric',
              "aTargets": [0] }, 
@@ -89,11 +91,11 @@ table td.params {
 <table class="ntdata" style="table-layout:fixed" id="characterTable">
     <thead class="heading" align="center">
     <tr>
-        <th> {{ KNOWL('character.dirichlet', title="character") }}</th>
-        <th> {{ KNOWL('character.dirichlet.modulus', title="modulus") }}</th>
-        <th> {{ KNOWL('character.dirichlet.conductor', title="conductor") }}</th>
-        <th> {{ KNOWL('character.dirichlet.order', title="order") }}</th>
-        <th> {{ KNOWL('character.dirichlet.parity', title="parity") }}</th>
+        <th style="width: 5em"> {{ KNOWL('character.dirichlet', title="character") }}</th>
+        <th style="width: 5em"> {{ KNOWL('character.dirichlet.modulus', title="modulus") }}</th>
+        <th style="width: 6em"> {{ KNOWL('character.dirichlet.conductor', title="conductor") }}</th>
+        <th style="width: 4em"> {{ KNOWL('character.dirichlet.order', title="order") }}</th>
+        <th style="width: 4em"> {{ KNOWL('character.dirichlet.parity', title="parity") }}</th>
     </tr>
     </thead>
     
@@ -119,7 +121,7 @@ table td.params {
                                 {% if chi[4] == 2 %}
                                     {{ chi[1] }}
                                 {% else %}
-                                    \({\displaystyle \chi_{ {{ chi[0] }} } }\)
+                                \({\displaystyle \chi_{ {{ chi[2] }}}({{chi[0]}},&middot;)  }\)
                                 {% endif %}
                                 </font>
                             </a>

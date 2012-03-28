@@ -123,7 +123,9 @@ def set_info_for_start_page():
     return info
 
 def initCharacterInfo(web_chi,args, request):
-    chi = web_chi.dirichletcharacter()
+    #chi = web_chi.dirichletcharacter()
+    #print chi
+    #print web.chi
     info = {'title': web_chi.title}
     info['citation'] = ''
     info['support'] = ''
@@ -142,14 +144,19 @@ def initCharacterInfo(web_chi,args, request):
 
     if args['type'] == 'dirichlet':
         #from dirichlet_conrey import *
-        chi_sage = chi.sage_character()
         snum = str(web_chi.number)
         info['number'] = snum
         smod = str(web_chi.modulus)
         info['modulus'] = smod
-        #G = DirichletGroup(web_chi.modulus)
+        G = DirichletGroup_conrey(web_chi.modulus)
+        chi = G[web_chi.number]
+        #print chi
+        chi_sage = chi.sage_character()
+        indices = []
         info['bread'] = [('Dirichlet Characters','/Character/Dirichlet'),('Character '+snum+ ' modulo '+smod,'/Character/Dirichlet/'+smod+'/'+snum)]
         info['char'] = str(web_chi.char)
+        info['chisage'] = str(web_chi.chi_sage)
+        print web_chi.chi_sage
         info['conductor'] = int(web_chi.conductor)
         info['order'] = int(web_chi.order)
         info['euerphi'] = euler_phi(web_chi.modulus)-1
@@ -179,24 +186,44 @@ def initCharacterInfo(web_chi,args, request):
         info['nextnumber'] = web_chi.number+1
         info['learnmore'] = [('Dirichlet Characters', url_for("knowledge.show", ID="character.dirichlet.learn_more_about"))] 
         info['friends'] = [('Dirichlet L-function', '/L/Character/Dirichlet/'+smod+'/'+snum)]
-        nmore = int(snum) + 1
+        #l = []
+        #for chi in G:
+        #    l.append(chi.number())
+        next = next_index(chi)
+        if next == None:
+            nmore = 1
+        else:
+            nmore = next 
+        #print nmore
         nless = int(snum) - 1
         mmore = int(smod) + 1
         mless = int(smod) - 1
         url_ch = url_for("render_Character", arg1=smod,arg2=str(nmore))
         if web_chi.modulus == 1:
-             info['navi'] = [(r"\(\chi_{" + str(0) + r"} \left( \text{mod}\; " + str(2)+ r"\right) \)" ,url_for("render_Character", arg1=str(2),arg2=str(0))), ("", "")]
+             info['navi'] = [(r"\(\chi_{" + str(2) + r"}(" + str(1) + r",&middot;)\)" ,url_for("render_Character", arg1=str(2),arg2=str(1))), ("", "")]
         elif web_chi.modulus == 2:
-             info['navi'] = [(r"\(\chi_{" + str(0) + r"} \left( \text{mod}\; " + str(3)+ r"\right) \)" ,url_for("render_Character", arg1=str(3),arg2=str(0))), (r"\(\chi_{" + str(0) + r"} \left( \text{mod}\;" + str(1)+ r"\right) \)",url_for("render_Character", arg1=str(1),arg2=str(0)))]
+             info['navi'] = [(r"\(\chi_{" + str(3) + r"} \left( " + str(1)+ r",&middot;\right) \)" ,url_for("render_Character", arg1=str(3),arg2=str(1))), (r"\(\chi_{" + str(1) + r"} \left( " + str(1)+ r",&middot;\right) \)",url_for("render_Character", arg1=str(1),arg2=str(1)))]
         else:
-            if web_chi.number == 0:
-                info['navi'] = [(r"\(\chi_{" + str(nmore) + r"} \left( \text{mod}\; " + smod+ r"\right) \)" ,url_ch), (r"\(\chi_{" + str(euler_phi(web_chi.modulus -1)-1) + r"} \left( \text{mod}\;" + str(mless)+ r"\right) \)",url_for("render_Character", arg1=str(mless),arg2=str(euler_phi(web_chi.modulus -1)-1)))]
-            elif web_chi.number == euler_phi(web_chi.modulus)-1:
-                info['navi'] = [(r"\(\chi_{" + str(0) + r"} \left( \text{mod}\;" + str(mmore)+ r"\right) \)",url_for("render_Character", arg1=str(mmore),arg2=str(0))), (r"\(\chi_{" + str(nless) + r"} \left( \text{mod}\;" + smod+ r"\right) \)",url_for("render_Character", arg1=smod,arg2=str(nless)))]
+            if web_chi.number == 1:
+                info['navi'] = [(r"\(\chi_{" + smod + r"} \left(  " + str(nmore)+ r",&middot;\right) \)" ,url_ch), (r"\(\chi_{" + str(mless) + r"}\left( " + str(euler_phi(web_chi.modulus -1)) + r",&middot;\right) \)",url_for("render_Character", arg1=str(mless),arg2=str(euler_phi(web_chi.modulus -1))))]
+            elif web_chi.number == euler_phi(web_chi.modulus):
+                info['navi'] = [(r"\(\chi_{" + str(mmore) + r"} \left( " + str(1)+ r",&middot;\right) \)",url_for("render_Character", arg1=str(mmore),arg2=str(1))), (r"\(\chi_{" + smod + r"} \left( " + str(nless)+ r",&middot;\right) \)",url_for("render_Character", arg1=smod,arg2=str(nless)))]
             else:
-                info['navi'] = [(r"\(\chi_{" + str(nmore) + r"} \left( \text{mod}\;" + smod+ r"\right) \)",url_for("render_Character", arg1=smod,arg2=str(nmore))), (r"\(\chi_{" + str(nless) + r"} \left( \text{mod}\; " + smod+ r"\right) \)",url_for("render_Character", arg1=smod,arg2=str(nless)))]
+                info['navi'] = [(r"\(\chi_{" + smod + r"} \left( " + str(nmore)+ r", &middot;\right) \)",url_for("render_Character", arg1=smod,arg2=str(nmore))), (r"\(\chi_{" + smod + r"} \left( " + str(nless)+ r", &middot;\right) \)",url_for("render_Character", arg1=smod,arg2=str(nless)))]
 
     return info
+
+def next_index(chi):
+    from sage.all import Integer
+    mod = chi.modulus()
+    index = chi.number()
+    for j in range(index+1,mod):
+        if Integer(j).gcd(mod) == 1:
+            return j
+
+#def prev_index(chi):
+    
+            
 
 @app.route("/Character/Dirichlet/<modulus>/<number>")
 def render_webpage_label(modulus,number):
@@ -318,12 +345,12 @@ def render_character_table(modulus=None,conductor=None,order=None):
             j = chi.number()
             add = True
             add &= not conductor or chi.conductor() == conductor
-            add &= not order     or chi.order() == order
+            add &= not order     or chi.multiplicative_order() == order
             if add:
-                if chi.order() == 2 and kronecker_symbol(chi) != None:
-                    ret.append([(j, kronecker_symbol(chi), chi.modulus(), chi.conductor(), chi.order(), chi.is_primitive(), chi.is_even())])
+                if chi.multiplicative_order() == 2 and kronecker_symbol(chi) != None:
+                    ret.append([(j, kronecker_symbol(chi), chi.modulus(), chi.conductor(), chi.multiplicative_order(), chi.is_primitive(), chi.is_even())])
                 else:
-                    ret.append([(j,chi, chi.modulus(), chi.conductor(), chi.order(), chi.is_primitive(), chi.is_even())])
+                    ret.append([(j,chi, chi.modulus(), chi.conductor(), chi.multiplicative_order(), chi.is_primitive(), chi.is_even())])
         return ret
     return [row(_) for _ in range(start,end,stepsize)]
 
@@ -347,3 +374,4 @@ def kronecker_symbol(chi):
             return r"\(\displaystyle\left(\frac{-%s}{\bullet}\right)\)" %(chi.conductor()) 
     else:
         return None
+
