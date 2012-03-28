@@ -31,7 +31,7 @@ function show_code(system) {
     <div class='magma nodisplay code'>&gt; E := EllipticCurve({{info.ainvs}});</div>
     <p> {{ info.equation }} </p>
 
-    <h2> {{ KNOWL('ec.q.mordell-weil', title='Mordel-Weil group') }} structure</h2>
+    <h2> {{ KNOWL('ec.q.mordell-weil', title='Mordell-Weil group') }} structure</h2>
    <div>{% if info.rank==1 %}{% if info.torsion!=1 %} \(\mathbb{Z}\times {{info.tor_structure}}\) 
     {%endif%}  {%endif%}     </div>
 
@@ -75,8 +75,8 @@ function show_code(system) {
         <tr>
         <td colspan="4">
             <span class='sage nodisplay code'>sage: E.conductor().factor()</span>
-            <span class='pari nodisplay code'></span>
-            <span class='magma nodisplay code'></span>
+            <span class='pari nodisplay code'>? ellglobalred(E)[1]</span>
+            <span class='magma nodisplay code'>&gt; Conductor(E);</span>
         </td>
         </tr>
         <tr>

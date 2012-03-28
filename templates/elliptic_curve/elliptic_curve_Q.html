@@ -5,6 +5,12 @@
 <div>
 An {{KNOWL("ec", title="elliptic curve")}} is a {{KNOWL("ag.curve.smooth",title="smooth")}} projective {{KNOWL("ag.curve",title="curve")}} of {{KNOWL("ag.curve.genus",title="genus")}} 1 with a rational basepoint $O$. 
 </div>
+<div>
+The database currently contains {{info.ncurves}} elliptic curves with
+maximum {{ KNOWL('ec.q.conductor',title = "conductor")}}
+{{info.max_N}} and maximum {{ KNOWL('ec.q.rank', title="rank")}}
+{{info.max_rank}}. 
+</div>
 
 <h2> Browse {{ KNOWL('ec.q',title='elliptic curves over $\mathbb{Q}$')}}</h2>
 
@@ -71,6 +77,18 @@ Please enter a value or leave blank:
           </td>
           <td>
           <span class="formexample"> e.g. 2 </span>
+          </td>   
+      </tr>
+
+    <tr>
+          <td>
+          {{ KNOWL('ec.q.analytic_sha_order',title="analytic order of &#1064;\(_{an} \)") }}
+          </td>
+          <td> 
+          <input type='text' name='sha_an' placeholder="4" size=10/>
+          </td>
+          <td>
+          <span class="formexample"> e.g. 4 </span>
           </td>   
       </tr>
 
