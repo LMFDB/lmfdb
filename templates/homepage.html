@@ -65,6 +65,14 @@
 
 <div id="sidebar">
   <h2 class="link">
+   <a href="{{ url_for('introduction') }}">Introduction</a>
+  </h2>
+  <ul>
+    <li class="intro"><a href="{{url_for('introduction_tutorial')}}">Tutorial</a></li>
+    <li class="intro"><a href="{{url_for('introduction_features')}}">Features</a></li>
+  </ul>
+
+  <h2 class="link">
    <a href="{{ url_for('render_Lfunction') }}">L-functions</a>
   </h2>
   <ul class="list">
