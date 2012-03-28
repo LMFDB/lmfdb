@@ -200,8 +200,8 @@ def set_info_for_start_page():
     ''' Sets the properties of the top L-function page.
     '''
     
-    tt = [[{'title':'Riemann','link': url_for('render_Lfunction', arg1='Riemann')},
-           {'title':'Dirichlet','link': url_for('render_Lfunction', arg1='degree1') + '#Dirichlet'}],
+    tt = [[{'title':'Riemann Zeta Function','link': url_for('render_Lfunction', arg1='Riemann')},
+           {'title':'Dirichlet L-function','link': url_for('render_Lfunction', arg1='degree1') + '#Dirichlet'}],
 
           [{'title':'Elliptic Curve','link': url_for('render_Lfunction', arg1='degree2') + '#EllipticCurve_Q'},
            {'title':'GL2 Cusp Form', 'link': url_for('render_Lfunction', arg1='degree2') + '#GL2_Q_Holomorphic'},
@@ -363,7 +363,12 @@ def specialValueString(L, s, sLatex):
     number_of_decimals = 10
     val = L.sageLfunction.value(s)
     lfuncion_value_tex = L.texname.replace('(s', '(' + sLatex)
-    return '\(' + lfuncion_value_tex +'\\approx ' + latex(round(val.real(), number_of_decimals)+round(val.imag(), number_of_decimals)*I) + '\)'
+    if val.abs() < 1e-10:
+        logger.debug("Zero value.")
+        return "\({0}=0\)".format(lfuncion_value_tex)
+    else:
+        return "\({0}\\approx {1}\)".format(lfuncion_value_tex,latex(round(val.real(), number_of_decimals)
+                                                                     +round(val.imag(), number_of_decimals)*I))
 
 
 ###########################################################################
@@ -422,6 +427,10 @@ def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, ar
     negativeZeros = []
     
     for zero in allZeros:
+        logger.debug("abszero: {0}".format(zero.abs()))
+        if zero.abs()< 1e-10:
+            logger.debug("Zero zero")
+            zero = 0
         if zero < 0:
             negativeZeros.append(zero)
         else:
