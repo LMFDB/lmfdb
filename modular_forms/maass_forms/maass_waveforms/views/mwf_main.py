@@ -302,22 +302,24 @@ def render_search_results_wp(info,search):
             if dim==None:
                 dim="undefined"
             row['dim']=dim
+            numc = f.get('Numc',0)
+            row['numc']=numc
             cev=f.get('Cusp_evs',[])
             if isinstance(cev,list):
                 if len(cev)>1:
                     fricke=cev[1]
                     row['fricke']=fricke
                 row['cuspevs']=cev
-                url = url_for('mwf.render_one_maass_waveform',maass_id=f.get('_id',None))
+            url = url_for('mwf.render_one_maass_waveform',maass_id=f.get('_id',None))
             row['url']=url
             nrows+=1
             table.append(row) 
     evs['table']['data']=table
     evs['table']['nrows']=nrows
-    evs['table']['ncols']=9
+    evs['table']['ncols']=10
     evs['table']['colheads']=['Level','Weight','Char','Eigenvalue',
                               'Symmetry','Error',
-                              'Dimension','Fricke involution','Atkin-Lehner eigenvalues']
+                              'Dimension','Coeff.','Fricke involution','Atkin-Lehner']
     bread=[('Modular forms',url_for('mf.modular_form_main_page')),
            ('Maass forms',url_for('.render_maass_waveforms'))]
     info['bread']=bread

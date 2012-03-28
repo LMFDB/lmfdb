@@ -114,6 +114,7 @@ $('#weight').change( function() { evTable.fnDraw(); } );
     <col align="char" char="."/>
     <col/> <col/>
     <col/> <col/>
+    <col/> <col/>
     <col/>
   </colgroup>
   <thead>
@@ -160,8 +161,12 @@ $('#weight').change( function() { evTable.fnDraw(); } );
              {% if data[r].dim is defined %} {{ data[r].dim}}  {% endif %}
            </td>
            <td>            
+             {% if data[r].numc is defined %} {{ data[r].numc}}  {% endif %}
+           </td>
+           <td>            
              {% if data[r].fricke is defined %} {{ data[r].fricke}}  {% endif %}
            </td>
+
            <td>            
              {% if data[r].cuspevs is defined %} {{ data[r].cuspevs}}  {% endif %}
            </td>
