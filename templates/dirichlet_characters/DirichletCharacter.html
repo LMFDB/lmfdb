@@ -215,7 +215,7 @@ table.props tr td:first-child {
 function gauss_handler(evt) {
     evt.preventDefault();
     var val = $("#calc-gauss-input").val();
-    $("#calc-gauss-output").load("{{ url_for('dc_calc_gauss', modulus=modulus,number=number) }}" + "?val=" + val, 
+    $("#calc-gauss-output").load("{{ url_for('dc_calc_gauss', modulus = modulus, number=number) }}" + "?val=" + val, 
      function() {
         {# tell mathjx to render the output #}
         MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-gauss-output"]);

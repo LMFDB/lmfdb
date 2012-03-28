@@ -34,7 +34,7 @@ table.ntdata tr.even, table.ntdata tr:nth-child(even) { background: none; }
 }
 </style>
 
-<script type="text/javascript">
+{#<script type="text/javascript">
 $(function() {
   var lastcols = $("#chitable tr th:last-child, #chitable tr td:last-child");
   lastcols.hide();
@@ -44,7 +44,7 @@ $(function() {
   });
 });
 </script>
-
+#}
 <table>    
     <thead align="left">
     <tr>
@@ -63,12 +63,13 @@ $(function() {
 <div>
 <table class="ntdata" id="chitable">
 <thead align="center">
-    <tr>
-     <td colspan="6" style="text-align: right;"></td>
+    {#<tr>
+        <td colspan="6" style="text-align: right;"></td>
      <td><a href="#" id="showlastcols">show more &rarr;</a></td>
      <td></td>
     </tr>
     <tr>
+    #}
         <th class="modulus">M\O</th>
         {% for h in headers %}
         <th>{{h}}</th>

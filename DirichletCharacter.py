@@ -151,7 +151,6 @@ def initCharacterInfo(web_chi,args, request):
         G = DirichletGroup_conrey(web_chi.modulus)
         G_prev = DirichletGroup_conrey(web_chi.modulus -1)
         chi = G[web_chi.number]
-        #print chi
         chi_sage = chi.sage_character()
         indices = []
         info['bread'] = [('Dirichlet Characters','/Character/Dirichlet'),('Character '+snum+ ' modulo '+smod,'/Character/Dirichlet/'+smod+'/'+snum)]
@@ -160,7 +159,7 @@ def initCharacterInfo(web_chi,args, request):
         #print web_chi.chi_sage
         info['conductor'] = int(web_chi.conductor)
         info['order'] = int(web_chi.order)
-        info['euerphi'] = euler_phi(web_chi.modulus)-1
+        info['eulerphi'] = euler_phi(web_chi.modulus)-1
         info['nextmodulus'] = web_chi.modulus+1
         info['primitive'] = web_chi.primitive
         info['zetaorder'] = web_chi.zetaorder
@@ -192,7 +191,7 @@ def initCharacterInfo(web_chi,args, request):
         #    l.append(chi.number())
         next = next_index(chi) 
         if web_chi.number == 1:
-            prev = prev_function(web_chi.modulus - 1, web_chi.modulus-1)
+            prev = prev_function(web_chi.modulus-1, web_chi.modulus-1)
         else:
             prev = prev_index(chi)
         mmore = int(smod) + 1
@@ -229,29 +228,29 @@ def initCharacterInfo(web_chi,args, request):
                 info['navi'] = [(n8,url8),(n9,url9)]
 
     return info
-def next_function(mod,index):
-    from sage.all import Integer 
-    for j in range(index+1,mod):
-        if Integer(j).gcd(mod) == 1:
-            return j
-    return 1
     
 def next_index(chi):
     mod = chi.modulus()
     index = chi.number()
     return next_function(mod,index)
 
-def prev_function(mod,index):
+def next_function(mod,index):
     from sage.all import Integer 
-    for j in range(index-1,0,-1):
+    for j in range(index+1,mod):
         if Integer(j).gcd(mod) == 1:
             return j
+    return 1
 
 def prev_index(chi):
     mod = chi.modulus()
     index = chi.number()
     return prev_function(mod,index) 
     
+def prev_function(mod,index):
+    from sage.all import Integer 
+    for j in range(index-1,0,-1):
+        if Integer(j).gcd(mod) == 1:
+            return j
 
 
 #def prev_index(chi):
@@ -268,24 +267,24 @@ def dc_calc_gauss(modulus,number):
     if not arg:
         return flask.abort(404)
     try:
-        from sage.modular.dirichlet import DirichletGroup
-        chi = DirichletGroup(modulus)[number]
-        gauss_sum_numerical = chi.gauss_sum_numerical(100,int(arg))
-        if int(arg) == 0:
-            zeta = ""
-        elif int(arg) == 1:
-            zeta = "\zeta^{r}"
+        from dirichlet_conrey import *
+        chi = DirichletGroup_conrey(modulus)[number]
+        chi = chi.sage_character()
+        g = chi.gauss_sum_numerical(100,int(arg))
+        real = int(round(g.real(),5))
+        imag = int(round(g.imag(),5))
+        if imag == 0:
+            g = str(real)
+        elif real == 0:
+            g = str(imag) + "i"
         else:
-            zeta = "\zeta^{%s r}" %(int(arg))
-        if modulus == 1:
-            zeta_subscript = "1st"
-        if modulus == 2:
-            zeta_subscript = "2nd"
-        elif modulus == 3:
-            zeta_subscript = "3rd"
-        else:
-            zeta_subscript = str(modulus)+"th"
-        return r"\begin{equation} \tau_{%s}(\chi_{%s}) = \sum_{r\in \mathbb{Z}/%s\mathbb{Z}} \chi_{%s}(r) %s = %s, \end{equation} where \(\zeta\) is a primitive %s root of unity." %(int(arg),number,modulus,number,zeta,latex(gauss_sum_numerical),zeta_subscript)
+            g = latex(g)
+        from sage.rings.rational import Rational
+        x = Rational('%s/%s' %(int(arg),modulus))
+        n = x.numerator() 
+        n = str(n)+"r" if not n == 1 else "r"
+        d = x.denominator()
+        return r"\begin{equation} \tau_{%s}(\chi_{%s}(%s,&middot;)) = \sum_{r\in \mathbb{Z}/%s\mathbb{Z}} \chi_{%s}(%s,r) e\left(\frac{%s}{%s}\right) = %s. \end{equation}" %(int(arg),modulus,number,modulus,modulus,number,n,d,g)
     except Exception, e:
         return "<span style='color:red;'>ERROR: %s</span>" % e
 
@@ -297,11 +296,13 @@ def dc_calc_jacobi(modulus,number):
     arg = map(int,arg.split('.'))
     try:
         num = arg[0]
-        from sage.modular.dirichlet import DirichletGroup
-        chi = DirichletGroup(modulus)[number]
-        psi = DirichletGroup(modulus)[num]
+        from dirichlet_conrey import *
+        chi = DirichletGroup_conrey(modulus)[number]
+        psi = DirichletGroup_conrey(modulus)[num]
+        chi = chi.sage_character()
+        psi = psi.sage_character()
         jacobi_sum = chi.jacobi_sum(psi)
-        return r"\begin{equation} J(\chi_{%s},\chi_{%s}) = \sum_{r\in \mathbb{Z}/%s\mathbb{Z}} \chi_{%s}(r) \chi_{%s}(1-r) = %s,\end{equation} where <a href='/Character/Dirichlet/%s/%s'> \(\chi_{%s}\) </a> is character \(%s\) modulo \(%s\)." %(number,num,modulus,number,num,latex(jacobi_sum),modulus,num,num,num,modulus)  
+        return r"\begin{equation} J(\chi_{%s}(%s,&middot;),\chi_{%s}(%s,&middot;)) = \sum_{r\in \mathbb{Z}/%s\mathbb{Z}} \chi_{%s}(%s,r) \chi_{%s}(%s,1-r) = %s,\end{equation} where <a href='/Character/Dirichlet/%s/%s'> \(\chi_{%s}(%s,&middot;)\) </a> is character \(%s\) modulo \(%s\)." %(modulus,number,modulus,num,modulus,modulus,number,modulus,num,latex(jacobi_sum),modulus,num,modulus,num,num,modulus)  
     except Exception, e:
         return "<span style='color:red;'>ERROR: %s</span>" % e
 
@@ -312,18 +313,19 @@ def dc_calc_kloosterman(modulus,number):
         return flask.abort(404)
     arg = map(int,arg.split(','))
     try:
-        from sage.modular.dirichlet import DirichletGroup
-        chi = DirichletGroup(modulus)[number]
-        kloosterman_sum_numerical = chi.kloosterman_sum_numerical(100,arg[0],arg[1])
-        if modulus == 1:
-            zeta_subscript = "1st"
-        if modulus == 2:
-            zeta_subscript = "2nd"
-        elif modulus == 3:
-            zeta_subscript = "3rd"
+        from dirichlet_conrey import *
+        chi = DirichletGroup_conrey(modulus)[number]
+        chi = chi.sage_character()
+        k = chi.kloosterman_sum_numerical(100,arg[0],arg[1])
+        real = int(round(k.real(),5))
+        imag = int(round(k.imag(),5))
+        if imag == 0:
+            k = str(real)
+        elif real == 0:
+            k = str(imag) + "i"
         else:
-            zeta_subscript = str(modulus)+"th"
-        return r"\begin{equation} K(%s,%s,\chi_{%s}) = \sum_{r \in \mathbb{Z}/%s\mathbb{Z}} \chi_{%s}(r) \zeta^{%s r + %s r^{-1}} = %s, \end{equation} where \(\zeta\) is a primitive %s root of unity." %(int(arg[0]),int(arg[1]),number, modulus, number,int(arg[0]),int(arg[1]),latex(kloosterman_sum_numerical),zeta_subscript)
+            k = latex(k)
+        return r"\begin{equation} K(%s,%s,\chi_{%s}(%s,&middot;)) = \sum_{r \in \mathbb{Z}/%s\mathbb{Z}} \chi_{%s}(%s,r) e\left(\frac{%s r + %s r^{-1}}{25}\right) = %s. \end{equation}" %(int(arg[0]),int(arg[1]),modulus,number, modulus, modulus,number,int(arg[0]),int(arg[1]),k)
     except Exception, e:
         return "<span style='color:red;'>ERROR: %s</span>" % e
 

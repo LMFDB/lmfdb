@@ -154,11 +154,11 @@ class WebCharacter:
         return(ans)
 
     def jacobi_sum_tex(self):
-        ans = "\(J(\\chi_{%s},\\psi) \\;\) for \(\\; \\psi = \)" %(self.number)
+        ans = "\(J(\\chi_{%s}(%s,&middot;),\\psi) \\;\) for \(\\; \\psi = \)" %(self.modulus,self.number)
         return(ans)
 
     def kloosterman_sum_tex(self):
-        ans = "\(K(a,b,\\chi_{%s}) \\;\) at \(\\; a,b = \)" %(self.number)
+        ans = "\(K(a,b,\\chi_{%s}(%s,&middot;)) \\;\) at \(\\; a,b = \)" %(self.modulus,self.number)
         return(ans)
 
     def _set_properties(self):
