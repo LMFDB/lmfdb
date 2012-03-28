@@ -26,11 +26,22 @@
 #chitable th { text-align: center; }
 table.ntdata tr.even, table.ntdata tr:nth-child(even) { background: none; }
 
+#legend {
+  border: 3px solid #ccc;
+  position: relative;
+  top:   -7px;
+  right: -7px;
+  float:right;
+  clear:right;
+  margin: 10px;
+}
+#legend td { cursor: pointer; }
+
 .primitive {
   color:green;
 }
-.nonprimitive {
-    color:blue;
+.imprimitive {
+  color:blue;
 }
 </style>
 
@@ -46,25 +57,34 @@ $(function() {
 </script>
 #}
 
+<script type="text/javascript">
+$(function() {
+  $("#legend-imp").hover(
+     function() { $(".imprimitive").css("background", "#DDF"); },
+     function() { $(".imprimitive").css("background", "inherit"); }
+   );
+  $("#legend-prim").hover(
+     function() { $(".primitive").css("background", "#DFD"); },
+     function() { $(".primitive").css("background", "inherit"); }
+   );
+ }
+);
+            
+</script>
 
+<table id="legend">    
+  <tr><td class="imprimitive" id="legend-imp"> Imprimitive</font>.</td></tr>
+  <tr><td class="primitive" id="legend-prim"> Primitive</font>.</td></tr>
+</table>
+
+<div>
 The table below displays {{ KNOWL('character.dirichlet', title="Dirichlet characters" ) }} of a 
 given {{ KNOWL('character.dirichlet.modulus', title="modulus") }} and index. If \(q\) is the 
 {{ KNOWL('character.dirichlet.modulus', title="modulus") }}, then each integer \(n\) (on the \(q\)-th row)
 represents the {{ KNOWL('character.dirichlet', title="Dirichlet character" ) }} \(\chi_{q}(n,&middot;)\). The 
 characters are grouped with respect to order and stacked integers indicate (multiplicative) inverse 
 {{ KNOWL('character.dirichlet', title="Dirichlet characters" ) }}.
-
-<table>    
-    <thead align="left">
-        <tr><br></br>
-        <th>
-            <font color = "blue"> Imprimitive </font> characters.</br>
-            <font color = "green"> Primitive </font> characters. 
-        </th>
-    <tr/>
-</thead>
-</table>
-<br/>
+</div>
 
 <div>
 <table class="ntdata" id="chitable">
@@ -89,11 +109,8 @@ characters are grouped with respect to order and stacked integers indicate (mult
     {% for e in entry %}
     <div>
       {% for chi in e %}
-        <a href="{{url_for('render_Character', arg1=row, arg2=chi[0])}}"> 
-            <font color="{% if chi[1] -%}green{%- else -%}blue{%- endif %}">
-                {{ chi[0] }}
-        </font>
-        </a>
+        <a href="{{url_for('render_Character', arg1=row, arg2=chi[0])}}" 
+            class="{% if chi[1] -%}primitive{%- else -%}imprimitive{%- endif %}">{{ chi[0] }}</a>
       {% endfor %}
     </div>
     {% endfor %}
@@ -101,11 +118,8 @@ characters are grouped with respect to order and stacked integers indicate (mult
     {% for e in entry %}
     <div>
       {% for chi in e %}
-        <a href="{{url_for('render_Character', arg1=row, arg2=chi[0])}}"> 
-            <font color="{% if chi[1] -%}green{%- else -%}blue{%- endif %}">
-                {{ chi[0] }}
-        </font>
-        </a>
+        <a href="{{url_for('render_Character', arg1=row, arg2=chi[0])}}"
+            class="{% if chi[1] -%}primitive{%- else -%}imprimitive{%- endif %}">{{ chi[0] }}</a>
       {% endfor %}
     </div>
     {% endfor %}
