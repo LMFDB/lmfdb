@@ -115,7 +115,7 @@ class MongoDBPagination(object):
     has_next = property(lambda x: x.page < x.pages)
     pages = property(lambda x: max(0, x.count - 1) // x.per_page + 1)
     start = property(lambda x: (x.page - 1) * x.per_page)
-    end = property(lambda x: x.start + x.per_page - 1)
+    end = property(lambda x: min(x.start + x.per_page - 1, x.count-1))
 
     @property
     def previous(self):

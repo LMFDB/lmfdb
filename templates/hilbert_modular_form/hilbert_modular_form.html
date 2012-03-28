@@ -1,8 +1,6 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-
-
   <h2>  Base Field  </h2>
 <p>
 <table>
@@ -22,6 +20,7 @@
 <tr><td> Dimension:<td> {{ info.dimension }} </tr>
 <tr><td> Is CM?:<td> {{ info.is_CM }} </tr>
 <tr><td> Is base change?:<td> {{ info.is_base_change }} </tr>
+<tr><td> Parent newspace dimension:<td> {{ info.newspace_dimension }} </tr>
 </table>
 </p>
 
@@ -30,13 +29,49 @@
 
   <h2>  $q$-expansion  </h2>
 
+<p>$f=(f_{\mathfrak{a}})$ is a tuple of holomorphic functions 
+$f_{\mathfrak{a}}:\mathcal{H}^{[F:\mathbb{Q}]} \to \mathbb{C}$ indexed by the strict class group of $F$, with<br>
+$\displaystyle{f_{\mathfrak{a}}(z) = \sum_{u \in (\mathfrak{ad})_+^{-1}} a_{u\mathfrak{ad}} q^{\mathrm{Tr}(uz)}}$<br>
+where $\mathfrak{d}$ is the different of $F$ and $q=e^{2\pi iz}$.</p>
+
+  <h2>  Hecke eigenvalues  </h2>
+
 <p>
-{% for entry in info.q_expansions: %}
-${% for term in entry: %}
-{{term[1]}} q^{\mathrm{Tr} ({{term[0]}})z} + 
-{% endfor %} \dots$
+<table>
+<tr><td> $e$ is a root of the defining polynomial: <td> ${{ info.hecke_polynomial }}$ </tr>
+</table>
+</p>
+
+<p>&nbsp;&nbsp;<a href='{{ info.label }}?display_eigs=True'>Print full eigenvalues</a>
+&nbsp;&nbsp;<a href='{{ info.label }}?display_eigs=False'>Hide large eigenvalues</a></p>
+
+<table class="ntdata" cellpadding=5>
+<tr>
+<th>Norm</th>
+<th>Prime</th>
+<th>Eigenvalue</th>
+</tr>
+{% for entry in info.eigs: %}
+<tr>
+<td>{{entry.prime_norm}}</td>
+<td>${{entry.prime_ideal}}$</td>
+<td>${{entry.eigenvalue}}$</td>
+</tr>
 {% endfor %}
-</P>
+</table>
+
+<form>
+<table>
+<tr>
+<td>Display number of eigenvalues</td>
+<td><input type='text' name='numeigs' placeholder='20' size=10>
+</tr>
+<tr>
+<td colspan=3><button type='submit' value='display'>Display</button>
+</td>
+</tr>
+</table>
+</form>
 
   <h2>  Atkin-Lehner eigenvalues  </h2>
 
@@ -60,29 +95,6 @@ ${% for term in entry: %}
 {% else %}
 <p>None</P> 
 {% endif %}
-
-  <h2>  Hecke eigenvalues  </h2>
-
-<p>
-<table>
-<tr><td> $e$ is a root of the defining polynomial: <td> ${{ info.hecke_polynomial }}$ </tr>
-</table>
-</p>
-
-<table class="ntdata" cellpadding=5>
-<tr>
-<th>Norm</th>
-<th>Prime</th>
-<th>Eigenvalue</th>
-</tr>
-{% for entry in info.eigs: %}
-<tr>
-<td>{{entry.prime_norm}}</td>
-<td>${{entry.prime_ideal}}$</td>
-<td>${{entry.eigenvalue}}$</td>
-</tr>
-{% endfor %}
-</table>
 
 
 

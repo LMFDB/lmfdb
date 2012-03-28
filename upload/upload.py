@@ -20,6 +20,7 @@ from os import path
 from pymongo.objectid import ObjectId
 from urlparse import urlparse
 from urllib import urlopen
+from utils import MongoDBPagination
 
 from users import admin_required
 
@@ -215,8 +216,15 @@ def displayParsed(id):
       ret += displayParsed(str(i[0])) + "<br/>";
     return ret
   table = getDBConnection().contrib[entry['metadata']['uploader_id']+str(entry['_id'])]
-  
-  return "Show first 10 results of " + entry['filename'] + "<br/>" + renderJson(list(table.find().limit(10)))
+  skip = 0
+  limit = 10
+  count = table.count()
+
+  pagination = MongoDBPagination(query=table.find(), per_page=10, page=request.args.get('page', 1), endpoint=".displayParsed", endpoint_params={'id':id})
+
+  html = render_template("displayParsed.html", pagination=pagination, id=str(entry['_id']), filename=entry['filename'])
+
+  return html + "<br/>" + renderJson(list(pagination.entries))
 
 @upload_page.route("/updateMappingRule", methods = ["POST"])
 @login_required

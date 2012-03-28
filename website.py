@@ -123,9 +123,25 @@ def render_Character(arg1 = None, arg2 = None):
     return DirichletCharacter.render_webpage(request,arg1,arg2)
 
 
-@app.route('/ModularForm/GSp4/Q')
-def ModularForm_GSp4_Q_top_level():
-    return siegel_modular_form.render_webpage(request.args)
+@app.route('/ModularForm/GSp/Q')
+@app.route('/ModularForm/GSp/Q/<group>')
+@app.route('/ModularForm/GSp/Q/<group>/<page>')
+@app.route('/ModularForm/GSp/Q/<group>/<page>/<weight>')
+@app.route('/ModularForm/GSp/Q/<group>/<page>/<weight>/<form>')
+def ModularForm_GSp4_Q_top_level( group = None, page = None, weight = None, form = None):
+    args = request.args
+    if group:
+        args = {}
+        for k in request.args:
+            args[k] =  request.args[k]
+        args['group'] = group
+        if None != weight:
+            page = 'specimen'
+        args['page'] = page
+        if 'specimen' == page:
+            args['weight'] = weight
+            args['form'] = form
+    return siegel_modular_form.render_webpage(args)
 
 #@app.route('/ModularForm/GL2/Q/holomorphic/')
 #def render_classical_modular_form():

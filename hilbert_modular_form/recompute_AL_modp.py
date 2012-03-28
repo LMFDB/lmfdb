@@ -11,14 +11,16 @@ fields = Connection(port=int(37010)).numberfields.fields
 P = PolynomialRing(Rationals(), 3, ['w','e','x'])
 w,e,x = P.gens()
 
-def recompute_AL(field_label = None):
+def recompute_AL(field_label = None, skip_odd = False):
     if field_label == None:
-        S = hmf_forms.find({})
+        S = hmf_forms.find({ "AL_eigenvalues_fixed" : None })
     else:
-        S = hmf_forms.find({ "field_label" : field_label })
+        S = hmf_forms.find({ "field_label" : field_label, "AL_eigenvalues_fixed" : None })
     S = S.sort("label")
 
     field_label = None
+
+    magma.eval('SetVerbose("ModFrmHil", 1);')
 
     v = S.next()
     while true:
@@ -26,22 +28,6 @@ def recompute_AL(field_label = None):
         v_label = v["label"]
 
         print v_label
-
-        try:
-            if v["AL_eigenvalues_fixed"] == 'done':
-#            if v["AL_eigenvalues_fixed"] == 'done' or v["AL_eigenvalues_fixed"] == 'working':
-#                u_label = v_label
-#                while u_label[-1] <> '-':
-#                    u_label = u_label[:-1]
-#                while v["label"].find(u_label) <> -1:
-#                    v = S.next()
-#                assert v["label"].find('-a') <> -1
-                v = S.next()
-                continue
-        except KeyError:
-            print "...new, computing!" 
-            v["AL_eigenvalues_fixed"] = 'working'
-            hmf_forms.save(v)
 
         if field_label == None or not field_label == v["field_label"]:
             field_label = v["field_label"]
@@ -59,7 +45,9 @@ def recompute_AL(field_label = None):
             magma.eval('primes_str := [' + ','.join([st for st in F_hmf["primes"]]) + '];')
             magma.eval('primes := [ideal<ZF | {F!x : x in I}> : I in primes_str];')
 
-        if F["degree"] % 2 == 1 and v["level_norm"] > 300:
+            magma.eval('classno := NarrowClassNumber(F);')
+
+        if skip_odd and F["degree"] % 2 == 1 and v["level_norm"] > 300:
             print "...level norm > 300, skipping!"
             try:
                 v = S.next()
@@ -69,7 +57,9 @@ def recompute_AL(field_label = None):
 
         NN_index = NN_label[NN_label.index('.')+1:]        
         magma.eval('NN := [I : I in ideals | Norm(I) eq ' + str(v["level_norm"]) + '][' + str(NN_index) + '];')
-        magma.eval('M := HilbertCuspForms(F, NN);')
+        magma.eval('Mfull := HilbertCuspForms(F, NN);')
+        magma.eval('M := NewSubspace(Mfull);')
+        magma.eval('O := QuaternionOrder(M); B := Algebra(O); DD := Discriminant(B);')
 
         if v["hecke_polynomial"] <> 'x':
             magma.eval('fpol := ' + v["hecke_polynomial"] + ';')
@@ -82,9 +72,11 @@ def recompute_AL(field_label = None):
 
         print "...Hecke eigenvalues loaded..."
 
-        magma.eval('denom := Lcm([Denominator(a) : a in hecke_eigenvalues]);')
-        magma.eval('q := NextPrime(200); while #Roots(fpol, GF(q)) eq 0 or Valuation(denom,q) gt 0 do q := NextPrime(q); end while;')
+        magma.eval('denom := Lcm([Denominator(a) : a in hecke_eigenvalues]); q := NextPrime(200);')
+        magma.eval('while #Roots(fpol, GF(q)) eq 0 or Valuation(denom,q) gt 0 do q := NextPrime(q); end while;')
         magma.eval('if K cmpeq Rationals() then mk := hom<K -> GF(q) | >; else mk := hom<K -> GF(q) | Roots(fpol,GF(q))[1][1]>; end if;')
+
+        magma.eval('_<xQ> := PolynomialRing(Rationals()); rootsofunity := [r[1] : r in Roots(xQ^(2*classno)-1,K)];')
 
         magma.eval('s := 0; KT := []; '\
                    'while KT cmpeq [] or Dimension(KT) gt 1 do '\
@@ -115,19 +107,15 @@ def recompute_AL(field_label = None):
         magma.eval('f := Vector(Basis(KT)[1]); '\
                    'AL_eigenvalues := []; '\
                    'for pp in NNfact do '\
-                   '  U_pp := AtkinLehnerOperator(M, pp[1]); '\
+                   '  if Valuation(DD,pp[1]) gt 0 then U_pp := -HeckeOperator(M, pp[1]); '\
+                   '  else U_pp := AtkinLehnerOperator(M, pp[1]); end if; '\
                    '  U_pp := Matrix(Nrows(U_pp),Ncols(U_pp),[mk(c) : c in Eltseq(U_pp)]); '\
-                   '  U_ppf := f*U_pp; '\
-                   '  assert U_ppf eq f or U_ppf eq -f; '\
-                   '  if U_ppf eq f then '\
-                   '    Append(~AL_eigenvalues, 1); '\
-                   '  else '\
-                   '    Append(~AL_eigenvalues, -1); '\
-                   '  end if; '\
+                   '  U_ppf := f*U_pp; found := false; '\
+                   '  for mu in rootsofunity do '\
+                   '    if U_ppf eq mk(mu)*f then Append(~AL_eigenvalues, mu); found := true; end if; '\
+                   '  end for; '\
+                   '  assert found; '\
                    'end for;')
-
-#                   '  T_ppf := f*ChangeRing(HeckeOperator(M, pp[1]),K); '\
-#                   '  if pp[2] ge 2 then assert T_ppf eq 0*f; else assert T_ppf eq -U_ppf; end if; '\
 
         print "...AL eigenvalues computed!"
 

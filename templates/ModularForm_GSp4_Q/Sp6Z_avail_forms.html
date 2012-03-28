@@ -14,7 +14,7 @@
       <td>
 	{% for form,dim in forms1|sort %}
 	<a style="display: inline;" href="{{ url_for( 'ModularForm_GSp4_Q_top_level', group='Sp6Z',
-		 form = form, weight = wt, page = 'specimen', orbit = form) }}">{{ form }} ({{ dim }})</a>
+		 form = form, weight = wt, page = 'specimen') }}">{{ form }} ({{ dim }})</a>
 	{% endfor %}
       </td>
     </tr>

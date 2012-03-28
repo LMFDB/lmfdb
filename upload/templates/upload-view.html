@@ -4,20 +4,28 @@
 
 <style>
   input.editable {
-    border: 1px ;
+    border: 1px solid lightgray;
     text-decoration:none; 
     font-family: sans-serif;
     font-size: 11pt;
-    width:100%
+    width:98%;
+    background-image: url("/static/images/pencil.png");
+    background-repeat: no-repeat;
+    padding-left: 14px;
+    background-color: #fffff4;
   }
   *.editable:hover {
     background-color: #ffffcc;
   }
   textarea.editable {
-    border: 1px ;
+    border: 1px solid lightgray;
     text-decoration:none;
-    width:100%;
+    width:98%;
     font-family: monospace;
+    background-color: #fffff4;
+    background-image: url("/static/images/pencil.png");
+    background-repeat: no-repeat;
+    padding-left: 14px;
   }
 
 
@@ -115,11 +123,11 @@ function updateMappingRules(data, id) {
 
   <dt>Status</dt>
   {% if current_user.is_admin() %}
-    <select onchange="updateMetadata('{{entry._id}}', 'status', this.value);return false">
+    <dd><select onchange="updateMetadata('{{entry._id}}', 'status', this.value);return false">
       <option value="approved" {%if entry.metadata.status[0]=='a'%}selected{%endif%}>Approved</option>
       <option value="disapproved" {%if entry.metadata.status[0]=='d'%}selected{%endif%}>Disapproved</option>
       <option value="unmoderated" {%if entry.metadata.status[0]=='u'%}selected{%endif%}>Unmoderated</option>
-    </select>
+    </select></dd>
   {% else %}
     <dd>{{entry.metadata.status}}</dd>
   {% endif %}
@@ -155,9 +163,16 @@ function updateMappingRules(data, id) {
     <!--<a href="#" onclick="parseJsonTable('/upload/download/{{entry._id}}/{{entry.filename}}', $('#div{{entry._id}}'));return false">
       Parse Json from {{entry.filename}}
     </a>-->
-    <a href="#" onclick="$('#div{{entry._id}}').load('{{url_for('.displayParsed',id=entry._id)}}');return false">
-      Show automatically parsed data
-    </a>
+      {% if display=='' %}
+      <script>
+      $(function() {
+        $('#div{{entry._id}}').load('{{url_for('.displayParsed',id=entry._id)}}');
+      })
+      </script>
+      {% else %}
+      <a href="#" onclick="$('#div{{entry._id}}').load('{{url_for('.displayParsed',id=entry._id)}}');return false">
+      Show automatically parsed data</a>
+      {% endif %}
 
     <div id="div{{entry._id}}">
     </div>

@@ -8,11 +8,11 @@ import pymongo
 from Lfunction import *
 import LfunctionComp
 import LfunctionPlot
-from utils import to_dict, make_logger
+from utils import to_dict #, make_logger
 import bson
 from Lfunctionutilities import lfuncDStex, lfuncEPtex, lfuncFEtex
 
-logger = make_logger("LF")
+#logger = make_logger("LF")
 
 ##import upload2Db.py
 
@@ -139,7 +139,7 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
     except Exception as e:
       # throw exception if not UserError
       if len(e.args) > 1 and e.args[1] != 'UserError': raise
-      info = { 'content': 'Sorry, there has been a problem: %s' % e.args[0], 'title': 'Error' }
+      info = { 'content': 'Sorry, there has been a problem: %s .         Please report it <a href="http://code.google.com/p/lmfdb/issues/list">here</a>.' % e.args[0], 'title': 'Error' }
       return render_template('LfunctionSimple.html', info=info, **info), 500
    
     try:
@@ -170,11 +170,11 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         return Lfunction_EC( label = arg3)
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic': # this has args: one for weight and one for level
-        logger.info(arg5+arg6+str(arg7)+str(arg8)+str(arg9))
+        logger.debug(arg5+arg6+str(arg7)+str(arg8)+str(arg9))
         return Lfunction_EMF( level = arg5, weight = arg6, character = arg7, label = arg8, number = arg9)
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2'and arg3 == 'Q' and arg4 == 'Maass':
-        logger.info(db)
+        logger.debug(db)
         return Lfunction_Maass(dbid = bson.objectid.ObjectId(arg5))
     
     elif arg1 == 'ModularForm' and (arg2 == 'GSp4' or arg2 == 'GL4' or  arg2 == 'GL3') and arg3 == 'Q' and arg4 == 'maass':
@@ -200,8 +200,8 @@ def set_info_for_start_page():
     ''' Sets the properties of the top L-function page.
     '''
     
-    tt = [[{'title':'Riemann','link': url_for('render_Lfunction', arg1='Riemann')},
-           {'title':'Dirichlet','link': url_for('render_Lfunction', arg1='degree1') + '#Dirichlet'}],
+    tt = [[{'title':'Riemann Zeta Function','link': url_for('render_Lfunction', arg1='Riemann')},
+           {'title':'Dirichlet L-function','link': url_for('render_Lfunction', arg1='degree1') + '#Dirichlet'}],
 
           [{'title':'Elliptic Curve','link': url_for('render_Lfunction', arg1='degree2') + '#EllipticCurve_Q'},
            {'title':'GL2 Cusp Form', 'link': url_for('render_Lfunction', arg1='degree2') + '#GL2_Q_Holomorphic'},
@@ -268,7 +268,6 @@ def initLfunction(L,args, request):
     if L.Ltype() == 'maass':
         if L.group == 'GL2':
             minNumberOfCoefficients = 100     # TODO: Fix this to take level into account
-            logger.info("# of coef: {0}".format(len(L.dirichlet_coefficients)))
                             
             if len(L.dirichlet_coefficients)< minNumberOfCoefficients:
                 info['zeroeslink'] = ''
@@ -283,13 +282,13 @@ def initLfunction(L,args, request):
 
     elif L.Ltype()  == 'riemann':
         info['bread'] = [('L-function','/L'),('Riemann Zeta',request.url)]
-        info['friends'] = [('\(\mathbb Q\)', url_for('number_fields.by_label', label='1.1.1.1')),  ('Dirichlet Character \(\\chi_{0}\\!\\!\\pmod{1}\)',
+        info['friends'] = [('\(\mathbb Q\)', url_for('number_fields.by_label', label='1.1.1.1')),  ('Dirichlet Character \(\\chi_{1}(0,\\cdot\)',
                                                                        url_for('render_Character', arg1=1, arg2=0))]
 
     elif L.Ltype()  == 'dirichlet':
         snum = str(L.characternumber)
         smod = str(L.charactermodulus)
-        charname = '\(\\chi_{%s}\\!\\!\\pmod{%s}\)' %(snum,smod)
+        charname = '\(\\chi_{%s}({%s},\\cdot\)' %(smod, snum)
         info['bread'] = [('L-function','/L'),('Dirichlet Character',url_for('render_Lfunction', arg1='degree1') +'#Dirichlet'),
                          (charname, request.url)]
         info['friends'] = [('Dirichlet Character '+str(charname), friendlink)]
@@ -364,7 +363,12 @@ def specialValueString(L, s, sLatex):
     number_of_decimals = 10
     val = L.sageLfunction.value(s)
     lfuncion_value_tex = L.texname.replace('(s', '(' + sLatex)
-    return '\(' + lfuncion_value_tex +'\\approx ' + latex(round(val.real(), number_of_decimals)+round(val.imag(), number_of_decimals)*I) + '\)'
+    if val.abs() < 1e-10:
+        logger.debug("Zero value.")
+        return "\({0}=0\)".format(lfuncion_value_tex)
+    else:
+        return "\({0}\\approx {1}\)".format(lfuncion_value_tex,latex(round(val.real(), number_of_decimals)
+                                                                     +round(val.imag(), number_of_decimals)*I))
 
 
 ###########################################################################
@@ -419,11 +423,14 @@ def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, ar
 
     # Sort the zeros and divide them into negative and positive ones
     allZeros.sort()
-    logger.info("allZeros: {0}".format(allZeros))
     positiveZeros = []
     negativeZeros = []
     
     for zero in allZeros:
+        logger.debug("abszero: {0}".format(zero.abs()))
+        if zero.abs()< 1e-10:
+            logger.debug("Zero zero")
+            zero = 0
         if zero < 0:
             negativeZeros.append(zero)
         else:

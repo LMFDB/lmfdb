@@ -1,3 +1,8 @@
-<p>A bunch of padic info for p = {{ info.p }}.
+{% if info.reg=="no data" %}
+<p>
+No \(p\)-adic data available.
+{% else %}
+<p>Some \(p\)-adic info for \(p\) = {{ info.p }}.
 
 <p> Regulator = {{ info.reg }}.
+{% endif %}
