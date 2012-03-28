@@ -1,5 +1,6 @@
 import flask
 import bson
+import base
 import pymongo
 from flask import render_template, url_for, request, redirect, make_response,send_file
 from utils import *
@@ -23,23 +24,60 @@ except Exception as ex:
 mwf_dbname = 'MaassWaveForm'
 available_collections=['FS','HT']
 
+_DB = None
+
 def connect_db():
-    import base
-    return base.getDBConnection()[mwf_dbname]
+    global _DB
+    if _DB==None:
+        host  = base.getDBConnection().host
+        port  = base.getDBConnection().port
+        _DB = MaassDB(host=host,port=port)
+    return _DB
+
+#def connect_db():
+#    import base
+#    return base.getDBConnection()[mwf_dbname]
 
 def get_collection(collection=''):
-    db = connect_db()
-    if collection in db.collection_names():
-        return db.collection
+    DB = connect_db()
+    for i in range(len(DB._show_collection)):
+        coll=DB._show_collection[i]
+        if collection==coll.name:
+            return coll
     else:
-        return None #raise ValueError,"Need Collection in :",db.collection_names()
+        return None #raise ValueError,"Need Collection in 
+
+def get_args_mwf(**kwds):
+    get_params=['level','weight','character','id','db','search',
+                'search_all','eigenvalue','collection','browse',
+                'ev_skip','ev_range','maass_id','skip','limit']
+    defaults={'level':0,'weight':-1,'character':0,'skip':0,'limit':2000,
+              'maass_id':None,'search':None,'collection':None,
+              'eigenvalue':None,'browse':None}
+    if request.method == 'GET':
+        req  = to_dict(request.args)
+        print "req:get=",request.args
+    else:
+        req = to_dict(request.form)
+        print "req:post=",request.form
+    res={}
+    if kwds.get('parameters',[])<>[]:
+        get_params.extend(kwds['parameters'])
+    for key in get_params:
+        if kwds.has_key(key) or req.has_key(key) or defaults.has_key(key):
+            res[key]=kwds.get(key,req.get(key,defaults.get(key,None)))
+    return res
+        
 
 def get_collections_info():
     db = connect_db()
-    for c in db.collection_names():
-        metadata=db.metadata[c]
-        mwf_logger.debug("METADATA: {0}".format(metadata))
-
+    dbmetadata=db.metadata()
+    metadata={}
+    for c in db._show_collection_name:
+        metadata[c]=dbmetadata.find({'c_name':c})
+        mwf_logger.debug("METADATA: {0}".format(metadata[c]))
+    return metadata
+    
 def GetNameOfPerson(DBname):
     if DBname == "FS":
         return "Fredrik Str&ouml;mberg"
@@ -121,16 +159,11 @@ def get_distinct_keys(key):
     return res
 
 def get_all_levels():
-    return get_distinct_keys('Level')
+    return connect_db().levels()
 
 def get_all_weights(Level):
-    res = []
-    db = connect_db()
-    for c in db.collection_names():
-        res.extend(db[c].find({'Level':int(Level)}).distinct('Weight'))
-    res = set(res)
-    res = list(res)
-    return res #return get_distinct_keys('Weight')
+    
+    return connect_db().weights(Level)
 
 
 def getallcharacters(Level,Weight):
@@ -144,38 +177,33 @@ def get_search_parameters(info):
     ret=dict()
     if not info.has_key('search') or not info['search']:
         return ret
-    #ret['level_lower']=my_get(info,'level_lower',-1,int)
-    #ret['level_upper']=my_get(info,'level_upper',-1,int)
     level_range = my_get(info,'level_range','').split('..')
     if len(level_range)==0:
-        ret['level_lower']=0
-        ret['level_upper']=0
+        ret['l1']=0;ret['l2']=0
     elif len(level_range)==1:
-        ret['level_lower']=level_range[0]
-        ret['level_upper']=level_range[0]
+        ret['l1']=level_range[0];ret['l2']=level_range[0]
     else:
-        ret['level_lower']=level_range[0] #my_get(info,'ev_lower',None)
-        ret['level_upper']=level_range[1] #my_get(info,'ev_upper',None)
-    if ret['level_lower']>0 and ret['level_upper']>0:
-        level_range={"$gte" : ret['level_lower'],"$lte":ret['level_upper']}
-    elif ret['level_upper']>0:
-        level_range={"$lte":ret['level_upper']}
-    elif ret['level_lower']>0:
-        level_range={"$gte":ret['level_lower']}        
+        ret['l1']=level_range[0];ret['l2']=level_range[1]
+    weight_range = my_get(info,'weight_range','').split('..')
+    if len(weight_range)==0:
+        ret['wt1']=0;ret['wt2']=0
+    elif len(weight_range)==1:
+        ret['wt1']=weight_range[0];ret['wt2']=weight_range[0]
+    else:
+        ret['wt1']=weight_range[0];ret['wt2']=weight_range[1]
 
     ret['rec_start']=my_get(info,'rec_start',1,int)
-    ret['limit']=my_get(info,'limit',20,int)
-    ret['weight']=my_get(info,'weight',0,int)
+    ret['limit']=my_get(info,'limit',2000,int)    
+    #ret['weight']=my_get(info,'weight',0,int)
     ev_range = my_get(info,'ev_range','').split('..')
     if len(ev_range)==0:
-        ret['ev_lower']=0
-        ret['ev_upper']=0
+        ret['r1']=0; ret['r2']=0
     elif len(ev_range)==1:
-        ret['ev_lower']=ev_range[0]
-        ret['ev_upper']=ev_range[0]
+        ev_range[0]=eval(ev_range[0]); ev_range[1]=eval(ev_range[1])
+        ret['r1']=ev_range[0]; ret['r2']=ev_range[0]
     else:
-        ret['ev_lower']=ev_range[0] #my_get(info,'ev_lower',None)
-        ret['ev_upper']=ev_range[1] #my_get(info,'ev_upper',None)
+        ev_range[0]=eval(ev_range[0]); ev_range[1]=eval(ev_range[1])
+        ret['r1']=ev_range[0]; ret['r2']=ev_range[1]
     return ret
 
 
@@ -282,17 +310,13 @@ class MWFTable(object):
         Skip tells you how many chunks of data you want to skip (from the beginning) and limit tells you how large each chunk is.
         """
         import base
+        self.DB=connect_db()
         self._collection_name=collection
         self.keys=keys
         if not isinstance(skip,list):
             self.skip=[skip,skip]
         if not isinstance(limit,list):
             self.limit=[limit,limit]            
-        host  = base.getDBConnection().host
-        port  = base.getDBConnection().port
-        mwf_logger.debug("host={0}".format(host))
-        mwf_logger.debug("port={0}".format(port))
-        self.DB = MaassDB(host=host,port=port)
         mwf_logger.debug("count={0}".format(self.DB.count()))
         self.metadata=[]
         self.title=''
@@ -325,7 +349,7 @@ class MWFTable(object):
             self.get_collections()
         metadata=list()
         for c in self.cols:
-            f=self.db.metadata.find({'c_name':c.name})
+            f=self.db.metadata().find({'c_name':c.name})
             for x in f:
                 print "x=",x
                 metadata.append(x)
@@ -353,7 +377,7 @@ class MWFTable(object):
         print "cur_level=",cur_level
         print "cur_wt=",cur_wt
         for N in levels:
-            if cur_level<>None and cur_level<>N:
+            if cur_level and cur_level<>N:
                 continue
             N=int(N)
             if N<level_ll or N>level_ul:
@@ -551,78 +575,6 @@ def search_for_eigenvalues(search):
         search['rec_stop']=limit+rec_start
     return res
 
-"""
-search1 = Collection.find({"Eigenvalue" : {"$gte" : ev}},{'Eigenvalue':1,'Symmetry':1},sort=[('Eigenvalue',1)],limit=2)
-                        search2 = Collection.find({"Eigenvalue" : {"$lte" : ev}},{'Eigenvalue':1,'Symmetry':1},sort=[('Eigenvalue',-1)],limit=2)
-                        index=write_eigenvalues(reversed(list(search2)),EVs,index)
-                        write_eigenvalues(search1,EVs,index)
-"""
-
-def get_args_mwf(**kwds):
-    get_params=['level','weight','character','id','db','search',
-                'search_all','eigenvalue','collection','browse',
-                'ev_skip','ev_range','maass_id','skip','limit']
-    defaults={'level':0,'weight':0,'character':0,'skip':0,'limit':10}
-#              'db':0,'search':0,
-#              'search_all':0,'eigenvalue':0,'collection':0,'browse':0,
-#              'ev_skip':0,'ev_range':0,'maass_id':None}
-    if request.method == 'GET':
-        req  = to_dict(request.args)
-        print "req:get=",request.args
-    else:
-        req = to_dict(request.form)
-        print "req:post=",request.form
-    res={}
-    if kwds.get('parameters',[])<>[]:
-        get_params.extend(kwds['parameters'])
-    for key in get_params:
-        if kwds.has_key(key) or req.has_key(key):
-            res[key]=kwds.get(key,req.get(key,defaults.get(key,None)))
-    return res
-        
-    
-def get_args_mwf2():
-    r"""
-    Get the supplied parameters.
-    """
-    if request.method == 'GET':
-	info   = to_dict(request.args)
-        print "req:get=",request.args
-    else:
-	info   = to_dict(request.form)
-        print "req:post=",request.form
-    # fix formatting of certain standard parameters
-    level  = my_get(info,'level', None,int)
-    weight = my_get(info,'weight',0,int) 
-    character = my_get(info,'character', '',str)
-    maass_id = my_get(info,"id", '',int)	
-    DBname = my_get(info,"db",'',str)
-    search = my_get(info,"search", '',str)
-    SearchAll = my_get(info,"search_all", '',str)
-    eigenvalue = my_get(info,"eigenvalue", '',str)
-    collection = my_get(info,"collection", 'all',str)
-    browse = my_get(info,"browse", '',str)
-    eskip= my_get(info,"ev_skip", '',str)
-    erange= my_get(info,"ev_range", '',str)
-    lskip= my_get(info,"level_skip", '',str)
-    lrange= my_get(info,"level_range", '',str)
-#int(info.get('weight',0))
-    #label  = info.get('label', '')
-    info['level']=level; info['weight']=weight; info['character']=character
-    info['maass_id']=maass_id
-    info['DBname']=DBname
-    info['search']=search
-    info['collection']=collection
-    info['SearchAll']=SearchAll
-    info['eigenvalue']=eigenvalue
-    info['browse']=browse
-    info['ev_skip']=eskip
-    info['level_skip']=lskip
-    info['level_range']=lrange
-    info['ev_range']=erange
-    
-    return info
-
 
 def my_get(dict,key,default,f=None):
     r"""
@@ -638,22 +590,6 @@ def my_get(dict,key,default,f=None):
         except:
             pass
     return x
-
-def print_table_of_levels(start,stop):
-    l = getallgroupsLevel()
-    print l
-    s="<table><tr><td>"
-    for N in l:
-        if N < start:
-            continue
-        if N > stop:
-            exit
-        url = url_for(".render_maass_waveformspace",level=N)
-        print "<a href=\"%s\">%s</a>" (url,N)
-    s+="</td></tr></table>"
-    return s
-
-
 
 
 def ajax_once(callback,*arglist,**kwds):

@@ -117,7 +117,8 @@ class WebMaassForm(object):
         coeff_id=f.get('coeff_id',None)
         if self.coeffs==[] and coeff_id:
             ## Let's see if we have coefficients stored
-            C = DB.get_coefficients({"_id":self._maassid})
+            C = self._db.get_coefficients({"_id":self._maassid})
+            self.all_coeffs=C
             nc = Gamma0(self.level).ncusps()
             if len(C.keys())==nc:
                 self.coeffs = C[0]
@@ -131,6 +132,32 @@ class WebMaassForm(object):
         else:
             self.num_coeff=0
         self.set_table()
+        
+    def get_all_coeffs(self):
+        return self.all_coeffs
+        
+    def the_character(self):
+        if self.character==0:
+            return "trivial"
+        else:
+            return self.character
+    def the_weight(self):
+        if self.weight==0:
+            return "0"
+        else:
+            return self.weight
+    def fricke(self):
+        if len(self.cusp_evs)>0:
+            return self.cusp_evs[1]
+        else:
+            return "undefined"
+    def even_odd(self):
+        if self.symmetry==1:
+            return "odd"
+        elif self.symmetry==0:
+            return "even"
+        else:
+            return "undefined"
         
     def set_table(self):
         table={'nrows':self.num_coeff,
