@@ -130,6 +130,10 @@ class Lfunction:
 
         lines = filecontents.split('\n',6)
         self.coefficient_type = int(lines[0])
+        # Rishi tells me that for his wrapper
+        # 0 is for general, 1 is for periodic and 2 is for elliptic curves.
+        # Mike seems to only use 0 and 1.
+        # POD
         self.quasidegree = int(lines[4])
         lines = self.lcalcfile.split('\n',8+2*self.quasidegree)
         self.Q_fe = float(lines[5+2*self.quasidegree])
@@ -1010,7 +1014,43 @@ class DedekindZeta(Lfunction):   # added by DK
         
 
 class ArtinLfunction(Lfunction):
-    pass
+    def Ltype(self):
+        return "artin"
+    
+    def __init__(self, **args):
+        constructor_logger(self,args)
+
+        #Check for compulsory arguments
+        if not 'tim_index' in args.keys() or not 'conductor' in args.keys() or not 'degree' in args.keys():
+            raise Exception("You have to supply a conductor, a degree, and an index in Tim Dokchitser's database")
+
+        # Initialize default values
+
+        # Put the arguments into the object dictionary
+        self.__dict__.update(args)
+        from math_classes import ArtinRepresentation
+        
+        self.artin = ArtinRepresentation(args["dimension"], args["conductor"], args["index"])
+
+        self.title = "L function for the Artin representation of dimension" + str(args["dimension"]) + \
+            ", conductor "+ str(args["conductor"]) + " and index in Tim's database"+ str(args["index"])
+                
+        self.dirichlet_coefficients = self.artin.coefficients_list()
+        
+        
+        self.coefficient_type = 0
+        self.coefficient_period = 0
+        #self.Q_fe,
+        #self.sign,
+        #self.kappa_fe,
+        #self.lambda_fe ,
+        #self.poles,
+        #self.residues
+
+        self.credit = 'Sage, lcalc, and data precomputed in Magma by Tim Dokchitser'
+        self.citation = ''
+        
+        self.generateSageLfunction()
 
 class SymmetricPowerLfunction(Lfunction):
     pass
