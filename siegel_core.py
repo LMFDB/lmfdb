@@ -47,15 +47,36 @@ def _dimension_Sp4Z_2(wt):
     a = H[wt - 10]+H[wt - 14]+H[wt - 16]+V[wt - 16]+V[wt - 18]+V[wt - 22]
     return (a, uk, uk)
 
-    
+
 def _dimension_Sp6Z(wt):
     """
-    Return the dimensions of subspaces of Siegel modular forms on $Sp(6,Z)$.
+    Return the dimensions of subspaces of Siegel modular forms on $Sp(4,Z)$.
     
     OUTPUT
-
+    ("Total", "Miyawaki-Type-1", "Miyawaki-Type-2 (conjectured)", "Interesting")
+    Remember, Miywaki type 2 is ONLY CONJECTURED!!
     """
-    raise NotImplementedError
+    if not is_even(wt): return (0,0,0,0)
+    R = PowerSeriesRing(ZZ, default_prec = wt + 1 , names=('x',))
+    (x,) = R._first_ngens(1)
+    R = PowerSeriesRing(ZZ, default_prec = 2* wt - 1 , names=('y',))
+    (y,) = R._first_ngens(1)
+    H_all = 1/((1-x**4)*(1-x**12)**2*(1-x**14)*(1-x**18)* \
+                    (1-x**20)*(1-x**30))*(                      \
+        1+x**6+x**10+x**12+3*x**16+2*x**18+2*x**20+   \
+            5*x**22+4*x**24+5*x**26+7*x**28+6*x**30+9*x**32+  \
+            10*x**34+10*x**36+12*x**38+14*x**40+15*x**42+16*x**44+ \
+            18*x**46+18*x**48+19*x**50+21*x**52+19*x**54+21*x**56+ \
+            21*x**58+19*x**60+21*x**62+19*x**64+18*x**66+18*x**68+ \
+            16*x**70+15*x**72+14*x**74+12*x**76+10*x**78+10*x**80+ \
+            9*x**82+6*x**84+7*x**86+5*x**88+4*x**90+5*x**92+       \
+            2*x**94+2*x**96+3*x**98+x**102+x**104+x**108+x**114)
+    H_noncusp = 1/(1 - x**4)/(1 - x**6)/(1 - x**10)/(1 - x**12)
+    H_E = y**12/(1 - y**4)/(1 - y**6)
+    H_Miyawaki1 = H_E[wt]*H_E[2*wt-4]
+    H_Miyawaki2 = H_E[wt-2]*H_E[2*wt-2]
+    a,b,c,d = H_all[wt], H_noncusp[wt], H_Miyawaki1, H_Miyawaki2
+    return (a,c,d,a - b - c - d)
 
 
 def _dimension_Sp8Z(wt):
