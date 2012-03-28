@@ -670,10 +670,11 @@ table .knowl-link {
   border-bottom: 2px solid {{ col_knowl_l}};
   font-size: x-small;
   text-align: right;
+  line-height: 100%;
 }
 .knowl-inc-edit a {
-  padding: 3px 5px 1px 5px;
-  color: {{ col_knowl }};
+  padding: 3px 5px 0px 5px;
+  background: {{ col_knowl_dd }};
   background: {{ col_knowl_l }};
   border-top-left-radius: 5px;
   -moz-border-radius-topleft: 5px;
