@@ -91,7 +91,8 @@ table.props tr td:first-child {
             {% endif %}
         </p>
         <div align="left"> 
-            {{ logvals }}
+            {#{{ logvals }}#}
+            [{{ logvals|join(", " ) }}]
         </div>
         
         {# Values on generators #}
@@ -170,7 +171,7 @@ table.props tr td:first-child {
         </h2>
         <div class = 'sage nodisplay code'>sage: chi.gauss_sum()</div>
         {% set gauss_default = 2 %}
-        <form> \( \tau_{ a }( \chi_{ {{number}} } )\;\)  at \(\;a = \)
+        <form> \( \tau_{ a }( \chi_{ {{modulus}} }({{number}},&middot;) )\;\)  at \(\;a = \)
             <input id="calc-gauss-input" size=10 placeholder={{gauss_default}}>
             <button id="calc-gauss-go"> Compute </button>
             <span class="formexample"> e.g. {{gauss_default}} </span>
