@@ -21,9 +21,9 @@ AUTHOR: Fredrik Strömberg
 """
 from flask import render_template, url_for, request, redirect, make_response,send_file,send_from_directory
 import tempfile, os,re
-from utils import ajax_more,ajax_result,make_logger
+from utils import ajax_more,ajax_result,make_logger,to_dict
 from sage.all import *
-from  sage.modular.dirichlet import DirichletGroup
+from sage.modular.dirichlet import DirichletGroup
 from base import app, db
 from modular_forms.elliptic_modular_forms.backend.web_modforms import WebModFormSpace,WebNewForm
 from modular_forms.elliptic_modular_forms.backend.emf_classes import ClassicalMFDisplay
@@ -58,6 +58,7 @@ k_max_db = 300000
 ###########################################
 # Search / Navigate
 ###########################################
+
 met = ['GET','POST']
 @emf.route("/",methods=met)
 @emf.route("/<int:level>/",methods=met)
@@ -65,10 +66,14 @@ met = ['GET','POST']
 @emf.route("/<int:level>/<int:weight>/<int:character>/",methods=met)
 @emf.route("/<int:level>/<int:weight>/<int:character>/<label>",methods=met)
 @emf.route("/<int:level>/<int:weight>/<int:character>/<label>/",methods=met)
-def render_elliptic_modular_forms(level=0,weight=0,character=-1,label='',**kwds):
+def render_elliptic_modular_forms(level=0,weight=0,character=None,label='',**kwds):
     r"""
     Default input of same type as required. Note that for holomorphic modular forms: level=0 or weight=0 are non-existent.
     """
+    if character == None and level == 0 and weight == 0:
+        character = 0
+    elif character == None:
+        character = -1
     emf_logger.debug("In render: level={0},weight={1},character={2},label={3}".format(level,weight,character,label))
     emf_logger.debug("args={0}".format(request.args))
     emf_logger.debug("args={0}".format(request.form))
@@ -77,9 +82,10 @@ def render_elliptic_modular_forms(level=0,weight=0,character=-1,label='',**kwds)
     info = get_args(request,level,weight,character,label,keys=keys)
     level=info['level']; weight=info['weight']; character=info['character']; label=info['label']
     emf_logger.debug("info={0}".format(info))
-    emf_logger.info("level=%s, %s"%(level,type(level)))
-    emf_logger.info("label=%s, %s"%(label,type(label)))
-    emf_logger.info("wt=%s, %s"% (weight,type(weight)) )
+    emf_logger.debug("level=%s, %s"%(level,type(level)))
+    emf_logger.debug("label=%s, %s"%(label,type(label)))
+    emf_logger.debug("wt=%s, %s"% (weight,type(weight)) )
+    emf_logger.debug("character=%s, %s"% (character,type(character)) )
     if info.has_key('download'):
         return get_downloads(**info)
     emf_logger.debug("info=%s"%info)
@@ -104,18 +110,16 @@ def render_elliptic_modular_forms(level=0,weight=0,character=-1,label='',**kwds)
     if (level>0 and weight==0) or (weight>0 and level==0):
         emf_logger.debug("Have level or weight only!")
         return browse_elliptic_modular_forms(**info)
+        #return render_elliptic_modular_form_navigation_wp(**info) 
     # Otherwise we go to the main navigation page
-    return render_elliptic_modular_form_navigation_wp(**info) 
+    return render_elliptic_modular_form_navigation_wp(**info)
 
 # If we don't match any arglist above we see if we have only a label
 @emf.route("/<test>/")
 def redirect_false_route(test=None):
     args=extract_data_from_jump_to(s)
     redirect(url_for("render_elliptic_modular_forms", **args), code=301)
-    #return render_elliptic_modular_form_navigation_wp(**info) 
-
-
-
+    #return render_elliptic_modular_form_navigation_wp(**info)
 
 
 def get_args(request,level=0,weight=0,character=-1,label='',keys=[]):    
@@ -151,8 +155,14 @@ def render_elliptic_modular_form_navigation_wp(**args):
     info = to_dict(args)
     level  = my_get(info,'level', 0,int)
     weight = my_get(info,'weight', 0,int)
+    character = my_get(info,'character',0,int)
     label  = info.get('label', '')
     disp = ClassicalMFDisplay('modularforms')
+    emf_logger.debug("info={0}".format(info))
+    emf_logger.debug("level=%s, %s"%(level,type(level)))
+    emf_logger.debug("label=%s, %s"%(label,type(label)))
+    emf_logger.debug("wt=%s, %s"% (weight,type(weight)) )
+    emf_logger.debug("character=%s, %s"% (character,type(character)) )
     
     if(info.has_key('plot') and level <> None):
         return render_fd_plot(level,info)
@@ -169,18 +179,34 @@ def render_elliptic_modular_form_navigation_wp(**args):
         return render_template(page, info=info,title=title)
     ## This is the list of weights we initially put on the form
     weight = int (weight)
-    if level>0:
-        info['geometric'] = print_geometric_data_Gamma0N(level)
-        info['fd_plot'] = render_fd_plot(level,info)
     title = "Holomorphic Cusp Forms"
     bread =[(MF_TOP,url_for('mf.modular_form_main_page'))]
     #  fun = dimension_new_cusp_forms
     #  title = 'Newforms'
-    disp.set_table_browsing(limit=[(1,36),(1,10)],keys=['Weight','Level'],character=0,dimension_fun=dimension_new_cusp_forms,title='Browse Holomorphic Modular Forms')
+    if is_set['weight']:
+        wt_range=(weight,weight)
+    else:
+        if character == 0:
+            wt_range=(2,36)
+        else:
+            wt_range=(2,20)
+    if is_set['level']:
+        level_range=(level,level)
+    else:
+        level_range=(1,12)
+    if character==0:
+        info['grouptype']=0
+        info['groupother']=1
+    else:
+        info['grouptype']=1
+        info['groupother']=0
+    info['show_switch']=True
+    disp.set_table_browsing(limit=[wt_range,level_range],
+                            keys=['Weight','Level'],character=character,
+                            dimension_fun=dimension_new_cusp_forms,title='Browse Holomorphic Modular Forms')
     info['browse_table']=disp._table
 
     return render_template("emf_navigation.html", info=info,title=title,bread=bread)
-
 
 met = ['GET','POST']
 @emf.route("/Download/<int:level>/<int:weight>/<int:character>/<label>",methods=['GET','POST'])

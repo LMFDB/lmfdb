@@ -16,6 +16,14 @@ $("#plot").load(function() {
 );
 </script>
 
+<style>
+table.ntdata th.colhead {
+  text-align: left;
+  background: #efe;
+  border-bottom: 0;
+  border-left: 2px solid #9b9;
+}
+</style>
 {% if error is defined %}
 
 <h1>There was an error in meeting your previous request. Please change parameters.</h1>
@@ -28,28 +36,62 @@ $("#plot").load(function() {
 
 {% include 'geometric.html' %}
 
-{% if info.weight is defined %}
-<h1>{{ KNOWL('mf.elliptic.newform',title='Newforms') }} of {{KNOWL('mf.elliptic.level',title='level')}} {{level}} and {{KNOWL('mf.elliptic.weight',title='weight')}} {{weight}}</h1>
+<h1>{{ KNOWL('mf.elliptic.newform',title='Newforms') }} of
+{% if level is defined %}
+{{KNOWL('mf.elliptic.level',title='level')}}
+{% if level.min is defined %}
+{{ level.min }}-{{ level.max }}
 {% else %}
-<h1>{{ KNOWL('mf.elliptic.newform',title='Newforms') }} of {{KNOWL('mf.elliptic.level',title='level')}} {{level}}</h1>
+{{ level }}
 {% endif %}
+{% endif %}
+{%if weight is defined and level is defined %} and {% endif %}
+{%if weight is defined %}
+{{KNOWL('mf.elliptic.weight',title='weight')}}
+{% if weight.min is defined %}
+{{ weight.min }}-{{ weight.max }}
+{% else %}
+{{ weight }}
+{% endif %}
+{% endif %}
+</h1>
 
 {% if browse_table is defined %}
 {% if browse_table.rows is defined %}
 {#{KNOWL('mf.ellipticemf_browse.all.info',title='Write about browsing') }#}
 <p>
-The table below gives the dimensions of the space of holomorphic cusp
-forms of specified level, weight, and character.  By clicking on an
+The table below gives the dimensions of the space of holomorphic
+{{ KNOWL('mf.elliptic.newform',title='newform') }}
+of specified {{KNOWL('mf.elliptic.level',title='level')}},
+{{KNOWL('mf.elliptic.weight',title='weight')}}, and
+{% if show_all_characters is defined %}
+character.<br>
+Here, the characters are numbered in the same way as
+in sage: DirichletGroup(N).<br>
+{% else %}
+trivial character.
+{% endif %}
+By clicking on an
 entry you access information about the forms in the specified space.
 </p>
 {% set table = browse_table %}
 {% set rows = browse_table.rows %}
+
+{% if table.maxRowCount is defined %}
+{% set maxRowCount = table.maxRowCount %}
+{% endif %}
+
 {% set row_class = cycler('odd', 'even') %}
-{% if show_all_characters is defined %}
 {% set len = table.col_heads | length %}
-{% set wid = 10*len +20 %}
+{% set wid = 10*len + 20 %}
 <table class="ntdata" width="{{wid}}px">
   <thead>
+    {% if table.colhead is defined %}
+    <tr>
+      <th></th>
+      <th colspan="{{maxRowCount}}" class="colhead">{{table.colhead}}</th>
+    </tr>
+    {% endif %}
     <tr>
       <th width="10px" style="border-right:1px solid black">
         {% if table.rowhead is defined %}
@@ -72,21 +114,24 @@ entry you access information about the forms in the specified space.
         {{ table.row_heads[loop.index-1] }}
 
       </th>
+      {% set rc = row|count %}
       {% for cell in row  %}
       <td align="center" width="0%">
         <a style="" href="{{cell.url}}">{{cell.dim}}</a>
       </td>
       {% endfor %}
+      {% if maxRowCount is defined %}
+      {% for j in range(rc,maxRowCount) %}
+        <td>&nbsp;</td>
+      {% endfor %}
+      {% endif %}
     </tr>
     {% endfor %}
   </tbody>
 </table>
 {% endif %}
 {% endif %}
-{% elif list_spaces is defined %}
 
-{{ list_spaces | safe }}
-
-{% endif %}
+{% include 'select_ranges.html'  %}
 
 {% endblock content %}

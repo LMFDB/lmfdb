@@ -84,7 +84,13 @@ function set_value(id,val) {
 }
 </script>
 
-<h1>Browse holomorphic {{KNOWL('mf.elliptic.cusp_form',title='cusp forms')}}</h1>
+<h1>Browse holomorphic {{KNOWL('mf.elliptic.cusp_form',title='cusp forms')}} for 
+{% if info.grouptype == 0 %}
+    {{KNOWL('mf.sl2.subgroup.gamma0N',title='\(\Gamma_0(N)\)')}}
+{% elif info.grouptype == 1 %}
+    {{KNOWL('mf.sl2.subgroup.gamma0N',title='\(\Gamma_1(N)\)')}}
+{% endif %}
+    </h1>
 
 <div>
       {% if info.browse_table.rows is defined %}
@@ -93,10 +99,8 @@ The table below gives the dimensions of the space of holomorphic
 {{KNOWL('mf.elliptic.cusp_form',title='cusp forms')}} of specified 
 {{KNOWL('mf.elliptic.level',title='level')}} and 
 {{KNOWL('mf.elliptic.weight',title='weight')}}, with trivial 
-{{KNOWL('character.dirichlet',title='character')}}.  By
-clicking on an entry you can access information about the cusp forms
-with trivial or nontrivial characters of the specified level, or level and
-weight.
+{{KNOWL('character.dirichlet',title='character')}}.<br>
+By clicking on an entry you can access information about that particular space.
 </div>
 
 <style>
@@ -106,12 +110,20 @@ table.ntdata th.left {
   border-bottom: 0;
   text-align: right;
 }
-table.ntdata td { text-align: right; }
+table.ntdata td { text-align: left; }
 table.ntdata th.weight {
   text-align: left;
   background: #efe;
+  border-bottom: 2px solid #9b9;
+  border-left: 0;
+}
+table.ntdata thead tr.space {
+  background: #efe;
   border-bottom: 0;
-  border-left: 2px solid #9b9;
+}
+
+table.ntdata thead th.spaceleft {
+  border-right: 2px solid #9b9;
 }
 </style>
       {% set table = info.browse_table %}
@@ -119,13 +131,23 @@ table.ntdata th.weight {
       <table class="ntdata">
         <thead>
           <tr>
-           <th></th>
-           <th class="weight" colspan="{{table.col_heads|length}}">Weight</th>
-          </tr>
-          <tr>
             <th class="left">Level</th>
+           <th class="weight" colspan="{{table.col_heads|length}}">
+	     <span style="display:block;float:left;margin-right:3px;">Weight</span>
+	     {%if info.show_switch is defined %}
+	   <span style="display:block;float:right">
+	     {% if info.groupother == 1 %}
+	     {% set groupotherchar = -1 %}
+             {% else %}
+	     {% set groupotherchar = 0 %}
+	     {%endif%}
+	     <a href="{{url_for('.render_elliptic_modular_forms',character=groupotherchar)}}">Switch to \(\Gamma_{{info.groupother}}(N)\)</a></span></th>
+	     {%endif%}
+          </tr>
+          <tr class="space">
+            <th class="spaceleft"></th>
             {% for k in table.col_heads  %}
-            <th>{{k}}</th>
+            <th class="weight">{{k}}</th>
             {% endfor %}
           </tr>
         </thead>
@@ -134,7 +156,7 @@ table.ntdata th.weight {
           <tr>
             <th class="left">
               {% set N = table.row_heads[loop.index-1] %}
-              {% set row_url = url_for('emf.render_elliptic_modular_forms',level=N) %}
+              {% set row_url = url_for('emf.render_elliptic_modular_forms',level=N,character=0) %}
               <a href="{{ row_url }}">{{ N }}</a>
             </th>
             {% for cell in row  %}
@@ -147,11 +169,11 @@ table.ntdata th.weight {
         </tbody>
       </table>
       {% endif %}
-    </td>  
-    <form name="browse" method = "get" action="{{url_for('.render_elliptic_modular_forms')}}">
-    </form>
-    
-  <h1>Find a specific cusp form</h1>
+    </td>
+
+{% include 'select_ranges.html' %}
+
+  <h1>Find a specific cusp form from the database</h1>
       <div>
         Search by {{KNOWL('mf.elliptic.label',title="label")}} 
         <form name="search" method = "post" action="{{url_for('.render_elliptic_modular_forms')}}">	  
@@ -160,6 +182,7 @@ table.ntdata th.weight {
         </form>
       </div>
 
+<!--
 <h1>Search</h1>
 <form name="search" method = "post" action="{{url_for('.render_elliptic_modular_forms')}}">
   <table class="">
@@ -182,8 +205,9 @@ table.ntdata th.weight {
 	<td>Dimension of Galois Orbit:</td><td><input type="text" name="gdim" value="" placeholder="1"> 
       <span class="formexample">(i.e. the rational field)</span></td>
     </tr-->
+<!--
   </table>
   <button type="submit" name="Submit" value="Search">Search</button>
 </form>
-
+-->
 {% endblock content %}

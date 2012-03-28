@@ -188,7 +188,7 @@ class WebModFormSpace(Parent):
         
     def _get_objects(self,k,N,chi,use_db=True,get_what='Modular_symbols.files',**kwds):
         r"""
-        Getting the space of modular symbols from the database if it exists. Otherise compute it and insert it into the database.
+        Getting the space of modular symbols from the database if it exists. Otherwise compute it and insert it into the database.
         """
         collection = get_what+'.files'
         if not get_what in ['ap','Modular_symbols']:
@@ -359,7 +359,6 @@ class WebModFormSpace(Parent):
             else:
                 self._dimension_new_cusp_forms=dimension_new_cusp_forms(self._N,self._k) 
         return self._dimension_new_cusp_forms
-
 
 
     def dimension(self):
