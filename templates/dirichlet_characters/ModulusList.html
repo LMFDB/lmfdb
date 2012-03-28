@@ -45,13 +45,19 @@ $(function() {
 });
 </script>
 #}
+
+
+The table below displays {{ KNOWL('character.dirichlet', title="Dirichlet characters" ) }} of a 
+given {{ KNOWL('character.dirichlet.modulus', title="modulus") }} and index. If \(q\) is the 
+{{ KNOWL('character.dirichlet.modulus', title="modulus") }}, then each integer \(n\) (on the \(q\)-th row)
+represents the {{ KNOWL('character.dirichlet', title="Dirichlet character" ) }} \(\chi_{q}(n,&middot;)\). The 
+characters are grouped with respect to order and stacked integers indicate (multiplicative) inverse 
+{{ KNOWL('character.dirichlet', title="Dirichlet characters" ) }}.
+
 <table>    
     <thead align="left">
-    <tr>
+        <tr><br></br>
         <th>
-            The following table displays Dirichlet characters. If q is the modulus, then each integer n </br>
-            in the qth row represents the Dirichlet character \(\chi_{q}(n,&middot;)\). The characters are grouped </br>
-            with respect to order and stacked integers indicate multiplicative inverses.</br></br> 
             <font color = "blue"> Imprimitive </font> characters.</br>
             <font color = "green"> Primitive </font> characters. 
         </th>
