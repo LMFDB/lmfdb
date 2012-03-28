@@ -12,6 +12,7 @@ import utils
 from modular_forms.elliptic_modular_forms.backend.web_modforms import *
 from modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import MaassDB
 from modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaassForm
+from WebCharacter import WebCharacter
 import time ### for printing the date on an lcalc file
 import socket ### for printing the machine used to generate the lcalc file
 
@@ -730,7 +731,10 @@ class Lfunction_Dirichlet(Lfunction):
         self.numcoeff = int(self.numcoeff)
 
         # Create the Dirichlet character
-        chi = DirichletGroup(self.charactermodulus)[self.characternumber]
+        web_chi = WebCharacter({ 'type': 'dirichlet',
+                                 'modulus': self.charactermodulus
+                                 'number': self.characternumber})
+        chi = web_chi.chi_sage
 
         if chi.is_primitive():
 
