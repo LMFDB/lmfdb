@@ -1053,4 +1053,62 @@ class ArtinLfunction(Lfunction):
         self.generateSageLfunction()
 
 class SymmetricPowerLfunction(Lfunction):
-    pass
+    def Ltype(self):
+        return "SymmetricPower"
+
+    def __init__(self, *args):
+        """
+        """
+        constructor_logger(self,args)
+        try:
+            self.m=Integer(args[0])
+        except TypeError:
+            raise TypeError, "The power has to be an integer"
+
+        if args[1][0] != 'EllipticCurve' or args[1][1] != 'Q':
+            raise TypeError, "The symmetric L functions have been implemented only for Elliptic Curves over Q"
+
+
+        try:
+            self.E=EllipticCurve(args[1][2])
+        except  AttributeError:
+            raise AttributeError, "This elliptic curve does not exist in cremona's database"
+
+
+        from symL.symL import SymmetricPowerLFunction
+
+        self.S=SymmetricPowerLFunction(E,m)
+
+        self.title = "The symmetric power $L$-function $L(s, Symm^%d E)$ of %s"% (self.m,self.E)
+
+        self.dirichlet_coefficients = 
+
+        self.sageLfunction = self.S._contruct_L()
+
+
+        # Initialize some default values
+        self.coefficient_period = 0
+        self.Q_fe = self.S._Q_fe
+        self.poles = self.S._poles
+        self.residues = self.S._residues
+        #self.kappa_fe = []
+        #self.lambda_fe =[]
+        self.mu_fe = self.S._mu_fe
+        self.nu_fe = self.S._nu_fe
+        self.sign = self.S.root_number()
+        self.selfdual = True
+        self.langlands = True
+        self.texname = "$L(s, Symm^2E)$"  # default name.  will be set later, for most L-functions
+        self.texnamecompleteds = "\\Lambda_{Symm^2 E}(s)"  # default name.  will be set later, for most L-functions
+        self.texnamecompleted1ms = "\\Lambda(1-{s})}"  # default name.  will be set later, for most L-functions
+        self.primitive = True # should be changed later
+        self.citation = ''
+        self.credit = ''
+
+
+
+
+
+
+
+
