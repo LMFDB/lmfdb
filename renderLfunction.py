@@ -143,11 +143,12 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
       return render_template('LfunctionSimple.html', info=info, **info), 500
    
     try:
-        logger.info(temp_args)
+        #logger.info(temp_args)
         if temp_args['download'] == 'lcalcfile':
             return render_lcalcfile(L, request.url)
     except:
         pass #Do nothing
+
 
     info = initLfunction(L, temp_args, request)
 
@@ -179,6 +180,9 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
     
     elif arg1 == 'ModularForm' and (arg2 == 'GSp4' or arg2 == 'GL4' or  arg2 == 'GL3') and arg3 == 'Q' and arg4 == 'maass':
         return Lfunction_Maass( dbid = arg5, dbName = 'Lfunction', dbColl = 'LemurellMaassHighDegree')
+
+    elif arg1 == 'ModularForm' and arg2 == 'GSp' and arg3 == 'Q' and arg4 == 'Sp4Z' and arg5== 'specimen': #this should be changed when we fix the SMF urls
+        return Lfunction_SMF2_scalar_valued( weight=arg6, orbit=arg7, number=arg8 )
 
     elif arg1 == 'NumberField':
         return DedekindZeta( label = str(arg2))
@@ -313,7 +317,13 @@ def initLfunction(L,args, request):
 
     elif L.Ltype() in ['lcalcurl', 'lcalcfile']:
         info['bread'] = [('L-function',url_for('render_Lfunction'))]
-        
+
+    elif L.Ltype() == 'siegelnonlift':
+        weight = str(L.weight)
+        number = str(L.number)
+        info['friends'] = [('Siegel Modular Form', friendlink)]
+
+
 
     info['dirichlet'] = lfuncDStex(L, "analytic")
     info['eulerproduct'] = lfuncEPtex(L, "abstract")
@@ -450,7 +460,7 @@ def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, ar
 #   Functions for rendering graphs for browsing L-functions.
 ###########################################################################
 def render_browseGraph(args):
-    logger.info(args)
+    #logger.info(args)
     if 'sign' in args:
       data = LfunctionPlot.paintSvgFileAll([[args['group'], int(args['level']), args['sign']]])
     else:
@@ -460,14 +470,14 @@ def render_browseGraph(args):
     return response
 
 def render_browseGraphHolo(args):
-    logger.info(args)
+    #logger.info(args)
     data = LfunctionPlot.paintSvgHolo(args['Nmin'], args['Nmax'], args['kmin'], args['kmax'])
     response = make_response(data)
     response.headers['Content-type'] = 'image/svg+xml'
     return response
 
 def render_browseGraphTMP(args):
-    logger.info(args)
+    #logger.info(args)
     data = LfunctionPlot.paintSvgHoloGeneral(args['Nmin'], args['Nmax'], args['kmin'], args['kmax'],args['imagewidth'], args['imageheight'])
     response = make_response(data)
     response.headers['Content-type'] = 'image/svg+xml'
@@ -546,7 +556,7 @@ def processEllipticCurveNavigation(startCond, endCond):
     s = '<h5>Examples of L-functions attached to isogeny classes of elliptic curves</h5>'
     s += '<table>'
     
-    logger.debug(iso_list)
+    #logger.debug(iso_list)
 
     counter = 0
     nr_of_columns = 10
