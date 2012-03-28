@@ -177,6 +177,12 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
 
     elif arg1 == 'NumberField':
         return DedekindZeta( label = str(arg2))
+        
+    elif arg1 == "ArtinRepresentation":
+        return ArtinLfunction(dimension = arg2, conductor = arg3, tim_index = arg4)
+    
+    elif arg1 == "SymmetricPower":
+        return SymmetricPowerLfunction(m = arg2, [arg3, arg4, arg5, arg6, arg7, arg8, arg9], temp_args)
 
     elif arg1 == 'Lcalcurl':
         return Lfunction( Ltype = arg1, url = arg2)

@@ -995,4 +995,8 @@ class DedekindZeta(Lfunction):   # added by DK
         return "dedekindzeta"
         
 
+class ArtinLfunction(Lfunction):
+    pass
 
+class SymmetricPowerLfunction(Lfunction):
+    pass
