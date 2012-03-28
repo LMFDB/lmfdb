@@ -15,7 +15,7 @@ class ArtinRepresentation(object):
         if len(x) == 0:
             self._data = data_dict["data"]
         else:
-            self = ArtinRepresentation.find_one({"Dimension":x[0],"Conductor":str(x[1]),"DBIndex":x[2]})
+            self = ArtinRepresentation.find_one({"Dim":int(x[0]),"Conductor":str(x[1]),"DBIndex":int(x[2])})
         
     @classmethod
     def find(cls, *x, **y):
@@ -34,7 +34,7 @@ class ArtinRepresentation(object):
     
     def index(self):
         return self._data["DBIndex"]
-    
+        
     def number_field_galois_group(self):
         if not hasattr(self,"_number_field_galois_group"):
             tmp = self._data["NFGal"]
@@ -64,6 +64,41 @@ class ArtinRepresentation(object):
         from artin_representations import artin_representations_page
         from artin_representations.main import *
         return url_for("artin_representations.by_data", dim = self.dimension(), conductor = self.conductor(), index = self.index())
+    
+    def sign(self):
+        # Guessing needs to be implemented here
+        pass
+    
+    def Q_fe(self):
+        return self.conductor()
+    
+    def kappa_fe(self):
+        return [1/2 for i in range(self.dimension())]
+    
+    def lambda_fe(self):
+        k = self.dimension()
+        tmp = (self.character()[self.number_field_galois_group().index_complex_conjugation()-1])
+        try:
+            trace_complex = sage(tmp)
+        # We are looking for the character value on the conjugacy class of complex conjugation.
+        # This is always an integer, so we don't expect this to be a more general algebraic integer, and we can simply convert to sage
+        except TypeError:
+            raise TypeError, "Expecting a character values that converts easily to integers, but that's not the case."
+        number_of_eigenvalues_1 = (k + trace_complex)/2
+        number_of_eigenvalues_minus_1 = (k - trace_complex)/2
+        return [0 for i in range(number_of_eigenvalues_1)] + [1/2 for i in range(number_of_eigenvalues_minus_1)]
+    
+    def poles(self):
+        if self.conductor() == 1 and self.dimension() ==1:
+            raise NotImplementedError
+            # needs to return the pole in the case of zeta
+        return []
+    
+    def residues(self):
+        if self.conductor() == 1 and self.dimension() ==1:
+            raise NotImplementedError
+            # needs to return the pole in the case of zeta
+        return []
         
 class CharacterValues(list):
     def display(self):
@@ -187,7 +222,8 @@ class NumberFieldGaloisGroup():
         tmp =  [str(x)  for x in self._data["QpRts"]]
         return tmp
         
-    def complex_conjugation(self):
+    def index_complex_conjugation(self):
+        # This is an index starting at 1
         return self._data["ComplexConjugation"]
         
     def Frobenius(self):

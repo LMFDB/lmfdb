@@ -1021,8 +1021,8 @@ class ArtinLfunction(Lfunction):
         constructor_logger(self,args)
 
         #Check for compulsory arguments
-        if not 'tim_index' in args.keys() or not 'conductor' in args.keys() or not 'degree' in args.keys():
-            raise Exception("You have to supply a conductor, a degree, and an index in Tim Dokchitser's database")
+        if not 'tim_index' in args.keys() or not 'conductor' in args.keys() or not 'dimension' in args.keys():
+            raise Exception("You have to supply a conductor, a degree, and an index in Tim Dokchitser's database, but you submitted %s"%args)
 
         # Initialize default values
 
@@ -1030,22 +1030,21 @@ class ArtinLfunction(Lfunction):
         self.__dict__.update(args)
         from math_classes import ArtinRepresentation
         
-        self.artin = ArtinRepresentation(args["dimension"], args["conductor"], args["index"])
+        self.artin = ArtinRepresentation(args["dimension"], args["conductor"], args["tim_index"])
 
         self.title = "L function for the Artin representation of dimension" + str(args["dimension"]) + \
-            ", conductor "+ str(args["conductor"]) + " and index in Tim's database"+ str(args["index"])
+            ", conductor "+ str(args["conductor"]) + " and index in Tim's database"+ str(args["tim_index"])
                 
         self.dirichlet_coefficients = self.artin.coefficients_list()
         
-        
         self.coefficient_type = 0
         self.coefficient_period = 0
-        #self.Q_fe,
-        #self.sign,
-        #self.kappa_fe,
-        #self.lambda_fe ,
-        #self.poles,
-        #self.residues
+        self.Q_fe = self.artin.Q_fe()
+        self.sign = self.artin.sign()
+        self.kappa_fe = self.artin.kappa_fe()
+        self.lambda_fe = self.artin.lambda_fe()
+        self.poles = self.artin.poles()
+        self.residues = self.artin.residues()
 
         self.credit = 'Sage, lcalc, and data precomputed in Magma by Tim Dokchitser'
         self.citation = ''
