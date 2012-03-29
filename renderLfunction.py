@@ -187,7 +187,12 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         return ArtinLfunction(dimension = arg2, conductor = arg3, tim_index = arg4)
 
     elif arg1 == "SymmetricPower":
-        return SymmetricPowerLfunction(arg2, [arg3, arg4, arg5, arg6, arg7, arg8, arg9], temp_args)
+        try: 
+            Integer(arg2)
+            return SymmetricPowerLfunction(arg2, [arg3, arg4, arg5, arg6, arg7, arg8, arg9], temp_args)
+        except ValueError:
+            pass
+            return SymmetricPowerEntryPage(arg2, [arg3, arg4, arg5, arg6, arg7, arg8, arg9], temp_args)
 
     elif arg1 == 'Lcalcurl':
         return Lfunction( Ltype = arg1, url = arg2)
@@ -318,6 +323,20 @@ def initLfunction(L,args, request):
 
     elif L.Ltype() in ['lcalcurl', 'lcalcfile']:
         info['bread'] = [('L-function',url_for('render_Lfunction'))]
+
+    elif L.Ltype() == 'SymmetricPower':
+        def ordinal(n):
+                if 10 <= n % 100 < 20:
+                    return str(n) + 'th' 
+                else: 
+                    return  str(n) + {1 : 'st', 2 : 'nd', 3 : 'rd'}.get(n % 10, "th")
+        friendlink =request.url.replace('/L/SymmetricPower/%d/'%L.m,'/')
+        splitlink=friendlink.rpartition('/')
+        friendlink = splitlink[0]+splitlink[2]
+        mplusone = L.m +1
+        friendlink2 =request.url.replace('/L/SymmetricPower/%d/'%L.m,'/L/SymmetricPower/%d/'%mplusone)
+
+        info['friends'] =  [('Isogeny class', friendlink), ('%s Symmetric Power'%ordinal(mplusone) , friendlink2)]
         
 
     info['dirichlet'] = lfuncDStex(L, "analytic")
