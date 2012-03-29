@@ -8,7 +8,7 @@
 {% else %}
 <h1> {{ name | safe }} </h1>
 
-{% set KNOWL_ID = "mf.%s-%s-%s-%s"|format(level,weight,character,label) %}
+{% set KNOWL_ID = "mf.%s.%s.%s.%s"|format(level,weight,character,label) %}
 <h2>{{ KNOWL_INC(KNOWL_ID+'.top', title='') }}</h2>
 
 
@@ -157,8 +157,8 @@ in the field of complex numbers. The values are shown in the table below.
 {% endif %}
 
 
-<h2> {{KNOWL('mf.elliptic.explicit_formula',title='')}}Explicit Formulas</h2>
 {% if explicit_formulas is defined %}
+<h2> {{KNOWL('mf.elliptic.explicit_formula',title='')}}Explicit Formulas</h2>
     {{ explicit_formulas }}
 {% endif %}
 <h2>{{ KNOWL_INC(KNOWL_ID+'.formulas', title='') }}</h2>
