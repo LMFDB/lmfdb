@@ -211,20 +211,25 @@ class NumberFieldGaloisGroup(object):
             from sage.all import pari
             pol = R(pari(pol).polredabs())
             self._data["polredabs"] = pol
-            return self._data["polredabs"]
+            return pol
     
     def label(self):
         if "label" in self._data.keys():
             return self._data["label"]
         else:
             from number_fields.number_field import poly_to_field_label
-            self._data["label"] = poly_to_field_label(self.polynomial())
-            return self._data["label"]
+            label =  poly_to_field_label(self.polynomial())
+            if label:
+                self._data["label"] = label
+            return label
     
     def url_for(self):
         from number_fields import nf_page
         from number_fields.number_field import *
-        return url_for("number_fields.by_label", label = self.label())        
+        if self.label():
+            return url_for("number_fields.by_label", label = self.label())
+        else:
+            None
     
     def size(self):
         return self._data["Size"]
