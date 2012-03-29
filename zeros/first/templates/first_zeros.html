@@ -1,0 +1,126 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<script>
+{% if start %}
+var start = {{start}};
+{% else %}
+var start = '';
+{% endif %}
+
+{% if end %}
+var end = {{end}};
+{% else %}
+var end = '';
+{% endif %}
+
+
+{% if limit %}
+var limit = {{limit}};
+{% else %}
+var limit = 100;
+{% endif %}
+var startstr = "";
+if(start > 0) {
+    startstr = String(start);
+}
+var endstr = "";
+if(end > 0) {
+    endstr = String(end);
+}
+var argstring = '?start='+startstr+"&end="+endstr+"&limit="+limit;
+listzeros_url = '{{url_for(".list_zeros")}}';
+displayzeros_url = '{{url_for(".firstzeros")}}';
+function loadzeros(save_history) {
+    var request = new XMLHttpRequest();
+    request.onreadystatechange = function() {
+        if(request.readyState == 4 && request.status == 200) {
+            var zero_table = document.getElementById('zero_table');
+            var old_length = zero_table.rows.length
+            for(var n = 0; n < old_length - 1; n++) {
+                zero_table.deleteRow(-1);
+            }
+            var lines = request.responseText.split('\n');
+            start = Number(lines[0].split(' ')[1]);
+            document.getElementById("startbox").value = start;
+            var entry = ''
+            for(var n = 0; n < lines.length; n++) {
+                if(lines[n] == "") {
+                    continue;
+                }
+                entry = lines[n].split(' ');
+                var row = zero_table.insertRow(-1);
+                var cell = row.insertCell(-1);
+                cell.appendChild(document.createTextNode(entry[0]));
+                cell = row.insertCell(-1);
+                cell.appendChild(document.createTextNode(entry[1]));
+            }
+            end = Number(entry[1])
+        }
+    };
+    startstr = "";
+    if(start > 0) {
+        startstr = String(start);
+    }
+    endstr = "";
+    if(end > 0) {
+        endstr = String(end);
+    }
+    argstring = '?start='+startstr+"&end="+endstr+"&limit="+limit;
+    if(save_history) {
+        history.pushState({'start' : start, 'limit' : limit, 'end' : end},
+                            "zeta zeros", displayzeros_url + argstring);
+    }
+    document.getElementById('plainlink').href = listzeros_url + argstring;
+    document.getElementById('plaindownloadlink').href = 
+                              listzeros_url + argstring + '&download=yes';
+
+    request.open('GET', listzeros_url + argstring, true);
+    request.send(null);
+};
+function next() {
+    start = end;
+    end = ''
+    loadzeros(true);
+};
+function prev() {
+    end = start
+    start = ''
+    loadzeros(true);
+};
+var oldonload = window.onload;
+window.onload = function() {
+    if(oldonload) {
+        oldonload();
+    }
+    loadzeros(false);
+};
+window.onpopstate = function(event) {
+    if(event.state) {
+        start = event.state.start;
+        limit = event.state.limit;
+        loadzeros(false);
+    }
+};
+</script>
+<form align="center">
+    List <input type="text" name="limit" value="{{limit}}" style="width:5em"/>
+    zeros of the zeta function starting with zero number
+    <input type="text" value="{{start}}" name="start" id="startbox"/>
+
+    <button type="submit" value="Go">Go</button>
+</form>
+<br/>
+<div align="center">
+<a id="plainlink" href="">View</a> or <a id="plaindownloadlink" href="">download</a> this table as plain text.
+</div>
+<br/>
+<div align="center">
+<a href="#" class="navlink" onclick="prev(); return false">Previous {{limit}}</a>
+<a href="#" class="navlink" onclick="next(); return false">Next {{limit}}</a>
+</div>
+<table class='ntdata' id='zero_table' align="center">
+<thead><td>Zero number</td><td>Imaginary part</td></thead>
+</table>
+
+{% endblock %}
