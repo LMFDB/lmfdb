@@ -3,6 +3,7 @@
 import pymongo
 ASC = pymongo.ASCENDING
 import flask
+import base
 from base import app, getDBConnection, url_for
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, redirect, g, session, Flask
 from number_fields import nf_page, nf_logger
@@ -30,6 +31,9 @@ def group_cclasses_data(n, t):
 def group_character_table_data(n, t):
   C = getDBConnection()
   return group_character_table_knowl_guts(n,t,C)
+
+def na_text():
+  return "Not computed"
 
 @app.context_processor
 def ctx_galois_groups():
@@ -62,7 +66,6 @@ def poly_to_field_label(pol):
     coeffs = [int(c) for c in pol.coeffs()]
     d = int(pol.degree())
     query = {'degree': d, 'coefficients': coeffs}
-    import base
     C = base.getDBConnection()
     one = C.numberfields.fields.find_one(query)
     if one:
@@ -405,7 +408,6 @@ def GG_data(GGlabel):
  
 def render_field_webpage(args):
     data = None
-    import base
     C = base.getDBConnection()
     if 'label' in args:
         label = str(args['label'])
@@ -428,10 +430,14 @@ def render_field_webpage(args):
     data['galois_group'] = group_display_knowl(n,t,C)
     data['cclasses'] = cclasses_display_knowl(n,t,C)
     data['character_table'] = character_table_display_knowl(n,t,C)
-    data['class_group_invs'] = data['class_group']
+    if not data.has_key['class_group']:
+      data['class_group'] = na_text()
+      data['class_group_invs'] = data['class_group']
+    else:
+      data['class_group_invs'] = data['class_group']
+      data['class_group'] = str(AbelianGroup(data['class_group']))
     if data['class_group_invs']==[]:
         data['class_group_invs']='Trivial'
-    data['class_group'] = str(AbelianGroup(data['class_group']))
     sig = data['signature']
     D = ZZ(data['discriminant'])
     ram_primes = D.prime_factors()
@@ -459,7 +465,6 @@ def render_field_webpage(args):
         'unit_rank': unit_rank,
         'root_of_unity': web_latex(UK.torsion_generator()),
         'fund_units': ',&nbsp; '.join([web_latex(u) for u in UK.fundamental_units()])
-    #    'Gorder': Gorder, 'Gsign': Gsign, 'Gab': Gab
         })
     info['downloads_visible'] = True
     info['downloads'] = [('worksheet', '/')]
@@ -521,6 +526,8 @@ def parse_power(pair):
     return int(pair)
 
 def signedlog(j):
+  if j==0:
+    return 0.0
   sgn = 1
   if(j<0):
     sgn = -1
@@ -528,11 +535,6 @@ def signedlog(j):
   flog = float(j.log(prec=53))
   return flog*sgn
 
-# string to sage int, take the signed log, and multiply by the fudge factor
-def Zsignedlog(j):
-  fudge = 1+2.**(-52)
-  return signedlog(ZZ(str(j)))*fudge
-  
 @nf_page.route("/<label>")
 def by_label(label):
     return render_field_webpage({'label' : split_label(label)})
@@ -558,38 +560,64 @@ def parse_discs(arg):
     start, end = arg[:ix], arg[ix+1:]
     low,high = 'i', 'i'
     if start:
-      low = ZZ(start)
+      low = ZZ(str(start))
     if end:
-      high = ZZ(end)
+      high = ZZ(str(end))
     if low=='i': raise Exception('parsing error')
     if high=='i': raise Exception('parsing error')
     return [[low, high]]
   else:
-    return [ZZ(arg)]
+    return [ZZ(str(arg))]
 
-# modified to apply signedlog to entries to adjust for discriminant search
-def parse_range3(arg):
-  # parsing can be thrown off by spaces
-  if type(arg)==str:
-    arg = arg.replace(' ','')
-  if type(arg)==int:
-    return ['disc_log', Zsignedlog(arg)]
-  if ',' in arg:
-    tmp = [parse_range3(a) for a in arg.split(',')]
-    tmp = [{a[0]: a[1]} for a in tmp]
-    return ['$or', tmp]
-  elif '-' in arg[1:]:
-    ix = arg.index('-', 1)
-    start, end = arg[:ix], arg[ix+1:]
-    q = {}
-    if start:
-      q['$gte'] = Zsignedlog(start)
-    if end:
-      q['$lte'] = Zsignedlog(end)
-    return ['disc_log', q]
-  else:
-    return ['disc_log', Zsignedlog(arg)]
+def handle_zz_to_slog(ent):
+  if type(ent)==list:
+    return [signedlog(x) for x in ent]
+  #single entries become pairs
+  slog = signedlog(ent)
+  return [slog, slog]
 
+def discs_parse_to_slogs(arg):
+  return [handle_zz_to_slog(ent) for ent in arg] 
+
+# updown = 1 or -1 to say which way to fudge
+def fudge_float(a, updown, ffactor=1+2.**(-51)):
+  if a<0:
+    updown = -updown
+  return a*(ffactor**updown)
+
+# wide = 1 to widen, -1 to narrow
+def fudge_pair(pair, wide):
+  return [fudge_float(pair[0],-wide), fudge_float(pair[1], wide)]
+
+def fudge_list(li, wide):
+  return [fudge_pair(x, wide) for x in li]
+
+def list_to_query(dlist):
+  floatit = discs_parse_to_slogs(dlist)
+  floatitwide = fudge_list(floatit, 1)
+  if len(floatitwide)==1:
+    return ['disc_log', {'$lte': floatitwide[0][1], '$gte': floatitwide[0][0]}]
+  ans = []
+  for x in floatitwide:
+    ans.append({'disc_log': {'$lte': x[1], '$gte': x[0]}})
+  return ['$or', ans]
+
+# Need to be able to verify fields
+def verify_field(field, narrowconds, zconds):
+  if len(zconds)==0: return True
+  fdisc = field['disc_log']
+  # Quick exit if we satisfy narrowed floating point bounds
+  for x in narrowconds:
+    if fdisc <= x[1] and fdisc >= x[0]: return True
+  zdisc = ZZ(str(field['disc_string']))
+  for x in zconds:
+    if zdisc <= x[1] and zdisc >= x[0]: return True
+  return False
+
+def verify_all_fields(li, dlist):
+  floatit = discs_parse_to_slogs(dlist)
+  floatitnarrow = fudge_list(floatit, -1)
+  return filter(lambda x: verify_field(x, floatitnarrow, dlist), li)
 
 def number_field_search(**args):
     info = to_dict(args)
@@ -598,6 +626,7 @@ def number_field_search(**args):
         field_id = parse_field_string(info['natural'])
         return render_field_webpage({'label' : field_id})
     query = {}
+    dlist = []
     for field in ['degree', 'signature', 'discriminant', 'class_number', 'class_group', 'galois_group']:
         if info.get(field):
             if field in ['class_group', 'signature']:
@@ -610,7 +639,10 @@ def number_field_search(**args):
                     ran = ran.replace('..','-')
                     if field == 'discriminant':
                       # Need to take signed log of entries
-                      tmp = parse_range3(ran)
+                      # dlist will contain the disc conditions
+                      # as sage ints
+                      dlist = parse_discs(ran)
+                      tmp = list_to_query(dlist)
                     else:
                       tmp = parse_range2(ran, field)
                     # work around syntax for $or
@@ -647,43 +679,20 @@ def number_field_search(**args):
         start = 0
 
 
-
+    C = base.getDBConnection()
     info['query'] = dict(query)
     if 'lucky' in args:
-        import base
-        C = base.getDBConnection()
         one = C.numberfields.fields.find_one(query)
         if one:
             label = one['label']
             return render_field_webpage({'label': label})
 
-    if 'discriminant' in query:
-        import base
-        C = base.getDBConnection()
-        res = C.numberfields.fields.find(query).sort([('degree',pymongo.ASCENDING),('signature',pymongo.DESCENDING),('discriminant',pymongo.ASCENDING)]) # TODO: pages
-        nres = res.count()
-    else:
-        # find matches with negative discriminant:
-        neg_query = dict(query)
-        neg_query['discriminant'] = {'$lt':0}
-        import base
-        C = base.getDBConnection()
-        res_neg = C.numberfields.fields.find(neg_query).sort([('degree',pymongo.ASCENDING),('discriminant',pymongo.DESCENDING)])
-        nres_neg = res_neg.count()
-        # TODO: pages
+    res = C.numberfields.fields.find(query).sort([('degree',pymongo.ASCENDING),('signature',pymongo.DESCENDING),('discriminant',pymongo.ASCENDING)]) # TODO: pages
 
-        # find matches with positive discriminant:
-        pos_query = dict(query)
-        pos_query['discriminant'] = {'$gt':0}
-        import base
-        C = base.getDBConnection()
-        res_pos = C.numberfields.fields.find(pos_query).sort([('degree',pymongo.ASCENDING),('discriminant',pymongo.ASCENDING)])
-        nres_pos = res_pos.count()
-        # TODO: pages
-
-        # TODO HSY: why is there a merge_sort? a sorted(key=lambda _: ...) would be much much faster
-        res = merge_sort(iter(res_neg),iter(res_pos))
-        nres = nres_pos+nres_neg
+    res = verify_all_fields(res, dlist)
+    res.sort(key=lambda x: abs(x['disc_log']))
+    res.sort(key=lambda x: x['degree'])
+    nres = len(res)
         
     if ur_primes:
         res = filter_ur_primes(res, ur_primes)
@@ -691,8 +700,6 @@ def number_field_search(**args):
     if(start>=nres): start-=(1+(start-nres)/count)*count
     if(start<0): start=0
 
-    res = iter_limit(res,count,start)
-        
     info['fields'] = res
     info['number'] = nres
     info['start'] = start
@@ -710,59 +717,6 @@ def number_field_search(**args):
     properties = []
     return render_template("number_field_search.html", info = info, title=t, properties=properties, bread=bread)
 
-
-def iter_limit(it,lim,skip):
-    count = 0
-    while count<skip:
-        it.next()
-        count += 1
-    count = 0
-    while count<lim:
-        yield it.next()
-        count += 1
-    return
-
-                   
-def merge_sort(it1,it2):
-    try:
-        a = it1.next()
-    except StopIteration:
-        b = it2.next()
-        while True:
-            yield b
-            b = it2.next()
-        return
-    
-    try:
-        b = it2.next()
-    except StopIteration:
-        while True:
-            yield a
-            a = it1.next()
-        return
-                
-    while True:
-        if abs(a['discriminant'])<abs(b['discriminant']):
-            yield a
-            try:
-                a = it1.next()
-            except StopIteration:
-                b = it2.next()
-                while True:
-                    yield b
-                    b = it2.next()
-                return
-        else:
-            yield b
-            try:
-                b = it2.next()
-            except StopIteration:
-                a = it1.next()
-                while True:
-                    yield a
-                    a = it1.next()
-                return
-    return
 
 def support_is_disjoint(D,plist):
     D = ZZ(D)
