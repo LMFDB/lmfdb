@@ -1061,8 +1061,8 @@ class SymmetricPowerLfunction(Lfunction):
         self.selfdual = True
         self.langlands = True
         self.texname = "L(s, Symm^%dE)"%self.m  # default name.  will be set later, for most L-functions
-        self.texnamecompleteds = "\\Lambda_{Symm^2 E}(s)"  # default name.  will be set later, for most L-functions
-        self.texnamecompleted1ms = "\\Lambda(1-{s})}"  # default name.  will be set later, for most L-functions
+        self.texnamecompleteds = "\\Lambda_{Symm^{%d} E}(s)"%self.S.m  # default name.  will be set later, for most L-functions
+        self.texnamecompleted1ms = "\\Lambda_{Symm^{%d} E}(1-{s})"%self.S.m  # default name.  will be set later, for most L-functions
         self.primitive = True # should be changed later
         self.citation = ' '
         self.credit = ' '
