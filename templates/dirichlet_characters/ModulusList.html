@@ -66,9 +66,9 @@ $(function() {
      function() { $(".imprimitive").css("background", "#DDF"); },
      function() { $(".imprimitive").css("background", "inherit"); }
      );
-  $("#legend-imp").click(
-      function() { $("#chitable .imprimitive").toggle("fast");}
-      );
+  $("#legend-imp").click(function() {
+    $("#chitable .imprimitive").toggle();
+  });
   $("#legend-prim").hover(
      function() { $(".primitive").css("background", "#90EE90"); },
      function() { $(".primitive").css("background", "inherit"); }
