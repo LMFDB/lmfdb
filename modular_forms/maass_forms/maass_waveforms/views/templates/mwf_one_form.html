@@ -19,7 +19,7 @@ var oTable = $("table#coeffs").dataTable(
                 ],
     "bSort":true,
     "iDisplayLength": 20,    
-    "iDisplayStart": 3,
+    "iDisplayStart": 0,
     "oLanguage": {
             "sZeroRecords": "There are no coefficients that match your search criterion",
             "sLengthMenu": "Display _MENU_ coefficients per page",
@@ -114,9 +114,9 @@ var oTable = $("table#coeffs").dataTable(
                {% set n,cp,cn  = data[r][k] %}
              {% endif %}
           {% endif %}
-           <td style="border-right: 1px solid black">{{n}}</td>
+           <td style="border-right: 1px solid black">{{n-1}}</td>
            <td>{{cp}}</td>
-           <td style="border-right: 1px solid black">{{-n}}</td>
+           <td style="border-right: 1px solid black">{{1-n}}</td>
            <td>{{cn}}</td>
          {% endfor %}
       {%endif%}

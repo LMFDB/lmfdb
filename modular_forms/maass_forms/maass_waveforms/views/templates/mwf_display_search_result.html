@@ -50,8 +50,9 @@ var evTable = $("table#eigenvalues").dataTable(
    "aoColumns":[{"aaSorting":"asc","sWidth": "10%", "bSortable": true, "bSearchable": true ,"sType":"numeric" },
                  {"sWidth": "10%", "bSortable": true,  "bSearchable": true, "sClass": "alignLeft","fnRender":"text-align:left"},
                  {"sWidth": "10%", "bSortable": false, "bSearchable": true, "sClass": "alignLeft","fnRender":"text-align:left"},
-                 {"sWidth": "20%", "bSortable": true,  "bSearchable": true, "sClass": "alignLeft","fnRender":"text-align:left"},
+                 {"sWidth": "20%", "bSortable": true,  "bSearchable": true, "sClass": "alignLeft","fnRender":"text-align:left","sType":"numeric"},
                  {"sWidth": "10%", "bSortable": false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:left"},
+                 {"sWidth": "10%", "bSortable": false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:left","sType":"numeric"},
                  {"sWidth": "10%", "bSortable": false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:left"},
                  {"sWidth": "10%", "bSortable": false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:left"},
                  {"sWidth": "10%", "bSortable": false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:left"},
@@ -109,13 +110,9 @@ $('#weight').change( function() { evTable.fnDraw(); } );
 <div id="searchresults">
 <table class="ntdata pretty" id="eigenvalues">
   <colgroup>
-    <col/> <col/>
-    <col/> 
+    <col/> <col/><col/> 
     <col align="char" char="."/>
-    <col/> <col/>
-    <col/> <col/>
-    <col/> <col/>
-    <col/>
+    <col/> <col/><col/> <col/> <col/> <col/>
   </colgroup>
   <thead>
     <tr>
@@ -132,7 +129,6 @@ $('#weight').change( function() { evTable.fnDraw(); } );
     {% for r in range(0,nnrows) %}
     {% if data[r] is defined %}
     <tr>
-
            <td>            
              {% if data[r].N is defined %} {{ data[r].N}}  {% endif %}
            </td>
