@@ -516,6 +516,19 @@ def parse_power(pair):
     return int(tmp[0])**int(tmp[1])
   except:
     return int(pair)
+
+def signedlog(j):
+  sgn = 1
+  if(j<0):
+    sgn = -1
+    j = -j
+  flog = float(j.log(prec=53))
+  return flog*sgn
+
+# string to sage int, take the signed log, and multiply by the fudge factor
+def Zsignedlog(j):
+  fudge = 1+2.**(-52)
+  return signedlog(ZZ(str(j)))*fudge
   
 @nf_page.route("/<label>")
 def by_label(label):
@@ -527,6 +540,53 @@ def parse_list(L):
       return [int(a) for a in L[1:-1].split(',')]
     return []
     # return eval(str(L)) works but using eval() is insecure
+
+# We need to have a first level parsing of discs to have it
+# as sage ints, and then a second version where we apply signed logs
+# If we have an error, raise a parse error
+def parse_discs(arg):
+  # parsing can be thrown off by spaces
+  if type(arg)==str:
+    arg = arg.replace(' ','')
+  if ',' in arg:
+    return [parse_discs(a)[0] for a in arg.split(',')]
+  elif '-' in arg[1:]:
+    ix = arg.index('-', 1)
+    start, end = arg[:ix], arg[ix+1:]
+    low,high = 'i', 'i'
+    if start:
+      low = ZZ(start)
+    if end:
+      high = ZZ(end)
+    if low=='i': raise Exception('parsing error')
+    if high=='i': raise Exception('parsing error')
+    return [[low, high]]
+  else:
+    return [ZZ(arg)]
+
+# modified to apply signedlog to entries to adjust for discriminant search
+def parse_range3(arg):
+  # parsing can be thrown off by spaces
+  if type(arg)==str:
+    arg = arg.replace(' ','')
+  if type(arg)==int:
+    return ['disc_log', Zsignedlog(arg)]
+  if ',' in arg:
+    tmp = [parse_range3(a) for a in arg.split(',')]
+    tmp = [{a[0]: a[1]} for a in tmp]
+    return ['$or', tmp]
+  elif '-' in arg[1:]:
+    ix = arg.index('-', 1)
+    start, end = arg[:ix], arg[ix+1:]
+    q = {}
+    if start:
+      q['$gte'] = Zsignedlog(start)
+    if end:
+      q['$lte'] = Zsignedlog(end)
+    return ['disc_log', q]
+  else:
+    return ['disc_log', Zsignedlog(arg)]
+
 
 def number_field_search(**args):
     info = to_dict(args)
@@ -545,10 +605,21 @@ def number_field_search(**args):
                 else:
                     ran = info[field]
                     ran = ran.replace('..','-')
-                    tmp = parse_range2(ran, field)
-                # Warning, if more than one field uses $or, we need to
-                # foil them out
-                    query[field] = tmp
+                    if field == 'discriminant':
+                      # Need to take signed log of entries
+                      tmp = parse_range3(ran)
+                    else:
+                      tmp = parse_range2(ran, field)
+                    # work around syntax for $or
+                    # we have to foil out multiple or conditions
+                    if tmp[0]=='$or' and query.has_key('$or'):
+                      newors = []
+                      for y in tmp[1]:
+                        oldors = [dict.copy(x) for x in query['$or']]
+                        for x in oldors: x.update(y)
+                        newors.extend(oldors)
+                      tmp[1] = newors
+                    query[tmp[0]] = tmp[1]
     if info.get('ur_primes'):
         ur_primes = [int(a) for a in str(info['ur_primes']).split(',')]
     else:

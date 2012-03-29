@@ -171,7 +171,14 @@ pari:
 <br>
   [[e, primefactor.residue_class_degree()] for primefactor,e in idealfactors]
   </div>
-
+  <div class='magma nodisplay code'>
+<br>
+  p := 7;   # set a prime
+<br>
+  idealfactors := Factorization(p*Integers(K));  # get the data
+<br>
+  [<Valuation(Norm(primefactor[1]), p), primefactor[2]> : primefactor in idealfactors];
+</div>
 
 	{% if "tim_number_field" in info.keys() %}
 	{% if user_is_authenticated %}
