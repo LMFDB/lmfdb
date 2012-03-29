@@ -27,7 +27,7 @@
 <h2>Hecke eigenvalues
   <button name="Eigenvalues" value="Download" onclick="window.location.href = '{{ the_form[5] }}'">Download</button>
 </h2>
-  <form action="/ModularForm/GSp4/Q" method="get">
+  <form action="/ModularForm/GSp/Q" method="get">
     <input type="hidden" name="group" value="{{ group }}" />
     <input type="hidden" name="page" value="specimen" /> 
     <input type="hidden" name="form" value="{{ form_name }}" /> 
@@ -99,7 +99,7 @@
     f(\tau,z,\tau')=\sum_{T=(n,r,m)}a(T)\;e^{2\pi i(n\tau+rz+m\tau')}.
     \]
 {% endif %}
-  <form action="/ModularForm/GSp4/Q" method="get">
+  <form action="/ModularForm/GSp/Q" method="get">
     <input type="hidden" name="group" value="{{ group }}" />
     <input type="hidden" name="page" value="specimen" /> 
     <input type="hidden" name="form" value="{{ form_name }}" /> 
