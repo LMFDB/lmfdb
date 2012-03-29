@@ -84,7 +84,6 @@ def render_webpage(request,arg1,arg2):
             info['contents'] = ListCharacters.get_character_order(order_start, order_end+1)
             return render_template("dirichlet_characters/OrderList.html", **info)
 
-
         elif arg1 == 'custom':
             return "not yet implemented"
 
@@ -105,6 +104,7 @@ def render_webpage(request,arg1,arg2):
 
         return render_template('dirichlet_characters/DirichletCharacter.html', **info)
     else:
+
         return character_search(**args)
 
 def set_info_for_start_page():
@@ -277,6 +277,7 @@ def dc_calc_gauss(modulus,number):
     except Exception, e:
         return "<span style='color:red;'>ERROR: %s</span>" % e
 
+
 @app.route("/Character/Dirichlet/calc_jacobi/<int:modulus>/<int:number>")
 def dc_calc_jacobi(modulus,number):
     arg = request.args.get("val", [])
@@ -323,7 +324,6 @@ def redirect_character(modulus,number):
     return render_webpage(request,modulus,number)
 
 def character_search(**args):
-    #import base
     info = to_dict(args)
     query = {}
     print args
@@ -379,6 +379,7 @@ def render_character_table(modulus=None,conductor=None,order=None):
     return [row(_) for _ in range(start,end,stepsize)]
 
 
+
 def kronecker_symbol(chi):
     m = chi.conductor()/4
     if chi.conductor()%2 == 1:
@@ -398,4 +399,9 @@ def kronecker_symbol(chi):
             return r"\(\displaystyle\left(\frac{-%s}{\bullet}\right)\)" %(chi.conductor()) 
     else:
         return None
+
+@app.route("/Character/Dirichlet/table")
+def character_table_values(**args):
+    modulus = request.args.get("modulus")
+    return "Hello " + args.get("modulus", "empty")
 

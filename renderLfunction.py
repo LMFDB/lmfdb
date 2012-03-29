@@ -301,7 +301,7 @@ def initLfunction(L,args, request):
 
     elif L.Ltype()  == 'ellipticcurve':
         label = L.label
-        info['friends'] = [('Elliptic Curve', friendlink )]
+        info['friends'] = [('Elliptic curve isogeny class '+label, friendlink )]
         info['bread'] = [('L-function','/L'),('Elliptic Curve',url_for('render_Lfunction', arg1='/L/degree2#EllipticCurve_Q')),
                          (label,url_for('render_Lfunction',arg1='EllipticCurve',arg2='Q',arg3= label))]
 
