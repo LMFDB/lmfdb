@@ -29,6 +29,8 @@ function show_code(system) {
   <div class='pari nodisplay code'>pari: K = bnfinit({{info.rawpoly}})</div>
   <div class='magma nodisplay code'>&gt; K&lt;a&gt; := NumberField(PolynomialRing(Rationals())!{{info.coefficients}});</div>
 </p>
+        {% set KNOWL_ID = "nf.%s"|format(info['label']) %}
+        <h2>{{ KNOWL_INC(KNOWL_ID+'.top', title='') }}</h2>
 
         <p><h2> {{ KNOWL('nf.defining_polynomial', title='Defining polynomial') }}</h2>
         <div class='sage nodisplay code'>sage: K.defining_polynomial()</div>
@@ -199,5 +201,11 @@ pari:
 	{% endif %}
 	{% endif %}
 
+<<<<<<< local
+=======
+
+        {% set KNOWL_ID = "nf.%s"|format(info['label']) %}
+        <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
+>>>>>>> other
 {% endblock %}
 </html>

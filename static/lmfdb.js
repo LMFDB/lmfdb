@@ -106,7 +106,7 @@ function properties_collapser(evt) {
 
 $(function() {
  /* properties box collapsable click handlers */
- $("#properties-header,#properties-collapser").click(function(evt) { properties_collapser(evt); });
+ $(".properties-header,#properties-collapser").click(function(evt) { properties_collapser(evt); });
  /* providing watermark examples in those forms, that have an 'example=...' attribute */
  /* Add extra spaces so that if you type in exactly the example it does not disappear */
  $('input[example]').each(function(a,b) { $(b).watermark($(b).attr('example')+'   '  ) } )
