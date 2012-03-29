@@ -7,6 +7,11 @@
    {{ error | safe }}
 {% else %}
 <h1> {{ name | safe }} </h1>
+
+{% set KNOWL_ID = "mf.%s-%s-%s-%s"|format(level,weight,character,label) %}
+<h2>{{ KNOWL_INC(KNOWL_ID+'.top', title='') }}</h2>
+
+
 <div id="qexp">
 <h2> {{ KNOWL('mf.elliptic.q-expansion',title='q-expansion')}}</h2>
 {{ qexp | safe }}
@@ -47,6 +52,8 @@
 {{ polynomial_st | safe }}
 <br>
 {% if is_rational==0 %}
+
+
 <h3>Embeddings</h3>
 It is possible to embed the Fourier coefficients in the \(q\)-expansion above
 in the field of complex numbers. The values are shown in the table below.
@@ -142,19 +149,19 @@ in the field of complex numbers. The values are shown in the table below.
         {% set vals =CM_values.cm_vals_latex[tau] %}
         <td width="50px">{{ vals[h] }}</td>
         {% endfor %}
-        {% endfor %}            
+        {% endfor %}
       </tr>
     </tbody>
   </table>
 </p>
 {% endif %}
 
-{% if explicit_formulas is defined %}
-<h2> {{KNOWL('mf.elliptic.explicit_formula',title='')}}Explicit Formulas</h2>
-	
-{{ explicit_formulas }}
 
+<h2> {{KNOWL('mf.elliptic.explicit_formula',title='')}}Explicit Formulas</h2>
+{% if explicit_formulas is defined %}
+    {{ explicit_formulas }}
 {% endif %}
+<h2>{{ KNOWL_INC(KNOWL_ID+'.formulas', title='') }}</h2>
 
 {% if  true %}
 
@@ -249,6 +256,10 @@ in the field of complex numbers. The values are shown in the table below.
 </div>
 {% endif %}
 {% endif %}
+<h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
+
 </div>
+
+
 
 {% endblock %}
