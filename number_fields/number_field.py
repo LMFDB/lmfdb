@@ -423,8 +423,8 @@ def render_field_webpage(args):
     rawpoly = coeff_to_poly(data['coefficients'])
     K = NumberField(rawpoly, 'a')
     D = data['discriminant']
-    #if not data.has_key('class_number'):
-      #data['class_number'] = na_text()
+    if not data.has_key('class_number'):
+      data['class_number'] = na_text()
     h = data['class_number']
     t = data['T']
     n = data['degree']
@@ -432,12 +432,12 @@ def render_field_webpage(args):
     data['galois_group'] = group_display_knowl(n,t,C)
     data['cclasses'] = cclasses_display_knowl(n,t,C)
     data['character_table'] = character_table_display_knowl(n,t,C)
-#    if not data.has_key['class_group']:
-#      data['class_group'] = na_text()
-#      data['class_group_invs'] = data['class_group']
-#    else:
-    data['class_group_invs'] = data['class_group']
-    data['class_group'] = str(AbelianGroup(data['class_group']))
+    if not data.has_key('class_group'):
+      data['class_group'] = na_text()
+      data['class_group_invs'] = data['class_group']
+    else:
+      data['class_group_invs'] = data['class_group']
+      data['class_group'] = str(AbelianGroup(data['class_group']))
     if data['class_group_invs']==[]:
         data['class_group_invs']='Trivial'
     sig = data['signature']
@@ -613,7 +613,10 @@ def verify_field(field, narrowconds, zconds):
     if fdisc <= x[1] and fdisc >= x[0]: return True
   zdisc = ZZ(str(field['disc_string']))
   for x in zconds:
-    if zdisc <= x[1] and zdisc >= x[0]: return True
+    if type(x)==list:
+      if zdisc <= x[1] and zdisc >= x[0]: return True
+    else:
+      if zdisc == x: return True
   return False
 
 def verify_all_fields(li, dlist):
