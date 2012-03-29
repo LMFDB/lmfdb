@@ -362,18 +362,19 @@ def specialValueString(L, s, sLatex):
     
     number_of_decimals = 10
     val = L.sageLfunction.value(s)
-    lfuncion_value_tex = L.texname.replace('(s', '(' + sLatex)
+    lfunction_value_tex = L.texname.replace('(s', '(' + sLatex)
     # We must test for NaN first, since it would show as zero otherwise
     # Try "RR(NaN) < float(1e-10)" in sage -- GT
     if val.real().is_NaN():
         logger.debug("Infinity value.")
-        return "\({0}=\infty\)".format(lfuncion_value_tex)
+        return "{0}=\\infty".format(lfunction_value_tex)
     elif val.abs() < 1e-10:
         logger.debug("Zero value.")
-        return "\({0}=0\)".format(lfuncion_value_tex)
+        return "{0}=0".format(lfunction_value_tex)
     else:
-        return "\({0}\\approx {1}\)".format(lfuncion_value_tex,latex(round(val.real(), number_of_decimals)
-                                                                     +round(val.imag(), number_of_decimals)*I))
+        return "{0}\\approx {1}".format(lfunction_value_tex,
+            latex( round(val.real(), number_of_decimals)
+                 + round(val.imag(), number_of_decimals)*I ))
 
 
 ###########################################################################
