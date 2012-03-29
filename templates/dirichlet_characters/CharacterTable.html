@@ -4,13 +4,13 @@
 {% block content %}
 
 <style type="text/css">
-table.ntdata th.left {
-  border-right: 2px solid #9b9;
-  background: #efe;
-  border-bottom: 0;
-  text-align: right;
+table.ntdata th.left { 
+    border-right: 2px solid #9b9; 
+    background: #efe;
+    border-bottom: 0;
+    text-align: right;
 }
-table.ntdata td { text-align: left; }
+
 table.ntdata th.weight {
   text-align: center;
   background: #efe;
@@ -18,6 +18,7 @@ table.ntdata th.weight {
   border-left: 0;
   vertical-align: center;
 }
+
 table.ntdata thead tr.space {
   background: #efe;
   border-bottom: 0;
@@ -45,11 +46,11 @@ table.ntdata thead th.spaceleft {
 #chitable { clear:right; }
 #chitable td div { float: left; padding-left: .5em; padding-right: .5em; }
 #chitable td div>a { text-align: right; }
-#chitable td { vertical-align: middle;  white-space: nowrap; }
+#chitable td { text-align: right; vertical-align: middle;  white-space: nowrap; }
 #chitable td.a { background: #DFD; }
 #chitable td.b { background: none; }
 #chitable th { text-align: right; }
-table.ntdata tr.even, table.ntdata tr:nth-child(even) { background: none; }
+/*table.ntdata tr.even, table.ntdata tr:nth-child(even) { background: none; }*/
 #chitable a.imprimitive:visited { color: blue;}
 #chitable a.primitive:visited { color:green ;}
 #chitable a.imprimitive { display:none; }
@@ -83,29 +84,31 @@ table.ntdata tr.even, table.ntdata tr:nth-child(even) { background: none; }
 
 <div>
 <table class="ntdata" id="chitable">
-    <thead align="center">
+    <thead class="space">
         <tr class="space">
             <th class="spaceleft"> Modulus </th>
             <th class="weight" colspan="{{headers|length}}">
-            <span style="display:block;float:left;margin-right:3px;"> Order </span>
+            <span style="display:block;float:left;margin-right:3px;"> Values </span>
+        </tr>
+        <tr> 
+        <th class="left"> </th>
+        {% for h in headers %}
+        <th class="weight">{{h}} </th> 
+        {% endfor %}
         </tr>
     </thead>
     <tbody>
-        {% set row_class = cycler('odd', 'even') %}
         {% for row in contents %}
-            <tr class="{{ row_class.next() }}">
-                <td align="right">
+        <tr>
+                <th class="left">
                     <a align="center" href="{{modulus}}/{{row[0]}}">
                     \(\chi_{ {{modulus}} } ( {{row[0]}}, n)\)
             </a>
-                </td>
-                <td align="right">
-                    {% for index in row[1] %}
-                    <div>
-                        <th align="center">\({{index}}\)</th> 
-                    </div>
+                </th>
+                    {% for value in row[1] %}
+                    <td> {{value}} </td> 
                     {% endfor %}
-                </td>
+                </tr>
         {% endfor %} 
     </tbody>    
     

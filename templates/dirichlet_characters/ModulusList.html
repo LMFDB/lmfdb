@@ -3,7 +3,31 @@
 
 {% block content %}
 
-<style>
+<style type="text/css">
+table.ntdata th.left { 
+    border-right: 2px solid #9b9; 
+    background: #efe;
+    border-bottom: 0;
+    text-align: center;
+}
+
+table.ntdata th.weight {
+  text-align: center;
+  background: #efe;
+  border-bottom: 2px solid #9b9;
+  border-left: 0;
+  vertical-align: center;
+}
+
+table.ntdata thead tr.space {
+  background: #efe;
+  border-bottom: 0;
+}
+
+table.ntdata thead th.spaceleft {
+  border-right: 2px solid #9b9;
+  vertical-align: top;
+}
 .modulus {
     vertical-align: top;
     padding-top:    .5em;
@@ -32,13 +56,8 @@ table.ntdata tr.odd, table.ntdata tr:nth-child(odd), table.ntdata tr:first-child
 #chitable .imprimitive { display:none; }
 #chitable a { display: inline; }
 #legend {
-  border: 3px solid #006400;
-  position: relative;
-  top:   -7px;
-  right: -7px;
-  float:right;
-  float:clear;
-  margin: 10px;
+  margin: 0 20px 10px 0;
+  border-right: 2px solid #006400;
 }
 #legend td { cursor: pointer; }
 
@@ -89,35 +108,30 @@ $(function() {
             
 </script>
 
+<table id="legend" style="float: left;">    
+  <tr><td class="imprimitive" id="legend-imp"><input type="checkbox" /> Imprimitive</td></tr>
+  <tr><td class="primitive" id="legend-prim"><input type="checkbox" checked /> Primitive</td></tr>
+</table>
 
 <div>
 The table below displays {{ KNOWL('character.dirichlet', title="Dirichlet characters" ) }} of a 
 given {{ KNOWL('character.dirichlet.modulus', title="modulus") }} \(q\) and index \(n\). If \(q\) is the 
 {{ KNOWL('character.dirichlet.modulus', title="modulus") }}, then each integer \(n\) (on the \(q\)-th row)
 represents the {{ KNOWL('character.dirichlet', title="Dirichlet character" ) }} \(\chi_{q}(n,&middot;)\). The 
-characters are grouped with respect to order, \(\text{ord}\), and stacked integers indicate (multiplicative) inverse 
-{{ KNOWL('character.dirichlet', title="Dirichlet characters" ) }}.
+characters are grouped with respect to order and stacked integers indicate (complex) conjugate characters.
 </div>
-
-<table id="legend">    
-  <tr><td class="imprimitive" id="legend-imp"><input type="checkbox" /> Imprimitive</td></tr>
-  <tr><td class="primitive" id="legend-prim"><input type="checkbox" checked /> Primitive</td></tr>
-</table>
 
 <div>
 <table class="ntdata" id="chitable">
-<thead align="center">
-    <tr>
-        {#<td colspan="6" style="text-align: right;"></td>
-     <td><a href="#" id="showlastcols">show more &rarr;</a></td>
-     <td></td>
-    </tr>
-    <tr>
-    #}
-    <!--<th class="modulus">\(q\backslash\text{ord}\)</th>-->
-    <th class="modulus">q\ord</th>
+    <thead class="space">
+        <tr class="space">
+            <th class="spaceleft"> Modulus </th>
+            <th class="weight" colspan="{{headers|length}}">
+            <span style ="display:block;float:left;margin-right:3px;"> Order </span>
+        </tr>
+        <th class="left"></th>
         {% for h in headers %}
-        <th>{{h}}</th>
+        <th class="weight"> {{h}}</th>
         {% endfor %}
     </tr>
 </thead>
@@ -153,7 +167,7 @@ characters are grouped with respect to order, \(\text{ord}\), and stacked intege
 <tbody>
 {% for row in rows %}
   <tr>
-  <td class="modulus"align="center" style="4em"> {{ row }} </td>
+  <th class="left"> {{ row }} </th>
    {% for col in cols %}
    <td class="{{ row_class.next() }}"> 
       {{ show_character(contents[(row, col)], col, row) }} 
