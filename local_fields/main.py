@@ -73,7 +73,6 @@ def local_field_search(**args):
   if 'jump_to' in info:
     return render_field_webpage({'label' : info['jump_to']})
 
-  logger = make_logger("LF")
   for param in ['p', 'n', 'c', 'e']:
     if info.get(param):
       ran = info[param]

@@ -158,6 +158,7 @@
   <h2>Search</h2>
    <ul>
     <li><a href="{{ url_for('LfunctionDB.query', zerolowerbound=1.1, zeroupperbound=2.1) }}">Zeros of L-functions</a></li>
+    <li><a href="{{ url_for('zeta zeros.zetazeros') }}">Browse zeros of $\zeta(s)$</a></li>
    </ul>
   
    {{ entry("Learn more about", learnmore) }}
@@ -211,24 +212,6 @@
     </div>
     {%- endif %}
 
-    {% if (citation or properties) -%}
-    <div id="properties">
-       <h1 id="properties-header">Properties</h1>
-       <div id="properties-collapser">&uarr;</div>
-       <div id="properties-body">
-         <h1 style="background: red">DEPRECATED!</h1>
-         <div style="background:orange;font-size:x-small;">your use of properties is deprecated.<br> please switch to properties2<br> with the correct datastructure:<br>[(.,[…]),…]</div>
-        {% if citation -%}
-         <h1>Citation</h1>
-         {{ citation }}
-        {%- endif %} 
-        {% if properties -%}
-         {% for p in properties -%}{{ p|safe }}{%- endfor %}
-        {%- endif %}
-      </div>
-    </div>
-    {%- endif %}
-    
 <div id="main">
   <!-- <div id="mathjax-info">
     <img src="{{ url_for('static', filename='images/progress-green.gif') }}" />
