@@ -1,0 +1,96 @@
+{% extends "homepage.html" %}
+
+{% block content -%}
+<style type="text/css">
+a.curcat {
+  font-weight: bold;
+  background: #EEF;
+}
+</style>
+<script type="text/javascript">
+$(function() {
+  $("*[kid]").bind('click', function(e) {
+   e.preventDefault();
+   window.location = "{{ url_for('.show', ID='') }}" + $(this).attr('kid');
+  });
+});
+</script>
+
+<table>
+<tr>
+ <td>Search</td>
+ <td> 
+ <form id='knowl-search' action="{{ url_for('.index') }}" method="GET">
+    <input name="search" value="{{ search }}" size="40" placeholder="ID, description, #hashtag, or full text"/>
+    {% if search|length > 0 -%}<a href="{{url_for('.index')}}">clear</a>{%- endif %}
+    <button type="submit">Go</button>
+  </form>
+ </td>
+</tr>
+
+<tr>
+ <td>Filter</td>
+ <td>Category: 
+    {% for cat in categories -%}
+     <a 
+      {% if cur_cat == cat -%}class='curcat'{%- endif %}
+      href="{{ url_for('.index', category = cat) }}">{{cat}}</a>
+       {# {% if not loop.last -%} &middot; {%- endif %} #}
+    {%- endfor %}
+    {% if categorymode -%}
+    </td></tr>
+    <tr><td/><td>
+     <strong><a href="{{ url_for('.index') }}">clear category filter</a></strong>
+    {%- endif %}
+ </td>
+</tr>
+
+{% if not searchmode and not categorymode %}
+<tr>
+ <td></td>
+ <td>
+  <form method="GET" action="{{ url_for('.index') }}">
+    Quality:
+    {% for kq in knowl_qualities -%}
+     <input type="checkbox" id="{{ kq }}" name="{{ kq }}" {% if filters[loop.index0] -%}checked{%- endif %} />
+        <label for="{{ kq }}">{{ kq|capitalize }}</label>
+    {%- endfor %}
+    <button type="submit" name="filter">Filter</button>
+   </form>
+  </td>
+</tr>
+{% endif %}
+
+<tr>
+ <td>More</td>
+ <td> 
+   <a href="{{ url_for('.history') }}">Recently modified Knowls</a></td>
+</tr>
+</table>
+
+<table id="knowl-index" class="ntdata" style="margin-top: 50px;">
+  {% for c, ks in knowls -%}
+   <tr>
+    <td>{{ c }}</td>
+    <td>
+      {% for k in ks %}
+        <div title="{{k.title|striptags}} [{{k._id}}]" kid="{{k._id}}">
+          <span>{{ k._id }}</span>
+          <a href="{{ url_for('.show', ID=k._id) }}" >{{ k.title|safe }}</a>
+        </div>
+      {% endfor %}
+     </td>
+   </tr>
+  {%- endfor %}
+</table>
+
+{% if user_is_authenticated -%}
+  <hr/>
+  <h2>Create Knowl</h2>
+  <form action="{{ url_for('.edit_form') }}" method="POST">
+    Knowl ID: <input id="knowl-edit-id" name="id"></input>
+    <button id="knowl-edit-btn">Create</button>
+  </form>
+{%- endif %}
+
+{%- endblock %}

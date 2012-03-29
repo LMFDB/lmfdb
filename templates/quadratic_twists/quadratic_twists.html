@@ -1,14 +1,19 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<h2> Browse </h2>
-
-
-<p>
-By isogeny : 
-{% for r in info.isogeny_list: %}
-<a href="{{r}}">{{r}}</a>,
-{% endfor %}
-</p>
+<h2> Browse by Isogeny </h2>
+<div>
+ <table>
+  {% for row in info.isogeny_list|batch(7, '') %}
+    <tr>
+     {% for element in row %}
+       <td align="right">
+         {% if element %} <a href="{{element}}">{{element}}</a> {% endif %}
+       </td>
+     {% endfor %}
+    </tr>
+  {% endfor %}
+ </table>
+</div>
      
 {% endblock %}

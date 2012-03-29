@@ -1,0 +1,62 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<h1>Testing KNOWL_INC /w KNOWLs inside</h1>
+
+{{ KNOWL_INC('EC.elliptic_curve.intro') }}
+
+<h1>Title {{ KNOWL("test.1") }}</h1>
+
+<h1>Testing KNOWL inside a table td</h1>
+
+<table>
+<tr><th>table th</th><th>th 2</th></tr>
+<tr><td>table td {{ KNOWL('test.knowlparam', x=1, yy='this is yy') }}</td><td>x</td></tr>
+<tr><td style="border: 1px solid pink;" colspan="2"><div>knowlspot</div></td></tr>
+<tr><td>another row</td><td>y</td></tr>
+</table>
+
+<div>div after the table</div>
+
+<h1>Testing KNOWL_LINK /w Parameters</h1>
+
+<div>Linking to Knowl with parameters x=42 and yy="Number Theory": 
+{{ KNOWL_LINK('test.knowlparam', x=42, yy='Number Theory') }}
+</div>
+
+<h1>Testing Knowl Parameters</h1>
+<div>Expand this "{{ KNOWL('test.knowlparam', x=1, yy='hello parameter!') }}" Knowl
+which gets x=1 and yy="hello parameter!"  as parameters and does something with it.</div>
+
+<h1>Testing Knowl filter "knowl_type"</h1>
+<div>
+<ul>
+  <li>This should be true:
+    {% if k1 is knowl_type %}true{% else %}false{% endif %}
+  </li>
+  <li>This should be false:
+    {% if info is knowl_type %}true{% else %}false{% endif %}
+  </li>
+</ul>
+</div>
+
+<h1>KNOWL_INC</h1>
+
+{{ KNOWL_INC('lfunction.dirichlet_series', htag="h3") }}
+
+<h1>Missing Knowl</h1>
+
+{{ KNOWL_INC('knowl.missing') }}
+
+{{ lipsum(1) }}
+<div>Some other {{ KNOWL("test.text") }} you should read.</div>
+{{ lipsum(1) }}
+
+
+<h1>Title {{ KNOWL("test.2") }}</h1>
+<div>text</div>
+<h2>H2 Title  {{ KNOWL("test.2") }}</h2>
+
+<div>{{ lipsum(2) }}</div>
+{% endblock %}

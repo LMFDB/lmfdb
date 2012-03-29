@@ -7,7 +7,12 @@ from copy import copy
 
 import pymongo
 
-mod = flask.Module(__name__, 'LfunctionDB')
+mod = flask.Blueprint('LfunctionDB', __name__, template_folder="templates")
+title = "L-function search"
+
+@mod.context_processor
+def body_class():
+  return { 'body_class' : 'LfunctionDB' }
 
 @mod.route("/")
 @mod.route("/<zero>")
@@ -18,7 +23,7 @@ def zero_search(**kwargs):
     else:
         zero = float(kwargs['zero'])
         query = C.test.Lfunctions_test2.find({'first_zero' : {'$lt' : zero + .1, '$gt' : zero - .1 } }).sort('first_zero')
-    pagination = LazyMongoDBPagination(query = query, per_page=50, page=request.args.get('page', 1), endpoint="zero_search", endpoint_params=kwargs)
+    pagination = LazyMongoDBPagination(query = query, per_page=50, page=request.args.get('page', 1), endpoint=".zero_search", endpoint_params=kwargs)
         #result_string = ""
         #printed_arrow = False
         #for x in L:
@@ -27,7 +32,7 @@ def zero_search(**kwargs):
         #        printed_arrow = True
         #    result_string = result_string + str(x['zero']) + " " + str(x['modulus']) + " " + str(x['character']) + "<br>\n"
         #return result_string
-    return render_template('LfunctionDB/list.html', pagination=pagination, info = {})
+    return render_template('lf-list.html', pagination=pagination, title=title)
 
 @mod.route("/query")
 def query(**kwargs):
@@ -63,5 +68,5 @@ def query(**kwargs):
         filter['first_zero']['$lte'] = float(first_zero_end)
 
     query = C.test.Lfunctions_test2.find(filter).sort(sort, direction)
-    pagination = LazyMongoDBPagination(query = query, per_page=50, page=request.args.get('page', 1), endpoint="query", endpoint_params=dict(request.args))
-    return render_template('LfunctionDB/list.html', pagination=pagination, info = {'blah' : 'blah'})
+    pagination = LazyMongoDBPagination(query = query, per_page=50, page=request.args.get('page', 1), endpoint=".query", endpoint_params=dict(request.args))
+    return render_template('lf-list.html', pagination=pagination, title=title)

@@ -1,45 +1,56 @@
 {% extends "base.html" %}
 
-{% macro index() -%}
-<ul>
-<li><a href="{{ url_for('.EC_toplevel')  }}  ">Elliptic Curves over Q</a>
-<li><a href="{{ url_for('.render_maass_form')  }}  ">Maass cusp forms</a></li>
-<li><a href="{{ url_for('.render_Lfunction') }}">L-functions</a> </li>
-<li><a href="{{ url_for('.ModularForm_GSp4_Q_top_level')  }}  ">Siegel modular forms</a> </li>
-<li><a href="{{ url_for('.cmf.render_classical_modular_forms')  }}  ">Classical modular forms</a></li>
-<li><a href="{{ url_for('.number_field_render_webpage')  }}  ">Number Fields</a></li>
-<li><a href="{{ url_for('.hilbert_modular_form_render_webpage')  }}">Hilbert Modular Forms</a></li>
-<li><a href="{{ url_for('.LfunctionDB.query', zerolowerbound=1.1, zeroupperbound=2.1) }} ">First zero search example</a></li>
-<li><a href="{{ url_for('.quadratic_twists') }} ">Quadratic Twists</a></li>
-</ul>
-{%- endmacro %}
-
-{% block body %}
-
+{% block body -%}
 <div id="header">
-    <div class="logo"><a href="/"><img src="{{ url_for('.static', filename='images/lmdb-logo.png') }}" /></a></div>
+    <div id="logo"><a href="/"><img src="{{ url_for('static', filename='images/lmfdb-logo.png') }}" /></a></div>
     <div class="right">
       <div class="bread">
-        <a href="/">Top</a>
         {% if bread %}
-          {% for b in bread %}
-            &rarr; <a href="{{ b[1] }}">{{ b[0] }}</a>
-          {% endfor %}
-        {% else %}
-          &rarr; Bread &rarr; Crumb &rarr; Hierarchy
-        {% endif %}
+          <a href="/">Top</a>
+          {% for b in bread -%}
+            &rarr; <a href="{{ b[1] }}">{{ b[0]|striptags }}</a>
+          {%- endfor %}
+         {% endif %}
       </div>
-      <div class="title"> 
-        {% if title %}{{ title }}
-        {% else %}TITLE OF PAGE MISSING \( \chi^2 \) even more text and tex \( \frac{1}{1+x+x^2} \) and even more ...
-        {% endif %}
+      <div class="topright">
+          <a href="{{ feedbackpage }}" target="_blank">
+             Feedback</a>
+            &middot;
+          {% if user_is_admin -%}
+            <a href="{{ url_for('users.register') }}">Registertokens</a>
+            &middot;
+          {% endif %}
+          {% if user_is_authenticated -%}
+            <a href="{{ url_for('users.info') }}">{{ username }}</a> 
+            &middot;
+            <a href="{{ url_for('users.logout') }}">Logout</a>
+          {%- else -%}
+            {# <a href="{{ url_for('users.register_new') }}">Register</a>
+            &middot; #}
+            <a href="{{ url_for('users.info') }}">Login</a>
+          {%- endif %}
+          <br/>
+          <span id="communication-wrapper">
+            <img id="communication-img" src="{{ url_for('static', filename='images/progress-green.gif') }}" />
+            <span id="communication"></span>
+          </span>
       </div>
+      {% if navi is defined -%}
+        <div id="navi">
+         {% for txt, u in navi -%}
+          <a href="{{ u }}">{{ txt|safe }}</a>
+          {% if not loop.last -%}&middot;{%- endif %}
+         {%- endfor %}
+        </div>
+      {%- elif navi_raw is defined -%}
+        <div id="navi">{{ navi_raw|safe }}</div>
+      {%- endif %} 
+      {# this span inside a div thing is necessary to align it at the bottom, see css #}
+      <div id="title"><span id="title-content">{{ title|safe }}</span></div>
     </div>
 </div>
 
-{% block sidebar %} 
-<div id="sidebar">
-
+{% block sidebar -%} 
  {% macro entry(title, entries) -%}
    {% if entries %}
     <h2>{{ title }}</h2>
@@ -51,71 +62,211 @@
    {% endif %}
  {%- endmacro %}
 
- <h2 id="top">Navigation</h2>
- {{ index() }}
 
- {{ entry("Downloads", info.downloads) }}
- {{ entry("Learn more about", info.learnmore) }}
- {{ entry("Friends", info.friends) }}
+<div id="sidebar">
+  <h2 class="link">
+   <a href="{{ url_for('introduction') }}">Introduction</a>
+  </h2>
+  <ul>
+    <li class="intro"><a href="{{url_for('introduction_features')}}">Features</a></li>
+    <li class="intro"><a href="{{url_for('introduction_tutorial')}}">Tutorial</a></li>
+  </ul>
+  
+  <h2 class="link">
+   <a href="{{ url_for('bigpicture') }}">Big Picture</a>
+  </h2>
 
- {% if sidebar %}
-  {% for topic, content in sidebar %}
+  <h2 class="link">
+   <a href="{{ url_for('render_Lfunction') }}">L-functions</a>
+  </h2>
+  <ul class="list">
+   <li>
+    Degree:
+    {% if user_is_authenticated and (username == 'MichaelRubinstein' or username == 'Jonathan Bober' or username == 'Ralph Furmaniak' or username == 'Harald Schilly') %}
+      <span id="span1" style="position:relative;display:none">
+      <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree1')}}"><img src="/static/images/1dot.svg"/></a>
+      <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree2')}}"><img src="/static/images/2dot.svg"/></a>
+      <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree3')}}"><img src="/static/images/3dot.svg"/></a>
+      <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree4')}}"><img src="/static/images/4dot.svg"/></a>
+      </span>
+      <script>
+        if(Math.random()<0.02) {
+        $().ready(function() {
+	  $('#span2').hide();
+	  $('#span1').show();
+	  setTimeout(function() {
+	    $('#span1').hide();
+	    $('#span2').show();
+	  }, 1000);
+	});
+	}
+      </script>
+    {% endif %}
+    <span id="span2">
+    <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree1')}}">1</a>
+    <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree2')}}">2</a>
+    <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree3')}}">3</a>
+    <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree4')}}">4</a>
+    </span>
+   </li>
+  </ul>
+
+  <h2>Elliptic Curves</h2>
+  <ul>
+   <li><a href="{{ url_for('EC_toplevel') }}  ">Elliptic Curves/\(\mathbb Q\)</a>
+  </ul>
+
+  <h2> Fields</h2>
+    <ul>
+      <li><a class = "number_fields" href="{{ url_for('number_fields.number_field_render_webpage') }}">Global Number Fields</a></li>
+      <li><a href="{{ url_for('local_fields.index') }}">Local Number Fields</a></li>
+      <li><a href="{{ url_for('galois_groups.index') }}">Galois Groups</a></li>
+      {% if user_is_authenticated %}
+          <li><a class = "number_field_galois_groups" href="{{ url_for('number_field_galois_groups.index') }}">Galois Groups (only logged in)</a></li>
+      {% endif %}
+    </ul>
+
+  <h2>Characters</h2>
+  <ul>
+   <li><a href="{{ url_for('render_Character') }} ">Dirichlet Characters</a></li>
+  </ul>
+
+  <h2 class="link">
+       <a class="mf"    href="{{ url_for('mf.modular_form_main_page') }}">Holomorphic Modular Forms</a></h2>
+  <ul>
+   <li><a class="emf"  href="{{ url_for('emf.render_elliptic_modular_forms') }}">Classical, $\mathrm{GL}(2)$</a></li>
+   <li><a              href="{{ url_for('ModularForm_GSp4_Q_top_level') }}">Siegel</a> </li>
+   <li><a              href="{{ url_for('hilbert_modular_form_render_webpage') }}">Hilbert</a></li>
+  </ul>
+   {# <li><a href="{{ url_for('quadratic_twists') }}">Quadratic Twists</a></li> #}
+
+  <h2 class="link">
+       <a class="mf"    href="{{ url_for('mf.modular_form_main_page') }}">Maass Forms</a></h2>
+  <ul>
+   <li><a class="mwf"  href="{{ url_for('mwf.render_maass_waveforms') }}">Classical, $\mathrm{GL}(2)$</a></li>
+   <li><a class="mwfp" href="{{ url_for('mwfp.render_picard_maass_forms') }}">for \(\mathrm{PSL}(2,\mathbb{Z}[i])\)</a></li>
+  </ul>
+  <h2 class="link">
+       <a class="artin_representations" href="{{ url_for('artin_representations.index') }}">Artin Representations</a></h2>
+  
+
+
+  <h2 class="link knowl">
+     <a class="knowl" href="{{ url_for("knowledge.index") }}">Knowledge</a>
+  </h2>
+
+  <h2>Search</h2>
+   <ul>
+    <li><a href="{{ url_for('LfunctionDB.query', zerolowerbound=1.1, zeroupperbound=2.1) }}">Zeros of L-functions</a></li>
+   </ul>
+  
+   {{ entry("Learn more about", learnmore) }}
+   {{ entry("Downloads", downloads) }}
+   {{ entry("Data", getUploadedFor(request.path) ) }}
+
+ {% if sidebar -%}
+  {% for topic, content in sidebar -%}
     {{ entry(topic, content) }}
-  {% endfor %}
- {% endif %}
+  {%- endfor %}
+ {%- endif %}
 
 </div>
-{% endblock sidebar %}
+{%- endblock sidebar %}
 
-
-<div id="main">
-  <div id="Content">
-    {% if properties2 %}
-    <table>
-     {% for p in properties2 %}
-       <tr>
-        <td>{{p[0]}}</td>
-        <td>
-        {% if string(p[1]) %}
-            {{ p[1] }}
-        {% else %}
-            e|join('<br/>')
-        {% endif %}
-        </td>
-       </tr>
-     {% endfor %} 
-    {% endif %}
-
-    {% if (citation or properties) %}
+    {% if (properties2 or friends) %}
       <div id="properties">
-        {% if citation %}
-         <h1>Citation</h1>
-         {{ citation }}
-        {% endif %} 
-        {% if properties %}
-         <h1>Properties</h1>
-         {% for p in properties %}{{ p|safe }}{% endfor %}
-        {% endif %}
+       <div id="properties-collapser">&uarr;</div>
+    {% if properties2 %}
+       <h1 class="properties-header">Properties</h1>
+       <div class="properties-body">
+       <table>
+       {% for label, content in properties2 -%}
+         {% if label %}
+           <tr><td class="label">{{label|safe}}</td><td>
+         {% else %}
+           <tr><td colspan="2">
+         {% endif %}
+         {% if content is string  -%}
+             {{ content|safe }}</td></tr>
+         {%- else -%}
+           {% for c in content -%}
+            {% if not loop.first -%}<tr><td></td>{%- endif %}
+              {{c|safe}}</td></tr>
+           {%- endfor %}
+         {%- endif %}
+       {%- endfor %} 
+      </table>
       </div>
     {% endif %}
+    {% if friends -%}
+      <h1 class="properties-header">Related objects</h1>
+      <div class="properties-body">
+        <ul>
+          {% for text,url in friends %}
+          <li><a href="{{ url }}">{{ text }}</a></li>
+          {% endfor %}
+        </ul>
+      </div>
+    {%- endif %}
+    </div>
+    {%- endif %}
 
-    {% block content %}
+    {% if (citation or properties) -%}
+    <div id="properties">
+       <h1 id="properties-header">Properties</h1>
+       <div id="properties-collapser">&uarr;</div>
+       <div id="properties-body">
+         <h1 style="background: red">DEPRECATED!</h1>
+         <div style="background:orange;font-size:x-small;">your use of properties is deprecated.<br> please switch to properties2<br> with the correct datastructure:<br>[(.,[…]),…]</div>
+        {% if citation -%}
+         <h1>Citation</h1>
+         {{ citation }}
+        {%- endif %} 
+        {% if properties -%}
+         {% for p in properties -%}{{ p|safe }}{%- endfor %}
+        {%- endif %}
+      </div>
+    </div>
+    {%- endif %}
+    
+<div id="main">
+  <!-- <div id="mathjax-info">
+    <img src="{{ url_for('static', filename='images/progress-green.gif') }}" />
+    <br/>
+    Loading website and processing LaTeX ...
+    <br>
+    <span id="mathjax-log"></span>
+  </div> --!>
+  <div id="content">
+    {% with msgs = get_flashed_messages(with_categories=true) -%}
+      <div id="flashes">
+        {% for cat, msg in msgs -%}
+          <p class="{{ cat }}">{{ msg }}</p>
+        {%- endfor %}
+      </div>
+    {%- endwith %}
+    
+    {% block content -%}
     There is nothing here. This is just a template.
-    {% endblock content %}
+    {%- endblock content %}
   </div>
 </div>
 
 <div id="footer">
-    {% if credit %}
+    {% if credit -%}
       &copy; Data computed by {{ credit|safe }}.<br />
-    {% endif %}
+    {%- endif %}
     
-    {% if support %}
+    {% if support -%}
       {{ support|safe }}<br/>
-    {% else %}
-       The creation of this website was supported by the NSF, AIM ...<br />
-    {% endif %}
-    Number Theory, the Queen of Mathematics!
+    {%- else -%}
+        <h4>{{shortthanks|safe}}</h4>
+<br />
+    {%- endif %}
+    <div>
+      <a href="{{ url_for('acknowledgment') }}">Acknowledgments</a>
+      {# <a href="{{ 'about' }}">About</a> #}
+    </div>
 </div>
 
-{% endblock body %}
+{%- endblock body %}

@@ -1,0 +1,17 @@
+{% extends 'homepage.html' %}
+{% block content %}  
+
+<table>
+  {% for user_row in users|batch(5,'') %}
+  <tr>
+    {% for user in user_row %}
+    <td>
+      {% if user %}
+        <a href="{{ url_for('.profile', userid=user[0]) }}">{{ user[1] }}</a>
+      {% endif %}
+    </td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

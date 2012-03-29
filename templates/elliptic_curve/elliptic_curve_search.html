@@ -4,43 +4,75 @@
 
 <!--{{ info.query }}-->
 
+
 <h2> Further refine search </h2>
 
-
-<table border=0  >
-
-<tr>
 <form>
-<td align=center> Conductor <input type='text' name='conductor' size=10 value={{info.conductor}}></td>
-<td align=center>Rank <input type='text' name='rank'size=1 value={{info.rank}}></td>
-<td align=center>Torsion Order <input type='text' name='torsion' size=1 value={{info.torsion}}> 
-Optimal <input type='checkbox'  name='optimal' {% if info.optimal %} checked {%endif %}></td>
-</tr>
-
+<input type="hidden" name="start" value="{{info.start}}"/>
+<table border="0">
 
 <tr>
-<td>
-<input type='submit' value='refine'></td>
+<td align=left> {{ KNOWL_LINK('ec.q.conductor', title='conductor') }} <input type='text' name='conductor' size=10 value={{info.conductor}}></td>
+<td align=left>{{ KNOWL_LINK('ec.q.rank', title='rank') }}<input type='text' name='rank'size=1 value={{info.rank}}></td>
+<td align=left>{{ KNOWL_LINK('ec.q.torsion_order', title='torsion order') }} <input type='text' name='torsion' size=1 value={{info.torsion}}> </td>
+<td align=left>{{ KNOWL_LINK('ec.q.torsion_subgroup', title='torsion structure') }} <input type='text' name='torsion_structure' size=1 value={{info.torsion_structure}}> </td>
+<td align=left>{{ KNOWL_LINK('ec.q.analytic_sha_order', title='analytic order of &#1064;\(_{an} \)') }} <input type='text' name='sha_an' size=1 value={{info.sha_an}}> </td>
+<td align=left>
+<td align=left>{{ KNOWL_LINK('ec.q.optimal', title='Optimal') }}
+<select name='optimal'>
+  <option value="">No</option>
+  <option value="on">Yes</option>
+</select>
+</td>
 </tr>
+<tr>
+<td align=left colspan=4>Maximum number of curves to display <input type='text' name='count' value={{info.count}} size=10>
+</td>
+</tr>
+
+<tr> <td>
+<button type='submit' value='refine'>Search again</button>
+</td> </tr>
+</table>
 </form>
+
+<style type="text/css">
+table td.center {
+  text-align: center;
+}
+table td.params {
+  text-align: left;
+  font-family: monospace;
+}
+
+</style>
+
+<h2> Results ({{info.report}})</h2>
+<table>
 <tr>
-<td><h2>Results</h2></td>
-<tr>
-<td align=center>Isogeny class</td>
-<td align=center>Cremona label</td>
-<td align=left>[\(a_1\),\(a_2\),\(a_3\),\(a_4\),\(a_6\)]</td>
-<td align=center>rank</td>
-<td align=center>torsion order</td>
+  <th class="center">{{ KNOWL_LINK('ec.isogeny_class', title='isogeny class') }}</th>
+  <th class="center">{{ KNOWL_LINK('ec.q.cremona_label', title='Cremona label') }}</th>
+  <th align="left">[a<sub>1</sub>,  a<sub>2</sub>, a<sub>3</sub>, a<sub>4</sub>, a<sub>6</sub>]</th>
+  <th class="center">{{ KNOWL_LINK('ec.q.rank', title='rank') }}</th>
+  <th class="center">{{ KNOWL_LINK('ec.field.torsion_order', title='torsion order') }}</th>
 </tr>
 {% for curve in info.curves: %}
 <tr>
-<td align=center><a href="/EllipticCurve/Q/{{curve.iso}}">{{curve.iso}}</a></td>
-<td align=center><a href="/EllipticCurve/Q/{{curve.label}}">{{curve.label}}</a></td>
-<td align=left>{{info.format_ainvs(curve.ainvs)}}</td>
-<td align=center><a href="/EllipticCurve/Q?conductor={{info.conductor}}&rank={{curve.rank}}&torsion={{info.torsion}}">{{curve.rank}}</a></td>
-<td align=center><a href="/EllipticCurve/Q?conductor={{info.conductor}}&rank={{info.rank}}&torsion={{curve.torsion}}">{{curve.torsion}}</a></td>
+<td class="center"><a href="/EllipticCurve/Q/{{curve.iso}}">{{curve.iso}}</a></td>
+<td class="center"><a href="/EllipticCurve/Q/{{curve.label}}">{{curve.label}}</a></td>
+<td class="params">{{info.format_ainvs(curve.ainvs)}}</td>
+<td class="center"><a href="/EllipticCurve/Q?conductor={{info.conductor}}&rank={{curve.rank}}&torsion={{info.torsion}}">{{curve.rank}}</a></td>
+<td class="center"><a href="/EllipticCurve/Q?conductor={{info.conductor}}&rank={{info.rank}}&torsion={{curve.torsion}}">{{curve.torsion}}</a></td>
 </tr>
 {% endfor %}
 </table>
+
+<hr>
+<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form();return false">Previous</A>
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form();return false">Next</A></td>
+
+{% if 0 %}
+Query was: {{info.query}}
+{% endif %}
 
 {% endblock %}

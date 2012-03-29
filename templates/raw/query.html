@@ -1,14 +1,8 @@
 {% extends 'homepage.html' %}
 
-{% block title %}Elliptic curves over the rationals{% endblock %}
-
 {% block content %}
 
-<div id = "header">
-<H1>{{db}}.{{coll}}</H1>
-</div>
-
-<div id = "Content">
+{# <H1>{{db}}.{{coll}}</H1> #}
 
 <pre>
 {{info.metadata}}
@@ -51,7 +45,5 @@ Download as:
 </table>
 
 {% endif %}
-
-</div>
 
 {% endblock %}

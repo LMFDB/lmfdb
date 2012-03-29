@@ -1,0 +1,149 @@
+{% extends 'homepage.html' %}
+
+
+{% block content %}
+
+<style>
+.modulus {
+    vertical-align: top;
+    padding-top:    .5em;
+    padding-bottom: .5em;
+    border-right: 2px solid #8a8;
+}
+.chi {
+    padding: 5px 5px;
+    width: 3em;
+    float: left;
+    display: inline;
+    white-space:nowrap;
+}
+.chi a { display: inline; text-align: center; font-family: serif;}
+#chitable td div { float: left; padding-left: .5em; padding-right: .5em; }
+#chitable td div>a { text-align: right; }
+#chitable td { vertical-align: middle;  white-space: nowrap; }
+#chitable td.a { background: #DFD; }
+#chitable td.b { background: none; }
+#chitable th { text-align: center; }
+table.ntdata tr.even, table.ntdata tr:nth-child(even) { background: none; }
+
+#legend {
+  border: 3px solid #ccc;
+  position: relative;
+  top:   -7px;
+  right: -7px;
+  float:right;
+  clear:right;
+  margin: 10px;
+}
+#legend td { cursor: pointer; }
+
+.primitive {
+  color:green;
+}
+.imprimitive {
+  color:blue;
+}
+</style>
+
+{#<script type="text/javascript">
+$(function() {
+  var lastcols = $("#chitable tr th:last-child, #chitable tr td:last-child");
+  lastcols.hide();
+  $("#showlastcols").click(function () {
+    lastcols.show("slow");
+    $(this).hide();
+  });
+});
+</script>
+#}
+
+<script type="text/javascript">
+$(function() {
+  $("#legend-imp").hover(
+     function() { $(".imprimitive").css("background", "#DDF"); },
+     function() { $(".imprimitive").css("background", "inherit"); }
+   );
+  $("#legend-prim").hover(
+     function() { $(".primitive").css("background", "#DFD"); },
+     function() { $(".primitive").css("background", "inherit"); }
+   );
+ }
+);
+            
+</script>
+
+<table id="legend">    
+  <tr><td class="imprimitive" id="legend-imp"> Imprimitive</font>.</td></tr>
+  <tr><td class="primitive" id="legend-prim"> Primitive</font>.</td></tr>
+</table>
+
+<div>
+The table below displays {{ KNOWL('character.dirichlet', title="Dirichlet characters" ) }} of a 
+given {{ KNOWL('character.dirichlet.modulus', title="modulus") }} and index. If \(q\) is the 
+{{ KNOWL('character.dirichlet.modulus', title="modulus") }}, then each integer \(n\) (on the \(q\)-th row)
+represents the {{ KNOWL('character.dirichlet', title="Dirichlet character" ) }} \(\chi_{q}(n,&middot;)\). The 
+characters are grouped with respect to order and stacked integers indicate (multiplicative) inverse 
+{{ KNOWL('character.dirichlet', title="Dirichlet characters" ) }}.
+</div>
+
+<div>
+<table class="ntdata" id="chitable">
+<thead align="center">
+    {#<tr>
+        <td colspan="6" style="text-align: right;"></td>
+     <td><a href="#" id="showlastcols">show more &rarr;</a></td>
+     <td></td>
+    </tr>
+    <tr>
+    #}
+        <th class="modulus">M\O</th>
+        {% for h in headers %}
+        <th>{{h}}</th>
+        {% endfor %}
+    </tr>
+</thead>
+
+{% macro show_character(entry, col, row) -%}
+{% if not entry is none %}
+  {% if col == "more"  %}
+    {% for e in entry %}
+    <div>
+      {% for chi in e %}
+        <a href="{{url_for('render_Character', arg1=row, arg2=chi[0])}}" 
+            class="{% if chi[1] -%}primitive{%- else -%}imprimitive{%- endif %}">{{ chi[0] }}</a>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  {% else %}
+    {% for e in entry %}
+    <div>
+      {% for chi in e %}
+        <a href="{{url_for('render_Character', arg1=row, arg2=chi[0])}}"
+            class="{% if chi[1] -%}primitive{%- else -%}imprimitive{%- endif %}">{{ chi[0] }}</a>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  {% endif %}
+{% endif %}
+{%- endmacro %}
+
+{% set row_class = cycler('a', 'b') %}
+<tbody>
+{% for row in rows %}
+
+	<tr>
+	<td class="modulus"align="center" style="4em"> {{ row }} </td>
+
+	{% for col in cols %}
+	<td class="{{ row_class.next() }}"> {{ show_character(contents[(row, col)], col, row) }} </td>
+	{% endfor %}
+
+	</tr>
+{% endfor %}
+<tbody>
+</table>
+</div>
+
+{% endblock %}
+
+

@@ -1,0 +1,60 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<p>
+
+      <h2>Browse {{KNOWL('gg.galois_group', title="Galois groups")}}</h2>
+<p>
+
+Browse by degree $n$:
+{% for n in info.degree_list: %}
+<a href="?n={{n}}">{{n}}</a>
+{% endfor %}
+
+<p>
+
+    <h2>Find a specific Galois group</h2>
+
+
+    <form name="search" method = "get" action="{{search}}">
+        <table class="">
+	  <tr>
+	    <td>
+	      Search by {{KNOWL('gg.label',title="label")}}
+	      <input type="text" name="jump_to" value="" placeholder="8T14"> 
+	      <input type="submit" value="Find">
+	    </td>
+	    <td>
+	      <span class="formexample">a Galois group label, e.g. 6T3</span>
+	    </td>
+	  </tr>
+	</table>
+        </form>
+
+        <h2>Search</h2>
+      <form name="search" method = "get" action="{{search}}">
+        <table class="">
+          <tr>
+            <td>
+          {{KNOWL('gg.degree',title='Degree')}}:
+            </td><td><input type="text" name="n" value="" placeholder="6"></td>
+	    <td>
+	      <span class="formexample">e.g. 6 or 4,6 or 2..5 or 4,6..8</span>
+	    </td>
+          </tr>
+          <tr>
+            <td>
+              {{KNOWL('gg.tnumber',title='$t$')}}:
+            </td><td><input type="text" name="t" value="" placeholder="3"></td>
+	    <td>
+	      <span class="formexample">e.g. 6 or 4,6 or 2..5 or 4,6..8</span>
+	    </td>
+          </tr>
+	</table>
+        <input type="submit" name="Submit" value="Search">
+      </form>
+
+
+
+{% endblock %}

@@ -1,6 +1,10 @@
 syntax:glob
+password.py
 
 *.pyc
+*.so
+*.o
+*.c
 *.swp
 *~
 

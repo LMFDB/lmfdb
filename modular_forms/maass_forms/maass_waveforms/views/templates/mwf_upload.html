@@ -1,0 +1,181 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<script>
+$(document).ready(function() {
+$("#format_flds").data("len",8);
+print_select();
+});
+
+function print_select() {
+var id="#format_flds";
+var n =  $(id).data("len");
+for (var i = 0; i < n; i++) {
+     add_one_select() 
+}
+
+/* We need only set default selected for the first few fields*/		    
+for (var i = 0; i < n; i++) {
+    var selid="field"+i;
+    var mySelect = document.getElementById(selid);
+    var $options = mySelect.options;
+    var nn=$options.length; 
+
+    if( i < 7 && i < nn) {
+        $options[i].selected="true";
+    } else {
+        $options[nn-1].selected="true";		
+    }	     
+}
+}
+
+function add_one_select() {
+var id="#format_flds_body";
+var $kids = $(id).children();
+var m = $(id).children().length;
+s = one_select_row(m) 
+$(id).append(s);
+var n = $(id).data("len");
+if (m+1>n) {
+    $(id).data("len",m+1);
+}
+var $options = document.getElementById("field"+m).options;
+var nn = $options.length;
+$options[nn-1].selected="true";
+}
+
+
+
+function one_select_row(i) {
+		selid="field"+i;
+
+		s="<tr>";
+                    s+="<td>"+i+"</td>\n";
+                    s+="<td><select id='"+selid+"' name='"+selid+"'>\n";
+	{% for item in info.allowed_entries.ordered_keys %}
+	s+="<option value='{{item}}'>{{info.allowed_entries[item].name }}</option>"
+	{% endfor %}
+/*		    s+="<option value='N'>Level</option>\n";
+		    s+="<option value='k'>Weight</option>\n";
+		    s+="<option value='char'>Character</option>\n";
+		    s+="<option value='R'>Eigenvalue</option>\n";
+		    s+="<option value='sym'>Reflectional symmetry</option>\n";
+		    s+="<option value='fricke'>Fricke involution</option>\n";
+		    s+="<option value='err'>Error estimate</option>\n";
+		    s+="<option value='grp'>Group</option>\n";
+		    s+="<option value='misc'>Misc</option>\n";
+*/
+		    s+="<option value='ignore'>Ignore</option>\n";
+		    s+="</select>\n";
+		    s+="</td></tr>\n";
+	return s;
+}
+
+</script>
+{% if info.error is defined %}
+
+<h1>There was an error in meeting your previous request. Please change parameters.</h1>
+
+<div> 
+<h2> Error message: </h2>% extends "homepage.html" %}
+
+{{ info.error | safe }}
+</div>
+{% endif %}
+<h1>Insert Maass waveforms into database</h1>
+<table>
+  <tr>
+    <td>
+      <form name="upload" method = "post" enctype="multipart/form-data" action="{{url_for('render_maass_waveforms')}}upload">
+	<h2>Insert Eigenvalues into database</h2>
+	<div id="#disp"></div>
+	<table width="100%">
+	  <tr>
+	    <td>
+	      <h3>Filename / url</h3>
+	      file:<input type=file name="file">
+	      url:<input type="text" name="url" wdth="50" value=""/>
+
+	    </td>
+	    </tr>
+	  <tr>
+	    <td>
+	      <h3>Format of the file:</h3>
+	      <br>
+	      Separator:<input type="text" name="separator" value=" "> 
+	      <table id="format_flds" data-len="">
+		<thead>
+		  <tr>
+		    <td>Field no.</td>
+		    <td>Format</td>
+		  </tr>
+		  <tbody id="format_flds_body" name="list of formats">
+		  </tbody>
+	      </table>
+	      <a href="javascript:add_one_select()">Add field</a>
+	    </td>
+	  </tr>
+	</table>
+	<input type="submit" value="Upload">
+	</form>
+	</td>
+    <tr>
+      <td>
+	<h3>Explanation of the assumed format of the fields:</h3>
+	<table>
+	  <thead>
+	    <tr>
+	      <td>Name</td>
+	      <td>Format</td>
+	      <td>Description</td>
+	    </tr>
+	  </thead>
+	  <tbody>
+	    <tr>
+	      <td style=""> Eigenvalue </td>
+	      <td> 
+		Real number
+	      </td>
+	      <td>
+		\(R=\sqrt{\lambda-\frac{1}{4}}\) 
+	      </td>
+	    <tr>
+	      <td>Level</td>
+	      <td>Integer</td>
+	      <td>The level of a group of the form \(Gamma_{0}(N)\)</td>
+	    </tr>
+	    <tr>
+	      <td>Group</td>
+	      <td>String</td>
+	      <td>An identifier of the group. Should only be used if the group is not a congruence group of the form above.</td>
+	    </tr>
+	    <tr>
+	      <td>Weight</td>
+	      <td>Real number</td>
+	      <td>The weight of the form.</td>
+	    </tr>
+	    <tr>
+	      <td>Character</td>
+	      <td>Integer</td>
+	      <td>Number of the character in the Dirichlet group modulo N. As given by SAGE. Zero mean trivial character.
+	      </td>
+	    </tr>
+	    <tr>
+	      <td>Reflectional Symmetry</td>
+	      <td>Integer</td>
+	      <td>\(0/1\) if the form is even/odd with respect to the reflection 
+		\(J:z\mapsto -\bar{z} \)
+	      </td>
+	    </tr>
+	    <tr>
+	      <td>Fricke involution</td>
+	      <td>Complex number</td>
+	      <td>Eigenvalue of the Fricke involution: \(z\mapsto -1/Nz\)</td>
+	    </tr>
+	  </tbody>
+	</table>
+      </td>
+    </tr>
+</table>
+{% endblock content %}

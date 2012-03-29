@@ -1,6 +1,8 @@
 import re
+import base
+from pymongo import ASCENDING
 
-cremona_label_regex = re.compile(r'(\d+)([a-z])+(\d*)')
+from elliptic_curve import cremona_label_regex
 
 def characterlist(N,type):
      from sage.modular.dirichlet import DirichletGroup
@@ -23,23 +25,25 @@ def characterlist(N,type):
 
 def charactertable(Nmin,Nmax,type):
          ans=[]
-         print 'min max', Nmin,Nmax
+         logging.info('min %s, max %s' % (Nmin,Nmax))
          for i in range(Nmin,Nmax+1):
                  ans.append([i,characterlist(i,type)])
          return(ans)
 
 def isogenyclasstable(Nmin,Nmax):
-    iso_dict = {}
-    from sage.schemes.elliptic_curves.ell_rational_field import cremona_curves 
-    from sage.misc.misc import srange
-    for E in cremona_curves(srange(Nmin,Nmax)):        
-        cond = int(cremona_label_regex.match(E.label()).groups()[0])
-        iso_dict[cond] = []
-    for E in cremona_curves(srange(Nmin,Nmax)):
-        cond = int(cremona_label_regex.match(E.label()).groups()[0])
-        id = cremona_label_regex.match(E.label()).groups()[1]
-        iso_dict[cond].append(str(cond)+id)
-    for cond in iso_dict:
-        iso_dict[cond] = set(iso_dict[cond])
-    return iso_dict
+    iso_list = []
+
+    query = {'number': 1, 'conductor': {'$lte': Nmax, '$gte': Nmin}}
+
+    # Get all the curves and sort them according to conductor
+    cursor = base.getDBConnection().ellcurves.curves.find(query)
+    res = cursor.sort([('conductor', ASCENDING), ('iso', ASCENDING), ('number', ASCENDING)])
+
+    oldE = {'iso': 'q', 'conductor': 'foo'}
+    for E in res:
+       if not (E['iso'] == oldE['iso'] and E['conductor'] == oldE['conductor']):
+            iso_list.append( str(E['conductor'])+E['iso'])
+       oldE = E
+
+    return iso_list
     

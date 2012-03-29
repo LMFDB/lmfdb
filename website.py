@@ -1,37 +1,93 @@
 """
 start this via $ sage -python website.py --port <portnumber>
-add --debug if you are debugging
+add --debug if you are developing (auto-restart, full stacktrace in browser, ...)
 """
 from base import *
 
+import intro
 import hilbert_modular_form
 import siegel_modular_form
-import classical_modular_forms
+import modular_forms
 import elliptic_curve
 import quadratic_twists
-import Lfunction
-import maass_form
+import renderLfunction
+#import maass_form
 import plot_example
-import number_field
+import number_fields
 import lfunction_db
-import maass_form_picard
+#import maass_form_picard
+#import maass_waveforms
+import users 
+import knowledge
+import upload
+import DirichletCharacter
+import local_fields
+import galois_groups
+import number_field_galois_groups
+import artin_representations
+import zeros
 
 import raw
+from modular_forms.maass_forms.picard import mwfp
 
 import sys
 
+try:
+    import password
+    logging.info("password imported")
+    readwrite_password = password.readwrite_password
+except:
+    logging.warning("no password!")
+    readwrite_password = ''
+
 @app.errorhandler(404)
 def not_found(error):
-    return "404", 404
+    return render_template("404.html"), 404
+
+@app.errorhandler(500)
+def not_found(error):
+    return render_template("500.html"), 500
 
 @app.route("/")
 def index():
-    return render_template('index.html', title ="Template Title")
+    return render_template('index.html', titletag ="The L-functions and modular forms database", title="", bread=None)
+
+@app.route("/about")
+def about():
+    return render_template("about.html", title="About")
+
+@app.route("/acknowledgment")
+def acknowledgment():
+  return render_template("acknowledgment.html", title="Acknowledgments")
+
+def root_static_file(name):
+    def static_fn():
+       import os
+       fn = os.path.join('.', "static", name)
+       if os.path.exists(fn):
+         return open(fn).read()
+       import logging
+       logging.critical("root_static_file: file %s not found!" % fn)
+       return flask.redirect(404)
+    app.add_url_rule('/%s'%name, 'static_%s'%name, static_fn)
+map(root_static_file, [ 'favicon.ico' ])
 
 @app.route("/robots.txt")
-def robots():
-   import os
-   return open(os.path.join('.', "static","robots.txt")).read()
+def robots_txt():
+  if "l-functions.org".lower() in request.url_root.lower():
+    fn = os.path.join('.', "static", "robots.txt")
+    if os.path.exists(fn):
+      return open(fn).read()
+  return "User-agent: *\nDisallow: / \n"
+
+
+@app.route("/style.css")
+def css():
+  from flask import make_response
+  response = make_response(render_template("style.css"))
+  response.headers['Content-type'] = 'text/css'
+  response.headers['Cache-Control'] = 'public, max-age=600'
+  return response
 
 @app.route('/a/<int:a>')
 def a(a):
@@ -47,7 +103,7 @@ def example(blah = None):
 @app.route("/ModularForm/")
 @app.route("/AutomorphicForm/")
 def modular_form_toplevel():
-    return redirect(url_for("render_classical_modular_forms"))
+    return redirect(url_for("mf.render_modular_form_main_page"))
     #return render_template("modular_form_space.html", info = { })
     
 @app.route("/calc")
@@ -60,59 +116,40 @@ def form_example():
     info = {'sidebar' : sidebar}
     return render_template("form.html", info=info)
 
-@app.route("/Lfunction/")
-@app.route("/Lfunction/<arg1>")
-@app.route("/Lfunction/<arg1>/<arg2>")
-@app.route("/Lfunction/<arg1>/<arg2>/<arg3>")
-@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>")
-@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
-@app.route("/L/")
-@app.route("/L/<arg1>") # arg1 is EllipticCurve, ModularForm, Character, etc
-@app.route("/L/<arg1>/<arg2>") # arg2 is field
-#@app.route("/L/<arg1>/<arg2>/") # arg2 is field
-@app.route("/L/<arg1>/<arg2>/<arg3>") #arg3 is label
-@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>")
-@app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
-@app.route("/L-function/")
-@app.route("/L-function/<arg1>")
-@app.route("/L-function/<arg1>/<arg2>")
-@app.route("/L-function/<arg1>/<arg2>/<arg3>")
-@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>")
-@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>")
-def render_Lfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = None):
-    return Lfunction.render_webpage(request, arg1, arg2, arg3, arg4, arg5)
+@app.route("/Character/Dirichlet/")
+@app.route("/Character/Dirichlet/<arg1>")
+@app.route("/Character/Dirichlet/<arg1>/<arg2>")
+def render_Character(arg1 = None, arg2 = None):
+    return DirichletCharacter.render_webpage(request,arg1,arg2)
 
-@app.route("/plotLfunction")
-def plotLfunction():
-    return Lfunction.render_plotLfunction(request.args)
 
-@app.route("/browseGraph")
-def browseGraph():
-    return Lfunction.render_browseGraph(request.args)
-
-@app.route("/browseGraphHolo")
-def browseGraphHolo():
-    return Lfunction.render_browseGraphHolo(request.args)
-
-@app.route("/browseGraphChar")
-def browseGraphChar():
-    return Lfunction.render_browseGraphHolo(request.args)
-
-@app.route("/zeroesLfunction")
-def zeroesLfunction():
-    return Lfunction.render_zeroesLfunction(request.args)
-
-@app.route('/ModularForm/GSp4/Q')
-def ModularForm_GSp4_Q_top_level():
-    return siegel_modular_form.render_webpage(request.args)
+@app.route('/ModularForm/GSp/Q')
+@app.route('/ModularForm/GSp/Q/<group>')
+@app.route('/ModularForm/GSp/Q/<group>/<page>')
+@app.route('/ModularForm/GSp/Q/<group>/<page>/<weight>')
+@app.route('/ModularForm/GSp/Q/<group>/<page>/<weight>/<form>')
+def ModularForm_GSp4_Q_top_level( group = None, page = None, weight = None, form = None):
+    args = request.args
+    if group:
+        args = {}
+        for k in request.args:
+            args[k] =  request.args[k]
+        args['group'] = group
+        if None != weight:
+            page = 'specimen'
+        args['page'] = page
+        if 'specimen' == page:
+            args['weight'] = weight
+            args['form'] = form
+    return siegel_modular_form.render_webpage(args)
 
 #@app.route('/ModularForm/GL2/Q/holomorphic/')
 #def render_classical_modular_form():
 #    return classical_modular_form.render_webpage(request.args)
 
-@app.route('/ModularForm/GL2/Q/Maass/')
-def render_maass_form():
-    return maass_form.render_webpage(request.args)
+#@app.route('/ModularForm/GL2/Q/Maass/')
+#def render_maass_form():
+#    return maass_form.render_webpage(request.args)
 
 @app.route('/example_plot')
 def render_example_plot():
@@ -120,19 +157,20 @@ def render_example_plot():
 
 @app.route("/not_yet_implemented")
 def not_yet_implemented():
-    return render_template("not_yet_implemented.html")
+    return render_template("not_yet_implemented.html", title = "Not Yet Implemented")
 
 
 def usage():
     print """
 Usage: %s [OPTION]...
 
-  -p, --port=NUM    bind to port NUM (default 37777)
-  -h, --host=HOST   bind to host HOST (default "127.0.0.1")
-  -l, --log=FILE    log to FILE (default "flasklog")
-      --dbport=NUM  bind the MongoDB to the given port (default 37010)
-      --debug       enable debug mode
-      --help        show this help
+  -p, --port=NUM      bind to port NUM (default 37777)
+  -h, --host=HOST     bind to host HOST (default "127.0.0.1")
+  -l, --log=FILE      log to FILE (default "flasklog")
+      --dbport=NUM    bind the MongoDB to the given port (default 37010)
+      --debug         enable debug mode
+      --logfocus=NAME enter name of logger to focus on
+      --help          show this help
 """ % sys.argv[0]
 
 def main():
@@ -141,7 +179,7 @@ def main():
     try:
         opts, args = getopt.getopt(sys.argv[1:],
                 "p:h:l:",
-                [ "port=", "host=", "dbport=", "log=", "debug", "help",
+                [ "port=", "host=", "dbport=", "log=", "logfocus=", "debug", "help",
                 # undocumented, see below
                 "enable-reloader", "disable-reloader",
                 "enable-debugger", "disable-debugger",
@@ -152,7 +190,10 @@ def main():
         sys.exit(2)
 
     # default options to pass to the app.run()
-    options = { "port": 37777, "host": "127.0.0.1" }
+    options = { "port": 37777, "host": "127.0.0.1" , "debug" : False}
+    # the logfocus can be set to the string-name of a logger you want
+    # follow on the debug level and all others will be set to warning
+    logfocus = None
     logfile = "flasklog"
     dbport = 37010
 
@@ -170,6 +211,8 @@ def main():
             dbport = int(arg)
         elif opt == "--debug":
             options["debug"] = True
+        elif opt == "--logfocus":
+            logfocus = arg
         # undocumented: the following allow changing the defaults for
         # these options to werkzeug (they both default to False unless
         # --debug is set, in which case they default to True but can
@@ -184,17 +227,43 @@ def main():
             options["use_debugger"] = False
 
     import logging
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+    root_logger.name = "LMFDB"
+    import utils
+    formatter = logging.Formatter(utils.LmfdbFormatter.fmtString.split(r'[')[0])
+    ch = logging.StreamHandler()
+    ch.setFormatter(formatter)
+    root_logger.addHandler(ch)
+    
     file_handler = logging.FileHandler(logfile)
     file_handler.setLevel(logging.WARNING)
+    app.logger.addHandler(file_handler)
     
     import base
-    base._init(dbport)
-   
-    app.logger.addHandler(file_handler)
+    base._init(dbport, readwrite_password)
+    base.set_logfocus(logfocus)
+    logging.info("... done.")
+
+    # just for debugging
+    #if options["debug"]:
+    #  logging.info(str(app.url_map))
+
     app.run(**options)
 
 
 if __name__ == '__main__':
-
     main()
+else:
+    # this bit is so that we can import website.py to use
+    # with gunicorn.
+    import logging
+    logfile = "flasklog"
+    file_handler = logging.FileHandler(logfile)
+    file_handler.setLevel(logging.WARNING)
+    import base
+    base._init(37010, readwrite_password)
+    app.logger.addHandler(file_handler)
 
+def getDownloadsFor(path):
+  return "bar"

@@ -1,12 +1,13 @@
+# -*- coding: utf-8 -*-
 import json
 
 from base import app
 from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
-from utilities import to_dict, parse_range
+from utils import to_dict, parse_range
 import base
 
 def is_safe(name):
-    return name not in ('admin', 'local', 'system.indexes')
+    return name not in ('admin', 'local', 'system.indexes', 'users')
 
 @app.route("/raw")
 def database_list():
@@ -17,7 +18,7 @@ def database_list():
             continue
         db = getattr(C, db_name)
         all_db.append((db_name, filter(is_safe, db.collection_names())))
-    return render_template("raw/index.html", all_db = all_db, info={})
+    return render_template("raw/index.html", all_db = all_db, title="Number Theory Database")
 
 @app.route("/raw/<db_name>/<coll_name>")
 def database_query(db_name, coll_name):
@@ -89,7 +90,8 @@ def database_query(db_name, coll_name):
         info['default_fields'] = ['all']
         info['sep'] = ''
     else:
-        return render_template("raw/query.html", db=db_name, coll=coll_name, info=info, indices=indices, res=res)
+        title = "%s.%s" % (db_name, coll_name)
+        return render_template("raw/query.html", db=db_name, coll=coll_name, info=info, indices=indices, res=res, title = title)
     # not html
     response = make_response(render_template("raw/query_download.html", db=db_name, coll=coll_name, info=info, indices=indices, res=res))
     response.headers['Content-type'] = 'text/plain'

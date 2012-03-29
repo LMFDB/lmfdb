@@ -7,7 +7,8 @@ import pymongo
 from pymongo import Connection
 import sage.libs.lcalc.lcalc_Lfunction as lc
 
-C = Connection(port=37010)
+import base
+C = base.getDBConnection()
 
 Lfunctions = C.test.Lfunctions_test2
 

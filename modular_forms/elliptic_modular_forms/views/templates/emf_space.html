@@ -1,0 +1,73 @@
+{% extends 'homepage.html' %}
+
+{% set got_a_relative_nf = 0 %}
+
+{% block content %}
+
+<h1>Cusp forms of weight {{ weight }} for {{ group }}
+{% if character is defined and character>0 %} 
+with character \( \chi_{ {{ character }} }\) modulo \( {{ level }}\) with  <span style="white-space:nowrap">order \( {{ character_order }}\) </span> and <span style="white-space:nowrap">conductor \( {{ character_conductor }}\)</span>
+{% else %} 
+   with trivial character.
+{% endif %}
+{% if is_empty is not defined %}
+
+{% if extra_info is defined %}
+<span style="font-size:50%">({{ extra_info |safe }})</span>
+{% endif %}
+</h1>
+
+{% if error is defined %}
+{{ error |safe }}
+<br>
+{{ sage_version | safe}}
+{% else %}
+
+{% if nontrivial_new %}
+<h2>
+  Decomposition of {{name_new}} into galois orbits
+</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Form</th>
+      <th>Dim.</th>
+      <th>Defining polynomial</th>
+      <th>Discriminant</th>
+      <th align="left">\(q\)-expansion of eigenform</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for form in galois_orbits %}
+    <tr>
+      <td><a href="{{form.url}}">{{form.full_label}}</a></td>
+      <td>{{ form.dim }}</td>
+      <td>{{ form.poly }}</td>
+      <td>{{ form.disc }}
+        {% if form.is_relative %}
+        {% set got_a_relative_nf = 1 %}
+        \( {}^{*} \)
+        {% endif %}
+      </td>
+      <td>{{ form.qexp }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% if got_a_relative_nf == 1 %}
+\( {}^{*} \) denotes a relative discriminant.
+{% endif %}
+ {% else %}
+{{ name_new }} is empty.
+{% endif %}
+{% if old_decomposition != "" %}
+<h2> Decomposition of {{name_old}} into lower level spaces</h2>
+{{ old_decomposition | safe }}
+{% endif %}
+	
+{% endif %}
+{{ test | safe }}
+{% else %}
+<h2>This space is empty!</h2>
+{% endif %}
+{% endblock %}

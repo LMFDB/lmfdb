@@ -8,8 +8,6 @@
 <h1>{{ info.info1 }}</h1>
 </div>
 
-<div id = "Content">
-
 
 <style type="text/css">
 table.maass_table td {
@@ -59,7 +57,7 @@ table#maass_table_outer td {
 </table>
 
 <div> 
-<a href="{{ url_for('maass_form_picard')}}">\(PSL(Z[i]\)</a> <!-- added to include Holger Then's data on PSL(Z[i]) -->
+<a href="{{ url_for('maass_form_picard')}}">\(PSL(Z[i])\)</a> <!-- added to include Holger Then's data on PSL(Z[i]) -->
 </div>
 
 </td>
@@ -126,7 +124,7 @@ Search for \(r\):
 {% else %}
 <input name="eigenvalue" />
 {% endif %}
-<input type="submit" value="search" />
+<button type="submit" value="search" />
 {% if info.cur_level %}
 <input type="hidden" name="level" value="{{info.cur_level}}" />
 {% endif %}
@@ -136,7 +134,7 @@ Search for \(r\):
 {% if info.cur_character %}
 <input type="hidden" name="character" value="{{info.cur_character}}" />
 {% endif %}
-<!-- <input type="submit" name="search" value="search in selected" /> -->
+{# <button type="submit" name="search" value="search in selected" /> #}
 </form>
 </div>
 
@@ -168,6 +166,5 @@ Search for \(r\):
 </table>
 {% endfor %}
 
-</div>
 
 {% endblock %}

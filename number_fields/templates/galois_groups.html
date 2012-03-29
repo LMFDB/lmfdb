@@ -1,0 +1,35 @@
+{% extends 'homepage.html' %}
+{% block content %}
+<p>
+Each Galois group is identified by a label consisting of four integers
+(degree, order, sign, index), and also has an official GAP
+indentifier.  For convenience, we list here the usual short names for
+some of the groups.  These may be used in the search field.
+</p>
+<p>There are two conventions for the index:  for degrees up to 7,
+  there is a separate sequence of indices for each triple
+  (degree,order,sign), so most indices are equal to 1.  For degrees 8
+  and above, there is a single sequence of indices for each degree.
+</p>
+<p>
+All possible groups of degree up to 11 are listed.
+</p>
+
+<table border=1 cellpadding=5 class='right_align_table'>
+<tr>
+<th>Label<br>(degree,order,sign,index)</th>
+<th>Gap name</th>
+<th>Aliases</th>
+</tr>
+{% for group in groups: %}
+<tr>
+<td>{{group['label']}}</td>
+<td>{{group['gap_name']}}</td>
+<td>{{group['human_name']}}</td>
+</tr>
+{% endfor %}
+</table>
+
+
+{% endblock %}
+</html>

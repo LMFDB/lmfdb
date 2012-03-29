@@ -1,0 +1,124 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<script type="text/javascript" src="{{ url_for('emf.static', filename='elliptic_modular_form_util-functions.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('emf.static', filename='elliptic_modular_form_scripts.js') }}"></script>
+
+
+{% if info.error is defined %}
+
+<h1>There was an error in meeting your previous request. Please change parameters.</h1>
+
+<h2> Error message: </h2>% extends "homepage.html" %}
+
+<div>
+{{ info.error | safe }}
+</div>
+{% endif %}
+
+<script>
+allowed_levels= {{info.list_of_levels}} <!-- these are the levels which are in the database-->
+
+function set_value(name,val) {
+  document.forms.browse[name].value=val;
+  document.forms.browse.submit();			   
+}
+
+</script>
+{#{ info | safe } #}
+
+<h1>Browse {{KNOWL('mf.maass.mwf',title='Maass forms')}} over \( \mathrm{GL}_{2}(\mathbb{Q})\) </h1>
+<form name="browse" method="get" action="{{url_for('.render_maass_waveforms')}}">
+        
+  <input type="hidden" name="weight" value=""/>
+  <input type="hidden" name="level" value=""/>
+  <input type="hidden" name="browse" value="1"/>
+  <ul>
+    <li>
+      <a href="javascript:set_value('weight',0);">Browse Maass forms of weight 0</a>
+    </li>
+    <li>
+      <a href="javascript:set_value('weight',1);">Browse Maass forms of weight 1</a>
+    </li>
+    <li>
+      <a href="javascript:set_value('browse','all');">Browse Table of all
+      Eigenvalues in the Database</a>
+</li>
+  </ul>
+  <button type="submit" name="Browse" value="Search">Browse</button>
+</form>
+
+<h1>Find a specific Maass form</h1>
+<table>
+  <tr>
+    <td>
+      <form name="search" method = "post" action="{{url_for('.render_maass_waveforms')}}">	  
+        <input type="text" name="jump_to" value="" placeholder="1.12"> 
+	<button type="submit" value="Jump">Find</button>
+        <br>
+        <span class="formexample">(1.12 gives the 12th entry of level 1)</span>
+        
+
+      </form>
+    </td>
+  </tr>
+ </table>
+<h1>Search</h1>
+ <table>
+  <tr>
+    <td>
+      <form name="search" method = "post" action="{{url_for('.render_maass_waveforms')}}">
+	<input type="hidden" name="search" value="true"> 
+	<input type="hidden" name="rec_start" value="0"> 
+	<table class="">
+	  <tr>
+	    <td>Level in range:</td>
+	    <td> 
+	      <input type="text" name="level_range" value="" placeholder="1..10"> 
+	    </td>
+	  </tr>
+	  <tr>
+	    <td>R in range:</td>
+	    <td> 
+	      <input type="text" name="ev_range" value="" placeholder="9.5..10.5">
+            </td>
+	  </tr>
+
+	  <tr>
+	    <td>Weight:</td>
+	    <td> 
+	      <input type="text" name="weight" value="" placeholder="0"/> 
+	      <span class="formexample"> (leave blank for weight 0)</span>
+	    </td>
+	  </tr>
+	  <tr>
+	    <td>Character:</td>
+      <td>
+        <input type="text" name="character" value="" placeholder="0"/>
+          <span class="formexample">(0 means trivial character, leave blank for all characters)</span>
+      </td>
+	  </tr>
+	  <tr>
+	    <td>
+	      <button type="submit" name="Submit" value="Search">Search</button>
+	    </td>
+	    <td>
+	      Show number of records:
+	      <select name="limit">
+		<option value="20">20</option>
+		<option value="50">50</option>
+		<option value="100">100</option>
+		<option value="-1">all</option>
+	      </select>
+	    </td>
+          </tr>
+      </form>
+   </table>
+   </td>
+  </tr>
+</table>
+
+</div>
+
+{% endblock content %}

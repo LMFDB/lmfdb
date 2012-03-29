@@ -1,0 +1,83 @@
+{% extends 'homepage.html' %}
+
+
+{% block content %}
+
+<style>
+.order { 
+     vertical-align: top;
+     padding-top: 1em;
+     border-right: 2px solid #8a8;
+}
+.chi {
+    padding: 10px 10px;
+    width: 7em;
+    float: left;
+    display: inline;
+    white-space:nowrap;
+}
+.chi a { display: inline; font-family: serif;}
+.primitive {
+  color:green;
+}
+.nonprimitive {
+    color:blue;
+}
+</style>
+
+The table below displays {{ KNOWL('character.dirichlet', title="Dirichlet characters" ) }} of a
+given {{ KNOWL('character.dirichlet.order', title="order") }}.
+
+<table>
+<thead align="left">
+    <tr><br></br>
+        <th>
+            <font color = "blue"> Non-primitive </font> characters.</br>
+            <font color = "green"> Primitive </font> characters. 
+        </th>
+    <tr/>
+</thead>
+</table>
+<br/>
+
+<div>
+<table class="ntdata">
+    <thead align="center">
+    <tr>
+        <th>Order</th>
+        <th>Characters</th>
+    </tr>
+</thead>
+<tbody>
+    {% set row_class = cycler('odd', 'even') %}
+    {% for line in contents %}
+        <tr class="{{ row_class.next() }}">
+            <td class="order" align="center" style="4em"> {{ line[0] }}</td>
+            <td align="right">
+                {% for chi in line[1] %}
+                    <div class="chi">
+                    <a href="{{ chi[0] }}/{{chi[1]}}">
+                        {% if chi[2] %}
+                            <font color="green">
+                        {% else %}
+                            <font color="blue">
+                        {% endif %}
+                        {% if chi[3] == 2 %}
+                        `   {{ chi[4] }} (mod {{chi[0]}})
+                        {% else %}
+                        \( \chi_{ {{chi[0]}} }( {{chi[1]}}, &middot;) \)
+                        {% endif %}
+                    </font>
+                    </a>
+                    </div>
+                {% endfor %}
+            </td>
+        </tr>
+    {% endfor %}
+<tbody>
+</table>
+</div>
+
+{% endblock %}
+
+

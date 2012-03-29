@@ -1,87 +1,65 @@
 {% extends 'homepage.html' %}
 
 {% block content %}
-    <!--<div id="header">
-        <div class="logo">
-            <a href="/L">{{ info.objecttitle }} home</a>
-        </div>
-        <div class="banner">
-            <span>The logo of the portal could go here... </span>
-        </div>
-    </div>-->
-    <div id="Content">
-        <h2>
-            Dirichlet series
-        </h2>
-        <p>
-            {{ info.dirichlet }}
-        </p>
-        <h2>
-            Functional equation
-        </h2>
-        <p>
-            <div id="functionalEqText">{{ info.functionalequation }}</div>
-			<div class="LfunctionFooter">
-            	<a id="functionalEqSelberg">Selberg</a>
-            	<a id="functionalEqAnalytic">Analytic</a>
-	    </div>
-        </p>
-        <h2>
-            Euler product
-        </h2>
-        <p>
-            {{ info.eulerproduct }}
-        </p>
-        <h2>
-            Imaginary part of the first few zeroes on the critical line
-        </h2>
-	{% if info.zeroeslink %}
-        <p>
-            <span id="zeroes"></span>
-        </p>
-    {% else %}
-         <p>Not enough Dirichelet series coefficients to compute zeros.</p>       
-    {% endif %}
-    {% if info.sv1 and info.sv12 %}
 
-        <h2>Special Values</h2>
-        <p>
-         {{ info.sv12 }}<br>
-         {{ info.sv1 }} <br>
-        </p>
-    {% else %}
-         <p>Not enough Dirichelet series coefficients to compute special values.</p>  
-    {% endif %}
 
-	{% if info.plotlink %}
-        <h2>
-            Graph of the \(Z\)-function along the critical line
-        </h2>
-        <img src="{{ info.plotlink|safe }}" >
-    {% else %}
-<p>Not enough Dirichelet series coefficients to make a graph.</p>       
-	{% endif %}
- 
-    </div>
-    
-	<div class="spacer">
-        &nbsp;</div>
-        
-    <script type="text/javascript">
-        $(document).ready(function() {
-            $("#zeroes").load("{{ info.zeroeslink|safe }}");
-        });
+ {% if Ltype!="maass" %}
+     <h2>{{ KNOWL_INC('historical'+request.path.lower().replace('/','_'), title='Historical Information') }}</h2>
+ {% endif %}
 
-	$("#functionalEqSelberg").click(function() {
-	var math = MathJax.Hub.getAllJax("functionalEqText")[0];
-	MathJax.Hub.Queue(["Text",math, "{{ info.functionalequationSelberg|safe }}"]);
-	});
-		
-	$("#functionalEqAnalytic").click(function() {
-	var math = MathJax.Hub.getAllJax("functionalEqText")[0];
-	MathJax.Hub.Queue(["Text",math, "{{ info.functionalequationAnalytic|safe }}"]);
-	});
-    </script>
+ <h2> {{ KNOWL('lfunction.dirichlet_series', title='Dirichlet series') }}</h2>
+ <div>\[{{ dirichlet }}\]</div>
+
+ <h2>{{ KNOWL('lfunction.functional_equation',title='Functional equation') }}</h2>
+
+ <div id="functionalEqText">\[{{ functionalequation }}\]</div>
+ <div>
+   {{ KNOWL('lfunction.selbergdata', title="Selberg data") }}: ${{ functionalequationSelberg }}$</div>
+
+
+ <h2>{{ KNOWL('lfunction.euler_product', title='Euler product') }}</h2>
+ <div>\[{{ eulerproduct }}\]</div>
+
+ <h2> Imaginary part of the first few zeroes on the {{ KNOWL('lfunction.critical_line', title='critical line') }}</h2>
+
+ {% if zeroeslink %}
+     <div><span id="zeroes"></span></div>
+ {% else %}
+     <div>Not enough Dirichlet series coefficients to compute zeros.</div>
+ {% endif %}
+
+ <h2>Special Values</h2>
+ <div>
+  {% if sv12 %}
+      \[ {{ sv12 }} \]
+  {% endif %}
+  {% if sv1 %}
+      \[ {{ sv1 }} \]
+  {% endif %}
+  {% if not sv1 and not sv12 %}
+      Not enough Dirichlet series coefficients to compute special values.
+  {% endif %}
+ </div>
+
+    <h2> Graph of the {{ KNOWL('lfunction.zfunction', title='$Z$-function') }} along center part of the {{ KNOWL('lfunction.critical_line', title='critical line') }} </h2>
+
+ {% if plotlink %}
+    <img src="{{ plotlink|safe }}" >
+ {% else %}
+    <div>Not enough Dirichlet series coefficients to make a graph.</div>
+ {% endif %}
+
+
+ {% if Ltype!="maass" %}
+     <h2>{{ KNOWL_INC('misc'+request.path.lower().replace('/','_'), title='Misc') }}</h2>
+ {% endif %}
+
+
+<script type="text/javascript">
+  $(function() {
+      $("#zeroes").load("{{ zeroeslink|safe }}");
+  });
+</script>
 
 {% endblock %}
 

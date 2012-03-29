@@ -1,16 +1,30 @@
 <!DOCTYPE HTML>
-<html>
+<html lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta http-equiv="Content-Language" Content="en">
+<meta name="description" content="{{description|striptags}}"/>
+{% if titletag %}
+<title>LMFDB - {{ titletag|striptags }}</title>
+{% else %}
+<title>LMFDB{% if title %} - {{ title|striptags }}{% endif %}  </title>
+{% endif %}
+<link href="{{ url_for('css') }}" rel="stylesheet" type="text/css" /> 
 
-<title>
-{% if title %}LMDB: {{ title }}{% else %}LMDB{% endif %}
-</title>
+<script type="text/javascript" src="{{ url_for('static', filename='jquery.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='jquery.watermark.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='lmfdb.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='showdown.min.js') }}"></script>
 
-<script type="text/javascript" src="{{ url_for('.static', filename='jquery.min.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('.static', filename='MathJax/MathJax.js',config='default') }}"></script>
-<link href="{{ url_for('.static', filename='style.css') }}" rel="stylesheet" type="text/css" />
-<script type="text/javascript">
+<script type="text/javascript" src="{{ url_for('static', filename='jquery.dataTables.js') }}"></script> 
+<script type="text/javascript" src="{{ url_for('static', filename='jquery.dataTables.plugins.js') }}"></script> 
+<script type="text/javascript" src="{{ url_for('static', filename='jquery-ui-1.8.14.custom.min.js') }}"></script> 
+<script type="text/javascript" src="https://www.google.com/jsapi"></script> 
+ 
+<link rel="stylesheet" href="{{ url_for('static', filename='jquery-ui-1.8.14.custom.css') }}" type="text/css"/> 
+
+<script type="text/x-mathjax-config">
 MathJax.Hub.Config({
   extensions: ["tex2jax.js","TeX/AMSmath.js","TeX/AMSsymbols.js"],
   jax: ["input/TeX","output/HTML-CSS"],
@@ -18,36 +32,38 @@ MathJax.Hub.Config({
     inlineMath: [['$','$'],["\\(","\\)"]],
     processEscapes: true,
   },
-  "HTML-CSS": { scale: 85 }
-  menuSettings: { zoom: "Hover", zscale: "150%" }
+  "HTML-CSS": { scale: 85 },
+  menuSettings: { zscale: "150%", zoom: "Double-Click" }
 });
 </script>
+{#- <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script> -#}
+<script type="text/javascript" src="http://www.l-functions.org/MathJax/MathJax.js"></script>
+{#- append this: ?config=default if the script complains about a missing config -#}
+
+{#- the defs for the knowls, need to be after mathjax, before analytics -#}
+{%- include "knowl-defs.html" -%}
+{%- from "knowl-defs.html" import KNOWL with context -%}
+{%- from "knowl-defs.html" import KNOWL_LINK with context -%}
+{%- from "knowl-defs.html" import KNOWL_INC with context -%}
+{%- from "knowl-defs.html" import TEXT_DATA with context -%}
+
 <script type="text/javascript">
 var _gaq = _gaq || [];
 _gaq.push(['_setAccount', 'UA-19138192-1']);
-_gaq.push(['_setDomainName', '.modform.org']);
+_gaq.push(['_setDomainName', 'none']);
+_gaq.push(['_setAllowLinker', true]);
 _gaq.push(['_trackPageview']);
+_gaq.push(['_trackPageLoadTime']);
 
 (function() {
  var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
  ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
  var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
- })();
+})();
 </script>
 </head>
 
-<body>
-
-{% if false %}
-<div style="width: 100%; background-color: #f88; text-align: center; padding: 3px;margin-bottom:0px; border-bottom: 2px solid red;">
-Pre-Release Version. Feedback via 
-<a href="mailto:farmer@aimath.org" subject="[LMDB] ">direct e-mail</a> or 
-<a href="http://groups.google.com/group/lmdb" target="_blank">discuss online</a>.</div>
-{% endif %}
-
-{% block body %}
-
-{% endblock body %}
-
+<body class="{{ body_class }}">
+{% block body -%}{%- endblock body %}
 </body>
 </html>

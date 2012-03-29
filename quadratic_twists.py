@@ -5,9 +5,10 @@ from pymongo import ASCENDING
 import base
 from base import app
 from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
+import flask
 
 
-from utilities import ajax_more, image_src, web_latex, to_dict, parse_range
+from utils import ajax_more, image_src, web_latex, to_dict, parse_range
 import sage.all 
 from sage.all import ZZ, EllipticCurve, latex, matrix,srange
 q = ZZ['x'].gen()
@@ -72,7 +73,7 @@ def render_isogeny_class(label):
         return "No such curves"
     data['download_Rub_data_100']=url_for('download_Rub_data', label=str(label), limit=100)
     data['download_Rub_data']=url_for('download_Rub_data', label=str(label))
-    if 'related_to' in info:
+    if info and 'related_to' in info:
         data['related_to']=info['related_to']
     else:
         data['related_to']=''
@@ -94,10 +95,12 @@ def download_Rub_data():
     isogeny=C.quadratic_twists.isogeny.files
     filename=isogeny.find_one({'label':label})['filename']
     d= fs.get_last_version(filename)
-    if limit==None:
-        response = make_response(d.read())
+    if limit is None:
+        response = flask.Response(d.__iter__())
+        response.headers['Content-disposition'] = 'attachment; filename=%s' % label
+	response.content_length=d.length
     else: 
-        limit=eval(limit)
+        limit=int(limit)
         response = make_response(''.join(str(d.readline()) for i in srange(limit)))
     response.headers['Content-type'] = 'text/plain'
     return response

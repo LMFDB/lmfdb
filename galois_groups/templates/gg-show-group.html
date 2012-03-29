@@ -1,0 +1,67 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+  <p><h2>{{ KNOWL('gg.group_action_invariants', title='Group action invariants') }}</h2>
+    <table>
+      <tr><td>Degree $n$ :<td>&nbsp;&nbsp;<td>${{info.n}}$</tr>
+      <tr><td>Transitive number $t$ :<td>&nbsp;&nbsp;<td>${{info.t}}$</tr>
+      <tr><td>Parity:<td>&nbsp;&nbsp;<td>{{info.parity}}</tr>
+      <tr><td>Primitive:<td>&nbsp;&nbsp;<td>{{info.yesno(info.prim)}}</tr>
+      <tr><td>Generators:<td>&nbsp;&nbsp;<td>{{info.gens}}</tr>
+      <tr><td>$|\textrm{Aut}(F/K)|$:<td>&nbsp;&nbsp;<td>${{info.auts}}$</tr>
+      <tr><td>Low degree resolvents:<td>&nbsp;&nbsp;<td>{{info.resolve|safe}}</tr>
+    </table>
+  </p>
+
+  <p><h2>{{ KNOWL('gg.subfields', title='Subfields') }}</h2>
+   <p>
+   <blockquote>
+    {{info.subinfo|safe}}
+   </blockquote>
+   </p>
+
+  <p><h2>{{ KNOWL('gg.other_representations', title='Other representations') }}</h2>
+   <p>
+   <blockquote>
+    {{info.otherreps|safe}}
+   </blockquote>
+   </p>
+
+  <p><h2>{{ KNOWL('gg.conjugacy_classes', title='Conjugacy Classes') }}</h2>
+   <p>
+
+   <table class="ntdata">
+      <thead><tr><td>Cycle Type</td><td>Size</td><td>Order</td><td>Representative</td></tr></thead>
+      <tbody>
+        {% for c in info.cclasses %}
+           <tr><td> ${{c[3]}}$</td>
+              <td> ${{c[2]}}$</td>
+              <td> ${{c[1]}}$</td>
+              <td> ${{c[0]}}$</td>
+           </tr>
+        {% endfor %}
+      </tbody>
+      </table>
+
+
+   </p>
+
+
+<p><h2> {{ KNOWL('gg.invariants', title='Group invariants') }}</h2>
+  <p>
+    <table>
+      <tr><td>Order:<td>&nbsp;&nbsp;<td>${{info.order}}={{info.orderfac}}$</tr>
+      <tr><td>Cyclic:<td>&nbsp;&nbsp;<td>{{info.yesno(info.cyc)}}</tr>
+      <tr><td>Abelian:<td>&nbsp;&nbsp;<td>{{info.yesno(info.ab)}}</tr>
+      <tr><td>Solvable:<td>&nbsp;&nbsp;<td>{{info.yesno(info.solv)}}</tr>
+    </table>
+
+    <table>
+      <tr><td>Character table:<td>&nbsp;&nbsp;<td><pre>
+{{info.chartable}}
+</pre></td></tr>
+    </table>
+  </p>
+
+{% endblock %}

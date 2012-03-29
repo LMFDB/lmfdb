@@ -1,14 +1,8 @@
 {% extends 'homepage.html' %}
 
-{% block title %}Number theory database{% endblock %}
-
 {% block content %}
 
-<div id = "header">
-<H1>Number theory database</H1>
-</div>
-
-<div id = "Content">
+{# <H1>Number theory database</H1> #}
 
 {% for db, colls in all_db %}
 <h2> {{db}} </h2>
@@ -18,7 +12,5 @@
     {% endfor %}
 <p>
 {% endfor %}
-
-</div>
 
 {% endblock %}

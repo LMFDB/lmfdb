@@ -1,0 +1,184 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+{% if lock %}
+    <div style="color: red; font-weight: bold; font-size: 200%;">Concurrent Edit!!!</div>
+
+    <div>
+     The Knowl {{ k.title }} is currently or has been recently edited by 
+     <a href="{{ url_for('users.profile', userid = lock.who) }}">{{ get_username(lock.who) }}</a>
+     at {{ lock.time|fmtdatetime }}. There might be a conflict!
+    </div>
+
+    <div style="margin-top: 30px">
+     <a href="{{ url_for('.edit', ID=k.id, lock='ignore') }}">Continue</a>
+    </div>
+
+    <div style="margin-top: 30px">
+     <a href="{{ request.referrer }}">Abort</a>
+    </div>
+{% else %}
+
+{% from "knowl-defs.html" import knowlbar with context %}
+<div>
+The general editing inside a {{KNOWL("doc.knowl", title="Knowl")}} works as per usual in a {{KNOWL("doc.wiki",title="wiki")}}.
+The main difference is that a {{KNOWL("doc.knowl", title="Knowl")}} is {{KNOWL("doc.knowl.context_free", title="context-free")}}.
+</div>
+<br>
+
+<br>
+    <div>
+        You are about to edit a Knowl. If you were to put the code
+    </div>
+    <blockquote>
+{% raw %}
+... the {{ KNOWL("lfunction.rh.proof",title="proof")}} of the {{KNOWL("lfunction.rh",title="Riemann hypothesis")}} was found in ...
+{% endraw %}
+    </blockquote>
+the result would look like
+    <blockquote>
+... the {{ KNOWL("lfunction.rh.proof",title="proof")}} of the {{KNOWL("lfunction.rh",title="Riemann hypothesis")}} was found in ...
+    </blockquote>
+    <br>
+<div>
+    As you can see the Knowl {{ KNOWL("lfunction.rh.proof", title="Riemann Hypothesis Knowl")}} is currently missing, but would be {{KNOWL("doc.knowl.implicit", title="implicitly created")}} once someone edits it.
+</div>
+<br>
+<div>
+    Please follow our {{ KNOWL("doc.knowl.naming_conventions",title="naming conventions")}} and {{ KNOWL("doc.knowl.naming_suggestions",title="naming suggestions")}}
+    for the {{KNOWL("doc.knowl.description",title="description")}} and {{KNOWL("doc.knowl.identifier",title="identifier")}} fields of Knowls.
+</div>
+<br>
+
+{{ knowlbar() }}
+
+<script type="text/javascript" src="{{ url_for('static', filename='jquery.markitup.js')}}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='jquery.markitup.markdown.js')}}"></script>
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='markitup.css')}}" />
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='markdown.css')}}" />
+
+
+<script language="javascript">
+$(document).ready(function()	{
+    $('#kcontent').markItUp(myMarkdownSettings);
+});
+</script>
+
+
+
+<form action="{{ url_for('.save_form') }}" method="POST" id=>
+  <input type="hidden" name="id" value="{{ k.id }}"/>
+  <table>
+   <tr>
+     <td>{{KNOWL("doc.knowl.identifier",title="Identifier")}}</td><td><a href="{{ url_for('.render', ID = k.id) }}">{{ k.id }}</a></td>
+   </tr>
+   <tr>
+     <td>{{KNOWL("doc.knowl.description",title="Description")}}</td>
+     <td><input size="40" name="title" id="ktitle" value="{{ k.title }}" /></td>
+   </tr>
+   <tr>
+     <td>Quality</td>
+     <td>
+      {{ k.quality }} <span style="margin-left: 50px;">change to:</span>
+      <select name="quality">
+        <option value="">-- change --</option>
+        <option value="beta">Beta</option>
+        <option value="ok">Ok</option>
+        <option value="reviewed">Reviewed</option>
+      </select>
+     </td>
+   </tr>
+   <tr>
+     <td colspan="2"><textarea cols="40" rows="10"
+          name="content" id="kcontent">{{ k.content }}</textarea>
+     </td>
+   </tr>
+  </table>
+   <button type="submit" id="knowl-edit-btn" onclick="unsaved = false;">Save</button>
+   <a style="margin-left: 30px" onclick="unsaved = false;" href="{{ url_for('.index') }}">cancel</a>
+</form>
+
+<div class="knowl-preview-sep">
+  Preview of Knowl '{{ k.id }}'
+   <a id="knowl-update" style="display: none; margin-left: 20px;" onclick="update();return false;" href="#">refresh preview</a>
+</div>
+<div id="knowl-preview" class="knowl">
+   <h1 id="knowl-title"></h1>
+   <div id="knowl-content"></div>
+</div>
+
+<script type="text/javascript">
+/* the dom fields we are working with */
+var $ktitle    = $("#ktitle");
+var $kcontent  = $("#kcontent");
+var $title     = $("#knowl-title");
+var $content   = $("#knowl-content");
+var $update    = $("#knowl-update");
+/* state flags */
+var update_id     = null;
+var reparse_latex = false;
+/* parameters */
+var UPDATE_TIMEOUT = 5000;
+
+function update() {
+  if (update_id) {
+    /* this case happens, when we click "refresh" while a timer is running. */
+    window.clearTimeout(update_id);
+  }
+  //console.log("running update");
+  $title.html("updating ...");
+
+  var url = "{{ url_for('.render', ID=k.id)}}";
+  $.post(url, { "content" : $kcontent.val(), "footer" : "0" },
+    function(data) {
+      $title.html("Processing ...");
+      $content.html(data);
+      MathJax.Hub.Queue(["Typeset", MathJax.Hub, $title.get()]);
+      MathJax.Hub.Queue(["Typeset", MathJax.Hub, $content.get()]);
+      MathJax.Hub.Queue(function () {  
+        update_id = null;
+        // MathJax tells us it is done.
+        // has there been a call in the meantime and we have to do this again?
+        if (reparse_latex) {
+          /* console.log("reparse_latex == true"); */
+          reparse_latex = false;
+          update();
+        } 
+      });
+      /* finally, set the title and hide the refresh link */
+      MathJax.Hub.Queue(function() {$title.html($ktitle.val())});
+      $update.fadeOut();
+    }).error(function() { $title.html("ERROR"); })
+}
+
+/* if nothing scheduled, update delayed
+   otherwise tell it to reparse the latex */
+function update_delay() {
+  unsaved = true;
+  $update.fadeIn();
+  if (update_id) {
+    reparse_latex = true;
+  } else {
+    update_id = window.setTimeout(update, UPDATE_TIMEOUT);
+  }
+}
+
+/* register keyhandlers */
+$(function() {
+  $ktitle.keyup(   function(evt) { update_delay(); });
+  $kcontent.keyup( function(evt) { update_delay(); });
+  update();
+});
+
+/* prevent accidental closing of browser window */
+var unsaved = false;
+window.onbeforeunload = function() {
+  if(unsaved) {
+    return "There are unsaved edits. Really close?";
+  }
+}
+</script>
+
+{% endif %} {# concurrent edit warning at the top #}
+{% endblock %}
