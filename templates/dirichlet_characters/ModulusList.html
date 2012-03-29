@@ -26,9 +26,11 @@
 #chitable td.b { background: none; }
 #chitable th { text-align: center; }
 table.ntdata tr.even, table.ntdata tr:nth-child(even) { background: none; }
-#chitable a.imprimitive:visited { color: blue;}
-#chitable a.primitive:visited { color:green ;}
-#chitable a.imprimitive { display:none; }
+table.ntdata tr.odd, table.ntdata tr:nth-child(odd), table.ntdata tr:first-child { background: none; }
+#chitable .imprimitive a:visited { color:blue;}
+#chitable .primitive   a:visited { color:green;}
+#chitable .imprimitive { display:none; }
+#chitable a { display: inline; }
 #legend {
   border: 3px solid #006400;
   position: relative;
@@ -40,10 +42,10 @@ table.ntdata tr.even, table.ntdata tr:nth-child(even) { background: none; }
 }
 #legend td { cursor: pointer; }
 
-.primitive {
+.primitive, .primitive a {
   color:green;
 }
-.imprimitive {
+.imprimitive, .imprimitive a {
   color:blue;
 }
 </style>
@@ -103,7 +105,8 @@ characters are grouped with respect to order, \(\text{ord}\), and stacked intege
     </tr>
     <tr>
     #}
-    <th class="modulus">\(q\backslash\text{ord}\)</th>
+    <!--<th class="modulus">\(q\backslash\text{ord}\)</th>-->
+    <th class="modulus">q\ord</th>
         {% for h in headers %}
         <th>{{h}}</th>
         {% endfor %}
@@ -112,25 +115,27 @@ characters are grouped with respect to order, \(\text{ord}\), and stacked intege
 
 {% macro show_character(entry, col, row) -%}
 {% if not entry is none %}
+<table><tr>
   {% if col == "more"  %}
     {% for e in entry %}
-    <div>
+    <td class="{% if e[0][1] -%}primitive{%- else -%}imprimitive{%- endif %}">
       {% for chi in e %}
-      <a href="{{url_for('render_Character', arg1=row, arg2=chi[0])}}"
-          class="{% if chi[1] -%}primitive{%- else -%}imprimitive{%- endif %}">{{ chi[0] }}</a>
+      <a href="{{url_for('render_Character', arg1=row, arg2=chi[0])}}" >{{ chi[0] }}</a>
+      {% if loop.first %}<br/>{% endif %}
       {% endfor %}
-    </div>
+    </td>
     {% endfor %}
   {% else %}
     {% for e in entry %}
-    <div>
+    <td class="{% if e[0][1] -%}primitive{%- else -%}imprimitive{%- endif %}">
       {% for chi in e %}
-        <a href="{{url_for('render_Character', arg1=row, arg2=chi[0])}}"
-            class="{% if chi[1] -%}primitive{%- else -%}imprimitive{%- endif %}" id="legend-prim">{{ chi[0] }}</a>
+        <a href="{{url_for('render_Character', arg1=row, arg2=chi[0])}}">{{ chi[0] }}</a>
+      {% if loop.first %}<br/>{% endif %}
       {% endfor %}
-    </div>
+    </td>
     {% endfor %}
   {% endif %}
+</tr></table>
 {% endif %}
 {%- endmacro %}
 
@@ -138,15 +143,14 @@ characters are grouped with respect to order, \(\text{ord}\), and stacked intege
 {% set row_class = cycler('a', 'b') %}
 <tbody>
 {% for row in rows %}
-
-	<tr>
-	<td class="modulus"align="center" style="4em"> {{ row }} </td>
-
-	{% for col in cols %}
-	<td class="{{ row_class.next() }}"> {{ show_character(contents[(row, col)], col, row) }} </td>
-	{% endfor %}
-
-	</tr>
+  <tr>
+  <td class="modulus"align="center" style="4em"> {{ row }} </td>
+   {% for col in cols %}
+   <td class="{{ row_class.next() }}"> 
+      {{ show_character(contents[(row, col)], col, row) }} 
+   </td>
+  {% endfor %}
+  </tr>
 {% endfor %}
 <tbody>
 </table>
