@@ -43,9 +43,15 @@ class ArtinRepresentation(object):
             self._number_field_galois_group = NumberFieldGaloisGroup.find_one(query)
         return self._number_field_galois_group
     
+    def euler_polynomial(self,p):
+        """
+            Returns the polynomial at the prime p in the Euler product. Output is as a list of length the degree (or more), with first coefficient the independent term.
+        """
+        return [1]
+        
     def coefficients_list(self):
-        return [1,2]
-        raise NotImplementedError
+        from utils import an_list
+        return an_list(lambda p: self.euler_polynomial(p), upperbound=100000, base_ring = sage.rings.all.RationalField())
 
     def character(self):
         return CharacterValues(self._data["Character"])
