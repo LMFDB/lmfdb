@@ -5,6 +5,8 @@
 # def func(): ...
 import logging
 
+import re
+
 from flask import request, make_response
 from functools import wraps
 from werkzeug.contrib.cache import SimpleCache
@@ -364,6 +366,8 @@ def parse_range(arg, parse_singleton=int):
 # version above does not produce legal results when there is a comma
 # to deal with $or, we return [key, value]
 def parse_range2(arg, key, parse_singleton=int):
+    if type(arg)==str:
+        arg = arg.replace(' ','')
     if type(arg)==parse_singleton:
         return [key, arg]
     if ',' in arg:
