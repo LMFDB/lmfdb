@@ -187,6 +187,10 @@ class Lfunction:
                                             self.Q_fe, self.sign ,
                                             self.kappa_fe, self.lambda_fe ,
                                             self.poles, self.residues)
+                    # self.kappa_fe:        
+                    # self.lambda_fe:
+                    # According to Rishi, as of March 2012 (sage <=5.0), the documentation to his wrapper is wrong
+                    # POD
 
     def createLcalcfile(self):
         thefile="";
@@ -1017,37 +1021,42 @@ class ArtinLfunction(Lfunction):
     def Ltype(self):
         return "artin"
     
-    def __init__(self, **args):
+    def __init__(self, dimension, conductor, tim_index, **args):
         constructor_logger(self,args)
 
-        #Check for compulsory arguments
-        if not 'tim_index' in args.keys() or not 'conductor' in args.keys() or not 'dimension' in args.keys():
-            raise Exception("You have to supply a conductor, a degree, and an index in Tim Dokchitser's database, but you submitted %s"%args)
-
-        # Initialize default values
-
-        # Put the arguments into the object dictionary
-        self.__dict__.update(args)
         from math_classes import ArtinRepresentation
         
-        self.artin = ArtinRepresentation(args["dimension"], args["conductor"], args["tim_index"])
+        self.artin = ArtinRepresentation(dimension, conductor, tim_index)
 
-        self.title = "L function for the Artin representation of dimension" + str(args["dimension"]) + \
-            ", conductor "+ str(args["conductor"]) + " and index in Tim's database"+ str(args["tim_index"])
+        self.title = "L function for an Artin representation of dimension " + str(dimension) + \
+            ", conductor "+ str(conductor) 
                 
         self.dirichlet_coefficients = self.artin.coefficients_list()
         
+        
         self.coefficient_type = 0
         self.coefficient_period = 0
-        self.Q_fe = self.artin.Q_fe()
+        self.Q_fe = Integer(self.artin.conductor())/float(math.pi)
+            # This is wrong at the moment
         self.sign = self.artin.sign()
+        self.degree = self.artin.dimension()
         self.kappa_fe = self.artin.kappa_fe()
         self.lambda_fe = self.artin.lambda_fe()
         self.poles = self.artin.poles()
         self.residues = self.artin.residues()
+        self.level = self.artin.conductor()
+        self.selfdual = self.artin.selfdual()               
+        self.primitive = self.artin.primitive()             
+        self.langlands = self.artin.langlands()             
+        self.mu_fe = self.artin.mu_fe()
+        self.nu_fe = self.artin.nu_fe()
 
         self.credit = 'Sage, lcalc, and data precomputed in Magma by Tim Dokchitser'
         self.citation = ''
+        
+        self.texname = "L(s)"  # default name.  will be set later, for most L-functions
+        self.texnamecompleteds = "\\Lambda(s)"  # default name.  will be set later, for most L-functions
+        self.texnamecompleted1ms = "\\overline{\\Lambda(1-\\overline{s})}"  # default name.  will be set later, for most L-functions
         
         self.generateSageLfunction()
 

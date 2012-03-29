@@ -13,10 +13,11 @@ class ArtinRepresentation(object):
     
     def __init__(self, *x, **data_dict):
         if len(x) == 0:
+            # Just passing named arguments
             self._data = data_dict["data"]
         else:
-            self = ArtinRepresentation.find_one({"Dim":int(x[0]),"Conductor":str(x[1]),"DBIndex":int(x[2])})
-        
+            self._data = self.__class__.collection().find_and_convert_one(Dim = int(x[0]), Conductor = str(x[1]), DBIndex = int(x[2]))
+
     @classmethod
     def find(cls, *x, **y):
         for item in cls.collection().find_and_convert(*x, **y):
@@ -41,6 +42,10 @@ class ArtinRepresentation(object):
             query = {"Degree" : int(tmp[0]), "Size" : str(tmp[1]), "DBIndex": int(tmp[2])}
             self._number_field_galois_group = NumberFieldGaloisGroup.find_one(query)
         return self._number_field_galois_group
+    
+    def coefficients_list(self):
+        return [1,2]
+        raise NotImplementedError
 
     def character(self):
         return CharacterValues(self._data["Character"])
@@ -67,26 +72,58 @@ class ArtinRepresentation(object):
     
     def sign(self):
         # Guessing needs to be implemented here
-        pass
+        return 1
+        raise NotImplementedError
     
-    def Q_fe(self):
-        return self.conductor()
-    
-    def kappa_fe(self):
-        return [1/2 for i in range(self.dimension())]
-    
-    def lambda_fe(self):
-        k = self.dimension()
+    def trace_complex_conjugation(self):
+        """ Computes the trace of complex conjugation, and returns an int
+        """
         tmp = (self.character()[self.number_field_galois_group().index_complex_conjugation()-1])
+        # -1 because of this sequence's index starts at 1
         try:
-            trace_complex = sage(tmp)
+            trace_complex = int(tmp)
         # We are looking for the character value on the conjugacy class of complex conjugation.
         # This is always an integer, so we don't expect this to be a more general algebraic integer, and we can simply convert to sage
         except TypeError:
             raise TypeError, "Expecting a character values that converts easily to integers, but that's not the case."
-        number_of_eigenvalues_1 = (k + trace_complex)/2
-        number_of_eigenvalues_minus_1 = (k - trace_complex)/2
-        return [0 for i in range(number_of_eigenvalues_1)] + [1/2 for i in range(number_of_eigenvalues_minus_1)]
+        return trace_complex
+    
+    def number_of_eigenvalues_plus_one_complex_conjugation(self):
+        return int((self.dimension() + self.trace_complex_conjugation())/2)
+    
+    def number_of_eigenvalues_minus_one_complex_conjugation(self):
+        return int((self.dimension() - self.trace_complex_conjugation())/2)
+        
+    def kappa_fe(self):
+        return [1/2 for i in range(self.dimension())]
+    
+    def lambda_fe(self):
+        return [0 for i in range(self.number_of_eigenvalues_plus_one_complex_conjugation())] + \
+                    [1/2 for i in range(self.number_of_eigenvalues_minus_one_complex_conjugation())]
+    
+    def langlands(self):
+        return True
+        raise NotImplementedError
+    
+    def selfdual(self):
+        return True
+        raise NotImplementedError
+
+    def primitive(self):
+        return True
+        raise NotImplementedError
+
+    def mu_fe(self):
+        return []
+        raise NotImplementedError
+        
+    def nu_fe(self):
+        return []
+        raise NotImplementedError
+    
+    def self_dual(self):
+        return True
+        raise NotImplementedError
     
     def poles(self):
         if self.conductor() == 1 and self.dimension() ==1:
@@ -134,7 +171,7 @@ class G_gens(list):
     def display(self):
         return self
         
-class NumberFieldGaloisGroup():
+class NumberFieldGaloisGroup(object):
     @staticmethod
     def collection(source = "Dokchitser"):
         if source == "Dokchitser":

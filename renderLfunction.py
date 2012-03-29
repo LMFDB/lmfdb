@@ -133,6 +133,7 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
             
         elif arg1 == 'custom': # need a better name
             return "not yet implemented"
+    #L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, temp_args)
         
     try:
       L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, temp_args)
@@ -184,7 +185,7 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         return DedekindZeta( label = str(arg2))
         
     elif arg1 == "ArtinRepresentation":
-        return ArtinLfunction(dimension = arg2, conductor = arg3, tim_index = arg4)
+        return ArtinLfunction(arg2, arg3, arg4)
     
     elif arg1 == "SymmetricPower":
         return SymmetricPowerLfunction(arg2, [arg3, arg4, arg5, arg6, arg7, arg8, arg9], temp_args)
