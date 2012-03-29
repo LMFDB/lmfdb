@@ -1012,5 +1012,60 @@ class DedekindZeta(Lfunction):   # added by DK
 class ArtinLfunction(Lfunction):
     pass
 
+
 class SymmetricPowerLfunction(Lfunction):
-    pass
+    def Ltype(self):
+        return "SymmetricPower"
+
+    def __init__(self, *args):
+        """
+        """
+        constructor_logger(self,args)
+        try:
+            self.m=Integer(args[0])
+        except TypeError:
+            raise TypeError, "The power has to be an integer"
+
+        if args[1][0] != 'EllipticCurve' or args[1][1] != 'Q':
+            raise TypeError, "The symmetric L functions have been implemented only for Elliptic Curves over Q"
+
+
+        try:
+            self.E=EllipticCurve(args[1][2])
+        except  AttributeError:
+            raise AttributeError, "This elliptic curve does not exist in cremona's database"
+
+
+        from symL.symL import SymmetricPowerLFunction
+
+        self.S=SymmetricPowerLFunction(self.E,self.m)
+
+        self.title = "The symmetric power $L$-function $L(s, Symm^%d E)$ of Elliptic curve %s"% (self.m,self.E.cremona_label())
+
+        self.dirichlet_coefficients = self.S._coeffs
+
+        self.sageLfunction = self.S._construct_L()
+
+
+        # Initialize some default values
+        self.coefficient_period = 0
+        self.degree = self.m+1
+        self.Q_fe = self.S._Q_fe
+        self.poles = self.S._poles
+        self.residues = self.S._residues
+        self.mu_fe = self.S._mu_fe
+        self.nu_fe = self.S._nu_fe
+        self.kappa_fe = self.mu_fe
+        self.lambda_fe = self.nu_fe
+        self.sign = self.S.root_number
+        self.selfdual = True
+        self.langlands = True
+        self.texname = "L(s, Symm^%dE)"%self.m  # default name.  will be set later, for most L-functions
+        self.texnamecompleteds = "\\Lambda_{Symm^2 E}(s)"  # default name.  will be set later, for most L-functions
+        self.texnamecompleted1ms = "\\Lambda(1-{s})}"  # default name.  will be set later, for most L-functions
+        self.primitive = True # should be changed later
+        self.citation = ' '
+        self.credit = ' '
+        self.level=self.S.conductor
+
+
