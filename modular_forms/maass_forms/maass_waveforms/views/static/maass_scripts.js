@@ -60,6 +60,39 @@ function alignColumnChar()
 
 }
 
+$.fn.dataTableExt.afnFiltering.push(
+    function( oSettings, aData, iDataIndex ) {
+        var wtElt=document.getElementById('weight')
+        var iWt;
+        var thisWt;
+        //alert("hrjj");
+        // we only want to filter on weight
+        var a = (oSettings.aoColumns[1].sTitle).toString().trim();
+        var b = "Weight".toString();
+        for (var i=0,n=Math.max(a.length, b.length); i<n && a.charAt(i) === b.charAt(i); ++i);
+        if (i != n){
+            //alert(a+":"+a.charAt(0)+"."+a.charAt(1)+":"+b.charAt(0));
+            return true;
+        } 
+
+//        if (col_id.toString().localeCompare("Weight".toString())!=0) {
+//            alert(col_id.toString().localeCompare("Weight".toString()));
+//            return true;
+//        }
+        if (wtElt == null) {
+            iWt=0; // default value
+        }
+        if (wtElt != null) {
+            iWt = wtElt.value * 1;
+        }         
+        thisWt = aData[1];
+        if ( iWt == thisWt)
+        {
+            return true;
+        }
+        return false;
+    }
+)
 
 
 //jQuery('table:has(col)').each(alignColumns);

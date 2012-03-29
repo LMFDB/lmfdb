@@ -128,12 +128,12 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
                                     processMaassNavigation()]
             elif degree == 3 or degree == 4:
                 info["contents"] = LfunctionPlot.getAllMaassGraphHtml(degree)
-                
+
             return render_template("DegreeNavigateL.html", title = 'Degree ' + str(degree)+ ' L-functions', **info)
-            
+
         elif arg1 == 'custom': # need a better name
             return "not yet implemented"
-        
+
     try:
       L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, temp_args)
     except Exception as e:
@@ -141,18 +141,19 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
       if len(e.args) > 1 and e.args[1] != 'UserError': raise
       info = { 'content': 'Sorry, there has been a problem: %s .         Please report it <a href="http://code.google.com/p/lmfdb/issues/list">here</a>.' % e.args[0], 'title': 'Error' }
       return render_template('LfunctionSimple.html', info=info, **info), 500
-   
+
     try:
-        logger.info(temp_args)
+        #logger.info(temp_args)
         if temp_args['download'] == 'lcalcfile':
             return render_lcalcfile(L, request.url)
     except:
         pass #Do nothing
 
+
     info = initLfunction(L, temp_args, request)
 
     return render_template('Lfunction.html', **info)
-    
+
 
 def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, temp_args):
     ''' Returns the L-function object corresponding to the supplied argumnents
@@ -173,19 +174,26 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         logger.debug(arg5+arg6+str(arg7)+str(arg8)+str(arg9))
         return Lfunction_EMF( level = arg5, weight = arg6, character = arg7, label = arg8, number = arg9)
 
+    elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 <> 'Q' and arg4 == 'holomorphic': # Hilbert modular form
+        logger.debug(arg5+arg6+str(arg7)+str(arg8)+str(arg9))
+        return Lfunction_HMF( field = arg3, label = arg5, character = arg6, number = arg7)
+
     elif arg1 == 'ModularForm' and arg2 == 'GL2'and arg3 == 'Q' and arg4 == 'Maass':
         logger.debug(db)
         return Lfunction_Maass(dbid = bson.objectid.ObjectId(arg5))
-    
+
     elif arg1 == 'ModularForm' and (arg2 == 'GSp4' or arg2 == 'GL4' or  arg2 == 'GL3') and arg3 == 'Q' and arg4 == 'maass':
         return Lfunction_Maass( dbid = arg5, dbName = 'Lfunction', dbColl = 'LemurellMaassHighDegree')
 
+    elif arg1 == 'ModularForm' and arg2 == 'GSp' and arg3 == 'Q' and arg4 == 'Sp4Z' and arg5== 'specimen': #this should be changed when we fix the SMF urls
+        return Lfunction_SMF2_scalar_valued( weight=arg6, orbit=arg7, number=arg8 )
+
     elif arg1 == 'NumberField':
         return DedekindZeta( label = str(arg2))
-        
+
     elif arg1 == "ArtinRepresentation":
         return ArtinLfunction(dimension = arg2, conductor = arg3, tim_index = arg4)
-    
+
     elif arg1 == "SymmetricPower":
         return SymmetricPowerLfunction(arg2, [arg3, arg4, arg5, arg6, arg7, arg8, arg9], temp_args)
 
@@ -199,7 +207,7 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
 def set_info_for_start_page():
     ''' Sets the properties of the top L-function page.
     '''
-    
+
     tt = [[{'title':'Riemann Zeta Function','link': url_for('render_Lfunction', arg1='Riemann')},
            {'title':'Dirichlet L-function','link': url_for('render_Lfunction', arg1='degree1') + '#Dirichlet'}],
 
@@ -222,20 +230,25 @@ def set_info_for_start_page():
 #   info['learnmore'] = [('Lmfdb-wiki', 'http://wiki.l-functions.org/L-function')]
 
     return info
-    
+
 
 def initLfunction(L,args, request):
     ''' Sets the properties to show on the homepage of an L-function page.
     '''
-    
+
     info = {'title': L.title}
     info['citation'] = ''
     info['support'] = ''
-    info['sv12'] = specialValueString(L, 0.5, '1/2')
-    info['sv1'] = specialValueString(L, 1, '1')
+    # Here we should decide which values are indeed special values
+    # According to Brian, odd degree has special value at 1, and even
+    # degree has special value at 1/2.
+    # (however, I'm not sure this is true if L is not primitive -- GT)
+    if is_even(L.degree):
+        info['sv12'] = specialValueString(L, 0.5, '1/2')
+    if is_odd(L.degree):
+        info['sv1'] = specialValueString(L, 1, '1')
     info['args'] = args
     info['Ltype'] = L.Ltype()
-    info['URL'] = request.path
 
 
     info['credit'] = L.credit
@@ -282,13 +295,13 @@ def initLfunction(L,args, request):
 
     elif L.Ltype()  == 'riemann':
         info['bread'] = [('L-function','/L'),('Riemann Zeta',request.url)]
-        info['friends'] = [('\(\mathbb Q\)', url_for('number_fields.by_label', label='1.1.1.1')),  ('Dirichlet Character \(\\chi_{1}(0,\\cdot\)',
+        info['friends'] = [('\(\mathbb Q\)', url_for('number_fields.by_label', label='1.1.1.1')),  ('Dirichlet Character \(\\chi_{1}(0,\\cdot)\)',
                                                                        url_for('render_Character', arg1=1, arg2=0))]
 
     elif L.Ltype()  == 'dirichlet':
         snum = str(L.characternumber)
         smod = str(L.charactermodulus)
-        charname = '\(\\chi_{%s}({%s},\\cdot\)' %(smod, snum)
+        charname = '\(\\chi_{%s}({%s},\\cdot)\)' %(smod, snum)
         info['bread'] = [('L-function','/L'),('Dirichlet Character',url_for('render_Lfunction', arg1='degree1') +'#Dirichlet'),
                          (charname, request.url)]
         info['friends'] = [('Dirichlet Character '+str(charname), friendlink)]
@@ -296,7 +309,7 @@ def initLfunction(L,args, request):
 
     elif L.Ltype()  == 'ellipticcurve':
         label = L.label
-        info['friends'] = [('Elliptic Curve', friendlink )]
+        info['friends'] = [('Elliptic curve isogeny class '+label, friendlink )]
         info['bread'] = [('L-function','/L'),('Elliptic Curve',url_for('render_Lfunction', arg1='/L/degree2#EllipticCurve_Q')),
                          (label,url_for('render_Lfunction',arg1='EllipticCurve',arg2='Q',arg3= label))]
 
@@ -308,12 +321,28 @@ def initLfunction(L,args, request):
         number = str(L.number)
         info['friends'] = [('Modular Form', friendlink.rpartition('/')[0])] 
 
+    elif L.Ltype() == 'hilbertmodularform':
+        weight = str(L.weight)
+        level = str(L.level)
+        character = str(L.character)
+        label = str(L.label)
+        number = str(L.number)
+        info['friends'] = [('Hilbert Modular Form', friendlink.rpartition('/')[0])] 
+
     elif L.Ltype() == 'dedekindzeta':
         info['friends'] = [('Number Field', friendlink)]
 
     elif L.Ltype() in ['lcalcurl', 'lcalcfile']:
         info['bread'] = [('L-function',url_for('render_Lfunction'))]
+
+    elif L.Ltype() == 'siegelnonlift' or L.Ltype() == 'siegeleisenstein' or L.Ltype() == 'siegelklingeneisenstein' or L.Ltype() == 'siegelmaasslift':
+        weight = str(L.weight)
+        number = str(L.number)
+        info['friends'] = [('Siegel Modular Form', friendlink)]
+
         
+
+
 
     info['dirichlet'] = lfuncDStex(L, "analytic")
     info['eulerproduct'] = lfuncEPtex(L, "abstract")
@@ -362,13 +391,19 @@ def specialValueString(L, s, sLatex):
     
     number_of_decimals = 10
     val = L.sageLfunction.value(s)
-    lfuncion_value_tex = L.texname.replace('(s', '(' + sLatex)
-    if val.abs() < 1e-10:
+    lfunction_value_tex = L.texname.replace('(s', '(' + sLatex)
+    # We must test for NaN first, since it would show as zero otherwise
+    # Try "RR(NaN) < float(1e-10)" in sage -- GT
+    if val.real().is_NaN():
+        logger.debug("Infinity value.")
+        return "{0}=\\infty".format(lfunction_value_tex)
+    elif val.abs() < 1e-10:
         logger.debug("Zero value.")
-        return "\({0}=0\)".format(lfuncion_value_tex)
+        return "{0}=0".format(lfunction_value_tex)
     else:
-        return "\({0}\\approx {1}\)".format(lfuncion_value_tex,latex(round(val.real(), number_of_decimals)
-                                                                     +round(val.imag(), number_of_decimals)*I))
+        return "{0}\\approx {1}".format(lfunction_value_tex,
+            latex( round(val.real(), number_of_decimals)
+                 + round(val.imag(), number_of_decimals)*I ))
 
 
 ###########################################################################
@@ -427,9 +462,7 @@ def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, ar
     negativeZeros = []
     
     for zero in allZeros:
-        logger.debug("abszero: {0}".format(zero.abs()))
         if zero.abs()< 1e-10:
-            logger.debug("Zero zero")
             zero = 0
         if zero < 0:
             negativeZeros.append(zero)
@@ -450,7 +483,7 @@ def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, ar
 #   Functions for rendering graphs for browsing L-functions.
 ###########################################################################
 def render_browseGraph(args):
-    logger.info(args)
+    #logger.info(args)
     if 'sign' in args:
       data = LfunctionPlot.paintSvgFileAll([[args['group'], int(args['level']), args['sign']]])
     else:
@@ -460,14 +493,14 @@ def render_browseGraph(args):
     return response
 
 def render_browseGraphHolo(args):
-    logger.info(args)
+    #logger.info(args)
     data = LfunctionPlot.paintSvgHolo(args['Nmin'], args['Nmax'], args['kmin'], args['kmax'])
     response = make_response(data)
     response.headers['Content-type'] = 'image/svg+xml'
     return response
 
 def render_browseGraphTMP(args):
-    logger.info(args)
+    #logger.info(args)
     data = LfunctionPlot.paintSvgHoloGeneral(args['Nmin'], args['Nmax'], args['kmin'], args['kmax'],args['imagewidth'], args['imageheight'])
     response = make_response(data)
     response.headers['Content-type'] = 'image/svg+xml'
@@ -546,7 +579,7 @@ def processEllipticCurveNavigation(startCond, endCond):
     s = '<h5>Examples of L-functions attached to isogeny classes of elliptic curves</h5>'
     s += '<table>'
     
-    logger.debug(iso_list)
+    #logger.debug(iso_list)
 
     counter = 0
     nr_of_columns = 10

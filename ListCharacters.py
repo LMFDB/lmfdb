@@ -61,17 +61,17 @@ def get_character_conductor(a,b):
         while count < 7:
             if modulus%N == 0:
                 G = DirichletGroup_conrey(modulus)
-                #chi_count = 0
-                for j,chi in enumerate(G):
-                        if count == 7:
-                            break
-                        elif chi.conductor() == N:
-                            count += 1
-                            l.append((modulus,j,chi.is_primitive(),chi.multiplicative_order(),k(chi)))
+                for chi in G:
+                    j = chi.number()
+                    print chi.conductor(), j, N
+                    if count == 7:
+                        break
+                    elif chi.conductor() == N:
+                        count += 1
+                        l.append((modulus,j,chi.is_primitive(),chi.multiplicative_order(),k(chi)))
             modulus += N
             if count == 0:
                 break
-        print count
         return l 
     return [(_,line(_)) for _ in range(a,b)]
 

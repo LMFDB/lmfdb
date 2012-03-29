@@ -2,7 +2,7 @@
 {% block content %}
 
 <div class="announce">
-{{description}}
+{{ KNOWL_INC('intro.description') }}
 </div>
 
 <h1>Sections</h1>
@@ -10,8 +10,8 @@
  <ul>
   <li><a href="{{ url_for('introduction') }}">Introduction</a></li>
   <ul>
-    <li><a href="{{url_for('introduction_tutorial')}}">Tutorial</a></li>
     <li><a href="{{url_for('introduction_features')}}">Features</a></li>
+    <li><a href="{{url_for('introduction_tutorial')}}">Tutorial</a></li>
   </ul>
   
   <li><a href="{{ url_for('bigpicture') }}">Big Picture</a></li>
@@ -56,6 +56,7 @@
 <h1>Search</h1>
  <ul>
   <li><a href="{{ url_for('LfunctionDB.query', zerolowerbound=1.1, zeroupperbound=2.1) }}">Zeros of $L$-functions</a></li>
+  <li><a href="{{ url_for('zeta zeros.zetazeros') }}">Browse zeros of $\zeta(s)$</a></li>
  </ul>
 
 <h1>Misc Pages</h1>

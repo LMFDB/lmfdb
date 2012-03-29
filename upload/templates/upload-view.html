@@ -171,7 +171,7 @@ function updateMappingRules(data, id) {
       </script>
       {% else %}
       <a href="#" onclick="$('#div{{entry._id}}').load('{{url_for('.displayParsed',id=entry._id)}}');return false">
-      Show automatically parsed data</a>
+      Show automatically parsed data ({{entry.metadata.parsed_as}})</a>
       {% endif %}
 
     <div id="div{{entry._id}}">

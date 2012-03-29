@@ -262,6 +262,7 @@ def getUploadedFor(path):
   files = getDBConnection().upload.fs.files.find({"metadata.related_to": path, "$or" : [{"metadata.status": "approved"}, {"metadata.status": "approvedchild"}]})
   ret =  [ [x['metadata']['name'], "/upload/view/%s" % x['_id']] for x in files ]
   ret.insert(0, ["Upload your data here", url_for("upload.index") + "?related_to=" + request.path ])
+  ret.append(["View all data", url_for("upload.viewAll") ])
   return ret
 
 def queryUploadDatabase(filename, path, limit=0):
