@@ -18,6 +18,7 @@
     white-space:nowrap;
 }
 .chi a { display: inline; text-align: center; font-family: serif;}
+#chitable { clear:right; }
 #chitable td div { float: left; padding-left: .5em; padding-right: .5em; }
 #chitable td div>a { text-align: right; }
 #chitable td { vertical-align: middle;  white-space: nowrap; }
@@ -25,14 +26,16 @@
 #chitable td.b { background: none; }
 #chitable th { text-align: center; }
 table.ntdata tr.even, table.ntdata tr:nth-child(even) { background: none; }
-
+#chitable a.imprimitive:visited { color: blue;}
+#chitable a.primitive:visited { color:green ;}
+#chitable a.imprimitive { display:none; }
 #legend {
-  border: 3px solid #ccc;
+  border: 3px solid #006400;
   position: relative;
   top:   -7px;
   right: -7px;
   float:right;
-  clear:right;
+  float:clear;
   margin: 10px;
 }
 #legend td { cursor: pointer; }
@@ -62,9 +65,12 @@ $(function() {
   $("#legend-imp").hover(
      function() { $(".imprimitive").css("background", "#DDF"); },
      function() { $(".imprimitive").css("background", "inherit"); }
-   );
+     );
+  $("#legend-imp").click(
+      function() { $("#chitable .imprimitive").toggle("fast");}
+      );
   $("#legend-prim").hover(
-     function() { $(".primitive").css("background", "#DFD"); },
+     function() { $(".primitive").css("background", "#90EE90"); },
      function() { $(".primitive").css("background", "inherit"); }
    );
  }
@@ -72,19 +78,20 @@ $(function() {
             
 </script>
 
-<table id="legend">    
-  <tr><td class="imprimitive" id="legend-imp"> Imprimitive</font>.</td></tr>
-  <tr><td class="primitive" id="legend-prim"> Primitive</font>.</td></tr>
-</table>
 
 <div>
 The table below displays {{ KNOWL('character.dirichlet', title="Dirichlet characters" ) }} of a 
-given {{ KNOWL('character.dirichlet.modulus', title="modulus") }} and index. If \(q\) is the 
+given {{ KNOWL('character.dirichlet.modulus', title="modulus") }} \(q\) and index \(n\). If \(q\) is the 
 {{ KNOWL('character.dirichlet.modulus', title="modulus") }}, then each integer \(n\) (on the \(q\)-th row)
 represents the {{ KNOWL('character.dirichlet', title="Dirichlet character" ) }} \(\chi_{q}(n,&middot;)\). The 
-characters are grouped with respect to order and stacked integers indicate (multiplicative) inverse 
+characters are grouped with respect to order, \(\text{ord}\), and stacked integers indicate (multiplicative) inverse 
 {{ KNOWL('character.dirichlet', title="Dirichlet characters" ) }}.
 </div>
+
+<table id="legend">    
+  <tr><td class="imprimitive" id="legend-imp">&bullet; Imprimitive</td></tr>
+  <tr><td class="primitive" id="legend-prim"> &bullet; Primitive</td></tr>
+</table>
 
 <div>
 <table class="ntdata" id="chitable">
@@ -96,7 +103,7 @@ characters are grouped with respect to order and stacked integers indicate (mult
     </tr>
     <tr>
     #}
-        <th class="modulus">M\O</th>
+    <th class="modulus">\(q\backslash\text{ord}\)</th>
         {% for h in headers %}
         <th>{{h}}</th>
         {% endfor %}
@@ -109,8 +116,8 @@ characters are grouped with respect to order and stacked integers indicate (mult
     {% for e in entry %}
     <div>
       {% for chi in e %}
-        <a href="{{url_for('render_Character', arg1=row, arg2=chi[0])}}" 
-            class="{% if chi[1] -%}primitive{%- else -%}imprimitive{%- endif %}">{{ chi[0] }}</a>
+      <a href="{{url_for('render_Character', arg1=row, arg2=chi[0])}}"
+          class="{% if chi[1] -%}primitive{%- else -%}imprimitive{%- endif %}">{{ chi[0] }}</a>
       {% endfor %}
     </div>
     {% endfor %}
@@ -119,13 +126,14 @@ characters are grouped with respect to order and stacked integers indicate (mult
     <div>
       {% for chi in e %}
         <a href="{{url_for('render_Character', arg1=row, arg2=chi[0])}}"
-            class="{% if chi[1] -%}primitive{%- else -%}imprimitive{%- endif %}">{{ chi[0] }}</a>
+            class="{% if chi[1] -%}primitive{%- else -%}imprimitive{%- endif %}" id="legend-prim">{{ chi[0] }}</a>
       {% endfor %}
     </div>
     {% endfor %}
   {% endif %}
 {% endif %}
 {%- endmacro %}
+
 
 {% set row_class = cycler('a', 'b') %}
 <tbody>

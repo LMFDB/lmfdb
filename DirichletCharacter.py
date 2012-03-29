@@ -65,7 +65,11 @@ def render_webpage(request,arg1,arg2):
             info["bread"] = [('Dirichlet Characters', url_for("render_Character")), ('Conductor '+str(conductor_start) + '-' + str(conductor_end), '/Character/Dirichlet/condsearch='+str(conductor_start)+'-'+str(conductor_end))]
             info['title'] = 'Dirichlet Characters of Conductors ' +str(conductor_start)+'-'+str(conductor_end)
             info['credit'] = "Sage"
-            info['contents'] = ListCharacters.get_character_conductor(conductor_start,conductor_end+1)
+            info['contents']  = ListCharacters.get_character_conductor(conductor_start,conductor_end+1)
+            #info['contents'] = c
+            #info['header'] = h 
+            #info['rows'] = rows
+            #info['cols'] = cols
             return render_template("dirichlet_characters/ConductorList.html", **info)
 
         elif arg1.startswith("ordbrowse"):
