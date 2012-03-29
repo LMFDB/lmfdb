@@ -401,7 +401,28 @@ def kronecker_symbol(chi):
         return None
 
 @app.route("/Character/Dirichlet/table")
-def character_table_values(**args):
-    modulus = request.args.get("modulus")
-    return "Hello " + args.get("modulus", "empty")
+def dirichlet_table(**args):
+    modulus = request.args.get("modulus", 1, type=int)
+    info = to_dict(args)
+    info['modulus'] = modulus
+    info["bread"] = [('Dirichlet Character Table', url_for("dirichlet_table")), ('result', ' ')]
+    info['credit'] = 'Sage'
+    h, c = get_entries(modulus)
+    info['headers'] = h
+    info['contents'] = c
+    info['title'] = 'Dirichlet Characters'
+    return render_template("/dirichlet_characters/CharacterTable.html",**info)
+
+def get_entries(modulus):
+    from dirichlet_conrey import DirichletGroup_conrey
+    from sage.all import Integer
+    from WebCharacter import log_value 
+    G = DirichletGroup_conrey(modulus)
+    headers = range(1,modulus+1)
+    e = euler_phi(modulus)
+    rows = []
+    for chi in G:
+        number = chi.number()
+        rows.append(log_value(modulus,number))
+    return headers, [(_, rows[_]) for _ in range(1,e)] 
 

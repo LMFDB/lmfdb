@@ -81,29 +81,7 @@ class WebCharacter:
             self.conductor = chi.conductor()
             self.order = chi.multiplicative_order()
             self.vals = chi.values()
-            l = []
-            for j in range(1,self.modulus+1):
-                logvalue = chi.logvalue(j)
-                n = logvalue.numer()
-                d = logvalue.denom()
-                from sage.all import Integer
-                if Integer(j).gcd(self.modulus) == 1:
-                    if n == 0:
-                        s = "1"
-                    elif n == 1:
-                        if d == 2:
-                            s = "-1"
-                        if d == 4:
-                            s = "i"
-                    elif n == 3:
-                        if d == 4:
-                            s = "-i"
-                    else:
-                        s = r"\(e\left(\frac{%s}{%s}\right)\)" %(n,d) 
-                else:
-                    s=0
-                l.append(s)
-            self.logvals = l
+            self.logvals = log_values(self.modulus,self.number)
             self.bound = 5*1024
             if chi.is_even():
                 self.parity = 'Even'
@@ -147,6 +125,8 @@ class WebCharacter:
         self.title = r"Dirichlet Character: \(\chi_{%s}(%s,\cdot)\)" %(self.modulus,self.number)
     
         return chi
+
+
     def gauss_sum_tex(self):
         ans = "\(\\tau_a(\\chi_{%s}) \\;\) at \(\\; a = \)" %(self.number)
         return(ans)
@@ -175,6 +155,34 @@ class WebCharacter:
 
 
 
+
+def log_value(modulus,number):
+    from dirichlet_conrey import DirichletGroup
+    G = DirichletGroup_conrey(modulus)
+    chi = G[number]
+    l = []
+    for j in range(1, modulus+1):
+        logvalue = chi.logvalue(j)
+        n = logvalue.numer()
+        d = logvalue.denom()
+        from sage.all import Integer
+        if Integer(j).gcd(modulus) == 1:
+            if n == 0:
+                s = "1"
+            elif n == 1:
+                if d == 2:
+                    s = "-1"
+                if d == 4:
+                    s = "i"
+            elif n == 3:
+                if d == 4:
+                    s = "-i"
+            else:
+                s = r"e\left(\frac{%s}{%s}\right)" %(n,d) 
+        else:
+            s=0
+        l.append(s)
+    return l
 
 
 
