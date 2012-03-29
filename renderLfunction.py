@@ -128,12 +128,12 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
                                     processMaassNavigation()]
             elif degree == 3 or degree == 4:
                 info["contents"] = LfunctionPlot.getAllMaassGraphHtml(degree)
-                
+
             return render_template("DegreeNavigateL.html", title = 'Degree ' + str(degree)+ ' L-functions', **info)
-            
+
         elif arg1 == 'custom': # need a better name
             return "not yet implemented"
-        
+
     try:
       L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, temp_args)
     except Exception as e:
@@ -141,7 +141,7 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
       if len(e.args) > 1 and e.args[1] != 'UserError': raise
       info = { 'content': 'Sorry, there has been a problem: %s .         Please report it <a href="http://code.google.com/p/lmfdb/issues/list">here</a>.' % e.args[0], 'title': 'Error' }
       return render_template('LfunctionSimple.html', info=info, **info), 500
-   
+
     try:
         logger.info(temp_args)
         if temp_args['download'] == 'lcalcfile':
@@ -152,7 +152,7 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
     info = initLfunction(L, temp_args, request)
 
     return render_template('Lfunction.html', **info)
-    
+
 
 def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, temp_args):
     ''' Returns the L-function object corresponding to the supplied argumnents
@@ -176,16 +176,16 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
     elif arg1 == 'ModularForm' and arg2 == 'GL2'and arg3 == 'Q' and arg4 == 'Maass':
         logger.debug(db)
         return Lfunction_Maass(dbid = bson.objectid.ObjectId(arg5))
-    
+
     elif arg1 == 'ModularForm' and (arg2 == 'GSp4' or arg2 == 'GL4' or  arg2 == 'GL3') and arg3 == 'Q' and arg4 == 'maass':
         return Lfunction_Maass( dbid = arg5, dbName = 'Lfunction', dbColl = 'LemurellMaassHighDegree')
 
     elif arg1 == 'NumberField':
         return DedekindZeta( label = str(arg2))
-        
+
     elif arg1 == "ArtinRepresentation":
         return ArtinLfunction(dimension = arg2, conductor = arg3, tim_index = arg4)
-    
+
     elif arg1 == "SymmetricPower":
         return SymmetricPowerLfunction(arg2, [arg3, arg4, arg5, arg6, arg7, arg8, arg9], temp_args)
 
@@ -199,7 +199,7 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
 def set_info_for_start_page():
     ''' Sets the properties of the top L-function page.
     '''
-    
+
     tt = [[{'title':'Riemann Zeta Function','link': url_for('render_Lfunction', arg1='Riemann')},
            {'title':'Dirichlet L-function','link': url_for('render_Lfunction', arg1='degree1') + '#Dirichlet'}],
 
@@ -222,12 +222,12 @@ def set_info_for_start_page():
 #   info['learnmore'] = [('Lmfdb-wiki', 'http://wiki.l-functions.org/L-function')]
 
     return info
-    
+
 
 def initLfunction(L,args, request):
     ''' Sets the properties to show on the homepage of an L-function page.
     '''
-    
+
     info = {'title': L.title}
     info['citation'] = ''
     info['support'] = ''
@@ -241,7 +241,6 @@ def initLfunction(L,args, request):
         info['sv1'] = specialValueString(L, 1, '1')
     info['args'] = args
     info['Ltype'] = L.Ltype()
-    info['URL'] = request.path
 
 
     info['credit'] = L.credit
