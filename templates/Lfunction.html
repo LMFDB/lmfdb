@@ -28,15 +28,18 @@
      <div>Not enough Dirichlet series coefficients to compute zeros.</div>
  {% endif %}
 
- {% if sv1 and sv12 %}
-     <h2>Special Values</h2>
-     <div>
-     \[ {{ sv12 }} \]
-     \[ {{ sv1 }} \]
-     </div>
- {% else %}
-      <div>Not enough Dirichlet series coefficients to compute special values.</div>
- {% endif %}
+ <h2>Special Values</h2>
+ <div>
+  {% if sv12 %}
+      \[ {{ sv12 }} \]
+  {% endif %}
+  {% if sv1 %}
+      \[ {{ sv1 }} \]
+  {% endif %}
+  {% if not sv1 and not sv12 %}
+      Not enough Dirichlet series coefficients to compute special values.
+  {% endif %}
+ </div>
 
     <h2> Graph of the {{ KNOWL('lfunction.zfunction', title='$Z$-function') }} along center part of the {{ KNOWL('lfunction.critical_line', title='critical line') }} </h2>
 
