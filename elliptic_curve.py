@@ -301,6 +301,8 @@ def render_isogeny_class(iso_class):
     friends=[]
 #   friends.append(('Quadratic Twist', "/quadratic_twists/%s" % (label)))
     friends.append(('L-function', url_for("render_Lfunction", arg1='EllipticCurve', arg2='Q', arg3=label)))
+    friends.append(('Symmetric square L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='2',arg3='EllipticCurve', arg4='Q', arg5=label)))
+    friends.append(('Symmetric 4th power L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='4',arg3='EllipticCurve', arg4='Q', arg5=label)))
 #render_one_elliptic_modular_form(level,weight,character,label,**kwds)
     friends.append(('Modular form '+N+mod_form_iso, url_for("emf.render_elliptic_modular_forms", level=N,weight=2,character=0,label=mod_form_iso)))
     info['friends'] = friends
