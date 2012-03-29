@@ -13,10 +13,11 @@ class ArtinRepresentation(object):
     
     def __init__(self, *x, **data_dict):
         if len(x) == 0:
+            # Just passing named arguments
             self._data = data_dict["data"]
         else:
-            self = ArtinRepresentation.find_one({"Dimension":x[0],"Conductor":str(x[1]),"DBIndex":x[2]})
-        
+            self._data = self.__class__.collection().find_and_convert_one(Dim = int(x[0]), Conductor = str(x[1]), DBIndex = int(x[2]))
+
     @classmethod
     def find(cls, *x, **y):
         for item in cls.collection().find_and_convert(*x, **y):
@@ -34,13 +35,23 @@ class ArtinRepresentation(object):
     
     def index(self):
         return self._data["DBIndex"]
-    
+        
     def number_field_galois_group(self):
         if not hasattr(self,"_number_field_galois_group"):
             tmp = self._data["NFGal"]
             query = {"Degree" : int(tmp[0]), "Size" : str(tmp[1]), "DBIndex": int(tmp[2])}
             self._number_field_galois_group = NumberFieldGaloisGroup.find_one(query)
         return self._number_field_galois_group
+    
+    def euler_polynomial(self,p):
+        """
+            Returns the polynomial at the prime p in the Euler product. Output is as a list of length the degree (or more), with first coefficient the independent term.
+        """
+        return [1]
+        
+    def coefficients_list(self):
+        from utils import an_list
+        return an_list(lambda p: self.euler_polynomial(p), upperbound=100000, base_ring = sage.rings.all.RationalField())
 
     def character(self):
         return CharacterValues(self._data["Character"])
@@ -65,6 +76,77 @@ class ArtinRepresentation(object):
         from artin_representations.main import *
         return url_for("artin_representations.by_data", dim = self.dimension(), conductor = self.conductor(), index = self.index())
         
+    def langlands(self):
+        """
+            Tim:    conjectured always true,
+                    known in dimension 1,
+                    most cases in dimension 2
+            Andy: 
+        """
+        return True
+
+    def sign(self):
+        # Guessing needs to be implemented here
+        return 1
+        raise NotImplementedError
+    
+    def trace_complex_conjugation(self):
+        """ Computes the trace of complex conjugation, and returns an int
+        """
+        tmp = (self.character()[self.number_field_galois_group().index_complex_conjugation()-1])
+        # -1 because of this sequence's index starts at 1
+        try:
+            trace_complex = int(tmp)
+        # We are looking for the character value on the conjugacy class of complex conjugation.
+        # This is always an integer, so we don't expect this to be a more general algebraic integer, and we can simply convert to sage
+        except TypeError:
+            raise TypeError, "Expecting a character values that converts easily to integers, but that's not the case."
+        return trace_complex
+    
+    def number_of_eigenvalues_plus_one_complex_conjugation(self):
+        return int((self.dimension() + self.trace_complex_conjugation())/2)
+    
+    def number_of_eigenvalues_minus_one_complex_conjugation(self):
+        return int((self.dimension() - self.trace_complex_conjugation())/2)
+        
+    def kappa_fe(self):
+        return [1/2 for i in range(self.dimension())]
+    
+    def lambda_fe(self):
+        return [0 for i in range(self.number_of_eigenvalues_plus_one_complex_conjugation())] + \
+                    [1/2 for i in range(self.number_of_eigenvalues_minus_one_complex_conjugation())]
+    
+    def primitive(self):
+        return True
+
+    def mu_fe(self):
+        return []
+        raise NotImplementedError
+        
+    def nu_fe(self):
+        return []
+        raise NotImplementedError
+    
+    def self_dual(self):
+        return True
+        raise NotImplementedError
+    
+    def selfdual(self):
+        return self.self_dual()
+    
+    def poles(self):
+        if self.conductor() == 1 and self.dimension() ==1:
+            raise NotImplementedError
+            # needs to return the pole in the case of zeta
+        return []
+    
+    def residues(self):
+        if self.conductor() == 1 and self.dimension() ==1:
+            raise NotImplementedError
+            # needs to return the pole in the case of zeta
+        return []
+    
+    
 class CharacterValues(list):
     def display(self):
         # The character values can be large, do not convert to int!
@@ -99,7 +181,7 @@ class G_gens(list):
     def display(self):
         return self
         
-class NumberFieldGaloisGroup():
+class NumberFieldGaloisGroup(object):
     @staticmethod
     def collection(source = "Dokchitser"):
         if source == "Dokchitser":
@@ -135,20 +217,25 @@ class NumberFieldGaloisGroup():
             from sage.all import pari
             pol = R(pari(pol).polredabs())
             self._data["polredabs"] = pol
-            return self._data["polredabs"]
+            return pol
     
     def label(self):
         if "label" in self._data.keys():
             return self._data["label"]
         else:
             from number_fields.number_field import poly_to_field_label
-            self._data["label"] = poly_to_field_label(self.polynomial())
-            return self._data["label"]
+            label =  poly_to_field_label(self.polynomial())
+            if label:
+                self._data["label"] = label
+            return label
     
     def url_for(self):
         from number_fields import nf_page
         from number_fields.number_field import *
-        return url_for("number_fields.by_label", label = self.label())        
+        if self.label():
+            return url_for("number_fields.by_label", label = self.label())
+        else:
+            None
     
     def size(self):
         return self._data["Size"]
@@ -187,7 +274,8 @@ class NumberFieldGaloisGroup():
         tmp =  [str(x)  for x in self._data["QpRts"]]
         return tmp
         
-    def complex_conjugation(self):
+    def index_complex_conjugation(self):
+        # This is an index starting at 1
         return self._data["ComplexConjugation"]
         
     def Frobenius(self):
@@ -205,10 +293,32 @@ class NumberFieldGaloisGroup():
                 for item in self._data["ArtinReps"]]
         return x
         
-#    def sage_object(self):
-#        from sage import *
-#        X = PolynomialRing(QQ,"x")
-#        return X(self.polynomial)
+    def discriminant(self):
+        return self.sage_object().discriminant()
+        
+    def sage_object(self):
+        from sage import *
+        X = PolynomialRing(QQ,"x")
+        from sage.rings.number_field.number_field import NumberField
+        return NumberField(X(self.polynomial()),"x")
+    
+    def frobenius_cycle_type(self, p):
+        try:
+            assert not self.discriminant() % p == 0
+        except:
+            raise AssertionError, "Expecting a prime not dividing the discriminant", p
+        return self.residue_field_degree(p)
+    
+    def increasing_frobenius_cycle_type(self, p):
+        return sorted(self.frobenius_cycle_type(p), reverse = True)
+        
+    def residue_field_degree(self, p):
+        """ This function returns the residue field degrees.
+        """
+        if not hasattr(self, "_residue_field_degree"):
+            from number_fields.number_field import residue_field_degrees_function
+            self._residue_field_degrees = residue_field_degrees_function(self.sage_object())
+        return self._residue_field_degrees(p)
     
     def __str__(self):
         try:

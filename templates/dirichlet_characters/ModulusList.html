@@ -86,13 +86,22 @@ $(function() {
 #}
 
 <script type="text/javascript">
+var prim = true;
+var impr = false;
 $(function() {
   $("#legend-imp").hover(
      function() { $(".imprimitive").css("background", "#DDF"); },
      function() { $(".imprimitive").css("background", "inherit"); }
      );
   $("#legend-imp").click(function() {
-    $("#chitable .imprimitive").toggle();
+    impr = !impr;
+    $("#chitable .imprimitive").toggle(impr);
+    $("#legend-imp input").prop("checked", impr);
+  });
+  $("#legend-prim").click(function() {
+    prim = !prim;
+    $("#chitable .primitive").toggle(prim);
+    $("#legend-prim input").prop("checked", prim);
   });
   $("#legend-prim").hover(
      function() { $(".primitive").css("background", "#90EE90"); },
@@ -113,8 +122,8 @@ characters are grouped with respect to order and stacked integers indicate (comp
 </div>
 
 <table id="legend">    
-  <tr><td class="imprimitive" id="legend-imp">&bullet; Imprimitive</td></tr>
-  <tr><td class="primitive" id="legend-prim"> &bullet; Primitive</td></tr>
+  <tr><td class="imprimitive" id="legend-imp"><input type="checkbox" /> Imprimitive</td></tr>
+  <tr><td class="primitive" id="legend-prim"><input type="checkbox" checked /> Primitive</td></tr>
 </table>
 
 <div>

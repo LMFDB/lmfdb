@@ -187,6 +187,36 @@ def pair2complex(pair):
     return [float(rp),float(ip)]
 
 
+def an_list(euler_factor_polynomial_fn, upperbound=100000, base_ring = sage.rings.all.RationalField()):
+    """ Takes a fn that gives for each prime the polynomial of the associated with the prime,
+        given as a list, with independent coefficient first. This list is of length the degree.
+    """
+    from sage.rings.fast_arith import prime_range
+    PP = sage.rings.all.PowerSeriesRing(base_ring, 'x', (log(upperbound)/log(2.)).ceiling())
+
+    x = PP('x')
+    prime_l = prime_range(upperbound)
+    result = upperbound *[1]
+
+    for p in prime_l:
+        euler_factor =  (1/(PP(euler_factor_polynomial(p)))).padded_list()
+        
+        if len(euler_factor) == 1:
+            for j in range(1+ upperbound // p):
+                result[j*p -1]=0
+            continue
+
+        k=1
+        while True:
+            if p**k > upperbound:
+                break
+            for j in range(1+ upperbound // (p**k)):
+                if j % p == 0:
+                    continue
+                result[j* p**k -1] *= euler_factor[k]
+            k += 1
+    return result
+
 def splitcoeff(coeff):
     local = coeff.split("\n")
     answer = []

@@ -192,7 +192,13 @@ pari:
 	<thead><tr><td></td><td>{{ KNOWL('artin.dimension', title='Dimension') }}</td><td>{{ KNOWL('artin.conductor', title='Conductor') }}</td><td>Defining polynomial of {{ KNOWL('artin.number_field', title='Artin Field') }} </td><td>Galois subgroup</td></tr></thead>
 	<tbody>
         {% for artin in info["tim_number_field"].artin_representations()%}
-          <tr> <td><a href = "{{artin.url_for()}}">{{loop.index}}</a></td><td>${{artin.dimension()}}$</td><td>${{artin.conductor()}}$</td><td><a href="{{artin.number_field_galois_group().url_for()}}">${{artin.number_field_galois_group().polredabs()}}$</a></td><td>${{artin.number_field_galois_group().G_name()}}$</td></tr>
+          <tr> <td><a href = "{{artin.url_for()}}">{{loop.index}}</a></td><td>${{artin.dimension()}}$</td><td>${{artin.conductor()}}$</td>
+	  {% if artin.number_field_galois_group().url_for() %}
+	     <td><a href="{{artin.number_field_galois_group().url_for()}}">${{artin.number_field_galois_group().polredabs()}}$</a></td>
+	  {% else %}
+	      <td>${{artin.number_field_galois_group().polredabs()}}$</td>
+	  {% endif %}
+	  <td>${{artin.number_field_galois_group().G_name()}}$</td></tr>
         {% endfor %}
 	</tbody>
 	</table>
