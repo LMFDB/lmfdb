@@ -81,7 +81,7 @@ class WebCharacter:
             self.conductor = chi.conductor()
             self.order = chi.multiplicative_order()
             self.vals = chi.values()
-            self.logvals = log_values(self.modulus,self.number)
+            self.logvals = log_value(self.modulus,self.number)
             self.bound = 5*1024
             if chi.is_even():
                 self.parity = 'Even'
@@ -125,19 +125,6 @@ class WebCharacter:
         self.title = r"Dirichlet Character: \(\chi_{%s}(%s,\cdot)\)" %(self.modulus,self.number)
     
         return chi
-
-
-    def gauss_sum_tex(self):
-        ans = "\(\\tau_a(\\chi_{%s}) \\;\) at \(\\; a = \)" %(self.number)
-        return(ans)
-
-    def jacobi_sum_tex(self):
-        ans = "\(J(\\chi_{%s}(%s,&middot;),\\psi) \\;\) for \(\\; \\psi = \)" %(self.modulus,self.number)
-        return(ans)
-
-    def kloosterman_sum_tex(self):
-        ans = "\(K(a,b,\\chi_{%s}(%s,&middot;)) \\;\) at \(\\; a,b = \)" %(self.modulus,self.number)
-        return(ans)
 
     def _set_properties(self):
         conductor = str(self.conductor)
