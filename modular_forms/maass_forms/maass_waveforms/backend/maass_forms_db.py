@@ -185,7 +185,13 @@ class MaassDB(object):
                    'Weight':int(weight),
                    'Character':int(ch)}
         return self._collection.find(find_data).count()
-                
+
+    def collection_names(self):
+        return self._show_collection_name
+
+    def metadata(self):
+        return self._mongo_db.metadata
+    
     def is_data_in_table_mongo(self,level,weight,ch,sym_type,R,err=0):
         ep0=max(1.0E-8,2*RR(err))
 
@@ -318,7 +324,7 @@ class MaassDB(object):
         Find a Maass form matching the information in the dictionary data
         """
         find_data=arg_to_search_parameters(data,**kwds)
-        print "find_data",find_data
+        #print "find_data",find_data
         for collection in self._show_collection:
             f = collection.find(find_data)
             if f.count()>0:
@@ -329,11 +335,17 @@ class MaassDB(object):
         return res
 
     def get_Maass_forms(self,data={},**kwds):
+        print "Data=",data,type(data)
         if isinstance(data,bson.objectid.ObjectId):
             find_data={'_id':data}
+        elif isinstance(data,str):
+            find_data={'_id':bson.objectid.ObjectId(data)}
         else:
             find_data=arg_to_search_parameters(data,**kwds)
-        format_data=arg_to_format_parameters(data,**kwds)
+        if isinstance(data,dict):
+            format_data=arg_to_format_parameters(data,**kwds)
+        else:
+            format_data=arg_to_format_parameters({},**kwds)
         sorting = [('Weight',pymongo.ASCENDING),('Level',pymongo.ASCENDING),('Character',pymongo.ASCENDING),('Eigenvalue',pymongo.ASCENDING)]
         print "find_data=",find_data
         print "format_data=",format_data
@@ -366,9 +378,7 @@ class MaassDB(object):
         else:
             idd = self.find_Maass_form_id(data=data,**kwds)
         res=[]
-        #print "lenidd=",len(idd)
-        #if len(idd)>1:
-        #    raise ArithmeticError
+        get_filename=kwds.get('get_filename','')
         for maassid in idd:
             #print "id=",idd
             f = self._collection.find({'_id':maassid})
@@ -380,11 +390,25 @@ class MaassDB(object):
                     continue
                 cid=fn.get('coeff_id',None)
                 if cid==None:
+                    C1 = f.get('Coefficients',[])
+                    if C1<>[]:
+                        if get_filename<>'':
+                            Rst=str(R).split(".")
+                            Rst=(Rst[0]+"."+Rst[1][0:10])[0:12]
+                            fname='{0}-{1}-{2}-{3}-{4}'.format(f.get('Level'),f.get('Weight'),f.get('Character'),f.get('Symmetry'),Rst)
+                            return C1,fname
+                        else:
+                            return C1
+                        
                     continue
                 f1 = gridfs.GridFS(self._mongo_db,'Coefficients')
                 if f1.exists(cid):
-                    C =   loads(f1.get(cid).read())
-                    res.append(C)
+                    ff = f1.get(cid)
+                    C =   loads(ff.read())
+                    if get_filename<>'':
+                        res.append((C,f1.name))
+                    else:
+                        res.append(C)
         return res
 
     def count(self,data={},**kwds):
@@ -946,9 +970,14 @@ def mongify_elt(x):
 
 def arg_to_format_parameters(data={},**kwds):
     res={}
-    res['skip']=int(data.get('skip',kwds.get('skip',0)))
-    res['limit']=int(data.get('limit',kwds.get('limit',50)))
-    res['collection_name']=data.get('collection_name',kwds.get('collection_name',''))
+    if not isinstance(data,dict):
+        res['skip']=0
+        res['limit']=50
+        res['collection_name']=''
+    else:
+        res['skip']=int(data.get('skip',kwds.get('skip',0)))
+        res['limit']=int(data.get('limit',kwds.get('limit',50)))
+        res['collection_name']=data.get('collection_name',kwds.get('collection_name',''))
     return res
     
 def arg_to_search_parameters(data={},**kwds):

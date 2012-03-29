@@ -118,19 +118,24 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
         return info
     info['name']=WNF._name
     info['satake']=WNF.satake_parameters(prec,bprec)
-    info['polynomial'] = WNF.polynomial()
+    
     #br = 500
     #info['q_exp'] = ajax_more(WNF.print_q_expansion,{'prec':5,'br':br},{'prec':10,'br':br},{'prec':20,'br':br},{'prec':100,'br':br},{'prec':200,'br':br})
 
-    info['qexp']=WNF.print_q_expansion(prec,50)
-    c = list(WNF.q_expansion(prec))
-    info['c']=map(lambda x: str(x).replace("*",""), c)
-    info['maxc']=prec
-    if(WNF.dimension()>1 or WNF.base_ring()<>QQ):
+    info['qexp']=WNF.print_q_expansion(prec)
+    #c = list(WNF.q_expansion(prec))
+    #c = map(lambda x: str(x).replace("*",""), c)
+    #info['c'] = map(lambda x: x.replace(, c)
+    #emf_logger.debug("c={0}".format(info['c']))
+    #info['maxc']=len(c)
+    #emf_logger.debug("maxc={0}".format(info['maxc']))
+    K = WNF.base_ring()
+    info['polynomial'] = str(WNF.polynomial()).replace('x',str(latex(K.gen())))
+    if(K<>QQ):
         info['polynomial_st'] = 'where ' +r'\('+ info['polynomial'] +r'=0\)'
     else:
         info['polynomial_st'] = ''
-    K = WNF.base_ring()
+
     if(K<>QQ and K.is_relative()):
         info['degree'] = int(WNF.base_ring().relative_degree())
     else:

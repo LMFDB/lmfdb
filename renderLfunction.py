@@ -231,8 +231,14 @@ def initLfunction(L,args, request):
     info = {'title': L.title}
     info['citation'] = ''
     info['support'] = ''
-    info['sv12'] = specialValueString(L, 0.5, '1/2')
-    info['sv1'] = specialValueString(L, 1, '1')
+    # Here we should decide which values are indeed special values
+    # According to Brian, odd degree has special value at 1, and even
+    # degree has special value at 1/2.
+    # (however, I'm not sure this is true if L is not primitive -- GT)
+    if is_even(L.degree):
+        info['sv12'] = specialValueString(L, 0.5, '1/2')
+    if is_odd(L.degree):
+        info['sv1'] = specialValueString(L, 1, '1')
     info['args'] = args
     info['Ltype'] = L.Ltype()
     info['URL'] = request.path
@@ -362,13 +368,19 @@ def specialValueString(L, s, sLatex):
     
     number_of_decimals = 10
     val = L.sageLfunction.value(s)
-    lfuncion_value_tex = L.texname.replace('(s', '(' + sLatex)
-    if val.abs() < 1e-10:
+    lfunction_value_tex = L.texname.replace('(s', '(' + sLatex)
+    # We must test for NaN first, since it would show as zero otherwise
+    # Try "RR(NaN) < float(1e-10)" in sage -- GT
+    if val.real().is_NaN():
+        logger.debug("Infinity value.")
+        return "{0}=\\infty".format(lfunction_value_tex)
+    elif val.abs() < 1e-10:
         logger.debug("Zero value.")
-        return "\({0}=0\)".format(lfuncion_value_tex)
+        return "{0}=0".format(lfunction_value_tex)
     else:
-        return "\({0}\\approx {1}\)".format(lfuncion_value_tex,latex(round(val.real(), number_of_decimals)
-                                                                     +round(val.imag(), number_of_decimals)*I))
+        return "{0}\\approx {1}".format(lfunction_value_tex,
+            latex( round(val.real(), number_of_decimals)
+                 + round(val.imag(), number_of_decimals)*I ))
 
 
 ###########################################################################

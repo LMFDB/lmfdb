@@ -14,7 +14,7 @@
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 r"""
-Utilities file for elliptic (holomorhic) modular forms.
+Utilities file for elliptic (holomorphic) modular forms.
 
 AUTHOR: Fredrik Strömberg
 
@@ -25,9 +25,41 @@ from flask import  jsonify
 from utils import *
 from modular_forms.elliptic_modular_forms import EMF,emf, emf_logger
 logger = emf_logger
-from sage.all import dimension_new_cusp_forms,vector,dimension_modular_forms,dimension_cusp_forms,is_odd
+from sage.all import dimension_new_cusp_forms,vector,dimension_modular_forms,dimension_cusp_forms,is_odd,loads,dumps,Gamma0,Gamma1,Gamma
 from modular_forms.backend.mf_utils import my_get
 from plot_dom import draw_fundamental_domain
+import base
+from pymongo.binary import *
+
+def parse_range(arg, parse_singleton=int):
+    # TODO: graceful errors
+    if type(arg)==parse_singleton:
+        return arg
+    if ',' in arg:
+        return [parse_range(a) for a in arg.split(',')]
+    elif '-' in arg[1:]:
+        ix = arg.index('-', 1)
+        start, end = arg[:ix], arg[ix+1:]
+        q = {}
+        if start:
+            q['min'] = parse_singleton(start)
+        if end:
+            q['max'] = parse_singleton(end)
+        return q
+    else:
+        return parse_singleton(arg)
+
+def extract_limits_as_tuple(arg, field, defaults=(1,10)):
+    if type(arg.get(field))==dict:
+        limits=(arg[field]['min'],arg[field]['max'])
+    else:
+        if arg.get(field):
+            limits=(arg[field],arg[field])
+        else:
+            limits=defaults
+    return limits
+    
+
 
 def extract_data_from_jump_to(s):
     label=None;weight=None;character=None;level=None
@@ -189,8 +221,6 @@ def ajax_later(callback,*arglist,**kwds):
         return jsonify(result=res)
 
 
-
-
 class MyNewGrp (object):
     def __init__(self,level,info):
         self._level=level
@@ -205,4 +235,33 @@ def render_fd_plot(level,info,**kwds):
         # we only allow standard groups
     if (group  not in ['Gamma0','Gamma','Gamma1']):
         group = 'Gamma0'
-    return draw_fundamental_domain(level,group,**kwds) 
+        type=int(0)
+    else:
+        if group=='Gamma':
+            type=int(-1)
+        else:
+            type=(1)
+    db_name = 'SL2Zsubgroups'
+    dbport = 37010
+    collection='groups'
+    C = base.getDBConnection()
+    emf_logger.debug("C={0}".format(C))
+    if not C:
+        emf_logger.critical("Could not connect to Database! C={0}".format(C))
+    if not db_name in C.database_names():
+        emf_logger.critical("Incorrect database name {0}. \n Available databases are:{1}".format(db_name,C.database_names()))
+    if not collection in C[db_name].collection_names():
+        emf_logger.critical("Incorrect collection {0} in database {1}. \n Available collections are:{2}".format(collection,db_name,C[db_name].collection_names()))
+    
+    find=C[db_name][collection].find_one({'level':level,'type':type})
+    if find:
+        if find.get('domain'):
+            domain=loads(str(find['domain']))
+        emf_logger.debug('Found fundamental domain in database')
+    else:
+        if type==int(0):
+            domain=draw_fundamental_domain(level,group,**kwds)
+            G=Gamma0(level)
+            #C[db_name][collection].insert({'level':int(level), 'type':type, 'index':int(G.index), 'G':pymongo.binary.Binary(dumps(G)), 'domain': pymongo.binary.Binary(dumps(domain))})
+            #emf_logger.debug('Inserting group and fundamental domain in database')
+    return domain
