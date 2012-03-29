@@ -69,7 +69,16 @@ class ArtinRepresentation(object):
         from artin_representations import artin_representations_page
         from artin_representations.main import *
         return url_for("artin_representations.by_data", dim = self.dimension(), conductor = self.conductor(), index = self.index())
-    
+        
+    def langlands(self):
+        """
+            Tim:    conjectured always true,
+                    known in dimension 1,
+                    most cases in dimension 2
+            Andy: 
+        """
+        return True
+
     def sign(self):
         # Guessing needs to be implemented here
         return 1
@@ -101,17 +110,8 @@ class ArtinRepresentation(object):
         return [0 for i in range(self.number_of_eigenvalues_plus_one_complex_conjugation())] + \
                     [1/2 for i in range(self.number_of_eigenvalues_minus_one_complex_conjugation())]
     
-    def langlands(self):
-        return True
-        raise NotImplementedError
-    
-    def selfdual(self):
-        return True
-        raise NotImplementedError
-
     def primitive(self):
         return True
-        raise NotImplementedError
 
     def mu_fe(self):
         return []
@@ -125,6 +125,9 @@ class ArtinRepresentation(object):
         return True
         raise NotImplementedError
     
+    def selfdual(self):
+        return self.self_dual()
+    
     def poles(self):
         if self.conductor() == 1 and self.dimension() ==1:
             raise NotImplementedError
@@ -136,7 +139,8 @@ class ArtinRepresentation(object):
             raise NotImplementedError
             # needs to return the pole in the case of zeta
         return []
-        
+    
+    
 class CharacterValues(list):
     def display(self):
         # The character values can be large, do not convert to int!
@@ -278,10 +282,32 @@ class NumberFieldGaloisGroup(object):
                 for item in self._data["ArtinReps"]]
         return x
         
-#    def sage_object(self):
-#        from sage import *
-#        X = PolynomialRing(QQ,"x")
-#        return X(self.polynomial)
+    def discriminant(self):
+        return self.sage_object().discriminant()
+        
+    def sage_object(self):
+        from sage import *
+        X = PolynomialRing(QQ,"x")
+        from sage.rings.number_field.number_field import NumberField
+        return NumberField(X(self.polynomial()),"x")
+    
+    def frobenius_cycle_type(self, p):
+        try:
+            assert not self.discriminant() % p == 0
+        except:
+            raise AssertionError, "Expecting a prime not dividing the discriminant", p
+        return self.residue_field_degree(p)
+    
+    def increasing_frobenius_cycle_type(self, p):
+        return sorted(self.frobenius_cycle_type(p), reverse = True)
+        
+    def residue_field_degree(self, p):
+        """ This function returns the residue field degrees.
+        """
+        if not hasattr(self, "_residue_field_degree"):
+            from number_fields.number_field import residue_field_degrees_function
+            self._residue_field_degrees = residue_field_degrees_function(self.sage_object())
+        return self._residue_field_degrees(p)
     
     def __str__(self):
         try:

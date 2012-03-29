@@ -710,18 +710,31 @@ def filter_ur_primes(it, ur_primes):
         D = a['discriminant']
     return
 
-# Compute Frobenius cycle types
-def frobs(K):
+
+def residue_field_degrees_function(K):
+  """ Given a sage field, returns a function that has
+          input: a prime p
+          output: the residue field degrees at the prime p
+  """
   k1 = pari(K)
   D = K.disc()
   ans = []
-  for p in primes(2,60):
+  def dec(p):
     if not ZZ(p).divides(D):
       dec = k1.idealprimedec(p)
       dec = [z[3] for z in dec]
-      vals = list(set(dec))
-      vals = sorted(vals, reverse=True)
-      dec = [[x, dec.count(x)] for x in vals]
+      return dec
+    else:
+      raise ValueError, "Expecting a prime not dividing D"
+  return dec
+
+
+# Compute Frobenius cycle types, returns string nicely presenting this
+def frobs(K):
+  frob_at_p = frobs_function(K)
+  for p in primes(2,60):
+    if not ZZ(p).divides(D):
+      dec = residue_field_degrees_function(p)
       dec2 = ["$"+str(x[0]) + ('^{'+str(x[1])+'}$' if x[1]>1 else '$') for x in dec]
       s = '$'
       old=2

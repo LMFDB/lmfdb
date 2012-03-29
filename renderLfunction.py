@@ -342,6 +342,7 @@ def set_gaga_properties(L):
 
     ans.append(('Level',     str(L.level)))
     ans.append(('Sign',      str(L.sign)))
+    
 
     if L.selfdual:
         sd = 'Self-dual'
@@ -353,9 +354,16 @@ def set_gaga_properties(L):
         prim = 'Primitive'
     else:
         prim = 'Not primitive'
-#    ans.append((None,        prim))    Disabled until fixed
+    ans.append((None, prim))
 
-    return ans
+    if L.langlands:
+        langlands = "True"
+        motivic_weight = str(L.motivic_weight)
+        ans.append(("Langlands", langlands ))
+        ans.append(("Motivic weight", motivic_weight))
+    else:
+        langlands = "False"
+        ans.append(("Langlands", langlands ))
 
 
 def specialValueString(L, s, sLatex):

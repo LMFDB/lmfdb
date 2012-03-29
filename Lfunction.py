@@ -83,6 +83,7 @@ class Lfunction:
         self.primitive = True # should be changed later
         self.citation = ''
         self.credit = ''
+        self.motivic_weight = NaN
 
         # Initialize from an lcalcfile if it's not a subclass
         if 'Ltype' in args.keys():
@@ -504,6 +505,7 @@ class Lfunction_EC(Lfunction):
         self.nu_fe = [Rational('1/2')]
         self.langlands = True
         self.degree = 2
+        self.motivic_weight = 1
 
         self.dirichlet_coefficients = self.E.anlist(self.numcoeff)[1:]  #remove a0
         self.dirichlet_coefficients_unnormalized = self.dirichlet_coefficients[:]
@@ -578,6 +580,7 @@ class Lfunction_EMF(Lfunction):
         self.__dict__.update(args)
         logger.debug(str(self.character)+str(self.label)+str(self.number))
         self.weight = int(self.weight)
+        self.motivic_weight = 1
         self.level = int(self.level)
         self.character = int(self.character)
         if self.character > 0:
@@ -703,6 +706,7 @@ class RiemannZeta(Lfunction):
         self.is_zeta = True
 
         self.sageLfunction = lc.Lfunction_Zeta()
+        self.motivic_weight = 0
 
     def Ltype(self):
         return "riemann"
@@ -739,7 +743,8 @@ class Lfunction_Dirichlet(Lfunction):
 
         # Create the Dirichlet character
         chi = DirichletGroup(self.charactermodulus)[self.characternumber]
-
+        self.motivic_weight = 0
+        
         if chi.is_primitive():
 
             # Extract the L-function information from the Dirichlet character
@@ -949,7 +954,7 @@ class DedekindZeta(Lfunction):   # added by DK
 
     def __init__(self, **args):
         constructor_logger(self,args)
-
+        self.motivic_weight = 0
         #Check for compulsory arguments
         if not 'label' in args.keys():
             raise Exception("You have to supply a label for a Dedekind zeta function")
@@ -1033,13 +1038,13 @@ class ArtinLfunction(Lfunction):
                 
         self.dirichlet_coefficients = self.artin.coefficients_list()
         
+        self.motivic_weight = 0
         
         self.coefficient_type = 0
         self.coefficient_period = 0
-        self.Q_fe = Integer(self.artin.conductor())/float(math.pi)
-            # This is wrong at the moment
-        self.sign = self.artin.sign()
         self.degree = self.artin.dimension()
+        self.Q_fe = int(self.artin.conductor())/float(math.pi)**int(self.degree)
+        self.sign = self.artin.sign()
         self.kappa_fe = self.artin.kappa_fe()
         self.lambda_fe = self.artin.lambda_fe()
         self.poles = self.artin.poles()
