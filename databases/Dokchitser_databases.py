@@ -1,5 +1,5 @@
-artin_location = ("contrib","pdehaye4f2bef4ce9841255c9000002")
-galois_group_location = ("contrib","pdehaye4f2bef6ae9841255c9000004")
+artin_location = ("limbo","tim_artin_01")
+galois_group_location = ("limbo","nfgal_01")
 
 from type_generation import String, Array, Dict, Int, Anything, Float
 
