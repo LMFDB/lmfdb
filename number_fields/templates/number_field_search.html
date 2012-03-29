@@ -1,6 +1,66 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
+<script>
+jQuery.fn.dataTableExt.oSort['label-asc']  = function(xl,yl) {
+  var partsx, partsy;
+  partsx = xl.replace(/<.*>(.*)<.*>/g,"$1");
+  partsy = yl.replace(/<.*>(.*)<.*>/g,"$1");
+  partsx = partsx.split(".");
+  partsx = partsy.split(".");
+  x = new Array();
+  y = new Array();
+  var j;
+  for (j in partsx) x.push(parseInt(j));
+  for (j in partsy) y.push(parseInt(j));
+  if(x[0]==y[0]) {
+    return ((x[2] < y[2]) ? -1 : ((x[2] > y[2]) ?  1 : 0));
+  } else {
+    return ((x[0] < y[0]) ? -1 : 1);
+  }
+};
+
+jQuery.fn.dataTableExt.oSort['label-desc'] = function(x,y) {
+  var partsx, partsy;
+  partsx = xl.replace(/<.*>(.*)<.*>/g,"$1");
+  partsy = yl.replace(/<.*>(.*)<.*>/g,"$1");
+  partsx = partsx.split(".");
+  partsx = partsy.split(".");
+  x = new Array();
+  y = new Array();
+  var j;
+  for (j in partsx) x.push(parseInt(j));
+  for (j in partsy) y.push(parseInt(j));
+  if(x[0]==y[0]) {
+    return ((x[2] < y[2]) ? 1 : ((x[2] > y[2]) ?  -1 : 0));
+  } else {
+    return ((x[0] < y[0]) ? 1 : -1);
+  }
+};
+
+
+ $(document).ready(function() {
+     $('#fieldTab').dataTable({
+       "bFilter": false, 
+       "aaSorting": [[0, 'asc'], [3, 'asc']],
+       "aoColumns": [
+			{ "sType": 'label' },
+			null,
+			null,
+			null,
+			null
+		],
+       "aLengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+       "fnRowCallback": function( row, data, index ){ 
+             MathJax.Hub.Queue(['Typeset', MathJax.Hub, row]);
+             return row;
+         }
+     });
+ });
+</script>
+
+
+
 <h2> Further refine search </h2>
 
 <form>
@@ -16,10 +76,6 @@
 <td align=left> {{KNOWL('nf.ideal_class_group', title='class group')}} <td align=left> <input type='text' name='class_group' size=5 value="{{info.class_group}}"></td>
 <td align=left> {{KNOWL('nf.unramified_prime', title='unramified primes')}}<td align=left> <input type='text' name='ur_primes' size=3 value="{{info.ur_primes}}"></td>
 </tr>
-<tr>
-<td align=left colspan=3>Maximum number of fields to display 
-<td align=left> <input type='text' name='count' value="{{info.count}}" size=5></td>
-</tr>
 
 <tr> 
 <td align=left><button type='submit' value='refine'>Search again</button></td> 
@@ -28,9 +84,10 @@
 </form>
 
 
-<h2> Results ({{info.report}})</h2>
+<h2> Results: ({{info.report}})</h2>
 
-<table border=1 cellpadding=5 class='right_align_table'>
+<table border=1 cellpadding=5 class="ntdata", id="fieldTab"`>
+<thead>
 <tr>
 <th>Label</th>
 <th>Polynomial</th>
@@ -38,6 +95,8 @@
 <th>Galois group</th>
 <th>Class group</th>
 </tr>
+</thead>
+<tbody>
 {% for field in info.fields: %}
 <tr>
 <td align='left'><a href="/NumberField/{{field.label}}">{{field.label}}</a></td>
@@ -52,10 +111,8 @@
 {% endif %}
 </tr>
 {% endfor %}
+</tbody>
 </table>
-
-<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form();return false">Previous</A>
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form();return false">Next</A></td>
 
 
 {% endblock %}

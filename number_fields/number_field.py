@@ -423,6 +423,8 @@ def render_field_webpage(args):
     rawpoly = coeff_to_poly(data['coefficients'])
     K = NumberField(rawpoly, 'a')
     D = data['discriminant']
+    if not data.has_key('class_number'):
+      data['class_number'] = na_text()
     h = data['class_number']
     t = data['T']
     n = data['degree']
@@ -710,6 +712,7 @@ def number_field_search(**args):
             info['report'] = 'displaying matches %s-%s of %s'%(start+1,min(nres,start+count),nres)
         else:
             info['report'] = 'displaying all %s matches'%nres
+    info['report'] = 'found %s fields' % nres
     info['format_coeffs'] = format_coeffs
     info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), ('Discriminant ranges',url_for(".render_discriminants_page"))]
     t = 'Global Number Field search results'
