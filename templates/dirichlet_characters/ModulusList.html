@@ -26,15 +26,26 @@
 #chitable th { text-align: center; }
 table.ntdata tr.even, table.ntdata tr:nth-child(even) { background: none; }
 
+#legend {
+  border: 3px solid #ccc;
+  position: relative;
+  top:   -7px;
+  right: -7px;
+  float:right;
+  clear:right;
+  margin: 10px;
+}
+#legend td { cursor: pointer; }
+
 .primitive {
   color:green;
 }
-.nonprimitive {
-    color:blue;
+.imprimitive {
+  color:blue;
 }
 </style>
 
-<script type="text/javascript">
+{#<script type="text/javascript">
 $(function() {
   var lastcols = $("#chitable tr th:last-child, #chitable tr td:last-child");
   lastcols.hide();
@@ -44,31 +55,47 @@ $(function() {
   });
 });
 </script>
+#}
 
-<table>    
-    <thead align="left">
-    <tr>
-        <th>
-            The following table displays Dirichlet characters. If q is the modulus, then each integer n </br>
-            in the qth row represents the Dirichlet character \(\chi_{q}(n,&middot;)\). The characters are grouped </br>
-            with respect to order and stacked integers indicate multiplicative inverses.</br></br> 
-            <font color = "blue"> Imprimitive </font> characters.</br>
-            <font color = "green"> Primitive </font> characters. 
-        </th>
-    <tr/>
-</thead>
+<script type="text/javascript">
+$(function() {
+  $("#legend-imp").hover(
+     function() { $(".imprimitive").css("background", "#DDF"); },
+     function() { $(".imprimitive").css("background", "inherit"); }
+   );
+  $("#legend-prim").hover(
+     function() { $(".primitive").css("background", "#DFD"); },
+     function() { $(".primitive").css("background", "inherit"); }
+   );
+ }
+);
+            
+</script>
+
+<table id="legend">    
+  <tr><td class="imprimitive" id="legend-imp"> Imprimitive</font>.</td></tr>
+  <tr><td class="primitive" id="legend-prim"> Primitive</font>.</td></tr>
 </table>
-<br/>
+
+<div>
+The table below displays {{ KNOWL('character.dirichlet', title="Dirichlet characters" ) }} of a 
+given {{ KNOWL('character.dirichlet.modulus', title="modulus") }} and index. If \(q\) is the 
+{{ KNOWL('character.dirichlet.modulus', title="modulus") }}, then each integer \(n\) (on the \(q\)-th row)
+represents the {{ KNOWL('character.dirichlet', title="Dirichlet character" ) }} \(\chi_{q}(n,&middot;)\). The 
+characters are grouped with respect to order and stacked integers indicate (multiplicative) inverse 
+{{ KNOWL('character.dirichlet', title="Dirichlet characters" ) }}.
+</div>
 
 <div>
 <table class="ntdata" id="chitable">
 <thead align="center">
-    <tr>
-     <td colspan="6" style="text-align: right;"></td>
+    {#<tr>
+        <td colspan="6" style="text-align: right;"></td>
      <td><a href="#" id="showlastcols">show more &rarr;</a></td>
      <td></td>
     </tr>
     <tr>
+    #}
         <th class="modulus">M\O</th>
         {% for h in headers %}
         <th>{{h}}</th>
@@ -82,11 +109,8 @@ $(function() {
     {% for e in entry %}
     <div>
       {% for chi in e %}
-        <a href="{{url_for('render_Character', arg1=row, arg2=chi[0])}}"> 
-            <font color="{% if chi[1] -%}green{%- else -%}blue{%- endif %}">
-                {{ chi[0] }}
-        </font>
-        </a>
+        <a href="{{url_for('render_Character', arg1=row, arg2=chi[0])}}" 
+            class="{% if chi[1] -%}primitive{%- else -%}imprimitive{%- endif %}">{{ chi[0] }}</a>
       {% endfor %}
     </div>
     {% endfor %}
@@ -94,11 +118,8 @@ $(function() {
     {% for e in entry %}
     <div>
       {% for chi in e %}
-        <a href="{{url_for('render_Character', arg1=row, arg2=chi[0])}}"> 
-            <font color="{% if chi[1] -%}green{%- else -%}blue{%- endif %}">
-                {{ chi[0] }}
-        </font>
-        </a>
+        <a href="{{url_for('render_Character', arg1=row, arg2=chi[0])}}"
+            class="{% if chi[1] -%}primitive{%- else -%}imprimitive{%- endif %}">{{ chi[0] }}</a>
       {% endfor %}
     </div>
     {% endfor %}
