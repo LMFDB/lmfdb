@@ -432,7 +432,7 @@ def render_field_webpage(args):
     data['galois_group'] = group_display_knowl(n,t,C)
     data['cclasses'] = cclasses_display_knowl(n,t,C)
     data['character_table'] = character_table_display_knowl(n,t,C)
-    if not data.has_key['class_group']:
+    if not data.has_key('class_group'):
       data['class_group'] = na_text()
       data['class_group_invs'] = data['class_group']
     else:
@@ -613,7 +613,10 @@ def verify_field(field, narrowconds, zconds):
     if fdisc <= x[1] and fdisc >= x[0]: return True
   zdisc = ZZ(str(field['disc_string']))
   for x in zconds:
-    if zdisc <= x[1] and zdisc >= x[0]: return True
+    if type(x)==list:
+      if zdisc <= x[1] and zdisc >= x[0]: return True
+    else:
+      if zdisc == x: return True
   return False
 
 def verify_all_fields(li, dlist):
