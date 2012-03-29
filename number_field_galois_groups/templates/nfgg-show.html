@@ -30,7 +30,7 @@
 
       <tbody>
         {% for gen in info.conjugacy_classes()%}
-            <tr {% if loop.index == info.complex_conjugation()%}class="redhighlight"{%endif%}> <td>${{loop.index}}$</td><td>${{gen.size()}}$</td><td>${{gen.order()}}$</td><td>${{gen.representative()}}$</td><td>${{gen.representative().cycle_string()}}$</td></tr>
+            <tr {% if loop.index == info.index_complex_conjugation()%}class="redhighlight"{%endif%}> <td>${{loop.index}}$</td><td>${{gen.size()}}$</td><td>${{gen.order()}}$</td><td>${{gen.representative()}}$</td><td>${{gen.representative().cycle_string()}}$</td></tr>
         {% endfor %}
       </tbody>
       </table>

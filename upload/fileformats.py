@@ -68,6 +68,9 @@ def guessParsing(file1):
   #if len(''.join(firstlines))/len(firstlines) >= 1000:
     #print "IGNORE"
   #print firstlines
+  file1.seek(0)
+  
+  ret = json.loads(file1)
 
 
   percentContainingComma = len([1 for line in firstlines if line.find(',')!=-1])*100/len(firstlines)

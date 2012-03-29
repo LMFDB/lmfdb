@@ -83,6 +83,7 @@ class Lfunction:
         self.primitive = True # should be changed later
         self.citation = ''
         self.credit = ''
+        self.motivic_weight = NaN
 
         # Initialize from an lcalcfile if it's not a subclass
         if 'Ltype' in args.keys():
@@ -130,6 +131,10 @@ class Lfunction:
 
         lines = filecontents.split('\n',6)
         self.coefficient_type = int(lines[0])
+        # Rishi tells me that for his wrapper
+        # 0 is for general, 1 is for periodic and 2 is for elliptic curves.
+        # Mike seems to only use 0 and 1.
+        # POD
         self.quasidegree = int(lines[4])
         lines = self.lcalcfile.split('\n',8+2*self.quasidegree)
         self.Q_fe = float(lines[5+2*self.quasidegree])
@@ -183,6 +188,10 @@ class Lfunction:
                                             self.Q_fe, self.sign ,
                                             self.kappa_fe, self.lambda_fe ,
                                             self.poles, self.residues)
+                    # self.kappa_fe:        
+                    # self.lambda_fe:
+                    # According to Rishi, as of March 2012 (sage <=5.0), the documentation to his wrapper is wrong
+                    # POD
 
     def createLcalcfile(self):
         thefile="";
@@ -496,6 +505,7 @@ class Lfunction_EC(Lfunction):
         self.nu_fe = [Rational('1/2')]
         self.langlands = True
         self.degree = 2
+        self.motivic_weight = 1
 
         self.dirichlet_coefficients = self.E.anlist(self.numcoeff)[1:]  #remove a0
         self.dirichlet_coefficients_unnormalized = self.dirichlet_coefficients[:]
@@ -570,6 +580,7 @@ class Lfunction_EMF(Lfunction):
         self.__dict__.update(args)
         logger.debug(str(self.character)+str(self.label)+str(self.number))
         self.weight = int(self.weight)
+        self.motivic_weight = 1
         self.level = int(self.level)
         self.character = int(self.character)
         if self.character > 0:
@@ -695,6 +706,7 @@ class RiemannZeta(Lfunction):
         self.is_zeta = True
 
         self.sageLfunction = lc.Lfunction_Zeta()
+        self.motivic_weight = 0
 
     def Ltype(self):
         return "riemann"
@@ -731,7 +743,8 @@ class Lfunction_Dirichlet(Lfunction):
 
         # Create the Dirichlet character
         chi = DirichletGroup(self.charactermodulus)[self.characternumber]
-
+        self.motivic_weight = 0
+        
         if chi.is_primitive():
 
             # Extract the L-function information from the Dirichlet character
@@ -941,7 +954,7 @@ class DedekindZeta(Lfunction):   # added by DK
 
     def __init__(self, **args):
         constructor_logger(self,args)
-
+        self.motivic_weight = 0
         #Check for compulsory arguments
         if not 'label' in args.keys():
             raise Exception("You have to supply a label for a Dedekind zeta function")
@@ -1010,7 +1023,47 @@ class DedekindZeta(Lfunction):   # added by DK
 
 
 class ArtinLfunction(Lfunction):
-    pass
+    def Ltype(self):
+        return "artin"
+    
+    def __init__(self, dimension, conductor, tim_index, **args):
+        constructor_logger(self,args)
+
+        from math_classes import ArtinRepresentation
+        
+        self.artin = ArtinRepresentation(dimension, conductor, tim_index)
+
+        self.title = "L function for an Artin representation of dimension " + str(dimension) + \
+            ", conductor "+ str(conductor) 
+                
+        self.dirichlet_coefficients = self.artin.coefficients_list()
+        
+        self.motivic_weight = 0
+        
+        self.coefficient_type = 0
+        self.coefficient_period = 0
+        self.degree = self.artin.dimension()
+        self.Q_fe = int(self.artin.conductor())/float(math.pi)**int(self.degree)
+        self.sign = self.artin.sign()
+        self.kappa_fe = self.artin.kappa_fe()
+        self.lambda_fe = self.artin.lambda_fe()
+        self.poles = self.artin.poles()
+        self.residues = self.artin.residues()
+        self.level = self.artin.conductor()
+        self.selfdual = self.artin.selfdual()               
+        self.primitive = self.artin.primitive()             
+        self.langlands = self.artin.langlands()             
+        self.mu_fe = self.artin.mu_fe()
+        self.nu_fe = self.artin.nu_fe()
+
+        self.credit = 'Sage, lcalc, and data precomputed in Magma by Tim Dokchitser'
+        self.citation = ''
+        
+        self.texname = "L(s)"  # default name.  will be set later, for most L-functions
+        self.texnamecompleteds = "\\Lambda(s)"  # default name.  will be set later, for most L-functions
+        self.texnamecompleted1ms = "\\overline{\\Lambda(1-\\overline{s})}"  # default name.  will be set later, for most L-functions
+        
+        self.generateSageLfunction()
 
 
 class SymmetricPowerLfunction(Lfunction):
