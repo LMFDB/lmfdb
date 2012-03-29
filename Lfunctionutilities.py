@@ -140,6 +140,7 @@ def lfuncDStex(L ,fmt):
         fmt could be any of the values: "analytic", "langlands", "abstract"
     """
 
+
     if len(L.dirichlet_coefficients)==0:
         return '\\text{No Dirichlet coefficients supplied.}'
     
@@ -158,6 +159,8 @@ def lfuncDStex(L ,fmt):
                 ans=ans+"\\cr\n"
                 ans=ans+"&"
         ans=ans+" + \\ \\cdots\n\\end{align}"
+
+
 
     elif fmt=="abstract":
        if L.Ltype()=="riemann":
@@ -231,6 +234,7 @@ def lfuncFEtex(L,fmt):
         ans += "=\\mathstrut & "+seriescoeff(L.sign,0,"factor","",-6,5)
         ans += L.texnamecompleted1ms+"\n\\end{align}\n"
     elif fmt=="selberg":
+        print L.nu_fe,"!!!!!!!"
         ans+="("+str(int(L.degree))+","
         ans+=str(int(L.level))+","
         ans+="("
@@ -250,3 +254,71 @@ def lfuncFEtex(L,fmt):
     return(ans)
                        
 
+#------
+
+NN = 500
+CF = ComplexField(NN)
+
+
+def euler_p_factor(root_list,PREC):
+  # computes the coefficients of the pth Euler factor expanded as a geometric series
+  # ax^n is the Dirichlet series coefficient p^(-ns)
+  PREC = floor(PREC);
+  #return satake_list
+  R = LaurentSeriesRing(CF,'x')
+  x = R.gens()[0]
+  ep = prod([1/(1-a*x) for a in root_list])
+  return ep + O(x**(PREC+1))
+
+
+def compute_dirichlet_series(p_list, PREC):
+  # p_list is a list of pairs (p,y) where p is a prime and y is the list of roots of the Euler factor at x
+  LL = [0]*PREC;
+  # create an empty list of the right size and now populate it with the powers of p
+  for (p,y) in p_list:
+      p_prec = log(PREC)/log(p)+1;
+      ep = euler_p_factor(y,PREC);
+      for n in range(ep.prec()):
+          if p**n < PREC:
+              LL[p**n] = ep.coefficients()[n]
+  for i in range(1,PREC):
+      f = factor(i);
+      if len(f)>1: #not a prime power
+          LL[i] = prod([LL[p**e] for (p,e) in f])
+  return LL
+
+def compute_local_roots_SMF2_scalar_valued(ev_data, k, embedding):
+    K = ev_data[0].parent().fraction_field() # field of definition for the eigenvalues
+    ev = ev_data[1] # dict of eigenvalues
+    L = ev.keys()
+    m = ZZ(max(L)).isqrt() + 1
+    ev2 = {}
+    for p in primes(m):
+        try:
+            ev2[p] = (ev[p],ev[p*p])
+
+        except:
+            break
+        
+    ret = []
+    for p in ev2:
+        R = PolynomialRing(QQ,'x')
+        x = R.gens()[0]
+        f =  (1 - ev2[p][0]*x+(ev2[p][0]**2-ev2[p][1]-p**(2*k-4))*x**2 -ev2[p][0]*p**(2*k-3)*x**3+p**(4*k-6)*x**4)
+        Rnum = PolynomialRing(CF, 'y')
+        x = Rnum.gens()[0]
+        fnum = Rnum(0)
+        if K != QQ:
+            for i in range(int(f.degree())+1):
+                fnum = fnum + f[i].complex_embeddings(NN)[embedding]*x**i
+        else:
+            print "here"
+            fnum = Rnum(f)
+        r = fnum.roots(CF)
+        r = [1/a[0] for a in r]
+        #a1 = r[1][0]/r[0][0]
+        #a2 = r[2][0]/r[0][0]
+        #a0 = 1/r[3][0]
+        ret.append((p,r))
+
+    return ret
