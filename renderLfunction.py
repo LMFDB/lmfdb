@@ -173,6 +173,10 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         logger.debug(arg5+arg6+str(arg7)+str(arg8)+str(arg9))
         return Lfunction_EMF( level = arg5, weight = arg6, character = arg7, label = arg8, number = arg9)
 
+    elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 <> 'Q' and arg4 == 'holomorphic': # Hilbert modular form
+        logger.debug(arg5+arg6+str(arg7)+str(arg8)+str(arg9))
+        return Lfunction_HMF( field = arg3, label = arg5, character = arg6, number = arg7)
+
     elif arg1 == 'ModularForm' and arg2 == 'GL2'and arg3 == 'Q' and arg4 == 'Maass':
         logger.debug(db)
         return Lfunction_Maass(dbid = bson.objectid.ObjectId(arg5))
@@ -312,6 +316,14 @@ def initLfunction(L,args, request):
         label = str(L.label)
         number = str(L.number)
         info['friends'] = [('Modular Form', friendlink.rpartition('/')[0])] 
+
+    elif L.Ltype() == 'hilbertmodularform':
+        weight = str(L.weight)
+        level = str(L.level)
+        character = str(L.character)
+        label = str(L.label)
+        number = str(L.number)
+        info['friends'] = [('Hilbert Modular Form', friendlink.rpartition('/')[0])] 
 
     elif L.Ltype() == 'dedekindzeta':
         info['friends'] = [('Number Field', friendlink)]
