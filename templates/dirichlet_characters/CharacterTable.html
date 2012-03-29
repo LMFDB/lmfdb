@@ -1,0 +1,114 @@
+<!-- character_search.html -->
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+<style type="text/css">
+table.ntdata th.left {
+  border-right: 2px solid #9b9;
+  background: #efe;
+  border-bottom: 0;
+  text-align: right;
+}
+table.ntdata td { text-align: left; }
+table.ntdata th.weight {
+  text-align: center;
+  background: #efe;
+  border-bottom: 2px solid #9b9;
+  border-left: 0;
+  vertical-align: center;
+}
+table.ntdata thead tr.space {
+  background: #efe;
+  border-bottom: 0;
+}
+
+table.ntdata thead th.spaceleft {
+  border-right: 2px solid #9b9;
+  vertical-align: top;
+}
+.modulus {
+    font-family: serif;
+    vertical-align: top;
+    padding-top: 1em;
+    border-right: 2px solid #8a8;
+}
+.modulus a { display: inline; font-family: serif; }
+.modulus font { display: inline; font-family: serif }
+.chi {
+    padding: 30px 30px;
+    font-family: serif;
+    width: 7em;
+    display: inline;
+    white-space:nowrap;}
+.chi a { display: inline; font-family: serif;}
+#chitable { clear:right; }
+#chitable td div { float: left; padding-left: .5em; padding-right: .5em; }
+#chitable td div>a { text-align: right; }
+#chitable td { vertical-align: middle;  white-space: nowrap; }
+#chitable td.a { background: #DFD; }
+#chitable td.b { background: none; }
+#chitable th { text-align: right; }
+table.ntdata tr.even, table.ntdata tr:nth-child(even) { background: none; }
+#chitable a.imprimitive:visited { color: blue;}
+#chitable a.primitive:visited { color:green ;}
+#chitable a.imprimitive { display:none; }
+
+.primitive {
+  color:green;
+}
+.nonprimitive {
+    color:blue;
+}
+.heading {
+    padding: 30px 30px
+    }
+</style>
+
+<h2> Create tables for other moduli: </h2>
+<form>
+    {#<input type="hidden" name="start" value="{{start}}"/>#}
+    <table border="0">
+        <tr>
+            <td align=left> {{ KNOWL('character.dirichlet.modulus', title="modulus") }}  
+                <input type = 'text' name = 'modulus' size=10 value={{modulus}}>
+            </td>
+        </tr>
+    </table>
+    <p></p>
+    <td>
+        <button type='submit' value='refine'>Create again</button>
+    </td>
+</form>
+
+<div>
+<table class="ntdata" id="chitable">
+    <thead align="center">
+        <tr class="space">
+            <th class="spaceleft"> Modulus </th>
+            <th class="weight" colspan="{{headers|length}}">
+            <span style="display:block;float:left;margin-right:3px;"> Order </span>
+        </tr>
+    </thead>
+    <tbody>
+        {% set row_class = cycler('odd', 'even') %}
+        {% for row in contents %}
+            <tr class="{{ row_class.next() }}">
+                <td align="right">
+                    <a align="center" href="{{modulus}}/{{row[0]}}">
+                    \(\chi_{ {{modulus}} } ( {{row[0]}}, n)\)
+            </a>
+                </td>
+                <td align="right">
+                    {% for index in row[1] %}
+                    <div>
+                        <th align="center">\({{index}}\)</th> 
+                    </div>
+                    {% endfor %}
+                </td>
+        {% endfor %} 
+    </tbody>    
+    
+</table>
+</div>
+{% endblock %}
