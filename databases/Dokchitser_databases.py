@@ -85,7 +85,8 @@ Dokchitser_NumberFieldGaloisGroup = Dict({
 
     "FrobResolvents" :      FiniteSet(Dokchitser_FrobResolvent),
     
-    "ArtinReps" :           FiniteSequence(Dokchitser_ArtinRepresentation_Short)
+    "ArtinReps" :           FiniteSequence(Dokchitser_ArtinRepresentation_Short),
+    "label" :               LabelString
 })
 
 

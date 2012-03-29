@@ -46,7 +46,7 @@ def render_webpage(request,arg1,arg2):
             modulus_end = int(arg1.partition('-')[2])
             info = {}
             info["bread"] = [('Dirichlet Characters', url_for("render_Character")), ('Moduli '+str(modulus_start) + '-' + str(modulus_end), '/Character/Dirichlet/modbrowse='+str(modulus_start)+'-'+str(modulus_end))]
-            info['title'] = 'Moduli ' +str(modulus_start)+'-'+str(modulus_end)
+            info['title'] = 'Dirichlet Characters of Moduli ' +str(modulus_start)+'-'+str(modulus_end)
             info['credit'] = 'Sage'
             h, c, rows, cols = ListCharacters.get_character_modulus(modulus_start,modulus_end)
             info['contents'] = c 
@@ -63,9 +63,13 @@ def render_webpage(request,arg1,arg2):
             info['conductor_start'] = conductor_start
             info['conductor_end'] = conductor_end
             info["bread"] = [('Dirichlet Characters', url_for("render_Character")), ('Conductor '+str(conductor_start) + '-' + str(conductor_end), '/Character/Dirichlet/condsearch='+str(conductor_start)+'-'+str(conductor_end))]
-            info['title'] = 'Conductors ' +str(conductor_start)+'-'+str(conductor_end)
+            info['title'] = 'Dirichlet Characters of Conductors ' +str(conductor_start)+'-'+str(conductor_end)
             info['credit'] = "Sage"
-            info['contents'] = ListCharacters.get_character_conductor(conductor_start,conductor_end+1)
+            info['contents']  = ListCharacters.get_character_conductor(conductor_start,conductor_end+1)
+            #info['contents'] = c
+            #info['header'] = h 
+            #info['rows'] = rows
+            #info['cols'] = cols
             return render_template("dirichlet_characters/ConductorList.html", **info)
 
         elif arg1.startswith("ordbrowse"):
@@ -75,7 +79,7 @@ def render_webpage(request,arg1,arg2):
             info['order_start'] = order_start
             info['order_end'] = order_end
             info["bread"] = [('Dirichlet Characters', url_for("render_Character")), ('Order '+str(order_start) + '-' + str(order_end), '/Character/Dirichlet/ordbrowse='+str(order_start)+'-'+str(order_end))]
-            info['title'] = 'Order ' +str(order_start)+'-'+str(order_end)
+            info['title'] = 'Dirichlet Characters of Orders ' +str(order_start)+'-'+str(order_end)
             info['credit'] = 'Sage'
             info['contents'] = ListCharacters.get_character_order(order_start, order_end+1)
             return render_template("dirichlet_characters/OrderList.html", **info)
@@ -91,9 +95,6 @@ def render_webpage(request,arg1,arg2):
             #    temp_args['type'] = 'hecke'
     
         web_chi = WebCharacter(temp_args)
-        #chi = web_chi.dirichletcharacter()
-
-        #print chi
 
         try:
             print temp_args
@@ -123,7 +124,6 @@ def set_info_for_start_page():
     return info
 
 def initCharacterInfo(web_chi,args, request):
-    chi = web_chi.dirichletcharacter()
     info = {'title': web_chi.title}
     info['citation'] = ''
     info['support'] = ''
@@ -142,17 +142,21 @@ def initCharacterInfo(web_chi,args, request):
 
     if args['type'] == 'dirichlet':
         #from dirichlet_conrey import *
-        chi_sage = chi.sage_character()
         snum = str(web_chi.number)
         info['number'] = snum
         smod = str(web_chi.modulus)
         info['modulus'] = smod
-        #G = DirichletGroup(web_chi.modulus)
+        G = DirichletGroup_conrey(web_chi.modulus)
+        G_prev = DirichletGroup_conrey(web_chi.modulus -1)
+        chi = G[web_chi.number]
+        chi_sage = chi.sage_character()
+        indices = []
         info['bread'] = [('Dirichlet Characters','/Character/Dirichlet'),('Character '+snum+ ' modulo '+smod,'/Character/Dirichlet/'+smod+'/'+snum)]
         info['char'] = str(web_chi.char)
+        info['chisage'] = str(web_chi.chi_sage)
         info['conductor'] = int(web_chi.conductor)
         info['order'] = int(web_chi.order)
-        info['euerphi'] = euler_phi(web_chi.modulus)-1
+        info['eulerphi'] = euler_phi(web_chi.modulus)-1
         info['nextmodulus'] = web_chi.modulus+1
         info['primitive'] = web_chi.primitive
         info['zetaorder'] = web_chi.zetaorder
@@ -164,7 +168,6 @@ def initCharacterInfo(web_chi,args, request):
         info['prim'] = web_chi.prim
         info['vals'] = web_chi.vals
         info['logvals'] = web_chi.logvals
-        #info['valstex'] = web_chi.valstex
         #info['root_unity'] =  str(any(map(lambda x : r"\zeta" in x,  web_chi.vals)))
         info['unitgens'] = str(web_chi.unitgens)
         info['bound'] = int(web_chi.bound)
@@ -179,24 +182,69 @@ def initCharacterInfo(web_chi,args, request):
         info['nextnumber'] = web_chi.number+1
         info['learnmore'] = [('Dirichlet Characters', url_for("knowledge.show", ID="character.dirichlet.learn_more_about"))] 
         info['friends'] = [('Dirichlet L-function', '/L/Character/Dirichlet/'+smod+'/'+snum)]
-        nmore = int(snum) + 1
-        nless = int(snum) - 1
+        next = next_index(chi) 
+        if web_chi.number == 1:
+            prev = prev_function(web_chi.modulus-1, web_chi.modulus-1)
+        else:
+            prev = prev_index(chi)
         mmore = int(smod) + 1
         mless = int(smod) - 1
-        url_ch = url_for("render_Character", arg1=smod,arg2=str(nmore))
+        name_pattern = r"\(\chi_{%s}(%s,&middot;)\)"
         if web_chi.modulus == 1:
-             info['navi'] = [(r"\(\chi_{" + str(0) + r"} \left( \text{mod}\; " + str(2)+ r"\right) \)" ,url_for("render_Character", arg1=str(2),arg2=str(0))), ("", "")]
+             n1 = name_pattern % (2,1)
+             url1 = url_for("render_Character", arg1=2,arg2=1)
+             info['navi'] = [(n1,url1),("", "")]
         elif web_chi.modulus == 2:
-             info['navi'] = [(r"\(\chi_{" + str(0) + r"} \left( \text{mod}\; " + str(3)+ r"\right) \)" ,url_for("render_Character", arg1=str(3),arg2=str(0))), (r"\(\chi_{" + str(0) + r"} \left( \text{mod}\;" + str(1)+ r"\right) \)",url_for("render_Character", arg1=str(1),arg2=str(0)))]
+             n2 = name_pattern % (3,1)
+             url2 = url_for("render_Character", arg1=3,arg2=1)
+             n3 = name_pattern % (1,1)
+             url3 = url_for("render_Character", arg1=1,arg2=1)
+             info['navi'] = [(n2,url2),(n3,url3)]
         else:
-            if web_chi.number == 0:
-                info['navi'] = [(r"\(\chi_{" + str(nmore) + r"} \left( \text{mod}\; " + smod+ r"\right) \)" ,url_ch), (r"\(\chi_{" + str(euler_phi(web_chi.modulus -1)-1) + r"} \left( \text{mod}\;" + str(mless)+ r"\right) \)",url_for("render_Character", arg1=str(mless),arg2=str(euler_phi(web_chi.modulus -1)-1)))]
-            elif web_chi.number == euler_phi(web_chi.modulus)-1:
-                info['navi'] = [(r"\(\chi_{" + str(0) + r"} \left( \text{mod}\;" + str(mmore)+ r"\right) \)",url_for("render_Character", arg1=str(mmore),arg2=str(0))), (r"\(\chi_{" + str(nless) + r"} \left( \text{mod}\;" + smod+ r"\right) \)",url_for("render_Character", arg1=smod,arg2=str(nless)))]
+            if web_chi.number == 1:
+                n4 = name_pattern % (smod,next)
+                url4 = url_for("render_Character", arg1=smod,arg2=next)
+                n5 = name_pattern % (mless,prev)
+                url5 = url_for("render_Character", arg1=mless,arg2=prev)
+                info['navi'] = [(n4,url4),(n5,url5)] 
+            elif web_chi.number == web_chi.modulus - 1:
+                n6 = name_pattern % (mmore, 1) 
+                url6 = url_for("render_Character", arg1=mmore,arg2=1)
+                n7 = name_pattern % (smod,prev)
+                url7 = url_for("render_Character", arg1=smod,arg2=prev)
+                info['navi'] = [(n6,url6),(n7,url7)]
             else:
-                info['navi'] = [(r"\(\chi_{" + str(nmore) + r"} \left( \text{mod}\;" + smod+ r"\right) \)",url_for("render_Character", arg1=smod,arg2=str(nmore))), (r"\(\chi_{" + str(nless) + r"} \left( \text{mod}\; " + smod+ r"\right) \)",url_for("render_Character", arg1=smod,arg2=str(nless)))]
+                n8 = name_pattern % (smod,next)
+                url8 = url_for("render_Character", arg1=smod,arg2=next)
+                n9 = name_pattern % (smod,prev)
+                url9 = url_for("render_Character", arg1=smod,arg2=prev)
+                info['navi'] = [(n8,url8),(n9,url9)]
 
     return info
+    
+def next_index(chi):
+    mod = chi.modulus()
+    index = chi.number()
+    return next_function(mod,index)
+
+def next_function(mod,index):
+    from sage.all import Integer 
+    for j in range(index+1,mod):
+        if Integer(j).gcd(mod) == 1:
+            return j
+    return 1
+
+def prev_index(chi):
+    mod = chi.modulus()
+    index = chi.number()
+    return prev_function(mod,index) 
+    
+def prev_function(mod,index):
+    from sage.all import Integer 
+    for j in range(index-1,0,-1):
+        if Integer(j).gcd(mod) == 1:
+            return j
+
 
 @app.route("/Character/Dirichlet/<modulus>/<number>")
 def render_webpage_label(modulus,number):
@@ -208,24 +256,24 @@ def dc_calc_gauss(modulus,number):
     if not arg:
         return flask.abort(404)
     try:
-        from sage.modular.dirichlet import DirichletGroup
-        chi = DirichletGroup(modulus)[number]
-        gauss_sum_numerical = chi.gauss_sum_numerical(100,int(arg))
-        if int(arg) == 0:
-            zeta = ""
-        elif int(arg) == 1:
-            zeta = "\zeta^{r}"
+        from dirichlet_conrey import *
+        chi = DirichletGroup_conrey(modulus)[number]
+        chi = chi.sage_character()
+        g = chi.gauss_sum_numerical(100,int(arg))
+        real = int(round(g.real(),5))
+        imag = int(round(g.imag(),5))
+        if imag == 0:
+            g = str(real)
+        elif real == 0:
+            g = str(imag) + "i"
         else:
-            zeta = "\zeta^{%s r}" %(int(arg))
-        if modulus == 1:
-            zeta_subscript = "1st"
-        if modulus == 2:
-            zeta_subscript = "2nd"
-        elif modulus == 3:
-            zeta_subscript = "3rd"
-        else:
-            zeta_subscript = str(modulus)+"th"
-        return r"\begin{equation} \tau_{%s}(\chi_{%s}) = \sum_{r\in \mathbb{Z}/%s\mathbb{Z}} \chi_{%s}(r) %s = %s, \end{equation} where \(\zeta\) is a primitive %s root of unity." %(int(arg),number,modulus,number,zeta,latex(gauss_sum_numerical),zeta_subscript)
+            g = latex(g)
+        from sage.rings.rational import Rational
+        x = Rational('%s/%s' %(int(arg),modulus))
+        n = x.numerator() 
+        n = str(n)+"r" if not n == 1 else "r"
+        d = x.denominator()
+        return r"\begin{equation} \tau_{%s}(\chi_{%s}(%s,&middot;)) = \sum_{r\in \mathbb{Z}/%s\mathbb{Z}} \chi_{%s}(%s,r) e\left(\frac{%s}{%s}\right) = %s. \end{equation}" %(int(arg),modulus,number,modulus,modulus,number,n,d,g)
     except Exception, e:
         return "<span style='color:red;'>ERROR: %s</span>" % e
 
@@ -237,11 +285,13 @@ def dc_calc_jacobi(modulus,number):
     arg = map(int,arg.split('.'))
     try:
         num = arg[0]
-        from sage.modular.dirichlet import DirichletGroup
-        chi = DirichletGroup(modulus)[number]
-        psi = DirichletGroup(modulus)[num]
+        from dirichlet_conrey import *
+        chi = DirichletGroup_conrey(modulus)[number]
+        psi = DirichletGroup_conrey(modulus)[num]
+        chi = chi.sage_character()
+        psi = psi.sage_character()
         jacobi_sum = chi.jacobi_sum(psi)
-        return r"\begin{equation} J(\chi_{%s},\chi_{%s}) = \sum_{r\in \mathbb{Z}/%s\mathbb{Z}} \chi_{%s}(r) \chi_{%s}(1-r) = %s,\end{equation} where <a href='/Character/Dirichlet/%s/%s'> \(\chi_{%s}\) </a> is character \(%s\) modulo \(%s\)." %(number,num,modulus,number,num,latex(jacobi_sum),modulus,num,num,num,modulus)  
+        return r"\begin{equation} J(\chi_{%s}(%s,&middot;),\chi_{%s}(%s,&middot;)) = \sum_{r\in \mathbb{Z}/%s\mathbb{Z}} \chi_{%s}(%s,r) \chi_{%s}(%s,1-r) = %s,\end{equation} where <a href='/Character/Dirichlet/%s/%s'> \(\chi_{%s}(%s,&middot;)\) </a> is character \(%s\) modulo \(%s\)." %(modulus,number,modulus,num,modulus,modulus,number,modulus,num,latex(jacobi_sum),modulus,num,modulus,num,num,modulus)  
     except Exception, e:
         return "<span style='color:red;'>ERROR: %s</span>" % e
 
@@ -252,18 +302,19 @@ def dc_calc_kloosterman(modulus,number):
         return flask.abort(404)
     arg = map(int,arg.split(','))
     try:
-        from sage.modular.dirichlet import DirichletGroup
-        chi = DirichletGroup(modulus)[number]
-        kloosterman_sum_numerical = chi.kloosterman_sum_numerical(100,arg[0],arg[1])
-        if modulus == 1:
-            zeta_subscript = "1st"
-        if modulus == 2:
-            zeta_subscript = "2nd"
-        elif modulus == 3:
-            zeta_subscript = "3rd"
+        from dirichlet_conrey import *
+        chi = DirichletGroup_conrey(modulus)[number]
+        chi = chi.sage_character()
+        k = chi.kloosterman_sum_numerical(100,arg[0],arg[1])
+        real = int(round(k.real(),5))
+        imag = int(round(k.imag(),5))
+        if imag == 0:
+            k = str(real)
+        elif real == 0:
+            k = str(imag) + "i"
         else:
-            zeta_subscript = str(modulus)+"th"
-        return r"\begin{equation} K(%s,%s,\chi_{%s}) = \sum_{r \in \mathbb{Z}/%s\mathbb{Z}} \chi_{%s}(r) \zeta^{%s r + %s r^{-1}} = %s, \end{equation} where \(\zeta\) is a primitive %s root of unity." %(int(arg[0]),int(arg[1]),number, modulus, number,int(arg[0]),int(arg[1]),latex(kloosterman_sum_numerical),zeta_subscript)
+            k = latex(k)
+        return r"\begin{equation} K(%s,%s,\chi_{%s}(%s,&middot;)) = \sum_{r \in \mathbb{Z}/%s\mathbb{Z}} \chi_{%s}(%s,r) e\left(\frac{%s r + %s r^{-1}}{25}\right) = %s. \end{equation}" %(int(arg[0]),int(arg[1]),modulus,number, modulus, modulus,number,int(arg[0]),int(arg[1]),k)
     except Exception, e:
         return "<span style='color:red;'>ERROR: %s</span>" % e
 
@@ -318,12 +369,12 @@ def render_character_table(modulus=None,conductor=None,order=None):
             j = chi.number()
             add = True
             add &= not conductor or chi.conductor() == conductor
-            add &= not order     or chi.order() == order
+            add &= not order     or chi.multiplicative_order() == order
             if add:
-                if chi.order() == 2 and kronecker_symbol(chi) != None:
-                    ret.append([(j, kronecker_symbol(chi), chi.modulus(), chi.conductor(), chi.order(), chi.is_primitive(), chi.is_even())])
+                if chi.multiplicative_order() == 2 and kronecker_symbol(chi) != None:
+                    ret.append([(j, kronecker_symbol(chi), chi.modulus(), chi.conductor(), chi.multiplicative_order(), chi.is_primitive(), chi.is_even())])
                 else:
-                    ret.append([(j,chi, chi.modulus(), chi.conductor(), chi.order(), chi.is_primitive(), chi.is_even())])
+                    ret.append([(j,chi, chi.modulus(), chi.conductor(), chi.multiplicative_order(), chi.is_primitive(), chi.is_even())])
         return ret
     return [row(_) for _ in range(start,end,stepsize)]
 
@@ -347,3 +398,4 @@ def kronecker_symbol(chi):
             return r"\(\displaystyle\left(\frac{-%s}{\bullet}\right)\)" %(chi.conductor()) 
     else:
         return None
+

@@ -6,7 +6,7 @@
 <li>The PARI database from the Bordeaux PARI group
 <li>Additional totally real fields of degrees from 6 to 10 computed by
   John Voight.
-<li>Additional fields from John Jones's database (work in progress).
+<li>Additional fields from John Jones-David Roberts database.
 </ol>
 </p>
 
@@ -51,7 +51,44 @@
 <tr class="{{ row_class.next() }}"><td>10<td>\(1\)<td>\(7623696325213\)</tr>
 </table>
 </p>
-<li>Jones database additional fields (work in progress).
+<li>Jones-Roberts database additional fields.
+<p>
+The degree of a field is given by \(n\).
+<table>
+{% set row_class = cycler("odd", "even") %}
+<tr class="{{ row_class.next() }}"><td>Fields unramified outside \(\{2,3\}\)
+ with \(n\leq 7\)
+</tr>
+<tr class="{{ row_class.next() }}"><td>Fields ramified at only one prime \(p\) with \(p<200\) with \(n\leq 9\) </tr>
+<tr class="{{ row_class.next() }}"><td>Fields ramified at only two primes \(p\lt q \leq 5\) with \(n\leq 8\) </tr>
+</table>
+</p>
+<p>
+The remaining cases, the bound depends on the Galois group.  Galois groups
+are given in the form \(n\)T\(t\) where \(n\) is the degree and \(t\)
+it the T-number.  The bound \(B\) is for the root discriminant, so a
+bound of \(B\) means the discriminant \(D\) satisfies \(|D|\leq B^n\).
+</p>
+<p>
+<table>
+{% set row_class = cycler("odd", "even") %}
+<tr>
+<th>\(n\)T\(t\)</th>
+<th>\(B\)</th>
+</tr>
+<tr class="{{ row_class.next() }}"><td>7T3<td>\(26\)</tr>
+<tr class="{{ row_class.next() }}"><td>7T5<td>\(38\)</tr>
+<tr class="{{ row_class.next() }}"><td>8T3<td>\(20\)</tr>
+<tr class="{{ row_class.next() }}"><td>8T5<td>\(50\)</tr>
+<tr class="{{ row_class.next() }}"><td>8T15<td>\(15\)</tr>
+<tr class="{{ row_class.next() }}"><td>8T18<td>\(15\)</tr>
+<tr class="{{ row_class.next() }}"><td>8T22<td>\(15\)</tr>
+<tr class="{{ row_class.next() }}"><td>8T26<td>\(15\)</tr>
+<tr class="{{ row_class.next() }}"><td>8T29<td>\(15\)</tr>
+<tr class="{{ row_class.next() }}"><td>8T32<td>\(15\)</tr>
+<tr class="{{ row_class.next() }}"><td>8T34<td>\(15\)</tr>
+<tr class="{{ row_class.next() }}"><td>8T36<td>\(15\)</tr>
+</table>
 </ol>
 </p>
 

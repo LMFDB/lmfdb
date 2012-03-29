@@ -241,7 +241,7 @@ def lfuncFEtex(L,fmt):
         ans = ans+":"
         if L.nu_fe != []:
             for nu in range(len(L.nu_fe)-1):
-                ans+=str(L.mu_fe[nu])+", "
+                ans+=str(L.nu_fe[nu])+", "
             ans+=str(L.nu_fe[-1])
         ans+="), "
         ans+=seriescoeff(L.sign, 0, "literal","", -6,5)

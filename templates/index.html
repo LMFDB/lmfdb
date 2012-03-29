@@ -2,12 +2,20 @@
 {% block content %}
 
 <div class="announce">
-{{description}}
+{{ KNOWL_INC('intro.description') }}
 </div>
 
 <h1>Sections</h1>
 
  <ul>
+  <li><a href="{{ url_for('introduction') }}">Introduction</a></li>
+  <ul>
+    <li><a href="{{url_for('introduction_features')}}">Features</a></li>
+    <li><a href="{{url_for('introduction_tutorial')}}">Tutorial</a></li>
+  </ul>
+  
+  <li><a href="{{ url_for('bigpicture') }}">Big Picture</a></li>
+
   <li><a href="{{ url_for('render_Lfunction') }}">L-functions and Zeta-functions</a></li>
   <li>Elliptic Curves
   <ul>

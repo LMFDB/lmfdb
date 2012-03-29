@@ -29,6 +29,8 @@ function show_code(system) {
   <div class='pari nodisplay code'>pari: K = bnfinit(Polrev({{info.coefficients}}))</div>
   <div class='magma nodisplay code'>&gt; K&lt;a&gt; := NumberField(PolynomialRing(Rationals())!{{info.coefficients}});</div>
 </p>
+        {% set KNOWL_ID = "nf.%s"|format(info['label']) %}
+        <h2>{{ KNOWL_INC(KNOWL_ID+'.top', title='') }}</h2>
 
         <p><h2> {{ KNOWL('nf.defining_polynomial', title='Defining polynomial') }}</h2>
         <div class='sage nodisplay code'>sage: K.defining_polynomial()</div>
@@ -118,28 +120,59 @@ function show_code(system) {
         <div class='pari nodisplay code'>pari: polgalois(pol)</div>
         <div class='magma nodisplay code'>&gt; GaloisGroup(K);</div>
         <p>
-            {{ info.galois_grou | safe }} 
-        </p>
+            {{ info.galois_grou | safe }}:
+          <table>
+            <tr><td>{{ info.phrase }}</tr>
+            <tr><td>
+            {{ info.cclasses | safe }}</tr>
+            <tr><td>
+            {{ info.character_table | safe }}</tr>
+          </table>
 
         <p><h2> {{ KNOWL('nf.frobenius_cycle_types', title='Frobenius cycle types') }}</h2>
-        <p>
-           <table class="ntdata" rules="all">
+        <p><center>
+           <table class="ntdata" >
+	    <thead>
              <tr><th>$p$</th>
             {% for p in info.frob_data %}
             <td>{{ p[0] | safe }} </td>
             {% endfor %}
              </tr>
+	    </thead>
+	    <tbody>
              <tr><th>Cycle type</th>
             {% for p in info.frob_data %}
             <td>{{ p[1] | safe }} </td>
             {% endfor %}
              </tr>
+	     </tbody>
            </table>
+	   </center>
         </p>
         <p>
           In the table, <i>R</i> denotes a ramified prime.  Cycle lengths which are repeated in a cycle type are indicated
-          by exponents.
+          by exponents .
+	{% if "tim_number_field" in info.keys() %}
+	{% if user_is_authenticated %}
+	<p><h2> {{ KNOWL('artin', title='Artin representations') }} (only logged in)</h2>
+	    This might be wrong at the moment, or lead to broken links, but merely serves a as mockup.
+        <div>
+	<center>
+	<table class="ntdata">
+	<thead><tr><td></td><td>{{ KNOWL('artin.dimension', title='Dimension') }}</td><td>{{ KNOWL('artin.conductor', title='Conductor') }}</td><td>Defining polynomial of {{ KNOWL('artin.number_field', title='Artin Field') }} </td><td>Galois subgroup</td></tr></thead>
+	<tbody>
+        {% for artin in info["tim_number_field"].artin_representations()%}
+          <tr> <td><a href = "{{artin.url_for()}}">{{loop.index}}</a></td><td>${{artin.dimension()}}$</td><td>${{artin.conductor()}}$</td><td><a href="{{artin.number_field_galois_group().url_for()}}">${{artin.number_field_galois_group().polredabs()}}$</a></td><td>${{artin.number_field_galois_group().G_name()}}$</td></tr>
+        {% endfor %}
+	</tbody>
+	</table>
+	</center>
+	</div>
+	{% endif %}
+	{% endif %}
 
 
+        {% set KNOWL_ID = "nf.%s"|format(info['label']) %}
+        <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
 {% endblock %}
 </html>

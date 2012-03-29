@@ -14,17 +14,19 @@ $("#plot").load(function() {
     });
 }
 );
-
 </script>
-{% if info.error is defined %}
+
+{% if error is defined %}
 
 <h1>There was an error in meeting your previous request. Please change parameters.</h1>
 
 <div> 
 <h2> Error message: </h2>
-{{ info.error | safe }}
+{{ error | safe }}
 </div>
 {% endif %}
+
+{% include 'geometric.html' %}
 
 {% if info.weight is defined %}
 <h1>{{ KNOWL('mf.elliptic.newform',title='Newforms') }} of {{KNOWL('mf.elliptic.level',title='level')}} {{level}} and {{KNOWL('mf.elliptic.weight',title='weight')}} {{weight}}</h1>
@@ -85,48 +87,6 @@ entry you access information about the forms in the specified space.
 
 {{ list_spaces | safe }}
 
-
-
-
 {% endif %}
-
-   {% if geometric is defined %}
-      {% set G = geometric %}
-      <table width="100%">
-        <tr>
-          <td valign="top">
-            <div>
-            {% if level > 1 %}
-            {% set level = level %}
-            {% set ti = "\(\Gamma_{0}( " ~ level  ~ ") \)" %} 
-            <h2>Geometric information for {{KNOWL('mf.sl2.subgroup.gamma0N',title=ti)}}</h2>
-            {% else %}
-            <h2>Geometric information for {{KNOWL('mf.sl2z',title='PSL<sub>2</sub>\( (\mathbb{Z}) \)')}}</h2>
-            {% endif %}
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <td valign="top">
-            <table>
-              <tr><th>{{KNOWL('mf.sl2z.subgroup.index',title='index')}}</th><td>{{G.index}}</td></tr>
-              <tr><th>{{KNOWL('mf.sl2z.subgroup.genus',title='genus')}}</th><td>{{G.genus}}</td></tr>
-              <tr><th>{{KNOWL('mf.sl2z.subgroup.cusps',title='cusps')}}</th><td>{{G.cusps}}</td></tr>
-              <tr><th colspan="2">Number of {{KNOWL('mf.sl2z.subgroup.ellipticfxpts',title='elliptic fixed points')}} of </th></tr>
-              <tr><th>order 2</th><td>{{G.nu2}}</td></tr>
-              <tr><th>order 3</th><td>{{G.nu2}}</td></tr>
-            </table>
-          </td>
-          {% endif %}
-          {% if fd_plot is defined %}
-          <td> <!--Fundamental domain:-->
-            <div>
-              <span id="wait">      </span>
-              <img id="plot" src="{{ fd_plot | safe }} " width="50%" height="100%"/>
-            </div>
-          </td>
-        </tr>
-      </table>
-      {% endif %}
 
 {% endblock content %}

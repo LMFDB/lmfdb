@@ -8,7 +8,8 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 import tempfile
 import os
 
-from utils import ajax_more, image_src, web_latex, to_dict, parse_range, web_latex_split_on_pm
+from utils import ajax_more, image_src, web_latex, to_dict, parse_range2, web_latex_split_on_pm
+from number_fields.number_field import parse_list
 import sage.all 
 from sage.all import ZZ, EllipticCurve, latex, matrix,srange
 q = ZZ['x'].gen()
@@ -23,13 +24,13 @@ init_ecdb_flag = False
 def init_ecdb_count():
     global ncurves, max_N, max_rank, init_ecdb_flag
     if not init_ecdb_flag:
-        ecdb = base.getDBConnection().ellcurves.curves
+        ecdb = base.getDBConnection().elliptic_curves.curves
         ncurves = ecdb.count()
         max_N = max(ecdb.distinct('conductor'))
         max_rank = max(ecdb.distinct('rank'))
         init_ecdb_flag = True
 
-cremona_label_regex = re.compile(r'(\d+)([a-z])+(\d*)')
+cremona_label_regex = re.compile(r'(\d+)([a-z]+)(\d*)')
 sw_label_regex=re.compile(r'sw(\d+)(\.)(\d+)(\.*)(\d*)')
 
 def format_ainvs(ainvs):
@@ -103,7 +104,7 @@ def rational_elliptic_curves():
     conductor_list = ["%s-%s" % (start,end-1) for start, end in zip(conductor_list_endpoints[:-1], conductor_list_endpoints[1:])]
     init_ecdb_count()
     info = {
-        'rank_list': range(6),
+        'rank_list': range(max_rank+1),
         'torsion_list': [1,2,3,4,5,6,7,8,9,10,12,16], 
         'conductor_list': conductor_list,
         'ncurves': ncurves,
@@ -134,13 +135,30 @@ def elliptic_curve_search(**args):
                 return render_isogeny_class(str(N)+iso)
         else:
             query['label'] = label
+
     for field in ['conductor', 'torsion', 'rank', 'sha_an']:
         if info.get(field):
-            query[field] = parse_range(info[field])
-    #if info.get('iso'):
-        #query['isogeny'] = parse_range(info['isogeny'], str)
+            ran = info[field]
+            ran = ran.replace('..','-')
+            tmp = parse_range2(ran, field)
+            # work around syntax for $or
+            # we have to foil out multiple or conditions
+            if tmp[0]=='$or' and query.has_key('$or'):
+                newors = []
+                for y in tmp[1]:
+                    oldors = [dict.copy(x) for x in query['$or']]
+                    for x in oldors: x.update(y) 
+                    newors.extend(oldors)
+                tmp[1] = newors
+            query[tmp[0]] = tmp[1]
+#            query[field] = parse_range2(info[field])
+
     if 'optimal' in info and info['optimal']=='on':
         query['number'] = 1
+
+    if 'torsion_structure' in info and info['torsion_structure']:
+        query['torsion_structure'] = [str(a) for a in parse_list(info['torsion_structure'])]
+
     info['query'] = query
 
     count_default=100
@@ -164,7 +182,7 @@ def elliptic_curve_search(**args):
         start = start_default
 
     print query
-    cursor = base.getDBConnection().ellcurves.curves.find(query)
+    cursor = base.getDBConnection().elliptic_curves.curves.find(query)
     nres = cursor.count()
     if(start>=nres): start-=(1+(start-nres)/count)*count
     if(start<0): start=0
@@ -200,12 +218,12 @@ def by_ec_label(label):
     if number:
         return render_curve_webpage_by_label(label=label)
     else:
-        return render_isogeny_class(label)
+        return render_isogeny_class(str(N)+iso)
 
 @app.route("/EllipticCurve/Q/plot/<label>")
 def plot_ec(label):
     C = base.getDBConnection()
-    data = C.ellcurves.curves.find_one({'label': label})
+    data = C.elliptic_curves.curves.find_one({'label': label})
     if data is None:
         return "No such curve"    
     ainvs = [int(a) for a in data['ainvs']]
@@ -223,30 +241,31 @@ def plot_ec(label):
 def render_isogeny_class(iso_class):
     info = {}
     credit = 'John Cremona'
-    label=iso_class
+    label=iso_class # e.g. '11a'
 
     C = base.getDBConnection()
-    data = C.ellcurves.isogeny.find_one({'label': label})
+    data = C.elliptic_curves.isogeny_classes.find_one({'label': label})
     if data is None:
         return "No such isogeny class"
-    ainvs = [int(a) for a in data['ainvs_for_optimal_curve']]
+    curves_data = C.elliptic_curves.curves.find_one({'label': label+'1'})
+    size = data['size']
+    ainvs = [int(a) for a in data['ainvs_optimal']]
     E = EllipticCurve(ainvs)
     info = {'label': label}
     info['optimal_ainvs'] = ainvs
-    if 'imag' in data:
-        info['imag']=data['imag']
-    if 'real' in data:
-        info['real']=data['real']
-    info['rank'] = data['rank']
-    info['isogeny_matrix']=latex(matrix(eval(data['isogeny_matrix'])))
-    info['modular_degree']=web_latex(data['degree'])
+    info['rank'] = curves_data['rank']
+    info['isogeny_matrix']=latex(matrix(eval(data['Isogeny_matrix'])))
+    if 'degree' in data:
+        info['modular_degree']=web_latex(data['degree'])
+    else:
+        info['modular_degree']=web_latex(E.modular_degree())
+      
     #info['f'] = ajax_more(E.q_eigenform, 10, 20, 50, 100, 250)
     info['f'] = web_latex(E.q_eigenform(10))
     G = E.isogeny_graph(); n = G.num_verts()
     G.relabel(range(1,n+1)) # proper cremona labels...
     info['graph_img'] = image_src(G.plot(edge_labels=True, layout='spring'))
-    curves = data['label_of_curves_in_the_class']
-    curves.sort(cmp=cmp_label)
+    curves = [label+str(i+1) for i in range(size)]
     ecurves = [EllipticCurve(c) for c in curves]
     info['curves'] = [[c.label(),str(list(c.ainvs())),c.torsion_order(),c.modular_degree()] for c in ecurves]
     info['download_qexp_url'] = url_for('download_qexp', limit=100, ainvs=','.join([str(a) for a in ainvs]))
@@ -288,7 +307,7 @@ def modular_form_display(label, number):
     if number > 1000:
         number = 1000
     C = base.getDBConnection()
-    data = C.ellcurves.curves.find_one({'label': label})
+    data = C.elliptic_curves.curves.find_one({'label': label})
     if data is None:
         return "No such curve"
     ainvs = [int(a) for a in data['ainvs']]
@@ -325,7 +344,7 @@ def modular_form_display(label, number):
         
 def render_curve_webpage_by_label(label):
     C = base.getDBConnection()
-    data = C.ellcurves.curves.find_one({'label': label})
+    data = C.elliptic_curves.curves.find_one({'label': label})
     if data is None:
         return "No such curve"    
     info = {}
@@ -341,12 +360,13 @@ def render_curve_webpage_by_label(label):
     xintpoints_projective=[E.lift_x(x) for x in xintegral_point(data['x-coordinates_of_integral_points'])]
     xintpoints=proj_to_aff(xintpoints_projective)
     G = E.torsion_subgroup().gens()
+    minq_label = E.minimal_quadratic_twist()[0].label()
     
     if 'gens' in data:
         generator=parse_gens(data['gens'])
     if len(G) == 0:
-        tor_struct = 'Trivial'
-        tor_group='Trivial'
+        tor_struct = '\mathrm{Trivial}'
+        tor_group='\mathrm{Trivial}'
     else:
         tor_group=' \\times '.join(['\mathbb{Z}/{%s}\mathbb{Z}'%a.order() for a in G])
     if 'torsion_structure' in data:
@@ -362,20 +382,34 @@ def render_curve_webpage_by_label(label):
     else:
         assert rank == 0
         lder_tex = "L(E,1)"
+    p_adic_data_exists = (C.ellcurves.padic_db.find({'label': iso_class}).count())>0
+
+    # Local data
+    local_data = []
+    for p in N.prime_factors():
+        local_info = E.local_data(p)
+        local_data.append({'p': p,
+                           'tamagawa_number': local_info.tamagawa_number(),
+                           'kodaira_symbol': web_latex(local_info.kodaira_symbol()).replace('$',''),
+                           'reduction_type': local_info.bad_reduction_type()
+                           })
+
     info.update({
         'conductor': N,
         'disc_factor': latex(discriminant.factor()),
         'j_invar_factor':latex(j_invariant.factor()),
         'label': label,
-        'isogeny':iso_class,
+        'iso_class':iso_class,
         'equation': web_latex(E),
         #'f': ajax_more(E.q_eigenform, 10, 20, 50, 100, 250),
         'f' : web_latex(E.q_eigenform(10)),
         'generators':','.join(web_latex(g) for g in generator) if 'gens' in data else ' ',
         'lder'  : lder_tex,
         'p_adic_primes': [p for p in sage.all.prime_range(5,100) if E.is_ordinary(p) and not p.divides(N)],
+        'p_adic_data_exists': p_adic_data_exists,
         'ainvs': format_ainvs(data['ainvs']),
         'tamagawa_numbers': r' \cdot '.join(str(sage.all.factor(c)) for c in E.tamagawa_numbers()),
+        'local_data': local_data,
         'cond_factor':latex(N.factor()),
         'xintegral_points':','.join(web_latex(i_p) for i_p in xintpoints),
         'tor_gens':','.join(web_latex(eval(g)) for g in data['torsion_generators']) if False else ','.join(web_latex(P.element().xy()) for P in list(G))
@@ -384,19 +418,24 @@ def render_curve_webpage_by_label(label):
                         })
     info['downloads_visible'] = True
     info['downloads'] = [('worksheet', url_for("not_yet_implemented"))]
-    info['friends'] = [('Isogeny class', "/EllipticCurve/Q/%s%s" % (str(N),iso_class)),
-####  THIS DOESN'T WORK AT THE MOMENT /Lemurell                       ('Modular Form', url_for("emf.render_elliptic_modular_form_from_label",label="%s" %(iso_class))),
-                       ('L-function', url_for("render_Lfunction", arg1='EllipticCurve', arg2='Q', arg3=label))]
+    info['friends'] = [
+        ('Isogeny class', "/EllipticCurve/Q/%s" % iso_class),
+        ('Minimal quadratic twist', "/EllipticCurve/Q/%s" % minq_label),
+        ('L-function', url_for("render_Lfunction", arg1='EllipticCurve', arg2='Q', arg3=label))]
+####  THIS DOESN'T WORK AT THE MOMENT /Lemurell ('Modular Form',
+####  url_for("emf.render_elliptic_modular_form_from_label",label="%s"
+####  %(iso_class))),
+
     info['learnmore'] = [('Elliptic Curves', url_for("not_yet_implemented"))]
     #info['plot'] = image_src(plot)
     info['plot'] = url_for('plot_ec', label=label)
-    info['iso_class'] = str(data['conductor'])+data['iso']
     info['download_qexp_url'] = url_for('download_qexp', limit=100, ainvs=','.join([str(a) for a in ainvs]))
+
     properties2 = [('Label', '%s' % label),
                    (None, '<img src="%s" width="200" height="150"/>' % url_for('plot_ec', label=label) ),
                    ('Conductor', '\(%s\)' % N), 
                    ('Discriminant', '\(%s\)' % discriminant),
-                   ('j-invariant', '\(%s\)' % j_invariant),
+                   ('j-invariant', '%s' % web_latex(j_invariant)),
                    ('Rank', '\(%s\)' % rank),
                    ('Torsion Structure', '\(%s\)' % tor_group)
     ]
@@ -444,19 +483,20 @@ def download_qexp():
 def download_all():
     label=(request.args.get('label'))
     C = base.getDBConnection()
-    data = C.ellcurves.isogeny.find_one({'label': label})
+    data = C.elliptic_curves.isogeny_classes.find_one({'label': label})
     #all data about this isogeny class
-    curves=data['label_of_curves_in_the_class']
-    curves.sort(cmp=cmp_label)
+    
+    size=data['size']
+    curves = [label+str(i+1) for i in range(size)]
 
     data1=[str(c)+'='+str(data[c]) for c in data]
     #titles of all entries of curves
     lab=curves[-1]
-    titles_curves=[str(c) for c in C.ellcurves.curves.find_one({'label': lab})]
+    titles_curves=[str(c) for c in C.elliptic_curves.curves.find_one({'label': lab})]
     data1.append(titles_curves)
     for lab in curves:
         print lab
-        data_curves=C.ellcurves.curves.find_one({'label': lab})
+        data_curves=C.elliptic_curves.curves.find_one({'label': lab})
         data1.append([data_curves[t] for t in titles_curves])
     response=make_response('\n'.join(str(an) for an in  data1))
     response.headers['Content-type'] = 'text/plain'
@@ -468,7 +508,7 @@ def download_all():
 #    label=(request.args.get('label'))
 #    type=(request.args.get('type'))
 #    C = base.getDBConnection()
-#    fs = gridfs.GridFS(C.ellcurves,'isogeny' )
+#    fs = gridfs.GridFS(C.elliptic_curves,'isogeny' )
 #    isogeny=C.ellcurves.isogeny.files
 #    filename=isogeny.find_one({'label':str(label),'type':str(type)})['filename']
 #    d= fs.get_last_version(filename)

@@ -33,11 +33,32 @@
             {% for tbl  in table %}
             <td valign="top">
               <table class="ntdata">
+                {% if info.table.weights != 0 %}
+                <thead>
+                  <tr>
+                    <td>Level {{tbl.N}} and Weight {{tbl.k}}</td>
+
+                   </tr></thead>
+                {% else %}
                 <thead><tr><td>Level {{tbl.N}}</td></tr></thead>
+                 {% endif %}
                 <tbody>
-                  {% for r,url,name in tbl.evs %}
+                  {% for row in tbl.evs %}
                   <tr class="{{ row_class.next() }}">
-                    <td><a style="display:inline" href="{{url}}">{{r}}</a><sup><small>{{ name}} </small></sup></td>
+                    <td>
+                      <span>
+                      <a style="display:inline"
+                      href="{{row.url}}">{{row.R}}</a>
+                     <!--sup><small>{{row.name}}</small></sup-->
+                      </span>
+                      <div id="detailed_info">
+                       
+                      </div>
+                    </td>
+                    <td>
+                      {{row.numc}}
+                    </td>
+
                   </tr>
                   {% endfor %}
                 </tbody>
@@ -46,7 +67,22 @@
             {% endfor %}
           </tr>
         </tbody>
+
       </table>
+      <div>
+        <small>
+        <form name="browse" method="post">
+        <hidden name="skip" value="{{info.table.skip[0]}}">
+        <hidden name="limit" value="{{info.table.limit[0]}}">
+        {%for skip in info.table.paging %}
+         <a href="{{skip.url}}" onclick="document.browse.skip={{skip.skip}}">{{skip.k0}}--{{skip.k1}} </a>
+
+        {%endfor%}
+        </form>
+      </small>
+      </div>
+ 
+
       <p>
       <div>        
       {% if info.table.metadata is defined %}
