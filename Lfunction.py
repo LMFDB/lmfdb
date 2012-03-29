@@ -657,6 +657,148 @@ class Lfunction_EMF(Lfunction):
     def Ltype(self):
         return "ellipticmodularform"
 
+#############################################################################
+
+class Lfunction_HMF(Lfunction):
+    """Class representing an elliptic modular form L-function
+
+    Compulsory parameters: label
+
+    Possible parameters: number
+    
+    """
+    
+    def __init__(self, **args):
+
+        #Check for compulsory arguments
+        if not ('label' in args.keys()):
+            raise KeyError, "You have to supply label for a Hilbert modular form L-function"
+        logger.debug(str(args))
+        # Initialize default values
+        if not args['number']:
+            args['number'] = 0     # Default choice of embedding of the coefficients
+        args['character'] = 0      # Only trivial character
+
+        # Put the arguments into the object dictionary
+        self.__dict__.update(args)
+        logger.debug(str(self.character)+str(self.label)+str(self.number))
+
+        # Load form from database
+        import base
+        C = base.getDBConnection()
+        f = C.hmfs.forms.find_one({'label' : self.label})
+        if f == None:
+            raise KeyError, "There is no Hilbert modular form with that label"
+        logger.debug(str(args))
+
+        F = C.numberfields.fields.find_one({'label': f['field_label']})
+        F_hmf = C.hmfs.fields.find_one({'label': f['field_label']})
+
+        self.character = args['character']
+        if self.character > 0:
+            raise KeyError, "The L-function of a Hilbert modular form with non-trivial character has not been implemented yet."
+        self.number = int(args['number'])
+
+        self.field_disc = int(F['discriminant'])
+        self.field_degree = int(F['degree'])
+        try:
+            self.weight = int(f['parallel_weight'])
+        except KeyError:
+            self.weight = int(f['weight'].split(', ')[0][1:])
+
+        self.level = int(f['level_norm']*self.field_disc**2)
+
+        # Extract the L-function information from the elliptic modular form
+        self.automorphyexp = float(self.weight-1)/float(2)
+        self.Q_fe = float(sqrt(self.level))/(2*math.pi)**(self.field_degree)
+
+        R = QQ['x']; (x,) = R._first_ngens(1)
+        K = NumberField(R(str(f['hecke_polynomial']).replace('^','**')), 'e')
+        e = K.gens()[0]
+        iota = K.complex_embeddings()[self.number]
+
+        if self.level == 1:  # For level 1, the sign is always plus
+            self.sign = 1
+        else:  # for level not 1, calculate sign from Fricke involution and weight
+            AL_signs = [iota(eval(al[1])) for al in f['AL_eigenvalues']]
+            self.sign = prod(AL_signs) * (-1)**(float(self.weight*self.field_degree/2))
+        logger.debug("Sign: " + str(self.sign))
+
+        self.kappa_fe = [1]
+        self.lambda_fe = [self.automorphyexp for i in range(self.field_degree)]
+        self.mu_fe = []
+        self.nu_fe = [self.automorphyexp for i in range(self.field_degree)]
+        self.selfdual = True
+        self.langlands = True
+        self.primitive = True
+        self.degree = 2*self.field_degree
+        self.poles = []
+        self.residues = []
+
+        # Compute Dirichlet coefficients
+        self.numcoeff = 20 + int(5 * math.ceil(self.weight * sqrt(self.level))) #just testing  NB: Need to learn how to use more coefficients
+
+        hecke_eigenvalues = [iota(K(str(ae))) for ae in f['hecke_eigenvalues']]
+        primes = [pp_str.split(', ') for pp_str in F_hmf['primes']]
+        primes = [[int(pp[0][1:]), int(pp[1])] for pp in primes]
+        primes = [[pp[0], pp[1], int(log(pp[0],pp[1]))] for pp in primes]
+
+        ratl_primes = [p for p in range(primes[-1][0]+1) if is_prime(p)]
+        RCC = CC['T']; (T,) = RCC._first_ngens(1)
+        heckepols = [ RCC(1) for p in ratl_primes ]
+        for l in range(len(hecke_eigenvalues)):
+            heckepols[ratl_primes.index(primes[l][1])] *= 1 - hecke_eigenvalues[l]/float(sqrt(primes[l][0]))*(T**primes[l][2]) + (T**(2*primes[l][2]))
+        dcoeffs = [1,1]
+        for n in range(2,ratl_primes[-1]):
+            nfact = factor(n)
+            if len(nfact) == 1:
+                # prime power
+                p = nfact[0][0]
+                k = nfact[0][1]
+                S = [1] + [dcoeffs[p^i] for i in range(1,k)]
+                heckepol = heckepols[ratl_primes.index(p)]
+                if k == 1:
+                    # prime, just the trace
+                    dcoeffs.append(-heckepol[1])
+                elif k < 2*self.field_degree:
+                    # Newton relations
+                    Sk = sum([ heckepol[i]*S[k-i] for i in range(1,k)]) + k*heckepol[k]
+                    dcoeffs.append(-Sk)
+                else:
+                    # Just evaluate polynomial
+                    Sk = sum([ heckepol[i]*S[k-2*self.field_degree+i] for i in range(2*self.field_degree)])
+                    dcoeffs.append(-Sk)
+            else:
+                # composite
+                ancoeff = prod([dcoeffs[pe[0]^pe[1]] for pe in nfact])
+                dcoeffs.append(ancoeff)
+
+        self.dirichlet_coefficients = dcoeffs
+
+        self.coefficient_period = 0   #HUH?
+        self.coefficient_type = 2     #HUH?
+        self.quasidegree = 1          #HUH?
+
+        self.checkselfdual()
+
+        self.texname = "L(s,f)"
+        self.texnamecompleteds = "\\Lambda(s,f)"
+        if self.selfdual:
+            self.texnamecompleted1ms = "\\Lambda(1-s,f)"
+        else:
+            self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{f})"
+        self.title = "$L(s,f)$, "+ "where $f$ is a holomorphic Hilbert cusp form with parallel weight "+str(self.weight)+", level norm "+str(f['level_norm'])+", and character "+str(self.character)
+
+        self.citation = ''
+        self.credit = ''
+
+        self.generateSageLfunction()
+        constructor_logger(self,args)
+
+
+    def Ltype(self):
+        return "hilbertmodularform"
+
 
 #############################################################################
 
