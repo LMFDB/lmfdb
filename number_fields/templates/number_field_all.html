@@ -31,22 +31,6 @@ By {{KNOWL('nf.class_number', title='class number')}}:
 {% endfor %}
 </ul>
 
-<h3>Go to a specific field by {{KNOWL('nf.label',title='label')}} or {{KNOWL('nf.nickname',title='nickname')}}</h3>
-
-<form>
-<table border=0 cellpadding=5>
-<tr>
-<td>Field:&nbsp;&nbsp;</td>
-<td><input type='text' name='natural' size=10 example='Qsqrt5'> </td>
-<td><button type='submit' name='search' value='Go'>Go</button></td>
-<td rowspan=3><span class="formexample"> either: a field label, e.g. 2.2.5.1 for
-    \(\mathbb{Q}(\sqrt{5})\); <br>or: a nickname, e.g. Q or Qsqrt5 or Qzeta7;<br> or: a polynomial in x, e.g. x^2+1</span></td>
-</tr>
-<tr></tr>
-<tr></tr>
-</table>
-</form>
-
 <h3> Search for fields </h3>
 <form>
 <p>
@@ -92,5 +76,25 @@ Enter values into one or more boxes to restrict the search.&nbsp;&nbsp;
 </tr>
 </table>
 </form>
+
+
+<h3>Go to a specific field by {{KNOWL('nf.label',title='label')}} or {{KNOWL('nf.nickname',title='nickname')}}</h3>
+
+<form>
+<table border=0 cellpadding=5>
+<tr>
+<td>Field:&nbsp;&nbsp;</td>
+<td ><input type='text' name='natural' size=60 example='Qsqrt5'> </td>
+<td><button type='submit' name='search' value='Go'>Go</button></td>
+</tr>
+<tr>
+<td colspan="3" rowspan="2"><span class="formexample"> Enter either a field label, e.g. 2.2.5.1 for
+    \(\mathbb{Q}(\sqrt{5})\); a nickname, e.g. Q or Qsqrt5 or Qzeta7; or a polynomial in x, e.g. x^2+1</span></td>
+</tr>
+<tr></tr>
+<tr></tr>
+</table>
+</form>
+
 
 {% endblock %}

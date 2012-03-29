@@ -445,13 +445,16 @@ def render_field_webpage(args):
     else:
         reg = K.regulator()
     UK = K.unit_group()
+    zk = pari(K).nf_subst('a')
+    zk = list(zk.nf_get_zk())
+    zk = web_latex([K(j) for j in zk])
     
     info.update(data)
     info.update({
         'label': field_pretty(label),
         'polynomial': web_latex(K.defining_polynomial()),
         'ram_primes': ram_primes,
-        'integral_basis': web_latex(K.integral_basis()),
+        'integral_basis': zk,
         'regulator': web_latex(reg),
         'unit_rank': unit_rank,
         'root_of_unity': web_latex(UK.torsion_generator()),
