@@ -11,31 +11,27 @@
  $(document).ready(function() {
 
 jQuery('table:has(col)').each(alignColumns);
-$("table#coeffs").dataTable(
+var oTable = $("table#coeffs").dataTable(
 {
-    "aoColumns":[{"aaSorting":"asc","sWidth": "10%", "bSortable": true,
-                  "bSearchable": false ,"sType":"numeric" },
-                 {"sWidth": "90%", "bSortable": true, "bSearchable": true, 
-                "sClass": "alignLeft" },
-],
-//  "aaSorting":[[0,"asc"],[1,"asc"]],
-  "bSort":true,
-        iDisplayLength: 25,    
-        iDisplayStart: 3,
-        "oLanguage": {
-            "sZeroRecords": "There are no records that match your search criterion",
-            "sLengthMenu": "Display _MENU_ records per page",
+    "sPaginationType": "full_numbers",
+    "aoColumns":[{"aaSorting":"asc","sWidth": "20%", "bSortable": true, "bSearchable": false ,"sType":"numeric" },
+                 {"sWidth": "50%", "bSortable": false, "bSearchable": true, "sClass": "alignLeft","fnRender":"text-align:left"},
+                ],
+    "bSort":true,
+    "iDisplayLength": 20,    
+    "iDisplayStart": 3,
+    "oLanguage": {
+            "sZeroRecords": "There are no coefficients that match your search criterion",
+            "sLengthMenu": "Display _MENU_ coefficients per page",
             "sInfo": "Displaying _START_ to _END_ of _TOTAL_ coefficients",
             "sInfoEmpty": "Showing 0 to 0 of 0 records",
             "sInfoFiltered": "(filtered from _MAX_ total coefficients)"
-        }, 
-        sScorollX: "300px", 
-        sPagination: "full_numbers",
-        bStateSave: true,
-        "bAutoWidth": false,
-        bScrollInfinite:true, 
-        oSearch: { "sSearch": "Type here...", "bRegex": false, "bSmart": true },
-  "sDom": '<"title">lt<"bottom"pf><"bottom"i>'
+     }, 
+     "sDom": 't<"paging"p><"bottom"l><"bottom"fr><"filterbox"i>',
+     "sScorollX": "300px", 
+     "bStateSave": false,
+     "bAutoWidth": false,
+     "oSearch": { "sSearch": "", "bRegex": false, "bSmart": true },
 
  });
 }
@@ -52,8 +48,9 @@ $("table#coeffs").dataTable(
     line-height: 0;
     height: 0;
  td.sorting_1 {}
-.alignLeft  {text-align:left}
-}
+ .alignLeft  {text-align:left}
+ .dataTables_length {width:100%}
+ .dataTables_filter {text-align:left}
 </style>
 
 
@@ -76,16 +73,6 @@ $("table#coeffs").dataTable(
 {% set nrows = table.nrows %}
 {% set ncols = table.ncols %}
 {% set data = table.data %}
-
-<!-- h2>Properties</h2>
-<table>
-
-{# The eigenvalue of the {{KNOWL('mf.maass.mwf.laplacian',title='Laplacian')}} is:{{ Eigenvalue } #}
-
-</div>
-<div>Symmetry type: {{ MF.symmetry }}</div>
-
-</table-->
 
 <h2>Fourier Coefficients</h2>
 {% if MF.coeffs is defined and MF.num_coeff > 0%}
@@ -142,14 +129,8 @@ $("table#coeffs").dataTable(
 <p>
 <form name="search" method = "get" action="{{url_for('mwf.render_one_maass_waveform',maass_id=maassid)}}">
   <input type="hidden" name="id" value="{{maassid}}">
-  More Coefficients:
-  <select name="limit">
-    <option value="20">20</option>
-    <option value="50">50</option>
-    <option value="100">100</option>
-    <option value="-1">all</option>
-  </select>
-  <!--button type="submit" name="Submit" value="Get more">Get more</button-->	
+  <input type="hidden" name="download" value="coefficients">
+  <button type="submit" name="Submit" value="Get more">Download coefficients</button>	
 </form>
 </td></tr></table>
 <p>

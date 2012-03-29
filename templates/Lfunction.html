@@ -2,9 +2,11 @@
 
 {% block content %}
 
-
- {% if Ltype!="maass" %}
-     <h2>{{ KNOWL_INC('historical'+request.path.lower().replace('/','_'), title='Historical Information') }}</h2>
+ {% if degree==1 or degree==2 %}
+     {% if Ltype!="maass" %}
+         {% set KNOWL_ID = request.path.replace('/L/','lfunction.').lower().replace('/','.') %}
+         <h2>{{ KNOWL_INC(KNOWL_ID+'top', title='') }}</h2>
+     {% endif %}
  {% endif %}
 
  <h2> {{ KNOWL('lfunction.dirichlet_series', title='Dirichlet series') }}</h2>
@@ -32,7 +34,9 @@
      <h2>Special Values</h2>
      <div>
       {{ sv12 }}<br>
-      {% if Ltype!="riemann" and Ltype!="dedekindzeta" %}
+      {% if Ltype=="riemann" or Ltype=="dedekindzeta" %}
+          pole at s=1<br>
+      {% else %}
           {{ sv1 }}<br>
       {% endif %}
      </div>
@@ -49,8 +53,10 @@
  {% endif %}
 
 
- {% if Ltype!="maass" %}
-     <h2>{{ KNOWL_INC('misc'+request.path.lower().replace('/','_'), title='Misc') }}</h2>
+ {% if degree==1 or degree==2 %}
+     {% if Ltype!="maass" %}
+         <h2>{{ KNOWL_INC(KNOWL_ID+'bottom', title='') }}</h2>
+     {% endif %}
  {% endif %}
 
 

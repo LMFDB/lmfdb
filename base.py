@@ -125,7 +125,7 @@ def ctx_proc_userdata():
   
   # default title
   vars['title'] = r'LMFDB'
-  vars['description'] = r'Welcome to the LMFDB, a database of L-functions, modular forms, and related objects.'
+  #vars['description'] = r'Welcome to the LMFDB, a database of L-functions, modular forms, and related objects.'
   vars['shortthanks'] = r'This project is supported by <a href="%s">grants</a> from the National Science Foundation.'% (url_for('acknowledgment') + "#sponsers")
   vars['feedbackpage'] = r"https://docs.google.com/spreadsheet/viewform?formkey=dDJXYXBleU1BMTFERFFIdjVXVmJqdlE6MQ"
 

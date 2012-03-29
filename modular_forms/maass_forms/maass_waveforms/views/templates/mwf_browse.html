@@ -46,9 +46,11 @@
                   {% for row in tbl.evs %}
                   <tr class="{{ row_class.next() }}">
                     <td>
+                      <span>
                       <a style="display:inline"
-                      href="{{row.url}}">{{row.R}}</a><sup>                        
-                        <small>{{row.name}} </small></sup>
+                      href="{{row.url}}">{{row.R}}</a>
+                     <!--sup><small>{{row.name}}</small></sup-->
+                      </span>
                       <div id="detailed_info">
                        
                       </div>
