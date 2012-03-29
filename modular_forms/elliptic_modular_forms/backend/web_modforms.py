@@ -26,7 +26,7 @@ TODO:
 Fix complex characters. I.e. embedddings and galois conjugates in a consistent way. 
 
 """
-from sage.all import ZZ,QQ,DirichletGroup,CuspForms,Gamma0,ModularSymbols,Newforms,trivial_character,is_squarefree,divisors,RealField,ComplexField,prime_range,I,join,gcd,Cusp,Infinity,ceil,CyclotomicField,exp,pi,primes_first_n,euler_phi,RR,prime_divisors
+from sage.all import ZZ,QQ,DirichletGroup,CuspForms,Gamma0,ModularSymbols,Newforms,trivial_character,is_squarefree,divisors,RealField,ComplexField,prime_range,I,join,gcd,Cusp,Infinity,ceil,CyclotomicField,exp,pi,primes_first_n,euler_phi,RR,prime_divisors,Integer,matrix
 from sage.all import Parent,SageObject,dimension_new_cusp_forms,vector,dimension_modular_forms,dimension_cusp_forms,EisensteinForms,Matrix,floor,denominator,latex,is_prime,prime_pi,next_prime,primes_first_n,previous_prime,factor,loads
 import re
 
@@ -188,7 +188,7 @@ class WebModFormSpace(Parent):
         
     def _get_objects(self,k,N,chi,use_db=True,get_what='Modular_symbols.files',**kwds):
         r"""
-        Getting the space of modular symbols from the database if it exists. Otherise compute it and insert it into the database.
+        Getting the space of modular symbols from the database if it exists. Otherwise compute it and insert it into the database.
         """
         collection = get_what+'.files'
         if not get_what in ['ap','Modular_symbols']:
@@ -246,10 +246,15 @@ class WebModFormSpace(Parent):
                     emf_logger.debug("weight: {0}".format(k))
                     res=ModularSymbols(self._character,k,sign=1)
             elif get_what=='ap':
-                res=self._modular_symbols.ambient().compact_newform_eigenvalues(prime_range(prec),names='x')
+                if self.level()==1:
+                    ## Get the Hecke eigenvalues for level 1.
+                    ## Have to do this manually due to bug in Sage:
+                    res=my_compact_newform_eigenvalues(self._modular_symbols.ambient(),prime_range(prec),names='x')
+                else:
+                    res=self._modular_symbols.ambient().compact_newform_eigenvalues(prime_range(prec),names='x')
         return res
         
-        
+    
 
     def __reduce__(self):
         r"""
@@ -294,7 +299,7 @@ class WebModFormSpace(Parent):
         r"""
         We compose the new subspace into galois orbits.
         """
-	from sage.monoids.all import AlphabeticStrings
+        from sage.monoids.all import AlphabeticStrings
         if(len(self._galois_decomposition)<>0):
             return self._galois_decomposition
         L=self._newspace.decomposition()
@@ -359,7 +364,6 @@ class WebModFormSpace(Parent):
             else:
                 self._dimension_new_cusp_forms=dimension_new_cusp_forms(self._N,self._k) 
         return self._dimension_new_cusp_forms
-
 
 
     def dimension(self):
@@ -772,7 +776,7 @@ class WebNewForm(SageObject):
         else:
             self._from_dict({})
         if self._verbose>0:
-            emf_logger.debug("self.f={0}".format(self._f))
+            emf_logger.debug("self.fi={0}".format(self._fi))
         if self._parent==None:
             if self._verbose>0:
                 emf_logger.debug("compute parent!")
@@ -1077,6 +1081,8 @@ class WebNewForm(SageObject):
                 res.append(0)
             elif is_prime(n):
                 pi = prime_pi(n)-1
+                #if self._verbose>0:
+                #    print "pi=",pi
                 if pi < len(self._ap): 
                     ap = self._ap[pi]
                 else:
@@ -1091,8 +1097,13 @@ class WebNewForm(SageObject):
                         pe = mn
                     else:
                         pe = previous_prime(mn)
-                    E,v = self._f.compact_system_of_eigenvalues(prime_range(ps,pe+1),names='x')
+                    if self.level()==1:
+                        E,v=my_compact_system_of_eigenvalues(self._f,prime_range(ps,pe+1),names='x')
+                    else:
+                        E,v = self._f.compact_system_of_eigenvalues(prime_range(ps,pe+1),names='x')
                     c = E*v
+                    #if self._verbose>0:
+                    #    print "c="
                     for app in c:
                         self._ap.append(app)
                 ap = self._ap[pi]
@@ -1646,7 +1657,7 @@ class WebNewForm(SageObject):
         k=self.weight()
         maxp= len(prime_range(prec))
         if len(self._ap)< maxp: 
-            E,v = self._f.compact_system_of_eigenvalues(ps)
+            E,v = my_compact_system_of_eigenvalues(self._f,ps)
             ap_vec = E*v
         else:
             ap_vec=self._ap
@@ -1776,17 +1787,17 @@ class WebNewForm(SageObject):
 
 
         """
-        
         if(prec==None):
             prec=self._prec
         s = my_latex_from_qexp(str(self.q_expansion(prec)))
         sb = list()
         if br > 0:
             sb = break_line_at(s,br)
+            emf_logger.debug("print_q_exp: sb=".format(sb))
         if len(sb)<=1:
-            s = r"\\("+s+r"\\)"
+            s = r"\("+s+r"\)"
         else:
-            s = r"\\("+join(sb,"",)+r"\\)"
+            s = r"\("+join(sb,"",)+r"\)"
         emf_logger.debug("print_q_exp: prec=".format(prec))
         return s
 
@@ -2219,12 +2230,123 @@ def unpickle_wmfs_v1(k,N,chi,cuspidal,prec,bitprec,data):
     return M
 
 def pol_to_html(p):
-   r"""
-   Convert polynomial p to html.
-   """
-   s = str(p)
-   s = re.sub("\^(\d*)","<sup>\\1</sup>",s)
-   s = re.sub("\_(\d*)","<sub>\\1</sub>",s)
-   s = re.sub("\*","",s)
-   s = re.sub("x","<i>x</i>",s)
-   return s
+    r"""
+    Convert polynomial p to html.
+    """
+    s = str(p)
+    s = re.sub("\^(\d*)","<sup>\\1</sup>",s)
+    s = re.sub("\_(\d*)","<sub>\\1</sub>",s)
+    s = re.sub("\*","",s)
+    s = re.subst("x","<i>x</i>",s)
+    return s
+
+## Added routines to replace sage routines with bugs for level 1
+##
+
+def my_compact_system_of_eigenvalues(AA, v, names='alpha', nz=None):
+    r"""
+    Return a compact system of eigenvalues `a_n` for
+    `n\in v`. This should only be called on simple factors of
+    modular symbols spaces.
+
+    INPUT:
+
+
+    -  ``v`` - a list of positive integers
+
+    -  ``nz`` - (default: None); if given specifies a
+       column index such that the dual module has that column nonzero.
+
+
+    OUTPUT:
+
+
+    -  ``E`` - matrix such that E\*v is a vector with
+       components the eigenvalues `a_n` for `n \in v`.
+
+    -  ``v`` - a vector over a number field
+
+
+    EXAMPLES::
+
+        sage: M = ModularSymbols(43,2,1)[2]; M
+        Modular Symbols subspace of dimension 2 of Modular Symbols space of dimension 4 for Gamma_0(43) of weight 2 with sign 1 over Rational Field
+        sage: E, v = M.compact_system_of_eigenvalues(prime_range(10))
+        sage: E
+        [ 3 -2]
+        [-3  2]
+        [-1  2]
+        [ 1 -2]
+        sage: v
+        (1, -1/2*alpha + 3/2)
+        sage: E*v
+        (alpha, -alpha, -alpha + 2, alpha - 2)
+    """
+    if nz is None:
+        nz = AA._eigen_nonzero()
+    M = AA.ambient()
+    try:
+        E = my_hecke_images(M,nz, v) * AA.dual_free_module().basis_matrix().transpose()
+    except AttributeError:
+        # TODO!!!
+        raise NotImplementedError, "ambient space must implement hecke_images but doesn't yet"
+    v = AA.dual_eigenvector(names=names, lift=False, nz=nz)
+    return E, v
+
+def my_compact_newform_eigenvalues(AA, v, names='alpha'):
+    r"""
+    """
+    
+    if AA.sign() == 0:
+        raise ValueError, "sign must be nonzero"
+    v = list(v)
+        
+    # Get decomposition of this space
+    D = AA.cuspidal_submodule().new_subspace().decomposition()
+    for A in D:
+        # since sign is zero and we're on the new cuspidal subspace
+        # each factor is definitely simple.
+        A._is_simple = True 
+        B = [A.dual_free_module().basis_matrix().transpose() for A in D]
+
+        # Normalize the names strings.
+        names = ['%s%s'%(names,i) for i in range(len(B))]
+        
+        # Find an integer i such that the i-th columns of the basis for the
+        # dual modules corresponding to the factors in D are all nonzero.
+        nz = None
+        for i in range(AA.dimension()):
+            # Decide if this i works, i.e., ith row of every element of B is nonzero.
+            bad = False
+            for C in B:
+                if C.row(i) == 0:
+                    # i is bad.
+                    bad = True
+                    continue
+            if bad: continue
+            # It turns out that i is not bad.
+            nz = i
+            break
+
+        if nz is not None:
+            R = my_hecke_images(AA,nz, v)
+            return [(R*m, D[i].dual_eigenvector(names=names[i], lift=False, nz=nz)) for i, m in enumerate(B)]
+        else:
+            # No single i works, so we do something less uniform.
+            ans = []
+            cache = {}
+            for i in range(len(D)):
+                nz = D[i]._eigen_nonzero()
+                if cache.has_key(nz):
+                     R = cache[nz]
+                else:
+                     R = my_hecke_images(AA,nz, v)
+                     cache[nz] = R
+                ans.append((R*B[i], D[i].dual_eigenvector(names=names[i], lift=False, nz=nz)))
+            return ans
+
+def my_hecke_images(AA, i, v):
+   # Use slow generic algorithm
+   x = AA.gen(i)
+   X = [AA.hecke_operator(n).apply_sparse(x).element() for n in v]
+   return matrix(AA.base_ring(), X)

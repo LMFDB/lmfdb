@@ -96,12 +96,12 @@ def guessParsing(file1):
       text = re.sub(r'\] *\[', '],[', text)
       text = '[' + text + ']'
 
-    try:
-      print text
-      ret = json.loads(text)
-      print "Valid JSON"
-      return ret
-    except: pass
+    #try:
+    print text
+    ret = json.loads(text)
+    print "Valid JSON"
+    return ret
+    #except: pass
     #print text
     text = re.sub(r'([\[\{,]) *([^" ])', '\\1"\\2', text)
     text = re.sub(r'([^" ]) *([\]\},])', '\\1"\\2', text)

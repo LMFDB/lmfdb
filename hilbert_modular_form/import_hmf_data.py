@@ -46,7 +46,7 @@ def import_all_data(n):
 def import_data(hmf_filename):
     hmff = file(hmf_filename)
 
-    ferrors = file('import_data.err', 'a')
+    ferrors = file('/home/jvoight/lmfdb/backups/import_data.err', 'a')
 
     # Parse field data
     v = hmff.readline()
@@ -190,7 +190,6 @@ def import_data(hmf_filename):
         try:
             assert all([abs(int(c)) <= 1 for c in AL_eigsin])
         except:
-            print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Hecke eigenvalue incorrect!"
             ferrors.write(str(n) + '/' + str(d) + ' ' + label + '\n')
             
         AL_eigenvalues = []
@@ -198,17 +197,14 @@ def import_data(hmf_filename):
         for i in range(len(AL_eigsin)):
             if ees[i] >= 2:
                 if hecke_eigenvalues[ALind[i]] <> 0:
-                    print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Hecke eigenvalue incorrect!"
                     ferrors.write(str(n) + '/' + str(d) + ' ' + label + '\n')
             else:
                 try:
                     if abs(int(AL_eigsin[i])) <> 1:
-                        print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Hecke eigenvalue incorrect!"
                         ferrors.write(str(n) + '/' + str(d) + ' ' + label + '\n')
                     else:
                         AL_eigenvalues.append([primes_str[ALind[i]], -AL_eigsin[i]])
                 except TypeError:
-                    print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Hecke eigenvalue incorrect!"
                     ferrors.write(str(n) + '/' + str(d) + ' ' + label + '\n')
 
         assert magma('[Valuation(NN, ideal<ZF | {F!x : x in a}>) gt 0 : a in [' +\

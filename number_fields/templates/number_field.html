@@ -25,10 +25,12 @@ function show_code(system) {
     <div></div>
 
 <p>
-  <div class='sage nodisplay code'>sage: K = NumberField(PolynomialRing(QQ,'x')({{info.coefficients}}),'a')</div>
-  <div class='pari nodisplay code'>pari: K = bnfinit(Polrev({{info.coefficients}}))</div>
+  <div class='sage nodisplay code'>sage: K = NumberField({{info.rawpoly}},'a')</div>
+  <div class='pari nodisplay code'>pari: K = bnfinit({{info.rawpoly}})</div>
   <div class='magma nodisplay code'>&gt; K&lt;a&gt; := NumberField(PolynomialRing(Rationals())!{{info.coefficients}});</div>
 </p>
+        {% set KNOWL_ID = "nf.%s"|format(info['label']) %}
+        <h2>{{ KNOWL_INC(KNOWL_ID+'.top', title='') }}</h2>
 
         <p><h2> {{ KNOWL('nf.defining_polynomial', title='Defining polynomial') }}</h2>
         <div class='sage nodisplay code'>sage: K.defining_polynomial()</div>
@@ -114,11 +116,11 @@ function show_code(system) {
 
 
         <p><h2> {{ KNOWL('nf.galois_group', title='Galois group') }}</h2>
-        <div class='sage nodisplay code'>sage: K.class_group().isomorphism_type_info_simple_group()</div>
+        <div class='sage nodisplay code'>sage: K.galois_group(type='pari')</div>
         <div class='pari nodisplay code'>pari: polgalois(pol)</div>
         <div class='magma nodisplay code'>&gt; GaloisGroup(K);</div>
         <p>
-            {{ info.galois_grou | safe }}:
+            {{ info.galois_group | safe }}:
           <table>
             <tr><td>{{ info.phrase }}</tr>
             <tr><td>
@@ -147,9 +149,39 @@ function show_code(system) {
            </table>
 	   </center>
         </p>
+<p>
+   In the table, <i>R</i> denotes a ramified prime.  Cycle lengths 
+   which are repeated in a cycle type are indicated by exponents.
         <p>
-          In the table, <i>R</i> denotes a ramified prime.  Cycle lengths which are repeated in a cycle type are indicated
-          by exponents .
+  <div class='pari nodisplay code'>
+   To obtain a list of [\(e_i, f_i\)] for the factorization of the ideal
+ \(p\mathcal{O}_K\) <br>
+pari: 
+<br>
+  p = 7;  \\ set a prime
+<br>
+  idealfactors = idealprimedec(K, p); \\ get the data
+<br>
+  vector(length(idealfactors), j, [idealfactors[j][3], idealfactors[j][4]])
+</div>
+  <div class='sage nodisplay code'>
+   sage:
+<br>
+  p = 7   # set a prime
+<br>
+  idealfactors = K.factor(p)  # get the data
+<br>
+  [[e, primefactor.residue_class_degree()] for primefactor,e in idealfactors]
+  </div>
+  <div class='magma nodisplay code'>
+<br>
+  p := 7;   # set a prime
+<br>
+  idealfactors := Factorization(p*Integers(K));  # get the data
+<br>
+  [<Valuation(Norm(primefactor[1]), p), primefactor[2]> : primefactor in idealfactors];
+</div>
+
 	{% if "tim_number_field" in info.keys() %}
 	{% if user_is_authenticated %}
 	<p><h2> {{ KNOWL('artin', title='Artin representations') }} (only logged in)</h2>
@@ -169,6 +201,11 @@ function show_code(system) {
 	{% endif %}
 	{% endif %}
 
+<<<<<<< local
+=======
 
+        {% set KNOWL_ID = "nf.%s"|format(info['label']) %}
+        <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
+>>>>>>> other
 {% endblock %}
 </html>

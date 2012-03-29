@@ -25,9 +25,19 @@
 }
 </style>
 
+The table below displays {{ KNOWL('character.dirichlet', title="Dirichlet characters" ) }} of a
+given {{ KNOWL('character.dirichlet.conductor', title="conductor") }}.
+
+{#If \(q\) is the_
+{{ KNOWL('character.dirichlet.modulus', title="modulus") }} and \(n\) is the index
+\(\chi_{q}(n,&middot;)\) represents the {{ KNOWL('character.dirichlet', title="Dirichlet character" ) }} 
+characters are grouped with respect to order and stacked integers indicate (multiplicative) inverse_
+{{ KNOWL('character.dirichlet', title="Dirichlet characters" ) }}.#}
+
+
 <table>
 <thead align="left">
-    <tr>
+    <tr><br></br>
         <th>
             <font color = "blue"> Non-primitive </font> characters.</br>
             <font color = "green"> Primitive </font> characters. 
@@ -63,9 +73,9 @@
                             <font color="blue">
                         {% endif %}
                         {% if chi[3] == 2 %}
-                            {{ chi[4] }} (mod {{ chi[0] }})
+                            {{ chi[4] }}( mod {{ chi[0]}})
                         {% else %}
-                            &chi;<sub>{{chi[1]}}</sub> (mod {{chi[0]}})
+                        \( \displaystyle \chi_{ {{chi[0]}} } ( {{chi[1]}}, &middot;) \)
                         {% endif %}
                         </font>
                     </a>

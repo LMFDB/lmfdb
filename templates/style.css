@@ -437,10 +437,11 @@ blockquote p {
 }
 
 /* highlighting menu entries (if their respective blueprint overwirtes the body_class variable!) */
-body.mwf #sidebar a.mwf { background: #BFB; }
-body.cmf #sidebar a.cmf { background: #BFB; }
+body.mwf #sidebar a.mwf { background: {{ col_main_l }}; }
+body.cmf #sidebar a.cmf { background: {{ col_main_l }}; }
 body.knowl #sidebar a.knowl { background: {{ col_knowl_d }}; }
-body.local_fields #sidebar a.local_fields { background: #BFB; }
+body.local_fields #sidebar a.local_fields { background:  {{ col_main_l }}; }
+body.intro #sidebar a.intro { background: {{ col_main_l }}; }
 
 .visible {
 	visibility: visible;

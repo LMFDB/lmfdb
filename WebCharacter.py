@@ -82,28 +82,26 @@ class WebCharacter:
             self.order = chi.multiplicative_order()
             self.vals = chi.values()
             l = []
-            #phi = euler_phi(self.modulus)
-            #from sage.rings.rational.Rational import numer, denom
             for j in range(1,self.modulus+1):
                 logvalue = chi.logvalue(j)
                 n = logvalue.numer()
                 d = logvalue.denom()
-                if n == 0:
-                    s = "1"
-                elif n == 1:
-                    if d == 2:
-                        s = "-1"
-                    if d == 4:
-                        s = "i"
-                elif n == 3:
-                    if d == 4:
-                        s = "-i"
+                from sage.all import Integer
+                if Integer(j).gcd(self.modulus) == 1:
+                    if n == 0:
+                        s = "1"
+                    elif n == 1:
+                        if d == 2:
+                            s = "-1"
+                        if d == 4:
+                            s = "i"
+                    elif n == 3:
+                        if d == 4:
+                            s = "-i"
+                    else:
+                        s = r"\(e\left(\frac{%s}{%s}\right)\)" %(n,d) 
                 else:
-                    s = r"\(e\left(\frac{%s}{%s}\right)\)" %(n,d) 
-                    #s = r"\(\displaystyle\frac{%s}{%s}\)" %(n,d) 
-                    #s = r"\(e(%s)\)" %(chi.logvalue(j))
-                #import utils; utils.debug()
-                #import utils; utils.debug()
+                    s=0
                 l.append(s)
             self.logvals = l
             self.bound = 5*1024
@@ -154,11 +152,11 @@ class WebCharacter:
         return(ans)
 
     def jacobi_sum_tex(self):
-        ans = "\(J(\\chi_{%s},\\psi) \\;\) for \(\\; \\psi = \)" %(self.number)
+        ans = "\(J(\\chi_{%s}(%s,&middot;),\\psi) \\;\) for \(\\; \\psi = \)" %(self.modulus,self.number)
         return(ans)
 
     def kloosterman_sum_tex(self):
-        ans = "\(K(a,b,\\chi_{%s}) \\;\) at \(\\; a,b = \)" %(self.number)
+        ans = "\(K(a,b,\\chi_{%s}(%s,&middot;)) \\;\) at \(\\; a,b = \)" %(self.modulus,self.number)
         return(ans)
 
     def _set_properties(self):

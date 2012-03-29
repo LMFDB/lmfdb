@@ -152,7 +152,7 @@ def test():
 def edit(ID):
   if not allowed_knowl_id.match(ID):
       flask.flash("""Oops, knowl id '%s' is not allowed.
-                  It must consist of lower/uppercase characters, 
+                  It must consist of lowercase characters, 
                   no spaces, numbers or '.', '_' and '-'.""" % ID, "error")
       return flask.redirect(url_for(".index"))
   knowl = Knowl(ID)

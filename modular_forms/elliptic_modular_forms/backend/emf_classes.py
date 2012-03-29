@@ -22,9 +22,9 @@ class ClassicalMFDisplay(MFDisplay):
 
     def __init__(self,dbname='',**kwds):
         MFDisplay.__init__(self,dbname,**kwds)
-        
 
-    
+
+
     def set_table_browsing(self,skip=[0,0],limit=[(2,16),(1,50)],keys=['Weight','Level'],character=0,dimension_fun=dimension_new_cusp_forms,title='Dimension of newforms'):
         r"""
         Table of Holomorphic modular forms spaces.
@@ -81,7 +81,7 @@ class ClassicalMFDisplay(MFDisplay):
                     if not k in self._table['col_heads']:
                         self._table['col_heads'].append(k)
                     row.append({'N':N,'k':k,'url':url,'dim':d})
-                self._table['rows'].append(row)                
+                self._table['rows'].append(row)
             else:
                 for N in range(level_ll,level_ul+1):
                     if not N in self._table['row_heads']:
@@ -118,7 +118,7 @@ class ClassicalMFDisplay(MFDisplay):
                     for k in range(wt_ll,wt_ul+1):
                         if not k in self._table['col_heads']:
                             #emf_logger.debug("Adding to col_heads:{0}s".format(k))
-                            
+
                             self._table['col_heads'].append(k)
                         try:
                             d = dimension_fun(x,k)
@@ -127,7 +127,7 @@ class ClassicalMFDisplay(MFDisplay):
                             d = -1
                         url = url_for('emf.render_elliptic_modular_forms',level=N,weight=k,character=xi)
                         row.append({'N':N,'k':k,'chi':xi,'url':url,'dim':d})
-                    self._table['rows'].append(row)                            
+                    self._table['rows'].append(row)
             else:
                 for N in range(level_ll,level_ul+1):
                     self._table['row_heads'].append(N)
@@ -139,7 +139,7 @@ class ClassicalMFDisplay(MFDisplay):
                         tbl=[]
                         for x in D:
                             xi = D.list().index(x)
-                            if not N in self._table['characters'][N]:              
+                            if not N in self._table['characters'][N]:
                                 self._table['characters'][N].append(xi)
                             if x.is_even() and is_odd(k):
                                 continue
@@ -154,8 +154,8 @@ class ClassicalMFDisplay(MFDisplay):
                             self._table['col_heads'].append(k)
                         tbl.append({'N':N,'k':k,'chi':xi,'url':url,'dim':d})
                         row.append(tbl)
-                    self._table['rows'].append(row)            
-                    
+                    self._table['rows'].append(row)
+
 
 
 
@@ -181,5 +181,5 @@ class ClassicalMFDisplay(MFDisplay):
         character=info.get('character')
         sbar=([],[],[],[],[]) #properties,parents,friends,siblings,lifts)
         (info,sbar)=set_info_for_modular_form_space(info,sbar)
-         
+
 

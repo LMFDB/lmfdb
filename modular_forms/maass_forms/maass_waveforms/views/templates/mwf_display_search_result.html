@@ -1,11 +1,90 @@
 {% extends "homepage.html" %}
-
 {% block content %}
+<style type="text/css">
+ .dataTables_wrapper { height: 100px; class:"ntdata"}
+ .dataTables_wrapper:after {
+    content: ".";
+    display: block;
+    clear: both;
+    visibility: hidden;
+    line-height: 0;
+    height: 0;
+ td.sorting_1 {}
+ .alignLeft  {text-align:left}
+ .dataTables_length {width:100%}
 
-<!--script type="text/javascript" src="{{ url_for('emf.static', filename='elliptic_modular_form_util-functions.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('emf.static', filename='elliptic_modular_form_scripts.js') }}"></script-->
+table.pretty {
+    clear: both;
+}
 
+div.newsearch {
+    clear: both;
+}
+ 
+/* Self clearing - */
+div.dataTables_wrapper:after {
+    content: ".";
+    display: block;
+    clear: both;
+    visibility: hidden;
+    line-height: 0;
+    height: 0;
+}
+html[xmlns] .dataTables_wrapper { display: block; }
+* html .dataTables_wrapper { height: 1%; }
+</style>
 
+<script src="{{ url_for('static', filename='jquery.column.min.js')}}" type="text/javascript" charset="utf-8"></script>
+ <script src="{{ url_for('mwf.static', filename='maass_scripts.js')}}" type="text/javascript" charset="utf-8"></script>
+ <script type="text/javascript" charset="utf-8">
+ $(document).ready(function() {
+jQuery('table:has(col)').each(alignColumns);
+var evTable = $("table#eigenvalues").dataTable(
+{
+   "bPaginate":true,
+   "bLengthChange":true,
+   "sPaginationType": "full_numbers",
+   "bFilter": true,
+   "bInfo": true,
+   "bProcessing":true,
+   "aoColumns":[{"aaSorting":"asc","sWidth": "10%", "bSortable": true, "bSearchable": true ,"sType":"numeric" },
+                 {"sWidth": "10%", "bSortable": true,  "bSearchable": true, "sClass": "alignLeft","fnRender":"text-align:left"},
+                 {"sWidth": "10%", "bSortable": false, "bSearchable": true, "sClass": "alignLeft","fnRender":"text-align:left"},
+                 {"sWidth": "20%", "bSortable": true,  "bSearchable": true, "sClass": "alignLeft","fnRender":"text-align:left"},
+                 {"sWidth": "10%", "bSortable": false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:left"},
+                 {"sWidth": "10%", "bSortable": false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:left"},
+                 {"sWidth": "10%", "bSortable": false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:left"},
+                 {"sWidth": "10%", "bSortable": false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:left"},
+                 {"sWidth": "10%", "bSortable": false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:left"}],
+    "bSort":true,
+    "iDisplayLength": 20,    
+    "iDisplayStart": 0,
+    "fnSort":[[1,"asc"],[2,"asc"],[3,"asc"]],
+    "oLanguage": {
+            "sZeroRecords": "There are no eigenvalues that match your search criterion in the current database",
+            "sLengthMenu": "Display _MENU_ eigenvalues per page",
+            "sInfo": "Displaying _START_ to _END_ of _TOTAL_ eigenvalues",
+            "sInfoEmpty": "Showing 0 to 0 of 0 records",
+            "sInfoFiltered": "(filtered from _MAX_ total eigenvalues)",
+            "sSearch":"Filter records:"
+     }, 
+     "sDom": 't<"paging"p><"bottom"l><"bottom"fr><"filterbox"i>',
+     "sScorollX": "500px", 
+     "bStateSave": false,
+     "bAutoWidth": false,
+    "oSearch": { "sSearch": "", "bRegex": false, "bSmart": true },
+ });
+
+/* Add filtering box */
+s='<br>Weight:<select id="weight"><option selected="yes">0<option>1</select>'
+$('#eigenvalues_filter').append(s);
+
+/* Add event listeners to the two range filtering inputs */
+
+$('#weight').change( function() { evTable.fnDraw(); } );
+
+ });
+</script>
 
 {% if info.error is defined %}
 
@@ -17,18 +96,89 @@
 {{ info.error | safe }}
 </div>
 {% endif %}
-<!-- To make an interface that is easier to read we implement each case of input separately -->
 
-<!-- {{ info | safe }} $("div").data("option",{"start":1}); -->
-<h1> Search Results</h1>
-{{ info.table_of_eigenvalues  | safe  }}
+<h1>{{info.title}}</h1>
 
-Showing records {{search.rec_start}}  to {{search.rec_stop}}
- (out of {{search.num_recs }}).
+{% if evs is defined %}
+{% set table = evs.table %}
+{% set nrows = table.nrows %}
+{% set ncols = table.ncols %}
+{% set data = table.data %}
+
+<h2>Eigenvalues</h2>
+<div id="searchresults">
+<table class="ntdata pretty" id="eigenvalues">
+  <colgroup>
+    <col/> <col/>
+    <col/> 
+    <col align="char" char="."/>
+    <col/> <col/>
+    <col/> <col/>
+    <col/> <col/>
+    <col/>
+  </colgroup>
+  <thead>
+    <tr>
+    {% for head in table.colheads %}
+      <th> {{head}}</th>
+    {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% set nnrows = 200 %}
+    {%if nrows < nnrows %}
+     {% set nnrows = nrows %}
+    {%endif%}
+    {% for r in range(0,nnrows) %}
+    {% if data[r] is defined %}
+    <tr>
+
+           <td>            
+             {% if data[r].N is defined %} {{ data[r].N}}  {% endif %}
+           </td>
+           <td>            
+             {% if data[r].k is defined %} {{ data[r].k}}  {% endif %}
+           </td>
+           <td>            
+             {% if data[r].ch is defined %} {{ data[r].ch}}  {% endif %}
+           </td>
+           <td>            
+             {% if data[r].R is defined %} 
+               {% if data[r].url is defined %} 
+               <a href="{{ data[r].url}}">{{data[r].R}}</a>
+               {% else %}
+               {{data[r].R}}
+               {% endif %}
+            {% endif %}
+           </td>
+           <td>            
+             {% if data[r].symmetry is defined %} {{ data[r].symmetry}}  {% endif %}
+           </td>
+           <td>            
+             {% if data[r].err is defined %} {{ data[r].err}}  {% endif %}
+           </td>
+           <td>            
+             {% if data[r].dim is defined %} {{ data[r].dim}}  {% endif %}
+           </td>
+           <td>            
+             {% if data[r].numc is defined %} {{ data[r].numc}}  {% endif %}
+           </td>
+           <td>            
+             {% if data[r].fricke is defined %} {{ data[r].fricke}}  {% endif %}
+           </td>
+
+           <td>            
+             {% if data[r].cuspevs is defined %} {{ data[r].cuspevs}}  {% endif %}
+           </td>
+    </tr>
+    {% endif %}
+    {% endfor %}
+   </tbody>
+</table>
+</div>
+<div id="newsearch" class="newsearch" style="clear:both">
 {% if info.more  %}
-
 <form name="hidden-search" method = "post" action="{{url_for('.render_maass_waveforms')}}">
-
   <input type="hidden" name="search" value="true"> 
   <input type="hidden" name="level_lower" value="{{search.level_lower}}"> 
   <input type="hidden" name="level_upper" value="{{search.level_upper}}">  
@@ -62,7 +212,6 @@ Showing records {{search.rec_start}}  to {{search.rec_stop}}
 	   <input type="text" name="ev_upper" value=""> 
 	   <span class="formexample">e.g. 9.5 -- 10.5</span> </td>
        </tr>
-       
        <tr>
 	    <td>Weight:</td>
 	    <td> 
@@ -88,7 +237,18 @@ Showing records {{search.rec_start}}  to {{search.rec_stop}}
 	 </td>
        </tr>
      </table>
-     <!--input type="button" name="Submit" value="Search" onclick="document.search.submit()"-->
    </form>
+</div>
+{{ KNOWL('metadata.knowl-tag') }}
+</p>
+{% else %}
+There are no eigenvalues in this database matching your search parameters.
+{% endif %}
+
+
+
+
+
+
 
 {% endblock content %}
