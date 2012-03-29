@@ -162,8 +162,6 @@
    </ul>
   
    {{ entry("Learn more about", learnmore) }}
-   {{ entry("Downloads", downloads) }}
-   {{ entry("Data", getUploadedFor(request.path) ) }}
 
  {% if sidebar -%}
   {% for topic, content in sidebar -%}
@@ -174,7 +172,20 @@
 </div>
 {%- endblock sidebar %}
 
-    {% if (properties2 or friends) %}
+  {% macro rightnavig(title, entries) -%}
+  {% if entries %}
+  <h1 class="properties-header">{{ title }}</h1>
+  <div class="properties-body">
+    <ul>
+      {% for text,url in entries %}
+      <li><a href="{{ url }}">{{ text }}</a></li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+  {%- endmacro %}
+
+{% if (properties2 or friends or downloads) %}
       <div id="properties">
        <div id="properties-collapser">&uarr;</div>
     {% if properties2 %}
@@ -199,16 +210,9 @@
       </table>
       </div>
     {% endif %}
-    {% if friends -%}
-      <h1 class="properties-header">Related objects</h1>
-      <div class="properties-body">
-        <ul>
-          {% for text,url in friends %}
-          <li><a href="{{ url }}">{{ text }}</a></li>
-          {% endfor %}
-        </ul>
-      </div>
-    {%- endif %}
+   {{ rightnavig("Related objects", friends) }}
+   {{ rightnavig("Downloads", downloads) }}
+   {{ rightnavig("Data", getUploadedFor(request.path) ) }}
     </div>
     {%- endif %}
 
