@@ -10,7 +10,7 @@ import LfunctionComp
 import LfunctionPlot
 from utils import to_dict #, make_logger
 import bson
-from Lfunctionutilities import lfuncDStex, lfuncEPtex, lfuncFEtex
+from Lfunctionutilities import lfuncDStex, lfuncEPtex, lfuncFEtex, truncatenumber
 
 #logger = make_logger("LF")
 
@@ -122,7 +122,6 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
             info["bread"] =  [('L-functions', url_for("render_Lfunction")), ('Degree '+str(degree), url_for('render_Lfunction', arg1=str(degree)))]
             if degree == 1:
                 info["contents"] = [LfunctionPlot.getOneGraphHtmlChar(1,35,1,13)]
-                info['friends'] = [('Dirichlet Characters', url_for('render_Character'))]
             elif degree == 2:
                 info["contents"] = [processEllipticCurveNavigation(11,65), LfunctionPlot.getOneGraphHtmlHolo(1, 6, 2, 14),
                                     processMaassNavigation()]
@@ -344,7 +343,7 @@ def set_gaga_properties(L):
     ans = [ ('Degree',    str(L.degree))]
 
     ans.append(('Level',     str(L.level)))
-    ans.append(('Sign',      str(L.sign)))
+    ans.append(('Sign',      styleTheSign(sign)))
 
     if L.selfdual:
         sd = 'Self-dual'
@@ -360,7 +359,18 @@ def set_gaga_properties(L):
 
     return ans
 
-
+def styleTheSign(sign):
+    ''' Returns the string to display as sign
+    '''
+    try:
+        fromInt = sign - round(sign)
+        if fromInt.abs() < 1e-10:
+            return str(int(round(sign)))
+        else:
+            return truncatenumber(sign, 3)
+    except:
+        str(sign)
+    
 def specialValueString(L, s, sLatex):
     ''' Returns the LaTex to dislpay for L(s) 
     '''
@@ -371,13 +381,11 @@ def specialValueString(L, s, sLatex):
     # We must test for NaN first, since it would show as zero otherwise
     # Try "RR(NaN) < float(1e-10)" in sage -- GT
     if val.real().is_NaN():
-        logger.debug("Infinity value.")
-        return "{0}=\\infty".format(lfunction_value_tex)
+        return "\\[{0}=\\infty\\]".format(lfunction_value_tex)
     elif val.abs() < 1e-10:
-        logger.debug("Zero value.")
-        return "{0}=0".format(lfunction_value_tex)
+        return "\\[{0}=0\\]".format(lfunction_value_tex)
     else:
-        return "{0}\\approx {1}".format(lfunction_value_tex,
+        return "\\[{0} \\approx {1}\\]".format(lfunction_value_tex,
             latex( round(val.real(), number_of_decimals)
                  + round(val.imag(), number_of_decimals)*I ))
 
@@ -418,8 +426,8 @@ def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, ar
     L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
 
     # Compute the first few zeros
-    if L.degree > 2 or L.Ltype()=="ellipticmodularform" or L.Ltype()=="maass":  # Too slow to be rigorous here  ()
-        search_step = 0.05
+    if L.degree > 2 or L.Ltype()=="maass":  # Too slow to be rigorous here  ( or L.Ltype()=="ellipticmodularform")
+        search_step = 0.02
         if L.selfdual:
             allZeros = L.sageLfunction.find_zeros(-search_step/2 , 20 ,search_step)
         else:

@@ -481,6 +481,19 @@ class Lfunction_EC(Lfunction):
         self.__dict__.update(args)
         self.numcoeff = int(self.numcoeff)
 
+        #Remove the ending number (if given) in the label to only get isogeny class
+        while self.label[len(self.label)-1].isnumber():
+            self.label = self.label[0:len(self.label)-2]
+
+        #Compute the # of curves in the isogeny class
+        i = 1
+        connection = base.getDBConnection()
+        data = connection.elliptic_curves.curves.find_one({'label': self.label+'i'})
+        while not data is None:
+            i += 1
+            data = connection.elliptic_curves.curves.find_one({'label': self.label+'i'})
+        self.curves_in_class = []
+ 
 
         # Create the elliptic curve
         self.E = EllipticCurve(str(self.label))
@@ -593,7 +606,7 @@ class Lfunction_EMF(Lfunction):
         self.kappa_fe = [1]
         self.lambda_fe = [self.automorphyexp]
         self.mu_fe = []
-        self.nu_fe = [self.automorphyexp]
+        self.nu_fe = [Rational(str(self.weight-1) + '/2')]
         self.selfdual = True
         self.langlands = True
         self.primitive = True
