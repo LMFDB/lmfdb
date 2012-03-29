@@ -172,18 +172,18 @@
 </div>
 {%- endblock sidebar %}
 
-  {% macro rightnavig(title, entries) -%}
-  {% if entries %}
-  <h1 class="properties-header">{{ title }}</h1>
-  <div class="properties-body">
+ {% macro rightnavig(title, entries) -%}
+   {% if entries %}
+    <h1 class="properties-header">{{ title }}</h1>
+    <div class="properties-body">
     <ul>
-      {% for text,url in entries %}
-      <li><a href="{{ url }}">{{ text }}</a></li>
-      {% endfor %}
+        {% for text,url in entries %}
+           <li><a href="{{ url }}">{{ text }}</a></li>
+        {% endfor %}
     </ul>
   </div>
-  {% endif %}
-  {%- endmacro %}
+   {% endif %}
+ {%- endmacro %}
 
 {% if (properties2 or friends or downloads) %}
       <div id="properties">
