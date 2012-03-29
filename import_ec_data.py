@@ -1,17 +1,43 @@
 # -*- coding: utf-8 -*-
-r"""
-Import data from Cremona tables.
-Note: This code can be run on all files in any order. Even if you rerun this code on previously entered files, it should have no affect. 
-This code checks if the entry exists, if so returns that and updates with new information. If the entry does not exist then it creates it and 
-returns that. 
+r""" Import data from Cremona tables.  Note: This code can be run on
+all files in any order. Even if you rerun this code on previously
+entered files, it should have no affect.  This code checks if the
+entry exists, if so returns that and updates with new information. If
+the entry does not exist then it creates it and returns that.
 
 Initial version (Paris 2010)
 More tables Feb 2011 Gagan Sekhon
 Needed importing code for Stein-Watkins 
 
-After running this script, please remember to run import_EC_isogeny_data.py
-"""
+Rewritten by John Cremona and David Roe, Bristol, March 2012
 
+The documents in the collection 'curves' in the database 'elliptic_curves' have the following fields:
+
+   - '_id': internal mogodb identifier
+   - 'label':  (string) full label, e.g. '1225a2'
+   - 'conductor': (int) conductor, e.g. 1225
+   - 'iso': (string) isogeny class code, e.g. 'a'
+   - 'number': (int) curve number within its class, e.g. 2
+   - 'ainvs': (list of strings) list of a-invariants, e.g. ['0', '1', '1', '10617', '75394']
+   - 'rank': (int) rank, e.g. 0
+   - 'torsion': (int) torsion order, e.g. 1
+   - 'torsion_structure': (list of strings) list of invariants of torsion subgroup, e.g. ['3']
+   - 'torsion_generators': (list of strings) list of generators of torsion subgroup, e.g. ['(5, 5)']
+   - 'x-coordinates_of_integral_points': (string) list of x-coordinates of integral points, e.g. '[5,16]'
+   - 'gens': (list of strings) list of generators of infinite order, e.g. ['(0:0:1)']
+   - 'regulator': (float) regulator, e.g. 1.0
+   - 'tamagawa_product': (int) product of Tamagawa numbers, e.g. 4
+   - 'special_value': (float) special value of derivative of L-function, e.g.1.490882041449698
+   - 'real_period': (float) real period, e.g. 0.3727205103624245
+
+{u'real_period': 0.3727205103624245, u'ainvs': [u'0', u'1', u'1',
+u'10617', u'75394'], u'conductor': 1225, u'sha_an': 1.0, u'number': 2,
+u'rank': 0, u'tamagawa_product': 4, u'regulator': 1.0,
+u'torsion_structure': [], u'iso': u'a', u'label': u'1225a2', u'torsion':
+1, u'special_value': 1.490882041449698, u'_id':
+ObjectId('4cb3b38f5009fb5915001833'), u'torsion_generators': [],
+u'x-coordinates_of_integral_points': u'[]'}
+"""
 
 import os.path, gzip, re, sys, time, os, random,glob
 import pymongo
@@ -25,8 +51,13 @@ conn = base.getDBConnection()
 print "setting curves"
 curves = conn.elliptic_curves.curves
 
-#The following ensure_index command checks if there is an index on label, conductor, rank and torsion. If there is no index it creates one. 
-#Need: once torsion structure is computed, we should have an index on that too. 
+
+
+
+#The following ensure_index command checks if there is an index on
+#label, conductor, rank and torsion. If there is no index it creates
+#one.  Need: once torsion structure is computed, we should have an
+#index on that too.
 
 curves.ensure_index('label')
 curves.ensure_index('conductor')
@@ -38,7 +69,7 @@ print "finished indices"
 def parse_tgens(s):
     r"""
     Converts projective coordinates to affine coordinates for generator
-    """  
+    """
     g1=s.replace('(', ' ').replace(')',' ').split(':')
     x,y,z = [ZZ(c) for c in g1]
     g=(x/z,y/z)
@@ -46,6 +77,9 @@ def parse_tgens(s):
 
 
 def parse_ainvs(s):
+    r"""
+    Given a string like '[a1,a2,a3,a4,a6]' returns the list of substrings ['a1','a2','a3','a4','a6']
+    """
 #    return [int(a) for a in s[1:-1].split(',')]
     return [a for a in s[1:-1].split(',')]
 
@@ -58,8 +92,20 @@ def split(line):
     return whitespace.split(line.strip())
 
 def allbsd(line):
-    r"""
-    Parses allbsd files
+    r""" Parses one line from an allbsd file.  Returns the label and a
+    dict containing fields with keys 'conductor', 'iso', 'number',
+    'ainvs', 'rank', 'torsion', 'tamagawa_product', 'real_period',
+    'special_value', 'regulator', 'sha_an', all values being strings
+    or ints.
+
+    Input line fields:
+
+    conductor iso number ainvs rank torsion tamagawa_product real_period special_value regulator sha_an
+
+    Sample input line:
+
+    11 a 1 [0,-1,1,-10,-20] 0 5 5 1.2692093042795534217 0.25384186085591068434 1 1.00000000000000000000
+
     """
     data = split(line)
     label = data[0] + data[1] + data[2]
@@ -78,9 +124,19 @@ def allbsd(line):
         'sha_an': float(data[10]),
     }
 
+# Next function redundant as all data in allcurves is also in allgens
 def allcurves(line):
-    r"""
-    Parses allcurves files
+    r""" Parses one line from an allcurves file.  Returns the label and a
+    dict containing fields with keys 'conductor', 'iso', 'number',
+    'ainvs', 'rank', 'torsion', all values being strings or ints.
+
+    Input line fields:
+
+    conductor iso number ainvs rank torsion
+
+    Sample input line:
+
+    11 a 1 [0,-1,1,-10,-20] 0 5
     """
     data = split(line)
     label = data[0] + data[1] + data[2]
@@ -95,13 +151,24 @@ def allcurves(line):
     }
     
 def allgens(line):
-    r"""
-    Parses allgens files
+    r""" Parses one line from an allgens file.  Returns the label and
+    a dict containing fields with keys 'conductor', 'iso', 'number',
+    'ainvs', 'rank', 'gens', 'torsion_order', 'torsion_structure',
+    'torsion_generators', all values being strings or ints.
+
+    Input line fields:
+
+    conductor iso number ainvs rank torsion_structure gens torsion_gens
+
+    Sample input line:
+
+    20202 i 2 [1,0,0,-298389,54947169] 1 [2,4] [-570:6603:1] [-622:311:1] [834:19239:1]
     """
     data = split(line)
     label = data[0] + data[1] + data[2]
     rank=int(data[4])
-    torsion=len(eval(data[5]))
+    t=eval(data[5])
+    torsion=int(prod([ti for ti in t],1))
     ainvs=parse_ainvs(data[3])
     return label, {
             'conductor': int(data[0]),
@@ -110,23 +177,23 @@ def allgens(line):
             'ainvs': ainvs,
             'rank': int(data[4]),
             'gens': ["(%s)" % gen[1:-1] for gen in data[6:6+rank]],
-            'torsion_structure':["%s" %tor for tor in eval(data[5])],
+            'torsion': torsion,
+            'torsion_structure':["%s" %tor for tor in t],
             'torsion_generators':["%s" %parse_tgens(tgens[1:-1]) for tgens in data[6+rank:]],
             }
         
-def allisog(line):
-    data=split(line)
-    ainvs=parse_ainvs(data[3])
-    label = data[0] + data[1] + data[2]
-    return label, ainvs,{
-        'Curves_in_the_class':data[4],
-        'Isogeny_matrix':data[5]
-    } 
- 
-
 def intpts(line):
-    r"""
-    Parses intpts files
+    r""" Parses one line from an intpts file.  Returns the label and a
+    dict containing fields with keys 'ainvs',
+    'x-coordinates_of_integral_points', all values being strings.
+
+    Input line fields:
+
+    label ainvs x-coordinates_of_integral_points
+
+    Sample input line:
+
+    11a1 [0,-1,1,-10,-20] [5,16]
     """
     data=split(line)
     label=data[0]
@@ -136,29 +203,8 @@ def intpts(line):
         'x-coordinates_of_integral_points':data[2]
         }
 
-# NOT USED NOW!
-def lookup_or_create(label, ainvs):
-    r"""
-    This function looks for the label, if there is an entry with that label then that entry is returned. If there is no entry with this label then a new 
-    one is created and returned. 
-    This prevents accidental duplications.
-    """
-    item=curves.find_one({'ainvs':ainvs})
-    if item is None:
-        return {'label':label,'ainvs':ainvs}
-    elif item['label']==label: 
-        print label
-        return item
-    else:
-        print "Label in DB differs from label provided", item['label'], label
-        swlabel=item['label']
-        item.update({'label':label, 'swlabel':swlabel})
-        curves.save(item)
-        return item
 
-#filename_base_list = ['allcurves', 'allbsd', 'allgens', 'allisog', 'intpts']
 filename_base_list = ['allcurves', 'allbsd', 'allgens', 'intpts']
-filename_base_list = ['allcurves']
 
 def cmp_label(lab1,lab2):
     from sage.databases.cremona import parse_cremona_label, class_to_int
@@ -173,7 +219,8 @@ def comp_dict_by_label(d1,d2):
     return cmp_label(d1['label'],d2['label'])
 
 def upload_to_db(base_path,min_N, max_N):
-    allcurves_filename = 'allcurves.%s-%s'%(min_N,max_N)
+#    allcurves data all exists also in allgens
+#    allcurves_filename = 'allcurves.%s-%s'%(min_N,max_N)
     allbsd_filename = 'allbsd.%s-%s'%(min_N,max_N)
     allgens_filename = 'allgens.%s-%s'%(min_N,max_N)
     intpts_filename = 'intpts.%s-%s'%(min_N,max_N)
@@ -214,36 +261,4 @@ def upload_to_db(base_path,min_N, max_N):
         curves.update({'label':val['label']}, val, upsert=True)
         count += 1
         if count%5000==0: print "inserted %s"%(val['label'])
-    #curves.insert(data_to_insert.values())
-
-#this code actually reads all the files and calls the appropriate function. 
-# for path in sys.argv[1:]:
-#     print path
-#     for file in glob.glob( os.path.join(path, '*.*') ):
-#         filename = os.path.basename(file)
-#         base = filename[:filename.find('.')]
-#         if base not in filename_base_list:
-#             print "Ignoring", file
-#             continue
-#         print "parsing ",file
-#         parse = globals()[base]
-#         h = gzip.open(file) if filename[-3:] == '.gz' else open(file)
-#         t = time.time()
-#         for line in h.readlines():
-#             label, ainvs, data = parse(line)
-#             info = lookup_or_create(label,ainvs)
-#             for key in data:
-#                 if key not in info:
-#                     if key!='gens':
-#                         print "key %s not in database for label %s"%(key,label)
-#                 elif data[key]!=info[key]:
-#                     if not key in ['torsion_generators','torsion_structure','iso']:
-#                         print "data for %s for %s differs: %s vs. %s"%(key,label,data[key],info[key])
-
-#             # info.update(data)
-#             # curves.save(info)
-#             # if time.time() - t > 5:
-#             #     print "\t", label
-#             #     t = time.time()
-
 
