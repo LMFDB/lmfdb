@@ -15,7 +15,7 @@ from sage.rings.arith import primes
 
 from transitive_group import group_display_knowl, group_knowl_guts, group_display_short, group_cclasses_knowl_guts, group_phrase, cclasses_display_knowl, character_table_display_knowl, group_character_table_knowl_guts
 
-from utils import ajax_more, image_src, web_latex, to_dict, parse_range, coeff_to_poly, pol_to_html
+from utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html
 
 NF_credit = 'the PARI group, J. Voight, J. Jones, and D. Roberts'
 
@@ -141,7 +141,7 @@ def render_groups_page():
     groups.sort(cmp=gcmp)
     t = 'Galois group labels'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")),('Galois group labels',' ')]
-    return render_template("galois_groups.html", groups=groups, info=info, credit=NF_credit, title=t, bread=bread)
+    return render_template("galois_groups.html", groups=groups, info=info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
 
 @nf_page.route("/FieldLabels")
 def render_labels_page():
@@ -149,7 +149,7 @@ def render_labels_page():
     info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), ('Discriminant ranges',url_for(".render_discriminants_page"))]
     t = 'Number field labels'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")),('Number field labels','')]
-    return render_template("number_field_labels.html", info=info, credit=NF_credit, title=t, bread=bread)
+    return render_template("number_field_labels.html", info=info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
 
 @nf_page.route("/Discriminants")
 def render_discriminants_page():
@@ -157,7 +157,7 @@ def render_discriminants_page():
     info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), ('Discriminant ranges',url_for(".render_discriminants_page"))]
     t = 'Global Number Field Discriminant Ranges'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")),('Discriminant ranges',' ')]
-    return render_template("discriminant_ranges.html", info=info, credit=NF_credit, title=t, bread=bread)
+    return render_template("discriminant_ranges.html", info=info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
 
 @nf_page.route("/")
 def number_field_render_webpage():
@@ -176,7 +176,7 @@ def number_field_render_webpage():
         t = 'Global Number Fields'
         bread = [('Global Number Fields', url_for(".number_field_render_webpage"))]
         info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), ('Discriminant ranges',url_for(".render_discriminants_page"))]
-        return render_template("number_field_all.html", info = info, credit=NF_credit, title=t, bread=bread)
+        return render_template("number_field_all.html", info = info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
     else:
         return number_field_search(**args)
 
@@ -424,10 +424,10 @@ def render_field_webpage(args):
     h = data['class_number']
     t = data['T']
     n = data['degree']
-    data['galois_grou'] = group_display_knowl(n,t,C)
+    data['rawpoly'] = rawpoly
+    data['galois_group'] = group_display_knowl(n,t,C)
     data['cclasses'] = cclasses_display_knowl(n,t,C)
     data['character_table'] = character_table_display_knowl(n,t,C)
-    data['galois_group'] = str(data['galois_group'][3])
     data['class_group_invs'] = data['class_group']
     if data['class_group_invs']==[]:
         data['class_group_invs']='Trivial'
@@ -439,11 +439,6 @@ def render_field_webpage(args):
     ram_primes = str(ram_primes)[1:-1]
     data['frob_data'] = frobs(K)
     data['phrase'] = group_phrase(n,t,C)
-    #Gorder,Gsign,Gab = GG_data(data['galois_group'])
-    #if Gab:
-    #    Gab='abelian'
-    #else:
-    #    Gab='non-abelian'
     unit_rank = sig[0]+sig[1]-1
     if unit_rank==0:
         reg = 1
@@ -481,7 +476,6 @@ def render_field_webpage(args):
                    ('Ramified '+primes+':', '%s' %ram_primes),
                    ('Class number:', '%s' %data['class_number']),
                    ('Class group:', '%s' %data['class_group_invs']),
-#                   ('Galois Group:', '%s' %data['galois_group'])
                    ('Galois Group:', group_display_short(data['degree'], t, C))
     ]
     from math_classes import NumberFieldGaloisGroup
@@ -522,6 +516,19 @@ def parse_power(pair):
     return int(tmp[0])**int(tmp[1])
   except:
     return int(pair)
+
+def signedlog(j):
+  sgn = 1
+  if(j<0):
+    sgn = -1
+    j = -j
+  flog = float(j.log(prec=53))
+  return flog*sgn
+
+# string to sage int, take the signed log, and multiply by the fudge factor
+def Zsignedlog(j):
+  fudge = 1+2.**(-52)
+  return signedlog(ZZ(str(j)))*fudge
   
 @nf_page.route("/<label>")
 def by_label(label):
@@ -533,6 +540,53 @@ def parse_list(L):
       return [int(a) for a in L[1:-1].split(',')]
     return []
     # return eval(str(L)) works but using eval() is insecure
+
+# We need to have a first level parsing of discs to have it
+# as sage ints, and then a second version where we apply signed logs
+# If we have an error, raise a parse error
+def parse_discs(arg):
+  # parsing can be thrown off by spaces
+  if type(arg)==str:
+    arg = arg.replace(' ','')
+  if ',' in arg:
+    return [parse_discs(a)[0] for a in arg.split(',')]
+  elif '-' in arg[1:]:
+    ix = arg.index('-', 1)
+    start, end = arg[:ix], arg[ix+1:]
+    low,high = 'i', 'i'
+    if start:
+      low = ZZ(start)
+    if end:
+      high = ZZ(end)
+    if low=='i': raise Exception('parsing error')
+    if high=='i': raise Exception('parsing error')
+    return [[low, high]]
+  else:
+    return [ZZ(arg)]
+
+# modified to apply signedlog to entries to adjust for discriminant search
+def parse_range3(arg):
+  # parsing can be thrown off by spaces
+  if type(arg)==str:
+    arg = arg.replace(' ','')
+  if type(arg)==int:
+    return ['disc_log', Zsignedlog(arg)]
+  if ',' in arg:
+    tmp = [parse_range3(a) for a in arg.split(',')]
+    tmp = [{a[0]: a[1]} for a in tmp]
+    return ['$or', tmp]
+  elif '-' in arg[1:]:
+    ix = arg.index('-', 1)
+    start, end = arg[:ix], arg[ix+1:]
+    q = {}
+    if start:
+      q['$gte'] = Zsignedlog(start)
+    if end:
+      q['$lte'] = Zsignedlog(end)
+    return ['disc_log', q]
+  else:
+    return ['disc_log', Zsignedlog(arg)]
+
 
 def number_field_search(**args):
     info = to_dict(args)
@@ -551,7 +605,21 @@ def number_field_search(**args):
                 else:
                     ran = info[field]
                     ran = ran.replace('..','-')
-                    query[field] = parse_range(ran)
+                    if field == 'discriminant':
+                      # Need to take signed log of entries
+                      tmp = parse_range3(ran)
+                    else:
+                      tmp = parse_range2(ran, field)
+                    # work around syntax for $or
+                    # we have to foil out multiple or conditions
+                    if tmp[0]=='$or' and query.has_key('$or'):
+                      newors = []
+                      for y in tmp[1]:
+                        oldors = [dict.copy(x) for x in query['$or']]
+                        for x in oldors: x.update(y)
+                        newors.extend(oldors)
+                      tmp[1] = newors
+                    query[tmp[0]] = tmp[1]
     if info.get('ur_primes'):
         ur_primes = [int(a) for a in str(info['ur_primes']).split(',')]
     else:
