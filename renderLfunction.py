@@ -324,10 +324,12 @@ def initLfunction(L,args, request):
     elif L.Ltype() in ['lcalcurl', 'lcalcfile']:
         info['bread'] = [('L-function',url_for('render_Lfunction'))]
 
-    elif L.Ltype() == 'siegelnonlift':
+    elif L.Ltype() == 'siegelnonlift' or L.Ltype() == 'siegeleisenstein' or L.Ltype() == 'siegelklingeneisenstein' or L.Ltype() == 'siegelmaasslift':
         weight = str(L.weight)
         number = str(L.number)
         info['friends'] = [('Siegel Modular Form', friendlink)]
+
+        
 
 
 

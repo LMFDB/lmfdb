@@ -1137,14 +1137,21 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         self.__dict__.update(args)
         self.weight = int(self.weight)
         self.number = int(self.number)
+        
         # Load the eigenvalues
         if (self.weight == 20 or self.weight == 22 or self.weight == 24 or self.weight == 26) and self.orbit[0] == 'U':
             loc = "http://data.countnumber.de/Siegel-Modular-Forms/Sp4Z/xeigenvalues/"+str(self.weight)+"_"+self.orbit+"-ev.sobj"
+
         else:
             loc = "http://data.countnumber.de/Siegel-Modular-Forms/Sp4Z/eigenvalues/"+str(self.weight)+"_"+self.orbit+"-ev.sobj"
 
+
+        #logger.debug(loc)
         self.ev_data = load(loc)
 
+
+
+        
         self.automorphyexp = float(self.weight)-float(1.5)
         self.Q_fe = float(1/(4*math.pi**2)) # the Q in the FE as in lcalc
 
@@ -1153,13 +1160,21 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         self.level = 1
         self.degree = 4
         #logger.debug(str(self.degree))
-        roots = compute_local_roots_SMF2_scalar_valued(self.ev_data, self.weight) # compute the roots of the Euler factors
+
+
+
+        roots = compute_local_roots_SMF2_scalar_valued(self.ev_data, self.weight, self.number) # compute the roots of the Euler factors
+
+
+
+
         #logger.debug(str(self.ev_data))
         self.numcoeff = max([a[0] for a in roots]) # include a_0 = 0
         self.dirichlet_coefficients = compute_dirichlet_series(roots, self.numcoeff) # these are in the arithmetic normalization
         self.kappa_fe = [1,1] # the coefficients from Gamma(ks+lambda)
         self.lambda_fe = [float(1)/float(2), self.automorphyexp] # the coefficients from Gamma(ks+lambda)
         self.mu_fe = [] # the shifts of the Gamma_R to print
+
 
 
         self.nu_fe = [float(1)/float(2), self.automorphyexp] # the shift of the Gamma_C to print
@@ -1184,22 +1199,28 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
             self.residues = [math.pi**2/6] # fix this
             self.langlands = True
             self.primitive = False
-            
+
+
         # FIX the coefficients by applying the analytic normalization and
 
-        K = self.ev_data[0].parent().fraction_field()
-        if K == QQ:
-            d = self.dirichlet_coefficients
-            self.dirichlet_coefficients = [ d[i]/float(i)**self.automorphyexp for i in range(1,len(d)) ]
-        else:
-            emb = K.complex_embeddings()[self.number]
-            d = self.dirichlet_coefficients
-            self.dirichlet_coefficients = [ emb(d[i])/float(i)**self.automorphyexp for i in range(1,len(d)) ]
+
+        #K = self.ev_data[0].parent().fraction_field()
+        #if K == QQ:
+        #d = self.dirichlet_coefficients
+        #self.dirichlet_coefficients = [ d[i]/float(i)**self.automorphyexp for i in range(1,len(d)) ]
+        #else:
+        #d = self.dirichlet_coefficients
+        #self.dirichlet_coefficients = [ emb(d[i])/float(i)**self.automorphyexp for i in range(1,len(d)) ]
+
+
+
         self.coefficient_period = 0
         self.coefficient_type = 2
         self.quasidegree = 1
 
-        self.checkselfdual()
+
+
+        #self.checkselfdual()
 
 
         self.texname = "L(s,F)"
@@ -1219,3 +1240,9 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
     def Ltype(self):
         if self.orbit[0] == 'U':
             return "siegelnonlift"
+        elif self.orbit[0] == 'E':
+            return "siegeleisenstein"
+        elif self.orbit[0] == 'K':
+            return "siegelklingeneisenstein"
+        elif self.orbit[0] == 'M':
+            return "siegelmaasslift"
