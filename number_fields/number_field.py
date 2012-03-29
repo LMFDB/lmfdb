@@ -746,23 +746,28 @@ def residue_field_degrees_function(K):
   """
   k1 = pari(K)
   D = K.disc()
-  ans = []
-  def dec(p):
+  def decomposition(p):
     if not ZZ(p).divides(D):
       dec = k1.idealprimedec(p)
       dec = [z[3] for z in dec]
       return dec
     else:
       raise ValueError, "Expecting a prime not dividing D"
-  return dec
+  return decomposition
 
 
 # Compute Frobenius cycle types, returns string nicely presenting this
 def frobs(K):
-  frob_at_p = frobs_function(K)
+  frob_at_p = residue_field_degrees_function(K)
+  D = K.disc()
+  ans = []
   for p in primes(2,60):
     if not ZZ(p).divides(D):
-      dec = residue_field_degrees_function(p)
+      # [3] ,   [2,1]
+      dec = frob_at_p(p)
+      vals = list(set(dec))
+      vals = sorted(vals, reverse=True)
+      dec = [[x, dec.count(x)] for x in vals]
       dec2 = ["$"+str(x[0]) + ('^{'+str(x[1])+'}$' if x[1]>1 else '$') for x in dec]
       s = '$'
       old=2
