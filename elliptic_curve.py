@@ -242,39 +242,67 @@ def render_isogeny_class(iso_class):
     info = {}
     credit = 'John Cremona'
     label=iso_class # e.g. '11a'
+    N, iso, number = cremona_label_regex.match(label).groups()
 
-    C = base.getDBConnection()
-    data = C.elliptic_curves.isogeny_classes.find_one({'label': label})
-    if data is None:
+    CDB = base.getDBConnection().elliptic_curves.curves
+    
+    E1data = CDB.find_one({'label': label+'1'})
+    if E1data is None:
         return "No such isogeny class"
-    curves_data = C.elliptic_curves.curves.find_one({'label': label+'1'})
-    size = data['size']
-    ainvs = [int(a) for a in data['ainvs_optimal']]
-    E = EllipticCurve(ainvs)
+    ainvs = E1data['ainvs']
+    E1 = EllipticCurve([ZZ(c) for c in ainvs])
+    curves, mat = E1.isogeny_class()
+    size = len(curves)
+    # Create a list of the curves in the class from the database, so
+    # they are in the correct order!
+    db_curves = [E1]
+    print "size=%s"%size
+    for i in range(2,size+1):
+        print "looking for %s"%(label+str(i))
+        Edata = CDB.find_one({'label': label+str(i)})
+        E = EllipticCurve([ZZ(c) for c in Edata['ainvs']])
+        db_curves.append(E)
+    assert len(db_curves)==size
+    # Now work out the permutation needed to match the two lists of curves:
+    perm = [db_curves.index(E) for E in curves]
+    # Apply the same permutation to the isogeny matrix:
+    mat = [[mat[perm[i],perm[j]] for j in range(size)] for i in range(size)]
+    
+    # On 2012-03-29 the modular forms database only contained levels
+    # up to 100.  In that range there are 5 cases where the labels in
+    # the modular forms database do not agree with the elliptic curve
+    # isogeny clas labels.  This permutation was kindly provided by
+    # Kiran Kedlaya.
+    mod_form_iso=iso
+    label_perm={'57b':'c', '57c':'b',
+                '75a':'c', '75c':'a',
+                '84a':'b', '84b':'a',
+                '92a':'b', '94b':'a',
+                '96a':'b', '96b':'a'}
+    if label in label_perm:
+        mod_form_iso=label_perm[label]
+        
     info = {'label': label}
     info['optimal_ainvs'] = ainvs
-    info['rank'] = curves_data['rank']
-    info['isogeny_matrix']=latex(matrix(eval(data['Isogeny_matrix'])))
-    if 'degree' in data:
-        info['modular_degree']=web_latex(data['degree'])
-    else:
-        info['modular_degree']=web_latex(E.modular_degree())
+    info['rank'] = E1data['rank']
+    info['isogeny_matrix']=latex(matrix(mat))
+    info['modular_degree']=web_latex(E1.modular_degree())
       
     #info['f'] = ajax_more(E.q_eigenform, 10, 20, 50, 100, 250)
     info['f'] = web_latex(E.q_eigenform(10))
-    G = E.isogeny_graph(); n = G.num_verts()
-    G.relabel(range(1,n+1)) # proper cremona labels...
+    G = E1.isogeny_graph(); n = G.num_verts()
+    G.relabel([1+perm[j] for j in range(n)]) # proper cremona labels...
     info['graph_img'] = image_src(G.plot(edge_labels=True, layout='spring'))
-    curves = [label+str(i+1) for i in range(size)]
-    ecurves = [EllipticCurve(c) for c in curves]
-    info['curves'] = [[c.label(),str(list(c.ainvs())),c.torsion_order(),c.modular_degree()] for c in ecurves]
+
+    info['curves'] = [[c.label(),str(list(c.ainvs())),c.torsion_order(),c.modular_degree()] for c in db_curves]
     info['download_qexp_url'] = url_for('download_qexp', limit=100, ainvs=','.join([str(a) for a in ainvs]))
     info['download_all_url'] = url_for('download_all', label=str(label))
+
     friends=[]
-#    friends=[('Elliptic Curve %s' % l , "/EllipticCurve/Q/%s" % l) for l in data['label_of_curves_in_the_class']]
-#    friends.append(('Quadratic Twist', "/quadratic_twists/%s" % (label)))
+#   friends.append(('Quadratic Twist', "/quadratic_twists/%s" % (label)))
     friends.append(('L-function', url_for("render_Lfunction", arg1='EllipticCurve', arg2='Q', arg3=label)))
-####  THIS DOESN'T WORK AT THE MOMENT /Lemurell                           friends.append(('Modular Form', url_for("emf.render_classical_modular_form_from_label",label="%s" %(label))))
+#render_one_elliptic_modular_form(level,weight,character,label,**kwds)
+    friends.append(('Modular form '+N+mod_form_iso, url_for("emf.render_elliptic_modular_forms", level=N,weight=2,character=0,label=mod_form_iso)))
     info['friends'] = friends
 
     t= "Elliptic Curve Isogeny Class %s" % info['label']
@@ -360,7 +388,15 @@ def render_curve_webpage_by_label(label):
     xintpoints_projective=[E.lift_x(x) for x in xintegral_point(data['x-coordinates_of_integral_points'])]
     xintpoints=proj_to_aff(xintpoints_projective)
     G = E.torsion_subgroup().gens()
-    minq_label = E.minimal_quadratic_twist()[0].label()
+    minq = E.minimal_quadratic_twist()[0]
+    if E==minq:
+        minq_label = label
+    else:
+        minq_ainvs = [str(c) for c in minq.ainvs()]
+        minq_label=C.elliptic_curves.curves.find_one({'ainvs': minq_ainvs})['label']
+# We do not just do the following, as Sage's installed database
+# might not have all the curves in the LMFDB database.
+# minq_label = E.minimal_quadratic_twist()[0].label()
     
     if 'gens' in data:
         generator=parse_gens(data['gens'])
@@ -419,8 +455,8 @@ def render_curve_webpage_by_label(label):
     info['downloads_visible'] = True
     info['downloads'] = [('worksheet', url_for("not_yet_implemented"))]
     info['friends'] = [
-        ('Isogeny class', "/EllipticCurve/Q/%s" % iso_class),
-        ('Minimal quadratic twist', "/EllipticCurve/Q/%s" % minq_label),
+        ('Isogeny class '+iso_class, "/EllipticCurve/Q/%s" % iso_class),
+        ('Minimal quadratic twist '+minq_label, "/EllipticCurve/Q/%s" % minq_label),
         ('L-function', url_for("render_Lfunction", arg1='EllipticCurve', arg2='Q', arg3=label))]
 ####  THIS DOESN'T WORK AT THE MOMENT /Lemurell ('Modular Form',
 ####  url_for("emf.render_elliptic_modular_form_from_label",label="%s"
@@ -482,23 +518,26 @@ def download_qexp():
 @app.route("/EllipticCurve/Q/download_all")
 def download_all():
     label=(request.args.get('label'))
-    C = base.getDBConnection()
-    data = C.elliptic_curves.isogeny_classes.find_one({'label': label})
-    #all data about this isogeny class
-    
-    size=data['size']
-    curves = [label+str(i+1) for i in range(size)]
+    CDB = base.getDBConnection().elliptic_curves.curves
+    data_list = [CDB.find_one({'label': label+'1'})]
+    if data_list[0] is None:
+        return "No such class exists: %s"%label
+    size = 1
+    data = 0 # any non-None value will do here
+    while not data is None:
+        size += 1
+        data = CDB.find_one({'label': label+str(size)})
+        if not data is None:
+            data_list.append(data)
 
-    data1=[str(c)+'='+str(data[c]) for c in data]
     #titles of all entries of curves
-    lab=curves[-1]
-    titles_curves=[str(c) for c in C.elliptic_curves.curves.find_one({'label': lab})]
-    data1.append(titles_curves)
-    for lab in curves:
-        print lab
-        data_curves=C.elliptic_curves.curves.find_one({'label': lab})
-        data1.append([data_curves[t] for t in titles_curves])
-    response=make_response('\n'.join(str(an) for an in  data1))
+    dump_data=[]
+    titles = [str(c) for c in data_list[0]]
+    titles.sort()
+    dump_data.append(titles)
+    for data in data_list:
+        dump_data.append([data[t] for t in titles])
+    response=make_response('\n'.join(str(an) for an in dump_data))
     response.headers['Content-type'] = 'text/plain'
     return response
     
