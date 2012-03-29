@@ -109,12 +109,12 @@ def browseGraphChar():
 def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9):
     args = request.args
     temp_args = to_dict(args)
-    
+
     if len(args) == 0:  #This ensures it's a navigation page 
         if not arg1: # this means we're at the start page
             info = set_info_for_start_page()
             return render_template("LfunctionNavigate.html", **info)
-        
+
         elif arg1.startswith("degree"):
             degree = int(arg1[6:])
             info = { "degree" : degree }
@@ -273,7 +273,7 @@ def initLfunction(L,args, request):
     if L.Ltype() == 'maass':
         if L.group == 'GL2':
             minNumberOfCoefficients = 100     # TODO: Fix this to take level into account
-                            
+
             if len(L.dirichlet_coefficients)< minNumberOfCoefficients:
                 info['zeroeslink'] = ''
                 info['plotlink'] = ''
@@ -297,7 +297,7 @@ def initLfunction(L,args, request):
         info['bread'] = [('L-function','/L'),('Dirichlet Character',url_for('render_Lfunction', arg1='degree1') +'#Dirichlet'),
                          (charname, request.url)]
         info['friends'] = [('Dirichlet Character '+str(charname), friendlink)]
-                
+
 
     elif L.Ltype()  == 'ellipticcurve':
         label = L.label

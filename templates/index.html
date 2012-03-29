@@ -53,9 +53,9 @@
 
  </ul>
 
-<h1>Search</h1>
+<h1>Zeros of $L$-functions</h1>
  <ul>
-  <li><a href="{{ url_for('LfunctionDB.query', zerolowerbound=1.1, zeroupperbound=2.1) }}">Zeros of $L$-functions</a></li>
+  <li><a href="{{ url_for('LfunctionDB.query', zerolowerbound=1.1, zeroupperbound=2.1) }}">Search</a></li>
  </ul>
 
 <h1>Misc Pages</h1>
@@ -67,26 +67,20 @@
    you are "<a href="{{ url_for('users.info') }}">{{username}}</a>"
  {%- endif %}
  </li>
- <li><a href="{{ url_for("about") }}">About</a></li>
  <li><a href="{{ url_for("acknowledgment") }}">Acknowledgment</a></li>
 </ul>
 
-<h1>Data Uploading</h1>
+<h1>Data</h1>
 <ul>
-<li><a href="{{ url_for("upload.viewAll")}}">View uploaded data</a></li>
+<li><a href="{{ url_for("upload.viewAll")}}">View user uploaded data</a></li>
 {% if user_is_authenticated %}
  <li><a href="{{ url_for("upload.index") }}">Upload data</a></li>
+ <li><a href="/raw">raw LMFDB data</a></li>
  {% if user_is_admin %}
   <li><a href="{{ url_for("upload.admin") }}">Moderate uploaded files</a></li>
  {% endif %}
 {% endif %}
 </ul>
 
-{% if user_is_authenticated %}
-<h1>Raw</h1>
-<ul>
-<li><a href="/raw">raw</a>
-</ul>
-{% endif %}
 
 {% endblock %}

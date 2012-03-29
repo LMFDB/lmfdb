@@ -148,18 +148,18 @@
   </ul>
   <h2 class="link">
        <a class="artin_representations" href="{{ url_for('artin_representations.index') }}">Artin Representations</a></h2>
-  
+
 
 
   <h2 class="link knowl">
      <a class="knowl" href="{{ url_for("knowledge.index") }}">Knowledge</a>
   </h2>
 
-  <h2>Search</h2>
+  <h2>Zeros of $L$-functions</h2>
    <ul>
-    <li><a href="{{ url_for('LfunctionDB.query', zerolowerbound=1.1, zeroupperbound=2.1) }}">Zeros of L-functions</a></li>
+    <li><a href="{{ url_for('LfunctionDB.query', zerolowerbound=1.1, zeroupperbound=2.1) }}">Search</a></li>
    </ul>
-  
+
    {{ entry("Learn more about", learnmore) }}
    {{ entry("Downloads", downloads) }}
    {{ entry("Data", getUploadedFor(request.path) ) }}
