@@ -913,8 +913,8 @@ class Lfunction_Maass(Lfunction):
                 self.sign = self.fricke * self.sign
 
             self.kappa_fe = [0.5,0.5]
-            self.lambda_fe = [0.5*aa + self.eigenvalue*I, 0.5*aa - self.eigenvalue*I]
-            self.mu_fe = [aa + 2*self.eigenvalue*I, aa -2*self.eigenvalue*I]
+            self.lambda_fe = [0.5*aa + self.eigenvalue*I/2, 0.5*aa - self.eigenvalue*I/2]
+            self.mu_fe = [aa + self.eigenvalue*I, aa -self.eigenvalue*I]
             self.nu_fe = []
             self.langlands = True
             self.degree = 2

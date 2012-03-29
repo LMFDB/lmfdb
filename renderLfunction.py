@@ -439,9 +439,7 @@ def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, ar
     negativeZeros = []
     
     for zero in allZeros:
-        logger.debug("abszero: {0}".format(zero.abs()))
         if zero.abs()< 1e-10:
-            logger.debug("Zero zero")
             zero = 0
         if zero < 0:
             negativeZeros.append(zero)
