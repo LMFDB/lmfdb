@@ -49,7 +49,7 @@ met = ['GET','POST']
 @mwf.route("/<int:level>/<int:weight>/<int:character>/<float:r1>/<float:r2>/",methods=met)
 def render_maass_waveforms(level=0,weight=-1,character=-1,r1=0,r2=0,**kwds):
     info = get_args_mwf(level=level,weight=weight,character=character,r1=r1,r2=r2,**kwds)
-    print "INFO=",info
+    
     info["credit"] = ""
     info["learnmore"]= []
     info["learnmore"].append(["Wiki","http://wiki.l-functions.org/ModularForms/MaassForms"])
@@ -58,37 +58,53 @@ def render_maass_waveforms(level=0,weight=-1,character=-1,r1=0,r2=0,**kwds):
     mwf_logger.debug("method=%s"%request.method)
     mwf_logger.debug("req.form=%s"%request.form)
     mwf_logger.debug("info=%s"%info)
+    mwf_logger.debug("level,weight,char={0},{1},{2}".format(level,weight,character))
     if info.get('maass_id',None) and info.get('db',None):
         return render_one_maass_waveform_wp(**info)
     if info['search'] or info['browse']:
         search = get_search_parameters(info)
+        mwf_logger.debug("search=%s"%search)
         return render_search_results_wp(info,search)
 
- 
+    DB = connect_db() 
     if not info['collection'] or info['collection']=='all':
         md = get_collections_info()
     info['cur_character'] = character
     #info["info1"] = MakeTitle(level,weight,character)  
-    if level:
-        info['maass_weight'] = getallweights(int(level))
+    if level>0:
+        info['maass_weight'] = DB.weights(int(level))
         info['cur_level'] = level
         
-    if level and weight:
+    if weight>-1:
         info['cur_weight'] = weight
-        info['maass_character'] = getallcharacters(int(level),float(weight))
+        if level>0:
+            info['maass_character'] = DB.characters(int(level),float(weight))            
+    if character > - 1:
+        info['cur_character'] = character
+
         
-    if level and weight and character:
-        info['cur_character'] = character       
+    if level>0 or weight>-1 or character>-1:
+        info['search']=1
+        search = get_search_parameters(info)
+        mwf_logger.debug("info=%s"%info)
+        mwf_logger.debug("search=%s"%search)
+        return render_search_results_wp(info,search)
     title='Maass forms'
-    info['list_of_levels']=get_all_levels()
+    info['list_of_levels']=DB.levels()
     if info['list_of_levels']:
         info['max_level']=max(info['list_of_levels'])
     else:
         info['max_level']=0
     mwf_logger.debug("info3=%s"%info)
-    return render_template("mwf_navigate.html", info=info,title=title)
-    #return render_browse_maass_waveforms(info=info,title=title)
-    #return render_template("mwf_browse.html", info=info,title=title)
+    bread=[('Modular forms',url_for('mf.modular_form_main_page')),
+           ('Maass forms',url_for('.render_maass_waveforms'))]
+    info['bread']=bread
+    info['title']=title
+    DB.set_table()
+    DB.table['ncols']=10
+    info['DB']=DB
+    
+    return render_template("mwf_navigate.html", **info)
 
     
 def render_maass_waveform_space(level,weight,character,**kwds):
@@ -100,50 +116,6 @@ def render_maass_waveform_space(level,weight,character,**kwds):
     table.set_table({'level':level,'weight':weight,'character':character})
     info={'table':table}
     return render_template("mwf_browse.html", info=info,title=title)
-
-
-def render_maass_waveforms_for_one_group(level,**kwds):
-    DB = connect_db()
-    res  = dict()
-    info=dict()
-    mwf_logger.debug("collections {0}".format(DB.collection_names()))
-    for collection_name in DB.collection_names():
-        res[collection_name] = list()
-        C = pymongo.collection.Collection(DB,collection_name)
-        mwf_logger.debug("Collection {0}".format(C))
-        L = C.find({'Level':level,'Weight':0.0})
-        for F in L:
-            mwf_logger.debug("F: {0}".format(F))
-            try:
-                id = F['_id']
-                R  =  F['Eigenvalue']
-                k =   F['Weight']
-                res[collection_name].append((R,k,id))
-            except:
-                pass
-        res[collection_name].sort()
-    # now we have all maass waveforms for this group
-    s="<table><tr>"
-    for name in res.keys():
-        if(len(res[name])==0):
-            continue
-        s+="<td valign='top'>"
-        s+="<table><thead>"
-        s+=" <tr><td valign='top'>Collection:"+name
-        s+="     </td></tr></thead>"
-        s+="<tbody>"
-        for (R,k,id) in res[name]:
-            url = url_for('mwf.render_one_maass_waveform',maass_id=str(id),db=name)
-            s+="<tr><td><a href=\"%s\">%s</a></td></tr>" %(url,R)
-        s+="</tbody>"
-        s+="</table>"
-        s+="</td>"
-    s+="</tr></table>"
-    #print "S=",s
-    info['table_of_eigenvalues']=s
-    title="Maass forms for \(\Gamma_{0}("+str(level)+")\)"
-    bread=[('Maass forms',url_for('.render_maass_waveforms'))]
-    return render_template("mwf_one_group.html", info=info,title=title)
 
 
 @mwf.route("/<maass_id>",methods=['GET','POST'])
@@ -180,20 +152,24 @@ def render_one_maass_waveform_wp(info):
     mwf_logger.debug("id1={0}".format(maass_id))
     # Create the link to the L-function (put in '/L' at the beginning and '/' before '?'
     Llink = "/L"+url_for('mwf.render_one_maass_waveform',maass_id=maass_id) #+ '/?db=' + info['db']
-    
     info["friends"]= [("L-function",Llink)]
-    info['bread']=[('Maass waveforms',url_for('.render_maass_waveforms'))]
+    info['MF'] = WebMaassForm(DB,maass_id)
+    level = info['MF'].level
+    bread=[('Maass waveforms',url_for('.render_maass_waveforms')),
+          ('Of Level {0}'.format(level),
+           url_for('.render_maass_waveforms',level=level))          ]
+    
     info["downloads"]= []
     lenc = 20
     mwf_logger.debug("count={0}".format(DB.count()))
-    info['MF'] = WebMaassForm(DB,maass_id)
-    mwf_logger.debug("tabl={0}".format(info['MF'].table))
+#    mwf_logger.debug("tabl={0}".format(info['MF'].table))
     properties =  [('Level',[info['MF'].level]),
                    ('Symmetry',[info['MF'].even_odd()]),
                    ('Weight',[info['MF'].the_weight()]),
                    ('Character',[info['MF'].the_character()]),
                    ('Fricke Eigenvalue',[info['MF'].fricke()])]
     info['title']="Maass forms on \(\Gamma_{0}( %s )\)" % (info['MF'].level)
+    info['bread']=bread
     info['properties2']=properties
     return render_template("mwf_one_form.html",**info)
 
@@ -251,11 +227,6 @@ def render_one_maass_waveform_wp_old(info):
     bread=[('Maass forms',url_for('.render_maass_waveforms'))]
     return render_template("mwf_one_maass_form.html", info=info,title=title,bread=bread,properties=properties)
 
-    
-
-    
-
-
 def render_search_results_wp(info,search):
     # res contains a lst of Maass waveforms
     mwf_logger.debug("in render_search_results. info=".format(info))
@@ -294,13 +265,13 @@ def render_search_results_wp(info,search):
             row['symmetry']=st
             er = f.get('Error',0)
             if er>0:
-                er = "{0:2.1e}".format(er)
+                er = "{0:1.0e}".format(er)
             else:
                 er="undefined"
             row['err']=er
             dim = f.get('Dim',None)
             if dim==None:
-                dim="undefined"
+                dim=1 #"undefined"
             row['dim']=dim
             numc = f.get('Numc',0)
             row['numc']=numc
@@ -424,99 +395,48 @@ def render_browse_all_eigenvalues(info,**kwds):
     info['evs']=evs
 
     return render_template("mwf_browse_all_eigenvalues.html", **info)
-    
-"""
-def write_eigenvalues(search,EVs,index):
-        for i in search:
-                link=url_for('.render_maass_form',id=str(i['_id']))
-                EVs.append([i['Eigenvalue'],index,i['Symmetry'], link])
-                index=index+1
-        return index
 
-def render_webpage(args):
-        info = dict(args)
-        maassID = args.get("id", None)#[0]
-        eigenvalue = args.get("eigenvalue", None)
-#       multicheck = args.get("multicheck", None)
-        
-        import base
-        C = base.getDBConnection()
-        DB = C.MaassWaveForm
-        Collection = DB.HT
-        Collection.ensure_index("Eigenvalue")
-#       if show == 'all':
-#               return render_template("maass_form.html", info=info)
-#       else:
-        EVs=[]
-        index = 0
-        info["credit"] = "Holger Then"
-        info["info1"] = "Maass cusp forms for \(PSL(2,Z)\)"
-        info["info2"] = "list of  \(r\)"
-#, Eigenvalue \(\\lambda= \\frac{1}{4}+ r^2\)"
 
-        info["info3"] = "Maass form"
-        info["info4"] = "\(\\quad f(z)=const\\sum_{ n \\not= 0}a_n\\sqrt{y}K_{ir}(2\\pi|n|y)e^{2\\pi inx}\)"
-        info["info5"] = "Eigenvalue"
-#       info["info6"] = "\( \\quad \\lambda=r^2 + \\frac{1}{4} \\ , \\quad r= \\ \) {{ info.eigenvalue  }}  "
-#       info["info7"] = "Coefficients"
-#       info["info8"] = "\\quad normalization \(a_1=1\)"
-#       info["info9"] = "\\quad symmetry \(a_{-1}=\\%c1\)"
-#       info["info10"]= "\\quad multiplicity \(a_{mp}=a_{m}a_{p}-a_{m/p}\)\\quad where \(a_{m/p}=0\) if \(p\\not|m\)"
-#       info["info11"]= "\\quad prime coefficients \(a_2= \\%.5f \\quad a_3= \\%.5f \\quad a_5= \\%.5f \\quad a_7= \\%.5f \\quad \\ldots\)"
 
-        info["learnmore"]= []
-        info["learnmore"].append(["Wiki","http://wiki.l-functions.org/ModularForms/MaassForms"])
-        info["learnmore"].append(["Literature","http://arxiv.org/abs/math-ph/0305047"])
-
-        if maassID:
-                try: 
-                        OBJ = bson.objectid.ObjectId(maassID)
-                except bson.errors.InvalidId:
-                        return render_template("maass_form.html", info=info)
-                data=Collection.find_one({'_id':bson.objectid.ObjectId(maassID)})
-                info["info1"] += ", r="+str(data['Eigenvalue'])
-                info["info2"] = str(data['Symmetry'])+' r='+str(data['Eigenvalue'])
-                info["link"] = url_for('.render_maass_form')
-                info["info6"] = "\( \\quad \\lambda= \\frac{1}{4} + r^2 \\ , \\quad r= "+str(data['Eigenvalue'])+"\)"
-                info["info7"] = "Symmetry"
-                info["info8"] = str(data['Symmetry'])
-                ANs = []
-                id = 0
-                for a in data['Coefficient']:
-                        ANs.append([id,a])
-                        id = id +1
-                info["an"]= ANs
-                info["check"]=[]
-                info["check"].append(["Hecke relation",url_for('.render_maass_form', multicheck=maassID)])
-                info["check"].append(["Ramanujan-Petersson conjecture",url_for('.render_maass_form', RPconj=maassID)])
-                info["friends"]= []
-                info["friends"].append(["L-function",url_for('.render_maass_form', Lfunction=maassID)])
-#               info["learnmore"]= []
-#               info["learnmore"].append(["Wiki","http://wiki.l-functions.org/ModularForms/MaassForms"])
-#               info["learnmore"].append(["Literature","http://arxiv.org/abs/math-ph/0305047"])
-                info["downloads"]= []
-                info["downloads"].append(["Maass form data",url_for('.render_maass_form', download=maassID)])
-                return render_template("maass_form2.html", info=info)
-        else:   
-                offset = maassID = args.get("id", 0)
-                EVs = []
-                index = 0
-                if eigenvalue:
-                        try:
-                                ev = float(eigenvalue)
-                        except ValueError:
-                                return render_template("maass_form.html", info=info)
-                        search1 = Collection.find({"Eigenvalue" : {"$gte" : ev}},{'Eigenvalue':1,'Symmetry':1},sort=[('Eigenvalue',1)],limit=2)
-                        search2 = Collection.find({"Eigenvalue" : {"$lte" : ev}},{'Eigenvalue':1,'Symmetry':1},sort=[('Eigenvalue',-1)],limit=2)
-                        index=write_eigenvalues(reversed(list(search2)),EVs,index)
-                        write_eigenvalues(search1,EVs,index)
-                        info["info2"] += " search for: "+eigenvalue
-                else:
-                        searchres=Collection.find({},{'Eigenvalue':1,'Symmetry':1},sort=[('Eigenvalue',1)])
-                        write_eigenvalues(searchres,EVs,index)
-                info["ev"] = EVs
-                
-                return render_template("maass_form.html", info=info)
-
-#find_one({'_id':bson.objectid.ObjectId('fsdfds')})
-"""
+def render_maass_waveforms_for_one_group(level,**kwds):
+    DB = connect_db()
+    res  = dict()
+    info=dict()
+    mwf_logger.debug("collections {0}".format(DB.collection_names()))
+    for collection_name in DB.collection_names():
+        res[collection_name] = list()
+        C = pymongo.collection.Collection(DB,collection_name)
+        mwf_logger.debug("Collection {0}".format(C))
+        L = C.find({'Level':level,'Weight':0.0})
+        for F in L:
+            mwf_logger.debug("F: {0}".format(F))
+            try:
+                id = F['_id']
+                R  =  F['Eigenvalue']
+                k =   F['Weight']
+                res[collection_name].append((R,k,id))
+            except:
+                pass
+        res[collection_name].sort()
+    # now we have all maass waveforms for this group
+    s="<table><tr>"
+    for name in res.keys():
+        if(len(res[name])==0):
+            continue
+        s+="<td valign='top'>"
+        s+="<table><thead>"
+        s+=" <tr><td valign='top'>Collection:"+name
+        s+="     </td></tr></thead>"
+        s+="<tbody>"
+        for (R,k,id) in res[name]:
+            url = url_for('mwf.render_one_maass_waveform',maass_id=str(id),db=name)
+            s+="<tr><td><a href=\"%s\">%s</a></td></tr>" %(url,R)
+        s+="</tbody>"
+        s+="</table>"
+        s+="</td>"
+    s+="</tr></table>"
+    #print "S=",s
+    info['table_of_eigenvalues']=s
+    title="Maass forms for \(\Gamma_{0}("+str(level)+")\)"
+    bread=[('Maass forms',url_for('.render_maass_waveforms'))]
+    return render_template("mwf_one_group.html", info=info,title=title)

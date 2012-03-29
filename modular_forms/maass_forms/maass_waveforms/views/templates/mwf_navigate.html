@@ -34,6 +34,11 @@ function set_value(name,val) {
   <input type="hidden" name="weight" value=""/>
   <input type="hidden" name="level" value=""/>
   <input type="hidden" name="browse" value="1"/>
+{% if DB is defined %}
+{% include 'mwf_table.html' %}
+{% else %}
+No table!
+{% endif %}
   <ul>
     <li>
       <a href="javascript:set_value('weight',0);">Browse Maass forms of weight 0</a>
