@@ -65,7 +65,11 @@ def render_webpage(request,arg1,arg2):
             info["bread"] = [('Dirichlet Characters', url_for("render_Character")), ('Conductor '+str(conductor_start) + '-' + str(conductor_end), '/Character/Dirichlet/condsearch='+str(conductor_start)+'-'+str(conductor_end))]
             info['title'] = 'Dirichlet Characters of Conductors ' +str(conductor_start)+'-'+str(conductor_end)
             info['credit'] = "Sage"
-            info['contents'] = ListCharacters.get_character_conductor(conductor_start,conductor_end+1)
+            info['contents']  = ListCharacters.get_character_conductor(conductor_start,conductor_end+1)
+            #info['contents'] = c
+            #info['header'] = h 
+            #info['rows'] = rows
+            #info['cols'] = cols
             return render_template("dirichlet_characters/ConductorList.html", **info)
 
         elif arg1.startswith("ordbrowse"):
@@ -79,7 +83,6 @@ def render_webpage(request,arg1,arg2):
             info['credit'] = 'Sage'
             info['contents'] = ListCharacters.get_character_order(order_start, order_end+1)
             return render_template("dirichlet_characters/OrderList.html", **info)
-
 
         elif arg1 == 'custom':
             return "not yet implemented"
@@ -101,6 +104,7 @@ def render_webpage(request,arg1,arg2):
 
         return render_template('dirichlet_characters/DirichletCharacter.html', **info)
     else:
+
         return character_search(**args)
 
 def set_info_for_start_page():
@@ -269,9 +273,10 @@ def dc_calc_gauss(modulus,number):
         n = x.numerator() 
         n = str(n)+"r" if not n == 1 else "r"
         d = x.denominator()
-        return r"\begin{equation} \tau_{%s}(\chi_{%s}(%s,&middot;)) = \sum_{r\in \mathbb{Z}/%s\mathbb{Z}} \chi_{%s}(%s,r) e\left(\frac{%s}{%s}\right) = %s. \end{equation}" %(int(arg),modulus,number,modulus,modulus,number,n,d,g)
+        return r"\(\displaystyle \tau_{%s}(\chi_{%s}(%s,&middot;)) = \sum_{r\in \mathbb{Z}/%s\mathbb{Z}} \chi_{%s}(%s,r) e\left(\frac{%s}{%s}\right) = %s. \)" %(int(arg),modulus,number,modulus,modulus,number,n,d,g)
     except Exception, e:
         return "<span style='color:red;'>ERROR: %s</span>" % e
+
 
 @app.route("/Character/Dirichlet/calc_jacobi/<int:modulus>/<int:number>")
 def dc_calc_jacobi(modulus,number):
@@ -287,7 +292,7 @@ def dc_calc_jacobi(modulus,number):
         chi = chi.sage_character()
         psi = psi.sage_character()
         jacobi_sum = chi.jacobi_sum(psi)
-        return r"\begin{equation} J(\chi_{%s}(%s,&middot;),\chi_{%s}(%s,&middot;)) = \sum_{r\in \mathbb{Z}/%s\mathbb{Z}} \chi_{%s}(%s,r) \chi_{%s}(%s,1-r) = %s,\end{equation} where <a href='/Character/Dirichlet/%s/%s'> \(\chi_{%s}(%s,&middot;)\) </a> is character \(%s\) modulo \(%s\)." %(modulus,number,modulus,num,modulus,modulus,number,modulus,num,latex(jacobi_sum),modulus,num,modulus,num,num,modulus)  
+        return r"\( \displaystyle J(\chi_{%s}(%s,&middot;),\chi_{%s}(%s,&middot;)) = \sum_{r\in \mathbb{Z}/%s\mathbb{Z}} \chi_{%s}(%s,r) \chi_{%s}(%s,1-r) = %s.\)" %(modulus,number,modulus,num,modulus,modulus,number,modulus,num,latex(jacobi_sum))  
     except Exception, e:
         return "<span style='color:red;'>ERROR: %s</span>" % e
 
@@ -310,7 +315,7 @@ def dc_calc_kloosterman(modulus,number):
             k = str(imag) + "i"
         else:
             k = latex(k)
-        return r"\begin{equation} K(%s,%s,\chi_{%s}(%s,&middot;)) = \sum_{r \in \mathbb{Z}/%s\mathbb{Z}} \chi_{%s}(%s,r) e\left(\frac{%s r + %s r^{-1}}{25}\right) = %s. \end{equation}" %(int(arg[0]),int(arg[1]),modulus,number, modulus, modulus,number,int(arg[0]),int(arg[1]),k)
+        return r"\( \displaystyle K(%s,%s,\chi_{%s}(%s,&middot;)) = \sum_{r \in \mathbb{Z}/%s\mathbb{Z}} \chi_{%s}(%s,r) e\left(\frac{%s r + %s r^{-1}}{25}\right) = %s. \)" %(int(arg[0]),int(arg[1]),modulus,number, modulus, modulus,number,int(arg[0]),int(arg[1]),k)
     except Exception, e:
         return "<span style='color:red;'>ERROR: %s</span>" % e
 
@@ -319,7 +324,6 @@ def redirect_character(modulus,number):
     return render_webpage(request,modulus,number)
 
 def character_search(**args):
-    #import base
     info = to_dict(args)
     query = {}
     print args
@@ -375,6 +379,7 @@ def render_character_table(modulus=None,conductor=None,order=None):
     return [row(_) for _ in range(start,end,stepsize)]
 
 
+
 def kronecker_symbol(chi):
     m = chi.conductor()/4
     if chi.conductor()%2 == 1:
@@ -394,4 +399,30 @@ def kronecker_symbol(chi):
             return r"\(\displaystyle\left(\frac{-%s}{\bullet}\right)\)" %(chi.conductor()) 
     else:
         return None
+
+@app.route("/Character/Dirichlet/table")
+def dirichlet_table(**args):
+    modulus = request.args.get("modulus", 1, type=int)
+    info = to_dict(args)
+    info['modulus'] = modulus
+    info["bread"] = [('Dirichlet Character Table', url_for("dirichlet_table")), ('result', ' ')]
+    info['credit'] = 'Sage'
+    h, c = get_entries(modulus)
+    info['headers'] = h
+    info['contents'] = c
+    info['title'] = 'Dirichlet Characters'
+    return render_template("/dirichlet_characters/CharacterTable.html",**info)
+
+def get_entries(modulus):
+    from dirichlet_conrey import DirichletGroup_conrey
+    from sage.all import Integer
+    from WebCharacter import log_value 
+    G = DirichletGroup_conrey(modulus)
+    headers = range(1,modulus+1)
+    e = euler_phi(modulus)
+    rows = []
+    for chi in G:
+        number = chi.number()
+        rows.append((number,log_value(modulus,number)))
+    return headers, rows
 

@@ -8,7 +8,7 @@ class RootTest(LmfdbTest):
 
   def test_robots(self):
     r = self.tc.get("/robots.txt")
-    assert "Disallow: /" in r.data
+    assert "Disallow: /" not in r.data
 
   def test_favicon(self):
     assert len(self.tc.get("/favicon.ico").data) > 10

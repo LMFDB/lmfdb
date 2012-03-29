@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-from base import app, getDBConnection
+from base import app, getDBConnection 
 from utils import make_logger
-from flask import Blueprint
+from flask import Blueprint 
 
 artin_representations_page = Blueprint("artin_representations", __name__, template_folder='templates', static_folder="static")
 artin_logger = make_logger("artin", hl = True)
