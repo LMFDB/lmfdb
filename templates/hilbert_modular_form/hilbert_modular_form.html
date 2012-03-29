@@ -24,15 +24,15 @@
 </table>
 </p>
 
-<p><a href='{{ info.label }}/download/magma' target='_blank'>Download to Magma</a></p>
-<p><a href='{{ info.label }}/download/sage' target='_blank'>Download to Sage</a></p>
+<!-- <p><a href='{{ info.label }}/download/magma' target='_blank'>Download to Magma</a></p>
+<p><a href='{{ info.label }}/download/sage' target='_blank'>Download to Sage</a></p> -->
 
   <h2>  $q$-expansion  </h2>
 
 <p>$f=(f_{\mathfrak{a}})$ is a tuple of holomorphic functions 
 $f_{\mathfrak{a}}:\mathcal{H}^{[F:\mathbb{Q}]} \to \mathbb{C}$ indexed by the strict class group of $F$, with<br>
 $\displaystyle{f_{\mathfrak{a}}(z) = \sum_{u \in (\mathfrak{ad})_+^{-1}} a_{u\mathfrak{ad}} q^{\mathrm{Tr}(uz)}}$<br>
-where $\mathfrak{d}$ is the different of $F$ and $q=e^{2\pi iz}$.</p>
+where $\mathfrak{d}$ is the different of $F$ and $q=e^{2\pi i}$.</p>
 
   <h2>  Hecke eigenvalues  </h2>
 
@@ -55,7 +55,7 @@ where $\mathfrak{d}$ is the different of $F$ and $q=e^{2\pi iz}$.</p>
 <tr>
 <td>{{entry.prime_norm}}</td>
 <td>${{entry.prime_ideal}}$</td>
-<td>${{entry.eigenvalue}}$</td>
+<td align=right>${{entry.eigenvalue}}$</td>
 </tr>
 {% endfor %}
 </table>
@@ -87,7 +87,7 @@ where $\mathfrak{d}$ is the different of $F$ and $q=e^{2\pi iz}$.</p>
 <tr>
 <td>{{entry.prime_norm}}</td>
 <td>${{entry.prime_ideal}}$</td>
-<td>${{entry.eigenvalue}}$</td>
+<td align=right>${{entry.eigenvalue}}$</td>
 </tr>
 {% endfor %}
 </table>

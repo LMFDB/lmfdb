@@ -52,6 +52,8 @@ def hilbert_modular_form_render_webpage():
 
 def hilbert_modular_form_search(**args):
     C = getDBConnection()
+    C.hmfs.forms.ensure_index([('level_norm',pymongo.ASCENDING),('label',pymongo.ASCENDING)])
+
     info = to_dict(args) # what has been entered in the search boxes
     if 'natural' in info:
         return render_hmf_webpage({'label' : info['natural']})
@@ -83,7 +85,6 @@ def hilbert_modular_form_search(**args):
         count = 100
 
     info['query'] = dict(query)
-#    C.hmfs.forms.ensure_index([('label',pymongo.ASCENDING)])
     res = C.hmfs.forms.find(query).sort([('level_norm',pymongo.ASCENDING), ('label',pymongo.ASCENDING)]).limit(count)
     nres = res.count()
         
@@ -248,20 +249,15 @@ def render_hmf_webpage(**args):
 
     info.update(data)
 
-    info['downloads_visible'] = True
-    info['downloads'] = [('worksheet (not yet)', '/')]
-    info['friends'] = [('L-function (not yet)', '/')]
+    info['downloads'] = [('Download to Magma', info['label'] + '/download/magma'), ('Download to Sage', info['label'] + '/download/sage')]
+    info['friends'] = [('L-function', '/L/ModularForm/GL2/' + data['field_label'] + '/holomorphic/' + info['label'] + '/0/0')]
 #    info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
     bread = [('Hilbert Modular Forms', url_for("hilbert_modular_form_render_webpage")),('%s'%data['label'],' ')]
 
     t = "Hilbert Cuspform %s" % info['label']
     credit = 'Lassina Dembele, Steve Donnelly and <A HREF="http://www.cems.uvm.edu/~voight/">John Voight</A>'
 
-    space_label = label[:-1]
-    if space_label[-1] <> '-':
-        space_label = label[:-1]
-
-    forms_space = C.hmfs.forms.find({'label' : {'$regex' : space_label + '*'}})
+    forms_space = C.hmfs.forms.find({'field_label' : data['field_label'], 'level_ideal' : data['level_ideal']})
     dim_space = 0
     for v in forms_space:
         dim_space += v['dimension']
@@ -293,9 +289,15 @@ def render_hmf_webpage(**args):
 
     info['hecke_polynomial'] = teXify_pol(info['hecke_polynomial'])
 
-    info['AL_eigs'] = [{'eigenvalue': teXify_pol(al[1]),
-                     'prime_ideal': teXify_pol(al[0]), 
-                     'prime_norm': al[0][1:al[0].index(',')]} for al in data['AL_eigenvalues']]
+    if data.has_key('AL_eigenvalues_fixed'):
+        if data['AL_eigenvalues_fixed'] == 'done':
+            info['AL_eigs'] = [{'eigenvalue': teXify_pol(al[1]),
+                                'prime_ideal': teXify_pol(al[0]), 
+                                'prime_norm': al[0][1:al[0].index(',')]} for al in data['AL_eigenvalues']]
+        else:
+            info['AL_eigs'] = [{'eigenvalue': '?', 'prime_ideal' : '?'}]
+    else:
+        info['AL_eigs'] = [{'eigenvalue': '?', 'prime_ideal' : '?'}]
     info['AL_eigs_count'] = len(info['AL_eigs']) <> 0
 
     if not display_eigs:
@@ -333,4 +335,4 @@ def render_hmf_webpage(**args):
                    ('Base Change?', is_base_change)
     ]
 
-    return render_template("hilbert_modular_form/hilbert_modular_form.html", info = info, properties2=properties2, credit=credit, title = t, bread=bread)
+    return render_template("hilbert_modular_form/hilbert_modular_form.html", downloads = info["downloads"], info = info, properties2=properties2, credit=credit, title = t, bread=bread, friends = info['friends'])
