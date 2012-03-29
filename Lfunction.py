@@ -1136,7 +1136,10 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         self.weight = int(self.weight)
         self.number = int(self.number)
         # Load the eigenvalues
-        loc = "http://data.countnumber.de/Siegel-Modular-Forms/Sp4Z/xeigenvalues/"+str(self.weight)+"_"+self.orbit+"-ev.sobj"
+        if (self.weight == 20 or self.weight == 22 or self.weight == 24 or self.weight == 26) and self.orbit[0] == 'U':
+            loc = "http://data.countnumber.de/Siegel-Modular-Forms/Sp4Z/xeigenvalues/"+str(self.weight)+"_"+self.orbit+"-ev.sobj"
+        else:
+            loc = "http://data.countnumber.de/Siegel-Modular-Forms/Sp4Z/eigenvalues/"+str(self.weight)+"_"+self.orbit+"-ev.sobj"
 
         self.ev_data = load(loc)
 
@@ -1159,13 +1162,27 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
 
         self.nu_fe = [float(1)/float(2), self.automorphyexp] # the shift of the Gamma_C to print
         self.selfdual = True 
-        if self.orbit[0] == 'U': # if the form isn't a lift 
+        if self.orbit[0] == 'U': # if the form isn't a lift but is a cusp form 
             self.poles = [] # the L-function is entire
             self.residues = []
             self.langlands = True
             self.primitive = True # and primitive
-
-
+        elif self.orbit[0] == 'E': # if the function is an Eisenstein series
+            self.poles = [float(3)/float(2)]
+            self.residues = [math.pi**2/6] # fix this
+            self.langlands = True
+            self.primitive = False
+        elif self.orbit[0] == 'M': # if the function is a lift and a cusp form
+            self.poles = [float(3)/float(2)]
+            self.residues = [math.pi**2/6] # fix this
+            self.langlands = True
+            self.primitive = False
+        elif self.orbit[0] == 'K':
+            self.poles = [float(3)/float(2)]
+            self.residues = [math.pi**2/6] # fix this
+            self.langlands = True
+            self.primitive = False
+            
         # FIX the coefficients by applying the analytic normalization and
 
         K = self.ev_data[0].parent().fraction_field()
