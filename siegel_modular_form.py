@@ -205,7 +205,7 @@ def render_webpage( args = {}):
         except:
             info['error'] = 'Data not available'
             loaded = False
-        # print 'hahahah %s'%loaded
+        print 'hahahah %s'%loaded
         if True == loaded:
 
             # throw out disc = 0 keys for cusp forms
