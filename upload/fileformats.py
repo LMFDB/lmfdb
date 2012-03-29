@@ -20,6 +20,7 @@ import json
 from pymongo.cursor import Cursor                                                            
 from pymongo.errors import AutoReconnect
 from pymongo.connection import Connection
+from pymongo.objectid import ObjectId
 import pymongo
 
 from gridfs import GridFS
@@ -27,6 +28,8 @@ from gridfs import GridFS
 # Try to parse each element progressively as an int, a float, and a string
 def parseSingle(i):
   try:
+    v = int(i)
+    assert abs(i) < 1000000000000000000
     return int(i)
   except:
     try:
@@ -58,12 +61,16 @@ def guessParsing(file1):
   # If there are unprintable characters then binary
   if not all([isgraph(c) or isspace(c) for c in file1.read(10000)]):
     print "Binary file"
-    return None
+    parsed_as = 'Binary file'
+    return parsed_as,None
   file1.seek(0)
   firstlines = file1.read(10000).splitlines()
   #if len(''.join(firstlines))/len(firstlines) >= 1000:
     #print "IGNORE"
   #print firstlines
+  file1.seek(0)
+  
+  ret = json.loads(file1)
 
 
   percentContainingComma = len([1 for line in firstlines if line.find(',')!=-1])*100/len(firstlines)
@@ -76,12 +83,12 @@ def guessParsing(file1):
 
   if len(lines)==0:
     print "Empty file"
-    return []
+    parsed_as = 'Empty file'
+    return parsed_as,[]
 
   beginsWithBrackets = [line.startswith('{') or line.startswith('[') for line in lines[0:20]]
 
   if any(beginsWithBrackets):
-    print "Possibly JSON"
     text = ' '.join(lines[beginsWithBrackets.index(True):])
     text = re.sub(r', *([\]\}])', '\\1', text)
     if re.search(r'} *{', text) is not None:
@@ -93,12 +100,13 @@ def guessParsing(file1):
       text = re.sub(r'\] *\[', '],[', text)
       text = '[' + text + ']'
 
-    #try:
-    print text
-    ret = json.loads(text)
-    print "Valid JSON"
-    return ret
-    #except: pass
+    try:
+      print text
+      ret = json.loads(text)
+      print "Valid JSON"
+      parsed_as = 'Valid JSON'
+      return parsed_as,ret
+    except: pass
     #print text
     text = re.sub(r'([\[\{,]) *([^" ])', '\\1"\\2', text)
     text = re.sub(r'([^" ]) *([\]\},])', '\\1"\\2', text)
@@ -108,7 +116,8 @@ def guessParsing(file1):
       #print text
       ret = json.loads(text)
       print "Almost valid JSON"
-      return ret
+      parsed_as = 'Almost valid JSON (multiple entries not explicitly in an array)'
+      return parsed_as,ret
     except: pass
       
     #ParseArrayOrMap(text)
@@ -120,9 +129,11 @@ def guessParsing(file1):
 
   if percentContainingComma > 50:
     print "CSV"
+    parsed_as = 'CSV (does not begin with bracket, most lines contain a comma)'
     ret = csv.reader(lines, delimiter=',')
     #ret = [line.split(',') for line in lines]
   else:
+    parsed_as = 'SSV (does not begin with bracket, most lines do not contain a comma)'
     print "SSV"
     #print lines
     ret = csv.reader(lines, delimiter=' ', skipinitialspace=True)
@@ -135,23 +146,24 @@ def guessParsing(file1):
   elif all([len(row)==1 for row in ret]):
     ret = [ row[0] for row in ret]
 
-  return ret
+  return parsed_as,ret
 
 if len(sys.argv)==2:
   file1 = open(sys.argv[1], "r")
-  print guessParsing(file1)
+  print guessParsing(file1).second
   quit()
 
 db = Connection(port=37010)
 fs = GridFS(db.upload)
-for entry in db.upload.fs.files.find({"$or": [{"metadata.status":"approved"},{"metadata.status":"approvedchild"}]}, sort=[("uploadDate",-1)]).limit(10):
+for entry in db.upload.fs.files.find({"$or": [{"metadata.status":"approved"},{"metadata.status":"approvedchild"}]}, sort=[("uploadDate",-1)]):
   print '%s: %s (%s)' % (entry['_id'], entry['filename'], str(entry['uploadDate']))
   file = fs.get(entry['_id'])
   #print list(Lines(file.read(1000).splitlines()))
   #file.seek(0)
   #print list(Lines(file.read(1000).splitlines()))
   #file.seek(0)
-  data = guessParsing(file)
+  parsed_as,data = guessParsing(file)
+  db.upload.fs.files.update({"_id": ObjectId(entry['_id'])}, {"$set": {"metadata.parsed_as": parsed_as}})
   if data is None: continue
   if type(data) is dict: data=[data];
   #for row in data:

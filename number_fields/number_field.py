@@ -3,6 +3,7 @@
 import pymongo
 ASC = pymongo.ASCENDING
 import flask
+import base
 from base import app, getDBConnection, url_for
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, redirect, g, session, Flask
 from number_fields import nf_page, nf_logger
@@ -15,7 +16,7 @@ from sage.rings.arith import primes
 
 from transitive_group import group_display_knowl, group_knowl_guts, group_display_short, group_cclasses_knowl_guts, group_phrase, cclasses_display_knowl, character_table_display_knowl, group_character_table_knowl_guts
 
-from utils import ajax_more, image_src, web_latex, to_dict, parse_range, coeff_to_poly, pol_to_html
+from utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html
 
 NF_credit = 'the PARI group, J. Voight, J. Jones, and D. Roberts'
 
@@ -30,6 +31,9 @@ def group_cclasses_data(n, t):
 def group_character_table_data(n, t):
   C = getDBConnection()
   return group_character_table_knowl_guts(n,t,C)
+
+def na_text():
+  return "Not computed"
 
 @app.context_processor
 def ctx_galois_groups():
@@ -62,7 +66,6 @@ def poly_to_field_label(pol):
     coeffs = [int(c) for c in pol.coeffs()]
     d = int(pol.degree())
     query = {'degree': d, 'coefficients': coeffs}
-    import base
     C = base.getDBConnection()
     one = C.numberfields.fields.find_one(query)
     if one:
@@ -141,7 +144,7 @@ def render_groups_page():
     groups.sort(cmp=gcmp)
     t = 'Galois group labels'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")),('Galois group labels',' ')]
-    return render_template("galois_groups.html", groups=groups, info=info, credit=NF_credit, title=t, bread=bread)
+    return render_template("galois_groups.html", groups=groups, info=info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
 
 @nf_page.route("/FieldLabels")
 def render_labels_page():
@@ -149,7 +152,7 @@ def render_labels_page():
     info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), ('Discriminant ranges',url_for(".render_discriminants_page"))]
     t = 'Number field labels'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")),('Number field labels','')]
-    return render_template("number_field_labels.html", info=info, credit=NF_credit, title=t, bread=bread)
+    return render_template("number_field_labels.html", info=info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
 
 @nf_page.route("/Discriminants")
 def render_discriminants_page():
@@ -157,7 +160,7 @@ def render_discriminants_page():
     info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), ('Discriminant ranges',url_for(".render_discriminants_page"))]
     t = 'Global Number Field Discriminant Ranges'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")),('Discriminant ranges',' ')]
-    return render_template("discriminant_ranges.html", info=info, credit=NF_credit, title=t, bread=bread)
+    return render_template("discriminant_ranges.html", info=info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
 
 @nf_page.route("/")
 def number_field_render_webpage():
@@ -176,7 +179,7 @@ def number_field_render_webpage():
         t = 'Global Number Fields'
         bread = [('Global Number Fields', url_for(".number_field_render_webpage"))]
         info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), ('Discriminant ranges',url_for(".render_discriminants_page"))]
-        return render_template("number_field_all.html", info = info, credit=NF_credit, title=t, bread=bread)
+        return render_template("number_field_all.html", info = info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
     else:
         return number_field_search(**args)
 
@@ -405,7 +408,6 @@ def GG_data(GGlabel):
  
 def render_field_webpage(args):
     data = None
-    import base
     C = base.getDBConnection()
     if 'label' in args:
         label = str(args['label'])
@@ -421,17 +423,23 @@ def render_field_webpage(args):
     rawpoly = coeff_to_poly(data['coefficients'])
     K = NumberField(rawpoly, 'a')
     D = data['discriminant']
+    if not data.has_key('class_number'):
+      data['class_number'] = na_text()
     h = data['class_number']
     t = data['T']
     n = data['degree']
-    data['galois_grou'] = group_display_knowl(n,t,C)
+    data['rawpoly'] = rawpoly
+    data['galois_group'] = group_display_knowl(n,t,C)
     data['cclasses'] = cclasses_display_knowl(n,t,C)
     data['character_table'] = character_table_display_knowl(n,t,C)
-    data['galois_group'] = str(data['galois_group'][3])
-    data['class_group_invs'] = data['class_group']
+    if not data.has_key('class_group'):
+      data['class_group'] = na_text()
+      data['class_group_invs'] = data['class_group']
+    else:
+      data['class_group_invs'] = data['class_group']
+      data['class_group'] = str(AbelianGroup(data['class_group']))
     if data['class_group_invs']==[]:
         data['class_group_invs']='Trivial'
-    data['class_group'] = str(AbelianGroup(data['class_group']))
     sig = data['signature']
     D = ZZ(data['discriminant'])
     ram_primes = D.prime_factors()
@@ -439,29 +447,26 @@ def render_field_webpage(args):
     ram_primes = str(ram_primes)[1:-1]
     data['frob_data'] = frobs(K)
     data['phrase'] = group_phrase(n,t,C)
-    #Gorder,Gsign,Gab = GG_data(data['galois_group'])
-    #if Gab:
-    #    Gab='abelian'
-    #else:
-    #    Gab='non-abelian'
     unit_rank = sig[0]+sig[1]-1
     if unit_rank==0:
         reg = 1
     else:
         reg = K.regulator()
     UK = K.unit_group()
+    zk = pari(K).nf_subst('a')
+    zk = list(zk.nf_get_zk())
+    zk = web_latex([K(j) for j in zk])
     
     info.update(data)
     info.update({
         'label': field_pretty(label),
         'polynomial': web_latex(K.defining_polynomial()),
         'ram_primes': ram_primes,
-        'integral_basis': web_latex(K.integral_basis()),
+        'integral_basis': zk,
         'regulator': web_latex(reg),
         'unit_rank': unit_rank,
         'root_of_unity': web_latex(UK.torsion_generator()),
         'fund_units': ',&nbsp; '.join([web_latex(u) for u in UK.fundamental_units()])
-    #    'Gorder': Gorder, 'Gsign': Gsign, 'Gab': Gab
         })
     info['downloads_visible'] = True
     info['downloads'] = [('worksheet', '/')]
@@ -481,7 +486,6 @@ def render_field_webpage(args):
                    ('Ramified '+primes+':', '%s' %ram_primes),
                    ('Class number:', '%s' %data['class_number']),
                    ('Class group:', '%s' %data['class_group_invs']),
-#                   ('Galois Group:', '%s' %data['galois_group'])
                    ('Galois Group:', group_display_short(data['degree'], t, C))
     ]
     from math_classes import NumberFieldGaloisGroup
@@ -490,6 +494,7 @@ def render_field_webpage(args):
     except AttributeError:
       pass
     del info['_id']
+    assert "tim_number_field" in info
     return render_template("number_field.html", properties2=properties2, credit=NF_credit, title = title, bread=bread, friends=info.pop('friends'), learnmore=info.pop('learnmore'), info=info )
 
 def format_coeffs(coeffs):
@@ -522,7 +527,17 @@ def parse_power(pair):
     return int(tmp[0])**int(tmp[1])
   except:
     return int(pair)
-  
+
+def signedlog(j):
+  if j==0:
+    return 0.0
+  sgn = 1
+  if(j<0):
+    sgn = -1
+    j = -j
+  flog = float(j.log(prec=53))
+  return flog*sgn
+
 @nf_page.route("/<label>")
 def by_label(label):
     return render_field_webpage({'label' : split_label(label)})
@@ -534,6 +549,82 @@ def parse_list(L):
     return []
     # return eval(str(L)) works but using eval() is insecure
 
+# We need to have a first level parsing of discs to have it
+# as sage ints, and then a second version where we apply signed logs
+# If we have an error, raise a parse error
+def parse_discs(arg):
+  # parsing can be thrown off by spaces
+  if type(arg)==str:
+    arg = arg.replace(' ','')
+  if ',' in arg:
+    return [parse_discs(a)[0] for a in arg.split(',')]
+  elif '-' in arg[1:]:
+    ix = arg.index('-', 1)
+    start, end = arg[:ix], arg[ix+1:]
+    low,high = 'i', 'i'
+    if start:
+      low = ZZ(str(start))
+    if end:
+      high = ZZ(str(end))
+    if low=='i': raise Exception('parsing error')
+    if high=='i': raise Exception('parsing error')
+    return [[low, high]]
+  else:
+    return [ZZ(str(arg))]
+
+def handle_zz_to_slog(ent):
+  if type(ent)==list:
+    return [signedlog(x) for x in ent]
+  #single entries become pairs
+  slog = signedlog(ent)
+  return [slog, slog]
+
+def discs_parse_to_slogs(arg):
+  return [handle_zz_to_slog(ent) for ent in arg] 
+
+# updown = 1 or -1 to say which way to fudge
+def fudge_float(a, updown, ffactor=1+2.**(-51)):
+  if a<0:
+    updown = -updown
+  return a*(ffactor**updown)
+
+# wide = 1 to widen, -1 to narrow
+def fudge_pair(pair, wide):
+  return [fudge_float(pair[0],-wide), fudge_float(pair[1], wide)]
+
+def fudge_list(li, wide):
+  return [fudge_pair(x, wide) for x in li]
+
+def list_to_query(dlist):
+  floatit = discs_parse_to_slogs(dlist)
+  floatitwide = fudge_list(floatit, 1)
+  if len(floatitwide)==1:
+    return ['disc_log', {'$lte': floatitwide[0][1], '$gte': floatitwide[0][0]}]
+  ans = []
+  for x in floatitwide:
+    ans.append({'disc_log': {'$lte': x[1], '$gte': x[0]}})
+  return ['$or', ans]
+
+# Need to be able to verify fields
+def verify_field(field, narrowconds, zconds):
+  if len(zconds)==0: return True
+  fdisc = field['disc_log']
+  # Quick exit if we satisfy narrowed floating point bounds
+  for x in narrowconds:
+    if fdisc <= x[1] and fdisc >= x[0]: return True
+  zdisc = ZZ(str(field['disc_string']))
+  for x in zconds:
+    if type(x)==list:
+      if zdisc <= x[1] and zdisc >= x[0]: return True
+    else:
+      if zdisc == x: return True
+  return False
+
+def verify_all_fields(li, dlist):
+  floatit = discs_parse_to_slogs(dlist)
+  floatitnarrow = fudge_list(floatit, -1)
+  return filter(lambda x: verify_field(x, floatitnarrow, dlist), li)
+
 def number_field_search(**args):
     info = to_dict(args)
     if 'natural' in info:
@@ -541,6 +632,7 @@ def number_field_search(**args):
         field_id = parse_field_string(info['natural'])
         return render_field_webpage({'label' : field_id})
     query = {}
+    dlist = []
     for field in ['degree', 'signature', 'discriminant', 'class_number', 'class_group', 'galois_group']:
         if info.get(field):
             if field in ['class_group', 'signature']:
@@ -551,7 +643,24 @@ def number_field_search(**args):
                 else:
                     ran = info[field]
                     ran = ran.replace('..','-')
-                    query[field] = parse_range(ran)
+                    if field == 'discriminant':
+                      # Need to take signed log of entries
+                      # dlist will contain the disc conditions
+                      # as sage ints
+                      dlist = parse_discs(ran)
+                      tmp = list_to_query(dlist)
+                    else:
+                      tmp = parse_range2(ran, field)
+                    # work around syntax for $or
+                    # we have to foil out multiple or conditions
+                    if tmp[0]=='$or' and query.has_key('$or'):
+                      newors = []
+                      for y in tmp[1]:
+                        oldors = [dict.copy(x) for x in query['$or']]
+                        for x in oldors: x.update(y)
+                        newors.extend(oldors)
+                      tmp[1] = newors
+                    query[tmp[0]] = tmp[1]
     if info.get('ur_primes'):
         ur_primes = [int(a) for a in str(info['ur_primes']).split(',')]
     else:
@@ -576,43 +685,20 @@ def number_field_search(**args):
         start = 0
 
 
-
+    C = base.getDBConnection()
     info['query'] = dict(query)
     if 'lucky' in args:
-        import base
-        C = base.getDBConnection()
         one = C.numberfields.fields.find_one(query)
         if one:
             label = one['label']
             return render_field_webpage({'label': label})
 
-    if 'discriminant' in query:
-        import base
-        C = base.getDBConnection()
-        res = C.numberfields.fields.find(query).sort([('degree',pymongo.ASCENDING),('signature',pymongo.DESCENDING),('discriminant',pymongo.ASCENDING)]) # TODO: pages
-        nres = res.count()
-    else:
-        # find matches with negative discriminant:
-        neg_query = dict(query)
-        neg_query['discriminant'] = {'$lt':0}
-        import base
-        C = base.getDBConnection()
-        res_neg = C.numberfields.fields.find(neg_query).sort([('degree',pymongo.ASCENDING),('discriminant',pymongo.DESCENDING)])
-        nres_neg = res_neg.count()
-        # TODO: pages
+    res = C.numberfields.fields.find(query).sort([('degree',pymongo.ASCENDING),('signature',pymongo.DESCENDING),('discriminant',pymongo.ASCENDING)]) # TODO: pages
 
-        # find matches with positive discriminant:
-        pos_query = dict(query)
-        pos_query['discriminant'] = {'$gt':0}
-        import base
-        C = base.getDBConnection()
-        res_pos = C.numberfields.fields.find(pos_query).sort([('degree',pymongo.ASCENDING),('discriminant',pymongo.ASCENDING)])
-        nres_pos = res_pos.count()
-        # TODO: pages
-
-        # TODO HSY: why is there a merge_sort? a sorted(key=lambda _: ...) would be much much faster
-        res = merge_sort(iter(res_neg),iter(res_pos))
-        nres = nres_pos+nres_neg
+    res = verify_all_fields(res, dlist)
+    res.sort(key=lambda x: abs(x['disc_log']))
+    res.sort(key=lambda x: x['degree'])
+    nres = len(res)
         
     if ur_primes:
         res = filter_ur_primes(res, ur_primes)
@@ -620,8 +706,6 @@ def number_field_search(**args):
     if(start>=nres): start-=(1+(start-nres)/count)*count
     if(start<0): start=0
 
-    res = iter_limit(res,count,start)
-        
     info['fields'] = res
     info['number'] = nres
     info['start'] = start
@@ -632,6 +716,7 @@ def number_field_search(**args):
             info['report'] = 'displaying matches %s-%s of %s'%(start+1,min(nres,start+count),nres)
         else:
             info['report'] = 'displaying all %s matches'%nres
+    info['report'] = 'found %s fields' % nres
     info['format_coeffs'] = format_coeffs
     info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), ('Discriminant ranges',url_for(".render_discriminants_page"))]
     t = 'Global Number Field search results'
@@ -639,59 +724,6 @@ def number_field_search(**args):
     properties = []
     return render_template("number_field_search.html", info = info, title=t, properties=properties, bread=bread)
 
-
-def iter_limit(it,lim,skip):
-    count = 0
-    while count<skip:
-        it.next()
-        count += 1
-    count = 0
-    while count<lim:
-        yield it.next()
-        count += 1
-    return
-
-                   
-def merge_sort(it1,it2):
-    try:
-        a = it1.next()
-    except StopIteration:
-        b = it2.next()
-        while True:
-            yield b
-            b = it2.next()
-        return
-    
-    try:
-        b = it2.next()
-    except StopIteration:
-        while True:
-            yield a
-            a = it1.next()
-        return
-                
-    while True:
-        if abs(a['discriminant'])<abs(b['discriminant']):
-            yield a
-            try:
-                a = it1.next()
-            except StopIteration:
-                b = it2.next()
-                while True:
-                    yield b
-                    b = it2.next()
-                return
-        else:
-            yield b
-            try:
-                b = it2.next()
-            except StopIteration:
-                a = it1.next()
-                while True:
-                    yield a
-                    a = it1.next()
-                return
-    return
 
 def support_is_disjoint(D,plist):
     D = ZZ(D)
@@ -710,15 +742,33 @@ def filter_ur_primes(it, ur_primes):
         D = a['discriminant']
     return
 
-# Compute Frobenius cycle types
-def frobs(K):
+
+def residue_field_degrees_function(K):
+  """ Given a sage field, returns a function that has
+          input: a prime p
+          output: the residue field degrees at the prime p
+  """
   k1 = pari(K)
+  D = K.disc()
+  def decomposition(p):
+    if not ZZ(p).divides(D):
+      dec = k1.idealprimedec(p)
+      dec = [z[3] for z in dec]
+      return dec
+    else:
+      raise ValueError, "Expecting a prime not dividing D"
+  return decomposition
+
+
+# Compute Frobenius cycle types, returns string nicely presenting this
+def frobs(K):
+  frob_at_p = residue_field_degrees_function(K)
   D = K.disc()
   ans = []
   for p in primes(2,60):
     if not ZZ(p).divides(D):
-      dec = k1.idealprimedec(p)
-      dec = [z[3] for z in dec]
+      # [3] ,   [2,1]
+      dec = frob_at_p(p)
       vals = list(set(dec))
       vals = sorted(vals, reverse=True)
       dec = [[x, dec.count(x)] for x in vals]

@@ -2,13 +2,6 @@
 
 {% block content %}
 
- {% if degree==1 or degree==2 %}
-     {% if Ltype!="maass" %}
-         {% set KNOWL_ID = request.path.replace('/L/','lfunction.').lower().replace('/','.') %}
-         <h2>{{ KNOWL_INC(KNOWL_ID+'top', title='') }}</h2>
-     {% endif %}
- {% endif %}
-
  <h2> {{ KNOWL('lfunction.dirichlet_series', title='Dirichlet series') }}</h2>
  <div>\[{{ dirichlet }}\]</div>
 
@@ -49,16 +42,8 @@
  {% if plotlink %}
     <img src="{{ plotlink|safe }}" >
  {% else %}
-    <div>Not enough Dirichlet series coefficients to make a graph.</div>
+    <div>Not enough Dirichlet series coefficients to make a plot.</div>
  {% endif %}
-
-
- {% if degree==1 or degree==2 %}
-     {% if Ltype!="maass" %}
-         <h2>{{ KNOWL_INC(KNOWL_ID+'bottom', title='') }}</h2>
-     {% endif %}
- {% endif %}
-
 
 <script type="text/javascript">
   $(function() {

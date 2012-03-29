@@ -38,7 +38,7 @@
 
       <tbody>
         {% for gen in object.number_field_galois_group().conjugacy_classes()%}
-            <tr {% if loop.index == object.number_field_galois_group().complex_conjugation()%}class="redhighlight"{%endif%}> <td>${{loop.index}}$</td><td>${{gen.size()}}$</td><td>${{gen.order()}}$</td><td>${{gen.representative().cycle_string()}}$</td><td>${{ object.character()[loop.index - 1] }}$ </td></tr>
+            <tr {% if loop.index == object.number_field_galois_group().index_complex_conjugation()%}class="redhighlight"{%endif%}> <td>${{loop.index}}$</td><td>${{gen.size()}}$</td><td>${{gen.order()}}$</td><td>${{gen.representative().cycle_string()}}$</td><td>${{ object.character()[loop.index - 1] }}$ </td></tr>
         {% endfor %}
       </tbody>
       </table>

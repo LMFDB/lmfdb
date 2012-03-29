@@ -133,6 +133,7 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
 
         elif arg1 == 'custom': # need a better name
             return "not yet implemented"
+    #L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, temp_args)
 
     try:
       L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, temp_args)
@@ -170,11 +171,11 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         return Lfunction_EC( label = arg3)
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic': # this has args: one for weight and one for level
-        logger.debug(arg5+arg6+str(arg7)+str(arg8)+str(arg9))
+        logger.info(arg5+arg6+str(arg7)+str(arg8)+str(arg9))
         return Lfunction_EMF( level = arg5, weight = arg6, character = arg7, label = arg8, number = arg9)
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2'and arg3 == 'Q' and arg4 == 'Maass':
-        logger.debug(db)
+        logger.info(db)
         return Lfunction_Maass(dbid = bson.objectid.ObjectId(arg5))
 
     elif arg1 == 'ModularForm' and (arg2 == 'GSp4' or arg2 == 'GL4' or  arg2 == 'GL3') and arg3 == 'Q' and arg4 == 'maass':
@@ -184,15 +185,10 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         return DedekindZeta( label = str(arg2))
 
     elif arg1 == "ArtinRepresentation":
-        return ArtinLfunction(dimension = arg2, conductor = arg3, tim_index = arg4)
+        return ArtinLfunction(arg2, arg3,  arg4)
 
     elif arg1 == "SymmetricPower":
-        try: 
-            Integer(arg2)
-            return SymmetricPowerLfunction(arg2, [arg3, arg4, arg5, arg6, arg7, arg8, arg9], temp_args)
-        except ValueError:
-            pass
-            return SymmetricPowerEntryPage(arg2, [arg3, arg4, arg5, arg6, arg7, arg8, arg9], temp_args)
+        return SymmetricPowerLfunction(arg2, [arg3, arg4, arg5, arg6, arg7, arg8, arg9], temp_args)
 
     elif arg1 == 'Lcalcurl':
         return Lfunction( Ltype = arg1, url = arg2)
@@ -205,8 +201,8 @@ def set_info_for_start_page():
     ''' Sets the properties of the top L-function page.
     '''
 
-    tt = [[{'title':'Riemann Zeta Function','link': url_for('render_Lfunction', arg1='Riemann')},
-           {'title':'Dirichlet L-function','link': url_for('render_Lfunction', arg1='degree1') + '#Dirichlet'}],
+    tt = [[{'title':'Riemann','link': url_for('render_Lfunction', arg1='Riemann')},
+           {'title':'Dirichlet','link': url_for('render_Lfunction', arg1='degree1') + '#Dirichlet'}],
 
           [{'title':'Elliptic Curve','link': url_for('render_Lfunction', arg1='degree2') + '#EllipticCurve_Q'},
            {'title':'GL2 Cusp Form', 'link': url_for('render_Lfunction', arg1='degree2') + '#GL2_Q_Holomorphic'},
@@ -236,14 +232,8 @@ def initLfunction(L,args, request):
     info = {'title': L.title}
     info['citation'] = ''
     info['support'] = ''
-    # Here we should decide which values are indeed special values
-    # According to Brian, odd degree has special value at 1, and even
-    # degree has special value at 1/2.
-    # (however, I'm not sure this is true if L is not primitive -- GT)
-    if is_even(L.degree):
-        info['sv12'] = specialValueString(L, 0.5, '1/2')
-    if is_odd(L.degree):
-        info['sv1'] = specialValueString(L, 1, '1')
+    info['sv12'] = specialValueString(L, 0.5, '1/2')
+    info['sv1'] = specialValueString(L, 1, '1')
     info['args'] = args
     info['Ltype'] = L.Ltype()
 
@@ -298,7 +288,7 @@ def initLfunction(L,args, request):
     elif L.Ltype()  == 'dirichlet':
         snum = str(L.characternumber)
         smod = str(L.charactermodulus)
-        charname = '\(\\chi_{%s}({%s},\\cdot)\)' %(smod, snum)
+        charname = '\(\\chi_{%s}\\!\\!\\pmod{%s}\)' %(snum,smod)
         info['bread'] = [('L-function','/L'),('Dirichlet Character',url_for('render_Lfunction', arg1='degree1') +'#Dirichlet'),
                          (charname, request.url)]
         info['friends'] = [('Dirichlet Character '+str(charname), friendlink)]
@@ -306,7 +296,7 @@ def initLfunction(L,args, request):
 
     elif L.Ltype()  == 'ellipticcurve':
         label = L.label
-        info['friends'] = [('Elliptic Curve', friendlink )]
+        info['friends'] = [('Elliptic curve isogeny class '+label, friendlink )]
         info['bread'] = [('L-function','/L'),('Elliptic Curve',url_for('render_Lfunction', arg1='/L/degree2#EllipticCurve_Q')),
                          (label,url_for('render_Lfunction',arg1='EllipticCurve',arg2='Q',arg3= label))]
 
@@ -338,6 +328,11 @@ def initLfunction(L,args, request):
 
         info['friends'] =  [('Isogeny class', friendlink), ('%s Symmetric Power'%ordinal(mplusone) , friendlink2)]
         
+    elif L.Ltype() == 'siegelnonlift' or L.Ltype() == 'siegeleisenstein' or L.Ltype() == 'siegelklingeneisenstein' or L.Ltype() == 'siegelmaasslift':
+        weight = str(L.weight)
+        number = str(L.number)
+        info['friends'] = [('Siegel Modular Form', friendlink)]
+
 
     info['dirichlet'] = lfuncDStex(L, "analytic")
     info['eulerproduct'] = lfuncEPtex(L, "abstract")
@@ -375,9 +370,17 @@ def set_gaga_properties(L):
         prim = 'Primitive'
     else:
         prim = 'Not primitive'
+    ans.append((None, prim))
 #    ans.append((None,        prim))    Disabled until fixed
 
-    return ans
+    if L.langlands:
+        langlands = "True"
+        motivic_weight = str(L.motivic_weight)
+        ans.append(("Langlands", langlands ))
+        ans.append(("Motivic weight", motivic_weight))
+    else:
+        langlands = "False"
+        ans.append(("Langlands", langlands ))
 
 
 def specialValueString(L, s, sLatex):
@@ -387,18 +390,7 @@ def specialValueString(L, s, sLatex):
     number_of_decimals = 10
     val = L.sageLfunction.value(s)
     lfunction_value_tex = L.texname.replace('(s', '(' + sLatex)
-    # We must test for NaN first, since it would show as zero otherwise
-    # Try "RR(NaN) < float(1e-10)" in sage -- GT
-    if val.real().is_NaN():
-        logger.debug("Infinity value.")
-        return "{0}=\\infty".format(lfunction_value_tex)
-    elif val.abs() < 1e-10:
-        logger.debug("Zero value.")
-        return "{0}=0".format(lfunction_value_tex)
-    else:
-        return "{0}\\approx {1}".format(lfunction_value_tex,
-            latex( round(val.real(), number_of_decimals)
-                 + round(val.imag(), number_of_decimals)*I ))
+    return '\(' + lfunction_value_tex +'\\approx ' + latex(round(val.real(), number_of_decimals)+round(val.imag(), number_of_decimals)*I) + '\)'
 
 
 ###########################################################################
