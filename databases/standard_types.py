@@ -20,9 +20,22 @@ class TooLargeInt(String):
     
 class LabelString(String):
     pass
+
     
 FiniteSequence = Array
 FiniteSet = Array
+
+InfiniteSequence = Array
+
+class PolynomialAsSequenceInt(FiniteSequence(Int)):
+    pass
+
+class PowerSeriesAsSequenceInt(InfiniteSequence(Int)):
+    pass
+
+class PolynomialAsSequenceTooLargeInt(FiniteSequence(TooLargeInt)):
+    pass
+
 
 
 class GAP_GroupLabel(LabelString):
