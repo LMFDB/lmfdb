@@ -1800,14 +1800,16 @@ class WebNewForm(SageObject):
         if(prec==None):
             prec=self._prec
         s = my_latex_from_qexp(str(self.q_expansion(prec)))
+        
         sb = list()
         if br > 0:
             sb = break_line_at(s,br)
-            emf_logger.debug("print_q_exp: sb=".format(sb))
+            emf_logger.debug("print_q_exp: sb={0}".format(sb))
         if len(sb)<=1:
             s = r"\("+s+r"\)"
         else:
-            s = r"\("+join(sb,"",)+r"\)"
+            s = r"\[\begin{align} &"+join(sb,"\cr &")+r"\end{align}\]"
+                
         emf_logger.debug("print_q_exp: prec=".format(prec))
         return s
 
@@ -2125,6 +2127,7 @@ def break_line_at(s,brpt=20):
     sl=list()
     stmp = ''
     left_par = 0
+    emf_logger.debug('Break at line, Input ={0}'.format(s))
     for i in range(len(s)):
         if s[i] == '(': ## go to the matching case
             left_par = 1
@@ -2133,9 +2136,10 @@ def break_line_at(s,brpt=20):
         if left_par == 0 and (s[i] == '+' or s[i]== '-'):
             sl.append(stmp)
             stmp=''
-        stmp = join([stmp,s[i]])
+        stmp = stmp + s[i]
         if i==len(s)-1:
             sl.append(stmp)
+    emf_logger.debug('sl={0}'.format(sl))
 
     # sl now contains a split  e.g. into terms in the q-expansion
     # we now have to join as many as fits on the line

@@ -89,7 +89,16 @@ function set_value(id,val) {
     {% set group=KNOWL('mf.sl2.subgroup.gamma0N',title='\(\Gamma_1(N)\)') %}
 {% endif %}
 
-<h1>Browse holomorphic {{KNOWL('mf.elliptic.new_form',title='newforms')}} for {{group}}</h1>
+{%if info.show_switch is defined %}
+  {% if info.groupother == 1 %}
+  {% set groupotherchar = -1 %}
+  {% else %}
+  {% set groupotherchar = 0 %}
+  {%endif%}
+  <div style="float:right;margin-right:30px;"><h2 style="font-size:1.2em"><a href="{{url_for('.render_elliptic_modular_forms',character=groupotherchar)}}">Switch to \(\Gamma_{{info.groupother}}(N)\)</a></h2></div>
+{%endif%}
+
+<h1>Browse holomorphic {{KNOWL('mf.elliptic.newform',title='newforms')}} for {{group}}</h1>
 
 <div>
       {% if info.browse_table.rows is defined %}
@@ -138,15 +147,7 @@ table.ntdata thead th.spaceleft {
            <th class="spaceleft">Weight</th>
            <th class="weight" colspan="{{table.col_heads|length}}">
 	     <span style="display:block;float:left;margin-right:3px;">Level \(N\)</span>
-	     {%if info.show_switch is defined %}
-	   <span style="display:block;float:right">
-	     {% if info.groupother == 1 %}
-	     {% set groupotherchar = -1 %}
-             {% else %}
-	     {% set groupotherchar = 0 %}
-	     {%endif%}
-	     <a href="{{url_for('.render_elliptic_modular_forms',character=groupotherchar)}}">Switch to \(\Gamma_{{info.groupother}}(N)\)</a></span></th>
-	     {%endif%}
+	   </th>
           </tr>
           <tr class="space">
             <th class="spaceleft"></th>

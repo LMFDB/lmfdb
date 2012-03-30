@@ -135,7 +135,7 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
     #    prec1=max(int(prec-(K.absolute_degree())/2),3)
     #else:
     #    prec1=prec
-    info['qexp']=WNF.print_q_expansion(prec)
+    info['qexp']=WNF.print_q_expansion(prec,120)
     #c = list(WNF.q_expansion(prec))
     #c = map(lambda x: str(x).replace("*",""), c)
     #info['c'] = map(lambda x: x.replace(, c)
@@ -171,19 +171,24 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
         info['embeddings'] = ''
     info['embeddings'] = WNF.q_expansion_embeddings(prec,bprec)                 
     info['embeddings_len']=len(info['embeddings'])
-    info['twist_info'] = WNF.print_twist_info()
+    properties2=[]
+    if (ZZ(level)).is_squarefree():
+        info['twist_info'] = WNF.print_twist_info()
+        info['is_minimal']=info['twist_info'][0]
+        if(info['twist_info'][0]):                          
+            s='- Is minimal<br>'
+        else:
+            s='- Is a twist of lower level<br>'
+        properties2=[('Twist info',s)]
+    else:
+        info['twist_info'] = 'Twist info currently not available.'
+        properties2=[('Twist info','- not available')]
     info['is_cm']=WNF.is_CM()
-    info['is_minimal']=info['twist_info'][0]
     info['CM'] = WNF.print_is_CM()
     args=list()
     for x in range(5,200,10): args.append({'digits':x})
     digits = 7
     info['CM_values'] = WNF.cm_values(digits=digits)
-    if(info['twist_info'][0]):                          
-        s='- Is minimal<br>'
-    else:
-        s='- Is a twist of lower level<br>'
-    properties2=[('Twist info',s)]
     if(WNF.is_CM()[0]):                         
         s='- Is a CM-form<br>'
     else:
@@ -235,6 +240,7 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
     else:
         friends.append((s,url))
     # if there is an elliptic curve over Q associated to self we also list that
+    if WNF.weight()==2 and WNF.degree()==1:
         llabel=str(level)+'.'+label
         s = 'Elliptic Curve Isogeny Class '+llabel
         url = '/EllipticCurve/Q/'+llabel 

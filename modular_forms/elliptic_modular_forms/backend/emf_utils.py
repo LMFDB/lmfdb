@@ -230,6 +230,12 @@ def render_fd_plot(level,info,**kwds):
     if(info.has_key('group')):
         group = info['group']
         # we only allow standard groups
+    if info.has_key('grouptype'):
+        type=int(info['grouptype'])
+        if info['grouptype']==0:
+            group='Gamma0'
+        elif info['grouptype']==1:
+            group='Gamma1'
     if (group  not in ['Gamma0','Gamma','Gamma1']):
         group = 'Gamma0'
         type=int(0)
@@ -255,9 +261,9 @@ def render_fd_plot(level,info,**kwds):
             domain=loads(str(find['domain']))
         emf_logger.debug('Found fundamental domain in database')
     else:
-        if type==int(0):
-            domain=draw_fundamental_domain(level,group,**kwds)
-            G=Gamma0(level)
+        emf_logger.debug('Drawing fundamental domain for group {0}({1})'.format(group,level))
+        domain=draw_fundamental_domain(level,group,**kwds)
+            #G=Gamma0(level)
             #C[db_name][collection].insert({'level':int(level), 'type':type, 'index':int(G.index), 'G':pymongo.binary.Binary(dumps(G)), 'domain': pymongo.binary.Binary(dumps(domain))})
             #emf_logger.debug('Inserting group and fundamental domain in database')
     return domain
