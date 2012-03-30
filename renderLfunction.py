@@ -326,7 +326,7 @@ def initLfunction(L,args, request):
         mplusone = L.m +1
         friendlink2 =request.url.replace('/L/SymmetricPower/%d/'%L.m,'/L/SymmetricPower/%d/'%mplusone)
 
-        info['friends'] =  [('Isogeny class', friendlink), ('%s Symmetric Power'%ordinal(mplusone) , friendlink2)]
+        info['friends'] =  [('Isogeny class '+L.label, friendlink), ('%s Symmetric Power'%ordinal(mplusone) , friendlink2)]
         
     elif L.Ltype() == 'siegelnonlift' or L.Ltype() == 'siegeleisenstein' or L.Ltype() == 'siegelklingeneisenstein' or L.Ltype() == 'siegelmaasslift':
         weight = str(L.weight)
