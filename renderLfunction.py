@@ -117,19 +117,41 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
         
         elif arg1.startswith("degree"):
             degree = int(arg1[6:])
-            info = { "degree" : degree }
-            info["key"] = 777
-            info["bread"] =  [('L-functions', url_for("render_Lfunction")), ('Degree '+str(degree), url_for('render_Lfunction', arg1=str(degree)))]
-            if degree == 1:
-                info["contents"] = [LfunctionPlot.getOneGraphHtmlChar(1,35,1,13)]
-            elif degree == 2:
-                info["contents"] = [processEllipticCurveNavigation(11,65), LfunctionPlot.getOneGraphHtmlHolo(1, 6, 2, 14),
-                                    processMaassNavigation()]
-            elif degree == 3 or degree == 4:
-                info["contents"] = LfunctionPlot.getAllMaassGraphHtml(degree)
-
-            return render_template("DegreeNavigateL.html", title = 'Degree ' + str(degree)+ ' L-functions', **info)
-
+            if not arg2:
+                info = { "degree" : degree }
+                info["key"] = 777
+                info["bread"] =  [('L-functions', url_for("render_Lfunction")), ('Degree '+str(degree), url_for('render_Lfunction', arg1=str(degree)))]
+                    
+                return render_template("lfunctions/DegreeNavigateL.html", title = 'Degree ' + str(degree)+ ' L-functions', **info)
+            
+            else:
+                info = {}
+                info["bread"] =  [('L-functions', url_for("render_Lfunction")),
+                                  ('Degree '+str(degree), url_for('render_Lfunction', arg1=str(degree))),
+                                  (arg2, url_for('render_Lfunction', arg1=str(degree), arg2=arg2))]
+                if degree == 1:
+                    if arg2 == 'Dirichlet':
+                        info["contents"] = [LfunctionPlot.getOneGraphHtmlChar(1,35,1,13)]
+                        return render_template("lfunctions/Dirichlet.html", title = 'Dirichlet L-functions', **info)
+                elif degree == 2:
+                    if arg2 == 'CuspForm':
+                        info["contents"] = [LfunctionPlot.getOneGraphHtmlHolo(1, 6, 2, 14)]
+                        return render_template("lfunctions/cuspformGL2.html", title = 'L-functions of GL(2) Cusp Forms', **info)
+                    elif arg2 == 'MaassForm':
+                        info["contents"] = [processMaassNavigation()]
+                        return render_template("lfunctions/MaassformGL2.html", title = 'L-functions of GL(2) Maass Forms', **info)
+                    elif arg2 == 'EllipticCurve':
+                        info["contents"] = [processEllipticCurveNavigation(11,65)]
+                        return render_template("lfunctions/ellipticcurve.html", title = 'L-functions of Elliptic Curves', **info)
+                elif degree == 3:
+                    if arg2 == 'MaassForm':
+                        info["contents"] = LfunctionPlot.getAllMaassGraphHtml(3)
+                        return render_template("lfunctions/MaassformGLn.html", title = 'L-functions of GL(3) Maass Forms', **info)
+                elif degree == 4:
+                    if arg2 == 'MaassForm':
+                        info["contents"] = LfunctionPlot.getAllMaassGraphHtml(4)
+                        return render_template("lfunctions/MaassformGLn.html", title = 'L-functions of GL(4) Maass Forms', **info)
+                       
         elif arg1 == 'custom': # need a better name
             return "not yet implemented"
 
@@ -204,15 +226,15 @@ def set_info_for_start_page():
     '''
 
     tt = [[{'title':'Riemann Zeta Function','link': url_for('render_Lfunction', arg1='Riemann')},
-           {'title':'Dirichlet L-function','link': url_for('render_Lfunction', arg1='degree1') + '#Dirichlet'}],
+           {'title':'Dirichlet L-function','link': url_for('render_Lfunction', arg1='degree1', arg2='Dirichlet')}],
 
-          [{'title':'Elliptic Curve','link': url_for('render_Lfunction', arg1='degree2') + '#EllipticCurve_Q'},
-           {'title':'GL2 Cusp Form', 'link': url_for('render_Lfunction', arg1='degree2') + '#GL2_Q_Holomorphic'},
-           {'title':'GL2 Maass Form','link': url_for('render_Lfunction', arg1='degree2') + '#GL2_Q_Maass'}],
+          [{'title':'Elliptic Curve','link': url_for('render_Lfunction', arg1='degree2', arg2='EllipticCurve')},
+           {'title':'GL2 Cusp Form', 'link': url_for('render_Lfunction', arg1='degree2', arg2='CuspForm')},
+           {'title':'GL2 Maass Form','link': url_for('render_Lfunction', arg1='degree2', arg2='MaassForm')}],
 
-          [{'title':'GL3 Maass Form', 'link': url_for('render_Lfunction', arg1='degree3') + '#GL3_Q_Maass'},
-           {'title':'GL4 Maass Form', 'link': url_for('render_Lfunction', arg1='degree4') + '#GL4_Q_Maass'},
-           {'title':'GSp4 Maass Form', 'link': url_for('render_Lfunction', arg1='degree4') + '#GSp4_Q_Maass'}]]
+          [{'title':'GL3 Maass Form', 'link': url_for('render_Lfunction', arg1='degree3', arg2='MaassForm')},
+           {'title':'GL4 Maass Form', 'link': url_for('render_Lfunction', arg1='degree4', arg2='MaassForm')},
+           {'title':'GSp4 Maass Form', 'link': url_for('render_Lfunction', arg1='degree4', arg2='MaassForm') + '#GSp4_Q_Maass'}]]
 
     info = {
         'degree_list': range(1,5),

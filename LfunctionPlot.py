@@ -66,7 +66,9 @@ def getAllMaassGraphHtml(degree):
 def getGroupHtml(group):
     if group == 'GSp4':
         ans = "<h3 id='GSp4_Q_Maass'>Maass cusp forms for GSp(4)</h3>\n"
-        ans += "<div>These satisfy a functional equation with \\(\\Gamma\\)-factors\n"
+        ans += "<div>Currently in the LMFDB, we have data on L-functions associated "
+        ans += "to Maass cusp forms for GSp(4) of level 1."
+        ans += "These satisfy a functional equation with \\(\\Gamma\\)-factors\n"
         ans += "\\begin{equation}"
         ans += "\\Gamma_R(s + i \\mu_1)"
         ans += "\\Gamma_R(s + i \\mu_2)"
@@ -77,7 +79,9 @@ def getGroupHtml(group):
 
     elif group == 'GL4':
         ans = "<h3 id='GL4_Q_Maass'>Maass cusp forms for GL(4)</h3>\n"
-        ans += "<div>These satisfy a functional equation with \\(\\Gamma\\)-factors\n"
+        ans += "<div>Currently in the LMFDB, we have data on L-functions associated "
+        ans += "to Maass cusp forms for GL(4) of level 1."
+        ans += "These satisfy a functional equation with \\(\\Gamma\\)-factors\n"
         ans += "\\begin{equation}"
         ans += "\\Gamma_R(s + i \\mu_1)"
         ans += "\\Gamma_R(s + i \\mu_2)"
@@ -88,7 +92,9 @@ def getGroupHtml(group):
 
     elif group == 'GL3':
         ans = "<h3 id='GL3_Q_Maass'>Maass cusp forms for GL(3)</h3>\n"
-        ans += "<div>These satisfy a functional equation with \\(\\Gamma\\)-factors\n"
+        ans += "<div>Currently in the LMFDB, we have data on L-functions associated "
+        ans += "to Maass cusp forms for GL(3) of level 1 and 4."
+        ans += "These satisfy a functional equation with \\(\\Gamma\\)-factors\n"
         ans += "\\begin{equation}"
         ans += "\\Gamma_R(s + i \\mu_1)"
         ans += "\\Gamma_R(s + i \\mu_2)"
