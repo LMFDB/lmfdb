@@ -103,6 +103,7 @@ class WebMaassForm(object):
             return
         f=ff[0]
         print "f here=",f
+        self.dim = f.get('Dim',1)
         self.R=f.get('Eigenvalue',None)
         self.symmetry=f.get('Symmetry',-1)
         self.weight=f.get('Weight',0)
@@ -115,15 +116,45 @@ class WebMaassForm(object):
         
         self.coeffs=f.get('Coefficient',[])
         coeff_id=f.get('coeff_id',None)
+        nc = Gamma0(self.level).ncusps()
+        self.M0=f.get('M0',nc)
+
         if self.coeffs==[] and coeff_id:
             ## Let's see if we have coefficients stored
             C = self._db.get_coefficients({"_id":self._maassid})
             self.all_coeffs=C
-            nc = Gamma0(self.level).ncusps()
-            if len(C.keys())==nc:
-                self.coeffs = C[0]
+            if nc==1:
+                self.coeffs=self.all_coeffs
+            elif isinstance(C,dict):
+                if len(C.keys())==1:
+                    self.coeffs = C[0][0]
+                else:
+                    self.coeffs = C[0]
+                mwf_logger.debug("self.coeff.keys={0}".format(self.coeffs.keys()))
+                    
+            elif isinstance(C,list):
+                mwf_logger.debug("len(C)={0}".format(len(C)))
+                if len(C)==1:
+                    mwf_logger.debug("len(C[0])={0}".format(len(C[0])))
+                    if len(C[0])==1:
+                        mwf_logger.debug("len(C[0][0])={0}".format(len(C[0][0])))
+                        if len(C[0][0])==1:
+                            mwf_logger.debug("len(C[0][0][0])={0}".format(len(C[0][0][0])))
+                            if len(C[0][0][0])<self.M0: ## This recursion has to stop at some point, assume here...
+                                self.coeffs = C[0][0][0][0]
+                            else:
+                                self.coeffs = C[0][0][0]
+                        else:
+                            self.coeffs = C[0][0]
+                    else:
+                        self.coeffs = C[0]
+                else:
+                    self.coeffs=C[0]
             else:
-                self.coeffs=C
+                self.coeffs={}
+        if isinstance(self.coeffs,list):
+            if self.coeffs[0]==0:
+                self.coeffs.pop(0)
         self.nc = 1 #len(self.coeffs.keys())
         if isinstance(self.coeffs,list):
             self.num_coeff=len(self.coeffs)
@@ -132,6 +163,15 @@ class WebMaassForm(object):
         else:
             self.num_coeff=0
         self.set_table()
+
+    def C(self,r,n):
+        r"""
+        Get coeff nr. n at cusp nr. r of self
+        """
+        if not self.all_coeffs:
+            return None
+        
+        
         
     def get_all_coeffs(self):
         return self.all_coeffs
@@ -168,7 +208,10 @@ class WebMaassForm(object):
             for n in range(self.num_coeff):
                 row=[]
                 for k in range(table['ncols']):
-                    row.append((n,self.coeffs[n]))
+                    c = self.coeffs.get(n,None)
+                    if c<>None:
+                        c=CC(c)
+                    row.append((n,c))
                 table['data'].append(row)
         else:
             table['negc']=1

@@ -23,14 +23,18 @@
      <div>Not enough Dirichlet series coefficients to compute zeros.</div>
  {% endif %}
 
- {% if sv1 and sv12 %}
-     <h2>Special Values</h2>
-     <div>
-      {{ sv12 }}<br>
-      {% if Ltype=="riemann" or Ltype=="dedekindzeta" %}
-          pole at s=1<br>
-      {% else %}
-          {{ sv1 }}<br>
+<h2>Special Values</h2>
+{% if sv12 or sv1 %}
+      <div>
+      {% if sv12 %}
+          {{ sv12 }}<br>
+      {% endif %}
+      {% if sv1 %}
+          {% if Ltype=="riemann" or Ltype=="dedekindzeta" %}
+              pole at s=1<br>
+          {% else %}
+              {{ sv1 }}<br>
+          {% endif %}
       {% endif %}
      </div>
  {% else %}

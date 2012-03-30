@@ -121,7 +121,7 @@ table#maass_table_outer td {
 <div>
 <form name="ev" action="{{ url_for('.render_maass_form') }}" method="get">
 Search for \(r\): 
-{% if info.search_for_ev %}
+{% if info.search_for_ev_ev %}
 <input name="eigenvalue" value="{{ info.search_for_ev}}" />
 {% else %}
 <input name="eigenvalue" />
