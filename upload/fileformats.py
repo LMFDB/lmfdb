@@ -68,6 +68,9 @@ def guessParsing(file1):
   #if len(''.join(firstlines))/len(firstlines) >= 1000:
     #print "IGNORE"
   #print firstlines
+  file1.seek(0)
+  
+  ret = json.loads(file1)
 
 
   percentContainingComma = len([1 for line in firstlines if line.find(',')!=-1])*100/len(firstlines)
@@ -154,6 +157,7 @@ db = Connection(port=37010)
 fs = GridFS(db.upload)
 for entry in db.upload.fs.files.find({"$or": [{"metadata.status":"approved"},{"metadata.status":"approvedchild"}]}, sort=[("uploadDate",-1)]):
   print '%s: %s (%s)' % (entry['_id'], entry['filename'], str(entry['uploadDate']))
+  name = entry['metadata']['uploader_id']+str(entry['_id'])
   file = fs.get(entry['_id'])
   #print list(Lines(file.read(1000).splitlines()))
   #file.seek(0)
@@ -165,7 +169,7 @@ for entry in db.upload.fs.files.find({"$or": [{"metadata.status":"approved"},{"m
   if type(data) is dict: data=[data];
   #for row in data:
     #print row
-  c = db.contrib[entry['metadata']['uploader_id']+str(entry['_id'])]
+  c = db.contrib.create_collection(name)#db.contrib[entry['metadata']['uploader_id']+str(entry['_id'])]
   c.remove()
   for row in data:
     if type(row) is not dict:

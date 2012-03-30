@@ -147,8 +147,8 @@ def viewAll():
   db = getDBConnection().upload
   fs = GridFS(db)
 
-  approved = [ fs.get(x['_id']) for x in db.fs.files.find({"metadata.status" : "approved"}) ]
-  unmoderated = [ fs.get(x['_id']) for x in db.fs.files.find({"metadata.status" : "unmoderated"}) ]
+  approved = [ fs.get(x['_id']) for x in db.fs.files.find({"metadata.status" : "approved"}).sort("metadata.related_to") ]
+  unmoderated = [ fs.get(x['_id']) for x in db.fs.files.find({"metadata.status" : "unmoderated"}).sort("metadata_related_to") ]
 
   return render_template("upload-view.html", title = "Uploaded data", bread = get_bread(), approved=approved, unmoderated2=unmoderated)
 
@@ -258,11 +258,12 @@ def updateMetadata():
     db.fs.files.update({"metadata.parent_archive_id" : ObjectId(id)}, {"$set": {"metadata.status" : value+"child"}}, multi=1)
   return getDBConnection().upload.fs.files.find_one({"_id" : ObjectId(id)})['metadata'][property]
 
-def getUploadedFor(path):
+def getUploadedFor(path, addExtras):
   files = getDBConnection().upload.fs.files.find({"metadata.related_to": path, "$or" : [{"metadata.status": "approved"}, {"metadata.status": "approvedchild"}]})
   ret =  [ [x['metadata']['name'], "/upload/view/%s" % x['_id']] for x in files ]
-  ret.insert(0, ["Upload your data here", url_for("upload.index") + "?related_to=" + request.path ])
-  ret.append(["View all data", url_for("upload.viewAll") ])
+  if addExtras:
+    ret.insert(0, ["Upload your data here", url_for("upload.index") + "?related_to=" + request.path ])
+    ret.append(["View all data", url_for("upload.viewAll") ])
   return ret
 
 def queryUploadDatabase(filename, path, limit=0):

@@ -110,9 +110,18 @@ function updateMappingRules(data, id) {
 
 {% macro render_uploadlist(title, list, display) %}
 <h2> {{ title }} </h2>
-
+<ul>
+{% if list|length > 1 %}
+<li> <h4>Unassociated files</h4>
+{% endif %}
 {% for entry in list %}
-<p>
+<!--<p>-->
+{% if entry.metadata['related_to'] is defined %}
+{% if entry.metadata['related_to'] == '' %}
+{% else %}
+<li>
+<h4>{{entry.metadata['related_to']|default('hi')}}</h4>
+{% endif %} {% endif %}
 <A HREF="#" onclick="$('#display{{entry._id}}').toggle();return false">+{{entry.metadata['name']}}</a>
 (uploaded by <A HREF="/users/profile/{{entry.metadata['uploader_id']}}">{{entry.metadata['uploader']}}</A>)<br/>
 <dl class=propertylist style="display:{{display}}" id="display{{entry._id}}">
@@ -209,6 +218,7 @@ function updateMappingRules(data, id) {
   {{ caller(entry) }}
 </dl>
 {% endfor %}
+</ul>
 {% endmacro %}
 
 {% if file is defined %}

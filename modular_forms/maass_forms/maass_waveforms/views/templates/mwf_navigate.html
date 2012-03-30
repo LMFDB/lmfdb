@@ -2,9 +2,7 @@
 
 {% block content %}
 
-<script type="text/javascript" src="{{ url_for('emf.static', filename='elliptic_modular_form_util-functions.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('emf.static', filename='elliptic_modular_form_scripts.js') }}"></script>
-
+<script type="text/javascript" src="{{ url_for('mwf.static', filename='maass_scripts.js') }}"></script>
 
 {% if info.error is defined %}
 
@@ -17,15 +15,7 @@
 </div>
 {% endif %}
 
-<script>
-allowed_levels= {{info.list_of_levels}} <!-- these are the levels which are in the database-->
 
-function set_value(name,val) {
-  document.forms.browse[name].value=val;
-  document.forms.browse.submit();			   
-}
-
-</script>
 {#{ info | safe } #}
 
 <h1>Browse {{KNOWL('mf.maass.mwf',title='Maass forms')}} over \( \mathrm{GL}_{2}(\mathbb{Q})\) </h1>
@@ -34,15 +24,20 @@ function set_value(name,val) {
   <input type="hidden" name="weight" value=""/>
   <input type="hidden" name="level" value=""/>
   <input type="hidden" name="browse" value="1"/>
+{% if DB is defined %}
+{#% include 'mwf_table.html' %#}
+{% else %}
+No table!
+{% endif %}
   <ul>
     <li>
-      <a href="javascript:set_value('weight',0);">Browse Maass forms of weight 0</a>
+      <a href="javascript:set_browse_value('weight',0);">Browse Maass forms of weight 0</a>
     </li>
     <li>
-      <a href="javascript:set_value('weight',1);">Browse Maass forms of weight 1</a>
+      <a href="javascript:set_browse_value('weight',1);">Browse Maass forms of weight 1</a>
     </li>
     <li>
-      <a href="javascript:set_value('browse','all');">Browse Table of all
+      <a href="javascript:set_browse_value('browse','all');">Browse Table of all
       Eigenvalues in the Database</a>
 </li>
   </ul>

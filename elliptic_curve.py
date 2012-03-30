@@ -277,7 +277,7 @@ def render_isogeny_class(iso_class):
     label_perm={'57b':'c', '57c':'b',
                 '75a':'c', '75c':'a',
                 '84a':'b', '84b':'a',
-                '92a':'b', '94b':'a',
+                '92a':'b', '92b':'a',
                 '96a':'b', '96b':'a'}
     if label in label_perm:
         mod_form_iso=label_perm[label]

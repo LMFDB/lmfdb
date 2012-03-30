@@ -168,6 +168,7 @@ def initCharacterInfo(web_chi,args, request):
         info['prim'] = web_chi.prim
         info['vals'] = web_chi.vals
         info['logvals'] = web_chi.logvals
+        #info['galoisorbits'] = web_chi.galoisorbits
         #info['root_unity'] =  str(any(map(lambda x : r"\zeta" in x,  web_chi.vals)))
         info['unitgens'] = str(web_chi.unitgens)
         info['bound'] = int(web_chi.bound)
@@ -273,7 +274,7 @@ def dc_calc_gauss(modulus,number):
         n = x.numerator() 
         n = str(n)+"r" if not n == 1 else "r"
         d = x.denominator()
-        return r"\begin{equation} \tau_{%s}(\chi_{%s}(%s,&middot;)) = \sum_{r\in \mathbb{Z}/%s\mathbb{Z}} \chi_{%s}(%s,r) e\left(\frac{%s}{%s}\right) = %s. \end{equation}" %(int(arg),modulus,number,modulus,modulus,number,n,d,g)
+        return r"\(\displaystyle \tau_{%s}(\chi_{%s}(%s,&middot;)) = \sum_{r\in \mathbb{Z}/%s\mathbb{Z}} \chi_{%s}(%s,r) e\left(\frac{%s}{%s}\right) = %s. \)" %(int(arg),modulus,number,modulus,modulus,number,n,d,g)
     except Exception, e:
         return "<span style='color:red;'>ERROR: %s</span>" % e
 
@@ -292,7 +293,7 @@ def dc_calc_jacobi(modulus,number):
         chi = chi.sage_character()
         psi = psi.sage_character()
         jacobi_sum = chi.jacobi_sum(psi)
-        return r"\begin{equation} J(\chi_{%s}(%s,&middot;),\chi_{%s}(%s,&middot;)) = \sum_{r\in \mathbb{Z}/%s\mathbb{Z}} \chi_{%s}(%s,r) \chi_{%s}(%s,1-r) = %s,\end{equation} where <a href='/Character/Dirichlet/%s/%s'> \(\chi_{%s}(%s,&middot;)\) </a> is character \(%s\) modulo \(%s\)." %(modulus,number,modulus,num,modulus,modulus,number,modulus,num,latex(jacobi_sum),modulus,num,modulus,num,num,modulus)  
+        return r"\( \displaystyle J(\chi_{%s}(%s,&middot;),\chi_{%s}(%s,&middot;)) = \sum_{r\in \mathbb{Z}/%s\mathbb{Z}} \chi_{%s}(%s,r) \chi_{%s}(%s,1-r) = %s.\)" %(modulus,number,modulus,num,modulus,modulus,number,modulus,num,latex(jacobi_sum))  
     except Exception, e:
         return "<span style='color:red;'>ERROR: %s</span>" % e
 
@@ -315,7 +316,7 @@ def dc_calc_kloosterman(modulus,number):
             k = str(imag) + "i"
         else:
             k = latex(k)
-        return r"\( K(%s,%s,\chi_{%s}(%s,&middot;)) = \sum_{r \in \mathbb{Z}/%s\mathbb{Z}} \chi_{%s}(%s,r) e\left(\frac{%s r + %s r^{-1}}{25}\right) = %s. \)" %(int(arg[0]),int(arg[1]),modulus,number, modulus, modulus,number,int(arg[0]),int(arg[1]),k)
+        return r"\( \displaystyle K(%s,%s,\chi_{%s}(%s,&middot;)) = \sum_{r \in \mathbb{Z}/%s\mathbb{Z}} \chi_{%s}(%s,r) e\left(\frac{%s r + %s r^{-1}}{25}\right) = %s. \)" %(int(arg[0]),int(arg[1]),modulus,number, modulus, modulus,number,int(arg[0]),int(arg[1]),k)
     except Exception, e:
         return "<span style='color:red;'>ERROR: %s</span>" % e
 
@@ -423,6 +424,6 @@ def get_entries(modulus):
     rows = []
     for chi in G:
         number = chi.number()
-        rows.append(log_value(modulus,number))
-    return headers, [(_, rows[_]) for _ in range(1,e)] 
+        rows.append((number,log_value(modulus,number)))
+    return headers, rows
 

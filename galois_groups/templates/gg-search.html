@@ -31,14 +31,20 @@ jQuery.fn.dataTableExt.oSort['nTt-desc']  = function(x,y) {
        "bFilter":false, 
        "bAutoWidth":false, 
        "iDisplayLength":20, 
-       "aoColumns": [ {"sType": "nTt"},null null,null,null],
+       "aoColumns": [ {"sType": "nTt"},null, null,null,null],
+       "aoColumns": [ null,null, null,null,null],
        "aaSorting": [[0, 'asc']],
+        "oLanguage": {
+                "oPaginate": {
+                        "sPrevious": "",
+                        "sNext": ""
+                }
+        },
        "aLengthMenu": [[20, 50, -1], [20, 50, "All"]],
        "fnRowCallback": function( row, data, index ){ 
              MathJax.Hub.Queue(['Typeset', MathJax.Hub, row]);
              return row;
          }
-
      });
  });
 </script>
@@ -53,7 +59,7 @@ jQuery.fn.dataTableExt.oSort['nTt-desc']  = function(x,y) {
 </td>
 
 <td align=left> 
-{{KNOWL('gg.tnumber',title='$t$')}}:
+{{KNOWL('gg.tnumber',title='$t$')}} :
 <td align=left> <input type="text" name="t" size="3" value="{{info.t}}" ></td>
 </tr>
 <tr>

@@ -15,6 +15,32 @@ try:
 except:
   logger.critical("dirichlet_conrey.pyx cython file is not available ...")
 
+def log_value(modulus,number):
+    from dirichlet_conrey import DirichletGroup
+    G = DirichletGroup_conrey(modulus)
+    chi = G[number]
+    l = []
+    for j in range(1, modulus+1):
+        logvalue = chi.logvalue(j)
+        n = int(logvalue.numer())
+        d = int(logvalue.denom())
+        from sage.all import Integer
+        if Integer(j).gcd(modulus) == 1:
+            print "n = " + str(n)
+            if n == 0:
+                s = "1"
+            else:
+                s = r"\(e\left(\frac{%s}{%s}\right)\)" %(n,d)
+                if n == 1 and d == 2:
+                    s = "-1"
+                if n == 1 and d == 4:
+                    s = "i"
+                if n == 3 and d == 4:
+                    s = "-i"
+        else:
+            s="0"
+        l.append(s)
+    return l
 
 class WebCharacter:
     """Class for presenting a Character on a web page
@@ -141,35 +167,6 @@ class WebCharacter:
         self.properties = [("Conductor", [conductor]), ("Order", [order]), ("Parity", [self.parity]), ("Real", [self.real]), ("Primitive", [self.prim])]
 
 
-
-
-def log_value(modulus,number):
-    from dirichlet_conrey import DirichletGroup
-    G = DirichletGroup_conrey(modulus)
-    chi = G[number]
-    l = []
-    for j in range(1, modulus+1):
-        logvalue = chi.logvalue(j)
-        n = logvalue.numer()
-        d = logvalue.denom()
-        from sage.all import Integer
-        if Integer(j).gcd(modulus) == 1:
-            if n == 0:
-                s = "1"
-            elif n == 1:
-                if d == 2:
-                    s = "-1"
-                if d == 4:
-                    s = "i"
-            elif n == 3:
-                if d == 4:
-                    s = "-i"
-            else:
-                s = r"e\left(\frac{%s}{%s}\right)" %(n,d) 
-        else:
-            s=0
-        l.append(s)
-    return l
 
 
 

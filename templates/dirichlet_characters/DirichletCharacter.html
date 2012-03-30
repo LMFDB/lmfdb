@@ -108,6 +108,8 @@ table.props tr td:first-child {
 
         <h2> {{ KNOWL('character.dirichlet.basic_properties', title="Basic properties") }} </h2>
 
+        {# Galois Orbits #}
+        
         {# Basic properties #}
         <table class="props">
             <tr>
@@ -190,7 +192,7 @@ table.props tr td:first-child {
         <form> \( J(\chi_{ {{modulus}} }({{number}},&middot;),\psi) \;\) for \( \;\psi = {{modulus}}.\)
             <input id="calc-jacobi-input" size="10" placeholder={{jacobi_default}}>
             <button id="calc-jacobi-go"> Compute </button>
-            <span class="formexample"> n.b., takes integers 1--{{modulus}} coprime to {{modulus}}</span>
+            <span class="formexample"> e.g. 1</span>
             <div class="slider" id="slider-jacobi-b"></div>
         </form>
         <div class="output"><span id="calc-jacobi-output"></span></div>
@@ -280,7 +282,7 @@ $(function() {
       jacobi_handler(event);
                                                 };
 
-    $( "#slider-jacobi-b").slider({ value: {{jacobi_default}}, min: 0, max: {{eulerphi}}, step: 1,
+    $( "#slider-jacobi-b").slider({ value: {{jacobi_default}}, min: 0, max: {{modulus}}, step: 1,
         change: function( event, ui ) {
             $( "#calc-jacobi-input" ).val(ui.value);
             jacobi_handler(event);
