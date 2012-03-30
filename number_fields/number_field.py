@@ -41,6 +41,11 @@ def ctx_galois_groups():
           'group_cclasses_data': group_cclasses_data,
           'group_character_table_data': group_character_table_data}
 
+def group_display_shortC(C):
+  def gds(nt):
+    return group_display_short(nt[0], nt[1], C)
+  return gds
+
 def field_pretty(field_str):
     d,r,D,i = field_str.split('.')
     if d == '1':  # Q
@@ -233,7 +238,10 @@ def render_field_webpage(args):
     UK = K.unit_group()
     zk = pari(K).nf_subst('a')
     zk = list(zk.nf_get_zk())
-    zk = web_latex([K(j) for j in zk])
+    Ra = PolynomialRing(QQ, 'a')
+    zk = [sage.all.latex(Ra(x)) for x in zk]
+    zk = ['$%s$'%x for x in zk]
+    zk = ', '.join(zk)
     
     info.update(data)
     info.update({
@@ -524,6 +532,7 @@ def number_field_search(**args):
     if count>500:
       info['report'] += ' - displaying first 500'
     info['format_coeffs'] = format_coeffs
+    info['group_display'] = group_display_shortC(C)
     info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), ('Discriminant ranges',url_for(".render_discriminants_page"))]
     t = 'Global Number Field search results'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")),('Search results',' ')]
