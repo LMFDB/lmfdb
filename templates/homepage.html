@@ -161,6 +161,7 @@
     <li><a href="{{ url_for('zeta zeros.zetazeros') }}">Browse zeros of $\zeta(s)$</a></li>
    </ul>
   
+   {{ entry("Data", getUploadedFor(request.path) ) }}
    {{ entry("Learn more about", learnmore) }}
 
  {% if sidebar -%}
@@ -212,7 +213,6 @@
     {% endif %}
    {{ rightnavig("Related objects", friends) }}
    {{ rightnavig("Downloads", downloads) }}
-   {{ rightnavig("Data", getUploadedFor(request.path) ) }}
     </div>
     {%- endif %}
 
