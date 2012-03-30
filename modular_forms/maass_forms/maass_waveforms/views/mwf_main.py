@@ -340,6 +340,9 @@ import json
 @mwf.route("/Tables_get",methods=met)
 def get_table():
     search = get_search_parameters({})
+    mwf_logger.debug("args=%s"%request.args)
+    mwf_logger.debug("method=%s"%request.method)
+    mwf_logger.debug("req.form=%s"%request.form)
     mwf_logger.debug("req:".format(request))
     mwf_logger.debug("search:".format(search))
     if not isinstance(search,dict):
@@ -348,11 +351,17 @@ def get_table():
         search['limit']=2000
     if not search.has_key('skip'):
         search['skip']=0        
-    res = {'aaData':evs_table(search)}
-    return json.dumps(res)
+    evs=evs_table(search,True)
+    res = {
+        "aoData":evs['table']['data'],
+        "iTotalRecords" : evs['table']['nrows'],
+        "iTotalDisplayRecords" : 20}
+    res = json.dumps(res)
+    #print "res=",res
+    return res
 
 
-def evs_table(search):
+def evs_table(search,twodarray=False):
     DB = connect_db()
     finds  = DB.get_Maass_forms(search)
     table=[]
@@ -400,6 +409,8 @@ def evs_table(search):
         url = url_for('mwf.render_one_maass_waveform',maass_id=f.get('_id',None))
         row['url']=url
         nrows+=1
+        if twodarray:
+            row=row.values()
         table.append(row) 
     mwf_logger.debug("nrows:".format(nrows))
     evs={'table':{}}
