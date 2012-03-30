@@ -18,12 +18,11 @@ Utilities file for elliptic (holomorphic) modular forms.
 
 AUTHOR: Fredrik Strömberg
 
-
 """
 import random
 from flask import  jsonify
 from utils import *
-from modular_forms.elliptic_modular_forms import EMF,emf, emf_logger
+from modular_forms.elliptic_modular_forms import EMF,emf, emf_logger, default_prec
 logger = emf_logger
 from sage.all import dimension_new_cusp_forms,vector,dimension_modular_forms,dimension_cusp_forms,is_odd,loads,dumps,Gamma0,Gamma1,Gamma
 from modular_forms.backend.mf_utils import my_get
@@ -59,8 +58,6 @@ def extract_limits_as_tuple(arg, field, defaults=(1,10)):
             limits=defaults
     return limits
     
-
-
 def extract_data_from_jump_to(s):
     label=None;weight=None;character=None;level=None
     weight = 2  # this is default for jumping
@@ -230,19 +227,18 @@ class MyNewGrp (object):
             
 def render_fd_plot(level,info,**kwds):
     group = None
-    if(info.has_key('group')):
+    if info.has_key('group'):
         group = info['group']
         # we only allow standard groups
-    if (group  not in ['Gamma0','Gamma','Gamma1']):
+    if group  not in ['Gamma0','Gamma','Gamma1']:
         group = 'Gamma0'
         type=int(0)
     else:
         if group=='Gamma':
             type=int(-1)
         else:
-            type=(1)
+            type=1
     db_name = 'SL2Zsubgroups'
-    dbport = 37010
     collection='groups'
     C = base.getDBConnection()
     emf_logger.debug("C={0}".format(C))
@@ -254,14 +250,26 @@ def render_fd_plot(level,info,**kwds):
         emf_logger.critical("Incorrect collection {0} in database {1}. \n Available collections are:{2}".format(collection,db_name,C[db_name].collection_names()))
     
     find=C[db_name][collection].find_one({'level':level,'type':type})
+    domain=None
+    emf_logger.debug("find={0}".format(find))     
     if find:
         if find.get('domain'):
-            domain=loads(str(find['domain']))
-        emf_logger.debug('Found fundamental domain in database')
+            domain=loads(str(find.get('domain',None)))
+        emf_logger.debug('Found fundamental domain in database: {0}'.format(0))
+    if domain==None:
+        #if type==int(0) or level==1:
+        domain=draw_fundamental_domain(level,group,**kwds)
+        #G=Gamma0(level)
+        #C[db_name][collection].insert({'level':int(level), 'type':type, 'index':int(G.index), 'G':pymongo.binary.Binary(dumps(G)), 'domain': pymongo.binary.Binary(dumps(domain))})
+    emf_logger.debug("Group={0}({1}) domain={2}".format(level,group,domain))
+    if domain<>None:
+        return domain
     else:
-        if type==int(0):
-            domain=draw_fundamental_domain(level,group,**kwds)
-            G=Gamma0(level)
-            #C[db_name][collection].insert({'level':int(level), 'type':type, 'index':int(G.index), 'G':pymongo.binary.Binary(dumps(G)), 'domain': pymongo.binary.Binary(dumps(domain))})
-            #emf_logger.debug('Inserting group and fundamental domain in database')
-    return domain
+        return Graphics()
+def is_data_in_db(level=0,weight=0,character=0):
+    r"""
+     Checks whether we have the requested data in the database.
+    """
+    
+    return True
+    

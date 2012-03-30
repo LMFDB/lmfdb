@@ -28,9 +28,9 @@ from base import app, db
 from modular_forms.elliptic_modular_forms.backend.web_modforms import WebModFormSpace,WebNewForm
 from modular_forms.elliptic_modular_forms.backend.emf_classes import ClassicalMFDisplay
 from modular_forms.backend.mf_utils import my_get
-from modular_forms.elliptic_modular_forms.backend.emf_core import * 
+from modular_forms.elliptic_modular_forms.backend.emf_core import *
 from modular_forms.elliptic_modular_forms.backend.emf_utils import *
-from modular_forms.elliptic_modular_forms.backend.plot_dom import * 
+from modular_forms.elliptic_modular_forms.backend.plot_dom import *
 from modular_forms.elliptic_modular_forms import EMF, emf_logger, emf
 
 
@@ -40,19 +40,20 @@ def render_elliptic_modular_form_space(info):
     Render the webpage for a elliptic modular forms space.
     """
     level  = my_get(info,'level', -1,int)
-    weight = my_get(info,'weight',-1,int) 
+    weight = my_get(info,'weight',-1,int)
     character = my_get(info,'character', '',str) #int(info.get('weight',0))
     label = my_get(info,'label', 'a',str)
     if character=='':
         character=0
-    properties=list(); parents=list(); friends=list(); lifts=list(); siblings=list() 
+    properties=list(); parents=list(); friends=list(); lifts=list(); siblings=list()
     sbar=(properties,parents,friends,siblings,lifts)
     if info.has_key('character') and info['character']=='*':
         return render_elliptic_modular_form_space_list_chars(level,weight)
     ### This might take forever....
     info=set_info_for_modular_form_space(info)
     emf_logger.debug("keys={0}".format(info.keys()))
-    if info.has_key('download') and not info.has_key('error'):                           return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
+    if info.has_key('download') and not info.has_key('error'):
+        return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
     if info.has_key('dimension_newspace') and info['dimension_newspace']==1: # if there is only one orbit we list it
         emf_logger.debug("Dimension of newforms is one!")
         info =dict()

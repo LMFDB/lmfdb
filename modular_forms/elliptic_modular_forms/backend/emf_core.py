@@ -29,10 +29,12 @@ from sage.all import ZZ,Newform,is_squarefree,squarefree_part,factor,is_square,d
 import re
 
 from modular_forms.elliptic_modular_forms import emf_logger as logger
+import pymongo, pymongo.binary
 
 ####
 #### Core functions for spaces of cuspforms
 ####
+
 def get_dimension_cusp_forms(k,N=1,xi=0):
     r""" Return the dimension of S_k(N,xi).
 

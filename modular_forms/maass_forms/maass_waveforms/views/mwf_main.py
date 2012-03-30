@@ -222,83 +222,30 @@ def render_one_maass_waveform_wp_old(info):
         title="Could not find this Maass form in the database!"
         info['error']=data['error']
 
-
     bread=[('Maass forms',url_for('.render_maass_waveforms'))]
     return render_template("mwf_one_maass_form.html", info=info,title=title,bread=bread,properties=properties)
+
 
 def render_search_results_wp(info,search):
     # res contains a lst of Maass waveforms
     mwf_logger.debug("in render_search_results. info=".format(info))
     mwf_logger.debug("Search:".format(search))
     evs={'table':{}}
-    table=[]
-    nrows=0
-    DB=connect_db()
     if not isinstance(search,dict):
         search={}
     if not search.has_key('limit'):
         search['limit']=2000
     if not search.has_key('skip'):
         search['skip']=0        
-    finds  = DB.get_Maass_forms(search)
-    for f in finds:
-            row={}
-            R = f.get('Eigenvalue',None)
-            N = f.get('Level',None)
-            k = f.get('Weight',None)
-            if R==None or N==None or k==None:
-                continue
-            row['R']=R; row['N']=N;
-            if k==0 or k==1:
-                row['k']=int(k)
-            else:
-                row['k']=k
-            row['ch']=f.get('Character',0)
-            st = f.get('Symmetry')
-            if st==1:
-                st = "odd"
-            elif st==0:
-                st = "even"
-            else:
-                st = "undefined"
-            row['symmetry']=st
-            er = f.get('Error',0)
-            if er>0:
-                er = "{0:1.0e}".format(er)
-            else:
-                er="undefined"
-            row['err']=er
-            dim = f.get('Dim',None)
-            if dim==None:
-                dim=1 #"undefined"
-            row['dim']=dim
-            numc = f.get('Numc',0)
-            row['numc']=numc
-            cev=f.get('Cusp_evs',[])
-            if isinstance(cev,list):
-                if len(cev)>1:
-                    fricke=cev[1]
-                    row['fricke']=fricke
-                row['cuspevs']=cev
-            url = url_for('mwf.render_one_maass_waveform',maass_id=f.get('_id',None))
-            row['url']=url
-            nrows+=1
-            table.append(row) 
-    mwf_logger.debug("nrows:".format(nrows))
-    evs['table']['data']=table
-    evs['table']['nrows']=nrows
-    evs['table']['ncols']=10
-    evs['table']['colheads']=['Level','Weight','Char','Eigenvalue',
-                              'Symmetry','Error',
-                              'Dim.','Coeff.','Fricke'] #,'Atkin-Lehner']
     bread=[('Modular forms',url_for('mf.modular_form_main_page')),
            ('Maass forms',url_for('.render_maass_waveforms'))]
     info['bread']=bread
-    info['evs']=evs
+    info['evs']=evs_table(search)
     if info.get('browse',None)<>None:
         info['title']='Browse Maassforms'
     else:
         info['title']='Search Results'
+    
     return render_template("mwf_display_search_result.html", **info)
 
 
@@ -331,70 +278,7 @@ def render_browse_maass_waveforms(info,title):
 
 
 
-def render_browse_all_eigenvalues(info,**kwds):
-    evs={'table':{}}
-    table=[]
-    nrows=0
-    DB=connect_db()
-    for coll in DB._show_collection:
-        #coll=DB._show_collection[i]
-        mwf_logger.debug("coll:{0}".format(coll))
-        mwf_logger.debug("f.name={0}".format(coll.name))
-        finds = coll.find()
-        mwf_logger.debug("f.num={0}".format(finds.count()))
-        for f in finds:
-            row={}
-            R = f.get('Eigenvalue',None)
-            N = f.get('Level',None)
-            k = f.get('Weight',None)
-            if R==None or N==None or k==None:
-                continue
-            row['R']=R; row['N']=N;
-            if k==0 or k==1:
-                row['k']=int(k)
-            else:
-                row['k']=k
-            row['ch']=f.get('Character',0)
-            st = f.get('Symmetry')
-            if st==1:
-                st = "odd"
-            elif st==0:
-                st = "even"
-            else:
-                st = "undefined"
-            row['symmetry']=st
-            er = f.get('Error',0)
-            if er>0:
-                er = "{0:2.1e}".format(er)
-            else:
-                er="undefined"
-            row['err']=er
-            dim = f.get('Dim',None)
-            if dim==None:
-                dim="undefined"
-            row['dim']=dim
-            cev=f.get('Cusp_evs',[])
-            if isinstance(cev,list):
-                if len(cev)>1:
-                    fricke=cev[1]
-                    row['fricke']=fricke
-                row['cuspevs']=cev
-                url = url_for('mwf.render_one_maass_waveform',maass_id=f.get('_id',None))
-            row['url']=url
-            nrows+=1
-            table.append(row) 
-    evs['table']['data']=table
-    evs['table']['nrows']=nrows
-    evs['table']['ncols']=9
-    evs['table']['colheads']=['Level','Weight','Char','Eigenvalue',
-                              'Symmetry','Error',
-                              'Dimension','Fricke involution','Atkin-Lehner eigenvalues']
-    bread=[('Modular forms',url_for('mf.modular_form_main_page')),
-           ('Maass forms',url_for('.render_maass_waveforms'))]
-    info['bread']=bread
-    info['evs']=evs
 
-    return render_template("mwf_browse_all_eigenvalues.html", **info)
 
 
 
@@ -440,3 +324,90 @@ def render_maass_waveforms_for_one_group(level,**kwds):
     title="Maass forms for \(\Gamma_{0}("+str(level)+")\)"
     bread=[('Maass forms',url_for('.render_maass_waveforms'))]
     return render_template("mwf_one_group.html", info=info,title=title)
+
+@mwf.route("/Tables",methods=met)
+def render_browse_all_eigenvalues():
+    bread=[('Maass forms',url_for('.render_maass_waveforms'))]
+    info={}
+    info['bread']=bread
+    info['colheads']=['Level','Weight','Char','Eigenvalue',
+                              'Symmetry','Error','Coefficients'
+                              'Dimension','Fricke involution','Atkin-Lehner']
+    return render_template("mwf_browse_all_eigenvalues.html", **info)
+
+
+import json
+@mwf.route("/Tables_get",methods=met)
+def get_table():
+    search = get_search_parameters({})
+    mwf_logger.debug("req:".format(request))
+    mwf_logger.debug("search:".format(search))
+    if not isinstance(search,dict):
+        search={}
+    if not search.has_key('limit'):
+        search['limit']=2000
+    if not search.has_key('skip'):
+        search['skip']=0        
+    res = {'aaData':evs_table(search)}
+    return json.dumps(res)
+
+
+def evs_table(search):
+    DB = connect_db()
+    finds  = DB.get_Maass_forms(search)
+    table=[]
+    nrows=0
+
+    for f in finds:
+        row={}
+        R = f.get('Eigenvalue',None)
+        N = f.get('Level',None)
+        k = f.get('Weight',None)
+        if R==None or N==None or k==None:
+            continue
+        row['R']=R; row['N']=N;
+        if k==0 or k==1:
+            row['k']=int(k)
+        else:
+            row['k']=k
+        row['ch']=f.get('Character',0)
+        st = f.get('Symmetry')
+        if st==1:
+            st = "odd"
+        elif st==0:
+            st = "even"
+        else:
+            st = "undefined"
+        row['symmetry']=st
+        er = f.get('Error',0)
+        if er>0:
+            er = "{0:1.0e}".format(er)
+        else:
+            er="undefined"
+        row['err']=er
+        dim = f.get('Dim',None)
+        if dim==None:
+            dim=1 #"undefined"
+        row['dim']=dim
+        numc = f.get('Numc',0)
+        row['numc']=numc
+        cev=f.get('Cusp_evs',[])
+        if isinstance(cev,list):
+            if len(cev)>1:
+                fricke=cev[1]
+                row['fricke']=fricke
+            row['cuspevs']=cev
+        url = url_for('mwf.render_one_maass_waveform',maass_id=f.get('_id',None))
+        row['url']=url
+        nrows+=1
+        table.append(row) 
+    mwf_logger.debug("nrows:".format(nrows))
+    evs={'table':{}}
+    evs['table']['data']=table
+    evs['table']['nrows']=nrows
+    evs['table']['ncols']=10
+    evs['table']['colheads']=['Level','Weight','Char','Eigenvalue',
+                              'Symmetry','Error',
+                              'Dim.','Coeff.','Fricke',
+                              'Atkin-Lehner']
+    return evs
