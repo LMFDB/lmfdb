@@ -25,7 +25,8 @@ function show_code(system) {
     </div>
     <div></div>
 
-    <h2>{{ KNOWL_INC('historical'+request.path.lower().replace('/','_'), title='Historical Information') }}</h2>
+    {% set KNOWL_ID = "ec.q.%s"|format(info['label']) %}
+    <h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
 
     <h2> {{ KNOWL('ec.q.minimal_weierstrass_equation', title='Minimal Weierstrass equation') }} </h2>
     <div class='sage nodisplay code'>sage: E = EllipticCurve({{info.ainvs}})</div>
@@ -226,7 +227,7 @@ function show_code(system) {
 <table>
 <tr>
 <th>prime</th>
-<th>{{KNOWL('ec.q.Tamagawa_numbers', title='Tamagawa number')}}</th>
+<th>{{KNOWL('ec.q.tamagawa_numbers', title='Tamagawa number')}}</th>
 <th>{{KNOWL('ec.q.kodaira_symbol', title='Kodaira symbol')}}</th>
 <th>{{KNOWL('ec.q.reduction_type', title='Reduction type')}}</th>
 </tr>
@@ -299,7 +300,7 @@ $(function() {
     $("#morebutton").click(function(e) {more_handler(e)});
 });
 </script>
-    
 
-    <h2>{{ KNOWL_INC('misc'+request.path.lower().replace('/','_'), title='Misc') }}</h2>
+    {% set KNOWL_ID = "ec.q.%s"|format(info['label']) %}
+    <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
 {% endblock %}

@@ -28,8 +28,9 @@ function show_code(system) {
 
 <style>
 .output {
-    margin:20px 0;
+    padding:20px 0 20px 100px;
     text-align: left;
+    font-size: 115%;
 }
 table.navi td {
     padding: 0;
@@ -92,7 +93,7 @@ table.props tr td:first-child {
         </p>
         <div align="left"> 
             {#{{ logvals }}#}
-            [{{ logvals|join(", " ) }}]
+            \([{{ logvals|join(", " ) }}]\)
         </div>
         
         {# Values on generators #}
@@ -189,7 +190,7 @@ table.props tr td:first-child {
         <form> \( J(\chi_{ {{modulus}} }({{number}},&middot;),\psi) \;\) for \( \;\psi = {{modulus}}.\)
             <input id="calc-jacobi-input" size="10" placeholder={{jacobi_default}}>
             <button id="calc-jacobi-go"> Compute </button>
-            <span class="formexample"> n.b., takes values 0--{{eulerphi}}</span>
+            <span class="formexample"> n.b., takes integers 1--{{modulus}} coprime to {{modulus}}</span>
             <div class="slider" id="slider-jacobi-b"></div>
         </form>
         <div class="output"><span id="calc-jacobi-output"></span></div>
@@ -206,8 +207,10 @@ table.props tr td:first-child {
             <input id="calc-kloosterman-input" size=10 placeholder={{kloosterman_default_a}},{{kloosterman_default_b}}>
             <button id="calc-kloosterman-go"> Compute </button>
             <span class="formexample"> e.g. {{kloosterman_default_a}},{{kloosterman_default_b}}</span>
-            <div class="slider" id="slider-kloosterman-a"></div>
-            <div class="slider" id="slider-kloosterman-b"></div>
+            <table style="width: 95%;">
+            <tr><td style="width: 3em; text-align: right;">a: </td><td><div class="slider" id="slider-kloosterman-a"></div></td></tr>
+            <tr><td style="width: 3em; text-align: right;">b: </td><td><div class="slider" id="slider-kloosterman-b"></div></td></tr>
+            </table>
         </form>
         <div class="output"><span id="calc-kloosterman-output"></span></div>
 
@@ -215,7 +218,7 @@ table.props tr td:first-child {
 function gauss_handler(evt) {
     evt.preventDefault();
     var val = $("#calc-gauss-input").val();
-    $("#calc-gauss-output").load("{{ url_for('dc_calc_gauss', modulus=modulus,number=number) }}" + "?val=" + val, 
+    $("#calc-gauss-output").load("{{ url_for('dc_calc_gauss', modulus = modulus, number=number) }}" + "?val=" + val, 
      function() {
         {# tell mathjx to render the output #}
         MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-gauss-output"]);

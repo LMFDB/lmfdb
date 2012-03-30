@@ -63,8 +63,10 @@ def render_artin_representation_webpage(dim,conductor,index):
   from number_field_galois_groups import nfgg_page
   from number_field_galois_groups.main import by_data
   
-  friends = [("Artin Field", url_for("number_fields.by_label", label = the_nf.label())), \
-            ("Same degree and conductor", url_for(".by_partial_data", dim = the_rep.dimension(), conductor = the_rep.conductor()))]
+  friends = [("Artin Field", the_nf.url_for()), \
+            ("Same degree and conductor", url_for(".by_partial_data", dim = the_rep.dimension(), conductor = the_rep.conductor())),\
+            ("L-function", url_for("render_Lfunction", arg1 = 'ArtinRepresentation', arg2 = the_rep.dimension(), arg3 = the_rep.conductor(), arg4 = the_rep.index()))    
+            ]
   return render_template("artin-representation-show.html", credit= tim_credit, support = support_credit, title = title, bread = bread, friends = friends, object = the_rep)
 
 def render_artin_representation_set_webpage(dim,conductor):

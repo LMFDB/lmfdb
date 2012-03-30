@@ -81,7 +81,7 @@ def group_display_long(n, t, C):
 def group_knowl_guts(n,t, C):
   label = base_label(n,t)
   group = C.transitivegroups.groups.find_one({'label': label})
-  inf = "Group "+str(group['n'])+"T"+str(group['t'])
+  inf = "Transitive group "+str(group['n'])+"T"+str(group['t'])
   inf += ", order "+str(group['order'])
   inf += ", parity "+str(group['parity'])
   if group['cyc']==1:
@@ -97,7 +97,7 @@ def group_knowl_guts(n,t, C):
   else:
     inf += ", imprimitive"
 
-  inf = "  ("+inf+")"
+  inf = "&nbsp;&nbsp;&mdash;&nbsp;&nbsp;  "+inf+""
   rest = '<div><h3>Generators</h3><blockquote>'
   rest += generators(n, t)
   rest += '</blockquote></div>'

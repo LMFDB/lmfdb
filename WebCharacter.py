@@ -15,6 +15,33 @@ try:
 except:
   logger.critical("dirichlet_conrey.pyx cython file is not available ...")
 
+def log_value(modulus,number):
+    from dirichlet_conrey import DirichletGroup
+    G = DirichletGroup_conrey(modulus)
+    chi = G[number]
+    l = []
+    for j in range(1, modulus+1):
+        logvalue = chi.logvalue(j)
+        n = logvalue.numer()
+        d = logvalue.denom()
+        from sage.all import Integer
+        if Integer(j).gcd(modulus) == 1:
+            if n == 0:
+                s = "1"
+            elif n == 1:
+                if d == 2:
+                    s = "-1"
+                if d == 4:
+                    s = "i"
+            elif n == 3:
+                if d == 4:
+                    s = "-i"
+            else:
+                s = r"e\left(\frac{%s}{%s}\right)" %(n,d) 
+        else:
+            s=0
+        l.append(s)
+    return l
 
 class WebCharacter:
     """Class for presenting a Character on a web page
@@ -81,31 +108,7 @@ class WebCharacter:
             self.conductor = chi.conductor()
             self.order = chi.multiplicative_order()
             self.vals = chi.values()
-            l = []
-            #phi = euler_phi(self.modulus)
-            #from sage.rings.rational.Rational import numer, denom
-            for j in range(1,self.modulus+1):
-                logvalue = chi.logvalue(j)
-                n = logvalue.numer()
-                d = logvalue.denom()
-                if n == 0:
-                    s = "1"
-                elif n == 1:
-                    if d == 2:
-                        s = "-1"
-                    if d == 4:
-                        s = "i"
-                elif n == 3:
-                    if d == 4:
-                        s = "-i"
-                else:
-                    s = r"\(e\left(\frac{%s}{%s}\right)\)" %(n,d) 
-                    #s = r"\(\displaystyle\frac{%s}{%s}\)" %(n,d) 
-                    #s = r"\(e(%s)\)" %(chi.logvalue(j))
-                #import utils; utils.debug()
-                #import utils; utils.debug()
-                l.append(s)
-            self.logvals = l
+            self.logvals = log_value(self.modulus,self.number)
             self.bound = 5*1024
             if chi.is_even():
                 self.parity = 'Even'
@@ -149,17 +152,6 @@ class WebCharacter:
         self.title = r"Dirichlet Character: \(\chi_{%s}(%s,\cdot)\)" %(self.modulus,self.number)
     
         return chi
-    def gauss_sum_tex(self):
-        ans = "\(\\tau_a(\\chi_{%s}) \\;\) at \(\\; a = \)" %(self.number)
-        return(ans)
-
-    def jacobi_sum_tex(self):
-        ans = "\(J(\\chi_{%s},\\psi) \\;\) for \(\\; \\psi = \)" %(self.number)
-        return(ans)
-
-    def kloosterman_sum_tex(self):
-        ans = "\(K(a,b,\\chi_{%s}) \\;\) at \(\\; a,b = \)" %(self.number)
-        return(ans)
 
     def _set_properties(self):
         conductor = str(self.conductor)
@@ -174,7 +166,6 @@ class WebCharacter:
         else: 
             self.real = "No"
         self.properties = [("Conductor", [conductor]), ("Order", [order]), ("Parity", [self.parity]), ("Real", [self.real]), ("Primitive", [self.prim])]
-
 
 
 

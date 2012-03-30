@@ -164,9 +164,10 @@ def get_user_token_coll():
 
 @login_page.route("/register")
 def register_new():
-  q_admins = getDBConnection().userdb.users.find({'admin' : True})
-  admins =', '.join((_['full_name'] or _['_id'] for _ in q_admins))
-  return "You have to contact one of the Admins: %s" % admins
+  return ""
+  #q_admins = getDBConnection().userdb.users.find({'admin' : True})
+  #admins =', '.join((_['full_name'] or _['_id'] for _ in q_admins))
+  #return "You have to contact one of the Admins: %s" % admins
 
 @login_page.route("/register/new")
 @login_page.route("/register/new/<int:N>")
