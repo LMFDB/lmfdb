@@ -27,7 +27,7 @@ _C = None
 
 readonly_dbs = [ 'HTPicard', 'Lfunction', 'Lfunctions', 'MaassWaveForm',
         'ellcurves', 'hmfs', 'modularforms', 'modularforms_2010',
-        'mwf_dbname', 'numberfields', 'quadratic_twists', 'test', 'test_pdehaye']
+        'mwf_dbname', 'numberfields', 'quadratic_twists', 'test', 'limbo']
 
 readwrite_dbs = ['userdb', 'upload', 'knowledge']
 
@@ -128,6 +128,7 @@ def ctx_proc_userdata():
   #vars['description'] = r'Welcome to the LMFDB, a database of L-functions, modular forms, and related objects.'
   vars['shortthanks'] = r'This project is supported by <a href="%s">grants</a> from the National Science Foundation.'% (url_for('acknowledgment') + "#sponsers")
   vars['feedbackpage'] = r"https://docs.google.com/spreadsheet/viewform?formkey=dDJXYXBleU1BMTFERFFIdjVXVmJqdlE6MQ"
+  vars['LINK_EXT'] = lambda a,b : '<a href="%s" target="_blank">%s</a>' % (b, a)
 
   return vars
 

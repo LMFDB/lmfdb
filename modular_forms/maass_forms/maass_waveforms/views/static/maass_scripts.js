@@ -94,6 +94,12 @@ $.fn.dataTableExt.afnFiltering.push(
     }
 )
 
+function set_browse_value(name,val) {
+  document.forms.browse[name].value=val;
+  document.forms.browse.submit();			   
+}
 
 //jQuery('table:has(col)').each(alignColumns);
   
+
+

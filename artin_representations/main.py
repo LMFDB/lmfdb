@@ -49,11 +49,9 @@ def by_partial_data(dim,conductor):
 tim_credit = "Tim Dokchitser"
 support_credit = "Support by Paul-Olivier Dehaye"
 
-def render_artin_representation_webpage(dim,conductor,index):
-  try:
-    the_rep = ArtinRepresentation.find_one({'Dim' : int(dim),"Conductor":str(conductor),"DBIndex":int(index)})
-  except:
-    pass
+def render_artin_representation_webpage(dim, conductor, index):
+  the_rep = ArtinRepresentation.find_one({'Dim' : int(dim),"Conductor":str(conductor),"DBIndex":int(index)})
+  
   artin_logger.info("Found %s"%(the_rep._data))
   
   bread = get_bread([(str("Dimension %s, conductor %s, index %s"%(the_rep.dimension(),the_rep.conductor(),the_rep.index())), ' ')])

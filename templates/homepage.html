@@ -121,9 +121,9 @@
       <li><a class = "number_fields" href="{{ url_for('number_fields.number_field_render_webpage') }}">Global Number Fields</a></li>
       <li><a href="{{ url_for('local_fields.index') }}">Local Number Fields</a></li>
       <li><a href="{{ url_for('galois_groups.index') }}">Galois Groups</a></li>
-      {% if user_is_authenticated %}
-          <li><a class = "number_field_galois_groups" href="{{ url_for('number_field_galois_groups.index') }}">Galois Groups (only logged in)</a></li>
-      {% endif %}
+      <!--  Please keep POD
+      #<li><a class = "number_field_galois_groups" href="{{ url_for('number_field_galois_groups.index') }}">Galois Groups (only logged in)</a></li>
+      -->
     </ul>
 
   <h2>Characters</h2>
@@ -147,7 +147,12 @@
    <li><a class="mwfp" href="{{ url_for('mwfp.render_picard_maass_forms') }}">for \(\mathrm{PSL}(2,\mathbb{Z}[i])\)</a></li>
   </ul>
   <h2 class="link">
-       <a class="artin_representations" href="{{ url_for('artin_representations.index') }}">Artin Representations</a></h2>
+	{% if is_authenticated_user %}
+       <a class="artin_representations" href="{{ url_for('artin_representations.index') }}">Artin Representations (no search)</a>
+        {% else %}
+      Artin Representations
+	{% endif %}
+  </h2>
   
 
 
@@ -162,6 +167,7 @@
    </ul>
   
    {{ entry("Learn more about", learnmore) }}
+   {{ entry("Data", getUploadedFor(request.path, true) ) }}
 
  {% if sidebar -%}
   {% for topic, content in sidebar -%}
@@ -211,8 +217,7 @@
       </div>
     {% endif %}
    {{ rightnavig("Related objects", friends) }}
-   {{ rightnavig("Downloads", downloads) }}
-   {{ rightnavig("Data", getUploadedFor(request.path) ) }}
+   {{ rightnavig("Downloads", downloads + getUploadedFor(request.path, false) ) }}
     </div>
     {%- endif %}
 

@@ -175,22 +175,32 @@ def getallcharacters(Level,Weight):
 
 def get_search_parameters(info):
     ret=dict()
-    if not info.has_key('search') or not info['search']:
-        return ret
-    level_range = my_get(info,'level_range','').split('..')
-    if len(level_range)==0:
-        ret['l1']=0;ret['l2']=0
-    elif len(level_range)==1:
-        ret['l1']=level_range[0];ret['l2']=level_range[0]
+    #if not info.has_key('search') or not info['search']:
+    #    return ret
+    level=my_get(info,'level',0)
+    mwf_logger.debug("get_search param=%s"%info)
+    mwf_logger.debug("level=%s"%level)
+    if level>0:
+        ret['l1']=int(level); ret['l2']=int(level)
     else:
-        ret['l1']=level_range[0];ret['l2']=level_range[1]
-    weight_range = my_get(info,'weight_range','').split('..')
-    if len(weight_range)==0:
-        ret['wt1']=0;ret['wt2']=0
-    elif len(weight_range)==1:
-        ret['wt1']=weight_range[0];ret['wt2']=weight_range[0]
+        level_range = my_get(info,'level_range','').split('..')
+        if len(level_range)==0:
+            ret['l1']=0;ret['l2']=0
+        elif len(level_range)==1:
+            ret['l1']=level_range[0];ret['l2']=level_range[0]
+        else:
+            ret['l1']=level_range[0];ret['l2']=level_range[1]
+    weight=my_get(info,'weight',-1)
+    if weight>-1:
+        ret['wt1']=float(weight);ret['wt2']=float(weight)
     else:
-        ret['wt1']=weight_range[0];ret['wt2']=weight_range[1]
+        weight_range = my_get(info,'weight_range','').split('..')
+        if len(weight_range)==0:
+            ret['wt1']=0;ret['wt2']=0
+        elif len(weight_range)==1:
+            ret['wt1']=weight_range[0];ret['wt2']=weight_range[0]
+        else:
+            ret['wt1']=weight_range[0];ret['wt2']=weight_range[1]
 
     ret['rec_start']=my_get(info,'rec_start',1,int)
     ret['limit']=my_get(info,'limit',2000,int)    
@@ -199,10 +209,11 @@ def get_search_parameters(info):
     if len(ev_range)==0:
         ret['r1']=0; ret['r2']=0
     elif len(ev_range)==1:
-        ev_range[0]=eval(ev_range[0]); ev_range[1]=eval(ev_range[1])
+        mwf_logger.debug("ev_range=%s"%ev_range)
+        #ev_range[0]=float(ev_range[0]); ev_range[1]=float(ev_range[1])
         ret['r1']=ev_range[0]; ret['r2']=ev_range[0]
     else:
-        ev_range[0]=eval(ev_range[0]); ev_range[1]=eval(ev_range[1])
+        ev_range[0]=float(ev_range[0]); ev_range[1]=float(ev_range[1])
         ret['r1']=ev_range[0]; ret['r2']=ev_range[1]
     return ret
 

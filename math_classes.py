@@ -39,19 +39,26 @@ class ArtinRepresentation(object):
     def number_field_galois_group(self):
         if not hasattr(self,"_number_field_galois_group"):
             tmp = self._data["NFGal"]
-            query = {"Degree" : int(tmp[0]), "Size" : str(tmp[1]), "DBIndex": int(tmp[2])}
+            query = {"TransitiveDegree" : int(tmp[0]), "Size" : str(tmp[1]), "DBIndex": int(tmp[2])}
             self._number_field_galois_group = NumberFieldGaloisGroup.find_one(query)
         return self._number_field_galois_group
+    
+    def is_ramified(self, p):
+        return self.number_field_galois_group().discriminant() % p == 0
     
     def euler_polynomial(self,p):
         """
             Returns the polynomial at the prime p in the Euler product. Output is as a list of length the degree (or more), with first coefficient the independent term.
         """
-        return [1]
+        if self.is_ramified(p):
+            return [1,1]
+        else:
+            return [1]
         
-    def coefficients_list(self):
+    def coefficients_list(self, upperbound = 100):
+        from sage.rings.all import RationalField
         from utils import an_list
-        return an_list(lambda p: self.euler_polynomial(p), upperbound=100000, base_ring = sage.rings.all.RationalField())
+        return an_list(lambda p: self.euler_polynomial(p), upperbound = upperbound, base_ring = RationalField())
 
     def character(self):
         return CharacterValues(self._data["Character"])
@@ -81,7 +88,7 @@ class ArtinRepresentation(object):
             Tim:    conjectured always true,
                     known in dimension 1,
                     most cases in dimension 2
-            Andy: 
+            Andy:   
         """
         return True
 
@@ -94,13 +101,13 @@ class ArtinRepresentation(object):
         """ Computes the trace of complex conjugation, and returns an int
         """
         tmp = (self.character()[self.number_field_galois_group().index_complex_conjugation()-1])
-        # -1 because of this sequence's index starts at 1
         try:
-            trace_complex = int(tmp)
+            assert len(tmp) == 1
+            trace_complex = tmp[0]  
+        except AssertionError:            
         # We are looking for the character value on the conjugacy class of complex conjugation.
         # This is always an integer, so we don't expect this to be a more general algebraic integer, and we can simply convert to sage
-        except TypeError:
-            raise TypeError, "Expecting a character values that converts easily to integers, but that's not the case."
+            raise TypeError, "Expecting a character values that converts easily to integers, but that's not the case: %s"% tmp
         return trace_complex
     
     def number_of_eigenvalues_plus_one_complex_conjugation(self):
@@ -202,7 +209,7 @@ class NumberFieldGaloisGroup(object):
             yield NumberFieldGaloisGroup(data = item)
     
     def degree(self):
-        return self._data["Degree"]
+        return self._data["TransitiveDegree"]
     
     def polynomial(self):
         return self._data["Polynomial"]
@@ -211,7 +218,7 @@ class NumberFieldGaloisGroup(object):
         if "polredabs" in self._data.keys():
             return self._data["polredabs"]
         else:
-            pol=PolynomialRing(QQ,'x')(str(self.polynomial()))
+            pol = PolynomialRing(QQ,'x')(self.polynomial())
             pol *= pol.denominator()
             R = pol.parent()
             from sage.all import pari
@@ -224,7 +231,8 @@ class NumberFieldGaloisGroup(object):
             return self._data["label"]
         else:
             from number_fields.number_field import poly_to_field_label
-            label =  poly_to_field_label(self.polynomial())
+            pol = PolynomialRing(QQ,'x')(self.polynomial())
+            label =  poly_to_field_label(pol)
             if label:
                 self._data["label"] = label
             return label
@@ -288,8 +296,7 @@ class NumberFieldGaloisGroup(object):
         return [ConjugacyClass(self.G_name(),item) for item in self._data["ConjClasses"]]
     
     def artin_representations(self):
-        x = [ArtinRepresentation.find_one(dict([("Dim",item["Degree"]),\
-            ("Conductor",str(item["Conductor"])), ("DBIndex",item["Index"])]))\
+        x = [ArtinRepresentation.find_one({"Dim":item["Dim"], "Conductor":str(item["Conductor"]), "DBIndex":item["DBIndex"]})\
                 for item in self._data["ArtinReps"]]
         return x
         
@@ -302,23 +309,44 @@ class NumberFieldGaloisGroup(object):
         from sage.rings.number_field.number_field import NumberField
         return NumberField(X(self.polynomial()),"x")
     
+    def from_type_to_cycle_index_fn(self):
+        # Returns an index starting a 1
+        resolvents = self.Frobenius_resolvents()
+        # Slow below
+        def tmp(cycle):
+            return [d for d in resolvents if d["CycleType"] == cycle][0]["Classes"]
+        return tmp
+    
+    def from_cc_index_to_polynomial_fn(self, polynomial):
+        def tmp(conjugacy_class_index):
+            pass
+        return  tmp
+            
+        
+    
     def frobenius_cycle_type(self, p):
         try:
             assert not self.discriminant() % p == 0
         except:
             raise AssertionError, "Expecting a prime not dividing the discriminant", p
-        return self.residue_field_degree(p)
+        return self.residue_field_degrees(p)
+
+    def frobenius_CC_index(self, p):
+        cycle_type = self.frobenius_cycle_type(p)
+        self._data[""]
     
     def increasing_frobenius_cycle_type(self, p):
         return sorted(self.frobenius_cycle_type(p), reverse = True)
         
-    def residue_field_degree(self, p):
-        """ This function returns the residue field degrees.
+    def residue_field_degrees(self, p):
+        """ This function returns the residue field degrees at p.
         """
         if not hasattr(self, "_residue_field_degree"):
             from number_fields.number_field import residue_field_degrees_function
             self._residue_field_degrees = residue_field_degrees_function(self.sage_object())
         return self._residue_field_degrees(p)
+    
+    
     
     def __str__(self):
         try:

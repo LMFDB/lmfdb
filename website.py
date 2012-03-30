@@ -80,6 +80,22 @@ def robots_txt():
       return open(fn).read()
   return "User-agent: *\nDisallow: / \n"
 
+@app.route("/hg/<arg>")
+def hg(arg):
+  if arg == "":
+    return "Use /hg/parent, /hg/log or /hg/identify"
+  import os
+  if arg == "parent":
+    f = os.popen("hg parent")
+  elif arg == "tip":
+    f = os.popen("hg tip")
+  elif arg == "identify":
+    f = os.popen("hg identify")
+  else:
+    return "Unrecognized command. Allowed are parent, tip and identify."
+  text = f.read()
+  return str(text)
+
 
 @app.route("/style.css")
 def css():

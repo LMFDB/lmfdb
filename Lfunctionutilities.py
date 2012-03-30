@@ -1,5 +1,7 @@
 import re
 from sage.all import *
+import utils
+logger = utils.make_logger("LF")
 
 def pair2complex(pair):
     local = re.match(" *([^ ]+)[ \t]*([^ ]*)", pair)
@@ -184,6 +186,10 @@ def lfuncEPtex(L,fmt):
     
     ans=""
     if fmt=="abstract":
+        if L.Ltype() == "SymmetricPower":
+             ans = L.euler
+             return ans
+
         ans="\\begin{equation} \n "+L.texname+" = "
         if L.Ltype()=="riemann":
              ans= ans+"\\prod_p (1 - p^{-s})^{-1}"
@@ -204,6 +210,7 @@ def lfuncEPtex(L,fmt):
         elif L.langlands:
                 ans= ans+"\\prod_p \\ \\prod_{j=1}^{"+str(L.degree)+"} (1 - \\alpha_{j,p}\\,  p^{-s})^{-1}"
           
+
         else:
             return("No information is available about the Euler product.")
         ans=ans+" \n \\end{equation}"
@@ -322,3 +329,31 @@ def compute_local_roots_SMF2_scalar_valued(ev_data, k, embedding):
         ret.append((p,r))
 
     return ret
+
+def number_of_coefficients_needed(Q, kappa_fe, lambda_fe, max_t):
+    # TODO: This doesn't work. Trouble when computing t0
+    # We completely mimic what lcalc does when it decides whether
+    # to print a warning.
+
+    DIGITS = 14    # These are names of lcalc parameters, and we are
+    DIGITS2 = 2    # mimicking them.
+
+    logger.debug("Start NOC")
+    theta = sum(kappa_fe)
+    c = DIGITS2 * log(10.0)
+    a = len(kappa_fe)
+
+    c1 = 0.0
+    for j in range(a):
+       logger.debug("In loop NOC")
+       t0 = kappa_fe[j] * max_t + complex(lambda_fe[j]).imag()
+       logger.debug("In loop 2 NOC")
+       if abs(t0) < 2 * c/ (math.pi * a):
+          logger.debug("In loop 3_1 NOC")
+          c1 += kappa_fe[j] * pi/2.0
+       else:
+          c1 += kappa_fe[j] * abs(c/(t0 * a))
+          logger.debug("In loop 3_2 NOC")
+
+    return int(round(Q * exp( log(2.3 * DIGITS * theta/c1) * theta) + 10))
+
