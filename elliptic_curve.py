@@ -8,7 +8,8 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 import tempfile
 import os
 
-from utils import ajax_more, image_src, web_latex, to_dict, parse_range2, web_latex_split_on_pm
+from utils import ajax_more, image_src, web_latex, to_dict, parse_range2, web_latex_split_on_pm, make_logger
+logger = make_logger("EllipticCurve")
 from number_fields.number_field import parse_list
 import sage.all 
 from sage.all import ZZ, EllipticCurve, latex, matrix,srange
@@ -212,12 +213,23 @@ def elliptic_curve_search(**args):
 
 @app.route("/EllipticCurve/Q/<label>")
 def by_ec_label(label):
+    logger.debug(label)
     try:
         N, iso, number = lmfdb_label_regex.match(label).groups()
     except:
+        print label
         N, iso, number = cremona_label_regex.match(label).groups()
+        print N, iso, number
         C = base.getDBConnection()
-        data = C.elliptic_curves.curves.find_one({'label': label})
+        # We permanently redirect to the lmfdb label
+        if number:
+            data = C.elliptic_curves.curves.find_one({'label': label})
+            logger.debug(url_for("by_ec_label",label=data['lmfdb_label']))
+            return redirect(url_for("by_ec_label",label=data['lmfdb_label']),301)
+        else:
+            data = C.elliptic_curves.curves.find_one({'iso': label})
+            logger.debug(url_for("by_ec_label",label=data['lmfdb_label']))
+            return redirect(url_for("by_ec_label",label=data['lmfdb_iso']),301)
         #N,d1, iso,d2, number = sw_label_regex.match(label).groups()
     if number:
         return render_curve_webpage_by_label(label=label)

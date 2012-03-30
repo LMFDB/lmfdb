@@ -279,6 +279,7 @@ def initLfunction(L,args, request):
     friendlink = request.url.replace('/L/','/').replace('/L-function/','/').replace('/Lfunction/','/')
     splitlink = friendlink.rpartition('/')
     friendlink = splitlink[0] + splitlink[2]
+    logger.debug(L.Ltype())
 
     if L.Ltype() == 'maass':
         if L.group == 'GL2':
@@ -314,24 +315,24 @@ def initLfunction(L,args, request):
         while friendlink[len(friendlink)-1].isdigit():  #Remove any number at the end to get isogeny class url
             friendlink = friendlink[0:len(friendlink)-1]
 
-        info['friends'] = [('EC Isogeny class ' + label, friendlink )]
+        info['friends'] = [('Isogeny class ' + label, friendlink )]
         for i in range(1, L.nr_of_curves_in_class + 1):
-            info['friends'].append(('Elliptic Curve ' + label + str(i), friendlink + str(i)))
+            info['friends'].append(('Elliptic curve ' + label + str(i), friendlink + str(i)))
         if L.modform:
-            info['friends'].append(('Modular form', url_for("emf.render_elliptic_modular_forms",
+            info['friends'].append(('Modular form ' + label.replace('.','.2'), url_for("emf.render_elliptic_modular_forms",
                                                             level=L.modform['level'],weight=2,character=0,label=L.modform['iso'])))
 
-        info['bread'] = [('L-function','/L'),('Elliptic Curve',url_for('render_Lfunction', arg1='/L/degree2#EllipticCurve_Q')),
+        info['bread'] = [('L-function','/L'),('Elliptic curve',url_for('render_Lfunction', arg1='/L/degree2#EllipticCurve_Q')),
                          (label,url_for('render_Lfunction',arg1='EllipticCurve',arg2='Q',arg3= label))]
 
     elif L.Ltype() == 'ellipticmodularform':
         friendlink = friendlink + L.addToLink
         friendlink = friendlink.rpartition('/')[0]
-        info['friends'] = [('Modular Form', friendlink)] 
+        info['friends'] = [('Modular form', friendlink)]
         if L.ellipticcurve:
-            info['friends'].append(('EC Isogeny class ' + L.ellipticcurve, url_for("by_ec_label",label=L.ellipticcurve)))
+            info['friends'].append(('Elliptic curve isogeny class ' + L.ellipticcurve, url_for("by_ec_label",label=L.ellipticcurve)))
             for i in range(1, L.nr_of_curves_in_class + 1):
-                info['friends'].append(('Elliptic Curve ' + L.ellipticcurve + str(i), url_for("by_ec_label",label=L.ellipticcurve + str(i))))
+                info['friends'].append(('Elliptic curve ' + L.ellipticcurve + str(i), url_for("by_ec_label",label=L.ellipticcurve + str(i))))
 
     elif L.Ltype() == 'hilbertmodularform':
         friendlink = '/'.join(friendlink.split('/')[:-1])

@@ -49,11 +49,11 @@ def nr_of_EC_in_isogeny_class(label):
     i = 1
     logger.debug(label)
     connection = base.getDBConnection()
-    data = connection.elliptic_curves.curves.find_one({'label': label+ str(i)})
+    data = connection.elliptic_curves.curves.find_one({'lmfdb_label': label + str(i)})
     logger.debug(str(data))
     while not data is None:
         i += 1
-        data = connection.elliptic_curves.curves.find_one({'label': label+ str(i)})
+        data = connection.elliptic_curves.curves.find_one({'lmfdb_label': label + str(i)})
     return i-1
 
 def modform_from_EC(label):

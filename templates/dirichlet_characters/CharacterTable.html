@@ -51,14 +51,13 @@ table.ntdata thead th.spaceleft {
 #chitable td.b { background: none; }
 #chitable th { text-align: right; }
 /*table.ntdata tr.even, table.ntdata tr:nth-child(even) { background: none; }*/
-#chitable a.imprimitive:visited { color: blue;}
-#chitable a.primitive:visited { color:green ;}
-#chitable a.imprimitive { display:none; }
+#chitable a.imprimitive { color: blue;}
+#chitable a.primitive { color:green ;}
 
 .primitive {
   color:green;
 }
-.nonprimitive {
+.imprimitive {
     color:blue;
 }
 .heading {
@@ -101,11 +100,11 @@ table.ntdata thead th.spaceleft {
         {% for row in contents %}
         <tr>
                 <th class="left">
-                    <a align="center" href="{{modulus}}/{{row[0]}}">
-                    \(\chi_{ {{modulus}} } ( {{row[0]}}, n)\)
+                    <a class="{% if row[1] -%}primitive{%- else -%}imprimitive{%- endif %}"  align="center" href="{{modulus}}/{{row[0]}}">
+                    \(\chi_{ {{modulus}} } ( {{row[0]}}, &middot;)\)
             </a>
                 </th>
-                    {% for value in row[1] %}
+                    {% for value in row[2] %}
                     <td style="font-family: serif;" >{{value}}</td> 
                     {% endfor %}
                 </tr>

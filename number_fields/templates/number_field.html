@@ -182,7 +182,7 @@ pari:
   [<Valuation(Norm(primefactor[1]), p), primefactor[2]> : primefactor in idealfactors];
 </div>
 
-	{% if "tim_number_field" in info.keys() %}
+{#	{% if "tim_number_field" in info.keys() %}
 	<p><h2> {{ KNOWL('artin', title='Artin representations') }}</h2>
 	    This might be wrong at the moment, or lead to broken links, but merely serves a as mockup.
         <div>
@@ -204,7 +204,8 @@ pari:
 	</center>
 	</div>
 	{% endif %}
-	
+#}
+
         {% set KNOWL_ID = "nf.%s"|format(info['label']) %}
         <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
 
