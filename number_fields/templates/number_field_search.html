@@ -108,7 +108,7 @@ jQuery.fn.dataTableExt.oSort['label-desc'] = function(xl,yl) {
 <td align='left'><a href="/NumberField/{{field.label}}">{{field.label}}</a></td>
 <td>{{info.format_coeffs(field.coefficients)|safe}}</td>
 <td>{{field.discriminant}}</td>
-<td>{{field.galois_group[3]}}</td>
+<td>{{ info.group_display(field.gal) }}</td>
 {% if field.class_group==[] %}
 <td> Trivial </td>
 {% endif %}
