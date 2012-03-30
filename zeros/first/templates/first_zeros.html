@@ -14,6 +14,11 @@ var end = {{end}};
 var end = '';
 {% endif %}
 
+{% if degree %}
+var degree = {{degree}};
+{% else %}
+var degree = '';
+{% endif %}
 
 {% if limit %}
 var limit = {{limit}};
@@ -28,7 +33,11 @@ var endstr = "";
 if(end > 0) {
     endstr = String(end);
 }
-var argstring = '?start='+startstr+"&end="+endstr+"&limit="+limit;
+var degreestr = "";
+if(degree > 0) {
+    degreestr = String(degree)
+}
+var argstring = '?start='+startstr+"&end="+endstr+"&limit="+limit+'&degree='+degreestr;
 listzeros_url = '{{url_for(".list_zeros")}}';
 displayzeros_url = '{{url_for(".firstzeros")}}';
 function loadzeros(save_history) {
@@ -41,7 +50,7 @@ function loadzeros(save_history) {
                 zero_table.deleteRow(-1);
             }
             var lines = request.responseText.split('\n');
-            start = Number(lines[0].split(' ')[1]);
+            start = Number(lines[0].split(' ')[0]);
             document.getElementById("startbox").value = start;
             var entry = ''
             for(var n = 0; n < lines.length; n++) {
@@ -50,12 +59,75 @@ function loadzeros(save_history) {
                 }
                 entry = lines[n].split(' ');
                 var row = zero_table.insertRow(-1);
-                var cell = row.insertCell(-1);
-                cell.appendChild(document.createTextNode(entry[0]));
+
+                var L_link = "";
+                var obj_link = "";
+                var description = "";
+                if(entry[5] == '0'){
+                    description = "Riemann zeta function";
+                }
+                else if (entry[5] == '1'){
+                    description = "Dirichlet character " + entry[6] + " modulo " + entry[2];
+                    var q = Number(entry[2]);
+                    if(q < 50) {
+                        L_link = "/L/Character/Dirichlet/" + entry[2] + "/" + entry[6];
+                        obj_link = "/Character/Dirichlet/" + entry[2] + "/" + entry[6];
+                    }
+                }
+                else if (entry[5] == '2') {
+                    description = "Elliptic curve " + entry[6];
+                    var N = Number(entry[2])
+                    if(N < 2000) {
+                        L_link = "/L/EllipticCurve/Q/" + entry[6];
+                    }
+                    obj_link = "/EllipticCurve/Q/" + entry[6];
+                }
+                else {
+                    description = entry[5] + ' ' + entry[6];
+                }
+
+                var cell
                 cell = row.insertCell(-1);
-                cell.appendChild(document.createTextNode(entry[1]));
+                if(L_link == "") {
+                    cell.appendChild(document.createTextNode(entry[0])); // zero
+                }
+                else {
+                    var a = document.createElement('a');
+                    a.setAttribute('href', L_link);
+                    a.appendChild(document.createTextNode(entry[0]));
+                    cell.appendChild(a);
+                }
+                cell = row.insertCell(-1);
+                cell.appendChild(document.createTextNode(entry[1])); // degree
+                cell = row.insertCell(-1);
+                cell.appendChild(document.createTextNode(entry[2])); // level
+                cell = row.insertCell(-1);
+                cell.appendChild(document.createTextNode('[' + entry[3] + ',' + entry[4] + ']')); //signature
+                cell = row.insertCell(-1);
+                if(entry[5] == '0'){
+                    description = "Riemann zeta function";
+                }
+                else if (entry[5] == '1'){
+                    description = "Dirichlet character " + entry[6] + " modulo " + entry[2];
+                }
+                else if (entry[5] == '2') {
+                    description = "Elliptic curve " + entry[6]
+                }
+                else {
+                    description = entry[5] + ' ' + entry[6];
+                }
+                if(obj_link == "") {
+                    cell.appendChild(document.createTextNode(description)); // type and label
+                }
+                else {
+                    var a = document.createElement('a');
+                    a.setAttribute('href', obj_link);
+                    a.appendChild(document.createTextNode(description));
+                    cell.appendChild(a);
+                }
             }
-            end = Number(entry[1])
+            end = Number(entry[0])
+            document.getElementById("endbox").value = end;
         }
     };
     startstr = "";
@@ -66,9 +138,9 @@ function loadzeros(save_history) {
     if(end > 0) {
         endstr = String(end);
     }
-    argstring = '?start='+startstr+"&end="+endstr+"&limit="+limit;
+    argstring = '?start='+startstr+"&end="+endstr+"&limit="+limit+'&degree='+degreestr;
     if(save_history) {
-        history.pushState({'start' : start, 'limit' : limit, 'end' : end},
+        history.pushState({'start' : start, 'limit' : limit, 'end' : end, 'degree' : degree},
                             "zeta zeros", displayzeros_url + argstring);
     }
     document.getElementById('plainlink').href = listzeros_url + argstring;
@@ -99,28 +171,36 @@ window.onpopstate = function(event) {
     if(event.state) {
         start = event.state.start;
         limit = event.state.limit;
+        end = event.state.end;
+        degree = event.state.degree
         loadzeros(false);
     }
 };
 </script>
 <form align="center">
-    List <input type="text" name="limit" value="{{limit}}" style="width:5em"/>
-    zeros of the zeta function starting with zero number
-    <input type="text" value="{{start}}" name="start" id="startbox"/>
-
+    List up to <input type="text" name="limit" value="{{limit}}" style="width:5em"/>
+    first zeros with imaginary part between <input type="text" value="{{start}}" name="start" id="startbox"/>
+    and <input type="text" value="{{end}}" name="end" id="endbox"/>.
+    <br/>
+    {% if degree %}
+    Restrict to degree <input type="text" name="degree" value="{{degree}}" style="width:5em"/>.
+    {% else %}
+    Restrict to degree <input type="text" name="degree" value="" style="width:5em"/>.
+    {% endif %}
+    <br/>
     <button type="submit" value="Go">Go</button>
 </form>
 <br/>
 <div align="center">
-<a id="plainlink" href="">View</a> or <a id="plaindownloadlink" href="">download</a> this table as plain text.
+    <a id="plainlink" href="">View</a> or <a id="plaindownloadlink" href="">download</a> this table as plain text.
 </div>
 <br/>
 <div align="center">
-<a href="#" class="navlink" onclick="prev(); return false">Previous {{limit}}</a>
-<a href="#" class="navlink" onclick="next(); return false">Next {{limit}}</a>
+    <a href="#" class="navlink" onclick="prev(); return false">Previous {{limit}}</a>
+    <a href="#" class="navlink" onclick="next(); return false">Next {{limit}}</a>
 </div>
 <table class='ntdata' id='zero_table' align="center">
-<thead><td>Zero number</td><td>Imaginary part</td></thead>
+    <thead><td>Zero</td><td>Degree</td><td>Level</td><td>Signature</td><td>Underlying Object</td></thead>
 </table>
 
 {% endblock %}
