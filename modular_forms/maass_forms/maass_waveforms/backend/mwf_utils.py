@@ -209,10 +209,11 @@ def get_search_parameters(info):
     if len(ev_range)==0:
         ret['r1']=0; ret['r2']=0
     elif len(ev_range)==1:
-        ev_range[0]=eval(ev_range[0]); ev_range[1]=eval(ev_range[1])
+        mwf_logger.debug("ev_range=%s"%ev_range)
+        #ev_range[0]=float(ev_range[0]); ev_range[1]=float(ev_range[1])
         ret['r1']=ev_range[0]; ret['r2']=ev_range[0]
     else:
-        ev_range[0]=eval(ev_range[0]); ev_range[1]=eval(ev_range[1])
+        ev_range[0]=float(ev_range[0]); ev_range[1]=float(ev_range[1])
         ret['r1']=ev_range[0]; ret['r2']=ev_range[1]
     return ret
 

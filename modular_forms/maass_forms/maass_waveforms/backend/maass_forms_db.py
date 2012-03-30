@@ -46,7 +46,7 @@ class MaassDB(object):
         
     def __repr__(self):
         s="Maass waveforms database at {0}:{1}".format(self._host,self._port)
-        
+        return s
             
     def setup_mongodb(self,host='localhost',port=27017):
         
@@ -381,12 +381,14 @@ class MaassDB(object):
         res=[]
         get_filename=kwds.get('get_filename','')
         for maassid in idd:
-            #print "id=",idd
+            if verbose>0:
+                print "id=",idd
             f = self._collection.find({'_id':maassid})
             if f.count()>0:
                 fn=f.next()
                 nc = fn.get('Numc',0)
-                #print "fn=",fn
+                if verbose>0:
+                    print "fn=",fn
                 if nc==0:
                     continue
                 cid=fn.get('coeff_id',None)
@@ -884,12 +886,12 @@ class MaassDB(object):
             # If
             if verbose>0:
                 print "Local data:",N,k,ch,st,R,err
-                if math.isnan(R):
-                    print "x=",x
+            if math.isnan(R):
+                print "x=",x
+                continue
             find_data=copy(data)
             find_data['r1']=float(R)-float(ep0)
             find_data['r2']=float(R)+float(ep0)            
-            ff = other.find_Maass_form_id(find_data)
             data['Eigenvalue']=float(R)
             data['Error']=err
             data['Numc']=nc
@@ -899,17 +901,20 @@ class MaassDB(object):
             data['Cusp_evs']=evs
             data['Dim']=dim
             data['_id']=idd
+            coeff_id=None
+            f=None
+            ff = other.find_Maass_form_id({'_id':idd}) #find_data)
             if len(ff)==0: #f.count()==0:
                 if verbose>1:
                     print "find_data=",find_data
                 if verbose>0:
-
                     print "Record did not exist in other db!"
-                ins = other._collection.insert(data,upsert=True)
+                key={'_id':idd}
+                ins = other._collection.update(key,data,upsert=True)
                 if ins and verbose>0:
                     print "Insertion successful!"
                 elif verbose>0:
-                    print "Insertion unsuccessful!"
+                    print "Insertion unsuccessful! ins:{0}".format(ins)
                 ncnew=0
                 idnew=ins
             else: ## See if it is still worth to update the record
@@ -934,7 +939,7 @@ class MaassDB(object):
                     if verbose>0:
                         print "Error in self is better than error in other!"
                     try:
-                        ins = other._collection.update(key,inserts)
+                        ins = other._collection.update(key,inserts,upsert=True)
                     #                                                   upsert=True)
                     except:
                         #f = other._collection.find(key)
@@ -949,14 +954,23 @@ class MaassDB(object):
                     print "self has more Fourier coefficients!: id={0}".format(idd)
                 C = self.get_coefficients({'_id':idd},verbose=verbose)
                 Rst=str(R).split(".")
+                print "Rst=",Rst
                 Rst=(Rst[0]+"."+Rst[1][0:12])[0:12]  ## Shou
                 fname='{0}-{1}-{2}-{3}-{4}'.format(N,k,ch,st,Rst)
-  
+                if ff:
+                    if len(ff)>0:
+                        f = other.get_Maass_forms(ff[0])[0]
+                    if f:
+                        k = f.get('Weight',k)
+                        N=f.get('Level',N)
+                        R=f.get('Eigenvalue',R)
+                    #    #print "ff=",ff[0]
+                #    f = other.get_Maass_forms(ff[0])[0]  
                 fs =  gridfs.GridFS(other._mongo_db,'Coefficients')
                 fid=fs.put(dumps(C),filename='c-'+fname,
-                           maass_id=idnew,level=f.get('Level'),
-                           weight=f.get('Weight'),
-                           eigenvalue=f.get('Eigenvalue'),
+                           maass_id=idnew,level=N,
+                           weight=k,
+                           eigenvalue=R,
                            numc=int(nc))
                 inserts = {"$set":{"Numc":int(nc),"coeff_id":fid}}
                 key={"_id":idnew}
@@ -1096,7 +1110,6 @@ def arg_to_search_parameters(data={},**kwds):
     dim=data.get('d',data.get('dim',kwds.get('d',kwds.get('dim',None))))
     d1=data.get('d1',data.get('dim1',kwds.get('d1',kwds.get('dim1',dim))))
     d2=data.get('d2',data.get('dim2',kwds.get('d2',kwds.get('dim2',dim))))
-
     numc=data.get('nc',data.get('numc',kwds.get('nc',kwds.get('numc',None))))
     nc1=data.get('nc1',data.get('numc1',kwds.get('nc1',kwds.get('numc1',numc))))
     nc2=data.get('nc2',data.get('numc2',kwds.get('nc2',kwds.get('numc2',numc))))
@@ -1108,24 +1121,35 @@ def arg_to_search_parameters(data={},**kwds):
     if level<>None:
         find['Level']=level
     elif level1<>None or level2<>None:
-        find['Level']={}
-        if level1<>None: 
+        if level1<>None and level1<>'': 
+            level1=int(level1)
+            if not find.has_key('Level'):
+                find['Level']={}
             find['Level']["$gte"]=level1
-        if level2<>None: 
+        if level2<>None and level2<>'':
+            level2=int(level2)
+            if not find.has_key('Level'):
+                find['Level']={}
             find['Level']["$lte"]=level2
     if R1<>None or R2<>None:
-        find['Eigenvalue']={}
-        if R1<>None: 
+        if R1<>None and R1<>'': 
+            R1=float(R1)
+            find['Eigenvalue']={}
             find['Eigenvalue']["$gte"]=R1-tol
-        if R2<>None: 
+        if R2<>None and R2<>'': 
+            R2=float(R2)
+            if not find.has_key('Eigenvalue'):
+                find['Eigenvalue']={}
             find['Eigenvalue']["$lte"]=R2+tol
     if wt<>None:
         find['Weight']=wt
     elif wt1<>None or wt2<>None:
         find['Weight']={}
-        if wt<>None: 
+        if wt1<>None and w1<>'': 
+            w1=float(w1)
             find['Weight']["$gte"]=wt1
-        if wt2<>None: 
+        if wt2<>None and w1<>'': 
+            w2=float(w2)
             find['Weight']["$lte"]=wt2
     if idd<>None:
         find['_id']=idd
@@ -1135,17 +1159,21 @@ def arg_to_search_parameters(data={},**kwds):
     elif ch1<>None or ch2<>None:
         find['Character']={}
         if ch1<>None: 
+            ch1=int(ch1)
             find['Character']["$gte"]=ch1
-        if ch2<>None: 
+        if ch2<>None:
+            ch2=int(ch2)
             find['Character']["$lte"]=ch2
 
     if dim<>None:
         find['Dim']=dim
     elif d1<>None or d2<>None:
         find['Dim']={}
-        if d1<>None: 
+        if d1<>None and d1<>'':
+            d1=int(d1)
             find['Dim']["$gte"]=d1
-        if d2<>None: 
+        if d2<>None and d2<>'':
+            d2=int(d2)
             find['Dim']["$lte"]=d2
 
     if numc<>None:

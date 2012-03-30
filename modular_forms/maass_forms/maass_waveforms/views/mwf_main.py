@@ -84,7 +84,6 @@ def render_maass_waveforms(level=0,weight=-1,character=-1,r1=0,r2=0,**kwds):
 
         
     if level>0 or weight>-1 or character>-1:
-        info['search']=1
         search = get_search_parameters(info)
         mwf_logger.debug("info=%s"%info)
         mwf_logger.debug("search=%s"%search)
@@ -285,12 +284,13 @@ def render_search_results_wp(info,search):
             row['url']=url
             nrows+=1
             table.append(row) 
+    mwf_logger.debug("nrows:".format(nrows))
     evs['table']['data']=table
     evs['table']['nrows']=nrows
     evs['table']['ncols']=10
     evs['table']['colheads']=['Level','Weight','Char','Eigenvalue',
                               'Symmetry','Error',
-                              'Dimension','Coeff.','Fricke involution','Atkin-Lehner']
+                              'Dim.','Coeff.','Fricke'] #,'Atkin-Lehner']
     bread=[('Modular forms',url_for('mf.modular_form_main_page')),
            ('Maass forms',url_for('.render_maass_waveforms'))]
     info['bread']=bread
