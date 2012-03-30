@@ -156,16 +156,17 @@
   
 
 
+
   <h2 class="link knowl">
      <a class="knowl" href="{{ url_for("knowledge.index") }}">Knowledge</a>
   </h2>
 
-  <h2>Search</h2>
+  <h2>Zeros of $L$-functions</h2>
    <ul>
     <li><a href="{{ url_for('LfunctionDB.query', zerolowerbound=1.1, zeroupperbound=2.1) }}">Zeros of L-functions</a></li>
     <li><a href="{{ url_for('zeta zeros.zetazeros') }}">Browse zeros of $\zeta(s)$</a></li>
    </ul>
-  
+
    {{ entry("Learn more about", learnmore) }}
    {{ entry("Data", getUploadedFor(request.path, true) ) }}
 
