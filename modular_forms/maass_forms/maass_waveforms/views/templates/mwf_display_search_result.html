@@ -124,9 +124,11 @@ $('#weight').change( function() { evTable.fnDraw(); } );
   <thead>
     <tr>
     {% for head in table.colheads %}
+   {% if head != "Atkin-Lehner" %}
       <th> {{head}}</th>
+  {% endif %}
     {% endfor %}
-    <th width="100px">Atkin&nbsp;-&nbsp;Lehner&nbsp;</th>
+    <th width="200px">Atkin&nbsp;-&nbsp;Lehner&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
     </tr>
   </thead>
   <tbody>
