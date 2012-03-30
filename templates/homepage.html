@@ -67,9 +67,13 @@
   <h2 class="link">
    <a href="{{ url_for('introduction') }}">Introduction</a>
   </h2>
-  <ul>
-    <li class="intro"><a href="{{url_for('introduction_features')}}">Features</a></li>
-    <li class="intro"><a href="{{url_for('introduction_tutorial')}}">Tutorial</a></li>
+  <ul class="list">
+    <li class="intro" style="padding-left: 0;">
+     <span>
+        <a href="{{url_for('introduction_features')}}">Features</a>
+        <a href="{{url_for('introduction_tutorial')}}">Tutorial</a>
+     </span>
+    </li>
   </ul>
   
   <h2 class="link">
