@@ -224,7 +224,10 @@ def conjclasses(g, n):
   cc = g.ConjugacyClasses()
   ccn = [x.Size() for x in cc]
   cc = [x.Representative() for x in cc]
-  cc2 = [x.cycletype(n) for x in cc]
+  if n==1:
+    cc2 = [[1]]
+  else:
+    cc2 = [x.cycletype(n) for x in cc]
   cc2 = [str(x) for x in cc2]
   cc2 = map(lambda x: re.sub("\[",'', x),  cc2)
   cc2 = map(lambda x: re.sub("\]",'', x),  cc2)
@@ -250,7 +253,10 @@ def cclasses (n, t):
   return html
 
 def chartable (n, t):
-  G = gap.TransitiveGroup(n,t)
+  if n==1:
+    G = gap.SmallGroup(n,t)
+  else:
+    G = gap.TransitiveGroup(n,t)
   CT = G.CharacterTable()
   ctable = gap.eval("Display(%s)"%CT.name())
   ctable = re.sub("^.*\n", '', ctable)
@@ -259,7 +265,10 @@ def chartable (n, t):
 
 
 def generators (n, t):
-  G = gap.TransitiveGroup(n,t)
+  if n==1:
+    G = gap.SmallGroup(n,t)
+  else:
+    G = gap.TransitiveGroup(n,t)
   gens = G.SmallGeneratingSet()
   gens = str(gens)
   gens = re.sub("[\[\]]", '', gens)
@@ -286,6 +295,11 @@ def aliastable (C):
 def complete_group_code(code):
   if code in aliases.keys():
     return aliases[code]
+  rematch = re.match("(\d+)T(\d+)", code)
+  if rematch:
+    n = int(rematch.group(1))
+    t = int(rematch.group(2))
+    return [[n,t]]
   return []
 
 def complete_group_code_old(c):

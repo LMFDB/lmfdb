@@ -132,14 +132,14 @@ def render_group_webpage(args):
     order = data['order']
     data['orderfac'] = latex(ZZ(order).factor())
     pgroup = len(ZZ(order).prime_factors())<2
-    G = gap.TransitiveGroup(n,t)
+    if n==1:
+      G = gap.SmallGroup(n,t)
+    else:
+      G = gap.TransitiveGroup(n,t)
     ctable = chartable(n,t)
-    #CT = G.CharacterTable()
-    #chartable = gap.eval("Display(%s)"%CT.name())
-    #chartable = re.sub("^.*\n", '', chartable)
-    #chartable = re.sub("^.*\n", '', chartable)
     data['gens'] = generators(n,t)
     data['chartable'] = ctable
+    data['parity'] = "$%s$"%data['parity']
     data['cclasses'] = conjclasses(G, n)
     data['subinfo'] = subfield_display(C, n, data['subs'])
     data['resolve'] = resolve_display(C, data['resolve'])
@@ -156,7 +156,6 @@ def render_group_webpage(args):
              ('Name:', group_display_short(n, t, C)),
              ]
     info.update(data)
-    
 
     bread = get_bread([(label, ' ')])
     return render_template("gg-show-group.html", credit=GG_credit, title = title, bread = bread, info = info, properties2=prop2 )

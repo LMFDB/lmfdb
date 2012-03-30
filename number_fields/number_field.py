@@ -41,6 +41,11 @@ def ctx_galois_groups():
           'group_cclasses_data': group_cclasses_data,
           'group_character_table_data': group_character_table_data}
 
+def group_display_shortC(C):
+  def gds(nt):
+    return group_display_short(nt[0], nt[1], C)
+  return gds
+
 def field_pretty(field_str):
     d,r,D,i = field_str.split('.')
     if d == '1':  # Q
@@ -233,7 +238,10 @@ def render_field_webpage(args):
     UK = K.unit_group()
     zk = pari(K).nf_subst('a')
     zk = list(zk.nf_get_zk())
-    zk = web_latex([K(j) for j in zk])
+    Ra = PolynomialRing(QQ, 'a')
+    zk = [sage.all.latex(Ra(x)) for x in zk]
+    zk = ['$%s$'%x for x in zk]
+    zk = ', '.join(zk)
     
     info.update(data)
     info.update({
@@ -480,21 +488,24 @@ def number_field_search(**args):
     res = fields.find(query).sort([('degree',pymongo.ASCENDING),('abs_disc',pymongo.ASCENDING),('signature',pymongo.DESCENDING)]) # TODO: pages
 
                                                                                                 #    res = verify_all_fields(newres, dlist)
+    #res = [fields.find_one(query)]
 
     count = 0
     kept = []
     floatit = discs_parse_to_slogs(dlist)
     floatitnarrow = fudge_list(floatit, -1)
     for a in res:
-      if verify_field(a,floatitnarrow, dlist):
-        ok = True
-        if ur_primes:
-          D = str(a['disc_string'])
-          ok = support_is_disjoint(D, ur_primes)
+      ok = True
+      if len(dlist)>0:
+        ok = verify_field(a,floatitnarrow, dlist)
         if ok:
-          count += 1
-          if count < 501:
-            kept.append(a)
+          if ur_primes:
+            D = str(a['disc_string'])
+            ok = support_is_disjoint(D, ur_primes)
+      if ok:
+        count += 1
+        if count < 501:
+          kept.append(a)
     nres = count      
 
     #    if ur_primes:
@@ -521,6 +532,7 @@ def number_field_search(**args):
     if count>500:
       info['report'] += ' - displaying first 500'
     info['format_coeffs'] = format_coeffs
+    info['group_display'] = group_display_shortC(C)
     info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), ('Discriminant ranges',url_for(".render_discriminants_page"))]
     t = 'Global Number Field search results'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")),('Search results',' ')]
