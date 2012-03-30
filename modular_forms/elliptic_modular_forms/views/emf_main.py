@@ -140,7 +140,6 @@ def get_args(request,level=0,weight=0,character=-1,label='',keys=[]):
             info[key]=my_get(dd,key,'',str)
     return info
 
-
 ###
 ## The routines that renders the various parts
 ###

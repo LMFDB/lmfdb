@@ -40,7 +40,7 @@ class DimensionTable(object):
             if k in tblN.keys():
                 dim=tblN[k]['dimension']
                 return dim
-        return -1
+        return "n/a"
 
     def dimension_gamma1(self,arg1,k=3):
         emf_logger.debug('Lookup dimension for Gamma1')
@@ -269,10 +269,8 @@ class ClassicalMFDisplay(MFDisplay):
                             url = url_for('emf.render_elliptic_modular_forms',level=N,weight=k,character=character)
                         else:
                             url=''
-                    elif d != 0:
-                        url = url_for('emf.render_elliptic_modular_forms',level=N,weight=k)
                     else:
-                        url = ''
+                        url = url_for('emf.render_elliptic_modular_forms',level=N,weight=k)
                     if not k in self._table['row_heads']:
                         self._table['row_heads'].append(k)
                     row.append({'N':N,'k':k,'url':url,'dim':d})

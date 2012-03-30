@@ -112,8 +112,6 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
         info['error']="Could not compute the desired function!"
     properties2=list(); parents=list(); siblings=list(); friends=list()
     if WNF==None or  WNF._f == None:
-        print "level=",level
-        print WNF
         info['error']="This space is empty!"
     D = DirichletGroup(level)
     if len(D.list())> character:
@@ -135,7 +133,7 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
     #    prec1=max(int(prec-(K.absolute_degree())/2),3)
     #else:
     #    prec1=prec
-    info['qexp']=WNF.print_q_expansion(prec)
+    info['qexp']=WNF.print_q_expansion(prec,120)
     #c = list(WNF.q_expansion(prec))
     #c = map(lambda x: str(x).replace("*",""), c)
     #info['c'] = map(lambda x: x.replace(, c)
@@ -171,19 +169,24 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
         info['embeddings'] = ''
     info['embeddings'] = WNF.q_expansion_embeddings(prec,bprec)                 
     info['embeddings_len']=len(info['embeddings'])
-    info['twist_info'] = WNF.print_twist_info()
+    properties2=[]
+    if (ZZ(level)).is_squarefree():
+        info['twist_info'] = WNF.print_twist_info()
+        info['is_minimal']=info['twist_info'][0]
+        if(info['twist_info'][0]):                          
+            s='- Is minimal<br>'
+        else:
+            s='- Is a twist of lower level<br>'
+        properties2=[('Twist info',s)]
+    else:
+        info['twist_info'] = 'Twist info currently not available.'
+        properties2=[('Twist info','- not available')]
     info['is_cm']=WNF.is_CM()
-    info['is_minimal']=info['twist_info'][0]
     info['CM'] = WNF.print_is_CM()
     args=list()
     for x in range(5,200,10): args.append({'digits':x})
     digits = 7
     info['CM_values'] = WNF.cm_values(digits=digits)
-    if(info['twist_info'][0]):                          
-        s='- Is minimal<br>'
-    else:
-        s='- Is a twist of lower level<br>'
-    properties2=[('Twist info',s)]
     if(WNF.is_CM()[0]):                         
         s='- Is a CM-form<br>'
     else:
@@ -233,26 +236,7 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
         friends.append((s,url))
     # if there is an elliptic curve over Q associated to self we also list that
     if WNF.weight()==2 and WNF.degree()==1:
-        # UGLY add-hoc fixes of non-matching labels
-        # with Cremona labels
-        if level in [84,92,96]:
-            if label=='a':
-                clabel='b'
-            elif label=='b':
-                clabel='a'
-        elif level == 57:
-            if label == 'b':
-                clabel='c'
-            elif label=='c':
-                clabel='b'
-        elif level == 75:
-            if label=='a':
-                clabel='c'
-            elif label=='c':
-                clabel='a'
-        else:
-            clabel=label
-        llabel=str(level)+clabel
+        llabel=str(level)+label
         s = 'Elliptic Curve '+llabel
         url = '/EllipticCurve/Q/'+llabel 
         friends.append((s,url))

@@ -25,7 +25,7 @@ AUTHOR: Fredrik Stroemberg
 
 """
 
-from sage.all import ZZ,Newform,is_squarefree,squarefree_part,factor,is_square,divisors,DirichletGroup,QQ,xgcd,prime_factors,Gamma0,html,I,ceil,ComplexField,RealField,dimension_cusp_forms,sturm_bound,latex,join
+from sage.all import ZZ,Newform,is_squarefree,squarefree_part,factor,is_square,divisors,DirichletGroup,QQ,xgcd,prime_factors,Gamma0,html,I,ceil,ComplexField,RealField,dimension_cusp_forms,sturm_bound,latex,join,Gamma1
 import re
 
 from modular_forms.elliptic_modular_forms import emf_logger as logger
@@ -1096,6 +1096,22 @@ def get_geometric_data_Gamma0N(N):
     res['nu2']=G.nu2()
     res['nu3']=G.nu3()
     return res
+
+def get_geometric_data(N,group=0):
+    res=dict()
+    if group==0:
+        G=Gamma0(N)
+    elif group==1:
+        G=Gamma1(N)
+    else:
+        return None
+    res['index']=G.index()
+    res['genus']=G.genus()
+    res['cusps']=G.cusps()
+    res['nu2']=G.nu2()
+    res['nu3']=G.nu3()
+    return res
+
 
 def print_geometric_data_Gamma0N(N):
         r""" Print data about Gamma0(N).
