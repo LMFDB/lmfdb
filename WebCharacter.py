@@ -26,22 +26,20 @@ def log_value(modulus,number):
         d = int(logvalue.denom())
         from sage.all import Integer
         if Integer(j).gcd(modulus) == 1:
-            print "n = " + str(n)
             if n == 0:
-                s = "1"
+                s = "\(1\)"
             else:
                 s = r"\(e\left(\frac{%s}{%s}\right)\)" %(n,d)
                 if n == 1 and d == 2:
-                    s = "-1"
+                    s = "\(-1\)"
                 if n == 1 and d == 4:
-                    s = "i"
+                    s = "\(i\)"
                 if n == 3 and d == 4:
-                    s = "-i"
+                    s = "\(-i\)"
         else:
             s="0"
         l.append(s)
     return l
-
 class WebCharacter:
     """Class for presenting a Character on a web page
 
