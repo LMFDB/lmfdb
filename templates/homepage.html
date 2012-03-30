@@ -167,6 +167,7 @@
    </ul>
   
    {{ entry("Learn more about", learnmore) }}
+   {{ entry("Data", getUploadedFor(request.path, true) ) }}
 
  {% if sidebar -%}
   {% for topic, content in sidebar -%}
@@ -216,8 +217,7 @@
       </div>
     {% endif %}
    {{ rightnavig("Related objects", friends) }}
-   {{ rightnavig("Downloads", downloads) }}
-   {{ rightnavig("Data", getUploadedFor(request.path) ) }}
+   {{ rightnavig("Downloads", downloads + getUploadedFor(request.path, false) ) }}
     </div>
     {%- endif %}
 
