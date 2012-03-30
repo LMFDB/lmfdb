@@ -121,9 +121,7 @@ a {
 }
 
 /* icon in front of external links */
-a[target="_blank"] {
-}
-a[target="_blank"]:before {
+#content a[target="_blank"]:before {
   content: url("static/images/url-ext.gif");
   padding-right: 2px;
 }
