@@ -1,5 +1,5 @@
-artin_location = ("contrib","pdehaye4f2bef4ce9841255c9000002")
-galois_group_location = ("contrib","pdehaye4f2bef6ae9841255c9000004")
+artin_location = ("limbo","tim_artin_01")
+galois_group_location = ("limbo","nfgal_01")
 
 from type_generation import String, Array, Dict, Int, Anything, Float
 
@@ -31,7 +31,7 @@ Dokchitser_ArtinRepresentation = Dict({
         "_id":          Anything,
         "Dim" :         Int,
         "Conductor" :   TooLargeInt,
-        "DBIndex" :     Int,
+        "DBIndex" :     Int,        # Starting at 1
         "NFGal" :       FiniteSequence(Int),
         "Character" :   Dokchitser_Character
     })
@@ -49,9 +49,10 @@ Dokchitser_FrobResolvent = Dict(
 
 Dokchitser_ArtinRepresentation_Short = Dict(
             {
-                "Degree":           Int,
+                "Degree":           Int,   # ---> becomes "Dim" in new data
                 "Conductor":        TooLargeInt,
-                "Index":            Int,
+                "Index":            Int,        # Starting at 1
+                                                # Index ---> DBIndex
                 "Character":        Dokchitser_Character
             })
 
@@ -67,7 +68,7 @@ Dokchitser_NumberFieldGaloisGroup = Dict({
     "Degree" :              Int,
     "Polynomial" :          Polynomial_X_ZZ_AsString,
     "Size" :                TooLargeInt,
-    "DBIndex" :             Int,
+    "DBIndex" :             Int,                    # Starting at 1
     
     "G-Gens" :              FiniteSet(PermutationAsList),
     "G-Name" :              GAP_GroupLabel,
