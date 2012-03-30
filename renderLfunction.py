@@ -327,6 +327,7 @@ def initLfunction(L,args, request):
         character = str(L.character)
         label = str(L.label)
         number = str(L.number)
+        friendlink = '/'.join(friendlink.split('/')[:-1])
         info['friends'] = [('Hilbert Modular Form', friendlink.rpartition('/')[0])] 
 
     elif L.Ltype() == 'dedekindzeta':

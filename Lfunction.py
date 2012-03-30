@@ -732,19 +732,24 @@ class Lfunction_HMF(Lfunction):
         primes = [[int(pp[0][1:]), int(pp[1])] for pp in primes]
         primes = [[pp[0], pp[1], int(log(pp[0],pp[1]))] for pp in primes]
 
+        ppmidNN = [c[0] for c in f['AL_eigenvalues']]
+
         ratl_primes = [p for p in range(primes[-1][0]+1) if is_prime(p)]
         RCC = CC['T']; (T,) = RCC._first_ngens(1)
         heckepols = [ RCC(1) for p in ratl_primes ]
         for l in range(len(hecke_eigenvalues)):
-            heckepols[ratl_primes.index(primes[l][1])] *= 1 - hecke_eigenvalues[l]/float(sqrt(primes[l][0]))*(T**primes[l][2]) + (T**(2*primes[l][2]))
-        dcoeffs = [1,1]
-        for n in range(2,ratl_primes[-1]):
+            if F_hmf['primes'][l] in ppmidNN:
+                heckepols[ratl_primes.index(primes[l][1])] *= 1 - hecke_eigenvalues[l]/float(sqrt(primes[l][0]))*(T**primes[l][2])
+            else:
+                heckepols[ratl_primes.index(primes[l][1])] *= 1 - hecke_eigenvalues[l]/float(sqrt(primes[l][0]))*(T**primes[l][2]) + (T**(2*primes[l][2]))
+        dcoeffs = [0,1]
+        for n in range(2,ratl_primes[-1]+1):
             nfact = factor(n)
             if len(nfact) == 1:
                 # prime power
                 p = nfact[0][0]
                 k = nfact[0][1]
-                S = [1] + [dcoeffs[p^i] for i in range(1,k)]
+                S = [1] + [dcoeffs[p**i] for i in range(1,k)]
                 heckepol = heckepols[ratl_primes.index(p)]
                 if k == 1:
                     # prime, just the trace
@@ -759,10 +764,15 @@ class Lfunction_HMF(Lfunction):
                     dcoeffs.append(-Sk)
             else:
                 # composite
-                ancoeff = prod([dcoeffs[pe[0]^pe[1]] for pe in nfact])
+                ancoeff = prod([dcoeffs[pe[0]**pe[1]] for pe in nfact])
                 dcoeffs.append(ancoeff)
 
-        self.dirichlet_coefficients = dcoeffs
+        ff = open('dcoeffs.txt', 'w')
+        ff.write(str(dcoeffs) + '\n')
+        ff.write(str(heckepols))
+        ff.close()
+
+        self.dirichlet_coefficients = dcoeffs[1:]
 
         self.coefficient_period = 0   #HUH?
         self.coefficient_type = 2     #HUH?
