@@ -20,7 +20,7 @@ jQuery.fn.dataTableExt.oSort['label-asc']  = function(xl,yl) {
   }
 };
 
-jQuery.fn.dataTableExt.oSort['label-desc'] = function(x,y) {
+jQuery.fn.dataTableExt.oSort['label-desc'] = function(xl,yl) {
   var partsx, partsy;
   partsx = xl.replace(/<.*>(.*)<.*>/g,"$1");
   partsy = yl.replace(/<.*>(.*)<.*>/g,"$1");
@@ -43,6 +43,12 @@ jQuery.fn.dataTableExt.oSort['label-desc'] = function(x,y) {
      $('#fieldTab').dataTable({
        "bFilter": false, 
        "aaSorting": [[0, 'asc']],
+        "oLanguage": {
+                "oPaginate": {
+                        "sPrevious": "",
+                        "sNext": "",
+                }
+        },
        "aoColumns": [
 			{ "sType": 'label' },
 			null,
@@ -113,6 +119,7 @@ jQuery.fn.dataTableExt.oSort['label-desc'] = function(x,y) {
 {% endfor %}
 </tbody>
 </table>
+
 
 
 {% endblock %}

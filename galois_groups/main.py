@@ -22,7 +22,7 @@ try:
 except:
   logger.fatal("It looks like the SPKGes gap_packages and database_gap are not installed on the server.  Please install them via 'sage -i ...' and try again.")
 
-from transitive_group import group_display_short, group_display_long, group_display_inertia, group_knowl_guts, subfield_display, otherrep_display, resolve_display, conjclasses, generators, chartable
+from transitive_group import group_display_short, group_display_long, group_display_inertia, group_knowl_guts, subfield_display, otherrep_display, resolve_display, conjclasses, generators, chartable, aliastable
 
 GG_credit = 'GAP and J. Jones'
 
@@ -36,9 +36,13 @@ def galois_group_data(n, t):
   C = base.getDBConnection()
   return group_knowl_guts(n, t, C)
 
-#@app.context_processor
-#def ctx_galois_groups():
-#  return {'galois_group_data': galois_group_data }
+def group_alias_table():
+  C = base.getDBConnection()
+  return aliastable(C)
+
+@app.context_processor
+def ctx_galois_groups():
+  return {'group_alias_table': group_alias_table }
 
 def group_display_shortC(C):
   def gds(nt):
