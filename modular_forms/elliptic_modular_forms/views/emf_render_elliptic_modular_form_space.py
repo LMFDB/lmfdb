@@ -59,7 +59,8 @@ def render_elliptic_modular_form_space(level=None,weight=None,character=None,lab
     ### This might take forever....
     info=set_info_for_modular_form_space(**info)
     emf_logger.debug("keys={0}".format(info.keys()))
-    if kwds.has_key('download') and not kwds.has_key('error'):                           return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
+    if kwds.has_key('download') and not kwds.has_key('error'):
+        return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
     if kwds.has_key('dimension_newspace') and kwds['dimension_newspace']==1:
         # if there is only one orbit we list it
         emf_logger.debug("Dimension of newforms is one!")

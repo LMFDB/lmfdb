@@ -74,7 +74,11 @@ entry you access information about the forms in the specified space.
       </th>
       {% for cell in row  %}
       <td align="center" width="0%">
-        <a style="" href="{{cell.url}}">{{cell.dim}}</a>
+        {% if cell.url != '' %}
+          <a href="{{cell.url}}">{{cell.dim}}</a>
+        {% else %}
+	  {{cell.dim}}
+	{% endif %}
       </td>
       {% endfor %}
     </tr>

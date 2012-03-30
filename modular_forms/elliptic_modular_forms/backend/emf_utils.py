@@ -18,12 +18,11 @@ Utilities file for elliptic (holomorphic) modular forms.
 
 AUTHOR: Fredrik Strömberg
 
-
 """
 import random
 from flask import  jsonify
 from utils import *
-from modular_forms.elliptic_modular_forms import EMF,emf, emf_logger
+from modular_forms.elliptic_modular_forms import EMF,emf, emf_logger, default_prec
 logger = emf_logger
 from sage.all import dimension_new_cusp_forms,vector,dimension_modular_forms,dimension_cusp_forms,is_odd,loads,dumps,Gamma0,Gamma1,Gamma
 from modular_forms.backend.mf_utils import my_get
@@ -59,8 +58,6 @@ def extract_limits_as_tuple(arg, field, defaults=(1,10)):
             limits=defaults
     return limits
     
-
-
 def extract_data_from_jump_to(s):
     label=None;weight=None;character=None;level=None
     weight = 2  # this is default for jumping
@@ -242,7 +239,6 @@ def render_fd_plot(level,info,**kwds):
         else:
             type=(1)
     db_name = 'SL2Zsubgroups'
-    dbport = 37010
     collection='groups'
     C = base.getDBConnection()
     emf_logger.debug("C={0}".format(C))
@@ -265,3 +261,12 @@ def render_fd_plot(level,info,**kwds):
             #C[db_name][collection].insert({'level':int(level), 'type':type, 'index':int(G.index), 'G':pymongo.binary.Binary(dumps(G)), 'domain': pymongo.binary.Binary(dumps(domain))})
             #emf_logger.debug('Inserting group and fundamental domain in database')
     return domain
+
+
+def is_data_in_db(level=0,weight=0,character=0):
+    r"""
+     Checks whether we have the requested data in the database.
+    """
+    
+    return True
+    

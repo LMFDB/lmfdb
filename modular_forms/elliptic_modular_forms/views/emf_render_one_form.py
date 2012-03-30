@@ -91,7 +91,7 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
     prec = my_get(info,'prec',default_prec,int)
     bprec = my_get(info,'prec',default_bprec,int)
     try:
-        WNF = WebNewForm(weight,level,character,label)
+        WNF = WebNewForm(weight,level,character,label,verbose=1)
         # if info.has_key('download') and info.has_key('tempfile'):
         #     WNF._save_to_file(info['tempfile'])
         #     info['filename']=str(weight)+'-'+str(level)+'-'+str(character)+'-'+label+'.sobj'
@@ -119,9 +119,13 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
     info['name']=WNF._name
     info['satake']=WNF.satake_parameters(prec,bprec)
     
-    #br = 500
-    #info['q_exp'] = ajax_more(WNF.print_q_expansion,{'prec':5,'br':br},{'prec':10,'br':br},{'prec':20,'br':br},{'prec':100,'br':br},{'prec':200,'br':br})
-
+    #br = 60
+    #info['qexp'] = ajax_more(WNF.print_q_expansion,{'prec':5,'br':br},{'prec':10,'br':br},{'prec':20,'br':br},{'prec':100,'br':br},{'prec':200,'br':br})
+    K = WNF.base_ring()
+    #if K.absolute_degree() > 1:
+    #    prec1=max(int(prec-(K.absolute_degree())/2),3)
+    #else:
+    #    prec1=prec
     info['qexp']=WNF.print_q_expansion(prec)
     #c = list(WNF.q_expansion(prec))
     #c = map(lambda x: str(x).replace("*",""), c)
@@ -129,7 +133,6 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
     #emf_logger.debug("c={0}".format(info['c']))
     #info['maxc']=len(c)
     #emf_logger.debug("maxc={0}".format(info['maxc']))
-    K = WNF.base_ring()
     info['polynomial'] = str(WNF.polynomial()).replace('x',str(latex(K.gen())))
     if(K<>QQ):
         info['polynomial_st'] = 'where ' +r'\('+ info['polynomial'] +r'=0\)'
@@ -206,11 +209,9 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
         for label_other in WNF.parent()._galois_orbits_labels:
             if(label_other<>label):
                 s='Modular Form '
-            else:
-                s='Modular Form '
-            s=s+str(level)+str(label_other)
-            url = url_for('emf.render_elliptic_modular_forms',level=level,weight=weight,character=character,label=label_other)                 
-            friends.append((s,url))
+                s=s+str(level)+str(label_other)
+                url = url_for('emf.render_elliptic_modular_forms',level=level,weight=weight,character=character,label=label_other)                 
+                friends.append((s,url))
     s = 'L-Function '+str(level)+label
     #url = "/L/ModularForm/GL2/Q/holomorphic?level=%s&weight=%s&character=%s&label=%s&number=%s" %(level,weight,character,label,0)
     url = '/L'+url_for('emf.render_elliptic_modular_forms',level=level,weight=weight,character=character,label=label)
@@ -223,7 +224,26 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
         friends.append((s,url))
     # if there is an elliptic curve over Q associated to self we also list that
     if WNF.weight()==2 and WNF.degree()==1:
-        llabel=str(level)+label
+        # UGLY add-hoc fixes of non-matching labels
+        # with Cremona labels
+        if level in [84,92,96]:
+            if label=='a':
+                clabel='b'
+            elif label=='b':
+                clabel='a'
+        elif level == 57:
+            if label == 'b':
+                clabel='c'
+            elif label=='c':
+                clabel='b'
+        elif level == 75:
+            if label=='a':
+                clabel='c'
+            elif label=='c':
+                clabel='a'
+        else:
+            clabel=label
+        llabel=str(level)+clabel
         s = 'Elliptic Curve '+llabel
         url = '/EllipticCurve/Q/'+llabel 
         friends.append((s,url))
