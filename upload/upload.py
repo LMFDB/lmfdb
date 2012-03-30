@@ -147,8 +147,8 @@ def viewAll():
   db = getDBConnection().upload
   fs = GridFS(db)
 
-  approved = [ fs.get(x['_id']) for x in db.fs.files.find({"metadata.status" : "approved"}) ]
-  unmoderated = [ fs.get(x['_id']) for x in db.fs.files.find({"metadata.status" : "unmoderated"}) ]
+  approved = [ fs.get(x['_id']) for x in db.fs.files.find({"metadata.status" : "approved"}).sort("metadata.related_to") ]
+  unmoderated = [ fs.get(x['_id']) for x in db.fs.files.find({"metadata.status" : "unmoderated"}).sort("metadata_related_to") ]
 
   return render_template("upload-view.html", title = "Uploaded data", bread = get_bread(), approved=approved, unmoderated2=unmoderated)
 

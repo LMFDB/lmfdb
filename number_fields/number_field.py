@@ -494,7 +494,6 @@ def render_field_webpage(args):
     except AttributeError:
       pass
     del info['_id']
-    assert "tim_number_field" in info
     return render_template("number_field.html", properties2=properties2, credit=NF_credit, title = title, bread=bread, friends=info.pop('friends'), learnmore=info.pop('learnmore'), info=info )
 
 def format_coeffs(coeffs):

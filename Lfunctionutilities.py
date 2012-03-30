@@ -186,6 +186,10 @@ def lfuncEPtex(L,fmt):
     
     ans=""
     if fmt=="abstract":
+        if L.Ltype() == "SymmetricPower":
+             ans = L.euler
+             return ans
+
         ans="\\begin{equation} \n "+L.texname+" = "
         if L.Ltype()=="riemann":
              ans= ans+"\\prod_p (1 - p^{-s})^{-1}"
@@ -206,6 +210,7 @@ def lfuncEPtex(L,fmt):
         elif L.langlands:
                 ans= ans+"\\prod_p \\ \\prod_{j=1}^{"+str(L.degree)+"} (1 - \\alpha_{j,p}\\,  p^{-s})^{-1}"
           
+
         else:
             return("No information is available about the Euler product.")
         ans=ans+" \n \\end{equation}"

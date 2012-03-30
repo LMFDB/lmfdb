@@ -1258,7 +1258,7 @@ class SymmetricPowerLfunction(Lfunction):
         from symL.symL import SymmetricPowerLFunction
         self.S=SymmetricPowerLFunction(self.E,self.m)
 
-        self.title = "The symmetric power $L$-function $L(s, Symm^%d E)$ of Elliptic curve %s"% (self.m,self.E.cremona_label())
+        self.title = "The symmetric power $L$-function $L(s,E,\mathrm{sym}^%d)$ of Elliptic curve %s"% (self.m,self.E.cremona_label())
 
         self.dirichlet_coefficients = self.S._coeffs
 
@@ -1277,15 +1277,50 @@ class SymmetricPowerLfunction(Lfunction):
         self.kappa_fe = self.mu_fe
         self.lambda_fe = self.nu_fe
         self.sign = self.S.root_number
+        self.motivic_weight = self.m
         self.selfdual = True
         self.langlands = True
-        self.texname = "L(s, Symm^%dE)"%self.m  # default name.  will be set later, for most L-functions
-        self.texnamecompleteds = "\\Lambda_{Symm^{%d} E}(s)"%self.S.m  # default name.  will be set later, for most L-functions
-        self.texnamecompleted1ms = "\\Lambda_{Symm^{%d} E}(1-{s})"%self.S.m  # default name.  will be set later, for most L-functions
+        self.texname = "L(s, E, \mathrm{sym}^%d)"%self.m  # default name.  will be set later, for most L-functions
+        self.texnamecompleteds = "\\Lambda(s,E,\mathrm{sym}^{%d})"%self.S.m  # default name.  will be set later, for most L-functions
+        self.texnamecompleted1ms = "\\Lambda(1-{s}, E,\mathrm{sym}^{%d})"%self.S.m  # default name.  will be set later, for most L-functions
         self.primitive = True # should be changed later
         self.citation = ' '
         self.credit = ' '
         self.level=self.S.conductor
+        self.euler = "\\begin{align} L(s,E, \\mathrm{sym}^{%d}) = & \\prod_{p \\textrm{ good}} \\prod_{j=0}^{%d} (1-\\alpha_p^j\\beta_p^{%d-j}p^{-s})^{-1} "%(self.m,self.m,self.m)
+        for p in self.S.bad_primes:
+            poly = self.S.eulerFactor(p)
+            poly_string =" "
+            if len(poly) > 1:
+                poly_string="\\\\ & \\times (1"
+                if poly[1] != 0:
+                    if poly[1] == 1:
+                        poly_string += "%d^{ -s}"%p
+                    elif poly[1] == -1:
+                        poly_string += "-%d^{- s}"%p
+                    elif poly[1] <0 :
+                        poly_string += "%d%d^{- s}"%(poly[1],p)
+                    else:
+                        poly_string += "+%d%d^{- s}"%(poly[1],p)
+
+                for j in range(2,len(poly)):
+                    if poly[j]== 0:
+                        continue
+                    if poly[j] == 1:
+                        poly_string += "%d^{-%d s}"%(p,j)
+                    elif poly[j] == -1:
+                        poly_string += "-%d^{-%d s}"%(p,j)
+                    elif poly[j] <0 :
+                        poly_string += "%d%d^{-%d s}"%(poly[j],p,j)
+                    else:
+                        poly_string += "+%d%d^{-%d s}"%(poly[j],p,j)
+                poly_string += ")^{-1}"
+            self.euler += poly_string
+        self.euler += "\\end{align}"
+
+        #self.friends = [("Isogeny Class", '/'.join('', 'EllipticCurve','Q',arg[1][2], ''))]
+
+
 
 
 

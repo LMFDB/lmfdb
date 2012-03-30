@@ -169,8 +169,12 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         return Lfunction_EC( label = arg3)
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic': # this has args: one for weight and one for level
-        logger.debug(arg5+arg6+str(arg7)+str(arg8)+str(arg9))
+        logger.info(arg5+arg6+str(arg7)+str(arg8)+str(arg9))
         return Lfunction_EMF( level = arg5, weight = arg6, character = arg7, label = arg8, number = arg9)
+
+    elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 <> 'Q' and arg4 == 'holomorphic': # Hilbert modular form
+        logger.debug(arg5+arg6+str(arg7)+str(arg8)+str(arg9))
+        return Lfunction_HMF( field = arg3, label = arg5, character = arg6, number = arg7)
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2'and arg3 == 'Q' and arg4 == 'Maass':
         logger.debug(db)
@@ -321,12 +325,25 @@ def initLfunction(L,args, request):
             info['friends'].append(('EC Isogeny class ' + L.ellipticcurve, url_for("by_ec_label",label=L.ellipticcurve)))
             for i in range(1, L.nr_of_curves_in_class + 1):
                 info['friends'].append(('Elliptic Curve ' + L.ellipticcurve + str(i), url_for("by_ec_label",label=L.ellipticcurve + str(i))))
-  
     elif L.Ltype() == 'dedekindzeta':
         info['friends'] = [('Number Field', friendlink)]
 
     elif L.Ltype() in ['lcalcurl', 'lcalcfile']:
         info['bread'] = [('L-function',url_for('render_Lfunction'))]
+        
+    elif L.Ltype() == 'SymmetricPower':
+        def ordinal(n):
+                if 10 <= n % 100 < 20:
+                    return str(n) + 'th' 
+                else: 
+                    return  str(n) + {1 : 'st', 2 : 'nd', 3 : 'rd'}.get(n % 10, "th")
+        friendlink =request.url.replace('/L/SymmetricPower/%d/'%L.m,'/')
+        splitlink=friendlink.rpartition('/')
+        friendlink = splitlink[0]+splitlink[2]
+        mplusone = L.m +1
+        friendlink2 =request.url.replace('/L/SymmetricPower/%d/'%L.m,'/L/SymmetricPower/%d/'%mplusone)
+
+        info['friends'] =  [('Isogeny class', friendlink), ('%s Symmetric Power'%ordinal(mplusone) , friendlink2)]
         
 
     info['dirichlet'] = lfuncDStex(L, "analytic")
@@ -365,6 +382,7 @@ def set_gaga_properties(L):
         prim = 'Primitive'
     else:
         prim = 'Not primitive'
+#    ans.append((None,        prim))    Disabled until fixed
 #    ans.append((None,        prim))    Disabled until fixed
 
     return ans
