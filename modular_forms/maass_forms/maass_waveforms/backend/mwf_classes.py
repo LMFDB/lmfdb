@@ -113,7 +113,7 @@ class WebMaassForm(object):
         self.level=f.get('Level',None)
         if self.R ==None or self.level==None:
             return
-        
+        self.num_coeff=f.get('Numc',0)
         self.coeffs=f.get('Coefficient',[])
         coeff_id=f.get('coeff_id',None)
         nc = Gamma0(self.level).ncusps()
@@ -140,7 +140,8 @@ class WebMaassForm(object):
                         mwf_logger.debug("len(C[0][0])={0}".format(len(C[0][0])))
                         if len(C[0][0])==1:
                             mwf_logger.debug("len(C[0][0][0])={0}".format(len(C[0][0][0])))
-                            if len(C[0][0][0])<self.M0: ## This recursion has to stop at some point, assume here...
+                            if len(C[0][0][0])<self.M0:
+       ## This recursion has to stop at some point, assume here...
                                 self.coeffs = C[0][0][0][0]
                             else:
                                 self.coeffs = C[0][0][0]
@@ -152,16 +153,33 @@ class WebMaassForm(object):
                     self.coeffs=C[0]
             else:
                 self.coeffs={}
-        if isinstance(self.coeffs,list):
-            if self.coeffs[0]==0:
-                self.coeffs.pop(0)
+        ## Make sure that self.coeffs is only the current coefficients
+        if isinstance(self.coeffs,dict):
+            n1=len(self.coeffs.keys())
+            mwf_logger.debug("|coeff.keys()|:{0}".format(n1))
+            if n1<>self.dim:
+                mwf_logger.warning("Got coefficient dict of wrong format!:dim={0} and len(c.keys())=".format(self.dimn,n1))
+            if n1>0:
+                for j in range(self.dim):                    
+                    n2=len(self.coeffs.get(j,{}).keys())
+                    mwf_logger.debug("|coeff[{0}].keys()|:{1}".format(j,n2))
+                    if n2<>nc:
+                        mwf_logger.warning("Got coefficient dict of wrong format!:num cusps={0} and len(c[0].keys())=".format(nc,n2))
+                
+        #if self.dim>1:
+        #if len(self.coeffs.keys())<=nc:
+        #self.coeffs=self.coeffs.get(0,{})
+        mwf_logger.debug("coeff[0]:{0}".format(self.coeffs.keys()))
+        #if isinstance(self.coeffs,list):
+        #    if self.coeffs[0]==0:
+        #        self.coeffs.pop(0)
         self.nc = 1 #len(self.coeffs.keys())
-        if isinstance(self.coeffs,list):
-            self.num_coeff=len(self.coeffs)
-        elif isinstance(self.coeffs,dict):
-            self.num_coeff=len(self.coeffs.keys())
-        else:
-            self.num_coeff=0
+        #if isinstance(self.coeffs,list):
+        #    self.num_coeff=len(self.coeffs)
+        #elif isinstance(self.coeffs,dict):
+        #    self.num_coeff=len(self.coeffs.keys())
+        #else:
+        #    self.num_coeff=0
         self.set_table()
 
     def C(self,r,n):
@@ -170,7 +188,7 @@ class WebMaassForm(object):
         """
         if not self.all_coeffs:
             return None
-        
+        raise NotImplementedError
         
         
     def get_all_coeffs(self):
@@ -201,18 +219,27 @@ class WebMaassForm(object):
         
     def set_table(self):
         table={'nrows':self.num_coeff,
-               'ncols':1}
+               'ncols':self.dim+1}
         table['data']=[]
         if self.symmetry<>-1:
             table['negc']=0
             for n in range(self.num_coeff):
-                row=[]
+                row=[n]
                 for k in range(table['ncols']):
-                    c = self.coeffs.get(n,None)
-                    if c<>None:
-                        c=CC(c)
-                    row.append((n,c))
+                    if self.dim==1:
+                        c = self.coeffs.get(n,None)
+                        if c<>None:
+                            c=CC(c)
+                        row.append((n,c))
+                    else:                        
+                        for j in range(self.dim):
+                            c = ((self.coeffs.get(j,{})).get(0,None)).get(n,None)
+                            if c<>None:
+                                #mwf_logger.debug("c={0}".format(c))
+                                c1=CC(c)
+                                row.append(c1)
                 table['data'].append(row)
+                #mwf_logger.debug("row={0}".format(row))
         else:
             table['negc']=1
             # in this case we need to have coeffs as dict.
@@ -220,11 +247,21 @@ class WebMaassForm(object):
                 self.table={}
                 return
             for n in range(len(self.coeffs.keys()/2)):
-                row=[]
-                for k in range(table['ncols']):
-                   cp = self.coeffs.get(n,0)
-                   cn = self.coeffs.get(-n,0)
-                   row.append((n,cp,cn))
-                table['data'].append(row)
+                row=[n]
+                if self.dim==1:
+                    for k in range(table['ncols']):
+                        cp = self.coeffs.get(n,0)
+                        cn = self.coeffs.get(-n,0)
+                        row.append((cp,cn))
+                else:
+                    for j in range(self.dim):
+                        c = (self.coeffs.get(j,{})).get(n,None)
+                        if c<>None:
+                            c1 = c.get(n,None)
+                            cn1 = c.get(-n,None)
+                            c1=CC(c1)
+                            cn1=CC(cn1)
+                            row.append((c1,cn1))
+                        table['data'].append(row)
         self.table=table
                     

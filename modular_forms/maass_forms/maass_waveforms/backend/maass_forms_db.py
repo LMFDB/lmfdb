@@ -1105,8 +1105,8 @@ def arg_to_search_parameters(data={},**kwds):
     ch1=data.get('ch1',data.get('char1',kwds.get('ch1',kwds.get('char1',ch))))
     ch2=data.get('ch2',data.get('char2',kwds.get('ch2',kwds.get('char2',ch))))
     wt=data.get('wt',data.get('weight',kwds.get('wt',kwds.get('weight',None))))
-    wt1=data.get('w1',data.get('weight1',kwds.get('wt1',kwds.get('weight1',wt))))
-    wt2=data.get('w2',data.get('weight2',kwds.get('wt2',kwds.get('weight2',wt))))
+    wt1=data.get('wt1',data.get('weight1',kwds.get('wt1',kwds.get('weight1',wt))))
+    wt2=data.get('wt2',data.get('weight2',kwds.get('wt2',kwds.get('weight2',wt))))
     dim=data.get('d',data.get('dim',kwds.get('d',kwds.get('dim',None))))
     d1=data.get('d1',data.get('dim1',kwds.get('d1',kwds.get('dim1',dim))))
     d2=data.get('d2',data.get('dim2',kwds.get('d2',kwds.get('dim2',dim))))
@@ -1145,11 +1145,11 @@ def arg_to_search_parameters(data={},**kwds):
         find['Weight']=wt
     elif wt1<>None or wt2<>None:
         find['Weight']={}
-        if wt1<>None and w1<>'': 
-            w1=float(w1)
+        if wt1<>None and wt1<>'': 
+            wt1=float(wt1)
             find['Weight']["$gte"]=wt1
-        if wt2<>None and w1<>'': 
-            w2=float(w2)
+        if wt2<>None and wt2<>'': 
+            wt2=float(wt2)
             find['Weight']["$lte"]=wt2
     if idd<>None:
         find['_id']=idd

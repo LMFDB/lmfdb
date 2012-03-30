@@ -84,7 +84,7 @@ var evTable = $("table#eigenvalues").dataTable(
  });
 
 /* Add filtering box */
-s='<br>Weight:<select id="weight"><option selected="yes">0<option>1</select>'
+s='<br>Weight:<select id="weight"><option selected="{{wtis0}}">0<option selected="{{wtis1}}">1</select>'
 $('#eigenvalues_filter').append(s);
 
 /* Add event listeners to the two range filtering inputs */
@@ -124,20 +124,22 @@ $('#weight').change( function() { evTable.fnDraw(); } );
   <thead>
     <tr>
     {% for head in table.colheads %}
+   {% if head != "Atkin-Lehner" %}
       <th> {{head}}</th>
+  {% endif %}
     {% endfor %}
-    <th width="100px">Atkin&nbsp;-&nbsp;Lehner&nbsp;</th>
+    <th width="200px">Atkin&nbsp;-&nbsp;Lehner&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
     </tr>
   </thead>
   <tbody>
-    {% set nnrows = 100 %}
+    {% set nnrows = 2000 %}
     {%if nrows < nnrows %}
      {% set nnrows = nrows %}
     {%endif%}
     {% for r in range(0,nnrows) %}
     {% if data[r] is defined %}
     <tr>
-           <td>            
+        <td>            
              {% if data[r].N is defined %} {{ data[r].N}}  {% endif %}
            </td>
            <td>            
