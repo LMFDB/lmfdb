@@ -101,8 +101,6 @@ class ArtinRepresentation(object):
             return "An Artin representation"
     
     def url_for(self):
-        from artin_representations import artin_representations_page
-        from artin_representations.main import *
         return url_for("artin_representations.by_data", dim = self.dimension(), conductor = self.conductor(), index = self.index())
         
     def langlands(self):
@@ -330,8 +328,6 @@ class NumberFieldGaloisGroup(object):
             return label
     
     def url_for(self):
-        from number_fields import nf_page
-        from number_fields.number_field import *
         if self.label():
             return url_for("number_fields.by_label", label = self.label())
         else:
@@ -399,7 +395,6 @@ class NumberFieldGaloisGroup(object):
         return self.sage_object().discriminant()
         
     def sage_object(self):
-        from sage import *
         X = PolynomialRing(QQ,"x")
         from sage.rings.number_field.number_field import NumberField
         return NumberField(X(self.polynomial()),"x")

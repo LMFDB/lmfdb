@@ -222,7 +222,7 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
     if(len(WNF.parent().galois_decomposition())>1):
         for label_other in WNF.parent()._galois_orbits_labels:
             if(label_other<>label):
-                s='Modular Form '
+                s='Modular form '
                 if character:
                     s = s + str(level) + '.' + str(weight) + '.' + str(character) + str(label_other)
                 else:
@@ -242,7 +242,7 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
     # if there is an elliptic curve over Q associated to self we also list that
     if WNF.weight()==2 and WNF.degree()==1:
         llabel=str(level)+'.'+label
-        s = 'Elliptic Curve Isogeny Class '+llabel
+        s = 'Elliptic curve isogeny class '+llabel
         url = '/EllipticCurve/Q/'+llabel 
         friends.append((s,url))
     space_url='?&level='+str(level)+'&weight='+str(weight)+'&character='+str(character)
