@@ -216,6 +216,8 @@ def by_ec_label(label):
         N, iso, number = lmfdb_label_regex.match(label).groups()
     except:
         N, iso, number = cremona_label_regex.match(label).groups()
+        C = base.getDBConnection()
+        data = C.elliptic_curves.curves.find_one({'label': label})
         #N,d1, iso,d2, number = sw_label_regex.match(label).groups()
     if number:
         return render_curve_webpage_by_label(label=label)
@@ -485,8 +487,8 @@ def render_curve_webpage_by_label(label):
         ('Isogeny class '+lmfdb_iso_class, "/EllipticCurve/Q/%s" % lmfdb_iso_class),
         ('Minimal quadratic twist '+minq_label, "/EllipticCurve/Q/%s" % minq_label),
         ('L-function', url_for("render_Lfunction", arg1='EllipticCurve', arg2='Q', arg3=lmfdb_label)),
-        ('Symmetric square L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='2',arg3='EllipticCurve', arg4='Q', arg5=lmfdb_label)),
-        ('Symmetric 4th power L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='4',arg3='EllipticCurve', arg4='Q', arg5=lmfdb_label))]
+        ('Symmetric square L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='2',arg3='EllipticCurve', arg4='Q', arg5=lmfdb_iso_class)),
+        ('Symmetric 4th power L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='4',arg3='EllipticCurve', arg4='Q', arg5=lmfdb_iso_class))]
     
     if int(N)<100:
         info['friends'].append(('Modular form '+lmfdb_iso_class, url_for("emf.render_elliptic_modular_forms", level=int(N),weight=2,character=0,label=mod_form_iso)))
