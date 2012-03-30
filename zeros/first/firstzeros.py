@@ -9,11 +9,11 @@ logger = utils.make_logger(FirstZeros)
 import sqlite3
 data_location = os.path.expanduser("~/data/zeros/")
 print data_location
-#try:
-db = sqlite3.connect(data_location + 'first_zeros.db')
-c = db.cursor()
-#except:
-#    pass
+try:
+    db = sqlite3.connect(data_location + 'first_zeros.db')
+    c = db.cursor()
+except:
+    pass
 
 @FirstZeros.route("/")
 def firstzeros():
