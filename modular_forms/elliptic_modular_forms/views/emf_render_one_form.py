@@ -26,7 +26,7 @@ from sage.all import *
 from  sage.modular.dirichlet import DirichletGroup
 from base import app, db
 from modular_forms.elliptic_modular_forms.backend.web_modforms import WebModFormSpace,WebNewForm
-from modular_forms.elliptic_modular_forms.backend.emf_classes import ClassicalMFDisplay
+from modular_forms.elliptic_modular_forms.backend.emf_classes import ClassicalMFDisplay,DimensionTable
 from modular_forms import MF_TOP
 from modular_forms.backend.mf_utils import my_get
 from modular_forms.elliptic_modular_forms.backend.emf_core import * 
@@ -40,13 +40,22 @@ def render_one_elliptic_modular_form(level,weight,character,label,**kwds):
     Renders the webpage for one elliptic modular form.
     
     """
+    if character==0:
+        dimtbl=DimensionTable()
+    else:
+        dimtbl=DimensionTable(1)
+    emf_logger.debug("Created dimension table")
+    if not dimtbl.is_in_db(level,weight,character):
+        emf_logger.debug("Data not available")
+        return render_template("not_available.html")
     citation = ['Sage:'+version()]
     info=set_info_for_one_modular_form(level,weight,
                                        character,label,**kwds)
     emf_logger.debug("info={0}".format(info))
     err = info.get('error','')
     ## Check if we want to download either file of the function or Fourier coefficients
-    if info.has_key('download') and not info.has_key('error'):                           return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
+    if info.has_key('download') and not info.has_key('error'):
+        return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
     name = "Cuspidal newform %s of weight %s for "%(label,weight)
     if level==1:
         name+="\(\mathrm{SL}_{2}(\mathbb{Z})\)"

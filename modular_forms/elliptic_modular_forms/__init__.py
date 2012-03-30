@@ -9,6 +9,9 @@ EMF_TOP = "Holomorphic Modular Forms" # The name to use for the top of this cate
 EMF="emf" # The current blueprint name
 emf = flask.Blueprint(EMF, __name__, template_folder="views/templates",static_folder="views/static")
 emf_logger = utils.make_logger(emf)
+### Maximum values for computations
+N_max_comp = 5000
+k_max_comp = 20
 
 import views
 import backend

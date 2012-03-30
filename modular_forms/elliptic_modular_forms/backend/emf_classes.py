@@ -45,7 +45,6 @@ class DimensionTable(object):
     def dimension_gamma1(self,arg1,k=3):
         emf_logger.debug('Lookup dimension for Gamma1')
         if type(arg1)==sage.modular.dirichlet.DirichletCharacter:
-            emf_logger.debug('Have Dirichlet Caracter {0}'.format(arg1))
             N=arg1.modulus()
             character=arg1.parent().list().index(arg1)
         else:
@@ -63,19 +62,19 @@ class DimensionTable(object):
                 dim=tblN[k][character]['dimension']
                 #emf_logger.debug('Have dimension for Gamma1({0}), weight={1}, character={1}'.format(N,k,character))
                 return dim
-        return -1
+        return "n/a"
 
     def is_in_db(self,N=1,k=4,character=0):
         #emf_logger.debug("in is_in_db: N={0},k={1},character={2}".format(N,k,character))
         if N in self._table.keys():
-            emf_logger.debug("have information for level {0}".format(N))
+            #emf_logger.debug("have information for level {0}".format(N))
             tblN=self._table[N]
             if k in tblN.keys():
-                emf_logger.debug("have information for weight {0}".format(k))
+                #emf_logger.debug("have information for weight {0}".format(k))
                 if self._group==1:
                     if character in tblN[k].keys():
                         in_db=tblN[k][character]['in_db']
-                        emf_logger.debug("information for character {0}: {1}".format(character,in_db))
+                        #emf_logger.debug("information for character {0}: {1}".format(character,in_db))
                         return in_db
                 else:
                     in_db=tblN[k]['in_db']
@@ -127,7 +126,7 @@ class ClassicalMFDisplay(MFDisplay):
             dimension_fun=dimension_table.dimension
             is_data_in_db=dimension_table.is_in_db
         else:
-            def is_data_in_db(N,k,chi):
+            def is_data_in_db(N,k,character):
                 return False
         # fixed level
         if level_ll == level_ul:
@@ -160,7 +159,11 @@ class ClassicalMFDisplay(MFDisplay):
                 self._table['rows'].append(row)
             else:
                 D = DirichletGroup(N)
-                emf_logger.debug("I am here!")
+                # A security check, if we have at least weight 2 and trivial character, otherwise don't show anything
+                if check_db and not is_data_in_db(N,2,0):
+                    emf_logger.debug("No data for level {0} and weight 2, trivial character".format(N))
+                    self._table = None
+                    return None
                 self._table['rowhead']='Character&nbsp;\\&nbsp;Weight'
                 for x in D:
                     xi = D.list().index(x)

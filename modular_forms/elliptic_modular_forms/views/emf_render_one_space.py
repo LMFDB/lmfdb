@@ -47,9 +47,16 @@ def render_elliptic_modular_form_space(info):
         character=0
     properties=list(); parents=list(); friends=list(); lifts=list(); siblings=list()
     sbar=(properties,parents,friends,siblings,lifts)
+    if character==0:
+        dimtbl=DimensionTable()
+    else:
+        dimtbl=DimensionTable(1)
+    emf_logger.debug("Created dimension table in render_elliptic_modular_form_space")
     if info.has_key('character') and info['character']=='*':
         return render_elliptic_modular_form_space_list_chars(level,weight)
-    ### This might take forever....
+    if not dimtbl.is_in_db(level,weight,character):
+        emf_logger.debug("Data not available")
+        return render_template("not_available.html")
     info=set_info_for_modular_form_space(info)
     emf_logger.debug("keys={0}".format(info.keys()))
     if info.has_key('download') and not info.has_key('error'):

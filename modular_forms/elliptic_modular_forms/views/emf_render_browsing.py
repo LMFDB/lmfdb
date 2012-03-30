@@ -5,6 +5,7 @@ from modular_forms.elliptic_modular_forms.backend.emf_core import get_geometric_
 from modular_forms.elliptic_modular_forms.backend.emf_utils import MyNewGrp,my_get,parse_range,extract_limits_as_tuple
 from modular_forms.backend.mf_utils import my_get
 from modular_forms import MF_TOP
+from modular_forms.elliptic_modular_forms import N_max_comp,k_max_comp
 from flask import render_template, url_for, request, redirect, make_response,send_file
 from modular_forms.elliptic_modular_forms.backend.emf_classes import ClassicalMFDisplay, DimensionTable
 list_of_implemented_dims=['new','cusp','modular','eisenstein']
@@ -158,11 +159,12 @@ def browse_elliptic_modular_forms(level=0,weight=0,character=-1,label='',limits=
     emf_logger.info("level=%s, %s"%(level,type(level)))
     emf_logger.info("wt=%s, %s"% (weight,type(weight)) )
     if level>0:
-        info['geometric'] = get_geometric_data_Gamma0N(level)
-        #if info.has_key('plot'):
-        grp=MyNewGrp(level,info)
-        info['fd_plot']= image_src(grp)
-        emf_logger.info("PLOT: %s" % info['fd_plot'])
+        if level <= N_max_comp:
+            info['geometric'] = get_geometric_data_Gamma0N(level)
+            #if info.has_key('plot'):
+            grp=MyNewGrp(level,info)
+            info['fd_plot']= image_src(grp)
+            emf_logger.info("PLOT: %s" % info['fd_plot'])
     if level>0 and weight==0:
         #print "here1!"
         title = "Holomorphic Cusp Forms of level %s " % level
@@ -173,8 +175,9 @@ def browse_elliptic_modular_forms(level=0,weight=0,character=-1,label='',limits=
         disp = ClassicalMFDisplay('modularforms')
         disp.set_table_browsing(limit=[(2,20),(level,level)],keys=['Weight','Level'],character=character,dimension_table=dimtbl,title='Dimension of cusp forms')
         info['show_all_characters']=1
-        info['browse_table']=disp._table
-        
+        tbl=disp._table
+        if tbl != None:
+            info['browse_table']=tbl
         #info['list_spaces']=ajax_more(make_table_of_spaces_fixed_level,*largs,text='more')
         bread =[(MF_TOP,url_for('mf.modular_form_main_page'))]
         bread.append((EMF_TOP,url_for('emf.render_elliptic_modular_forms')))
@@ -194,6 +197,7 @@ def render_elliptic_modular_form_space_list_chars(level,weight):
     Renders a page with list of spaces of elliptic forms of given 
     level and weight (list all characters) 
     """
+    emf_logger.debug("In render_elliptic_modular_form_space_list_chars(level={0},weight={1})".format(level,weight))
     info = dict()
     #s = make_table_of_characters(level,weight)
     info['level']=level; info['weight']=weight

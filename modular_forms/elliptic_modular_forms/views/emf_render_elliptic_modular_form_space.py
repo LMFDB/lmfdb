@@ -26,17 +26,14 @@ from sage.all import *
 from  sage.modular.dirichlet import DirichletGroup
 from base import app, db
 from modular_forms.elliptic_modular_forms.backend.web_modforms import WebModFormSpace,WebNewForm
-from modular_forms.elliptic_modular_forms.backend.emf_classes import ClassicalMFDisplay
+from modular_forms.elliptic_modular_forms.backend.emf_classes import ClassicalMFDisplay,DimensionTable
 from modular_forms import MF_TOP
+from modular_forms.elliptic_modular_forms import N_max_comp, k_max_comp
 from modular_forms.backend.mf_utils import my_get
 from modular_forms.elliptic_modular_forms.backend.emf_core import * 
 from modular_forms.elliptic_modular_forms.backend.emf_utils import *
 from modular_forms.elliptic_modular_forms.backend.plot_dom import * 
 from modular_forms.elliptic_modular_forms import EMF, emf_logger, emf,EMF_TOP
-
-### Maximum values to be generated on the fly
-N_max_comp = 100
-k_max_comp = 30
 ### Maximum values from the database (does this make sense)
 N_max_db = 1000000 
 k_max_db = 300000
@@ -50,13 +47,20 @@ def render_elliptic_modular_form_space(level=None,weight=None,character=None,lab
     r"""
     Render the webpage for a elliptic modular forms space.
     """
-    emf_logger.debug("In browse_elliptic_modular_forms kwds: {0}".format(kwds))
+    emf_logger.debug("In render_ellitpic_modular_form_space kwds: {0}".format(kwds))
     emf_logger.debug("Input: level={0},weight={1},character={2},label={3}".format(level,weight,character,label))
     info=to_dict(kwds)
     info['level']=level; info['weight']=weight; info['character']=character
     #if kwds.has_key('character') and kwds['character']=='*':
     #    return render_elliptic_modular_form_space_list_chars(level,weight)
-    ### This might take forever....
+    if character==0:
+        dimtbl=DimensionTable()
+    else:
+        dimtbl=DimensionTable(1)
+    if not dimtbl.is_in_db(level,weight,character):
+        emf_logger.debug("Data not available")
+        return render_template("not_available.html")
+    emf_logger.debug("Created dimension table in render_elliptic_modular_form_space")
     info=set_info_for_modular_form_space(**info)
     emf_logger.debug("keys={0}".format(info.keys()))
     if kwds.has_key('download') and not kwds.has_key('error'):

@@ -91,6 +91,9 @@ entry you access information about the forms in the specified space.
 
 {{ list_spaces | safe }}
 
+{% else%}
+  <h1>This data is not available yet.</h1>
 {% endif %}
+
 
 {% endblock content %}
