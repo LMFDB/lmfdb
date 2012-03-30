@@ -133,7 +133,7 @@ def elliptic_curve_search(**args):
             if number:
                 return render_curve_webpage_by_label(label=label)
             else:
-                return render_isogeny_class(str(N)+iso)
+                return render_isogeny_class(str(N)+'.'+iso)
         else:
             query['label'] = label
 
@@ -215,11 +215,12 @@ def by_ec_label(label):
     try:
         N, iso, number = lmfdb_label_regex.match(label).groups()
     except:
-        N,d1, iso,d2, number = sw_label_regex.match(label).groups()
+        N, iso, number = cremona_label_regex.match(label).groups()
+        #N,d1, iso,d2, number = sw_label_regex.match(label).groups()
     if number:
         return render_curve_webpage_by_label(label=label)
     else:
-        return render_isogeny_class(str(N)+iso)
+        return render_isogeny_class(str(N)+'.'+iso)
 
 @app.route("/EllipticCurve/Q/plot/<label>")
 def plot_ec(label):
@@ -260,15 +261,15 @@ def plot_iso_graph(label):
 def render_isogeny_class(iso_class):
     info = {}
     credit = 'John Cremona'
-    lmfdb_iso=iso_class # e.g. '11a'
+    lmfdb_iso=iso_class # e.g. '11.a'
     N, iso, number = lmfdb_label_regex.match(lmfdb_iso).groups()
 
     CDB = base.getDBConnection().elliptic_curves.curves
-    
-    E1data = CDB.find_one({'lmfdb_label': lmfdb_iso+'1'})  
+
+    E1data = CDB.find_one({'lmfdb_label': lmfdb_iso+'1'})
     if E1data is None:
         return "No such isogeny class"
-    
+
     cremona_iso = E1data['iso']
     ainvs = E1data['ainvs']
     E1 = EllipticCurve([ZZ(c) for c in ainvs])
@@ -402,7 +403,7 @@ def render_curve_webpage_by_label(label):
     lmfdb_label=data['lmfdb_label']
     N = ZZ(data['conductor'])
     cremona_iso_class = data['iso'] # eg '37a'
-    lmfdb_iso_class = data['lmfdb_iso'] # eg '37a'
+    lmfdb_iso_class = data['lmfdb_iso'] # eg '37.a'
     rank = data['rank']
     j_invariant=E.j_invariant()
     #plot=E.plot()

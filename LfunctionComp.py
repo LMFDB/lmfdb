@@ -4,7 +4,7 @@ from pymongo import ASCENDING
 import utils
 logger = utils.make_logger("LFComp")
 
-from elliptic_curve import cremona_label_regex
+from elliptic_curve import lmfdb_label_regex
 
 def characterlist(N,type):
      from sage.modular.dirichlet import DirichletGroup
@@ -57,29 +57,8 @@ def nr_of_EC_in_isogeny_class(label):
     return i-1
 
 def modform_from_EC(label):
-     # This is only guaranteed up to 100
-     N, iso, number = cremona_label_regex.match(label).groups()
-     mod_form_iso=iso
-     label_perm={'57b':'c', '57c':'b',
-                '75a':'c', '75c':'a',
-                '84a':'b', '84b':'a',
-                '92a':'b', '94b':'a',
-                '96a':'b', '96b':'a'}
-     if label in label_perm:
-         mod_form_iso=label_perm[label]
-     return { 'level' : N, 'iso' : mod_form_iso}
+     N, iso, number = lmfdb_label_regex.match(label).groups()
+     return { 'level' : N, 'iso' : iso}
 
 def EC_from_modform(level, iso):
-     # This is only guaranteed up to 100
-     label = str(level) + iso
-     EC_iso=iso
-     label_perm={'57b':'c', '57c':'b',
-                '75a':'c', '75c':'a',
-                '84a':'b', '84b':'a',
-                '92a':'b', '92b':'a',
-                '96a':'b', '96b':'a'}
-     if label in label_perm:
-         EC_iso=label_perm[label]
-     return str(level) + EC_iso
-
-
+     return str(level) + '.' + iso
