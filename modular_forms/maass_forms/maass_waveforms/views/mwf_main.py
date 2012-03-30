@@ -234,7 +234,9 @@ def render_search_results_wp(info,search):
     if not isinstance(search,dict):
         search={}
     if not search.has_key('limit'):
-        search['limit']=2000
+        search['limit']=200
+    else:
+        search['limit']=min(200,search['limit'])
     if not search.has_key('skip'):
         search['skip']=0        
     bread=[('Modular forms',url_for('mf.modular_form_main_page')),
