@@ -477,7 +477,7 @@ class Lfunction_EC(Lfunction):
     """Class representing an elliptic curve L-function
     It can be called with a dictionary of these forms:
 
-    dict = { 'label': ... }  label is the Cremona label of the elliptic curve
+    dict = { 'label': ... }  label is the LMFDB label of the elliptic curve
     """
 
     def __init__(self, **args):
@@ -500,7 +500,12 @@ class Lfunction_EC(Lfunction):
         self.nr_of_curves_in_class = nr_of_EC_in_isogeny_class(self.label)
 
         # Create the elliptic curve
-        self.E = EllipticCurve(str(self.label))
+        curves = base.getDBConnection().elliptic_curves.curves
+        Edata = curves.find_one({'lmfdb_label': self.label+'1'})
+        if Edata is None:
+            raise KeyError, 'No elliptic curve with label %s exists in the database'%self.label
+        else:
+            self.E = EllipticCurve([int(a) for a in Edata['ainvs']])
 
         # Extract the L-function information from the elliptic curve
         self.quasidegree = 1
@@ -510,7 +515,7 @@ class Lfunction_EC(Lfunction):
         self.kappa_fe = [1]
         self.lambda_fe = [0.5]
         self.numcoeff = self.Q_fe * 210 + 10
-        logger.debug("numcoeff: {0}".format(self.numcoeff))
+        #logger.debug("numcoeff: {0}".format(self.numcoeff))
         self.mu_fe = []
         self.nu_fe = [Rational('1/2')]
         self.langlands = True
@@ -541,16 +546,16 @@ class Lfunction_EC(Lfunction):
         self.texname = "L(s,E)"
         self.texnamecompleteds = "\\Lambda(s,E)"
         self.texnamecompleted1ms = "\\Lambda(1-s,E)"
-        self.title = "L-function $L(s,E)$ for the Elliptic Curve isogeny class over Q with label "+ self.label
+        self.title = "L-function $L(s,E)$ for the Elliptic Curve Isogeny Class "+ self.label
 
         self.properties = [('Degree ','%s' % self.degree)]
         self.properties.append(('Level', '%s' % self.level))
         self.credit = 'Sage'
         self.citation = ''
-        
-        self.sageLfunction = lc.Lfunction_from_elliptic_curve(self.E, self.numcoeff)
 
-        logger.info("I am now proud to have ", str(self.__dict__))
+        self.sageLfunction = lc.Lfunction_from_elliptic_curve(self.E, int(self.numcoeff))
+
+        #logger.info("I am now proud to have ", str(self.__dict__))
         constructor_logger(self,args)
 
     def Ltype(self):
@@ -688,7 +693,7 @@ class Lfunction_EMF(Lfunction):
 #############################################################################
 
 class Lfunction_HMF(Lfunction):
-    """Class representing an elliptic modular form L-function
+    """Class representing a Hilbert modular form L-function
 
     Compulsory parameters: label
 
@@ -1261,14 +1266,19 @@ class SymmetricPowerLfunction(Lfunction):
         if args[1][0] != 'EllipticCurve' or args[1][1] != 'Q':
             raise TypeError, "The symmetric L functions have been implemented only for Elliptic Curves over Q"
 
-        try:
-            self.E=EllipticCurve(args[1][2])
-        except  AttributeError:
-            raise AttributeError, "This elliptic curve does not exist in cremona's database"
+        self.label = args[1][2]
+        # Create the elliptic curve
+        curves = base.getDBConnection().elliptic_curves.curves
+        Edata = curves.find_one({'lmfdb_label': self.label+'1'})
+        if Edata is None:
+            raise KeyError, 'No elliptic curve with label %s exists in the database'%self.label
+        else:
+            self.E = EllipticCurve([int(a) for a in Edata['ainvs']])
+
         from symL.symL import SymmetricPowerLFunction
         self.S=SymmetricPowerLFunction(self.E,self.m)
 
-        self.title = "The symmetric power $L$-function $L(s,E,\mathrm{sym}^%d)$ of isogeny class %s"% (self.m,self.E.cremona_label()[:-1])
+        self.title = "The symmetric power $L$-function $L(s,E,\mathrm{sym}^%d)$ of Elliptic Curve Isogeny Class %s"% (self.m,self.label)
 
         self.dirichlet_coefficients = self.S._coeffs
 
@@ -1328,10 +1338,7 @@ class SymmetricPowerLfunction(Lfunction):
             self.euler += poly_string
         self.euler += "\\end{align}"
 
-        #self.friends = [("Isogeny Class", '/'.join('', 'EllipticCurve','Q',arg[1][2], ''))]
-
-
-
+        #self.friends = [("Isogeny Class", '/'.join('', 'EllipticCurve','Q',self.label, ''))]
 
 
 

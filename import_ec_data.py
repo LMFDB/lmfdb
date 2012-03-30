@@ -29,6 +29,7 @@ The documents in the collection 'curves' in the database 'elliptic_curves' have 
    - 'tamagawa_product': (int) product of Tamagawa numbers, e.g. 4
    - 'special_value': (float) special value of derivative of L-function, e.g.1.490882041449698
    - 'real_period': (float) real period, e.g. 0.3727205103624245
+   - 'degree': (int) degree of modular parametrization, e.g. 1984
 
 {u'real_period': 0.3727205103624245, u'ainvs': [u'0', u'1', u'1',
 u'10617', u'75394'], u'conductor': 1225, u'sha_an': 1.0, u'number': 2,
@@ -203,8 +204,27 @@ def intpts(line):
         'x-coordinates_of_integral_points':data[2]
         }
 
+def alldegphi(line):
+    r""" Parses one line from an alldegphi file.  Returns the label
+    and a dict containing one field with key 'degree', all values
+    being strings or ints.
 
-filename_base_list = ['allcurves', 'allbsd', 'allgens', 'intpts']
+    Input line fields:
+
+    conductor iso number ainvs degree
+
+    Sample input line:
+
+    11 a 1 [0,-1,1,-10,-20] 1
+    """
+    data = split(line)
+    label = data[0] + data[1] + data[2]
+    return label, {
+        'degree': int(data[4])
+    }
+
+
+filename_base_list = ['allcurves', 'allbsd', 'allgens', 'intpts', 'alldegphi']
 
 def cmp_label(lab1,lab2):
     from sage.databases.cremona import parse_cremona_label, class_to_int

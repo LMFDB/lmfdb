@@ -86,7 +86,7 @@ table.ntdata thead th.spaceleft {
 <table class="ntdata" id="chitable">
     <thead class="space">
         <tr class="space">
-            <th class="spaceleft"> Modulus </th>
+            <th class="spaceleft"></th>
             <th class="weight" colspan="{{headers|length}}">
             <span style="display:block;float:left;margin-right:3px;"> Values </span>
         </tr>
@@ -106,7 +106,7 @@ table.ntdata thead th.spaceleft {
             </a>
                 </th>
                     {% for value in row[1] %}
-                    <td> {{value}} </td> 
+                    <td style="font-family: serif;" >{{value}}</td> 
                     {% endfor %}
                 </tr>
         {% endfor %} 

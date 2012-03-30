@@ -112,6 +112,8 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
         info['error']="Could not compute the desired function!"
     properties2=list(); parents=list(); siblings=list(); friends=list()
     if WNF==None or  WNF._f == None:
+        print "level=",level
+        print WNF
         info['error']="This space is empty!"
     D = DirichletGroup(level)
     if len(D.list())> character:
@@ -221,10 +223,13 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
         for label_other in WNF.parent()._galois_orbits_labels:
             if(label_other<>label):
                 s='Modular Form '
-                s=s+str(level)+str(label_other)
+                if character:
+                    s = s + str(level) + '.' + str(weight) + '.' + str(character) + str(label_other)
+                else:
+                    s = s + str(level) + '.' + str(weight) + str(label_other)
                 url = url_for('emf.render_elliptic_modular_forms',level=level,weight=weight,character=character,label=label_other)                 
                 friends.append((s,url))
-    s = 'L-Function '+str(level)+label
+    s = 'L-Function '+str(level)+'.'+label
     #url = "/L/ModularForm/GL2/Q/holomorphic?level=%s&weight=%s&character=%s&label=%s&number=%s" %(level,weight,character,label,0)
     url = '/L'+url_for('emf.render_elliptic_modular_forms',level=level,weight=weight,character=character,label=label)
     if WNF.degree()>1:
@@ -236,8 +241,8 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
         friends.append((s,url))
     # if there is an elliptic curve over Q associated to self we also list that
     if WNF.weight()==2 and WNF.degree()==1:
-        llabel=str(level)+label
-        s = 'Elliptic Curve '+llabel
+        llabel=str(level)+'.'+label
+        s = 'Elliptic Curve Isogeny Class '+llabel
         url = '/EllipticCurve/Q/'+llabel 
         friends.append((s,url))
     space_url='?&level='+str(level)+'&weight='+str(weight)+'&character='+str(character)
