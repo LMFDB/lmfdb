@@ -35,16 +35,20 @@ class BadFactor(Array(Int)):
 Dokchitser_Character = FiniteSequence(Anything)
 #### Not precise ####
 
+class IndexAt1(Int):
+    pass
+
 Dokchitser_ArtinRepresentation = Dict({
         "_id":              Anything,
         "Dim" :             Int,                                #
         "Indicator":        Int,                                #
         "Conductor" :       TooLargeInt,                        #
-        "BadFactors":       FiniteSequence(BadFactor),          #
+        "BadFactors":       FiniteSequence(IndexAt1),           #   
         "BadPrimes":        FiniteSequence(TooLargeInt),        #
-        "LocalFactors":     Anything,                     
-        "DBIndex" :         Int,        # Starting at 1         #
-        "NFGal" :           FiniteSequence(String),             #
+        "LocalFactors":     FiniteSequence(Anything),
+                        # actually, not Anything but PolynomialAsSequence(PolynomialCyclotomic)
+        "DBIndex" :         IndexAt1,        # Starting at 1    #
+        "NFGal" :           FiniteSequence(Anything),           #
         "Character" :       Anything,
         "Sign":             Int,                                #
         "CharacterField":   Int                                 #
@@ -78,6 +82,10 @@ Dokchitser_ConjugacyClass = Dict(
                 "Representative":   PermutationAsList
             })
 
+class pAdicApproximationAsString(String):
+    # If the numbers get too unwidely, one can use this class to overload self.latex() and display it in a better form
+    pass
+
 Dokchitser_NumberFieldGaloisGroup = Dict({
     "_id" :                 Anything,
     "ArtinReps" :           FiniteSequence(Dokchitser_ArtinRepresentation_Short),
@@ -89,7 +97,7 @@ Dokchitser_NumberFieldGaloisGroup = Dict({
     "G-Gens" :              FiniteSet(PermutationAsList),
     "G-Name" :              Custom_GroupLabel,
     "Polynomial" :          PolynomialAsSequenceInt,
-    "QpRts" :               FiniteSequence(Anything),
+    "QpRts" :               FiniteSequence(pAdicApproximationAsString),
     "QpRts-minpoly" :       PolynomialAsSequenceInt,
     "QpRts-p" :             Int,
     "QpRts-prec" :          Int,
