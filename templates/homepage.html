@@ -73,11 +73,12 @@
         <a href="{{url_for('introduction_features')}}">Features</a>
         <a href="{{url_for('introduction_tutorial')}}">Tutorial</a>
      </span>
-    </li>
-   <li>
+   </li>
+  </ul><ul>
+   <li class="bigpicture">
     <a href="{{ url_for('bigpicture') }}">Map of LMFDB</a>
    </li>
-  </h2>
+  </ul>
 
   <h2 class="link">
    <a href="{{ url_for('render_Lfunction') }}">L-functions</a>
@@ -135,7 +136,8 @@
   </ul>
 
   <h2 class="link">
-       <a class="mf"    href="{{ url_for('mf.modular_form_main_page') }}">Modular Forms</a></h2>
+       <a class="mf"    href="{{ url_for('mf.modular_form_main_page') }}">Modular Forms</a>
+  </h2>
   <ul>
    <li><a class="emf"  href="{{ url_for('emf.render_elliptic_modular_forms') }}">Classical, $\mathrm{GL}(2)/\mathbb{Q}$</a></li>
    <li><a class="mwf"  href="{{ url_for('mwf.render_maass_waveforms') }}">Maass, $\mathrm{GL}(2)/\mathbb{Q}$</a></li>
