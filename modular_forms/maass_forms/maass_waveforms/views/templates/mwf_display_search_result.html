@@ -12,11 +12,16 @@
  td.sorting_1 {}
  .alignLeft  {text-align:left}
  .dataTables_length {width:100%}
-
+.main { width:100% }
+.content { width:100% }
+.eigenvalues { width:100% }
+.eigenvalues_wrapper { width:100% }
+.searchresults { width:100% }
 table.pretty {
     clear: both;
 }
 
+.dataTables_wrapper {width:100%}
 div.newsearch {
     clear: both;
 }
@@ -32,6 +37,7 @@ div.dataTables_wrapper:after {
 }
 html[xmlns] .dataTables_wrapper { display: block; }
 * html .dataTables_wrapper { height: 1%; }
+
 </style>
 
 <script src="{{ url_for('static', filename='jquery.column.min.js')}}" type="text/javascript" charset="utf-8"></script>
@@ -48,16 +54,18 @@ var evTable = $("table#eigenvalues").dataTable(
    "bInfo": true,
    "bProcessing":true,
    "aoColumns":[{"aaSorting":"asc","sWidth": "10%", "bSortable": true, "bSearchable": true ,"sType":"numeric" },
-                 {"sWidth": "10%", "bSortable": true,  "bSearchable": true, "sClass": "alignLeft","fnRender":"text-align:left"},
-                 {"sWidth": "10%", "bSortable": false, "bSearchable": true, "sClass": "alignLeft","fnRender":"text-align:left"},
-                 {"sWidth": "20%", "bSortable": true,  "bSearchable": true, "sClass": "alignLeft","fnRender":"text-align:left"},
+                 {"sWidth": "5%", "bSortable": true,  "bSearchable": true, "sClass": "alignLeft","fnRender":"text-align:left"},
+                 {"sWidth": "5%", "bSortable": false, "bSearchable": true, "sClass": "alignLeft","fnRender":"text-align:left"},
+                 {"sWidth": "20%", "bSortable": true,  "bSearchable": true, "sClass": "alignLeft","fnRender":"text-align:left","sType":"numeric"},
+                 {"sWidth": "10%", "bSortable": false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:left"},
+                 {"sWidth": "10%", "bSortable": false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:left","sType":"numeric"},
                  {"sWidth": "10%", "bSortable": false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:left"},
                  {"sWidth": "10%", "bSortable": false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:left"},
                  {"sWidth": "10%", "bSortable": false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:left"},
-                 {"sWidth": "10%", "bSortable": false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:left"},
-                 {"sWidth": "10%", "bSortable": false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:left"}],
+                 {"sWidth": "500px","resizeable":false, "bSortable":
+                  false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:left","minWidth":200000}],  
     "bSort":true,
-    "iDisplayLength": 20,    
+    "iDisplayLength": 15,    
     "iDisplayStart": 0,
     "fnSort":[[1,"asc"],[2,"asc"],[3,"asc"]],
     "oLanguage": {
@@ -109,30 +117,26 @@ $('#weight').change( function() { evTable.fnDraw(); } );
 <div id="searchresults">
 <table class="ntdata pretty" id="eigenvalues">
   <colgroup>
-    <col/> <col/>
-    <col/> 
+    <col/> <col/><col/> 
     <col align="char" char="."/>
-    <col/> <col/>
-    <col/> <col/>
-    <col/> <col/>
-    <col/>
+    <col/> <col/><col/> <col/> <col/> <col/>
   </colgroup>
   <thead>
     <tr>
     {% for head in table.colheads %}
       <th> {{head}}</th>
     {% endfor %}
+    <th width="100px">Atkin&nbsp;-&nbsp;Lehner&nbsp;</th>
     </tr>
   </thead>
   <tbody>
-    {% set nnrows = 200 %}
+    {% set nnrows = 100 %}
     {%if nrows < nnrows %}
      {% set nnrows = nrows %}
     {%endif%}
     {% for r in range(0,nnrows) %}
     {% if data[r] is defined %}
     <tr>
-
            <td>            
              {% if data[r].N is defined %} {{ data[r].N}}  {% endif %}
            </td>
