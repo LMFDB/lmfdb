@@ -135,9 +135,9 @@ table.ntdata thead th.spaceleft {
       <table class="ntdata">
         <thead>
           <tr class="space">
-           <th class="spaceleft">Level \(N\)</th>
+           <th class="spaceleft">Weight</th>
            <th class="weight" colspan="{{table.col_heads|length}}">
-	     <span style="display:block;float:left;margin-right:3px;">Weight</span>
+	     <span style="display:block;float:left;margin-right:3px;">Level \(N\)</span>
 	     {%if info.show_switch is defined %}
 	   <span style="display:block;float:right">
 	     {% if info.groupother == 1 %}
@@ -150,8 +150,9 @@ table.ntdata thead th.spaceleft {
           </tr>
           <tr class="space">
             <th class="spaceleft"></th>
-            {% for k in table.col_heads  %}
-            <th class="level">{{k}}</th>
+            {% for N in table.col_heads  %}
+	    {% set col_url = url_for('emf.render_elliptic_modular_forms',level=N,character=0) %}
+            <th class="level"><a href="{{col_url}}">{{N}}</a></th>
             {% endfor %}
           </tr>
         </thead>
@@ -159,13 +160,17 @@ table.ntdata thead th.spaceleft {
           {% for row in rows  %}
           <tr>
             <th class="left">
-              {% set N = table.row_heads[loop.index-1] %}
-              {% set row_url = url_for('emf.render_elliptic_modular_forms',level=N,character=0) %}
-              <a href="{{ row_url }}">{{ N }}</a>
+              {% set k = table.row_heads[loop.index-1] %}
+              {% set row_url = url_for('emf.render_elliptic_modular_forms',weight=k,character=0) %}
+              <a href="{{ row_url }}">{{ k }}</a>
             </th>
             {% for cell in row  %}
             <td align="center">
-              <a href="{{cell.url}}">{{cell.dim}}</a>
+	      {% if cell.url != '' %}
+                <a href="{{cell.url}}">{{cell.dim}}</a>
+              {% else %}
+		{{cell.dim}}
+	      {% endif  %}
             </td>
             {% endfor %}
           </tr>
