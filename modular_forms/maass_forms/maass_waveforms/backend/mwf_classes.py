@@ -152,6 +152,7 @@ class WebMaassForm(object):
                     self.coeffs=C[0]
             else:
                 self.coeffs={}
+        #mwf_logger.debug("coeff:{0}".format(self.coeffs))
         if isinstance(self.coeffs,list):
             if self.coeffs[0]==0:
                 self.coeffs.pop(0)
