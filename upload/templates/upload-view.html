@@ -110,9 +110,10 @@ function updateMappingRules(data, id) {
 
 {% macro render_uploadlist(title, list, display) %}
 <h2> {{ title }} </h2>
-
 <ul>
+{% if list|length > 1 %}
 <li> <h4>Unassociated files</h4>
+{% endif %}
 {% for entry in list %}
 <!--<p>-->
 {% if entry.metadata['related_to'] is defined %}

@@ -217,7 +217,11 @@
       </div>
     {% endif %}
    {{ rightnavig("Related objects", friends) }}
-   {{ rightnavig("Downloads", downloads + getUploadedFor(request.path, false) ) }}
+   {% if downloads %}
+     {{ rightnavig("Downloads", downloads + getUploadedFor(request.path, false) ) }}
+   {% else %}
+     {{ rightnavig("Data", getUploadedFor(request.path, false) ) }}
+   {% endif %}
     </div>
     {%- endif %}
 
