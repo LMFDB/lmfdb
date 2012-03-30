@@ -36,14 +36,10 @@ def isogenyclasstable(Nmin,Nmax):
     query = {'number': 1, 'conductor': {'$lte': Nmax, '$gte': Nmin}}
 
     # Get all the curves and sort them according to conductor
-    cursor = base.getDBConnection().ellcurves.curves.find(query)
-    res = cursor.sort([('conductor', ASCENDING), ('iso', ASCENDING), ('number', ASCENDING)])
+    cursor = base.getDBConnection().elliptic_curves.curves.find(query)
+    res = cursor.sort([('conductor', ASCENDING), ('lmfdb_label', ASCENDING)])
 
-    oldE = {'iso': 'q', 'conductor': 'foo'}
-    for E in res:
-       if not (E['iso'] == oldE['iso'] and E['conductor'] == oldE['conductor']):
-            iso_list.append( str(E['conductor'])+E['iso'])
-       oldE = E
+    iso_list = [E['lmfdb_iso'] for E in res]
 
     return iso_list
     

@@ -31,6 +31,7 @@ def init_ecdb_count():
         init_ecdb_flag = True
 
 cremona_label_regex = re.compile(r'(\d+)([a-z]+)(\d*)')
+lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
 sw_label_regex=re.compile(r'sw(\d+)(\.)(\d+)(\.*)(\d*)')
 
 def format_ainvs(ainvs):
@@ -126,9 +127,9 @@ def elliptic_curve_search(**args):
     query = {}
     if 'jump' in args:
         label = info.get('label', '')
-        m = cremona_label_regex.match(label)
+        m = lmfdb_label_regex.match(label)
         if m:
-            N, iso, number = cremona_label_regex.match(label).groups()
+            N, iso, number = m.groups()
             if number:
                 return render_curve_webpage_by_label(label=label)
             else:
@@ -186,7 +187,7 @@ def elliptic_curve_search(**args):
     nres = cursor.count()
     if(start>=nres): start-=(1+(start-nres)/count)*count
     if(start<0): start=0
-    res = cursor.sort([('conductor', ASCENDING), ('iso', ASCENDING), ('number', ASCENDING)]).skip(start).limit(count)
+    res = cursor.sort([('conductor', ASCENDING), ('lmfdb_iso', ASCENDING), ('lmfdb_number', ASCENDING)]).skip(start).limit(count)
     info['curves'] = res
     info['format_ainvs'] = format_ainvs
     info['number'] = nres
@@ -212,7 +213,7 @@ def elliptic_curve_search(**args):
 @app.route("/EllipticCurve/Q/<label>")
 def by_ec_label(label):
     try:
-        N, iso, number = cremona_label_regex.match(label).groups()
+        N, iso, number = lmfdb_label_regex.match(label).groups()
     except:
         N,d1, iso,d2, number = sw_label_regex.match(label).groups()
     if number:
@@ -240,7 +241,7 @@ def plot_ec(label):
 @app.route("/EllipticCurve/Q/iso_graph/<label>")
 def plot_iso_graph(label):
     C = base.getDBConnection()
-    data = C.ellcurves.curves.find_one({'lmfdb_label': label})
+    data = C.elliptic_curves.curves.find_one({'lmfdb_iso': label})
     if data is None:
         return "No such curve"
     ainvs = [int(a) for a in data['ainvs']]
@@ -260,7 +261,7 @@ def render_isogeny_class(iso_class):
     info = {}
     credit = 'John Cremona'
     lmfdb_iso=iso_class # e.g. '11a'
-    N, iso, number = cremona_label_regex.match(lmfdb_iso).groups()
+    N, iso, number = lmfdb_label_regex.match(lmfdb_iso).groups()
 
     CDB = base.getDBConnection().elliptic_curves.curves
     
@@ -313,11 +314,8 @@ def render_isogeny_class(iso_class):
       
     #info['f'] = ajax_more(E.q_eigenform, 10, 20, 50, 100, 250)
     info['f'] = web_latex(E.q_eigenform(10))
-    G = E1.isogeny_graph(); n = G.num_verts()
-#    G.relabel([1+perm[j] for j in range(n)]) # proper cremona labels...
-    G.relabel([1+j for j in range(n)])
-    info['graph_img'] = image_src(G.plot(edge_labels=True, layout='spring'))
-
+    info['graph_img'] = url_for('plot_iso_graph', label=lmfdb_iso)
+   
     info['curves'] = [[lmfdb_iso+str(i+1),cremona_labels[i],str(list(c.ainvs())),c.torsion_order(),c.modular_degree(),optimal_flags[i]] for i,c in enumerate(db_curves)]
     info['download_qexp_url'] = url_for('download_qexp', limit=100, ainvs=','.join([str(a) for a in ainvs]))
     info['download_all_url'] = url_for('download_all', label=str(lmfdb_iso))
@@ -477,7 +475,7 @@ def render_curve_webpage_by_label(label):
     #     mod_form_iso=label_perm[mod_form_iso]
     # else:
     #     mod_form_iso=cremona_label_regex.match(iso_class).groups()[1]
-    mod_form_iso=cremona_label_regex.match(lmfdb_iso_class).groups()[1]
+    mod_form_iso=lmfdb_label_regex.match(lmfdb_iso_class).groups()[1]
 
     info.update({
         'conductor': N,
@@ -548,13 +546,14 @@ def padic_data():
     label = request.args['label']
     p = int(request.args['p'])
     info['p'] = p
-    N, iso, number = cremona_label_regex.match(label).groups()
+    N, iso, number = lmfdb_label_regex.match(label).groups()
     #print N, iso, number
     if request.args['rank'] == '0':
         info['reg'] = 1
     elif number == '1':
         C = base.getDBConnection()
-        data = C.ellcurves.padic_db.find_one({'label': N + iso, 'p': p})
+        data = C.elliptic_curves.curves.find_one({'lmfdb_iso': N+'.'+iso})      
+        data = C.ellcurves.padic_db.find_one({'label': data['label'], 'p': p})
         info['data'] = data
         if data is None:
             info['reg'] = 'no data'
