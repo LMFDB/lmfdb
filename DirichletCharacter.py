@@ -168,7 +168,7 @@ def initCharacterInfo(web_chi,args, request):
         info['prim'] = web_chi.prim
         info['vals'] = web_chi.vals
         info['logvals'] = web_chi.logvals
-        #info['galoisorbits'] = web_chi.galoisorbits
+    #info['galoisorbits'] = web_chi.galoisorbits
         #info['root_unity'] =  str(any(map(lambda x : r"\zeta" in x,  web_chi.vals)))
         info['unitgens'] = str(web_chi.unitgens)
         info['bound'] = int(web_chi.bound)
@@ -408,7 +408,7 @@ def dirichlet_table(**args):
     info['modulus'] = modulus
     info["bread"] = [('Dirichlet Character Table', url_for("dirichlet_table")), ('result', ' ')]
     info['credit'] = 'Sage'
-    h, c = get_entries(modulus)
+    h, c, = get_entries(modulus)
     info['headers'] = h
     info['contents'] = c
     info['title'] = 'Dirichlet Characters'
@@ -423,7 +423,8 @@ def get_entries(modulus):
     e = euler_phi(modulus)
     rows = []
     for chi in G:
+        is_prim = chi.is_primitive()
         number = chi.number()
-        rows.append((number,log_value(modulus,number)))
+        rows.append((number,is_prim, log_value(modulus,number)))
     return headers, rows
 

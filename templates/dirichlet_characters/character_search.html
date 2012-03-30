@@ -39,6 +39,32 @@ table td.params {
 }
 </style>
 
+<script>
+ $(document).ready(function() {
+     $('#characterTable').dataTable({
+        "oLanguage": {
+                "oPaginate": {
+                        "sPrevious": "",
+                        "sNext": ""
+                }
+        },
+         "bFilter":false,
+         "bAutoWidth": false, 
+         "iDisplayLength":10, 
+         "aoColumnDefs": [ 
+           { "sType": 'title-numeric',
+             "aTargets": [0] }, 
+         ],
+         "aLengthMenu": [[20, 50, -1], [20, 50, "All"]],
+         "fnRowCallback": function( row, data, index ){ 
+             MathJax.Hub.Queue(['Typeset', MathJax.Hub, row]);
+             return row;
+         }
+
+    });
+});
+</script>
+
 <h2> Further refine search </h2>
 <form>
     {#<input type="hidden" name="start" value="{{start}}"/>#}
@@ -69,31 +95,6 @@ table td.params {
         Results
     {% endif %} 
 </h2>
-
-<script>
- $(document).ready(function() {
-     $('#characterTable').dataTable({
-        "oLanguage": {
-                "oPaginate": {
-                        "sPrevious": "",
-                        "sNext": ""
-                }
-        },
-         "bFilter":false,
-         "bAutoWidth": false, 
-         "aoColumnDefs": [ 
-           { "sType": 'title-numeric',
-             "aTargets": [0] }, 
-         ],
-
-          "fnRowCallback": function( row, data, index ){ 
-             MathJax.Hub.Queue(['Typeset', MathJax.Hub, row]);
-             return row;
-         }
-
-    });
-});
-</script>
 
 <table class="ntdata" style="table-layout:fixed" id="characterTable">
     <thead class="heading" align="center">
