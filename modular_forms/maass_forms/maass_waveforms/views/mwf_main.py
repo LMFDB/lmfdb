@@ -22,8 +22,9 @@ import base
 from base import app
 from flask import render_template, url_for, request, redirect, make_response,send_file
 import bson
+import StringIO
 import pymongo
-from sage.all import is_odd,is_even
+from sage.all import is_odd,is_even,dumps
 #mwf = flask.Blueprint('mwf', __name__, template_folder="templates",static_folder="static")
 import utils
 from  modular_forms.maass_forms.maass_waveforms import MWF,mwf_logger, mwf
@@ -32,6 +33,7 @@ from modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import MaassF
 from modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import MaassDB
 from mwf_upload_data import *
 logger = mwf_logger
+import json
 
 
 # this is a blueprint specific default for the tempate system.
@@ -65,7 +67,7 @@ def render_maass_waveforms(level=0,weight=-1,character=-1,r1=0,r2=0,**kwds):
         search = get_search_parameters(info)
         mwf_logger.debug("search=%s"%search)
         return render_search_results_wp(info,search)
-
+    
     DB = connect_db() 
     if not info['collection'] or info['collection']=='all':
         md = get_collections_info()
@@ -102,7 +104,8 @@ def render_maass_waveforms(level=0,weight=-1,character=-1,r1=0,r2=0,**kwds):
     DB.set_table()
     DB.table['ncols']=10
     info['DB']=DB
-    
+    info['dbcount']=DB.count()
+    info['limit']=200
     return render_template("mwf_navigate.html", **info)
 
     
@@ -119,10 +122,28 @@ def render_maass_waveform_space(level,weight,character,**kwds):
 
 @mwf.route("/<maass_id>",methods=['GET','POST'])
 def render_one_maass_waveform(maass_id,**kwds):
-    mwf_logger.debug("in_render_one_maass_form")
-    if kwds.get('download','')=='coefficients':
-        C,fname = DB.get_coefficients({"_id":self._maassid},filename='True')
+    info = get_args_mwf(**kwds)
+    info['maass_id']=bson.objectid.ObjectId(maass_id)
+    mwf_logger.debug("in_render_one_maass_form: info={0}".format(info))
+    if info.get('download','')=='coefficients1':
+        DB = connect_db()
+        fname=""
+        f = DB.get_maassform_by_id({"_id":info['maass_id']},filename='True')
+        dim =f.get('dim',0)
+        res =  DB.get_coefficients({"_id":info['maass_id']},filename='True')
+        if isinstance(res,list):
+            if isinstance(res,list):
+                res = res[0][0]
+            else:
+                res = res[0]
+        try:
+            C,fname = res
+        except: # ValueError:
+            C = res
+            mwf_logger.debug("res={0}".format(res))
         filename=fname+'.txt'
+        mwf_logger.debug("filename={0}".format(filename))
+        s = dumps(C)
         strIO = StringIO.StringIO()
         strIO.write(s)
         strIO.seek(0)
@@ -134,8 +155,7 @@ def render_one_maass_waveform(maass_id,**kwds):
             info['error']="Could not send file!"
             
     else:
-        info = get_args_mwf()
-        info['maass_id']=maass_id
+    
         #mwf_logger.debug("id1={0}".format(id))
         return render_one_maass_waveform_wp(info)
 
@@ -149,11 +169,13 @@ def render_one_maass_waveform_wp(info):
     DB=connect_db()
     maass_id = info['maass_id']
     mwf_logger.debug("id1={0}".format(maass_id))
-    # Create the link to the L-function (put in '/L' at the beginning and '/' before '?'
-    Llink = "/L"+url_for('mwf.render_one_maass_waveform',maass_id=maass_id) #+ '/?db=' + info['db']
-    info["friends"]= [("L-function",Llink)]
     info['MF'] = WebMaassForm(DB,maass_id)
     level = info['MF'].level
+    dim = info['MF'].dim
+    # Create the link to the L-function (put in '/L' at the beginning and '/' before '?'
+    Llink = "/L"+url_for('mwf.render_one_maass_waveform',maass_id=maass_id) #+ '/?db=' + info['db']
+    if dim==1:
+        info["friends"]= [("L-function",Llink)]
     bread=[('Maass waveforms',url_for('.render_maass_waveforms')),
           ('Of Level {0}'.format(level),
            url_for('.render_maass_waveforms',level=level))          ]
@@ -166,10 +188,31 @@ def render_one_maass_waveform_wp(info):
                    ('Symmetry',[info['MF'].even_odd()]),
                    ('Weight',[info['MF'].the_weight()]),
                    ('Character',[info['MF'].the_character()]),
+                                      ('Dimension',[dim]),
                    ('Fricke Eigenvalue',[info['MF'].fricke()])]
+    if dim>0 and info['MF'].the_character()=="trivial":
+        properties.append(("Possibly oldform",[]))
     info['title']="Maass forms on \(\Gamma_{0}( %s )\)" % (info['MF'].level)
     info['bread']=bread
     info['properties2']=properties
+
+
+    cols=[{"aaSorting":"asc","sWidth": "10%", "bSortable": "true", "bSearchable": "false" ,"sType":"numeric" }]
+    negc=info['MF'].table['negc']
+    for j in range(dim):
+        if not negc:
+            col = {"bSortable": "false", "bSearchable": "true", "sClass": "alignLeft","fnRender":"text-align:left","sType":"numeric" }
+            cols.append(col)
+        else:
+            col1 = {"bSortable": "false", "bSearchable": "true", "sClass": "alignLeft","fnRender":"text-align:left","sType":"numeric" }
+            col2 = {"bSortable": "false", "bSearchable": "true", "sClass": "alignLeft","fnRender":"text-align:left","sType":"numeric" }
+            cols.append(col1)
+            cols.append(col2)
+    
+    info['coeff_aoColumns']=cols # json.dumps(cols)
+    mwf_logger.debug("col={0}".format(cols))
+    #coeffurl=url_for('mwf.render_one_maass_waveform',maass_id=maass_id,download='coefficients')
+#    info['downloads'] = [('Coefficients', coeffurl) ]
     return render_template("mwf_one_form.html",**info)
 
 
@@ -228,8 +271,8 @@ def render_one_maass_waveform_wp_old(info):
 
 def render_search_results_wp(info,search):
     # res contains a lst of Maass waveforms
-    mwf_logger.debug("in render_search_results. info=".format(info))
-    mwf_logger.debug("Search:".format(search))
+    mwf_logger.debug("in render_search_results. info={0}".format(info))
+    mwf_logger.debug("Search:{0}".format(search))
     evs={'table':{}}
     if not isinstance(search,dict):
         search={}
@@ -247,7 +290,10 @@ def render_search_results_wp(info,search):
         info['title']='Browse Maassforms'
     else:
         info['title']='Search Results'
-    
+    if info.get('Weight',0)==1:
+        info['wtis1']="yes";info['wtis0']=""
+    else:
+        info['wtis0']="yes";info['wtis1']=""
     return render_template("mwf_display_search_result.html", **info)
 
 
@@ -333,12 +379,11 @@ def render_browse_all_eigenvalues():
     info={}
     info['bread']=bread
     info['colheads']=['Level','Weight','Char','Eigenvalue',
-                              'Symmetry','Error','Coefficients'
-                              'Dimension','Fricke involution','Atkin-Lehner']
+                              'Symmetry','Precision','Coefficients'
+                              'Dimension','Fricke','Atkin-Lehner']
     return render_template("mwf_browse_all_eigenvalues.html", **info)
 
 
-import json
 @mwf.route("/Tables_get",methods=met)
 def get_table():
     search = get_search_parameters({})
@@ -388,13 +433,13 @@ def evs_table(search,twodarray=False):
         elif st==0:
             st = "even"
         else:
-            st = "undefined"
+            st = "none"
         row['symmetry']=st
         er = f.get('Error',0)
         if er>0:
             er = "{0:1.0e}".format(er)
         else:
-            er="undefined"
+            er="unknown"
         row['err']=er
         dim = f.get('Dim',None)
         if dim==None:
@@ -420,7 +465,7 @@ def evs_table(search,twodarray=False):
     evs['table']['nrows']=nrows
     evs['table']['ncols']=10
     evs['table']['colheads']=['Level','Weight','Char','Eigenvalue',
-                              'Symmetry','Error',
+                              'Symmetry','Precision',
                               'Dim.','Coeff.','Fricke',
                               'Atkin-Lehner']
     return evs
