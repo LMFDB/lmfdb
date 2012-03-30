@@ -48,7 +48,7 @@ table.props tr td:first-child {
             <a onclick="show_code('sage'); return false" href='#'>sage</a>
         </div>
  
-        <div class='sage nodisplay code'>sage: chi = DirichletGroup({{modulus}})[{{number}}]</div>
+        <div class='sage nodisplay code'>sage: chi = DirichletGroup_conrey({{modulus}})[{{number}}]<br>sage: chi_sage = DirichletGroup_conrey.standard_dirichlet_group({{modulus}})[{{number}}]</br></div>
 
         {# Kronecker symbol #}
 
@@ -56,7 +56,7 @@ table.props tr td:first-child {
         <h2>
             {{ KNOWL('character.dirichlet.kronecker_symbol') }} representation
         </h2>
-        <div class = 'sage nodisplay code'>sage: a.kronecker({{conductor}})</div>
+        <div class = 'sage nodisplay code'>sage: chi_sage.kronecker({{conductor}})</div>
         <p>
         {{ kronsymbol }} (mod {{modulus}})
         </p>
@@ -66,7 +66,7 @@ table.props tr td:first-child {
 
         {% if primitive=="False" %}
             <h2>
-                Inducing {{ KNOWL('character.dirichlet.induced_character', title="primitive character") }}
+                Inducing {{ KNOWL('character.dirichlet.primitive', title="primitive character") }}
             </h2>
             <div class = 'sage nodisplay code'>sage: chi.primitive_character()</div>
             <p>
@@ -85,15 +85,10 @@ table.props tr td:first-child {
         </h2>
         <div class = 'sage nodisplay code'>sage: chi.values()</div>
         <p>
-            {% if root_unity=="True" %} 
-                For \(\zeta_{ {{ zetaorder }} }\) a primitive 
-                \( {{ zetaorder }} \)-th root of unity
-                <br><br/> 
-            {% endif %}
         </p>
         <div align="left"> 
             {#{{ logvals }}#}
-            \([{{ logvals|join(", " ) }}]\)
+            [{{ logvals|join(", " ) }}]
         </div>
         
         {# Values on generators #}
@@ -101,13 +96,15 @@ table.props tr td:first-child {
         <h2>
             {{ KNOWL('character.dirichlet.values_on_gens', title="Values on generators") }}
         </h2>
-        <div class = 'sage nodisplay code'>sage: chi.values_on_gens()</div>
+        <div class = 'sage nodisplay code'>sage: chi_sage.values_on_gens()</div>
         <p>
             \( {{ unitgens }} \) &rarr; \( {{ genvalstex }} \)
         </p>
 
         <h2> {{ KNOWL('character.dirichlet.basic_properties', title="Basic properties") }} </h2>
 
+        {# Galois Orbits #}
+        
         {# Basic properties #}
         <table class="props">
             <tr>
@@ -185,12 +182,12 @@ table.props tr td:first-child {
         <h2>
             {{ KNOWL('character.dirichlet.jacobi_sum') }}
         </h2>
-        <div class = 'sage nodisplay code'>sage: chi.jacobi_sum()</div>
+        <div class = 'sage nodisplay code'>sage: chi_sage.jacobi_sum()</div>
         {% set jacobi_default = 1 %}
-        <form> \( J(\chi_{ {{modulus}} }({{number}},&middot;),\psi) \;\) for \( \;\psi = {{modulus}}.\)
+        <form> \( J(\chi_{ {{modulus}} }({{number}},&middot;),\chi_{ {{modulus}} }(n,&middot;)) \;\) for \( \; n = \)
             <input id="calc-jacobi-input" size="10" placeholder={{jacobi_default}}>
             <button id="calc-jacobi-go"> Compute </button>
-            <span class="formexample"> n.b., takes integers 1--{{modulus}} coprime to {{modulus}}</span>
+            <span class="formexample"> e.g. 1</span>
             <div class="slider" id="slider-jacobi-b"></div>
         </form>
         <div class="output"><span id="calc-jacobi-output"></span></div>
@@ -200,7 +197,7 @@ table.props tr td:first-child {
         <h2>
             {{ KNOWL('character.dirichlet.kloosterman_sum') }}
         </h2>
-        <div class = 'sage nodisplay code'>sage: chi.kloosterman_sum(,)</div>
+        <div class = 'sage nodisplay code'>sage: chi_sage.kloosterman_sum(,)</div>
         {% set kloosterman_default_a = 1 %}
         {% set kloosterman_default_b = 2 %} 
         <form> \(K(a,b,\chi_{ {{modulus}} }({{number}},&middot;)) \;\) at \(\; a,b = \)
@@ -280,7 +277,7 @@ $(function() {
       jacobi_handler(event);
                                                 };
 
-    $( "#slider-jacobi-b").slider({ value: {{jacobi_default}}, min: 0, max: {{eulerphi}}, step: 1,
+    $( "#slider-jacobi-b").slider({ value: {{jacobi_default}}, min: 0, max: {{modulus}}, step: 1,
         change: function( event, ui ) {
             $( "#calc-jacobi-input" ).val(ui.value);
             jacobi_handler(event);

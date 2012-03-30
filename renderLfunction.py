@@ -109,12 +109,12 @@ def browseGraphChar():
 def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9):
     args = request.args
     temp_args = to_dict(args)
-    
+
     if len(args) == 0:  #This ensures it's a navigation page 
         if not arg1: # this means we're at the start page
             info = set_info_for_start_page()
             return render_template("LfunctionNavigate.html", **info)
-        
+
         elif arg1.startswith("degree"):
             degree = int(arg1[6:])
             info = { "degree" : degree }
@@ -122,13 +122,14 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
             info["bread"] =  [('L-functions', url_for("render_Lfunction")), ('Degree '+str(degree), url_for('render_Lfunction', arg1=str(degree)))]
             if degree == 1:
                 info["contents"] = [LfunctionPlot.getOneGraphHtmlChar(1,35,1,13)]
+                info['friends'] = [('Dirichlet Characters', url_for('render_Character'))]
             elif degree == 2:
                 info["contents"] = [processEllipticCurveNavigation(11,65), LfunctionPlot.getOneGraphHtmlHolo(1, 6, 2, 14),
                                     processMaassNavigation()]
-            elif degree == 3 or degree == 4:
-                info["contents"] = [LfunctionPlot.getAllMaassGraphHtml(degree),processSymSquareEllipticCurveNavigation(11,65)]
+            elif degree == 3 :
+                info["contents"] = [LfunctionPlot.getAllMaassGraphHtml(degree),processSymPowerEllipticCurveNavigation(11,65,2)]
             elif degree == 4:
-                info["contents"] = LfunctionPlot.getAllMaassGraphHtml(degree)
+                info["contents"] = [LfunctionPlot.getAllMaassGraphHtml(degree),processSymPowerEllipticCurveNavigation(11,65,3)]
 
             return render_template("DegreeNavigateL.html", title = 'Degree ' + str(degree)+ ' L-functions', **info)
 
@@ -149,6 +150,7 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
             return render_lcalcfile(L, request.url)
     except:
         pass #Do nothing
+
 
     info = initLfunction(L, temp_args, request)
 
@@ -184,6 +186,9 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
 
     elif arg1 == 'ModularForm' and (arg2 == 'GSp4' or arg2 == 'GL4' or  arg2 == 'GL3') and arg3 == 'Q' and arg4 == 'maass':
         return Lfunction_Maass( dbid = arg5, dbName = 'Lfunction', dbColl = 'LemurellMaassHighDegree')
+
+    elif arg1 == 'ModularForm' and arg2 == 'GSp' and arg3 == 'Q' and arg4 == 'Sp4Z' and arg5== 'specimen': #this should be changed when we fix the SMF urls
+        return Lfunction_SMF2_scalar_valued( weight=arg6, orbit=arg7, number=arg8 )
 
     elif arg1 == 'NumberField':
         return DedekindZeta( label = str(arg2))
@@ -302,7 +307,7 @@ def initLfunction(L,args, request):
         info['bread'] = [('L-function','/L'),('Dirichlet Character',url_for('render_Lfunction', arg1='degree1') +'#Dirichlet'),
                          (charname, request.url)]
         info['friends'] = [('Dirichlet Character '+str(charname), friendlink)]
-                
+
 
     elif L.Ltype()  == 'ellipticcurve':
         label = L.label
@@ -327,6 +332,11 @@ def initLfunction(L,args, request):
             info['friends'].append(('EC Isogeny class ' + L.ellipticcurve, url_for("by_ec_label",label=L.ellipticcurve)))
             for i in range(1, L.nr_of_curves_in_class + 1):
                 info['friends'].append(('Elliptic Curve ' + L.ellipticcurve + str(i), url_for("by_ec_label",label=L.ellipticcurve + str(i))))
+
+    elif L.Ltype() == 'hilbertmodularform':
+        friendlink = '/'.join(friendlink.split('/')[:-1])
+        info['friends'] = [('Hilbert Modular Form', friendlink.rpartition('/')[0])] 
+
     elif L.Ltype() == 'dedekindzeta':
         info['friends'] = [('Number Field', friendlink)]
 
@@ -346,7 +356,15 @@ def initLfunction(L,args, request):
         friendlink2 =request.url.replace('/L/SymmetricPower/%d/'%L.m,'/L/SymmetricPower/%d/'%mplusone)
 
         info['friends'] =  [('Isogeny class', friendlink), ('%s Symmetric Power'%ordinal(mplusone) , friendlink2)]
+
+    elif L.Ltype() == 'siegelnonlift' or L.Ltype() == 'siegeleisenstein' or L.Ltype() == 'siegelklingeneisenstein' or L.Ltype() == 'siegelmaasslift':
+        weight = str(L.weight)
+        number = str(L.number)
+        info['friends'] = [('Siegel Modular Form', friendlink)]
+
         
+
+
 
     info['dirichlet'] = lfuncDStex(L, "analytic")
     info['eulerproduct'] = lfuncEPtex(L, "abstract")
@@ -663,7 +681,7 @@ def processMaassNavigation():
 
 
 
-def processSymSquareEllipticCurveNavigation(startCond, endCond):
+def processSymPowerEllipticCurveNavigation(startCond, endCond,power):
     try:
         N = startCond
         if N < 11:
@@ -695,7 +713,7 @@ def processSymSquareEllipticCurveNavigation(startCond, endCond):
             s += '<tr>'
             
         counter += 1
-        s += '<td><a href="' + url_for('render_Lfunction', arg1 = 'SymmetricPower' , arg2='2', arg3='EllipticCurve', arg4='Q', arg5=label)+ '">%s</a></td>\n' % label
+        s += '<td><a href="' + url_for('render_Lfunction', arg1 = 'SymmetricPower', arg2='%d'%power, arg3='EllipticCurve', arg4='Q', arg5=label)+ '">%s</a></td>\n' % label
             
         if counter == nr_of_columns:
             s += '</tr>\n'

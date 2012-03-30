@@ -3,10 +3,11 @@ import siegel_core
 import pickle
 import urllib
 from sage.all_cmdline import *
+import os
 
-DATA = 'http://data.countnumber.de/Siegel-Modular-Forms/'
-#DATA = '/media/data/home/nils/Sandbox/super_current/nilsskoruppa-lmfdb/db/'
-#DATA = '/media/data/home/nils/Sandbox/super_current/Siegel-Modular-Forms/'
+#DATA = 'http://data.countnumber.de/Siegel-Modular-Forms/'
+#DATA = '/home/nils/Sandbox/super_current/Siegel-Modular-Forms/'
+DATA = os.path.expanduser("~/data/Siegel-Modular-Forms/")
 
 def render_webpage( args = {}):
     """
@@ -240,7 +241,7 @@ def render_webpage( args = {}):
                 # print f_keys
 
             # make the coefficients of the M_k(Sp(4,Z)) forms integral
-            if 'Sp4Z' == group:
+            if 'Sp4Z' == group: # or 'Sp4Z_2' == group:
                 d = lcm( map( lambda n: denominator(n), f[1].coefficients()))
                 f = list(f)
                 f[1] *= d
@@ -264,6 +265,7 @@ def render_webpage( args = {}):
                             g[1][i] = I.reduce(g[1][i])
                         
             except:
+                info['fc_modulus'] = 0
                 pass
 
             try:
@@ -274,14 +276,24 @@ def render_webpage( args = {}):
                 info['fc_modulus'] = m
                 K = g[0].parent().fraction_field()
                 if m != 0:
-                    if QQ == K:
-                        for i in f_keys:
-                            f[2][i] = Integer(f[2][i])%m
+                    if 'Sp4Z_2' == group:
+                        if QQ == K:
+                            for i in f_keys:
+                                f[2][i] = sum( (v[0]%m)*v[1] for v in list(f[2][i]))
+                        else:
+                            I = K.ideal(m)
+                            for i in f_keys:
+                                f[2][i] = sum( I.reduce(v[0])*v[1] for v in list(f[2][i]))
                     else:
-                        I = K.ideal(m)
-                        for i in f_keys:
-                            f[2][i] = I.reduce(f[2][i])                        
+                        if QQ == K:
+                            for i in f_keys:
+                                f[2][i] = Integer(f[2][i])%m
+                        else:
+                            I = K.ideal(m)
+                            for i in f_keys:
+                                f[2][i] = I.reduce(f[2][i])
             except:
+                info['fc_modulus'] = 0
                 pass
 
             info['the_form'] = [ f[0].parent(), f[1], \
