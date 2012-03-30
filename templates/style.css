@@ -105,6 +105,19 @@ a {
 }
 #content .announce {
   font-size: 1.2em;
+  padding: 10px 20px;
+  margin: 20px 0px;
+  border-left: 3px solid {{ col_main }};
+  background: {{ col_main_ll }};
+  line-height: 1.5em;
+}
+#content .announce.red {
+  border-left: 3px solid #D00;
+  background: #FDD;
+}
+/*
+#content .announce {
+  font-size: 1.2em;
   margin: 40px;
   padding: 20px;
   border: 1px solid {{ col_main }};
@@ -119,6 +132,14 @@ a {
   -moz-box-shadow:    inset 0px 0px 15px 5px {{ col_error }};
   box-shadow:         inset 0px 0px 15px 5px {{ col_error }};
 }
+*/
+
+/* icon in front of external links */
+#content a[target="_blank"]:before {
+  content: url("static/images/url-ext.gif");
+  padding-right: 2px;
+}
+
 
 a:visited { color: #080; }
 a:hover { 

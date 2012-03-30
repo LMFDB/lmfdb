@@ -607,16 +607,31 @@ def filter_disc_conds(it, dlist):
     a = it.next()
   return
 
-
-# Compute Frobenius cycle types
-def frobs(K):
+def residue_field_degrees_function(K):
+  """ Given a sage field, returns a function that has
+          input: a prime p
+          output: the residue field degrees at the prime p
+  """
   k1 = pari(K)
+  D = K.disc()
+  def decomposition(p):
+    if not ZZ(p).divides(D):
+      dec = k1.idealprimedec(p)
+      dec = [z[3] for z in dec]
+      return dec
+    else:
+      raise ValueError, "Expecting a prime not dividing D"
+  return decomposition
+
+# Compute Frobenius cycle types, returns string nicely presenting this
+def frobs(K):
+  frob_at_p = residue_field_degrees_function(K)
   D = K.disc()
   ans = []
   for p in primes(2,60):
     if not ZZ(p).divides(D):
-      dec = k1.idealprimedec(p)
-      dec = [z[3] for z in dec]
+      # [3] ,   [2,1]
+      dec = frob_at_p(p)
       vals = list(set(dec))
       vals = sorted(vals, reverse=True)
       dec = [[x, dec.count(x)] for x in vals]

@@ -121,9 +121,9 @@
       <li><a class = "number_fields" href="{{ url_for('number_fields.number_field_render_webpage') }}">Global Number Fields</a></li>
       <li><a href="{{ url_for('local_fields.index') }}">Local Number Fields</a></li>
       <li><a href="{{ url_for('galois_groups.index') }}">Galois Groups</a></li>
-      {% if user_is_authenticated %}
-          <li><a class = "number_field_galois_groups" href="{{ url_for('number_field_galois_groups.index') }}">Galois Groups (only logged in)</a></li>
-      {% endif %}
+      <!--  Please keep POD
+      #<li><a class = "number_field_galois_groups" href="{{ url_for('number_field_galois_groups.index') }}">Galois Groups (only logged in)</a></li>
+      -->
     </ul>
 
   <h2>Characters</h2>
@@ -147,7 +147,12 @@
    <li><a class="mwfp" href="{{ url_for('mwfp.render_picard_maass_forms') }}">for \(\mathrm{PSL}(2,\mathbb{Z}[i])\)</a></li>
   </ul>
   <h2 class="link">
-       <a class="artin_representations" href="{{ url_for('artin_representations.index') }}">Artin Representations</a></h2>
+	{% if is_authenticated_user %}
+       <a class="artin_representations" href="{{ url_for('artin_representations.index') }}">Artin Representations (no search)</a>
+        {% else %}
+      Artin Representations
+	{% endif %}
+  </h2>
   
 
 
@@ -162,8 +167,7 @@
    </ul>
   
    {{ entry("Learn more about", learnmore) }}
-   {{ entry("Downloads", downloads) }}
-   {{ entry("Data", getUploadedFor(request.path) ) }}
+   {{ entry("Data", getUploadedFor(request.path, true) ) }}
 
  {% if sidebar -%}
   {% for topic, content in sidebar -%}
@@ -174,7 +178,20 @@
 </div>
 {%- endblock sidebar %}
 
-    {% if (properties2 or friends) %}
+ {% macro rightnavig(title, entries) -%}
+   {% if entries %}
+    <h1 class="properties-header">{{ title }}</h1>
+    <div class="properties-body">
+    <ul>
+        {% for text,url in entries %}
+           <li><a href="{{ url }}">{{ text }}</a></li>
+        {% endfor %}
+    </ul>
+  </div>
+   {% endif %}
+ {%- endmacro %}
+
+{% if (properties2 or friends or downloads) %}
       <div id="properties">
        <div id="properties-collapser">&uarr;</div>
     {% if properties2 %}
@@ -199,16 +216,8 @@
       </table>
       </div>
     {% endif %}
-    {% if friends -%}
-      <h1 class="properties-header">Related objects</h1>
-      <div class="properties-body">
-        <ul>
-          {% for text,url in friends %}
-          <li><a href="{{ url }}">{{ text }}</a></li>
-          {% endfor %}
-        </ul>
-      </div>
-    {%- endif %}
+   {{ rightnavig("Related objects", friends) }}
+   {{ rightnavig("Downloads", downloads + getUploadedFor(request.path, false) ) }}
     </div>
     {%- endif %}
 
