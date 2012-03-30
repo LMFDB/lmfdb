@@ -101,9 +101,10 @@ See the {{ KNOWL('lfunction.degree2holo.key', title='legend') }} for more detail
 {{contents[0]|safe}}
 
 <h3 id="EllipticCurve_Q">Symmetric Square $L$-functions of Elliptic Curves over $\mathbb{Q}$</h3>
+
 <div>
-Given an $L$-function of an Elliptic Curve of conductor $N$, the $n$-th symmetric power $L$-functions is defined
-by the euler product
+    Given an $L$-function of an Elliptic Curve of conductor $N$, the {{ KNOWL('lfunction.symm', title='$n$-th symmetric power $L$-functions')}}
+    is defined by the euler product
 \begin{equation}
 \prod_{p\nmid N} \prod_{j=0}^n \left(1 - \frac{\alpha_p^{j} \beta^{n-j}_p}{p^s} \right)^{-1} \times \prod_{p|N} L_p(s)
 \end{equation}
@@ -111,20 +112,6 @@ by the euler product
 
 {{contents[1]|safe}}
 
-<h3></h3>
-
-
-<div>
-    In general, if an $L$-function is given by
-    \begin{equation}
-    L(s)= \prod_{p\not\in S} \prod_{j=1}^r \left (1- \frac{\alpha_j}{p^s}\right)^{-1} \times \prod_{p \in S} L_p(s)
-    \end{equation}
-    then the $n$-th symmetric  power $L$-function is given by
-    \begin{equation}
-    L(s,\mathrm{sym}^n) = \prod_{p\not\in S}\prod_{m} \left( 1- \frac{m(\alpha_1,\dotsc,\alpha_r)}{p^s} \right)^{-1} \times \prod_{p\in S} L_p(s,\mathrm{sym}^n).
-    \end{equation}
-    The product is over all degree-$n$ monomials $m$ in $r$ variables.
-</div>
 
 {% endif %}
  
