@@ -26,7 +26,7 @@ from sage.all import *
 from sage.modular.dirichlet import DirichletGroup
 from base import app, db
 from modular_forms.elliptic_modular_forms.backend.web_modforms import WebModFormSpace,WebNewForm
-from modular_forms.elliptic_modular_forms.backend.emf_classes import ClassicalMFDisplay
+from modular_forms.elliptic_modular_forms.backend.emf_classes import ClassicalMFDisplay, DimensionTable
 from modular_forms import MF_TOP
 from modular_forms.backend.mf_utils import my_get
 from modular_forms.elliptic_modular_forms import EMF_TOP
@@ -187,13 +187,13 @@ def render_elliptic_modular_form_navigation_wp(**args):
         wt_range=(weight,weight)
     else:
         if character == 0:
-            wt_range=(2,36)
+            wt_range=(2,12)
         else:
-            wt_range=(2,20)
+            wt_range=(2,12)
     if is_set['level']:
         level_range=(level,level)
     else:
-        level_range=(1,20)
+        level_range=(1,24)
     if character==0:
         info['grouptype']=0
         info['groupother']=1
@@ -203,7 +203,7 @@ def render_elliptic_modular_form_navigation_wp(**args):
     info['show_switch']=True
     disp.set_table_browsing(limit=[wt_range,level_range],
                             keys=['Weight','Level'],character=character,
-                            dimension_fun=dimension_new_cusp_forms,title='Browse Holomorphic Modular Forms')
+                            dimension_table=DimensionTable(info['grouptype']),title='Browse Holomorphic Modular Forms',check_db=True)
     info['browse_table']=disp._table
 
     return render_template("emf_navigation.html", info=info,title=title,bread=bread)

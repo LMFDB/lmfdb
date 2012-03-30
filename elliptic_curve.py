@@ -293,19 +293,6 @@ def render_isogeny_class(iso_class):
     # Apply the same permutation to the isogeny matrix:
     mat = [[mat[perm[i],perm[j]] for j in range(size)] for i in range(size)]
     
-    # # On 2012-03-29 the modular forms database only contained levels
-    # # up to 100.  In that range there are 5 cases where the labels in
-    # # the modular forms database do not agree with the elliptic curve
-    # # isogeny clas labels.  This permutation was kindly provided by
-    # # Kiran Kedlaya.
-    # mod_form_iso=iso
-    # label_perm={'57b':'c', '57c':'b',
-    #             '75a':'c', '75c':'a',
-    #             '84a':'b', '84b':'a',
-    #             '92a':'b', '94b':'a',
-    #             '96a':'b', '96b':'a'}
-    # if label in label_perm:
-    #     mod_form_iso=label_perm[label]
         
     info = {'label': lmfdb_iso}
     info['optimal_ainvs'] = ainvs
@@ -465,16 +452,6 @@ def render_curve_webpage_by_label(label):
                            'reduction_type': local_info.bad_reduction_type()
                            })
 
-    mod_form_iso=lmfdb_iso_class
-    # label_perm={'57b':'c', '57c':'b',
-    #             '75a':'c', '75c':'a',
-    #             '84a':'b', '84b':'a',
-    #             '92a':'b', '94b':'a',
-    #             '96a':'b', '96b':'a'}
-    # if mod_form_iso in label_perm:
-    #     mod_form_iso=label_perm[mod_form_iso]
-    # else:
-    #     mod_form_iso=cremona_label_regex.match(iso_class).groups()[1]
     mod_form_iso=lmfdb_label_regex.match(lmfdb_iso_class).groups()[1]
 
     info.update({
