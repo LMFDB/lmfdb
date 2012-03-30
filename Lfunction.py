@@ -1227,7 +1227,7 @@ class SymmetricPowerLfunction(Lfunction):
         from symL.symL import SymmetricPowerLFunction
         self.S=SymmetricPowerLFunction(self.E,self.m)
 
-        self.title = "The symmetric power $L$-function $L(s,E,\mathrm{sym}^%d)$ of Elliptic curve %s"% (self.m,self.E.cremona_label())
+        self.title = "The symmetric power $L$-function $L(s,E,\mathrm{sym}^%d)$ of isogeny class %s"% (self.m,self.E.cremona_label()[:-1])
 
         self.dirichlet_coefficients = self.S._coeffs
 
@@ -1256,7 +1256,7 @@ class SymmetricPowerLfunction(Lfunction):
         self.citation = ' '
         self.credit = ' '
         self.level=self.S.conductor
-        self.euler = "\\begin{align} L(s,E, \\mathrm{sym}^{%d}) = & \\prod_{p \\textrm{ good}} \\prod_{j=0}^{%d} (1-\\alpha_p^j\\beta_p^{%d-j}p^{-s})^{-1} "%(self.m,self.m,self.m)
+        self.euler = "\\begin{align} L(s,E, \\mathrm{sym}^{%d}) = & \\prod_{p \\nmid %d } \\prod_{j=0}^{%d} (1- \\frac{\\alpha_p^j\\beta_p^{%d-j}}{p^{s}})^{-1} "%(self.m, self.E.conductor(),self.m,self.m)
         for p in self.S.bad_primes:
             poly = self.S.eulerFactor(p)
             poly_string =" "
@@ -1264,13 +1264,13 @@ class SymmetricPowerLfunction(Lfunction):
                 poly_string="\\\\ & \\times (1"
                 if poly[1] != 0:
                     if poly[1] == 1:
-                        poly_string += "%d^{ -s}"%p
+                        poly_string += "+%d^{ -s}"%p
                     elif poly[1] == -1:
                         poly_string += "-%d^{- s}"%p
                     elif poly[1] <0 :
-                        poly_string += "%d%d^{- s}"%(poly[1],p)
+                        poly_string += "%d\\ %d^{- s}"%(poly[1],p)
                     else:
-                        poly_string += "+%d%d^{- s}"%(poly[1],p)
+                        poly_string += "+%d\\ %d^{- s}"%(poly[1],p)
 
                 for j in range(2,len(poly)):
                     if poly[j]== 0:
@@ -1280,9 +1280,9 @@ class SymmetricPowerLfunction(Lfunction):
                     elif poly[j] == -1:
                         poly_string += "-%d^{-%d s}"%(p,j)
                     elif poly[j] <0 :
-                        poly_string += "%d%d^{-%d s}"%(poly[j],p,j)
+                        poly_string += "%d \\ %d^{-%d s}"%(poly[j],p,j)
                     else:
-                        poly_string += "+%d%d^{-%d s}"%(poly[j],p,j)
+                        poly_string += "+%d\\ %d^{-%d s}"%(poly[j],p,j)
                 poly_string += ")^{-1}"
             self.euler += poly_string
         self.euler += "\\end{align}"

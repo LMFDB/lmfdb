@@ -127,6 +127,8 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
                 info["contents"] = [processEllipticCurveNavigation(11,65), LfunctionPlot.getOneGraphHtmlHolo(1, 6, 2, 14),
                                     processMaassNavigation()]
             elif degree == 3 or degree == 4:
+                info["contents"] = [LfunctionPlot.getAllMaassGraphHtml(degree),processSymSquareEllipticCurveNavigation(11,65)]
+            elif degree == 4:
                 info["contents"] = LfunctionPlot.getAllMaassGraphHtml(degree)
 
             return render_template("DegreeNavigateL.html", title = 'Degree ' + str(degree)+ ' L-functions', **info)
@@ -622,3 +624,51 @@ def processMaassNavigation():
     s += '</table>\n'
 
     return s
+
+
+
+
+def processSymSquareEllipticCurveNavigation(startCond, endCond):
+    try:
+        N = startCond
+        if N < 11:
+            N=11
+        elif N > 100:
+            N=100
+    except:
+        N = 11
+        
+    try:
+        if endCond > 500:
+            end = 500
+        else:
+            end = endCond
+            
+    except:
+        end = 100
+        
+    iso_list = LfunctionComp.isogenyclasstable(N, end)
+    s = '<h5>Examples of symmetric square L-functions attached to isogeny classes of elliptic curves</h5>'
+    s += '<table>'
+    
+    logger.debug(iso_list)
+
+    counter = 0
+    nr_of_columns = 10
+    for label in iso_list:
+        if counter==0:
+            s += '<tr>'
+            
+        counter += 1
+        s += '<td><a href="' + url_for('render_Lfunction', arg1 = 'SymmetricPower' , arg2='2', arg3='EllipticCurve', arg4='Q', arg5=label)+ '">%s</a></td>\n' % label
+            
+        if counter == nr_of_columns:
+            s += '</tr>\n'
+            counter = 0
+
+    if counter>0:
+        s += '</tr>\n'
+        
+    s += '</table>\n'
+    return s
+
