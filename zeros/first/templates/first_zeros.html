@@ -76,10 +76,7 @@ function loadzeros(save_history) {
                 }
                 else if (entry[5] == '2') {
                     description = "Elliptic curve " + entry[6];
-                    var N = Number(entry[2])
-                    if(N < 2000) {
-                        L_link = "/L/EllipticCurve/Q/" + entry[6];
-                    }
+                    L_link = "/L/EllipticCurve/Q/" + entry[6];
                     obj_link = "/EllipticCurve/Q/" + entry[6];
                 }
                 else {

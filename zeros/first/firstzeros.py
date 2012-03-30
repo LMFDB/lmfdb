@@ -29,7 +29,7 @@ def firstzeros():
         limit = 100
 
     #return render_template("first_zeros.html", start=start, end=end, limit=limit, degree=degree, signature_r=signature_r, signature_c=signature_c)
-    return render_template("first_zeros.html", start=start, end=end, limit=limit, degree=degree)
+    return render_template("first_zeros.html", start=start, end=end, limit=limit, degree=degree, title="First zero search", bread=[("First zeros search"," "),])
 
 @FirstZeros.route("/list")
 def list_zeros(start = None,
@@ -67,8 +67,6 @@ def list_zeros(start = None,
     limit = int(limit)
 
     where_clause = 'WHERE 1=1 '
-    
-
 
     if start is None:
         end = float(end)

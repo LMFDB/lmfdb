@@ -15,7 +15,7 @@ def zetazeros():
     if limit > 1000:
         return list_zeros(N = N, t = t, limit = limit)
     else:
-        return render_template('zeta.html', N = N, t = t, limit = limit)
+        return render_template('zeta.html', N = N, t = t, limit = limit, title="Zeros of zeta function", bread=[('Zeros of zeta function', ' '),])
 
 @ZetaZeros.route("/list")
 def list_zeros(N = None,
