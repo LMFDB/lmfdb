@@ -300,18 +300,28 @@ def initLfunction(L,args, request):
 
     elif L.Ltype()  == 'ellipticcurve':
         label = L.label
-        info['friends'] = [('Elliptic Curve', friendlink )]
+        while friendlink[len(friendlink)-1].isdigit():  #Remove any number at the end to get isogeny class url
+            friendlink = friendlink[0:len(friendlink)-1]
+
+        info['friends'] = [('EC Isogeny class ' + label, friendlink )]
+        for i in range(1, L.nr_of_curves_in_class + 1):
+            info['friends'].append(('Elliptic Curve ' + label + str(i), friendlink + str(i)))
+        if L.modform:
+            info['friends'].append(('Modular form', url_for("emf.render_elliptic_modular_forms",
+                                                            level=L.modform['level'],weight=2,character=0,label=L.modform['iso'])))
+
         info['bread'] = [('L-function','/L'),('Elliptic Curve',url_for('render_Lfunction', arg1='/L/degree2#EllipticCurve_Q')),
                          (label,url_for('render_Lfunction',arg1='EllipticCurve',arg2='Q',arg3= label))]
 
     elif L.Ltype() == 'ellipticmodularform':
-        weight = str(L.weight)
-        level = str(L.level)
-        character = str(L.character)
-        label = str(L.label)
-        number = str(L.number)
-        info['friends'] = [('Modular Form', friendlink.rpartition('/')[0])] 
-
+        friendlink = friendlink + L.addToLink
+        friendlink = friendlink.rpartition('/')[0]
+        info['friends'] = [('Modular Form', friendlink)] 
+        if L.ellipticcurve:
+            info['friends'].append(('EC Isogeny class ' + L.ellipticcurve, url_for("by_ec_label",label=L.ellipticcurve)))
+            for i in range(1, L.nr_of_curves_in_class + 1):
+                info['friends'].append(('Elliptic Curve ' + L.ellipticcurve + str(i), url_for("by_ec_label",label=L.ellipticcurve + str(i))))
+  
     elif L.Ltype() == 'dedekindzeta':
         info['friends'] = [('Number Field', friendlink)]
 
@@ -343,7 +353,7 @@ def set_gaga_properties(L):
     ans = [ ('Degree',    str(L.degree))]
 
     ans.append(('Level',     str(L.level)))
-    ans.append(('Sign',      styleTheSign(sign)))
+    ans.append(('Sign',      styleTheSign(L.sign)))
 
     if L.selfdual:
         sd = 'Self-dual'
@@ -363,14 +373,24 @@ def styleTheSign(sign):
     ''' Returns the string to display as sign
     '''
     try:
-        fromInt = sign - round(sign)
-        if fromInt.abs() < 1e-10:
-            return str(int(round(sign)))
+        logger.debug(1-sign)
+        if abs(1-sign) < 1e-10:
+            return '1'
+        elif abs(1+sign) < 1e-10:
+            return '-1'
+        elif abs(1-sign.imag()) < 1e-10:
+            return 'i'
+        elif abs(1+sign.imag()) < 1e-10:
+            return '-i'
+        elif sign.imag > 0:
+            return "${0} + {1}i$".format(truncatenumber(sign.real(), 5),truncatenumber(sign.imag(), 5))
         else:
-            return truncatenumber(sign, 3)
+            return "${0} {1}i$".format(truncatenumber(sign.real(), 5),truncatenumber(sign.imag(), 5))
     except:
-        str(sign)
-    
+        logger.debug("no styling of sign")
+        return str(sign)
+
+
 def specialValueString(L, s, sLatex):
     ''' Returns the LaTex to dislpay for L(s) 
     '''

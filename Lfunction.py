@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import base
 import math
-from Lfunctionutilities import pair2complex, splitcoeff, seriescoeff, compute_local_roots_SMF2_scalar_valued, compute_dirichlet_series
+from Lfunctionutilities import (pair2complex, splitcoeff, seriescoeff, compute_local_roots_SMF2_scalar_valued,
+                                compute_dirichlet_series, number_of_coefficients_needed)
+from LfunctionComp import nr_of_EC_in_isogeny_class, modform_from_EC, EC_from_modform
 from sage.all import *
 import sage.libs.lcalc.lcalc_Lfunction as lc
 from sage.rings.rational import Rational
@@ -9,6 +11,7 @@ import re
 import pymongo
 import bson
 import utils
+from WebCharacter import WebCharacter
 
 from modular_forms.elliptic_modular_forms.backend.web_modforms import *
 from modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import MaassDB
@@ -475,8 +478,6 @@ class Lfunction_EC(Lfunction):
     It can be called with a dictionary of these forms:
 
     dict = { 'label': ... }  label is the Cremona label of the elliptic curve
-    dict = { 'label': ... , 'numcoeff': ...  }  numcoeff is the number of
-           coefficients to use when computing
     """
 
     def __init__(self, **args):
@@ -485,25 +486,18 @@ class Lfunction_EC(Lfunction):
             raise Exception("You have to supply a label for an elliptic curve L-function")
 
         # Initialize default values
-        self.numcoeff = 500 # set default to 500 coefficients
+        max_height = 30
+        modform_translation_limit = 101
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
-        self.numcoeff = int(self.numcoeff)
 
         #Remove the ending number (if given) in the label to only get isogeny class
-        while self.label[len(self.label)-1].isnumber():
-            self.label = self.label[0:len(self.label)-2]
+        while self.label[len(self.label)-1].isdigit():
+            self.label = self.label[0:len(self.label)-1]
 
         #Compute the # of curves in the isogeny class
-        i = 1
-        connection = base.getDBConnection()
-        data = connection.elliptic_curves.curves.find_one({'label': self.label+'i'})
-        while not data is None:
-            i += 1
-            data = connection.elliptic_curves.curves.find_one({'label': self.label+'i'})
-        self.curves_in_class = []
- 
+        self.nr_of_curves_in_class = nr_of_EC_in_isogeny_class(self.label)
 
         # Create the elliptic curve
         self.E = EllipticCurve(str(self.label))
@@ -515,11 +509,19 @@ class Lfunction_EC(Lfunction):
         self.sign = self.E.lseries().dokchitser().eps
         self.kappa_fe = [1]
         self.lambda_fe = [0.5]
+        self.numcoeff = self.Q_fe * 210 + 10
+        logger.debug("numcoeff: {0}".format(self.numcoeff))
         self.mu_fe = []
         self.nu_fe = [Rational('1/2')]
         self.langlands = True
         self.degree = 2
         self.motivic_weight = 1
+
+        # Get the data for the corresponding modular form if possible
+        if self.level <= modform_translation_limit:
+            self.modform = modform_from_EC(self.label)
+        else:
+            self.modform = False
 
         self.dirichlet_coefficients = self.E.anlist(self.numcoeff)[1:]  #remove a0
         self.dirichlet_coefficients_unnormalized = self.dirichlet_coefficients[:]
@@ -539,7 +541,7 @@ class Lfunction_EC(Lfunction):
         self.texname = "L(s,E)"
         self.texnamecompleteds = "\\Lambda(s,E)"
         self.texnamecompleted1ms = "\\Lambda(1-s,E)"
-        self.title = "L-function $L(s,E)$ for the Elliptic Curve over Q with label "+ self.E.label()
+        self.title = "L-function $L(s,E)$ for the Elliptic Curve isogeny class over Q with label "+ self.label
 
         self.properties = [('Degree ','%s' % self.degree)]
         self.properties.append(('Level', '%s' % self.level))
@@ -582,13 +584,19 @@ class Lfunction_EMF(Lfunction):
         if not ('weight' in args.keys() and 'level' in args.keys()):
             raise KeyError, "You have to supply weight and level for an elliptic modular form L-function"
         logger.debug(str(args))
+        self.addToLink = ''  # This is to take care of the case where character and/or label is not given
         # Initialize default values
         if not args['character']:
             args['character'] = 0  # Trivial character is default
+            self.addToLink = '/0'
         if not args['label']:
             args['label']='a'      # No label, is OK If space is one-dimensional
+            self.addToLink += '/a'
         if not args['number']:
             args['number'] = 0     # Default choice of embedding of the coefficients
+            self.addToLink += '/0'
+
+        modform_translation_limit = 101
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
@@ -627,6 +635,13 @@ class Lfunction_EMF(Lfunction):
         self.residues = []
         self.numcoeff = 20 + int(5 * math.ceil(self.weight * sqrt(self.level))) #just testing  NB: Need to learn how to use more coefficients
         self.dirichlet_coefficients = []
+
+        # Get the data for the corresponding elliptic if possible
+        if self.level <= modform_translation_limit and self.weight==2:
+            self.ellipticcurve = EC_from_modform(self.level, self.label)
+            self.nr_of_curves_in_class = nr_of_EC_in_isogeny_class(self.ellipticcurve)
+        else:
+            self.ellipticcurve = False
 
         # Appending list of Dirichlet coefficients
         GaloisDegree = self.MF.degree()  #number of forms in the Galois orbit
@@ -789,7 +804,7 @@ class Lfunction_HMF(Lfunction):
         self.dirichlet_coefficients = dcoeffs
 
         self.coefficient_period = 0   #HUH?
-        self.coefficient_type = 2     #HUH?
+        self.coefficient_type = 0     #HUH?
         self.quasidegree = 1          #HUH?
 
         self.checkselfdual()
@@ -898,7 +913,10 @@ class Lfunction_Dirichlet(Lfunction):
         self.numcoeff = int(self.numcoeff)
 
         # Create the Dirichlet character
-        chi = DirichletGroup(self.charactermodulus)[self.characternumber]
+        web_chi = WebCharacter({ 'type': 'dirichlet',
+                                 'modulus': self.charactermodulus,
+                                 'number': self.characternumber})
+        chi = web_chi.chi_sage
         self.motivic_weight = 0
         
         if chi.is_primitive():
