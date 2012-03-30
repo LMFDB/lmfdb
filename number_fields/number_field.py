@@ -480,21 +480,24 @@ def number_field_search(**args):
     res = fields.find(query).sort([('degree',pymongo.ASCENDING),('abs_disc',pymongo.ASCENDING),('signature',pymongo.DESCENDING)]) # TODO: pages
 
                                                                                                 #    res = verify_all_fields(newres, dlist)
+    #res = [fields.find_one(query)]
 
     count = 0
     kept = []
     floatit = discs_parse_to_slogs(dlist)
     floatitnarrow = fudge_list(floatit, -1)
     for a in res:
-      if verify_field(a,floatitnarrow, dlist):
-        ok = True
-        if ur_primes:
-          D = str(a['disc_string'])
-          ok = support_is_disjoint(D, ur_primes)
+      ok = True
+      if len(dlist)>0:
+        ok = verify_field(a,floatitnarrow, dlist)
         if ok:
-          count += 1
-          if count < 501:
-            kept.append(a)
+          if ur_primes:
+            D = str(a['disc_string'])
+            ok = support_is_disjoint(D, ur_primes)
+      if ok:
+        count += 1
+        if count < 501:
+          kept.append(a)
     nres = count      
 
     #    if ur_primes:
