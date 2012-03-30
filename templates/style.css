@@ -111,6 +111,10 @@ a {
   background: {{ col_main_ll }};
   line-height: 1.5em;
 }
+#content .announce.red {
+  border-left: 3px solid #FDD;
+  background: #FDD;
+}
 /*
 #content .announce {
   font-size: 1.2em;
