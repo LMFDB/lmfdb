@@ -509,7 +509,7 @@ class Lfunction_EC(Lfunction):
         self.sign = self.E.lseries().dokchitser().eps
         self.kappa_fe = [1]
         self.lambda_fe = [0.5]
-        self.numcoeff = self.Q_fe * 210 + 10
+        self.numcoeff = round(self.Q_fe * 220 + 10)
         logger.debug("numcoeff: {0}".format(self.numcoeff))
         self.mu_fe = []
         self.nu_fe = [Rational('1/2')]
