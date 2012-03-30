@@ -18,7 +18,11 @@ def zetazeros():
         return render_template('zeta.html', N = N, t = t, limit = limit)
 
 @ZetaZeros.route("/list")
-def list_zeros(N = None, t = None, limit = None, fmt = None, download = None):
+def list_zeros(N = None,
+               t = None,
+               limit = None,
+               fmt = None,
+               download = None):
     if N is None:
         N = request.args.get("N", None, int)
     if t is None:
