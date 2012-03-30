@@ -236,7 +236,25 @@ def plot_ec(label):
     response = make_response(data)
     response.headers['Content-type'] = 'image/png'
     return response
-    
+
+@app.route("/EllipticCurve/Q/iso_graph/<label>")
+def plot_iso_graph(label):
+    C = base.getDBConnection()
+    data = C.ellcurves.curves.find_one({'lmfdb_label': label})
+    if data is None:
+        return "No such curve"
+    ainvs = [int(a) for a in data['ainvs']]
+    E = EllipticCurve(ainvs)
+    G = E.isogeny_graph(); n = G.num_verts()
+    G.relabel(range(1,n+1)) # proper lmfdb labels...
+    P = G.plot(edge_labels=True, layout='spring')
+    _, filename = tempfile.mkstemp('.png')
+    P.save(filename)
+    data = open(filename).read()
+    os.unlink(filename)
+    response = make_response(data)
+    response.headers['Content-type'] = 'image/png'
+    return response
 
 def render_isogeny_class(iso_class):
     info = {}
