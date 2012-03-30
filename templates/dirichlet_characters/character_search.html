@@ -73,14 +73,19 @@ table td.params {
 <script>
  $(document).ready(function() {
      $('#characterTable').dataTable({
-         sPaginationType: "string
-         ",
+        "oLanguage": {
+                "oPaginate": {
+                        "sPrevious": "",
+                        "sNext": ""
+                }
+        },
          "bFilter":false,
          "bAutoWidth": false, 
-          "aoColumnDefs": [ 
+         "aoColumnDefs": [ 
            { "sType": 'title-numeric',
              "aTargets": [0] }, 
-          ],
+         ],
+
           "fnRowCallback": function( row, data, index ){ 
              MathJax.Hub.Queue(['Typeset', MathJax.Hub, row]);
              return row;
