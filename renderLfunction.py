@@ -126,10 +126,10 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
             elif degree == 2:
                 info["contents"] = [processEllipticCurveNavigation(11,65), LfunctionPlot.getOneGraphHtmlHolo(1, 6, 2, 14),
                                     processMaassNavigation()]
-            elif degree == 3 or degree == 4:
-                info["contents"] = [LfunctionPlot.getAllMaassGraphHtml(degree),processSymSquareEllipticCurveNavigation(11,65)]
+            elif degree == 3 :
+                info["contents"] = [LfunctionPlot.getAllMaassGraphHtml(degree),processSymPowerEllipticCurveNavigation(11,65,2)]
             elif degree == 4:
-                info["contents"] = LfunctionPlot.getAllMaassGraphHtml(degree)
+                info["contents"] = [LfunctionPlot.getAllMaassGraphHtml(degree),processSymPowerEllipticCurveNavigation(11,65,3)]
 
             return render_template("DegreeNavigateL.html", title = 'Degree ' + str(degree)+ ' L-functions', **info)
 
@@ -681,7 +681,7 @@ def processMaassNavigation():
 
 
 
-def processSymSquareEllipticCurveNavigation(startCond, endCond):
+def processSymPowerEllipticCurveNavigation(startCond, endCond,power):
     try:
         N = startCond
         if N < 11:
@@ -713,7 +713,7 @@ def processSymSquareEllipticCurveNavigation(startCond, endCond):
             s += '<tr>'
             
         counter += 1
-        s += '<td><a href="' + url_for('render_Lfunction', arg1 = 'SymmetricPower' , arg2='2', arg3='EllipticCurve', arg4='Q', arg5=label)+ '">%s</a></td>\n' % label
+        s += '<td><a href="' + url_for('render_Lfunction', arg1 = 'SymmetricPower', arg2='%d'%power, arg3='EllipticCurve', arg4='Q', arg5=label)+ '">%s</a></td>\n' % label
             
         if counter == nr_of_columns:
             s += '</tr>\n'

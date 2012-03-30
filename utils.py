@@ -189,7 +189,7 @@ def pair2complex(pair):
 
 def an_list(euler_factor_polynomial_fn, upperbound=100000, base_field = sage.rings.all.RationalField()):
     """ Takes a fn that gives for each prime the polynomial of the associated with the prime,
-        given as a list, with independent coefficient first. This list is of length the degree.
+        given as a list, with independent coefficient first. This list is of length the degree+1.
     """
     from sage.rings.fast_arith import prime_range
     from sage.rings.all import PowerSeriesRing

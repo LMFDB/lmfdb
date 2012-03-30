@@ -1297,7 +1297,7 @@ class SymmetricPowerLfunction(Lfunction):
         self.citation = ' '
         self.credit = ' '
         self.level=self.S.conductor
-        self.euler = "\\begin{align} L(s,E, \\mathrm{sym}^{%d}) = & \\prod_{p \\nmid %d } \\prod_{j=0}^{%d} (1- \\frac{\\alpha_p^j\\beta_p^{%d-j}}{p^{s}})^{-1} "%(self.m, self.E.conductor(),self.m,self.m)
+        self.euler = "\\begin{align} L(s,E, \\mathrm{sym}^{%d}) = & \\prod_{p \\nmid %d } \\prod_{j=0}^{%d} \\left(1- \\frac{\\alpha_p^j\\beta_p^{%d-j}}{p^{s}}\\right)^{-1} "%(self.m, self.E.conductor(),self.m,self.m)
         for p in self.S.bad_primes:
             poly = self.S.eulerFactor(p)
             poly_string =" "
