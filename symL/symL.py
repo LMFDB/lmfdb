@@ -55,7 +55,7 @@ class SymmetricPowerLFunction(SageObject):
 
     def eulerFactor(self,p):
         """
-        Euler Factor
+        Euler Factor, in the form [c_0,c_1,c_2,...], where \sum c_i x^i is the polynomial giving the euler factor
         """
         if p in self.bad_primes:
             return self.bad_prime_euler[p]
