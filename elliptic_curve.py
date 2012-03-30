@@ -304,7 +304,12 @@ def render_isogeny_class(iso_class):
     friends.append(('Symmetric square L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='2',arg3='EllipticCurve', arg4='Q', arg5=label)))
     friends.append(('Symmetric 4th power L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='4',arg3='EllipticCurve', arg4='Q', arg5=label)))
 #render_one_elliptic_modular_form(level,weight,character,label,**kwds)
-    friends.append(('Modular form '+N+mod_form_iso, url_for("emf.render_elliptic_modular_forms", level=N,weight=2,character=0,label=mod_form_iso)))
+
+    if int(N)<100:
+        friends.append(('Modular form '+N+mod_form_iso, url_for("emf.render_elliptic_modular_forms", level=N,weight=2,character=0,label=mod_form_iso)))
+    else:
+        friends.append(('Modular form '+N+mod_form_iso+' not available', 0))
+
     info['friends'] = friends
 
     t= "Elliptic Curve Isogeny Class %s" % info['label']
@@ -382,7 +387,7 @@ def render_curve_webpage_by_label(label):
     E = EllipticCurve(ainvs)
     label=data['label']
     N = ZZ(data['conductor'])
-    iso_class = data['iso']
+    iso_class = data['iso'] # eg '37a'
     rank = data['rank']
     j_invariant=E.j_invariant()
     #plot=E.plot()
@@ -432,6 +437,17 @@ def render_curve_webpage_by_label(label):
                            'reduction_type': local_info.bad_reduction_type()
                            })
 
+    mod_form_iso=iso_class
+    label_perm={'57b':'c', '57c':'b',
+                '75a':'c', '75c':'a',
+                '84a':'b', '84b':'a',
+                '92a':'b', '94b':'a',
+                '96a':'b', '96b':'a'}
+    if mod_form_iso in label_perm:
+        mod_form_iso=label_perm[mod_form_iso]
+    else:
+        mod_form_iso=cremona_label_regex.match(iso_class).groups()[1]
+
     info.update({
         'conductor': N,
         'disc_factor': latex(discriminant.factor()),
@@ -459,10 +475,14 @@ def render_curve_webpage_by_label(label):
     info['friends'] = [
         ('Isogeny class '+iso_class, "/EllipticCurve/Q/%s" % iso_class),
         ('Minimal quadratic twist '+minq_label, "/EllipticCurve/Q/%s" % minq_label),
-        ('L-function', url_for("render_Lfunction", arg1='EllipticCurve', arg2='Q', arg3=label))]
-####  THIS DOESN'T WORK AT THE MOMENT /Lemurell ('Modular Form',
-####  url_for("emf.render_elliptic_modular_form_from_label",label="%s"
-####  %(iso_class))),
+        ('L-function', url_for("render_Lfunction", arg1='EllipticCurve', arg2='Q', arg3=label)),
+        ('Symmetric square L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='2',arg3='EllipticCurve', arg4='Q', arg5=label)),
+        ('Symmetric 4th power L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='4',arg3='EllipticCurve', arg4='Q', arg5=label))]
+    
+    if int(N)<100:
+        info['friends'].append(('Modular form '+iso_class, url_for("emf.render_elliptic_modular_forms", level=int(N),weight=2,character=0,label=mod_form_iso)))
+    else:
+        info['friends'].append(('Modular form '+iso_class+" not available",0))
 
     info['learnmore'] = [('Elliptic Curves', url_for("not_yet_implemented"))]
     #info['plot'] = image_src(plot)
