@@ -1134,6 +1134,13 @@ class WebNewForm(SageObject):
         """
         l=self.atkin_lehner_eigenvalues()
         return l.get(Q)
+
+    def _compute_atkin_lehner_matrix(self,f,Q):
+        ALambient=f.ambient_hecke_module()._compute_atkin_lehner_matrix(ZZ(Q))
+        B=f.free_module().echelonized_basis_matrix()
+        P=B.pivots()
+        M=B*ALambient.matrix_from_columns(P)
+        return M
         
     def atkin_lehner_eigenvalues(self):
         r""" Compute the Atkin-Lehner eigenvalues of self. 
@@ -1159,10 +1166,7 @@ class WebNewForm(SageObject):
                 emf_logger.debug("Q={0}".format(Q))
                 emf_logger.debug("self._f={0}".format(self._f))
                 #try:
-                ALambient=self._f.ambient_hecke_module()._compute_atkin_lehner_matrix(ZZ(Q))
-                B=self._f.free_module().echelonized_basis_matrix()
-                P=B.pivots()
-                M=B*ALambient.matrix_from_columns(P)
+                M=self._compute_atkin_lehner_matrix(self._f,ZZ(Q))
                     #M=self._f._compute_atkin_lehner_matrix(ZZ(Q))
                 #except:
                 #    emf_logger.critical("Error in computing Atkin Lehner Matrix. Bug is known and due to pickling.")
@@ -1219,7 +1223,7 @@ class WebNewForm(SageObject):
         p=cusp.numerator()
         d=ZZ(cusp*N)
         if(d.divides(N) and gcd(ZZ(N/d),ZZ(d))==1):
-            M=self._f._compute_atkin_lehner_matrix(ZZ(d))
+            M=self._compute_atkin_lehner_matrix(self._f,ZZ(d))
             ev = M.eigenvalues()
             if len(ev)>1:
                 if len(set(ev))>1:
