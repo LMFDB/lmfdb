@@ -491,6 +491,12 @@ body.intro #sidebar a.intro { background: {{ col_main_l }}; }
    color: grey;
 }
 
+.errmsg {
+   font-size: 80%;
+   font-style: bold;
+   color: red;
+}
+
 td.forminfo {
    font-size: 80%;
    font-style: italic;
