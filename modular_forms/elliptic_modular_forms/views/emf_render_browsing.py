@@ -1,5 +1,5 @@
 from utils import to_dict,image_src
-from sage.all import dimension_new_cusp_forms,dimension_cusp_forms,dimension_eis,dimension_modular_forms,Zmod
+from sage.all import dimension_new_cusp_forms,dimension_cusp_forms,dimension_eis,dimension_modular_forms,Zmod,DirichletGroup,latex
 from modular_forms.elliptic_modular_forms import EMF, emf_logger, emf,EMF_TOP
 from modular_forms.elliptic_modular_forms.backend.emf_core import get_geometric_data
 from modular_forms.elliptic_modular_forms.backend.emf_utils import MyNewGrp,my_get,parse_range,extract_limits_as_tuple,image_src_fdomain
@@ -9,7 +9,12 @@ from modular_forms.elliptic_modular_forms import N_max_comp,k_max_comp
 from flask import render_template, url_for, request, redirect, make_response,send_file
 from modular_forms.elliptic_modular_forms.backend.emf_classes import ClassicalMFDisplay, DimensionTable
 list_of_implemented_dims=['new','cusp','modular','eisenstein']
-from sage.all import DirichletGroup
+
+try:
+    from dirichlet_conrey import *
+except:
+    emf_logger.critical("Could not import dirichlet_conrey!")
+
 met = ['POST','GET']
 @emf.route("/TablesMF/",methods=met)
 @emf.route("/TablesMF/<int:nrows>/<int:ncols>/",methods=met)
@@ -119,10 +124,6 @@ def browse_elliptic_modular_forms_ranges(**kwds):
         info['groupother']=1
         dimtbl=DimensionTable(0)
     else:
-        info['unitgens']=Zmod(level).unit_gens()
-        D=DirichletGroup(level)
-        info['zeta']=latex(D.zeta())
-        into['zeta_order']=D.zeta_order()
         info['grouptype']=1
         info['groupother']=0
         dimtbl=DimensionTable(1)
@@ -132,6 +133,10 @@ def browse_elliptic_modular_forms_ranges(**kwds):
     if limits_level[0]==limits_level[1]:
         level = limits_level[0]
         info['geometric'] = get_geometric_data(level, info['grouptype'])
+        info['unitgens']=Zmod(level).unit_gens()
+        D=DirichletGroup(level)
+        info['zeta']='\(' + latex(D.zeta()) + '\)'
+        info['zeta_order']=D.zeta_order()
         #if info.has_key('plot'):
         grp=MyNewGrp(level,info)
         info['fd_plot']= image_src_fdomain(grp)
@@ -173,7 +178,10 @@ def browse_elliptic_modular_forms(level=0,weight=0,character=-1,label='',limits=
         if character==-1:
             info['show_all_characters']=1
             info['unitgens']=Zmod(level).unit_gens()
-    emf_logger.info("level=%s, %s"%(level,type(level)))
+            D=DirichletGroup(level)
+            info['zeta']='\(' + latex(D.zeta()) + '\)'
+            info['zeta_order']=D.zeta_order()
+        emf_logger.info("level=%s, %s"%(level,type(level)))
     emf_logger.info("wt=%s, %s"% (weight,type(weight)) )
     if level>0:
         if level <= N_max_comp:

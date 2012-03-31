@@ -16,6 +16,33 @@ $("#plot").load(function() {
 );
 </script>
 
+<style>
+table.ntdata th.left {
+  border-right: 2px solid #9b9;
+  background: #efe;
+  border-bottom: 0;
+  text-align: right;
+}
+table.ntdata td { text-align: left; }
+table.ntdata th.weight {
+  text-align: left;
+  background: #efe;
+  border-bottom: 2px solid #9b9;
+  border-left: 0;
+  vertical-align: center;
+}
+table.ntdata thead tr.space {
+  background: #efe;
+  border-bottom: 0;
+}
+
+table.ntdata thead th.spaceleft {
+  border-right: 2px solid #9b9;
+  vertical-align: top;
+}
+
+</style>
+
 {% if error is defined %}
 
 <h1>There was an error in meeting your previous request. Please change parameters.</h1>
@@ -40,15 +67,12 @@ $("#plot").load(function() {
 <p>
 {% if grouptype == 1  %}
 The table below gives the dimensions of the space of holomorphic cusp
-forms of level {{level}}, specified weight and character.<br>
-The characters are specified by their values on the generators of \( (\mathbb{Z}/{{level}}\mathbb{Z})^\times \).
-These generators are given by: {{unitgens}}.
-{% if {{zeta_order > 2}} %}
-For the values, {{zeta}} denotes a primitive {{zeta_order}}th root of unity.
-{% endif %}
+forms of {{ KNOWL('mf.elliptic.level',title='level') }} {{level}},
+specified {{ KNOWL('mf.elliptic.weight',title='weight') }}  and {{ KNOWL('character.dirichlet',title='character') }}.
 {% else %}
 The table below gives the dimensions of the space of holomorphic cusp
-forms of level {{level}}, specified weight, with trivial character.
+forms of {{ KNOWL('mf.elliptic.level',title='level') }} {{level}}
+and specified {{ KNOWL('mf.elliptic.weight',title='weight') }}, with trivial character.
 {% endif %}
 </p>
 {% set table = browse_table %}
@@ -59,27 +83,31 @@ forms of level {{level}}, specified weight, with trivial character.
 {% set wid = 10*len +20 %}
 <table class="ntdata" width="{{wid}}px">
   <thead>
-    <tr>
-      <th width="10px" style="border-right:1px solid black">
-        {% if table.rowhead is defined %}
-        {{ table.rowhead | safe }}
-        {% endif %}
+    <tr class="space">
+      <th class="spaceleft">Character</th>
+      <th class="weight" colspan="{{table.col_heads|length}}">
+	<span>Weight</span>
       </th>
-      {% for ix in table.col_heads  %}
-      <th width="10px">
-        {{ ix }}
-        <!--a href="{{url_for('render_webpage_label',modulus=level,number=ix) }}" style="">{{ix}}</a-->
-      </th>
+    </tr>
+    <tr class="space">
+      <th class="spaceleft"></th>
+      {% for k in table.col_heads  %}
+      {% set col_url = url_for('emf.render_elliptic_modular_forms',level=level,weight=k) %}
+      <th class="weight"><a href="{{col_url}}">{{k}}</a></th>
       {% endfor %}
     </tr>
   </thead>
   <tbody>
     {% for row in rows  %}
     <tr class="{{row_class.next() }}">
-      <th width="10px" style="background:#afa; border-right: 1px solid black">
-        {{ table.row_heads[loop.index-1] }}
+      <th width="10px" class="left">
+	{% if row.url != '' %}
+          <a href="{{row.url}}">{{ row.head }}</a>
+        {% else %}
+	  {{row.head}}
+	{% endif %}
       </th>
-      {% for cell in row  %}
+      {% for cell in row.cells  %}
       <td align="center" width="0%">
         {% if cell.url != '' %}
           <a href="{{cell.url}}">{{cell.dim}}</a>
