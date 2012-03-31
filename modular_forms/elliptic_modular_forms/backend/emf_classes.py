@@ -168,7 +168,7 @@ class ClassicalMFDisplay(MFDisplay):
                 self._table['rowhead']='Character&nbsp;\\&nbsp;Weight'
                 for xi,x in enumerate(G):
                     row=[]
-                    self._table['row_heads'].append(xi)
+                    self._table['row_heads'].append(str(xi) + ": " + str(x.values_on_gens()))
                     for k in range(wt_ll,wt_ul+1):
                         if not k in self._table['col_heads']:
                             #emf_logger.debug("Adding to col_heads:{0}s".format(k))                            
