@@ -46,7 +46,7 @@ class DimensionTable(object):
         emf_logger.debug('Lookup dimension for Gamma1')
         if type(arg1)==sage.modular.dirichlet.DirichletCharacter:
             N=arg1.modulus()
-            character=arg1.parent().list().index(arg1)
+            character=arg1.parent().galois_orbits().index(arg1.galois_orbit())
         else:
             if type(arg1)==int or type(arg1)==Integer:
                 N=arg1
@@ -159,7 +159,7 @@ class ClassicalMFDisplay(MFDisplay):
                 self._table['rows'].append(row)
             else:
                 D = DirichletGroup(N)
-                G = D.galois_orbits()
+                G = D.galois_orbits(reps_only=True)
                 # A security check, if we have at least weight 2 and trivial character, otherwise don't show anything
                 if check_db and not is_data_in_db(N,2,0):
                     emf_logger.debug("No data for level {0} and weight 2, trivial character".format(N))
@@ -174,7 +174,6 @@ class ClassicalMFDisplay(MFDisplay):
                             #emf_logger.debug("Adding to col_heads:{0}s".format(k))                            
                             self._table['col_heads'].append(k)
                         try:
-                            x=x[0]
                             d = dimension_fun(x,k)
                         except Exception as ex:
                             emf_logger.critical("Exception: {0} \n Could not compute the dimension with function {1}".format(ex,dimension_fun))
@@ -196,7 +195,7 @@ class ClassicalMFDisplay(MFDisplay):
                 if character != 0 and character != 1:
                     self._table['colhead']="Index of character in DirichletGroup(N)"
                     D = DirichletGroup(N)
-                    G = D.galois_orbits()
+                    G = D.galois_orbits(reps_only=True)
                     for xi,x in enumerate(G):
                         if not xi in self._table['col_heads']:
                             self._table['col_heads'].append(xi)
@@ -207,7 +206,6 @@ class ClassicalMFDisplay(MFDisplay):
                             row.append({'N':N,'k':k,'chi':xi,'url':url,'dim':0})
                             continue
                         try:
-                            x=x[0]
                             d = dimension_fun(x,k)
                         except Exception as ex:
                             emf_logger.critical("Exception: {0} \n Could not compute the dimension with function {0}".format(ex,dimension_fun))

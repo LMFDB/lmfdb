@@ -227,27 +227,31 @@ class MyNewGrp (object):
             
 def render_fd_plot(level,info,**kwds):
     group = None
+    grouptype=None
     if(info.has_key('group')):
         group = info['group']
         # we only allow standard groups
     if info.has_key('grouptype'):
-        type=int(info['grouptype'])
+        grouptype=int(info['grouptype'])
         if info['grouptype']==0:
             group='Gamma0'
         elif info['grouptype']==1:
             group='Gamma1'
     if (group  not in ['Gamma0','Gamma','Gamma1']):
         group = 'Gamma0'
-        type=int(0)
+        grouptype=int(0)
     else:
-        if group=='Gamma':
-            type=int(-1)
-        else:
-            type=(1)
+        if grouptype==None:
+            if group=='Gamma':
+                grouptype=int(-1)
+            elif group=='Gamma0':
+                grouptype=int(0)
+            else:
+                grouptype=int(1)
     db_name = 'SL2Zsubgroups'
     collection='groups'
     C = base.getDBConnection()
-    emf_logger.debug("C={0}".format(C))
+    emf_logger.debug("C={0}, level={1}, grouptype={2}".format(C,level,grouptype))
     if not C:
         emf_logger.critical("Could not connect to Database! C={0}".format(C))
     if not db_name in C.database_names():
@@ -255,7 +259,7 @@ def render_fd_plot(level,info,**kwds):
     if not collection in C[db_name].collection_names():
         emf_logger.critical("Incorrect collection {0} in database {1}. \n Available collections are:{2}".format(collection,db_name,C[db_name].collection_names()))
     
-    find=C[db_name][collection].find_one({'level':level,'type':type})
+    find=C[db_name][collection].find_one({'level':int(level),'type':int(grouptype)})
     if find:
         if find.get('domain'):
             domain=loads(str(find['domain']))
@@ -266,13 +270,4 @@ def render_fd_plot(level,info,**kwds):
             #G=Gamma0(level)
             #C[db_name][collection].insert({'level':int(level), 'type':type, 'index':int(G.index), 'G':pymongo.binary.Binary(dumps(G)), 'domain': pymongo.binary.Binary(dumps(domain))})
             #emf_logger.debug('Inserting group and fundamental domain in database')
-    return domain
-
-
-def is_data_in_db(level=0,weight=0,character=0):
-    r"""
-     Checks whether we have the requested data in the database.
-    """
-    
-    return True
-    
+    return domain    

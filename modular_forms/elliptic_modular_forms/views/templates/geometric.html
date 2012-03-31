@@ -1,11 +1,16 @@
 {% if geometric is defined %}
+{% if grouptype==0 %}
+  {% set w="217" %} {%set h="320"%}
+{% else %}
+  {% set w="384" %} {%set h="320"%}
+{% endif %}
 <style>
 #fundom{
   float:right;
   margin-top:30px;
   vertical-align:top;
-  height:320px;
-  width:217px;
+  height:{{h}}px;
+  width:{{w}}px;
   background-color:lightblue;
   text-color:white;
 }
@@ -21,10 +26,12 @@
 {% endif %}
 
       {% set G = geometric %}
-      <div id="fundom">
-        <span id="wait"></span>
-        <img id="plot" width="217" height="320" src="{{ fd_plot | safe }} " />
-      </div>
+      {% if fd_plot is defined %}
+        <div id="fundom">
+          <span id="wait"></span>
+          <img id="plot" width={{w}} height={{h}} src="{{ fd_plot | safe }} " />
+        </div>
+     {% endif %}
       <table>
         <tr>
           <td valign="top">
@@ -55,8 +62,6 @@
               <tr><th>order 3</th><td>{{G.nu2}}</td></tr>
             </table>
           </td>
-          {% endif %}
-          {% if fd_plot is defined %}
         </tr>
       </table>
       {% endif %}
