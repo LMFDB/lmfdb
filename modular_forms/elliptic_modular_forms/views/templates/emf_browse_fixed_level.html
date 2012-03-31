@@ -38,7 +38,7 @@ $("#plot").load(function() {
 {% if browse_table.rows is defined %}
 {#{KNOWL('mf.ellipticemf_browse.all.info',title='Write about browsing') }#}
 <p>
-{% if character == -1  %}
+{% if grouptype == 1  %}
 The table below gives the dimensions of the space of holomorphic cusp
 forms of level {{level}}, specified weight and character.
 The characters are specified by their values on the generators of \( (\mathbb{Z}/{{level}}\mathbb{Z})^\times \).
