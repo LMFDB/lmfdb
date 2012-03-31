@@ -176,7 +176,8 @@ class WebModFormSpace(Parent):
         D = DirichletGroup(self.group().level())
         G = D.galois_orbits(reps_only=True)
         try:
-            return D[k]
+            emf_logger.debug("k={0},G[k]={1}".format(k,G[k])
+            return G[k]
         except IndexError:
             emf_logger.critical("Got character no. {0}, which are outside the scope of Galois orbits of the characters mod {1}!".format(k,self.group().level()))
             return trivial_character(self.group().level())
