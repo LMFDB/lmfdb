@@ -1545,7 +1545,7 @@ class WebNewForm(SageObject):
         K=self.base_ring()
         #print "K={0}".format(K)
         # recall that 
-        degree = K.degree()
+        degree = K.absolute_degree()
         cm_vals=dict()
         # the points we want are i and rho. More can be added later...
         rho=CyclotomicField(3).gen()
