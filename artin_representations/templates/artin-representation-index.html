@@ -3,38 +3,7 @@
 {% block content %}
 
 {% if user_is_authenticated %}
-<h1>
-    <br>
-    This index/search page is not done. The main reason is that it is not fully clear to me yet how people might want to search on Artin representations.
-    
-    <br>
-    Searches that should be allowed:
-        
-        <UL>
-            <LI> based on dimension of representation
-            <LI> based on degree of the group action
-            <LI> based on conductor
-            <LI> based on group name
-            <LI> based on size of the group
-            <LI> character values?
-        </UL>
 
-    <br>
-    If you have an opinion, let me (Paul) know!
-</h1>
-Meanwhile, here are some examples. You can browse more of them by directly changing the url, or by accessing them from the number field pages (bottom).
-However, the database only include a very thin slice of the data that will be available in the end, so it s likely you will follow broken links. 
-
-<table>
-    <tr><td><a href = {{url_for('.by_data', dim=1,conductor=1,index=1)}}>Artin representation of dimension 1, conductor 1 and index 1</a></td></tr>
-    <tr><td><a href = {{url_for('.by_data', dim=1,conductor=17,index=1)}}>Artin representation of dimension 1, conductor 17 and index 1</a></td></tr>
-    <tr><td><a href = {{url_for('.by_partial_data', dim=1,conductor=17)}}>Artin representations of dimension 1 and conductor 17 </a></td></tr>
-    <tr><td><a href = {{url_for('.by_data', dim = 3, conductor = 113337, index = 1 )}}>Artin representation of dimension 3, conductor 1133337 and index 1</a></td></tr>
-    <tr><td><a href = {{url_for('.by_partial_data', dim=1,conductor=1)}}>Artin representations of dimension 1 and conductor 1 </a></td></tr>
-    <tr><td><a href = {{url_for('.by_partial_data', dim=2,conductor=22356)}}>Artin representations of dimension 2 and conductor 22356 </a></td></tr>
-    <tr><td><a href = {{url_for('.by_partial_data', dim=4,conductor=136480336)}}>Artin representations of dimension 4 and conductor 136480336 </a></td></tr>
-    
-</table>
 
 
 
@@ -86,17 +55,17 @@ Find Artin representation by <div>{{KNOWL("artin.conductor",title="conductor")}}
 
 
 <div>
-An {{KNOWL("ec", title="elliptic curve")}} is a {{KNOWL("ag.curve.smooth",title="smooth")}} projective {{KNOWL("ag.curve",title="curve")}} of {{KNOWL("ag.curve.genus",title="genus")}} 1 with a rational basepoint $O$. 
+{{KNOWL_INC("artin", title = "")}}
 </div>
 <div>
-The database currently contains the Cremona database of all
-{{info.ncurves}} elliptic curves with {{ KNOWL('ec.q.conductor',title
-= "conductor")}} at most {{info.max_N}}, all of which have {{
-KNOWL('ec.q.rank', title="rank")}} &le; {{info.max_rank}}.  In future
-it will contain some or all of the Stein-Watkins database.
+As a preview, the LMFDB database currently contains a few hundred Artin representations, each factoring through a Galois group of relatively small order.
+These representations were all computed in Magma by Tim Dokchitser, and the list is currently not meant to be exhaustive in any way.
+<br>
+<br>
+Soon one will also be able to access information about the associated {{KNOWL("artin.lfunction", title = "Artin L-function")}}. 
 </div>
 
-<h2> Browse {{ KNOWL('ec.q',title='elliptic curves over $\mathbb{Q}$')}}</h2>
+<h2> Browse Artin representations</h2>
 
 <p>
 By {{ KNOWL('ec.q.conductor',title = "conductor")}}:
@@ -135,75 +104,66 @@ Please enter a value or leave blank:
 
    <tr>
    <td>
-    {{ KNOWL('artin.transitive_degree',title="transitive_degree") }}
+    {{ KNOWL('artin.dimension',title="dimension") }}
     </td>
            <td>
-           <input type='text' name='rank' placeholder="0" size=10>
+           <input type='text' name='transitive_degree' placeholder="0" size=10>
            </td>
            <td><span class="formexample"> e.g. 0 </span>
            </td>
     </tr>
 
-    <tr>
-          <td>
-          {{ KNOWL('ec.q.torsion_order',title="torsion order") }}
-          </td>
-          <td> 
-          <input type='text' name='torsion' placeholder="2" size=10/>
-          </td>
-          <td>
-          <span class="formexample"> e.g. 2 </span>
-          </td>   
-      </tr>
-
-    <tr>
-          <td>
-          {{ KNOWL('ec.q.torsion_subgroup',title="torsion structure") }}
-          </td>
-          <td> 
-          <input type='text' name='torsion_structure' placeholder="[2,4]" size=10/>
-          </td>
-          <td>
-          <span class="formexample"> e.g. [2,4] </span>
-          </td>   
-      </tr>
-
-    <tr>
-          <td>
-          {{ KNOWL('ec.q.analytic_sha_order',title="analytic order of &#1064;\(_{an} \)") }}
-          </td>
-          <td> 
-          <input type='text' name='sha_an' placeholder="4" size=10/>
-          </td>
-          <td>
-          <span class="formexample"> e.g. 4 </span>
-          </td>   
-      </tr>
-
-
-    <tr>
-      <td>{{ KNOWL('ec.q.optimal',title="Optimal only") }}</td>
-      <td>
-         <select name='optimal'>
-           <option value="">No</option>
-           <option value="on">Yes</option>
-         </select>
-      </td>
-
-      
+   <tr>
+   <td>
+    {{ KNOWL('gg.galois_group',title="Galois group") }}
+    </td>
+           <td>
+           <input type='text' name='group' placeholder="0" size=10>
+           </td>
+           <td><span class="formexample"> e.g. 0 </span>
+           </td>
     </tr>
-
 <tr>
-<td align=left colspan=4>Maximum number of curves to display <input type='text' name='count' value=100 size=10>
+<td align=left colspan=4>Maximum number of Artin representations to display <input type='text' name='count' value=100 size=10>
 </td>
 </tr>
-
-
   </table>
-<p></p>
-<td><button type='submit' value='Search'>Search</td>
+  
 
+<td><button type='submit' value='Search'>Search</button></td>
 </form>
+
+    <br>
+    This index/search page is not done. The main reason is that it is not fully clear to me yet how people might want to search on Artin representations.
+    
+    <br>
+    Searches that should be allowed:
+        
+        <UL>
+            <LI> based on dimension of representation
+            <LI> based on degree of the group action
+            <LI> based on conductor
+            <LI> based on group name
+            <LI> based on size of the group
+            <LI> character values?
+        </UL>
+
+    <br>
+    If you have an opinion, let me (Paul) know!
+
+Meanwhile, here are some examples. You can browse more of them by directly changing the url, or by accessing them from the number field pages (bottom).
+However, the database only include a very thin slice of the data that will be available in the end, so it s likely you will follow broken links. 
+
+<table>
+    <tr><td><a href = {{url_for('.by_data', dim=1,conductor=1,index=1)}}>Artin representation of dimension 1, conductor 1 and index 1</a></td></tr>
+    <tr><td><a href = {{url_for('.by_data', dim=1,conductor=17,index=1)}}>Artin representation of dimension 1, conductor 17 and index 1</a></td></tr>
+    <tr><td><a href = {{url_for('.by_partial_data', dim=1,conductor=17)}}>Artin representations of dimension 1 and conductor 17 </a></td></tr>
+    <tr><td><a href = {{url_for('.by_data', dim = 3, conductor = 113337, index = 1 )}}>Artin representation of dimension 3, conductor 1133337 and index 1</a></td></tr>
+    <tr><td><a href = {{url_for('.by_partial_data', dim=1,conductor=1)}}>Artin representations of dimension 1 and conductor 1 </a></td></tr>
+    <tr><td><a href = {{url_for('.by_partial_data', dim=2,conductor=22356)}}>Artin representations of dimension 2 and conductor 22356 </a></td></tr>
+    <tr><td><a href = {{url_for('.by_partial_data', dim=4,conductor=136480336)}}>Artin representations of dimension 4 and conductor 136480336 </a></td></tr>
+    
+</table>
 {% endif %}
 {% if not user_is_authenticated %}
     Please log in to see more
