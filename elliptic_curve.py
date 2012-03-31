@@ -246,7 +246,7 @@ def by_ec_label(label):
     logger.debug(label)
     try:
         N, iso, number = lmfdb_label_regex.match(label).groups()
-    except:
+    except AttributeError:
         N, iso, number = cremona_label_regex.match(label).groups()
         C = base.getDBConnection()
         # We permanently redirect to the lmfdb label
@@ -488,7 +488,7 @@ def render_curve_webpage_by_label(label):
     else:
         assert rank == 0
         lder_tex = "L(E,1)"
-    p_adic_data_exists = (C.ellcurves.padic_db.find({'label': cremona_iso_class}).count())>0
+    p_adic_data_exists = (C.elliptic_curves.padic_db.find({'lmfdb_iso': lmfdb_iso_class}).count())>0
 
     # Local data
     local_data = []
@@ -578,14 +578,15 @@ def padic_data():
         info['reg'] = 1
     elif number == '1':
         C = base.getDBConnection()
-        data = C.elliptic_curves.curves.find_one({'lmfdb_iso': N+'.'+iso})      
-        data = C.ellcurves.padic_db.find_one({'label': data['label'], 'p': p})
+        data = C.elliptic_curves.curves.find_one({'lmfdb_iso': N+'.'+iso})
+        data = C.elliptic_curves.padic_db.find_one({'lmfdb_iso': N+'.'+iso, 'p': p})
         info['data'] = data
         if data is None:
             info['reg'] = 'no data'
         else:
-            reg = sage.all.Qp(p, data['prec'])(int(data['unit'])) * sage.all.Integer(p)**int(data['val'])
-            reg = reg.add_bigoh(min(data['prec'], data['prec'] + data['val']))
+            val = int(data['val'])
+            aprec = data['prec']
+            reg = sage.all.Qp(p, aprec)(int(data['unit']), aprec - val) << val
             info['reg'] = web_latex(reg)
     else:
         info['reg'] = "no data"
