@@ -131,7 +131,7 @@ def set_info_for_modular_form_space(level=None,weight=None,character=None,label=
         return info
     info['sturm_bound'] = WMFS.sturm_bound()
     info['new_decomposition'] = WMFS.print_galois_orbits()
-    emf_logger.debug("new_decomp=".format(info['new_decomposition']))
+    emf_logger.debug("new_decomp={0}".format(info['new_decomposition']))
     info['nontrivial_new'] = len(info['new_decomposition'])
     ## we try to catch well-known bugs...
     try:
