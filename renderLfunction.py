@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from base import *
-from flask import Flask, session, g, render_template, url_for, request, redirect, make_response, abort
+from flask import Flask, session, g, render_template, url_for, request, make_response, abort
+import flask
 
 from sage.all import *
 import tempfile, os
@@ -21,6 +22,25 @@ from Lfunctionutilities import lfuncDStex, lfuncEPtex, lfuncFEtex, truncatenumbe
 #   Route functions
 ###########################################################################
 
+#@app.route("/L/EllipticCurve/Q/<label>")
+def return_ECLfunction(label):
+    logger.debug(label)
+    from elliptic_curve import cremona_label_regex, lmfdb_label_regex
+    m = lmfdb_label_regex.match(label)
+    if m is not None:
+        if m.groups()[2]:
+            # strip off the curve number
+            return flask.redirect("/L/EllipticCurve/Q/%s"%label[:-1], 301)
+        else:
+            return render_webpage(request,'EllipticCurve','Q',label,None,None,None,None,None,None)
+    m = cremona_label_regex.match(label)
+    if m is not None:
+        if m.groups()[2]:
+            C = getDBConnection().elliptic_curves.curves.find_one({'label':label})
+        else:
+            C = getDBConnection().elliptic_curves.curves.find_one({'iso':label})
+        return flask.redirect("/L/EllipticCurve/Q/%s"%(C['lmfdb_iso']), 301)
+
 @app.route("/L/")
 @app.route("/L/<arg1>/") # arg1 is EllipticCurve, ModularForm, Character, etc
 @app.route("/L/<arg1>/<arg2>/") # arg2 is field
@@ -32,6 +52,8 @@ from Lfunctionutilities import lfuncDStex, lfuncEPtex, lfuncFEtex, truncatenumbe
 @app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/")
 @app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>/")
 def render_Lfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = None, arg6 = None, arg7 = None, arg8 = None, arg9 = None):
+    if arg1 == 'EllipticCurve' and arg2 == 'Q':
+        return return_ECLfunction(arg3)
     return render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
 
 @app.route("/Lfunction/")
@@ -56,7 +78,7 @@ def render_Lfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = 
 @app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>/")
 def render_Lfunction_redirect(**args):
     args.update(request.args)
-    return redirect(url_for("render_Lfunction", **args), code=301)
+    return flask.redirect(url_for("render_Lfunction", **args), code=301)
 
 @app.route("/plotLfunction/")
 @app.route("/plotLfunction/<arg1>/")
@@ -203,7 +225,7 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         return Lfunction( Ltype = arg1, url = arg2)
 
     else:
-        return Flask.redirect(403)
+        return flask.redirect(403)
 
 
 def set_info_for_start_page():
@@ -321,16 +343,22 @@ def initLfunction(L,args, request):
         if L.modform:
             info['friends'].append(('Modular form ' + label.replace('.','.2'), url_for("emf.render_elliptic_modular_forms",
                                                             level=L.modform['level'],weight=2,character=0,label=L.modform['iso'])))
-
+            info['friends'].append(('L-function ' + label.replace('.','.2'), url_for("render_Lfunction", arg1='ModularForm', arg2='GL2', arg3='Q', arg4='holomorphic', arg5=L.modform['level'], arg6='2', arg7='0', arg8=L.modform['iso'])))
+        info['friends'].append(('Symmetric square L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='2',arg3='EllipticCurve', arg4='Q', arg5=label)))
+        info['friends'].append(('Symmetric 4th power L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='4',arg3='EllipticCurve', arg4='Q', arg5=label)))
         info['bread'] = [('L-function','/L'),('Elliptic curve',url_for('render_Lfunction', arg1='/L/degree2#EllipticCurve_Q')),
                          (label,url_for('render_Lfunction',arg1='EllipticCurve',arg2='Q',arg3= label))]
 
     elif L.Ltype() == 'ellipticmodularform':
         friendlink = friendlink + L.addToLink
         friendlink = friendlink.rpartition('/')[0]
-        info['friends'] = [('Modular form', friendlink)]
+        if L.character:
+            info['friends'] = [('Modular form ' + str(L.level) + '.' + str(L.weight) + '.' + str(L.character) + str(L.label), friendlink)]
+        else:
+            info['friends'] = [('Modular form ' + str(L.level) + '.' + str(L.weight) + str(L.label), friendlink)]
         if L.ellipticcurve:
             info['friends'].append(('Elliptic curve isogeny class ' + L.ellipticcurve, url_for("by_ec_label",label=L.ellipticcurve)))
+            info['friends'].append(('L-function ' + str(L.level) + '.' + str(L.label), url_for("render_Lfunction", arg1='EllipticCurve', arg2='Q', arg3=L.ellipticcurve)))
             for i in range(1, L.nr_of_curves_in_class + 1):
                 info['friends'].append(('Elliptic curve ' + L.ellipticcurve + str(i), url_for("by_ec_label",label=L.ellipticcurve + str(i))))
 
@@ -346,18 +374,27 @@ def initLfunction(L,args, request):
         
     elif L.Ltype() == 'SymmetricPower':
         def ordinal(n):
-                if 10 <= n % 100 < 20:
-                    return str(n) + 'th' 
-                else: 
-                    return  str(n) + {1 : 'st', 2 : 'nd', 3 : 'rd'}.get(n % 10, "th")
+            if n == 2:
+                return "Square"
+            elif n == 3:
+                return "Cube"
+            elif 10 <= n % 100 < 20:
+                return str(n) + "th Power"
+            else:
+                return  str(n) + {1 : 'st', 2 : 'nd', 3 : 'rd'}.get(n % 10, "th") + " Power"
         friendlink =request.url.replace('/L/SymmetricPower/%d/'%L.m,'/')
         splitlink=friendlink.rpartition('/')
         friendlink = splitlink[0]+splitlink[2]
-        mplusone = L.m +1
-        friendlink2 =request.url.replace('/L/SymmetricPower/%d/'%L.m,'/L/SymmetricPower/%d/'%mplusone)
 
-        info['friends'] =  [('Isogeny class '+L.label, friendlink), ('%s Symmetric Power'%ordinal(mplusone) , friendlink2)]
-        
+        friendlink2 =request.url.replace('/L/SymmetricPower/%d/'%L.m,'/L/')
+        splitlink=friendlink2.rpartition('/')
+        friendlink2 = splitlink[0]+splitlink[2]
+
+        mplusone = L.m +1
+        friendlink3 =request.url.replace('/L/SymmetricPower/%d/'%L.m,'/L/SymmetricPower/%d/'%mplusone)
+
+        info['friends'] = [('Isogeny class '+L.label, friendlink), ('Symmetric 1st Power', friendlink2), ('Symmetric %s'%ordinal(mplusone) , friendlink3)]
+
     elif L.Ltype() == 'siegelnonlift' or L.Ltype() == 'siegeleisenstein' or L.Ltype() == 'siegelklingeneisenstein' or L.Ltype() == 'siegelmaasslift':
         weight = str(L.weight)
         number = str(L.number)
@@ -472,7 +509,7 @@ def render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8
     data = plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
     if not data:
         # see note about missing "hardy_z_function" in plotLfunction()
-        return redirect(404)
+        return flask.redirect(404)
     response = make_response(data)
     response.headers['Content-type'] = 'image/png'
     return response

@@ -605,7 +605,7 @@ class Lfunction_EMF(Lfunction):
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
-        logger.debug(str(self.character)+str(self.label)+str(self.number))
+        #logger.debug(str(self.character)+str(self.label)+str(self.number))
         self.weight = int(self.weight)
         self.motivic_weight = 1
         self.level = int(self.level)
@@ -616,17 +616,17 @@ class Lfunction_EMF(Lfunction):
 
         # Create the modular form
         self.MF = WebNewForm(self.weight, self.level, self.character, self.label)
-        logger.debug(str(self.MF))
+        #logger.debug(str(self.MF))
         # Extract the L-function information from the elliptic modular form
         self.automorphyexp = float(self.weight-1)/float(2)
         self.Q_fe = float(sqrt(self.level)/(2*math.pi))
-        logger.debug("ALeigen: " + str(self.MF.atkin_lehner_eigenvalues()))
+        #logger.debug("ALeigen: " + str(self.MF.atkin_lehner_eigenvalues()))
 
         if self.level == 1:  # For level 1, the sign is always plus
             self.sign = 1
         else:  # for level not 1, calculate sign from Fricke involution and weight
             self.sign = self.MF.atkin_lehner_eigenvalues()[self.level] * (-1)**(float(self.weight/2))
-        logger.debug("Sign: " + str(self.sign))
+        #logger.debug("Sign: " + str(self.sign))
 
         self.kappa_fe = [1]
         self.lambda_fe = [self.automorphyexp]
@@ -650,16 +650,16 @@ class Lfunction_EMF(Lfunction):
 
         # Appending list of Dirichlet coefficients
         GaloisDegree = self.MF.degree()  #number of forms in the Galois orbit
-        logger.debug("Galois degree: " + str(GaloisDegree))
+        #logger.debug("Galois degree: " + str(GaloisDegree))
         if GaloisDegree == 1:
            self.dirichlet_coefficients = self.MF.q_expansion_embeddings(
                self.numcoeff+1)[1:self.numcoeff+1] #when coeffs are rational, q_expansion_embedding()
                                                    #is the list of Fourier coefficients
         else:
-           logger.debug("Start computing coefficients.")
+           #logger.debug("Start computing coefficients.")
            for n in range(1,self.numcoeff+1):
               self.dirichlet_coefficients.append(self.MF.q_expansion_embeddings(self.numcoeff+1)[n][self.number])
-           logger.debug("Done computing coefficients.")
+           #logger.debug("Done computing coefficients.")
               
         for n in range(1,len(self.dirichlet_coefficients)+1):
             an = self.dirichlet_coefficients[n-1]

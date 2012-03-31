@@ -166,10 +166,10 @@
      <a class="knowl" href="{{ url_for("knowledge.index") }}">Knowledge</a>
   </h2>
 
-  <h2>Zeros of $L$-functions</h2>
+  <h2>Zeros of L-functions</h2>
    <ul>
-    <li><a href="{{ url_for('LfunctionDB.query', zerolowerbound=1.1, zeroupperbound=2.1) }}">Search</a></li>
-    <li><a href="{{ url_for('zeta zeros.zetazeros') }}">Browse</a></li>
+    <li><a href="{{ url_for('first L-function zeros.firstzeros') }}">First zeros</a></li>
+    <li><a href="{{ url_for('zeta zeros.zetazeros') }}">Zeta zeros</a></li>
    </ul>
 
    {{ entry("Learn more about", learnmore) }}
