@@ -88,7 +88,8 @@ class WebMaassForm(object):
         self._db=db
         self.R=None; self.symmetry=-1
         self.weight=0; self.character=0; self.level=1
-        self.table={}
+        self.table={}; self.coeffs={}
+        self.all_coeffs={}
         if not isinstance(maassid,(bson.objectid.ObjectId,str)):
             ids=db.find_Maass_form_id(id=maassid)
             if len(ids)==0:
@@ -158,7 +159,7 @@ class WebMaassForm(object):
             n1=len(self.coeffs.keys())
             mwf_logger.debug("|coeff.keys()|:{0}".format(n1))
             if n1<>self.dim:
-                mwf_logger.warning("Got coefficient dict of wrong format!:dim={0} and len(c.keys())=".format(self.dimn,n1))
+                mwf_logger.warning("Got coefficient dict of wrong format!:dim={0} and len(c.keys())=".format(self.dim,n1))
             if n1>0:
                 for j in range(self.dim):                    
                     n2=len(self.coeffs.get(j,{}).keys())
@@ -169,7 +170,7 @@ class WebMaassForm(object):
         #if self.dim>1:
         #if len(self.coeffs.keys())<=nc:
         #self.coeffs=self.coeffs.get(0,{})
-        mwf_logger.debug("coeff[0]:{0}".format(self.coeffs.keys()))
+        #mwf_logger.debug("coeff[0]:{0}".format(self.coeffs.keys()))
         #if isinstance(self.coeffs,list):
         #    if self.coeffs[0]==0:
         #        self.coeffs.pop(0)
@@ -221,25 +222,39 @@ class WebMaassForm(object):
         table={'nrows':self.num_coeff,
                'ncols':self.dim+1}
         table['data']=[]
+        table['negc']=0
+        realnumc=0
+        if self.all_coeffs=={} or self.num_coeff==0:
+            self.table=table
+            return
         if self.symmetry<>-1:
-            table['negc']=0
             for n in range(self.num_coeff):
                 row=[n]
                 for k in range(table['ncols']):
                     if self.dim==1:
-                        c = self.coeffs.get(n,None)
+                        c=None
+                        if isinstance(self.coeffs,dict):
+                            c = self.coeffs[0].get(n,None)
+                        elif isinstance(self.coeffs,list):
+                            if len(self.coeffs)>0:
+                                if isinstance(self.coeffs[0],dict):
+                                    c= self.coeffs[0].get(n,None)
+                                elif isinstance(self.coeffs[0],list):
+                                    if n<len(self.coeffs[0]):
+                                        c= self.coeffs[0][n]
                         if c<>None:
                             c=CC(c)
-                        row.append((n,c))
+                            realnumc+=1
+                        row.append(c)
                     else:                        
                         for j in range(self.dim):
                             c = ((self.coeffs.get(j,{})).get(0,None)).get(n,None)
                             if c<>None:
                                 #mwf_logger.debug("c={0}".format(c))
                                 c1=CC(c)
+                                realnumc+=1
                                 row.append(c1)
-                table['data'].append(row)
-                #mwf_logger.debug("row={0}".format(row))
+                table['data'].append(row)                #mwf_logger.debug("row={0}".format(row))
         else:
             table['negc']=1
             # in this case we need to have coeffs as dict.
@@ -253,6 +268,7 @@ class WebMaassForm(object):
                         cp = self.coeffs.get(n,0)
                         cn = self.coeffs.get(-n,0)
                         row.append((cp,cn))
+                        realnumc+=1
                 else:
                     for j in range(self.dim):
                         c = (self.coeffs.get(j,{})).get(n,None)
@@ -262,6 +278,7 @@ class WebMaassForm(object):
                             c1=CC(c1)
                             cn1=CC(cn1)
                             row.append((c1,cn1))
+                            realnumc+=1
                         table['data'].append(row)
         self.table=table
-                    
+        mwf_logger.debug("realnumc={0}".format(realnumc))

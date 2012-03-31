@@ -348,8 +348,8 @@ class MaassDB(object):
         else:
             format_data=arg_to_format_parameters({},**kwds)
         sorting = [('Weight',pymongo.ASCENDING),('Level',pymongo.ASCENDING),('Character',pymongo.ASCENDING),('Eigenvalue',pymongo.ASCENDING)]
-        print "find_data=",find_data
-        print "format_data=",format_data
+        #print "find_data=",find_data
+        #print "format_data=",format_data
         #f = self._collection.find(find_data)
         res=[]
         skip0 = format_data['skip'];skip=skip0
@@ -362,9 +362,9 @@ class MaassDB(object):
                 continue
             finds = collection.find(find_data,sort=sorting).skip(skip).limit(limit)
             skip=0
-            print "skip=",skip
-            print "limit=",limit
-            print "find[",collection.name,"]=",finds.count()
+            #print "skip=",skip
+            #print "limit=",limit
+            #print "find[",collection.name,"]=",finds.count()
             limit = limit - finds.count()
             for x in finds:
                 res.append(x)
@@ -393,7 +393,7 @@ class MaassDB(object):
                     continue
                 cid=fn.get('coeff_id',None)
                 if cid==None:
-                    C1 = f.get('Coefficients',[])
+                    C1 = fn.get('Coefficients',[])
                     if C1<>[]:
                         if get_filename<>'':
                             Rst=str(R).split(".")
@@ -1144,11 +1144,13 @@ def arg_to_search_parameters(data={},**kwds):
     if wt<>None:
         find['Weight']=wt
     elif wt1<>None or wt2<>None:
-        find['Weight']={}
         if wt1<>None and wt1<>'': 
+            find['Weight']={}
             wt1=float(wt1)
             find['Weight']["$gte"]=wt1
         if wt2<>None and wt2<>'': 
+            if not find.has_key('Weight'):
+                find['Weight']={}
             wt2=float(wt2)
             find['Weight']["$lte"]=wt2
     if idd<>None:
@@ -1157,12 +1159,14 @@ def arg_to_search_parameters(data={},**kwds):
     if ch<>None:
         find['Character']=ch
     elif ch1<>None or ch2<>None:
-        find['Character']={}
         if ch1<>None: 
             ch1=int(ch1)
+            find['Character']={}
             find['Character']["$gte"]=ch1
         if ch2<>None:
             ch2=int(ch2)
+            if not find.has_key('Character'):
+                find['Character']={}
             find['Character']["$lte"]=ch2
 
     if dim<>None:

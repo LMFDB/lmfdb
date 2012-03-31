@@ -49,7 +49,6 @@ var evTable = $("table#eigenvalues").dataTable(
 {
    "bPaginate":true,
    "bLengthChange":true,
-   "sPaginationType": "full_numbers",
    "bFilter": true,
    "bInfo": true,
    "bProcessing":true,
@@ -74,7 +73,11 @@ var evTable = $("table#eigenvalues").dataTable(
             "sInfo": "Displaying _START_ to _END_ of _TOTAL_ eigenvalues",
             "sInfoEmpty": "Showing 0 to 0 of 0 records",
             "sInfoFiltered": "(filtered from _MAX_ total eigenvalues)",
-            "sSearch":"Filter records:"
+            "sSearch":"Filter records:",
+            "oPaginate": {
+                        "sPrevious": "",
+                        "sNext": ""
+                }
      }, 
      "sDom": 't<"paging"p><"bottom"l><"bottom"fr><"filterbox"i>',
      "sScorollX": "500px", 
@@ -84,7 +87,7 @@ var evTable = $("table#eigenvalues").dataTable(
  });
 
 /* Add filtering box */
-s='<br>Weight:<select id="weight"><option selected="{{wtis0}}">0<option selected="{{wtis1}}">1</select>'
+s='<br>Weight:<select id="weight"><option {{wtis0}}>0<option {{wtis1}}>1</select>'
 $('#eigenvalues_filter').append(s);
 
 /* Add event listeners to the two range filtering inputs */

@@ -172,6 +172,7 @@ def render_one_maass_waveform_wp(info):
     info['MF'] = WebMaassForm(DB,maass_id)
     level = info['MF'].level
     dim = info['MF'].dim
+    numc= info['MF'].num_coeff
     # Create the link to the L-function (put in '/L' at the beginning and '/' before '?'
     Llink = "/L"+url_for('mwf.render_one_maass_waveform',maass_id=maass_id) #+ '/?db=' + info['db']
     if dim==1:
@@ -190,7 +191,7 @@ def render_one_maass_waveform_wp(info):
                    ('Character',[info['MF'].the_character()]),
                                       ('Dimension',[dim]),
                    ('Fricke Eigenvalue',[info['MF'].fricke()])]
-    if dim>0 and info['MF'].the_character()=="trivial":
+    if dim>1 and info['MF'].the_character()=="trivial":
         properties.append(("Possibly oldform",[]))
     info['title']="Maass forms on \(\Gamma_{0}( %s )\)" % (info['MF'].level)
     info['bread']=bread
@@ -212,7 +213,7 @@ def render_one_maass_waveform_wp(info):
     info['coeff_aoColumns']=cols # json.dumps(cols)
     mwf_logger.debug("col={0}".format(cols))
     #coeffurl=url_for('mwf.render_one_maass_waveform',maass_id=maass_id,download='coefficients')
-#    info['downloads'] = [('Coefficients', coeffurl) ]
+    #    info['downloads'] = [('Coefficients', coeffurl) ]
     return render_template("mwf_one_form.html",**info)
 
 
@@ -291,9 +292,10 @@ def render_search_results_wp(info,search):
     else:
         info['title']='Search Results'
     if info.get('Weight',0)==1:
-        info['wtis1']="yes";info['wtis0']=""
+        info['wtis1']="selected";info['wtis0']=""
     else:
-        info['wtis0']="yes";info['wtis1']=""
+        info['wtis0']="selected";info['wtis1']=""
+    mwf_logger.debug("in render_search_results. info={0}".format(info))
     return render_template("mwf_display_search_result.html", **info)
 
 
