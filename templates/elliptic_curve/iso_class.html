@@ -35,19 +35,16 @@ padding : 4px;
         <p>
             {{ info.f | safe }}
         </p>
-         <p align="left">
-        <a  href='{{info.download_qexp_url}}' target='_blank' >Download</a> coefficients
-    </p>
 
 <h2>Curves in the class</h2>
         <div class='sage nodisplay code'>sage: E.isogeny_class()[0]</div>
 <table>
 <tr>
-<th class="center">Label</th>
-<th class="center">Cremona label</th>
-<th class="center">Weierstrass coefficients</th>
-<th align="center">Torsion order</th>
-<th align="center">Modular degree</th>
+<th class="center">{{ KNOWL('ec.q.lmfdb_label', title='LMFDB label')}}</th>
+<th class="center">{{ KNOWL('ec.q.cremona_label', title='Cremona label')}}</th>
+<th class="center">{{ KNOWL('ec.weierstrass_coeffs', title='Weierstrass coefficients') }}</th>
+<th align="center">{{ KNOWL('ec.q.torsion_order', title='Torsion order') }}</th>
+<th align="center">{{ KNOWL('ec.q.modular_degree', title='Modular degree') }}</th>
 <th align="center">&nbsp;</th>
 </tr>
 {% for c in info.curves %}
@@ -84,17 +81,11 @@ padding : 4px;
     </p>
 
 
-        <h2>
-            Isogeny graph
-        </h2>
+        <h2>Isogeny graph</h2>
         <div class='sage nodisplay code'>sage: E.isogeny_graph().plot(edge_labels=True,layout='spring',vertex_size=250,)<br>(Note: the following graph has been relabeled<br>to respect the Cremona labeling)</div>
         <center>
         <img width="300" height="300" src="{{info.graph_img}}" />
         </center>
-    <h2>Data download </h2>
-    <p align="left">
-        <a href='{{info.download_all_url}}' target='_blank' >Download</a>
-        all database data for all curves in this class
-    </p>
-    {% endblock %}
+
+{% endblock %}
 </html>

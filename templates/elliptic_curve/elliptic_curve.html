@@ -214,14 +214,11 @@ function show_code(system) {
         <button id="morebutton">More</button>
     </form>
     </p>
-    <p align="left">
-        <a  href='{{info.download_qexp_url}}' target='_blank' >download coefficients</a>
-    </p>
 
     <h2> {{KNOWL('ec.q.special_value', title='Special L-value', special_value = info.special_value)}} attached to the curve </h2>
         \( {{ info.lder }} = {{ info.special_value}} \)
     </p>
-    
+
     <h2> Local data </h2>
 
 <table>
@@ -251,7 +248,7 @@ function show_code(system) {
 
 
 
-    <h2> \( p \)-adic data </h2>
+    <h2> p-adic data </h2>
     <p>
 {% if info.rank==0 %}
 All \(p\)-adic regulators are identically \(1\) since the rank is \(0\).
@@ -275,15 +272,15 @@ No \(p\)-adic data exists for this curve.
 {% endif %}
     </p>
 
-<!---
+{#
     <h2> Plot of real points</h2>
     <div class='sage nodisplay code'>sage: E.plot()</div>
     <div class='pari nodisplay code'> </div>
     <div class='magma nodisplay code'> </div>
     <center>
     <img src="{{info.plot}}" />
---->
     </center>
+#}
 
 <script type="text/javascript">
 var number_of_coefficients = 10;
