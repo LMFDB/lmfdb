@@ -26,8 +26,8 @@ def get_logfocus():
 _C = None
 
 readonly_dbs = [ 'HTPicard', 'Lfunction', 'Lfunctions', 'MaassWaveForm',
-        'ellcurves', 'hmfs', 'modularforms', 'modularforms_2010',
-        'mwf_dbname', 'numberfields', 'quadratic_twists', 'test', 'test_pdehaye']
+        'ellcurves', 'elliptic_curves', 'hmfs', 'modularforms', 'modularforms_2010',
+        'mwf_dbname', 'numberfields', 'quadratic_twists', 'test', 'limbo']
 
 readwrite_dbs = ['userdb', 'upload', 'knowledge']
 

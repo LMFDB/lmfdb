@@ -477,7 +477,7 @@ class Lfunction_EC(Lfunction):
     """Class representing an elliptic curve L-function
     It can be called with a dictionary of these forms:
 
-    dict = { 'label': ... }  label is the Cremona label of the elliptic curve
+    dict = { 'label': ... }  label is the LMFDB label of the elliptic curve
     """
 
     def __init__(self, **args):
@@ -500,7 +500,12 @@ class Lfunction_EC(Lfunction):
         self.nr_of_curves_in_class = nr_of_EC_in_isogeny_class(self.label)
 
         # Create the elliptic curve
-        self.E = EllipticCurve(str(self.label))
+        curves = base.getDBConnection().elliptic_curves.curves
+        Edata = curves.find_one({'lmfdb_label': self.label+'1'})
+        if Edata is None:
+            raise KeyError, 'No elliptic curve with label %s exists in the database'%self.label
+        else:
+            self.E = EllipticCurve([int(a) for a in Edata['ainvs']])
 
         # Extract the L-function information from the elliptic curve
         self.quasidegree = 1
@@ -510,7 +515,7 @@ class Lfunction_EC(Lfunction):
         self.kappa_fe = [1]
         self.lambda_fe = [0.5]
         self.numcoeff = self.Q_fe * 210 + 10
-        logger.debug("numcoeff: {0}".format(self.numcoeff))
+        #logger.debug("numcoeff: {0}".format(self.numcoeff))
         self.mu_fe = []
         self.nu_fe = [Rational('1/2')]
         self.langlands = True
@@ -541,16 +546,16 @@ class Lfunction_EC(Lfunction):
         self.texname = "L(s,E)"
         self.texnamecompleteds = "\\Lambda(s,E)"
         self.texnamecompleted1ms = "\\Lambda(1-s,E)"
-        self.title = "L-function $L(s,E)$ for the Elliptic Curve isogeny class over Q with label "+ self.label
+        self.title = "L-function $L(s,E)$ for the Elliptic Curve Isogeny Class "+ self.label
 
         self.properties = [('Degree ','%s' % self.degree)]
         self.properties.append(('Level', '%s' % self.level))
         self.credit = 'Sage'
         self.citation = ''
-        
-        self.sageLfunction = lc.Lfunction_from_elliptic_curve(self.E, self.numcoeff)
 
-        logger.info("I am now proud to have ", str(self.__dict__))
+        self.sageLfunction = lc.Lfunction_from_elliptic_curve(self.E, int(self.numcoeff))
+
+        #logger.info("I am now proud to have ", str(self.__dict__))
         constructor_logger(self,args)
 
     def Ltype(self):
@@ -600,7 +605,7 @@ class Lfunction_EMF(Lfunction):
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
-        logger.debug(str(self.character)+str(self.label)+str(self.number))
+        #logger.debug(str(self.character)+str(self.label)+str(self.number))
         self.weight = int(self.weight)
         self.motivic_weight = 1
         self.level = int(self.level)
@@ -611,17 +616,17 @@ class Lfunction_EMF(Lfunction):
 
         # Create the modular form
         self.MF = WebNewForm(self.weight, self.level, self.character, self.label)
-        logger.debug(str(self.MF))
+        #logger.debug(str(self.MF))
         # Extract the L-function information from the elliptic modular form
         self.automorphyexp = float(self.weight-1)/float(2)
         self.Q_fe = float(sqrt(self.level)/(2*math.pi))
-        logger.debug("ALeigen: " + str(self.MF.atkin_lehner_eigenvalues()))
+        #logger.debug("ALeigen: " + str(self.MF.atkin_lehner_eigenvalues()))
 
         if self.level == 1:  # For level 1, the sign is always plus
             self.sign = 1
         else:  # for level not 1, calculate sign from Fricke involution and weight
             self.sign = self.MF.atkin_lehner_eigenvalues()[self.level] * (-1)**(float(self.weight/2))
-        logger.debug("Sign: " + str(self.sign))
+        #logger.debug("Sign: " + str(self.sign))
 
         self.kappa_fe = [1]
         self.lambda_fe = [self.automorphyexp]
@@ -645,16 +650,16 @@ class Lfunction_EMF(Lfunction):
 
         # Appending list of Dirichlet coefficients
         GaloisDegree = self.MF.degree()  #number of forms in the Galois orbit
-        logger.debug("Galois degree: " + str(GaloisDegree))
+        #logger.debug("Galois degree: " + str(GaloisDegree))
         if GaloisDegree == 1:
            self.dirichlet_coefficients = self.MF.q_expansion_embeddings(
                self.numcoeff+1)[1:self.numcoeff+1] #when coeffs are rational, q_expansion_embedding()
                                                    #is the list of Fourier coefficients
         else:
-           logger.debug("Start computing coefficients.")
+           #logger.debug("Start computing coefficients.")
            for n in range(1,self.numcoeff+1):
               self.dirichlet_coefficients.append(self.MF.q_expansion_embeddings(self.numcoeff+1)[n][self.number])
-           logger.debug("Done computing coefficients.")
+           #logger.debug("Done computing coefficients.")
               
         for n in range(1,len(self.dirichlet_coefficients)+1):
             an = self.dirichlet_coefficients[n-1]
@@ -688,7 +693,7 @@ class Lfunction_EMF(Lfunction):
 #############################################################################
 
 class Lfunction_HMF(Lfunction):
-    """Class representing an elliptic modular form L-function
+    """Class representing a Hilbert modular form L-function
 
     Compulsory parameters: label
 
@@ -771,19 +776,24 @@ class Lfunction_HMF(Lfunction):
         primes = [[int(pp[0][1:]), int(pp[1])] for pp in primes]
         primes = [[pp[0], pp[1], int(log(pp[0],pp[1]))] for pp in primes]
 
+        ppmidNN = [c[0] for c in f['AL_eigenvalues']]
+
         ratl_primes = [p for p in range(primes[-1][0]+1) if is_prime(p)]
         RCC = CC['T']; (T,) = RCC._first_ngens(1)
         heckepols = [ RCC(1) for p in ratl_primes ]
         for l in range(len(hecke_eigenvalues)):
-            heckepols[ratl_primes.index(primes[l][1])] *= 1 - hecke_eigenvalues[l]/float(sqrt(primes[l][0]))*(T**primes[l][2]) + (T**(2*primes[l][2]))
-        dcoeffs = [1,1]
-        for n in range(2,ratl_primes[-1]):
+            if F_hmf['primes'][l] in ppmidNN:
+                heckepols[ratl_primes.index(primes[l][1])] *= 1 - hecke_eigenvalues[l]/float(sqrt(primes[l][0]))*(T**primes[l][2])
+            else:
+                heckepols[ratl_primes.index(primes[l][1])] *= 1 - hecke_eigenvalues[l]/float(sqrt(primes[l][0]))*(T**primes[l][2]) + (T**(2*primes[l][2]))
+        dcoeffs = [0,1]
+        for n in range(2,ratl_primes[-1]+1):
             nfact = factor(n)
             if len(nfact) == 1:
                 # prime power
                 p = nfact[0][0]
                 k = nfact[0][1]
-                S = [1] + [dcoeffs[p^i] for i in range(1,k)]
+                S = [1] + [dcoeffs[p**i] for i in range(1,k)]
                 heckepol = heckepols[ratl_primes.index(p)]
                 if k == 1:
                     # prime, just the trace
@@ -798,10 +808,15 @@ class Lfunction_HMF(Lfunction):
                     dcoeffs.append(-Sk)
             else:
                 # composite
-                ancoeff = prod([dcoeffs[pe[0]^pe[1]] for pe in nfact])
+                ancoeff = prod([dcoeffs[pe[0]**pe[1]] for pe in nfact])
                 dcoeffs.append(ancoeff)
 
-        self.dirichlet_coefficients = dcoeffs
+        ff = open('dcoeffs.txt', 'w')
+        ff.write(str(dcoeffs) + '\n')
+        ff.write(str(heckepols))
+        ff.close()
+
+        self.dirichlet_coefficients = dcoeffs[1:]
 
         self.coefficient_period = 0   #HUH?
         self.coefficient_type = 0     #HUH?
@@ -1251,14 +1266,19 @@ class SymmetricPowerLfunction(Lfunction):
         if args[1][0] != 'EllipticCurve' or args[1][1] != 'Q':
             raise TypeError, "The symmetric L functions have been implemented only for Elliptic Curves over Q"
 
-        try:
-            self.E=EllipticCurve(args[1][2])
-        except  AttributeError:
-            raise AttributeError, "This elliptic curve does not exist in cremona's database"
+        self.label = args[1][2]
+        # Create the elliptic curve
+        curves = base.getDBConnection().elliptic_curves.curves
+        Edata = curves.find_one({'lmfdb_label': self.label+'1'})
+        if Edata is None:
+            raise KeyError, 'No elliptic curve with label %s exists in the database'%self.label
+        else:
+            self.E = EllipticCurve([int(a) for a in Edata['ainvs']])
+
         from symL.symL import SymmetricPowerLFunction
         self.S=SymmetricPowerLFunction(self.E,self.m)
 
-        self.title = "The symmetric power $L$-function $L(s,E,\mathrm{sym}^%d)$ of Elliptic curve %s"% (self.m,self.E.cremona_label())
+        self.title = "The symmetric power $L$-function $L(s,E,\mathrm{sym}^%d)$ of Elliptic Curve Isogeny Class %s"% (self.m,self.label)
 
         self.dirichlet_coefficients = self.S._coeffs
 
@@ -1287,7 +1307,7 @@ class SymmetricPowerLfunction(Lfunction):
         self.citation = ' '
         self.credit = ' '
         self.level=self.S.conductor
-        self.euler = "\\begin{align} L(s,E, \\mathrm{sym}^{%d}) = & \\prod_{p \\textrm{ good}} \\prod_{j=0}^{%d} (1-\\alpha_p^j\\beta_p^{%d-j}p^{-s})^{-1} "%(self.m,self.m,self.m)
+        self.euler = "\\begin{align} L(s,E, \\mathrm{sym}^{%d}) = & \\prod_{p \\nmid %d } \\prod_{j=0}^{%d} \\left(1- \\frac{\\alpha_p^j\\beta_p^{%d-j}}{p^{s}}\\right)^{-1} "%(self.m, self.E.conductor(),self.m,self.m)
         for p in self.S.bad_primes:
             poly = self.S.eulerFactor(p)
             poly_string =" "
@@ -1295,13 +1315,13 @@ class SymmetricPowerLfunction(Lfunction):
                 poly_string="\\\\ & \\times (1"
                 if poly[1] != 0:
                     if poly[1] == 1:
-                        poly_string += "%d^{ -s}"%p
+                        poly_string += "+%d^{ -s}"%p
                     elif poly[1] == -1:
                         poly_string += "-%d^{- s}"%p
                     elif poly[1] <0 :
-                        poly_string += "%d%d^{- s}"%(poly[1],p)
+                        poly_string += "%d\\ %d^{- s}"%(poly[1],p)
                     else:
-                        poly_string += "+%d%d^{- s}"%(poly[1],p)
+                        poly_string += "+%d\\ %d^{- s}"%(poly[1],p)
 
                 for j in range(2,len(poly)):
                     if poly[j]== 0:
@@ -1311,17 +1331,14 @@ class SymmetricPowerLfunction(Lfunction):
                     elif poly[j] == -1:
                         poly_string += "-%d^{-%d s}"%(p,j)
                     elif poly[j] <0 :
-                        poly_string += "%d%d^{-%d s}"%(poly[j],p,j)
+                        poly_string += "%d \\ %d^{-%d s}"%(poly[j],p,j)
                     else:
-                        poly_string += "+%d%d^{-%d s}"%(poly[j],p,j)
+                        poly_string += "+%d\\ %d^{-%d s}"%(poly[j],p,j)
                 poly_string += ")^{-1}"
             self.euler += poly_string
         self.euler += "\\end{align}"
 
-        #self.friends = [("Isogeny Class", '/'.join('', 'EllipticCurve','Q',arg[1][2], ''))]
-
-
-
+        #self.friends = [("Isogeny Class", '/'.join('', 'EllipticCurve','Q',self.label, ''))]
 
 
 

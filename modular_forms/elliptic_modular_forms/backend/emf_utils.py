@@ -18,12 +18,11 @@ Utilities file for elliptic (holomorphic) modular forms.
 
 AUTHOR: Fredrik Strömberg
 
-
 """
 import random
 from flask import  jsonify
 from utils import *
-from modular_forms.elliptic_modular_forms import EMF,emf, emf_logger
+from modular_forms.elliptic_modular_forms import EMF,emf, emf_logger, default_prec
 logger = emf_logger
 from sage.all import dimension_new_cusp_forms,vector,dimension_modular_forms,dimension_cusp_forms,is_odd,loads,dumps,Gamma0,Gamma1,Gamma
 from modular_forms.backend.mf_utils import my_get
@@ -59,8 +58,6 @@ def extract_limits_as_tuple(arg, field, defaults=(1,10)):
             limits=defaults
     return limits
     
-
-
 def extract_data_from_jump_to(s):
     label=None;weight=None;character=None;level=None
     weight = 2  # this is default for jumping
@@ -233,6 +230,12 @@ def render_fd_plot(level,info,**kwds):
     if(info.has_key('group')):
         group = info['group']
         # we only allow standard groups
+    if info.has_key('grouptype'):
+        type=int(info['grouptype'])
+        if info['grouptype']==0:
+            group='Gamma0'
+        elif info['grouptype']==1:
+            group='Gamma1'
     if (group  not in ['Gamma0','Gamma','Gamma1']):
         group = 'Gamma0'
         type=int(0)
@@ -242,7 +245,6 @@ def render_fd_plot(level,info,**kwds):
         else:
             type=(1)
     db_name = 'SL2Zsubgroups'
-    dbport = 37010
     collection='groups'
     C = base.getDBConnection()
     emf_logger.debug("C={0}".format(C))
@@ -259,9 +261,18 @@ def render_fd_plot(level,info,**kwds):
             domain=loads(str(find['domain']))
         emf_logger.debug('Found fundamental domain in database')
     else:
-        if type==int(0):
-            domain=draw_fundamental_domain(level,group,**kwds)
-            G=Gamma0(level)
+        emf_logger.debug('Drawing fundamental domain for group {0}({1})'.format(group,level))
+        domain=draw_fundamental_domain(level,group,**kwds)
+            #G=Gamma0(level)
             #C[db_name][collection].insert({'level':int(level), 'type':type, 'index':int(G.index), 'G':pymongo.binary.Binary(dumps(G)), 'domain': pymongo.binary.Binary(dumps(domain))})
             #emf_logger.debug('Inserting group and fundamental domain in database')
     return domain
+
+
+def is_data_in_db(level=0,weight=0,character=0):
+    r"""
+     Checks whether we have the requested data in the database.
+    """
+    
+    return True
+    

@@ -6,10 +6,11 @@
 An {{KNOWL("ec", title="elliptic curve")}} is a {{KNOWL("ag.curve.smooth",title="smooth")}} projective {{KNOWL("ag.curve",title="curve")}} of {{KNOWL("ag.curve.genus",title="genus")}} 1 with a rational basepoint $O$. 
 </div>
 <div>
-The database currently contains all {{info.ncurves}} elliptic curves
-with {{ KNOWL('ec.q.conductor',title = "conductor")}} at most
-{{info.max_N}}; these all have {{ KNOWL('ec.q.rank',
-title="rank")}} &le; {{info.max_rank}}.
+The database currently contains the Cremona database of all
+{{info.ncurves}} elliptic curves with {{ KNOWL('ec.q.conductor',title
+= "conductor")}} at most {{info.max_N}}, all of which have {{
+KNOWL('ec.q.rank', title="rank")}} &le; {{info.max_rank}}.  In future
+it will contain some or all of the Stein-Watkins database.
 </div>
 
 <h2> Browse {{ KNOWL('ec.q',title='elliptic curves over $\mathbb{Q}$')}}</h2>
@@ -35,8 +36,9 @@ By {{ KNOWL('ec.q.torsion_order', torsion=t,title="torsion order") }}:
 </p>
 
 
-<h2> Find a specific curve by {{
-  KNOWL('ec.cremona_label',title="Cremona label") }}, or an {{ KNOWL('ec.isogeny_class',title="isogeny class") }}</h2>
+<h2> Find a specific curve or {{
+  KNOWL('ec.isogeny_class',title="isogeny class") }} by {{
+  KNOWL('ec.q.lmfdb_label',title="LMFDB label") }} </h2>
 <form>
 <input type='text' name='label' size=25 placeholder="11a2">
 <button type='submit' name='jump' value='label or isogeny class' >label or isogeny class</button>
@@ -125,7 +127,7 @@ Please enter a value or leave blank:
 
   </table>
 <p></p>
-<td><button type='submit' value='Search'>Search</td>
+<td><button type='submit' value='Search'>Search</button></td>
 
 </form>
 {% endblock %}

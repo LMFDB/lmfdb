@@ -1,4 +1,4 @@
-   {% if geometric is defined %}
+{% if geometric is defined %}
 <style>
 #fundom{
   float:right;
@@ -10,6 +10,16 @@
   text-color:white;
 }
 </style>
+{% if level == 1 %}
+  {% set group=KNOWL('mf.sl2z',title='\(\mathrm{SL}_2(\mathbb{Z})\)') %}
+{% else %}
+  {% if grouptype == 0 %}
+    {% set group=KNOWL('mf.sl2.subgroup.gamma0N',title='\(\Gamma_0(' ~ level ~ ') \)') %}
+  {% elif grouptype == 1 %}
+    {% set group=KNOWL('mf.sl2.subgroup.gamma0N',title='\(\Gamma_1(' ~ level ~  ')\)') %}
+  {% endif %}
+{% endif %}
+
       {% set G = geometric %}
       <div id="fundom">
         <span id="wait"></span>
@@ -19,13 +29,7 @@
         <tr>
           <td valign="top">
             <div>
-            {% if level > 1 %}
-            {% set level = level %}
-            {% set ti = "\(\Gamma_{0}( " ~ level  ~ ") \)" %} 
-            <h1>Geometric information for {{KNOWL('mf.sl2.subgroup.gamma0N',title=ti)}}</h1>
-            {% else %}
-            <h1>Geometric information for {{KNOWL('mf.sl2z',title='PSL<sub>2</sub>\( (\mathbb{Z}) \)')}}</h1>
-            {% endif %}
+            <h1>Geometric information for {{group}}</h1>
             </div>
           </td>
         </tr>
@@ -46,7 +50,7 @@
 		  ({{ G.cusps|count }} cusps)
 	        </td>
 	      </tr>
-              <tr><th colspan="2">Number of {{KNOWL('mf.sl2z.subgroup.ellipticfxpts',title='elliptic fixed points')}} of </th></tr>
+              <tr><th colspan="2" style="text-align:left;">Number of {{KNOWL('mf.sl2z.subgroup.ellipticfxpts',title='elliptic fixed points')}} of </th></tr>
               <tr><th>order 2</th><td>{{G.nu2}}</td></tr>
               <tr><th>order 3</th><td>{{G.nu2}}</td></tr>
             </table>

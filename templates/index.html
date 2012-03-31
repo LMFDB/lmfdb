@@ -12,9 +12,8 @@
   <ul>
     <li><a href="{{url_for('introduction_features')}}">Features</a></li>
     <li><a href="{{url_for('introduction_tutorial')}}">Tutorial</a></li>
+    <li><a href="{{ url_for('bigpicture') }}">A Map of LMFDB</a></li>
   </ul>
-  
-  <li><a href="{{ url_for('bigpicture') }}">Big Picture</a></li>
 
   <li><a href="{{ url_for('render_Lfunction') }}">L-functions and Zeta-functions</a></li>
   <li>Elliptic Curves
@@ -36,27 +35,22 @@
   </ul>
   </li>
 
-  <li><a class="mf"    href="{{ url_for('mf.modular_form_main_page') }}">Holomorphic Modular Forms</a>
+  <li><a class="mf"    href="{{ url_for('mf.modular_form_main_page') }}">Modular Forms</a>
   <ul>
-   <li><a class="emf"  href="{{ url_for('emf.render_elliptic_modular_forms') }}">Holomorphic Cusp Forms  on \(\mathrm{GL}(2)\)</a></li>
-   <li><a              href="{{ url_for('ModularForm_GSp4_Q_top_level') }}">Siegel Modular forms</a> </li>
+   <li><a class="emf"  href="{{ url_for('emf.render_elliptic_modular_forms') }}">Holomorphic Cusp Forms  on \(\mathrm{GL}(2)/\mathbb{Q}\)</a></li>
+   <li><a class="mwf"  href="{{ url_for('mwf.render_maass_waveforms') }}">Maass Forms on \(\mathrm{GL}(2)/\mathbb{Q}\)</a></li>
+{#  <li><a class="mwfp" href="{{ url_for('mwfp.render_picard_maass_forms') }}">Maass Forms on the Picard Group, \(\mathrm{PSL}(2,\mathbb{Z}[i])\)</a></li> #}
    <li><a              href="{{ url_for('hilbert_modular_form_render_webpage') }}">Hilbert Modular Forms</a></li>
-  </ul>
-  </li>
-
-  <li><a class="mf"    href="{{ url_for('mf.modular_form_main_page') }}">Maass Forms</a>
-  <ul>
-   <li><a class="mwf"  href="{{ url_for('mwf.render_maass_waveforms') }}">Maass Forms on \(\mathrm{GL}(2)\)</a></li>
-   <li><a class="mwfp" href="{{ url_for('mwfp.render_picard_maass_forms') }}">Maass Forms on the Picard Group, \(\mathrm{PSL}(2,\mathbb{Z}[i])\)</a></li>
+   <li><a              href="{{ url_for('ModularForm_GSp4_Q_top_level') }}">Siegel Modular forms</a> </li>
   </ul>
   </li>
 
  </ul>
 
-<h1>Search</h1>
+<h1>Zeros of $L$-functions</h1>
  <ul>
-  <li><a href="{{ url_for('LfunctionDB.query', zerolowerbound=1.1, zeroupperbound=2.1) }}">Zeros of $L$-functions</a></li>
-  <li><a href="{{ url_for('zeta zeros.zetazeros') }}">Browse zeros of $\zeta(s)$</a></li>
+  <li><a href="{{ url_for('LfunctionDB.query', zerolowerbound=1.1, zeroupperbound=2.1) }}">Search</a></li>
+  <li><a href="{{ url_for('zeta zeros.zetazeros') }}">Browse</a></li>
  </ul>
 
 <h1>Misc Pages</h1>
@@ -68,26 +62,20 @@
    you are "<a href="{{ url_for('users.info') }}">{{username}}</a>"
  {%- endif %}
  </li>
- <li><a href="{{ url_for("about") }}">About</a></li>
  <li><a href="{{ url_for("acknowledgment") }}">Acknowledgment</a></li>
 </ul>
 
-<h1>Data Uploading</h1>
+<h1>Data</h1>
 <ul>
-<li><a href="{{ url_for("upload.viewAll")}}">View uploaded data</a></li>
+<li><a href="{{ url_for("upload.viewAll")}}">View user uploaded data</a></li>
 {% if user_is_authenticated %}
  <li><a href="{{ url_for("upload.index") }}">Upload data</a></li>
+ <li><a href="/raw">raw LMFDB data</a></li>
  {% if user_is_admin %}
   <li><a href="{{ url_for("upload.admin") }}">Moderate uploaded files</a></li>
  {% endif %}
 {% endif %}
 </ul>
 
-{% if user_is_authenticated %}
-<h1>Raw</h1>
-<ul>
-<li><a href="/raw">raw</a>
-</ul>
-{% endif %}
 
 {% endblock %}
