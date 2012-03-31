@@ -108,6 +108,8 @@ def browse_elliptic_modular_forms_ranges(**kwds):
     bread.append((EMF_TOP,url_for('emf.render_elliptic_modular_forms')))
     limits_weight = extract_limits_as_tuple(info,'weight')
     limits_level  = extract_limits_as_tuple(info,'level')
+    if limits_weight[0]==limits_weight[1] and limits_level[0]==limits_level[1]:
+        return render_elliptic_modular_form_space_list_chars(limits_level[0],limits_level[0])
     if limits_level[1] >= N_max_comp:
         return render_template("not_available.html")
     if limits_weight[1] >= k_max_comp:
@@ -142,10 +144,7 @@ def browse_elliptic_modular_forms_ranges(**kwds):
     info['browse_type']=""
     info['title']=title;  info['bread']=bread
     #info['level']=level
-    if limits_weight[0]!=limits_weight[1] and limits_level[0]!=limits_level[1]:
-        return render_template("emf_navigation.html", info=info,title=title,bread=bread)
-    return render_template("emf_browse_range.html", **info)
-    
+    return render_template("emf_navigation.html", info=info,title=title,bread=bread)
 
 def browse_elliptic_modular_forms(level=0,weight=0,character=-1,label='',limits=None,**kwds):
     r"""

@@ -183,68 +183,6 @@ class ClassicalMFDisplay(MFDisplay):
                             url=''
                         row.append({'N':N,'k':k,'chi':xi,'url':url,'dim':d})
                     self._table['rows'].append(row)
-        # fixed weight
-        elif wt_ll==wt_ul:
-            k=wt_ll
-            self._table['rowhead']="Level"
-            for N in range(level_ll,level_ul+1):
-                #self._table['characters'][N]=list()       
-                if N==0: continue
-                row=[]
-                rowdim=0
-                if character != 0 and character != 1:
-                    self._table['colhead']="Index of character in DirichletGroup(N)"
-                    D = DirichletGroup(N)
-                    G = D.galois_orbits(reps_only=True)
-                    for xi,x in enumerate(G):
-                        if not xi in self._table['col_heads']:
-                            self._table['col_heads'].append(xi)
-                            self._table['maxRowCount']=xi+1
-                        #if not N in self._table['characters'][N]:              
-                        #    self._table['characters'][N].append(xi)
-                        if (x.is_even() and is_odd(k)) or (x.is_odd() and is_even(k)):
-                            row.append({'N':N,'k':k,'chi':xi,'url':url,'dim':0})
-                            continue
-                        try:
-                            d = dimension_fun(x,k)
-                        except Exception as ex:
-                            emf_logger.critical("Exception: {0} \n Could not compute the dimension with function {0}".format(ex,dimension_fun))
-                        if (not check_db) or is_data_in_db(N,k,xi):
-                            url = url_for('emf.render_elliptic_modular_forms',level=N,weight=k,character=xi)
-                        else:
-                            url=''
-                        row.append({'N':N,'k':k,'chi':xi,'url':url,'dim':d})
-                        rowdim=rowdim+d
-                    if (rowdim>0):
-                        self._table['rows'].append(row)
-                    self._table['row_heads'].append(N)
-                # specific character = 0,1
-                else:
-                    self._table['rowhead']='Weight'
-                    if character==0:
-                        self._table['row_heads']=['Trivial character']
-                    else:
-                        self._table['row_heads']=['\( \\( \frac{\cdot}{N} \\)\)']
-                    row=[]
-                    if character == 0 and is_odd(k):
-                        continue
-                    try:
-                        if character==0:
-                            d = dimension_fun(N,k)
-                        elif character==1:
-                            x = kronecker_character_upside_down(N)
-                            d = dimension_fun(x,k)
-                    except Exception as ex:
-                        emf_logger.critical("Exception: {0}. \n Could not compute the dimension with function {1}".format(ex,dimension_fun))
-                    if (not check_db) or is_data_in_db(N,k,character):
-                        url = url_for('emf.render_elliptic_modular_forms',level=N,weight=k, character=character)
-                    else:
-                        url=''
-                    emf_logger.debug("url= {0}".format(url))
-                    if not k in self._table['col_heads']:
-                        self._table['col_heads'].append(k)
-                    row.append({'N':N,'k':k,'url':url,'dim':d})
-                self._table['rows'].append(row)
         else:
             for k in range(wt_ll,wt_ul+1):
                 if character == 0 and is_odd(k):
