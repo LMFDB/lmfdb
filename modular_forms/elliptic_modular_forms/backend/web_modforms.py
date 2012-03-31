@@ -170,14 +170,15 @@ class WebModFormSpace(Parent):
 
     def _get_character(self,k):
         r"""
-        Returns character nr. k acting on the ambient space of self.
+        Returns canonical representative of the Galois orbit nr. k acting on the ambient space of self.
 
         """
-        D = DirichletGroup(self.group().level()).list()
+        D = DirichletGroup(self.group().level())
+        G = D.galois_orbits(reps_only=True)
         try:
             return D[k]
         except IndexError:
-            emf_logger.critical("Got character no. {0}, which are outside the scope of characters mod {1}!".format(k,self.group().level()))
+            emf_logger.critical("Got character no. {0}, which are outside the scope of Galois orbits of the characters mod {1}!".format(k,self.group().level()))
             return trivial_character(self.group().level())
 
         
