@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from base import *
-from flask import Flask, session, g, render_template, url_for, request, redirect, make_response, abort
+from flask import Flask, session, g, render_template, url_for, request, make_response, abort
+import flask
 
 from sage.all import *
 import tempfile, os
@@ -21,6 +22,25 @@ from Lfunctionutilities import lfuncDStex, lfuncEPtex, lfuncFEtex, truncatenumbe
 #   Route functions
 ###########################################################################
 
+#@app.route("/L/EllipticCurve/Q/<label>")
+def return_ECLfunction(label):
+    logger.debug(label)
+    from elliptic_curve import cremona_label_regex, lmfdb_label_regex
+    m = lmfdb_label_regex.match(label)
+    if m is not None:
+        if m.groups()[2]:
+            # strip off the curve number
+            return flask.redirect("/L/EllipticCurve/Q/%s"%label[:-1], 301)
+        else:
+            return render_webpage(request,'EllipticCurve','Q',label,None,None,None,None,None,None)
+    m = cremona_label_regex.match(label)
+    if m is not None:
+        if m.groups()[2]:
+            C = getDBConnection().elliptic_curves.curves.find_one({'label':label})
+        else:
+            C = getDBConnection().elliptic_curves.curves.find_one({'iso':label})
+        return flask.redirect("/L/EllipticCurve/Q/%s"%(C['lmfdb_iso']), 301)
+
 @app.route("/L/")
 @app.route("/L/<arg1>/") # arg1 is EllipticCurve, ModularForm, Character, etc
 @app.route("/L/<arg1>/<arg2>/") # arg2 is field
@@ -32,6 +52,8 @@ from Lfunctionutilities import lfuncDStex, lfuncEPtex, lfuncFEtex, truncatenumbe
 @app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/")
 @app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>/")
 def render_Lfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = None, arg6 = None, arg7 = None, arg8 = None, arg9 = None):
+    if arg1 == 'EllipticCurve' and arg2 == 'Q':
+        return return_ECLfunction(arg3)
     return render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
 
 @app.route("/Lfunction/")
@@ -56,7 +78,7 @@ def render_Lfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = 
 @app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>/")
 def render_Lfunction_redirect(**args):
     args.update(request.args)
-    return redirect(url_for("render_Lfunction", **args), code=301)
+    return flask.redirect(url_for("render_Lfunction", **args), code=301)
 
 @app.route("/plotLfunction/")
 @app.route("/plotLfunction/<arg1>/")
@@ -203,7 +225,7 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         return Lfunction( Ltype = arg1, url = arg2)
 
     else:
-        return Flask.redirect(403)
+        return flask.redirect(403)
 
 
 def set_info_for_start_page():
@@ -487,7 +509,7 @@ def render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8
     data = plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
     if not data:
         # see note about missing "hardy_z_function" in plotLfunction()
-        return redirect(404)
+        return flask.redirect(404)
     response = make_response(data)
     response.headers['Content-type'] = 'image/png'
     return response
