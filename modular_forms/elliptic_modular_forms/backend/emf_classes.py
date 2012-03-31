@@ -167,7 +167,7 @@ class ClassicalMFDisplay(MFDisplay):
                     return None
                 self._table['rowhead']='Character&nbsp;\\&nbsp;Weight'
                 for x in G:
-                    xi = G.list().index(x)
+                    xi = G.index(x.galois_orbit())
                     row=[]
                     self._table['row_heads'].append(xi)
                     for k in range(wt_ll,wt_ul+1):
@@ -199,7 +199,7 @@ class ClassicalMFDisplay(MFDisplay):
                     D = DirichletGroup(N)
                     G = D.galois_orbits()
                     for x in G:
-                        xi = G.list().index(x)
+                        xi = G.index(x.galois_orbit())
                         if not xi in self._table['col_heads']:
                             self._table['col_heads'].append(xi)
                             self._table['maxRowCount']=xi+1
