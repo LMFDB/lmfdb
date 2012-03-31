@@ -12,13 +12,13 @@
 <table border="0">
 
 <tr>
-<td align=left> {{ KNOWL_LINK('ec.q.conductor', title='conductor') }} <input type='text' name='conductor' size=10 value={{info.conductor}}></td>
-<td align=left>{{ KNOWL_LINK('ec.q.rank', title='rank') }}<input type='text' name='rank'size=1 value={{info.rank}}></td>
-<td align=left>{{ KNOWL_LINK('ec.q.torsion_order', title='torsion order') }} <input type='text' name='torsion' size=1 value={{info.torsion}}> </td>
-<td align=left>{{ KNOWL_LINK('ec.q.torsion_subgroup', title='torsion structure') }} <input type='text' name='torsion_structure' size=1 value={{info.torsion_structure}}> </td>
-<td align=left>{{ KNOWL_LINK('ec.q.analytic_sha_order', title='analytic order of &#1064;\(_{an} \)') }} <input type='text' name='sha_an' size=1 value={{info.sha_an}}> </td>
+<td align=left> {{ KNOWL('ec.q.conductor', title='conductor') }} <input type='text' name='conductor' size=10 value={{info.conductor}}></td>
+<td align=left>{{ KNOWL('ec.q.rank', title='rank') }}<input type='text' name='rank'size=1 value={{info.rank}}></td>
+<td align=left>{{ KNOWL('ec.q.torsion_order', title='torsion order') }} <input type='text' name='torsion' size=1 value={{info.torsion}}> </td>
+<td align=left>{{ KNOWL('ec.q.torsion_subgroup', title='torsion structure') }} <input type='text' name='torsion_structure' size=1 value={{info.torsion_structure}}> </td>
+<td align=left>{{ KNOWL('ec.q.analytic_sha_order', title='analytic order of &#1064;\(_{an} \)') }} <input type='text' name='sha_an' size=1 value={{info.sha_an}}> </td>
 <td align=left>
-<td align=left>{{ KNOWL_LINK('ec.q.optimal', title='Optimal') }}
+<td align=left>{{ KNOWL('ec.q.optimal', title='Optimal') }}
 <select name='optimal'>
   <option value="">No</option>
   <option value="on">Yes</option>
@@ -50,12 +50,12 @@ table td.params {
 <h2> Results ({{info.report}})</h2>
 <table>
 <tr>
-  <th class="center">{{ KNOWL_LINK('ec.isogeny_class', title='isogeny class') }}</th>
-  <th class="center">{{ KNOWL_LINK('ec.q.lmfdb_label', title='LMFDB label')}}</th>
-  <th class="center">{{ KNOWL_LINK('ec.q.cremona_label', title='Cremona label')}}</th>
+  <th class="center">{{ KNOWL('ec.isogeny_class', title='isogeny class') }}</th>
+  <th class="center">{{ KNOWL('ec.q.lmfdb_label', title='LMFDB label')}}</th>
+  <th class="center">{{ KNOWL('ec.q.cremona_label', title='Cremona label')}}</th>
   <th align="left">[a<sub>1</sub>,  a<sub>2</sub>, a<sub>3</sub>, a<sub>4</sub>, a<sub>6</sub>]</th>
-  <th class="center">{{ KNOWL_LINK('ec.q.rank', title='rank') }}</th>
-  <th class="center">{{ KNOWL_LINK('ec.field.torsion_order', title='torsion order') }}</th>
+  <th class="center">{{ KNOWL('ec.q.rank', title='rank') }}</th>
+  <th class="center">{{ KNOWL('ec.q.torsion_order', title='torsion order') }}</th>
 </tr>
 {% for curve in info.curves: %}
 <tr>

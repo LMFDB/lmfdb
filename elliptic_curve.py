@@ -319,8 +319,6 @@ def render_isogeny_class(iso_class):
     info['graph_img'] = url_for('plot_iso_graph', label=lmfdb_iso)
    
     info['curves'] = [[lmfdb_iso+str(i+1),cremona_labels[i],str(list(c.ainvs())),c.torsion_order(),c.modular_degree(),optimal_flags[i]] for i,c in enumerate(db_curves)]
-    info['download_qexp_url'] = url_for('download_qexp', limit=100, ainvs=','.join([str(a) for a in ainvs]))
-    info['download_all_url'] = url_for('download_all', label=str(lmfdb_iso))
 
     friends=[]
 #   friends.append(('Quadratic Twist', "/quadratic_twists/%s" % (lmfdb_iso)))
@@ -336,13 +334,16 @@ def render_isogeny_class(iso_class):
 
     info['friends'] = friends
 
+    info['downloads'] = [('Download coeffients of q-expansion', url_for("download_EC_qexp", label=lmfdb_iso, limit=100)), \
+                         ('Download stored data for curves in this class', url_for("download_EC_all", label=lmfdb_iso))]
+
     if lmfdb_iso==cremona_iso:
         t = "Elliptic Curve Isogeny Class %s" % lmfdb_iso
     else:
         t = "Elliptic Curve Isogeny Class %s (Cremona label %s)" % (lmfdb_iso,cremona_iso)
     bread = [('Elliptic Curves ', url_for("rational_elliptic_curves")),('isogeny class %s' %lmfdb_iso,' ')]
 
-    return render_template("elliptic_curve/iso_class.html", info=info, bread=bread, credit=credit,title = t, friends=info['friends'])
+    return render_template("elliptic_curve/iso_class.html", info=info, bread=bread, credit=credit,title = t, friends=info['friends'], downloads=info['downloads'])
 
 @app.route("/EllipticCurve/Q/modular_form_display/<label>/<number>")
 def modular_form_display(label, number):
@@ -493,28 +494,29 @@ def render_curve_webpage_by_label(label):
         # Database has errors when torsion generators not integral
         # 'tor_gens':','.join(web_latex(eval(g)) for g in data['torsion_generators']) if 'torsion_generators' in data else [P.element().xy() for P in list(G)]
                         })
-    info['downloads_visible'] = True
-    info['downloads'] = [('worksheet', url_for("not_yet_implemented"))]
     info['friends'] = [
         ('Isogeny class '+lmfdb_iso_class, "/EllipticCurve/Q/%s" % lmfdb_iso_class),
         ('Minimal quadratic twist '+minq_label, "/EllipticCurve/Q/%s" % minq_label),
         ('L-function', url_for("render_Lfunction", arg1='EllipticCurve', arg2='Q', arg3=lmfdb_label)),
         ('Symmetric square L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='2',arg3='EllipticCurve', arg4='Q', arg5=lmfdb_iso_class)),
         ('Symmetric 4th power L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='4',arg3='EllipticCurve', arg4='Q', arg5=lmfdb_iso_class))]
-    
+
     if int(N)<100:
-        info['friends'].append(('Modular form '+lmfdb_iso_class, url_for("emf.render_elliptic_modular_forms", level=int(N),weight=2,character=0,label=mod_form_iso)))
+        info['friends'].append(('Modular form '+lmfdb_iso_class.replace('.','.2'), url_for("emf.render_elliptic_modular_forms", level=int(N),weight=2,character=0,label=mod_form_iso)))
     else:
-        info['friends'].append(('Modular form '+lmfdb_iso_class+" not available",0))
+        info['friends'].append(('Modular form '+lmfdb_iso_class.replace('.','.2')+" not available",0))
+
+    info['downloads'] = [('Download coeffients of q-expansion', url_for("download_EC_qexp", label=lmfdb_label, limit=100)), \
+                         ('Download all stored data', url_for("download_EC_all", label=lmfdb_label))]
+
 
     #info['learnmore'] = [('Elliptic Curves', url_for("not_yet_implemented"))]
     #info['plot'] = image_src(plot)
     info['plot'] = url_for('plot_ec', label=lmfdb_label)
-    info['download_qexp_url'] = url_for('download_qexp', limit=100, ainvs=','.join([str(a) for a in ainvs]))
 
     properties2 = [('Label', '%s' % lmfdb_label),
                    (None, '<img src="%s" width="200" height="150"/>' % url_for('plot_ec', label=lmfdb_label) ),
-                   ('Conductor', '\(%s\)' % N), 
+                   ('Conductor', '\(%s\)' % N),
                    ('Discriminant', '\(%s\)' % discriminant),
                    ('j-invariant', '%s' % web_latex(j_invariant)),
                    ('Rank', '\(%s\)' % rank),
@@ -526,11 +528,11 @@ def render_curve_webpage_by_label(label):
         t = "Elliptic Curve %s" % info['label']
     else:
         t = "Elliptic Curve %s (Cremona label %s)" % (info['label'],info['cremona_label'])
-        
+
     bread = [('Elliptic Curves ', url_for("rational_elliptic_curves")),('Elliptic curves %s' %lmfdb_label,' ')]
 
-    return render_template("elliptic_curve/elliptic_curve.html", 
-          properties2=properties2, credit=credit,bread=bread, title = t, info=info, friends = info['friends'])
+    return render_template("elliptic_curve/elliptic_curve.html",
+          properties2=properties2, credit=credit,bread=bread, title = t, info=info, friends = info['friends'], downloads = info['downloads'])
 
 @app.route("/EllipticCurve/Q/padic_data")
 def padic_data():
@@ -557,28 +559,35 @@ def padic_data():
         info['reg'] = "no data"
     return render_template("elliptic_curve/elliptic_curve_padic.html", info = info)
 
-@app.route("/EllipticCurve/Q/download_qexp")
-def download_qexp():
-    ainvs = request.args.get('ainvs')
-    E = EllipticCurve([int(a) for a in ainvs.split(',')])
-    response = make_response(' '.join(str(an) for an in E.anlist(int(request.args.get('limit', 100)), python_ints=True)))
+@app.route("/EllipticCurve/Q/download_qexp/<label>/<limit>")
+def download_EC_qexp(label, limit):
+    logger.debug(label)
+    CDB = base.getDBConnection().elliptic_curves.curves
+    N, iso, number = lmfdb_label_regex.match(label).groups()
+    if number:
+        data = CDB.find_one({'lmfdb_label':label})
+    else:
+        data = CDB.find_one({'lmfdb_iso':label})
+    ainvs = data['ainvs']
+    logger.debug(ainvs)
+    E = EllipticCurve([int(a) for a in ainvs])
+    response = make_response(' '.join(str(an) for an in E.anlist(int(limit), python_ints=True)))
     response.headers['Content-type'] = 'text/plain'
     return response
 
-@app.route("/EllipticCurve/Q/download_all")
-def download_all():
-    label=(request.args.get('label'))
+@app.route("/EllipticCurve/Q/download_all/<label>")
+def download_EC_all(label):
     CDB = base.getDBConnection().elliptic_curves.curves
-    data_list = [CDB.find_one({'label': label+'1'})]
-    if data_list[0] is None:
-        return "No such class exists: %s"%label
-    size = 1
-    data = 0 # any non-None value will do here
-    while not data is None:
-        size += 1
-        data = CDB.find_one({'label': label+str(size)})
-        if not data is None:
-            data_list.append(data)
+    N, iso, number = lmfdb_label_regex.match(label).groups()
+    if number:
+        data = CDB.find_one({'lmfdb_label':label})
+        if data is None:
+            raise ValueError("No such curve known in database")
+        data_list = [data]
+    else:
+        data_list = sorted(list(CDB.find({'lmfdb_iso':label})), key = lambda E: E['number'])
+        if len(data_list) == 0:
+            raise ValueError("No such class known in database")
 
     #titles of all entries of curves
     dump_data=[]
@@ -590,6 +599,17 @@ def download_all():
     response=make_response('\n'.join(str(an) for an in dump_data))
     response.headers['Content-type'] = 'text/plain'
     return response
+
+@app.route('/ModularForm/GL2/<field_label>/holomorphic/<label>/download/<download_type>')
+def render_hmf_webpage_download(**args):
+    if args['download_type'] == 'magma':
+        response = make_response(download_hmf_magma(**args))
+        response.headers['Content-type'] = 'text/plain'
+        return response
+    elif args['download_type'] == 'sage':
+        response = make_response(download_hmf_sage(**args))
+        response.headers['Content-type'] = 'text/plain'
+        return response
     
 #@app.route("/EllipticCurve/Q/download_Rub_data")
 #def download_Rub_data():
