@@ -182,9 +182,9 @@ pari:
   [<Valuation(Norm(primefactor[1]), p), primefactor[2]> : primefactor in idealfactors];
 </div>
 
-{#	{% if "tim_number_field" in info.keys() %}
+{% if info.get("tim_number_field", False) %}
 	<p><h2> {{ KNOWL('artin', title='Artin representations') }}</h2>
-	    This might be wrong at the moment, or lead to broken links, but merely serves a as mockup.
+		{# This is now correct #}
         <div>
 	<center>
 	<table class="ntdata">
@@ -204,6 +204,9 @@ pari:
 	</center>
 	</div>
 	{% endif %}
+{# POD: Please leave the part above for the public release. This part on Artin representations is ready.
+	However it is not possible at the moment to search or browse Artin representations, so they should not appear in the sidebar.
+	Also not yet available are Artin L-functions.
 #}
 
         {% set KNOWL_ID = "nf.%s"|format(info['label']) %}

@@ -18,9 +18,9 @@ def introduction_tutorial():
 
 @app.route("/bigpicture")
 def bigpicture():
-    return render_template("bigpicture.html", title="A Map of LMFDB", body_class="bigpicture")
+    return render_template("bigpicture.html", title="A Map of the LMFDB", body_class="bigpicture")
 
 @app.route("/editorial-board")
 def edit_board():
-    return render_template("intro.html", title="Editorial and Managment Boards", kid='content.edit-board', body_class=_bc)
+    return render_template("intro.html", title="Editorial and Management Boards", kid='content.edit-board', body_class=_bc)
 
