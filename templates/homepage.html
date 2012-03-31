@@ -162,9 +162,6 @@
   </h2>
 #}
 
-  <h2 class="link knowl">
-     <a class="knowl" href="{{ url_for("knowledge.index") }}">Knowledge</a>
-  </h2>
 
   <h2>Zeros of L-functions</h2>
    <ul>
@@ -172,6 +169,9 @@
     <li><a href="{{ url_for('zeta zeros.zetazeros') }}">Zeta zeros</a></li>
    </ul>
 
+  <h2 class="link knowl">
+     <a class="knowl" href="{{ url_for("knowledge.index") }}">Knowledge</a>
+  </h2>
    {{ entry("Learn more about", learnmore) }}
    {{ entry("Data", getUploadedFor(request.path, true) ) }}
   {# {% if user_is_authenticated %} {% endif %} #}
