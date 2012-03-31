@@ -1,5 +1,5 @@
 from utils import to_dict,image_src
-from sage.all import dimension_new_cusp_forms,dimension_cusp_forms,dimension_eis,dimension_modular_forms
+from sage.all import dimension_new_cusp_forms,dimension_cusp_forms,dimension_eis,dimension_modular_forms,Zmod
 from modular_forms.elliptic_modular_forms import EMF, emf_logger, emf,EMF_TOP
 from modular_forms.elliptic_modular_forms.backend.emf_core import get_geometric_data
 from modular_forms.elliptic_modular_forms.backend.emf_utils import MyNewGrp,my_get,parse_range,extract_limits_as_tuple
@@ -119,6 +119,7 @@ def browse_elliptic_modular_forms_ranges(**kwds):
         info['groupother']=1
         dimtbl=DimensionTable(0)
     else:
+        info['unitgens']=Zmod(level).unit_gens()
         info['grouptype']=1
         info['groupother']=0
         dimtbl=DimensionTable(1)
@@ -169,6 +170,7 @@ def browse_elliptic_modular_forms(level=0,weight=0,character=-1,label='',limits=
         dimtbl=DimensionTable(1)
         if character==-1:
             info['show_all_characters']=1
+            info['unitgens']=Zmod(level).unit_gens()
     emf_logger.info("level=%s, %s"%(level,type(level)))
     emf_logger.info("wt=%s, %s"% (weight,type(weight)) )
     if level>0:
