@@ -99,15 +99,21 @@ def EC_toplevel():
 #########################
 
 @app.route("/EllipticCurve/Q")
-def rational_elliptic_curves():
-    if len(request.args) != 0:
-        return elliptic_curve_search(**request.args)
-    conductor_list_endpoints = [1,100,1000,5000] + range(10000,130001,10000)
-    conductor_list = ["%s-%s" % (start,end-1) for start, end in zip(conductor_list_endpoints[:-1], conductor_list_endpoints[1:])]
+def rational_elliptic_curves(err_args=None):
+    if err_args is None:
+        if len(request.args) != 0:
+            return elliptic_curve_search(**request.args)
+        else:
+            err_args = {}
+            for field in ['conductor', 'torsion', 'rank', 'sha_an', 'optimal', 'torsion_structure','msg']:
+                err_args[field] = ''
+            err_args['count'] = '100'
     init_ecdb_count()
+    conductor_list_endpoints = [1,100,1000,10000,100000,max_N+1]
+    conductor_list = ["%s-%s" % (start,end-1) for start, end in zip(conductor_list_endpoints[:-1], conductor_list_endpoints[1:])]
     info = {
         'rank_list': range(max_rank+1),
-        'torsion_list': [1,2,3,4,5,6,7,8,9,10,12,16], 
+        'torsion_list': [1,2,3,4,5,6,7,8,9,10,12,16],
         'conductor_list': conductor_list,
         'ncurves': ncurves,
         'max_N': max_N,
@@ -116,32 +122,55 @@ def rational_elliptic_curves():
     credit = 'John Cremona'
     t = 'Elliptic curves/$\mathbb{Q}$'
     bread = [('Elliptic Curves', url_for("rational_elliptic_curves")),('Elliptic curves/$\mathbb{Q}$',' ')]
-    return render_template("elliptic_curve/elliptic_curve_Q.html", info = info, credit=credit, title = t,bread=bread)
+    return render_template("elliptic_curve/elliptic_curve_Q.html", info = info, credit=credit, title = t,bread=bread, **err_args)
 
 @app.route("/EllipticCurve/Q/<int:conductor>")
 def by_conductor(conductor):
     return elliptic_curve_search(conductor=conductor, **request.args)
 
+def elliptic_curve_jump_error(label, args, wellformed_label=False, cremona_label=False):
+    err_args = {}
+    for field in ['conductor', 'torsion', 'rank', 'sha_an', 'optimal', 'torsion_structure']:
+        err_args[field] = args.get(field, '')
+    err_args['count'] = args.get('count','100')
+    if wellformed_label:
+        err_args['err_msg'] = "No curve or isogeny class in database with label %s"%label
+    elif cremona_label:
+        err_args['err_msg'] = "To search for a Cremona label use 'Cremona:%s'"%label
+    else:
+        err_args['err_msg'] = "Could not understand label %s"%label
+    return rational_elliptic_curves(err_args)
 
 def elliptic_curve_search(**args):
     info = to_dict(args)
     query = {}
     if 'jump' in args:
-        label = info.get('label', '')
+        label = info.get('label', '').replace(" ","")
         m = lmfdb_label_regex.match(label)
         if m:
-            N, iso, number = m.groups()
-            if number:
-                return render_curve_webpage_by_label(label=label)
-            else:
-                return render_isogeny_class(str(N)+'.'+iso)
+            try:
+                return by_ec_label(label)
+            except ValueError:
+                return elliptic_curve_jump_error(label, info, wellformed_label=True)
+        elif label.startswith("Cremona:"):
+            label = label[8:]
+            m = cremona_label_regex.match(label)
+            if m:
+                try:
+                    return by_ec_label(label)
+                except ValueError:
+                    return elliptic_curve_jump_error(label, info, wellformed_label=True)
+        elif cremona_label_regex.match(label):
+            return elliptic_curve_jump_error(label, info, cremona_label=True)
+        elif label:
+            return elliptic_curve_jump_error(label, info)
         else:
-            query['label'] = label
+            query['label'] = ''
 
     for field in ['conductor', 'torsion', 'rank', 'sha_an']:
         if info.get(field):
             ran = info[field]
-            ran = ran.replace('..','-')
+            ran = ran.replace('..','-').replace(' ','')
             tmp = parse_range2(ran, field)
             # work around syntax for $or
             # we have to foil out multiple or conditions
@@ -149,13 +178,14 @@ def elliptic_curve_search(**args):
                 newors = []
                 for y in tmp[1]:
                     oldors = [dict.copy(x) for x in query['$or']]
-                    for x in oldors: x.update(y) 
+                    for x in oldors: x.update(y)
                     newors.extend(oldors)
                 tmp[1] = newors
             query[tmp[0]] = tmp[1]
 #            query[field] = parse_range2(info[field])
 
     if 'optimal' in info and info['optimal']=='on':
+        # fails on 990h3
         query['number'] = 1
 
     if 'torsion_structure' in info and info['torsion_structure']:
@@ -164,7 +194,7 @@ def elliptic_curve_search(**args):
     info['query'] = query
 
     count_default=100
-    if info.get('count'):        
+    if info.get('count'):
         try:
             count = int(info['count'])
         except:
@@ -172,7 +202,7 @@ def elliptic_curve_search(**args):
     else:
         info['count'] = count_default
         count = count_default
-    
+
     start_default=0
     if info.get('start'):
         try:
@@ -217,17 +247,19 @@ def by_ec_label(label):
     try:
         N, iso, number = lmfdb_label_regex.match(label).groups()
     except:
-        print label
         N, iso, number = cremona_label_regex.match(label).groups()
-        print N, iso, number
         C = base.getDBConnection()
         # We permanently redirect to the lmfdb label
         if number:
             data = C.elliptic_curves.curves.find_one({'label': label})
+            if data is None:
+                raise ValueError("No such curve")
             logger.debug(url_for("by_ec_label",label=data['lmfdb_label']))
             return redirect(url_for("by_ec_label",label=data['lmfdb_label']),301)
         else:
             data = C.elliptic_curves.curves.find_one({'iso': label})
+            if data is None:
+                raise ValueError("No such class")
             logger.debug(url_for("by_ec_label",label=data['lmfdb_label']))
             return redirect(url_for("by_ec_label",label=data['lmfdb_iso']),301)
         #N,d1, iso,d2, number = sw_label_regex.match(label).groups()
@@ -241,7 +273,7 @@ def plot_ec(label):
     C = base.getDBConnection()
     data = C.elliptic_curves.curves.find_one({'lmfdb_label': label})
     if data is None:
-        return "No such curve"    
+        raise ValueError("No such curve")
     ainvs = [int(a) for a in data['ainvs']]
     E = EllipticCurve(ainvs)
     P = E.plot()
@@ -258,7 +290,7 @@ def plot_iso_graph(label):
     C = base.getDBConnection()
     data = C.elliptic_curves.curves.find_one({'lmfdb_iso': label})
     if data is None:
-        return "No such curve"
+        raise ValueError("No such curve")
     ainvs = [int(a) for a in data['ainvs']]
     E = EllipticCurve(ainvs)
     G = E.isogeny_graph(); n = G.num_verts()
@@ -282,7 +314,7 @@ def render_isogeny_class(iso_class):
 
     E1data = CDB.find_one({'lmfdb_label': lmfdb_iso+'1'})
     if E1data is None:
-        return "No such isogeny class"
+        raise ValueError("No such isogeny class")
 
     cremona_iso = E1data['iso']
     ainvs = E1data['ainvs']
@@ -319,8 +351,6 @@ def render_isogeny_class(iso_class):
     info['graph_img'] = url_for('plot_iso_graph', label=lmfdb_iso)
    
     info['curves'] = [[lmfdb_iso+str(i+1),cremona_labels[i],str(list(c.ainvs())),c.torsion_order(),c.modular_degree(),optimal_flags[i]] for i,c in enumerate(db_curves)]
-    info['download_qexp_url'] = url_for('download_qexp', limit=100, ainvs=','.join([str(a) for a in ainvs]))
-    info['download_all_url'] = url_for('download_all', label=str(lmfdb_iso))
 
     friends=[]
 #   friends.append(('Quadratic Twist', "/quadratic_twists/%s" % (lmfdb_iso)))
@@ -336,13 +366,16 @@ def render_isogeny_class(iso_class):
 
     info['friends'] = friends
 
+    info['downloads'] = [('Download coeffients of q-expansion', url_for("download_EC_qexp", label=lmfdb_iso, limit=100)), \
+                         ('Download stored data for curves in this class', url_for("download_EC_all", label=lmfdb_iso))]
+
     if lmfdb_iso==cremona_iso:
         t = "Elliptic Curve Isogeny Class %s" % lmfdb_iso
     else:
         t = "Elliptic Curve Isogeny Class %s (Cremona label %s)" % (lmfdb_iso,cremona_iso)
     bread = [('Elliptic Curves ', url_for("rational_elliptic_curves")),('isogeny class %s' %lmfdb_iso,' ')]
 
-    return render_template("elliptic_curve/iso_class.html", info=info, bread=bread, credit=credit,title = t, friends=info['friends'])
+    return render_template("elliptic_curve/iso_class.html", info=info, bread=bread, credit=credit,title = t, friends=info['friends'], downloads=info['downloads'])
 
 @app.route("/EllipticCurve/Q/modular_form_display/<label>/<number>")
 def modular_form_display(label, number):
@@ -371,7 +404,7 @@ def modular_form_display(label, number):
     C = base.getDBConnection()
     data = C.elliptic_curves.curves.find_one({'lmfdb_label': label})
     if data is None:
-        return "No such curve"
+        raise ValueError("No such curve")
     ainvs = [int(a) for a in data['ainvs']]
     E = EllipticCurve(ainvs)
     modform = E.q_eigenform(number)
@@ -404,12 +437,12 @@ def modular_form_display(label, number):
 #        return render_curve_webpage_by_label(label="%s%s%s" % (conductor, iso_class, number))
 #    else:
 #        return render_curve_webpage_by_label(label="sw%s.%s.%s" % (conductor, iso_class, number))
-        
+
 def render_curve_webpage_by_label(label):
     C = base.getDBConnection()
     data = C.elliptic_curves.curves.find_one({'lmfdb_label': label})
     if data is None:
-        return "No such curve"    
+        raise ValueError("No such curve")
     info = {}
     ainvs = [int(a) for a in data['ainvs']]
     E = EllipticCurve(ainvs)
@@ -434,7 +467,7 @@ def render_curve_webpage_by_label(label):
 # We do not just do the following, as Sage's installed database
 # might not have all the curves in the LMFDB database.
 # minq_label = E.minimal_quadratic_twist()[0].label()
-    
+
     if 'gens' in data:
         generator=parse_gens(data['gens'])
     if len(G) == 0:
@@ -493,28 +526,29 @@ def render_curve_webpage_by_label(label):
         # Database has errors when torsion generators not integral
         # 'tor_gens':','.join(web_latex(eval(g)) for g in data['torsion_generators']) if 'torsion_generators' in data else [P.element().xy() for P in list(G)]
                         })
-    info['downloads_visible'] = True
-    info['downloads'] = [('worksheet', url_for("not_yet_implemented"))]
     info['friends'] = [
         ('Isogeny class '+lmfdb_iso_class, "/EllipticCurve/Q/%s" % lmfdb_iso_class),
         ('Minimal quadratic twist '+minq_label, "/EllipticCurve/Q/%s" % minq_label),
         ('L-function', url_for("render_Lfunction", arg1='EllipticCurve', arg2='Q', arg3=lmfdb_label)),
         ('Symmetric square L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='2',arg3='EllipticCurve', arg4='Q', arg5=lmfdb_iso_class)),
         ('Symmetric 4th power L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='4',arg3='EllipticCurve', arg4='Q', arg5=lmfdb_iso_class))]
-    
+
     if int(N)<100:
-        info['friends'].append(('Modular form '+lmfdb_iso_class, url_for("emf.render_elliptic_modular_forms", level=int(N),weight=2,character=0,label=mod_form_iso)))
+        info['friends'].append(('Modular form '+lmfdb_iso_class.replace('.','.2'), url_for("emf.render_elliptic_modular_forms", level=int(N),weight=2,character=0,label=mod_form_iso)))
     else:
-        info['friends'].append(('Modular form '+lmfdb_iso_class+" not available",0))
+        info['friends'].append(('Modular form '+lmfdb_iso_class.replace('.','.2')+" not available",0))
+
+    info['downloads'] = [('Download coeffients of q-expansion', url_for("download_EC_qexp", label=lmfdb_label, limit=100)), \
+                         ('Download all stored data', url_for("download_EC_all", label=lmfdb_label))]
+
 
     #info['learnmore'] = [('Elliptic Curves', url_for("not_yet_implemented"))]
     #info['plot'] = image_src(plot)
     info['plot'] = url_for('plot_ec', label=lmfdb_label)
-    info['download_qexp_url'] = url_for('download_qexp', limit=100, ainvs=','.join([str(a) for a in ainvs]))
 
     properties2 = [('Label', '%s' % lmfdb_label),
                    (None, '<img src="%s" width="200" height="150"/>' % url_for('plot_ec', label=lmfdb_label) ),
-                   ('Conductor', '\(%s\)' % N), 
+                   ('Conductor', '\(%s\)' % N),
                    ('Discriminant', '\(%s\)' % discriminant),
                    ('j-invariant', '%s' % web_latex(j_invariant)),
                    ('Rank', '\(%s\)' % rank),
@@ -526,11 +560,11 @@ def render_curve_webpage_by_label(label):
         t = "Elliptic Curve %s" % info['label']
     else:
         t = "Elliptic Curve %s (Cremona label %s)" % (info['label'],info['cremona_label'])
-        
+
     bread = [('Elliptic Curves ', url_for("rational_elliptic_curves")),('Elliptic curves %s' %lmfdb_label,' ')]
 
-    return render_template("elliptic_curve/elliptic_curve.html", 
-          properties2=properties2, credit=credit,bread=bread, title = t, info=info, friends = info['friends'])
+    return render_template("elliptic_curve/elliptic_curve.html",
+          properties2=properties2, credit=credit,bread=bread, title = t, info=info, friends = info['friends'], downloads = info['downloads'])
 
 @app.route("/EllipticCurve/Q/padic_data")
 def padic_data():
@@ -557,28 +591,35 @@ def padic_data():
         info['reg'] = "no data"
     return render_template("elliptic_curve/elliptic_curve_padic.html", info = info)
 
-@app.route("/EllipticCurve/Q/download_qexp")
-def download_qexp():
-    ainvs = request.args.get('ainvs')
-    E = EllipticCurve([int(a) for a in ainvs.split(',')])
-    response = make_response(' '.join(str(an) for an in E.anlist(int(request.args.get('limit', 100)), python_ints=True)))
+@app.route("/EllipticCurve/Q/download_qexp/<label>/<limit>")
+def download_EC_qexp(label, limit):
+    logger.debug(label)
+    CDB = base.getDBConnection().elliptic_curves.curves
+    N, iso, number = lmfdb_label_regex.match(label).groups()
+    if number:
+        data = CDB.find_one({'lmfdb_label':label})
+    else:
+        data = CDB.find_one({'lmfdb_iso':label})
+    ainvs = data['ainvs']
+    logger.debug(ainvs)
+    E = EllipticCurve([int(a) for a in ainvs])
+    response = make_response(' '.join(str(an) for an in E.anlist(int(limit), python_ints=True)))
     response.headers['Content-type'] = 'text/plain'
     return response
 
-@app.route("/EllipticCurve/Q/download_all")
-def download_all():
-    label=(request.args.get('label'))
+@app.route("/EllipticCurve/Q/download_all/<label>")
+def download_EC_all(label):
     CDB = base.getDBConnection().elliptic_curves.curves
-    data_list = [CDB.find_one({'label': label+'1'})]
-    if data_list[0] is None:
-        return "No such class exists: %s"%label
-    size = 1
-    data = 0 # any non-None value will do here
-    while not data is None:
-        size += 1
-        data = CDB.find_one({'label': label+str(size)})
-        if not data is None:
-            data_list.append(data)
+    N, iso, number = lmfdb_label_regex.match(label).groups()
+    if number:
+        data = CDB.find_one({'lmfdb_label':label})
+        if data is None:
+            raise ValueError("No such curve known in database")
+        data_list = [data]
+    else:
+        data_list = sorted(list(CDB.find({'lmfdb_iso':label})), key = lambda E: E['number'])
+        if len(data_list) == 0:
+            raise ValueError("No such class known in database")
 
     #titles of all entries of curves
     dump_data=[]
@@ -590,6 +631,17 @@ def download_all():
     response=make_response('\n'.join(str(an) for an in dump_data))
     response.headers['Content-type'] = 'text/plain'
     return response
+
+@app.route('/ModularForm/GL2/<field_label>/holomorphic/<label>/download/<download_type>')
+def render_hmf_webpage_download(**args):
+    if args['download_type'] == 'magma':
+        response = make_response(download_hmf_magma(**args))
+        response.headers['Content-type'] = 'text/plain'
+        return response
+    elif args['download_type'] == 'sage':
+        response = make_response(download_hmf_sage(**args))
+        response.headers['Content-type'] = 'text/plain'
+        return response
     
 #@app.route("/EllipticCurve/Q/download_Rub_data")
 #def download_Rub_data():
