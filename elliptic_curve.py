@@ -252,10 +252,14 @@ def by_ec_label(label):
         # We permanently redirect to the lmfdb label
         if number:
             data = C.elliptic_curves.curves.find_one({'label': label})
+            if data is None:
+                raise ValueError("No such curve")
             logger.debug(url_for("by_ec_label",label=data['lmfdb_label']))
             return redirect(url_for("by_ec_label",label=data['lmfdb_label']),301)
         else:
             data = C.elliptic_curves.curves.find_one({'iso': label})
+            if data is None:
+                raise ValueError("No such class")
             logger.debug(url_for("by_ec_label",label=data['lmfdb_label']))
             return redirect(url_for("by_ec_label",label=data['lmfdb_iso']),301)
         #N,d1, iso,d2, number = sw_label_regex.match(label).groups()
