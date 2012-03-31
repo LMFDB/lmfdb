@@ -348,8 +348,8 @@ class MaassDB(object):
         else:
             format_data=arg_to_format_parameters({},**kwds)
         sorting = [('Weight',pymongo.ASCENDING),('Level',pymongo.ASCENDING),('Character',pymongo.ASCENDING),('Eigenvalue',pymongo.ASCENDING)]
-        print "find_data=",find_data
-        print "format_data=",format_data
+        #print "find_data=",find_data
+        #print "format_data=",format_data
         #f = self._collection.find(find_data)
         res=[]
         skip0 = format_data['skip'];skip=skip0
@@ -362,9 +362,9 @@ class MaassDB(object):
                 continue
             finds = collection.find(find_data,sort=sorting).skip(skip).limit(limit)
             skip=0
-            print "skip=",skip
-            print "limit=",limit
-            print "find[",collection.name,"]=",finds.count()
+            #print "skip=",skip
+            #print "limit=",limit
+            #print "find[",collection.name,"]=",finds.count()
             limit = limit - finds.count()
             for x in finds:
                 res.append(x)
@@ -393,7 +393,7 @@ class MaassDB(object):
                     continue
                 cid=fn.get('coeff_id',None)
                 if cid==None:
-                    C1 = f.get('Coefficients',[])
+                    C1 = fn.get('Coefficients',[])
                     if C1<>[]:
                         if get_filename<>'':
                             Rst=str(R).split(".")
@@ -1105,8 +1105,8 @@ def arg_to_search_parameters(data={},**kwds):
     ch1=data.get('ch1',data.get('char1',kwds.get('ch1',kwds.get('char1',ch))))
     ch2=data.get('ch2',data.get('char2',kwds.get('ch2',kwds.get('char2',ch))))
     wt=data.get('wt',data.get('weight',kwds.get('wt',kwds.get('weight',None))))
-    wt1=data.get('w1',data.get('weight1',kwds.get('wt1',kwds.get('weight1',wt))))
-    wt2=data.get('w2',data.get('weight2',kwds.get('wt2',kwds.get('weight2',wt))))
+    wt1=data.get('wt1',data.get('weight1',kwds.get('wt1',kwds.get('weight1',wt))))
+    wt2=data.get('wt2',data.get('weight2',kwds.get('wt2',kwds.get('weight2',wt))))
     dim=data.get('d',data.get('dim',kwds.get('d',kwds.get('dim',None))))
     d1=data.get('d1',data.get('dim1',kwds.get('d1',kwds.get('dim1',dim))))
     d2=data.get('d2',data.get('dim2',kwds.get('d2',kwds.get('dim2',dim))))
@@ -1144,12 +1144,14 @@ def arg_to_search_parameters(data={},**kwds):
     if wt<>None:
         find['Weight']=wt
     elif wt1<>None or wt2<>None:
-        find['Weight']={}
-        if wt1<>None and w1<>'': 
-            w1=float(w1)
+        if wt1<>None and wt1<>'': 
+            find['Weight']={}
+            wt1=float(wt1)
             find['Weight']["$gte"]=wt1
-        if wt2<>None and w1<>'': 
-            w2=float(w2)
+        if wt2<>None and wt2<>'': 
+            if not find.has_key('Weight'):
+                find['Weight']={}
+            wt2=float(wt2)
             find['Weight']["$lte"]=wt2
     if idd<>None:
         find['_id']=idd
@@ -1157,12 +1159,14 @@ def arg_to_search_parameters(data={},**kwds):
     if ch<>None:
         find['Character']=ch
     elif ch1<>None or ch2<>None:
-        find['Character']={}
         if ch1<>None: 
             ch1=int(ch1)
+            find['Character']={}
             find['Character']["$gte"]=ch1
         if ch2<>None:
             ch2=int(ch2)
+            if not find.has_key('Character'):
+                find['Character']={}
             find['Character']["$lte"]=ch2
 
     if dim<>None:

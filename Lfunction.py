@@ -1081,9 +1081,13 @@ class Lfunction_Maass(Lfunction):
             else:  #no fricke for level 1
                 self.fricke = 1
 
-            self.dirichlet_coefficients = self.mf.coeffs
+            # Todo: If self has dimension >1, link to specific L-functions
+            self.dirichlet_coefficients = self.mf.coeffs[0].values() ## makes into a list. 
+            logger.info("Zeroth coefficient: {0}".format(self.dirichlet_coefficients[0]))
+            if self.dirichlet_coefficients[0]==0:
+                self.dirichlet_coefficients.pop(0)
+            logger.info("First coefficient: {0}".format(self.dirichlet_coefficients[0]))
             logger.info("Third coefficient: {0}".format(self.dirichlet_coefficients[2]))
-
             # Set properties of the L-function
             self.coefficient_type = 2
             self.selfdual = True

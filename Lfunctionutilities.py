@@ -34,8 +34,12 @@ def truncatenumber(numb,precision):
 
 def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precision):
     truncation=float(10**truncationexp)
-    rp=real_part(coeff)
-    ip=imag_part(coeff)
+    if type(coeff)==complex:
+        rp=coeff.real
+        ip=coeff.imag
+    else:
+        rp=real_part(coeff)
+        ip=imag_part(coeff)
 # below we use float(abs()) instead of abs() to avoid a sage bug
     if (float(abs(rp))>truncation) & (float(abs(ip))>truncation):
         ans = ""
@@ -57,6 +61,7 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
 #    if seriescoefftype=="series":
 #        ans=ans+" + "
 #commenting out the above "if" code so as to fix + - problem
+    logger.info("rp={0}".format(rp))
     if rp>truncation: 
         if float(abs(rp-1))<truncation:
             if seriescoefftype=="literal":
