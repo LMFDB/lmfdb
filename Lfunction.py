@@ -195,6 +195,7 @@ class Lfunction:
                     # self.kappa_fe:        
                     # self.lambda_fe:
                     # According to Rishi, as of March 2012 (sage <=5.0), the documentation to his wrapper is wrong
+                    # But we are not using his wrapper, I think, since Jonathan has put in a patch on sage running on the server
                     # POD
 
     def createLcalcfile(self):
