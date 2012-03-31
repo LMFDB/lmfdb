@@ -40,9 +40,12 @@ $("#plot").load(function() {
 <p>
 {% if grouptype == 1  %}
 The table below gives the dimensions of the space of holomorphic cusp
-forms of level {{level}}, specified weight and character.
+forms of level {{level}}, specified weight and character.<br>
 The characters are specified by their values on the generators of \( (\mathbb{Z}/{{level}}\mathbb{Z})^\times \).
-The generators are given by: {{unitgens}}.
+These generators are given by: {{unitgens}}.
+{% if {{zeta_order > 2}} %}
+For the values, {{zeta}} denotes a primitive {{zeta_order}}th root of unity.
+{% endif %}
 {% else %}
 The table below gives the dimensions of the space of holomorphic cusp
 forms of level {{level}}, specified weight, with trivial character.

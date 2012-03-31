@@ -2,7 +2,7 @@ from utils import to_dict,image_src
 from sage.all import dimension_new_cusp_forms,dimension_cusp_forms,dimension_eis,dimension_modular_forms,Zmod
 from modular_forms.elliptic_modular_forms import EMF, emf_logger, emf,EMF_TOP
 from modular_forms.elliptic_modular_forms.backend.emf_core import get_geometric_data
-from modular_forms.elliptic_modular_forms.backend.emf_utils import MyNewGrp,my_get,parse_range,extract_limits_as_tuple
+from modular_forms.elliptic_modular_forms.backend.emf_utils import MyNewGrp,my_get,parse_range,extract_limits_as_tuple,image_src_fdomain
 from modular_forms.backend.mf_utils import my_get
 from modular_forms import MF_TOP
 from modular_forms.elliptic_modular_forms import N_max_comp,k_max_comp
@@ -120,6 +120,9 @@ def browse_elliptic_modular_forms_ranges(**kwds):
         dimtbl=DimensionTable(0)
     else:
         info['unitgens']=Zmod(level).unit_gens()
+        D=DirichletGroup(level)
+        info['zeta']=latex(D.zeta())
+        into['zeta_order']=D.zeta_order()
         info['grouptype']=1
         info['groupother']=0
         dimtbl=DimensionTable(1)
@@ -131,8 +134,7 @@ def browse_elliptic_modular_forms_ranges(**kwds):
         info['geometric'] = get_geometric_data(level, info['grouptype'])
         #if info.has_key('plot'):
         grp=MyNewGrp(level,info)
-        plot=grp.plot
-        info['fd_plot']= image_src(grp)
+        info['fd_plot']= image_src_fdomain(grp)
         emf_logger.info("PLOT: %s" % info['fd_plot'])
     disp.set_table_browsing(limit=[limits_weight,limits_level],
                             keys=['Weight','Level'],character=info['character'],dimension_table=dimtbl,title='Dimension of newforms')
@@ -177,8 +179,11 @@ def browse_elliptic_modular_forms(level=0,weight=0,character=-1,label='',limits=
         if level <= N_max_comp:
             info['geometric'] = get_geometric_data(level,info['grouptype'])
             #if info.has_key('plot'):
-            grp=MyNewGrp(level,info)
-            info['fd_plot']= image_src(grp)
+            if level in [1,2]:
+                grp=MyNewGrp(level,{'group': 'Gamma0'})
+            else:
+                grp=MyNewGrp(level,info)
+            info['fd_plot']= image_src_fdomain(grp)
             emf_logger.info("PLOT: %s" % info['fd_plot'])
     if level>0 and weight==0:
         #print "here1!"

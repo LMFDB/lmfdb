@@ -3,7 +3,7 @@ r"""
 Contains basic classes for displaying holomorphic modular forms.
 
 """
-from sage.all import vector,is_odd,DirichletGroup,is_even,Gamma1,dimension_new_cusp_forms,kronecker_character_upside_down,loads,Integer
+from sage.all import vector,is_odd,DirichletGroup,is_even,Gamma1,dimension_new_cusp_forms,kronecker_character_upside_down,loads,Integer,latex
 from modular_forms.backend.mf_classes import  MFDisplay,MFDataTable
 emf_dbname = 'modularforms'
 from utils import *
@@ -32,9 +32,14 @@ class DimensionTable(object):
                 self.dimension=self.dimension_gamma1
         except:
             emf_logger.critical('Critical error: No dimension information for group={0}'.format(group))
-        self._table=loads(rec['data'])
+        if rec:
+            self._table=loads(rec['data'])
+        else:
+            self._table=None
 
     def dimension_gamma0(self,N=1,k=4):
+        if self._table == None:
+            return "n/a"
         if N in self._table.keys():
             tblN=self._table[N]
             if k in tblN.keys():
@@ -43,7 +48,8 @@ class DimensionTable(object):
         return "n/a"
 
     def dimension_gamma1(self,arg1,k=3):
-        emf_logger.debug('Lookup dimension for Gamma1')
+        if self._table == None:
+            return "n/a"
         if type(arg1)==sage.modular.dirichlet.DirichletCharacter:
             N=arg1.modulus()
             character=arg1.parent().galois_orbits().index(arg1.galois_orbit())
@@ -65,6 +71,8 @@ class DimensionTable(object):
         return "n/a"
 
     def is_in_db(self,N=1,k=4,character=0):
+        if self._table == None:
+            return "n/a"
         #emf_logger.debug("in is_in_db: N={0},k={1},character={2}".format(N,k,character))
         if N in self._table.keys():
             #emf_logger.debug("have information for level {0}".format(N))
@@ -168,7 +176,7 @@ class ClassicalMFDisplay(MFDisplay):
                 self._table['rowhead']='Character&nbsp;\\&nbsp;Weight'
                 for xi,x in enumerate(G):
                     row=[]
-                    self._table['row_heads'].append(str(xi) + ": " + str(list(x.values_on_gens())))
+                    self._table['row_heads'].append(str(xi) + ": " + str(map(lambda x: '\(' + latex(x) + '\)',list(x.values_on_gens()))))
                     for k in range(wt_ll,wt_ul+1):
                         if not k in self._table['col_heads']:
                             #emf_logger.debug("Adding to col_heads:{0}s".format(k))                            

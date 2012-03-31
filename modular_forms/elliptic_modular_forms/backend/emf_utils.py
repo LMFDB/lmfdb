@@ -20,6 +20,7 @@ AUTHOR: Fredrik Strömberg
 
 """
 import random
+import sage.plot.plot
 from flask import  jsonify
 from utils import *
 from modular_forms.elliptic_modular_forms import EMF,emf, emf_logger, default_prec
@@ -262,7 +263,8 @@ def render_fd_plot(level,info,**kwds):
     find=C[db_name][collection].find_one({'level':int(level),'type':int(grouptype)})
     if find:
         if find.get('domain'):
-            domain=loads(str(find['domain']))
+            #domain=loads(str(find['domain']))
+            domain=find['domain']
         emf_logger.debug('Found fundamental domain in database')
     else:
         emf_logger.debug('Drawing fundamental domain for group {0}({1})'.format(group,level))
@@ -271,3 +273,21 @@ def render_fd_plot(level,info,**kwds):
             #C[db_name][collection].insert({'level':int(level), 'type':type, 'index':int(G.index), 'G':pymongo.binary.Binary(dumps(G)), 'domain': pymongo.binary.Binary(dumps(domain))})
             #emf_logger.debug('Inserting group and fundamental domain in database')
     return domain    
+
+def image_src_fdomain(G):
+    return ajax_url(image_callback_fdomain, G, _ajax_sticky=True)
+
+def image_callback_fdomain(G):
+    P = G.plot()
+    emf_logger.debug('image_callback: {0}'.format(type(P)))
+    if isinstance(P,sage.plot.plot.Graphics):
+        emf_logger.debug('Got a Graphics object')
+        _, filename = tempfile.mkstemp('.png')
+        P.save(filename)
+        data = open(filename).read()
+        os.unlink(filename)
+    else:
+        data=P
+    response = make_response(data)
+    response.headers['Content-type'] = 'image/png'
+    return response
