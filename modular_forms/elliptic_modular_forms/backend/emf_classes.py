@@ -159,14 +159,15 @@ class ClassicalMFDisplay(MFDisplay):
                 self._table['rows'].append(row)
             else:
                 D = DirichletGroup(N)
+                G = D.galois_orbits()
                 # A security check, if we have at least weight 2 and trivial character, otherwise don't show anything
                 if check_db and not is_data_in_db(N,2,0):
                     emf_logger.debug("No data for level {0} and weight 2, trivial character".format(N))
                     self._table = None
                     return None
                 self._table['rowhead']='Character&nbsp;\\&nbsp;Weight'
-                for x in D:
-                    xi = D.list().index(x)
+                for x in G:
+                    xi = G.list().index(x)
                     row=[]
                     self._table['row_heads'].append(xi)
                     for k in range(wt_ll,wt_ul+1):
@@ -174,6 +175,7 @@ class ClassicalMFDisplay(MFDisplay):
                             #emf_logger.debug("Adding to col_heads:{0}s".format(k))                            
                             self._table['col_heads'].append(k)
                         try:
+                            x=x[0]
                             d = dimension_fun(x,k)
                         except Exception as ex:
                             emf_logger.critical("Exception: {0} \n Could not compute the dimension with function {1}".format(ex,dimension_fun))
@@ -195,8 +197,9 @@ class ClassicalMFDisplay(MFDisplay):
                 if character != 0 and character != 1:
                     self._table['colhead']="Index of character in DirichletGroup(N)"
                     D = DirichletGroup(N)
-                    for x in D:
-                        xi = D.list().index(x)
+                    G = D.galois_orbits()
+                    for x in G:
+                        xi = G.list().index(x)
                         if not xi in self._table['col_heads']:
                             self._table['col_heads'].append(xi)
                             self._table['maxRowCount']=xi+1
@@ -206,6 +209,7 @@ class ClassicalMFDisplay(MFDisplay):
                             row.append({'N':N,'k':k,'chi':xi,'url':url,'dim':0})
                             continue
                         try:
+                            x=x[0]
                             d = dimension_fun(x,k)
                         except Exception as ex:
                             emf_logger.critical("Exception: {0} \n Could not compute the dimension with function {0}".format(ex,dimension_fun))

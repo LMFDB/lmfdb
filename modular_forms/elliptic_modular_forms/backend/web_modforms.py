@@ -16,7 +16,6 @@
 r""" Class for newforms in format which can be presented on the web easily
 
 
-
 AUTHORS:
 
  - Fredrik Stroemberg
@@ -575,6 +574,7 @@ class WebModFormSpace(Parent):
         """
 	from sage.monoids.all import AlphabeticStrings
         L=self.galois_decomposition()
+        emf_logger.debug("L=".format(L))
         if(len(L)==0):
             return ""
         x=AlphabeticStrings().gens()
