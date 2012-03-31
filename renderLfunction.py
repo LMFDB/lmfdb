@@ -321,16 +321,22 @@ def initLfunction(L,args, request):
         if L.modform:
             info['friends'].append(('Modular form ' + label.replace('.','.2'), url_for("emf.render_elliptic_modular_forms",
                                                             level=L.modform['level'],weight=2,character=0,label=L.modform['iso'])))
-
+            info['friends'].append(('L-function ' + label.replace('.','.2'), url_for("render_Lfunction", arg1='ModularForm', arg2='GL2', arg3='Q', arg4='holomorphic', arg5=L.modform['level'], arg6='2', arg7='0', arg8=L.modform['iso'])))
+        info['friends'].append(('Symmetric square L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='2',arg3='EllipticCurve', arg4='Q', arg5=label)))
+        info['friends'].append(('Symmetric 4th power L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='4',arg3='EllipticCurve', arg4='Q', arg5=label)))
         info['bread'] = [('L-function','/L'),('Elliptic curve',url_for('render_Lfunction', arg1='/L/degree2#EllipticCurve_Q')),
                          (label,url_for('render_Lfunction',arg1='EllipticCurve',arg2='Q',arg3= label))]
 
     elif L.Ltype() == 'ellipticmodularform':
         friendlink = friendlink + L.addToLink
         friendlink = friendlink.rpartition('/')[0]
-        info['friends'] = [('Modular form', friendlink)]
+        if L.character:
+            info['friends'] = [('Modular form ' + str(L.level) + '.' + str(L.weight) + '.' + str(L.character) + str(L.label), friendlink)]
+        else:
+            info['friends'] = [('Modular form ' + str(L.level) + '.' + str(L.weight) + str(L.label), friendlink)]
         if L.ellipticcurve:
             info['friends'].append(('Elliptic curve isogeny class ' + L.ellipticcurve, url_for("by_ec_label",label=L.ellipticcurve)))
+            info['friends'].append(('L-function ' + str(L.level) + '.' + str(L.label), url_for("render_Lfunction", arg1='EllipticCurve', arg2='Q', arg3=L.ellipticcurve)))
             for i in range(1, L.nr_of_curves_in_class + 1):
                 info['friends'].append(('Elliptic curve ' + L.ellipticcurve + str(i), url_for("by_ec_label",label=L.ellipticcurve + str(i))))
 
@@ -346,18 +352,27 @@ def initLfunction(L,args, request):
         
     elif L.Ltype() == 'SymmetricPower':
         def ordinal(n):
-                if 10 <= n % 100 < 20:
-                    return str(n) + 'th' 
-                else: 
-                    return  str(n) + {1 : 'st', 2 : 'nd', 3 : 'rd'}.get(n % 10, "th")
+            if n == 2:
+                return "Square"
+            elif n == 3:
+                return "Cube"
+            elif 10 <= n % 100 < 20:
+                return str(n) + "th Power"
+            else:
+                return  str(n) + {1 : 'st', 2 : 'nd', 3 : 'rd'}.get(n % 10, "th") + " Power"
         friendlink =request.url.replace('/L/SymmetricPower/%d/'%L.m,'/')
         splitlink=friendlink.rpartition('/')
         friendlink = splitlink[0]+splitlink[2]
-        mplusone = L.m +1
-        friendlink2 =request.url.replace('/L/SymmetricPower/%d/'%L.m,'/L/SymmetricPower/%d/'%mplusone)
 
-        info['friends'] =  [('Isogeny class '+L.label, friendlink), ('%s Symmetric Power'%ordinal(mplusone) , friendlink2)]
-        
+        friendlink2 =request.url.replace('/L/SymmetricPower/%d/'%L.m,'/L/')
+        splitlink=friendlink2.rpartition('/')
+        friendlink2 = splitlink[0]+splitlink[2]
+
+        mplusone = L.m +1
+        friendlink3 =request.url.replace('/L/SymmetricPower/%d/'%L.m,'/L/SymmetricPower/%d/'%mplusone)
+
+        info['friends'] = [('Isogeny class '+L.label, friendlink), ('Symmetric 1st Power', friendlink2), ('Symmetric %s'%ordinal(mplusone) , friendlink3)]
+
     elif L.Ltype() == 'siegelnonlift' or L.Ltype() == 'siegeleisenstein' or L.Ltype() == 'siegelklingeneisenstein' or L.Ltype() == 'siegelmaasslift':
         weight = str(L.weight)
         number = str(L.number)
