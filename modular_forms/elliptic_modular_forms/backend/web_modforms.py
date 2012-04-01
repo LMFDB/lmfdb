@@ -972,7 +972,7 @@ class WebNewForm(SageObject):
         return self._conrey_character
         
     def conrey_character_name(self):
-        return "\chi_{" +str(self._level) + "}(" +str(self._conrey_character.number()) + ",\cdot)"
+        return "\chi_{" +str(self._N) + "}(" +str(self._conrey_character.number()) + ",\cdot)"
         
     def character_order(self):
         return self._parent.character_order()
