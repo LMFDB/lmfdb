@@ -138,6 +138,7 @@ def set_info_for_modular_form_space(level=None,weight=None,character=None,label=
     emf_logger.debug("new_decomp={0}".format(info['new_decomposition']))
     info['nontrivial_new'] = len(info['new_decomposition'])
     ## we try to catch well-known bugs...
+    info['old_decomposition']="n/a"
     if N < N_max_comp:
         try:
             O = WMFS.print_oldspace_decomposition()
@@ -179,18 +180,18 @@ def set_info_for_modular_form_space(level=None,weight=None,character=None,label=
         info['character_order']=WMFS.character_order()
         info['character_conductor']=WMFS.character_conductor()
     friends=list(); lifts = list()
-    #if(not info.has_key('label')):
-    #    O=WMFS.oldspace_decomposition()
-    #    try:
-    #        for (old_level,chi,mult,d) in O:
-    #            if chi<>0:
-    #                s="\(S_{%s}(\Gamma_0(%s),\chi_{%s}) \) " % (weight,old_level,chi)
-    #                friends.append((s,'?weight='+str(weight)+'&level='+str(old_level)+'&character='+str(chi)))
-    #            else:
-    #                s="\(S_{%s}(\Gamma_0(%s)) \) " % (weight,old_level)
-    #                friends.append((s,'?weight='+str(weight)+'&level='+str(old_level)+'&character='+str(0)))
-    #    except:
-    #        pass
+    if(not info.has_key('label') and info['old_decomposition'] != 'n/a'):
+        O=WMFS.oldspace_decomposition()
+        try:
+            for (old_level,chi,mult,d) in O:
+                if chi<>0:
+                    s="\(S_{%s}(\Gamma_0(%s),\chi_{%s}) \) " % (weight,old_level,chi)
+                    friends.append((s,'?weight='+str(weight)+'&level='+str(old_level)+'&character='+str(chi)))
+                else:
+                    s="\(S_{%s}(\Gamma_0(%s)) \) " % (weight,old_level)
+                    friends.append((s,'?weight='+str(weight)+'&level='+str(old_level)+'&character='+str(0)))
+        except:
+            pass
     info['friends']=friends
     lifts.append(('Half-Integral Weight Forms','/ModularForm/Mp2/Q'))
     lifts.append(('Siegel Modular Forms','/ModularForm/GSp4/Q'))
