@@ -145,6 +145,7 @@ class WebModFormSpace(Parent):
             except RuntimeError:
                 raise RuntimeError, "Could not construct space for (k=%s,N=%s,chi=%s)=" % (k,N,self._chi)
         self._conrey_character=self._get_conrey_character(self._character)
+        emf_logger.debug("Setting conrey_character={0}".format(self._conrey_character))
         ### If we can we set these dimensions using formulas
         if(self.dimension()==self.dimension_newspace()):
             self._is_new=True
