@@ -113,7 +113,7 @@ def set_info_for_modular_form_space(level=None,weight=None,character=None,label=
     else:
         conrey_char = WMFS.conrey_character()
         conrey_char_name= WMFS.conrey_character_name()
-        info['conrey_character_name']=conrey_char_name
+        info['conrey_character_name']='\( ' + conrey_char_name + '\)'
         info['character_url']=url_for('render_Character',arg1=WMFS.level(),arg2=conrey_char.number())
         info['name_new']= "\(S_{ %s }^{new}(%s,%s) \)" %(WMFS.weight(),WMFS.level(),conrey_char_name)
         info['name_old']= "\(S_{ %s }^{old}(%s,%s) \)" %(WMFS.weight(),WMFS.level(),conrey_char_name)

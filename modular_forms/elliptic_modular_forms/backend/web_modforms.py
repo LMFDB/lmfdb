@@ -540,7 +540,7 @@ class WebModFormSpace(Parent):
 
         n=0; s=""
         if(self._chi<>0):
-            s="\[S_{%s}^{old}(%s,{%s}) = " % (self._k,self._N,self._conrey_character_name)
+            s="\[S_{%s}^{old}(%s,{%s}) = " % (self._k,self._N,self.conrey_character_name())
         else:
             s="\[S_{%s}^{old}(%s) = " % (self._k,self._N)
         if(len(O)==0):
