@@ -1082,6 +1082,8 @@ def mongify_elt(x):
         return float(real(x)),float(imag(x))
     elif isinstance(x,MPComplexNumber):
         return float(x.real()),float(x.imag())
+    elif x==None:
+        return x
     else:
         raise TypeError,"Could not coerce {0} to mongodb-compatible format. Consider using gridfs instead!".format(x)
 

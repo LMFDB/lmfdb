@@ -109,6 +109,9 @@ class WebMaassForm(object):
 
         #print "f here=",f
         self.dim = f.get('Dim',1)
+        if self.dim==0:
+            self.dim=1
+        
         self.R=f.get('Eigenvalue',None)
         self.symmetry=f.get('Symmetry',-1)
         self.weight=f.get('Weight',0)

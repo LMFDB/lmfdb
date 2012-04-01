@@ -447,7 +447,7 @@ def evs_table(search,twodarray=False):
         elif st==0:
             st = "even"
         else:
-            st = "none"
+            st = "n/a"
         row['symmetry']=st
         er = f.get('Error',0)
         if er>0:
