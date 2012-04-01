@@ -133,10 +133,7 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
     else:
         info['polynomial_st'] = ''
 
-    if(K<>QQ and K.is_relative()):
-        info['degree'] = int(WNF.base_ring().relative_degree())
-    else:
-        info['degree'] = int(WNF.base_ring().degree())
+    info['degree'] = int(WNF.degree())
     if K==QQ:
         info['is_rational']=1
     else:
