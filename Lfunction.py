@@ -1056,9 +1056,11 @@ class Lfunction_Maass(Lfunction):
             port  = base.getDBConnection().port
             DB=MaassDB(host=host,port=port)
             logger.debug("count={0}".format(DB.count()))
-            self.mf = WebMaassForm(DB,self.dbid)
+            print "BEFORE!!!"
+            self.mf = WebMaassForm(DB,self.dbid,get_dirichlet_c_only=1)
             self.group = 'GL2'
-
+            print "AFTER!!!"
+            logger.debug("HERE")
             # Extract the L-function information from the Maass form object
             self.symmetry = self.mf.symmetry
             self.eigenvalue = float(self.mf.R)
@@ -1081,9 +1083,13 @@ class Lfunction_Maass(Lfunction):
             else:  #no fricke for level 1
                 self.fricke = 1
 
+            # Todo: If self has dimension >1, link to specific L-functions
             self.dirichlet_coefficients = self.mf.coeffs
+            logger.info("Zeroth coefficient: {0}".format(self.dirichlet_coefficients[0]))
+            if self.dirichlet_coefficients[0]==0:
+                self.dirichlet_coefficients.pop(0)
+            logger.info("First coefficient: {0}".format(self.dirichlet_coefficients[0]))
             logger.info("Third coefficient: {0}".format(self.dirichlet_coefficients[2]))
-
             # Set properties of the L-function
             self.coefficient_type = 2
             self.selfdual = True

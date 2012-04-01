@@ -7,5 +7,6 @@ mwf_logger = make_logger(mwf)
 
 import backend
 import views
-
+from backend import *
+from views import *
 
