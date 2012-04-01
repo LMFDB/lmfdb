@@ -21,6 +21,7 @@ table.pretty {
     clear: both;
 }
 
+.bottom {width:100%}
 .dataTables_wrapper {width:100%}
 div.newsearch {
     clear: both;
@@ -79,21 +80,32 @@ var evTable = $("table#eigenvalues").dataTable(
                         "sNext": ""
                 }
      }, 
-     "sDom": 't<"paging"p><"bottom"l><"bottom"fr><"filterbox"i>',
+     "sDom": 't<"paging"ip>l<"bottom"fr><"filterbox">',
      "sScorollX": "500px", 
      "bStateSave": false,
      "bAutoWidth": false,
     "oSearch": { "sSearch": "", "bRegex": false, "bSmart": true },
  });
 
-/* Add filtering box */
-s='<br>Weight:<select id="weight"><option {{wtis0}}>0<option {{wtis1}}>1</select>'
+/* Add filtering box if we don't have a fixed weight*/
+
+{% if wtis1 !='' %}
+s='<input type="hidden" id="weight" value="1">'
 $('#eigenvalues_filter').append(s);
-
-/* Add event listeners to the two range filtering inputs */
-
+{% elif wtis0 !='' %}
+s='<input type="hidden" id="weight" value="0">'
+$('#eigenvalues_filter').append(s);
+{% else %}
+s='<br>Weight:<select id="weight"><option selected>0<option>1<option >all </select>'
+$('#eigenvalues_filter').append(s);
+/* Add event listener to the weight filtering */
 $('#weight').change( function() { evTable.fnDraw(); } );
+{% endif %}
+evTable.fnDraw(); 
 
+$('#eigenvalues_length').css("width","100%")
+$('#eigenvalues_filter').css("width","100%")
+$('.bottom').css("width","100%")
  });
 </script>
 
@@ -126,12 +138,16 @@ $('#weight').change( function() { evTable.fnDraw(); } );
   </colgroup>
   <thead>
     <tr>
-    {% for head in table.colheads %}
-   {% if head != "Atkin-Lehner" %}
-      <th> {{head}}</th>
-  {% endif %}
+    {% set sep="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" %}
+    {% for knowl,title in table.colheads %}
+      {% if title != "Atkin-Lehner" %}
+         <th> {{KNOWL(knowl,title=title)}}</th>
+      {% else %}
+    <th width="200px">{{KNOWL(knowl,title=title)}}
+   </th>
+      {% endif %}
     {% endfor %}
-    <th width="200px">Atkin&nbsp;-&nbsp;Lehner&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+
     </tr>
   </thead>
   <tbody>

@@ -272,7 +272,7 @@ def render_one_maass_waveform_wp_old(info):
 
 def render_search_results_wp(info,search):
     # res contains a lst of Maass waveforms
-    mwf_logger.debug("in render_search_results. info={0}".format(info))
+    mwf_logger.debug("in render_search_results. info1={0}".format(info))
     mwf_logger.debug("Search:{0}".format(search))
     evs={'table':{}}
     if not isinstance(search,dict):
@@ -287,18 +287,22 @@ def render_search_results_wp(info,search):
            ('Maass forms',url_for('.render_maass_waveforms'))]
     info['bread']=bread
     info['evs']=evs_table(search)
-    if info.get('Weight',0)==1:
+    mwf_logger.debug("in render_search_results. info2={0}".format(info))
+    print "wt=",info.get('weight')
+    if int(info.get('weight',0))==1:
+        print "weight1=",info.get('weight',0)
         info['wtis1']="selected";info['wtis0']=""
     else:
+        print "weight0=",info.get('weight',0)
         info['wtis0']="selected";info['wtis1']=""
     if info.get('browse',None)<>None:
         info['title']='Browse Maassforms'
-        if info.get('Weight',-1) in [0,1]:
-            info['title']+='of weight '.format(info['Weight'])
-            if info.get('Level',0)>0:
-                info['title']+='and level '.format(info['Level'])
-        elif  info.get('Level',0)>0:
-                info['title']+='of level '.format(info['Level'])
+        if int(info.get('weight',-1)) in [0,1]:
+            info['title']+=' of weight {0}'.format(info['weight'])
+            if info.get('level',0)>0:
+                info['title']+=' and level {0}'.format(info['level'])
+        elif  int(info.get('Level',0))>0:
+                info['title']+=' of level {0}'.format(info['level'])
     else:
         info['title']='Search Results'
     mwf_logger.debug("in render_search_results. info={0}".format(info))
@@ -463,7 +467,8 @@ def evs_table(search,twodarray=False):
         row['numc']=numc
         cev=f.get('Cusp_evs',[])
         row['fricke']='n/a'
-        if isinstance(cev,list):
+        row['cuspevs']='n/a'
+        if row['k']==0 and isinstance(cev,list):
             if len(cev)>1:
                 fricke=cev[1]
                 row['fricke']=fricke
@@ -485,10 +490,18 @@ def evs_table(search,twodarray=False):
     evs['table']['data']=table
     evs['table']['nrows']=nrows
     evs['table']['ncols']=10
-    evs['table']['colheads']=['Level','Weight','Char','Eigenvalue',
-                              'Symmetry','Precision',
-                              'Dim.','Coeff.','Fricke',
-                              'Atkin-Lehner']
+    evs['table']['colheads']=[]
+    knowls=['mf.maass.mwf.level','mf.maass.mwf.weight','mf.maass.mwf.character',
+            'mf.maass.mwf.eigenvalue','mf.maass.mwf.symmetry',
+            'mf.maass.mwf.precision','mf.maass.mwf.dimension',
+            'mf.maass.mwf.ncoefficients','mf.maass.mwf.fricke',
+            'mf,maass.mwf.atkinlehner']
+    titles=['Level','Weight','Char',
+            'Eigenvalue','Symmetry',
+            'Precision','Mult.',
+            'Coeff.','Fricke','Atkin-Lehner']
+    for i in range(10):
+        evs['table']['colheads'].append((knowls[i],titles[i]))
     search.pop('limit')
     search.pop('skip')
     evs['totalrecords']=DB.count(search)
