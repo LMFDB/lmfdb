@@ -4,6 +4,7 @@ add --debug if you are developing (auto-restart, full stacktrace in browser, ...
 """
 from base import *
 
+import intro
 import hilbert_modular_form
 import siegel_modular_form
 import modular_forms
@@ -73,11 +74,27 @@ map(root_static_file, [ 'favicon.ico' ])
 
 @app.route("/robots.txt")
 def robots_txt():
-  if "l-functions.org".lower() in request.url_root.lower():
+  if "lmfdb.org".lower() in request.url_root.lower():
     fn = os.path.join('.', "static", "robots.txt")
     if os.path.exists(fn):
       return open(fn).read()
   return "User-agent: *\nDisallow: / \n"
+
+@app.route("/hg/<arg>")
+def hg(arg):
+  if arg == "":
+    return "Use /hg/parent, /hg/log or /hg/identify"
+  import os
+  if arg == "parent":
+    f = os.popen("hg parent")
+  elif arg == "tip":
+    f = os.popen("hg tip")
+  elif arg == "identify":
+    f = os.popen("hg identify")
+  else:
+    return "Unrecognized command. Allowed are parent, tip and identify."
+  text = f.read()
+  return str(text)
 
 
 @app.route("/style.css")
@@ -122,9 +139,25 @@ def render_Character(arg1 = None, arg2 = None):
     return DirichletCharacter.render_webpage(request,arg1,arg2)
 
 
-@app.route('/ModularForm/GSp4/Q')
-def ModularForm_GSp4_Q_top_level():
-    return siegel_modular_form.render_webpage(request.args)
+@app.route('/ModularForm/GSp/Q')
+@app.route('/ModularForm/GSp/Q/<group>')
+@app.route('/ModularForm/GSp/Q/<group>/<page>')
+@app.route('/ModularForm/GSp/Q/<group>/<page>/<weight>')
+@app.route('/ModularForm/GSp/Q/<group>/<page>/<weight>/<form>')
+def ModularForm_GSp4_Q_top_level( group = None, page = None, weight = None, form = None):
+    args = request.args
+    if group:
+        args = {}
+        for k in request.args:
+            args[k] =  request.args[k]
+        args['group'] = group
+        if None != weight:
+            page = 'specimen'
+        args['page'] = page
+        if 'specimen' == page:
+            args['weight'] = weight
+            args['form'] = form
+    return siegel_modular_form.render_webpage(args)
 
 #@app.route('/ModularForm/GL2/Q/holomorphic/')
 #def render_classical_modular_form():

@@ -2,9 +2,8 @@
 
 
 {% block content %}
-<div> A {{ KNOWL('character.dirichlet', title="Dirichlet character") }} is an arithmetic function with certain properties. </div>
 
-<h2> Browse </h2>
+<h2> Browse {{ KNOWL('character.dirichlet', title="Dirichlet characters") }}</h2>
 <p>
 &nbsp;&nbsp;By {{ KNOWL('character.dirichlet.modulus', title="modulus") }}:
 &nbsp;&nbsp;<a href="modbrowse=1-25">1&mdash;25</a>
@@ -34,7 +33,7 @@
 <form>
     <input type='text' name='natural' size=10 placeholder="13.2">
     <button type='submit' name='search' value='Go'> Find  </button>
-    <span class="formexample"> e.g. 13.2 -- represents the sage command DirichletGroup(13)[2].</span>
+    <span class="formexample"> e.g. 13.2 -- represents the Dirichlet character \(\displaystyle\chi_{13}(2,&middot;)\).</span>
 </form>
 
 <h2> Search for characters </h2>
@@ -44,7 +43,7 @@ Enter criteria into one or more boxes to restrict the search.
 <form>
     <table>
         <tr>    
-            <td> {{ KNOWL('character.dirichlet.modulus', title="modulus") }} </td>
+            <td> {{ KNOWL('character.dirichlet.modulus', title="modulus") }}</td>
             <td> <input type='text' name='modulus' size = '10' placeholder="13"></td>
             <td><span class="formexample"> e.g. 13 </span></td>
         </tr>
@@ -67,6 +66,20 @@ Enter criteria into one or more boxes to restrict the search.
     </td>
 </form>
 
+<h2> Create a character table </h2>
+<form action="{{ url_for('dirichlet_table') }}" method="get"> 
+    <table>
+        <tr>
+            <td> {{ KNOWL('character.dirichlet.modulus', title="modulus") }} </td>
+            <td> <input type='text' name='modulus' size='10' placeholder="13"></td>
+            <td><span class="formexample"> e.g. 13 </span></td>
+        </tr>
+    </table>
+    <p></p>
+    <td>
+        <button type='submit' value='Create' > Create </button>
+    </td>
+</form>
 {% endblock %}
 
 

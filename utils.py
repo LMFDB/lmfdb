@@ -5,6 +5,8 @@
 # def func(): ...
 import logging
 
+import re
+
 from flask import request, make_response
 from functools import wraps
 from werkzeug.contrib.cache import SimpleCache
@@ -115,7 +117,7 @@ class MongoDBPagination(object):
     has_next = property(lambda x: x.page < x.pages)
     pages = property(lambda x: max(0, x.count - 1) // x.per_page + 1)
     start = property(lambda x: (x.page - 1) * x.per_page)
-    end = property(lambda x: x.start + x.per_page - 1)
+    end = property(lambda x: min(x.start + x.per_page - 1, x.count-1))
 
     @property
     def previous(self):
@@ -184,6 +186,38 @@ def pair2complex(pair):
         ip=0
     return [float(rp),float(ip)]
 
+
+def an_list(euler_factor_polynomial_fn, upperbound=100000, base_field = sage.rings.all.RationalField()):
+    """ Takes a fn that gives for each prime the polynomial of the associated with the prime,
+        given as a list, with independent coefficient first. This list is of length the degree+1.
+    """
+    from sage.rings.fast_arith import prime_range
+    from sage.rings.all import PowerSeriesRing
+    from math import ceil, log
+    PP = PowerSeriesRing(base_field, 'x', ceil(log(upperbound)/log(2.)))
+
+    x = PP('x')
+    prime_l = prime_range(upperbound)
+    result = upperbound *[1]
+
+    for p in prime_l:
+        euler_factor =  (1/(PP(euler_factor_polynomial_fn(p)))).padded_list()
+        
+        if len(euler_factor) == 1:
+            for j in range(1+ upperbound // p):
+                result[j*p -1]=0
+            continue
+
+        k=1
+        while True:
+            if p**k > upperbound:
+                break
+            for j in range(1+ upperbound // (p**k)):
+                if j % p == 0:
+                    continue
+                result[j* p**k -1] *= euler_factor[k]
+            k += 1
+    return result
 
 def splitcoeff(coeff):
     local = coeff.split("\n")
@@ -364,6 +398,8 @@ def parse_range(arg, parse_singleton=int):
 # version above does not produce legal results when there is a comma
 # to deal with $or, we return [key, value]
 def parse_range2(arg, key, parse_singleton=int):
+    if type(arg)==str:
+        arg = arg.replace(' ','')
     if type(arg)==parse_singleton:
         return [key, arg]
     if ',' in arg:
@@ -387,3 +423,11 @@ def coeff_to_poly(c):
     from sage.all import PolynomialRing, QQ
     return PolynomialRing(QQ, 'x')(c)
 
+from flask import current_app
+def debug():
+    """
+    this triggers the debug environment on purpose. you have to start
+    the server via website.py --debug
+    don't forget to remove the debug() from your code!!!
+    """
+    assert current_app.debug == False, "Don't panic! You're here by request of debug()"

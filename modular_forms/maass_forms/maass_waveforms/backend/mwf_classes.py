@@ -11,7 +11,8 @@ class MaassFormTable(MFDataTable):
         self._id = kwds.get('id',None)
         if not self._id:
             mwf_logger.critical("You must supply an id!")
-    
+
+            
     def set_table(self,**kwds):
         self._name = kwds.get('name','')
         self._table=dict()
@@ -78,3 +79,152 @@ class MaassFormTable(MFDataTable):
 
 
 
+class WebMaassForm(object):
+    def __init__(self,db,maassid):
+        r"""
+        Setup a Maass form from maassid in the database db
+        of the type MaassDB.
+        """
+        self._db=db
+        self.R=None; self.symmetry=-1
+        self.weight=0; self.character=0; self.level=1
+        self.table={}
+        if not isinstance(maassid,(bson.objectid.ObjectId,str)):
+            ids=db.find_Maass_form_id(id=maassid)
+            if len(ids)==0:
+                return
+            mwf_logger.debug("maassid is not an objectid! {0}".format(maassid))
+            maassid=ids[0]
+        self._maassid=bson.objectid.ObjectId(maassid)
+        mwf_logger.debug("_id={0}".format(self._maassid))
+        ff=db.get_Maass_forms(id=self._maassid)
+        print "ff=",ff
+        if len(ff)==0:
+            return
+        f=ff[0]
+        print "f here=",f
+        self.dim = f.get('Dim',1)
+        self.R=f.get('Eigenvalue',None)
+        self.symmetry=f.get('Symmetry',-1)
+        self.weight=f.get('Weight',0)
+        self.character=f.get('Character',0)
+        self.cusp_evs=f.get('Cusp_evs',[])
+        self.error=f.get('Error',[])
+        self.level=f.get('Level',None)
+        if self.R ==None or self.level==None:
+            return
+        
+        self.coeffs=f.get('Coefficient',[])
+        coeff_id=f.get('coeff_id',None)
+        nc = Gamma0(self.level).ncusps()
+        self.M0=f.get('M0',nc)
+
+        if self.coeffs==[] and coeff_id:
+            ## Let's see if we have coefficients stored
+            C = self._db.get_coefficients({"_id":self._maassid})
+            self.all_coeffs=C
+            if nc==1:
+                self.coeffs=self.all_coeffs
+            elif isinstance(C,dict):
+                if len(C.keys())==1:
+                    self.coeffs = C[0][0]
+                else:
+                    self.coeffs = C[0]
+                mwf_logger.debug("self.coeff.keys={0}".format(self.coeffs.keys()))
+                    
+            elif isinstance(C,list):
+                mwf_logger.debug("len(C)={0}".format(len(C)))
+                if len(C)==1:
+                    mwf_logger.debug("len(C[0])={0}".format(len(C[0])))
+                    if len(C[0])==1:
+                        mwf_logger.debug("len(C[0][0])={0}".format(len(C[0][0])))
+                        if len(C[0][0])==1:
+                            mwf_logger.debug("len(C[0][0][0])={0}".format(len(C[0][0][0])))
+                            if len(C[0][0][0])<self.M0: ## This recursion has to stop at some point, assume here...
+                                self.coeffs = C[0][0][0][0]
+                            else:
+                                self.coeffs = C[0][0][0]
+                        else:
+                            self.coeffs = C[0][0]
+                    else:
+                        self.coeffs = C[0]
+                else:
+                    self.coeffs=C[0]
+            else:
+                self.coeffs={}
+        if isinstance(self.coeffs,list):
+            if self.coeffs[0]==0:
+                self.coeffs.pop(0)
+        self.nc = 1 #len(self.coeffs.keys())
+        if isinstance(self.coeffs,list):
+            self.num_coeff=len(self.coeffs)
+        elif isinstance(self.coeffs,dict):
+            self.num_coeff=len(self.coeffs.keys())
+        else:
+            self.num_coeff=0
+        self.set_table()
+
+    def C(self,r,n):
+        r"""
+        Get coeff nr. n at cusp nr. r of self
+        """
+        if not self.all_coeffs:
+            return None
+        
+        
+        
+    def get_all_coeffs(self):
+        return self.all_coeffs
+        
+    def the_character(self):
+        if self.character==0:
+            return "trivial"
+        else:
+            return self.character
+    def the_weight(self):
+        if self.weight==0:
+            return "0"
+        else:
+            return self.weight
+    def fricke(self):
+        if len(self.cusp_evs)>0:
+            return self.cusp_evs[1]
+        else:
+            return "undefined"
+    def even_odd(self):
+        if self.symmetry==1:
+            return "odd"
+        elif self.symmetry==0:
+            return "even"
+        else:
+            return "undefined"
+        
+    def set_table(self):
+        table={'nrows':self.num_coeff,
+               'ncols':1}
+        table['data']=[]
+        if self.symmetry<>-1:
+            table['negc']=0
+            for n in range(self.num_coeff):
+                row=[]
+                for k in range(table['ncols']):
+                    c = self.coeffs.get(n,None)
+                    if c<>None:
+                        c=CC(c)
+                    row.append((n,c))
+                table['data'].append(row)
+        else:
+            table['negc']=1
+            # in this case we need to have coeffs as dict.
+            if not isinstance(self.coeffs,dict):
+                self.table={}
+                return
+            for n in range(len(self.coeffs.keys()/2)):
+                row=[]
+                for k in range(table['ncols']):
+                   cp = self.coeffs.get(n,0)
+                   cn = self.coeffs.get(-n,0)
+                   row.append((n,cp,cn))
+                table['data'].append(row)
+        self.table=table
+                    

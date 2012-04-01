@@ -26,8 +26,8 @@ def get_logfocus():
 _C = None
 
 readonly_dbs = [ 'HTPicard', 'Lfunction', 'Lfunctions', 'MaassWaveForm',
-        'ellcurves', 'hmfs', 'modularforms', 'modularforms_2010',
-        'mwf_dbname', 'numberfields', 'quadratic_twists', 'test', 'test_pdehaye']
+        'ellcurves', 'elliptic_curves', 'hmfs', 'modularforms', 'modularforms_2010',
+        'mwf_dbname', 'numberfields', 'quadratic_twists', 'test', 'limbo']
 
 readwrite_dbs = ['userdb', 'upload', 'knowledge']
 
@@ -125,9 +125,12 @@ def ctx_proc_userdata():
   
   # default title
   vars['title'] = r'LMFDB'
-  vars['description'] = r'Welcome to the LMFDB, a database of L-functions, modular forms, and related objects.'
+  # meta_description appears in the meta tag "description"
+  import knowledge
+  vars['meta_description'] = knowledge.knowl.Knowl("intro.description").content
   vars['shortthanks'] = r'This project is supported by <a href="%s">grants</a> from the National Science Foundation.'% (url_for('acknowledgment') + "#sponsers")
   vars['feedbackpage'] = r"https://docs.google.com/spreadsheet/viewform?formkey=dDJXYXBleU1BMTFERFFIdjVXVmJqdlE6MQ"
+  vars['LINK_EXT'] = lambda a,b : '<a href="%s" target="_blank">%s</a>' % (b, a)
 
   return vars
 

@@ -77,9 +77,9 @@ $.fn.round_bl = function(val) {
 /** collapser: stored height is used to track progress. */
 function properties_collapser(evt) {
   evt.preventDefault();
-  var $pb = $("#properties-body");
+  var $pb = $(".properties-body");
   var $pc = $("#properties-collapser");
-  var $ph = $("#properties-header");
+  var $ph = $(".properties-header");
   var pb_h = $pb.height();
   $pb.animate({"height": "toggle", "opacity" : "toggle"}, 
     { 
@@ -106,7 +106,7 @@ function properties_collapser(evt) {
 
 $(function() {
  /* properties box collapsable click handlers */
- $("#properties-header,#properties-collapser").click(function(evt) { properties_collapser(evt); });
+ $(".properties-header,#properties-collapser").click(function(evt) { properties_collapser(evt); });
  /* providing watermark examples in those forms, that have an 'example=...' attribute */
  /* Add extra spaces so that if you type in exactly the example it does not disappear */
  $('input[example]').each(function(a,b) { $(b).watermark($(b).attr('example')+'   '  ) } )
@@ -200,8 +200,7 @@ function knowl_click_handler($el) {
  *  download/show/hide magic. also add a unique ID, 
  *  necessary when the same reference is used several times. */
 $(function() {
-  $("*[knowl]").live({
-    click: function(evt) {
+  $("body").on("click", "*[knowl]", function(evt) {
       evt.preventDefault();
       var $knowl = $(this);
       if(!$knowl.attr("knowl-uid")) {
@@ -210,7 +209,6 @@ $(function() {
         knowl_id_counter++;
       }
       knowl_click_handler($knowl, evt);
-    }
   });
 });
 

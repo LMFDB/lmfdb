@@ -1,16 +1,17 @@
 {% extends 'homepage.html' %}
 
 {% block content %}
+
  <h2> {{ KNOWL('lfunction.dirichlet_series', title='Dirichlet series') }}</h2>
  <div>\[{{ dirichlet }}\]</div>
 
  <h2>{{ KNOWL('lfunction.functional_equation',title='Functional equation') }}</h2>
- 
+
  <div id="functionalEqText">\[{{ functionalequation }}\]</div>
  <div>
    {{ KNOWL('lfunction.selbergdata', title="Selberg data") }}: ${{ functionalequationSelberg }}$</div>
- 
- 
+
+
  <h2>{{ KNOWL('lfunction.euler_product', title='Euler product') }}</h2>
  <div>\[{{ eulerproduct }}\]</div>
 
@@ -22,11 +23,19 @@
      <div>Not enough Dirichlet series coefficients to compute zeros.</div>
  {% endif %}
 
- {% if sv1 and sv12 %}
-     <h2>Special Values</h2>
-     <div>
-      {{ sv12 }}<br>
-      {{ sv1 }}<br>
+<h2>Special Values</h2>
+{% if sv12 or sv1 %}
+      <div>
+      {% if sv12 %}
+          {{ sv12 }}<br>
+      {% endif %}
+      {% if sv1 %}
+          {% if Ltype=="riemann" or Ltype=="dedekindzeta" %}
+              pole at s=1<br>
+          {% else %}
+              {{ sv1 }}<br>
+          {% endif %}
+      {% endif %}
      </div>
  {% else %}
       <div>Not enough Dirichlet series coefficients to compute special values.</div>
@@ -37,7 +46,7 @@
  {% if plotlink %}
     <img src="{{ plotlink|safe }}" >
  {% else %}
-    <div>Not enough Dirichlet series coefficients to make a graph.</div>
+    <div>Not enough Dirichlet series coefficients to make a plot.</div>
  {% endif %}
 
 <script type="text/javascript">

@@ -25,14 +25,16 @@ AUTHOR: Fredrik Stroemberg
 
 """
 
-from sage.all import ZZ,Newform,is_squarefree,squarefree_part,factor,is_square,divisors,DirichletGroup,QQ,xgcd,prime_factors,Gamma0,html,I,ceil,ComplexField,RealField,dimension_cusp_forms,sturm_bound,latex,join
+from sage.all import ZZ,Newform,is_squarefree,squarefree_part,factor,is_square,divisors,DirichletGroup,QQ,xgcd,prime_factors,Gamma0,html,I,ceil,ComplexField,RealField,dimension_cusp_forms,sturm_bound,latex,join,Gamma1
 import re
 
 from modular_forms.elliptic_modular_forms import emf_logger as logger
+import pymongo, pymongo.binary
 
 ####
 #### Core functions for spaces of cuspforms
 ####
+
 def get_dimension_cusp_forms(k,N=1,xi=0):
     r""" Return the dimension of S_k(N,xi).
 
@@ -1084,7 +1086,7 @@ def len_as_printed(s,format='latex'):
     #
     #tot_len = len(ss)+ceil((len(ssubs)+len(sexps))*0.67)
     return tot_len
-    
+            
 def get_geometric_data_Gamma0N(N):
     res=dict()
     G=Gamma0(N)
@@ -1094,6 +1096,22 @@ def get_geometric_data_Gamma0N(N):
     res['nu2']=G.nu2()
     res['nu3']=G.nu3()
     return res
+
+def get_geometric_data(N,group=0):
+    res=dict()
+    if group==0:
+        G=Gamma0(N)
+    elif group==1:
+        G=Gamma1(N)
+    else:
+        return None
+    res['index']=G.index()
+    res['genus']=G.genus()
+    res['cusps']=G.cusps()
+    res['nu2']=G.nu2()
+    res['nu3']=G.nu3()
+    return res
+
 
 def print_geometric_data_Gamma0N(N):
         r""" Print data about Gamma0(N).
@@ -1109,7 +1127,6 @@ def print_geometric_data_Gamma0N(N):
         s+="<tr><td>order 3:</td><td>%s</td></tr>" % G.nu3()
         s+="</table>"
         return s
-
 
 def pol_to_html(p):
     r"""

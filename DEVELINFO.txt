@@ -37,6 +37,25 @@ folders, e.g. /knowledge/templates/.
 [1] http://docs.python.org/tutorial/modules.html
 [2] http://flask.pocoo.org/docs/blueprints/
 
+Basic Orga / Editorial Board
+----------------------------
+
+Behind the Scenes:
+ * Backend: Harald Schilly
+ * Server: Jonathan Bober
+ * Data Management: Ralf Furmaniak
+
+Sections:
+ * Hilbert MF: John Voight
+ * Elliptic Curves: John Cremona
+ * L-functions: Stefan Lemurell
+ * Siegeld MF: Nils Skoruppa
+ * Elliptic MFs: Fredrik Stromberg
+ * Maass Fs: Fredrik Stromberg
+ * Number Fields / Galois Groups: John Jones
+ * Artin Repos: Andy Booker
+ * Dirichlet Characters: Pascal Molin
+ * Zeroes: Jonathan Bober
 
 Code Attribution
 ----------------
@@ -101,7 +120,7 @@ jonathan = http://jwbober-lmfdb.googlecode.com/hg
 harald = http://haraldschilly-content.googlecode.com/hg
 
 # l-functions
-stefan = http://sj-lmfdb2-lmfdb.googlecode.com/hg
+stefan = http://sj-lmfdb2.googlecode.com/hg
 gagan = http://gagandsekhon-lmdb.googlecode.com/hg
 
 # maass forms

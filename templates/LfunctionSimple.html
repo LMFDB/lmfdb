@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="announce">
- {{ content }}
+ {{ content|safe }}
 </div>
 <div align="center">
 <input type=button value="Back" onClick="history.go(-1)">

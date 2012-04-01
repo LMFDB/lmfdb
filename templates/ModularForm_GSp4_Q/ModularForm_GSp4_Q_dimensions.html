@@ -22,12 +22,29 @@
     <li><span class="emph">Other</span>: The subspace that are not Ikeda or Miyawaki lifts.</li>
   </ul>
 
+  {% elif group=='Sp6Z' %}
+  \(M_k({\rm Sp}(6,Z))\):
+  <ul>
+    <li><span class="emph">Total</span>: The full space \(M_k({\rm Sp}(6,Z))\).</li>
+    <li><span class="emph">Miyawaki lifts I</span>: The subspace of Miyawaki lifts of type I.</li>
+    <li><span class="emph">Miyawaki lifts II</span>: The subspace of (conjectured) Miyawaki lifts of type II.</li>
+    <li><span class="emph">Other</span>: The subspace of cusp forms which are not Miyawaki lifts of type I or II.</li>
+  </ul>
+
   {% elif group=='Kp' %}
   \(S_k({\rm K}({{ level }}))\):
   <ul>
     <li><span class="emph">Total</span>: The full space \(S_k({\rm K}({{ level }}))\).</li>
     <li><span class="emph">Lifts</span>: The subspace of Gritsenko lifts.</li>
     <li><span class="emph">Nonlifts</span>: The subspace of nonlifts.</li>
+  </ul>
+
+  {% elif group=='Sp4Z_2' %}
+  \(M_{k,2}({\rm Sp}(4,Z))\):
+  <ul>
+    <li><span class="emph">Total</span>: The full space \(M_{k,2}({\rm Sp}(4,Z))\).</li>
+    <li><span class="emph">Non cusp</span>: The subspace of non cusp forms.</li>
+    <li><span class="emph">Cusp</span>: The subspace of cusp form.</li>
   </ul>
 
   {% else %}
@@ -117,7 +134,7 @@
   {% endif %}
 </p>
 
-<form action="/ModularForm/GSp4/Q" method="get" onSubmit="return validate_weight()"> 
+<form action="/ModularForm/GSp/Q" method="get" onSubmit="return validate_weight()"> 
   <input type="hidden" name="group" value="{{ group }}" />
   <input type="hidden" name="page" value="dimensions" /> 
   <table> 

@@ -8,7 +8,7 @@ class RootTest(LmfdbTest):
 
   def test_robots(self):
     r = self.tc.get("/robots.txt")
-    assert "Disallow: /" in r.data
+    assert "Disallow: /" not in r.data
 
   def test_favicon(self):
     assert len(self.tc.get("/favicon.ico").data) > 10
@@ -16,7 +16,7 @@ class RootTest(LmfdbTest):
   def test_db(self):
     assert self.C != None
     known_dbnames = self.C.database_names()
-    expected_dbnames = ['Lfunctions', 'ellcurves', 'numberfields', 
+    expected_dbnames = ['Lfunctions', 'ellcurves', 'elliptic_curves', 'numberfields',  
                         'MaassWaveForm', 'HTPicard', 'Lfunction', 
                         'upload', 'knowledge', 'hmfs', 'userdb', 'quadratic_twists', 
                         'modularforms']

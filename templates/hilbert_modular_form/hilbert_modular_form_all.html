@@ -18,7 +18,7 @@ By field:
 <td>Field</td>  
 <td><input type='text' name='field_label' placeholder='2.2.5.1' size=10>
 <td><span class="formexample"> either a field label, e.g. 2.2.5.1 for
-    \(\mathbb{Q}(\sqrt{5})\), or a nickname, e.g. Q or Qsqrt5 </span></td>
+    \(\mathbb{Q}(\sqrt{5})\), or a nickname, e.g. Qsqrt5 </span></td>
 </tr>
 <tr>
 <td>{{ KNOWL('mf.hilbert.weight_vector', title='Weight vector') }}</td>
@@ -36,7 +36,7 @@ By field:
 <td><span class="formexample"> e.g. 1</td>
 </tr>
 <tr>
-<td>Maximum number of forms</td>
+<td>Maximum number</td>
 <td><input type='text' name='count' value=100 size=10></td>
 <td><span class="formexample"> &nbsp;</td>
 </tr>
@@ -45,6 +45,14 @@ By field:
 </td>
 </tr>
 </table>
+</form>
+
+<h2> Find a specific form by label </h2>
+
+<form>
+<input type='text' name='label' placeholder='2.2.5.1-31.1-a'>
+<button type='submit'>Label</button>
+<br><span class="formexample">e.g. 2.2.5.1-31.1-a </span>
 </form>
 
 

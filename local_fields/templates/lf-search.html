@@ -6,6 +6,12 @@
  $(document).ready(function() {
      $('#fieldTab').dataTable({
        "bFilter":false, 
+	"oLanguage": {
+		"oPaginate": {
+			"sPrevious": "",
+			"sNext": "",
+		}
+	},
        "aaSorting": [[1, 'asc'], [2, 'asc'], [4, 'asc']],
        "aLengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
        "fnRowCallback": function( row, data, index ){ 
@@ -37,7 +43,7 @@ Prime $p$ for base field $\mathbb{Q}_p$:<td align=left> <input type="text" name=
 <td align=left> 
 {{KNOWL('lf.ramification_index',title='Ramification index')}} $e$:
 <td align=left> 
-<input type="text" name="e" size="3" value={{info.e}} >
+<input type="text" name="e" size="3" value="{{info.e}}" >
 </tr>
 <tr>
 <td align=left colspan="2"> 

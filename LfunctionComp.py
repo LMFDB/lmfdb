@@ -1,9 +1,10 @@
 import re
 import base
 from pymongo import ASCENDING
+import utils
+logger = utils.make_logger("LFComp")
 
-
-cremona_label_regex = re.compile(r'(\d+)([a-z])+(\d*)')
+from elliptic_curve import lmfdb_label_regex
 
 def characterlist(N,type):
      from sage.modular.dirichlet import DirichletGroup
@@ -37,14 +38,25 @@ def isogenyclasstable(Nmin,Nmax):
     query = {'number': 1, 'conductor': {'$lte': Nmax, '$gte': Nmin}}
 
     # Get all the curves and sort them according to conductor
-    cursor = base.getDBConnection().ellcurves.curves.find(query)
-    res = cursor.sort([('conductor', ASCENDING), ('iso', ASCENDING), ('number', ASCENDING)])
+    cursor = base.getDBConnection().elliptic_curves.curves.find(query)
+    res = cursor.sort([('conductor', ASCENDING), ('lmfdb_label', ASCENDING)])
 
-    oldE = {'iso': 'q', 'conductor': 'foo'}
-    for E in res:
-       if not (E['iso'] == oldE['iso'] and E['conductor'] == oldE['conductor']):
-            iso_list.append( str(E['conductor'])+E['iso'])
-       oldE = E
+    iso_list = [E['lmfdb_iso'] for E in res]
 
     return iso_list
     
+def nr_of_EC_in_isogeny_class(label):
+    i = 1
+    connection = base.getDBConnection()
+    data = connection.elliptic_curves.curves.find_one({'lmfdb_label': label + str(i)})
+    while not data is None:
+        i += 1
+        data = connection.elliptic_curves.curves.find_one({'lmfdb_label': label + str(i)})
+    return i-1
+
+def modform_from_EC(label):
+     N, iso, number = lmfdb_label_regex.match(label).groups()
+     return { 'level' : N, 'iso' : iso}
+
+def EC_from_modform(level, iso):
+     return str(level) + '.' + iso

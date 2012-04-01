@@ -26,17 +26,14 @@ from sage.all import *
 from  sage.modular.dirichlet import DirichletGroup
 from base import app, db
 from modular_forms.elliptic_modular_forms.backend.web_modforms import WebModFormSpace,WebNewForm
-from modular_forms.elliptic_modular_forms.backend.emf_classes import ClassicalMFDisplay
+from modular_forms.elliptic_modular_forms.backend.emf_classes import ClassicalMFDisplay,DimensionTable
 from modular_forms import MF_TOP
+from modular_forms.elliptic_modular_forms import N_max_comp, k_max_comp
 from modular_forms.backend.mf_utils import my_get
 from modular_forms.elliptic_modular_forms.backend.emf_core import * 
 from modular_forms.elliptic_modular_forms.backend.emf_utils import *
 from modular_forms.elliptic_modular_forms.backend.plot_dom import * 
 from modular_forms.elliptic_modular_forms import EMF, emf_logger, emf,EMF_TOP
-
-### Maximum values to be generated on the fly
-N_max_comp = 100
-k_max_comp = 30
 ### Maximum values from the database (does this make sense)
 N_max_db = 1000000 
 k_max_db = 300000
@@ -50,32 +47,36 @@ def render_elliptic_modular_form_space(level=None,weight=None,character=None,lab
     r"""
     Render the webpage for a elliptic modular forms space.
     """
-    emf_logger.debug("In browse_elliptic_modular_forms kwds: {0}".format(kwds))
+    emf_logger.debug("In render_ellitpic_modular_form_space kwds: {0}".format(kwds))
     emf_logger.debug("Input: level={0},weight={1},character={2},label={3}".format(level,weight,character,label))
     info=to_dict(kwds)
     info['level']=level; info['weight']=weight; info['character']=character
     #if kwds.has_key('character') and kwds['character']=='*':
     #    return render_elliptic_modular_form_space_list_chars(level,weight)
-    ### This might take forever....
+    if character==0:
+        dimtbl=DimensionTable()
+    else:
+        dimtbl=DimensionTable(1)
+    if not dimtbl.is_in_db(level,weight,character):
+        emf_logger.debug("Data not available")
+        return render_template("not_available.html")
+    emf_logger.debug("Created dimension table in render_elliptic_modular_form_space")
     info=set_info_for_modular_form_space(**info)
     emf_logger.debug("keys={0}".format(info.keys()))
-    if kwds.has_key('download') and not kwds.has_key('error'):                           return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
+    if kwds.has_key('download') and not kwds.has_key('error'):
+        return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
     if kwds.has_key('dimension_newspace') and kwds['dimension_newspace']==1:
         # if there is only one orbit we list it
         emf_logger.debug("Dimension of newforms is one!")
         info['label']='a'
         return redirect(url_for('emf.render_elliptic_modular_forms', **info))
-    info['title'] = "Holomorphic Cusp Forms of weight %s on \(\Gamma_{0}(%s)\)" %(weight,level)
-    bread =[(MF_TOP,url_for('mf.modular_form_main_page'))]
-    bread.append((EMF_TOP,url_for('emf.render_elliptic_modular_forms')))
+    info['title'] = "Newforms of weight %s on \(\Gamma_{0}(%s)\)" %(weight,level)
+    bread=[(EMF_TOP,url_for('emf.render_elliptic_modular_forms'))]
     bread.append(("Level %s" %level,url_for('emf.render_elliptic_modular_forms',level=level)))
     bread.append(("Weight %s" %weight,url_for('emf.render_elliptic_modular_forms',level=level,weight=weight)))
     #emf_logger.debug("friends={0}".format(friends))
     info['bread']=bread
-    if info['dimension_newspace']==0:
-        return render_template("emf_space.html", **info)
-    else:
-        return render_template("emf_space.html", **info)
+    return render_template("emf_space.html", **info)
 
 
 def set_info_for_modular_form_space(level=None,weight=None,character=None,label=None,**kwds):
@@ -105,9 +106,17 @@ def set_info_for_modular_form_space(level=None,weight=None,character=None,label=
     if WMFS.level()==1:
         info['group']="\( \mathrm{SL}_{2}(\mathbb{Z})\)"
     else:
-        info['group']="\( \Gamma_{{0}}( {0} ) \)".format(WMFS.level())  
-    info['name_new']= "\(S_{ %s }^{new}(%s) \)" %(WMFS.weight(),WMFS.level())
-    info['name_old']= "\(S_{ %s }^{old}(%s) \)" %(WMFS.weight(),WMFS.level())
+        info['group']="\( \Gamma_{{0}}( {0} ) \)".format(WMFS.level())
+    if character==0:
+        info['name_new']= "\(S_{ %s }^{new}(%s) \)" %(WMFS.weight(),WMFS.level())
+        info['name_old']= "\(S_{ %s }^{old}(%s) \)" %(WMFS.weight(),WMFS.level())
+    else:
+        conrey_char = WMFS.conrey_character()
+        conrey_char_name= WMFS.conrey_character_name()
+        info['conrey_character_name']='\( ' + conrey_char_name + '\)'
+        info['character_url']=url_for('render_Character',arg1=WMFS.level(),arg2=conrey_char.number())
+        info['name_new']= "\(S_{ %s }^{new}(%s,%s) \)" %(WMFS.weight(),WMFS.level(),conrey_char_name)
+        info['name_old']= "\(S_{ %s }^{old}(%s,%s) \)" %(WMFS.weight(),WMFS.level(),conrey_char_name)
     info['dimension_cusp_forms'] = WMFS.dimension_cusp_forms()
     info['dimension_mod_forms'] = WMFS.dimension_modular_forms()
     info['dimension_new_cusp_forms'] = WMFS.dimension_new_cusp_forms()
@@ -126,7 +135,7 @@ def set_info_for_modular_form_space(level=None,weight=None,character=None,label=
         return info
     info['sturm_bound'] = WMFS.sturm_bound()
     info['new_decomposition'] = WMFS.print_galois_orbits()
-    emf_logger.debug("new_decomp=".format(info['new_decomposition']))
+    emf_logger.debug("new_decomp={0}".format(info['new_decomposition']))
     info['nontrivial_new'] = len(info['new_decomposition'])
     ## we try to catch well-known bugs...
     try:

@@ -105,6 +105,19 @@ a {
 }
 #content .announce {
   font-size: 1.2em;
+  padding: 10px 20px;
+  margin: 20px 0px;
+  border-left: 3px solid {{ col_main }};
+  background: {{ col_main_ll }};
+  line-height: 1.5em;
+}
+#content .announce.red {
+  border-left: 3px solid #D00;
+  background: #FDD;
+}
+/*
+#content .announce {
+  font-size: 1.2em;
   margin: 40px;
   padding: 20px;
   border: 1px solid {{ col_main }};
@@ -119,6 +132,16 @@ a {
   -moz-box-shadow:    inset 0px 0px 15px 5px {{ col_error }};
   box-shadow:         inset 0px 0px 15px 5px {{ col_error }};
 }
+*/
+
+/* icon in front of external links */
+#content a[target="_blank"]:before {
+  content: url("static/images/url-ext.gif");
+  padding-right: 2px;
+}
+
+
+
 
 a:visited { color: #080; }
 a:hover { 
@@ -241,7 +264,7 @@ body.knowl #header {
     font-family: sans-serif;
     float: right;
     clear: right;
-    margin: 20px 0px 15px 15px;
+    margin: 10px 0px 15px 15px;
     /* width: 20%; */
     /* background: #9d9; */
     position: relative;
@@ -249,33 +272,43 @@ body.knowl #header {
     border: 0;
     padding: 0px;
 }
-#properties-body div, #properties-body p {
+.properties-body div, .properties-body p {
   padding: 5px;
 }
-#properties-body h1, #properties-body h2 {
+.properties-body h1, .properties-body h2 {
     color: #050;
     padding: 5px;
     margin: 0;
     margin-bottom: 0;
     background: {{ col_main_l }};
 }
-#properties-body h1 {
+.properties-body h1 {
     font-size: 120%;
 }
-#properties-body h2 {
+.properties-body h2 {
     font-size: 110%;
     margin-top: 10px;
 }
-#properties-body h2:first-child { margin-top: 0px; }
-#properties-body table th, 
-#properties-body table td {
+.properties-body h2:first-child { margin-top: 0px; }
+.properties-body table th, 
+.properties-body table td {
   padding-left: 10px;
   padding-right: 10px;
 }
-#properties-body .label {
+.properties-body .label {
   font-weight: bold;
 }
-#properties-body {
+.properties-body ul {
+  margin: 0px;
+  padding: 0px;
+}
+.properties-body li {
+  display: block;
+  padding: 5px;
+  font-weight: bold;
+  margin-left: 5px;
+}
+.properties-body {
   margin: 0;
   padding: 0;
   background: #efe;
@@ -284,10 +317,11 @@ body.knowl #header {
   border-bottom-left-radius: 10px;
   -moz-border-radius-bottomleft: 10px;
 }
-#properties-header {
+.properties-header {
   border-top-left-radius: 10px;
   -moz-border-radius-topleft: 10px;
   margin: 0;
+  margin-top: 10px;
   padding: 5px 10px;
   color: #050;
   background: #9d9;
@@ -305,15 +339,15 @@ body.knowl #header {
   width: 20px;
   height: 17px;
   position: absolute;
-  top:   3px;
+  top:   12px;
   right: 3px;
   {{ BORDER_RADIUS(20) }}
 }
 
-
 #content {
   margin-top: 20px;
   font-size: 95%;
+  line-height: 135%;
 }
 
 #content blockquote
@@ -426,10 +460,11 @@ blockquote p {
 }
 
 /* highlighting menu entries (if their respective blueprint overwirtes the body_class variable!) */
-body.mwf #sidebar a.mwf { background: #BFB; }
-body.cmf #sidebar a.cmf { background: #BFB; }
+body.mwf #sidebar a.mwf { background: {{ col_main_l }}; }
+body.cmf #sidebar a.cmf { background: {{ col_main_l }}; }
 body.knowl #sidebar a.knowl { background: {{ col_knowl_d }}; }
-body.local_fields #sidebar a.local_fields { background: #BFB; }
+body.local_fields #sidebar a.local_fields { background:  {{ col_main_l }}; }
+body.intro #sidebar a.intro { background: {{ col_main_l }}; }
 
 .visible {
 	visibility: visible;
@@ -454,6 +489,12 @@ body.local_fields #sidebar a.local_fields { background: #BFB; }
    font-size: 80%;
    font-style: italic;
    color: grey;
+}
+
+.errmsg {
+   font-size: 80%;
+   font-style: bold;
+   color: red;
 }
 
 td.forminfo {
@@ -602,6 +643,12 @@ div.literature {
   color: red;
 }
 
+.bluehighlight {
+  color: blue;
+}
+
+
+
 .highlight {
   /* text-decoration: underline; */
   font-weight: bold;
@@ -653,10 +700,11 @@ table .knowl-link {
   border-bottom: 2px solid {{ col_knowl_l}};
   font-size: x-small;
   text-align: right;
+  line-height: 100%;
 }
 .knowl-inc-edit a {
-  padding: 3px 5px 1px 5px;
-  color: {{ col_knowl }};
+  padding: 3px 5px 0px 5px;
+  background: {{ col_knowl_dd }};
   background: {{ col_knowl_l }};
   border-top-left-radius: 5px;
   -moz-border-radius-topleft: 5px;
@@ -676,6 +724,7 @@ table .knowl-link {
   color: grey;
   position: absolute;
   top: 2px;
+  line-height: 1em;
 }
 #knowl-index td div {
   position: relative;

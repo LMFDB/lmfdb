@@ -1,11 +1,11 @@
-artin_location = ("contrib","pdehaye4f2bef4ce9841255c9000002")
-galois_group_location = ("contrib","pdehaye4f2bef6ae9841255c9000004")
+artin_location = ("limbo","tim_artin_02")
+galois_group_location = ("limbo","tim_nfgal_02")
 
 from type_generation import String, Array, Dict, Int, Anything, Float
 
 from standard_types import PolynomialAsString, PermutationAsList,\
-    TooLargeInt, LabelString, FiniteSequence, FiniteSet, GAP_GroupLabel, PrimeIndexedSequence, AlgebraicNumberPolynomialString, \
-    PolynomialAsString, AlgebraicNumberString_Root
+    TooLargeInt, LabelString, FiniteSequence, FiniteSet, PrimeIndexedSequence, AlgebraicNumberPolynomialString, \
+    PolynomialAsString, AlgebraicNumberString_Root, PolynomialAsSequenceInt, PolynomialAsSequenceTooLargeInt
     
 from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
 from sage.rings.rational_field import QQ
@@ -16,7 +16,6 @@ Polynomial_X_QQ_AsString = PolynomialAsString(PolynomialRing(QQ,"x", sparse=Fals
 Polynomial_X_ZZ_AsString = PolynomialAsString(PolynomialRing(ZZ,"x", sparse=False))
 Polynomial_a_ZZ_AsString = PolynomialAsString(PolynomialRing(ZZ, "a", sparse = False))
 
-
 from bind_collection import bind_collection
 
 Dokchitser_AlgebraicNumber_MinPol = PolynomialAsString(PolynomialRing(PolynomialRing(ZZ,"x", sparse = False),"a", sparse = False))
@@ -24,19 +23,39 @@ Dokchitser_AlgebraicNumber_Root = AlgebraicNumberString_Root
     
 class Dokchitser_AlgorithmLabel(LabelString):
     pass
+#### Not precise ####
 
-Dokchitser_Character = FiniteSequence(Dokchitser_AlgebraicNumber_Root)
+class Custom_GroupLabel(LabelString):
+    pass
+
+class BadFactor(Array(Int)):
+    pass
+#### Not precise ####
+
+Dokchitser_Character = FiniteSequence(Anything)
+#### Not precise ####
+
+class IndexAt1(Int):
+    pass
 
 Dokchitser_ArtinRepresentation = Dict({
-        "_id":          Anything,
-        "Dim" :         Int,
-        "Conductor" :   TooLargeInt,
-        "DBIndex" :     Int,
-        "NFGal" :       FiniteSequence(Int),
-        "Character" :   Dokchitser_Character
+        "_id":              Anything,
+        "Dim" :             Int,                                #
+        "Indicator":        Int,                                #
+        "Conductor" :       TooLargeInt,                        #
+        "BadFactors":       FiniteSequence(IndexAt1),           #   
+        "BadPrimes":        FiniteSequence(TooLargeInt),        #
+        "LocalFactors":     FiniteSequence(Anything),
+                        # actually, not Anything but PolynomialAsSequence(PolynomialCyclotomic)
+        "DBIndex" :         IndexAt1,        # Starting at 1    #
+        "NFGal" :           FiniteSequence(Anything),           #
+        "Character" :       Anything,
+        "Sign":             Int,                                #
+        "CharacterField":   Int                                 #
     })
 
-class CycleType(Array(Int)):
+
+class CycleType(FiniteSequence(Int)):
     pass
     
 Dokchitser_FrobResolvent = Dict(
@@ -49,9 +68,10 @@ Dokchitser_FrobResolvent = Dict(
 
 Dokchitser_ArtinRepresentation_Short = Dict(
             {
-                "Degree":           Int,
+                "Dim":              Int, 
                 "Conductor":        TooLargeInt,
-                "Index":            Int,
+                "DBIndex":          Int,        # Starting at 1
+                "CharacterField":   Int,
                 "Character":        Dokchitser_Character
             })
 
@@ -62,30 +82,28 @@ Dokchitser_ConjugacyClass = Dict(
                 "Representative":   PermutationAsList
             })
 
+class pAdicApproximationAsString(String):
+    # If the numbers get too unwidely, one can use this class to overload self.latex() and display it in a better form
+    pass
+
 Dokchitser_NumberFieldGaloisGroup = Dict({
     "_id" :                 Anything,
-    "Degree" :              Int,
-    "Polynomial" :          Polynomial_X_ZZ_AsString,
-    "Size" :                TooLargeInt,
-    "DBIndex" :             Int,
-    
-    "G-Gens" :              FiniteSet(PermutationAsList),
-    "G-Name" :              GAP_GroupLabel,
-    
-    "QpRts-p" :             Int,
-    "QpRts-minpoly" :       Polynomial_X_ZZ_AsString,
-    "QpRts-prec" :          Int,
-    "QpRts" :               FiniteSequence(Dokchitser_AlgebraicNumber_MinPol),
-    
-    "ConjClasses" :         FiniteSequence(Dokchitser_ConjugacyClass),
-
+    "ArtinReps" :           FiniteSequence(Dokchitser_ArtinRepresentation_Short),
     "ComplexConjugation" :  Int,
-    
+    "ConjClasses" :         FiniteSequence(Dokchitser_ConjugacyClass),
+    "DBIndex" :             Int,                    # Starting at 1
+    "FrobResolvents" :      Array(Dokchitser_FrobResolvent),
     "Frobs" :               PrimeIndexedSequence(Int), 
-
-    "FrobResolvents" :      FiniteSet(Dokchitser_FrobResolvent),
-    
-    "ArtinReps" :           FiniteSequence(Dokchitser_ArtinRepresentation_Short)
+    "G-Gens" :              FiniteSet(PermutationAsList),
+    "G-Name" :              Custom_GroupLabel,
+    "Polynomial" :          PolynomialAsSequenceInt,
+    "QpRts" :               FiniteSequence(pAdicApproximationAsString),
+    "QpRts-minpoly" :       PolynomialAsSequenceInt,
+    "QpRts-p" :             Int,
+    "QpRts-prec" :          Int,
+    "Size" :                TooLargeInt,
+    "TransitiveDegree" :    Int,
+    "label" :               LabelString
 })
 
 

@@ -3,10 +3,11 @@ import siegel_core
 import pickle
 import urllib
 from sage.all_cmdline import *
+import os
 
-DATA = 'http://data.countnumber.de/Siegel-Modular-Forms/'
-#DATA = '/media/data/home/nils/Sandbox/super_current/nilsskoruppa-lmfdb/db/'
-#DATA = '/media/data/home/nils/Sandbox/super_current/Siegel-Modular-Forms/'
+#DATA = 'http://data.countnumber.de/Siegel-Modular-Forms/'
+#DATA = '/home/nils/Sandbox/super_current/Siegel-Modular-Forms/'
+DATA = os.path.expanduser("~/data/Siegel-Modular-Forms/")
 
 def render_webpage( args = {}):
     """
@@ -30,7 +31,6 @@ def render_webpage( args = {}):
     level = args.get('level')
     form = args.get('form')
     page = args.get('page')
-    orbit = args.get('orbit')
     weight_range = args.get('weight_range')
     ev_modulus = args.get('ev_modulus')
     fc_modulus = args.get('fc_modulus')
@@ -38,7 +38,6 @@ def render_webpage( args = {}):
     # set info
     info['group'] = group
     info['form'] = form
-    info['orbit']= orbit
     info['level']= level
 
     # We check first the key 'group' since it is needed always
@@ -172,6 +171,10 @@ def render_webpage( args = {}):
         if 'Sp8Z' == group:
             info['table_headers'] = ['Weight', 'Total', 'Ikeda lifts', 'Miyawaki lifts', 'Other']
 
+        elif 'Sp6Z' == group:
+            info['table_headers'] = ['Weight', 'Total', 'Miyawaki lifts I', 'Miyawaki lifts II', 'Other']
+
+
         elif group == 'Kp':
             info['table_headers'] = ["Weight", "Total", "Gritsenko Lifts", "Nonlifts", "Oldforms"]
 
@@ -193,15 +196,17 @@ def render_webpage( args = {}):
         try:
             file_name = weight + '_' + form + '.sobj'
             f_url = DATA + group + '/eigenforms/' + file_name
+            # print 'fafaf %s'%f_url
             f = load(f_url)
             file_name = weight + '_' + form + '-ev.sobj'
             g_url = DATA + group +'/eigenvalues/' + file_name
+            # print 'gagag %s'%g_url
             g =load( g_url)
             loaded = True
         except:
             info['error'] = 'Data not available'
             loaded = False
-
+        print 'hahahah %s'%loaded
         if True == loaded:
 
             # throw out disc = 0 keys for cusp forms
@@ -210,7 +215,7 @@ def render_webpage( args = {}):
                 f_keys = filter( lambda (a,b,c): b^2<4*a*c, f_keys)
                 
             # sort the table of Fourier coefficients by discriminant, forms in increasing lexicographic order
-            if 'Sp8Z' != group:
+            if 'Sp8Z' != group and 'Sp6Z' != group:
                 __disc = lambda (a,b,c): 4*a*c - b**2
                 __cmp = lambda (a,b,c), (A,B,C) : cmp( (4*a*c - b**2,a,b,c), (4*A*C - B**2, A,B,C) )
                 f_keys.sort( cmp = __cmp)
@@ -221,9 +226,27 @@ def render_webpage( args = {}):
                         matrix( ZZ, 4,4, [m11,m12,m13,m14, m12,m22,m23,m24, m13,m23,m33,m34, m14,m24,m34,m44])
                 __disc = lambda i: __mat(i).det()
                 __cmp = lambda f1, f2: cmp( [__mat(f1).det()]+list(f1), [__mat(f2).det()]+list(f2))
-                print 'before: ', f_keys
+                # print 'before: ', f_keys
                 f_keys.sort( cmp = __cmp)
-                print f_keys
+                # print f_keys
+
+            if 'Sp6Z' == group:
+                # matrix index is given as [m11/2 m22/2 m33/2 m12 m13 m23]
+                __mat = lambda (a,b,c,d,e,f): \
+                        matrix( ZZ, 3,3, [2*a,d,e, d,2*b,f, e,f,2*c])
+                __disc = lambda i: __mat(i).det()
+                __cmp = lambda f1, f2: cmp( [__mat(f1).det()]+list(f1), [__mat(f2).det()]+list(f2))
+                # print 'before: ', f_keys
+                f_keys.sort( cmp = __cmp)
+                # print f_keys
+
+            # make the coefficients of the M_k(Sp(4,Z)) forms integral
+            if 'Sp4Z' == group: # or 'Sp4Z_2' == group:
+                d = lcm( map( lambda n: denominator(n), f[1].coefficients()))
+                f = list(f)
+                f[1] *= d
+                for k in f[2]:
+                    f[2][k] *= d
 
             try:
                 if not ev_modulus:
@@ -242,6 +265,7 @@ def render_webpage( args = {}):
                             g[1][i] = I.reduce(g[1][i])
                         
             except:
+                info['fc_modulus'] = 0
                 pass
 
             try:
@@ -252,17 +276,27 @@ def render_webpage( args = {}):
                 info['fc_modulus'] = m
                 K = g[0].parent().fraction_field()
                 if m != 0:
-                    if QQ == K:
-                        for i in f_keys:
-                            f[2][i] = Integer(f[2][i])%m
+                    if 'Sp4Z_2' == group:
+                        if QQ == K:
+                            for i in f_keys:
+                                f[2][i] = sum( (v[0]%m)*v[1] for v in list(f[2][i]))
+                        else:
+                            I = K.ideal(m)
+                            for i in f_keys:
+                                f[2][i] = sum( I.reduce(v[0])*v[1] for v in list(f[2][i]))
                     else:
-                        I = K.ideal(m)
-                        for i in f_keys:
-                            f[2][i] = I.reduce(f[2][i])                        
+                        if QQ == K:
+                            for i in f_keys:
+                                f[2][i] = Integer(f[2][i])%m
+                        else:
+                            I = K.ideal(m)
+                            for i in f_keys:
+                                f[2][i] = I.reduce(f[2][i])
             except:
+                info['fc_modulus'] = 0
                 pass
 
-            info['form'] = [ f[0].parent(), f[1], \
+            info['the_form'] = [ f[0].parent(), f[1], \
                              [ (l,g[1][l]) for l in g[1]], \
                              [(i,f[2][i],__disc(i)) for i in f_keys], \
                              f_url, g_url]

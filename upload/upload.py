@@ -20,6 +20,7 @@ from os import path
 from pymongo.objectid import ObjectId
 from urlparse import urlparse
 from urllib import urlopen
+from utils import MongoDBPagination
 
 from users import admin_required
 
@@ -146,8 +147,8 @@ def viewAll():
   db = getDBConnection().upload
   fs = GridFS(db)
 
-  approved = [ fs.get(x['_id']) for x in db.fs.files.find({"metadata.status" : "approved"}) ]
-  unmoderated = [ fs.get(x['_id']) for x in db.fs.files.find({"metadata.status" : "unmoderated"}) ]
+  approved = [ fs.get(x['_id']) for x in db.fs.files.find({"metadata.status" : "approved"}).sort("metadata.related_to") ]
+  unmoderated = [ fs.get(x['_id']) for x in db.fs.files.find({"metadata.status" : "unmoderated"}).sort("metadata_related_to") ]
 
   return render_template("upload-view.html", title = "Uploaded data", bread = get_bread(), approved=approved, unmoderated2=unmoderated)
 
@@ -215,8 +216,15 @@ def displayParsed(id):
       ret += displayParsed(str(i[0])) + "<br/>";
     return ret
   table = getDBConnection().contrib[entry['metadata']['uploader_id']+str(entry['_id'])]
-  
-  return "Show first 10 results of " + entry['filename'] + "<br/>" + renderJson(list(table.find().limit(10)))
+  skip = 0
+  limit = 10
+  count = table.count()
+
+  pagination = MongoDBPagination(query=table.find(), per_page=10, page=request.args.get('page', 1), endpoint=".displayParsed", endpoint_params={'id':id})
+
+  html = render_template("displayParsed.html", pagination=pagination, id=str(entry['_id']), filename=entry['filename'])
+
+  return html + "<br/>" + renderJson(list(pagination.entries))
 
 @upload_page.route("/updateMappingRule", methods = ["POST"])
 @login_required
@@ -250,10 +258,14 @@ def updateMetadata():
     db.fs.files.update({"metadata.parent_archive_id" : ObjectId(id)}, {"$set": {"metadata.status" : value+"child"}}, multi=1)
   return getDBConnection().upload.fs.files.find_one({"_id" : ObjectId(id)})['metadata'][property]
 
-def getUploadedFor(path):
+def getUploadedFor(path, addExtras):
   files = getDBConnection().upload.fs.files.find({"metadata.related_to": path, "$or" : [{"metadata.status": "approved"}, {"metadata.status": "approvedchild"}]})
   ret =  [ [x['metadata']['name'], "/upload/view/%s" % x['_id']] for x in files ]
-  ret.insert(0, ["Upload your data here", url_for("upload.index") + "?related_to=" + request.path ])
+  if addExtras:
+    from flaskext.login import current_user
+    if current_user.is_authenticated():
+      ret.insert(0, ["Upload your data here", url_for("upload.index") + "?related_to=" + request.path ])
+      ret.append(["View all data", url_for("upload.viewAll") ])
   return ret
 
 def queryUploadDatabase(filename, path, limit=0):

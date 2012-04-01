@@ -20,9 +20,28 @@ class TooLargeInt(String):
     
 class LabelString(String):
     pass
+
     
 FiniteSequence = Array
 FiniteSet = Array
+
+InfiniteSequence = Array
+
+class PolynomialAsSequenceInt(FiniteSequence(Int)):
+    from sage.rings.all import RationalField
+    def sage(self, var = "x", base_field = RationalField()):
+        from sage.rings.all import PolynomialRing, QQ
+        PP = PolynomialRing(QQ, var)
+        return PP(self)
+    def latex(self, letter = "x"):
+        return self.sage(var = letter)._latex_()
+
+class PowerSeriesAsSequenceInt(InfiniteSequence(Int)):
+    pass
+
+class PolynomialAsSequenceTooLargeInt(FiniteSequence(TooLargeInt)):
+    pass
+
 
 
 class GAP_GroupLabel(LabelString):
@@ -41,3 +60,10 @@ class AlgebraicNumberString_Root(String):
     def eval(self):
         tmp = self.replace("^","**")
         return eval(tmp,{"__builtins__":None},{"z":AlgebraicNumberString_Root.z})
+    
+    def __str__(self):
+        return self.replace("*"," ")
+    
+    def latex(self):
+        return self.replace("*","\cdot ")
+    

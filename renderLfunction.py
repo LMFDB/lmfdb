@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from base import *
-from flask import Flask, session, g, render_template, url_for, request, redirect, make_response, abort
+from flask import Flask, session, g, render_template, url_for, request, make_response, abort
+import flask
 
 from sage.all import *
 import tempfile, os
@@ -8,11 +9,11 @@ import pymongo
 from Lfunction import *
 import LfunctionComp
 import LfunctionPlot
-from utils import to_dict, make_logger
+from utils import to_dict #, make_logger
 import bson
-from Lfunctionutilities import lfuncDStex, lfuncEPtex, lfuncFEtex
+from Lfunctionutilities import lfuncDStex, lfuncEPtex, lfuncFEtex, truncatenumber
 
-logger = make_logger("LF")
+#logger = make_logger("LF")
 
 ##import upload2Db.py
 
@@ -20,6 +21,25 @@ logger = make_logger("LF")
 ###########################################################################
 #   Route functions
 ###########################################################################
+
+#@app.route("/L/EllipticCurve/Q/<label>")
+def return_ECLfunction(label):
+    logger.debug(label)
+    from elliptic_curve import cremona_label_regex, lmfdb_label_regex
+    m = lmfdb_label_regex.match(label)
+    if m is not None:
+        if m.groups()[2]:
+            # strip off the curve number
+            return flask.redirect("/L/EllipticCurve/Q/%s"%label[:-1], 301)
+        else:
+            return render_webpage(request,'EllipticCurve','Q',label,None,None,None,None,None,None)
+    m = cremona_label_regex.match(label)
+    if m is not None:
+        if m.groups()[2]:
+            C = getDBConnection().elliptic_curves.curves.find_one({'label':label})
+        else:
+            C = getDBConnection().elliptic_curves.curves.find_one({'iso':label})
+        return flask.redirect("/L/EllipticCurve/Q/%s"%(C['lmfdb_iso']), 301)
 
 @app.route("/L/")
 @app.route("/L/<arg1>/") # arg1 is EllipticCurve, ModularForm, Character, etc
@@ -32,6 +52,8 @@ logger = make_logger("LF")
 @app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/")
 @app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>/")
 def render_Lfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = None, arg6 = None, arg7 = None, arg8 = None, arg9 = None):
+    if arg1 == 'EllipticCurve' and arg2 == 'Q':
+        return return_ECLfunction(arg3)
     return render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
 
 @app.route("/Lfunction/")
@@ -56,7 +78,7 @@ def render_Lfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = 
 @app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>/")
 def render_Lfunction_redirect(**args):
     args.update(request.args)
-    return redirect(url_for("render_Lfunction", **args), code=301)
+    return flask.redirect(url_for("render_Lfunction", **args), code=301)
 
 @app.route("/plotLfunction/")
 @app.route("/plotLfunction/<arg1>/")
@@ -102,18 +124,19 @@ def browseGraphChar():
 
 
 ###########################################################################
-#   Functions for rendering the web pages
+#   Functions for rendering the L-function web pages including, both browsing
+#   and individual home pages.
 ###########################################################################
 
 def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9):
     args = request.args
     temp_args = to_dict(args)
-    
+
     if len(args) == 0:  #This ensures it's a navigation page 
         if not arg1: # this means we're at the start page
             info = set_info_for_start_page()
             return render_template("LfunctionNavigate.html", **info)
-        
+
         elif arg1.startswith("degree"):
             degree = int(arg1[6:])
             info = { "degree" : degree }
@@ -125,22 +148,24 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
             elif degree == 2:
                 info["contents"] = [processEllipticCurveNavigation(11,65), LfunctionPlot.getOneGraphHtmlHolo(1, 6, 2, 14),
                                     processMaassNavigation()]
-            elif degree == 3 or degree == 4:
-                info["contents"] = LfunctionPlot.getAllMaassGraphHtml(degree)
-                
+            elif degree == 3 :
+                info["contents"] = [LfunctionPlot.getAllMaassGraphHtml(degree),processSymPowerEllipticCurveNavigation(11,65,2)]
+            elif degree == 4:
+                info["contents"] = [LfunctionPlot.getAllMaassGraphHtml(degree),processSymPowerEllipticCurveNavigation(11,65,3)]
+
             return render_template("DegreeNavigateL.html", title = 'Degree ' + str(degree)+ ' L-functions', **info)
-            
+
         elif arg1 == 'custom': # need a better name
             return "not yet implemented"
-        
+
     try:
       L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, temp_args)
     except Exception as e:
       # throw exception if not UserError
       if len(e.args) > 1 and e.args[1] != 'UserError': raise
-      info = { 'content': 'Sorry, there has been a problem: %s' % e.args[0], 'title': 'Error' }
+      info = { 'content': 'Sorry, there has been a problem: %s .         Please report it <a href="http://code.google.com/p/lmfdb/issues/list">here</a>.' % e.args[0], 'title': 'Error' }
       return render_template('LfunctionSimple.html', info=info, **info), 500
-   
+
     try:
         logger.info(temp_args)
         if temp_args['download'] == 'lcalcfile':
@@ -148,12 +173,17 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
     except:
         pass #Do nothing
 
+
     info = initLfunction(L, temp_args, request)
 
     return render_template('Lfunction.html', **info)
-    
+
 
 def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, temp_args):
+    ''' Returns the L-function object corresponding to the supplied argumnents
+        from the url. temp_args contains possible arguments after a question mark.
+    '''
+
     if (arg1 == 'Riemann' or (arg1 == 'Character' and arg2 == 'Dirichlet' and arg3 == '1' and arg4 == '0')
         or (arg1 == 'NumberField' and arg2 == '1.1.1.1')):
         return RiemannZeta()
@@ -168,28 +198,42 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         logger.info(arg5+arg6+str(arg7)+str(arg8)+str(arg9))
         return Lfunction_EMF( level = arg5, weight = arg6, character = arg7, label = arg8, number = arg9)
 
+    elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 <> 'Q' and arg4 == 'holomorphic': # Hilbert modular form
+        logger.debug(arg5+arg6+str(arg7)+str(arg8)+str(arg9))
+        return Lfunction_HMF( field = arg3, label = arg5, character = arg6, number = arg7)
+
     elif arg1 == 'ModularForm' and arg2 == 'GL2'and arg3 == 'Q' and arg4 == 'Maass':
-        logger.info(db)
-        return Lfunction_Maass(dbid = bson.objectid.ObjectId(arg5), dbName = 'MaassWaveForm', dbColl = temp_args['db'])
-    
+        logger.debug(db)
+        return Lfunction_Maass(dbid = bson.objectid.ObjectId(arg5))
+
     elif arg1 == 'ModularForm' and (arg2 == 'GSp4' or arg2 == 'GL4' or  arg2 == 'GL3') and arg3 == 'Q' and arg4 == 'maass':
         return Lfunction_Maass( dbid = arg5, dbName = 'Lfunction', dbColl = 'LemurellMaassHighDegree')
+
+    elif arg1 == 'ModularForm' and arg2 == 'GSp' and arg3 == 'Q' and arg4 == 'Sp4Z' and arg5== 'specimen': #this should be changed when we fix the SMF urls
+        return Lfunction_SMF2_scalar_valued( weight=arg6, orbit=arg7, number=arg8 )
 
     elif arg1 == 'NumberField':
         return DedekindZeta( label = str(arg2))
 
+    elif arg1 == "ArtinRepresentation":
+        return ArtinLfunction(dimension = arg2, conductor = arg3, tim_index = arg4)
+
+    elif arg1 == "SymmetricPower":
+        return SymmetricPowerLfunction(arg2, [arg3, arg4, arg5, arg6, arg7, arg8, arg9], temp_args)
+
     elif arg1 == 'Lcalcurl':
         return Lfunction( Ltype = arg1, url = arg2)
-    
-    raise Exception("Not Found")
+
+    else:
+        return flask.redirect(403)
 
 
 def set_info_for_start_page():
     ''' Sets the properties of the top L-function page.
     '''
-    
-    tt = [[{'title':'Riemann','link': url_for('render_Lfunction', arg1='Riemann')},
-           {'title':'Dirichlet','link': url_for('render_Lfunction', arg1='degree1') + '#Dirichlet'}],
+
+    tt = [[{'title':'Riemann Zeta Function','link': url_for('render_Lfunction', arg1='Riemann')},
+           {'title':'Dirichlet L-function','link': url_for('render_Lfunction', arg1='degree1') + '#Dirichlet'}],
 
           [{'title':'Elliptic Curve','link': url_for('render_Lfunction', arg1='degree2') + '#EllipticCurve_Q'},
            {'title':'GL2 Cusp Form', 'link': url_for('render_Lfunction', arg1='degree2') + '#GL2_Q_Holomorphic'},
@@ -202,7 +246,7 @@ def set_info_for_start_page():
     info = {
         'degree_list': range(1,5),
         'type_table': tt,
-        'type_row_list':[0,1,2] 
+        'type_row_list':[0,1,2]
     }
 
     info['title'] = 'L-functions'
@@ -210,15 +254,26 @@ def set_info_for_start_page():
 #   info['learnmore'] = [('Lmfdb-wiki', 'http://wiki.l-functions.org/L-function')]
 
     return info
-    
+
 
 def initLfunction(L,args, request):
+    ''' Sets the properties to show on the homepage of an L-function page.
+    '''
+
     info = {'title': L.title}
     info['citation'] = ''
     info['support'] = ''
-    info['sv12'] = specialValueString(L, 0.5, '1/2')
-    info['sv1'] = specialValueString(L, 1, '1')
+    # Here we should decide which values are indeed special values
+    # According to Brian, odd degree has special value at 1, and even
+    # degree has special value at 1/2.
+    # (however, I'm not sure this is true if L is not primitive -- GT)
+    if is_even(L.degree):
+        info['sv12'] = specialValueString(L, 0.5, '1/2')
+    if is_odd(L.degree):
+        info['sv1'] = specialValueString(L, 1, '1')
     info['args'] = args
+    info['Ltype'] = L.Ltype()
+
 
     info['credit'] = L.credit
     #info['citation'] = L.citation
@@ -246,10 +301,12 @@ def initLfunction(L,args, request):
     friendlink = request.url.replace('/L/','/').replace('/L-function/','/').replace('/Lfunction/','/')
     splitlink = friendlink.rpartition('/')
     friendlink = splitlink[0] + splitlink[2]
+    logger.debug(L.Ltype())
 
     if L.Ltype() == 'maass':
         if L.group == 'GL2':
-            minNumberOfCoefficients = 20 # TODO: Fix this to take level into account
+            minNumberOfCoefficients = 100     # TODO: Fix this to take level into account
+                            
             if len(L.dirichlet_coefficients)< minNumberOfCoefficients:
                 info['zeroeslink'] = ''
                 info['plotlink'] = ''
@@ -263,31 +320,51 @@ def initLfunction(L,args, request):
 
     elif L.Ltype()  == 'riemann':
         info['bread'] = [('L-function','/L'),('Riemann Zeta',request.url)]
-        info['friends'] = [('\(\mathbb Q\)', url_for('by_label', label='1.1.1.1')),  ('Dirichlet Character \(\\chi_{0}\\!\\!\\pmod{1}\)',
+        info['friends'] = [('\(\mathbb Q\)', url_for('number_fields.by_label', label='1.1.1.1')),  ('Dirichlet Character \(\\chi_{1}(0,\\cdot)\)',
                                                                        url_for('render_Character', arg1=1, arg2=0))]
 
     elif L.Ltype()  == 'dirichlet':
         snum = str(L.characternumber)
         smod = str(L.charactermodulus)
-        charname = '\(\\chi_{%s}\\!\\!\\pmod{%s}\)' %(snum,smod)
+        charname = '\(\\chi_{%s}({%s},\\cdot)\)' %(smod, snum)
         info['bread'] = [('L-function','/L'),('Dirichlet Character',url_for('render_Lfunction', arg1='degree1') +'#Dirichlet'),
                          (charname, request.url)]
         info['friends'] = [('Dirichlet Character '+str(charname), friendlink)]
-                
+
 
     elif L.Ltype()  == 'ellipticcurve':
         label = L.label
-        info['friends'] = [('Elliptic Curve', friendlink )]
-        info['bread'] = [('L-function','/L'),('Elliptic Curve',url_for('render_Lfunction', arg1='/L/degree2#EllipticCurve_Q')),
+        while friendlink[len(friendlink)-1].isdigit():  #Remove any number at the end to get isogeny class url
+            friendlink = friendlink[0:len(friendlink)-1]
+
+        info['friends'] = [('Isogeny class ' + label, friendlink )]
+        for i in range(1, L.nr_of_curves_in_class + 1):
+            info['friends'].append(('Elliptic curve ' + label + str(i), friendlink + str(i)))
+        if L.modform:
+            info['friends'].append(('Modular form ' + label.replace('.','.2'), url_for("emf.render_elliptic_modular_forms",
+                                                            level=L.modform['level'],weight=2,character=0,label=L.modform['iso'])))
+            info['friends'].append(('L-function ' + label.replace('.','.2'), url_for("render_Lfunction", arg1='ModularForm', arg2='GL2', arg3='Q', arg4='holomorphic', arg5=L.modform['level'], arg6='2', arg7='0', arg8=L.modform['iso'])))
+        info['friends'].append(('Symmetric square L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='2',arg3='EllipticCurve', arg4='Q', arg5=label)))
+        info['friends'].append(('Symmetric 4th power L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='4',arg3='EllipticCurve', arg4='Q', arg5=label)))
+        info['bread'] = [('L-function','/L'),('Elliptic curve',url_for('render_Lfunction', arg1='/L/degree2#EllipticCurve_Q')),
                          (label,url_for('render_Lfunction',arg1='EllipticCurve',arg2='Q',arg3= label))]
 
     elif L.Ltype() == 'ellipticmodularform':
-        weight = str(L.weight)
-        level = str(L.level)
-        character = str(L.character)
-        label = str(L.label)
-        number = str(L.number)
-        info['friends'] = [('Modular Form', friendlink.rpartition('/')[0])] 
+        friendlink = friendlink + L.addToLink
+        friendlink = friendlink.rpartition('/')[0]
+        if L.character:
+            info['friends'] = [('Modular form ' + str(L.level) + '.' + str(L.weight) + '.' + str(L.character) + str(L.label), friendlink)]
+        else:
+            info['friends'] = [('Modular form ' + str(L.level) + '.' + str(L.weight) + str(L.label), friendlink)]
+        if L.ellipticcurve:
+            info['friends'].append(('Elliptic curve isogeny class ' + L.ellipticcurve, url_for("by_ec_label",label=L.ellipticcurve)))
+            info['friends'].append(('L-function ' + str(L.level) + '.' + str(L.label), url_for("render_Lfunction", arg1='EllipticCurve', arg2='Q', arg3=L.ellipticcurve)))
+            for i in range(1, L.nr_of_curves_in_class + 1):
+                info['friends'].append(('Elliptic curve ' + L.ellipticcurve + str(i), url_for("by_ec_label",label=L.ellipticcurve + str(i))))
+
+    elif L.Ltype() == 'hilbertmodularform':
+        friendlink = '/'.join(friendlink.split('/')[:-1])
+        info['friends'] = [('Hilbert Modular Form', friendlink.rpartition('/')[0])] 
 
     elif L.Ltype() == 'dedekindzeta':
         info['friends'] = [('Number Field', friendlink)]
@@ -295,6 +372,36 @@ def initLfunction(L,args, request):
     elif L.Ltype() in ['lcalcurl', 'lcalcfile']:
         info['bread'] = [('L-function',url_for('render_Lfunction'))]
         
+    elif L.Ltype() == 'SymmetricPower':
+        def ordinal(n):
+            if n == 2:
+                return "Square"
+            elif n == 3:
+                return "Cube"
+            elif 10 <= n % 100 < 20:
+                return str(n) + "th Power"
+            else:
+                return  str(n) + {1 : 'st', 2 : 'nd', 3 : 'rd'}.get(n % 10, "th") + " Power"
+        friendlink =request.url.replace('/L/SymmetricPower/%d/'%L.m,'/')
+        splitlink=friendlink.rpartition('/')
+        friendlink = splitlink[0]+splitlink[2]
+
+        friendlink2 =request.url.replace('/L/SymmetricPower/%d/'%L.m,'/L/')
+        splitlink=friendlink2.rpartition('/')
+        friendlink2 = splitlink[0]+splitlink[2]
+
+        mplusone = L.m +1
+        friendlink3 =request.url.replace('/L/SymmetricPower/%d/'%L.m,'/L/SymmetricPower/%d/'%mplusone)
+
+        info['friends'] = [('Isogeny class '+L.label, friendlink), ('Symmetric 1st Power', friendlink2), ('Symmetric %s'%ordinal(mplusone) , friendlink3)]
+
+    elif L.Ltype() == 'siegelnonlift' or L.Ltype() == 'siegeleisenstein' or L.Ltype() == 'siegelklingeneisenstein' or L.Ltype() == 'siegelmaasslift':
+        weight = str(L.weight)
+        number = str(L.number)
+        info['friends'] = [('Siegel Modular Form', friendlink)]
+
+
+
 
     info['dirichlet'] = lfuncDStex(L, "analytic")
     info['eulerproduct'] = lfuncEPtex(L, "abstract")
@@ -320,7 +427,7 @@ def set_gaga_properties(L):
     ans = [ ('Degree',    str(L.degree))]
 
     ans.append(('Level',     str(L.level)))
-    ans.append(('Sign',      str(L.sign)))
+    ans.append(('Sign',      styleTheSign(L.sign)))
 
     if L.selfdual:
         sd = 'Self-dual'
@@ -333,16 +440,54 @@ def set_gaga_properties(L):
     else:
         prim = 'Not primitive'
 #    ans.append((None,        prim))    Disabled until fixed
+#    ans.append((None,        prim))    Disabled until fixed
 
     return ans
 
+def styleTheSign(sign):
+    ''' Returns the string to display as sign
+    '''
+    try:
+        logger.debug(1-sign)
+        if abs(1-sign) < 1e-10:
+            return '1'
+        elif abs(1+sign) < 1e-10:
+            return '-1'
+        elif abs(1-sign.imag()) < 1e-10:
+            return 'i'
+        elif abs(1+sign.imag()) < 1e-10:
+            return '-i'
+        elif sign.imag > 0:
+            return "${0} + {1}i$".format(truncatenumber(sign.real(), 5),truncatenumber(sign.imag(), 5))
+        else:
+            return "${0} {1}i$".format(truncatenumber(sign.real(), 5),truncatenumber(sign.imag(), 5))
+    except:
+        logger.debug("no styling of sign")
+        return str(sign)
+
 
 def specialValueString(L, s, sLatex):
+    ''' Returns the LaTex to dislpay for L(s) 
+    '''
+    
     number_of_decimals = 10
     val = L.sageLfunction.value(s)
-    lfuncion_value_tex = L.texname.replace('(s', '(' + sLatex)
-    return '\(' + lfuncion_value_tex +'\\approx ' + latex(round(val.real(), number_of_decimals)+round(val.imag(), number_of_decimals)*I) + '\)'
+    lfunction_value_tex = L.texname.replace('(s', '(' + sLatex)
+    # We must test for NaN first, since it would show as zero otherwise
+    # Try "RR(NaN) < float(1e-10)" in sage -- GT
+    if val.real().is_NaN():
+        return "\\[{0}=\\infty\\]".format(lfunction_value_tex)
+    elif val.abs() < 1e-10:
+        return "\\[{0}=0\\]".format(lfunction_value_tex)
+    else:
+        return "\\[{0} \\approx {1}\\]".format(lfunction_value_tex,
+            latex( round(val.real(), number_of_decimals)
+                 + round(val.imag(), number_of_decimals)*I ))
 
+
+###########################################################################
+#   Functions for rendering the plot of an L-function.
+###########################################################################
 
 def plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9):
     pythonL = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
@@ -364,30 +509,58 @@ def render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8
     data = plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
     if not data:
         # see note about missing "hardy_z_function" in plotLfunction()
-        return redirect(404)
+        return flask.redirect(404)
     response = make_response(data)
     response.headers['Content-type'] = 'image/png'
     return response
 
+###########################################################################
+#   Functions for rendering a few of the zeros of an L-function.
+###########################################################################
 def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9):
     L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
 
-    if L.degree > 2 or L.Ltype()=="ellipticmodularform"  or L.Ltype()=="maass":  # Too slow to be rigorous here
-        search_step = 0.05
+    # Compute the first few zeros
+    if L.degree > 2 or L.Ltype()=="maass":  # Too slow to be rigorous here  ( or L.Ltype()=="ellipticmodularform")
+        search_step = 0.02
         if L.selfdual:
-            s = str(L.sageLfunction.find_zeros(-search_step/2 , 20,search_step))
+            allZeros = L.sageLfunction.find_zeros(-search_step/2 , 20 ,search_step)
         else:
-            s = str(L.sageLfunction.find_zeros(-15,15,search_step))
+            allZeros = L.sageLfunction.find_zeros(-15,15,search_step)
 
     else:
         if L.selfdual:
             number_of_zeros = 6
         else:
             number_of_zeros = 8
-        s = str(L.sageLfunction.find_zeros_via_N(number_of_zeros, not L.selfdual))
+        allZeros = L.sageLfunction.find_zeros_via_N(number_of_zeros, not L.selfdual)
 
-    return s[1:len(s)-1]
+    # Sort the zeros and divide them into negative and positive ones
+    allZeros.sort()
+    positiveZeros = []
+    negativeZeros = []
+    
+    for zero in allZeros:
+        if zero.abs()< 1e-10:
+            zero = 0
+        if zero < 0:
+            negativeZeros.append(zero)
+        else:
+            positiveZeros.append(zero)
 
+    #Format the html string to render 
+    positiveZeros = str(positiveZeros)
+    negativeZeros = str(negativeZeros)
+    if len(positiveZeros) > 2 and len(negativeZeros) > 2:  # Add comma and empty space between negative and positive
+        negativeZeros = negativeZeros.replace("]", ", ]")
+    
+    return "<span class='redhighlight'>{0}</span><span class='bluehighlight'>{1}</span>".format(
+        negativeZeros[1:len(negativeZeros)-1], positiveZeros[1:len(positiveZeros)-1])
+
+
+###########################################################################
+#   Functions for rendering graphs for browsing L-functions.
+###########################################################################
 def render_browseGraph(args):
     logger.info(args)
     if 'sign' in args:
@@ -418,6 +591,9 @@ def render_browseGraphChar(args):
     respone.headers['Content-type'] = 'image/svg+xml'
     return response
 
+###########################################################################
+#   Function for rendering the lcalc file of an L-function.
+###########################################################################
 def render_lcalcfile(L, url):
     try:  #First check if the Lcalc file is stored in the database
         response = make_response(L.lcalcfile)
@@ -428,6 +604,9 @@ def render_lcalcfile(L, url):
     return response
 
 
+###########################################################################
+#   A demo for showing metadata of the collections in the database.
+###########################################################################
 def render_showcollections_demo():
     connection = pymongo.Connection()
     dbNames = connection.database_names()
@@ -450,53 +629,12 @@ def render_showcollections_demo():
     info = {'collections' : dbList}
     return render_template("ShowCollectionDemo.html", info = info)
 
-## NOT USED
-##def processDirichletNavigation(args):
-##    logger.info(str(args))
-##    try:
-##        logger.debug(args['start'])
-##        N = int(args['start'])
-##        if N < 3:
-##            N=3
-##        elif N > 100:
-##            N=100
-##    except:
-##        N = 3
-##    try:
-##        length = int(args['length'])
-##        if length < 1:
-##            length = 1
-##        elif length > 20:
-##            length = 20
-##    except:
-##        length = 10
-##    try:
-##        numcoeff = int(args['numcoeff'])
-##    except:
-##        numcoeff = 50
-##    chars = LfunctionComp.charactertable(N, N+length,'primitive')
-##    s = '<table>\n'
-##    s += '<tr>\n<th scope="col">Conductor</th>\n'
-##    s += '<th scope="col">Primitive characters</th>\n</tr>\n'
-##    for i in range(N,N+length):
-##        s += '<tr>\n<th scope="row">' + str(i) + '</th>\n'
-##        s += '<td>\n'
-##        j = i-N
-##        for k in range(len(chars[j][1])):
-##            s += '<a style=\'display:inline\' href="Character/Dirichlet/'
-##            s += str(i)
-##            s += '/'
-##            s += str(chars[j][1][k])
-##            s += '/&numcoeff='
-##            s += str(numcoeff)
-##            s += '">'
-##            s += '\(\chi_{' + str(chars[j][1][k]) + '}\)</a> '
-##        s += '</td>\n</tr>\n'
-##    s += '</table>\n'
-##    return s
-##    #info['contents'] = s
-##    #return info
 
+
+###########################################################################
+#   Functions for displaying examples of degree 2 L-functions on the
+#   degree browsing page.
+###########################################################################
 def processEllipticCurveNavigation(startCond, endCond):
     try:
         N = startCond
@@ -548,32 +686,79 @@ def processMaassNavigation():
     s += '<tr>\n'
     s += '<td><bold>N=3:</bold></td>\n'
     s += '<td><a href="' + url_for('render_Lfunction', arg1='ModularForm', arg2='GL2', arg3='Q',
-                                   arg4='Maass', arg5='4cb8502658bca9141c00002a', db='FS')+ '">4.38805356322</a></td>\n' 
+                                   arg4='Maass', arg5='4cb8502658bca9141c00002a')+ '">4.38805356322</a></td>\n' 
     s += '<td><a href="' + url_for('render_Lfunction', arg1='ModularForm', arg2='GL2', arg3='Q',
-                                   arg4='Maass', arg5='4cb8502658bca9141c00002b', db='FS')+ '">5.09874190873</a></td>\n' 
+                                   arg4='Maass', arg5='4cb8502658bca9141c00002b')+ '">5.09874190873</a></td>\n' 
     s += '<td><a href="' + url_for('render_Lfunction', arg1='ModularForm', arg2='GL2', arg3='Q',
-                                   arg4='Maass', arg5='4cb8502658bca9141c00002c', db='FS')+ '">6.12057553309</a></td>\n' 
+                                   arg4='Maass', arg5='4cb8502658bca9141c00002c')+ '">6.12057553309</a></td>\n' 
     s += '<td><a href="' + url_for('render_Lfunction', arg1='ModularForm', arg2='GL2', arg3='Q',
-                                   arg4='Maass', arg5='4cb8502658bca9141c00002d', db='FS')+ '">6.75741527775</a></td>\n' 
+                                   arg4='Maass', arg5='4cb8502658bca9141c00002d')+ '">6.75741527775</a></td>\n' 
     s += '<td><a href="' + url_for('render_Lfunction', arg1='ModularForm', arg2='GL2', arg3='Q',
-                                   arg4='Maass', arg5='4cb8502658bca9141c00002e', db='FS')+ '">7.75813319502</a></td>\n' 
+                                   arg4='Maass', arg5='4cb8502658bca9141c00002e')+ '">7.75813319502</a></td>\n' 
     s += '</tr>\n'
     
     s += '<tr>\n'
     s += '<td><bold>N=5:</bold></td>\n'
     s += '<td><a href="' + url_for('render_Lfunction', arg1='ModularForm', arg2='GL2', arg3='Q',
-                                   arg4='Maass', arg5='4cb8502658bca9141c000036', db='FS')+ '">3.02837629307</a></td>\n' 
+                                   arg4='Maass', arg5='4cb8502658bca9141c000036')+ '">3.02837629307</a></td>\n' 
     s += '<td><a href="' + url_for('render_Lfunction', arg1='ModularForm', arg2='GL2', arg3='Q',
-                                   arg4='Maass', arg5='4cb8502658bca9141c000039', db='FS')+ '">4.89723501573</a></td>\n' 
+                                   arg4='Maass', arg5='4cb8502658bca9141c000039')+ '">4.89723501573</a></td>\n' 
     s += '<td><a href="' + url_for('render_Lfunction', arg1='ModularForm', arg2='GL2', arg3='Q',
-                                   arg4='Maass', arg5='4cb8502658bca9141c00003b', db='FS')+ '">5.70582652719</a></td>\n' 
+                                   arg4='Maass', arg5='4cb8502658bca9141c00003b')+ '">5.70582652719</a></td>\n' 
     s += '<td><a href="' + url_for('render_Lfunction', arg1='ModularForm', arg2='GL2', arg3='Q',
-                                   arg4='Maass', arg5='4cb8502658bca9141c00003c', db='FS')+ '">6.05402838077</a></td>\n' 
+                                   arg4='Maass', arg5='4cb8502658bca9141c00003c')+ '">6.05402838077</a></td>\n' 
     s += '<td><a href="' + url_for('render_Lfunction', arg1='ModularForm', arg2='GL2', arg3='Q',
-                                   arg4='Maass', arg5='4cb8502658bca9141c00003d', db='FS')+ '">6.45847643848</a></td>\n' 
+                                   arg4='Maass', arg5='4cb8502658bca9141c00003d')+ '">6.45847643848</a></td>\n' 
     s += '</tr>\n'
     
     s += '</table>\n'
 
+    return s
+
+
+
+
+def processSymPowerEllipticCurveNavigation(startCond, endCond,power):
+    try:
+        N = startCond
+        if N < 11:
+            N=11
+        elif N > 100:
+            N=100
+    except:
+        N = 11
+        
+    try:
+        if endCond > 500:
+            end = 500
+        else:
+            end = endCond
+            
+    except:
+        end = 100
+        
+    iso_list = LfunctionComp.isogenyclasstable(N, end)
+    s = '<h5>Examples of symmetric square L-functions attached to isogeny classes of elliptic curves</h5>'
+    s += '<table>'
+    
+    logger.debug(iso_list)
+
+    counter = 0
+    nr_of_columns = 10
+    for label in iso_list:
+        if counter==0:
+            s += '<tr>'
+            
+        counter += 1
+        s += '<td><a href="' + url_for('render_Lfunction', arg1 = 'SymmetricPower', arg2='%d'%power, arg3='EllipticCurve', arg4='Q', arg5=label)+ '">%s</a></td>\n' % label
+            
+        if counter == nr_of_columns:
+            s += '</tr>\n'
+            counter = 0
+
+    if counter>0:
+        s += '</tr>\n'
+        
+    s += '</table>\n'
     return s
 

@@ -26,7 +26,7 @@ from sage.all import *
 from  sage.modular.dirichlet import DirichletGroup
 from base import app, db
 from modular_forms.elliptic_modular_forms.backend.web_modforms import WebModFormSpace,WebNewForm
-from modular_forms.elliptic_modular_forms.backend.emf_classes import ClassicalMFDisplay
+from modular_forms.elliptic_modular_forms.backend.emf_classes import ClassicalMFDisplay,DimensionTable
 from modular_forms import MF_TOP
 from modular_forms.backend.mf_utils import my_get
 from modular_forms.elliptic_modular_forms.backend.emf_core import * 
@@ -40,32 +40,27 @@ def render_one_elliptic_modular_form(level,weight,character,label,**kwds):
     Renders the webpage for one elliptic modular form.
     
     """
+    if character==0:
+        dimtbl=DimensionTable()
+    else:
+        dimtbl=DimensionTable(1)
+    emf_logger.debug("Created dimension table")
+    if not dimtbl.is_in_db(level,weight,character):
+        emf_logger.debug("Data not available")
+        return render_template("not_available.html")
     citation = ['Sage:'+version()]
     info=set_info_for_one_modular_form(level,weight,
                                        character,label,**kwds)
     emf_logger.debug("info={0}".format(info))
     err = info.get('error','')
     ## Check if we want to download either file of the function or Fourier coefficients
-    if info.has_key('download') and not info.has_key('error'):                           return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
-    name = "Cuspidal newform %s of weight %s for "%(label,weight)
-    if level==1:
-        name+="\(\mathrm{SL}_{2}(\mathbb{Z})\)"
-    else:
-        name+="\(\Gamma_0(%s)\)" %(level)
-    if int(character)<>0:
-        name+=" with character \(\chi_{%s}\) mod %s" %(character,level)
-        name+=" of order %s and conductor %s" %(info['character_order'],info['character_conductor'])
-    else:
-        name+=" with trivial character"
-    info['name']=name
-    info['title']= 'Modular Form '+info['name']
-    url0 = url_for('mf.modular_form_main_page')
+    if info.has_key('download') and not info.has_key('error'):
+        return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
     url1 = url_for("emf.render_elliptic_modular_forms")
     url2 = url_for("emf.render_elliptic_modular_forms",level=level) 
     url3 = url_for("emf.render_elliptic_modular_forms",level=level,weight=weight)
     url4 = url_for("emf.render_elliptic_modular_forms",level=level,weight=weight,character=character) 
-    bread = [(MF_TOP,url0)]
-    bread.append((EMF_TOP,url1))
+    bread=[(EMF_TOP,url1)]
     bread.append(("of level %s" % level,url2))
     bread.append(("weight %s" % weight,url3))
     if int(character) == 0 :
@@ -91,7 +86,7 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
     prec = my_get(info,'prec',default_prec,int)
     bprec = my_get(info,'prec',default_bprec,int)
     try:
-        WNF = WebNewForm(weight,level,character,label)
+        WNF = WebNewForm(weight,level,character,label,verbose=1)
         # if info.has_key('download') and info.has_key('tempfile'):
         #     WNF._save_to_file(info['tempfile'])
         #     info['filename']=str(weight)+'-'+str(level)+'-'+str(character)+'-'+label+'.sobj'
@@ -103,34 +98,42 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
         info['error']="Could not compute the desired function!"
     properties2=list(); parents=list(); siblings=list(); friends=list()
     if WNF==None or  WNF._f == None:
-        print "level=",level
-        print WNF
         info['error']="This space is empty!"
-    D = DirichletGroup(level)
-    if len(D.list())> character:
-        x = D.list()[character]
-        info['character_order']=x.order()
-        info['character_conductor']=x.conductor()
+    name = "Cuspidal newform %s of weight %s for "%(label,weight)
+    if level==1:
+        name+="\(\mathrm{SL}_{2}(\mathbb{Z})\)"
     else:
-        info['character_order']='0'
-        info['character_conductor']=level
+        name+="\(\Gamma_0(%s)\)" %(level)
+    if int(character)<>0:
+        conrey_char=WNF.conrey_character()
+        conrey_char_name=WNF.conrey_character_name()
+        info['conrey_number']=conrey_char.number()
+        name+=" with character \(%s\)" %(conrey_char_name)
+    else:
+        name+=" with trivial character"
+    info['name']=name
+    info['title']= 'Modular Form ' + info['name']
     if info.has_key('error'):
         return info
-    info['name']=WNF._name
+    #info['name']=WNF._name
     info['satake']=WNF.satake_parameters(prec,bprec)
-    info['polynomial'] = WNF.polynomial()
-    #br = 500
-    #info['q_exp'] = ajax_more(WNF.print_q_expansion,{'prec':5,'br':br},{'prec':10,'br':br},{'prec':20,'br':br},{'prec':100,'br':br},{'prec':200,'br':br})
-
-    info['qexp']=WNF.print_q_expansion(prec,50)
-    c = list(WNF.q_expansion(prec))
-    info['c']=map(lambda x: str(x).replace("*",""), c)
-    info['maxc']=prec
-    if(WNF.dimension()>1 or WNF.base_ring()<>QQ):
+    
+    #br = 60
+    #info['qexp'] = ajax_more(WNF.print_q_expansion,{'prec':5,'br':br},{'prec':10,'br':br},{'prec':20,'br':br},{'prec':100,'br':br},{'prec':200,'br':br})
+    K = WNF.base_ring()
+    info['qexp']=WNF.print_q_expansion(prec,120)
+    #c = list(WNF.q_expansion(prec))
+    #c = map(lambda x: str(x).replace("*",""), c)
+    #info['c'] = map(lambda x: x.replace(, c)
+    #emf_logger.debug("c={0}".format(info['c']))
+    #info['maxc']=len(c)
+    #emf_logger.debug("maxc={0}".format(info['maxc']))
+    info['polynomial'] = str(WNF.polynomial()).replace('x',str(latex(K.gen())))
+    if(K<>QQ):
         info['polynomial_st'] = 'where ' +r'\('+ info['polynomial'] +r'=0\)'
     else:
         info['polynomial_st'] = ''
-    K = WNF.base_ring()
+
     if(K<>QQ and K.is_relative()):
         info['degree'] = int(WNF.base_ring().relative_degree())
     else:
@@ -154,19 +157,24 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
         info['embeddings'] = ''
     info['embeddings'] = WNF.q_expansion_embeddings(prec,bprec)                 
     info['embeddings_len']=len(info['embeddings'])
-    info['twist_info'] = WNF.print_twist_info()
+    properties2=[]
+    if (ZZ(level)).is_squarefree():
+        info['twist_info'] = WNF.print_twist_info()
+        info['is_minimal']=info['twist_info'][0]
+        if(info['twist_info'][0]):                          
+            s='- Is minimal<br>'
+        else:
+            s='- Is a twist of lower level<br>'
+        properties2=[('Twist info',s)]
+    else:
+        info['twist_info'] = 'Twist info currently not available.'
+        properties2=[('Twist info','- not available')]
     info['is_cm']=WNF.is_CM()
-    info['is_minimal']=info['twist_info'][0]
     info['CM'] = WNF.print_is_CM()
     args=list()
     for x in range(5,200,10): args.append({'digits':x})
     digits = 7
     info['CM_values'] = WNF.cm_values(digits=digits)
-    if(info['twist_info'][0]):                          
-        s='- Is minimal<br>'
-    else:
-        s='- Is a twist of lower level<br>'
-    properties2=[('Twist info',s)]
     if(WNF.is_CM()[0]):                         
         s='- Is a CM-form<br>'
     else:
@@ -200,13 +208,14 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
     if(len(WNF.parent().galois_decomposition())>1):
         for label_other in WNF.parent()._galois_orbits_labels:
             if(label_other<>label):
-                s='Modular Form '
-            else:
-                s='Modular Form '
-            s=s+str(level)+str(label_other)
-            url = url_for('emf.render_elliptic_modular_forms',level=level,weight=weight,character=character,label=label_other)                 
-            friends.append((s,url))
-    s = 'L-Function '+str(level)+label
+                s='Modular form '
+                if character:
+                    s = s + str(level) + '.' + str(weight) + '.' + str(character) + str(label_other)
+                else:
+                    s = s + str(level) + '.' + str(weight) + str(label_other)
+                url = url_for('emf.render_elliptic_modular_forms',level=level,weight=weight,character=character,label=label_other)                 
+                friends.append((s,url))
+    s = 'L-Function '+str(level)+'.'+label
     #url = "/L/ModularForm/GL2/Q/holomorphic?level=%s&weight=%s&character=%s&label=%s&number=%s" %(level,weight,character,label,0)
     url = '/L'+url_for('emf.render_elliptic_modular_forms',level=level,weight=weight,character=character,label=label)
     if WNF.degree()>1:
@@ -218,8 +227,8 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
         friends.append((s,url))
     # if there is an elliptic curve over Q associated to self we also list that
     if WNF.weight()==2 and WNF.degree()==1:
-        llabel=str(level)+label
-        s = 'Elliptic Curve '+llabel
+        llabel=str(level)+'.'+label
+        s = 'Elliptic curve isogeny class '+llabel
         url = '/EllipticCurve/Q/'+llabel 
         friends.append((s,url))
     space_url='?&level='+str(level)+'&weight='+str(weight)+'&character='+str(character)

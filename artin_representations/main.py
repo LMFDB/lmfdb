@@ -46,14 +46,12 @@ def by_partial_data(dim,conductor):
 
 
 # credit information should be moved to the databases themselves, not at the display level. that's too late. 
-tim_credit = "Tim Dokchitser"
-support_credit = "Support by Paul-Olivier Dehaye"
+tim_credit = "Tim Dokchitser on Magma"
+support_credit = "Support by Paul-Olivier Dehaye."
 
-def render_artin_representation_webpage(dim,conductor,index):
-  try:
-    the_rep = ArtinRepresentation.find_one({'Dim' : int(dim),"Conductor":str(conductor),"DBIndex":int(index)})
-  except:
-    pass
+def render_artin_representation_webpage(dim, conductor, index):
+  the_rep = ArtinRepresentation.find_one({'Dim' : int(dim),"Conductor":str(conductor),"DBIndex":int(index)})
+  
   artin_logger.info("Found %s"%(the_rep._data))
   
   bread = get_bread([(str("Dimension %s, conductor %s, index %s"%(the_rep.dimension(),the_rep.conductor(),the_rep.index())), ' ')])
@@ -63,8 +61,10 @@ def render_artin_representation_webpage(dim,conductor,index):
   from number_field_galois_groups import nfgg_page
   from number_field_galois_groups.main import by_data
   
-  friends = [("Artin Field", url_for("number_field_galois_groups.by_data", degree = the_nf.degree(), size = the_nf.size(), index = the_nf.index())), \
-            ("Same degree and conductor", url_for(".by_partial_data", dim = the_rep.dimension(), conductor = the_rep.conductor()))]
+  friends = [("Artin Field", the_nf.url_for()), \
+            #("Same degree and conductor", url_for(".by_partial_data", dim = the_rep.dimension(), conductor = the_rep.conductor())),\
+            #("L-function", url_for("render_Lfunction", arg1 = 'ArtinRepresentation', arg2 = the_rep.dimension(), arg3 = the_rep.conductor(), arg4 = the_rep.index()))    
+            ]
   return render_template("artin-representation-show.html", credit= tim_credit, support = support_credit, title = title, bread = bread, friends = friends, object = the_rep)
 
 def render_artin_representation_set_webpage(dim,conductor):
