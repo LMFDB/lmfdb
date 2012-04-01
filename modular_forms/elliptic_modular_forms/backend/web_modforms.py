@@ -108,6 +108,7 @@ class WebModFormSpace(Parent):
                 self._group = data['group']
             if data.has_key('character'):
                 self._character = data['character']
+                self._conrey_character=self._get_conrey_character(self._character)
             if data.has_key('modular_symbols'):
                  self._modular_symbols = data['modular_symbols']
             if data.has_key('newspace'):
@@ -136,6 +137,7 @@ class WebModFormSpace(Parent):
                 self._galois_decomposition=[]
                 self._oldspace_decomposition=[]
                 self._galois_orbits_labels=[]
+                self._conrey_character=self._get_conrey_character(self._character)
                 self._newforms=list()
                 l = len(self.galois_decomposition())
                 for i in range(l):
@@ -144,7 +146,6 @@ class WebModFormSpace(Parent):
                     self._compute_newforms(compute)                    
             except RuntimeError:
                 raise RuntimeError, "Could not construct space for (k=%s,N=%s,chi=%s)=" % (k,N,self._chi)
-        self._conrey_character=self._get_conrey_character(self._character)
         emf_logger.debug("Setting conrey_character={0}".format(self._conrey_character))
         ### If we can we set these dimensions using formulas
         if(self.dimension()==self.dimension_newspace()):
