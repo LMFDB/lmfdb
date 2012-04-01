@@ -30,6 +30,11 @@ from modular_forms.backend.mf_utils import my_get
 from plot_dom import draw_fundamental_domain
 import base
 from pymongo.binary import *
+try:
+    from dirichlet_conrey import *
+except:
+    emf_logger.critical("Could not import dirichlet_conrey!")
+
 
 def parse_range(arg, parse_singleton=int):
     # TODO: graceful errors
@@ -291,3 +296,14 @@ def image_callback_fdomain(G):
     response = make_response(data)
     response.headers['Content-type'] = 'image/png'
     return response
+
+def sage_character_to_conrey_index(chi,N):
+    r"""
+    For Dirichlet character chi,
+    we return the corresponding Conrey Index n, so that x(m)=chi_N(n,m).
+    """
+    Dc = DirichletGroup_conrey(N)
+    for c in Dc:
+        if c.sage_character() == chi:
+            return c.number()
+    return -1

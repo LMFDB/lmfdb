@@ -56,25 +56,11 @@ def render_one_elliptic_modular_form(level,weight,character,label,**kwds):
     ## Check if we want to download either file of the function or Fourier coefficients
     if info.has_key('download') and not info.has_key('error'):
         return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
-    name = "Cuspidal newform %s of weight %s for "%(label,weight)
-    if level==1:
-        name+="\(\mathrm{SL}_{2}(\mathbb{Z})\)"
-    else:
-        name+="\(\Gamma_0(%s)\)" %(level)
-    if int(character)<>0:
-        name+=" with character \(\chi_{%s}\) mod %s" %(character,level)
-        name+=" of order %s and conductor %s" %(info['character_order'],info['character_conductor'])
-    else:
-        name+=" with trivial character"
-    info['name']=name
-    info['title']= 'Modular Form '+info['name']
-    url0 = url_for('mf.modular_form_main_page')
     url1 = url_for("emf.render_elliptic_modular_forms")
     url2 = url_for("emf.render_elliptic_modular_forms",level=level) 
     url3 = url_for("emf.render_elliptic_modular_forms",level=level,weight=weight)
     url4 = url_for("emf.render_elliptic_modular_forms",level=level,weight=weight,character=character) 
-    bread = [(MF_TOP,url0)]
-    bread.append((EMF_TOP,url1))
+    bread=[(EMF_TOP,url1)]
     bread.append(("of level %s" % level,url2))
     bread.append(("weight %s" % weight,url3))
     if int(character) == 0 :
@@ -112,17 +98,21 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
         info['error']="Could not compute the desired function!"
     properties2=list(); parents=list(); siblings=list(); friends=list()
     if WNF==None or  WNF._f == None:
-        print "level=",level
-        print WNF
         info['error']="This space is empty!"
-    D = DirichletGroup(level)
-    if len(D.list())> character:
-        x = D.list()[character]
-        info['character_order']=x.order()
-        info['character_conductor']=x.conductor()
+    name = "Cuspidal newform %s of weight %s for "%(label,weight)
+    if level==1:
+        name+="\(\mathrm{SL}_{2}(\mathbb{Z})\)"
     else:
-        info['character_order']='0'
-        info['character_conductor']=level
+        name+="\(\Gamma_0(%s)\)" %(level)
+    if int(character)<>0:
+        conrey_char=WNF.conrey_character()
+        conrey_char_name=WNF.conrey_character_name()
+        info['conrey_number']=conrey_char.number()
+        name+=" with character %s" %(conrey_char_name)
+    else:
+        name+=" with trivial character"
+    info['name']=name
+    info['title']= 'Modular Form ' + info['name']
     if info.has_key('error'):
         return info
     info['name']=WNF._name
@@ -131,10 +121,6 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
     #br = 60
     #info['qexp'] = ajax_more(WNF.print_q_expansion,{'prec':5,'br':br},{'prec':10,'br':br},{'prec':20,'br':br},{'prec':100,'br':br},{'prec':200,'br':br})
     K = WNF.base_ring()
-    #if K.absolute_degree() > 1:
-    #    prec1=max(int(prec-(K.absolute_degree())/2),3)
-    #else:
-    #    prec1=prec
     info['qexp']=WNF.print_q_expansion(prec,120)
     #c = list(WNF.q_expansion(prec))
     #c = map(lambda x: str(x).replace("*",""), c)

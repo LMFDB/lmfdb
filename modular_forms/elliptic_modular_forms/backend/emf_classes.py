@@ -13,7 +13,6 @@ try:
 except:
     emf_logger.critical("Could not import dirichlet_conrey!")
 
-
 def connect_db():
     import base
     return base.getDBConnection()[emf_dbname]
@@ -179,7 +178,9 @@ class ClassicalMFDisplay(MFDisplay):
             else:
                 D = DirichletGroup(N)
                 G = D.galois_orbits()
+                Greps= D.galois_orbits(reps_only=True)
                 Dc = DirichletGroup_conrey(N)
+                Gcreps=dict()
                 # A security check, if we have at least weight 2 and trivial character, otherwise don't show anything
                 if check_db and not is_data_in_db(N,2,0):
                     emf_logger.debug("No data for level {0} and weight 2, trivial character".format(N))
@@ -194,14 +195,16 @@ class ClassicalMFDisplay(MFDisplay):
                     xi=G.index(x.galois_orbit())
                     #emf_logger.debug('Dirichlet Character Conrey {0} = sage_char {1}, has Galois orbit nr. {2}'.format(xc,x,xi))
                     Gc[xi].append(xc)
+                    if x == Greps[xi]:
+                        Gcreps[xi]=xc
                 emf_logger.debug('Gc={0}'.format(Gc))
                 for xi in Gc:
                     g=Gc[xi]
                     if len(g)>self._table['maxGalCount']:
                         self._table['maxGalCount'] = len(g)
                     emf_logger.debug('xi,g={0},{1}'.format(xi,g))
-                    x=G[xi][0]
-                    xc=g[0]
+                    x=Greps[xi]
+                    xc=Gcreps[xi]
                     row=dict()
                     row['head'] = "\(\chi_{" + str(N) + "}(" + str(xc.number()) +  ",\cdot) \)"
                     row['url'] = url_for("render_Character",arg1=N,arg2=xc.number())

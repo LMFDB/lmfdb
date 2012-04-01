@@ -169,8 +169,6 @@ def browse_elliptic_modular_forms(level=0,weight=0,character=-1,label='',limits=
         info['grouptype']=1
         info['groupother']=0
         dimtbl=DimensionTable(1)
-        if character==-1:
-            info['show_all_characters']=1
         emf_logger.info("level=%s, %s"%(level,type(level)))
     emf_logger.info("wt=%s, %s"% (weight,type(weight)) )
     if level>0:

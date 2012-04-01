@@ -31,7 +31,6 @@ import re
 
 from flask import url_for
 
-
 ## DB modules
 import pymongo 
 import gridfs
@@ -42,6 +41,11 @@ import base
 from modular_forms.elliptic_modular_forms import emf_logger
 from plot_dom import draw_fundamental_domain
 from emf_core import html_table,len_as_printed
+try:
+    from dirichlet_conrey import *
+except:
+    emf_logger.critical("Could not import dirichlet_conrey!")
+
 db_name = 'modularforms'
 dbport = 37010
 
@@ -140,6 +144,7 @@ class WebModFormSpace(Parent):
                     self._compute_newforms(compute)                    
             except RuntimeError:
                 raise RuntimeError, "Could not construct space for (k=%s,N=%s,chi=%s)=" % (k,N,self._chi)
+        self._conrey_character=self._get_conrey_character(self._character)
         ### If we can we set these dimensions using formulas
         if(self.dimension()==self.dimension_newspace()):
             self._is_new=True
@@ -181,6 +186,12 @@ class WebModFormSpace(Parent):
         except IndexError:
             emf_logger.critical("Got character no. {0}, which are outside the scope of Galois orbits of the characters mod {1}!".format(k,self.group().level()))
             return trivial_character(self.group().level())
+        
+    def _get_conrey_character(self,chi):
+        Dc = DirichletGroup_conrey(chi.modulus())
+        for c in Dc:
+            if c.sage_character() == self._character:
+                return c
 
         
     def _get_objects(self,k,N,chi,use_db=True,get_what='Modular_symbols',**kwds):
@@ -383,6 +394,12 @@ class WebModFormSpace(Parent):
 
     def character(self):
         return self._character
+
+    def conrey_character(self):
+        return self._conrey_character
+
+    def conrey_character_name(self):
+        return "\( \chi_" + str(self._N) + "(" +str(self._conrey_character.number()) + ",\cdot)  \)"
     
     def character_order(self):
         if(self._character<>0):
@@ -395,7 +412,6 @@ class WebModFormSpace(Parent):
             return self._character.conductor()
         else:
             return 1
-
 
     def group(self):
         return self._group
@@ -753,8 +769,14 @@ class WebNewForm(SageObject):
         if self._chi<>0:
             if self._parent and self._parent._character:
                 self._character=self._parent._character
+                self._conrey_character=self._parent._conrey_character
             else:
-                self._character=DirichletGroup(N)[0]
+                self._character=DirichletGroup(N).galois_orbits(reps_only=True)[0]
+                Dc = DirichletGroup_conrey(N)
+                for c in Dc:
+                    if c.sage_character() == self._character:
+                            self._conrey_character=c
+                            break
         self.f=None
         self._label = label
         self._fi=fi
@@ -943,6 +965,12 @@ class WebNewForm(SageObject):
             return self._character
         else:
             return trivial_character
+
+    def conrey_character(self):
+        return self._conrey_character
+        
+    def conrey_character_name(self):
+        return "\( \chi_" +str(self._level) + "(" +str(self._conrey_character.number()) + ",\cdot)  \)"
         
     def character_order(self):
         return self._parent.character_order()
