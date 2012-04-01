@@ -203,7 +203,8 @@ function show_code(system) {
 
 <!-- %%%%%%%%%%%%%%%% END OF TABLE %%%%%%%%%%%%%%%%%%% -->
 
-    <h2> {{KNOWL('ec.q.modular_form', title='Modular form')}} </h2>
+    <h2> {{KNOWL('ec.q.modular_parametrization', title='Modular invariants')}}</h2>
+    <p><h3> {{KNOWL('ec.q.modular_form', title='Modular form')}} </h3>
     <div class='sage nodisplay code'>sage: E.q_eigenform(10)</div>
     <div class='pari nodisplay code'></div>
     <div class='magma nodisplay code'>&gt; ModularForm(E);</div>
@@ -214,8 +215,12 @@ function show_code(system) {
         <button id="morebutton">More</button>
     </form>
     </p>
+    <p><h3> {{ KNOWL('ec.q.modular_degree', title='Modular degree') }} </h3>
+    {{ info.modular_degree }}<br>
+    {% if info.Gamma0optimal %} \( \Gamma_0(N) \)-optimal {% endif %}
+    </p>
 
-    <h2> {{KNOWL('ec.q.special_value', title='Special L-value', special_value = info.special_value)}} attached to the curve </h2>
+    <h3> {{KNOWL('ec.q.special_value', title='Special L-value', special_value = info.special_value)}} attached to the curve </h3>
         \( {{ info.lder }} = {{ info.special_value}} \)
     </p>
 
@@ -266,8 +271,10 @@ reduction.
         </select>
         <div id='padic'>
         </div>
-{% else %}
+{% elif info.Gamma0optimal %}
 No \(p\)-adic data exists for this curve.
+{% else %}
+\(p\)-adic regulators are not yet computed for curves that are not \(\Gamma_0\)-optimal.
 {% endif %}
 {% endif %}
     </p>

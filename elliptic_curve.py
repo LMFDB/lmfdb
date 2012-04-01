@@ -335,6 +335,8 @@ def render_isogeny_class(iso_class):
         if Edata['number']==1:
             optimal_flags[i-1]=True
         db_curves.append(E)
+    if cremona_iso == '990h': # this isogeny class is labeled wrong in Cremona's tables
+        optimal_flags = [False, False, True, False]
     # Now work out the permutation needed to match the two lists of curves:
     perm = [db_curves.index(E) for E in curves]
     # Apply the same permutation to the isogeny matrix:
@@ -479,7 +481,7 @@ def render_curve_webpage_by_label(label):
         info['tor_structure']= ' \\times '.join(['\mathbb{Z}/{%s}\mathbb{Z}'% int(a) for a in data['torsion_structure']])
     else:
         info['tor_structure'] = tor_group
-        
+
     info.update(data)
     if rank >=2:
         lder_tex = "L%s(E,1)" % ("^{("+str(rank)+")}")
@@ -488,7 +490,9 @@ def render_curve_webpage_by_label(label):
     else:
         assert rank == 0
         lder_tex = "L(E,1)"
-    p_adic_data_exists = (C.elliptic_curves.padic_db.find({'lmfdb_iso': lmfdb_iso_class}).count())>0
+    info['Gamma0optimal'] = (cremona_label[-1] == '1' if cremona_iso_class != '990h' else cremona_label[-1] == '3')
+    info['modular_degree'] = E.modular_degree()
+    p_adic_data_exists = (C.elliptic_curves.padic_db.find({'lmfdb_iso': lmfdb_iso_class}).count()) > 0 and info['Gamma0optimal']
 
     # Local data
     local_data = []

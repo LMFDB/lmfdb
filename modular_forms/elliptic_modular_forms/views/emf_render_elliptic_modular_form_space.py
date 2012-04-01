@@ -70,17 +70,13 @@ def render_elliptic_modular_form_space(level=None,weight=None,character=None,lab
         emf_logger.debug("Dimension of newforms is one!")
         info['label']='a'
         return redirect(url_for('emf.render_elliptic_modular_forms', **info))
-    info['title'] = "Holomorphic Cusp Forms of weight %s on \(\Gamma_{0}(%s)\)" %(weight,level)
-    bread =[(MF_TOP,url_for('mf.modular_form_main_page'))]
-    bread.append((EMF_TOP,url_for('emf.render_elliptic_modular_forms')))
+    info['title'] = "Newforms of weight %s on \(\Gamma_{0}(%s)\)" %(weight,level)
+    bread=[(EMF_TOP,url_for('emf.render_elliptic_modular_forms'))]
     bread.append(("Level %s" %level,url_for('emf.render_elliptic_modular_forms',level=level)))
     bread.append(("Weight %s" %weight,url_for('emf.render_elliptic_modular_forms',level=level,weight=weight)))
     #emf_logger.debug("friends={0}".format(friends))
     info['bread']=bread
-    if info['dimension_newspace']==0:
-        return render_template("emf_space.html", **info)
-    else:
-        return render_template("emf_space.html", **info)
+    return render_template("emf_space.html", **info)
 
 
 def set_info_for_modular_form_space(level=None,weight=None,character=None,label=None,**kwds):
@@ -110,9 +106,17 @@ def set_info_for_modular_form_space(level=None,weight=None,character=None,label=
     if WMFS.level()==1:
         info['group']="\( \mathrm{SL}_{2}(\mathbb{Z})\)"
     else:
-        info['group']="\( \Gamma_{{0}}( {0} ) \)".format(WMFS.level())  
-    info['name_new']= "\(S_{ %s }^{new}(%s) \)" %(WMFS.weight(),WMFS.level())
-    info['name_old']= "\(S_{ %s }^{old}(%s) \)" %(WMFS.weight(),WMFS.level())
+        info['group']="\( \Gamma_{{0}}( {0} ) \)".format(WMFS.level())
+    if character==0:
+        info['name_new']= "\(S_{ %s }^{new}(%s) \)" %(WMFS.weight(),WMFS.level())
+        info['name_old']= "\(S_{ %s }^{old}(%s) \)" %(WMFS.weight(),WMFS.level())
+    else:
+        conrey_char = WMFS.conrey_character()
+        conrey_char_name= WMFS.conrey_character_name()
+        info['conrey_character_name']='\( ' + conrey_char_name + '\)'
+        info['character_url']=url_for('render_Character',arg1=WMFS.level(),arg2=conrey_char.number())
+        info['name_new']= "\(S_{ %s }^{new}(%s,%s) \)" %(WMFS.weight(),WMFS.level(),conrey_char_name)
+        info['name_old']= "\(S_{ %s }^{old}(%s,%s) \)" %(WMFS.weight(),WMFS.level(),conrey_char_name)
     info['dimension_cusp_forms'] = WMFS.dimension_cusp_forms()
     info['dimension_mod_forms'] = WMFS.dimension_modular_forms()
     info['dimension_new_cusp_forms'] = WMFS.dimension_new_cusp_forms()
