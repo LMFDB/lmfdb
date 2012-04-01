@@ -3,7 +3,7 @@ r"""
 Contains basic classes for displaying holomorphic modular forms.
 
 """
-from sage.all import vector,is_odd,DirichletGroup,is_even,Gamma1,dimension_new_cusp_forms,kronecker_character_upside_down,loads,Integer,latex
+from sage.all import vector,is_odd,DirichletGroup,is_even,Gamma1,dimension_new_cusp_forms,kronecker_character_upside_down,loads,Integer,latex,join
 from modular_forms.backend.mf_classes import  MFDisplay,MFDataTable
 emf_dbname = 'modularforms'
 from utils import *
@@ -185,13 +185,30 @@ class ClassicalMFDisplay(MFDisplay):
                     emf_logger.debug("No data for level {0} and weight 2, trivial character".format(N))
                     self._table = None
                     return None
+                Gc=dict()
+                for xi,g in enumerate(G):
+                    Gc[xi]=list()
+                self._table['maxGalCount']=0
                 for xc in Dc:
                     x=xc.sage_character()
                     xi=G.index(x.galois_orbit())
-                    emf_logger.debug('Dirichlet Character Conrey {0} = sage_char {1}, has Galois orbit nr. {2}'.format(xc,x,xi))
+                    #emf_logger.debug('Dirichlet Character Conrey {0} = sage_char {1}, has Galois orbit nr. {2}'.format(xc,x,xi))
+                    Gc[xi].append(xc)
+                emf_logger.debug('Gc={0}'.format(Gc))
+                for xi in Gc:
+                    g=Gc[xi]
+                    if len(g)>self._table['maxGalCount']:
+                        self._table['maxGalCount'] = len(g)
+                    emf_logger.debug('xi,g={0},{1}'.format(xi,g))
+                    x=G[xi][0]
+                    xc=g[0]
                     row=dict()
-                    row['head']="\(\chi_{" + str(N) + "}(" + str(xc.number()) +  ",\cdot) \)"
-                    row['url']=url_for("render_Character",arg1=N,arg2=xc.number())
+                    row['head'] = "\(\chi_{" + str(N) + "}(" + str(xc.number()) +  ",\cdot) \)"
+                    row['url'] = url_for("render_Character",arg1=N,arg2=xc.number())
+                    row['galois_orbit'] = [
+                        {'chi': str(xc.number()),
+                         'url': url_for("render_Character",arg1=N,arg2=xc.number())}
+                        for xc in g]
                     row['cells']=[]
                     for k in range(wt_ll,wt_ul+1):
                         if not k in self._table['col_heads']:
