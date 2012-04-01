@@ -5,7 +5,7 @@ from modular_forms.elliptic_modular_forms.backend.emf_core import get_geometric_
 from modular_forms.elliptic_modular_forms.backend.emf_utils import MyNewGrp,my_get,parse_range,extract_limits_as_tuple,image_src_fdomain
 from modular_forms.backend.mf_utils import my_get
 from modular_forms import MF_TOP
-from modular_forms.elliptic_modular_forms import N_max_comp,k_max_comp
+from modular_forms.elliptic_modular_forms import N_max_comp,k_max_comp, N_max_db, k_max_db
 from flask import render_template, url_for, request, redirect, make_response,send_file
 from modular_forms.elliptic_modular_forms.backend.emf_classes import ClassicalMFDisplay, DimensionTable
 list_of_implemented_dims=['new','cusp','modular','eisenstein']
@@ -106,36 +106,38 @@ def browse_elliptic_modular_forms_ranges(**kwds):
     if info['weight'] == 1:
         return render_template("not_available.html")
     elif (type(info['weight']) == dict) and info['weight'].get('min')==1:
-        info['weight']['min']=2
-        
+        info['weight']['min']=2       
     emf_logger.debug("Input: info={0}".format(info))
     bread = [(MF_TOP,url_for('mf.modular_form_main_page'))]
     bread.append((EMF_TOP,url_for('emf.render_elliptic_modular_forms')))
     limits_weight = extract_limits_as_tuple(info,'weight')
     limits_level  = extract_limits_as_tuple(info,'level')
     if limits_weight[0]==limits_weight[1] and limits_level[0]==limits_level[1]:
-        return render_elliptic_modular_form_space_list_chars(limits_level[0],limits_level[0])
-    if limits_level[1] >= N_max_comp:
+        return render_elliptic_modular_form_space_list_chars(limits_level[0],limits_weight[0])
+    if limits_level[1] >= N_max_db:
         return render_template("not_available.html")
-    if limits_weight[1] >= k_max_comp:
+    if limits_weight[1] >= k_max_db:
         return render_template("not_available.html")
     if info['character']==0:
         info['grouptype']=0
         info['groupother']=1
         dimtbl=DimensionTable(0)
+        if level <= N_max_Gamma0_fdraw: drawdomain=True
     else:
         info['grouptype']=1
         info['groupother']=0
         dimtbl=DimensionTable(1)
+        if level <= N_max_Gamma1_fdraw: drawdomain=True
         if info['character']==-1:
             info['show_all_characters']=1
     disp = ClassicalMFDisplay('modularforms')
     if limits_level[0]==limits_level[1]:
         level = limits_level[0]
-        info['geometric'] = get_geometric_data(level, info['grouptype'])        
-        grp=MyNewGrp(level,info)
-        info['fd_plot']= image_src_fdomain(grp)
-        emf_logger.info("PLOT: %s" % info['fd_plot'])
+        if drawdomain:
+            info['geometric'] = get_geometric_data(level, info['grouptype'])        
+            grp=MyNewGrp(level,info)
+            info['fd_plot']= image_src_fdomain(grp)
+            emf_logger.info("PLOT: %s" % info['fd_plot'])
     disp.set_table_browsing(limit=[limits_weight,limits_level],
                             keys=['Weight','Level'],character=info['character'],dimension_table=dimtbl,title='Dimension of newforms')
     tbl=disp._table
