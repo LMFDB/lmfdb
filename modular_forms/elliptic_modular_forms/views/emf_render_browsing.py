@@ -1,6 +1,6 @@
 from utils import to_dict,image_src
 from sage.all import dimension_new_cusp_forms,dimension_cusp_forms,dimension_eis,dimension_modular_forms,Zmod,DirichletGroup,latex
-from modular_forms.elliptic_modular_forms import EMF, emf_logger, emf,EMF_TOP
+from modular_forms.elliptic_modular_forms import EMF, emf_logger, emf,EMF_TOP, N_max_Gamma0_fdraw, N_max_Gamma1_fdraw
 from modular_forms.elliptic_modular_forms.backend.emf_core import get_geometric_data
 from modular_forms.elliptic_modular_forms.backend.emf_utils import MyNewGrp,my_get,parse_range,extract_limits_as_tuple,image_src_fdomain
 from modular_forms.backend.mf_utils import my_get
