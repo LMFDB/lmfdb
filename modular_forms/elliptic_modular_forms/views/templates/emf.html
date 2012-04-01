@@ -67,12 +67,12 @@ in the field of complex numbers. The values are shown in the table below.
   </tr>
 </thead>
 <tbody>
-  {% for h in range(embeddings_len) %}
+  {% for h in range(degree) %}
   <tr>
     <th style="border-right:solid black 1px">
       \( v_{{h}}(a(n)) \)
     </th>
-    {% for n in range(degree) %}
+    {% for n in range(embeddings_len) %}
     <td style="white-space:nowrap;">
       {{ embeddings[n][h] }}
     </td>
