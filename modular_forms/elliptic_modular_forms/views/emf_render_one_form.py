@@ -108,7 +108,7 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
         conrey_char=WNF.conrey_character()
         conrey_char_name=WNF.conrey_character_name()
         info['conrey_number']=conrey_char.number()
-        name+=" with character %s" %(conrey_char_name)
+        name+=" with character \(%s\)" %(conrey_char_name)
     else:
         name+=" with trivial character"
     info['name']=name
