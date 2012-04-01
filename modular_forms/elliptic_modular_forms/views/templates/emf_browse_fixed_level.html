@@ -55,10 +55,20 @@ table.ntdata thead th.spaceleft {
 
 {% include 'geometric.html' %}
 
-{% if info.weight is defined %}
-<h1>{{ KNOWL('mf.elliptic.newform',title='Newforms') }} of {{KNOWL('mf.elliptic.level',title='level')}} {{level}} and {{KNOWL('mf.elliptic.weight',title='weight')}} {{weight}}</h1>
+{% if level == 1 %}
+  {% set group=KNOWL('mf.sl2z',title='\(\mathrm{SL}_2(\mathbb{Z})\)') %}
 {% else %}
-<h1>{{ KNOWL('mf.elliptic.newform',title='Newforms') }} of {{KNOWL('mf.elliptic.level',title='level')}} {{level}}</h1>
+  {% if grouptype == 0 %}
+    {% set group=KNOWL('mf.sl2.subgroup.gamma0N',title='\(\Gamma_0(' ~ level ~ ') \)') %}
+  {% elif grouptype == 1 %}
+    {% set group=KNOWL('mf.sl2.subgroup.gamma0N',title='\(\Gamma_1(' ~ level ~  ')\)') %}
+  {% endif %}
+{% endif %}
+
+{% if info.weight is defined %}
+<h1>{{ KNOWL('mf.elliptic.newform',title='Newforms') }} of {{KNOWL('mf.elliptic.weight',title='weight')}} {{weight}} for {{group}}</h1>
+{% else %}
+<h1>{{ KNOWL('mf.elliptic.newform',title='Newforms') }} for {{group}}</h1>
 {% endif %}
 
 {% if browse_table is defined %}
@@ -66,13 +76,12 @@ table.ntdata thead th.spaceleft {
 {#{KNOWL('mf.ellipticemf_browse.all.info',title='Write about browsing') }#}
 <p>
 {% if grouptype == 1  %}
-The table below gives the dimensions of the space of holomorphic cusp
-forms of {{ KNOWL('mf.elliptic.level',title='level') }} {{level}},
-specified {{ KNOWL('mf.elliptic.weight',title='weight') }}  and {{ KNOWL('character.dirichlet',title='character') }}.
+The table below gives the dimensions of the space of {{ KNOWL('mf.elliptic.newform',title='Newforms') }}
+for \( \Gamma_1({{level}}) \) of specified {{ KNOWL('mf.elliptic.weight',title='weight') }}, transforming
+with specified {{ KNOWL('character.dirichlet',title='character') }} for \( \Gamma_0({{level}}) \).
 {% else %}
 The table below gives the dimensions of the space of holomorphic cusp
-forms of {{ KNOWL('mf.elliptic.level',title='level') }} {{level}}
-and specified {{ KNOWL('mf.elliptic.weight',title='weight') }}, with trivial character.
+forms for  \( \Gamma_0({{level}}) \) with trivial {{ KNOWL('character.dirichlet',title='character') }}.
 {% endif %}
 </p>
 {% set table = browse_table %}
