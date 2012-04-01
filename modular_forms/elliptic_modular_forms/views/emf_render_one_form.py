@@ -142,18 +142,18 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
     else:
         info['is_rational']=0
     #info['q_exp_embeddings'] = WNF.print_q_expansion_embeddings()
-    if(int(info['degree'])>1 and WNF.dimension()>1):
-        s = 'One can embed it into \( \mathbb{C} \) as:' 
+    #if(int(info['degree'])>1 and WNF.dimension()>1):
+    #    s = 'One can embed it into \( \mathbb{C} \) as:' 
         #bprec = 26
         #print s
-        info['embeddings'] =  ajax_more2(WNF.print_q_expansion_embeddings,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more coeffs.','higher precision'])
-    elif(int(info['degree'])>1):
-        s = 'There are '+str(info['degree'])+' embeddings into \( \mathbb{C} \):'
+    #    info['embeddings'] =  ajax_more2(WNF.print_q_expansion_embeddings,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more coeffs.','higher precision'])
+    #elif(int(info['degree'])>1):
+    #    s = 'There are '+str(info['degree'])+' embeddings into \( \mathbb{C} \):'
         #bprec = 26
         #print s
-        info['embeddings'] =  ajax_more2(WNF.print_q_expansion_embeddings,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more coeffs.','higher precision'])
-    else:
-        info['embeddings'] = ''
+    #    info['embeddings'] =  ajax_more2(WNF.print_q_expansion_embeddings,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more coeffs.','higher precision'])
+    #else:
+    #    info['embeddings'] = ''
     info['embeddings'] = WNF.q_expansion_embeddings(prec,bprec)                 
     info['embeddings_len']=len(info['embeddings'])
     properties2=[]

@@ -1573,7 +1573,7 @@ class WebNewForm(SageObject):
         if(self._verbose>1):
             emf_logger.debug("eps={0}".format(eps))
         K=self.base_ring()
-        #print "K={0}".format(K)
+        print "K={0}".format(K)
         # recall that 
         degree = K.absolute_degree()
         cm_vals=dict()
