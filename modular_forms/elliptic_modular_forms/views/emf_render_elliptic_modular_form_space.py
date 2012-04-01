@@ -139,11 +139,12 @@ def set_info_for_modular_form_space(level=None,weight=None,character=None,label=
     info['nontrivial_new'] = len(info['new_decomposition'])
     ## we try to catch well-known bugs...
     info['old_decomposition']="n/a"
-    if N < N_max_comp:
+    if level < N_max_comp:
         try:
             O = WMFS.print_oldspace_decomposition()
             info['old_decomposition'] = O
         except:
+            emf_logger.critical("Error in computing oldspace decomposition")
             O =[]
             info['old_decomposition'] = "n/a"
             (A,B,C)=sys.exc_info()
@@ -180,7 +181,7 @@ def set_info_for_modular_form_space(level=None,weight=None,character=None,label=
         info['character_order']=WMFS.character_order()
         info['character_conductor']=WMFS.character_conductor()
     friends=list(); lifts = list()
-    if(not info.has_key('label') and info['old_decomposition'] != 'n/a'):
+    if((not info.has_key('label')) and info['old_decomposition'] != 'n/a'):
         O=WMFS.oldspace_decomposition()
         try:
             for (old_level,chi,mult,d) in O:
