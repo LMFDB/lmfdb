@@ -115,7 +115,7 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
     info['title']= 'Modular Form ' + info['name']
     if info.has_key('error'):
         return info
-    info['name']=WNF._name
+    #info['name']=WNF._name
     info['satake']=WNF.satake_parameters(prec,bprec)
     
     #br = 60
