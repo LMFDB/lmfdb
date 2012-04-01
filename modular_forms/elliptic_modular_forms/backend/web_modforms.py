@@ -399,7 +399,7 @@ class WebModFormSpace(Parent):
         return self._conrey_character
 
     def conrey_character_name(self):
-        return "\( \chi_" + str(self._N) + "(" +str(self._conrey_character.number()) + ",\cdot)  \)"
+        return "\chi_" + str(self._N) + "(" +str(self._conrey_character.number()) + ",\cdot)"
     
     def character_order(self):
         if(self._character<>0):
@@ -517,7 +517,7 @@ class WebModFormSpace(Parent):
                         Sd = dimension_new_cusp_forms(xx,k)
                         if Sd>0:
                             # identify this character for internal storage... should be optimized
-                            x_k = DirichletGroup(q).list().index(xx)
+                            x_k = self._get_conrey_character(xx).number()
                             mult=len(divisors(ZZ(d)))
                             check_dim=check_dim+mult*Sd
                             L.append((q,x_k,mult,Sd))
@@ -540,7 +540,7 @@ class WebModFormSpace(Parent):
 
         n=0; s=""
         if(self._chi<>0):
-            s="\[S_{%s}^{old}(%s,\chi_{%s}) = " % (self._k,self._N,self._chi)
+            s="\[S_{%s}^{old}(%s,{%s}) = " % (self._k,self._N,self._conrey_character_name)
         else:
             s="\[S_{%s}^{old}(%s) = " % (self._k,self._N)
         if(len(O)==0):
@@ -548,7 +548,7 @@ class WebModFormSpace(Parent):
         for n in range(len(O)):
             (N,chi,m,d)=O[n]
             if(self._chi<>0):
-                s=s+" %s\cdot S_{%s}^{new}(%s,\chi_{%s})" %(m,self._k,N,chi)
+                s=s+" %s\cdot S_{%s}^{new}(%s,\chi_{%s}({%s}, \cdot))" %(m,self._k,N,N,chi)
             else:
                 s=s+" %s\cdot S_{%s}^{new}(%s)" %(m,self._k,N)
             if(n<len(O)-1 and len(O)>1):
@@ -970,7 +970,7 @@ class WebNewForm(SageObject):
         return self._conrey_character
         
     def conrey_character_name(self):
-        return "\( \chi_" +str(self._level) + "(" +str(self._conrey_character.number()) + ",\cdot)  \)"
+        return "\chi_" +str(self._level) + "(" +str(self._conrey_character.number()) + ",\cdot)"
         
     def character_order(self):
         return self._parent.character_order()
