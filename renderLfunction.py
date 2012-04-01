@@ -679,7 +679,8 @@ def processEllipticCurveNavigation(startCond, endCond):
     s += '</table>\n'
     return s
 
-def processMaassNavigation():
+## Old version. I added the version below with tests for existence 
+def processMaassNavigation_old():
     s = '<h5>Examples of L-functions attached to Maass forms on Hecke congruence groups $\Gamma_0(N)$</h5>'
     s += '<table>\n'
 
@@ -716,7 +717,45 @@ def processMaassNavigation():
     return s
 
 
+def processMaassNavigation(numrecs=10):
+    r"""
+    Produces a table of numrecs Maassforms with Fourier coefficients in the database
+    """
+    host  = base.getDBConnection().host
+    port  = base.getDBConnection().port
+    DB=MaassDB(host=host,port=port)
+    s = '<h5>Examples of L-functions attached to Maass forms on Hecke congruence groups $\Gamma_0(N)$</h5>'
+    s += '<table>\n'
+    i=0
+    maxinlevel=5
+    for level in [3,5,7,10]:
+        j=0
+        s += '<tr>\n'
+        s += '<td><bold>N={0}:</bold></td>\n'.format(level)
+        finds= DB.get_Maass_forms({'Level':int(level),'Character':int(0)})
+        for f in finds:
+            nc = f.get('Numc',0)
+            if nc<=0:
+                continue
+            R = f.get('Eigenvalue',0)
+            if R==0:
+                continue
+            Rst=str(R)[0:min(12,len(str(R)))]
+            idd = f.get('_id',None)
+            if idd==None:
+                continue
+            idd=str(idd)
+            url =  url_for('render_Lfunction', arg1='ModularForm', arg2='GL2', arg3='Q', arg4='Maass', arg5=idd)
+            s += '<td><a href="{0}">{1}</a>'.format(url,Rst)
+            i+=1;j+=1
+            if i>=numrecs or j>=maxinlevel:
+                break
+        s += '</tr>\n'
+        if i>numrecs:
+            break        
+    s += '</table>\n'
 
+    return s
 
 def processSymPowerEllipticCurveNavigation(startCond, endCond,power):
     try:

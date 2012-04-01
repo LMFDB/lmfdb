@@ -197,9 +197,9 @@ def render_one_maass_waveform_wp(info):
     info['bread']=bread
     info['properties2']=properties
 
-
+    info['MF'].set_table()
     cols=[{"aaSorting":"asc","sWidth": "10%", "bSortable": "true", "bSearchable": "false" ,"sType":"numeric" }]
-    negc=info['MF'].table['negc']
+    negc=info['MF'].table.get('negc',0)
     for j in range(dim):
         if not negc:
             col = {"bSortable": "false", "bSearchable": "true", "sClass": "alignLeft","fnRender":"text-align:left","sType":"numeric" }
@@ -287,14 +287,20 @@ def render_search_results_wp(info,search):
            ('Maass forms',url_for('.render_maass_waveforms'))]
     info['bread']=bread
     info['evs']=evs_table(search)
-    if info.get('browse',None)<>None:
-        info['title']='Browse Maassforms'
-    else:
-        info['title']='Search Results'
     if info.get('Weight',0)==1:
         info['wtis1']="selected";info['wtis0']=""
     else:
         info['wtis0']="selected";info['wtis1']=""
+    if info.get('browse',None)<>None:
+        info['title']='Browse Maassforms'
+        if info.get('Weight',-1) in [0,1]:
+            info['title']+='of weight '.format(info['Weight'])
+            if info.get('Level',0)>0:
+                info['title']+='and level '.format(info['Level'])
+        elif  info.get('Level',0)>0:
+                info['title']+='of level '.format(info['Level'])
+    else:
+        info['title']='Search Results'
     mwf_logger.debug("in render_search_results. info={0}".format(info))
     return render_template("mwf_display_search_result.html", **info)
 
@@ -381,8 +387,8 @@ def render_browse_all_eigenvalues():
     info={}
     info['bread']=bread
     info['colheads']=['Level','Weight','Char','Eigenvalue',
-                              'Symmetry','Precision','Coefficients'
-                              'Dimension','Fricke','Atkin-Lehner']
+                              'Symmetry','Precision','Dim','Coeff'
+                             ,'Fricke','Atkin-Lehner']
     return render_template("mwf_browse_all_eigenvalues.html", **info)
 
 
@@ -391,21 +397,28 @@ def get_table():
     search = get_search_parameters({})
     mwf_logger.debug("args=%s"%request.args)
     mwf_logger.debug("method=%s"%request.method)
-    mwf_logger.debug("req.form=%s"%request.form)
-    mwf_logger.debug("req:".format(request))
-    mwf_logger.debug("search:".format(search))
+    #mwf_logger.debug("req.form=%s"%request.form)
+    if isinstance(request.form,dict):
+        for key in request.form.keys():
+            mwf_logger.debug("{0}:{1}".format(key,request.form[key]))
+    mwf_logger.debug("search:{0}".format(search))
     if not isinstance(search,dict):
         search={}
-    if not search.has_key('limit'):
-        search['limit']=2000
+    #if not search.has_key('limit'):
+    search['limit']=request.form.get('iDisplayLength',2000)
+        
     if not search.has_key('skip'):
         search['skip']=0        
+    search['skip']=request.form.get('iDisplayStart',0)
     evs=evs_table(search,True)
     res = {
-        "aoData":evs['table']['data'],
-        "iTotalRecords" : evs['table']['nrows'],
-        "iTotalDisplayRecords" : 20}
+        "aoColumns":evs['table']['colheads'],
+        "aaData":evs['table']['data'],
+        "iTotalRecords" : evs['totalrecords'],
+        "iTotalDisplayRecords" : evs['totalrecords']}
     res = json.dumps(res)
+    mwf_logger.debug("table.nrows:{0}".format(evs['table']['nrows']))
+    mwf_logger.debug("totalrecords:{0}".format(evs['totalrecords']))
     #print "res=",res
     return res
 
@@ -415,7 +428,6 @@ def evs_table(search,twodarray=False):
     finds  = DB.get_Maass_forms(search)
     table=[]
     nrows=0
-
     for f in finds:
         row={}
         R = f.get('Eigenvalue',None)
@@ -450,6 +462,7 @@ def evs_table(search,twodarray=False):
         numc = f.get('Numc',0)
         row['numc']=numc
         cev=f.get('Cusp_evs',[])
+        row['fricke']='n/a'
         if isinstance(cev,list):
             if len(cev)>1:
                 fricke=cev[1]
@@ -459,8 +472,14 @@ def evs_table(search,twodarray=False):
         row['url']=url
         nrows+=1
         if twodarray:
-            row=row.values()
-        table.append(row) 
+            s='<a href="{0}">{1}</a>'.format(row['url'],row['R'])
+            rowr=[row['N'],row['k'],row['ch'],s,
+                  row['symmetry'],row['err'],row['dim'],row['numc'],
+                  row['fricke'],row['cuspevs']]
+            table.append(rowr)
+        else:
+            #row=row.values()
+            table.append(row) 
     mwf_logger.debug("nrows:".format(nrows))
     evs={'table':{}}
     evs['table']['data']=table
@@ -470,4 +489,8 @@ def evs_table(search,twodarray=False):
                               'Symmetry','Precision',
                               'Dim.','Coeff.','Fricke',
                               'Atkin-Lehner']
+    search.pop('limit')
+    search.pop('skip')
+    evs['totalrecords']=DB.count(search)
+
     return evs
