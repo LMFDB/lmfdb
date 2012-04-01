@@ -85,8 +85,10 @@ function set_value(id,val) {
 </script>
 {% if info.grouptype == 0 %}
     {% set group=KNOWL('mf.sl2.subgroup.gamma0N',title='\(\Gamma_0(N)\)') %}
+    {% set chi = 0%}
 {% elif info.grouptype == 1 %}
     {% set group=KNOWL('mf.sl2.subgroup.gamma0N',title='\(\Gamma_1(N)\)') %}
+    {% set chi = -1%}
 {% endif %}
 
 {%if info.show_switch is defined %}
@@ -105,7 +107,7 @@ function set_value(id,val) {
       {#{KNOWLl('mf.elliptic.browse.all.info') } #}
 The table below gives the dimensions of the space of holomorphic 
 {{KNOWL('mf.elliptic.new_form',title='newforms')}} of integral
-{{KNOWL('mf.elliptic.weight',title='weight')}} starting from 2 for {{group}}
+{{KNOWL('mf.elliptic.weight',title='weight')}} for {{group}}
 {% if info.grouptype == 1 %}
 .
 {% else %}
@@ -152,7 +154,7 @@ table.ntdata thead th.spaceleft {
           <tr class="space">
             <th class="spaceleft"></th>
             {% for N in table.col_heads  %}
-	    {% set col_url = url_for('emf.render_elliptic_modular_forms',level=N,character=0) %}
+	    {% set col_url = url_for('emf.render_elliptic_modular_forms',level=N,character=chi) %}
             <th class="level"><a href="{{col_url}}">{{N}}</a></th>
             {% endfor %}
           </tr>
@@ -162,7 +164,7 @@ table.ntdata thead th.spaceleft {
           <tr>
             <th class="left">
               {% set k = table.row_heads[loop.index-1] %}
-              {% set row_url = url_for('emf.render_elliptic_modular_forms',weight=k,character=0) %}
+              {% set row_url = url_for('emf.render_elliptic_modular_forms',weight=k,character=chi) %}
               <a href="{{ row_url }}">{{ k }}</a>
             </th>
             {% for cell in row  %}

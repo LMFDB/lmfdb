@@ -4,9 +4,12 @@
 
 {% block content %}
 
-<h1>Cusp forms of weight {{ weight }} for {{ group }}
+<h1>Newforms of weight {{ weight }} for {{ group }}
 {% if character is defined and character>0 %} 
-with character \( \chi_{ {{ character }} }\) modulo \( {{ level }}\) with  <span style="white-space:nowrap">order \( {{ character_order }}\) </span> and <span style="white-space:nowrap">conductor \( {{ character_conductor }}\)</span>
+with character
+<a href='{{character_url}}'> 
+{{conrey_character_name}}
+</a>
 {% else %} 
    with trivial character.
 {% endif %}
