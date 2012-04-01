@@ -773,7 +773,7 @@ class WebNewForm(SageObject):
                 self._character=self._parent._character
                 self._conrey_character=self._parent._conrey_character
             else:
-                self._character=DirichletGroup(N).galois_orbits(reps_only=True)[0]
+                self._character=DirichletGroup(N).galois_orbits(reps_only=True)[chi]
                 Dc = DirichletGroup_conrey(N)
                 for c in Dc:
                     if c.sage_character() == self._character:
@@ -2256,9 +2256,10 @@ def _degree(K):
     if(K==QQ):
         return 1
     try:
-        if(K.is_relative()):
-            return K.relative_degree()
-        return K.degree()
+        return K.absolute_degree()
+        #if(K.is_relative()):
+        #    return K.relative_degree()
+        #return K.degree()
     except AttributeError:
         return  -1 ##  exit silently
         
