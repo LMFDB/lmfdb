@@ -637,17 +637,6 @@ def download_EC_all(label):
     response.headers['Content-type'] = 'text/plain'
     return response
 
-@app.route('/ModularForm/GL2/<field_label>/holomorphic/<label>/download/<download_type>')
-def render_hmf_webpage_download(**args):
-    if args['download_type'] == 'magma':
-        response = make_response(download_hmf_magma(**args))
-        response.headers['Content-type'] = 'text/plain'
-        return response
-    elif args['download_type'] == 'sage':
-        response = make_response(download_hmf_sage(**args))
-        response.headers['Content-type'] = 'text/plain'
-        return response
-    
 #@app.route("/EllipticCurve/Q/download_Rub_data")
 #def download_Rub_data():
 #    import gridfs
