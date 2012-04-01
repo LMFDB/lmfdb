@@ -35,8 +35,8 @@ from modular_forms.elliptic_modular_forms.backend.emf_utils import *
 from modular_forms.elliptic_modular_forms.backend.plot_dom import * 
 from modular_forms.elliptic_modular_forms import EMF, emf_logger, emf,EMF_TOP
 ### Maximum values from the database (does this make sense)
-N_max_db = 1000000 
-k_max_db = 300000
+N_max_db = 5000 
+k_max_db = 30
 
 ###
 use_db = True ## Should be decided intelligently
@@ -86,8 +86,8 @@ def set_info_for_modular_form_space(level=None,weight=None,character=None,label=
     info=dict()
     info['level']=level; info['weight']=weight; info['character']=character
     emf_logger.debug("info={0}".format(info))
-    if(level > N_max_comp or weight > k_max_comp):
-        info['error']="Will take too long to compute!"
+    if(level > N_max_db or weight > k_max_db):
+        info['error']="Currently not available"
     WMFS=None
     if level <= 0:
         info['error']="Got wrong level: %s " %level
@@ -138,25 +138,26 @@ def set_info_for_modular_form_space(level=None,weight=None,character=None,label=
     emf_logger.debug("new_decomp={0}".format(info['new_decomposition']))
     info['nontrivial_new'] = len(info['new_decomposition'])
     ## we try to catch well-known bugs...
-    try:
-        O = WMFS.print_oldspace_decomposition()
-        info['old_decomposition'] = O
-    except:
-        O =[]
-        info['old_decomposition'] = "n/a"
-        (A,B,C)=sys.exc_info()
-        # build an error message...
-        errtype=A.__name__
-        errmsg=B
-        s="%s: %s  at:" %(errtype,errmsg)
-        next=C.tb_next
-        while(next):
-            ln=next.tb_lineno
-            filen=next.tb_frame.f_code.co_filename                  
-            s+="\n line no. %s in file %s" %(ln,filen)
-            next=next.tb_next
-            info['error_note'] = "Could not construct oldspace!\n"+s
-        # properties for the sidebar
+    if N < N_max_comp:
+        try:
+            O = WMFS.print_oldspace_decomposition()
+            info['old_decomposition'] = O
+        except:
+            O =[]
+            info['old_decomposition'] = "n/a"
+            (A,B,C)=sys.exc_info()
+            # build an error message...
+            errtype=A.__name__
+            errmsg=B
+            s="%s: %s  at:" %(errtype,errmsg)
+            next=C.tb_next
+            while(next):
+                ln=next.tb_lineno
+                filen=next.tb_frame.f_code.co_filename                  
+                s+="\n line no. %s in file %s" %(ln,filen)
+                next=next.tb_next
+                info['error_note'] = "Could not construct oldspace!\n"+s
+    # properties for the sidebar
     prop=[]
     if WMFS._cuspidal==1:
         prop=[('Dimension newforms',[info['dimension_newspace']])]
@@ -178,18 +179,18 @@ def set_info_for_modular_form_space(level=None,weight=None,character=None,label=
         info['character_order']=WMFS.character_order()
         info['character_conductor']=WMFS.character_conductor()
     friends=list(); lifts = list()
-    if(not info.has_key('label')):
-        O=WMFS.oldspace_decomposition()
-        try:
-            for (old_level,chi,mult,d) in O:
-                if chi<>0:
-                    s="\(S_{%s}(\Gamma_0(%s),\chi_{%s}) \) " % (weight,old_level,chi)
-                    friends.append((s,'?weight='+str(weight)+'&level='+str(old_level)+'&character='+str(chi)))
-                else:
-                    s="\(S_{%s}(\Gamma_0(%s)) \) " % (weight,old_level)
-                    friends.append((s,'?weight='+str(weight)+'&level='+str(old_level)+'&character='+str(0)))
-        except:
-            pass
+    #if(not info.has_key('label')):
+    #    O=WMFS.oldspace_decomposition()
+    #    try:
+    #        for (old_level,chi,mult,d) in O:
+    #            if chi<>0:
+    #                s="\(S_{%s}(\Gamma_0(%s),\chi_{%s}) \) " % (weight,old_level,chi)
+    #                friends.append((s,'?weight='+str(weight)+'&level='+str(old_level)+'&character='+str(chi)))
+    #            else:
+    #                s="\(S_{%s}(\Gamma_0(%s)) \) " % (weight,old_level)
+    #                friends.append((s,'?weight='+str(weight)+'&level='+str(old_level)+'&character='+str(0)))
+    #    except:
+    #        pass
     info['friends']=friends
     lifts.append(('Half-Integral Weight Forms','/ModularForm/Mp2/Q'))
     lifts.append(('Siegel Modular Forms','/ModularForm/GSp4/Q'))

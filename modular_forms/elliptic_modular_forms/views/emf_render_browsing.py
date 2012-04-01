@@ -161,18 +161,21 @@ def browse_elliptic_modular_forms(level=0,weight=0,character=-1,label='',limits=
     #if weight<0:
     #    weight=None
     info=dict()
+    drawdomain=False
     if character==0:
         info['grouptype']=0
         info['groupother']=1
         dimtbl=DimensionTable(0)
+        if level <= N_max_Gamma0_fdraw: drawdomain=True
     else:
         info['grouptype']=1
         info['groupother']=0
+        if level <= N_max_Gamma1_fdraw: drawdomain=True
         dimtbl=DimensionTable(1)
         emf_logger.info("level=%s, %s"%(level,type(level)))
     emf_logger.info("wt=%s, %s"% (weight,type(weight)) )
     if level>0:
-        if level <= N_max_comp:
+        if drawdomain:
             info['geometric'] = get_geometric_data(level,info['grouptype'])
             #if info.has_key('plot'):
             if level in [1,2]:
