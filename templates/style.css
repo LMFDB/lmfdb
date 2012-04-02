@@ -302,18 +302,24 @@ body.knowl #header {
   margin: 0px;
   padding: 0px;
 }
+.properties-body ul:last-child li:last-child a {
+  border-bottom-left-radius: 10px;
+  -moz-border-radius-bottomleft: 10px;
+}
 .properties-body li {
   display: block;
-  padding: 5px;
-  font-weight: bold;
-  margin-left: 5px;
+  padding: 0;
+  margin: 0;
+}
+.properties-body li a {
+ display: block;
+ padding: 5px;
 }
 .properties-body {
-  margin: 0;
-  padding: 0;
+  margin: 0px;
+  padding: 0px;
   background: #efe;
   min-width: 200px;
-  padding-bottom: 10px;
   border-bottom-left-radius: 10px;
   -moz-border-radius-bottomleft: 10px;
 }
@@ -489,6 +495,12 @@ body.intro #sidebar a.intro { background: {{ col_main_l }}; }
    font-size: 80%;
    font-style: italic;
    color: grey;
+}
+
+.errmsg {
+   font-size: 80%;
+   font-style: bold;
+   color: red;
 }
 
 td.forminfo {

@@ -49,33 +49,33 @@
 
 <h1>Zeros of $L$-functions</h1>
  <ul>
-  <li><a href="{{ url_for('LfunctionDB.query', zerolowerbound=1.1, zeroupperbound=2.1) }}">Search</a></li>
-  <li><a href="{{ url_for('zeta zeros.zetazeros') }}">Browse</a></li>
+  <li><a href="/zeros/first/">First zeros of L-functions</a></li>
+  <li><a href="/zeros/zeta/">Zeros of the Riemann zeta function</a></li>
  </ul>
 
-<h1>Misc Pages</h1>
+<h1>Miscellaneous Pages</h1>
 <ul>
  <li><a href="{{ url_for("knowledge.index") }}">Knowledge</a></li>
  <li>What is a {{ KNOWL("doc.knowl") }}? Click on it!</li>
- <li><a href="{{ url_for("users.list") }}">User Management</a>:
  {% if user_is_authenticated -%}
+ <li><a href="{{ url_for("users.list") }}">User Management</a>:
    you are "<a href="{{ url_for('users.info') }}">{{username}}</a>"
  {%- endif %}
  </li>
- <li><a href="{{ url_for("acknowledgment") }}">Acknowledgment</a></li>
+ <li><a href="{{ url_for("acknowledgment") }}">Acknowledgments</a></li>
 </ul>
 
+{% if user_is_authenticated %}
 <h1>Data</h1>
 <ul>
 <li><a href="{{ url_for("upload.viewAll")}}">View user uploaded data</a></li>
-{% if user_is_authenticated %}
  <li><a href="{{ url_for("upload.index") }}">Upload data</a></li>
  <li><a href="/raw">raw LMFDB data</a></li>
  {% if user_is_admin %}
   <li><a href="{{ url_for("upload.admin") }}">Moderate uploaded files</a></li>
  {% endif %}
-{% endif %}
 </ul>
+{% endif %}
 
 
 {% endblock %}

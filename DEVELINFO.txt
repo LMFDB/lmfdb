@@ -120,7 +120,7 @@ jonathan = http://jwbober-lmfdb.googlecode.com/hg
 harald = http://haraldschilly-content.googlecode.com/hg
 
 # l-functions
-stefan = http://sj-lmfdb2-lmfdb.googlecode.com/hg
+stefan = http://sj-lmfdb2.googlecode.com/hg
 gagan = http://gagandsekhon-lmdb.googlecode.com/hg
 
 # maass forms
