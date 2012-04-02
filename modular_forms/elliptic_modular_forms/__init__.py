@@ -14,8 +14,8 @@ N_max_comp = 500
 k_max_comp = 20
 N_max_Gamma1_fdraw = 33
 N_max_Gamma0_fdraw = 300
-N_max_db = 33
-k_max_db = 300
+N_max_db = 5000
+k_max_db = 12
 
 import views
 import backend

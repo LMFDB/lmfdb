@@ -26,10 +26,9 @@
 {% endif %}
 
       {% set G = geometric %}
-      {% if fd_plot is defined %}
+      {% if fd_plot_url is defined %}
         <div id="fundom">
-          <span id="wait"></span>
-          <img id="plot" width={{w}} height={{h}} src="{{ fd_plot | safe }} " />
+          <img id="plot" width="{{w}}" height="{{h}}" src="{{fd_plot_url | safe}}" />
         </div>
      {% endif %}
       <table>

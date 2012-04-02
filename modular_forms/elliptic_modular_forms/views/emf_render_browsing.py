@@ -2,7 +2,7 @@ from utils import to_dict,image_src
 from sage.all import dimension_new_cusp_forms,dimension_cusp_forms,dimension_eis,dimension_modular_forms,Zmod,DirichletGroup,latex
 from modular_forms.elliptic_modular_forms import EMF, emf_logger, emf,EMF_TOP, N_max_Gamma0_fdraw, N_max_Gamma1_fdraw
 from modular_forms.elliptic_modular_forms.backend.emf_core import get_geometric_data
-from modular_forms.elliptic_modular_forms.backend.emf_utils import MyNewGrp,my_get,parse_range,extract_limits_as_tuple,image_src_fdomain
+from modular_forms.elliptic_modular_forms.backend.emf_utils import my_get,parse_range,extract_limits_as_tuple
 from modular_forms.backend.mf_utils import my_get
 from modular_forms import MF_TOP
 from modular_forms.elliptic_modular_forms import N_max_comp,k_max_comp, N_max_db, k_max_db
@@ -114,30 +114,23 @@ def browse_elliptic_modular_forms_ranges(**kwds):
     limits_level  = extract_limits_as_tuple(info,'level')
     if limits_weight[0]==limits_weight[1] and limits_level[0]==limits_level[1]:
         return render_elliptic_modular_form_space_list_chars(limits_level[0],limits_weight[0])
-    if limits_level[1] >= N_max_db:
+    if limits_level[0] > N_max_db:
+        emf_logger.debug("limits_level={0} > N_max_db={1}".format(limits_level,N_max_db))
         return render_template("not_available.html")
-    if limits_weight[1] >= k_max_db:
+    if limits_weight[0] > k_max_db:
+        emf_logger.debug("limits_weight={0} > k_max_db={1}".format(limits_weight,k_max_db))
         return render_template("not_available.html")
     if info['character']==0:
         info['grouptype']=0
         info['groupother']=1
         dimtbl=DimensionTable(0)
-        if level <= N_max_Gamma0_fdraw: drawdomain=True
     else:
         info['grouptype']=1
         info['groupother']=0
         dimtbl=DimensionTable(1)
-        if level <= N_max_Gamma1_fdraw: drawdomain=True
         if info['character']==-1:
             info['show_all_characters']=1
     disp = ClassicalMFDisplay('modularforms')
-    if limits_level[0]==limits_level[1]:
-        level = limits_level[0]
-        if drawdomain:
-            info['geometric'] = get_geometric_data(level, info['grouptype'])        
-            grp=MyNewGrp(level,info)
-            info['fd_plot']= image_src_fdomain(grp)
-            emf_logger.info("PLOT: %s" % info['fd_plot'])
     disp.set_table_browsing(limit=[limits_weight,limits_level],
                             keys=['Weight','Level'],character=info['character'],dimension_table=dimtbl,title='Dimension of newforms')
     tbl=disp._table
@@ -145,7 +138,23 @@ def browse_elliptic_modular_forms_ranges(**kwds):
         return render_template("not_available.html")
     else:
         info['browse_table'] = tbl
-    title = "Holomorphic Cusp Forms"
+    if limits_level[0]==limits_level[1]:
+        drawdomain=False
+        level = limits_level[0]
+        if info['grouptype']==0 and level <= N_max_Gamma0_fdraw: drawdomain=True
+        elif level <= N_max_Gamma1_fdraw: drawdomain=True 
+        info['geometric'] = get_geometric_data(level, info['grouptype'])
+        if drawdomain:
+            info['fd_plot_url']= url_for('emf.render_plot',level=level, grouptype=info['grouptype'])
+        title = "Newforms for \(\Gamma_{0}({1})\)".format(info['grouptype'],level)
+        level = int(level)
+        #info['list_spaces']=ajax_more(make_table_of_spaces_fixed_level,*largs,text='more')
+        bread.append(("Level %s" %level,url_for("emf.render_elliptic_modular_forms",level=level)))
+        info['browse_type']=" of level %s " % level
+        info['title']=title;  info['bread']=bread
+        info['level']=level
+        return render_template("emf_browse_fixed_level.html", **info)
+    title = "Newforms for \(\Gamma_{0}(N)\)".format(info['grouptype'])
     info['browse_type']=""
     info['title']=title;  info['bread']=bread
     #info['level']=level
@@ -177,14 +186,10 @@ def browse_elliptic_modular_forms(level=0,weight=0,character=-1,label='',limits=
         emf_logger.info("level=%s, %s"%(level,type(level)))
     emf_logger.info("wt=%s, %s"% (weight,type(weight)) )
     if level>0:
+        info['geometric'] = get_geometric_data(level,info['grouptype'])
+        #if info.has_key('plot'):
         if drawdomain:
-            info['geometric'] = get_geometric_data(level,info['grouptype'])
-            #if info.has_key('plot'):
-            if level in [1,2]:
-                grp=MyNewGrp(level,{'group': 'Gamma0'})
-            else:
-                grp=MyNewGrp(level,info)
-            info['fd_plot']= image_src_fdomain(grp)
+            info['fd_plot_url']= url_for('emf.render_plot',level=level, grouptype=info['grouptype'])
             emf_logger.info("PLOT: %s" % info['fd_plot'])
     if level>0 and weight==0:
         #print "here1!"

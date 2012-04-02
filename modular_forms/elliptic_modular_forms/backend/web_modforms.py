@@ -249,7 +249,7 @@ class WebModFormSpace(Parent):
         except Exception as e:
             emf_logger.critical("Error: {0}".format(e))
             #pass
-        if not res:
+        if not res and not use_db:
             if get_what=='Modular_symbols':
                 if chi==0:
                     res=ModularSymbols(N,k,sign=1)
@@ -264,6 +264,7 @@ class WebModFormSpace(Parent):
                     res=my_compact_newform_eigenvalues(self._modular_symbols.ambient(),prime_range(prec),names='x')
                 else:
                     res=self._modular_symbols.ambient().compact_newform_eigenvalues(prime_range(prec),names='x')
+        emf_logger.debug("res={0}".format(res))
         return res
         
     
