@@ -383,8 +383,8 @@ def initLfunction(L,args, request):
                          (label,url_for('render_Lfunction',arg1='EllipticCurve',arg2='Q',arg3= label))]
 
     elif L.Ltype() == 'ellipticmodularform':
-        friendlink = friendlink + L.addToLink
-        friendlink = friendlink.rpartition('/')[0]
+        friendlink = friendlink + L.addToLink        # Strips off the embedding
+        friendlink = friendlink.rpartition('/')[0]   # number for the L-function
         if L.character:
             info['friends'] = [('Modular form ' + str(L.level) + '.' + str(L.weight) + '.' + str(L.character) + str(L.label), friendlink)]
         else:
@@ -394,6 +394,8 @@ def initLfunction(L,args, request):
             info['friends'].append(('L-function ' + str(L.level) + '.' + str(L.label), url_for("render_Lfunction", arg1='EllipticCurve', arg2='Q', arg3=L.ellipticcurve)))
             for i in range(1, L.nr_of_curves_in_class + 1):
                 info['friends'].append(('Elliptic curve ' + L.ellipticcurve + str(i), url_for("by_ec_label",label=L.ellipticcurve + str(i))))
+            info['friends'].append(('Symmetric square L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='2',arg3='EllipticCurve', arg4='Q', arg5=L.ellipticcurve)))
+            info['friends'].append(('Symmetric 4th power L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='4',arg3='EllipticCurve', arg4='Q', arg5=L.ellipticcurve)))
 
     elif L.Ltype() == 'hilbertmodularform':
         friendlink = '/'.join(friendlink.split('/')[:-1])
