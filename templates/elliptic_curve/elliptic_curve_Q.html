@@ -6,20 +6,20 @@
 An {{KNOWL("ec", title="elliptic curve")}} is a {{KNOWL("ag.curve.smooth",title="smooth")}} projective {{KNOWL("ag.curve",title="curve")}} of {{KNOWL("ag.curve.genus",title="genus")}} 1 with a rational basepoint $O$. 
 </div>
 <div>
-The database currently contains all {{info.ncurves}} elliptic curves
-with {{ KNOWL('ec.q.conductor',title = "conductor")}} at most
-{{info.max_N}}; these all have {{ KNOWL('ec.q.rank',
-title="rank")}} &le; {{info.max_rank}}.
+The database currently contains the Cremona database of all
+{{info.ncurves}} elliptic curves with {{ KNOWL('ec.q.conductor',title
+= "conductor")}} at most {{info.max_N}}, all of which have {{
+KNOWL('ec.q.rank', title="rank")}} &le; {{info.max_rank}}.  In future
+it will contain some or all of the Stein-Watkins database.
 </div>
 
 <h2> Browse {{ KNOWL('ec.q',title='elliptic curves over $\mathbb{Q}$')}}</h2>
 
 <p>
 By {{ KNOWL('ec.q.conductor',title = "conductor")}}:
-<a href="?conductor={{'1-99'}}">{{'1-99'}}</a>
-<a href="?conductor={{'100-199'}}">{{'100-199'}}</a>
-<a href="?conductor={{'200-299'}}">{{'200-299'}}</a>
-<a href="?conductor={{'300-399'}}">{{'300-399'}}</a>
+{% for rnge in info.conductor_list %}
+<a href="?conductor={{rnge}}">{{rnge}}</a>
+{% endfor %}
 </p>
 <p>
 By {{ KNOWL('ec.q.rank', title="rank")}}:
@@ -35,12 +35,16 @@ By {{ KNOWL('ec.q.torsion_order', torsion=t,title="torsion order") }}:
 </p>
 
 
-<h2> Find a specific curve by {{
-  KNOWL('ec.cremona_label',title="Cremona label") }}, or an {{ KNOWL('ec.isogeny_class',title="isogeny class") }}</h2>
+<h2> Find a specific curve or {{
+  KNOWL('ec.isogeny_class',title="isogeny class") }} by {{
+  KNOWL('ec.q.lmfdb_label',title="LMFDB label") }} </h2>
 <form>
-<input type='text' name='label' size=25 placeholder="11a2">
+<input type='text' name='label' size=25 example="11.a2">
 <button type='submit' name='jump' value='label or isogeny class' >label or isogeny class</button>
-<br><span class="formexample">e.g. 11a2 or 389a </span>
+<br><span class="formexample">e.g. 11.a2 or 389.a or Cremona:11a1 </span>
+{% if err_msg %}
+<br><span class="errmsg">{{err_msg}}</span>
+{% endif %}
 </form>
 
 <h2> Search </h2>
@@ -51,7 +55,7 @@ Please enter a value or leave blank:
     <tr>
       <td>{{ KNOWL('ec.q.conductor',title = "conductor") }}</td>
      <td>
-       <input type='text' name='conductor' placeholder="389" size=10/>
+       <input type='text' name='conductor' example="389" size=10 value="{{conductor}}" />
      </td>
      <td><span class="formexample"> e.g. 389 or 100-200</span></td>
     </tr>
@@ -62,7 +66,7 @@ Please enter a value or leave blank:
     {{ KNOWL('ec.q.rank',title="rank") }}
     </td>
            <td>
-           <input type='text' name='rank' placeholder="0" size=10>
+           <input type='text' name='rank' example="0" size=10 value="{{rank}}" />
            </td>
            <td><span class="formexample"> e.g. 0 </span>
            </td>
@@ -72,36 +76,36 @@ Please enter a value or leave blank:
           <td>
           {{ KNOWL('ec.q.torsion_order',title="torsion order") }}
           </td>
-          <td> 
-          <input type='text' name='torsion' placeholder="2" size=10/>
+          <td>
+          <input type='text' name='torsion' example="2" size=10 value="{{torsion}}" />
           </td>
           <td>
           <span class="formexample"> e.g. 2 </span>
-          </td>   
+          </td>
       </tr>
 
     <tr>
           <td>
           {{ KNOWL('ec.q.torsion_subgroup',title="torsion structure") }}
           </td>
-          <td> 
-          <input type='text' name='torsion_structure' placeholder="[2,4]" size=10/>
+          <td>
+          <input type='text' name='torsion_structure' example="[2,4]" size=10 value="{{torsion_structure}}" />
           </td>
           <td>
           <span class="formexample"> e.g. [2,4] </span>
-          </td>   
+          </td>
       </tr>
 
     <tr>
           <td>
           {{ KNOWL('ec.q.analytic_sha_order',title="analytic order of &#1064;\(_{an} \)") }}
           </td>
-          <td> 
-          <input type='text' name='sha_an' placeholder="4" size=10/>
+          <td>
+          <input type='text' name='sha_an' example="4" size=10 />
           </td>
           <td>
           <span class="formexample"> e.g. 4 </span>
-          </td>   
+          </td>
       </tr>
 
 
@@ -109,23 +113,28 @@ Please enter a value or leave blank:
       <td>{{ KNOWL('ec.q.optimal',title="Optimal only") }}</td>
       <td>
          <select name='optimal'>
+{% if optimal=='on' %}
+           <option value="">No</option>
+           <option value="on" selected="yes">Yes</option>
+{% else %}
            <option value="">No</option>
            <option value="on">Yes</option>
+{% endif %}
          </select>
       </td>
 
-      
+
     </tr>
 
 <tr>
-<td align=left colspan=4>Maximum number of curves to display <input type='text' name='count' value=100 size=10>
+<td align=left colspan=4>Maximum number of curves to display <input type='text' name='count' value={{count}} size=10 />
 </td>
 </tr>
 
 
   </table>
 <p></p>
-<td><button type='submit' value='Search'>Search</td>
+<td><button type='submit' value='Search'>Search</button></td>
 
 </form>
 {% endblock %}

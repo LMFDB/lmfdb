@@ -1,31 +1,42 @@
-   {% if geometric is defined %}
+{% if geometric is defined %}
+{% if grouptype==0 or level == 1 or level == 2%}
+  {% set w="217" %} {%set h="320"%}
+{% else %}
+  {% set w="384" %} {%set h="320"%}
+{% endif %}
 <style>
 #fundom{
   float:right;
   margin-top:30px;
   vertical-align:top;
-  height:320px;
-  width:217px;
+  height:{{h}}px;
+  width:{{w}}px;
   background-color:lightblue;
   text-color:white;
 }
 </style>
+{% if level == 1 %}
+  {% set group=KNOWL('mf.sl2z',title='\(\mathrm{SL}_2(\mathbb{Z})\)') %}
+{% else %}
+  {% if grouptype == 0 %}
+    {% set group=KNOWL('mf.sl2.subgroup.gamma0N',title='\(\Gamma_0(' ~ level ~ ') \)') %}
+  {% elif grouptype == 1 %}
+    {% set group=KNOWL('mf.sl2.subgroup.gamma0N',title='\(\Gamma_1(' ~ level ~  ')\)') %}
+  {% endif %}
+{% endif %}
+
       {% set G = geometric %}
-      <div id="fundom">
-        <span id="wait"></span>
-        <img id="plot" width="217" height="320" src="{{ fd_plot | safe }} " />
-      </div>
+      {% if fd_plot is defined %}
+        <div id="fundom">
+          <span id="wait"></span>
+          <img id="plot" width={{w}} height={{h}} src="{{ fd_plot | safe }} " />
+        </div>
+     {% endif %}
       <table>
         <tr>
           <td valign="top">
             <div>
-            {% if level > 1 %}
-            {% set level = level %}
-            {% set ti = "\(\Gamma_{0}( " ~ level  ~ ") \)" %} 
-            <h1>Geometric information for {{KNOWL('mf.sl2.subgroup.gamma0N',title=ti)}}</h1>
-            {% else %}
-            <h1>Geometric information for {{KNOWL('mf.sl2z',title='PSL<sub>2</sub>\( (\mathbb{Z}) \)')}}</h1>
-            {% endif %}
+            <h1>Geometric information for {{group}}</h1>
             </div>
           </td>
         </tr>
@@ -46,13 +57,11 @@
 		  ({{ G.cusps|count }} cusps)
 	        </td>
 	      </tr>
-              <tr><th colspan="2">Number of {{KNOWL('mf.sl2z.subgroup.ellipticfxpts',title='elliptic fixed points')}} of </th></tr>
+              <tr><th colspan="2" style="text-align:left;">Number of {{KNOWL('mf.sl2z.subgroup.ellipticfxpts',title='elliptic fixed points')}} of </th></tr>
               <tr><th>order 2</th><td>{{G.nu2}}</td></tr>
               <tr><th>order 3</th><td>{{G.nu2}}</td></tr>
             </table>
           </td>
-          {% endif %}
-          {% if fd_plot is defined %}
         </tr>
       </table>
       {% endif %}

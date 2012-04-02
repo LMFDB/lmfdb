@@ -72,7 +72,7 @@ function show_code(system) {
         <div class='pari nodisplay code'>pari: K.zk</div>
         <div class='magma nodisplay code'>&gt; IntegralBasis(K);</div>
         <p>
-            {{ info.integral_basis}}
+            {{ info.integral_basis }}
         </p>
 
         <p><h2> {{ KNOWL('nf.ideal_class_group', title='Class group') }} and  {{ KNOWL('nf.class_number', title='class number') }}</h2>
@@ -182,9 +182,9 @@ pari:
   [<Valuation(Norm(primefactor[1]), p), primefactor[2]> : primefactor in idealfactors];
 </div>
 
-	{% if "tim_number_field" in info.keys() %}
+{% if info.get("tim_number_field", False) %}
 	<p><h2> {{ KNOWL('artin', title='Artin representations') }}</h2>
-	    This might be wrong at the moment, or lead to broken links, but merely serves a as mockup.
+		{# This is now correct #}
         <div>
 	<center>
 	<table class="ntdata">
@@ -204,8 +204,12 @@ pari:
 	</center>
 	</div>
 	{% endif %}
-	
+{# POD: Please leave the part above for the public release. This part on Artin representations is ready.
+	However it is not possible at the moment to search or browse Artin representations, so they should not appear in the sidebar.
+	Also not yet available are Artin L-functions.
+#}
+
         {% set KNOWL_ID = "nf.%s"|format(info['label']) %}
         <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
+
 {% endblock %}
-</html>

@@ -55,8 +55,9 @@ def hilbert_modular_form_search(**args):
     C.hmfs.forms.ensure_index([('level_norm',pymongo.ASCENDING),('label',pymongo.ASCENDING)])
 
     info = to_dict(args) # what has been entered in the search boxes
-    if 'natural' in info:
-        return render_hmf_webpage({'label' : info['natural']})
+    if 'label' in info:
+        args = {'label' : info['label']}
+        return render_hmf_webpage(**args)
     query = {}
     for field in ['field_label', 'weight', 'level_norm', 'dimension']:
         if info.get(field):
@@ -68,6 +69,8 @@ def hilbert_modular_form_search(**args):
                     query[field] = str(parse_list(info[field]))
             elif field == 'field_label':
                 query[field] = parse_field_string(info[field])
+            elif field == 'label':
+                query[field] = info[field]
             elif field == 'dimension':
                 query[field] = parse_range(str(info[field]))
             elif field == 'level_norm':
@@ -87,8 +90,7 @@ def hilbert_modular_form_search(**args):
     info['query'] = dict(query)
     res = C.hmfs.forms.find(query).sort([('level_norm',pymongo.ASCENDING), ('label',pymongo.ASCENDING)]).limit(count)
     nres = res.count()
-        
-    info['forms'] = res
+
     if nres>0:
         info['field_pretty_name'] = field_pretty(res[0]['field_label'])
     else:
@@ -101,8 +103,19 @@ def hilbert_modular_form_search(**args):
             info['report'] = 'displaying first %s of %s matches'%(count,nres)
         else:
             info['report'] = 'displaying all %s matches'%nres
+        
+    res_clean = []
+    for v in res:
+        v_clean = {}
+        v_clean['field_label'] = v['field_label']
+        v_clean['short_label'] = v['short_label']
+        v_clean['label'] = v['label']
+        v_clean['level_ideal'] = teXify_pol(v['level_ideal'])
+        v_clean['dimension'] = v['dimension']
+        res_clean.append(v_clean)
 
-#    info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
+    info['forms'] = res_clean
+
     t = 'Hilbert Modular Form search results'
 
     bread = [('Hilbert Modular Forms', url_for("hilbert_modular_form_render_webpage")),('Search results',' ')]
@@ -249,12 +262,14 @@ def render_hmf_webpage(**args):
 
     info.update(data)
 
-    info['downloads'] = [('Download to Magma', info['label'] + '/download/magma'), ('Download to Sage', info['label'] + '/download/sage')]
-    info['friends'] = [('L-function', '/L/ModularForm/GL2/' + data['field_label'] + '/holomorphic/' + info['label'] + '/0/0')]
+    downloadslabel = '/ModularForm/GL2/' + info['field_label'] + '/holomorphic/' + info['label']
+    info['downloads'] = [('Download to Magma', downloadslabel + '/download/magma'), ('Download to Sage', downloadslabel + '/download/sage')]
+    info['friends'] = []
+#    info['friends'] = [('L-function', '/L/ModularForm/GL2/' + data['field_label'] + '/holomorphic/' + info['label'] + '/0/0')]
 #    info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]
     bread = [('Hilbert Modular Forms', url_for("hilbert_modular_form_render_webpage")),('%s'%data['label'],' ')]
 
-    t = "Hilbert Cuspform %s" % info['label']
+    t = "Hilbert Cusp Form %s" % info['label']
     credit = 'Lassina Dembele, Steve Donnelly and <A HREF="http://www.cems.uvm.edu/~voight/">John Voight</A>'
 
     forms_space = C.hmfs.forms.find({'field_label' : data['field_label'], 'level_ideal' : data['level_ideal']})

@@ -23,14 +23,9 @@ These L-functions have a functional equation of the form
 \Lambda(s,\chi) = q^{s/2} \Gamma_{\mathbb R} (s+a) L(s,\chi) = \varepsilon_\chi \overline{\Lambda}(1-s),
 \]
 where $q$ is the conductor of $\chi$.
+Browse <a href="/Character/Dirichet">Dirichlet characters</a> to
+find their associated L-functions.
 </div>
-<div>
-The table below shows the primitive characters arranged by the conductor and the order of the
-character, with color indicating the sign of the functional equation.
-</div>
-
-{{contents[0]|safe}}
-
 {% endif %}
 
 {% if degree==2 %}
@@ -98,33 +93,25 @@ See the {{ KNOWL('lfunction.degree2holo.key', title='legend') }} for more detail
 
 <h2>Available Examples:</h2>
 
-{{contents[0]|safe}}
-
 <h3 id="EllipticCurve_Q">Symmetric Square $L$-functions of Elliptic Curves over $\mathbb{Q}$</h3>
-<div>
-Given an $L$-function of an Elliptic Curve of conductor $N$, the $n$-th symmetric power $L$-functions is defined
-by the euler product
-\begin{equation}
-\prod_{p\nmid N} \prod_{j=0}^n \left(1 - \frac{\alpha_p^{j} \beta^{n-j}_p}{p^s} \right)^{-1} \times \prod_{p|N} L_p(s)
-\end{equation}
-</div>
+
+
+
+
+    <div>
+            Given an $L$-function of an Elliptic Curve of conductor $N$, the {{ KNOWL('lfunction.symm', title='$n$-th symmetric power $L$-functions')}}
+                is defined by the euler product
+                \begin{equation}
+                \prod_{p\nmid N} \prod_{j=0}^n \left(1 - \frac{\alpha_p^{j} \beta^{n-j}_p}{p^s} \right)^{-1} \times \prod_{p|N} L_p(s)
+                \end{equation}
+            </div>
 
 {{contents[1]|safe}}
 
-<h3></h3>
+{{contents[0]|safe}}
 
 
-<div>
-    In general, if an $L$-function is given by
-    \begin{equation}
-    L(s)= \prod_{p\not\in S} \prod_{j=1}^r \left (1- \frac{\alpha_j}{p^s}\right)^{-1} \times \prod_{p \in S} L_p(s)
-    \end{equation}
-    then the $n$-th symmetric  power $L$-function is given by
-    \begin{equation}
-    L(s,\mathrm{sym}^n) = \prod_{p\not\in S}\prod_{m} \left( 1- \frac{m(\alpha_1,\dotsc,\alpha_r)}{p^s} \right)^{-1} \times \prod_{p\in S} L_p(s,\mathrm{sym}^n).
-    \end{equation}
-    The product is over all degree-$n$ monomials $m$ in $r$ variables.
-</div>
+
 
 {% endif %}
  
@@ -149,6 +136,22 @@ by the euler product
         <p>
 
 <h2>Available Examples:</h2>
+<h3 id="EllipticCurve_Q">Symmetric Cube $L$-functions of Elliptic Curves over $\mathbb{Q}$</h3>
+
+
+
+
+    <div>
+            Given an $L$-function of an Elliptic Curve of conductor $N$, the {{ KNOWL('lfunction.symm', title='$n$-th symmetric power $L$-functions')}}
+                is defined by the euler product
+                \begin{equation}
+                \prod_{p\nmid N} \prod_{j=0}^n \left(1 - \frac{\alpha_p^{j} \beta^{n-j}_p}{p^s} \right)^{-1} \times \prod_{p|N} L_p(s)
+                \end{equation}
+            </div>
+
+{{contents[1]|safe}}
+
+
 
 <!-- <h3>Maass cusp forms on Sp(4,Z)</h3>
 <div>These satisfy a functional equation with $\Gamma$-factors
@@ -178,7 +181,7 @@ where $\mu_1 + \mu_2 = \mu_3 + \mu_4$.
 which have been found by a computer search.</div>
 <embed src="/static/images/SL4.svg" width="520" height="360"> -->
 
-{{contents|safe}}
+{{contents[0]|safe}}
 
 {% endif %}
  

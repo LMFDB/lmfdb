@@ -18,18 +18,23 @@ Utilities file for elliptic (holomorphic) modular forms.
 
 AUTHOR: Fredrik Strömberg
 
-
 """
 import random
+import sage.plot.plot
 from flask import  jsonify
 from utils import *
-from modular_forms.elliptic_modular_forms import EMF,emf, emf_logger
+from modular_forms.elliptic_modular_forms import EMF,emf, emf_logger, default_prec
 logger = emf_logger
 from sage.all import dimension_new_cusp_forms,vector,dimension_modular_forms,dimension_cusp_forms,is_odd,loads,dumps,Gamma0,Gamma1,Gamma
 from modular_forms.backend.mf_utils import my_get
 from plot_dom import draw_fundamental_domain
 import base
 from pymongo.binary import *
+try:
+    from dirichlet_conrey import *
+except:
+    emf_logger.critical("Could not import dirichlet_conrey!")
+
 
 def parse_range(arg, parse_singleton=int):
     # TODO: graceful errors
@@ -59,8 +64,6 @@ def extract_limits_as_tuple(arg, field, defaults=(1,10)):
             limits=defaults
     return limits
     
-
-
 def extract_data_from_jump_to(s):
     label=None;weight=None;character=None;level=None
     weight = 2  # this is default for jumping
@@ -230,22 +233,31 @@ class MyNewGrp (object):
             
 def render_fd_plot(level,info,**kwds):
     group = None
+    grouptype=None
     if(info.has_key('group')):
         group = info['group']
         # we only allow standard groups
+    if info.has_key('grouptype'):
+        grouptype=int(info['grouptype'])
+        if info['grouptype']==0:
+            group='Gamma0'
+        elif info['grouptype']==1:
+            group='Gamma1'
     if (group  not in ['Gamma0','Gamma','Gamma1']):
         group = 'Gamma0'
-        type=int(0)
+        grouptype=int(0)
     else:
-        if group=='Gamma':
-            type=int(-1)
-        else:
-            type=(1)
+        if grouptype==None:
+            if group=='Gamma':
+                grouptype=int(-1)
+            elif group=='Gamma0':
+                grouptype=int(0)
+            else:
+                grouptype=int(1)
     db_name = 'SL2Zsubgroups'
-    dbport = 37010
     collection='groups'
     C = base.getDBConnection()
-    emf_logger.debug("C={0}".format(C))
+    emf_logger.debug("C={0}, level={1}, grouptype={2}".format(C,level,grouptype))
     if not C:
         emf_logger.critical("Could not connect to Database! C={0}".format(C))
     if not db_name in C.database_names():
@@ -253,15 +265,45 @@ def render_fd_plot(level,info,**kwds):
     if not collection in C[db_name].collection_names():
         emf_logger.critical("Incorrect collection {0} in database {1}. \n Available collections are:{2}".format(collection,db_name,C[db_name].collection_names()))
     
-    find=C[db_name][collection].find_one({'level':level,'type':type})
+    find=C[db_name][collection].find_one({'level':int(level),'type':int(grouptype)})
     if find:
         if find.get('domain'):
-            domain=loads(str(find['domain']))
+            #domain=loads(str(find['domain']))
+            domain=find['domain']
         emf_logger.debug('Found fundamental domain in database')
     else:
-        if type==int(0):
-            domain=draw_fundamental_domain(level,group,**kwds)
-            G=Gamma0(level)
+        emf_logger.debug('Drawing fundamental domain for group {0}({1})'.format(group,level))
+        domain=draw_fundamental_domain(level,group,**kwds)
+            #G=Gamma0(level)
             #C[db_name][collection].insert({'level':int(level), 'type':type, 'index':int(G.index), 'G':pymongo.binary.Binary(dumps(G)), 'domain': pymongo.binary.Binary(dumps(domain))})
             #emf_logger.debug('Inserting group and fundamental domain in database')
-    return domain
+    return domain    
+
+def image_src_fdomain(G):
+    return ajax_url(image_callback_fdomain, G, _ajax_sticky=True)
+
+def image_callback_fdomain(G):
+    P = G.plot()
+    emf_logger.debug('image_callback: {0}'.format(type(P)))
+    if isinstance(P,sage.plot.plot.Graphics):
+        emf_logger.debug('Got a Graphics object')
+        _, filename = tempfile.mkstemp('.png')
+        P.save(filename)
+        data = open(filename).read()
+        os.unlink(filename)
+    else:
+        data=P
+    response = make_response(data)
+    response.headers['Content-type'] = 'image/png'
+    return response
+
+def sage_character_to_conrey_index(chi,N):
+    r"""
+    For Dirichlet character chi,
+    we return the corresponding Conrey Index n, so that x(m)=chi_N(n,m).
+    """
+    Dc = DirichletGroup_conrey(N)
+    for c in Dc:
+        if c.sage_character() == chi:
+            return c.number()
+    return -1

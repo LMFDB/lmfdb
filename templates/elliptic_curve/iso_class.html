@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<script>
+<script type="text/javascript">
 var cur_system = null;
 function show_code(system) {
     $('.sage').hide();
@@ -17,6 +17,11 @@ function show_code(system) {
     }
 }
 </script>
+<style type="text/css">
+table th, table td {
+padding : 4px;
+}
+</style>
 
         <h1>
             {{ info.label }}</h1>
@@ -25,49 +30,49 @@ function show_code(system) {
             </div>
         <div class='sage nodisplay code'>sage: E = EllipticCurve('{{info.label}}1')<br>sage: E.isogeny_class()</div>
         
-        <h2>Rank</h2>
-        <div class='sage nodisplay code'>sage: E.rank()</div>
-        <p>
-        \({{ info.rank}}\)
-        </p>
-        <h2>
-            {{
-  KNOWL('ec.q.modular_degree',title="Modular degree") }} for the {{
-  KNOWL('ec.q.optimal',title="optimal curve") }}
-        </h2>
-     <div class='sage nodisplay code'>sage: E.modular_degree()</div>
-        <p>
-        {{info.modular_degree}}
-        </p>
-        <h2>
-            Modular form
-        </h2>
+        <h2>Modular form </h2>
         <div class='sage nodisplay code'>sage: E.q_eigenform(10)</div>
         <p>
             {{ info.f | safe }}
         </p>
-         <p align="left">
-        <a  href='{{info.download_qexp_url}}' target='_blank' >Download</a> coefficients
-    </p>
 
 <h2>Curves in the class</h2>
         <div class='sage nodisplay code'>sage: E.isogeny_class()[0]</div>
 <table>
 <tr>
-<th class="center">Label</th>
-<th class="center">Weierstrass coefficients</th>
-<th align="center">Torsion order</th>
-<th align="center">Modular degree</th>
+<th class="center">{{ KNOWL('ec.q.lmfdb_label', title='LMFDB label')}}</th>
+<th class="center">{{ KNOWL('ec.q.cremona_label', title='Cremona label')}}</th>
+<th class="center">{{ KNOWL('ec.q.minimal_weierstrass_equation', title='Weierstrass coefficients') }}</th>
+<th align="center">{{ KNOWL('ec.q.torsion_order', title='Torsion order') }}</th>
+<th align="center">{{ KNOWL('ec.q.modular_degree', title='Modular degree') }}</th>
+<th align="center">&nbsp;</th>
 </tr>
-{% for c in info.curves: %}
+{% for c in info.curves %}
+{% if c[5] %}
+<tr bgcolor="lightgreen">
+{% else %}
 <tr>
+{% endif %}
 <td class="center"><a href="/EllipticCurve/Q/{{c[0]}}">{{c[0]}}</a></td>
 <td class="center">{{c[1]}}</td>
-<td align="center">{{c[2]}}</td>
+<td class="center">{{c[2]}}</td>
 <td align="center">{{c[3]}}</td>
+<td align="center">{{c[4]}}</td>
+{% if c[5] %}
+<td>\(\Gamma_0(N)\)-optimal</td>
+{% else %}
+<td>&nbsp;</td>
+{% endif %}
 </tr>
 {% endfor %}
 </table>
+
+        <h2>Rank</h2>
+        <div class='sage nodisplay code'>sage: E.rank()</div>
+        <p>
+        \({{ info.rank}}\)
+        </p>
+
 
     <h2>Matrix of isogeny degrees</h2>
    <div class='sage nodisplay code'>sage: E.isogeny_class()[1]</div>
@@ -76,18 +81,11 @@ function show_code(system) {
     </p>
 
 
-        <h2>
-            Isogeny graph
-        </h2>
+        <h2>Isogeny graph</h2>
         <div class='sage nodisplay code'>sage: E.isogeny_graph().plot(edge_labels=True,layout='spring',vertex_size=250,)<br>(Note: the following graph has been relabeled<br>to respect the Cremona labeling)</div>
         <center>
         <img width="300" height="300" src="{{info.graph_img}}" />
         </center>
-    <h2>Data download </h2>
-    <p align="left">
-        <a href='{{info.download_all_url}}' target='_blank' >Download</a>
-        all database data for this isogeny class and all curves in
-        this class
-    </p>
-    {% endblock %}
+
+{% endblock %}
 </html>

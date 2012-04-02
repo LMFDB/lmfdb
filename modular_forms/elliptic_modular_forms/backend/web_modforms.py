@@ -16,7 +16,6 @@
 r""" Class for newforms in format which can be presented on the web easily
 
 
-
 AUTHORS:
 
  - Fredrik Stroemberg
@@ -32,7 +31,6 @@ import re
 
 from flask import url_for
 
-
 ## DB modules
 import pymongo 
 import gridfs
@@ -43,6 +41,11 @@ import base
 from modular_forms.elliptic_modular_forms import emf_logger
 from plot_dom import draw_fundamental_domain
 from emf_core import html_table,len_as_printed
+try:
+    from dirichlet_conrey import *
+except:
+    emf_logger.critical("Could not import dirichlet_conrey!")
+
 db_name = 'modularforms'
 dbport = 37010
 
@@ -105,6 +108,7 @@ class WebModFormSpace(Parent):
                 self._group = data['group']
             if data.has_key('character'):
                 self._character = data['character']
+                self._conrey_character=self._get_conrey_character(self._character)
             if data.has_key('modular_symbols'):
                  self._modular_symbols = data['modular_symbols']
             if data.has_key('newspace'):
@@ -128,12 +132,12 @@ class WebModFormSpace(Parent):
                 #self._modular_symbols_cuspidal_new_submodule=MS.cuspidal_submodule().new_submodule()
                 self._newspace=self._modular_symbols.cuspidal_submodule().new_submodule()
                 self._ap = self._get_objects(k,N,chi,use_db,'ap',prec=prec)
-                self._newforms = list()
                 #self._fullspace.newforms(names='x')
                 #self._new_modular_symbols=self._modular_symbols.new_submodule()
                 self._galois_decomposition=[]
                 self._oldspace_decomposition=[]
                 self._galois_orbits_labels=[]
+                self._conrey_character=self._get_conrey_character(self._character)
                 self._newforms=list()
                 l = len(self.galois_decomposition())
                 for i in range(l):
@@ -142,6 +146,7 @@ class WebModFormSpace(Parent):
                     self._compute_newforms(compute)                    
             except RuntimeError:
                 raise RuntimeError, "Could not construct space for (k=%s,N=%s,chi=%s)=" % (k,N,self._chi)
+        emf_logger.debug("Setting conrey_character={0}".format(self._conrey_character))
         ### If we can we set these dimensions using formulas
         if(self.dimension()==self.dimension_newspace()):
             self._is_new=True
@@ -166,33 +171,39 @@ class WebModFormSpace(Parent):
                     f_data['ap']=self._ap[i]
                 emf_logger.debug("Actually getting F {0},{1}".format(label,i))
                 F=WebNewForm(self._k,self._N,self._chi,label=label,fi=i,prec=self._prec,bitprec=self._bitprec,verbose=self._verbose,data=f_data,parent=self,compute=i)
+                emf_logger.debug("F={0},type(F)={1}".format(F,type(F)))
                 self._newforms[i]=F
                         
 
-
-
-
-
     def _get_character(self,k):
         r"""
-        Returns character nr. k acting on the ambient space of self.
+        Returns canonical representative of the Galois orbit nr. k acting on the ambient space of self.
 
         """
-        D = DirichletGroup(self.group().level()).list()
+        D = DirichletGroup(self.group().level())
+        G = D.galois_orbits(reps_only=True)
         try:
-            return D[k]
+            emf_logger.debug("k={0},G[k]={1}".format(k,G[k]))
+            return G[k]
         except IndexError:
-            emf_logger.critical("Got character no. {0}, which are outside the scope of characters mod {1}!".format(k,self.group().level()))
+            emf_logger.critical("Got character no. {0}, which are outside the scope of Galois orbits of the characters mod {1}!".format(k,self.group().level()))
             return trivial_character(self.group().level())
+        
+    def _get_conrey_character(self,chi):
+        Dc = DirichletGroup_conrey(chi.modulus())
+        for c in Dc:
+            if c.sage_character() == chi:
+                return c
 
         
-    def _get_objects(self,k,N,chi,use_db=True,get_what='Modular_symbols.files',**kwds):
+    def _get_objects(self,k,N,chi,use_db=True,get_what='Modular_symbols',**kwds):
         r"""
         Getting the space of modular symbols from the database if it exists. Otherwise compute it and insert it into the database.
         """
-        collection = get_what+'.files'
         if not get_what in ['ap','Modular_symbols']:
             emf_logger.critical("Collection {0} is not implemented!".format(get_what))
+        collection=get_what
+        emf_logger.debug("collection={0}".format(collection))
         res=None
         if kwds.has_key('prec'):
             prec=kwds['prec']
@@ -208,7 +219,7 @@ class WebModFormSpace(Parent):
                     emf_logger.critical("Could not connect to Database! C={0}".format(C))
                 if not db_name in C.database_names():
                     emf_logger.critical("Incorrect database name {0}. \n Available databases are:{1}".format(db_name,C.database_names()))
-                if not collection in C[db_name].collection_names():
+                if not collection+'.files' in C[db_name].collection_names():
                     emf_logger.critical("Incorrect collection {0} in database {1}. \n Available collections are:{2}".format(collection,db_name,C[db_name].collection_names()))
                 files = C[db_name][collection].files
                 if chi==0:
@@ -224,12 +235,13 @@ class WebModFormSpace(Parent):
                     emf_logger.debug("files={0}".format(files))
                     emf_logger.debug("key={0}".format(key))
                     emf_logger.debug("finds={0}".format(finds))
+                    emf_logger.debug("finds.count()={0}".format(finds.count()))
                 if finds and finds.count()>0:
                     rec=finds[0]
                     emf_logger.debug("rec={0}".format(rec))
-                    filename = rec['filename']
+                    fid = rec['_id']
                     fs = gridfs.GridFS(C[db_name],collection)
-                    f = fs.get_version(filename)
+                    f = fs.get(fid)
                     res = loads(f.read())
                     self._from_db=1
                     self._id=rec['_id']
@@ -323,7 +335,6 @@ class WebModFormSpace(Parent):
         return self._galois_orbits_labels[j]
 
     # return specific properties of self
-
     ## By old and newforms we check if self is cuspidal or not
     def dimension_newspace(self):
         if self._dimension_newspace==None:
@@ -385,6 +396,12 @@ class WebModFormSpace(Parent):
 
     def character(self):
         return self._character
+
+    def conrey_character(self):
+        return self._conrey_character
+
+    def conrey_character_name(self):
+        return "\chi_{" + str(self._N) + "}(" +str(self._conrey_character.number()) + ",\cdot)"
     
     def character_order(self):
         if(self._character<>0):
@@ -397,7 +414,6 @@ class WebModFormSpace(Parent):
             return self._character.conductor()
         else:
             return 1
-
 
     def group(self):
         return self._group
@@ -503,7 +519,7 @@ class WebModFormSpace(Parent):
                         Sd = dimension_new_cusp_forms(xx,k)
                         if Sd>0:
                             # identify this character for internal storage... should be optimized
-                            x_k = DirichletGroup(q).list().index(xx)
+                            x_k = self._get_conrey_character(xx).number()
                             mult=len(divisors(ZZ(d)))
                             check_dim=check_dim+mult*Sd
                             L.append((q,x_k,mult,Sd))
@@ -526,7 +542,7 @@ class WebModFormSpace(Parent):
 
         n=0; s=""
         if(self._chi<>0):
-            s="\[S_{%s}^{old}(%s,\chi_{%s}) = " % (self._k,self._N,self._chi)
+            s="\[S_{%s}^{old}(%s,{%s}) = " % (self._k,self._N,self.conrey_character_name())
         else:
             s="\[S_{%s}^{old}(%s) = " % (self._k,self._N)
         if(len(O)==0):
@@ -534,7 +550,7 @@ class WebModFormSpace(Parent):
         for n in range(len(O)):
             (N,chi,m,d)=O[n]
             if(self._chi<>0):
-                s=s+" %s\cdot S_{%s}^{new}(%s,\chi_{%s})" %(m,self._k,N,chi)
+                s=s+" %s\cdot S_{%s}^{new}(%s,\chi_{%s}({%s}, \cdot))" %(m,self._k,N,N,chi)
             else:
                 s=s+" %s\cdot S_{%s}^{new}(%s)" %(m,self._k,N)
             if(n<len(O)-1 and len(O)>1):
@@ -578,6 +594,7 @@ class WebModFormSpace(Parent):
         """
 	from sage.monoids.all import AlphabeticStrings
         L=self.galois_decomposition()
+        emf_logger.debug("L=".format(L))
         if(len(L)==0):
             return ""
         x=AlphabeticStrings().gens()
@@ -754,8 +771,14 @@ class WebNewForm(SageObject):
         if self._chi<>0:
             if self._parent and self._parent._character:
                 self._character=self._parent._character
+                self._conrey_character=self._parent._conrey_character
             else:
-                self._character=DirichletGroup(N)[0]
+                self._character=DirichletGroup(N).galois_orbits(reps_only=True)[0]
+                Dc = DirichletGroup_conrey(N)
+                for c in Dc:
+                    if c.sage_character() == self._character:
+                            self._conrey_character=c
+                            break
         self.f=None
         self._label = label
         self._fi=fi
@@ -944,6 +967,12 @@ class WebNewForm(SageObject):
             return self._character
         else:
             return trivial_character
+
+    def conrey_character(self):
+        return self._conrey_character
+        
+    def conrey_character_name(self):
+        return "\chi_{" +str(self._N) + "}(" +str(self._conrey_character.number()) + ",\cdot)"
         
     def character_order(self):
         return self._parent.character_order()
@@ -1137,6 +1166,13 @@ class WebNewForm(SageObject):
         """
         l=self.atkin_lehner_eigenvalues()
         return l.get(Q)
+
+    def _compute_atkin_lehner_matrix(self,f,Q):
+        ALambient=f.ambient_hecke_module()._compute_atkin_lehner_matrix(ZZ(Q))
+        B=f.free_module().echelonized_basis_matrix()
+        P=B.pivots()
+        M=B*ALambient.matrix_from_columns(P)
+        return M
         
     def atkin_lehner_eigenvalues(self):
         r""" Compute the Atkin-Lehner eigenvalues of self. 
@@ -1160,7 +1196,13 @@ class WebNewForm(SageObject):
                 continue
             if(gcd(Q,ZZ(self.level()/Q))==1):
                 emf_logger.debug("Q={0}".format(Q))
-                M=self._f._compute_atkin_lehner_matrix(ZZ(Q))
+                emf_logger.debug("self._f={0}".format(self._f))
+                #try:
+                M=self._compute_atkin_lehner_matrix(self._f,ZZ(Q))
+                    #M=self._f._compute_atkin_lehner_matrix(ZZ(Q))
+                #except:
+                #    emf_logger.critical("Error in computing Atkin Lehner Matrix. Bug is known and due to pickling.")
+                #M=self._f.atkin_lehner_operator(ZZ(Q)).matrix()
                 try:
                     ev = M.eigenvalues()
                 except:
@@ -1213,7 +1255,7 @@ class WebNewForm(SageObject):
         p=cusp.numerator()
         d=ZZ(cusp*N)
         if(d.divides(N) and gcd(ZZ(N/d),ZZ(d))==1):
-            M=self._f._compute_atkin_lehner_matrix(ZZ(d))
+            M=self._compute_atkin_lehner_matrix(self._f,ZZ(d))
             ev = M.eigenvalues()
             if len(ev)>1:
                 if len(set(ev))>1:
@@ -1289,7 +1331,7 @@ class WebNewForm(SageObject):
                             for p in primes_first_n(max_nump):
                                 if(ZZ(p).divides(ZZ(N))):
                                     continue
-                                bf=self._f.q_eigenform(maxp+1)[p]
+                                bf=self._f.q_eigenform(maxp+1,names='x')[p]
                                 bg=g.q_expansion(maxp+1)[p]
                                 if(bf == 0 and bg == 0):
                                     continue
@@ -1533,7 +1575,7 @@ class WebNewForm(SageObject):
         K=self.base_ring()
         #print "K={0}".format(K)
         # recall that 
-        degree = K.degree()
+        degree = K.absolute_degree()
         cm_vals=dict()
         # the points we want are i and rho. More can be added later...
         rho=CyclotomicField(3).gen()
@@ -1790,14 +1832,16 @@ class WebNewForm(SageObject):
         if(prec==None):
             prec=self._prec
         s = my_latex_from_qexp(str(self.q_expansion(prec)))
+        
         sb = list()
         if br > 0:
             sb = break_line_at(s,br)
-            emf_logger.debug("print_q_exp: sb=".format(sb))
+            emf_logger.debug("print_q_exp: sb={0}".format(sb))
         if len(sb)<=1:
             s = r"\("+s+r"\)"
         else:
-            s = r"\("+join(sb,"",)+r"\)"
+            s = r"\[\begin{align} &"+join(sb,"\cr &")+r"\end{align}\]"
+                
         emf_logger.debug("print_q_exp: prec=".format(prec))
         return s
 
@@ -2091,11 +2135,6 @@ class WebNewForm(SageObject):
 ###
 ### Independent helper functions  
 ### 
-
-
-
-
-
 def my_latex_from_qexp(s):
     r"""
     Make LaTeX from string. in particular from parts of q-expansions.
@@ -2120,6 +2159,7 @@ def break_line_at(s,brpt=20):
     sl=list()
     stmp = ''
     left_par = 0
+    emf_logger.debug('Break at line, Input ={0}'.format(s))
     for i in range(len(s)):
         if s[i] == '(': ## go to the matching case
             left_par = 1
@@ -2128,9 +2168,10 @@ def break_line_at(s,brpt=20):
         if left_par == 0 and (s[i] == '+' or s[i]== '-'):
             sl.append(stmp)
             stmp=''
-        stmp = join([stmp,s[i]])
+        stmp = stmp + s[i]
         if i==len(s)-1:
             sl.append(stmp)
+    emf_logger.debug('sl={0}'.format(sl))
 
     # sl now contains a split  e.g. into terms in the q-expansion
     # we now have to join as many as fits on the line
@@ -2184,6 +2225,7 @@ def _get_newform(k,N,chi,fi=None):
     #print k,N,chi,fi
     try:
         if(chi==0):
+            emf_logger.debug("EXPLICITLY CALLING NEWFORMS!")
             S=Newforms(N,k,names='x')
         else:
             S=Newforms(DirichletGroup(N)[chi],k,names='x')

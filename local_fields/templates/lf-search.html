@@ -6,6 +6,12 @@
  $(document).ready(function() {
      $('#fieldTab').dataTable({
        "bFilter":false, 
+	"oLanguage": {
+		"oPaginate": {
+			"sPrevious": "",
+			"sNext": "",
+		}
+	},
        "aaSorting": [[1, 'asc'], [2, 'asc'], [4, 'asc']],
        "aLengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
        "fnRowCallback": function( row, data, index ){ 

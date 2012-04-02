@@ -67,14 +67,18 @@
   <h2 class="link">
    <a href="{{ url_for('introduction') }}">Introduction</a>
   </h2>
-  <ul>
-    <li class="intro"><a href="{{url_for('introduction_features')}}">Features</a></li>
-    <li class="intro"><a href="{{url_for('introduction_tutorial')}}">Tutorial</a></li>
+  <ul class="list">
+    <li class="intro" style="padding-left: 0;">
+     <span>
+        <a href="{{url_for('introduction_features')}}">Features</a>
+        <a href="{{url_for('introduction_tutorial')}}">Tutorial</a>
+     </span>
+   </li>
+  </ul><ul>
+   <li class="bigpicture">
+    <a href="{{ url_for('bigpicture') }}">Map of LMFDB</a>
+   </li>
   </ul>
-  
-  <h2 class="link">
-   <a href="{{ url_for('bigpicture') }}">Big Picture</a>
-  </h2>
 
   <h2 class="link">
    <a href="{{ url_for('render_Lfunction') }}">L-functions</a>
@@ -121,9 +125,9 @@
       <li><a class = "number_fields" href="{{ url_for('number_fields.number_field_render_webpage') }}">Global Number Fields</a></li>
       <li><a href="{{ url_for('local_fields.index') }}">Local Number Fields</a></li>
       <li><a href="{{ url_for('galois_groups.index') }}">Galois Groups</a></li>
-      <!--  Please keep POD
+      {#  Please keep the commented part, I might reinstate some of it POD
       #<li><a class = "number_field_galois_groups" href="{{ url_for('number_field_galois_groups.index') }}">Galois Groups (only logged in)</a></li>
-      -->
+      #}
     </ul>
 
   <h2>Characters</h2>
@@ -132,42 +136,45 @@
   </ul>
 
   <h2 class="link">
-       <a class="mf"    href="{{ url_for('mf.modular_form_main_page') }}">Holomorphic Modular Forms</a></h2>
+       <a class="mf"    href="{{ url_for('mf.modular_form_main_page') }}">Modular Forms</a>
+  </h2>
   <ul>
-   <li><a class="emf"  href="{{ url_for('emf.render_elliptic_modular_forms') }}">Classical, $\mathrm{GL}(2)$</a></li>
-   <li><a              href="{{ url_for('ModularForm_GSp4_Q_top_level') }}">Siegel</a> </li>
+   <li><a class="emf"  href="{{ url_for('emf.render_elliptic_modular_forms') }}">Classical, $\mathrm{GL}(2)/\mathbb{Q}$</a></li>
+   <li><a class="mwf"  href="{{ url_for('mwf.render_maass_waveforms') }}">Maass, $\mathrm{GL}(2)/\mathbb{Q}$</a></li>
    <li><a              href="{{ url_for('hilbert_modular_form_render_webpage') }}">Hilbert</a></li>
+   <li><a              href="{{ url_for('ModularForm_GSp4_Q_top_level') }}">Siegel</a> </li>
   </ul>
    {# <li><a href="{{ url_for('quadratic_twists') }}">Quadratic Twists</a></li> #}
-
+{#
   <h2 class="link">
        <a class="mf"    href="{{ url_for('mf.modular_form_main_page') }}">Maass Forms</a></h2>
   <ul>
-   <li><a class="mwf"  href="{{ url_for('mwf.render_maass_waveforms') }}">Classical, $\mathrm{GL}(2)$</a></li>
    <li><a class="mwfp" href="{{ url_for('mwfp.render_picard_maass_forms') }}">for \(\mathrm{PSL}(2,\mathbb{Z}[i])\)</a></li>
   </ul>
-  <h2 class="link">
+#}
+{#
+  <h2>
 	{% if is_authenticated_user %}
        <a class="artin_representations" href="{{ url_for('artin_representations.index') }}">Artin Representations (no search)</a>
         {% else %}
       Artin Representations
 	{% endif %}
   </h2>
-  
+#}
 
+
+  <h2>Zeros of L-functions</h2>
+   <ul>
+    <li><a href="{{ url_for('first L-function zeros.firstzeros') }}">First zeros</a></li>
+    <li><a href="{{ url_for('zeta zeros.zetazeros') }}">Zeta zeros</a></li>
+   </ul>
 
   <h2 class="link knowl">
      <a class="knowl" href="{{ url_for("knowledge.index") }}">Knowledge</a>
   </h2>
-
-  <h2>Search</h2>
-   <ul>
-    <li><a href="{{ url_for('LfunctionDB.query', zerolowerbound=1.1, zeroupperbound=2.1) }}">Zeros of L-functions</a></li>
-    <li><a href="{{ url_for('zeta zeros.zetazeros') }}">Browse zeros of $\zeta(s)$</a></li>
-   </ul>
-  
    {{ entry("Learn more about", learnmore) }}
    {{ entry("Data", getUploadedFor(request.path, true) ) }}
+  {# {% if user_is_authenticated %} {% endif %} #}
 
  {% if sidebar -%}
   {% for topic, content in sidebar -%}
@@ -261,6 +268,8 @@
     {%- endif %}
     <div>
       <a href="{{ url_for('acknowledgment') }}">Acknowledgments</a>
+      &middot;
+      <a href="{{ url_for('edit_board') }}">Editorial and Management Boards</a>
       {# <a href="{{ 'about' }}">About</a> #}
     </div>
 </div>

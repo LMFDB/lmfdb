@@ -1,356 +1,456 @@
 {% extends "homepage.html" %}
 {% block content %}
 
+<script type="text/javascript">
+function show_info(el, t1, t2) {
+   $(el).hover(function() {
+           $(t1).attr("stroke", "crimson");
+           $(t2).show();
+           $('.popbox').show();
+   },function() {
+           $(t1).attr("stroke", "none");
+           $(t2).hide();
+           $('.popbox').hide();
+   });
+}
+
+function show_info(el, t1, t2,t3) {
+   $(el).hover(function() {
+           $(t1).attr("stroke", "crimson");
+           $(t3).attr("stroke", "crimson");
+           $(t2).show();
+           $('.popbox').show();
+   },function() {
+           $(t1).attr("stroke", "none");
+           $(t3).attr("stroke", "black");
+           $(t2).hide();
+           $('.popbox').hide();
+   });
+}
+
+$(function() {
+ show_info("#AR", ".AR", ".ARhidden",".ARkeep");
+ show_info("#AV", ".AV", ".AVhidden",".AVkeep");
+ show_info("#AF", ".AF", ".AFhidden",".AFkeep");
+ show_info("#NF", ".NF", ".NFhidden");
+ show_info("#L", ".L", ".Lhidden");
+ show_info("#GG", ".GG", ".GGhidden");
+ show_info("#NFL", ".NFL", ".NFLhidden");
+ show_info("#NFGG", ".NFGG", ".NFGGhidden",".NFGGkeep");
+ show_info("#LL", ".LL", ".LLhidden", ".LLkeep");
+ show_info("#AVAF", ".AVAF", ".AVAFhidden", ".AVAFkeep");
+ show_info("#AVNF", ".AVNF", ".AVNFhidden", ".AVNFkeep");
+ show_info("#AFAV", ".AFAV", ".AFAVhidden", ".AFAVkeep");
+ show_info("#AVAV", ".AVAV", ".AVAVhidden", ".AVAVkeep");
+ show_info("#AFL", ".AFL", ".AFLhidden", ".AFLkeep");
+ show_info("#AFAF", ".AFAF", ".AFAFhidden", ".AFAFkeep");
+ show_info("#ARAF", ".ARAF", ".ARAFhidden", ".ARAFkeep");
+ show_info("#LAF", ".LAF", ".LAFhidden", ".LAFkeep");
+ show_info("#AVL", ".AVL", ".AVLhidden", ".AVLkeep");
+ show_info("#ARL", ".ARL", ".ARLhidden", ".ARLkeep");
+});
+</script>
+
 <div>
-The research areas of the LMFBD are distinguished by
+The research areas of the LMFDB are distinguished by
 the variety of connections among the various objects.
 </div>
 
-<svg width="810px" height="900px" viewBox="0 0 900 1000" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1">
 
-<!--
-  <path id="AVtoNF" d="M 0 0 L 0 900" stroke="grey" stroke-width="1" fill="none" />
-  <path id="AVtoNF" d="M 300 0 L 300 900" stroke="grey" stroke-width="1" fill="none" />
-  <path id="AVtoNF" d="M 600 0 L 600 900" stroke="grey" stroke-width="1" fill="none" />
-  <path id="AVtoNF" d="M 900 0 L 900 900" stroke="grey" stroke-width="1" fill="none" />
-  <path id="AVtoNF" d="M 0 900 L 900 900" stroke="grey" stroke-width="1" fill="none" />
-  <path id="AVtoNF" d="M 0 600 L 900 600" stroke="grey" stroke-width="1" fill="none" />
-  <path id="AVtoNF" d="M 0 300 L 900 300" stroke="grey" stroke-width="1" fill="none" />
-  <path id="AVtoNF" d="M 0 0 L 900 0" stroke="grey" stroke-width="1" fill="none" />
--->
+<svg height=600px width=600px viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" version="1.1">
 
- <text x="50" y="130" style="font-family:verdana;font-size:40">Algebraic</text>
- <text x="54" y="175" style="font-family:verdana;font-size:40">Varieties</text>
+<g id="AV">
+ <text class="AV" x="50" y="130" style="font-family:verdana;font-size:40">Algebraic</text>
+ <text class="AV" x="54" y="175" style="font-family:verdana;font-size:40">Varieties</text>
+</g>
 
- <text x="620" y="130" style="font-family:verdana;font-size:40">Automorphic</text>
- <text x="685" y="175" style="font-family:verdana;font-size:40">Forms</text>
+<g id="AF">
+ <text class="AF" stroke="none" class="AF" x="620" y="130" style="font-family:verdana;font-size:40">Automorphic</text>
+ <text class="AF" stroke="none" class="AF" x="685" y="175" style="font-family:verdana;font-size:40">Forms</text>
+</g>
 
- <text x="340" y="470" style="font-family:verdana;font-size:40">L-functions</text>
+<g id="L">
+ <text stroke="none" class="L" x="340" y="470" style="font-family:verdana;font-size:40">L-functions</text>
+</g>
 
- <text x="69" y="730" style="font-family:verdana;font-size:40">Number</text>
- <text x="88" y="775" style="font-family:verdana;font-size:40">Fields</text>
+<g id="NF">
+ <text class="NF" x="69" y="730" style="font-family:verdana;font-size:40">Number</text>
+ <text class="NF" x="88" y="775" style="font-family:verdana;font-size:40">Fields</text>
+</g>
 
- <text x="700" y="730" style="font-family:verdana;font-size:35">Artin</text>
- <text x="608" y="770" style="font-family:verdana;font-size:35">Representations</text>
+<g id="AR">
+ <text stroke="none" class="AR" x="700" y="730" style="font-family:verdana;font-size:35">Artin</text>
+ <text stroke="none" class="AR" x="608" y="770" style="font-family:verdana;font-size:35">Representations</text>
 
- <text x="325" y="930" style="font-family:verdana;font-size:40">Galois</text>
- <text x="318" y="970" style="font-family:verdana;font-size:40">Groups</text>
-
-<svg> <!-- AF lifts -->
-<title>The Rankin-Selberg convolution of a degree $d_1$ L-function and a degree $d_2$ L-function in an L-function of degree $d_1 d_2$.</title>
-<defs> 
-  <path id="RSoffset" d="M 350,430 A 180,180 0 0,1 550 430"
-  stroke-width="0px" fill="none" transform="translate(0,0)"/>
+<svg> <!-- GG and NF to AR -->
+<path class="ARkeep" id="GGAR" d="M 380 888 Q 410 793 545 764" stroke="black" stroke-width="2" fill="none"></path>
+<path class="ARkeep" id="GGAR" d="M 380 888 l 20,-20 m -20,20 l 20,20" stroke="black" stroke-width="2" fill="none" transform="rotate(-70 380 888)"></path>
+<path class="ARkeep" id="NFAR" d="M 270 750 q 160 50 310 5" stroke="black" stroke-width="2" fill="none"></path>
+<path class="ARkeep" id="GGAR" d="M 270 750 l 20,-20 m -20,20 l 20,20" stroke="black" stroke-width="2" fill="none" transform="rotate(15 270 750)"></path>
+<defs>
+<path id="arguide1" d="M 380 888 Q 410 793 545 764" stroke-width="0" fill="none" transform="translate(-1,-5)"></path>
+<path id="arguide2" d="M 270 750 q 160 50 310 5" stroke="black" stroke-width="0" fill="none" transform="translate(0,-5)"></path>
 </defs>
-<!--
- <path d="M 825,165 A 70,70 0 1,0 755,90 l -15 -15  m 15 15 l 15 -15"
-         stroke="darkorange" fill="none" stroke-width="4" />
--->
- <path d="M 350,435 A 180,180 0 0,1 550 435 l -5 -15  m 5 15 l -15 4"
-         stroke="darkorange" fill="none" stroke-width="4" />
 
-<text id="ARAR" style="font-family:ariel;font-size:28">
-<textPath xlink:href="#RSoffset">
-&nbsp;&nbsp;Rankin-Selberg
+<text stroke="none" class="AR" style="font-family:ariel;font-size:20">
+<textPath xlink:href="#arguide1">
+                  &nbsp; &nbsp; component
 </textPath>
 </text>
-<set attributeName="fill" from="black"      to="red"
-                                      begin="mouseover" end="mouseout"/>
+<text stroke="none" class="AR" style="font-family:ariel;font-size:20">
+<textPath xlink:href="#arguide2">
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; component
+</textPath>
+</text>
 </svg>
+</g>
+
+<g id="GG"> <text stroke="none" class="GG" x="325" y="930" style="font-family:verdana;font-size:40">Galois</text>
+ <text stroke="none" class="GG" x="318" y="970" style="font-family:verdana;font-size:40">Groups</text>
+</g>
+
 
 <svg><!-- arrow GG to NF -->
-<title>Associated to any number field is a Galois group: the Galois group of its Galois closure</title>
 <defs>
-<path id="GGtoNF1" d="M 210 800 L 310 900 l 0 -25 m 0 25 l -25 0" 
-transform="translate(5,-5)"/>
-<path id="GGtoNF2" d="M 210 800 L 310 900 l 0 -25 m 0 25 l -25 0" 
-transform="translate(-15,15)"/>
+<path id="GGtoNF1" d="M 210 800 L 310 900 l 0 -25 m 0 25 l -25 0" transform="translate(5,-5)"></path>
+<path id="GGtoNF2" d="M 210 800 L 310 900 l 0 -25 m 0 25 l -25 0" transform="translate(-15,15)"></path>
 </defs>
-  <path id="GGtoNF" d="M 210 800 L 310 900 l 0 -25 m 0 25 l -25 0" stroke="black" stroke-width="2px" fill="none" />
+<g id="NFGG">
+  <path class="NFGGkeep" id="GGtoNF" d="M 210 800 L 310 900 l 0 -25 m 0 25 l -25 0" stroke="black" stroke-width="2px" fill="none"></path>
 
-<text style="font-family:ariel;font-size:24">
+<text stroke="none" class="NFGG" style="font-family:ariel;font-size:24">
 <textPath xlink:href="#GGtoNF1">
 &nbsp;&nbsp;Galois
 </textPath>
 </text>
-<text style="font-family:ariel;font-size:24">
+<text stroke="none" class="NFGG" style="font-family:ariel;font-size:24">
 <textPath xlink:href="#GGtoNF2">
 &nbsp;&nbsp;closure
 </textPath>
 </text>
-<set attributeName="stroke" from="black"      to="red"
-                                      begin="mouseover" end="mouseout"/>
+</g>
 <!-- END arrow GG to NF -->
 </svg>
 
 
 <svg><!-- arrow AV to NF -->
-<title>Smooth varieties defined over a number field</title>
+<g id="AVNF">
 <defs>  
-  <path id="AVtoNFoffset" d="M 100 230 L 100 700" stroke="black"
-  stroke-width="0px" fill="none" transform="translate(10,70)"/>
+  <path id="AVtoNFoffset" d="M 100 230 L 100 700" stroke="black" stroke-width="0px" fill="none" transform="translate(10,70)"></path>
+  <path id="AVtoNFoffset2" d="M 100 230 L 100 700" stroke="black" stroke-width="0px" fill="none" transform="translate(-25,70)"></path>
 </defs>
-  <path id="AVtoNF" d="M 100 220 L 100 650 M 100 650 l -20 -20 M 100 650 l 20 -20" stroke="black" stroke-width="2px" fill="none" />
-<text id="AVNF" style="font-family:ariel;font-size:28">
+  <path class="AVNFkeep" d="M 100 220 L 100 650 M 100 650 l -20 -20 M 100 650 l 20 -20" stroke="black" stroke-width="5px" fill="none"></path>
+<text class="AVNF" style="font-family:ariel;font-size:28" stroke="none" fill="black">
 <textPath xlink:href="#AVtoNFoffset">
-field of definition
+field of definition,
 </textPath>
 </text>
-<set attributeName="fill" from="black"      to="red"
-                                      begin="mouseover" end="mouseout"/>
+<text class="AVNF" style="font-family:ariel;font-size:28" stroke="none" fill="black">
+<textPath xlink:href="#AVtoNFoffset2">
+n-divison fields, etc
+</textPath>
+</text>
+</g>
+
 <!-- END arrow AV to NF -->
 </svg>
 
 <svg> <!-- AF lifts -->
-<title>A "lift" is a map from the automorphic forms on one group to the automorphic forms on another group.</title>
 <defs>  
-  <path id="ARliftoffset" d="M 780,90 A 45,45 0 1,1 825 140"
-  stroke-width="0px" fill="none"/>
+  <path id="ARliftoffset" d="M 780,90 A 45,45 0 1,1 825 140" stroke-width="0px" fill="none"></path>
 </defs>
 <!--
  <path d="M 825,165 A 70,70 0 1,0 755,90 l -15 -15  m 15 15 l 15 -15"
          stroke="darkorange" fill="none" stroke-width="4" />
 -->
- <path d="M 873,145 A 70,70 0 1,0 755,90 l -12 -15  m 12 15 l 15 -12"
-         stroke="darkorange" fill="none" stroke-width="4" />
+ <path d="M 873,145 A 70,70 0 1,0 755,90 l -12 -15  m 12 15 l 15 -12" stroke="darkorange" fill="none" stroke-width="4"></path>
 
-<text id="ARAR" style="font-family:ariel;font-size:28">
+<text id="AFAF" class="AFAF"  style="font-family:ariel;font-size:28">
 <textPath xlink:href="#ARliftoffset">
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;lifts
 </textPath>
 </text>
-<set attributeName="fill" from="black"      to="red"
-                                      begin="mouseover" end="mouseout"/>
 </svg>
 
-<svg> <!-- AF lifts -->
-<title>A "twist" is ...</title>
+<svg> <!-- AV lifts -->
 <defs>
-  <path id="AVtwistoffset" d="M 68,126 A 45,45 0 1,1 138 76"
-  stroke-width="0px" fill="none"/>
+  <path id="AVtwistoffset" d="M 68,126 A 45,45 0 1,1 138 76" stroke-width="0px" fill="none"></path>
 </defs>
- <path d="M 50,145 A 70,70 0 1,1 165,90 l -15 -12  m 15 12 l 12 -15"
-         stroke="steelblue" fill="none" stroke-width="4" />
+ <path d="M 50,145 A 70,70 0 1,1 165,90 l -15 -12  m 15 12 l 12 -15" stroke="steelblue" fill="none" stroke-width="4"></path>
 
-<text id="AVAV" style="font-family:ariel;font-size:28">
+<text id="AVAV" class="AVAV" style="font-family:ariel;font-size:28">
 <textPath xlink:href="#AVtwistoffset">
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;twists
 </textPath>
 </text>
-<set attributeName="fill" from="black"      to="red"
-                                      begin="mouseover" end="mouseout"/>
 </svg>
 
 <svg><!-- arrow AR to AF -->
-<title>The Langlands program predicts that Artin representations are automorphic.</title>
+<g id="ARAF">
 <defs>
-  <path id="ARtoAFoffset" d="M 850 680 L 850 220" 
-  stroke-width="0px" fill="none" transform="translate(-10,-50)"/>
+  <path id="ARtoAFoffset" d="M 840 570 L 840 220" stroke-width="0px" fill="none" transform="translate(0,-50)"></path>
 </defs>
-  <path id="ARtoAF" d="M 850 680 L 850 240 M 850 240 l -20 20 M 850 240 l 20 20" stroke="black" stroke-width="4px" fill="none" />
-<text id="AVNF" style="font-family:ariel;font-size:28">
+<path class="ARAF" d="M 850 240 l -20 0 l 20 -20 l 20 20z" stroke="none" stroke-width="1" fill="thistle"></path>
+<path class="ARAF" d="M 850 680 l -5 0 l 0 -440 l 10 0 l 0 440z" stroke="none" stroke-width="1" fill="thistle"></path>
+
+<text class="ARAF" style="font-family:ariel;font-size:28">
 <textPath xlink:href="#ARtoAFoffset">
-give explicit examples of
+functoriality
 </textPath>
 </text>
-<set attributeName="fill" from="black"      to="red"
-                                      begin="mouseover" end="mouseout"/>
+</g>
 <!-- END arrow AR to AF -->
 </svg>
 
 <svg>  <!-- Number Field to L-function -->
-<title>The Dedekind zeta function is defined as a product over the prime ideals of the number field</title>
 <defs>
-  <path id="NFtoLoffsettop" d="M 200 670 L 400 470" stroke="black"
-  stroke-width="0px" fill="none" transform="translate(15,-20)"/>
-  <path id="NFtoLoffsetbottom" d="M 200 670 L 400 470" stroke="black"
-  stroke-width="0px" fill="none" transform="translate(45,15)"/>
+  <path id="NFtoLoffsettop" d="M 200 670 L 400 470" stroke="black" stroke-width="0px" fill="none" transform="translate(15,-20)"></path>
+  <path id="NFtoLoffsetbottom" d="M 200 670 L 400 470" stroke="black" stroke-width="0px" fill="none" transform="translate(45,15)"></path>
 </defs>
 
-  <path id="NFtoL" d="M 200 670 L 340 530 L 326 516 L 368 516 L 368 558 L 354 544 L 214 684 Z" fill="steelblue"/>
-<g>
-<text id="NFL" style="font-family:ariel;font-size:28">
+<g id="NFL">
+  <path stroke="none" class="NFL" d="M 200 670 L 340 530 L 326 516 L 368 516 L 368 558 L 354 544 L 214 684 Z" fill="steelblue"></path>
+<text class="NFL" style="font-family:ariel;font-size:28" stroke="none">
 <textPath xlink:href="#NFtoLoffsettop">
 Dedekind
 </textPath>
 </text>
-<text style="font-family:ariel;font-size:28">
+<text stroke="none" class="NFL" style="font-family:ariel;font-size:28">
 <textPath xlink:href="#NFtoLoffsetbottom">
 zeta function
 </textPath>
 </text>
-
-<set attributeName="fill" from="grey"      to="red"
-                                      begin="mouseover" end="mouseout"/>
 </g>
+
 </svg> <!-- /Number Field to L-function -->
 
 <svg>  <!-- AV to L-function -->
-<title>The local factors of the Hasse-Weil L-function are determined by counting points on the variety modulo prime powers.</title>
+<g id="AVL">
 <defs>
-  <path id="AVtoLoffsettop" d="M 200 670 L 400 470" stroke="black"
-  stroke-width="0px" fill="none" transform="rotate(90 250 200) translate(75,-460)"/>
-  <path id="AVtoLoffsetbottom" d="M 200 670 L 400 470" stroke="black"
-  stroke-width="0px" fill="none" transform="rotate(90 250 200) translate(110,-425)"/>
+  <path id="AVtoLoffsettop" d="M 200 670 L 400 470" stroke="black" stroke-width="0px" fill="none" transform="rotate(90 250 200) translate(75,-460)"></path>
+  <path id="AVtoLoffsetbottom" d="M 200 670 L 400 470" stroke="black" stroke-width="0px" fill="none" transform="rotate(90 250 200) translate(110,-425)"></path>
 </defs>
 
-  <path id="AVtoL" d="M 200 670 L 340 530 L 326 516 L 368 516 L 368 558 L 354 544 L 214 684 Z"
-   transform="rotate(90 250 200) translate(60,-435)" fill="grey"/>
-<text id="AVL" style="font-family:ariel;font-size:28">
+  <path class="AVL" d="M 200 670 L 340 530 L 326 516 L 368 516 L 368 558 L 354 544 L 214 684 Z" transform="rotate(90 250 200) translate(60,-435)" fill="grey"></path>
+<text class="AVL" style="font-family:ariel;font-size:28">
 <textPath xlink:href="#AVtoLoffsettop">
 Hasse-Weil
 </textPath>
 </text>
-<text style="font-family:ariel;font-size:28">
+<text class="AVL" style="font-family:ariel;font-size:28">
 <textPath xlink:href="#AVtoLoffsetbottom">
 L-function
 </textPath>
 </text>
-
-<set attributeName="fill" from="grey"      to="red"
-                                      begin="mouseover" end="mouseout"/>
+</g>
 </svg> <!-- AV to L-function -->
 
+<g id="ARL">
 <svg>  <!-- AR to L-function -->
-<title>The local factors of the Artin L-function are constructed from the trace of Frobenius.</title>
 <defs>
-  <path id="ARtoLoffsettop" d="M 550 550 L 650 650" 
-  stroke-width="0px" fill="none" transform="translate(35,5)"/>
-  <path id="ARtoLoffsetbottom" d="M 550 550 L 650 650"
-  stroke-width="0px" fill="none" transform="translate(-20,25)"/>
+  <path id="ARtoLoffsettop" d="M 550 550 L 650 650" stroke-width="0px" fill="none" transform="translate(35,5)"></path>
+  <path id="ARtoLoffsetbottom" d="M 550 550 L 650 650" stroke-width="0px" fill="none" transform="translate(-20,25)"></path>
 </defs>
 
-  <path id="ARtoL" d="M 200 670 L 340 530 L 326 516 L 368 516 L 368 558 L 354 544 L 214 684 Z"
-   transform="rotate(-90 250 200) translate(-430,-50)" fill="grey"/>
-<text id="ARL" style="font-family:ariel;font-size:28">
+  <path class="ARL" d="M 200 670 L 340 530 L 326 516 L 368 516 L 368 558 L 354 544 L 214 684 Z" transform="rotate(-90 250 200) translate(-430,-50)" fill="grey"></path>
+<text class="ARL" style="font-family:ariel;font-size:28">
 <textPath xlink:href="#ARtoLoffsettop">
 Artin
 </textPath>
 </text>
-<text style="font-family:ariel;font-size:28">
+<text class="ARL" style="font-family:ariel;font-size:28">
 <textPath xlink:href="#ARtoLoffsetbottom">
 L-function
 </textPath>
 </text>
 
-<set attributeName="fill" from="grey"      to="red"
-                                      begin="mouseover" end="mouseout"/>
 </svg> <!-- Artin representation to L-function -->
+</g>
 
 
 <svg>  <!-- L-function to AF  -->
-<title>A "comnverse theorem" is an assertion that an L-function is the L-function of an automorphic object.</title>
+<g id="LAF">
 <defs>
-  <path id="LtoAFoffsettop" d="M 500 350 l 200 -200" stroke="black"
-  stroke-width="0px" fill="none" transform="translate(30,-35)"/>
-  <path id="LtoAFoffsetbottom" d="M 500 350 l 200 -200" stroke="black"
-  stroke-width="0px" fill="none" transform="translate(67,-7)"/>
+  <path id="LtoAFoffsettop" d="M 500 350 l 200 -200" stroke="black" stroke-width="0px" fill="none" transform="translate(30,-35)"></path>
+  <path id="LtoAFoffsetbottom" d="M 500 350 l 200 -200" stroke="black" stroke-width="0px" fill="none" transform="translate(67,-7)"></path>
 </defs>
 
-  <path id="NFtoL" d="M 500 350 l 140 -140 l -14 -14 l 42 0 l 0 42 l -14 -14 l -140 140 Z" fill="gold" />
-<text id="NFL" style="font-family:ariel;font-size:28">
+  <path class="LAF" d="M 500 350 l 140 -140 l -14 -14 l 42 0 l 0 42 l -14 -14 l -140 140 Z" fill="gold"></path>
+<text class="LAF" style="font-family:ariel;font-size:28">
 <textPath xlink:href="#LtoAFoffsettop">
 converse
 </textPath>
 </text>
-<text style="font-family:ariel;font-size:28">
+<text class="LAF" style="font-family:ariel;font-size:28">
 <textPath xlink:href="#LtoAFoffsetbottom">
 theorem
 </textPath>
 </text>
-
-<set attributeName="fill" from="grey"      to="red"
-                                      begin="mouseover" end="mouseout"/>
+</g>
 </svg>
 
 <svg>  <!-- AF to L-function  -->
-<title>Given a cuspidal automorphic representation $\pi$ of a XXXX group $G$ and a finite dimensional representation $\rho$ of the Weil-Deligne group of $G$, one can form the automorphic L-function $L(s,\pi,\rho)$.</title>
+<g id="AFL">
 <defs>
-  <path id="AFtoLoffsettop" d="M 470 340 l 200 -200" 
-  stroke-width="0px" fill="none" transform="translate(130,55)"/>
-  <path id="AFtoLoffsetbottom" d="M 470 340 l 200 -200" 
-  stroke-width="0px" fill="none" transform="translate(165,85)"/>
+  <path id="AFtoLoffsettop" d="M 470 340 l 200 -200" stroke-width="0px" fill="none" transform="translate(130,55)"></path>
+  <path id="AFtoLoffsetbottom" d="M 470 340 l 200 -200" stroke-width="0px" fill="none" transform="translate(165,85)"></path>
 </defs>
 
-  <path id="LtoAF" d="M 470 340 l 140 -140 l -14 -14 l 42 0 l 0 42 l -14 -14 l -140 140 Z" fill="darkorange" transform="rotate(180 610 310)"/>
-<text id="NFL" style="font-family:ariel;font-size:28">
+  <path class="AFL" d="M 470 340 l 140 -140 l -14 -14 l 42 0 l 0 42 l -14 -14 l -140 140 Z" fill="darkorange" transform="rotate(180 610 310)"></path>
+<text class="AFL" style="font-family:ariel;font-size:28">
 <textPath xlink:href="#AFtoLoffsettop">
-automorphic <!--
-representations of the
--->
+automorphic
 </textPath>
 </text>
-<text style="font-family:ariel;font-size:28">
+<text class="AFL" style="font-family:ariel;font-size:28">
 <textPath xlink:href="#AFtoLoffsetbottom">
 representation
-<!--
-Weil-Deligne group
--->
 </textPath>
 </text>
-
-<set attributeName="fill" from="grey"      to="red"
-                                      begin="mouseover" end="mouseout"/>
+</g>
 </svg>
 
+<g id="AVAF">
 <svg> <!-- AV to AF -->
-<title>A variety is 'modular' if its Hasse-Weil L-function is the same as the standard L-function of some modular form.
-The key step in proving Fermat's Last Theorem was showing that certain elliptic curves are modular.</title>
+
 <defs>
-<path id="modularvarguide" d="M 260 110 q 160 150 320 20"
-  stroke-width="0" fill="none" transform="translate(0,-15)"/>
+<path id="modularvarguide" d="M 260 150 q 160 150 320 20" stroke-width="0" fill="none" transform="translate(0,-15)"></path>
 </defs>
-<path id="modularvar" d="M 260 110 q 160 150 320 20"
-  stroke="pink" stroke-width="15" fill="none" />
-<path d="M 580 130 l -20 -20 l 40 0 l 0 40 Z" fill="pink" />
-<text  style="font-family:ariel;font-size:28">
+<path d="M 260 150 q 160 150 320 20" stroke="pink" stroke-width="10" fill="none"></path>
+<path d="M 576 176 l -15 -15 l 30 0 l 0 30 Z" fill="pink"></path>
+<text class="AVAF" style="font-family:ariel;font-size:28">
 <textPath xlink:href="#modularvarguide">
                   &nbsp; &nbsp; some varieties are modular
 </textPath>
 </text>
-<set attributeName="fill" from="black"      to="red"
-                                      begin="mouseover" end="mouseout"/>
 </svg>
+</g>
 
-<svg> <!-- GG and NF to AR -->
-<title>An Artin representation is a finite dimensional representation of the Galois group of a number field. (Somebody please correct that to what it should say.)</title>
-<!--
-<path id="NFAR" d="M 270 750 q 160 50 310 5"
-  stroke="black" stroke-width="1" fill="none" />
-<path id="GGAR" d="M 380 888 q 30 -95 165 -124"
-  stroke="black" stroke-width="1" fill="none" />
--->
-<path id="GGAR" d="M 380 888 Q 410 793 545 764"
-  stroke="black" stroke-width="2" fill="none" />
-<path id="GGAR" d="M 380 888 l 20,-20 m -20,20 l 20,20"
-  stroke="black" stroke-width="2" fill="none" transform="rotate(-70 380 888)"/>
-<path id="NFAR" d="M 270 750 q 160 50 310 5"
-  stroke="black" stroke-width="2" fill="none" />
-<path id="GGAR" d="M 270 750 l 20,-20 m -20,20 l 20,20"
-  stroke="black" stroke-width="2" fill="none" transform="rotate(15 270 750)"/>
+<g id="AFAV">
+<svg> <!-- AF to AV -->
+
 <defs>
-<path id="arguide1" d="M 380 888 Q 410 793 545 764"
-  stroke-width="0" fill="none" transform="translate(-1,-5)"/>
-<path id="arguide2" d="M 270 750 q 160 50 310 5"
-  stroke="black" stroke-width="0" fill="none" transform="translate(0,-5)"/>
+<path id="svguide" d="M 264 150 q 160 -150 320 10" stroke-width="0" fill="none" transform="translate(0,-15)"></path>
 </defs>
+<path d="M 260 140 q 160 150 320 20" stroke="lightblue" stroke-width="10" fill="none" transform="rotate(180 425 127)"></path>
+<path d="M 576 166 l -15 -15 l 30 0 l 0 30 Z" fill="lightblue" transform="rotate(180 425 127)"></path>
+<text class="AFAV" style="font-family:ariel;font-size:28">
+<textPath xlink:href="#svguide">
+ &nbsp; &nbsp; &nbsp; &nbsp; 
+ &nbsp; &nbsp; Shimura varieties
+</textPath>
+</text>
+</svg>
+</g>
 
-<text  style="font-family:ariel;font-size:20">
-<textPath xlink:href="#arguide1">
-                  &nbsp; &nbsp; component
+
+
+
+<svg>
+<path style="display: none;" class="popbox" d="M 500 950 l 0 -100 l 500 0 l 0 100" stroke="none" fill="moccasin" stroke-width="0" display="none"></path>
+<path style="display: none;" class="AFLhidden" d="M 500 1000 l 0 -150 l 500 0 l 0 150" stroke="none" fill="moccasin" stroke-width="0" display="none"></path>
+
+<text class="NFhidden" x="510" y="880" stroke="none" fill="black" style="font-family:verdana;font-size:20;display:none">A number field is a finite dimensional extension</text>
+<text class="NFhidden" x="510" y="905" stroke="none" fill="black" style="font-family:verdana;font-size:20;display:none
+">of the rational numbers.</text>
+
+<text class="NFLhidden" x="510" y="880" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">The Dedekind zeta function is defined as a</text>
+<text class="NFLhidden" x="510" y="905" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">product over the prime ideals of the number</text>
+<text class="NFLhidden" x="510" y="930" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">field.</text>
+
+<text class="ARhidden" x="510" y="880" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">An Artin representation is a finite dimensional</text>
+<text class="ARhidden" x="510" y="905" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">representation of the Galois group of a number</text>
+<text class="ARhidden" x="510" y="930" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">field.</text>
+
+<text class="NFGGhidden" x="510" y="880" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">Associated to a number field is a Galois group:</text>
+<text class="NFGGhidden" x="510" y="905" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">the Galois group of its Galois closure.</text>
+
+<text class="LLhidden" x="510" y="880" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">The Rankin-Selberg convolution of a degree n</text>
+<text class="LLhidden" x="510" y="905" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">L-function and a degree m L-function is an</text>
+<text class="LLhidden" x="510" y="930" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">L-function of degree n*m.</text>
+
+<text class="AVAFhidden" x="510" y="880" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">A variety is 'modular' if its Hasse-Weil</text>
+<text class="AVAFhidden" x="510" y="905" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">L-function is the same as the standard  </text>
+<text class="AVAFhidden" x="510" y="930" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">L-function of some modular form.</text>
+
+<text class="AFAVhidden" x="510" y="880" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">Shimura varieties are algebraic varieties</text>
+<text class="AFAVhidden" x="510" y="905" stroke="none" fill="black" style="font-family: verdana; font-size
+: 20px; display: none;">uniformized by the same linear algebraic</text>
+<text class="AFAVhidden" x="510" y="930" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">groups that give rise to  automorphic forms.</text>
+
+<text class="AVAVhidden" x="510" y="880" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">A 'twist' is an algebraic variety defined</text>
+<text class="AVAVhidden" x="510" y="905" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">over the same field isomorphic to the </text>
+<text class="AVAVhidden" x="510" y="930" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">original one over some larger field.</text>
+
+<text class="AFLhidden" x="510" y="880" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">Given a cuspidal automorphic representation</text>
+<text class="AFLhidden" x="510" y="905" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">&pi; of an adelic reductive group G and a finite </text>
+<text class="AFLhidden" x="510" y="930" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">dimensional representation &rho; of the Weil-</text>
+<text class="AFLhidden" x="510" y="955" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">Deligne group of G, one can form the</text>
+<text class="AFLhidden" x="510" y="980" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">automorphic L-function L(s,&pi;,&rho;).</text>
+
+<text class="AFAFhidden" x="510" y="880" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">A 'lift' is a map from the automorphic forms  </text>
+<text class="AFAFhidden" x="510" y="905" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">on one group to the automorphic forms on  </text>
+<text class="AFAFhidden" x="510" y="930" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">another group.</text>
+
+<text class="LAFhidden" x="510" y="880" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">A 'converse theorem' is an assertion that</text>
+<text class="LAFhidden" x="510" y="905" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;"> an L-function is the L-function of an</text>
+<text class="LAFhidden" x="510" y="930" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">automorphic object.</text>
+
+<text class="AVLhidden" x="510" y="880" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">The local factors of the Hasse-Weil</text>
+<text class="AVLhidden" x="510" y="905" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">L-function are determined by counting</text>
+<text class="AVLhidden" x="510" y="930" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">points on the variety modulo prime powers.</text>
+
+<text class="ARLhidden" x="510" y="880" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">The local factors of the Artin L-function are</text>
+<text class="ARLhidden" x="510" y="905" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">constructed from the trace of Frobenius.</text>
+
+<text class="AVhidden" x="510" y="880" stroke="none" fill="black" style="font-family:verdana;font-size:20;display:none">Algebraic varieties are geometric objects</text>
+<text class="AVhidden" x="510" y="905" stroke="none" fill="black" style="font-family:verdana;font-size:20;display:none"> defined by polynomial equations; a more</text>
+<text class="AVhidden" x="510" y="930" stroke="none" fill="black" style="font-family:verdana;font-size:20;display:none">refined notion is the concept of a scheme.</text>
+
+
+<text class="AFhidden" x="510" y="880" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">Automorphic forms are L
+<tspan baseline-shift="super" style="font-size: 18px">
+2
+</tspan>
+ functions on</text>
+<text class="AFhidden" x="510" y="905" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">certain double coset spaces of the adelic</text>
+<text class="AFhidden" x="510" y="930" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">points of a linear algebraic group.</text>
+
+<text class="Lhidden" x="510" y="880" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">An L-function is a Dirichlet series with a</text>
+<text class="Lhidden" x="510" y="905" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">functional equation and an Euler product.</text>
+
+<text class="GGhidden" x="510" y="880" stroke="none" fill="black" style="font-family:verdana;font-size:20;display:none">Galois groups can be realized as permutations</text>
+<text class="GGhidden" x="510" y="905" stroke="none" fill="black" style="font-family:verdana;font-size:20;display:none">acting on the roots of a polynomial.</text>
+
+
+<text class="ARAFhidden" x="510" y="880" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">The Langlands program predicts that Galois</text>
+<text class="ARAFhidden" x="510" y="905" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">representations are automorphic.</text>
+
+<text class="AVNFhidden" x="510" y="880" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;"> The &eacute;tale cohomology with torsion coefficients</text>
+<text class="AVNFhidden" x="510" y="905" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">carries an action of the absolute Galois group.</text>
+<text class="AVNFhidden" x="510" y="930" stroke="none" fill="black" style="font-family: verdana; font-size: 20px; display: none;">The kernel is an n-division field.</text>
+
+
+</svg>
+
+<svg> <!-- LL lifts -->
+<defs> 
+  <path id="RSoffset" d="M 350,430 A 180,180 0 0,1 550 430" stroke-width="0px" fill="none" transform="translate(0,0)"></path>
+</defs>
+ <path d="M 350,435 A 180,180 0 0,1 550 435 l -5 -15  m 5 15 l -15 4" stroke="darkorange" fill="none" stroke-width="4"></path>
+
+<g id="LL">
+<text class="LL" style="font-family:ariel;font-size:28">
+<textPath xlink:href="#RSoffset">
+&nbsp;&nbsp;Rankin-Selberg
 </textPath>
 </text>
-<text  style="font-family:ariel;font-size:20">
-<textPath xlink:href="#arguide2">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; component
-</textPath>
-</text>
-<set attributeName="fill" from="black"      to="red"
-                                      begin="mouseover" end="mouseout"/>
+</g>
+</svg>
+
 </svg>
 
 
-</svg>
 
 {% endblock %}
 
