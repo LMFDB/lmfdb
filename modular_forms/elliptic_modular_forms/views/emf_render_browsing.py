@@ -190,7 +190,7 @@ def browse_elliptic_modular_forms(level=0,weight=0,character=-1,label='',limits=
         #if info.has_key('plot'):
         if drawdomain:
             info['fd_plot_url']= url_for('emf.render_plot',level=level, grouptype=info['grouptype'])
-            emf_logger.info("PLOT: %s" % info['fd_plot'])
+            emf_logger.info("PLOT: %s" % info['fd_plot_url'])
     if level>0 and weight==0:
         #print "here1!"
         title = "Newforms for \(\Gamma_{0}({1})\)".format(info['grouptype'],level)
