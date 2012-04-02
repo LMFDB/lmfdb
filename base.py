@@ -166,10 +166,10 @@ def urlencode(kwargs):
 def link_to_current_hg_version():
   """returns link to list of revisions, where the current one is on top"""
   try:
-    from popen2 import popen2
+    from subprocess import Popen, PIPE
     # date via: {date|rfc3339date}
     hg = '''hg parent --template '<a href="http://code.google.com/p/lmfdb/source/list?r={node}">{node|short}</a>' '''
-    __hg = popen2(hg)[0].read()
+    __hg = Popen([hg], shell=True, stdout=PIPE).communicate()[0]
   except:
     __hg = ''
   return {'current_version' : __hg }
