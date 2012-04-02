@@ -242,7 +242,11 @@ class ArtinRepresentation(object):
             return self.bad_factor(p)
         else:
             return self.good_factor(p)
-    
+        
+    def Lfunction(self):
+        from Lfunction import ArtinLfunction
+        return ArtinLfunction(self.dimension(), self.conductor(), self.index())
+
     
 class CharacterValues(list):
     def display(self):
@@ -407,8 +411,11 @@ class NumberFieldGaloisGroup(object):
             resolvents = self.Frobenius_resolvents()
             # Slow below
             def tmp(cycle_type):
-                return [d for d in resolvents if d["CycleType"] == cycle_type and d["Algorithm"] == "CYC"][0]["Classes"]
-                # Simplest case. If the entry has a "CYC", then it also has a "Classes" entry
+                try:
+                    return [d for d in resolvents if d["CycleType"] == cycle_type and d["Algorithm"] == "CYC"][0]["Classes"]
+                    # Simplest case. If the entry has a "CYC", then it also has a "Classes" entry
+                except IndexError:
+                    raise NotImplementedError, "At the moment we assume it is of type 'CYC'"
             self._from_cycle_type_to_conjugacy_class_index = tmp
             return tmp
 

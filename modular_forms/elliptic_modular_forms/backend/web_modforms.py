@@ -31,7 +31,6 @@ import re
 
 from flask import url_for
 
-
 ## DB modules
 import pymongo 
 import gridfs
@@ -42,6 +41,11 @@ import base
 from modular_forms.elliptic_modular_forms import emf_logger
 from plot_dom import draw_fundamental_domain
 from emf_core import html_table,len_as_printed
+try:
+    from dirichlet_conrey import *
+except:
+    emf_logger.critical("Could not import dirichlet_conrey!")
+
 db_name = 'modularforms'
 dbport = 37010
 
@@ -104,6 +108,7 @@ class WebModFormSpace(Parent):
                 self._group = data['group']
             if data.has_key('character'):
                 self._character = data['character']
+                self._conrey_character=self._get_conrey_character(self._character)
             if data.has_key('modular_symbols'):
                  self._modular_symbols = data['modular_symbols']
             if data.has_key('newspace'):
@@ -132,6 +137,7 @@ class WebModFormSpace(Parent):
                 self._galois_decomposition=[]
                 self._oldspace_decomposition=[]
                 self._galois_orbits_labels=[]
+                self._conrey_character=self._get_conrey_character(self._character)
                 self._newforms=list()
                 l = len(self.galois_decomposition())
                 for i in range(l):
@@ -140,6 +146,7 @@ class WebModFormSpace(Parent):
                     self._compute_newforms(compute)                    
             except RuntimeError:
                 raise RuntimeError, "Could not construct space for (k=%s,N=%s,chi=%s)=" % (k,N,self._chi)
+        emf_logger.debug("Setting conrey_character={0}".format(self._conrey_character))
         ### If we can we set these dimensions using formulas
         if(self.dimension()==self.dimension_newspace()):
             self._is_new=True
@@ -181,6 +188,12 @@ class WebModFormSpace(Parent):
         except IndexError:
             emf_logger.critical("Got character no. {0}, which are outside the scope of Galois orbits of the characters mod {1}!".format(k,self.group().level()))
             return trivial_character(self.group().level())
+        
+    def _get_conrey_character(self,chi):
+        Dc = DirichletGroup_conrey(chi.modulus())
+        for c in Dc:
+            if c.sage_character() == chi:
+                return c
 
         
     def _get_objects(self,k,N,chi,use_db=True,get_what='Modular_symbols',**kwds):
@@ -383,6 +396,12 @@ class WebModFormSpace(Parent):
 
     def character(self):
         return self._character
+
+    def conrey_character(self):
+        return self._conrey_character
+
+    def conrey_character_name(self):
+        return "\chi_{" + str(self._N) + "}(" +str(self._conrey_character.number()) + ",\cdot)"
     
     def character_order(self):
         if(self._character<>0):
@@ -395,7 +414,6 @@ class WebModFormSpace(Parent):
             return self._character.conductor()
         else:
             return 1
-
 
     def group(self):
         return self._group
@@ -501,7 +519,7 @@ class WebModFormSpace(Parent):
                         Sd = dimension_new_cusp_forms(xx,k)
                         if Sd>0:
                             # identify this character for internal storage... should be optimized
-                            x_k = DirichletGroup(q).list().index(xx)
+                            x_k = self._get_conrey_character(xx).number()
                             mult=len(divisors(ZZ(d)))
                             check_dim=check_dim+mult*Sd
                             L.append((q,x_k,mult,Sd))
@@ -524,7 +542,7 @@ class WebModFormSpace(Parent):
 
         n=0; s=""
         if(self._chi<>0):
-            s="\[S_{%s}^{old}(%s,\chi_{%s}) = " % (self._k,self._N,self._chi)
+            s="\[S_{%s}^{old}(%s,{%s}) = " % (self._k,self._N,self.conrey_character_name())
         else:
             s="\[S_{%s}^{old}(%s) = " % (self._k,self._N)
         if(len(O)==0):
@@ -532,7 +550,7 @@ class WebModFormSpace(Parent):
         for n in range(len(O)):
             (N,chi,m,d)=O[n]
             if(self._chi<>0):
-                s=s+" %s\cdot S_{%s}^{new}(%s,\chi_{%s})" %(m,self._k,N,chi)
+                s=s+" %s\cdot S_{%s}^{new}(%s,\chi_{%s}({%s}, \cdot))" %(m,self._k,N,N,chi)
             else:
                 s=s+" %s\cdot S_{%s}^{new}(%s)" %(m,self._k,N)
             if(n<len(O)-1 and len(O)>1):
@@ -753,8 +771,14 @@ class WebNewForm(SageObject):
         if self._chi<>0:
             if self._parent and self._parent._character:
                 self._character=self._parent._character
+                self._conrey_character=self._parent._conrey_character
             else:
-                self._character=DirichletGroup(N)[0]
+                self._character=DirichletGroup(N).galois_orbits(reps_only=True)[chi]
+                Dc = DirichletGroup_conrey(N)
+                for c in Dc:
+                    if c.sage_character() == self._character:
+                            self._conrey_character=c
+                            break
         self.f=None
         self._label = label
         self._fi=fi
@@ -943,6 +967,12 @@ class WebNewForm(SageObject):
             return self._character
         else:
             return trivial_character
+
+    def conrey_character(self):
+        return self._conrey_character
+        
+    def conrey_character_name(self):
+        return "\chi_{" +str(self._N) + "}(" +str(self._conrey_character.number()) + ",\cdot)"
         
     def character_order(self):
         return self._parent.character_order()
@@ -1543,7 +1573,7 @@ class WebNewForm(SageObject):
         if(self._verbose>1):
             emf_logger.debug("eps={0}".format(eps))
         K=self.base_ring()
-        #print "K={0}".format(K)
+        print "K={0}".format(K)
         # recall that 
         degree = K.absolute_degree()
         cm_vals=dict()
@@ -2226,9 +2256,10 @@ def _degree(K):
     if(K==QQ):
         return 1
     try:
-        if(K.is_relative()):
-            return K.relative_degree()
-        return K.degree()
+        return K.absolute_degree()
+        #if(K.is_relative()):
+        #    return K.relative_degree()
+        #return K.degree()
     except AttributeError:
         return  -1 ##  exit silently
         
