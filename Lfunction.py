@@ -1259,6 +1259,17 @@ class SymmetricPowerLfunction(Lfunction):
         return "SymmetricPower"
 
     def __init__(self, *args):
+
+        def ordinal(n):
+            if n == 2:
+                return "Square"
+            elif n == 3:
+                return "Cube"
+            elif 10 <= n % 100 < 20:
+                return str(n) + "th Power"
+            else:
+                return  str(n) + {1 : 'st', 2 : 'nd', 3 : 'rd'}.get(n % 10, "th") + " Power"
+
         try:
             self.m=Integer(args[0])
         except TypeError:
@@ -1278,7 +1289,7 @@ class SymmetricPowerLfunction(Lfunction):
         from symL.symL import SymmetricPowerLFunction
         self.S=SymmetricPowerLFunction(self.E,self.m)
 
-        self.title = "The symmetric power $L$-function $L(s,E,\mathrm{sym}^%d)$ of Elliptic Curve Isogeny Class %s"% (self.m,self.label)
+        self.title = "The Symmetric %s $L$-function $L(s,E,\mathrm{sym}^%d)$ of Elliptic Curve Isogeny Class %s"% (ordinal(self.m), self.m,self.label)
 
         self.dirichlet_coefficients = self.S._coeffs
 
