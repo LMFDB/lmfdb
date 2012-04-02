@@ -162,17 +162,17 @@ def urlencode(kwargs):
   return urllib.urlencode(kwargs)
 
 
-__hg = None
+@app.context_processor
 def link_to_current_hg_version():
   """returns link to list of revisions, where the current one is on top"""
-  if not __hg:
-    try:
-      from popen2 import popen2
-      hg = '''hg parent --template '<a href="http://code.google.com/p/lmfdb/source/list?r={node}">{date|rfc3339date}</a>' '''
-      __hg = popen2(hg)[0].read()
-    except:
-      __hg = ''
-  return __hg
+  try:
+    from popen2 import popen2
+    # date via: {date|rfc3339date}
+    hg = '''hg parent --template '<a href="http://code.google.com/p/lmfdb/source/list?r={node}">{node|short}</a>' '''
+    __hg = popen2(hg)[0].read()
+  except:
+    __hg = ''
+  return {'current_version' : __hg }
 
 ### for testing.py ###
 import unittest
