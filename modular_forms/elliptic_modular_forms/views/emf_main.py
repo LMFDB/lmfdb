@@ -44,13 +44,6 @@ logger = emf_logger
 def body_class():
   return { 'body_class' : EMF }
 
-### Maximum values to be generated on the fly
-N_max_comp = 100
-k_max_comp = 30
-### Maximum values from the database (does this make sense)
-N_max_db = 1000000 
-k_max_db = 300000
-
 #################
 # Top level
 #################
