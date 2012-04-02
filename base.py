@@ -128,7 +128,7 @@ def ctx_proc_userdata():
   # meta_description appears in the meta tag "description"
   import knowledge
   vars['meta_description'] = knowledge.knowl.Knowl("intro.description").content
-  vars['shortthanks'] = r'This project is supported by <a href="%s">grants</a> from the National Science Foundation.'% (url_for('acknowledgment') + "#sponsers")
+  vars['shortthanks'] = r'This project is supported by <a href="%s">grants</a> from the National Science Foundation.'% (url_for('acknowledgment') + "#sponsors")
   vars['feedbackpage'] = r"https://docs.google.com/spreadsheet/viewform?formkey=dDJXYXBleU1BMTFERFFIdjVXVmJqdlE6MQ"
   vars['LINK_EXT'] = lambda a,b : '<a href="%s" target="_blank">%s</a>' % (b, a)
 
@@ -160,6 +160,19 @@ def obfuscate_email(email):
 def urlencode(kwargs):
   import urllib
   return urllib.urlencode(kwargs)
+
+
+@app.context_processor
+def link_to_current_hg_version():
+  """returns link to list of revisions, where the current one is on top"""
+  try:
+    from subprocess import Popen, PIPE
+    # date via: {date|rfc3339date}
+    hg = '''hg parent --template '<a href="http://code.google.com/p/lmfdb/source/list?r={node}">{node|short}</a>' '''
+    __hg = Popen([hg], shell=True, stdout=PIPE).communicate()[0]
+  except:
+    __hg = ''
+  return {'current_version' : __hg }
 
 ### for testing.py ###
 import unittest
