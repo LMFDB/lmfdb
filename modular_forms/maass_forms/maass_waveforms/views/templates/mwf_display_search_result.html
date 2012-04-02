@@ -80,7 +80,7 @@ var evTable = $("table#eigenvalues").dataTable(
                         "sNext": ""
                 }
      }, 
-     "sDom": 't<"paging"ip>l<"bottom"fr><"filterbox">',
+     "sDom": 't<"paging"ip><"bottom"lfr><"filterbox">',
      "sScorollX": "500px", 
      "bStateSave": false,
      "bAutoWidth": false,
@@ -104,6 +104,7 @@ $('#weight').change( function() { evTable.fnDraw(); } );
 evTable.fnDraw(); 
 
 $('#eigenvalues_length').css("width","100%")
+$('#eigenvalues_length').css("text-align","left")
 $('#eigenvalues_filter').css("width","100%")
 $('.bottom').css("width","100%")
  });

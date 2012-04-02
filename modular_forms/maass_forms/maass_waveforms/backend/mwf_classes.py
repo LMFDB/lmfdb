@@ -87,6 +87,7 @@ class WebMaassForm(object):
         OPTIONAL parameters:
         - dirichlet_c_only = 0 or 1
         -fnr = get the Dirichlet series coefficients of this function in self only
+        - get_coeffs = False if we do not compute or fetch coefficients
         """
         self._db=db
         self.R=None; self.symmetry=-1
@@ -125,20 +126,23 @@ class WebMaassForm(object):
         ## As default we assume we just have c(0)=1 and c(1)=1 
         self._get_dirichlet_c_only=kwds.get('get_dirichlet_c_only',False)
         self._num_coeff0=kwds.get('num_coeffs',self.num_coeff)
+        self._get_coeffs=kwds.get('get_coeffs',True)
         self._fnr=kwds.get('fnr',0)
-        self.coeffs=f.get('Coefficient',[0,1,0,0,0])
-        if self.coeffs<>[0,1]:
-            if self._get_dirichlet_c_only:
-                if len(self.coeffs)==1:
-                    self.coeffs=self.coeffs[0]
-            else:
-                self.coeffs={}
-
+        if self._get_coeffs:
+            self.coeffs=f.get('Coefficient',[0,1,0,0,0])
+            if self.coeffs<>[0,1,0,0,0]:
+                if self._get_dirichlet_c_only:
+                    if len(self.coeffs)==1:
+                        self.coeffs=self.coeffs[0]
+                else:
+                    self.coeffs={}
+        else:
+            self.coeffs={}
         coeff_id=f.get('coeff_id',None)
         nc = Gamma0(self.level).ncusps()
         self.M0=f.get('M0',nc)
-        mwf_logger.debug("coeffid={0}".format(coeff_id))
-        if coeff_id: #self.coeffs==[] and coeff_id:
+        mwf_logger.debug("coeffid={0}, get_coeffs={1}".format(coeff_id,self._get_coeffs))
+        if coeff_id and self._get_coeffs: #self.coeffs==[] and coeff_id:
             ## Let's see if we have coefficients stored
             C = self._db.get_coefficients({"_id":self._maassid})
             if len(C)>=1:
@@ -156,7 +160,7 @@ class WebMaassForm(object):
                     print "setting C!"
                     self.coeffs=C
          ## Make sure that self.coeffs is only the current coefficients
-        if isinstance(self.coeffs,dict):
+        if self._get_coeffs and isinstance(self.coeffs,dict):
             n1=len(self.coeffs.keys())
             mwf_logger.debug("|coeff.keys()|:{0}".format(n1))
             if n1<>self.dim:
@@ -184,18 +188,26 @@ class WebMaassForm(object):
         
         
         
-    def the_character(self):
-        if self.character==0:
-            return "trivial"
+    def the_character(self,conrey=True):
+        if not conrey:
+            if self.character==0:
+                return "trivial"
+            else:
+                return self.character
         else:
-            return self.character
+            chi = self._db.getDircharConrey(self.level,self.character)
+            #return "\chi_{" + str(self.level) + "}(" +strIO(chi) + ",\cdot)"
+
+         
+        
+        
     def the_weight(self):
         if self.weight==0:
             return "0"
         else:
             return self.weight
     def fricke(self):
-        if len(self.cusp_evs)>0:
+        if len(self.cusp_evs)>1:
             return self.cusp_evs[1]
         else:
             return "undefined"

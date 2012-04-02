@@ -6,8 +6,10 @@ import gridfs
 import bson
 from sage.symbolic.expression import Expression
 import datetime
-from sage.all import Integer,DirichletGroup,is_even,loads,dumps
+from sage.all import Integer,DirichletGroup,is_even,loads,dumps,cached_method
 import math
+from dirichlet_conrey import *
+import cython
 
 class MaassDB(object):
     r"""
@@ -571,8 +573,26 @@ class MaassDB(object):
         f = self._mongo_db.DirChars.insert({'Modulus':int(N),'Chars':l,'Parity':int(parity)})
         return l
 
+    @cached_method
+    def getDircharConrey(self,N,j):
+        f = self._mongo_db.DirCharsConrey.find_one({'Modulus':int(N)})
+        if not f:
+            Dl = DirichletGroup(N).list()
+            Dc = DirichletGroup_conrey(N)
+            res=range(len(Dl))
+            for k in range(len(Dl)):
+                for c in Dc:
+                    if c.sage_character() == Dl[k]:
+                        res[k]=int(c.number())
+            self._mongo_db.DirCharsConrey.insert({'Modulus':int(N),'chars':res})
+            return res[j]
+        else:
+            res = f.get('chars')[j]
+            return res
+        
+        
 
-            
+        
     def show_data(self,also_empty=0,merge_collections=0,html=0,do_not_print=0):
         r"""
         Show which levels, characters and weights are in the database
