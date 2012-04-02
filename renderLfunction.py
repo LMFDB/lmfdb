@@ -150,7 +150,7 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
                 info = {}
                 info["bread"] =  [('L-functions', url_for("render_Lfunction")),
                                   ('Degree '+str(degree), url_for('render_Lfunction', arg1=str(degree))),
-                                  (arg2, url_for('render_Lfunction', arg1=str(degree), arg2=arg2))]
+                                  (arg2, url_for('render_Lfunction', arg1=str(degree), arg2=arg2, arg3=arg3))]
                 if degree == 1:
                     if arg2 == 'Dirichlet':
                         info["contents"] = [LfunctionPlot.getOneGraphHtmlChar(1,35,1,13)]
@@ -163,16 +163,25 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
                         info["contents"] = [processMaassNavigation()]
                         return render_template("lfunctions/MaassformGL2.html", title = 'L-functions of GL(2) Maass Forms', **info)
                     elif arg2 == 'EllipticCurve':
+                        info["representation"] = ''
                         info["contents"] = [processEllipticCurveNavigation(11,65)]
                         return render_template("lfunctions/ellipticcurve.html", title = 'L-functions of Elliptic Curves', **info)
                 elif degree == 3:
                     if arg2 == 'MaassForm':
                         info["contents"] = LfunctionPlot.getAllMaassGraphHtml(3)
                         return render_template("lfunctions/MaassformGLn.html", title = 'L-functions of GL(3) Maass Forms', **info)
+                    elif arg2 == 'EllipticCurve':
+                        info["representation"] = 'Symmetric square'
+                        info["contents"] = [processSymPowerEllipticCurveNavigation(11,65,2)]
+                        return render_template("lfunctions/ellipticcurve.html", title = 'Symmetric square of L-functions of Elliptic Curves', **info)
                 elif degree == 4:
                     if arg2 == 'MaassForm':
                         info["contents"] = LfunctionPlot.getAllMaassGraphHtml(4)
                         return render_template("lfunctions/MaassformGLn.html", title = 'L-functions of GL(4) Maass Forms', **info)
+                    elif arg2 == 'EllipticCurve':
+                        info["representation"] = 'Symmetric cube'
+                        info["contents"] = [processSymPowerEllipticCurveNavigation(11,65,3)]
+                        return render_template("lfunctions/ellipticcurve.html", title = 'Symmetric cube of L-functions of Elliptic Curves', **info)
                        
         elif arg1 == 'custom': # need a better name
             return "not yet implemented"
@@ -251,26 +260,31 @@ def set_info_for_start_page():
     ''' Sets the properties of the top L-function page.
     '''
 
-    tt = [[{'title':'Riemann Zeta Function','link': url_for('render_Lfunction', arg1='Riemann')},
+    tt = [[{'title':'Riemann zeta function','link': url_for('render_Lfunction', arg1='Riemann')},
            {'title':'Dirichlet L-function','link': url_for('render_Lfunction', arg1='degree1', arg2='Dirichlet')}],
 
-          [{'title':'Elliptic Curve','link': url_for('render_Lfunction', arg1='degree2', arg2='EllipticCurve')},
-           {'title':'GL2 Cusp Form', 'link': url_for('render_Lfunction', arg1='degree2', arg2='CuspForm')},
-           {'title':'GL2 Maass Form','link': url_for('render_Lfunction', arg1='degree2', arg2='MaassForm')}],
+          [{'title':'GL2 Cusp form', 'link': url_for('render_Lfunction', arg1='degree2', arg2='CuspForm')},
+           {'title':'GL2 Maass form','link': url_for('render_Lfunction', arg1='degree2', arg2='MaassForm')},
+           {'title':'Elliptic curve','link': url_for('render_Lfunction', arg1='degree2', arg2='EllipticCurve')}],
 
-          [{'title':'GL3 Maass Form', 'link': url_for('render_Lfunction', arg1='degree3', arg2='MaassForm')},
-           {'title':'GL4 Maass Form', 'link': url_for('render_Lfunction', arg1='degree4', arg2='MaassForm')},
-           {'title':'GSp4 Maass Form', 'link': url_for('render_Lfunction', arg1='degree4', arg2='MaassForm') + '#GSp4_Q_Maass'}]]
+          [ {'title':'', 'link': ''},
+            {'title':'GL3 Maass form', 'link': url_for('render_Lfunction', arg1='degree3', arg2='MaassForm')},
+            {'title':'Symmetric square L-function of Elliptic curve','link': url_for('render_Lfunction', arg1='degree3', arg2='EllipticCurve', arg3='Symmetric square')}],
+          
+          [{'title':'GSp4 Maass form', 'link': url_for('render_Lfunction', arg1='degree4', arg2='MaassForm') + '#GSp4_Q_Maass'},
+           {'title':'GL4 Maass form', 'link': url_for('render_Lfunction', arg1='degree4', arg2='MaassForm')},
+           {'title':'Symmetric cube L-function of Elliptic curve','link': url_for('render_Lfunction', arg1='degree4', arg2='EllipticCurve', arg3='Symmetric square')}]]
+          
+
 
     info = {
         'degree_list': range(1,5),
         'type_table': tt,
-        'type_row_list':[0,1,2]
+        'type_row_list':[0,1,2,3]
     }
 
     info['title'] = 'L-functions'
     info['bread'] = [('L-functions', url_for("render_Lfunction"))]
-#   info['learnmore'] = [('Lmfdb-wiki', 'http://wiki.l-functions.org/L-function')]
 
     return info
 
