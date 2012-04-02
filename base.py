@@ -170,7 +170,7 @@ def link_to_current_hg_version():
   txt = '{date|isodate}'
   try:
     from subprocess import Popen, PIPE
-    hg_cmd = '''hgg parent --template '<a href="%s">%s</a>' ''' % (url, txt)
+    hg_cmd = '''hg parent --template '<a href="%s">%s</a>' ''' % (url, txt)
     hg = Popen([hg_cmd], shell=True, stdout=PIPE).communicate()[0]
   except e:
     hg = ''
