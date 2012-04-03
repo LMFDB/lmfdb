@@ -68,11 +68,17 @@ def render_maass_waveforms(level=0,weight=-1,character=-1,r1=0,r2=0,**kwds):
     mwf_logger.debug("level,weight,char={0},{1},{2}".format(level,weight,character))
     if info.get('maass_id',None) and info.get('db',None):
         return render_one_maass_waveform_wp(**info)
-    if info['search'] or info['browse']:
+    if info['search'] or (info['browse'] and int(info['weight'])<>0) :
         search = get_search_parameters(info)
         mwf_logger.debug("search=%s"%search)
+        #for key in search:
+        #    info[key]=search[key]
+        #return render_browse_all_eigenvalues(**info)
         return render_search_results_wp(info,search)
-    
+    if  info['browse']:
+        mwf_logger.debug("browse info=%s"%info)
+        return render_browse_all_eigenvalues(**info)
+        
     DB = connect_db() 
     if not info['collection'] or info['collection']=='all':
         md = get_collections_info()
@@ -94,6 +100,10 @@ def render_maass_waveforms(level=0,weight=-1,character=-1,r1=0,r2=0,**kwds):
         search = get_search_parameters(info)
         mwf_logger.debug("info=%s"%info)
         mwf_logger.debug("search=%s"%search)
+        ### TODO
+        #for key in search:
+        #    info[key]=search[key]
+        #return render_browse_all_eigenvalues(**info)
         return render_search_results_wp(info,search)
     title='Maass forms'
     info['list_of_levels']=DB.levels()
@@ -394,13 +404,29 @@ def render_maass_waveforms_for_one_group(level,**kwds):
     return render_template("mwf_one_group.html", info=info,title=title)
 
 @mwf.route("/Tables",methods=met)
-def render_browse_all_eigenvalues():
+def render_browse_all_eigenvalues(**kwds):
+    info = get_args_mwf(**kwds)
     bread=[('Maass forms',url_for('.render_maass_waveforms'))]
-    info={}
+    #info={}
     info['bread']=bread
-    info['colheads']=['Level','Weight','Char','Eigenvalue',
-                              'Symmetry','Precision','Dim','Coeff'
-                             ,'Fricke','Atkin-Lehner']
+    #knowls=['mf.maass.mwf.level','mf.maass.mwf.weight',
+    #        'mf.maass.mwf.character',
+    #        'mf.maass.mwf.eigenvalue','mf.maass.mwf.symmetry',
+    #        'mf.maass.mwf.precision','mf.maass.mwf.dimension',
+    #        'mf.maass.mwf.ncoefficients','mf.maass.mwf.fricke',
+    #        'mf.maass.mwf.atkinlehner']
+    # How to incorporate KNOWLS from here?
+    info['colheads'] = ['Level','Weight','Char',
+            'Eigenvalue','Symmetry',
+            'Precision','Mult.',
+            'Coeff.','Fricke','Atkin-Lehner']
+
+    if int(info.get('weight',0))==1:
+        print "weight1=",info.get('weight',0)
+        info['wtis1']="selected";info['wtis0']=""
+    else:
+        print "weight0=",info.get('weight',0)
+        info['wtis0']="selected";info['wtis1']=""
     return render_template("mwf_browse_all_eigenvalues.html", **info)
 
 
@@ -417,17 +443,16 @@ def get_table():
     if not isinstance(search,dict):
         search={}
     #if not search.has_key('limit'):
-    search['limit']=request.form.get('iDisplayLength',2000)
-        
+    search['limit']=request.form.get('iDisplayLength',10000)        
     if not search.has_key('skip'):
         search['skip']=0        
     search['skip']=request.form.get('iDisplayStart',0)
-    evs=evs_table(search,True)
+    evs=evs_table2(search,True)
     res = {
         "aoColumns":evs['table']['colheads'],
         "aaData":evs['table']['data'],
         "iTotalRecords" : evs['totalrecords'],
-        "iTotalDisplayRecords" : evs['totalrecords']}
+        "iTotalDisplayRecords" : evs['totalrecords_filtered']}
     res = json.dumps(res)
     mwf_logger.debug("table.nrows:{0}".format(evs['table']['nrows']))
     mwf_logger.debug("totalrecords:{0}".format(evs['totalrecords']))
@@ -533,17 +558,10 @@ def conrey_character_name(N,chi):
 
 def evs_table2(search,twodarray=False):
     DB = connect_db()
-
-    #indices  = DB.get_Maass_forms(search)
-    #fs = DB.find_Maass_form_id(search) 
     table=[]
     nrows=0
     fs = DB.get_Maass_forms(search)
     for f in fs : #indices:
-        #f = DB.get_Maass_forms({'_id':fid})
-        #if len(f)==0:
-        #    continue
-        #f=f[0]
         row={}
         R = f.get('Eigenvalue',None)
         N = f.get('Level',None)
@@ -629,6 +647,7 @@ def evs_table2(search,twodarray=False):
         search.pop('limit')
     if search.has_key('skip'):
         search.pop('skip')
-    evs['totalrecords']=DB.count(search)
+    evs['totalrecords']=DB.count(search,filtered=False)
+    evs['totalrecords_filtered']=DB.count(search,filtered=True)
 
     return evs

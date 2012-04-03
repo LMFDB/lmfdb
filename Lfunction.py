@@ -1071,7 +1071,9 @@ class Lfunction_Maass(Lfunction):
             self.weight = int(self.mf.weight)
             self.characternumber = int(self.mf.character)
 
-            if self.characternumber > 0:
+            # We now use the Conrey naming scheme for characters
+            # in Maas forms too.
+            if self.characternumber <> 1:
                 raise KeyError, 'TODO L-function of Maass form with non-trivial character not implemented. '
 
             if self.level > 1:

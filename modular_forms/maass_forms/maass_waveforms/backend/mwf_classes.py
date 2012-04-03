@@ -188,15 +188,17 @@ class WebMaassForm(object):
         
         
         
-    def the_character(self,conrey=True):
-        if not conrey:
-            if self.character==0:
-                return "trivial"
-            else:
-                return self.character
-        else:
-            chi = self._db.getDircharConrey(self.level,self.character)
-            #return "\chi_{" + str(self.level) + "}(" +strIO(chi) + ",\cdot)"
+    def the_character(self):
+        return self.character
+        #     if not conrey:
+        #     if self.character==0:
+        #         return "trivial"
+        #     else:
+        #         return self.character
+        # elif not self._using_conrey:
+        #     chi = self._db.getDircharConrey(self.level,self.character)
+        #     #return "\chi_{" + str(self.level) + "}(" +strIO(chi) + ",
+#            \cdot)"
 
          
         
@@ -219,13 +221,18 @@ class WebMaassForm(object):
         else:
             return "undefined"
         
-    def set_table(self,fnr=0,cusp=0):
+    def set_table(self,fnr=-1,cusp=0):
         r"""
         Setup a table with coefficients for function nr. fnr in self,
         at cusp nr. cusp
         """
-        table={'nrows':self.num_coeff,
-               'ncols':self.dim+1}
+        table={'nrows':self.num_coeff}
+        if fnr<0:
+            colrange=range(self.dim)
+            table['ncols']=self.dim+1
+        elif fnr<self.dim:
+            colrange=[fnr]
+            table['ncols']=2
         table['data']=[]
         table['negc']=0
         realnumc=0
@@ -235,26 +242,25 @@ class WebMaassForm(object):
         if self.symmetry<>-1:
             for n in range(self.num_coeff):
                 row=[n]
-                for k in range(table['ncols']):
+                for k in colrange:
                     if self.dim==1:
                         c=None
                         try:
-                            c = self.coeffs[fnr][cusp].get(n,None)
+                            c = self.coeffs[k][cusp].get(n,None)
                         except KeyError,IndexError:
-                            mwf_logger.critical("GOt coefficient in wrong format for id={0}".format(self._maassid))
+                            mwf_logger.critical("Got coefficient in wrong format for id={0}".format(self._maassid))
+                        print k,c
                         if c<>None:
-                            c=CC(c)
                             realnumc+=1
-                        row.append(c)
+                            row.append(pretty_coeff(c))
                     else:                        
                         for j in range(self.dim):
-                            c = ((self.coeffs.get(j,{})).get(0,None)).get(n,None)
+                            c =  ((self.coeffs.get(j,{})).get(0,None)).get(n,None)
                             if c<>None:
-                                #mwf_logger.debug("c={0}".format(c))
-                                c1=CC(c)
+                                row.append(pretty_coeff(c))
                                 realnumc+=1
-                                row.append(c1)
-                table['data'].append(row)                #mwf_logger.debug("row={0}".format(row))
+                table['data'].append(row)
+                mwf_logger.debug("row={0}".format(row))
         else:
             table['negc']=1
             # in this case we need to have coeffs as dict.
@@ -282,3 +288,50 @@ class WebMaassForm(object):
                         table['data'].append(row)
         self.table=table
         mwf_logger.debug("realnumc={0}".format(realnumc))
+
+
+import sage
+def pretty_coeff(c,digits=12):
+    if isinstance(c,complex):
+        x = c.real;y=c.imag
+    elif isinstance(c,(complex,sage.rings.complex_number.ComplexNumber)):
+        x = c.real();y=c.imag()
+    else:
+        return (c,'',)
+    if y==0:
+        x = round(x,digits)
+        return x
+    ##
+    d2 = digits
+    d1 = digits+1
+ 
+    #print "d,d1,d2=",digits,d1,d2
+    #print "x0=",x
+    if abs(x)<10.0**-digits:
+        if x>0:
+            xs = "+{0:<2.1g}".format(float(x))
+        else:
+            xs = "{0:<3.1g}".format(float(x))
+    else:
+        x = round(x,digits)       
+        if x>0:
+            xs = "&nbsp;{x:<{width}.{digs}}".format(width=d2,digs=d2,x=float(x))
+        elif x<0:
+            xs = "{x:<{width}.{digs}}".format(width=d2,digs=d1,x=float(x))
+        #x = round(x,digits)
+        #y = round(y,digits)
+    #print "x1=",xs
+    if abs(y)<10.0**-digits:
+        if y>0:
+            ys = "+{0:<2.1e}".format(float(y))
+        else:
+            ys = "{0:<3.1e}".format(float(y))
+    else:
+        y = round(y,digits)
+        if y>0:
+            ys = "+{y:<{width}.0{digs}}".format(width=d2,digs=d2,y=y)
+        elif y<0:
+            ys = "{y:<{width}.0{digs}}".format(width=d2,digs=d1,y=y)
+
+    return xs+ys+"i"
+            
