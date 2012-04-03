@@ -222,14 +222,6 @@ def ajax_later(callback,*arglist,**kwds):
     else:
         res = callback(do_now=do_now)
         return jsonify(result=res)
-
-
-class MyNewGrp (object):
-    def __init__(self,level,info):
-        self._level=level
-        self._info=info
-    def plot(self,**kwds):
-        return render_fd_plot(self._level,self._info,**kwds)
             
 def render_fd_plot(level,info,**kwds):
     group = None
@@ -279,23 +271,6 @@ def render_fd_plot(level,info,**kwds):
             #emf_logger.debug('Inserting group and fundamental domain in database')
     return domain    
 
-def image_src_fdomain(G):
-    return ajax_url(image_callback_fdomain, G, _ajax_sticky=True)
-
-def image_callback_fdomain(G):
-    P = G.plot()
-    emf_logger.debug('image_callback: {0}'.format(type(P)))
-    if isinstance(P,sage.plot.plot.Graphics):
-        emf_logger.debug('Got a Graphics object')
-        _, filename = tempfile.mkstemp('.png')
-        P.save(filename)
-        data = open(filename).read()
-        os.unlink(filename)
-    else:
-        data=P
-    response = make_response(data)
-    response.headers['Content-type'] = 'image/png'
-    return response
 
 def sage_character_to_conrey_index(chi,N):
     r"""

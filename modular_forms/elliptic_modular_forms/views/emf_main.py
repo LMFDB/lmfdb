@@ -202,7 +202,6 @@ def render_elliptic_modular_form_navigation_wp(**args):
 
 met = ['GET','POST']
 @emf.route("/Download/<int:level>/<int:weight>/<int:character>/<label>",methods=['GET','POST'])
-
 def get_downloads(level=None,weight=None,character=None,label=None,**kwds):
     keys=['download','download_file','tempfile','format','number']
     info = get_args(request,level,weight,character,label,keys=keys)
@@ -235,6 +234,21 @@ def get_downloads(level=None,weight=None,character=None,label=None,**kwds):
         #else:
         #    render_one_elliptic_modular_form_space_wp(info)
         #    # download a space
+
+@emf.route("/Plots/<int:grouptype>/<int:level>/")
+def render_plot(grouptype=0,level=1):
+    domain=render_fd_plot(level,{'grouptype':grouptype})
+    if isinstance(domain,sage.plot.plot.Graphics):
+        emf_logger.debug('Got a Graphics object')
+        _, filename = tempfile.mkstemp('.png')
+        P.save(filename)
+        data = open(filename).read()
+        os.unlink(filename)
+    else:
+        data=domain
+    response = make_response(data)
+    response.headers['Content-type'] = 'image/png'
+    return response
 
 def get_coefficients(info):
     emf_logger.debug("IN GET_COEFFICIENTS!!!")

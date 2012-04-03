@@ -165,14 +165,17 @@ def urlencode(kwargs):
 @app.context_processor
 def link_to_current_hg_version():
   """returns link to list of revisions, where the current one is on top"""
+  url =  'http://code.google.com/p/lmfdb/source/list?r={node}'
+  #txt = '{node|short}'
+  txt = '{date|isodate}'
   try:
     from subprocess import Popen, PIPE
-    # date via: {date|rfc3339date}
-    hg = '''hg parent --template '<a href="http://code.google.com/p/lmfdb/source/list?r={node}">{node|short}</a>' '''
-    __hg = Popen([hg], shell=True, stdout=PIPE).communicate()[0]
-  except:
-    __hg = ''
-  return {'current_version' : __hg }
+    hg_cmd = '''hg parent --template '<a href="%s">%s</a>' ''' % (url, txt)
+    hg = Popen([hg_cmd], shell=True, stdout=PIPE).communicate()[0]
+  except e:
+    hg = ''
+  
+  return {'current_version' : hg }
 
 ### for testing.py ###
 import unittest

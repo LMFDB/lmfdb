@@ -211,7 +211,12 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
                     s = s + str(level) + '.' + str(weight) + str(label_other)
                 url = url_for('emf.render_elliptic_modular_forms',level=level,weight=weight,character=character,label=label_other)                 
                 friends.append((s,url))
-    s = 'L-Function '+str(level)+'.'+label
+    
+    s = 'L-Function '
+    if character:
+        s = s + str(level) + '.' + str(weight) + '.' + str(character) + str(label)
+    else:
+        s = s + str(level) + '.' + str(weight) + str(label)
     #url = "/L/ModularForm/GL2/Q/holomorphic?level=%s&weight=%s&character=%s&label=%s&number=%s" %(level,weight,character,label,0)
     url = '/L'+url_for('emf.render_elliptic_modular_forms',level=level,weight=weight,character=character,label=label)
     if WNF.degree()>1:
