@@ -1020,7 +1020,7 @@ def paintSvgChar(min_cond,max_cond,min_order,max_order):
 def getOneGraphHtmlChar(min_cond, max_cond, min_order, max_order):
     graphInfo = getGraphInfoChar(min_cond, max_cond, min_order, max_order)
     logger.info("graphInfo %s" % graphInfo)
-    ans = ("<embed src='" + graphInfo['src'] + "' width='" + str(graphInfo['width']) +
+    ans = ("<embed id='charGraph' src='" + graphInfo['src'] + "' width='" + str(graphInfo['width']) +
 #    ans = ("<embed src='/static/images/browseGraphChar_1_35.svg' width='" + str(graphInfo['width']) +
            "' height='" + str(graphInfo['height']) +
             "' type='image/svg+xml' " +

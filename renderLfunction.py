@@ -155,7 +155,10 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
                                   (arg2, url_for('render_Lfunction', arg1='degree' + str(degree), arg2=arg2, arg3=arg3))]
                 if degree == 1:
                     if arg2 == 'Dirichlet':
-                        info["contents"] = [LfunctionPlot.getOneGraphHtmlChar(1,25,1,14)]
+                        info["minModDefault"] = 1
+                        info["maxModDefault"] = 25
+                        info["maxOrder"] = 14
+                        info["contents"] = [LfunctionPlot.getOneGraphHtmlChar(info["minModDefault"],info["maxModDefault"],1,info["maxOrder"])]
                         return render_template("lfunctions/Dirichlet.html", title = 'Dirichlet L-functions', **info)
                 elif degree == 2:
                     if arg2 == 'CuspForm':
