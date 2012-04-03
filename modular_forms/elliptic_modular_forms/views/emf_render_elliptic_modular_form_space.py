@@ -28,16 +28,12 @@ from base import app, db
 from modular_forms.elliptic_modular_forms.backend.web_modforms import WebModFormSpace,WebNewForm
 from modular_forms.elliptic_modular_forms.backend.emf_classes import ClassicalMFDisplay,DimensionTable
 from modular_forms import MF_TOP
-from modular_forms.elliptic_modular_forms import N_max_comp, k_max_comp
+from modular_forms.elliptic_modular_forms import N_max_comp, k_max_comp, N_max_db, k_max_db
 from modular_forms.backend.mf_utils import my_get
 from modular_forms.elliptic_modular_forms.backend.emf_core import * 
 from modular_forms.elliptic_modular_forms.backend.emf_utils import *
 from modular_forms.elliptic_modular_forms.backend.plot_dom import * 
 from modular_forms.elliptic_modular_forms import EMF, emf_logger, emf,EMF_TOP
-### Maximum values from the database (does this make sense)
-N_max_db = 5000 
-k_max_db = 30
-
 ###
 use_db = True ## Should be decided intelligently
 ###

@@ -425,6 +425,8 @@ def nice_coset_reps(G):
         lvl=G.generalised_level()
         # Start with identity rep.
         cl.append(SL2Z([1 ,0 ,0 ,1 ]))
+        if lvl==1:
+            return cl
         if(not S in G):
             cl.append(S)
         # If the original group is given as a Gamma0 then

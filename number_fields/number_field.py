@@ -174,6 +174,7 @@ def number_field_render_webpage():
         'degree_list': range(1,11),
         'signature_list': sig_list, 
         'class_number_list': range(1,6)+['6..10'],
+        'count': '20',
         'discriminant_list': discriminant_list
         }
         t = 'Global Number Fields'
@@ -202,7 +203,7 @@ def render_field_webpage(args):
     try:
         info['count'] = args['count']
     except KeyError:
-        info['count'] = 10
+        info['count'] = 20
     rawpoly = coeff_to_poly(data['coefficients'])
     K = NumberField(rawpoly, 'a')
     D = data['discriminant']
@@ -451,28 +452,33 @@ def number_field_search(**args):
                       tmp[1] = newors
                     query[tmp[0]] = tmp[1]
     if info.get('ur_primes'):
-        ur_primes = [int(a) for a in str(info['ur_primes']).split(',')]
+        # now we want a list of strings, no spaces, which might be big ints
+        ur_primes = re.sub(' ', '', str(info.get('ur_primes')))
+        ur_primes = ur_primes.split(',')
+        # Assuming this will be the only nor in the query
+        query['$nor'] = [{'ramps': x} for x in ur_primes]
     else:
         ur_primes = []
 
-    if info.get('count'):        
+    count_default=20
+    if info.get('count'):
         try:
             count = int(info['count'])
         except:
-            count = 10
+            count = count_default
     else:
-        info['count'] = 10
-        count = 10
+        info['count'] = count_default
+        count = count_default
 
+    start_default=0
     if info.get('start'):
         try:
             start = int(info['start'])
-            #if(start < 0): start += (1-(start+1)/count)*count
+            if(start < 0): start += (1-(start+1)/count)*count
         except:
-            start = 0
+            start = start_default
     else:
-        start = 0
-
+        start = start_default
 
     C = base.getDBConnection()
     info['query'] = dict(query)
@@ -483,39 +489,32 @@ def number_field_search(**args):
             return render_field_webpage({'label': label})
 
     fields = C.numberfields.fields
-    fields.ensure_index('disc_log')
-    fields.ensure_index([('degree',pymongo.ASCENDING),('abs_disc',pymongo.ASCENDING),('signature',pymongo.DESCENDING)])
+#    fields.ensure_index('disc_log')
+#    fields.ensure_index([('degree',pymongo.ASCENDING),('abs_disc',pymongo.ASCENDING),('signature',pymongo.DESCENDING)])
+
     res = fields.find(query).sort([('degree',pymongo.ASCENDING),('abs_disc',pymongo.ASCENDING),('signature',pymongo.DESCENDING)]) # TODO: pages
 
-                                                                                                #    res = verify_all_fields(newres, dlist)
-    #res = [fields.find_one(query)]
+    nres = res.count()
+    res = res.skip(start).limit(count)
 
-    count = 0
+    if(start>=nres): start-=(1+(start-nres)/count)*count
+    if(start<0): start=0
     kept = []
-    floatit = discs_parse_to_slogs(dlist)
-    floatitnarrow = fudge_list(floatit, -1)
-    for a in res:
-      ok = True
-      if len(dlist)>0:
+    bad = 0
+    if len(dlist)>0:
+      floatit = discs_parse_to_slogs(dlist)
+      floatitnarrow = fudge_list(floatit, -1)
+      for a in res:
         ok = verify_field(a,floatitnarrow, dlist)
         if ok:
-          if ur_primes:
-            D = str(a['disc_string'])
-            ok = support_is_disjoint(D, ur_primes)
-      if ok:
-        count += 1
-        if count < 501:
           kept.append(a)
-    nres = count      
-
-    #    if ur_primes:
-    #  res = filter_ur_primes(res, ur_primes)
-    #if len(dlist)>0:
-    #  res = filter_disc_conds(res, dlist)
-
-
-    #if(start>=nres): start-=(1+(start-nres)/count)*count
-    #if(start<0): start=0
+        else:
+          bad += 1
+    else:
+      kept = res
+    # Very unlikely to happen, but
+    if bad>0:
+      nres -= bad
 
       #    info['fields'] = res
     info['fields'] = kept
@@ -528,9 +527,6 @@ def number_field_search(**args):
             info['report'] = 'displaying matches %s-%s of %s'%(start+1,min(nres,start+count),nres)
         else:
             info['report'] = 'displaying all %s matches'%nres
-    info['report'] = 'found %s fields' % nres
-    if count>500:
-      info['report'] += ' - displaying first 500'
     info['format_coeffs'] = format_coeffs
     info['group_display'] = group_display_shortC(C)
     info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), ('Discriminant ranges',url_for(".render_discriminants_page"))]
@@ -590,23 +586,6 @@ def merge_sort(it1,it2):
                     yield a
                     a = it1.next()
                 return
-    return
-
-def support_is_disjoint(D,plist):
-  D = ZZ(D)
-  for p in plist:
-    if ZZ(p).divides(D):
-      return False
-  return True
-
-def filter_ur_primes(it, ur_primes):
-    a = it.next()
-    D = a['discriminant']
-    while True:
-        if support_is_disjoint(D,ur_primes):
-            yield a
-        a = it.next()
-        D = a['discriminant']
     return
 
 def filter_disc_conds(it, dlist):

@@ -249,7 +249,7 @@ class WebModFormSpace(Parent):
         except Exception as e:
             emf_logger.critical("Error: {0}".format(e))
             #pass
-        if not res:
+        if not res and not use_db:
             if get_what=='Modular_symbols':
                 if chi==0:
                     res=ModularSymbols(N,k,sign=1)
@@ -264,6 +264,7 @@ class WebModFormSpace(Parent):
                     res=my_compact_newform_eigenvalues(self._modular_symbols.ambient(),prime_range(prec),names='x')
                 else:
                     res=self._modular_symbols.ambient().compact_newform_eigenvalues(prime_range(prec),names='x')
+        emf_logger.debug("res={0}".format(res))
         return res
         
     
@@ -562,8 +563,10 @@ class WebModFormSpace(Parent):
         r"""
         Set the info for all galois orbits (newforms) in list of  dictionaries.
         """
+        emf_logger.debug('In get_all_galois_orbit_info')
         from sage.monoids.all import AlphabeticStrings
         L=self.galois_decomposition()
+        emf_logger.debug('have Galois decomposition: L={0}'.format(L))
         if(len(L)==0):
             self._orbit_info=[]
         x=AlphabeticStrings().gens()
@@ -579,11 +582,13 @@ class WebModFormSpace(Parent):
             o['full_label']=full_label
             o['url']  = url_for('emf.render_elliptic_modular_forms',level=self.level(),weight=self.weight(),label=o['label'],character=self._chi)
             o['dim']  = self._galois_decomposition[j].dimension()
+            emf_logger.debug('dim({0}={1})'.format(j,o['dim']))
             poly,disc,is_relative = self.galois_orbit_poly_info(j,prec)
             o['poly']="\( {0} \)".format(latex(poly))
             o['disc']="\( {0} \)".format(latex(disc))
             o['is_relative']=is_relative
             o['qexp'] = self.qexp_orbit_as_string(j,prec,qexp_max_len)
+            emf_logger.debug('qexp({0}={1})'.format(j,o['qexp']))
             res.append(o)
         return res
     

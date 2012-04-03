@@ -92,6 +92,7 @@ class DimensionTable(object):
                     in_db=tblN[k]['in_db']
                     return in_db
         return False
+        return False
 
 class ClassicalMFDisplay(MFDisplay):
 

@@ -326,17 +326,22 @@ class MaassDB(object):
         """
         find_data=arg_to_search_parameters(data,**kwds)
         #print "find_data",find_data
+        res=[]
         for collection in self._show_collection:
             f = collection.find(find_data)
-            if f.count()>0:
-                break
-        res=[]
-        for x in f:
-            res.append(x['_id'])
+            if f.count()==0:
+                continue
+            for x in f:
+                xid=x.get('_id',None)
+                if not xid:
+                    if self._verbose>0:
+                        print "Error: got record without id:{0}".format(x)
+                        mwf_logger.debug("coeffid={0}".format(coeff_id))
+                res.append(x['_id'])
         return res
 
     def get_Maass_forms(self,data={},**kwds):
-        print "Data=",data,type(data)
+        #print "Data=",data,type(data)
         if isinstance(data,bson.objectid.ObjectId):
             find_data={'_id':data}
         elif isinstance(data,str):
@@ -348,8 +353,8 @@ class MaassDB(object):
         else:
             format_data=arg_to_format_parameters({},**kwds)
         sorting = [('Weight',pymongo.ASCENDING),('Level',pymongo.ASCENDING),('Character',pymongo.ASCENDING),('Eigenvalue',pymongo.ASCENDING)]
-        print "find_data=",find_data
-        print "format_data=",format_data
+        #print "find_data=",find_data
+        #print "format_data=",format_data
         #f = self._collection.find(find_data)
         res=[]
         skip0 = format_data['skip'];skip=skip0
@@ -362,13 +367,13 @@ class MaassDB(object):
                 continue
             finds = collection.find(find_data,sort=sorting).skip(skip).limit(limit)
             skip=0
-            print "skip=",skip
-            print "limit=",limit
-            print "find[",collection.name,"]=",finds.count()
+            #print "skip=",skip
+            #print "limit=",limit
+            #print "find[",collection.name,"]=",finds.count()
             limit = limit - finds.count()
             for x in finds:
                 res.append(x)
-        print "len=",len(res)
+        #print "len=",len(res)
         return res        
 
     def get_coefficients(self,data={},verbose=0,**kwds):
@@ -393,7 +398,7 @@ class MaassDB(object):
                     continue
                 cid=fn.get('coeff_id',None)
                 if cid==None:
-                    C1 = f.get('Coefficients',[])
+                    C1 = fn.get('Coefficients',[])
                     if C1<>[]:
                         if get_filename<>'':
                             Rst=str(R).split(".")
@@ -588,9 +593,9 @@ class MaassDB(object):
                     res[coll.name][k][N]={}
                     if also_empty==1:
                         if is_even(int(k)):
-                            lc = DB.Dirchars(N,parity=0)
+                            lc = self.Dirchars(N,parity=0)
                         else:
-                            lc = DB.Dirchars(N,parity=1)
+                            lc =self.Dirchars(N,parity=1)
                     else:
                         lc=coll.find({'Level':N,'Weight':k}).distinct('Character')
                     for x in lc:
@@ -1058,18 +1063,27 @@ def mongify(data):
         return mongify_dict(data)
     return mongify_elt(data)
 
-#from sage.rings.real_mpfr import RealNumber,RealLiteral
+import sage
+from sage.rings.real_mpfr import RealNumber,RealLiteral
+from sage.rings.complex_number import ComplexNumber
+try:
+    from sage.rings.complex_mpc import MPComplexNumber
+except:
+    MPComplexNumber=None
+    pass
 def mongify_elt(x):
     if isinstance(x,(int,float,str,unicode,datetime.datetime,bson.objectid.ObjectId)):
         return x
     if isinstance(x,Integer):
         return int(x)
-    if isinstance(x,(sage.rings.real_mpfr.RealNumber,sage.rings.real_mpfr.RealLiteral)):
+    if isinstance(x,(RealNumber,RealLiteral)):
         return float(x)
-    if isinstance(x,(complex,sage.rings.complex_number.ComplexNumber,Expression)):
+    if isinstance(x,(complex,ComplexNumber,Expression)):
         return float(real(x)),float(imag(x))
-    elif isinstance(x,sage.rings.complex_mpc.MPComplexNumber):
+    elif isinstance(x,MPComplexNumber):
         return float(x.real()),float(x.imag())
+    elif x==None:
+        return x
     else:
         raise TypeError,"Could not coerce {0} to mongodb-compatible format. Consider using gridfs instead!".format(x)
 
@@ -1105,8 +1119,8 @@ def arg_to_search_parameters(data={},**kwds):
     ch1=data.get('ch1',data.get('char1',kwds.get('ch1',kwds.get('char1',ch))))
     ch2=data.get('ch2',data.get('char2',kwds.get('ch2',kwds.get('char2',ch))))
     wt=data.get('wt',data.get('weight',kwds.get('wt',kwds.get('weight',None))))
-    wt1=data.get('w1',data.get('weight1',kwds.get('wt1',kwds.get('weight1',wt))))
-    wt2=data.get('w2',data.get('weight2',kwds.get('wt2',kwds.get('weight2',wt))))
+    wt1=data.get('wt1',data.get('weight1',kwds.get('wt1',kwds.get('weight1',wt))))
+    wt2=data.get('wt2',data.get('weight2',kwds.get('wt2',kwds.get('weight2',wt))))
     dim=data.get('d',data.get('dim',kwds.get('d',kwds.get('dim',None))))
     d1=data.get('d1',data.get('dim1',kwds.get('d1',kwds.get('dim1',dim))))
     d2=data.get('d2',data.get('dim2',kwds.get('d2',kwds.get('dim2',dim))))
@@ -1144,12 +1158,14 @@ def arg_to_search_parameters(data={},**kwds):
     if wt<>None:
         find['Weight']=wt
     elif wt1<>None or wt2<>None:
-        find['Weight']={}
-        if wt1<>None and w1<>'': 
-            w1=float(w1)
+        if wt1<>None and wt1<>'': 
+            find['Weight']={}
+            wt1=float(wt1)
             find['Weight']["$gte"]=wt1
-        if wt2<>None and w1<>'': 
-            w2=float(w2)
+        if wt2<>None and wt2<>'': 
+            if not find.has_key('Weight'):
+                find['Weight']={}
+            wt2=float(wt2)
             find['Weight']["$lte"]=wt2
     if idd<>None:
         find['_id']=idd
@@ -1157,12 +1173,14 @@ def arg_to_search_parameters(data={},**kwds):
     if ch<>None:
         find['Character']=ch
     elif ch1<>None or ch2<>None:
-        find['Character']={}
         if ch1<>None: 
             ch1=int(ch1)
+            find['Character']={}
             find['Character']["$gte"]=ch1
         if ch2<>None:
             ch2=int(ch2)
+            if not find.has_key('Character'):
+                find['Character']={}
             find['Character']["$lte"]=ch2
 
     if dim<>None:

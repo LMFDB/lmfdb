@@ -13,7 +13,7 @@ import backend
 import elliptic_modular_forms 
 import maass_forms
 from elliptic_modular_forms  import *
-
+from maass_forms import *
 base.app.register_blueprint(mf, url_prefix="/ModularForm/")
 base.app.register_blueprint(mf, url_prefix="/AutomorphicForm/")
 base.app.register_blueprint(elliptic_modular_forms.emf, url_prefix="/ModularForm/GL2/Q/holomorphic")
