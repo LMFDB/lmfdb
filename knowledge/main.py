@@ -45,7 +45,7 @@ class IgnorePattern(markdown.inlinepatterns.Pattern):
 class HashTagPattern(markdown.inlinepatterns.Pattern):
     def handleMatch(self, m):
       el = markdown.util.etree.Element("a")
-      el.set('href', url_for('.index')+'?search=%23'+m.group(2))
+      el.set('href', url_for('knowledge.index')+'?search=%23'+m.group(2))
       el.text = '#' + m.group(2) 
       return el
 
