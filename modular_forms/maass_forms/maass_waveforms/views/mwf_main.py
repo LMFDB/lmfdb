@@ -561,6 +561,7 @@ def evs_table2(search,twodarray=False):
     table=[]
     nrows=0
     fs = DB.get_Maass_forms(search)
+    mwf_logger.debug("numrec:{0}".format(len(fs)))
     for f in fs : #indices:
         row={}
         R = f.get('Eigenvalue',None)
