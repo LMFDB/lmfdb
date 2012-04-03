@@ -59,13 +59,13 @@ var evTable = $("table#eigenvalues").dataTable(
                  {"sWidth": "20%", "bSortable": true,  "bSearchable": true, "sClass": "alignLeft","fnRender":"text-align:left","sType":"numeric"},
                  {"sWidth": "10%", "bSortable": false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:left"},
                  {"sWidth": "10%", "bSortable": false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:left","sType":"numeric"},
-                 {"sWidth": "10%", "bSortable": false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:left"},
-                 {"sWidth": "10%", "bSortable": false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:left"},
-                 {"sWidth": "10%", "bSortable": false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:left"},
-                 {"sWidth": "500px","resizeable":false, "bSortable":
-                  false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:left","minWidth":200000}],  
+                 {"sWidth": "5%", "bSortable": false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:left"},
+                 {"sWidth": "5%", "bSortable": false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:left"},
+                 {"sWidth": "10%", "bSortable": false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:right","sType":"numeric"},
+                 {"sWidth": "20%", "bSortable": false, "bSearchable":
+ false,"sClass": "alignLeft", "fnRender":"text-align:left","minWidth":"200px"}],  
     "bSort":true,
-    "iDisplayLength": 15,    
+    "iDisplayLength": 10,    
     "iDisplayStart": 0,
     "fnSort":[[1,"asc"],[2,"asc"],[3,"asc"]],
     "oLanguage": {
@@ -80,7 +80,9 @@ var evTable = $("table#eigenvalues").dataTable(
                         "sNext": ""
                 }
      }, 
+"aLengthMenu": [[10, 15, 25, 50, 100 , -1], [10, 15, 25, 50, 100, "All"]],
      "sDom": 't<"paging"ip><"bottom"lfr><"filterbox">',
+   "sPaginationType": "full_numbers",
      "sScorollX": "500px", 
      "bStateSave": false,
      "bAutoWidth": false,
@@ -106,7 +108,9 @@ evTable.fnDraw();
 $('#eigenvalues_length').css("width","100%")
 $('#eigenvalues_length').css("text-align","left")
 $('#eigenvalues_filter').css("width","100%")
+$('#eigenvalues_wrapper').css("width","75%")
 $('.bottom').css("width","100%")
+$('.bottom').css("text-align","left")
  });
 </script>
 
@@ -144,7 +148,7 @@ $('.bottom').css("width","100%")
       {% if title != "Atkin-Lehner" %}
          <th> {{KNOWL(knowl,title=title)}}</th>
       {% else %}
-    <th width="200px">{{KNOWL(knowl,title=title)}}
+    <th style="width:200px">{{KNOWL(knowl,title=title)}}
    </th>
       {% endif %}
     {% endfor %}
@@ -166,7 +170,7 @@ $('.bottom').css("width","100%")
              {% if data[r].k is defined %} {{ data[r].k}}  {% endif %}
            </td>
            <td>            
-             {% if data[r].ch is defined %} {{ data[r].ch}}  {% endif %}
+             {% if data[r].ch is defined %} {{ data[r].ch | safe }}  {% endif %}
            </td>
            <td>            
              {% if data[r].R is defined %} 

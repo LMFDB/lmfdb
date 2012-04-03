@@ -138,9 +138,13 @@ class MaassDB(object):
         # Check if this record already exists
         isin,numc0,errin,idd0 =  self.is_data_in_table_mongo(level,weight,ch,sym_type,R,err)
         print "Is in database:",isin
+        if not data.get('Conrey',False):
+            # Then we have to convert the character to Conrey's label
+            ch = db.getDircharConrey(level,ch)
         insert_data={'Level':level,'Weight':weight,
                      'Character':ch,'Symmetry':sym_type,
                      'Error':err,
+                     'Conrey':int(1),  ## we leave this indicator here until the convention is more widespread
                      'Dim':dim,
                      'Eigenvalue':R,'M0':M0,'Y':Y,
                      'date':bson.datetime.datetime.utcnow(),
@@ -445,6 +449,34 @@ class MaassDB(object):
                 weights.extend(c.distinct('Weight'))
         return  list(set(weights))
 
+
+    def convert_db_to_Conrey(self,verbose=0):
+        r"""
+        Convert any non-conrey character labels 
+        """
+        if verbose>0:
+            i=0
+        for coll in self._show_collection:
+            n1 = coll.find().count()
+            n2 = coll.find({'Conrey': {"$exists" : True}}).count()
+            if n2<n1:
+                ## Have to get in there...
+                finds = coll.find({'Conrey': {"$exists" : False}})
+                for f in finds:
+                    ## Defaults to trivial character
+                    ch = f.get('Character',0)
+                    N = f.get('Level',0)
+                    if N==0:
+                        continue
+                    cnr = self.getDircharConrey(N,ch)
+                    key = {'_id':f.get('_id')}
+                    values={"$set":{'Conrey': int(1),'Character':cnr}}
+                    coll.update(key,values,upsert=False)
+                    if verbose>0:
+                        i+=1
+        if verbose>0:
+            print "Corrected {0} records!".format(i)
+                
     def characters(self,Level=0,Weight=0):
         characters=[]
         for c in self._show_collection:
@@ -551,12 +583,19 @@ class MaassDB(object):
             if self._verbose>0:
                 print "removed job nr. ",jobnr
         # update the self._list_of_jobs??
+
         
-    def Dirchars(self,N,parity=0):
+    def Dirchars(self,N,parity=0,conrey=True,verbose=0,refresh=False):
         r"""
-        Returns a list of indices of even Dirichlet characters mod N
+        Returns a list of (Conrey) indices of representatives of even or odd  Dirichlet characters mod N
         """
-        f = self._mongo_db.DirChars.find_one({'Modulus':int(N),'Parity':int(parity)})
+        if conrey:
+            f = self._mongo_db.DirChars.find_one({'Modulus':int(N),'Parity':int(parity),'Conrey':int(1)})
+        else:
+            f = self._mongo_db.DirChars.find_one({'Modulus':int(N),'Parity':int(parity),'Conrey':{"$exists":False}})
+        if verbose>0:
+
+            print "f=",f
         if f <>None:
             return f.get('Chars')
         D = DirichletGroup(N)
@@ -566,11 +605,17 @@ class MaassDB(object):
         else:
             DGG = filter(lambda x:x[0].is_odd(),DG)
         l=[]
-        print "DG=",DGG
+        if verbose>0:
+            print "DG=",DGG
         for x in DGG:
             xi = D.list().index(x[0])
+            if conrey:
+                xi = self.getDircharConrey(N,xi)
             l.append(int(xi))
-        f = self._mongo_db.DirChars.insert({'Modulus':int(N),'Chars':l,'Parity':int(parity)})
+        if conrey:
+            f = self._mongo_db.DirChars.insert({'Modulus':int(N),'Chars':l,'Parity':int(parity),'Conrey':int(1)})
+        else:
+            f = self._mongo_db.DirChars.insert({'Modulus':int(N),'Chars':l,'Parity':int(parity)})
         return l
 
     @cached_method
@@ -578,22 +623,27 @@ class MaassDB(object):
         f = self._mongo_db.DirCharsConrey.find_one({'Modulus':int(N)})
         if not f:
             Dl = DirichletGroup(N).list()
-            Dc = DirichletGroup_conrey(N)
             res=range(len(Dl))
             for k in range(len(Dl)):
-                for c in Dc:
-                    if c.sage_character() == Dl[k]:
-                        res[k]=int(c.number())
+                x = Dl[k]
+                res[k]=self.getDircharConreyFromSageChar(x)
             self._mongo_db.DirCharsConrey.insert({'Modulus':int(N),'chars':res})
             return res[j]
         else:
             res = f.get('chars')[j]
             return res
         
-        
+
+    def getDircharConreyFromSageChar(self,x):            
+        N = x.modulus()
+        DC = DirichletGroup_conrey(N)
+        for c in Dc:
+            if c.sage_character() == x:
+                return c.number()
 
         
-    def show_data(self,also_empty=0,merge_collections=0,html=0,do_not_print=0):
+        
+    def show_data(self,also_empty=0,merge_collections=0,html=0,do_not_print=0,conrey=True):
         r"""
         Show which levels, characters and weights are in the database
         If merge_collections is set to 0 we display the collections separately
@@ -613,9 +663,9 @@ class MaassDB(object):
                     res[coll.name][k][N]={}
                     if also_empty==1:
                         if is_even(int(k)):
-                            lc = self.Dirchars(N,parity=0)
+                            lc = self.Dirchars(N,parity=0,conrey=conrey)
                         else:
-                            lc =self.Dirchars(N,parity=1)
+                            lc =self.Dirchars(N,parity=1,conrey=conrey)
                     else:
                         lc=coll.find({'Level':N,'Weight':k}).distinct('Character')
                     for x in lc:
@@ -871,6 +921,8 @@ class MaassDB(object):
         i = 0
         # # Get eigenvalues and 
         maassids=self.find_Maass_form_id(search)
+        self.convert_db_to_Conrey()
+        other.convert_db_to_Conrey()
         for idd in maassids:
             if i>2:
                 return
@@ -886,6 +938,7 @@ class MaassDB(object):
             k = x.get('Weight',0)
             data['Weight'] = k
             ch = x.get('Character',0)
+            conrey = x.get('Conrey',0)
             data['Character'] = ch
             st = x.get('Symmetry',-1)
             if not isinstance(st,int):

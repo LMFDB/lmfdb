@@ -189,8 +189,8 @@ def render_one_maass_waveform_wp(info):
     info["downloads"]= []
     lenc = 20
     mwf_logger.debug("count={0}".format(DB.count()))
-    ch = info['MF'].the_character()
-    s = "\( \chi_{ {0} }({1},\cdot)".format(level,ch)
+    ch = info['MF'].character
+    s = "\( \chi_{"+str(level)+"}("+str(ch)+",\cdot) \)"
     #s+=url_for('render_Character',level,ch)
     #    mwf_logger.debug("tabl={0}".format(info['MF'].table))
     properties =  [('Level',[info['MF'].level]),
@@ -294,7 +294,7 @@ def render_search_results_wp(info,search):
     bread=[('Modular forms',url_for('mf.modular_form_main_page')),
            ('Maass forms',url_for('.render_maass_waveforms'))]
     info['bread']=bread
-    info['evs']=evs_table(search)
+    info['evs']=evs_table2(search)
     mwf_logger.debug("in render_search_results. info2={0}".format(info))
     print "wt=",info.get('weight')
     if int(info.get('weight',0))==1:
@@ -458,7 +458,7 @@ def evs_table(search,twodarray=False):
         #j = f.get('Character',0)
         ## Now get the COnrey number.
         ## First the character 
-        if k<>0:
+        if k==0:
              #s+=url_for('render_Character',level,ch)
             row['ch']=f.the_character() #conrey_character_name(N,chi)
         else:
@@ -555,13 +555,17 @@ def evs_table2(search,twodarray=False):
             row['k']=int(k)
         else:
             row['k']=k
-        j = f.get('Character',0)
+        ##
+        chi = f.get('Character',0)
+        conrey = f.get('Conrey',0)
+        if conrey==0:# we need to change to conrey's notation
+            chi=DB.getDircharConrey(N,chi)
         ## Now get the COnrey number.
         ## First the character 
-        if k<>0:
-        #     #s+=url_for('render_Character',level,ch)
-        #    row['ch']=f.the_character() #conrey_character_name(N,chi)
-            row['ch']=j
+        if k==0:
+            url = url_for('render_Character',arg1=N,arg2=chi)
+            s="<a href={0}>{1}</a>".format(url,chi)
+            row['ch']=s
         else:
             row['ch']="eta"
         st = f.get('Symmetry',-1)
