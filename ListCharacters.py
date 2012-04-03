@@ -13,10 +13,10 @@ from sage.rings.arith import euler_phi
  
 #from dirichlet_conrey import *
 
-def get_character_modulus(a,b):
+def get_character_modulus(a,b,limit=7):
     from dirichlet_conrey import DirichletGroup_conrey
     #from DirichletCharacter import kronecker_symbol as k
-    headers = range(1,7)
+    headers = range(1,limit)
     headers.append("more")
     entries = {}
     rows = range(a, b+1)
@@ -32,7 +32,8 @@ def get_character_modulus(a,b):
             entries[(row, col)] = entry
     
     entries2 = {}
-    out = lambda chi : (chi.number(), chi.is_primitive(), chi.multiplicative_order())
+    out = lambda chi : (chi.number(), chi.is_primitive(),
+                        chi.multiplicative_order(), chi.is_even())
     for k, v in entries.iteritems():
         l = []
         v = sorted(v)

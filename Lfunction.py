@@ -2,7 +2,8 @@
 import base
 import math
 from Lfunctionutilities import (pair2complex, splitcoeff, seriescoeff, compute_local_roots_SMF2_scalar_valued,
-                                compute_dirichlet_series, number_of_coefficients_needed)
+                                compute_dirichlet_series, number_of_coefficients_needed,
+                                logger)
 from LfunctionComp import nr_of_EC_in_isogeny_class, modform_from_EC, EC_from_modform
 from sage.all import *
 import sage.libs.lcalc.lcalc_Lfunction as lc
@@ -10,7 +11,6 @@ from sage.rings.rational import Rational
 import re
 import pymongo
 import bson
-import utils
 from WebCharacter import WebCharacter
 
 from modular_forms.elliptic_modular_forms.backend.web_modforms import *
@@ -18,8 +18,6 @@ from modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import Maa
 from modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaassForm
 import time ### for printing the date on an lcalc file
 import socket ### for printing the machine used to generate the lcalc file
-
-logger = utils.make_logger("LF")
 
 def get_attr_or_method(thiswillbeexecuted, attr_or_method_name):
     """
@@ -1071,7 +1069,7 @@ class Lfunction_Maass(Lfunction):
             self.weight = int(self.mf.weight)
             self.characternumber = int(self.mf.character)
 
-            if self.characternumber > 0:
+            if self.characternumber > 1:
                 raise KeyError, 'TODO L-function of Maass form with non-trivial character not implemented. '
 
             if self.level > 1:

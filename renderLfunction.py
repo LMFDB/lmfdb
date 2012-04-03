@@ -9,7 +9,7 @@ import pymongo
 from Lfunction import *
 import LfunctionComp
 import LfunctionPlot
-from utils import to_dict #, make_logger
+from utils import to_dict
 import bson
 from Lfunctionutilities import lfuncDStex, lfuncEPtex, lfuncFEtex, truncatenumber
 
@@ -120,7 +120,7 @@ def browseGraphHolo():
 
 @app.route("/browseGraphChar/")
 def browseGraphChar():
-    return render_browseGraphHolo(request.args)
+    return render_browseGraphChar(request.args)
 
 
 ###########################################################################
@@ -153,7 +153,7 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
                                   (arg2, url_for('render_Lfunction', arg1=str(degree), arg2=arg2, arg3=arg3))]
                 if degree == 1:
                     if arg2 == 'Dirichlet':
-                        info["contents"] = [LfunctionPlot.getOneGraphHtmlChar(1,35,1,13)]
+                        info["contents"] = [LfunctionPlot.getOneGraphHtmlChar(1,25,1,14)]
                         return render_template("lfunctions/Dirichlet.html", title = 'Dirichlet L-functions', **info)
                 elif degree == 2:
                     if arg2 == 'CuspForm':
@@ -195,7 +195,7 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
       return render_template('LfunctionSimple.html', info=info, **info), 500
 
     try:
-        logger.info(temp_args)
+        #logger.debug(temp_args)
         if temp_args['download'] == 'lcalcfile':
             return render_lcalcfile(L, request.url)
     except:
@@ -223,15 +223,15 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         return Lfunction_EC( label = arg3)
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic': # this has args: one for weight and one for level
-        logger.info(arg5+arg6+str(arg7)+str(arg8)+str(arg9))
+        #logger.debug(arg5+arg6+str(arg7)+str(arg8)+str(arg9))
         return Lfunction_EMF( level = arg5, weight = arg6, character = arg7, label = arg8, number = arg9)
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 <> 'Q' and arg4 == 'holomorphic': # Hilbert modular form
-        logger.debug(arg5+arg6+str(arg7)+str(arg8)+str(arg9))
+        #logger.debug(arg5+arg6+str(arg7)+str(arg8)+str(arg9))
         return Lfunction_HMF( field = arg3, label = arg5, character = arg6, number = arg7)
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2'and arg3 == 'Q' and arg4 == 'Maass':
-        logger.debug(db)
+        #logger.debug(db)
         return Lfunction_Maass(dbid = bson.objectid.ObjectId(arg5))
 
     elif arg1 == 'ModularForm' and (arg2 == 'GSp4' or arg2 == 'GL4' or  arg2 == 'GL3') and arg3 == 'Q' and arg4 == 'maass':
@@ -597,7 +597,7 @@ def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, ar
 #   Functions for rendering graphs for browsing L-functions.
 ###########################################################################
 def render_browseGraph(args):
-    logger.info(args)
+    #logger.debug(args)
     if 'sign' in args:
       data = LfunctionPlot.paintSvgFileAll([[args['group'], int(args['level']), args['sign']]])
     else:
@@ -607,23 +607,24 @@ def render_browseGraph(args):
     return response
 
 def render_browseGraphHolo(args):
-    logger.info(args)
+    #logger.debug(args)
     data = LfunctionPlot.paintSvgHolo(args['Nmin'], args['Nmax'], args['kmin'], args['kmax'])
     response = make_response(data)
     response.headers['Content-type'] = 'image/svg+xml'
     return response
 
 def render_browseGraphTMP(args):
-    logger.info(args)
+    #logger.debug(args)
     data = LfunctionPlot.paintSvgHoloGeneral(args['Nmin'], args['Nmax'], args['kmin'], args['kmax'],args['imagewidth'], args['imageheight'])
     response = make_response(data)
     response.headers['Content-type'] = 'image/svg+xml'
     return response
 
 def render_browseGraphChar(args):
-    data = LfunctionPlot.paintSvgChar(args['min_cond'], args['max_cond'], args['min_order'], arg['max_order'])
+    #logger.debug(args)
+    data = LfunctionPlot.paintSvgChar(args['min_cond'], args['max_cond'], args['min_order'], args['max_order'])
     response = make_response(data)
-    respone.headers['Content-type'] = 'image/svg+xml'
+    response.headers['Content-type'] = 'image/svg+xml'
     return response
 
 ###########################################################################
