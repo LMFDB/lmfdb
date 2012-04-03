@@ -142,15 +142,17 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
             if not arg2:
                 info = { "degree" : degree }
                 info["key"] = 777
-                info["bread"] =  [('L-functions', url_for("render_Lfunction")), ('Degree '+str(degree), url_for('render_Lfunction', arg1=str(degree)))]
+                info["bread"] =  [('L-functions', url_for("render_Lfunction")),
+                                  ('Degree '+str(degree), url_for('render_Lfunction', arg1='degree' + str(degree)))]
                     
                 return render_template("lfunctions/DegreeNavigateL.html", title = 'Degree ' + str(degree)+ ' L-functions', **info)
             
             else:
                 info = {}
                 info["bread"] =  [('L-functions', url_for("render_Lfunction")),
-                                  ('Degree '+str(degree), url_for('render_Lfunction', arg1=str(degree))),
-                                  (arg2, url_for('render_Lfunction', arg1=str(degree), arg2=arg2, arg3=arg3))]
+                                  ('Degree '+str(degree), url_for('render_Lfunction',
+                                                                  arg1='degree' + str(degree))),
+                                  (arg2, url_for('render_Lfunction', arg1='degree' + str(degree), arg2=arg2, arg3=arg3))]
                 if degree == 1:
                     if arg2 == 'Dirichlet':
                         info["contents"] = [LfunctionPlot.getOneGraphHtmlChar(1,25,1,14)]
