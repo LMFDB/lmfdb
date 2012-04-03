@@ -1,0 +1,22 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<div>
+L-functions associated to Dirichlet characters are called 
+{{ KNOWL('lfunction.dirichlet', title='Dirichlet L-functions') }}.
+</div>
+
+<p>
+The table below shows the {{ KNOWL('character.dirichlet.primitive', title='primitive characters') }} 
+arranged by the {{ KNOWL('lfunction.conductor', title='conductor') }} and the order of the character, with color indicating the sign of the 
+{{ KNOWL('lfunction.functional_equation', title='functional equation') }}.  Clicking on an entry will 
+take you to the associated Dirichlet L-function.
+</p>
+
+<!--<p>
+NOTE: This hasn't been updated yet!
+</p>-->
+{{contents[0]|safe}}
+
+
+{% endblock %}

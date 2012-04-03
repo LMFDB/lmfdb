@@ -41,7 +41,10 @@ No table!
       Eigenvalues in the Database</a>
 </li>
   </ul>
-  <button type="submit" name="Browse" value="Search">Browse</button>
+Note: Search results are currently limited to {{limit}} records.
+<br>
+The entire database consists of {{dbcount}} records.
+  <!--button type="submit" name="Browse" value="Search">Browse</button-->
 </form>
 
 <h1>Find a specific Maass form</h1>
@@ -99,13 +102,14 @@ No table!
 	      <button type="submit" name="Submit" value="Search">Search</button>
 	    </td>
 	    <td>
-	      Show number of records:
+<!--	      Show number of records:
 	      <select name="limit">
 		<option value="20">20</option>
 		<option value="50">50</option>
 		<option value="100">100</option>
 		<option value="-1">all</option>
 	      </select>
+ -->
 	    </td>
           </tr>
       </form>
