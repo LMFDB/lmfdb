@@ -2,7 +2,8 @@
 import base
 import math
 from Lfunctionutilities import (pair2complex, splitcoeff, seriescoeff, compute_local_roots_SMF2_scalar_valued,
-                                compute_dirichlet_series, number_of_coefficients_needed)
+                                compute_dirichlet_series, number_of_coefficients_needed,
+                                logger)
 from LfunctionComp import nr_of_EC_in_isogeny_class, modform_from_EC, EC_from_modform
 from sage.all import *
 import sage.libs.lcalc.lcalc_Lfunction as lc
@@ -10,7 +11,6 @@ from sage.rings.rational import Rational
 import re
 import pymongo
 import bson
-import utils
 from WebCharacter import WebCharacter
 
 from modular_forms.elliptic_modular_forms.backend.web_modforms import *
@@ -18,8 +18,6 @@ from modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import Maa
 from modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaassForm
 import time ### for printing the date on an lcalc file
 import socket ### for printing the machine used to generate the lcalc file
-
-logger = utils.make_logger("LF")
 
 def get_attr_or_method(thiswillbeexecuted, attr_or_method_name):
     """
@@ -514,7 +512,7 @@ class Lfunction_EC(Lfunction):
         self.sign = self.E.lseries().dokchitser().eps
         self.kappa_fe = [1]
         self.lambda_fe = [0.5]
-        self.numcoeff = self.Q_fe * 210 + 10
+        self.numcoeff = round(self.Q_fe * 220 + 10)
         #logger.debug("numcoeff: {0}".format(self.numcoeff))
         self.mu_fe = []
         self.nu_fe = [Rational('1/2')]
@@ -1267,6 +1265,17 @@ class SymmetricPowerLfunction(Lfunction):
         return "SymmetricPower"
 
     def __init__(self, *args):
+
+        def ordinal(n):
+            if n == 2:
+                return "Square"
+            elif n == 3:
+                return "Cube"
+            elif 10 <= n % 100 < 20:
+                return str(n) + "th Power"
+            else:
+                return  str(n) + {1 : 'st', 2 : 'nd', 3 : 'rd'}.get(n % 10, "th") + " Power"
+
         try:
             self.m=Integer(args[0])
         except TypeError:
@@ -1286,7 +1295,7 @@ class SymmetricPowerLfunction(Lfunction):
         from symL.symL import SymmetricPowerLFunction
         self.S=SymmetricPowerLFunction(self.E,self.m)
 
-        self.title = "The symmetric power $L$-function $L(s,E,\mathrm{sym}^%d)$ of Elliptic Curve Isogeny Class %s"% (self.m,self.label)
+        self.title = "The Symmetric %s $L$-function $L(s,E,\mathrm{sym}^%d)$ of Elliptic Curve Isogeny Class %s"% (ordinal(self.m), self.m,self.label)
 
         self.dirichlet_coefficients = self.S._coeffs
 

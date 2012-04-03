@@ -1,71 +1,6 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<script>
-jQuery.fn.dataTableExt.oSort['label-asc']  = function(xl,yl) {
-  var partsx, partsy;
-  partsx = xl.replace(/<.*>(.*)<.*>/g,"$1");
-  partsy = yl.replace(/<.*>(.*)<.*>/g,"$1");
-  partsx = partsx.split(".");
-  partsx = partsy.split(".");
-  x = new Array();
-  y = new Array();
-  var j;
-  for (j in partsx) x.push(parseInt(j));
-  for (j in partsy) y.push(parseInt(j));
-  if(x[0]==y[0]) {
-    return ((x[2] < y[2]) ? -1 : ((x[2] > y[2]) ?  1 : 0));
-  } else {
-    return ((x[0] < y[0]) ? -1 : 1);
-  }
-};
-
-jQuery.fn.dataTableExt.oSort['label-desc'] = function(xl,yl) {
-  var partsx, partsy;
-  partsx = xl.replace(/<.*>(.*)<.*>/g,"$1");
-  partsy = yl.replace(/<.*>(.*)<.*>/g,"$1");
-  partsx = partsx.split(".");
-  partsx = partsy.split(".");
-  x = new Array();
-  y = new Array();
-  var j;
-  for (j in partsx) x.push(parseInt(j));
-  for (j in partsy) y.push(parseInt(j));
-  if(x[0]==y[0]) {
-    return ((x[2] < y[2]) ? 1 : ((x[2] > y[2]) ?  -1 : 0));
-  } else {
-    return ((x[0] < y[0]) ? 1 : -1);
-  }
-};
-
-
- $(document).ready(function() {
-     $('#fieldTab').dataTable({
-       "bFilter": false, 
-       "aaSorting": [[0, 'asc']],
-        "oLanguage": {
-                "oPaginate": {
-                        "sPrevious": "",
-                        "sNext": "",
-                }
-        },
-       "aoColumns": [
-			{ "sType": 'label' },
-			null,
-			null,
-			null,
-			null
-		],
-       "aLengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
-       "fnRowCallback": function( row, data, index ){ 
-             MathJax.Hub.Queue(['Typeset', MathJax.Hub, row]);
-             return row;
-         }
-     });
- });
-</script>
-
-
 
 <h2> Further refine search </h2>
 
@@ -75,13 +10,25 @@ jQuery.fn.dataTableExt.oSort['label-desc'] = function(xl,yl) {
 
 <tr>
 <td align=left> {{KNOWL('nf.degree', title='degree')}} <td align=left> <input type='text' name='degree' size="3" value="{{info.degree}}"></td>
-<td align=left> {{KNOWL('nf.discriminant', title='discriminant')}} range <td align=left> <input type='text' name='discriminant' size=5 value="{{info.discriminant}}"></td>
+
+
+<td align=left> {{KNOWL('nf.signature', title='signature')}} <td align=left> <input type='text' name='signature' size=5 value="{{info.signature}}"></td>
+
 <td align=left> {{KNOWL('nf.galois_group', title='Galois group')}} <td align=left> <input type='text' name='galois_group' size=3 value="{{info.galois_group}}"></td></tr>
 <tr>
 <td align=left> {{KNOWL('nf.class_number', title='class number')}} <td align=left> <input type='text' name='class_number' size=3 value="{{info.class_number}}"></td>
 <td align=left> {{KNOWL('nf.ideal_class_group', title='class group')}} <td align=left> <input type='text' name='class_group' size=5 value="{{info.class_group}}"></td>
 <td align=left> {{KNOWL('nf.unramified_prime', title='unramified primes')}}<td align=left> <input type='text' name='ur_primes' size=3 value="{{info.ur_primes}}"></td>
 </tr>
+<tr>
+<td align='left'> {{KNOWL('nf.discriminant', title='discriminant')}} range <td align='left' colspan='2'> <input type='text' name='discriminant' size='20' value="{{info.discriminant}}"></td>
+</tr>
+
+<tr>
+<td align='left' colspan='4'>Maximum number of curves to display <input type='text' name='count' value="{{info.count}}" size='10'>
+</td>
+</tr>
+
 
 <tr> 
 <td align=left><button type='submit' value='refine'>Search again</button></td> 
@@ -92,7 +39,7 @@ jQuery.fn.dataTableExt.oSort['label-desc'] = function(xl,yl) {
 
 <h2> Results: ({{info.report}})</h2>
 
-<table border=1 cellpadding=5 class="ntdata", id="fieldTab"`>
+<table border=1 cellpadding=5 class="ntdata" id="fieldTab"`>
 <thead>
 <tr>
 <th>Label</th>
@@ -119,6 +66,10 @@ jQuery.fn.dataTableExt.oSort['label-desc'] = function(xl,yl) {
 {% endfor %}
 </tbody>
 </table>
+<br>
+<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form();return false">Previous</A>
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form();return false">Next</A></td>
+
 
 
 

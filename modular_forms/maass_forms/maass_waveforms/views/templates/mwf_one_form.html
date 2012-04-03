@@ -128,6 +128,7 @@ $('.paging_full_numbers').css('width','250px')
             {% endif %}
             </td>  
             {% for k in range(1,ncols)  %}
+             <td>
               {% if data[r] is defined and data[r][k] is defined %}
                  {% if data[r][k] is defined %}
                     {% set c  = data[r][k] %}                 
