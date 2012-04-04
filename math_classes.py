@@ -113,8 +113,10 @@ class ArtinRepresentation(object):
         return True
 
     def sign(self):
-        # Guessing needs to be implemented here
-        return int(self._data["Sign"])
+        try:
+            return int(self._data["Sign"])
+        except KeyError:
+            return "?"
     
     def trace_complex_conjugation(self):
         """ Computes the trace of complex conjugation, and returns an int
@@ -146,15 +148,15 @@ class ArtinRepresentation(object):
         return True
 
     def mu_fe(self):
-        return []
+        return "?"
         raise NotImplementedError
         
     def nu_fe(self):
-        return []
+        return "?"
         raise NotImplementedError
     
     def self_dual(self):
-        return True
+        return "?"
         raise NotImplementedError
     
     def selfdual(self):
@@ -187,9 +189,9 @@ class ArtinRepresentation(object):
             def tmp(conjugacy_class_index_start_1):
                 pol = local_factors[conjugacy_class_index_start_1-1]
                 # We now have an array of arrays, because we have a polynomial over algebraic integers
-                from sage.rings.all import RealField
+                from sage.rings.all import RealField, ComplexField
                 field = ComplexField()
-                root_of_unity = exp(2*pi/self.character_field())
+                root_of_unity = exp(2*field.pi()/int(self.character_field()))
                 pol2 = process_polynomial_over_algebraic_integer(pol, field, root_of_unity)
                 return pol2
             self._from_conjugacy_class_index_to_polynomial_fn = tmp 
@@ -199,16 +201,19 @@ class ArtinRepresentation(object):
         return self._data["BadFactors"]
     
     def bad_factor(self, p):
+        factor_double_pol = self.from_conjugacy_class_index_to_polynomial_fn()(self.bad_factor_index(p))
+        # We get a polynomial over algebraic integers
+        field = ComplexField()
+        return factor_double_pol
+        
+    def bad_factor_index(self, p):
+        # Index in the conjugacy classes, but starts at 1
         try:
             i = self.bad_primes().index(p)
         except:
             raise IndexError, "Not a bad prime%"%p
-        field = ComplexField()
-        root_of_unity = exp(2*pi/self.character_field())
-        pol2 = process_polynomial_over_algebraic_integer([[self.bad_factors()[i-1]]], field, root_of_unity)
-        return pol2
-        # index starts at 1
-
+        return self.bad_factors()[i]
+        
     def from_cycle_type_to_conjugacy_class_index(self, cycle_type):
         # Needs data stored in the number field
         try:
