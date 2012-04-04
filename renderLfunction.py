@@ -156,7 +156,7 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
                 if degree == 1:
                     if arg2 == 'Dirichlet':
                         info["minModDefault"] = 1
-                        info["maxModDefault"] = 25
+                        info["maxModDefault"] = 20
                         info["maxOrder"] = 14
                         info["contents"] = [LfunctionPlot.getOneGraphHtmlChar(info["minModDefault"],info["maxModDefault"],1,info["maxOrder"])]
                         return render_template("lfunctions/Dirichlet.html", title = 'Dirichlet L-functions', **info)
@@ -818,7 +818,14 @@ def processSymPowerEllipticCurveNavigation(startCond, endCond,power):
         end = 100
         
     iso_list = LfunctionComp.isogenyclasstable(N, end)
-    s = '<h5>Examples of symmetric square L-functions attached to isogeny classes of elliptic curves</h5>'
+    if power == 2:
+        powerName = 'square'
+    elif power == 3:
+        powerName = 'cube'
+    else:
+        powerName = str(power) + '-th power'
+                
+    s = '<h5>Examples of symmetric ' + powerName + ' L-functions attached to isogeny classes of elliptic curves</h5>'
     s += '<table>'
     
     logger.debug(iso_list)
