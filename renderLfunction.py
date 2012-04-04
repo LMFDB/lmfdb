@@ -52,6 +52,7 @@ def return_ECLfunction(label):
 @app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/")
 @app.route("/L/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>/")
 def render_Lfunction(arg1 = None, arg2 = None, arg3 = None, arg4 = None, arg5 = None, arg6 = None, arg7 = None, arg8 = None, arg9 = None):
+    #logger.debug("in render_L with args:{0}".format((arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9)))
     if arg1 == 'EllipticCurve' and arg2 == 'Q':
         return return_ECLfunction(arg3)
     return render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
