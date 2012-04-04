@@ -13,19 +13,18 @@ the distribution of prime numbers.
 </div>
 
 <h3>2. Dirichlet L-functions associated to a primitive {{ KNOWL('character.dirichlet', title='Dirichlet character') }}</h3>
-<div>
+<p>
 {{ KNOWL('lfunction.dirichlet', title='Dirichlet L-functions') }} were introduced by {{ KNOWL('bio.dirichlet', title='Dirichlet') }} in the mid-1800s as a tool to study
 prime numbers in arithmetic progressions.
-</div>
-<div>
+</p>
+<p>
 These L-functions have a functional equation of the form 
 \[
 \Lambda(s,\chi) = q^{s/2} \Gamma_{\mathbb R} (s+a) L(s,\chi) = \varepsilon_\chi \overline{\Lambda}(1-s),
 \]
-where $q$ is the conductor of $\chi$.
-Browse <a href="/Character/Dirichet">Dirichlet characters</a> to
-find their associated L-functions.
-</div>
+where $q$ is the conductor of $\chi$. The table below shows the primitive
+characters arranged by the conductor and the order of the character, with color indicating the sign of the functional equation. 
+</p>
 {% endif %}
 
 {% if degree==2 %}
@@ -99,7 +98,7 @@ See the {{ KNOWL('lfunction.degree2holo.key', title='legend') }} for more detail
 
 
     <div>
-            Given an $L$-function of an Elliptic Curve of conductor $N$, the {{ KNOWL('lfunction.symm', title='$n$-th symmetric power $L$-functions')}}
+            Given an $L$-function of an Elliptic Curve of conductor $N$, the {{ KNOWL('lfunction.symm', title='symmetric n-th power $L$-functions')}}
                 is defined by the euler product
                 \begin{equation}
                 \prod_{p\nmid N} \prod_{j=0}^n \left(1 - \frac{\alpha_p^{j} \beta^{n-j}_p}{p^s} \right)^{-1} \times \prod_{p|N} L_p(s)
@@ -142,7 +141,7 @@ See the {{ KNOWL('lfunction.degree2holo.key', title='legend') }} for more detail
 
 
     <div>
-            Given an $L$-function of an Elliptic Curve of conductor $N$, the {{ KNOWL('lfunction.symm', title='$n$-th symmetric power $L$-functions')}}
+            Given an $L$-function of an Elliptic Curve of conductor $N$, the {{ KNOWL('lfunction.symm', title='symmetric n-th power $L$-functions')}}
                 is defined by the euler product
                 \begin{equation}
                 \prod_{p\nmid N} \prod_{j=0}^n \left(1 - \frac{\alpha_p^{j} \beta^{n-j}_p}{p^s} \right)^{-1} \times \prod_{p|N} L_p(s)

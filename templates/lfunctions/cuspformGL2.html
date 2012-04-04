@@ -1,25 +1,35 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<h3>Holomorphic cusp forms for GL(2)</h3>
-
 <p>
-Currently in the LMFDB, we have data on L-functions associated to holomorphic cusp forms with trivial character.  
-These L-functions \(L(s) = \sum a_n n^{-s} \) have a {{ KNOWL("lfunction.functional_equation",title="functional equation")}} of the form 
+Currently in the LMFDB, we have data on L-functions associated to
+{{ KNOWL("mf.elliptic",title="holomorphic cusp forms")}}
+with {{ KNOWL("mf.elliptic.character",title="trivial character")}}.  
+These L-functions \(L(s,f) = \sum a_n n^{-s} \) have an 
+{{ KNOWL('lfunction.euler_product', title='Euler product')}}
+of the form
+\[
+   L(s,f)= \prod_{p\mid N}  \left(1 - a_p p^{-s} \right)^{-1}\prod_{p\nmid N}  \left(1 - a_p p^{-s} + p^{-2s} \right)^{-1}
+\]
+and satisfies the 
+{{ KNOWL("lfunction.functional_equation",title="functional equation")}} of the form 
 \begin{equation} 
-\Lambda_f(s) := N^{s/2} \Gamma_{\mathbb{C} }
-\left(s + \frac{k-1}{2} \right) L(s, f) 
-\pm \Lambda_f(1-s),
+\Lambda(s,f) = N^{s/2} \Gamma_{\mathbb{C} }
+\left(s + \frac{k-1}{2} \right)\cdot L(s, f) =
+\varepsilon \Lambda(1-s,f),
 \end{equation}
-where \(a_n n^{\frac{k-1}{2} } \) 
+where  $N$ is the 
+{{ KNOWL("mf.elliptic.level",title="level")}}, $k$ is the
+{{ KNOWL("mf.elliptic.weight",title="weight")}}
+and \(a_n n^{\frac{k-1}{2} } \) 
 is an algebraic integer. 
 </p>
 
 <p>
-In the plot below, L-functions are organized by the ordered pair \((N,k)\) where N is the 
-{{ KNOWL("mf.elliptic.level",title="level")}} and k is the {{ KNOWL("mf.elliptic.weight",title="weight")}}.
-For a given \((N,k)\), the color indicates the sign of the functional equation, and the horizontal 
-grouping indicates the degree of the field containing the arithmetically normalized coefficients. 
+In the plot below, L-functions are organized by the ordered pair \((N,k)\).
+For a given \((N,k)\), the color indicates the {{ KNOWL('lfunction.sign', title='sign')}}
+of the functional equation, and the horizontal 
+grouping indicates the {{ KNOWL('nf.degree', title='degree')}} of the field containing the arithmetically normalized coefficients. 
 
 See the {{ KNOWL('lfunction.degree2holo.key', title='legend') }} for more details.
 </p>
