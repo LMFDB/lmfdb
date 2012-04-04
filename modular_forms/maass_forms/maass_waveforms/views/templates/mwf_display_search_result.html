@@ -36,13 +36,13 @@ var evTable = $("table#eigenvalues").dataTable(
             "sInfoFiltered": "(filtered from _MAX_ total eigenvalues)",
             "sSearch":"Filter records:",
             "oPaginate": {
-                        "sPrevious": "",
-                        "sNext": ""
+                        "sPrevious": "Previous",
+                        "sNext": "Next"
                 }
      }, 
      "bjQueryUI":true,
      "sPaginationType": "full_numbers",
-     "sDom": 'ti<"paging"p><"bottom"lfr><"filterbox">',
+     "sDom": 'ti<"paging"p><"bottom"lfr><"filterbox"><"clear">',
      "sScorollX": "500px", 
      "bStateSave": false,
      "aLengthMenu": [[15, 25, 50, 100 ,200, -1], [15, 25, 50, 100, 200, "All"]],
@@ -216,33 +216,32 @@ a.paginate_button {
        <tr>
 	 <td>Level in range:</td>
 	 <td> 
-	   <input type="text" name="level_lower" value=""> --
-	   <input type="text" name="level_upper" value=""> 
-	   <span class="formexample">e.g. 1 -- 10</span>
+	   <input type="text" name="level_range" value=""  placeholder="1..10">
 	 </td>
        </tr>
        <tr>
 	 <td>R in range:</td>
 	 <td> 
-	   <input type="text" name="ev_lower" value=""> --
-	   <input type="text" name="ev_upper" value=""> 
-	   <span class="formexample">e.g. 9.5 -- 10.5</span> </td>
+	   <input type="text" name="ev_range" value=""
+                  placeholder="9.5..10">
        </tr>
        <tr>
 	    <td>Weight:</td>
 	    <td> 
-	      <input type="text" name="weight" value=""> 
-	      <span class="formexample">e.g. 1 (leave blank for weight 0)</span>
+	      <input type="text" name="weight" value="" placeholder="0"> 
+	      <span class="formexample">(leave blank for weight 0)</span>
 	    </td>
        </tr>
        <tr>
-	 <td>Character:</td><td> <input type="text" name="character" value=""> <span class="formexample">e.g. 1 (0 means trivial character, leave blank for all characters)</span></td>
+	 <td>Character:</td><td> <input type="text" name="character"
+	 value="" placeholder="0">
+<span class="formexample">(0 means trivial character, leave blank for all characters)</span></td>
        </tr>
        <tr>
 	 <td>
 	   <input type="submit" name="Submit" value="Search">
 	 </td>
-	 <td>
+	 <!--td>
 	   Show number of records:
 	 <select name="limit">
 	   <option value="20">20</option>
@@ -250,7 +249,7 @@ a.paginate_button {
 	   <option value="100">100</option>
 	   <option value="-1">all</option>
 	 </select>
-	 </td>
+	 </td-->
        </tr>
      </table>
    </form>

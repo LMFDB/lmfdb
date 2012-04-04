@@ -259,10 +259,7 @@ class WebMaassForm(object):
                             if c<>None:
                                 row.append(pretty_coeff(c))
                                 realnumc+=1
-                                c1=CC(c)
-                mwf_logger.debug("row={0}".format(row))
-                                row.append(c1)
-                table['data'].append(row)                #mwf_logger.debug("row={0}".format(row))
+                table['data'].append(row)   
         else:
             table['negc']=1
             # in this case we need to have coeffs as dict.
