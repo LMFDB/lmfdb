@@ -1,7 +1,8 @@
 import re
+from utils import make_logger
 from sage.all import *
-import utils
-logger = utils.make_logger("LF")
+
+logger = make_logger("LF")
 
 def pair2complex(pair):
     local = re.match(" *([^ ]+)[ \t]*([^ ]*)", pair)

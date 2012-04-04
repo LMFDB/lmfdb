@@ -8,23 +8,27 @@ class LfunctionTest(LmfdbTest):
     assert 'Graph' in L.data
 
   def test_LDirichlet(self):
-    L = self.tc.get('/L/Character/Dirichlet/35/7/')
+    L = self.tc.get('/L/Character/Dirichlet/5/2/')
     assert 'Graph' in L.data
 
   def test_Lec(self):
-    L = self.tc.get('/L/EllipticCurve/Q/11a2/')
+    L = self.tc.get('/L/EllipticCurve/Q/56.a/')
     assert 'Graph' in L.data
 
   def test_Lemf(self):
-    L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/1/12/0/a/0/')
+    L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/11/2/0/a/0/')
     assert 'Graph' in L.data
 
   def test_Lgl2maass(self):
-    L = self.tc.get('L/ModularForm/GL2/Q/Maass/4cb8502658bca9141c00002a/')
+    L = self.tc.get('L/ModularForm/GL2/Q/Maass/4f55571b88aece241f000013/')
     assert 'Graph' in L.data
 
   def test_Lgl3maass(self):
     L = self.tc.get('/L/ModularForm/GL3/Q/maass/GL3Maass_4_19.9942_2.27431/')
+    assert 'Graph' in L.data
+
+  def test_Lsym2EC(self):
+    L = self.tc.get('/L/SymmetricPower/2/EllipticCurve/Q/11.a/')
     assert 'Graph' in L.data
 
   def test_Lgl4maass(self):
@@ -54,6 +58,38 @@ class LfunctionTest(LmfdbTest):
   def test_Ldegree4(self):
     L = self.tc.get('/L/degree4/')
     assert 'Maass' in L.data
+
+  def test_Ldegree1Dirichlet(self):
+    L = self.tc.get('/L/degree1/Dirichlet/')
+    assert 'Dirichlet' in L.data
+
+  def test_Ldegree2CuspForm(self):
+    L = self.tc.get('/L/degree2/CuspForm/')
+    assert 'Holomorphic' in L.data
+
+  def test_Ldegree2MaassForm(self):
+    L = self.tc.get('/L/degree2/MaassForm/')
+    assert 'Maass' in L.data
+
+  def test_Ldegree2EllipticCurve(self):
+    L = self.tc.get('/L/degree2/EllipticCurve/')
+    assert 'Elliptic' in L.data
+
+  def test_Ldegree3MaassForm(self):
+    L = self.tc.get('/L/degree3/MaassForm/')
+    assert 'Maass' in L.data
+
+  def test_Ldegree3EllipticCurve(self):
+    L = self.tc.get('/L/degree3/EllipticCurve/SymmetricSquare/')
+    assert 'Elliptic' in L.data
+
+  def test_Ldegree4MaassForm(self):
+    L = self.tc.get('/L/degree4/MaassForm/')
+    assert 'Maass' in L.data
+
+  def test_Ldegree4EllipticCurve(self):
+    L = self.tc.get('/L/degree4/EllipticCurve/SymmetricCube/')
+    assert 'Elliptic' in L.data
 
 
 
