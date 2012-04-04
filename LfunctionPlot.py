@@ -818,27 +818,26 @@ def paintCSChar(width, height, xMax, yMax, xfactor, yfactor,ticlength):
 def reindex_characters(min_mod, max_mod, order_limit=12):
     h, entries, rownrs, colnrs = get_character_modulus(min_mod,max_mod,order_limit)
     char_dict = {}
-    rowindex = 0
-    for row in entries:
-        modulus = rownrs[rowindex]
-        for chi in row:
-            if chi[0][1]: #Primitiv
-                order = chi[0][2]
-                nr = chi[0][0]
-                isEven = chi[0][3]
-                
-                if order > order_limit:
-                    order = order_limit
+    for modulus in rownrs:
+        for col in colnrs:
+            entry = entries[(row, col)]
+            for chi in entry:  #chi is either a real character or pair of complex conjugates
+                if chi[0][1]: #Primitiv
+                    order = chi[0][2]
+                    nr = chi[0][0]
+                    isEven = chi[0][3]
+                    
+                    if order > order_limit:
+                        order = order_limit
 
-                # Add an entry to list with given order and modulus
-                dict_entry = char_dict.get((order, modulus), [])
-                if order < 3:  # Real
-                    dict_entry.append((nr, isEven))
-                else:  # Complex
-                    nrInv = chi[1][0]   # Number of the inverse character
-                    dict_entry.append((nr, nrInv, isEven))
-                char_dict[(order, modulus)] = dict_entry
-        rowindex += 1
+                    # Add an entry to list with given order and modulus
+                    dict_entry = char_dict.get((order, modulus), [])
+                    if order < 3:  # Real
+                        dict_entry.append((nr, isEven))
+                    else:  # Complex
+                        nrInv = chi[1][0]   # Number of the inverse character
+                        dict_entry.append((nr, nrInv, isEven))
+                    char_dict[(order, modulus)] = dict_entry
 
     #logger.debug(char_dict)
     return char_dict
