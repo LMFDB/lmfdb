@@ -910,6 +910,7 @@ div.limit-height {
   position: relative;
   bottom: -10px;
   font-size: x-small;
+  line-height: 100%;
   background: {{ col_knowl_l }};
   color: grey;
   padding: 1px 0 1px 10px;
@@ -919,6 +920,7 @@ div.limit-height {
   position: relative;
   top: -10px;
   font-size: x-small;
+  line-height: 100%;
   background: {{ col_knowl_l }};
   color: grey;
   padding: 1px 0 1px 10px;
