@@ -1,8 +1,31 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<h3>{{representation}} $L$-function of Elliptic Curves over $\mathbb{Q}$
-<br>
+{% if representation=='' %}
+<p>
+    The L-function $L(s,E)= \sum a_n n^{-s}$ of an Elliptic curve of
+    {{ KNOWL('ec.q.conductor', title='conductor')}} $N$ has an 
+    {{ KNOWL('lfunction.euler_product', title='Euler product')}}
+    of the form
+    \[
+    L(s,E)=\prod_{p\mid N}  \left(1 - a_p p^{-s} \right)^{-1}\prod_{p\nmid N}  \left(1 - a_p p^{-s} + p^{-2s} \right)^{-1}
+    \]
+    and satisfies the {{ KNOWL('lfunction.functional_equation', title='functional equation')}}
+    \[
+    \Lambda(s,E)= N^{s/2}\Gamma_{\mathbb C}(s+1/2)\cdot L(s,E)= \Lambda(1-s,E).
+    \]
+</p>
+{% else %}
+<p>
+    Given an L-function of an Elliptic curve of conductor $N$, the
+    {{ KNOWL('lfunction.symm', title='symmetric n-th power $L$-functions')}}
+    is defined by the {{ KNOWL('lfunction.euler_product', title='Euler product')}}
+    \[
+    L(s,E,\text{sym}^n)=\prod_{p\nmid N} \prod_{j=0}^n \left(1 - \frac{\alpha_p^{j} \beta^{n-j}_p}{p^s} \right)^{-1} \times \prod_{p|N} L_p(s)
+    \]
+</p>
+
+{% endif %}
 
 {{contents[0]|safe}}
 

@@ -613,8 +613,11 @@ class Lfunction_EMF(Lfunction):
         self.number = int(self.number)
 
         # Create the modular form
-        self.MF = WebNewForm(self.weight, self.level, self.character, self.label)
-        #logger.debug(str(self.MF))
+        try:
+            self.MF = WebNewForm(self.weight, self.level, self.character, self.label)
+        except:
+            raise KeyError, ("No data available yet for this modular form, so"+
+                             " not able to compute it's L-function") 
         # Extract the L-function information from the elliptic modular form
         self.automorphyexp = float(self.weight-1)/float(2)
         self.Q_fe = float(sqrt(self.level)/(2*math.pi))
@@ -1275,11 +1278,11 @@ class SymmetricPowerLfunction(Lfunction):
                 return  str(n) + {1 : 'st', 2 : 'nd', 3 : 'rd'}.get(n % 10, "th") + " Power"
 
         try:
-            self.m=Integer(args[0])
+            self.m=int(args[0])
         except TypeError:
             raise TypeError, "The power has to be an integer"
         if args[1][0] != 'EllipticCurve' or args[1][1] != 'Q':
-            raise TypeError, "The symmetric L functions have been implemented only for Elliptic Curves over Q"
+            raise TypeError, "The symmetric L-functions have been implemented only for Elliptic Curves over Q"
 
         self.label = args[1][2]
         # Create the elliptic curve
@@ -1290,6 +1293,11 @@ class SymmetricPowerLfunction(Lfunction):
         else:
             self.E = EllipticCurve([int(a) for a in Edata['ainvs']])
 
+        if self.E.has_cm():
+            raise TypeError, ('This Elliptic curve has complex multiplication' +
+                              ' and the symmetric power of its L-function is '+
+                              'then not primitive. This has not yet been implemented')
+        
         from symL.symL import SymmetricPowerLFunction
         self.S=SymmetricPowerLFunction(self.E,self.m)
 
