@@ -741,7 +741,7 @@ def getGraphInfoChar(min_cond, max_cond, min_order, max_order):
     xfactor = 70
     yfactor = 30
     extraSpace = 30
-    (width,height) = (2*extraSpace + xfactor*(max_order), 2*extraSpace + yfactor*(max_cond))
+    (width,height) = (2*extraSpace + xfactor*(max_order), 2*extraSpace + yfactor*(max_cond-min_cond+1))
 ##    url = url_for('browseGraph',group=group, level=level, sign=sign)
     url = ('/browseGraphChar/?min_cond=' + str(min_cond) + '&max_cond=' + str(max_cond) + '&min_order=' + str(min_order) + '&max_order=' + str(max_order))
     ans = {'src': url}
@@ -816,7 +816,7 @@ def paintCSChar(width, height, xMax, yMax, xfactor, yfactor,ticlength):
 ## =============================================
 
 def reindex_characters(min_mod, max_mod, order_limit=12):
-    h, entries, rownrs, colnrs = ListCharacters.get_character_modulus(min_mod,max_mod,order_limit)
+    h, entries, rownrs, colnrs = get_character_modulus(min_mod,max_mod,order_limit)
     char_dict = {}
     rowindex = 0
     for row in entries:
