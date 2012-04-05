@@ -8,7 +8,10 @@ from sage.symbolic.expression import Expression
 import datetime
 from sage.all import Integer,DirichletGroup,is_even,loads,dumps,cached_method
 import math
-from dirichlet_conrey import *
+try:
+  from dirichlet_conrey import *
+except:
+  print "dirichlet_conrey.pyx cython file is not available ..."
 import cython
 
 class MaassDB(object):
