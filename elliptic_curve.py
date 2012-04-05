@@ -247,7 +247,10 @@ def by_ec_label(label):
     try:
         N, iso, number = lmfdb_label_regex.match(label).groups()
     except AttributeError:
-        N, iso, number = cremona_label_regex.match(label).groups()
+        try:
+            N, iso, number = cremona_label_regex.match(label).groups()
+        except AttributeError:
+            raise ValueError("No such curve")
         C = base.getDBConnection()
         # We permanently redirect to the lmfdb label
         if number:
@@ -379,9 +382,9 @@ def render_isogeny_class(iso_class):
 #render_one_elliptic_modular_form(level,weight,character,label,**kwds)
 
     if int(N)<100:
-        friends.append(('Modular form '+lmfdb_iso, url_for("emf.render_elliptic_modular_forms", level=N,weight=2,character=0,label=iso)))
+        friends.append(('Modular form '+lmfdb_iso.replace('.','.2'), url_for("emf.render_elliptic_modular_forms", level=N,weight=2,character=0,label=iso)))
     else:
-        friends.append(('Modular form '+lmfdb_iso+' not available', 0))
+        friends.append(('Modular form '+lmfdb_iso.replace('.','.2')+' not available', 0))
 
     info['friends'] = friends
 
@@ -552,7 +555,7 @@ def render_curve_webpage_by_label(label):
         'cond_factor':latex(N.factor()),
         'xintegral_points':','.join(web_latex(i_p) for i_p in xintpoints),
         'tor_gens':','.join(web_latex(eval(g)) for g in data['torsion_generators']) if False else ','.join(web_latex(P.element().xy()) for P in list(G))
-        # Database has errors when torsion generators not integral
+        # Database used to have errors when torsion generators not integral
         # 'tor_gens':','.join(web_latex(eval(g)) for g in data['torsion_generators']) if 'torsion_generators' in data else [P.element().xy() for P in list(G)]
                         })
     info['friends'] = [
