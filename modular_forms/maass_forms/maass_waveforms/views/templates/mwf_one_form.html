@@ -82,7 +82,7 @@ $('.paging_full_numbers').css('width','250px')
 
 <h2>Fourier Coefficients</h2>
 {% if MF.coeffs is defined and MF.num_coeff > 0%}
-<!--table class="ntdata" id="coeffs" valign="top" border="1"-->
+{# <table class="ntdata" id="coeffs" valign="top" border="1"> #}
 <table>
 <tr><td>
 <table class="ntdata" id="coeffs">
@@ -166,11 +166,11 @@ $('.paging_full_numbers').css('width','250px')
 </td></tr>
 <tr><td>
 <p>
-<!--form name="search" method = "get" action="{{url_for('mwf.render_one_maass_waveform',maass_id=maassid)}}">
+{# <form name="search" method = "get" action="{{url_for('mwf.render_one_maass_waveform',maass_id=maassid)}}">
   <input type="hidden" name="id" value="{{maassid}}">
   <input type="hidden" name="download" value="coefficients">
   <button type="submit" name="Submit" value="Get more">Download coefficients</button>	
-</form-->
+</form> #}
 </td></tr></table>
 <div style="clear:both">
 {{ KNOWL('metadata.knowl-tag') }}

@@ -19,7 +19,8 @@
 {% if head == "Coefficients" %}
 {{ info.coefficients | safe }}
 
-<!--tbody>
+{#
+<tbody>
 <tr><td>\(n\)</td><td>\(a_n\)</td></tr>
 {% set row_class = cycler('odd', 'even') %}
 {% for id,an in data %}
@@ -29,7 +30,8 @@
 </tr>
 {% endfor %}
 </tbody>
-</table-->
+</table>
+#}
 {% else %}
 <p>{{ data }}</p>
 {% endif %}

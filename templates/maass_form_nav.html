@@ -40,7 +40,7 @@ table#maass_table_outer td {
 <tbody>
 <tr>
 <td>Group</td>
-<!-- <td> odd </td> <td> even </td> -->
+{# <td> odd </td> <td> even </td> #}
 </tr>
 {% set row_class = cycler('odd', 'even') %}
 {% for level in info.maass_group %}
@@ -57,7 +57,7 @@ table#maass_table_outer td {
 </table>
 
 <div> 
-<a href="{{ url_for('maass_form_picard')}}">\(PSL(Z[i])\)</a> <!-- added to include Holger Then's data on PSL(Z[i]) -->
+<a href="{{ url_for('maass_form_picard')}}">\(PSL(Z[i])\)</a> {# added to include Holger Then's data on PSL(Z[i]) #}
 </div>
 
 </td>
@@ -67,7 +67,7 @@ table#maass_table_outer td {
 <tbody>
 <tr>
 <td>Weight \(k\)</td>
-<!-- <td> odd </td> <td> even </td> -->
+{# <td> odd </td> <td> even </td> #}
 </tr>
 {% set row_class = cycler('odd', 'even') %}
 {% for weight in info.maass_weight %}
@@ -92,7 +92,7 @@ table#maass_table_outer td {
 <tbody>
 <tr>
 <td>Character \(\chi\)</td>
-<!-- <td> odd </td> <td> even </td> -->
+{# <td> odd </td> <td> even </td> #}
 </tr>
 {% set row_class = cycler('odd', 'even') %}
 {% for character in info.maass_character %}

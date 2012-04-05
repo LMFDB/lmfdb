@@ -246,13 +246,16 @@ in the field of complex numbers. The values are shown in the table below.
 <div class="formexample"> 
   Note: In order to use this data file you currently need to download
   and import the entire lmfdb from: 
-<a href="http://code.google.com/p/lmfdb/">lmfdb at google code</a>. <!--form name="download_file" method="post"  action="{{url_for('.render_elliptic_modular_forms')}}">
+<a href="http://code.google.com/p/lmfdb/">lmfdb at google code</a>. 
+{#
+<form name="download_file" method="post"  action="{{url_for('.render_elliptic_modular_forms')}}">
   Note: In order to use this data file you currently need to download
   <input type="hidden" name="download" value="file">
   <input type="hidden" name="download_file" value="web_modforms.py">
   <a href="javascript:void(0);"
   OnClick="document.download_file.submit()">web_modforms.py</a>
- </form -->
+ </form>
+#}
 </div>
 {% endif %}
 {% endif %}

@@ -16,9 +16,9 @@
 {{ info.error | safe }}
 </div>
 {% endif %}
-<!-- To make an interface that is easier to read we implement each case of input separately -->
+{# To make an interface that is easier to read we implement each case of input separately #}
 
-<!-- {{ info | safe }} $("div").data("option",{"start":1}); -->
+{# {{ info | safe }} $("div").data("option",{"start":1}); #}
 
 <script>
 $(document).ready(function() {
@@ -195,7 +195,6 @@ table.ntdata thead th.spaceleft {
       </div>
 
 {#
-<!--
 <h1>Search</h1>
 <form name="search" method = "post" action="{{url_for('.render_elliptic_modular_forms')}}">
   <table class="">
@@ -217,6 +216,5 @@ table.ntdata thead th.spaceleft {
   </table>
   <button type="submit" name="Submit" value="Search">Search</button>
 </form>
--->
 #}
 {% endblock content %}
