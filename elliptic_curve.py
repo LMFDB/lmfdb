@@ -330,7 +330,7 @@ def render_isogeny_class(iso_class):
         degrees[0]=E1data['degree']
     else:
         try:
-            modular_degree = E1.modular_degree()
+            degrees[0] = E1.modular_degree()
         except RuntimeError:
             pass
     cremona_labels = [E1data['label']]+[0]*(size-1)
@@ -346,7 +346,7 @@ def render_isogeny_class(iso_class):
             degrees[i-1]=Edata['degree']
         else:
             try:
-                modular_degree = E.modular_degree()
+                degrees[i-1] = E.modular_degree()
             except RuntimeError:
                 pass
         db_curves.append(E)
