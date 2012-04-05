@@ -130,12 +130,17 @@ class WebMaassForm(object):
         self._fnr=kwds.get('fnr',0)
         if self._get_coeffs:
             self.coeffs=f.get('Coefficient',[0,1,0,0,0])
-            if self.coeffs<>[0,1,0,0,0]:
-                if self._get_dirichlet_c_only:
-                    if len(self.coeffs)==1:
-                        self.coeffs=self.coeffs[0]
-                else:
-                    self.coeffs={}
+            res={}
+            for n in range(len(self.coeffs)):
+                res[n]=self.coeffs[n]
+            self.coeffs=res
+            if self._get_dirichlet_c_only:
+                #if self.coeffs<>[0,1,0,0,0]:
+                if len(self.coeffs)==1:
+                    self.coeffs=self.coeffs[0]
+            else:
+                self.coeffs={0:{0:self.coeffs}}
+                    
         else:
             self.coeffs={}
         coeff_id=f.get('coeff_id',None)
@@ -296,10 +301,11 @@ def pretty_coeff(c,digits=12):
     elif isinstance(c,(complex,sage.rings.complex_number.ComplexNumber)):
         x = c.real();y=c.imag()
     else:
-        return (c,'',)
-    if y==0:
-        x = round(x,digits)
-        return x
+        x = c
+        y = 0
+    #if y==0:
+    #    x = round(x,digits)
+    #    return x
     ##
     d2 = digits
     d1 = digits+1
@@ -319,6 +325,8 @@ def pretty_coeff(c,digits=12):
             xs = "{x:<{width}.{digs}}".format(width=d2,digs=d1,x=float(x))
         #x = round(x,digits)
         #y = round(y,digits)
+    if y==0:
+        return xs
     #print "x1=",xs
     if abs(y)<10.0**-digits:
         if y>0:
