@@ -14,10 +14,13 @@ Rewritten by John Cremona and David Roe, Bristol, March 2012
 The documents in the collection 'curves' in the database 'elliptic_curves' have the following fields:
 
    - '_id': internal mogodb identifier
-   - 'label':  (string) full label, e.g. '1225a2'
+   - 'label':  (string) full Cremona label, e.g. '1225a2'
+   - 'lmfdb_label':  (string) full LMFDB label, e.g. '1225.a2'
    - 'conductor': (int) conductor, e.g. 1225
-   - 'iso': (string) isogeny class code, e.g. 'a'
-   - 'number': (int) curve number within its class, e.g. 2
+   - 'iso': (string) Cremona isogeny class code, e.g. 'a'
+   - 'lmfdb_iso': (string) LMFDB isogeny class code, e.g. 'a'
+   - 'number': (int) Cremona curve number within its class, e.g. 2
+   - 'lmfdb_number': (int) LMFDB curve number within its class, e.g. 2
    - 'ainvs': (list of strings) list of a-invariants, e.g. ['0', '1', '1', '10617', '75394']
    - 'rank': (int) rank, e.g. 0
    - 'torsion': (int) torsion order, e.g. 1
@@ -30,14 +33,6 @@ The documents in the collection 'curves' in the database 'elliptic_curves' have 
    - 'special_value': (float) special value of derivative of L-function, e.g.1.490882041449698
    - 'real_period': (float) real period, e.g. 0.3727205103624245
    - 'degree': (int) degree of modular parametrization, e.g. 1984
-
-{u'real_period': 0.3727205103624245, u'ainvs': [u'0', u'1', u'1',
-u'10617', u'75394'], u'conductor': 1225, u'sha_an': 1.0, u'number': 2,
-u'rank': 0, u'tamagawa_product': 4, u'regulator': 1.0,
-u'torsion_structure': [], u'iso': u'a', u'label': u'1225a2', u'torsion':
-1, u'special_value': 1.490882041449698, u'_id':
-ObjectId('4cb3b38f5009fb5915001833'), u'torsion_generators': [],
-u'x-coordinates_of_integral_points': u'[]'}
 """
 
 import os.path, gzip, re, sys, time, os, random,glob
@@ -50,10 +45,8 @@ base._init(int(37010),'')
 print "getting connection"
 conn = base.getDBConnection()
 print "setting curves"
+#curves = conn.elliptic_curves.test
 curves = conn.elliptic_curves.curves
-
-
-
 
 #The following ensure_index command checks if there is an index on
 #label, conductor, rank and torsion. If there is no index it creates
@@ -64,6 +57,7 @@ curves.ensure_index('label')
 curves.ensure_index('conductor')
 curves.ensure_index('rank')
 curves.ensure_index('torsion')
+curves.ensure_index('degree')
 
 print "finished indices"
 
@@ -223,8 +217,36 @@ def alldegphi(line):
         'degree': int(data[4])
     }
 
+def alllabels(line):
+    r""" Parses one line from an alllabels file.  Returns the label
+    and a dict containing six fields, 'conductor', 'iso', 'number',
+    'lmfdb_label', 'lmfdb_iso', 'lmfdb_number', being strings or ints.
 
-filename_base_list = ['allcurves', 'allbsd', 'allgens', 'intpts', 'alldegphi']
+    Input line fields:
+
+    conductor iso number conductor lmfdb_iso lmfdb_number
+
+    Sample input line:
+
+    57 c 2 57 b 1
+
+    """
+    data = split(line)
+    if data[0]!=data[3]:
+        raise ValueError, "Inconsistent data in alllabels file: %s"%line
+    label = data[0] + data[1] + data[2]
+    lmfdb_label = data[3] + data[4] + data[5]
+    return label, {
+        'conductor': int(data[0]),
+        'iso': data[0]+data[1],
+        'number': int(data[2]),
+        'lmfdb_label': lmfdb_label,
+        'lmfdb_iso': data[3]+data[4],
+        'lmfdb_number': data[5]
+    }
+
+
+filename_base_list = ['allcurves', 'allbsd', 'allgens', 'intpts', 'alldegphi', 'alllabel']
 
 def cmp_label(lab1,lab2):
     from sage.databases.cremona import parse_cremona_label, class_to_int
@@ -244,7 +266,10 @@ def upload_to_db(base_path,min_N, max_N):
     allbsd_filename = 'allbsd.%s-%s'%(min_N,max_N)
     allgens_filename = 'allgens.%s-%s'%(min_N,max_N)
     intpts_filename = 'intpts.%s-%s'%(min_N,max_N)
-    file_list = [allcurves_filename, allbsd_filename, allgens_filename, intpts_filename]
+    alldegphi_filename = 'alldegphi.%s-%s'%(min_N,max_N)
+    alllabels_filename = 'alllabels.%s-%s'%(min_N,max_N)
+    file_list = [allbsd_filename, allgens_filename, intpts_filename, alldegphi_filename, alllabels_filename]
+#    file_list = [alldegphi_filename]
 
     data_to_insert = {} # will hold all the data to be inserted
 
@@ -271,14 +296,12 @@ def upload_to_db(base_path,min_N, max_N):
                 else:
                     curve[key] = data[key]
         print "finished reading %s lines from file"%count
-    
-    from cPickle import dumps
-    #print len(dumps(data_to_insert.values()))
+
     vals = data_to_insert.values()
-    vals.sort(cmp=comp_dict_by_label)
+    # vals.sort(cmp=comp_dict_by_label)
     count = 0
     for val in vals:
-        curves.update({'label':val['label']}, val, upsert=True)
+        curves.update({'label':val['label']}, { "$set": val}, upsert=True)
         count += 1
         if count%5000==0: print "inserted %s"%(val['label'])
 
