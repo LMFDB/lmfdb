@@ -227,7 +227,7 @@ def render_one_maass_waveform_wp(info):
             col2 = {"bSortable": "false", "bSearchable": "true", "sClass": "alignLeft","fnRender":"text-align:left","sType":"numeric" }
             cols.append(col1)
             cols.append(col2)
-    
+    info['credit']=info['MF'].contributor_name
     info['coeff_aoColumns']=cols # json.dumps(cols)
     mwf_logger.debug("col={0}".format(cols))
     #coeffurl=url_for('mwf.render_one_maass_waveform',maass_id=maass_id,download='coefficients')

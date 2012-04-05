@@ -72,8 +72,10 @@ class MaassDB(object):
             self._show_collection=[self._show_collection_name]
         if self._show_collection_name=='all':
             self._show_collection=[]
-            for cn in ['FS','HT']: #D.collection_names():
-                self._show_collection.append(D[cn])
+            ## We currently merged both collections.
+            for cn in ['FS']: #,'HT']: #D.collection_names():
+                if cn in D.collection_names():
+                    self._show_collection.append(D[cn])
 
         if not 'Coefficients' in D.collection_names():
             D.create_collection('Coefficients')
@@ -351,6 +353,7 @@ class MaassDB(object):
 
     def get_Maass_forms(self,data={},**kwds):
         verbose=kwds.get('verbose',0)
+        collection=kwds.get('collection','all')
         if verbose>0:
             print "get_Maass_forms for data=",data
         if isinstance(data,bson.objectid.ObjectId):
@@ -373,7 +376,12 @@ class MaassDB(object):
         res=[]
         skip0 = format_data['skip'];skip=skip0
         limit0= format_data['limit']; limit=limit0
+        
+        #print "SHow collection:",self._show_collection
         for collection in self._show_collection:
+            #print "limit=",limit
+            print "skip=",skip
+            print "limit=",limit
             cname = format_data.get('collection_name','')
             if cname<>'' and cname<>collection.name:
                 continue
@@ -381,10 +389,8 @@ class MaassDB(object):
                 continue
             finds = collection.find(find_data,sort=sorting).skip(skip).limit(limit)
             skip=0
-            #print "skip=",skip
-            #print "limit=",limit
-            #print "find[",collection.name,"]=",finds.count()
-            limit = limit - finds.count()
+            print "find[",collection.name,"]=",finds.count()
+            limit = limit - finds.count(True)
             for x in finds:
                 res.append(x)
         #print "len=",len(res)
@@ -976,11 +982,13 @@ class MaassDB(object):
             N = x.get('Level',0)
             data['Level'] = N
             R = x.get('Eigenvalue',0)
+            Contributor = x.get('Contributor','')
             k = x.get('Weight',0)
             data['Weight'] = k
             ch = x.get('Character',0)
             conrey = x.get('Conrey',0)
             data['Character'] = ch
+
             st = x.get('Symmetry',-1)
             if not isinstance(st,int):
                 if st=='even':
@@ -1019,6 +1027,7 @@ class MaassDB(object):
             data['Conrey']=conrey
             data['Dim']=dim
             data['_id']=idd
+            data['Contributor']=Contr
             coeff_id=None
             f=None
             ff = other.find_Maass_form_id({'_id':idd}) #find_data)
@@ -1061,7 +1070,7 @@ class MaassDB(object):
                              "Cusp_evs":evs,
                              "dim":dim,
                              "Symmetry":st,
-                             'M0':int(M0),
+                             'M0':int(M0),                             
                              'Y':Y}
                     inserts = {"$set":dsets}
                     key={"_id":idnew}

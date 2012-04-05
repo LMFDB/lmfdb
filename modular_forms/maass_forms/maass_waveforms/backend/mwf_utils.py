@@ -31,7 +31,7 @@ def connect_db():
     if _DB==None:
         host  = base.getDBConnection().host
         port  = base.getDBConnection().port
-        _DB = MaassDB(host=host,port=port)
+        _DB = MaassDB(host=host,port=port,show_collection='all')
     return _DB
 
 #def connect_db():

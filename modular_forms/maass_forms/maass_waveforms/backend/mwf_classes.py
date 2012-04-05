@@ -120,6 +120,11 @@ class WebMaassForm(object):
         self.cusp_evs=f.get('Cusp_evs',[])
         self.error=f.get('Error',[])
         self.level=f.get('Level',None)
+        ## Contributor key
+        self.contr=f.get('Contributor','')
+        md = db._mongo_db['metadata'].find_one({'c_name':self.contr})
+        ## Contributor full name
+        self.contributor_name=md.get('contributor',self.contr)
         self.num_coeff=f.get('Numc',0)
         if self.R ==None or self.level==None:
             return
