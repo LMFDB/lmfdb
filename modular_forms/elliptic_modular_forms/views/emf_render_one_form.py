@@ -32,7 +32,7 @@ from modular_forms.backend.mf_utils import my_get
 from modular_forms.elliptic_modular_forms.backend.emf_core import * 
 from modular_forms.elliptic_modular_forms.backend.emf_utils import *
 from modular_forms.elliptic_modular_forms.backend.plot_dom import * 
-from modular_forms.elliptic_modular_forms import EMF, emf_logger, emf,default_prec,default_bprec,EMF_TOP
+from modular_forms.elliptic_modular_forms import EMF, emf_logger, emf,default_prec,default_bprec,EMF_TOP,N_max_AL,N_max_comp,N_max_db,k_max_db,k_max_comp
 
 
 def render_one_elliptic_modular_form(level,weight,character,label,**kwds):
@@ -185,9 +185,8 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
         properties2.append((s1,s2))
         #properties.append(s)
     emf_logger.debug("properties={0}".format(properties2))
-    if WNF.level()==1 or not alev:
-        info['atkinlehner']=None
-    else:
+    info['atkinlehner']=None
+    if level < N_max_AL and alev and level != 1:
         alev = WNF.atkin_lehner_eigenvalues_for_all_cusps()
         info['atkinlehner']=list()
         #info['atkin_lehner_cusps']=list()
@@ -197,7 +196,6 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
             s = "\("+latex(c)+"\)"
             Q = alev[c][0]; ev=alev[c][1]
             info['atkinlehner'].append([Q,c,ev])
-        
     if(level==1):
         info['explicit_formulas'] = WNF.print_as_polynomial_in_E4_and_E6()
     cur_url='?&level='+str(level)+'&weight='+str(weight)+'&character='+str(character)+'&label='+str(label)
