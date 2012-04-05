@@ -167,7 +167,7 @@ class WebModFormSpace(Parent):
                 f_data['f']=self.galois_decomposition()[i]
                 emf_logger.debug("f_data={0}".format(f_data['f']))
                 emf_logger.debug("self_ap={0}".format(self._ap))
-                if len(self._ap)<=i:
+                if self._ap != None and  len(self._ap)<=i:
                     f_data['ap']=self._ap[i]
                 emf_logger.debug("Actually getting F {0},{1}".format(label,i))
                 F=WebNewForm(self._k,self._N,self._chi,label=label,fi=i,prec=self._prec,bitprec=self._bitprec,verbose=self._verbose,data=f_data,parent=self,compute=i)
