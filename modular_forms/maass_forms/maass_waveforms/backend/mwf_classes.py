@@ -87,6 +87,7 @@ class WebMaassForm(object):
         OPTIONAL parameters:
         - dirichlet_c_only = 0 or 1
         -fnr = get the Dirichlet series coefficients of this function in self only
+        - get_coeffs = False if we do not compute or fetch coefficients
         """
         self._db=db
         self.R=None; self.symmetry=-1
@@ -125,20 +126,23 @@ class WebMaassForm(object):
         ## As default we assume we just have c(0)=1 and c(1)=1 
         self._get_dirichlet_c_only=kwds.get('get_dirichlet_c_only',False)
         self._num_coeff0=kwds.get('num_coeffs',self.num_coeff)
+        self._get_coeffs=kwds.get('get_coeffs',True)
         self._fnr=kwds.get('fnr',0)
-        self.coeffs=f.get('Coefficient',[0,1,0,0,0])
-        if self.coeffs<>[0,1]:
-            if self._get_dirichlet_c_only:
-                if len(self.coeffs)==1:
-                    self.coeffs=self.coeffs[0]
-            else:
-                self.coeffs={}
-
+        if self._get_coeffs:
+            self.coeffs=f.get('Coefficient',[0,1,0,0,0])
+            if self.coeffs<>[0,1,0,0,0]:
+                if self._get_dirichlet_c_only:
+                    if len(self.coeffs)==1:
+                        self.coeffs=self.coeffs[0]
+                else:
+                    self.coeffs={}
+        else:
+            self.coeffs={}
         coeff_id=f.get('coeff_id',None)
         nc = Gamma0(self.level).ncusps()
         self.M0=f.get('M0',nc)
-        mwf_logger.debug("coeffid={0}".format(coeff_id))
-        if coeff_id: #self.coeffs==[] and coeff_id:
+        mwf_logger.debug("coeffid={0}, get_coeffs={1}".format(coeff_id,self._get_coeffs))
+        if coeff_id and self._get_coeffs: #self.coeffs==[] and coeff_id:
             ## Let's see if we have coefficients stored
             C = self._db.get_coefficients({"_id":self._maassid})
             if len(C)>=1:
@@ -156,7 +160,7 @@ class WebMaassForm(object):
                     print "setting C!"
                     self.coeffs=C
          ## Make sure that self.coeffs is only the current coefficients
-        if isinstance(self.coeffs,dict):
+        if self._get_coeffs and isinstance(self.coeffs,dict):
             n1=len(self.coeffs.keys())
             mwf_logger.debug("|coeff.keys()|:{0}".format(n1))
             if n1<>self.dim:
@@ -185,17 +189,27 @@ class WebMaassForm(object):
         
         
     def the_character(self):
-        if self.character==0:
-            return "trivial"
-        else:
-            return self.character
+        return self.character
+        #     if not conrey:
+        #     if self.character==0:
+        #         return "trivial"
+        #     else:
+        #         return self.character
+        # elif not self._using_conrey:
+        #     chi = self._db.getDircharConrey(self.level,self.character)
+        #     #return "\chi_{" + str(self.level) + "}(" +strIO(chi) + ",
+#            \cdot)"
+
+         
+        
+        
     def the_weight(self):
         if self.weight==0:
             return "0"
         else:
             return self.weight
     def fricke(self):
-        if len(self.cusp_evs)>0:
+        if len(self.cusp_evs)>1:
             return self.cusp_evs[1]
         else:
             return "undefined"
@@ -207,13 +221,18 @@ class WebMaassForm(object):
         else:
             return "undefined"
         
-    def set_table(self,fnr=0,cusp=0):
+    def set_table(self,fnr=-1,cusp=0):
         r"""
         Setup a table with coefficients for function nr. fnr in self,
         at cusp nr. cusp
         """
-        table={'nrows':self.num_coeff,
-               'ncols':self.dim+1}
+        table={'nrows':self.num_coeff}
+        if fnr<0:
+            colrange=range(self.dim)
+            table['ncols']=self.dim+1
+        elif fnr<self.dim:
+            colrange=[fnr]
+            table['ncols']=2
         table['data']=[]
         table['negc']=0
         realnumc=0
@@ -223,26 +242,24 @@ class WebMaassForm(object):
         if self.symmetry<>-1:
             for n in range(self.num_coeff):
                 row=[n]
-                for k in range(table['ncols']):
+                for k in colrange:
                     if self.dim==1:
                         c=None
                         try:
-                            c = self.coeffs[fnr][cusp].get(n,None)
+                            c = self.coeffs[k][cusp].get(n,None)
                         except KeyError,IndexError:
-                            mwf_logger.critical("GOt coefficient in wrong format for id={0}".format(self._maassid))
+                            mwf_logger.critical("Got coefficient in wrong format for id={0}".format(self._maassid))
+                        print k,c
                         if c<>None:
-                            c=CC(c)
                             realnumc+=1
-                        row.append(c)
+                            row.append(pretty_coeff(c))
                     else:                        
                         for j in range(self.dim):
-                            c = ((self.coeffs.get(j,{})).get(0,None)).get(n,None)
+                            c =  ((self.coeffs.get(j,{})).get(0,None)).get(n,None)
                             if c<>None:
-                                #mwf_logger.debug("c={0}".format(c))
-                                c1=CC(c)
+                                row.append(pretty_coeff(c))
                                 realnumc+=1
-                                row.append(c1)
-                table['data'].append(row)                #mwf_logger.debug("row={0}".format(row))
+                table['data'].append(row)   
         else:
             table['negc']=1
             # in this case we need to have coeffs as dict.
@@ -270,3 +287,50 @@ class WebMaassForm(object):
                         table['data'].append(row)
         self.table=table
         mwf_logger.debug("realnumc={0}".format(realnumc))
+
+
+import sage
+def pretty_coeff(c,digits=12):
+    if isinstance(c,complex):
+        x = c.real;y=c.imag
+    elif isinstance(c,(complex,sage.rings.complex_number.ComplexNumber)):
+        x = c.real();y=c.imag()
+    else:
+        return (c,'',)
+    if y==0:
+        x = round(x,digits)
+        return x
+    ##
+    d2 = digits
+    d1 = digits+1
+ 
+    #print "d,d1,d2=",digits,d1,d2
+    #print "x0=",x
+    if abs(x)<10.0**-digits:
+        if x>0:
+            xs = "+{0:<2.1g}".format(float(x))
+        else:
+            xs = "{0:<3.1g}".format(float(x))
+    else:
+        x = round(x,digits)       
+        if x>0:
+            xs = "&nbsp;{x:<{width}.{digs}}".format(width=d2,digs=d2,x=float(x))
+        elif x<0:
+            xs = "{x:<{width}.{digs}}".format(width=d2,digs=d1,x=float(x))
+        #x = round(x,digits)
+        #y = round(y,digits)
+    #print "x1=",xs
+    if abs(y)<10.0**-digits:
+        if y>0:
+            ys = "+{0:<2.1e}".format(float(y))
+        else:
+            ys = "{0:<3.1e}".format(float(y))
+    else:
+        y = round(y,digits)
+        if y>0:
+            ys = "+{y:<{width}.0{digs}}".format(width=d2,digs=d2,y=y)
+        elif y<0:
+            ys = "{y:<{width}.0{digs}}".format(width=d2,digs=d1,y=y)
+
+    return xs+ys+"i"
+            

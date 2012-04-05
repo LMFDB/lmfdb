@@ -1,18 +1,19 @@
 {# template defs #}
-{% set col_error = '#922' %}
-{% set col_main = '#292' %}
-{% set col_main_2 = '#afa' %}
-{% set col_main_l = '#bfb' %}
+{% set col_error   = '#922' %}
+{% set col_main_d  = '#040' %}
+{% set col_main    = '#292' %}
+{% set col_main_2  = '#afa' %}
+{% set col_main_l  = '#bfb' %}
 {% set col_main_ll = '#efe' %}
 
-{% set col_ntdata_border = '#9b9' %}
-{% set col_ntdata_bkg = '#afa' %}
+{% set col_ntdata_border  = '#9b9' %}
+{% set col_ntdata_bkg     = '#afa' %}
 
-{% set col_knowl = '#AAF' %}
-{% set col_knowl_l = '#DDF' %}
-{% set col_knowl_ll = '#EEF' %}
-{% set col_knowl_d = '#88F' %}
-{% set col_knowl_dd = '#006' %}
+{% set col_knowl     = '#AAF' %}
+{% set col_knowl_l   = '#DDF' %}
+{% set col_knowl_ll  = '#EEF' %}
+{% set col_knowl_d   = '#88F' %}
+{% set col_knowl_dd  = '#006' %}
 
 {%- macro BORDER_RADIUS(R) -%}
   border-radius: {{R}}px;
@@ -266,7 +267,7 @@ body.knowl #header {
     clear: right;
     margin: 10px 0px 15px 15px;
     /* width: 20%; */
-    /* background: #9d9; */
+    /* background: {{ col_main_l }}; */
     position: relative;
     border: 1px solid #474;
     border: 0;
@@ -276,7 +277,7 @@ body.knowl #header {
   padding: 5px;
 }
 .properties-body h1, .properties-body h2 {
-    color: #050;
+    color: {{ col_main_d }};
     padding: 5px;
     margin: 0;
     margin-bottom: 0;
@@ -292,8 +293,10 @@ body.knowl #header {
 .properties-body h2:first-child { margin-top: 0px; }
 .properties-body table th, 
 .properties-body table td {
-  padding-left: 10px;
-  padding-right: 10px;
+  padding: 2px 10px;
+}
+.properties-body table tr:last-child td {
+  padding-bottom: 7px;
 }
 .properties-body .label {
   font-weight: bold;
@@ -329,15 +332,15 @@ body.knowl #header {
   margin: 0;
   margin-top: 10px;
   padding: 5px 10px;
-  color: #050;
-  background: #9d9;
+  color: {{ col_main_d }};
+  background: {{ col_main_l }};
   font-size: 14px;
   cursor: pointer;
   padding-right: 30px;
 }
 #properties-collapser {
   cursor: pointer;
-  color: #050;
+  color: {{ col_main_d }};
   font-size: 19px;
   font-weight: bold;
   text-align: center;
@@ -417,7 +420,7 @@ blockquote p {
     font-family: sans-serif;
     font-size: 100%;
     background-color: {{ col_main_l }};
-    color: #050;
+    color: {{ col_main_d }};
     padding: 5px;
     margin: 15px 0 0 0;
 }
@@ -910,6 +913,7 @@ div.limit-height {
   position: relative;
   bottom: -10px;
   font-size: x-small;
+  line-height: 100%;
   background: {{ col_knowl_l }};
   color: grey;
   padding: 1px 0 1px 10px;
@@ -919,6 +923,7 @@ div.limit-height {
   position: relative;
   top: -10px;
   font-size: x-small;
+  line-height: 100%;
   background: {{ col_knowl_l }};
   color: grey;
   padding: 1px 0 1px 10px;
