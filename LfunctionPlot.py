@@ -741,7 +741,7 @@ def getGraphInfoChar(min_cond, max_cond, min_order, max_order):
     xfactor = 70
     yfactor = 30
     extraSpace = 30
-    (width,height) = (2*extraSpace + xfactor*(max_order), 2*extraSpace + yfactor*(max_cond))
+    (width,height) = (2*extraSpace + xfactor*(max_order), 2*extraSpace + yfactor*(max_cond-min_cond+1))
 ##    url = url_for('browseGraph',group=group, level=level, sign=sign)
     url = ('/browseGraphChar/?min_cond=' + str(min_cond) + '&max_cond=' + str(max_cond) + '&min_order=' + str(min_order) + '&max_order=' + str(max_order))
     ans = {'src': url}
@@ -816,29 +816,28 @@ def paintCSChar(width, height, xMax, yMax, xfactor, yfactor,ticlength):
 ## =============================================
 
 def reindex_characters(min_mod, max_mod, order_limit=12):
-    h, entries, rownrs, colnrs = ListCharacters.get_character_modulus(min_mod,max_mod,order_limit)
+    h, entries, rownrs, colnrs = get_character_modulus(min_mod,max_mod,order_limit)
     char_dict = {}
-    rowindex = 0
-    for row in entries:
-        modulus = rownrs[rowindex]
-        for chi in row:
-            if chi[0][1]: #Primitiv
-                order = chi[0][2]
-                nr = chi[0][0]
-                isEven = chi[0][3]
-                
-                if order > order_limit:
-                    order = order_limit
+    for modulus in rownrs:
+        for col in colnrs:
+            entry = entries[(row, col)]
+            for chi in entry:  #chi is either a real character or pair of complex conjugates
+                if chi[0][1]: #Primitiv
+                    order = chi[0][2]
+                    nr = chi[0][0]
+                    isEven = chi[0][3]
+                    
+                    if order > order_limit:
+                        order = order_limit
 
-                # Add an entry to list with given order and modulus
-                dict_entry = char_dict.get((order, modulus), [])
-                if order < 3:  # Real
-                    dict_entry.append((nr, isEven))
-                else:  # Complex
-                    nrInv = chi[1][0]   # Number of the inverse character
-                    dict_entry.append((nr, nrInv, isEven))
-                char_dict[(order, modulus)] = dict_entry
-        rowindex += 1
+                    # Add an entry to list with given order and modulus
+                    dict_entry = char_dict.get((order, modulus), [])
+                    if order < 3:  # Real
+                        dict_entry.append((nr, isEven))
+                    else:  # Complex
+                        nrInv = chi[1][0]   # Number of the inverse character
+                        dict_entry.append((nr, nrInv, isEven))
+                    char_dict[(order, modulus)] = dict_entry
 
     #logger.debug(char_dict)
     return char_dict
@@ -1020,7 +1019,7 @@ def paintSvgChar(min_cond,max_cond,min_order,max_order):
 def getOneGraphHtmlChar(min_cond, max_cond, min_order, max_order):
     graphInfo = getGraphInfoChar(min_cond, max_cond, min_order, max_order)
     logger.info("graphInfo %s" % graphInfo)
-    ans = ("<embed src='" + graphInfo['src'] + "' width='" + str(graphInfo['width']) +
+    ans = ("<embed id='charGraph' src='" + graphInfo['src'] + "' width='" + str(graphInfo['width']) +
 #    ans = ("<embed src='/static/images/browseGraphChar_1_35.svg' width='" + str(graphInfo['width']) +
            "' height='" + str(graphInfo['height']) +
             "' type='image/svg+xml' " +

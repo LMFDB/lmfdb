@@ -1,11 +1,31 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<h3>Maass cusp forms for GL(2)</h3>
-
 <p>
-Currently in the LMFDB, we have data on L-functions associated to Maass cusp forms on Hecke congruence groups 
-$\Gamma_0(N)$.  The L-functions below are organized in terms of level and eigenvalue.
+Currently in the LMFDB, we have data on L-functions associated to
+{{ KNOWL("mf.maass.mwf",title="Maass cusp forms")}} on
+Hecke congruence groups 
+$\Gamma_0(N)$. These L-functions \(L(s,f) = \sum a_n n^{-s} \) have an 
+{{ KNOWL('lfunction.euler_product', title='Euler product')}}
+of the form
+\[
+   L(s,f)= \prod_{p\mid N}  \left(1 - a_p p^{-s} \right)^{-1}\prod_{p\nmid N}  \left(1 - a_p p^{-s} + p^{-2s} \right)^{-1}
+\]
+and satisfies the 
+{{ KNOWL("lfunction.functional_equation",title="functional equation")}} of the form 
+\begin{equation} 
+\Lambda(s,f) = N^{s/2} \Gamma_{\mathbb{R} }
+\left(s + iR \right) \Gamma_{\mathbb{R} }
+\left(s - iR \right) \cdot L(s, f) =
+\varepsilon \Lambda(1-s,f),
+\end{equation}
+where $N$ is the {{ KNOWL("mf.maass.mwf.level",title="level")}} and
+$R$ the {{ KNOWL("mf.maass.mwf.eigenvalue",title="eigenvalue")}} of the
+Maass cusp form.
+</p>
+<p>
+The L-functions below are organized in terms of
+level and eigenvalue.
 </p>
 
 {{contents[0]|safe}}

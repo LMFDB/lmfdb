@@ -92,7 +92,6 @@ class DimensionTable(object):
                     in_db=tblN[k]['in_db']
                     return in_db
         return False
-        return False
 
 class ClassicalMFDisplay(MFDisplay):
 
@@ -179,7 +178,7 @@ class ClassicalMFDisplay(MFDisplay):
             else:
                 D = DirichletGroup(N)
                 G = D.galois_orbits()
-                Greps= D.galois_orbits(reps_only=True)
+                Greps= [X[0] for X in G]
                 Dc = DirichletGroup_conrey(N)
                 Gcreps=dict()
                 # A security check, if we have at least weight 2 and trivial character, otherwise don't show anything

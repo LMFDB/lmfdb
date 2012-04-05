@@ -247,6 +247,7 @@ def render_field_webpage(args):
     info.update(data)
     info.update({
         'label': field_pretty(label),
+        'label_raw' : label,
         'polynomial': web_latex(K.defining_polynomial()),
         'ram_primes': ram_primes,
         'integral_basis': zk,
