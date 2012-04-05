@@ -188,8 +188,8 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
         #properties.append(s)
         emf_logger.debug("properties={0}".format(properties2))
     else:
-        properties2.append("CM info", "not available")
-        if level != 1: properties2.append("Atkin-Lehner eigenvalues", "not available")
+        properties2.append(("CM info", "not available"))
+        if level != 1: properties2.append(("Atkin-Lehner eigenvalues", "not available"))
     info['atkinlehner']=None
     if  alev and level != 1:
         alev = WNF.atkin_lehner_eigenvalues_for_all_cusps()
