@@ -325,6 +325,14 @@ def render_isogeny_class(iso_class):
     # they are in the correct order!
     db_curves = [E1]
     optimal_flags = [False]*size
+    degrees = [0]*size
+    if 'degree' in E1data:
+        degrees[0]=E1data['degree']
+    else:
+        try:
+            modular_degree = E1.modular_degree()
+        except RuntimeError:
+            pass
     cremona_labels = [E1data['label']]+[0]*(size-1)
     if E1data['number']==1:
         optimal_flags[0]=True
@@ -334,9 +342,18 @@ def render_isogeny_class(iso_class):
         cremona_labels[i-1]=Edata['label']
         if Edata['number']==1:
             optimal_flags[i-1]=True
+        if 'degree' in Edata:
+            degrees[i-1]=Edata['degree']
+        else:
+            try:
+                modular_degree = E.modular_degree()
+            except RuntimeError:
+                pass
         db_curves.append(E)
+
     if cremona_iso == '990h': # this isogeny class is labeled wrong in Cremona's tables
         optimal_flags = [False, False, True, False]
+
     # Now work out the permutation needed to match the two lists of curves:
     perm = [db_curves.index(E) for E in curves]
     # Apply the same permutation to the isogeny matrix:
@@ -352,7 +369,7 @@ def render_isogeny_class(iso_class):
     info['f'] = web_latex(E.q_eigenform(10))
     info['graph_img'] = url_for('plot_iso_graph', label=lmfdb_iso)
    
-    info['curves'] = [[lmfdb_iso+str(i+1),cremona_labels[i],str(list(c.ainvs())),c.torsion_order(),c.modular_degree(),optimal_flags[i]] for i,c in enumerate(db_curves)]
+    info['curves'] = [[lmfdb_iso+str(i+1),cremona_labels[i],str(list(c.ainvs())),c.torsion_order(),degrees[i],optimal_flags[i]] for i,c in enumerate(db_curves)]
 
     friends=[]
 #   friends.append(('Quadratic Twist', "/quadratic_twists/%s" % (lmfdb_iso)))
@@ -459,6 +476,14 @@ def render_curve_webpage_by_label(label):
     discriminant=E.discriminant()
     xintpoints_projective=[E.lift_x(x) for x in xintegral_point(data['x-coordinates_of_integral_points'])]
     xintpoints=proj_to_aff(xintpoints_projective)
+    if 'degree' in data:
+        modular_degree = data['degree']
+    else:
+        try:
+            modular_degree = E.modular_degree()
+        except RuntimeError:
+            modular_degree = 0 # invalid, will be displayed nicely
+
     G = E.torsion_subgroup().gens()
     minq = E.minimal_quadratic_twist()[0]
     if E==minq:
@@ -491,7 +516,7 @@ def render_curve_webpage_by_label(label):
         assert rank == 0
         lder_tex = "L(E,1)"
     info['Gamma0optimal'] = (cremona_label[-1] == '1' if cremona_iso_class != '990h' else cremona_label[-1] == '3')
-    info['modular_degree'] = E.modular_degree()
+    info['modular_degree'] = modular_degree
     p_adic_data_exists = (C.elliptic_curves.padic_db.find({'lmfdb_iso': lmfdb_iso_class}).count()) > 0 and info['Gamma0optimal']
 
     # Local data

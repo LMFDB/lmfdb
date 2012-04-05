@@ -57,7 +57,9 @@ padding : 4px;
 <td class="center">{{c[1]}}</td>
 <td class="center">{{c[2]}}</td>
 <td align="center">{{c[3]}}</td>
-<td align="center">{{c[4]}}</td>
+<td align="center">
+{% if c[4]==0 %}Not available{% else %}{{c[4]}}{% endif %}
+</td>
 {% if c[5] %}
 <td>\(\Gamma_0(N)\)-optimal</td>
 {% else %}

@@ -216,7 +216,12 @@ function show_code(system) {
     </form>
     </p>
     <p><h3> {{ KNOWL('ec.q.modular_degree', title='Modular degree') }} </h3>
-    {{ info.modular_degree }}<br>
+      {% if info.modular_degree==0 %}
+      Not available
+      {% else %}
+     {{ info.modular_degree }}
+      {% endif %}
+    <br>
     {% if info.Gamma0optimal %} \( \Gamma_0(N) \)-optimal {% endif %}
     </p>
 
