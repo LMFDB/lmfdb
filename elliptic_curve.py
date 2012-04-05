@@ -381,10 +381,7 @@ def render_isogeny_class(iso_class):
     friends.append(('Symmetric 4th power L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='4',arg3='EllipticCurve', arg4='Q', arg5=lmfdb_iso)))
 #render_one_elliptic_modular_form(level,weight,character,label,**kwds)
 
-    if int(N)<100:
-        friends.append(('Modular form '+lmfdb_iso.replace('.','.2'), url_for("emf.render_elliptic_modular_forms", level=N,weight=2,character=0,label=iso)))
-    else:
-        friends.append(('Modular form '+lmfdb_iso.replace('.','.2')+' not available', 0))
+    friends.append(('Modular form '+lmfdb_iso.replace('.','.2'), url_for("emf.render_elliptic_modular_forms", level=N,weight=2,character=0,label=iso)))
 
     info['friends'] = friends
 
@@ -565,10 +562,7 @@ def render_curve_webpage_by_label(label):
         ('Symmetric square L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='2',arg3='EllipticCurve', arg4='Q', arg5=lmfdb_iso_class)),
         ('Symmetric 4th power L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='4',arg3='EllipticCurve', arg4='Q', arg5=lmfdb_iso_class))]
 
-    if int(N)<100:
-        info['friends'].append(('Modular form '+lmfdb_iso_class.replace('.','.2'), url_for("emf.render_elliptic_modular_forms", level=int(N),weight=2,character=0,label=mod_form_iso)))
-    else:
-        info['friends'].append(('Modular form '+lmfdb_iso_class.replace('.','.2')+" not available",0))
+    info['friends'].append(('Modular form '+lmfdb_iso_class.replace('.','.2'), url_for("emf.render_elliptic_modular_forms", level=int(N),weight=2,character=0,label=mod_form_iso)))
 
     info['downloads'] = [('Download coeffients of q-expansion', url_for("download_EC_qexp", label=lmfdb_label, limit=100)), \
                          ('Download all stored data', url_for("download_EC_all", label=lmfdb_label))]
