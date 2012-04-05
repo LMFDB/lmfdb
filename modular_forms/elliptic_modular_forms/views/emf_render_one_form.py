@@ -165,19 +165,19 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
     else:
         info['twist_info'] = 'Twist info currently not available.'
         properties2=[('Twist info','- not available')]
-    info['is_cm']=WNF.is_CM()
-    info['CM'] = WNF.print_is_CM()
     args=list()
     for x in range(5,200,10): args.append({'digits':x})
     digits = 7
-    info['CM_values'] = WNF.cm_values(digits=digits)
-    if(WNF.is_CM()[0]):                         
-        s='- Is a CM-form<br>'
-    else:
-        s='- Is not a CM-form<br>'
-    properties2.append(('CM info',s))
     alev = None
-    if level < N_max_AL:
+    if level < N_max_extra_comp:
+        info['is_cm']=WNF.is_CM()
+        info['CM'] = WNF.print_is_CM()
+        info['CM_values'] = WNF.cm_values(digits=digits)
+        if(WNF.is_CM()[0]):                         
+            s='- Is a CM-form<br>'
+        else:
+            s='- Is not a CM-form<br>'
+        properties2.append(('CM info',s))
         alev=WNF.atkin_lehner_eigenvalues()
         if len(alev.keys())>0:
             s1 = " Atkin-Lehner eigenvalues "
@@ -187,6 +187,9 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
                 properties2.append((s1,s2))
         #properties.append(s)
     emf_logger.debug("properties={0}".format(properties2))
+    else:
+        properties2.append("CM info", "not available")
+        if level != 1: properties2.append("Atkin-Lehner eigenvalues", "not available")
     info['atkinlehner']=None
     if  alev and level != 1:
         alev = WNF.atkin_lehner_eigenvalues_for_all_cusps()
