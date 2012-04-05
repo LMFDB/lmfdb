@@ -32,7 +32,7 @@ from modular_forms.backend.mf_utils import my_get
 from modular_forms.elliptic_modular_forms.backend.emf_core import * 
 from modular_forms.elliptic_modular_forms.backend.emf_utils import *
 from modular_forms.elliptic_modular_forms.backend.plot_dom import * 
-from modular_forms.elliptic_modular_forms import EMF, emf_logger, emf,default_prec,default_bprec,EMF_TOP,N_max_AL,N_max_comp,N_max_db,k_max_db,k_max_comp
+from modular_forms.elliptic_modular_forms import EMF, emf_logger, emf,default_prec,default_bprec,EMF_TOP,N_max_extra_comp,N_max_comp,N_max_db,k_max_db,k_max_comp
 
 
 def render_one_elliptic_modular_form(level,weight,character,label,**kwds):
