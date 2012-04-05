@@ -164,7 +164,7 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
         properties2=[('Twist info',s)]
     else:
         info['twist_info'] = 'Twist info currently not available.'
-        properties2=[('Twist info','- not available')]
+        properties2=[('Twist info','not available')]
     args=list()
     for x in range(5,200,10): args.append({'digits':x})
     digits = 7
