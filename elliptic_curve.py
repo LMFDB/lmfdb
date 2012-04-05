@@ -247,7 +247,10 @@ def by_ec_label(label):
     try:
         N, iso, number = lmfdb_label_regex.match(label).groups()
     except AttributeError:
-        N, iso, number = cremona_label_regex.match(label).groups()
+        try:
+            N, iso, number = cremona_label_regex.match(label).groups()
+        except AttributeError:
+            raise ValueError("No such curve")
         C = base.getDBConnection()
         # We permanently redirect to the lmfdb label
         if number:
@@ -378,10 +381,7 @@ def render_isogeny_class(iso_class):
     friends.append(('Symmetric 4th power L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='4',arg3='EllipticCurve', arg4='Q', arg5=lmfdb_iso)))
 #render_one_elliptic_modular_form(level,weight,character,label,**kwds)
 
-    if int(N)<100:
-        friends.append(('Modular form '+lmfdb_iso, url_for("emf.render_elliptic_modular_forms", level=N,weight=2,character=0,label=iso)))
-    else:
-        friends.append(('Modular form '+lmfdb_iso+' not available', 0))
+    friends.append(('Modular form '+lmfdb_iso.replace('.','.2'), url_for("emf.render_elliptic_modular_forms", level=N,weight=2,character=0,label=iso)))
 
     info['friends'] = friends
 
@@ -552,7 +552,7 @@ def render_curve_webpage_by_label(label):
         'cond_factor':latex(N.factor()),
         'xintegral_points':','.join(web_latex(i_p) for i_p in xintpoints),
         'tor_gens':','.join(web_latex(eval(g)) for g in data['torsion_generators']) if False else ','.join(web_latex(P.element().xy()) for P in list(G))
-        # Database has errors when torsion generators not integral
+        # Database used to have errors when torsion generators not integral
         # 'tor_gens':','.join(web_latex(eval(g)) for g in data['torsion_generators']) if 'torsion_generators' in data else [P.element().xy() for P in list(G)]
                         })
     info['friends'] = [
@@ -562,10 +562,7 @@ def render_curve_webpage_by_label(label):
         ('Symmetric square L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='2',arg3='EllipticCurve', arg4='Q', arg5=lmfdb_iso_class)),
         ('Symmetric 4th power L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='4',arg3='EllipticCurve', arg4='Q', arg5=lmfdb_iso_class))]
 
-    if int(N)<100:
-        info['friends'].append(('Modular form '+lmfdb_iso_class.replace('.','.2'), url_for("emf.render_elliptic_modular_forms", level=int(N),weight=2,character=0,label=mod_form_iso)))
-    else:
-        info['friends'].append(('Modular form '+lmfdb_iso_class.replace('.','.2')+" not available",0))
+    info['friends'].append(('Modular form '+lmfdb_iso_class.replace('.','.2'), url_for("emf.render_elliptic_modular_forms", level=int(N),weight=2,character=0,label=mod_form_iso)))
 
     info['downloads'] = [('Download coeffients of q-expansion', url_for("download_EC_qexp", label=lmfdb_label, limit=100)), \
                          ('Download all stored data', url_for("download_EC_all", label=lmfdb_label))]
