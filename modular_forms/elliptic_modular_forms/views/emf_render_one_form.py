@@ -176,17 +176,19 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
     else:
         s='- Is not a CM-form<br>'
     properties2.append(('CM info',s))
-    alev=WNF.atkin_lehner_eigenvalues()
-    if len(alev.keys())>0:
-        s1 = " Atkin-Lehner eigenvalues "
-        s2=""
-        for Q in alev.keys():
-            s2+="\( \omega_{ %s } \) : %s <br>" % (Q,alev[Q])
-        properties2.append((s1,s2))
+    alev = None
+    if level < N_max_AL:
+        alev=WNF.atkin_lehner_eigenvalues()
+        if len(alev.keys())>0:
+            s1 = " Atkin-Lehner eigenvalues "
+            s2=""
+            for Q in alev.keys():
+                s2+="\( \omega_{ %s } \) : %s <br>" % (Q,alev[Q])
+                properties2.append((s1,s2))
         #properties.append(s)
     emf_logger.debug("properties={0}".format(properties2))
     info['atkinlehner']=None
-    if level < N_max_AL and alev and level != 1:
+    if  alev and level != 1:
         alev = WNF.atkin_lehner_eigenvalues_for_all_cusps()
         info['atkinlehner']=list()
         #info['atkin_lehner_cusps']=list()
