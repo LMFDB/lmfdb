@@ -760,7 +760,7 @@ def getGraphInfoChar(min_cond, max_cond, min_order, max_order):
 ## yfactor = the number of pixels per unit in y
 ## ticlength = the length of the tickmarks
 ## ============================================
-def paintCSChar(width, height, xMax, yMax, xfactor, yfactor,ticlength):
+def paintCSChar(width, height, xMax, yMax, yMin, xfactor, yfactor,ticlength):
     xmlText = ("<line x1='0' y1='" + str(height) + "' x2='" +
                str(width) + "' y2='" + str(height) +
                "' style='stroke:rgb(0,0,0);'/>\n")
@@ -786,23 +786,23 @@ def paintCSChar(width, height, xMax, yMax, xfactor, yfactor,ticlength):
                          str(i*xfactor) +
                          "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
-    for i in range( 1,  yMax + 1):
+    for i in range( yMin,  yMax + 1):
         xmlText = xmlText + ("<line x1='0' y1='" +
-                             str(height - i*yfactor) + "' x2='" +
+                             str(height - (i-yMin+1)*yfactor) + "' x2='" +
                              str(ticlength) + "' y2='" +
-                             str(height - i*yfactor) +
+                             str(height - (i-yMin+1)*yfactor) +
                              "' style='stroke:rgb(0,0,0);'/>\n")
 
-    for i in range( 2,  yMax + 1, 2):
+    for i in range( yMin + yMin%2,  yMax + 1, 2):
         xmlText = xmlText + ("<text x='5' y='" +
-                             str(height - i*yfactor + 3) +
+                             str(height - (i-yMin+1)*yfactor + 3) +
                              "' style='fill:rgb(102,102,102);font-size:11px;'>" +
                              str(i) + "</text>\n")
 
-        if i%4==0 :  #  put dahes every four units
+        if i%2==0 :  #  put dahes every two units (this "if" is not needed after change from 4 to 2)
            xmlText = xmlText + ("<line x1='0' y1='" +
-                         str(height - i*yfactor) + "' x2='" + str(width) +
-                         "' y2='" + str(height - i*yfactor) +
+                         str(height - (i-yMin+1)*yfactor) + "' x2='" + str(width) +
+                         "' y2='" + str(height - (i-yMin+1)*yfactor) +
                          "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
     return xmlText
@@ -817,10 +817,17 @@ def paintCSChar(width, height, xMax, yMax, xfactor, yfactor,ticlength):
 
 def reindex_characters(min_mod, max_mod, order_limit=12):
     h, entries, rownrs, colnrs = get_character_modulus(min_mod,max_mod,order_limit)
+##    These entries used for debugging when Conrey char not availble.
+##    rownrs=range(1,21)
+##    colnrs=range(1,12)
+##    colnrs.append('more')
+##    entries = {}
+##    entries[(5,4)] = [((3, True, 4,True),(3, True, 4,True) ) ,((2,True,2,False),)]
+##    entries[(17,'more')] = [((3, True, 16,True),(3, True, 16,True) ) ,((2,True,2,False),)]
     char_dict = {}
     for modulus in rownrs:
         for col in colnrs:
-            entry = entries[(row, col)]
+            entry = entries.get((modulus, col), [])
             for chi in entry:  #chi is either a real character or pair of complex conjugates
                 if chi[0][1]: #Primitiv
                     order = chi[0][2]
@@ -839,7 +846,7 @@ def reindex_characters(min_mod, max_mod, order_limit=12):
                         dict_entry.append((nr, nrInv, isEven))
                     char_dict[(order, modulus)] = dict_entry
 
-    #logger.debug(char_dict)
+    logger.debug(char_dict)
     return char_dict
 
 # This is the old version for sage characters 
@@ -926,10 +933,11 @@ def paintSvgChar(min_cond,max_cond,min_order,max_order):
 
     xMax = int(max_order)
     yMax = int(max_cond)
+    yMin = int(min_cond)
     width = xfactor *xMax + 3*extraSpace
-    height = yfactor *yMax + 3*extraSpace
+    height = yfactor *(yMax-yMin) + 3*extraSpace
 
-    ans += paintCSChar(width, height, xMax, yMax, xfactor, yfactor, ticlength)
+    ans += paintCSChar(width, height, xMax, yMax, yMin, xfactor, yfactor, ticlength)
 
     #loop over orders and conductors
     cd = reindex_characters(int(min_cond), int(max_cond), int(max_order))
@@ -949,7 +957,7 @@ def paintSvgChar(min_cond,max_cond,min_order,max_order):
                     counteven += 1
                     ans += "<a xlink:href='" + linkurl + "/" + str(current[0]) + "' target='_top'>\n"
                     ans += "<circle cx='" + str(float(xbaseplus)*xfactor)[0:7]
-                    ans += "' cy='" +  str(height-(y*yfactor))[0:7]
+                    ans += "' cy='" +  str(height-((y-yMin+1)*yfactor))[0:7]
                     ans += "' r='" + str(radius)
                     ans += "' style='fill:"+ thiscolour +"'>"
                     ans += "<title>" + '(' + str(y) + ',' + str(current[0]) + ')' + "</title>"
@@ -961,7 +969,7 @@ def paintSvgChar(min_cond,max_cond,min_order,max_order):
                     countodd += 1
                     ans += "<a xlink:href='" + linkurl + "/" + str(current[0]) + "' target='_top'>\n"
                     ans += "<circle cx='" + str(float(xbaseminus)*xfactor)[0:7]
-                    ans += "' cy='" +  str(height-(y*yfactor))[0:7]
+                    ans += "' cy='" +  str(height-((y-yMin+1)*yfactor))[0:7]
                     ans += "' r='" + str(radius)
                     ans += "' style='fill:"+ thiscolour +"'>"
                     ans += "<title>" + '(' + str(y) + ',' + str(current[0]) + ')' + "</title>"
@@ -974,14 +982,14 @@ def paintSvgChar(min_cond,max_cond,min_order,max_order):
                     counteven += 1
                     ans += "<a xlink:href='" + linkurl + "/" + str(current[0]) + "' target='_top'>\n"
                     ans += "<circle cx='" + str(float(xbaseplus)*xfactor)[0:7]
-                    ans += "' cy='" +  str(height-(y*yfactor))[0:7]
+                    ans += "' cy='" +  str(height-((y-yMin+1)*yfactor) - 2*radius)[0:7]
                     ans += "' r='" + str(radius)
                     ans += "' style='fill:"+ thiscolour +"'>"
                     ans += "<title>" + '(' + str(y) + ',' + str(current[0]) + ')' + "</title>"
                     ans += "</circle></a>\n"
                     ans += "<a xlink:href='" + linkurl + "/" + str(current[1]) + "' target='_top'>\n"
                     ans += "<circle cx='" + str(float(xbaseplus)*xfactor)[0:7]
-                    ans += "' cy='" +  str(height-(y*yfactor)+ 2*radius)[0:7]
+                    ans += "' cy='" +  str(height-((y-yMin+1)*yfactor)+ 2*radius)[0:7]
                     ans += "' r='" + str(radius)
                     ans += "' style='fill:"+ thiscolour +"'>"
                     ans += "<title>" + '(' + str(y) + ',' + str(current[1]) + ')' + "</title>"
@@ -992,14 +1000,14 @@ def paintSvgChar(min_cond,max_cond,min_order,max_order):
                     countodd += 1
                     ans += "<a xlink:href='" + linkurl + "/" + str(current[0]) + "' target='_top'>\n"
                     ans += "<circle cx='" + str(float(xbaseminus)*xfactor)[0:7]
-                    ans += "' cy='" +  str(height-(y*yfactor))[0:7]
+                    ans += "' cy='" +  str(height-((y-yMin+1)*yfactor) - 2*radius)[0:7]
                     ans += "' r='" + str(radius)
                     ans += "' style='fill:"+ thiscolour +"'>"
                     ans += "<title>" + '(' + str(y) + ',' + str(current[0]) + ')' + "</title>"
                     ans += "</circle></a>\n"
                     ans += "<a xlink:href='" + linkurl + "/" + str(cd[(x,y)][ii][1]) + "' target='_top'>\n"
                     ans += "<circle cx='%s'" % str(float(xbaseminus)*xfactor)[0:7]
-                    ans += " cy='%s'" %  str(height-(y*yfactor)+ 2*radius)[0:7]
+                    ans += " cy='%s'" %  str(height-((y-yMin+1)*yfactor)+ 2*radius)[0:7]
                     ans += " r='%s'" % radius
                     ans += " style='fill:%s'>" % thiscolour 
                     ans += "<title>" + '(' + str(y) + ',' + str(current[1]) + ')' + "</title>"
