@@ -296,16 +296,11 @@ def upload_to_db(base_path,min_N, max_N):
                 else:
                     curve[key] = data[key]
         print "finished reading %s lines from file"%count
-    
-    #from cPickle import dumps
-    #print len(dumps(data_to_insert.values()))
+
     vals = data_to_insert.values()
-    print "starting sort..."
-    vals.sort(cmp=comp_dict_by_label)
-    print "...finished sort."
+    # vals.sort(cmp=comp_dict_by_label)
     count = 0
     for val in vals:
-#        print val
         curves.update({'label':val['label']}, { "$set": val}, upsert=True)
         count += 1
         if count%5000==0: print "inserted %s"%(val['label'])
