@@ -70,7 +70,7 @@ Dokchitser_ArtinRepresentation_Short = Dict(
             {
                 "Dim":              Int, 
                 "Conductor":        TooLargeInt,
-                "DBIndex":          Int,        # Starting at 1
+                "DBIndex":          IndexAt1,        # Starting at 1
                 "CharacterField":   Int,
                 "Character":        Dokchitser_Character
             })
@@ -91,7 +91,7 @@ Dokchitser_NumberFieldGaloisGroup = Dict({
     "ArtinReps" :           FiniteSequence(Dokchitser_ArtinRepresentation_Short),
     "ComplexConjugation" :  Int,
     "ConjClasses" :         FiniteSequence(Dokchitser_ConjugacyClass),
-    "DBIndex" :             Int,                    # Starting at 1
+    "DBIndex" :             IndexAt1,                    # Starting at 1
     "FrobResolvents" :      Array(Dokchitser_FrobResolvent),
     "Frobs" :               PrimeIndexedSequence(Int), 
     "G-Gens" :              FiniteSet(PermutationAsList),
