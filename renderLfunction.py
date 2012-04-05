@@ -440,8 +440,10 @@ def initLfunction(L,args, request):
         weight = str(L.weight)
         number = str(L.number)
         info['friends'] = [('Siegel Modular Form', friendlink)]
-
-
+        
+    elif L.type() == "artin":
+        info['zeroeslink'] = ''
+        info['plotlink'] = ''
 
 
     info['dirichlet'] = lfuncDStex(L, "analytic")
