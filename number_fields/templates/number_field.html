@@ -188,9 +188,16 @@ pari:
         <div>
 	<center>
 	<table class="ntdata">
-	<thead><tr><td></td><td>{{ KNOWL('artin.dimension', title='Dimension') }}</td><td>{{ KNOWL('artin.conductor', title='Conductor') }}</td><td>Defining polynomial of {{ KNOWL('artin.number_field', title='Artin Field') }} </td><td>Galois subgroup</td>
+	<thead><tr><td></td><td>{{ KNOWL('artin.dimension', title='Dimension') }}</td><td>{{ KNOWL('artin.conductor', title='Conductor') }}</td><td>Defining polynomial of {{ KNOWL('artin.number_field', title='Artin Field') }} </td>
+	<td>Galois subgroup</td>
 	<td>{{ KNOWL('artin.sign', title='Sign') }}</td>
 	<td>{{ KNOWL('artin.ramification', title='Bad primes') }}</td>
+	<td>Trace of complex conjugation</td>
+	<td>kappa</td>
+	<td>lambda</td>
+	<td>mu</td>
+	<td>nu</td>
+	<td>coefficients_list</td>
 	</tr></thead>
 	<tbody>
         {% for artin in info["tim_number_field"].artin_representations()%}
@@ -203,6 +210,12 @@ pari:
 	  <td>${{artin.number_field_galois_group().G_name()}}$</td>
 	  <td>${{artin.sign()}}$</td>
 	  <td>${{artin.bad_primes()}}$</td>
+	  <td>${{artin.trace_complex_conjugation()}}$</td>
+	  <td>${{artin.kappa_fe()}}$</td>
+	  <td>${{artin.lambda_fe()}}$</td>
+	  <td>${{artin.mu_fe()}}$</td>
+	  <td>${{artin.nu_fe()}}$</td>
+	  <td>${{artin.coefficients_list(upperbound=20)}}$</td>
 	  </tr>
         {% endfor %}
 	</tbody>

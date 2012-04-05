@@ -19,19 +19,19 @@ from modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaa
 import time ### for printing the date on an lcalc file
 import socket ### for printing the machine used to generate the lcalc file
 
-def get_attr_or_method(thiswillbeexecuted, attr_or_method_name):
-    """
-        Given an object O and a string "text", this returns O.text() or O.text depending on
-        whether text is an attribute or a method of O itself _or one of its superclasses_, which I will
-        only know at running time. I think I need an eval for that.   POD
-
-    """
-    # I don't see a way around using eval for what I want to be able to do
-    # Because of inheritance, which method should be called depends on self
-    try:
-        return eval("thiswillbeexecuted."+attr_or_method_name)
-    except:
-        return None
+#def get_attr_or_method(thiswillbeexecuted, attr_or_method_name):
+#    """
+#        Given an object O and a string "text", this returns O.text() or O.text depending on
+#        whether text is an attribute or a method of O itself _or one of its superclasses_, which I will
+#        only know at running time. I think I need an eval for that.   POD
+#
+#    """
+#    # I don't see a way around using eval for what I want to be able to do
+#    # Because of inheritance, which method should be called depends on self
+#    try:
+#        return eval("thiswillbeexecuted."+attr_or_method_name)
+#    except:
+#        return None
 
 def my_find_update(the_coll, search_dict, update_dict):
     """ This performs a search using search_dict, and updates each find in  
@@ -450,24 +450,24 @@ class Lfunction:
     ### Injects into the database of all the L-functions
     ############################################################################
 
-    def inject_database(self, relevant_info, time_limit = None):
-        #   relevant_methods are text strings 
-        #    desired_database_fields = [Lfunction.original_mathematical_object, Lfunction.level]
-        #    also zeroes, degree, conductor, type, real_coeff, rational_coeff, algebraic_coeff, critical_value, value_at_1, sign
-        #    ok_methods = [Lfunction.math_id, Lfunction.level]
-        #
-        # Is used to inject the data in relevant_fields
-
-        logger.info("Trying to inject")
-        import base
-        db = base.getDBConnection().Lfunctions
-        Lfunctions = db.full_collection
-        update_dict = dict([(method_name,get_attr_or_method(self,method_name)) for method_name in relevant_info])
-
-        logger.info("injecting " + str(update_dict))
-        search_dict = {"original_mathematical_object()": get_attr_or_method(self, "original_mathematical_object()")}
-
-        my_find_update(Lfunctions, search_dict, update_dict)
+    #def inject_database(self, relevant_info, time_limit = None):
+    #    #   relevant_methods are text strings 
+    #    #    desired_database_fields = [Lfunction.original_mathematical_object, Lfunction.level]
+    #    #    also zeroes, degree, conductor, type, real_coeff, rational_coeff, algebraic_coeff, critical_value, value_at_1, sign
+    #    #    ok_methods = [Lfunction.math_id, Lfunction.level]
+    #    #
+    #    # Is used to inject the data in relevant_fields
+    #
+    #    logger.info("Trying to inject")
+    #    import base
+    #    db = base.getDBConnection().Lfunctions
+    #    Lfunctions = db.full_collection
+    #    update_dict = dict([(method_name,get_attr_or_method(self,method_name)) for method_name in relevant_info])
+    #
+    #    logger.info("injecting " + str(update_dict))
+    #    search_dict = {"original_mathematical_object()": get_attr_or_method(self, "original_mathematical_object()")}
+    #
+    #    my_find_update(Lfunctions, search_dict, update_dict)
 
 
 #############################################################################
@@ -1230,7 +1230,7 @@ class ArtinLfunction(Lfunction):
         self.title = "L function for an Artin representation of dimension " + str(dimension) + \
             ", conductor "+ str(conductor) 
                 
-        self.dirichlet_coefficients = self.artin.coefficients_list()
+        self.dirichlet_coefficients = self.artin.coefficients_list(upperbound = 1000)
         
         self.motivic_weight = 0
         

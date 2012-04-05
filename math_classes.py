@@ -108,7 +108,6 @@ class ArtinRepresentation(object):
             Tim:    conjectured always true,
                     known in dimension 1,
                     most cases in dimension 2
-            Andy:   
         """
         return True
 
@@ -116,7 +115,7 @@ class ArtinRepresentation(object):
         try:
             return int(self._data["Sign"])
         except KeyError:
-            return "?"
+            return "?"      # Could try to implement guessing of the sign
     
     def trace_complex_conjugation(self):
         """ Computes the trace of complex conjugation, and returns an int
@@ -148,12 +147,11 @@ class ArtinRepresentation(object):
         return True
 
     def mu_fe(self):
-        return "?"
-        raise NotImplementedError
+        return [0 for i in range(self.number_of_eigenvalues_plus_one_complex_conjugation())] + \
+                    [1 for i in range(self.number_of_eigenvalues_minus_one_complex_conjugation())]
         
     def nu_fe(self):
-        return "?"
-        raise NotImplementedError
+        return []
     
     def self_dual(self):
         return "?"
@@ -163,15 +161,21 @@ class ArtinRepresentation(object):
         return self.self_dual()
     
     def poles(self):
-        if self.conductor() == 1 and self.dimension() ==1:
+        try:
+            assert self.primitive()
+        except AssertionError:
             raise NotImplementedError
-            # needs to return the pole in the case of zeta
+        if self.conductor() == 1 and self.dimension() == 1:
+            return [1]
         return []
     
     def residues(self):
-        if self.conductor() == 1 and self.dimension() ==1:
+        try:
+            assert self.primitive()
+        except AssertionError:
             raise NotImplementedError
-            # needs to return the pole in the case of zeta
+        if self.conductor() == 1 and self.dimension() ==1:
+            return [1]
         return []
     
     def local_factors_table(self):
