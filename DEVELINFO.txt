@@ -114,6 +114,7 @@ Open .hg/hgrc and edit it like this:
 [paths]
 default = !!! ENTER YOUR URL, https://... !!!
 master  = http://lmfdb.googlecode.com/hg
+beta = https://code.google.com/r/jwbober-lmfdb-beta
 
 # infrastructure
 jonathan = http://jwbober-lmfdb.googlecode.com/hg
