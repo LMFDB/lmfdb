@@ -15,8 +15,6 @@ var oTable = $("table#coeffs").dataTable(
 {
     "sPaginationType": "full_numbers",
     "aoColumns":{{  coeff_aoColumns |safe }},
-
-
     "bSort":true,
     "iDisplayLength": 20,    
     "iDisplayStart": 0,
@@ -103,7 +101,7 @@ $('.paging_full_numbers').css('width','250px')
      {% else %}
         <th> n </th>
           {% for k in range(1,ncols)  %}
-              {% if table.negc is defined and table.negc == 0 %}
+            {% if table.negc is defined and table.negc == 0 %}
                 <th colspan="3">\( c_{ {{k}} } (n) \) </td>
              {% else %}
                 <th>\( c_{ {{k}} } (n) \) </td>
@@ -128,7 +126,6 @@ $('.paging_full_numbers').css('width','250px')
             {% endif %}
             </td>  
             {% for k in range(1,ncols)  %}
-             <td>
               {% if data[r] is defined and data[r][k] is defined %}
                  {% if data[r][k] is defined %}
                     {% set c  = data[r][k] %}                 
@@ -173,7 +170,7 @@ $('.paging_full_numbers').css('width','250px')
 </form> #}
 </td></tr></table>
 <div style="clear:both">
-{{ KNOWL('metadata.knowl-tag') }}
+{# { KNOWL('metadata.knowl-tag') } #}
 </div>
 {% else %}
 There are no Fourier coefficients supplied for this Maass form.

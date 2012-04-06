@@ -227,7 +227,7 @@ def render_one_maass_waveform_wp(info):
             col2 = {"bSortable": "false", "bSearchable": "true", "sClass": "alignLeft","fnRender":"text-align:left","sType":"numeric" }
             cols.append(col1)
             cols.append(col2)
-    
+    info['credit']=info['MF'].contributor_name
     info['coeff_aoColumns']=cols # json.dumps(cols)
     mwf_logger.debug("col={0}".format(cols))
     #coeffurl=url_for('mwf.render_one_maass_waveform',maass_id=maass_id,download='coefficients')
@@ -280,7 +280,7 @@ def render_one_maass_waveform_wp_old(info):
         if data.has_key('plot'):
             mwf_logger.error("file={0}".format(data['plot']))
     else:
-        print "data=",data
+        #print "data=",data
         title="Could not find this Maass form in the database!"
         info['error']=data['error']
 
@@ -306,12 +306,12 @@ def render_search_results_wp(info,search):
     info['bread']=bread
     info['evs']=evs_table2(search)
     mwf_logger.debug("in render_search_results. info2={0}".format(info))
-    print "wt=",info.get('weight')
+    #print "wt=",info.get('weight')
     if int(info.get('weight',0))==1:
-        print "weight1=",info.get('weight',0)
+        #print "weight1=",info.get('weight',0)
         info['wtis1']="selected";info['wtis0']=""
     else:
-        print "weight0=",info.get('weight',0)
+        #print "weight0=",info.get('weight',0)
         info['wtis0']="selected";info['wtis1']=""
     if info.get('browse',None)<>None:
         info['title']='Browse Maassforms'

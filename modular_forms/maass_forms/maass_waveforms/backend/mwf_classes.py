@@ -120,6 +120,11 @@ class WebMaassForm(object):
         self.cusp_evs=f.get('Cusp_evs',[])
         self.error=f.get('Error',[])
         self.level=f.get('Level',None)
+        ## Contributor key
+        self.contr=f.get('Contributor','')
+        md = db._mongo_db['metadata'].find_one({'c_name':self.contr})
+        ## Contributor full name
+        self.contributor_name=md.get('contributor',self.contr)
         self.num_coeff=f.get('Numc',0)
         if self.R ==None or self.level==None:
             return
@@ -153,7 +158,7 @@ class WebMaassForm(object):
             if len(C)>=1:
                 C=C[0]
                 if self._get_dirichlet_c_only:
-                    print "setting Dirichlet C!"
+                    mwf_logger.debug("setting Dirichlet C!")
                     if self._fnr>len(C):
                         self._fnr=0
                     if self._num_coeff0>len(C[self._fnr][0])-1:
@@ -162,7 +167,7 @@ class WebMaassForm(object):
                     for j in range(1,self._num_coeff0+1):
                         self.coeffs.append(C[self._fnr][0][j])
                 else:
-                    print "setting C!"
+                    mwf_logger.debug("setting C!")
                     self.coeffs=C
          ## Make sure that self.coeffs is only the current coefficients
         if self._get_coeffs and isinstance(self.coeffs,dict):
@@ -254,7 +259,7 @@ class WebMaassForm(object):
                             c = self.coeffs[k][cusp].get(n,None)
                         except KeyError,IndexError:
                             mwf_logger.critical("Got coefficient in wrong format for id={0}".format(self._maassid))
-                        print k,c
+                        #mwf_logger.debug("{0},{1}".format(k,c))
                         if c<>None:
                             realnumc+=1
                             row.append(pretty_coeff(c))
