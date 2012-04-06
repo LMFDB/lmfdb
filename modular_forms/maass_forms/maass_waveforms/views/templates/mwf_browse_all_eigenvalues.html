@@ -82,7 +82,7 @@ s='<br>Weight:<select id="weight"><option selected>0<option>1<option >all </sele
 $('#eigenvalues_filter').append(s);
 {% endif %}
 
-
+{# $('#content').append($('#knowl')) #}
 
 /* Add event listeners to the two range filtering inputs */
 $('#weight').change( function() { evTable.fnDraw(); } );
@@ -91,6 +91,19 @@ $('.bottom').css("width","100%")
 $('.bottom').css("text-align","left")
 $('.atkinl').css("width","400px")
 
+evTable.fnDraw(); 
+$('#eigenvalues_length').css("width","50%")
+$('#eigenvalues').css("width","875px")
+$('#eigenvalues_wrapper').css("width","875px")
+$('#eigenvalues_paginate').css("width","75%")
+$('#eigenvalues_paginate').css("text-align","left")
+$('.paging_full_numbers').css('width','400px')
+$('#eigenvalues_first').css('padding','10px')
+$('#eigenvalues_last').css('padding','10px')
+$('#eigenvalues_next').css('padding','10px')
+$('#eigenvalues_previous').css('padding','10px')
+
+{#
 $('#eigenvalues_length').css("width","400px")
 $('#eigenvalues_length').css("text-align","left")
 $('#eigenvalues_filter').css("width","100%")
@@ -101,7 +114,7 @@ $('.paging_full_numbers').css('width','400px')
 $('#eigenvalues_first').css('padding','10px')
 $('#eigenvalues_last').css('padding','10px')
 $('#eigenvalues_next').css('padding','10px')
-$('#eigenvalues_previous').css('padding','10px')
+$('#eigenvalues_previous').css('padding','10px') #}
  });
 </script>
 <style type="text/css">
@@ -119,6 +132,10 @@ $('#eigenvalues_previous').css('padding','10px')
 table.eigenvalues {clear:both}
 }
 a.paginate_button {
+    padding:10px;
+ } 
+a.paginate_active {
+    font-weight:bold;
     padding:10px;
  } 
 </style>
@@ -141,10 +158,8 @@ a.paginate_button {
 <h2>Eigenvalues</h2>
 <table class="ntdata" id="eigenvalues">
 </table>
-<table style="clear:both"><tr><td>
-<div>
+{# <div id="knowl">
 {{ KNOWL('metadata.knowl-tag') }}
-</td></tr></table>
 </div>
-
+#}
 {% endblock content %}

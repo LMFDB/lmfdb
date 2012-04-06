@@ -201,14 +201,26 @@ def render_one_maass_waveform_wp(info):
     mwf_logger.debug("count={0}".format(DB.count()))
     ch = info['MF'].character
     s = "\( \chi_{"+str(level)+"}("+str(ch)+",\cdot) \)"
-    #s+=url_for('render_Character',level,ch)
-    #    mwf_logger.debug("tabl={0}".format(info['MF'].table))
+    # is it possible to get the knowls into the properties?
+    knowls=knowls={'level':'mf.maass.mwf.level',
+                   'weight':'mf.maass.mwf.weight',
+                   'char':'mf.maass.mwf.character',
+                   'R':'mf.maass.mwf.eigenvalue',
+                   'sym':'mf.maass.mwf.symmetry',
+                   'prec':'mf.maass.mwf.precision',
+                   'mult':'mf.maass.mwf.dimension',
+                   'ncoeff':'mf.maass.mwf.ncoefficients',
+                   'fricke':'mf.maass.mwf.fricke',
+                   'atkinlehner':'mf.maass.mwf.atkinlehner'}
     properties =  [('Level',[info['MF'].level]),
                    ('Symmetry',[info['MF'].even_odd()]),
                    ('Weight',[info['MF'].the_weight()]),
                    ('Character',[ s ]),
-                                      ('Dimension',[dim]),
-                   ('Fricke Eigenvalue',[info['MF'].fricke()])]
+                   ('Multiplicity',[dim]),
+                   ('Precision',[info['MF'].precision()]),
+                   ('Fricke Eigenvalue',[info['MF'].fricke()]),
+                   ('Atkin-Lehner Eigenvalues',[info['MF'].atkinlehner()]),
+                   ]
     if dim>1 and info['MF'].the_character()=="trivial":
         properties.append(("Possibly oldform",[]))
     info['title']="Maass forms on \(\Gamma_{0}( %s )\)" % (info['MF'].level)
@@ -614,7 +626,15 @@ def evs_table2(search,twodarray=False):
             if len(cev)>1:
                 fricke=cev[1]
                 row['fricke']=fricke
-            row['cuspevs']=cev
+                s='{0}'.format(cev[0])
+                for j in range(1,len(cev)):
+                    s+=",{0}".format(cev[j])
+            elif len(cev)==1:
+                s=str(cev[0])
+            elif len(cev)==0:
+                s='n/a'
+            row['cuspevs']=s
+
         url = url_for('mwf.render_one_maass_waveform',maass_id=f.get('_id'))
         row['url']=url
         nrows+=1
