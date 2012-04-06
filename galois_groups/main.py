@@ -119,6 +119,7 @@ def render_group_webpage(args):
   info = {}
   if 'label' in args:
     label = str(args['label'])
+    label = label.replace('t', 'T')
     C = base.getDBConnection()
     data = C.transitivegroups.groups.find_one({'label': label})
     if data is None:

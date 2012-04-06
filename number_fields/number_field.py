@@ -414,6 +414,8 @@ def verify_all_fields(li, dlist):
 
 def number_field_search(**args):
     info = to_dict(args)
+    #for k in info.keys():
+    #  nf_logger.debug(str(k) + ' ---> ' + str(info[k]))
     if 'natural' in info:
         field_id = info['natural']
         field_id = parse_field_string(info['natural'])
@@ -463,23 +465,28 @@ def number_field_search(**args):
 
     count_default=20
     if info.get('count'):
-        try:
-            count = int(info['count'])
-        except:
-            count = count_default
-    else:
-        info['count'] = count_default
+      try:
+        count = int(info['count'])
+      except:
         count = count_default
+    else:
+      info['count'] = count_default
+      count = count_default
 
     start_default=0
     if info.get('start'):
-        try:
-            start = int(info['start'])
-            if(start < 0): start += (1-(start+1)/count)*count
-        except:
-            start = start_default
+      try:
+        start = int(info['start'])
+        if(start < 0): start += (1-(start+1)/count)*count
+      except:
+        start = start_default
     else:
         start = start_default
+    if info.get('paging'):
+      try:
+        paging = int(info['paging'])
+        if paging==0: start = 0
+      except: pass
 
     C = base.getDBConnection()
     info['query'] = dict(query)
