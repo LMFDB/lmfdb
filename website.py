@@ -102,7 +102,12 @@ def css():
   from flask import make_response
   response = make_response(render_template("style.css"))
   response.headers['Content-type'] = 'text/css'
-  response.headers['Cache-Control'] = 'public, max-age=600'
+  # don't cache css file, if in debug mode. 
+  from flask import current_app
+  if current_app.debug:
+    response.headers['Cache-Control'] = 'no-cache, no-store'
+  else:
+    response.headers['Cache-Control'] = 'public, max-age=600'
   return response
 
 @app.route('/a/<int:a>')
@@ -159,14 +164,6 @@ def ModularForm_GSp4_Q_top_level( group = None, page = None, weight = None, form
             args['form'] = form
     return siegel_modular_form.render_webpage(args)
 
-#@app.route('/ModularForm/GL2/Q/holomorphic/')
-#def render_classical_modular_form():
-#    return classical_modular_form.render_webpage(request.args)
-
-#@app.route('/ModularForm/GL2/Q/Maass/')
-#def render_maass_form():
-#    return maass_form.render_webpage(request.args)
-
 @app.route('/example_plot')
 def render_example_plot():
     return plot_example.render_plot(request.args)
@@ -174,6 +171,14 @@ def render_example_plot():
 @app.route("/not_yet_implemented")
 def not_yet_implemented():
     return render_template("not_yet_implemented.html", title = "Not Yet Implemented")
+
+# the checklist is for testing on a high-level
+@app.route("/checklist-list")
+def checklist_list():
+  return render_template("checklist.html", body_class="checklist")
+@app.route("/checklist")
+def checklist():
+  return render_template("checklist-fs.html")
 
 
 def usage():
