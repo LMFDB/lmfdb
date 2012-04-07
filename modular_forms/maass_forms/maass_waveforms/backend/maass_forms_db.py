@@ -1229,7 +1229,7 @@ def arg_to_format_parameters(data={},**kwds):
     res={}
     if not isinstance(data,dict):
         res['skip']=0
-        res['limit']=50
+        res['limit']=3000
         res['collection_name']=''
     else:
         res['skip']=int(data.get('skip',kwds.get('skip',0)))
