@@ -38,11 +38,12 @@ var oTable = $("table#coeffs").dataTable(
 $('.bottom').css("width","100%")
 $('.bottom').css("text-align","left")
 $('.paging_full_numbers').css('width','250px')
+$('#coeffs').css('width','650px')
 });
 </script>
  
 <style type="text/css">
- .dataTables_wrapper { height: 100px; class:"ntdata"}
+ .dataTables_wrapper { width: 600px; class:"ntdata"}
  .dataTables_wrapper:after {
     content: ".";
     display: block;
@@ -102,7 +103,7 @@ $('.paging_full_numbers').css('width','250px')
         <th> n </th>
           {% for k in range(1,ncols)  %}
             {% if table.negc is defined and table.negc == 0 %}
-                <th colspan="3">\( c_{ {{k}} } (n) \) </td>
+                <th colspan="1">\( c_{ {{k}} } (n) \) </td>
              {% else %}
                 <th>\( c_{ {{k}} } (n) \) </td>
                 <th>\(c_{ {{k}} } (-n) \) </td>

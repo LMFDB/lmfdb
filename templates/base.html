@@ -61,6 +61,10 @@ _gaq.push(['_trackPageLoadTime']);
  var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
 })();
 </script>
+
+{% if body_class == "checklist" -%}
+<base target="page">
+{%- endif %}
 </head>
 
 <body class="{{ body_class }}">

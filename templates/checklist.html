@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block body -%}
+<h4>Checklist in /templates/checklist.html</h4>
+
+<a href="{{ url_for('index')}}">index</a>: menu, more entries if logged in.<br/>
+<a href="{{ url_for('rational_elliptic_curves', conductor='1-99') }}">Ell curves/Q, conductor 1-99</a><br/>
+<a href="{{ url_for('by_ec_label', label='17.a3') }}">EllCurve 17.a3</a>: plot in the properties box, ...<br/>
+
+{%- endblock %}
