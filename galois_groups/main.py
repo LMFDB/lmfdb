@@ -132,6 +132,10 @@ def render_group_webpage(args):
     data['yesno'] = yesno
     order = data['order']
     data['orderfac'] = latex(ZZ(order).factor())
+    orderfac = latex(ZZ(order).factor())
+    data['ordermsg'] = "$%s=%s$"%(order, latex(orderfac))
+    if order == 1: data['ordermsg'] = "$1$"
+    if ZZ(order).is_prime(): data['ordermsg'] = "$%s$ (is prime)"%order
     pgroup = len(ZZ(order).prime_factors())<2
     if n==1:
       G = gap.SmallGroup(n,t)
@@ -139,6 +143,7 @@ def render_group_webpage(args):
       G = gap.TransitiveGroup(n,t)
     ctable = chartable(n,t)
     data['gens'] = generators(n,t)
+    if n==1 and t==1: data['gens'] = 'None needed'
     data['chartable'] = ctable
     data['parity'] = "$%s$"%data['parity']
     data['cclasses'] = conjclasses(G, n)
