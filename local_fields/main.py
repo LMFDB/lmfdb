@@ -47,7 +47,8 @@ def index():
   bread = get_bread()
   if len(request.args) != 0:
     return local_field_search(**request.args)
-  return render_template("lf-index.html", title ="Local Number Fields", bread = bread)
+  info = {'count': 20}
+  return render_template("lf-index.html", title ="Local Number Fields", bread = bread, credit=LF_credit, info=info)
 
 @local_fields_page.route("/<label>")
 def by_label(label):
@@ -89,13 +90,52 @@ def local_field_search(**args):
         tmp[1] = newors
       query[tmp[0]] = tmp[1]
 
+  count_default=20
+  if info.get('count'):
+    try:
+      count = int(info['count'])
+    except:
+      count = count_default
+  else:
+    info['count'] = count_default
+    count = count_default
+
+  start_default=0
+  if info.get('start'):
+    try:
+      start = int(info['start'])
+      if(start < 0): start += (1-(start+1)/count)*count
+    except:
+      start = start_default
+  else:
+      start = start_default
+  if info.get('paging'):
+    try:
+      paging = int(info['paging'])
+      if paging==0: start = 0
+    except: pass
+
+
 
   res = C.localfields.fields.find(query).sort([('p',pymongo.ASCENDING),('n',pymongo.ASCENDING),('c',pymongo.ASCENDING),('label', pymongo.ASCENDING)])
   nres = res.count()
+  res = res.skip(start).limit(count)
+
+  if(start>=nres): start-=(1+(start-nres)/count)*count
+  if(start<0): start=0
+
   info['fields'] = res
   info['group_display'] = group_display_shortC(C)
   info['display_poly'] = format_coeffs
-  info['report'] = "found %s fields"%nres
+  info['start'] = start
+  if nres==1:
+    info['report'] = 'unique match'
+  else:
+    if nres>count or start!=0:
+      info['report'] = 'displaying matches %s-%s of %s'%(start+1,min(nres,start+count),nres)
+    else:
+      info['report'] = 'displaying all %s matches'%nres
+
 
   bread = get_bread([("Search results", url_for('.search'))])
   return render_template("lf-search.html", info = info, title="Local Number Field Search Result", bread=bread, credit=LF_credit)
