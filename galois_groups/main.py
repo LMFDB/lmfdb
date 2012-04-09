@@ -54,9 +54,9 @@ def index():
   bread = get_bread()
   if len(request.args) != 0:
     return galois_group_search(**request.args)
-  info = {}
+  info = {'count': 20}
   info['degree_list'] = range(14)[2:]
-  return render_template("gg-index.html", title ="Galois Groups", bread = bread, info = info)
+  return render_template("gg-index.html", title ="Galois Groups", bread = bread, info = info, credit=GG_credit)
 
 @galois_groups_page.route("/<label>")
 def by_label(label):
@@ -98,13 +98,50 @@ def galois_group_search(**args):
         tmp[1] = newors
       query[tmp[0]] = tmp[1]
 
+  count_default=20
+  if info.get('count'):
+    try:
+      count = int(info['count'])
+    except:
+      count = count_default
+  else:
+    info['count'] = count_default
+    count = count_default
+
+  start_default=0
+  if info.get('start'):
+    try:
+      start = int(info['start'])
+      if(start < 0): start += (1-(start+1)/count)*count
+    except:
+      start = start_default
+  else:
+      start = start_default
+  if info.get('paging'):
+    try:
+      paging = int(info['paging'])
+      if paging==0: start = 0
+    except: pass
+
   res = C.transitivegroups.groups.find(query).sort([('n',pymongo.ASCENDING),('t',pymongo.ASCENDING)])
   nres = res.count()
-#  res = iter_limit(res, count, start)
+  res = res.skip(start).limit(count)
+
+  if(start>=nres): start-=(1+(start-nres)/count)*count
+  if(start<0): start=0
+
   info['groups'] = res
   info['group_display'] = group_display_shortC(C)
   info['report'] = "found %s groups"%nres
   info['yesno'] = yesno
+  info['start'] = start
+  if nres==1:
+    info['report'] = 'unique match'
+  else:
+    if nres>count or start!=0:
+      info['report'] = 'displaying matches %s-%s of %s'%(start+1,min(nres,start+count),nres)
+    else:
+      info['report'] = 'displaying all %s matches'%nres
 
   bread = get_bread([("Search results", url_for('.search'))])
   return render_template("gg-search.html", info = info, title="Galois Group Search Result", bread=bread, credit=GG_credit)

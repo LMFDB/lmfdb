@@ -115,8 +115,6 @@ def local_field_search(**args):
       if paging==0: start = 0
     except: pass
 
-
-
   res = C.localfields.fields.find(query).sort([('p',pymongo.ASCENDING),('n',pymongo.ASCENDING),('c',pymongo.ASCENDING),('label', pymongo.ASCENDING)])
   nres = res.count()
   res = res.skip(start).limit(count)
