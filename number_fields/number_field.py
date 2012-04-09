@@ -543,17 +543,6 @@ def number_field_search(**args):
     properties = []
     return render_template("number_field_search.html", info = info, title=t, properties=properties, bread=bread)
 
-def iter_limit(it,lim,skip):
-    count = 0
-    while count<skip:
-        it.next()
-        count += 1
-    count = 0
-    while count<lim:
-        yield it.next()
-        count += 1
-    return
-
                    
 def merge_sort(it1,it2):
     try:
