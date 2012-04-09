@@ -26,10 +26,6 @@ def galois_group_data(n, t):
   C = base.getDBConnection()
   return group_knowl_guts(n, t, C)
 
-#@app.context_processor
-##def ctx_galois_groups():
-#  return {'galois_group_data': galois_group_data }
-
 def display_poly(coeffs):
   return web_latex(coeff_to_poly(coeffs))
 
