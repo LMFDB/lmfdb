@@ -1,0 +1,16 @@
+{% extends "homepage.html" %}
+{% block content %}
+
+<div>The following of roadmaps outline the future directions of this LMFDB web-site. For more details visit our
+<a href="http://code.google.com/p/lmfdb/issues/list" target="_blank">Bugtracker</a>.</div>
+
+{# the formatting should be fine this way, just needs extension to all roadmaps #}
+
+{{ KNOWL_INC('hmf.roadmap') }}
+
+{{ KNOWL_INC('lf.roadmap') }}
+
+{{ KNOWL_INC('gg.roadmap') }}
+
+{% endblock %}
+
