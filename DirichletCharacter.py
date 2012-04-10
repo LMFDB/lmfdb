@@ -261,11 +261,11 @@ def dc_calc_gauss(modulus,number):
         chi = DirichletGroup_conrey(modulus)[number]
         chi = chi.sage_character()
         g = chi.gauss_sum_numerical(100,int(arg))
-        real = int(round(g.real(),5))
-        imag = int(round(g.imag(),5))
-        if imag == 0:
+        real = round(g.real(),10)
+        imag = round(g.imag(),10)
+        if imag == 0.:
             g = str(real)
-        elif real == 0:
+        elif real == 0.:
             g = str(imag) + "i"
         else:
             g = latex(g)
@@ -308,8 +308,8 @@ def dc_calc_kloosterman(modulus,number):
         chi = DirichletGroup_conrey(modulus)[number]
         chi = chi.sage_character()
         k = chi.kloosterman_sum_numerical(100,arg[0],arg[1])
-        real = int(round(k.real(),5))
-        imag = int(round(k.imag(),5))
+        real = round(k.real(),5)
+        imag = round(k.imag(),5)
         if imag == 0:
             k = str(real)
         elif real == 0:

@@ -1,0 +1,34 @@
+{% extends "homepage.html" %}
+{% block content %}
+
+<div>The following of roadmaps outline the future directions of this LMFDB web-site. For more details visit our
+<a href="http://code.google.com/p/lmfdb/issues/list" target="_blank">Bugtracker</a>.</div>
+
+{# the formatting should be fine this way, just needs extension to all roadmaps #}
+
+{{ KNOWL_INC('lfunction.roadmap') }}
+
+{{ KNOWL_INC('mf.elliptic.roadmap') }}
+
+{{ KNOWL_INC('ec.roadmap') }}
+
+{{ KNOWL_INC('dirichlet_character.roadmap') }}
+
+{{ KNOWL_INC('mf.hilbert.roadmap') }}
+
+{{ KNOWL_INC('mf.maass.roadmap') }}
+
+{{ KNOWL_INC('mf.siegel.roadmap') }}
+
+{{ KNOWL_INC('artin.roadmap') }}
+
+{{ KNOWL_INC('nf.roadmap') }}
+
+{{ KNOWL_INC('lf.roadmap') }}
+
+{{ KNOWL_INC('gg.roadmap') }}
+
+{{ KNOWL_INC('zeros.roadmap') }}
+
+{% endblock %}
+

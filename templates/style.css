@@ -141,8 +141,9 @@ a {
   padding-right: 2px;
 }
 
-
-
+body.checklist {
+ font-size: 70%;
+}
 
 a:visited { color: #080; }
 a:hover { 

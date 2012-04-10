@@ -50,10 +50,10 @@ Sections:
  * Elliptic Curves: John Cremona
  * L-functions: Stefan Lemurell
  * Siegeld MF: Nils Skoruppa
- * Elliptic MFs: Fredrik Stromberg
+ * Elliptic MFs: Nathan Ryan
  * Maass Fs: Fredrik Stromberg
  * Number Fields / Galois Groups: John Jones
- * Artin Repos: Andy Booker
+ * Artin Repos: Paul-Olivier Dehaye
  * Dirichlet Characters: Pascal Molin
  * Zeroes: Jonathan Bober
 

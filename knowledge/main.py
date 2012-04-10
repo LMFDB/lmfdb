@@ -256,6 +256,13 @@ def render(ID, footer=None, kwargs = None, raw = False):
   kwargs = kwargs or dict(((k, v) for k,v in request.args.iteritems()))
   #logger.debug("kwargs: %s" , kwargs)
 
+  # kw_params is inserted *verbatim* into the url_for(...) function inside the template
+  # the idea is to pass the keyword arguments of the knowl further along the chain
+  # of links, in this case the title and the permalink!
+  # so, this kw_params should be plain python, e.g. "a=1, b='xyz'"
+  kw_params = ', '.join(('%s="%s"' % (k,v) for k,v in kwargs.iteritems()))
+  logger.debug("kw_params: %s" % kw_params)
+
   #this is a very simple template based on no other template to render one single Knowl
   #for inserting into a website via AJAX or for server-side operations.
   if request.method == "POST":
@@ -282,15 +289,15 @@ def render(ID, footer=None, kwargs = None, raw = False):
   if foot == "1":
     render_me += """\
   <div class="knowl-header">
-    <a href="{{ url_for('.show', ID='%(ID)s') }}">%(title)s</a> 
-  </div>""" % { 'ID' : k.id, 'title' : (k.title or k.id) }
+    <a href="{{ url_for('.show', ID='%(ID)s', %(kw_params)s ) }}">%(title)s</a> 
+  </div>""" % { 'ID' : k.id, 'title' : (k.title or k.id), 'kw_params' : kw_params }
 
   render_me += """<div><div class="knowl-content">%(content)s</div></div>"""
 
   if foot == "1": 
     render_me += """\
   <div class="knowl-footer">
-    <a href="{{ url_for('.show', ID='%(ID)s') }}">permalink</a> 
+    <a href="{{ url_for('.show', ID='%(ID)s', %(kw_params)s) }}">permalink</a> 
     {%% if user_is_authenticated %%}
       &middot;
       <a href="{{ url_for('.edit', ID='%(ID)s') }}">edit</a> 
@@ -300,12 +307,12 @@ def render(ID, footer=None, kwargs = None, raw = False):
   render_me += "</div>"
   # render_me = render_me % {'content' : con, 'ID' : k.id }
   # markdown enabled
-  render_me = render_me % {'content' : md.convert(con), 'ID' : k.id } #, 'authors' : authors }
+  render_me = render_me % {'content' : md.convert(con), 'ID' : k.id, 'kw_params' : kw_params } #, 'authors' : authors }
   # Pass the text on to markdown.  Note, backslashes need to be escaped for this, but not for the javascript markdown parser
   
   #logger.debug("rendering template string:\n%s" % render_me)
 
-  # TODO wrap this string-rendering into a try/catch and return a proper error message
+  # TODO improve the error message
   # so that the user has a clue. Most likely, the {{ KNOWL('...') }} has the wrong syntax!
   try:
     data = render_template_string(render_me, k = k, **kwargs)

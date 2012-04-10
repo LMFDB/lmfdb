@@ -7,11 +7,13 @@ import bson
 from sage.symbolic.expression import Expression
 import datetime
 from sage.all import Integer,DirichletGroup,is_even,loads,dumps,cached_method
+from  modular_forms.maass_forms.maass_waveforms import mwf_logger
 import math
+logger = mwf_logger
 try:
   from dirichlet_conrey import *
 except:
-  print "dirichlet_conrey.pyx cython file is not available ..."
+    logger.critical("dirichlet_conrey.pyx cython file is not available ...")
 import cython
 
 class MaassDB(object):
@@ -60,8 +62,8 @@ class MaassDB(object):
             Con = pymongo.Connection(constr)
             self._Con = Con    
         except: #AutoReconnect:
-            print "No database found at "+constr
-            print "Please specifiy other host/port (default to fallback database type)"
+            logger.critical("No database found at {0}".format(constr))
+            logger.critical("Please specifiy other host/port")
             return 0
         D=Con['MaassWaveForms']
         self._mongo_db=D
@@ -72,8 +74,10 @@ class MaassDB(object):
             self._show_collection=[self._show_collection_name]
         if self._show_collection_name=='all':
             self._show_collection=[]
-            for cn in ['FS','HT']: #D.collection_names():
-                self._show_collection.append(D[cn])
+            ## We currently merged both collections.
+            for cn in ['FS']: #,'HT']: #D.collection_names():
+                if cn in D.collection_names():
+                    self._show_collection.append(D[cn])
 
         if not 'Coefficients' in D.collection_names():
             D.create_collection('Coefficients')
@@ -85,7 +89,7 @@ class MaassDB(object):
         self._collection_progress = D['Progress']
         self._collection_coeff_progress = D['CoeffProgress']
         self._job_history=D['job_history']
-        print "successfully set up mongodb!"
+        #print "successfully set up mongodb!"
         return 1
         
     # def setup_file(self,dir='',filename='maassforms_db'):
@@ -140,7 +144,7 @@ class MaassDB(object):
         cn_evs=data.get("Cusp_evs",[])
         # Check if this record already exists
         isin,numc0,errin,idd0 =  self.is_data_in_table_mongo(level,weight,ch,sym_type,R,err)
-        print "Is in database:",isin
+        mwf_logger.debug("Is in database:".format(isin))
         if not data.get('Conrey',False):
             # Then we have to convert the character to Conrey's label
             ch = db.getDircharConrey(level,ch)
@@ -157,7 +161,7 @@ class MaassDB(object):
         ## Then we leave it be.
         idd=0
         if isin==0:
-            print "inserting:",insert_data
+            logger.debug("inserting:".format(insert_data))
             idd = self._collection.insert(insert_data)
         else:
             if (isin==1 and (errin==0 or errin>err)):
@@ -187,7 +191,7 @@ class MaassDB(object):
                 key={'_id':idd}
                 inserts={"$set":{"Coefficients":C}}
                 self._collection_coeff.update(key,inserts,upsert=True)
-                print "Inserted coeficients"
+                logger.debug("Inserted coeficients")
 
 
     def has_level_weight_char(self,level,weight,ch):
@@ -211,11 +215,11 @@ class MaassDB(object):
                    'Symmetry':sym_type,
                    'Eigenvalue':{"$gte": float(R)-float(ep0),"$lt":float(R)+float(ep0)}
                    }
-        print "find_Data:",find_data
+        mwf_logger.debug("find_Data:{0}".format(find_data))
         if self._collection.find(find_data).count()==0:
             return 0,0,0,0
         x = self._collection.find(find_data)[0]
-        print "x=",x
+        mwf_logger.debug("x={0}".format(x))
         numc=x.get('Numc',0)
         err=x.get('Error',0)
         idd=x.get('_id',0)
@@ -228,10 +232,8 @@ class MaassDB(object):
         data={'Level':int(level),
               'Weight':int(weight),
               'Character':int(ch)}
-#              'R1':float(R1),
-#              'R2':float(R2)}
         if verbose>0:
-            print "Register work: N,weight,ch=",level,weight,ch," in R1,R2=",R1,R2
+            mwf_logger.debug("Register work: N,weight,ch={0},{1},{2},{3} in {4}, {5}".format(level,weight,ch,R1,R2))
         try:
             t0 = self._collection_progress.find(data)
             if t0.count()>0:  ## Check more detail
@@ -351,6 +353,7 @@ class MaassDB(object):
 
     def get_Maass_forms(self,data={},**kwds):
         verbose=kwds.get('verbose',0)
+        collection=kwds.get('collection','all')
         if verbose>0:
             print "get_Maass_forms for data=",data
         if isinstance(data,bson.objectid.ObjectId):
@@ -373,7 +376,12 @@ class MaassDB(object):
         res=[]
         skip0 = format_data['skip'];skip=skip0
         limit0= format_data['limit']; limit=limit0
+        
+        #print "SHow collection:",self._show_collection
         for collection in self._show_collection:
+            #print "limit=",limit
+            print "skip=",skip
+            print "limit=",limit
             cname = format_data.get('collection_name','')
             if cname<>'' and cname<>collection.name:
                 continue
@@ -381,10 +389,8 @@ class MaassDB(object):
                 continue
             finds = collection.find(find_data,sort=sorting).skip(skip).limit(limit)
             skip=0
-            #print "skip=",skip
-            #print "limit=",limit
-            #print "find[",collection.name,"]=",finds.count()
-            limit = limit - finds.count()
+            print "find[",collection.name,"]=",finds.count()
+            limit = limit - finds.count(True)
             for x in finds:
                 res.append(x)
         #print "len=",len(res)
@@ -976,11 +982,13 @@ class MaassDB(object):
             N = x.get('Level',0)
             data['Level'] = N
             R = x.get('Eigenvalue',0)
+            Contributor = x.get('Contributor','')
             k = x.get('Weight',0)
             data['Weight'] = k
             ch = x.get('Character',0)
             conrey = x.get('Conrey',0)
             data['Character'] = ch
+
             st = x.get('Symmetry',-1)
             if not isinstance(st,int):
                 if st=='even':
@@ -1019,6 +1027,7 @@ class MaassDB(object):
             data['Conrey']=conrey
             data['Dim']=dim
             data['_id']=idd
+            data['Contributor']=Contr
             coeff_id=None
             f=None
             ff = other.find_Maass_form_id({'_id':idd}) #find_data)
@@ -1061,7 +1070,7 @@ class MaassDB(object):
                              "Cusp_evs":evs,
                              "dim":dim,
                              "Symmetry":st,
-                             'M0':int(M0),
+                             'M0':int(M0),                             
                              'Y':Y}
                     inserts = {"$set":dsets}
                     key={"_id":idnew}
@@ -1220,7 +1229,7 @@ def arg_to_format_parameters(data={},**kwds):
     res={}
     if not isinstance(data,dict):
         res['skip']=0
-        res['limit']=50
+        res['limit']=3000
         res['collection_name']=''
     else:
         res['skip']=int(data.get('skip',kwds.get('skip',0)))

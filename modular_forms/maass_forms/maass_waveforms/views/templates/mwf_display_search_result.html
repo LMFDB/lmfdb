@@ -25,7 +25,7 @@ var evTable = $("table#eigenvalues").dataTable(
                  {"sWidth": "20%", "bSortable": false, "bSearchable":
  false,"sClass": "alignLeft", "fnRender":"text-align:left","minWidth":"200px"}],  
     "bSort":true,
-    "iDisplayLength": 10,    
+    "iDisplayLength": 15,    
     "iDisplayStart": 0,
     "fnSort":[[1,"asc"],[2,"asc"],[3,"asc"]],
     "oLanguage": {
@@ -42,7 +42,7 @@ var evTable = $("table#eigenvalues").dataTable(
      }, 
      "bjQueryUI":true,
      "sPaginationType": "full_numbers",
-     "sDom": 'ti<"paging"p><"bottom"lfr><"filterbox"><"clear">',
+     "sDom": 'ti<"paging"p><"bottom"lfr><"filterbox"><>',
      "sScorollX": "500px", 
      "bStateSave": false,
      "aLengthMenu": [[15, 25, 50, 100 ,200, -1], [15, 25, 50, 100, 200, "All"]],
@@ -65,13 +65,9 @@ $('#eigenvalues_filter').append(s);
 $('#weight').change( function() { evTable.fnDraw(); } );
 {% endif %}
 evTable.fnDraw(); 
-
 $('#eigenvalues_length').css("width","50%")
-$('#eigenvalues_length').css("text-align","left")
-$('#eigenvalues_filter').css("width","100%")
-$('#eigenvalues_wrapper').css("width","75%")
-$('.bottom').css("width","100%")
-$('.bottom').css("text-align","left")
+$('#eigenvalues').css("width","875px")
+$('#eigenvalues_wrapper').css("width","875px")
 $('#eigenvalues_paginate').css("width","75%")
 $('#eigenvalues_paginate').css("text-align","left")
 $('.paging_full_numbers').css('width','400px')
@@ -80,25 +76,42 @@ $('#eigenvalues_last').css('padding','10px')
 $('#eigenvalues_next').css('padding','10px')
 $('#eigenvalues_previous').css('padding','10px')
 
- });
-</script>
+s='<div id="newsearch" class="newsearch"></div>';
+$('#content').append(s);
+/* $('#content').append($("knowl"));*/
+s='<h2>New Search</h2>';
+$('#newsearch').append(s);;
+s='<form name="search" method = "post" action="{{url_for('.render_maass_waveforms')}}" id="newsearchform" ></form>';
+$('#newsearch').append(s);
+s='<input type="hidden" name="search" value="true">';
+$('#newsearchform').append(s);
+s='<table id="newsearchtable"></table>';
+$('#newsearchform').append(s);
+s='<tr><td>Level in range:</td><td><input type="text" name="level_range" value="" placeholder="1..10"></td></tr>';
+$('#newsearchtable').append(s);
+s='<tr><td>R in range:</td><td><input type="text" name="ev_range" value="" placeholder="9.5..10"></td></tr>';
+$('#newsearchtable').append(s);
+s='<tr><td>Weight:</td><td><input type="text" name="weight" value="" placeholder="0"><span class="formexample">(leave blank for weight 0)</span></td></tr>';
+$('#newsearchtable').append(s);
+s='<tr><td>Character:</td><td><input type="text" name="character" value="" placeholder="0"><span class="formexample">(0 means trivial character, leave blank for all characters)</span></td></tr>';
+$('#newsearchtable').append(s);
+s='<tr><td colspan="2"><input type="submit" name="Submit" value="Search"></td> </tr>';
+$('#newsearchtable').append(s);
 
+ });
+
+</script>
 <style type="text/css">
- .dataTables_wrapper { height: 100px; class:"ntdata"}
- .dataTables_wrapper:after {
-    content: ".";
-    display: block;
-    visibility: hidden;
-    line-height: 0;
-    height: 0;
- td.sorting_1 {}
-.alignLeft  {text-align:left}
- .dataTables_length {width:100%}
-}
+
 a.paginate_button {
     padding:10px;
  } 
+a.paginate_active {
+    font-weight:bold;
+    padding:10px;
+ } 
 </style>
+
 
 {% if info.error is defined %}
 
@@ -120,7 +133,7 @@ a.paginate_button {
 {% set data = table.data %}
 
 <h2>Eigenvalues</h2>
-<div id="searchresults">
+<!--div id="searchresults" -->
 <table class="ntdata pretty" id="eigenvalues">
   <colgroup>
     <col/> <col/><col/> 
@@ -191,80 +204,13 @@ a.paginate_button {
     {% endfor %}
    </tbody>
 </table>
+{# Make the new search floating  to get correct placement #}
+{# What kind of metadata should be here?
+<div id="knowl">
+{{ KNOWL("metadata.knowl-tag") }}
 </div>
-<div id="newsearch" class="newsearch" style="clear:both">
-{% if info.more  %}
-<form name="hidden-search" method = "post" action="{{url_for('.render_maass_waveforms')}}">
-  <input type="hidden" name="search" value="true"> 
-  <input type="hidden" name="level_lower" value="{{search.level_lower}}"> 
-  <input type="hidden" name="level_upper" value="{{search.level_upper}}">  
-  <input type="hidden" name="weight" value="{{search.weight}}"> 
-  <input type="hidden" name="character" value="{{search.character}}"> 
-  <input type="hidden" name="ev_lower" value="{{search.ev_lower}}"> 
-  <input type="hidden" name="ev_upper" value="{{search.ev_upper}}"> 
-  <input type="hidden" name="rec_start" value="{{info.rec_start}}"> 
-  <input type="hidden" name="limit" value="{{info.limit}}"> 
-  <input type="submit" value="Display Next {{info.limit}} records">
-</form>
-{% endif %}
-<h2>New Search</h2>
-   <form name="search" method = "post" action="{{url_for('.render_maass_waveforms')}}">
-     <input type="hidden" name="search" value="true"> 
-     <input type="hidden" name="rec_start" value="1"> 
-     <h3>Search</h3>
-     <table class="">
-       <tr>
-	 <td>Level in range:</td>
-	 <td> 
-	   <input type="text" name="level_range" value=""  placeholder="1..10">
-	 </td>
-       </tr>
-       <tr>
-	 <td>R in range:</td>
-	 <td> 
-	   <input type="text" name="ev_range" value=""
-                  placeholder="9.5..10">
-       </tr>
-       <tr>
-	    <td>Weight:</td>
-	    <td> 
-	      <input type="text" name="weight" value="" placeholder="0"> 
-	      <span class="formexample">(leave blank for weight 0)</span>
-	    </td>
-       </tr>
-       <tr>
-	 <td>Character:</td><td> <input type="text" name="character"
-	 value="" placeholder="0">
-<span class="formexample">(0 means trivial character, leave blank for all characters)</span></td>
-       </tr>
-       <tr>
-	 <td>
-	   <input type="submit" name="Submit" value="Search">
-	 </td>
-{# <td>
-	   Show number of records:
-	 <select name="limit">
-	   <option value="20">20</option>
-	   <option value="50">50</option>
-	   <option value="100">100</option>
-	   <option value="-1">all</option>
-	 </select>
-	 </td>
 #}
-       </tr>
-     </table>
-   </form>
-</div>
-{{ KNOWL('metadata.knowl-tag') }}
-</p>
 {% else %}
 There are no eigenvalues in this database matching your search parameters.
 {% endif %}
-
-
-
-
-
-
-
 {% endblock content %}

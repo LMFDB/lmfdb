@@ -414,6 +414,8 @@ def verify_all_fields(li, dlist):
 
 def number_field_search(**args):
     info = to_dict(args)
+    #for k in info.keys():
+    #  nf_logger.debug(str(k) + ' ---> ' + str(info[k]))
     if 'natural' in info:
         field_id = info['natural']
         field_id = parse_field_string(info['natural'])
@@ -463,23 +465,28 @@ def number_field_search(**args):
 
     count_default=20
     if info.get('count'):
-        try:
-            count = int(info['count'])
-        except:
-            count = count_default
-    else:
-        info['count'] = count_default
+      try:
+        count = int(info['count'])
+      except:
         count = count_default
+    else:
+      info['count'] = count_default
+      count = count_default
 
     start_default=0
     if info.get('start'):
-        try:
-            start = int(info['start'])
-            if(start < 0): start += (1-(start+1)/count)*count
-        except:
-            start = start_default
+      try:
+        start = int(info['start'])
+        if(start < 0): start += (1-(start+1)/count)*count
+      except:
+        start = start_default
     else:
         start = start_default
+    if info.get('paging'):
+      try:
+        paging = int(info['paging'])
+        if paging==0: start = 0
+      except: pass
 
     C = base.getDBConnection()
     info['query'] = dict(query)
@@ -536,18 +543,6 @@ def number_field_search(**args):
     properties = []
     return render_template("number_field_search.html", info = info, title=t, properties=properties, bread=bread)
 
-def iter_limit(it,lim,skip):
-    count = 0
-    while count<skip:
-        it.next()
-        count += 1
-    count = 0
-    while count<lim:
-        yield it.next()
-        count += 1
-    return
-
-                   
 def merge_sort(it1,it2):
     try:
         a = it1.next()
@@ -642,53 +637,3 @@ def frobs(K):
       ans.append([p, 'R'])
   return(ans)
 
-
-
-
-# obsolete old function:                    
-def old_merge(it1,it2,lim):
-    count=0
-    try:
-        a = it1.next()
-    except StopIteration:
-        for b in it2:
-            if count==lim:
-                return
-            yield b
-            count += 1
-        return
-    try:
-        b = it2.next()
-    except StopIteration:
-        for a in it1:
-            if count==lim:
-                return
-            yield a
-            count += 1
-        return
-
-    while count<lim:
-        if abs(a['discriminant'])<abs(b['discriminant']):
-            yield a
-            count += 1
-            try:
-                a = it1.next()
-            except StopIteration:
-                for b in it2:
-                    if count==lim:
-                        return
-                    yield b
-                    count += 1
-                return
-        else:
-            yield b
-            count += 1
-            try:
-                b = it2.next()
-            except StopIteration:
-                for a in it1:
-                    if count==lim:
-                        return
-                    yield a
-                    count += 1
-                return

@@ -1,9 +1,8 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-<meta http-equiv="Content-Language" Content="en">
 <meta name="description" content="{{meta_description|striptags}}"/>
 {% if titletag %}
 <title>LMFDB - {{ titletag|striptags }}</title>
@@ -61,6 +60,10 @@ _gaq.push(['_trackPageLoadTime']);
  var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
 })();
 </script>
+
+{% if body_class == "checklist" -%}
+<base target="page">
+{%- endif %}
 </head>
 
 <body class="{{ body_class }}">
