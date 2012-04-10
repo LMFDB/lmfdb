@@ -130,7 +130,6 @@ def local_field_search(**args):
     else:
       info['report'] = 'displaying all %s matches'%nres
 
-
   bread = get_bread([("Search results", url_for('.search'))])
   return render_template("lf-search.html", info = info, title="Local Number Field Search Result", bread=bread, credit=LF_credit)
 
