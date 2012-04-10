@@ -630,7 +630,7 @@ def download_EC_qexp(label, limit):
     ainvs = data['ainvs']
     logger.debug(ainvs)
     E = EllipticCurve([int(a) for a in ainvs])
-    response = make_response(' '.join(str(an) for an in E.anlist(int(limit), python_ints=True)))
+    response = make_response(','.join(str(an) for an in E.anlist(int(limit), python_ints=True)))
     response.headers['Content-type'] = 'text/plain'
     return response
 
@@ -651,10 +651,26 @@ def download_EC_all(label):
     #titles of all entries of curves
     dump_data=[]
     titles = [str(c) for c in data_list[0]]
+    titles = [t for t in titles if t[0]!='_']
     titles.sort()
     dump_data.append(titles)
     for data in data_list:
-        dump_data.append([data[t] for t in titles])
+        data1 = []
+        for t in titles:
+            d = data[t]
+            if t=='ainvs':
+                data1.append(format_ainvs(d))
+            elif t in ['torsion_generators', 'torsion_structure']:
+                data1.append([eval(g) for g in d])
+            elif t=='x-coordinates_of_integral_points':
+                data1.append(eval(d))
+            elif t=='gens':
+                data1.append(parse_gens(d))
+            elif t in ['iso', 'label', 'lmfdb_iso', 'lmfdb_label']:
+                data1.append(str(d))
+            else:
+                data1.append(d)
+        dump_data.append(data1)
     response=make_response('\n'.join(str(an) for an in dump_data))
     response.headers['Content-type'] = 'text/plain'
     return response
