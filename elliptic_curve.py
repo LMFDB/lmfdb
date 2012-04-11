@@ -320,8 +320,8 @@ def render_isogeny_class(iso_class):
         raise ValueError("No such isogeny class")
 
     cremona_iso = E1data['iso']
-    ainvs = E1data['ainvs']
-    E1 = EllipticCurve([ZZ(c) for c in ainvs])
+    ainvs = [int(a) for a in E1data['ainvs']]
+    E1 = EllipticCurve(ainvs)
     curves, mat = E1.isogeny_class()
     size = len(curves)
     # Create a list of the curves in the class from the database, so
@@ -341,7 +341,7 @@ def render_isogeny_class(iso_class):
         optimal_flags[0]=True
     for i in range(2,size+1):
         Edata = CDB.find_one({'lmfdb_label': lmfdb_iso+str(i)})
-        E = EllipticCurve([ZZ(c) for c in Edata['ainvs']])
+        E = EllipticCurve([int(a) for a in Edata['ainvs']])
         cremona_labels[i-1]=Edata['label']
         if Edata['number']==1:
             optimal_flags[i-1]=True
