@@ -56,7 +56,7 @@ def AlgebraicNumberPolynomialString(pol_as_string_convention):
     return ParametrizedAlgebraicNumberPolynomialString
 
 class AlgebraicNumberString_Root(String):
-    z = lambda n: e^(pi*I/n)
+    z = lambda n: exp(pi*I/n)
     def eval(self):
         tmp = self.replace("^","**")
         return eval(tmp,{"__builtins__":None},{"z":AlgebraicNumberString_Root.z})

@@ -108,13 +108,14 @@ class ArtinRepresentation(object):
             Tim:    conjectured always true,
                     known in dimension 1,
                     most cases in dimension 2
-            Andy:   
         """
         return True
 
     def sign(self):
-        # Guessing needs to be implemented here
-        return int(self._data["Sign"])
+        try:
+            return int(self._data["Sign"])
+        except KeyError:
+            return "?"      # Could try to implement guessing of the sign
     
     def trace_complex_conjugation(self):
         """ Computes the trace of complex conjugation, and returns an int
@@ -146,30 +147,35 @@ class ArtinRepresentation(object):
         return True
 
     def mu_fe(self):
-        return []
-        raise NotImplementedError
+        return [0 for i in range(self.number_of_eigenvalues_plus_one_complex_conjugation())] + \
+                    [1 for i in range(self.number_of_eigenvalues_minus_one_complex_conjugation())]
         
     def nu_fe(self):
         return []
-        raise NotImplementedError
     
     def self_dual(self):
-        return True
+        return "?"
         raise NotImplementedError
     
     def selfdual(self):
         return self.self_dual()
     
     def poles(self):
-        if self.conductor() == 1 and self.dimension() ==1:
+        try:
+            assert self.primitive()
+        except AssertionError:
             raise NotImplementedError
-            # needs to return the pole in the case of zeta
+        if self.conductor() == 1 and self.dimension() == 1:
+            return [1]
         return []
     
     def residues(self):
-        if self.conductor() == 1 and self.dimension() ==1:
+        try:
+            assert self.primitive()
+        except AssertionError:
             raise NotImplementedError
-            # needs to return the pole in the case of zeta
+        if self.conductor() == 1 and self.dimension() ==1:
+            return [1]
         return []
     
     def local_factors_table(self):
@@ -187,9 +193,9 @@ class ArtinRepresentation(object):
             def tmp(conjugacy_class_index_start_1):
                 pol = local_factors[conjugacy_class_index_start_1-1]
                 # We now have an array of arrays, because we have a polynomial over algebraic integers
-                from sage.rings.all import RealField
+                from sage.rings.all import RealField, ComplexField
                 field = ComplexField()
-                root_of_unity = exp(2*pi/self.character_field())
+                root_of_unity = exp(2*field.pi()/int(self.character_field()))
                 pol2 = process_polynomial_over_algebraic_integer(pol, field, root_of_unity)
                 return pol2
             self._from_conjugacy_class_index_to_polynomial_fn = tmp 
@@ -199,16 +205,19 @@ class ArtinRepresentation(object):
         return self._data["BadFactors"]
     
     def bad_factor(self, p):
+        factor_double_pol = self.from_conjugacy_class_index_to_polynomial_fn()(self.bad_factor_index(p))
+        # We get a polynomial over algebraic integers
+        field = ComplexField()
+        return factor_double_pol
+        
+    def bad_factor_index(self, p):
+        # Index in the conjugacy classes, but starts at 1
         try:
             i = self.bad_primes().index(p)
         except:
             raise IndexError, "Not a bad prime%"%p
-        field = ComplexField()
-        root_of_unity = exp(2*pi/self.character_field())
-        pol2 = process_polynomial_over_algebraic_integer([[self.bad_factors()[i-1]]], field, root_of_unity)
-        return pol2
-        # index starts at 1
-
+        return self.bad_factors()[i]
+        
     def from_cycle_type_to_conjugacy_class_index(self, cycle_type):
         # Needs data stored in the number field
         try:
