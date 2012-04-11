@@ -472,6 +472,11 @@ def render_curve_webpage_by_label(label):
     lmfdb_iso_class = data['lmfdb_iso'] # eg '37.a'
     rank = data['rank']
     j_invariant=E.j_invariant()
+    if j_invariant==0:
+        j_inv_factored = latex(0)
+    else:
+        j_inv_factored = latex(j_invariant.factor())
+
     #plot=E.plot()
     discriminant=E.discriminant()
     xintpoints_projective=[E.lift_x(x) for x in xintegral_point(data['x-coordinates_of_integral_points'])]
@@ -534,7 +539,7 @@ def render_curve_webpage_by_label(label):
     info.update({
         'conductor': N,
         'disc_factor': latex(discriminant.factor()),
-        'j_invar_factor':latex(j_invariant.factor()),
+        'j_invar_factor':j_inv_factored,
         'label': lmfdb_label,
         'cremona_label': cremona_label,
         'iso_class':lmfdb_iso_class,
