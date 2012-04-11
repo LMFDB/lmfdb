@@ -188,7 +188,12 @@ pari:
         <div>
 	<center>
 	<table class="ntdata">
-	<thead><tr><td></td><td>{{ KNOWL('artin.dimension', title='Dimension') }}</td><td>{{ KNOWL('artin.conductor', title='Conductor') }}</td><td>Defining polynomial of {{ KNOWL('artin.number_field', title='Artin Field') }} </td><td>Galois subgroup</td></tr></thead>
+	<thead><tr><td></td><td>{{ KNOWL('artin.dimension', title='Dimension') }}</td><td>{{ KNOWL('artin.conductor', title='Conductor') }}</td><td>Defining polynomial of {{ KNOWL('artin.number_field', title='Artin Field') }} </td>
+	<td>Galois subgroup</td>
+	<td>{{ KNOWL('artin.sign', title='Sign') }}</td>
+	<td>{{ KNOWL('artin.ramification', title='Bad primes') }}</td>
+	<td>Trace of complex conjugation</td>
+	</tr></thead>
 	<tbody>
         {% for artin in info["tim_number_field"].artin_representations()%}
           <tr> <td><a href = "{{artin.url_for()}}">{{loop.index}}</a></td><td>${{artin.dimension()}}$</td><td>${{artin.conductor()}}$</td>
@@ -197,7 +202,11 @@ pari:
 	  {% else %}
 	      <td>${{artin.number_field_galois_group().polredabs()}}$</td>
 	  {% endif %}
-	  <td>${{artin.number_field_galois_group().G_name()}}$</td></tr>
+	  <td>${{artin.number_field_galois_group().G_name()}}$</td>
+	  <td>${{artin.sign()}}$</td>
+	  <td>${{artin.bad_primes()}}$</td>
+	  <td>${{artin.trace_complex_conjugation()}}$</td>
+	  </tr>
         {% endfor %}
 	</tbody>
 	</table>

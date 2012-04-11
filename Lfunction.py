@@ -19,19 +19,19 @@ from modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaa
 import time ### for printing the date on an lcalc file
 import socket ### for printing the machine used to generate the lcalc file
 
-def get_attr_or_method(thiswillbeexecuted, attr_or_method_name):
-    """
-        Given an object O and a string "text", this returns O.text() or O.text depending on
-        whether text is an attribute or a method of O itself _or one of its superclasses_, which I will
-        only know at running time. I think I need an eval for that.   POD
-
-    """
-    # I don't see a way around using eval for what I want to be able to do
-    # Because of inheritance, which method should be called depends on self
-    try:
-        return eval("thiswillbeexecuted."+attr_or_method_name)
-    except:
-        return None
+#def get_attr_or_method(thiswillbeexecuted, attr_or_method_name):
+#    """
+#        Given an object O and a string "text", this returns O.text() or O.text depending on
+#        whether text is an attribute or a method of O itself _or one of its superclasses_, which I will
+#        only know at running time. I think I need an eval for that.   POD
+#
+#    """
+#    # I don't see a way around using eval for what I want to be able to do
+#    # Because of inheritance, which method should be called depends on self
+#    try:
+#        return eval("thiswillbeexecuted."+attr_or_method_name)
+#    except:
+#        return None
 
 def my_find_update(the_coll, search_dict, update_dict):
     """ This performs a search using search_dict, and updates each find in  
@@ -193,6 +193,7 @@ class Lfunction:
                     # self.kappa_fe:        
                     # self.lambda_fe:
                     # According to Rishi, as of March 2012 (sage <=5.0), the documentation to his wrapper is wrong
+                    # But we are not using his wrapper, I think, since Jonathan has put in a patch on sage running on the server
                     # POD
 
     def createLcalcfile(self):
@@ -449,24 +450,24 @@ class Lfunction:
     ### Injects into the database of all the L-functions
     ############################################################################
 
-    def inject_database(self, relevant_info, time_limit = None):
-        #   relevant_methods are text strings 
-        #    desired_database_fields = [Lfunction.original_mathematical_object, Lfunction.level]
-        #    also zeroes, degree, conductor, type, real_coeff, rational_coeff, algebraic_coeff, critical_value, value_at_1, sign
-        #    ok_methods = [Lfunction.math_id, Lfunction.level]
-        #
-        # Is used to inject the data in relevant_fields
-
-        logger.info("Trying to inject")
-        import base
-        db = base.getDBConnection().Lfunctions
-        Lfunctions = db.full_collection
-        update_dict = dict([(method_name,get_attr_or_method(self,method_name)) for method_name in relevant_info])
-
-        logger.info("injecting " + str(update_dict))
-        search_dict = {"original_mathematical_object()": get_attr_or_method(self, "original_mathematical_object()")}
-
-        my_find_update(Lfunctions, search_dict, update_dict)
+    #def inject_database(self, relevant_info, time_limit = None):
+    #    #   relevant_methods are text strings 
+    #    #    desired_database_fields = [Lfunction.original_mathematical_object, Lfunction.level]
+    #    #    also zeroes, degree, conductor, type, real_coeff, rational_coeff, algebraic_coeff, critical_value, value_at_1, sign
+    #    #    ok_methods = [Lfunction.math_id, Lfunction.level]
+    #    #
+    #    # Is used to inject the data in relevant_fields
+    #
+    #    logger.info("Trying to inject")
+    #    import base
+    #    db = base.getDBConnection().Lfunctions
+    #    Lfunctions = db.full_collection
+    #    update_dict = dict([(method_name,get_attr_or_method(self,method_name)) for method_name in relevant_info])
+    #
+    #    logger.info("injecting " + str(update_dict))
+    #    search_dict = {"original_mathematical_object()": get_attr_or_method(self, "original_mathematical_object()")}
+    #
+    #    my_find_update(Lfunctions, search_dict, update_dict)
 
 
 #############################################################################
@@ -1234,14 +1235,19 @@ class ArtinLfunction(Lfunction):
         self.title = "L function for an Artin representation of dimension " + str(dimension) + \
             ", conductor "+ str(conductor) 
                 
-        self.dirichlet_coefficients = self.artin.coefficients_list()
         
         self.motivic_weight = 0
-        
-        self.coefficient_type = 0
-        self.coefficient_period = 0
         self.degree = self.artin.dimension()
-        self.Q_fe = int(self.artin.conductor())/float(math.pi)**int(self.degree)
+        self.coefficient_type = 0
+        
+        if self.degree == 1:
+            self.coefficient_period = Integer(self.artin.conductor())
+            self.dirichlet_coefficients = self.artin.coefficients_list(upperbound = min(1000,self.coefficient_period))
+        else:
+            self.coefficient_period = 0            
+            self.dirichlet_coefficients = self.artin.coefficients_list(upperbound = 1000)
+
+        self.Q_fe = Integer(self.artin.conductor())/float(math.pi)**int(self.degree)
         self.sign = self.artin.sign()
         self.kappa_fe = self.artin.kappa_fe()
         self.lambda_fe = self.artin.lambda_fe()
