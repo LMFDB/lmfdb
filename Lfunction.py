@@ -1235,14 +1235,20 @@ class ArtinLfunction(Lfunction):
         self.title = "L function for an Artin representation of dimension " + str(dimension) + \
             ", conductor "+ str(conductor) 
                 
-        self.dirichlet_coefficients = self.artin.coefficients_list(upperbound = 1000)
         
         self.motivic_weight = 0
-        
-        self.coefficient_type = 0
-        self.coefficient_period = 0
         self.degree = self.artin.dimension()
-        self.Q_fe = int(self.artin.conductor())/float(math.pi)**int(self.degree)
+        self.coefficient_type = 0
+        
+        if self.degree == 1:
+            self.coefficient_period = Integer(self.artin.conductor())
+            self.dirichlet_coefficients = self.artin.coefficients_list(upperbound = min(1000,self.coefficient_period))
+            for i in range(100):
+                print "done: ", self.coefficient_period, len(self.dirichlet_coefficients), min(int(1000),int(self.coefficient_period)), type(self.coefficient_period), type(1000)
+        else:
+            self.coefficient_period = 0            
+            self.dirichlet_coefficients = self.artin.coefficients_list(upperbound = 1000)
+        self.Q_fe = Integer(self.artin.conductor())/float(math.pi)**int(self.degree)
         self.sign = self.artin.sign()
         self.kappa_fe = self.artin.kappa_fe()
         self.lambda_fe = self.artin.lambda_fe()

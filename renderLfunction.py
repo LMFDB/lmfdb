@@ -441,7 +441,7 @@ def initLfunction(L,args, request):
         number = str(L.number)
         info['friends'] = [('Siegel Modular Form', friendlink)]
         
-    elif L.type() == "artin":
+    elif L.Ltype() == "artin":
         info['zeroeslink'] = ''
         info['plotlink'] = ''
 
