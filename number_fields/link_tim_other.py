@@ -1,3 +1,8 @@
+# This script links the nfgal database of Tim Dokchitser's data to the other number field database
+# It works by computing the polredabs of a defining polynomial of the field, and looking it up in the other number field database
+# If that canonical form is in the number field database, this scripts adds a "label" field in Tim's database
+# If not, it does nothing
+
 import sys
 sys.path.append("../")
 
