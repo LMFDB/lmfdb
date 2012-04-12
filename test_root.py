@@ -1,5 +1,18 @@
-
+# -*- coding: utf8 -*-
 from base import LmfdbTest
+from flask import url_for
+
+class PermalinkTest(LmfdbTest):
+  """
+  the following tests check if the url_for() actually gives
+  what we expect
+  """
+  def ec(self):
+    assert url_for('by_ec_label', label='17.a3') == '/EllipticCurve/Q/17.a3'
+
+
+
+
 class RootTest(LmfdbTest):
 
   def test_root(self):
