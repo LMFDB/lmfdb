@@ -1343,28 +1343,29 @@ class SymmetricPowerLfunction(Lfunction):
             poly = self.S.eulerFactor(p)
             poly_string =" "
             if len(poly) > 1:
+                s="s -%s"%(Integer(self.m) /Integer(2))
                 poly_string="\\\\ & \\times (1"
                 if poly[1] != 0:
                     if poly[1] == 1:
-                        poly_string += "+%d^{ -s}"%p
+                        poly_string += "+%d^{ -%s}"%(p,s)
                     elif poly[1] == -1:
-                        poly_string += "-%d^{- s}"%p
+                        poly_string += "-%d^{- %s}"%(p,s)
                     elif poly[1] <0 :
-                        poly_string += "%d\\ %d^{- s}"%(poly[1],p)
+                        poly_string += "%d\\ %d^{- %s}"%(poly[1],p,s)
                     else:
-                        poly_string += "+%d\\ %d^{- s}"%(poly[1],p)
+                        poly_string += "+%d\\ %d^{- %s}"%(poly[1],p,s)
 
                 for j in range(2,len(poly)):
                     if poly[j]== 0:
                         continue
                     if poly[j] == 1:
-                        poly_string += "%d^{-%d s}"%(p,j)
+                        poly_string += "%d^{-%d %s}"%(p,j,s)
                     elif poly[j] == -1:
-                        poly_string += "-%d^{-%d s}"%(p,j)
+                        poly_string += "-%d^{-%d %s}"%(p,j,s)
                     elif poly[j] <0 :
-                        poly_string += "%d \\ %d^{-%d s}"%(poly[j],p,j)
+                        poly_string += "%d \\ %d^{-%d %s}"%(poly[j],p,j,s)
                     else:
-                        poly_string += "+%d\\ %d^{-%d s}"%(poly[j],p,j)
+                        poly_string += "+%d\\ %d^{-%d %s}"%(poly[j],p,j,s)
                 poly_string += ")^{-1}"
             self.euler += poly_string
         self.euler += "\\end{align}"
