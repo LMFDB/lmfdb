@@ -92,13 +92,22 @@ def render_webpage(request,arg1,arg2):
         temp_args['number'] = arg2
             #elif arg1 == 'Hecke':
             #    temp_args['type'] = 'hecke'
-    
+
+        if arg1<=0 or arg2 <=0 or arg1<arg2 or gcd(arg1,arg2) != 1:
+            info = {}
+            info['message'] = """ modulus=%s,number=%s does not form a valid
+            Dirichlet character.
+            """ % (arg1,arg2)
+            #See our <a href="%s">naming conventions</a>.
+            return render_template("404.html",**info), 404
+            #return 'invalid Dirichlet character name'
+            
         web_chi = WebCharacter(temp_args)
 
-        try:
-            print temp_args
-        except:
-            1
+        #try:
+        #    print temp_args
+        #except:
+        #    1
 
         info = initCharacterInfo(web_chi, temp_args, request) # sets the various properties of chi to be displayed in DirichletCharacter.htiml
 
