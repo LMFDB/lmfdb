@@ -95,8 +95,8 @@ def render_webpage(request,arg1,arg2):
 
         if arg1<=0 or arg2 <=0 or arg1<arg2 or gcd(arg1,arg2) != 1:
             info = {}
-            info['message'] = """ modulus=%s,number=%s does not form a valid
-            Dirichlet character.
+            info['message'] = """ modulus=%s,number=%s does correspond to
+            a valid Dirichlet character name.
             """ % (arg1,arg2)
             #See our <a href="%s">naming conventions</a>.
             return render_template("404.html",**info), 404
@@ -156,7 +156,10 @@ def initCharacterInfo(web_chi,args, request):
         smod = str(web_chi.modulus)
         info['modulus'] = smod
         G = DirichletGroup_conrey(web_chi.modulus)
-        G_prev = DirichletGroup_conrey(web_chi.modulus -1)
+        if web_chi.modulus > 1:
+          G_prev = DirichletGroup_conrey(web_chi.modulus -1)
+        else:
+          G_prev = None
         chi = G[web_chi.number]
         chi_sage = chi.sage_character()
         indices = []
