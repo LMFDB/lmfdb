@@ -417,6 +417,9 @@ def parse_range2(arg, key, parse_singleton=int):
     else:
         return [key, parse_singleton(arg)]
 
+def len_val_fn(val):
+  import bson
+  return bson.SON([("len",len(val)),("val",val)])
 
 def coeff_to_poly(c):
     from sage.all import PolynomialRing, QQ

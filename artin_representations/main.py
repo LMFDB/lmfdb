@@ -28,9 +28,6 @@ def index():
     return artin_representation_search(**args)
 
 
-def len_val_fn(val):
-  import bson
-  return bson.SON([("len",len(val)),("val",val)])
 
 def parse_range_simple(query, fn = lambda x:x):
   tmp = query.split("-")
@@ -67,7 +64,8 @@ def artin_representation_search(**args):
       query["Sign"] = int(req["root_number"])
     tmp_conductor = []
     if req.get("conductor","") <> "":
-      tmp_conductor = parse_compound(req["conductor"],fn=len_val_fn)
+      from utils import len_val_fn
+      tmp_conductor = parse_compound(req["conductor"],fn = len_val_fn)
     # examples of tmp_conductor: [], [{"len":2,"val":"44"},{"len":3,"val":"444"},{"$gte":{"len":2,"val":"44"}, "$lte":{"len":5,"val";"44444"}}]
     tmp_dimension = []
     if req.get("dimension", "") <> "":
