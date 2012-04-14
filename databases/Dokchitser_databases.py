@@ -50,8 +50,7 @@ Dokchitser_ArtinRepresentation = Dict({
         "Conductor" :       TooLargeInt,                        #
         "BadFactors":       FiniteSequence(IndexAt1),           #   
         "BadPrimes":        FiniteSequence(TooLargeInt),        #
-        "LocalFactors":     FiniteSequence(Anything),
-                        # actually, not Anything but PolynomialAsSequence(PolynomialCyclotomic)
+        "LocalFactors":     FiniteSequence(Anything),           #
         "DBIndex" :         IndexAt1,        # Starting at 1    #
         "NFGal" :           FiniteSequence(Anything),           #
         "Character" :       Anything,

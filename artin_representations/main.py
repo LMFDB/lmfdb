@@ -27,11 +27,6 @@ def index():
   else:
     return artin_representation_search(**args)
 
-# See inject_conductor_36.py for the parameter values
-max_log = 20
-basis = 36
-def str_to_Int_to_str_basis(val):
-  return Integer(str(val)).str(basis).rjust(max_log,"0")
 
 def len_val_fn(val):
   import bson
