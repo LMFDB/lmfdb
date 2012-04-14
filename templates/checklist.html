@@ -6,5 +6,12 @@
 <a href="{{ url_for('rational_elliptic_curves', conductor='1-99') }}">Ell curves/Q, conductor 1-99</a><br/>
 <a href="{{ url_for('by_ec_label', label='17.a3') }}">EllCurve 17.a3</a>: plot in the properties box, ...<br/>
 <a href="{{ url_for('by_ec_label', label='108.a2') }}">EllCurve 108.a2</a>: j(E)=0 case<br/>
+<a href="{{ url_for('number_fields.by_label', label='6.0.11691.1') }}">Number field 6.0.11691.1</a> <br/>
+<a href="{{ url_for('number_fields.by_label', label='4.2.6912.1') }}">Number field 4.2.6912.1</a>Difference with previous is that data on Artin representations is available and might mess up the page <br/>
+<a href="{{ url_for('render_Lfunction', arg1 = "NumberField", arg2 = "4.2.6912.1")}}"> Dedekind zeta function for 4.2.6912.1</a><br/>
+<a href="{{ url_for('artin_representations.by_data', dim=1, conductor="5", index =1)}}"> Artin representation dim 1, conductor 5, index 1</a><br/>
+<a href="{{ url_for('render_Lfunction', arg1 = "ArtinRepresentation", arg2 = 1, arg3 = 5, arg4 = 1)}}"> Artin L-function of dim 1, conductor 5, index 1</a> (still experimental)<br/>
+<a href="{{ url_for('render_Lfunction', arg1 = "ArtinRepresentation", arg2 = 2, arg3 = 6400, arg4 = 1)}}"> Artin L-function of dim 2, conductor 6400, index 1</a> (still experimental)<br/>
+
 
 {%- endblock %}

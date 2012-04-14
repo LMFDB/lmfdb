@@ -38,6 +38,11 @@ Dokchitser_Character = FiniteSequence(Anything)
 class IndexAt1(Int):
     pass
 
+LenPair = Dict({
+        "len":              Int,
+        "val":              TooLargeInt
+    })
+
 Dokchitser_ArtinRepresentation = Dict({
         "_id":              Anything,
         "Dim" :             Int,                                #
@@ -51,7 +56,8 @@ Dokchitser_ArtinRepresentation = Dict({
         "NFGal" :           FiniteSequence(Anything),           #
         "Character" :       Anything,
         "Sign":             Int,                                #
-        "CharacterField":   Int                                 #
+        "CharacterField":   Int,                                #
+        "Conductor_plus":   LenPair                             # Added after Tim
     })
 
 
@@ -103,7 +109,7 @@ Dokchitser_NumberFieldGaloisGroup = Dict({
     "QpRts-prec" :          Int,
     "Size" :                TooLargeInt,
     "TransitiveDegree" :    Int,
-    "label" :               LabelString
+    "label" :               LabelString                 # Added after Tim
 })
 
 

@@ -60,8 +60,12 @@
  {% if user_is_authenticated -%}
  <li><a href="{{ url_for("users.list") }}">User Management</a>:
    you are "<a href="{{ url_for('users.info') }}">{{username}}</a>"
- {%- endif %}
  </li>
+ {%- endif %}
+ {% if user_is_authenticated -%}
+ <li><a href="{{ url_for('checklist') }}">Testing</a>
+ </li>
+ {%- endif %}
  <li><a href="{{ url_for("acknowledgment") }}">Acknowledgments</a></li>
 </ul>
 

@@ -1,6 +1,6 @@
 {% extends 'homepage.html' %}
 {% block content %}
-
+{# Displays individual number field homepage #}
 <script>
 var cur_system = null;
 function show_code(system) {
@@ -187,25 +187,28 @@ pari:
 		{# This is now correct #}
         <div>
 	<center>
-	<table class="ntdata">
-	<thead><tr><td></td><td>{{ KNOWL('artin.dimension', title='Dimension') }}</td><td>{{ KNOWL('artin.conductor', title='Conductor') }}</td><td>Defining polynomial of {{ KNOWL('artin.number_field', title='Artin Field') }} </td>
-	<td>Galois subgroup</td>
-	<td>{{ KNOWL('artin.sign', title='Sign') }}</td>
-	<td>{{ KNOWL('artin.ramification', title='Bad primes') }}</td>
-	<td>Trace of complex conjugation</td>
+	<table>
+
+	<thead><tr><th></th><th>{{ KNOWL('artin.dimension', title='Dimension') }}</th><th>{{ KNOWL('artin.conductor', title='Conductor') }}</th><th>Defining polynomial of {{ KNOWL('artin.number_field', title='Artin Field') }} </th>
+	<th>Galois subgroup</th>
+	<th>Size of subgroup</th>
+	<th>{{ KNOWL('artin.root_number', title='Root number') }}</th>
+	<th>{{ KNOWL('artin.ramification', title='Bad primes') }}</th>
+	<th>Trace of complex conjugation</th>
 	</tr></thead>
 	<tbody>
         {% for artin in info["tim_number_field"].artin_representations()%}
-          <tr> <td><a href = "{{artin.url_for()}}">{{loop.index}}</a></td><td>${{artin.dimension()}}$</td><td>${{artin.conductor()}}$</td>
+          <tr> <th><a href = "{{artin.url_for()}}">{{loop.index}}</a></th><th>${{artin.dimension()}}$</th><th>${{artin.conductor()}}$</th>
 	  {% if artin.number_field_galois_group().url_for() %}
-	     <td><a href="{{artin.number_field_galois_group().url_for()}}">${{artin.number_field_galois_group().polredabs()}}$</a></td>
+	     <th><a href="{{artin.number_field_galois_group().url_for()}}">${{artin.number_field_galois_group().polredabs()}}$</a></th>
 	  {% else %}
-	      <td>${{artin.number_field_galois_group().polredabs()}}$</td>
+	      <th>${{artin.number_field_galois_group().polredabs()}}$</th>
 	  {% endif %}
-	  <td>${{artin.number_field_galois_group().G_name()}}$</td>
-	  <td>${{artin.sign()}}$</td>
-	  <td>${{artin.bad_primes()}}$</td>
-	  <td>${{artin.trace_complex_conjugation()}}$</td>
+	  <th>${{artin.number_field_galois_group().G_name()}}$</th>
+	  <th>${{artin.number_field_galois_group().size()}}$</th>
+	  <th>${{artin.sign()}}$</th>
+	  <th>${{artin.bad_primes()}}$</th>
+	  <th>${{artin.trace_complex_conjugation()}}$</th>
 	  </tr>
         {% endfor %}
 	</tbody>
