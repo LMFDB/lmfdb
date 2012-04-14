@@ -152,15 +152,12 @@
    <li><a class="mwfp" href="{{ url_for('mwfp.render_picard_maass_forms') }}">for \(\mathrm{PSL}(2,\mathbb{Z}[i])\)</a></li>
   </ul>
 #}
-{#
-  <h2>
-	{% if is_authenticated_user %}
-       <a class="artin_representations" href="{{ url_for('artin_representations.index') }}">Artin Representations (no search)</a>
-        {% else %}
-      Artin Representations
-	{% endif %}
-  </h2>
-#}
+	{% if user_is_authenticated %}
+	    <h2 class="link">
+   		<a class="artin_representations" href="{{ url_for('artin_representations.index') }}">Artin Representations</a>
+	    </h2>
+        {% endif %}
+  
 
 
   <h2>Zeros of L-functions</h2>

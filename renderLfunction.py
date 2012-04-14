@@ -442,8 +442,9 @@ def initLfunction(L,args, request):
         info['friends'] = [('Siegel Modular Form', friendlink)]
         
     elif L.Ltype() == "artin":
-        info['zeroeslink'] = ''
-        info['plotlink'] = ''
+        #info['zeroeslink'] = ''
+        #info['plotlink'] = ''
+        info['friends'] = [('Artin representation', L.artin.url_for())]
 
 
     info['dirichlet'] = lfuncDStex(L, "analytic")

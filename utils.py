@@ -199,7 +199,6 @@ def an_list(euler_factor_polynomial_fn, upperbound=100000, base_field = sage.rin
     x = PP('x')
     prime_l = prime_range(upperbound)
     result = upperbound *[1]
-
     for p in prime_l:
         euler_factor =  (1/(PP(euler_factor_polynomial_fn(p)))).padded_list()
         

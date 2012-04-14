@@ -1242,7 +1242,7 @@ class ArtinLfunction(Lfunction):
         
         if self.degree == 1:
             self.coefficient_period = Integer(self.artin.conductor())
-            self.dirichlet_coefficients = self.artin.coefficients_list(upperbound = min(1000,self.coefficient_period))
+            self.dirichlet_coefficients = self.artin.coefficients_list(upperbound = min(1000,self.coefficient_period))[:-1]
         else:
             self.coefficient_period = 0            
             self.dirichlet_coefficients = self.artin.coefficients_list(upperbound = 1000)

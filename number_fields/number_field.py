@@ -290,12 +290,12 @@ def format_coeffs(coeffs):
 #    return web_latex(coeff_to_poly(coeffs))
 
 
-@nf_page.route("/")
-def number_fields():
-    if len(request.args) != 0:
-        return number_field_search(**request.args)
-    info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), (Completename,url_for(".render_discriminants_page"))]
-    return render_template("number_field_all.html", info = info)
+#@nf_page.route("/")
+#def number_fields():
+#    if len(request.args) != 0:
+#        return number_field_search(**request.args)
+#    info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), (Completename,url_for(".render_discriminants_page"))]
+#    return render_template("number_field_all.html", info = info)
 
 def split_label(label):
   """
@@ -490,6 +490,7 @@ def number_field_search(**args):
       except: pass
 
     C = base.getDBConnection()
+    print query
     info['query'] = dict(query)
     if 'lucky' in args:
         one = C.numberfields.fields.find_one(query)

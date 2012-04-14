@@ -46,7 +46,7 @@ class ArtinRepresentation(object):
             return self._bad_primes
         except AttributeError:
             from sage.rings.all import Integer
-            self._bad_primes = [Integer(x) for x in self._data["BadPrimes"]]
+            self._bad_primes = [Integer(str(x)) for x in self._data["BadPrimes"]]
             return self._bad_primes
     
     def is_bad_prime(self, p):

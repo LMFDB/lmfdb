@@ -26,6 +26,8 @@
     <ul>
       <li><a href="{{ url_for('number_fields.number_field_render_webpage') }}">Global Number Fields</a></li>
       <li><a href="{{ url_for('local_fields.index') }}">Local Number Fields</a></li>
+      <li><a href="{{ url_for('galois_groups.index') }}">Galois Groups</a></li>
+
     </ul>
   </li>
 
@@ -44,13 +46,15 @@
    <li><a              href="{{ url_for('ModularForm_GSp4_Q_top_level') }}">Siegel Modular forms</a> </li>
   </ul>
   </li>
-
- </ul>
-
-<h1>Zeros of $L$-functions</h1>
+ {% if user_is_authenticated -%}
+<li><a href="{{ url_for('artin_representations.index') }}">Artin Representations</a></li>
+{% endif%}
+<li>Zeros of $L$-functions
  <ul>
   <li><a href="/zeros/first/">First zeros of L-functions</a></li>
   <li><a href="/zeros/zeta/">Zeros of the Riemann zeta function</a></li>
+ </ul>
+</li>
  </ul>
 
 <h1>Miscellaneous Pages</h1>
@@ -60,8 +64,12 @@
  {% if user_is_authenticated -%}
  <li><a href="{{ url_for("users.list") }}">User Management</a>:
    you are "<a href="{{ url_for('users.info') }}">{{username}}</a>"
- {%- endif %}
  </li>
+ {%- endif %}
+ {% if user_is_authenticated -%}
+ <li><a href="{{ url_for('checklist') }}">Testing</a>
+ </li>
+ {%- endif %}
  <li><a href="{{ url_for("acknowledgment") }}">Acknowledgments</a></li>
 </ul>
 
