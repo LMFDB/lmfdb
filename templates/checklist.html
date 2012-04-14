@@ -5,7 +5,7 @@
 <a href="{{ url_for('render_Lfunction', arg1 = "Riemann")}}">Riemann zeta function</a> This better work<br/>
 <a href="{{ url_for('render_Character', arg1 = 13, arg2 = 2)}}">Dirichlet character 13.2</a> <br/>
 <a href="{{ url_for('render_Lfunction',  arg1 = "Character", arg2 = "Dirichlet", arg3=13,arg4=2)}}">Dirichlet L-function character 13.2</a> <br/>
-<a href="{{ url_for('index')}}">index</a>: menu, more entries if logged in.<br/>
+<a href="{{ url_for('index')}}">index</a>: menu, more entries if logged in, sidebar and main page have same structure<br/>
 <a href="{{ url_for('rational_elliptic_curves', conductor='1-99') }}">Ell curves/Q, conductor 1-99</a><br/>
 <a href="{{ url_for('by_ec_label', label='17.a3') }}">EllCurve 17.a3</a>: plot in the properties box, ...<br/>
 <a href="{{ url_for('by_ec_label', label='108.a2') }}">EllCurve 108.a2</a>: j(E)=0 case<br/>
