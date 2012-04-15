@@ -3,7 +3,7 @@
 from base import getDBConnection, app
 from utils import url_for
 from databases.Dokchitser_databases import Dokchitser_ArtinRepresentation_Collection, Dokchitser_NumberFieldGaloisGroup_Collection
-from sage.all import PolynomialRing, QQ, ComplexField, exp, pi
+from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer
 
 def process_algebraic_integer(seq, root_of_unity):
     return sum(seq[i] * root_of_unity**i for i in range(len(seq)))
@@ -132,17 +132,19 @@ class ArtinRepresentation(object):
         return trace_complex
     
     def number_of_eigenvalues_plus_one_complex_conjugation(self):
-        return int((self.dimension() + self.trace_complex_conjugation())/2)
+        return int(Integer(self.dimension() + self.trace_complex_conjugation())/2)
     
     def number_of_eigenvalues_minus_one_complex_conjugation(self):
-        return int((self.dimension() - self.trace_complex_conjugation())/2)
+        return int(Integer(self.dimension() - self.trace_complex_conjugation())/2)
         
     def kappa_fe(self):
-        return [1/2 for i in range(self.dimension())]
+        return [Integer(1)/2 for i in range(self.dimension())]
+        # this becomes gamma[1] in lcalc.lcalc_Lfunction._print_data_to_standard_output
     
     def lambda_fe(self):
         return [0 for i in range(self.number_of_eigenvalues_plus_one_complex_conjugation())] + \
-                    [1/2 for i in range(self.number_of_eigenvalues_minus_one_complex_conjugation())]
+                    [Integer(1)/2 for i in range(self.number_of_eigenvalues_minus_one_complex_conjugation())]
+        # this becomes lambda[1] in lcalc.lcalc_Lfunction._print_data_to_standard_output
     
     def primitive(self):
         return True
@@ -166,7 +168,34 @@ class ArtinRepresentation(object):
             assert self.primitive()
         except AssertionError:
             raise NotImplementedError
-        if self.conductor() == 1 and self.dimension() == 1:
+        if int(self.conductor()) == 1 and int(self.dimension()) == 1:
+            return [1]
+        return []
+        
+    def completed_poles(self):
+        try:
+            assert self.primitive()
+        except AssertionError:
+            raise NotImplementedError
+        if int(self.conductor()) == 1 and int(self.dimension()) == 1:
+            return [0,1]
+        return []
+    
+    def completed_residues(self):
+        try:
+            assert self.primitive()
+        except AssertionError:
+            raise NotImplementedError
+        if int(self.conductor()) == 1 and int(self.dimension()) ==1:
+            return [-1,1]
+        return []
+    
+    def poles(self):
+        try:
+            assert self.primitive()
+        except AssertionError:
+            raise NotImplementedError
+        if int(self.conductor()) == 1 and int(self.dimension()) == 1:
             return [1]
         return []
     
@@ -175,9 +204,10 @@ class ArtinRepresentation(object):
             assert self.primitive()
         except AssertionError:
             raise NotImplementedError
-        if self.conductor() == 1 and self.dimension() ==1:
+        if int(self.conductor()) == 1 and int(self.dimension()) ==1:
             return [1]
         return []
+    
     
     def local_factors_table(self):
         return self._data["LocalFactors"]
@@ -428,7 +458,7 @@ class NumberFieldGaloisGroup(object):
                     return [d for d in resolvents if d["CycleType"] == cycle_type and d["Algorithm"] == "CYC"][0]["Classes"]
                     # Simplest case. If the entry has a "CYC", then it also has a "Classes" entry
                 except IndexError:
-                    raise NotImplementedError, "At the moment we assume it is of type 'CYC'"
+                    raise NotImplementedError, "At the moment we assume all local factors are of type 'CYC', as things are easier to compute in this case. Just wait a bit for the the other cases to be implemented!"
             self._from_cycle_type_to_conjugacy_class_index = tmp
             return tmp
 

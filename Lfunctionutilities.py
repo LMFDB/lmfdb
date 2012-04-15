@@ -148,7 +148,6 @@ def lfuncDStex(L ,fmt):
         fmt could be any of the values: "analytic", "langlands", "abstract"
     """
 
-
     if len(L.dirichlet_coefficients)==0:
         return '\\text{No Dirichlet coefficients supplied.}'
     

@@ -184,18 +184,19 @@ class Lfunction:
     def generateSageLfunction(self):
         """ Generate a SageLfunction to do computations
         """
+        logger.info("Generating Sage Lfunction with parameters %s and coefficients (maybe shortened in this msg) %s"%([self.title, self.coefficient_type, self.coefficient_period, self.Q_fe, self.sign , self.kappa_fe, self.lambda_fe , self.poles, self.residues],self.dirichlet_coefficients[:20]))
         self.sageLfunction = lc.Lfunction_C(self.title, self.coefficient_type,
                                             self.dirichlet_coefficients,
                                             self.coefficient_period,
                                             self.Q_fe, self.sign ,
                                             self.kappa_fe, self.lambda_fe ,
                                             self.poles, self.residues)
-                    # self.kappa_fe:        
-                    # self.lambda_fe:
+                    # self.poles:           Needs poles of _completed_ L-function
+                    # self.residues:        Needs residues of _completed_ L-function
+                    # self.kappa_fe:        What ultimately appears if you do lcalc.lcalc_Lfunction._print_data_to_standard_output() as the gamma[1]
+                    # self.lambda_fe:       What ultimately appears if you do lcalc.lcalc_Lfunction._print_data_to_standard_output() as the lambda[1]
                     # According to Rishi, as of March 2012 (sage <=5.0), the documentation to his wrapper is wrong
-                    # But we are not using his wrapper, I think, since Jonathan has put in a patch on sage running on the server
-                    # POD
-
+                    
     def createLcalcfile(self):
         thefile="";
         if self.selfdual:
@@ -400,27 +401,38 @@ class Lfunction:
 
         else:
             thefile += "0,\t\t\t### set Dirichlet_coefficient[0]\n"
+            if self.coefficient_period == 0:
+                period = Infinity
+            else:
+                period = self.coefficient_period
+            
             if hasattr(self, 'dirichlet_coefficients_unnormalized'):
-                for n in range(0,len(self.dirichlet_coefficients_unnormalized)):
+                total = min(len(self.dirichlet_coefficients_unnormalized), period-1)
+                for n in range(0,total):
                     if self.selfdual:
                         thefile += str(self.dirichlet_coefficients_unnormalized[n])
                     else:
                         thefile += parse_complex_number(self.dirichlet_coefficients_unnormalized[n])
+                    if n < total - 1:           # We will be back
+                        thefile += ","
                     if n<2:
-                        thefile += ",\t\t\t### set Dirichlet_coefficient[" + str(n+1) +"] \n"
+                        thefile += "\t\t\t### set Dirichlet_coefficient[" + str(n+1) +"] \n"
                     else:
-                        thefile += ",\n"
+                        thefile += "\n"
             else:
-                for n in range(0,len(self.dirichlet_coefficients)):
+                total = min(len(self.dirichlet_coefficients), period-1)
+                for n in range(0,total):
                     if self.selfdual:
                         thefile += str(self.dirichlet_coefficients[n])
                     else:
                         thefile += parse_complex_number(self.dirichlet_coefficients[n])
+                    if n < total - 1:           # We will be back
+                        thefile += ","
                     if n<2:
-                        thefile += ",\t\t\t### set Dirichlet_coefficient[" + str(n+1) +"] \n"
+                        thefile += "\t\t\t### set Dirichlet_coefficient[" + str(n+1) +"] \n"
                     else:
-                        thefile += ",\n"
-            thefile = thefile[:-2]
+                        thefile += "\n"
+            #thefile = thefile[:-2]
             thefile += "]\n"
 
         return(thefile)
@@ -1242,17 +1254,20 @@ class ArtinLfunction(Lfunction):
         
         if self.degree == 1:
             self.coefficient_period = Integer(self.artin.conductor())
-            self.dirichlet_coefficients = self.artin.coefficients_list(upperbound = min(1000,self.coefficient_period))[:-1]
+            self.dirichlet_coefficients = self.artin.coefficients_list(upperbound = self.coefficient_period)
         else:
             self.coefficient_period = 0            
             self.dirichlet_coefficients = self.artin.coefficients_list(upperbound = 1000)
 
-        self.Q_fe = Integer(self.artin.conductor())/float(math.pi)**int(self.degree)
+        #self.Q_fe = Integer(self.artin.conductor())/float(math.pi)**int(self.degree)
+        self.Q_fe = sqrt(Integer(self.artin.conductor())*1./float(math.pi)**int(self.degree))
         self.sign = self.artin.sign()
         self.kappa_fe = self.artin.kappa_fe()
         self.lambda_fe = self.artin.lambda_fe()
-        self.poles = self.artin.poles()
-        self.residues = self.artin.residues()
+        self.poles_L = self.artin.poles()
+        self.residues_L = self.artin.residues()
+        self.poles = self.artin.completed_poles()
+        self.residues = self.artin.completed_residues()
         self.level = self.artin.conductor()
         self.selfdual = self.artin.selfdual()               
         self.primitive = self.artin.primitive()             

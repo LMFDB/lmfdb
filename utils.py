@@ -194,16 +194,15 @@ def an_list(euler_factor_polynomial_fn, upperbound=100000, base_field = sage.rin
     from sage.rings.fast_arith import prime_range
     from sage.rings.all import PowerSeriesRing
     from math import ceil, log
-    PP = PowerSeriesRing(base_field, 'x', ceil(log(upperbound)/log(2.)))
+    PP = PowerSeriesRing(base_field, 'x', 1 + ceil(log(upperbound)/log(2.)))
 
     x = PP('x')
-    prime_l = prime_range(upperbound)
-    result = upperbound *[1]
+    prime_l = prime_range(upperbound+1)
+    result = [1 for i in range(upperbound)]
     for p in prime_l:
         euler_factor =  (1/(PP(euler_factor_polynomial_fn(p)))).padded_list()
-        
         if len(euler_factor) == 1:
-            for j in range(1+ upperbound // p):
+            for j in range(1, 1+ upperbound // p):
                 result[j*p -1]=0
             continue
 
@@ -211,12 +210,13 @@ def an_list(euler_factor_polynomial_fn, upperbound=100000, base_field = sage.rin
         while True:
             if p**k > upperbound:
                 break
-            for j in range(1+ upperbound // (p**k)):
+            for j in range(1, 1+ upperbound // (p**k)):
                 if j % p == 0:
                     continue
                 result[j* p**k -1] *= euler_factor[k]
             k += 1
     return result
+
 
 def splitcoeff(coeff):
     local = coeff.split("\n")
