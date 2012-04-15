@@ -42,6 +42,12 @@ class ArtinRepresentation(object):
     def conductor(self):
         return self._data["Conductor"]
     
+    def hard_primes(self):
+        return self.bad_primes()            # TO CHANGE    (copy bad_primes below, with "HardPrimes" instead)
+
+    def is_hard_prime(self, p):
+        return p in self.hard_primes()
+    
     def bad_primes(self):
         try:
             return self._bad_primes
@@ -237,22 +243,22 @@ class ArtinRepresentation(object):
             self._from_conjugacy_class_index_to_polynomial_fn = tmp 
             return self._from_conjugacy_class_index_to_polynomial_fn
     
-    def bad_factors(self):
-        return self._data["BadFactors"]
+    def hard_factors(self):
+        return self._data["BadFactors"]             # TO_CHANGE: replace to "HardFactors"
     
-    def bad_factor(self, p):
-        factor_double_pol = self.from_conjugacy_class_index_to_polynomial_fn()(self.bad_factor_index(p))
+    def hard_factor(self, p):
+        factor_double_pol = self.from_conjugacy_class_index_to_polynomial_fn()(self.hard_factor_index(p))
         # We get a polynomial over algebraic integers
         field = ComplexField()
         return factor_double_pol
         
-    def bad_factor_index(self, p):
+    def hard_factor_index(self, p):
         # Index in the conjugacy classes, but starts at 1
         try:
-            i = self.bad_primes().index(p)
+            i = self.hard_primes().index(p)
         except:
-            raise IndexError, "Not a bad prime%"%p
-        return self.bad_factors()[i]
+            raise IndexError, "Not a 'hard' prime%"%p
+        return self.hard_factors()[i]
         
     def from_cycle_type_to_conjugacy_class_index(self, cycle_type):
         # Needs data stored in the number field
@@ -280,11 +286,11 @@ class ArtinRepresentation(object):
     ###                                                                 cycle type ---> conjugacy_class_index
     ###               
     ###               ArtinRepresentation.from_conjugacy_class_index_to_polynomial : conjugacy_class_index ---Artin----> local_factor
-    ### if p is bad:  ArtinRepresentation.bad_factor :                  p --Artin-> bad_factor 
+    ### if p is hard:  ArtinRepresentation.hard_factor :                  p --Artin-> hard_factor 
     
     def local_factor(self, p):
-        if self.is_bad_prime(p):
-            return self.bad_factor(p)
+        if self.is_hard_prime(p):
+            return self.hard_factor(p)
         else:
             return self.good_factor(p)
         
@@ -402,7 +408,7 @@ class NumberFieldGaloisGroup(object):
         
     def G_name(self):
         """
-        Standardized name of the abstract group
+        More-or-less standardized name of the abstract group
         """
         return self._data["G-Name"]
         
