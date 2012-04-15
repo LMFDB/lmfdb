@@ -12,6 +12,12 @@ from utils import to_dict
 
 from math_classes import *
 
+def initialize_indices():
+  ArtinRepresentation.collection().ensure_index([("Dim",ASC), ("Conductor_plus",ASC)])
+  ArtinRepresentation.collection().ensure_index([("Dim",ASC), ("Conductor",ASC)])
+  ArtinRepresentation.collection().ensure_index([("Conductor",ASC), ("Dim",ASC)])
+  ArtinRepresentation.collection().ensure_index([("Conductor_plus",ASC), ("Dim",ASC)])
+
 def get_bread(breads = []):
   bc = [("Artin Representations", url_for(".index"))]
   for b in breads:
@@ -27,15 +33,7 @@ def index():
   else:
     return artin_representation_search(**args)
 
-# See inject_conductor_36.py for the parameter values
-max_log = 20
-basis = 36
-def str_to_Int_to_str_basis(val):
-  return Integer(str(val)).str(basis).rjust(max_log,"0")
 
-def len_val_fn(val):
-  import bson
-  return bson.SON([("len",len(val)),("val",val)])
 
 def parse_range_simple(query, fn = lambda x:x):
   tmp = query.split("-")
@@ -72,7 +70,8 @@ def artin_representation_search(**args):
       query["Sign"] = int(req["root_number"])
     tmp_conductor = []
     if req.get("conductor","") <> "":
-      tmp_conductor = parse_compound(req["conductor"],fn=len_val_fn)
+      from utils import len_val_fn
+      tmp_conductor = parse_compound(req["conductor"],fn = len_val_fn)
     # examples of tmp_conductor: [], [{"len":2,"val":"44"},{"len":3,"val":"444"},{"$gte":{"len":2,"val":"44"}, "$lte":{"len":5,"val";"44444"}}]
     tmp_dimension = []
     if req.get("dimension", "") <> "":
@@ -143,10 +142,15 @@ def render_artin_representation_webpage(dim, conductor, index):
                 ("Conductor",str(the_rep.conductor())),
                 ("Bad primes", str(the_rep.bad_primes()))]
   
-  friends = [("Artin Field", the_nf.url_for()), \
+  nf_url = the_nf.url_for()
+  if nf_url:
+    friends = [("Artin Field", nf_url)]
+  else:
+    friends = []
+            #[
             #("Same degree and conductor", url_for(".by_partial_data", dim = the_rep.dimension(), conductor = the_rep.conductor())),\
             #("L-function", url_for("render_Lfunction", arg1 = 'ArtinRepresentation', arg2 = the_rep.dimension(), arg3 = the_rep.conductor(), arg4 = the_rep.index()))    
-            ]
+            #]
   return render_template("artin-representation-show.html", credit= tim_credit, support = support_credit, title = title, bread = bread, friends = friends, object = the_rep, properties2 = properties)
 
 def render_artin_representation_set_webpage(dim,conductor):

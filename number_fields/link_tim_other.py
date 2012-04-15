@@ -26,5 +26,7 @@ for nf_dict in NF.collection().find():
       print nf.label()
       nf_dict2["label"] = nf.label()
       NF.collection().save(nf_dict2)
+   else:
+      print "No label!"
 
 print "Done, in ", NF.collection()

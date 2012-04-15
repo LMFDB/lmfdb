@@ -37,12 +37,12 @@
     
     <h3> Conjugacy classes and associated representation</h3>
     <p> <center><table class="ntdata">
-      <thead><tr><td></td><td>Size</td><td>Order</td><td>Action on
+      <thead><tr><td></td><td></td><td></td><td>Size</td><td>Order</td><td>Action on
       $r_1 \cdots r_{ {{object.number_field_galois_group().degree()}} }$</td><td>Character value</td></tr></thead>
 
       <tbody>
         {% for gen in object.number_field_galois_group().conjugacy_classes()%}
-            <tr {% if loop.index == object.number_field_galois_group().index_complex_conjugation()%}class="redhighlight"{%endif%}> <td>${{loop.index}}$</td><td>${{gen.size()}}$</td><td>${{gen.order()}}$</td><td><center>${{gen.representative().cycle_string()}}$</center></td><td><center>${{ object.character()[loop.index - 1] }}$</center> </td></tr>
+            <tr {% if loop.index == object.number_field_galois_group().index_complex_conjugation()%}class="redhighlight"{%endif%}> <td>${{loop.index}}$</td><td></td><td></td><td>${{gen.size()}}$</td><td>${{gen.order()}}$</td><td><center>${{gen.representative().cycle_string()}}$</center></td><td><center>${{ object.character()[loop.index - 1] }}$</center> </td></tr>
         {% endfor %}
       </tbody>
       </table>
