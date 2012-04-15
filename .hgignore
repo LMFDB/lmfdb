@@ -16,3 +16,4 @@ flasklog
 .*.sw?
 # backup files
 *~
+paul_scripts

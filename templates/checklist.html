@@ -14,6 +14,7 @@
 <a href="{{ url_for('render_Lfunction', arg1 = "NumberField", arg2 = "4.2.6912.1")}}"> Dedekind zeta function for 4.2.6912.1</a><br/>
 <a href="{{ url_for('artin_representations.by_data', dim=1, conductor="5", index =1)}}"> Artin representation dim 1, conductor 5, index 1</a><br/>
 <a href="{{ url_for('render_Lfunction', arg1 = "ArtinRepresentation", arg2 = 1, arg3 = 5, arg4 = 1)}}"> Artin L-function of dim 1, conductor 5, index 1</a> (still experimental, not linked)<br/>
+<a href="{{ url_for('render_Lfunction', arg1 = "ArtinRepresentation", arg2 = 3, arg3 = 688, arg4 = 1)}}"> Artin L-function of dim 3, conductor 688, index 1</a> (still experimental, not linked)<br/>
 <a href="{{ url_for('render_Lfunction', arg1 = "ArtinRepresentation", arg2 = 2, arg3 = 6400, arg4 = 1)}}"> Artin L-function of dim 2, conductor 6400, index 1</a> (still experimental, not linked, should gracefully fail atm)<br/>
 <a href="{{ url_for('render_Lfunction', arg1 = "ModularForm", arg2 = "GL2", arg3 = "Q", arg4 = "Maass", arg5 = "4f5558c888aece2646000013")}}"> A Maass form </a><br/>
 <a href="{{ url_for('emf.render_elliptic_modular_forms', level = 11, weight = 6, character = 0,label = "b")}}"> Cuspidal newform 11.6.0.b </a> (this does not work locally but works on server) and 
