@@ -113,7 +113,7 @@ class ArtinRepresentation(object):
         return True
 
     def sign(self):
-        artin_logger.debug("ArtinRepresentation.sign now deprecated, use root_number instead")
+        print "ArtinRepresentation.sign now deprecated, use root_number instead"
         return self.root_number()
         
     def root_number(self):
