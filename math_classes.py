@@ -13,6 +13,7 @@ def process_polynomial_over_algebraic_integer(seq, field, root_of_unity):
     PP = PolynomialRing(field, "x")
     return PP([process_algebraic_integer(x, root_of_unity) for x in seq])
 
+
 class ArtinRepresentation(object):
     @staticmethod
     def collection(source = "Dokchitser"):
@@ -64,7 +65,7 @@ class ArtinRepresentation(object):
             return self._nf
         except AttributeError:
             tmp = self._data["NFGal"]
-            query = {"TransitiveDegree" : int(tmp[0]), "Size" : str(tmp[1]), "DBIndex": int(tmp[2])}
+            query = {"TransitiveDegree" : int(tmp[0]), "Size" : int(tmp[1]), "DBIndex": int(tmp[2])}
             self._nf = NumberFieldGaloisGroup.find_one(query)
         return self._nf
             
@@ -328,6 +329,9 @@ class NumberFieldGaloisGroup(object):
             pol = R(pari(pol).polredabs())
             self._data["polredabs"] = pol
             return pol
+        
+    def polredabslatex(self):
+        return self.polredabs()._latex_()
     
     def label(self):
         if "label" in self._data.keys():

@@ -10,6 +10,11 @@ from flask import render_template, render_template_string, request, abort, Bluep
 from number_field_galois_groups import nfgg_page, nfgg_logger
 from math_classes import *
 
+def initialize_indices():
+  NumberFieldGaloisGroup.collection().ensure_index([("label",ASC)])
+  NumberFieldGaloisGroup.collection().ensure_index([("Size",ASC)])
+  NumberFieldGaloisGroup.collection().ensure_index([("Transitive_degree",ASC), ("Size",ASC), ("DBIndex",ASC)])
+
 def get_bread(breads = []):
   bc = [("Number Field Galois Group", url_for(".index"))]
   for b in breads:
@@ -50,7 +55,7 @@ tim_credit = "Tim Dokchitser"
 support_credit = "Support by Paul-Olivier Dehaye"
 
 def render_nfgg_webpage(degree,size,index):
-  the_nfgg = NumberFieldGaloisGroup.find_one({"Degree" : int(degree), "Size" : str(size), "DBIndex": int(index)})
+  the_nfgg = NumberFieldGaloisGroup.find_one({"Degree" : int(degree), "Size" : int(size), "DBIndex": int(index)})
   if the_nfgg._data is None:
     # I haven't found it
     raise NotImplementedError
@@ -67,7 +72,7 @@ def render_nfgg_webpage(degree,size,index):
 
 
 def render_nfgg_set_webpage(degree,size):
-  the_nfggs = NumberFieldGaloisGroup.find({"Degree" : int(degree), "Size" : str(size)})
+  the_nfggs = NumberFieldGaloisGroup.find({"Degree" : int(degree), "Size" : int(size)})
     
   #nfgg_logger.info("Found %s"%(the_nfggs._data))
   

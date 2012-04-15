@@ -202,7 +202,7 @@ pari:
 	  {% if artin.number_field_galois_group().url_for() %}
 	     <th><a href="{{artin.number_field_galois_group().url_for()}}">${{artin.number_field_galois_group().polredabs()}}$</a></th>
 	  {% else %}
-	      <th>${{artin.number_field_galois_group().polredabs()}}$</th>
+	      <th>${{artin.number_field_galois_group().polredabslatex()}}$</th>
 	  {% endif %}
 	  <th>${{artin.number_field_galois_group().G_name()}}$</th>
 	  <th>${{artin.number_field_galois_group().size()}}$</th>

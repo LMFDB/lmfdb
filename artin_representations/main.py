@@ -12,6 +12,12 @@ from utils import to_dict
 
 from math_classes import *
 
+def initialize_indices():
+  ArtinRepresentation.collection().ensure_index([("Dim",ASC), ("Conductor_plus",ASC)])
+  ArtinRepresentation.collection().ensure_index([("Dim",ASC), ("Conductor",ASC)])
+  ArtinRepresentation.collection().ensure_index([("Conductor",ASC), ("Dim",ASC)])
+  ArtinRepresentation.collection().ensure_index([("Conductor_plus",ASC), ("Dim",ASC)])
+
 def get_bread(breads = []):
   bc = [("Artin Representations", url_for(".index"))]
   for b in breads:
@@ -136,10 +142,15 @@ def render_artin_representation_webpage(dim, conductor, index):
                 ("Conductor",str(the_rep.conductor())),
                 ("Bad primes", str(the_rep.bad_primes()))]
   
-  friends = [("Artin Field", the_nf.url_for()), \
+  nf_url = the_nf.url_for()
+  if nf_url:
+    friends = [("Artin Field", nf_url)]
+  else:
+    friends = []
+            #[
             #("Same degree and conductor", url_for(".by_partial_data", dim = the_rep.dimension(), conductor = the_rep.conductor())),\
             #("L-function", url_for("render_Lfunction", arg1 = 'ArtinRepresentation', arg2 = the_rep.dimension(), arg3 = the_rep.conductor(), arg4 = the_rep.index()))    
-            ]
+            #]
   return render_template("artin-representation-show.html", credit= tim_credit, support = support_credit, title = title, bread = bread, friends = friends, object = the_rep, properties2 = properties)
 
 def render_artin_representation_set_webpage(dim,conductor):

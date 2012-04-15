@@ -19,6 +19,7 @@ print ".....done"
 
 
 #l = ArtinLfunction("1","5","2")
+k = 0
 
 for x in ArtinRepresentation.find():
     try:
@@ -27,5 +28,8 @@ for x in ArtinRepresentation.find():
         print x
     except:
         pass
+    k += 1
+    if k > 100:
+        break
 
 #nf = l.artin.number_field_galois_group()
