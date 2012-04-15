@@ -42,7 +42,7 @@
      {{ KNOWL('artin.root_number',title="Root number") }}
      </td>
             <td>
-            <input type='text' name='sign' value = "{{req.sign}}" size=15/>
+            <input type='text' name='root_number' value = "{{req.root_number}}" size=15/>
             </td>
             <td><span class="formexample"> at the moment, one of 1 or -1 </span>
             </td>
@@ -64,7 +64,7 @@
 	<thead><tr><th>Result</th><th>{{ KNOWL('artin.dimension', title='Dimension') }}</th><th>{{ KNOWL('artin.conductor', title='Conductor') }}</th><th>Defining polynomial of {{ KNOWL('artin.number_field', title='Artin Field') }} </th>
 	<th>Galois subgroup</th>
         <th>Size of Galois subgroup</th>
-	<th>{{ KNOWL('artin.sign', title='Sign') }}</th>
+	<th>{{ KNOWL('artin.root_number', title='Root number') }}</th>
 	<th>{{ KNOWL('artin.ramification', title='Bad primes') }}</th>
 	<th>Trace of complex conjugation</th>
 	</tr></thead>
@@ -78,7 +78,7 @@
 	  {% endif %}
 	  <th>${{artin.number_field_galois_group().G_name()}}$</th>
           <th>${{artin.number_field_galois_group().size()}}$</th>
-	  <th>${{artin.sign()}}$</th>
+	  <th>${{artin.root_number()}}$</th>
 	  <th>${{artin.bad_primes()}}$</th>
 	  <th>${{artin.trace_complex_conjugation()}}$</th>
 	  </tr>

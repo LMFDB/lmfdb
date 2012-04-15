@@ -113,10 +113,15 @@ class ArtinRepresentation(object):
         return True
 
     def sign(self):
+        artin_logger.debug("ArtinRepresentation.sign now deprecated, use root_number instead")
+        return self.root_number()
+        
+    def root_number(self):
         try:
             return int(self._data["Sign"])
         except KeyError:
-            return "?"      # Could try to implement guessing of the sign
+            return "?"      # Could try to implement guessing of the root number
+        
     
     def trace_complex_conjugation(self):
         """ Computes the trace of complex conjugation, and returns an int

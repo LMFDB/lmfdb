@@ -137,7 +137,7 @@ def render_artin_representation_webpage(dim, conductor, index):
   the_nf = the_rep.number_field_galois_group()
   from number_field_galois_groups import nfgg_page
   from number_field_galois_groups.main import by_data
-  properties = [("Sign", str(the_rep.sign())),
+  properties = [("Root number", str(the_rep.root_number())),
                 ("Dimension", str(the_rep.dimension())),
                 ("Conductor",str(the_rep.conductor())),
                 ("Bad primes", str(the_rep.bad_primes()))]
