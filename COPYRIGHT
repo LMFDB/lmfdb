@@ -1,0 +1,46 @@
+LICENSE: GPLv2+
+
+LMFDB - L-function and Modular Forms Database Website
+Copyright (C) 2010-2012 by LMFDB Developers (see below)
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+
+
+AUTHORS:
+
+David Farmer <farmer@aimath.org>
+David Roe <roed.math@gmail.com>
+DK Huynh <dkhuynhms@gmail.com>
+Fredrik Stroemberg <stroemberg@mathematik.tu-darmstadt.de>
+Gagan Sekhon <gagan.d.sekhon@gmail.com>
+Gonzalo Tornaría <tornaria@cmat.edu.uy>
+Harald Schilly <harald.schilly@gmail.com>
+Holly Swisher <swisherh@gmail.com>
+John Cremona <john.cremona@gmail.com>
+John Jones <jj@asu.edu>
+John Voight <jvoight@gmail.com>
+Jonathan Bober <jwbober@gmail.com>
+Matt Alderson <alderson.matthew@gmail.com>
+Michael Rubinstein <michael.o.rubinstein@gmail.com>
+Pascal Molin <molin.maths@gmail.com>
+Nathan C. Ryan <nathan.ryan@bucknell.edu>
+Nils Skoruppa <nils.skoruppa@uni-siegen.de>
+Paul-Olivier Dehaye <paulolivier@gmail.com>
+Ralph Furmaniak <rfurman@stanford.edu>
+Rishikesh <rishikes@gmail.com>
+Sally Koutsoliotas <koutslts@bucknell.edu>
+Stefan Lemurell <sj@chalmers.se>
+Stephan Ehlen <mail@stephanehlen.de>
