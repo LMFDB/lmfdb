@@ -19,7 +19,7 @@ from transitive_group import group_display_knowl, group_knowl_guts, group_displa
 from utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html
 
 NF_credit = 'the PARI group, J. Voight, J. Jones, and D. Roberts'
-Completename = 'Completeness for Global Number Fields'
+Completename = 'Completeness of global number field data'
 
 def galois_group_data(n, t):
   C = getDBConnection()
@@ -159,7 +159,7 @@ def render_labels_page():
 def render_discriminants_page():
     info = {}
     info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), (Completename,url_for(".render_discriminants_page"))]
-    t = 'Completeness of Global Number Field Tables'
+    t = 'Completeness of Global Number Field Data'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")),(Completename,' ')]
     return render_template("discriminant_ranges.html", info=info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
 
