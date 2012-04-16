@@ -93,9 +93,10 @@ def render_webpage(request,arg1,arg2):
             #elif arg1 == 'Hecke':
             #    temp_args['type'] = 'hecke'
 
-        if arg1<=0 or arg2 <=0 or arg1<arg2 or gcd(arg1,arg2) != 1:
+        mod,num = Integer(arg1), Integer(arg2)
+        if mod<=0 or num <0 or mod<num or gcd(mod,num) != 1:
             info = {}
-            info['message'] = """ modulus=%s,number=%s does correspond to
+            info['message'] = """ modulus=%s,number=%s does not correspond to
             a valid Dirichlet character name.
             """ % (arg1,arg2)
             #See our <a href="%s">naming conventions</a>.
@@ -338,12 +339,17 @@ def redirect_character(modulus,number):
 
 def character_search(**args):
     info = to_dict(args)
+    for field in ['modulus', 'conductor', 'order']:
+        info[field] = info.get(field,'')
     query = {}
-    print args
+    print "args = ", args
     if 'natural' in args:
         label = info.get('natural', '')
-        modulus = int(str(label).partition('.')[0])
-        number = int(str(label).partition('.')[2])
+        try:
+            modulus = int(str(label).partition('.')[0])
+            number = int(str(label).partition('.')[2])
+        except ValueError:
+            return "<span style='color:red;'>ERROR: bad query</span>"
         return redirect(url_for("render_webpage_label", modulus=modulus,number=number))
     else:
         for field in ['modulus', 'conductor', 'order']:
@@ -356,6 +362,8 @@ def character_search(**args):
             info['contents'] = charactertable(query)
             info['title'] = 'Dirichlet Characters'
             return render_template("dirichlet_characters/character_search.html", **info)
+        else:
+            return "<span style='color:red;'>ERROR: bad query</span>"
 
 def charactertable(query):
     return render_character_table(
