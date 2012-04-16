@@ -339,12 +339,17 @@ def redirect_character(modulus,number):
 
 def character_search(**args):
     info = to_dict(args)
+    for field in ['modulus', 'conductor', 'order']:
+        info[field] = info.get(field,'')
     query = {}
-    print args
+    print "args = ", args
     if 'natural' in args:
         label = info.get('natural', '')
-        modulus = int(str(label).partition('.')[0])
-        number = int(str(label).partition('.')[2])
+        try:
+            modulus = int(str(label).partition('.')[0])
+            number = int(str(label).partition('.')[2])
+        except ValueError:
+            return "<span style='color:red;'>ERROR: bad query</span>"
         return redirect(url_for("render_webpage_label", modulus=modulus,number=number))
     else:
         for field in ['modulus', 'conductor', 'order']:
@@ -357,6 +362,8 @@ def character_search(**args):
             info['contents'] = charactertable(query)
             info['title'] = 'Dirichlet Characters'
             return render_template("dirichlet_characters/character_search.html", **info)
+        else:
+            return "<span style='color:red;'>ERROR: bad query</span>"
 
 def charactertable(query):
     return render_character_table(
