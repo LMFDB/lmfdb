@@ -93,9 +93,10 @@ def render_webpage(request,arg1,arg2):
             #elif arg1 == 'Hecke':
             #    temp_args['type'] = 'hecke'
 
-        if arg1<=0 or arg2 <=0 or arg1<arg2 or gcd(arg1,arg2) != 1:
+        mod,num = Integer(arg1), Integer(arg2)
+        if mod<=0 or num <0 or mod<num or gcd(mod,num) != 1:
             info = {}
-            info['message'] = """ modulus=%s,number=%s does correspond to
+            info['message'] = """ modulus=%s,number=%s does not correspond to
             a valid Dirichlet character name.
             """ % (arg1,arg2)
             #See our <a href="%s">naming conventions</a>.
