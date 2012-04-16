@@ -43,7 +43,13 @@ class ArtinRepresentation(object):
         return self._data["Conductor"]
     
     def hard_primes(self):
-        return self.bad_primes()            # TO CHANGE    (copy bad_primes below, with "HardPrimes" instead)
+        try:
+            return self._hard_primes
+        except AttributeError:
+            from sage.rings.all import Integer
+            self._hard_primes = [Integer(str(x)) for x in self._data["HardPrimes"]]
+            return self._hard_primes
+    
 
     def is_hard_prime(self, p):
         return p in self.hard_primes()
@@ -244,7 +250,7 @@ class ArtinRepresentation(object):
             return self._from_conjugacy_class_index_to_polynomial_fn
     
     def hard_factors(self):
-        return self._data["BadFactors"]             # TO_CHANGE: replace to "HardFactors"
+        return self._data["HardFactors"]             
     
     def hard_factor(self, p):
         factor_double_pol = self.from_conjugacy_class_index_to_polynomial_fn()(self.hard_factor_index(p))

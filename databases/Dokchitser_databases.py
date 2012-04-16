@@ -1,5 +1,5 @@
-artin_location = ("limbo","tim_artin_03")
-galois_group_location = ("limbo","tim_nfgal_03")
+artin_location = ("limbo","tim_artin_04")
+galois_group_location = ("limbo","tim_nfgal_04")
 
 from type_generation import String, Array, Dict, Int, Anything, Float
 
@@ -48,7 +48,8 @@ Dokchitser_ArtinRepresentation = Dict({
         "Dim" :             Int,                                #
         "Indicator":        Int,                                #
         "Conductor" :       TooLargeInt,                        #
-        "BadFactors":       FiniteSequence(IndexAt1),           #   
+        "HardFactors":      FiniteSequence(IndexAt1),           #   
+        "HardPrimes":       FiniteSequence(TooLargeInt),        #
         "BadPrimes":        FiniteSequence(TooLargeInt),        #
         "LocalFactors":     FiniteSequence(Anything),           #
         "DBIndex" :         IndexAt1,        # Starting at 1    #

@@ -417,9 +417,26 @@ def parse_range2(arg, key, parse_singleton=int):
     else:
         return [key, parse_singleton(arg)]
 
-def len_val_fn(val):
-  import bson
-  return bson.SON([("len",len(val)),("val",val)])
+def len_val_fn(value):
+    """ This creates a SON pair of the type {len:len(value), val:value}, with the len first so lexicographic ordering works.
+        WATCH OUT however as later manipulations of the database are likely to mess up this ordering if not careful.
+        For this, use order_values below.
+        Later we should implement SON_manipulators that insert and save safely.
+    """
+    import bson
+    return bson.SON([("len",len(value)),("val",value)])
+  
+def order_values(doc, field, sub_fields = ["len","val"]):
+    """ Retrieving a document then saving it messes up the ordering in SON documents. This allows you to take a document,
+        retrieve a specific field, order it according to the order of sub_fields, and return a document with a SON in place,
+        which can then be saved.
+    """ 
+    import bson
+    tmp = doc[field]
+    doc[field] = bson.SON([(sub_field,tmp[sub_field]) for sub_field in sub_fields])
+    return doc
+  
+
 
 def coeff_to_poly(c):
     from sage.all import PolynomialRing, QQ
