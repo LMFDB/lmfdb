@@ -162,21 +162,43 @@ def urlencode(kwargs):
   return urllib.urlencode(kwargs)
 
 
-@app.context_processor
-def link_to_current_hg_version():
-  """returns link to list of revisions, where the current one is on top"""
-  url =  'http://code.google.com/p/lmfdb/source/list?r={node}'
-  #txt = '{node|short}'
-  txt = '{date|isodate}'
+def safe_url_link_from_hg(url, display_txt):
   try:
     from subprocess import Popen, PIPE
-    hg_cmd = '''hg parent --template '<a href="%s">%s</a>' ''' % (url, txt)
-    hg = Popen([hg_cmd], shell=True, stdout=PIPE).communicate()[0]
+    hg_cmd = '''hg parent --template '<a href="%s">%s</a>' ''' % (url, display_txt)
+    cmd_output = Popen([hg_cmd], shell=True, stdout=PIPE).communicate()[0]
   except e:
-    hg = ''
+    cmd_output = ''
+  return cmd_output
   
-  return {'current_version' : hg }
 
+@app.context_processor
+def link_to_current_source():
+  """
+  Returns google code link to the source code at the most recent commit.
+  Returns erroneous link on local copy if there are intermediate commits that have not been pushed to the master, of course.
+  """
+  #txt = '{node|short}'
+  
+  url_source = 'http://code.google.com/p/lmfdb/source/browse/?r={node}'
+  txt_source = 'Source'
+  
+  return {'current_source': safe_url_link_from_hg(url_source, txt_source)}
+  
+
+@app.context_processor
+def link_to_latest_changeset():
+  """
+  Returns google code link to the list of revisions on the master, where the most recent commit is on top.
+  Returns erroneous link on local copy if there are intermediate commits that have not been pushed to the master, of course.
+  """
+  #txt = '{node|short}'
+
+  url_changeset =  'http://code.google.com/p/lmfdb/source/list?r={node}'
+  txt_changeset = '{date|isodate}'
+  
+  return {'latest_changeset': safe_url_link_from_hg(url_changeset, txt_changeset)}
+  
 ### for testing.py ###
 import unittest
 class LmfdbTest(unittest.TestCase):

@@ -28,10 +28,6 @@ class Dokchitser_AlgorithmLabel(LabelString):
 class Custom_GroupLabel(LabelString):
     pass
 
-class BadFactor(Array(Int)):
-    pass
-#### Not precise ####
-
 Dokchitser_Character = FiniteSequence(Anything)
 #### Not precise ####
 
