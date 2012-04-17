@@ -266,10 +266,15 @@ def render_webpage_label(modulus,number):
 
 @app.route("/Character/Dirichlet/calc_gauss/<int:modulus>/<int:number>")
 def dc_calc_gauss(modulus,number):
+    #import pdb; pdb.set_trace()
     arg = request.args.get("val", [])
     if not arg:
         return flask.abort(404)
     try:
+        if modulus == 1:
+            # there is a bug in sage for modulus = 1
+            return r"""\(\displaystyle \tau_{%s}(\chi_{1}(1,&middot;)) =
+          \sum_{r\in \mathbb{Z}/\mathbb{Z}} \chi_{1}(1,r) 1^{%s}= 1. \)""" %(int(arg),int(arg))
         from dirichlet_conrey import DirichletGroup_conrey
         chi = DirichletGroup_conrey(modulus)[number]
         chi = chi.sage_character()
@@ -315,12 +320,20 @@ def dc_calc_kloosterman(modulus,number):
     arg = request.args.get("val", [])
     if not arg:
         return flask.abort(404)
-    arg = map(int,arg.split(','))
     try:
+        a,b = map(int,arg.split(','))
+        if modulus == 1:
+            # there is a bug in sage for modulus = 1
+            return r"""
+            \( \displaystyle K(%s,%s,\chi_{1}(1,&middot;))
+            = \sum_{r \in \mathbb{Z}/\mathbb{Z}}
+                 \chi_{1}(1,r) 1^{%s r + %s r^{-1}}
+            = 1 \)
+            """ % (a,b,a,b)
         from dirichlet_conrey import DirichletGroup_conrey
         chi = DirichletGroup_conrey(modulus)[number]
         chi = chi.sage_character()
-        k = chi.kloosterman_sum_numerical(100,arg[0],arg[1])
+        k = chi.kloosterman_sum_numerical(100,a,b)
         real = round(k.real(),5)
         imag = round(k.imag(),5)
         if imag == 0:
@@ -329,7 +342,11 @@ def dc_calc_kloosterman(modulus,number):
             k = str(imag) + "i"
         else:
             k = latex(k)
-        return r"\( \displaystyle K(%s,%s,\chi_{%s}(%s,&middot;)) = \sum_{r \in \mathbb{Z}/%s\mathbb{Z}} \chi_{%s}(%s,r) e\left(\frac{%s r + %s r^{-1}}{25}\right) = %s. \)" %(int(arg[0]),int(arg[1]),modulus,number, modulus, modulus,number,int(arg[0]),int(arg[1]),k)
+        return r"""
+        \( \displaystyle K(%s,%s,\chi_{%s}(%s,&middot;))
+        = \sum_{r \in \mathbb{Z}/%s\mathbb{Z}}
+             \chi_{%s}(%s,r) e\left(\frac{%s r + %s r^{-1}}{%s}\right)
+        = %s. \)""" %(a,b,modulus,number, modulus, modulus,number,a,b,modulus,k)
     except Exception, e:
         return "<span style='color:red;'>ERROR: %s</span>" % e
 
