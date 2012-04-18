@@ -177,7 +177,6 @@ def safe_url_link_from_hg(url, display_txt):
     cmd_output = Popen([hg_cmd], shell=True, stdout=PIPE).communicate()[0]
   except e:
     cmd_output = ''
-  print ">>>>>>>>>> hg cmd returned: %s" % cmd_output
   return cmd_output
   
 """
