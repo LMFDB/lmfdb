@@ -1,6 +1,6 @@
 
 # This implements new type generation facilities
-# For instance, we can do Array(Int, Int, Int), immediately creating a type that consists of length 3 lists of int
+# For instance, we can do Array(Int, Int, Int), immediately creating a type that consists of length 3 lists of Int
 # This can then inherit additional functionalities:
 
 # class WithFunctionalities(Array(Int,Int,Int)):

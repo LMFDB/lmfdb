@@ -110,13 +110,17 @@ def artin_representation_search(**args):
 #  else:
 #    return flask.redirect(404)
 
-
 @artin_representations_page.route("/<dim>/<conductor>/<index>")
+def by_data_no_slash(dim, conductor, index):
+    return flask.redirect(url_for(".by_data", dim = dim, conductor = conductor, index = index), code=301)
+
+
+@artin_representations_page.route("/<dim>/<conductor>/<index>/")
 def by_data(dim,conductor,index):
     artin_logger.debug("Asked for the Artin representation with parameters dim: %s conductor: %s index: %s"%(dim, conductor, index))
     return render_artin_representation_webpage(dim,conductor,index)
 
-@artin_representations_page.route("/<dim>/<conductor>")
+@artin_representations_page.route("/<dim>/<conductor>/")
 def by_partial_data(dim,conductor):
     artin_logger.debug("Asked for the set of Artin representations with parameters dim: %s conductor: %s "%(dim, conductor))
     return render_artin_representation_set_webpage(dim,conductor)
