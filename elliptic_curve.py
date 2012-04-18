@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 
-from pymongo import ASCENDING
+from pymongo import ASCENDING, DESCENDING
 import base
 from base import app
 from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
@@ -27,8 +27,11 @@ def init_ecdb_count():
     if not init_ecdb_flag:
         ecdb = base.getDBConnection().elliptic_curves.curves
         ncurves = ecdb.count()
-        max_N = max(ecdb.distinct('conductor'))
-        max_rank = max(ecdb.distinct('rank'))
+        max_N = ecdb.find().sort('conductor', DESCENDING).limit(1)[0]['conductor']
+        max_rank = ecdb.find().sort('rank' , DESCENDING).limit(1)[0]['rank']
+        # old, much slower version:
+        # max_N = max(ecdb.distinct('conductor'))
+        # max_rank =  max(ecdb.distinct('rank'))
         init_ecdb_flag = True
 
 cremona_label_regex = re.compile(r'(\d+)([a-z]+)(\d*)')
