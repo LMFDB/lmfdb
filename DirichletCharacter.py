@@ -93,7 +93,7 @@ def render_webpage(request,arg1,arg2):
             #elif arg1 == 'Hecke':
             #    temp_args['type'] = 'hecke'
 
-        mod,num = Integer(arg1), Integer(arg2)
+        mod,num = Integer(str(arg1)), Integer(str(arg2))
         if mod<=0 or num <0 or mod<num or gcd(mod,num) != 1:
             info = {}
             info['message'] = """ modulus=%s,number=%s does not correspond to
