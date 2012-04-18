@@ -218,7 +218,7 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         from the url. temp_args contains possible arguments after a question mark.
     '''
 
-    if (arg1 == 'Riemann' or (arg1 == 'Character' and arg2 == 'Dirichlet' and arg3 == '1' and arg4 == '0')
+    if (arg1 == 'Riemann' or (arg1 == 'Character' and arg2 == 'Dirichlet' and arg3 == '1' and arg4 == '1')
         or (arg1 == 'NumberField' and arg2 == '1.1.1.1')):
         return RiemannZeta()
 

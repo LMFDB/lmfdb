@@ -44,7 +44,7 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
 # below we use float(abs()) instead of abs() to avoid a sage bug
     if (float(abs(rp))>truncation) & (float(abs(ip))>truncation):
         ans = ""
-        if seriescoefftype=="series":
+        if seriescoefftype=="series" or seriescoefftype=="signed":
             ans +="+"
         ans +="("
         ans += truncatenumber(rp, precision)
