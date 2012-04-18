@@ -359,8 +359,8 @@ def initLfunction(L,args, request):
 
     elif L.Ltype()  == 'riemann':
         info['bread'] = [('L-function','/L'),('Riemann Zeta',request.url)]
-        info['friends'] = [('\(\mathbb Q\)', url_for('number_fields.by_label', label='1.1.1.1')),  ('Dirichlet Character \(\\chi_{1}(0,\\cdot)\)',
-                                                                       url_for('render_Character', arg1=1, arg2=0))]
+        info['friends'] = [('\(\mathbb Q\)', url_for('number_fields.by_label', label='1.1.1.1')),  ('Dirichlet Character \(\\chi_{1}(1,\\cdot)\)',
+                                                                       url_for('render_Character', arg1=1, arg2=1))]
 
     elif L.Ltype()  == 'dirichlet':
         snum = str(L.characternumber)
