@@ -168,6 +168,7 @@ def urlencode(kwargs):
   import urllib
   return urllib.urlencode(kwargs)
 
+### start: link to google code at the bottom
 
 def safe_url_link_from_hg(url, display_txt):
   try:
@@ -176,36 +177,29 @@ def safe_url_link_from_hg(url, display_txt):
     cmd_output = Popen([hg_cmd], shell=True, stdout=PIPE).communicate()[0]
   except e:
     cmd_output = ''
+  print ">>>>>>>>>> hg cmd returned: %s" % cmd_output
   return cmd_output
   
+"""
+Creates google code link to the source code at the most recent commit.
+"""
+_url_source = 'http://code.google.com/p/lmfdb/source/browse/?r={node}'
+_txt_source = 'Source'
+_current_source = safe_url_link_from_hg(_url_source, _txt_source)
+"""
+Creates google code link to the list of revisions on the master, where the most recent commit is on top.
+"""
+_url_changeset =  'http://code.google.com/p/lmfdb/source/list?r={node}'
+_txt_changeset = '{date|isodate}'
+_latest_changeset = safe_url_link_from_hg(_url_changeset, _txt_changeset)
 
 @app.context_processor
 def link_to_current_source():
-  """
-  Returns google code link to the source code at the most recent commit.
-  Returns erroneous link on local copy if there are intermediate commits that have not been pushed to the master, of course.
-  """
-  #txt = '{node|short}'
-  
-  url_source = 'http://code.google.com/p/lmfdb/source/browse/?r={node}'
-  txt_source = 'Source'
-  
-  return {'current_source': safe_url_link_from_hg(url_source, txt_source)}
-  
+  return {'current_source': _current_source, 'latest_changeset' : _latest_changeset }
 
-@app.context_processor
-def link_to_latest_changeset():
-  """
-  Returns google code link to the list of revisions on the master, where the most recent commit is on top.
-  Returns erroneous link on local copy if there are intermediate commits that have not been pushed to the master, of course.
-  """
-  #txt = '{node|short}'
+### end: google code links
 
-  url_changeset =  'http://code.google.com/p/lmfdb/source/list?r={node}'
-  txt_changeset = '{date|isodate}'
-  
-  return {'latest_changeset': safe_url_link_from_hg(url_changeset, txt_changeset)}
-  
+
 ### for testing.py ###
 import unittest
 class LmfdbTest(unittest.TestCase):
