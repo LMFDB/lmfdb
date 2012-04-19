@@ -16,6 +16,7 @@ def render_webpage( args = {}):
 
     info = dict(args)
     #info['learnmore'] = [ ('Siegel modular forms', 'http://en.wikipedia.org/wiki/Siegel_modular_form')]
+    info['learnmore']= []
     bread = [('Siegel modular forms', url_for( 'ModularForm_GSp4_Q_top_level'))]
     
     if len(args) == 0:
@@ -39,7 +40,6 @@ def render_webpage( args = {}):
     info['group'] = group
     info['form'] = form
     info['level']= level
-    info['learnmore']= []
 
     # We check first the key 'group' since it is needed always
 
