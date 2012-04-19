@@ -169,7 +169,6 @@
   <h2 class="link knowl">
      <a class="knowl" href="{{ url_for("knowledge.index") }}">Knowledge</a>
   </h2>
-   {{ entry("Learn more about", learnmore) }}
    {{ entry("Data", getUploadedFor(request.path, true) ) }}
   {# {% if user_is_authenticated %} {% endif %} #}
 
@@ -226,8 +225,10 @@
    {% else %}
      {{ rightnavig("Data", getUploadedFor(request.path, false) ) }}
    {% endif %}
+   {{ rightnavig("Learn more about", learnmore) }}
     </div>
     {%- endif %}
+
 
 <div id="main">
   {# <div id="mathjax-info">
