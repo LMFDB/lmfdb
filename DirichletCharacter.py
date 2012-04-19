@@ -129,7 +129,7 @@ def set_info_for_start_page():
     info['credit'] = 'Sage'
     info['title'] = 'Dirichlet Characters'
     info['bread'] = [('Dirichlet Characters', url_for("render_Character"))]
-    info['learnmore'] = [('Dirichlet Characters', url_for("knowledge.show", ID="character.dirichlet.learn_more_about"))]
+    #info['learnmore'] = [('Dirichlet Characters', url_for("knowledge.show", ID="character.dirichlet.learn_more_about"))]
     info['friends'] = [('Dirichlet L-functions', url_for("render_Lfunction", arg1="degree1"))]
     return info
 
@@ -194,7 +194,7 @@ def initCharacterInfo(web_chi,args, request):
             info['inducedchar_number'] = web_chi.inducedchar_number
             info['inducedchar_tex'] = web_chi.inducedchar_tex
         info['nextnumber'] = web_chi.number+1
-        info['learnmore'] = [('Dirichlet Characters', url_for("knowledge.show", ID="character.dirichlet.learn_more_about"))] 
+        #info['learnmore'] = [('Dirichlet Characters', url_for("knowledge.show", ID="character.dirichlet.learn_more_about"))] 
         info['friends'] = [('Dirichlet L-function', '/L/Character/Dirichlet/'+smod+'/'+snum)]
         next = next_index(chi) 
         if web_chi.number == 1:

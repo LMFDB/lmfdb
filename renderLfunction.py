@@ -452,7 +452,7 @@ def initLfunction(L,args, request):
     info['functionalequation'] = lfuncFEtex(L, "analytic")
     info['functionalequationSelberg'] = lfuncFEtex(L, "selberg")
 
-    info['learnmore'] = [('L-functions', 'http://wiki.l-functions.org/L-functions') ]
+    #info['learnmore'] = [('L-functions', 'http://wiki.l-functions.org/L-functions') ]
     
     if len(request.args)==0:
         lcalcUrl = request.url + '?download=lcalcfile'
