@@ -14,7 +14,7 @@ import sage.all
 from sage.all import ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, euler_phi, pari, prod
 from sage.rings.arith import primes
 
-from transitive_group import group_display_knowl, group_knowl_guts, group_display_short, group_cclasses_knowl_guts, group_phrase, cclasses_display_knowl, character_table_display_knowl, group_character_table_knowl_guts, aliastable, complete_group_code
+from transitive_group import group_display_knowl, group_knowl_guts, group_display_short, group_cclasses_knowl_guts, group_phrase, cclasses_display_knowl, character_table_display_knowl, group_character_table_knowl_guts, aliastable, complete_group_codes
 
 from utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html
 
@@ -444,7 +444,7 @@ def number_field_search(**args):
                 query[field] = parse_list(info[field])
             else:
                 if field == 'galois_group':
-                    gcs = complete_group_code(info[field])
+                    gcs = complete_group_codes(info[field])
                     if len(gcs)==1:
                       query['gal'] = list(gcs[0])
                     if len(gcs)>1:
