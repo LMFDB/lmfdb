@@ -21,6 +21,16 @@ from utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_r
 NF_credit = 'the PARI group, J. Voight, J. Jones, and D. Roberts'
 Completename = 'Completeness of this data'
 
+nfields = None
+init_nf_flag = False
+
+def init_nf_count():
+  global nfields, init_nf_flag
+  if not init_nf_flag:
+    nfdb = base.getDBConnection().numberfields.fields
+    nfields = nfdb.count()
+    init_nf_flag = True
+
 def galois_group_data(n, t):
   C = getDBConnection()
   return group_knowl_guts(n, t, C)
@@ -46,6 +56,9 @@ def group_display_shortC(C):
   def gds(nt):
     return group_display_short(nt[0], nt[1], C)
   return gds
+
+def comma(x): 
+  return x < 1000 and str(x) or ('%s,%03d' % (comma(x//1000), (x%1000)))
 
 def field_pretty(field_str):
     d,r,D,i = field_str.split('.')
@@ -169,6 +182,7 @@ def number_field_render_webpage():
     sig_list = sum([[[d-2*r2,r2] for r2 in range(1+(d//2))] for d in range(1,7)],[]) + sum([[[d,0]] for d in range(7,11)],[])
     sig_list = sig_list[:10]
     if len(args) == 0:      
+        init_nf_count()
         discriminant_list_endpoints = [-10000,-1000,-100,0,100,1000,10000]
         discriminant_list = ["%s..%s" % (start,end-1) for start, end in zip(discriminant_list_endpoints[:-1], discriminant_list_endpoints[1:])]
         info = {
@@ -176,6 +190,7 @@ def number_field_render_webpage():
         'signature_list': sig_list, 
         'class_number_list': range(1,6)+['6..10'],
         'count': '20',
+        'nfields': comma(nfields),
         'discriminant_list': discriminant_list
         }
         t = 'Global Number Fields'
