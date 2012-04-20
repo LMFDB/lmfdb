@@ -218,7 +218,7 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         from the url. temp_args contains possible arguments after a question mark.
     '''
 
-    if (arg1 == 'Riemann' or (arg1 == 'Character' and arg2 == 'Dirichlet' and arg3 == '1' and arg4 == '1')
+    if (arg1 == 'Riemann' or (arg1 == 'Character' and arg2 == 'Dirichlet' and arg3 == '1' and arg4 == '0')
         or (arg1 == 'NumberField' and arg2 == '1.1.1.1')):
         return RiemannZeta()
 
@@ -366,7 +366,7 @@ def initLfunction(L,args, request):
         snum = str(L.characternumber)
         smod = str(L.charactermodulus)
         charname = '\(\\chi_{%s}({%s},\\cdot)\)' %(smod, snum)
-        info['bread'] = [('L-function','/L'),('Dirichlet Character',url_for('render_Lfunction', arg1='degree1') +'#Dirichlet'),
+        info['bread'] = [('L-function','/L'),('Dirichlet Characters',url_for('render_Lfunction', arg1='degree1') +'Dirichlet'),
                          (charname, request.url)]
         info['friends'] = [('Dirichlet Character '+str(charname), friendlink)]
 
@@ -440,11 +440,8 @@ def initLfunction(L,args, request):
         weight = str(L.weight)
         number = str(L.number)
         info['friends'] = [('Siegel Modular Form', friendlink)]
-        
-    elif L.Ltype() == "artin":
-        #info['zeroeslink'] = ''
-        #info['plotlink'] = ''
-        info['friends'] = [('Artin representation', L.artin.url_for())]
+
+
 
 
     info['dirichlet'] = lfuncDStex(L, "analytic")

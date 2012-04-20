@@ -92,23 +92,13 @@ def render_webpage(request,arg1,arg2):
         temp_args['number'] = arg2
             #elif arg1 == 'Hecke':
             #    temp_args['type'] = 'hecke'
-
-        mod,num = Integer(arg1), Integer(arg2)
-        if mod<=0 or num <0 or mod<num or gcd(mod,num) != 1:
-            info = {}
-            info['message'] = """ modulus=%s,number=%s does not correspond to
-            a valid Dirichlet character name.
-            """ % (arg1,arg2)
-            #See our <a href="%s">naming conventions</a>.
-            return render_template("404.html",**info), 404
-            #return 'invalid Dirichlet character name'
-            
+    
         web_chi = WebCharacter(temp_args)
 
-        #try:
-        #    print temp_args
-        #except:
-        #    1
+        try:
+            print temp_args
+        except:
+            1
 
         info = initCharacterInfo(web_chi, temp_args, request) # sets the various properties of chi to be displayed in DirichletCharacter.htiml
 
@@ -157,10 +147,7 @@ def initCharacterInfo(web_chi,args, request):
         smod = str(web_chi.modulus)
         info['modulus'] = smod
         G = DirichletGroup_conrey(web_chi.modulus)
-        if web_chi.modulus > 1:
-          G_prev = DirichletGroup_conrey(web_chi.modulus -1)
-        else:
-          G_prev = None
+        G_prev = DirichletGroup_conrey(web_chi.modulus -1)
         chi = G[web_chi.number]
         chi_sage = chi.sage_character()
         indices = []
@@ -195,7 +182,10 @@ def initCharacterInfo(web_chi,args, request):
             info['inducedchar_tex'] = web_chi.inducedchar_tex
         info['nextnumber'] = web_chi.number+1
         info['learnmore'] = [('Dirichlet Characters', url_for("knowledge.show", ID="character.dirichlet.learn_more_about"))] 
-        info['friends'] = [('Dirichlet L-function', '/L/Character/Dirichlet/'+smod+'/'+snum)]
+        if web_chi.primitive=="False":
+            info['friends'] = []
+        else:
+            info['friends'] = [('Dirichlet L-function', '/L/Character/Dirichlet/'+smod+'/'+snum)]
         next = next_index(chi) 
         if web_chi.number == 1:
             prev = prev_function(web_chi.modulus-1, web_chi.modulus-1)
@@ -235,7 +225,15 @@ def initCharacterInfo(web_chi,args, request):
                 info['navi'] = [(n8,url8),(n9,url9)]
 
     return info
+
+def getPrevNextNavigation(web_chi, chi, mode):
+    ''' Returns the contents for info['navi'] which is the
+    navigation to the next and previous character or
+    the corresponding L-function
+    Mode is either "character" or "L"
+    '''
     
+
 def next_index(chi):
     mod = chi.modulus()
     index = chi.number()
@@ -274,11 +272,11 @@ def dc_calc_gauss(modulus,number):
         chi = DirichletGroup_conrey(modulus)[number]
         chi = chi.sage_character()
         g = chi.gauss_sum_numerical(100,int(arg))
-        real = round(g.real(),10)
-        imag = round(g.imag(),10)
-        if imag == 0.:
+        real = int(round(g.real(),5))
+        imag = int(round(g.imag(),5))
+        if imag == 0:
             g = str(real)
-        elif real == 0.:
+        elif real == 0:
             g = str(imag) + "i"
         else:
             g = latex(g)
@@ -321,8 +319,8 @@ def dc_calc_kloosterman(modulus,number):
         chi = DirichletGroup_conrey(modulus)[number]
         chi = chi.sage_character()
         k = chi.kloosterman_sum_numerical(100,arg[0],arg[1])
-        real = round(k.real(),5)
-        imag = round(k.imag(),5)
+        real = int(round(k.real(),5))
+        imag = int(round(k.imag(),5))
         if imag == 0:
             k = str(real)
         elif real == 0:
@@ -339,17 +337,12 @@ def redirect_character(modulus,number):
 
 def character_search(**args):
     info = to_dict(args)
-    for field in ['modulus', 'conductor', 'order']:
-        info[field] = info.get(field,'')
     query = {}
-    print "args = ", args
+    print args
     if 'natural' in args:
         label = info.get('natural', '')
-        try:
-            modulus = int(str(label).partition('.')[0])
-            number = int(str(label).partition('.')[2])
-        except ValueError:
-            return "<span style='color:red;'>ERROR: bad query</span>"
+        modulus = int(str(label).partition('.')[0])
+        number = int(str(label).partition('.')[2])
         return redirect(url_for("render_webpage_label", modulus=modulus,number=number))
     else:
         for field in ['modulus', 'conductor', 'order']:
@@ -362,8 +355,6 @@ def character_search(**args):
             info['contents'] = charactertable(query)
             info['title'] = 'Dirichlet Characters'
             return render_template("dirichlet_characters/character_search.html", **info)
-        else:
-            return "<span style='color:red;'>ERROR: bad query</span>"
 
 def charactertable(query):
     return render_character_table(
