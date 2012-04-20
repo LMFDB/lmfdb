@@ -195,7 +195,10 @@ def initCharacterInfo(web_chi,args, request):
             info['inducedchar_tex'] = web_chi.inducedchar_tex
         info['nextnumber'] = web_chi.number+1
         #info['learnmore'] = [('Dirichlet Characters', url_for("knowledge.show", ID="character.dirichlet.learn_more_about"))] 
-        info['friends'] = [('Dirichlet L-function', '/L/Character/Dirichlet/'+smod+'/'+snum)]
+        if web_chi.primitive=="False":
+            info['friends'] = []
+        else:
+            info['friends'] = [('Dirichlet L-function', '/L/Character/Dirichlet/'+smod+'/'+snum)]
         next = next_index(chi) 
         if web_chi.number == 1:
             prev = prev_function(web_chi.modulus-1, web_chi.modulus-1)
@@ -235,7 +238,15 @@ def initCharacterInfo(web_chi,args, request):
                 info['navi'] = [(n8,url8),(n9,url9)]
 
     return info
+
+def getPrevNextNavigation(web_chi, chi, mode):
+    ''' Returns the contents for info['navi'] which is the
+    navigation to the next and previous character or
+    the corresponding L-function
+    Mode is either "character" or "L"
+    '''
     
+
 def next_index(chi):
     mod = chi.modulus()
     index = chi.number()
