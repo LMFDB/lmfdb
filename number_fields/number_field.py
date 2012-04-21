@@ -126,7 +126,7 @@ def parse_field_string(F): # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
     F=F.replace('X','x')
     if 'x' in F:
         F=F.replace('^','**')
-        print F
+        #print F
         F = poly_to_field_label(F)
         if F:
             return F
@@ -331,16 +331,6 @@ def parse_power(pair):
   except:
     return int(pair)
 
-def signedlog(j):
-  if j==0:
-    return 0.0
-  sgn = 1
-  if(j<0):
-    sgn = -1
-    j = -j
-  flog = float(j.log(prec=53))
-  return flog*sgn
-
 @nf_page.route("/<label>")
 def by_label(label):
     return render_field_webpage({'label' : split_label(label)})
@@ -351,6 +341,15 @@ def parse_list(L):
       return [int(a) for a in L[1:-1].split(',')]
     return []
     # return eval(str(L)) works but using eval() is insecure
+
+# input is a sage int
+def make_disc_key(D):
+  s='1'
+  if D<0: s='0'
+  Dz = D.abs()
+  if Dz==0: D1 = 0
+  else: D1 = int(Dz.log(10))
+  return '%s%03d%s'%(s,D1,str(Dz))
 
 # We need to have a first level parsing of discs to have it
 # as sage ints, and then a second version where we apply signed logs
@@ -375,58 +374,42 @@ def parse_discs(arg):
   else:
     return [ZZ(str(arg))]
 
-def handle_zz_to_slog(ent):
-  if type(ent)==list:
-    return [signedlog(x) for x in ent]
-  #single entries become pairs
-  slog = signedlog(ent)
-  return [slog, slog]
-
-def discs_parse_to_slogs(arg):
-  return [handle_zz_to_slog(ent) for ent in arg] 
-
-# updown = 1 or -1 to say which way to fudge
-def fudge_float(a, updown, ffactor=1+2.**(-51)):
-  if a<0:
-    updown = -updown
-  return a*(ffactor**updown)
-
-# wide = 1 to widen, -1 to narrow
-def fudge_pair(pair, wide):
-  return [fudge_float(pair[0],-wide), fudge_float(pair[1], wide)]
-
-def fudge_list(li, wide):
-  return [fudge_pair(x, wide) for x in li]
-
+# Input is the output of parse_discs, [[-5,-2], 10, 11, [16,100]]
 def list_to_query(dlist):
-  floatit = discs_parse_to_slogs(dlist)
-  floatitwide = fudge_list(floatit, 1)
-  if len(floatitwide)==1:
-    return ['disc_log', {'$lte': floatitwide[0][1], '$gte': floatitwide[0][0]}]
-  ans = []
-  for x in floatitwide:
-    ans.append({'disc_log': {'$lte': x[1], '$gte': x[0]}})
-  return ['$or', ans]
-
-# Need to be able to verify fields
-def verify_field(field, narrowconds, zconds):
-  if len(zconds)==0: return True
-  fdisc = field['disc_log']
-  # Quick exit if we satisfy narrowed floating point bounds
-  for x in narrowconds:
-    if fdisc <= x[1] and fdisc >= x[0]: return True
-  zdisc = ZZ(str(field['disc_string']))
-  for x in zconds:
-    if type(x)==list:
-      if zdisc <= x[1] and zdisc >= x[0]: return True
+  # we need to split intervals which span 0
+  x = 0
+  while x <len(dlist):
+    if type(dlist[x]) == list:
+      if dlist[x][0]<0 and dlist[x][1]>0:  # split into pos/neg parts
+        low,high= dlist[x][0], dlist[x][1]
+        dlist[x] = [low,ZZ(-1)]
+        dlist.insert(x+1, [ZZ(1),high])
+        x += 1
+      elif dlist[x][0] > dlist[x][1]:  # bogus entry
+        dlist.pop(x)
+        x -= 1 # to offset the increment below
+    x += 1
+ 
+  # if there is only one part, we don't need an $or
+  if len(dlist)==1:
+    dlist = dlist[0]
+    if type(dlist)==list:
+      if dlist[0]<0:
+        return ['disc_key', {'$gte': make_disc_key(dlist[1]), '$lte': make_disc_key(dlist[0])}]
+      else:
+        return ['disc_key', {'$lte': make_disc_key(dlist[1]), '$gte': make_disc_key(dlist[0])}]
     else:
-      if zdisc == x: return True
-  return False
-
-def verify_all_fields(li, dlist):
-  floatit = discs_parse_to_slogs(dlist)
-  floatitnarrow = fudge_list(floatit, -1)
-  return filter(lambda x: verify_field(x, floatitnarrow, dlist), li)
+      return ['disc_key', make_disc_key(dlist)]
+  ans = []
+  for x in dlist:
+    if type(x)==list:
+      if x[0]<0:
+        ans.append({'disc_key': {'$gte': make_disc_key(x[1]), '$lte': make_disc_key(x[0])}})
+      else:
+        ans.append({'disc_key': {'$lte': make_disc_key(x[1]), '$gte': make_disc_key(x[0])}})
+    else:
+      ans.append({'disc_key': make_disc_key(x)})
+  return ['$or', ans]
 
 def number_field_search(**args):
     info = to_dict(args)
@@ -505,7 +488,7 @@ def number_field_search(**args):
       except: pass
 
     C = base.getDBConnection()
-    print query
+    #nf_logger.debug(query)
     info['query'] = dict(query)
     if 'lucky' in args:
         one = C.numberfields.fields.find_one(query)
@@ -517,32 +500,15 @@ def number_field_search(**args):
 #    fields.ensure_index('disc_log')
 #    fields.ensure_index([('degree',pymongo.ASCENDING),('abs_disc',pymongo.ASCENDING),('signature',pymongo.DESCENDING)])
 
-    res = fields.find(query).sort([('degree',pymongo.ASCENDING),('abs_disc',pymongo.ASCENDING),('signature',pymongo.DESCENDING)]) # TODO: pages
+    res = fields.find(query).sort([('degree',pymongo.ASCENDING),('disc_len',pymongo.ASCENDING),('disc_abs_string', pymongo.ASCENDING),('signature',pymongo.DESCENDING)])
 
     nres = res.count()
     res = res.skip(start).limit(count)
 
     if(start>=nres): start-=(1+(start-nres)/count)*count
     if(start<0): start=0
-    kept = []
-    bad = 0
-    if len(dlist)>0:
-      floatit = discs_parse_to_slogs(dlist)
-      floatitnarrow = fudge_list(floatit, -1)
-      for a in res:
-        ok = verify_field(a,floatitnarrow, dlist)
-        if ok:
-          kept.append(a)
-        else:
-          bad += 1
-    else:
-      kept = res
-    # Very unlikely to happen, but
-    if bad>0:
-      nres -= bad
 
-      #    info['fields'] = res
-    info['fields'] = kept
+    info['fields'] = res
     info['number'] = nres
     info['start'] = start
     if nres==1:
