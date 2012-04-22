@@ -539,56 +539,6 @@ def number_field_search(**args):
     properties = []
     return render_template("number_field_search.html", info = info, title=t, properties=properties, bread=bread)
 
-def merge_sort(it1,it2):
-    try:
-        a = it1.next()
-    except StopIteration:
-        b = it2.next()
-        while True:
-            yield b
-            b = it2.next()
-        return
-    
-    try:
-        b = it2.next()
-    except StopIteration:
-        while True:
-            yield a
-            a = it1.next()
-        return
-                
-    while True:
-        if abs(a['discriminant'])<abs(b['discriminant']):
-            yield a
-            try:
-                a = it1.next()
-            except StopIteration:
-                b = it2.next()
-                while True:
-                    yield b
-                    b = it2.next()
-                return
-        else:
-            yield b
-            try:
-                b = it2.next()
-            except StopIteration:
-                a = it1.next()
-                while True:
-                    yield a
-                    a = it1.next()
-                return
-    return
-
-def filter_disc_conds(it, dlist):
-  floatit = discs_parse_to_slogs(dlist)
-  floatitnarrow = fudge_list(floatit, -1)
-  a = it.next()
-  while True:
-    if verify_field(a,floatitnarrow, dlist):
-      yield a
-    a = it.next()
-  return
 
 def residue_field_degrees_function(K):
   """ Given a sage field, returns a function that has
