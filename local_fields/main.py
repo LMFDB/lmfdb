@@ -119,6 +119,7 @@ def local_field_search(**args):
   if(start<0): start=0
 
   info['fields'] = res
+  info['number'] = nres
   info['group_display'] = group_display_shortC(C)
   info['display_poly'] = format_coeffs
   info['start'] = start
