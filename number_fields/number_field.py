@@ -344,12 +344,12 @@ def parse_list(L):
 
 # input is a sage int
 def make_disc_key(D):
-  s='1'
-  if D<0: s='0'
+  s=1
+  if D<0: s=-1
   Dz = D.abs()
   if Dz==0: D1 = 0
   else: D1 = int(Dz.log(10))
-  return '%s%03d%s'%(s,D1,str(Dz))
+  return s, '%03d%s'%(D1,str(Dz))
 
 # We need to have a first level parsing of discs to have it
 # as sage ints, and then a second version where we apply signed logs
@@ -375,6 +375,7 @@ def parse_discs(arg):
     return [ZZ(str(arg))]
 
 # Input is the output of parse_discs, [[-5,-2], 10, 11, [16,100]]
+# Output is a list of key/value pairs for the query
 def list_to_query(dlist):
   # we need to split intervals which span 0
   x = 0
@@ -394,22 +395,29 @@ def list_to_query(dlist):
   if len(dlist)==1:
     dlist = dlist[0]
     if type(dlist)==list:
-      if dlist[0]<0:
-        return ['disc_key', {'$gte': make_disc_key(dlist[1]), '$lte': make_disc_key(dlist[0])}]
+      s0, d0 = make_disc_key(dlist[0])
+      s1, d1 = make_disc_key(dlist[1])
+      if s0<0:
+        return [['disc_sign', s0], ['disc_abs_key', {'$gte': d1, '$lte': d0}]]
       else:
-        return ['disc_key', {'$lte': make_disc_key(dlist[1]), '$gte': make_disc_key(dlist[0])}]
+        return [['disc_sign', s0], ['disc_abs_key', {'$lte': d1, '$gte': d0}]]
     else:
-      return ['disc_key', make_disc_key(dlist)]
+      s0, d0 = make_disc_key(dlist)
+      return [['disc_sign', s0],['disc_abs_key', d0]]
+  # Now dlist has length >1
   ans = []
   for x in dlist:
     if type(x)==list:
-      if x[0]<0:
-        ans.append({'disc_key': {'$gte': make_disc_key(x[1]), '$lte': make_disc_key(x[0])}})
+      s0, d0 = make_disc_key(x[0])
+      s1, d1 = make_disc_key(x[1])
+      if s0<0:
+        ans.append({'disc_sign': s0, 'disc_abs_key': {'$gte': d1, '$lte': d0}})
       else:
-        ans.append({'disc_key': {'$lte': make_disc_key(x[1]), '$gte': make_disc_key(x[0])}})
+        ans.append({'disc_sign': s0, 'disc_abs_key': {'$lte': d1, '$gte': d0}})
     else:
-      ans.append({'disc_key': make_disc_key(x)})
-  return ['$or', ans]
+      s0, d0 = make_disc_key(x)
+      ans.append({'disc_sign': s0, 'disc_abs_key': d0})
+  return [['$or', ans]]
 
 def number_field_search(**args):
     info = to_dict(args)
@@ -436,11 +444,18 @@ def number_field_search(**args):
                     ran = info[field]
                     ran = ran.replace('..','-')
                     if field == 'discriminant':
-                      # Need to take signed log of entries
                       # dlist will contain the disc conditions
                       # as sage ints
                       dlist = parse_discs(ran)
+                      # now convert to a query
                       tmp = list_to_query(dlist)
+                      # Two cases, could be a list of sign/inequalties
+                      # or an '$or'
+                      if len(tmp)==1:
+                        tmp = tmp[0]
+                      else:
+                        query[tmp[0][0]] = tmp[0][1]
+                        tmp = tmp[1]
                     else:
                       tmp = parse_range2(ran, field)
                     # work around syntax for $or
@@ -497,10 +512,8 @@ def number_field_search(**args):
             return render_field_webpage({'label': label})
 
     fields = C.numberfields.fields
-#    fields.ensure_index('disc_log')
-#    fields.ensure_index([('degree',pymongo.ASCENDING),('abs_disc',pymongo.ASCENDING),('signature',pymongo.DESCENDING)])
 
-    res = fields.find(query).sort([('degree',pymongo.ASCENDING),('disc_len',pymongo.ASCENDING),('disc_abs_string', pymongo.ASCENDING),('signature',pymongo.DESCENDING)])
+    res = fields.find(query).sort([('degree',pymongo.ASCENDING),('disc_abs_key', pymongo.ASCENDING),('disc_sign',pymongo.ASCENDING),('signature',pymongo.DESCENDING)])
 
     nres = res.count()
     res = res.skip(start).limit(count)
