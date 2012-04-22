@@ -30,6 +30,8 @@
 
 <h2> Results: ({{info.report}}) </h2>
 
+{% if info.number > 0 %}
+
 <table border=1 cellpadding=5 class="ntdata">
 <thead>
 <tr>
@@ -59,6 +61,6 @@
 <a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form();return false">Previous</A>
 <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form();return false">Next</A></td>
 
-
+{% endif %}
 
 {% endblock %}
