@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <line x1="0" y1="440" x2="560" y2="440" style="stroke:rgb(0,0,0);"/>
-<line x1="0" y1="440" x2="0" y2="0" style="stroke:rgb(0,0,0);"/>
+<line x1="0" y1="440" x2="0" y2="30" style="stroke:rgb(0,0,0);"/>
 <line x1="90" y1="436" x2="90" y2="440" style="stroke:rgb(0,0,0);"/>
 <line x1="180" y1="436" x2="180" y2="440" style="stroke:rgb(0,0,0);"/>
 <line x1="270" y1="436" x2="270" y2="440" style="stroke:rgb(0,0,0);"/>
@@ -8,15 +8,15 @@
 <line x1="450" y1="436" x2="450" y2="440" style="stroke:rgb(0,0,0);"/>
 <line x1="540" y1="436" x2="540" y2="440" style="stroke:rgb(0,0,0);"/>
 <text x="87" y="432" style="fill:rgb(102,102,102);font-size:11px;">1</text>
-<line y1="0" x1="90" y2="440" x2="90" style="stroke:rgb(204,204,204);stroke-dasharray:3,3;"/>
+<line y1="30" x1="90" y2="440" x2="90" style="stroke:rgb(204,204,204);stroke-dasharray:3,3;"/>
 <text x="177" y="432" style="fill:rgb(102,102,102);font-size:11px;">2</text>
-<line y1="0" x1="180" y2="440" x2="180" style="stroke:rgb(204,204,204);stroke-dasharray:3,3;"/>
+<line y1="30" x1="180" y2="440" x2="180" style="stroke:rgb(204,204,204);stroke-dasharray:3,3;"/>
 <text x="267" y="432" style="fill:rgb(102,102,102);font-size:11px;">3</text>
-<line y1="0" x1="270" y2="440" x2="270" style="stroke:rgb(204,204,204);stroke-dasharray:3,3;"/>
+<line y1="30" x1="270" y2="440" x2="270" style="stroke:rgb(204,204,204);stroke-dasharray:3,3;"/>
 <text x="357" y="432" style="fill:rgb(102,102,102);font-size:11px;">4</text>
-<line y1="0" x1="360" y2="440" x2="360" style="stroke:rgb(204,204,204);stroke-dasharray:3,3;"/>
+<line y1="30" x1="360" y2="440" x2="360" style="stroke:rgb(204,204,204);stroke-dasharray:3,3;"/>
 <text x="447" y="432" style="fill:rgb(102,102,102);font-size:11px;">5</text>
-<line y1="0" x1="450" y2="440" x2="450" style="stroke:rgb(204,204,204);stroke-dasharray:3,3;"/>
+<line y1="30" x1="450" y2="440" x2="450" style="stroke:rgb(204,204,204);stroke-dasharray:3,3;"/>
 <text x="537" y="432" style="fill:rgb(102,102,102);font-size:11px;">6</text>
 <line y1="0" x1="540" y2="440" x2="540" style="stroke:rgb(204,204,204);stroke-dasharray:3,3;"/>
 <line x1="0" y1="410" x2="4" y2="410" style="stroke:rgb(0,0,0);"/>
@@ -32,7 +32,6 @@
 <line x1="0" y1="110" x2="4" y2="110" style="stroke:rgb(0,0,0);"/>
 <line x1="0" y1="80" x2="4" y2="80" style="stroke:rgb(0,0,0);"/>
 <line x1="0" y1="50" x2="4" y2="50" style="stroke:rgb(0,0,0);"/>
-<line x1="0" y1="20" x2="4" y2="20" style="stroke:rgb(0,0,0);"/>
 <text x="5" y="383" style="fill:rgb(102,102,102);font-size:11px;">2</text>
 <text x="5" y="323" style="fill:rgb(102,102,102);font-size:11px;">4</text>
 <line x1="0" y1="320" x2="560" y2="320" style="stroke:rgb(204,204,204);stroke-dasharray:3,3;"/>
@@ -42,17 +41,12 @@
 <text x="5" y="143" style="fill:rgb(102,102,102);font-size:11px;">10</text>
 <text x="5" y="83" style="fill:rgb(102,102,102);font-size:11px;">12</text>
 <line x1="0" y1="80" x2="560" y2="80" style="stroke:rgb(204,204,204);stroke-dasharray:3,3;"/>
-<text x="5" y="23" style="fill:rgb(102,102,102);font-size:11px;">14</text>
 <a xlink:href="/L/ModularForm/GL2/Q/holomorphic/1/12/0/a/0" target="_top">
 <circle cx="94.95" cy="80.0" r="3.3" style="fill:rgb(63,63,255)"><title>(1, 12)</title></circle></a>
 <a xlink:href="/L/ModularForm/GL2/Q/holomorphic/2/8/0/a/0" target="_top">
 <circle cx="184.95" cy="200.0" r="3.3" style="fill:rgb(63,63,255)"><title>(2, 8)</title></circle></a>
 <a xlink:href="/L/ModularForm/GL2/Q/holomorphic/2/10/0/a/0" target="_top">
 <circle cx="184.95" cy="140.0" r="3.3" style="fill:rgb(63,63,255)"><title>(2, 10)</title></circle></a>
-<a xlink:href="/L/ModularForm/GL2/Q/holomorphic/2/14/0/a/0" target="_top">
-<circle cx="175.05" cy="20.0" r="3.3" style="fill:rgb(191,191,0)"><title>(2, 14)</title></circle></a>
-<a xlink:href="/L/ModularForm/GL2/Q/holomorphic/2/14/0/b/0" target="_top">
-<circle cx="184.95" cy="20.0" r="3.3" style="fill:rgb(63,63,255)"><title>(2, 14)</title></circle></a>
 <a xlink:href="/L/ModularForm/GL2/Q/holomorphic/3/6/0/a/0" target="_top">
 <circle cx="274.95" cy="260.0" r="3.3" style="fill:rgb(63,63,255)"><title>(3, 6)</title></circle></a>
 <a xlink:href="/L/ModularForm/GL2/Q/holomorphic/3/8/0/a/0" target="_top">
@@ -63,52 +57,37 @@
 <circle cx="274.95" cy="140.0" r="3.3" style="fill:rgb(63,63,255)"><title>(3, 10)</title></circle></a>
 <a xlink:href="/L/ModularForm/GL2/Q/holomorphic/3/12/0/a/0" target="_top">
 <circle cx="274.95" cy="80.0" r="3.3" style="fill:rgb(63,63,255)"><title>(3, 12)</title></circle></a>
-<a xlink:href="/L/ModularForm/GL2/Q/holomorphic/3/14/0/a/0" target="_top">
-<circle cx="265.05" cy="20.0" r="3.3" style="fill:rgb(191,191,0)"><title>(3, 14)</title></circle></a>
-<line x1="274.95" y1="20.0" x2="284.85" y2="20.0" style="stroke:rgb(63,63,255);stroke-width:2.4"/><a xlink:href="/L/ModularForm/GL2/Q/holomorphic/3/14/0/b/0" target="_top">
-<circle cx="274.95" cy="20.0" r="3.3" style="fill:rgb(63,63,255)"><title>(3, 14)</title></circle></a>
-<a xlink:href="/L/ModularForm/GL2/Q/holomorphic/3/14/0/b/1" target="_top">
-<circle cx="284.85" cy="20.0" r="3.3" style="fill:rgb(63,63,255)"><title>(3, 14)</title></circle></a>
 <a xlink:href="/L/ModularForm/GL2/Q/holomorphic/4/6/0/a/0" target="_top">
 <circle cx="364.95" cy="260.0" r="3.3" style="fill:rgb(63,63,255)"><title>(4, 6)</title></circle></a>
 <a xlink:href="/L/ModularForm/GL2/Q/holomorphic/4/10/0/a/0" target="_top">
 <circle cx="364.95" cy="140.0" r="3.3" style="fill:rgb(63,63,255)"><title>(4, 10)</title></circle></a>
 <a xlink:href="/L/ModularForm/GL2/Q/holomorphic/4/12/0/a/0" target="_top">
 <circle cx="355.05" cy="80.0" r="3.3" style="fill:rgb(191,191,0)"><title>(4, 12)</title></circle></a>
-<a xlink:href="/L/ModularForm/GL2/Q/holomorphic/4/14/0/a/0" target="_top">
-<circle cx="364.95" cy="20.0" r="3.3" style="fill:rgb(63,63,255)"><title>(4, 14)</title></circle></a>
 <a xlink:href="/L/ModularForm/GL2/Q/holomorphic/5/4/0/a/0" target="_top">
 <circle cx="454.95" cy="320.0" r="3.3" style="fill:rgb(63,63,255)"><title>(5, 4)</title></circle></a>
 <a xlink:href="/L/ModularForm/GL2/Q/holomorphic/5/6/0/a/0" target="_top">
 <circle cx="454.95" cy="260.0" r="3.3" style="fill:rgb(63,63,255)"><title>(5, 6)</title></circle></a>
 <a xlink:href="/L/ModularForm/GL2/Q/holomorphic/5/8/0/a/0" target="_top">
 <circle cx="445.05" cy="200.0" r="3.3" style="fill:rgb(191,191,0)"><title>(5, 8)</title></circle></a>
-<line x1="454.95" y1="200.0" x2="464.85" y2="200.0" style="stroke:rgb(63,63,255);stroke-width:2.4"/><a xlink:href="/L/ModularForm/GL2/Q/holomorphic/5/8/0/b/0" target="_top">
+<line x1="454.95" y1="200.0" x2="464.85" y2="200.0" style="stroke:rgb(63,63,255);stroke-width:2.4"/>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic/5/8/0/b/0" target="_top">
 <circle cx="454.95" cy="200.0" r="3.3" style="fill:rgb(63,63,255)"><title>(5, 8)</title></circle></a>
 <a xlink:href="/L/ModularForm/GL2/Q/holomorphic/5/8/0/b/1" target="_top">
 <circle cx="464.85" cy="200.0" r="3.3" style="fill:rgb(63,63,255)"><title>(5, 8)</title></circle></a>
 <a xlink:href="/L/ModularForm/GL2/Q/holomorphic/5/10/0/a/0" target="_top">
 <circle cx="445.05" cy="140.0" r="3.3" style="fill:rgb(191,191,0)"><title>(5, 10)</title></circle></a>
-<line x1="454.95" y1="140.0" x2="464.85" y2="140.0" style="stroke:rgb(63,63,255);stroke-width:2.4"/><a xlink:href="/L/ModularForm/GL2/Q/holomorphic/5/10/0/b/0" target="_top">
+<line x1="454.95" y1="140.0" x2="464.85" y2="140.0" style="stroke:rgb(63,63,255);stroke-width:2.4"/>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic/5/10/0/b/0" target="_top">
 <circle cx="454.95" cy="140.0" r="3.3" style="fill:rgb(63,63,255)"><title>(5, 10)</title></circle></a>
 <a xlink:href="/L/ModularForm/GL2/Q/holomorphic/5/10/0/b/1" target="_top">
 <circle cx="464.85" cy="140.0" r="3.3" style="fill:rgb(63,63,255)"><title>(5, 10)</title></circle></a>
 <a xlink:href="/L/ModularForm/GL2/Q/holomorphic/5/12/0/a/0" target="_top">
 <circle cx="445.05" cy="80.0" r="3.3" style="fill:rgb(191,191,0)"><title>(5, 12)</title></circle></a>
-<line x1="454.95" y1="80.0" x2="464.85" y2="80.0" style="stroke:rgb(63,63,255);stroke-width:2.4"/><a xlink:href="/L/ModularForm/GL2/Q/holomorphic/5/12/0/b/0" target="_top">
+<line x1="454.95" y1="80.0" x2="464.85" y2="80.0" style="stroke:rgb(63,63,255);stroke-width:2.4"/>
+<a xlink:href="/L/ModularForm/GL2/Q/holomorphic/5/12/0/b/0" target="_top">
 <circle cx="454.95" cy="80.0" r="3.3" style="fill:rgb(63,63,255)"><title>(5, 12)</title></circle></a>
 <a xlink:href="/L/ModularForm/GL2/Q/holomorphic/5/12/0/b/1" target="_top">
 <circle cx="464.85" cy="80.0" r="3.3" style="fill:rgb(63,63,255)"><title>(5, 12)</title></circle></a>
-<line x1="445.05" y1="20.0" x2="435.15" y2="20.0" style="stroke:rgb(191,191,0);stroke-width:2.4"/><a xlink:href="/L/ModularForm/GL2/Q/holomorphic/5/14/0/a/0" target="_top">
-<circle cx="445.05" cy="20.0" r="3.3" style="fill:rgb(191,191,0)"><title>(5, 14)</title></circle></a>
-<a xlink:href="/L/ModularForm/GL2/Q/holomorphic/5/14/0/a/1" target="_top">
-<circle cx="435.15" cy="20.0" r="3.3" style="fill:rgb(191,191,0)"><title>(5, 14)</title></circle></a>
-<line x1="454.95" y1="20.0" x2="474.75" y2="20.0" style="stroke:rgb(63,63,255);stroke-width:2.4"/><a xlink:href="/L/ModularForm/GL2/Q/holomorphic/5/14/0/b/0" target="_top">
-<circle cx="454.95" cy="20.0" r="3.3" style="fill:rgb(63,63,255)"><title>(5, 14)</title></circle></a>
-<a xlink:href="/L/ModularForm/GL2/Q/holomorphic/5/14/0/b/1" target="_top">
-<circle cx="464.85" cy="20.0" r="3.3" style="fill:rgb(63,63,255)"><title>(5, 14)</title></circle></a>
-<a xlink:href="/L/ModularForm/GL2/Q/holomorphic/5/14/0/b/2" target="_top">
-<circle cx="474.75" cy="20.0" r="3.3" style="fill:rgb(63,63,255)"><title>(5, 14)</title></circle></a>
 <a xlink:href="/L/ModularForm/GL2/Q/holomorphic/6/4/0/a/0" target="_top">
 <circle cx="544.95" cy="320.0" r="3.3" style="fill:rgb(63,63,255)"><title>(6, 4)</title></circle></a>
 <a xlink:href="/L/ModularForm/GL2/Q/holomorphic/6/6/0/a/0" target="_top">
@@ -123,6 +102,4 @@
 <circle cx="535.05" cy="80.0" r="3.3" style="fill:rgb(191,191,0)"><title>(6, 12)</title></circle></a>
 <a xlink:href="/L/ModularForm/GL2/Q/holomorphic/6/12/0/c/0" target="_top">
 <circle cx="544.95" cy="71.6" r="3.3" style="fill:rgb(63,63,255)"><title>(6, 12)</title></circle></a>
-<a xlink:href="/L/ModularForm/GL2/Q/holomorphic/6/14/0/a/0" target="_top">
-<circle cx="544.95" cy="20.0" r="3.3" style="fill:rgb(63,63,255)"><title>(6, 14)</title></circle></a>
 </svg>
