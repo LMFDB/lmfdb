@@ -12,7 +12,7 @@ from utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_r
 from sage.all import ZZ, var, PolynomialRing, QQ
 from local_fields import local_fields_page, logger
 
-from transitive_group import group_display_short, group_display_long, group_display_inertia, group_knowl_guts, group_display_knowl
+from transitive_group import group_display_short, group_display_long, group_display_inertia, group_knowl_guts, group_display_knowl, complete_group_codes
 
 LF_credit = 'J. Jones and D. Roberts'
 
@@ -70,11 +70,19 @@ def local_field_search(**args):
   if 'jump_to' in info:
     return render_field_webpage({'label' : info['jump_to']})
 
-  for param in ['p', 'n', 'c', 'e']:
+  for param in ['p', 'n', 'c', 'e', 'gal']:
     if info.get(param):
-      ran = info[param]
-      ran = ran.replace('..','-')
-      tmp = parse_range2(ran, param)
+      if param == 'gal':
+        gcs = complete_group_codes(info[param])
+        if len(gcs)==1:
+          tmp = ['gal', list(gcs[0])]
+        if len(gcs)>1:
+          tmp = [{'gal': list(x)} for x in gcs]
+          tmp = ['$or', tmp]
+      else:
+        ran = info[param]
+        ran = ran.replace('..','-')
+        tmp = parse_range2(ran, param)
       # work around syntax for $or
       # we have to foil out multiple or conditions
       if tmp[0]=='$or' and query.has_key('$or'):
@@ -111,6 +119,7 @@ def local_field_search(**args):
       if paging==0: start = 0
     except: pass
 
+  #logger.debug(query)
   res = C.localfields.fields.find(query).sort([('p',pymongo.ASCENDING),('n',pymongo.ASCENDING),('c',pymongo.ASCENDING),('label', pymongo.ASCENDING)])
   nres = res.count()
   res = res.skip(start).limit(count)
@@ -152,8 +161,8 @@ def render_field_webpage(args):
     f = data['f']
     cc = data['c']
     GG = data['gal']
-    gn = GG[2][0]
-    gt = GG[2][1]
+    gn = GG[0]
+    gt = GG[1]
     prop2 = [
              ('Base', '\(\mathbb{Q}_{%s}\)' % p ),
              ('Degree', '\(%s\)' % data['n']),
@@ -168,7 +177,6 @@ def render_field_webpage(args):
     unramp = Pyt(str(data['unram']))
     # Look up the unram poly so we can link to it
     unramdata = C.localfields.fields.find_one({'p': p, 'n': f, 'c': 0 })
-    logger = make_logger("LF")
     if len(unramdata)>0:
       unramfriend = "/LocalNumberField/%s" % unramdata['label']
     else:
