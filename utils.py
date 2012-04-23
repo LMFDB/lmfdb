@@ -436,6 +436,10 @@ def order_values(doc, field, sub_fields = ["len","val"]):
     doc[field] = bson.SON([(sub_field,tmp[sub_field]) for sub_field in sub_fields])
     return doc
   
+# Input is an integer
+# Output is a string of that integer with comma separators
+def comma(x):
+  return x < 1000 and str(x) or ('%s,%03d' % (comma(x//1000), (x%1000)))
 
 
 def coeff_to_poly(c):

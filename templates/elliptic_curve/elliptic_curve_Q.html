@@ -2,15 +2,16 @@
 
 {% block content %}
 
+{#
 <div>
 An {{KNOWL("ec", title="elliptic curve")}} is a {{KNOWL("ag.curve.smooth",title="smooth")}} projective {{KNOWL("ag.curve",title="curve")}} of {{KNOWL("ag.curve.genus",title="genus")}} 1 with a rational basepoint $O$. 
 </div>
+#}
 <div>
 The database currently contains the Cremona database of all
 {{info.ncurves}} elliptic curves with {{ KNOWL('ec.q.conductor',title
 = "conductor")}} at most {{info.max_N}}, all of which have {{
-KNOWL('ec.q.rank', title="rank")}} &le; {{info.max_rank}}.  In future
-it will contain some or all of the Stein-Watkins database.
+KNOWL('ec.q.rank', title="rank")}} &le; {{info.max_rank}}.
 </div>
 
 <h2> Browse {{ KNOWL('ec.q',title='elliptic curves over $\mathbb{Q}$')}}</h2>

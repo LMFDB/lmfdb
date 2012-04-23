@@ -16,7 +16,7 @@ from sage.rings.arith import primes
 
 from transitive_group import group_display_knowl, group_knowl_guts, group_display_short, group_cclasses_knowl_guts, group_phrase, cclasses_display_knowl, character_table_display_knowl, group_character_table_knowl_guts, aliastable, complete_group_codes
 
-from utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html
+from utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, comma
 
 NF_credit = 'the PARI group, J. Voight, J. Jones, and D. Roberts'
 Completename = 'Completeness of this data'
@@ -56,9 +56,6 @@ def group_display_shortC(C):
   def gds(nt):
     return group_display_short(nt[0], nt[1], C)
   return gds
-
-def comma(x): 
-  return x < 1000 and str(x) or ('%s,%03d' % (comma(x//1000), (x%1000)))
 
 def field_pretty(field_str):
     d,r,D,i = field_str.split('.')

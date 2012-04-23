@@ -8,7 +8,7 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 import tempfile
 import os
 
-from utils import ajax_more, image_src, web_latex, to_dict, parse_range2, web_latex_split_on_pm, make_logger
+from utils import ajax_more, image_src, web_latex, to_dict, parse_range2, web_latex_split_on_pm, make_logger, comma
 logger = make_logger("EllipticCurve")
 from number_fields.number_field import parse_list
 import sage.all 
@@ -118,8 +118,8 @@ def rational_elliptic_curves(err_args=None):
         'rank_list': range(max_rank+1),
         'torsion_list': [1,2,3,4,5,6,7,8,9,10,12,16],
         'conductor_list': conductor_list,
-        'ncurves': ncurves,
-        'max_N': max_N,
+        'ncurves': comma(ncurves),
+        'max_N': comma(max_N),
         'max_rank': max_rank
     }
     credit = 'John Cremona'
