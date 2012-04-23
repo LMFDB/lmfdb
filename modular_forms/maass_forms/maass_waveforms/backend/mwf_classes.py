@@ -80,15 +80,20 @@ class MaassFormTable(MFDataTable):
 
 
 class WebMaassForm(object):
-    def __init__(self,db,maassid):
+    def __init__(self,db,maassid,**kwds):
         r"""
         Setup a Maass form from maassid in the database db
         of the type MaassDB.
+        OPTIONAL parameters:
+        - dirichlet_c_only = 0 or 1
+        -fnr = get the Dirichlet series coefficients of this function in self only
+        - get_coeffs = False if we do not compute or fetch coefficients
         """
+        mwf_logger.debug("calling WebMaassform with DB={0} and maassid={1}, kwds={2}".format(db,maassid,kwds))
         self._db=db
         self.R=None; self.symmetry=-1
         self.weight=0; self.character=0; self.level=1
-        self.table={}
+        self.table={}; self.coeffs={}
         if not isinstance(maassid,(bson.objectid.ObjectId,str)):
             ids=db.find_Maass_form_id(id=maassid)
             if len(ids)==0:
@@ -98,99 +103,145 @@ class WebMaassForm(object):
         self._maassid=bson.objectid.ObjectId(maassid)
         mwf_logger.debug("_id={0}".format(self._maassid))
         ff=db.get_Maass_forms(id=self._maassid)
-        print "ff=",ff
+        #print "ff=",ff
         if len(ff)==0:
             return
         f=ff[0]
-        print "f here=",f
+
+
+        #print "f here=",f
         self.dim = f.get('Dim',1)
+        if self.dim==0:
+            self.dim=1
+        
         self.R=f.get('Eigenvalue',None)
         self.symmetry=f.get('Symmetry',-1)
         self.weight=f.get('Weight',0)
         self.character=f.get('Character',0)
         self.cusp_evs=f.get('Cusp_evs',[])
-        self.error=f.get('Error',[])
+        self.error=f.get('Error',0)
         self.level=f.get('Level',None)
+        ## Contributor key
+        self.contr=f.get('Contributor','')
+        md = db._mongo_db['metadata'].find_one({'c_name':self.contr})
+        ## Contributor full name
+        self.contributor_name=md.get('contributor',self.contr)
+        self.num_coeff=f.get('Numc',0)
         if self.R ==None or self.level==None:
             return
-        
-        self.coeffs=f.get('Coefficient',[])
+        ## As default we assume we just have c(0)=1 and c(1)=1 
+        self._get_dirichlet_c_only=kwds.get('get_dirichlet_c_only',False)
+        self._num_coeff0=kwds.get('num_coeffs',self.num_coeff)
+        self._get_coeffs=kwds.get('get_coeffs',True)
+        self._fnr=kwds.get('fnr',0)
+        if self._get_coeffs:
+            self.coeffs=f.get('Coefficient',[0,1,0,0,0])
+            res={}
+            for n in range(len(self.coeffs)):
+                res[n]=self.coeffs[n]
+            self.coeffs=res
+            if self._get_dirichlet_c_only:
+                #if self.coeffs<>[0,1,0,0,0]:
+                if len(self.coeffs)==1:
+                    self.coeffs=self.coeffs[0]
+            else:
+                self.coeffs={0:{0:self.coeffs}}
+                    
+        else:
+            self.coeffs={}
         coeff_id=f.get('coeff_id',None)
         nc = Gamma0(self.level).ncusps()
         self.M0=f.get('M0',nc)
-
-        if self.coeffs==[] and coeff_id:
+        mwf_logger.debug("coeffid={0}, get_coeffs={1}".format(coeff_id,self._get_coeffs))
+        if coeff_id and self._get_coeffs: #self.coeffs==[] and coeff_id:
             ## Let's see if we have coefficients stored
             C = self._db.get_coefficients({"_id":self._maassid})
-            self.all_coeffs=C
-            if nc==1:
-                self.coeffs=self.all_coeffs
-            elif isinstance(C,dict):
-                if len(C.keys())==1:
-                    self.coeffs = C[0][0]
+            if len(C)>=1:
+                C=C[0]
+                if self._get_dirichlet_c_only:
+                    mwf_logger.debug("setting Dirichlet C!")
+                    if self._fnr>len(C):
+                        self._fnr=0
+                    if self._num_coeff0>len(C[self._fnr][0])-1:
+                        self._num_coeff0=len(C[self._fnr][0])-1
+                    self.coeffs=[]
+                    for j in range(1,self._num_coeff0+1):
+                        self.coeffs.append(C[self._fnr][0][j])
                 else:
-                    self.coeffs = C[0]
-                mwf_logger.debug("self.coeff.keys={0}".format(self.coeffs.keys()))
-                    
-            elif isinstance(C,list):
-                mwf_logger.debug("len(C)={0}".format(len(C)))
-                if len(C)==1:
-                    mwf_logger.debug("len(C[0])={0}".format(len(C[0])))
-                    if len(C[0])==1:
-                        mwf_logger.debug("len(C[0][0])={0}".format(len(C[0][0])))
-                        if len(C[0][0])==1:
-                            mwf_logger.debug("len(C[0][0][0])={0}".format(len(C[0][0][0])))
-                            if len(C[0][0][0])<self.M0: ## This recursion has to stop at some point, assume here...
-                                self.coeffs = C[0][0][0][0]
-                            else:
-                                self.coeffs = C[0][0][0]
-                        else:
-                            self.coeffs = C[0][0]
-                    else:
-                        self.coeffs = C[0]
-                else:
-                    self.coeffs=C[0]
+                    mwf_logger.debug("setting C!")
+                    self.coeffs=C
+         ## Make sure that self.coeffs is only the current coefficients
+        if self._get_coeffs and isinstance(self.coeffs,dict) and not self._get_dirichlet_c_only:
+            if not isinstance(self.coeffs,dict):
+                mwf_logger.warning("Coefficients s not a dict. Got:{0}".format(type(self.coeffs)))
             else:
-                self.coeffs={}
-        if isinstance(self.coeffs,list):
-            if self.coeffs[0]==0:
-                self.coeffs.pop(0)
+                n1=len(self.coeffs.keys())
+                mwf_logger.debug("|coeff.keys()|:{0}".format(n1))
+                if n1<>self.dim:
+                    mwf_logger.warning("Got coefficient dict of wrong format!:dim={0} and len(c.keys())={1}".format(self.dim,n1))
+                if n1>0:
+                    for j in range(self.dim):                    
+                        n2=len(self.coeffs.get(j,{}).keys())
+                        mwf_logger.debug("|coeff[{0}].keys()|:{1}".format(j,n2))
+                        if n2<>nc:
+                            mwf_logger.warning("Got coefficient dict of wrong format!:num cusps={0} and len(c[0].keys())=".format(nc,n2))
+                
         self.nc = 1 #len(self.coeffs.keys())
-        if isinstance(self.coeffs,list):
-            self.num_coeff=len(self.coeffs)
-        elif isinstance(self.coeffs,dict):
-            self.num_coeff=len(self.coeffs.keys())
+        if not self._get_dirichlet_c_only:
+            pass #self.set_table()
         else:
-            self.num_coeff=0
-        self.set_table()
+            self.table={}
 
-    def C(self,r,n):
+    def C(self,r,n,i=0):
         r"""
         Get coeff nr. n at cusp nr. r of self
         """
-        if not self.all_coeffs:
+        if not self.coeffs:
             return None
+        raise NotImplementedError
         
         
-        
-    def get_all_coeffs(self):
-        return self.all_coeffs
         
     def the_character(self):
-        if self.character==0:
-            return "trivial"
-        else:
-            return self.character
+        return self.character
+        #     if not conrey:
+        #     if self.character==0:
+        #         return "trivial"
+        #     else:
+        #         return self.character
+        # elif not self._using_conrey:
+        #     chi = self._db.getDircharConrey(self.level,self.character)
+        #     #return "\chi_{" + str(self.level) + "}(" +strIO(chi) + ",
+#            \cdot)"
+
+
+
+    
+        
+        
     def the_weight(self):
         if self.weight==0:
             return "0"
         else:
             return self.weight
     def fricke(self):
-        if len(self.cusp_evs)>0:
+        if len(self.cusp_evs)>1:
             return self.cusp_evs[1]
         else:
             return "undefined"
+    def atkinlehner(self):
+        if len(self.cusp_evs)==0:
+            return 'n/a'
+        if len(self.cusp_evs)==1:
+            return str(self.cusp_evs[0])
+        s='{0}'.format(self.cusp_evs[0])
+        for j in range(1,len(self.cusp_evs)):
+            s+=",{0}".format(self.cusp_evs[j])
+        return s
+
+    def precision(self):
+        return "{0:2.1g}".format(float(self.error))
+
     def even_odd(self):
         if self.symmetry==1:
             return "odd"
@@ -199,20 +250,45 @@ class WebMaassForm(object):
         else:
             return "undefined"
         
-    def set_table(self):
-        table={'nrows':self.num_coeff,
-               'ncols':1}
+    def set_table(self,fnr=-1,cusp=0):
+        r"""
+        Setup a table with coefficients for function nr. fnr in self,
+        at cusp nr. cusp
+        """
+        table={'nrows':self.num_coeff}
+        if fnr<0:
+            colrange=range(self.dim)
+            table['ncols']=self.dim+1
+        elif fnr<self.dim:
+            colrange=[fnr]
+            table['ncols']=2
         table['data']=[]
+        table['negc']=0
+        realnumc=0
+        if self.num_coeff==0:
+            self.table=table
+            return
         if self.symmetry<>-1:
-            table['negc']=0
             for n in range(self.num_coeff):
-                row=[]
-                for k in range(table['ncols']):
-                    c = self.coeffs.get(n,None)
-                    if c<>None:
-                        c=CC(c)
-                    row.append((n,c))
-                table['data'].append(row)
+                row=[n]
+                for k in colrange:
+                    if self.dim==1:
+                        c=None
+                        try:
+                            c = self.coeffs[k][cusp].get(n,None)
+                        except KeyError,IndexError:
+                            mwf_logger.critical("Got coefficient in wrong format for id={0}".format(self._maassid))
+                        #mwf_logger.debug("{0},{1}".format(k,c))
+                        if c<>None:
+                            realnumc+=1
+                            row.append(pretty_coeff(c))
+                    else:                        
+                        for j in range(self.dim):
+                            c =  ((self.coeffs.get(j,{})).get(0,None)).get(n,None)
+                            if c<>None:
+                                row.append(pretty_coeff(c))
+                                realnumc+=1
+                table['data'].append(row)   
         else:
             table['negc']=1
             # in this case we need to have coeffs as dict.
@@ -220,11 +296,73 @@ class WebMaassForm(object):
                 self.table={}
                 return
             for n in range(len(self.coeffs.keys()/2)):
-                row=[]
-                for k in range(table['ncols']):
-                   cp = self.coeffs.get(n,0)
-                   cn = self.coeffs.get(-n,0)
-                   row.append((n,cp,cn))
-                table['data'].append(row)
+                row=[n]
+                if self.dim==1:
+                    for k in range(table['ncols']):
+                        cp = self.coeffs.get(n,0)
+                        cn = self.coeffs.get(-n,0)
+                        row.append((cp,cn))
+                        realnumc+=1
+                else:
+                    for j in range(self.dim):
+                        c = (self.coeffs.get(j,{})).get(n,None)
+                        if c<>None:
+                            c1 = c.get(n,None)
+                            cn1 = c.get(-n,None)
+                            c1=CC(c1)
+                            cn1=CC(cn1)
+                            row.append((c1,cn1))
+                            realnumc+=1
+                        table['data'].append(row)
         self.table=table
-                    
+        mwf_logger.debug("realnumc={0}".format(realnumc))
+
+
+import sage
+def pretty_coeff(c,digits=10):
+    if isinstance(c,complex):
+        x = c.real;y=c.imag
+    elif isinstance(c,(complex,sage.rings.complex_number.ComplexNumber)):
+        x = c.real();y=c.imag()
+    else:
+        x = c
+        y = 0
+    #if y==0:
+    #    x = round(x,digits)
+    #    return x
+    ##
+    d2 = digits
+    d1 = digits+1
+ 
+    #print "d,d1,d2=",digits,d1,d2
+    #print "x0=",x
+    if abs(x)<10.0**-digits:
+        if x>0:
+            xs = "+{0:<2.1g}".format(float(x))
+        else:
+            xs = "{0:<3.1g}".format(float(x))
+    else:
+        x = round(x,digits)       
+        if x>0:
+            xs = "&nbsp;{x:<{width}.{digs}}".format(width=d2,digs=d2,x=float(x))
+        elif x<0:
+            xs = "{x:<{width}.{digs}}".format(width=d2,digs=d1,x=float(x))
+        #x = round(x,digits)
+        #y = round(y,digits)
+    if y==0:
+        return xs
+    #print "x1=",xs
+    if abs(y)<10.0**-digits:
+        if y>0:
+            ys = "+{0:<2.1e}".format(float(y))
+        else:
+            ys = "{0:<3.1e}".format(float(y))
+    else:
+        y = round(y,digits)
+        if y>0:
+            ys = "+{y:<{width}.0{digs}}".format(width=d2,digs=d2,y=y)
+        elif y<0:
+            ys = "{y:<{width}.0{digs}}".format(width=d2,digs=d1,y=y)
+
+    return xs+ys+"i"
+            

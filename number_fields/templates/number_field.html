@@ -29,7 +29,7 @@ function show_code(system) {
   <div class='pari nodisplay code'>pari: K = bnfinit({{info.rawpoly}})</div>
   <div class='magma nodisplay code'>&gt; K&lt;a&gt; := NumberField(PolynomialRing(Rationals())!{{info.coefficients}});</div>
 </p>
-        {% set KNOWL_ID = "nf.%s"|format(info['label']) %}
+        {% set KNOWL_ID = "nf.%s"|format(info['label_raw']) %}
         <h2>{{ KNOWL_INC(KNOWL_ID+'.top', title='') }}</h2>
 
         <p><h2> {{ KNOWL('nf.defining_polynomial', title='Defining polynomial') }}</h2>
@@ -72,7 +72,7 @@ function show_code(system) {
         <div class='pari nodisplay code'>pari: K.zk</div>
         <div class='magma nodisplay code'>&gt; IntegralBasis(K);</div>
         <p>
-            {{ info.integral_basis}}
+            {{ info.integral_basis }}
         </p>
 
         <p><h2> {{ KNOWL('nf.ideal_class_group', title='Class group') }} and  {{ KNOWL('nf.class_number', title='class number') }}</h2>
@@ -182,13 +182,18 @@ pari:
   [<Valuation(Norm(primefactor[1]), p), primefactor[2]> : primefactor in idealfactors];
 </div>
 
-	{% if "tim_number_field" in info.keys() %}
+{% if info.get("tim_number_field", False) %}
 	<p><h2> {{ KNOWL('artin', title='Artin representations') }}</h2>
-	    This might be wrong at the moment, or lead to broken links, but merely serves a as mockup.
+		{# This is now correct #}
         <div>
 	<center>
 	<table class="ntdata">
-	<thead><tr><td></td><td>{{ KNOWL('artin.dimension', title='Dimension') }}</td><td>{{ KNOWL('artin.conductor', title='Conductor') }}</td><td>Defining polynomial of {{ KNOWL('artin.number_field', title='Artin Field') }} </td><td>Galois subgroup</td></tr></thead>
+	<thead><tr><td></td><td>{{ KNOWL('artin.dimension', title='Dimension') }}</td><td>{{ KNOWL('artin.conductor', title='Conductor') }}</td><td>Defining polynomial of {{ KNOWL('artin.number_field', title='Artin Field') }} </td>
+	<td>Galois subgroup</td>
+	<td>{{ KNOWL('artin.sign', title='Sign') }}</td>
+	<td>{{ KNOWL('artin.ramification', title='Bad primes') }}</td>
+	<td>Trace of complex conjugation</td>
+	</tr></thead>
 	<tbody>
         {% for artin in info["tim_number_field"].artin_representations()%}
           <tr> <td><a href = "{{artin.url_for()}}">{{loop.index}}</a></td><td>${{artin.dimension()}}$</td><td>${{artin.conductor()}}$</td>
@@ -197,15 +202,22 @@ pari:
 	  {% else %}
 	      <td>${{artin.number_field_galois_group().polredabs()}}$</td>
 	  {% endif %}
-	  <td>${{artin.number_field_galois_group().G_name()}}$</td></tr>
+	  <td>${{artin.number_field_galois_group().G_name()}}$</td>
+	  <td>${{artin.sign()}}$</td>
+	  <td>${{artin.bad_primes()}}$</td>
+	  <td>${{artin.trace_complex_conjugation()}}$</td>
+	  </tr>
         {% endfor %}
 	</tbody>
 	</table>
 	</center>
 	</div>
 	{% endif %}
-	
-        {% set KNOWL_ID = "nf.%s"|format(info['label']) %}
+{# POD: Please leave the part above for the public release. This part on Artin representations is ready.
+	However it is not possible at the moment to search or browse Artin representations, so they should not appear in the sidebar.
+	Also not yet available are Artin L-functions.
+#}
+
         <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
 
 {% endblock %}

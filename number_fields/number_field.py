@@ -19,6 +19,7 @@ from transitive_group import group_display_knowl, group_knowl_guts, group_displa
 from utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html
 
 NF_credit = 'the PARI group, J. Voight, J. Jones, and D. Roberts'
+Completename = 'Completeness for Global Number Fields'
 
 def galois_group_data(n, t):
   C = getDBConnection()
@@ -40,6 +41,11 @@ def ctx_galois_groups():
   return {'galois_group_data': galois_group_data, 
           'group_cclasses_data': group_cclasses_data,
           'group_character_table_data': group_character_table_data}
+
+def group_display_shortC(C):
+  def gds(nt):
+    return group_display_short(nt[0], nt[1], C)
+  return gds
 
 def field_pretty(field_str):
     d,r,D,i = field_str.split('.')
@@ -135,7 +141,7 @@ def set_sidebar(l):
 @nf_page.route("/GaloisGroups")
 def render_groups_page():
     info = {}
-    info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), ('Discriminant ranges',url_for(".render_discriminants_page"))]
+    info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), (Completename,url_for(".render_discriminants_page"))]
     t = 'Galois group labels'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")),('Galois group labels',' ')]
     C = base.getDBConnection()
@@ -144,7 +150,7 @@ def render_groups_page():
 @nf_page.route("/FieldLabels")
 def render_labels_page():
     info = {}
-    info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), ('Discriminant ranges',url_for(".render_discriminants_page"))]
+    info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), (Completename,url_for(".render_discriminants_page"))]
     t = 'Number field labels'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")),('Number field labels','')]
     return render_template("number_field_labels.html", info=info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
@@ -152,9 +158,9 @@ def render_labels_page():
 @nf_page.route("/Discriminants")
 def render_discriminants_page():
     info = {}
-    info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), ('Discriminant ranges',url_for(".render_discriminants_page"))]
-    t = 'Global Number Field Discriminant Ranges'
-    bread = [('Global Number Fields', url_for(".number_field_render_webpage")),('Discriminant ranges',' ')]
+    info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), (Completename,url_for(".render_discriminants_page"))]
+    t = 'Completeness of Global Number Field Tables'
+    bread = [('Global Number Fields', url_for(".number_field_render_webpage")),(Completename,' ')]
     return render_template("discriminant_ranges.html", info=info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
 
 @nf_page.route("/")
@@ -169,11 +175,12 @@ def number_field_render_webpage():
         'degree_list': range(1,11),
         'signature_list': sig_list, 
         'class_number_list': range(1,6)+['6..10'],
+        'count': '20',
         'discriminant_list': discriminant_list
         }
         t = 'Global Number Fields'
         bread = [('Global Number Fields', url_for(".number_field_render_webpage"))]
-        info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), ('Discriminant ranges',url_for(".render_discriminants_page"))]
+        info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), (Completename,url_for(".render_discriminants_page"))]
         return render_template("number_field_all.html", info = info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
     else:
         return number_field_search(**args)
@@ -197,7 +204,7 @@ def render_field_webpage(args):
     try:
         info['count'] = args['count']
     except KeyError:
-        info['count'] = 10
+        info['count'] = 20
     rawpoly = coeff_to_poly(data['coefficients'])
     K = NumberField(rawpoly, 'a')
     D = data['discriminant']
@@ -233,11 +240,15 @@ def render_field_webpage(args):
     UK = K.unit_group()
     zk = pari(K).nf_subst('a')
     zk = list(zk.nf_get_zk())
-    zk = web_latex([K(j) for j in zk])
+    Ra = PolynomialRing(QQ, 'a')
+    zk = [sage.all.latex(Ra(x)) for x in zk]
+    zk = ['$%s$'%x for x in zk]
+    zk = ', '.join(zk)
     
     info.update(data)
     info.update({
         'label': field_pretty(label),
+        'label_raw' : label,
         'polynomial': web_latex(K.defining_polynomial()),
         'ram_primes': ram_primes,
         'integral_basis': zk,
@@ -249,7 +260,7 @@ def render_field_webpage(args):
     info['downloads_visible'] = True
     info['downloads'] = [('worksheet', '/')]
     info['friends'] = [('L-function', "/L/NumberField/%s" % label), ('Galois group', "/GaloisGroup/%dT%d" % (n, t))]
-    info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), ('Discriminant ranges',url_for(".render_discriminants_page"))]
+    info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), (Completename,url_for(".render_discriminants_page"))]
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")),('%s'%info['label'],' ')]
     title = "Global Number Field %s" % info['label']
 
@@ -283,7 +294,7 @@ def format_coeffs(coeffs):
 def number_fields():
     if len(request.args) != 0:
         return number_field_search(**request.args)
-    info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), ('Discriminant ranges',url_for(".render_discriminants_page"))]
+    info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), (Completename,url_for(".render_discriminants_page"))]
     return render_template("number_field_all.html", info = info)
 
 def split_label(label):
@@ -404,6 +415,8 @@ def verify_all_fields(li, dlist):
 
 def number_field_search(**args):
     info = to_dict(args)
+    #for k in info.keys():
+    #  nf_logger.debug(str(k) + ' ---> ' + str(info[k]))
     if 'natural' in info:
         field_id = info['natural']
         field_id = parse_field_string(info['natural'])
@@ -443,28 +456,38 @@ def number_field_search(**args):
                       tmp[1] = newors
                     query[tmp[0]] = tmp[1]
     if info.get('ur_primes'):
-        ur_primes = [int(a) for a in str(info['ur_primes']).split(',')]
+        # now we want a list of strings, no spaces, which might be big ints
+        ur_primes = re.sub(' ', '', str(info.get('ur_primes')))
+        ur_primes = ur_primes.split(',')
+        # Assuming this will be the only nor in the query
+        query['$nor'] = [{'ramps': x} for x in ur_primes]
     else:
         ur_primes = []
 
-    if info.get('count'):        
-        try:
-            count = int(info['count'])
-        except:
-            count = 10
+    count_default=20
+    if info.get('count'):
+      try:
+        count = int(info['count'])
+      except:
+        count = count_default
     else:
-        info['count'] = 10
-        count = 10
+      info['count'] = count_default
+      count = count_default
 
+    start_default=0
     if info.get('start'):
-        try:
-            start = int(info['start'])
-            #if(start < 0): start += (1-(start+1)/count)*count
-        except:
-            start = 0
+      try:
+        start = int(info['start'])
+        if(start < 0): start += (1-(start+1)/count)*count
+      except:
+        start = start_default
     else:
-        start = 0
-
+        start = start_default
+    if info.get('paging'):
+      try:
+        paging = int(info['paging'])
+        if paging==0: start = 0
+      except: pass
 
     C = base.getDBConnection()
     info['query'] = dict(query)
@@ -475,36 +498,32 @@ def number_field_search(**args):
             return render_field_webpage({'label': label})
 
     fields = C.numberfields.fields
-    fields.ensure_index('disc_log')
-    fields.ensure_index([('degree',pymongo.ASCENDING),('abs_disc',pymongo.ASCENDING),('signature',pymongo.DESCENDING)])
+#    fields.ensure_index('disc_log')
+#    fields.ensure_index([('degree',pymongo.ASCENDING),('abs_disc',pymongo.ASCENDING),('signature',pymongo.DESCENDING)])
+
     res = fields.find(query).sort([('degree',pymongo.ASCENDING),('abs_disc',pymongo.ASCENDING),('signature',pymongo.DESCENDING)]) # TODO: pages
 
-                                                                                                #    res = verify_all_fields(newres, dlist)
+    nres = res.count()
+    res = res.skip(start).limit(count)
 
-    count = 0
+    if(start>=nres): start-=(1+(start-nres)/count)*count
+    if(start<0): start=0
     kept = []
-    floatit = discs_parse_to_slogs(dlist)
-    floatitnarrow = fudge_list(floatit, -1)
-    for a in res:
-      if verify_field(a,floatitnarrow, dlist):
-        ok = True
-        if ur_primes:
-          D = str(a['disc_string'])
-          ok = support_is_disjoint(D, ur_primes)
+    bad = 0
+    if len(dlist)>0:
+      floatit = discs_parse_to_slogs(dlist)
+      floatitnarrow = fudge_list(floatit, -1)
+      for a in res:
+        ok = verify_field(a,floatitnarrow, dlist)
         if ok:
-          count += 1
-          if count < 501:
-            kept.append(a)
-    nres = count      
-
-    #    if ur_primes:
-    #  res = filter_ur_primes(res, ur_primes)
-    #if len(dlist)>0:
-    #  res = filter_disc_conds(res, dlist)
-
-
-    #if(start>=nres): start-=(1+(start-nres)/count)*count
-    #if(start<0): start=0
+          kept.append(a)
+        else:
+          bad += 1
+    else:
+      kept = res
+    # Very unlikely to happen, but
+    if bad>0:
+      nres -= bad
 
       #    info['fields'] = res
     info['fields'] = kept
@@ -517,28 +536,14 @@ def number_field_search(**args):
             info['report'] = 'displaying matches %s-%s of %s'%(start+1,min(nres,start+count),nres)
         else:
             info['report'] = 'displaying all %s matches'%nres
-    info['report'] = 'found %s fields' % nres
-    if count>500:
-      info['report'] += ' - displaying first 500'
     info['format_coeffs'] = format_coeffs
-    info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), ('Discriminant ranges',url_for(".render_discriminants_page"))]
+    info['group_display'] = group_display_shortC(C)
+    info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), (Completename,url_for(".render_discriminants_page"))]
     t = 'Global Number Field search results'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")),('Search results',' ')]
     properties = []
     return render_template("number_field_search.html", info = info, title=t, properties=properties, bread=bread)
 
-def iter_limit(it,lim,skip):
-    count = 0
-    while count<skip:
-        it.next()
-        count += 1
-    count = 0
-    while count<lim:
-        yield it.next()
-        count += 1
-    return
-
-                   
 def merge_sort(it1,it2):
     try:
         a = it1.next()
@@ -578,23 +583,6 @@ def merge_sort(it1,it2):
                     yield a
                     a = it1.next()
                 return
-    return
-
-def support_is_disjoint(D,plist):
-  D = ZZ(D)
-  for p in plist:
-    if ZZ(p).divides(D):
-      return False
-  return True
-
-def filter_ur_primes(it, ur_primes):
-    a = it.next()
-    D = a['discriminant']
-    while True:
-        if support_is_disjoint(D,ur_primes):
-            yield a
-        a = it.next()
-        D = a['discriminant']
     return
 
 def filter_disc_conds(it, dlist):
@@ -650,53 +638,3 @@ def frobs(K):
       ans.append([p, 'R'])
   return(ans)
 
-
-
-
-# obsolete old function:                    
-def old_merge(it1,it2,lim):
-    count=0
-    try:
-        a = it1.next()
-    except StopIteration:
-        for b in it2:
-            if count==lim:
-                return
-            yield b
-            count += 1
-        return
-    try:
-        b = it2.next()
-    except StopIteration:
-        for a in it1:
-            if count==lim:
-                return
-            yield a
-            count += 1
-        return
-
-    while count<lim:
-        if abs(a['discriminant'])<abs(b['discriminant']):
-            yield a
-            count += 1
-            try:
-                a = it1.next()
-            except StopIteration:
-                for b in it2:
-                    if count==lim:
-                        return
-                    yield b
-                    count += 1
-                return
-        else:
-            yield b
-            count += 1
-            try:
-                b = it2.next()
-            except StopIteration:
-                for a in it1:
-                    if count==lim:
-                        return
-                    yield a
-                    count += 1
-                return

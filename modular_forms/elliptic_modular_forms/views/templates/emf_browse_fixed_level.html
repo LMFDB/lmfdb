@@ -16,6 +16,33 @@ $("#plot").load(function() {
 );
 </script>
 
+<style>
+table.ntdata th.left {
+  border-right: 2px solid #9b9;
+  background: #efe;
+  border-bottom: 0;
+  text-align: right;
+}
+table.ntdata td { text-align: left; }
+table.ntdata th.weight {
+  text-align: left;
+  background: #efe;
+  border-bottom: 2px solid #9b9;
+  border-left: 0;
+  vertical-align: center;
+}
+table.ntdata thead tr.space {
+  background: #efe;
+  border-bottom: 0;
+}
+
+table.ntdata thead th.spaceleft {
+  border-right: 2px solid #9b9;
+  vertical-align: top;
+}
+
+</style>
+
 {% if error is defined %}
 
 <h1>There was an error in meeting your previous request. Please change parameters.</h1>
@@ -28,51 +55,72 @@ $("#plot").load(function() {
 
 {% include 'geometric.html' %}
 
-{% if info.weight is defined %}
-<h1>{{ KNOWL('mf.elliptic.newform',title='Newforms') }} of {{KNOWL('mf.elliptic.level',title='level')}} {{level}} and {{KNOWL('mf.elliptic.weight',title='weight')}} {{weight}}</h1>
+{% if level == 1 %}
+  {% set group=KNOWL('mf.sl2z',title='\(\mathrm{SL}_2(\mathbb{Z})\)') %}
 {% else %}
-<h1>{{ KNOWL('mf.elliptic.newform',title='Newforms') }} of {{KNOWL('mf.elliptic.level',title='level')}} {{level}}</h1>
+  {% if grouptype == 0 %}
+    {% set group=KNOWL('mf.sl2.subgroup.gamma0N',title='\(\Gamma_0(' ~ level ~ ') \)') %}
+  {% elif grouptype == 1 %}
+    {% set group=KNOWL('mf.sl2.subgroup.gamma1N',title='\(\Gamma_1(' ~ level ~  ')\)') %}
+  {% endif %}
 {% endif %}
 
 {% if browse_table is defined %}
+{% set table = browse_table %}
 {% if browse_table.rows is defined %}
 {#{KNOWL('mf.ellipticemf_browse.all.info',title='Write about browsing') }#}
 <p>
+{% if grouptype == 1  %}
+The table below gives the dimensions of the spaces of {{ KNOWL('mf.elliptic.newform',title='Newforms') }}
+for \( \Gamma_1({{level}}) \) of specified {{ KNOWL('mf.elliptic.weight',title='weight') }}, transforming
+with specified {{ KNOWL('character.dirichlet',title='character') }} for \( \Gamma_0({{level}}) \).<br>
+  {% if table.maxGalCount is defined %}
+    {% set maxGalCount = table.maxGalCount %}
+    {% if maxGalCount > 1 %}
+      {% set showGaloisOrbits = True %}
+      In the table, we only list one representative per
+     {{ KNOWL('character.dirichlet.galois_orbit',title='Galois orbit') }}.
+     The complete Galois orbits are listed in the second table below.
+    {% else %}
+      {% set showGaloisOrbits = False %}
+    {% endif %}
+  {% endif %}
+{% else %}
 The table below gives the dimensions of the space of holomorphic cusp
-forms of specified level, weight, and character.  By clicking on an
-entry you access information about the forms in the specified space.
+forms for  \( \Gamma_0({{level}}) \) with trivial {{ KNOWL('character.dirichlet',title='character') }}.
+{% endif %}
 </p>
-{% set table = browse_table %}
 {% set rows = browse_table.rows %}
 {% set row_class = cycler('odd', 'even') %}
-{% if show_all_characters is defined %}
 {% set len = table.col_heads | length %}
 {% set wid = 10*len +20 %}
 <table class="ntdata" width="{{wid}}px">
   <thead>
-    <tr>
-      <th width="10px" style="border-right:1px solid black">
-        {% if table.rowhead is defined %}
-        {{ table.rowhead | safe }}
-        {% endif %}
+    <tr class="space">
+      <th class="spaceleft">Character</th>
+      <th class="weight" colspan="{{table.col_heads|length}}">
+	<span>Weight</span>
       </th>
-      {% for ix in table.col_heads  %}
-      <th width="10px">
-        {{ ix }}
-        <!--a href="{{url_for('render_webpage_label',modulus=level,number=ix) }}" style="">{{ix}}</a-->
-      </th>
+    </tr>
+    <tr class="space">
+      <th class="spaceleft"></th>
+      {% for k in table.col_heads  %}
+      {% set col_url = url_for('emf.render_elliptic_modular_forms',level=level,weight=k) %}
+      <th class="weight"><a href="{{col_url}}">{{k}}</a></th>
       {% endfor %}
     </tr>
   </thead>
   <tbody>
     {% for row in rows  %}
     <tr class="{{row_class.next() }}">
-      <th width="10px" style="background:#afa; border-right: 1px solid black">
-
-        {{ table.row_heads[loop.index-1] }}
-
+      <th width="10px" class="left">
+	{% if row.url != '' %}
+          <a href="{{row.url}}">{{ row.head }}</a>
+        {% else %}
+	  {{row.head}}
+	{% endif %}
       </th>
-      {% for cell in row  %}
+      {% for cell in row.cells  %}
       <td align="center" width="0%">
         {% if cell.url != '' %}
           <a href="{{cell.url}}">{{cell.dim}}</a>
@@ -81,6 +129,44 @@ entry you access information about the forms in the specified space.
 	{% endif %}
       </td>
       {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% if grouptype==1 and showGaloisOrbits %}
+<table class="ntdata" width="{{wid}}px">
+  <thead>
+    <tr class="space">
+      <th class="spaceleft">Representative</th>
+      <th class="weight" colspan="{{maxGalCount}}">Galois orbit</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in rows  %}
+    <tr class="{{row_class.next() }}">
+      <th width="10px" class="left">
+	{% if row.url != '' %}
+          <a href="{{row.url}}">{{ row.head }}</a>
+        {% else %}
+	  {{row.head}}
+	{% endif %}
+      </th>
+      {% for chi in row.galois_orbit  %}
+      <td align="center" width="0%">
+        {% if chi.url != '' %}
+          <a href="{{chi.url}}">{{ chi.chi }}</a>
+        {% else %}
+	  {{chi.chi}}
+	{% endif %}
+      </td>
+      {% endfor %}
+      {% if maxGalCount is defined %}
+        {% set rc = row.galois_orbit|count %}
+        {% for j in range(rc,maxGalCount) %}
+          <td>&nbsp;</td>
+        {% endfor %}
+      {% endif  %}
     </tr>
     {% endfor %}
   </tbody>

@@ -125,8 +125,10 @@ def ctx_proc_userdata():
   
   # default title
   vars['title'] = r'LMFDB'
-  #vars['description'] = r'Welcome to the LMFDB, a database of L-functions, modular forms, and related objects.'
-  vars['shortthanks'] = r'This project is supported by <a href="%s">grants</a> from the National Science Foundation.'% (url_for('acknowledgment') + "#sponsers")
+  # meta_description appears in the meta tag "description"
+  import knowledge
+  vars['meta_description'] = knowledge.knowl.Knowl("intro.description").content
+  vars['shortthanks'] = r'This project is supported by <a href="%s">grants</a> from the National Science Foundation.'% (url_for('acknowledgment') + "#sponsors")
   vars['feedbackpage'] = r"https://docs.google.com/spreadsheet/viewform?formkey=dDJXYXBleU1BMTFERFFIdjVXVmJqdlE6MQ"
   vars['LINK_EXT'] = lambda a,b : '<a href="%s" target="_blank">%s</a>' % (b, a)
 
@@ -158,6 +160,22 @@ def obfuscate_email(email):
 def urlencode(kwargs):
   import urllib
   return urllib.urlencode(kwargs)
+
+
+@app.context_processor
+def link_to_current_hg_version():
+  """returns link to list of revisions, where the current one is on top"""
+  url =  'http://code.google.com/p/lmfdb/source/list?r={node}'
+  #txt = '{node|short}'
+  txt = '{date|isodate}'
+  try:
+    from subprocess import Popen, PIPE
+    hg_cmd = '''hg parent --template '<a href="%s">%s</a>' ''' % (url, txt)
+    hg = Popen([hg_cmd], shell=True, stdout=PIPE).communicate()[0]
+  except e:
+    hg = ''
+  
+  return {'current_version' : hg }
 
 ### for testing.py ###
 import unittest

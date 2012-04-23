@@ -50,10 +50,10 @@ Sections:
  * Elliptic Curves: John Cremona
  * L-functions: Stefan Lemurell
  * Siegeld MF: Nils Skoruppa
- * Elliptic MFs: Fredrik Stromberg
+ * Elliptic MFs: Nathan Ryan
  * Maass Fs: Fredrik Stromberg
  * Number Fields / Galois Groups: John Jones
- * Artin Repos: Andy Booker
+ * Artin Repos: Paul-Olivier Dehaye
  * Dirichlet Characters: Pascal Molin
  * Zeroes: Jonathan Bober
 
@@ -114,13 +114,14 @@ Open .hg/hgrc and edit it like this:
 [paths]
 default = !!! ENTER YOUR URL, https://... !!!
 master  = http://lmfdb.googlecode.com/hg
+beta = https://code.google.com/r/jwbober-lmfdb-beta
 
 # infrastructure
 jonathan = http://jwbober-lmfdb.googlecode.com/hg
 harald = http://haraldschilly-content.googlecode.com/hg
 
 # l-functions
-stefan = http://sj-lmfdb2-lmfdb.googlecode.com/hg
+stefan = http://sj-lmfdb2.googlecode.com/hg
 gagan = http://gagandsekhon-lmdb.googlecode.com/hg
 
 # maass forms

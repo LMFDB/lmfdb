@@ -201,9 +201,10 @@ function show_code(system) {
         </table>
     </p>
 
-<!-- %%%%%%%%%%%%%%%% END OF TABLE %%%%%%%%%%%%%%%%%%% -->
+{# %%%%%%%%%%%%%%%% END OF TABLE %%%%%%%%%%%%%%%%%%% #}
 
-    <h2> {{KNOWL('ec.q.modular_form', title='Modular form')}} </h2>
+    <h2> {{KNOWL('ec.q.modular_parametrization', title='Modular invariants')}}</h2>
+    <p><h3> {{KNOWL('ec.q.modular_form', title='Modular form')}} </h3>
     <div class='sage nodisplay code'>sage: E.q_eigenform(10)</div>
     <div class='pari nodisplay code'></div>
     <div class='magma nodisplay code'>&gt; ModularForm(E);</div>
@@ -214,14 +215,20 @@ function show_code(system) {
         <button id="morebutton">More</button>
     </form>
     </p>
-    <p align="left">
-        <a  href='{{info.download_qexp_url}}' target='_blank' >download coefficients</a>
+    <p><h3> {{ KNOWL('ec.q.modular_degree', title='Modular degree') }} </h3>
+      {% if info.modular_degree==0 %}
+      Not available
+      {% else %}
+     {{ info.modular_degree }}
+      {% endif %}
+    <br>
+    {% if info.Gamma0optimal %} \( \Gamma_0(N) \)-optimal {% endif %}
     </p>
 
-    <h2> {{KNOWL('ec.q.special_value', title='Special L-value', special_value = info.special_value)}} attached to the curve </h2>
+    <h3> {{KNOWL('ec.q.special_value', title='Special L-value', special_value = info.special_value)}} attached to the curve </h3>
         \( {{ info.lder }} = {{ info.special_value}} \)
     </p>
-    
+
     <h2> Local data </h2>
 
 <table>
@@ -251,7 +258,7 @@ function show_code(system) {
 
 
 
-    <h2> \( p \)-adic data </h2>
+    <h2> p-adic data </h2>
     <p>
 {% if info.rank==0 %}
 All \(p\)-adic regulators are identically \(1\) since the rank is \(0\).
@@ -269,21 +276,23 @@ reduction.
         </select>
         <div id='padic'>
         </div>
-{% else %}
+{% elif info.Gamma0optimal %}
 No \(p\)-adic data exists for this curve.
+{% else %}
+\(p\)-adic regulators are not yet computed for curves that are not \(\Gamma_0\)-optimal.
 {% endif %}
 {% endif %}
     </p>
 
-<!---
+{#
     <h2> Plot of real points</h2>
     <div class='sage nodisplay code'>sage: E.plot()</div>
     <div class='pari nodisplay code'> </div>
     <div class='magma nodisplay code'> </div>
     <center>
     <img src="{{info.plot}}" />
---->
     </center>
+#}
 
 <script type="text/javascript">
 var number_of_coefficients = 10;

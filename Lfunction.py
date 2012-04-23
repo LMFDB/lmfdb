@@ -2,7 +2,8 @@
 import base
 import math
 from Lfunctionutilities import (pair2complex, splitcoeff, seriescoeff, compute_local_roots_SMF2_scalar_valued,
-                                compute_dirichlet_series, number_of_coefficients_needed)
+                                compute_dirichlet_series, number_of_coefficients_needed,
+                                logger)
 from LfunctionComp import nr_of_EC_in_isogeny_class, modform_from_EC, EC_from_modform
 from sage.all import *
 import sage.libs.lcalc.lcalc_Lfunction as lc
@@ -10,7 +11,6 @@ from sage.rings.rational import Rational
 import re
 import pymongo
 import bson
-import utils
 from WebCharacter import WebCharacter
 
 from modular_forms.elliptic_modular_forms.backend.web_modforms import *
@@ -19,21 +19,19 @@ from modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaa
 import time ### for printing the date on an lcalc file
 import socket ### for printing the machine used to generate the lcalc file
 
-logger = utils.make_logger("LF")
-
-def get_attr_or_method(thiswillbeexecuted, attr_or_method_name):
-    """
-        Given an object O and a string "text", this returns O.text() or O.text depending on
-        whether text is an attribute or a method of O itself _or one of its superclasses_, which I will
-        only know at running time. I think I need an eval for that.   POD
-
-    """
-    # I don't see a way around using eval for what I want to be able to do
-    # Because of inheritance, which method should be called depends on self
-    try:
-        return eval("thiswillbeexecuted."+attr_or_method_name)
-    except:
-        return None
+#def get_attr_or_method(thiswillbeexecuted, attr_or_method_name):
+#    """
+#        Given an object O and a string "text", this returns O.text() or O.text depending on
+#        whether text is an attribute or a method of O itself _or one of its superclasses_, which I will
+#        only know at running time. I think I need an eval for that.   POD
+#
+#    """
+#    # I don't see a way around using eval for what I want to be able to do
+#    # Because of inheritance, which method should be called depends on self
+#    try:
+#        return eval("thiswillbeexecuted."+attr_or_method_name)
+#    except:
+#        return None
 
 def my_find_update(the_coll, search_dict, update_dict):
     """ This performs a search using search_dict, and updates each find in  
@@ -195,6 +193,7 @@ class Lfunction:
                     # self.kappa_fe:        
                     # self.lambda_fe:
                     # According to Rishi, as of March 2012 (sage <=5.0), the documentation to his wrapper is wrong
+                    # But we are not using his wrapper, I think, since Jonathan has put in a patch on sage running on the server
                     # POD
 
     def createLcalcfile(self):
@@ -451,24 +450,24 @@ class Lfunction:
     ### Injects into the database of all the L-functions
     ############################################################################
 
-    def inject_database(self, relevant_info, time_limit = None):
-        #   relevant_methods are text strings 
-        #    desired_database_fields = [Lfunction.original_mathematical_object, Lfunction.level]
-        #    also zeroes, degree, conductor, type, real_coeff, rational_coeff, algebraic_coeff, critical_value, value_at_1, sign
-        #    ok_methods = [Lfunction.math_id, Lfunction.level]
-        #
-        # Is used to inject the data in relevant_fields
-
-        logger.info("Trying to inject")
-        import base
-        db = base.getDBConnection().Lfunctions
-        Lfunctions = db.full_collection
-        update_dict = dict([(method_name,get_attr_or_method(self,method_name)) for method_name in relevant_info])
-
-        logger.info("injecting " + str(update_dict))
-        search_dict = {"original_mathematical_object()": get_attr_or_method(self, "original_mathematical_object()")}
-
-        my_find_update(Lfunctions, search_dict, update_dict)
+    #def inject_database(self, relevant_info, time_limit = None):
+    #    #   relevant_methods are text strings 
+    #    #    desired_database_fields = [Lfunction.original_mathematical_object, Lfunction.level]
+    #    #    also zeroes, degree, conductor, type, real_coeff, rational_coeff, algebraic_coeff, critical_value, value_at_1, sign
+    #    #    ok_methods = [Lfunction.math_id, Lfunction.level]
+    #    #
+    #    # Is used to inject the data in relevant_fields
+    #
+    #    logger.info("Trying to inject")
+    #    import base
+    #    db = base.getDBConnection().Lfunctions
+    #    Lfunctions = db.full_collection
+    #    update_dict = dict([(method_name,get_attr_or_method(self,method_name)) for method_name in relevant_info])
+    #
+    #    logger.info("injecting " + str(update_dict))
+    #    search_dict = {"original_mathematical_object()": get_attr_or_method(self, "original_mathematical_object()")}
+    #
+    #    my_find_update(Lfunctions, search_dict, update_dict)
 
 
 #############################################################################
@@ -514,7 +513,7 @@ class Lfunction_EC(Lfunction):
         self.sign = self.E.lseries().dokchitser().eps
         self.kappa_fe = [1]
         self.lambda_fe = [0.5]
-        self.numcoeff = self.Q_fe * 210 + 10
+        self.numcoeff = round(self.Q_fe * 220 + 10)
         #logger.debug("numcoeff: {0}".format(self.numcoeff))
         self.mu_fe = []
         self.nu_fe = [Rational('1/2')]
@@ -605,7 +604,7 @@ class Lfunction_EMF(Lfunction):
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
-        logger.debug(str(self.character)+str(self.label)+str(self.number))
+        #logger.debug(str(self.character)+str(self.label)+str(self.number))
         self.weight = int(self.weight)
         self.motivic_weight = 1
         self.level = int(self.level)
@@ -615,18 +614,21 @@ class Lfunction_EMF(Lfunction):
         self.number = int(self.number)
 
         # Create the modular form
-        self.MF = WebNewForm(self.weight, self.level, self.character, self.label)
-        logger.debug(str(self.MF))
+        try:
+            self.MF = WebNewForm(self.weight, self.level, self.character, self.label)
+        except:
+            raise KeyError, ("No data available yet for this modular form, so"+
+                             " not able to compute it's L-function") 
         # Extract the L-function information from the elliptic modular form
         self.automorphyexp = float(self.weight-1)/float(2)
         self.Q_fe = float(sqrt(self.level)/(2*math.pi))
-        logger.debug("ALeigen: " + str(self.MF.atkin_lehner_eigenvalues()))
+        #logger.debug("ALeigen: " + str(self.MF.atkin_lehner_eigenvalues()))
 
         if self.level == 1:  # For level 1, the sign is always plus
             self.sign = 1
         else:  # for level not 1, calculate sign from Fricke involution and weight
             self.sign = self.MF.atkin_lehner_eigenvalues()[self.level] * (-1)**(float(self.weight/2))
-        logger.debug("Sign: " + str(self.sign))
+        #logger.debug("Sign: " + str(self.sign))
 
         self.kappa_fe = [1]
         self.lambda_fe = [self.automorphyexp]
@@ -650,16 +652,16 @@ class Lfunction_EMF(Lfunction):
 
         # Appending list of Dirichlet coefficients
         GaloisDegree = self.MF.degree()  #number of forms in the Galois orbit
-        logger.debug("Galois degree: " + str(GaloisDegree))
+        #logger.debug("Galois degree: " + str(GaloisDegree))
         if GaloisDegree == 1:
            self.dirichlet_coefficients = self.MF.q_expansion_embeddings(
                self.numcoeff+1)[1:self.numcoeff+1] #when coeffs are rational, q_expansion_embedding()
                                                    #is the list of Fourier coefficients
         else:
-           logger.debug("Start computing coefficients.")
+           #logger.debug("Start computing coefficients.")
            for n in range(1,self.numcoeff+1):
               self.dirichlet_coefficients.append(self.MF.q_expansion_embeddings(self.numcoeff+1)[n][self.number])
-           logger.debug("Done computing coefficients.")
+           #logger.debug("Done computing coefficients.")
               
         for n in range(1,len(self.dirichlet_coefficients)+1):
             an = self.dirichlet_coefficients[n-1]
@@ -1056,9 +1058,11 @@ class Lfunction_Maass(Lfunction):
             port  = base.getDBConnection().port
             DB=MaassDB(host=host,port=port)
             logger.debug("count={0}".format(DB.count()))
-            self.mf = WebMaassForm(DB,self.dbid)
+            print "BEFORE!!!"
+            self.mf = WebMaassForm(DB,self.dbid,get_dirichlet_c_only=1)
             self.group = 'GL2'
-
+            print "AFTER!!!"
+            logger.debug("HERE")
             # Extract the L-function information from the Maass form object
             self.symmetry = self.mf.symmetry
             self.eigenvalue = float(self.mf.R)
@@ -1069,7 +1073,9 @@ class Lfunction_Maass(Lfunction):
             self.weight = int(self.mf.weight)
             self.characternumber = int(self.mf.character)
 
-            if self.characternumber > 0:
+            # We now use the Conrey naming scheme for characters
+            # in Maas forms too.
+            if self.characternumber <> 1:
                 raise KeyError, 'TODO L-function of Maass form with non-trivial character not implemented. '
 
             if self.level > 1:
@@ -1081,9 +1087,13 @@ class Lfunction_Maass(Lfunction):
             else:  #no fricke for level 1
                 self.fricke = 1
 
+            # Todo: If self has dimension >1, link to specific L-functions
             self.dirichlet_coefficients = self.mf.coeffs
+            logger.info("Zeroth coefficient: {0}".format(self.dirichlet_coefficients[0]))
+            if self.dirichlet_coefficients[0]==0:
+                self.dirichlet_coefficients.pop(0)
+            logger.info("First coefficient: {0}".format(self.dirichlet_coefficients[0]))
             logger.info("Third coefficient: {0}".format(self.dirichlet_coefficients[2]))
-
             # Set properties of the L-function
             self.coefficient_type = 2
             self.selfdual = True
@@ -1225,14 +1235,19 @@ class ArtinLfunction(Lfunction):
         self.title = "L function for an Artin representation of dimension " + str(dimension) + \
             ", conductor "+ str(conductor) 
                 
-        self.dirichlet_coefficients = self.artin.coefficients_list()
         
         self.motivic_weight = 0
-        
-        self.coefficient_type = 0
-        self.coefficient_period = 0
         self.degree = self.artin.dimension()
-        self.Q_fe = int(self.artin.conductor())/float(math.pi)**int(self.degree)
+        self.coefficient_type = 0
+        
+        if self.degree == 1:
+            self.coefficient_period = Integer(self.artin.conductor())
+            self.dirichlet_coefficients = self.artin.coefficients_list(upperbound = min(1000,self.coefficient_period))
+        else:
+            self.coefficient_period = 0            
+            self.dirichlet_coefficients = self.artin.coefficients_list(upperbound = 1000)
+
+        self.Q_fe = Integer(self.artin.conductor())/float(math.pi)**int(self.degree)
         self.sign = self.artin.sign()
         self.kappa_fe = self.artin.kappa_fe()
         self.lambda_fe = self.artin.lambda_fe()
@@ -1259,12 +1274,23 @@ class SymmetricPowerLfunction(Lfunction):
         return "SymmetricPower"
 
     def __init__(self, *args):
+
+        def ordinal(n):
+            if n == 2:
+                return "Square"
+            elif n == 3:
+                return "Cube"
+            elif 10 <= n % 100 < 20:
+                return str(n) + "th Power"
+            else:
+                return  str(n) + {1 : 'st', 2 : 'nd', 3 : 'rd'}.get(n % 10, "th") + " Power"
+
         try:
-            self.m=Integer(args[0])
+            self.m=int(args[0])
         except TypeError:
             raise TypeError, "The power has to be an integer"
         if args[1][0] != 'EllipticCurve' or args[1][1] != 'Q':
-            raise TypeError, "The symmetric L functions have been implemented only for Elliptic Curves over Q"
+            raise TypeError, "The symmetric L-functions have been implemented only for Elliptic Curves over Q"
 
         self.label = args[1][2]
         # Create the elliptic curve
@@ -1275,10 +1301,15 @@ class SymmetricPowerLfunction(Lfunction):
         else:
             self.E = EllipticCurve([int(a) for a in Edata['ainvs']])
 
+        if self.E.has_cm():
+            raise TypeError, ('This Elliptic curve has complex multiplication' +
+                              ' and the symmetric power of its L-function is '+
+                              'then not primitive. This has not yet been implemented')
+        
         from symL.symL import SymmetricPowerLFunction
         self.S=SymmetricPowerLFunction(self.E,self.m)
 
-        self.title = "The symmetric power $L$-function $L(s,E,\mathrm{sym}^%d)$ of Elliptic Curve Isogeny Class %s"% (self.m,self.label)
+        self.title = "The Symmetric %s $L$-function $L(s,E,\mathrm{sym}^%d)$ of Elliptic Curve Isogeny Class %s"% (ordinal(self.m), self.m,self.label)
 
         self.dirichlet_coefficients = self.S._coeffs
 

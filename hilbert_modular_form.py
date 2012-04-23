@@ -262,7 +262,8 @@ def render_hmf_webpage(**args):
 
     info.update(data)
 
-    info['downloads'] = [('Download to Magma', info['label'] + '/download/magma'), ('Download to Sage', info['label'] + '/download/sage')]
+    downloadslabel = '/ModularForm/GL2/' + info['field_label'] + '/holomorphic/' + info['label']
+    info['downloads'] = [('Download to Magma', downloadslabel + '/download/magma'), ('Download to Sage', downloadslabel + '/download/sage')]
     info['friends'] = []
 #    info['friends'] = [('L-function', '/L/ModularForm/GL2/' + data['field_label'] + '/holomorphic/' + info['label'] + '/0/0')]
 #    info['learnmore'] = [('Number Field labels', url_for("render_labels_page")), ('Galois group labels',url_for("render_groups_page")), ('Discriminant ranges',url_for("render_discriminants_page"))]

@@ -33,18 +33,24 @@ No table!
     <li>
       <a href="javascript:set_browse_value('weight',0);">Browse Maass forms of weight 0</a>
     </li>
+   {# 
     <li>
       <a href="javascript:set_browse_value('weight',1);">Browse Maass forms of weight 1</a>
     </li>
-    <li>
+    #}
+   {#<li>
       <a href="javascript:set_browse_value('browse','all');">Browse Table of all
       Eigenvalues in the Database</a>
-</li>
+   </li>
+   #}
   </ul>
-  <button type="submit" name="Browse" value="Search">Browse</button>
+<br>
+The entire database consists of {{dbcount}} Maass forms.
+  {# <button type="submit" name="Browse" value="Search">Browse</button> #}
+  {# <button type="submit" name="Browse" value="Search">Browse</button> #}
 </form>
 
-<h1>Find a specific Maass form</h1>
+{#<h1>Find a specific Maass form</h1>
 <table>
   <tr>
     <td>
@@ -59,6 +65,7 @@ No table!
     </td>
   </tr>
  </table>
+#}
 <h1>Search</h1>
  <table>
   <tr>
@@ -99,13 +106,16 @@ No table!
 	      <button type="submit" name="Submit" value="Search">Search</button>
 	    </td>
 	    <td>
-	      Show number of records:
+Note: Search results are currently limited to {{limit}} records.
+
+{#    Show number of records:
 	      <select name="limit">
 		<option value="20">20</option>
 		<option value="50">50</option>
 		<option value="100">100</option>
 		<option value="-1">all</option>
 	      </select>
+#}
 	    </td>
           </tr>
       </form>

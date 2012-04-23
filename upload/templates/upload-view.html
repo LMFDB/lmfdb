@@ -115,7 +115,7 @@ function updateMappingRules(data, id) {
 <li> <h4>Unassociated files</h4>
 {% endif %}
 {% for entry in list %}
-<!--<p>-->
+{#<p>#}
 {% if entry.metadata['related_to'] is defined %}
 {% if entry.metadata['related_to'] == '' %}
 {% else %}
@@ -169,9 +169,10 @@ function updateMappingRules(data, id) {
       Download {{entry.filename}}
     </a>
     <br/>
-    <!--<a href="#" onclick="parseJsonTable('/upload/download/{{entry._id}}/{{entry.filename}}', $('#div{{entry._id}}'));return false">
+{#  >a href="#" onclick="parseJsonTable('/upload/download/{{entry._id}}/{{entry.filename}}', $('#div{{entry._id}}'));return false">
       Parse Json from {{entry.filename}}
-    </a>-->
+    </a>
+#}
       {% if display=='' %}
       <script>
       $(function() {
@@ -229,7 +230,7 @@ function updateMappingRules(data, id) {
 
 {% if unmoderated is defined %}
 
-<!--
+{#
 <script>
   /* attach a submit handler to the form */
   $(document).ready(function() {
@@ -247,7 +248,7 @@ function updateMappingRules(data, id) {
     //$.post( url, { s: term });
    })})
 </script>
--->
+#}
 
 
 

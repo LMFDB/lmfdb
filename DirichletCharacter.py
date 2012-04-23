@@ -257,15 +257,15 @@ def dc_calc_gauss(modulus,number):
     if not arg:
         return flask.abort(404)
     try:
-        from dirichlet_conrey import *
+        from dirichlet_conrey import DirichletGroup_conrey
         chi = DirichletGroup_conrey(modulus)[number]
         chi = chi.sage_character()
         g = chi.gauss_sum_numerical(100,int(arg))
-        real = int(round(g.real(),5))
-        imag = int(round(g.imag(),5))
-        if imag == 0:
+        real = round(g.real(),10)
+        imag = round(g.imag(),10)
+        if imag == 0.:
             g = str(real)
-        elif real == 0:
+        elif real == 0.:
             g = str(imag) + "i"
         else:
             g = latex(g)
@@ -287,7 +287,7 @@ def dc_calc_jacobi(modulus,number):
     arg = map(int,arg.split('.'))
     try:
         num = arg[0]
-        from dirichlet_conrey import *
+        from dirichlet_conrey import DirichletGroup_conrey
         chi = DirichletGroup_conrey(modulus)[number]
         psi = DirichletGroup_conrey(modulus)[num]
         chi = chi.sage_character()
@@ -304,12 +304,12 @@ def dc_calc_kloosterman(modulus,number):
         return flask.abort(404)
     arg = map(int,arg.split(','))
     try:
-        from dirichlet_conrey import *
+        from dirichlet_conrey import DirichletGroup_conrey
         chi = DirichletGroup_conrey(modulus)[number]
         chi = chi.sage_character()
         k = chi.kloosterman_sum_numerical(100,arg[0],arg[1])
-        real = int(round(k.real(),5))
-        imag = int(round(k.imag(),5))
+        real = round(k.real(),5)
+        imag = round(k.imag(),5)
         if imag == 0:
             k = str(real)
         elif real == 0:
@@ -408,7 +408,7 @@ def dirichlet_table(**args):
     info['modulus'] = modulus
     info["bread"] = [('Dirichlet Character Table', url_for("dirichlet_table")), ('result', ' ')]
     info['credit'] = 'Sage'
-    h, c = get_entries(modulus)
+    h, c, = get_entries(modulus)
     info['headers'] = h
     info['contents'] = c
     info['title'] = 'Dirichlet Characters'
@@ -423,7 +423,8 @@ def get_entries(modulus):
     e = euler_phi(modulus)
     rows = []
     for chi in G:
+        is_prim = chi.is_primitive()
         number = chi.number()
-        rows.append((number,log_value(modulus,number)))
+        rows.append((number,is_prim, log_value(modulus,number)))
     return headers, rows
 

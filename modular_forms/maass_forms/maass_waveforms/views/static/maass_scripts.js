@@ -45,7 +45,9 @@ function alignColumnChar()
   function calculateAlignWidth(i)
   {
     var content = jQuery(this).text();
-    var strindex = content.lastIndexOf(achar);
+    //var strindex = content.lastIndexOf(achar);
+    var strindex = content.indexOf(achar);
+    //  alert(content,strindex);
     if (strindex == -1)
     {
       widths[i] = 0;
@@ -57,7 +59,23 @@ function alignColumnChar()
     widths[i] = tag.width();
     tag.remove();
   }
-
+function calculateAlignWidthOld(i)
+  {
+    var content = jQuery(this).text();
+    //var strindex = content.lastIndexOf(achar);
+    var strindex = content.indexOf(achar);
+    //  alert(content,strindex);
+    if (strindex == -1)
+    {
+      widths[i] = 0;
+      return;
+    }
+    var remainder = content.substr(strindex);
+    // Make a dummy element with the remainder to get its width
+    var tag = jQuery('<span>'+remainder+'</span>').appendTo(this);
+    widths[i] = tag.width();
+    tag.remove();
+  }
 }
 
 $.fn.dataTableExt.afnFiltering.push(

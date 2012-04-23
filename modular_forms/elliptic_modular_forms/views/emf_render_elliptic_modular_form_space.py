@@ -28,16 +28,12 @@ from base import app, db
 from modular_forms.elliptic_modular_forms.backend.web_modforms import WebModFormSpace,WebNewForm
 from modular_forms.elliptic_modular_forms.backend.emf_classes import ClassicalMFDisplay,DimensionTable
 from modular_forms import MF_TOP
-from modular_forms.elliptic_modular_forms import N_max_comp, k_max_comp
+from modular_forms.elliptic_modular_forms import N_max_comp, k_max_comp, N_max_db, k_max_db
 from modular_forms.backend.mf_utils import my_get
 from modular_forms.elliptic_modular_forms.backend.emf_core import * 
 from modular_forms.elliptic_modular_forms.backend.emf_utils import *
 from modular_forms.elliptic_modular_forms.backend.plot_dom import * 
 from modular_forms.elliptic_modular_forms import EMF, emf_logger, emf,EMF_TOP
-### Maximum values from the database (does this make sense)
-N_max_db = 1000000 
-k_max_db = 300000
-
 ###
 use_db = True ## Should be decided intelligently
 ###
@@ -70,17 +66,13 @@ def render_elliptic_modular_form_space(level=None,weight=None,character=None,lab
         emf_logger.debug("Dimension of newforms is one!")
         info['label']='a'
         return redirect(url_for('emf.render_elliptic_modular_forms', **info))
-    info['title'] = "Holomorphic Cusp Forms of weight %s on \(\Gamma_{0}(%s)\)" %(weight,level)
-    bread =[(MF_TOP,url_for('mf.modular_form_main_page'))]
-    bread.append((EMF_TOP,url_for('emf.render_elliptic_modular_forms')))
+    info['title'] = "Newforms of weight %s on \(\Gamma_{0}(%s)\)" %(weight,level)
+    bread=[(EMF_TOP,url_for('emf.render_elliptic_modular_forms'))]
     bread.append(("Level %s" %level,url_for('emf.render_elliptic_modular_forms',level=level)))
     bread.append(("Weight %s" %weight,url_for('emf.render_elliptic_modular_forms',level=level,weight=weight)))
     #emf_logger.debug("friends={0}".format(friends))
     info['bread']=bread
-    if info['dimension_newspace']==0:
-        return render_template("emf_space.html", **info)
-    else:
-        return render_template("emf_space.html", **info)
+    return render_template("emf_space.html", **info)
 
 
 def set_info_for_modular_form_space(level=None,weight=None,character=None,label=None,**kwds):
@@ -90,8 +82,8 @@ def set_info_for_modular_form_space(level=None,weight=None,character=None,label=
     info=dict()
     info['level']=level; info['weight']=weight; info['character']=character
     emf_logger.debug("info={0}".format(info))
-    if(level > N_max_comp or weight > k_max_comp):
-        info['error']="Will take too long to compute!"
+    if(level > N_max_db or weight > k_max_db):
+        info['error']="Currently not available"
     WMFS=None
     if level <= 0:
         info['error']="Got wrong level: %s " %level
@@ -110,9 +102,17 @@ def set_info_for_modular_form_space(level=None,weight=None,character=None,label=
     if WMFS.level()==1:
         info['group']="\( \mathrm{SL}_{2}(\mathbb{Z})\)"
     else:
-        info['group']="\( \Gamma_{{0}}( {0} ) \)".format(WMFS.level())  
-    info['name_new']= "\(S_{ %s }^{new}(%s) \)" %(WMFS.weight(),WMFS.level())
-    info['name_old']= "\(S_{ %s }^{old}(%s) \)" %(WMFS.weight(),WMFS.level())
+        info['group']="\( \Gamma_{{0}}( {0} ) \)".format(WMFS.level())
+    if character==0:
+        info['name_new']= "\(S_{ %s }^{new}(%s) \)" %(WMFS.weight(),WMFS.level())
+        info['name_old']= "\(S_{ %s }^{old}(%s) \)" %(WMFS.weight(),WMFS.level())
+    else:
+        conrey_char = WMFS.conrey_character()
+        conrey_char_name= WMFS.conrey_character_name()
+        info['conrey_character_name']='\( ' + conrey_char_name + '\)'
+        info['character_url']=url_for('render_Character',arg1=WMFS.level(),arg2=conrey_char.number())
+        info['name_new']= "\(S_{ %s }^{new}(%s,%s) \)" %(WMFS.weight(),WMFS.level(),conrey_char_name)
+        info['name_old']= "\(S_{ %s }^{old}(%s,%s) \)" %(WMFS.weight(),WMFS.level(),conrey_char_name)
     info['dimension_cusp_forms'] = WMFS.dimension_cusp_forms()
     info['dimension_mod_forms'] = WMFS.dimension_modular_forms()
     info['dimension_new_cusp_forms'] = WMFS.dimension_new_cusp_forms()
@@ -131,28 +131,31 @@ def set_info_for_modular_form_space(level=None,weight=None,character=None,label=
         return info
     info['sturm_bound'] = WMFS.sturm_bound()
     info['new_decomposition'] = WMFS.print_galois_orbits()
-    emf_logger.debug("new_decomp=".format(info['new_decomposition']))
+    emf_logger.debug("new_decomp={0}".format(info['new_decomposition']))
     info['nontrivial_new'] = len(info['new_decomposition'])
     ## we try to catch well-known bugs...
-    try:
-        O = WMFS.print_oldspace_decomposition()
-        info['old_decomposition'] = O
-    except:
-        O =[]
-        info['old_decomposition'] = "n/a"
-        (A,B,C)=sys.exc_info()
-        # build an error message...
-        errtype=A.__name__
-        errmsg=B
-        s="%s: %s  at:" %(errtype,errmsg)
-        next=C.tb_next
-        while(next):
-            ln=next.tb_lineno
-            filen=next.tb_frame.f_code.co_filename                  
-            s+="\n line no. %s in file %s" %(ln,filen)
-            next=next.tb_next
-            info['error_note'] = "Could not construct oldspace!\n"+s
-        # properties for the sidebar
+    info['old_decomposition']="n/a"
+    if level < N_max_comp:
+        try:
+            O = WMFS.print_oldspace_decomposition()
+            info['old_decomposition'] = O
+        except:
+            emf_logger.critical("Error in computing oldspace decomposition")
+            O =[]
+            info['old_decomposition'] = "n/a"
+            (A,B,C)=sys.exc_info()
+            # build an error message...
+            errtype=A.__name__
+            errmsg=B
+            s="%s: %s  at:" %(errtype,errmsg)
+            next=C.tb_next
+            while(next):
+                ln=next.tb_lineno
+                filen=next.tb_frame.f_code.co_filename                  
+                s+="\n line no. %s in file %s" %(ln,filen)
+                next=next.tb_next
+                info['error_note'] = "Could not construct oldspace!\n"+s
+    # properties for the sidebar
     prop=[]
     if WMFS._cuspidal==1:
         prop=[('Dimension newforms',[info['dimension_newspace']])]
@@ -174,7 +177,7 @@ def set_info_for_modular_form_space(level=None,weight=None,character=None,label=
         info['character_order']=WMFS.character_order()
         info['character_conductor']=WMFS.character_conductor()
     friends=list(); lifts = list()
-    if(not info.has_key('label')):
+    if((not info.has_key('label')) and info['old_decomposition'] != 'n/a'):
         O=WMFS.oldspace_decomposition()
         try:
             for (old_level,chi,mult,d) in O:

@@ -31,7 +31,7 @@ def connect_db():
     if _DB==None:
         host  = base.getDBConnection().host
         port  = base.getDBConnection().port
-        _DB = MaassDB(host=host,port=port)
+        _DB = MaassDB(host=host,port=port,show_collection='all')
     return _DB
 
 #def connect_db():
@@ -50,7 +50,8 @@ def get_collection(collection=''):
 def get_args_mwf(**kwds):
     get_params=['level','weight','character','id','db','search',
                 'search_all','eigenvalue','collection','browse',
-                'ev_skip','ev_range','maass_id','skip','limit']
+                'ev_skip','ev_range','maass_id','skip','limit',
+                'level_range','weight_range','ev_range','download']
     defaults={'level':0,'weight':-1,'character':0,'skip':0,'limit':2000,
               'maass_id':None,'search':None,'collection':None,
               'eigenvalue':None,'browse':None}
@@ -65,7 +66,9 @@ def get_args_mwf(**kwds):
         get_params.extend(kwds['parameters'])
     for key in get_params:
         if kwds.has_key(key) or req.has_key(key) or defaults.has_key(key):
-            res[key]=kwds.get(key,req.get(key,defaults.get(key,None)))
+            res[key]=req.get(key,kwds.get(key,defaults.get(key,None)))
+            mwf_logger.debug("res[{0}]={1}:{2}:{3}".format(key,
+                                                       kwds.get(key,None),req.get(key,None),res[key]))
     return res
         
 

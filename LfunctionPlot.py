@@ -6,8 +6,10 @@ from flask import url_for, make_response
 import base
 from modular_forms.elliptic_modular_forms.backend.web_modforms import *
 from utils import make_logger
+from ListCharacters import get_character_modulus
+from Lfunction import logger
 
-logger = make_logger("LF")
+#logger = make_logger("LF")
 
 
 ## ============================================
@@ -46,15 +48,15 @@ def getAllMaassGraphHtml(degree):
     ans = ""
     for docGroup in groups:
         g = docGroup['group']
-        logger.debug(g)
+        #logger.debug(g)
         ans += getGroupHtml(g)
         levels = collection.group(['level'],{ 'degree': degree ,'group': g },
                               {'csum': 0},
                               'function(obj,prev) { prev.csum += 1; }')
-        logger.debug(levels)
+        #logger.debug(levels)
         for docLevel in levels:
             l = math.trunc(docLevel['level'])
-            logger.debug(l)
+            #logger.debug(l)
             ans += getOneGraphHtml([g,l])
                                 
     return(ans)
@@ -66,7 +68,9 @@ def getAllMaassGraphHtml(degree):
 def getGroupHtml(group):
     if group == 'GSp4':
         ans = "<h3 id='GSp4_Q_Maass'>Maass cusp forms for GSp(4)</h3>\n"
-        ans += "<div>These satisfy a functional equation with \\(\\Gamma\\)-factors\n"
+        ans += "<div>Currently in the LMFDB, we have data on L-functions associated "
+        ans += "to Maass cusp forms for GSp(4) of level 1."
+        ans += "These satisfy a functional equation with \\(\\Gamma\\)-factors\n"
         ans += "\\begin{equation}"
         ans += "\\Gamma_R(s + i \\mu_1)"
         ans += "\\Gamma_R(s + i \\mu_2)"
@@ -77,7 +81,9 @@ def getGroupHtml(group):
 
     elif group == 'GL4':
         ans = "<h3 id='GL4_Q_Maass'>Maass cusp forms for GL(4)</h3>\n"
-        ans += "<div>These satisfy a functional equation with \\(\\Gamma\\)-factors\n"
+        ans += "<div>Currently in the LMFDB, we have data on L-functions associated "
+        ans += "to Maass cusp forms for GL(4) of level 1."
+        ans += "These satisfy a functional equation with \\(\\Gamma\\)-factors\n"
         ans += "\\begin{equation}"
         ans += "\\Gamma_R(s + i \\mu_1)"
         ans += "\\Gamma_R(s + i \\mu_2)"
@@ -88,7 +94,9 @@ def getGroupHtml(group):
 
     elif group == 'GL3':
         ans = "<h3 id='GL3_Q_Maass'>Maass cusp forms for GL(3)</h3>\n"
-        ans += "<div>These satisfy a functional equation with \\(\\Gamma\\)-factors\n"
+        ans += "<div>Currently in the LMFDB, we have data on L-functions associated "
+        ans += "to Maass cusp forms for GL(3) of level 1 and 4."
+        ans += "These satisfy a functional equation with \\(\\Gamma\\)-factors\n"
         ans += "\\begin{equation}"
         ans += "\\Gamma_R(s + i \\mu_1)"
         ans += "\\Gamma_R(s + i \\mu_2)"
@@ -733,9 +741,9 @@ def getGraphInfoChar(min_cond, max_cond, min_order, max_order):
     xfactor = 70
     yfactor = 30
     extraSpace = 30
-    (width,height) = (2*extraSpace + xfactor*(max_order), 2*extraSpace + yfactor*(max_cond))
+    (width,height) = (2*extraSpace + xfactor*(max_order), 2*extraSpace + yfactor*(max_cond-min_cond+1))
 ##    url = url_for('browseGraph',group=group, level=level, sign=sign)
-    url = ('/browseGraphChar?min_cond=' + str(min_cond) + '&max_cond=' + str(max_cond) + '&min_order=' + str(min_order) + '&max_order=' + str(max_order))
+    url = ('/browseGraphChar/?min_cond=' + str(min_cond) + '&max_cond=' + str(max_cond) + '&min_order=' + str(min_order) + '&max_order=' + str(max_order))
     ans = {'src': url}
     ans['width']= width
     ans['height']= height
@@ -752,7 +760,7 @@ def getGraphInfoChar(min_cond, max_cond, min_order, max_order):
 ## yfactor = the number of pixels per unit in y
 ## ticlength = the length of the tickmarks
 ## ============================================
-def paintCSChar(width, height, xMax, yMax, xfactor, yfactor,ticlength):
+def paintCSChar(width, height, xMax, yMax, yMin, xfactor, yfactor,ticlength):
     xmlText = ("<line x1='0' y1='" + str(height) + "' x2='" +
                str(width) + "' y2='" + str(height) +
                "' style='stroke:rgb(0,0,0);'/>\n")
@@ -778,23 +786,23 @@ def paintCSChar(width, height, xMax, yMax, xfactor, yfactor,ticlength):
                          str(i*xfactor) +
                          "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
-    for i in range( 1,  yMax + 1):
+    for i in range( yMin,  yMax + 1):
         xmlText = xmlText + ("<line x1='0' y1='" +
-                             str(height - i*yfactor) + "' x2='" +
+                             str(height - (i-yMin+1)*yfactor) + "' x2='" +
                              str(ticlength) + "' y2='" +
-                             str(height - i*yfactor) +
+                             str(height - (i-yMin+1)*yfactor) +
                              "' style='stroke:rgb(0,0,0);'/>\n")
 
-    for i in range( 2,  yMax + 1, 2):
+    for i in range( yMin + yMin%2,  yMax + 1, 2):
         xmlText = xmlText + ("<text x='5' y='" +
-                             str(height - i*yfactor + 3) +
+                             str(height - (i-yMin+1)*yfactor + 3) +
                              "' style='fill:rgb(102,102,102);font-size:11px;'>" +
                              str(i) + "</text>\n")
 
-        if i%4==0 :  #  put dahes every four units
+        if i%2==0 :  #  put dahes every two units (this "if" is not needed after change from 4 to 2)
            xmlText = xmlText + ("<line x1='0' y1='" +
-                         str(height - i*yfactor) + "' x2='" + str(width) +
-                         "' y2='" + str(height - i*yfactor) +
+                         str(height - (i-yMin+1)*yfactor) + "' x2='" + str(width) +
+                         "' y2='" + str(height - (i-yMin+1)*yfactor) +
                          "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
     return xmlText
@@ -807,8 +815,42 @@ def paintCSChar(width, height, xMax, yMax, xfactor, yfactor,ticlength):
 ## ordering, and is even if parity is 0 and 1 otherwise.
 ## =============================================
 
+def reindex_characters(min_mod, max_mod, order_limit=12):
+    h, entries, rownrs, colnrs = get_character_modulus(min_mod,max_mod,order_limit)
+##    These entries used for debugging when Conrey char not availble.
+##    rownrs=range(1,21)
+##    colnrs=range(1,12)
+##    colnrs.append('more')
+##    entries = {}
+##    entries[(5,4)] = [((3, True, 4,True),(3, True, 4,True) ) ,((2,True,2,False),)]
+##    entries[(17,'more')] = [((3, True, 16,True),(3, True, 16,True) ) ,((2,True,2,False),)]
+    char_dict = {}
+    for modulus in rownrs:
+        for col in colnrs:
+            entry = entries.get((modulus, col), [])
+            for chi in entry:  #chi is either a real character or pair of complex conjugates
+                if chi[0][1]: #Primitiv
+                    order = chi[0][2]
+                    nr = chi[0][0]
+                    isEven = chi[0][3]
+                    
+                    if order > order_limit:
+                        order = order_limit
 
-def reindex_characters(min_mod, max_mod):
+                    # Add an entry to list with given order and modulus
+                    dict_entry = char_dict.get((order, modulus), [])
+                    if order < 3:  # Real
+                        dict_entry.append((nr, isEven))
+                    else:  # Complex
+                        nrInv = chi[1][0]   # Number of the inverse character
+                        dict_entry.append((nr, nrInv, isEven))
+                    char_dict[(order, modulus)] = dict_entry
+
+    logger.debug(char_dict)
+    return char_dict
+
+# This is the old version for sage characters 
+def reindex_characters_old(min_mod, max_mod):
     from sage.sets.set import Set
     char_dict = {}
     for N in range(min_mod, max_mod + 1):
@@ -891,15 +933,15 @@ def paintSvgChar(min_cond,max_cond,min_order,max_order):
 
     xMax = int(max_order)
     yMax = int(max_cond)
+    yMin = int(min_cond)
     width = xfactor *xMax + 3*extraSpace
-    height = yfactor *yMax + 3*extraSpace
+    height = yfactor *(yMax-yMin) + 3*extraSpace
 
-    ans += paintCSChar(width, height, xMax, yMax, xfactor, yfactor, ticlength)
+    ans += paintCSChar(width, height, xMax, yMax, yMin, xfactor, yfactor, ticlength)
 
     #loop over orders and conductors
-    cd = reindex_characters(min_cond, max_cond)
+    cd = reindex_characters(int(min_cond), int(max_cond), int(max_order))
     for (x,y) in cd:
-        lid = "(" + str(x) + "," + str(y) + ")"
         linkurl = "/L/" + "Character/Dirichlet/" + str(y) 
         counteven = 0   # count how many characters are even
         countodd = 0   # count how many characters are odd
@@ -908,17 +950,17 @@ def paintSvgChar(min_cond,max_cond,min_order,max_order):
         for ii in range(len(cd[(x,y)])):
             current = cd[(x,y)][ii]
             if len(current) == 2:
-                parity = current[1]
-                if parity == 1:
+                isEven = current[1]
+                if isEven:
                     xbaseplus += xdotspacing
                     thiscolour = colourplus
                     counteven += 1
                     ans += "<a xlink:href='" + linkurl + "/" + str(current[0]) + "' target='_top'>\n"
                     ans += "<circle cx='" + str(float(xbaseplus)*xfactor)[0:7]
-                    ans += "' cy='" +  str(height-(y*yfactor))[0:7]
+                    ans += "' cy='" +  str(height-((y-yMin+1)*yfactor))[0:7]
                     ans += "' r='" + str(radius)
                     ans += "' style='fill:"+ thiscolour +"'>"
-                    ans += "<title>" + str((x,y)).replace("u", "").replace("'", "") + "</title>"
+                    ans += "<title>" + '(' + str(y) + ',' + str(current[0]) + ')' + "</title>"
                     ans += "</circle></a>\n"
     
                 else:
@@ -927,48 +969,48 @@ def paintSvgChar(min_cond,max_cond,min_order,max_order):
                     countodd += 1
                     ans += "<a xlink:href='" + linkurl + "/" + str(current[0]) + "' target='_top'>\n"
                     ans += "<circle cx='" + str(float(xbaseminus)*xfactor)[0:7]
-                    ans += "' cy='" +  str(height-(y*yfactor))[0:7]
+                    ans += "' cy='" +  str(height-((y-yMin+1)*yfactor))[0:7]
                     ans += "' r='" + str(radius)
                     ans += "' style='fill:"+ thiscolour +"'>"
-                    ans += "<title>" + str((x,y)).replace("u", "").replace("'", "") + "</title>"
+                    ans += "<title>" + '(' + str(y) + ',' + str(current[0]) + ')' + "</title>"
                     ans += "</circle></a>\n"
             if len(current) == 3:
-                parity = cd[(x,y)][ii][2]
-                if parity == 1:
+                isEven = current[2]
+                if isEven:
                     xbaseplus += xdotspacing
                     thiscolour = colourplus
                     counteven += 1
                     ans += "<a xlink:href='" + linkurl + "/" + str(current[0]) + "' target='_top'>\n"
                     ans += "<circle cx='" + str(float(xbaseplus)*xfactor)[0:7]
-                    ans += "' cy='" +  str(height-(y*yfactor))[0:7]
+                    ans += "' cy='" +  str(height-((y-yMin+1)*yfactor) - 2*radius)[0:7]
                     ans += "' r='" + str(radius)
                     ans += "' style='fill:"+ thiscolour +"'>"
-                    ans += "<title>" + str((x,y)).replace("u", "").replace("'", "") + "</title>"
+                    ans += "<title>" + '(' + str(y) + ',' + str(current[0]) + ')' + "</title>"
                     ans += "</circle></a>\n"
                     ans += "<a xlink:href='" + linkurl + "/" + str(current[1]) + "' target='_top'>\n"
                     ans += "<circle cx='" + str(float(xbaseplus)*xfactor)[0:7]
-                    ans += "' cy='" +  str(height-(y*yfactor)+ 2*radius)[0:7]
+                    ans += "' cy='" +  str(height-((y-yMin+1)*yfactor)+ 2*radius)[0:7]
                     ans += "' r='" + str(radius)
                     ans += "' style='fill:"+ thiscolour +"'>"
-                    ans += "<title>" + str((x,y)).replace("u", "").replace("'", "") + "</title>"
+                    ans += "<title>" + '(' + str(y) + ',' + str(current[1]) + ')' + "</title>"
                     ans += "</circle></a>\n"
                 else:
                     xbaseminus -= xdotspacing
                     thiscolour = colourminus
                     countodd += 1
-                    ans += "<a xlink:href='" + linkurl + "/" + str(cd[(x,y)][ii][0]) + "' target='_top'>\n"
+                    ans += "<a xlink:href='" + linkurl + "/" + str(current[0]) + "' target='_top'>\n"
                     ans += "<circle cx='" + str(float(xbaseminus)*xfactor)[0:7]
-                    ans += "' cy='" +  str(height-(y*yfactor))[0:7]
+                    ans += "' cy='" +  str(height-((y-yMin+1)*yfactor) - 2*radius)[0:7]
                     ans += "' r='" + str(radius)
                     ans += "' style='fill:"+ thiscolour +"'>"
-                    ans += "<title>" + str((x,y)).replace("u", "").replace("'", "") + "</title>"
+                    ans += "<title>" + '(' + str(y) + ',' + str(current[0]) + ')' + "</title>"
                     ans += "</circle></a>\n"
                     ans += "<a xlink:href='" + linkurl + "/" + str(cd[(x,y)][ii][1]) + "' target='_top'>\n"
                     ans += "<circle cx='%s'" % str(float(xbaseminus)*xfactor)[0:7]
-                    ans += "cy='%s'" %  str(height-(y*yfactor)+ 2*radius)[0:7]
-                    ans += "r='%s'" % radius
-                    ans += "style='fill:%s'>" % thiscolour 
-                    ans += "<title>" + str((x,y)).replace("u", "").replace("'", "") + "</title>"
+                    ans += " cy='%s'" %  str(height-((y-yMin+1)*yfactor)+ 2*radius)[0:7]
+                    ans += " r='%s'" % radius
+                    ans += " style='fill:%s'>" % thiscolour 
+                    ans += "<title>" + '(' + str(y) + ',' + str(current[1]) + ')' + "</title>"
                     ans += "</circle></a>\n"
 
     ans += "</svg>"
@@ -985,8 +1027,8 @@ def paintSvgChar(min_cond,max_cond,min_order,max_order):
 def getOneGraphHtmlChar(min_cond, max_cond, min_order, max_order):
     graphInfo = getGraphInfoChar(min_cond, max_cond, min_order, max_order)
     logger.info("graphInfo %s" % graphInfo)
-#    ans += ("<embed src='" + graphInfo['src'] + "' width='" + str(graphInfo['width']) +
-    ans = ("<embed src='/static/images/browseGraphChar_1_35.svg' width='" + str(graphInfo['width']) +
+    ans = ("<embed id='charGraph' src='" + graphInfo['src'] + "' width='" + str(graphInfo['width']) +
+#    ans = ("<embed src='/static/images/browseGraphChar_1_35.svg' width='" + str(graphInfo['width']) +
            "' height='" + str(graphInfo['height']) +
             "' type='image/svg+xml' " +
             "pluginspage='http://www.adobe.com/svg/viewer/install/'/>\n")

@@ -6,8 +6,15 @@ import gridfs
 import bson
 from sage.symbolic.expression import Expression
 import datetime
-from sage.all import Integer,DirichletGroup,is_even,loads,dumps
+from sage.all import Integer,DirichletGroup,is_even,loads,dumps,cached_method
+from  modular_forms.maass_forms.maass_waveforms import mwf_logger
 import math
+logger = mwf_logger
+try:
+  from dirichlet_conrey import *
+except:
+    logger.critical("dirichlet_conrey.pyx cython file is not available ...")
+import cython
 
 class MaassDB(object):
     r"""
@@ -55,8 +62,8 @@ class MaassDB(object):
             Con = pymongo.Connection(constr)
             self._Con = Con    
         except: #AutoReconnect:
-            print "No database found at "+constr
-            print "Please specifiy other host/port (default to fallback database type)"
+            logger.critical("No database found at {0}".format(constr))
+            logger.critical("Please specifiy other host/port")
             return 0
         D=Con['MaassWaveForms']
         self._mongo_db=D
@@ -67,8 +74,10 @@ class MaassDB(object):
             self._show_collection=[self._show_collection_name]
         if self._show_collection_name=='all':
             self._show_collection=[]
-            for cn in ['FS','HT']: #D.collection_names():
-                self._show_collection.append(D[cn])
+            ## We currently merged both collections.
+            for cn in ['FS']: #,'HT']: #D.collection_names():
+                if cn in D.collection_names():
+                    self._show_collection.append(D[cn])
 
         if not 'Coefficients' in D.collection_names():
             D.create_collection('Coefficients')
@@ -80,7 +89,7 @@ class MaassDB(object):
         self._collection_progress = D['Progress']
         self._collection_coeff_progress = D['CoeffProgress']
         self._job_history=D['job_history']
-        print "successfully set up mongodb!"
+        #print "successfully set up mongodb!"
         return 1
         
     # def setup_file(self,dir='',filename='maassforms_db'):
@@ -135,10 +144,14 @@ class MaassDB(object):
         cn_evs=data.get("Cusp_evs",[])
         # Check if this record already exists
         isin,numc0,errin,idd0 =  self.is_data_in_table_mongo(level,weight,ch,sym_type,R,err)
-        print "Is in database:",isin
+        mwf_logger.debug("Is in database:".format(isin))
+        if not data.get('Conrey',False):
+            # Then we have to convert the character to Conrey's label
+            ch = db.getDircharConrey(level,ch)
         insert_data={'Level':level,'Weight':weight,
                      'Character':ch,'Symmetry':sym_type,
                      'Error':err,
+                     'Conrey':int(1),  ## we leave this indicator here until the convention is more widespread
                      'Dim':dim,
                      'Eigenvalue':R,'M0':M0,'Y':Y,
                      'date':bson.datetime.datetime.utcnow(),
@@ -148,7 +161,7 @@ class MaassDB(object):
         ## Then we leave it be.
         idd=0
         if isin==0:
-            print "inserting:",insert_data
+            logger.debug("inserting:".format(insert_data))
             idd = self._collection.insert(insert_data)
         else:
             if (isin==1 and (errin==0 or errin>err)):
@@ -178,7 +191,7 @@ class MaassDB(object):
                 key={'_id':idd}
                 inserts={"$set":{"Coefficients":C}}
                 self._collection_coeff.update(key,inserts,upsert=True)
-                print "Inserted coeficients"
+                logger.debug("Inserted coeficients")
 
 
     def has_level_weight_char(self,level,weight,ch):
@@ -202,11 +215,11 @@ class MaassDB(object):
                    'Symmetry':sym_type,
                    'Eigenvalue':{"$gte": float(R)-float(ep0),"$lt":float(R)+float(ep0)}
                    }
-        print "find_Data:",find_data
+        mwf_logger.debug("find_Data:{0}".format(find_data))
         if self._collection.find(find_data).count()==0:
             return 0,0,0,0
         x = self._collection.find(find_data)[0]
-        print "x=",x
+        mwf_logger.debug("x={0}".format(x))
         numc=x.get('Numc',0)
         err=x.get('Error',0)
         idd=x.get('_id',0)
@@ -219,10 +232,8 @@ class MaassDB(object):
         data={'Level':int(level),
               'Weight':int(weight),
               'Character':int(ch)}
-#              'R1':float(R1),
-#              'R2':float(R2)}
         if verbose>0:
-            print "Register work: N,weight,ch=",level,weight,ch," in R1,R2=",R1,R2
+            mwf_logger.debug("Register work: N,weight,ch={0},{1},{2},{3} in {4}, {5}".format(level,weight,ch,R1,R2))
         try:
             t0 = self._collection_progress.find(data)
             if t0.count()>0:  ## Check more detail
@@ -326,35 +337,51 @@ class MaassDB(object):
         """
         find_data=arg_to_search_parameters(data,**kwds)
         #print "find_data",find_data
+        res=[]
         for collection in self._show_collection:
             f = collection.find(find_data)
-            if f.count()>0:
-                break
-        res=[]
-        for x in f:
-            res.append(x['_id'])
+            if f.count()==0:
+                continue
+            for x in f:
+                xid=x.get('_id',None)
+                if not xid:
+                    if self._verbose>0:
+                        print "Error: got record without id:{0}".format(x)
+                        mwf_logger.debug("coeffid={0}".format(coeff_id))
+                res.append(x['_id'])
         return res
 
     def get_Maass_forms(self,data={},**kwds):
-        print "Data=",data,type(data)
+        verbose=kwds.get('verbose',0)
+        collection=kwds.get('collection','all')
+        if verbose>0:
+            print "get_Maass_forms for data=",data
         if isinstance(data,bson.objectid.ObjectId):
             find_data={'_id':data}
         elif isinstance(data,str):
             find_data={'_id':bson.objectid.ObjectId(data)}
         else:
+            if verbose>0:
+                print "get search parameters!"
             find_data=arg_to_search_parameters(data,**kwds)
         if isinstance(data,dict):
             format_data=arg_to_format_parameters(data,**kwds)
         else:
             format_data=arg_to_format_parameters({},**kwds)
         sorting = [('Weight',pymongo.ASCENDING),('Level',pymongo.ASCENDING),('Character',pymongo.ASCENDING),('Eigenvalue',pymongo.ASCENDING)]
-        print "find_data=",find_data
-        print "format_data=",format_data
+        if verbose>0:
+            print "find_data=",find_data
+            print "format_data=",format_data
         #f = self._collection.find(find_data)
         res=[]
         skip0 = format_data['skip'];skip=skip0
         limit0= format_data['limit']; limit=limit0
+        
+        #print "SHow collection:",self._show_collection
         for collection in self._show_collection:
+            #print "limit=",limit
+            print "skip=",skip
+            print "limit=",limit
             cname = format_data.get('collection_name','')
             if cname<>'' and cname<>collection.name:
                 continue
@@ -362,13 +389,11 @@ class MaassDB(object):
                 continue
             finds = collection.find(find_data,sort=sorting).skip(skip).limit(limit)
             skip=0
-            print "skip=",skip
-            print "limit=",limit
             print "find[",collection.name,"]=",finds.count()
-            limit = limit - finds.count()
+            limit = limit - finds.count(True)
             for x in finds:
                 res.append(x)
-        print "len=",len(res)
+        #print "len=",len(res)
         return res        
 
     def get_coefficients(self,data={},verbose=0,**kwds):
@@ -393,7 +418,7 @@ class MaassDB(object):
                     continue
                 cid=fn.get('coeff_id',None)
                 if cid==None:
-                    C1 = f.get('Coefficients',[])
+                    C1 = fn.get('Coefficients',[])
                     if C1<>[]:
                         if get_filename<>'':
                             Rst=str(R).split(".")
@@ -415,12 +440,13 @@ class MaassDB(object):
         return res
 
     def count(self,data={},**kwds):
+        filtered=kwds.get('filtered',False)
         find_data=arg_to_search_parameters(data,**kwds)
         num=0
         if self._verbose>0:
             print "find_data(count)=",find_data
         for c in self._show_collection:
-            num+=c.find(find_data).count()
+            num+=c.find(find_data).count(with_limit_and_skip=filtered)
         return  num
         
     def levels(self):
@@ -438,6 +464,34 @@ class MaassDB(object):
                 weights.extend(c.distinct('Weight'))
         return  list(set(weights))
 
+
+    def convert_db_to_Conrey(self,verbose=0):
+        r"""
+        Convert any non-conrey character labels 
+        """
+        if verbose>0:
+            i=0
+        for coll in self._show_collection:
+            n1 = coll.find().count()
+            n2 = coll.find({'Conrey': {"$exists" : True}}).count()
+            if n2<n1:
+                ## Have to get in there...
+                finds = coll.find({'Conrey': {"$exists" : False}})
+                for f in finds:
+                    ## Defaults to trivial character
+                    ch = f.get('Character',0)
+                    N = f.get('Level',0)
+                    if N==0:
+                        continue
+                    cnr = self.getDircharConrey(N,ch)
+                    key = {'_id':f.get('_id')}
+                    values={"$set":{'Conrey': int(1),'Character':cnr}}
+                    coll.update(key,values,upsert=False)
+                    if verbose>0:
+                        i+=1
+        if verbose>0:
+            print "Corrected {0} records!".format(i)
+                
     def characters(self,Level=0,Weight=0):
         characters=[]
         for c in self._show_collection:
@@ -544,12 +598,19 @@ class MaassDB(object):
             if self._verbose>0:
                 print "removed job nr. ",jobnr
         # update the self._list_of_jobs??
+
         
-    def Dirchars(self,N,parity=0):
+    def Dirchars(self,N,parity=0,conrey=True,verbose=0,refresh=False):
         r"""
-        Returns a list of indices of even Dirichlet characters mod N
+        Returns a list of (Conrey) indices of representatives of even or odd  Dirichlet characters mod N
         """
-        f = self._mongo_db.DirChars.find_one({'Modulus':int(N),'Parity':int(parity)})
+        if conrey:
+            f = self._mongo_db.DirChars.find_one({'Modulus':int(N),'Parity':int(parity),'Conrey':int(1)})
+        else:
+            f = self._mongo_db.DirChars.find_one({'Modulus':int(N),'Parity':int(parity),'Conrey':{"$exists":False}})
+        if verbose>0:
+
+            print "f=",f
         if f <>None:
             return f.get('Chars')
         D = DirichletGroup(N)
@@ -559,16 +620,73 @@ class MaassDB(object):
         else:
             DGG = filter(lambda x:x[0].is_odd(),DG)
         l=[]
-        print "DG=",DGG
+        if verbose>0:
+            print "DG=",DGG
         for x in DGG:
             xi = D.list().index(x[0])
+            if conrey:
+                xi = self.getDircharConrey(N,xi)
             l.append(int(xi))
-        f = self._mongo_db.DirChars.insert({'Modulus':int(N),'Chars':l,'Parity':int(parity)})
+        if conrey:
+            f = self._mongo_db.DirChars.insert({'Modulus':int(N),'Chars':l,'Parity':int(parity),'Conrey':int(1)})
+        else:
+            f = self._mongo_db.DirChars.insert({'Modulus':int(N),'Chars':l,'Parity':int(parity)})
         return l
 
+    @cached_method
+    def getDircharConrey(self,N,j):
+        f = self._mongo_db.DirCharsConrey.find_one({'Modulus':int(N)})
+        if not f:
+            Dl = DirichletGroup(N).list()
+            res=range(len(Dl))
+            for k in range(len(Dl)):
+                x = Dl[k]
+                res[k]=self.getDircharConreyFromSageChar(x)
+            self._mongo_db.DirCharsConrey.insert({'Modulus':int(N),'chars':res})
+            return res[j]
+        else:
+            res = f.get('chars')[j]
+            return res
+        
 
+    def getDircharConreyFromSageChar(self,x):            
+        N = x.modulus()
+        DC = DirichletGroup_conrey(N)
+        for c in DC:
+            if c.sage_character() == x:
+                return c.number()
+    from sage.all import euler_phi
+    @cached_method
+    def getDircharSageFromConrey(self,N,j):
+        f = self._mongo_db.DirCharsSage.find_one({'Modulus':int(N)})
+        if not f:
+            DC = DirichletGroup_conrey(N)
+            maxn=0
+            for c in DC:
+                if c.number()>maxn:
+                    maxn=c.number()
+            res = range(maxn+1)
+            for c in DC:
+                k = c.number()
+                res[k]=self.getOneDircharSageFromConreyChar(c)
+            self._mongo_db.DirCharsSage.insert({'Modulus':int(N),'chars':res})
+            return res[j]
+        else:
+            res = f.get('chars')[j]
+            return res
+        
+
+    def getOneDircharSageFromConreyChar(self,x):            
+        N = x.modulus()
+        DC = DirichletGroup(N)
+        for j in range(len(DC.list())):
+            c = DC.list()[j]
+            if x.sage_character() == c:
+                return j
             
-    def show_data(self,also_empty=0,merge_collections=0,html=0,do_not_print=0):
+        
+        
+    def show_data(self,also_empty=0,merge_collections=0,html=0,do_not_print=0,conrey=True):
         r"""
         Show which levels, characters and weights are in the database
         If merge_collections is set to 0 we display the collections separately
@@ -588,9 +706,9 @@ class MaassDB(object):
                     res[coll.name][k][N]={}
                     if also_empty==1:
                         if is_even(int(k)):
-                            lc = DB.Dirchars(N,parity=0)
+                            lc = self.Dirchars(N,parity=0,conrey=conrey)
                         else:
-                            lc = DB.Dirchars(N,parity=1)
+                            lc =self.Dirchars(N,parity=1,conrey=conrey)
                     else:
                         lc=coll.find({'Level':N,'Weight':k}).distinct('Character')
                     for x in lc:
@@ -747,10 +865,14 @@ class MaassDB(object):
         #pri#nt N
 
     def show_eigenvalues(self,data={},**kwds):
+        verbose=kwds.get('verbose',0)
         find_data = arg_to_search_parameters(data,**kwds)
         format_data=arg_to_format_parameters(data,**kwds)
         sorting = [('Weight',pymongo.ASCENDING),('Level',pymongo.ASCENDING),('Character',pymongo.ASCENDING),('Eigenvalue',pymongo.ASCENDING)]
         s=self.display_header()
+        if verbose>0:
+            print "find_data=",find_data
+            print "format_data=",format_data
         finds = self._collection.find(find_data,sort=sorting).skip(format_data['skip']).limit(format_data['limit'])
         for f in finds:
             s+=self.display_one_record(f,header=0)
@@ -846,6 +968,8 @@ class MaassDB(object):
         i = 0
         # # Get eigenvalues and 
         maassids=self.find_Maass_form_id(search)
+        #self.convert_db_to_Conrey()
+        #other.convert_db_to_Conrey()
         for idd in maassids:
             if i>2:
                 return
@@ -858,10 +982,13 @@ class MaassDB(object):
             N = x.get('Level',0)
             data['Level'] = N
             R = x.get('Eigenvalue',0)
+            Contributor = x.get('Contributor','')
             k = x.get('Weight',0)
             data['Weight'] = k
             ch = x.get('Character',0)
+            conrey = x.get('Conrey',0)
             data['Character'] = ch
+
             st = x.get('Symmetry',-1)
             if not isinstance(st,int):
                 if st=='even':
@@ -881,8 +1008,6 @@ class MaassDB(object):
             ep0=max(1.0E-7,2*RR(err))
             #data['Eigenvalue'] = {"$gte": float(R)-float(ep0),
             #"$lt":float(R)+float(ep0)}
-
-
             # If
             if verbose>0:
                 print "Local data:",N,k,ch,st,R,err
@@ -899,8 +1024,10 @@ class MaassDB(object):
             data['Y']=Y
             data['date']=rdate
             data['Cusp_evs']=evs
+            data['Conrey']=conrey
             data['Dim']=dim
             data['_id']=idd
+            data['Contributor']=Contr
             coeff_id=None
             f=None
             ff = other.find_Maass_form_id({'_id':idd}) #find_data)
@@ -909,37 +1036,50 @@ class MaassDB(object):
                     print "find_data=",find_data
                 if verbose>0:
                     print "Record did not exist in other db!"
-                key={'_id':idd}
-                ins = other._collection.update(key,data,upsert=True)
-                if ins and verbose>0:
-                    print "Insertion successful!"
-                elif verbose>0:
-                    print "Insertion unsuccessful! ins:{0}".format(ins)
+                #key={'_id':idd}
+                ins = other._collection.insert(data,upsert=True)
+                if ins<>None and verbose>0:
+                    print "Insertion successful! rec:{0}".format(data)
+                    #print "newrec=",other._collection.find_one(key)
+                else:
+                    #if other._collection.find(key).count()==0:
+                    raise ArithmeticError,"Insertion unsuccessful!\n key={0}, inserts={1}, ind:{2}".format(key,data,ins)
+                        #print "Insertion unsuccessful! ins:{0}".format(ins)
                 ncnew=0
                 idnew=ins
             else: ## See if it is still worth to update the record
                 #f = ff[0]
+                f = other.get_Maass_forms(ff[0])
+                if len(f)==0:
+                    if verbose>0:
+                        print "Record did and did not exits? id={0}".format(ff[0])
+                    continue
+                f = f[0]
                 if verbose>0:
                     print "Record exist in other db!"
-                f = other.get_Maass_forms(ff[0])[0]
+                    print "Remote data:{0},{1},{2},{3},{4},{5}".format(f.get('Level',0),f.get('Weight',0),
+                                                                       f.get('Character',0),f.get('Symmetry',0),
+                                                                       f.get('Eigenvalue',0),f.get('Error',0))
                 errf=f.get('Error',1)
                 idnew=f.get('_id')
                 if err<errf or update==True:
                     data['_id']=idnew
                     other._collection.insert(data)
-                    dsets = {"Eigenvalue":float(R),
+                    dsets={  "Eigenvalue":float(R),
                              "Error":float(err),
                              "Cusp_evs":evs,
                              "dim":dim,
                              "Symmetry":st,
-                             'M0':int(M0),
+                             'M0':int(M0),                             
                              'Y':Y}
                     inserts = {"$set":dsets}
                     key={"_id":idnew}
                     if verbose>0:
                         print "Error in self is better than error in other!"
+                        print "key:{0}".format(key)
+                        print "inserts:{0}".format(inserts)
                     try:
-                        ins = other._collection.update(key,inserts,upsert=True)
+                        ins = other._collection.update(key,inserts)
                     #                                                   upsert=True)
                     except:
                         #f = other._collection.find(key)
@@ -949,6 +1089,8 @@ class MaassDB(object):
                         print "Update successful!"
                 ncnew=f.get("Numc",0)
                 coeff_id=f.get("coeff_id",None)
+                if verbose>0:
+                    print "coeff_id:",coeff_id                
             if nc>ncnew or not coeff_id:  # Update the coefficients
                 if verbose>0:
                     print "self has more Fourier coefficients!: id={0}".format(idd)
@@ -1058,18 +1200,27 @@ def mongify(data):
         return mongify_dict(data)
     return mongify_elt(data)
 
-#from sage.rings.real_mpfr import RealNumber,RealLiteral
+import sage
+from sage.rings.real_mpfr import RealLiteral
+#from sage.rings.complex_number import ComplexNumber
+try:
+    from sage.rings.complex_mpc import MPComplexNumber
+except:
+    MPComplexNumber=None
+    pass
 def mongify_elt(x):
     if isinstance(x,(int,float,str,unicode,datetime.datetime,bson.objectid.ObjectId)):
         return x
     if isinstance(x,Integer):
         return int(x)
-    if isinstance(x,(sage.rings.real_mpfr.RealNumber,sage.rings.real_mpfr.RealLiteral)):
+    if isinstance(x,(RealLiteral,sage.rings.real_mpfr.RealNumber,Expression)):
         return float(x)
     if isinstance(x,(complex,sage.rings.complex_number.ComplexNumber,Expression)):
         return float(real(x)),float(imag(x))
-    elif isinstance(x,sage.rings.complex_mpc.MPComplexNumber):
+    elif isinstance(x,MPComplexNumber):
         return float(x.real()),float(x.imag())
+    elif x==None:
+        return x
     else:
         raise TypeError,"Could not coerce {0} to mongodb-compatible format. Consider using gridfs instead!".format(x)
 
@@ -1078,7 +1229,7 @@ def arg_to_format_parameters(data={},**kwds):
     res={}
     if not isinstance(data,dict):
         res['skip']=0
-        res['limit']=50
+        res['limit']=3000
         res['collection_name']=''
     else:
         res['skip']=int(data.get('skip',kwds.get('skip',0)))
@@ -1105,8 +1256,8 @@ def arg_to_search_parameters(data={},**kwds):
     ch1=data.get('ch1',data.get('char1',kwds.get('ch1',kwds.get('char1',ch))))
     ch2=data.get('ch2',data.get('char2',kwds.get('ch2',kwds.get('char2',ch))))
     wt=data.get('wt',data.get('weight',kwds.get('wt',kwds.get('weight',None))))
-    wt1=data.get('w1',data.get('weight1',kwds.get('wt1',kwds.get('weight1',wt))))
-    wt2=data.get('w2',data.get('weight2',kwds.get('wt2',kwds.get('weight2',wt))))
+    wt1=data.get('wt1',data.get('weight1',kwds.get('wt1',kwds.get('weight1',wt))))
+    wt2=data.get('wt2',data.get('weight2',kwds.get('wt2',kwds.get('weight2',wt))))
     dim=data.get('d',data.get('dim',kwds.get('d',kwds.get('dim',None))))
     d1=data.get('d1',data.get('dim1',kwds.get('d1',kwds.get('dim1',dim))))
     d2=data.get('d2',data.get('dim2',kwds.get('d2',kwds.get('dim2',dim))))
@@ -1144,12 +1295,14 @@ def arg_to_search_parameters(data={},**kwds):
     if wt<>None:
         find['Weight']=wt
     elif wt1<>None or wt2<>None:
-        find['Weight']={}
-        if wt1<>None and w1<>'': 
-            w1=float(w1)
+        if wt1<>None and wt1<>'': 
+            find['Weight']={}
+            wt1=float(wt1)
             find['Weight']["$gte"]=wt1
-        if wt2<>None and w1<>'': 
-            w2=float(w2)
+        if wt2<>None and wt2<>'': 
+            if not find.has_key('Weight'):
+                find['Weight']={}
+            wt2=float(wt2)
             find['Weight']["$lte"]=wt2
     if idd<>None:
         find['_id']=idd
@@ -1157,12 +1310,14 @@ def arg_to_search_parameters(data={},**kwds):
     if ch<>None:
         find['Character']=ch
     elif ch1<>None or ch2<>None:
-        find['Character']={}
         if ch1<>None: 
             ch1=int(ch1)
+            find['Character']={}
             find['Character']["$gte"]=ch1
         if ch2<>None:
             ch2=int(ch2)
+            if not find.has_key('Character'):
+                find['Character']={}
             find['Character']["$lte"]=ch2
 
     if dim<>None:

@@ -14,9 +14,7 @@ jQuery('table:has(col)').each(alignColumns);
 var oTable = $("table#coeffs").dataTable(
 {
     "sPaginationType": "full_numbers",
-    "aoColumns":[{"aaSorting":"asc","sWidth": "20%", "bSortable": true, "bSearchable": false ,"sType":"numeric" },
-                 {"sWidth": "50%", "bSortable": false, "bSearchable": true, "sClass": "alignLeft","fnRender":"text-align:left"},
-                ],
+    "aoColumns":{{  coeff_aoColumns |safe }},
     "bSort":true,
     "iDisplayLength": 20,    
     "iDisplayStart": 0,
@@ -27,19 +25,25 @@ var oTable = $("table#coeffs").dataTable(
             "sInfoEmpty": "Showing 0 to 0 of 0 records",
             "sInfoFiltered": "(filtered from _MAX_ total coefficients)"
      }, 
-     "sDom": 't<"paging"p><"bottom"l><"bottom"fr><"filterbox"i>',
+     "sDom": 't<"paging"ip><"bottom"lfr><"filterbox">',
+//     "sDom": 't<"paging"p><"bottom"l><"bottom"fr><"filterbox"i>',
      "sScorollX": "300px", 
+    "aLengthMenu": [[15, 25, 50, 100, 200, -1], [15, 25, 50, 100,  200, "All"]],
      "bStateSave": false,
      "bAutoWidth": false,
      "oSearch": { "sSearch": "", "bRegex": false, "bSmart": true },
 
  });
-}
-)
+
+$('.bottom').css("width","100%")
+$('.bottom').css("text-align","left")
+$('.paging_full_numbers').css('width','250px')
+$('#coeffs').css('width','650px')
+});
 </script>
  
 <style type="text/css">
- .dataTables_wrapper { height: 100px; class:"ntdata"}
+ .dataTables_wrapper { width: 600px; class:"ntdata"}
  .dataTables_wrapper:after {
     content: ".";
     display: block;
@@ -51,6 +55,7 @@ var oTable = $("table#coeffs").dataTable(
  .alignLeft  {text-align:left}
  .dataTables_length {width:100%}
  .dataTables_filter {text-align:left}
+ table.coeffs { clear: both;}
 </style>
 
 
@@ -76,17 +81,35 @@ var oTable = $("table#coeffs").dataTable(
 
 <h2>Fourier Coefficients</h2>
 {% if MF.coeffs is defined and MF.num_coeff > 0%}
-<!--table class="ntdata" id="coeffs" valign="top" border="1"-->
+{# <table class="ntdata" id="coeffs" valign="top" border="1"> #}
 <table>
 <tr><td>
 <table class="ntdata" id="coeffs">
   <colgroup>
     <col/>
-    <col align="char" char="."/>
+    {% for k in range(1,ncols)  %}
+     <col/>
+    {%endfor%}
   </colgroup>
   <thead>
     <tr>
-      <th> n </th><th>C(n) </th>
+     {% if ncols <= 2 %}
+       {% if table.negc is defined and table.negc == 0 %}
+        <th> n </th><th>c(n) </th>
+       {% else %}
+        <th> n </th><th>c(n) </th><th>c(-n) </th>
+       {%endif%}
+     {% else %}
+        <th> n </th>
+          {% for k in range(1,ncols)  %}
+            {% if table.negc is defined and table.negc == 0 %}
+                <th colspan="1">\( c_{ {{k}} } (n) \) </td>
+             {% else %}
+                <th>\( c_{ {{k}} } (n) \) </td>
+                <th>\(c_{ {{k}} } (-n) \) </td>
+             {%endif%}
+         {%endfor%}
+     {%endif%}
     </tr>
   </thead>
   <tbody>
@@ -97,28 +120,42 @@ var oTable = $("table#coeffs").dataTable(
     {% for r in range(0,nnrows) %}
     <tr>
       {% if table.negc is defined and table.negc == 0 %}
-          {% for k in range(0,ncols)  %}
-          {% if data[r] is defined and data[r][k] is defined %}
-             {% if data[r][k] is defined %}
-               {% set n,c  = data[r][k] %}
+            <td style="border-right: 1px solid black">
+            {% if data[r] is defined and data[r][0] is defined %}
+              {% set n = data[r][0] %}
+                {{n}}
+            {% endif %}
+            </td>  
+            {% for k in range(1,ncols)  %}
+              {% if data[r] is defined and data[r][k] is defined %}
+                 {% if data[r][k] is defined %}
+                    {% set c  = data[r][k] %}                 
+                    {% if c is defined %}
+                      <td>{{c | safe}}</td>
+                    {% else %}
+                      <td></td>
+                    {% endif %}
+                 {% endif %}
              {% endif %}
-          {% endif %}
-           <td style="border-right: 1px solid black">{{n}}</td>
-           <td>{{c}}</td>
           {% endfor %}
 
      {%else%}
-          {% for k in range(0,ncols)  %} 
-          {% if data[r] is defined and data[r][k] is defined %}
-             {% if data[r][k] is defined %}
-               {% set n,cp,cn  = data[r][k] %}
-             {% endif %}
-          {% endif %}
-           <td style="border-right: 1px solid black">{{n-1}}</td>
-           <td>{{cp}}</td>
-           <td style="border-right: 1px solid black">{{1-n}}</td>
-           <td>{{cn}}</td>
-         {% endfor %}
+            <td style="border-right: 1px solid black">
+            {% if data[r] is defined and data[r][0] is defined %}
+              {% set n = data[r][0] %}
+                {{n}}
+              {% endif %}
+            </td>  
+            {% for k in range(1,ncols)  %}
+              {% set cp="" %}
+              {% set cn="" %}
+               {% if data[r] is defined and data[r][k] is defined %}
+                  {% if data[r][k] is defined %}
+                    {% set cp,cn  = data[r][k] %}
+                  {% endif %}
+               {% endif %}
+              <td>{{cp}}</td><td>{{cn}}</td>
+           {% endfor %}
       {%endif%}
     </tr>
     {% endfor %}
@@ -127,15 +164,15 @@ var oTable = $("table#coeffs").dataTable(
 </td></tr>
 <tr><td>
 <p>
-<form name="search" method = "get" action="{{url_for('mwf.render_one_maass_waveform',maass_id=maassid)}}">
+{# <form name="search" method = "get" action="{{url_for('mwf.render_one_maass_waveform',maass_id=maassid)}}">
   <input type="hidden" name="id" value="{{maassid}}">
   <input type="hidden" name="download" value="coefficients">
   <button type="submit" name="Submit" value="Get more">Download coefficients</button>	
-</form>
+</form> #}
 </td></tr></table>
-<p>
-{{ KNOWL('metadata.knowl-tag') }}
-</p>
+<div style="clear:both">
+{# { KNOWL('metadata.knowl-tag') } #}
+</div>
 {% else %}
 There are no Fourier coefficients supplied for this Maass form.
 {% endif %}

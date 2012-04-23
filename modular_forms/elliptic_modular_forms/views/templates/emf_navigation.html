@@ -16,9 +16,9 @@
 {{ info.error | safe }}
 </div>
 {% endif %}
-<!-- To make an interface that is easier to read we implement each case of input separately -->
+{# To make an interface that is easier to read we implement each case of input separately #}
 
-<!-- {{ info | safe }} $("div").data("option",{"start":1}); -->
+{# {{ info | safe }} $("div").data("option",{"start":1}); #}
 
 <script>
 $(document).ready(function() {
@@ -85,8 +85,10 @@ function set_value(id,val) {
 </script>
 {% if info.grouptype == 0 %}
     {% set group=KNOWL('mf.sl2.subgroup.gamma0N',title='\(\Gamma_0(N)\)') %}
+    {% set chi = 0%}
 {% elif info.grouptype == 1 %}
     {% set group=KNOWL('mf.sl2.subgroup.gamma0N',title='\(\Gamma_1(N)\)') %}
+    {% set chi = -1%}
 {% endif %}
 
 {%if info.show_switch is defined %}
@@ -105,7 +107,7 @@ function set_value(id,val) {
       {#{KNOWLl('mf.elliptic.browse.all.info') } #}
 The table below gives the dimensions of the space of holomorphic 
 {{KNOWL('mf.elliptic.new_form',title='newforms')}} of integral
-{{KNOWL('mf.elliptic.weight',title='weight')}} starting from 2 for {{group}}
+{{KNOWL('mf.elliptic.weight',title='weight')}} for {{group}}
 {% if info.grouptype == 1 %}
 .
 {% else %}
@@ -152,7 +154,7 @@ table.ntdata thead th.spaceleft {
           <tr class="space">
             <th class="spaceleft"></th>
             {% for N in table.col_heads  %}
-	    {% set col_url = url_for('emf.render_elliptic_modular_forms',level=N,character=0) %}
+	    {% set col_url = url_for('emf.render_elliptic_modular_forms',level=N,character=chi) %}
             <th class="level"><a href="{{col_url}}">{{N}}</a></th>
             {% endfor %}
           </tr>
@@ -162,7 +164,7 @@ table.ntdata thead th.spaceleft {
           <tr>
             <th class="left">
               {% set k = table.row_heads[loop.index-1] %}
-              {% set row_url = url_for('emf.render_elliptic_modular_forms',weight=k,character=0) %}
+              {% set row_url = url_for('emf.render_elliptic_modular_forms',weight=k,character=chi) %}
               <a href="{{ row_url }}">{{ k }}</a>
             </th>
             {% for cell in row  %}
@@ -192,7 +194,7 @@ table.ntdata thead th.spaceleft {
         </form>
       </div>
 
-<!--
+{#
 <h1>Search</h1>
 <form name="search" method = "post" action="{{url_for('.render_elliptic_modular_forms')}}">
   <table class="">
@@ -211,13 +213,8 @@ table.ntdata thead th.spaceleft {
         {{KNOWL('mf.elliptic.character',title='Character')}}:
       </td><td><input type="text" name="character" value="" placeholder="0"></td> 
     </tr>
-    <!--tr>
-	<td>Dimension of Galois Orbit:</td><td><input type="text" name="gdim" value="" placeholder="1"> 
-      <span class="formexample">(i.e. the rational field)</span></td>
-    </tr-->
-<!--
   </table>
   <button type="submit" name="Submit" value="Search">Search</button>
 </form>
--->
+#}
 {% endblock content %}

@@ -223,16 +223,24 @@ def conjclasses(g, n):
   gap.set('cycletype', 'function(el, n) local ct; ct := CycleLengths(el, [1..n]); ct := ShallowCopy(ct); Sort(ct); ct := Reversed(ct); return(ct); end;')
   cc = g.ConjugacyClasses()
   ccn = [x.Size() for x in cc]
-  cc = [x.Representative() for x in cc]
-  cc2 = [x.cycletype(n) for x in cc]
+  ccc = [x.Representative() for x in cc]
+  if int(n)==1:
+    cc2 = [[1]]
+    cc = ['()']
+  else:
+    cc = ccc
+    cc2 = [x.cycletype(n) for x in cc]
   cc2 = [str(x) for x in cc2]
   cc2 = map(lambda x: re.sub("\[",'', x),  cc2)
   cc2 = map(lambda x: re.sub("\]",'', x),  cc2)
-  ans = [[cc[j], cc[j].Order(), ccn[j], cc2[j]] for j in range(len(ccn))]
+  ans = [[cc[j], ccc[j].Order(), ccn[j], cc2[j]] for j in range(len(ccn))]
   return(ans)
 
 def cclasses (n, t):
-  G = gap.TransitiveGroup(n,t)
+  if int(n)==1:
+    G = gap.SmallGroup(1,1)
+  else:
+    G = gap.TransitiveGroup(n,t)
   cc = conjclasses(G, n)
   html = """<div>
             <table class="ntdata">
@@ -250,7 +258,10 @@ def cclasses (n, t):
   return html
 
 def chartable (n, t):
-  G = gap.TransitiveGroup(n,t)
+  if int(n)==1:
+    G = gap.SmallGroup(n,t)
+  else:
+    G = gap.TransitiveGroup(n,t)
   CT = G.CharacterTable()
   ctable = gap.eval("Display(%s)"%CT.name())
   ctable = re.sub("^.*\n", '', ctable)
@@ -259,7 +270,10 @@ def chartable (n, t):
 
 
 def generators (n, t):
-  G = gap.TransitiveGroup(n,t)
+  if n==1:
+    G = gap.SmallGroup(n,t)
+  else:
+    G = gap.TransitiveGroup(n,t)
   gens = G.SmallGeneratingSet()
   gens = str(gens)
   gens = re.sub("[\[\]]", '', gens)
@@ -286,6 +300,11 @@ def aliastable (C):
 def complete_group_code(code):
   if code in aliases.keys():
     return aliases[code]
+  rematch = re.match("(\d+)[Tt](\d+)", code)
+  if rematch:
+    n = int(rematch.group(1))
+    t = int(rematch.group(2))
+    return [[n,t]]
   return []
 
 def complete_group_code_old(c):

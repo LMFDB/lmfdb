@@ -77,8 +77,8 @@ entry you access information about the forms in the specified space.
 {% set table = browse_table %}
 {% set rows = browse_table.rows %}
 
-{% if table.maxRowCount is defined %}
-{% set maxRowCount = table.maxRowCount %}
+{% if table.maxColCount is defined %}
+{% set maxColCount = table.maxColCount %}
 {% endif %}
 
 {% set row_class = cycler('odd', 'even') %}
@@ -89,7 +89,7 @@ entry you access information about the forms in the specified space.
     {% if table.colhead is defined %}
     <tr>
       <th></th>
-      <th colspan="{{maxRowCount}}" class="colhead">{{table.colhead}}</th>
+      <th colspan="{{maxColCount}}" class="colhead">{{table.colhead}}</th>
     </tr>
     {% endif %}
     <tr>
@@ -101,7 +101,7 @@ entry you access information about the forms in the specified space.
       {% for ix in table.col_heads  %}
       <th width="10px">
         {{ ix }}
-        <!--a href="{{url_for('render_webpage_label',modulus=level,number=ix) }}" style="">{{ix}}</a-->
+        {# <a href="{{url_for('render_webpage_label',modulus=level,number=ix) }}" style="">{{ix}}</a> #}
       </th>
       {% endfor %}
     </tr>
@@ -120,8 +120,8 @@ entry you access information about the forms in the specified space.
         <a style="" href="{{cell.url}}">{{cell.dim}}</a>
       </td>
       {% endfor %}
-      {% if maxRowCount is defined %}
-      {% for j in range(rc,maxRowCount) %}
+      {% if maxColCount is defined %}
+      {% for j in range(rc,maxColCount) %}
         <td>&nbsp;</td>
       {% endfor %}
       {% endif %}

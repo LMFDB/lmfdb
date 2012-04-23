@@ -1,0 +1,86 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+
+{% if degree==1 %}
+
+<div>
+L-functions can be organized by {{ KNOWL('lfunction.degree', title='degree') }}.
+The 
+{{ KNOWL('lfunction.known_degree1', title='degree 1 L-functions') }} are
+given below.
+</div>
+
+<h2>Browse Degree 1 L-functions</h2>
+
+By {{ KNOWL('lfunction.underlying_object', title='underlying object:') }} <a href="{{url_for('render_Lfunction', arg1 = 'Riemann')}}">Riemann zeta function</a>
+&nbsp; <a href="{{url_for('render_Lfunction', arg1 = 'degree1', arg2 = 'Dirichlet')}}">Dirichlet character</a> 
+{#
+<h2>Search Degree 1 L-functions</h2>
+#}
+
+{% endif %}
+
+{% if degree==2 %}
+
+<div>
+L-functions can be organized by {{ KNOWL('lfunction.degree', title='degree') }}.  Here are 
+{{ KNOWL('lfunction.known_degree2', title='examples of L-functions of degree 2') }}.
+</div>
+
+<h2>Browse Degree 2 L-functions</h2>
+
+By {{ KNOWL('lfunction.underlying_object', title='underlying object:') }} <a href="{{url_for('render_Lfunction', arg1 = 'degree2', arg2 = 'CuspForm')}}">Cusp form for GL(2)</a>
+&nbsp; <a href="{{url_for('render_Lfunction', arg1 = 'degree2', arg2 = 'MaassForm')}}">Maass form for GL(2)</a> &nbsp; <a href="{{url_for('render_Lfunction', arg1 = 'degree2', arg2 = 'EllipticCurve')}}">Elliptic curve</a>
+
+{#
+<h2>Search Degree 2 L-functions</h2>
+#}
+
+{% endif %}
+
+{% if degree==3 %}
+
+<div>
+L-functions can be organized by {{ KNOWL('lfunction.degree', title='degree') }}.  Here are 
+{{ KNOWL('lfunction.known_degree3', title='examples of L-functions of degree 3') }}.
+</div>
+
+<h2>Browse Degree 3 L-functions</h2>
+
+By {{ KNOWL('lfunction.underlying_object', title='underlying object:') }}
+<a href="{{url_for('render_Lfunction', arg1 = 'degree3', arg2 = 'MaassForm')}}">Maass form for GL(3)</a> 
+&nbsp; <a href="{{url_for('render_Lfunction', arg1 = 'degree3', arg2 = 'EllipticCurve', arg3 = 'SymmetricSquare')}}">Symmetric square of L-function of Elliptic curve</a> 
+
+{#
+<h2>Search Degree 3 L-functions</h2>
+#}
+
+
+{% endif %}
+ 
+{% if degree==4 %}
+
+<div>
+L-functions can be organized by {{ KNOWL('lfunction.degree', title='degree') }}.  Here are
+{{ KNOWL('lfunction.known_degree4', title='examples of L-functions of degree 4') }}.
+</div>
+
+<h2>Browse Degree 4 L-functions</h2>
+
+By {{ KNOWL('lfunction.underlying_object', title='underlying object:')}}
+<a href="{{url_for('render_Lfunction', arg1 = 'degree4', arg2 = 'MaassForm')}}">Maass form for GL(4)</a> 
+&nbsp; <a href="{{url_for('render_Lfunction', arg1 = 'degree4', arg2 = 'MaassForm')}}#GSp4_Q_Maass">Maass form for GSp(4)</a>
+&nbsp; <a href="{{url_for('render_Lfunction', arg1 = 'degree4', arg2 = 'EllipticCurve', arg3 = 'SymmetricCube')}}">Symmetric cube of L-function of Elliptic curve</a> 
+
+{#
+<h2>Search Degree 4 L-functions</h2>
+#}
+
+
+{% endif %}
+ 
+{% endblock %}
+
+
