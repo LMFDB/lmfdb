@@ -722,8 +722,8 @@ def paintSvgHoloGeneral(Nmin,Nmax,kmin,kmax,imagewidth,imageheight):
 ## ============================================
 def getOneGraphHtmlHolo(Nmin, Nmax, kmin, kmax):
     graphInfo = getGraphInfoHolo(Nmin, Nmax, kmin, kmax)
-# To  generate the graph:    ans = ("<embed src='" + graphInfo['src'] + "' width='" + str(graphInfo['width']) +  
-    ans = ("<embed  src='/static/images/browseGraphHolo_22_14_5a.svg' width='" + str(graphInfo['width']) +
+# To  generate the graph:    ans += ("<embed src='" + graphInfo['src'] + "' width='" + str(graphInfo['width']) +  
+    ans = ("<embed src='/static/images/browseGraphHolo_22_14_5a.svg' width='" + str(graphInfo['width']) +
            "' height='" + str(graphInfo['height']) +
             "' type='image/svg+xml' " +
             "pluginspage='http://www.adobe.com/svg/viewer/install/'/>\n")
@@ -775,16 +775,11 @@ def paintCSChar(width, height, xMax, yMax, yMin, xfactor, yfactor,ticlength):
     for i in range( 1,  xMax + 1, 1):
         digitoffset = 6
         if i < 10:
-            digitoffset = 3
-        if i < xMax:       
-            textOrder = str(i)
-        else:
-            textOrder = '>' + str(xMax-1)
-	    digitoffset += 6
+           digitoffset = 3
         xmlText = xmlText + ("<text x='" + str(i*xfactor - digitoffset) + "' y='" +
                              str(height - 2 * ticlength) +
                              "' style='fill:rgb(102,102,102);font-size:11px;'>"
-                             + textOrder + "</text>\n")
+                             + str(i) + "</text>\n")
 
         xmlText = xmlText + ("<line y1='0' x1='" + str(i*xfactor) +
                          "' y2='" + str(height) + "' x2='" +
@@ -804,16 +799,12 @@ def paintCSChar(width, height, xMax, yMax, yMin, xfactor, yfactor,ticlength):
                              "' style='fill:rgb(102,102,102);font-size:11px;'>" +
                              str(i) + "</text>\n")
 
-        if i%2==0 :  #  put dashes every two units (this "if" is not needed after change from 4 to 2)
+        if i%2==0 :  #  put dahes every two units (this "if" is not needed after change from 4 to 2)
            xmlText = xmlText + ("<line x1='0' y1='" +
                          str(height - (i-yMin+1)*yfactor) + "' x2='" + str(width) +
                          "' y2='" + str(height - (i-yMin+1)*yfactor) +
                          "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
-    xmlText = xmlText + ("<text x='5' y='10' style='fill:rgb(102,102,102);font-size:11px;'>Conductor</text>\n")
-    xmlText = xmlText + ("<text x='" + str(width-xfactor+35) + "' y='" + str(height - 2 * ticlength) +
-                         "' style='fill:rgb(102,102,102);font-size:11px;'>Order</text>\n")
-    
     return xmlText
 
 ## =============================================
