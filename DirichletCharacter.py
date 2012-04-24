@@ -259,6 +259,12 @@ def get_next_index(chi):
     mod = chi.modulus()
     index = chi.number()
     return next_function(mod,index)
+
+def next_function(mod,index):
+    from sage.all import Integer 
+    for j in range(index+1,mod):
+        if Integer(j).gcd(mod) == 1:
+            return j
     return 1
 
 def get_prev_index(chi):
@@ -332,7 +338,6 @@ def dc_calc_kloosterman(modulus,number):
     arg = request.args.get("val", [])
     if not arg:
         return flask.abort(404)
-    arg = map(int,arg.split(','))
     try:
         a,b = map(int,arg.split(','))
         if modulus == 1:
