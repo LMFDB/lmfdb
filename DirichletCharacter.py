@@ -176,7 +176,7 @@ def initCharacterInfo(web_chi,args, request):
         info['genvals'] = str(web_chi.genvalues)
         info['genvalstex'] = str(web_chi.genvaluestex)
         info['parity'] = web_chi.parity
-        info['sign'] = web_chi.sign
+        #info['sign'] = web_chi.sign  ## removed by Pascal (syn parity)
         info['real'] = web_chi.real
         info['prim'] = web_chi.prim
         info['vals'] = web_chi.vals
@@ -250,9 +250,9 @@ def getPrevNextNavigation(web_chi, chi, mode):
 
 def getUrl(conductor, index, mode):
     if mode == "character":
-        url_for("render_Character", arg1=conductor, arg2=index)
+        return url_for("render_Character", arg1=conductor, arg2=index)
     else:
-        url_for("render_Lfunction", arg1 = 'Character', arg2 = 'Dirichlet',
+        return url_for("render_Lfunction", arg1 = 'Character', arg2 = 'Dirichlet',
                 arg3=conductor, arg4=index)
 
 def get_next_index(chi):
@@ -285,7 +285,6 @@ def render_webpage_label(modulus,number):
 
 @app.route("/Character/Dirichlet/calc_gauss/<int:modulus>/<int:number>")
 def dc_calc_gauss(modulus,number):
-    #import pdb; pdb.set_trace()
     arg = request.args.get("val", [])
     if not arg:
         return flask.abort(404)
