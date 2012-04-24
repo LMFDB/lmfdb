@@ -269,6 +269,7 @@ def getUrl(modulus, number, mode):
         return url_for("render_Lfunction", arg1 = 'Character', arg2 = 'Dirichlet',
                 arg3=modulus, arg4=number)
 
+
 def getPrevNextNavigation(web_chi, chi, mode):
     ''' Returns the contents for info['navi'] which is the
     navigation to the next and previous character or
