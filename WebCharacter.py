@@ -93,9 +93,6 @@ class WebCharacter:
                 count += 1
             if len(Gunits) != 1:
                 self.unitgens += ")"
-            self.sign = "True"
-            if self.zetaorder > 2:
-                self.sign = "False"
             chizero = G_sage[0]
             self.char = str(chi)
             if chi.is_primitive():
@@ -158,7 +155,7 @@ class WebCharacter:
         else:
             self.prim = "No"
         order = str(self.order)
-        if self.sign=="True":
+        if self.order == 2:
             self.real = "Yes"
         else: 
             self.real = "No"

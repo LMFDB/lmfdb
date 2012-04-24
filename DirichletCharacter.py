@@ -10,7 +10,7 @@ from sage.all import *
 import tempfile, os
 from pymongo import ASCENDING
 from WebCharacter import *
-from renderLfunction import render_Lfunction
+#from renderLfunction import render_Lfunction
 from utils import to_dict, parse_range, make_logger
 import ListCharacters
 
@@ -176,7 +176,7 @@ def initCharacterInfo(web_chi,args, request):
         info['genvals'] = str(web_chi.genvalues)
         info['genvalstex'] = str(web_chi.genvaluestex)
         info['parity'] = web_chi.parity
-        info['sign'] = web_chi.sign
+        #info['sign'] = web_chi.sign  ## removed by Pascal (syn parity)
         info['real'] = web_chi.real
         info['prim'] = web_chi.prim
         info['vals'] = web_chi.vals
@@ -195,48 +195,67 @@ def initCharacterInfo(web_chi,args, request):
             info['inducedchar_tex'] = web_chi.inducedchar_tex
         info['nextnumber'] = web_chi.number+1
         #info['learnmore'] = [('Dirichlet Characters', url_for("knowledge.show", ID="character.dirichlet.learn_more_about"))] 
-        info['friends'] = [('Dirichlet L-function', '/L/Character/Dirichlet/'+smod+'/'+snum)]
-        next = next_index(chi) 
-        if web_chi.number == 1:
-            prev = prev_function(web_chi.modulus-1, web_chi.modulus-1)
+        if web_chi.primitive=="False":
+            info['friends'] = []
         else:
-            prev = prev_index(chi)
-        mmore = int(smod) + 1
-        mless = int(smod) - 1
-        name_pattern = r"\(\chi_{%s}(%s,&middot;)\)"
-        if web_chi.modulus == 1:
-             n1 = name_pattern % (2,1)
-             url1 = url_for("render_Character", arg1=2,arg2=1)
-             info['navi'] = [(n1,url1),("", "")]
-        elif web_chi.modulus == 2:
-             n2 = name_pattern % (3,1)
-             url2 = url_for("render_Character", arg1=3,arg2=1)
-             n3 = name_pattern % (1,1)
-             url3 = url_for("render_Character", arg1=1,arg2=1)
-             info['navi'] = [(n2,url2),(n3,url3)]
-        else:
-            if web_chi.number == 1:
-                n4 = name_pattern % (smod,next)
-                url4 = url_for("render_Character", arg1=smod,arg2=next)
-                n5 = name_pattern % (mless,prev)
-                url5 = url_for("render_Character", arg1=mless,arg2=prev)
-                info['navi'] = [(n4,url4),(n5,url5)] 
-            elif web_chi.number == web_chi.modulus - 1:
-                n6 = name_pattern % (mmore, 1) 
-                url6 = url_for("render_Character", arg1=mmore,arg2=1)
-                n7 = name_pattern % (smod,prev)
-                url7 = url_for("render_Character", arg1=smod,arg2=prev)
-                info['navi'] = [(n6,url6),(n7,url7)]
-            else:
-                n8 = name_pattern % (smod,next)
-                url8 = url_for("render_Character", arg1=smod,arg2=next)
-                n9 = name_pattern % (smod,prev)
-                url9 = url_for("render_Character", arg1=smod,arg2=prev)
-                info['navi'] = [(n8,url8),(n9,url9)]
+            info['friends'] = [('Dirichlet L-function', '/L/Character/Dirichlet/'+smod+'/'+snum)]
 
+        info['navi'] = getPrevNextNavigation(web_chi, chi, "character")
+        
     return info
-    
-def next_index(chi):
+
+def getPrevNextNavigation(web_chi, chi, mode):
+    ''' Returns the contents for info['navi'] which is the
+    navigation to the next and previous character or
+    the corresponding L-function
+    Mode is either "character" or "L"
+    '''
+    if mode == "character":
+        name_pattern = r"\(\chi_{%s}(%s,&middot;)\)"
+    else:
+        name_pattern = r"\(L(s,\chi_{%s}(%s,&middot;))\)"
+
+    if web_chi.modulus == 1:
+        next_name = name_pattern % (2,1)
+        next_url = getUrl(2, 1, mode)
+        return [("", ""), (next_name, next_url)]
+      
+    if web_chi.modulus == 2:
+        (next_mod,next_index) = (3,1)   
+        (prev_mod,prev_index) = (1,1)
+        
+    else:
+        next_index = get_next_index(chi) 
+        if web_chi.number == 1:
+            prev_index = prev_function(web_chi.modulus-1, web_chi.modulus-1)
+        else:
+            prev_index = get_prev_index(chi)
+            
+        if web_chi.number == 1:
+            prev_mod = web_chi.modulus - 1
+        else:
+            prev_mod = web_chi.modulus
+            
+        if web_chi.number == web_chi.modulus - 1:
+            next_mod = web_chi.modulus + 1
+        else:
+            next_mod = web_chi.modulus
+
+    next_name = name_pattern % (next_mod,next_index)
+    next_url = getUrl(next_mod, next_index, mode)
+    prev_name = name_pattern % (prev_mod,prev_index)
+    prev_url = getUrl(prev_mod, prev_index, mode)
+
+    return [(prev_name, prev_url), (next_name, next_url)]
+
+def getUrl(conductor, index, mode):
+    if mode == "character":
+        return url_for("render_Character", arg1=conductor, arg2=index)
+    else:
+        return url_for("render_Lfunction", arg1 = 'Character', arg2 = 'Dirichlet',
+                arg3=conductor, arg4=index)
+
+def get_next_index(chi):
     mod = chi.modulus()
     index = chi.number()
     return next_function(mod,index)
@@ -248,7 +267,7 @@ def next_function(mod,index):
             return j
     return 1
 
-def prev_index(chi):
+def get_prev_index(chi):
     mod = chi.modulus()
     index = chi.number()
     return prev_function(mod,index) 
@@ -270,6 +289,10 @@ def dc_calc_gauss(modulus,number):
     if not arg:
         return flask.abort(404)
     try:
+        if modulus == 1:
+            # there is a bug in sage for modulus = 1
+            return r"""\(\displaystyle \tau_{%s}(\chi_{1}(1,&middot;)) =
+          \sum_{r\in \mathbb{Z}/\mathbb{Z}} \chi_{1}(1,r) 1^{%s}= 1. \)""" %(int(arg),int(arg))
         from dirichlet_conrey import DirichletGroup_conrey
         chi = DirichletGroup_conrey(modulus)[number]
         chi = chi.sage_character()
@@ -315,12 +338,20 @@ def dc_calc_kloosterman(modulus,number):
     arg = request.args.get("val", [])
     if not arg:
         return flask.abort(404)
-    arg = map(int,arg.split(','))
     try:
+        a,b = map(int,arg.split(','))
+        if modulus == 1:
+            # there is a bug in sage for modulus = 1
+            return r"""
+            \( \displaystyle K(%s,%s,\chi_{1}(1,&middot;))
+            = \sum_{r \in \mathbb{Z}/\mathbb{Z}}
+                 \chi_{1}(1,r) 1^{%s r + %s r^{-1}}
+            = 1 \)
+            """ % (a,b,a,b)
         from dirichlet_conrey import DirichletGroup_conrey
         chi = DirichletGroup_conrey(modulus)[number]
         chi = chi.sage_character()
-        k = chi.kloosterman_sum_numerical(100,arg[0],arg[1])
+        k = chi.kloosterman_sum_numerical(100,a,b)
         real = round(k.real(),5)
         imag = round(k.imag(),5)
         if imag == 0:
@@ -329,7 +360,11 @@ def dc_calc_kloosterman(modulus,number):
             k = str(imag) + "i"
         else:
             k = latex(k)
-        return r"\( \displaystyle K(%s,%s,\chi_{%s}(%s,&middot;)) = \sum_{r \in \mathbb{Z}/%s\mathbb{Z}} \chi_{%s}(%s,r) e\left(\frac{%s r + %s r^{-1}}{25}\right) = %s. \)" %(int(arg[0]),int(arg[1]),modulus,number, modulus, modulus,number,int(arg[0]),int(arg[1]),k)
+        return r"""
+        \( \displaystyle K(%s,%s,\chi_{%s}(%s,&middot;))
+        = \sum_{r \in \mathbb{Z}/%s\mathbb{Z}}
+             \chi_{%s}(%s,r) e\left(\frac{%s r + %s r^{-1}}{%s}\right)
+        = %s. \)""" %(a,b,modulus,number, modulus, modulus,number,a,b,modulus,k)
     except Exception, e:
         return "<span style='color:red;'>ERROR: %s</span>" % e
 
