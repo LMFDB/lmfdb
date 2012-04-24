@@ -937,10 +937,11 @@ class Lfunction_Dirichlet(Lfunction):
         self.numcoeff = int(self.numcoeff)
 
         # Create the Dirichlet character
-        web_chi = WebCharacter({ 'type': 'dirichlet',
+        self.web_chi = WebCharacter({ 'type': 'dirichlet',
                                  'modulus': self.charactermodulus,
                                  'number': self.characternumber})
-        chi = web_chi.chi_sage
+        chi = self.web_chi.chi_sage
+        self.chi_sage = chi
         self.motivic_weight = 0
         
         if chi.is_primitive():

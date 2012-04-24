@@ -367,7 +367,7 @@ def initLfunction(L,args, request):
                                                                        url_for('render_Character', arg1=1, arg2=1))]
 
     elif L.Ltype()  == 'dirichlet':
-        info['navi'] = getPrevNextNavigation(web_chi, chi, "L")
+        info['navi'] = getPrevNextNavigation(L.web_chi, L.chi_sage, "L")
         snum = str(L.characternumber)
         smod = str(L.charactermodulus)
         charname = '\(\\chi_{%s}({%s},\\cdot)\)' %(smod, snum)
