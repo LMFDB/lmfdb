@@ -12,7 +12,7 @@ import LfunctionPlot
 from utils import to_dict
 import bson
 from Lfunctionutilities import lfuncDStex, lfuncEPtex, lfuncFEtex, truncatenumber
-from DirichletCharacter import getPrevNextNavigation
+from DirichletCharacter import getPrevNextNavig
 
 #logger = make_logger("LF")
 
