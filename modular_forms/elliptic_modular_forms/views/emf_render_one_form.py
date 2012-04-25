@@ -184,7 +184,7 @@ def set_info_for_one_modular_form(level=None,weight=None,character=None,label=No
             s2=""
             for Q in alev.keys():
                 s2+="\( \omega_{ %s } \) : %s <br>" % (Q,alev[Q])
-                properties2.append((s1,s2))
+            properties2.append((s1,s2))
         #properties.append(s)
         emf_logger.debug("properties={0}".format(properties2))
     else:
