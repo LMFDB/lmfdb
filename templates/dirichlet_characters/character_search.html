@@ -120,7 +120,7 @@ table td.params {
                     <tr class="{{ row_class.next() }}">
                         <td class="modulus" align="center">
                             <a href="/Character/Dirichlet/{{chi[2]}}/{{chi[0]}}" title="{{counter.next()}}">
-                                {% if chi[5] == "True"%}
+                                {% if chi[5] == True %}
                                     <font color="green">
                                 {% else %}
                                     <font color="blue">
@@ -145,7 +145,7 @@ table td.params {
                             <a href="/Character/Dirichlet/?modulus={{modulus}}&conductor={{conductor}}&order={{chi[4]}}&parity={{parity}}">{{chi[4]}}</a>
                         </td>
                         <td  align=center>
-                            {% if chi[6] == "True" %}
+                            {% if chi[6] == True %}
                                 Even
                             {% else %}
                                 Odd

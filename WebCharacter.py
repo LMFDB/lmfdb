@@ -15,31 +15,46 @@ try:
 except:
   logger.critical("dirichlet_conrey.pyx cython file is not available ...")
 
+def latex_char_logvalue(x,tag=False):
+    n = int(x.numer())
+    d = int(x.denom())
+    if d == 1:
+        s = "1"
+    elif n == 1 and d == 2:
+        s = "-1"
+    elif n == 1 and d == 4:
+        s = "i"
+    elif n == 3 and d == 4:
+        s = "-i"
+    else:
+        s = r"e\left(\frac{%s}{%s}\right)" % (n,d)
+    if tag:
+        return "\(%s\)" % s
+    else:
+        return s
+
+def latex_tuple(v):
+    if len(v) == 1:
+      return v[0]
+    else:
+      return "(%s)" % (', '.join(v))
+
 def log_value(modulus,number):
+    """
+    return the list of values of a given character
+    """
     from dirichlet_conrey import DirichletGroup
     G = DirichletGroup_conrey(modulus)
     chi = G[number]
     l = []
     for j in range(1, modulus+1):
+      if gcd(j,modulus) != 1:
+        l.append('0')
+      else:
         logvalue = chi.logvalue(j)
-        n = int(logvalue.numer())
-        d = int(logvalue.denom())
-        from sage.all import Integer
-        if Integer(j).gcd(modulus) == 1:
-            if n == 0:
-                s = "\(1\)"
-            else:
-                s = r"\(e\left(\frac{%s}{%s}\right)\)" %(n,d)
-                if n == 1 and d == 2:
-                    s = "\(-1\)"
-                if n == 1 and d == 4:
-                    s = "\(i\)"
-                if n == 3 and d == 4:
-                    s = "\(-i\)"
-        else:
-            s="0"
-        l.append(s)
+        l.append(latex_char_logvalue(logvalue,True))
     return l
+
 class WebCharacter:
     """Class for presenting a Character on a web page
 
@@ -73,27 +88,11 @@ class WebCharacter:
             chi_sage = chi.sage_character()
             self.chi_sage = chi_sage
             self.zetaorder = G_sage.zeta_order()
-            self.genvalues = chi_sage.values_on_gens()
-            if len(chi_sage.values_on_gens()) == 1:
-                self.genvaluestex = latex(chi_sage.values_on_gens()[0])
-            else:
-                self.genvaluestex = latex(chi_sage.values_on_gens())
-            chivals = chi_sage.values_on_gens()
-            Gunits = G_sage.unit_gens()
-            if len(Gunits) != 1:
-                self.unitgens = "("
-            else:
-                self.unitgens = ""
-            count = 0
-            for g in Gunits:
-                if count != len(Gunits)-1:
-                    self.unitgens += latex(g) + ","
-                else:
-                    self.unitgens += latex(g)
-                count += 1
-            if len(Gunits) != 1:
-                self.unitgens += ")"
-            chizero = G_sage[0]
+            ###if len(chi_sage.values_on_gens()) == 1:
+            ###    self.genvaluestex = latex(chi_sage.values_on_gens()[0])
+            ###else:
+            ###    self.genvaluestex = latex(chi_sage.values_on_gens())
+            ###chizero = G_sage[0]
             self.char = str(chi)
             if chi.is_primitive():
                 self.primitive = "True"
@@ -103,6 +102,13 @@ class WebCharacter:
             self.order = chi.multiplicative_order()
             self.vals = chi.values()
             self.logvals = log_value(self.modulus,self.number)
+            #self.logvals = map(chi.logvalue, range(1,self.modulus+1))
+            #self.logvals = [latex_char_logvalue(k,True) for k in self.logvals]
+            Gunits = G_sage.unit_gens()
+            self.unitgens = latex_tuple(map(str, Gunits))
+            self.genvalues = chi_sage.values_on_gens() ## what is the use ?
+            self.genlogvalues = [ chi.logvalue(k) for k in Gunits ]
+            self.genvaluestex = latex_tuple(map(latex_char_logvalue,self.genlogvalues))
             self.bound = 5*1024
             if chi.is_even():
                 self.parity = 'Even'

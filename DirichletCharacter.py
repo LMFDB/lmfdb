@@ -133,7 +133,7 @@ def set_info_for_start_page():
     info['friends'] = [('Dirichlet L-functions', url_for("render_Lfunction", arg1="degree1"))]
     return info
 
-def initCharacterInfo(web_chi,args, request):
+def initCharacterInfo(web_chi, args, request):
     info = {'title': web_chi.title}
     info['citation'] = ''
     info['support'] = ''
@@ -173,7 +173,7 @@ def initCharacterInfo(web_chi,args, request):
         info['nextmodulus'] = web_chi.modulus+1
         info['primitive'] = web_chi.primitive
         info['zetaorder'] = web_chi.zetaorder
-        info['genvals'] = str(web_chi.genvalues)
+        #info['genvals'] = str(web_chi.genvalues)
         info['genvalstex'] = str(web_chi.genvaluestex)
         info['parity'] = web_chi.parity
         #info['sign'] = web_chi.sign  ## removed by Pascal (syn parity)
@@ -181,7 +181,7 @@ def initCharacterInfo(web_chi,args, request):
         info['prim'] = web_chi.prim
         info['vals'] = web_chi.vals
         info['logvals'] = web_chi.logvals
-    #info['galoisorbits'] = web_chi.galoisorbits
+        #info['galoisorbits'] = web_chi.galoisorbits
         #info['root_unity'] =  str(any(map(lambda x : r"\zeta" in x,  web_chi.vals)))
         info['unitgens'] = str(web_chi.unitgens)
         info['bound'] = int(web_chi.bound)
@@ -200,9 +200,75 @@ def initCharacterInfo(web_chi,args, request):
         else:
             info['friends'] = [('Dirichlet L-function', '/L/Character/Dirichlet/'+smod+'/'+snum)]
 
-        info['navi'] = getPrevNextNavigation(web_chi, chi, "character")
+        info['navi'] = getPrevNextNavig(web_chi.modulus, web_chi.number, "character")
         
     return info
+
+def getPrevNextNavig(modulus,number,mode='character'):
+    """
+    Returns the contents for info['navi'] which is the
+    navigation to the next and previous character or
+    the corresponding L-function
+    Mode is either "character" or "L"
+    In case of L-function, restrict to primitive characters.
+    """
+    if mode == "character":
+        name_pattern = r"\(\chi_{%s}(%s,&middot;)\)"
+    else:
+        name_pattern = r"\(L(s,\chi_{%s}(%s,&middot;))\)"
+
+    if modulus == 1:
+        next_name = name_pattern % (2,1)
+        next_url = getUrl(2, 1, mode)
+        return [("", ""), (next_name, next_url)]
+      
+    if modulus == 2:
+        next_mod,next_number = (3,1)   
+        prev_mod,prev_number = (1,1)
+        
+    else:
+        """ we know that the characters
+            chi_m(1,.) and chi_m(m-1,.)
+            always exist for m>1.
+            They are extremal for a given m.
+        """
+        if number == modulus-1:
+            next_mod, next_number = modulus+1, 1
+        else:
+            next_mod = modulus
+            next_number = next_prime_to(modulus,number)
+
+        if number == 1:
+            prev_mod, prev_number = modulus-1, modulus-1
+        else:
+            prev_mod = modulus
+            prev_number = prev_prime_to(modulus,number)
+           
+    next_name = name_pattern % (next_mod,next_number)
+    next_url = getUrl(next_mod, next_number, mode)
+    prev_name = name_pattern % (prev_mod,prev_number)
+    prev_url = getUrl(prev_mod, prev_number, mode)
+
+    return [(prev_name, prev_url), (next_name, next_url)]
+
+def next_prime_to(m,n):
+    """ next n prime to m. Assume m>1 """
+    for k in xrange(n+1,m):
+        if gcd(m,k)==1: return k
+    return 1
+
+def prev_prime_to(m,n):
+    for k in xrange(n-1,0,-1):
+        if gcd(m,k)==1: return k
+    return 1
+
+def getUrl(modulus, number, mode):
+    if mode == "character":
+        return url_for("render_Character", arg1=modulus, arg2=number)
+    else:
+        return url_for("render_Lfunction", arg1 = 'Character', arg2 = 'Dirichlet',
+                arg3=modulus, arg4=number)
+
 
 def getPrevNextNavigation(web_chi, chi, mode):
     ''' Returns the contents for info['navi'] which is the
@@ -247,13 +313,6 @@ def getPrevNextNavigation(web_chi, chi, mode):
     prev_url = getUrl(prev_mod, prev_index, mode)
 
     return [(prev_name, prev_url), (next_name, next_url)]
-
-def getUrl(conductor, index, mode):
-    if mode == "character":
-        return url_for("render_Character", arg1=conductor, arg2=index)
-    else:
-        return url_for("render_Lfunction", arg1 = 'Character', arg2 = 'Dirichlet',
-                arg3=conductor, arg4=index)
 
 def get_next_index(chi):
     mod = chi.modulus()
