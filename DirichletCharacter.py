@@ -240,6 +240,7 @@ def getPrevNextNavig(modulus,number,mode='character'):
 
         if number == 1:
             prev_mod, prev_number = modulus-1, modulus-1
+            if modulus == 3: prev_number = 1
         else:
             prev_mod = modulus
             prev_number = prev_prime_to(modulus,number)
