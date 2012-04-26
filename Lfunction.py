@@ -611,6 +611,7 @@ class Lfunction_EMF(Lfunction):
         #if self.character > 0:
         #    raise KeyError, "The L-function of a modular form with non-trivial character has not been implemented yet."
         self.number = int(self.number)
+        logger.debug((7+13*I)/float(135))
 
         # Create the modular form
         try:
@@ -636,7 +637,7 @@ class Lfunction_EMF(Lfunction):
         self.numcoeff = 20 + int(5 * math.ceil(self.weight * sqrt(self.level))) #just testing  NB: Need to learn how to use more coefficients
         self.dirichlet_coefficients = []
 
-        # Get the data for the corresponding elliptic if possible
+        # Get the data for the corresponding elliptic curve if possible
         if self.level <= modform_translation_limit and self.weight==2:
             self.ellipticcurve = EC_from_modform(self.level, self.label)
             self.nr_of_curves_in_class = nr_of_EC_in_isogeny_class(self.ellipticcurve)
@@ -658,7 +659,7 @@ class Lfunction_EMF(Lfunction):
 
         for n in range(1,len(self.dirichlet_coefficients)+1):
             an = self.dirichlet_coefficients[n-1]
-            self.dirichlet_coefficients[n-1]=float(an)/float(n**self.automorphyexp)
+            self.dirichlet_coefficients[n-1]=an/float(n**self.automorphyexp)
 
         if self.level == 1:  # For level 1, the sign is always plus
             self.sign = 1
@@ -1083,8 +1084,8 @@ class Lfunction_Maass(Lfunction):
 
             # We now use the Conrey naming scheme for characters
             # in Maas forms too.
-            if self.characternumber <> 1:
-                raise KeyError, 'TODO L-function of Maass form with non-trivial character not implemented. '
+            #if self.characternumber <> 1:
+            #    raise KeyError, 'TODO L-function of Maass form with non-trivial character not implemented. '
 
             if self.level > 1:
                 try:
@@ -1142,7 +1143,11 @@ class Lfunction_Maass(Lfunction):
             else:
                 self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{f})"
 
-            self.title = "$L(s,f)$, where $f$ is a Maass cusp form with level "+str(self.level)+", and eigenvalue "+str(self.eigenvalue)
+            if self.characternumber<>1:
+                characterName = " character \(\chi_{%s}(%s,\cdot)\)" %(self.level, self.characternumber)
+            else:
+                characterName = " trivial character"
+            self.title = "$L(s,f)$, where $f$ is a Maass cusp form with level %s, eigenvalue %s, and %s" %(self.level, self.eigenvalue, characterName)
             self.citation = ''
             self.credit = ''
 
