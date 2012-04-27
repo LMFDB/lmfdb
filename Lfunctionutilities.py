@@ -302,27 +302,30 @@ def compute_dirichlet_series(p_list, PREC):
 def compute_local_roots_SMF2_scalar_valued(ev_data, k, embedding):
     K = ev_data[0].parent().fraction_field() # field of definition for the eigenvalues
     ev = ev_data[1] # dict of eigenvalues
+    #print "ev=--------->>>>>>>", ev
     L = ev.keys()
     m = ZZ(max(L)).isqrt() + 1
     ev2 = {}
     for p in primes(m):
+
         try:
             ev2[p] = (ev[p],ev[p*p])
-
         except:
             break
-        
+    
     ret = []
     for p in ev2:
-        R = PolynomialRing(QQ,'x')
+        R = PolynomialRing(K,'x')
         x = R.gens()[0]
+
         f =  (1 - ev2[p][0]*x+(ev2[p][0]**2-ev2[p][1]-p**(2*k-4))*x**2 -ev2[p][0]*p**(2*k-3)*x**3+p**(4*k-6)*x**4)
+
         Rnum = PolynomialRing(CF, 'y')
         x = Rnum.gens()[0]
         fnum = Rnum(0)
         if K != QQ:
             for i in range(int(f.degree())+1):
-                fnum = fnum + f[i].complex_embeddings(NN)[embedding]*x**i
+                fnum = fnum + f[i].complex_embeddings(NN)[embedding]*(x/p**(k-1.5))**i
         else:
             print "here"
             fnum = Rnum(f)
@@ -331,6 +334,7 @@ def compute_local_roots_SMF2_scalar_valued(ev_data, k, embedding):
         #a1 = r[1][0]/r[0][0]
         #a2 = r[2][0]/r[0][0]
         #a0 = 1/r[3][0]
+
         ret.append((p,r))
 
     return ret

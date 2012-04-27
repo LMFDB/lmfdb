@@ -1413,7 +1413,7 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         #logger.debug(loc)
         self.ev_data = load(loc)
 
-
+        print self.ev_data
 
         
         self.automorphyexp = float(self.weight)-float(1.5)
