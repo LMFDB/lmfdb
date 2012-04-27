@@ -214,53 +214,74 @@ def getPrevNextNavig(modulus,number,mode='character'):
     """
     if mode == "character":
         name_pattern = r"\(\chi_{%s}(%s,&middot;)\)"
+        onlyprimitive = False
     else:
         name_pattern = r"\(L(s,\chi_{%s}(%s,&middot;))\)"
+        onlyprimitive = True
 
-    if modulus == 1:
-        next_name = name_pattern % (2,1)
-        next_url = getUrl(2, 1, mode)
-        return [("", ""), (next_name, next_url)]
-      
-    if modulus == 2:
-        next_mod,next_number = (3,1)   
-        prev_mod,prev_number = (1,1)
-        
-    else:
-        """ we know that the characters
-            chi_m(1,.) and chi_m(m-1,.)
-            always exist for m>1.
-            They are extremal for a given m.
-        """
-        if number == modulus-1:
-            next_mod, next_number = modulus+1, 1
-        else:
-            next_mod = modulus
-            next_number = next_prime_to(modulus,number)
-
-        if number == 1:
-            prev_mod, prev_number = modulus-1, modulus-1
-        else:
-            prev_mod = modulus
-            prev_number = prev_prime_to(modulus,number)
-           
+    next_mod, next_number = next_char(modulus,number,onlyprimitive)
     next_name = name_pattern % (next_mod,next_number)
     next_url = getUrl(next_mod, next_number, mode)
+
+    if modulus == 1:
+        # no previous character
+        return [("", ""), (next_name, next_url)]
+
+    prev_mod, prev_number = prev_char(modulus,number,onlyprimitive)
     prev_name = name_pattern % (prev_mod,prev_number)
     prev_url = getUrl(prev_mod, prev_number, mode)
-
+    
     return [(prev_name, prev_url), (next_name, next_url)]
-
-def next_prime_to(m,n):
-    """ next n prime to m. Assume m>1 """
+     
+def next_char(m,n,onlyprimitive=False):
+    """ we know that the characters
+        chi_m(1,.) and chi_m(m-1,.)
+        always exist for m>1.
+        They are extremal for a given m.
+    """
+    if onlyprimitive: return next_primitive_char(m,n)
+    if m == 1: return 2,1
+    if n == m-1: return m+1,1
     for k in xrange(n+1,m):
-        if gcd(m,k)==1: return k
-    return 1
+        if gcd(m,k)==1: return m,k
+    raise Exception("next_char")
 
-def prev_prime_to(m,n):
+def prev_char(m,n,onlyprimitive=False):
+    """ Assume m>1 """
+    if onlyprimitive: return prev_primitive_char(m,n)
+    if n == 1: m,n = m-1,m
+    if m <= 2: return m,1 # important : 2,2 is not a character
     for k in xrange(n-1,0,-1):
-        if gcd(m,k)==1: return k
-    return 1
+        if gcd(m,k)==1: return m,k
+    raise Exception("next_char")
+
+def prev_primitive_char(m,n):
+    if m<=3: return 1,1
+    if n>2: Gm = DirichletGroup_conrey(m)
+    while True:
+        n-=1
+        if n==1: # (m,1) is never primitive for m>1
+            m,n=m-1,m-1
+            Gm = DirichletGroup_conrey(m)
+        if m<=2: return 1,1
+        if gcd(m,n) != 1: continue
+        # we have a character, test if it is primitive
+        chi = Gm[n]
+        if chi.is_primitive(): return m,n
+
+def next_primitive_char(m,n):
+    if m<3: return 3,2
+    if n < m-1: Gm = DirichletGroup_conrey(m)
+    while 1:
+        n+=1
+        if n==m:
+            m,n=m+1,2
+            Gm = DirichletGroup_conrey(m)
+        if gcd(m,n) != 1: continue
+        # we have a character, test if it is primitive
+        chi = Gm[n]
+        if chi.is_primitive(): return m,n
+
 
 def getUrl(modulus, number, mode):
     if mode == "character":
@@ -268,75 +289,6 @@ def getUrl(modulus, number, mode):
     else:
         return url_for("render_Lfunction", arg1 = 'Character', arg2 = 'Dirichlet',
                 arg3=modulus, arg4=number)
-
-
-def getPrevNextNavigation(web_chi, chi, mode):
-    ''' Returns the contents for info['navi'] which is the
-    navigation to the next and previous character or
-    the corresponding L-function
-    Mode is either "character" or "L"
-    '''
-    if mode == "character":
-        name_pattern = r"\(\chi_{%s}(%s,&middot;)\)"
-    else:
-        name_pattern = r"\(L(s,\chi_{%s}(%s,&middot;))\)"
-
-    if web_chi.modulus == 1:
-        next_name = name_pattern % (2,1)
-        next_url = getUrl(2, 1, mode)
-        return [("", ""), (next_name, next_url)]
-      
-    if web_chi.modulus == 2:
-        (next_mod,next_index) = (3,1)   
-        (prev_mod,prev_index) = (1,1)
-        
-    else:
-        next_index = get_next_index(chi) 
-        if web_chi.number == 1:
-            prev_index = prev_function(web_chi.modulus-1, web_chi.modulus-1)
-        else:
-            prev_index = get_prev_index(chi)
-            
-        if web_chi.number == 1:
-            prev_mod = web_chi.modulus - 1
-        else:
-            prev_mod = web_chi.modulus
-            
-        if web_chi.number == web_chi.modulus - 1:
-            next_mod = web_chi.modulus + 1
-        else:
-            next_mod = web_chi.modulus
-
-    next_name = name_pattern % (next_mod,next_index)
-    next_url = getUrl(next_mod, next_index, mode)
-    prev_name = name_pattern % (prev_mod,prev_index)
-    prev_url = getUrl(prev_mod, prev_index, mode)
-
-    return [(prev_name, prev_url), (next_name, next_url)]
-
-def get_next_index(chi):
-    mod = chi.modulus()
-    index = chi.number()
-    return next_function(mod,index)
-
-def next_function(mod,index):
-    from sage.all import Integer 
-    for j in range(index+1,mod):
-        if Integer(j).gcd(mod) == 1:
-            return j
-    return 1
-
-def get_prev_index(chi):
-    mod = chi.modulus()
-    index = chi.number()
-    return prev_function(mod,index) 
-    
-def prev_function(mod,index):
-    from sage.all import Integer 
-    for j in range(index-1,0,-1):
-        if Integer(j).gcd(mod) == 1:
-            return j
-
 
 @app.route("/Character/Dirichlet/<modulus>/<number>")
 def render_webpage_label(modulus,number):

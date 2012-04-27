@@ -105,6 +105,7 @@ class WebCharacter:
             #self.logvals = map(chi.logvalue, range(1,self.modulus+1))
             #self.logvals = [latex_char_logvalue(k,True) for k in self.logvals]
             Gunits = G_sage.unit_gens()
+            if self.modulus == 2: Gunits = [1]
             self.unitgens = latex_tuple(map(str, Gunits))
             self.genvalues = chi_sage.values_on_gens() ## what is the use ?
             self.genlogvalues = [ chi.logvalue(k) for k in Gunits ]
