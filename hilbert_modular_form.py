@@ -14,6 +14,8 @@ from utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_t
 
 from number_fields.number_field import parse_list, parse_field_string, field_pretty
 
+from transitive_group import group_display_short
+
 def teXify_pol(pol_str): # TeXify a polynomial (or other string containing polynomials)
     o_str = pol_str.replace('*','')
     ind_mid = o_str.find('/')
@@ -254,7 +256,7 @@ def render_hmf_webpage(**args):
 
     hmf_field  = C.hmfs.fields.find_one({'label': data['field_label']})
     field_info = C.numberfields.fields.find_one({'label': data['field_label']})
-    field_info['galois_group'] = str(field_info['galois_group'][3])
+    field_info['galois_group'] = group_display_short(field_info['degree'], field_info['T'], C)
     info['field_info'] = field_info
     info['field_degree'] = field_info['degree']
     info['field_disc'] = field_info['discriminant']
