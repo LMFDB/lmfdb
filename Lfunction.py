@@ -1434,7 +1434,7 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
 
         #logger.debug(str(self.ev_data))
         self.numcoeff = max([a[0] for a in roots]) # include a_0 = 0
-        self.dirichlet_coefficients = compute_dirichlet_series(roots, self.numcoeff) # these are in the arithmetic normalization
+        self.dirichlet_coefficients = compute_dirichlet_series(roots, self.numcoeff) # these are in the analytic normalization
         self.kappa_fe = [1,1] # the coefficients from Gamma(ks+lambda)
         self.lambda_fe = [float(1)/float(2), self.automorphyexp] # the coefficients from Gamma(ks+lambda)
         self.mu_fe = [] # the shifts of the Gamma_R to print

@@ -297,12 +297,15 @@ def compute_dirichlet_series(p_list, PREC):
       f = factor(i);
       if len(f)>1: #not a prime power
           LL[i] = prod([LL[p**e] for (p,e) in f])
-  return LL
+  print LL[:5]
+  return LL[1:]
 
 def compute_local_roots_SMF2_scalar_valued(ev_data, k, embedding):
+
+    logger.debug("Start SMF2")
     K = ev_data[0].parent().fraction_field() # field of definition for the eigenvalues
     ev = ev_data[1] # dict of eigenvalues
-    #print "ev=--------->>>>>>>", ev
+    print "ev=--------->>>>>>>", ev
     L = ev.keys()
     m = ZZ(max(L)).isqrt() + 1
     ev2 = {}
@@ -312,7 +315,8 @@ def compute_local_roots_SMF2_scalar_valued(ev_data, k, embedding):
             ev2[p] = (ev[p],ev[p*p])
         except:
             break
-    
+        
+    logger.debug(str(ev2))
     ret = []
     for p in ev2:
         R = PolynomialRing(K,'x')
@@ -327,8 +331,9 @@ def compute_local_roots_SMF2_scalar_valued(ev_data, k, embedding):
             for i in range(int(f.degree())+1):
                 fnum = fnum + f[i].complex_embeddings(NN)[embedding]*(x/p**(k-1.5))**i
         else:
-            print "here"
-            fnum = Rnum(f)
+            for i in range(int(f.degree())+1):
+                fnum = fnum + f[i]*(x/CF(p**(k-1.5)))**i
+
         r = fnum.roots(CF)
         r = [1/a[0] for a in r]
         #a1 = r[1][0]/r[0][0]
