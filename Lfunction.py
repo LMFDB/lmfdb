@@ -614,7 +614,8 @@ class Lfunction_EMF(Lfunction):
 
         # Create the modular form
         try:
-            self.MF = WebNewForm(self.weight, self.level, self.character, self.label)
+            self.MF = WebNewForm(self.weight, self.level, self.character, self.label
+                                 , verbose=1)
         except:
             raise KeyError, ("No data available yet for this modular form, so"+
                              " not able to compute it's L-function") 
