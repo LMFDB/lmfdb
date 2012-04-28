@@ -611,7 +611,6 @@ class Lfunction_EMF(Lfunction):
         #if self.character > 0:
         #    raise KeyError, "The L-function of a modular form with non-trivial character has not been implemented yet."
         self.number = int(self.number)
-        logger.debug((7+13*I)/float(135))
 
         # Create the modular form
         try:
