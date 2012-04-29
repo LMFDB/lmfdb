@@ -17,16 +17,19 @@ print "I have it"
 
 base.getDBConnection()
 
-for nf_dict in NF.collection().find():
+for nf_dict in NF.collection().find({"label":{"$exists":False}}):
    from copy import deepcopy
    nf_dict2 = deepcopy(nf_dict)
    nf = NF(data = nf_dict)
-   print nf.polredabs()
-   if nf.label():
-      print nf.label()
-      nf_dict2["label"] = nf.label()
-      NF.collection().save(nf_dict2)
-   else:
-      print "No label!"
+   print nf.polynomial()
+   if int(nf.polynomial()[0]) <> -45 and len(nf.polynomial()) <> 9 :
+      # This is needed to avoid an apparent bug with pari(x^8-45).polredabs()
+      print nf.polredabs()
+      if nf.label():
+         print nf.label()
+         nf_dict2["label"] = nf.label()
+         NF.collection().save(nf_dict2)
+      else:
+         print "No label added!"
 
 print "Done, in ", NF.collection()

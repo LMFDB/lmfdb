@@ -184,7 +184,7 @@ class Lfunction:
     def generateSageLfunction(self):
         """ Generate a SageLfunction to do computations
         """
-        logger.info("Generating Sage Lfunction with parameters %s and coefficients (maybe shortened in this msg) %s"%([self.title, self.coefficient_type, self.coefficient_period, self.Q_fe, self.sign , self.kappa_fe, self.lambda_fe , self.poles, self.residues],self.dirichlet_coefficients[:20]))
+        logger.info("Generating Sage Lfunction with parameters %s and coefficients (maybe shortened in this msg, but there are %s) %s"%([self.title, self.coefficient_type, self.coefficient_period, self.Q_fe, self.sign , self.kappa_fe, self.lambda_fe , self.poles, self.residues],len(self.dirichlet_coefficients),self.dirichlet_coefficients[:20]))
         self.sageLfunction = lc.Lfunction_C(self.title, self.coefficient_type,
                                             self.dirichlet_coefficients,
                                             self.coefficient_period,
@@ -1261,7 +1261,7 @@ class ArtinLfunction(Lfunction):
 
         #self.Q_fe = Integer(self.artin.conductor())/float(math.pi)**int(self.degree)
         self.Q_fe = sqrt(Integer(self.artin.conductor())*1./float(math.pi)**int(self.degree))
-        self.sign = self.artin.sign()
+        self.sign = self.artin.root_number()
         self.kappa_fe = self.artin.kappa_fe()
         self.lambda_fe = self.artin.lambda_fe()
         self.poles_L = self.artin.poles()
@@ -1277,6 +1277,7 @@ class ArtinLfunction(Lfunction):
 
         self.credit = 'Sage, lcalc, and data precomputed in Magma by Tim Dokchitser'
         self.citation = ''
+        self.support = "Support by Paul-Olivier Dehaye"
         
         self.texname = "L(s)"  # default name.  will be set later, for most L-functions
         self.texnamecompleteds = "\\Lambda(s)"  # default name.  will be set later, for most L-functions

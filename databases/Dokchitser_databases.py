@@ -1,5 +1,5 @@
-artin_location = ("limbo","tim_artin_04")
-galois_group_location = ("limbo","tim_nfgal_04")
+artin_location = ("limbo","tim_artin_06")
+galois_group_location = ("limbo","tim_nfgal_06")
 
 from type_generation import String, Array, Dict, Int, Anything, Float
 
@@ -103,7 +103,7 @@ Dokchitser_NumberFieldGaloisGroup = Dict({
     "QpRts-minpoly" :       PolynomialAsSequenceInt,
     "QpRts-p" :             Int,
     "QpRts-prec" :          Int,
-    "Size" :                Int,
+    "Size" :                TooLargeInt,
     "TransitiveDegree" :    Int,
     "label" :               LabelString                 # Added after Tim, by link_tim_other.py script
 })

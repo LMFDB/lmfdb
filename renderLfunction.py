@@ -300,8 +300,14 @@ def initLfunction(L,args, request):
     '''
 
     info = {'title': L.title}
-    info['citation'] = ''
-    info['support'] = ''
+    try:
+        info['citation'] = L.citation
+    except AttributeError:
+        info['citation'] = ""
+    try:
+        info['support'] = L.support
+    except AttributeError:
+        info['support'] = ""
     # Here we should decide which values are indeed special values
     # According to Brian, odd degree has special value at 1, and even
     # degree has special value at 1/2.
