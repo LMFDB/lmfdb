@@ -49,3 +49,9 @@ def edit_board():
     t = "Editorial and Management Boards"
     b = [(t, url_for("edit_board"))]
     return render_template(_single_knowl, title=t, kid='content.edit-board', body_class='', bread = b)
+
+@app.route("/contact")
+def contact():
+  t = "Contact"
+  b = [(t, url_for("contact"))]
+  return render_template('contact.html', title=t, body_class='', bread = b)
