@@ -60,14 +60,6 @@ def not_found(error):
 def index():
     return render_template('index.html', titletag ="The L-functions and modular forms database", title="", bread=None)
 
-@app.route("/about")
-def about():
-    return render_template("about.html", title="About")
-
-@app.route("/acknowledgment")
-def acknowledgment():
-  return render_template("acknowledgment.html", title="Acknowledgments")
-
 def root_static_file(name):
     def static_fn():
        import os
