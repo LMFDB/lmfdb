@@ -256,8 +256,17 @@ def lfuncFEtex(L,fmt):
         for nu in L.nu_fe:
            ans += "\Gamma_{\mathbb{C}}(s"+seriescoeff(nu,0,"signed","",-6,5)+")"
         ans += " \\cdot "+L.texname+"\\cr\n"
-        ans += "=\\mathstrut & "+seriescoeff(L.sign,0,"factor","",-6,5)
-        ans += L.texnamecompleted1ms+"\n\\end{align}\n"
+        ans += "=\\mathstrut & "
+        if L.sign == 0:
+            ans += "\epsilon \cdot "
+        else:
+            ans += seriescoeff(L.sign,0,"factor","",-6,5)
+        ans += L.texnamecompleted1ms
+        if L.sign == 0 and L.degree == 1:
+            ans += "\quad (\\text{with }\epsilon \\text{ not computed})"
+        if L.sign == 0 and L.degree > 1:
+            ans += "\quad (\\text{with }\epsilon \\text{ unknown})"
+        ans += "\n\\end{align}\n"
     elif fmt=="selberg":
         print L.nu_fe,"!!!!!!!"
         ans+="("+str(int(L.degree))+","
