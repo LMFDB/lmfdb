@@ -78,6 +78,9 @@
    <li class="bigpicture">
     <a href="{{ url_for('bigpicture') }}">Map of LMFDB</a>
    </li>
+   <li class="roadmap">
+    <a href="{{ url_for('roadmap') }}">Future Plans</a>
+   </li>
   </ul>
 
   <h2 class="link">
@@ -169,7 +172,6 @@
   <h2 class="link knowl">
      <a class="knowl" href="{{ url_for("knowledge.index") }}">Knowledge</a>
   </h2>
-   {{ entry("Learn more about", learnmore) }}
    {{ entry("Data", getUploadedFor(request.path, true) ) }}
   {# {% if user_is_authenticated %} {% endif %} #}
 
@@ -195,7 +197,7 @@
    {% endif %}
  {%- endmacro %}
 
-{% if (properties2 or friends or downloads) %}
+{% if (properties2 or friends or downloads or learnmore) %}
       <div id="properties">
        <div id="properties-collapser">&uarr;</div>
     {% if properties2 %}
@@ -226,8 +228,10 @@
    {% else %}
      {{ rightnavig("Data", getUploadedFor(request.path, false) ) }}
    {% endif %}
+   {{ rightnavig("Learn more about", learnmore) }}
     </div>
     {%- endif %}
+
 
 <div id="main">
   {# <div id="mathjax-info">
@@ -264,6 +268,8 @@
 <br />
     {%- endif %}
     <div>
+      <a href="{{ url_for('contact') }}">Contact</a>
+      &middot;
       <a href="{{ url_for('acknowledgment') }}">Acknowledgments</a>
       &middot;
       <a href="{{ url_for('edit_board') }}">Editorial and Management Boards</a>

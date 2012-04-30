@@ -12,6 +12,7 @@ import LfunctionPlot
 from utils import to_dict
 import bson
 from Lfunctionutilities import lfuncDStex, lfuncEPtex, lfuncFEtex, truncatenumber
+from DirichletCharacter import getPrevNextNavig
 
 #logger = make_logger("LF")
 
@@ -163,7 +164,7 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
                         return render_template("lfunctions/Dirichlet.html", title = 'Dirichlet L-functions', **info)
                 elif degree == 2:
                     if arg2 == 'CuspForm':
-                        info["contents"] = [LfunctionPlot.getOneGraphHtmlHolo(1, 6, 2, 14)]
+                        info["contents"] = [LfunctionPlot.getOneGraphHtmlHolo(1, 13, 2, 12)]
                         return render_template("lfunctions/cuspformGL2.html", title = 'L-functions of GL(2) Cusp Forms', **info)
                     elif arg2 == 'MaassForm':
                         info["contents"] = [processMaassNavigation()]
@@ -193,12 +194,17 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
             return "not yet implemented"
 
     try:
-      L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, temp_args)
+        if ((arg1 == 'Character' and arg2 == 'Dirichlet' and arg3 == '1' and arg4 == '1')
+           or (arg1 == 'NumberField' and arg2 == '1.1.1.1')):
+            logger.debug("Redirect to Riemann.")
+            return flask.redirect(url_for("render_Lfunction", arg1 = 'Riemann'), code=301)
+      
+        L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, temp_args)
     except Exception as e:
       # throw exception if not UserError
-      if len(e.args) > 1 and e.args[1] != 'UserError': raise
-      info = { 'content': 'Sorry, there has been a problem: %s .         Please report it <a href="http://code.google.com/p/lmfdb/issues/list">here</a>.' % e.args[0], 'title': 'Error' }
-      return render_template('LfunctionSimple.html', info=info, **info), 500
+        if len(e.args) > 1 and e.args[1] != 'UserError': raise
+        info = { 'content': 'Sorry, there has been a problem: %s .         Please report it <a href="http://code.google.com/p/lmfdb/issues/list">here</a>.' % e.args[0], 'title': 'Error' }
+        return render_template('LfunctionSimple.html', info=info, **info), 500
 
     try:
         #logger.debug(temp_args)
@@ -217,9 +223,7 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
     ''' Returns the L-function object corresponding to the supplied argumnents
         from the url. temp_args contains possible arguments after a question mark.
     '''
-
-    if (arg1 == 'Riemann' or (arg1 == 'Character' and arg2 == 'Dirichlet' and arg3 == '1' and arg4 == '0')
-        or (arg1 == 'NumberField' and arg2 == '1.1.1.1')):
+    if arg1 == 'Riemann':
         return RiemannZeta()
 
     elif arg1 == 'Character' and arg2 == 'Dirichlet':
@@ -359,14 +363,15 @@ def initLfunction(L,args, request):
 
     elif L.Ltype()  == 'riemann':
         info['bread'] = [('L-function','/L'),('Riemann Zeta',request.url)]
-        info['friends'] = [('\(\mathbb Q\)', url_for('number_fields.by_label', label='1.1.1.1')),  ('Dirichlet Character \(\\chi_{1}(0,\\cdot)\)',
-                                                                       url_for('render_Character', arg1=1, arg2=0))]
+        info['friends'] = [('\(\mathbb Q\)', url_for('number_fields.by_label', label='1.1.1.1')),  ('Dirichlet Character \(\\chi_{1}(1,\\cdot)\)',
+                                                                       url_for('render_Character', arg1=1, arg2=1))]
 
     elif L.Ltype()  == 'dirichlet':
+        info['navi'] = getPrevNextNavig(L.charactermodulus, L.characternumber, "L")
         snum = str(L.characternumber)
         smod = str(L.charactermodulus)
         charname = '\(\\chi_{%s}({%s},\\cdot)\)' %(smod, snum)
-        info['bread'] = [('L-function','/L'),('Dirichlet Character',url_for('render_Lfunction', arg1='degree1') +'#Dirichlet'),
+        info['bread'] = [('L-function','/L'),('Dirichlet Characters',url_for('render_Lfunction', arg1='degree1') +'Dirichlet'),
                          (charname, request.url)]
         info['friends'] = [('Dirichlet Character '+str(charname), friendlink)]
 
@@ -440,11 +445,8 @@ def initLfunction(L,args, request):
         weight = str(L.weight)
         number = str(L.number)
         info['friends'] = [('Siegel Modular Form', friendlink)]
-        
-    elif L.Ltype() == "artin":
-        #info['zeroeslink'] = ''
-        #info['plotlink'] = ''
-        info['friends'] = [('Artin representation', L.artin.url_for())]
+
+
 
 
     info['dirichlet'] = lfuncDStex(L, "analytic")
@@ -452,7 +454,7 @@ def initLfunction(L,args, request):
     info['functionalequation'] = lfuncFEtex(L, "analytic")
     info['functionalequationSelberg'] = lfuncFEtex(L, "selberg")
 
-    info['learnmore'] = [('L-functions', 'http://wiki.l-functions.org/L-functions') ]
+    #info['learnmore'] = [('L-functions', 'http://wiki.l-functions.org/L-functions') ]
     
     if len(request.args)==0:
         lcalcUrl = request.url + '?download=lcalcfile'

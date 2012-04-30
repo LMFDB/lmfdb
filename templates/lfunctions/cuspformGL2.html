@@ -3,13 +3,13 @@
 
 <p>
 Currently in the LMFDB, we have data on L-functions associated to
-{{ KNOWL("mf.elliptic",title="holomorphic cusp forms")}}
-with {{ KNOWL("mf.elliptic.character",title="trivial character")}}.  
+{{ KNOWL("mf.elliptic",title="holomorphic cusp forms")}} on Hecke congruence groups
+$\Gamma_0(N)$ with character $\chi$.  
 These L-functions \(L(s,f) = \sum a_n n^{-s} \) have an 
 {{ KNOWL('lfunction.euler_product', title='Euler product')}}
 of the form
 \[
-   L(s,f)= \prod_{p\mid N}  \left(1 - a_p p^{-s} \right)^{-1}\prod_{p\nmid N}  \left(1 - a_p p^{-s} + p^{-2s} \right)^{-1}
+   L(s,f)= \prod_{p\mid N}  \left(1 - a_p p^{-s} \right)^{-1}\prod_{p\nmid N}  \left(1 - a_p p^{-s} + \chi(p) p^{-2s} \right)^{-1}
 \]
 and satisfies the 
 {{ KNOWL("lfunction.functional_equation",title="functional equation")}} of the form 
@@ -22,7 +22,7 @@ where  $N$ is the
 {{ KNOWL("mf.elliptic.level",title="level")}}, $k$ is the
 {{ KNOWL("mf.elliptic.weight",title="weight")}}
 and \(a_n n^{\frac{k-1}{2} } \) 
-is an algebraic integer. 
+are algebraic integers. 
 </p>
 
 <p>

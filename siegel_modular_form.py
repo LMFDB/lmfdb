@@ -15,7 +15,8 @@ def render_webpage( args = {}):
     """
 
     info = dict(args)
-    info['learnmore'] = [ ('Siegel modular forms', 'http://en.wikipedia.org/wiki/Siegel_modular_form')]
+    #info['learnmore'] = [ ('Siegel modular forms', 'http://en.wikipedia.org/wiki/Siegel_modular_form')]
+    info['learnmore']= []
     bread = [('Siegel modular forms', url_for( 'ModularForm_GSp4_Q_top_level'))]
     
     if len(args) == 0:
@@ -300,7 +301,7 @@ def render_webpage( args = {}):
                              [ (l,g[1][l]) for l in g[1]], \
                              [(i,f[2][i],__disc(i)) for i in f_keys], \
                              f_url, g_url]
-##             info['friends'] = [ ('Spin L-function', url_for('not_yet_implemented')), \
+            #info['friends'] = [ ('Spin L-function', url_for('not_yet_implemented'))]#, \
 ##                                 ('Standard L-function', url_for('not_yet_implemented')), \
 ##                                 ('First Fourier-Jacobi coefficient', url_for('not_yet_implemented'))]
 
