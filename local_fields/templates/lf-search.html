@@ -9,24 +9,29 @@
 
 <tr>
 <td align=left> 
-{{KNOWL('lf.degree',title='Degree')}}<td align=left> <input type='text' name='n' size=3 value="{{info.n}}">
+{{KNOWL('lf.degree',title='Degree')}}:</td><td align=left> <input type='text' name='n' size=3 value="{{info.n}}">
 </td>
-
-<td align=left> 
-Prime $p$ for base field $\mathbb{Q}_p$:<td align=left> <input type="text" name="p" size="3" value="{{info.p}}" ></td>
-</tr>
-<tr>
 <td align=left> 
 {{KNOWL('lf.discriminant_exponent',title='Discriminant exponent')}} $c$:
 <td align=left> <input type="text" name="c" size="3" value="{{info.c}}" >
+
+<td align=left> 
+{{KNOWL('nf.galois_group',title='Galois group')}}:
+<td align=left> <input type="text" name="gal" size="8" value="{{info.gal}}" >
+
+</tr>
+<tr>
+<td align=left> 
+Prime $p$:</td><td align=left> <input type="text" name="p" size="3" value="{{info.p}}" ></td>
 </td>
 <td align=left> 
 {{KNOWL('lf.ramification_index',title='Ramification index')}} $e$:
 <td align=left> 
 <input type="text" name="e" size="3" value="{{info.e}}" >
 </tr>
+
 <tr>
-<td align='left' colspan='4'>Maximum number of fields to display <input type='text' name='count' value="{{info.count}}" size='10'>
+<td align='left' colspan='4'>Maximum number of fields to display: <input type='text' name='count' value="{{info.count}}" size='10'>
 </td>
 </tr>
 
@@ -39,6 +44,8 @@ Prime $p$ for base field $\mathbb{Q}_p$:<td align=left> <input type="text" name=
 
 
 <h2> Results: ({{info.report}}) </h2>
+
+{% if info.number > 0 %}
 
 <table border=1 cellpadding=5 class="ntdata">
 <thead>
@@ -60,7 +67,7 @@ Prime $p$ for base field $\mathbb{Q}_p$:<td align=left> <input type="text" name=
 <td>{{field.e}}</td>
 <td>{{field.f}}</td>
 <td>{{field.c}}</td>
-<td>{{info.group_display(field.gal[2])}}</td>
+<td>{{info.group_display(field.gal)}}</td>
 </tr>
 
 {% endfor %}
@@ -71,7 +78,7 @@ Prime $p$ for base field $\mathbb{Q}_p$:<td align=left> <input type="text" name=
 <a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form();return false">Previous</A>
 <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form();return false">Next</A></td>
 
-
+{% endif %}
 
 
 

@@ -10,7 +10,7 @@ from sage.all import *
 import tempfile, os
 from pymongo import ASCENDING
 from WebCharacter import *
-from renderLfunction import render_Lfunction
+#from renderLfunction import render_Lfunction
 from utils import to_dict, parse_range, make_logger
 import ListCharacters
 
@@ -93,7 +93,7 @@ def render_webpage(request,arg1,arg2):
             #elif arg1 == 'Hecke':
             #    temp_args['type'] = 'hecke'
 
-        mod,num = Integer(arg1), Integer(arg2)
+        mod,num = Integer(str(arg1)), Integer(str(arg2))
         if mod<=0 or num <0 or mod<num or gcd(mod,num) != 1:
             info = {}
             info['message'] = """ modulus=%s,number=%s does not correspond to
@@ -129,11 +129,11 @@ def set_info_for_start_page():
     info['credit'] = 'Sage'
     info['title'] = 'Dirichlet Characters'
     info['bread'] = [('Dirichlet Characters', url_for("render_Character"))]
-    info['learnmore'] = [('Dirichlet Characters', url_for("knowledge.show", ID="character.dirichlet.learn_more_about"))]
+    #info['learnmore'] = [('Dirichlet Characters', url_for("knowledge.show", ID="character.dirichlet.learn_more_about"))]
     info['friends'] = [('Dirichlet L-functions', url_for("render_Lfunction", arg1="degree1"))]
     return info
 
-def initCharacterInfo(web_chi,args, request):
+def initCharacterInfo(web_chi, args, request):
     info = {'title': web_chi.title}
     info['citation'] = ''
     info['support'] = ''
@@ -173,15 +173,15 @@ def initCharacterInfo(web_chi,args, request):
         info['nextmodulus'] = web_chi.modulus+1
         info['primitive'] = web_chi.primitive
         info['zetaorder'] = web_chi.zetaorder
-        info['genvals'] = str(web_chi.genvalues)
+        #info['genvals'] = str(web_chi.genvalues)
         info['genvalstex'] = str(web_chi.genvaluestex)
         info['parity'] = web_chi.parity
-        info['sign'] = web_chi.sign
+        #info['sign'] = web_chi.sign  ## removed by Pascal (syn parity)
         info['real'] = web_chi.real
         info['prim'] = web_chi.prim
         info['vals'] = web_chi.vals
         info['logvals'] = web_chi.logvals
-    #info['galoisorbits'] = web_chi.galoisorbits
+        #info['galoisorbits'] = web_chi.galoisorbits
         #info['root_unity'] =  str(any(map(lambda x : r"\zeta" in x,  web_chi.vals)))
         info['unitgens'] = str(web_chi.unitgens)
         info['bound'] = int(web_chi.bound)
@@ -194,71 +194,101 @@ def initCharacterInfo(web_chi,args, request):
             info['inducedchar_number'] = web_chi.inducedchar_number
             info['inducedchar_tex'] = web_chi.inducedchar_tex
         info['nextnumber'] = web_chi.number+1
-        info['learnmore'] = [('Dirichlet Characters', url_for("knowledge.show", ID="character.dirichlet.learn_more_about"))] 
-        info['friends'] = [('Dirichlet L-function', '/L/Character/Dirichlet/'+smod+'/'+snum)]
-        next = next_index(chi) 
-        if web_chi.number == 1:
-            prev = prev_function(web_chi.modulus-1, web_chi.modulus-1)
+        #info['learnmore'] = [('Dirichlet Characters', url_for("knowledge.show", ID="character.dirichlet.learn_more_about"))] 
+        if web_chi.primitive=="False":
+            info['friends'] = []
         else:
-            prev = prev_index(chi)
-        mmore = int(smod) + 1
-        mless = int(smod) - 1
-        name_pattern = r"\(\chi_{%s}(%s,&middot;)\)"
-        if web_chi.modulus == 1:
-             n1 = name_pattern % (2,1)
-             url1 = url_for("render_Character", arg1=2,arg2=1)
-             info['navi'] = [(n1,url1),("", "")]
-        elif web_chi.modulus == 2:
-             n2 = name_pattern % (3,1)
-             url2 = url_for("render_Character", arg1=3,arg2=1)
-             n3 = name_pattern % (1,1)
-             url3 = url_for("render_Character", arg1=1,arg2=1)
-             info['navi'] = [(n2,url2),(n3,url3)]
-        else:
-            if web_chi.number == 1:
-                n4 = name_pattern % (smod,next)
-                url4 = url_for("render_Character", arg1=smod,arg2=next)
-                n5 = name_pattern % (mless,prev)
-                url5 = url_for("render_Character", arg1=mless,arg2=prev)
-                info['navi'] = [(n4,url4),(n5,url5)] 
-            elif web_chi.number == web_chi.modulus - 1:
-                n6 = name_pattern % (mmore, 1) 
-                url6 = url_for("render_Character", arg1=mmore,arg2=1)
-                n7 = name_pattern % (smod,prev)
-                url7 = url_for("render_Character", arg1=smod,arg2=prev)
-                info['navi'] = [(n6,url6),(n7,url7)]
-            else:
-                n8 = name_pattern % (smod,next)
-                url8 = url_for("render_Character", arg1=smod,arg2=next)
-                n9 = name_pattern % (smod,prev)
-                url9 = url_for("render_Character", arg1=smod,arg2=prev)
-                info['navi'] = [(n8,url8),(n9,url9)]
+            info['friends'] = [('Dirichlet L-function', '/L/Character/Dirichlet/'+smod+'/'+snum)]
 
+        info['navi'] = getPrevNextNavig(web_chi.modulus, web_chi.number, "character")
+        
     return info
+
+def getPrevNextNavig(modulus,number,mode='character'):
+    """
+    Returns the contents for info['navi'] which is the
+    navigation to the next and previous character or
+    the corresponding L-function
+    Mode is either "character" or "L"
+    In case of L-function, restrict to primitive characters.
+    """
+    if mode == "character":
+        name_pattern = r"\(\chi_{%s}(%s,&middot;)\)"
+        onlyprimitive = False
+    else:
+        name_pattern = r"\(L(s,\chi_{%s}(%s,&middot;))\)"
+        onlyprimitive = True
+
+    next_mod, next_number = next_char(modulus,number,onlyprimitive)
+    next_name = name_pattern % (next_mod,next_number)
+    next_url = getUrl(next_mod, next_number, mode)
+
+    if modulus == 1:
+        # no previous character
+        return [("", ""), (next_name, next_url)]
+
+    prev_mod, prev_number = prev_char(modulus,number,onlyprimitive)
+    prev_name = name_pattern % (prev_mod,prev_number)
+    prev_url = getUrl(prev_mod, prev_number, mode)
     
-def next_index(chi):
-    mod = chi.modulus()
-    index = chi.number()
-    return next_function(mod,index)
+    return [(prev_name, prev_url), (next_name, next_url)]
+     
+def next_char(m,n,onlyprimitive=False):
+    """ we know that the characters
+        chi_m(1,.) and chi_m(m-1,.)
+        always exist for m>1.
+        They are extremal for a given m.
+    """
+    if onlyprimitive: return next_primitive_char(m,n)
+    if m == 1: return 2,1
+    if n == m-1: return m+1,1
+    for k in xrange(n+1,m):
+        if gcd(m,k)==1: return m,k
+    raise Exception("next_char")
 
-def next_function(mod,index):
-    from sage.all import Integer 
-    for j in range(index+1,mod):
-        if Integer(j).gcd(mod) == 1:
-            return j
-    return 1
+def prev_char(m,n,onlyprimitive=False):
+    """ Assume m>1 """
+    if onlyprimitive: return prev_primitive_char(m,n)
+    if n == 1: m,n = m-1,m
+    if m <= 2: return m,1 # important : 2,2 is not a character
+    for k in xrange(n-1,0,-1):
+        if gcd(m,k)==1: return m,k
+    raise Exception("next_char")
 
-def prev_index(chi):
-    mod = chi.modulus()
-    index = chi.number()
-    return prev_function(mod,index) 
-    
-def prev_function(mod,index):
-    from sage.all import Integer 
-    for j in range(index-1,0,-1):
-        if Integer(j).gcd(mod) == 1:
-            return j
+def prev_primitive_char(m,n):
+    if m<=3: return 1,1
+    if n>2: Gm = DirichletGroup_conrey(m)
+    while True:
+        n-=1
+        if n==1: # (m,1) is never primitive for m>1
+            m,n=m-1,m-1
+            Gm = DirichletGroup_conrey(m)
+        if m<=2: return 1,1
+        if gcd(m,n) != 1: continue
+        # we have a character, test if it is primitive
+        chi = Gm[n]
+        if chi.is_primitive(): return m,n
 
+def next_primitive_char(m,n):
+    if m<3: return 3,2
+    if n < m-1: Gm = DirichletGroup_conrey(m)
+    while 1:
+        n+=1
+        if n==m:
+            m,n=m+1,2
+            Gm = DirichletGroup_conrey(m)
+        if gcd(m,n) != 1: continue
+        # we have a character, test if it is primitive
+        chi = Gm[n]
+        if chi.is_primitive(): return m,n
+
+
+def getUrl(modulus, number, mode):
+    if mode == "character":
+        return url_for("render_Character", arg1=modulus, arg2=number)
+    else:
+        return url_for("render_Lfunction", arg1 = 'Character', arg2 = 'Dirichlet',
+                arg3=modulus, arg4=number)
 
 @app.route("/Character/Dirichlet/<modulus>/<number>")
 def render_webpage_label(modulus,number):
@@ -270,6 +300,10 @@ def dc_calc_gauss(modulus,number):
     if not arg:
         return flask.abort(404)
     try:
+        if modulus == 1:
+            # there is a bug in sage for modulus = 1
+            return r"""\(\displaystyle \tau_{%s}(\chi_{1}(1,&middot;)) =
+          \sum_{r\in \mathbb{Z}/\mathbb{Z}} \chi_{1}(1,r) 1^{%s}= 1. \)""" %(int(arg),int(arg))
         from dirichlet_conrey import DirichletGroup_conrey
         chi = DirichletGroup_conrey(modulus)[number]
         chi = chi.sage_character()
@@ -315,12 +349,20 @@ def dc_calc_kloosterman(modulus,number):
     arg = request.args.get("val", [])
     if not arg:
         return flask.abort(404)
-    arg = map(int,arg.split(','))
     try:
+        a,b = map(int,arg.split(','))
+        if modulus == 1:
+            # there is a bug in sage for modulus = 1
+            return r"""
+            \( \displaystyle K(%s,%s,\chi_{1}(1,&middot;))
+            = \sum_{r \in \mathbb{Z}/\mathbb{Z}}
+                 \chi_{1}(1,r) 1^{%s r + %s r^{-1}}
+            = 1 \)
+            """ % (a,b,a,b)
         from dirichlet_conrey import DirichletGroup_conrey
         chi = DirichletGroup_conrey(modulus)[number]
         chi = chi.sage_character()
-        k = chi.kloosterman_sum_numerical(100,arg[0],arg[1])
+        k = chi.kloosterman_sum_numerical(100,a,b)
         real = round(k.real(),5)
         imag = round(k.imag(),5)
         if imag == 0:
@@ -329,7 +371,11 @@ def dc_calc_kloosterman(modulus,number):
             k = str(imag) + "i"
         else:
             k = latex(k)
-        return r"\( \displaystyle K(%s,%s,\chi_{%s}(%s,&middot;)) = \sum_{r \in \mathbb{Z}/%s\mathbb{Z}} \chi_{%s}(%s,r) e\left(\frac{%s r + %s r^{-1}}{25}\right) = %s. \)" %(int(arg[0]),int(arg[1]),modulus,number, modulus, modulus,number,int(arg[0]),int(arg[1]),k)
+        return r"""
+        \( \displaystyle K(%s,%s,\chi_{%s}(%s,&middot;))
+        = \sum_{r \in \mathbb{Z}/%s\mathbb{Z}}
+             \chi_{%s}(%s,r) e\left(\frac{%s r + %s r^{-1}}{%s}\right)
+        = %s. \)""" %(a,b,modulus,number, modulus, modulus,number,a,b,modulus,k)
     except Exception, e:
         return "<span style='color:red;'>ERROR: %s</span>" % e
 

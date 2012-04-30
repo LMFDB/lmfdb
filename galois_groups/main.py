@@ -135,6 +135,7 @@ def galois_group_search(**args):
   info['report'] = "found %s groups"%nres
   info['yesno'] = yesno
   info['start'] = start
+  info['number'] = nres
   if nres==1:
     info['report'] = 'unique match'
   else:

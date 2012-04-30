@@ -3,10 +3,15 @@
 {% block content %}
 
 <p>
-
-      <h2>Browse {{KNOWL('lf', title="local number fields")}}</h2>
+The database currently contains all extensions of 
+{{KNOWL('lf.qp',title='$\mathbb{Q}_p$')}} of 
+{{KNOWL('lf.degree',title='degree')}} $n$ up to isomorphism for primes $p<150$
+and $1\leq n \leq 11$.
 <p>
 
+      <h2>Browse {{KNOWL('lf', title="local number fields")}}</h2>
+
+<p>
 The table gives for each $p$ and $n$ shown, the number of degree $n$ extensions
 of $\mathbb{Q}_p$ up to isomorphism.
 <p>
@@ -91,6 +96,17 @@ of $\mathbb{Q}_p$ up to isomorphism.
             </td><td><input type="text" name="e" value="" placeholder="3"></td>
       <td>
 	<span class="formexample">e.g. 3, or a range like 2..6</span>
+      </td>
+          </tr>
+          <tr>
+            <td>
+              {{KNOWL('nf.galois_group',title='Galois
+              group')}} $G$ :
+            </td><td><input type="text" name="gal" value="" placeholder="5T3"></td>
+      <td>
+	<span class="formexample">e.g. 5T3, C4, or a list of 
+{{KNOWL('nf.galois_group.name',title='labels')}}
+</span>
       </td>
           </tr>
           <tr>

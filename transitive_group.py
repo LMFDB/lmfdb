@@ -300,24 +300,21 @@ def aliastable (C):
 def complete_group_code(code):
   if code in aliases.keys():
     return aliases[code]
-  rematch = re.match("(\d+)[Tt](\d+)", code)
+  rematch = re.match("(\d+)T(\d+)", code)
   if rematch:
     n = int(rematch.group(1))
     t = int(rematch.group(2))
     return [[n,t]]
   return []
 
-def complete_group_code_old(c):
-  for g in group_names.keys():
-    if c in group_names[g]:
-      return list(g)[1:]+[group_names[g][0]]
-    try:
-      if (c[0]=='[' and c[-1]==']') or (c[0]=='(' and c[-1]==')'):
-        c = parse_list(c)
-        return c[1:]+[group_names[tuple(c)][0]]
-    except (KeyError, NameError, ValueError):
-      return 0
-
+# Takes a list of codes
+def complete_group_codes(codes):
+  codes = re.sub(r'\s', '', codes)
+  codes = codes.upper()
+  ans = []
+  for code in codes.split(','):
+    ans.extend(complete_group_code(code))
+  return ans
 
 #for j in group_names.keys():
 #  for k in group_names[j]:

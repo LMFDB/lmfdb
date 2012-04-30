@@ -44,7 +44,7 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
 # below we use float(abs()) instead of abs() to avoid a sage bug
     if (float(abs(rp))>truncation) & (float(abs(ip))>truncation):
         ans = ""
-        if seriescoefftype=="series":
+        if seriescoefftype=="series" or seriescoefftype=="signed":
             ans +="+"
         ans +="("
         ans += truncatenumber(rp, precision)
@@ -201,12 +201,12 @@ def lfuncEPtex(L,fmt):
         elif L.Ltype()=="dirichlet":
              ans= ans+"\\prod_p (1- \\chi(p) p^{-s})^{-1}"
         elif L.Ltype()=="ellipticmodularform":
-            ans= ans+"\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1} \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + p^{-2s})^{-1}"
+            ans= ans+"\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1} \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + \chi(p)p^{-2s})^{-1}"
         elif L.Ltype()=="ellipticcurve":
             ans= ans+"\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1} \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + p^{-2s})^{-1}"
         elif L.Ltype()=="maass":
             if L.group == 'GL2':
-                ans= ans+"\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1} \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + p^{-2s})^{-1}"
+                ans= ans+"\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1} \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + \chi(p)p^{-2s})^{-1}"
             elif L.group == 'GL3':
                 ans= ans+"\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1}  \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + \\overline{a(p)} p^{-2s} - p^{-3s})^{-1}"
             else:
@@ -297,40 +297,49 @@ def compute_dirichlet_series(p_list, PREC):
       f = factor(i);
       if len(f)>1: #not a prime power
           LL[i] = prod([LL[p**e] for (p,e) in f])
-  return LL
+  print LL[:5]
+  return LL[1:]
 
 def compute_local_roots_SMF2_scalar_valued(ev_data, k, embedding):
+
+    logger.debug("Start SMF2")
     K = ev_data[0].parent().fraction_field() # field of definition for the eigenvalues
     ev = ev_data[1] # dict of eigenvalues
+    print "ev=--------->>>>>>>", ev
     L = ev.keys()
     m = ZZ(max(L)).isqrt() + 1
     ev2 = {}
     for p in primes(m):
+
         try:
             ev2[p] = (ev[p],ev[p*p])
-
         except:
             break
         
+    logger.debug(str(ev2))
     ret = []
     for p in ev2:
-        R = PolynomialRing(QQ,'x')
+        R = PolynomialRing(K,'x')
         x = R.gens()[0]
+
         f =  (1 - ev2[p][0]*x+(ev2[p][0]**2-ev2[p][1]-p**(2*k-4))*x**2 -ev2[p][0]*p**(2*k-3)*x**3+p**(4*k-6)*x**4)
+
         Rnum = PolynomialRing(CF, 'y')
         x = Rnum.gens()[0]
         fnum = Rnum(0)
         if K != QQ:
             for i in range(int(f.degree())+1):
-                fnum = fnum + f[i].complex_embeddings(NN)[embedding]*x**i
+                fnum = fnum + f[i].complex_embeddings(NN)[embedding]*(x/p**(k-1.5))**i
         else:
-            print "here"
-            fnum = Rnum(f)
+            for i in range(int(f.degree())+1):
+                fnum = fnum + f[i]*(x/CF(p**(k-1.5)))**i
+
         r = fnum.roots(CF)
         r = [1/a[0] for a in r]
         #a1 = r[1][0]/r[0][0]
         #a2 = r[2][0]/r[0][0]
         #a0 = 1/r[3][0]
+
         ret.append((p,r))
 
     return ret

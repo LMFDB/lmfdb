@@ -59,7 +59,8 @@ def render_maass_waveforms(level=0,weight=-1,character=-1,r1=0,r2=0,**kwds):
     
     info["credit"] = ""
     info["learnmore"]= []
-    info["learnmore"].append(["Wiki","http://wiki.l-functions.org/ModularForms/MaassForms"])
+    # Not using wiki links for now
+    #info["learnmore"].append(["Wiki","http://wiki.l-functions.org/ModularForms/MaassForms"])
     # if we submit a search we search the database:
     mwf_logger.debug("args=%s"%request.args)
     mwf_logger.debug("method=%s"%request.method)
