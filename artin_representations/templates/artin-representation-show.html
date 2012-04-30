@@ -64,7 +64,7 @@
       <table class="ntdata">
       <tbody>
         {% for root in object.number_field_galois_group().computation_roots()%}
-          <tr> <td>$r_{{loop.index}}$</td><td>{{root}}</td></tr>
+          <tr> <td>$r_{{loop.index}}$</td><td>${{root.latex(letter="a")}} +O\left({{object.number_field_galois_group().residue_characteristic()}}^{ {{object.number_field_galois_group().computation_precision()}} }\right)$</td></tr>
         {% endfor %}
         
       </tbody>

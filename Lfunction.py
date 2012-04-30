@@ -1295,8 +1295,10 @@ class ArtinLfunction(Lfunction):
         
         self.texname = "L(s)"  # default name.  will be set later, for most L-functions
         self.texnamecompleteds = "\\Lambda(s)"  # default name.  will be set later, for most L-functions
-        self.texnamecompleted1ms = "\\overline{\\Lambda(1-\\overline{s})}"  # default name.  will be set later, for most L-functions
-        
+        if self.selfdual:
+            self.texnamecompleted1ms = "\\Lambda(1-s)"  # default name.  will be set later, for most L-functions
+        else:
+            self.texnamecompleted1ms = "\\overline{\\Lambda(1-\\overline{s})}"  # default name.  will be set later, for most L-functions
         self.generateSageLfunction()
 
 class SymmetricPowerLfunction(Lfunction):

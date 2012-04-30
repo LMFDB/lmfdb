@@ -188,16 +188,23 @@ pari:
 	<center>
 	<table>
 
-	<thead><tr><th></th><th>{{ KNOWL('artin.dimension', title='Dimension') }}</th><th>{{ KNOWL('artin.conductor', title='Conductor') }}</th><th>Defining polynomial of {{ KNOWL('artin.number_field', title='Artin Field') }} </th>
+	<thead><tr><th></th>
+	<th>{{ KNOWL('artin.dimension', title='Dimension') }}</th>
+	<th>{{ KNOWL('artin.conductor', title='Conductor') }}</th>
+	<th>Factored {{ KNOWL('artin.conductor', title='conductor') }}</th>
+	<th>{{ KNOWL('artin.ramification', title='Bad primes') }}</th>
+	<th>Defining polynomial of {{ KNOWL('artin.number_field', title='Artin field') }} </th>
 	<th>{{ KNOWL('artin.gg_quotient', title='Galois quotient $G$') }}</th>
 	<th>Size of $G$</th>
 	<th>{{ KNOWL('artin.root_number', title='Root number') }}</th>
-	<th>{{ KNOWL('artin.ramification', title='Bad primes') }}</th>
+	<th>{{ KNOWL('artin.frobenius_schur_indicator', title='Frobenius-Schur indicator') }}</th>
 	<th>Trace of complex conjugation</th>
 	</tr></thead>
 	<tbody>
         {% for artin in info["tim_number_field"].artin_representations()%}
           <tr> <th><a href = "{{artin.url_for()}}">{{loop.index}}</a></th><th>${{artin.dimension()}}$</th><th>${{artin.conductor()}}$</th>
+	  <th>${{artin.factored_conductor_latex()}}$</th>
+	  <th>${{artin.bad_primes()}}$</th>
 	  {% if artin.number_field_galois_group().url_for() %}
 	     <th><a href="{{artin.number_field_galois_group().url_for()}}">${{artin.number_field_galois_group().polredabslatex()}}$</a></th>
 	  {% else %}
@@ -205,8 +212,8 @@ pari:
 	  {% endif %}
 	  <th>${{artin.number_field_galois_group().G_name()}}$</th>
 	  <th>${{artin.number_field_galois_group().size()}}$</th>
-	  <th>${{artin.root_number()}}$</th>
-	  <th>${{artin.bad_primes()}}$</th>
+	  <th>${{artin.processed_root_number()}}$</th>
+	  <th> ${{artin.indicator()}}$</th>
 	  <th>${{artin.trace_complex_conjugation()}}$</th>
 	  </tr>
         {% endfor %}

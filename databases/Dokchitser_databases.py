@@ -84,9 +84,7 @@ Dokchitser_ConjugacyClass = Dict(
                 "Representative":   PermutationAsList
             })
 
-class pAdicApproximationAsString(String):
-    # If the numbers get too unwidely, one can use this class to overload self.latex() and display it in a better form
-    pass
+
 
 Dokchitser_NumberFieldGaloisGroup = Dict({
     "_id" :                 Anything,
@@ -99,7 +97,7 @@ Dokchitser_NumberFieldGaloisGroup = Dict({
     "G-Gens" :              FiniteSet(PermutationAsList),
     "G-Name" :              Custom_GroupLabel,
     "Polynomial" :          PolynomialAsSequenceInt,
-    "QpRts" :               FiniteSequence(pAdicApproximationAsString),
+    "QpRts" :               FiniteSequence(PolynomialAsSequenceTooLargeInt),
     "QpRts-minpoly" :       PolynomialAsSequenceInt,
     "QpRts-p" :             Int,
     "QpRts-prec" :          Int,

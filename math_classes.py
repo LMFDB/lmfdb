@@ -3,7 +3,7 @@
 from base import getDBConnection, app
 from utils import url_for
 from databases.Dokchitser_databases import Dokchitser_ArtinRepresentation_Collection, Dokchitser_NumberFieldGaloisGroup_Collection
-from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer
+from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation
 
 def process_algebraic_integer(seq, root_of_unity):
     return sum(seq[i] * root_of_unity**i for i in range(len(seq)))
@@ -42,6 +42,20 @@ class ArtinRepresentation(object):
     def conductor(self):
         return self._data["Conductor"]
     
+    def factored_conductor(self):
+        return [(p, valuation(Integer(self.conductor()),p)) for p in self.bad_primes()]
+    
+    def factored_conductor_latex(self):
+        if int(self.conductor()) == 1:
+            return "1"
+        def power_prime(p,exponent):
+            if exponent == 1:
+                return " " + str(p) + " "
+            else:
+                return " " + str(p) +"^{" + str(exponent)+"}"
+        tmp = " \cdot ".join(power_prime(p,val) for (p,val) in self.factored_conductor() )
+        return tmp
+        
     def hard_primes(self):
         try:
             return self._hard_primes
@@ -129,11 +143,15 @@ class ArtinRepresentation(object):
         return self.root_number()
         
     def root_number(self):
-        try:
-            return int(self._data["Sign"])
-        except KeyError:
-            return "?"      # Could try to implement guessing of the root number
-        
+        return int(self._data["Sign"])
+    
+    def processed_root_number(self):
+        tmp = self.root_number()
+        if tmp == 0:
+            return "?"
+        else:
+            return str(tmp)
+    
     
     def trace_complex_conjugation(self):
         """ Computes the trace of complex conjugation, and returns an int
@@ -172,14 +190,7 @@ class ArtinRepresentation(object):
         
     def nu_fe(self):
         return []
-    
-    def self_dual(self):
-        return "?"
-        raise NotImplementedError
-    
-    def selfdual(self):
-        return self.self_dual()
-    
+        
     def poles(self):
         try:
             assert self.primitive()
@@ -242,7 +253,7 @@ class ArtinRepresentation(object):
             local_factors = self.local_factors_table()
             from sage.rings.all import RealField, ComplexField
             field = ComplexField()
-            root_of_unity = exp(2*field.pi()/int(self.character_field()))
+            root_of_unity = exp((field.gen())*2*field.pi()/int(self.character_field()))
             local_factor_processed_pols = [0]   # dummy to account for the shift in indices
             for pol in local_factors:
                 local_factor_processed_pols.append(process_polynomial_over_algebraic_integer(pol, field, root_of_unity))
@@ -289,6 +300,23 @@ class ArtinRepresentation(object):
     def Lfunction(self):
         from Lfunction import ArtinLfunction
         return ArtinLfunction(self.dimension(), self.conductor(), self.index())
+
+    def indicator(self):
+        """ The Frobenius-Schur indicator of the Artin L-function. Will be
+                +1 if rho is orthogonal,
+                -1 if rho is symplectic and
+                0 if the character of rho is not defined over the reals, i.e. the representation is not self-dual.
+        """
+        return self._data["Indicator"]
+        
+    def self_dual(self):
+        if self.indicator() == 0:
+            return False
+        else:
+            return True
+    
+    def selfdual(self):
+        return self.self_dual()
 
     
 class CharacterValues(list):
@@ -417,8 +445,7 @@ class NumberFieldGaloisGroup(object):
         return self._data["QpRts-minpoly"]
 
     def computation_roots(self):
-        tmp =  [str(x)  for x in self._data["QpRts"]]
-        return tmp
+        return [x for x in self._data["QpRts"]]
         
     def index_complex_conjugation(self):
         # This is an index starting at 1

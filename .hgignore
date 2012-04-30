@@ -17,3 +17,5 @@ flasklog
 # backup files
 *~
 paul_scripts
+
+local.sh
