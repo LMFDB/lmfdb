@@ -23,7 +23,8 @@ for nf_dict in NF.collection().find({"label":{"$exists":False}}):
    nf = NF(data = nf_dict)
    print nf.polynomial()
    if int(nf.polynomial()[0]) <> -45 and len(nf.polynomial()) <> 9 :
-      # This is needed to avoid an apparent bug with pari(x^8-45).polredabs()
+      # This is needed to avoid a bug that appears sometimes with pari(x^8-45).polredabs()
+      # It looks like this bug was fixed upstream in an upcoming release of pari
       print nf.polredabs()
       if nf.label():
          print nf.label()

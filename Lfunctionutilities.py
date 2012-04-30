@@ -151,20 +151,30 @@ def lfuncDStex(L ,fmt):
     if len(L.dirichlet_coefficients)==0:
         return '\\text{No Dirichlet coefficients supplied.}'
     
-    numperline = 3
-    numcoeffs=min(10,len(L.dirichlet_coefficients))
+    numperline = 4
+    maxcoeffs = 20
     if L.selfdual:
-        numperline = 7
-        numcoeffs=min(20,len(L.dirichlet_coefficients))
-        ans=""
+        numperline = 9 # Actually, we want 8 per line, and one extra addition to counter to ensure
+                        # we add only one newline
+        maxcoeffs = 30
+    ans=""
+    # Changes to account for very sparse series, only count actual nonzero terms to decide when to go to next line
+    # This actually jumps by 2 whenever we add a newline, to ensure we just add one new line
+    nonzeroterms = 1
     if fmt=="analytic" or fmt=="langlands":
         ans="\\begin{align}\n"
         ans=ans+L.texname+"="+seriescoeff(L.dirichlet_coefficients[0],0,"literal","",-6,5)+"\\mathstrut&"
-        for n in range(1,numcoeffs):
-            ans=ans+seriescoeff(L.dirichlet_coefficients[n],n+1,"series","dirichlet",-6,5)
-            if(n % numperline ==0):
+        for n in range(1,len(L.dirichlet_coefficients)):
+            tmp = seriescoeff(L.dirichlet_coefficients[n],n+1,"series","dirichlet",-6,5)
+            if tmp <> "":
+                nonzeroterms += 1
+            ans=ans+tmp
+            if nonzeroterms > maxcoeffs:
+                break
+            if(nonzeroterms % numperline ==0):
                 ans=ans+"\\cr\n"
                 ans=ans+"&"
+                nonzeroterms += 1   # This ensures we don t add more than one newline
         ans=ans+" + \\ \\cdots\n\\end{align}"
 
 
@@ -213,7 +223,10 @@ def lfuncEPtex(L,fmt):
                 ans= ans+"\\prod_p \\ \\prod_{j=1}^{"+str(L.degree)+"} (1 - \\alpha_{j,p}\\,  p^{-s})^{-1}"
                 
         elif L.langlands:
+            if L.degree > 1:
                 ans= ans+"\\prod_p \\ \\prod_{j=1}^{"+str(L.degree)+"} (1 - \\alpha_{j,p}\\,  p^{-s})^{-1}"
+            else:
+                ans= ans+"\\prod_p \\  (1 - \\alpha_{p}\\,  p^{-s})^{-1}"
           
 
         else:
