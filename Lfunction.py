@@ -792,12 +792,13 @@ class Lfunction_HMF(Lfunction):
         self.residues = []
 
         # Compute Dirichlet coefficients
-        self.numcoeff = 20 + int(5 * math.ceil(self.weight * sqrt(self.level))) #just testing  NB: Need to learn how to use more coefficients
-
         hecke_eigenvalues = [iota(K(str(ae))) for ae in f['hecke_eigenvalues']]
         primes = [pp_str.split(', ') for pp_str in F_hmf['primes']]
         primes = [[int(pp[0][1:]), int(pp[1])] for pp in primes]
-        primes = [[pp[0], pp[1], int(log(pp[0],pp[1]))] for pp in primes]
+        primes = [[pp[0], pp[1], factor(pp[0])[0][1]] for pp in primes]
+
+        PP = primes[-1][0]
+        self.numcoeff = PP # The number of coefficients is given by the norm of the last prime
 
         ppmidNN = [c[0] for c in f['AL_eigenvalues']]
 
@@ -809,6 +810,10 @@ class Lfunction_HMF(Lfunction):
                 heckepols[ratl_primes.index(primes[l][1])] *= 1 - hecke_eigenvalues[l]/float(sqrt(primes[l][0]))*(T**primes[l][2])
             else:
                 heckepols[ratl_primes.index(primes[l][1])] *= 1 - hecke_eigenvalues[l]/float(sqrt(primes[l][0]))*(T**primes[l][2]) + (T**(2*primes[l][2]))
+
+        # Compute inverses up to given degree
+        heckepolsinv = [ heckepols[i].xgcd(T**ceil(log(PP*1.0)/log(ratl_primes[i]*1.0)))[1] for i in range(len(heckepols))]
+
         dcoeffs = [0,1]
         for n in range(2,ratl_primes[-1]+1):
             nfact = factor(n)
@@ -817,26 +822,17 @@ class Lfunction_HMF(Lfunction):
                 p = nfact[0][0]
                 k = nfact[0][1]
                 S = [1] + [dcoeffs[p**i] for i in range(1,k)]
-                heckepol = heckepols[ratl_primes.index(p)]
-                if k == 1:
-                    # prime, just the trace
-                    dcoeffs.append(-heckepol[1])
-                elif k < 2*self.field_degree:
-                    # Newton relations
-                    Sk = sum([ heckepol[i]*S[k-i] for i in range(1,k)]) + k*heckepol[k]
-                    dcoeffs.append(-Sk)
-                else:
-                    # Just evaluate polynomial
-                    Sk = sum([ heckepol[i]*S[k-2*self.field_degree+i] for i in range(2*self.field_degree)])
-                    dcoeffs.append(-Sk)
+                heckepol = heckepolsinv[ratl_primes.index(p)]
+                dcoeffs.append(heckepol[k])
             else:
                 # composite
                 ancoeff = prod([dcoeffs[pe[0]**pe[1]] for pe in nfact])
                 dcoeffs.append(ancoeff)
 
         ff = open('dcoeffs.txt', 'w')
-        ff.write(str(dcoeffs) + '\n')
-        ff.write(str(heckepols))
+        ff.write(str(primes) + '\n')
+        ff.write(str(heckepols) + '\n')
+        ff.write(str(ratl_primes) + '\n')
         ff.close()
 
         self.dirichlet_coefficients = dcoeffs[1:]
