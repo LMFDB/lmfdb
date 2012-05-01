@@ -203,7 +203,7 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
     except Exception as e:
       # throw exception if not UserError
         if len(e.args) > 1 and e.args[1] != 'UserError': raise
-        info = { 'content': 'Sorry, there has been a problem: %s .         Please report it <a href="http://code.google.com/p/lmfdb/issues/list">here</a>.' % e.args[0], 'title': 'Error' }
+        info = { 'content': 'Sorry, there has been a problem: %s.' % e.args[0], 'title': 'Error' }
         return render_template('LfunctionSimple.html', info=info, **info), 500
 
     try:
