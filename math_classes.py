@@ -42,6 +42,16 @@ class ArtinRepresentation(object):
     def conductor(self):
         return self._data["Conductor"]
     
+    def conductor_equation(self):
+        # Returns things of the type "1", "7", "49 = 7^{2}"
+        factors = self.factored_conductor()
+        if str(self.conductor()) == "1":
+            return "1"
+        if len(factors) == 1 and factors[0][1] == 1:
+            return str(self.conductor())
+        else:
+            return str(self.conductor()) + "=" + self.factored_conductor_latex()
+            
     def factored_conductor(self):
         return [(p, valuation(Integer(self.conductor()),p)) for p in self.bad_primes()]
     

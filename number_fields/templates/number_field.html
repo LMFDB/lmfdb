@@ -191,8 +191,6 @@ pari:
 	<thead><tr><th></th>
 	<th>{{ KNOWL('artin.dimension', title='Dimension') }}</th>
 	<th>{{ KNOWL('artin.conductor', title='Conductor') }}</th>
-	<th>Factored {{ KNOWL('artin.conductor', title='conductor') }}</th>
-	<th>{{ KNOWL('artin.ramification', title='Bad primes') }}</th>
 	<th>Defining polynomial of {{ KNOWL('artin.number_field', title='Artin field') }} </th>
 	<th>{{ KNOWL('artin.gg_quotient', title='Galois quotient $G$') }}</th>
 	<th>Size of $G$</th>
@@ -202,9 +200,8 @@ pari:
 	</tr></thead>
 	<tbody>
         {% for artin in info["tim_number_field"].artin_representations()%}
-          <tr> <th><a href = "{{artin.url_for()}}">{{loop.index}}</a></th><th>${{artin.dimension()}}$</th><th>${{artin.conductor()}}$</th>
-	  <th>${{artin.factored_conductor_latex()}}$</th>
-	  <th>${{artin.bad_primes()}}$</th>
+          <tr> <th><a href = "{{artin.url_for()}}">{{loop.index}}</a></th><th>${{artin.dimension()}}$</th>
+	  <th>${{artin.conductor_equation()}}$</th>
 	  {% if artin.number_field_galois_group().url_for() %}
 	     <th><a href="{{artin.number_field_galois_group().url_for()}}">${{artin.number_field_galois_group().polredabslatex()}}$</a></th>
 	  {% else %}

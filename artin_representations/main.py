@@ -158,7 +158,7 @@ def render_artin_representation_webpage(dim, conductor, index):
                 ("Dimension", str(the_rep.dimension())),
                 ("Conductor",str(the_rep.conductor())),
                 ("Factored conductor","$"+the_rep.factored_conductor_latex()+"$"),
-                ("Bad primes", str(the_rep.bad_primes())),
+                #("Bad primes", str(the_rep.bad_primes())),
                 ("Frobenius-Schur indicator", str(the_rep.indicator()))
                 ]
   
