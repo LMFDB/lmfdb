@@ -829,11 +829,11 @@ class Lfunction_HMF(Lfunction):
                 ancoeff = prod([dcoeffs[pe[0]**pe[1]] for pe in nfact])
                 dcoeffs.append(ancoeff)
 
-        ff = open('dcoeffs.txt', 'w')
-        ff.write(str(primes) + '\n')
-        ff.write(str(heckepols) + '\n')
-        ff.write(str(ratl_primes) + '\n')
-        ff.close()
+        #ff = open('dcoeffs.txt', 'w')
+        #ff.write(str(primes) + '\n')
+        #ff.write(str(heckepols) + '\n')
+        #ff.write(str(ratl_primes) + '\n')
+        #ff.close()
 
         self.dirichlet_coefficients = dcoeffs[1:]
 
