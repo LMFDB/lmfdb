@@ -1,5 +1,5 @@
-artin_location = ("limbo","tim_artin_04")
-galois_group_location = ("limbo","tim_nfgal_04")
+artin_location = ("limbo","tim_artin_06")
+galois_group_location = ("limbo","tim_nfgal_06")
 
 from type_generation import String, Array, Dict, Int, Anything, Float
 
@@ -84,9 +84,7 @@ Dokchitser_ConjugacyClass = Dict(
                 "Representative":   PermutationAsList
             })
 
-class pAdicApproximationAsString(String):
-    # If the numbers get too unwidely, one can use this class to overload self.latex() and display it in a better form
-    pass
+
 
 Dokchitser_NumberFieldGaloisGroup = Dict({
     "_id" :                 Anything,
@@ -99,11 +97,11 @@ Dokchitser_NumberFieldGaloisGroup = Dict({
     "G-Gens" :              FiniteSet(PermutationAsList),
     "G-Name" :              Custom_GroupLabel,
     "Polynomial" :          PolynomialAsSequenceInt,
-    "QpRts" :               FiniteSequence(pAdicApproximationAsString),
+    "QpRts" :               FiniteSequence(PolynomialAsSequenceTooLargeInt),
     "QpRts-minpoly" :       PolynomialAsSequenceInt,
     "QpRts-p" :             Int,
     "QpRts-prec" :          Int,
-    "Size" :                Int,
+    "Size" :                TooLargeInt,
     "TransitiveDegree" :    Int,
     "label" :               LabelString                 # Added after Tim, by link_tim_other.py script
 })

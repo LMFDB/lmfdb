@@ -151,20 +151,30 @@ def lfuncDStex(L ,fmt):
     if len(L.dirichlet_coefficients)==0:
         return '\\text{No Dirichlet coefficients supplied.}'
     
-    numperline = 3
-    numcoeffs=min(10,len(L.dirichlet_coefficients))
+    numperline = 4
+    maxcoeffs = 20
     if L.selfdual:
-        numperline = 7
-        numcoeffs=min(20,len(L.dirichlet_coefficients))
-        ans=""
+        numperline = 9 # Actually, we want 8 per line, and one extra addition to counter to ensure
+                        # we add only one newline
+        maxcoeffs = 30
+    ans=""
+    # Changes to account for very sparse series, only count actual nonzero terms to decide when to go to next line
+    # This actually jumps by 2 whenever we add a newline, to ensure we just add one new line
+    nonzeroterms = 1
     if fmt=="analytic" or fmt=="langlands":
         ans="\\begin{align}\n"
         ans=ans+L.texname+"="+seriescoeff(L.dirichlet_coefficients[0],0,"literal","",-6,5)+"\\mathstrut&"
-        for n in range(1,numcoeffs):
-            ans=ans+seriescoeff(L.dirichlet_coefficients[n],n+1,"series","dirichlet",-6,5)
-            if(n % numperline ==0):
+        for n in range(1,len(L.dirichlet_coefficients)):
+            tmp = seriescoeff(L.dirichlet_coefficients[n],n+1,"series","dirichlet",-6,5)
+            if tmp <> "":
+                nonzeroterms += 1
+            ans=ans+tmp
+            if nonzeroterms > maxcoeffs:
+                break
+            if(nonzeroterms % numperline ==0):
                 ans=ans+"\\cr\n"
                 ans=ans+"&"
+                nonzeroterms += 1   # This ensures we don t add more than one newline
         ans=ans+" + \\ \\cdots\n\\end{align}"
 
 
@@ -213,7 +223,10 @@ def lfuncEPtex(L,fmt):
                 ans= ans+"\\prod_p \\ \\prod_{j=1}^{"+str(L.degree)+"} (1 - \\alpha_{j,p}\\,  p^{-s})^{-1}"
                 
         elif L.langlands:
+            if L.degree > 1:
                 ans= ans+"\\prod_p \\ \\prod_{j=1}^{"+str(L.degree)+"} (1 - \\alpha_{j,p}\\,  p^{-s})^{-1}"
+            else:
+                ans= ans+"\\prod_p \\  (1 - \\alpha_{p}\\,  p^{-s})^{-1}"
           
 
         else:
@@ -243,8 +256,17 @@ def lfuncFEtex(L,fmt):
         for nu in L.nu_fe:
            ans += "\Gamma_{\mathbb{C}}(s"+seriescoeff(nu,0,"signed","",-6,5)+")"
         ans += " \\cdot "+L.texname+"\\cr\n"
-        ans += "=\\mathstrut & "+seriescoeff(L.sign,0,"factor","",-6,5)
-        ans += L.texnamecompleted1ms+"\n\\end{align}\n"
+        ans += "=\\mathstrut & "
+        if L.sign == 0:
+            ans += "\epsilon \cdot "
+        else:
+            ans += seriescoeff(L.sign,0,"factor","",-6,5)
+        ans += L.texnamecompleted1ms
+        if L.sign == 0 and L.degree == 1:
+            ans += "\quad (\\text{with }\epsilon \\text{ not computed})"
+        if L.sign == 0 and L.degree > 1:
+            ans += "\quad (\\text{with }\epsilon \\text{ unknown})"
+        ans += "\n\\end{align}\n"
     elif fmt=="selberg":
         print L.nu_fe,"!!!!!!!"
         ans+="("+str(int(L.degree))+","
@@ -297,12 +319,15 @@ def compute_dirichlet_series(p_list, PREC):
       f = factor(i);
       if len(f)>1: #not a prime power
           LL[i] = prod([LL[p**e] for (p,e) in f])
-  return LL
+  print LL[:5]
+  return LL[1:]
 
 def compute_local_roots_SMF2_scalar_valued(ev_data, k, embedding):
+
+    logger.debug("Start SMF2")
     K = ev_data[0].parent().fraction_field() # field of definition for the eigenvalues
     ev = ev_data[1] # dict of eigenvalues
-    #print "ev=--------->>>>>>>", ev
+    print "ev=--------->>>>>>>", ev
     L = ev.keys()
     m = ZZ(max(L)).isqrt() + 1
     ev2 = {}
@@ -312,7 +337,8 @@ def compute_local_roots_SMF2_scalar_valued(ev_data, k, embedding):
             ev2[p] = (ev[p],ev[p*p])
         except:
             break
-    
+        
+    logger.debug(str(ev2))
     ret = []
     for p in ev2:
         R = PolynomialRing(K,'x')
@@ -327,8 +353,9 @@ def compute_local_roots_SMF2_scalar_valued(ev_data, k, embedding):
             for i in range(int(f.degree())+1):
                 fnum = fnum + f[i].complex_embeddings(NN)[embedding]*(x/p**(k-1.5))**i
         else:
-            print "here"
-            fnum = Rnum(f)
+            for i in range(int(f.degree())+1):
+                fnum = fnum + f[i]*(x/CF(p**(k-1.5)))**i
+
         r = fnum.roots(CF)
         r = [1/a[0] for a in r]
         #a1 = r[1][0]/r[0][0]

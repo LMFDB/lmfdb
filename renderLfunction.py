@@ -203,7 +203,7 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
     except Exception as e:
       # throw exception if not UserError
         if len(e.args) > 1 and e.args[1] != 'UserError': raise
-        info = { 'content': 'Sorry, there has been a problem: %s .         Please report it <a href="http://code.google.com/p/lmfdb/issues/list">here</a>.' % e.args[0], 'title': 'Error' }
+        info = { 'content': 'Sorry, there has been a problem: %s.' % e.args[0], 'title': 'Error' }
         return render_template('LfunctionSimple.html', info=info, **info), 500
 
     try:
@@ -304,18 +304,28 @@ def initLfunction(L,args, request):
     '''
 
     info = {'title': L.title}
-    info['citation'] = ''
-    info['support'] = ''
+    try:
+        info['citation'] = L.citation
+    except AttributeError:
+        info['citation'] = ""
+    try:
+        info['support'] = L.support
+    except AttributeError:
+        info['support'] = ""
+
+    info['Ltype'] = L.Ltype()
+
     # Here we should decide which values are indeed special values
     # According to Brian, odd degree has special value at 1, and even
     # degree has special value at 1/2.
     # (however, I'm not sure this is true if L is not primitive -- GT)
-    if is_even(L.degree):
-        info['sv12'] = specialValueString(L, 0.5, '1/2')
-    if is_odd(L.degree):
-        info['sv1'] = specialValueString(L, 1, '1')
+    if L.Ltype() <> "artin" or (L.Ltype() == "artin" and L.sign <> 0):
+        if is_even(L.degree) :
+            info['sv12'] = specialValueString(L, 0.5, '1/2')
+        if is_odd(L.degree):
+            info['sv1'] = specialValueString(L, 1, '1')
+            
     info['args'] = args
-    info['Ltype'] = L.Ltype()
 
 
     info['credit'] = L.credit
@@ -446,8 +456,13 @@ def initLfunction(L,args, request):
         number = str(L.number)
         info['friends'] = [('Siegel Modular Form', friendlink)]
 
-
-
+    elif L.Ltype() == "artin":
+        #info['zeroeslink'] = ''
+        #info['plotlink'] = ''
+        info['friends'] = [('Artin representation', L.artin.url_for())]
+        if L.sign == 0:           # The root number is now unknown
+            info['zeroeslink'] = ''
+            info['plotlink'] = ''
 
     info['dirichlet'] = lfuncDStex(L, "analytic")
     info['eulerproduct'] = lfuncEPtex(L, "abstract")
@@ -495,6 +510,8 @@ def styleTheSign(sign):
     '''
     try:
         logger.debug(1-sign)
+        if sign == 0:
+            return "unknown"
         if abs(1-sign) < 1e-10:
             return '1'
         elif abs(1+sign) < 1e-10:

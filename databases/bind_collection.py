@@ -20,7 +20,7 @@ class ExtendedCollection(Collection):
         else:
             iter_search = self.find(*args, **kwargs)
         for x in iter_search:
-            databases_logger.debug("found one:",x)
+            #databases_logger.debug("found one:",x)
             yield self._type_conversion(x)
 
     def find_and_convert_one(self, *args, **kwargs):
@@ -36,5 +36,5 @@ class ExtendedCollection(Collection):
             x = self.find_one(*args,**kwargs)
         databases_logger.debug("GOT " +str( x))
         y = self._type_conversion(x)
-        databases_logger.debug("CONVERTED TO "+str(y))
+        #databases_logger.debug("CONVERTED TO "+str(y))
         return y

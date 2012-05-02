@@ -6,53 +6,39 @@
   <table>
     <tr>
       <td>{{ KNOWL('artin.conductor',title = "Conductor") }}</td>
-     <td>
-       <input type='text' name='conductor' value="{{req.conductor}}" size=15/>
-     </td>
-     <td><span class="formexample"> e.g. 50, 100-200</span></td>
-    <td>
-     Ramified primes
-     </td>
-            <td>
-            <input type='text' name='ramified' value="{{req.ramified}}" size=15/>
-            </td>
-            <td><span class="formexample"> e.g. 2, 3 (no range allowed)</span>
-            </td>
+      <td><input type='text' name='conductor' value="{{req.conductor}}" size=15/></td>
+      <td><span class="formexample"> e.g. 50, 100-200</span></td>
     </tr>
     <tr>
-    <td>
-     {{ KNOWL('artin.dimension',title="Dimension") }}
-     </td>
-            <td>
-            <input type='text' name='dimension' value="{{req.dimension}}" size=15/>
-            </td>
-            <td><span class="formexample"> e.g. 1, 2-4 </span>
-            </td>
-     <td>
-     Unramified primes
-     </td>
-            <td>
-            <input type='text' name='unramified' value = "{{req.unramified}}" size=15/>
-            </td>
-            <td><span class="formexample"> e.g. 5, 7, 13  (no range allowed)</span>
-            </td>
-     </tr>
-    
-    <td>
-     {{ KNOWL('artin.root_number',title="Root number") }}
-     </td>
-            <td>
-            <input type='text' name='root_number' value = "{{req.root_number}}" size=15/>
-            </td>
-            <td><span class="formexample"> at the moment, one of 1 or -1 </span>
-            </td>
-     </tr>
+      <td>Ramified primes</td>
+      <td><input type='text' name='ramified' value="{{req.ramified}}" size=15/></td>
+      <td><span class="formexample"> e.g. 2, 3 (no range allowed)</span></td>
+    </tr>
+    <tr>
+      <td>{{ KNOWL('artin.dimension',title="Dimension") }}</td>
+      <td><input type='text' name='dimension' value="{{req.dimension}}" size=15/></td>
+      <td><span class="formexample"> e.g. 1, 2-4 </span></td>
+    </tr>
+    <tr>
+      <td>Unramified primes</td>
+      <td><input type='text' name='unramified' value = "{{req.unramified}}" size=15/></td>
+      <td><span class="formexample"> e.g. 5, 7, 13  (no range allowed)</span></td>
+    </tr>
+    <tr>
+      <td>{{ KNOWL('artin.root_number',title="Root number") }}</td>
+      <td><input type='text' name='root_number' value = "{{req.root_number}}" size=15/></td>
+      <td><span class="formexample"> at the moment, one of 1 or -1 </span></td>
+    </tr>
+    <tr>
+      <td>{{ KNOWL('artin.frobenius_schur_indicator',title="Frobenius-Schur indicator") }}</td>
+      <td><input type='text' name='frobenius_schur_indicator' value = "{{req.frobenius_schur_indicator}}" size=15/></td>
+      <td><span class="formexample"> +1 for orthogonal, -1 for symplectic, 0 for non-real character</span></td>
+    </tr>
 
-<tr>
-<td align=left colspan=4>Maximum number of Artin representations to display <input type='text' name='count' value="{{req.count}}" size=10>
-</td>
-</tr>
-  </table>
+    <tr>
+      <td align=left colspan=4>Maximum number of Artin representations to display <input type='text' name='count' value="{{req.count}}" size=10></td>
+    </tr>
+</table>
   
 
 <td><button type='submit' value='Search'>Search</button></td>
@@ -61,31 +47,34 @@
 
 	<table>
 
-	<thead><tr><th>Result</th><th>{{ KNOWL('artin.dimension', title='Dimension') }}</th><th>{{ KNOWL('artin.conductor', title='Conductor') }}</th><th>Defining polynomial of {{ KNOWL('artin.number_field', title='Artin Field') }} </th>
-	<th>Galois subgroup</th>
-        <th>Size of Galois subgroup</th>
+	<thead><tr><th>Result</th>
+        <th>{{ KNOWL('artin.dimension', title='Dimension') }}</th>
+	<th>{{ KNOWL('artin.conductor', title='Conductor') }}</th>
+	<th>Defining polynomial of {{ KNOWL('artin.number_field', title='Artin field') }} </th>
+	<th>{{ KNOWL('artin.gg_quotient', title='Galois quotient $G$') }}</th>
+	<th>Size of $G$</th>
 	<th>{{ KNOWL('artin.root_number', title='Root number') }}</th>
-	<th>{{ KNOWL('artin.ramification', title='Bad primes') }}</th>
+	<th>{{ KNOWL('artin.frobenius_schur_indicator', title='Frobenius-Schur indicator') }}</th>
 	<th>Trace of complex conjugation</th>
 	</tr></thead>
 	<tbody>
         {% for artin in data%}
-          <tr> <th><a href = "{{artin.url_for()}}">{{loop.index}}</a></th><th>${{artin.dimension()}}$</th><th>${{artin.conductor()}}$</th>
+          <tr> <th><a href = "{{artin.url_for()}}">{{loop.index}}</a></th><th>${{artin.dimension()}}$</th>
+          <th>${{artin.conductor_equation()}}$</th>
 	  {% if artin.number_field_galois_group().url_for() %}
-	     <th><a href="{{artin.number_field_galois_group().url_for()}}">${{artin.number_field_galois_group().polredabs()}}$</a></th>
+	     <th><a href="{{artin.number_field_galois_group().url_for()}}">${{artin.number_field_galois_group().polredabslatex()}}$</a></th>
 	  {% else %}
 	      <th>${{artin.number_field_galois_group().polredabslatex()}}$</th>
 	  {% endif %}
 	  <th>${{artin.number_field_galois_group().G_name()}}$</th>
-          <th>${{artin.number_field_galois_group().size()}}$</th>
-	  <th>${{artin.root_number()}}$</th>
-	  <th>${{artin.bad_primes()}}$</th>
+	  <th>${{artin.number_field_galois_group().size()}}$</th>
+	  <th>${{artin.processed_root_number()}}$</th>
+	  <th> ${{artin.indicator()}}$</th>
 	  <th>${{artin.trace_complex_conjugation()}}$</th>
 	  </tr>
         {% endfor %}
 	</tbody>
 	</table>
-
 <br>
 Original request {{req}} was turned into mongo query <span class="tex2jax_ignore">{{query}}</span>.
 <br>

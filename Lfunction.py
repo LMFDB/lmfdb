@@ -19,19 +19,19 @@ from modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaa
 import time ### for printing the date on an lcalc file
 import socket ### for printing the machine used to generate the lcalc file
 
-def get_attr_or_method(thiswillbeexecuted, attr_or_method_name):
-    """
-        Given an object O and a string "text", this returns O.text() or O.text depending on
-        whether text is an attribute or a method of O itself _or one of its superclasses_, which I will
-        only know at running time. I think I need an eval for that.   POD
-
-    """
-    # I don't see a way around using eval for what I want to be able to do
-    # Because of inheritance, which method should be called depends on self
-    try:
-        return eval("thiswillbeexecuted."+attr_or_method_name)
-    except:
-        return None
+#def get_attr_or_method(thiswillbeexecuted, attr_or_method_name):
+#    """
+#        Given an object O and a string "text", this returns O.text() or O.text depending on
+#        whether text is an attribute or a method of O itself _or one of its superclasses_, which I will
+#        only know at running time. I think I need an eval for that.   POD
+#
+#    """
+#    # I don't see a way around using eval for what I want to be able to do
+#    # Because of inheritance, which method should be called depends on self
+#    try:
+#        return eval("thiswillbeexecuted."+attr_or_method_name)
+#    except:
+#        return None
 
 def my_find_update(the_coll, search_dict, update_dict):
     """ This performs a search using search_dict, and updates each find in  
@@ -184,16 +184,18 @@ class Lfunction:
     def generateSageLfunction(self):
         """ Generate a SageLfunction to do computations
         """
+        logger.info("Generating Sage Lfunction with parameters %s and coefficients (maybe shortened in this msg, but there are %s) %s"%([self.title, self.coefficient_type, self.coefficient_period, self.Q_fe, self.sign , self.kappa_fe, self.lambda_fe , self.poles, self.residues],len(self.dirichlet_coefficients),self.dirichlet_coefficients[:20]))
         self.sageLfunction = lc.Lfunction_C(self.title, self.coefficient_type,
                                             self.dirichlet_coefficients,
                                             self.coefficient_period,
                                             self.Q_fe, self.sign ,
                                             self.kappa_fe, self.lambda_fe ,
                                             self.poles, self.residues)
-                    # self.kappa_fe:        
-                    # self.lambda_fe:
+                    # self.poles:           Needs poles of _completed_ L-function
+                    # self.residues:        Needs residues of _completed_ L-function
+                    # self.kappa_fe:        What ultimately appears if you do lcalc.lcalc_Lfunction._print_data_to_standard_output() as the gamma[1]
+                    # self.lambda_fe:       What ultimately appears if you do lcalc.lcalc_Lfunction._print_data_to_standard_output() as the lambda[1]
                     # According to Rishi, as of March 2012 (sage <=5.0), the documentation to his wrapper is wrong
-                    # POD
 
     def createLcalcfile(self):
         thefile="";
@@ -399,27 +401,38 @@ class Lfunction:
 
         else:
             thefile += "0,\t\t\t### set Dirichlet_coefficient[0]\n"
+            if self.coefficient_period == 0:
+                period = Infinity
+            else:
+                period = self.coefficient_period
+            
             if hasattr(self, 'dirichlet_coefficients_unnormalized'):
-                for n in range(0,len(self.dirichlet_coefficients_unnormalized)):
+                total = min(len(self.dirichlet_coefficients_unnormalized), period-1)
+                for n in range(0,total):
                     if self.selfdual:
                         thefile += str(self.dirichlet_coefficients_unnormalized[n])
                     else:
                         thefile += parse_complex_number(self.dirichlet_coefficients_unnormalized[n])
+                    if n < total - 1:           # We will be back
+                        thefile += ","
                     if n<2:
-                        thefile += ",\t\t\t### set Dirichlet_coefficient[" + str(n+1) +"] \n"
+                        thefile += "\t\t\t### set Dirichlet_coefficient[" + str(n+1) +"] \n"
                     else:
-                        thefile += ",\n"
+                        thefile += "\n"
             else:
-                for n in range(0,len(self.dirichlet_coefficients)):
+                total = min(len(self.dirichlet_coefficients), period-1)
+                for n in range(0,total):
                     if self.selfdual:
                         thefile += str(self.dirichlet_coefficients[n])
                     else:
                         thefile += parse_complex_number(self.dirichlet_coefficients[n])
+                    if n < total - 1:           # We will be back
+                        thefile += ","
                     if n<2:
-                        thefile += ",\t\t\t### set Dirichlet_coefficient[" + str(n+1) +"] \n"
+                        thefile += "\t\t\t### set Dirichlet_coefficient[" + str(n+1) +"] \n"
                     else:
-                        thefile += ",\n"
-            thefile = thefile[:-2]
+                        thefile += "\n"
+            #thefile = thefile[:-2]
             thefile += "]\n"
 
         return(thefile)
@@ -449,24 +462,24 @@ class Lfunction:
     ### Injects into the database of all the L-functions
     ############################################################################
 
-    def inject_database(self, relevant_info, time_limit = None):
-        #   relevant_methods are text strings 
-        #    desired_database_fields = [Lfunction.original_mathematical_object, Lfunction.level]
-        #    also zeroes, degree, conductor, type, real_coeff, rational_coeff, algebraic_coeff, critical_value, value_at_1, sign
-        #    ok_methods = [Lfunction.math_id, Lfunction.level]
-        #
-        # Is used to inject the data in relevant_fields
-
-        logger.info("Trying to inject")
-        import base
-        db = base.getDBConnection().Lfunctions
-        Lfunctions = db.full_collection
-        update_dict = dict([(method_name,get_attr_or_method(self,method_name)) for method_name in relevant_info])
-
-        logger.info("injecting " + str(update_dict))
-        search_dict = {"original_mathematical_object()": get_attr_or_method(self, "original_mathematical_object()")}
-
-        my_find_update(Lfunctions, search_dict, update_dict)
+    #def inject_database(self, relevant_info, time_limit = None):
+    #    #   relevant_methods are text strings 
+    #    #    desired_database_fields = [Lfunction.original_mathematical_object, Lfunction.level]
+    #    #    also zeroes, degree, conductor, type, real_coeff, rational_coeff, algebraic_coeff, critical_value, value_at_1, sign
+    #    #    ok_methods = [Lfunction.math_id, Lfunction.level]
+    #    #
+    #    # Is used to inject the data in relevant_fields
+    #
+    #    logger.info("Trying to inject")
+    #    import base
+    #    db = base.getDBConnection().Lfunctions
+    #    Lfunctions = db.full_collection
+    #    update_dict = dict([(method_name,get_attr_or_method(self,method_name)) for method_name in relevant_info])
+    #
+    #    logger.info("injecting " + str(update_dict))
+    #    search_dict = {"original_mathematical_object()": get_attr_or_method(self, "original_mathematical_object()")}
+    #
+    #    my_find_update(Lfunctions, search_dict, update_dict)
 
 
 #############################################################################
@@ -1248,19 +1261,27 @@ class ArtinLfunction(Lfunction):
         self.title = "L function for an Artin representation of dimension " + str(dimension) + \
             ", conductor "+ str(conductor) 
                 
-        self.dirichlet_coefficients = self.artin.coefficients_list()
         
         self.motivic_weight = 0
-        
-        self.coefficient_type = 0
-        self.coefficient_period = 0
         self.degree = self.artin.dimension()
-        self.Q_fe = int(self.artin.conductor())/float(math.pi)**int(self.degree)
-        self.sign = self.artin.sign()
+        self.coefficient_type = 0
+
+        if self.degree == 1:
+            self.coefficient_period = Integer(self.artin.conductor())
+            self.dirichlet_coefficients = self.artin.coefficients_list(upperbound = self.coefficient_period)
+        else:
+            self.coefficient_period = 0            
+            self.dirichlet_coefficients = self.artin.coefficients_list(upperbound = 1000)
+
+        #self.Q_fe = Integer(self.artin.conductor())/float(math.pi)**int(self.degree)
+        self.Q_fe = sqrt(Integer(self.artin.conductor())*1./float(math.pi)**int(self.degree))
+        self.sign = self.artin.root_number()
         self.kappa_fe = self.artin.kappa_fe()
         self.lambda_fe = self.artin.lambda_fe()
-        self.poles = self.artin.poles()
-        self.residues = self.artin.residues()
+        self.poles_L = self.artin.poles()
+        self.residues_L = self.artin.residues()
+        self.poles = self.artin.completed_poles()
+        self.residues = self.artin.completed_residues()
         self.level = self.artin.conductor()
         self.selfdual = self.artin.selfdual()               
         self.primitive = self.artin.primitive()             
@@ -1270,11 +1291,14 @@ class ArtinLfunction(Lfunction):
 
         self.credit = 'Sage, lcalc, and data precomputed in Magma by Tim Dokchitser'
         self.citation = ''
+        self.support = "Support by Paul-Olivier Dehaye"
         
         self.texname = "L(s)"  # default name.  will be set later, for most L-functions
         self.texnamecompleteds = "\\Lambda(s)"  # default name.  will be set later, for most L-functions
-        self.texnamecompleted1ms = "\\overline{\\Lambda(1-\\overline{s})}"  # default name.  will be set later, for most L-functions
-        
+        if self.selfdual:
+            self.texnamecompleted1ms = "\\Lambda(1-s)"  # default name.  will be set later, for most L-functions
+        else:
+            self.texnamecompleted1ms = "\\overline{\\Lambda(1-\\overline{s})}"  # default name.  will be set later, for most L-functions
         self.generateSageLfunction()
 
 class SymmetricPowerLfunction(Lfunction):
@@ -1439,7 +1463,7 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
 
         #logger.debug(str(self.ev_data))
         self.numcoeff = max([a[0] for a in roots]) # include a_0 = 0
-        self.dirichlet_coefficients = compute_dirichlet_series(roots, self.numcoeff) # these are in the arithmetic normalization
+        self.dirichlet_coefficients = compute_dirichlet_series(roots, self.numcoeff) # these are in the analytic normalization
         self.kappa_fe = [1,1] # the coefficients from Gamma(ks+lambda)
         self.lambda_fe = [float(1)/float(2), self.automorphyexp] # the coefficients from Gamma(ks+lambda)
         self.mu_fe = [] # the shifts of the Gamma_R to print

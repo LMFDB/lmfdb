@@ -3,7 +3,7 @@
 from base import getDBConnection, app
 from utils import url_for
 from databases.Dokchitser_databases import Dokchitser_ArtinRepresentation_Collection, Dokchitser_NumberFieldGaloisGroup_Collection
-from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer
+from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation
 
 def process_algebraic_integer(seq, root_of_unity):
     return sum(seq[i] * root_of_unity**i for i in range(len(seq)))
@@ -42,6 +42,30 @@ class ArtinRepresentation(object):
     def conductor(self):
         return self._data["Conductor"]
     
+    def conductor_equation(self):
+        # Returns things of the type "1", "7", "49 = 7^{2}"
+        factors = self.factored_conductor()
+        if str(self.conductor()) == "1":
+            return "1"
+        if len(factors) == 1 and factors[0][1] == 1:
+            return str(self.conductor())
+        else:
+            return str(self.conductor()) + "=" + self.factored_conductor_latex()
+            
+    def factored_conductor(self):
+        return [(p, valuation(Integer(self.conductor()),p)) for p in self.bad_primes()]
+    
+    def factored_conductor_latex(self):
+        if int(self.conductor()) == 1:
+            return "1"
+        def power_prime(p,exponent):
+            if exponent == 1:
+                return " " + str(p) + " "
+            else:
+                return " " + str(p) +"^{" + str(exponent)+"}"
+        tmp = " \cdot ".join(power_prime(p,val) for (p,val) in self.factored_conductor() )
+        return tmp
+        
     def hard_primes(self):
         try:
             return self._hard_primes
@@ -77,7 +101,7 @@ class ArtinRepresentation(object):
             return self._nf
         except AttributeError:
             tmp = self._data["NFGal"]
-            query = {"TransitiveDegree" : int(tmp[0]), "Size" : int(tmp[1]), "DBIndex": int(tmp[2])}
+            query = {"TransitiveDegree" : int(tmp[0]), "Size" : str(tmp[1]), "DBIndex": int(tmp[2])}
             self._nf = NumberFieldGaloisGroup.find_one(query)
         return self._nf
             
@@ -129,11 +153,15 @@ class ArtinRepresentation(object):
         return self.root_number()
         
     def root_number(self):
-        try:
-            return int(self._data["Sign"])
-        except KeyError:
-            return "?"      # Could try to implement guessing of the root number
-        
+        return int(self._data["Sign"])
+    
+    def processed_root_number(self):
+        tmp = self.root_number()
+        if tmp == 0:
+            return "?"
+        else:
+            return str(tmp)
+    
     
     def trace_complex_conjugation(self):
         """ Computes the trace of complex conjugation, and returns an int
@@ -172,14 +200,7 @@ class ArtinRepresentation(object):
         
     def nu_fe(self):
         return []
-    
-    def self_dual(self):
-        return "?"
-        raise NotImplementedError
-    
-    def selfdual(self):
-        return self.self_dual()
-    
+        
     def poles(self):
         try:
             assert self.primitive()
@@ -230,69 +251,55 @@ class ArtinRepresentation(object):
         return self._data["LocalFactors"]
     
     
-    def from_conjugacy_class_index_to_polynomial_fn(self):
-        """ This is in the good case
+    def from_conjugacy_class_index_to_polynomial(self, index):
+        """ A function converting from a conjugacy class index (starting at 1) to the local Euler polynomial.
+            Saves a sequence of processed polynomials, obtained from the local factors table, so it can reuse computations from prime to prime
+            This sequence is indexed by conjugacy class indices (starting at 1, filled with dummy first) and gives the corresponding polynomials in the form
+            [coeff_deg_0, coeff_deg_1, ...], where coeff_deg_i is in ComplexField(). This could be changed later, or made parametrizable
         """
         try:
-            return self._from_conjugacy_class_index_to_polynomial_fn
+            return self._from_conjugacy_class_index_to_polynomial_fn(index)
         except AttributeError:
-            # Returns an index starting a 1
             local_factors = self.local_factors_table()
+            from sage.rings.all import RealField, ComplexField
+            field = ComplexField()
+            root_of_unity = exp((field.gen())*2*field.pi()/int(self.character_field()))
+            local_factor_processed_pols = [0]   # dummy to account for the shift in indices
+            for pol in local_factors:
+                local_factor_processed_pols.append(process_polynomial_over_algebraic_integer(pol, field, root_of_unity))
             def tmp(conjugacy_class_index_start_1):
-                pol = local_factors[conjugacy_class_index_start_1-1]
-                # We now have an array of arrays, because we have a polynomial over algebraic integers
-                from sage.rings.all import RealField, ComplexField
-                field = ComplexField()
-                root_of_unity = exp(2*field.pi()/int(self.character_field()))
-                pol2 = process_polynomial_over_algebraic_integer(pol, field, root_of_unity)
-                return pol2
-            self._from_conjugacy_class_index_to_polynomial_fn = tmp 
-            return self._from_conjugacy_class_index_to_polynomial_fn
+                return local_factor_processed_pols[conjugacy_class_index_start_1]
+            self._from_conjugacy_class_index_to_polynomial_fn = tmp
+            return self._from_conjugacy_class_index_to_polynomial_fn(index)
     
     def hard_factors(self):
         return self._data["HardFactors"]             
     
-    def hard_factor(self, p):
-        factor_double_pol = self.from_conjugacy_class_index_to_polynomial_fn()(self.hard_factor_index(p))
-        # We get a polynomial over algebraic integers
-        field = ComplexField()
-        return factor_double_pol
-        
-    def hard_factor_index(self, p):
+    def hard_prime_to_conjugacy_class_index(self, p):
         # Index in the conjugacy classes, but starts at 1
         try:
             i = self.hard_primes().index(p)
         except:
             raise IndexError, "Not a 'hard' prime%"%p
         return self.hard_factors()[i]
-        
-    def from_cycle_type_to_conjugacy_class_index(self, cycle_type):
-        # Needs data stored in the number field
-        try:
-            return self._from_cycle_type_to_conjugacy_class_index_fn(cycle_type)
-        except AttributeError:
-            self._from_cycle_type_to_conjugacy_class_index_fn = self.number_field_galois_group().from_cycle_type_to_conjugacy_class_index_fn()
-            return self._from_cycle_type_to_conjugacy_class_index_fn(cycle_type)
     
     def nf(self):
         return self.number_field_galois_group()
+   
+    def hard_factor(self, p):
+        return self.from_conjugacy_class_index_to_polynomial(self.hard_prime_to_conjugacy_class_index(p))
         
-    
-    def from_prime_to_conjugacy_class_index(self, p):
-        cycle_type = self.nf().frobenius_cycle_type(p)
-        conjugacy_class_index = self.from_cycle_type_to_conjugacy_class_index(cycle_type)
-        return conjugacy_class_index
-    
     def good_factor(self, p):
-        return self.from_conjugacy_class_index_to_polynomial_fn()(self.from_prime_to_conjugacy_class_index(p))
+        return self.from_conjugacy_class_index_to_polynomial(self.nf().from_prime_to_conjugacy_class_index(p))
         
 
     ### if p is good: NumberFieldGaloisGroup.frobenius_cycle_type :     p -> Frob --NF---> cycle type
-    ###               ArtinRepresentation.from_cycle_type_to_conjugacy_class_index : Uses data stored in the number field originally, but allows
+    ###               NumberFieldGaloisGroup.from_cycle_type_to_conjugacy_class_index : Uses data stored in the number field originally, but allows
     ###                                                                 cycle type ---> conjugacy_class_index
-    ###               
-    ###               ArtinRepresentation.from_conjugacy_class_index_to_polynomial : conjugacy_class_index ---Artin----> local_factor
-    ### if p is hard:  ArtinRepresentation.hard_factor :                  p --Artin-> hard_factor 
+    ###                   
+    ### if p is hard:  ArtinRepresentation.hard_prime_to_conjugacy_class_index :   p --Artin-> conjugacy_class_index
+    
+    ### in both cases: ArtinRepresentation.from_conjugacy_class_index_to_polynomial : conjugacy_class_index ---Artin----> local_factor
     
     def local_factor(self, p):
         if self.is_hard_prime(p):
@@ -303,6 +310,23 @@ class ArtinRepresentation(object):
     def Lfunction(self):
         from Lfunction import ArtinLfunction
         return ArtinLfunction(self.dimension(), self.conductor(), self.index())
+
+    def indicator(self):
+        """ The Frobenius-Schur indicator of the Artin L-function. Will be
+                +1 if rho is orthogonal,
+                -1 if rho is symplectic and
+                0 if the character of rho is not defined over the reals, i.e. the representation is not self-dual.
+        """
+        return self._data["Indicator"]
+        
+    def self_dual(self):
+        if self.indicator() == 0:
+            return False
+        else:
+            return True
+    
+    def selfdual(self):
+        return self.self_dual()
 
     
 class CharacterValues(list):
@@ -431,18 +455,17 @@ class NumberFieldGaloisGroup(object):
         return self._data["QpRts-minpoly"]
 
     def computation_roots(self):
-        tmp =  [str(x)  for x in self._data["QpRts"]]
-        return tmp
+        return [x for x in self._data["QpRts"]]
         
     def index_complex_conjugation(self):
         # This is an index starting at 1
         return self._data["ComplexConjugation"]
         
-    def Frobenius_fn(self):
-        try:
-            return self._Frobenius
-        except:
-            tmp = self._data["Frobs"]
+    #def Frobenius_fn(self):
+    #    try:
+    #        return self._Frobenius
+    #    except:
+    #        tmp = self._data["Frobs"]
 
     def Frobenius_resolvents(self):
         return self._data["FrobResolvents"]
@@ -463,33 +486,45 @@ class NumberFieldGaloisGroup(object):
         from sage.rings.number_field.number_field import NumberField
         return NumberField(X(self.polynomial()),"x")
     
-    def from_cycle_type_to_conjugacy_class_index_fn(self):
+    def from_cycle_type_to_conjugacy_class_index(self, cycle_type, p):
         try:
-            return self._from_cycle_type_to_conjugacy_class_index
+            dict_to_use = self._from_cycle_type_to_conjugacy_class_index_dict
         except AttributeError:
-            # Returns an index starting a 1
-            resolvents = self.Frobenius_resolvents()
-            # Slow below
-            def tmp(cycle_type):
-                try:
-                    return [d for d in resolvents if d["CycleType"] == cycle_type and d["Algorithm"] == "CYC"][0]["Classes"]
-                    # Simplest case. If the entry has a "CYC", then it also has a "Classes" entry
-                except IndexError:
-                    raise NotImplementedError, "At the moment we assume all local factors are of type 'CYC', as things are easier to compute in this case. Just wait a bit for the the other cases to be implemented!"
-            self._from_cycle_type_to_conjugacy_class_index = tmp
-            return tmp
+            import cyc_alt_res_engine
+            self._from_cycle_type_to_conjugacy_class_index_dict = cyc_alt_res_engine.from_cycle_type_to_conjugacy_class_index_dict(self.polynomial(), self.Frobenius_resolvents())
+            # self._from_cycle_type_to_conjugacy_class_index_dict is now a dictionary with keys the the cycle types (as tuples),
+            # and values functions of the prime that output the conjugacy class index (using different methods depending on local information)
+            # cyc_alt_res_engine.from_cycle_type_to_conjugacy_class_index_dict constructs this dictionary,
+            # and only needs to know the defining polynomial of the number field and the frobenius resolvent
+            # CAUTION: this is not meant to be used for hard primes, even though it would seemingly work
+            # This is a consequence of Tim's definition of hard primes.
+            dict_to_use = self._from_cycle_type_to_conjugacy_class_index_dict
+        try:
+            fn_to_use = dict_to_use[cycle_type]
+        except KeyError:
+            raise KeyError, "Expecting to find key %s, whose entries have type %s, in %s. For info, keys there have entries of type %s"% \
+                (cycle_type, type(cycle_type[0]), self._from_cycle_type_to_conjugacy_class_index_dict, type(self._from_cycle_type_to_conjugacy_class_index_dict.keys()[0][0]))
+        return fn_to_use(p)
 
+    def from_prime_to_conjugacy_class_index(self, p):
+        return self.from_cycle_type_to_conjugacy_class_index(self.frobenius_cycle_type(p), p)
+    
         
     def frobenius_cycle_type(self, p):
         try:
             assert not self.discriminant() % p == 0
         except:
             raise AssertionError, "Expecting a prime not dividing the discriminant", p
-        return self.residue_field_degrees(p)
+        return tuple(self.residue_field_degrees(p))
+        # tuple allows me to use this for indexing of a dictionary
 
     
-    def increasing_frobenius_cycle_type(self, p):
-        return sorted(self.frobenius_cycle_type(p), reverse = True)
+    #def increasing_frobenius_cycle_type(self, p):
+    #    try:
+    #        assert not self.discriminant() % p == 0
+    #    except:
+    #        raise AssertionError, "Expecting a prime not dividing the discriminant", p
+    #    return tuple(sorted(self.residue_field_degrees(p), reverse = True))
         
     def residue_field_degrees(self, p):
         """ This function returns the residue field degrees at p.
@@ -498,11 +533,10 @@ class NumberFieldGaloisGroup(object):
             return self._residue_field_degrees(p)
         except AttributeError:
             from number_fields.number_field import residue_field_degrees_function
-            self._residue_field_degrees = residue_field_degrees_function(self.sage_object())
+            fn_with_pari_output = residue_field_degrees_function(self.sage_object())
+            self._residue_field_degrees = lambda p : map(Integer,fn_with_pari_output(p))
+            # This function is better, becuase its output has entries in Integer
             return self._residue_field_degrees(p)
-        
-    
-    
     
     def __str__(self):
         try:

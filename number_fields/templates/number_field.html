@@ -184,30 +184,33 @@ pari:
 
 {% if info.get("tim_number_field", False) %}
 	<p><h2> {{ KNOWL('artin', title='Artin representations') }}</h2>
-		{# This is now correct #}
         <div>
 	<center>
 	<table>
 
-	<thead><tr><th></th><th>{{ KNOWL('artin.dimension', title='Dimension') }}</th><th>{{ KNOWL('artin.conductor', title='Conductor') }}</th><th>Defining polynomial of {{ KNOWL('artin.number_field', title='Artin Field') }} </th>
-	<th>Galois subgroup</th>
-	<th>Size of subgroup</th>
+	<thead><tr><th></th>
+	<th>{{ KNOWL('artin.dimension', title='Dimension') }}</th>
+	<th>{{ KNOWL('artin.conductor', title='Conductor') }}</th>
+	<th>Defining polynomial of {{ KNOWL('artin.number_field', title='Artin field') }} </th>
+	<th>{{ KNOWL('artin.gg_quotient', title='Galois quotient $G$') }}</th>
+	<th>Size of $G$</th>
 	<th>{{ KNOWL('artin.root_number', title='Root number') }}</th>
-	<th>{{ KNOWL('artin.ramification', title='Bad primes') }}</th>
+	<th>{{ KNOWL('artin.frobenius_schur_indicator', title='Frobenius-Schur indicator') }}</th>
 	<th>Trace of complex conjugation</th>
 	</tr></thead>
 	<tbody>
         {% for artin in info["tim_number_field"].artin_representations()%}
-          <tr> <th><a href = "{{artin.url_for()}}">{{loop.index}}</a></th><th>${{artin.dimension()}}$</th><th>${{artin.conductor()}}$</th>
+          <tr> <th><a href = "{{artin.url_for()}}">{{loop.index}}</a></th><th>${{artin.dimension()}}$</th>
+	  <th>${{artin.conductor_equation()}}$</th>
 	  {% if artin.number_field_galois_group().url_for() %}
-	     <th><a href="{{artin.number_field_galois_group().url_for()}}">${{artin.number_field_galois_group().polredabs()}}$</a></th>
+	     <th><a href="{{artin.number_field_galois_group().url_for()}}">${{artin.number_field_galois_group().polredabslatex()}}$</a></th>
 	  {% else %}
 	      <th>${{artin.number_field_galois_group().polredabslatex()}}$</th>
 	  {% endif %}
 	  <th>${{artin.number_field_galois_group().G_name()}}$</th>
 	  <th>${{artin.number_field_galois_group().size()}}$</th>
-	  <th>${{artin.root_number()}}$</th>
-	  <th>${{artin.bad_primes()}}$</th>
+	  <th>${{artin.processed_root_number()}}$</th>
+	  <th> ${{artin.indicator()}}$</th>
 	  <th>${{artin.trace_complex_conjugation()}}$</th>
 	  </tr>
         {% endfor %}
@@ -216,10 +219,6 @@ pari:
 	</center>
 	</div>
 	{% endif %}
-{# POD: Please leave the part above for the public release. This part on Artin representations is ready.
-	However it is not possible at the moment to search or browse Artin representations, so they should not appear in the sidebar.
-	Also not yet available are Artin L-functions.
-#}
 
         <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
 
