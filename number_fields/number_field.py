@@ -25,7 +25,6 @@ Completename = 'Completeness of this data'
 # Matches a list of integers and ranges
 LIST_RE = re.compile(r'^(-?\d+|(-?\d+--?\d+))(,(-?\d+|(-?\d+--?\d+)))*$')
 LIST_SIMPLE_RE = re.compile(r'^(-?\d+)(,-?\d+)*$')
-
 PAIR_RE = re.compile(r'^\[\d+,\d+\]')
 
 
@@ -56,9 +55,8 @@ def na_text():
   return "Not computed"
 
 # Remove whitespace for simpler parsing
-# Remove angle brackets to defeat evil doers since we echo this back out
 def clean_input(inp):
-  return re.sub(r'[\s<>]', '', str(inp))
+  return re.sub(r'\s', '', str(inp))
 
 @app.context_processor
 def ctx_galois_groups():
@@ -220,12 +218,17 @@ def sig2sign(sig):
 def render_field_webpage(args):
     data = None
     C = base.getDBConnection()
-    if 'label' in args:
-        label = str(args['label'])
-        data = C.numberfields.fields.find_one({'label': label})
-    if data is None:
-        return "No such field: " + label + " in the database"  
     info = {}
+    bread = [('Global Number Fields', url_for(".number_field_render_webpage"))]
+
+    if 'label' in args:
+      label = str(args['label'])
+      data = C.numberfields.fields.find_one({'label': label})
+    if data is None:
+      bread.append(('Search results', ' '))
+      info['err'] = 'No such field: %s in the database'%label
+      info['label'] = args['label_orig'] if args.has_key('label_orig') else args['label']
+      return search_input_error(info, 'Field not found', bread)
 
     try:
         info['count'] = args['count']
@@ -283,13 +286,14 @@ def render_field_webpage(args):
         'root_of_unity': web_latex(UK.torsion_generator()),
         'fund_units': ',&nbsp; '.join([web_latex(u) for u in UK.fundamental_units()])
         })
+
+    bread.append(('%s'%info['label'],' '))
     info['downloads_visible'] = True
     info['downloads'] = [('worksheet', '/')]
     info['friends'] = [('L-function', "/L/NumberField/%s" % label), ('Galois group', "/GaloisGroup/%dT%d" % (n, t))]
     info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), (Completename,url_for(".render_discriminants_page"))]
     # With Galois group labels, probably not needed here
     #info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), (Completename,url_for(".render_discriminants_page"))]
-    bread = [('Global Number Fields', url_for(".number_field_render_webpage")),('%s'%info['label'],' ')]
     title = "Global Number Field %s" % info['label']
 
     if npr==1:
@@ -365,8 +369,8 @@ def make_disc_key(D):
   return s, '%03d%s'%(D1,str(Dz))
 
 # We need to have a first level parsing of discs to have it
-# as sage ints, and then a second version where we apply signed logs
-# If we have an error, raise a parse error
+# as sage ints
+# If we have an error, raise a parse error.  Should not be needed since we screen the inputs
 def parse_discs(arg):
   # parsing can be thrown off by spaces
   if type(arg)==str:
@@ -443,8 +447,8 @@ def number_field_search(**args):
     #  nf_logger.debug(str(k) + ' ---> ' + str(info[k]))
     if 'natural' in info:
       field_id = info['natural']
-      field_id = parse_field_string(info['natural'])
-      return render_field_webpage({'label' : field_id})
+      field_id_parsed = parse_field_string(info['natural'])
+      return render_field_webpage({'label' : field_id_parsed, 'label_orig': field_id})
     query = {}
     dlist = []
     for field in ['galois_group', 'degree', 'signature', 'discriminant', 'class_number', 'class_group']:
@@ -466,7 +470,7 @@ def number_field_search(**args):
                     if len(gcs)>1:
                       query['$or'] = [{'gal': list(x)} for x in gcs]
                   except:
-                    info['err']='Error parsing input for Galois group.  It needs to be a <a title = "Galois group labels" knowl="nf.galois_group.name">group label</a>, such as C5 or 5T1, or comma separated list of labels'
+                    info['err']='Error parsing input for Galois group.  It needs to be a <a title = "Galois group labels" knowl="nf.galois_group.name">group label</a>, such as C5 or 5T1, or comma separated list of labels.'
                 else: # not signature, class group, or galois group
                     ran = info[field]
                     ran = ran.replace('..','-')
@@ -498,7 +502,7 @@ def number_field_search(**args):
                       query[tmp[0]] = tmp[1]
                     else:
                       name = re.sub('_', ' ', field)
-                      info['err'] = 'Error parsing input for %s.  It needs to be an integer (such as 5), a range of integers (such as 2-100 or 2..100), or a comma-separated list of these (such as 2,3,8 or 3-5, 7, 8-100)'%name
+                      info['err'] = 'Error parsing input for %s.  It needs to be an integer (such as 5), a range of integers (such as 2-100 or 2..100), or a comma-separated list of these (such as 2,3,8 or 3-5, 7, 8-100).'%name
                       return search_input_error(info, t, bread)
     if info.get('ur_primes'):
       # now we want a list of strings, no spaces, which might be big ints
@@ -508,7 +512,7 @@ def number_field_search(**args):
         # Assuming this will be the only nor in the query
         query['$nor'] = [{'ramps': x} for x in ur_primes]
       else:
-        info['err'] = 'Error parsing input for unramified primes.  It needs to be an integer (such as 5), or a comma-separated list of integers (such as 2,3,11)'
+        info['err'] = 'Error parsing input for unramified primes.  It needs to be an integer (such as 5), or a comma-separated list of integers (such as 2,3,11).'
         return search_input_error(info, t, bread)
 
     count_default=20
