@@ -42,6 +42,32 @@ Prime $p$:</td><td align=left> <input type="text" name="p" size="3" value="{{inf
 </table>
 </form>
 
+{% if info.err is defined %}
+
+{% if info.label is defined %}
+<form>
+<table border=0 cellpadding=5>
+<tr>
+<td>Field:&nbsp;&nbsp;</td>
+<td ><input type='text' name='natural' size=60 value="{{info.label}}"> </td>
+<td><button type='submit' name='search' value='Go'>Go</button></td>
+</tr>
+<tr>
+<td colspan="3" rowspan="2"><span class="formexample"> a field label, e.g. 2.4.6.7</span></td>
+</tr>
+</table>
+</form>
+
+{% endif %}
+
+<h2>Error</h2>
+<div>
+  {{ info.err|safe }}
+  <p>
+  Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
+</div>
+{% else %}
+
 
 <h2> Results: ({{info.report}}) </h2>
 
@@ -78,6 +104,7 @@ Prime $p$:</td><td align=left> <input type="text" name="p" size="3" value="{{inf
 <a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form();return false">Previous</A>
 <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form();return false">Next</A></td>
 
+{% endif %}
 {% endif %}
 
 

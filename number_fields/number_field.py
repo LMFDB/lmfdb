@@ -469,8 +469,9 @@ def number_field_search(**args):
                       query['gal'] = list(gcs[0])
                     if len(gcs)>1:
                       query['$or'] = [{'gal': list(x)} for x in gcs]
-                  except:
-                    info['err']='Error parsing input for Galois group.  It needs to be a <a title = "Galois group labels" knowl="nf.galois_group.name">group label</a>, such as C5 or 5T1, or comma separated list of labels.'
+                  except NameError as code:
+                    info['err']='Error parsing input for Galois group: unknown group label %s.  It needs to be a <a title = "Galois group labels" knowl="nf.galois_group.name">group label</a>, such as C5 or 5T1, or comma separated list of labels.'%code
+                    return search_input_error(info, t, bread)
                 else: # not signature, class group, or galois group
                     ran = info[field]
                     ran = ran.replace('..','-')

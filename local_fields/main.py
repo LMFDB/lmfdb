@@ -2,6 +2,7 @@
 # This Blueprint is about Local Number Fields
 # Author: John Jones
 
+import re
 import pymongo
 ASC = pymongo.ASCENDING
 import flask
@@ -37,6 +38,11 @@ def group_display_shortC(C):
     return group_display_short(nt[0], nt[1], C)
   return gds
 
+LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
+
+# Remove whitespace for simpler parsing
+def clean_input(inp):
+  return re.sub(r'\s', '', str(inp))
 
 @local_fields_page.route("/")
 def index():
@@ -64,7 +70,7 @@ def search():
 
 def local_field_search(**args):
   info = to_dict(args)
-  bread = get_bread()
+  bread = get_bread([("Search results", url_for('.search'))])
   C = base.getDBConnection()
   query = {}
   if 'jump_to' in info:
@@ -72,17 +78,27 @@ def local_field_search(**args):
 
   for param in ['p', 'n', 'c', 'e', 'gal']:
     if info.get(param):
+      info[param] = clean_input(info[param])
       if param == 'gal':
-        gcs = complete_group_codes(info[param])
-        if len(gcs)==1:
-          tmp = ['gal', list(gcs[0])]
-        if len(gcs)>1:
-          tmp = [{'gal': list(x)} for x in gcs]
-          tmp = ['$or', tmp]
+        try:
+          gcs = complete_group_codes(info[param])
+          if len(gcs)==1:
+            tmp = ['gal', list(gcs[0])]
+          if len(gcs)>1:
+            tmp = [{'gal': list(x)} for x in gcs]
+            tmp = ['$or', tmp]
+        except NameError as code:
+          info['err']='Error parsing input for Galois group: unknown group label %s.  It needs to be a <a title = "Galois group labels" knowl="nf.galois_group.name">group label</a>, such as C5 or 5T1, or comma separated list of labels.'%code
+          return search_input_error(info, 'Input error', bread=bread)
       else:
         ran = info[param]
         ran = ran.replace('..','-')
-        tmp = parse_range2(ran, param)
+        if LIST_RE.match(ran):
+          tmp = parse_range2(ran, param)
+        else:
+          names = {'p': 'prime p', 'n': 'degree', 'c': 'discriminant exponent c', 'e': 'ramification index e'}
+          info['err'] = 'Error parsing input for the %s.  It needs to be an integer (such as 5), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 2,3,8 or 3-5, 7, 8-11).'%names[param]
+          return search_input_error(info, 'Input error', bread=bread)
       # work around syntax for $or
       # we have to foil out multiple or conditions
       if tmp[0]=='$or' and query.has_key('$or'):
@@ -100,6 +116,7 @@ def local_field_search(**args):
       count = int(info['count'])
     except:
       count = count_default
+      info['count'] = count
   else:
     info['count'] = count_default
     count = count_default
@@ -140,7 +157,6 @@ def local_field_search(**args):
     else:
       info['report'] = 'displaying all %s matches'%nres
 
-  bread = get_bread([("Search results", url_for('.search'))])
   return render_template("lf-search.html", info = info, title="Local Number Field Search Result", bread=bread, credit=LF_credit)
 
 def render_field_webpage(args):
@@ -234,3 +250,6 @@ def printquad(code, p):
   if code[1] == 1 :
     s = str(s)+'*';
   return('$\mathbb{Q}_{'+str(p)+'}(\sqrt{'+ str(s)+'})$')
+
+def search_input_error(info, t, bread):
+  return render_template("lf-search.html", info = info, title=t, bread=bread)
