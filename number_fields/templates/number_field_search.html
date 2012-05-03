@@ -38,7 +38,13 @@
 </table>
 </form>
 
-
+{% if info.err is defined %}
+<div class="announce">
+  {{ info.err|safe }}
+  <p>
+  Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
+</div>
+{% else %}
 <h2> Results: ({{info.report}})</h2>
 
 {% if info.number > 0 %}
@@ -74,7 +80,7 @@
 <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form();return false">Next</A></td>
 
 {% endif %}
-
+{% endif %}
 
 
 {% endblock %}

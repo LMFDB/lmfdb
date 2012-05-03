@@ -309,7 +309,6 @@ def complete_group_code(code):
 
 # Takes a list of codes
 def complete_group_codes(codes):
-  codes = re.sub(r'\s', '', codes)
   codes = codes.upper()
   ans = []
   for code in codes.split(','):
