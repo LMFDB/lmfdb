@@ -89,7 +89,7 @@ def local_field_search(**args):
             tmp = ['$or', tmp]
         except NameError as code:
           info['err']='Error parsing input for Galois group: unknown group label %s.  It needs to be a <a title = "Galois group labels" knowl="nf.galois_group.name">group label</a>, such as C5 or 5T1, or comma separated list of labels.'%code
-          return search_input_error(info, 'Input error', bread=bread)
+          return search_input_error(info, bread)
       else:
         ran = info[param]
         ran = ran.replace('..','-')
@@ -98,7 +98,7 @@ def local_field_search(**args):
         else:
           names = {'p': 'prime p', 'n': 'degree', 'c': 'discriminant exponent c', 'e': 'ramification index e'}
           info['err'] = 'Error parsing input for the %s.  It needs to be an integer (such as 5), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 2,3,8 or 3-5, 7, 8-11).'%names[param]
-          return search_input_error(info, 'Input error', bread=bread)
+          return search_input_error(info, bread)
       # work around syntax for $or
       # we have to foil out multiple or conditions
       if tmp[0]=='$or' and query.has_key('$or'):
@@ -168,8 +168,9 @@ def render_field_webpage(args):
     data = C.localfields.fields.find_one({'label': label})
     if data is None:
         bread = get_bread([("Search error", url_for('.search'))])
-        info['msg'] = "Field " + label + " was not found in the database."
-        return render_template("lf-error.html", info=info, title="Local Number Field Search Error", bread=bread, credit=LF_credit), 404
+        info['err'] = "Field " + label + " was not found in the database."
+        info['label'] = label
+        return search_input_error(info, bread)
     title = 'Local Number Field:' + label
     polynomial = coeff_to_poly(data['coeffs'])
     p = data['p']
@@ -251,5 +252,5 @@ def printquad(code, p):
     s = str(s)+'*';
   return('$\mathbb{Q}_{'+str(p)+'}(\sqrt{'+ str(s)+'})$')
 
-def search_input_error(info, t, bread):
-  return render_template("lf-search.html", info = info, title=t, bread=bread)
+def search_input_error(info, bread):
+  return render_template("lf-search.html", info = info, title='Local Field Search Input Error', bread=bread)
