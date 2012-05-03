@@ -228,12 +228,12 @@ def render_field_webpage(args):
       bread.append(('Search results', ' '))
       info['err'] = 'No such field: %s in the database'%label
       info['label'] = args['label_orig'] if args.has_key('label_orig') else args['label']
-      return search_input_error(info, 'Field not found', bread)
+      return search_input_error(info, bread)
 
     try:
-        info['count'] = args['count']
+      info['count'] = args['count']
     except KeyError:
-        info['count'] = 20
+      info['count'] = 20
     rawpoly = coeff_to_poly(data['coefficients'])
     K = NumberField(rawpoly, 'a')
     D = data['discriminant']
@@ -460,7 +460,7 @@ def number_field_search(**args):
               else:
                 name= 'class group' if field=='class_group' else 'signature'
                 info['err'] = 'Error parsing input for %s.  It needs to be a pair of integers in square brackets, such as [2,3] or [3,3]'%name
-                return search_input_error(info, t, bread)
+                return search_input_error(info, bread)
             else:
                 if field == 'galois_group':
                   try:
@@ -471,7 +471,7 @@ def number_field_search(**args):
                       query['$or'] = [{'gal': list(x)} for x in gcs]
                   except NameError as code:
                     info['err']='Error parsing input for Galois group: unknown group label %s.  It needs to be a <a title = "Galois group labels" knowl="nf.galois_group.name">group label</a>, such as C5 or 5T1, or comma separated list of labels.'%code
-                    return search_input_error(info, t, bread)
+                    return search_input_error(info, bread)
                 else: # not signature, class group, or galois group
                     ran = info[field]
                     ran = ran.replace('..','-')
@@ -504,7 +504,7 @@ def number_field_search(**args):
                     else:
                       name = re.sub('_', ' ', field)
                       info['err'] = 'Error parsing input for %s.  It needs to be an integer (such as 5), a range of integers (such as 2-100 or 2..100), or a comma-separated list of these (such as 2,3,8 or 3-5, 7, 8-100).'%name
-                      return search_input_error(info, t, bread)
+                      return search_input_error(info, bread)
     if info.get('ur_primes'):
       # now we want a list of strings, no spaces, which might be big ints
       info['ur_primes'] = clean_input(info['ur_primes'])
@@ -514,7 +514,7 @@ def number_field_search(**args):
         query['$nor'] = [{'ramps': x} for x in ur_primes]
       else:
         info['err'] = 'Error parsing input for unramified primes.  It needs to be an integer (such as 5), or a comma-separated list of integers (such as 2,3,11).'
-        return search_input_error(info, t, bread)
+        return search_input_error(info, bread)
 
     count_default=20
     if info.get('count'):
@@ -522,6 +522,7 @@ def number_field_search(**args):
         count = int(info['count'])
       except:
         count = count_default
+        info['count'] = count
     else:
       info['count'] = count_default
       count = count_default
@@ -575,8 +576,8 @@ def number_field_search(**args):
     info['group_display'] = group_display_shortC(C)
     return render_template("number_field_search.html", info = info, title=t, bread=bread)
 
-def search_input_error(info, t, bread):
-  return render_template("number_field_search.html", info = info, title=t, bread=bread)
+def search_input_error(info, bread):
+  return render_template("number_field_search.html", info = info, title='Global Number Field Search Error', bread=bread)
 
 def residue_field_degrees_function(K):
   """ Given a sage field, returns a function that has
