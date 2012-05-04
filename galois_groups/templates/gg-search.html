@@ -7,9 +7,89 @@
 <input type="hidden" name="paging" value="0"/>
 <table border="0">
 
+          <tr>
+            <td colspan="4" align="center">
+            <table>
+              <tr>
+                <td align="center">Parity</td>
+                <td align="center">Cyclic</td>
+                <td align="center">Solvable</td>
+                <td align="center">Primitive</td>
+              </tr>
+              <tr>
+                <td> <select name='parity'>
+ {% if info.parity=='1' %}
+                   <option value='0'>All</option>
+                   <option value='-1'>Odd</option>
+                   <option selected='yes' value='1'>Even</option>
+ {% elif info.parity=='-1' %}
+                   <option value='0'>All</option>
+                   <option selected='yes' value='-1'>Odd</option>
+                   <option value='1'>Even</option>
+ {% else %}
+                   <option selected='yes' value='0'>All</option>
+                   <option value='-1'>Odd</option>
+                   <option value='1'>Even</option>
+ {% endif %}
+                  </select>
+                </td>
+                <td> <select name='cyc'>
+ {% if info.cyc=='1' %}
+                   <option value='0'>All</option>
+                   <option selected='yes' value='1'>Yes</option>
+                   <option value='-1'>No</option>
+ {% elif info.cyc=='-1' %}
+                   <option value='0'>All</option>
+                   <option value='1'>Yes</option>
+                   <option selected='yes' value='-1'>No</option>
+ {% else %}
+                   <option selected='yes' value='0'>All</option>
+                   <option value='1'>Yes</option>
+                   <option value='-1'>No</option>
+ {% endif %}
+                  </select>
+                </td>
+                <td> <select name='solv'>
+ {% if info.solv=='1' %}
+                   <option value='0'>All</option>
+                   <option selected='yes' value='1'>Yes</option>
+                   <option value='-1'>No</option>
+ {% elif info.solv=='-1' %}
+                   <option value='0'>All</option>
+                   <option value='1'>Yes</option>
+                   <option selected='yes' value='-1'>No</option>
+ {% else %}
+                   <option selected='yes' value='0'>All</option>
+                   <option value='1'>Yes</option>
+                   <option value='-1'>No</option>
+ {% endif %}
+                  </select>
+                </td>
+                <td> <select name='prim'>
+ {% if info.prim=='1' %}
+                   <option value='0'>All</option>
+                   <option selected='yes' value='1'>Yes</option>
+                   <option value='-1'>No</option>
+ {% elif info.prim=='-1' %}
+                   <option value='0'>All</option>
+                   <option value='1'>Yes</option>
+                   <option selected='yes' value='-1'>No</option>
+ {% else %}
+                   <option selected='yes' value='0'>All</option>
+                   <option value='1'>Yes</option>
+                   <option value='-1'>No</option>
+ {% endif %}
+                  </select>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+
 <tr>
 <td align=left> 
-{{KNOWL('gg.degree',title='Degree')}}<td align=left> <input type='text' name='n' size=3 value="{{info.n}}">
+{{KNOWL('gg.degree',title='Degree')}}<td align=left> <input type='text' name='n' size=3 value="{{info.n}}">:
 </td>
 
 <td align=left> 

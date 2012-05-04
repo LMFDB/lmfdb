@@ -105,6 +105,13 @@ def galois_group_search(**args):
           newors.extend(oldors)
         tmp[1] = newors
       query[tmp[0]] = tmp[1]
+  for param in ['cyc', 'solv', 'prim', 'parity']:
+    if info.get(param):
+      info[param] = str(info[param])
+      if info[param] == str(1):
+        query[param] = 1
+      elif info[param] == str(-1):
+        query[param] = -1 if param == 'parity' else 0
 
   count_default=20
   if info.get('count'):

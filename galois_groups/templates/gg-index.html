@@ -16,10 +16,58 @@ Browse by degree $n$ :
 {% endfor %}
 
 <p>
+Browse by type:
+<a href="?parity=-1">Odd</a>
+<a href="?parity=1">Even</a>
+<a href="?cyc=1">Cyclic</a>
+<a href="?cyc=-1">Non-cyclic</a>
+<a href="?solv=1">Solvable</a>
+<a href="?solv=-1">Non-solvable</a>
+<a href="?prim=1">Primitive</a>
+<a href="?prim=-1">Imprimitive</a>
+<p>
 
         <h2>Search</h2>
       <form name="search" method = "get" action="{{search}}">
         <table class="">
+          <tr>
+            <td colspan="2" align="center">
+            <table>
+              <tr>
+                <td align="center">Parity</td>
+                <td align="center">Cyclic</td>
+                <td align="center">Solvable</td>
+                <td align="center">Primitive</td>
+              </tr>
+              <tr>
+                <td> <select name='parity'>
+                   <option value='0'>All</option>
+                   <option value='-1'>Odd</option>
+                   <option value='1'>Even</option>
+                  </select>
+                </td>
+                <td> <select name='cyc'>
+                   <option value='0'>All</option>
+                   <option value='1'>Yes</option>
+                   <option value='-1'>No</option>
+                  </select>
+                </td>
+                <td> <select name='solv'>
+                   <option value='0'>All</option>
+                   <option value='1'>Yes</option>
+                   <option value='-1'>No</option>
+                  </select>
+                </td>
+                <td> <select name='prim'>
+                   <option value='0'>All</option>
+                   <option value='1'>Yes</option>
+                   <option value='-1'>No</option>
+                  </select>
+                </td>
+              </tr>
+            </table>
+           </td>
+          </tr>
           <tr>
             <td>
           {{KNOWL('gg.degree',title='Degree')}}:
@@ -36,13 +84,15 @@ Browse by degree $n$ :
 	      <span class="formexample">e.g. 6 or 4,6 or 2..5 or 4,6..8</span>
 	    </td>
           </tr>
-          <tr>
-          <td>
-              Maximum number of groups to display:
-            </td><td><input type="text" name="count" value="{{info.count}}" size="10"></td>
-          </tr>
 
-	</table>
+          <tr>
+          <td> Maximum number of groups to display: </td>
+          <td>
+            <input type="text" name="count" value="{{info.count}}" size="10">
+          </td>
+        </tr>
+
+       </table>
         <button type="submit" name="Submit" value="Search">Search</button>
       </form>
 
