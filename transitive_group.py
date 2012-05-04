@@ -300,7 +300,7 @@ def aliastable (C):
 def complete_group_code(code):
   if code in aliases.keys():
     return aliases[code]
-  rematch = re.match("^(\d+)T(\d+)$", code)
+  rematch = re.match(r"^(\d+)T(\d+)$", code)
   if rematch:
     n = int(rematch.group(1))
     t = int(rematch.group(2))
