@@ -5,7 +5,7 @@ class_group ---> [] (list of ints)
 class_number ---> 1 (int)
 coefficients ---> [1163, -1433, -3988, 1348, 217, -84, -1, 1] (list of ints)
 disc_string ---> 58451728309129 (string)
-disc_abs_key ---> 01358451728309129 (string)
+disc_abs_key ---> 01358451728309129 (see below)
 label ---> 7.7.58451728309129.1 (string)
 disc_sign ---> 1 (int)
 gal ---> [7, 1] (list of ints)
@@ -14,4 +14,16 @@ signature ---> [7, 0] (list of ints)
 T ---> 1 (int)
 _id ---> 4e777a1f0eb55b20bf000049 (string)
 
+disc_abs_key is a string, the second component is produced by
+
+def make_disc_key(D):
+  s=1
+  if D<0: s=-1
+  Dz = D.abs()
+  if Dz==0: D1 = 0
+  else: D1 = int(Dz.log(10))
+  return s, '%03d%s'%(D1,str(Dz))
+
+The first 3 digits give log base 10 of abs(D), and that is
+concatenated with abs(D).
 
