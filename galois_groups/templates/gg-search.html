@@ -27,6 +27,34 @@
 </table>
 </form>
 
+{% if info.err is defined %}
+
+{% if info.label is defined %}
+<form>
+<table border=0 cellpadding=5>
+<tr>
+    <td>
+      Search by {{KNOWL('gg.label',title="label")}}
+      <input type="text" name="jump_to" value="{{info.label}}"">
+      <button type="submit" value="Find">Find</button>
+    </td>
+    <td>
+      <span class="formexample">a Galois group label, e.g. 6T3</span>
+    </td>
+</tr>
+</table>
+</form>
+
+{% endif %}
+
+<h2>Error</h2>
+<div>
+  {{ info.err|safe }}
+  <p>
+  Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
+</div>
+{% else %}
+
 
 <h2> Results: ({{info.report}}) </h2>
 
@@ -61,6 +89,7 @@
 <a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form();return false">Previous</A>
 <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form();return false">Next</A></td>
 
+{% endif %}
 {% endif %}
 
 {% endblock %}

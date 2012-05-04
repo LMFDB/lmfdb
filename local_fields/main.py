@@ -9,7 +9,7 @@ import flask
 import base
 from base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
-from utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger
+from utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input
 from sage.all import ZZ, var, PolynomialRing, QQ
 from local_fields import local_fields_page, logger
 
@@ -39,10 +39,6 @@ def group_display_shortC(C):
   return gds
 
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
-
-# Remove whitespace for simpler parsing
-def clean_input(inp):
-  return re.sub(r'\s', '', str(inp))
 
 @local_fields_page.route("/")
 def index():
@@ -163,7 +159,7 @@ def render_field_webpage(args):
   data = None
   info = {}
   if 'label' in args:
-    label = str(args['label'])
+    label = clean_input(args['label'])
     C = base.getDBConnection()
     data = C.localfields.fields.find_one({'label': label})
     if data is None:

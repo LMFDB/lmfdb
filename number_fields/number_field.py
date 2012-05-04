@@ -16,7 +16,7 @@ from sage.rings.arith import primes
 
 from transitive_group import group_display_knowl, group_knowl_guts, group_display_short, group_cclasses_knowl_guts, group_phrase, cclasses_display_knowl, character_table_display_knowl, group_character_table_knowl_guts, aliastable, complete_group_codes
 
-from utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, comma
+from utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, comma, clean_input
 
 NF_credit = 'the PARI group, J. Voight, J. Jones, and D. Roberts'
 Completename = 'Completeness of this data'
@@ -53,10 +53,6 @@ def group_character_table_data(n, t):
 
 def na_text():
   return "Not computed"
-
-# Remove whitespace for simpler parsing
-def clean_input(inp):
-  return re.sub(r'\s', '', str(inp))
 
 @app.context_processor
 def ctx_galois_groups():
@@ -222,7 +218,7 @@ def render_field_webpage(args):
     bread = [('Global Number Fields', url_for(".number_field_render_webpage"))]
 
     if 'label' in args:
-      label = str(args['label'])
+      label = clean_input(args['label'])
       data = C.numberfields.fields.find_one({'label': label})
     if data is None:
       bread.append(('Search results', ' '))

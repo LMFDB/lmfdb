@@ -441,6 +441,10 @@ def order_values(doc, field, sub_fields = ["len","val"]):
 def comma(x):
   return x < 1000 and str(x) or ('%s,%03d' % (comma(x//1000), (x%1000)))
 
+# Remove whitespace for simpler parsing
+# Remove brackets to avoid tricks (so we can echo it back safely)
+def clean_input(inp):
+  return re.sub(r'[\s<>]', '', str(inp))
 
 def coeff_to_poly(c):
     from sage.all import PolynomialRing, QQ
