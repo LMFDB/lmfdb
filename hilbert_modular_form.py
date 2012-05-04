@@ -259,7 +259,7 @@ def render_hmf_webpage(**args):
     field_info['galois_group'] = group_display_short(field_info['degree'], field_info['T'], C)
     info['field_info'] = field_info
     info['field_degree'] = field_info['degree']
-    info['field_disc'] = field_info['discriminant']
+    info['field_disc'] = str(field_info['disc_string'])
     info['field_poly'] = teXify_pol(str(coeff_to_poly(field_info['coefficients'])))
 
     info.update(data)
