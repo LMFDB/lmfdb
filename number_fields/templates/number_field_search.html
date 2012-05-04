@@ -38,7 +38,32 @@
 </table>
 </form>
 
+{% if info.err is defined %}
 
+{% if info.label is defined %}
+<form>
+<table border=0 cellpadding=5>
+<tr>
+<td>Field:&nbsp;&nbsp;</td>
+<td ><input type='text' name='natural' size=60 value="{{info.label}}"> </td>
+<td><button type='submit' name='search' value='Go'>Go</button></td>
+</tr>
+<tr>
+<td colspan="3" rowspan="2"><span class="formexample"> Enter either a
+<a href="FieldLabels">field label</a>, e.g. 2.2.5.1 for
+    \(\mathbb{Q}(\sqrt{5})\); a nickname, e.g. Q or Qsqrt5 or Qzeta7; or a polynomial in x, e.g. x^2+1</span></td>
+</tr>
+</table>
+</form>
+{% endif %}
+
+<h2>Error</h2>
+<div>
+  {{ info.err|safe }}
+  <p>
+  Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
+</div>
+{% else %}
 <h2> Results: ({{info.report}})</h2>
 
 {% if info.number > 0 %}
@@ -74,7 +99,7 @@
 <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form();return false">Next</A></td>
 
 {% endif %}
-
+{% endif %}
 
 
 {% endblock %}
