@@ -232,7 +232,6 @@ def render_field_webpage(args):
       info['count'] = 20
     rawpoly = coeff_to_poly(data['coefficients'])
     K = NumberField(rawpoly, 'a')
-    D = data['discriminant']
     if not data.has_key('class_number'):
       data['class_number'] = na_text()
     h = data['class_number']
@@ -251,7 +250,7 @@ def render_field_webpage(args):
     if data['class_group_invs']==[]:
         data['class_group_invs']='Trivial'
     sig = data['signature']
-    D = ZZ(data['discriminant'])
+    D = ZZ(data['disc_string'])
     ram_primes = D.prime_factors()
     npr = len(ram_primes)
     ram_primes = str(ram_primes)[1:-1]

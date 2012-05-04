@@ -755,14 +755,15 @@ class Lfunction_HMF(Lfunction):
             raise KeyError, "The L-function of a Hilbert modular form with non-trivial character has not been implemented yet."
         self.number = int(args['number'])
 
-        self.field_disc = int(F['discriminant'])
+        # Make a Sage int
+        self.field_disc = ZZ(F['disc_string'])
         self.field_degree = int(F['degree'])
         try:
             self.weight = int(f['parallel_weight'])
         except KeyError:
             self.weight = int(f['weight'].split(', ')[0][1:])
 
-        self.level = int(f['level_norm']*self.field_disc**2)
+        self.level = f['level_norm']*self.field_disc**2
 
         # Extract the L-function information from the elliptic modular form
         self.automorphyexp = float(self.weight-1)/float(2)
