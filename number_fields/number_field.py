@@ -548,7 +548,7 @@ def number_field_search(**args):
 
     fields = C.numberfields.fields
 
-    res = fields.find(query).sort([('degree',pymongo.ASCENDING),('disc_abs_key', pymongo.ASCENDING),('disc_sign',pymongo.ASCENDING),('signature',pymongo.DESCENDING)])
+    res = fields.find(query).sort([('degree',ASC),('disc_abs_key', ASC),('disc_sign',ASC),('signature',pymongo.DESCENDING)])
 
     nres = res.count()
     res = res.skip(start).limit(count)
