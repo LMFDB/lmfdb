@@ -25,7 +25,8 @@ Completename = 'Completeness of this data'
 # Matches a list of integers and ranges
 LIST_RE = re.compile(r'^(-?\d+|(-?\d+--?\d+))(,(-?\d+|(-?\d+--?\d+)))*$')
 LIST_SIMPLE_RE = re.compile(r'^(-?\d+)(,-?\d+)*$')
-PAIR_RE = re.compile(r'^\[\d+,\d+\]')
+PAIR_RE = re.compile(r'^\[\d+,\d+\]$')
+IF_RE = re.compile(r'^\[\]|(\[\d+(,\d+)*\])$') # invariant factors
 
 
 nfields = None
@@ -450,7 +451,8 @@ def number_field_search(**args):
         if info.get(field):
             info[field] = clean_input(info[field])
             if field in ['class_group', 'signature']:
-              if PAIR_RE.match(info[field]):
+              # different regex for the two types
+              if (field == 'signature' and PAIR_RE.match(info[field])) or (field == 'class_group' and IF_RE.match(info[field])):
                 query[field] = parse_list(info[field])
               else:
                 name= 'class group' if field=='class_group' else 'signature'

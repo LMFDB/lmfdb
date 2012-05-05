@@ -39,7 +39,7 @@ lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
 sw_label_regex=re.compile(r'sw(\d+)(\.)(\d+)(\.*)(\d*)')
 
 LIST_RE = re.compile(r'^(\d+|(\d+-(\d+)?))(,(\d+|(\d+-(\d+)?)))*$')
-TORS_RE = re.compile(r'^\[\d+(,\d+)*\]')
+TORS_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
 
 def format_ainvs(ainvs):
     """
