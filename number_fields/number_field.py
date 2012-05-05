@@ -30,14 +30,15 @@ IF_RE = re.compile(r'^\[\]|(\[\d+(,\d+)*\])$') # invariant factors
 
 
 nfields = None
-maxdeg = None
+max_deg = None
 init_nf_flag = False
 
 def init_nf_count():
-  global nfields, init_nf_flag
+  global nfields, init_nf_flag, max_deg
   if not init_nf_flag:
     nfdb = base.getDBConnection().numberfields.fields
     nfields = nfdb.count()
+    max_deg = nfdb.find().sort('degree' , pymongo.DESCENDING).limit(1)[0]['degree']
     init_nf_flag = True
 
 def galois_group_data(n, t):
@@ -197,6 +198,7 @@ def number_field_render_webpage():
         'class_number_list': range(1,6)+['6..10'],
         'count': '20',
         'nfields': comma(nfields),
+        'maxdeg': max_deg,
         'discriminant_list': discriminant_list
         }
         t = 'Global Number Fields'
