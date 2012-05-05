@@ -42,8 +42,11 @@ def list_zeros(N = None,
     if t < 0:
         t = 0
 
-    if limit > 1000000:
-        limit = 1000000
+    if limit > 100000:
+        #limit = 100000
+        return """hello downloader. you hurt the server :(
+                  get the data here: http://www.lmfdb.org/data/zeros/zeta/ -- 
+                  code how to read it is here: http://code.google.com/p/lmfdb/source/browse/#hg%2Fzeros%2Fzeta"""
 
     if N is not None:
         zeros = zeros_starting_at_N(N, limit)
