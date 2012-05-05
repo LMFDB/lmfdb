@@ -13,10 +13,10 @@
 
 <tr>
 <td align=left> {{ KNOWL('ec.q.conductor', title='Conductor') }} <input type='text' name='conductor' size=10 value={{info.conductor}}></td>
-<td align=left>{{ KNOWL('ec.q.rank', title='Rank') }}<input type='text' name='rank'size=1 value={{info.rank}}></td>
-<td align=left>{{ KNOWL('ec.q.torsion_order', title='Torsion order') }} <input type='text' name='torsion' size=1 value={{info.torsion}}> </td>
-<td align=left>{{ KNOWL('ec.q.torsion_subgroup', title='Torsion structure') }} <input type='text' name='torsion_structure' size=1 value={{info.torsion_structure}}> </td>
-<td align=left>{{ KNOWL('ec.q.analytic_sha_order', title='Analytic order of &#1064;') }} <input type='text' name='sha_an' size=1 value={{info.sha_an}}> </td>
+<td align=left>{{ KNOWL('ec.q.rank', title='Rank') }}<input type='text' name='rank'size=2 value={{info.rank}}></td>
+<td align=left>{{ KNOWL('ec.q.torsion_order', title='Torsion order') }} <input type='text' name='torsion' size=5 value={{info.torsion}}> </td>
+<td align=left>{{ KNOWL('ec.q.torsion_subgroup', title='Torsion structure') }} <input type='text' name='torsion_structure' size=5 value={{info.torsion_structure}}> </td>
+<td align=left>{{ KNOWL('ec.q.analytic_sha_order', title='Analytic order of &#1064;') }} <input type='text' name='sha_an' size=5 value={{info.sha_an}}> </td>
 <td align=left>
 <td align=left>{{ KNOWL('ec.q.optimal', title='Optimal only') }}
 <select name='optimal'>
@@ -40,6 +40,17 @@
 </td> </tr>
 </table>
 </form>
+
+{% if info.err is defined %}
+
+<h2>Error</h2>
+<div>
+  {{ info.err|safe }}
+  <p>
+  Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
+</div>
+
+{% else %}
 
 <style type="text/css">
 table td.center {
@@ -78,8 +89,12 @@ table td.params {
 <a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form();return false">Previous</A>
 <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form();return false">Next</A></td>
 
+{% endif %}
+
 {#
 Query was: {{info.query}}
 #}
+
+
 
 {% endblock %}

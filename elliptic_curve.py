@@ -8,7 +8,7 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 import tempfile
 import os
 
-from utils import ajax_more, image_src, web_latex, to_dict, parse_range2, web_latex_split_on_pm, make_logger, comma
+from utils import ajax_more, image_src, web_latex, to_dict, parse_range2, web_latex_split_on_pm, make_logger, comma, clean_input
 logger = make_logger("EllipticCurve")
 from number_fields.number_field import parse_list
 import sage.all 
@@ -37,6 +37,9 @@ def init_ecdb_count():
 cremona_label_regex = re.compile(r'(\d+)([a-z]+)(\d*)')
 lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
 sw_label_regex=re.compile(r'sw(\d+)(\.)(\d+)(\.*)(\d*)')
+
+LIST_RE = re.compile(r'^(\d+|(\d+-(\d+)?))(,(\d+|(\d+-(\d+)?)))*$')
+TORS_RE = re.compile(r'^\[\d+(,\d+)*\]')
 
 def format_ainvs(ainvs):
     """
@@ -147,6 +150,8 @@ def elliptic_curve_jump_error(label, args, wellformed_label=False, cremona_label
 def elliptic_curve_search(**args):
     info = to_dict(args)
     query = {}
+    bread = [('Elliptic Curves', url_for("rational_elliptic_curves")),
+             ('Search Results', '.')]
     if 'jump' in args:
         label = info.get('label', '').replace(" ","")
         m = lmfdb_label_regex.match(label)
@@ -172,8 +177,14 @@ def elliptic_curve_search(**args):
 
     for field in ['conductor', 'torsion', 'rank', 'sha_an']:
         if info.get(field):
+            info[field] = clean_input(info[field])
             ran = info[field]
             ran = ran.replace('..','-').replace(' ','')
+            if not LIST_RE.match(ran):
+                names = {'conductor': 'conductor', 'torsion': 'torsion order', 'rank': 'rank', 'sha_an': 'analytic order of &#1064;'}
+                info['err'] = 'Error parsing input for the %s.  It needs to be an integer (such as 5), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 2,3,8 or 3-5, 7, 8-11).'%names[field]
+                return search_input_error(info, bread)
+            # Past input check
             tmp = parse_range2(ran, field)
             # work around syntax for $or
             # we have to foil out multiple or conditions
@@ -192,6 +203,10 @@ def elliptic_curve_search(**args):
         query['number'] = 1
 
     if 'torsion_structure' in info and info['torsion_structure']:
+        info['torsion_structure'] = clean_input(info['torsion_structure'])
+        if not TORS_RE.match(info['torsion_structure']):
+            info['err'] = 'Error parsing input for the torsion structure.  It needs to be one or more integers in square brackets, such as [6], [2,2], or [2,4].  Moreover, each integer should be bigger than 1, and each divides the next.'
+            return search_input_error(info, bread)
         query['torsion_structure'] = [str(a) for a in parse_list(info['torsion_structure'])]
 
     info['query'] = query
@@ -235,10 +250,10 @@ def elliptic_curve_search(**args):
             info['report'] = 'displaying all %s matches'%nres
     credit = 'John Cremona'
     t = 'Elliptic Curves'
-    bread = [('Elliptic Curves', url_for("rational_elliptic_curves")),
-             ('Search Results', '.')]
     return render_template("elliptic_curve/elliptic_curve_search.html",  info = info, credit=credit,bread=bread, title = t)
     
+def search_input_error(info, bread):
+    return render_template("elliptic_curve/elliptic_curve_search.html", info = info, title='Elliptic Curve Search Input Error', bread=bread)
 
 ##########################
 #  Specific curve pages
