@@ -14,7 +14,7 @@ import sage.all
 from sage.all import ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, euler_phi, pari, prod
 from sage.rings.arith import primes
 
-from transitive_group import group_display_knowl, group_knowl_guts, group_display_short, group_cclasses_knowl_guts, group_phrase, cclasses_display_knowl, character_table_display_knowl, group_character_table_knowl_guts, aliastable, complete_group_codes
+from transitive_group import *
 
 from utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, comma, clean_input
 
@@ -214,6 +214,11 @@ def coeff_to_nf(c):
 def sig2sign(sig):
     return [1,-1][sig[1]%2]
 
+def unstring(s):
+  s = str(s)
+  if s=='': return []
+  return [int(a) for a in s.split(',')]
+
 def render_field_webpage(args):
     data = None
     C = base.getDBConnection()
@@ -238,21 +243,22 @@ def render_field_webpage(args):
     if not data.has_key('class_number'):
       data['class_number'] = na_text()
     h = data['class_number']
-    t = data['T']
+    t = data['galois']['t']
     n = data['degree']
     data['rawpoly'] = rawpoly
     data['galois_group'] = group_display_knowl(n,t,C)
     data['cclasses'] = cclasses_display_knowl(n,t,C)
     data['character_table'] = character_table_display_knowl(n,t,C)
-    if not data.has_key('class_group'):
-      data['class_group'] = na_text()
-      data['class_group_invs'] = data['class_group']
+    if not data.has_key('cl_group'):
+      data['cl_group'] = na_text()
+      data['class_group_invs'] = data['cl_group']
     else:
-      data['class_group_invs'] = data['class_group']
-      data['class_group'] = str(AbelianGroup(data['class_group']))
+      data['class_group_invs'] = unstring(data['cl_group'])
+      data['cl_group'] = str(AbelianGroup(data['class_group_invs']))
     if data['class_group_invs']==[]:
         data['class_group_invs']='Trivial'
-    sig = data['signature']
+    sig = unstring(data['sig'])
+    data['signature'] = sig
     D = ZZ(data['disc_string'])
     ram_primes = D.prime_factors()
     npr = len(ram_primes)
@@ -449,15 +455,16 @@ def number_field_search(**args):
       return render_field_webpage({'label' : field_id_parsed, 'label_orig': field_id})
     query = {}
     dlist = []
-    for field in ['galois_group', 'degree', 'signature', 'discriminant', 'class_number', 'class_group']:
+    for field in ['galois_group', 'degree', 'sig', 'discriminant', 'class_number', 'cl_group']:
         if info.get(field):
             info[field] = clean_input(info[field])
-            if field in ['class_group', 'signature']:
+            if field in ['cl_group', 'sig']:
               # different regex for the two types
-              if (field == 'signature' and PAIR_RE.match(info[field])) or (field == 'class_group' and IF_RE.match(info[field])):
-                query[field] = parse_list(info[field])
+              if (field == 'sig' and PAIR_RE.match(info[field])) or (field == 'cl_group' and IF_RE.match(info[field])):
+                #query[field] = parse_list(info[field])
+                query[field] = info[field][1:-1]
               else:
-                name= 'class group' if field=='class_group' else 'signature'
+                name= 'class group' if field=='cl_group' else 'signature'
                 info['err'] = 'Error parsing input for %s.  It needs to be a pair of integers in square brackets, such as [2,3] or [3,3]'%name
                 return search_input_error(info, bread)
             else:
@@ -465,9 +472,11 @@ def number_field_search(**args):
                   try:
                     gcs = complete_group_codes(info[field])
                     if len(gcs)==1:
-                      query['gal'] = list(gcs[0])
+                      query['galois'] = make_galois_pair(gcs[0][0],gcs[0][1])
+#list(gcs[0])
                     if len(gcs)>1:
-                      query['$or'] = [{'gal': list(x)} for x in gcs]
+                      #query['$or'] = [{'gal': list(x)} for x in gcs]
+                      query['galois'] = {'$in': [make_galois_pair(x[0],x[1]) for x in gcs]}
                   except NameError as code:
                     info['err']='Error parsing input for Galois group: unknown group label %s.  It needs to be a <a title = "Galois group labels" knowl="nf.galois_group.name">group label</a>, such as C5 or 5T1, or comma separated list of labels.'%code
                     return search_input_error(info, bread)
@@ -552,7 +561,7 @@ def number_field_search(**args):
 
     fields = C.numberfields.fields
 
-    res = fields.find(query).sort([('degree',ASC),('disc_abs_key', ASC),('disc_sign',ASC),('signature',pymongo.DESCENDING)])
+    res = fields.find(query).sort([('degree',ASC),('disc_abs_key', ASC),('disc_sign',ASC),('sig',pymongo.DESCENDING)])
 
     nres = res.count()
     res = res.skip(start).limit(count)

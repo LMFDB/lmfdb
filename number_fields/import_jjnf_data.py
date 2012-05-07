@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 import sys, time
+import bson
+import sage.all
+from sage.all import PolynomialRing, QQ, pari, ZZ
 
 from pymongo.connection import Connection
 fields = Connection(port=37010).numberfields.fields
@@ -10,50 +13,57 @@ def coeffs(s):
 def base_label(d,r1,D,ind):
     return str(d)+"."+str(r1)+"."+str(abs(D))+"."+str(ind)
 
-def parse_xall(line):
-    data = eval(line)
-    d, r1, GG, D, ind, coeffs, h, cyc = eval(line)
-    label = base_label(d,r1,D,ind)
-    sig = [r1,(d-r1)/2]   
-    return label, {
-        'degree': d,
-        'signature': sig,
-        'discriminant': D,
-        'coefficients': coeffs,
-        'class_number': h,
-        'class_group': cyc,
-        'galois_group': GG
-    }
+def makeb(n,t):
+  return bson.SON([('n', n), ('t', t)])
+
+def makes(n,t):
+  return '%02d,%03d'%(n,t)
+
+def makels(li):
+  li2 = [str(x) for x in li]
+  return ','.join(li2)
+
+def make_disc_key(D):
+  s=1
+  if D<0: s=-1
+  Dz = D.abs()
+  if Dz==0: D1 = 0
+  else: D1 = int(Dz.log(10))
+  return s, '%03d%s'%(D1,str(Dz))
 
 
-def lookup_or_create(label):
-    item = None # fields.find_one({'label': label})
-    if item is None:
-        return {'label': label}
-    else:
-        return item
+from outlist  import li # this reads in the list called li
 
-from done2  import li # this reads in the list called quads
+print "finished importing li, number = %s"%len(li)
 
-quads = li
-
-print "finished importing quads, number = %s"%len(quads)
-
-for F in quads:
-#for F in quads[0:1]:
+for F in li:
+#for F in li[0:1]:
     print F
     t = time.time()
-    d, sig, D, coeffs, h, cyc, GG = F
-    absD = abs(D)
+    d, sig, D, coeffs, h, cyc, T, ramps = F
+    absD = abs(ZZ(D))
+    gal = makeb(d, T)
+    s, dstr = make_disc_key(ZZ(D))
+    ramps = [str(x) for x in ramps]
     data = {
         'degree': d,
-        'signature': sig,
-        'discriminant': D,
-        'coefficients': coeffs,
+        'disc_abs_key': dstr,
+        'disc_sign': s,
         'class_number': h,
+        'galois': gal,
+        'ramps': ramps,
+        'coeffs': makels(coeffs),
+        'sig': makels(sig),
+        'cl_group': makels(cyc),
         'class_group': cyc,
-        'galois_group': GG
+        'coefficients': coeffs,
+        'discriminant': D,
+        'gal': [d,T],
+        'disc_string': str(ZZ(D)),
+        'signature': sig,
+        'T': T
     }
+    D = int(D)
 
     index=1
     is_new = True
@@ -77,4 +87,5 @@ for F in quads:
     if time.time() - t > 5:
         print "\t", label
         t = time.time()
+    print ""
 

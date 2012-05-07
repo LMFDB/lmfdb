@@ -1,6 +1,7 @@
 import re
 import pymongo
 import string
+import bson
 
 from base import app, getDBConnection
 from flask import Flask, session, g, render_template, url_for, request, redirect
@@ -40,6 +41,10 @@ def character_table_display_knowl(n, t, C, name=None):
     name = 'Character table for '
     name += group_display_short(n, t, C)
   return '<a title = "'+ name + ' [gg.character_table.data]" knowl="gg.character_table.data" kwargs="n='+ str(n) + '&t='+ str(t) +'">'+name+'</a>'
+
+## For storage in the database by other modules
+def make_galois_pair(n,t):
+  return bson.SON([('n', n), ('t', t)])
 
 def group_phrase(n,t,C):
   label = base_label(n,t)

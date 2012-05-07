@@ -13,7 +13,7 @@ from utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_r
 from sage.all import ZZ, var, PolynomialRing, QQ
 from local_fields import local_fields_page, logger
 
-from transitive_group import group_display_short, group_display_long, group_display_inertia, group_knowl_guts, group_display_knowl, complete_group_codes
+from transitive_group import *
 
 LF_credit = 'J. Jones and D. Roberts'
 

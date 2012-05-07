@@ -1,20 +1,33 @@
 Fields in the number field database with sample values and type
 
 degree ---> 7 (int)
-class_group ---> [] (list of ints)
-class_number ---> 1 (int)
-coefficients ---> [1163, -1433, -3988, 1348, 217, -84, -1, 1] (list of ints)
-disc_string ---> 58451728309129 (string)
 disc_abs_key ---> 01358451728309129 (see below)
 label ---> 7.7.58451728309129.1 (string)
 disc_sign ---> 1 (int)
-gal ---> [7, 1] (list of ints)
+sig ---> 7,0 (string)
+coeffs ---> 1163,-1433,-3988,1348,217,-84,-1,1 (string)
 ramps ---> [u'197'] (list of strings)
-signature ---> [7, 0] (list of ints)
-T ---> 1 (int)
+galois ---> {u't': 1, u'n': 7} (bson.SON object)
 _id ---> 4e777a1f0eb55b20bf000049 (string)
 
-disc_abs_key is a string, the second component is produced by
+Optional fields:
+---------------
+class_number ---> 1 (int)
+cl_group ---> 3  (string)
+units ---> (string)
+no_on_the_fly ---> 1 (int -- if present, do not do on the fly calcs of units/regulator)
+
+Deprecated fields:
+-----------------
+class_group ---> [] (list of ints)
+gal ---> [7, 1] (list of ints)
+T ---> 1 (int)
+disc_string ---> 58451728309129 (string)
+coefficients ---> [1163, -1433, -3988, 1348, 217, -84, -1, 1] (list of ints)
+discriminant ---> 58451728309129
+signature ---> [7, 0] (list of ints)
+
+disc_abs_key is a string produced as the second component of
 
 def make_disc_key(D):
   s=1
