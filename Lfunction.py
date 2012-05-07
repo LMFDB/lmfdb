@@ -678,8 +678,8 @@ class Lfunction_EMF(Lfunction):
             self.sign = 1
         else:  # for level not 1, calculate sign from Fricke involution and weight
             if self.character > 0:
-                self.sign = (I**(float(self.weight)) * self.MF.conrey_character().sage_character().bar().gauss_sum_numerical() *
-                             self.dirichlet_coefficients[self.level].conjugate() / float(sqrt(self.level)) )
+                self.sign = (I**(float(self.weight)) * self.MF.conrey_character().sage_character().bar().gauss_sum_numerical().conjugate() *
+                             self.dirichlet_coefficients[self.level-1].conjugate() / float(sqrt(self.level)) )
             else:
                 self.sign = self.MF.atkin_lehner_eigenvalues()[self.level] * (-1)**(float(self.weight/2))
         #logger.debug("Sign: " + str(self.sign))
