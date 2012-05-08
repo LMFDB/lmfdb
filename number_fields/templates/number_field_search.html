@@ -82,13 +82,13 @@
 <tr>
 <td align='left'><a href="/NumberField/{{field.label}}">{{field.label}}</a></td>
 <td>{{info.format_coeffs(field.coefficients)|safe}}</td>
-<td>{{field.discriminant}}</td>
-<td>{{ info.group_display(field.gal) }}</td>
-{% if field.class_group==[] %}
+<td>{{info.disc_display(field.disc_abs_key, field.disc_sign)}}</td>
+<td>{{ info.group_display(field.galois) }}</td>
+{% if field.cl_group=='' %}
 <td> Trivial </td>
 {% endif %}
-{% if field.class_group!=[] %}
-<td>{{field.class_group}}</td>
+{% if field.cl_group!='' %}
+<td>{{info.class_group_display(field.cl_group)}}</td>
 {% endif %}
 </tr>
 {% endfor %}

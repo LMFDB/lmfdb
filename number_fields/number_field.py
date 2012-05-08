@@ -64,7 +64,7 @@ def ctx_galois_groups():
 
 def group_display_shortC(C):
   def gds(nt):
-    return group_display_short(nt[0], nt[1], C)
+    return group_display_short(nt['n'], nt['t'], C)
   return gds
 
 def field_pretty(field_str):
@@ -89,9 +89,9 @@ def poly_to_field_label(pol):
         pol = R(pari(pol).polredabs())
     except:
         return None
-    coeffs = [int(c) for c in pol.coeffs()]
+    coeffs = list2string([int(c) for c in pol.coeffs()])
     d = int(pol.degree())
-    query = {'degree': d, 'coefficients': coeffs}
+    query = {'coeffs': coeffs}
     C = base.getDBConnection()
     one = C.numberfields.fields.find_one(query)
     if one:
@@ -214,10 +214,18 @@ def coeff_to_nf(c):
 def sig2sign(sig):
     return [1,-1][sig[1]%2]
 
-def unstring(s):
+## Turn a list into a string (without brackets)
+def list2string(li):
+  li2 = [str(x) for x in li]
+  return ','.join(li2)
+
+def string2list(s):
   s = str(s)
   if s=='': return []
   return [int(a) for a in s.split(',')]
+
+def decodedisc(ads, s):
+  return ZZ(ads[3:])*s
 
 def render_field_webpage(args):
     data = None
@@ -238,7 +246,7 @@ def render_field_webpage(args):
       info['count'] = args['count']
     except KeyError:
       info['count'] = 20
-    rawpoly = coeff_to_poly(data['coefficients'])
+    rawpoly = coeff_to_poly(string2list(data['coeffs']))
     K = NumberField(rawpoly, 'a')
     if not data.has_key('class_number'):
       data['class_number'] = na_text()
@@ -253,13 +261,13 @@ def render_field_webpage(args):
       data['cl_group'] = na_text()
       data['class_group_invs'] = data['cl_group']
     else:
-      data['class_group_invs'] = unstring(data['cl_group'])
+      data['class_group_invs'] = string2list(data['cl_group'])
       data['cl_group'] = str(AbelianGroup(data['class_group_invs']))
     if data['class_group_invs']==[]:
         data['class_group_invs']='Trivial'
-    sig = unstring(data['sig'])
+    sig = string2list(data['sig'])
     data['signature'] = sig
-    D = ZZ(data['disc_string'])
+    D = decodedisc(data['disc_abs_key'], data['disc_sign'])
     ram_primes = D.prime_factors()
     npr = len(ram_primes)
     ram_primes = str(ram_primes)[1:-1]
@@ -277,10 +285,12 @@ def render_field_webpage(args):
     zk = [sage.all.latex(Ra(x)) for x in zk]
     zk = ['$%s$'%x for x in zk]
     zk = ', '.join(zk)
+    pretty_label = field_pretty(label)
+    if label != pretty_label: pretty_label = "%s: %s"%(label, pretty_label)
     
     info.update(data)
     info.update({
-        'label': field_pretty(label),
+        'label': pretty_label,
         'label_raw' : label,
         'polynomial': web_latex(K.defining_polynomial()),
         'ram_primes': ram_primes,
@@ -291,7 +301,7 @@ def render_field_webpage(args):
         'fund_units': ',&nbsp; '.join([web_latex(u) for u in UK.fundamental_units()])
         })
 
-    bread.append(('%s'%info['label'],' '))
+    bread.append(('%s'%info['label_raw'],' '))
     info['downloads_visible'] = True
     info['downloads'] = [('worksheet', '/')]
     info['friends'] = [('L-function', "/L/NumberField/%s" % label), ('Galois group', "/GaloisGroup/%dT%d" % (n, t))]
@@ -307,7 +317,7 @@ def render_field_webpage(args):
 
     properties2 = [('Degree:', '%s' %data['degree']),
                    ('Signature:', '%s' %data['signature']),
-                   ('Discriminant', '%s' %data['discriminant']),
+                   ('Discriminant', '%s' %str(D)),
                    ('Ramified '+primes+':', '%s' %ram_primes),
                    ('Class number:', '%s' %data['class_number']),
                    ('Class group:', '%s' %data['class_group_invs']),
@@ -561,7 +571,7 @@ def number_field_search(**args):
 
     fields = C.numberfields.fields
 
-    res = fields.find(query).sort([('degree',ASC),('disc_abs_key', ASC),('disc_sign',ASC),('sig',pymongo.DESCENDING)])
+    res = fields.find(query).sort([('degree',ASC),('disc_abs_key', ASC),('disc_sign',ASC),('label',ASC)])
 
     nres = res.count()
     res = res.skip(start).limit(count)
@@ -582,6 +592,8 @@ def number_field_search(**args):
 
     info['format_coeffs'] = format_coeffs
     info['group_display'] = group_display_shortC(C)
+    info['class_group_display'] = string2list
+    info['disc_display'] = decodedisc
     return render_template("number_field_search.html", info = info, title=t, bread=bread)
 
 def search_input_error(info, bread):
