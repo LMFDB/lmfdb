@@ -243,6 +243,7 @@ class WebModFormSpace(Parent):
                     fs = gridfs.GridFS(C[db_name],collection)
                     f = fs.get(fid)
                     res = loads(f.read())
+                    # TODO avoid pickling python objects for storing in the database
                     self._from_db=1
                     self._id=rec['_id']
                 self._got_ap_from_db=True

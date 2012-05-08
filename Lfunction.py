@@ -624,11 +624,11 @@ class Lfunction_EMF(Lfunction):
         #if self.character > 0:
         #    raise KeyError, "The L-function of a modular form with non-trivial character has not been implemented yet."
         self.number = int(self.number)
-        logger.debug((7+13*I)/float(135))
 
         # Create the modular form
         try:
-            self.MF = WebNewForm(self.weight, self.level, self.character, self.label)
+            self.MF = WebNewForm(self.weight, self.level, self.character, self.label
+                                 , verbose=1)
         except:
             raise KeyError, ("No data available yet for this modular form, so"+
                              " not able to compute it's L-function") 
@@ -678,8 +678,8 @@ class Lfunction_EMF(Lfunction):
             self.sign = 1
         else:  # for level not 1, calculate sign from Fricke involution and weight
             if self.character > 0:
-                self.sign = (I**(float(self.weight)) * self.MF.conrey_character().sage_character().bar().gauss_sum_numerical() *
-                             self.dirichlet_coefficients[self.level].conj() / float(sqrt(self.level)) )
+                self.sign = (I**(float(self.weight)) * self.MF.conrey_character().sage_character().bar().gauss_sum_numerical().conjugate() *
+                             self.dirichlet_coefficients[self.level-1].conjugate() / float(sqrt(self.level)) )
             else:
                 self.sign = self.MF.atkin_lehner_eigenvalues()[self.level] * (-1)**(float(self.weight/2))
         #logger.debug("Sign: " + str(self.sign))
