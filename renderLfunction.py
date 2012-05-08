@@ -400,7 +400,7 @@ def initLfunction(L,args, request):
             info['friends'].append(('L-function ' + label.replace('.','.2'), url_for("render_Lfunction", arg1='ModularForm', arg2='GL2', arg3='Q', arg4='holomorphic', arg5=L.modform['level'], arg6='2', arg7='0', arg8=L.modform['iso'])))
         info['friends'].append(('Symmetric square L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='2',arg3='EllipticCurve', arg4='Q', arg5=label)))
         info['friends'].append(('Symmetric 4th power L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='4',arg3='EllipticCurve', arg4='Q', arg5=label)))
-        info['bread'] = [('L-function','/L'),('Elliptic curve',url_for('render_Lfunction', arg1='/L/degree2#EllipticCurve_Q')),
+        info['bread'] = [('L-functions','/L'),('Degree 2', url_for('render_Lfunction', arg1='degree2')),('Elliptic curve',url_for('render_Lfunction', arg1='degree2', arg2='EllipticCurve')),
                          (label,url_for('render_Lfunction',arg1='EllipticCurve',arg2='Q',arg3= label))]
 
     elif L.Ltype() == 'ellipticmodularform':
