@@ -781,7 +781,7 @@ class Lfunction_HMF(Lfunction):
             self.sign = prod(AL_signs) * (-1)**(float(self.weight*self.field_degree/2))
         logger.debug("Sign: " + str(self.sign))
 
-        self.kappa_fe = [1]
+        self.kappa_fe =[1 for i in range(self.field_degree)]
         self.lambda_fe = [self.automorphyexp for i in range(self.field_degree)]
         self.mu_fe = []
         self.nu_fe = [self.automorphyexp for i in range(self.field_degree)]
