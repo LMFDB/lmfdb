@@ -26,6 +26,7 @@ from pwdmanager import LmfdbUser, LmfdbAnonymousUser
 
 # TODO update this url, needed for the user login token
 base_url = "http://www.l-functions.org"
+# TODO: Not sure this should be changed from l-functions -> lmfdb, because I don't really understand how this is used. Paul
 
 @login_manager.user_loader
 def load_user(userid):
