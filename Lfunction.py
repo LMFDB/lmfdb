@@ -247,6 +247,22 @@ class Lfunction:
         thefile += "### This file assembled: " + time.asctime()  + "\n"
         thefile += "### on machine: " + socket.gethostname()  + "\n"
         thefile += "###\n"
+        try:
+            thefile += "###     type = %s\n"%self.Ltype()
+            thefile+=  "### Data passed to lcalc wrapper, if it is used: \n"
+            thefile+=  "###     title = %s \n"%self.title
+            thefile += "###     coefficient_type = %s \n"%self.coefficient_type
+            thefile += "###     dirichlet_coefficients = %s \n"%self.dirichlet_coefficients[:50]
+            thefile += "###         (here limited to 50, but in reality %s are passed )\n"%len(self.dirichlet_coefficients)
+            thefile += "###     coefficient_period = %s \n"%self.coefficient_period
+            thefile += "###     Q_fe = %s \n"%self.Q_fe
+            thefile += "###     sign = %s \n"%self.sign
+            thefile += "###     kappa_fe = %s \n"%self.kappa_fe
+            thefile += "###     lambda_fe = %s \n"%self.lambda_fe
+            thefile += "###     poles = %s \n"%self.poles
+            thefile += "###     residues = %s \n"%self.residues
+        except AttributeError:
+            pass
         thefile += "##########################################################################################################\n\n"
         thefile += "lcalcfile_version = 2    ### lcalc files should have a version number for future enhancements\n\n"
 
