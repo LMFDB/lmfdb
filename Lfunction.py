@@ -664,10 +664,12 @@ class Lfunction_EMF(Lfunction):
            self.dirichlet_coefficients = self.MF.q_expansion_embeddings(
                self.numcoeff+1)[1:self.numcoeff+1] #when coeffs are rational, q_expansion_embedding()
                                                    #is the list of Fourier coefficients
+           self.coefficient_type = 2        # In this case, the L-function also comes from an elliptic curve. We tell that to lcalc, even if the coefficients are not produced using the elliptic curve
         else:
            #logger.debug("Start computing coefficients.")
            for n in range(1,self.numcoeff+1):
               self.dirichlet_coefficients.append(self.MF.q_expansion_embeddings(self.numcoeff+1)[n][self.number])
+           self.coefficient_type = 0        # In this case the coefficients are neither periodic nor coming from an elliptic curve
            #logger.debug("Done computing coefficients.")
 
         for n in range(1,len(self.dirichlet_coefficients)+1):
@@ -685,7 +687,7 @@ class Lfunction_EMF(Lfunction):
         #logger.debug("Sign: " + str(self.sign))
 
         self.coefficient_period = 0
-        self.coefficient_type = 2
+        
         self.quasidegree = 1
 
         self.checkselfdual()
