@@ -13,25 +13,35 @@
 <h3>Details of the fields contained in the database</h3>
 <p>
 <ol>
-<li>PARI database: the database is complete for the discriminant ranges
-shown.  It is possible that they are complete for larger
-  ranges which depend on the signature, but this is not
-  shown here.
+<li>PARI database: the database is complete for the absolute
+ discriminant $|D|$ less than the given bounds.
 <p>
 <table>
 {% set row_class = cycler("odd", "even") %}
 <tr>
 <th>degree</th>
-<th>minimum discriminant</th>
-<th>maximum discriminant</th>
+<th>signature</th>
+<th>maximum absolute discriminant</th>
 </tr>
-<tr class="{{ row_class.next() }}"><td>1<td>\(1\)<td>\(1\)</tr>
-<tr class="{{ row_class.next() }}"><td>2<td>\(-10^6\)<td>\(10^6\)</tr>
-<tr class="{{ row_class.next() }}"><td>3<td>\(-10^6\)<td>\(2\cdot10^6\)</tr>
-<tr class="{{ row_class.next() }}"><td>4<td>\(-10^6\)<td>\(10^6\)</tr>
-<tr class="{{ row_class.next() }}"><td>5<td>\(-10^6\)<td>\(2\cdot10^7\)</tr>
-<tr class="{{ row_class.next() }}"><td>6<td>\(-10^6\)<td>\(10^7\)</tr>
-<tr class="{{ row_class.next() }}"><td>7<td>\(-11841551\)<td>\(149324209\)</tr>
+<tr class="{{ row_class.next() }}"><td>1<td align="center">[1,0]<td>\(1\)</tr>
+<tr class="{{ row_class.next() }}"><td>2<td align="center">[2,0]<td>\(10^6\)</tr>
+<tr class="{{ row_class.next() }}"><td>2<td align="center">[0,1]<td>\(10^6\)</tr>
+<tr class="{{ row_class.next() }}"><td>3<td align="center">[3,0]<td>\(2\cdot10^6\)</tr>
+<tr class="{{ row_class.next() }}"><td>3<td align="center">[1,1]<td>\(10^6\)</tr>
+<tr class="{{ row_class.next() }}"><td>4<td align="center">[4,0]<td>\(10^6\)</tr>
+<tr class="{{ row_class.next() }}"><td>4<td align="center">[2,1]<td>\(10^6\)</tr>
+<tr class="{{ row_class.next() }}"><td>4<td align="center">[0,2]<td>\(10^6\)</tr>
+<tr class="{{ row_class.next() }}"><td>5<td align="center">[5,0]<td>\(2\cdot10^7\)</tr>
+<tr class="{{ row_class.next() }}"><td>5<td align="center">[3,1]<td>\(10^6\)</tr>
+<tr class="{{ row_class.next() }}"><td>5<td align="center">[1,2]<td>\(10^6\)</tr>
+<tr class="{{ row_class.next() }}"><td>6<td align="center">[6,0]<td>\(10^7\)</tr>
+<tr class="{{ row_class.next() }}"><td>6<td align="center">[4,1]<td>\(10^6\)</tr>
+<tr class="{{ row_class.next() }}"><td>6<td align="center">[2,2]<td>\(4\cdot10^5\)</tr>
+<tr class="{{ row_class.next() }}"><td>6<td align="center">[0,3]<td>\(2\cdot10^5\)</tr>
+<tr class="{{ row_class.next() }}"><td>7<td align="center">[7,0]<td>\(15\cdot10^7\)</tr>
+<tr class="{{ row_class.next() }}"><td>7<td align="center">[5,1]<td>\(12\cdot10^6\)</tr>
+<tr class="{{ row_class.next() }}"><td>7<td align="center">[3,2]<td>\(18\cdot10^5\)</tr>
+<tr class="{{ row_class.next() }}"><td>7<td align="center">[1,3]<td>\(6\cdot10^5\)</tr>
 </table>
 </p>
 <li>The Voight database is included and is complete for totally real
@@ -66,55 +76,82 @@ The degree of a field is given by \(n\).
 </p>
 <p>
 The remaining cases, the bound depends on the Galois group.  Galois groups
-are given in the form \(n\)T\(t\) where \(n\) is the degree and \(t\)
-it the T-number.  The bound \(B\) is for the root discriminant, so a
+are given by {{KNOWL('gg.tnumber', title='\(t\)-number')}}.
+The bound \(B\) is for the root discriminant, so a
 bound of \(B\) means the discriminant \(D\) satisfies \(|D|\leq B^n\).
 </p>
 <p>
 <table>
+<tr valign="top">
+ <td>
+<table>
 {% set row_class = cycler("odd", "even") %}
+<tr> <th colspan="2">Degree 7</th></tr>
 <tr>
-<th>\(n\)T\(t\)</th>
+<th>\(t\)</th>
 <th>\(B\)</th>
 </tr>
-<tr class="{{ row_class.next() }}"><td>7T3<td>\(26\)</tr>
-<tr class="{{ row_class.next() }}"><td>7T5<td>\(38\)</tr>
-<tr class="{{ row_class.next() }}"><td>8T3<td>\(20\)</tr>
-<tr class="{{ row_class.next() }}"><td>8T5<td>\(50\)</tr>
-<tr class="{{ row_class.next() }}"><td>8T15<td>\(15\)</tr>
-<tr class="{{ row_class.next() }}"><td>8T18<td>\(15\)</tr>
-<tr class="{{ row_class.next() }}"><td>8T22<td>\(15\)</tr>
-<tr class="{{ row_class.next() }}"><td>8T26<td>\(15\)</tr>
-<tr class="{{ row_class.next() }}"><td>8T29<td>\(15\)</tr>
-<tr class="{{ row_class.next() }}"><td>8T32<td>\(15\)</tr>
-<tr class="{{ row_class.next() }}"><td>8T34<td>\(15\)</tr>
-<tr class="{{ row_class.next() }}"><td>8T36<td>\(15\)</tr>
-<tr class="{{ row_class.next() }}"><td>8T39<td>\(15\)</tr>
-<tr class="{{ row_class.next() }}"><td>8T41<td>\(15\)</tr>
-<tr class="{{ row_class.next() }}"><td>8T45<td>\(15\)</tr>
-<tr class="{{ row_class.next() }}"><td>8T46<td>\(15\)</tr>
-<tr class="{{ row_class.next() }}"><td>9T2<td>\(20\)</tr>
-<tr class="{{ row_class.next() }}"><td>9T5<td>\(20\)</tr>
-<tr class="{{ row_class.next() }}"><td>9T6<td>\(20\)</tr>
-<tr class="{{ row_class.next() }}"><td>9T7<td>\(30\)</tr>
-<tr class="{{ row_class.next() }}"><td>9T7<td>\(30\)</tr>
-<tr class="{{ row_class.next() }}"><td>9T8<td>\(15\)</tr>
-<tr class="{{ row_class.next() }}"><td>9T12<td>\(15\)</tr>
-<tr class="{{ row_class.next() }}"><td>9T13<td>\(12\)</tr>
-<tr class="{{ row_class.next() }}"><td>9T14<td>\(18\)</tr>
-<tr class="{{ row_class.next() }}"><td>9T15<td>\(18\)</tr>
-<tr class="{{ row_class.next() }}"><td>9T16<td>\(12\)</tr>
-<tr class="{{ row_class.next() }}"><td>9T17<td>\(18\)</tr>
-<tr class="{{ row_class.next() }}"><td>9T18<td>\(12\)</tr>
-<tr class="{{ row_class.next() }}"><td>9T19<td>\(18\)</tr>
-<tr class="{{ row_class.next() }}"><td>9T21<td>\(15\)</tr>
-<tr class="{{ row_class.next() }}"><td>9T23<td>\(17\)</tr>
-<tr class="{{ row_class.next() }}"><td>9T24<td>\(12\)</tr>
-<tr class="{{ row_class.next() }}"><td>9T25<td>\(15\)</tr>
-<tr class="{{ row_class.next() }}"><td>9T26<td>\(15\)</tr>
-<tr class="{{ row_class.next() }}"><td>9T29<td>\(10\)</tr>
-<tr class="{{ row_class.next() }}"><td>9T30<td>\(10\)</tr>
-<tr class="{{ row_class.next() }}"><td>9T31<td>\(10\)</tr>
+<tr class="{{ row_class.next() }}"><td>3<td>\(26\)</tr>
+<tr class="{{ row_class.next() }}"><td>5<td>\(38\)</tr>
+  </table>
+ </td>
+ <td>
+  <table>
+{% set row_class = cycler("odd", "even") %}
+<tr> <th colspan="2">Degree 8</th></tr>
+<tr>
+<th>\(t\)</th>
+<th>\(B\)</th>
+</tr>
+<tr class="{{ row_class.next() }}"><td>3<td>\(20\)</tr>
+<tr class="{{ row_class.next() }}"><td>5<td>\(50\)</tr>
+<tr class="{{ row_class.next() }}"><td>15<td>\(15\)</tr>
+<tr class="{{ row_class.next() }}"><td>18<td>\(15\)</tr>
+<tr class="{{ row_class.next() }}"><td>22<td>\(15\)</tr>
+<tr class="{{ row_class.next() }}"><td>26<td>\(15\)</tr>
+<tr class="{{ row_class.next() }}"><td>29<td>\(15\)</tr>
+<tr class="{{ row_class.next() }}"><td>32<td>\(15\)</tr>
+<tr class="{{ row_class.next() }}"><td>34<td>\(15\)</tr>
+<tr class="{{ row_class.next() }}"><td>36<td>\(15\)</tr>
+<tr class="{{ row_class.next() }}"><td>39<td>\(15\)</tr>
+<tr class="{{ row_class.next() }}"><td>41<td>\(15\)</tr>
+<tr class="{{ row_class.next() }}"><td>45<td>\(15\)</tr>
+<tr class="{{ row_class.next() }}"><td>46<td>\(15\)</tr>
+  </table>
+ </td>
+ <td>
+  <table>
+{% set row_class = cycler("odd", "even") %}
+<tr> <th colspan="2">Degree 9</th></tr>
+<tr>
+<th>\(t\)</th>
+<th>\(B\)</th>
+</tr>
+<tr class="{{ row_class.next() }}"><td>2<td>\(20\)</tr>
+<tr class="{{ row_class.next() }}"><td>5<td>\(20\)</tr>
+<tr class="{{ row_class.next() }}"><td>6<td>\(20\)</tr>
+<tr class="{{ row_class.next() }}"><td>7<td>\(30\)</tr>
+<tr class="{{ row_class.next() }}"><td>7<td>\(30\)</tr>
+<tr class="{{ row_class.next() }}"><td>8<td>\(15\)</tr>
+<tr class="{{ row_class.next() }}"><td>12<td>\(15\)</tr>
+<tr class="{{ row_class.next() }}"><td>13<td>\(12\)</tr>
+<tr class="{{ row_class.next() }}"><td>14<td>\(18\)</tr>
+<tr class="{{ row_class.next() }}"><td>15<td>\(18\)</tr>
+<tr class="{{ row_class.next() }}"><td>16<td>\(12\)</tr>
+<tr class="{{ row_class.next() }}"><td>17<td>\(18\)</tr>
+<tr class="{{ row_class.next() }}"><td>18<td>\(12\)</tr>
+<tr class="{{ row_class.next() }}"><td>19<td>\(18\)</tr>
+<tr class="{{ row_class.next() }}"><td>21<td>\(15\)</tr>
+<tr class="{{ row_class.next() }}"><td>23<td>\(17\)</tr>
+<tr class="{{ row_class.next() }}"><td>24<td>\(12\)</tr>
+<tr class="{{ row_class.next() }}"><td>25<td>\(15\)</tr>
+<tr class="{{ row_class.next() }}"><td>26<td>\(15\)</tr>
+<tr class="{{ row_class.next() }}"><td>29<td>\(10\)</tr>
+<tr class="{{ row_class.next() }}"><td>30<td>\(10\)</tr>
+<tr class="{{ row_class.next() }}"><td>31<td>\(10\)</tr>
+</table>
+</td>
+</tr>
 </table>
 </ol>
 </p>
