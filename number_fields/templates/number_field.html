@@ -150,7 +150,10 @@ function show_code(system) {
 	   </center>
         </p>
 <p>
-   In the table, <i>R</i> denotes a ramified prime.  Cycle lengths 
+   {% if info.seeram %}
+   In the table, <i>R</i> denotes a ramified prime.  
+   {% endif %}
+   Cycle lengths 
    which are repeated in a cycle type are indicated by exponents.
         <p>
   <div class='pari nodisplay code'>

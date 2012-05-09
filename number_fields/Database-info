@@ -15,7 +15,7 @@ Optional fields:
 class_number ---> 1 (int)
 cl_group ---> 3  (string)
 units ---> (string)
-no_on_the_fly ---> 1 (int -- if present, do not do on the fly calcs of units/regulator)
+reg ---> 3.2345 (float)
 
 Deprecated fields:
 -----------------

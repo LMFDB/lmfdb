@@ -246,14 +246,29 @@ def render_field_webpage(args):
       info['count'] = args['count']
     except KeyError:
       info['count'] = 20
+
     rawpoly = coeff_to_poly(string2list(data['coeffs']))
+    data['rawpoly'] = rawpoly
     K = NumberField(rawpoly, 'a')
+    sig = string2list(data['sig'])
+    unit_rank = sig[0]+sig[1]-1
+    if unit_rank==0:
+      reg = 1
+      units = ''
+    elif data.has_key('reg'): # precomputed units
+      reg = data['reg']
+      units = ',&nbsp; '.join(data['units'])
+    elif data.has_key('class_number'):
+      reg = K.regulator()
+      units = [web_latex(u) for u in K.unit_group().fundamental_units()]
+      units = ',&nbsp; '.join(units)
+    else: # Field is just too hard to compute this stuff for
+      reg = na_text()
+      units = na_text()
     if not data.has_key('class_number'):
       data['class_number'] = na_text()
-    h = data['class_number']
     t = data['galois']['t']
     n = data['degree']
-    data['rawpoly'] = rawpoly
     data['galois_group'] = group_display_knowl(n,t,C)
     data['cclasses'] = cclasses_display_knowl(n,t,C)
     data['character_table'] = character_table_display_knowl(n,t,C)
@@ -265,24 +280,17 @@ def render_field_webpage(args):
       data['cl_group'] = str(AbelianGroup(data['class_group_invs']))
     if data['class_group_invs']==[]:
         data['class_group_invs']='Trivial'
-    sig = string2list(data['sig'])
     data['signature'] = sig
     D = decodedisc(data['disc_abs_key'], data['disc_sign'])
     ram_primes = D.prime_factors()
     npr = len(ram_primes)
     ram_primes = str(ram_primes)[1:-1]
-    data['frob_data'] = frobs(K)
+    data['frob_data'], data['seeram'] = frobs(K)
     data['phrase'] = group_phrase(n,t,C)
-    unit_rank = sig[0]+sig[1]-1
-    if unit_rank==0:
-        reg = 1
-    else:
-        reg = K.regulator()
-    UK = K.unit_group()
     zk = pari(K).nf_subst('a')
     zk = list(zk.nf_get_zk())
     Ra = PolynomialRing(QQ, 'a')
-    zk = [sage.all.latex(Ra(x)) for x in zk]
+    zk = [latex(Ra(x)) for x in zk]
     zk = ['$%s$'%x for x in zk]
     zk = ', '.join(zk)
     pretty_label = field_pretty(label)
@@ -297,8 +305,8 @@ def render_field_webpage(args):
         'integral_basis': zk,
         'regulator': web_latex(reg),
         'unit_rank': unit_rank,
-        'root_of_unity': web_latex(UK.torsion_generator()),
-        'fund_units': ',&nbsp; '.join([web_latex(u) for u in UK.fundamental_units()])
+        'root_of_unity': web_latex(K.primitive_root_of_unity()),
+        'fund_units': units
         })
 
     bread.append(('%s'%info['label_raw'],' '))
@@ -620,6 +628,7 @@ def frobs(K):
   frob_at_p = residue_field_degrees_function(K)
   D = K.disc()
   ans = []
+  seeram = False
   for p in primes(2,60):
     if not ZZ(p).divides(D):
       # [3] ,   [2,1]
@@ -640,5 +649,6 @@ def frobs(K):
       ans.append([p, s])
     else:
       ans.append([p, 'R'])
-  return(ans)
+      seeram = True
+  return ans, seeram
 
