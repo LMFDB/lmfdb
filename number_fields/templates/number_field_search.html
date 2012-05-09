@@ -84,11 +84,14 @@
 <td>{{info.format_coeffs(field.coefficients)|safe}}</td>
 <td>{{info.disc_display(field.disc_abs_key, field.disc_sign)}}</td>
 <td>{{ info.group_display(field.galois) }}</td>
-{% if field.cl_group=='' %}
-<td> Trivial </td>
-{% endif %}
-{% if field.cl_group!='' %}
-<td>{{info.class_group_display(field.cl_group)}}</td>
+{% if field.cl_group is defined %}
+  {% if field.cl_group=='' %}
+    <td> Trivial </td>
+  {% else %}
+    <td>{{info.class_group_display(field.cl_group)}}</td>
+  {% endif %}
+{% else %}
+  <td>n/a</td>
 {% endif %}
 </tr>
 {% endfor %}

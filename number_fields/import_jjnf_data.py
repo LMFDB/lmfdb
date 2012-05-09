@@ -2,7 +2,7 @@
 import sys, time
 import bson
 import sage.all
-from sage.all import PolynomialRing, QQ, pari, ZZ
+from sage.all import *
 
 from pymongo.connection import Connection
 fields = Connection(port=37010).numberfields.fields
@@ -31,6 +31,10 @@ def make_disc_key(D):
   else: D1 = int(Dz.log(10))
   return s, '%03d%s'%(D1,str(Dz))
 
+def getclgroup(coeffs):
+  a = coeffs['foo']
+  return []
+
 
 from outlist  import li # this reads in the list called li
 
@@ -40,22 +44,23 @@ for F in li:
 #for F in li[0:1]:
     print F
     t = time.time()
-    d, sig, D, coeffs, h, cyc, T, ramps = F
+    d, sig, D, coeffs, T, ramps = F
     absD = abs(ZZ(D))
     gal = makeb(d, T)
     s, dstr = make_disc_key(ZZ(D))
     ramps = [str(x) for x in ramps]
+    try:
+      getclgroup(coeffs)
+    except:
+      pass
     data = {
         'degree': d,
         'disc_abs_key': dstr,
         'disc_sign': s,
-        'class_number': h,
         'galois': gal,
         'ramps': ramps,
         'coeffs': makels(coeffs),
         'sig': makels(sig),
-        'cl_group': makels(cyc),
-        'class_group': cyc,
         'coefficients': coeffs,
         'discriminant': D,
         'gal': [d,T],
@@ -63,7 +68,7 @@ for F in li:
         'signature': sig,
         'T': T
     }
-    D = int(D)
+    D = 10 # D = int(D)
 
     index=1
     is_new = True
@@ -76,16 +81,17 @@ for F in li:
             break
 
     if is_new:
-        print "new field"
-        label = base_label(d,sig[0],absD,index)
-        info =  {'label': label}
-        info.update(data)
-        print "entering %s into database"%info
-        fields.save(info)
+      print "new field"
+      label = base_label(d,sig[0],absD,index)
+      info =  {'label': label}
+      info.update(data)
+      print "entering %s into database"%info
+      fields.save(info)
     else:
-        print "field already in database"
+      print "field already in database"
     if time.time() - t > 5:
-        print "\t", label
-        t = time.time()
+      print "\t", label
+      t = time.time()
+    print "\t", label
     print ""
 
