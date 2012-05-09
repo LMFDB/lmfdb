@@ -247,6 +247,22 @@ class Lfunction:
         thefile += "### This file assembled: " + time.asctime()  + "\n"
         thefile += "### on machine: " + socket.gethostname()  + "\n"
         thefile += "###\n"
+        try:
+            thefile += "###     type = %s\n"%self.Ltype()
+            thefile+=  "### Data passed to lcalc wrapper, if it is used: \n"
+            thefile+=  "###     title = %s \n"%self.title
+            thefile += "###     coefficient_type = %s \n"%self.coefficient_type
+            thefile += "###     dirichlet_coefficients = %s \n"%self.dirichlet_coefficients[:50]
+            thefile += "###         (here limited to 50, but in reality %s are passed )\n"%len(self.dirichlet_coefficients)
+            thefile += "###     coefficient_period = %s \n"%self.coefficient_period
+            thefile += "###     Q_fe = %s \n"%self.Q_fe
+            thefile += "###     sign = %s \n"%self.sign
+            thefile += "###     kappa_fe = %s \n"%self.kappa_fe
+            thefile += "###     lambda_fe = %s \n"%self.lambda_fe
+            thefile += "###     poles = %s \n"%self.poles
+            thefile += "###     residues = %s \n"%self.residues
+        except AttributeError:
+            pass
         thefile += "##########################################################################################################\n\n"
         thefile += "lcalcfile_version = 2    ### lcalc files should have a version number for future enhancements\n\n"
 
@@ -664,10 +680,12 @@ class Lfunction_EMF(Lfunction):
            self.dirichlet_coefficients = self.MF.q_expansion_embeddings(
                self.numcoeff+1)[1:self.numcoeff+1] #when coeffs are rational, q_expansion_embedding()
                                                    #is the list of Fourier coefficients
+           self.coefficient_type = 2        # In this case, the L-function also comes from an elliptic curve. We tell that to lcalc, even if the coefficients are not produced using the elliptic curve
         else:
            #logger.debug("Start computing coefficients.")
            for n in range(1,self.numcoeff+1):
               self.dirichlet_coefficients.append(self.MF.q_expansion_embeddings(self.numcoeff+1)[n][self.number])
+           self.coefficient_type = 0        # In this case the coefficients are neither periodic nor coming from an elliptic curve
            #logger.debug("Done computing coefficients.")
 
         for n in range(1,len(self.dirichlet_coefficients)+1):
@@ -678,14 +696,14 @@ class Lfunction_EMF(Lfunction):
             self.sign = 1
         else:  # for level not 1, calculate sign from Fricke involution and weight
             if self.character > 0:
-                self.sign = (I**(float(self.weight)) * self.MF.conrey_character().sage_character().bar().gauss_sum_numerical().conjugate() *
+                self.sign = (I**(float(self.weight)) * self.MF.conrey_character().sage_character().bar().gauss_sum_numerical() *
                              self.dirichlet_coefficients[self.level-1].conjugate() / float(sqrt(self.level)) )
             else:
                 self.sign = self.MF.atkin_lehner_eigenvalues()[self.level] * (-1)**(float(self.weight/2))
         #logger.debug("Sign: " + str(self.sign))
 
         self.coefficient_period = 0
-        self.coefficient_type = 2
+        
         self.quasidegree = 1
 
         self.checkselfdual()
