@@ -12,6 +12,7 @@ import re
 import pymongo
 import bson
 from WebCharacter import WebCharacter
+from WebNumberField import WebNumberField
 
 from modular_forms.elliptic_modular_forms.backend.web_modforms import *
 from modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import MaassDB
@@ -758,14 +759,13 @@ class Lfunction_HMF(Lfunction):
         logger.debug(str(self.character)+str(self.label)+str(self.number))
 
         # Load form from database
-        import base
         C = base.getDBConnection()
         f = C.hmfs.forms.find_one({'label' : self.label})
         if f == None:
             raise KeyError, "There is no Hilbert modular form with that label"
         logger.debug(str(args))
 
-        F = C.numberfields.fields.find_one({'label': f['field_label']})
+        F = WebNumberField(f['field_label'])
         F_hmf = C.hmfs.fields.find_one({'label': f['field_label']})
 
         self.character = args['character']
@@ -773,9 +773,9 @@ class Lfunction_HMF(Lfunction):
             raise KeyError, "The L-function of a Hilbert modular form with non-trivial character has not been implemented yet."
         self.number = int(args['number'])
 
-        # Make a Sage int
-        self.field_disc = ZZ(F['disc_string'])
-        self.field_degree = int(F['degree'])
+        # It is a Sage int
+        self.field_disc = F.disc()
+        self.field_degree = int(F.degree())
         try:
             self.weight = int(f['parallel_weight'])
         except KeyError:
@@ -1205,10 +1205,7 @@ class DedekindZeta(Lfunction):   # added by DK
         self.__dict__.update(args)
 
         # Fetch the polynomial of the field from the database
-        import base
-        connection = base.getDBConnection()
-        db = connection.numberfields.fields
-        poly_coeffs = db.find_one({'label':self.label})['coefficients']
+        poly_coeffs = WebNumberField(self.label).coeffs()
 
         # Extract the L-function information from the polynomial
         R = QQ['x']; (x,) = R._first_ngens(1)

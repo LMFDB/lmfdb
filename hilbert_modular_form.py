@@ -14,7 +14,7 @@ from utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_t
 
 from number_fields.number_field import parse_list, parse_field_string, field_pretty
 
-from transitive_group import group_display_short
+from WebNumberField import *
 
 def teXify_pol(pol_str): # TeXify a polynomial (or other string containing polynomials)
     o_str = pol_str.replace('*','')
@@ -143,11 +143,11 @@ def download_hmf_magma(**args):
     if f == None:
         return "No such form"
 
-    F = C.numberfields.fields.find_one({'label': f['field_label']})
+    F = WebNumberField(f['field_label'])
     F_hmf = C.hmfs.fields.find_one({'label': f['field_label']})
     
     outstr = 'P<x> := PolynomialRing(Rationals());\n'
-    outstr += 'g := P!' + str(F["coefficients"]) + ';\n'
+    outstr += 'g := P!' + str(F.coeffs()) + ';\n'
     outstr += 'F<w> := NumberField(g);\n'
     outstr += 'ZF := Integers(F);\n\n'
 #    outstr += 'ideals_str := [' + ','.join([st for st in F_hmf["ideals"]]) + '];\n'
@@ -200,11 +200,11 @@ def download_hmf_sage(**args):
     if f == None:
         return "No such form"
 
-    F = C.numberfields.fields.find_one({'label': f['field_label']})
+    F = WebNumberField(f['field_label'])
     F_hmf = C.hmfs.fields.find_one({'label': f['field_label']})
     
     outstr = 'P.<x> = PolynomialRing(QQ)\n'
-    outstr += 'g = P(' + str(F["coefficients"]) + ')\n'
+    outstr += 'g = P(' + str(F.coeffs()) + ')\n'
     outstr += 'F.<w> = NumberField(g)\n'
     outstr += 'ZF = F.ring_of_integers()\n\n'
 
@@ -255,12 +255,11 @@ def render_hmf_webpage(**args):
         numeigs = 20
 
     hmf_field  = C.hmfs.fields.find_one({'label': data['field_label']})
-    field_info = C.numberfields.fields.find_one({'label': data['field_label']})
-    field_info['galois_group'] = group_display_short(field_info['degree'], field_info['T'], C)
-    info['field_info'] = field_info
-    info['field_degree'] = field_info['degree']
-    info['field_disc'] = str(field_info['disc_string'])
-    info['field_poly'] = teXify_pol(str(coeff_to_poly(field_info['coefficients'])))
+    nf = WebNumberField(data['field_label'])
+    info['base_galois_group'] = nf.galois_string()
+    info['field_degree'] = nf.degree()
+    info['field_disc'] = str(nf.disc())
+    info['field_poly'] = teXify_pol(str(nf.poly()))
 
     info.update(data)
 

@@ -7,6 +7,7 @@ import base
 from base import app, getDBConnection, url_for
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, redirect, g, session, Flask
 from number_fields import nf_page, nf_logger
+from WebNumberField import *
 
 import re
 
@@ -235,11 +236,13 @@ def render_field_webpage(args):
 
     if 'label' in args:
       label = clean_input(args['label'])
-      data = C.numberfields.fields.find_one({'label': label})
+      #data = C.numberfields.fields.find_one({'label': label})
+      nf = WebNumberField(label)
+      data = WebNumberField(label)._data
     if data is None:
       bread.append(('Search results', ' '))
       info['err'] = 'No such field: %s in the database'%label
-      info['label'] = args['label_orig'] if args.has_key('label_orig') else args['label']
+      info['label'] = args['label_orig'] if 'label_orig' in args else args['label']
       return search_input_error(info, bread)
 
     try:
@@ -247,32 +250,32 @@ def render_field_webpage(args):
     except KeyError:
       info['count'] = 20
 
-    rawpoly = coeff_to_poly(string2list(data['coeffs']))
+    rawpoly = nf.poly()
     data['rawpoly'] = rawpoly
     K = NumberField(rawpoly, 'a')
-    sig = string2list(data['sig'])
+    sig = nf.signature()
     unit_rank = sig[0]+sig[1]-1
     if unit_rank==0:
       reg = 1
       units = ''
-    elif data.has_key('reg'): # precomputed units
-      reg = data['reg']
-      units = ',&nbsp; '.join(data['units'])
-    elif data.has_key('class_number'):
+    elif nf.haskey('reg'): # precomputed units
+      reg = nf.regulator()
+      units = ',&nbsp; '.join(nf.fu())
+    elif 'class_number' in data:
       reg = K.regulator()
       units = [web_latex(u) for u in K.unit_group().fundamental_units()]
       units = ',&nbsp; '.join(units)
     else: # Field is just too hard to compute this stuff for
       reg = na_text()
       units = na_text()
-    if not data.has_key('class_number'):
+    if 'class_number' not in data:
       data['class_number'] = na_text()
     t = data['galois']['t']
     n = data['degree']
     data['galois_group'] = group_display_knowl(n,t,C)
     data['cclasses'] = cclasses_display_knowl(n,t,C)
     data['character_table'] = character_table_display_knowl(n,t,C)
-    if not data.has_key('cl_group'):
+    if 'cl_group' not in data:
       data['cl_group'] = na_text()
       data['class_group_invs'] = data['cl_group']
     else:
@@ -519,7 +522,7 @@ def number_field_search(**args):
                         tmp = parse_range2(ran, field)
                       # work around syntax for $or
                       # we have to foil out multiple or conditions
-                      if tmp[0]=='$or' and query.has_key('$or'):
+                      if tmp[0]=='$or' and '$or' in query:
                         newors = []
                         for y in tmp[1]:
                           oldors = [dict.copy(x) for x in query['$or']]
