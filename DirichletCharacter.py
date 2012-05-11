@@ -10,6 +10,7 @@ from sage.all import *
 import tempfile, os
 from pymongo import ASCENDING
 from WebCharacter import *
+from WebNumberField import WebNumberField
 #from renderLfunction import render_Lfunction
 from utils import to_dict, parse_range, make_logger
 import ListCharacters
@@ -183,6 +184,21 @@ def initCharacterInfo(web_chi, args, request):
         info['logvals'] = web_chi.logvals
         #info['galoisorbits'] = web_chi.galoisorbits
         #info['root_unity'] =  str(any(map(lambda x : r"\zeta" in x,  web_chi.vals)))
+        #  Code works, but currently not run
+        if info['order'] < 16 and False:
+            pol=str(gp.galoissubcyclo(web_chi.modulus,web_chi.chi_sage.kernel()))
+            sagepol = PolynomialRing(QQ, 'x')(pol)
+            R = sagepol.parent()
+            nfpol = R(pari(sagepol).polredabs())
+            info['nfpol'] = "\( %s \)" % latex(nfpol)
+            wnf = WebNumberField.from_coeffs([int(c) for c in nfpol.coeffs()])
+            if wnf.is_null():
+              nf_friend = ''
+            else:
+              nf_friend = '/NumberField/' + str(wnf.label)
+        else: 
+            info['nfpol'] = ''
+            nf_friend = ''
         info['unitgens'] = str(web_chi.unitgens)
         info['bound'] = int(web_chi.bound)
         if web_chi.order == 2:
@@ -199,6 +215,8 @@ def initCharacterInfo(web_chi, args, request):
             info['friends'] = []
         else:
             info['friends'] = [('Dirichlet L-function', '/L/Character/Dirichlet/'+smod+'/'+snum)]
+        if nf_friend != '': # Don't add yet since this is currently always ''
+            info['friends'].append(('Number field', nf_friend))
 
         info['navi'] = getPrevNextNavig(web_chi.modulus, web_chi.number, "character")
         

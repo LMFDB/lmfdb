@@ -306,5 +306,14 @@ $(function() {
 
 });
 </script>
+
+{#  Maybe include the polynomial or other information about the field?
+  {% if order < 16 %}
+    <h2>Associated number field</h2>
+      <div>
+        {{ nfpol }}
+      </div>
+  {% endif %}
+#}
 {% endblock %}
 
