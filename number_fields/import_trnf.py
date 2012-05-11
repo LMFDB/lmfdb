@@ -1,4 +1,11 @@
 # -*- coding: utf-8 -*-
+
+#
+#
+# Do not use this script -- it is out of date
+#
+#
+
 import os.path, gzip, re, sys, time
 import pymongo
 import base

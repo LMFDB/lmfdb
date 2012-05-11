@@ -111,7 +111,7 @@ def group_knowl_guts(n,t, C):
   rest += '<div><h3>Subfields</h3><blockquote>'
   rest += subfield_display(C, n, group['subs'])
   rest += '</blockquote></div>'
-  rest += '<div><h3>Other representations</h3><blockquote>'
+  rest += '<div><h3>Other low-degree representations</h3><blockquote>'
   rest += otherrep_display(C, group['repns'])
   rest += '</blockquote></div>'
 

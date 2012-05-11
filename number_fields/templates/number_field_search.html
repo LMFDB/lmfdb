@@ -82,14 +82,16 @@
 {% set wnf = info.wnf(field) %}
 <tr>
 <td align='left'><a href="/NumberField/{{field.label}}">{{field.label}}</a></td>
-<td>{{info.format_coeffs(field.coeffs)|safe}}</td>
+<td>{{ wnf.web_poly() | safe }}</td>
 <td>\( {{ wnf.disc_factored_latex() }} \)</td>
-<td>{{ info.group_display(field.galois) }}</td>
+{# <td>{{ info.group_display(field.galois) }}</td> #}
+<td>{{ wnf.galois_string() }}</td>
 {% if field.cl_group is defined %}
   {% if field.cl_group=='' %}
     <td> Trivial </td>
   {% else %}
-    <td>{{info.class_group_display(field.cl_group)}}</td>
+    {# <td>{{info.class_group_display(field.cl_group)}}</td> #}
+    <td>{{ wnf.class_group_invariants() }}</td>
   {% endif %}
 {% else %}
   <td>n/a</td>
@@ -99,8 +101,10 @@
 </tbody>
 </table>
 <br>
-<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form();return false">Previous</A>
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form();return false">Next</A></td>
+   {% if info.all == 0 %}
+      <a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form();return false">Previous</A>
+      <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form();return false">Next</A></td>
+   {% endif %}
 
 {% endif %}
 {% endif %}

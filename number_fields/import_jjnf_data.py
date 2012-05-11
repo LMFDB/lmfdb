@@ -93,11 +93,42 @@ def timeout(seconds, force_kill=True):
 @timeout(600)
 def getclgroup(K):
   clg = K.class_group()
-  h = clg.order()
+  h = int(clg.order())
   clg = clg.invariants()
+  clg = [int(j) for j in clg]
   uk = K.unit_group().fundamental_units()
   reg = float(K.regulator())
   return h,clg,uk,reg
+
+### Temp
+
+def string2list(s):
+  s = str(s)
+  if s=='': return []
+  return [int(a) for a in s.split(',')]
+
+
+li = fields.find({'class_number': {'$exists': False}})
+for data in li:
+    coeffs = string2list(data['coeffs'])
+    K = NumberField(coeff_to_poly(coeffs), 'a')
+    print data['label']
+    try:
+        cltime = time.time()
+        h,clg,uk,reg = getclgroup(K)
+        cltimeend = time.time()
+        data['class_number'] = h
+        data['cl_group'] = makels(clg)
+        if cltimeend-cltime>=2: # slow, so save 
+          data['reg'] = reg
+          data['units'] = [web_latex(u) for u in uk]
+    except: # Catch the time out exception
+        print "*******************************************  Timed out"
+        pass
+    
+exit()
+
+### End Temp
 
 
 from outlist  import li # this reads in the list called li
@@ -138,7 +169,6 @@ for F in li:
       print "new field"
       label = base_label(d,sig[0],absD,index)
       info =  {'label': label}
-      exit()
       try:
         cltime = time.time()
         h,clg,uk,reg = getclgroup(K)

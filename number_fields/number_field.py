@@ -233,7 +233,6 @@ def render_field_webpage(args):
 
     if 'label' in args:
       label = clean_input(args['label'])
-      #data = C.numberfields.fields.find_one({'label': label})
       nf = WebNumberField(label)
       data = WebNumberField(label)._data
     if data is None:
@@ -242,45 +241,16 @@ def render_field_webpage(args):
       info['label'] = args['label_orig'] if 'label_orig' in args else args['label']
       return search_input_error(info, bread)
 
-    try:
-      info['count'] = args['count']
-    except KeyError:
-      info['count'] = 20
-
-    rawpoly = nf.poly()
-    data['rawpoly'] = rawpoly
-    K = NumberField(rawpoly, 'a')
-    sig = nf.signature()
-    unit_rank = sig[0]+sig[1]-1
-    if unit_rank==0:
-      reg = 1
-      units = ''
-    elif nf.haskey('reg'): # precomputed units
-      reg = nf.regulator()
-      units = ',&nbsp; '.join(nf.fu())
-    elif 'class_number' in data:
-      reg = K.regulator()
-      units = [web_latex(u) for u in K.unit_group().fundamental_units()]
-      units = ',&nbsp; '.join(units)
-    else: # Field is just too hard to compute this stuff for
-      reg = na_text()
-      units = na_text()
-    if 'class_number' not in data:
-      data['class_number'] = na_text()
-    t = data['galois']['t']
-    n = data['degree']
+    info['wnf'] = nf
+    data['class_number'] = nf.class_number()
+    t = nf.galois_t()
+    n = nf.degree()
     data['galois_group'] = group_display_knowl(n,t,C)
     data['cclasses'] = cclasses_display_knowl(n,t,C)
     data['character_table'] = character_table_display_knowl(n,t,C)
-    if 'cl_group' not in data:
-      data['cl_group'] = na_text()
-      data['class_group_invs'] = data['cl_group']
-    else:
-      data['class_group_invs'] = string2list(data['cl_group'])
-      data['cl_group'] = str(AbelianGroup(data['class_group_invs']))
-    if data['class_group_invs']==[]:
-        data['class_group_invs']='Trivial'
-    data['signature'] = sig
+    data['cl_group'] = nf.class_group()
+    data['class_group_invs'] = nf.class_group_invariants()
+    data['signature'] = nf.signature()
     D = nf.disc()
     ram_primes = D.prime_factors()
     data['disc_factor'] = nf.disc_factored_latex()
@@ -290,9 +260,9 @@ def render_field_webpage(args):
       data['discriminant'] = "\(%s=%s\)"%(str(D),data['disc_factor'])
     npr = len(ram_primes)
     ram_primes = str(ram_primes)[1:-1]
-    data['frob_data'], data['seeram'] = frobs(K)
+    data['frob_data'], data['seeram'] = frobs(nf.K())
     data['phrase'] = group_phrase(n,t,C)
-    zk = pari(K).nf_subst('a')
+    zk = pari(nf.K()).nf_subst('a')
     zk = list(zk.nf_get_zk())
     Ra = PolynomialRing(QQ, 'a')
     zk = [latex(Ra(x)) for x in zk]
@@ -305,13 +275,13 @@ def render_field_webpage(args):
     info.update({
         'label': pretty_label,
         'label_raw' : label,
-        'polynomial': web_latex(K.defining_polynomial()),
+        'polynomial': web_latex(nf.K().defining_polynomial()),
         'ram_primes': ram_primes,
         'integral_basis': zk,
-        'regulator': web_latex(reg),
-        'unit_rank': unit_rank,
-        'root_of_unity': web_latex(K.primitive_root_of_unity()),
-        'fund_units': units
+        'regulator': web_latex(nf.regulator()),
+        'unit_rank': nf.unit_rank(),
+        'root_of_unity': web_latex(nf.K().primitive_root_of_unity()),
+        'fund_units': nf.units()
         })
 
     bread.append(('%s'%info['label_raw'],' '))
@@ -478,6 +448,7 @@ def number_field_search(**args):
     if 'natural' in info:
       field_id = info['natural']
       field_id_parsed = parse_field_string(info['natural'])
+      field_id_parsed = split_label(field_id_parsed) # allows factored labels 11.11.11e20.1
       return render_field_webpage({'label' : field_id_parsed, 'label_orig': field_id})
     query = {}
     dlist = []
@@ -597,6 +568,7 @@ def number_field_search(**args):
     info['fields'] = res
     info['number'] = nres
     info['start'] = start
+    info['all'] = 0
     if nres==1:
       info['report'] = 'unique match'
     else:
@@ -604,10 +576,8 @@ def number_field_search(**args):
         info['report'] = 'displaying matches %s-%s of %s'%(start+1,min(nres,start+count),nres)
       else:
         info['report'] = 'displaying all %s matches'%nres
+        info['all'] = 1
 
-    info['format_coeffs'] = format_coeffs2
-    info['group_display'] = group_display_shortC(C)
-    info['class_group_display'] = string2list
     info['wnf'] = WebNumberField.from_data
     return render_template("number_field_search.html", info = info, title=t, bread=bread)
 

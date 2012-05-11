@@ -24,9 +24,10 @@ function show_code(system) {
     </div>
     <div></div>
 
+{% set nf = info.wnf %}
 <p>
-  <div class='sage nodisplay code'>sage: K = NumberField({{info.rawpoly}},'a')</div>
-  <div class='pari nodisplay code'>pari: K = bnfinit({{info.rawpoly}})</div>
+  <div class='sage nodisplay code'>sage: K = NumberField({{ nf.poly() }},'a')</div>
+  <div class='pari nodisplay code'>pari: K = bnfinit({{ nf.poly() }}, 1)</div>
   <div class='magma nodisplay code'>&gt; K&lt;a&gt; := NumberField(PolynomialRing(Rationals())!{{info.coefficients}});</div>
 </p>
         {% set KNOWL_ID = "nf.%s"|format(info['label_raw']) %}
@@ -80,7 +81,7 @@ function show_code(system) {
         <div class='pari nodisplay code'>pari: K.clgp</div>
         <div class='magma nodisplay code'>&gt; ClassGroup(K);</div>
 	<p>
-          {{ info.cl_group }}, order {{info.class_number}}
+          {{ info.cl_group }}
         </p>
 
 
