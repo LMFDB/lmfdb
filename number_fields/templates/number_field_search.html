@@ -79,10 +79,11 @@
 </thead>
 <tbody>
 {% for field in info.fields: %}
+{% set wnf = info.wnf(field) %}
 <tr>
 <td align='left'><a href="/NumberField/{{field.label}}">{{field.label}}</a></td>
-<td>{{info.format_coeffs(field.coefficients)|safe}}</td>
-<td>{{info.disc_display(field.disc_abs_key, field.disc_sign)}}</td>
+<td>{{info.format_coeffs(field.coeffs)|safe}}</td>
+<td>\( {{ wnf.disc_factored_latex() }} \)</td>
 <td>{{ info.group_display(field.galois) }}</td>
 {% if field.cl_group is defined %}
   {% if field.cl_group=='' %}

@@ -146,17 +146,17 @@ def NF_redirect():
     return redirect(url_for(".number_field_render_webpage", **request.args))
 
 # function copied from classical_modular_form.py
-def set_sidebar(l):
-        res=list()
-#       print "l=",l
-        for ll in l:
-                if(len(ll)>1):
-                        content=list()
-                        for n in range(1,len(ll)):
-                                content.append(ll[n])
-                        res.append([ll[0],content])
+#def set_sidebar(l):
+#        res=list()
+##       print "l=",l
+#        for ll in l:
+#                if(len(ll)>1):
+#                        content=list()
+#                        for n in range(1,len(ll)):
+#                                content.append(ll[n])
+#                        res.append([ll[0],content])
 #       print "res=",res
-        return res
+#        return res
 
 
 @nf_page.route("/GaloisGroups")
@@ -194,7 +194,7 @@ def number_field_render_webpage():
         discriminant_list_endpoints = [-10000,-1000,-100,0,100,1000,10000]
         discriminant_list = ["%s..%s" % (start,end-1) for start, end in zip(discriminant_list_endpoints[:-1], discriminant_list_endpoints[1:])]
         info = {
-        'degree_list': range(1,11),
+        'degree_list': range(1,12),
         'signature_list': sig_list, 
         'class_number_list': range(1,6)+['6..10'],
         'count': '20',
@@ -224,9 +224,6 @@ def string2list(s):
   s = str(s)
   if s=='': return []
   return [int(a) for a in s.split(',')]
-
-def decodedisc(ads, s):
-  return ZZ(ads[3:])*s
 
 def render_field_webpage(args):
     data = None
@@ -284,8 +281,13 @@ def render_field_webpage(args):
     if data['class_group_invs']==[]:
         data['class_group_invs']='Trivial'
     data['signature'] = sig
-    D = decodedisc(data['disc_abs_key'], data['disc_sign'])
+    D = nf.disc()
     ram_primes = D.prime_factors()
+    data['disc_factor'] = nf.disc_factored_latex()
+    if D.abs().is_prime():
+      data['discriminant'] = "\(%s\)" % str(D)
+    else:
+      data['discriminant'] = "\(%s=%s\)"%(str(D),data['disc_factor'])
     npr = len(ram_primes)
     ram_primes = str(ram_primes)[1:-1]
     data['frob_data'], data['seeram'] = frobs(K)
@@ -328,7 +330,7 @@ def render_field_webpage(args):
 
     properties2 = [('Degree:', '%s' %data['degree']),
                    ('Signature:', '%s' %data['signature']),
-                   ('Discriminant', '%s' %str(D)),
+                   ('Discriminant:', '$%s$' %data['disc_factor']),
                    ('Ramified '+primes+':', '%s' %ram_primes),
                    ('Class number:', '%s' %data['class_number']),
                    ('Class group:', '%s' %data['class_group_invs']),
@@ -341,6 +343,9 @@ def render_field_webpage(args):
       pass
     del info['_id']
     return render_template("number_field.html", properties2=properties2, credit=NF_credit, title = title, bread=bread, friends=info.pop('friends'), learnmore=info.pop('learnmore'), info=info )
+
+def format_coeffs2(coeffs):
+  return format_coeffs(string2list(coeffs))
 
 def format_coeffs(coeffs):
     return pol_to_html(str(coeff_to_poly(coeffs)))
@@ -356,22 +361,22 @@ def format_coeffs(coeffs):
 
 def split_label(label):
   """
-    Parses number field labels. Allows for 3.1.4!1x11!1.1
+    Parses number field labels. Allows for 3.1.4e1t11e1.1
   """
   tmp = label.split(".")
   tmp[2] = parse_product(tmp[2])
   return ".".join(tmp)
   
 def parse_product(symbol):
-  tmp = symbol.split("x")
+  tmp = symbol.split("t")
   return str(prod(parse_power(pair) for pair in tmp))
 
 def parse_power(pair):
   try:
-    tmp = pair.split("!")
-    return int(tmp[0])**int(tmp[1])
+    tmp = pair.split("e")
+    return ZZ(tmp[0])**ZZ(tmp[1])
   except:
-    return int(pair)
+    return ZZ(pair)
 
 @nf_page.route("/<label>")
 def by_label(label):
@@ -496,7 +501,6 @@ def number_field_search(**args):
                       query['galois'] = make_galois_pair(gcs[0][0],gcs[0][1])
 #list(gcs[0])
                     if len(gcs)>1:
-                      #query['$or'] = [{'gal': list(x)} for x in gcs]
                       query['galois'] = {'$in': [make_galois_pair(x[0],x[1]) for x in gcs]}
                   except NameError as code:
                     info['err']='Error parsing input for Galois group: unknown group label %s.  It needs to be a <a title = "Galois group labels" knowl="nf.galois_group.name">group label</a>, such as C5 or 5T1, or comma separated list of labels.'%code
@@ -601,10 +605,10 @@ def number_field_search(**args):
       else:
         info['report'] = 'displaying all %s matches'%nres
 
-    info['format_coeffs'] = format_coeffs
+    info['format_coeffs'] = format_coeffs2
     info['group_display'] = group_display_shortC(C)
     info['class_group_display'] = string2list
-    info['disc_display'] = decodedisc
+    info['wnf'] = WebNumberField.from_data
     return render_template("number_field_search.html", info = info, title=t, bread=bread)
 
 def search_input_error(info, bread):

@@ -122,42 +122,35 @@ for F in li:
         'galois': gal,
         'ramps': ramps,
         'coeffs': makels(coeffs),
-        'sig': makels(sig),
-        'coefficients': coeffs,
-        'discriminant': D,
-        'gal': [d,T],
-        'disc_string': str(ZZ(D)),
-        'signature': sig,
-        'T': T
+        'sig': makels(sig)
     }
-
-    try:
-      cltime = time.time()
-      h,clg,uk,reg = getclgroup(K)
-      cltimeend = time.time()
-      data['class_number'] = h
-      data['class_group'] = clg
-      data['cl_group'] = makels(clg)
-      if cltimeend-cltime>=2: # slow, so save 
-        data['reg'] = reg
-        data['units'] = [web_latex(u) for u in uk]
-    except: # Catch the time out exception
-      print "*******************************************  Timed out"
-      pass
     index=1
     is_new = True
     for field in fields.find({'degree': d, 
                  'sig': data['sig'],
                  'disc_abs_key': dstr}):
-        index +=1
-        if field['coeffs'] == data['coeffs']:
-            is_new = False
-            break
+      index +=1
+      if field['coeffs'] == data['coeffs']:
+        is_new = False
+        break
 
     if is_new:
       print "new field"
       label = base_label(d,sig[0],absD,index)
       info =  {'label': label}
+      exit()
+      try:
+        cltime = time.time()
+        h,clg,uk,reg = getclgroup(K)
+        cltimeend = time.time()
+        data['class_number'] = h
+        data['cl_group'] = makels(clg)
+        if cltimeend-cltime>=2: # slow, so save 
+          data['reg'] = reg
+          data['units'] = [web_latex(u) for u in uk]
+      except: # Catch the time out exception
+        print "*******************************************  Timed out"
+        pass
       info.update(data)
       #print "entering %s into database"%info
       if saving:
@@ -167,6 +160,5 @@ for F in li:
 #    if time.time() - t > 5:
 #      print "\t", label
 #      t = time.time()
-    print "\t", label
     print ""
 

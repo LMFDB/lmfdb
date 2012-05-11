@@ -32,6 +32,7 @@ class WebNumberField:
     else:
       self._data = data
 
+  # works with a string, or a list of coefficients
   @classmethod
   def from_coeffs(cls, coeffs):
     if isinstance(coeffs, list):
@@ -44,6 +45,11 @@ class WebNumberField:
       return cls(f['label'], f)
     else:
       raise Exception('wrong type')
+
+  # If we already have the database entry
+  @classmethod
+  def from_data(cls, data):
+    return cls(data['label'], data)
 
   def _get_dbdata(self):
     nfdb = base.getDBConnection().numberfields.fields
@@ -83,3 +89,14 @@ class WebNumberField:
     if self.haskey('units'): return self._data['units']
     return None
 
+  def disc_factored_latex(self):
+    D = self.disc()
+    s = ''
+    if D<0:
+      D= -D
+      s = r'-\,'
+    return s+ latex(D.factor())
+
+  def is_null(self):
+    return self._data is None
+    
