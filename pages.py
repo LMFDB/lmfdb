@@ -15,6 +15,11 @@ def acknowledgment():
 def humans_txt():
   return render_template("acknowledgment.html", title="Acknowledgments")
 
+# google's CSE for www.lmfdb.org/* (and *only* those pages!)
+@app.route("/search")
+def search():
+  return render_template("search.html", title="Search LMFDB", bread = [('Search', url_for("search"))])
+
 ##
 ## INTRO PAGES
 ##
