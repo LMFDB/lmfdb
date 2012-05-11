@@ -116,6 +116,15 @@ a {
   border-left: 3px solid #D00;
   background: #FDD;
 }
+#search-topright {
+  display: inline;
+}
+#search-topright input {
+  font-size: 70%;
+  border: 1px solid {{ col_main }};
+  background: #DFD ;
+  vertical-align: baseline;
+}
 /*
 #content .announce {
   font-size: 1.2em;
