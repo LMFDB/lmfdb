@@ -218,8 +218,8 @@ def elliptic_curve_search(**args):
         except:
             count = count_default
     else:
-        info['count'] = count_default
         count = count_default
+    info['count'] = count
 
     start_default=0
     if info.get('start'):

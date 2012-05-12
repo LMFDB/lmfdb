@@ -5,7 +5,7 @@
 
 <h2> Further refine search </h2>
 
-<form>
+<form id="re-search">
 <input type="hidden" name="start" value="{{info.start}}"/>
 <input type="hidden" name="paging" value="0"/>
 <table border="0">
@@ -101,10 +101,12 @@
 </tbody>
 </table>
 <br>
-   {% if info.all == 0 %}
-      <a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form();return false">Previous</A>
-      <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form();return false">Next</A></td>
-   {% endif %}
+     {% if info.start > 0 %}
+      <a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
+     {% endif %}
+     {% if info.start +info.count  < info.number %}
+      <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
+     {% endif %}
 
 {% endif %}
 {% endif %}

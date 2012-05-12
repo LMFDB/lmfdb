@@ -112,10 +112,9 @@ def local_field_search(**args):
       count = int(info['count'])
     except:
       count = count_default
-      info['count'] = count
   else:
-    info['count'] = count_default
     count = count_default
+  info['count'] = count
 
   start_default=0
   if info.get('start'):

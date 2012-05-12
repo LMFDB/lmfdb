@@ -530,6 +530,7 @@ def number_field_search(**args):
     else:
       info['count'] = count_default
       count = count_default
+    info['count'] = int(info['count'])
 
     start_default=0
     if info.get('start'):
