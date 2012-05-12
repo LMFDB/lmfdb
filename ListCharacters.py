@@ -89,7 +89,7 @@ def get_character_order(a,b):
                         break
                     elif chi.multiplicative_order() == N:
                         count += 1
-                        l.append((modulus,j,chi.is_primitive(),chi.multiplicative_order(), k(chi)))
+                        l.append((modulus,chi.number(),chi.is_primitive(),chi.multiplicative_order(), k(chi)))
             if count == 8:
                 break
         return l
