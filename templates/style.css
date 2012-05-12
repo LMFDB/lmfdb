@@ -120,10 +120,12 @@ a {
   display: inline;
 }
 #search-topright input {
-  font-size: 70%;
+  font-size: 75%;
   border: 1px solid {{ col_main }};
+  padding: 1px;
   background: #DFD ;
-  vertical-align: baseline;
+  position: relative;
+  top: -1px;
 }
 /*
 #content .announce {
