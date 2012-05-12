@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<form>
+<form id="re-search">
 <input type="hidden" name="start" value="{{info.start}}"/>
 <input type="hidden" name="paging" value="0"/>
 <table border="0">
@@ -101,8 +101,8 @@ Prime $p$:</td><td align=left> <input type="text" name="p" size="3" value="{{inf
 </tbody>
 </table>
 <br>
-<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form();return false">Previous</A>
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form();return false">Next</A></td>
+<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
 
 {% endif %}
 {% endif %}

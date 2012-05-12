@@ -248,7 +248,7 @@ $(function() {
       function() { $(this).text("done"); clear(true, true); });
 });
 
-function decrease_start_by_count_and_submit_form() {
+function decrease_start_by_count_and_submit_form(form_id) {
   startelem = $('input[name=start]');
   count = parseInt($('input[name=count]').val());
   newstart = parseInt(startelem.val())-count;
@@ -258,14 +258,14 @@ function decrease_start_by_count_and_submit_form() {
   pagingelem = $('input[name=paging]');
   if (typeof pagingelem != 'undefined')
     pagingelem.val(1);
-  $('form')[0].submit();
+  $('form[id='+form_id+']').submit()
 }
-function increase_start_by_count_and_submit_form() {
+function increase_start_by_count_and_submit_form(form_id) {
   startelem = $('input[name=start]');
   count = parseInt($('input[name=count]').val());
   startelem.val(parseInt(startelem.val())+count);
   pagingelem = $('input[name=paging]');
   if (typeof pagingelem != 'undefined')
     pagingelem.val(1);
-  $('form')[0].submit();
+  $('form[id='+form_id+']').submit()
 }
