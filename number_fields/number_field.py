@@ -5,7 +5,8 @@ ASC = pymongo.ASCENDING
 import flask
 import base
 from base import app, getDBConnection, url_for
-from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, redirect, g, session, Flask
+from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, redirect, g, session, Flask, send_file
+import StringIO
 from number_fields import nf_page, nf_logger
 from WebNumberField import *
 
@@ -28,7 +29,7 @@ LIST_RE = re.compile(r'^(-?\d+|(-?\d+--?\d+))(,(-?\d+|(-?\d+--?\d+)))*$')
 LIST_SIMPLE_RE = re.compile(r'^(-?\d+)(,-?\d+)*$')
 PAIR_RE = re.compile(r'^\[\d+,\d+\]$')
 IF_RE = re.compile(r'^\[\]|(\[\d+(,\d+)*\])$') # invariant factors
-
+FIELD_LABEL_RE = re.compile(r'^\d+\.\d+\.(\d+(e\d+)?(t\d+(e\d+)?)*)\.\d+$')
 
 nfields = None
 max_deg = None
@@ -237,7 +238,8 @@ def render_field_webpage(args):
       data = WebNumberField(label)._data
     if data is None:
       bread.append(('Search results', ' '))
-      info['err'] = 'No such field: %s in the database'%label
+      label2 = re.sub(r'[<>]', '', args['label'])
+      info['err'] = 'No such field: %s in the database'%label2
       info['label'] = args['label_orig'] if 'label_orig' in args else args['label']
       return search_input_error(info, bread)
 
@@ -448,7 +450,8 @@ def number_field_search(**args):
     if 'natural' in info:
       field_id = info['natural']
       field_id_parsed = parse_field_string(info['natural'])
-      field_id_parsed = split_label(field_id_parsed) # allows factored labels 11.11.11e20.1
+      if FIELD_LABEL_RE.match(field_id_parsed):
+        field_id_parsed = split_label(field_id_parsed) # allows factored labels 11.11.11e20.1
       return render_field_webpage({'label' : field_id_parsed, 'label_orig': field_id})
     query = {}
     dlist = []
@@ -458,7 +461,6 @@ def number_field_search(**args):
             if field in ['cl_group', 'sig']:
               # different regex for the two types
               if (field == 'sig' and PAIR_RE.match(info[field])) or (field == 'cl_group' and IF_RE.match(info[field])):
-                #query[field] = parse_list(info[field])
                 query[field] = info[field][1:-1]
               else:
                 name= 'class group' if field=='cl_group' else 'signature'
@@ -468,6 +470,7 @@ def number_field_search(**args):
                 if field == 'galois_group':
                   try:
                     gcs = complete_group_codes(info[field])
+                    print "***************************** "+str(gcs)
                     if len(gcs)==1:
                       query['galois'] = make_galois_pair(gcs[0][0],gcs[0][1])
 #list(gcs[0])
@@ -560,6 +563,9 @@ def number_field_search(**args):
 
     res = fields.find(query).sort([('degree',ASC),('disc_abs_key', ASC),('disc_sign',ASC),('label',ASC)])
 
+    if 'download' in info and info['download'] != '0':
+      return download_search(info, res)
+
     nres = res.count()
     res = res.skip(start).limit(count)
 
@@ -569,7 +575,6 @@ def number_field_search(**args):
     info['fields'] = res
     info['number'] = nres
     info['start'] = start
-    info['all'] = 0
     if nres==1:
       info['report'] = 'unique match'
     else:
@@ -577,7 +582,6 @@ def number_field_search(**args):
         info['report'] = 'displaying matches %s-%s of %s'%(start+1,min(nres,start+count),nres)
       else:
         info['report'] = 'displaying all %s matches'%nres
-        info['all'] = 1
 
     info['wnf'] = WebNumberField.from_data
     return render_template("number_field_search.html", info = info, title=t, bread=bread)
@@ -629,4 +633,36 @@ def frobs(K):
       ans.append([p, 'R'])
       seeram = True
   return ans, seeram
+
+def download_search(info, res):
+  dltype = info['Submit']
+  ld = '[' # left delimiter
+  rd = ']' # left delimiter
+  com = r'\\' # comment start
+  filename = 'fields.gp'
+  if dltype=='sage': 
+    com = '#'
+    filename = 'fields.sage'
+  s  = '%s Global number fields downloaded from the LMFDB\n'% com
+  s += '%s Below is a list called data. Each entry has the form:\n'% com
+  s += '%s   %spolynomial, discriminant, t-number, class group%s\n'%(com, ld, rd)
+  s += '%s Here the t-number is for the Galois group\n'% com
+  s += '%s If a class group was not computed, the entry is %s-1%s\n'%(com,ld,rd)
+  s += '\n'
+  s += 'data = %s' % ld
+  s += '\\\n'
+  for f in res:
+    wnf = WebNumberField.from_data(f)
+    cgi = wnf.class_group_invariants()
+    entry =  ', '.join([str(wnf.poly()), str(wnf.disc()), str(wnf.galois_t()), str(wnf.class_group_invariants_raw())])
+    s += ld + entry + rd + ',\\\n'
+  s = s[:-3]
+  s += rd
+  s += '\n'
+  strIO = StringIO.StringIO()
+  strIO.write(s)
+  strIO.seek(0)
+  return send_file(strIO,
+                   attachment_filename=filename,
+                   as_attachment=True)
 

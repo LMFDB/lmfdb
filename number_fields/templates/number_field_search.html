@@ -2,7 +2,6 @@
 {% block content %}
 {# Refine search page #}
 
-
 <h2> Further refine search </h2>
 
 <form id="re-search">
@@ -107,8 +106,23 @@
      {% if info.start +info.count  < info.number %}
       <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
      {% endif %}
+<br>
+<br>
+<form>
+Download all search results for 
+<input type="submit" name="Submit" value="pari/gp">
+<input type="submit" name="Submit" value="sage">
+<input type="hidden" name="download" value="1"/>
+<input type="hidden" name="degree" value="{{info.degree}}"/>
+<input type="hidden" name="sig" value="{{info.sig}}"/>
+<input type="hidden" name="galois_group" value="{{info.galois_group}}"/>
+<input type="hidden" name="class_number" value="{{info.class_number}}"/>
+<input type="hidden" name="cl_group" value="{{info.cl_group}}"/>
+<input type="hidden" name="ur_primes" value="{{info.ur_primes}}"/>
+<input type="hidden" name="discriminant" value="{{info.discriminant}}"/>
 
-{% endif %}
+</form>
+{% endif %} {# info.number > 0 #}
 {% endif %}
 
 

@@ -139,6 +139,11 @@ class WebNumberField:
       return 'Trivial'
     return cg_list
 
+  def class_group_invariants_raw(self):
+    if not self.haskey('cl_group'):
+      return [-1]
+    return string2list(self._data['cl_group'])    
+
   def class_group(self):
     if self.haskey('cl_group'):
       cg_list = string2list(self._data['cl_group'])

@@ -100,44 +100,21 @@ def getclgroup(K):
   reg = float(K.regulator())
   return h,clg,uk,reg
 
-### Temp
-
 def string2list(s):
   s = str(s)
   if s=='': return []
   return [int(a) for a in s.split(',')]
 
-
-li = fields.find({'class_number': {'$exists': False}})
-for data in li:
-    coeffs = string2list(data['coeffs'])
-    K = NumberField(coeff_to_poly(coeffs), 'a')
-    print data['label']
-    try:
-        cltime = time.time()
-        h,clg,uk,reg = getclgroup(K)
-        cltimeend = time.time()
-        data['class_number'] = h
-        data['cl_group'] = makels(clg)
-        if cltimeend-cltime>=2: # slow, so save 
-          data['reg'] = reg
-          data['units'] = [web_latex(u) for u in uk]
-    except: # Catch the time out exception
-        print "*******************************************  Timed out"
-        pass
-    
-exit()
-
-### End Temp
-
-
 from outlist  import li # this reads in the list called li
 
-print "finished importing li, number = %s"%len(li)
+tot = len(li)
+print "finished importing li, number = %s"% tot
+count = 0
 
 for F in li:
 #for F in li[0:1]:
-    print F
+    count += 1
+    print "%d of %d: %s"%(count, tot, F)
     t = time.time()
     d, sig, D, coeffs, T, ramps = F
     absD = abs(ZZ(D))
