@@ -470,7 +470,6 @@ def number_field_search(**args):
                 if field == 'galois_group':
                   try:
                     gcs = complete_group_codes(info[field])
-                    print "***************************** "+str(gcs)
                     if len(gcs)==1:
                       query['galois'] = make_galois_pair(gcs[0][0],gcs[0][1])
 #list(gcs[0])

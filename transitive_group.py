@@ -318,7 +318,10 @@ def complete_group_code(code):
 def complete_group_codes(codes):
   codes = codes.upper()
   ans = []
-  for code in codes.split(','):
+  codes = re.sub(r'\((\d+),(\d+)\)', r'(\1Z\2)', codes)
+  codelist = codes.split(',')
+  codelist = [re.sub('Z',',',x) for x in codelist]
+  for code in codelist:
     ans.extend(complete_group_code(code))
   return ans
 
