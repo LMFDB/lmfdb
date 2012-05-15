@@ -635,29 +635,40 @@ def frobs(K):
 
 def download_search(info, res):
   dltype = info['Submit']
-  ld = '[' # left delimiter
-  rd = ']' # left delimiter
-  com = r'\\' # comment start
+  delim = 'bracket'
+  com = r'\\' # single line comment start
+  com1 = '' # multiline comment start
+  com2 = '' # multiline comment end
   filename = 'fields.gp'
   if dltype=='sage': 
     com = '#'
     filename = 'fields.sage'
-  s  = '%s Global number fields downloaded from the LMFDB\n'% com
-  s += '%s Below is a list called data. Each entry has the form:\n'% com
-  s += '%s   %spolynomial, discriminant, t-number, class group%s\n'%(com, ld, rd)
-  s += '%s Here the t-number is for the Galois group\n'% com
-  s += '%s If a class group was not computed, the entry is %s-1%s\n'%(com,ld,rd)
+  if dltype=='mathematica': 
+    com = ''
+    com1 = '(*'
+    com2 = '*)'
+    delim = 'brace'
+    filename = 'fields.ma'
+  s = com1 + "\n"
+  s  += com + ' Global number fields downloaded from the LMFDB\n'
+  s += com + ' Below is a list called data. Each entry has the form:\n'
+  s += com + '   [polynomial, discriminant, t-number, class group]\n'
+  s += com + ' Here the t-number is for the Galois group\n'
+  s += com + ' If a class group was not computed, the entry is [-1]\n'
+  s += '\n' + com2
   s += '\n'
-  s += 'data = %s' % ld
+  s += 'data = ['
   s += '\\\n'
   for f in res:
     wnf = WebNumberField.from_data(f)
     cgi = wnf.class_group_invariants()
     entry =  ', '.join([str(wnf.poly()), str(wnf.disc()), str(wnf.galois_t()), str(wnf.class_group_invariants_raw())])
-    s += ld + entry + rd + ',\\\n'
+    s += '[' + entry + ']' + ',\\\n'
   s = s[:-3]
-  s += rd
-  s += '\n'
+  s += ']\n'
+  if delim == 'brace':
+    s = s.replace('[','{')
+    s = s.replace(']','}')
   strIO = StringIO.StringIO()
   strIO.write(s)
   strIO.seek(0)
