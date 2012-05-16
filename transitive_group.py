@@ -15,6 +15,36 @@ from pymongo.connection import Connection
 
 MAX_GROUP_DEGREE = 13
 
+############  Galois group object
+
+class WebGaloisGroup:
+  """
+    Class for retrieving transitive group information from the database
+  """
+  def __init__(self, label, data=None):
+    self.label = label
+    if data is None:
+      self._data = self._get_dbdata()
+    else:
+      self._data = data
+
+  @classmethod
+  def from_nt(cls, n, t):
+    return cls(base_label(n,t))
+  
+  def _get_dbdata(self):
+    tgdb = getDBConnection().transitivegroups.groups
+    return tgdb.find_one({'label': self.label})
+
+  def is_abelian(self):
+    if self._data['ab']==1: return True
+    return False
+
+  def order(self):
+    return self._data['order']
+
+############  Misc Functions
+
 def base_label(n,t):
   return str(n)+"T"+str(t)
 
@@ -298,9 +328,6 @@ def aliastable (C):
     ans +="<tr><td>%s</td><td>%s</td><td>%s</td></tr>"%(j, name, ntstring)
   ans += '</tbody></table>'
   return ans
-  
-
-#groups = [{'label':list(g),'gap_name':group_names[g][0],'human_name':', '.join(group_names[g][1:])} for g in group_names.keys()]
 
 def complete_group_code(code):
   if code in aliases.keys():
@@ -318,9 +345,11 @@ def complete_group_code(code):
 def complete_group_codes(codes):
   codes = codes.upper()
   ans = []
-  codes = re.sub(r'\((\d+),(\d+)\)', r'(\1Z\2)', codes)
+  # after upper casing, we can replace commas we want to keep with "z"
+  codes = re.sub(r'\((\d+),(\d+)\)', r'(\1z\2)', codes)
   codelist = codes.split(',')
-  codelist = [re.sub('Z',',',x) for x in codelist]
+  # now turn the z's back into commas
+  codelist = [re.sub('z',',',x) for x in codelist]
   for code in codelist:
     ans.extend(complete_group_code(code))
   return ans

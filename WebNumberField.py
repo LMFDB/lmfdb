@@ -158,3 +158,25 @@ class WebNumberField:
   def is_null(self):
     return self._data is None
     
+  def conductor(self):
+    """ Computes the conductor if the extension is abelian.
+        It does not check the abelian condition. """
+    D = self.disc()
+    plist = D.prime_factors()
+    K = self.K()
+    f = ZZ(1)
+    for p in plist:
+      e = K.factor(p)[0][0].ramification_index()
+      if p == ZZ(2):
+        e = K.factor(p)[0][0].ramification_index()
+        # ramification index must be a power of 2
+        f *= e*2
+        c = D.valuation(p)
+        res_deg = ZZ(self.degree()/e)
+        # adjust disc expo for unramified part
+        c = ZZ(c/res_deg)
+        if is_odd(c): f *= 2
+      else:
+        f *= p**(e.valuation(p)+1)
+    return f
+

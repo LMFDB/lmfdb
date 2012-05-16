@@ -247,6 +247,15 @@ def render_field_webpage(args):
     data['class_number'] = nf.class_number()
     t = nf.galois_t()
     n = nf.degree()
+    gg = WebGaloisGroup.from_nt(n,t)
+    data['is_galois'] = gg.order() == n
+    data['is_abelian'] = gg.is_abelian()
+    if gg.is_abelian():
+      data['conductor'] = nf.conductor()
+      if data['conductor'].is_prime():
+        data['conductor'] = "\(%s\)" % str(data['conductor'])
+      else:
+        data['conductor'] = "\(%s=%s\)"%(str(data['conductor']),latex(data['conductor'].factor()))
     data['galois_group'] = group_display_knowl(n,t,C)
     data['cclasses'] = cclasses_display_knowl(n,t,C)
     data['character_table'] = character_table_display_knowl(n,t,C)
