@@ -5,7 +5,7 @@ import re
 import pymongo
 import bson
 from utils import *
-from transitive_group import group_display_short
+from transitive_group import group_display_short, WebGaloisGroup
 #logger = make_logger("DC")
 
 def na_text():
@@ -55,6 +55,8 @@ class WebNumberField:
     return cls(data['label'], data)
 
   def _get_dbdata(self):
+#    from pymongo.connection import Connection
+#    nfdb = Connection(port=37010).numberfields.fields
     nfdb = base.getDBConnection().numberfields.fields
     return nfdb.find_one({'label': self.label})
 
@@ -72,6 +74,18 @@ class WebNumberField:
   # Just return the t-number of the Galois group
   def galois_t(self):
     return self._data['galois']['t']
+
+  # return the Galois group
+  def gg(self):
+    if not self.haskey('gg'):
+      self._data['gg'] = WebGaloisGroup.from_nt(self.degree(), self.galois_t())
+    return self._data['gg']
+
+  def is_galois(self):
+    return self.gg().order() == self.degree()
+
+  def is_abelian(self):
+    return self.gg().is_abelian()
 
   def coeffs(self):
     return string2list(self._data['coeffs'])
@@ -160,7 +174,10 @@ class WebNumberField:
     
   def conductor(self):
     """ Computes the conductor if the extension is abelian.
-        It does not check the abelian condition. """
+        It raises an exception if the field is not abelian.
+    """
+    if not self.is_abelian():
+      raise Exception('Invalid field for conductor')
     D = self.disc()
     plist = D.prime_factors()
     K = self.K()
@@ -180,3 +197,28 @@ class WebNumberField:
         f *= p**(e.valuation(p)+1)
     return f
 
+  def dirichlet_group(self):
+    from dirichlet_conrey import DirichletGroup_conrey
+    f = self.conductor()
+    G = DirichletGroup_conrey(f)
+    pram = f.prime_factors()
+    P = Primes()
+    p = P.first()
+    K = self.K()
+    
+    while p in pram:
+      p = P.next(p)
+    fres = K.factor(p)[0][0].residue_class_degree()
+    a = p ** fres
+    S = set(G[a].kernel())
+    timeout = 10000
+    while len(S) != self.degree():
+      timeout -= 1
+      p = P.next(p)
+      if p not in pram:
+        fres = K.factor(p)[0][0].residue_class_degree()
+        a = p ** fres
+        S = S.intersection(G[a].kernel())
+      if timeout ==0: raise Exception('timeout in dirichlet group')
+    
+    return [b for b in S]

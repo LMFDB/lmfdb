@@ -61,8 +61,11 @@ function show_code(system) {
             <tr><td>Discriminant:<td>&nbsp;&nbsp;<td>{{info.discriminant}}</tr>
             <tr><td>Ramified primes:<td>&nbsp;&nbsp;<td>{{info.ram_primes}}</tr>
   {% if info.is_abelian %}
+			<tr><td colspan="3">&nbsp;</tr>
             <tr><td colspan="3">Extension is Galois and abelian</tr>
             <tr><td>Conductor:<td>&nbsp;&nbsp;<td>{{info.conductor}}</tr>
+            <tr><td>Dirichlet
+				group:<td>&nbsp;&nbsp;<td>{{info.dirichlet_group|safe}}</tr> 
   {% elif info.is_galois %}
             <tr><td colspan="3">Extension is Galois</tr>
   {% endif %}

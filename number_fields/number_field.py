@@ -247,11 +247,12 @@ def render_field_webpage(args):
     data['class_number'] = nf.class_number()
     t = nf.galois_t()
     n = nf.degree()
-    gg = WebGaloisGroup.from_nt(n,t)
-    data['is_galois'] = gg.order() == n
-    data['is_abelian'] = gg.is_abelian()
-    if gg.is_abelian():
+    data['is_galois'] = nf.is_galois()
+    data['is_abelian'] = nf.is_abelian()
+    if nf.is_abelian():
       data['conductor'] = nf.conductor()
+      data['dirichlet_group'] = ['<a href = "%s">$\chi_{%s}(%s,&middot;)$</a>' % (url_for("render_Character", arg1=data['conductor'], arg2=j), data['conductor'], j) for j in nf.dirichlet_group()]
+      data['dirichlet_group'] = r'$\lbrace$'+', '.join(data['dirichlet_group'])+r'$\rbrace$'
       if data['conductor'].is_prime():
         data['conductor'] = "\(%s\)" % str(data['conductor'])
       else:
