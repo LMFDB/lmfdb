@@ -200,6 +200,8 @@ class WebNumberField:
   def dirichlet_group(self):
     from dirichlet_conrey import DirichletGroup_conrey
     f = self.conductor()
+    if f==1: # To make the trivial case work correctly
+      return [1]
     G = DirichletGroup_conrey(f)
     pram = f.prime_factors()
     P = Primes()

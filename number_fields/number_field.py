@@ -250,8 +250,10 @@ def render_field_webpage(args):
     data['is_galois'] = nf.is_galois()
     data['is_abelian'] = nf.is_abelian()
     if nf.is_abelian():
-      data['conductor'] = nf.conductor()
-      data['dirichlet_group'] = ['<a href = "%s">$\chi_{%s}(%s,&middot;)$</a>' % (url_for("render_Character", arg1=data['conductor'], arg2=j), data['conductor'], j) for j in nf.dirichlet_group()]
+      conductor = nf.conductor()
+      data['conductor'] = conductor
+      dirichlet_chars = nf.dirichlet_group()
+      data['dirichlet_group'] = ['<a href = "%s">$\chi_{%s}(%s,&middot;)$</a>' % (url_for("render_Character", arg1=data['conductor'], arg2=j), data['conductor'], j) for j in dirichlet_chars]
       data['dirichlet_group'] = r'$\lbrace$'+', '.join(data['dirichlet_group'])+r'$\rbrace$'
       if data['conductor'].is_prime():
         data['conductor'] = "\(%s\)" % str(data['conductor'])
@@ -300,6 +302,14 @@ def render_field_webpage(args):
     info['downloads_visible'] = True
     info['downloads'] = [('worksheet', '/')]
     info['friends'] = [('L-function', "/L/NumberField/%s" % label), ('Galois group', "/GaloisGroup/%dT%d" % (n, t))]
+    if 'dirichlet_group' in info:
+      info['friends'].append(('Dirichlet group', url_for("dirichlet_table",
+                           modulus=int(conductor), 
+                           char_number_list=','.join([str(a) for a in dirichlet_chars]),
+                           title='Group of Dirichlet Characters',
+                           poly = info['polynomial'])))
+#/Character/Dirichlet/table"))
+#dirichlet_chars
     info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), (Completename,url_for(".render_discriminants_page"))]
     # With Galois group labels, probably not needed here
     #info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), (Completename,url_for(".render_discriminants_page"))]

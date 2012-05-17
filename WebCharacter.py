@@ -10,6 +10,7 @@ from utils import parse_range, make_logger
 logger = make_logger("DC")
 #import web_modforms
 from modular_forms.elliptic_modular_forms.backend.web_modforms import *
+from WebNumberField import WebNumberField
 try:
   from dirichlet_conrey import *
 except:
@@ -134,6 +135,21 @@ class WebCharacter:
        #     self.primtf = True
        # else:
        #     self.primtf = False
+            if self.order < 16:
+                pol=str(gp.galoissubcyclo(self.modulus,self.chi_sage.kernel()))
+                sagepol = PolynomialRing(QQ, 'x')(pol)
+                R = sagepol.parent()
+                nf_pol = R(pari(sagepol).polredabs())
+                self.nf_pol = "\( %s \)" % latex(nf_pol)
+                wnf = WebNumberField.from_coeffs([int(c) for c in nf_pol.coeffs()])
+                if wnf.is_null():
+                    self.nf_friend = ''
+                else:
+                    self.nf_friend = '/NumberField/' + str(wnf.label)
+            else:
+                self.nf_pol = ''
+                self.nf_friend = ''
+
             if self.order == 2:
                 if self.conductor%2 == 1:
                     self.kronsymbol = r"\begin{equation} \chi_{%s}(a) = " %(self.number)
