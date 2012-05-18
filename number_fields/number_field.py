@@ -303,13 +303,10 @@ def render_field_webpage(args):
     info['downloads'] = [('worksheet', '/')]
     info['friends'] = [('L-function', "/L/NumberField/%s" % label), ('Galois group', "/GaloisGroup/%dT%d" % (n, t))]
     if 'dirichlet_group' in info:
-      info['friends'].append(('Dirichlet group', url_for("dirichlet_table",
+      info['friends'].append(('Dirichlet group', url_for("dirichlet_group_table",
                            modulus=int(conductor), 
                            char_number_list=','.join([str(a) for a in dirichlet_chars]),
-                           title='Group of Dirichlet Characters',
                            poly = info['polynomial'])))
-#/Character/Dirichlet/table"))
-#dirichlet_chars
     info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), (Completename,url_for(".render_discriminants_page"))]
     # With Galois group labels, probably not needed here
     #info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), (Completename,url_for(".render_discriminants_page"))]

@@ -163,6 +163,27 @@ table.props tr td:first-child {
             </tr>
         </table>
         
+        {# Fields #}
+        <h2>
+            {{ KNOWL('character.dirichlet.related_fields', 'Related number fields') }}
+        </h2>
+        <table>
+            <tr>
+                <td> Field of values </td>
+                <td>{{ valuefield }}</td>
+            </tr>
+            </tr>
+        {% if nf_pol is defined %}
+            <tr>
+                <td>{{ kername }}</td>
+                <td>Field <a href="/NumberField/{{nf_label}}">{{ nf_label }}</a></td>
+            </tr>
+            <tr><td></td>
+                <td>{{ nf_pol }} </td>
+            </tr>
+        {% endif %}
+        </table>
+
         {# Gauss sum #}
 
         <h2>

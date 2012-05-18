@@ -64,10 +64,6 @@ table.ntdata thead th.spaceleft {
     }
 </style>
 
-{% if char_number_list is defined %}
-  <h2>Character group for $\textrm{Gal}(K/\mathbb{Q})$</h2> 
-     $K$ is the global number field defined by {{ poly }}
-{% else %}
 <h2> Create tables for other moduli: </h2>
 <form>
     {#<input type="hidden" name="start" value="{{start}}"/>#}
@@ -83,8 +79,6 @@ table.ntdata thead th.spaceleft {
         <button type='submit' value='refine'>Create again</button>
     </td>
 </form>
-
-{% endif %}
 
 <div>
 <table class="ntdata" id="chitable">

@@ -183,7 +183,10 @@ def initCharacterInfo(web_chi, args, request):
         info['logvals'] = web_chi.logvals
         #info['galoisorbits'] = web_chi.galoisorbits
         #info['root_unity'] =  str(any(map(lambda x : r"\zeta" in x,  web_chi.vals)))
-        #  Code works, but currently not run
+        info['valuefield'] = web_chi.valuefield
+        info['kername'] = web_chi.kername
+        if web_chi.nf_pol:
+          info['nf_pol'] = web_chi.nf_pol
         info['unitgens'] = str(web_chi.unitgens)
         info['bound'] = int(web_chi.bound)
         if web_chi.order == 2:
@@ -200,8 +203,11 @@ def initCharacterInfo(web_chi, args, request):
             info['friends'] = []
         else:
             info['friends'] = [('Dirichlet L-function', '/L/Character/Dirichlet/'+smod+'/'+snum)]
-        if web_chi.nf_friend != '': # Don't add yet since this is currently always ''
-            info['friends'].append(('Number Field', web_chi.nf_friend))
+        if web_chi.valuefield_label != '':
+            info['friends'].append(('Field of values','/NumberField/' + str(web_chi.valuefield_label) ))
+        if web_chi.nf_friend != '':
+            info['friends'].append((info['kername'], web_chi.nf_friend))
+            info['nf_label'] = web_chi.nf_label
 
         info['navi'] = getPrevNextNavig(web_chi.modulus, web_chi.number, "character")
         
@@ -474,22 +480,16 @@ def kronecker_symbol(chi):
 def dirichlet_table(**args):
     modulus = request.args.get("modulus", 1, type=int)
     info = to_dict(args)
-    if "modulus" not in info:
-      info["modulus"] = modulus
+    info['modulus'] = modulus
     info["bread"] = [('Dirichlet Character Table', url_for("dirichlet_table")), ('result', ' ')]
     info['credit'] = 'Sage'
-    char_number_list = request.args.get("char_number_list")
-    if char_number_list is not None:
-      info['char_number_list'] = char_number_list
-      char_number_list = [int(a) for a in char_number_list.split(',')]
-      info['poly'] = request.args.get("poly", '???')
-    h, c, = get_entries(modulus, char_number_list)
+    h, c, = get_entries(modulus)
     info['headers'] = h
     info['contents'] = c
-    info['title'] = request.args.get("title", 'Dirichlet Characters')
+    info['title'] = 'Dirichlet Characters'
     return render_template("/dirichlet_characters/CharacterTable.html",**info)
 
-def get_entries(modulus, char_number_list=None):
+def get_entries(modulus):
     from dirichlet_conrey import DirichletGroup_conrey
     from sage.all import Integer
     from WebCharacter import log_value 
@@ -500,7 +500,34 @@ def get_entries(modulus, char_number_list=None):
     for chi in G:
         is_prim = chi.is_primitive()
         number = chi.number()
-        if char_number_list is None or number in char_number_list:
-            rows.append((number,is_prim, log_value(modulus,number)))
+        rows.append((number,is_prim, log_value(modulus,number)))
     return headers, rows
 
+@app.route("/Character/Dirichlet/grouptable")
+def dirichlet_group_table(**args):
+    modulus = request.args.get("modulus", 1, type=int)
+    info = to_dict(args)
+    if "modulus" not in info:
+        info["modulus"] = modulus
+    info["bread"] = [('Dirichlet Characters', url_for("render_Character")), 
+                     ('Dirichlet Character Table', url_for("dirichlet_table"))]
+    info['credit'] = 'Sage'
+    char_number_list = request.args.get("char_number_list")
+    if char_number_list is not None:
+      info['char_number_list'] = char_number_list
+      char_number_list = [int(a) for a in char_number_list.split(',')]
+      info['poly'] = request.args.get("poly", '???')
+    h, c = get_group_table(modulus, char_number_list)
+    info['headers'] = h
+    info['contents'] = c
+    info['title'] = 'Group of Dirichlet Characters'
+    return render_template("/dirichlet_characters/CharacterGroupTable.html",**info)
+
+def get_group_table(modulus, char_number_list):
+    # Move 1 to the front of the list
+    j=0
+    while char_number_list[j] != 1: j += 1
+    char_number_list.insert(0, char_number_list.pop(j))
+    headers = [j for j in char_number_list] # Just a copy
+    rows = [ [(j*k) % modulus for k in char_number_list] for j in char_number_list]
+    return headers, rows

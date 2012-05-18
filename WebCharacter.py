@@ -135,6 +135,23 @@ class WebCharacter:
        #     self.primtf = True
        # else:
        #     self.primtf = False
+            # Set data for related number fields
+            order2 = int(self.order)
+            if order2 % 4 == 2: 
+                order2 = order2/2
+            self.valuefield = r'\(\mathbb{Q}(\zeta_{%d})\)' % order2
+            if order2 == 1:
+                self.valuefield = r'\(\mathbb{Q}\)'
+            if order2 == 4:
+                self.valuefield = r'\(\mathbb{Q}(i)\)'
+            valuewnf = WebNumberField.from_cyclo(order2)
+            if not valuewnf.is_null():
+                self.valuefield_label = valuewnf.label
+            else:
+                self.valuefield_label = ''
+            self.texname = r'\chi_{%d}(%d, \cdot)' % (self.modulus, self.number)
+            self.kername = r'\(\mathbb{Q}(\zeta_{%d})^{\ker %s}\)' % (self.modulus, self.texname)
+
             if self.order < 16:
                 pol=str(gp.galoissubcyclo(self.modulus,self.chi_sage.kernel()))
                 sagepol = PolynomialRing(QQ, 'x')(pol)
@@ -146,6 +163,7 @@ class WebCharacter:
                     self.nf_friend = ''
                 else:
                     self.nf_friend = '/NumberField/' + str(wnf.label)
+                    self.nf_label = wnf.label
             else:
                 self.nf_pol = ''
                 self.nf_friend = ''

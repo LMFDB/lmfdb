@@ -54,6 +54,16 @@ class WebNumberField:
   def from_data(cls, data):
     return cls(data['label'], data)
 
+  # For cyclotomic fields
+  @classmethod
+  def from_cyclo(cls, n):
+    if euler_phi(n) > 15:
+      return cls('none') # Forced to fail
+    pol = pari.polcyclo(n)
+    R=PolynomialRing(QQ,'x')
+    coeffs=R(pol.polredabs()).coeffs()
+    return cls.from_coeffs(coeffs)
+
   def _get_dbdata(self):
 #    from pymongo.connection import Connection
 #    nfdb = Connection(port=37010).numberfields.fields
