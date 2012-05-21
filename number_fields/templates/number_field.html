@@ -92,6 +92,7 @@ function show_code(system) {
         <div class='magma nodisplay code'>&gt; ClassGroup(K);</div>
 	<p>
           {{ info.cl_group }}
+          {{ info.grh_label|safe }}
         </p>
 
 
@@ -116,12 +117,18 @@ function show_code(system) {
             <tr><td>Rank:<td>&nbsp;&nbsp;<td>${{info.unit_rank}}$</tr>
             <tr><td>Torsion generator:<td>&nbsp;&nbsp;<td>{{info.root_of_unity}}</tr>
 {% if info.unit_rank==1 %}
-            <tr><td>Fundamental unit:<td>&nbsp;&nbsp;<td>{{info.fund_units|safe}}</tr>
+            <tr><td>Fundamental unit:<td>&nbsp;&nbsp;<td>{{info.fund_units|safe}}
+          {{ info.grh_label|safe }}
+</tr>
 {% endif %}
 {% if info.unit_rank>1 %}
-            <tr><td>Fundamental units:<td>&nbsp;&nbsp;<td>{{info.fund_units|safe}}</tr>
+            <tr><td>Fundamental units:<td>&nbsp;&nbsp;<td>{{info.fund_units|safe}}
+          {{ info.grh_label|safe }}
+</tr>
 {% endif %}
-            <tr><td>Regulator:<td>&nbsp;&nbsp;<td>{{info.regulator}}</tr>
+            <tr><td>Regulator:<td>&nbsp;&nbsp;<td>{{info.regulator}}
+          {{ info.grh_label|safe }}
+           </tr>
           </table>
         </p>
 

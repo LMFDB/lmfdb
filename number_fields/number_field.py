@@ -236,6 +236,7 @@ def render_field_webpage(args):
       label = clean_input(args['label'])
       nf = WebNumberField(label)
       data = WebNumberField(label)._data
+      data = {}
     if data is None:
       bread.append(('Search results', ' '))
       label2 = re.sub(r'[<>]', '', args['label'])
@@ -244,6 +245,7 @@ def render_field_webpage(args):
       return search_input_error(info, bread)
 
     info['wnf'] = nf
+    data['degree'] = nf.degree()
     data['class_number'] = nf.class_number()
     t = nf.galois_t()
     n = nf.degree()
@@ -282,6 +284,9 @@ def render_field_webpage(args):
     zk = [latex(Ra(x)) for x in zk]
     zk = ['$%s$'%x for x in zk]
     zk = ', '.join(zk)
+    grh_label = '<small>(<a title="assuming GRH" knowl="nf.assuming_grh">assuming GRH</a>)</small>' if nf.used_grh() else ''
+    # Short version for properties
+    grh_lab = nf.short_grh_string()
     pretty_label = field_pretty(label)
     if label != pretty_label: pretty_label = "%s: %s"%(label, pretty_label)
     
@@ -289,19 +294,23 @@ def render_field_webpage(args):
     info.update({
         'label': pretty_label,
         'label_raw' : label,
-        'polynomial': web_latex(nf.K().defining_polynomial()),
+        'polynomial': web_latex_split_on_pm(nf.K().defining_polynomial()),
         'ram_primes': ram_primes,
         'integral_basis': zk,
         'regulator': web_latex(nf.regulator()),
         'unit_rank': nf.unit_rank(),
         'root_of_unity': web_latex(nf.K().primitive_root_of_unity()),
-        'fund_units': nf.units()
+        'fund_units': nf.units(),
+        'grh_label': grh_label
         })
 
     bread.append(('%s'%info['label_raw'],' '))
     info['downloads_visible'] = True
     info['downloads'] = [('worksheet', '/')]
-    info['friends'] = [('L-function', "/L/NumberField/%s" % label), ('Galois group', "/GaloisGroup/%dT%d" % (n, t))]
+    info['friends'] = []
+    if nf.can_class_number():
+      info['friends'].append(('L-function', "/L/NumberField/%s" % label))
+    info['friends'].append(('Galois group', "/GaloisGroup/%dT%d" % (n, t)))
     if 'dirichlet_group' in info:
       info['friends'].append(('Dirichlet group', url_for("dirichlet_group_table",
                            modulus=int(conductor), 
@@ -321,8 +330,8 @@ def render_field_webpage(args):
                    ('Signature:', '%s' %data['signature']),
                    ('Discriminant:', '$%s$' %data['disc_factor']),
                    ('Ramified '+primes+':', '%s' %ram_primes),
-                   ('Class number:', '%s' %data['class_number']),
-                   ('Class group:', '%s' %data['class_group_invs']),
+                   ('Class number:', '%s %s' %(data['class_number'],grh_lab)),
+                   ('Class group:', '%s %s' %(data['class_group_invs'],grh_lab)),
                    ('Galois Group:', group_display_short(data['degree'], t, C))
     ]
     from math_classes import NumberFieldGaloisGroup
@@ -330,7 +339,7 @@ def render_field_webpage(args):
       info["tim_number_field"] = NumberFieldGaloisGroup.find_one({"label":label})
     except AttributeError:
       pass
-    del info['_id']
+#    del info['_id']
     return render_template("number_field.html", properties2=properties2, credit=NF_credit, title = title, bread=bread, friends=info.pop('friends'), learnmore=info.pop('learnmore'), info=info )
 
 def format_coeffs2(coeffs):

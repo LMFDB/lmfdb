@@ -1205,16 +1205,17 @@ class DedekindZeta(Lfunction):   # added by DK
         self.__dict__.update(args)
 
         # Fetch the polynomial of the field from the database
-        poly_coeffs = WebNumberField(self.label).coeffs()
+        wnf = WebNumberField(self.label)
+        #poly_coeffs = wnf.coeffs()
 
         # Extract the L-function information from the polynomial
         R = QQ['x']; (x,) = R._first_ngens(1)
-        self.polynomial = sum([poly_coeffs[i]*x**i for i in range(len(poly_coeffs))])
-        self.NF = NumberField(self.polynomial, 'a')
-        self.signature = self.NF.signature()
+        # self.polynomial = sum([poly_coeffs[i]*x**i for i in range(len(poly_coeffs))])
+        self.NF = wnf.K() # NumberField(self.polynomial, 'a')
+        self.signature = wnf.signature() # self.NF.signature()
         self.sign = 1
         self.quasidegree = sum(self.signature)
-        self.level = self.NF.discriminant().abs()
+        self.level = wnf.disc().abs() # self.NF.discriminant().abs()
         self.degreeofN = self.NF.degree()
 
         self.Q_fe = float(sqrt(self.level)/(2**(self.signature[1]) * (math.pi)**(float(self.degreeofN)/2.0)))
@@ -1224,13 +1225,29 @@ class DedekindZeta(Lfunction):   # added by DK
         self.mu_fe = self.signature[0]*[0] # not in use?
         self.nu_fe = self.signature[1]*[0] # not in use?
         self.langlands = True
-        self.degree = self.signature[0] + 2 * self.signature[1] # N = r1 +2r2
+        #self.degree = self.signature[0] + 2 * self.signature[1] # N = r1 +2r2
+        self.degree = self.degreeofN
         self.dirichlet_coefficients = [Integer(x) for x in self.NF.zeta_coefficients(5000)]
-        self.h=self.NF.class_number()
-        self.R=self.NF.regulator()
+        self.h= wnf.class_number() # self.NF.class_number()
+        self.R= wnf.regulator() # self.NF.regulator()
         self.w=len(self.NF.roots_of_unity())
-        self.h=self.NF.class_number()
         self.res=RR(2**self.signature[0]*self.h*self.R/self.w) #r1 = self.signature[0]
+        self.grh = wnf.used_grh()
+        if self.degree > 1:
+          if wnf.is_abelian():
+            cond = wnf.conductor()
+            dir_group = wnf.dirichlet_group()
+            # Remove 1 from the list
+            j=0
+            while dir_group[j] != 1: j += 1
+            dir_group.pop(j)
+            self.factorization = r'\(\zeta_K(s) =\) <a href="/L/Riemann/">\(\zeta(s)\)</a>'
+            fullchargroup = wnf.full_dirichlet_group()
+            for j in dir_group:
+              chij = fullchargroup[j]
+              mycond = chij.conductor()
+              myj = j % mycond
+              self.factorization += r'\(\;\cdot\) <a href="/L/Character/Dirichlet/%d/%d/">\(L(s,\chi_{%d}(%d, \cdot))\)</a>'%(mycond, myj, mycond, myj)
 
         self.poles = [1,0] # poles of the Lambda(s) function
         self.residues = [self.res,-self.res] # residues of the Lambda(s) function

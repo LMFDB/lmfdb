@@ -332,6 +332,11 @@ def initLfunction(L,args, request):
     #info['citation'] = L.citation
 
     try:
+        info['factorization'] = L.factorization
+    except:
+        pass
+
+    try:
         info['url'] = L.url
     except:
         info['url'] =''

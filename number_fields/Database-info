@@ -4,7 +4,7 @@ degree ---> 7 (int)
 disc_abs_key ---> 01358451728309129 (see below)
 label ---> 7.7.58451728309129.1 (string)
 disc_sign ---> 1 (int)
-sig ---> 7,0 (string)
+signature ---> 7,0 (string)
 coeffs ---> 1163,-1433,-3988,1348,217,-84,-1,1 (string)
 ramps ---> [u'197'] (list of strings)
 galois ---> {u't': 1, u'n': 7} (bson.SON object)
@@ -13,12 +13,15 @@ _id ---> 4e777a1f0eb55b20bf000049 (string)
 Optional fields:
 ---------------
 class_number ---> 1 (int)
-cl_group ---> 3  (string)
+class_group ---> 3  (string)
 units ---> (string)
 reg ---> 3.2345 (float)
+used_grh ---> True (boolean)
 
 Deprecated fields:
 -----------------
+cl_group ---> 3  (string)
+sig ---> 7,0 (string)
 coefficients ---> [1163, -1433, -3988, 1348, 217, -84, -1, 1] (list of ints)
 
 disc_abs_key is a string produced as the second component of

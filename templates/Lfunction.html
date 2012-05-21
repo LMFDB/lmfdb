@@ -15,6 +15,13 @@
  <h2>{{ KNOWL('lfunction.euler_product', title='Euler product') }}</h2>
  <div>\[{{ eulerproduct }}\]</div>
 
+ {% if factorization is defined %}
+ <h2>Factorization</h2>
+  <div align="center">
+    {{ factorization|safe }} 
+  </div>
+ {% endif %}
+
  <h2> Imaginary part of the first few zeroes on the {{ KNOWL('lfunction.critical_line', title='critical line') }}</h2>
 
  {% if zeroeslink %}

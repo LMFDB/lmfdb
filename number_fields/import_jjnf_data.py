@@ -100,6 +100,12 @@ def getclgroup(K):
   reg = float(K.regulator())
   return h,clg,uk,reg
 
+# Take the polynomial as a string
+@timeout(120)
+def grhbnf(pol):
+  bnf = pari('bnfinit(' + pol + ',1)')
+  return bnf[7]
+
 def string2list(s):
   s = str(s)
   if s=='': return []
@@ -111,6 +117,8 @@ tot = len(li)
 print "finished importing li, number = %s"% tot
 count = 0
 
+PR = PolynomialRing(QQ, 'a')
+
 for F in li:
 #for F in li[0:1]:
     count += 1
@@ -121,7 +129,8 @@ for F in li:
     gal = makeb(d, T)
     s, dstr = make_disc_key(ZZ(D))
     ramps = [str(x) for x in ramps]
-    K = NumberField(coeff_to_poly(coeffs), 'a')
+    pol = coeff_to_poly(coeffs)
+    K = NumberField(pol, 'a')
     D = str(D)
     data = {
         'degree': d,
@@ -151,13 +160,29 @@ for F in li:
         h,clg,uk,reg = getclgroup(K)
         cltimeend = time.time()
         data['class_number'] = h
-        data['cl_group'] = makels(clg)
+        data['class_group'] = makels(clg)
         if cltimeend-cltime>=2: # slow, so save 
           data['reg'] = reg
           data['units'] = [web_latex(u) for u in uk]
       except: # Catch the time out exception
         print "*******************************************  Timed out"
-        pass
+        try:
+          bnf = grhbnf(pol)
+        except:
+          print "-------- Could not bnfinit"
+        else:
+          data['class_number'] = int(bnf[0][0])
+          clg = [int(j) for j in bnf[0][1]]
+          data['cl_group'] = makels(clg)
+          data['reg'] = float(bnf[1])
+          fu = str(bnf[4]) # "[3x^3+2, ...]"
+          fu = fu.replace('[','')
+          fu = fu.replace(']','')
+          fu = fu.replace('x','a')
+          uk = fu.split(',')
+          uk = [PR(j) for j in uk]
+          data['units'] = [web_latex(u) for u in uk]
+          data['used_grh'] = True
       info.update(data)
       #print "entering %s into database"%info
       if saving:

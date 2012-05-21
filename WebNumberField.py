@@ -101,7 +101,7 @@ class WebNumberField:
     return string2list(self._data['coeffs'])
 
   def signature(self):
-    return string2list(self._data['sig'])
+    return string2list(self._data['signature'])
 
   def degree(self):
     return self._data['degree']
@@ -156,21 +156,21 @@ class WebNumberField:
     return pol_to_html(str(coeff_to_poly(self.coeffs())))
 
   def class_group_invariants(self):
-    if not self.haskey('cl_group'):
+    if not self.haskey('class_group'):
       return na_text()
-    cg_list = string2list(self._data['cl_group'])    
+    cg_list = string2list(self._data['class_group'])    
     if cg_list == []:
       return 'Trivial'
     return cg_list
 
   def class_group_invariants_raw(self):
-    if not self.haskey('cl_group'):
+    if not self.haskey('class_group'):
       return [-1]
-    return string2list(self._data['cl_group'])    
+    return string2list(self._data['class_group'])    
 
   def class_group(self):
-    if self.haskey('cl_group'):
-      cg_list = string2list(self._data['cl_group'])
+    if self.haskey('class_group'):
+      cg_list = string2list(self._data['class_group'])
       return str(AbelianGroup(cg_list)) + ', order ' + str(self._data['class_number'])
     return na_text()
 
@@ -179,8 +179,22 @@ class WebNumberField:
       return self._data['class_number']
     return na_text()
 
+  def can_class_number(self):
+    if self.haskey('class_number'):
+      return True
+    return False
+
   def is_null(self):
     return self._data is None
+
+  def used_grh(self):
+    if self.haskey('used_grh'):
+      return self._data['used_grh']
+    return False
+
+  def short_grh_string(self):
+    if self.used_grh(): return '<span style="font-size: x-small">(GRH)</span>'
+    return ''
     
   def conductor(self):
     """ Computes the conductor if the extension is abelian.
@@ -234,3 +248,8 @@ class WebNumberField:
       if timeout ==0: raise Exception('timeout in dirichlet group')
     
     return [b for b in S]
+
+  def full_dirichlet_group(self):
+    from dirichlet_conrey import DirichletGroup_conrey
+    f = self.conductor()
+    return DirichletGroup_conrey(f)

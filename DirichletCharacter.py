@@ -529,5 +529,8 @@ def get_group_table(modulus, char_number_list):
     while char_number_list[j] != 1: j += 1
     char_number_list.insert(0, char_number_list.pop(j))
     headers = [j for j in char_number_list] # Just a copy
-    rows = [ [(j*k) % modulus for k in char_number_list] for j in char_number_list]
+    if modulus==1:
+      rows =  [[1]]
+    else:
+      rows = [ [(j*k) % modulus for k in char_number_list] for j in char_number_list]
     return headers, rows

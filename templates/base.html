@@ -27,6 +27,15 @@
 MathJax.Hub.Config({
   extensions: ["tex2jax.js","TeX/AMSmath.js","TeX/AMSsymbols.js"],
   jax: ["input/TeX","output/HTML-CSS"],
+//  TeX: {
+//        Macros: {
+//	  C: '{\\mathbb{C}}',
+//	  R: '{\\mathbb{R}}',
+//	  Q: '{\\mathbb{Q}}',
+//	  Z: '{\\mathbb{Z}}',
+//	},
+//        MAXBUFFER: 100*1024
+//     },
   tex2jax: {
     inlineMath: [['$','$'],["\\(","\\)"]],
     processEscapes: true,
