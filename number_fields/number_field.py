@@ -195,7 +195,7 @@ def number_field_render_webpage():
         discriminant_list_endpoints = [-10000,-1000,-100,0,100,1000,10000]
         discriminant_list = ["%s..%s" % (start,end-1) for start, end in zip(discriminant_list_endpoints[:-1], discriminant_list_endpoints[1:])]
         info = {
-        'degree_list': range(1,12),
+        'degree_list': range(1,max_deg+1),
         'signature_list': sig_list, 
         'class_number_list': range(1,6)+['6..10'],
         'count': '20',
