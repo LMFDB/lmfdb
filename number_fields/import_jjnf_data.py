@@ -136,7 +136,6 @@ for F in li:
         'degree': d,
         'disc_abs_key': dstr,
         'disc_sign': s,
-        'galois': gal,
         'ramps': ramps,
         'coeffs': makels(coeffs),
         'sig': makels(sig)
@@ -186,6 +185,7 @@ for F in li:
       info.update(data)
       #print "entering %s into database"%info
       if saving:
+        info['galois'] = gal
         fields.save(info)
     else:
       print "field already in database"

@@ -2,6 +2,13 @@
 
 {% block content %}
 
+<style type="text/css">
+table.ntdata a {
+  display:inline;
+  padding:0px;
+}
+</style>
+
 <form id="re-search">
 <input type="hidden" name="start" value="{{info.start}}"/>
 <input type="hidden" name="paging" value="0"/>
@@ -148,17 +155,20 @@
 <th>Order</th>
 <th>Parity</th>
 <th>Solvable</th>
+<th>Other Low Degree Representations</th>
 </tr>
 </thead>
 <tbody>
 
 {% for group in info.groups: %}
+{% set wgg = info.wgg(group) %}
 <tr>
 <td><a href="/GaloisGroup/{{group.label}}">{{group.label}}</a></td>
 <td>{{info.group_display([group.n, group.t])}}</td>
 <td align="right">{{group.order}}</td>
 <td align="right">{{group.parity}}</td>
 <td align="center">{{info.yesno(group.solv)}}</td>
+<td >{{wgg.otherrep_list()|safe}}</td>
 </tr>
 
 {% endfor %}

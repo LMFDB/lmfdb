@@ -32,9 +32,19 @@ class WebGaloisGroup:
   def from_nt(cls, n, t):
     return cls(base_label(n,t))
   
+  @classmethod
+  def from_data(cls, data):
+    return cls(data['label'], data)
+  
   def _get_dbdata(self):
     tgdb = getDBConnection().transitivegroups.groups
     return tgdb.find_one({'label': self.label})
+
+  def n(self):
+    return self._data['n']
+
+  def t(self):
+    return self._data['t']
 
   def is_abelian(self):
     if self._data['ab']==1: return True
@@ -43,10 +53,38 @@ class WebGaloisGroup:
   def order(self):
     return self._data['order']
 
+  def otherrep_list(self):
+    reps = [(j[0],j[1]) for j in self._data['repns']]
+    me = (self.n(), self.t())
+    difreps = list(set(reps))
+    difreps.sort()
+    ans = ''
+    for k in difreps:
+      if ans != '':
+        ans += ', '
+      cnt = reps.count(k)
+      start = 'a'
+      if k == me: start = chr(ord(start)+1)
+      if cnt == 1:
+        ans += trylink(k[0],k[1])
+        if k==me: ans += 'b'
+      else:
+        for j in range(cnt):
+          if j>0: ans += ', '
+          ans += "%s%s" % (trylink(k[0], k[1]), start)
+          start = chr(ord(start)+1)
+    return ans
+
+
 ############  Misc Functions
 
 def base_label(n,t):
   return str(n)+"T"+str(t)
+
+def trylink(n,t):
+  if n<=MAX_GROUP_DEGREE:
+    return '<a href="/GaloisGroup/%dT%d">%dT%d</a>' % (n, t, n, t)
+  return '%dT%d' % (n,t)
 
 def group_display_short(n, t, C):
   label = base_label(n,t)
@@ -142,7 +180,7 @@ def group_knowl_guts(n,t, C):
   rest += subfield_display(C, n, group['subs'])
   rest += '</blockquote></div>'
   rest += '<div><h3>Other low-degree representations</h3><blockquote>'
-  rest += otherrep_display(C, group['repns'])
+  rest += otherrep_display(n,t,C, group['repns'])
   rest += '</blockquote></div>'
 
   if group['pretty']:
@@ -202,16 +240,34 @@ def subfield_display(C, n, subs):
     ans += substrs[deg]+'</p>'
   return ans
 
-def otherrep_display(C, reps):
+def otherrep_display(n,t,C, reps):
+  reps = [(j[0],j[1]) for j in reps]
+  me = (n, t)
+  difreps = list(set(reps))
+  difreps.sort()
   ans = ''
-  for k in reps:
+  for k in difreps:
     if ans != '':
       ans += ', '
-    name = str(k[0])+'T'+str(k[1])
-    if k[0] <= MAX_GROUP_DEGREE:
-      ans += group_display_knowl(k[0], k[1], C, name)
+    cnt = reps.count(k)
+    start = 'a'
+    name = "%dT%d" % (k[0], k[1])
+    if k == me: start = chr(ord(start)+1)
+    if cnt==1:
+      if k[0] <= MAX_GROUP_DEGREE:
+        ans += group_display_knowl(k[0],k[1],C,name)
+      else:
+        ans += name
+      if k==me: ans += 'b'
     else:
-      ans += name
+      for j in range(cnt):
+        if j>0: ans += ', '
+        if k[0] <= MAX_GROUP_DEGREE:
+          ans += "%s%s" % (group_display_knowl(k[0], k[1],C,name), start)
+        else:
+          ans += "%s%s" % (name, start)
+        start = chr(ord(start)+1)
+
   if ans == '':
     ans = 'None'
   return ans

@@ -15,14 +15,14 @@ import sage.all
 from sage.all import ZZ, latex, gap
 
 # Test to see if this gap installation knows about transitive groups
-logger = make_logger("GG")
+#logger = make_logger("GG")
 
 try:
   G = gap.TransitiveGroup(9,2)
 except:
   logger.fatal("It looks like the SPKGes gap_packages and database_gap are not installed on the server.  Please install them via 'sage -i ...' and try again.")
 
-from transitive_group import group_display_short, group_display_long, group_display_inertia, group_knowl_guts, subfield_display, otherrep_display, resolve_display, conjclasses, generators, chartable, aliastable
+from transitive_group import group_display_short, group_display_long, group_display_inertia, group_knowl_guts, subfield_display, otherrep_display, resolve_display, conjclasses, generators, chartable, aliastable, WebGaloisGroup
 
 GG_credit = 'GAP and J. Jones'
 
@@ -149,6 +149,7 @@ def galois_group_search(**args):
   info['group_display'] = group_display_shortC(C)
   info['report'] = "found %s groups"%nres
   info['yesno'] = yesno
+  info['wgg'] = WebGaloisGroup.from_data
   info['start'] = start
   info['number'] = nres
   if nres==1:
@@ -203,7 +204,7 @@ def render_group_webpage(args):
     data['subinfo'] = subfield_display(C, n, data['subs'])
     data['resolve'] = resolve_display(C, data['resolve'])
 #    if len(data['resolve']) == 0: data['resolve'] = 'None'
-    data['otherreps'] = otherrep_display(C, data['repns'])
+    data['otherreps'] = otherrep_display(n,t,C, data['repns'])
     prop2 = [
              ('Order:', '\(%s\)' % order ),
              ('n:', '\(%s\)' % data['n']),
