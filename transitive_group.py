@@ -53,6 +53,11 @@ class WebGaloisGroup:
   def order(self):
     return self._data['order']
 
+  def display_short(self):
+    if self._data['pretty']:
+      return self._data['pretty']
+    return self._data['name']
+
   def otherrep_list(self):
     reps = [(j[0],j[1]) for j in self._data['repns']]
     me = (self.n(), self.t())

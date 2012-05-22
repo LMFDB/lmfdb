@@ -440,6 +440,22 @@ class NumberFieldGaloisGroup(object):
         """
         More-or-less standardized name of the abstract group
         """
+        from WebNumberField import WebNumberField
+        import re
+        wnf = WebNumberField.from_polredabs(self.polredabs())
+        if not wnf.is_null(): 
+            mygalstring = wnf.galois_string()
+            if re.search('Trivial', mygalstring) is not None:
+                return '$C_1$'
+            # Have to remove dollar signs
+            return mygalstring
+        if self.polredabs().degree()<12:
+            # Let pari compute it for us now
+            from sage.all import pari
+	    galt = int(list(pari('polgalois('+str(self.polredabs())+')'))[2])
+            from transitive_group import WebGaloisGroup
+            tg = WebGaloisGroup.from_nt(self.polredabs().degree(),galt)
+            return tg.display_short()
         return self._data["G-Name"]
         
     def computation_data(self):

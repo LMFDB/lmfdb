@@ -49,6 +49,10 @@ class WebNumberField:
     else:
       raise Exception('wrong type')
 
+  @classmethod
+  def from_polredabs(cls, pol):
+    return cls.from_coeffs([int(c) for c in pol.coeffs()])
+
   # If we already have the database entry
   @classmethod
   def from_data(cls, data):

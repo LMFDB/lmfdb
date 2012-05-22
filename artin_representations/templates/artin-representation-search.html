@@ -66,7 +66,7 @@
 	  {% else %}
 	      <th>${{artin.number_field_galois_group().polredabslatex()}}$</th>
 	  {% endif %}
-	  <th>${{artin.number_field_galois_group().G_name()}}$</th>
+	  <td align="center">{{artin.number_field_galois_group().G_name()}}</td>
 	  <th>${{artin.number_field_galois_group().size()}}$</th>
 	  <th>${{artin.processed_root_number()}}$</th>
 	  <th> ${{artin.indicator()}}$</th>
