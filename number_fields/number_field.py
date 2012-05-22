@@ -547,6 +547,18 @@ def number_field_search(**args):
       else:
         info['err'] = 'Error parsing input for unramified primes.  It needs to be an integer (such as 5), or a comma-separated list of integers (such as 2,3,11).'
         return search_input_error(info, bread)
+    if info.get('ram_primes'):
+      # now we want a list of strings, no spaces, which might be big ints
+      info['ram_primes'] = clean_input(info['ram_primes'])
+      if LIST_SIMPLE_RE.match(info['ram_primes']):
+        ram_primes = info['ram_primes'].split(',')
+        if str(info['ram_quantifier']) == 'some':
+          query['ramps'] = {'$all': ram_primes}
+        else:
+          query['ramps'] = ram_primes
+      else:
+        info['err'] = 'Error parsing input for ramified primes.  It needs to be an integer (such as 5), or a comma-separated list of integers (such as 2,3,11).'
+        return search_input_error(info, bread)
 
     count_default=20
     if info.get('count'):

@@ -15,14 +15,28 @@
 
 <td align=left> {{KNOWL('nf.signature', title='signature')}} <td align=left> <input type='text' name='sig' size=5 value="{{info.sig}}"></td>
 
-<td align=left> {{KNOWL('nf.galois_group', title='Galois group')}} <td align=left> <input type='text' name='galois_group' size=3 value="{{info.galois_group}}"></td></tr>
+<td align=left> {{KNOWL('nf.galois_group', title='Galois group')}} <td align=left> <input type='text' name='galois_group' size="5" value="{{info.galois_group}}"></td></tr>
 <tr>
 <td align=left> {{KNOWL('nf.class_number', title='class number')}} <td align=left> <input type='text' name='class_number' size=3 value="{{info.class_number}}"></td>
-<td align=left> {{KNOWL('nf.ideal_class_group', title='class group')}} <td align=left> <input type='text' name='cl_group' size=5 value="{{info.cl_group}}"></td>
-<td align=left> {{KNOWL('nf.unramified_prime', title='unramified primes')}}<td align=left> <input type='text' name='ur_primes' size=3 value="{{info.ur_primes}}"></td>
+<td align=left> {{KNOWL('nf.ideal_class_group', title='class group')}} <td align=left> <input type='text' name='cl_group' size="5" value="{{info.cl_group}}"></td>
+<td align=left> {{KNOWL('nf.unramified_prime', title='unramified primes')}}<td align=left> <input type='text' name='ur_primes' size="5" value="{{info.ur_primes}}"></td>
 </tr>
 <tr>
 <td align='left'> {{KNOWL('nf.discriminant', title='discriminant')}} range <td align='left' colspan='2'> <input type='text' name='discriminant' size='20' value="{{info.discriminant}}"></td>
+<td align=right>
+{% if info.ram_quantifier == 'some' %}
+<select name = "ram_quantifier">
+  <option selected='yes' value='some'>some</option>
+  <option value='all'>all</option>
+</select>
+{% else %}
+<select name = "ram_quantifier">
+  <option value='some'>some</option>
+  <option selected='yes' value='all'>all</option>
+</select>
+{% endif %}
+<td align=left>
+ {{KNOWL('nf.ramified_prime', title='ramified primes')}}<td align=left> <input type='text' name='ram_primes' size=5 value="{{info.ram_primes}}"></td>
 </tr>
 
 <tr>
@@ -122,6 +136,8 @@ Download all search results for
 <input type="hidden" name="class_number" value="{{info.class_number}}"/>
 <input type="hidden" name="cl_group" value="{{info.cl_group}}"/>
 <input type="hidden" name="ur_primes" value="{{info.ur_primes}}"/>
+<input type="hidden" name="ram_primes" value="{{info.ram_primes}}"/>
+<input type="hidden" name="ram_quantifier" value="{{info.ram_quantifier}}"/>
 <input type="hidden" name="discriminant" value="{{info.discriminant}}"/>
 
 </form>
