@@ -267,7 +267,7 @@ def render_fd_plot(level,info,**kwds):
         emf_logger.debug('Drawing fundamental domain for group {0}({1})'.format(group,level))
         domain=draw_fundamental_domain(level,group,**kwds)
             #G=Gamma0(level)
-            #C[db_name][collection].insert({'level':int(level), 'type':type, 'index':int(G.index), 'G':pymongo.binary.Binary(dumps(G)), 'domain': pymongo.binary.Binary(dumps(domain))})
+            #C[db_name][collection].insert({'level':int(level), 'type':type, 'index':int(G.index), 'G':bson.binary.Binary(dumps(G)), 'domain': bson.binary.Binary(dumps(domain))})
             #emf_logger.debug('Inserting group and fundamental domain in database')
     return domain    
 
