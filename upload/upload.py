@@ -17,7 +17,7 @@ from flask import render_template, request, abort, Blueprint, url_for
 from flaskext.login import login_required, current_user
 from gridfs import GridFS
 from os import path
-from pymongo.objectid import ObjectId
+from bson.objectid import ObjectId
 from urlparse import urlparse
 from urllib import urlopen
 from utils import MongoDBPagination

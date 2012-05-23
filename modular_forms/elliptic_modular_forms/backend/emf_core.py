@@ -29,7 +29,7 @@ from sage.all import ZZ,Newform,is_squarefree,squarefree_part,factor,is_square,d
 import re
 
 from modular_forms.elliptic_modular_forms import emf_logger as logger
-import pymongo, pymongo.binary
+import pymongo, bson.binary
 
 ####
 #### Core functions for spaces of cuspforms

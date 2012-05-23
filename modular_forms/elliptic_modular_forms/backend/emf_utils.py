@@ -29,7 +29,7 @@ from sage.all import dimension_new_cusp_forms,vector,dimension_modular_forms,dim
 from modular_forms.backend.mf_utils import my_get
 from plot_dom import draw_fundamental_domain
 import base
-from pymongo.binary import *
+from bson.binary import *
 try:
     from dirichlet_conrey import *
 except:
