@@ -56,10 +56,10 @@ function show_code(system) {
         <div class='magma nodisplay code'>&gt; PrimeDivisors(Discriminant(K));</div>
         <p>
           <table>
-            <tr><td>Degree:<td>&nbsp;&nbsp;<td>{{info.degree}}</tr>
-            <tr><td>Signature:<td>&nbsp;&nbsp;<td>{{info.signature}}</tr>
+            <tr><td>Degree:<td>&nbsp;&nbsp;<td>${{info.degree}}$</tr>
+            <tr><td>Signature:<td>&nbsp;&nbsp;<td>${{info.signature}}$</tr>
             <tr><td>Discriminant:<td>&nbsp;&nbsp;<td>{{info.discriminant}}</tr>
-            <tr><td>Ramified primes:<td>&nbsp;&nbsp;<td>{{info.ram_primes}}</tr>
+            <tr><td>Ramified primes:<td>&nbsp;&nbsp;<td>${{info.ram_primes}}$</tr>
   {% if info.is_abelian %}
 			<tr><td colspan="3">&nbsp;</tr>
             <tr><td colspan="3">Extension is Galois and abelian</tr>

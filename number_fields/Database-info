@@ -20,9 +20,7 @@ used_grh ---> True (boolean)
 
 Deprecated fields:
 -----------------
-cl_group ---> 3  (string)
-sig ---> 7,0 (string)
-coefficients ---> [1163, -1433, -3988, 1348, 217, -84, -1, 1] (list of ints)
+None
 
 disc_abs_key is a string produced as the second component of
 

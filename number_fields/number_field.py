@@ -327,9 +327,9 @@ def render_field_webpage(args):
          primes='primes'
 
     properties2 = [('Degree:', '%s' %data['degree']),
-                   ('Signature:', '%s' %data['signature']),
+                   ('Signature:', '$%s$' %data['signature']),
                    ('Discriminant:', '$%s$' %data['disc_factor']),
-                   ('Ramified '+primes+':', '%s' %ram_primes),
+                   ('Ramified '+primes+':', '$%s$' %ram_primes),
                    ('Class number:', '%s %s' %(data['class_number'],grh_lab)),
                    ('Class group:', '%s %s' %(data['class_group_invs'],grh_lab)),
                    ('Galois Group:', group_display_short(data['degree'], t, C))
