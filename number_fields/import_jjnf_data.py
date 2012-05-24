@@ -103,7 +103,7 @@ def getclgroup(K):
 # Take the polynomial as a string
 @timeout(120)
 def grhbnf(pol):
-  bnf = pari('bnfinit(' + pol + ',1)')
+  bnf = pari('bnfinit(' + str(pol) + ',1)')
   return bnf[7]
 
 def string2list(s):
@@ -138,15 +138,17 @@ for F in li:
         'disc_sign': s,
         'ramps': ramps,
         'coeffs': makels(coeffs),
-        'sig': makels(sig)
+        'signature': makels(sig)
     }
     index=1
     is_new = True
+    holdfield = ''
     for field in fields.find({'degree': d, 
-                 'sig': data['sig'],
+                 'signature': data['signature'],
                  'disc_abs_key': dstr}):
       index +=1
       if field['coeffs'] == data['coeffs']:
+        holdfield = field
         is_new = False
         break
 
@@ -172,7 +174,7 @@ for F in li:
         else:
           data['class_number'] = int(bnf[0][0])
           clg = [int(j) for j in bnf[0][1]]
-          data['cl_group'] = makels(clg)
+          data['class_group'] = makels(clg)
           data['reg'] = float(bnf[1])
           fu = str(bnf[4]) # "[3x^3+2, ...]"
           fu = fu.replace('[','')
@@ -189,8 +191,5 @@ for F in li:
         fields.save(info)
     else:
       print "field already in database"
-#    if time.time() - t > 5:
-#      print "\t", label
-#      t = time.time()
     print ""
 

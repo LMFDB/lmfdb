@@ -69,7 +69,7 @@ class WebGaloisGroup:
         ans += ', '
       cnt = reps.count(k)
       start = 'a'
-      if k == me: start = chr(ord(start)+1)
+      if k == me: start = nextchr(start)
       if cnt == 1:
         ans += trylink(k[0],k[1])
         if k==me: ans += 'b'
@@ -77,7 +77,7 @@ class WebGaloisGroup:
         for j in range(cnt):
           if j>0: ans += ', '
           ans += "%s%s" % (trylink(k[0], k[1]), start)
-          start = chr(ord(start)+1)
+          start = nextchr(start)
     return ans
 
 
@@ -85,6 +85,18 @@ class WebGaloisGroup:
 
 def base_label(n,t):
   return str(n)+"T"+str(t)
+
+# When labeling other rep'ns, we go successively through characters
+# This can exhaust the alphabet.  So, c could be a longer string!
+def nextchr(c):
+  s = ord('a')-1 # really 96
+  l = [ZZ(ord(j)-s) for j in list(c)]
+  l.reverse()
+  tot = ZZ(l, 27)+1 
+  newl = tot.digits(27)
+  newl.reverse()
+  newl = map(lambda x: x+1 if x==0 else x,newl)
+  return ''.join([chr(j+s) for j in newl])
 
 def trylink(n,t):
   if n<=MAX_GROUP_DEGREE:
