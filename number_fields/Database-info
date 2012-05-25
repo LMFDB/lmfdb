@@ -8,7 +8,6 @@ signature ---> 7,0 (string)
 coeffs ---> 1163,-1433,-3988,1348,217,-84,-1,1 (string)
 ramps ---> [u'197'] (list of strings)
 galois ---> {u't': 1, u'n': 7} (bson.SON object)
-_id ---> 4e777a1f0eb55b20bf000049 (string)
 
 Optional fields:
 ---------------

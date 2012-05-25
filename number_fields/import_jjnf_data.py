@@ -172,6 +172,7 @@ for F in li:
         except:
           print "-------- Could not bnfinit"
         else:
+          print "++++++++ bnf ok"
           data['class_number'] = int(bnf[0][0])
           clg = [int(j) for j in bnf[0][1]]
           data['class_group'] = makels(clg)

@@ -1,0 +1,18 @@
+Fields in the transitive group database.
+
+label ---> 5T1 (string)
+n ---> 5       (int)
+t ---> 1       (int)
+auts ---> 5    (int)
+order ---> 5   (int)
+parity ---> 1  (int = 1 or -1)
+ab ---> 1      (int = 0 or 1)
+prim ---> 1    (int = 0 or 1)
+cyc ---> 1     (int = 0 or 1)
+solv ---> 1    (int = 0 or 1)
+subs ---> [[2, 1]]
+repns ---> [[9, 4], [18, 3]]
+resolve ---> [[2, [2, 1]], [3, [3, 1]], [6, [3, 2]], [6, [6, 1]]]
+name ---> C(5) = 5 (string)
+pretty ---> $C_5$  (string or None)
+
