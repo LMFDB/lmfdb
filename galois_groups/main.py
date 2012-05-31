@@ -24,7 +24,7 @@ except:
 
 from transitive_group import group_display_short, group_display_long, group_display_inertia, group_knowl_guts, subfield_display, otherrep_display, resolve_display, conjclasses, generators, chartable, aliastable, WebGaloisGroup
 
-GG_credit = 'GAP and J. Jones'
+GG_credit = 'GAP, Magma, and J. Jones'
 
 def get_bread(breads = []):
   bc = [("Galois Groups", url_for(".index"))]
@@ -57,11 +57,11 @@ def index():
   if len(request.args) != 0:
     return galois_group_search(**request.args)
   info = {'count': 20}
-  info['degree_list'] = range(14)[2:]
+  info['degree_list'] = range(16)[2:]
   return render_template("gg-index.html", title ="Galois Groups", bread = bread, info = info, credit=GG_credit)
 
-@galois_groups_page.route("/<label>")
-def by_label(label):
+@app.route("/<label>")
+def gg_by_label(label):
     return render_group_webpage({'label' : label})
 
 @galois_groups_page.route("/search", methods = ["GET", "POST"])
@@ -112,6 +112,32 @@ def galois_group_search(**args):
         query[param] = 1
       elif info[param] == str(-1):
         query[param] = -1 if param == 'parity' else 0
+
+  # Determine if we have any composite degrees
+  info['show_subs'] = True
+  if info.get('n'):
+    info['show_subs'] = False # now only show subs if a composite n is allowed
+    nparam = info.get('n')
+    nparam.replace('..','-')
+    nlist = nparam.split(',')
+    found = False
+    for nl in nlist:
+      if '-' in nl:
+        inx = nl.index('-')
+        ll, hh = nl[:inx], nl[inx+1:]
+        hh = int(hh)
+        jj=int(ll)
+        while jj<=hh and not found:
+          if not( ZZ(jj).is_prime() or ZZ(jj) == 1 ):
+            found = True
+          jj += 1
+        if found: break
+      else:
+        jj = ZZ(nl)
+        if not ( ZZ(jj).is_prime() or ZZ(jj) == 1 ):
+          found = True
+          break
+    if found: info['show_subs'] = True
 
   count_default=20
   if info.get('count'):
