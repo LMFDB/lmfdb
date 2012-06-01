@@ -13,7 +13,7 @@ from utils import ajax_more, image_src, web_latex, to_dict, parse_range
 
 from pymongo.connection import Connection
 
-MAX_GROUP_DEGREE = 15
+MAX_GROUP_DEGREE = 23
 
 ############  Galois group object
 
@@ -213,7 +213,7 @@ def group_knowl_guts(n,t, C):
   rest += otherrep_display(n,t,C, group['repns'])
   rest += '</blockquote></div>'
   rest += '<div align="right">'
-  rest += '<a href="%s">%sT%s home page</a>'%(url_for('gg_by_label', label=label), str(n), str(t))
+  rest += '<a href="/GaloisGroup/%s">%sT%s home page</a>'%(label, str(n), str(t))
   rest += '</div>'
 
 

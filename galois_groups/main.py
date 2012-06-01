@@ -51,6 +51,10 @@ def group_display_shortC(C):
 
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
+@galois_groups_page.route("/<label>")
+def by_label(label):
+    return render_group_webpage({'label' : label})
+
 @galois_groups_page.route("/")
 def index():
   bread = get_bread()
@@ -59,10 +63,6 @@ def index():
   info = {'count': 20}
   info['degree_list'] = range(16)[2:]
   return render_template("gg-index.html", title ="Galois Groups", bread = bread, info = info, credit=GG_credit)
-
-@app.route("/<label>")
-def gg_by_label(label):
-    return render_group_webpage({'label' : label})
 
 @galois_groups_page.route("/search", methods = ["GET", "POST"])
 def search():
@@ -74,7 +74,6 @@ def search():
     return "ERROR: we always do http get to explicitly display the search parameters"
   else:
     return flask.redirect(404)
-
 
 def galois_group_search(**args):
   info = to_dict(args)
@@ -221,7 +220,10 @@ def render_group_webpage(args):
       G = gap.SmallGroup(n,t)
     else:
       G = gap.TransitiveGroup(n,t)
-    ctable = chartable(n,t)
+    if ZZ(order)<ZZ('10000000000'):
+      ctable = chartable(n,t)
+    else:
+      ctable = 'Group too large'
     data['gens'] = generators(n,t)
     if n==1 and t==1: data['gens'] = 'None needed'
     data['chartable'] = ctable

@@ -35,6 +35,7 @@ for F in li:
     t, order, parity, auts, name, res, other, subs = g
     lab = make_label(n,t)
     g1 = gr.find_one({'label': lab})
+    order = str(order)
 
     if g1 is None:
       print "new group %s" % lab
