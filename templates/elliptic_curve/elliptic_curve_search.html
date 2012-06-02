@@ -66,18 +66,18 @@ table td.params {
 <h2> Results ({{info.report}})</h2>
 <table>
 <tr>
-  <th class="center">{{ KNOWL('ec.isogeny_class', title='Isogeny class') }}</th>
   <th class="center">{{ KNOWL('ec.q.lmfdb_label', title='LMFDB label')}}</th>
   <th class="center">{{ KNOWL('ec.q.cremona_label', title='Cremona label')}}</th>
+  <th class="center">{{ KNOWL('ec.isogeny_class', title='Isogeny class') }}</th>
   <th align="left">[a<sub>1</sub>,  a<sub>2</sub>, a<sub>3</sub>, a<sub>4</sub>, a<sub>6</sub>]</th>
   <th class="center">{{ KNOWL('ec.q.rank', title='Rank') }}</th>
   <th class="center">{{ KNOWL('ec.q.torsion_order', title='Torsion order') }}</th>
 </tr>
 {% for curve in info.curves: %}
 <tr>
-<td class="center"><a href="/EllipticCurve/Q/{{curve.lmfdb_iso}}">{{curve.lmfdb_iso}}</a></td>
 <td class="center"><a href="/EllipticCurve/Q/{{curve.lmfdb_label}}">{{curve.lmfdb_label}}</a></td>
 <td class="center">{{curve.label}}</td>
+<td class="center"><a href="/EllipticCurve/Q/{{curve.lmfdb_iso}}">{{curve.lmfdb_iso}}</a></td>
 <td class="params">{{info.format_ainvs(curve.ainvs)}}</td>
 <td class="center"><a href="/EllipticCurve/Q?conductor={{info.conductor}}&rank={{curve.rank}}&torsion={{info.torsion}}&torsion_structure={{info.torsion_structure}}&sha_an={{info.sha_an}}">{{curve.rank}}</a></td>
 <td class="center"><a href="/EllipticCurve/Q?conductor={{info.conductor}}&rank={{info.rank}}&torsion={{curve.torsion}}&torsion_structure={{info.torsion_structure}}&sha_an={{info.sha_an}}">{{curve.torsion}}</a></td>
