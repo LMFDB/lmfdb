@@ -1,5 +1,6 @@
 syntax:glob
 password.py
+config.ini
 
 *.pyc
 *.so

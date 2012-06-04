@@ -14,68 +14,69 @@ is present) and replace values stored within it with those given
 via optional command-line arguments.
 """
 
-# only make "config" variable visible
-__all__ = ['config']
-
-import collections
-class LmfdbConfig(collections.Mapping):
-  '''
-  This is the LMFDB configuration. Its values are immutable!
-  '''
-  def __init__(self):
-    self._dict = dict()
-
-  def __iter__(self):
-    return iter(self._dict)
-
-  def __getitem__(self, key):
-    return self._dict[key]
-
-  def __getattr__(self, key):
-    if not key in self._dict:
-      raise AttributeError('there is no %s' % key)
-    return self._dict[key]
-
-  def __hash__(self):
-    return hash(tuple(sorted(self._dict.iteritems())))
-
 default_config_fn = 'config.ini'
 
 # 1: parsing command-line arguments
 from optparse import OptionParser
-parser = OptionParser()
-parser.add_option('-c', '--config-file', dest="config_file",
-                  help='configuration file',
-                  default=default_config_fn)
+_parser = OptionParser()
+_parser.add_option('-c', '--config-file', dest="config_file",
+                  help='configuration file [default: %default]', default=default_config_fn)
+_parser.add_option('-d', '--debug', action="store_true", dest='debug', help='debug mode [default: %default]', default=False)
+_parser.add_option("-v", action="count", dest="verbosity", help="verbosity level: -v, -vv, or -vvv", default=0)
 
-options, args = parser.parse_args()
+_options, _args = _parser.parse_args()
+
+print _options
 
 import os
 from ConfigParser import ConfigParser
 
 # 2/1: does config file exist?
-if not os.path.exists(options.config_file):
-  cfgp = ConfigParser()
+if not os.path.exists(_options.config_file):
+  _cfgp = ConfigParser()
   # create them in the reverse order
-  cfgp.add_section('lfunc') # demo
-  cfgp.add_section('mf')    # demo
-  cfgp.add_section('artin') # demo
+  _cfgp.add_section('lfunc') # demo
+  _cfgp.add_section('mf')    # demo
+  _cfgp.add_section('artin') # demo
 
-  cfgp.add_section('db') # database config
-  cfgp.set('db', 'port', '37010')
-  cfgp.set('db', 'host', 'localhost')
+  _cfgp.add_section('db') # database config
+  _cfgp.set('db', 'port', '37010')
+  _cfgp.set('db', 'host', 'localhost')
 
-  cfgp.add_section('web') # webserver 
-  cfgp.set('web', 'port', '37777')
+  _cfgp.add_section('web') # webserver 
+  _cfgp.set('web', 'port', '37777')
 
-  cfgp.add_section('core') # core configuration
-  cfgp.set('core', 'debug', 'false') # default: no debug mode
+  _cfgp.add_section('core') # core configuration
+  _cfgp.set('core', 'debug', 'false') # default: no debug mode
 
   with open(options.config_file, 'wb') as configfile:
-    cfgp.write(configfile)
+    _cfgp.write(configfile)
 
 # 2/2: reading the config file
-cfgp = ConfigParser()
-cfgp.read(options.config_file)
+_cfgp = ConfigParser()
+_cfgp.read(_options.config_file)
 
+# 3: override specific settings
+if _options.debug: _cfgp.set('core', 'debug', 'true')
 
+print _cfgp.get('core', 'debug')
+
+## some generic function
+def get_config(section, key):
+  return _cfgp.get(section, key)
+
+def all(sep = '::'):
+  ret = {}
+  for s in _cfgp.sections():
+    for k, v in _cfgp.items(s):
+      ret['%s%s%s' % (s, sep, k)] = v
+  return ret
+
+## specific data
+http_port = _cfgp.getint('web', 'port')
+db_port   = _cfgp.getint('db',  'port')
+db_host   = _cfgp.get   ('db',  'host')
+debug     = _cfgp.getboolean('core', 'debug')
+verbosity = 40 - (10 * _options.verbosity)
+
+print verbosity
