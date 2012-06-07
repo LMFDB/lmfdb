@@ -48,7 +48,7 @@ def hashpwd(pwd, random_salt = None):
   return hashed.hexdigest()
 
 # Read about flask-login if you are unfamiliar with this UserMixin/Login 
-from flaskext.login import UserMixin
+from flask.ext.login import UserMixin
 
 class LmfdbUser(UserMixin):
   """
@@ -209,7 +209,7 @@ def get_user_list():
     ret.append((e['_id'], name))
   return ret
 
-from flaskext.login import AnonymousUser
+from flask.ext.login import AnonymousUser
 class LmfdbAnonymousUser(AnonymousUser):
   """
   The sole purpose of this Anonymous User is the 'is_admin' method
