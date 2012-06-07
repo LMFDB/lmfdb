@@ -176,7 +176,7 @@ def render_field_webpage(args):
     gn = GG[0]
     gt = GG[1]
     prop2 = [
-             ('Base', '\(\mathbb{Q}_{%s}\)' % p ),
+             ('Base', '\(\Q_{%s}\)' % p ),
              ('Degree', '\(%s\)' % data['n']),
              ('e', '\(%s\)' % e),
              ('f', '\(%s\)' % f),
@@ -237,15 +237,15 @@ def show_slopes(sl):
 
 def printquad(code, p):
   if code == [1,0] :
-    return('$\mathbb{Q}_{%s}$' % p)
+    return('$\Q_{%s}$' % p)
   if code == [1,1] :
-    return('$\mathbb{Q}_{%s}(\sqrt{*})$' % p)
+    return('$\Q_{%s}(\sqrt{*})$' % p)
   if code == [-1,1] :
-    return('$\mathbb{Q}_{%s}(\sqrt{-*})$' % p)
+    return('$\Q_{%s}(\sqrt{-*})$' % p)
   s = code[0]
   if code[1] == 1 :
     s = str(s)+'*';
-  return('$\mathbb{Q}_{'+str(p)+'}(\sqrt{'+ str(s)+'})$')
+  return('$\Q_{'+str(p)+'}(\sqrt{'+ str(s)+'})$')
 
 def search_input_error(info, bread):
   return render_template("lf-search.html", info = info, title='Local Field Search Input Error', bread=bread)

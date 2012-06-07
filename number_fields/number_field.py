@@ -72,14 +72,14 @@ def group_display_shortC(C):
 def field_pretty(field_str):
     d,r,D,i = field_str.split('.')
     if d == '1':  # Q
-        return '\( {\mathbb Q} \)'
+        return '\(\Q\)'
     if d == '2':  # quadratic field
         D = ZZ(int(D)).squarefree_part()
         if r=='0': D = -D
-        return '\( {\mathbb Q}(\sqrt{' + str(D) + '}) \)'
+        return '\(\Q(\sqrt{' + str(D) + '}) \)'
     for n in [5,7,8,9,10]: 
         if field_str==parse_field_string('Qzeta'+str(n)):
-            return '\( {\mathbb Q}(\zeta_%s) \)'%n
+            return '\(\Q(\zeta_%s) \)'%n
     return field_str
 #    TODO:  pretty-printing of more fields of higher degree
 
@@ -235,9 +235,9 @@ def render_field_webpage(args):
     if 'label' in args:
       label = clean_input(args['label'])
       nf = WebNumberField(label)
-      data = WebNumberField(label)._data
+      # data = WebNumberField(label)._data
       data = {}
-    if data is None:
+    if nf.is_null():
       bread.append(('Search results', ' '))
       label2 = re.sub(r'[<>]', '', args['label'])
       info['err'] = 'No such field: %s in the database'%label2
@@ -276,6 +276,7 @@ def render_field_webpage(args):
       data['discriminant'] = "\(%s=%s\)"%(str(D),data['disc_factor'])
     npr = len(ram_primes)
     ram_primes = str(ram_primes)[1:-1]
+    if ram_primes=='': ram_primes= r'\textrm{None}'
     data['frob_data'], data['seeram'] = frobs(nf.K())
     data['phrase'] = group_phrase(n,t,C)
     zk = pari(nf.K()).nf_subst('a')

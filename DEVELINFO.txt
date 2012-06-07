@@ -104,6 +104,16 @@ or
 prop = [ ( '<description>', '<value>'), ('<description>', '<value>'), ... ]
 you can mix list or non-list.
 
+LaTeX Macros
+------------
+
+The following extra macros may be used in LaTeX on the site:
+  \Z for the rational integers
+  \Q for the rational numbers
+  \R for the real numbers
+  \C for the complex numbers
+  \F for finite fields, as in $\F_5$
+Each produces the corresponding letter in blackboard bold.
 
 Mercurial
 ---------
