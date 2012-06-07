@@ -235,13 +235,13 @@ def alllabels(line):
     if data[0]!=data[3]:
         raise ValueError, "Inconsistent data in alllabels file: %s"%line
     label = data[0] + data[1] + data[2]
-    lmfdb_label = data[3] + data[4] + data[5]
+    lmfdb_label = data[3] + '.' + data[4] + data[5]
     return label, {
         'conductor': int(data[0]),
         'iso': data[0]+data[1],
         'number': int(data[2]),
         'lmfdb_label': lmfdb_label,
-        'lmfdb_iso': data[3]+data[4],
+        'lmfdb_iso': data[3]+'.'+data[4],
         'lmfdb_number': data[5]
     }
 
@@ -301,6 +301,7 @@ def upload_to_db(base_path,min_N, max_N):
     # vals.sort(cmp=comp_dict_by_label)
     count = 0
     for val in vals:
+        #print val
         curves.update({'label':val['label']}, { "$set": val}, upsert=True)
         count += 1
         if count%5000==0: print "inserted %s"%(val['label'])
