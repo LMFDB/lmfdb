@@ -155,6 +155,9 @@ table.ntdata a {
 <th>Order</th>
 <th>Parity</th>
 <th>Solvable</th>
+{% if info.show_subs %}
+<th>Subfields</th>
+{% endif %}
 <th>Other Low Degree Representations</th>
 </tr>
 </thead>
@@ -168,6 +171,9 @@ table.ntdata a {
 <td align="right">{{group.order}}</td>
 <td align="right">{{group.parity}}</td>
 <td align="center">{{info.yesno(group.solv)}}</td>
+{% if info.show_subs %}
+<td >{{ wgg.subfields() | safe }}</td>
+{% endif %}
 <td >{{wgg.otherrep_list()|safe}}</td>
 </tr>
 

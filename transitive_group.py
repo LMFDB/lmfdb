@@ -13,7 +13,7 @@ from utils import ajax_more, image_src, web_latex, to_dict, parse_range
 
 from pymongo.connection import Connection
 
-MAX_GROUP_DEGREE = 13
+MAX_GROUP_DEGREE = 23
 
 ############  Galois group object
 
@@ -71,15 +71,22 @@ class WebGaloisGroup:
       start = 'a'
       if k == me: start = nextchr(start)
       if cnt == 1:
-        ans += trylink(k[0],k[1])
+        ans += tryknowl(k[0],k[1])
         if k==me: ans += 'b'
       else:
         for j in range(cnt):
           if j>0: ans += ', '
-          ans += "%s%s" % (trylink(k[0], k[1]), start)
+          ans += "%s%s" % (tryknowl(k[0], k[1]), start)
           start = nextchr(start)
     return ans
 
+  def subfields(self):
+    ans = ''
+    for k in self._data['subs']:
+      if ans != '':
+        ans += ', '
+      ans += tryknowl(k[0], k[1])
+    return ans
 
 ############  Misc Functions
 
@@ -101,6 +108,12 @@ def nextchr(c):
 def trylink(n,t):
   if n<=MAX_GROUP_DEGREE:
     return '<a href="/GaloisGroup/%dT%d">%dT%d</a>' % (n, t, n, t)
+  return '%dT%d' % (n,t)
+
+def tryknowl(n,t):
+  if n<=MAX_GROUP_DEGREE:
+    C = getDBConnection()
+    return group_display_knowl(n, t, C, '%dT%d' % (n, t))
   return '%dT%d' % (n,t)
 
 def group_display_short(n, t, C):
@@ -199,6 +212,10 @@ def group_knowl_guts(n,t, C):
   rest += '<div><h3>Other low-degree representations</h3><blockquote>'
   rest += otherrep_display(n,t,C, group['repns'])
   rest += '</blockquote></div>'
+  rest += '<div align="right">'
+  rest += '<a href="/GaloisGroup/%s">%sT%s home page</a>'%(label, str(n), str(t))
+  rest += '</div>'
+
 
   if group['pretty']:
     return group['pretty']+inf+rest
@@ -306,6 +323,7 @@ def resolve_display(C, resolves):
     if k[0] <= MAX_GROUP_DEGREE:
       ans += group_display_knowl(k[0], k[1], C, name)
     else:
+      if k[1] == -1: name = '%dT?' % k[0]
       ans += name
   if ans != '': ans += '</td></tr></table>'
   else:         ans = 'None'
