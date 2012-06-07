@@ -268,19 +268,19 @@ def by_ec_label(label):
         try:
             N, iso, number = cremona_label_regex.match(label).groups()
         except AttributeError:
-            raise ValueError("No such curve")
+            return elliptic_curve_jump_error(label, {})
         C = base.getDBConnection()
         # We permanently redirect to the lmfdb label
         if number:
             data = C.elliptic_curves.curves.find_one({'label': label})
             if data is None:
-                raise ValueError("No such curve")
+                return elliptic_curve_jump_error(label, {})
             logger.debug(url_for("by_ec_label",label=data['lmfdb_label']))
             return redirect(url_for("by_ec_label",label=data['lmfdb_label']),301)
         else:
             data = C.elliptic_curves.curves.find_one({'iso': label})
             if data is None:
-                raise ValueError("No such class")
+                return elliptic_curve_jump_error(label, {})
             logger.debug(url_for("by_ec_label",label=data['lmfdb_label']))
             return redirect(url_for("by_ec_label",label=data['lmfdb_iso']),301)
         #N,d1, iso,d2, number = sw_label_regex.match(label).groups()
@@ -294,7 +294,7 @@ def plot_ec(label):
     C = base.getDBConnection()
     data = C.elliptic_curves.curves.find_one({'lmfdb_label': label})
     if data is None:
-        raise ValueError("No such curve")
+        return elliptic_curve_jump_error(label, {})
     ainvs = [int(a) for a in data['ainvs']]
     E = EllipticCurve(ainvs)
     P = E.plot()
@@ -311,7 +311,7 @@ def plot_iso_graph(label):
     C = base.getDBConnection()
     data = C.elliptic_curves.curves.find_one({'lmfdb_iso': label})
     if data is None:
-        raise ValueError("No such curve")
+        return elliptic_curve_jump_error(label, {})
     ainvs = [int(a) for a in data['ainvs']]
     E = EllipticCurve(ainvs)
     G = E.isogeny_graph(); n = G.num_verts()
@@ -335,7 +335,7 @@ def render_isogeny_class(iso_class):
 
     E1data = CDB.find_one({'lmfdb_label': lmfdb_iso+'1'})
     if E1data is None:
-        raise ValueError("No such isogeny class")
+        return elliptic_curve_jump_error(lmfdb_iso, {})
 
     cremona_iso = E1data['iso']
     ainvs = [int(a) for a in E1data['ainvs']]
@@ -441,7 +441,7 @@ def modular_form_display(label, number):
     C = base.getDBConnection()
     data = C.elliptic_curves.curves.find_one({'lmfdb_label': label})
     if data is None:
-        raise ValueError("No such curve")
+        return elliptic_curve_jump_error(label, {})
     ainvs = [int(a) for a in data['ainvs']]
     E = EllipticCurve(ainvs)
     modform = E.q_eigenform(number)
@@ -479,7 +479,7 @@ def render_curve_webpage_by_label(label):
     C = base.getDBConnection()
     data = C.elliptic_curves.curves.find_one({'lmfdb_label': label})
     if data is None:
-        raise ValueError("No such curve")
+        return elliptic_curve_jump_error(label, {})
     info = {}
     ainvs = [int(a) for a in data['ainvs']]
     E = EllipticCurve(ainvs)
@@ -662,12 +662,12 @@ def download_EC_all(label):
     if number:
         data = CDB.find_one({'lmfdb_label':label})
         if data is None:
-            raise ValueError("No such curve known in database")
+            return elliptic_curve_jump_error(label, {})
         data_list = [data]
     else:
         data_list = sorted(list(CDB.find({'lmfdb_iso':label})), key = lambda E: E['number'])
         if len(data_list) == 0:
-            raise ValueError("No such class known in database")
+            return elliptic_curve_jump_error(label, {})
 
     #titles of all entries of curves
     dump_data=[]
