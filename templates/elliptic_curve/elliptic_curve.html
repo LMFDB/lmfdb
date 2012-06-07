@@ -1,5 +1,8 @@
 {% extends 'homepage.html' %}
 {% block content %}
+<style>
+<div.ip>span { white-space: nowrap; font-family: serif; }
+</style>
 
 <script>
 var cur_system = null;
@@ -65,13 +68,15 @@ function show_code(system) {
     <div class='sage nodisplay code'>sage: E.integral_points()</div>
     <div class='pari nodisplay code'> </div>
     <div class='magma nodisplay code'>&gt; IntegralPoints(E);</div>
-    {% if info.xintegral_points!='' %}    
-    <p> {{ info.xintegral_points}} </p>
+    {% if info.xintegral_points %}
+    <div class="ip">
+      {{info.xintegral_points}}
+    </div>
     <div> Note: only one of each pair $\pm P$ is listed. </div>
     {%else %}
-    <div> None </div> 
+    <div> None </div>
     {%endif %}
-    
+
     <h2> {{ KNOWL('ec.q.invariants', title='Invariants') }}  </h2>
         <table>
 
