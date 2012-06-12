@@ -395,3 +395,26 @@ def number_of_coefficients_needed(Q, kappa_fe, lambda_fe, max_t):
 
     return int(round(Q * exp( log(2.3 * DIGITS * theta/c1) * theta) + 10))
 
+def signOfEmfLfunction(level, weight, coefs, tol = 10**(-7), num = 1.3 ):
+    """ Computes the sign of a EMF with give level, weight and
+        coefficients numerically by computing the value of the EMF
+        at two points related by the Atkin-Lehner involution.
+        If the absolute value of the result is more than tol from 1
+        then it returns "Not able to compute" which indicates to few
+        (or wrong) coeffcients.
+        The parameter num chooses the related points and shouldn't be 1.
+    """
+    sum1 = 0
+    sum2 = 0
+    for i in range(1,len(coefs)):
+        sum1 += coefs[i-1] * math.exp(- 2 * math.pi * i *num/math.sqrt(level))
+        logger.debug("Sum1: {0}".format(sum1))
+        sum2 += coefs[i-1].conjugate() * math.exp(- 2 * math.pi * i /num/math.sqrt(level)) / num**weight
+        logger.debug("Sum2: {0}".format(sum2))
+    sign = sum1/sum2
+    if abs(abs(sign)-1) > tol:
+        logger.critical("Not enough coefficients to compute the sign of the L-function.")
+        sign = "Not able to compute."
+    return sign
+        
+    

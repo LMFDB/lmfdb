@@ -3,7 +3,7 @@ import base
 import math
 from Lfunctionutilities import (pair2complex, splitcoeff, seriescoeff, compute_local_roots_SMF2_scalar_valued,
                                 compute_dirichlet_series, number_of_coefficients_needed,
-                                logger)
+                                logger, signOfEmfLfunction)
 from LfunctionComp import nr_of_EC_in_isogeny_class, modform_from_EC, EC_from_modform
 from sage.all import *
 import sage.libs.lcalc.lcalc_Lfunction as lc
@@ -665,7 +665,7 @@ class Lfunction_EMF(Lfunction):
         self.poles = []
         self.residues = []
         self.numcoeff = 20 + int(5 * math.ceil(self.weight * sqrt(self.level))) #just testing  NB: Need to learn how to use more coefficients
-        self.dirichlet_coefficients = []
+        self.algebraic_coefficients = []
 
         # Get the data for the corresponding elliptic curve if possible
         if self.level <= modform_translation_limit and self.weight==2:
@@ -678,27 +678,26 @@ class Lfunction_EMF(Lfunction):
         GaloisDegree = self.MF.degree()  #number of forms in the Galois orbit
         #logger.debug("Galois degree: " + str(GaloisDegree))
         if GaloisDegree == 1:
-           self.dirichlet_coefficients = self.MF.q_expansion_embeddings(
+           self.algebraic_coefficients = self.MF.q_expansion_embeddings(
                self.numcoeff+1)[1:self.numcoeff+1] #when coeffs are rational, q_expansion_embedding()
                                                    #is the list of Fourier coefficients
            self.coefficient_type = 2        # In this case, the L-function also comes from an elliptic curve. We tell that to lcalc, even if the coefficients are not produced using the elliptic curve
         else:
            #logger.debug("Start computing coefficients.")
            for n in range(1,self.numcoeff+1):
-              self.dirichlet_coefficients.append(self.MF.q_expansion_embeddings(self.numcoeff+1)[n][self.number])
+              self.algebraic_coefficients.append(self.MF.q_expansion_embeddings(self.numcoeff+1)[n][self.number])
            self.coefficient_type = 0        # In this case the coefficients are neither periodic nor coming from an elliptic curve
            #logger.debug("Done computing coefficients.")
 
-        for n in range(1,len(self.dirichlet_coefficients)+1):
-            an = self.dirichlet_coefficients[n-1]
-            self.dirichlet_coefficients[n-1]=an/float(n**self.automorphyexp)
+        self.dirichlet_coefficients = self.algebraic_coefficients
+        for n in range(1,len(self.algebraic_coefficients)+1):
+            self.dirichlet_coefficients[n-1]=self.algebraic_coefficients[n-1]/float(n**self.automorphyexp)
 
         if self.level == 1:  # For level 1, the sign is always plus
             self.sign = 1
         else:  # for level not 1, calculate sign from Fricke involution and weight
             if self.character > 0:
-                self.sign = (I**(float(self.weight)) * self.MF.conrey_character().sage_character().bar().gauss_sum_numerical() *
-                             self.dirichlet_coefficients[self.level-1].conjugate() / float(sqrt(self.level)) )
+                self.sign = signOfEmfLfunction(self.level, self.weight, self.algebraic_coefficients) 
             else:
                 self.sign = self.MF.atkin_lehner_eigenvalues()[self.level] * (-1)**(float(self.weight/2))
         #logger.debug("Sign: " + str(self.sign))
