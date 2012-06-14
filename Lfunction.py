@@ -678,20 +678,22 @@ class Lfunction_EMF(Lfunction):
         GaloisDegree = self.MF.degree()  #number of forms in the Galois orbit
         #logger.debug("Galois degree: " + str(GaloisDegree))
         if GaloisDegree == 1:
-           self.algebraic_coefficients = self.MF.q_expansion_embeddings(
-               self.numcoeff+1)[1:self.numcoeff+1] #when coeffs are rational, q_expansion_embedding()
+            self.algebraic_coefficients = self.MF.q_expansion_embeddings(
+                self.numcoeff+1)[1:self.numcoeff+1] #when coeffs are rational, q_expansion_embedding()
                                                    #is the list of Fourier coefficients
-           self.coefficient_type = 2        # In this case, the L-function also comes from an elliptic curve. We tell that to lcalc, even if the coefficients are not produced using the elliptic curve
+            self.coefficient_type = 2        # In this case, the L-function also comes from an elliptic curve. We tell that to lcalc, even if the coefficients are not produced using the elliptic curve
         else:
-           #logger.debug("Start computing coefficients.")
-           for n in range(1,self.numcoeff+1):
-              self.algebraic_coefficients.append(self.MF.q_expansion_embeddings(self.numcoeff+1)[n][self.number])
-           self.coefficient_type = 0        # In this case the coefficients are neither periodic nor coming from an elliptic curve
-           #logger.debug("Done computing coefficients.")
+            #logger.debug("Start computing coefficients.")
 
-        self.dirichlet_coefficients = self.algebraic_coefficients
+            embeddings = self.MF.q_expansion_embeddings(self.numcoeff+1)
+            for n in range(1,self.numcoeff+1):
+                self.algebraic_coefficients.append(embeddings[n][self.number])
+            self.coefficient_type = 0        # In this case the coefficients are neither periodic nor coming from an elliptic curve
+            #logger.debug("Done computing coefficients.")
+
+        self.dirichlet_coefficients = []
         for n in range(1,len(self.algebraic_coefficients)+1):
-            self.dirichlet_coefficients[n-1]=self.algebraic_coefficients[n-1]/float(n**self.automorphyexp)
+            self.dirichlet_coefficients.append(self.algebraic_coefficients[n-1]/float(n**self.automorphyexp))
 
         if self.level == 1:  # For level 1, the sign is always plus
             self.sign = 1
