@@ -264,7 +264,7 @@ def render_field_webpage(args):
     data['galois_group'] = group_display_knowl(n,t,C)
     data['cclasses'] = cclasses_display_knowl(n,t,C)
     data['character_table'] = character_table_display_knowl(n,t,C)
-    data['cl_group'] = nf.class_group()
+    data['class_group'] = nf.class_group()
     data['class_group_invs'] = nf.class_group_invariants()
     data['signature'] = nf.signature()
     D = nf.disc()
@@ -482,15 +482,15 @@ def number_field_search(**args):
       return render_field_webpage({'label' : field_id_parsed, 'label_orig': field_id})
     query = {}
     dlist = []
-    for field in ['galois_group', 'degree', 'sig', 'discriminant', 'class_number', 'cl_group']:
+    for field in ['galois_group', 'degree', 'signature', 'discriminant', 'class_number', 'class_group']:
         if info.get(field):
             info[field] = clean_input(info[field])
-            if field in ['cl_group', 'sig']:
+            if field in ['class_group', 'signature']:
               # different regex for the two types
-              if (field == 'sig' and PAIR_RE.match(info[field])) or (field == 'cl_group' and IF_RE.match(info[field])):
+              if (field == 'signature' and PAIR_RE.match(info[field])) or (field == 'class_group' and IF_RE.match(info[field])):
                 query[field] = info[field][1:-1]
               else:
-                name= 'class group' if field=='cl_group' else 'signature'
+                name= 'class group' if field=='class_group' else 'signature'
                 info['err'] = 'Error parsing input for %s.  It needs to be a pair of integers in square brackets, such as [2,3] or [3,3]'%name
                 return search_input_error(info, bread)
             else:
