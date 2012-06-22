@@ -432,9 +432,9 @@ def list_to_query(dlist):
         dlist[x] = [low,ZZ(-1)]
         dlist.insert(x+1, [ZZ(1),high])
         x += 1
-      elif dlist[x][0] > dlist[x][1]:  # bogus entry
-        dlist.pop(x)
-        x -= 1 # to offset the increment below
+      #elif dlist[x][0] > dlist[x][1]:  # bogus entry
+      #  dlist.pop(x)
+      #  x -= 1 # to offset the increment below
     x += 1
  
   # if there is only one part, we don't need an $or
