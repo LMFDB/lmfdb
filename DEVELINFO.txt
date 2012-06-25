@@ -115,6 +115,10 @@ The following extra macros may be used in LaTeX on the site:
   \F for finite fields, as in $\F_5$
 Each produces the corresponding letter in blackboard bold.
 
+One should use the following macros for names of algebraic groups:
+  \GL, \SL, \PGL, \PSL, \Sp, \GSp
+Each produces the group name in upright font.
+
 Mercurial
 ---------
 
