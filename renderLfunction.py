@@ -180,7 +180,7 @@ def render_webpage(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
                     elif arg2 == 'EllipticCurve':
                         info["representation"] = 'Symmetric square'
                         info["contents"] = [processSymPowerEllipticCurveNavigation(11,65,2)]
-                        return render_template("lfunctions/ellipticcurve.html", title = 'Symmetric square of L-functions of Elliptic Curves', **info)
+                        return render_template("lfunctions/ellipticcurve.html", title = 'Symmetric square L-functions of Elliptic Curves', **info)
                 elif degree == 4:
                     if arg2 == 'MaassForm':
                         info["contents"] = LfunctionPlot.getAllMaassGraphHtml(4)
