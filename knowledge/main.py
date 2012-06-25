@@ -417,7 +417,16 @@ def index():
   from knowl import get_categories 
   cats = get_categories()
 
-  knowls = sorted(knowls, key = lambda x : x['title'].lower())
+  def knowl_sort_key(knowl):
+    '''sort knowls, special chars at the end'''
+    title = knowl['title']
+    if title and title[0] in string.ascii_letters:
+      return (0, title.lower())
+    else:
+      return (1, title.lower())
+    
+
+  knowls = sorted(knowls, key = knowl_sort_key)
   from itertools import groupby
   knowls = groupby(knowls, first_char)
   return render_template("knowl-index.html", 
