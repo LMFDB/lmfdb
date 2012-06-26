@@ -451,10 +451,16 @@ def initLfunction(L,args, request):
         splitlink=friendlink2.rpartition('/')
         friendlink2 = splitlink[0]+splitlink[2]
 
-        mplusone = L.m +1
-        friendlink3 =request.url.replace('/L/SymmetricPower/%d/'%L.m,'/L/SymmetricPower/%d/'%mplusone)
+        info['friends'] = [('Isogeny class '+L.label, friendlink), ('Symmetric 1st Power', friendlink2)]
+        for j in range(2, L.m+2):
+            if j != L.m:
+                friendlink3 =request.url.replace('/L/SymmetricPower/%d/'%L.m,'/L/SymmetricPower/%d/'%j)
+                info['friends'].append(('Symmetric %s'%ordinal(j) , friendlink3))
 
-        info['friends'] = [('Isogeny class '+L.label, friendlink), ('Symmetric 1st Power', friendlink2), ('Symmetric %s'%ordinal(mplusone) , friendlink3)]
+        #mplusone = L.m +1
+        #friendlink3 =request.url.replace('/L/SymmetricPower/%d/'%L.m,'/L/SymmetricPower/%d/'%mplusone)
+
+        #info['friends'] = [('Isogeny class '+L.label, friendlink), ('Symmetric 1st Power', friendlink2), ('Symmetric %s'%ordinal(mplusone) , friendlink3)]
 
     elif L.Ltype() == 'siegelnonlift' or L.Ltype() == 'siegeleisenstein' or L.Ltype() == 'siegelklingeneisenstein' or L.Ltype() == 'siegelmaasslift':
         weight = str(L.weight)
