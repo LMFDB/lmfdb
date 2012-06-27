@@ -30,9 +30,11 @@ Below you can browse classes of modular forms currently in the LMFDB.
 <p>
 <a href="{{ url_for('mwf.render_maass_waveforms') }}">Maass Forms on \(\GL_{2}(\Q) \)</a>
 </p>
+{% if user_is_authenticated -%}
 <p>
 <a href="{{ url_for('mwfp.render_picard_maass_forms') }}">Maass Forms on the Picard group \(\SL_{2}(\Z[i])\)</a>
 </p>
+{% endif %}
 <p><a href="{{ url_for('ModularForm_GSp4_Q_top_level') }}">Siegel Modular Forms</a> 
 </p>
 
