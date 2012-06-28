@@ -2,12 +2,12 @@
 {% block content %}
 {% set row_class=cycler("even","odd") %}
 
-<h1>{{ title }}</h1>
+{# <h1>{{ title }}</h1> 
 
 
-<p>
 A Maass form \(f\) on the {{KNOWL('mf.maass.picard',title='Maass Forms on the Picard group \(\mathrm{SL}_{2}(\mathbb{Z}[i])\)') }}
 </p>
+#}
 {# Should be used to display one single Maass Form #}
 
 {% if table is defined %}
@@ -20,7 +20,7 @@ The eigenvalue of the {{KNOWL('mf.maass.picard.laplacian',title='Laplacian')}} i
 </div>
 <div>symmetry type: {{ sym|join(" ")}}</div>
 <div>
-The {{KNOWL('mf.maass.picard.fourierexpansion',title='Fourier expansion')}} has coefficients \( c(n) \) with \(n = a+bi\) and \( m,n  \in \mathbb{Z} \). 
+The {{KNOWL('mf.maass.picard.fourierexpansion',title='Fourier expansion')}} has coefficients \( c(n) \) with \(n = a+bi\) and \( m,n  \in \Z \). 
 </div>
 
 <h2>Fourier Coefficients</h2>

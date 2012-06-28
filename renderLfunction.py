@@ -374,7 +374,10 @@ def initLfunction(L,args, request):
             info['friends'] = [('Maass Form ', friendlink)]
         else:
             info['bread'] = [('L-function','/L') ,('Degree ' + str(L.degree),
-                             url_for('render_Lfunction', arg1= str(L.degree))), (L.dbid, request.url)]
+                             url_for('render_Lfunction', arg1= 'degree'+str(L.degree))), 
+                             ('Maass Form',
+                             url_for('render_Lfunction', arg1= 'degree'+str(L.degree), arg2 ='MaassForm' )), 
+                             (L.dbid, request.url)]
 
     elif L.Ltype()  == 'riemann':
         info['bread'] = [('L-function','/L'),('Riemann Zeta',request.url)]
