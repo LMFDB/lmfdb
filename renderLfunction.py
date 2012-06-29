@@ -324,6 +324,8 @@ def initLfunction(L,args, request):
             info['sv12'] = specialValueString(L, 0.5, '1/2')
         if is_odd(L.degree):
             info['sv1'] = specialValueString(L, 1, '1')
+    info['sv1'] = specialValueString(L, 1, '1')
+    info['sv12'] = specialValueString(L, 0.5, '1/2')
             
     info['args'] = args
 
