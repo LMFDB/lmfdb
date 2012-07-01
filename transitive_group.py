@@ -396,8 +396,8 @@ def chartable (n, t):
 
 
 def generators (n, t):
-  if n==1:
-    G = gap.SmallGroup(n,t)
+  if str(n)=="1":
+    return "None needed"
   else:
     G = gap.TransitiveGroup(n,t)
   gens = G.SmallGeneratingSet()
