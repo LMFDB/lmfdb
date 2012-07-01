@@ -1082,6 +1082,9 @@ class Lfunction_Maass(Lfunction):
 
             # Extract the L-function information from the database entry
             self.__dict__.update(dbEntry)
+            # Kludge to deal with improperly formatted SL or GL in the database
+            self.title = re.sub(r'(?<!\\)SL', r'\SL', self.title)
+            self.title = re.sub(r'(?<!\\)GL', r'\GL', self.title)
 
             self.coefficient_period = 0
             self.poles = []
