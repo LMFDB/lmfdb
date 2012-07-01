@@ -258,7 +258,7 @@ def render_field_webpage(args):
       dirichlet_chars = nf.dirichlet_group()
       data['dirichlet_group'] = ['<a href = "%s">$\chi_{%s}(%s,&middot;)$</a>' % (url_for("render_Character", arg1=data['conductor'], arg2=j), data['conductor'], j) for j in dirichlet_chars]
       data['dirichlet_group'] = r'$\lbrace$'+', '.join(data['dirichlet_group'])+r'$\rbrace$'
-      if data['conductor'].is_prime():
+      if data['conductor'].is_prime() or data['conductor'] == 1:
         data['conductor'] = "\(%s\)" % str(data['conductor'])
       else:
         data['conductor'] = "\(%s=%s\)"%(str(data['conductor']),latex(data['conductor'].factor()))
@@ -271,7 +271,7 @@ def render_field_webpage(args):
     D = nf.disc()
     ram_primes = D.prime_factors()
     data['disc_factor'] = nf.disc_factored_latex()
-    if D.abs().is_prime():
+    if D.abs().is_prime() or D == 1:
       data['discriminant'] = "\(%s\)" % str(D)
     else:
       data['discriminant'] = "\(%s=%s\)"%(str(D),data['disc_factor'])
