@@ -38,12 +38,12 @@ function show_code(system) {
     <p> {{ info.equation }} </p>
 
     <h2> {{ KNOWL('ec.q.mordell-weil', title='Mordell-Weil group') }} structure</h2>
-   <div>{% if info.rank==1 %}{% if info.torsion!=1 %} \(\mathbb{Z}\times {{info.tor_structure}}\) 
+   <div>{% if info.rank==1 %}{% if info.torsion!=1 %} \(\Z\times {{info.tor_structure}}\) 
     {%endif%}  {%endif%}     </div>
 
-    <div>{% if info.rank==1 %}{% if info.torsion==1 %}\(\mathbb{Z}\) {%endif%}  {%endif%} </div>
-    <div> {% if info.rank !=0 and info.rank!=1 %} {% if info.torsion!=1 %}\(\mathbb{Z}^{{info.rank}} \times {{info.tor_structure}}\) {%endif%}  {%endif%} </div>
-    <div> {% if info.rank !=0 and info.rank!=1%} {% if info.torsion==1 %} \(\mathbb{Z}^{{info.rank}}\){%endif%}  {%endif%} </div>
+    <div>{% if info.rank==1 %}{% if info.torsion==1 %}\(\Z\) {%endif%}  {%endif%} </div>
+    <div> {% if info.rank !=0 and info.rank!=1 %} {% if info.torsion!=1 %}\(\Z^{{info.rank}} \times {{info.tor_structure}}\) {%endif%}  {%endif%} </div>
+    <div> {% if info.rank !=0 and info.rank!=1%} {% if info.torsion==1 %} \(\Z^{{info.rank}}\){%endif%}  {%endif%} </div>
     <div> {% if info.rank ==0 %} {% if info.torsion!=1 %} \({{info.tor_structure}}\){%endif%}  {%endif%} </div>
     <div> {% if info.rank ==0 %} {% if info.torsion==1 %} Trivial {%endif%}  {%endif%} </div>
     

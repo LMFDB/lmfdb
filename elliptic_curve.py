@@ -126,8 +126,8 @@ def rational_elliptic_curves(err_args=None):
         'max_rank': max_rank
     }
     credit = 'John Cremona'
-    t = 'Elliptic curves/$\mathbb{Q}$'
-    bread = [('Elliptic Curves', url_for("rational_elliptic_curves")),('Elliptic curves/$\mathbb{Q}$',' ')]
+    t = 'Elliptic curves/$\Q$'
+    bread = [('Elliptic Curves', url_for("rational_elliptic_curves")),('Elliptic curves/$\Q$',' ')]
     return render_template("elliptic_curve/elliptic_curve_Q.html", info = info, credit=credit, title = t,bread=bread, **err_args)
 
 @app.route("/EllipticCurve/Q/<int:conductor>")
@@ -524,9 +524,9 @@ def render_curve_webpage_by_label(label):
         tor_struct = '\mathrm{Trivial}'
         tor_group='\mathrm{Trivial}'
     else:
-        tor_group=' \\times '.join(['\mathbb{Z}/{%s}\mathbb{Z}'%a.order() for a in G])
+        tor_group=' \\times '.join(['\Z/{%s}\Z'%a.order() for a in G])
     if 'torsion_structure' in data:
-        info['tor_structure']= ' \\times '.join(['\mathbb{Z}/{%s}\mathbb{Z}'% int(a) for a in data['torsion_structure']])
+        info['tor_structure']= ' \\times '.join(['\Z/{%s}\Z'% int(a) for a in data['torsion_structure']])
     else:
         info['tor_structure'] = tor_group
 
