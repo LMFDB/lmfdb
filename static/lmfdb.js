@@ -129,9 +129,16 @@ function knowl_click_handler($el) {
   var uid = $el.attr("knowl-uid");
   var output_id = '#knowl-output-' + uid; 
   var $output_id = $(output_id);
+
+  // slightly different behaviour if we are inside a table, but
+  // not in a knowl inside a table.
+  var table_mode = $el.parents().is("table") && !$el.parents().hasClass("knowl-content");
  
   // if we already have the content, toggle visibility
   if ($output_id.length > 0) {
+    if (table_mode) {
+      $output_id.parent().parent().slideToggle("fast");
+    }
     $output_id.slideToggle("fast");
     $el.toggleClass("active");
 
@@ -140,11 +147,11 @@ function knowl_click_handler($el) {
     $el.addClass("active");
     // create the element for the content, insert it after the one where the 
     // knowl element is included (e.g. inside a <h1> tag) (sibling in DOM)
-     var idtag = "id='"+output_id.substring(1) + "'";
+    var idtag = "id='"+output_id.substring(1) + "'";
     
-    // check, if the knowl is inside a td or th in a table. otherwise assume its
-    // properly sitting inside a <div> or <p>
-    if($el.parents().is("table")) {
+    // behave a bit differently, if the knowl is inside a td or th in a table. 
+    // otherwise assume its sitting inside a <div> or <p>
+    if(table_mode) {
       // assume we are in a td or th tag, go 2 levels up
       var cols = $el.parent().parent().children().length;
       $el.parent().parent().after(
