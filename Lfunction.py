@@ -1083,6 +1083,9 @@ class Lfunction_Maass(Lfunction):
             # Extract the L-function information from the database entry
             self.__dict__.update(dbEntry)
             # Kludge to deal with improperly formatted SL or GL in the database
+            # Current database entries only have SL in titles.  Note, this
+            # will break for PSL or PGL.  Ideally, the database entries
+            # should be changed.
             self.title = re.sub(r'(?<!\\)SL', r'\SL', self.title)
             self.title = re.sub(r'(?<!\\)GL', r'\GL', self.title)
 

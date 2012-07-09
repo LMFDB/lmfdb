@@ -119,6 +119,9 @@ One should use the following macros for names of algebraic groups:
   \GL, \SL, \PGL, \PSL, \Sp, \GSp
 Each produces the group name in upright font.
 
+The convention for indicating the size is $\GL(2)$ or $\GL(2,\Q)$ where
+appropriate instead of $\GL_2$ and $\GL_2(\Q)$.
+
 Mercurial
 ---------
 

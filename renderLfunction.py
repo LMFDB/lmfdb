@@ -320,14 +320,14 @@ def initLfunction(L,args, request):
     # degree has special value at 1/2.
     # (however, I'm not sure this is true if L is not primitive -- GT)
 
-    # Now we display both in all cases
-    #if L.Ltype() <> "artin" or (L.Ltype() == "artin" and L.sign <> 0):
+    # Now we usually display both
+    if L.Ltype() <> "artin" or (L.Ltype() == "artin" and L.sign <> 0):
     #    if is_even(L.degree) :
     #        info['sv12'] = specialValueString(L, 0.5, '1/2')
     #    if is_odd(L.degree):
     #        info['sv1'] = specialValueString(L, 1, '1')
-    info['sv1'] = specialValueString(L, 1, '1')
-    info['sv12'] = specialValueString(L, 0.5, '1/2')
+        info['sv1'] = specialValueString(L, 1, '1')
+        info['sv12'] = specialValueString(L, 0.5, '1/2')
             
     info['args'] = args
 
