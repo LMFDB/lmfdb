@@ -40,8 +40,7 @@ By {{KNOWL('nf.class_number', title='class number')}}:
 <h3> Search for fields </h3>
 <form>
 <p>
-Enter values into one or more boxes to restrict the search.&nbsp;&nbsp;
-<button type='submit' value='Search'>Search</button>
+Enter values into one or more boxes to restrict the search.
 </p>
 <table border=0 cellpadding=5>
 <tr>
@@ -84,11 +83,12 @@ Enter values into one or more boxes to restrict the search.&nbsp;&nbsp;
 <td>
 <td align=left>{{KNOWL('nf.ideal_class_group', title = 'class group')}} structure
   <td><input type='text' name='class_group' size=10 example='[2,2]'>
-<span class="formexample"> e.g. [], [3], or [2,2]</span></td>
+<span class="formexample"> e.g. [ ], [3], or [2,2]</span></td>
 </tr>
 <tr>
-<td align="left" colspan="5">Maximum number of fields to display <input type='text' name='count' value="{{info.count}}" size="10" />
-</td>
+<td align="left" colspan="4">Maximum number of fields to display <input type='text' name='count' value="{{info.count}}" size="6" />
+</td><td>
+<button type='submit' value='Search'>Search</button></td>
 </tr>
 
 
@@ -96,19 +96,21 @@ Enter values into one or more boxes to restrict the search.&nbsp;&nbsp;
 </form>
 
 
-<h3>Go to a specific field by {{KNOWL('nf.label',title='label')}} or {{KNOWL('nf.nickname',title='nickname')}}</h3>
+<h3>Go to a specific field by {{KNOWL('nf.label',title='label')}}, 
+  {{KNOWL('nf.nickname',title='nickname')}}, or 
+  {{KNOWL('nf.defining_polynomial',title='polynomial')}}</h3>
 
 <form>
 <table border=0 cellpadding=5>
 <tr>
 <td>Field:&nbsp;&nbsp;</td>
-<td ><input type='text' name='natural' size=60 example='Qsqrt5'> </td>
+<td ><input type='text' name='natural' size=60 example='x^7 - x^6 - 3 x^5 + x^4 + 4 x^3 - x^2 - x + 1'> </td>
 <td><button type='submit' name='search' value='Go'>Go</button></td>
 </tr>
 <tr>
-<td colspan="3" rowspan="2"><span class="formexample"> Enter either a
-<a href="FieldLabels">field label</a>, e.g. 2.2.5.1 for
-    \(\Q(\sqrt{5})\); a nickname, e.g. Q or Qsqrt5 or Qzeta7; or a polynomial in x, e.g. x^2+1</span></td>
+<td colspan="3" rowspan="2"><span class="formexample"> e.g.,
+ 2.2.5.1, Qsqrt5, x^2-5, or x^2-x-1 for
+    \(\Q(\sqrt{5})\)</span></td>
 </tr>
 </table>
 </form>

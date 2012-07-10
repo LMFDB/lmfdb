@@ -105,6 +105,8 @@ def parse_field_string(F): # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
     if F=='Q': return '1.1.1.1'
     if F=='Qi': return '2.0.4.1'
     fail_string = str(F + ' is not a valid field label or name or polynomial, or is not ')
+    if len(F) == 0:
+      return "Entry for the field was left blank.  You need to enter a field label, field name, or a polynomial.";
     if F[0]=='Q':
         if F[1:5] in ['sqrt','root']:
             try:
@@ -241,7 +243,10 @@ def render_field_webpage(args):
     if nf.is_null():
       bread.append(('Search results', ' '))
       label2 = re.sub(r'[<>]', '', args['label'])
-      info['err'] = 'No such field: %s in the database'%label2
+      if 'You need to enter a field' in label2:
+        info['err'] = label2
+      else:
+        info['err'] = 'No such field: %s in the database'%label2
       info['label'] = args['label_orig'] if 'label_orig' in args else args['label']
       return search_input_error(info, bread)
 
