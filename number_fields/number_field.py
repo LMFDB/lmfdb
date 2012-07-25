@@ -480,6 +480,7 @@ def number_field_search(**args):
 
     #for k in info.keys():
     #  nf_logger.debug(str(k) + ' ---> ' + str(info[k]))
+    # nf_logger.debug('******************* '+ str(info['search']))
     if 'natural' in info:
       field_id = info['natural']
       field_id_parsed = parse_field_string(info['natural'])
