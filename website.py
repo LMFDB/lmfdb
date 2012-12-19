@@ -18,11 +18,12 @@ import siegel_modular_form
 import modular_forms
 import elliptic_curve
 import quadratic_twists
-import renderLfunction
+#import renderLfunction
 #import maass_form
 import plot_example
 import number_fields
 import lfunction_db
+import lfunctions
 #import maass_form_picard
 #import maass_waveforms
 import users 

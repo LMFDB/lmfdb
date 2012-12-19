@@ -2,25 +2,25 @@
 {% block body -%}
 <h4>Checklist in /templates/checklist.html</h4>
 
-<a href="{{ url_for('render_Lfunction', arg1 = "Riemann")}}">Riemann zeta function</a> This better work<br/>
+<a href="{{ url_for('l_functions.l_function_riemann_page')}}">Riemann zeta function</a> This better work<br/>
 <a href="{{ url_for('render_Character', arg1 = 13, arg2 = 2)}}">Dirichlet character 13.2</a> <br/>
-<a href="{{ url_for('render_Lfunction',  arg1 = "Character", arg2 = "Dirichlet", arg3=13,arg4=2)}}">Dirichlet L-function character 13.2</a> <br/>
+<a href="{{ url_for('l_functions.l_function_dirichlet_page', modulus=13,number=2)}}">Dirichlet L-function character 13.2</a> <br/>
 <a href="{{ url_for('index')}}">index</a>: menu, more entries if logged in, sidebar and main page have same structure<br/>
 <a href="{{ url_for('rational_elliptic_curves', conductor='1-99') }}">Ell curves/Q, conductor 1-99</a><br/>
 <a href="{{ url_for('by_ec_label', label='17.a3') }}">EllCurve 17.a3</a>: plot in the properties box, ...<br/>
 <a href="{{ url_for('by_ec_label', label='108.a2') }}">EllCurve 108.a2</a>: j(E)=0 case<br/>
 <a href="{{ url_for('number_fields.by_label', label='6.0.11691.1') }}">Number field 6.0.11691.1</a> <br/>
 <a href="{{ url_for('number_fields.by_label', label='4.2.6912.1') }}">Number field 4.2.6912.1</a>Difference with previous is that data on Artin representations is available and might mess up the page <br/>
-<a href="{{ url_for('render_Lfunction', arg1 = "NumberField", arg2 = "4.2.6912.1")}}"> Dedekind zeta function for 4.2.6912.1</a><br/>
+<a href="{{ url_for('l_functions.l_function_nf_page', label = "4.2.6912.1")}}"> Dedekind zeta function for 4.2.6912.1</a><br/>
 <a href="{{ url_for('artin_representations.by_data', dim=1, conductor="5", index =1)}}"> Artin representation dim 1, conductor 5, index 1</a><br/>
-<a href="{{ url_for('render_Lfunction', arg1 = "ArtinRepresentation", arg2 = 1, arg3 = 5, arg4 = 1)}}"> Artin L-function of dim 1, conductor 5, index 1</a> <br/>
-<a href="{{ url_for('render_Lfunction', arg1 = "ArtinRepresentation", arg2 = 3, arg3 = 688, arg4 = 1)}}"> Artin L-function of dim 3, conductor 688, index 1</a> <br/>
-<a href="{{ url_for('render_Lfunction', arg1 = "ArtinRepresentation", arg2 = 1, arg3 = 1501, arg4 = 3)}}"> Artin L-function of dim 1, conductor 1501, index 3</a> <br/>
-<a href="{{ url_for('render_Lfunction', arg1 = "ArtinRepresentation", arg2 = 2, arg3 = 6400, arg4 = 1)}}"> Artin L-function of dim 2, conductor 6400, index 1</a> various cases for the computation of coefficients of L-function<br/>
-<a href="{{ url_for('render_Lfunction', arg1 = "ModularForm", arg2 = "GL2", arg3 = "Q", arg4 = "Maass", arg5 = "4f5558c888aece2646000013")}}"> A Maass form </a><br/>
+<a href="{{ url_for('l_functions.l_function_artin_page', dimension = 1, conductor = 5, tim_index = 1)}}"> Artin L-function of dim 1, conductor 5, index 1</a> <br/>
+<a href="{{ url_for('l_functions.l_function_artin_page', dimension = 3, conductor = 688, tim_index = 1)}}"> Artin L-function of dim 3, conductor 688, index 1</a> <br/>
+<a href="{{ url_for('l_functions.l_function_artin_page', dimension = 1, conductor = 1501, tim_index = 3)}}"> Artin L-function of dim 1, conductor 1501, index 3</a> <br/>
+<a href="{{ url_for('l_functions.l_function_artin_page', dimension = 2, conductor = 6400, tim_index = 1)}}"> Artin L-function of dim 2, conductor 6400, index 1</a> various cases for the computation of coefficients of L-function<br/>
+<a href="{{ url_for('l_functions.l_function_maass_page', dbid = "4f5558c888aece2646000013")}}"> A Maass form </a><br/>
 <a href="{{ url_for('emf.render_elliptic_modular_forms', level = 11, weight = 6, character = 0,label = "b")}}"> Cuspidal newform 11.6.0.b </a> (this does not work locally but works on server) and 
-<a href="{{ url_for('render_Lfunction', arg1 = "ModularForm", arg2 = "GL2", arg3 = "Q", arg4 = "holomorphic", arg5 = 11, arg6 = 6, arg7 = 0, arg8 = "b", arg9 = 2)}}"> an associated L-function </a> (same here)<br/>
-<a href="{{ url_for('render_Lfunction', arg1 = "SymmetricPower", arg2 = 2, arg3 = "EllipticCurve", arg4 = "Q", arg5 = "11.a")}}"> Symmetric square of Ell 11.a </a><br/>
-<a href="{{ url_for('render_Lfunction', arg1 = "SymmetricPower", arg2 = 3, arg3 = "EllipticCurve", arg4 = "Q", arg5 = "11.a")}}"> Symmetric cube of Ell 11.a </a><br/>
+<a href="{{ url_for('l_functions.l_function_emf_page', level = 11, weight = 6, character = 0, label = "b", number = 2)}}"> an associated L-function </a> (same here)<br/>
+<a href="{{ url_for('l_functions.l_function_ec_sym_page', power = 2, label = "11.a")}}"> Symmetric square of Ell 11.a </a><br/>
+<a href="{{ url_for('l_functions.l_function_ec_sym_page', power = 3, label = "11.a")}}"> Symmetric cube of Ell 11.a </a><br/>
 
 {%- endblock %}

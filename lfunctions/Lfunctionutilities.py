@@ -1,10 +1,17 @@
+# Different helper functions.
+
 import re
-from utils import make_logger
+from lfunctions import logger
 from sage.all import *
 
-logger = make_logger("LF")
+
+###############################################################
+# Functions for displaying numbers in correct format etc.
+###############################################################
 
 def pair2complex(pair):
+    ''' Turns the pair into a complex number.
+    '''
     local = re.match(" *([^ ]+)[ \t]*([^ ]*)", pair)
     if local:
         rp = local.group(1)
@@ -32,6 +39,30 @@ def truncatenumber(numb,precision):
     if numb < 0:
         localprecision = localprecision + 1        
     return(str(numb)[0:int(localprecision)])
+
+def styleTheSign(sign):
+    ''' Returns the string to display as sign
+    '''
+    try:
+        logger.debug(1-sign)
+        if sign == 0:
+            return "unknown"
+        if abs(1-sign) < 1e-10:
+            return '1'
+        elif abs(1+sign) < 1e-10:
+            return '-1'
+        elif abs(1-sign.imag()) < 1e-10:
+            return 'i'
+        elif abs(1+sign.imag()) < 1e-10:
+            return '-i'
+        elif sign.imag > 0:
+            return "${0} + {1}i$".format(truncatenumber(sign.real(), 5),truncatenumber(sign.imag(), 5))
+        else:
+            return "${0} {1}i$".format(truncatenumber(sign.real(), 5),truncatenumber(sign.imag(), 5))
+    except:
+        logger.debug("no styling of sign")
+        return str(sign)
+
 
 def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precision):
     truncation=float(10**truncationexp)
@@ -288,43 +319,70 @@ def lfuncFEtex(L,fmt):
         ans+=")"
 
     return(ans)
-                       
 
-#------
+def specialValueString(L, s, sLatex):
+    ''' Returns the LaTex to dislpay for L(s) 
+    '''
+    number_of_decimals = 10
+    val = L.sageLfunction.value(s)
+    lfunction_value_tex = L.texname.replace('(s', '(' + sLatex)
+    # We must test for NaN first, since it would show as zero otherwise
+    # Try "RR(NaN) < float(1e-10)" in sage -- GT
+    if val.real().is_NaN():
+        return "\\[{0}=\\infty\\]".format(lfunction_value_tex)
+    elif val.abs() < 1e-10:
+        return "\\[{0}=0\\]".format(lfunction_value_tex)
+    else:
+        return "\\[{0} \\approx {1}\\]".format(lfunction_value_tex,
+            latex( round(val.real(), number_of_decimals)
+                 + round(val.imag(), number_of_decimals)*I ))
+
+
+                   
+
+###############################################################
+# Functions for Siegel dirichlet series
+###############################################################
 
 NN = 500
 CF = ComplexField(NN)
 
 
-def euler_p_factor(root_list,PREC):
-  # computes the coefficients of the pth Euler factor expanded as a geometric series
-  # ax^n is the Dirichlet series coefficient p^(-ns)
-  PREC = floor(PREC);
-  #return satake_list
-  R = LaurentSeriesRing(CF,'x')
-  x = R.gens()[0]
-  ep = prod([1/(1-a*x) for a in root_list])
-  return ep + O(x**(PREC+1))
-
-
 def compute_dirichlet_series(p_list, PREC):
-  # p_list is a list of pairs (p,y) where p is a prime and y is the list of roots of the Euler factor at x
-  LL = [0]*PREC;
-  # create an empty list of the right size and now populate it with the powers of p
-  for (p,y) in p_list:
-      p_prec = log(PREC)/log(p)+1;
-      ep = euler_p_factor(y,PREC);
-      for n in range(ep.prec()):
-          if p**n < PREC:
-              LL[p**n] = ep.coefficients()[n]
-  for i in range(1,PREC):
-      f = factor(i);
-      if len(f)>1: #not a prime power
-          LL[i] = prod([LL[p**e] for (p,e) in f])
-  print LL[:5]
-  return LL[1:]
+    ''' computes the dirichlet series for a Lfunction_SMF2_scalar_valued 
+    '''
+    # p_list is a list of pairs (p,y) where p is a prime and y is the list of roots of the Euler factor at x
+    LL = [0]*PREC;
+    # create an empty list of the right size and now populate it with the powers of p
+    for (p,y) in p_list:
+        p_prec = log(PREC)/log(p)+1;
+        ep = euler_p_factor(y,PREC);
+        for n in range(ep.prec()):
+            if p**n < PREC:
+                LL[p**n] = ep.coefficients()[n]
+    for i in range(1,PREC):
+        f = factor(i);
+        if len(f)>1: #not a prime power
+            LL[i] = prod([LL[p**e] for (p,e) in f])
+    print LL[:5]
+    return LL[1:]
+
+def euler_p_factor(root_list,PREC):
+    ''' computes the coefficients of the pth Euler factor expanded as a geometric series
+      ax^n is the Dirichlet series coefficient p^(-ns)
+    '''
+    PREC = floor(PREC);
+    #return satake_list
+    R = LaurentSeriesRing(CF,'x')
+    x = R.gens()[0]
+    ep = prod([1/(1-a*x) for a in root_list])
+    return ep + O(x**(PREC+1))
+
+
 
 def compute_local_roots_SMF2_scalar_valued(ev_data, k, embedding):
+    ''' computes the dirichlet series for a Lfunction_SMF2_scalar_valued 
+    '''
 
     logger.debug("Start SMF2")
     K = ev_data[0].parent().fraction_field() # field of definition for the eigenvalues
@@ -368,6 +426,14 @@ def compute_local_roots_SMF2_scalar_valued(ev_data, k, embedding):
 
     return ret
 
+
+
+###############################################################
+# Functions for computing the number of coefficients needed
+# in order to be able to show plot and compute zeros.
+###############################################################
+
+
 def number_of_coefficients_needed(Q, kappa_fe, lambda_fe, max_t):
     # TODO: This doesn't work. Trouble when computing t0
     # We completely mimic what lcalc does when it decides whether
@@ -394,6 +460,12 @@ def number_of_coefficients_needed(Q, kappa_fe, lambda_fe, max_t):
           logger.debug("In loop 3_2 NOC")
 
     return int(round(Q * exp( log(2.3 * DIGITS * theta/c1) * theta) + 10))
+
+
+###############################################################
+# Functions for cusp forms
+###############################################################
+
 
 def signOfEmfLfunction(level, weight, coefs, tol = 10**(-7), num = 1.3 ):
     """ Computes the sign of a EMF with give level, weight and

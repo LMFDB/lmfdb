@@ -95,13 +95,6 @@ def get_character_order(a,b):
         return l
     return [(_,line(_)) for _ in range(a,b)]
 
-def charactertable(Nmin, Nmax, type):
-    ans = []
-    print 'min max', Nmin, Nmax
-    for i in range(Nmin, Nmax+1):
-        ans.append([i, characterlist(i,type)])
-    return(ans)
-
 def processDirichletNavigation(args):
     s = '<table>\n'
     s += '<tr>\n<th scope="col">Characters</th>\n</tr>\n'

@@ -394,9 +394,11 @@ def render_isogeny_class(iso_class):
 
     friends=[]
 #   friends.append(('Quadratic Twist', "/quadratic_twists/%s" % (lmfdb_iso)))
-    friends.append(('L-function', url_for("render_Lfunction", arg1='EllipticCurve', arg2='Q', arg3=lmfdb_iso)))
-    friends.append(('Symmetric square L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='2',arg3='EllipticCurve', arg4='Q', arg5=lmfdb_iso)))
-    friends.append(('Symmetric 4th power L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='4',arg3='EllipticCurve', arg4='Q', arg5=lmfdb_iso)))
+    friends.append(('L-function', url_for("l_functions.l_function_ec_page", label=lmfdb_iso)))
+    friends.append(('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page",
+                                                           power='2', label=lmfdb_iso)))
+    friends.append(('Symmetric 4th power L-function', url_for("l_functions.l_function_ec_sym_page",
+                                                              power='4', label=lmfdb_iso)))
 #render_one_elliptic_modular_form(level,weight,character,label,**kwds)
 
     friends.append(('Modular form '+lmfdb_iso.replace('.','.2'), url_for("emf.render_elliptic_modular_forms", level=N,weight=2,character=0,label=iso)))
@@ -579,9 +581,11 @@ def render_curve_webpage_by_label(label):
     info['friends'] = [
         ('Isogeny class '+lmfdb_iso_class, "/EllipticCurve/Q/%s" % lmfdb_iso_class),
         ('Minimal quadratic twist '+minq_label, "/EllipticCurve/Q/%s" % minq_label),
-        ('L-function', url_for("render_Lfunction", arg1='EllipticCurve', arg2='Q', arg3=lmfdb_label)),
-        ('Symmetric square L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='2',arg3='EllipticCurve', arg4='Q', arg5=lmfdb_iso_class)),
-        ('Symmetric 4th power L-function', url_for("render_Lfunction", arg1='SymmetricPower', arg2='4',arg3='EllipticCurve', arg4='Q', arg5=lmfdb_iso_class))]
+        ('L-function', url_for("l_functions.l_function_ec_page", label=lmfdb_label)),
+        ('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2',
+                                                label=lmfdb_iso_class)),
+        ('Symmetric 4th power L-function', url_for("l_functions.l_function_ec_sym_page", power='4',
+                                                   label=lmfdb_iso_class))]
 
     info['friends'].append(('Modular form '+lmfdb_iso_class.replace('.','.2'), url_for("emf.render_elliptic_modular_forms", level=int(N),weight=2,character=0,label=mod_form_iso)))
 

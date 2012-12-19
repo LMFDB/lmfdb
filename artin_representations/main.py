@@ -167,10 +167,13 @@ def render_artin_representation_webpage(dim, conductor, index):
   if nf_url:
     friends.append(("Artin Field", nf_url))
   
-  friends.append(("L-function", url_for("render_Lfunction", arg1 = 'ArtinRepresentation', arg2 = the_rep.dimension(), arg3 = the_rep.conductor(), arg4 = the_rep.index())))
+  friends.append(("L-function", url_for("l_functions.l_function_artin_page",
+                                        dimension = the_rep.dimension(),
+                                        conductor = the_rep.conductor(),
+                                        tim_index = the_rep.index())))
             #[
             #("Same degree and conductor", url_for(".by_partial_data", dim = the_rep.dimension(), conductor = the_rep.conductor())),\
-            #("L-function", url_for("render_Lfunction", arg1 = 'ArtinRepresentation', arg2 = the_rep.dimension(), arg3 = the_rep.conductor(), arg4 = the_rep.index()))    
+            #("L-function", url_for("l_functions.l_function_artin_page",  dimension = the_rep.dimension(), conductor = the_rep.conductor(), tim_index = the_rep.index()))    
             #]
   return render_template("artin-representation-show.html", credit= tim_credit, support = support_credit, title = title, bread = bread, friends = friends, object = the_rep, properties2 = properties)
 

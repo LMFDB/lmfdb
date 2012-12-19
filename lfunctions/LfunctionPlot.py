@@ -1,3 +1,5 @@
+# Code for creating plots for browsing L-functions
+
 from pymongo import Connection
 import math
 import cmath
@@ -5,11 +7,18 @@ import datetime
 from flask import url_for, make_response
 import base
 from modular_forms.elliptic_modular_forms.backend.web_modforms import *
-from utils import make_logger
 from ListCharacters import get_character_modulus
-from Lfunction import logger
+from lfunctions import logger
 
-#logger = make_logger("LF")
+###############################################################################
+# Maass form for GL(n) n>2
+###############################################################################
+
+#============
+# url to add all degree-3, level-4 dots on one plot
+#   http://localhost:37777/L/browseGraph?group=GL3&level=4
+#=========
+
 
 
 ## ============================================
@@ -30,6 +39,7 @@ def createLid(group, objectName, level, sign, parameters):
             toAdd = str(item)
             ans += toAdd
     return ans
+
 
 ## ============================================
 ## Returns all the html including links to the svg-files for Maass forms
@@ -109,6 +119,7 @@ def getGroupHtml(group):
         
     return(ans)
 
+
 ## ============================================
 ## Returns the header, some information and the url for the svg-file for
 ## the L-functions of the Maass forms for given group, level and
@@ -125,7 +136,8 @@ def getOneGraphHtml(gls):
     ans += "search. Click on any of the dots to get detailed information about "
     ans += "the L-function.</div>\n<br />"
     graphInfo = getGraphInfo(gls)
-    ans += ("<embed src='" + graphInfo['src'] + "' width='" + str(graphInfo['width']) + 
+    ans += ("<embed src='" + graphInfo['src'] + "' width='" +
+            str(graphInfo['width']) + 
            "' height='" + str(graphInfo['height']) +
             "' type='image/svg+xml' " +
             "pluginspage='http://www.adobe.com/svg/viewer/install/'/>\n")
@@ -133,11 +145,6 @@ def getOneGraphHtml(gls):
         
     return(ans)
 
-#============
-# url to add all degree-3, level-4 dots on one plot
-#   http://localhost:37777/browseGraph?group=GL3&level=4
-#=========
-    
 ## ============================================
 ## Returns the url and width and height of the svg-file for
 ## the L-functions of the Maass forms for given group, level and
@@ -146,38 +153,17 @@ def getOneGraphHtml(gls):
 def getGraphInfo(gls):
     (width,height) = getWidthAndHeight(gls)
     if len(gls) > 2:
-        url = url_for('browseGraph',group=gls[0], level=gls[1], sign=gls[2])
+        url = url_for('.browseGraph',group=gls[0], level=gls[1],
+                      sign=gls[2])
         url =url.replace('+', '%2B')  ## + is a special character in urls
     else:
-        url = url_for('browseGraph',group=gls[0], level=gls[1])
+        url = url_for('.browseGraph',group=gls[0], level=gls[1])
     
     ans = {'src': url}
     ans['width']= width
     ans['height']= height
     
     return(ans)
-
-
-## ============================================
-## Returns the url and width and height of the svg-file for
-## the L-functions of holomorphic cusp form.
-## ============================================
-def getGraphInfoHolo(Nmin, Nmax, kmin, kmax):
-    xfactor = 90
-    yfactor = 30
-    x_extraSpace = 50
-    y_extraSpace = 80
-
-    (width,height) = (x_extraSpace + xfactor*(Nmax), y_extraSpace + yfactor*(kmax))
-    url = url_for('browseGraphHolo',Nmin=str(Nmin), Nmax=str(Nmax),
-                  kmin= str(kmin), kmax= str(kmax))
-
-    ans = {'src': url}
-    ans['width']= width
-    ans['height']= height
-
-    return(ans)
-
 
 ## ============================================
 ## Returns the width and height of the svg-file for
@@ -217,7 +203,6 @@ def getWidthAndHeight(gls):
     height = int(yfactor *yMax + extraSpace)
 
     return( (width, height) )
-
 
 ## ============================================
 ## Returns the contents (as a string) of the svg-file for
@@ -269,7 +254,7 @@ def paintSvgFileAll(glslist):  # list of group, level, and (maybe) sign
     ans += paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength)
 
     for (x,y,lid,group,level,sign) in paralist:
-        linkurl = "/L/ModularForm/" + group + "/Q/maass/" + lid
+        linkurl = url_for('.l_function_maass_gln_page', group=group, dbid=lid)
         ans += "<a xlink:href='" + linkurl + "' target='_top'>\n"
         ans += "<circle cx='" + str(float(x)*xfactor)[0:7]
         ans += "' cy='" +  str(height- float(y)*yfactor)[0:7]
@@ -281,7 +266,6 @@ def paintSvgFileAll(glslist):  # list of group, level, and (maybe) sign
     ans += "</svg>"
 
     return(ans)
-
 
 
 ## ============================================
@@ -337,142 +321,49 @@ def paintCS(width, height, xMax, yMax, xfactor, yfactor,ticlength):
 
     return(xmlText)
 
-## ============================================
-## Returns the svg-code for a simple coordinate system
-## INCLUDING a grid at the even lattice points.
-## width = width of the system
-## height = height of the system
-## xMax = maximum in first (x) coordinate
-## yMax = maximum in second (y) coordinate
-## xfactor = the number of pixels per unit in x
-## yfactor = the number of pixels per unit in y
-## ticlength = the length of the tickmarks
-## ============================================
-def paintCSHolo(width, height, xMax, yMax, xfactor, yfactor,ticlength):
-    xmlText = ("<line x1='0' y1='" + str(height) + "' x2='" +
-               str(width) + "' y2='" + str(height) +
-               "' style='stroke:rgb(0,0,0);'/>\n")
-    xmlText = xmlText + ("<line x1='0' y1='" + str(height) +
-                         "' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n")
-    for i in range( 1,  xMax + 1):
-        xmlText = xmlText + ("<line x1='" + str(i*xfactor) + "' y1='" +
-                             str(height - ticlength) + "' x2='" +
-                             str(i*xfactor) + "' y2='" + str(height) +
-                             "' style='stroke:rgb(0,0,0);'/>\n")
 
-    for i in range( 1,  xMax + 1, 1):
-        digitoffset = 6
-        if i < 10:
-           digitoffset = 3
-        xmlText = xmlText + ("<text x='" + str(i*xfactor - digitoffset) + "' y='" +
-                             str(height - 2 * ticlength) +
-                             "' style='fill:rgb(102,102,102);font-size:11px;'>"
-                             + str(i) + "</text>\n")
-
-        xmlText = xmlText + ("<line y1='0' x1='" + str(i*xfactor) +
-                         "' y2='" + str(height) + "' x2='" +
-                         str(i*xfactor) +
-                         "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
-
-    for i in range( 1,  yMax + 1):
-        xmlText = xmlText + ("<line x1='0' y1='" +
-                             str(height - i*yfactor) + "' x2='" +
-                             str(ticlength) + "' y2='" +
-                             str(height - i*yfactor) +
-                             "' style='stroke:rgb(0,0,0);'/>\n")
-
-    for i in range( 2,  yMax + 1, 2):
-        xmlText = xmlText + ("<text x='5' y='" +
-                             str(height - i*yfactor + 3) +
-                             "' style='fill:rgb(102,102,102);font-size:11px;'>" +
-                             str(i) + "</text>\n")
-
-        if i%4==0 :  #  put dashes every four units
-           xmlText = xmlText + ("<line x1='0' y1='" +
-                         str(height - i*yfactor) + "' x2='" + str(width) +
-                         "' y2='" + str(height - i*yfactor) +
-                         "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
-
-    return(xmlText)
+###############################################################################
+# GL(2) cusp forms
+# This is normally picked from a static file created by this code.
+###############################################################################
 
 ## ============================================
-#
-#
+## Returns the header, some information and the url for the svg-file for
+## the L-functions of holomorphic cusp forms.
 ## ============================================
-## Returns the svg-code for a simple coordinate system.
-## width = width of the system
-## height = height of the system
-## xMax = maximum in first (x) coordinate
-## yMax = maximum in second (y) coordinate
-## xfactor = the number of pixels per unit in x
-## yfactor = the number of pixels per unit in y
-## ticlength = the length of the tickmarks
+def getOneGraphHtmlHolo(Nmin, Nmax, kmin, kmax):
+    graphInfo = getGraphInfoHolo(Nmin, Nmax, kmin, kmax)
+# To  generate the graph:    ans = ("<embed src='" + graphInfo['src'] + "' width='" + str(graphInfo['width']) +  
+    image_url = url_for('static', filename = 'images/browseGraphHolo_22_14_5a.svg')
+    logger.debug(image_url)
+    ans = ("<embed  src='%s' width='%s' height='%s' type='image/svg+xml' "%(image_url,str(graphInfo['width']), str(graphInfo['height']) ) +
+           "pluginspage='http://www.adobe.com/svg/viewer/install/'/>\n"  )
+    ans += "<br/>\n"
+
+    return(ans)
+   
+
+
+
 ## ============================================
-# ============================================
-def paintCSHoloTMP(width, height, xMax, yMax, xfactor, yfactor,ticlength):
-    xmlText = ("<line x1='-50' y1='" + str(height) + "' x2='" +
-               str(width) + "' y2='" + str(height) +
-               "' style='stroke:rgb(0,0,0);'/>\n")   # draw horizontal axis
-#     xmlText += mytext("level", [0,height], [xfactor, yfactor], [0.4, 0.7], "", "", "", 'rgb(0,0,0)')
-#    xmlText += '<text x="18" y="395" style="stroke:none" font-style = "italic";>level</text>'
-    xmlText = xmlText + ("<line x1='0' y1='" + str(height) + "' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n")  # draw vertical axis
-    xmlText +="<text x='50.0' y='491.0' font-style='italic'>level</text>"
-#
-    #xmlText += mytext("level", [0,height], [xfactor, yfactor], [0.2, 0.7], "", 'font-size:11px', "", 'rgb(0,0,0)')
-    xmlText += "<text x='33.0' y='411.0' transform='rotate(270 33, 411)' font-style='italic'>weight</text>"
-    #xmlText += '<text x="118"  y="365" transform="rotate(90 118, 365)" style="stroke:none" font-style="italic";>weight</text>'
-    #xmlText += '<text x="118"  y="365" transform="rotate(-90 118, 365)" style="stroke:none" font-style = "italic";>weight</text>'
-    for i in range( 1,  xMax + 1):
-        xmlText = xmlText + ("<line x1='" + str(i*xfactor) + "' y1='" +
-                             str(height - ticlength) + "' x2='" +
-                             str(i*xfactor) + "' y2='" + str(height) +
-                             "' style='stroke:rgb(0,0,0);'/>\n")   
+## Returns the url and width and height of the svg-file for
+## the L-functions of holomorphic cusp form.
+## ============================================
+def getGraphInfoHolo(Nmin, Nmax, kmin, kmax):
+    xfactor = 90
+    yfactor = 30
+    x_extraSpace = 50
+    y_extraSpace = 80
 
-    for i in range( 1,  xMax + 1, 1):
-        digitoffset = 6
-        if i < 10:
-           digitoffset = 3
-        xmlText = xmlText + ("<text x='" + str(i*xfactor - digitoffset) + "' y='" +
-                             str(height - 2 * ticlength) +
-                             "' style='fill:rgb(102,102,102);font-size:11px;'>"
-                             + str(i) + "</text>\n")
+    (width,height) = (x_extraSpace + xfactor*(Nmax), y_extraSpace + yfactor*(kmax))
+    url = url_for('.browseGraphHolo',Nmin=str(Nmin), Nmax=str(Nmax),
+                  kmin= str(kmin), kmax= str(kmax))
 
-        #xmlText = xmlText + ("<line y1='0' x1='" + str(i*xfactor) +
-        #                 "' y2='" + str(height) + "' x2='" +
-        #                 str(i*xfactor) +
-        #                 "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+    ans = {'src': url}
+    ans['width']= width
+    ans['height']= height
 
-    for i in range( 1,  yMax + 1):
-        xmlText = xmlText + ("<line x1='0' y1='" +
-                             str(height - i*yfactor) + "' x2='" +
-                             str(ticlength) + "' y2='" +
-                             str(height - i*yfactor) +
-                             "' style='stroke:rgb(0,0,0);'/>\n")
-
-    for i in range( 2,  yMax + 1, 2):
-        xmlText = xmlText + ("<text x='5' y='" +
-                             str(height - i*yfactor + 3) +
-                             "' style='fill:rgb(102,102,102);font-size:11px;'>" +
-                             str(i) + "</text>\n")
-
-        #if i%4==0 :  #  put dahes every four units
-        #   xmlText = xmlText + ("<line x1='0' y1='" +
-        #                 str(height - i*yfactor) + "' x2='" + str(width) +
-        #                 "' y2='" + str(height - i*yfactor) +
-        #                 "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
-
-    return(xmlText)
-
-##================================================
-#+++++++++++++++++++++++++++++++++++++++++++++++++
-##
-##================================================
-def signtocolour(sign):
-    argument = cmath.phase(sign)
-    r = int(255.0 * (math.cos( (1.0 * math.pi / 3.0) - (argument/2.0)))**2)
-    g = int(255.0 * (math.cos( (2.0 * math.pi / 3.0) - (argument/2.0)))**2)
-    b = int(255.0 * (math.cos(argument/2.0))**2)
-    return("rgb("+str(r)+","+str(g)+","+str(b)+")")
+    return(ans)
 
 ## ============================================
 ## Returns the contents (as a string) of the svg-file for
@@ -588,10 +479,69 @@ def paintSvgHolo(Nmin,Nmax,kmin,kmax):
  
     return ans
 
-#=====================
 
 
 ## ============================================
+## Returns the svg-code for a simple coordinate system
+## INCLUDING a grid at the even lattice points.
+## width = width of the system
+## height = height of the system
+## xMax = maximum in first (x) coordinate
+## yMax = maximum in second (y) coordinate
+## xfactor = the number of pixels per unit in x
+## yfactor = the number of pixels per unit in y
+## ticlength = the length of the tickmarks
+## ============================================
+def paintCSHolo(width, height, xMax, yMax, xfactor, yfactor,ticlength):
+    xmlText = ("<line x1='0' y1='" + str(height) + "' x2='" +
+               str(width) + "' y2='" + str(height) +
+               "' style='stroke:rgb(0,0,0);'/>\n")
+    xmlText = xmlText + ("<line x1='0' y1='" + str(height) +
+                         "' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n")
+    for i in range( 1,  xMax + 1):
+        xmlText = xmlText + ("<line x1='" + str(i*xfactor) + "' y1='" +
+                             str(height - ticlength) + "' x2='" +
+                             str(i*xfactor) + "' y2='" + str(height) +
+                             "' style='stroke:rgb(0,0,0);'/>\n")
+
+    for i in range( 1,  xMax + 1, 1):
+        digitoffset = 6
+        if i < 10:
+           digitoffset = 3
+        xmlText = xmlText + ("<text x='" + str(i*xfactor - digitoffset) + "' y='" +
+                             str(height - 2 * ticlength) +
+                             "' style='fill:rgb(102,102,102);font-size:11px;'>"
+                             + str(i) + "</text>\n")
+
+        xmlText = xmlText + ("<line y1='0' x1='" + str(i*xfactor) +
+                         "' y2='" + str(height) + "' x2='" +
+                         str(i*xfactor) +
+                         "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+
+    for i in range( 1,  yMax + 1):
+        xmlText = xmlText + ("<line x1='0' y1='" +
+                             str(height - i*yfactor) + "' x2='" +
+                             str(ticlength) + "' y2='" +
+                             str(height - i*yfactor) +
+                             "' style='stroke:rgb(0,0,0);'/>\n")
+
+    for i in range( 2,  yMax + 1, 2):
+        xmlText = xmlText + ("<text x='5' y='" +
+                             str(height - i*yfactor + 3) +
+                             "' style='fill:rgb(102,102,102);font-size:11px;'>" +
+                             str(i) + "</text>\n")
+
+        if i%4==0 :  #  put dashes every four units
+           xmlText = xmlText + ("<line x1='0' y1='" +
+                         str(height - i*yfactor) + "' x2='" + str(width) +
+                         "' y2='" + str(height - i*yfactor) +
+                         "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+
+    return(xmlText)
+
+
+## ===========================================
+## THIS HASN'T BEEN FINISHED AND TESTED
 ## Returns the contents (as a string) of the svg-file for
 ## the L-functions of holomorphic cusp forms.
 ## General code to be used with plotsector routine.
@@ -715,22 +665,109 @@ def paintSvgHoloGeneral(Nmin,Nmax,kmin,kmax,imagewidth,imageheight):
 
 #=====================
 
+## ============================================
+#
+#
+## ============================================
+## Returns the svg-code for a simple coordinate system.
+## width = width of the system
+## height = height of the system
+## xMax = maximum in first (x) coordinate
+## yMax = maximum in second (y) coordinate
+## xfactor = the number of pixels per unit in x
+## yfactor = the number of pixels per unit in y
+## ticlength = the length of the tickmarks
+## ============================================
+# ============================================
+def paintCSHoloTMP(width, height, xMax, yMax, xfactor, yfactor,ticlength):
+    xmlText = ("<line x1='-50' y1='" + str(height) + "' x2='" +
+               str(width) + "' y2='" + str(height) +
+               "' style='stroke:rgb(0,0,0);'/>\n")   # draw horizontal axis
+#     xmlText += mytext("level", [0,height], [xfactor, yfactor], [0.4, 0.7], "", "", "", 'rgb(0,0,0)')
+#    xmlText += '<text x="18" y="395" style="stroke:none" font-style = "italic";>level</text>'
+    xmlText = xmlText + ("<line x1='0' y1='" + str(height) + "' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n")  # draw vertical axis
+    xmlText +="<text x='50.0' y='491.0' font-style='italic'>level</text>"
+#
+    #xmlText += mytext("level", [0,height], [xfactor, yfactor], [0.2, 0.7], "", 'font-size:11px', "", 'rgb(0,0,0)')
+    xmlText += "<text x='33.0' y='411.0' transform='rotate(270 33, 411)' font-style='italic'>weight</text>"
+    #xmlText += '<text x="118"  y="365" transform="rotate(90 118, 365)" style="stroke:none" font-style="italic";>weight</text>'
+    #xmlText += '<text x="118"  y="365" transform="rotate(-90 118, 365)" style="stroke:none" font-style = "italic";>weight</text>'
+    for i in range( 1,  xMax + 1):
+        xmlText = xmlText + ("<line x1='" + str(i*xfactor) + "' y1='" +
+                             str(height - ticlength) + "' x2='" +
+                             str(i*xfactor) + "' y2='" + str(height) +
+                             "' style='stroke:rgb(0,0,0);'/>\n")   
+
+    for i in range( 1,  xMax + 1, 1):
+        digitoffset = 6
+        if i < 10:
+           digitoffset = 3
+        xmlText = xmlText + ("<text x='" + str(i*xfactor - digitoffset) + "' y='" +
+                             str(height - 2 * ticlength) +
+                             "' style='fill:rgb(102,102,102);font-size:11px;'>"
+                             + str(i) + "</text>\n")
+
+        #xmlText = xmlText + ("<line y1='0' x1='" + str(i*xfactor) +
+        #                 "' y2='" + str(height) + "' x2='" +
+        #                 str(i*xfactor) +
+        #                 "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+
+    for i in range( 1,  yMax + 1):
+        xmlText = xmlText + ("<line x1='0' y1='" +
+                             str(height - i*yfactor) + "' x2='" +
+                             str(ticlength) + "' y2='" +
+                             str(height - i*yfactor) +
+                             "' style='stroke:rgb(0,0,0);'/>\n")
+
+    for i in range( 2,  yMax + 1, 2):
+        xmlText = xmlText + ("<text x='5' y='" +
+                             str(height - i*yfactor + 3) +
+                             "' style='fill:rgb(102,102,102);font-size:11px;'>" +
+                             str(i) + "</text>\n")
+
+        #if i%4==0 :  #  put dahes every four units
+        #   xmlText = xmlText + ("<line x1='0' y1='" +
+        #                 str(height - i*yfactor) + "' x2='" + str(width) +
+        #                 "' y2='" + str(height - i*yfactor) +
+        #                 "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+
+    return(xmlText)
+
+##================================================
+#+++++++++++++++++++++++++++++++++++++++++++++++++
+##
+##================================================
+def signtocolour(sign):
+    argument = cmath.phase(sign)
+    r = int(255.0 * (math.cos( (1.0 * math.pi / 3.0) - (argument/2.0)))**2)
+    g = int(255.0 * (math.cos( (2.0 * math.pi / 3.0) - (argument/2.0)))**2)
+    b = int(255.0 * (math.cos(argument/2.0))**2)
+    return("rgb("+str(r)+","+str(g)+","+str(b)+")")
+
+#=====================
+
+
+
+###############################################################################
+# Dirichlet characters
+###############################################################################
 
 ## ============================================
 ## Returns the header, some information and the url for the svg-file for
-## the L-functions of holomorphic cusp forms.
+## the Dirichlet L-functions.
 ## ============================================
-def getOneGraphHtmlHolo(Nmin, Nmax, kmin, kmax):
-    graphInfo = getGraphInfoHolo(Nmin, Nmax, kmin, kmax)
-# To  generate the graph:    ans = ("<embed src='" + graphInfo['src'] + "' width='" + str(graphInfo['width']) +  
-    ans = ("<embed  src='/static/images/browseGraphHolo_22_14_5a.svg' width='" + str(graphInfo['width']) +
+def getOneGraphHtmlChar(min_cond, max_cond, min_order, max_order):
+    graphInfo = getGraphInfoChar(min_cond, max_cond, min_order, max_order)
+    logger.info("graphInfo %s" % graphInfo)
+    ans = ("<embed id='charGraph' src='" + graphInfo['src'] + "' width='" + str(graphInfo['width']) +
+#    ans = ("<embed src='/static/images/browseGraphChar_1_35.svg' width='" + str(graphInfo['width']) +
            "' height='" + str(graphInfo['height']) +
             "' type='image/svg+xml' " +
             "pluginspage='http://www.adobe.com/svg/viewer/install/'/>\n")
     ans += "<br/>\n"
 
     return(ans)
-   
+
 
 
 ## ============================================
@@ -742,182 +779,15 @@ def getGraphInfoChar(min_cond, max_cond, min_order, max_order):
     yfactor = 30
     extraSpace = 30
     (width,height) = (2*extraSpace + xfactor*(max_order), 2*extraSpace + yfactor*(max_cond-min_cond+1))
-##    url = url_for('browseGraph',group=group, level=level, sign=sign)
-    url = ('/browseGraphChar/?min_cond=' + str(min_cond) + '&max_cond=' + str(max_cond) + '&min_order=' + str(min_order) + '&max_order=' + str(max_order))
+##    url = url_for('.browseGraph',group=group, level=level, sign=sign)
+    url = url_for('.browseGraphChar', min_cond = str(min_cond),
+                  max_cond = str(max_cond), min_order = str(min_order),
+                  max_order = str(max_order))
     ans = {'src': url}
     ans['width']= width
     ans['height']= height
     return ans
 
-
-## ============================================
-## Returns the svg-code for a simple coordinate system.
-## width = width of the system
-## height = height of the system
-## xMax = maximum in first (x) coordinate
-## yMax = maximum in second (y) coordinate
-## xfactor = the number of pixels per unit in x
-## yfactor = the number of pixels per unit in y
-## ticlength = the length of the tickmarks
-## ============================================
-def paintCSChar(width, height, xMax, yMax, yMin, xfactor, yfactor,ticlength):
-    xmlText = ("<line x1='0' y1='" + str(height) + "' x2='" +
-               str(width) + "' y2='" + str(height) +
-               "' style='stroke:rgb(0,0,0);'/>\n")
-    xmlText = xmlText + ("<line x1='0' y1='" + str(height) +
-                         "' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n")
-    for i in range( 1,  xMax + 1):
-        xmlText = xmlText + ("<line x1='" + str(i*xfactor) + "' y1='" +
-                             str(height - ticlength) + "' x2='" +
-                             str(i*xfactor) + "' y2='" + str(height) +
-                             "' style='stroke:rgb(0,0,0);'/>\n")
-
-    for i in range( 1,  xMax + 1, 1):
-        digitoffset = 6
-        if i < 10:
-            digitoffset = 3
-        if i < xMax:       
-            textOrder = str(i)
-        else:
-            textOrder = '>' + str(xMax-1)
-	    digitoffset += 6
-        xmlText = xmlText + ("<text x='" + str(i*xfactor - digitoffset) + "' y='" +
-                             str(height - 2 * ticlength) +
-                             "' style='fill:rgb(102,102,102);font-size:11px;'>"
-                             + textOrder + "</text>\n")
-
-        xmlText = xmlText + ("<line y1='0' x1='" + str(i*xfactor) +
-                         "' y2='" + str(height) + "' x2='" +
-                         str(i*xfactor) +
-                         "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
-
-    for i in range( yMin,  yMax + 1):
-        xmlText = xmlText + ("<line x1='0' y1='" +
-                             str(height - (i-yMin+1)*yfactor) + "' x2='" +
-                             str(ticlength) + "' y2='" +
-                             str(height - (i-yMin+1)*yfactor) +
-                             "' style='stroke:rgb(0,0,0);'/>\n")
-
-    for i in range( yMin + yMin%2,  yMax + 1, 2):
-        xmlText = xmlText + ("<text x='5' y='" +
-                             str(height - (i-yMin+1)*yfactor + 3) +
-                             "' style='fill:rgb(102,102,102);font-size:11px;'>" +
-                             str(i) + "</text>\n")
-
-        if i%2==0 :  #  put dashes every two units (this "if" is not needed after change from 4 to 2)
-           xmlText = xmlText + ("<line x1='0' y1='" +
-                         str(height - (i-yMin+1)*yfactor) + "' x2='" + str(width) +
-                         "' y2='" + str(height - (i-yMin+1)*yfactor) +
-                         "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
-
-    xmlText = xmlText + ("<text x='5' y='10' style='fill:rgb(102,102,102);font-size:11px;'>Conductor</text>\n")
-    xmlText = xmlText + ("<text x='" + str(width-xfactor+35) + "' y='" + str(height - 2 * ticlength) +
-                         "' style='fill:rgb(102,102,102);font-size:11px;'>Order</text>\n")
-    
-    return xmlText
-
-## =============================================
-## helper function that organizes the Dirichlet characters
-## by order.  It returns a dict of characters where each entry
-## is a list of pairs. In particular char_dict[(N, order)] = [(ii,parity)]
-## where N is the conductor of the character with index ii in Sage's 
-## ordering, and is even if parity is 0 and 1 otherwise.
-## =============================================
-
-def reindex_characters(min_mod, max_mod, order_limit=12):
-    h, entries, rownrs, colnrs = get_character_modulus(min_mod,max_mod,order_limit)
-##    These entries used for debugging when Conrey char not availble.
-##    rownrs=range(1,21)
-##    colnrs=range(1,12)
-##    colnrs.append('more')
-##    entries = {}
-##    entries[(5,4)] = [((3, True, 4,True),(3, True, 4,True) ) ,((2,True,2,False),)]
-##    entries[(17,'more')] = [((3, True, 16,True),(3, True, 16,True) ) ,((2,True,2,False),)]
-    char_dict = {}
-    for modulus in rownrs:
-        for col in colnrs:
-            entry = entries.get((modulus, col), [])
-            for chi in entry:  #chi is either a real character or pair of complex conjugates
-                if chi[0][1]: #Primitiv
-                    order = chi[0][2]
-                    nr = chi[0][0]
-                    isEven = chi[0][3]
-                    
-                    if order > order_limit:
-                        order = order_limit
-
-                    # Add an entry to list with given order and modulus
-                    dict_entry = char_dict.get((order, modulus), [])
-                    if order < 3:  # Real
-                        dict_entry.append((nr, isEven))
-                    else:  # Complex
-                        nrInv = chi[1][0]   # Number of the inverse character
-                        dict_entry.append((nr, nrInv, isEven))
-                    char_dict[(order, modulus)] = dict_entry
-
-    logger.debug(char_dict)
-    return char_dict
-
-# This is the old version for sage characters 
-def reindex_characters_old(min_mod, max_mod):
-    from sage.sets.set import Set
-    char_dict = {}
-    for N in range(min_mod, max_mod + 1):
-        GG = list(DirichletGroup(N))
-        G = []
-        for g in GG:
-            if g.is_primitive():
-                G.append(g)
-        for ii in range(len(G)):
-            chi = G[ii]
-            chib = chi.bar()
-            ord = chi.order()
-            parity = 1 # even
-            if chi.is_odd():
-                parity = -1
-            if ord < 13:
-                if chi == chib: #chi is real
-                    try:
-                        char_dict[(ord, N)].append((ii, parity))
-                    except KeyError:
-                        char_dict[(ord, N)] = []
-                        char_dict[(ord, N)].append((ii, parity))
-                else: #chi is complex 
-                    jj = G.index(chib)
-                    try:
-                        char_dict[(ord, N, "i")].append((ii,jj,parity))
-                    except KeyError:
-                        char_dict[(ord, N, "i")] = []
-                        char_dict[(ord, N, "i")].append((ii,jj,parity))
-            else:
-                if chi == chib: #chi is real
-                    try:
-                        char_dict[(13, N)].append((ii, parity))
-                    except KeyError:
-                        char_dict[(13, N)] = []
-                        char_dict[(13, N)].append((ii, parity))
-                else: #chi is complex 
-                    jj = G.index(chib)
-                    try:
-                        char_dict[(13, N, "i")].append((ii,jj,parity))
-                    except KeyError:
-                        char_dict[(13, N, "i")] = []
-                        char_dict[(13, N, "i")].append((ii,jj,parity))
-    cd = {} 
-    for k in char_dict:
-        if len(k) == 2:
-            cd[k] = char_dict[k]
-
-    for k in char_dict:
-        if len(k) == 3:
-            ll = char_dict[k]
-            for a,b,c in ll:
-                ll.remove((b,a,c))
-            try:
-                cd[(k[0],k[1])].extend(ll) 
-            except KeyError:
-                cd[(k[0],k[1])] = ll                         
-    return cd
 
 
 ## ============================================
@@ -1028,22 +898,121 @@ def paintSvgChar(min_cond,max_cond,min_order,max_order):
     return ans 
 
 
-
 ## ============================================
-## Returns the header, some information and the url for the svg-file for
-## the Dirichlet L-functions.
+## Returns the svg-code for a simple coordinate system.
+## width = width of the system
+## height = height of the system
+## xMax = maximum in first (x) coordinate
+## yMax = maximum in second (y) coordinate
+## xfactor = the number of pixels per unit in x
+## yfactor = the number of pixels per unit in y
+## ticlength = the length of the tickmarks
 ## ============================================
-def getOneGraphHtmlChar(min_cond, max_cond, min_order, max_order):
-    graphInfo = getGraphInfoChar(min_cond, max_cond, min_order, max_order)
-    logger.info("graphInfo %s" % graphInfo)
-    ans = ("<embed id='charGraph' src='" + graphInfo['src'] + "' width='" + str(graphInfo['width']) +
-#    ans = ("<embed src='/static/images/browseGraphChar_1_35.svg' width='" + str(graphInfo['width']) +
-           "' height='" + str(graphInfo['height']) +
-            "' type='image/svg+xml' " +
-            "pluginspage='http://www.adobe.com/svg/viewer/install/'/>\n")
-    ans += "<br/>\n"
+def paintCSChar(width, height, xMax, yMax, yMin, xfactor, yfactor,ticlength):
+    xmlText = ("<line x1='0' y1='" + str(height) + "' x2='" +
+               str(width) + "' y2='" + str(height) +
+               "' style='stroke:rgb(0,0,0);'/>\n")
+    xmlText = xmlText + ("<line x1='0' y1='" + str(height) +
+                         "' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n")
+    for i in range( 1,  xMax + 1):
+        xmlText = xmlText + ("<line x1='" + str(i*xfactor) + "' y1='" +
+                             str(height - ticlength) + "' x2='" +
+                             str(i*xfactor) + "' y2='" + str(height) +
+                             "' style='stroke:rgb(0,0,0);'/>\n")
 
-    return(ans)
+    for i in range( 1,  xMax + 1, 1):
+        digitoffset = 6
+        if i < 10:
+            digitoffset = 3
+        if i < xMax:       
+            textOrder = str(i)
+        else:
+            textOrder = '>' + str(xMax-1)
+	    digitoffset += 6
+        xmlText = xmlText + ("<text x='" + str(i*xfactor - digitoffset) + "' y='" +
+                             str(height - 2 * ticlength) +
+                             "' style='fill:rgb(102,102,102);font-size:11px;'>"
+                             + textOrder + "</text>\n")
+
+        xmlText = xmlText + ("<line y1='0' x1='" + str(i*xfactor) +
+                         "' y2='" + str(height) + "' x2='" +
+                         str(i*xfactor) +
+                         "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+
+    for i in range( yMin,  yMax + 1):
+        xmlText = xmlText + ("<line x1='0' y1='" +
+                             str(height - (i-yMin+1)*yfactor) + "' x2='" +
+                             str(ticlength) + "' y2='" +
+                             str(height - (i-yMin+1)*yfactor) +
+                             "' style='stroke:rgb(0,0,0);'/>\n")
+
+    for i in range( yMin + yMin%2,  yMax + 1, 2):
+        xmlText = xmlText + ("<text x='5' y='" +
+                             str(height - (i-yMin+1)*yfactor + 3) +
+                             "' style='fill:rgb(102,102,102);font-size:11px;'>" +
+                             str(i) + "</text>\n")
+
+        if i%2==0 :  #  put dashes every two units (this "if" is not needed after change from 4 to 2)
+           xmlText = xmlText + ("<line x1='0' y1='" +
+                         str(height - (i-yMin+1)*yfactor) + "' x2='" + str(width) +
+                         "' y2='" + str(height - (i-yMin+1)*yfactor) +
+                         "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+
+    xmlText = xmlText + ("<text x='5' y='10' style='fill:rgb(102,102,102);font-size:11px;'>Conductor</text>\n")
+    xmlText = xmlText + ("<text x='" + str(width-xfactor+35) + "' y='" + str(height - 2 * ticlength) +
+                         "' style='fill:rgb(102,102,102);font-size:11px;'>Order</text>\n")
+    
+    return xmlText
+
+## =============================================
+## helper function that organizes the Dirichlet characters
+## by order.  It returns a dict of characters where each entry
+## is a list of pairs. In particular char_dict[(N, order)] = [(ii,parity)]
+## where N is the conductor of the character with index ii in Sage's 
+## ordering, and is even if parity is 0 and 1 otherwise.
+## =============================================
+
+def reindex_characters(min_mod, max_mod, order_limit=12):
+    h, entries, rownrs, colnrs = get_character_modulus(min_mod,max_mod,order_limit)
+##    These entries used for debugging when Conrey char not availble.
+##    rownrs=range(1,21)
+##    colnrs=range(1,12)
+##    colnrs.append('more')
+##    entries = {}
+##    entries[(5,4)] = [((3, True, 4,True),(3, True, 4,True) ) ,((2,True,2,False),)]
+##    entries[(17,'more')] = [((3, True, 16,True),(3, True, 16,True) ) ,((2,True,2,False),)]
+    char_dict = {}
+    for modulus in rownrs:
+        for col in colnrs:
+            entry = entries.get((modulus, col), [])
+            for chi in entry:  #chi is either a real character or pair of complex conjugates
+                if chi[0][1]: #Primitiv
+                    order = chi[0][2]
+                    nr = chi[0][0]
+                    isEven = chi[0][3]
+                    
+                    if order > order_limit:
+                        order = order_limit
+
+                    # Add an entry to list with given order and modulus
+                    dict_entry = char_dict.get((order, modulus), [])
+                    if order < 3:  # Real
+                        dict_entry.append((nr, isEven))
+                    else:  # Complex
+                        nrInv = chi[1][0]   # Number of the inverse character
+                        dict_entry.append((nr, nrInv, isEven))
+                    char_dict[(order, modulus)] = dict_entry
+
+    logger.debug(char_dict)
+    return char_dict
+
+
+
+###############################################################################
+# Uncompleted code to create a more elaborate graph for cusp forms
+###############################################################################
+
+
 
 
 ## ============================================

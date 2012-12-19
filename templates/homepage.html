@@ -88,17 +88,17 @@
   </ul>
 
   <h2 class="link">
-   <a href="{{ url_for('render_Lfunction') }}">L-functions</a>
+   <a href="{{ url_for('l_functions.l_function_top_page') }}">L-functions</a>
   </h2>
   <ul class="list">
    <li>
     Degree:
     {% if user_is_authenticated and (username == 'MichaelRubinstein' or username == 'Jonathan Bober' or username == 'Ralph Furmaniak' or username == 'Harald Schilly') %}
       <span id="span1" style="position:relative;display:none">
-      <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree1')}}"><img src="/static/images/1dot.svg"/></a>
-      <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree2')}}"><img src="/static/images/2dot.svg"/></a>
-      <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree3')}}"><img src="/static/images/3dot.svg"/></a>
-      <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree4')}}"><img src="/static/images/4dot.svg"/></a>
+      <a class="lfunction"  href="{{url_for('l_functions.l_function_degree_page', degree='degree1')}}"><img src="/static/images/1dot.svg"/></a>
+      <a class="lfunction"  href="{{url_for('l_functions.l_function_degree_page', degree='degree2')}}"><img src="/static/images/2dot.svg"/></a>
+      <a class="lfunction"  href="{{url_for('l_functions.l_function_degree_page', degree='degree3')}}"><img src="/static/images/3dot.svg"/></a>
+      <a class="lfunction"  href="{{url_for('l_functions.l_function_degree_page', degree='degree4')}}"><img src="/static/images/4dot.svg"/></a>
       </span>
       <script>
         if(Math.random()<0.02) {
@@ -114,10 +114,10 @@
       </script>
     {% endif %}
     <span id="span2">
-    <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree1')}}">1</a>
-    <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree2')}}">2</a>
-    <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree3')}}">3</a>
-    <a class="lfunction"  href="{{url_for('render_Lfunction', arg1 = 'degree4')}}">4</a>
+    <a class="lfunction"  href="{{url_for('l_functions.l_function_degree_page', degree= 'degree1')}}">1</a>
+    <a class="lfunction"  href="{{url_for('l_functions.l_function_degree_page', degree= 'degree2')}}">2</a>
+    <a class="lfunction"  href="{{url_for('l_functions.l_function_degree_page', degree= 'degree3')}}">3</a>
+    <a class="lfunction"  href="{{url_for('l_functions.l_function_degree_page', degree= 'degree4')}}">4</a>
     </span>
    </li>
   </ul>

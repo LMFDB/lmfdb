@@ -10,7 +10,6 @@ from sage.all import *
 import tempfile, os
 from pymongo import ASCENDING
 from WebCharacter import *
-#from renderLfunction import render_Lfunction
 from utils import to_dict, parse_range, make_logger
 import ListCharacters
 
@@ -129,8 +128,7 @@ def set_info_for_start_page():
     info['credit'] = 'Sage'
     info['title'] = 'Dirichlet Characters'
     info['bread'] = [('Dirichlet Characters', url_for("render_Character"))]
-    #info['learnmore'] = [('Dirichlet Characters', url_for("knowledge.show", ID="character.dirichlet.learn_more_about"))]
-    info['friends'] = [('Dirichlet L-functions', url_for("render_Lfunction", arg1="degree1"))]
+    info['friends'] = [('Dirichlet L-functions', url_for("l_functions.l_function_dirichlet_browse_page"))]
     return info
 
 def initCharacterInfo(web_chi, args, request):
@@ -296,8 +294,7 @@ def getUrl(modulus, number, mode):
     if mode == "character":
         return url_for("render_Character", arg1=modulus, arg2=number)
     else:
-        return url_for("render_Lfunction", arg1 = 'Character', arg2 = 'Dirichlet',
-                arg3=modulus, arg4=number)
+        return url_for("l_functions.l_function_dirichlet_page", modulus=modulus, number=number)
 
 @app.route("/Character/Dirichlet/<modulus>/<number>")
 def render_webpage_label(modulus,number):

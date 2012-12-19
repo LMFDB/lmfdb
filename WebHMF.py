@@ -21,11 +21,11 @@ class WebHMF:
             import urllib
             self.url = dict['url']
             self.contents = urllib.urlopen(self.url).read()
-            self.parseLcalcfile()
+            self.parseLcalcfile_ver1()
 
         elif self.type=='lcalcfile':
             self.contents = dict['filecontents']
-            self.parseLcalcfile()
+            self.parseLcalcfile_ver1()
 
         elif self.type=='modularform':
             self.level = dict['level']
@@ -42,7 +42,7 @@ class WebHMF:
         """
 
 
-    def parseLcalcfile(self):
+    def parseLcalcfile_ver1(self):
         lines = self.contents.split('\n',6)
         self.coefficient_type = int(lines[0])
         self.quasidegree = int(lines[4])

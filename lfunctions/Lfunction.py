@@ -1,10 +1,21 @@
 # -*- coding: utf-8 -*-
+# Contains the class Lfunction which represents an L-function
+# It's usually created through one of the subclasses:
+# RiemannZeta, Lfunction_Dirichlet, Lfunction_EC, Lfunction_EMF, 
+# Lfunction_HMF, Lfunction_Maass, Lfunction_SMF2_scalar_valued,
+# DedekindZeta, ArtinLfunction, SymmetricPowerLfunction
+
 import base
 import math
-from Lfunctionutilities import (pair2complex, splitcoeff, seriescoeff, compute_local_roots_SMF2_scalar_valued,
-                                compute_dirichlet_series, number_of_coefficients_needed,
-                                logger, signOfEmfLfunction)
-from LfunctionComp import nr_of_EC_in_isogeny_class, modform_from_EC, EC_from_modform
+from Lfunctionutilities import (seriescoeff,
+                                compute_local_roots_SMF2_scalar_valued,
+                                compute_dirichlet_series,
+                                number_of_coefficients_needed,
+                                signOfEmfLfunction)
+from LfunctionComp import (nr_of_EC_in_isogeny_class, modform_from_EC,
+                           EC_from_modform)
+import LfunctionLcalc
+from lfunctions import logger
 from sage.all import *
 import sage.libs.lcalc.lcalc_Lfunction as lc
 from sage.rings.rational import Rational
@@ -17,46 +28,21 @@ from WebNumberField import WebNumberField
 from modular_forms.elliptic_modular_forms.backend.web_modforms import *
 from modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import MaassDB
 from modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaassForm
-import time ### for printing the date on an lcalc file
-import socket ### for printing the machine used to generate the lcalc file
-
-#def get_attr_or_method(thiswillbeexecuted, attr_or_method_name):
-#    """
-#        Given an object O and a string "text", this returns O.text() or O.text depending on
-#        whether text is an attribute or a method of O itself _or one of its superclasses_, which I will
-#        only know at running time. I think I need an eval for that.   POD
-#
-#    """
-#    # I don't see a way around using eval for what I want to be able to do
-#    # Because of inheritance, which method should be called depends on self
-#    try:
-#        return eval("thiswillbeexecuted."+attr_or_method_name)
-#    except:
-#        return None
-
-def my_find_update(the_coll, search_dict, update_dict):
-    """ This performs a search using search_dict, and updates each find in  
-    the_coll using update_dict. If there are none, update_dict is actually inserted.
-    """
-    x = the_coll.find(search_dict,limit=1)
-    if x.count() == 0:
-        the_coll.insert(update_dict)
-    else:
-        for x in the_coll.find(search_dict):
-            x.update(update_dict)
-            the_coll.save(x)
 
 
-def parse_complex_number(z):
-    z_parsed = "(" + str(real_part(z)) + "," +str(imag_part(z)) + ")"
-    return z_parsed
-
-#############################################################################
 
 def constructor_logger(object, args):
+    ''' Executed when a object is constructed for debugging reasons
+    '''
     logger.info(str(object.__class__)+str(args))
     #object.inject_database(["original_mathematical_object()", "poles", "residues", "kappa_fe",
     #    "lambda_fe", "mu_fe", "nu_fe"])  #Paul Dehaye put this here for debugging
+
+
+
+#############################################################################
+# The base class
+#############################################################################
 
 class Lfunction:
     """Class representing a general L-function
@@ -106,7 +92,7 @@ class Lfunction:
                     raise Exception("You forgot to supply an url.")
 
             # Parse the Lcalcfile
-            self.parseLcalcfile()
+            self.parseLcalcfile_ver1()
 
             # Check if self dual
             self.checkselfdual()
@@ -125,51 +111,9 @@ class Lfunction:
 
             self.generateSageLfunction()
 
+
     def Ltype(self):
         return self._Ltype
-
-    def parseLcalcfile(self, filecontents):
-        """ Extracts informtion from the lcalcfile
-        """
-
-        lines = filecontents.split('\n',6)
-        self.coefficient_type = int(lines[0])
-        # Rishi tells me that for his wrapper
-        # 0 is for general, 1 is for periodic and 2 is for elliptic curves.
-        # Mike seems to only use 0 and 1.
-        # POD
-        self.quasidegree = int(lines[4])
-        lines = self.lcalcfile.split('\n',8+2*self.quasidegree)
-        self.Q_fe = float(lines[5+2*self.quasidegree])
-        self.sign = pair2complex(lines[6+2*self.quasidegree])
-
-        self.kappa_fe = []
-        self.lambda_fe = []
-        self.mu_fe = []
-        self.nu_fe = []
-
-        for i in range(self.quasidegree):
-            localdegree = float(lines[5+2*i])
-            self.kappa_fe.append(localdegree)
-            locallambda = pair2complex(lines[6+2*i])
-            self.lambda_fe.append(locallambda)
-            if math.fabs(localdegree-0.5)<0.00001:
-                self.mu_fe.append(2*locallambda)
-            elif math.fabs(localdegree-1)<0.00001:
-                self.nu_fe.append(locallambda)
-            else:
-                self.nu_fe.append(locallambda)
-                self.langlands = False
-
-        """ Do poles here later
-        """
-
-        self.degree = int(round(2*sum(self.kappa_fe)))
-
-        self.level = int(round(math.pi**float(self.degree) * 4**len(self.nu_fe) * self.Q_fe**2 ))
-        # note:  math.pi was not compatible with the sage type of degree
-
-        self.dirichlet_coefficients = splitcoeff(lines[-1])
 
 
     def checkselfdual(self):
@@ -181,6 +125,7 @@ class Lfunction:
         for n in range(1,min(8,len(self.dirichlet_coefficients))):
             if abs(imag_part(self.dirichlet_coefficients[n]/self.dirichlet_coefficients[0])) > 0.00001:
                 self.selfdual = False
+
 
     def generateSageLfunction(self):
         """ Generate a SageLfunction to do computations
@@ -198,307 +143,41 @@ class Lfunction:
                     # self.lambda_fe:       What ultimately appears if you do lcalc.lcalc_Lfunction._print_data_to_standard_output() as the lambda[1]
                     # According to Rishi, as of March 2012 (sage <=5.0), the documentation to his wrapper is wrong
 
-    def createLcalcfile(self):
-        thefile="";
-        if self.selfdual:
-            thefile += "2\n"  # 2 means real coefficients
-        else:
-            thefile += "3\n"  # 3 means complex coefficients
 
-        thefile += "0\n"  # 0 means unknown type
+    def parseLcalcfile_ver1(self, filecontents):
+        """ Extracts informtion from the lcalcfile, version 1
+        """
+        LfunctionLcalc.parseLcalcfile_ver1(self, filecontents)
 
-        thefile += str(len(self.dirichlet_coefficients)) + "\n"  
-
-        thefile += "0\n"  # assume the coefficients are not periodic
-
-        thefile += str(self.quasidegree) + "\n"  # number of actual Gamma functions
-
-        for n in range(0,self.quasidegree):
-            thefile = thefile + str(self.kappa_fe[n]) + "\n"
-            thefile = thefile + str(real_part(self.lambda_fe[n])) + " " + str(imag_part(self.lambda_fe[n])) + "\n"
-
-        thefile += str(real_part(self.Q_fe)) +  "\n"
-
-        thefile += str(real_part(self.sign)) + " " + str(imag_part(self.sign)) + "\n"
-
-        thefile += str(len(self.poles)) + "\n"  # counts number of poles
-
-        for n in range(0,len(self.poles)):
-            thefile += str(real_part(self.poles[n])) + " " + str(imag_part(self.poles[n])) + "\n" #pole location
-            thefile += str(real_part(self.residues[n])) + " " + str(imag_part(self.residues[n])) + "\n" #residue at pole
-
-        for n in range(0,len(self.dirichlet_coefficients)):
-            thefile += str(real_part(self.dirichlet_coefficients[n]))   # add real part of Dirichlet coefficient
-            if not self.selfdual:  # if not selfdual
-                thefile += " " + str(imag_part(self.dirichlet_coefficients[n]))   # add imaginary part of Dirichlet coefficient
-            thefile += "\n"
-
-        return(thefile)
-
-
-############################################################################
-### Returns the Lcalcfile, version 2
-############################################################################
+    def createLcalcfile_ver1(self):
+        """ Creates the lcalcfile of L, version 1
+        """
+        return LfunctionLcalc.createLcalcfile_ver1(self)
 
     def createLcalcfile_ver2(self, url):
-        thefile=""
-        thefile += "##########################################################################################################\n"
-        thefile += "###\n"
-        thefile += "### lcalc file for the url: " + url + "\n"
-        thefile += "### This file assembled: " + time.asctime()  + "\n"
-        thefile += "### on machine: " + socket.gethostname()  + "\n"
-        thefile += "###\n"
-        try:
-            thefile += "###     type = %s\n"%self.Ltype()
-            thefile+=  "### Data passed to lcalc wrapper, if it is used: \n"
-            thefile+=  "###     title = %s \n"%self.title
-            thefile += "###     coefficient_type = %s \n"%self.coefficient_type
-            thefile += "###     dirichlet_coefficients = %s \n"%self.dirichlet_coefficients[:50]
-            thefile += "###         (here limited to 50, but in reality %s are passed )\n"%len(self.dirichlet_coefficients)
-            thefile += "###     coefficient_period = %s \n"%self.coefficient_period
-            thefile += "###     Q_fe = %s \n"%self.Q_fe
-            thefile += "###     sign = %s \n"%self.sign
-            thefile += "###     kappa_fe = %s \n"%self.kappa_fe
-            thefile += "###     lambda_fe = %s \n"%self.lambda_fe
-            thefile += "###     poles = %s \n"%self.poles
-            thefile += "###     residues = %s \n"%self.residues
-        except AttributeError:
-            pass
-        thefile += "##########################################################################################################\n\n"
-        thefile += "lcalcfile_version = 2    ### lcalc files should have a version number for future enhancements\n\n"
-
-        thefile += """\
-##########################################################################################################
-### Specify the functional equation using the Gamma_R and Gamma_C
-### notation. Let Gamma_R = pi^(-s/2) Gamma(s/2), and  Gamma_C = (2 pi)^(-s) Gamma(s).
-###
-### Let Lambda(s) :=
-###
-###                  a
-###               --------'
-###              '  |  |
-###          s      |  |
-###   sqrt(N)       |  |   Gamma_{R or C}(s + lambda_j)  L(s)
-###                 |  |
-###                j = 1
-###
-###                          ___________
-###                                    _
-### satisfy Lambda(s) = omega Lambda(1-s), where N is a positive integer, |omega|=1,
-### Each of the Gamma factors can be a Gamma_R or Gamma_C.
-
-### Specify the conductor. Other possible keywords: N, level."""
-
-
-#omega, and Gamma_R and Gamma_C factors:"""
-
-        thefile += "\n\n"
-        thefile += "conductor = " + str(self.level) + "\n\n"
-
-        thefile += "### Specify the sign of the functional equation.\n"
-        thefile += "### Complex numbers should be specified as:\n"
-        thefile += "### omega = (Re(omega),Im(omega)). Other possible keyword: sign\n\n"
-        if self.selfdual:
-            thefile += "omega = " + str(self.sign) + "\n\n"
-        else:
-            thefile += "omega = " + parse_complex_number(self.sign) + "\n\n"
-
-
-        thefile += "### Gamma_{R or C}_list lists the associated lambda_j's. Lines with empty lists can be omitted.\n\n"
-        thefile += "Gamma_R_list = " +  str(self.mu_fe) + "\n"
-        thefile += "Gamma_C_list = " +  str(self.nu_fe) + "\n\n"
-
-        thefile += """\
-##########################################################################################################
-### Specify, as lists, the poles and residues of L(s) in Re(s)>1/2 (i.e. assumes that there are no
-### poles on s=1/2). Also assumes that the poles are simple. Lines with empty lists can be omitted."""
-        thefile += "\n\n"
-        if hasattr(self, 'poles_L'):
-            thefile += "pole_list = " +  str(self.poles_L) + "\n"
-        else:
-            thefile += "pole_list = []\n"
-
-        if hasattr(self, 'residues_L'):
-            thefile += "residue_list = " +  str(self.residues_L) + "\n\n"
-        else:
-            thefile += "residue_list = []\n\n"
-
-        thefile += """\
-##########################################################################################################
-### Optional:"""
-
-        thefile += "\n\n"
-
-        thefile += "name = \"" + url.partition('/L/')[2].partition('?download')[0].strip('/') + "\"\n"
-        kind = url.partition('/L/')[2].partition('?download')[0].partition('/')[0]
-        kind_of_L = url.partition('/L/')[2].partition('?download')[0].split('/')
-        #thefile += str(kind_of_L) + "\n\n\n\n"
-        if len(kind_of_L)>2:
-            thefile += "kind = \"" + kind_of_L[0] + "/" + kind_of_L[1] + "\"\n\n"
-        elif len(kind_of_L)==2:
-            thefile += "kind = \"" + kind_of_L[0] + "\"\n\n"
-
-        thefile += """\
-##########################################################################################################
-### Specify the Dirichlet coefficients, whether they are periodic
-### (relevant for Dirichlet L-functions), and whether to normalize them
-### if needed to get a functional equation s <--> 1-s
-###
-### periodic should be set to either True (in the case of Dirichlet L-functions,
-### for instance), or False (the default). If True, then lcalc assumes that the coefficients
-### given, a[0]...a[N], specify all a[n] with a[n]=a[m] if n=m mod (N+1).
-### For example, for the real character mod 4, one should,
-### have periodic = True and at the bottom of this file, then specify:
-### dirichlet_coefficient =[
-### 0,
-### 1,
-### 0,
-### -1
-### ]
-###
-### Specify whether Dirichlet coefficients are periodic:"""
-        thefile += "\n\n"
-        if(self.coefficient_period!=0 or hasattr(self, 'is_zeta')):
-            thefile += "periodic = True\n\n"
-        else:
-            thefile += "periodic = False\n\n"
-
-
-        thefile += """\
-##########################################################################################################
-### The default is to assume that the Dirichlet coefficients are provided
-### normalized so that the functional equation is s <--> 1-s, i.e. `normalize_by'
-### is set to 0 by default.
-###
-### Sometimes, such as for an elliptic curve L-function, it is more convenient to
-### record the Dirichlet coefficients normalized differently, for example, as
-### integers rather than as floating point approximations.
-###
-### For example, an elliptic curve L-function is assumed by lcalc to be of the
-### form:
-###
-###     L(s) = sum (a(n)/n^(1/2)) n^(-s),
-###
-### i.e. to have Dirichlet coefficients a(n)/n^(1/2) rather than a(n),
-### where a(p) = p+1-#E(F_p), and functional equation of the form
-###
-###     Lambda(s):=(sqrt(N)/(2 pi))^s Gamma(s+1/2) L(s) = omega Lambda(1-s),
-###
-### where omega = \pm 1.
-###
-### So, the normalize_by variable is meant to allow the convenience, for example,
-### of listing the a(n)'s rather than the a(n)/sqrt(n)'s."""
-        thefile += "\n\n"
-
-        if hasattr(self, 'normalize_by'):
-            thefile += "normalize_by = " + str(self.normalize_by) +  "    ### floating point is also okay.\n"
-            thefile += "### Normalize, below, the n-th Dirichlet coefficient by n^(" +str(self.normalize_by) + ")\n\n"
-        else:
-            thefile += "normalize_by = 0    # the default, i.e. no normalizing\n\n"
-
-        thefile += """\
-##########################################################################################################
-### The last entry must be the dirichlet_coefficient list, one coefficient per
-### line, separated # by commas. The 0-th entry is ignored unless the Dirichlet
-### coefficients are periodic. One should always include it, however, because, in
-### computer languages such as python, the 0-th entry is the `first' entry of an
-### array. Since this file is meant to be compatible also with python, we assume
-### that the 0-th entry is also listed.
-###
-### Complex numbers should be entered, as usual as a pair of numbers, separated
-### by a comma. If no complex numbers appear amongst the Dirichlet coefficients,
-### lcalc will assume the L-function is self-dual."""
-        thefile += "\n\n"
-
-
-        thefile += "Dirichlet_coefficient = [\n"
-
-        if hasattr(self, 'is_zeta'):
-            thefile += "1    ### the Dirichlet coefficients of zeta are all 1\n]\n"
-
-        else:
-            thefile += "0,\t\t\t### set Dirichlet_coefficient[0]\n"
-            if self.coefficient_period == 0:
-                period = Infinity
-            else:
-                period = self.coefficient_period
-            
-            if hasattr(self, 'dirichlet_coefficients_unnormalized'):
-                total = min(len(self.dirichlet_coefficients_unnormalized), period-1)
-                for n in range(0,total):
-                    if self.selfdual:
-                        thefile += str(self.dirichlet_coefficients_unnormalized[n])
-                    else:
-                        thefile += parse_complex_number(self.dirichlet_coefficients_unnormalized[n])
-                    if n < total - 1:           # We will be back
-                        thefile += ","
-                    if n<2:
-                        thefile += "\t\t\t### set Dirichlet_coefficient[" + str(n+1) +"] \n"
-                    else:
-                        thefile += "\n"
-            else:
-                total = min(len(self.dirichlet_coefficients), period-1)
-                for n in range(0,total):
-                    if self.selfdual:
-                        thefile += str(self.dirichlet_coefficients[n])
-                    else:
-                        thefile += parse_complex_number(self.dirichlet_coefficients[n])
-                    if n < total - 1:           # We will be back
-                        thefile += ","
-                    if n<2:
-                        thefile += "\t\t\t### set Dirichlet_coefficient[" + str(n+1) +"] \n"
-                    else:
-                        thefile += "\n"
-            #thefile = thefile[:-2]
-            thefile += "]\n"
-
-        return(thefile)
-
+        logger.debug("Starting Lcalc")
+        """ Creates the lcalcfile of L, version 1
+        """
+        return LfunctionLcalc.createLcalcfile_ver2(self, url)
 
     ############################################################################
-    ### other useful methods
+    ### other useful methods not implemented universally yet
     ############################################################################
 
     def original_mathematical_object(self):
         raise Error("not all L-function have a mathematical object tag defined atm")
 
-    def initial_zeroes(self, numzeroes=0):
-        pass
-
     def critical_value(self):
-        pass
-
-    def value_at_1(self):
         pass
 
     def conductor(self, advocate):
         # Advocate could be IK, CFKRS or B
         pass
 
-    ############################################################################
-    ### Injects into the database of all the L-functions
-    ############################################################################
-
-    #def inject_database(self, relevant_info, time_limit = None):
-    #    #   relevant_methods are text strings 
-    #    #    desired_database_fields = [Lfunction.original_mathematical_object, Lfunction.level]
-    #    #    also zeroes, degree, conductor, type, real_coeff, rational_coeff, algebraic_coeff, critical_value, value_at_1, sign
-    #    #    ok_methods = [Lfunction.math_id, Lfunction.level]
-    #    #
-    #    # Is used to inject the data in relevant_fields
-    #
-    #    logger.info("Trying to inject")
-    #    import base
-    #    db = base.getDBConnection().Lfunctions
-    #    Lfunctions = db.full_collection
-    #    update_dict = dict([(method_name,get_attr_or_method(self,method_name)) for method_name in relevant_info])
-    #
-    #    logger.info("injecting " + str(update_dict))
-    #    search_dict = {"original_mathematical_object()": get_attr_or_method(self, "original_mathematical_object()")}
-    #
-    #    my_find_update(Lfunctions, search_dict, update_dict)
 
 
+#############################################################################
+# The subclasses
 #############################################################################
 
 class Lfunction_EC(Lfunction):
@@ -1094,7 +773,7 @@ class Lfunction_Maass(Lfunction):
             self.residues = []
 
             # Extract the L-function information from the lcalfile in the database
-            self.parseLcalcfile(self.lcalcfile)
+            self.parseLcalcfile_ver1(self.lcalcfile)
 
         else: # GL2 data from Then or Stromberg
 
@@ -1102,11 +781,11 @@ class Lfunction_Maass(Lfunction):
             port  = base.getDBConnection().port
             DB=MaassDB(host=host,port=port)
             logger.debug("count={0}".format(DB.count()))
-            print "BEFORE!!!"
+            logger.debug(self.dbid)
             self.mf = WebMaassForm(DB,self.dbid,get_dirichlet_c_only=1)
             self.group = 'GL2'
-            print "AFTER!!!"
-            logger.debug("HERE")
+            logger.debug(self.mf.R)
+            logger.debug(self.mf.symmetry)
             # Extract the L-function information from the Maass form object
             self.symmetry = self.mf.symmetry
             self.eigenvalue = float(self.mf.R)
@@ -1133,11 +812,9 @@ class Lfunction_Maass(Lfunction):
 
             # Todo: If self has dimension >1, link to specific L-functions
             self.dirichlet_coefficients = self.mf.coeffs
-            logger.info("Zeroth coefficient: {0}".format(self.dirichlet_coefficients[0]))
             if self.dirichlet_coefficients[0]==0:
                 self.dirichlet_coefficients.pop(0)
-            logger.info("First coefficient: {0}".format(self.dirichlet_coefficients[0]))
-            logger.info("Third coefficient: {0}".format(self.dirichlet_coefficients[2]))
+
             # Set properties of the L-function
             self.coefficient_type = 2
             self.selfdual = True
@@ -1145,7 +822,7 @@ class Lfunction_Maass(Lfunction):
             self.quasidegree = 2
             self.Q_fe = float(sqrt(self.level))/float(math.pi)
 
-            logger.info("Symmetry: {0}".format(self.symmetry))
+            logger.debug("Symmetry: {0}".format(self.symmetry))
             if self.symmetry =="odd" or self.symmetry == 1:
                 self.sign = -1
                 aa = 1
@@ -1153,10 +830,10 @@ class Lfunction_Maass(Lfunction):
                 self.sign = 1
                 aa = 0
 
-            logger.info("Sign (without Fricke): {0}".format(self.sign))
+            logger.debug("Sign (without Fricke): {0}".format(self.sign))
             if self.level > 1:
                 self.sign = self.fricke * self.sign
-            logger.info("Sign: {0}".format(self.sign))
+            logger.debug("Sign: {0}".format(self.sign))
 
             self.kappa_fe = [0.5,0.5]
             self.lambda_fe = [0.5*aa + self.eigenvalue*I/2, 0.5*aa - self.eigenvalue*I/2]
@@ -1190,10 +867,12 @@ class Lfunction_Maass(Lfunction):
 
     def Ltype(self):
         return "maass"
+
+    
 #############################################################################
 
 class DedekindZeta(Lfunction):   # added by DK
-    """Class representing the Dedekind zeta-fucntion
+    """Class representing the Dedekind zeta-function
 
     Compulsory parameters: label
 
@@ -1224,7 +903,7 @@ class DedekindZeta(Lfunction):   # added by DK
         self.quasidegree = sum(self.signature)
         self.level = wnf.disc().abs() # self.NF.discriminant().abs()
         self.degreeofN = self.NF.degree()
-
+        
         self.Q_fe = float(sqrt(self.level)/(2**(self.signature[1]) * (math.pi)**(float(self.degreeofN)/2.0)))
 
         self.kappa_fe = self.signature[0]* [0.5] + self.signature[1] * [1]
@@ -1282,11 +961,16 @@ class DedekindZeta(Lfunction):   # added by DK
     def Ltype(self):
         return "dedekindzeta"
 
+    
+#############################################################################
 
 class ArtinLfunction(Lfunction):
-    def Ltype(self):
-        return "artin"
-    
+    """Class representing the Artin L-function
+
+    Compulsory parameters: dimension, conductor, tim_index
+
+    """
+
     def __init__(self, dimension, conductor, tim_index, **args):
         constructor_logger(self,args)
 
@@ -1337,11 +1021,23 @@ class ArtinLfunction(Lfunction):
             self.texnamecompleted1ms = "\\overline{\\Lambda(1-\\overline{s})}"  # default name.  will be set later, for most L-functions
         self.generateSageLfunction()
 
-class SymmetricPowerLfunction(Lfunction):
     def Ltype(self):
-        return "SymmetricPower"
+        return "artin"
+    
+#############################################################################
 
-    def __init__(self, *args):
+class SymmetricPowerLfunction(Lfunction):
+    """Class representing the Symmetric power of an L-function
+
+    Only implemented for (non-CM) elliptic curves    
+
+    Compulsory parameters: power, underlying_type, field
+    For ellitic curves: label
+
+    """
+
+    def __init__(self, **args):
+        constructor_logger(self,args)
 
         def ordinal(n):
             if n == 2:
@@ -1353,14 +1049,18 @@ class SymmetricPowerLfunction(Lfunction):
             else:
                 return  str(n) + {1 : 'st', 2 : 'nd', 3 : 'rd'}.get(n % 10, "th") + " Power"
 
+        # Put the arguments into the object dictionary
+        # They are: power, underlying_type, field, label  (for EC)
+        self.__dict__.update(args)
+
         try:
-            self.m=int(args[0])
+            self.m=int(self.power)
+            logger.debug(self.m)
         except TypeError:
             raise TypeError, "The power has to be an integer"
-        if args[1][0] != 'EllipticCurve' or args[1][1] != 'Q':
+        if self.underlying_type != 'EllipticCurve' or self.field != 'Q':
             raise TypeError, "The symmetric L-functions have been implemented only for Elliptic Curves over Q"
 
-        self.label = args[1][2]
         # Create the elliptic curve
         curves = base.getDBConnection().elliptic_curves.curves
         Edata = curves.find_one({'lmfdb_label': self.label+'1'})
@@ -1437,9 +1137,11 @@ class SymmetricPowerLfunction(Lfunction):
             self.euler += poly_string
         self.euler += "\\end{align}"
 
-        #self.friends = [("Isogeny Class", '/'.join('', 'EllipticCurve','Q',self.label, ''))]
+    def Ltype(self):
+        return "SymmetricPower"
 
 
+#############################################################################
 
 class Lfunction_SMF2_scalar_valued(Lfunction):
     """Class representing an L-function for a scalar valued Siegel modular form of degree 2
@@ -1541,16 +1243,11 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         #d = self.dirichlet_coefficients
         #self.dirichlet_coefficients = [ emb(d[i])/float(i)**self.automorphyexp for i in range(1,len(d)) ]
 
-
-
         self.coefficient_period = 0
         self.coefficient_type = 2
         self.quasidegree = 1
 
-
-
         #self.checkselfdual()
-
 
         self.texname = "L(s,F)"
         self.texnamecompleteds = "\\Lambda(s,F)"
