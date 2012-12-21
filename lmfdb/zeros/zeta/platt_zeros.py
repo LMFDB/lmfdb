@@ -23,12 +23,13 @@ try:
 except:
     pass
 
+
 def list_zeros(filename,
                offset,
                block_number,
-               number_of_zeros = 2000,
-               t_start = 0,
-               N_start = 0):
+               number_of_zeros=2000,
+               t_start=0,
+               N_start=0):
     r"""
     Lower level function to list zeros starting at a specific place in a
     specific file. This function is meant to be called by a higher level
@@ -54,7 +55,7 @@ def list_zeros(filename,
 
     """
 
-    eps = mpmath.mpf(2)**(-101)     # The (absolute!) precision to which
+    eps = mpmath.mpf(2) ** (-101)     # The (absolute!) precision to which
                                     # the zeros are stored.
 
     infile = open(os.path.join(data_location, filename), 'rb')
@@ -63,13 +64,11 @@ def list_zeros(filename,
     # It is in a compressed binary format that we aren't going to
     # describe completely here. See [TODO].
 
-    number_of_blocks = struct.unpack('Q', infile.read(8))[0] # The first 8 bytes of the
+    number_of_blocks = struct.unpack('Q', infile.read(8))[0]  # The first 8 bytes of the
                                                              # the file are a 64-bit
                                                              # unsigned integer.
 
-
     # We move to the beginning of the block that we are interested in...
-    
     infile.seek(offset, 0)
     t0, t1, Nt0, Nt1 = struct.unpack('ddQQ', infile.read(8 * 4))
 
@@ -111,7 +110,7 @@ def list_zeros(filename,
             #
             if block_number == number_of_blocks:
                 infile.close()
-                
+
                 # If we are at the end of the file, we have to make a new
                 # query into the index to get the name of the next file.
                 #
@@ -161,15 +160,17 @@ def list_zeros(filename,
 
     infile.close()
 
-def zeros_starting_at_t(t, number_of_zeros = 1000):
+
+def zeros_starting_at_t(t, number_of_zeros=1000):
     if t < 14:
         t = 14
     query = 'select * from zero_index where t <= %d order by t desc limit 1' % float(t)
     c.execute(query)
     t0, N0, filename, offset, block_number = c.fetchone()
-    return list_zeros(filename, offset, block_number, number_of_zeros = number_of_zeros, t_start = t)
-   
-def zeros_starting_at_N(N, number_of_zeros = 1000):
+    return list_zeros(filename, offset, block_number, number_of_zeros=number_of_zeros, t_start=t)
+
+
+def zeros_starting_at_N(N, number_of_zeros=1000):
     N = int(N)
     if N < 0:
         N = 0
@@ -177,10 +178,10 @@ def zeros_starting_at_N(N, number_of_zeros = 1000):
     query = 'select * from zero_index where N <= %d order by N desc limit 1' % N
     c.execute(query)
     t0, N0, filename, offset, block_number = c.fetchone()
-    return list_zeros(filename, offset, block_number, number_of_zeros = number_of_zeros, N_start = N)
+    return list_zeros(filename, offset, block_number, number_of_zeros=number_of_zeros, N_start=N)
 
 if __name__ == "__main__":
     t = float(sys.argv[1])
     count = int(sys.argv[2])
     _print = int(sys.argv[3])
-    zeros = zeros_starting_at_t(t, count, _print = _print)
+    zeros = zeros_starting_at_t(t, count, _print=_print)

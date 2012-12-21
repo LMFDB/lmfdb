@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 from base import app
 from utils import make_logger
@@ -9,10 +8,8 @@ nf_logger = make_logger(nf_page)
 
 @nf_page.context_processor
 def body_class():
-  return { 'body_class' : 'nf' }
+    return {'body_class': 'nf'}
 
 from number_field import *
 
 app.register_blueprint(nf_page, url_prefix="/NumberField")
-
-

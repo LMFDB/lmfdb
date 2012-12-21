@@ -1,4 +1,8 @@
-import os.path, gzip, re, sys, time
+import os.path
+import gzip
+import re
+import sys
+import time
 import sage.misc.preparser
 import subprocess
 from pymongo import Connection
@@ -8,14 +12,15 @@ hmf_fields = Connection(port=int(37010)).hmfs.fields
 
 fields = Connection(port=int(37010)).numberfields.fields
 
-P = PolynomialRing(Rationals(), 3, ['w','e','x'])
-w,e,x = P.gens()
+P = PolynomialRing(Rationals(), 3, ['w', 'e', 'x'])
+w, e, x = P.gens()
 
-def recompute_AL(field_label = None, skip_odd = False):
-    if field_label == None:
-        S = hmf_forms.find({ "AL_eigenvalues_fixed" : None })
+
+def recompute_AL(field_label=None, skip_odd=False):
+    if field_label is None:
+        S = hmf_forms.find({"AL_eigenvalues_fixed": None})
     else:
-        S = hmf_forms.find({ "field_label" : field_label, "AL_eigenvalues_fixed" : None })
+        S = hmf_forms.find({"field_label": field_label, "AL_eigenvalues_fixed": None})
     S = S.sort("label")
 
     field_label = None
@@ -29,12 +34,12 @@ def recompute_AL(field_label = None, skip_odd = False):
 
         print v_label
 
-        if field_label == None or not field_label == v["field_label"]:
+        if field_label is None or not field_label == v["field_label"]:
             field_label = v["field_label"]
             print "...new field " + field_label
 
-            F = fields.find_one({"label" : field_label})
-            F_hmf = hmf_fields.find_one({"label" : field_label})
+            F = fields.find_one({"label": field_label})
+            F_hmf = hmf_fields.find_one({"label": field_label})
 
             magma.eval('P<x> := PolynomialRing(Rationals());')
             magma.eval('F<w> := NumberField(Polynomial(' + str(F["coefficients"]) + '));')
@@ -55,13 +60,14 @@ def recompute_AL(field_label = None, skip_odd = False):
             except StopIteration:
                 break
 
-        NN_index = NN_label[NN_label.index('.')+1:]        
-        magma.eval('NN := [I : I in ideals | Norm(I) eq ' + str(v["level_norm"]) + '][' + str(NN_index) + '];')
+        NN_index = NN_label[NN_label.index('.') + 1:]
+        magma.eval(
+            'NN := [I : I in ideals | Norm(I) eq ' + str(v["level_norm"]) + '][' + str(NN_index) + '];')
         magma.eval('Mfull := HilbertCuspForms(F, NN);')
         magma.eval('M := NewSubspace(Mfull);')
         magma.eval('O := QuaternionOrder(M); B := Algebra(O); DD := Discriminant(B);')
 
-        if v["hecke_polynomial"] <> 'x':
+        if v["hecke_polynomial"] != 'x':
             magma.eval('fpol := ' + v["hecke_polynomial"] + ';')
             magma.eval('K<e> := NumberField(fpol);')
         else:
@@ -73,55 +79,57 @@ def recompute_AL(field_label = None, skip_odd = False):
         print "...Hecke eigenvalues loaded..."
 
         magma.eval('denom := Lcm([Denominator(a) : a in hecke_eigenvalues]); q := NextPrime(200);')
-        magma.eval('while #Roots(fpol, GF(q)) eq 0 or Valuation(denom,q) gt 0 do q := NextPrime(q); end while;')
+        magma.eval(
+            'while #Roots(fpol, GF(q)) eq 0 or Valuation(denom,q) gt 0 do q := NextPrime(q); end while;')
         magma.eval('if K cmpeq Rationals() then mk := hom<K -> GF(q) | >; else mk := hom<K -> GF(q) | Roots(fpol,GF(q))[1][1]>; end if;')
 
-        magma.eval('_<xQ> := PolynomialRing(Rationals()); rootsofunity := [r[1] : r in Roots(xQ^(2*classno)-1,K)];')
+        magma.eval(
+            '_<xQ> := PolynomialRing(Rationals()); rootsofunity := [r[1] : r in Roots(xQ^(2*classno)-1,K)];')
 
-        magma.eval('s := 0; KT := []; '\
-                   'while KT cmpeq [] or Dimension(KT) gt 1 do '\
-                   '  s +:= 1; '\
-                   '  if s gt Min(50,#hecke_eigenvalues) then '\
-                   '    q := NextPrime(q); while #Roots(fpol, GF(q)) eq 0 or Valuation(denom,q) gt 0 do q := NextPrime(q); end while; '\
-                   '    if K cmpeq Rationals() then mk := hom<K -> GF(q) | >; else mk := hom<K -> GF(q) | Roots(fpol,GF(q))[1][1]>; end if; '\
-                   '    s := 1; '\
-                   '    KT := []; '\
-                   '  end if; '\
-                   '  pp := primes[s]; '\
-                   '  if Valuation(NN, pp) eq 0 then '\
-                   '    T_pp := HeckeOperator(M, pp); '\
-                   '    T_pp := Matrix(Nrows(T_pp),Ncols(T_pp),[mk(c) : c in Eltseq(T_pp)]); '\
-                   '    a_pp := hecke_eigenvalues[s]; '\
-                   '    if KT cmpeq [] then '\
-                   '      KT := Kernel(T_pp-mk(a_pp)); '\
-                   '    else '\
-                   '      KT := KT meet Kernel(T_pp-mk(a_pp)); '\
-                   '    end if; '\
-                   '  end if; '\
+        magma.eval('s := 0; KT := []; '
+                   'while KT cmpeq [] or Dimension(KT) gt 1 do '
+                   '  s +:= 1; '
+                   '  if s gt Min(50,#hecke_eigenvalues) then '
+                   '    q := NextPrime(q); while #Roots(fpol, GF(q)) eq 0 or Valuation(denom,q) gt 0 do q := NextPrime(q); end while; '
+                   '    if K cmpeq Rationals() then mk := hom<K -> GF(q) | >; else mk := hom<K -> GF(q) | Roots(fpol,GF(q))[1][1]>; end if; '
+                   '    s := 1; '
+                   '    KT := []; '
+                   '  end if; '
+                   '  pp := primes[s]; '
+                   '  if Valuation(NN, pp) eq 0 then '
+                   '    T_pp := HeckeOperator(M, pp); '
+                   '    T_pp := Matrix(Nrows(T_pp),Ncols(T_pp),[mk(c) : c in Eltseq(T_pp)]); '
+                   '    a_pp := hecke_eigenvalues[s]; '
+                   '    if KT cmpeq [] then '
+                   '      KT := Kernel(T_pp-mk(a_pp)); '
+                   '    else '
+                   '      KT := KT meet Kernel(T_pp-mk(a_pp)); '
+                   '    end if; '
+                   '  end if; '
                    'end while;')
         magma.eval('assert Dimension(KT) eq 1;')
 
         print "...dimension 1 subspace found..."
 
         magma.eval('NNfact := [pp : pp in Factorization(NN) | pp[1] in primes];')
-        magma.eval('f := Vector(Basis(KT)[1]); '\
-                   'AL_eigenvalues := []; '\
-                   'for pp in NNfact do '\
-                   '  if Valuation(DD,pp[1]) gt 0 then U_pp := -HeckeOperator(M, pp[1]); '\
-                   '  else U_pp := AtkinLehnerOperator(M, pp[1]); end if; '\
-                   '  U_pp := Matrix(Nrows(U_pp),Ncols(U_pp),[mk(c) : c in Eltseq(U_pp)]); '\
-                   '  U_ppf := f*U_pp; found := false; '\
-                   '  for mu in rootsofunity do '\
-                   '    if U_ppf eq mk(mu)*f then Append(~AL_eigenvalues, mu); found := true; end if; '\
-                   '  end for; '\
-                   '  assert found; '\
+        magma.eval('f := Vector(Basis(KT)[1]); '
+                   'AL_eigenvalues := []; '
+                   'for pp in NNfact do '
+                   '  if Valuation(DD,pp[1]) gt 0 then U_pp := -HeckeOperator(M, pp[1]); '
+                   '  else U_pp := AtkinLehnerOperator(M, pp[1]); end if; '
+                   '  U_pp := Matrix(Nrows(U_pp),Ncols(U_pp),[mk(c) : c in Eltseq(U_pp)]); '
+                   '  U_ppf := f*U_pp; found := false; '
+                   '  for mu in rootsofunity do '
+                   '    if U_ppf eq mk(mu)*f then Append(~AL_eigenvalues, mu); found := true; end if; '
+                   '  end for; '
+                   '  assert found; '
                    'end for;')
 
         print "...AL eigenvalues computed!"
 
         AL_ind = eval(preparse(magma.eval('[Index(primes,pp[1])-1 : pp in NNfact]')))
         AL_eigenvalues_jv = eval(preparse(magma.eval('AL_eigenvalues')))
-        AL_eigenvalues = [ [F_hmf["primes"][AL_ind[i]], AL_eigenvalues_jv[i] ] for i in range(len(AL_ind))]
+        AL_eigenvalues = [[F_hmf["primes"][AL_ind[i]], AL_eigenvalues_jv[i]] for i in range(len(AL_ind))]
         pps_exps = eval(preparse(magma.eval('[pp[2] : pp in NNfact]')))
 
         hecke_eigenvalues = v["hecke_eigenvalues"]
@@ -134,9 +142,9 @@ def recompute_AL(field_label = None, skip_odd = False):
                     hecke_eigenvalues[s] = str(-AL_eigenvalues[j][1])
             except IndexError:
                 pass
-                
-        AL_eigenvalues = [ [a[0], str(a[1])] for a in AL_eigenvalues]
-       
+
+        AL_eigenvalues = [[a[0], str(a[1])] for a in AL_eigenvalues]
+
         v["hecke_eigenvalues"] = hecke_eigenvalues
         v["AL_eigenvalues"] = AL_eigenvalues
         v["AL_eigenvalues_fixed"] = 'done'

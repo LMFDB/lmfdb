@@ -1,4 +1,5 @@
-import sys, time
+import sys
+import time
 
 from pymongo.connection import Connection
 fields = Connection(port=37010).localfields.fields
@@ -23,33 +24,36 @@ fields = Connection(port=37010).localfields.fields
 # aut: number of automorphisms
 # galT: galois T number
 
+
 def coeffs(s):
     return [a for a in s[1:-1].split(',')]
 
-def base_label(p,n,c,ind):
-    return str(p)+"."+str(n)+"."+str(c)+"."+str(ind)
+
+def base_label(p, n, c, ind):
+    return str(p) + "." + str(n) + "." + str(c) + "." + str(ind)
+
 
 def lookup_or_create(label):
-    item = None # fields.find_one({'label': label})
+    item = None  # fields.find_one({'label': label})
     if item is None:
         return {'label': label}
     else:
         return item
 
-from getme  import li # this reads in the list called li
+from getme import li  # this reads in the list called li
 
-print "finished importing getme, number = %s"%len(li)
+print "finished importing getme, number = %s" % len(li)
 
 for F in li:
  #    print F
  #   t = time.time()
     p, c, e, f, n, coeffs, gal, inertia, slopes, t, u, unram, eisen, rf, hw, gms, aut, galT = F
     data = {
-	'p': p,
-	'c': c,
-	'e': e,
-	'f': f,
-	'n': n,
+        'p': p,
+        'c': c,
+        'e': e,
+        'f': f,
+        'n': n,
         'coeffs': coeffs,
         'gal': gal,
         'inertia': inertia,
@@ -65,13 +69,13 @@ for F in li:
         'galT': galT
     }
 
-    index=1
+    index = 1
     is_new = True
-    holdfield={}
-    for field in fields.find({'p': p, 
-                 'n': n,
-                 'c': c}):
-        index +=1
+    holdfield = {}
+    for field in fields.find({'p': p,
+                              'n': n,
+                              'c': c}):
+        index += 1
         if field['coeffs'] == coeffs:
             is_new = False
             holdfield = field
@@ -79,16 +83,15 @@ for F in li:
 
     if is_new:
         print "new field"
-        label = base_label(p,n,c,index)
-        info =  {'label': label}
+        label = base_label(p, n, c, index)
+        info = {'label': label}
         info.update(data)
-        print "entering %s into database"%info
+        print "entering %s into database" % info
         fields.save(info)
     else:
-        holdfield.update(data);
-        print "field already in database, updating with %s"%holdfield
+        holdfield.update(data)
+        print "field already in database, updating with %s" % holdfield
         fields.save(holdfield)
  #   if time.time() - t > 5:
  #       print "\t", label
  #       t = time.time()
-

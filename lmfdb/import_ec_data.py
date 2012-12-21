@@ -7,7 +7,7 @@ the entry does not exist then it creates it and returns that.
 
 Initial version (Paris 2010)
 More tables Feb 2011 Gagan Sekhon
-Needed importing code for Stein-Watkins 
+Needed importing code for Stein-Watkins
 
 Rewritten by John Cremona and David Roe, Bristol, March 2012
 
@@ -35,23 +35,30 @@ The documents in the collection 'curves' in the database 'elliptic_curves' have 
    - 'degree': (int) degree of modular parametrization, e.g. 1984
 """
 
-import os.path, gzip, re, sys, time, os, random,glob
+import os.path
+import gzip
+import re
+import sys
+import time
+import os
+import random
+import glob
 import pymongo
 import base
 from sage.rings.all import ZZ
 
 print "calling base._init()"
-base._init(int(37010),'')
+base._init(int(37010), '')
 print "getting connection"
 conn = base.getDBConnection()
 print "setting curves"
-#curves = conn.elliptic_curves.test
+# curves = conn.elliptic_curves.test
 curves = conn.elliptic_curves.curves
 
-#The following ensure_index command checks if there is an index on
-#label, conductor, rank and torsion. If there is no index it creates
-#one.  Need: once torsion structure is computed, we should have an
-#index on that too.
+# The following ensure_index command checks if there is an index on
+# label, conductor, rank and torsion. If there is no index it creates
+# one.  Need: once torsion structure is computed, we should have an
+# index on that too.
 
 curves.ensure_index('label')
 curves.ensure_index('conductor')
@@ -61,13 +68,14 @@ curves.ensure_index('degree')
 
 print "finished indices"
 
+
 def parse_tgens(s):
     r"""
     Converts projective coordinates to affine coordinates for generator
     """
-    g1=s.replace('(', ' ').replace(')',' ').split(':')
-    x,y,z = [ZZ(c) for c in g1]
-    g=(x/z,y/z)
+    g1 = s.replace('(', ' ').replace(')', ' ').split(':')
+    x, y, z = [ZZ(c) for c in g1]
+    g = (x / z, y / z)
     return str(g)
 
 
@@ -79,12 +87,15 @@ def parse_ainvs(s):
     return [a for a in s[1:-1].split(',')]
 
 
-#def parse_gens(s):
+# def parse_gens(s):
  #   return [int(a) for a in s[1:-1].split(':')]
 
 whitespace = re.compile(r'\s+')
+
+
 def split(line):
     return whitespace.split(line.strip())
+
 
 def allbsd(line):
     r""" Parses one line from an allbsd file.  Returns the label and a
@@ -104,10 +115,10 @@ def allbsd(line):
     """
     data = split(line)
     label = data[0] + data[1] + data[2]
-    ainvs=parse_ainvs(data[3])
+    ainvs = parse_ainvs(data[3])
     return label, {
         'conductor': int(data[0]),
-        'iso': data[0]+data[1],
+        'iso': data[0] + data[1],
         'number': int(data[2]),
         'ainvs': ainvs,
         'rank': int(data[4]),
@@ -120,6 +131,8 @@ def allbsd(line):
     }
 
 # Next function redundant as all data in allcurves is also in allgens
+
+
 def allcurves(line):
     r""" Parses one line from an allcurves file.  Returns the label and a
     dict containing fields with keys 'conductor', 'iso', 'number',
@@ -135,16 +148,17 @@ def allcurves(line):
     """
     data = split(line)
     label = data[0] + data[1] + data[2]
-    ainvs=parse_ainvs(data[3])
+    ainvs = parse_ainvs(data[3])
     return label, {
         'conductor': int(data[0]),
-        'iso': data[0]+data[1],
+        'iso': data[0] + data[1],
         'number': int(data[2]),
         'ainvs': ainvs,
         'rank': int(data[4]),
         'torsion': int(data[5]),
     }
-    
+
+
 def allgens(line):
     r""" Parses one line from an allgens file.  Returns the label and
     a dict containing fields with keys 'conductor', 'iso', 'number',
@@ -161,22 +175,23 @@ def allgens(line):
     """
     data = split(line)
     label = data[0] + data[1] + data[2]
-    rank=int(data[4])
-    t=eval(data[5])
-    torsion=int(prod([ti for ti in t],1))
-    ainvs=parse_ainvs(data[3])
+    rank = int(data[4])
+    t = eval(data[5])
+    torsion = int(prod([ti for ti in t], 1))
+    ainvs = parse_ainvs(data[3])
     return label, {
-            'conductor': int(data[0]),
-            'iso': data[0]+data[1],
-            'number': int(data[2]),
-            'ainvs': ainvs,
-            'rank': int(data[4]),
-            'gens': ["(%s)" % gen[1:-1] for gen in data[6:6+rank]],
-            'torsion': torsion,
-            'torsion_structure':["%s" %tor for tor in t],
-            'torsion_generators':["%s" %parse_tgens(tgens[1:-1]) for tgens in data[6+rank:]],
-            }
-        
+        'conductor': int(data[0]),
+        'iso': data[0] + data[1],
+        'number': int(data[2]),
+        'ainvs': ainvs,
+        'rank': int(data[4]),
+        'gens': ["(%s)" % gen[1:-1] for gen in data[6:6 + rank]],
+        'torsion': torsion,
+        'torsion_structure': ["%s" % tor for tor in t],
+        'torsion_generators': ["%s" % parse_tgens(tgens[1:-1]) for tgens in data[6 + rank:]],
+    }
+
+
 def intpts(line):
     r""" Parses one line from an intpts file.  Returns the label and a
     dict containing fields with keys 'ainvs',
@@ -190,13 +205,14 @@ def intpts(line):
 
     11a1 [0,-1,1,-10,-20] [5,16]
     """
-    data=split(line)
-    label=data[0]
-    ainvs=parse_ainvs(data[1])
-    return label,{
+    data = split(line)
+    label = data[0]
+    ainvs = parse_ainvs(data[1])
+    return label, {
         'ainvs': ainvs,
-        'x-coordinates_of_integral_points':data[2]
-        }
+        'x-coordinates_of_integral_points': data[2]
+    }
+
 
 def alldegphi(line):
     r""" Parses one line from an alldegphi file.  Returns the label
@@ -217,6 +233,7 @@ def alldegphi(line):
         'degree': int(data[4])
     }
 
+
 def alllabels(line):
     r""" Parses one line from an alllabels file.  Returns the label
     and a dict containing six fields, 'conductor', 'iso', 'number',
@@ -232,77 +249,80 @@ def alllabels(line):
 
     """
     data = split(line)
-    if data[0]!=data[3]:
-        raise ValueError, "Inconsistent data in alllabels file: %s"%line
+    if data[0] != data[3]:
+        raise ValueError("Inconsistent data in alllabels file: %s" % line)
     label = data[0] + data[1] + data[2]
     lmfdb_label = data[3] + '.' + data[4] + data[5]
     return label, {
         'conductor': int(data[0]),
-        'iso': data[0]+data[1],
+        'iso': data[0] + data[1],
         'number': int(data[2]),
         'lmfdb_label': lmfdb_label,
-        'lmfdb_iso': data[3]+'.'+data[4],
+        'lmfdb_iso': data[3] + '.' + data[4],
         'lmfdb_number': data[5]
     }
 
 
 filename_base_list = ['allcurves', 'allbsd', 'allgens', 'intpts', 'alldegphi', 'alllabel']
 
-def cmp_label(lab1,lab2):
+
+def cmp_label(lab1, lab2):
     from sage.databases.cremona import parse_cremona_label, class_to_int
 #    print lab1,lab2
-    a,b,c = parse_cremona_label(lab1)
-    id1 = int(a),class_to_int(b),int(c)
-    a,b,c = parse_cremona_label(lab2)
-    id2 = int(a),class_to_int(b),int(c)
-    return cmp(id1,id2)
+    a, b, c = parse_cremona_label(lab1)
+    id1 = int(a), class_to_int(b), int(c)
+    a, b, c = parse_cremona_label(lab2)
+    id2 = int(a), class_to_int(b), int(c)
+    return cmp(id1, id2)
 
-def comp_dict_by_label(d1,d2):
-    return cmp_label(d1['label'],d2['label'])
 
-def upload_to_db(base_path,min_N, max_N):
+def comp_dict_by_label(d1, d2):
+    return cmp_label(d1['label'], d2['label'])
+
+
+def upload_to_db(base_path, min_N, max_N):
 #    allcurves data all exists also in allgens
 #    allcurves_filename = 'allcurves.%s-%s'%(min_N,max_N)
-    allbsd_filename = 'allbsd.%s-%s'%(min_N,max_N)
-    allgens_filename = 'allgens.%s-%s'%(min_N,max_N)
-    intpts_filename = 'intpts.%s-%s'%(min_N,max_N)
-    alldegphi_filename = 'alldegphi.%s-%s'%(min_N,max_N)
-    alllabels_filename = 'alllabels.%s-%s'%(min_N,max_N)
+    allbsd_filename = 'allbsd.%s-%s' % (min_N, max_N)
+    allgens_filename = 'allgens.%s-%s' % (min_N, max_N)
+    intpts_filename = 'intpts.%s-%s' % (min_N, max_N)
+    alldegphi_filename = 'alldegphi.%s-%s' % (min_N, max_N)
+    alllabels_filename = 'alllabels.%s-%s' % (min_N, max_N)
     file_list = [allbsd_filename, allgens_filename, intpts_filename, alldegphi_filename, alllabels_filename]
 #    file_list = [alldegphi_filename]
 
-    data_to_insert = {} # will hold all the data to be inserted
+    data_to_insert = {}  # will hold all the data to be inserted
 
     for f in file_list:
-        h = open(os.path.join(base_path,f))
-        print "opened %s"%os.path.join(base_path,f)
+        h = open(os.path.join(base_path, f))
+        print "opened %s" % os.path.join(base_path, f)
 
-        parse =  globals()[f[:f.find('.')]]
+        parse = globals()[f[:f.find('.')]]
 
         t = time.time()
-        count=0
+        count = 0
         for line in h.readlines():
             label, data = parse(line)
             # if count%5000==0:
             #     print label
             count += 1
-            if not data_to_insert.has_key(label):
+            if label not in data_to_insert:
                 data_to_insert[label] = {'label': label}
             curve = data_to_insert[label]
             for key in data:
-                if curve.has_key(key):
+                if key in curve:
                     if curve[key] != data[key]:
-                        raise RuntimeError, "Inconsistent data for %s"%label
+                        raise RuntimeError("Inconsistent data for %s" % label)
                 else:
                     curve[key] = data[key]
-        print "finished reading %s lines from file"%count
+        print "finished reading %s lines from file" % count
 
     vals = data_to_insert.values()
     # vals.sort(cmp=comp_dict_by_label)
     count = 0
     for val in vals:
-        #print val
-        curves.update({'label':val['label']}, { "$set": val}, upsert=True)
+        # print val
+        curves.update({'label': val['label']}, {"$set": val}, upsert=True)
         count += 1
-        if count%5000==0: print "inserted %s"%(val['label'])
-
+        if count % 5000 == 0:
+            print "inserted %s" % (val['label'])

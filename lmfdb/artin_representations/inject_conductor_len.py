@@ -4,7 +4,7 @@
 import sys
 sys.path.append("../")
 import base
-base._init(37010,"")
+base._init(37010, "")
 from math_classes import ArtinRepresentation
 the_collection = ArtinRepresentation.collection()
 print "Got", the_collection
@@ -20,4 +20,3 @@ for x in the_collection.find():
     val = x[field]
     x[new_field] = len_val_fn(val)
     the_collection.save(x)
-    

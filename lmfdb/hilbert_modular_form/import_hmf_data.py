@@ -1,4 +1,8 @@
-import os.path, gzip, re, sys, time
+import os.path
+import gzip
+import re
+import sys
+import time
 import sage.misc.preparser
 import subprocess
 from pymongo import Connection
@@ -8,12 +12,13 @@ hmf_fields = Connection(port=int(37010)).hmfs.fields
 
 fields = Connection(port=int(37010)).numberfields.fields
 
-#hmf_forms.create_index('field_label')
-#hmf_forms.create_index('level_norm')
-#hmf_forms.create_index('level_ideal')
-#hmf_forms.create_index('dimension')
+# hmf_forms.create_index('field_label')
+# hmf_forms.create_index('level_norm')
+# hmf_forms.create_index('level_ideal')
+# hmf_forms.create_index('dimension')
 
 magma.eval('nice_idealstr := function(F : Bound := 10000); idealsstr := []; ideals := IdealsUpTo(Bound, F); for I in ideals do bl, g := IsPrincipal(I); if bl then s := Sprintf("[%o, %o, %o]", Norm(I), Minimum(I), F!g); else zs := Generators(I); z := zs[#zs]; m := Minimum(I); z := F![(Integers()!c) mod m : c in Eltseq(F!z)]; assert ideal<Integers(F) | [m, z]> eq I; s := Sprintf("[%o, %o, %o]", Norm(I), m, z); end if; Append(~idealsstr, s); end for; return idealsstr; end function;')
+
 
 def parse_label(field_label, weight, level_label, label_suffix):
     if weight == [2 for i in range(len(weight))]:
@@ -24,8 +29,9 @@ def parse_label(field_label, weight, level_label, label_suffix):
         weight_label = str(weight) + '-'
     return field_label + '-' + weight_label + level_label + '-' + label_suffix
 
-P = PolynomialRing(Rationals(), 3, ['w','e','x'])
-w,e,x = P.gens()
+P = PolynomialRing(Rationals(), 3, ['w', 'e', 'x'])
+w, e, x = P.gens()
+
 
 def import_all_data(n):
     nstr = str(n)
@@ -64,8 +70,8 @@ def import_data(hmf_filename):
 
     # Find the corresponding field in the database of number fields
     print "Finding field..."
-    fields_matching = fields.find({"signature" : [n,int(0)], 
-                                   "discriminant" : d})
+    fields_matching = fields.find({"signature": [n, int(0)],
+                                   "discriminant": d})
     cnt = fields_matching.count()
     assert cnt >= 1
     field_label = None
@@ -73,22 +79,22 @@ def import_data(hmf_filename):
         nf = fields_matching.next()
         if nf['coefficients'] == coeffs:
             field_label = nf['label']
-    assert field_label <> None
+    assert field_label is not None
     print "...found!"
 
     # Find the field in the HMF database
     print "Finding field in HMF..."
-    F_hmf = hmf_fields.find_one({"label" : field_label})
-    if F_hmf == None:
+    F_hmf = hmf_fields.find_one({"label": field_label})
+    if F_hmf is None:
         # Create list of ideals
         print "...adding!"
         ideals = eval(preparse(magma.eval('nice_idealstr(F);')))
         ideals_str = [str(c) for c in ideals]
-        hmf_fields.insert({"label" : field_label,
-                           "degree" : n,
-                           "discriminant" : d,
-                           "ideals" : ideals_str})
-        F_hmf = hmf_fields.find_one({"label" : field_label})
+        hmf_fields.insert({"label": field_label,
+                           "degree": n,
+                           "discriminant": d,
+                           "ideals": ideals_str})
+        F_hmf = hmf_fields.find_one({"label": field_label})
     else:
         print "...found!"
 
@@ -98,7 +104,7 @@ def import_data(hmf_filename):
     ideals_norms = [c[0] for c in ideals]
     magma.eval('ideals_str := [' + ''.join(F_hmf['ideals']).replace('][', '], [') + ']')
     magma.eval('ideals := [ideal<ZF | {F!x : x in I}> : I in ideals_str];')
-    
+
     # Add the list of primes
     print "Computing primes..."
     v = hmff.readline()  # Skip line
@@ -120,17 +126,17 @@ def import_data(hmf_filename):
         # Check at least they have the same norm
         magma.eval('for tau in perm do assert #{Norm(ideals[primes_indices[t]]) : t in tau} eq 1; end for;')
         primes_resort = eval(magma.eval('Eltseq(sigma)'))
-        primes_resort = [c-1 for c in primes_resort]
+        primes_resort = [c - 1 for c in primes_resort]
 
     primes_indices = eval(magma.eval('primes_indices'))
-    primes_str = [ideals_str[j-1] for j in primes_indices]
+    primes_str = [ideals_str[j - 1] for j in primes_indices]
     assert len(primes_array) == len(primes_str)
     print "...comparing..."
     for i in range(len(primes_array)):
-        assert magma('ideal<ZF | {F!x : x in ' + primes_array[i] +'}> eq '\
-                   + 'ideal<ZF | {F!x : x in ' + primes_str[i] + '}>;')
-    
-    if F_hmf.has_key('primes'): # Nothing smart: make sure it is the same
+        assert magma('ideal<ZF | {F!x : x in ' + primes_array[i] + '}> eq '
+                     + 'ideal<ZF | {F!x : x in ' + primes_str[i] + '}>;')
+
+    if 'primes' in F_hmf:  # Nothing smart: make sure it is the same
         assert F_hmf['primes'] == primes_str
     else:
         F_hmf['primes'] = primes_str
@@ -144,14 +150,14 @@ def import_data(hmf_filename):
         levels_array = [str(t) for t in eval(preparse(levels_str))]
         v = hmff.readline()
     for i in range(3):
-        if v[:11] <> 'NEWFORMS :=':
+        if v[:11] != 'NEWFORMS :=':
             v = hmff.readline()
         else:
             break
 
-    # Finally, newforms!   
+    # Finally, newforms!
     print "Starting newforms!"
-    while v <> '':
+    while v != '':
         v = hmff.readline()[1:-3]
         if len(v) == 0:
             break
@@ -161,10 +167,11 @@ def import_data(hmf_filename):
         label_suffix = data[1]
         weight = [2 for i in range(n)]
 
-        level_ind = int(magma('Index(ideals, ideal<ZF | {F!x : x in ' + str(level_ideal) + '}>)'))-1 # Magma counts starting at 1
+        level_ind = int(magma('Index(ideals, ideal<ZF | {F!x : x in ' + str(level_ideal) + '}>)')
+                        ) - 1  # Magma counts starting at 1
         level_ideal = ideals_str[level_ind]
-        assert magma('ideal<ZF | {F!x : x in ' + str(level_ideal) +'}> eq '\
-                   + 'ideal<ZF | {F!x : x in ' + str(data[0]) + '}>;')
+        assert magma('ideal<ZF | {F!x : x in ' + str(level_ideal) + '}> eq '
+                     + 'ideal<ZF | {F!x : x in ' + str(data[0]) + '}>;')
         level_dotlabel = level_ind - ideals_norms.index(level_norm) + 1   # Start counting at 1
         assert level_dotlabel > 0
         level_label = str(level_norm) + '.' + str(level_dotlabel)
@@ -185,30 +192,31 @@ def import_data(hmf_filename):
         # Sort out Atkin-Lehner involutions
         magma.eval('NN := ideal<ZF | {F!x : x in ' + str(level_ideal) + '}>;')
         magma.eval('NNfact := Factorization(NN);')
-        ALind = eval(preparse(magma.eval('[Index(primes, pp[1])-1 : pp in NNfact | Index(primes,pp[1]) gt 0];')))
+        ALind = eval(
+            preparse(magma.eval('[Index(primes, pp[1])-1 : pp in NNfact | Index(primes,pp[1]) gt 0];')))
         AL_eigsin = [hecke_eigenvalues[c] for c in ALind]
         try:
             assert all([abs(int(c)) <= 1 for c in AL_eigsin])
         except:
             ferrors.write(str(n) + '/' + str(d) + ' ' + label + '\n')
-            
+
         AL_eigenvalues = []
         ees = eval(preparse(magma.eval('[pp[2] : pp in NNfact]')))
         for i in range(len(AL_eigsin)):
             if ees[i] >= 2:
-                if hecke_eigenvalues[ALind[i]] <> 0:
+                if hecke_eigenvalues[ALind[i]] != 0:
                     ferrors.write(str(n) + '/' + str(d) + ' ' + label + '\n')
             else:
                 try:
-                    if abs(int(AL_eigsin[i])) <> 1:
+                    if abs(int(AL_eigsin[i])) != 1:
                         ferrors.write(str(n) + '/' + str(d) + ' ' + label + '\n')
                     else:
                         AL_eigenvalues.append([primes_str[ALind[i]], -AL_eigsin[i]])
                 except TypeError:
                     ferrors.write(str(n) + '/' + str(d) + ' ' + label + '\n')
 
-        assert magma('[Valuation(NN, ideal<ZF | {F!x : x in a}>) gt 0 : a in [' +\
-                       str(''.join([a[0] for a in AL_eigenvalues])).replace('][', '], [') + ']];')
+        assert magma('[Valuation(NN, ideal<ZF | {F!x : x in a}>) gt 0 : a in [' +
+                     str(''.join([a[0] for a in AL_eigenvalues])).replace('][', '], [') + ']];')
 
         # Constrain eigenvalues to size 2MB
         hecke_eigenvalues = [str(c) for c in hecke_eigenvalues]
@@ -219,21 +227,21 @@ def import_data(hmf_filename):
         if leftout > 0:
             print "Left out", leftout
 
-        info = {"label" : label,
-                "short_label" : short_label,
-                "field_label" : field_label,
-                "level_norm" : int(level_norm),
-                "level_ideal" : str(level_ideal),
-                "level_label" : level_label,
-                "weight" : str(weight),
-                "label_suffix" : label_suffix,
-                "dimension" : hecke_polynomial.degree(),
-                "hecke_polynomial" : str(hecke_polynomial),
-                "hecke_eigenvalues" : hecke_eigenvalues,
-                "AL_eigenvalues" : [[str(a[0]), str(a[1])] for a in AL_eigenvalues]}
+        info = {"label": label,
+                "short_label": short_label,
+                "field_label": field_label,
+                "level_norm": int(level_norm),
+                "level_ideal": str(level_ideal),
+                "level_label": level_label,
+                "weight": str(weight),
+                "label_suffix": label_suffix,
+                "dimension": hecke_polynomial.degree(),
+                "hecke_polynomial": str(hecke_polynomial),
+                "hecke_eigenvalues": hecke_eigenvalues,
+                "AL_eigenvalues": [[str(a[0]), str(a[1])] for a in AL_eigenvalues]}
         print info['label']
 
-        existing_forms = hmf_forms.find({"label" : label})
+        existing_forms = hmf_forms.find({"label": label})
         assert existing_forms.count() <= 1
         if existing_forms.count() == 0:
             hmf_forms.insert(info)
@@ -242,13 +250,14 @@ def import_data(hmf_filename):
             assert info['hecke_eigenvalues'] == existing_form['hecke_eigenvalues']
             print "...duplicate"
 
-#def parse_label_old(field_label, weight, level_ideal, label_suffix):
+# def parse_label_old(field_label, weight, level_ideal, label_suffix):
 #    label_str = field_label + str(weight) + str(level_ideal) + label_suffix
 #    label_str = label_str.replace(' ', '')
 #    return label_str
 
+
 def repair_fields(D):
-    F = hmf_fields.find_one({"label" : '2.2.' + str(D) + '.1'})
+    F = hmf_fields.find_one({"label": '2.2.' + str(D) + '.1'})
 
     P = PolynomialRing(Rationals(), 'w')
     w = P.gens()[0]
@@ -256,19 +265,20 @@ def repair_fields(D):
     primes = F['primes']
     primes = [[int(eval(p)[0]), int(eval(p)[1]), str(eval(p)[2])] for p in primes]
     F['primes'] = primes
-    
-    hmff = file("data_2_" + (4-len(str(D)))*'0' + str(D))
+
+    hmff = file("data_2_" + (4 - len(str(D))) * '0' + str(D))
 
     # Parse field data
     for i in range(7):
         v = hmff.readline()
     ideals = eval(v[10:][:-2])
-    ideals = [[p[0],p[1],str(p[2])] for p in ideals]
+    ideals = [[p[0], p[1], str(p[2])] for p in ideals]
     F['ideals'] = ideals
     hmf_fields.save(F)
 
+
 def repair_fields_add_ideal_labels(D):
-    F = hmf_fields.find_one({"label" : '2.2.' + str(D) + '.1'})
+    F = hmf_fields.find_one({"label": '2.2.' + str(D) + '.1'})
 
     ideals = F['ideals']
     ideal_labels = ['1.1']
@@ -285,9 +295,10 @@ def repair_fields_add_ideal_labels(D):
     F['ideal_labels'] = ideal_labels
     hmf_fields.save(F)
 
+
 def attach_new_label(f):
     print f['label']
-    F = hmf_fields.find_one({"label" : f['field_label']})
+    F = hmf_fields.find_one({"label": f['field_label']})
 
     P = PolynomialRing(Rationals(), 'w')
     w = P.gens()[0]
@@ -296,7 +307,7 @@ def attach_new_label(f):
         N = eval(f['level_ideal'])
     else:
         N = f['level_ideal']
-    if type(N) <> list or len(N) <> 3:
+    if type(N) != list or len(N) != 3:
         print f, N, type(N)
         assert false
 

@@ -6,8 +6,8 @@
     ### Injects into the database of all the L-functions
     ############################################################################
 
-    #def inject_database(self, relevant_info, time_limit = None):
-    #    #   relevant_methods are text strings 
+    # def inject_database(self, relevant_info, time_limit = None):
+    #    #   relevant_methods are text strings
     #    #    desired_database_fields = [Lfunction.original_mathematical_object, Lfunction.level]
     #    #    also zeroes, degree, conductor, type, real_coeff, rational_coeff, algebraic_coeff, critical_value, value_at_1, sign
     #    #    ok_methods = [Lfunction.math_id, Lfunction.level]
@@ -27,14 +27,13 @@
 
 
 def my_find_update(the_coll, search_dict, update_dict):
-    """ This performs a search using search_dict, and updates each find in  
+    """ This performs a search using search_dict, and updates each find in
     the_coll using update_dict. If there are none, update_dict is actually inserted.
     """
-    x = the_coll.find(search_dict,limit=1)
+    x = the_coll.find(search_dict, limit=1)
     if x.count() == 0:
         the_coll.insert(update_dict)
     else:
         for x in the_coll.find(search_dict):
             x.update(update_dict)
             the_coll.save(x)
-

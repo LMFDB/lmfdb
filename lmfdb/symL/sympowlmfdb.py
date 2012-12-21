@@ -47,20 +47,22 @@ ACKNOWLEDGEMENT (from sympow readme):
 #                  http://www.gnu.org/licenses/
 ########################################################################
 
-import os, weakref
+import os
+import weakref
 
 from sage.structure.sage_object import SageObject
 from sage.misc.all import pager, verbose
 import sage.rings.all
 
+
 class SympowLMFDB(SageObject):
     r"""
     Watkins Symmetric Power `L`-function Calculator
-    
+
     Type ``sympow.[tab]`` for a list of useful commands
     that are implemented using the command line interface, but return
     objects that make sense in Sage.
-    
+
     You can also use the complete command-line interface of sympow via
     this class. Type ``sympow.help()`` for a list of
     commands and how to call them.
@@ -75,7 +77,7 @@ class SympowLMFDB(SageObject):
         """
         Used to call sympow with given args
         """
-        cmd = 'sympow %s'%args
+        cmd = 'sympow %s' % args
         v = os.popen(cmd).read().strip()
         verbose(v, level=2)
         return v
@@ -84,104 +86,98 @@ class SympowLMFDB(SageObject):
         w = err
         j = w.rfind('./sympow')
         if j != -1:
-            w = w[:j-1] + "sympow('" + w[j+9:] + ')'
+            w = w[:j - 1] + "sympow('" + w[j + 9:] + ')'
         return w
 
     def _curve_str(self, E):
-        return '-curve "%s"'%(str(list(E.minimal_model().a_invariants())).replace(' ',''))
+        return '-curve "%s"' % (str(list(E.minimal_model().a_invariants())).replace(' ', ''))
 
     def L(self, E, n, prec):
         r"""
         Return `L(\mathrm{Sym}^{(n)}(E, \text{edge}))` to prec digits of
         precision, where edge is the *right* edge. Here `n` must be
         even.
-        
+
         INPUT:
-        
-        
+
+
         -  ``E`` - elliptic curve
-        
+
         -  ``n`` - even integer
-        
+
         -  ``prec`` - integer
-        
-        
+
+
         OUTPUT:
-        
-        
+
+
         -  ``string`` - real number to prec digits of precision
            as a string.
-        
-        
+
+
         .. note::
 
            Before using this function for the first time for a given
            `n`, you may have to type ``sympow('-new_data n')``,
            where ``n`` is replaced by your value of `n`.
-        
+
         If you would like to see the extensive output sympow prints when
         running this function, just type ``set_verbose(2)``.
-        
+
         EXAMPLES::
-        
+
             sage: a = sympow.L(EllipticCurve('11a'), 2, 16); a   # optional
             '1.057599244590958E+00'
             sage: RR(a)                    # optional -- requires precomputations
             1.05759924459096
         """
         if n % 2 == 1:
-            raise ValueError, "n (=%s) must be even"%n
+            raise ValueError("n (=%s) must be even" % n)
         if prec > 64:
-            raise ValueError, "prec (=%s) must be at most 64"%prec
+            raise ValueError("prec (=%s) must be at most 64" % prec)
         if prec < 1:
-            raise ValueError, "prec (=%s) must be at least 1"%prec
-        v = self('-sp %sp%s %s'%(n, prec, self._curve_str(E)))
+            raise ValueError("prec (=%s) must be at least 1" % prec)
+        v = self('-sp %sp%s %s' % (n, prec, self._curve_str(E)))
         i = v.rfind(': ')
         if i == -1:
             print self._fix_err(v)
-            raise RuntimeError, "failed to compute symmetric power"
-        x = v[i+2:]
+            raise RuntimeError("failed to compute symmetric power")
+        x = v[i + 2:]
         return x
-    
 
-    def local_data(self,E,n,prec=64):
+    def local_data(self, E, n, prec=64):
         import re
-        R= sage.rings.all.PolynomialRing(sage.rings.all.RationalField(),'x')
+        R = sage.rings.all.PolynomialRing(sage.rings.all.RationalField(), 'x')
 
         if prec > 64:
-            raise ValueError, "prec (=%s) must be at most 64"%prec
+            raise ValueError("prec (=%s) must be at most 64" % prec)
         if prec < 1:
-            raise ValueError, "prec (=%s) must be at least 1"%prec
-        
-        if n%2 != 1:
-            v = self('-sp %sp%s -local  %s'%(n, prec, self._curve_str(E)))
+            raise ValueError("prec (=%s) must be at least 1" % prec)
+
+        if n % 2 != 1:
+            v = self('-sp %sp%s -local  %s' % (n, prec, self._curve_str(E)))
         else:
-            v = self('-sp %sp%sd0 -local  %s'%(n, prec, self._curve_str(E)))
+            v = self('-sp %sp%sd0 -local  %s' % (n, prec, self._curve_str(E)))
 
         vv = v.split('\n')
 
-        bad_primes_l = [ i for i in vv if re.match(r'sp %d: Euler'%n, i)]
+        bad_primes_l = [i for i in vv if re.match(r'sp %d: Euler' % n, i)]
 
-        bad_primes = [( sage.rings.all.Integer(i.split()[5]),
-            R(i.split()[7]).coeffs()) for i in bad_primes_l]
+        bad_primes = [(sage.rings.all.Integer(i.split()[5]),
+                      R(i.split()[7]).coeffs()) for i in bad_primes_l]
 
-        cond_rootn_string=[i for i in vv if re.search('conductor',i)].pop()
-        cond_rootn_string=cond_rootn_string.replace(',',' ')
+        cond_rootn_string = [i for i in vv if re.search('conductor', i)].pop()
+        cond_rootn_string = cond_rootn_string.replace(',', ' ')
 
-        conductor,root = sage.rings.all.Integer(cond_rootn_string.split()[5]),sage.rings.all.Integer(cond_rootn_string.split()[-1])
-                        
+        conductor, root = sage.rings.all.Integer(
+            cond_rootn_string.split()[5]), sage.rings.all.Integer(cond_rootn_string.split()[-1])
 
-
-
-
-        return  bad_primes,conductor,root
-        #j = v.rfind(': ')
-        #if i == -1:
-            #print self._fix_err(v)
-            #raise RuntimeError, "failed to compute symmetric power"
-        #x = v[i+2:]
-
-
+        return bad_primes, conductor, root
+        # j = v.rfind(': ')
+        # if i == -1:
+            # print self._fix_err(v)
+            # raise RuntimeError, "failed to compute symmetric power"
+        # x = v[i+2:]
 
     def Lderivs(self, E, n, prec, d):
         r"""
@@ -189,30 +185,30 @@ class SympowLMFDB(SageObject):
         `L(\mathrm{Sym}^{(n)}(E,s)` to prec digits of precision, where
         `s` is the right edge if `n` is even and the center
         if `n` is odd.
-        
+
         INPUT:
-        
-        
+
+
         -  ``E`` - elliptic curve
-        
+
         -  ``n`` - integer (even or odd)
-        
+
         -  ``prec`` - integer
-        
+
         -  ``d`` - integer
-        
-        
+
+
         OUTPUT: a string, exactly as output by sympow
-        
+
         .. note::
 
            To use this function you may have to run a few commands
            like ``sympow('-new_data 1d2')``, each which takes a
            few minutes. If this function fails it will indicate what commands
            have to be run.
-        
+
         EXAMPLES::
-        
+
             sage: print sympow.Lderivs(EllipticCurve('11a'), 1, 16, 2)  # not tested
             ...
              1n0: 2.538418608559107E-01
@@ -223,32 +219,32 @@ class SympowLMFDB(SageObject):
              1w2: 3.414818600982502E-02
         """
         if prec > 64:
-            raise ValueError, "prec (=%s) must be at most 64"%prec
+            raise ValueError("prec (=%s) must be at most 64" % prec)
         if prec < 1:
-            raise ValueError, "prec (=%s) must be at least 1"%prec
-        v = self('-sp %sp%sd%s %s'%(n, prec, d, self._curve_str(E)))
+            raise ValueError("prec (=%s) must be at least 1" % prec)
+        v = self('-sp %sp%sd%s %s' % (n, prec, d, self._curve_str(E)))
         return self._fix_err(v)
 
     def modular_degree(self, E):
         """
         Return the modular degree of the elliptic curve E, assuming the
         Stevens conjecture.
-        
+
         INPUT:
-        
-        
+
+
         -  ``E`` - elliptic curve over Q
-        
-        
+
+
         OUTPUT:
-        
-        
+
+
         -  ``integer`` - modular degree
-        
-        
+
+
         EXAMPLES: We compute the modular degrees of the lowest known
         conductor curves of the first few ranks::
-        
+
             sage: sympow.modular_degree(EllipticCurve('11a'))
             1
             sage: sympow.modular_degree(EllipticCurve('37a'))
@@ -260,47 +256,47 @@ class SympowLMFDB(SageObject):
             sage: sympow.modular_degree(EllipticCurve([1, -1, 0, -79, 289]))
             334976
         """
-        v = self('%s -moddeg'%self._curve_str(E))
+        v = self('%s -moddeg' % self._curve_str(E))
         s = 'Modular Degree is '
         i = v.find(s)
         if i == -1:
             print self._fix_err(v)
-            raise RuntimeError, "failed to compute modular degree"
-        return sage.rings.all.Integer(v[i+len(s):])
+            raise RuntimeError("failed to compute modular degree")
+        return sage.rings.all.Integer(v[i + len(s):])
 
     def analytic_rank(self, E):
         r"""
         Return the analytic rank and leading `L`-value of the
         elliptic curve `E`.
-        
+
         INPUT:
-        
-        
+
+
         -  ``E`` - elliptic curve over Q
-        
-        
+
+
         OUTPUT:
-        
-        
+
+
         -  ``integer`` - analytic rank
-        
+
         -  ``string`` - leading coefficient (as string)
-        
-        
+
+
         .. note::
 
            The analytic rank is *not* computed provably correctly in
            general.
-        
+
         .. note::
 
            In computing the analytic rank we consider
            `L^{(r)}(E,1)` to be `0` if
            `L^{(r)}(E,1)/\Omega_E > 0.0001`.
-        
+
         EXAMPLES: We compute the analytic ranks of the lowest known
         conductor curves of the first few ranks::
-        
+
             sage: sympow.analytic_rank(EllipticCurve('11a'))
             (0, '2.53842e-01')
             sage: sympow.analytic_rank(EllipticCurve('37a'))
@@ -318,16 +314,16 @@ class SympowLMFDB(SageObject):
             sage: sympow.analytic_rank(EllipticCurve([0, 0, 0, -10012, 346900]))  # long time
             (7, '1.32517e+03')
         """
-        v = self('%s -analrank'%self._curve_str(E))
+        v = self('%s -analrank' % self._curve_str(E))
         s = 'Analytic Rank is '
         i = v.rfind(s)
         if i == -1:
             print self._fix_err(v)
-            raise RuntimeError, "failed to compute analytic rank"
+            raise RuntimeError("failed to compute analytic rank")
         j = v.rfind(':')
-        r = sage.rings.all.Integer(v[i+len(s):j])
+        r = sage.rings.all.Integer(v[i + len(s):j])
         i = v.rfind(' ')
-        L = v[i+1:]
+        L = v[i + 1:]
         return r, L
 
     def new_data(self, n):
@@ -335,7 +331,7 @@ class SympowLMFDB(SageObject):
         Pre-compute data files needed for computation of n-th symmetric
         powers.
         """
-        print self('-new_data %s'%n)
+        print self('-new_data %s' % n)
 
     def help(self):
         h = """
@@ -459,13 +455,9 @@ Output of "!sympow -help":
                Examples: 1d3 2 2d1h 3d2 4 4c 5d0 6 7d0h 11d1 12c
                NOTE: new_data runs a shell script that uses GP
 Other options are used internally/recursively by -new_data
-"""        
+"""
         pager()(h)
-
-
 
 
 # An instance
 sympowlmfdb = SympowLMFDB()
-
-

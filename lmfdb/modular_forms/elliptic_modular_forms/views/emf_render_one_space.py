@@ -19,13 +19,15 @@ Routines for rendering webpages for holomorphic modular forms on GL(2,Q)
 AUTHOR: Fredrik Strömberg
 
 """
-from flask import render_template, url_for, request, redirect, make_response,send_file
-import tempfile, os,re
-from utils import ajax_more,ajax_result,make_logger
+from flask import render_template, url_for, request, redirect, make_response, send_file
+import tempfile
+import os
+import re
+from utils import ajax_more, ajax_result, make_logger
 from sage.all import *
-from  sage.modular.dirichlet import DirichletGroup
+from sage.modular.dirichlet import DirichletGroup
 from base import app, db
-from modular_forms.elliptic_modular_forms.backend.web_modforms import WebModFormSpace,WebNewForm
+from modular_forms.elliptic_modular_forms.backend.web_modforms import WebModFormSpace, WebNewForm
 from modular_forms.elliptic_modular_forms.backend.emf_classes import ClassicalMFDisplay
 from modular_forms.backend.mf_utils import my_get
 from modular_forms.elliptic_modular_forms.backend.emf_core import *
@@ -34,47 +36,53 @@ from modular_forms.elliptic_modular_forms.backend.plot_dom import *
 from modular_forms.elliptic_modular_forms import EMF, emf_logger, emf
 
 
-
 def render_elliptic_modular_form_space(info):
     r"""
     Render the webpage for a elliptic modular forms space.
     """
-    level  = my_get(info,'level', -1,int)
-    weight = my_get(info,'weight',-1,int)
-    character = my_get(info,'character', '',str) #int(info.get('weight',0))
-    label = my_get(info,'label', 'a',str)
-    if character=='':
-        character=0
-    properties=list(); parents=list(); friends=list(); lifts=list(); siblings=list()
-    sbar=(properties,parents,friends,siblings,lifts)
-    if character==0:
-        dimtbl=DimensionTable()
+    level = my_get(info, 'level', -1, int)
+    weight = my_get(info, 'weight', -1, int)
+    character = my_get(info, 'character', '', str)  # int(info.get('weight',0))
+    label = my_get(info, 'label', 'a', str)
+    if character == '':
+        character = 0
+    properties = list()
+    parents = list()
+    friends = list()
+    lifts = list()
+    siblings = list()
+    sbar = (properties, parents, friends, siblings, lifts)
+    if character == 0:
+        dimtbl = DimensionTable()
     else:
-        dimtbl=DimensionTable(1)
+        dimtbl = DimensionTable(1)
     emf_logger.debug("Created dimension table in render_elliptic_modular_form_space")
-    if info.has_key('character') and info['character']=='*':
-        return render_elliptic_modular_form_space_list_chars(level,weight)
-    if not dimtbl.is_in_db(level,weight,character):
+    if 'character' in info and info['character'] == '*':
+        return render_elliptic_modular_form_space_list_chars(level, weight)
+    if not dimtbl.is_in_db(level, weight, character):
         emf_logger.debug("Data not available")
         return render_template("not_available.html")
-    info=set_info_for_modular_form_space(info)
+    info = set_info_for_modular_form_space(info)
     emf_logger.debug("keys={0}".format(info.keys()))
-    if info.has_key('download') and not info.has_key('error'):
+    if 'download' in info and 'error' not in info:
         return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
-    if info.has_key('dimension_newspace') and info['dimension_newspace']==1: # if there is only one orbit we list it
+    if 'dimension_newspace' in info and info['dimension_newspace'] == 1:  # if there is only one orbit we list it
         emf_logger.debug("Dimension of newforms is one!")
-        info =dict()
-        info['level']=level; info['weight']=weight; info['label']='a'; info['character']=character
+        info = dict()
+        info['level'] = level
+        info['weight'] = weight
+        info['label'] = 'a'
+        info['character'] = character
         return redirect(url_for('emf.render_elliptic_modular_forms', **info))
-    info['title'] = "Holomorphic Cusp Forms of weight %s on \(\Gamma_{0}(%s)\)" %(weight,level)
-    bread =[(MF_TOP,url_for('mf.modular_form_main_page'))]
-    bread.append((EMF_TOP,url_for('emf.render_elliptic_modular_forms')))
-    bread.append(("Level %s" %level,url_for('emf.render_elliptic_modular_forms',level=level)))
-    bread.append(("Weight %s" %weight,url_for('emf.render_elliptic_modular_forms',level=level,weight=weight)))
+    info['title'] = "Holomorphic Cusp Forms of weight %s on \(\Gamma_{0}(%s)\)" % (weight, level)
+    bread = [(MF_TOP, url_for('mf.modular_form_main_page'))]
+    bread.append((EMF_TOP, url_for('emf.render_elliptic_modular_forms')))
+    bread.append(("Level %s" % level, url_for('emf.render_elliptic_modular_forms', level=level)))
+    bread.append(
+        ("Weight %s" % weight, url_for('emf.render_elliptic_modular_forms', level=level, weight=weight)))
     emf_logger.debug("friends={0}".format(friends))
-    info['bread']=bread
-    if info['dimension_newspace']==0:
+    info['bread'] = bread
+    if info['dimension_newspace'] == 0:
         return render_template("emf_space.html", **info)
     else:
         return render_template("emf_space.html", **info)
-

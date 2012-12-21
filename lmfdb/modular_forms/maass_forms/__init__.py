@@ -5,10 +5,8 @@ from flask import Blueprint
 
 MAASSF = "maassf"
 maassf = Blueprint(MAASSF, __name__, template_folder="views/templates")
-maassf_logger=make_logger(maassf)
+maassf_logger = make_logger(maassf)
 
-import maass_waveforms 
+import maass_waveforms
 from maass_waveforms import *
-import picard 
-
-
+import picard

@@ -6,8 +6,10 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 from utils import to_dict, parse_range
 import base
 
+
 def is_safe(name):
     return name not in ('admin', 'local', 'system.indexes', 'users')
+
 
 @app.route("/raw")
 def database_list():
@@ -18,7 +20,8 @@ def database_list():
             continue
         db = getattr(C, db_name)
         all_db.append((db_name, filter(is_safe, db.collection_names())))
-    return render_template("raw/index.html", all_db = all_db, title="Number Theory Database")
+    return render_template("raw/index.html", all_db=all_db, title="Number Theory Database")
+
 
 @app.route("/raw/<db_name>/<coll_name>")
 def database_query(db_name, coll_name):
@@ -30,7 +33,7 @@ def database_query(db_name, coll_name):
     db = getattr(C, db_name)
     if coll_name not in db.collection_names():
         return "No such collection."
-    
+
     args = to_dict(request.args)
     info = dict(args)
     collection = getattr(db, coll_name)
@@ -79,7 +82,8 @@ def database_query(db_name, coll_name):
     non_format_args = to_dict(request.args)
     if '_format' in non_format_args:
         del non_format_args['_format']
-    info['formats'] = [(format, url_for('database_query', db_name=db_name, coll_name=coll_name, _format=format, **non_format_args)) for format in ('text', 'csv', 'json')]
+    info['formats'] = [(format, url_for('database_query', db_name=db_name, coll_name=coll_name,
+                        _format=format, **non_format_args)) for format in ('text', 'csv', 'json')]
     format = args.get('_format', 'html')
     if format in ('txt', 'text'):
         info['sep'] = ' '
@@ -91,11 +95,13 @@ def database_query(db_name, coll_name):
         info['sep'] = ''
     else:
         title = "%s.%s" % (db_name, coll_name)
-        return render_template("raw/query.html", db=db_name, coll=coll_name, info=info, indices=indices, res=res, title = title)
+        return render_template("raw/query.html", db=db_name, coll=coll_name, info=info, indices=indices, res=res, title=title)
     # not html
-    response = make_response(render_template("raw/query_download.html", db=db_name, coll=coll_name, info=info, indices=indices, res=res))
+    response = make_response(render_template(
+        "raw/query_download.html", db=db_name, coll=coll_name, info=info, indices=indices, res=res))
     response.headers['Content-type'] = 'text/plain'
     return response
+
 
 def json_iter(iterator):
     for item in iterator:

@@ -19,3 +19,6 @@ flasklog
 paul_scripts
 
 local.sh
+
+lmfdb/cover
+lmfdb/.coverage

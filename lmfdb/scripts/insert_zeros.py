@@ -22,4 +22,4 @@ for q in range(3, 1500):
         if G[n].is_primitive():
             L = lc.Lfunction_from_character(G[n])
             z = L.find_zeros_via_N(1)[0]
-            first_zeros.insert({ 'zero' : float(z), 'modulus' : int(q), 'character' : int(n) })
+            first_zeros.insert({'zero': float(z), 'modulus': int(q), 'character': int(n)})

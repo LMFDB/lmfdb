@@ -15,7 +15,7 @@ mr.remove()
 
 entries = []
 for _ in range(100):
-    entries.append({'vector': [ 10 * random() - 5 for _ in range(100)] })
+    entries.append({'vector': [10 * random() - 5 for _ in range(100)]})
 mr.insert(entries)
 print list(mr.find(limit=1))
 
@@ -52,5 +52,3 @@ freduce = Code('function(k, objs) {\
 
 for e in mr.map_reduce(fmap, freduce).find():
     print e
-
-
