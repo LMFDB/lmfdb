@@ -182,27 +182,29 @@ def urlencode(kwargs):
 ### start: link to google code at the bottom
 
 
-def safe_url_link_from_hg(url, display_txt):
+def git_infos():
     try:
         from subprocess import Popen, PIPE
-        hg_cmd = '''hg parent --template '<a href="%s">%s</a>' ''' % (url, display_txt)
-        cmd_output = Popen([hg_cmd], shell=True, stdout=PIPE).communicate()[0]
+        git_rev_cmd = '''git rev-parse HEAD'''
+        git_date_cmd = '''git show --format="%ci" -s HEAD'''
+        rev = Popen([git_rev_cmd], shell=True, stdout=PIPE).communicate()[0]
+        date = Popen([git_date_cmd], shell=True, stdout=PIPE).communicate()[0]
+        cmd_output = rev, date
     except e:
-        cmd_output = ''
+        cmd_output = '-', '-'
     return cmd_output
 
+git_rev, git_date = git_infos()
 """
-Creates google code link to the source code at the most recent commit.
+Creates link to the source code at the most recent commit.
 """
-_url_source = 'http://code.google.com/p/lmfdb/source/browse/?r={node}'
-_txt_source = 'Source'
-_current_source = safe_url_link_from_hg(_url_source, _txt_source)
+_url_source = 'https://github.com/LMFDB/lmfdb/commit/'
+_current_source = '<a href="%s%s">%s</a>' % (_url_source, git_rev, "Source")
 """
-Creates google code link to the list of revisions on the master, where the most recent commit is on top.
+Creates link to the list of revisions on the master, where the most recent commit is on top.
 """
-_url_changeset = 'http://code.google.com/p/lmfdb/source/list?r={node}'
-_txt_changeset = '{date|isodate}'
-_latest_changeset = safe_url_link_from_hg(_url_changeset, _txt_changeset)
+_url_changeset = 'https://github.com/LMFDB/lmfdb/tree/'
+_latest_changeset = '<a href="%s%s">%s</a>' % (_url_changeset, git_rev, git_date)
 
 
 @app.context_processor
