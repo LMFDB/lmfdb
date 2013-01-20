@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from base import *
+from lmfdb.base import *
 from flask import Flask, session, g, render_template, url_for, request, make_response, abort
 import flask
 
@@ -8,14 +8,14 @@ import tempfile
 import os
 import pymongo
 from Lfunction import *
-import LfunctionComp
-import LfunctionPlot
-from utils import to_dict
+import LfunctionComp as LfunctionCompo
+import LfunctionPlot as LfunctionPlot
+from lmfdb.utils import to_dict
 import bson
 from Lfunctionutilities import (lfuncDStex, lfuncEPtex, lfuncFEtex,
                                 truncatenumber, styleTheSign, specialValueString)
-from DirichletCharacter import getPrevNextNavig
-from lfunctions import l_function_page, logger
+from lmfdb.DirichletCharacter import getPrevNextNavig
+from lmfdb.lfunctions import l_function_page, logger
 
 # import upload2Db.py
 

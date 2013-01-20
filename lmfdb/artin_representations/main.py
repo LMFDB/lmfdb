@@ -5,12 +5,12 @@
 import pymongo
 ASC = pymongo.ASCENDING
 import flask
-from base import app, getDBConnection
+from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
-from artin_representations import artin_representations_page, artin_logger
-from utils import to_dict
+from lmfdb.artin_representations import artin_representations_page, artin_logger
+from lmfdb.utils import to_dict
 
-from math_classes import *
+from lmfdb.math_classes import *
 
 
 def initialize_indices():

@@ -3,7 +3,7 @@ Upload data and insert into database for Maass waveforms.
 
 
 """
-from modular_forms.maass_forms.maass_waveforms.backend.mwf_utils import *
+from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_utils import *
 
 import flask
 from flask import render_template, url_for, request, redirect, make_response, send_file

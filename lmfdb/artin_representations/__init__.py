@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from base import app, getDBConnection
-from utils import make_logger
+from lmfdb.base import app, getDBConnection
+from lmfdb.utils import make_logger
 from flask import Blueprint
 
 artin_representations_page = Blueprint(

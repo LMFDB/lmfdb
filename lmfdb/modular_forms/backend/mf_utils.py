@@ -1,9 +1,9 @@
-import base
+import lmfdb.base
 
 
 def get_distinct_keys(dbname, key):
     res = []
-    db = base.DBConnect(dbname)
+    db = lmfdb.base.DBConnect(dbname)
     for c in db.collection_names():
         res.extend(db[c].distinct(key))
     res = set(res)

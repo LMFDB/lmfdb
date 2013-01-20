@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from base import app
-from utils import make_logger
+from lmfdb.base import app
+from lmfdb.utils import make_logger
 from flask import Blueprint
 
 knowledge_page = Blueprint("knowledge", __name__, template_folder='templates')

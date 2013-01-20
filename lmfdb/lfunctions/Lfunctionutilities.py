@@ -1,7 +1,7 @@
 # Different helper functions.
 
 import re
-from lfunctions import logger
+from lmfdb.lfunctions import logger
 from sage.all import *
 
 

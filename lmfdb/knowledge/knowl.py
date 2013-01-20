@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # the basic knowlege object, with database awareness, …
-from knowledge import logger
-from base import getDBConnection
+from lmfdb.knowledge import logger
+from lmfdb.base import getDBConnection
 from datetime import datetime
 import pymongo
 ASC = pymongo.ASCENDING

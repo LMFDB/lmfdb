@@ -82,8 +82,8 @@ def make_logger(bp_or_name, hl=False):
     to true, the corresponding lines will be bold.
     """
     import flask
-    import base
-    logfocus = base.get_logfocus()
+    import lmfdb.base
+    logfocus = lmfdb.base.get_logfocus()
     if type(bp_or_name) == flask.Blueprint:
         name = bp_or_name.name
     else:
@@ -164,7 +164,7 @@ import os
 import re
 import time
 
-from base import app
+from lmfdb.base import app
 from flask import url_for, make_response
 import sage.all
 

@@ -5,10 +5,10 @@
 import pymongo
 ASC = pymongo.ASCENDING
 import flask
-from base import app, getDBConnection, url_for
+from lmfdb.base import app, getDBConnection, url_for
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
-from number_field_galois_groups import nfgg_page, nfgg_logger
-from math_classes import *
+from lmfdb.number_field_galois_groups import nfgg_page, nfgg_logger
+from lmfdb.math_classes import *
 
 
 def initialize_indices():

@@ -223,5 +223,5 @@ class LmfdbTest(unittest.TestCase):
         app.config['TESTING'] = True
         self.app = app
         self.tc = app.test_client()
-        import website
+        import lmfdb.website
         self.C = getDBConnection()

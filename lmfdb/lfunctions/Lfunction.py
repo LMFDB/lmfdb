@@ -5,7 +5,7 @@
 # Lfunction_HMF, Lfunction_Maass, Lfunction_SMF2_scalar_valued,
 # DedekindZeta, ArtinLfunction, SymmetricPowerLfunction
 
-import base
+from lmfdb import base
 import math
 from Lfunctionutilities import (seriescoeff,
                                 compute_local_roots_SMF2_scalar_valued,
@@ -15,19 +15,19 @@ from Lfunctionutilities import (seriescoeff,
 from LfunctionComp import (nr_of_EC_in_isogeny_class, modform_from_EC,
                            EC_from_modform)
 import LfunctionLcalc
-from lfunctions import logger
+from lmfdb.lfunctions import logger
 from sage.all import *
 import sage.libs.lcalc.lcalc_Lfunction as lc
 from sage.rings.rational import Rational
 import re
 import pymongo
 import bson
-from WebCharacter import WebCharacter
-from WebNumberField import WebNumberField
+from lmfdb.WebCharacter import WebCharacter
+from lmfdb.WebNumberField import WebNumberField
 
-from modular_forms.elliptic_modular_forms.backend.web_modforms import *
-from modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import MaassDB
-from modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaassForm
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms import *
+from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import MaassDB
+from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaassForm
 
 
 def constructor_logger(object, args):

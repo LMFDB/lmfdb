@@ -2,13 +2,13 @@
 import re
 
 from pymongo import ASCENDING, DESCENDING
-import base
-from base import app
+import lmfdb.base
+from lmfdb.base import app
 from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
 import tempfile
 import os
 
-from utils import ajax_more, image_src, web_latex, to_dict, parse_range2, web_latex_split_on_pm, make_logger, comma, clean_input
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range2, web_latex_split_on_pm, make_logger, comma, clean_input
 logger = make_logger("EllipticCurve")
 from number_fields.number_field import parse_list
 import sage.all

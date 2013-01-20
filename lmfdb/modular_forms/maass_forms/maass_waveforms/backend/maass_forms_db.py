@@ -7,11 +7,11 @@ import bson
 from sage.symbolic.expression import Expression
 import datetime
 from sage.all import Integer, DirichletGroup, is_even, loads, dumps, cached_method
-from modular_forms.maass_forms.maass_waveforms import mwf_logger
+from lmfdb.modular_forms.maass_forms.maass_waveforms import mwf_logger
 import math
 logger = mwf_logger
 try:
-    from dirichlet_conrey import *
+    from lmfdb.dirichlet_conrey import *
 except:
     logger.critical("dirichlet_conrey.pyx cython file is not available ...")
 import cython

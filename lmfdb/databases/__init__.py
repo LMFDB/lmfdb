@@ -1,4 +1,4 @@
-from utils import make_logger
+from lmfdb.utils import make_logger
 databases_logger = make_logger("databases_logger", hl=True)
 
 from type_generation import *

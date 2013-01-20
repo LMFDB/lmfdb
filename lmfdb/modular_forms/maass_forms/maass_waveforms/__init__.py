@@ -1,4 +1,4 @@
-from utils import make_logger
+from lmfdb.utils import make_logger
 from flask import Blueprint
 
 MWF = "mwf"  # Maass waveforms

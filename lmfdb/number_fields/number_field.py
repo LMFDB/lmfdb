@@ -3,12 +3,12 @@
 import pymongo
 ASC = pymongo.ASCENDING
 import flask
-import base
-from base import app, getDBConnection, url_for
+import lmfdb.base
+from lmfdb.base import app, getDBConnection, url_for
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, redirect, g, session, Flask, send_file
 import StringIO
-from number_fields import nf_page, nf_logger
-from WebNumberField import *
+from lmfdb.number_fields import nf_page, nf_logger
+from lmfdb.WebNumberField import *
 
 import re
 
@@ -16,9 +16,9 @@ import sage.all
 from sage.all import ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, euler_phi, pari, prod
 from sage.rings.arith import primes
 
-from transitive_group import *
+from lmfdb.transitive_group import *
 
-from utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, comma, clean_input
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, comma, clean_input
 
 NF_credit = 'the PARI group, J. Voight, J. Jones, and D. Roberts'
 Completename = 'Completeness of this data'

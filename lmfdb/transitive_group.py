@@ -3,13 +3,13 @@ import pymongo
 import string
 import bson
 
-from base import app, getDBConnection
+from lmfdb.base import app, getDBConnection
 from flask import Flask, session, g, render_template, url_for, request, redirect
 
 import sage.all
 from sage.all import ZZ, latex, AbelianGroup, pari, gap
 
-from utils import ajax_more, image_src, web_latex, to_dict, parse_range
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range
 
 from pymongo.connection import Connection
 

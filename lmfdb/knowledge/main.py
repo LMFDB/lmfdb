@@ -15,14 +15,14 @@ import string
 import re
 import pymongo
 import flask
-from base import app, getDBConnection
+from lmfdb.base import app, getDBConnection
 from datetime import datetime
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
 from flask.ext.login import login_required, current_user
 from knowl import Knowl, knowl_title, get_history, knowl_exists
-from users import admin_required, housekeeping
+from lmfdb.users import admin_required, housekeeping
 import markdown
-from knowledge import logger
+from lmfdb.knowledge import logger
 
 ASC = pymongo.ASCENDING
 DSC = pymongo.DESCENDING
@@ -120,7 +120,7 @@ def test_knowl_type(k):
     return isinstance(k, Knowl)
 app.jinja_env.tests['knowl_type'] = test_knowl_type
 
-from knowledge import knowledge_page
+from lmfdb.knowledge import knowledge_page
 
 # blueprint specific definition of the body_class variable
 

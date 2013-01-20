@@ -1,4 +1,4 @@
-from modular_forms.backend.mf_classes import MFDataTable
+from lmfdb.modular_forms.backend.mf_classes import MFDataTable
 from mwf_utils import *
 import bson
 

@@ -1,6 +1,6 @@
-from base import app
+from lmfdb.base import app
 from flask import render_template, url_for
-from modular_forms import mf, MF, mf_logger
+from lmfdb.modular_forms import mf, MF, mf_logger
 
 
 @mf.context_processor

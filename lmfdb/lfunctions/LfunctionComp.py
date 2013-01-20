@@ -2,11 +2,11 @@
 # TODO: These should be (is already) part of the elliptic curve code?
 
 import re
-import base
+import lmfdb.base
 from pymongo import ASCENDING
-import utils
-from lfunctions import logger
-from elliptic_curve import lmfdb_label_regex
+import lmfdb.utils
+from lmfdb.lfunctions import logger
+from lmfdb.elliptic_curve import lmfdb_label_regex
 
 
 def isogenyclasstable(Nmin, Nmax):
