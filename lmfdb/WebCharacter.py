@@ -11,7 +11,7 @@ logger = make_logger("DC")
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms import *
 from WebNumberField import WebNumberField
 try:
-    from lmfdb.dirichlet_conrey import *
+    from dirichlet_conrey import *
 except:
     logger.critical("dirichlet_conrey.pyx cython file is not available ...")
 
