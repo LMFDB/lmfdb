@@ -8,7 +8,7 @@ sys.path.append("../")
 
 print "Importing sage in base"
 import base
-from math_classes import NumberFieldGaloisGroup as NF
+from lmfdb.math_classes import NumberFieldGaloisGroup as NF
 print "Sage loaded"
 
 print "getting connection"

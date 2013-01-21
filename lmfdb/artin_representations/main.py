@@ -159,8 +159,8 @@ def render_artin_representation_webpage(dim, conductor, index):
 
     title = the_rep.title()
     the_nf = the_rep.number_field_galois_group()
-    from number_field_galois_groups import nfgg_page
-    from number_field_galois_groups.main import by_data
+    from lmfdb.number_field_galois_groups import nfgg_page
+    from lmfdb.number_field_galois_groups.main import by_data
     if the_rep.root_number() == 0:
         processed_root_number = "unknown"
     else:

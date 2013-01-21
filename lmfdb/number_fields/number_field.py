@@ -376,7 +376,7 @@ def render_field_webpage(args):
                    ('Class group:', '%s %s' % (data['class_group_invs'], grh_lab)),
                    ('Galois Group:', group_display_short(data['degree'], t, C))
                    ]
-    from math_classes import NumberFieldGaloisGroup
+    from lmfdb.math_classes import NumberFieldGaloisGroup
     try:
         info["tim_number_field"] = NumberFieldGaloisGroup.find_one({"label": label})
     except AttributeError:

@@ -248,7 +248,7 @@ def elliptic_curve_search(**args):
         start = start_default
 
     print query
-    cursor = base.getDBConnection().elliptic_curves.curves.find(query)
+    cursor = lmfdb.base.getDBConnection().elliptic_curves.curves.find(query)
     nres = cursor.count()
     if(start >= nres):
         start -= (1 + (start - nres) / count) * count
