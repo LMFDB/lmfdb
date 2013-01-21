@@ -3,7 +3,7 @@
 import pymongo
 ASC = pymongo.ASCENDING
 import flask
-import lmfdb.base
+import lmfdb.base as base
 from lmfdb.base import app, getDBConnection, url_for
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, redirect, g, session, Flask, send_file
 import StringIO
