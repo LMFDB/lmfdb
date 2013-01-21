@@ -67,7 +67,7 @@ def root_static_file(name):
     import flask
     def static_fn():
         import os
-        fn = os.path.join('.', "static", name)
+        fn = os.path.join(os.path.dirname(os.path.realname(__file__)), "static", name)
         if os.path.exists(fn):
             return open(fn).read()
         import logging
@@ -80,7 +80,7 @@ map(root_static_file, ['favicon.ico'])
 @app.route("/robots.txt")
 def robots_txt():
     if "lmfdb.org".lower() in request.url_root.lower():
-        fn = os.path.join('.', "static", "robots.txt")
+        fn = os.path.join(os.path.dirname(os.path.realname(__file__)), "static", "robots.txt")
         if os.path.exists(fn):
             return open(fn).read()
     return "User-agent: *\nDisallow: / \n"
