@@ -9,7 +9,7 @@ import os
 import re
 from lmfdb.crystals import crystals_page, logger
 import sage.all
-from sage.all import ZZ, latex
+from sage.all import ZZ, latex, Partition, CrystalOfTableaux
 
 def get_bread(breads=[]):
     bc = [("Crystals", url_for(".index"))]
@@ -19,10 +19,18 @@ def get_bread(breads=[]):
 
 @crystals_page.route("/show", methods = ["GET"])
 def show():
-    label = request.args.get('label', None)
-    i = int(label)
-    j = 4 *i
-    return render_template("crystals.html", label = j, bread = get_bread())
+    weight = request.args.get('weight', None)
+    cartan_type = str(request.args.get('cartan_type', None))
+    rank = int(request.args.get('rank', None))
+    #logger.info("weight = %s" % weight)
+    j = Partition(map(int,weight.split(",")))
+    crystal = CrystalOfTableaux([cartan_type,rank], shape=j)
+
+    from sage.misc.latex import png
+    png(crystal, "/Users/anne/lmfdb/lmfdb/static/crystal.png", debug=True, pdflatex=True)
+    return render_template("crystals.html", cartan_type= cartan_type, weight = j, rank = rank, 
+                           crystal = crystal,
+                           rankbread = get_bread())
 
 
 @crystals_page.route("/")
