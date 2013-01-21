@@ -4,7 +4,7 @@
 
 import flask
 from lmfdb import base
-from flask import render_template,  request, abort, url_for, make_response
+from flask import render_template, request, abort, url_for, make_response, redirect
 import os
 import re
 from lmfdb.crystals import crystals_page, logger
@@ -17,11 +17,12 @@ def get_bread(breads=[]):
         bc.append(b)
     return bc
 
-@crystals_page.route("/<label>")
-def by_label(label):
+@crystals_page.route("/show", methods = ["GET"])
+def show():
+    label = request.args.get('label', None)
     i = int(label)
     j = 4 *i
-    return render_template("crystals.html", label = j)
+    return render_template("crystals.html", label = j, bread = get_bread())
 
 
 @crystals_page.route("/")
