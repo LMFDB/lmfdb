@@ -3,7 +3,7 @@
 import pymongo
 ASC = pymongo.ASCENDING
 import flask
-import lmfdb.base
+import lmfdb.base as base
 from lmfdb.base import app, getDBConnection, url_for
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, redirect, g, session, Flask, send_file
 import StringIO
@@ -376,7 +376,7 @@ def render_field_webpage(args):
                    ('Class group:', '%s %s' % (data['class_group_invs'], grh_lab)),
                    ('Galois Group:', group_display_short(data['degree'], t, C))
                    ]
-    from math_classes import NumberFieldGaloisGroup
+    from lmfdb.math_classes import NumberFieldGaloisGroup
     try:
         info["tim_number_field"] = NumberFieldGaloisGroup.find_one({"label": label})
     except AttributeError:

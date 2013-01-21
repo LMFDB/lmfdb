@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import lmfdb.base
+import lmfdb.base as base
 from sage.all import *
 import re
 import pymongo

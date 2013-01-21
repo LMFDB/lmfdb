@@ -42,7 +42,7 @@ from lmfdb.modular_forms.elliptic_modular_forms import emf_logger
 from plot_dom import draw_fundamental_domain
 from emf_core import html_table, len_as_printed
 try:
-    from lmfdb.dirichlet_conrey import *
+    from dirichlet_conrey import *
 except:
     emf_logger.critical("Could not import dirichlet_conrey!")
 

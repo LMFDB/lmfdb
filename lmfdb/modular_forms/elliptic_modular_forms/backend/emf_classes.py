@@ -9,7 +9,7 @@ emf_dbname = 'modularforms'
 from lmfdb.utils import *
 from lmfdb.modular_forms.elliptic_modular_forms import emf_logger, emf
 try:
-    from lmfdb.dirichlet_conrey import *
+    from dirichlet_conrey import *
 except:
     emf_logger.critical("Could not import dirichlet_conrey!")
 

@@ -633,7 +633,8 @@ def plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
         return None
     # FIXME there could be a filename collission
     fn = tempfile.mktemp(suffix=".png")
-    F = [(i, L.hardy_z_function(CC(.5, i)).real()) for i in srange(-30, 30, .1)]
+    #F = [(i, L.hardy_z_function(CC(.5, i)).real()) for i in srange(-30, 30, .1)]
+    F = [(i, L.hardy_z_function(i).real()) for i in srange(-30, 30, .1)]
     p = line(F)
     p.save(filename=fn)
     data = file(fn).read()
