@@ -1,9 +1,9 @@
 import flask
-import utils
+import lmfdb.utils
 from flask import render_template, request
 
 ZetaZeros = flask.Blueprint("zeta zeros", __name__, template_folder="templates")
-logger = utils.make_logger(ZetaZeros)
+logger = lmfdb.utils.make_logger(ZetaZeros)
 
 from platt_zeros import *
 

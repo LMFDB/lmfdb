@@ -1,4 +1,4 @@
-from base import app
+from lmfdb.base import app
 import flask
 from flask import render_template, request
 

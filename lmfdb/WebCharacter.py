@@ -6,13 +6,12 @@ import sage.libs.lcalc.lcalc_Lfunction as lc
 import re
 import pymongo
 import bson
-from utils import parse_range, make_logger
+from lmfdb.utils import parse_range, make_logger
 logger = make_logger("DC")
-# import web_modforms
-from modular_forms.elliptic_modular_forms.backend.web_modforms import *
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms import *
 from WebNumberField import WebNumberField
 try:
-    from dirichlet_conrey import *
+    from lmfdb.dirichlet_conrey import *
 except:
     logger.critical("dirichlet_conrey.pyx cython file is not available ...")
 
@@ -47,7 +46,7 @@ def log_value(modulus, number):
     """
     return the list of values of a given character
     """
-    from dirichlet_conrey import DirichletGroup
+    from lmfdb.dirichlet_conrey import DirichletGroup
     G = DirichletGroup_conrey(modulus)
     chi = G[number]
     l = []

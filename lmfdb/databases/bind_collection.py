@@ -1,6 +1,6 @@
-from base import getDBConnection
+from lmfdb.base import getDBConnection
 from pymongo.collection import Collection
-from databases import databases_logger
+from lmfdb.databases import databases_logger
 
 
 def bind_collection(name, type_conversion):

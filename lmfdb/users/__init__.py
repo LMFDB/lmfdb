@@ -2,7 +2,7 @@
 
 from main import login_page, login_manager, admin_required, housekeeping
 
-from base import app
+from lmfdb.base import app
 
 # secret key, necessary for sessions, and sessions are
 # in turn necessary for users to login

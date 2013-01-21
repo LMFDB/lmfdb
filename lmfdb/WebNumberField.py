@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-import base
+import lmfdb.base
 from sage.all import *
 import re
 import pymongo
 import bson
-from utils import *
-from transitive_group import group_display_short, WebGaloisGroup
+from lmfdb.utils import *
+from lmfdb.transitive_group import group_display_short, WebGaloisGroup
 # logger = make_logger("DC")
 
 
@@ -236,7 +236,7 @@ class WebNumberField:
         return f
 
     def dirichlet_group(self):
-        from dirichlet_conrey import DirichletGroup_conrey
+        from lmfdb.dirichlet_conrey import DirichletGroup_conrey
         f = self.conductor()
         if f == 1:  # To make the trivial case work correctly
             return [1]
@@ -265,6 +265,6 @@ class WebNumberField:
         return [b for b in S]
 
     def full_dirichlet_group(self):
-        from dirichlet_conrey import DirichletGroup_conrey
+        from lmfdb.dirichlet_conrey import DirichletGroup_conrey
         f = self.conductor()
         return DirichletGroup_conrey(f)

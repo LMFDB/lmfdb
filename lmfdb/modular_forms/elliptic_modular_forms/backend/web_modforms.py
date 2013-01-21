@@ -37,12 +37,12 @@ import gridfs
 from pymongo.helpers import bson
 from bson import BSON
 # local imports
-import base
-from modular_forms.elliptic_modular_forms import emf_logger
+import lmfdb.base
+from lmfdb.modular_forms.elliptic_modular_forms import emf_logger
 from plot_dom import draw_fundamental_domain
 from emf_core import html_table, len_as_printed
 try:
-    from dirichlet_conrey import *
+    from lmfdb.dirichlet_conrey import *
 except:
     emf_logger.critical("Could not import dirichlet_conrey!")
 
@@ -212,7 +212,7 @@ class WebModFormSpace(Parent):
         try:
             if use_db:
                 emf_logger.debug("dbport={0}".format(dbport))
-                C = base.getDBConnection()
+                C = lmfdb.base.getDBConnection()
                 emf_logger.debug("C={0}".format(C))
                 if not C:
                     emf_logger.critical("Could not connect to Database! C={0}".format(C))

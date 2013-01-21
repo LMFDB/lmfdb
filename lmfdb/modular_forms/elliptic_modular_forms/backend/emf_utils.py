@@ -22,16 +22,16 @@ AUTHOR: Fredrik Strömberg
 import random
 import sage.plot.plot
 from flask import jsonify
-from utils import *
-from modular_forms.elliptic_modular_forms import EMF, emf, emf_logger, default_prec
+from lmfdb.utils import *
+from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf, emf_logger, default_prec
 logger = emf_logger
 from sage.all import dimension_new_cusp_forms, vector, dimension_modular_forms, dimension_cusp_forms, is_odd, loads, dumps, Gamma0, Gamma1, Gamma
-from modular_forms.backend.mf_utils import my_get
+from lmfdb.modular_forms.backend.mf_utils import my_get
 from plot_dom import draw_fundamental_domain
-import base
+import lmfdb.base
 from bson.binary import *
 try:
-    from dirichlet_conrey import *
+    from lmfdb.dirichlet_conrey import *
 except:
     emf_logger.critical("Could not import dirichlet_conrey!")
 
@@ -264,7 +264,7 @@ def render_fd_plot(level, info, **kwds):
                 grouptype = int(1)
     db_name = 'SL2Zsubgroups'
     collection = 'groups'
-    C = base.getDBConnection()
+    C = lmfdb.base.getDBConnection()
     emf_logger.debug("C={0}, level={1}, grouptype={2}".format(C, level, grouptype))
     if not C:
         emf_logger.critical("Could not connect to Database! C={0}".format(C))

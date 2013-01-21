@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from base import getDBConnection, app
-from utils import url_for
+from lmfdb.base import getDBConnection, app
+from lmfdb.utils import url_for
 from databases.Dokchitser_databases import Dokchitser_ArtinRepresentation_Collection, Dokchitser_NumberFieldGaloisGroup_Collection
 from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation
 

@@ -1,17 +1,18 @@
-from utils import to_dict, image_src
+# -*- coding: utf8 -*-
+from lmfdb.utils import to_dict, image_src
 from sage.all import dimension_new_cusp_forms, dimension_cusp_forms, dimension_eis, dimension_modular_forms, Zmod, DirichletGroup, latex
-from modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, EMF_TOP, N_max_Gamma0_fdraw, N_max_Gamma1_fdraw
-from modular_forms.elliptic_modular_forms.backend.emf_core import get_geometric_data
-from modular_forms.elliptic_modular_forms.backend.emf_utils import my_get, parse_range, extract_limits_as_tuple
-from modular_forms.backend.mf_utils import my_get
-from modular_forms import MF_TOP
-from modular_forms.elliptic_modular_forms import N_max_comp, k_max_comp, N_max_db, k_max_db
+from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, EMF_TOP, N_max_Gamma0_fdraw, N_max_Gamma1_fdraw
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_core import get_geometric_data
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import my_get, parse_range, extract_limits_as_tuple
+from lmfdb.modular_forms.backend.mf_utils import my_get
+from lmfdb.modular_forms import MF_TOP
+from lmfdb.modular_forms.elliptic_modular_forms import N_max_comp, k_max_comp, N_max_db, k_max_db
 from flask import render_template, url_for, request, redirect, make_response, send_file
-from modular_forms.elliptic_modular_forms.backend.emf_classes import ClassicalMFDisplay, DimensionTable
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_classes import ClassicalMFDisplay, DimensionTable
 list_of_implemented_dims = ['new', 'cusp', 'modular', 'eisenstein']
 
 try:
-    from dirichlet_conrey import *
+    from lmfdb.dirichlet_conrey import *
 except:
     emf_logger.critical("Could not import dirichlet_conrey!")
 

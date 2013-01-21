@@ -23,19 +23,19 @@ from flask import render_template, url_for, request, redirect, make_response, se
 import tempfile
 import os
 import re
-from utils import ajax_more, ajax_result, make_logger, to_dict
+from lmfdb.utils import ajax_more, ajax_result, make_logger, to_dict
 from sage.all import *
 from sage.modular.dirichlet import DirichletGroup
-from base import app, db
-from modular_forms.elliptic_modular_forms.backend.web_modforms import WebModFormSpace, WebNewForm
-from modular_forms.elliptic_modular_forms.backend.emf_classes import ClassicalMFDisplay, DimensionTable
-from modular_forms import MF_TOP
-from modular_forms.elliptic_modular_forms import N_max_comp, k_max_comp, N_max_db, k_max_db
-from modular_forms.backend.mf_utils import my_get
-from modular_forms.elliptic_modular_forms.backend.emf_core import *
-from modular_forms.elliptic_modular_forms.backend.emf_utils import *
-from modular_forms.elliptic_modular_forms.backend.plot_dom import *
-from modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, EMF_TOP
+from lmfdb.base import app, db
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms import WebModFormSpace, WebNewForm
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_classes import ClassicalMFDisplay, DimensionTable
+from lmfdb.modular_forms import MF_TOP
+from lmfdb.modular_forms.elliptic_modular_forms import N_max_comp, k_max_comp, N_max_db, k_max_db
+from lmfdb.modular_forms.backend.mf_utils import my_get
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_core import *
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import *
+from lmfdb.modular_forms.elliptic_modular_forms.backend.plot_dom import *
+from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, EMF_TOP
 ###
 use_db = True  # Should be decided intelligently
 ###

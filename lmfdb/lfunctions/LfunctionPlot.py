@@ -5,10 +5,10 @@ import math
 import cmath
 import datetime
 from flask import url_for, make_response
-import base
-from modular_forms.elliptic_modular_forms.backend.web_modforms import *
-from ListCharacters import get_character_modulus
-from lfunctions import logger
+import lmfdb.base as base
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms import *
+from lmfdb.ListCharacters import get_character_modulus
+from lmfdb.lfunctions import logger
 
 ###############################################################################
 # Maass form for GL(n) n>2

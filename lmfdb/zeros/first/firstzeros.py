@@ -1,10 +1,10 @@
 import flask
-import utils
+import lmfdb.utils
 import os
 from flask import render_template, request
 
 FirstZeros = flask.Blueprint('first L-function zeros', __name__, template_folder="templates")
-logger = utils.make_logger(FirstZeros)
+logger = lmfdb.utils.make_logger(FirstZeros)
 
 import sqlite3
 data_location = os.path.expanduser("~/data/zeros/")

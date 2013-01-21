@@ -4,19 +4,19 @@ Contains basic classes for displaying holomorphic modular forms.
 
 """
 from sage.all import vector, is_odd, DirichletGroup, is_even, Gamma1, dimension_new_cusp_forms, kronecker_character_upside_down, loads, Integer, latex, join
-from modular_forms.backend.mf_classes import MFDisplay, MFDataTable
+from lmfdb.modular_forms.backend.mf_classes import MFDisplay, MFDataTable
 emf_dbname = 'modularforms'
-from utils import *
-from modular_forms.elliptic_modular_forms import emf_logger, emf
+from lmfdb.utils import *
+from lmfdb.modular_forms.elliptic_modular_forms import emf_logger, emf
 try:
-    from dirichlet_conrey import *
+    from lmfdb.dirichlet_conrey import *
 except:
     emf_logger.critical("Could not import dirichlet_conrey!")
 
 
 def connect_db():
-    import base
-    return base.getDBConnection()[emf_dbname]
+    import lmfdb.base
+    return lmfdb.base.getDBConnection()[emf_dbname]
 
 
 def connect_mf_db():

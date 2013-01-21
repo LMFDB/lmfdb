@@ -1,12 +1,12 @@
 import flask
 import bson
-import base
+import lmfdb.base
 import pymongo
 from flask import render_template, url_for, request, redirect, make_response, send_file
-from utils import *
-from modular_forms.elliptic_modular_forms.backend.plot_dom import *
-from modular_forms.maass_forms.maass_waveforms import MWF, mwf_logger, mwf
-from modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import MaassDB
+from lmfdb.utils import *
+from lmfdb.modular_forms.elliptic_modular_forms.backend.plot_dom import *
+from lmfdb.modular_forms.maass_forms.maass_waveforms import MWF, mwf_logger, mwf
+from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import MaassDB
 # from knowledge.knowl import Knowl
 # from psage.modform.maass.lpkbessel import *
 # build extensions
@@ -30,8 +30,8 @@ _DB = None
 def connect_db():
     global _DB
     if _DB is None:
-        host = base.getDBConnection().host
-        port = base.getDBConnection().port
+        host = lmfdb.base.getDBConnection().host
+        port = lmfdb.base.getDBConnection().port
         _DB = MaassDB(host=host, port=port, show_collection='all')
     return _DB
 

@@ -1,6 +1,6 @@
 # /modular_forms/maass_forms/__init__.py
 
-from utils import make_logger
+from lmfdb.utils import make_logger
 from flask import Blueprint
 
 MAASSF = "maassf"

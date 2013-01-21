@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import json
 
-from base import app
+from lmfdb.base import app
 from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
-from utils import to_dict, parse_range
-import base
+from lmfdb.utils import to_dict, parse_range
+import lmfdb.base as base
 
 
 def is_safe(name):

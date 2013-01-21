@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from base import app
-from utils import make_logger
+from lmfdb.base import app
+from lmfdb.utils import make_logger
 from flask import Blueprint
 
 nfgg_page = Blueprint(

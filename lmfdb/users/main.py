@@ -7,13 +7,13 @@ import pymongo
 ASC = pymongo.ASCENDING
 import flask
 from functools import wraps
-from base import app, getDBConnection
+from lmfdb.base import app, getDBConnection
 from flask import render_template, request, abort, Blueprint, url_for, make_response
 from flask.ext.login import login_required, login_user, current_user, logout_user
 
 login_page = Blueprint("users", __name__, template_folder='templates')
-import utils
-logger = utils.make_logger(login_page)
+import lmfdb.utils
+logger = lmfdb.utils.make_logger(login_page)
 
 import re
 allowed_usernames = re.compile("^[a-zA-Z0-9._-]+$")

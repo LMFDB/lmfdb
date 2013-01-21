@@ -8,7 +8,7 @@ from flask import render_template, url_for, request, render_template_string
 # from  modular_forms.maass_forms.maass_waveform import MWFTable
 # import modular_forms.maass_forms
 # from modular_forms.maass_forms.picard.backend.mwfp_utils import *
-from modular_forms.maass_forms.picard.backend.mwfp_classes import *
+from lmfdb.modular_forms.maass_forms.picard.backend.mwfp_classes import *
 # import jinja2
 from flask import Blueprint
 

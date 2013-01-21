@@ -1,5 +1,5 @@
-from base import getDBConnection
-from modular_forms import mf_logger
+from lmfdb.base import getDBConnection
+from lmfdb.modular_forms import mf_logger
 
 
 class MFDataTable(object):

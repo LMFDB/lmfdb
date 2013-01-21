@@ -18,24 +18,24 @@ AUTHORS:
 
 
 """
-import base
-from base import app
+import lmfdb.base
+from lmfdb.base import app
 from flask import render_template, url_for, request, redirect, make_response, send_file
 import bson
 import StringIO
 import pymongo
 from sage.all import is_odd, is_even, dumps
 # mwf = flask.Blueprint('mwf', __name__, template_folder="templates",static_folder="static")
-import utils
-from modular_forms.maass_forms.maass_waveforms import MWF, mwf_logger, mwf
-from modular_forms.maass_forms.maass_waveforms.backend.mwf_utils import *
-from modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import MaassFormTable, WebMaassForm
-from modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import MaassDB
+import lmfdb.utils
+from lmfdb.modular_forms.maass_forms.maass_waveforms import MWF, mwf_logger, mwf
+from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_utils import *
+from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import MaassFormTable, WebMaassForm
+from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import MaassDB
 from mwf_upload_data import *
 logger = mwf_logger
 import json
 try:
-    from dirichlet_conrey import *
+    from lmfdb.dirichlet_conrey import *
 except:
     mwf_logger.critical("Could not import dirichlet_conrey!")
 

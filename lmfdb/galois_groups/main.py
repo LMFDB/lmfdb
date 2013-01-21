@@ -5,13 +5,13 @@
 import pymongo
 ASC = pymongo.ASCENDING
 import flask
-import base
-from base import app, getDBConnection
+from lmfdb import base
+from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
-from utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, make_logger, clean_input
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, make_logger, clean_input
 import os
 import re
-from galois_groups import galois_groups_page, logger
+from lmfdb.galois_groups import galois_groups_page, logger
 import sage.all
 from sage.all import ZZ, latex, gap
 
@@ -23,7 +23,7 @@ try:
 except:
     logger.fatal("It looks like the SPKGes gap_packages and database_gap are not installed on the server.  Please install them via 'sage -i ...' and try again.")
 
-from transitive_group import group_display_short, group_display_long, group_display_inertia, group_knowl_guts, subfield_display, otherrep_display, resolve_display, conjclasses, generators, chartable, aliastable, WebGaloisGroup
+from lmfdb.transitive_group import group_display_short, group_display_long, group_display_inertia, group_knowl_guts, subfield_display, otherrep_display, resolve_display, conjclasses, generators, chartable, aliastable, WebGaloisGroup
 
 GG_credit = 'GAP, Magma, and J. Jones'
 

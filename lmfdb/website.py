@@ -18,8 +18,6 @@ import siegel_modular_form
 import modular_forms
 import elliptic_curve
 import quadratic_twists
-# import renderLfunction
-# import maass_form
 import plot_example
 import number_fields
 import lfunction_db
@@ -66,6 +64,7 @@ def index():
 
 
 def root_static_file(name):
+    import flask
     def static_fn():
         import os
         fn = os.path.join('.', "static", name)

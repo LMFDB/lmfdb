@@ -1,7 +1,7 @@
 # from utils import *
-from modular_forms.maass_forms.picard import *  # MWFP,mwfp_logger, mwfp
-from modular_forms.backend.mf_utils import *
-from modular_forms.backend.mf_classes import MFDataTable
+from lmfdb.modular_forms.maass_forms.picard import *  # MWFP,mwfp_logger, mwfp
+from lmfdb.modular_forms.backend.mf_utils import *
+from lmfdb.modular_forms.backend.mf_classes import MFDataTable
 from flask import url_for
 
 
