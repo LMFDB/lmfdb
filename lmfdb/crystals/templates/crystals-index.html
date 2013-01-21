@@ -1,0 +1,17 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<p>
+this is the crystal page
+<p>
+
+      <h2>Browse {{KNOWL('crystals.crystal', title="Crystals")}}</h2>
+<p>
+
+<form method= "get" action="{{url_for('by_label')}}">
+<input name="label" />
+<button type="submit">Weight</button>
+</form>
+
+{% endblock %}

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# This Blueprint is about Galois Groups
+# This Blueprint is about Crystals
 # Author: Anne Schilling 
 
 import flask
@@ -7,7 +7,7 @@ from lmfdb import base
 from flask import render_template,  request, abort, url_for, make_response
 import os
 import re
-from lmfdb.crystals import crystal_page, logger
+from lmfdb.crystals import crystals_page, logger
 import sage.all
 from sage.all import ZZ, latex
 
@@ -17,14 +17,16 @@ def get_bread(breads=[]):
         bc.append(b)
     return bc
 
-@crystal_page.route("/<label>")
+@crystals_page.route("/<label>")
 def by_label(label):
-    return render_template("crystal.html", label = label)
+    i = int(label)
+    j = 4 *i
+    return render_template("crystals.html", label = j)
 
 
-@crystal_page.route("/")
+@crystals_page.route("/")
 def index():
     bread = get_bread()
-    return render_template("crystal-index.html", title="Crystal", bread=bread)
+    return render_template("crystals-index.html", title="Crystals", bread=bread)
 
 
