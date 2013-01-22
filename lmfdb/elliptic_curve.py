@@ -524,6 +524,21 @@ def render_curve_webpage_by_label(label):
         j_inv_factored = latex(0)
     else:
         j_inv_factored = latex(j_invariant.factor())
+    CMD = 0
+    CM = "no"
+    EndE = "\(\Z\)"
+    if E.has_cm():
+        CMD = E.cm_discriminant()
+        CM = "yes (\(%s\))"%CMD
+        if CMD%4==0:
+            d4 = ZZ(CMD)//4
+            # r = d4.squarefree_part()
+            # f = (d4//r).isqrt()
+            # f="" if f==1 else str(f)
+            # EndE = "\(\Z[%s\sqrt{%s}]\)"%(f,r)
+            EndE = "\(\Z[\sqrt{%s}]\)"%(d4)
+        else:            
+            EndE = "\(\Z[(1+\sqrt{%s})/2]\)"%CMD
 
     # plot=E.plot()
     discriminant = E.discriminant()
@@ -602,6 +617,9 @@ def render_curve_webpage_by_label(label):
         'p_adic_primes': [p for p in sage.all.prime_range(5, 100) if E.is_ordinary(p) and not p.divides(N)],
         'p_adic_data_exists': p_adic_data_exists,
         'ainvs': format_ainvs(data['ainvs']),
+        'CM': CM,
+        'CMD': CMD,
+        'EndE': EndE,
         'tamagawa_numbers': r' \cdot '.join(str(sage.all.factor(c)) for c in E.tamagawa_numbers()),
         'local_data': local_data,
         'cond_factor': latex(N.factor()),
@@ -633,6 +651,7 @@ def render_curve_webpage_by_label(label):
                    ('Conductor', '\(%s\)' % N),
                    ('Discriminant', '\(%s\)' % discriminant),
                    ('j-invariant', '%s' % web_latex(j_invariant)),
+                   ('CM', '%s' % CM),
                    ('Rank', '\(%s\)' % rank),
                    ('Torsion Structure', '\(%s\)' % tor_group)
                    ]
