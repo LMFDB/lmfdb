@@ -41,6 +41,31 @@ def calc_littelmann():
     v = request.args.get('value', 0)
     return str( 2 * int(v) )
 
+@crystals_page.route("/littelmann-image")
+def littelmann_image():
+    from sage.all_cmdline import CrystalOfLSPaths, vector, line
+
+    def line_of_path(path):
+        if path is None:
+            result = []
+        else:
+            L = path.parent().weight.parent()
+            v = vector(L.zero())
+            result = [v]
+            for d in path.value:
+               v = v + vector(d)
+               result.append(v)
+        result = list(result)
+        result = line(result)
+        result.set_axes_range(-10,10,-10,10)
+        return result
+
+    from lmfdb.utils import image_callback
+    C = CrystalOfLSPaths(['A',2],[6,3])
+    x = C[int(request.args.get("value"))]
+    y = x.f_string([1, 1])
+    return image_callback(line_of_path(y))
+
 @crystals_page.route("/")
 def index():
     bread = get_bread()

@@ -381,7 +381,6 @@ def image_src(G):
 
 
 def image_callback(G):
-
     P = G.plot()
     _, filename = tempfile.mkstemp('.png')
     P.save(filename)

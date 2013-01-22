@@ -1,27 +1,13 @@
 {% extends "homepage.html" %}
 
 {% block content %}
-    <script src="http://aleph.sagemath.org/static/jquery.min.js"></script>
-    <script src="http://aleph.sagemath.org/embedded_sagecell.js"></script>
-    <script>
-$(function () {
-    // Make the div with id 'mycell' a Sage cell
-    sagecell.makeSagecell({inputLocation:  '#mycell',
-                           template:       sagecell.templates.minimal,
-                           evalButtonText: 'Activate'});
-    // Make *any* div with class 'compute' a Sage cell
-    sagecell.makeSagecell({inputLocation: 'div.compute',
-                           evalButtonText: 'Evaluate'});
-});
-    </script>
-
-<hr/>
 
 <script type="text/javascript">
 function littelmann_handler(evt) {
     evt.preventDefault();
     var value = $("#littelmann-slider").slider("value");
     $("#littelmann-value").html(value);
+    $("#littelmann-image").attr('src', "{{ url_for('.littelmann_image') }}" + "?value=" + value);
     $("#littelmann-output").load("{{ url_for('.calc_littelmann') }}" + "?value=" + value,
      function() {
         {# tell mathjx to render the output #}
@@ -37,40 +23,11 @@ $(function() {
 });
 </script>
 
+<h2>{{ KNOWL('crystal.littelmann_path', title = 'Littelmann path') }}</h2>
+
 <div class="slider" id="littelmann-slider"></div>
 <div>Value: <span id="littelmann-value">-</span></div>
 <div class="output">Result: <span id="littelmann-output">-</span></div>
-
-<hr/>
-
-   <h2>Littelmann path</h2>
-   Click the &ldquo;Activate&rdquo; button below to display the Littelmann paths for $A_2$ and weight $(6,3)$.
-   <div id="mycell"><script type="text/x-sage">
-C = CrystalOfLSPaths(['A',2],[6,3])
-def line_of_path(path):
-     if path is None:
-         result = []
-     else:
-         L = path.parent().weight.parent()
-         v = vector(L.zero())
-         result = [v]
-         for d in path.value:
-             v = v + vector(d)
-             result.append(v)
-     result = list(result)
-     print result
-     result = line(result)
-     result.set_axes_range(-10,10,-10,10)
-     return result
-@interact
-def string(element = slider(0, C.cardinality(),1), i=C.index_set(), l=slider(-10, 10, 1,0)):
-     x = C[element]
-     if l>=0:
-         y = x.f_string([i]*l)
-     else:
-         y = x.e_string([i]*-l)
-     line_of_path(y).show()  
-   </script>
-   </div>
+<div>Image: <img id="littelmann-image" src="{{ url_for('.littelmann_image')}}?value=5"/> </div>
 
 {% endblock %}
