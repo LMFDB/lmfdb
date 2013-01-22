@@ -1,0 +1,33 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<script type="text/javascript">
+function littelmann_handler(evt) {
+    evt.preventDefault();
+    var value = $("#littelmann-slider").slider("value");
+    $("#littelmann-value").html(value);
+    $("#littelmann-image").attr('src', "{{ url_for('.littelmann_image') }}" + "?value=" + value);
+    $("#littelmann-output").load("{{ url_for('.calc_littelmann') }}" + "?value=" + value,
+     function() {
+        {# tell mathjx to render the output #}
+        MathJax.Hub.Queue(['Typeset', MathJax.Hub, "littelmann-output"]);
+    });
+}
+$(function() {
+  $( "#littelmann-slider" ).slider({ value: 5, min: 0, max: 10, step: 1,
+    change: function( event, ui ) {
+      littelmann_handler(event);
+    }
+  });
+});
+</script>
+
+<h2>{{ KNOWL('crystal.littelmann_path', title = 'Littelmann path') }}</h2>
+
+<div class="slider" id="littelmann-slider"></div>
+<div>Value: <span id="littelmann-value">-</span></div>
+<div class="output">Result: <span id="littelmann-output">-</span></div>
+<div>Image: <img id="littelmann-image" src="{{ url_for('.littelmann_image')}}?value=5"/> </div>
+
+{% endblock %}

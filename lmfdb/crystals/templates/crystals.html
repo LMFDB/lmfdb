@@ -1,0 +1,30 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<h2>Classical Crystal</h2>
+<p>This is the classical highest weight crystal of type ${{ cartan_type }}_{{ rank}}$ and highest weight {{ weight }}</p>
+
+<center>
+<div>
+<img src="/static/crystal.png"/>
+</div>
+</center>
+
+<a href="#" id="show_list">Show list</a>
+
+<ul id="list" style="display: none;">
+<p><strong>List:</strong></p>
+{% for element in crystal %}
+  <li>{{element}}</li>
+{% endfor %}
+</ul>
+
+<script>
+$('#show_list').click(function(){
+    $("#list").show();
+    $("#show_list").toggle();
+});
+</script>
+
+{% endblock %}

@@ -236,7 +236,7 @@ class WebNumberField:
         return f
 
     def dirichlet_group(self):
-        from lmfdb.dirichlet_conrey import DirichletGroup_conrey
+        from dirichlet_conrey import DirichletGroup_conrey
         f = self.conductor()
         if f == 1:  # To make the trivial case work correctly
             return [1]
