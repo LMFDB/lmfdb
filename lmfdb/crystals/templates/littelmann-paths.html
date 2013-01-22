@@ -1,0 +1,57 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Sage Cell Server</title>
+    <script src="http://aleph.sagemath.org/static/jquery.min.js"></script>
+    <script src="http://aleph.sagemath.org/embedded_sagecell.js"></script>
+    <script>
+$(function () {
+    // Make the div with id 'mycell' a Sage cell
+    sagecell.makeSagecell({inputLocation:  '#mycell',
+                           template:       sagecell.templates.minimal,
+                           evalButtonText: 'Activate'});
+    // Make *any* div with class 'compute' a Sage cell
+    sagecell.makeSagecell({inputLocation: 'div.compute',
+                           evalButtonText: 'Evaluate'});
+});
+    </script>
+  </head>
+
+  <body>
+  <h1>Embedded Sage Cells</h1>
+
+   <h2>Littelmann path</h2>
+   Click the &ldquo;Activate&rdquo; button below to display the Littelmann paths for $A_2$ and weight $(6,3)$.
+   <div id="mycell"><script type="text/x-sage">
+C = CrystalOfLSPaths(['A',2],[6,3])
+def line_of_path(path):
+     if path is None:
+         result = []
+     else:
+         L = path.parent().weight.parent()
+         v = vector(L.zero())
+         result = [v]
+         for d in path.value:
+             v = v + vector(d)
+             result.append(v)
+     result = list(result)
+     print result
+     result = line(result)
+     result.set_axes_range(-10,10,-10,10)
+     return result
+@interact
+def string(element = slider(0, C.cardinality(),1), i=C.index_set(), l=slider(-10, 10, 1,0)):
+     x = C[element]
+     if l>=0:
+         y = x.f_string([i]*l)
+     else:
+         y = x.e_string([i]*-l)
+     line_of_path(y).show()  
+   </script>
+   </div>
+
+{% endblock %}

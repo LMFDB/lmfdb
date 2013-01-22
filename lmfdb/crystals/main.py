@@ -23,15 +23,18 @@ def show():
     cartan_type = str(request.args.get('cartan_type', None))
     rank = int(request.args.get('rank', None))
     #logger.info("weight = %s" % weight)
-    j = Partition(map(int,weight.split(",")))
-    crystal = CrystalOfTableaux([cartan_type,rank], shape=j)
+    p = Partition(map(int,weight.split(",")))
+    crystal = CrystalOfTableaux([cartan_type,rank], shape=p)
 
     from sage.misc.latex import png
     png(crystal, "/Users/anne/lmfdb/lmfdb/static/crystal.png", debug=True, pdflatex=True)
-    return render_template("crystals.html", cartan_type= cartan_type, weight = j, rank = rank, 
+    return render_template("crystals.html", cartan_type= cartan_type, weight = p, rank = rank, 
                            crystal = crystal,
-                           rankbread = get_bread())
+                           bread = get_bread())
 
+@crystals_page.route("/littelmann")
+def show_littelmann():
+    return render_template("littelmann-paths.html", title = "Littelmann Paths")
 
 @crystals_page.route("/")
 def index():
