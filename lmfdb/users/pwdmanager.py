@@ -10,13 +10,10 @@ __all__ = ['LmfdbUser', 'user_exists']
 # NEVER EVER change the fixed_salt!
 fixed_salt = '=tU\xfcn|\xab\x0b!\x08\xe3\x1d\xd8\xe8d\xb9\xcc\xc3fM\xe9O\xfb\x02\x9e\x00\x05`\xbb\xb9\xa7\x98'
 
-import os
 from lmfdb import base
 from main import logger
 
-
 def get_users():
-    import base
     return base.getDBConnection().userdb.users
 
 # never narrow down this range, only increase it!
