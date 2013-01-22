@@ -31,28 +31,31 @@ function littelmann_handler_l(evt) {
 }
 $(function() {
   $( "#littelmann-slider-element" ).slider({ value: val_element, min: 0, max: {{ max_element }}, step: 1,
-    change: function( event, ui ) {
-      littelmann_handler_element(event);
-    }
+    change: function( event, ui ) { littelmann_handler_element(event); },
   });
   $( "#littelmann-slider-i" ).slider({ value: val_i, min: 1, max: {{ max_i }}, step: 1,
-    change: function( event, ui ) {
-      littelmann_handler_i(event);
-    }
+    change: function( event, ui ) { littelmann_handler_i(event); }
   });
   $( "#littelmann-slider-l" ).slider({ value: val_l, min: -10, max: 10, step: 1,
-    change: function( event, ui ) {
-      littelmann_handler_l(event);
-    }
+    change: function( event, ui ) { littelmann_handler_l(event); }
+  });
+  $("#recenter").click(function(event) {
+    $.get("{{ url_for('.littelmann_recenter', crystal = crystal) }}?element="+val_element+"&i="+val_i+"&l="+val_l, function(data) {
+      val_l = 0;
+      val_element = eval(data);
+      $("#littelmann-slider-l").slider('value', val_l);
+      $("#littelmann-slider-element").slider('value', data);
+      handle_event();
+   });
   });
 });
 </script>
 
 <h2>{{ KNOWL('crystal.littelmann_path', title = 'Littelmann path') }}</h2>
 
-<div>Crystal: {{ crystal }}</div>
+<div>Crystal: {{ C }}</div>
 
-<table style="width: 90%"><tr>
+<table style="width: 100%"><tr>
 <td>
   Element: <span id="littelmann-value-element">1</span>
   <div class="slider" id="littelmann-slider-element"></div>
@@ -65,8 +68,10 @@ $(function() {
   l = <span id="littelmann-value-l">0</span>
   <div class="slider" id="littelmann-slider-l"></div>
 </td>
+<td> <button id="recenter">recenter</button> </td>
 </tr>
 <table>
-<div>Image: <img id="littelmann-image" src="{{ url_for('.littelmann_image')}}?i=1&l=0&element=0&crystal={{crystal}}"/> </div>
+
+<div><img id="littelmann-image" src="{{ url_for('.littelmann_image')}}?i=1&l=0&element=0&crystal={{crystal}}"/> </div>
 
 {% endblock %}

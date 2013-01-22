@@ -48,7 +48,7 @@ def show_littelmann(crystal):
     C = make_path_crystal(crystal)
     max_i = str(max(C.index_set()))
     max_element = str(C.cardinality())
-    return render_template("littelmann-paths.html", title = "Littelmann Paths", crystal = crystal, max_element = max_element, max_i = max_i)
+    return render_template("littelmann-paths.html", title = "Littelmann Paths", crystal = crystal, C = C, max_element = max_element, max_i = max_i)
 
 @crystals_page.route("/littelmann-image")
 def littelmann_image():
@@ -82,6 +82,20 @@ def littelmann_image():
 
     from lmfdb.utils import image_callback
     return image_callback(line_of_path(y))
+
+@crystals_page.route("/littelmann-recenter/<crystal>")
+def littelmann_recenter(crystal):
+    C = make_path_crystal(crystal)
+    element = int(request.args.get("element"))
+    i = int(request.args.get("i"))
+    l = int(request.args.get("l"))
+    x = C[element]
+    if l >= 0 :
+        y = x.f_string([i] * l)
+    else:
+        y = x.e_string([i] * -l)
+    ret = str(C.rank(y))
+    return 1 if ret == "NaN" else ret
 
 @crystals_page.route("/")
 def index():
