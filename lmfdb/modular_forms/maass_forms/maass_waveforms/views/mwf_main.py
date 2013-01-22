@@ -35,7 +35,7 @@ from mwf_upload_data import *
 logger = mwf_logger
 import json
 try:
-    from lmfdb.dirichlet_conrey import *
+    from dirichlet_conrey import *
 except:
     mwf_logger.critical("Could not import dirichlet_conrey!")
 

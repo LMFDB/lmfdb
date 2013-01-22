@@ -980,7 +980,7 @@ class ArtinLfunction(Lfunction):
     def __init__(self, dimension, conductor, tim_index, **args):
         constructor_logger(self, args)
 
-        from math_classes import ArtinRepresentation
+        from lmfdb.math_classes import ArtinRepresentation
 
         self.artin = ArtinRepresentation(dimension, conductor, tim_index)
 
@@ -1080,7 +1080,7 @@ class SymmetricPowerLfunction(Lfunction):
                             ' and the symmetric power of its L-function is ' +
                             'then not primitive. This has not yet been implemented')
 
-        from symL.symL import SymmetricPowerLFunction
+        from lmfdb.symL.symL import SymmetricPowerLFunction
         self.S = SymmetricPowerLFunction(self.E, self.m)
 
         self.title = "The Symmetric %s $L$-function $L(s,E,\mathrm{sym}^%d)$ of Elliptic Curve Isogeny Class %s" % (ordinal(self.m), self.m, self.label)

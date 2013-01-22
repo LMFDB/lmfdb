@@ -26,7 +26,7 @@ init_ecdb_flag = False
 def init_ecdb_count():
     global ncurves, max_N, max_rank, init_ecdb_flag
     if not init_ecdb_flag:
-        ecdb = base.getDBConnection().elliptic_curves.curves
+        ecdb = lmfdb.base.getDBConnection().elliptic_curves.curves
         ncurves = ecdb.count()
         max_N = ecdb.find().sort('conductor', DESCENDING).limit(1)[0]['conductor']
         max_rank = ecdb.find().sort('rank', DESCENDING).limit(1)[0]['rank']
@@ -248,7 +248,7 @@ def elliptic_curve_search(**args):
         start = start_default
 
     print query
-    cursor = base.getDBConnection().elliptic_curves.curves.find(query)
+    cursor = lmfdb.base.getDBConnection().elliptic_curves.curves.find(query)
     nres = cursor.count()
     if(start >= nres):
         start -= (1 + (start - nres) / count) * count
@@ -290,7 +290,7 @@ def by_ec_label(label):
             N, iso, number = cremona_label_regex.match(label).groups()
         except AttributeError:
             return elliptic_curve_jump_error(label, {})
-        C = base.getDBConnection()
+        C = lmfdb.base.getDBConnection()
         # We permanently redirect to the lmfdb label
         if number:
             data = C.elliptic_curves.curves.find_one({'label': label})
@@ -313,7 +313,7 @@ def by_ec_label(label):
 
 @app.route("/EllipticCurve/Q/plot/<label>")
 def plot_ec(label):
-    C = base.getDBConnection()
+    C = lmfdb.base.getDBConnection()
     data = C.elliptic_curves.curves.find_one({'lmfdb_label': label})
     if data is None:
         return elliptic_curve_jump_error(label, {})
@@ -331,7 +331,7 @@ def plot_ec(label):
 
 @app.route("/EllipticCurve/Q/iso_graph/<label>")
 def plot_iso_graph(label):
-    C = base.getDBConnection()
+    C = lmfdb.base.getDBConnection()
     data = C.elliptic_curves.curves.find_one({'lmfdb_iso': label})
     if data is None:
         return elliptic_curve_jump_error(label, {})
@@ -356,7 +356,7 @@ def render_isogeny_class(iso_class):
     lmfdb_iso = iso_class  # e.g. '11.a'
     N, iso, number = lmfdb_label_regex.match(lmfdb_iso).groups()
 
-    CDB = base.getDBConnection().elliptic_curves.curves
+    CDB = lmfdb.base.getDBConnection().elliptic_curves.curves
 
     E1data = CDB.find_one({'lmfdb_label': lmfdb_iso + '1'})
     if E1data is None:
@@ -467,7 +467,7 @@ def modular_form_display(label, number):
         return "Please stop poking me."
     if number > 1000:
         number = 1000
-    C = base.getDBConnection()
+    C = lmfdb.base.getDBConnection()
     data = C.elliptic_curves.curves.find_one({'lmfdb_label': label})
     if data is None:
         return elliptic_curve_jump_error(label, {})
@@ -506,7 +506,7 @@ def modular_form_display(label, number):
 
 
 def render_curve_webpage_by_label(label):
-    C = base.getDBConnection()
+    C = lmfdb.base.getDBConnection()
     data = C.elliptic_curves.curves.find_one({'lmfdb_label': label})
     if data is None:
         return elliptic_curve_jump_error(label, {})
@@ -661,7 +661,7 @@ def padic_data():
     if request.args['rank'] == '0':
         info['reg'] = 1
     elif number == '1':
-        C = base.getDBConnection()
+        C = lmfdb.base.getDBConnection()
         data = C.elliptic_curves.curves.find_one({'lmfdb_iso': N + '.' + iso})
         data = C.elliptic_curves.padic_db.find_one({'lmfdb_iso': N + '.' + iso, 'p': p})
         info['data'] = data
@@ -680,7 +680,7 @@ def padic_data():
 @app.route("/EllipticCurve/Q/download_qexp/<label>/<limit>")
 def download_EC_qexp(label, limit):
     logger.debug(label)
-    CDB = base.getDBConnection().elliptic_curves.curves
+    CDB = lmfdb.base.getDBConnection().elliptic_curves.curves
     N, iso, number = lmfdb_label_regex.match(label).groups()
     if number:
         data = CDB.find_one({'lmfdb_label': label})
@@ -696,7 +696,7 @@ def download_EC_qexp(label, limit):
 
 @app.route("/EllipticCurve/Q/download_all/<label>")
 def download_EC_all(label):
-    CDB = base.getDBConnection().elliptic_curves.curves
+    CDB = lmfdb.base.getDBConnection().elliptic_curves.curves
     N, iso, number = lmfdb_label_regex.match(label).groups()
     if number:
         data = CDB.find_one({'lmfdb_label': label})

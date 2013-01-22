@@ -2,7 +2,7 @@
 # TODO: These should be (is already) part of the elliptic curve code?
 
 import re
-import lmfdb.base
+from lmfdb import base
 from pymongo import ASCENDING
 import lmfdb.utils
 from lmfdb.lfunctions import logger

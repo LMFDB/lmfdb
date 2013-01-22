@@ -12,7 +12,7 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_classes import Class
 list_of_implemented_dims = ['new', 'cusp', 'modular', 'eisenstein']
 
 try:
-    from lmfdb.dirichlet_conrey import *
+    from dirichlet_conrey import *
 except:
     emf_logger.critical("Could not import dirichlet_conrey!")
 

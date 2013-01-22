@@ -1,4 +1,4 @@
-from math_classes import ArtinRepresentation
+from lmfdb.math_classes import ArtinRepresentation
 
 import base
 base._init(int(37010), "")
