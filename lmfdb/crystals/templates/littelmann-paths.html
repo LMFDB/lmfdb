@@ -1,11 +1,6 @@
 {% extends "homepage.html" %}
 
 {% block content %}
-
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width">
-    <title>Sage Cell Server</title>
     <script src="http://aleph.sagemath.org/static/jquery.min.js"></script>
     <script src="http://aleph.sagemath.org/embedded_sagecell.js"></script>
     <script>
@@ -19,10 +14,34 @@ $(function () {
                            evalButtonText: 'Evaluate'});
 });
     </script>
-  </head>
 
-  <body>
-  <h1>Embedded Sage Cells</h1>
+<hr/>
+
+<script type="text/javascript">
+function littelmann_handler(evt) {
+    evt.preventDefault();
+    var value = $("#littelmann-slider").slider("value");
+    $("#littelmann-value").html(value);
+    $("#littelmann-output").load("{{ url_for('.calc_littelmann') }}" + "?value=" + value,
+     function() {
+        {# tell mathjx to render the output #}
+        MathJax.Hub.Queue(['Typeset', MathJax.Hub, "littelmann-output"]);
+    });
+}
+$(function() {
+  $( "#littelmann-slider" ).slider({ value: 5, min: 0, max: 10, step: 1,
+    change: function( event, ui ) {
+      littelmann_handler(event);
+    }
+  });
+});
+</script>
+
+<div class="slider" id="littelmann-slider"></div>
+<div>Value: <span id="littelmann-value">-</span></div>
+<div class="output">Result: <span id="littelmann-output">-</span></div>
+
+<hr/>
 
    <h2>Littelmann path</h2>
    Click the &ldquo;Activate&rdquo; button below to display the Littelmann paths for $A_2$ and weight $(6,3)$.

@@ -36,6 +36,11 @@ def show():
 def show_littelmann():
     return render_template("littelmann-paths.html", title = "Littelmann Paths")
 
+@crystals_page.route("/calc-littelmann")
+def calc_littelmann():
+    v = request.args.get('value', 0)
+    return str( 2 * int(v) )
+
 @crystals_page.route("/")
 def index():
     bread = get_bread()
