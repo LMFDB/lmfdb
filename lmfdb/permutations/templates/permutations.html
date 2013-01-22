@@ -1,0 +1,46 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<h2>Permutation</h2>
+<p>${{ permutation }}$</p>
+
+
+<h2>Size</h2>
+{{ permutation.size() }}
+
+
+<h2>Matrix</h2>
+
+<p><a href="#" id="show_matrix">Show matrix</a></p>
+
+<p id="matrix" style="display: none;">${{ permutation.to_matrix()._latex_() }}$</p>
+
+<script>
+$('#show_matrix').click(function(){
+    $("#matrix").show();
+    $("#show_matrix").toggle();
+});
+</script>
+
+<h2>Graph</h2>
+
+TODO
+
+<!--
+ {{ digraph_plot.plot() }}
+
+ {% if plotlink %}
+    <img src="{{ plotlink|safe }}" >
+ {% else %}
+    <div>Not enough information (Dirichlet series coefficients/sign of the functional equation) to make a plot.</div>
+ {% endif %}
+ --!>
+
+<h2>Number of inversions</h2>
+<p>${{ permutation.number_of_inversions() }}$</p>
+
+<h2>Product of cycles</h2>
+<p>${{ permutation.to_cycles() }}$</p>
+
+{% endblock %}
