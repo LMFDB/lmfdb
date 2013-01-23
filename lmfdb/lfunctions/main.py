@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from lmfdb.base import *
-from flask import Flask, session, g, render_template, url_for, request, make_response, abort
+from flask import (Flask, session, g, render_template, url_for, request,
+                   make_response, abort)
 import flask
 
 from sage.all import *
@@ -8,7 +9,6 @@ import tempfile
 import os
 import pymongo
 from Lfunction import *
-import LfunctionComp as LfunctionCompo
 import LfunctionPlot as LfunctionPlot
 from lmfdb.utils import to_dict
 import bson
@@ -16,6 +16,8 @@ from Lfunctionutilities import (lfuncDStex, lfuncEPtex, lfuncFEtex,
                                 truncatenumber, styleTheSign, specialValueString)
 from lmfdb.DirichletCharacter import getPrevNextNavig
 from lmfdb.lfunctions import l_function_page, logger
+from lmfdb.elliptic_curve import cremona_label_regex, lmfdb_label_regex
+from LfunctionComp import isogenyclasstable
 
 # import upload2Db.py
 
@@ -183,7 +185,6 @@ def l_function_dirichlet_page(modulus, number):
 @l_function_page.route("/EllipticCurve/Q/<label>/")
 def l_function_ec_page(label):
     logger.debug(label)
-    from elliptic_curve import cremona_label_regex, lmfdb_label_regex
 
     m = lmfdb_label_regex.match(label)
     if m is not None:
@@ -569,6 +570,9 @@ def set_gaga_properties(L):
         sd = 'Not self-dual'
     ans.append((None, sd))
 
+    if L.algebraic:
+        ans.append(('Motivic weight', str(L.motivic_weight)))
+        
     if L.primitive:
         prim = 'Primitive'
     else:
@@ -823,7 +827,7 @@ def processEllipticCurveNavigation(startCond, endCond):
     except:
         end = 100
 
-    iso_list = LfunctionComp.isogenyclasstable(N, end)
+    iso_list = isogenyclasstable(N, end)
     s = '<h5>Examples of L-functions attached to isogeny classes of elliptic curves</h5>'
     s += '<table>'
 
@@ -914,7 +918,7 @@ def processSymPowerEllipticCurveNavigation(startCond, endCond, power):
     except:
         end = 100
 
-    iso_list = LfunctionComp.isogenyclasstable(N, end)
+    iso_list = isogenyclasstable(N, end)
     if power == 2:
         powerName = 'square'
     elif power == 3:

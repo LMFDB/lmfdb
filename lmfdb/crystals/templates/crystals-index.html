@@ -1,0 +1,35 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<p>
+A crystal graph is a representation for a $U_q$-module in the limit $q\to 0$.
+<p>
+
+      <h2>Browse {{KNOWL('crystals.crystal', title="Crystals")}}</h2>
+<p>
+
+<!--
+<form method= "get" action="{{ url_for('.show', crystal='A-1-1') }}">
+<table>
+<tr>
+   <td>Cartan type</td> <td> <input name="cartan_type" /> </td>
+</tr>
+<tr>
+   <td>Rank</td> <td> <input name="rank" /></td>
+</tr>
+<tr>
+  <td>Weight</td> <td> <input name="weight" /></td>
+</tr>
+<tr> <td><button type="submit">Submit</button> </td></tr>
+</table>
+</form>
+-->
+
+<a href="{{ url_for('.show', crystal = 'A-2-6.4') }}">crystal example</a>
+
+<br/>
+
+<a href="{{ url_for('.show_littelmann', crystal = 'A-2-6.4')}}">Littelmann Path</a>
+
+{% endblock %}

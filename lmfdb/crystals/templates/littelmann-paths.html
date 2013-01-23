@@ -1,0 +1,77 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<script type="text/javascript">
+var val_element = 1;
+var val_i = 1;
+var val_l = 0;
+
+function handle_event() { 
+    $("#littelmann-image").attr('src', "{{ url_for('.littelmann_image') }}" + "?crystal={{crystal}}&i=" + val_i + "&l=" + val_l + "&element=" + val_element);
+}
+
+function littelmann_handler_element(evt) {
+    evt.preventDefault();
+    val_element = $("#littelmann-slider-element").slider("value");
+    $("#littelmann-value-element").html(val_element);
+    handle_event();
+}
+function littelmann_handler_i(evt) {
+    evt.preventDefault();
+    val_i = $("#littelmann-slider-i").slider("value");
+    $("#littelmann-value-i").html(val_i);
+    handle_event();
+}
+function littelmann_handler_l(evt) {
+    evt.preventDefault();
+    val_l = $("#littelmann-slider-l").slider("value");
+    $("#littelmann-value-l").html(val_l);
+    handle_event();
+}
+$(function() {
+  $( "#littelmann-slider-element" ).slider({ value: val_element, min: 0, max: {{ max_element }}, step: 1,
+    change: function( event, ui ) { littelmann_handler_element(event); },
+  });
+  $( "#littelmann-slider-i" ).slider({ value: val_i, min: 1, max: {{ max_i }}, step: 1,
+    change: function( event, ui ) { littelmann_handler_i(event); }
+  });
+  $( "#littelmann-slider-l" ).slider({ value: val_l, min: -10, max: 10, step: 1,
+    change: function( event, ui ) { littelmann_handler_l(event); }
+  });
+  $("#recenter").click(function(event) {
+    $.get("{{ url_for('.littelmann_recenter', crystal = crystal) }}?element="+val_element+"&i="+val_i+"&l="+val_l, function(data) {
+      val_l = 0;
+      val_element = eval(data);
+      $("#littelmann-slider-l").slider('value', val_l);
+      $("#littelmann-slider-element").slider('value', data);
+      handle_event();
+   });
+  });
+});
+</script>
+
+<h2>{{ KNOWL('crystals.littelmann_path', title = 'Littelmann path') }}</h2>
+
+<div>Crystal: {{ C }}</div>
+
+<table style="width: 100%"><tr>
+<td>
+  Element: <span id="littelmann-value-element">1</span>
+  <div class="slider" id="littelmann-slider-element"></div>
+</td>
+<td>
+  i = <span id="littelmann-value-i">1</span>
+  <div class="slider" id="littelmann-slider-i"></div>
+</td>
+<td>
+  l = <span id="littelmann-value-l">0</span>
+  <div class="slider" id="littelmann-slider-l"></div>
+</td>
+<td> <button id="recenter">recenter</button> </td>
+</tr>
+<table>
+
+<div><img id="littelmann-image" src="{{ url_for('.littelmann_image')}}?i=1&l=0&element=0&crystal={{crystal}}"/> </div>
+
+{% endblock %}
