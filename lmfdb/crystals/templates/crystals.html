@@ -5,24 +5,18 @@
 <h2>Classical Crystal</h2>
 <p>This is the classical highest weight crystal of type ${{ crystal.cartan_type() }}$ and highest weight {{ crystal.weight }}</p>
 
+<p><a href="{{ url_for('.show_littelmann', crystal = crystal_string) }}">goto associated littelmann path</a></p>
+
 <center>
 <img src="{{ url_for('.crystal_image', crystal=crystal_string) }}" />
 </center>
 
-<ul> <!--  id="list" style="display: none;"> -->
+<ul>
 <p><strong>List:</strong></p>
 {% for element in crystal %}
   <li>{{element._repr_()}}</li>
 {% endfor %}
 </ul>
 
-<!--
-<script>
-$('#show_list').click(function(){
-    $("#list").show();
-    $("#show_list").toggle();
-});
-</script>
--->
 
 {% endblock %}
