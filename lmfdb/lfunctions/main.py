@@ -570,6 +570,9 @@ def set_gaga_properties(L):
         sd = 'Not self-dual'
     ans.append((None, sd))
 
+    if L.algebraic:
+        ans.append(('Motivic weight', str(L.motivic_weight)))
+        
     if L.primitive:
         prim = 'Primitive'
     else:

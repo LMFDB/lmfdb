@@ -187,6 +187,8 @@ def initCharacterInfo(web_chi, args, request):
         info['prim'] = web_chi.prim
         info['vals'] = web_chi.vals
         info['logvals'] = web_chi.logvals
+        modulus = web_chi.modulus
+        info['galoisorbit'] = [ (modulus, n, char_label(modulus, n)) for n in web_chi.galoisorbit ]
         # info['galoisorbits'] = web_chi.galoisorbits
         # info['root_unity'] =  str(any(map(lambda x : r"\zeta" in x,  web_chi.vals)))
         info['valuefield'] = web_chi.valuefield
@@ -219,6 +221,10 @@ def initCharacterInfo(web_chi, args, request):
         info['navi'] = getPrevNextNavig(web_chi.modulus, web_chi.number, "character")
 
     return info
+
+def char_label(modulus, number):
+    name_pattern = r"\(\chi_{%s}(%s, \cdot )\)"
+    return name_pattern % (modulus, number)
 
 
 def getPrevNextNavig(modulus, number, mode='character'):
