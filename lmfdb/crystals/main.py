@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # This Blueprint is about Crystals
-# Author: Anne Schilling 
+# Author: Anne Schilling (lead), Mike Hansen, Harald Schilly
 
 import flask
 from lmfdb import base
