@@ -70,6 +70,7 @@ class Lfunction:
         self.citation = ''
         self.credit = ''
         self.motivic_weight = NaN
+        self.algebraic = True
 
         # Initialize from an lcalcfile if it's not a subclass
         if 'Ltype' in args.keys():
@@ -190,6 +191,7 @@ class Lfunction_EC(Lfunction):
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
+        self.algebraic = True
 
         # Remove the ending number (if given) in the label to only get isogeny class
         while self.label[len(self.label) - 1].isdigit():
@@ -304,9 +306,10 @@ class Lfunction_EMF(Lfunction):
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
+        self.algebraic = True
         # logger.debug(str(self.character)+str(self.label)+str(self.number))
         self.weight = int(self.weight)
-        self.motivic_weight = 1
+        self.motivic_weight = self.weight - 1
         self.level = int(self.level)
         self.character = int(self.character)
         # if self.character > 0:
@@ -432,6 +435,7 @@ class Lfunction_HMF(Lfunction):
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
+        self.algebraic = True
         logger.debug(str(self.character) + str(self.label) + str(self.number))
 
         # Load form from database
@@ -457,9 +461,10 @@ class Lfunction_HMF(Lfunction):
         except KeyError:
             self.weight = int(f['weight'].split(', ')[0][1:])
 
+        self.motivic_weight = self.weight - 1
         self.level = f['level_norm'] * self.field_disc ** 2
 
-        # Extract the L-function information from the elliptic modular form
+        # Extract the L-function information from the hilbert modular form
         self.automorphyexp = float(self.weight - 1) / float(2)
         self.Q_fe = float(sqrt(self.level)) / (2 * math.pi) ** (self.field_degree)
 
@@ -578,6 +583,7 @@ class RiemannZeta(Lfunction):
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
+        self.algebraic = True
         self.numcoeff = int(self.numcoeff)
 
         self.coefficient_type = 1
@@ -642,6 +648,7 @@ class Lfunction_Dirichlet(Lfunction):
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
+        self.algebraic = True
         self.charactermodulus = int(self.charactermodulus)
         self.characternumber = int(self.characternumber)
         self.numcoeff = int(self.numcoeff)
@@ -751,6 +758,7 @@ class Lfunction_Maass(Lfunction):
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
 
+        self.algebraic = False
         # Fetch the information from the database
 
         if self.dbName == 'Lfunction':  # Data from Lemurell
@@ -891,6 +899,7 @@ class DedekindZeta(Lfunction):   # added by DK
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
+        self.algebraic = True
 
         # Fetch the polynomial of the field from the database
         wnf = WebNumberField(self.label)
@@ -988,6 +997,7 @@ class ArtinLfunction(Lfunction):
             ", conductor " + str(conductor)
 
         self.motivic_weight = 0
+        self.algebraic = True
         self.degree = self.artin.dimension()
         self.coefficient_type = 0
 
@@ -1068,6 +1078,7 @@ class SymmetricPowerLfunction(Lfunction):
             raise TypeError("The symmetric L-functions have been implemented only for Elliptic Curves over Q")
 
         # Create the elliptic curve
+        self.algebraic = True
         curves = base.getDBConnection().elliptic_curves.curves
         Edata = curves.find_one({'lmfdb_label': self.label + '1'})
         if Edata is None:
@@ -1170,6 +1181,7 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
             args['number'] = 0     # Default choice of embedding of the coefficients
 
         self.__dict__.update(args)
+        self.algebraic = True
         self.weight = int(self.weight)
         self.number = int(self.number)
 
