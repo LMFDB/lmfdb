@@ -50,19 +50,21 @@ def crystal_image(crystal):
     import os
     filename = os.path.join(d, 'crystal.png')
 
-    from sage.misc.latex import png
-    png(C, filename, debug=True, pdflatex=True)
+    try:
+        from sage.misc.latex import png
+        png(C, filename, debug=True, pdflatex=True)
 
-    from flask import make_response
-    image_data = open(filename, 'rb').read()
-    response = make_response(image_data)
-    response.headers['Content-Type'] = 'image/png'
+        image_data = open(filename, 'rb').read()
+        response = make_response(image_data)
+        response.headers['Content-Type'] = 'image/png'
 
-    # Get rid of the temporary directory
-    import shutil
-    shutil.rmtree(d)
+        # Get rid of the temporary directory
+        import shutil
+        shutil.rmtree(d)
 
-    return response
+        return response
+    finally:
+        return "internal error rendering graph", 404
 
 @crystals_page.route("/<crystal>/littelmann")
 def show_littelmann(crystal):
