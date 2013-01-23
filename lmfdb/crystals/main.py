@@ -39,9 +39,30 @@ def show(crystal):
     #crystal = CrystalOfTableaux([cartan_type,rank], shape=p)
 
     C = make_tableaux_crystal(crystal)
-    #from sage.misc.latex import png
-    #png(crystal, "/Users/anne/lmfdb/lmfdb/static/crystal.png", debug=True, pdflatex=True)
-    return render_template("crystals.html", crystal = C, bread = get_bread())
+    return render_template("crystals.html", crystal = C, crystal_string=crystal, bread = get_bread())
+
+@crystals_page.route("/<crystal>/image")
+def crystal_image(crystal):
+    C = make_tableaux_crystal(crystal)
+    from sage.all import tmp_dir
+    d = tmp_dir()
+
+    import os
+    filename = os.path.join(d, 'crystal.png')
+
+    from sage.misc.latex import png
+    png(C, filename, debug=True, pdflatex=True)
+
+    from flask import make_response
+    image_data = open(filename, 'rb').read()
+    response = make_response(image_data)
+    response.headers['Content-Type'] = 'image/png'
+
+    # Get rid of the temporary directory
+    import shutil
+    shutil.rmtree(d)
+
+    return response
 
 @crystals_page.route("/<crystal>/littelmann")
 def show_littelmann(crystal):

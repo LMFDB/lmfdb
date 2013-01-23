@@ -5,6 +5,9 @@
 <h2>Classical Crystal</h2>
 <p>This is the classical highest weight crystal of type ${{ crystal.cartan_type() }}$ and highest weight {{ crystal.weight }}</p>
 
+<center>
+<img src="{{ url_for('.crystal_image', crystal=crystal_string) }}" />
+</center>
 
 <ul> <!--  id="list" style="display: none;"> -->
 <p><strong>List:</strong></p>
