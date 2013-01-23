@@ -102,11 +102,11 @@ table.props tr td:first-child {
             \( {{ unitgens }} \) &rarr; \( {{ genvalstex }} \)
         </p>
 
-        <h2> {{ KNOWL('character.dirichlet.basic_properties', title="Basic properties") }} </h2>
-
-        {# Galois Orbits #}
         
         {# Basic properties #}
+
+        <h2> {{ KNOWL('character.dirichlet.basic_properties', title="Basic properties") }} </h2>
+
         <table class="props">
             <tr>
                 <td>
@@ -162,7 +162,23 @@ table.props tr td:first-child {
                     {% endif %}
             </tr>
         </table>
-        
+
+         {# Galois Orbits #}
+
+        <h2>
+            {{ KNOWL('character.dirichlet.galois_orbit', title="Galois orbit") }}
+        </h2>
+        <div class = 'sage nodisplay code'>sage: chi_sage.galois_orbit()</div>
+
+        <p>
+        {% for m,n,label in galoisorbit %}
+        <a href="{{ url_for('render_webpage_label', modulus = m, number  = n)}}">
+                {{label}}
+            </a>
+         {% endfor %}
+
+        </p>
+
         {# Fields #}
         <h2>
             {{ KNOWL('character.dirichlet.related_fields', 'Related number fields') }}

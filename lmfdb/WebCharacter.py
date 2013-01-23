@@ -103,6 +103,7 @@ class WebCharacter:
                 self.primitive = "False"
             self.conductor = chi.conductor()
             self.order = chi.multiplicative_order()
+            self.galoisorbit = [ power_mod(self.number, k, self.modulus) for k in xrange(1, self.order) if gcd(k, self.order) == 1 ]
             self.vals = chi.values()
             self.logvals = log_value(self.modulus, self.number)
             # self.logvals = map(chi.logvalue, range(1,self.modulus+1))
