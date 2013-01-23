@@ -31,15 +31,31 @@ def make_path_crystal(crystal):
 
 @crystals_page.route("/<crystal>", methods = ["GET"])
 def show(crystal):
-    #weight = request.args.get('weight', None)
-    #cartan_type = str(request.args.get('cartan_type', None))
-    #rank = int(request.args.get('rank', None))
-    #logger.info("weight = %s" % weight)
-    #p = Partition(map(int,weight.split(",")))
-    #crystal = CrystalOfTableaux([cartan_type,rank], shape=p)
-
     C = make_tableaux_crystal(crystal)
     return render_template("crystals.html", crystal = C, crystal_string=crystal, bread = get_bread())
+
+@crystals_page.route("/search")
+def search():
+    weight = request.args.get('weight', '')
+    weight = weight.replace(',', '.')
+    cartan_type = str(request.args.get('cartan_type', ''))
+    rank = request.args.get('rank', '')
+    logger.info("weight = %s" % weight)
+    if not (cartan_type and rank and weight ):
+        return redirect(url_for('.index'))
+    crystal_string = "-".join([cartan_type, rank, weight])
+    return redirect(url_for('.show', crystal=crystal_string))
+
+@crystals_page.route("/search_littelmann")
+def search_littelmann():
+    weight = request.args.get('weight', '')
+    weight = weight.replace(',', '.')
+    cartan_type = str(request.args.get('cartan_type', ''))
+    logger.info("weight = %s" % weight)
+    if not (cartan_type and weight ):
+        return redirect(url_for('.index'))
+    crystal_string = "-".join([cartan_type, str(2), weight])
+    return redirect(url_for('.show_littelmann', crystal=crystal_string))
 
 @crystals_page.route("/<crystal>/image")
 def crystal_image(crystal):
@@ -58,16 +74,13 @@ def crystal_image(crystal):
         response = make_response(image_data)
         response.headers['Content-Type'] = 'image/png'
 
-        # Get rid of the temporary directory
-        import shutil
-        shutil.rmtree(d)
-
         return response
+    except IOError:
+        return "internal error rendering graph", 500
     finally:
         # Get rid of the temporary directory
         import shutil
         shutil.rmtree(d)
-        return "internal error rendering graph", 500
 
 @crystals_page.route("/<crystal>/littelmann")
 def show_littelmann(crystal):
