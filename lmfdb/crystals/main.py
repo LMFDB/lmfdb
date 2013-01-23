@@ -64,7 +64,10 @@ def crystal_image(crystal):
 
         return response
     finally:
-        return "internal error rendering graph", 404
+        # Get rid of the temporary directory
+        import shutil
+        shutil.rmtree(d)
+        return "internal error rendering graph", 500
 
 @crystals_page.route("/<crystal>/littelmann")
 def show_littelmann(crystal):
