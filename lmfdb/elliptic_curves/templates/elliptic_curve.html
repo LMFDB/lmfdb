@@ -61,7 +61,7 @@ function show_code(system) {
     </div>
 
 
-<br>    <div align = "right"> {{ KNOWL('sage.test', title='Evaluate using Sage', kwargs='n=1') }} </div>
+<br>    <div align = "right"> {{ KNOWL('sage.test', title='Evaluate using Sage', code = 'E = EllipticCurve(%s); E'|format(info.ainvs))  }} </div>
 
 <br>    <div align = "right"> {{ KNOWL('sage.test', title='Evaluate something else using Sage', kwargs='n=2') }} </div>
 
