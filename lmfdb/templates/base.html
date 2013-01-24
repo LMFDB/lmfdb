@@ -28,21 +28,20 @@ MathJax.Hub.Config({
   extensions: ["tex2jax.js","TeX/AMSmath.js","TeX/AMSsymbols.js"],
   jax: ["input/TeX","output/HTML-CSS"],
   TeX: {
-        Macros: {
-	  C: '{\\mathbb{C}}',
-	  R: '{\\mathbb{R}}',
-	  Q: '{\\mathbb{Q}}',
-	  Z: '{\\mathbb{Z}}',
-	  F: '{\\mathbb{F}}',
-	  SL: '{\\textrm{SL}}',
-	  GL: '{\\textrm{GL}}',
-	  PSL: '{\\textrm{PSL}}',
-	  PGL: '{\\textrm{PGL}}',
-	  Sp: '{\\textrm{Sp}}',
-	  GSp: '{\\textrm{GSp}}',
-//	  N: '{\\mathbb{N}}',
-	},
-     },
+   Macros: {
+    C: '{\\mathbb{C}}',
+    R: '{\\mathbb{R}}',
+    Q: '{\\mathbb{Q}}',
+    Z: '{\\mathbb{Z}}',
+    F: '{\\mathbb{F}}',
+    SL: '{\\textrm{SL}}',
+    GL: '{\\textrm{GL}}',
+    PSL: '{\\textrm{PSL}}',
+    PGL: '{\\textrm{PGL}}',
+    Sp: '{\\textrm{Sp}}',
+    GSp: '{\\textrm{GSp}}',
+   },
+  },
   tex2jax: {
     inlineMath: [['$','$'],["\\(","\\)"]],
     processEscapes: true,
@@ -51,8 +50,8 @@ MathJax.Hub.Config({
   menuSettings: { zscale: "150%", zoom: "Double-Click" }
 });
 </script>
-{#- <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script> -#}
-<script type="text/javascript" src="http://www.lmfdb.org/MathJax/MathJax.js"></script>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+{#- <script type="text/javascript" src="http://www.lmfdb.org/MathJax/MathJax.js"></script> -#}
 {#- append this: ?config=default if the script complains about a missing config -#}
 
 {#- the defs for the knowls, need to be after mathjax, before analytics -#}
