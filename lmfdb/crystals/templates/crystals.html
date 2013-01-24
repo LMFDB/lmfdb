@@ -1,22 +1,48 @@
 {% extends "homepage.html" %}
-
 {% block content %}
 
-<h2>Classical Crystal</h2>
-<p>This is the classical highest weight crystal of type ${{ crystal.cartan_type() }}$ and highest weight {{ crystal.weight }}</p>
+<script>
+var cur_system = null;
+function show_code(system) {
+    $('.sage').hide();
+    $('.pari').hide();
+    $('.magma').hide();
+    if (cur_system == system) {
+      $('.'+system).hide();
+      cur_system = null;
+      } else {
+      $('.'+system).show();
+      cur_system = system;
+    }
+  }
+</script>
 
-<p><a href="{{ url_for('.show_littelmann', crystal = crystal_string) }}">goto associated littelmann path</a></p>
+<div align="right">
+      Show commands for:  <a onclick="show_code('sage'); return false" href="#">sage</a>
+    </div>
+
+<h2>Classical Crystal</h2>
+<p>This is the classical highest weight crystal of type ${{ crystal.cartan_type() }}$ and highest weight {{ crystal.highest_weight_vector().weight() }}.</p>
+
+<div class='sage nodisplay code'>sage: B = CrystalOfTableaux( {{ crystal.cartan_type() }}, shape = {{crystal.highest_weight_vector().weight()}}) </div>
+<div class='sage nodisplay code'>sage: view(B)</div>
 
 <center>
-<img src="{{ url_for('.crystal_image', crystal=crystal_string) }}" />
+<img src="{{ url_for('.crystal_image', crystal=crystal_string) }}"/>
 </center>
 
 <ul>
 <p><strong>List:</strong></p>
+  <div class='sage nodisplay code'>sage: B = CrystalOfTableaux({{crystal.cartan_type()}}, shape = {{crystal.highest_weight_vector().weight()}}) </div>
+<div class='sage nodisplay code'>sage: B.list()</div>
 {% for element in crystal %}
   <li>{{element._repr_()}}</li>
 {% endfor %}
 </ul>
+
+<!--
+<p><a href="{{ url_for('.show_littelmann', crystal = crystal_string) }}">Associated Littelmann path model</a></p>
+-->
 
 
 {% endblock %}
