@@ -7,6 +7,8 @@ import flask
 from sage.all import *
 import tempfile
 import os
+import sqlite3
+import numpy
 import pymongo
 from Lfunction import *
 import LfunctionPlot as LfunctionPlot
@@ -215,19 +217,21 @@ def l_function_emf_page(level, weight, character, label, number):
 
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<level>/<weight>/<character>/<label>/")
-def l_function_emf_redirect(level, weight, character, label):
+def l_function_emf_redirect_1(level, weight, character, label):
+    logger.debug(level, weight, character, label)
     return flask.redirect(url_for('.l_function_emf_page', level=level, weight=weight,
-                                  character=character, label=label, number=0), code=301)
+                                  character=character, label=label, number='0'), code=301)
 
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<level>/<weight>/<character>/")
-def l_function_emf_redirect(level, weight, character):
+def l_function_emf_redirect_2(level, weight, character):
     return flask.redirect(url_for('.l_function_emf_page', level=level, weight=weight,
                                   character=character, label='a', number='0'), code=301)
 
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<level>/<weight>/")
-def l_function_emf_redirect(level, weight):
+def l_function_emf_redirect_3(level, weight):
+    logger.debug(level, weight)
     return flask.redirect(url_for('.l_function_emf_page', level=level, weight=weight,
                                   character='0', label='a', number='0'), code=301)
 
@@ -241,13 +245,15 @@ def l_function_hmf_page(field, label, character, number):
 
 
 @l_function_page.route("/ModularForm/GL2/<field>/holomorphic/<label>/<character>/")
-def l_function_hmf_redirect(field, label, character):
+def l_function_hmf_redirect_1(field, label, character):
+    logger.debug(field, label, character)
     return flask.redirect(url_for('.l_function_hmf_page', field=field, label=label,
                                   character=character, number='0'), code=301)
 
 
 @l_function_page.route("/ModularForm/GL2/<field>/holomorphic/<label>/")
-def l_function_hmf_redirect(field, label):
+def l_function_hmf_redirect_2(field, label):
+    logger.debug(field, label)
     return flask.redirect(url_for('.l_function_hmf_page', field=field, label=label,
                                   character='0', number='0'), code=301)
 
@@ -325,25 +331,6 @@ def render_single_Lfunction(Lclass, args, request):
     info = initLfunction(L, temp_args, request)
     return render_template('Lfunction.html', **info)
 
-
-# def render_single_Lfunction(L, request):
-##    ''' Renders the homepage of the L-function object L.
-##        If the argument download = 'lcalcfile' then a plain text file with
-##        the lcalcfile of L is rendered.
-##        Request should be the request of the page.
-##    '''
-##    args = request.args
-##    temp_args = to_dict(args)
-##    try:
-##        if temp_args['download'] == 'lcalcfile':
-##            return render_lcalcfile(L, request.url)
-##    except:
-##        pass #Do nothing
-##
-##    info = initLfunction(L, temp_args, request)
-##    return render_template('Lfunction.html', **info)
-
-
 def render_lcalcfile(L, url):
     ''' Function for rendering the lcalc file of an L-function.
     '''
@@ -403,13 +390,13 @@ def initLfunction(L, args, request):
 
     info['degree'] = int(L.degree)
 
-    info['zeroeslink'] = (request.url.replace('/L/', '/zeroesLfunction/').
-                          replace('/Lfunction/', '/zeroesLfunction/').
-                          replace('/L-function/', '/zeroesLfunction/'))  # url_for('zeroesLfunction',  **args)
+    info['zeroeslink'] = (request.url.replace('/L/', '/L/Zeroes/').
+                          replace('/Lfunction/', '/L/Zeroes/').
+                          replace('/L-function/', '/L/Zeroes/'))  # url_for('zeroesLfunction',  **args)
 
-    info['plotlink'] = (request.url.replace('/L/', '/plotLfunction/').
-                        replace('/Lfunction/', '/plotLfunction/').
-                        replace('/L-function/', '/plotLfunction/'))  # info['plotlink'] = url_for('plotLfunction',  **args)
+    info['plotlink'] = (request.url.replace('/L/', '/L/Plot/').
+                        replace('/Lfunction/', '/L/Plot/').
+                        replace('/L-function/', '/L/Plot/'))  # info['plotlink'] = url_for('plotLfunction',  **args)
 
     info['bread'] = []
     info['properties2'] = set_gaga_properties(L)
@@ -578,7 +565,6 @@ def set_gaga_properties(L):
     else:
         prim = 'Not primitive'
 #    ans.append((None,        prim))    Disabled until fixed
-#    ans.append((None,        prim))    Disabled until fixed
 
     return ans
 
@@ -586,30 +572,36 @@ def set_gaga_properties(L):
 ################################################################################
 #   Route functions, plotting L-function and displaying zeroes
 ################################################################################
-@app.route("/plotLfunction/")
-@app.route("/plotLfunction/<arg1>/")
-@app.route("/plotLfunction/<arg1>/<arg2>/")
-@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/")
-@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/<arg4>/")
-@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/")
-@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/")
-@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/")
-@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/")
-@app.route("/plotLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>/")
+
+# L-function of Elliptic curve #################################################
+@l_function_page.route("/Plot/EllipticCurve/Q/<label>/")
+def l_function_ec_plot(label):
+    query = "label = '{0}'".format(label)
+    logger.debug(query)
+    return render_plotLfunction_test("ecplots", query)
+
+@l_function_page.route("/Plot/<arg1>/")
+@l_function_page.route("/Plot/<arg1>/<arg2>/")
+@l_function_page.route("/Plot/<arg1>/<arg2>/<arg3>/")
+@l_function_page.route("/Plot/<arg1>/<arg2>/<arg3>/<arg4>/")
+@l_function_page.route("/Plot/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/")
+@l_function_page.route("/Plot/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/")
+@l_function_page.route("/Plot/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/")
+@l_function_page.route("/Plot/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/")
+@l_function_page.route("/Plot/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>/")
 def plotLfunction(arg1=None, arg2=None, arg3=None, arg4=None, arg5=None, arg6=None, arg7=None, arg8=None, arg9=None):
     return render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
 
 
-@app.route("/zeroesLfunction/")
-@app.route("/zeroesLfunction/<arg1>/")
-@app.route("/zeroesLfunction/<arg1>/<arg2>/")
-@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/")
-@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>/")
-@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/")
-@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/")
-@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/")
-@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/")
-@app.route("/zeroesLfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>/")
+@l_function_page.route("/Zeroes/<arg1>/")
+@l_function_page.route("/Zeroes/<arg1>/<arg2>/")
+@l_function_page.route("/Zeroes/<arg1>/<arg2>/<arg3>/")
+@l_function_page.route("/Zeroes/<arg1>/<arg2>/<arg3>/<arg4>/")
+@l_function_page.route("/Zeroes/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/")
+@l_function_page.route("/Zeroes/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/")
+@l_function_page.route("/Zeroes/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/")
+@l_function_page.route("/Zeroes/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/")
+@l_function_page.route("/Zeroes/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>/")
 def zeroesLfunction(arg1=None, arg2=None, arg3=None, arg4=None, arg5=None, arg6=None, arg7=None, arg8=None, arg9=None):
     return render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
 
@@ -617,6 +609,45 @@ def zeroesLfunction(arg1=None, arg2=None, arg3=None, arg4=None, arg5=None, arg6=
 ################################################################################
 #   Render functions, plotting L-function and displaying zeroes
 ################################################################################
+def render_plotLfunction_test(dbTable, condition):
+    data_location = os.path.expanduser(
+        "~/data/lfunction_plots/{0}.db".format(dbTable))
+    logger.debug(data_location)
+    try:
+        db = sqlite3.connect(data_location)
+        with db:
+            cur = db.cursor()
+            query = "SELECT * FROM ecplots WHERE {0} LIMIT 1".format(condition)
+            logger.debug(query)
+            cur.execute(query)
+            logger.debug("execute done")
+            row = cur.fetchone()
+            logger.debug(row)
+            
+        Lid, start, end, values = row
+        logger.debug(Lid)
+        values = numpy.frombuffer(values)
+        logger.debug(values.size)
+        step = (end - start)/values.size
+        logger.debug(step)
+
+        pairs = [ (start + x * step, values[x] ) for x in range(0, values.size, 1)]
+        p = plot(spline(pairs), -30, 30)
+        logger.debug(pairs[0])
+    except:
+        return flask.redirect(404)
+
+    fn = tempfile.mktemp(suffix=".png")
+    p.save(filename=fn)
+    logger.debug(fn)
+    data = file(fn).read()
+    os.remove(fn)
+    logger.debug(fn)
+    response = make_response(data)
+    response.headers['Content-type'] = 'image/png'
+    return response
+
+
 def render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9):
     data = plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
     if not data:
@@ -628,6 +659,7 @@ def render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8
 
 
 def plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9):
+    plotStep = .1
     pythonL = generateLfunctionFromUrl(
         arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
     L = pythonL.sageLfunction
@@ -638,7 +670,7 @@ def plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
     # FIXME there could be a filename collission
     fn = tempfile.mktemp(suffix=".png")
     #F = [(i, L.hardy_z_function(CC(.5, i)).real()) for i in srange(-30, 30, .1)]
-    F = [(i, L.hardy_z_function(i).real()) for i in srange(-30, 30, .1)]
+    F = [(i, L.hardy_z_function(i).real()) for i in srange(-30, 30, plotStep)]
     p = line(F)
     p.save(filename=fn)
     data = file(fn).read()
