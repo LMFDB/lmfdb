@@ -2,14 +2,8 @@
 # This Blueprint is about Crystals
 # Author: Anne Schilling (lead), Mike Hansen, Harald Schilly
 
-import flask
-from lmfdb import base
-from flask import render_template, request, abort, url_for, make_response, redirect
-import os
-import re
+from flask import render_template, request, url_for, make_response, redirect
 from lmfdb.crystals import crystals_page, logger
-import sage.all
-from sage.all import ZZ, latex, Partition
 
 def get_bread(breads=[]):
     bc = [("Crystals", url_for(".index"))]
@@ -32,7 +26,8 @@ def make_path_crystal(crystal):
 @crystals_page.route("/<crystal>", methods = ["GET"])
 def show(crystal):
     C = make_tableaux_crystal(crystal)
-    return render_template("crystals.html", crystal = C, crystal_string=crystal, bread = get_bread())
+    bc = get_bread([(crystal, url_for('.show', crystal = crystal))])
+    return render_template("crystals.html", crystal = C, crystal_string=crystal, bread = bc)
 
 @crystals_page.route("/search")
 def search():
@@ -87,7 +82,10 @@ def show_littelmann(crystal):
     C = make_path_crystal(crystal)
     max_i = str(max(C.index_set()))
     max_element = str(C.cardinality())
-    return render_template("littelmann-paths.html", title = "Littelmann Paths", crystal = crystal, C = C, max_element = max_element, max_i = max_i)
+    bc = get_bread([(crystal, url_for('.show', crystal = crystal)),
+                    ('Littelmann', url_for('.show_littelmann', crystal = crystal))])
+    return render_template("littelmann-paths.html", title = "Littelmann Paths", 
+        crystal = crystal, C = C, max_element = max_element, max_i = max_i, bread = bc)
 
 @crystals_page.route("/littelmann-image")
 def littelmann_image():
