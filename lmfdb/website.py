@@ -51,12 +51,12 @@ except:
 
 
 @app.errorhandler(404)
-def not_found(error):
+def not_found_404(error):
     return render_template("404.html"), 404
 
 
 @app.errorhandler(500)
-def not_found(error):
+def not_found_500(error):
     return render_template("500.html"), 500
 
 
@@ -67,9 +67,10 @@ def index():
 
 def root_static_file(name):
     import flask
+
     def static_fn():
         import os
-        fn = os.path.join('.', "static", name)
+        fn = os.path.join(os.path.dirname(os.path.realname(__file__)), "static", name)
         if os.path.exists(fn):
             return open(fn).read()
         import logging
@@ -82,12 +83,13 @@ map(root_static_file, ['favicon.ico'])
 @app.route("/robots.txt")
 def robots_txt():
     if "lmfdb.org".lower() in request.url_root.lower():
-        fn = os.path.join('.', "static", "robots.txt")
+        fn = os.path.join(os.path.dirname(os.path.realname(__file__)), "static", "robots.txt")
         if os.path.exists(fn):
             return open(fn).read()
     return "User-agent: *\nDisallow: / \n"
 
 
+# TODO what is that? we have git now btw ...
 @app.route("/hg/<arg>")
 def hg(arg):
     if arg == "":

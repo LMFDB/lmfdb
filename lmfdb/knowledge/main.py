@@ -338,12 +338,11 @@ def render(ID, footer=None, kwargs=None, raw=False):
     # so that the user has a clue. Most likely, the {{ KNOWL('...') }} has the wrong syntax!
     try:
         data = render_template_string(render_me, k=k, **kwargs)
-        if raw:
-            return data
         resp = make_response(data)
-        # cache 10 minutes if it is a usual GET
+        # cache 2 minutes if it is a usual GET
         if request.method == 'GET':
-            resp.headers['Cache-Control'] = 'max-age=%s, public' % (10 * 60)
+            resp.headers['Cache-Control'] = 'max-age=%s, public' % (2 * 60)
+            resp.headers['Access-Control-Allow-Origin'] = '*'
         return resp
     except Exception, e:
         return "ERROR in the template: %s. Please edit it to resolve the problem." % e

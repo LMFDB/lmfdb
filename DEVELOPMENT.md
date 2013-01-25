@@ -157,3 +157,32 @@ michael = http://michaelorubinstein-lmfdb.googlecode.com/hg
 default.username = !!! ENTER YOUR GOOGLE ID EMAIL !!!
 default.password = !!! YOUR SPECIAL GOOGLE CODE/PROFILE/SETTINGS PASSWORD !!!
 
+Server Hook
+-----------
+This is in the `hooks/post-receive` in the bare Git repo:
+
+```
+#!/bin/sh
+# update the lmfdb-git-beta or -prod server depending on the branc
+# this is based on http://stackoverflow.com/a/13057643/54236
+
+restart() {
+    echo "updating $1" 
+    export GIT_WORK_TREE=/home/lmfdbweb/lmfdb-git-$1
+    git checkout $1 -f
+    echo 'git HEAD now at' `git rev-parse HEAD`
+    bash ~/restart-$1
+}
+
+while read oldrev newrev refname
+do
+    branch=$(git rev-parse --symbolic --abbrev-ref $refname)
+    case $branch in
+        prod) restart $branch
+              ;;
+
+        beta) restart $branch
+              ;;
+    esac
+done
+```

@@ -12,7 +12,7 @@ from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range2, 
 logger = make_logger("EllipticCurve")
 from number_fields.number_field import parse_list
 import sage.all
-from sage.all import ZZ, EllipticCurve, latex, matrix, srange
+from sage.all import ZZ, QQ, EllipticCurve, latex, matrix, srange
 q = ZZ['x'].gen()
 
 #########################
@@ -41,7 +41,7 @@ sw_label_regex = re.compile(r'sw(\d+)(\.)(\d+)(\.*)(\d*)')
 
 LIST_RE = re.compile(r'^(\d+|(\d+-(\d+)?))(,(\d+|(\d+-(\d+)?)))*$')
 TORS_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
-
+QQ_RE = re.compile(r'^-?\d+(/\d+)?$')
 
 def format_ainvs(ainvs):
     """
@@ -120,7 +120,7 @@ def rational_elliptic_curves(err_args=None):
             return elliptic_curve_search(**request.args)
         else:
             err_args = {}
-            for field in ['conductor', 'torsion', 'rank', 'sha_an', 'optimal', 'torsion_structure', 'msg']:
+            for field in ['conductor', 'jinv', 'torsion', 'rank', 'sha_an', 'optimal', 'torsion_structure', 'msg']:
                 err_args[field] = ''
             err_args['count'] = '100'
     init_ecdb_count()
@@ -187,6 +187,14 @@ def elliptic_curve_search(**args):
             return elliptic_curve_jump_error(label, info)
         else:
             query['label'] = ''
+
+    if info.get('jinv'):
+        j = clean_input(info['jinv'])
+        j = j.replace('+', '')
+        if not QQ_RE.match(j):
+            info['err'] = 'Error parsing input for the j-invariant.  It needs to be a rational number.'
+            return search_input_error(info, bread)
+        query['jinv'] = j
 
     for field in ['conductor', 'torsion', 'rank', 'sha_an']:
         if info.get(field):
@@ -519,11 +527,29 @@ def render_curve_webpage_by_label(label):
     cremona_iso_class = data['iso']  # eg '37a'
     lmfdb_iso_class = data['lmfdb_iso']  # eg '37.a'
     rank = data['rank']
-    j_invariant = E.j_invariant()
+    try:
+        j_invariant = QQ(str(data['jinv']))
+    except KeyError:
+        j_invariant = E.j_invariant()
     if j_invariant == 0:
         j_inv_factored = latex(0)
     else:
         j_inv_factored = latex(j_invariant.factor())
+    CMD = 0
+    CM = "no"
+    EndE = "\(\Z\)"
+    if E.has_cm():
+        CMD = E.cm_discriminant()
+        CM = "yes (\(%s\))"%CMD
+        if CMD%4==0:
+            d4 = ZZ(CMD)//4
+            # r = d4.squarefree_part()
+            # f = (d4//r).isqrt()
+            # f="" if f==1 else str(f)
+            # EndE = "\(\Z[%s\sqrt{%s}]\)"%(f,r)
+            EndE = "\(\Z[\sqrt{%s}]\)"%(d4)
+        else:            
+            EndE = "\(\Z[(1+\sqrt{%s})/2]\)"%CMD
 
     # plot=E.plot()
     discriminant = E.discriminant()
@@ -602,6 +628,9 @@ def render_curve_webpage_by_label(label):
         'p_adic_primes': [p for p in sage.all.prime_range(5, 100) if E.is_ordinary(p) and not p.divides(N)],
         'p_adic_data_exists': p_adic_data_exists,
         'ainvs': format_ainvs(data['ainvs']),
+        'CM': CM,
+        'CMD': CMD,
+        'EndE': EndE,
         'tamagawa_numbers': r' \cdot '.join(str(sage.all.factor(c)) for c in E.tamagawa_numbers()),
         'local_data': local_data,
         'cond_factor': latex(N.factor()),
@@ -633,6 +662,7 @@ def render_curve_webpage_by_label(label):
                    ('Conductor', '\(%s\)' % N),
                    ('Discriminant', '\(%s\)' % discriminant),
                    ('j-invariant', '%s' % web_latex(j_invariant)),
+                   ('CM', '%s' % CM),
                    ('Rank', '\(%s\)' % rank),
                    ('Torsion Structure', '\(%s\)' % tor_group)
                    ]

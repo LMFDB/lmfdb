@@ -88,7 +88,7 @@ function show_code(system) {
         </td>
         </tr>
         <tr>
-        <td colspan="4">
+        <td>
          \(N \)</td>
         <td>=</td>
         <td>\({{ info.cond_factor }}\)</td>
@@ -102,7 +102,7 @@ function show_code(system) {
         </td>
         </tr>
         <tr>
-        <td colspan="4"> \(\Delta \)</td>
+        <td> \(\Delta \)</td>
         <td>=</td>
         <td>\({{ info.disc_factor }} \)</td>
         </tr>
@@ -115,11 +115,19 @@ function show_code(system) {
         </td>
         </tr>
         <tr>
-        <td colspan="4"> \(j \)</td>
+        <td> \(j \)</td>
         <td>=</td>
         <td>\({{ info.j_invar_factor }}\)</td>
         </tr>
 
+        <tr>
+        <td> \( \text{End} (E) \)</td>
+        <td>=</td>
+        <td>{{ info.EndE }}</td>
+        <td>({%if not info.CMD %} no {%endif %}    
+{{ KNOWL('ec.complex_multiplication', title='Complex Multiplication') }})
+        </td>
+        </tr>
 
        </table>
 
