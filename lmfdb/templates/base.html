@@ -25,8 +25,8 @@
 
 <script type="text/x-mathjax-config">
 MathJax.Hub.Config({
-  extensions: ["tex2jax.js","TeX/AMSmath.js","TeX/AMSsymbols.js","asciimath2jax.js","MathMenu.js","MathZoom.js","autobold.js",
-  {% if DEBUG() -%} "noErrors.js","noUndefined.js" {%- endif %} ],
+  extensions: ["tex2jax.js","TeX/AMSmath.js","TeX/AMSsymbols.js","asciimath2jax.js","MathMenu.js","MathZoom.js",
+               "autobold.js" {% if not user_is_authenticated -%},"noErrors.js","noUndefined.js" {%- endif %} ],
   jax: ["input/TeX","input/AsciiMath","output/HTML-CSS"],
   TeX: {
    Macros: {
