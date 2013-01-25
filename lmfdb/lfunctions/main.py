@@ -318,11 +318,9 @@ def render_single_Lfunction(Lclass, args, request):
 
     try:
         L = Lclass(**args)
-        try:
-            if temp_args['download'] == 'lcalcfile':
-                return render_lcalcfile(L, request.url)
-        except Exception as ex:
-            pass  # Do nothing
+        
+        if temp_args['download'] == 'lcalcfile':
+            return render_lcalcfile(L, request.url)
 
     except Exception as ex:
         info = {'content': 'Sorry, there has been a problem: %s.' % ex.args[0], 'title': 'Error'}
