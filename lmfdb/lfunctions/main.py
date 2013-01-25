@@ -577,8 +577,7 @@ def set_gaga_properties(L):
 @l_function_page.route("/Plot/EllipticCurve/Q/<label>/")
 def l_function_ec_plot(label):
     query = "label = '{0}'".format(label)
-    logger.debug(query)
-    return render_plotLfunction_test("ecplots", query)
+    return render_plotLfunction_from_db("ecplots", "ecplots", query)
 
 @l_function_page.route("/Plot/<arg1>/")
 @l_function_page.route("/Plot/<arg1>/<arg2>/")
@@ -609,40 +608,37 @@ def zeroesLfunction(arg1=None, arg2=None, arg3=None, arg4=None, arg5=None, arg6=
 ################################################################################
 #   Render functions, plotting L-function and displaying zeroes
 ################################################################################
-def render_plotLfunction_test(dbTable, condition):
+def render_plotLfunction_from_db(db, dbTable, condition):
     data_location = os.path.expanduser(
-        "~/data/lfunction_plots/{0}.db".format(dbTable))
+        "~/data/lfunction_plots/{0}.db".format(db))
     logger.debug(data_location)
     try:
         db = sqlite3.connect(data_location)
         with db:
             cur = db.cursor()
-            query = "SELECT * FROM ecplots WHERE {0} LIMIT 1".format(condition)
+            query = "SELECT * FROM {0} WHERE {1} LIMIT 1".format(dbTable,
+                                                                  condition)
             logger.debug(query)
             cur.execute(query)
-            logger.debug("execute done")
             row = cur.fetchone()
             logger.debug(row)
             
         Lid, start, end, values = row
-        logger.debug(Lid)
         values = numpy.frombuffer(values)
-        logger.debug(values.size)
         step = (end - start)/values.size
-        logger.debug(step)
 
-        pairs = [ (start + x * step, values[x] ) for x in range(0, values.size, 1)]
-        p = plot(spline(pairs), -30, 30)
-        logger.debug(pairs[0])
+        pairs = [ (start + x * step, values[x] )
+                  for x in range(0, values.size, 1)]
+        p = plot(spline(pairs), -30, 30, thickness = 0.4)
+        styleLfunctionPlot(p, 5)
+        
     except:
         return flask.redirect(404)
 
     fn = tempfile.mktemp(suffix=".png")
-    p.save(filename=fn)
-    logger.debug(fn)
+    p.save(filename=fn, dpi = 150)
     data = file(fn).read()
     os.remove(fn)
-    logger.debug(fn)
     response = make_response(data)
     response.headers['Content-type'] = 'image/png'
     return response
@@ -672,10 +668,19 @@ def plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
     #F = [(i, L.hardy_z_function(CC(.5, i)).real()) for i in srange(-30, 30, .1)]
     F = [(i, L.hardy_z_function(i).real()) for i in srange(-30, 30, plotStep)]
     p = line(F)
+    styleLfunctionPlot(p, 8)
     p.save(filename=fn)
     data = file(fn).read()
     os.remove(fn)
     return data
+
+def styleLfunctionPlot(p, fontsize):
+    p.fontsize(fontsize)
+    p.axes_color((0.7,0.7,0.7))
+    p.tick_label_color((0.7,0.7,0.7))
+    p.axes_width(0.2)
+
+
 
 
 def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9):
