@@ -95,7 +95,7 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
 #    if seriescoefftype=="series":
 #        ans=ans+" + "
 # commenting out the above "if" code so as to fix + - problem
-    logger.info("rp={0}".format(rp))
+#    logger.info("rp={0}".format(rp))
     if rp > truncation:
         if float(abs(rp - 1)) < truncation:
             if seriescoefftype == "literal":

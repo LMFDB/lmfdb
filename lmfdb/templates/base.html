@@ -20,39 +20,40 @@
 <script type="text/javascript" src="{{ url_for('static', filename='jquery.dataTables.plugins.js') }}"></script> 
 <script type="text/javascript" src="{{ url_for('static', filename='jquery-ui-1.8.14.custom.min.js') }}"></script> 
 <script type="text/javascript" src="https://www.google.com/jsapi"></script> 
- 
+
 <link rel="stylesheet" href="{{ url_for('static', filename='jquery-ui-1.8.14.custom.css') }}" type="text/css"/> 
 
 <script type="text/x-mathjax-config">
 MathJax.Hub.Config({
-  extensions: ["tex2jax.js","TeX/AMSmath.js","TeX/AMSsymbols.js"],
-  jax: ["input/TeX","output/HTML-CSS"],
+  extensions: ["tex2jax.js","TeX/AMSmath.js","TeX/AMSsymbols.js","asciimath2jax.js","MathMenu.js","MathZoom.js",
+               "TeX/autobold.js" {% if not user_is_authenticated -%},"TeX/noErrors.js","TeX/noUndefined.js" {%- endif %} ],
+  jax: ["input/TeX","input/AsciiMath","output/HTML-CSS"],
   TeX: {
-        Macros: {
-	  C: '{\\mathbb{C}}',
-	  R: '{\\mathbb{R}}',
-	  Q: '{\\mathbb{Q}}',
-	  Z: '{\\mathbb{Z}}',
-	  F: '{\\mathbb{F}}',
-	  SL: '{\\textrm{SL}}',
-	  GL: '{\\textrm{GL}}',
-	  PSL: '{\\textrm{PSL}}',
-	  PGL: '{\\textrm{PGL}}',
-	  Sp: '{\\textrm{Sp}}',
-	  GSp: '{\\textrm{GSp}}',
-//	  N: '{\\mathbb{N}}',
-	},
-     },
+   Macros: {
+    C: '{\\mathbb{C}}',
+    R: '{\\mathbb{R}}',
+    Q: '{\\mathbb{Q}}',
+    Z: '{\\mathbb{Z}}',
+    F: '{\\mathbb{F}}',
+    SL: '{\\textrm{SL}}',
+    GL: '{\\textrm{GL}}',
+    PSL: '{\\textrm{PSL}}',
+    PGL: '{\\textrm{PGL}}',
+    Sp: '{\\textrm{Sp}}',
+    GSp: '{\\textrm{GSp}}',
+   },
+  },
   tex2jax: {
     inlineMath: [['$','$'],["\\(","\\)"]],
     processEscapes: true,
   },
+  asciimath2jax: { delimiters: [['#(',')#'], ['#[',']#']] },
   "HTML-CSS": { scale: 85 },
   menuSettings: { zscale: "150%", zoom: "Double-Click" }
 });
 </script>
-{#- <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script> -#}
-<script type="text/javascript" src="http://www.lmfdb.org/MathJax/MathJax.js"></script>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+{#- <script type="text/javascript" src="http://www.lmfdb.org/MathJax/MathJax.js"></script> -#}
 {#- append this: ?config=default if the script complains about a missing config -#}
 
 {#- the defs for the knowls, need to be after mathjax, before analytics -#}
