@@ -83,7 +83,7 @@ def artin_representation_search(**args):
 
     tmp_conductor = []
     if req.get("conductor", "") != "":
-        from utils import len_val_fn
+        from lmfdb.utils import len_val_fn
         tmp_conductor = parse_compound(req["conductor"], fn=len_val_fn)
     # examples of tmp_conductor: [],
     # [{"len":2,"val":"44"},{"len":3,"val":"444"},{"$gte":{"len":2,"val":"44"},
