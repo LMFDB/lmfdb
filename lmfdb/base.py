@@ -80,7 +80,8 @@ def _db_reconnect(func):
 # disabling this reconnect thing, doesn't really help anyways
 # Cursor._Cursor__send_message = _db_reconnect(Cursor._Cursor__send_message)
 # Connection._send_message = _db_reconnect(Connection._send_message)
-# Connection._send_message_with_response = _db_reconnect(Connection._send_message_with_response)
+# Connection._send_message_with_response =
+# _db_reconnect(Connection._send_message_with_response)
 
 
 def _init(dbport, readwrite_password):
@@ -127,6 +128,11 @@ app.jinja_env.trim_blocks = True
 #  * title = 'test string'
 
 
+def is_debug_mode():
+    from flask import current_app
+    return current_app.debug
+
+
 @app.context_processor
 def ctx_proc_userdata():
     # insert an empty info={} as default
@@ -141,12 +147,16 @@ def ctx_proc_userdata():
 
     # default title
     vars['title'] = r'LMFDB'
+
     # meta_description appears in the meta tag "description"
     import knowledge
     vars['meta_description'] = knowledge.knowl.Knowl("intro.description").content
     vars['shortthanks'] = r'This project is supported by <a href="%s">grants</a> from the National Science Foundation.' % (url_for('acknowledgment') + "#sponsors")
     vars['feedbackpage'] = r"https://docs.google.com/spreadsheet/viewform?formkey=dDJXYXBleU1BMTFERFFIdjVXVmJqdlE6MQ"
     vars['LINK_EXT'] = lambda a, b: '<a href="%s" target="_blank">%s</a>' % (b, a)
+
+    # debug mode?
+    vars['DEBUG'] = is_debug_mode
 
     return vars
 
