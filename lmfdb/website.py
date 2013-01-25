@@ -50,12 +50,12 @@ except:
 
 
 @app.errorhandler(404)
-def not_found(error):
+def not_found_404(error):
     return render_template("404.html"), 404
 
 
 @app.errorhandler(500)
-def not_found(error):
+def not_found_500(error):
     return render_template("500.html"), 500
 
 
@@ -66,6 +66,7 @@ def index():
 
 def root_static_file(name):
     import flask
+
     def static_fn():
         import os
         fn = os.path.join('.', "static", name)
@@ -87,6 +88,7 @@ def robots_txt():
     return "User-agent: *\nDisallow: / \n"
 
 
+# TODO what is that? we have git now btw ...
 @app.route("/hg/<arg>")
 def hg(arg):
     if arg == "":
