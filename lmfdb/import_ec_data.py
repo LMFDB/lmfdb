@@ -22,6 +22,7 @@ The documents in the collection 'curves' in the database 'elliptic_curves' have 
    - 'number': (int) Cremona curve number within its class, e.g. 2
    - 'lmfdb_number': (int) LMFDB curve number within its class, e.g. 2
    - 'ainvs': (list of strings) list of a-invariants, e.g. ['0', '1', '1', '10617', '75394']
+   - 'jinv': (string) j-invariant, e.g. -4096/11
    - 'rank': (int) rank, e.g. 0
    - 'torsion': (int) torsion order, e.g. 1
    - 'torsion_structure': (list of strings) list of invariants of torsion subgroup, e.g. ['3']
@@ -65,6 +66,7 @@ curves.ensure_index('conductor')
 curves.ensure_index('rank')
 curves.ensure_index('torsion')
 curves.ensure_index('degree')
+curves.ensure_index('jinv')
 
 print "finished indices"
 
@@ -136,7 +138,7 @@ def allbsd(line):
 def allcurves(line):
     r""" Parses one line from an allcurves file.  Returns the label and a
     dict containing fields with keys 'conductor', 'iso', 'number',
-    'ainvs', 'rank', 'torsion', all values being strings or ints.
+    'ainvs', 'jinv', 'rank', 'torsion', all values being strings or ints.
 
     Input line fields:
 
@@ -149,11 +151,13 @@ def allcurves(line):
     data = split(line)
     label = data[0] + data[1] + data[2]
     ainvs = parse_ainvs(data[3])
+    jinv = unicode(str(EllipticCurve([ZZ(eval(a)) for a in ainvs]).j_invariant()))
     return label, {
         'conductor': int(data[0]),
         'iso': data[0] + data[1],
         'number': int(data[2]),
         'ainvs': ainvs,
+        'jinv': jinv,
         'rank': int(data[4]),
         'torsion': int(data[5]),
     }
@@ -162,7 +166,7 @@ def allcurves(line):
 def allgens(line):
     r""" Parses one line from an allgens file.  Returns the label and
     a dict containing fields with keys 'conductor', 'iso', 'number',
-    'ainvs', 'rank', 'gens', 'torsion_order', 'torsion_structure',
+    'ainvs', 'jinv', 'rank', 'gens', 'torsion_order', 'torsion_structure',
     'torsion_generators', all values being strings or ints.
 
     Input line fields:
@@ -179,11 +183,13 @@ def allgens(line):
     t = eval(data[5])
     torsion = int(prod([ti for ti in t], 1))
     ainvs = parse_ainvs(data[3])
+    jinv = unicode(str(EllipticCurve([ZZ(eval(a)) for a in ainvs]).j_invariant()))
     return label, {
         'conductor': int(data[0]),
         'iso': data[0] + data[1],
         'number': int(data[2]),
         'ainvs': ainvs,
+        'jinv': jinv,
         'rank': int(data[4]),
         'gens': ["(%s)" % gen[1:-1] for gen in data[6:6 + rank]],
         'torsion': torsion,
@@ -289,7 +295,6 @@ def upload_to_db(base_path, min_N, max_N):
     alldegphi_filename = 'alldegphi.%s-%s' % (min_N, max_N)
     alllabels_filename = 'alllabels.%s-%s' % (min_N, max_N)
     file_list = [allbsd_filename, allgens_filename, intpts_filename, alldegphi_filename, alllabels_filename]
-#    file_list = [alldegphi_filename]
 
     data_to_insert = {}  # will hold all the data to be inserted
 

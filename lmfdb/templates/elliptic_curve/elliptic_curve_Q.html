@@ -14,7 +14,7 @@ The database currently contains the Cremona database of all
 KNOWL('ec.q.rank', title="rank")}} &le; {{info.max_rank}}.
 </div>
 
-<h2> Browse {{ KNOWL('ec.q',title='elliptic curves over $\Q$')}}</h2>
+<h2> Browse {{ KNOWL('ec',title='elliptic curves')}} over $\Q$</h2>
 
 <p>
 By {{ KNOWL('ec.q.conductor',title = "conductor")}}:
@@ -59,6 +59,14 @@ Please enter a value or leave blank:
        <input type='text' name='conductor' example="389" size=10 value="{{conductor}}" />
      </td>
      <td><span class="formexample"> e.g. 389 or 100-200</span></td>
+    </tr>
+
+    <tr>
+      <td>{{ KNOWL('ec.q.j_invariant',title = "j-invariant") }}</td>
+     <td>
+       <input type='text' name='jinv' example=1728 size=10 value="{{jinv}}" />
+     </td>
+     <td><span class="formexample"> e.g. 1728 or -4096/11</span></td>
     </tr>
 
 

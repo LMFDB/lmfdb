@@ -3,33 +3,63 @@
 {% block content %}
 
 <p>
-A crystal graph is a representation for a $U_q$-module in the limit $q\to 0$.
+This is a reference site for crystals. All examples are currently dynamical produced from code in Sage.
 <p>
 
-      <h2>Browse {{KNOWL('crystals.crystal', title="Crystals")}}</h2>
+      <h2>Find {{KNOWL('crystals.crystal', title="Crystals")}}</h2>
 <p>
 
-<!--
-<form method= "get" action="{{ url_for('.show', crystal='A-1-1') }}">
+Currently, only classical highest weight crystals and Littelmann paths crystals are supported on this website.
+
+<h3>Find {{KNOWL('crystals.highest_weight', title="Classical highest weight crystals")}}</h3>
+
+<p>Explore classical highest weight crystals.</p>
+
+<form method= "get" action="{{ url_for('.search') }}">
 <table>
 <tr>
-   <td>Cartan type</td> <td> <input name="cartan_type" /> </td>
+   <td>Cartan type</td> <td> <input name="cartan_type" />
+       <span class="formexample"> e.g. A or B or C or D</td>
 </tr>
 <tr>
-   <td>Rank</td> <td> <input name="rank" /></td>
+   <td>Rank</td> <td> <input name="rank" />
+       <span class="formexample"> e.g. 2</td>
 </tr>
 <tr>
-  <td>Weight</td> <td> <input name="weight" /></td>
+  <td>Weight</td> <td> <input name="weight" />
+     <span class="formexample"> e.g. 2,1</td>
 </tr>
-<tr> <td><button type="submit">Submit</button> </td></tr>
+<tr>
+  <td><button type="submit">Find</button> </td>
+  <td><span class="formexample"> e.g. A-2-2.1 -- represents the 
+    <a href="{{ url_for('.show', crystal = 'A-2-2.1') }}">classical highest weight crystal of type $A_2$ and weight $(2,1)$</a></span> </td>
+</tr>
 </table>
 </form>
--->
 
-<a href="{{ url_for('.show', crystal = 'A-2-6.4') }}">crystal example</a>
+<h3>Find {{KNOWL('crystals.littelmann_path', title="Littelmann paths crystals")}}</h3>
 
-<br/>
+<p>Display Littelmann paths and crystals operators on them for rank 2.</p>
 
+<form method= "get" action="{{ url_for('.search_littelmann') }}">
+<table>
+<tr>
+   <td>Cartan type</td> <td> <input name="cartan_type" />
+       <span class="formexample"> e.g. A or B or C or D or E or F or G</td>
+</tr>
+<tr>
+  <td>Weight</td> <td> <input name="weight" />
+     <span class="formexample"> e.g. 1,1</td>
+</tr>
+<tr>
+  <td><button type="submit">Find</button> </td>
+  <td><span class="formexample"> e.g. A-2-6.4/littelmann -- represents the 
+    <a href="{{ url_for('.show_littelmann', crystal = 'A-2-6.4') }}">Littelmann path model $A_2$ and weight $6\Lambda_1 + 4 \Lambda_2$</a></span> </td>
+</tr>
+</table>
+</form>
+
+<!--
 <a href="{{ url_for('.show_littelmann', crystal = 'A-2-6.4')}}">Littelmann Path</a>
-
+-->
 {% endblock %}
