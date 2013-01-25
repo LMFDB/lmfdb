@@ -266,7 +266,6 @@ def render_field_webpage(args):
     if 'label' in args:
         label = clean_input(args['label'])
         nf = WebNumberField(label)
-        # data = WebNumberField(label)._data
         data = {}
     if nf.is_null():
         bread.append(('Search results', ' '))
@@ -379,6 +378,8 @@ def render_field_webpage(args):
     from lmfdb.math_classes import NumberFieldGaloisGroup
     try:
         info["tim_number_field"] = NumberFieldGaloisGroup.find_one({"label": label})
+        v = nf.factor_perm_repn(info["tim_number_field"])
+        info["mydecomp"] = ['*' if x>0 else '' for x in v]
     except AttributeError:
         pass
 #    del info['_id']

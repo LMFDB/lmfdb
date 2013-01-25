@@ -497,6 +497,9 @@ class NumberFieldGaloisGroup(object):
              for item in self._data["ArtinReps"]]
         return x
 
+    def ArtinReps(self):
+        return self._data["ArtinReps"]
+
     def discriminant(self):
         return self.sage_object().discriminant()
 

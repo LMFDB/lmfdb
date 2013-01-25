@@ -948,6 +948,19 @@ class DedekindZeta(Lfunction):   # added by DK
                     mycond = chij.conductor()
                     myj = j % mycond
                     self.factorization += r'\(\;\cdot\) <a href="/L/Character/Dirichlet/%d/%d/">\(L(s,\chi_{%d}(%d, \cdot))\)</a>' % (mycond, myj, mycond, myj)
+            elif len(wnf.factor_perm_repn())>0:
+                nfgg = wnf.factor_perm_repn() # first call cached it
+                ar = wnf.artin_reps() # these are in the same order
+                self.factorization = r'\(\zeta_K(s) =\) <a href="/L/Riemann/">\(\zeta(s)\)</a>'
+                for j in range(len(ar)):
+                    if nfgg[j]>0:
+                        the_rep = ar[j]
+                        if the_rep.dimension()>1 or str(the_rep.conductor())!=str(1) or the_rep.index()>1:
+                            ar_url = url_for("l_functions.l_function_artin_page", dimension=the_rep.dimension(), conductor=the_rep.conductor(), tim_index=the_rep.index())
+                            right = r'\({}^{%d}\)' % (nfgg[j]) if nfgg[j]>1 else r''
+                            self.factorization += r'\(\;\cdot\)' 
+                            self.factorization += r'<a href="%s">\(L(s, \rho_{%d,%s,%d})\)</a>' % (ar_url, the_rep.dimension(), str(the_rep.conductor()), the_rep.index())
+                            self.factorization += right
 
         self.poles = [1, 0]  # poles of the Lambda(s) function
         self.residues = [self.res, -self.res]  # residues of the Lambda(s) function
