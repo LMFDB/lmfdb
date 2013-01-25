@@ -121,19 +121,19 @@ var knowl_id_counter = 0;
 /* site wide cache, TODO html5 local storage to cover whole domain
  * /w a freshness timeout of about 10 minutes */
 var knowl_cache = {};
- 
+
 function knowl_click_handler($el) {
   // the knowl attribute holds the id of the knowl
   var knowl_id = $el.attr("knowl");
   // the uid is necessary if we want to reference the same content several times
   var uid = $el.attr("knowl-uid");
-  var output_id = '#knowl-output-' + uid; 
+  var output_id = '#knowl-output-' + uid;
   var $output_id = $(output_id);
 
   // slightly different behaviour if we are inside a table, but
   // not in a knowl inside a table.
   var table_mode = $el.parents().is("table") && !$el.parents().hasClass("knowl-content");
- 
+
   // if we already have the content, toggle visibility
   if ($output_id.length > 0) {
     if (table_mode) {
@@ -148,7 +148,7 @@ function knowl_click_handler($el) {
     // create the element for the content, insert it after the one where the 
     // knowl element is included (e.g. inside a <h1> tag) (sibling in DOM)
     var idtag = "id='"+output_id.substring(1) + "'";
-    
+
     // behave a bit differently, if the knowl is inside a td or th in a table. 
     // otherwise assume its sitting inside a <div> or <p>
     if(table_mode) {
@@ -159,7 +159,7 @@ function knowl_click_handler($el) {
     } else {
       $el.parent().after("<div class='knowl-output'" +idtag+ ">loading '"+knowl_id+"' …</div>");
     }
- 
+
     // "select" where the output is and get a hold of it 
     var $output = $(output_id);
     var kwargs = $el.attr("kwargs");

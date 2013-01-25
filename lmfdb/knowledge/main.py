@@ -344,6 +344,7 @@ def render(ID, footer=None, kwargs=None, raw=False):
         # cache 10 minutes if it is a usual GET
         if request.method == 'GET':
             resp.headers['Cache-Control'] = 'max-age=%s, public' % (10 * 60)
+            resp.headers['Access-Control-Allow-Origin'] = '*'
         return resp
     except Exception, e:
         return "ERROR in the template: %s. Please edit it to resolve the problem." % e
