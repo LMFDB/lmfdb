@@ -184,7 +184,22 @@ def elliptic_curve_search(**args):
         elif cremona_label_regex.match(label):
             return elliptic_curve_jump_error(label, info, cremona_label=True)
         elif label:
-            return elliptic_curve_jump_error(label, info)
+            # Try to parse a string like [1,0,3,2,4]
+            lab = re.sub(r'\s','',label)
+            lab = re.sub(r'^\[','',lab)
+            lab = re.sub(r']$','',lab)
+            try:
+                labvec = lab.split(',')
+                labvec = [QQ(str(z)) for z in labvec] # Rationals allowed
+                E = EllipticCurve(labvec)
+                ainvs = [str(c) for c in E.minimal_model().ainvs()]
+                C = lmfdb.base.getDBConnection()
+                data = C.elliptic_curves.curves.find_one({'ainvs': ainvs})
+                if data is None:
+                    return elliptic_curve_jump_error(label, info)
+                return by_ec_label(data['lmfdb_label'])
+            except (ValueError, ArithmeticError):
+                return elliptic_curve_jump_error(label, info)
         else:
             query['label'] = ''
 
