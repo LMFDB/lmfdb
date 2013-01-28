@@ -6,7 +6,7 @@ import pymongo
 import bson
 from lmfdb.utils import *
 from lmfdb.transitive_group import group_display_short, WebGaloisGroup
-# logger = make_logger("DC")
+wnflog = make_logger("WNF")
 
 
 def na_text():
@@ -26,6 +26,11 @@ def string2list(s):
         return []
     return [int(a) for a in s.split(',')]
 
+def psum(val, li):
+    tot=0
+    for j in range(len(li)):
+        tot += li[j]*val**j
+    return tot
 
 def decodedisc(ads, s):
     return ZZ(ads[3:]) * s
@@ -76,8 +81,6 @@ class WebNumberField:
         return cls.from_coeffs(coeffs)
 
     def _get_dbdata(self):
-#    from pymongo.connection import Connection
-#    nfdb = Connection(port=37010).numberfields.fields
         nfdb = base.getDBConnection().numberfields.fields
         return nfdb.find_one({'label': self.label})
 
@@ -235,6 +238,65 @@ class WebNumberField:
                 f *= p ** (e.valuation(p) + 1)
         return f
 
+    def artin_reps(self, nfgg=None):
+        if nfgg is not None:
+                self._data["nfgg"] = nfgg
+        else:
+            if "nfgg" not in self._data:
+                from math_classes import NumberFieldGaloisGroup
+                nfgg = NumberFieldGaloisGroup.find_one({"label": self.label})
+                self._data["nfgg"] = nfgg
+            else:
+                nfgg = self._data["nfgg"]
+        return nfgg.artin_representations()
+
+    def factor_perm_repn(self, nfgg=None):
+        if 'artincoefs' in self._data:
+            return self._data['artincoefs']
+        try:
+            if nfgg is not None:
+                    self._data["nfgg"] = nfgg
+            else:
+                if "nfgg" not in self._data:
+                    from math_classes import NumberFieldGaloisGroup
+                    nfgg = NumberFieldGaloisGroup.find_one({"label": self.label})
+                    self._data["nfgg"] = nfgg
+                else:
+                    nfgg = self._data["nfgg"]
+
+            cc = nfgg.conjugacy_classes()
+            # cc is list, each has methods group, size, order, representative
+            ccreps = [x.representative() for x in cc]
+            ccns = [int(x.size()) for x in cc]
+            ccreps = [x.cycle_string() for x in ccreps]
+            ccgen = '['+','.join(ccreps)+']'
+            ar = nfgg.ArtinReps() # list of artin reps from db
+            gap.set('fixed', 'function(a,b) if a*b=a then return 1; else return 0; fi; end;');
+            g = gap.Group(ccgen)
+            h = g.Stabilizer('1')
+            rc = g.RightCosets(h)
+            # Permutation character for our field
+            permchar = [gap.Sum(rc, 'j->fixed(j,'+x+')') for x in ccreps]
+            charcoefs = [0 for x in ar]
+            # list of lists (inner are giving char values
+            ar2 = [x['Character'] for x in ar]
+            for j in range(len(ar)):
+                fieldchar = int(ar[j]['CharacterField'])
+                zet = CyclotomicField(fieldchar).gen()
+                ar2[j] = [psum(zet, x) for x in ar2[j]]
+            for j in range(len(ar)):
+                charcoefs[j] = 0
+                for k in range(len(ccns)):
+                    charcoefs[j] += int(permchar[k])*ccns[k]*ar2[j][k]
+            charcoefs = [x/int(g.Size()) for x in charcoefs]
+            self._data['artincoefs'] = charcoefs
+            return charcoefs
+
+        except AttributeError:
+            return []
+
+        return []
+
     def dirichlet_group(self):
         from dirichlet_conrey import DirichletGroup_conrey
         f = self.conductor()
@@ -265,6 +327,6 @@ class WebNumberField:
         return [b for b in S]
 
     def full_dirichlet_group(self):
-        from lmfdb.dirichlet_conrey import DirichletGroup_conrey
+        from dirichlet_conrey import DirichletGroup_conrey
         f = self.conductor()
         return DirichletGroup_conrey(f)

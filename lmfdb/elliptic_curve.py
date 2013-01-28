@@ -184,7 +184,22 @@ def elliptic_curve_search(**args):
         elif cremona_label_regex.match(label):
             return elliptic_curve_jump_error(label, info, cremona_label=True)
         elif label:
-            return elliptic_curve_jump_error(label, info)
+            # Try to parse a string like [1,0,3,2,4]
+            lab = re.sub(r'\s','',label)
+            lab = re.sub(r'^\[','',lab)
+            lab = re.sub(r']$','',lab)
+            try:
+                labvec = lab.split(',')
+                labvec = [QQ(str(z)) for z in labvec] # Rationals allowed
+                E = EllipticCurve(labvec)
+                ainvs = [str(c) for c in E.minimal_model().ainvs()]
+                C = lmfdb.base.getDBConnection()
+                data = C.elliptic_curves.curves.find_one({'ainvs': ainvs})
+                if data is None:
+                    return elliptic_curve_jump_error(label, info)
+                return by_ec_label(data['lmfdb_label'])
+            except (ValueError, ArithmeticError):
+                return elliptic_curve_jump_error(label, info)
         else:
             query['label'] = ''
 
@@ -535,6 +550,7 @@ def render_curve_webpage_by_label(label):
         j_inv_factored = latex(0)
     else:
         j_inv_factored = latex(j_invariant.factor())
+    jinv = unicode(str(j_invariant))
     CMD = 0
     CM = "no"
     EndE = "\(\Z\)"
@@ -640,6 +656,7 @@ def render_curve_webpage_by_label(label):
     info['friends'] = [
         ('Isogeny class ' + lmfdb_iso_class, "/EllipticCurve/Q/%s" % lmfdb_iso_class),
         ('Minimal quadratic twist ' + minq_label, "/EllipticCurve/Q/%s" % minq_label),
+        ('All twists ', url_for("rational_elliptic_curves", jinv=jinv)),
         ('L-function', url_for("l_functions.l_function_ec_page", label=lmfdb_label)),
         ('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2',
                                                 label=lmfdb_iso_class)),

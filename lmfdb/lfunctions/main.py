@@ -391,9 +391,9 @@ def initLfunction(L, args, request):
 
     info['degree'] = int(L.degree)
 
-    info['zeroeslink'] = (request.url.replace('/L/', '/L/Zeroes/').
-                          replace('/Lfunction/', '/L/Zeroes/').
-                          replace('/L-function/', '/L/Zeroes/'))  # url_for('zeroesLfunction',  **args)
+    info['zeroeslink'] = (request.url.replace('/L/', '/L/Zeros/').
+                          replace('/Lfunction/', '/L/Zeros/').
+                          replace('/L-function/', '/L/Zeros/'))  # url_for('zeroesLfunction',  **args)
 
     info['plotlink'] = (request.url.replace('/L/', '/L/Plot/').
                         replace('/Lfunction/', '/L/Plot/').
@@ -593,15 +593,15 @@ def plotLfunction(arg1=None, arg2=None, arg3=None, arg4=None, arg5=None, arg6=No
     return render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
 
 
-@l_function_page.route("/Zeroes/<arg1>/")
-@l_function_page.route("/Zeroes/<arg1>/<arg2>/")
-@l_function_page.route("/Zeroes/<arg1>/<arg2>/<arg3>/")
-@l_function_page.route("/Zeroes/<arg1>/<arg2>/<arg3>/<arg4>/")
-@l_function_page.route("/Zeroes/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/")
-@l_function_page.route("/Zeroes/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/")
-@l_function_page.route("/Zeroes/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/")
-@l_function_page.route("/Zeroes/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/")
-@l_function_page.route("/Zeroes/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>/")
+@l_function_page.route("/Zeros/<arg1>/")
+@l_function_page.route("/Zeros/<arg1>/<arg2>/")
+@l_function_page.route("/Zeros/<arg1>/<arg2>/<arg3>/")
+@l_function_page.route("/Zeros/<arg1>/<arg2>/<arg3>/<arg4>/")
+@l_function_page.route("/Zeros/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/")
+@l_function_page.route("/Zeros/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/")
+@l_function_page.route("/Zeros/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/")
+@l_function_page.route("/Zeros/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/")
+@l_function_page.route("/Zeros/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>/")
 def zeroesLfunction(arg1=None, arg2=None, arg3=None, arg4=None, arg5=None, arg6=None, arg7=None, arg8=None, arg9=None):
     return render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
 
@@ -631,13 +631,13 @@ def render_plotLfunction_from_db(db, dbTable, condition):
         pairs = [ (start + x * step, values[x] )
                   for x in range(0, values.size, 1)]
         p = plot(spline(pairs), -30, 30, thickness = 0.4)
-        styleLfunctionPlot(p, 5)
+        styleLfunctionPlot(p, 8)
         
     except:
         return flask.redirect(404)
 
     fn = tempfile.mktemp(suffix=".png")
-    p.save(filename=fn, dpi = 150)
+    p.save(filename=fn, dpi = 100)
     data = file(fn).read()
     os.remove(fn)
     response = make_response(data)
@@ -669,7 +669,7 @@ def plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
     #F = [(i, L.hardy_z_function(CC(.5, i)).real()) for i in srange(-30, 30, .1)]
     F = [(i, L.hardy_z_function(i).real()) for i in srange(-30, 30, plotStep)]
     p = line(F)
-    styleLfunctionPlot(p, 8)
+    styleLfunctionPlot(p, 10)
     p.save(filename=fn)
     data = file(fn).read()
     os.remove(fn)
@@ -677,8 +677,8 @@ def plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
 
 def styleLfunctionPlot(p, fontsize):
     p.fontsize(fontsize)
-    p.axes_color((0.7,0.7,0.7))
-    p.tick_label_color((0.7,0.7,0.7))
+    p.axes_color((0.5,0.5,0.5))
+    p.tick_label_color((0.5,0.5,0.5))
     p.axes_width(0.2)
 
 

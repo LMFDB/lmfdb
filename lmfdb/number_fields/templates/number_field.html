@@ -222,23 +222,29 @@ pari:
 	</tr></thead>
 	<tbody>
         {% for artin in info["tim_number_field"].artin_representations()%}
-          <tr> <th><a href = "{{artin.url_for()}}">{{loop.index}}</a></th><th>${{artin.dimension()}}$</th>
-	  <th>${{artin.conductor_equation()}}$</th>
+          <tr> <td align="right">
+              {{info.mydecomp[loop.index-1]}}<a href = "{{artin.url_for()}}">{{loop.index}}</a></td><td align="center">${{artin.dimension()}}$</td>
+	  <td align="center">${{artin.conductor_equation()}}$</td>
 	  {% if artin.number_field_galois_group().url_for() %}
-	     <th><a href="{{artin.number_field_galois_group().url_for()}}">${{artin.number_field_galois_group().polredabslatex()}}$</a></th>
+	     <td align="center"><a href="{{artin.number_field_galois_group().url_for()}}">${{artin.number_field_galois_group().polredabslatex()}}$</a></td>
 	  {% else %}
-	      <th>${{artin.number_field_galois_group().polredabslatex()}}$</th>
+	      <td align="center">${{artin.number_field_galois_group().polredabslatex()}}$</td>
 	  {% endif %}
-	  <th>{{artin.number_field_galois_group().G_name()}}</th>
-	  <th>${{artin.number_field_galois_group().size()}}$</th>
-	  <th>${{artin.processed_root_number()}}$</th>
-	  <th> ${{artin.indicator()}}$</th>
-	  <th>${{artin.trace_complex_conjugation()}}$</th>
+	  <td align="center">{{artin.number_field_galois_group().G_name()}}</td>
+	  <td align="center">${{artin.number_field_galois_group().size()}}$</td>
+	  <td align="center">${{artin.processed_root_number()}}$</td>
+	  <td align="center"> ${{artin.indicator()}}$</td>
+	  <td align="center">${{artin.trace_complex_conjugation()}}$</td>
 	  </tr>
         {% endfor %}
 	</tbody>
 	</table>
 	</center>
+        </div>
+        <div>
+        Data is given for all irreducible 
+        representations of the Galois group.  Those marked with 
+        * are associated with this field.
 	</div>
 	{% endif %}
 

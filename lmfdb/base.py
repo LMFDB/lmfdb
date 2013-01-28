@@ -208,12 +208,12 @@ git_rev, git_date = git_infos()
 """
 Creates link to the source code at the most recent commit.
 """
-_url_source = 'https://github.com/LMFDB/lmfdb/commit/'
+_url_source = 'https://github.com/LMFDB/lmfdb/tree/'
 _current_source = '<a href="%s%s">%s</a>' % (_url_source, git_rev, "Source")
 """
 Creates link to the list of revisions on the master, where the most recent commit is on top.
 """
-_url_changeset = 'https://github.com/LMFDB/lmfdb/tree/'
+_url_changeset = 'https://github.com/LMFDB/lmfdb/commit/'
 _latest_changeset = '<a href="%s%s">%s</a>' % (_url_changeset, git_rev, git_date)
 
 
