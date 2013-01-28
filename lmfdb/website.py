@@ -34,6 +34,7 @@ import number_field_galois_groups
 import artin_representations
 import zeros
 import crystals
+import permutations
 
 import raw
 from modular_forms.maass_forms.picard import mwfp
