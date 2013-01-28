@@ -338,6 +338,10 @@ def render(ID, footer=None, kwargs=None, raw=False):
     # so that the user has a clue. Most likely, the {{ KNOWL('...') }} has the wrong syntax!
     try:
         data = render_template_string(render_me, k=k, **kwargs)
+        if raw:
+            # note, this is just internally for the .show method, raw rendering
+            # doesn't exist right now and will wrap this into a make_reponse!
+            return data
         resp = make_response(data)
         # cache 2 minutes if it is a usual GET
         if request.method == 'GET':
