@@ -205,6 +205,17 @@ def show(ID):
                            bread=b)
 
 
+@knowledge_page.route("/raw/<ID>")
+def raw(ID):
+    k = Knowl(ID)
+    data = render(ID, footer="0", raw=True)
+    resp = make_response(data)
+    # cache 2 minutes and allow CORS
+    resp.headers['Cache-Control'] = 'max-age=%s, public' % (2 * 60)
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
+
+
 @knowledge_page.route("/history")
 def history():
     h_items = get_history()
