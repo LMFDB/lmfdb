@@ -19,21 +19,71 @@ q = ZZ['x'].gen()
 #   Utility functions
 #########################
 
-ncurves = max_N = max_rank = None
+ncurves = nclasses = max_N = max_rank = None
+rank_counts = sha_counts = max_sha = tor_counts = None
 init_ecdb_flag = False
+init_ecdb_stats_flag = False
 
 
 def init_ecdb_count():
-    global ncurves, max_N, max_rank, init_ecdb_flag
+    global ncurves, nclasses, max_N, max_rank, init_ecdb_flag
     if not init_ecdb_flag:
+        print "Computing elliptic curve counts..."
         ecdb = lmfdb.base.getDBConnection().elliptic_curves.curves
         ncurves = ecdb.count()
+        nclasses = ecdb.find({'number': 1}).count()
         max_N = ecdb.find().sort('conductor', DESCENDING).limit(1)[0]['conductor']
         max_rank = ecdb.find().sort('rank', DESCENDING).limit(1)[0]['rank']
-        # old, much slower version:
-        # max_N = max(ecdb.distinct('conductor'))
-        # max_rank =  max(ecdb.distinct('rank'))
+        print "... finished computing elliptic curve counts."
         init_ecdb_flag = True
+
+def format_percentage(num, denom):
+    return "%10.2f"%((100.0*num)/denom)
+
+def init_ecdb_stats():
+    global rank_counts, max_sha, sha_counts, tor_counts, init_ecdb_stats_flag
+    init_ecdb_count() # sets max_rank
+    if not init_ecdb_stats_flag:
+        print "Computing elliptic curve stats..."
+        ecdb = lmfdb.base.getDBConnection().elliptic_curves.curves
+        rank_counts = []
+        for r in range(max_rank+1):
+            ncu = ecdb.find({'rank': r}).count()
+            ncl = ecdb.find({'rank': r, 'number': 1}).count()
+            prop = format_percentage(ncl,nclasses)
+            rank_counts.append({'r': r, 'ncurves': ncu, 'nclasses': ncl, 'prop': prop})
+        tor_counts = []
+        tor_counts2 = []
+        for t in  [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 16]:
+            ncu = ecdb.find({'torsion': t}).count()
+            if t in [4,8,12]: # two possible structures
+                ncyc = ecdb.find({'torsion_structure': [str(t)]}).count()
+                gp = "\(C_{%s}\)"%t
+                prop = format_percentage(ncyc,ncurves)
+                tor_counts.append({'t': t, 'gp': gp, 'ncurves': ncyc, 'prop': prop})
+                nncyc = ncu-ncyc
+                gp = "\(C_{2}\\times C_{%s}\)"%(t//2)
+                prop = format_percentage(nncyc,ncurves)
+                tor_counts2.append({'t': t, 'gp': gp, 'ncurves': nncyc, 'prop': prop})
+            elif t==16: # all C_2 x C_8
+                gp = "\(C_{2}\\times C_{8}\)"
+                prop = format_percentage(ncu,ncurves)
+                tor_counts2.append({'t': t, 'gp': gp, 'ncurves': ncu, 'prop': prop})
+            else: # all cyclic
+                gp = "\(C_{%s}\)"%t
+                prop = format_percentage(ncu,ncurves)
+                tor_counts.append({'t': t, 'gp': gp, 'ncurves': ncu, 'prop': prop})
+        tor_counts = tor_counts+tor_counts2
+        max_sha = ecdb.find().sort('sha_an', DESCENDING).limit(1)[0]['sha_an']
+        sha_counts = []
+        from math import sqrt
+        for s in range(1,int(sqrt(max_sha))+1):
+            s2 = s*s
+            nc = ecdb.find({'sha_an': { '$gt': s2-0.1, '$lt': s2+0.1}}).count()
+            if nc:
+                sha_counts.append({'s': s, 'ncurves': nc})
+        print "... finished computing elliptic curve stats."
+        init_ecdb_stats_flag = True
 
 cremona_label_regex = re.compile(r'(\d+)([a-z]+)(\d*)')
 lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
@@ -49,7 +99,7 @@ def format_ainvs(ainvs):
     have big-ints, and all strings are stored as unicode. However, printing
     a list of unicodes looks like [u'0', u'1', ...]
     """
-    return [int(a) for a in ainvs]
+    return [ZZ(a) for a in ainvs]
 
 
 def xintegral_point(s):
@@ -139,6 +189,25 @@ def rational_elliptic_curves(err_args=None):
     t = 'Elliptic curves/$\Q$'
     bread = [('Elliptic Curves', url_for("rational_elliptic_curves")), ('Elliptic curves/$\Q$', ' ')]
     return render_template("elliptic_curve/elliptic_curve_Q.html", info=info, credit=credit, title=t, bread=bread, **err_args)
+
+@app.route("/EllipticCurve/Q/stats")
+def statistics():
+    init_ecdb_count()
+    init_ecdb_stats()
+    info = {
+        'ncurves': comma(ncurves),
+        'nclasses': comma(nclasses),
+        'max_N': comma(max_N),
+        'max_rank': max_rank,
+        'rank_counts': rank_counts,
+        'tor_counts': tor_counts,
+        'max_sha': max_sha,
+        'sha_counts': sha_counts
+    }
+    credit = 'John Cremona'
+    t = 'Elliptic curves/$\Q$: statistics'
+    bread = [('Elliptic Curves', url_for("rational_elliptic_curves")), ('Elliptic curves/$\Q$: statistics', ' ')]
+    return render_template("elliptic_curve/statistics.html", info=info, credit=credit, title=t, bread=bread)
 
 
 @app.route("/EllipticCurve/Q/<int:conductor>")
@@ -233,8 +302,11 @@ def elliptic_curve_search(**args):
                         x.update(y)
                     newors.extend(oldors)
                 tmp[1] = newors
-            query[tmp[0]] = tmp[1]
-#            query[field] = parse_range2(info[field])
+            if field=='sha_an': # database sha_an values are not all exact!
+                query[tmp[0]] = { '$gt': tmp[1]-0.1, '$lt': tmp[1]+0.1}
+                print query
+            else:
+                query[tmp[0]] = tmp[1]
 
     if 'optimal' in info and info['optimal'] == 'on':
         # fails on 990h3
@@ -580,7 +652,13 @@ def render_curve_webpage_by_label(label):
             modular_degree = 0  # invalid, will be displayed nicely
 
     G = E.torsion_subgroup().gens()
-    minq = E.minimal_quadratic_twist()[0]
+    E_pari = E.pari_curve(prec=200)
+    from sage.libs.pari.all import PariError
+    try:
+        minq = E.minimal_quadratic_twist()[0]
+    except PariError:  # this does occur with 164411a1
+        print "PariError computing minimal quadratic twist of elliptic curve %s"%lmfdb_label
+        minq = E
     if E == minq:
         minq_label = lmfdb_label
     else:
@@ -619,7 +697,7 @@ def render_curve_webpage_by_label(label):
     # Local data
     local_data = []
     for p in N.prime_factors():
-        local_info = E.local_data(p)
+        local_info = E.local_data(p, algorithm="generic")
         local_data.append({'p': p,
                            'tamagawa_number': local_info.tamagawa_number(),
                            'kodaira_symbol': web_latex(local_info.kodaira_symbol()).replace('$', ''),
@@ -628,6 +706,9 @@ def render_curve_webpage_by_label(label):
 
     mod_form_iso = lmfdb_label_regex.match(lmfdb_iso_class).groups()[1]
 
+    tamagawa_numbers = [E.local_data(p, algorithm="generic").tamagawa_number() for p in N.prime_factors()]
+    # if we use E.tamagawa_numbers() it calls E.local_data(p) which
+    # crashes on some curves e.g. 164411a1
     info.update({
         'conductor': N,
         'disc_factor': latex(discriminant.factor()),
@@ -647,7 +728,7 @@ def render_curve_webpage_by_label(label):
         'CM': CM,
         'CMD': CMD,
         'EndE': EndE,
-        'tamagawa_numbers': r' \cdot '.join(str(sage.all.factor(c)) for c in E.tamagawa_numbers()),
+        'tamagawa_numbers': r' \cdot '.join(str(sage.all.factor(c)) for c in tamagawa_numbers),
         'local_data': local_data,
         'cond_factor': latex(N.factor()),
         'xintegral_points': ', '.join(web_latex(P) for P in xintpoints),
