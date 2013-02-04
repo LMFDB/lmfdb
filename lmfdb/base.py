@@ -84,7 +84,7 @@ def _db_reconnect(func):
 # _db_reconnect(Connection._send_message_with_response)
 
 
-def _init(dbport, readwrite_password):
+def _init(dbport, readwrite_password, parallel_authentication = False):
     global _C
     logging.info("establishing db connection at port %s ..." % dbport)
     _C = Connection(port=dbport)
@@ -97,20 +97,29 @@ def _init(dbport, readwrite_password):
             _C[db].authenticate(readwrite_username, readwrite_password)
             logging.info("authenticated readwrite on database %s" % db)
 
-    import threading
-    tasks = []
-    for db in readwrite_dbs:
-        t = threading.Thread(target=db_auth_task, args=(db,))
-        t.start()
-        tasks.append(t)
-    for db in readonly_dbs:
-        t = threading.Thread(target=db_auth_task, args=(db, True))
-        t.start()
-        tasks.append(t)
+    if parallel_authentication:
+        logging.info("Authenticating to the databases in parallel")
+        import threading
+        tasks = []
+        for db in readwrite_dbs:
+            t = threading.Thread(target=db_auth_task, args=(db,))
+            t.start()
+            tasks.append(t)
+        for db in readonly_dbs:
+            t = threading.Thread(target=db_auth_task, args=(db, True))
+            t.start()
+            tasks.append(t)
 
-    for t in tasks:
-        t.join(timeout=15)
-    logging.info(">>> db auth done")
+        for t in tasks:
+            t.join(timeout=15)
+        logging.info(">>> db auth done")
+    else:
+        logging.info("Authenticating sequentially")
+        for db in readwrite_dbs:
+            db_auth_task(db)
+        for db in readonly_dbs:
+            db_auth_task(db, True)
+        logging.info(">>> db auth done")
 
 
 def getDBConnection():
