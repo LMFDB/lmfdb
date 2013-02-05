@@ -210,6 +210,7 @@ Usage: %s [OPTION]...
   -p, --port=NUM      bind to port NUM (default 37777)
   -h, --host=HOST     bind to host HOST (default "127.0.0.1")
   -l, --log=FILE      log to FILE (default "flasklog")
+  -t, --threading     multithread the database authentications
       --dbport=NUM    bind the MongoDB to the given port (default 37010)
       --debug         enable debug mode
       --logfocus=NAME enter name of logger to focus on
@@ -222,8 +223,8 @@ def main():
     import getopt
     try:
         opts, args = getopt.getopt(sys.argv[1:],
-                                   "p:h:l:",
-                                   ["port=", "host=", "dbport=", "log=", "logfocus=", "debug", "help",
+                                   "p:h:l:t",
+                                   ["port=", "host=", "dbport=", "log=", "logfocus=", "debug", "help", "threading", 
                                     # undocumented, see below
                                     "enable-reloader", "disable-reloader",
                                     "enable-debugger", "disable-debugger",
@@ -235,12 +236,13 @@ def main():
 
     # default options to pass to the app.run()
     options = {"port": 37777, "host": "127.0.0.1", "debug": False}
+    # Default option to pass to _init
+    threading_opt = False 
     # the logfocus can be set to the string-name of a logger you want
     # follow on the debug level and all others will be set to warning
     logfocus = None
     logfile = "flasklog"
     dbport = 37010
-
     for opt, arg in opts:
         if opt == "--help":
             usage()
@@ -249,6 +251,8 @@ def main():
             options["port"] = int(arg)
         elif opt in ("-h", "--host"):
             options["host"] = arg
+        elif opt in ("-t", "--threading"):
+            threading_opt = True
         elif opt in ("-l", "--log"):
             logfile = arg
         elif opt in ("--dbport"):
@@ -285,7 +289,7 @@ def main():
     app.logger.addHandler(file_handler)
 
     import base
-    base._init(dbport, readwrite_password)
+    base._init(dbport, readwrite_password, parallel_authentication = threading_opt)
     base.set_logfocus(logfocus)
     logging.info("... done.")
 
