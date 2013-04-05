@@ -201,7 +201,7 @@ pari:
 <br>
   idealfactors := Factorization(p*Integers(K));  # get the data
 <br>
-  [<Valuation(Norm(primefactor[1]), p), primefactor[2]> : primefactor in idealfactors];
+  [&lg;Valuation(Norm(primefactor[1]), p), primefactor[2]&gt; : primefactor in idealfactors];
 </div>
 
 {% if info.get("tim_number_field", False) %}
