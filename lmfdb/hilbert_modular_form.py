@@ -48,7 +48,7 @@ def hilbert_modular_form_render_webpage():
     if len(args) == 0:
         info = {}
         credit = 'Lassina Dembele, Steve Donnelly and <A HREF="http://www.cems.uvm.edu/~voight/">John Voight</A>'
-        t = 'Hilbert Modular Forms'
+        t = 'Hilbert Cusp Forms'
         bread = [('Hilbert Modular Forms', url_for("hilbert_modular_form_render_webpage"))]
         info['learnmore'] = []
         return render_template("hilbert_modular_form/hilbert_modular_form_all.html", info=info, credit=credit, title=t, bread=bread)
