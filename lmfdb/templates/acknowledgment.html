@@ -1,59 +1,16 @@
 {% extends 'homepage.html' %}
 
 {% block content %}
-
 <h1>Contributors</h1>
 <div style="column-count:4;-moz-column-count:4;-webkit-column-count: 4;">
 <ul>
-<li>  Matthew Alderson</li>
-<li>  Salman Baig</li>
-<li>  Jennifer Balakrishnan</li>
-<li>  Jennifer Beineke</li>
-<li>  Jonathan W. Bober</li>
-<li>  Andrew Booker</li>
-<li>  Robert Bradshaw</li>
-<li>  Alina Bucur</li>
-<li>  Henri Cohen</li>
-<li>  Brian Conrey</li>
-<li>  John Cremona</li>
-<li>  Paul-Olivier Dehaye</li>
-<li>  Lassina Dembele</li>
-<li>  Tim Dokchitser</li>
-<li>  Stephan Ehlen</li>
-<li>  David W. Farmer</li>
-<li>  Marcus Fraczek</li>
-<li>  Ralph Furmaniak</li>
-<li>  Jonthan Hanke</li>
-<li>  William Hart</li>
-<li>  Ghaith Hiary</li>
-<li>  Duc Khiem Huynh</li>
-<li>  John Jones</li>
-<li>  Jon Keating</li>
-<li>  Kiran S. Kedlaya</li>
-<li>  Kamal Khuri-Makdisi</li>
-<li>  Sally Koutsoliotas</li>
-<li>  Stefan Lemurell</li>
-<li>  Robert Miller</li>
-<li>  Pascal Molin</li>
-<li>  David Platt</li>
-<li>  Rishikesh</li>
-<li>  Michael Rubinstein</li>
-<li>  Nathan Ryan</li>
-<li>  Ralf Schmidt</li>
-<li>  Harald Schilly</li>
-<li>  Gagan Sekhon</li>
-<li>  Nils-Peter Skoruppa</li>
-<li>  William Stein</li>
-<li>  Fredrik Str&ouml;mberg</li>
-<li>  Holly Swisher</li>
-<li>  Gonzalo Tornaria</li>
-<li>  Holger Then</li>
-<li>  John Voight</li>
-<li>  Lynne Walling</li>
-<li>  Mark Watkins</li>
-<li>  Jamie Weigandt</li>
-<li>  Trevor Wooley</li>
-<li>  David Yuen</li>
+{% for c in contribs %}
+  {% if c.url %}
+    <li><a href="{{ c.url }}">{{ c.name }}</a></li>
+  {% else %}
+    <li>{{ c.name }}</li>
+  {% endif %}
+{% endfor %}
 </ul>
 </div>
 

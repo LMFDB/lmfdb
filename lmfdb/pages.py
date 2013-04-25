@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 from base import app
 from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
 
@@ -7,21 +8,28 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 def about():
     return render_template("about.html", title="About")
 
+# acknowledgement page, reads info from CONTRIBUTORS.yaml
+try:
+  import yaml
+except:
+  print "You have to install pyyaml"
+  exit(0)
+
+# reading and sorting list of contributors once at startup
+_curdir = os.path.dirname(os.path.abspath(__file__))
+contribs = yaml.load_all(open(os.path.join(_curdir, "..", "CONTRIBUTORS.yaml")))
+contribs = sorted(contribs, key = lambda x : x['name'].split()[-1])
 
 @app.route("/acknowledgment")
 def acknowledgment():
-    return render_template("acknowledgment.html", title="Acknowledgments")
+    return render_template("acknowledgment.html", title="Acknowledgments", contribs = contribs)
 
 # geeky pages have humans.txt
-
-
 @app.route("/humans.txt")
 def humans_txt():
     return render_template("acknowledgment.html", title="Acknowledgments")
 
 # google's CSE for www.lmfdb.org/* (and *only* those pages!)
-
-
 @app.route("/search")
 def search():
     return render_template("search.html", title="Search LMFDB", bread=[('Search', url_for("search"))])

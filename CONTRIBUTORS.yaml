@@ -1,0 +1,112 @@
+# This is the list of contributors to LMFDB
+# They are listed on /acknowledgement and mabye elsewhere
+# the 'name' field is mandatory, all others currently optional
+---
+name: Matthew Alderson
+---
+name: Salman Baig
+---
+name: Jennifer Balakrishnan
+---
+name: Jennifer Beineke
+---
+name: Jonathan W. Bober
+area:
+  - infrastructure
+  - server
+  - zeta zeros
+---
+name: Andrew Booker
+---
+name: Robert Bradshaw
+---
+name: Alina Bucur
+---
+name: Henri Cohen
+---
+name: Brian Conrey
+---
+name: John Cremona
+area:
+  - Elliptic Curves
+---
+name: Paul-Olivier Dehaye
+---
+name: Lassina Dembele
+---
+name: Tim Dokchitser
+---
+name: Stephan Ehlen
+---
+name: David W. Farmer
+---
+name: Marcus Fraczek
+---
+name: Ralph Furmaniak
+---
+name: Jonthan Hanke
+---
+name: William Hart
+---
+name: Ghaith Hiary
+---
+name: Duc Khiem Huynh
+---
+name: John Jones
+---
+name: Jon Keating
+---
+name: Kiran S. Kedlaya
+---
+name: Kamal Khuri-Makdisi
+---
+name: Sally Koutsoliotas
+---
+name: Stefan Lemurell
+---
+name: Robert Miller
+---
+name: Pascal Molin
+---
+name: David Platt
+---
+name: Rishikesh
+---
+name: Michael Rubinstein
+---
+name: Nathan Ryan
+---
+name: Ralf Schmidt
+---
+name:  Harald Schilly
+url:   http://harald.schil.ly
+email: harald@schil.ly
+area:
+  - infrastructure
+  - server
+---
+name: Gagan Sekhon
+---
+name: Nils-Peter Skoruppa
+---
+name: William Stein
+---
+name: Fredrik Str&ouml;mberg
+---
+name: Holly Swisher
+---
+name: Gonzalo Tornaria
+---
+name: Holger Then
+---
+name: John Voight
+---
+name: Lynne Walling
+---
+name: Mark Watkins
+---
+name: Jamie Weigandt
+---
+name: Trevor Wooley
+---
+name: David Yuen
