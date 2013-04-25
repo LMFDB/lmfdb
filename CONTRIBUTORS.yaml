@@ -11,7 +11,9 @@ name: Jennifer Balakrishnan
 name: Jennifer Beineke
 ---
 name: Jonathan W. Bober
-area:
+url: http://sage.math.washington.edu/home/bober/www/
+uni: University of Bristol
+notes:
   - infrastructure
   - server
   - zeta zeros
@@ -25,12 +27,16 @@ name: Alina Bucur
 name: Henri Cohen
 ---
 name: Brian Conrey
+url: http://www.aimath.org/conrey/
 ---
 name: John Cremona
-area:
+uni: University of Warwick
+url: http://www2.warwick.ac.uk/fac/sci/maths/people/staff/john_cremona/
+notes:
   - Elliptic Curves
 ---
 name: Paul-Olivier Dehaye
+url: http://user.math.uzh.ch/dehaye/
 ---
 name: Lassina Dembele
 ---
@@ -39,6 +45,7 @@ name: Tim Dokchitser
 name: Stephan Ehlen
 ---
 name: David W. Farmer
+email: farmer@aimath.org
 ---
 name: Marcus Fraczek
 ---
@@ -47,12 +54,17 @@ name: Ralph Furmaniak
 name: Jonthan Hanke
 ---
 name: William Hart
+url: http://homepages.warwick.ac.uk/~masfaw/
 ---
 name: Ghaith Hiary
 ---
 name: Duc Khiem Huynh
 ---
 name: John Jones
+url: http://hobbes.la.asu.edu/
+uni: Arizona State University
+notes:
+  - Galois Groups
 ---
 name: Jon Keating
 ---
@@ -73,6 +85,8 @@ name: David Platt
 name: Rishikesh
 ---
 name: Michael Rubinstein
+url: http://www.math.uwaterloo.ca/~mrubinst/
+uni: University of Waterloo
 ---
 name: Nathan Ryan
 ---
@@ -81,7 +95,9 @@ name: Ralf Schmidt
 name:  Harald Schilly
 url:   http://harald.schil.ly
 email: harald@schil.ly
-area:
+uni: University of Vienna
+location: Vienna, Austria
+notes:
   - infrastructure
   - server
 ---
@@ -90,16 +106,24 @@ name: Gagan Sekhon
 name: Nils-Peter Skoruppa
 ---
 name: William Stein
+url: http://wstein.org/
+uni: University of Washington
+notes:
+  - Creator of <a href="http://www.sagemath.org">Sage</a>
 ---
 name: Fredrik Str&ouml;mberg
 ---
 name: Holly Swisher
+url: http://www.math.oregonstate.edu/people/view/swisherh
+uni: Oregon State University
 ---
 name: Gonzalo Tornaria
 ---
 name: Holger Then
 ---
 name: John Voight
+url: http://www.cems.uvm.edu/~jvoight/
+uni: University of Vermont
 ---
 name: Lynne Walling
 ---
