@@ -1,56 +1,62 @@
 # This is the list of contributors to LMFDB
 # They are listed on /acknowledgement and mabye elsewhere
 # the 'name' field is mandatory, all others currently optional
+#  - affil: university or company affiliation
+#  - url: homepage
 ---
 name: Matthew Alderson
 ---
 name: Salman Baig
 ---
 name: Jennifer Balakrishnan
+url: http://www.math.harvard.edu/~jen/
+affil: Harvard
 ---
 name: Jennifer Beineke
+url: http://mars.wne.edu/~jbeineke/
+affil: Western New England College
 ---
 name: Jonathan W. Bober
 url: http://sage.math.washington.edu/home/bober/www/
-uni: University of Bristol
-notes:
-  - infrastructure
-  - server
-  - zeta zeros
+affil: University of Bristol
 ---
 name: Andrew Booker
-uni: University of Bristol
-url: http://www.maths.bris.ac.uk/people/profile/maarb
+affil: University of Bristol
+url: http://www.maths.bris.ac.uk/people/faculty/maarb/
 ---
 name: Robert Bradshaw
+affil: Google Inc.
 ---
 name: Alina Bucur
+url: http://www-math.mit.edu/~alina/
+affil: MIT
 ---
 name: Henri Cohen
-uni: Universtity of Bordeaux I
+url: http://www.math.u-bordeaux1.fr/~hecohen/
+affil: University Bordeaux I
 ---
 name: Brian Conrey
-uni: University of Bristol and AIM
+affil: University of Bristol and AIM
 url: http://www.aimath.org/conrey/
 ---
 name: John Cremona
-uni: University of Warwick
+affil: University of Warwick
 url: http://www2.warwick.ac.uk/fac/sci/maths/people/staff/john_cremona/
-notes:
-  - Elliptic Curves
 ---
 name: Paul-Olivier Dehaye
 url: http://user.math.uzh.ch/dehaye/
 ---
 name: Lassina Dembele
-uni: University of Warwick
 url: http://homepages.warwick.ac.uk/staff/L.Dembele/
+affil: University of Warwick
 ---
 name: Tim Dokchitser
-uni: University of Bristol
 url: http://www.maths.bris.ac.uk/~matyd/
+affil: University of Bristol
 ---
 name: Stephan Ehlen
+url: http://www3.mathematik.tu-darmstadt.de/index.php?id=2037
+affil: Technische Universität Darmstadt
 ---
 name: David W. Farmer
 email: farmer@aimath.org
@@ -58,115 +64,129 @@ email: farmer@aimath.org
 name: Marcus Fraczek
 ---
 name: Ralph Furmaniak
+affil: Stanford University
+url: http://stanford.edu/~rfurman/
 ---
 name: Jonthan Hanke
 ---
 name: William Hart
-uni: University of Warwick
+affil: University of Warwick
 url: http://homepages.warwick.ac.uk/~masfaw/
 ---
 name: Ghaith Hiary
-uni: University of Bristol
+affil: University of Bristol
 ---
 name: Duc Khiem Huynh
+url: http://www.math.uwaterloo.ca/~dkhuynh/
+affil: University of Waterloo
 ---
 name: John Jones
 url: http://hobbes.la.asu.edu/
-uni: Arizona State University
-notes:
-  - Galois Groups
+affil: Arizona State University
 ---
 name: Jon Keating
-uni: University of Bristol
+affil: University of Bristol
 url: http://www.maths.bris.ac.uk/people/profile/majpk
 ---
 name: Kiran S. Kedlaya
+url: http://math.ucsd.edu/~kedlaya/
+affil: University of California
 ---
 name: Kamal Khuri-Makdisi
 ---
 name: Sally Koutsoliotas
+url: http://www.bucknell.edu/x18772.xml
+affil: Bucknell University
 ---
 name: Stefan Lemurell
+url: http://www.math.chalmers.se/~sj/
+affil: Göteborgs Universitet
 ---
 name: Robert Miller
+url: http://www.rlmiller.org/
 ---
 name: Pascal Molin
+url: http://www.math.jussieu.fr/~molinp/
+affil: Université Paris 7
 ---
 name: David Platt
-uni: University of Bristol
+affil: University of Bristol
 url: http://www.maths.bris.ac.uk/~madjp/
 ---
 name: Rishikesh
 ---
 name: Michael Rubinstein
 url: http://www.math.uwaterloo.ca/~mrubinst/
-uni: University of Waterloo
+affil: University of Waterloo
 ---
 name: Nathan Ryan
+url: http://www.eg.bucknell.edu/~ncr006/
+affil: Bucknell University
 ---
 name: Ralf Schmidt
+url: http://www2.math.ou.edu/~rschmidt/
+affil: University of Oklahoma
 ---
 name:  Harald Schilly
 url:   http://harald.schil.ly
 email: harald@schil.ly
-uni: University of Vienna
+affil: University of Vienna
 location: Vienna, Austria
-notes:
-  - infrastructure
-  - server
 ---
 name: Gagan Sekhon
 ---
 name: Haluk Sengun
-uni: University of Warwick
+affil: University of Warwick
 url: http://www2.warwick.ac.uk/fac/sci/maths/people/staff/haluk_sengun/
 ---
 name: Samir Siksek
-uni: University of Warwick
+affil: University of Warwick
 url: http://homepages.warwick.ac.uk/staff/S.Siksek/
 ---
 name: Nils-Peter Skoruppa
-uni: Siegen University
+url: http://www.nskoruppa.de/
+affil: Universität Siegen
 ---
 name: William Stein
 url: http://wstein.org/
-uni: University of Washington
+affil: University of Washington
 notes:
   - Creator of <a href="http://www.sagemath.org">Sage</a>
 ---
 name: Fredrik Str&ouml;mberg
-uni: University of Durham
+affil: University of Durham
 ---
 name: Holly Swisher
 url: http://www.math.oregonstate.edu/people/view/swisherh
-uni: Oregon State University
+affil: Oregon State University
 ---
 name: Gonzalo Tornaria
 url: http://www.cmat.edu.uy/~tornaria/
-uni: Universidad de la Republica Uruguay
+affil: Universidad de la Uruguay
 ---
 name: Holger Then
-uni: University of Bristol
 url: http://www.maths.bris.ac.uk/~mahlt/
+affil: University of Bristol
 ---
 name: John Voight
 url: http://www.cems.uvm.edu/~jvoight/
-uni: University of Vermont
+affil: University of Vermont
 ---
 name: Lynne Walling
-uni: University of Bristol
+affil: University of Bristol
 url: http://www.maths.bris.ac.uk/people/profile/malhw
 ---
 name: Mark Watkins
-uni: University of Sydney
+affil: University of Sydney
+url: http://magma.maths.usyd.edu.au/~watkins/
 ---
 name: Jamie Weigandt
-uni: Purdue University
+affil: Purdue University
 ---
 name: Trevor Wooley
-uni: University of Bristol
+affil: University of Bristol
 url: http://www.maths.bris.ac.uk/people/profile/matdw
 ---
 name: David Yuen
-uni: Lake Forest College
+affil: Lake Forest College
 url: http://www.lakeforest.edu/academics/faculty/yuen/
