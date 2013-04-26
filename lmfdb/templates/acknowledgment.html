@@ -2,33 +2,29 @@
 
 {% block content %}
 <style>
-  #contribs { table-layout: fixed; width: 100%; border-spacing: 10px; border-collapse: separate; }
-  #contribs tr > td {  margin-bottom: 10px; padding: 0 ; margin: 5px; font-size: 70%; vertical-align: top; height: 50px; border: 1px solid #dfd; }
-  #contribs tr > td > div { padding-left: 5px; }
-  #contribs tr > td > div.name { font-weight: bold; background: #dfd; font-size: 100%; position: relative; }
-  #contribs tr > td > div.name > a { position: absolute; right: 5px; }
-  #contribs tr > td > div.uni  { color: #333; }
-  #contribs tr > td > div.notes { color: #666; }
+  #contribs { overflow: hidden; }
+  #contribs > div { padding: 0 ; margin: 5px; font-size: 70%; height: 4em; border: 1px solid #dfd; float:left; width: 200px;  overflow: hidden; }
+  #contribs > div > div { padding-left: 5px; }
+  #contribs > div > div.name { font-weight: bold; background: #dfd; font-size: 100%; position: relative; }
+  #contribs > div > div.name > a { position: absolute; right: 5px; }
+  #contribs > div > div.affil { color: #333;}
+  #contribs > div > div.notes { color: #666; }
 </style>
 
 <h1>Contributors</h1>
-<table id="contribs"> 
-{% for ccol in contribs | batch(4) %}
-  <tr>
-  {%- for c in ccol -%}
-  <td>
+<div id="contribs">
+{% for c in contribs %}
+  <div>
     <div class="name">{{ c.name|safe }}
       {% if c.url -%}<a href="{{ c.url }}">www</a>{%- endif %}
     </div>
-    {% if c.uni  -%}<div class="uni">{{ c.uni|safe }}</div>{%- endif %}
-    {% if c.notes -%}<div class="notes">{{ c.notes|join(', ')|safe }}</div>{%- endif %}
-  </td>
-  {%- endfor %}
-  </tr>
+    {% if c.affil -%}<div class="affil">{{ c.affil|safe }}</div>{%- endif %}
+    {# {% if c.notes -%}<div class="notes">{{ c.notes|join(', ')|safe }}</div>{%- endif %} #}
+  </div>
 {% endfor %}
-</table>
-
-<a name="sponsors"></a><h1>Sponsors</h1>
+</div>
+<a name="sponsors"></a>
+<h1 >Sponsors</h1>
 <div>
  The LMFDB is made possible by a number of grants.
     <ul>
