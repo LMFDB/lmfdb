@@ -2,8 +2,9 @@
 import pymongo
 from sage.all import dumps, save, parallel
 from modular_forms.elliptic_modular_forms.backend.plot_dom import *
-dbport = 37010
-C = pymongo.connection.Connection(port=int(37010))
+from lmfdb.website import dbport
+C = pymongo.connection.Connection(port=dbport)
+C = pymongo.connection.Connection(port=dbport)
 
 
 @parallel

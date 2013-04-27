@@ -4,7 +4,7 @@
 import sys
 sys.path.append("../")
 import base
-base._init(37010, "")
+base._init(dbport, "")
 from lmfdb.math_classes import ArtinRepresentation
 the_collection = ArtinRepresentation.collection()
 print "Got", the_collection

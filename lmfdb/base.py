@@ -49,7 +49,8 @@ readwrite_username = 'lmfdb_website'
 AUTO_RECONNECT_MAX = 10
 AUTO_RECONNECT_DELAY = 1
 AUTO_RECONNECT_ATTEMPTS = 0
-
+DEFAULT_DB_PORT = 37010
+dbport = DEFAULT_DB_PORT
 
 def _db_reconnect(func):
     """

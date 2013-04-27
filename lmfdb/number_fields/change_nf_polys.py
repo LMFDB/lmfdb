@@ -7,7 +7,8 @@ import time
 import base
 
 from pymongo.connection import Connection
-fields = Connection(port=37010).numberfields.fields
+fields = Connection(port=dbport).numberfields.fields
+fields = Connection(port=dbport).numberfields.fields
 #
 # This is a list of pairs of lists [pol1,pol2] where pol1 is a list of
 # the coefficients of a defining polynomial in the database (as of

@@ -211,7 +211,7 @@ Usage: %s [OPTION]...
   -h, --host=HOST     bind to host HOST (default "127.0.0.1")
   -l, --log=FILE      log to FILE (default "flasklog")
   -t, --threading     multithread the database authentications
-      --dbport=NUM    bind the MongoDB to the given port (default 37010)
+      --dbport=NUM    bind the MongoDB to the given port (default base.DEFAULT_DB_PORT)
       --debug         enable debug mode
       --logfocus=NAME enter name of logger to focus on
       --help          show this help
@@ -242,7 +242,8 @@ def main():
     # follow on the debug level and all others will be set to warning
     logfocus = None
     logfile = "flasklog"
-    dbport = 37010
+    import base
+    dbport = base.DEFAULT_DB_PORT
     for opt, arg in opts:
         if opt == "--help":
             usage()
@@ -288,7 +289,6 @@ def main():
     file_handler.setLevel(logging.WARNING)
     app.logger.addHandler(file_handler)
 
-    import base
     base._init(dbport, readwrite_password, parallel_authentication = threading_opt)
     base.set_logfocus(logfocus)
     logging.info("... done.")
@@ -310,7 +310,7 @@ else:
     file_handler = logging.FileHandler(logfile)
     file_handler.setLevel(logging.WARNING)
     import base
-    base._init(37010, readwrite_password)
+    base._init(base.DEFAULT_DB_PORT, readwrite_password)
     app.logger.addHandler(file_handler)
 
 

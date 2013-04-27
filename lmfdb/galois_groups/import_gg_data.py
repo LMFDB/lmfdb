@@ -8,7 +8,7 @@ from sage.all import *
 sys.path.append("../")
 import base
 from pymongo.connection import Connection
-base._init(37010, "")
+base._init(dbport, "")
 C = base.getDBConnection()
 import pymongo
 

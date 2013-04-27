@@ -6,7 +6,8 @@ import sage.all
 from sage.all import gap
 
 from pymongo.connection import Connection
-groups = Connection(port=37010).transitivegroups.groups
+groups = Connection(port=dbport).transitivegroups.groups
+groups = Connection(port=dbport).transitivegroups.groups
 
 groups.ensure_index('n')
 groups.ensure_index('t')

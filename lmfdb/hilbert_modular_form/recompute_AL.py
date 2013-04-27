@@ -7,10 +7,13 @@ import sage.misc.preparser
 import subprocess
 from pymongo import Connection
 
-hmf_forms = Connection(port=int(37010)).hmfs.forms
-hmf_fields = Connection(port=int(37010)).hmfs.fields
+hmf_forms = Connection(port=dbport).hmfs.forms
+hmf_forms = Connection(port=dbport).hmfs.forms
+hmf_fields = Connection(port=dbport).hmfs.fields
+hmf_fields = Connection(port=dbport).hmfs.fields
 
-fields = Connection(port=int(37010)).numberfields.fields
+fields = Connection(port=dbport).numberfields.fields
+fields = Connection(port=dbport).numberfields.fields
 
 P = PolynomialRing(Rationals(), 3, ['w', 'e', 'x'])
 w, e, x = P.gens()

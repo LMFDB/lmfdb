@@ -47,7 +47,7 @@ except:
     emf_logger.critical("Could not import dirichlet_conrey!")
 
 db_name = 'modularforms'
-dbport = 37010
+from lmfdb.website import dbport
 
 
 class WebModFormSpace(Parent):

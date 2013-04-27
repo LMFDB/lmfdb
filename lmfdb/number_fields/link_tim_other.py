@@ -12,7 +12,7 @@ from lmfdb.math_classes import NumberFieldGaloisGroup as NF
 print "Sage loaded"
 
 print "getting connection"
-base._init(37010, "")
+base._init(dbport, "")
 print "I have it"
 
 base.getDBConnection()

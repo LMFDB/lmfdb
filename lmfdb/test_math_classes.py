@@ -4,7 +4,7 @@ print "importing base"
 import base
 print ".....done"
 print "initializing connection"
-base._init(37010, "")
+base._init(dbport, "")
 print ".....done"
 
 print "math_classes, Lfunction"

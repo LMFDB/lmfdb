@@ -1,7 +1,7 @@
 from lmfdb.math_classes import ArtinRepresentation
 
 import base
-base._init(int(37010), "")
+base._init(dbport, "")
 
 # x is raw
 # a is of type ArtinRepresentation

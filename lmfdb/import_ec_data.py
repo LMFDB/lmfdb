@@ -49,7 +49,7 @@ import base
 from sage.rings.all import ZZ
 
 print "calling base._init()"
-base._init(int(37010), '')
+base._init(dbport, '')
 print "getting connection"
 conn = base.getDBConnection()
 print "setting curves"

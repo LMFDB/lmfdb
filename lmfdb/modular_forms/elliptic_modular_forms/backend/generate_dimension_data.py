@@ -1,11 +1,12 @@
 from sage.all import dimension_new_cusp_forms, DirichletGroup
 import pymongo
 
-dbport = 37010
+from lmfdb.website import dbport
 
 
 def generate_dimension_table_gamma0(maxN=100, maxk=12):
-    C = pymongo.connection.Connection(port=int(37010))
+    C = pymongo.connection.Connection(port=dbport)
+    C = pymongo.connection.Connection(port=dbport)
     ms = C['modularforms']['Modular_symbols.files']
     print ms
     data = dict()
@@ -22,7 +23,8 @@ def generate_dimension_table_gamma0(maxN=100, maxk=12):
 
 
 def generate_dimension_table_gamma1(maxN=100, maxk=12, minN=3, mink=2):
-    C = pymongo.connection.Connection(port=int(37010))
+    C = pymongo.connection.Connection(port=dbport)
+    C = pymongo.connection.Connection(port=dbport)
     ms = C['modularforms']['Modular_symbols.files']
     print ms
     data = dict()

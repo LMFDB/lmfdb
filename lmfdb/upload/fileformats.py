@@ -158,7 +158,8 @@ if len(sys.argv) == 2:
     print guessParsing(file1)[1]
     quit()
 
-db = Connection(port=37010)
+db = Connection(port=dbport)
+db = Connection(port=dbport)
 fs = GridFS(db.upload)
 for entry in db.upload.fs.files.find({"$or": [{"metadata.status": "approved"}, {"metadata.status": "approvedchild"}]}, sort=[("uploadDate", -1)]):
     print '%s: %s (%s)' % (entry['_id'], entry['filename'], str(entry['uploadDate']))

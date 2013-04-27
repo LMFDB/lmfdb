@@ -6,7 +6,8 @@ import sage.all
 from sage.all import *
 
 from pymongo.connection import Connection
-fields = Connection(port=37010).numberfields.fields
+fields = Connection(port=dbport).numberfields.fields
+fields = Connection(port=dbport).numberfields.fields
 
 saving = True
 
