@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from lmfdb.base import getDBConnection, app
-from lmfdb.utils import url_for
+from base import getDBConnection, app
+from utils import url_for
 from databases.Dokchitser_databases import Dokchitser_ArtinRepresentation_Collection, Dokchitser_NumberFieldGaloisGroup_Collection
 from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation
 
 
 def process_algebraic_integer(seq, root_of_unity):
-    return sum(seq[i] * root_of_unity ** i for i in range(len(seq)))
+    return sum(Integer(seq[i]) * root_of_unity ** i for i in range(len(seq)))
 
 
 def process_polynomial_over_algebraic_integer(seq, field, root_of_unity):
@@ -396,7 +396,8 @@ class NumberFieldGaloisGroup(object):
         if "polredabs" in self._data.keys():
             return self._data["polredabs"]
         else:
-            pol = PolynomialRing(QQ, 'x')(self.polynomial())
+            pol = PolynomialRing(QQ, 'x')(map(str,self.polynomial()))
+            # Need to map because the coefficients are given as unicode, which does not convert to QQ
             pol *= pol.denominator()
             R = pol.parent()
             from sage.all import pari
@@ -412,7 +413,7 @@ class NumberFieldGaloisGroup(object):
             return self._data["label"]
         else:
             from number_fields.number_field import poly_to_field_label
-            pol = PolynomialRing(QQ, 'x')(self.polynomial())
+            pol = PolynomialRing(QQ, 'x')(map(str,self.polynomial()))
             label = poly_to_field_label(pol)
             if label:
                 self._data["label"] = label
@@ -506,14 +507,14 @@ class NumberFieldGaloisGroup(object):
     def sage_object(self):
         X = PolynomialRing(QQ, "x")
         from sage.rings.number_field.number_field import NumberField
-        return NumberField(X(self.polynomial()), "x")
+        return NumberField(X(map(str,self.polynomial())), "x")
 
     def from_cycle_type_to_conjugacy_class_index(self, cycle_type, p):
         try:
             dict_to_use = self._from_cycle_type_to_conjugacy_class_index_dict
         except AttributeError:
             import cyc_alt_res_engine
-            self._from_cycle_type_to_conjugacy_class_index_dict = cyc_alt_res_engine.from_cycle_type_to_conjugacy_class_index_dict(self.polynomial(), self.Frobenius_resolvents())
+            self._from_cycle_type_to_conjugacy_class_index_dict = cyc_alt_res_engine.from_cycle_type_to_conjugacy_class_index_dict(map(str,self.polynomial()), self.Frobenius_resolvents())
             # self._from_cycle_type_to_conjugacy_class_index_dict is now a dictionary with keys the the cycle types (as tuples),
             # and values functions of the prime that output the conjugacy class index (using different methods depending on local information)
             # cyc_alt_res_engine.from_cycle_type_to_conjugacy_class_index_dict constructs this dictionary,
@@ -560,7 +561,7 @@ class NumberFieldGaloisGroup(object):
 
     def __str__(self):
         try:
-            tmp = "The Galois group of the number field  Q[x]/(%s)" % self.polynomial()
+            tmp = "The Galois group of the number field  Q[x]/(%s)" % map(str,self.polynomial())
         except:
             tmp = "The Galois group of a number field"
         return tmp
