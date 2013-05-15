@@ -15,5 +15,7 @@ python number_fields/link_tim_other.py
 # Adding conductor length into conductor_plus field of artin rep, for searching
 python artin_representations/inject_conductor_len.py 
 
-# Run once, do some searches from the web, test around a bit
-# Make sure the indices are present (they are normally generated automatically when queries are made)
+# From a sage -sh, run the following to create indices:
+>>> import lmfdb
+>>> lmfdb.artin_representations.main.initialize_indices()
+>>> lmfdb.number_field_galois_groups.main.initialize_indices()
