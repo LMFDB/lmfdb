@@ -1,3 +1,6 @@
+# This describes the process needed to introduce into the LMFDB data
+# coming from Tim Dokchitser on Artin representations.
+
 # For importing artin into mongodb (execute from the import_scripts/ folder)
 python import_generic.py artin_file.json limbo.artinXXX
 
@@ -21,3 +24,6 @@ python inject_conductor_len.py
 >>> import lmfdb
 >>> lmfdb.artin_representations.main.initialize_indices()
 >>> lmfdb.number_field_galois_groups.main.initialize_indices()
+
+# Update the knowl artin.database_comment (accessible at http://www.lmfdb.org/ArtinRepresentation/ )
+# to reflect the new reality.
