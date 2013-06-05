@@ -1,5 +1,5 @@
-artin_location = ("limbo", "tim_artin_06")
-galois_group_location = ("limbo", "tim_nfgal_06")
+artin_location = ("limbo", "artrep20130430")
+galois_group_location = ("limbo", "nfgal20130430")
 
 from type_generation import String, Array, Dict, Int, Anything, Float
 
@@ -99,7 +99,7 @@ Dokchitser_NumberFieldGaloisGroup = Dict({
     "Frobs": PrimeIndexedSequence(Int),
     "G-Gens": FiniteSet(PermutationAsList),
     "G-Name": Custom_GroupLabel,
-    "Polynomial": PolynomialAsSequenceInt,
+    "Polynomial": PolynomialAsSequenceTooLargeInt,
     "QpRts": FiniteSequence(PolynomialAsSequenceTooLargeInt),
     "QpRts-minpoly": PolynomialAsSequenceInt,
     "QpRts-p": Int,
