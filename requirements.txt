@@ -3,3 +3,4 @@ flask-cache
 flask-login
 flask-markdown
 pymongo
+pyyaml
