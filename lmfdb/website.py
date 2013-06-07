@@ -217,23 +217,7 @@ Usage: %s [OPTION]...
       --help          show this help
 """ % sys.argv[0]
 
-
-def main():
-
-    import getopt
-    try:
-        opts, args = getopt.getopt(sys.argv[1:],
-                                   "p:h:l:t",
-                                   ["port=", "host=", "dbport=", "log=", "logfocus=", "debug", "help", "threading", 
-                                    # undocumented, see below
-                                    "enable-reloader", "disable-reloader",
-                                    "enable-debugger", "disable-debugger",
-                                    ])
-    except getopt.GetoptError, err:
-        sys.stderr.write("%s: %s\n" % (sys.argv[0], err))
-        sys.stderr.write("Try '%s --help' for usage\n" % sys.argv[0])
-        sys.exit(2)
-
+def get_configuration():
     # default options to pass to the app.run()
     options = {"port": 37777, "host": "127.0.0.1", "debug": False}
     # Default option to pass to _init
@@ -244,52 +228,58 @@ def main():
     logfile = "flasklog"
     import base
     dbport = base.DEFAULT_DB_PORT
-    for opt, arg in opts:
-        if opt == "--help":
-            usage()
-            sys.exit()
-        elif opt in ("-p", "--port"):
-            options["port"] = int(arg)
-        elif opt in ("-h", "--host"):
-            options["host"] = arg
-        elif opt in ("-t", "--threading"):
-            threading_opt = True
-        elif opt in ("-l", "--log"):
-            logfile = arg
-        elif opt in ("--dbport"):
-            dbport = int(arg)
-        elif opt == "--debug":
-            options["debug"] = True
-        elif opt == "--logfocus":
-            logfocus = arg
-        # undocumented: the following allow changing the defaults for
-        # these options to werkzeug (they both default to False unless
-        # --debug is set, in which case they default to True but can
-        # be turned off)
-        elif opt == "--enable-reloader":
-            options["use_reloader"] = True
-        elif opt == "--disable-reloader":
-            options["use_reloader"] = False
-        elif opt == "--enable-debugger":
-            options["use_debugger"] = True
-        elif opt == "--disable-debugger":
-            options["use_debugger"] = False
+    try:
+      import getopt
+      try:
+          opts, args = getopt.getopt(sys.argv[1:],
+                                     "p:h:l:t",
+                                     ["port=", "host=", "dbport=", "log=", "logfocus=", "debug", "help", "threading", 
+                                      # undocumented, see below
+                                      "enable-reloader", "disable-reloader",
+                                      "enable-debugger", "disable-debugger",
+                                      ])
+      except getopt.GetoptError, err:
+          sys.stderr.write("%s: %s\n" % (sys.argv[0], err))
+          sys.stderr.write("Try '%s --help' for usage\n" % sys.argv[0])
+          #sys.exit(2)
 
-    import logging
-    root_logger = logging.getLogger()
-    root_logger.setLevel(logging.INFO)
-    root_logger.name = "LMFDB"
-    import utils
-    formatter = logging.Formatter(utils.LmfdbFormatter.fmtString.split(r'[')[0])
-    ch = logging.StreamHandler()
-    ch.setFormatter(formatter)
-    root_logger.addHandler(ch)
+      for opt, arg in opts:
+          if opt == "--help":
+              usage()
+              sys.exit()
+          elif opt in ("-p", "--port"):
+              options["port"] = int(arg)
+          elif opt in ("-h", "--host"):
+              options["host"] = arg
+          elif opt in ("-t", "--threading"):
+              threading_opt = True
+          elif opt in ("-l", "--log"):
+              logfile = arg
+          elif opt in ("--dbport"):
+              dbport = int(arg)
+          elif opt == "--debug":
+              options["debug"] = True
+          elif opt == "--logfocus":
+              logfocus = arg
+          # undocumented: the following allow changing the defaults for
+          # these options to werkzeug (they both default to False unless
+          # --debug is set, in which case they default to True but can
+          # be turned off)
+          elif opt == "--enable-reloader":
+              options["use_reloader"] = True
+          elif opt == "--disable-reloader":
+              options["use_reloader"] = False
+          elif opt == "--enable-debugger":
+              options["use_debugger"] = True
+          elif opt == "--disable-debugger":
+              options["use_debugger"] = False
+    except:
+        pass # something happens on the server -> TODO: FIXME
+    return { 'flask_options' : options, 'dbport' : dbport , 'threading_opt' : threading_opt }
 
-    file_handler = logging.FileHandler(logfile)
-    file_handler.setLevel(logging.WARNING)
-    app.logger.addHandler(file_handler)
+configuration = get_configuration()
 
-    base._init(dbport, readwrite_password, parallel_authentication = threading_opt)
+def main():
     base.set_logfocus(logfocus)
     logging.info("... done.")
 
@@ -297,22 +287,30 @@ def main():
     # if options["debug"]:
     #  logging.info(str(app.url_map))
 
-    app.run(**options)
+    app.run(**configuration['flask_options'])
 
-
-if __name__ == '__main__':
-    main()
-else:
+if True:
     # this bit is so that we can import website.py to use
     # with gunicorn.
     import logging
     logfile = "flasklog"
     file_handler = logging.FileHandler(logfile)
     file_handler.setLevel(logging.WARNING)
-    import base
-    base._init(base.DEFAULT_DB_PORT, readwrite_password)
-    app.logger.addHandler(file_handler)
 
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+    root_logger.name = "LMFDB"
+
+    import utils
+    formatter = logging.Formatter(utils.LmfdbFormatter.fmtString.split(r'[')[0])
+    ch = logging.StreamHandler()
+    ch.setFormatter(formatter)
+    root_logger.addHandler(ch)
+
+    logging.info("configuration: %s" % configuration)
+    import base
+    base._init(configuration['dbport'], readwrite_password, parallel_authentication = configuration["threading_opt"])
+    app.logger.addHandler(file_handler)
 
 def getDownloadsFor(path):
     return "bar"

@@ -2,5 +2,4 @@
 
 __version__ = '0.1'
 
-import base
 from website import main
