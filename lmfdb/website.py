@@ -153,12 +153,6 @@ def form_example():
     return render_template("form.html", info=info)
 
 
-@app.route("/Character/Dirichlet/")
-@app.route("/Character/Dirichlet/<arg1>")
-@app.route("/Character/Dirichlet/<arg1>/<arg2>")
-def render_Character(arg1=None, arg2=None):
-    return DirichletCharacter.render_webpage(request, arg1, arg2)
-
 
 @app.route('/ModularForm/GSp/Q')
 @app.route('/ModularForm/GSp/Q/<group>')
