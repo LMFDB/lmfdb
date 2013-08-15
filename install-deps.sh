@@ -3,7 +3,6 @@
 ## Script to check and install dependencies under the sage shell
 ## Author: Fredrik Stromberg (2013)
 ## 
-SAGEVERSION=`sage -v`
 # Parse the (few) parameters we take
 dry_run=0
 verbose=0
@@ -15,6 +14,7 @@ do
         echo " -h -- Print help (this) message"
         echo " -n or -dry-run -- do a dry-run: check but do not install python packages"
         echo " -v -- verbose; output more info"
+        echo " -sage=path-to-sage -- use a specific sage, if not set we use the system default"
         exit
     fi
     if [ `expr match $par '-n'` -ge 1 ] || [ `expr match $par '-dry-run'` -ge 1 ]
@@ -26,15 +26,32 @@ do
     then 
         verbose=1
     fi
+    if [ `expr match $par '-sage'` -ge 1 ]
+    then 
+        # extract executable
+        i=`expr index "$par" =`
+        sage_exec=${par:$i}
+        if [[ -x $sage_exec ]]
+        then
+            echo $sage_exec "is exectuable!"
+        else
+            echo $sage_exec "is not exectuable!"
+            sage_exec=`which sage`
+        fi
+     fi
 done
+
+
+SAGEVERSION=`$sage_exec -v`
 # Grab the major version
 i=`expr index "$SAGEVERSION" .` 
 SAGE_MAJORVERSION=${SAGEVERSION:12:i-13} 
 # Grab the minor version
 j=`expr index "$SAGEVERSION" ,`
-SAGE_ROOT=`sage -root`
+SAGE_ROOT=`$sage_exec -root`
 if [ verbose = 1 ]
 then
+    echo "sage_exec is " $sage_exec
     echo "SAGE_ROOT is" $SAGE_ROOT
 fi
 SAGE_MINORVERSION=${SAGEVERSION:i:j-i-1} 
@@ -55,12 +72,16 @@ else
 fi
 ### Now check packages and install / upgrade / downgrade
 deps="flask flask-login flask-cache flask-markdown pymongo==2.4.1 pyyaml"
-if [ $SAGE_MAJORVERSION = 5 ]  && [ $SAGE_MINORVERSION = 10  ]
+if [ $SAGE_MAJORVERSION -ge  5 ]  && [ $SAGE_MINORVERSION -ge 6  ]
 then
     # We set the environment variables from sage (the same as when running sage -sh)
     . "$SAGE_ROOT/spkg/bin/sage-env" >&2
     for dep in $deps
     do
+        if [ $verbose = 1 ] 
+        then
+            echo $dep
+        fi
         if [ $dry_run = 1 ]
         then
             easy_install -n $dep
