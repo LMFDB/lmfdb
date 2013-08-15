@@ -68,11 +68,25 @@ else
        echo "This will (presumably) work since patch from 13998 is applied."
    else
        echo "Please update Sage (or apply patch from trac ticket 13998)"
+       if [ $SAGE_MINORVERSION -lt 6  ]
+           then
+           echo "This sage version is completely unsupported. Please do update!"
+           exit
+           fi
    fi
 fi
+###
 ### Now check packages and install / upgrade / downgrade
-deps="flask flask-login flask-cache flask-markdown pymongo==2.4.1 pyyaml"
-if [ $SAGE_MAJORVERSION -ge  5 ]  && [ $SAGE_MINORVERSION -ge 6  ]
+###
+### TODO: add different tested versions of the dependencies (possibly different for different sage versions)
+checked_versions="8 10"
+deps="flask==0.10.1 flask-login==0.2.6 flask-cache==0.12 flask-markdown==0.3 pymongo==2.4.1 pyyaml==3.10"
+if ! [[ $checked_versions =~ $SAGE_MINORVERSION  ]]
+then 
+    echo "This minor version is not tested. If something doesn't work please test to down/upgrade packages and add appropriate dependencies."
+fi
+
+if [ $SAGE_MAJORVERSION -ge  5 ]  && [[ $checked_versions =~ $SAGE_MINORVERSION  ]]
 then
     # We set the environment variables from sage (the same as when running sage -sh)
     . "$SAGE_ROOT/spkg/bin/sage-env" >&2
