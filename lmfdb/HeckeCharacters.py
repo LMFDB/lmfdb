@@ -54,12 +54,6 @@ class RayClassGroup(AbelianGroup_class):
     def __repr__(self):
       return self.__str__()
 
-    def lmfdb_label(self):
-      a,b = self.bnr().idealtwoelt(self.modulus())
-      b = 'x'.join( str(x) for x in b)
-      if b is not '': b = '.' + b
-      return "%s%s"%(a,b)
-
 class HeckeCharGroup(DualAbelianGroup_class):
     def __init__(self, ray_class_group):
         DualAbelianGroup_class.__init__(self, ray_class_group)
@@ -106,6 +100,3 @@ class HeckeChar(DualAbelianGroupElement):
     def __call__(self, x):
         logx = self.parent().group()(x)
         return DualAbelianGroupElement.__call__(self,logx)
-
-    def lmfdb_label(self):
-        return '.'.join(map(str,self.list()))
