@@ -26,7 +26,7 @@ do
         dry_run=1
         echo "nothing will get installed! We do a dry run!"
     fi
-    if [`expr match $par '-f'` -ge 1 ]
+    if [ `expr match $par '-f'` -ge 1 ]
     then 
         force_install=1
     fi
@@ -61,10 +61,18 @@ then
     echo "SAGE_ROOT is" $SAGE_ROOT
 fi
 # Cut of any beta etc...
-TMP=${SAGEVERSION:i:-1} 
-k=`expr index "$TMP" .`
-#SAGE_MINORVERSION=${SAGEVERSION:i:j-i-1} 
-SAGE_MINORVERSION=${TMP:0:k-1}
+if [[ `expr match "$SAGEVERSION" 'beta'` -ge 1 ]]
+then
+    TMP=${SAGEVERSION:i:-1} 
+    k=`expr index "$TMP" .`
+    SAGE_MINORVERSION=${TMP:0:k-1}
+else
+    SAGE_MINORVERSION=${SAGEVERSION:i:j-i-1} 
+fi
+if [ $verbose -ge 1 ]
+then
+    echo $SAGE_MINORVERSION
+fi
 if [ $SAGE_MAJORVERSION -ge 5 ]  && [ $SAGE_MINORVERSION -ge 7  ]
 then
    echo "Sage version $SAGE_MAJORVERSION.$SAGE_MINORVERSION is ok!"
@@ -72,7 +80,7 @@ else
    echo "Sage version $SAGE_MAJORVERSION.$SAGE_MINORVERSION is too old!"
    t=`grep "$SAGE_ROOT"/devel/sage/sage/structure/sequence.py "13998"`
    # Check if the patch has been applied...
-   t=`grep -c 13998 $SAGE_ROOT/devel/sage/sage/structure/sequence.py`
+   t=`grep -c 13998 "$SAGE_ROOT"/devel/sage/sage/structure/sequence.py`
    if [ $t -ge 1 ]
    then
        echo "This will (presumably) work since patch from 13998 is applied."
@@ -102,7 +110,12 @@ fi
 if ([ $SAGE_MAJORVERSION -ge  5 ]  && [[ $checked_versions =~ $SAGE_MINORVERSION  ]] || [ $force_install = 1 ])
 then
     # We set the environment variables from sage (the same as when running sage -sh)
-    . "$SAGE_ROOT/spkg/bin/sage-env" >&2
+    sage_env="$SAGE_ROOT/spkg/bin/sage-env"
+    if ! [[ -e $sage_env ]]
+    then
+        sage_env="$SAGE_ROOT/src/bin/sage-env"
+    fi
+    . ""$sage_env"" >&2
     for dep in $deps
     do
         if [ $verbose = 1 ] 
