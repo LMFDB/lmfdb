@@ -6,6 +6,7 @@
 # Parse the (few) parameters we take
 dry_run=0
 verbose=0
+force_install=0
 sage_exec=`which sage`
 for par in $@
 do 
@@ -15,13 +16,19 @@ do
         echo " -h -- Print help (this) message"
         echo " -n or -dry-run -- do a dry-run: check but do not install python packages"
         echo " -v -- verbose; output more info"
+        echo " -f : force installation of packages even if version is not tested"
         echo " -sage=path-to-sage -- use a specific sage, if not set we use the system default"
+        echo " Observe that some matching stuff does not work with all shell versions. Use -f in this case." 
         exit
     fi
     if [ `expr match $par '-n'` -ge 1 ] || [ `expr match $par '-dry-run'` -ge 1 ]
     then
         dry_run=1
         echo "nothing will get installed! We do a dry run!"
+    fi
+    if [`expr match $par '-f'` -ge 1 ]
+    then 
+        force_install=1
     fi
     if [ `expr match $par '-v'` -ge 1 ]
     then 
@@ -92,7 +99,7 @@ then
     echo "This minor version is not tested. If something doesn't work please test to down/upgrade packages and add appropriate dependencies."
 fi
 
-if [ $SAGE_MAJORVERSION -ge  5 ]  && [[ $checked_versions =~ $SAGE_MINORVERSION  ]]
+if ([ $SAGE_MAJORVERSION -ge  5 ]  && [[ $checked_versions =~ $SAGE_MINORVERSION  ]] || [ $force_install = 1 ])
 then
     # We set the environment variables from sage (the same as when running sage -sh)
     . "$SAGE_ROOT/spkg/bin/sage-env" >&2
