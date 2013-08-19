@@ -242,8 +242,8 @@ class WebModFormSpace(Parent):
                     fid = rec['_id']
                     fs = gridfs.GridFS(C[db_name], collection)
                     f = fs.get(fid)
-                    print f.read()
-                    save(f.read(),"/home/purem/cvzx53/modym.sobj")
+                    #print f.read()
+                    #save(f.read(),"/home/purem/cvzx53/modym.sobj")
                     res = loads(f.read())
                     # TODO avoid pickling python objects for storing in the database
                     self._from_db = 1
