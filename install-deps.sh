@@ -6,6 +6,7 @@
 # Parse the (few) parameters we take
 dry_run=0
 verbose=0
+sage_exec=`which sage`
 for par in $@
 do 
     if [ `expr match $par '-h'` -ge 1 ]
@@ -36,7 +37,7 @@ do
             echo $sage_exec "is exectuable!"
         else
             echo $sage_exec "is not exectuable!"
-            sage_exec=`which sage`
+            exit
         fi
      fi
 done
