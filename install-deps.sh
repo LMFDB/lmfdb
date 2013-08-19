@@ -41,20 +41,23 @@ do
         fi
      fi
 done
-
 SAGEVERSION=`$sage_exec -v`
 # Grab the major version
-i=`expr index "$SAGEVERSION" .` 
+i=`expr index "$SAGEVERSION" .`
 SAGE_MAJORVERSION=${SAGEVERSION:12:i-13} 
 # Grab the minor version
 j=`expr index "$SAGEVERSION" ,`
 SAGE_ROOT=`$sage_exec -root`
-if [ verbose = 1 ]
+if [ $verbose = 1 ]
 then
     echo "sage_exec is " $sage_exec
     echo "SAGE_ROOT is" $SAGE_ROOT
 fi
-SAGE_MINORVERSION=${SAGEVERSION:i:j-i-1} 
+# Cut of any beta etc...
+TMP=${SAGEVERSION:i:-1} 
+k=`expr index "$TMP" .`
+#SAGE_MINORVERSION=${SAGEVERSION:i:j-i-1} 
+SAGE_MINORVERSION=${TMP:0:k-1}
 if [ $SAGE_MAJORVERSION -ge 5 ]  && [ $SAGE_MINORVERSION -ge 7  ]
 then
    echo "Sage version $SAGE_MAJORVERSION.$SAGE_MINORVERSION is ok!"
@@ -80,7 +83,10 @@ fi
 ###
 ### TODO: add different tested versions of the dependencies (possibly different for different sage versions)
 checked_versions="8 10 11"
-deps="flask==0.10.1 flask-login==0.2.6 flask-cache==0.12 flask-markdown==0.3 pymongo==2.4.1 pyyaml==3.10"
+
+deps="flask flask-login flask-cache flask-markdown pymongo pyyaml"
+#deps="flask==0.10.1 flask-login==0.2.6 flask-cache==0.12 flask-markdown==0.3 pymongo==2.4.1 pyyaml==3.10"
+
 if ! [[ $checked_versions =~ $SAGE_MINORVERSION  ]]
 then 
     echo "This minor version is not tested. If something doesn't work please test to down/upgrade packages and add appropriate dependencies."
@@ -100,7 +106,7 @@ then
         then
             easy_install -n $dep
         else
-            easy_install $dep
+            easy_install -U $dep
         fi
     done
 fi
