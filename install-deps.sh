@@ -21,9 +21,9 @@ do
     if [ `expr match $par '-n'` -ge 1 ] || [ `expr match $par '-dry-run'` -ge 1 ]
     then
         dry_run=1
-        echo "Do dry run!"
+        echo "nothing will get installed! We do a dry run!"
     fi
-    if [ `expr match $par '-h'` -ge 1 ]
+    if [ `expr match $par '-v'` -ge 1 ]
     then 
         verbose=1
     fi
@@ -41,7 +41,6 @@ do
         fi
      fi
 done
-
 
 SAGEVERSION=`$sage_exec -v`
 # Grab the major version
@@ -77,10 +76,10 @@ else
    fi
 fi
 ###
-### Now check packages and install / upgrade / downgrade
+### Now check python packages and install / upgrade / downgrade
 ###
 ### TODO: add different tested versions of the dependencies (possibly different for different sage versions)
-checked_versions="8 10"
+checked_versions="8 10 11"
 deps="flask==0.10.1 flask-login==0.2.6 flask-cache==0.12 flask-markdown==0.3 pymongo==2.4.1 pyyaml==3.10"
 if ! [[ $checked_versions =~ $SAGE_MINORVERSION  ]]
 then 
@@ -106,3 +105,49 @@ then
     done
 fi
 
+###
+### While we are at it we can also check for and install some of the required sage packages
+###
+sage_packages="gap_packages database_gap"
+for package in $sage_packages
+do
+    if [ $dry_run = 1 ]
+    then
+        if [ $verbose -gt 0 ]
+        then
+            echo "Would have installed $package"
+        fi
+    else
+        if [ $verbose -gt 0 ]
+        then
+            echo "Installing $package"
+        fi
+        $sage_exec -i "$package"
+    fi
+done
+###
+### And we also want to have DirichletCharacterconrey package
+###
+## First see if we already have it and if not we get an egg and install it.
+##
+test=`$sage_exec -c "import dirichlet_conrey; print sys.modules.get('dirichlet_conrey')==None"` 
+if [ $test = "True" ]
+then
+    if [ $verbose -gt 0 ]
+    then
+        echo "Do not have dirichlet_conrey!"
+    fi
+    . "$SAGE_ROOT/spkg/bin/sage-env" >&2
+    if [ $dry_run = 1 ]
+    then
+        easy_install -n http://sage.math.washington.edu/home/stromberg/pub/DirichletConrey-0.1-py2.7-linux-x86_64.egg
+    else
+        easy_install http://sage.math.washington.edu/home/stromberg/pub/DirichletConrey-0.1-py2.7-linux-x86_64.egg
+    fi
+else
+    if [ $verbose -gt 0 ]
+    then
+        echo "dirichlet_conrey is already installed!"
+    fi
+
+fi
