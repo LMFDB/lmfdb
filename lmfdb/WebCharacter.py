@@ -14,7 +14,48 @@ try:
     from dirichlet_conrey import *
 except:
     logger.critical("dirichlet_conrey.pyx cython file is not available ...")
+from HeckeCharacters import *
 
+def lmfdb_ideal2label(ideal):
+      """
+      labeling convention for ideal f:
+      use two elements representation f = (n,b)
+      with n = f cap Z an integer
+       and b an algebraic element sum b_i a^i
+      label f as n.b1pb2a^2p...bna^n
+      (dot between n and b, p acting as '+')
+      """
+      a,b = ideal.gens_two()
+      s = 'p'.join( '%s*a^%i'%(b,i) for i,b in enumerate(b.polynomial().list())
+                                    if b != 0 ) 
+      return "%s.%s"%(a,b)
+
+def lmfdb_label2ideal(k,label):
+      if label.count('.'):
+          n,b = label.split(".")
+          n = int(n)
+          a = k.gen()
+          b = eval(b.replace('p','+'))
+          return k.ideal( (n,b) )
+      else:
+          n = int(label)
+          return k.ideal( n )
+
+def lmfdb_idealrepr(ideal):
+    a,b = ideal.gens_two()
+    return "\langle %s, %s\\rangle"%(a._latex_(), b._latex_())
+
+def lmfdb_hecke2label(chi):
+    """
+    label of Hecke character
+    """
+    return '.'.join(map(str,self.list()))
+
+def lmfdb_label2hecke(label):
+    """
+    label of Hecke character
+    """
+    return map(int,label.split('.'))
 
 def latex_char_logvalue(x, tag=False):
     n = int(x.numer())
@@ -44,7 +85,7 @@ def latex_tuple(v):
 
 def log_value(modulus, number):
     """
-    return the list of values of a given character
+    return the list of values of a given Dirichlet character
     """
     from dirichlet_conrey import DirichletGroup
     G = DirichletGroup_conrey(modulus)
@@ -60,13 +101,12 @@ def log_value(modulus, number):
 
 
 class WebCharacter:
-    """Class for presenting a Character on a web page
-
+    """
+    Class for presenting a Character on a web page
     """
     def __init__(self, dict):
         self.type = dict['type']
         # self.texname = "\\chi"  # default name.  will be set later, for most L-functions
-        # self.primitive = True # should be changed
         self.citation = ''
         self.credit = ''
         if self.type == 'dirichlet':
@@ -74,9 +114,33 @@ class WebCharacter:
             self.number = int(dict['number'])
             self.dirichletcharacter()
             self._set_properties()
+        elif self.type == 'hecke':
+            # need Sage number field... easier way ?
+            k = WebNumberField(dict['number_field']).K()
+            self.number_field = k
+            self.modulus = lmfdb_label2ideal(k, dict['modulus'])
+            self.number = lmfdb_label2hecke(dict['number'])
+            self.heckecharacter()
+            self._set_properties()
 
-#===================  Set all the properties for different types of Characters
-
+    def _set_properties(self):
+        conductor = self.conductor
+        primitive = self.primitive
+        if primitive == "True":
+            self.prim = "Yes"
+        else:
+            self.prim = "No"
+        if self.order <= 2:
+            self.real = "Yes"
+        else:
+            self.real = "No"
+        order = str(self.order)
+        self.properties = [("Conductor", [conductor]),
+                           ( "Order", [order]),
+                           ("Parity", [self.parity]),
+                           ("Real", [self.real]),
+                           ("Primitive", [self.prim])]
+        
     def dirichletcharacter(self):
 
         #######################################################################################
@@ -193,17 +257,41 @@ class WebCharacter:
 
         return chi
 
-    def _set_properties(self):
-        conductor = str(self.conductor)
-        primitive = self.primitive
-        if primitive == "True":
-            self.prim = "Yes"
+    def heckecharacter(self):
+
+        G = RayClassGroup(self.number_field, self.modulus)
+        H = G.dual_group()
+        print G.ngens()
+        assert len(self.number) == G.ngens()
+        chi = HeckeChar(H,self.number)
+
+        self.order = chi.order()
+        self.zetaorder = 0 # FIXME H.zeta_order()
+        # not relevant over ideals
+        #self.parity = ('Odd', 'Even')[chi.is_even()]
+        self.parity = 'None'
+
+        self.conductor = lmfdb_idealrepr(chi.conductor())
+
+        self.primitive = str(chi.is_primitive())
+
+        self.texname = r'\chi_{%s}(\cdot)' % (self.number)
+        
+        order2 = int(self.order)
+        if order2 % 4 == 2:
+            order2 = order2 / 2
+        self.valuefield = r'\(\mathbb{Q}(\zeta_{%d})\)' % order2
+        if order2 == 1:
+            self.valuefield = r'\(\mathbb{Q}\)'
+        if order2 == 4:
+            self.valuefield = r'\(\mathbb{Q}(i)\)'
+        valuewnf = WebNumberField.from_cyclo(order2)
+        if not valuewnf.is_null():
+            self.valuefield_label = valuewnf.label
         else:
-            self.prim = "No"
-        order = str(self.order)
-        if self.order == 2:
-            self.real = "Yes"
-        else:
-            self.real = "No"
-        self.properties = [("Conductor", [conductor]), (
-            "Order", [order]), ("Parity", [self.parity]), ("Real", [self.real]), ("Primitive", [self.prim])]
+            self.valuefield_label = ''
+
+        self.credit = "Pari, Sage"
+        self.title = r"Hecke Character: \(\chi_{%s}(\cdot)\) modulo %s" % (self.number, self.modulus)
+
+        return chi
