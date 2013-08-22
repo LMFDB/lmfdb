@@ -22,26 +22,26 @@ def lmfdb_ideal2label(ideal):
       use two elements representation f = (n,b)
       with n = f cap Z an integer
        and b an algebraic element sum b_i a^i
-      label f as n.b1pb2a^2p...bna^n
-      (dot between n and b, p acting as '+')
+      label f as n.b1+b2*a^2+...bn*a^n
+      (dot between n and b, a is the field generator, use '+' and )
       """
       a,b = ideal.gens_two()
-      s = 'p'.join( '%s*a^%i'%(b,i) for i,b in enumerate(b.polynomial().list())
+      s = '+'.join( '%s*a**%i'%(b,i) for i,b in enumerate(b.polynomial().list())
                                     if b != 0 ) 
       return "%s.%s"%(a,b)
 
 def lmfdb_label2ideal(k,label):
       if label.count('.'):
-          n,b = label.split(".")
-          n = int(n)
-          a = k.gen()
-          b = eval(b.replace('p','+'))
-          return k.ideal( (n,b) )
+          n, b = label.split(".")
       else:
-          n = int(label)
-          return k.ideal( n )
+          n, b = label, '0'
+      a = k.gen()
+      n, b = eval(n), eval(b)
+      n, b = k(n), k(b)
+      print label, (n, b), k.ideal( (n,b) )
+      return k.ideal( (n,b) )
 
-def lmfdb_idealrepr(ideal):
+def lmfdb_ideal2tex(ideal):
     a,b = ideal.gens_two()
     return "\langle %s, %s\\rangle"%(a._latex_(), b._latex_())
 
@@ -49,7 +49,13 @@ def lmfdb_hecke2label(chi):
     """
     label of Hecke character
     """
-    return '.'.join(map(str,self.list()))
+    return '.'.join(map(str,chi.exponents()))
+
+def lmfdb_hecke2tex(chi):
+    """
+    label of Hecke character
+    """
+    return r'\(\chi_{%s}(\cdot)\)'%(','.join(map(str,chi.exponents())))
 
 def lmfdb_label2hecke(label):
     """
@@ -75,7 +81,6 @@ def latex_char_logvalue(x, tag=False):
     else:
         return s
 
-
 def latex_tuple(v):
     if len(v) == 1:
         return v[0]
@@ -98,7 +103,6 @@ def log_value(modulus, number):
             logvalue = chi.logvalue(j)
             l.append(latex_char_logvalue(logvalue, True))
     return l
-
 
 class WebCharacter:
     """
@@ -261,14 +265,14 @@ class WebCharacter:
 
         G = RayClassGroup(self.number_field, self.modulus)
         H = G.dual_group()
-        print G.ngens()
+        print G.ngens(), G.invariants(), G.modulus()
         assert len(self.number) == G.ngens()
         chi = HeckeChar(H,self.number)
 
         self.order = chi.order()
         self.zetaorder = 0 # FIXME H.zeta_order()
 
-        self.unitgens = latex_tuple(map(lmfdb_idealrepr, G.gen_ideals()))
+        self.unitgens = latex_tuple(map(lmfdb_ideal2tex, G.gen_ideals()))
         self.genvaluestex = latex_tuple(map(latex_char_logvalue, chi.logvalues_on_gens()))
 
 
@@ -276,11 +280,11 @@ class WebCharacter:
         #self.parity = ('Odd', 'Even')[chi.is_even()]
         self.parity = 'None'
 
-        self.conductor = lmfdb_idealrepr(chi.conductor())
+        self.conductor = lmfdb_ideal2tex(chi.conductor())
 
         self.primitive = str(chi.is_primitive())
 
-        self.texname = r'\chi_{%s}(\cdot)' % (self.number)
+        self.texname = lmfdb_hecke2tex(chi)
         
         order2 = int(self.order)
         if order2 % 4 == 2:
@@ -295,8 +299,12 @@ class WebCharacter:
             self.valuefield_label = valuewnf.label
         else:
             self.valuefield_label = ''
+        
+        mod_tex = lmfdb_ideal2tex(self.modulus)
+        mod_label = lmfdb_ideal2label(self.modulus)
+        self.galoisorbit = [ ( mod_label, lmfdb_hecke2label(c), lmfdb_hecke2tex(c) ) for c in chi.galois_orbit() ]
 
         self.credit = "Pari, Sage"
-        self.title = r"Hecke Character: \(\chi_{%s}(\cdot)\) modulo %s" % (self.number, self.modulus)
+        self.title = r"Hecke Character: %s modulo \(%s\)" % (self.texname, mod_tex)
 
         return chi

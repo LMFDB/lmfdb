@@ -11,6 +11,7 @@ class RayClassGroup(AbelianGroup_class):
     def __init__(self, number_field, mod_ideal = 1, mod_archimedean = None):
         if mod_archimedean == None:
             mod_archimedean = [0] * len(number_field.real_places())
+        mod_ideal = number_field.ideal( mod_ideal )
 
         bnf = gp(number_field.pari_bnf())
         # Use PARI to compute ray class group
@@ -148,6 +149,40 @@ class HeckeChar(DualAbelianGroupElement):
         except:
             return 0
         return DualAbelianGroupElement.__call__(self,logx)
+
+    def next_character(self, only_primitive=False):
+        D = self.parent().gens_orders()
+        F = list(self.exponents())
+        i = len(D)-1
+        while True:
+            F[i] += 1
+            if F[i] == D[i]:
+                F[i] = 0
+                i -= 1
+                if i < 0: return None
+            else:
+                c = HeckeChar(self.parent(), F)
+                if not only_primitive or c.is_primitive():
+                    return c
+               
+    def prev_character(self, only_primitive=False):
+        D = self.parent().gens_orders()
+        F = list(self.exponents())
+        i = len(D)-1
+        while True:
+            F[i] -= 1
+            if F[i] < 0:
+                F[i] = D[i] - 1
+                i -= 1
+                if i < 0: return None
+            else:
+                c = HeckeChar(self.parent(), F)
+                if not only_primitive or c.is_primitive():
+                    return c
+
+    def galois_orbit(self):
+        order = self.order()
+        return [ self.__pow__(k) for k in xrange(order) if gcd(k,order) == 1 ]
 
 """
 k.<a> = NumberField(x^4+7*x^2+13)

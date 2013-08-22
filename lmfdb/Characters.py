@@ -94,7 +94,7 @@ def initCharacterInfo(web_chi, args, request):
         info['vals'] = '' #web_chi.vals
         info['logvals'] = '' #web_chi.logvals
         modulus = web_chi.modulus
-        info['galoisorbit'] = [] #[ (modulus, n, char_label(modulus, n)) for n in web_chi.galoisorbit ]
+        info['galoisorbit'] = web_chi.galoisorbit
         info['valuefield'] = web_chi.valuefield
         info['kername'] = '' #web_chi.kername
         #if web_chi.nf_pol:
