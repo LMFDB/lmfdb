@@ -112,7 +112,7 @@ def render_webpage(request, arg1, arg2):
         # except:
         #    1
 
-        info = initCharacterInfo(web_chi, temp_args, request)  # sets the various properties of chi to be displayed in DirichletCharacter.htiml
+        info = initCharacterInfo(web_chi, temp_args, request)  # sets the various properties of chi to be displayed in DirichletCharacter.html
 
         return render_template('dirichlet_characters/DirichletCharacter.html', **info)
     else:

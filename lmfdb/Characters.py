@@ -45,7 +45,7 @@ def render_webpage(request, arg1, arg2, arg3):
 
     web_chi = WebCharacter(temp_args)
 
-    info = initCharacterInfo(web_chi, temp_args, request)  # sets the various properties of chi to be displayed in DirichletCharacter.htiml
+    info = initCharacterInfo(web_chi, temp_args, request)  # sets the various properties of chi to be displayed in DirichletCharacter.html
 
     return render_template('dirichlet_characters/DirichletCharacter.html', **info)
 
@@ -87,7 +87,7 @@ def initCharacterInfo(web_chi, args, request):
         info['primitive'] = web_chi.primitive
         info['zetaorder'] = web_chi.zetaorder
         info['genvals'] = '' #str(web_chi.genvalues)
-        info['genvalstex'] = '' #str(web_chi.genvaluestex)
+        info['genvalstex'] = str(web_chi.genvaluestex)
         info['parity'] = web_chi.parity
         info['real'] = web_chi.real
         info['prim'] = web_chi.prim
@@ -99,7 +99,7 @@ def initCharacterInfo(web_chi, args, request):
         info['kername'] = '' #web_chi.kername
         #if web_chi.nf_pol:
         #    info['nf_pol'] = web_chi.nf_pol
-        info['unitgens'] = '' #str(web_chi.unitgens)
+        info['unitgens'] = str(web_chi.unitgens)
         info['bound'] = 0 #int(web_chi.bound)
         if False and web_chi.primitive == "False":
             info['inducedchar'] = web_chi.inducedchar

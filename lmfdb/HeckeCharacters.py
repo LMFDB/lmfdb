@@ -18,6 +18,8 @@ class RayClassGroup(AbelianGroup_class):
         invariants = bnr[5][2]         # bnr.clgp.cyc
         invariants = tuple([ ZZ(x) for x in invariants ])
         names = tuple([ "I%i"%i for i in range(len(invariants)) ])
+        generators = bnr[5][3]         # bnr.gen = bnr.clgp[3]
+        generators = [ number_field.ideal(pari(x)) for x in generators ]
 
         AbelianGroup_class.__init__(self, invariants, names)
         self.__number_field = number_field
@@ -25,13 +27,14 @@ class RayClassGroup(AbelianGroup_class):
         self.__pari_mod = bnr[2][1]
         self.__mod_ideal = mod_ideal
         self.__mod_arch = mod_archimedean
+        self.__generators = generators
 
     #def __call__(self, *args, **kwargs):
     #    return group.Group.__call__(self, *args, **kwargs)
 
     def log(self,I):
         # Use PARI to compute class of given ideal
-        g = self.__bnr.bnrisprincipal(I)[1]
+        g = self.__bnr.bnrisprincipal(I, flag = 0)
         g = [ ZZ(x) for x in g ]
         return g
 
@@ -61,6 +64,13 @@ class RayClassGroup(AbelianGroup_class):
         
     def __repr__(self):
       return self.__str__()
+
+    def gen_ideals(self):
+        return self.__generators
+
+    def lift(self, x):
+        gens = self.gen_ideals()
+        return prod( g**e for g,e in zip(gens,x.list()) )
 
 class HeckeCharGroup(DualAbelianGroup_class):
     def __init__(self, ray_class_group, base_ring):
@@ -107,6 +117,7 @@ class HeckeChar(DualAbelianGroupElement):
     def modulus(self):
         return self.parent().group().modulus()
 
+    @cached_method
     def conductor(self):
         bnr = self.parent().group().bnr()
         pari_cond = pari(bnr.bnrconductorofchar(self.list()))
@@ -116,6 +127,21 @@ class HeckeChar(DualAbelianGroupElement):
     def is_primitive(self):
         return self.conductor() == self.modulus()
 
+    def logvalue(self, x):
+        try:
+            E = self.parent().group()(x)
+        except:
+            return 0
+        E = E.exponents()
+        F = self.exponents()
+        D = self.parent().gens_orders()
+        return sum( e*f/d for e,f,d in zip( E, F, D) )
+
+    def logvalues_on_gens(self):
+        F = self.exponents()
+        D = self.parent().gens_orders()
+        return tuple( f/d for f,d in zip( F, D) )
+        
     def __call__(self, x):
         try:
             logx = self.parent().group()(x)
@@ -128,4 +154,5 @@ k.<a> = NumberField(x^4+7*x^2+13)
 G = RayClassGroup(k,7)
 H = G.dual_group()
 H(3)
+H([3,1])
 """

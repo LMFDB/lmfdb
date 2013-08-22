@@ -267,6 +267,11 @@ class WebCharacter:
 
         self.order = chi.order()
         self.zetaorder = 0 # FIXME H.zeta_order()
+
+        self.unitgens = latex_tuple(map(lmfdb_idealrepr, G.gen_ideals()))
+        self.genvaluestex = latex_tuple(map(latex_char_logvalue, chi.logvalues_on_gens()))
+
+
         # not relevant over ideals
         #self.parity = ('Odd', 'Even')[chi.is_even()]
         self.parity = 'None'
