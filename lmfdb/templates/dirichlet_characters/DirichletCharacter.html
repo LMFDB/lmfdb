@@ -141,11 +141,7 @@ table.props tr td:first-child {
             <tr>
                 <td> Real </td>
                 <td>=</td>
-                    {% if sign=="True" %}
-                        <td> Yes</td>
-                    {% else %}
-                        <td> No </td>
-                    {% endif %}
+                <td> {{ real }} </td>
             </tr>
             <tr>
                 <td>
@@ -199,6 +195,8 @@ table.props tr td:first-child {
             </tr>
         {% endif %}
         </table>
+
+        {% if type=='dirichlet' %}
 
         {# Gauss sum #}
 
@@ -343,6 +341,7 @@ $(function() {
 
 });
 </script>
+        {% endif %}
 
 {#  Maybe include the polynomial or other information about the field?
   {% if order < 16 %}
