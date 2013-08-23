@@ -43,11 +43,42 @@ def render_webpage(request, arg1, arg2, arg3):
     temp_args['modulus'] = arg2
     temp_args['number'] = arg3
 
-    web_chi = WebCharacter(temp_args)
+    if arg1 == None:
+        return render_template('dirichlet_characters/Hecke_help.html')
+    elif arg2 == None:
+        info = init_NFinfo(temp_args)
+        return render_template('dirichlet_characters/HeckeChooseIdeal.html', **info)
+    elif arg3 == None:
+        info = init_HeckeGroup(temp_args)
+        return render_template('dirichlet_characters/HeckeGroup.html', **info)
+    else:
+        web_chi = WebCharacter(temp_args)
+        info = initCharacterInfo(web_chi, temp_args, request)
+        return render_template('dirichlet_characters/DirichletCharacter.html', **info)
 
-    info = initCharacterInfo(web_chi, temp_args, request)  # sets the various properties of chi to be displayed in DirichletCharacter.html
+def init_HeckeGroup(args):
 
-    return render_template('dirichlet_characters/DirichletCharacter.html', **info)
+    G = WebHeckeGroup(args)
+
+    info = {'title': G.title()}
+    info['args'] = args
+
+    info['credit'] = 'Sage, Pari'
+    info['support'] = ''
+    info['citation'] = ""
+
+    info['nflabel'] = nf_label = G.nflabel
+    info['nf_pol'] = G.nf_pol()
+    info['generators'] = G.generators()
+    info['modlabel'] = G.modlabel
+    info['modulus'] = G.mod()
+    info['order'] = G.order()
+    info['structure'] = G.structure()
+    info['contents'] = G.table_content()
+
+    info['friends'] = [('Field of definition', '/NumberField/' + nf_label)]
+
+    return info
 
 def initCharacterInfo(web_chi, args, request):
     info = {'title': web_chi.title}

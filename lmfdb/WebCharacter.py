@@ -63,6 +63,9 @@ def lmfdb_label2hecke(label):
     """
     return map(int,label.split('.'))
 
+def lmfdb_bool(b):
+    return ("No","Yes")[b]
+
 def latex_char_logvalue(x, tag=False):
     n = int(x.numer())
     d = int(x.denom())
@@ -308,3 +311,61 @@ class WebCharacter:
         self.title = r"Hecke Character: %s modulo \(%s\)" % (self.texname, mod_tex)
 
         return chi
+
+class WebHeckeGroup:
+    """
+    Class for presenting a Hecke Character Group on a web page
+    """
+    def __init__(self, args):
+        self.type = args['type']
+        # self.texname = "\\chi"  # default name.  will be set later, for most L-functions
+        self.nflabel = args['number_field']
+        self.modlabel = args['modulus']
+        self.numlabel = args['number']
+
+        self._compute()
+
+    def _compute(self):
+        self.nf = WebNumberField(self.nflabel)
+        k = self.nf.K()
+        self.modulus = lmfdb_label2ideal(k, self.modlabel)
+        self.G = RayClassGroup(k, self.modulus)
+        self.H = self.G.dual_group()
+        #self.number = lmfdb_label2hecke(self.numlabel)
+ 
+    @cached_method
+    def nf_pol(self):
+        return self.nf.web_poly()
+
+    @cached_method
+    def structure(self):
+        inv = self.G.invariants()
+        return '\\times '.join(['C_{%s}'%d for d in inv])
+
+    @cached_method
+    def mod(self):
+        return lmfdb_ideal2tex(self.modulus)
+
+    @cached_method
+    def generators(self):
+        return latex_tuple(map(lmfdb_ideal2tex, self.G.gen_ideals()))
+
+    @cached_method
+    def order(self):
+        return str(self.G.order())
+
+    def _char_table_row(self, c):
+        return ( self.modlabel,
+                 lmfdb_hecke2label(c),
+                 lmfdb_hecke2tex(c),
+                 str(c.order()),
+                 lmfdb_bool(c.is_primitive()),
+                 )
+
+    @cached_method
+    def table_content(self):
+        """ build list: (tex, link, order, primitive) """
+        return [ self._char_table_row(c) for c in self.H.list() ]
+
+    def title(self):
+        return "Group of Hecke characters modulo %s"%(self.mod())
