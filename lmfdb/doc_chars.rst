@@ -11,9 +11,10 @@ Characters
 ============ ================= ==== ==== ==== ==== =====================
 property      type              DG   HG   DC   HC   Example             
 ============ ================= ==== ==== ==== ==== =====================
-title          str               X                                        
-credit         str               X                                        
-============ ================= ==== ==== ==== ==== =====================
+title          str               X    X    X    X                            
+credit         str               X    X    X    X                            
+friends        [(label,tex)]     X    X    X    X
+navi           [(label,tex),]    X    X    X    X
 nf             tex                    X         X                     
 nflabel        str                    X         X                      
 nfpol          tex                    X         X                      
@@ -23,7 +24,6 @@ number         tex                         X    X
 numlabel       str                         X    X                      
 texname        tex                         X    X                         
 symbol         tex                         X
-============ ================= ==== ==== ==== ==== =====================
 previous       tex               X    X    X    X
 prevmod        str               X    X    X    X
 prevnum        str                         X    X
