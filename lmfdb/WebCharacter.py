@@ -63,6 +63,9 @@ def lmfdb_label2hecke(label):
     """
     return map(int,label.split('.'))
 
+def lmfdb_dirichlet2tex(mod,num):
+    return r'\(\chi_{%s}(%s,\cdot)\)'%(mod,num)
+
 def lmfdb_bool(b):
     return ("No","Yes")[b]
 
@@ -106,6 +109,209 @@ def log_value(modulus, number):
             logvalue = chi.logvalue(j)
             l.append(latex_char_logvalue(logvalue, True))
     return l
+
+class WebChar:
+    """
+    Class for presenting a Character on a web page
+    """
+    def __init__(self, args):
+        self.nflabel = args.get('number_field',None)
+        self.modlabel = args.get('modulus',None)
+        self.numlabel = args.get('number',None)
+
+        self.chi = None
+        self._compute()
+
+    def _compute(self):
+        pass
+
+    def to_dict(self):
+        d = {}
+        keys = [ 'title', 'credit', 'friends', 'navi', 'codelangs',
+                 'nf', 'nflabel', 'nfpol', 'modulus', 'modlabel',
+                 'number', 'numlabel', 'texname', 'codeinit', 'symbol',
+                 'previous', 'prevmod', 'prevnum', 'next', 'nextmod',
+                 'nextnum', 'structure', 'codestruct', 'conductor',
+                 'condlabel', 'codecond', 'isprimitive', 'inducing',
+                 'indlabel', 'codeind', 'order', 'codeorder', 'parity',
+                 'isreal', 'generators', 'codegen', 'genvalues', 'logvalues',
+                 'values', 'codeval', 'galoisorbit', 'codegalois',
+                 'galoisorbit', 'valuefield', 'vflabel', 'vfpol',
+                 'kerfield', 'kflabel', 'kfpol', 'contents' ]   
+        for k in keys:
+            d[k] = gettatr(self,k)
+        return d
+
+    @property
+    def order(self):
+        return self.chi.order()
+
+    @property
+    def isprimitive(self):
+        return lmfdb_bool( self.chi.is_primitive() )
+
+    @property
+    def isreal(self):
+        return lmfdb_bool( self.order() <= 2 )
+
+    @property
+    def valuefield(self):
+        """ compute order """
+        order2 = self.order()
+        if order2 % 4 == 2:
+            order2 = order2 / 2
+        if order2 == 1:
+            vf = r'\(\mathbb{Q}\)'
+            self.vflabel = ''
+        elif order2 == 4:
+            vf = r'\(\mathbb{Q}(i)\)'
+            self.vflabel = ''
+        else:
+            vf = r'\(\mathbb{Q}(\zeta_{%d})\)' % order2
+        self._order2 = order2
+        return valuefield
+
+    @property
+    def vflabel(self):
+      self.valuefield() # make sure valuefield was computed
+      order2 = self._order2
+      if order2 == 1:
+          return '1.1.1.1'
+      #elif order2 == 4:
+      #    return ''
+      valuewnf =  WebNumberField.from_cyclo(order2)
+      if not valuewnf.is_null():
+          return valuewnf.label
+      else:
+          return ''
+
+class WebDirichlet(WebChar):
+
+    def _compute(self):
+        self.modulus = int(self.modlabel)
+        self.G = G = DirichletGroup_conrey(self.modulus)
+        self.G_sage = G_sage = G.standard_dirichlet_group()
+        self.number = int(self.numlabel)
+
+        assert gcd(self.number,self.modulus) == 1
+        self.chi = chi = G[self.number]
+        self.chi_sage = chi_sage = chi.sage_character()
+        self.credit = "Sage"
+
+    @property
+    def title(self):
+        return r"Dirichlet Character: %s" % (self.texname())
+
+    @property
+    def texname(self):
+        return lmfdb_dirichlet2tex(self.modulus, self.number)
+
+    @property
+    def conductor(self):
+        return chi.conductor()
+
+    @property
+    def inducing(self):
+        return lmfdb_dirichlet2tex(self.conductor(),self.indlabel())
+
+    @property
+    def indlabel(self):
+        """ Conrey scheme makes this trivial ? except at two..."""
+        #return self.number % self.conductor
+        return chi.primitive_character().number()
+    
+    @property
+    def parity(self):
+        return ('Odd', 'Even')[self.chi.is_even()]
+
+    def _char_desc(self, num):
+        return ( self.modulus, num, lmfdb_dirichlet2tex(mod,num))
+
+    @property
+    def galoisorbit(self):
+        order = self.order()
+        mod, num = self.number, self.modulus
+        orbit = [ power_mod(num, k, mod) for k in xrange(1, order) if gcd(k,order) == 1 ]
+        return [ self._char_desc(num) for num in orbit ]
+
+    @property
+    def symbol(self):
+        """ chi is equal to a kronecker symbol if and only if it is real """
+        if self.order() != 2:
+            return None
+        cond = self.conductor()
+        if cond % 2 == 1:
+            if cond % 4 == 1: m = cond
+            else: m = -cond
+        elif cond % 8 == 4:
+            if cond % 16 == 4: m = cond
+            elif cond % 16 == 12: m = -cond
+        elif cond % 16 == 8:
+            if self.chi.is_even(): m = cond
+            else: m = -cond
+        else:
+            return None
+        return r'\(\displaystyle\left(\frac{%s}{\bullet}\right)\)' % (m)
+            
+class WebHecke(WebChar):
+
+    def _compute(self):
+        self._nf = WebNumberField(self.nflabel)
+        k = self.nf.K()
+        self._modulus = lmfdb_label2ideal(k, self.modlabel)
+        self.G = G = RayClassGroup(k, self.modulus)
+        self.H = H = self.G.dual_group()
+        #self.number = lmfdb_label2hecke(self.numlabel)
+        self.modlabel = lmfdb_ideal2label(self._modulus)
+ 
+        assert len(self.number) == G.ngens()
+        self.chi = chi = HeckeChar(self.H,self.number)
+
+        self.order = chi.order()
+        self.zetaorder = 0 # FIXME H.zeta_order()
+        self.parity = 'None'
+        self.credit = "Pari, Sage"
+
+    @property
+    def title(self):
+      return r"Hecke Character: %s modulo \(%s\)" % (self.texname(), self.modulus())
+    
+    @property
+    def inducing(self):
+        #return lmfdb_hecke2tex(self.conductor(),self.indlabel())
+        return None
+
+    @property
+    def indlabel(self):
+        #return chi.primitive_character().number()
+        return None
+
+    @property
+    def generators(self):
+        return latex_tuple(map(lmfdb_ideal2tex, G.gen_ideals()))
+
+    @property
+    def genvalues(self):
+        return latex_tuple(map(latex_char_logvalue, chi.logvalues_on_gens()))
+
+    def _char_desc(self, c):
+        return ( self.modlabel, lmfdb_hecke2label(c), lmfdb_hecke2tex(c))
+
+    @property
+    def galoisorbit(self):
+        return  [ self._char_desc(c) for c in chi.galois_orbit() ]
+
+    @property
+    def texname(self):
+        return lmfdb_hecke2tex(chi)
+
+    @property
+    def conductor(self):
+        return lmfdb_ideal2tex(chi.conductor())
+
+    @property
+    def modulus(self):
+        return lmfdb_ideal2tex(self._modulus)
 
 class WebCharacter:
     """
@@ -333,6 +539,16 @@ class WebHeckeGroup:
         self.H = self.G.dual_group()
         #self.number = lmfdb_label2hecke(self.numlabel)
  
+    def codeinit(self):
+        kpol = self.nf.K().polynomial()
+        return [('sage', ['k.<a> = NumberField(%s)'%kpol,
+                          'm = k.ideal(%s)'%self.modulus,
+                          'G = RayClassGroup(k,m)',
+                          'H = G.dual_group()' ]),
+                ('pari',  ['k=bnfinit(%s)'%kpol,
+                           'G=bnrinit(k,m,1)'] )
+                ]
+
     @cached_method
     def nf_pol(self):
         return self.nf.web_poly()
@@ -341,6 +557,8 @@ class WebHeckeGroup:
     def structure(self):
         inv = self.G.invariants()
         return '\\times '.join(['C_{%s}'%d for d in inv])
+    def codestruct(self):
+        return [('sage',['G.invariants()']), ('pari',['G.cyc'])]
 
     @cached_method
     def mod(self):
@@ -349,10 +567,16 @@ class WebHeckeGroup:
     @cached_method
     def generators(self):
         return latex_tuple(map(lmfdb_ideal2tex, self.G.gen_ideals()))
+    def codegen(self):
+        return [('sage','G.gen_ideals()'), ('pari','G.gen')]
+
 
     @cached_method
     def order(self):
         return str(self.G.order())
+    def codeorder(self):
+        return [('sage','G.order()'), ('pari','G.no')]
+
 
     def _char_table_row(self, c):
         return ( self.modlabel,

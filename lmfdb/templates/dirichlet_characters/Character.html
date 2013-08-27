@@ -1,0 +1,150 @@
+{% extends 'ShowCode.html' %}
+
+{% block description %}
+ 
+        <div class='sage nodisplay code'>sage: chi = DirichletGroup_conrey({{modulus}})[{{number}}]<br>sage: chi_sage = DirichletGroup_conrey.standard_dirichlet_group({{modulus}})[{{number}}]</br></div>
+        {% addcode(codeinit,'div') %}
+
+
+        {% if symbol %}
+        {# Kronecker symbol #}
+        <h2>
+            {{ KNOWL('character.dirichlet.kronecker_symbol') }} representation
+        </h2>
+        <div class = 'sage nodisplay code'>sage: chi_sage.kronecker({{conductor}})</div>
+        <p>
+        {{ symbol }} (mod {{modulus}})
+        </p>
+        {% endif %}
+
+        {# Inducing character #}
+        {% if isprimitive=="No" %}
+            <h2>
+                Inducing {{ KNOWL('character.dirichlet.primitive', title="primitive character") }}
+            </h2>
+            <div class = 'sage nodisplay code'>sage: chi.primitive_character()</div>
+            <p>
+            <a href="{{ url_for('render_webpage_label', 
+                modulus = condlabel, 
+                number  = indlabel)}}">
+                {{inducing}}
+            </a>
+            </p>
+        {% endif %}
+
+        {# Values #}
+        
+        {% if values %}
+        <h2>
+            {{ KNOWL('character.dirichlet.values', title="Values") }}
+        </h2>
+        <div class = 'sage nodisplay code'>sage: chi.values()</div>
+        <p>
+        </p>
+        <div align="left"> 
+            [{{ values|join(", " ) }}]
+        </div>
+        {% endif %}
+        
+        {# Values on generators #}
+        <h2>
+            {{ KNOWL('character.dirichlet.values_on_gens', title="Values on generators") }}
+        </h2>
+        <div class = 'sage nodisplay code'>sage: chi_sage.values_on_gens()</div>
+        {% addcode(codeval,'div') %}
+        <p>
+            {{ generators }} &rarr; {{ genvalues }}
+        </p>
+
+        
+        {# Basic properties #}
+
+        <h2> {{ KNOWL('character.dirichlet.basic_properties', title="Basic properties") }} </h2>
+
+        <table class="props">
+            <tr>
+                <td>
+                    {% addcode(codecond,'span') %}
+                    <span class='sage nodisplay code'>sage: chi.conductor()</span>
+                </td>
+            </tr>
+            <tr>
+                <td>Conductor</td>
+                <td>=</td>
+                <td>{{ conductor }}</td>
+            </tr>
+            <tr>
+                <td>
+                    <span class='sage nodisplay code'>sage: chi.order()</span>
+                </td>
+            </tr>
+            <tr>
+                <td> Order </td>
+                <td>=</td>
+                <td>{{ order }}</td>
+            </tr>
+            <tr>
+                <td>
+                    <span class='sage nodisplay code'>sage: chi.is_even() or chi.is_odd()</span>
+                </td>
+            </tr>
+
+            {% if parity %}
+            <tr>
+                <td> Parity </td>
+                <td>=</td>
+                <td> {{ parity }}</td>
+            </tr>
+            {% endif %}
+            <tr>
+                <td> Real </td>
+                <td>=</td>
+                <td> {{ isreal }} </td>
+            </tr>
+            <tr>
+                <td>
+                    <span class='sage nodisplay code'>sage: chi.is_primitive()</span>
+                </td>
+            </tr>
+            <tr>
+                <td> Primitive </td>
+                <td>=</td>
+                <td> {{ isprimitive }} </td>
+            </tr>
+        </table>
+
+         {# Galois Orbits #}
+        <h2>
+            {{ KNOWL('character.dirichlet.galois_orbit', title="Galois orbit") }}
+        </h2>
+        <div class = 'sage nodisplay code'>sage: chi_sage.galois_orbit()</div>
+
+        <p>
+        {% for mod,num,label in galoisorbit %}
+        <a href="{{ url_for('render_webpage_label', modulus=mod, number=num)}}">
+                {{label}}
+            </a>
+         {% endfor %}
+        </p>
+
+        {# Fields #}
+        <h2>
+            {{ KNOWL('character.dirichlet.related_fields', 'Related number fields') }}
+        </h2>
+        <table>
+            <tr>
+                <td> Field of values </td>
+                <td> Field <a href="/NumberField/{{vflabel}}">{{ valuefield }}</a></td>
+            </tr>
+            {% if kflabel is defined %}
+            <tr>
+                <td>{{ kerfield }}</td>
+                <td> Field <a href="/NumberField/{{kflabel}}">{{ kflabel }}</a>
+                     defined by {{ kfpol }}
+                </td>
+            </tr>
+            {% endif %}
+        </table>
+
+{% endblock %}
+
