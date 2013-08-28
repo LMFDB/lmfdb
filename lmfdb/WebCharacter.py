@@ -142,7 +142,7 @@ class WebCharObject:
     def to_dict(self):
         d = {}
         for k in self._keys:
-            d[k] = gettatr(self,k,None)
+            d[k] = getattr(self,k,None)
         return d
 
     def logvalue2tex(x, tag=False):
@@ -197,7 +197,7 @@ class WebHecke(WebCharObject):
         if modlabel == None:
             modlabel = self.modlabel
         numlabel = self.number2label( c.exponents() )
-        return ( (modlabel, numlabel, self.char2tex(c) )
+        return (modlabel, numlabel, self.char2tex(c) ) 
 
     @staticmethod
     def modulus2tex(ideal):
@@ -390,7 +390,7 @@ class WebDirichletCharacter(WebDirichlet, WebChar):
 
     @property
     def title(self):
-        return r"Dirichlet Character %s" % (self.texname())
+        return r"Dirichlet Character %s" % (self.texname)
 
     @property
     def texname(self):
@@ -410,7 +410,7 @@ class WebDirichletCharacter(WebDirichlet, WebChar):
 
     @property
     def inducing(self):
-        return self.char2tex(self.conductor(),self.indlabel())
+        return self.char2tex(self.conductor, self.indlabel)
 
     @property
     def indlabel(self):
@@ -460,7 +460,7 @@ class WebHeckeCharacter(WebChar):
         self.modlabel = lmfdb_ideal2label(self._modulus)
  
         assert len(self.number) == G.ngens()
-        self.chi = chi = HeckeChar(self.H,self.number)
+        self.chi = chi = HeckeChar(self.H, self.number)
 
         self.order = chi.order()
         self.zetaorder = 0 # FIXME H.zeta_order()
@@ -470,7 +470,7 @@ class WebHeckeCharacter(WebChar):
 
     @property
     def title(self):
-      return r"Hecke Character: %s modulo \(%s\)" % (self.texname(), self.modulus())
+      return r"Hecke Character: %s modulo \(%s\)" % (self.texname, self.modulus)
     
     @property
     def inducing(self):
