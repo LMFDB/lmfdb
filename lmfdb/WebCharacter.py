@@ -444,9 +444,17 @@ class WebDirichletCharacter(WebDirichlet, WebChar):
         return ('Odd', 'Even')[self.chi.is_even()]
 
     @property
+    def generators(self):
+        return latex_tuple(self.G.gens())
+
+    @property
+    def genvalues(self):
+      return  latex_tuple([chi.logvalue(k) for k in self.G.gens()])
+
+    @property
     def galoisorbit(self):
         order = self.order
-        mod, num = self.number, self.modulus
+        mod, num = self.modulus, self.number
         orbit = [ power_mod(num, k, mod) for k in xrange(1, order) if gcd(k,order) == 1 ]
         return [ self._char_desc(num) for num in orbit ]
 
