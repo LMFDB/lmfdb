@@ -47,6 +47,7 @@ def render_Dirichletwebpage(request, arg1, arg2):
         return render_template('dirichlet_characters/DirichletGroup.html', **info)
     else:
         info = WebDirichletCharacter(temp_args).to_dict()
+        print info
         info['navi'] = dirichlet_navi(info)
         return render_template('dirichlet_characters/DirichletCharacter.html', **info)
 
