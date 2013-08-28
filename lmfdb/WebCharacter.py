@@ -398,6 +398,7 @@ class WebDirichletCharacter(WebDirichlet, WebChar):
         self.modulus = m = int(self.modlabel)
         self.G = G = DirichletGroup_conrey(m)
         self.G_sage = G_sage = G.standard_dirichlet_group()
+        self._gens = G_sage.gens()
         self.number = n = int(self.numlabel)
 
         assert gcd(m, n) == 1
@@ -445,11 +446,12 @@ class WebDirichletCharacter(WebDirichlet, WebChar):
 
     @property
     def generators(self):
-        return latex_tuple(self.G.gens())
+        return latex_tuple(self._gens)
 
     @property
     def genvalues(self):
-      return  latex_tuple([chi.logvalue(k) for k in self.G.gens()])
+        logvals = [self.chi.logvalue(k) for k in self._gens]
+        return latex_tuple(map(latex_char_logvalue, logvals))
 
     @property
     def galoisorbit(self):
