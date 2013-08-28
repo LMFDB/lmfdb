@@ -27,7 +27,7 @@ import lfunctions
 import users
 import knowledge
 import upload
-import DirichletCharacter
+#import DirichletCharacter
 import Characters
 import local_fields
 import galois_groups

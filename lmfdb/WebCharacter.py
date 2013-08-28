@@ -110,24 +110,16 @@ def log_value(modulus, number):
             l.append(latex_char_logvalue(logvalue, True))
     return l
 
-class WebChar:
-    """
-    Class for presenting a Character on a web page
-    """
+#############################################################################
+###
+###    Class for Web objects
+###
+#############################################################################
+
+class WebCharObject:
+    """ class for all characters and character groups """
     def __init__(self, args):
-        self.nflabel = args.get('number_field',None)
-        self.modlabel = args.get('modulus',None)
-        self.numlabel = args.get('number',None)
-
-        self.chi = None
-        self._compute()
-
-    def _compute(self):
-        pass
-
-    def to_dict(self):
-        d = {}
-        keys = [ 'title', 'credit', 'friends', 'navi', 'codelangs',
+        self._keys = [ 'title', 'credit', 'codelangs',
                  'nf', 'nflabel', 'nfpol', 'modulus', 'modlabel',
                  'number', 'numlabel', 'texname', 'codeinit', 'symbol',
                  'previous', 'prevmod', 'prevnum', 'next', 'nextmod',
@@ -136,11 +128,183 @@ class WebChar:
                  'indlabel', 'codeind', 'order', 'codeorder', 'parity',
                  'isreal', 'generators', 'codegen', 'genvalues', 'logvalues',
                  'values', 'codeval', 'galoisorbit', 'codegalois',
-                 'galoisorbit', 'valuefield', 'vflabel', 'vfpol',
+                 'valuefield', 'vflabel', 'vfpol',
                  'kerfield', 'kflabel', 'kfpol', 'contents' ]   
-        for k in keys:
-            d[k] = gettatr(self,k)
+        self.nflabel = args.get('number_field',None)
+        self.modlabel = args.get('modulus',None)
+        self.numlabel = args.get('number',None)
+
+        self._compute()
+
+    def _compute(self):
+        pass
+
+    def to_dict(self):
+        d = {}
+        for k in self._keys:
+            d[k] = gettatr(self,k,None)
         return d
+
+    def logvalue2tex(x, tag=False):
+        n = int(x.numer())
+        d = int(x.denom())
+        if d == 1:
+            s = "1"
+        elif n == 1 and d == 2:
+            s = "-1"
+        elif n == 1 and d == 4:
+            s = "i"
+        elif n == 3 and d == 4:
+            s = "-i"
+        else:
+            s = r"e\left(\frac{%s}{%s}\right)" % (n, d)
+        if tag:
+            return "\(%s\)" % s
+        else:
+            return s
+
+
+#############################################################################
+###  Dirichlet type
+
+class WebDirichlet(WebCharObject):
+
+    def _char_desc(self, num, mod=None):
+        if mod == None:
+            mod = self.modulus
+        return ( (mod, num), self.char2tex(mod,num))
+
+    @staticmethod
+    def char2tex(modulus, number):
+        return r'\(\chi_{%s}(%s,\cdot)\)'%(modulus,number)
+
+#############################################################################
+###  Hecke type
+
+class WebHecke(WebCharObject):
+    """ labeling conventions are put here """
+
+    @staticmethod
+    def char2tex(c):
+        """ c is a Hecke character """
+        number = c.exponents()
+        return r'\(\chi_{%s}(\cdot)\)'%(','.join(map(str,number)))
+
+    def _char_desc(self, c, modlabel=None):
+        """ c is a Hecke character of modulus self.modulus
+            unless modlabel is specified
+        """
+        if modlabel == None:
+            modlabel = self.modlabel
+        numlabel = self.number2label( c.exponents() )
+        return ( (modlabel, numlabel, self.char2tex(c) )
+
+    @staticmethod
+    def modulus2tex(ideal):
+        a,b = ideal.gens_two()
+        return "\(\langle %s, %s\\rangle\)"%(a._latex_(), b._latex_())
+
+    @staticmethod
+    def modulus2label(ideal):
+        """
+        labeling convention for ideal f:
+        use two elements representation f = (n,b)
+        with n = f cap Z an integer
+         and b an algebraic element sum b_i a^i
+        label f as n.b1+b2*a^2+...bn*a^n
+        (dot between n and b, a is the field generator, use '+' and )
+        """
+        a,b = ideal.gens_two()
+        s = '+'.join( '%s*a**%i'%(b,i) for i,b in enumerate(b.polynomial().list())
+                                      if b != 0 ) 
+        return "%s.%s"%(a,b)
+
+    @staticmethod
+    def label2modulus(k,label):
+        if label.count('.'):
+            n, b = label.split(".")
+        else:
+            n, b = label, '0'
+        a = k.gen()
+        n, b = eval(n), eval(b)
+        n, b = k(n), k(b)
+        print label, (n, b), k.ideal( (n,b) )
+        return k.ideal( (n,b) )
+
+    @staticmethod
+    ### not static and put self as argument ?
+    def number2label(number):
+        return '.'.join(map(str,number))
+
+    @staticmethod
+    def label2number(label):
+        return map(int,label.split('.'))
+
+#############################################################################
+###  Family
+
+class WebCharFamily(WebCharObject):
+    """ compute first groups """
+    def __init__(self, args):
+        WebCharObject.__init__(self,args)
+        self._keys = [ 'title', 'credit', 'codelangs', 'nf', 'nflabel',
+            'nfpol', 'codeinit', 'headers', 'contents' ]   
+        self.headers = [ 'label', 'order', 'structure' ]
+        self._contents = []
+
+    def add_row(self, G):
+        self._contents.append(
+                 (G.modlabel,
+                  G.texname,
+                  G.order,
+                  G.structure) )
+
+#############################################################################
+###  Groups
+
+class WebCharGroup(WebCharObject):
+    """
+    Class for presenting Character Groups on a web page
+    """
+    def __init__(self, args):
+        WebCharObject.__init__(self,args)
+        self._keys = [ 'title', 'credit', 'codelangs', 'nf', 'nflabel',
+            'nfpol', 'modulus', 'modlabel', 'texname', 'codeinit', 'previous',
+            'prevmod', 'next', 'nextmod', 'structure', 'codestruct', 'order',
+            'codeorder', 'generators', 'codegen', 'valuefield', 'vflabel',
+            'vfpol', 'headers', 'contents' ] 
+        self.headers = [ 'label', 'order', 'structure' ]
+        self.contents = []
+
+    @property
+    def structure(self):
+        inv = self.G.invariants()
+        return '\\times '.join(['C_{%s}'%d for d in inv])
+    @property
+    def codestruct(self):
+        return [('sage',['G.invariants()']), ('pari',['G.cyc'])]
+
+    def add_row(self, chi):
+        self.contents.append(
+                 (chi.modlabel,
+                  chi.numlabel,
+                  chi.texname,
+                  chi.order,
+                  chi.isprimitive )
+            )
+     
+    def _fill_contents(self):
+        if self.H is not None:
+            for c in self.H.list():
+                self.add_row(c)
+
+#############################################################################
+###  Characters
+
+class WebChar(WebCharObject):
+    """
+    Class for presenting a Character on a web page
+    """
 
     @property
     def order(self):
@@ -185,26 +349,60 @@ class WebChar:
       else:
           return ''
 
-class WebDirichlet(WebChar):
+#############################################################################
+###  Actual web objects used in lmfdb
+
+class WebDirichletGroup(WebDirichlet, WebCharGroup):
 
     def _compute(self):
-        self.modulus = int(self.modlabel)
-        self.G = G = DirichletGroup_conrey(self.modulus)
+        self.modulus = m = int(self.modlabel)
+        self.G = G = DirichletGroup_conrey(m)
         self.G_sage = G_sage = G.standard_dirichlet_group()
-        self.number = int(self.numlabel)
-
-        assert gcd(self.number,self.modulus) == 1
-        self.chi = chi = G[self.number]
-        self.chi_sage = chi_sage = chi.sage_character()
-        self.credit = "Sage"
+        self.credit = 'Sage'
+        self.codelangs = ('Pari', 'Sage')
+        
+    @property
+    def codeinit(self):
+        kpol = self.nf.K().polynomial()
+        return [('sage', ['G = DirichletGroup_conrey(m)']),
+                ('pari', ['G = znstar(m)'])
+                ]
 
     @property
     def title(self):
-        return r"Dirichlet Character: %s" % (self.texname())
+      return r"Dirichlet Group modulo %s" % (self.modulus)
+
+class WebDirichletCharacter(WebDirichlet, WebChar):
+
+    def _compute(self):
+        self.modulus = m = int(self.modlabel)
+        self.G = G = DirichletGroup_conrey(m)
+        self.G_sage = G_sage = G.standard_dirichlet_group()
+        self.number = n = int(self.numlabel)
+
+        assert gcd(m, n) == 1
+        self.chi = chi = G[n]
+        self.chi_sage = chi_sage = chi.sage_character()
+        self.credit = "Sage"
+        self.codelangs = ('Pari', 'Sage')
+        self.prevmod, self.prevnum = prev_dirichlet_char(m, n)
+        self.nextmod, self.nextnum = next_dirichlet_char(m, n)
+
+    @property
+    def title(self):
+        return r"Dirichlet Character %s" % (self.texname())
 
     @property
     def texname(self):
-        return lmfdb_dirichlet2tex(self.modulus, self.number)
+        return self.char2tex(self.modulus, self.number)
+
+    @property
+    def previous(self):
+        return self.char2tex(self.prevmod, self.prevnum)
+
+    @property
+    def next(self):
+        return self.char2tex(self.nextmod, self.nextnum)
 
     @property
     def conductor(self):
@@ -212,7 +410,7 @@ class WebDirichlet(WebChar):
 
     @property
     def inducing(self):
-        return lmfdb_dirichlet2tex(self.conductor(),self.indlabel())
+        return self.char2tex(self.conductor(),self.indlabel())
 
     @property
     def indlabel(self):
@@ -223,9 +421,6 @@ class WebDirichlet(WebChar):
     @property
     def parity(self):
         return ('Odd', 'Even')[self.chi.is_even()]
-
-    def _char_desc(self, num):
-        return ( self.modulus, num, lmfdb_dirichlet2tex(mod,num))
 
     @property
     def galoisorbit(self):
@@ -252,8 +447,8 @@ class WebDirichlet(WebChar):
         else:
             return None
         return r'\(\displaystyle\left(\frac{%s}{\bullet}\right)\)' % (m)
-            
-class WebHecke(WebChar):
+
+class WebHeckeCharacter(WebChar):
 
     def _compute(self):
         self._nf = WebNumberField(self.nflabel)
@@ -271,6 +466,7 @@ class WebHecke(WebChar):
         self.zetaorder = 0 # FIXME H.zeta_order()
         self.parity = 'None'
         self.credit = "Pari, Sage"
+        self.codelangs = ('Pari', 'Sage')
 
     @property
     def title(self):
@@ -294,9 +490,6 @@ class WebHecke(WebChar):
     def genvalues(self):
         return latex_tuple(map(latex_char_logvalue, chi.logvalues_on_gens()))
 
-    def _char_desc(self, c):
-        return ( self.modlabel, lmfdb_hecke2label(c), lmfdb_hecke2tex(c))
-
     @property
     def galoisorbit(self):
         return  [ self._char_desc(c) for c in chi.galois_orbit() ]
@@ -312,6 +505,137 @@ class WebHecke(WebChar):
     @property
     def modulus(self):
         return lmfdb_ideal2tex(self._modulus)
+
+def next_dirichlet_char(m, n, onlyprimitive=False):
+    """ we know that the characters
+        chi_m(1,.) and chi_m(m-1,.)
+        always exist for m>1.
+        They are extremal for a given m.
+    """
+    if onlyprimitive:
+        return next_primitive_char(m, n)
+    if m == 1:
+        return 2, 1
+    if n == m - 1:
+        return m + 1, 1
+    for k in xrange(n + 1, m):
+        if gcd(m, k) == 1:
+            return m, k
+    raise Exception("next_char")
+
+def prev_dirichlet_char(m, n, onlyprimitive=False):
+    """ Assume m>1 """
+    if onlyprimitive:
+        return prev_primitive_char(m, n)
+    if n == 1:
+        m, n = m - 1, m
+    if m <= 2:
+        return m, 1  # important : 2,2 is not a character
+    for k in xrange(n - 1, 0, -1):
+        if gcd(m, k) == 1:
+            return m, k
+    raise Exception("next_char")
+
+def prev_dirichlet_primitive_char(m, n):
+    if m <= 3:
+        return 1, 1
+    if n > 2:
+        Gm = DirichletGroup_conrey(m)
+    while True:
+        n -= 1
+        if n == 1:  # (m,1) is never primitive for m>1
+            m, n = m - 1, m - 1
+            Gm = DirichletGroup_conrey(m)
+        if m <= 2:
+            return 1, 1
+        if gcd(m, n) != 1:
+            continue
+        # we have a character, test if it is primitive
+        chi = Gm[n]
+        if chi.is_primitive():
+            return m, n
+
+def next_dirichlet_primitive_char(m, n):
+    if m < 3:
+        return 3, 2
+    if n < m - 1:
+        Gm = DirichletGroup_conrey(m)
+    while 1:
+        n += 1
+        if n == m:
+            m, n = m + 1, 2
+            Gm = DirichletGroup_conrey(m)
+        if gcd(m, n) != 1:
+            continue
+        # we have a character, test if it is primitive
+        chi = Gm[n]
+        if chi.is_primitive():
+            return m, n
+
+class WebHeckeGroup(WebCharGroup):
+
+    def _compute(self):
+        self.nf = WebNumberField(self.nflabel)
+        k = self.nf.K()
+        self.modulus = lmfdb_label2ideal(k, self.modlabel)
+        self.G = RayClassGroup(k, self.modulus)
+        self.H = self.G.dual_group()
+        self._fill_contents()
+        self.credit = 'Pari, Sage'
+        self.codelangs = ('Pari', 'Sage')
+ 
+    @property
+    def codeinit(self):
+        kpol = self.nf.K().polynomial()
+        return [('sage', ['k.<a> = NumberField(%s)'%kpol,
+                          'm = k.ideal(%s)'%self.modulus,
+                          'G = RayClassGroup(k,m)',
+                          'H = G.dual_group()' ]),
+                ('pari',  ['k=bnfinit(%s)'%kpol,
+                           'G=bnrinit(k,m,1)'] )
+                ]
+
+    @property
+    def nf_pol(self):
+        return self.nf.web_poly()
+    @cached_method
+    def mod(self):
+        return lmfdb_ideal2tex(self.modulus)
+
+    @cached_method
+    def generators(self):
+        return latex_tuple(map(lmfdb_ideal2tex, self.G.gen_ideals()))
+    def codegen(self):
+        return [('sage','G.gen_ideals()'), ('pari','G.gen')]
+
+    @cached_method
+    def order(self):
+        return str(self.G.order())
+    def codeorder(self):
+        return [('sage','G.order()'), ('pari','G.no')]
+
+
+    def _char_table_row(self, c):
+        return ( self.modlabel,
+                 lmfdb_hecke2label(c),
+                 lmfdb_hecke2tex(c),
+                 str(c.order()),
+                 lmfdb_bool(c.is_primitive()),
+                 )
+
+    @cached_method
+    def table_content(self):
+        """ build list: (tex, link, order, primitive) """
+        return [ self._char_table_row(c) for c in self.H.list() ]
+
+    def title(self):
+        return "Group of Hecke characters modulo %s"%(self.mod())
+
+#############################################################################
+###
+###    OLD MATERIAL
+###
+#############################################################################
 
 class WebCharacter:
     """
@@ -518,78 +842,3 @@ class WebCharacter:
 
         return chi
 
-class WebHeckeGroup:
-    """
-    Class for presenting a Hecke Character Group on a web page
-    """
-    def __init__(self, args):
-        self.type = args['type']
-        # self.texname = "\\chi"  # default name.  will be set later, for most L-functions
-        self.nflabel = args['number_field']
-        self.modlabel = args['modulus']
-        self.numlabel = args['number']
-
-        self._compute()
-
-    def _compute(self):
-        self.nf = WebNumberField(self.nflabel)
-        k = self.nf.K()
-        self.modulus = lmfdb_label2ideal(k, self.modlabel)
-        self.G = RayClassGroup(k, self.modulus)
-        self.H = self.G.dual_group()
-        #self.number = lmfdb_label2hecke(self.numlabel)
- 
-    def codeinit(self):
-        kpol = self.nf.K().polynomial()
-        return [('sage', ['k.<a> = NumberField(%s)'%kpol,
-                          'm = k.ideal(%s)'%self.modulus,
-                          'G = RayClassGroup(k,m)',
-                          'H = G.dual_group()' ]),
-                ('pari',  ['k=bnfinit(%s)'%kpol,
-                           'G=bnrinit(k,m,1)'] )
-                ]
-
-    @cached_method
-    def nf_pol(self):
-        return self.nf.web_poly()
-
-    @cached_method
-    def structure(self):
-        inv = self.G.invariants()
-        return '\\times '.join(['C_{%s}'%d for d in inv])
-    def codestruct(self):
-        return [('sage',['G.invariants()']), ('pari',['G.cyc'])]
-
-    @cached_method
-    def mod(self):
-        return lmfdb_ideal2tex(self.modulus)
-
-    @cached_method
-    def generators(self):
-        return latex_tuple(map(lmfdb_ideal2tex, self.G.gen_ideals()))
-    def codegen(self):
-        return [('sage','G.gen_ideals()'), ('pari','G.gen')]
-
-
-    @cached_method
-    def order(self):
-        return str(self.G.order())
-    def codeorder(self):
-        return [('sage','G.order()'), ('pari','G.no')]
-
-
-    def _char_table_row(self, c):
-        return ( self.modlabel,
-                 lmfdb_hecke2label(c),
-                 lmfdb_hecke2tex(c),
-                 str(c.order()),
-                 lmfdb_bool(c.is_primitive()),
-                 )
-
-    @cached_method
-    def table_content(self):
-        """ build list: (tex, link, order, primitive) """
-        return [ self._char_table_row(c) for c in self.H.list() ]
-
-    def title(self):
-        return "Group of Hecke characters modulo %s"%(self.mod())

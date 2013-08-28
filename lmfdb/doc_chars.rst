@@ -15,7 +15,7 @@ title          str               X    X    X    X
 credit         str               X    X    X    X                            
 friends        [(label,tex)]     X    X    X    X
 navi           [(label,tex),]    X    X    X    X
-codelangs       [ str, ]          X    X    X    X
+codelangs      [ str, ]          X    X    X    X
 nf             tex                    X         X                     
 nflabel        str                    X         X                      
 nfpol          tex                    X         X                      
@@ -33,7 +33,7 @@ next           tex               X    X    X    X
 nextmod        str               X    X    X    X
 nextnum        str                         X    X
 structure      tex               X    X                              
-codestruct     [(lang,str),]
+codestruct     [(lang,str),]     X    X
 conductor      tex                         X    X                       
 condlabel      str                         X    X                       
 codecond       [(lang,str),]
@@ -42,11 +42,11 @@ inducing       tex                         X    X
 indlabel       str                         X    X
 codeind        [(lang,str),]
 order          int               X    X    X    X                       
-codeorder      [(lang,str),]
+codeorder      [(lang,str),]     X    X
 parity         Odd/Even                    X    X                       
 isreal         Yes/No                      X    X                       
 generators     tex               X    X    X    X                       
-codegen       [(lang,str),]
+codegen       [(lang,str),]      X    X
 genvalues      tex                         X    X                       
 logvalues      [ a/b, ]                    X    X                       
 values         [ tex, ]                    X    X                       

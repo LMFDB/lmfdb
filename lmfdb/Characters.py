@@ -10,8 +10,8 @@ from sage.all import *
 import tempfile
 import os
 from pymongo import ASCENDING
-from WebCharacter import *
 from utils import to_dict, parse_range, make_logger
+from WebCharacter import *
 import ListCharacters
 
 try:
@@ -26,15 +26,43 @@ logger = make_logger("HC")
 #   Route functions
 ###############################################################################
 
+@app.route("/Character/Dirichlet/")
+@app.route("/Character/Dirichlet/<arg1>")
+@app.route("/Character/Dirichlet/<arg1>/<arg2>")
+def render_DirichletCharacter(arg1=None, arg2=None):
+    return render_Dirichletwebpage(request, arg1, arg2)
 
+def render_Dirichletwebpage(request, arg1, arg2):
+    args = request.args
+    temp_args = to_dict(args)
+
+    temp_args['modulus'] = arg1
+    temp_args['number'] = arg2
+
+    if arg1 == None:
+        info = WebDirichlet(temp_args)
+        return render_template('dirichlet_characters/Dirichlet.html', **info)
+    elif arg2 == None:
+        info = WebDirichletGroup(temp_args).to_dict()
+        return render_template('dirichlet_characters/DirichletGroup.html', **info)
+    else:
+        info = WebDirichletCharacter(temp_args).to_dict()
+        info['navi'] = dirichlet_navi(info)
+        return render_template('dirichlet_characters/DirichletCharacter.html', **info)
+
+def dirichlet_navi(info):
+    prevurl =  url_for("render_DirichletCharacter", arg1=info['prevmod'], arg2=info['prevnum'])
+    nexturl =  url_for("render_DirichletCharacter", arg1=info['nextmod'], arg2=info['nextnum'])
+    return [ (info['previous'], prevurl), (info['next'], nexturl) ]
+  
 @app.route("/Character/Hecke/")
 @app.route("/Character/Hecke/<arg1>")
 @app.route("/Character/Hecke/<arg1>/<arg2>")
 @app.route("/Character/Hecke/<arg1>/<arg2>/<arg3>")
 def render_HeckeCharacter(arg1=None, arg2=None, arg3=None):
-    return Characters.render_webpage(request, arg1, arg2, arg3)
+    return render_Heckewebpage(request, arg1, arg2, arg3)
 
-def render_webpage(request, arg1, arg2, arg3):
+def render_Heckewebpage(request, arg1, arg2, arg3):
     args = request.args
     temp_args = to_dict(args)
 
