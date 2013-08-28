@@ -374,7 +374,7 @@ class WebDirichletGroup(WebDirichlet, WebCharGroup):
         self.G = G = DirichletGroup_conrey(m)
         self.G_sage = G_sage = G.standard_dirichlet_group()
         self.credit = 'Sage'
-        self.codelangs = ('Pari', 'Sage')
+        self.codelangs = ('pari', 'sage')
         
     @property
     def codeinit(self):
@@ -398,7 +398,7 @@ class WebDirichletCharacter(WebDirichlet, WebChar):
         self.modulus = m = int(self.modlabel)
         self.G = G = DirichletGroup_conrey(m)
         self.G_sage = G_sage = G.standard_dirichlet_group()
-        self._gens = G_sage.gens()
+        self._gens = G_sage.unit_gens()
         self.number = n = int(self.numlabel)
 
         assert gcd(m, n) == 1
@@ -406,7 +406,7 @@ class WebDirichletCharacter(WebDirichlet, WebChar):
         self.chi_sage = chi_sage = chi.sage_character()
         self.order = chi.multiplicative_order()
         self.credit = "Sage"
-        self.codelangs = ('Pari', 'Sage')
+        self.codelangs = ('pari', 'sage')
         self.prevmod, self.prevnum = prev_dirichlet_char(m, n)
         self.nextmod, self.nextnum = next_dirichlet_char(m, n)
 
@@ -446,12 +446,12 @@ class WebDirichletCharacter(WebDirichlet, WebChar):
 
     @property
     def generators(self):
-        return latex_tuple(self._gens)
+        return '\(%s\)'%(','.join( map(str, self._gens)) )
 
     @property
     def genvalues(self):
         logvals = [self.chi.logvalue(k) for k in self._gens]
-        return latex_tuple(map(latex_char_logvalue, logvals))
+        return '\(%s\)'%(','.join( map(self.logvalue2tex, logvals)) )
 
     @property
     def galoisorbit(self):
@@ -497,7 +497,7 @@ class WebHeckeCharacter(WebChar):
         self.zetaorder = 0 # FIXME H.zeta_order()
         self.parity = 'None'
         self.credit = "Pari, Sage"
-        self.codelangs = ('Pari', 'Sage')
+        self.codelangs = ('pari', 'sage')
 
     @property
     def title(self):
@@ -515,11 +515,12 @@ class WebHeckeCharacter(WebChar):
 
     @property
     def generators(self):
-        return latex_tuple(map(lmfdb_ideal2tex, G.gen_ideals()))
+        return '\(%s\)'%(','.join( map(lmfdb_ideal2tex, self.G.gen_ideals() )) )
 
     @property
     def genvalues(self):
-        return latex_tuple(map(latex_char_logvalue, chi.logvalues_on_gens()))
+        logvals = self.chi.logvalues_on_gens()
+        return '\(%s\)'%(','.join( map(self.logvalue2tex, logvals)) )
 
     @property
     def galoisorbit(self):
@@ -614,7 +615,7 @@ class WebHeckeGroup(WebCharGroup):
         self.order = self.G.order()
         self._fill_contents()
         self.credit = 'Pari, Sage'
-        self.codelangs = ('Pari', 'Sage')
+        self.codelangs = ('pari', 'sage')
  
     @property
     def codeinit(self):
