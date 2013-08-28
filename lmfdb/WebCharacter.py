@@ -406,7 +406,7 @@ class WebDirichletCharacter(WebDirichlet, WebChar):
 
     @property
     def conductor(self):
-        return chi.conductor()
+        return self.chi.conductor()
 
     @property
     def inducing(self):
@@ -416,7 +416,7 @@ class WebDirichletCharacter(WebDirichlet, WebChar):
     def indlabel(self):
         """ Conrey scheme makes this trivial ? except at two..."""
         #return self.number % self.conductor
-        return chi.primitive_character().number()
+        return self.chi.primitive_character().number()
     
     @property
     def parity(self):
