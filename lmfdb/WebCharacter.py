@@ -172,7 +172,7 @@ class WebDirichlet(WebCharObject):
     def _char_desc(self, num, mod=None):
         if mod == None:
             mod = self.modulus
-        return ( (mod, num), self.char2tex(mod,num))
+        return ( mod, num, self.char2tex(mod,num))
 
     @staticmethod
     def char2tex(modulus, number):
@@ -424,7 +424,7 @@ class WebDirichletCharacter(WebDirichlet, WebChar):
 
     @property
     def galoisorbit(self):
-        order = self.order()
+        order = self.order
         mod, num = self.number, self.modulus
         orbit = [ power_mod(num, k, mod) for k in xrange(1, order) if gcd(k,order) == 1 ]
         return [ self._char_desc(num) for num in orbit ]
