@@ -32,12 +32,12 @@ logger = make_logger("HC")
 def render_DirichletCharacter(arg1=None, arg2=None):
     return render_Dirichletwebpage(request, arg1, arg2)
 
-def render_Dirichletwebpage(request, arg1, arg2):
+def render_Dirichletwebpage(request, modulus, number):
     args = request.args
     temp_args = to_dict(args)
 
-    temp_args['modulus'] = arg1
-    temp_args['number'] = arg2
+    temp_args['modulus'] = modulus
+    temp_args['number'] = number
 
     if arg1 == None:
         info = WebDirichlet(temp_args)
@@ -49,7 +49,7 @@ def render_Dirichletwebpage(request, arg1, arg2):
         info = WebDirichletCharacter(temp_args).to_dict()
         print info
         info['navi'] = dirichlet_navi(info)
-        return render_template('dirichlet_characters/DirichletCharacter.html', **info)
+        return render_template('dirichlet_characters/Character.html', **info)
 
 def dirichlet_navi(info):
     prevurl =  url_for("render_DirichletCharacter", arg1=info['prevmod'], arg2=info['prevnum'])
@@ -63,14 +63,14 @@ def dirichlet_navi(info):
 def render_HeckeCharacter(arg1=None, arg2=None, arg3=None):
     return render_Heckewebpage(request, arg1, arg2, arg3)
 
-def render_Heckewebpage(request, arg1, arg2, arg3):
+def render_Heckewebpage(request, number_field, modulus, number):
     args = request.args
     temp_args = to_dict(args)
 
     temp_args['type'] = 'hecke'  # set type and input
-    temp_args['number_field'] = arg1
-    temp_args['modulus'] = arg2
-    temp_args['number'] = arg3
+    temp_args['number_field'] = number_field
+    temp_args['modulus'] = modulus
+    temp_args['number'] = number
 
     if arg1 == None:
         return render_template('dirichlet_characters/Hecke_help.html')
@@ -83,7 +83,7 @@ def render_Heckewebpage(request, arg1, arg2, arg3):
     else:
         web_chi = WebCharacter(temp_args)
         info = initCharacterInfo(web_chi, temp_args, request)
-        return render_template('dirichlet_characters/DirichletCharacter.html', **info)
+        return render_template('dirichlet_characters/Character.html', **info)
 
 def init_HeckeGroup(args):
 

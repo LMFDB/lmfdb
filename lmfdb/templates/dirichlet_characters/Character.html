@@ -24,7 +24,7 @@
             </h2>
             <div class = 'sage nodisplay code'>sage: chi.primitive_character()</div>
             <p>
-            <a href="{{ url_for('render_webpage_label', 
+            <a href="{{ url_for('render_Dirichletwebpage', 
                 modulus = condlabel, 
                 number  = indlabel)}}">
                 {{inducing}}
@@ -121,7 +121,7 @@
 
         <p>
         {% for mod,num,label in galoisorbit %}
-        <a href="{{ url_for('render_webpage_label', modulus=mod, number=num)}}">
+        <a href="{{ url_for('render_Dirichletwebpage', modulus=mod, number=num)}}">
                 {{label}}
             </a>
          {% endfor %}
