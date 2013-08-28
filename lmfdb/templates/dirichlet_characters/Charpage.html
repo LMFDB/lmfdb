@@ -1,14 +1,16 @@
-{% extends 'homepage.html' %}
-
-{% block content %}
 {% macro addcode(entries,tag) -%}
+   {% if entries %}
    {% for lang,code in entries %}
    <{{tag}} class='{{lang}} nodisplay code'>
    {{ code|join("<br/>") }}
    </{{tag}}>
    {% endfor %}
+   {% endif %}
 {%- endmacro %}
 
+{% extends 'homepage.html' %}
+
+{% block content %}
 
 <script>
 var cur_system = null;

@@ -32,6 +32,7 @@ logger = make_logger("HC")
 def render_DirichletCharacter(arg1=None, arg2=None):
     return render_Dirichletwebpage(request, arg1, arg2)
 
+@app.route("/Character/Dirichlet/<modulus>/<number>")
 def render_Dirichletwebpage(request, modulus, number):
     args = request.args
     temp_args = to_dict(args)
@@ -39,10 +40,10 @@ def render_Dirichletwebpage(request, modulus, number):
     temp_args['modulus'] = modulus
     temp_args['number'] = number
 
-    if arg1 == None:
+    if modulus == None:
         info = WebDirichlet(temp_args)
         return render_template('dirichlet_characters/Dirichlet.html', **info)
-    elif arg2 == None:
+    elif number == None:
         info = WebDirichletGroup(temp_args).to_dict()
         return render_template('dirichlet_characters/DirichletGroup.html', **info)
     else:
@@ -63,6 +64,7 @@ def dirichlet_navi(info):
 def render_HeckeCharacter(arg1=None, arg2=None, arg3=None):
     return render_Heckewebpage(request, arg1, arg2, arg3)
 
+@app.route("/Character/Hecke/<number_field>/<modulus>/<number>")
 def render_Heckewebpage(request, number_field, modulus, number):
     args = request.args
     temp_args = to_dict(args)
@@ -72,12 +74,12 @@ def render_Heckewebpage(request, number_field, modulus, number):
     temp_args['modulus'] = modulus
     temp_args['number'] = number
 
-    if arg1 == None:
+    if number_field == None:
         return render_template('dirichlet_characters/Hecke_help.html')
-    elif arg2 == None:
+    elif modulus == None:
         info = init_NFinfo(temp_args)
         return render_template('dirichlet_characters/HeckeChooseIdeal.html', **info)
-    elif arg3 == None:
+    elif number == None:
         info = init_HeckeGroup(temp_args)
         return render_template('dirichlet_characters/HeckeGroup.html', **info)
     else:

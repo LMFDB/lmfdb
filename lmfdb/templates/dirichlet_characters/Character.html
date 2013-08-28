@@ -1,9 +1,9 @@
-{% extends 'Charpage.html' %}
+{% extends 'dirichlet_characters/Charpage.html' %}
 
 {% block description %}
  
         <div class='sage nodisplay code'>sage: chi = DirichletGroup_conrey({{modulus}})[{{number}}]<br>sage: chi_sage = DirichletGroup_conrey.standard_dirichlet_group({{modulus}})[{{number}}]</br></div>
-        {% addcode(codeinit,'div') %}
+        {{ addcode(codeinit,'div') }}
 
 
         {% if symbol %}
@@ -51,7 +51,7 @@
             {{ KNOWL('character.dirichlet.values_on_gens', title="Values on generators") }}
         </h2>
         <div class = 'sage nodisplay code'>sage: chi_sage.values_on_gens()</div>
-        {% addcode(codeval,'div') %}
+        {{ addcode(codeval,'div') }}
         <p>
             {{ generators }} &rarr; {{ genvalues }}
         </p>
@@ -64,7 +64,7 @@
         <table class="props">
             <tr>
                 <td>
-                    {% addcode(codecond,'span') %}
+                  {{ addcode(codecond,'span') }}
                     <span class='sage nodisplay code'>sage: chi.conductor()</span>
                 </td>
             </tr>
