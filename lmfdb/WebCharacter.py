@@ -167,7 +167,9 @@ class WebCharObject:
 
     @staticmethod
     def textuple(l):
-        return '\((%s)\)'%(','.join(l))
+        t = ','.join(l)
+        if len(l) > 1: t='(%s)'%t
+        return '\(%s\)'%t
 
     @staticmethod
     def texbool(b):
@@ -260,6 +262,7 @@ class WebHecke(WebCharObject):
         else:
             n, b = label, '0'
         a = k.gen()
+        # FIXME: dangerous
         n, b = eval(n), eval(b)
         n, b = k(n), k(b)
         return k.ideal( (n,b) )
@@ -272,6 +275,13 @@ class WebHecke(WebCharObject):
     @staticmethod
     def label2number(label):
         return map(int,label.split('.'))
+
+    # FIXME: replace by calls to WebNF
+    @staticmethod
+    def label2nf(label):
+        pol = eval(label)
+        return NumberField(pol)
+
 
 #############################################################################
 ###  Family
@@ -286,7 +296,7 @@ class WebCharFamily(WebCharObject):
         self._contents = []
 
     def add_row(self, G):
-        self._contents.append(
+        self.contents.append(
                  (G.modlabel,
                   G.texname,
                   G.order,
@@ -298,16 +308,20 @@ class WebCharFamily(WebCharObject):
 class WebCharGroup(WebCharObject):
     """
     Class for presenting Character Groups on a web page
+    self.H is the character group
+    self.G is the underlying group
     """
     def __init__(self, args):
+        self.headers = [ 'order', 'primitive' ]
+        self.contents = []
+        self.maxrows = 40
+        self.maxcols = 40
         WebCharObject.__init__(self,args)
         self._keys = [ 'title', 'credit', 'codelangs', 'nf', 'nflabel',
             'nfpol', 'modulus', 'modlabel', 'texname', 'codeinit', 'previous',
             'prevmod', 'next', 'nextmod', 'structure', 'codestruct', 'order',
             'codeorder', 'generators', 'codegen', 'valuefield', 'vflabel',
             'vfpol', 'headers', 'contents' ] 
-        self.headers = [ 'number', 'name', 'order', 'isprimitive' ]
-        self.contents = []
 
     @property
     def structure(self):
@@ -322,7 +336,7 @@ class WebCharGroup(WebCharObject):
         return self.G.order()
     @property
     def codeorder(self):
-        return [('sage','G.order()'), ('pari','G.no')]
+        return [('sage',['G.order()']), ('pari',['G.no'])]
 
     @property
     def generators(self):
@@ -331,14 +345,17 @@ class WebCharGroup(WebCharObject):
     def add_row(self, chi):
         prim = chi.is_primitive()
         self.contents.append(
-                 ( self._char_desc(chi, prim=prim),
-                   (chi.order(), self.bool(prim) )
-                 )
+                 (  self._char_desc(chi, prim=prim),
+                    (chi.multiplicative_order(), self.texbool(prim) )
+                 ) )
      
     def _fill_contents(self):
-        if self.H is not None:
-            for c in self.H.list():
-                self.add_row(c)
+        r = 0
+        for c in self.H:
+            self.add_row(c)
+            r += 1
+            if r > self.maxrows:
+                break
 
 #############################################################################
 ###  Characters
@@ -392,21 +409,24 @@ class WebChar(WebCharObject):
 #############################################################################
 ###  Actual web objects used in lmfdb
 
-class WebDirichletGroup(WebDirichlet, WebCharGroup):
+class WebDirichletGroup(WebCharGroup, WebDirichlet):
+
+    #def __init__(self, args):
+    #    WebCharGroup.__init__(self, args)
 
     def _compute(self):
         self.modulus = m = int(self.modlabel)
-        self.G = G = DirichletGroup_conrey(m)
-        self.G_sage = G_sage = G.standard_dirichlet_group()
+        self.H = H = DirichletGroup_conrey(m)
+        self.H_sage = H.standard_dirichlet_group()
+        self._fill_contents()
         self.credit = 'Sage'
         self.codelangs = ('pari', 'sage')
         
     @property
     def codeinit(self):
-        kpol = self.nf.K().polynomial()
-        return [('sage', ['G = DirichletGroup_conrey(m)']),
-                ('pari', ['G = znstar(m)'])
-                ]
+        return [('sage', ['H = DirichletGroup_conrey(m)',
+                          'H_sage = H.standard_dirichlet_group()']),
+                ('pari', ['G = znstar(m)']) ]
 
     @property
     def title(self):
@@ -414,7 +434,24 @@ class WebDirichletGroup(WebDirichlet, WebCharGroup):
 
     @property
     def generators(self):
-        return self.textuple(self.G.gens())
+        return self.textuple(map(str, self.H_sage.unit_gens()))
+    @property
+    def codegen(self):
+        return [('sage', ['H_sage.unit_gens()']),
+                ('pari', ['G.gen']) ]
+
+    @property
+    def structure(self):
+        inv = self.H_sage.generator_orders()
+        return '\(%s\)'%('\\times '.join(['C_{%s}'%d for d in inv]))
+    @property
+    def codestruct(self):
+        return [('sage', ['H_sage.generator_orders()']),
+                ('pari', ['G.cyc']) ]
+      
+    @property
+    def order(self):
+        return self.H_sage.order()
 
 class WebDirichletCharacter(WebDirichlet, WebChar):
 
@@ -514,8 +551,7 @@ class WebDirichletCharacter(WebDirichlet, WebChar):
 class WebHeckeCharacter(WebChar):
 
     def _compute(self):
-        self._nf = WebNumberField(self.nflabel)
-        k = self.nf.K()
+        k = self.label2nf(nflabel)
         self._modulus = lmfdb_label2ideal(k, self.modlabel)
         self.G = G = RayClassGroup(k, self.modulus)
         self.H = H = self.G.dual_group()

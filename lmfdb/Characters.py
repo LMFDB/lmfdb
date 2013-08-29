@@ -45,6 +45,7 @@ def render_Dirichletwebpage(request, modulus, number):
         return render_template('dirichlet_characters/Dirichlet.html', **info)
     elif number == None:
         info = WebDirichletGroup(temp_args).to_dict()
+        print info
         return render_template('dirichlet_characters/CharGroup.html', **info)
     else:
         info = WebDirichletCharacter(temp_args).to_dict()

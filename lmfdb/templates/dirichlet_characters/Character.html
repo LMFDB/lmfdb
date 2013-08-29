@@ -120,7 +120,7 @@
         <div class = 'sage nodisplay code'>sage: chi_sage.galois_orbit()</div>
 
         <p>
-        {% for mod,num,label in galoisorbit %}
+        {% for mod,num,label,prim in galoisorbit %}
         <a href="{{ url_for('render_Dirichletwebpage', modulus=mod, number=num)}}">
                 {{label}}
             </a>
