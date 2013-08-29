@@ -146,6 +146,7 @@ class WebCharObject:
                 pass # should not
         return d
 
+    @staticmethod
     def logvalue2tex(x, tag=False):
         n = int(x.numer())
         d = int(x.denom())
@@ -431,6 +432,10 @@ class WebDirichletCharacter(WebDirichlet, WebChar):
         return self.chi.conductor()
 
     @property
+    def condlabel(self):
+        return self.conductor
+
+    @property
     def inducing(self):
         return self.char2tex(self.conductor, self.indlabel)
 
@@ -438,7 +443,10 @@ class WebDirichletCharacter(WebDirichlet, WebChar):
     def indlabel(self):
         """ Conrey scheme makes this trivial ? except at two..."""
         #return self.number % self.conductor
-        return self.chi.primitive_character().number()
+        indlabel =  self.chi.primitive_character().number()
+        if indlabel == 0:
+            return 1
+        return indlabel
     
     @property
     def parity(self):
