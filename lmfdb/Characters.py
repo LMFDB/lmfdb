@@ -45,7 +45,7 @@ def render_Dirichletwebpage(request, modulus, number):
         return render_template('dirichlet_characters/Dirichlet.html', **info)
     elif number == None:
         info = WebDirichletGroup(temp_args).to_dict()
-        return render_template('dirichlet_characters/DirichletGroup.html', **info)
+        return render_template('dirichlet_characters/CharGroup.html', **info)
     else:
         info = WebDirichletCharacter(temp_args).to_dict()
         print info
@@ -81,7 +81,7 @@ def render_Heckewebpage(request, number_field, modulus, number):
         return render_template('dirichlet_characters/HeckeChooseIdeal.html', **info)
     elif number == None:
         info = init_HeckeGroup(temp_args)
-        return render_template('dirichlet_characters/HeckeGroup.html', **info)
+        return render_template('dirichlet_characters/CharGroup.html', **info)
     else:
         web_chi = WebCharacter(temp_args)
         info = initCharacterInfo(web_chi, temp_args, request)

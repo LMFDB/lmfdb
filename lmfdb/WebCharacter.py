@@ -147,7 +147,7 @@ class WebCharObject:
         return d
 
     @staticmethod
-    def logvalue2tex(x, tag=False):
+    def texlogvalue(x, tag=False):
         n = int(x.numer())
         d = int(x.denom())
         if d == 1:
@@ -165,21 +165,45 @@ class WebCharObject:
         else:
             return s
 
+    @staticmethod
+    def textuple(l):
+        return '\((%s)\)'%(','.join(l))
+
+    @staticmethod
+    def texbool(b):
+        return ("No","Yes")[b]
 
 #############################################################################
 ###  Dirichlet type
 
 class WebDirichlet(WebCharObject):
+    """ 
+    For some applications (orbits, enumeration), Dirichlet characters may be
+    represented by a couple (modulus, number) without computing the Dirichlet
+    group.
+    """
 
-    def _char_desc(self, num, mod=None):
-        if mod == None:
+    def _char_desc(self, num, mod=None, prim=None):
+        """ usually num is the number, but can be a character """
+        if isinstance(num, DirichletCharacter_conrey):
+            mod = num.modulus()
+            num = num.number()
+        elif mod == None:
             mod = self.modulus
-        return ( mod, num, self.char2tex(mod,num))
+        if prim == None:
+            prim = self.charisprimitive(mod,num)
+        return ( mod, num, self.char2tex(mod,num), prim)
 
     @staticmethod
     def char2tex(modulus, number):
         return r'\(\chi_{%s}(%s,\cdot)\)'%(modulus,number)
 
+    def charisprimitive(self,mod,num):
+        if isinstance(self.G, DirichletGroup_conrey) and self.G.modulus()==mod:
+            G = self.G
+        else:
+            G = DirichletGroup_conrey(mod)
+        return G[num].is_primitive()
 
 #############################################################################
 ###  Hecke type
@@ -193,14 +217,16 @@ class WebHecke(WebCharObject):
         number = c.exponents()
         return r'\(\chi_{%s}(\cdot)\)'%(','.join(map(str,number)))
 
-    def _char_desc(self, c, modlabel=None):
+    def _char_desc(self, c, modlabel=None, prim=None):
         """ c is a Hecke character of modulus self.modulus
             unless modlabel is specified
         """
         if modlabel == None:
             modlabel = self.modlabel
         numlabel = self.number2label( c.exponents() )
-        return (modlabel, numlabel, self.char2tex(c) ) 
+        if prim == None:
+            prim = c.is_primitive()
+        return (modlabel, numlabel, self.char2tex(c), prim ) 
 
     @staticmethod
     def group2tex(ideal):
@@ -280,7 +306,7 @@ class WebCharGroup(WebCharObject):
             'prevmod', 'next', 'nextmod', 'structure', 'codestruct', 'order',
             'codeorder', 'generators', 'codegen', 'valuefield', 'vflabel',
             'vfpol', 'headers', 'contents' ] 
-        self.headers = [ 'label', 'order', 'structure' ]
+        self.headers = [ 'number', 'name', 'order', 'isprimitive' ]
         self.contents = []
 
     @property
@@ -300,16 +326,14 @@ class WebCharGroup(WebCharObject):
 
     @property
     def generators(self):
-        return latex_tuple(map(self.group2tex, self.G.gens()))
+        return self.textuple(map(self.group2tex, self.G.gens()))
 
     def add_row(self, chi):
+        prim = chi.is_primitive()
         self.contents.append(
-                 (chi.modlabel,
-                  chi.numlabel,
-                  chi.texname,
-                  chi.order,
-                  chi.isprimitive )
-            )
+                 ( self._char_desc(chi, prim=prim),
+                   (chi.order(), self.bool(prim) )
+                 )
      
     def _fill_contents(self):
         if self.H is not None:
@@ -330,11 +354,11 @@ class WebChar(WebCharObject):
 
     @property
     def isprimitive(self):
-        return lmfdb_bool( self.chi.is_primitive() )
+        return self.texbool( self.chi.is_primitive() )
 
     @property
     def isreal(self):
-        return lmfdb_bool( self.order <= 2 )
+        return self.texbool( self.order <= 2 )
 
     @property
     def valuefield(self):
@@ -390,8 +414,7 @@ class WebDirichletGroup(WebDirichlet, WebCharGroup):
 
     @property
     def generators(self):
-        return latex_tuple(self.G.gens())
-
+        return self.textuple(self.G.gens())
 
 class WebDirichletCharacter(WebDirichlet, WebChar):
 
@@ -454,19 +477,20 @@ class WebDirichletCharacter(WebDirichlet, WebChar):
 
     @property
     def generators(self):
-        return '\(%s\)'%(','.join( map(str, self._gens)) )
+        return self.textuple(map(str, self._gens) )
 
     @property
     def genvalues(self):
         logvals = [self.chi.logvalue(k) for k in self._gens]
-        return '\(%s\)'%(','.join( map(self.logvalue2tex, logvals)) )
+        return self.textuple( map(self.texlogvalue, logvals) )
 
     @property
     def galoisorbit(self):
         order = self.order
         mod, num = self.modulus, self.number
+        prim = self.isprimitive
         orbit = [ power_mod(num, k, mod) for k in xrange(1, order) if gcd(k,order) == 1 ]
-        return [ self._char_desc(num) for num in orbit ]
+        return [ self._char_desc(num, prim=prim) for num in orbit ]
 
     @property
     def symbol(self):
@@ -523,16 +547,17 @@ class WebHeckeCharacter(WebChar):
 
     @property
     def generators(self):
-        return '\(%s\)'%(','.join( map(lmfdb_ideal2tex, self.G.gen_ideals() )) )
+        return self.textuple( map(lmfdb_ideal2tex, self.G.gen_ideals() ) )
 
     @property
     def genvalues(self):
         logvals = self.chi.logvalues_on_gens()
-        return '\(%s\)'%(','.join( map(self.logvalue2tex, logvals)) )
+        return self.textuple( map(self.texlogvalue, logvals) )
 
     @property
     def galoisorbit(self):
-        return  [ self._char_desc(c) for c in chi.galois_orbit() ]
+        prim = self.isprimitive
+        return  [ self._char_desc(c, prim=prim) for c in self.chi.galois_orbit() ]
 
     @property
     def texname(self):
@@ -637,31 +662,19 @@ class WebHeckeGroup(WebCharGroup):
                 ]
 
     @property
+    def title(self):
+        return "Group of Hecke characters modulo %s"%(self.modulus)
+
+    @property
     def nf_pol(self):
         return self.nf.web_poly()
 
     @property
     def generators(self):
-        return latex_tuple(map(self.ideal2tex, self.G.gen_ideals()))
+        return self.textuple(map(self.ideal2tex, self.G.gen_ideals()))
     @property
     def codegen(self):
         return [('sage','G.gen_ideals()'), ('pari','G.gen')]
-
-    def _char_table_row(self, c):
-        return ( self.modlabel,
-                 lmfdb_hecke2label(c),
-                 lmfdb_hecke2tex(c),
-                 str(c.order()),
-                 lmfdb_bool(c.is_primitive()),
-                 )
-
-    @cached_method
-    def table_content(self):
-        """ build list: (tex, link, order, primitive) """
-        return [ self._char_table_row(c) for c in self.H.list() ]
-
-    def title(self):
-        return "Group of Hecke characters modulo %s"%(self.mod())
 
 #############################################################################
 ###
