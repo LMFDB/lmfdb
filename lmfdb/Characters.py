@@ -60,7 +60,7 @@ def render_Dirichletwebpage(request, modulus, number):
     temp_args['number'] = number
 
     if modulus == None:
-        info = WebDirichlet(temp_args)
+        info = WebDirichlet(temp_args).to_dict()
         return render_template('dirichlet_characters/Dirichlet.html', **info)
     elif number == None:
         info = WebDirichletGroup(temp_args).to_dict()

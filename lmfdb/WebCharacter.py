@@ -149,6 +149,8 @@ class WebCharObject:
 
     @staticmethod
     def texlogvalue(x, tag=False):
+        if not isinstance(x, Rational):
+            return 1
         n = int(x.numer())
         d = int(x.denom())
         if d == 1:
@@ -226,11 +228,29 @@ class WebDirichlet(WebCharObject):
     number2label = int
     label2number = int
     
+    @property
+    def groupelts(self):
+        return map(self.group2tex, self.Gelts)
+
+    def _compute_Gelts(self):
+        self.Gelts = []
+        m,n = self.modulus, 1
+        for k in xrange(1,m):
+            if gcd(k,m) == 1:
+                self.Gelts.append(k)
+                n += 1
+                if n > self.maxcols: break
+
+
+
 
 #############################################################################
 ###  Hecke type
 
 class WebHecke(WebCharObject):
+    """ FIXME design issue: should underlying group elements be represented
+        by tuples or by ideals ? for computations tuples are much better,
+        currently a mix of these is done """
 
     def _compute(self):
         self.k = self.label2nf(self.nflabel)
@@ -293,7 +313,7 @@ class WebHecke(WebCharObject):
         n, b = k(n), k(b)
         return k.ideal( (n,b) )
 
-    """ underlying group contains ideals """
+    """ underlying group contains ideals ( or could be exponent tuples) """
     group2tex = ideal2tex
     group2label = ideal2label
     label2group = label2ideal
@@ -314,6 +334,13 @@ class WebHecke(WebCharObject):
         pol = eval(label)
         return NumberField(pol,'a')
 
+    def _compute_Gelts(self):
+        self.Gelts = []
+        c = 1
+        for x in self.G.iter_exponents():
+            self.Gelts.append(x)
+            c += 1
+            if c > self.maxcols: break
 
 #############################################################################
 ###  Family
@@ -344,16 +371,17 @@ class WebCharGroup(WebCharObject):
     self.G is the underlying group
     """
     def __init__(self, args):
-        self.headers = [ 'order', 'primitive' ]
+        self.headers = [ 'order', 'primitive']
+        self.Gelts = []
         self.contents = []
-        self.maxrows = 40
-        self.maxcols = 40
+        self.maxrows = 25
+        self.maxcols = 20
         WebCharObject.__init__(self,args)
         self._keys = [ 'title', 'credit', 'codelangs', 'type', 'nf', 'nflabel',
             'nfpol', 'modulus', 'modlabel', 'texname', 'codeinit', 'previous',
             'prevmod', 'next', 'nextmod', 'structure', 'codestruct', 'order',
             'codeorder', 'generators', 'codegen', 'valuefield', 'vflabel',
-            'vfpol', 'headers', 'contents' ] 
+            'vfpol', 'headers', 'groupelts', 'contents' ] 
 
     @property
     def structure(self):
@@ -378,20 +406,30 @@ class WebCharGroup(WebCharObject):
     def generators(self):
         return self.textuple(map(self.group2tex, self.G.gens()), tag=False)
 
+    @property
+    def groupelts(self):
+        return map(self.group2tex, self.Gelts)
+
     def add_row(self, chi):
         prim = chi.is_primitive()
         self.contents.append(
-                 (  self._char_desc(chi, prim=prim),
-                    (chi.multiplicative_order(), self.texbool(prim) )
-                 ) )
+                 ( self._char_desc(chi, prim=prim),
+                   ( chi.multiplicative_order(),
+                     self.texbool(prim) ),
+                     self.charvalues(chi) ) )
      
     def _fill_contents(self):
+        self._compute_Gelts()
         r = 0
         for c in self.H:
             self.add_row(c)
             r += 1
             if r > self.maxrows:
                 break
+
+    def charvalues(self, chi):
+        return [ self.texlogvalue(chi.logvalue(x), tag=True) for x in self.Gelts ]
+
 
 #############################################################################
 ###  Characters
@@ -670,7 +708,7 @@ class WebHeckeCharacter(WebChar, WebHecke):
 
         self.order = chi.order()
         self.zetaorder = 0 # FIXME H.zeta_order()
-        self.parity = 'None'
+        self.parity = None
 
     @property
     def codeinit(self):
@@ -819,6 +857,13 @@ class WebHeckeGroup(WebCharGroup, WebHecke):
     @property
     def codegen(self):
         return [('sage','G.gen_ideals()'), ('pari','G.gen')]
+
+    @property
+    def groupelts(self):
+        print self.Gelts
+        print [ self.group2tex(self.G.exp(e)) for e in self.Gelts ]
+        return [ self.group2tex(self.G.exp(e)) for e in self.Gelts ]
+
 
 #############################################################################
 ###

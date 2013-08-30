@@ -55,13 +55,12 @@
   <thead class="space">
       <tr> 
         <th class="left"> </th>
-        {% for h in headers %}
-        <th class="weight">{{h}} </th> 
-        {% endfor %}
+        {% for h in headers %} <th class="weight">{{h}} </th> {% endfor %}
+        {% for v in groupelts %} <th >{{v}} </th> {% endfor %}
       </tr>
     </thead>
     <tbody>
-      {% for char, row in contents %}
+      {% for char, prop, values in contents %}
       {# row = ( label, tex, order, primitive ) #}
       <tr>
         <th class="left">
@@ -72,9 +71,8 @@
           </a>
           {% endwith %}
         </th>
-        {% for value in row %}
-        <td style="font-family: serif;" >{{value}}</td> 
-        {% endfor %} 
+        {% for value in prop %} <td style="font-family: serif;" >{{value}}</td> {% endfor %} 
+        {% for value in values %} <td style="font-family: serif;" >{{value}}</td> {% endfor %} 
       </tr>
       {% endfor %} 
     </tbody>    

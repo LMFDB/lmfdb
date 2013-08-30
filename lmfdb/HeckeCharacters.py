@@ -69,9 +69,20 @@ class RayClassGroup(AbelianGroup_class):
     def gen_ideals(self):
         return self.__generators
 
-    def lift(self, x):
+    def exp(self,x):
         gens = self.gen_ideals()
-        return prod( g**e for g,e in zip(gens,x.list()) )
+        return prod( g**e for g,e in zip(gens,x) )
+
+    def lift(self, x):
+        return self.exp(x.exponents())
+
+    def iter_exponents(self):
+        for e in xmrange(self.invariants(), tuple):
+            yield e
+
+    def iter_ideals(self):
+        for e in self.iter_exponents():
+            yield self.exp(e)
 
 class HeckeCharGroup(DualAbelianGroup_class):
     def __init__(self, ray_class_group, base_ring):
