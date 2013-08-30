@@ -548,7 +548,6 @@ def get_entries(modulus):
     return headers, rows
 
 
-@app.route("/Character/Dirichlet/grouptable")
 def dirichlet_group_table(**args):
     modulus = request.args.get("modulus", 1, type=int)
     info = to_dict(args)

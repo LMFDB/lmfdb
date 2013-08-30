@@ -2,9 +2,7 @@
 
 {% block description %}
  
-        <div class='sage nodisplay code'>sage: chi = DirichletGroup_conrey({{modulus}})[{{number}}]<br>sage: chi_sage = DirichletGroup_conrey.standard_dirichlet_group({{modulus}})[{{number}}]</br></div>
         {{ addcode(codeinit,'div') }}
-
 
         {% if symbol %}
         {# Kronecker symbol #}
@@ -24,7 +22,9 @@
             </h2>
             <div class = 'sage nodisplay code'>sage: chi.primitive_character()</div>
             <p>
-            <a href="{{ url_for('render_Dirichletwebpage', 
+            <a href="{{ url_for('render_charwebpage', 
+                type = type,
+                number_field = nflabel,
                 modulus = condlabel, 
                 number  = indlabel)}}">
                 {{inducing}}
@@ -121,7 +121,7 @@
 
         <p>
         {% for mod,num,label,prim in galoisorbit %}
-        <a href="{{ url_for('render_Dirichletwebpage', modulus=mod, number=num)}}">
+        <a href="{{ url_for('render_charwebpage', type=type, number_field=nflabel, modulus=mod, number=num)}}">
                 {{label}}
             </a>
          {% endfor %}
@@ -134,7 +134,7 @@
         <table>
             <tr>
                 <td> Field of values </td>
-                <td> Field <a href="/NumberField/{{vflabel}}">{{ valuefield }}</a></td>
+                <td> <a href="/NumberField/{{vflabel}}">{{ valuefield }}</a></td>
             </tr>
             {% if kflabel %}
             <tr>
@@ -146,5 +146,155 @@
             {% endif %}
         </table>
 
+        {# sums #}
+        
+        {% if type=='Dirichlet' %}
+
+        {# Gauss sum #}
+
+        <h2>
+            {{ KNOWL('character.dirichlet.gauss_sum') }}
+        </h2>
+        <div class = 'sage nodisplay code'>sage: chi.gauss_sum()</div>
+        {% set gauss_default = 2 %}
+        <form> \( \tau_{ a }( \chi_{ {{modulus}} }({{number}},&middot;) )\;\)  at \(\;a = \)
+            <input id="calc-gauss-input" size=10 placeholder={{gauss_default}}>
+            <button id="calc-gauss-go"> Compute </button>
+            <span class="formexample"> e.g. {{gauss_default}} </span>
+            <div class="slider" id="slider-gauss"></div>
+        </form>
+        <div class="output"><span id="calc-gauss-output"></span></div>
+
+        {# Jacobi sum #}
+
+        <h2>
+            {{ KNOWL('character.dirichlet.jacobi_sum') }}
+        </h2>
+        <div class = 'sage nodisplay code'>sage: chi_sage.jacobi_sum()</div>
+        {% set jacobi_default = 1 %}
+        <form> \( J(\chi_{ {{modulus}} }({{number}},&middot;),\chi_{ {{modulus}} }(n,&middot;)) \;\) for \( \; n = \)
+            <input id="calc-jacobi-input" size="10" placeholder={{jacobi_default}}>
+            <button id="calc-jacobi-go"> Compute </button>
+            <span class="formexample"> e.g. 1</span>
+            <div class="slider" id="slider-jacobi-b"></div>
+        </form>
+        <div class="output"><span id="calc-jacobi-output"></span></div>
+        
+        {# Kloosterman sum #}
+
+        <h2>
+            {{ KNOWL('character.dirichlet.kloosterman_sum') }}
+        </h2>
+        <div class = 'sage nodisplay code'>sage: chi_sage.kloosterman_sum(,)</div>
+        {% set kloosterman_default_a = 1 %}
+        {% set kloosterman_default_b = 2 %} 
+        <form> \(K(a,b,\chi_{ {{modulus}} }({{number}},&middot;)) \;\) at \(\; a,b = \)
+            <input id="calc-kloosterman-input" size=10 placeholder={{kloosterman_default_a}},{{kloosterman_default_b}}>
+            <button id="calc-kloosterman-go"> Compute </button>
+            <span class="formexample"> e.g. {{kloosterman_default_a}},{{kloosterman_default_b}}</span>
+            <table style="width: 95%;">
+            <tr><td style="width: 3em; text-align: right;">a: </td><td><div class="slider" id="slider-kloosterman-a"></div></td></tr>
+            <tr><td style="width: 3em; text-align: right;">b: </td><td><div class="slider" id="slider-kloosterman-b"></div></td></tr>
+            </table>
+        </form>
+        <div class="output"><span id="calc-kloosterman-output"></span></div>
+ 
+<script type="text/javascript">
+function gauss_handler(evt) {
+    evt.preventDefault();
+    var val = $("#calc-gauss-input").val();
+    $("#calc-gauss-output").load("{{ url_for('dc_calc', calc='gauss', modulus = modulus, number=number) }}" + "?val=" + val, 
+     function() {
+        {# tell mathjx to render the output #}
+        MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-gauss-output"]);
+     });
+}
+function jacobi_handler(evt) {
+   evt.preventDefault();
+   var val = $("#calc-jacobi-input").val();
+   $("#calc-jacobi-output").load("{{ url_for('dc_calc', calc='jacobi', modulus=modulus,number=number) }}" + "?val=" + val,
+     function() {
+       {# tell mathjx to render the output #}
+       MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-jacobi-output"]);
+     });
+}
+
+function kloosterman_handler(evt) {
+   evt.preventDefault();
+   var val = $("#calc-kloosterman-input").val();
+   $("#calc-kloosterman-output").load("{{ url_for('dc_calc', calc='kloosterman', modulus=modulus,number=number) }}" + "?val=" + val,
+     function() {
+       {# tell mathjx to render the output #}
+       MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-kloosterman-output"]);
+     });
+}
+
+$(function() {
+    $("#calc-gauss-go").click(function(e) {gauss_handler(e)});
+    $("#calc-jacobi-go").click(function(e) {jacobi_handler(e)});
+    $("#calc-kloosterman-go").click(function(e) {gauss_handler(e)});
+    $("#calc-gauss-input").keypress(function(e) {
+        if (e.which == 13) gauss_handler(e);
+        });
+    {#$("#calc-gauss-input").ready(function(e) {
+        gauss_handler(e);
+        });#}
+    $("#calc-jacobi-input").keypress(function(e) {
+        if (e.which == 13) jacobi_handler(e);
+    });
+    $("#calc-kloosterman-input").keypress(function(e) {
+        if (e.which == 13) kloosterman_handler(e);
+    });
+
+    {#{$( "#slider-gauss-default" ).slider({ value:2,
+        create: function( event, ui ) {
+          $( "#calc-gauss-input" ).val(ui.value);
+          gauss_handler(event);
+        }
+        });#}
+    $( "#slider-gauss" ).slider({ value: {{gauss_default}}, min: 0, max: 2*{{modulus}}, step: 1,
+        change: function( event, ui ) {
+          $( "#calc-gauss-input" ).val(ui.value);
+          gauss_handler(event);
+        }
+    });
+
+    function jacobi_slider_handler(event, ui) {
+      var b = $("#slider-jacobi-b").slider("value");
+      $( "#calc-jacobi-input" ).val(b);
+      jacobi_handler(event);
+                                                };
+
+    $( "#slider-jacobi-b").slider({ value: {{jacobi_default}}, min: 0, max: {{modulus}}, step: 1,
+        change: function( event, ui ) {
+            $( "#calc-jacobi-input" ).val(ui.value);
+            jacobi_handler(event);
+        }
+     });
+
+    function kloosterman_slider_handler(event, ui) {
+      var a = $("#slider-kloosterman-a").slider("value");
+      var b = $("#slider-kloosterman-b").slider("value");
+      $( "#calc-kloosterman-input" ).val(""+a+","+b);
+      kloosterman_handler(event);
+    }; 
+
+    $( "#slider-kloosterman-a" ).slider({ value: {{kloosterman_default_a}}, min: 0, max: 2*{{modulus}}, step: 1,
+      change: function( event, ui ) {
+        kloosterman_slider_handler(event, ui);
+       }
+     });
+
+    $( "#slider-kloosterman-b" ).slider({ value: {{kloosterman_default_b}}, min: 0, max: 2*{{modulus}}, step: 1,
+      change: function( event, ui ) {
+        kloosterman_slider_handler(event, ui);
+      }
+     });
+
+});
+</script>
+        {% endif %}
+
+       
 {% endblock %}
 

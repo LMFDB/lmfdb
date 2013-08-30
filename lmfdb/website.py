@@ -154,19 +154,19 @@ def form_example():
     return render_template("form.html", info=info)
 
 
-@app.route("/Character/Dirichlet/")
-@app.route("/Character/Dirichlet/<arg1>")
-@app.route("/Character/Dirichlet/<arg1>/<arg2>")
-def render_Character(arg1=None, arg2=None):
-    return DirichletCharacter.render_webpage(request, arg1, arg2)
-
-
-@app.route("/Character/Hecke/")
-@app.route("/Character/Hecke/<arg1>")
-@app.route("/Character/Hecke/<arg1>/<arg2>")
-@app.route("/Character/Hecke/<arg1>/<arg2>/<arg3>")
-def render_HeckeCharacter(arg1=None, arg2=None, arg3=None):
-    return Characters.render_webpage(request, arg1, arg2, arg3)
+#@app.route("/Character/Dirichlet/")
+#@app.route("/Character/Dirichlet/<arg1>")
+#@app.route("/Character/Dirichlet/<arg1>/<arg2>")
+#def render_Character(arg1=None, arg2=None):
+#    return DirichletCharacter.render_webpage(request, arg1, arg2)
+#
+#
+#@app.route("/Character/Hecke/")
+#@app.route("/Character/Hecke/<arg1>")
+#@app.route("/Character/Hecke/<arg1>/<arg2>")
+#@app.route("/Character/Hecke/<arg1>/<arg2>/<arg3>")
+#def render_HeckeCharacter(arg1=None, arg2=None, arg3=None):
+#    return Characters.render_webpage(request, arg1, arg2, arg3)
 
 
 @app.route('/ModularForm/GSp/Q')

@@ -2,7 +2,7 @@
    {% if entries %}
    {% for lang,code in entries %}
    <{{tag}} class='{{lang}} nodisplay code'>
-   {{ code|join("<br/>") }}
+   {{ code|nl2br }}
    </{{tag}}>
    {% endfor %}
    {% endif %}

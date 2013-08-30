@@ -26,6 +26,24 @@ logger = make_logger("HC")
 #   Route functions
 ###############################################################################
 
+## generic
+
+@app.route("/Character/")
+@app.route("/Character/<type>")
+@app.route("/Character/<type>/<arg1>")
+@app.route("/Character/<type>/<arg1>/<arg2>")
+@app.route("/Character/<type>/<arg1>/<arg2>/<arg3>")
+def render_Character(type=None, arg1=None, arg2=None, arg3=None):
+    render_charwebpage(request, type, arg1, arg2, arg3)
+
+@app.route("/Character/<type>/<modulus>/<number>")
+@app.route("/Character/<type>/<number_field>/<modulus>/<number>")
+def render_charwebpage(request, type, number_field, modulus, number):
+    if type=='Dirichlet':
+        render_Dirichletwebpage(request, modulus, number)
+    elif type=='Hecke':
+        render_Heckewebpage(request, number_field, modulus, number)
+
 @app.route("/Character/Dirichlet/")
 @app.route("/Character/Dirichlet/<arg1>")
 @app.route("/Character/Dirichlet/<arg1>/<arg2>")
@@ -37,6 +55,7 @@ def render_Dirichletwebpage(request, modulus, number):
     args = request.args
     temp_args = to_dict(args)
 
+    temp_args['type'] = 'Dirichlet'
     temp_args['modulus'] = modulus
     temp_args['number'] = number
 
@@ -53,11 +72,30 @@ def render_Dirichletwebpage(request, modulus, number):
         info['navi'] = dirichlet_navi(info)
         return render_template('dirichlet_characters/Character.html', **info)
 
+
+@app.route("/Character/Dirichlet/<calc>/<int:modulus>/<int:number>")
+def dc_calc(calc, modulus, number):
+    val = request.args.get("val", [])
+    args = {'type':'Dirichlet', 'modulus':modulus, 'number':number}
+    if not val:
+        return flask.abort(404)
+    try:
+        if calc == 'gauss':
+            return WebDirichletCharacter(args).gauss_sum(val)
+        elif calc == 'jacobi':
+            return WebDirichletCharacter(args).jacobi_sum(val)
+        elif calc == 'kloosterman':
+            return WebDirichletCharacter(args).kloosterman_sum(val)
+        else:
+            return flask.abort(404)
+    except Exception, e:
+        return "<span style='color:red;'>ERROR: %s</span>" % e
+
 def dirichlet_navi(info):
     prevurl =  url_for("render_DirichletCharacter", arg1=info['prevmod'], arg2=info['prevnum'])
     nexturl =  url_for("render_DirichletCharacter", arg1=info['nextmod'], arg2=info['nextnum'])
     return [ (info['previous'], prevurl), (info['next'], nexturl) ]
-  
+
 @app.route("/Character/Hecke/")
 @app.route("/Character/Hecke/<arg1>")
 @app.route("/Character/Hecke/<arg1>/<arg2>")
@@ -70,7 +108,7 @@ def render_Heckewebpage(request, number_field, modulus, number):
     args = request.args
     temp_args = to_dict(args)
 
-    temp_args['type'] = 'hecke'  # set type and input
+    temp_args['type'] = 'Hecke'
     temp_args['number_field'] = number_field
     temp_args['modulus'] = modulus
     temp_args['number'] = number
@@ -79,13 +117,15 @@ def render_Heckewebpage(request, number_field, modulus, number):
         return render_template('dirichlet_characters/Hecke_help.html')
     elif modulus == None:
         info = init_NFinfo(temp_args)
+        print info
         return render_template('dirichlet_characters/HeckeChooseIdeal.html', **info)
     elif number == None:
-        info = init_HeckeGroup(temp_args)
+        info = WebHeckeGroup(temp_args).to_dict()
+        print info
         return render_template('dirichlet_characters/CharGroup.html', **info)
     else:
-        web_chi = WebCharacter(temp_args)
-        info = initCharacterInfo(web_chi, temp_args, request)
+        info = WebHeckeCharacter(temp_args).to_dict()
+        print info
         return render_template('dirichlet_characters/Character.html', **info)
 
 def init_HeckeGroup(args):
