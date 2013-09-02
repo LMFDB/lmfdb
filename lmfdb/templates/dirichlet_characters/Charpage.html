@@ -44,6 +44,33 @@ table.props tr td:first-child {
     margin-left: 20px;
 }
 
+table.values {
+  width: auto;
+  border: 0;
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+table.values a {
+  display: block;
+}
+table.values thead tr {
+    border-bottom: 1px dotted gray;
+}
+table.values th {
+  text-align: center;
+  font-weight: normal;
+}
+
+table.values td.odd,
+table.values td:nth-child(odd),
+table.values td:first-child {
+ background: white;
+}
+
+table.values td.even,
+table.values td:nth-child(even) {
+ background: #EFE;
+}
 </style>
 
    {% if codelangs %}

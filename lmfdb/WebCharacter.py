@@ -118,17 +118,6 @@ def log_value(modulus, number):
 class WebCharObject:
     """ class for all characters and character groups """
     def __init__(self, args):
-        self._keys = [ 'title', 'credit', 'codelangs', 'type',
-                 'nf', 'nflabel', 'nfpol', 'modulus', 'modlabel',
-                 'number', 'numlabel', 'texname', 'codeinit', 'symbol',
-                 'previous', 'prevmod', 'prevnum', 'next', 'nextmod',
-                 'nextnum', 'structure', 'codestruct', 'conductor',
-                 'condlabel', 'codecond', 'isprimitive', 'inducing',
-                 'indlabel', 'codeind', 'order', 'codeorder', 'parity',
-                 'isreal', 'generators', 'codegen', 'genvalues', 'logvalues',
-                 'values', 'codeval', 'galoisorbit', 'codegalois',
-                 'valuefield', 'vflabel', 'vfpol',
-                 'kerfield', 'kflabel', 'kfpol', 'contents' ]   
         self.type = args.get('type',None)
         self.nflabel = args.get('number_field',None)
         self.modlabel = args.get('modulus',None)
@@ -141,20 +130,22 @@ class WebCharObject:
 
     def to_dict(self):
         d = {}
+        print self._keys
         for k in self._keys:
             d[k] = getattr(self,k,None)
             if d[k] == None:
                 pass # should not
+        print d
         return d
 
     @staticmethod
     def texlogvalue(x, tag=False):
         if not isinstance(x, Rational):
-            return 1
+            return '1'
         n = int(x.numer())
         d = int(x.denom())
         if d == 1:
-            s = "1"
+            return '1'
         elif n == 1 and d == 2:
             s = "-1"
         elif n == 1 and d == 4:
@@ -178,6 +169,9 @@ class WebCharObject:
     @staticmethod
     def texbool(b):
         return ("No","Yes")[b]
+
+    def charvalues(self, chi):
+        return [ self.texlogvalue(chi.logvalue(x), tag=True) for x in self.Gelts() ]
 
 #############################################################################
 ###  Dirichlet type
@@ -207,6 +201,10 @@ class WebDirichlet(WebCharObject):
             G = DirichletGroup_conrey(mod)
         return G[num].is_primitive()
 
+    @property
+    def generators(self):
+        return self.textuple(map(str, self.H_sage.unit_gens()))
+
     """ for Dirichlet over Z, everything is described using integers """
     @staticmethod
     def char2tex(modulus, number, val='\cdot', tag=True):
@@ -230,17 +228,18 @@ class WebDirichlet(WebCharObject):
     
     @property
     def groupelts(self):
-        return map(self.group2tex, self.Gelts)
+        return map(self.group2tex, self.Gelts())
 
-    def _compute_Gelts(self):
-        self.Gelts = []
+    @cached_method
+    def Gelts(self):
+        res = []
         m,n = self.modulus, 1
         for k in xrange(1,m):
             if gcd(k,m) == 1:
-                self.Gelts.append(k)
+                res.append(k)
                 n += 1
                 if n > self.maxcols: break
-
+        return res
 
 
 
@@ -249,8 +248,9 @@ class WebDirichlet(WebCharObject):
 
 class WebHecke(WebCharObject):
     """ FIXME design issue: should underlying group elements be represented
-        by tuples or by ideals ? for computations tuples are much better,
-        currently a mix of these is done """
+        by tuples or by representative ideals ?
+        for computations tuples are much better, this is also more compact.
+        """
 
     def _compute(self):
         self.k = self.label2nf(self.nflabel)
@@ -262,6 +262,11 @@ class WebHecke(WebCharObject):
         self.modlabel = self.ideal2label(self._modulus)
         self.credit = "Pari, Sage"
         self.codelangs = ('pari', 'sage')
+
+    @property
+    def generators(self):
+        """ use representative ideals """
+        return self.textuple( map(self.ideal2tex, self.G.gen_ideals() ), tag=False )
 
     """ labeling conventions are put here """
 
@@ -313,10 +318,38 @@ class WebHecke(WebCharObject):
         n, b = k(n), k(b)
         return k.ideal( (n,b) )
 
-    """ underlying group contains ideals ( or could be exponent tuples) """
-    group2tex = ideal2tex
-    group2label = ideal2label
-    label2group = label2ideal
+    """
+    underlying group contains ideal classes, but are represented
+    as exponent tuples on cyclic components (not canonical, but
+    more compact)
+    """
+    #group2tex = ideal2tex
+    #group2label = ideal2label
+    #label2group = label2ideal
+    @staticmethod
+    def group2tex(x, tag=True):
+        if not isinstance(x, tuple):
+            x = x.exponents()
+        #s =  '\cdot '.join('g_{%i}^{%i}'%(i,e) for i,e in enumerate(x) if e>0)
+        s = []
+        for i,e in enumerate(x):
+            if e > 0:
+                if e==1:
+                    s.append('g_{%i}'%i)
+                else:
+                    s.append('g_{%i}^{%i}'%(i,e))
+        s =  '\cdot '.join(s)
+        if s == '': s = '1'
+        if tag: s = '\(%s\)'%s
+        return s
+
+    @staticmethod
+    def group2label(x):
+        return number2label(x.exponents())
+
+    @staticmethod
+    def label2group(x):
+        return self.G(label2number(x))
 
     @staticmethod
     def number2label(number):
@@ -333,14 +366,20 @@ class WebHecke(WebCharObject):
         x = var('x')
         pol = eval(label)
         return NumberField(pol,'a')
+ 
+    @property
+    def groupelts(self):
+        return map(self.group2tex, self.Gelts())
 
-    def _compute_Gelts(self):
-        self.Gelts = []
+    @cached_method
+    def Gelts(self):
+        res = []
         c = 1
         for x in self.G.iter_exponents():
-            self.Gelts.append(x)
+            res.append(x)
             c += 1
             if c > self.maxcols: break
+        return res
 
 #############################################################################
 ###  Family
@@ -372,16 +411,16 @@ class WebCharGroup(WebCharObject):
     """
     def __init__(self, args):
         self.headers = [ 'order', 'primitive']
-        self.Gelts = []
         self.contents = []
         self.maxrows = 25
         self.maxcols = 20
-        WebCharObject.__init__(self,args)
         self._keys = [ 'title', 'credit', 'codelangs', 'type', 'nf', 'nflabel',
             'nfpol', 'modulus', 'modlabel', 'texname', 'codeinit', 'previous',
             'prevmod', 'next', 'nextmod', 'structure', 'codestruct', 'order',
             'codeorder', 'generators', 'codegen', 'valuefield', 'vflabel',
-            'vfpol', 'headers', 'groupelts', 'contents' ] 
+            'vfpol', 'headers', 'groupelts', 'contents',
+            'properties2', 'friends'] 
+        WebCharObject.__init__(self,args)
 
     @property
     def structure(self):
@@ -402,14 +441,6 @@ class WebCharGroup(WebCharObject):
     def modulus(self):
         return self.ideal2tex(self._modulus)
 
-    @property
-    def generators(self):
-        return self.textuple(map(self.group2tex, self.G.gens()), tag=False)
-
-    @property
-    def groupelts(self):
-        return map(self.group2tex, self.Gelts)
-
     def add_row(self, chi):
         prim = chi.is_primitive()
         self.contents.append(
@@ -419,7 +450,6 @@ class WebCharGroup(WebCharObject):
                      self.charvalues(chi) ) )
      
     def _fill_contents(self):
-        self._compute_Gelts()
         r = 0
         for c in self.H:
             self.add_row(c)
@@ -427,8 +457,17 @@ class WebCharGroup(WebCharObject):
             if r > self.maxrows:
                 break
 
-    def charvalues(self, chi):
-        return [ self.texlogvalue(chi.logvalue(x), tag=True) for x in self.Gelts ]
+    @property
+    def properties2(self):
+        return [("Structure", [self.structure]),
+                ("Order", [self.order]),
+                ]
+
+    @property
+    def friends(self):
+        if self.nflabel:
+            return [ ("Number Field", '/NumberField/' + self.nflabel), ]
+
 
 
 #############################################################################
@@ -438,6 +477,20 @@ class WebChar(WebCharObject):
     """
     Class for presenting a Character on a web page
     """
+    def __init__(self, args):
+        self.maxcols = 20
+        self._keys = [ 'title', 'credit', 'codelangs', 'type',
+                 'nf', 'nflabel', 'nfpol', 'modulus', 'modlabel',
+                 'number', 'numlabel', 'texname', 'codeinit', 'symbol',
+                 'previous', 'prevmod', 'prevnum', 'next', 'nextmod',
+                 'nextnum', 'structure', 'codestruct', 'conductor',
+                 'condlabel', 'codecond', 'isprimitive', 'inducing',
+                 'indlabel', 'codeind', 'order', 'codeorder', 'parity',
+                 'isreal', 'generators', 'codegen', 'genvalues', 'logvalues',
+                 'groupelts', 'values', 'codeval', 'galoisorbit', 'codegalois',
+                 'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
+                 'kfpol', 'contents', 'properties2', 'friends']   
+        WebCharObject.__init__(self,args)
 
     @property
     def order(self):
@@ -450,6 +503,10 @@ class WebChar(WebCharObject):
     @property
     def isreal(self):
         return self.texbool( self.order <= 2 )
+
+    @property
+    def values(self):
+        return self.charvalues(self.chi)
 
     @property
     def conductor(self):
@@ -501,13 +558,33 @@ class WebChar(WebCharObject):
       else:
           return ''
 
+    @property
+    def properties2(self):
+        f = [("Conductor", [self.conductor]),
+                ("Order", [self.order]),
+                ("Real", [self.isreal]),
+                ("Primitive", [self.isprimitive])]
+        if self.parity:
+            f.append(("Parity", [self.parity]))
+        return f
+
+    @property
+    def friends(self):
+        f = []
+        if self.nflabel:
+           cglink = '/Character/%s/%s/%s'%(self.type,self.nflabel,self.modlabel)
+           f.append( ("Character group", cglink) )
+           f.append( ('Number Field', '/NumberField/' + self.nflabel) )
+        else:
+           cglink = '/Character/%s/%s'%(self.type,self.modlabel)
+           f.append( ("Character group", cglink) )
+        f.append( ("Value Field", '/NumberField/' + self.vflabel) )
+        return f
+
 #############################################################################
 ###  Actual web objects used in lmfdb
 
 class WebDirichletGroup(WebCharGroup, WebDirichlet):
-
-    #def __init__(self, args):
-    #    WebCharGroup.__init__(self, args)
 
     def _compute(self):
         self.modulus = m = int(self.modlabel)
@@ -528,9 +605,6 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
       return r"Dirichlet Group modulo %s" % (self.modulus)
 
     @property
-    def generators(self):
-        return self.textuple(map(str, self.H_sage.unit_gens()))
-    @property
     def codegen(self):
         return [('sage', 'H_sage.unit_gens()'),
                 ('pari', 'G.gen') ]
@@ -548,7 +622,7 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
     def order(self):
         return self.H_sage.order()
 
-class WebDirichletCharacter(WebDirichlet, WebChar):
+class WebDirichletCharacter(WebChar, WebDirichlet):
 
     def _compute(self):
         self.modulus = m = int(self.modlabel)
@@ -565,6 +639,8 @@ class WebDirichletCharacter(WebDirichlet, WebChar):
         self.codelangs = ('pari', 'sage')
         self.prevmod, self.prevnum = prev_dirichlet_char(m, n)
         self.nextmod, self.nextnum = next_dirichlet_char(m, n)
+        print prev_dirichlet_char(m,n)
+        print self.prevmod
 
     @property
     def title(self):
@@ -594,10 +670,6 @@ class WebDirichletCharacter(WebDirichlet, WebChar):
     @property
     def parity(self):
         return ('Odd', 'Even')[self.chi.is_even()]
-
-    @property
-    def generators(self):
-        return self.textuple(map(str, self._gens) )
 
     @property
     def genvalues(self):
@@ -742,10 +814,6 @@ class WebHeckeCharacter(WebChar, WebHecke):
         return None
 
     @property
-    def generators(self):
-        return self.textuple( map(self.group2tex, self.G.gen_ideals() ), tag=False )
-
-    @property
     def genvalues(self):
         logvals = self.chi.logvalues_on_gens()
         return self.textuple( map(self.texlogvalue, logvals))
@@ -851,18 +919,8 @@ class WebHeckeGroup(WebCharGroup, WebHecke):
         return self.k.polynomial()._latex_()
 
     @property
-    def generators(self):
-        return self.textuple(map(self.group2tex, self.G.gen_ideals()), tag=False)
-
-    @property
     def codegen(self):
         return [('sage','G.gen_ideals()'), ('pari','G.gen')]
-
-    @property
-    def groupelts(self):
-        print self.Gelts
-        print [ self.group2tex(self.G.exp(e)) for e in self.Gelts ]
-        return [ self.group2tex(self.G.exp(e)) for e in self.Gelts ]
 
 
 #############################################################################

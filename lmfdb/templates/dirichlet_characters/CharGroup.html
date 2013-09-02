@@ -53,30 +53,30 @@
 
 <table class="ntdata" id="chitable">
   <thead class="space">
-      <tr> 
-        <th class="left"> </th>
-        {% for h in headers %} <th class="weight">{{h}} </th> {% endfor %}
-        {% for v in groupelts %} <th >{{v}} </th> {% endfor %}
-      </tr>
-    </thead>
-    <tbody>
-      {% for char, prop, values in contents %}
-      {# row = ( label, tex, order, primitive ) #}
-      <tr>
-        <th class="left">
-          {% with mod,num,tex,prim = char %}
-          <a class="{% if prim -%}primitive{%- else -%}imprimitive{%- endif %}"
-            align="center" href="{{mod}}/{{num}}">
-            {{ tex }}
-          </a>
-          {% endwith %}
-        </th>
-        {% for value in prop %} <td style="font-family: serif;" >{{value}}</td> {% endfor %} 
-        {% for value in values %} <td style="font-family: serif;" >{{value}}</td> {% endfor %} 
-      </tr>
-      {% endfor %} 
-    </tbody>    
-  </table>
+    <tr> 
+      <th class="left"> </th>
+      {% for h in headers %} <th class="weight">{{h}} </th> {% endfor %}
+      {% for v in groupelts %} <th >{{v}} </th> {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for char, prop, values in contents %}
+    {# row = ( label, tex, order, primitive ) #}
+    <tr>
+      <th class="left">
+        {% with mod,num,tex,prim = char %}
+        <a class="{% if prim -%}primitive{%- else -%}imprimitive{%- endif %}"
+          align="center" href="{{ url_for('render_charwebpage', type=type, number_field=nflabel, modulus=mod, number=num) }}">
+          {{ tex }}
+        </a>
+        {% endwith %}
+      </th>
+      {% for value in prop %} <td style="font-family: serif;" >{{value}}</td> {% endfor %} 
+      {% for value in values %} <td style="font-family: serif;" >{{value}}</td> {% endfor %} 
+    </tr>
+    {% endfor %} 
+  </tbody>    
+</table>
 
-  {% endblock %}
+{% endblock %}
 
