@@ -16,6 +16,30 @@ except:
     logger.critical("dirichlet_conrey.pyx cython file is not available ...")
 from HeckeCharacters import *
 
+def evalpolelt(label,gen,genlabel='a'):
+    """ label is a compact polynomial expression in genlabel                    
+        ( '*' and '**' are removed )                                            
+    """                                                                         
+    res = 0                                                                     
+    import re                                                                   
+    regexp = r'([+-]?)([+-]?\d*/?\d*)(%s\d*)?'%genlabel                         
+    for m in re.finditer(regexp,label):                                         
+        s,c,e = m.groups()                                                      
+        if c == '' and e == None: break    
+        if c == '':          
+            c = 1                            
+        else:                                
+            c = int(c)                                                          
+        if s == '-': c = -c                                                     
+        if e == None:                                                           
+            e = 0                                                               
+        elif e == genlabel:                                                     
+            e = 1                                                               
+        else:                                                                   
+            e = int(e[1:])                                                      
+        res += c*gen**e           
+    return res              
+
 def lmfdb_ideal2label(ideal):
       """
       labeling convention for ideal f:
@@ -318,9 +342,10 @@ class WebHecke(WebCharObject):
         (dot between n and b, a is the field generator, use '+' and )
         """
         a,b = ideal.gens_two()
-        s = '+'.join( '%s*a**%i'%(b,i) for i,b in enumerate(b.polynomial().list())
+        s = '+'.join( '%sa%i'%(b,i) for i,b in enumerate(b.polynomial().list())
                                       if b != 0 ) 
-        return "%s.%s"%(a,b)
+        return "%s.%s"%(a,s.replace('+-','-'))
+
     @staticmethod
     def label2ideal(k,label):
         """ k = underlying number field """
@@ -330,10 +355,11 @@ class WebHecke(WebCharObject):
             n, b = label, '0'
         a = k.gen()
         # FIXME: dangerous
-        n, b = eval(n), eval(b)
+        n, b = evalpolelt(n,a,'a'), evalpolelt(b,a,'a')
         n, b = k(n), k(b)
         return k.ideal( (n,b) )
 
+           
     """
     underlying group contains ideal classes, but are represented
     as exponent tuples on cyclic components (not canonical, but
@@ -364,10 +390,14 @@ class WebHecke(WebCharObject):
         return number2label(x.exponents())
 
     def label2group(self,x):
-        """ how to describe elements... """
-        a = self.k.gen()
-        print x
-        x = eval(x)
+        """ x is either an element of k or a tuple of ints or an ideal """
+        if x.count('.'):
+            x = self.label2ideal(self.k,x)
+        elif x.count('a'):
+            a = self.k.gen()
+            x = evalpolelt(x,a,'a')
+        elif x.count(','):
+            x = tuple(map(int,x.split(',')))
         return self.G(x)
 
     @staticmethod
@@ -383,7 +413,7 @@ class WebHecke(WebCharObject):
     @staticmethod
     def label2nf(label):
         x = var('x')
-        pol = eval(label)
+        pol = evalpolelt(label,x,'x')
         return NumberField(pol,'a')
  
     @property
