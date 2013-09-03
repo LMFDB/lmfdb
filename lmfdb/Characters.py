@@ -72,11 +72,19 @@ def render_Dirichletwebpage(request, modulus, number):
         return render_template('dirichlet_characters/Dirichlet.html', **info)
     elif number == None:
         info = WebDirichletGroup(temp_args).to_dict()
-        print info
+        m = info['modlabel']
+        info['bread'] = [('Characters','/Character'),
+                         ('Dirichlet','/Character/Dirichlet'),
+                         ('Modulus %s'%m, '/Character/Dirichlet/%s'%m)]
         return render_template('dirichlet_characters/CharGroup.html', **info)
     else:
         info = WebDirichletCharacter(temp_args).to_dict()
         info['navi'] = navi([info['previous'],info['next']])
+        m,n = info['modlabel'], info['numlabel']
+        info['bread'] = [('Characters','/Character'),
+                         ('Dirichlet','/Character/Dirichlet'),
+                         ('Modulus %s'%m, '/Character/Dirichlet/%s'%m),
+                         ('Character number %s'%n, '/Character/Dirichlet/%s/%s'%(m,n)) ]
         print info
         return render_template('dirichlet_characters/Character.html', **info)
 
@@ -132,11 +140,22 @@ def render_Heckewebpage(request, number_field, modulus, number):
         return render_template('dirichlet_characters/HeckeChooseIdeal.html', **info)
     elif number == None:
         info = WebHeckeGroup(temp_args).to_dict()
+        m = info['modlabel']
+        info['bread'] = [('Characters','/Character'),
+                         ('Hecke','/Character/Hecke'),
+                         ('Number Field %s'%number_field,'/Character/Hecke/%s'%number_field),
+                         ('Modulus %s'%m, '/Character/Hecke/%s/%s'%(number_field,m))]
         print info
         return render_template('dirichlet_characters/CharGroup.html', **info)
     else:
         info = WebHeckeCharacter(temp_args).to_dict()
         info['navi'] = navi([info['previous'],info['next']])
+        m,n = info['modlabel'], info['number']
+        info['bread'] = [('Characters','/Character'),
+                         ('Hecke','/Character/Hecke'),
+                         ('Number Field %s'%number_field,'/Character/Hecke/%s'%number_field),
+                         ('Modulus %s'%m, '/Character/Hecke/%s/%s'%(number_field,m)),
+                         ('Character number %s'%n, '/Character/Hecke/%s/%s/%s'%(number_field,m,n))]
         print info
         return render_template('dirichlet_characters/Character.html', **info)
 
