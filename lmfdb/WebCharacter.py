@@ -61,7 +61,6 @@ class WebCharObject:
 
     def to_dict(self):
         d = {}
-        print self._keys
         for k in self._keys:
             d[k] = getattr(self,k,None)
             if d[k] == None:
@@ -184,7 +183,75 @@ class WebDirichlet(WebCharObject):
 
         return res
 
+    @staticmethod
+    def nextchar(m, n, onlyprimitive=False):
+        """ we know that the characters
+            chi_m(1,.) and chi_m(m-1,.)
+            always exist for m>1.
+            They are extremal for a given m.
+        """
+        if onlyprimitive:
+            return nextprimchar(m, n)
+        if m == 1:
+            return 2, 1
+        if n == m - 1:
+            return m + 1, 1
+        for k in xrange(n + 1, m):
+            if gcd(m, k) == 1:
+                return m, k
+        raise Exception("nextchar")
+    
+    @staticmethod
+    def prevchar(m, n, onlyprimitive=False):
+        """ Assume m>1 """
+        if onlyprimitive:
+            return prevprimchar(m, n)
+        if n == 1:
+            m, n = m - 1, m
+        if m <= 2:
+            return m, 1  # important : 2,2 is not a character
+        for k in xrange(n - 1, 0, -1):
+            if gcd(m, k) == 1:
+                return m, k
+        raise Exception("prevchar")
+    
+    @staticmethod
+    def prevprimchar(m, n):
+        if m <= 3:
+            return 1, 1
+        if n > 2:
+            Gm = DirichletGroup_conrey(m)
+        while True:
+            n -= 1
+            if n == 1:  # (m,1) is never primitive for m>1
+                m, n = m - 1, m - 1
+                Gm = DirichletGroup_conrey(m)
+            if m <= 2:
+                return 1, 1
+            if gcd(m, n) != 1:
+                continue
+            # we have a character, test if it is primitive
+            chi = Gm[n]
+            if chi.is_primitive():
+                return m, n
 
+    @staticmethod
+    def nextprimchar(m, n):
+        if m < 3:
+            return 3, 2
+        if n < m - 1:
+            Gm = DirichletGroup_conrey(m)
+        while 1:
+            n += 1
+            if n == m:
+                m, n = m + 1, 2
+                Gm = DirichletGroup_conrey(m)
+            if gcd(m, n) != 1:
+                continue
+            # we have a character, test if it is primitive
+            chi = Gm[n]
+            if chi.is_primitive():
+                return m, n
 
 #############################################################################
 ###  Hecke type
@@ -443,8 +510,7 @@ class WebChar(WebCharObject):
         self._keys = [ 'title', 'credit', 'codelangs', 'type',
                  'nf', 'nflabel', 'nfpol', 'modulus', 'modlabel',
                  'number', 'numlabel', 'texname', 'codeinit', 'symbol',
-                 'previous', 'prevmod', 'prevnum', 'next', 'nextmod',
-                 'nextnum', 'structure', 'codestruct', 'conductor',
+                 'previous', 'next', 'conductor',
                  'condlabel', 'codecond', 'isprimitive', 'inducing',
                  'indlabel', 'codeind', 'order', 'codeorder', 'parity',
                  'isreal', 'generators', 'codegen', 'genvalues', 'logvalues',
@@ -591,8 +657,6 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
         assert gcd(m, n) == 1
         self.chi = chi = self.H[n]
         self.chi_sage = chi_sage = chi.sage_character()
-        self.prevmod, self.prevnum = prev_dirichlet_char(m, n)
-        self.nextmod, self.nextnum = next_dirichlet_char(m, n)
         print prev_dirichlet_char(m,n)
         print self.prevmod
 
@@ -606,11 +670,13 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
 
     @property
     def previous(self):
-        return self.char2tex(self.prevmod, self.prevnum)
+        mod, num = self.prevchar(self.modulus, self.number)
+        return (self.char2tex(mod, num), {'modulus':mod,'number':num})
 
     @property
     def next(self):
-        return self.char2tex(self.nextmod, self.nextnum)
+        mod, num = self.nextchar(self.modulus, self.number)
+        return (self.char2tex(mod, num), {'modulus':mod,'number':num})
 
     @property
     def indlabel(self):
@@ -790,71 +856,25 @@ class WebHeckeCharacter(WebChar, WebHecke):
         val = self.texlogvalue(self.chi.logvalue(val))
         return '\(%s=%s\)'%(chartex,val)
 
-def next_dirichlet_char(m, n, onlyprimitive=False):
-    """ we know that the characters
-        chi_m(1,.) and chi_m(m-1,.)
-        always exist for m>1.
-        They are extremal for a given m.
-    """
-    if onlyprimitive:
-        return next_primitive_char(m, n)
-    if m == 1:
-        return 2, 1
-    if n == m - 1:
-        return m + 1, 1
-    for k in xrange(n + 1, m):
-        if gcd(m, k) == 1:
-            return m, k
-    raise Exception("next_char")
+    def char4url(self, chi):
+        if chi is None:
+            return ('', {})
+        label = self.char2tex(chi)
+        args = {'type': 'Hecke',
+                'number_field': self.nflabel,
+                'modulus': self.ideal2label(chi.modulus()),
+                'number': self.number2label(chi.exponents())}
+        return (label, args)
 
-def prev_dirichlet_char(m, n, onlyprimitive=False):
-    """ Assume m>1 """
-    if onlyprimitive:
-        return prev_primitive_char(m, n)
-    if n == 1:
-        m, n = m - 1, m
-    if m <= 2:
-        return m, 1  # important : 2,2 is not a character
-    for k in xrange(n - 1, 0, -1):
-        if gcd(m, k) == 1:
-            return m, k
-    raise Exception("next_char")
+    @property
+    def previous(self):
+        psi = self.chi.prev_character()
+        return self.char4url(psi)
 
-def prev_dirichlet_primitive_char(m, n):
-    if m <= 3:
-        return 1, 1
-    if n > 2:
-        Gm = DirichletGroup_conrey(m)
-    while True:
-        n -= 1
-        if n == 1:  # (m,1) is never primitive for m>1
-            m, n = m - 1, m - 1
-            Gm = DirichletGroup_conrey(m)
-        if m <= 2:
-            return 1, 1
-        if gcd(m, n) != 1:
-            continue
-        # we have a character, test if it is primitive
-        chi = Gm[n]
-        if chi.is_primitive():
-            return m, n
-
-def next_dirichlet_primitive_char(m, n):
-    if m < 3:
-        return 3, 2
-    if n < m - 1:
-        Gm = DirichletGroup_conrey(m)
-    while 1:
-        n += 1
-        if n == m:
-            m, n = m + 1, 2
-            Gm = DirichletGroup_conrey(m)
-        if gcd(m, n) != 1:
-            continue
-        # we have a character, test if it is primitive
-        chi = Gm[n]
-        if chi.is_primitive():
-            return m, n
+    @property
+    def next(self):
+        psi = self.chi.next_character()
+        return self.char4url(psi)
 
 class WebHeckeGroup(WebCharGroup, WebHecke):
 

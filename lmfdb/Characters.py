@@ -76,9 +76,16 @@ def render_Dirichletwebpage(request, modulus, number):
         return render_template('dirichlet_characters/CharGroup.html', **info)
     else:
         info = WebDirichletCharacter(temp_args).to_dict()
+        info['navi'] = navi([info['previous'],info['next']])
         print info
-        info['navi'] = dirichlet_navi(info)
         return render_template('dirichlet_characters/Character.html', **info)
+
+def navi(L):
+    print L
+    r = [ (l, url_for('render_charwebpage', **args)) for l, args in L if l ]
+    return r
+    
+
 
 @app.route("/Character/Dirichlet/calc-<calc>/<int:modulus>/<int:number>")
 def dc_calc(calc, modulus, number):
@@ -99,11 +106,6 @@ def dc_calc(calc, modulus, number):
             return flask.abort(404)
     except Exception, e:
         return "<span style='color:red;'>ERROR: %s</span>" % e
-
-def dirichlet_navi(info):
-    prevurl =  url_for("render_DirichletCharacter", arg1=info['prevmod'], arg2=info['prevnum'])
-    nexturl =  url_for("render_DirichletCharacter", arg1=info['nextmod'], arg2=info['nextnum'])
-    return [ (info['previous'], prevurl), (info['next'], nexturl) ]
 
 @app.route("/Character/Hecke/")
 @app.route("/Character/Hecke/<arg1>")
@@ -134,6 +136,7 @@ def render_Heckewebpage(request, number_field, modulus, number):
         return render_template('dirichlet_characters/CharGroup.html', **info)
     else:
         info = WebHeckeCharacter(temp_args).to_dict()
+        info['navi'] = navi([info['previous'],info['next']])
         print info
         return render_template('dirichlet_characters/Character.html', **info)
 
