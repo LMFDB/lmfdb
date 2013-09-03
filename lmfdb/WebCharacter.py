@@ -22,21 +22,24 @@ def evalpolelt(label,gen,genlabel='a'):
     """                                                                         
     res = 0                                                                     
     import re                                                                   
-    regexp = r'([+-]?)([+-]?\d*/?\d*)(%s\d*)?'%genlabel                         
+    regexp = r'([+-]?)([+-]?\d*o?\d*)(%s\d*)?'%genlabel                         
     for m in re.finditer(regexp,label):                                         
         s,c,e = m.groups()                                                      
         if c == '' and e == None: break    
         if c == '':          
             c = 1                            
         else:                                
-            c = int(c)                                                          
+            """ c may be an int or a rational a/b """
+            from sage.rings.rational import Rational
+            c = str(c).replace('o','/')
+            c = Rational(c)                                                      
         if s == '-': c = -c                                                     
         if e == None:                                                           
             e = 0                                                               
         elif e == genlabel:                                                     
             e = 1                                                               
-        else:                                                                   
-            e = int(e[1:])                                                      
+        else:
+            e = int(e[1:])                                                                   
         res += c*gen**e           
     return res              
 
@@ -318,7 +321,7 @@ class WebHecke(WebCharObject):
         a,b = ideal.gens_two()
         s = '+'.join( '%sa%i'%(b,i) for i,b in enumerate(b.polynomial().list())
                                       if b != 0 ) 
-        return "%s.%s"%(a,s.replace('+-','-'))
+        return "%s.%s"%(a,s.replace('+-','-').replace('/','o'))
 
     @staticmethod
     def label2ideal(k,label):
@@ -412,18 +415,37 @@ class WebHecke(WebCharObject):
 class WebCharFamily(WebCharObject):
     """ compute first groups """
     def __init__(self, args):
-        WebCharObject.__init__(self,args)
         self._keys = [ 'title', 'credit', 'codelangs', 'type', 'nf', 'nflabel',
             'nfpol', 'codeinit', 'headers', 'contents' ]   
-        self.headers = [ 'label', 'order', 'structure' ]
-        self._contents = []
+        self.headers = [ 'modulus', 'order', 'structure' ]
+        self.contents = []
+        self.maxrows, self.rowtruncate = 25, False
+        WebCharObject.__init__(self,args)
 
-    def add_row(self, G):
-        self.contents.append(
-                 (G.modlabel,
-                  G.texname,
-                  G.order,
-                  G.structure) )
+    def _compute(self):
+        self._fill_contents()
+
+    def structure(self, G):
+        return G.invariants()
+
+    def struct2tex(self, inv):  
+        return '\(%s\)'%('\\times '.join(['C_{%s}'%d for d in inv]))
+
+    def add_row(self, modulus):
+        G = self.chargroup(modulus)
+        order = G.order()
+        struct = self.structure(G)
+        self.contents.append( (self.ideal2label(modulus), order, struct) )
+
+    def _fill_contents(self):
+        r = 0
+        for mod in self.first_moduli():
+            self.add_row(mod)
+            r += 1
+            if r > self.maxrows:
+                self.rowtruncate = True
+                break
+
 
 #############################################################################
 ###  Groups
@@ -613,6 +635,28 @@ class WebChar(WebCharObject):
 
 #############################################################################
 ###  Actual web objects used in lmfdb
+class WebDirichletFamily(WebCharFamily, WebDirichlet):
+
+    def _compute(self):
+        self.contents = []
+        self._fill_contents()
+        self.credit = 'Pari, Sage'
+        self.codelangs = ('pari', 'sage')
+
+    def first_moduli(self):
+        return xrange(2, self.maxrows)
+
+    def chargroup(self, mod):
+        return DirichletGroup(mod)
+
+    def structure(self, G):
+        inv = G.generator_orders()
+        return self.struct2tex(sorted(inv))
+
+    @property
+    def title(self):
+        return "Dirichlet characters"
+
 
 class WebDirichletGroup(WebCharGroup, WebDirichlet):
 
@@ -657,8 +701,6 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
         assert gcd(m, n) == 1
         self.chi = chi = self.H[n]
         self.chi_sage = chi_sage = chi.sage_character()
-        print prev_dirichlet_char(m,n)
-        print self.prevmod
 
     @property
     def title(self):
@@ -671,12 +713,12 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
     @property
     def previous(self):
         mod, num = self.prevchar(self.modulus, self.number)
-        return (self.char2tex(mod, num), {'modulus':mod,'number':num})
+        return (self.char2tex(mod, num), {'type':'Dirichlet', 'modulus':mod,'number':num})
 
     @property
     def next(self):
         mod, num = self.nextchar(self.modulus, self.number)
-        return (self.char2tex(mod, num), {'modulus':mod,'number':num})
+        return (self.char2tex(mod, num), {'type':'Dirichlet', 'modulus':mod,'number':num})
 
     @property
     def indlabel(self):
@@ -798,6 +840,26 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
         = \sum_{r \in \mathbb{Z}/%s\mathbb{Z}}
              \chi_{%s}(%s,r) e\left(\frac{%s r + %s r^{-1}}{%s}\right)
         = %s. \)""" % (a, b, modulus, number, modulus, modulus, number, a, b, modulus, k)
+
+class WebHeckeFamily(WebCharFamily, WebHecke):
+
+    def _compute(self):
+        self.k = self.label2nf(self.nflabel)
+        self.contents = []
+        self._fill_contents()
+        self.credit = 'Pari, Sage'
+        self.codelangs = ('pari', 'sage')
+        
+    def first_moduli(self):
+        #return sum(self.k.ideals_of_bdd_norm(100).values(),[])
+        return [ self.k.ideal(k) for k in xrange(2,self.maxrows) ]
+
+    def chargroup(self, mod):
+        return RayClassGroup(self.k,mod)
+
+    @property
+    def title(self):
+        return "Hecke characters"
 
 class WebHeckeCharacter(WebChar, WebHecke):
 

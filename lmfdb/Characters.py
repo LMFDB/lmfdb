@@ -68,8 +68,9 @@ def render_Dirichletwebpage(request, modulus, number):
     temp_args['number'] = number
 
     if modulus == None:
-        info = WebDirichlet(temp_args).to_dict()
-        return render_template('dirichlet_characters/Dirichlet.html', **info)
+        info = WebDirichletFamily(temp_args).to_dict()
+        print info
+        return render_template('dirichlet_characters/CharFamily.html', **info)
     elif number == None:
         info = WebDirichletGroup(temp_args).to_dict()
         m = info['modlabel']
@@ -135,9 +136,9 @@ def render_Heckewebpage(request, number_field, modulus, number):
     if number_field == None:
         return render_template('dirichlet_characters/Hecke_help.html')
     elif modulus == None:
-        info = init_NFinfo(temp_args)
+        info = WebHeckeFamily(temp_args).to_dict()
         print info
-        return render_template('dirichlet_characters/HeckeChooseIdeal.html', **info)
+        return render_template('dirichlet_characters/CharFamily.html', **info)
     elif number == None:
         info = WebHeckeGroup(temp_args).to_dict()
         m = info['modlabel']

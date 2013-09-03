@@ -148,6 +148,8 @@ class HeckeChar(DualAbelianGroupElement):
         F = self.exponents()
         D = self.parent().gens_orders()
         r = sum( e*f/d for e,f,d in zip( E, F, D) )
+        if isinstance(r, (int,Integer)): return 0
+        print r
         n,d = r.numerator(), r.denominator()
         return n%d/d
 

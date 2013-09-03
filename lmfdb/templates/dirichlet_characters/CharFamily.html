@@ -1,40 +1,33 @@
-{% extends 'Charpage.html' %}
+{% extends 'dirichlet_characters/Charpage.html' %}
 
-{% block properties %}
+{% block description %}
 
-   {% addcode(codeinit,'div') %}
+{{ addcode(codeinit,'div') }}
 
     {# First character groups #}
 
-    <table class="ntdata" id="chitable">
-    <thead class="space">
-        <tr class="space">
-            <th class="spaceleft"></th>
-            <th class="weight" colspan="{{headers|length}}">
-            <span style="display:block;float:left;margin-right:3px;"> Values </span>
-        </tr>
-        <tr> 
-        <th class="left"> </th>
-        {% for h in headers %}
-        <th class="weight">{{h}} </th> 
-        {% endfor %}
-        </tr>
-    </thead>
-    <tbody>
-        {% for row in contents %}
-        {# row = ( label, tex, order, primitive ) #}
-        <tr>
-                <th class="left">
-                  <a class="{% if row[4]=='Yes' -%}primitive{%- else -%}imprimitive{%- endif %}"
-                     align="center" href="{{modlabel}}/{{row[1]}}">
-                    {{row[2] }}
-                  </a>
-                </th>
-                <td style="font-family: serif;" >{{row[3]}}</td> 
-                <td style="font-family: serif;" >{{row[4]}}</td> 
-                </tr>
-        {% endfor %} 
-    </tbody>    
+    <h2> First {{type}} character groups </h2>
+<table class="ntdata" id="chitable">
+  <thead class="space">
+    <tr> 
+      {% for h in headers %} <th class="weight">{{h}} </th> {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for mod, ord, struct in contents %}
+    <tr>
+      <th class="left">
+        <a align="center"
+          {#href=" {{ url_for('render_charwebpage', type=type, number_field=nflabel, modulus=mod) }} ">#}
+          href="/Character/{{type}}{%if nflabel%}/{{nflabel}}{%endif%}/{{mod}}">
+          {{ mod }}
+        </a>
+      </th>
+      <td style="font-family: serif;" >{{ord}}</td>
+      <td style="font-family: serif;" >{{struct}}</td>
+    </tr>
+    {% endfor %} 
+  </tbody>    
 </table>
 
 {% endblock %}
