@@ -140,6 +140,8 @@ class WebCharObject:
 
     @staticmethod
     def texlogvalue(x, tag=False):
+        if x == None:
+            return 0
         if not isinstance(x, Rational):
             return '1'
         n = int(x.numer())
@@ -183,6 +185,13 @@ class WebDirichlet(WebCharObject):
     group.
     """
 
+    def _compute(self):
+        self.modulus = m = int(self.modlabel)
+        self.H = H = DirichletGroup_conrey(m)
+        self.H_sage = H.standard_dirichlet_group()
+        self.credit = 'Sage'
+        self.codelangs = ('pari', 'sage')
+
     def _char_desc(self, num, mod=None, prim=None):
         """ usually num is the number, but can be a character """
         if isinstance(num, DirichletCharacter_conrey):
@@ -195,11 +204,11 @@ class WebDirichlet(WebCharObject):
         return ( mod, num, self.char2tex(mod,num), prim)
 
     def charisprimitive(self,mod,num):
-        if isinstance(self.G, DirichletGroup_conrey) and self.G.modulus()==mod:
-            G = self.G
+        if isinstance(self.H, DirichletGroup_conrey) and self.H.modulus()==mod:
+            H = self.H
         else:
-            G = DirichletGroup_conrey(mod)
-        return G[num].is_primitive()
+            H = DirichletGroup_conrey(mod)
+        return H[num].is_primitive()
 
     @property
     def generators(self):
@@ -238,7 +247,10 @@ class WebDirichlet(WebCharObject):
             if gcd(k,m) == 1:
                 res.append(k)
                 n += 1
-                if n > self.maxcols: break
+                if n > self.maxcols:
+                  self.coltruncate = True
+                  break
+
         return res
 
 
@@ -251,7 +263,6 @@ class WebHecke(WebCharObject):
         by tuples or by representative ideals ?
         for computations tuples are much better, this is also more compact.
         """
-
     def _compute(self):
         self.k = self.label2nf(self.nflabel)
         self._modulus = self.label2ideal(self.k, self.modlabel)
@@ -262,6 +273,7 @@ class WebHecke(WebCharObject):
         self.modlabel = self.ideal2label(self._modulus)
         self.credit = "Pari, Sage"
         self.codelangs = ('pari', 'sage')
+        self.parity = None
 
     @property
     def generators(self):
@@ -271,10 +283,14 @@ class WebHecke(WebCharObject):
     """ labeling conventions are put here """
 
     @staticmethod
-    def char2tex(c):
+    def char2tex(c, val='\cdot',tag=True):
         """ c is a Hecke character """
-        number = c.exponents()
-        return r'\(\chi_{%s}(\cdot)\)'%(','.join(map(str,number)))
+        number = ','.join(map(str,c.exponents()))
+        s = r'\chi_{%s}(%s)'%(number,val)
+        if tag:
+            return r'\(%s\)'%s
+        else:
+            return s
 
     def _char_desc(self, c, modlabel=None, prim=None):
         """ c is a Hecke character of modulus self.modulus
@@ -347,9 +363,12 @@ class WebHecke(WebCharObject):
     def group2label(x):
         return number2label(x.exponents())
 
-    @staticmethod
-    def label2group(x):
-        return self.G(label2number(x))
+    def label2group(self,x):
+        """ how to describe elements... """
+        a = self.k.gen()
+        print x
+        x = eval(x)
+        return self.G(x)
 
     @staticmethod
     def number2label(number):
@@ -378,7 +397,9 @@ class WebHecke(WebCharObject):
         for x in self.G.iter_exponents():
             res.append(x)
             c += 1
-            if c > self.maxcols: break
+            if c > self.maxcols:
+                self.coltruncate = True
+                break
         return res
 
 #############################################################################
@@ -412,19 +433,19 @@ class WebCharGroup(WebCharObject):
     def __init__(self, args):
         self.headers = [ 'order', 'primitive']
         self.contents = []
-        self.maxrows = 25
-        self.maxcols = 20
+        self.maxrows, self.maxcols = 25, 20
+        self.rowtruncate, self.coltruncate = False, False
         self._keys = [ 'title', 'credit', 'codelangs', 'type', 'nf', 'nflabel',
             'nfpol', 'modulus', 'modlabel', 'texname', 'codeinit', 'previous',
             'prevmod', 'next', 'nextmod', 'structure', 'codestruct', 'order',
             'codeorder', 'generators', 'codegen', 'valuefield', 'vflabel',
             'vfpol', 'headers', 'groupelts', 'contents',
-            'properties2', 'friends'] 
+            'properties2', 'friends', 'rowtruncate', 'coltruncate'] 
         WebCharObject.__init__(self,args)
 
     @property
     def structure(self):
-        inv = self.G.invariants()
+        inv = self.H.invariants()
         return '\(%s\)'%('\\times '.join(['C_{%s}'%d for d in inv]))
     @property
     def codestruct(self):
@@ -432,7 +453,8 @@ class WebCharGroup(WebCharObject):
 
     @property
     def order(self):
-        return self.G.order()
+        return self.H.order()
+
     @property
     def codeorder(self):
         return [('sage','G.order()'), ('pari','G.no')]
@@ -455,6 +477,7 @@ class WebCharGroup(WebCharObject):
             self.add_row(c)
             r += 1
             if r > self.maxrows:
+                self.rowtruncate = True
                 break
 
     @property
@@ -479,6 +502,7 @@ class WebChar(WebCharObject):
     """
     def __init__(self, args):
         self.maxcols = 20
+        self.coltruncate = False
         self._keys = [ 'title', 'credit', 'codelangs', 'type',
                  'nf', 'nflabel', 'nfpol', 'modulus', 'modlabel',
                  'number', 'numlabel', 'texname', 'codeinit', 'symbol',
@@ -489,12 +513,15 @@ class WebChar(WebCharObject):
                  'isreal', 'generators', 'codegen', 'genvalues', 'logvalues',
                  'groupelts', 'values', 'codeval', 'galoisorbit', 'codegalois',
                  'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
-                 'kfpol', 'contents', 'properties2', 'friends']   
+                 'kfpol', 'contents', 'properties2', 'friends', 'coltruncate']   
         WebCharObject.__init__(self,args)
 
     @property
     def order(self):
-        return self.chi.order()
+        return self.chi.multiplicative_order()
+    @property
+    def codeorder(self):
+        return [('sage', 'chi.multiplicative_order()'),]
 
     @property
     def isprimitive(self):
@@ -587,12 +614,8 @@ class WebChar(WebCharObject):
 class WebDirichletGroup(WebCharGroup, WebDirichlet):
 
     def _compute(self):
-        self.modulus = m = int(self.modlabel)
-        self.H = H = DirichletGroup_conrey(m)
-        self.H_sage = H.standard_dirichlet_group()
+        WebDirichlet._compute(self)
         self._fill_contents()
-        self.credit = 'Sage'
-        self.codelangs = ('pari', 'sage')
         
     @property
     def codeinit(self):
@@ -625,18 +648,12 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
 class WebDirichletCharacter(WebChar, WebDirichlet):
 
     def _compute(self):
-        self.modulus = m = int(self.modlabel)
-        self.G = G = DirichletGroup_conrey(m)
-        self.G_sage = G_sage = G.standard_dirichlet_group()
-        self._gens = G_sage.unit_gens()
+        WebDirichlet._compute(self)
+        m = self.modulus
         self.number = n = int(self.numlabel)
-
         assert gcd(m, n) == 1
-        self.chi = chi = G[n]
+        self.chi = chi = self.H[n]
         self.chi_sage = chi_sage = chi.sage_character()
-        self.order = chi.multiplicative_order()
-        self.credit = "Sage"
-        self.codelangs = ('pari', 'sage')
         self.prevmod, self.prevnum = prev_dirichlet_char(m, n)
         self.nextmod, self.nextnum = next_dirichlet_char(m, n)
         print prev_dirichlet_char(m,n)
@@ -673,7 +690,7 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
 
     @property
     def genvalues(self):
-        logvals = [self.chi.logvalue(k) for k in self._gens]
+        logvals = [self.chi.logvalue(k) for k in self.H_sage.unit_gens()]
         return self.textuple( map(self.texlogvalue, logvals) )
 
     @property
@@ -703,6 +720,16 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
             return None
         return r'\(\displaystyle\left(\frac{%s}{\bullet}\right)\)' % (m)
 
+    def value(self, val):
+        val = int(val)
+        chartex = self.char2tex(self.modulus,self.number,val=val,tag=False)
+        # FIXME: bug in dirichlet_conrey logvalue
+        if gcd(val, self.modulus) == 1:
+            val = self.texlogvalue(self.chi.logvalue(val))
+        else:
+            val = 0
+        return '\(%s=%s\)'%(chartex,val)
+
     def gauss_sum(self, val):
         val = int(val)
         mod, num = self.modulus, self.number
@@ -730,7 +757,7 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
     def jacobi_sum(self, val):
         mod, num = self.modulus, self.number
         val = int(val[0])
-        psi = self.G[val]
+        psi = self.H[val]
         chi = self.chi.sage_character()
         psi = psi.sage_character()
         jacobi_sum = chi.jacobi_sum(psi)
@@ -772,15 +799,12 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
 class WebHeckeCharacter(WebChar, WebHecke):
 
     def _compute(self):
-        WebHecke._compute(self)
- 
+        WebHecke._compute(self) 
         self.number = self.label2number(self.numlabel)
         assert len(self.number) == self.G.ngens()
         self.chi = chi = HeckeChar(self.H, self.number)
 
-        self.order = chi.order()
         self.zetaorder = 0 # FIXME H.zeta_order()
-        self.parity = None
 
     @property
     def codeinit(self):
@@ -822,6 +846,12 @@ class WebHeckeCharacter(WebChar, WebHecke):
     def galoisorbit(self):
         prim = self.isprimitive
         return  [ self._char_desc(c, prim=prim) for c in self.chi.galois_orbit() ]
+
+    def value(self, val):
+        chartex = self.char2tex(self.chi,val=val,tag=False)
+        val = self.label2group(val)
+        val = self.texlogvalue(self.chi.logvalue(val))
+        return '\(%s=%s\)'%(chartex,val)
 
 def next_dirichlet_char(m, n, onlyprimitive=False):
     """ we know that the characters

@@ -44,6 +44,14 @@ def render_charwebpage(request, type, number_field, modulus, number):
     elif type=='Hecke':
         render_Heckewebpage(request, number_field, modulus, number)
 
+@app.route("/Character/<type>/calc-<calc>/<modulus>/<number>")
+@app.route("/Character/<type>/calc-<calc>/<number_field>/<modulus>/<number>")
+def char_calc(request, type, calc, number_field, modulus, number):
+    if type=='Dirichlet':
+        dc_calc(request, calc, modulus, number)
+    elif type=='Hecke':
+        hc_calc(request, calc, number_field, modulus, number)
+
 @app.route("/Character/Dirichlet/")
 @app.route("/Character/Dirichlet/<arg1>")
 @app.route("/Character/Dirichlet/<arg1>/<arg2>")
@@ -72,14 +80,15 @@ def render_Dirichletwebpage(request, modulus, number):
         info['navi'] = dirichlet_navi(info)
         return render_template('dirichlet_characters/Character.html', **info)
 
-
-@app.route("/Character/Dirichlet/<calc>/<int:modulus>/<int:number>")
+@app.route("/Character/Dirichlet/calc-<calc>/<int:modulus>/<int:number>")
 def dc_calc(calc, modulus, number):
     val = request.args.get("val", [])
     args = {'type':'Dirichlet', 'modulus':modulus, 'number':number}
     if not val:
         return flask.abort(404)
     try:
+        if calc == 'value':
+            return WebDirichletCharacter(args).value(val)
         if calc == 'gauss':
             return WebDirichletCharacter(args).gauss_sum(val)
         elif calc == 'jacobi':
@@ -127,6 +136,20 @@ def render_Heckewebpage(request, number_field, modulus, number):
         info = WebHeckeCharacter(temp_args).to_dict()
         print info
         return render_template('dirichlet_characters/Character.html', **info)
+
+@app.route("/Character/Hecke/calc-<calc>/<number_field>/<modulus>/<number>")
+def hc_calc(calc, number_field, modulus, number):
+    val = request.args.get("val", [])
+    args = {'type':'Hecke', 'number_field':number_field, 'modulus':modulus, 'number':number}
+    if not val:
+        return flask.abort(404)
+    try:
+        if calc == 'value':
+            return WebHeckeCharacter(args).value(val)
+        else:
+            return flask.abort(404)
+    except Exception, e:
+        return "<span style='color:red;'>ERROR: %s</span>" % e
 
 def init_HeckeGroup(args):
 

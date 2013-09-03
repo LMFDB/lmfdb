@@ -49,9 +49,9 @@ class RayClassGroup(AbelianGroup_class):
         return self.__mod_ideal
 
     def _element_constructor_(self, *args, **kwargs):
-        if isinstance(args[0], AbelianGroupElement):
-            return AbelianGroupElement(self, args[0])
-        else:
+        try:
+            return AbelianGroupElement(args[0], self)
+        except:
             I = self.__number_field.ideal(*args, **kwargs)
             return AbelianGroupElement(self.log(I), self)
 
@@ -112,7 +112,7 @@ class HeckeChar(DualAbelianGroupElement):
 
     def __init__(self, hecke_char_group, x):
         ray_class_group = hecke_char_group.group()
-        if not isinstance(x, list) or len(x) != ray_class_group.ngens():
+        if not isinstance(x, (list,tuple)) or len(x) != ray_class_group.ngens():
             x = ray_class_group(x).list()
         DualAbelianGroupElement.__init__(self, x, hecke_char_group)
         self.__repr = None
@@ -143,11 +143,13 @@ class HeckeChar(DualAbelianGroupElement):
         try:
             E = self.parent().group()(x)
         except:
-            return 0
+            return None
         E = E.exponents()
         F = self.exponents()
         D = self.parent().gens_orders()
-        return sum( e*f/d for e,f,d in zip( E, F, D) )
+        r = sum( e*f/d for e,f,d in zip( E, F, D) )
+        n,d = r.numerator(), r.denominator()
+        return n%d/d
 
     def logvalues_on_gens(self):
         F = self.exponents()
@@ -192,7 +194,7 @@ class HeckeChar(DualAbelianGroupElement):
                     return c
 
     def galois_orbit(self):
-        order = self.order()
+        order = self.multiplicative_order()
         return [ self.__pow__(k) for k in xrange(order) if gcd(k,order) == 1 ]
 
 """
