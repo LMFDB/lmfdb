@@ -426,9 +426,10 @@ class WebCharFamily(WebCharObject):
         self._fill_contents()
 
     def structure(self, G):
-        return G.invariants()
+        return self.struct2tex(G.invariants())
 
-    def struct2tex(self, inv):  
+    def struct2tex(self, inv):
+        if not inv: inv = (1,)
         return '\(%s\)'%('\\times '.join(['C_{%s}'%d for d in inv]))
 
     def add_row(self, modulus):
@@ -644,7 +645,8 @@ class WebDirichletFamily(WebCharFamily, WebDirichlet):
         self.codelangs = ('pari', 'sage')
 
     def first_moduli(self):
-        return xrange(2, self.maxrows)
+        """ restrict to conductors """
+        return ( m for m in xrange(2, self.maxrows) if m%4!=2 )
 
     def chargroup(self, mod):
         return DirichletGroup(mod)
@@ -850,9 +852,20 @@ class WebHeckeFamily(WebCharFamily, WebHecke):
         self.credit = 'Pari, Sage'
         self.codelangs = ('pari', 'sage')
         
-    def first_moduli(self):
-        #return sum(self.k.ideals_of_bdd_norm(100).values(),[])
-        return [ self.k.ideal(k) for k in xrange(2,self.maxrows) ]
+    def first_moduli(self, bound=200):
+        """ first ideals which are conductors """
+        bnf = self.k.pari_bnf()                                                           
+        oldbound = 0
+        while True:
+            L = bnf.ideallist(bound)[oldbound:]
+            for l in L:   
+                if l == []: next                                                           
+                for ideal in l:                                            
+                    if gp.bnrisconductor(bnf,ideal):
+                        yield self.k.ideal(ideal)
+            """ double the range if one needs more ideal """
+            oldbound = bound
+            bound *=2
 
     def chargroup(self, mod):
         return RayClassGroup(self.k,mod)
