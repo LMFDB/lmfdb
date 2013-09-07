@@ -1607,7 +1607,8 @@ class WebNewForm(SageObject):
                     for prec in range(minprec, maxprec, 10):
                         if(self._verbose > 1):
                             emf_logger.debug("prec={0}".format(prec))
-                        v2 = self._f.q_eigenform(prec)(q)
+                        print "q=",q
+                        v2 = self._f.q_eigenform(prec).truncate(prec)(q)
                         err = abs(v2 - v1)
                         if(self._verbose > 1):
                             emf_logger.debug("err={0}".format(err))

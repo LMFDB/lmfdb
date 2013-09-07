@@ -214,10 +214,10 @@ def get_user_list():
         ret.append((e['_id'], name))
     return ret
 
-from flask.ext.login import AnonymousUser
+from flask.ext.login import AnonymousUserMixin
 
 
-class LmfdbAnonymousUser(AnonymousUser):
+class LmfdbAnonymousUser(AnonymousUserMixin):
     """
     The sole purpose of this Anonymous User is the 'is_admin' method
     and probably others.
