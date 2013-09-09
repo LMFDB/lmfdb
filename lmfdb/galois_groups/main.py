@@ -11,6 +11,7 @@ from flask import render_template, render_template_string, request, abort, Bluep
 from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, make_logger, clean_input
 import os
 import re
+import bson
 from lmfdb.galois_groups import galois_groups_page, logger
 import sage.all
 from sage.all import ZZ, latex, gap
@@ -68,7 +69,7 @@ def index():
     bread = get_bread()
     if len(request.args) != 0:
         return galois_group_search(**request.args)
-    info = {'count': 20}
+    info = {'count': 50}
     info['degree_list'] = range(16)[2:]
     return render_template("gg-index.html", title="Galois Groups", bread=bread, info=info, credit=GG_credit)
 
@@ -151,7 +152,7 @@ def galois_group_search(**args):
         if found:
             info['show_subs'] = True
 
-    count_default = 20
+    count_default = 50
     if info.get('count'):
         try:
             count = int(info['count'])
@@ -256,8 +257,12 @@ def render_group_webpage(args):
         data['resolve'] = resolve_display(C, data['resolve'])
 #    if len(data['resolve']) == 0: data['resolve'] = 'None'
         data['otherreps'] = otherrep_display(n, t, C, data['repns'])
+        query={'galois': bson.SON([('n', n), ('t', t)])}
+        C = base.getDBConnection()
+        one = C.numberfields.fields.find_one(query)
         friends = []
-        friends.append(('Number fields with this Galois group', "NumberField/?galois_group=%dT%d" % (n, t)))
+        if one:
+            friends.append(('Number fields with this Galois group', url_for('number_fields.number_field_render_webpage')+"?galois_group=%dT%d" % (n, t) )) 
         prop2 = [
             ('Order:', '\(%s\)' % order),
             ('n:', '\(%s\)' % data['n']),
