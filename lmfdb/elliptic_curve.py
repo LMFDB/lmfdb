@@ -546,20 +546,20 @@ def modular_form_display(label, number):
         number = 10
     if number < 10:
         number = 10
-    if number > 100000:
-        number = 20
-    if number > 50000:
-        return "OK, I give up."
-    if number > 20000:
-        return "This incident will be reported to the appropriate authorities."
-    if number > 9600:
-        return "You have been banned from this website."
-    if number > 4800:
-        return "Seriously."
-    if number > 2400:
-        return "I mean it."
-    if number > 1200:
-        return "Please stop poking me."
+    # if number > 100000:
+    #     number = 20
+    # if number > 50000:
+    #     return "OK, I give up."
+    # if number > 20000:
+    #     return "This incident will be reported to the appropriate authorities."
+    # if number > 9600:
+    #     return "You have been banned from this website."
+    # if number > 4800:
+    #     return "Seriously."
+    # if number > 2400:
+    #     return "I mean it."
+    # if number > 1200:
+    #     return "Please stop poking me."
     if number > 1000:
         number = 1000
     C = lmfdb.base.getDBConnection()
@@ -680,6 +680,17 @@ def render_curve_webpage_by_label(label):
     else:
         info['tor_structure'] = tor_group
 
+    def trim_galois_image_code(s):
+        return s[2:] if s[1].isdigit() else s[1:]
+
+    if 'galois_images' in data:
+        galois_images = data['galois_images']
+        galois_images = [trim_galois_image_code(s) for s in galois_images]
+        non_surjective_primes = data['non-surjective_primes']
+
+    galois_data = [{'p': p,'image': im }
+                   for p,im in zip(non_surjective_primes,galois_images)]
+
     info.update(data)
     if rank >= 2:
         lder_tex = "L%s(E,1)" % ("^{(" + str(rank) + ")}")
@@ -731,6 +742,7 @@ def render_curve_webpage_by_label(label):
         'tamagawa_numbers': r' \cdot '.join(str(sage.all.factor(c)) for c in tamagawa_numbers),
         'local_data': local_data,
         'cond_factor': latex(N.factor()),
+        'galois_data': galois_data,
         'xintegral_points': ', '.join(web_latex(P) for P in xintpoints),
         'tor_gens': ', '.join(web_latex(eval(g)) for g in data['torsion_generators']) if False else ', '.join(web_latex(P.element().xy()) for P in list(G))
     })

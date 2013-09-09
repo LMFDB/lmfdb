@@ -49,6 +49,7 @@ import base
 from sage.rings.all import ZZ
 
 print "calling base._init()"
+dbport=37010
 base._init(dbport, '')
 print "getting connection"
 conn = base.getDBConnection()
@@ -268,6 +269,35 @@ def alllabels(line):
         'lmfdb_number': data[5]
     }
 
+def galrep(line):
+    r""" Parses one line from a galrep file.  Returns the label and a
+    dict containing two fields: 'non-surjective_primes', a list of
+    primes p for which the Galois representation modulo p is not
+    surjective (cut off at p=37 for CM curves for which this would
+    otherwise contain all primes), 'galois_images', a list of strings
+    encoding the image when not surjective, following Sutherland's
+    coding scheme for subgroups of GL(2,p).  Note that these codes
+    start with a 1 or 2 digit prime followed a letter in
+    ['B','C','N','S'].
+
+    Input line fields:
+
+    conductor iso number ainvs rank torsion codes
+
+    Sample input line:
+
+    66 c 3 [1,0,0,-10065,-389499] 0 2 2B 5B.1.2
+
+    """
+    data = split(line)
+    label = data[0] + data[1] + data[2]
+    image_codes = data[6:]
+    pr = ps = [ int(s[:2]) if s[1].isdigit() else int(s[:1]) for s in image_codes]
+    return label, {
+        'non-surjective_primes': pr,
+        'galois_images': image_codes,
+    }
+
 
 filename_base_list = ['allcurves', 'allbsd', 'allgens', 'intpts', 'alldegphi', 'alllabel']
 
@@ -294,7 +324,9 @@ def upload_to_db(base_path, min_N, max_N):
     intpts_filename = 'intpts.%s-%s' % (min_N, max_N)
     alldegphi_filename = 'alldegphi.%s-%s' % (min_N, max_N)
     alllabels_filename = 'alllabels.%s-%s' % (min_N, max_N)
-    file_list = [allbsd_filename, allgens_filename, intpts_filename, alldegphi_filename, alllabels_filename]
+    galreps_filename = 'galrep.%s-%s' % (min_N, max_N)
+    file_list = [allbsd_filename, allgens_filename, intpts_filename, alldegphi_filename, alllabels_filename, galreps_filename]
+#    file_list = [galreps_filename]
 
     data_to_insert = {}  # will hold all the data to be inserted
 
@@ -308,8 +340,8 @@ def upload_to_db(base_path, min_N, max_N):
         count = 0
         for line in h.readlines():
             label, data = parse(line)
-            # if count%5000==0:
-            #     print label
+            if count%5000==0:
+                print "read %s" % label
             count += 1
             if label not in data_to_insert:
                 data_to_insert[label] = {'label': label}
