@@ -256,6 +256,8 @@ def render_group_webpage(args):
         data['resolve'] = resolve_display(C, data['resolve'])
 #    if len(data['resolve']) == 0: data['resolve'] = 'None'
         data['otherreps'] = otherrep_display(n, t, C, data['repns'])
+        friends = []
+        friends.append(('Number fields with this Galois group', "NumberField/?galois_group=%dT%d" % (n, t)))
         prop2 = [
             ('Order:', '\(%s\)' % order),
             ('n:', '\(%s\)' % data['n']),
@@ -269,7 +271,7 @@ def render_group_webpage(args):
         info.update(data)
 
         bread = get_bread([(label, ' ')])
-        return render_template("gg-show-group.html", credit=GG_credit, title=title, bread=bread, info=info, properties2=prop2)
+        return render_template("gg-show-group.html", credit=GG_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends)
 
 
 def search_input_error(info, bread):
