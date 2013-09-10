@@ -10,7 +10,7 @@ from lmfdb import base
 from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
 from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input
-from sage.all import ZZ, var, PolynomialRing, QQ
+from sage.all import ZZ, var, PolynomialRing, QQ, latex
 from lmfdb.hypergm import hypergm_page, hgm_logger
 
 from lmfdb.transitive_group import *
@@ -178,6 +178,7 @@ def render_hgm_webpage(args):
         B = ['$'+str(x)+'$' for x in B]
         tn = data['t']['n']
         td = data['t']['d']
+        t = latex(QQ(str(tn)+'/'+str(td)))
         bad = data['bad']
         hodge = data['hodge']
         hodge = ['$'+str(x)+'$' for x in hodge
@@ -188,8 +189,7 @@ def render_hgm_webpage(args):
         info.update({
                     'A': A,
                     'B': B,
-                    'tn': tn,
-                    'td': td,
+                    't': t,
                     'degree' = data['degree'],
                     'weight' = data['weight'],
                     'bad' = data['bad'],
