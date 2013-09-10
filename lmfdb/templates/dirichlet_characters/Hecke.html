@@ -1,0 +1,13 @@
+{% extends 'dirichlet_characters/Charpage.html' %}
+
+{% block description %}
+
+
+A Hecke Character is a (finite order) character on the ideals
+of a number field $K$. Such a character factors over the
+ray class group $Cl(m)$ of some modulus $m$.
+
+Select a <a href="{{url_for('number_fields.number_field_render_webpage')}}">global number field</a>.
+
+{% endblock %}
+
