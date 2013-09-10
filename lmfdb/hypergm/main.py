@@ -173,15 +173,12 @@ def render_hgm_webpage(args):
             return search_input_error(info, bread)
         title = 'Hypergeometric Motive:' + label
         A = data['A']
-        A = ['$'+str(x)+'$' for x in A]
         B = data['B']
-        B = ['$'+str(x)+'$' for x in B]
         tn = data['t']['n']
         td = data['t']['d']
         t = latex(QQ(str(tn)+'/'+str(td)))
         bad = data['bad']
         hodge = data['hodge']
-        hodge = ['$'+str(x)+'$' for x in hodge]
         prop2 = [
             ('Degree', '\(%s\)' % data['degree']),
             ('Weight',  '\(%s\)' % data['weight'])
