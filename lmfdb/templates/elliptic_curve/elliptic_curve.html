@@ -273,8 +273,8 @@ function show_code(system) {
     <h2> {{KNOWL('ec.q.galois_rep', title='Galois Representations')}} </h2>
 
 {% if info.galois_data %}
+<p>
 {% if info.CMD %}
-
 The mod \( p \) {{KNOWL('ec.q.galois_rep', title='Galois
 Representations')}} of an elliptic curve with {{
 KNOWL('ec.complex_multiplication', title='Complex Multiplication') }}
@@ -285,6 +285,7 @@ The mod \( p \) {{KNOWL('ec.q.galois_rep', title='Galois
 Representation')}} is surjective for all primes \( p \) except those
     listed.
 {% endif %}
+</p>
 <table>
 <tr>
 <th>prime</th>
@@ -298,8 +299,10 @@ Representation')}} is surjective for all primes \( p \) except those
 {% endfor %}
 </table>
 {% else %}
+<p>
 The mod \( p \) {{KNOWL('ec.q.galois_rep', title='Galois
 Representation')}} is surjective for all primes \( p \).
+</p>
 {% endif %}
 
 

@@ -92,6 +92,7 @@ sw_label_regex = re.compile(r'sw(\d+)(\.)(\d+)(\.*)(\d*)')
 LIST_RE = re.compile(r'^(\d+|(\d+-(\d+)?))(,(\d+|(\d+-(\d+)?)))*$')
 TORS_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
 QQ_RE = re.compile(r'^-?\d+(/\d+)?$')
+LIST_POSINT_RE = re.compile(r'^(\d+)(,\d+)*$')
 
 def format_ainvs(ainvs):
     """
@@ -304,7 +305,6 @@ def elliptic_curve_search(**args):
                 tmp[1] = newors
             if field=='sha_an': # database sha_an values are not all exact!
                 query[tmp[0]] = { '$gt': tmp[1]-0.1, '$lt': tmp[1]+0.1}
-                print query
             else:
                 query[tmp[0]] = tmp[1]
 
@@ -318,6 +318,30 @@ def elliptic_curve_search(**args):
             info['err'] = 'Error parsing input for the torsion structure.  It needs to be one or more integers in square brackets, such as [6], [2,2], or [2,4].  Moreover, each integer should be bigger than 1, and each divides the next.'
             return search_input_error(info, bread)
         query['torsion_structure'] = [str(a) for a in parse_list(info['torsion_structure'])]
+
+    if info.get('surj_primes'):
+        info['surj_primes'] = clean_input(info['surj_primes'])
+        if LIST_POSINT_RE.match(info['surj_primes']):
+            surj_primes = [int(p) for p in info['surj_primes'].split(',')]            
+            query['non-surjective_primes'] = {"$nin": surj_primes}
+        else:
+            info['err'] = 'Error parsing input for surjective primes.  It needs to be an integer (such as 5), or a comma-separated list of integers (such as 2,3,11).'
+            return search_input_error(info, bread)
+
+    if info.get('nonsurj_primes'):
+        info['nonsurj_primes'] = clean_input(info['nonsurj_primes'])
+        if LIST_POSINT_RE.match(info['nonsurj_primes']):
+            nonsurj_primes = [int(p) for p in info['nonsurj_primes'].split(',')]
+            if info['surj_quantifier'] == 'exactly':
+                query['non-surjective_primes'] = nonsurj_primes
+            else:
+                if 'non-surjective_primes' in query:
+                    query['non-surjective_primes'] = { "$nin": surj_primes, "$all": nonsurj_primes }
+                else:
+                    query['non-surjective_primes'] = { "$all": nonsurj_primes }
+        else:
+            info['err'] = 'Error parsing input for nonsurjective primes.  It needs to be an integer (such as 5), or a comma-separated list of integers (such as 2,3,11).'
+            return search_input_error(info, bread)
 
     info['query'] = query
 
@@ -342,7 +366,6 @@ def elliptic_curve_search(**args):
     else:
         start = start_default
 
-    print query
     cursor = lmfdb.base.getDBConnection().elliptic_curves.curves.find(query)
     nres = cursor.count()
     if(start >= nres):
@@ -777,7 +800,7 @@ def render_curve_webpage_by_label(label):
                    ('Torsion Structure', '\(%s\)' % tor_group)
                    ]
     # properties.extend([ "prop %s = %s<br/>" % (_,_*1923) for _ in range(12) ])
-    credit = 'John Cremona'
+    credit = 'John Cremona and Andrew Sutherland'
     if info['label'] == info['cremona_label']:
         t = "Elliptic Curve %s" % info['label']
     else:

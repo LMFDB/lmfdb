@@ -34,6 +34,11 @@ The documents in the collection 'curves' in the database 'elliptic_curves' have 
    - 'special_value': (float) special value of derivative of L-function, e.g.1.490882041449698
    - 'real_period': (float) real period, e.g. 0.3727205103624245
    - 'degree': (int) degree of modular parametrization, e.g. 1984
+   - 'non-surjective_primes': (list of ints) primes p for which the
+     mod p Galois representation is not surjective, e.g. [5]
+   - 'galois_images': (list of strings) Sutherland codes for the
+     images of the mod p Galois representations for the primes in
+     'non-surjective_primes' e.g. ['5B']
 """
 
 import os.path
@@ -292,7 +297,7 @@ def galrep(line):
     data = split(line)
     label = data[0] + data[1] + data[2]
     image_codes = data[6:]
-    pr = ps = [ int(s[:2]) if s[1].isdigit() else int(s[:1]) for s in image_codes]
+    pr = [ int(s[:2]) if s[1].isdigit() else int(s[:1]) for s in image_codes]
     return label, {
         'non-surjective_primes': pr,
         'galois_images': image_codes,
