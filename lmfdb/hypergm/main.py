@@ -38,7 +38,7 @@ LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 def index():
     bread = get_bread()
     if len(request.args) != 0:
-        return local_field_search(**request.args)
+        return hgm_search(**request.args)
     info = {'count': 20}
     return render_template("hgm-index.html", title="Hypergeometric Motives", bread=bread, credit=HGM_credit, info=info)
 
@@ -53,14 +53,14 @@ def search():
     if request.method == "GET":
         val = request.args.get("val", "no value")
         bread = get_bread([("Search for '%s'" % val, url_for('.search'))])
-        return render_template("hgm-search.html", title="Local Number Field Search", bread=bread, val=val)
+        return render_template("hgm-search.html", title="Hypergeometric Motive Search", bread=bread, val=val)
     elif request.method == "POST":
         return "ERROR: we always do http get to explicitly display the search parameters"
     else:
         return flask.redirect(404)
 
 
-def local_field_search(**args):
+def hgm_search(**args):
     info = to_dict(args)
     bread = get_bread([("Search results", url_for('.search'))])
     C = base.getDBConnection()
