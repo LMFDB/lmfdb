@@ -6,7 +6,7 @@ import base
 C = base.getDBConnection()
 db = C.Lfunctions
 
-from Lfunction import Lfunction, Lfunction_Dirichlet
+from Lfunction import Lfunction_Dirichlet
 
 # Iterators over L-functions. It would be nice to have all of the types of forms that appear on the site
 

@@ -305,7 +305,7 @@ def l_function_ec_sym_page(power, label):
 @l_function_page.route("/Lcalcurl/<Ltype>/<url>/")
 def l_function_lcalc_page(Ltype, url):
     args = {Ltype: Ltype, url: url}
-    return render_single_Lfunction(Lfunction, args, request)
+    return render_single_Lfunction(Lfunction_lcalc, args, request)
 
 
 ################################################################################
@@ -769,7 +769,7 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         return SymmetricPowerLfunction(power=arg2, underlying_type=arg3, field=arg4, label=arg5)
 
     elif arg1 == 'Lcalcurl':
-        return Lfunction(Ltype=arg1, url=arg2)
+        return Lfunction_lcalc(Ltype=arg1, url=arg2)
 
     else:
         return flask.redirect(403)
