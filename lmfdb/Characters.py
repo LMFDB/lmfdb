@@ -134,7 +134,7 @@ def render_Heckewebpage(request, number_field, modulus, number):
     temp_args['number'] = number
 
     if number_field == None:
-        return render_template('dirichlet_characters/Hecke_help.html')
+        return render_template('dirichlet_characters/Hecke.html')
     elif modulus == None:
         info = WebHeckeFamily(temp_args).to_dict()
         print info

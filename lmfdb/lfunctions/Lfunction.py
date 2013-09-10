@@ -22,7 +22,7 @@ from sage.rings.rational import Rational
 import re
 import pymongo
 import bson
-from lmfdb.WebCharacter import WebCharacter
+from lmfdb.WebCharacter import WebDirichletCharacter
 from lmfdb.WebNumberField import WebNumberField
 
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms import *
@@ -654,9 +654,8 @@ class Lfunction_Dirichlet(Lfunction):
         self.numcoeff = int(self.numcoeff)
 
         # Create the Dirichlet character
-        self.web_chi = WebCharacter({'type': 'dirichlet',
-                                     'modulus': self.charactermodulus,
-                                     'number': self.characternumber})
+        self.web_chi = WebDirichletCharacter( {'modlabel': self.charactermodulus,
+                                'numlabel': self.characternumber})
         chi = self.web_chi.chi_sage
         self.chi_sage = chi
         self.motivic_weight = 0
