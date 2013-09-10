@@ -45,7 +45,7 @@ def index():
 
 @hypergm_page.route("/<label>")
 def by_label(label):
-    return render_field_webpage({'label': label})
+    return render_hgm_webpage({'label': label})
 
 
 @hypergm_page.route("/search", methods=["GET", "POST"])
@@ -66,7 +66,7 @@ def local_field_search(**args):
     C = base.getDBConnection()
     query = {}
     if 'jump_to' in info:
-        return render_field_webpage({'label': info['jump_to']})
+        return render_hgm_webpage({'label': info['jump_to']})
 
     for param in ['p', 'n', 'c', 'e', 'gal']:
         if info.get(param):
@@ -159,78 +159,49 @@ def local_field_search(**args):
     return render_template("hgm-search.html", info=info, title="Local Number Field Search Result", bread=bread, credit=HGM_credit)
 
 
-def render_field_webpage(args):
+def render_hgm_webpage(args):
     data = None
     info = {}
     if 'label' in args:
         label = clean_input(args['label'])
         C = base.getDBConnection()
-        data = C.localfields.fields.find_one({'label': label})
+        data = C.hgm.motives.find_one({'label': label})
         if data is None:
             bread = get_bread([("Search error", url_for('.search'))])
-            info['err'] = "Field " + label + " was not found in the database."
+            info['err'] = "Motive " + label + " was not found in the database."
             info['label'] = label
             return search_input_error(info, bread)
-        title = 'Local Number Field:' + label
-        polynomial = coeff_to_poly(data['coeffs'])
-        p = data['p']
-        e = data['e']
-        f = data['f']
-        cc = data['c']
-        GG = data['gal']
-        gn = GG[0]
-        gt = GG[1]
+        title = 'Hypergeometric Motive:' + label
+        A = data['A']
+        A = ['$'+str(x)+'$' for x in A]
+        B = data['B']
+        B = ['$'+str(x)+'$' for x in B]
+        tn = data['t']['n']
+        td = data['t']['d']
+        bad = data['bad']
+        hodge = data['hodge']
+        hodge = ['$'+str(x)+'$' for x in hodge
         prop2 = [
-            ('Base', '\(\Q_{%s}\)' % p),
-            ('Degree', '\(%s\)' % data['n']),
-            ('e', '\(%s\)' % e),
-            ('f', '\(%s\)' % f),
-            ('c', '\(%s\)' % cc),
-            ('Galois group', group_display_short(gn, gt, C)),
+            ('Degree', '\(%s\)' % data['degree']),
+            ('Weight',  '\(%s\)' % data['weight'])
         ]
-        Pt = PolynomialRing(QQ, 't')
-        Pyt = PolynomialRing(Pt, 'y')
-        eisenp = Pyt(str(data['eisen']))
-        unramp = Pyt(str(data['unram']))
-        # Look up the unram poly so we can link to it
-        unramdata = C.localfields.fields.find_one({'p': p, 'n': f, 'c': 0})
-        if len(unramdata) > 0:
-            unramfriend = "/LocalNumberField/%s" % unramdata['label']
-        else:
-            logger.fatal("Cannot find unramified field!")
-            unramfriend = ''
-        rfdata = C.localfields.fields.find_one({'p': p, 'n': {'$in': [1, 2]}, 'rf': data['rf']})
-        if rfdata is None:
-            logger.fatal("Cannot find discriminant root field!")
-            rffriend = ''
-        else:
-            rffriend = "/LocalNumberField/%s" % rfdata['label']
-
         info.update({
-                    'polynomial': web_latex(polynomial),
-                    'n': data['n'],
-                    'p': data['p'],
-                    'c': data['c'],
-                    'e': data['e'],
-                    'f': data['f'],
-                    't': data['t'],
-                    'u': data['u'],
-                    'rf': printquad(data['rf'], p),
-                    'hw': data['hw'],
-                    'slopes': show_slopes(data['slopes']),
-                    'gal': group_display_knowl(gn, gt, C),
-                    'gt': gt,
-                    'inertia': group_display_inertia(data['inertia'], C),
-                    'unram': web_latex(unramp),
-                    'eisen': web_latex(eisenp),
-                    'gms': data['gms'],
-                    'aut': data['aut'],
+                    'A': A,
+                    'B': B,
+                    'tn': tn,
+                    'td': td,
+                    'degree' = data['degree'],
+                    'weight' = data['weight'],
+                    'bad' = data['bad'],
+                    'sign' = data['sign'],
+                    'hodge': hodge,
                     })
-        friends = [('Galois group', "/GaloisGroup/%dT%d" % (gn, gt))]
-        if unramfriend != '':
-            friends.append(('Unramified subfield', unramfriend))
-        if rffriend != '':
-            friends.append(('Discriminant root field', rffriend))
+        friends = []
+#        friends = [('Galois group', "/GaloisGroup/%dT%d" % (gn, gt))]
+#        if unramfriend != '':
+#            friends.append(('Unramified subfield', unramfriend))
+#        if rffriend != '':
+#            friends.append(('Discriminant root field', rffriend))
 
         bread = get_bread([(label, ' ')])
         return render_template("hgm-show-motive.html", credit=HGM_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends)
@@ -256,4 +227,4 @@ def printquad(code, p):
 
 
 def search_input_error(info, bread):
-    return render_template("hgm-search.html", info=info, title='Local Field Search Input Error', bread=bread)
+    return render_template("hgm-search.html", info=info, title='Motive Search Input Error', bread=bread)
