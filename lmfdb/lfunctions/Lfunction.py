@@ -103,7 +103,11 @@ class Lfunction:
                     # self.lambda_fe:       What ultimately appears if you do lcalc.lcalc_Lfunction._print_data_to_standard_output() as the lambda[1]
                     # According to Rishi, as of March 2012 (sage <=5.0), the documentation to
                     # his wrapper is wrong
-
+    def parseLcalcfile_ver1(self, filecontents):
+        """ Extracts informtion from the lcalcfile, version 1
+        """
+        LfunctionLcalc.parseLcalcfile_ver1(self, filecontents)
+    
 
     def createLcalcfile_ver1(self):
         """ Creates the lcalcfile of L, version 1
@@ -129,6 +133,7 @@ class Lfunction:
     def conductor(self, advocate):
         # Advocate could be IK, CFKRS or B
         pass
+        
 
 class Lfunction_lcalc(Lfunction):
     """Class representing an L-function coming from an lcalc source, either a URL or a file
@@ -197,10 +202,6 @@ class Lfunction_lcalc(Lfunction):
     def original_mathematical_object(self):
         return [self.Ltype(), "An lcalc source of type {0}, with content {1}".format(self.Ltype(), self.filecontents)]
 
-    def parseLcalcfile_ver1(self, filecontents):
-        """ Extracts informtion from the lcalcfile, version 1
-        """
-        LfunctionLcalc.parseLcalcfile_ver1(self, filecontents)
 
 
 #############################################################################
