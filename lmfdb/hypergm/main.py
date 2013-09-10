@@ -181,7 +181,7 @@ def render_hgm_webpage(args):
         t = latex(QQ(str(tn)+'/'+str(td)))
         bad = data['bad']
         hodge = data['hodge']
-        hodge = ['$'+str(x)+'$' for x in hodge
+        hodge = ['$'+str(x)+'$' for x in hodge]
         prop2 = [
             ('Degree', '\(%s\)' % data['degree']),
             ('Weight',  '\(%s\)' % data['weight'])
@@ -190,10 +190,10 @@ def render_hgm_webpage(args):
                     'A': A,
                     'B': B,
                     't': t,
-                    'degree' = data['degree'],
-                    'weight' = data['weight'],
-                    'bad' = data['bad'],
-                    'sign' = data['sign'],
+                    'degree': data['degree'],
+                    'weight': data['weight'],
+                    'bad': data['bad'],
+                    'sign': data['sign'],
                     'hodge': hodge,
                     })
         friends = []
