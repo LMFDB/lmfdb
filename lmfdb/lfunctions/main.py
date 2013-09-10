@@ -196,7 +196,7 @@ def l_function_ec_page(label):
             return flask.redirect(url_for('.l_function_ec_page', label=label[:-1]), 301)
         else:
             args = {'label': label}
-            return render_single_Lfunction(Lfunction_EC, args, request)
+            return render_single_Lfunction(Lfunction_EC_Q, args, request)
 
     m = cremona_label_regex.match(label)
     if m is not None:
@@ -438,7 +438,7 @@ def initLfunction(L, args, request):
         info['bread'] = get_bread(1, [(charname, request.url)])
         info['friends'] = [('Dirichlet Character ' + str(charname), friendlink)]
 
-    elif L.Ltype() == 'ellipticcurve':
+    elif L.Ltype() == 'ellipticcurveQ':
         label = L.label
         while friendlink[len(friendlink) - 1].isdigit():  # Remove any number at the end to get isogeny class url
             friendlink = friendlink[0:len(friendlink) - 1]
@@ -738,7 +738,7 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         return Lfunction_Dirichlet(charactermodulus=arg3, characternumber=arg4)
 
     elif arg1 == 'EllipticCurve' and arg2 == 'Q':
-        return Lfunction_EC(label=arg3)
+        return Lfunction_EC_Q(label=arg3)
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic':  # this has args: one for weight and one for level
         # logger.debug(arg5+arg6+str(arg7)+str(arg8)+str(arg9))

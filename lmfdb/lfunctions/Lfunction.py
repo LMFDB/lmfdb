@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-# Contains the class Lfunction which represents an L-function
-# This should be made a Mixin
-# It's usually created through one of the subclasses:
-# RiemannZeta, Lfunction_Dirichlet, Lfunction_EC, Lfunction_EMF,
+# The class Lfunction is defined in Lfunction_base and represents an L-function
+# We subclass it here:
+# RiemannZeta, Lfunction_Dirichlet, Lfunction_EC_Q, Lfunction_EMF,
 # Lfunction_HMF, Lfunction_Maass, Lfunction_SMF2_scalar_valued,
 # DedekindZeta, ArtinLfunction, SymmetricPowerLfunction
 
@@ -29,111 +28,13 @@ from lmfdb.WebNumberField import WebNumberField
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms import *
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import MaassDB
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaassForm
-
+from Lfunction_base import Lfunction
 
 def constructor_logger(object, args):
     ''' Executed when a object is constructed for debugging reasons
     '''
     logger.info(str(object.__class__) + str(args))
-    # object.inject_database(["original_mathematical_object()", "poles", "residues", "kappa_fe",
-    #    "lambda_fe", "mu_fe", "nu_fe"])  #Paul Dehaye put this here for debugging
 
-
-#############################################################################
-# The base class
-#############################################################################
-
-class Lfunction:
-    """Class representing a general L-function
-    It can be called with a dictionary of these forms:
-
-    dict = { 'Ltype': 'lcalcurl', 'url': ... }  url is any url for an lcalcfile
-    dict = { 'Ltype': 'lcalcfile', 'filecontents': ... }  filecontents is the
-           contents of an lcalcfile
-
-    """
-
-    def __init__(self, **args):
-        constructor_logger(self, args)
-        # Initialize some default values
-        self.coefficient_period = 0
-        self.poles = []
-        self.residues = []
-        self.kappa_fe = []
-        self.lambda_fe = []
-        self.mu_fe = []
-        self.nu_fe = []
-        self.selfdual = False
-        self.langlands = True
-        self.texname = "L(s)"  # default name.  will be set later, for most L-functions
-        self.texnamecompleteds = "\\Lambda(s)"  # default name.  will be set later, for most L-functions
-        self.texnamecompleted1ms = "\\overline{\\Lambda(1-\\overline{s})}"  # default name.  will be set later, for most L-functions
-        self.primitive = True  # should be changed later
-        self.citation = ''
-        self.credit = ''
-        self.motivic_weight = NaN
-        self.algebraic = True
-
-    def Ltype(self):
-        return self._Ltype
-
-    def checkselfdual(self):
-        """ Checks whether coefficients are real to determine
-            whether L-function is selfdual
-        """
-
-        self.selfdual = True
-        for n in range(1, min(8, len(self.dirichlet_coefficients))):
-            if abs(imag_part(self.dirichlet_coefficients[n] / self.dirichlet_coefficients[0])) > 0.00001:
-                self.selfdual = False
-
-    def generateSageLfunction(self):
-        """ Generate a SageLfunction to do computations
-        """
-        logger.info("Generating Sage Lfunction with parameters %s and coefficients (maybe shortened in this msg, but there are %s) %s" % ([self.title, self.coefficient_type, self.coefficient_period, self.Q_fe, self.sign, self.kappa_fe, self.lambda_fe, self.poles, self.residues], len(self.dirichlet_coefficients), self.dirichlet_coefficients[:20]))
-        self.sageLfunction = lc.Lfunction_C(self.title, self.coefficient_type,
-                                            self.dirichlet_coefficients,
-                                            self.coefficient_period,
-                                            self.Q_fe, self.sign,
-                                            self.kappa_fe, self.lambda_fe,
-                                            self.poles, self.residues)
-                    # self.poles:           Needs poles of _completed_ L-function
-                    # self.residues:        Needs residues of _completed_ L-function
-                    # self.kappa_fe:        What ultimately appears if you do lcalc.lcalc_Lfunction._print_data_to_standard_output() as the gamma[1]
-                    # self.lambda_fe:       What ultimately appears if you do lcalc.lcalc_Lfunction._print_data_to_standard_output() as the lambda[1]
-                    # According to Rishi, as of March 2012 (sage <=5.0), the documentation to
-                    # his wrapper is wrong
-    def parseLcalcfile_ver1(self, filecontents):
-        """ Extracts informtion from the lcalcfile, version 1
-        """
-        LfunctionLcalc.parseLcalcfile_ver1(self, filecontents)
-    
-
-    def createLcalcfile_ver1(self):
-        """ Creates the lcalcfile of L, version 1
-        """
-        return LfunctionLcalc.createLcalcfile_ver1(self)
-
-    def createLcalcfile_ver2(self, url):
-        logger.debug("Starting Lcalc")
-        """ Creates the lcalcfile of L, version 1
-        """
-        return LfunctionLcalc.createLcalcfile_ver2(self, url)
-
-    ############################################################################
-    ### other useful methods not implemented universally yet
-    ############################################################################
-
-    def original_mathematical_object(self):
-        raise Error("not all L-function have a mathematical object tag defined atm")
-
-    def critical_value(self):
-        pass
-
-    def conductor(self, advocate):
-        # Advocate could be IK, CFKRS or B
-        pass
-        
 
 class Lfunction_lcalc(Lfunction):
     """Class representing an L-function coming from an lcalc source, either a URL or a file
@@ -143,7 +44,6 @@ class Lfunction_lcalc(Lfunction):
     dict = { 'Ltype': 'lcalcfile', 'filecontents': ... }  filecontents is the
            contents of an lcalcfile
     """
-    
     def __init__(self, **args):
         constructor_logger(self, args)
         # Initialize some default values
@@ -199,21 +99,25 @@ class Lfunction_lcalc(Lfunction):
 
         self.generateSageLfunction()
     
-    def original_mathematical_object(self):
-        return [self.Ltype(), "An lcalc source of type {0}, with content {1}".format(self.Ltype(), self.filecontents)]
+    def Lkey(self):
+        return {"filecontents": self.filecontents}
+    
+    def source_object(self):
+        return self.filecontents
 
 
 
 #############################################################################
 # The subclasses
 #############################################################################
-class Lfunction_EC(Lfunction):
+class Lfunction_EC_Q(Lfunction):
     """Class representing an elliptic curve L-function
     It can be called with a dictionary of these forms:
 
     dict = { 'label': ... }  label is the LMFDB label of the elliptic curve
-    """
 
+    """
+    #     This is bad, it assumes the label is Cremona's and the ground field is Q
     def __init__(self, **args):
         # Check for compulsory arguments
         if not 'label' in args.keys():
@@ -287,21 +191,23 @@ class Lfunction_EC(Lfunction):
         self.properties.append(('Level', '%s' % self.level))
         self.credit = 'Sage'
         self.citation = ''
-
         self.sageLfunction = lc.Lfunction_from_elliptic_curve(self.E, int(self.numcoeff))
 
         # logger.info("I am now proud to have ", str(self.__dict__))
         constructor_logger(self, args)
-
+    
     def Ltype(self):
-        return "ellipticcurve"
+        return "ellipticcurveQ"
 
     def ground_field(self):
         return "Q"
-        # At the moment
 
-    def original_mathematical_object(self):
-        return [self.Ltype(), self.ground_field(), self.label]
+    def Lkey(self):
+        # If over Q, the lmfdb label determines the curve
+        return {"label": self.label}
+    
+    def original_object(self):
+        return self.E
 
 
 #############################################################################
@@ -443,6 +349,12 @@ class Lfunction_EMF(Lfunction):
 
     def Ltype(self):
         return "ellipticmodularform"
+    
+    def Lkey(self):
+        return {"weight": self.weight, "level": self.level}
+        
+    def original_object(self):
+        return self.MF
 
 #############################################################################
 
@@ -457,7 +369,6 @@ class Lfunction_HMF(Lfunction):
     """
 
     def __init__(self, **args):
-
         # Check for compulsory arguments
         if not ('label' in args.keys()):
             raise KeyError("You have to supply label for a Hilbert modular form L-function")
@@ -598,6 +509,9 @@ class Lfunction_HMF(Lfunction):
 
     def Ltype(self):
         return "hilbertmodularform"
+        
+    def Lkey(self):
+        return {"label", self.label}
 
 
 #############################################################################
@@ -655,8 +569,8 @@ class RiemannZeta(Lfunction):
     def Ltype(self):
         return "riemann"
 
-    def original_mathematical_object(self):
-        return ["riemann"]
+    def Lkey(self):
+        return {}
 
 #############################################################################
 
@@ -762,8 +676,8 @@ class Lfunction_Dirichlet(Lfunction):
     def Ltype(self):
         return "dirichlet"
 
-    def original_mathematical_object(self):
-        return [self.Ltype(), self.charactermodulus, self.characternumber]
+    def Lkey(self):
+        return {"charactermodulus": self.charactermodulus, "characternumber": self.characternumber}
 
 
 #############################################################################
@@ -911,6 +825,9 @@ class Lfunction_Maass(Lfunction):
 
     def Ltype(self):
         return "maass"
+    
+    def Lkey(self):
+        return {"dbid": self.dbid}
 
 
 #############################################################################
@@ -923,12 +840,13 @@ class DedekindZeta(Lfunction):   # added by DK
     """
 
     def __init__(self, **args):
+        if not 'label' in args.keys():
+            raise Exception("You have to supply a label for a Dedekind zeta function")
+        
         constructor_logger(self, args)
         self.motivic_weight = 0
         # Check for compulsory arguments
-        if not 'label' in args.keys():
-            raise Exception("You have to supply a label for a Dedekind zeta function")
-
+        
         # Initialize default values
 
         # Put the arguments into the object dictionary
@@ -1023,6 +941,8 @@ class DedekindZeta(Lfunction):   # added by DK
     def Ltype(self):
         return "dedekindzeta"
 
+    def Lkey(self):
+        return {"label": self.label}
 
 #############################################################################
 
@@ -1032,13 +952,16 @@ class ArtinLfunction(Lfunction):
     Compulsory parameters: dimension, conductor, tim_index
 
     """
-
-    def __init__(self, dimension, conductor, tim_index, **args):
+    def __init__(self, **args):
         constructor_logger(self, args)
-
+        if not ('dimension' in args.keys() and 'conductor' in args.keys() and 'tim_index' in args.keys()):
+            raise KeyError("You have to supply dimension, conductor and tim_index for an Artin L-function")    
+        
         from lmfdb.math_classes import ArtinRepresentation
-
-        self.artin = ArtinRepresentation(dimension, conductor, tim_index)
+        self.dimension = args["dimension"]
+        self.conductor = args["conductor"]
+        self.tim_index = args["tim_index"]
+        self.artin = ArtinRepresentation(self.dimension, self.conductor, self.tim_index)
 
         self.title = "L function for an Artin representation of dimension " + str(dimension) + \
             ", conductor " + str(conductor)
@@ -1085,6 +1008,9 @@ class ArtinLfunction(Lfunction):
 
     def Ltype(self):
         return "artin"
+        
+    def Lkey(self):
+        return {"dimension": self.dimension, "conductor": self.conductor, "tim_index": self.tim_index}
 
 #############################################################################
 
@@ -1101,7 +1027,8 @@ class SymmetricPowerLfunction(Lfunction):
 
     def __init__(self, **args):
         constructor_logger(self, args)
-
+        if not ('power' in args.keys() and 'underlying_type' in args.keys() and 'field' in args.keys()):
+                    raise KeyError("You have to supply power, underlying type and field for a symmetric power L-function")    
         def ordinal(n):
             if n == 2:
                 return "Square"
@@ -1201,6 +1128,9 @@ class SymmetricPowerLfunction(Lfunction):
 
     def Ltype(self):
         return "SymmetricPower"
+    
+    def Lkey(self):
+        return {"power": power, "underlying_type": underlying_type, "field": field}
 
 
 #############################################################################
@@ -1326,3 +1256,6 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
             return "siegelklingeneisenstein"
         elif self.orbit[0] == 'M':
             return "siegelmaasslift"
+    
+    def Lkey():
+        return {"weight": self.weight, "orbit": self.orbit}
