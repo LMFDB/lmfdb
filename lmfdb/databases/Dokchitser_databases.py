@@ -1,5 +1,5 @@
-artin_location = ("limbo", "artrep20130430")
-galois_group_location = ("limbo", "nfgal20130430")
+artin_location = ("limbo", "artrep20130910")
+galois_group_location = ("limbo", "nfgal20130910")
 
 from type_generation import String, Array, Dict, Int, Anything, Float
 
@@ -43,6 +43,11 @@ LenPair = Dict({
     "val": TooLargeInt
 })
 
+GalPair = Dict({
+    "n": Int,
+    "t": Int
+})
+
 Dokchitser_ArtinRepresentation = Dict({
     "_id": Anything,
     "Dim": Int,
@@ -57,7 +62,8 @@ Dokchitser_ArtinRepresentation = Dict({
     "Character": Anything,
     "Sign": Int,
     "CharacterField": Int,
-    "Conductor_plus": LenPair                             # Added after Tim, by inject_conductor_len.py
+    "Conductor_plus": LenPair,                             # Added after Tim, by inject_conductor_len.py
+    "Galois_nt": GalPair,                             # Added after Tim, by jj
 })
 
 
