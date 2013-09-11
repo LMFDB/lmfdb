@@ -43,9 +43,7 @@ def generateSageLfunction(L):
     """ Generate a SageLfunction to do computations
     """
     from lmfdb.lfunctions import logger
-    logger.info("Generating Sage Lfunction with parameters %s and " +
-                "coefficients " +
-                "(maybe shortened in this msg, but there are %s) %s"
+    logger.info("Generating Sage Lfunction with parameters %s and coefficients (maybe shortened in this msg, but there are %s) %s"
                 % ([self.title, self.coefficient_type, self.coefficient_period,
                 self.Q_fe, self.sign, self.kappa_fe, self.lambda_fe,
                 self.poles, self.residues], len(self.dirichlet_coefficients),
@@ -179,8 +177,7 @@ class Lfunction_EC_Q(Lfunction):
         curves = base.getDBConnection().elliptic_curves.curves
         Edata = curves.find_one({'lmfdb_label': self.label + '1'})
         if Edata is None:
-            raise KeyError('No elliptic curve with label %s exists in the ' +
-                           'database' % self.label)
+            raise KeyError('No elliptic curve with label %s exists in the database' % self.label)
         else:
             self.E = EllipticCurve([int(a) for a in Edata['ainvs']])
 
@@ -1017,8 +1014,7 @@ class DedekindZeta(Lfunction):   # added by DK
                             right = (r'\({}^{%d}\)' % (nfgg[j])
                                      if nfgg[j]>1 else r'')
                             self.factorization += r'\(\;\cdot\)' 
-                            self.factorization += (r'<a href="%s">\(L(s, ' +
-                                    '\rho_{%d,%s,%d})\)</a>' % (ar_url,
+                            self.factorization += (r'<a href="%s">\(L(s, \rho_{%d,%s,%d})\)</a>' % (ar_url,
                                             the_rep.dimension(),
                                             str(the_rep.conductor()),
                                             the_rep.index()))
@@ -1182,8 +1178,7 @@ class SymmetricPowerLfunction(Lfunction):
         curves = base.getDBConnection().elliptic_curves.curves
         Edata = curves.find_one({'lmfdb_label': self.label + '1'})
         if Edata is None:
-            raise KeyError('No elliptic curve with label %s exists in the ' +
-                           'database' % self.label)
+            raise KeyError('No elliptic curve with label %s exists in the database' % self.label)
         else:
             self.E = EllipticCurve([int(a) for a in Edata['ainvs']])
 
@@ -1195,10 +1190,8 @@ class SymmetricPowerLfunction(Lfunction):
 
         from lmfdb.symL.symL import SymmetricPowerLFunction
         self.S = SymmetricPowerLFunction(self.E, self.m)
-
-        self.title = ("The Symmetric %s $L$-function $L(s,E,\mathrm{sym}^%d)$ "+
-                      "of Elliptic Curve Isogeny Class %s" % (ordinal(self.m),
-                                                            self.m, self.label))
+        self.title = ("The Symmetric %s $L$-function $L(s,E,\mathrm{sym}^%d)$ of Elliptic Curve Isogeny Class %s"
+                      % (ordinal(self.m), self.m, self.label))
 
         self.dirichlet_coefficients = self.S._coeffs
 
@@ -1226,11 +1219,8 @@ class SymmetricPowerLfunction(Lfunction):
         self.citation = ' '
         self.credit = ' '
         self.level = self.S.conductor
-        self.euler = ("\\begin{align} L(s,E, \\mathrm{sym}^{%d}) = & " +
-                      "\\prod_{p \\nmid %d } \\prod_{j=0}^{%d} " +
-                      "\\left(1- \\frac{\\alpha_p^j\\beta_p^{%d-j}}{p^{s}}" +
-                      "\\right)^{-1} " % (self.m, self.E.conductor(),
-                                          self.m, self.m))
+        self.euler = ("\\begin{align} L(s,E, \\mathrm{sym}^{%d}) = & \\prod_{p \\nmid %d } \\prod_{j=0}^{%d} \\left(1- \\frac{\\alpha_p^j\\beta_p^{%d-j}}{p^{s}} \\right)^{-1} "
+                      % (self.m, self.E.conductor(),self.m, self.m))
         for p in self.S.bad_primes:
             poly = self.S.eulerFactor(p)
             poly_string = " "
