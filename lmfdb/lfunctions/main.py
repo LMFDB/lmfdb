@@ -18,7 +18,7 @@ from Lfunctionutilities import (lfuncDStex, lfuncEPtex, lfuncFEtex,
                                 truncatenumber, styleTheSign, specialValueString)
 from lmfdb.DirichletCharacter import getPrevNextNavig
 from lmfdb.lfunctions import l_function_page, logger
-from lmfdb.elliptic_curve import cremona_label_regex, lmfdb_label_regex
+from lmfdb.elliptic_curves.elliptic_curve import cremona_label_regex, lmfdb_label_regex
 from LfunctionComp import isogenyclasstable
 
 # import upload2Db.py

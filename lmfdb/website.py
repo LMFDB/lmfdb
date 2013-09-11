@@ -16,7 +16,7 @@ import pages
 import hilbert_modular_form
 import siegel_modular_form
 import modular_forms
-import elliptic_curve
+import elliptic_curves
 import quadratic_twists
 import plot_example
 import number_fields
