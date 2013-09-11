@@ -1,5 +1,7 @@
 from flask import render_template, url_for
 import siegel_core
+import input_parser
+import dimensions
 import pickle
 import urllib
 from sage.all_cmdline import *
@@ -50,6 +52,18 @@ def render_webpage(args={}):
             info['parent_as_tex'] = 'M_k\\big({\\rm Sp}(4,\\mathbb{Z})\\big)'
             dimension = siegel_core._dimension_Sp4Z
             info['generators'] = 'smf.Igusa_generators'
+
+        elif 'Gamma0_2' == args['group']:
+            info['parent_as_tex'] = 'M_{k,j}\\big(\\Gamma_0(2)\\big)'
+            dimension = dimensions._dimension_Gamma_2    
+
+        elif 'Gamma1_2' == args['group']:
+            info['parent_as_tex'] = 'M_{k,j}\\big(\\Gamma_1(2)\\big)'
+            dimension = dimensions._dimension_Gamma_2
+
+        elif 'Gamma_2' == args['group']:
+            info['parent_as_tex'] = 'M_{k,j}\\big(\\Gamma(2)\\big)'
+            dimension = dimensions._dimension_Gamma_2
 
         elif 'Sp4Z_2' == args['group']:
             info['parent_as_tex'] = 'M_{k,2}\\big({\\rm Sp}(4,\\mathbb{Z})\\big)'
@@ -130,48 +144,44 @@ def render_webpage(args={}):
                                bread=bread, **info)
 
     if page == 'dimensions':
-        if not weight_range:
-            min_wt = 1
-            max_wt = 16
-        else:
+        if weight_range:
             info['weight_range'] = weight_range
-            # parse weight_range
-            wr = weight_range.split('-')
             try:
-                wr = map(int, wr)
-                min_wt = wr[0]
-                if len(wr) == 1:
+                min_wt, max_wt, sym_pow = input_parser.kj_parser( weight_range)
+                min_wt = Integer( min_wt)
+                if None == max_wt or max_wt < min_wt:
                     max_wt = min_wt
-                    if min_wt > 1000000:
-                        info['error'] = 'Input too large: Please enter a smaller number.'
-                        min_wt = 2
-                        max_wt = 50
-                else:
-                    max_wt = wr[1]
-                    if max_wt - min_wt >= 0 and (max_wt - min_wt + 1) * max_wt > 1000000:
-                        min_wt = 2
-                        max_wt = 50
-                        info['error'] = 'Input too large: Please enter a smaller range.'
-                        # raise ValueError('gaga')
-            except ValueError, e:
-                info['error'] = 'Invalid input: ' + e.message
-                min_wt = 2
-                max_wt = 50
-
-##             if info['group'] == "Sp8Z":
-##               info['table_headers'] = ["Weight", "Total", "Ikeda Lifts", "Miyawaki Lifts", "Other"]
-
+                if None == sym_pow:
+                    sym_pow = 0
+                if min_wt > 1000000 or (max_wt - min_wt + 1) * max_wt > 1000000 or sym_pow > 1000000:
+                    raise ValueError( '%d: Input too large: Please enter a smaller number.' % min_wt )
+                # info['weight_range'] = str(min_wt) + '-' + str(max_wt) + ',' + str(sym_pow)
+            except Exception as e:
+                info['error'] = 'Invalid input: ' + str(e)
+                min_wt = 20
+                max_wt = 30
+                sym_pow = 0
+        else:
+            min_wt = 20
+            max_wt = 30
+            sym_pow = 0
+            
         try:
             if 'Kp' == group:
                 info['dimensions'] = [(k, dimension(k, tp=int(level))) for k in range(min_wt, max_wt + 1)]
                 bread += [('Dimensions',
                           url_for('ModularForm_GSp4_Q_top_level', group=group, page=page, level=level, weight_range=weight_range))]
+            elif 'Gamma_2' == group:
+                info['sym_pow'] = sym_pow
+                info['dimensions'] = dimension( range( min_wt, max_wt + 1), sym_pow)
+                bread += [('Dimensions',
+                           url_for('ModularForm_GSp4_Q_top_level', group=group, page=page, level=level, weight_range=weight_range))]                
             else:
                 info['dimensions'] = [(k, dimension(k)) for k in range(min_wt, max_wt + 1)]
                 bread += [('Dimensions',
                           url_for('ModularForm_GSp4_Q_top_level', group=group, page=page, weight_range=weight_range))]
-        except:
-            info['error'] = 'Functional error'
+        except Exception as e:
+            info['error'] = 'Functional error: %s' % sys.exc_info()[0] #(str(e))
 
         if 'Sp8Z' == group:
             info['table_headers'] = ['Weight', 'Total', 'Ikeda lifts', 'Miyawaki lifts', 'Other']
@@ -182,7 +192,7 @@ def render_webpage(args={}):
         elif group == 'Kp':
             info['table_headers'] = ["Weight", "Total", "Gritsenko Lifts", "Nonlifts", "Oldforms"]
 
-        elif 'Sp4Z_2' == group or 'Gamma0_4_half' == group:
+        elif 'Sp4Z_2' == group or 'Gamma0_4_half' == group or 'Gamma_2':
             info['table_headers'] = ['Weight', 'Total', 'Non cusp', 'Cusp']
 
         else:
