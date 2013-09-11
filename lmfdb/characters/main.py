@@ -27,16 +27,16 @@ except:
 ## generic
 
 def url_character(type=None,number_field=None,modulus=None,number=None):
-    if type=='Dirichlet':
-        render_Dirichletwebpage(request, modulus, number)
-    elif type=='Hecke':
-        render_Heckewebpage(request, number_field, modulus, number)
+    if type == 'Dirichlet':
+        return url_for('render_Dirichletwebpage',modulus=modulus,number=number)
+    elif type == 'Hecke':
+        return url_for('render_Heckewebpage',number_field=number_field,modulus=modulus,number=number)
     else:
-        render_template('CharacterNavigate.html')
+        return url_for('render_CharacterNavigation')
 
 @characters_page.route("/")
 def render_characterNavigation():
-    return render_template('templates/CharacterNavigate.html')
+    return render_template('CharacterNavigate.html')
 
 @characters_page.route("/Dirichlet/")
 @characters_page.route("/Dirichlet/<modulus>")
