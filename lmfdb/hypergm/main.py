@@ -47,6 +47,9 @@ def index():
 def by_label(label):
     return render_hgm_webpage({'label': label})
 
+@hypergm_page.route("/family/<label>")
+def by_label(label):
+    return render_hgm_family_webpage({'label': label})
 
 @hypergm_page.route("/search", methods=["GET", "POST"])
 def search():
@@ -202,6 +205,48 @@ def render_hgm_webpage(args):
 
         bread = get_bread([(label, ' ')])
         return render_template("hgm-show-motive.html", credit=HGM_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends)
+
+
+def render_hgm_family_webpage(args):
+    data = None
+    info = {}
+    if 'label' in args:
+        label = clean_input(args['label'])
+        C = base.getDBConnection()
+        data = C.hgm.families.find_one({'label': label})
+        if data is None:
+            bread = get_bread([("Search error", url_for('.search'))])
+            info['err'] = "Family of hypergeometric motives " + label + " was not found in the database."
+            info['label'] = label
+            return search_input_error(info, bread)
+        title = 'Hypergeometric Motive Family:' + label
+        A = data['A']
+        B = data['B']
+        hodge = data['hodge']
+        prop2 = [
+            ('Degree', '\(%s\)' % data['degree']),
+            ('Weight',  '\(%s\)' % data['weight'])
+        ]
+        info.update({
+                    'A': A,
+                    'B': B,
+                    'degree': data['degree'],
+                    'weight': data['weight'],
+                    'hodge': hodge,
+                    'gal2': data['gal2'],
+                    'gal3': data['gal3'],
+                    'gal5': data['gal5'],
+                    'gal7': data['gal7'],
+                    })
+        friends = []
+#        friends = [('Galois group', "/GaloisGroup/%dT%d" % (gn, gt))]
+#        if unramfriend != '':
+#            friends.append(('Unramified subfield', unramfriend))
+#        if rffriend != '':
+#            friends.append(('Discriminant root field', rffriend))
+
+        bread = get_bread([(label, ' ')])
+        return render_template("hgm-show-family.html", credit=HGM_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends)
 
 
 def show_slopes(sl):
