@@ -6,7 +6,7 @@ import base
 C = base.getDBConnection()
 db = C.Lfunctions
 
-from Lfunction import Lfunction, Lfunction_Dirichlet
+from Lfunction import Lfunction_Dirichlet
 
 # Iterators over L-functions. It would be nice to have all of the types of forms that appear on the site
 
@@ -20,7 +20,7 @@ def Dirichlet_Lfunctions_iterator(qMax):
 def EC_iterator():
     data = set(_["label"] for _ in Lfunctions.ellcurves.curves.find({}, fields=["label"]))
     for c in data:
-        yield Lfunction_EC(c["label"])
+        yield Lfunction_EC_Q(c["label"])
 
 
 def Lfunction_iterator(dirichlet_max=100):
