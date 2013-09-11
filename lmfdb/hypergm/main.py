@@ -48,7 +48,7 @@ def by_label(label):
     return render_hgm_webpage({'label': label})
 
 @hypergm_page.route("/family/<label>")
-def by_label(label):
+def by_family_label(label):
     return render_hgm_family_webpage({'label': label})
 
 @hypergm_page.route("/search", methods=["GET", "POST"])
