@@ -92,6 +92,7 @@ sw_label_regex = re.compile(r'sw(\d+)(\.)(\d+)(\.*)(\d*)')
 LIST_RE = re.compile(r'^(\d+|(\d+-(\d+)?))(,(\d+|(\d+-(\d+)?)))*$')
 TORS_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
 QQ_RE = re.compile(r'^-?\d+(/\d+)?$')
+LIST_POSINT_RE = re.compile(r'^(\d+)(,\d+)*$')
 
 def format_ainvs(ainvs):
     """
@@ -304,7 +305,6 @@ def elliptic_curve_search(**args):
                 tmp[1] = newors
             if field=='sha_an': # database sha_an values are not all exact!
                 query[tmp[0]] = { '$gt': tmp[1]-0.1, '$lt': tmp[1]+0.1}
-                print query
             else:
                 query[tmp[0]] = tmp[1]
 
@@ -318,6 +318,30 @@ def elliptic_curve_search(**args):
             info['err'] = 'Error parsing input for the torsion structure.  It needs to be one or more integers in square brackets, such as [6], [2,2], or [2,4].  Moreover, each integer should be bigger than 1, and each divides the next.'
             return search_input_error(info, bread)
         query['torsion_structure'] = [str(a) for a in parse_list(info['torsion_structure'])]
+
+    if info.get('surj_primes'):
+        info['surj_primes'] = clean_input(info['surj_primes'])
+        if LIST_POSINT_RE.match(info['surj_primes']):
+            surj_primes = [int(p) for p in info['surj_primes'].split(',')]            
+            query['non-surjective_primes'] = {"$nin": surj_primes}
+        else:
+            info['err'] = 'Error parsing input for surjective primes.  It needs to be an integer (such as 5), or a comma-separated list of integers (such as 2,3,11).'
+            return search_input_error(info, bread)
+
+    if info.get('nonsurj_primes'):
+        info['nonsurj_primes'] = clean_input(info['nonsurj_primes'])
+        if LIST_POSINT_RE.match(info['nonsurj_primes']):
+            nonsurj_primes = [int(p) for p in info['nonsurj_primes'].split(',')]
+            if info['surj_quantifier'] == 'exactly':
+                query['non-surjective_primes'] = nonsurj_primes
+            else:
+                if 'non-surjective_primes' in query:
+                    query['non-surjective_primes'] = { "$nin": surj_primes, "$all": nonsurj_primes }
+                else:
+                    query['non-surjective_primes'] = { "$all": nonsurj_primes }
+        else:
+            info['err'] = 'Error parsing input for nonsurjective primes.  It needs to be an integer (such as 5), or a comma-separated list of integers (such as 2,3,11).'
+            return search_input_error(info, bread)
 
     info['query'] = query
 
@@ -342,7 +366,6 @@ def elliptic_curve_search(**args):
     else:
         start = start_default
 
-    print query
     cursor = lmfdb.base.getDBConnection().elliptic_curves.curves.find(query)
     nres = cursor.count()
     if(start >= nres):
@@ -546,20 +569,20 @@ def modular_form_display(label, number):
         number = 10
     if number < 10:
         number = 10
-    if number > 100000:
-        number = 20
-    if number > 50000:
-        return "OK, I give up."
-    if number > 20000:
-        return "This incident will be reported to the appropriate authorities."
-    if number > 9600:
-        return "You have been banned from this website."
-    if number > 4800:
-        return "Seriously."
-    if number > 2400:
-        return "I mean it."
-    if number > 1200:
-        return "Please stop poking me."
+    # if number > 100000:
+    #     number = 20
+    # if number > 50000:
+    #     return "OK, I give up."
+    # if number > 20000:
+    #     return "This incident will be reported to the appropriate authorities."
+    # if number > 9600:
+    #     return "You have been banned from this website."
+    # if number > 4800:
+    #     return "Seriously."
+    # if number > 2400:
+    #     return "I mean it."
+    # if number > 1200:
+    #     return "Please stop poking me."
     if number > 1000:
         number = 1000
     C = lmfdb.base.getDBConnection()
@@ -680,6 +703,17 @@ def render_curve_webpage_by_label(label):
     else:
         info['tor_structure'] = tor_group
 
+    def trim_galois_image_code(s):
+        return s[2:] if s[1].isdigit() else s[1:]
+
+    if 'galois_images' in data:
+        galois_images = data['galois_images']
+        galois_images = [trim_galois_image_code(s) for s in galois_images]
+        non_surjective_primes = data['non-surjective_primes']
+
+    galois_data = [{'p': p,'image': im }
+                   for p,im in zip(non_surjective_primes,galois_images)]
+
     info.update(data)
     if rank >= 2:
         lder_tex = "L%s(E,1)" % ("^{(" + str(rank) + ")}")
@@ -731,6 +765,7 @@ def render_curve_webpage_by_label(label):
         'tamagawa_numbers': r' \cdot '.join(str(sage.all.factor(c)) for c in tamagawa_numbers),
         'local_data': local_data,
         'cond_factor': latex(N.factor()),
+        'galois_data': galois_data,
         'xintegral_points': ', '.join(web_latex(P) for P in xintpoints),
         'tor_gens': ', '.join(web_latex(eval(g)) for g in data['torsion_generators']) if False else ', '.join(web_latex(P.element().xy()) for P in list(G))
     })
@@ -765,7 +800,7 @@ def render_curve_webpage_by_label(label):
                    ('Torsion Structure', '\(%s\)' % tor_group)
                    ]
     # properties.extend([ "prop %s = %s<br/>" % (_,_*1923) for _ in range(12) ])
-    credit = 'John Cremona'
+    credit = 'John Cremona and Andrew Sutherland'
     if info['label'] == info['cremona_label']:
         t = "Elliptic Curve %s" % info['label']
     else:
