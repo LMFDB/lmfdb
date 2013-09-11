@@ -22,7 +22,7 @@
             </h2>
             <div class = 'sage nodisplay code'>sage: chi.primitive_character()</div>
             <p>
-            <a href="{{ url_for('render_charwebpage', 
+            <a href="{{ url_character(
                 type = type,
                 number_field = nflabel,
                 modulus = condlabel, 
@@ -134,7 +134,7 @@
 
         <p>
         {% for mod,num,label,prim in galoisorbit %}
-        <a href="{{ url_for('render_charwebpage', type=type, number_field=nflabel, modulus=mod, number=num)}}">
+        <a href="{{ url_character(type=type, number_field=nflabel, modulus=mod, number=num)}}">
                 {{label}}
             </a>
          {% endfor %}
@@ -217,7 +217,7 @@
 function value_handler(evt) {
     evt.preventDefault();
     var val = $("#calc-value-input").val();
-    $("#calc-value-output").load("{{ url_for('char_calc', type=type, calc='value', number_field = nflabel, modulus = modlabel, number=numlabel) }}" + "?val=" + val, 
+    $("#calc-value-output").load("{{ url_character(type=type, calc='value', number_field = nflabel, modulus = modlabel, number=numlabel) }}" + "?val=" + val, 
      function() {
         {# tell mathjx to render the output #}
         MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-value-output"]);
@@ -227,7 +227,7 @@ function value_handler(evt) {
 function gauss_handler(evt) {
     evt.preventDefault();
     var val = $("#calc-gauss-input").val();
-    $("#calc-gauss-output").load("{{ url_for('char_calc', type=type, calc='gauss', modulus = modulus, number=number) }}" + "?val=" + val, 
+    $("#calc-gauss-output").load("{{ url_character(type=type, calc='gauss', modulus = modulus, number=number) }}" + "?val=" + val, 
      function() {
         {# tell mathjx to render the output #}
         MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-gauss-output"]);
@@ -236,7 +236,7 @@ function gauss_handler(evt) {
 function jacobi_handler(evt) {
    evt.preventDefault();
    var val = $("#calc-jacobi-input").val();
-   $("#calc-jacobi-output").load("{{ url_for('char_calc', type=type, calc='jacobi', modulus=modulus,number=number) }}" + "?val=" + val,
+   $("#calc-jacobi-output").load("{{ url_character(type=type, calc='jacobi', modulus=modulus,number=number) }}" + "?val=" + val,
      function() {
        {# tell mathjx to render the output #}
        MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-jacobi-output"]);
@@ -246,7 +246,7 @@ function jacobi_handler(evt) {
 function kloosterman_handler(evt) {
    evt.preventDefault();
    var val = $("#calc-kloosterman-input").val();
-   $("#calc-kloosterman-output").load("{{ url_for('char_calc', type=type, calc='kloosterman', modulus=modulus,number=number) }}" + "?val=" + val,
+   $("#calc-kloosterman-output").load("{{ url_character(type=type, calc='kloosterman', modulus=modulus,number=number) }}" + "?val=" + val,
      function() {
        {# tell mathjx to render the output #}
        MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-kloosterman-output"]);

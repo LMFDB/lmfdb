@@ -65,7 +65,7 @@
       <th class="left">
         {% with mod,num,tex,prim = char %}
         <a class="{% if prim -%}primitive{%- else -%}imprimitive{%- endif %}"
-          align="center" href="{{ url_for('render_charwebpage', type=type, number_field=nflabel, modulus=mod, number=num) }}">
+          align="center" href="{{ url_character(type=type, number_field=nflabel, modulus=mod, number=num) }}">
           {{ tex }}
         </a>
         {% endwith %}

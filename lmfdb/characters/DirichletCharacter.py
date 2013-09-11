@@ -41,7 +41,7 @@ def render_webpage(request, arg1, arg2):
         if arg1 is None:  # this means we're at the start page
             info = set_info_for_start_page()  # sets info for character navigate
             info['credit'] = 'Sage'
-            return render_template("dirichlet_characters/CharacterNavigate.html", **info)
+            return render_template("CharacterNavigate.html", **info)
 
         elif arg1.startswith("modbrowse"):
             modulus_start = int(arg1.partition('-')[0][10:])
@@ -55,7 +55,7 @@ def render_webpage(request, arg1, arg2):
             info['headers'] = h
             info['rows'] = rows
             info['cols'] = cols
-            return render_template("dirichlet_characters/ModulusList.html", **info)
+            return render_template("ModulusList.html", **info)
 
         elif arg1.startswith("condbrowse"):
             conductor_start = int(arg1.partition('-')[0][11:])
@@ -72,7 +72,7 @@ def render_webpage(request, arg1, arg2):
             # info['header'] = h
             # info['rows'] = rows
             # info['cols'] = cols
-            return render_template("dirichlet_characters/ConductorList.html", **info)
+            return render_template("ConductorList.html", **info)
 
         elif arg1.startswith("ordbrowse"):
             order_start = int(arg1.partition('-')[0][10:])
@@ -84,7 +84,7 @@ def render_webpage(request, arg1, arg2):
             info['title'] = 'Dirichlet Characters of Orders ' + str(order_start) + '-' + str(order_end)
             info['credit'] = 'Sage'
             info['contents'] = ListCharacters.get_character_order(order_start, order_end + 1)
-            return render_template("dirichlet_characters/OrderList.html", **info)
+            return render_template("OrderList.html", **info)
 
         elif arg1 == 'custom':
             return "not yet implemented"
@@ -114,7 +114,7 @@ def render_webpage(request, arg1, arg2):
 
         info = initCharacterInfo(web_chi, temp_args, request)  # sets the various properties of chi to be displayed in DirichletCharacter.html
 
-        return render_template('dirichlet_characters/DirichletCharacter.html', **info)
+        return render_template('DirichletCharacter.html', **info)
     else:
 
         return character_search(**args)
@@ -455,7 +455,7 @@ def character_search(**args):
             from sage.modular.dirichlet import DirichletGroup
             info['contents'] = charactertable(query)
             info['title'] = 'Dirichlet Characters'
-            return render_template("dirichlet_characters/character_search.html", **info)
+            return render_template("character_search.html", **info)
         else:
             return "<span style='color:red;'>ERROR: bad query</span>"
 
@@ -530,7 +530,7 @@ def dirichlet_table(**args):
     info['headers'] = h
     info['contents'] = c
     info['title'] = 'Dirichlet Characters'
-    return render_template("/dirichlet_characters/CharacterTable.html", **info)
+    return render_template("/CharacterTable.html", **info)
 
 
 def get_entries(modulus):
@@ -565,7 +565,7 @@ def dirichlet_group_table(**args):
     info['headers'] = h
     info['contents'] = c
     info['title'] = 'Group of Dirichlet Characters'
-    return render_template("/dirichlet_characters/CharacterGroupTable.html", **info)
+    return render_template("/CharacterGroupTable.html", **info)
 
 
 def get_group_table(modulus, char_number_list):

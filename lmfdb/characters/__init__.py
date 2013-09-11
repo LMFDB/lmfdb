@@ -14,4 +14,4 @@ def body_class():
 
 import main
 
-app.register_blueprint(characters_page, url_prefix="/Characters")
+app.register_blueprint(characters_page, url_prefix="/Character")

@@ -1,4 +1,4 @@
-{% extends 'dirichlet_characters/Charpage.html' %}
+{% extends 'Charpage.html' %}
 
 {% block description %}
 
@@ -18,8 +18,7 @@
     <tr>
       <th class="left">
         <a align="center"
-          {#href=" {{ url_for('render_charwebpage', type=type, number_field=nflabel, modulus=mod) }} ">#}
-          href="/Character/{{type}}{%if nflabel%}/{{nflabel}}{%endif%}/{{mod}}">
+          href=" {{ url_characterl(type=type, number_field=nflabel, modulus=mod) }} ">
           {{ mod }}
         </a>
       </th>
