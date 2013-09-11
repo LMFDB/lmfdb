@@ -240,6 +240,8 @@ class Lfunction_EMF(Lfunction):
     Possible parameters: character
                          label
                          number
+    
+    Actually, some of the possible parameters are required depending on the value of the possible parameters
 
     """
 
@@ -282,7 +284,7 @@ class Lfunction_EMF(Lfunction):
                                  self.label, verbose=1)
         except:
             raise KeyError("No data available yet for this modular form, so" +
-                           " not able to compute it's L-function")
+                           " not able to compute its L-function")
         # Extract the L-function information from the elliptic modular form
         self.automorphyexp = float(self.weight - 1) / float(2)
         self.Q_fe = float(sqrt(self.level) / (2 * math.pi))
