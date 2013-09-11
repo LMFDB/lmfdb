@@ -7,7 +7,7 @@ import datetime
 from flask import url_for, make_response
 import lmfdb.base as base
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms import *
-from lmfdb.ListCharacters import get_character_modulus
+from lmfdb.characters.ListCharacters import get_character_modulus
 from lmfdb.lfunctions import logger
 
 ###############################################################################

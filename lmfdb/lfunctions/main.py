@@ -16,7 +16,7 @@ from lmfdb.utils import to_dict
 import bson
 from Lfunctionutilities import (lfuncDStex, lfuncEPtex, lfuncFEtex,
                                 truncatenumber, styleTheSign, specialValueString)
-from lmfdb.DirichletCharacter import getPrevNextNavig
+from lmfdb.characters.DirichletCharacter import getPrevNextNavig
 from lmfdb.lfunctions import l_function_page, logger
 from lmfdb.elliptic_curve import cremona_label_regex, lmfdb_label_regex
 from LfunctionComp import isogenyclasstable

@@ -8,8 +8,8 @@ from sage.all import *
 import tempfile
 import os
 import pymongo
-from WebCharacter import *
-from utils import to_dict
+from lmfdb.WebCharacter import *
+from lmfdb.utils import to_dict
 from sage.rings.arith import euler_phi
 
 # from dirichlet_conrey import *

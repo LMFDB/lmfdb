@@ -3,15 +3,16 @@
 
 import re
 
-from base import app, r
+from lmfdb.base import app, r
 import flask
 from flask import Flask, session, g, render_template, url_for, make_response, request, redirect
 from sage.all import *
 import tempfile
 import os
 from pymongo import ASCENDING
-from utils import to_dict, parse_range, make_logger
-from WebCharacter import *
+from lmfdb.utils import to_dict, parse_range, make_logger
+from lmfdb.WebCharacter import *
+from lmfdb.characters import characters_page, logger
 import ListCharacters
 
 try:
@@ -19,47 +20,28 @@ try:
 except:
     logger.critical("dirichlet_conrey.pyx cython file is not available ...")
 
-
-logger = make_logger("HC")
-
 ###############################################################################
 #   Route functions
 ###############################################################################
 
 ## generic
 
-@app.route("/Character/")
-@app.route("/Character/<type>")
-@app.route("/Character/<type>/<arg1>")
-@app.route("/Character/<type>/<arg1>/<arg2>")
-@app.route("/Character/<type>/<arg1>/<arg2>/<arg3>")
-def render_Character(type=None, arg1=None, arg2=None, arg3=None):
-    render_charwebpage(request, type, arg1, arg2, arg3)
-
-@app.route("/Character/<type>/<modulus>/<number>")
-@app.route("/Character/<type>/<number_field>/<modulus>/<number>")
-def render_charwebpage(request, type, number_field, modulus, number):
+def url_character(type=None,number_field=None,modulus=None,number=None):
     if type=='Dirichlet':
         render_Dirichletwebpage(request, modulus, number)
     elif type=='Hecke':
         render_Heckewebpage(request, number_field, modulus, number)
+    else:
+        render_template('CharacterNavigate.html')
 
-@app.route("/Character/<type>/calc-<calc>/<modulus>/<number>")
-@app.route("/Character/<type>/calc-<calc>/<number_field>/<modulus>/<number>")
-def char_calc(request, type, calc, number_field, modulus, number):
-    if type=='Dirichlet':
-        dc_calc(request, calc, modulus, number)
-    elif type=='Hecke':
-        hc_calc(request, calc, number_field, modulus, number)
+@characters_page.route("/")
+def render_characterNavigation():
+    return render_template('templates/CharacterNavigate.html')
 
-@app.route("/Character/Dirichlet/")
-@app.route("/Character/Dirichlet/<arg1>")
-@app.route("/Character/Dirichlet/<arg1>/<arg2>")
-def render_DirichletCharacter(arg1=None, arg2=None):
-    return render_Dirichletwebpage(request, arg1, arg2)
-
-@app.route("/Character/Dirichlet/<modulus>/<number>")
-def render_Dirichletwebpage(request, modulus, number):
+@characters_page.route("/Dirichlet/")
+@characters_page.route("/Dirichlet/<modulus>")
+@characters_page.route("/Dirichlet/<modulus>/<number>")
+def render_Dirichletwebpage(request, modulus=None, number=None):
     args = request.args
     temp_args = to_dict(args)
 
@@ -91,12 +73,10 @@ def render_Dirichletwebpage(request, modulus, number):
 
 def navi(L):
     print L
-    r = [ (l, url_for('render_charwebpage', **args)) for l, args in L if l ]
+    r = [ (l, url_for('.render_charwebpage', **args)) for l, args in L if l ]
     return r
     
-
-
-@app.route("/Character/Dirichlet/calc-<calc>/<int:modulus>/<int:number>")
+@characters_page.route("/calc-<calc>/Dirichlet/<int:modulus>/<int:number>")
 def dc_calc(calc, modulus, number):
     val = request.args.get("val", [])
     args = {'type':'Dirichlet', 'modulus':modulus, 'number':number}
@@ -116,15 +96,8 @@ def dc_calc(calc, modulus, number):
     except Exception, e:
         return "<span style='color:red;'>ERROR: %s</span>" % e
 
-@app.route("/Character/Hecke/")
-@app.route("/Character/Hecke/<arg1>")
-@app.route("/Character/Hecke/<arg1>/<arg2>")
-@app.route("/Character/Hecke/<arg1>/<arg2>/<arg3>")
-def render_HeckeCharacter(arg1=None, arg2=None, arg3=None):
-    return render_Heckewebpage(request, arg1, arg2, arg3)
-
-@app.route("/Character/Hecke/<number_field>/<modulus>/<number>")
-def render_Heckewebpage(request, number_field, modulus, number):
+@characters_page.route("/Hecke/<number_field>/<modulus>/<number>")
+def render_Heckewebpage(request, number_field=None, modulus=None, number=None):
     args = request.args
     temp_args = to_dict(args)
 
@@ -160,7 +133,7 @@ def render_Heckewebpage(request, number_field, modulus, number):
         print info
         return render_template('dirichlet_characters/Character.html', **info)
 
-@app.route("/Character/Hecke/calc-<calc>/<number_field>/<modulus>/<number>")
+@characters_page.route("/calc-<calc>/Hecke/<number_field>/<modulus>/<number>")
 def hc_calc(calc, number_field, modulus, number):
     val = request.args.get("val", [])
     args = {'type':'Hecke', 'number_field':number_field, 'modulus':modulus, 'number':number}

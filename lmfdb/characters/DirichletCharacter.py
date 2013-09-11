@@ -3,15 +3,15 @@
 
 import re
 
-from base import app, r
+from lmfdb.base import app, r
 import flask
 from flask import Flask, session, g, render_template, url_for, make_response, request, redirect
 from sage.all import *
 import tempfile
 import os
 from pymongo import ASCENDING
-from WebCharacter import *
-from utils import to_dict, parse_range, make_logger
+from lmfdb.WebCharacter import *
+from lmfdb.utils import to_dict, parse_range, make_logger
 import ListCharacters
 
 try:
