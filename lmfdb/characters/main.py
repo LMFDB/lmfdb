@@ -26,13 +26,13 @@ except:
 
 ## generic
 
-def url_character(type=None,number_field=None,modulus=None,number=None):
-    if type == 'Dirichlet':
-        return url_for('render_Dirichletwebpage',modulus=modulus,number=number)
-    elif type == 'Hecke':
-        return url_for('render_Heckewebpage',number_field=number_field,modulus=modulus,number=number)
-    else:
+def url_character(**args):
+    if 'type' not in args:
         return url_for('render_CharacterNavigation')
+    elif args['type'] == 'Dirichlet':
+        return url_for('render_Dirichletwebpage',modulus=modulus,number=number)
+    elif args['type'] == 'Hecke':
+        return url_for('render_Heckewebpage',number_field=number_field,modulus=modulus,number=number)
 
 @characters_page.route("/")
 def render_characterNavigation():
