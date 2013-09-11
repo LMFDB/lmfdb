@@ -618,14 +618,12 @@ def render_plotLfunction_from_db(db, dbTable, condition):
         db = sqlite3.connect(data_location)
         with db:
             cur = db.cursor()
-            query = "SELECT * FROM {0} WHERE {1} LIMIT 1".format(dbTable,
+            query = "SELECT start,end,points FROM {0} WHERE {1} LIMIT 1".format(dbTable,
                                                                   condition)
-            logger.debug(query)
             cur.execute(query)
             row = cur.fetchone()
-            logger.debug(row)
-            
-        Lid, start, end, values = row
+      
+        start,end,values = row
         values = numpy.frombuffer(values)
         step = (end - start)/values.size
 
