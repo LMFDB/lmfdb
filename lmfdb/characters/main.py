@@ -26,16 +26,17 @@ except:
 
 ## generic
 
-def url_character(**args):
-    if 'type' not in args:
-        return url_for('render_CharacterNavigation')
-    elif args['type'] == 'Dirichlet':
-        return url_for('render_Dirichletwebpage',modulus=modulus,number=number)
-    elif args['type'] == 'Hecke':
-        return url_for('render_Heckewebpage',number_field=number_field,modulus=modulus,number=number)
+def url_character(*args,**kwargs):
+    return 'Character/'
+    if 'type' not in kwargs:
+        return url_for('characters.render_characterNavigation')
+    elif kwargs['type'] == 'Dirichlet':
+        return url_for('characters.render_Dirichletwebpage',modulus=modulus,number=number)
+    elif kwargs['type'] == 'Hecke':
+        return url_for('characters.render_Heckewebpage',number_field=number_field,modulus=modulus,number=number)
 
 @characters_page.route("/")
-def render_characterNavigation():
+def render_characterNavigation(request):
     return render_template('CharacterNavigate.html')
 
 @characters_page.route("/Dirichlet/")
@@ -146,3 +147,13 @@ def hc_calc(calc, number_field, modulus, number):
             return flask.abort(404)
     except Exception, e:
         return "<span style='color:red;'>ERROR: %s</span>" % e
+
+###############################################################################
+##  make some functions accessible from templates
+@app.context_processor
+def ctx_characters():
+    chardata = {}
+    chardata['url_character'] = url_character
+    return chardata
+
+
