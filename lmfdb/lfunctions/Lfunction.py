@@ -992,9 +992,7 @@ class DedekindZeta(Lfunction):   # added by DK
                     chij = fullchargroup[j]
                     mycond = chij.conductor()
                     myj = j % mycond
-                    self.factorization += (r'\(\;\cdot\) <a href='
-                                           +'"/L/Character/Dirichlet/%d/%d/">'
-                                           +'\(L(s,\chi_{%d}(%d, \cdot))\)</a>'
+                    self.factorization += (r'\(\;\cdot\) <a href="/L/Character/Dirichlet/%d/%d/">\(L(s,\chi_{%d}(%d, \cdot))\)</a>'
                                            % (mycond, myj, mycond, myj))
             elif len(wnf.factor_perm_repn())>0:
                 nfgg = wnf.factor_perm_repn() # first call cached it
