@@ -3,7 +3,6 @@
 #############################################################################
 # The base Lfunction class. The goal is to make this dependent on the least possible, so it can be loaded from sage or even python
 # Please do not pollute with flask, pymongo, logger or similar
-# and actually try to remove these dependencies from within methods
 #############################################################################
 
 class Lfunction:
@@ -45,25 +44,6 @@ class Lfunction:
         for n in range(1, min(8, len(self.dirichlet_coefficients))):
             if abs(imag_part(self.dirichlet_coefficients[n] / self.dirichlet_coefficients[0])) > 0.00001:
                 self.selfdual = False
-
-    def generateSageLfunction(self):
-        """ Generate a SageLfunction to do computations
-        """
-        from lmfdb.lfunctions import logger
-        logger.info("Generating Sage Lfunction with parameters %s and coefficients (maybe shortened in this msg, but there are %s) %s" % ([self.title, self.coefficient_type, self.coefficient_period, self.Q_fe, self.sign, self.kappa_fe, self.lambda_fe, self.poles, self.residues], len(self.dirichlet_coefficients), self.dirichlet_coefficients[:20]))
-        import sage.libs.lcalc.lcalc_Lfunction as lc
-        self.sageLfunction = lc.Lfunction_C(self.title, self.coefficient_type,
-                                            self.dirichlet_coefficients,
-                                            self.coefficient_period,
-                                            self.Q_fe, self.sign,
-                                            self.kappa_fe, self.lambda_fe,
-                                            self.poles, self.residues)
-                    # self.poles:           Needs poles of _completed_ L-function
-                    # self.residues:        Needs residues of _completed_ L-function
-                    # self.kappa_fe:        What ultimately appears if you do lcalc.lcalc_Lfunction._print_data_to_standard_output() as the gamma[1]
-                    # self.lambda_fe:       What ultimately appears if you do lcalc.lcalc_Lfunction._print_data_to_standard_output() as the lambda[1]
-                    # According to Rishi, as of March 2012 (sage <=5.0), the documentation to
-                    # his wrapper is wrong
 
     def Lkey(self):
         # Lkey should be a dictionary
