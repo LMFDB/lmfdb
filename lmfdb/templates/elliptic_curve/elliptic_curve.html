@@ -270,6 +270,42 @@ function show_code(system) {
 </table>
 
 
+    <h2> {{KNOWL('ec.q.galois_rep', title='Galois Representations')}} </h2>
+
+{% if info.galois_data %}
+<p>
+{% if info.CMD %}
+The mod \( p \) {{KNOWL('ec.q.galois_rep', title='Galois
+Representations')}} of an elliptic curve with {{
+KNOWL('ec.complex_multiplication', title='Complex Multiplication') }}
+are non-surjective for all primes \( p \).  We only show the image for
+primes \( p\le 37 \).
+{% else %}
+The mod \( p \) {{KNOWL('ec.q.galois_rep', title='Galois
+Representation')}} is surjective for all primes \( p \) except those
+    listed.
+{% endif %}
+</p>
+<table>
+<tr>
+<th>prime</th>
+<th>Image of {{KNOWL('ec.q.galois_rep', title='Galois Representation')}}</th>
+</tr>
+{% for pr in info.galois_data %}
+<tr>
+<td align=center> \({{pr.p}}\)</td>
+<td align=center>{{pr.image}}</td>
+</tr>
+{% endfor %}
+</table>
+{% else %}
+<p>
+The mod \( p \) {{KNOWL('ec.q.galois_rep', title='Galois
+Representation')}} is surjective for all primes \( p \).
+</p>
+{% endif %}
+
+
 
     <h2> p-adic data </h2>
     <p>
