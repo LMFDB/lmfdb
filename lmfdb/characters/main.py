@@ -94,6 +94,9 @@ def render_characterNavigation():
         info['contents'] = ListCharacters.get_character_order(order_start, order_end + 1)
         return render_template("OrderList.html", **info)
 
+    elif args != {}:
+        return character_search(**args)
+
     else:
        return render_template('CharacterNavigate.html', **info)
 
@@ -101,9 +104,10 @@ def render_characterNavigation():
 @characters_page.route("/Dirichlet/<modulus>")
 @characters_page.route("/Dirichlet/<modulus>/<number>")
 def render_Dirichletwebpage(modulus=None, number=None):
-    args = request.args
-    temp_args = to_dict(args)
+    #args = request.args
+    #temp_args = to_dict(args)
 
+    temp_args={}
     temp_args['type'] = 'Dirichlet'
     temp_args['modulus'] = modulus
     temp_args['number'] = number
@@ -160,9 +164,10 @@ def dc_calc(calc, modulus, number):
 @characters_page.route("/Hecke/<number_field>/<modulus>")
 @characters_page.route("/Hecke/<number_field>/<modulus>/<number>")
 def render_Heckewebpage(number_field=None, modulus=None, number=None):
-    args = request.args
-    temp_args = to_dict(args)
+    #args = request.args
+    #temp_args = to_dict(args)
 
+    temp_args = {}
     temp_args['type'] = 'Hecke'
     temp_args['number_field'] = number_field
     temp_args['modulus'] = modulus
@@ -235,12 +240,12 @@ def character_search(**args):
             number = int(str(label).partition('.')[2])
         except ValueError:
             return "<span style='color:red;'>ERROR: bad query</span>"
-        return redirect(url_for("render_webpage_label", modulus=modulus, number=number))
+        return redirect(url_character(type='Dirichlet',modulus=modulus, number=number))
     else:
         for field in ['modulus', 'conductor', 'order']:
             if info.get(field):
                 query[field] = parse_range(info[field])
-        info["bread"] = [('Dirichlet Characters', url_for("render_Character")), ('search results', ' ')]
+        info['bread'] = [('Characters','/Character'), ('search results', ' ') ]
         info['credit'] = 'Sage'
         if (len(query) != 0):
             from sage.modular.dirichlet import DirichletGroup
@@ -311,32 +316,34 @@ def kronecker_symbol(chi):
 
 
 @app.route("/Character/Dirichlet/table")
-def dirichlet_table(**args):
-    modulus = request.args.get("modulus", 1, type=int)
-    info = to_dict(args)
-    info['modulus'] = modulus
-    info["bread"] = [('Dirichlet Character Table', url_for("dirichlet_table")), ('result', ' ')]
-    info['credit'] = 'Sage'
-    h, c, = get_entries(modulus)
-    info['headers'] = h
-    info['contents'] = c
-    info['title'] = 'Dirichlet Characters'
-    return render_template("CharacterTable.html", **info)
+def dirichlet_table():
+    args = to_dict(request.args)
+    mod = args.get('modulus',1)
+    return redirect(url_character(type='Dirichlet',modulus=mod))
 
-
-def get_entries(modulus):
-    from dirichlet_conrey import DirichletGroup_conrey
-    from sage.all import Integer
-    from WebCharacter import log_value
-    G = DirichletGroup_conrey(modulus)
-    headers = range(1, modulus + 1)
-    e = euler_phi(modulus)
-    rows = []
-    for chi in G:
-        is_prim = chi.is_primitive()
-        number = chi.number()
-        rows.append((number, is_prim, log_value(modulus, number)))
-    return headers, rows
+#    info = to_dict(args)
+#    info['modulus'] = modulus
+#    info["bread"] = [('Dirichlet Character Table', url_for("dirichlet_table")), ('result', ' ')]
+#    info['credit'] = 'Sage'
+#    h, c, = get_entries(modulus)
+#    info['headers'] = h
+#    info['contents'] = c
+#    info['title'] = 'Dirichlet Characters'
+#    return render_template("CharacterTable.html", **info)
+#
+#
+#def get_entries(modulus):
+#    from dirichlet_conrey import DirichletGroup_conrey
+#    from sage.all import Integer
+#    G = DirichletGroup_conrey(modulus)
+#    headers = range(1, modulus + 1)
+#    e = euler_phi(modulus)
+#    rows = []
+#    for chi in G:
+#        is_prim = chi.is_primitive()
+#        number = chi.number()
+#        rows.append((number, is_prim, log_value(modulus, number)))
+#    return headers, rows
 
 
 def dirichlet_group_table(**args):
@@ -344,8 +351,7 @@ def dirichlet_group_table(**args):
     info = to_dict(args)
     if "modulus" not in info:
         info["modulus"] = modulus
-    info["bread"] = [('Dirichlet Characters', url_for("render_Character")),
-                     ('Dirichlet Character Table', url_for("dirichlet_table"))]
+    info['bread'] = [('Characters','/Character'), ('Dirichlet table', ' ') ]
     info['credit'] = 'Sage'
     char_number_list = request.args.get("char_number_list")
     if char_number_list is not None:
