@@ -11,6 +11,7 @@ from lmfdb.artin_representations import artin_representations_page, artin_logger
 from lmfdb.utils import to_dict
 
 from lmfdb.math_classes import *
+from lmfdb.WebNumberField import *
 
 
 def initialize_indices():
@@ -80,6 +81,21 @@ def artin_representation_search(**args):
         except:
             raise AssertionError("The Frobenius-Schur indicator can only be 0, 1 or -1")
         query["Indicator"] = int(req["frobenius_schur_indicator"])
+    if req.get("group", "") != "":
+        try:
+            gcs = complete_group_codes(info[field])
+            if len(gcs) == 1:
+                query['galois'] = make_galois_pair(gcs[0][0], gcs[0][1])
+# list(gcs[0])
+            if len(gcs) > 1:
+                query['galois'] = {'$in': [make_galois_pair(x[0], x[1]) for x in gcs]}
+        except NameError as code:
+            errinfo = 'Error parsing input for Galois group: unknown group label %s.  It needs to be a <a title = "Galois group labels" knowl="nf.galois_group.name">group label</a>, such as C5 or 5T1, or comma separated list of labels.' % code
+            # info['err'] = 'Error parsing input for Galois group: unknown group label %s.  It needs to be a <a title = "Galois group labels" knowl="nf.galois_group.name">group label</a>, such as C5 or 5T1, or comma separated list of labels.' % code
+            raise AssertionError(errinfo)
+            #return search_input_error(info, bread)
+
+
 
     tmp_conductor = []
     if req.get("conductor", "") != "":
