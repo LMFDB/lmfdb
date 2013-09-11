@@ -79,8 +79,6 @@ class Lfunction_lcalc(Lfunction):
                     raise Exception("Wasn't able to read the file at the url")
             else:
                 raise Exception("You forgot to supply an url.")
-            # Parse the Lcalcfile
-        self.parseLcalcfile_ver1()
 
         # Check if self dual
         self.checkselfdual()
@@ -730,7 +728,8 @@ class Lfunction_Maass(Lfunction):
             self.residues = []
 
             # Extract the L-function information from the lcalfile in the database
-            self.parseLcalcfile_ver1(self.lcalcfile)
+            import LfunctionLcalc
+            LfunctionLcalc.parseLcalcfile_ver1(self, self.lcalcfile)
 
         else:  # GL2 data from Then or Stromberg
 

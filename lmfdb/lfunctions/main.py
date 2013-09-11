@@ -338,7 +338,8 @@ def render_lcalcfile(L, url):
     try:  # First check if the Lcalc file is stored in the database
         response = make_response(L.lcalcfile)
     except:
-        response = make_response(L.createLcalcfile_ver2(url))
+        import LfunctionLcalc
+        response = make_response(LfunctionLcalc.createLcalcfile_ver2(L, url))
 
     response.headers['Content-type'] = 'text/plain'
     return response

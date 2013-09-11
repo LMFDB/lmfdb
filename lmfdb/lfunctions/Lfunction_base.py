@@ -64,26 +64,6 @@ class Lfunction:
                     # self.lambda_fe:       What ultimately appears if you do lcalc.lcalc_Lfunction._print_data_to_standard_output() as the lambda[1]
                     # According to Rishi, as of March 2012 (sage <=5.0), the documentation to
                     # his wrapper is wrong
-                    
-    def parseLcalcfile_ver1(self, filecontents):
-        """ Extracts informtion from the lcalcfile, version 1
-        """
-        import LfunctionLcalc
-        LfunctionLcalc.parseLcalcfile_ver1(self, filecontents)
-    
-
-    def createLcalcfile_ver1(self):
-        """ Creates the lcalcfile of L, version 1
-        """
-        import LfunctionLcalc
-        return LfunctionLcalc.createLcalcfile_ver1(self)
-
-    def createLcalcfile_ver2(self, url):
-        logger.debug("Starting Lcalc")
-        """ Creates the lcalcfile of L, version 2
-        """
-        import LfunctionLcalc
-        return LfunctionLcalc.createLcalcfile_ver2(self, url)
 
     def Lkey(self):
         # Lkey should be a dictionary
