@@ -44,10 +44,10 @@ def generateSageLfunction(L):
     """
     from lmfdb.lfunctions import logger
     logger.info("Generating Sage Lfunction with parameters %s and coefficients (maybe shortened in this msg, but there are %s) %s"
-                % ([self.title, self.coefficient_type, self.coefficient_period,
-                self.Q_fe, self.sign, self.kappa_fe, self.lambda_fe,
-                self.poles, self.residues], len(self.dirichlet_coefficients),
-                self.dirichlet_coefficients[:20]))
+                % ([L.title, L.coefficient_type, L.coefficient_period,
+                L.Q_fe, L.sign, L.kappa_fe, L.lambda_fe,
+                L.poles, L.residues], len(L.dirichlet_coefficients),
+                L.dirichlet_coefficients[:20]))
     import sage.libs.lcalc.lcalc_Lfunction as lc
     L.sageLfunction = lc.Lfunction_C(L.title, L.coefficient_type,
                                         L.dirichlet_coefficients,
@@ -787,7 +787,6 @@ class Lfunction_Maass(Lfunction):
 
         self.algebraic = False
         # Fetch the information from the database
-
         if self.dbName == 'Lfunction':  # Data from Lemurell
 
             connection = base.getDBConnection()
