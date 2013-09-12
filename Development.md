@@ -79,6 +79,28 @@ When you get lost, the command "bt" shows you exactly where you
 are and "up" helps you to get on step up on the stack.
 Of course, "help [<command>]" will tell you more...
 
+Git Tipps
+=========
+
+```
+[alias]
+        st=status
+        aliases=!git config --get-regexp 'alias.*' | colrm 1 6 | sed 's/[ ]/ = /'
+        ci=commit
+        br=branch
+        co=checkout
+        df=diff
+        who=shortlog -s --
+        ll = log --oneline --graph --decorate -25
+        lla = log --oneline --graph --decorate --all -25
+        wdiff=diff --word-diff=color
+[color]
+    ui = auto
+    branch = auto
+    diff = auto
+    interactive = auto
+    status = auto
+```
 
 List-table should always be like
 --------------------------------
