@@ -312,7 +312,7 @@ class ArtinRepresentation(object):
 
     def Lfunction(self):
         from Lfunction import ArtinLfunction
-        return ArtinLfunction(self.dimension(), self.conductor(), self.index())
+        return ArtinLfunction(dimension = self.dimension(), conductor = self.conductor(), tim_index = self.index())
 
     def indicator(self):
         """ The Frobenius-Schur indicator of the Artin L-function. Will be

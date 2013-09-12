@@ -7,7 +7,7 @@
         {% if symbol %}
         {# Kronecker symbol #}
         <h2>
-            {{ KNOWL('character.dirichlet.kronecker_symbol') }} representation
+            {{ KNOWL('character.dirichlet.kronecker_symbol', title = 'Kronecker symbol') }} representation
         </h2>
         <div class = 'sage nodisplay code'>sage: chi_sage.kronecker({{conductor}})</div>
         <p>
@@ -166,7 +166,7 @@
         {# Gauss sum #}
 
         <h2>
-            {{ KNOWL('character.dirichlet.gauss_sum') }}
+            {{ KNOWL('character.dirichlet.gauss_sum', title='Gauss sum') }}
         </h2>
         <div class = 'sage nodisplay code'>sage: chi.gauss_sum()</div>
         {% set gauss_default = 2 %}
@@ -181,7 +181,7 @@
         {# Jacobi sum #}
 
         <h2>
-            {{ KNOWL('character.dirichlet.jacobi_sum') }}
+            {{ KNOWL('character.dirichlet.jacobi_sum', title='Jacobi sum') }}
         </h2>
         <div class = 'sage nodisplay code'>sage: chi_sage.jacobi_sum()</div>
         {% set jacobi_default = 1 %}
@@ -196,7 +196,7 @@
         {# Kloosterman sum #}
 
         <h2>
-            {{ KNOWL('character.dirichlet.kloosterman_sum') }}
+            {{ KNOWL('character.dirichlet.kloosterman_sum', title='Kloosterman sum') }}
         </h2>
         <div class = 'sage nodisplay code'>sage: chi_sage.kloosterman_sum(,)</div>
         {% set kloosterman_default_a = 1 %}

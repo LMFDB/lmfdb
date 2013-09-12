@@ -31,7 +31,7 @@ logger = make_logger("DC")
 @app.route("/Character/Dirichlet/<arg1>")
 @app.route("/Character/Dirichlet/<arg1>/<arg2>")
 def render_Character(arg1=None, arg2=None):
-    return DirichletCharacter.render_webpage(request, arg1, arg2)
+    return render_webpage(request, arg1, arg2)
 
 
 def render_webpage(request, arg1, arg2):

@@ -35,6 +35,7 @@ import artin_representations
 import zeros
 import crystals
 import permutations
+import hypergm
 
 import raw
 from modular_forms.maass_forms.picard import mwfp

@@ -26,7 +26,7 @@ Fix complex characters. I.e. embedddings and galois conjugates in a consistent w
 
 """
 from sage.all import ZZ, QQ, DirichletGroup, CuspForms, Gamma0, ModularSymbols, Newforms, trivial_character, is_squarefree, divisors, RealField, ComplexField, prime_range, I, join, gcd, Cusp, Infinity, ceil, CyclotomicField, exp, pi, primes_first_n, euler_phi, RR, prime_divisors, Integer, matrix
-from sage.all import Parent, SageObject, dimension_new_cusp_forms, vector, dimension_modular_forms, dimension_cusp_forms, EisensteinForms, Matrix, floor, denominator, latex, is_prime, prime_pi, next_prime, primes_first_n, previous_prime, factor, loads
+from sage.all import Parent, SageObject, dimension_new_cusp_forms, vector, dimension_modular_forms, dimension_cusp_forms, EisensteinForms, Matrix, floor, denominator, latex, is_prime, prime_pi, next_prime, primes_first_n, previous_prime, factor, loads,save
 import re
 
 from flask import url_for
@@ -242,13 +242,17 @@ class WebModFormSpace(Parent):
                     fid = rec['_id']
                     fs = gridfs.GridFS(C[db_name], collection)
                     f = fs.get(fid)
+                    #print f.read()
+                    #save(f.read(),"/home/purem/cvzx53/modym.sobj")
                     res = loads(f.read())
                     # TODO avoid pickling python objects for storing in the database
                     self._from_db = 1
                     self._id = rec['_id']
                 self._got_ap_from_db = True
-        except Exception as e:
-            emf_logger.critical("Error: {0}".format(e))
+        except ArithmeticError:
+            pass
+            #Exception as e:
+            #emf_logger.critical("Error: {0}".format(e))
             # pass
         if not res and not use_db:
             if get_what == 'Modular_symbols':
@@ -1607,7 +1611,8 @@ class WebNewForm(SageObject):
                     for prec in range(minprec, maxprec, 10):
                         if(self._verbose > 1):
                             emf_logger.debug("prec={0}".format(prec))
-                        v2 = self._f.q_eigenform(prec)(q)
+                        print "q=",q
+                        v2 = self._f.q_eigenform(prec).truncate(prec)(q)
                         err = abs(v2 - v1)
                         if(self._verbose > 1):
                             emf_logger.debug("err={0}".format(err))
