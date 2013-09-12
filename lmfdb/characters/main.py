@@ -26,7 +26,7 @@ except:
 
 ## generic
 
-def url_character(*args,**kwargs):
+def url_character(**kwargs):
     if 'type' not in kwargs:
         return url_for('.render_characterNavigation')
     elif kwargs['type'] == 'Dirichlet':

@@ -897,8 +897,36 @@ class WebHeckeFamily(WebCharFamily, WebHecke):
             oldbound = bound
             bound *=2
 
+    """ for Hecke, I don't want to init WebHeckeGroup classes
+        (recomputing number field and modulus is stupid)
+        rewrite some things
+    """
     def chargroup(self, mod):
-        return RayClassGroup(self.k,mod)
+        return RayClassGroup(self.k,mod).dual_group()
+
+    def structure(self, H):
+        return self.struct2tex(H.invariants())
+
+    def struct2tex(self, inv):
+        if not inv: inv = (1,)
+        return '\(%s\)'%('\\times '.join(['C_{%s}'%d for d in inv]))
+
+    def first_chars(self, H):
+        r = []
+        for i,c in enumerate(H.group().iter_exponents()):
+            r.append(H(c))
+            if i > self.maxrows:
+                self.rowtruncate = True
+                break
+        return r
+
+    def add_row(self, modulus):
+        H = self.chargroup(modulus)
+        order = H.order()
+        struct = self.structure(H)
+        firstchars = [ self._char_desc(c) for c in self.first_chars(H) ]
+        self._contents.append( (self.ideal2label(modulus), order, struct, firstchars) )
+
 
     @property
     def title(self):
