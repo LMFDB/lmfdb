@@ -52,8 +52,8 @@ def factor_out_p(val, p):
     return out
 
 # c is a list of coefficients
-def poly_with_factored_coeffs(c, p):
-    c = [
+#def poly_with_factored_coeffs(c, p):
+#    c = [
 
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
