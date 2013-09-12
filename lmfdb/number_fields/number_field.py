@@ -9,6 +9,7 @@ from flask import render_template, render_template_string, request, abort, Bluep
 import StringIO
 from lmfdb.number_fields import nf_page, nf_logger
 from lmfdb.WebNumberField import *
+from lmfdb.characters.main import url_character
 
 import re
 
@@ -288,7 +289,7 @@ def render_field_webpage(args):
         conductor = nf.conductor()
         data['conductor'] = conductor
         dirichlet_chars = nf.dirichlet_group()
-        data['dirichlet_group'] = ['<a href = "%s">$\chi_{%s}(%s,&middot;)$</a>' % (url_for("render_Character", arg1=data['conductor'], arg2=j), data['conductor'], j) for j in dirichlet_chars]
+        data['dirichlet_group'] = ['<a href = "%s">$\chi_{%s}(%s,&middot;)$</a>' % (url_character(type='Dirichlet',modulus=data['conductor'], number=j), data['conductor'], j) for j in dirichlet_chars]
         data['dirichlet_group'] = r'$\lbrace$' + ', '.join(data['dirichlet_group']) + r'$\rbrace$'
         if data['conductor'].is_prime() or data['conductor'] == 1:
             data['conductor'] = "\(%s\)" % str(data['conductor'])
@@ -349,7 +350,7 @@ def render_field_webpage(args):
         info['friends'].append(('L-function', "/L/NumberField/%s" % label))
     info['friends'].append(('Galois group', "/GaloisGroup/%dT%d" % (n, t)))
     if 'dirichlet_group' in info:
-        info['friends'].append(('Dirichlet group', url_for("dirichlet_group_table",
+        info['friends'].append(('Dirichlet group', url_for("characters.dirichlet_group_table",
                                                            modulus=int(conductor),
                                                            char_number_list=','.join(
                                                                [str(a) for a in dirichlet_chars]),

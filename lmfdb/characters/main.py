@@ -24,23 +24,23 @@ except:
 #   Route functions
 ###############################################################################
 
-## generic
+## character routes
 
 def url_character(**kwargs):
     if 'type' not in kwargs:
-        return url_for('.render_characterNavigation')
+        return url_for('characters.render_characterNavigation',**kwargs)
     elif kwargs['type'] == 'Dirichlet':
         del kwargs['type']
         if kwargs.get('calc',None):
-            return url_for('.dc_calc',**kwargs)
+            return url_for('characters.dc_calc',**kwargs)
         else:
-            return url_for('.render_Dirichletwebpage',**kwargs)
+            return url_for('characters.render_Dirichletwebpage',**kwargs)
     elif kwargs['type'] == 'Hecke':
         del kwargs['type']
         if kwargs.get('calc',None):
-            return url_for('.hc_calc',**kwargs)
+            return url_for('characters.hc_calc',**kwargs)
         else:
-            return url_for('.render_Heckewebpage',**kwargs)
+            return url_for('characters.render_Heckewebpage',**kwargs)
 
 @characters_page.route("/")
 def render_characterNavigation():
@@ -315,7 +315,7 @@ def kronecker_symbol(chi):
         return None
 
 
-@app.route("/Character/Dirichlet/table")
+@characters_page.route("/Dirichlet/table")
 def dirichlet_table():
     args = to_dict(request.args)
     mod = args.get('modulus',1)
@@ -346,6 +346,8 @@ def dirichlet_table():
 #    return headers, rows
 
 
+# fixme: remove this
+@characters_page.route("/Dirichlet/grouptable")
 def dirichlet_group_table(**args):
     modulus = request.args.get("modulus", 1, type=int)
     info = to_dict(args)
@@ -362,7 +364,7 @@ def dirichlet_group_table(**args):
     info['headers'] = h
     info['contents'] = c
     info['title'] = 'Group of Dirichlet Characters'
-    return render_template("/CharacterGroupTable.html", **info)
+    return render_template("CharacterGroupTable.html", **info)
 
 
 def get_group_table(modulus, char_number_list):
