@@ -137,9 +137,10 @@
       #}
     </ul>
 
-  <h2>Characters</h2>
+    <h2 class="link"> <a href='{{ url_character() }}'> Characters</a></h2>
   <ul>
-   <li><a href="{{ url_for('render_Character') }} ">Dirichlet Characters</a></li>
+   <li><a href="{{ url_character(type='Dirichlet') }} ">Dirichlet Characters</a></li>
+   <li><a href="{{ url_character(type='Hecke') }} ">Hecke Characters</a></li>
   </ul>
 
   <h2 class="link">

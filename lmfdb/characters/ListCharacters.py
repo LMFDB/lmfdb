@@ -8,8 +8,8 @@ from sage.all import *
 import tempfile
 import os
 import pymongo
-from WebCharacter import *
-from utils import to_dict
+from lmfdb.WebCharacter import *
+from lmfdb.utils import to_dict
 from sage.rings.arith import euler_phi
 
 # from dirichlet_conrey import *
@@ -57,7 +57,7 @@ def get_character_modulus(a, b, limit=7):
 
 def get_character_conductor(a, b):
     from dirichlet_conrey import DirichletGroup_conrey
-    from DirichletCharacter import kronecker_symbol as k
+    from main import kronecker_symbol as k
 
     def line(N):
         l = []
@@ -83,7 +83,7 @@ def get_character_conductor(a, b):
 
 def get_character_order(a, b):
     from dirichlet_conrey import DirichletGroup_conrey
-    from DirichletCharacter import kronecker_symbol as k
+    from main import kronecker_symbol as k
 
     def line(N):
         l = []

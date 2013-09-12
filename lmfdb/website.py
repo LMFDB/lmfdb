@@ -27,7 +27,7 @@ import lfunctions
 import users
 import knowledge
 import upload
-import DirichletCharacter
+import characters
 import local_fields
 import galois_groups
 import number_field_galois_groups
@@ -152,8 +152,6 @@ def form_example():
     sidebar = [('topic1', [("abc", "#"), ("def", "#")]), ("topic2", [("ghi", "#"), ("jkl", "#")])]
     info = {'sidebar': sidebar}
     return render_template("form.html", info=info)
-
-
 
 @app.route('/ModularForm/GSp/Q')
 @app.route('/ModularForm/GSp/Q/<group>')
