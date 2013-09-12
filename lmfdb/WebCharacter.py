@@ -2,13 +2,9 @@
 import math
 # from Lfunctionutilities import pair2complex, splitcoeff, seriescoeff
 from sage.all import *
-import sage.libs.lcalc.lcalc_Lfunction as lc
 import re
-import pymongo
-import bson
 from lmfdb.utils import parse_range, make_logger, url_character
 logger = make_logger("DC")
-from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms import *
 from WebNumberField import WebNumberField
 try:
     from dirichlet_conrey import *
@@ -58,17 +54,15 @@ class WebCharObject:
         self.numlabel = args.get('number',None)
         self.args = args
 
-        print '############class WebCharObject calls _compute'
+        logger.debug('### class WebCharObject calls _compute')
         self._compute()
-        print '############ done'
 
     def to_dict(self):
         d = {}
         for k in self._keys:
             d[k] = getattr(self,k,None)
             if d[k] == None:
-                pass # should not
-        print d
+                logger.debug('### key[%s] is None'%k)
         return d
 
     @staticmethod
@@ -125,7 +119,7 @@ class WebDirichlet(WebCharObject):
             self.H_sage = H.standard_dirichlet_group()
         self.credit = 'Sage'
         self.codelangs = ('pari', 'sage')
-        print '###### WebDirichletComputed'
+        logger.debug('###### WebDirichletComputed')
 
     def _char_desc(self, c, mod=None, prim=None):
         """ usually num is the number, but can be a character """
@@ -280,7 +274,7 @@ class WebHecke(WebCharObject):
         self.credit = "Pari, Sage"
         self.codelangs = ('pari', 'sage')
         self.parity = None
-        print '###### WebHeckeComputed'
+        logger.debug('###### WebHeckeComputed')
 
     @property
     def generators(self):
@@ -520,7 +514,6 @@ class WebCharGroup(WebCharObject):
         return r
 
     def _fill_contents(self):
-        print self.first_chars()
         for c in self.first_chars():
             self.add_row(c)
 
@@ -663,7 +656,7 @@ class WebDirichletFamily(WebCharFamily, WebDirichlet):
     def _compute(self):
         WebDirichlet._compute(self)
         del self.args['modulus']
-        print '######## WebDirichletFamily Computed'
+        logger.debug('######## WebDirichletFamily Computed')
 
     def first_moduli(self):
         """ restrict to conductors """
@@ -691,7 +684,7 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
         is called once for each ancestor (I don't know why)
         """
         WebDirichlet._compute(self)
-        print '########### WebDirichletGroup computed'
+        logger.debug('######## WebDirichletGroup Computed')
 
     @property
     def codeinit(self):
@@ -735,7 +728,7 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
         assert gcd(m, n) == 1
         self.chi = chi = self.H[n]
         self.chi_sage = chi_sage = chi.sage_character()
-        print '########### WebDirichletCharacter computed'
+        logger.debug('########### WebDirichletCharacter computed')
 
     @property
     def codeinit(self):
@@ -923,9 +916,7 @@ class WebHeckeExamples(WebHecke):
             self.add_row(nflabel)
 
     def add_row(self, nflabel):
-        print nflabel
         nf = WebNumberField(nflabel)
-        print nf
         #nflink = (nflabel, url_for('number_fields.by_label',label=nflabel))
         nflink = (nflabel, url_character(type='Hecke',number_field=nflabel))
         F = WebHeckeFamily(number_field=nflabel)
