@@ -1068,17 +1068,21 @@ class ArtinLfunction(Lfunction):
         self.dimension = args["dimension"]
         self.conductor = args["conductor"]
         self.tim_index = args["tim_index"]
+        logger.debug("Self.conductor: " + str(self.conductor))
         self.artin = ArtinRepresentation(self.dimension,
                                          self.conductor, self.tim_index)
+        logger.debug("Done constructing Artin")
 
         self.title = ("L function for an Artin representation of dimension "
-                      + str(dimension) + ", conductor " + str(conductor))
+                      + str(self.dimension)
+                      + ", conductor " + str(self.conductor))
 
         self.motivic_weight = 0
         self.algebraic = True
         self.degree = self.artin.dimension()
         self.coefficient_type = 0
 
+        logger.debug("Artin.conductor: " + str(self.artin.conductor()))
         if self.degree == 1:
             self.coefficient_period = Integer(self.artin.conductor())
             self.dirichlet_coefficients = self.artin.coefficients_list(
