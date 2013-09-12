@@ -17,6 +17,7 @@ import bson
 from Lfunctionutilities import (lfuncDStex, lfuncEPtex, lfuncFEtex,
                                 truncatenumber, styleTheSign, specialValueString)
 from lmfdb.WebCharacter import WebDirichlet
+from lmfdb.characters.main import url_character
 from lmfdb.lfunctions import l_function_page, logger
 from lmfdb.elliptic_curve import cremona_label_regex, lmfdb_label_regex
 from LfunctionComp import isogenyclasstable
@@ -428,7 +429,7 @@ def initLfunction(L, args, request):
     elif L.Ltype() == 'riemann':
         info['bread'] = get_bread(1, [('Riemann Zeta', request.url)])
         info['friends'] = [('\(\mathbb Q\)', url_for('number_fields.by_label', label='1.1.1.1')), ('Dirichlet Character \(\\chi_{1}(1,\\cdot)\)',
-                           url_for('render_Character', arg1=1, arg2=1))]
+                           url_character(type='Dirichlet', modulus=1, number=1))]
 
     elif L.Ltype() == 'dirichlet':
         mod, num = L.charactermodulus, L.characternumber

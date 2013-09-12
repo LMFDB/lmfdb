@@ -25,7 +25,6 @@ except:
 ###############################################################################
 
 ## character routes
-
 def url_character(**kwargs):
     if 'type' not in kwargs:
         return url_for('characters.render_characterNavigation',**kwargs)

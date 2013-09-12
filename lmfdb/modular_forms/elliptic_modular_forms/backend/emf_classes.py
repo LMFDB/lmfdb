@@ -7,6 +7,7 @@ from sage.all import vector, is_odd, DirichletGroup, is_even, Gamma1, dimension_
 from lmfdb.modular_forms.backend.mf_classes import MFDisplay, MFDataTable
 emf_dbname = 'modularforms'
 from lmfdb.utils import *
+#from lmfdb.characters.main import url_character
 from lmfdb.modular_forms.elliptic_modular_forms import emf_logger, emf
 try:
     from dirichlet_conrey import *
@@ -166,7 +167,7 @@ class ClassicalMFDisplay(MFDisplay):
                 x = xc.sage_character()
                 row = dict()
                 row['head'] = "\(\chi_{" + str(N) + "}(" + str(xc.number()) + ",\cdot) \)"
-                row['url'] = url_for("render_Character", arg1=N, arg2=xc.number())
+                row['url'] = url_character(type='Dirichlet', modulus=N, number=xc.number())
                 row['cells'] = list()
                 for k in range(wt_ll, wt_ul + 1):
                     if character == 0 and is_odd(k):
@@ -221,10 +222,10 @@ class ClassicalMFDisplay(MFDisplay):
                     xc = Gcreps[xi]
                     row = dict()
                     row['head'] = "\(\chi_{" + str(N) + "}(" + str(xc.number()) + ",\cdot) \)"
-                    row['url'] = url_for("render_Character", arg1=N, arg2=xc.number())
+                    row['url'] = url_character(type='Dirichlet', modulus=N, number=xc.number())
                     row['galois_orbit'] = [
                         {'chi': str(xc.number()),
-                         'url': url_for("render_Character", arg1=N, arg2=xc.number())}
+                         'url': url_character(type='Dirichlet', modulus=N, number=xc.number()) }
                         for xc in g]
                     row['cells'] = []
                     for k in range(wt_ll, wt_ul + 1):

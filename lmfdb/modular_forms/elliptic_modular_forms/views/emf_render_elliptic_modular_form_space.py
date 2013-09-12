@@ -26,6 +26,7 @@ import re
 from lmfdb.utils import ajax_more, ajax_result, make_logger, to_dict
 from sage.all import *
 from sage.modular.dirichlet import DirichletGroup
+#from lmfdb.characters.main import url_character
 from lmfdb.base import app, db
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms import WebModFormSpace, WebNewForm
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_classes import ClassicalMFDisplay, DimensionTable
@@ -118,7 +119,7 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
         conrey_char = WMFS.conrey_character()
         conrey_char_name = WMFS.conrey_character_name()
         info['conrey_character_name'] = '\( ' + conrey_char_name + '\)'
-        info['character_url'] = url_for('render_Character', arg1=WMFS.level(), arg2=conrey_char.number())
+        info['character_url'] = url_character(type='Dirichlet', modulus=WMFS.level(), number=conrey_char.number())
         info['name_new'] = "\(S_{ %s }^{new}(%s,%s) \)" % (WMFS.weight(), WMFS.level(), conrey_char_name)
         info['name_old'] = "\(S_{ %s }^{old}(%s,%s) \)" % (WMFS.weight(), WMFS.level(), conrey_char_name)
     info['dimension_cusp_forms'] = WMFS.dimension_cusp_forms()
