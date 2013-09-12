@@ -10,7 +10,7 @@ from sage.all import *
 import tempfile
 import os
 from pymongo import ASCENDING
-from lmfdb.utils import to_dict, parse_range, make_logger
+from lmfdb.utils import to_dict, parse_range, make_logger, url_character
 from lmfdb.WebCharacter import *
 from lmfdb.characters import characters_page, logger
 import ListCharacters
@@ -22,24 +22,8 @@ except:
 
 ###############################################################################
 #   Route functions
+#   Do not use url_for on these, use url_character defined in lmfdb.utils
 ###############################################################################
-
-## character routes
-def url_character(**kwargs):
-    if 'type' not in kwargs:
-        return url_for('characters.render_characterNavigation',**kwargs)
-    elif kwargs['type'] == 'Dirichlet':
-        del kwargs['type']
-        if kwargs.get('calc',None):
-            return url_for('characters.dc_calc',**kwargs)
-        else:
-            return url_for('characters.render_Dirichletwebpage',**kwargs)
-    elif kwargs['type'] == 'Hecke':
-        del kwargs['type']
-        if kwargs.get('calc',None):
-            return url_for('characters.hc_calc',**kwargs)
-        else:
-            return url_for('characters.render_Heckewebpage',**kwargs)
 
 @characters_page.route("/")
 def render_characterNavigation():
@@ -173,7 +157,8 @@ def render_Heckewebpage(number_field=None, modulus=None, number=None):
     args['number'] = number
 
     if number_field == None:
-        return render_template('Hecke.html')
+        info = WebHeckeExamples(**args).to_dict()
+        return render_template('Hecke.html', **info)
     elif modulus == None:
         info = WebHeckeFamily(**args).to_dict()
         print info
@@ -212,15 +197,6 @@ def hc_calc(calc, number_field, modulus, number):
             return flask.abort(404)
     except Exception, e:
         return "<span style='color:red;'>ERROR: %s</span>" % e
-
-###############################################################################
-##  make some functions accessible from templates
-@app.context_processor
-def ctx_characters():
-    chardata = {}
-    chardata['url_character'] = url_character
-    return chardata
-
 
 ###############################################################################
 ##  TODO: refactor the following

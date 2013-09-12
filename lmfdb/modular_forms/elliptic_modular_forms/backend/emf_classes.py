@@ -7,7 +7,6 @@ from sage.all import vector, is_odd, DirichletGroup, is_even, Gamma1, dimension_
 from lmfdb.modular_forms.backend.mf_classes import MFDisplay, MFDataTable
 emf_dbname = 'modularforms'
 from lmfdb.utils import *
-#from lmfdb.characters.main import url_character
 from lmfdb.modular_forms.elliptic_modular_forms import emf_logger, emf
 try:
     from dirichlet_conrey import *

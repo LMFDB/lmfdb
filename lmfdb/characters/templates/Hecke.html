@@ -3,11 +3,39 @@
 {% block description %}
 
 
+<p>
 A Hecke Character is a (finite order) character on the ideals
 of a number field $K$. Such a character factors over the
 ray class group $Cl(m)$ of some modulus $m$.
+</p>
 
+<p>
 Select a <a href="{{url_for('number_fields.number_field_render_webpage')}}">global number field</a>.
+</p>
+
+<h2> Examples of number fields </h2>
+<table class="ntdata" id="chitable">
+  <thead class="space">
+    <tr> 
+      {% for h in headers %}
+      <th class="weight">{{h}} </th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for nf, signature, polynomial  in contents %}
+    <tr>
+      <th class="left">
+        {% with label,link = nf %}
+        <a align="center" href="{{link}} ">{{ label }} </a>
+        {% endwith %}
+      </th>
+      <td style="font-family: serif;" >{{ signature }}</td>
+      <td style="font-family: serif;" >{{ polynomial | safe }}</td>
+     </tr>
+    {% endfor %} 
+  </tbody>    
+</table>
 
 {% endblock %}
 

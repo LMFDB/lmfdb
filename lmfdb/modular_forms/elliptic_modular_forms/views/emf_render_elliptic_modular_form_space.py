@@ -23,10 +23,9 @@ from flask import render_template, url_for, request, redirect, make_response, se
 import tempfile
 import os
 import re
-from lmfdb.utils import ajax_more, ajax_result, make_logger, to_dict
+from lmfdb.utils import ajax_more, ajax_result, make_logger, to_dict, url_character
 from sage.all import *
 from sage.modular.dirichlet import DirichletGroup
-#from lmfdb.characters.main import url_character
 from lmfdb.base import app, db
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms import WebModFormSpace, WebNewForm
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_classes import ClassicalMFDisplay, DimensionTable

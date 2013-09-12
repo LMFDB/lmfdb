@@ -6,7 +6,7 @@ import sage.libs.lcalc.lcalc_Lfunction as lc
 import re
 import pymongo
 import bson
-from lmfdb.utils import parse_range, make_logger
+from lmfdb.utils import parse_range, make_logger, url_character
 logger = make_logger("DC")
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms import *
 from WebNumberField import WebNumberField
@@ -392,12 +392,13 @@ class WebHecke(WebCharObject):
         return map(int,label.split('.'))
 
 
-    # FIXME: replace by calls to WebNF
     @staticmethod
     def label2nf(label):
-        x = var('x')
-        pol = evalpolelt(label,x,'x')
-        return NumberField(pol,'a')
+        return WebNumberField(label).K()
+        # FIXME: replace by calls to WebNF
+        #x = var('x')
+        #pol = evalpolelt(label,x,'x')
+        #return NumberField(pol,'a')
  
     @property
     def groupelts(self):
@@ -875,6 +876,49 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
              \chi_{%s}(%s,r) e\left(\frac{%s r + %s r^{-1}}{%s}\right)
         = %s. \)""" % (a, b, modulus, number, modulus, modulus, number, a, b, modulus, k)
 
+
+class WebHeckeExamples(WebHecke):
+    """ this class only collects some interesting number fields """
+
+    def __init__(self, **args):
+        self._keys = [ 'title', 'credit', 'headers', 'contents' ]   
+        self.headers = ['label','signature', 'polynomial' ]
+        self._contents = None
+        self.maxrows, self.rowtruncate = 25, False
+        WebCharObject.__init__(self, **args)
+
+    def _compute(self):
+        self.nflabels = ['2.2.8.1',
+                     '2.0.4.1',
+                     '3.3.81.1',
+                     '3.1.44.1',
+                     #'4.4.2403.1',
+                     #'4.2.283.1',
+                     ]
+        self.credit = "Pari, Sage"
+        self.codelangs = ('pari', 'sage')
+
+    @property
+    def contents(self):
+        if self._contents is None:
+            self._contents = []
+            self._fill_contents()
+        return self._contents
+
+    def _fill_contents(self):
+        for nflabel in self.nflabels:
+            self.add_row(nflabel)
+
+    def add_row(self, nflabel):
+        print nflabel
+        nf = WebNumberField(nflabel)
+        print nf
+        #nflink = (nflabel, url_for('number_fields.by_label',label=nflabel))
+        nflink = (nflabel, url_character(type='Hecke',number_field=nflabel))
+        F = WebHeckeFamily(number_field=nflabel)
+        self._contents.append( (nflink, nf.signature(), nf.web_poly() ) )
+
+
 class WebHeckeFamily(WebCharFamily, WebHecke):
 
     def _compute(self):
@@ -990,6 +1034,7 @@ class WebHeckeCharacter(WebChar, WebHecke):
         return '\(%s=%s\)'%(chartex,val)
 
     def char4url(self, chi):
+        # FIXME: call url_character and only return (label, url)
         if chi is None:
             return ('', {})
         label = self.char2tex(chi)

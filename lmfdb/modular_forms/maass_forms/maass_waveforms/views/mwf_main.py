@@ -21,14 +21,12 @@ AUTHORS:
 import lmfdb.base
 from lmfdb.base import app
 from flask import render_template, url_for, request, redirect, make_response, send_file
+from lmfdb.utils import url_character
 import bson
 import StringIO
 import pymongo
 from sage.all import is_odd, is_even, dumps
 # mwf = flask.Blueprint('mwf', __name__, template_folder="templates",static_folder="static")
-import lmfdb.utils
-import lmfdb.characters.main
-from lmfdb.characters.main import url_character
 from lmfdb.modular_forms.maass_forms.maass_waveforms import MWF, mwf_logger, mwf
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_utils import *
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import MaassFormTable, WebMaassForm

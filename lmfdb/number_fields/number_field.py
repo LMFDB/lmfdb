@@ -9,7 +9,6 @@ from flask import render_template, render_template_string, request, abort, Bluep
 import StringIO
 from lmfdb.number_fields import nf_page, nf_logger
 from lmfdb.WebNumberField import *
-from lmfdb.characters.main import url_character
 
 import re
 
@@ -19,7 +18,7 @@ from sage.rings.arith import primes
 
 from lmfdb.transitive_group import *
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, comma, clean_input
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, comma, clean_input, url_character
 
 NF_credit = 'the PARI group, J. Voight, J. Jones, and D. Roberts'
 Completename = 'Completeness of this data'
