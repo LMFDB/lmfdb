@@ -16,7 +16,7 @@ from lmfdb.utils import to_dict
 import bson
 from Lfunctionutilities import (lfuncDStex, lfuncEPtex, lfuncFEtex,
                                 truncatenumber, styleTheSign, specialValueString)
-from lmfdb.characters.DirichletCharacter import getPrevNextNavig
+from lmfdb.WebCharacter import WebDirichlet
 from lmfdb.lfunctions import l_function_page, logger
 from lmfdb.elliptic_curve import cremona_label_regex, lmfdb_label_regex
 from LfunctionComp import isogenyclasstable
@@ -431,10 +431,19 @@ def initLfunction(L, args, request):
                            url_for('render_Character', arg1=1, arg2=1))]
 
     elif L.Ltype() == 'dirichlet':
-        info['navi'] = getPrevNextNavig(L.charactermodulus, L.characternumber, "L")
+        mod, num = L.charactermodulus, L.characternumber
+        Lpattern = r"\(L(s,\chi_{%s}(%s,&middot;))\)"
+        if mod > 1:
+            pmod,pnum = WebDirichlet.prevprimchar(mod, num)
+            Lprev = (Lpattern%(pmod,pnum),url_for('.l_function_dirichlet_page',modulus=pmod,number=pnum))
+        else: 
+            Lprev = ('','')
+        nmod,nnum = WebDirichlet.nextprimchar(mod, num)
+        Lnext = (Lpattern%(nmod,nnum),url_for('.l_function_dirichlet_page',modulus=nmod,number=nnum))
+        info['navi'] = (Lprev,Lnext)
         snum = str(L.characternumber)
         smod = str(L.charactermodulus)
-        charname = '\(\\chi_{%s}({%s},\\cdot)\)' % (smod, snum)
+        charname = WebDirichlet.char2tex(smod, snum)
         info['bread'] = get_bread(1, [(charname, request.url)])
         info['friends'] = [('Dirichlet Character ' + str(charname), friendlink)]
 

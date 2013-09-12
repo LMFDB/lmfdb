@@ -654,8 +654,8 @@ class Lfunction_Dirichlet(Lfunction):
         self.numcoeff = int(self.numcoeff)
 
         # Create the Dirichlet character
-        self.web_chi = WebDirichletCharacter( {'modlabel': self.charactermodulus,
-                                'numlabel': self.characternumber})
+        self.web_chi = WebDirichletCharacter( modulus=self.charactermodulus,
+                                number = self.characternumber)
         chi = self.web_chi.chi_sage
         self.chi_sage = chi
         self.motivic_weight = 0
