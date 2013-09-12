@@ -24,12 +24,36 @@ def get_bread(breads=[]):
         bc.append(b)
     return bc
 
-
 def display_poly(coeffs):
     return web_latex(coeff_to_poly(coeffs))
 
 def format_coeffs(coeffs):
     return pol_to_html(str(coeff_to_poly(coeffs)))
+
+# Returns a string of val if val = 0, 1, -1, or version with p factored out otherwise
+def factor_out_p(val, p):
+    if val==0 or val==1 or val==-1:
+        return str(val)
+    s = 1
+    if val<0:
+        s = -1
+        val = -val
+    ord = ZZ(val).valuation(p)
+    val = val/p**ord
+    out = ''
+    if s == -1:
+        out += '-'
+    if ord==1:
+        out +=  str(p)
+    elif ord>1:
+        out +=  '%d^{%d}' % (p, ord)
+    if val>1:
+        out += str(val)
+    return out
+
+# c is a list of coefficients
+def poly_with_factored_coeffs(c, p):
+    c = [
 
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
@@ -184,7 +208,7 @@ def render_hgm_webpage(args):
         locinfo = data['locinfo']
         for j in range(len(locinfo)):
             locinfo[j] = [primes[j]] + locinfo[j]
-            locinfo[j][2] = PolynomialRing(QQ, 'x')(c)._latex_()
+            locinfo[j][2] = PolynomialRing(QQ, 'x')(locinfo[j][2])._latex_()
         hodge = data['hodge']
         prop2 = [
             ('Degree', '\(%s\)' % data['degree']),
