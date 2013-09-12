@@ -1059,20 +1059,19 @@ class HypergeometricMotiveLfunction(Lfunction):
     def __init__(self, **args):
         constructor_logger(self, args)
         if not ('label' in args.keys()):
-            raise KeyError("You have to supply a label for a hypergeometric motive L-ffunction")            
+            raise KeyError("You have to supply a label for a hypergeometric motive L-function")            
         C = base.getDBConnection()
         self.motive = C.hgm.motives_copy.find_one({"label": args["label"]})
         
         self.label = args["label"]
         import operator
-        self.conductor = reduce(operator.__mul__, map(lambda x, y: x**y , self.motive["conductor"]))
+        self.conductor = reduce(operator.__mul__, [z[0]**z[1] for z in self.motive["conductor"]])
         self.factored_conductor = self.motive["conductor"]
         self.level = self.conductor
         self.title = ("L function for the hypergeometric motive with label  "
-                      + str(label))
+                      + str(self.label))
 
-        self.credit = 'Data precomputed by Dave Roberts'
-        self.citation = 'MAGMA package hypergeometric due to Mark Watkins'
+        self.credit = 'Dave Roberts, using Magma.'
         
         self.motivic_weight = 0
         self.algebraic = True
@@ -1080,28 +1079,49 @@ class HypergeometricMotiveLfunction(Lfunction):
         self.degree = self.motive["degree"]
         
         try:
-            self.arith_coeffs = self.motive["arith_coeff"]
+            self.arith_coeffs = self.motive["arith_coeffs"]
         except:
-            self.arith_coeffs = map(Integer, self.motive["arith_coeff_string"])
+            self.arith_coeffs = map(Integer, self.motive["arith_coeffs_string"])
 
         self.support = "Support by Paul-Olivier Dehaye"
         
-        self.sign = self.motive.sign
+        self.sign = self.motive["sign"]
         
         
-        # level, residues, selfdual, primitive, langlands, Q_fe, kappa_fe, lambda_fe?
+        # level, residues, selfdual, primitive, langlands, Q_fe, kappa_fe, lambda_fe, selfdual?
         
         # Hardcoded for 'A2.2.2.2_B1.1.1.1_t1.2'
+        self.poles = []
+        self.residues = []
+        self.primitive = True
+        self.langlands = True
         self.mu_fe = []                     
-        self.nu_fe = [0.5,1.5]              
+        self.nu_fe = [1/2,3/2]   
+        self.selfdual = True 
+        self.coefficient_period = 0
 
+        self.kappa_fe = [1,1]
+        self.lambda_fe = [.5,1.5]
+        self.dirichlet_coefficients = [Reals()(Integer(x))/Reals()(n+1)**(1.5) for n, x in enumerate(self.arith_coeffs)]
+        self.motivic_weight = 3     # HARD CODED
+        
         self.texname = "L(s)"  
         self.texnamecompleteds = "\\Lambda(s)"  
         if self.selfdual:
             self.texnamecompleted1ms = "\\Lambda(1-s)" 
         else:
             self.texnamecompleted1ms = "\\overline{\\Lambda(1-\\overline{s})}"
-        generateSageLfunction(self)
+        import sage.libs.lcalc.lcalc_Lfunction as lc
+        
+        Lexponent = self.motivic_weight/2.            
+        normalize =lambda coeff, n, exponent: Reals()(coeff)/n**exponent
+        self.dirichlet_coefficient = [normalize(coeff, i+1, Lexponent) for i, coeff in enumerate(self.arith_coeffs)]
+        self.Q_fe = RealField()(sqrt(self.conductor)/(2*pi)**2)          # HARD CODED
+        period = 0
+
+        self.sageLfunction = lc.Lfunction_D("LfunctionHypergeometric", 0, self.dirichlet_coefficient, period, self.Q_fe, self.sign, self.kappa_fe, self.lambda_fe, self.poles, self.residues)
+        # 1.182 arithmetic : 2
+        # 1.015 arithmetic : 4
 
     def Ltype(self):
         return "hgmQ"
