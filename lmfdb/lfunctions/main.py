@@ -315,7 +315,6 @@ def render_single_Lfunction(Lclass, args, request):
     temp_args = to_dict(request.args)
     logger.debug(args)
     logger.debug(temp_args)
-
     try:
         L = Lclass(**args)
         try:
