@@ -8,18 +8,24 @@
 # or inside the Sage environment: $ easy_install -U nose
 #                                 $ easy_install -U coverage
 #                                 $ easy_install -U unittest2
-# Second, call it via sage -sh test.sh
+# Second, call it in two ways, either $ ./test.sh for coverage to test all
+# or to test only a part of LMFDB:    $ ./test lmfdb/knowledge
 
 cd `dirname "$0"`
 
+HTML=''
+WHAT=''
 if [[ "$1" == "html" ]]; then
   rm -rf lmfdb/cover
   HTML='--cover-html'
 else
-  HTML=''
+  WHAT="$@"
 fi
 
-cd lmfdb
-nosetests -v -s --with-coverage --cover-erase --cover-package=lmfdb $HTML
-
+if [[ -n $WHAT ]]; then
+   eval "sage -sh -c 'nosetests -v -s $WHAT'"
+else
+   cd lmfdb
+   eval "sage -sh -c 'nosetests -v -s --with-coverage --cover-erase --cover-package=lmfdb $HTML'"
+fi
 
