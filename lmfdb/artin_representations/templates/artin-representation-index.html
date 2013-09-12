@@ -10,7 +10,36 @@
 {{KNOWL_INC("artin.database_comment", title = "")}}
 </div>
 
+<h2>Browse {{KNOWL('artin', title="Artin representations")}}</h2>
 
+<p>
+By {{ KNOWL('artin.dimension',title="dimension") }}:
+<a href="?dimension=1">1</a>, <a href="?dimension=2">2</a>, <a href="?dimension=3">3</a>,
+<a href="?dimension=4">4</a>, <a href="?dimension=5">5</a>, <a href="?dimension=6">6</a>,
+<a href="?dimension=7">7</a>, <a href="?dimension=8">8</a>, <a href="?dimension=9">9</a>,
+<a href="?dimension=10">10</a>
+
+<p>
+By {{ KNOWL('artin.conductor',title="conductor") }}:
+<a href="?conductor=1-100">1-100</a>,
+<a href="?conductor=101-1000">101-1000</a>,
+<a href="?conductor=1001-10000">1001-10000</a>,
+<a href="?conductor=10001-100000">10001-100000</a>
+
+<p>
+By {{ KNOWL('artin.gg_quotient',title="group") }}:
+<a href="?group=D4">$D_4$</a>,
+<a href="?group=A4">$A_4$</a>,
+<a href="?group=S4">$S_4$</a>,
+<a href="?group=A5">$A_5$</a>,
+<a href="?group=S5">$S_5$</a>,
+<a href="?group=6T13">$C_3^2:D_4$</a>,
+<a href="?group=A6">$A_6$</a>,
+<a href="?group=S6">$S_6$</a>,
+<a href="?group=GL(3,2)">$\GL(3,2)$</a>,
+<a href="?group=A7">$A_7$</a>,
+<a href="?group=S7">$S_7$</a>
+<a href="?group=GL(2,3)">$\GL(2,3)$</a>
 
 <h2> Search for an Artin representation </h2>
 Please enter a value or leave blank:
@@ -18,15 +47,15 @@ Please enter a value or leave blank:
 <form>
   <table>
     <tr>
-        <td>{{ KNOWL('artin.conductor',title = "Conductor") }}</td>
-        <td><input type='text' name='conductor' placeholder="50-100,150-210" size=15></td>
-        <td><span class="formexample"> e.g. 50, 100-200</span></td>
-    </tr>
-
-    <tr>
         <td>{{ KNOWL('artin.dimension',title="Dimension") }}</td>
         <td><input type='text' name='dimension' placeholder="2" size=15></td>
         <td><span class="formexample"> e.g. 1, 2-4 </span></td>
+    </tr>
+
+    <tr>
+        <td>{{ KNOWL('artin.conductor',title = "Conductor") }}</td>
+        <td><input type='text' name='conductor' placeholder="50-100,150-210" size=15></td>
+        <td><span class="formexample"> e.g. 50, 100-200</span></td>
     </tr>
 
     <tr>

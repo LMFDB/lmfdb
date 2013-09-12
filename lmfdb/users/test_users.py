@@ -1,6 +1,6 @@
 # -*- coding: utf8 -*-
 # testing users blueprint
-from base import LmfdbTest
+from lmfdb.base import LmfdbTest
 from main import login_page
 from flask import url_for
 
@@ -44,13 +44,15 @@ class UsersTestCase(LmfdbTest):
 
     def test_info(self):
         return
-        c.post('/users/info', data=dict(
-            full_name="test_full_name",
-            url="test_url",
-            about="test_about")
-        )
-        me = self.get_me()
-        print me
-        assert me['url'] == 'test_url'
-        assert me['about'] == 'test_about'
-        assert me['full_name'] == "full_name"
+        with self.tc as tc:
+            tc.post('/users/info', data=dict(
+                full_name="test_full_name",
+                url="test_url",
+                about="test_about")
+            )
+            me = self.get_me()
+            print me
+            self.app.logger.info(str(me))
+            assert me['url'] == 'test_url'
+            assert me['about'] == 'test_about'
+            assert me['full_name'] == "full_name"

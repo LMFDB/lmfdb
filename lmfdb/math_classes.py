@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from base import getDBConnection, app
-from utils import url_for
+from utils import url_for, pol_to_html
 from databases.Dokchitser_databases import Dokchitser_ArtinRepresentation_Collection, Dokchitser_NumberFieldGaloisGroup_Collection
-from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation
+from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField
 
 
 def process_algebraic_integer(seq, root_of_unity):
@@ -123,6 +123,14 @@ class ArtinRepresentation(object):
 
     def character(self):
         return CharacterValues(self._data["Character"])
+
+    def character_formatted(self):
+        char_vals = self.character()
+        charfield = int(self.character_field())
+        zet = CyclotomicField(charfield).gen()
+        print char_vals
+        s = [sum([y[j] * zet**j for j in range(len(y))])._latex_() for y in char_vals]
+        return s
 
     def __str__(self):
         try:
@@ -407,6 +415,9 @@ class NumberFieldGaloisGroup(object):
 
     def polredabslatex(self):
         return self.polredabs()._latex_()
+
+    def polredabshtml(self):
+        return pol_to_html(self.polredabs())
 
     def label(self):
         if "label" in self._data.keys():

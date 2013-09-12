@@ -184,6 +184,9 @@ def fmtdatetime(value, format='%Y-%m-%d %H:%M:%S'):
     else:
         return "-"
 
+@app.template_filter("nl2br")
+def nl2br(s):
+    return s.replace('\n', '<br>\n')
 
 @app.template_filter('obfuscate_email')
 def obfuscate_email(email):

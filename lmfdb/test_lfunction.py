@@ -26,7 +26,7 @@ class LfunctionTest(LmfdbTest):
         assert 'Graph' in L.data
 
     def test_Lgl3maass(self):
-        L = self.tc.get('/L/ModularForm/GL3/Q/maass/GL3Maass_4_19.9942_2.27431/')
+        L = self.tc.get('/L/ModularForm/GL3/Q/Maass/GL3Maass_4_19.9942_2.27431/')
         assert 'Graph' in L.data
 
     def test_Lsym2EC(self):
@@ -34,7 +34,7 @@ class LfunctionTest(LmfdbTest):
         assert 'Graph' in L.data
 
     def test_Lgl4maass(self):
-        L = self.tc.get('/L/ModularForm/GL4/Q/maass/GL4Maass_1_17.6101_7.81101_-6.0675/')
+        L = self.tc.get('/L/ModularForm/GL4/Q/Maass/GL4Maass_1_17.6101_7.81101_-6.0675/')
         assert 'Graph' in L.data
 
     def test_Ldedekind(self):

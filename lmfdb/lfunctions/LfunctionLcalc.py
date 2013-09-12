@@ -238,7 +238,7 @@ def parseLcalcfile_ver1(L, filecontents):
     # Mike seems to only use 0 and 1.
     # POD
     L.quasidegree = int(lines[4])
-    lines = L.lcalcfile.split('\n', 8 + 2 * L.quasidegree)
+    lines = filecontents.split('\n', 8 + 2 * L.quasidegree)
     L.Q_fe = float(lines[5 + 2 * L.quasidegree])
     L.sign = pair2complex(lines[6 + 2 * L.quasidegree])
 
