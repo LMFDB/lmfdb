@@ -1,4 +1,4 @@
-
+from sage.all import imag_part
 
 #############################################################################
 # The base Lfunction class. The goal is to make this dependent on the least possible, so it can be loaded from sage or even python
