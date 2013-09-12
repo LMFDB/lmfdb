@@ -35,6 +35,7 @@ import artin_representations
 import zeros
 import crystals
 import permutations
+import hypergm
 
 import raw
 from modular_forms.maass_forms.picard import mwfp
@@ -152,12 +153,6 @@ def form_example():
     info = {'sidebar': sidebar}
     return render_template("form.html", info=info)
 
-
-@app.route("/Character/Dirichlet/")
-@app.route("/Character/Dirichlet/<arg1>")
-@app.route("/Character/Dirichlet/<arg1>/<arg2>")
-def render_Character(arg1=None, arg2=None):
-    return DirichletCharacter.render_webpage(request, arg1, arg2)
 
 
 @app.route('/ModularForm/GSp/Q')

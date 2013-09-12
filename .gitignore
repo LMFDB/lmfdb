@@ -2,6 +2,7 @@ password.py
 config.ini
 
 *.pyc
+*.pyo
 *.so
 *.o
 *.c

@@ -18,7 +18,7 @@ print ".....done"
 # d = c.artin_representations()
 
 
-# l = ArtinLfunction("1","5","2")
+# l = ArtinLfunction(dimension = "1", conductor = "5", tim_index = "2")
 k = 0
 
 for x in ArtinRepresentation.find():
