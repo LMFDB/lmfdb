@@ -180,6 +180,11 @@ def render_hgm_webpage(args):
         tn = data['t']['n']
         td = data['t']['d']
         t = latex(QQ(str(tn)+'/'+str(td)))
+        primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71]
+        locinfo = data['locinfo']
+        for j in range(len(locinfo)):
+            locinfo[j] = [primes[j]] + locinfo[j]
+            locinfo[j][2] = PolynomialRing(QQ, 'x')(c)._latex_()
         hodge = data['hodge']
         prop2 = [
             ('Degree', '\(%s\)' % data['degree']),
@@ -194,7 +199,7 @@ def render_hgm_webpage(args):
                     'sign': data['sign'],
                     'sig': data['sig'],
                     'hodge': hodge,
-                    'locinfo': data['locinfo'],
+                    'locinfo': locinfo
                     })
         friends = []
 #        friends = [('Galois group', "/GaloisGroup/%dT%d" % (gn, gt))]
