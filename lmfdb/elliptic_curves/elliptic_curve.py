@@ -186,7 +186,7 @@ def rational_elliptic_curves(err_args=None):
         'max_N': comma(max_N),
         'max_rank': max_rank
     }
-    credit = 'John Cremona'
+    credit = 'John Cremona and Andrew Sutherland'
     t = 'Elliptic curves/$\Q$'
     bread = [('Elliptic Curves', url_for("rational_elliptic_curves")), ('Elliptic curves/$\Q$', ' ')]
     return render_template("elliptic_curve_Q.html", info=info, credit=credit, title=t, bread=bread, **err_args)
@@ -321,18 +321,25 @@ def elliptic_curve_search(**args):
 
     if info.get('surj_primes'):
         info['surj_primes'] = clean_input(info['surj_primes'])
-        if LIST_POSINT_RE.match(info['surj_primes']):
-            surj_primes = [int(p) for p in info['surj_primes'].split(',')]            
+        format_ok = LIST_POSINT_RE.match(info['surj_primes'])
+        if format_ok:
+            surj_primes = [int(p) for p in info['surj_primes'].split(',')]
+            format_ok = all([ZZ(p).is_prime(proof=False) for p in surj_primes])
+        if format_ok:
             query['non-surjective_primes'] = {"$nin": surj_primes}
         else:
-            info['err'] = 'Error parsing input for surjective primes.  It needs to be an integer (such as 5), or a comma-separated list of integers (such as 2,3,11).'
+            info['err'] = 'Error parsing input for surjective primes.  It needs to be a prime (such as 5), or a comma-separated list of primes (such as 2,3,11).'
             return search_input_error(info, bread)
 
     if info.get('nonsurj_primes'):
         info['nonsurj_primes'] = clean_input(info['nonsurj_primes'])
-        if LIST_POSINT_RE.match(info['nonsurj_primes']):
+        format_ok = LIST_POSINT_RE.match(info['nonsurj_primes'])
+        if format_ok:
             nonsurj_primes = [int(p) for p in info['nonsurj_primes'].split(',')]
+            format_ok = all([ZZ(p).is_prime(proof=False) for p in nonsurj_primes])
+        if format_ok:
             if info['surj_quantifier'] == 'exactly':
+                nonsurj_primes.sort()
                 query['non-surjective_primes'] = nonsurj_primes
             else:
                 if 'non-surjective_primes' in query:
@@ -340,7 +347,7 @@ def elliptic_curve_search(**args):
                 else:
                     query['non-surjective_primes'] = { "$all": nonsurj_primes }
         else:
-            info['err'] = 'Error parsing input for nonsurjective primes.  It needs to be an integer (such as 5), or a comma-separated list of integers (such as 2,3,11).'
+            info['err'] = 'Error parsing input for nonsurjective primes.  It needs to be a prime (such as 5), or a comma-separated list of primes (such as 2,3,11).'
             return search_input_error(info, bread)
 
     info['query'] = query
@@ -386,6 +393,8 @@ def elliptic_curve_search(**args):
         else:
             info['report'] = 'displaying all %s matches' % nres
     credit = 'John Cremona'
+    if 'non-surjective_primes' in query:
+        credit += 'and Andrew Sutherland'
     t = 'Elliptic Curves'
     return render_template("elliptic_curve_search.html", info=info, credit=credit, bread=bread, title=t)
 
