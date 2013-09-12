@@ -9,6 +9,8 @@ from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
 from lmfdb.artin_representations import artin_representations_page, artin_logger
 from lmfdb.utils import to_dict
+from lmfdb.transitive_group import complete_group_codes, make_galois_pair
+
 
 from lmfdb.math_classes import *
 from lmfdb.WebNumberField import *
@@ -83,12 +85,12 @@ def artin_representation_search(**args):
         query["Indicator"] = int(req["frobenius_schur_indicator"])
     if req.get("group", "") != "":
         try:
-            gcs = complete_group_codes(info[field])
+            gcs = complete_group_codes(req['group'])
             if len(gcs) == 1:
-                query['galois'] = make_galois_pair(gcs[0][0], gcs[0][1])
+                query['Galois_nt'] = gcs[0]
 # list(gcs[0])
             if len(gcs) > 1:
-                query['galois'] = {'$in': [make_galois_pair(x[0], x[1]) for x in gcs]}
+                query['Galois_nt'] = {'$in': [x for x in gcs]}
         except NameError as code:
             errinfo = 'Error parsing input for Galois group: unknown group label %s.  It needs to be a <a title = "Galois group labels" knowl="nf.galois_group.name">group label</a>, such as C5 or 5T1, or comma separated list of labels.' % code
             # info['err'] = 'Error parsing input for Galois group: unknown group label %s.  It needs to be a <a title = "Galois group labels" knowl="nf.galois_group.name">group label</a>, such as C5 or 5T1, or comma separated list of labels.' % code
@@ -120,8 +122,8 @@ def artin_representation_search(**args):
 
     count = int(req.get('count', 20))
 
-    for i in range(10):
-        print query
+    #for i in range(10):
+    #    print query
     from pymongo import ASCENDING
     ArtinRepresentation.collection().ensure_index([("Dim", ASCENDING), ("Conductor_plus", ASCENDING)])
     data = [ArtinRepresentation(data=x) for x in ArtinRepresentation.collection(

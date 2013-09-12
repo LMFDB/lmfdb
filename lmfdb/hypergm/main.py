@@ -48,12 +48,32 @@ def factor_out_p(val, p):
     elif ord>1:
         out +=  '%d^{%d}' % (p, ord)
     if val>1:
+        if ord ==1:
+            out += r'\cdot '
         out += str(val)
     return out
 
 # c is a list of coefficients
-#def poly_with_factored_coeffs(c, p):
-#    c = [
+def poly_with_factored_coeffs(c, p):
+    c = [factor_out_p(b) for b in c]
+    out = ''
+    for j in range(len(c)):
+        if c[j] != '0':
+            if c[j] == '1':
+                if j==0:
+                    out += '+'+c[j]
+                else:
+                    out += '+x^{'+ j +'}'
+            elif c[j] == '-1':
+                if j==0:
+                    out += '-1'
+                else:
+                    out += '-'+'x^{'+j+'}'
+            else:
+                if c[j][0] == '-':
+                    if j==0:
+                        out += c[j]
+
 
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
@@ -66,14 +86,13 @@ def index():
     info = {'count': 20}
     return render_template("hgm-index.html", title="Hypergeometric Motives", bread=bread, credit=HGM_credit, info=info)
 
-
 @hypergm_page.route("/<label>")
-def by_label(label):
-    return render_hgm_webpage({'label': label})
-
-@hypergm_page.route("/family/<label>")
 def by_family_label(label):
     return render_hgm_family_webpage({'label': label})
+
+@hypergm_page.route("/<label>/<t>")
+def by_label(label, t):
+    return render_hgm_webpage({'label': label+'_'+t})
 
 @hypergm_page.route("/search", methods=["GET", "POST"])
 def search():
@@ -234,7 +253,6 @@ def render_hgm_webpage(args):
 
         bread = get_bread([(label, ' ')])
         return render_template("hgm-show-motive.html", credit=HGM_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends)
-
 
 def render_hgm_family_webpage(args):
     data = None

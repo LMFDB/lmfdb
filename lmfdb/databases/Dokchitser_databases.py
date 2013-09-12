@@ -43,11 +43,6 @@ LenPair = Dict({
     "val": TooLargeInt
 })
 
-GalPair = Dict({
-    "n": Int,
-    "t": Int
-})
-
 Dokchitser_ArtinRepresentation = Dict({
     "_id": Anything,
     "Dim": Int,
@@ -57,13 +52,15 @@ Dokchitser_ArtinRepresentation = Dict({
     "HardPrimes": FiniteSequence(TooLargeInt),
     "BadPrimes": FiniteSequence(TooLargeInt),
     "LocalFactors": FiniteSequence(Anything),
-    "DBIndex": IndexAt1,        # Starting at 1    #
+    "DBIndex": IndexAt1,        # Starting at 1 
     "NFGal": FiniteSequence(Anything),
     "Character": Anything,
     "Sign": Int,
     "CharacterField": Int,
     "Conductor_plus": LenPair,                             # Added after Tim, by inject_conductor_len.py
-    "Galois_nt": GalPair,                             # Added after Tim, by jj
+    "Galois_nt": Array(Int,Int),                           # Added after Tim by jj
+    # Next is whether or not to show this in a search page because of redundancies
+    "Show": Int,                                           # Added after Tim by jj
 })
 
 
