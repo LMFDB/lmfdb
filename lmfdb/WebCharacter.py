@@ -899,6 +899,10 @@ class WebHeckeExamples(WebHecke):
         self.codelangs = ('pari', 'sage')
 
     @property
+    def title(self):
+        return "Finite order Hecke characters"
+
+    @property
     def contents(self):
         if self._contents is None:
             self._contents = []
