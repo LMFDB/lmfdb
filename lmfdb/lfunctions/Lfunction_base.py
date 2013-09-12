@@ -8,30 +8,6 @@
 class Lfunction:
     """Class representing a general L-function
     """
-
-    def __init__(self, **args):
-        # Initialize some default values
-        self.coefficient_period = 0
-        self.poles = []
-        self.residues = []
-        self.kappa_fe = []
-        self.lambda_fe = []
-        self.mu_fe = []
-        self.nu_fe = []
-        self.selfdual = False
-        self.langlands = True
-        self.texname = "L(s)"  # default name.  will be set later, for most L-functions
-        self.texnamecompleteds = "\\Lambda(s)"  # default name.  will be set later, for most L-functions
-        self.texnamecompleted1ms = "\\overline{\\Lambda(1-\\overline{s})}"  # default name.  will be set later, for most L-functions
-        self.primitive = True  # should be changed later
-        self.citation = ''
-        self.credit = ''
-        self.motivic_weight = NaN
-        self.algebraic = True
-        self.dirichlet_coefficients = []
-        self._Ltype = "Lfunction"
-        self._constructor_args = args
-
     def Ltype(self):
         return self._Ltype
 
