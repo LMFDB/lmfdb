@@ -95,20 +95,18 @@ def field_pretty(field_str):
 
 def poly_to_field_label(pol):
     try:
-        pol = PolynomialRing(QQ, 'x')(str(pol))
-        pol *= pol.denominator()
-        R = pol.parent()
-        pol = R(pari(pol).polredabs())
+        wnf = WebNumberField.from_polynomial(pol)
+        return wnf.get_label()
     except:
         return None
-    coeffs = list2string([int(c) for c in pol.coeffs()])
-    d = int(pol.degree())
-    query = {'coeffs': coeffs}
-    C = base.getDBConnection()
-    one = C.numberfields.fields.find_one(query)
-    if one:
-        return one['label']
-    return None
+    #coeffs = list2string([int(c) for c in pol.coeffs()])
+    #d = int(pol.degree())
+    #query = {'coeffs': coeffs}
+    #C = base.getDBConnection()
+    #one = C.numberfields.fields.find_one(query)
+    #if one:
+    #    return one['label']
+    #return None
 
 
 def parse_field_string(F):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc

@@ -65,6 +65,14 @@ class WebNumberField:
     def from_polredabs(cls, pol):
         return cls.from_coeffs([int(c) for c in pol.coeffs()])
 
+    @classmethod
+    def from_polynomial(cls, pol):
+        pol = PolynomialRing(QQ, 'x')(str(pol))
+        pol *= pol.denominator()
+        R = pol.parent()
+        pol = R(pari(pol).polredabs())
+        return cls.from_coeffs([int(c) for c in pol.coeffs()])
+
     # If we already have the database entry
     @classmethod
     def from_data(cls, data):
@@ -83,6 +91,9 @@ class WebNumberField:
     def _get_dbdata(self):
         nfdb = base.getDBConnection().numberfields.fields
         return nfdb.find_one({'label': self.label})
+
+    def get_label(self):
+        return self.label
 
     # Return discriminant as a sage int
     def disc(self):
