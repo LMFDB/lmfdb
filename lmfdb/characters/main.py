@@ -107,24 +107,24 @@ def render_Dirichletwebpage(modulus=None, number=None):
     #args = request.args
     #temp_args = to_dict(args)
 
-    temp_args={}
-    temp_args['type'] = 'Dirichlet'
-    temp_args['modulus'] = modulus
-    temp_args['number'] = number
+    args={}
+    args['type'] = 'Dirichlet'
+    args['modulus'] = modulus
+    args['number'] = number
 
     if modulus == None:
-        info = WebDirichletFamily(temp_args).to_dict()
+        info = WebDirichletFamily(**args).to_dict()
         print info
         return render_template('CharFamily.html', **info)
     elif number == None:
-        info = WebDirichletGroup(temp_args).to_dict()
+        info = WebDirichletGroup(**args).to_dict()
         m = info['modlabel']
         info['bread'] = [('Characters','/Character'),
                          ('Dirichlet','/Character/Dirichlet'),
                          ('Modulus %s'%m, '/Character/Dirichlet/%s'%m)]
         return render_template('CharGroup.html', **info)
     else:
-        info = WebDirichletCharacter(temp_args).to_dict()
+        info = WebDirichletCharacter(**args).to_dict()
         info['navi'] = navi([info['previous'],info['next']])
         m,n = info['modlabel'], info['numlabel']
         info['bread'] = [('Characters','/Character'),
@@ -147,13 +147,13 @@ def dc_calc(calc, modulus, number):
         return flask.abort(404)
     try:
         if calc == 'value':
-            return WebDirichletCharacter(args).value(val)
+            return WebDirichletCharacter(**args).value(val)
         if calc == 'gauss':
-            return WebDirichletCharacter(args).gauss_sum(val)
+            return WebDirichletCharacter(**args).gauss_sum(val)
         elif calc == 'jacobi':
-            return WebDirichletCharacter(args).jacobi_sum(val)
+            return WebDirichletCharacter(**args).jacobi_sum(val)
         elif calc == 'kloosterman':
-            return WebDirichletCharacter(args).kloosterman_sum(val)
+            return WebDirichletCharacter(**args).kloosterman_sum(val)
         else:
             return flask.abort(404)
     except Exception, e:
@@ -167,20 +167,20 @@ def render_Heckewebpage(number_field=None, modulus=None, number=None):
     #args = request.args
     #temp_args = to_dict(args)
 
-    temp_args = {}
-    temp_args['type'] = 'Hecke'
-    temp_args['number_field'] = number_field
-    temp_args['modulus'] = modulus
-    temp_args['number'] = number
+    args = {}
+    args['type'] = 'Hecke'
+    args['number_field'] = number_field
+    args['modulus'] = modulus
+    args['number'] = number
 
     if number_field == None:
         return render_template('Hecke.html')
     elif modulus == None:
-        info = WebHeckeFamily(temp_args).to_dict()
+        info = WebHeckeFamily(**args).to_dict()
         print info
         return render_template('CharFamily.html', **info)
     elif number == None:
-        info = WebHeckeGroup(temp_args).to_dict()
+        info = WebHeckeGroup(**args).to_dict()
         m = info['modlabel']
         info['bread'] = [('Characters','/Character'),
                          ('Hecke','/Character/Hecke'),
@@ -189,7 +189,7 @@ def render_Heckewebpage(number_field=None, modulus=None, number=None):
         print info
         return render_template('CharGroup.html', **info)
     else:
-        info = WebHeckeCharacter(temp_args).to_dict()
+        info = WebHeckeCharacter(**args).to_dict()
         info['navi'] = navi([info['previous'],info['next']])
         m,n = info['modlabel'], info['number']
         info['bread'] = [('Characters','/Character'),
@@ -208,7 +208,7 @@ def hc_calc(calc, number_field, modulus, number):
         return flask.abort(404)
     try:
         if calc == 'value':
-            return WebHeckeCharacter(args).value(val)
+            return WebHeckeCharacter(**args).value(val)
         else:
             return flask.abort(404)
     except Exception, e:

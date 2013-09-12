@@ -51,16 +51,16 @@ def evalpolelt(label,gen,genlabel='a'):
 
 class WebCharObject:
     """ class for all characters and character groups """
-    def __init__(self, args):
+    def __init__(self, **args):
         self.type = args.get('type',None)
         self.nflabel = args.get('number_field',None)
         self.modlabel = args.get('modulus',None)
         self.numlabel = args.get('number',None)
+        self.args = args
 
+        print '############class WebCharObject calls _compute'
         self._compute()
-
-    def _compute(self):
-        pass
+        print '############ done'
 
     def to_dict(self):
         d = {}
@@ -119,21 +119,26 @@ class WebDirichlet(WebCharObject):
     """
 
     def _compute(self):
-        self.modulus = m = int(self.modlabel)
-        self.H = H = DirichletGroup_conrey(m)
-        self.H_sage = H.standard_dirichlet_group()
+        if self.modlabel:
+            self.modulus = m = int(self.modlabel)
+            self.H = H = DirichletGroup_conrey(m)
+            self.H_sage = H.standard_dirichlet_group()
         self.credit = 'Sage'
         self.codelangs = ('pari', 'sage')
+        print '###### WebDirichletComputed'
 
-    def _char_desc(self, num, mod=None, prim=None):
+    def _char_desc(self, c, mod=None, prim=None):
         """ usually num is the number, but can be a character """
-        if isinstance(num, DirichletCharacter_conrey):
-            mod = num.modulus()
-            num = num.number()
+        if isinstance(c, DirichletCharacter_conrey):
+            if prim == None:
+                prim = c.is_primitive()
+            mod = c.modulus()
+            num = c.number()
         elif mod == None:
             mod = self.modulus
-        if prim == None:
-            prim = self.charisprimitive(mod,num)
+            num = c
+            if prim == None:
+                prim = self.charisprimitive(mod,num)
         return ( mod, num, self.char2tex(mod,num), prim)
 
     def charisprimitive(self,mod,num):
@@ -275,6 +280,7 @@ class WebHecke(WebCharObject):
         self.credit = "Pari, Sage"
         self.codelangs = ('pari', 'sage')
         self.parity = None
+        print '###### WebHeckeComputed'
 
     @property
     def generators(self):
@@ -414,29 +420,34 @@ class WebHecke(WebCharObject):
 
 class WebCharFamily(WebCharObject):
     """ compute first groups """
-    def __init__(self, args):
+    def __init__(self, **args):
         self._keys = [ 'title', 'credit', 'codelangs', 'type', 'nf', 'nflabel',
             'nfpol', 'codeinit', 'headers', 'contents' ]   
-        self.headers = [ 'modulus', 'order', 'structure' ]
-        self.contents = []
+        self.headers = [ 'modulus', 'order', 'structure', 'first characters' ]
+        self._contents = None
         self.maxrows, self.rowtruncate = 25, False
-        WebCharObject.__init__(self,args)
+        WebCharObject.__init__(self, **args)
 
-    def _compute(self):
-        self._fill_contents()
+    #def structure(self, G):
+    #    return self.struct2tex(G.invariants())
 
-    def structure(self, G):
-        return self.struct2tex(G.invariants())
-
-    def struct2tex(self, inv):
-        if not inv: inv = (1,)
-        return '\(%s\)'%('\\times '.join(['C_{%s}'%d for d in inv]))
+    #def struct2tex(self, inv):
+    #    if not inv: inv = (1,)
+    #    return '\(%s\)'%('\\times '.join(['C_{%s}'%d for d in inv]))
 
     def add_row(self, modulus):
         G = self.chargroup(modulus)
-        order = G.order()
-        struct = self.structure(G)
-        self.contents.append( (self.ideal2label(modulus), order, struct) )
+        order = G.order
+        struct = G.structure
+        firstchars = [ self._char_desc(c) for c in G.first_chars() ]
+        self._contents.append( (self.ideal2label(modulus), order, struct, firstchars) )
+
+    @property
+    def contents(self):
+        if self._contents is None:
+            self._contents = []
+            self._fill_contents()
+        return self._contents
 
     def _fill_contents(self):
         r = 0
@@ -447,7 +458,6 @@ class WebCharFamily(WebCharObject):
                 self.rowtruncate = True
                 break
 
-
 #############################################################################
 ###  Groups
 
@@ -457,9 +467,9 @@ class WebCharGroup(WebCharObject):
     self.H is the character group
     self.G is the underlying group
     """
-    def __init__(self, args):
+    def __init__(self, **args):
         self.headers = [ 'order', 'primitive']
-        self.contents = []
+        self._contents = None
         self.maxrows, self.maxcols = 25, 20
         self.rowtruncate, self.coltruncate = False, False
         self._keys = [ 'title', 'credit', 'codelangs', 'type', 'nf', 'nflabel',
@@ -468,7 +478,7 @@ class WebCharGroup(WebCharObject):
             'codeorder', 'generators', 'codegen', 'valuefield', 'vflabel',
             'vfpol', 'headers', 'groupelts', 'contents',
             'properties2', 'friends', 'rowtruncate', 'coltruncate'] 
-        WebCharObject.__init__(self,args)
+        WebCharObject.__init__(self, **args)
 
     @property
     def structure(self):
@@ -492,20 +502,26 @@ class WebCharGroup(WebCharObject):
 
     def add_row(self, chi):
         prim = chi.is_primitive()
-        self.contents.append(
+        self._contents.append(
                  ( self._char_desc(chi, prim=prim),
                    ( chi.multiplicative_order(),
                      self.texbool(prim) ),
                      self.charvalues(chi) ) )
-     
-    def _fill_contents(self):
-        r = 0
-        for c in self.H:
-            self.add_row(c)
-            r += 1
-            if r > self.maxrows:
+    
+    @cached_method
+    def first_chars(self):
+        r = []
+        for i,c in enumerate(self.H):
+            r.append(c)
+            if i > self.maxrows:
                 self.rowtruncate = True
                 break
+        return r
+
+    def _fill_contents(self):
+        print self.first_chars()
+        for c in self.first_chars():
+            self.add_row(c)
 
     @property
     def properties2(self):
@@ -518,7 +534,12 @@ class WebCharGroup(WebCharObject):
         if self.nflabel:
             return [ ("Number Field", '/NumberField/' + self.nflabel), ]
 
-
+    @property
+    def contents(self):
+        if self._contents == None:
+            self._contents = []
+            self._fill_contents()
+        return self._contents
 
 #############################################################################
 ###  Characters
@@ -527,7 +548,7 @@ class WebChar(WebCharObject):
     """
     Class for presenting a Character on a web page
     """
-    def __init__(self, args):
+    def __init__(self, **args):
         self.maxcols = 20
         self.coltruncate = False
         self._keys = [ 'title', 'credit', 'codelangs', 'type',
@@ -540,7 +561,7 @@ class WebChar(WebCharObject):
                  'groupelts', 'values', 'codeval', 'galoisorbit', 'codegalois',
                  'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
                  'kfpol', 'contents', 'properties2', 'friends', 'coltruncate']   
-        WebCharObject.__init__(self,args)
+        WebCharObject.__init__(self, **args)
 
     @property
     def order(self):
@@ -639,33 +660,38 @@ class WebChar(WebCharObject):
 class WebDirichletFamily(WebCharFamily, WebDirichlet):
 
     def _compute(self):
-        self.contents = []
-        self._fill_contents()
-        self.credit = 'Pari, Sage'
-        self.codelangs = ('pari', 'sage')
+        WebDirichlet._compute(self)
+        del self.args['modulus']
+        print '######## WebDirichletFamily Computed'
 
     def first_moduli(self):
         """ restrict to conductors """
         return ( m for m in xrange(2, self.maxrows) if m%4!=2 )
 
     def chargroup(self, mod):
-        return DirichletGroup(mod)
+        return WebDirichletGroup(modulus=mod,**self.args)
 
-    def structure(self, G):
-        inv = G.generator_orders()
-        return self.struct2tex(sorted(inv))
+    #def structure(self, G):
+    #    inv = G.standard_dirichlet_group().generator_orders()
+    #    return self.struct2tex(sorted(inv))
 
     @property
     def title(self):
         return "Dirichlet characters"
 
-
 class WebDirichletGroup(WebCharGroup, WebDirichlet):
+    """
+    Heritage: WebCharGroup -> __init__()
+              WebDirichlet -> _compute()
+    """           
 
     def _compute(self):
+        """ WARNING: do not remove otherwise _compute
+        is called once for each ancestor (I don't know why)
+        """
         WebDirichlet._compute(self)
-        self._fill_contents()
-        
+        print '########### WebDirichletGroup computed'
+
     @property
     def codeinit(self):
         return [('sage', 'H = DirichletGroup_conrey(m)\n' +
@@ -685,6 +711,7 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
     def structure(self):
         inv = self.H_sage.generator_orders()
         return '\(%s\)'%('\\times '.join(['C_{%s}'%d for d in inv]))
+
     @property
     def codestruct(self):
         return [('sage', 'H_sage.generator_orders()'),
@@ -695,6 +722,10 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
         return self.H_sage.order()
 
 class WebDirichletCharacter(WebChar, WebDirichlet):
+    """
+    Heritage: WebCharacter -> __init__()
+              WebDirichlet -> _compute()
+    """           
 
     def _compute(self):
         WebDirichlet._compute(self)
@@ -703,6 +734,7 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
         assert gcd(m, n) == 1
         self.chi = chi = self.H[n]
         self.chi_sage = chi_sage = chi.sage_character()
+        print '########### WebDirichletCharacter computed'
 
     @property
     def title(self):
@@ -847,8 +879,6 @@ class WebHeckeFamily(WebCharFamily, WebHecke):
 
     def _compute(self):
         self.k = self.label2nf(self.nflabel)
-        self.contents = []
-        self._fill_contents()
         self.credit = 'Pari, Sage'
         self.codelangs = ('pari', 'sage')
         
@@ -953,13 +983,6 @@ class WebHeckeCharacter(WebChar, WebHecke):
 
 class WebHeckeGroup(WebCharGroup, WebHecke):
 
-    def _compute(self):
-        WebHecke._compute(self)
-        self.order = self.G.order()
-        self._fill_contents()
-        self.credit = 'Pari, Sage'
-        self.codelangs = ('pari', 'sage')
- 
     @property
     def codeinit(self):
         kpol = self.k.polynomial()

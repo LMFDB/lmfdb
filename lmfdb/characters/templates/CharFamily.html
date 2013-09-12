@@ -10,11 +10,13 @@
 <table class="ntdata" id="chitable">
   <thead class="space">
     <tr> 
-      {% for h in headers %} <th class="weight">{{h}} </th> {% endfor %}
+      {% for h in headers %}
+      <th class="weight" {%if loop.last%}span='5'{%endif%}>{{h}} </th>
+      {% endfor %}
     </tr>
   </thead>
   <tbody>
-    {% for mod, ord, struct in contents %}
+    {% for mod, ord, struct, chars  in contents %}
     <tr>
       <th class="left">
         <a align="center"
@@ -24,7 +26,15 @@
       </th>
       <td style="font-family: serif;" >{{ord}}</td>
       <td style="font-family: serif;" >{{struct}}</td>
-    </tr>
+        {% for mod,num,tex,prim in chars %}
+        <td>
+        <a class="{% if prim -%}primitive{%- else -%}imprimitive{%- endif %}"
+          align="center" href="{{ url_character(type=type, number_field=nflabel, modulus=mod, number=num) }}">
+          {{ tex }}
+        </a>
+      </td>
+        {% endfor %}
+     </tr>
     {% endfor %} 
   </tbody>    
 </table>
