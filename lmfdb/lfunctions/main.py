@@ -76,7 +76,7 @@ def l_function_maass_browse_page():
 # L-function of elliptic curves browsing page ##############################################
 @l_function_page.route("/degree2/EllipticCurve/")
 def l_function_ec_browse_page():
-    info = {"bread": get_bread(2, [("EllipticCurve", url_for('.l_function_ec_browse_page'))])}
+    info = {"bread": get_bread(2, [("Elliptic curve", url_for('.l_function_ec_browse_page'))])}
     info["representation"] = ''
     info["contents"] = [processEllipticCurveNavigation(11, 65)]
     return render_template("ellipticcurve.html", title='L-functions of Elliptic Curves', **info)
@@ -96,7 +96,7 @@ def l_function_maass_gln_browse_page(degree):
 # L-function of symmetric square of elliptic curves browsing page ##############
 @l_function_page.route("/degree3/EllipticCurve/SymmetricSquare/")
 def l_function_ec_sym2_browse_page():
-    info = {"bread": get_bread(3, [("EllipticCurve",
+    info = {"bread": get_bread(3, [("Symmetric square of Elliptic curve",
                                     url_for('.l_function_ec_sym2_browse_page'))])}
     info["representation"] = 'Symmetric square'
     info["contents"] = [processSymPowerEllipticCurveNavigation(11, 26, 2)]
@@ -107,7 +107,7 @@ def l_function_ec_sym2_browse_page():
 # L-function of symmetric cube of elliptic curves browsing page ################
 @l_function_page.route("/degree4/EllipticCurve/SymmetricCube/")
 def l_function_ec_sym3_browse_page():
-    info = {"bread": get_bread(4, [("EllipticCurve", url_for('.l_function_ec_sym3_browse_page'))])}
+    info = {"bread": get_bread(4, [("Symmetric cube of Elliptic curve", url_for('.l_function_ec_sym3_browse_page'))])}
     info["representation"] = 'Symmetric cube'
     info["contents"] = [processSymPowerEllipticCurveNavigation(11, 17, 3)]
     return render_template("ellipticcurve.html",
@@ -489,7 +489,7 @@ def initLfunction(L, args, request):
         info['friends'] = [('Number Field', friendlink)]
 
     elif L.Ltype() in ['lcalcurl', 'lcalcfile']:
-        info['bread'] = [('L-function', url_for('.l_function_top_page'))]
+        info['bread'] = [('L-functions', url_for('.l_function_top_page'))]
 
     elif L.Ltype() == 'SymmetricPower':
         def ordinal(n):
@@ -501,6 +501,24 @@ def initLfunction(L, args, request):
                 return str(n) + "th Power"
             else:
                 return str(n) + {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, "th") + " Power"
+
+        if L.m == 2:
+            info['bread'] = get_bread(3, [("Symmetric square of Elliptic curve",
+                                    url_for('.l_function_ec_sym2_browse_page')),
+                                 (L.label, url_for('.l_function_ec_sym_page',
+                                                   label=L.label,power=L.m))])
+        elif L.m == 3:
+            info['bread'] = get_bread(4, [("Symmetric cube of Elliptic curve",
+                                    url_for('.l_function_ec_sym3_browse_page')),
+                                 (L.label, url_for('.l_function_ec_sym_page',
+                                                   label=L.label,power=L.m))])
+        else:
+            info['bread'] = [('L-functions', url_for('.l_function_top_page')),
+                                 ('Symmetric %s of Elliptic curve ' % ordinal(L.m)
+                                   + str(L.label),
+                                  url_for('.l_function_ec_sym_page',
+                                                   label=L.label,power=L.m))]
+
         friendlink = request.url.replace('/L/SymmetricPower/%d/' % L.m, '/')
         splitlink = friendlink.rpartition('/')
         friendlink = splitlink[0] + splitlink[2]
