@@ -3,6 +3,21 @@
 {% block content %}
 
 <p>
+A cusp-index of degree $d$ is a weakly increasing 
+list of positive integers $[u_1,\dots,u_k]$ with $\sum_{i=1}^k \phi(u_i) = d$. 
+Hypergeometric families $H(A,B)$ are indexed by pairs 
+$(A,B)$ of cusp-indices of a common degree having no common entries.  
+<p>
+
+Hypergeometric motives $H(A,B,t)$ in a family $H(A,B)$ are 
+indexed by rational numbers
+$t \not \in \{0,1\}$.  For example $H([3],[1,1],t)$ is the
+motive $H^1(E_{1728t},{\Bbb Q})$ where
+$E_{j}$ is an elliptic curve with $j$-invariant $1728j$.  
+Also special hypergeometric motives $H(A,B,1)$ are defined, having degree
+1 or 2 less than the other $H(A,B,t)$.  
+<p>
+
 The database contains all hypergeometric families of degree $\leq 10$. 
 For each family, it contains the special hypergeometric motive
 associated to $t=1$.  For the smaller degree families, it 
