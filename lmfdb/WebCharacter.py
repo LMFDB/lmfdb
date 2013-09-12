@@ -695,9 +695,9 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
 
     @property
     def codeinit(self):
-        return [('sage', 'H = DirichletGroup_conrey(m)\n' +
-                         'H_sage = H.standard_dirichlet_group()'),
-                ('pari', 'G = znstar(m)') ]
+        return [('sage', 'H = DirichletGroup_conrey(%i)\n'%(self.modulus)
+                       + 'H_sage = H.standard_dirichlet_group()'),
+                ('pari', 'G = znstar(%i)'%(self.modulus) ) ]
 
     @property
     def title(self):
@@ -736,6 +736,13 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
         self.chi = chi = self.H[n]
         self.chi_sage = chi_sage = chi.sage_character()
         print '########### WebDirichletCharacter computed'
+
+    @property
+    def codeinit(self):
+        return [('sage', 'H = DirichletGroup_conrey(%i)\n'%(self.modulus)
+                       + 'chi = H[%i]'%(self.number)),
+                ]
+        
 
     @property
     def title(self):
