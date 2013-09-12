@@ -3,7 +3,7 @@
 import math
 import time  # for printing the date on an lcalc file
 import socket  # for printing the machine used to generate the lcalc file
-from sage.all import Infinity
+from sage.all import Infinity, imag_part
 from Lfunctionutilities import splitcoeff, pair2complex
 
 
