@@ -180,7 +180,6 @@ def render_hgm_webpage(args):
         tn = data['t']['n']
         td = data['t']['d']
         t = latex(QQ(str(tn)+'/'+str(td)))
-        bad = data['bad']
         hodge = data['hodge']
         prop2 = [
             ('Degree', '\(%s\)' % data['degree']),
@@ -192,9 +191,10 @@ def render_hgm_webpage(args):
                     't': t,
                     'degree': data['degree'],
                     'weight': data['weight'],
-                    'bad': data['bad'],
                     'sign': data['sign'],
+                    'sig': data['sig'],
                     'hodge': hodge,
+                    'locinfo': data['locinfo'],
                     })
         friends = []
 #        friends = [('Galois group', "/GaloisGroup/%dT%d" % (gn, gt))]
