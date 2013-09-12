@@ -86,14 +86,13 @@ def index():
     info = {'count': 20}
     return render_template("hgm-index.html", title="Hypergeometric Motives", bread=bread, credit=HGM_credit, info=info)
 
-
 @hypergm_page.route("/<label>")
-def by_label(label):
-    return render_hgm_webpage({'label': label})
-
-@hypergm_page.route("/family/<label>")
 def by_family_label(label):
     return render_hgm_family_webpage({'label': label})
+
+@hypergm_page.route("/<label>/<t>")
+def by_label(label, t):
+    return render_hgm_webpage({'label': label+'_'+t})
 
 @hypergm_page.route("/search", methods=["GET", "POST"])
 def search():
@@ -254,7 +253,6 @@ def render_hgm_webpage(args):
 
         bread = get_bread([(label, ' ')])
         return render_template("hgm-show-motive.html", credit=HGM_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends)
-
 
 def render_hgm_family_webpage(args):
     data = None
