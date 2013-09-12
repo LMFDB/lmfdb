@@ -1051,6 +1051,65 @@ class DedekindZeta(Lfunction):   # added by DK
 
 #############################################################################
 
+class HypergeometricMotiveLfunction(Lfunction):
+    """Class representing the hypergeometric L-function
+
+    Compulsory parameters: label, for instance 'A2.2.2.2_B1.1.1.1_t1.2'
+    """
+    def __init__(self, **args):
+        constructor_logger(self, args)
+        if not ('label' in args.keys()):
+            raise KeyError("You have to supply a label for a hypergeometric motive L-ffunction")            
+        C = base.getDBConnection()
+        self.motive = C.hgm.motives_copy.find_one({"label": args["label"]})
+        
+        self.label = args["label"]
+        import operator
+        self.conductor = reduce(operator.__mul__, map(lambda x, y: x**y , self.motive["conductor"]))
+        self.factored_conductor = self.motive["conductor"]
+        self.level = self.conductor
+        self.title = ("L function for the hypergeometric motive with label  "
+                      + str(label))
+
+        self.credit = 'Data precomputed by Dave Roberts'
+        self.citation = 'MAGMA package hypergeometric due to Mark Watkins'
+        
+        self.motivic_weight = 0
+        self.algebraic = True
+        self.coefficient_type = 0
+        self.degree = self.motive["degree"]
+        
+        try:
+            self.arith_coeffs = self.motive["arith_coeff"]
+        except:
+            self.arith_coeffs = map(Integer, self.motive["arith_coeff_string"])
+
+        self.support = "Support by Paul-Olivier Dehaye"
+        
+        self.sign = self.motive.sign
+        
+        
+        # level, residues, selfdual, primitive, langlands, Q_fe, kappa_fe, lambda_fe?
+        
+        # Hardcoded for 'A2.2.2.2_B1.1.1.1_t1.2'
+        self.mu_fe = []                     
+        self.nu_fe = [0.5,1.5]              
+
+        self.texname = "L(s)"  
+        self.texnamecompleteds = "\\Lambda(s)"  
+        if self.selfdual:
+            self.texnamecompleted1ms = "\\Lambda(1-s)" 
+        else:
+            self.texnamecompleted1ms = "\\overline{\\Lambda(1-\\overline{s})}"
+        generateSageLfunction(self)
+
+    def Ltype(self):
+        return "hgmQ"
+        
+    def Lkey(self):
+        return {"label":self.label}
+#############################################################################
+
 class ArtinLfunction(Lfunction):
     """Class representing the Artin L-function
 
