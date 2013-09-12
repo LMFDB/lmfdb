@@ -747,6 +747,8 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
 
     @property
     def previous(self):
+        if self.modulus == 1:
+            return ('',{})
         mod, num = self.prevchar(self.modulus, self.number)
         return (self.char2tex(mod, num), {'type':'Dirichlet', 'modulus':mod,'number':num})
 
