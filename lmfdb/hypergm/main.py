@@ -48,12 +48,32 @@ def factor_out_p(val, p):
     elif ord>1:
         out +=  '%d^{%d}' % (p, ord)
     if val>1:
+        if ord ==1:
+            out += r'\cdot '
         out += str(val)
     return out
 
 # c is a list of coefficients
-#def poly_with_factored_coeffs(c, p):
-#    c = [
+def poly_with_factored_coeffs(c, p):
+    c = [factor_out_p(b) for b in c]
+    out = ''
+    for j in range(len(c)):
+        if c[j] != '0':
+            if c[j] == '1':
+                if j==0:
+                    out += '+'+c[j]
+                else:
+                    out += '+x^{'+ j +'}'
+            elif c[j] == '-1':
+                if j==0:
+                    out += '-1'
+                else:
+                    out += '-'+'x^{'+j+'}'
+            else:
+                if c[j][0] == '-':
+                    if j==0:
+                        out += c[j]
+
 
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
