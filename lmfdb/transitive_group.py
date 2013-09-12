@@ -447,7 +447,7 @@ def aliastable(C):
     for j in akeys:
         name = group_display_short(aliases[j][0][0], aliases[j][0][1], C)
         ntlist = aliases[j]
-        ntlist = filter(lambda x: x[0] < 12, ntlist)
+        #ntlist = filter(lambda x: x[0] < 12, ntlist)
         ntstrings = [str(x[0]) + "T" + str(x[1]) for x in ntlist]
         ntstring = string.join(ntstrings, ", ")
         ans += "<tr><td>%s</td><td>%s</td><td>%s</td></tr>" % (j, name, ntstring)

@@ -8,9 +8,9 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 import tempfile
 import os
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range2, web_latex_split_on_pm, make_logger, comma, clean_input
-logger = make_logger("EllipticCurve")
-from number_fields.number_field import parse_list
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range2, web_latex_split_on_pm, comma, clean_input
+from lmfdb.number_fields.number_field import parse_list
+from lmfdb.elliptic_curves import ec_page, ec_logger
 import sage.all
 from sage.all import ZZ, QQ, EllipticCurve, latex, matrix, srange
 q = ZZ['x'].gen()
@@ -189,7 +189,7 @@ def rational_elliptic_curves(err_args=None):
     credit = 'John Cremona'
     t = 'Elliptic curves/$\Q$'
     bread = [('Elliptic Curves', url_for("rational_elliptic_curves")), ('Elliptic curves/$\Q$', ' ')]
-    return render_template("elliptic_curve/elliptic_curve_Q.html", info=info, credit=credit, title=t, bread=bread, **err_args)
+    return render_template("elliptic_curve_Q.html", info=info, credit=credit, title=t, bread=bread, **err_args)
 
 @app.route("/EllipticCurve/Q/stats")
 def statistics():
@@ -208,7 +208,7 @@ def statistics():
     credit = 'John Cremona'
     t = 'Elliptic curves/$\Q$: statistics'
     bread = [('Elliptic Curves', url_for("rational_elliptic_curves")), ('Elliptic curves/$\Q$: statistics', ' ')]
-    return render_template("elliptic_curve/statistics.html", info=info, credit=credit, title=t, bread=bread)
+    return render_template("statistics.html", info=info, credit=credit, title=t, bread=bread)
 
 
 @app.route("/EllipticCurve/Q/<int:conductor>")
@@ -387,11 +387,11 @@ def elliptic_curve_search(**args):
             info['report'] = 'displaying all %s matches' % nres
     credit = 'John Cremona'
     t = 'Elliptic Curves'
-    return render_template("elliptic_curve/elliptic_curve_search.html", info=info, credit=credit, bread=bread, title=t)
+    return render_template("elliptic_curve_search.html", info=info, credit=credit, bread=bread, title=t)
 
 
 def search_input_error(info, bread):
-    return render_template("elliptic_curve/elliptic_curve_search.html", info=info, title='Elliptic Curve Search Input Error', bread=bread)
+    return render_template("elliptic_curve_search.html", info=info, title='Elliptic Curve Search Input Error', bread=bread)
 
 ##########################
 #  Specific curve pages
@@ -400,7 +400,7 @@ def search_input_error(info, bread):
 
 @app.route("/EllipticCurve/Q/<label>")
 def by_ec_label(label):
-    logger.debug(label)
+    ec_logger.debug(label)
     try:
         N, iso, number = lmfdb_label_regex.match(label).groups()
     except AttributeError:
@@ -414,13 +414,13 @@ def by_ec_label(label):
             data = C.elliptic_curves.curves.find_one({'label': label})
             if data is None:
                 return elliptic_curve_jump_error(label, {})
-            logger.debug(url_for("by_ec_label", label=data['lmfdb_label']))
+            ec_logger.debug(url_for("by_ec_label", label=data['lmfdb_label']))
             return redirect(url_for("by_ec_label", label=data['lmfdb_label']), 301)
         else:
             data = C.elliptic_curves.curves.find_one({'iso': label})
             if data is None:
                 return elliptic_curve_jump_error(label, {})
-            logger.debug(url_for("by_ec_label", label=data['lmfdb_label']))
+            ec_logger.debug(url_for("by_ec_label", label=data['lmfdb_label']))
             return redirect(url_for("by_ec_label", label=data['lmfdb_iso']), 301)
         # N,d1, iso,d2, number = sw_label_regex.match(label).groups()
     if number:
@@ -558,7 +558,7 @@ def render_isogeny_class(iso_class):
         t = "Elliptic Curve Isogeny Class %s (Cremona label %s)" % (lmfdb_iso, cremona_iso)
     bread = [('Elliptic Curves ', url_for("rational_elliptic_curves")), ('isogeny class %s' % lmfdb_iso, ' ')]
 
-    return render_template("elliptic_curve/iso_class.html", info=info, bread=bread, credit=credit, title=t, friends=info['friends'], downloads=info['downloads'])
+    return render_template("iso_class.html", info=info, bread=bread, credit=credit, title=t, friends=info['friends'], downloads=info['downloads'])
 
 
 @app.route("/EllipticCurve/Q/modular_form_display/<label>/<number>")
@@ -809,7 +809,7 @@ def render_curve_webpage_by_label(label):
     bread = [('Elliptic Curves ', url_for("rational_elliptic_curves")), ('Elliptic curves %s' %
              lmfdb_label, ' ')]
 
-    return render_template("elliptic_curve/elliptic_curve.html",
+    return render_template("elliptic_curve.html",
                            properties2=properties2, credit=credit, bread=bread, title=t, info=info, friends=info['friends'], downloads=info['downloads'])
 
 
@@ -837,12 +837,12 @@ def padic_data():
             info['reg'] = web_latex(reg)
     else:
         info['reg'] = "no data"
-    return render_template("elliptic_curve/elliptic_curve_padic.html", info=info)
+    return render_template("elliptic_curve_padic.html", info=info)
 
 
 @app.route("/EllipticCurve/Q/download_qexp/<label>/<limit>")
 def download_EC_qexp(label, limit):
-    logger.debug(label)
+    ec_logger.debug(label)
     CDB = lmfdb.base.getDBConnection().elliptic_curves.curves
     N, iso, number = lmfdb_label_regex.match(label).groups()
     if number:
@@ -850,7 +850,7 @@ def download_EC_qexp(label, limit):
     else:
         data = CDB.find_one({'lmfdb_iso': label})
     ainvs = data['ainvs']
-    logger.debug(ainvs)
+    ec_logger.debug(ainvs)
     E = EllipticCurve([int(a) for a in ainvs])
     response = make_response(','.join(str(an) for an in E.anlist(int(limit), python_ints=True)))
     response.headers['Content-type'] = 'text/plain'
