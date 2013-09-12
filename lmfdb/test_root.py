@@ -16,7 +16,7 @@ class RootTest(LmfdbTest):
 
     def test_root(self):
         root = self.tc.get("/")
-        assert "Database" in root.data
+        assert "database" in root.data
 
     def test_robots(self):
         r = self.tc.get("/robots.txt")
