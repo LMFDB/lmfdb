@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # This Blueprint is about Hypergeometric motives
-# Author: John Jones
+# Author: John Jones 
 
 import re
 import pymongo
@@ -9,7 +9,7 @@ import flask
 from lmfdb import base
 from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input, image_callback
 from lmfdb.number_fields.number_field import parse_list
 from sage.all import ZZ, var, PolynomialRing, QQ, latex
 from lmfdb.hypergm import hypergm_page, hgm_logger
@@ -102,6 +102,39 @@ def index():
     info = {'count': 20}
     return render_template("hgm-index.html", title="Hypergeometric Motives over $\Q$", bread=bread, credit=HGM_credit, info=info)
 
+
+
+@hypergm_page.route("/plot/circle/<AB>")
+def hgm_family_circle_image(AB):
+    A,B = AB.split("_")
+    from plot import circle_image
+    A = map(int,A[1:].split("."))
+    B = map(int,B[1:].split("."))
+    G = circle_image(A, B)
+    return image_callback(G)
+
+@hypergm_page.route("/plot/linear/<AB>")
+def hgm_family_linear_image(AB):
+    # piecewise linear, as opposed to piecewise constant
+    A,B = AB.split("_")
+    from plot import piecewise_linear_image
+    A = map(int,A[1:].split("."))
+    B = map(int,B[1:].split("."))
+    G = piecewise_linear_image(A, B)
+    return image_callback(G)
+
+@hypergm_page.route("/plot/constant/<AB>")
+def hgm_family_constant_image(AB):
+    # piecewise constant
+    A,B = AB.split("_")
+    from plot import piecewise_constant_image
+    A = map(int,A[1:].split("."))
+    B = map(int,B[1:].split("."))
+    G = piecewise_constant_image(A, B)
+    return image_callback(G)
+
+
+
 @hypergm_page.route("/<label>")
 def by_family_label(label):
     return render_hgm_family_webpage({'label': label})
@@ -120,7 +153,7 @@ def search():
         return "ERROR: we always do http get to explicitly display the search parameters"
     else:
         return flask.redirect(404)
-
+    
 
 def hgm_search(**args):
     info = to_dict(args)
@@ -268,12 +301,14 @@ def render_hgm_webpage(args):
                     'req': data['req'],
                     'locinfo': locinfo
                     })
-        friends = []
+        AB_data = data["label"].split("_t")[0]
+        friends = [("Motive family "+AB_data.replace("_"," "), url_for(".by_family_label", label = AB_data))]
 #        friends = [('Galois group', "/GaloisGroup/%dT%d" % (gn, gt))]
 #        if unramfriend != '':
 #            friends.append(('Unramified subfield', unramfriend))
 #        if rffriend != '':
 #            friends.append(('Discriminant root field', rffriend))
+
 
         bread = get_bread([(label, ' ')])
         return render_template("hgm-show-motive.html", credit=HGM_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends)
@@ -316,6 +351,9 @@ def render_hgm_family_webpage(args):
 #        if rffriend != '':
 #            friends.append(('Discriminant root field', rffriend))
 
+        info.update({"plotcircle":  url_for(".hgm_family_circle_image", AB  =  "A"+".".join(map(str,A))+"_B"+".".join(map(str,B)))})
+        info.update({"plotlinear": url_for(".hgm_family_linear_image", AB  = "A"+".".join(map(str,A))+"_B"+".".join(map(str,B)))})
+        info.update({"plotconstant": url_for(".hgm_family_constant_image", AB  = "A"+".".join(map(str,A))+"_B"+".".join(map(str,B)))})
         bread = get_bread([(label, ' ')])
         return render_template("hgm-show-family.html", credit=HGM_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends)
 

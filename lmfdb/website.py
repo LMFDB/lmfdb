@@ -14,7 +14,7 @@ from base import *
 
 import pages
 import hilbert_modular_form
-import siegel_modular_form
+import siegel_modular_forms
 import modular_forms
 import elliptic_curves
 import quadratic_twists
@@ -84,7 +84,7 @@ map(root_static_file, ['favicon.ico'])
 
 @app.route("/robots.txt")
 def robots_txt():
-    if "lmfdb.org".lower() in request.url_root.lower():
+    if "www.lmfdb.org".lower() in request.url_root.lower():
         fn = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "robots.txt")
         if os.path.exists(fn):
             return open(fn).read()
@@ -172,7 +172,7 @@ def ModularForm_GSp4_Q_top_level(group=None, page=None, weight=None, form=None):
         if 'specimen' == page:
             args['weight'] = weight
             args['form'] = form
-    return siegel_modular_form.render_webpage(args)
+    return siegel_modular_forms.siegel_modular_form.render_webpage(args)
 
 
 @app.route('/example_plot')
