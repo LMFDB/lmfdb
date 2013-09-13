@@ -96,65 +96,65 @@ table td.params {
 </h2>
 
 <table class="ntdata" style="table-layout:fixed" id="characterTable">
-    <thead class="heading" align="center">
+  <thead class="heading" align="center">
     <tr>
-        <th style="width: 5em"> {{ KNOWL('character.dirichlet', title="character") }}</th>
-        <th style="width: 5em"> {{ KNOWL('character.dirichlet.modulus', title="modulus") }}</th>
-        <th style="width: 6em"> {{ KNOWL('character.dirichlet.conductor', title="conductor") }}</th>
-        <th style="width: 4em"> {{ KNOWL('character.dirichlet.order', title="order") }}</th>
-        <th style="width: 4em"> {{ KNOWL('character.dirichlet.parity', title="parity") }}</th>
+      <th style="width: 5em"> {{ KNOWL('character.dirichlet', title="character") }}</th>
+      <th style="width: 5em"> {{ KNOWL('character.dirichlet.modulus', title="modulus") }}</th>
+      <th style="width: 6em"> {{ KNOWL('character.dirichlet.conductor', title="conductor") }}</th>
+      <th style="width: 4em"> {{ KNOWL('character.dirichlet.order', title="order") }}</th>
+      <th style="width: 4em"> {{ KNOWL('character.dirichlet.parity', title="parity") }}</th>
     </tr>
-    </thead>
-    
-    <tbody>
-        {% set row_class = cycler('odd', 'even') %}
-	{# Keep track of the row number when iterating
-	   A jinja bug prevents just using set on a variable
-	   xrange is lazy, so as long as there is no penalty to having
-	     a large list.  This will work as long as there are no more than
-	     1000000 elements in the range #}
-	{% set counter = range(1000000).__iter__() %}
-        {% for line in contents %}
-            {% for l in line %}
-                {% for chi in l %}
-                    <tr class="{{ row_class.next() }}">
-                        <td class="modulus" align="center">
-                            <a href="/Character/Dirichlet/{{chi[2]}}/{{chi[0]}}" title="{{counter.next()}}">
-                                {% if chi[5] == True %}
-                                    <font color="green">
-                                {% else %}
-                                    <font color="blue">
-                                {% endif %} 
-                                {% if chi[4] == 2 %}
-                                    {{ chi[1] }}
-                                {% else %}
-                                \({\displaystyle \chi_{ {{ chi[2] }}}({{chi[0]}},&middot;)  }\)
-                                {% endif %}
-                                </font>
-                            </a>
-                        </td>
-                        <td align=center>
-                            <a href="/Character/Dirichlet/?modulus={{chi[2]}}&conductor={{conductor}}&order={{order}}&parity={{parity}}">
-                                {{chi[2]}}
-                            </a>
-                        </td>
-                        <td align=center>
-                            <a href="/Character/Dirichlet/?modulus={{modulus}}&conductor={{chi[3]}}&order={{order}}&parity={{parity}}">{{chi[3]}}</a>
-                        </td>
-                        <td align=center>
-                            <a href="/Character/Dirichlet/?modulus={{modulus}}&conductor={{conductor}}&order={{chi[4]}}&parity={{parity}}">{{chi[4]}}</a>
-                        </td>
-                        <td  align=center>
-                            {% if chi[6] == True %}
-                                Even
-                            {% else %}
-                                Odd
-                            {% endif %}
-                        </td>
-                    </tr>
-                {% endfor %}
-            {% endfor %}
-    {% endfor %}
+  </thead>
+
+  <tbody>
+    {% set row_class = cycler('odd', 'even') %}
+    {# Keep track of the row number when iterating
+    A jinja bug prevents just using set on a variable
+    xrange is lazy, so as long as there is no penalty to having
+    a large list.  This will work as long as there are no more than
+    1000000 elements in the range #}
+    {% set counter = range(1000000).__iter__() %}
+    {% for line in contents %}
+    {% for l in line %}
+    {% for chi in l %}
+    <tr class="{{ row_class.next() }}">
+      <td class="modulus" align="center">
+        <a href="{{url_character(type='Dirichlet', modulus=chi[2], number=chi[0])}}" title="{{counter.next()}}">
+          {% if chi[5] == True %}
+          <font color="green">
+            {% else %}
+            <font color="blue">
+              {% endif %} 
+              {% if chi[4] == 2 %}
+              {{ chi[1] }}
+              {% else %}
+              \({\displaystyle \chi_{ {{ chi[2] }}}({{chi[0]}},&middot;)  }\)
+              {% endif %}
+            </font>
+          </a>
+        </td>
+        <td align=center>
+          <a href="/Character/Dirichlet/?modulus={{chi[2]}}&conductor={{conductor}}&order={{order}}&parity={{parity}}">
+            {{chi[2]}}
+          </a>
+        </td>
+        <td align=center>
+          <a href="/Character/Dirichlet/?modulus={{modulus}}&conductor={{chi[3]}}&order={{order}}&parity={{parity}}">{{chi[3]}}</a>
+        </td>
+        <td align=center>
+          <a href="/Character/Dirichlet/?modulus={{modulus}}&conductor={{conductor}}&order={{chi[4]}}&parity={{parity}}">{{chi[4]}}</a>
+        </td>
+        <td  align=center>
+          {% if chi[6] == True %}
+          Even
+          {% else %}
+          Odd
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+      {% endfor %}
+      {% endfor %}
     </tbody>
-</table>
-{% endblock %}
+  </table>
+  {% endblock %}
