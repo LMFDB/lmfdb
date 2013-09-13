@@ -166,7 +166,6 @@ def get_bread(degree, breads=[]):
 # Riemann zeta function ########################################################
 @l_function_page.route("/Riemann/")
 def l_function_riemann_page():
-    #import upload2Db
     args = {}
     return render_single_Lfunction(RiemannZeta, args, request)
 
