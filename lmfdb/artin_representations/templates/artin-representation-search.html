@@ -58,8 +58,8 @@
 	<th>Defining polynomial of {{ KNOWL('artin.number_field', title='Artin field') }} </th>
 	<th>{{ KNOWL('artin.gg_quotient', title='$G$') }}</th>
 {#	<th>Size of $G$</th>  #}
-	<th>{{ KNOWL('artin.root_number', title='Root number') }}</th>
-	<th>{{ KNOWL('artin.frobenius_schur_indicator', title='F-S ind') }}</th>
+{#	<th>{{ KNOWL('artin.root_number', title='Root number') }}</th> #}
+	<th>{{ KNOWL('artin.frobenius_schur_indicator', title='Ind') }}</th>
 	<th>{{ KNOWL('artin.trace_of_complex_conj', title='$\chi(c)$')}}</th>
 	</tr></thead>
 	<tbody>
@@ -75,7 +75,7 @@
 	  {% endif %}
 	  <td align="center">{{artin.number_field_galois_group().G_name()}}</td>
 {#	  <th>${{artin.number_field_galois_group().size()}}$</th> #}
-	  <th>${{artin.processed_root_number()}}$</th>
+{#	  <th>${{artin.processed_root_number()}}$</th> #}
 	  <th> ${{artin.indicator()}}$</th>
 	  <th>${{artin.trace_complex_conjugation()}}$</th>
 	  </tr>
