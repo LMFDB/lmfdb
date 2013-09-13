@@ -818,7 +818,7 @@ class WebNewForm(SageObject):
         """
         emf_logger.debug("k,N,chi,label={0}".format( (k,N,chi,label)))
         if label<>'' and get_from_db:            
-            if from_db and label<>'':
+            if get_from_db and label<>'':
                 d = self.get_from_db(N,k,chi,label)
             else:
                 d = {}
