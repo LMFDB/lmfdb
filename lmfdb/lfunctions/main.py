@@ -62,7 +62,7 @@ def l_function_dirichlet_browse_page():
 def l_function_cuspform_browse_page():
     info = {"bread": get_bread(2, [("CuspForm", url_for('.l_function_cuspform_browse_page'))])}
     info["contents"] = [LfunctionPlot.getOneGraphHtmlHolo(1, 13, 2, 12)]
-    return render_template("cuspformGL2.html", title='L-functions of GL(2) Cusp Forms', **info)
+    return render_template("cuspformGL2.html", title='L-functions of Cusp Forms on \(\Gamma_0(N)\) with trivial character', **info)
 
 
 # L-function of GL(2) maass forms browsing page ##############################################
@@ -124,14 +124,14 @@ def set_info_for_start_page():
     tt = [[{'title': 'Riemann zeta function', 'link': url_for('.l_function_riemann_page')},
            {'title': 'Dirichlet L-function', 'link': url_for('.l_function_dirichlet_browse_page')}],
 
-          [{'title': 'GL2 Cusp form', 'link': url_for('.l_function_cuspform_browse_page')},
+          [{'title': 'GL2 holomorphic cusp form with trivial character', 'link': url_for('.l_function_cuspform_browse_page')},
            {'title': 'GL2 Maass form', 'link': url_for('.l_function_maass_browse_page')},
            {'title': 'Elliptic curve', 'link': url_for('.l_function_ec_browse_page')}],
 
           [{'title': '', 'link': ''},
            {'title': 'GL3 Maass form', 'link': url_for('.l_function_maass_gln_browse_page',
                                                        degree='degree3')},
-           {'title': 'Symmetric square L-function of Elliptic curve', 'link': url_for('.l_function_ec_sym2_browse_page')}],
+           {'title': 'Symmetric square L-fuhttp://localhost:5555/nction of Elliptic curve', 'link': url_for('.l_function_ec_sym2_browse_page')}],
 
           [{'title': 'GSp4 Maass form', 'link': url_for('.l_function_maass_gln_browse_page', degree='degree4') + '#GSp4_Q_Maass'},
            {'title': 'GL4 Maass form', 'link': url_for('.l_function_maass_gln_browse_page',
@@ -588,7 +588,7 @@ def set_gaga_properties(L):
 
     if L.algebraic:
         ans.append(('Motivic weight', str(L.motivic_weight)))
-        
+
     if L.primitive:
         prim = 'Primitive'
     else:
@@ -649,7 +649,7 @@ def render_plotLfunction_from_db(db, dbTable, condition):
                                                                   condition)
             cur.execute(query)
             row = cur.fetchone()
-      
+
         start,end,values = row
         values = numpy.frombuffer(values)
         step = (end - start)/values.size
@@ -658,7 +658,7 @@ def render_plotLfunction_from_db(db, dbTable, condition):
                   for x in range(0, values.size, 1)]
         p = plot(spline(pairs), -30, 30, thickness = 0.4)
         styleLfunctionPlot(p, 8)
-        
+
     except:
         return flask.redirect(404)
 

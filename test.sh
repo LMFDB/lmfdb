@@ -13,6 +13,9 @@
 
 cd `dirname "$0"`
 
+# get rid of all cached .pyc files!
+find -name '*.pyc' -delete
+
 HTML=''
 WHAT=''
 if [[ "$1" == "html" ]]; then
