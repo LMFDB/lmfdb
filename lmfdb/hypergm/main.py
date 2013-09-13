@@ -32,8 +32,10 @@ def format_coeffs(coeffs):
 
 # Returns a string of val if val = 0, 1, -1, or version with p factored out otherwise
 def factor_out_p(val, p):
-    if val==0 or val==1 or val==-1:
+    if val==0 or val==-1:
         return str(val)
+    if val==1:
+        return '+1'
     s = 1
     if val<0:
         s = -1
@@ -43,6 +45,8 @@ def factor_out_p(val, p):
     out = ''
     if s == -1:
         out += '-'
+    else:
+        out += '+'
     if ord==1:
         out +=  str(p)
     elif ord>1:
@@ -55,24 +59,33 @@ def factor_out_p(val, p):
 
 # c is a list of coefficients
 def poly_with_factored_coeffs(c, p):
-    c = [factor_out_p(b) for b in c]
+    c = [factor_out_p(b,p) for b in c]
     out = ''
     for j in range(len(c)):
+        xpow = 'x^{'+ str(j) +'}'
+        if j == 0:
+            xpow = ''
+        elif j==1:
+            xpow = 'x'
         if c[j] != '0':
-            if c[j] == '1':
+            if c[j] == '+1':
                 if j==0:
-                    out += '+'+c[j]
+                    out += '+1'
                 else:
-                    out += '+x^{'+ j +'}'
+                    out += xpow
             elif c[j] == '-1':
                 if j==0:
                     out += '-1'
                 else:
-                    out += '-'+'x^{'+j+'}'
+                    out += '-'+ xpow
             else:
-                if c[j][0] == '-':
-                    if j==0:
-                        out += c[j]
+                if j==0:
+                    out += c[j]
+                else:
+                    out += c[j] + xpow
+    if out[0] == '+':
+        out = out[1:]
+    return out
 
 
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
@@ -227,7 +240,7 @@ def render_hgm_webpage(args):
         locinfo = data['locinfo']
         for j in range(len(locinfo)):
             locinfo[j] = [primes[j]] + locinfo[j]
-            locinfo[j][2] = PolynomialRing(QQ, 'x')(locinfo[j][2])._latex_()
+            locinfo[j][2] = poly_with_factored_coeffs(locinfo[j][2], primes[j])
         hodge = data['hodge']
         prop2 = [
             ('Degree', '\(%s\)' % data['degree']),
