@@ -73,7 +73,7 @@ def poly_with_factored_coeffs(c, p):
                 if j==0:
                     out += '+1'
                 else:
-                    out += xpow
+                    out += '+'+xpow
             elif c[j] == '-1':
                 if j==0:
                     out += '-1'
