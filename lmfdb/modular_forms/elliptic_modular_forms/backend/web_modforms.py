@@ -26,7 +26,7 @@ Fix complex characters. I.e. embedddings and galois conjugates in a consistent w
 
 """
 from sage.all import ZZ, QQ, DirichletGroup, CuspForms, Gamma0, ModularSymbols, Newforms, trivial_character, is_squarefree, divisors, RealField, ComplexField, prime_range, I, join, gcd, Cusp, Infinity, ceil, CyclotomicField, exp, pi, primes_first_n, euler_phi, RR, prime_divisors, Integer, matrix
-from sage.all import Parent, SageObject, dimension_new_cusp_forms, vector, dimension_modular_forms, dimension_cusp_forms, EisensteinForms, Matrix, floor, denominator, latex, is_prime, prime_pi, next_prime, primes_first_n, previous_prime, factor, loads,save
+from sage.all import Parent, SageObject, dimension_new_cusp_forms, vector, dimension_modular_forms, dimension_cusp_forms, EisensteinForms, Matrix, floor, denominator, latex, is_prime, prime_pi, next_prime, primes_first_n, previous_prime, factor, loads,save,dumps
 import re
 
 from flask import url_for
@@ -167,10 +167,12 @@ class WebModFormSpace(Parent):
                 f_data = dict()
                 f_data['parent'] = self
                 f_data['f'] = self.galois_decomposition()[i]
+
                 emf_logger.debug("f_data={0}".format(f_data['f']))
                 emf_logger.debug("self_ap={0}".format(self._ap))
-                if self._ap is not None and len(self._ap) <= i:
+                if self._ap is not None and len(self._ap) >= i+1:
                     f_data['ap'] = self._ap[i]
+                print "\n\n\n Get F"
                 emf_logger.debug("Actually getting F {0},{1}".format(label, i))
                 F = WebNewForm(self._k, self._N, self._chi, label=label, fi=i, prec=self._prec, bitprec=self._bitprec, verbose=self._verbose, data=f_data, parent=self, compute=i)
                 emf_logger.debug("F={0},type(F)={1}".format(F, type(F)))
@@ -807,6 +809,10 @@ class WebNewForm(SageObject):
         r"""
         Init self as form number fi in S_k(N,chi)
         """
+        if label<>'':            
+            if self.get_from_db(N,k,chi,label):
+                return
+
         if chi == 'trivial':
             chi = ZZ(0)
         else:
@@ -934,6 +940,32 @@ class WebNewForm(SageObject):
             return False
         return True
 
+    def get_from_db(self,N,k,chi,label):
+        C = lmfdb.base.getDBConnection()
+        collection = C[db_name].WebNewForms.files
+        f = C[db_name].WebNewForm.files.find_one({'N':int(N),'k':int(k),'chi':int(chi),'label':label})
+        if f<>None:
+            id = f.get('_id')
+            fs = gridfs.GridFS(C[db_name], WebNewForms)
+            f = fs.get(fid)
+            emf_logger.debug("Gettig rec={0}".format(f))
+            F = loads(f.read())
+            self.__dict__ = F.__dict__
+            return True
+        return False
+    
+    def insert_into_db(self):
+        emf_logger.debug("inserting self into db!")
+        C = lmfdb.base.getDBConnection()
+        collection = C[db_name].WebNewForms.files
+        fs = gridfs.GridFS(C[db_name], 'WebNewForms')
+              
+        fname = "webnewform-{0:0>5}-{1:0>3}-{2:0>3}-{3}".format(self._N,self._k,self._chi,self._label) 
+        rec = {'N':int(self._N),'k':int(self._k),'chi':int(self._chi),'label':self._label}
+       
+        id = fs.put(dumps(self),filename=fname,N=int(self._N),k=int(self._k),chi=int(self._chi),label=self._label)
+        emf_logger.debug("inserted :{0}".format(id))
+    
     def __repr__(self):
         r""" String representation f self.
         """

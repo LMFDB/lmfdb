@@ -98,7 +98,8 @@ def set_info_for_one_modular_form(level=None, weight=None, character=None, label
         #     return info
     except IndexError:
         WNF = None
-        print "Could not compute the desired function!"
+        emf_logger.debug("Could not compute the desired function!")
+        emf_logger.debug("{0},{1},{2}".format(level,weight,character))
         print level, weight, character, label
         info['error'] = "Could not compute the desired function!"
     properties2 = list()
@@ -107,12 +108,13 @@ def set_info_for_one_modular_form(level=None, weight=None, character=None, label
     friends = list()
     if WNF is None or WNF._f is None:
         info['error'] = "This space is empty!"
+    emf_logger.debug("WNF={0}".format(WNF))    
     name = "Cuspidal newform %s of weight %s for " % (label, weight)
     if level == 1:
         name += "\(\mathrm{SL}_{2}(\mathbb{Z})\)"
     else:
         name += "\(\Gamma_0(%s)\)" % (level)
-    if int(character) != 0:
+    if int(character) != 0 and hasattr(WNF,"conrey_character"):
         conrey_char = WNF.conrey_character()
         conrey_char_name = WNF.conrey_character_name()
         name += " with character \(%s\)" % (conrey_char_name)
@@ -124,7 +126,7 @@ def set_info_for_one_modular_form(level=None, weight=None, character=None, label
         return info
     # info['name']=WNF._name
     info['satake'] = WNF.satake_parameters(prec, bprec)
-
+    
     # br = 60
     # info['qexp'] =
     # ajax_more(WNF.print_q_expansion,{'prec':5,'br':br},{'prec':10,'br':br},{'prec':20,'br':br},{'prec':100,'br':br},{'prec':200,'br':br})
