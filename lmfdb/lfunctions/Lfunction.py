@@ -1204,10 +1204,16 @@ class SymmetricPowerLfunction(Lfunction):
         self.Q_fe = self.S._Q_fe
         self.poles = self.S._poles
         self.residues = self.S._residues
-        self.mu_fe = self.S._mu_fe
-        self.nu_fe = self.S._nu_fe
-        self.kappa_fe = self.mu_fe
-        self.lambda_fe = self.nu_fe
+        self.kappa_fe = self.S._kappa_fe
+        self.lambda_fe = self.S._lambda_fe
+        
+        self.compute_some_mu_nu()
+        
+        
+        
+        #self.mu_fe = self.kappa_fe
+        #self.nu_fe = self.lambda_fe
+        
         self.sign = self.S.root_number
         self.motivic_weight = self.m
         self.selfdual = True
