@@ -65,7 +65,7 @@
 	<tbody>
         {% for artin in data%}
           <tr> <th><a href = "{{artin.url_for()}}">{{loop.index}}</a></th><th>${{artin.dimension()}}$</th>
-          <th>${{artin.conductor_equation()}}$</th>
+          <th>${{artin.factored_conductor_latex()}}$</th>
 	  {% if artin.number_field_galois_group().url_for() %}
 {#	     <th><a href="{{artin.number_field_galois_group().url_for()}}">{{artin.number_field_galois_group().polredabshtml() | safe }}</a></th> #}
 	     <th><a href="{{artin.number_field_galois_group().url_for()}}">${{artin.number_field_galois_group().polredabslatex()}}$</a></th>
