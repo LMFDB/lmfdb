@@ -258,7 +258,10 @@ def paintSvgFileAll(glslist):  # list of group, level, and (maybe) sign
     ans += paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength)
 
     for (x, y, lid, group, level, sign) in paralist:
-        linkurl = url_for('.l_function_maass_gln_page', group=group, dbid=lid)
+        try:
+            linkurl = url_for('.l_function_maass_gln_page', group=group, dbid=lid)
+        except Exception as ex:  # catch when running a test
+            linkurl = lid
         ans += "<a xlink:href='" + linkurl + "' target='_top'>\n"
         ans += "<circle cx='" + str(float(x) * xfactor)[0:7]
         ans += "' cy='" + str(height - float(y) * yfactor)[0:7]
@@ -268,7 +271,6 @@ def paintSvgFileAll(glslist):  # list of group, level, and (maybe) sign
         ans += "</circle></a>\n"
 
     ans += "</svg>"
-
     return(ans)
 
 
