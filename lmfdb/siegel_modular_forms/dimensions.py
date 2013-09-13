@@ -16,7 +16,10 @@ def fetch( dct):
 
     import pymongo
 
-    client = pymongo.MongoClient( DB_URL)
+    # client = pymongo.MongoClient( DB_URL)
+    import lmfdb.base
+    client = lmfdb.base.getDBConnection()
+
     db = client.siegel_modular_forms
     hps = db.dimensions
     item = hps.find_one( dct)
