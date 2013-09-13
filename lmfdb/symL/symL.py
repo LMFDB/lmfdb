@@ -131,8 +131,9 @@ class SymmetricPowerLFunction(SageObject):
             kapp = u * [1.0]
             gamm = [self.m / 2.0 - i for i in range(u)]
 
-            self._nu_fe = gamm
-            self._mu_fe = []
+            self._kappa_fe = kapp
+            self._lambda_fe = gamm
+            assert len(kapp) == len(gamm)
 
             poles = []
             residues = []
@@ -144,9 +145,9 @@ class SymmetricPowerLFunction(SageObject):
             kapp = v * [1.0] + [0.5]
             gamm = [self.m / 2.0 - i for i in range(v)] + [self.m / 4.0 - v // 2]
 
-            self._nu_fe = gamm[:-1]
-            self._mu_fe = [gamm[-1]]
-
+            self._kappa_fe = kapp
+            self._lambda_fe = gamm
+            assert len(kapp) == len(gamm)
             poles = []
             residues = []
 
@@ -157,8 +158,8 @@ class SymmetricPowerLFunction(SageObject):
         self._coeffs = coeffs
         self._poles = poles
         self._residues = residues
-        # self._mu_fe=gamm
-        # self._nu_fe=[]
+        # self._kappa_fe=gamm
+        # self._lambda_fe=[]
 
         self._L = lcalc.Lfunction_D("", 0, coeffs, 0, Q, self.root_number, kapp, gamm, poles, residues)
         return self._L
