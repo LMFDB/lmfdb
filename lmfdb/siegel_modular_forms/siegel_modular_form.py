@@ -55,11 +55,11 @@ def render_webpage(args={}):
 
         elif 'Gamma0_2' == args['group']:
             info['parent_as_tex'] = 'M_{k,j}\\big(\\Gamma_0(2)\\big)'
-            dimension = dimensions._dimension_Gamma_2    
+            dimension = dimensions._dimension_Gamma0_2    
 
         elif 'Gamma1_2' == args['group']:
             info['parent_as_tex'] = 'M_{k,j}\\big(\\Gamma_1(2)\\big)'
-            dimension = dimensions._dimension_Gamma_2
+            dimension = dimensions._dimension_Gamma1_2
 
         elif 'Gamma_2' == args['group']:
             info['parent_as_tex'] = 'M_{k,j}\\big(\\Gamma(2)\\big)'
@@ -173,7 +173,7 @@ def render_webpage(args={}):
                           url_for('ModularForm_GSp4_Q_top_level', group=group, page=page, level=level, weight_range=weight_range))]
             elif 'Gamma_2' == group:
                 info['sym_pow'] = sym_pow
-                info['dimensions'] = dimension( range( min_wt, max_wt + 1), sym_pow)
+                info['table_headers'], info['dimensions'] = dimension( range( min_wt, max_wt + 1), sym_pow)
                 bread += [('Dimensions',
                            url_for('ModularForm_GSp4_Q_top_level', group=group, page=page, level=level, weight_range=weight_range))]                
             else:
@@ -181,7 +181,7 @@ def render_webpage(args={}):
                 bread += [('Dimensions',
                           url_for('ModularForm_GSp4_Q_top_level', group=group, page=page, weight_range=weight_range))]
         except Exception as e:
-            info['error'] = 'Functional error: %s' % sys.exc_info()[0] #(str(e))
+            info['error'] = 'Functional error: %s' % (sys.exc_info()[0]) #(str(e))
 
         if 'Sp8Z' == group:
             info['table_headers'] = ['Weight', 'Total', 'Ikeda lifts', 'Miyawaki lifts', 'Other']
@@ -192,8 +192,11 @@ def render_webpage(args={}):
         elif group == 'Kp':
             info['table_headers'] = ["Weight", "Total", "Gritsenko Lifts", "Nonlifts", "Oldforms"]
 
-        elif 'Sp4Z_2' == group or 'Gamma0_4_half' == group or 'Gamma_2':
+        elif 'Sp4Z_2' == group or 'Gamma0_4_half' == group:
             info['table_headers'] = ['Weight', 'Total', 'Non cusp', 'Cusp']
+
+        elif 'Gamma_2' == group:
+             info['table_headers'] = info['table_headers']
 
         else:
             info['table_headers'] = ["Weight", "Total", "Eisenstein", "Klingen", "Maass", "Interesting"]

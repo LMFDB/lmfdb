@@ -6,6 +6,80 @@ from sage.rings.power_series_ring import PowerSeriesRing
 from sage.rings.integer_ring import IntegerRing
 
 
+####################################################################
+## For general dimension related data from the data base
+####################################################################
+
+DB_URL = 'mongodb://localhost:40000/'
+
+def fetch( dct):
+
+    import pymongo
+
+    client = pymongo.MongoClient( DB_URL)
+    db = client.siegel_modular_forms
+    hps = db.dimensions
+    item = hps.find_one( dct)
+    client.close()
+    return item
+
+
+####################################################################
+## Dimension formulas for Gamma(2)
+####################################################################
+
+# def _dimension_Gamma_2( wt_range, j):
+#     return _vvsf_dimension_Gamma_2( wt_range, j)
+
+def _dimension_Gamma_2( wt_range, j):
+    """
+    Return the dict
+    {(k-> partition ->  [ d(k), e(k), c(k)] for k in wt_range]},
+    where d(k), e(k), c(k) are the dimensions
+    of the $p$-canonical part of $M_{k,j}( \Gamma(2))$ and its subspaces of
+    Non-cusp forms and Cusp forms.
+    """
+
+    partitions = [ u'6', u'51', u'42', u'411', u'33', u'321',
+                   u'311', u'222', u'2211', u'21111', u'111111']
+
+    if is_odd(j):
+        dct = dict( (k,dict((h,[0,0,0]) for h in partitions)) for k in wt_range)
+        for k in dct:
+            dct[k]['All'] = [0,0,0]
+        partitions.insert( 0,'All')
+        return partitions, dct
+        
+    if j>=2 and  wt_range[0] < 4:
+        raise NotImplementedError()
+
+    query = { 'sym_power': str(j), 'group' : 'Gamma(2)', 'space': 'total'}
+    db_total = fetch( query)
+    assert db_total, '%s: Data not available' % query
+    query['space'] = 'cusp'
+    db_cusp = fetch( query)
+    assert db_cusp, '%s: Data not available' % query
+    
+    P = PowerSeriesRing( IntegerRing(),  default_prec =wt_range[-1] + 1,  names = ('t',))
+    t = P.gen()
+    total = dict()
+    cusp = dict()
+    for p in partitions:
+        total[p] = eval(db_total[p])
+        cusp[p] = eval(db_cusp[p])
+    # total = dict( ( p, eval(db_total[p])) for p in partitions)
+    # cusp = dict( ( p, eval(db_cusp[p])) for p in partitions)
+    dct = dict( (k, dict( (p, [total[p][k], total[p][k]-cusp[p][k], cusp[p][k]]) for p in partitions))
+              for k in wt_range)
+    
+    for k in dct:
+        dct[k]['All'] = [sum( dct[k][p][j] for p in dct[k]) for j in range(3)]
+
+    partitions.insert( 0,'All')
+    return partitions, dct
+
+################### cut here ######################################
+
 def hilbert_polynomial( j, var, group = 'Gamma(2)'):
     """
     Return for $j\ge 1$ the Hilbert polynomials of
@@ -96,5 +170,95 @@ def _dimension_Gamma0_2( wt, j):
 def _dimension_Gamma1_2( wt, j):
     return vvsf_dimension( wt_range, j, group = 'Gamma1(2)')
 
-def _dimension_Gamma_2( wt_range, j):
-    return vvsf_dimension( wt_range, j, group = 'Gamma(2)')
+
+def fetch_hilbert_polynomial( j, var, group = 'Gamma(2)'):
+    
+    item = None
+    series = dict()
+    import pymongo
+    try:
+        client = pymongo.MongoClient( DB_URL)
+        db = client.siegel_modular_forms
+        hps = db.Hilbert_Poincare_series
+        item = hps.find_one( { 'sym_power': str(j), 'group': 'Gamma(2)'})
+        client.close()
+        if not item:
+            raise NotImplementedError()
+    except: 
+        pass
+
+    if item:
+        p = [
+         u'6',
+         u'51',
+         u'42',
+         u'411',
+         u'33',
+         u'321',
+         u'311',
+         u'222',
+         u'2211',
+         u'21111',
+         u'111111']
+        # the polynomials are strings with variable 't'
+        t = var
+        for key in p:
+            series[key] = eval( item[key])
+
+    return series
+
+
+
+
+# def __vvsf_dimension( wt_range, j, group = 'Gamma(2)'):
+#     """
+#     Return the arrays
+#     [(k, d(k), e(k), c(k), p_{6}(k), ... for k in wt_range],
+#     where d(k), e(k), c(k), p_{6}(k) are the dimensions
+#     of $M_{k,j}(group)$ and its subspaces of
+#     Non-cusp forms, Cusp forms, p_{6} canonical part, etc., respectively.
+
+#     NOTE
+#         Currently group can be
+#         - Gamma(2)
+#     """
+#     if 'Gamma(2)' == group:
+#         if is_odd(j):
+#             return [(k,(0,)*15) for k in wt_range]
+#         if j>=2 and  wt_range[0] < 4:
+#             raise NotImplementedError()
+#         P = PowerSeriesRing( IntegerRing(),  default_prec =wt_range[-1] + 1,  names = ('t',))
+#         t = P.gen()
+#         p_series = fetch_hilbert_polynomial( j, t, group = group)
+#         Eis_series = 15*((1-j/2) * t**6 + t**4 * j/2)/(1-t**2)**2
+    
+#         dct = dict( (k, dict( (p, p_series[p][k]) for p in p_series))
+#                   for k in wt_range)
+
+#         for k in dct:
+#             dct[k]['Total'] = sum( dct[k][p] for p in dct[k])
+#             dct[k]['Non cusp'] = Eis_series[k]
+#             dct[k]['Cusp'] =  dct[k]['Total'] - dct[k]['Non cusp']
+
+#         headers = [ 'Total',
+#                     'Non cusp',
+#                     'Cusp',
+#                     u'6',
+#                     u'51',
+#                     u'42',
+#                     u'411',
+#                     u'33',
+#                     u'321',
+#                     u'311',
+#                     u'222',
+#                     u'2211',
+#                     u'21111',
+#                     u'111111'
+#                     ]
+#     else:
+#         raise NotImplementedError()
+
+#     return headers, dct
+
+
+ 
