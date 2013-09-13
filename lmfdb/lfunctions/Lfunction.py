@@ -196,7 +196,7 @@ class Lfunction_EC_Q(Lfunction):
         self.Q_fe = float(sqrt(self.level) / (2 * math.pi))
         self.kappa_fe = [1]
         self.lambda_fe = [0.5]
-        # POD: Consider using self.compute_kappa_lambda_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
+        # POD: Consider using self.compute_kappa_lambda_Q_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
         
         self.numcoeff = round(self.Q_fe * 220 + 10)
         # logger.debug("numcoeff: {0}".format(self.numcoeff))
@@ -328,7 +328,7 @@ class Lfunction_EMF(Lfunction):
         self.kappa_fe = [1]
         self.lambda_fe = [self.automorphyexp]
         self.Q_fe = float(sqrt(self.level) / (2 * math.pi))
-        # POD: Consider using self.compute_kappa_lambda_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
+        # POD: Consider using self.compute_kappa_lambda_Q_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
 
         self.selfdual = True
         self.langlands = True
@@ -493,7 +493,7 @@ class Lfunction_HMF(Lfunction):
         self.Q_fe = (float(sqrt(self.level)) / (2 * math.pi) **
                      (self.field_degree))
 
-        # POD: Consider using self.compute_kappa_lambda_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
+        # POD: Consider using self.compute_kappa_lambda_Q_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
         
 
         R = QQ['x']
@@ -631,7 +631,7 @@ class RiemannZeta(Lfunction):
         self.kappa_fe = [0.5]
         self.lambda_fe = [0]
         self.Q_fe = float(1 / sqrt(math.pi))
-        # POD: Consider using self.compute_kappa_lambda_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
+        # POD: Consider using self.compute_kappa_lambda_Q_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
         
         
         self.sign = 1
@@ -717,7 +717,7 @@ class Lfunction_Dirichlet(Lfunction):
             self.kappa_fe = [0.5]
             self.lambda_fe = [0.5 * aa]
             self.Q_fe = float(sqrt(self.charactermodulus) / sqrt(math.pi))
-            # POD: Consider using self.compute_kappa_lambda_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
+            # POD: Consider using self.compute_kappa_lambda_Q_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
             
             self.sign = 1 / (I ** aa * float(sqrt(self.charactermodulus)) /
                              (chi.gauss_sum_numerical()))
@@ -894,7 +894,7 @@ class Lfunction_Maass(Lfunction):
             self.lambda_fe = [0.5 * aa + self.eigenvalue *
                               I / 2, 0.5 * aa - self.eigenvalue * I / 2]
             self.Q_fe = float(sqrt(self.level)) / float(math.pi)
-            # POD: Consider using self.compute_kappa_lambda_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
+            # POD: Consider using self.compute_kappa_lambda_Q_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
             
 
             logger.debug("Symmetry: {0}".format(self.symmetry))
@@ -991,12 +991,12 @@ class DedekindZeta(Lfunction):   # added by DK
                         (float(self.degreeofN) / 2.0)))
         self.kappa_fe = self.signature[0] * [0.5] + self.signature[1] * [1]
         self.lambda_fe = self.quasidegree * [0]
-        # POD: Consider using self.compute_kappa_lambda_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
+        # POD: Consider using self.compute_kappa_lambda_Q_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
         
         self.mu_fe = self.signature[0] * [0]  # not in use?
         self.nu_fe = self.signature[1] * [0]  # not in use?
         
-        # POD: consider using compute_kappa_lambda_from_mu_nu, this will help standardize interfaces, reuse code, and in general improve testing
+        # POD: consider using compute_kappa_lambda_Q_from_mu_nu, this will help standardize interfaces, reuse code, and in general improve testing
         self.langlands = True
         # self.degree = self.signature[0] + 2 * self.signature[1] # N = r1 +2r2
         self.degree = self.degreeofN
@@ -1138,7 +1138,10 @@ class HypergeometricMotiveLfunction(Lfunction):
         self.selfdual = True 
         self.coefficient_period = 0
 
-        self.compute_kappa_lambda()
+        self.compute_kappa_lambda_Q_from_mu_nu()
+        self.Q_fe = float(sqrt(self.conductor)/2**len(self.nu_fe)/pi**(len(self.mu_fe)/2+len(self.nu_fe)))
+        self.kappa_fe = [.5 for m in self.mu_fe] + [1. for n in self.nu_fe] 
+        self.lambda_fe = [m/2 for m in self.mu_fe] + [n for n in self.nu_fe]
         self.dirichlet_coefficients = [Reals()(Integer(x))/Reals()(n+1)**(1.5) for n, x in enumerate(self.arith_coeffs)]
 
         
@@ -1153,7 +1156,7 @@ class HypergeometricMotiveLfunction(Lfunction):
         Lexponent = self.motivic_weight/2.            
         normalize =lambda coeff, n, exponent: Reals()(coeff)/n**exponent
         self.dirichlet_coefficient = [normalize(coeff, i+1, Lexponent) for i, coeff in enumerate(self.arith_coeffs)]
-        self.compute_Q()
+
         period = 0
 
         self.sageLfunction = lc.Lfunction_D("LfunctionHypergeometric", 0, self.dirichlet_coefficient, period, self.Q_fe, self.sign, self.kappa_fe, self.lambda_fe, self.poles, self.residues)
@@ -1204,7 +1207,7 @@ class ArtinLfunction(Lfunction):
             self.dirichlet_coefficients = self.artin.coefficients_list(
                 upperbound=1000)
         
-        self.compute_kappa_lambda_from_mu_nu()
+        self.compute_kappa_lambda_Q_from_mu_nu()
 
         self.sign = self.artin.root_number()
         self.poles_L = self.artin.poles()
@@ -1217,7 +1220,7 @@ class ArtinLfunction(Lfunction):
         self.langlands = self.artin.langlands()
         self.mu_fe = self.artin.mu_fe()
         self.nu_fe = self.artin.nu_fe()
-        self.compute_kappa_lambda_from_mu_nu()
+        self.compute_kappa_lambda_Q_from_mu_nu()
 
         self.credit = ('Sage, lcalc, and data precomputed in ' +
                        'Magma by Tim Dokchitser')
@@ -1313,10 +1316,16 @@ class SymmetricPowerLfunction(Lfunction):
         self.Q_fe = self.S._Q_fe
         self.poles = self.S._poles
         self.residues = self.S._residues
-        self.mu_fe = self.S._mu_fe
-        self.nu_fe = self.S._nu_fe
-        self.kappa_fe = self.mu_fe
-        self.lambda_fe = self.nu_fe
+        self.kappa_fe = self.S._kappa_fe
+        self.lambda_fe = self.S._lambda_fe
+        
+        self.compute_some_mu_nu()
+        
+        
+        
+        #self.mu_fe = self.kappa_fe
+        #self.nu_fe = self.lambda_fe
+        
         self.sign = self.S.root_number
         self.motivic_weight = self.m
         self.selfdual = True
@@ -1422,7 +1431,7 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         self.kappa_fe = [1, 1]  
         self.lambda_fe = [float(1) / float(2), self.automorphyexp]  
         self.Q_fe = float(1 / (4 * math.pi ** 2))  # the Q in the FE as in lcalc
-                # POD: Consider using self.compute_kappa_lambda_from_mu_nu or self.lcalc_parameters_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
+                # POD: Consider using self.compute_kappa_lambda_Q_from_mu_nu or self.lcalc_parameters_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
 
 
         self.sign = (-1) ** float(self.weight)

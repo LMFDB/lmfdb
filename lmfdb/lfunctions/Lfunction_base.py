@@ -33,23 +33,40 @@ class Lfunction:
         # In practice, might be better to require Ltype to be the constructor class and Lkey to be the argument to that constructor        
         return self.Ltype(), self.Lkey()
         
+
     def compute_mu_nu(self):
         raise NotImplementedError               # time-consuming to get exactly right
         
-    def compute_kappa_lambda_from_mu_nu(self):
-        """ Computes some kappa and lambda from mu, nu, which might not be optimal for computational purposes
+    def compute_standard_mu_nu(self):
+        raise NotImplementedError               # time-consuming to get exactly right
+    def compute_some_mu_nu(self):
+        pairs_fe = zip(self.kappa_fe, self.lambda_fe)
+        self.mu_fe = [lambda_fe/2. for kappa_fe, lambda_fe in pairs_fe if abs(kappa_fe - 0.5) < 0.001]
+        self.nu_fe = [lambda_fe for kappa_fe, lambda_fe in pairs_fe if abs(kappa_fe - 1) < 0.001]
+        
+        
+    def compute_kappa_lambda_Q_from_mu_nu(self):
+        """ Computes some kappa, lambda and Q from mu, nu, which might not be optimal for computational purposes
         """
         try:
+            self.Q_fe = float(sqrt(self.conductor)/2**len(self.nu_fe)/pi**(len(self.mu_fe)/2+len(self.nu_fe)))
             self.kappa_fe = [.5 for m in self.mu_fe] + [1. for n in self.nu_fe] 
             self.lambda_fe = [m/2 for m in self.mu_fe] + [n for n in self.nu_fe]
-            self.Q_fe = float(sqrt(self.conductor)/2**len(self.nu_fe)/pi**(len(self.mu_fe)/2+len(self.nu_fe)))
         except:
             Exception("Expecting a mu and a nu to be defined")
     
     def compute_lcalc_parameters_from_mu_nu(self):
-        """ This should be made optimal, trying to group the kappas and lambdas that can be"""
-        return self.compute_kappa_lambda_from_mu_nu()
+        """ Computes some kappa, lambda and Q from mu, nu, which might not be optimal for computational purposes
+            Ideally would be optimized
+        """
+        try:
+            self.Q_fe = float(sqrt(self.conductor)/2**len(self.nu_fe)/pi**(len(self.mu_fe)/2+len(self.nu_fe)))
+            self.kappa_fe = [.5 for m in self.mu_fe] + [1. for n in self.nu_fe] 
+            self.lambda_fe = [m/2 for m in self.mu_fe] + [n for n in self.nu_fe]
+        except:
+            Exception("Expecting a mu and a nu to be defined")
     
+        
     ############################################################################
     ### other useful methods not implemented universally yet
     ############################################################################
