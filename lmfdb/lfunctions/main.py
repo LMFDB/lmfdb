@@ -34,6 +34,16 @@ def l_function_top_page():
     info = set_info_for_start_page()
     return render_template("LfunctionNavigate.html", **info)
 
+# Degree 1 L-functions browsing page ##############################################
+@l_function_page.route("/degree1/")
+def l_function_dirichlet_browse_page():
+    info = {"bread": get_bread(1, [])}
+    info["minModDefault"] = 1
+    info["maxModDefault"] = 20
+    info["maxOrder"] = 14
+    info["contents"] = [LfunctionPlot.getOneGraphHtmlChar(info["minModDefault"], info[
+                                                          "maxModDefault"], 1, info["maxOrder"])]
+    return render_template("Degree1.html", title='Degree 1 L-functions', **info)
 
 # Degree browsing page #########################################################
 @l_function_page.route("/<degree>/")
@@ -43,18 +53,6 @@ def l_function_degree_page(degree):
     info["key"] = 777
     info["bread"] = get_bread(degree, [])
     return render_template("DegreeNavigateL.html", title='Degree ' + str(degree) + ' L-functions', **info)
-
-
-# Dirichlet L-function browsing page ##############################################
-@l_function_page.route("/degree1/Dirichlet/")
-def l_function_dirichlet_browse_page():
-    info = {"bread": get_bread(1, [("Dirichlet", url_for('.l_function_dirichlet_browse_page'))])}
-    info["minModDefault"] = 1
-    info["maxModDefault"] = 20
-    info["maxOrder"] = 14
-    info["contents"] = [LfunctionPlot.getOneGraphHtmlChar(info["minModDefault"], info[
-                                                          "maxModDefault"], 1, info["maxOrder"])]
-    return render_template("Dirichlet.html", title='Dirichlet L-functions', **info)
 
 
 # L-function of holomorphic cusp form with trivial character browsing page ##############################################
