@@ -93,6 +93,8 @@ class WebNumberField:
         return nfdb.find_one({'label': self.label})
 
     def get_label(self):
+        if self.label == 'a':
+            return None
         return self.label
 
     # Return discriminant as a sage int

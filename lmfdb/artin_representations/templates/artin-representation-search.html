@@ -39,16 +39,48 @@
       <td><input type='text' name='frobenius_schur_indicator' value = "{{req.frobenius_schur_indicator}}" size=15/></td>
       <td><span class="formexample"> +1 for orthogonal, -1 for symplectic, 0 for non-real character</span></td>
     </tr>
-
     <tr>
       <td align=left colspan=4>Maximum number of Artin representations to display <input type='text' name='count' value="{{req.count}}" size=10></td>
     </tr>
-</table>
-  
-
-<td><button type='submit' value='Search'>Search</button></td>
+  <tr>
+    <td><button type='submit' value='Search'>Search again</button></td>
+  </tr>
+  </table>
 </form>
-<h2> Results: {{data_count}} found in the (non-exhaustive) database</h2>
+
+
+{% if req.err is defined %}
+
+{% if req.labelxyzzy is defined %}
+<form>
+<table border=0 cellpadding=5>
+<tr>
+<td>Field:&nbsp;&nbsp;</td>
+<td ><input type='text' name='natural' size=60 value="{{req.label}}"> </td>
+<td><button type='submit' name='search' value='Go'>Go</button></td>
+</tr>
+<tr>
+<td colspan="3" rowspan="2"><span class="formexample"> Enter either a
+<a href="FieldLabels">field label</a>, e.g. 2.2.5.1 for
+    \(\Q(\sqrt{5})\); a nickname, e.g. Q or Qsqrt5 or Qzeta7; or a polynomial in x, e.g. x^2+1</span></td>
+</tr>
+</table>
+</form>
+{% endif %}
+    
+<h2>Error</h2>
+    <div>
+  {{ req.err|safe }}
+    <p>
+      Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
+      </div>
+
+{% else %}
+
+
+
+
+<h2> Results: showing {{data_count}} results </h2>
 
 	<table border=1 cellpadding=5 class="ntdata">
 
@@ -57,7 +89,6 @@
 	<th>{{ KNOWL('artin.conductor', title='Conductor') }}</th>
 	<th>Defining polynomial of {{ KNOWL('artin.number_field', title='Artin field') }} </th>
 	<th>{{ KNOWL('artin.gg_quotient', title='$G$') }}</th>
-{#	<th>Size of $G$</th>  #}
 {#	<th>{{ KNOWL('artin.root_number', title='Root number') }}</th> #}
 	<th>{{ KNOWL('artin.frobenius_schur_indicator', title='Ind') }}</th>
 	<th>{{ KNOWL('artin.trace_of_complex_conj', title='$\chi(c)$')}}</th>
@@ -65,7 +96,7 @@
 	<tbody>
         {% for artin in data%}
           <tr> <th><a href = "{{artin.url_for()}}">{{loop.index}}</a></th><th>${{artin.dimension()}}$</th>
-          <th>${{artin.conductor_equation()}}$</th>
+          <th>${{artin.factored_conductor_latex()}}$</th>
 	  {% if artin.number_field_galois_group().url_for() %}
 {#	     <th><a href="{{artin.number_field_galois_group().url_for()}}">{{artin.number_field_galois_group().polredabshtml() | safe }}</a></th> #}
 	     <th><a href="{{artin.number_field_galois_group().url_for()}}">${{artin.number_field_galois_group().polredabslatex()}}$</a></th>
@@ -74,7 +105,6 @@
 {#	      <th>{{artin.number_field_galois_group().polredabshtml() | safe }}</th> #}
 	  {% endif %}
 	  <td align="center">{{artin.number_field_galois_group().G_name()}}</td>
-{#	  <th>${{artin.number_field_galois_group().size()}}$</th> #}
 {#	  <th>${{artin.processed_root_number()}}$</th> #}
 	  <th> ${{artin.indicator()}}$</th>
 	  <th>${{artin.trace_complex_conjugation()}}$</th>
@@ -82,6 +112,9 @@
         {% endfor %}
 	</tbody>
 	</table>
+
+{% endif %}
+
 {#
 <br>
 Original request {{req}} was turned into mongo query <span class="tex2jax_ignore">{{query}}</span>.
