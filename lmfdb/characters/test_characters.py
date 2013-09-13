@@ -53,6 +53,13 @@ class DirichletSearchTest(LmfdbTest):
         W = self.tc.get('/Character/?conductor=15&order=4')
         assert '\displaystyle \chi_{ 45}(17' in W.data
 
+class DirichletTableTest(LmfdbTest):
+
+    def test_table(self):
+        get='modulus=35&poly=\%28+x^{6}+\%29+-+\%28+x^{5}+\%29+-+\%28+7+x^{4}+\%29+%2B+\%28+2+x^{3}+\%29+%2B+\%28+7+x^{2}+\%29+-+\%28+2+x+\%29+-+\%28+1+\%29&char_number_list=1%2C4%2C9%2C11%2C16%2C29'
+        W = self.tc.get('/Character/Dirichlet/grouptable?%s'%get)
+        assert '35 }(29' in W.data
+
 class DirichletCharactersTest(LmfdbTest):
 
     def test_navig(self):
