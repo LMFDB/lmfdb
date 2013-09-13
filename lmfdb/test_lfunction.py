@@ -181,9 +181,9 @@ class LfunctionTest(LmfdbTest):
         svg = paintSvgFileAll([["GSp4", 1]])
         assert "12.4687" in svg
 
-    def test_paintSVGholo(self):
-        svg = paintSvgHolo(1,6,2,12)
-        assert "/L/ModularForm/GL2/Q/holomorphic/4/6/0/a/0" in svg
+##    def test_paintSVGholo(self):
+##        svg = paintSvgHolo(1,6,2,12)
+##        assert "/L/ModularForm/GL2/Q/holomorphic/4/6/0/a/0" in svg
 
     def test_paintSVGchar(self):
         svg = paintSvgChar(1,20,1,12)
