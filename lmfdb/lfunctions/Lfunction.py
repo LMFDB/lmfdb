@@ -1142,7 +1142,7 @@ class HypergeometricMotiveLfunction(Lfunction):
         # That s why I am reassigning just below
         self.Q_fe = float(sqrt(self.conductor)/2**len(self.nu_fe)/pi**(len(self.mu_fe)/2+len(self.nu_fe)))
         self.kappa_fe = [.5 for m in self.mu_fe] + [1. for n in self.nu_fe] 
-        self.lambda_fe = [m/2 for m in self.mu_fe] + [n for n in self.nu_fe]
+        self.lambda_fe = [m/2. for m in self.mu_fe] + [n for n in self.nu_fe]
         self.dirichlet_coefficients = [Reals()(Integer(x))/Reals()(n+1)**(1.5) for n, x in enumerate(self.arith_coeffs)]
 
         
@@ -1224,8 +1224,6 @@ class ArtinLfunction(Lfunction):
         
         
         self.Q_fe = self.Q_fe = float(sqrt(Integer(self.conductor))/2**len(self.nu_fe)/pi**(len(self.mu_fe)/2+len(self.nu_fe)))
-        
-        
         self.kappa_fe = [.5 for m in self.mu_fe] + [1. for n in self.nu_fe] 
         self.lambda_fe = [m/2. for m in self.mu_fe] + [n for n in self.nu_fe]
         
