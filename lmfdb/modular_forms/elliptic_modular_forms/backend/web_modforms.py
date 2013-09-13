@@ -46,7 +46,7 @@ try:
 except:
     emf_logger.critical("Could not import dirichlet_conrey!")
 
-db_name = 'modularforms'
+db_name = 'modularforms2'
 from lmfdb.website import dbport
 
 
@@ -92,6 +92,7 @@ class WebModFormSpace(Parent):
         self._newspace = None
         self._character = None
         self._got_ap_from_db = False
+        self._use_db = use_db
         # check what is in the database
         ## dO A SIMPLE TEST TO SEE IF WE EXIST OR NOT.
         if N < 0 or int(chi) > int(euler_phi(N)) or chi < 0:
@@ -199,7 +200,7 @@ class WebModFormSpace(Parent):
         r"""
         Getting the space of modular symbols from the database if it exists. Otherwise compute it and insert it into the database.
         """
-        if not get_what in ['ap', 'Modular_symbols']:
+        if not get_what in ['ap', 'Modular_symbols','Newform_factors']:
             emf_logger.critical("Collection {0} is not implemented!".format(get_what))
         collection = get_what
         emf_logger.debug("collection={0}".format(collection))
@@ -222,33 +223,41 @@ class WebModFormSpace(Parent):
                 if not collection + '.files' in C[db_name].collection_names():
                     emf_logger.critical("Incorrect collection {0} in database {1}. \n Available collections are:{2}".format(collection, db_name, C[db_name].collection_names()))
                 files = C[db_name][collection].files
-                if chi == 0:
-                    key = {'k': int(k), 'N': int(N)}
-                else:
-                    key = {'k': int(k), 'N': int(N), 'chi': int(chi)}
+                key = {'k': int(k), 'N': int(N), 'chi': int(chi)}
                 if get_what == 'ap':
                     key['prec'] = {"$gt": prec - 1}
                 finds = files.find(key)
                 if get_what == 'ap':
                     finds = finds.sort("prec")
+                    self._got_ap_from_db = True                    
                 if self._verbose > 1:
                     emf_logger.debug("files={0}".format(files))
                     emf_logger.debug("key={0}".format(key))
                     emf_logger.debug("finds={0}".format(finds))
                     emf_logger.debug("finds.count()={0}".format(finds.count()))
-                if finds and finds.count() > 0:
+                if get_what=='Newform_factors':
+                    finds = finds.sort("newform")
+                    res = []
+                    for rec in finds:
+                        fid = rec['_id']
+                        fs = gridfs.GridFS(C[db_name], collection)
+                        f = fs.get(fid)
+                        emf_logger.debug("rec={0}".format(rec))
+                        res.append(loads(f.read()))
+                        self._from_db = 1
+                elif finds and finds.count() > 0:
                     rec = finds[0]
                     emf_logger.debug("rec={0}".format(rec))
                     fid = rec['_id']
                     fs = gridfs.GridFS(C[db_name], collection)
                     f = fs.get(fid)
-                    #print f.read()
-                    #save(f.read(),"/home/purem/cvzx53/modym.sobj")
                     res = loads(f.read())
                     # TODO avoid pickling python objects for storing in the database
                     self._from_db = 1
-                    self._id = rec['_id']
-                self._got_ap_from_db = True
+                    if get_what == 'Modular_symbls':
+                        self._id = rec['_id'] 
+                else:
+                    res = []
         except ArithmeticError:
             pass
             #Exception as e:
@@ -312,6 +321,19 @@ class WebModFormSpace(Parent):
         return s
         # return str(self._fullspace)
 
+    def _computation_too_hard(self,comp='decomp'):
+        r"""
+        See if the supplied parameters make computation too hard or if we should try to do it on the fly.
+        TODO: Actually check times.
+        """
+        if comp=='decomp':
+            if self._level > 50:
+                return True
+            if self._chi > 0 and self._N > 5:
+                return True
+            if self._weight+self._N  > 100:
+                return True
+            return False
     # internal methods to generate properties of self
     def galois_decomposition(self):
         r"""
@@ -320,7 +342,19 @@ class WebModFormSpace(Parent):
         from sage.monoids.all import AlphabeticStrings
         if(len(self._galois_decomposition) != 0):
             return self._galois_decomposition
-        L = self._newspace.decomposition()
+        if '_HeckeModule_free_module__decomposition' in self._newspace.__dict__:
+            L = self._newspace.decomposition()
+        else:
+            decomp = self._get_objects(self._k, self._N, self._chi, self._use_db, 'Newform_factors')
+            if len(decomp)>0:
+                L = filter(lambda x: x.is_new() and x.is_cuspidal(), decomp)
+                emf_logger.debug("computed L:".format(L))
+            elif self._use_db or self._computation_too_hard():
+                L = []
+                emf_logger.debug("no decomp in database!")
+            else: # compute
+                L = self._newspace.decomposition()
+                emf_logger.debug("computed L:".format(L))
         self._galois_decomposition = L
         # we also label the compnents
         x = AlphabeticStrings().gens()
