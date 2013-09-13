@@ -1178,8 +1178,7 @@ class ArtinLfunction(Lfunction):
     """
     def __init__(self, **args):
         constructor_logger(self, args)
-        if not ('dimension' in args.keys() and 'conductor' in args.keys() and
-                'tim_index' in args.keys()):
+        if not ('dimension' in args.keys() and 'conductor' in args.keys() and 'tim_index' in args.keys()):
             raise KeyError("You have to supply dimension, conductor and " +
                            "tim_index for an Artin L-function")    
         
@@ -1198,7 +1197,7 @@ class ArtinLfunction(Lfunction):
         self.algebraic = True
         self.degree = self.artin.dimension()
         self.coefficient_type = 0
-
+        
         if self.degree == 1:
             self.coefficient_period = Integer(self.artin.conductor())
             self.dirichlet_coefficients = self.artin.coefficients_list(
@@ -1210,6 +1209,7 @@ class ArtinLfunction(Lfunction):
         
         
 
+        
         self.sign = self.artin.root_number()
         self.poles_L = self.artin.poles()
         self.residues_L = self.artin.residues()
@@ -1221,13 +1221,18 @@ class ArtinLfunction(Lfunction):
         self.langlands = self.artin.langlands()
         self.mu_fe = self.artin.mu_fe()
         self.nu_fe = self.artin.nu_fe()
-
-        self.Q_fe = float(sqrt(self.conductor)/2**len(self.nu_fe)/pi**(len(self.mu_fe)/2+len(self.nu_fe)))
+        
+        
+        self.Q_fe = self.Q_fe = float(sqrt(Integer(self.conductor))/2**len(self.nu_fe)/pi**(len(self.mu_fe)/2+len(self.nu_fe)))
+        
+        
         self.kappa_fe = [.5 for m in self.mu_fe] + [1. for n in self.nu_fe] 
-        self.lambda_fe = [m/2 for m in self.mu_fe] + [n for n in self.nu_fe]
+        self.lambda_fe = [m/2. for m in self.mu_fe] + [n for n in self.nu_fe]
         
         self.credit = ('Sage, lcalc, and data precomputed in ' +
                        'Magma by Tim Dokchitser')
+        
+        
         self.citation = ''
         self.support = "Support by Paul-Olivier Dehaye"
 
@@ -1237,6 +1242,7 @@ class ArtinLfunction(Lfunction):
             self.texnamecompleted1ms = "\\Lambda(1-s)" 
         else:
             self.texnamecompleted1ms = "\\overline{\\Lambda(1-\\overline{s})}"
+        
         generateSageLfunction(self)
 
     def Ltype(self):
