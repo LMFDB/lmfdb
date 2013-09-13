@@ -97,7 +97,7 @@ def render_Dirichletwebpage(modulus=None, number=None):
 
     if modulus == None:
         info = WebDirichletFamily(**args).to_dict()
-        print info
+        #logger.info(info)
         return render_template('CharFamily.html', **info)
     elif number == None:
         info = WebDirichletGroup(**args).to_dict()
@@ -105,6 +105,7 @@ def render_Dirichletwebpage(modulus=None, number=None):
         info['bread'] = [('Characters','/Character'),
                          ('Dirichlet','/Character/Dirichlet'),
                          ('Modulus %s'%m, '/Character/Dirichlet/%s'%m)]
+        #logger.info(info)
         return render_template('CharGroup.html', **info)
     else:
         info = WebDirichletCharacter(**args).to_dict()
@@ -114,11 +115,10 @@ def render_Dirichletwebpage(modulus=None, number=None):
                          ('Dirichlet','/Character/Dirichlet'),
                          ('Modulus %s'%m, '/Character/Dirichlet/%s'%m),
                          ('Character number %s'%n, '/Character/Dirichlet/%s/%s'%(m,n)) ]
-        print info
+        #logger.info(info)
         return render_template('Character.html', **info)
 
 def navi(L):
-    print L
     r = [ (l, url_character(**args)) for l, args in L if l ]
     return r
     
@@ -161,7 +161,7 @@ def render_Heckewebpage(number_field=None, modulus=None, number=None):
         return render_template('Hecke.html', **info)
     elif modulus == None:
         info = WebHeckeFamily(**args).to_dict()
-        print info
+        #logger.info(info)
         return render_template('CharFamily.html', **info)
     elif number == None:
         info = WebHeckeGroup(**args).to_dict()
@@ -170,7 +170,7 @@ def render_Heckewebpage(number_field=None, modulus=None, number=None):
                          ('Hecke','/Character/Hecke'),
                          ('Number Field %s'%number_field,'/Character/Hecke/%s'%number_field),
                          ('Modulus %s'%m, '/Character/Hecke/%s/%s'%(number_field,m))]
-        print info
+        #logger.info(info)
         return render_template('CharGroup.html', **info)
     else:
         info = WebHeckeCharacter(**args).to_dict()
@@ -181,7 +181,7 @@ def render_Heckewebpage(number_field=None, modulus=None, number=None):
                          ('Number Field %s'%number_field,'/Character/Hecke/%s'%number_field),
                          ('Modulus %s'%m, '/Character/Hecke/%s/%s'%(number_field,m)),
                          ('Character number %s'%n, '/Character/Hecke/%s/%s/%s'%(number_field,m,n))]
-        print info
+        #logger.info(info)
         return render_template('Character.html', **info)
 
 @characters_page.route("/calc-<calc>/Hecke/<number_field>/<modulus>/<number>")
@@ -207,7 +207,6 @@ def character_search(**args):
     for field in ['modulus', 'conductor', 'order']:
         info[field] = info.get(field, '')
     query = {}
-    print "args = ", args
     if 'natural' in args:
         label = info.get('natural', '')
         try:
