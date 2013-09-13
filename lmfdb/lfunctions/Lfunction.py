@@ -886,6 +886,13 @@ class Lfunction_Maass(Lfunction):
             self.selfdual = True
             self.primitive = True
             self.quasidegree = 2
+            logger.debug("Symmetry: {0}".format(self.symmetry))
+            if self.symmetry == "odd" or self.symmetry == 1:
+                self.sign = -1
+                aa = 1
+            else:
+                self.sign = 1
+                aa = 0
             
             self.mu_fe = [aa + self.eigenvalue * I, aa - self.eigenvalue * I]
             self.nu_fe = []
@@ -897,13 +904,6 @@ class Lfunction_Maass(Lfunction):
             # POD: Consider using self.compute_kappa_lambda_Q_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
             
 
-            logger.debug("Symmetry: {0}".format(self.symmetry))
-            if self.symmetry == "odd" or self.symmetry == 1:
-                self.sign = -1
-                aa = 1
-            else:
-                self.sign = 1
-                aa = 0
 
             logger.debug("Sign (without Fricke): {0}".format(self.sign))
             if self.level > 1:
@@ -1138,7 +1138,8 @@ class HypergeometricMotiveLfunction(Lfunction):
         self.selfdual = True 
         self.coefficient_period = 0
 
-        self.compute_kappa_lambda_Q_from_mu_nu()
+        self.compute_kappa_lambda_Q_from_mu_nu()            # Somehow this doesn t work, and I don t know why!
+        # That s why I am reassigning just below
         self.Q_fe = float(sqrt(self.conductor)/2**len(self.nu_fe)/pi**(len(self.mu_fe)/2+len(self.nu_fe)))
         self.kappa_fe = [.5 for m in self.mu_fe] + [1. for n in self.nu_fe] 
         self.lambda_fe = [m/2 for m in self.mu_fe] + [n for n in self.nu_fe]
@@ -1207,7 +1208,7 @@ class ArtinLfunction(Lfunction):
             self.dirichlet_coefficients = self.artin.coefficients_list(
                 upperbound=1000)
         
-        self.compute_kappa_lambda_Q_from_mu_nu()
+        
 
         self.sign = self.artin.root_number()
         self.poles_L = self.artin.poles()
@@ -1220,8 +1221,11 @@ class ArtinLfunction(Lfunction):
         self.langlands = self.artin.langlands()
         self.mu_fe = self.artin.mu_fe()
         self.nu_fe = self.artin.nu_fe()
-        self.compute_kappa_lambda_Q_from_mu_nu()
 
+        self.Q_fe = float(sqrt(self.conductor)/2**len(self.nu_fe)/pi**(len(self.mu_fe)/2+len(self.nu_fe)))
+        self.kappa_fe = [.5 for m in self.mu_fe] + [1. for n in self.nu_fe] 
+        self.lambda_fe = [m/2 for m in self.mu_fe] + [n for n in self.nu_fe]
+        
         self.credit = ('Sage, lcalc, and data precomputed in ' +
                        'Magma by Tim Dokchitser')
         self.citation = ''
