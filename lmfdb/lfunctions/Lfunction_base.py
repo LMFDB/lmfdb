@@ -49,9 +49,9 @@ class Lfunction:
         """ Computes some kappa, lambda and Q from mu, nu, which might not be optimal for computational purposes
         """
         try:
-            self.Q_fe = float(sqrt(self.conductor)/2**len(self.nu_fe)/pi**(len(self.mu_fe)/2+len(self.nu_fe)))
+            self.Q_fe = float(sqrt(Integer(self.conductor))/2.**len(self.nu_fe)/pi**(len(self.mu_fe)/2.+len(self.nu_fe)))
             self.kappa_fe = [.5 for m in self.mu_fe] + [1. for n in self.nu_fe] 
-            self.lambda_fe = [m/2 for m in self.mu_fe] + [n for n in self.nu_fe]
+            self.lambda_fe = [m/2. for m in self.mu_fe] + [n for n in self.nu_fe]
         except:
             Exception("Expecting a mu and a nu to be defined")
     
@@ -60,9 +60,9 @@ class Lfunction:
             Ideally would be optimized
         """
         try:
-            self.Q_fe = float(sqrt(self.conductor)/2**len(self.nu_fe)/pi**(len(self.mu_fe)/2+len(self.nu_fe)))
+            self.Q_fe = float(sqrt(Integer(self.conductor))/2**len(self.nu_fe)/pi**(len(self.mu_fe)/2.+len(self.nu_fe)))
             self.kappa_fe = [.5 for m in self.mu_fe] + [1. for n in self.nu_fe] 
-            self.lambda_fe = [m/2 for m in self.mu_fe] + [n for n in self.nu_fe]
+            self.lambda_fe = [m/2. for m in self.mu_fe] + [n for n in self.nu_fe]
         except:
             Exception("Expecting a mu and a nu to be defined")
     
