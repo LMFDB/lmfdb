@@ -101,14 +101,36 @@ def index():
 
 
 
-@hypergm_page.route("/plot/<AB>")
-def hgm_family_up_down_plot(AB):
+@hypergm_page.route("/plot/circle/<AB>")
+def hgm_family_circle_image(AB):
     A,B = AB.split("_")
     from plot import circle_image
     A = map(int,A[1:].split("."))
     B = map(int,B[1:].split("."))
     G = circle_image(A, B)
     return image_callback(G)
+
+@hypergm_page.route("/plot/linear/<AB>")
+def hgm_family_linear_image(AB):
+    # piecewise linear, as opposed to piecewise constant
+    A,B = AB.split("_")
+    from plot import piecewise_linear_image
+    A = map(int,A[1:].split("."))
+    B = map(int,B[1:].split("."))
+    G = piecewise_linear_image(A, B)
+    return image_callback(G)
+
+@hypergm_page.route("/plot/constant/<AB>")
+def hgm_family_constant_image(AB):
+    # piecewise constant
+    A,B = AB.split("_")
+    from plot import piecewise_constant_image
+    A = map(int,A[1:].split("."))
+    B = map(int,B[1:].split("."))
+    G = piecewise_constant_image(A, B)
+    return image_callback(G)
+
+
 
 @hypergm_page.route("/<label>")
 def by_family_label(label):
@@ -318,7 +340,9 @@ def render_hgm_family_webpage(args):
 #        if rffriend != '':
 #            friends.append(('Discriminant root field', rffriend))
 
-        info.update({"plotlink": url_for(".hgm_family_up_down_plot", AB  = "A"+".".join(map(str,A))+"_B"+".".join(map(str,B)))})
+        info.update({"plotcircle":  url_for(".hgm_family_circle_image", AB  =  "A"+".".join(map(str,A))+"_B"+".".join(map(str,B)))})
+        info.update({"plotlinear": url_for(".hgm_family_linear_image", AB  = "A"+".".join(map(str,A))+"_B"+".".join(map(str,B)))})
+        info.update({"plotconstant": url_for(".hgm_family_constant_image", AB  = "A"+".".join(map(str,A))+"_B"+".".join(map(str,B)))})
         bread = get_bread([(label, ' ')])
         return render_template("hgm-show-family.html", credit=HGM_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends)
 

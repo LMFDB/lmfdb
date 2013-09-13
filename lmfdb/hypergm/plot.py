@@ -29,7 +29,16 @@ def circle_drops(A,B):
 #    print tmp
     return [sum(tmp[:j]) for j in range(marks)]
     
-def image(A,B):
+def piecewise_constant_image(A,B):
+    # Jumps up and down going around circle, not used
+    v = circle_drops(A,B)
+    G = Graphics()
+    w = [(Rational(i)/len(v), j) for i,j in enumerate(v)]
+    for pt in w:
+        G += line([(pt[0],pt[1]),(pt[0]+Rational(1)/len(w),pt[1])])
+    return G
+
+def piecewise_linear_image(A,B):
     # Jumps up and down going around circle, not used
     v = circle_drops(A,B)
     G = Graphics()
