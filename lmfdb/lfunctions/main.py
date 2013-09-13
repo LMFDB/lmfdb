@@ -34,6 +34,16 @@ def l_function_top_page():
     info = set_info_for_start_page()
     return render_template("LfunctionNavigate.html", **info)
 
+# Degree 1 L-functions browsing page ##############################################
+@l_function_page.route("/degree1/")
+def l_function_dirichlet_browse_page():
+    info = {"bread": get_bread(1, [])}
+    info["minModDefault"] = 1
+    info["maxModDefault"] = 20
+    info["maxOrder"] = 14
+    info["contents"] = [LfunctionPlot.getOneGraphHtmlChar(info["minModDefault"], info[
+                                                          "maxModDefault"], 1, info["maxOrder"])]
+    return render_template("Degree1.html", title='Degree 1 L-functions', **info)
 
 # Degree browsing page #########################################################
 @l_function_page.route("/<degree>/")
@@ -45,19 +55,7 @@ def l_function_degree_page(degree):
     return render_template("DegreeNavigateL.html", title='Degree ' + str(degree) + ' L-functions', **info)
 
 
-# Dirichlet L-function browsing page ##############################################
-@l_function_page.route("/degree1/Dirichlet/")
-def l_function_dirichlet_browse_page():
-    info = {"bread": get_bread(1, [("Dirichlet", url_for('.l_function_dirichlet_browse_page'))])}
-    info["minModDefault"] = 1
-    info["maxModDefault"] = 20
-    info["maxOrder"] = 14
-    info["contents"] = [LfunctionPlot.getOneGraphHtmlChar(info["minModDefault"], info[
-                                                          "maxModDefault"], 1, info["maxOrder"])]
-    return render_template("Dirichlet.html", title='Dirichlet L-functions', **info)
-
-
-# L-function of GL(2) cusp forms browsing page ##############################################
+# L-function of holomorphic cusp form with trivial character browsing page ##############################################
 @l_function_page.route("/degree2/CuspForm/")
 def l_function_cuspform_browse_page():
     info = {"bread": get_bread(2, [("CuspForm", url_for('.l_function_cuspform_browse_page'))])}
@@ -124,14 +122,14 @@ def set_info_for_start_page():
     tt = [[{'title': 'Riemann zeta function', 'link': url_for('.l_function_riemann_page')},
            {'title': 'Dirichlet L-function', 'link': url_for('.l_function_dirichlet_browse_page')}],
 
-          [{'title': 'GL2 holomorphic cusp form with trivial character', 'link': url_for('.l_function_cuspform_browse_page')},
+          [{'title': 'Holomorphic cusp form with trivial character', 'link': url_for('.l_function_cuspform_browse_page')},
            {'title': 'GL2 Maass form', 'link': url_for('.l_function_maass_browse_page')},
            {'title': 'Elliptic curve', 'link': url_for('.l_function_ec_browse_page')}],
 
           [{'title': '', 'link': ''},
            {'title': 'GL3 Maass form', 'link': url_for('.l_function_maass_gln_browse_page',
                                                        degree='degree3')},
-           {'title': 'Symmetric square L-fuhttp://localhost:5555/nction of Elliptic curve', 'link': url_for('.l_function_ec_sym2_browse_page')}],
+           {'title': 'Symmetric square L-function of Elliptic curve', 'link': url_for('.l_function_ec_sym2_browse_page')}],
 
           [{'title': 'GSp4 Maass form', 'link': url_for('.l_function_maass_gln_browse_page', degree='degree4') + '#GSp4_Q_Maass'},
            {'title': 'GL4 Maass form', 'link': url_for('.l_function_maass_gln_browse_page',
@@ -450,7 +448,7 @@ def initLfunction(L, args, request):
         if mod > 1:
             pmod,pnum = WebDirichlet.prevprimchar(mod, num)
             Lprev = (Lpattern%(pmod,pnum),url_for('.l_function_dirichlet_page',modulus=pmod,number=pnum))
-        else: 
+        else:
             Lprev = ('','')
         nmod,nnum = WebDirichlet.nextprimchar(mod, num)
         Lnext = (Lpattern%(nmod,nnum),url_for('.l_function_dirichlet_page',modulus=nmod,number=nnum))
