@@ -265,6 +265,7 @@ def render_hgm_webpage(args):
                     'sig': data['sig'],
                     'hodge': hodge,
                     'cond': data['cond'],
+                    'req': data['req'],
                     'locinfo': locinfo
                     })
         friends = []
