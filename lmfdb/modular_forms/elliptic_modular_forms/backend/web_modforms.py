@@ -800,19 +800,20 @@ class WebModFormSpace(Parent):
         return s
 
 
+            
 class WebNewForm(SageObject):
-
     r"""
     Class for representing a (cuspidal) newform on the web.
     """
-    def __init__(self, k, N, chi=0, label='', fi=-1, prec=10, bitprec=53, parent=None, data=None, compute=None, verbose=-1):
+    def __init__(self, k, N, chi=0, label='', fi=-1, prec=10, bitprec=53, parent=None, data=None, compute=None, verbose=-1,get_from_db=False):
         r"""
         Init self as form number fi in S_k(N,chi)
         """
-        if label<>'':            
-            if self.get_from_db(N,k,chi,label):
-                return
-
+        if label<>'' and get_from_db:            
+            d = get_web_newform_from_db(N,k,chi,label):
+            if d <> None:
+                F.__dict__.update(d)
+            return 
         if chi == 'trivial':
             chi = ZZ(0)
         else:
@@ -943,15 +944,18 @@ class WebNewForm(SageObject):
     def get_from_db(self,N,k,chi,label):
         C = lmfdb.base.getDBConnection()
         collection = C[db_name].WebNewForms.files
-        f = C[db_name].WebNewForm.files.find_one({'N':int(N),'k':int(k),'chi':int(chi),'label':label})
+        s = {'N':int(N),'k':int(k),'chi':int(chi),'label':label}
+        emf_logger.debug("Looking in DB for rec={0}".format(s))
+        f = C[db_name].WebNewForms.files.find_one(s)
+        emf_logger.debug("Found rec={0}".format(f))
         if f<>None:
             id = f.get('_id')
-            fs = gridfs.GridFS(C[db_name], WebNewForms)
-            f = fs.get(fid)
+            fs = gridfs.GridFS(C[db_name],'WebNewForms')
+            f = fs.get(id)
             emf_logger.debug("Gettig rec={0}".format(f))
             F = loads(f.read())
-            self.__dict__ = F.__dict__
-            return True
+            #self.__dict__ = F.__dict__
+            return F
         return False
     
     def insert_into_db(self):
@@ -962,8 +966,7 @@ class WebNewForm(SageObject):
               
         fname = "webnewform-{0:0>5}-{1:0>3}-{2:0>3}-{3}".format(self._N,self._k,self._chi,self._label) 
         rec = {'N':int(self._N),'k':int(self._k),'chi':int(self._chi),'label':self._label}
-       
-        id = fs.put(dumps(self),filename=fname,N=int(self._N),k=int(self._k),chi=int(self._chi),label=self._label)
+        id = fs.put(dumps(self.__dict__),filename=fname,N=int(self._N),k=int(self._k),chi=int(self._chi),label=self._label)
         emf_logger.debug("inserted :{0}".format(id))
     
     def __repr__(self):
