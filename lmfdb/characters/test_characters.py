@@ -33,7 +33,7 @@ class UrlCharacterTest(LmfdbTest):
 
 
 
-class CharactersTest(LmfdbTest):
+class DirichletCharactersTest(LmfdbTest):
 
     def test_navig(self):
         W = self.tc.get('/Character/')
@@ -82,6 +82,9 @@ class CharactersTest(LmfdbTest):
         W = self.tc.get('Character/calc-jacobi/Dirichlet/91/3?val=37')
         assert '-5 \\zeta_{12}^{2} - 6' in W.data
 
+        W = self.tc.get('Character/calc-value/Dirichlet/107/7?val=32')
+        assert 'frac{3}{106}' in W.data
+
     def test_dirichletchar(self):
         W = self.tc.get('/Character/Dirichlet/531/40')
         assert 'Character group' in W.data
@@ -90,3 +93,30 @@ class CharactersTest(LmfdbTest):
         assert 'Kloosterman sum' in W.data
         assert '/Character/Dirichlet/531/38' in W.data, "prev navigation"
         assert  '(\\zeta_{87})' in W.data, "field of values"
+
+class HeckeCharactersTest(LmfdbTest):
+
+
+    def test_heckeexamples(self):
+        W = self.tc.get('/Character/Hecke/')
+        assert '2.2.8.1' in W.data
+
+    def test_heckefamily(self):
+        W = self.tc.get('/Character/Hecke/3.1.44.1')
+        assert 'C_{5}' in W.data
+
+    def test_heckegroup(self):
+        W = self.tc.get('/Character/Hecke/3.1.44.1/4.0')
+        assert 'Related objects' in W.data
+        assert 'primitive' in W.data
+
+    def test_heckechar(self):
+        #W = self.tc.get('/Character/Hecke/7.3.674057.1')
+        W = self.tc.get('/Character/Hecke/2.0.4.1/5./2')
+        assert 'Related objects' in W.data
+        assert 'primitive' in W.data
+
+    def test_hecke_calc(self):
+        W = self.tc.get('/Character/calc-value/Hecke/2.0.4.1/5./1?val=1-a')
+        assert '(1-a)=i' in W.data
+
