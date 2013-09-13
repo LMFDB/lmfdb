@@ -21,7 +21,7 @@ from lmfdb.lfunctions import l_function_page, logger
 from lmfdb.elliptic_curves.elliptic_curve import cremona_label_regex, lmfdb_label_regex
 from LfunctionComp import isogenyclasstable
 
-# import upload2Db.py
+
 
 
 ################################################################################
@@ -166,6 +166,7 @@ def get_bread(degree, breads=[]):
 # Riemann zeta function ########################################################
 @l_function_page.route("/Riemann/")
 def l_function_riemann_page():
+    #import upload2Db
     args = {}
     return render_single_Lfunction(RiemannZeta, args, request)
 
@@ -671,7 +672,7 @@ def render_plotLfunction_from_db(db, dbTable, condition):
 
 
 def render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9):
-    data = plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+    data = getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
     if not data:
         # see note about missing "hardy_z_function" in plotLfunction()
         return flask.redirect(404)
@@ -680,7 +681,7 @@ def render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8
     return response
 
 
-def plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9):
+def getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9):
     plotStep = .1
     pythonL = generateLfunctionFromUrl(
         arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
@@ -720,7 +721,7 @@ def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, ar
         if L.selfdual:
             allZeros = L.sageLfunction.find_zeros(-search_step / 2, 20, search_step)
         else:
-            allZeros = L.sageLfunction.find_zeros(-15, 15, search_step)
+            allZeros = L.sageLfunction.find_zeros(-20, 20, search_step)
 
     else:
         if L.selfdual:
