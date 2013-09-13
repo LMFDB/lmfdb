@@ -1057,10 +1057,16 @@ class DedekindZeta(Lfunction):   # added by DK
 class HypergeometricMotiveLfunction(Lfunction):
     """Class representing the hypergeometric L-function
 
-    Compulsory parameters: label, for instance 'A2.2.2.2_B1.1.1.1_t1.2'
+    Two options for parameters: 
+        label, for instance 'A2.2.2.2_B1.1.1.1_t1.2'
+    or
+        family, for instance 'A2.2.2.2_B1.1.1.1'
+        and t for instance 't1.2'
     """
     def __init__(self, **args):
         constructor_logger(self, args)
+        if "t" in args and "family" in args:
+            args["label"] = args["family"] + "_" + args["t"]
         if not ('label' in args.keys()):
             raise KeyError("You have to supply a label for a hypergeometric motive L-function")            
         C = base.getDBConnection()
@@ -1071,8 +1077,7 @@ class HypergeometricMotiveLfunction(Lfunction):
         self.conductor = reduce(operator.__mul__, [z[0]**z[1] for z in self.motive["conductor"]])
         self.factored_conductor = self.motive["conductor"]
         self.level = self.conductor
-        self.title = ("L function for the hypergeometric motive with label  "
-                      + str(self.label))
+        self.title = ("L-function for the hypergeometric motive with label  "+self.label)
 
         self.credit = 'Dave Roberts, using Magma.'
         
@@ -1089,9 +1094,9 @@ class HypergeometricMotiveLfunction(Lfunction):
         self.support = "Support by Paul-Olivier Dehaye"
         
         self.sign = self.motive["sign"]
+        self.motivic_weight =  self.motive["weight"]
         
-        
-        # level, residues, selfdual, primitive, langlands, Q_fe, kappa_fe, lambda_fe, selfdual?
+        # level, residues, selfdual, primitive, langlands
         
         # Hardcoded for 'A2.2.2.2_B1.1.1.1_t1.2'
         self.poles = []
@@ -1099,14 +1104,14 @@ class HypergeometricMotiveLfunction(Lfunction):
         self.primitive = True
         self.langlands = True
         self.mu_fe = []                     
-        self.nu_fe = [1/2,3/2]   
+        self.nu_fe = [Rational("1/2"),Rational("3/2")]   
         self.selfdual = True 
         self.coefficient_period = 0
 
         self.kappa_fe = [1,1]
         self.lambda_fe = [.5,1.5]
         self.dirichlet_coefficients = [Reals()(Integer(x))/Reals()(n+1)**(1.5) for n, x in enumerate(self.arith_coeffs)]
-        self.motivic_weight = 3     # HARD CODED
+
         
         self.texname = "L(s)"  
         self.texnamecompleteds = "\\Lambda(s)"  
@@ -1123,8 +1128,7 @@ class HypergeometricMotiveLfunction(Lfunction):
         period = 0
 
         self.sageLfunction = lc.Lfunction_D("LfunctionHypergeometric", 0, self.dirichlet_coefficient, period, self.Q_fe, self.sign, self.kappa_fe, self.lambda_fe, self.poles, self.residues)
-        # 1.182 arithmetic : 2
-        # 1.015 arithmetic : 4
+
 
     def Ltype(self):
         return "hgmQ"

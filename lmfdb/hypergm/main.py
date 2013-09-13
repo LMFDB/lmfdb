@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # This Blueprint is about Hypergeometric motives
-# Author: John Jones
+# Author: John Jones 
 
 import re
 import pymongo
@@ -104,6 +104,7 @@ def search():
         return "ERROR: we always do http get to explicitly display the search parameters"
     else:
         return flask.redirect(404)
+
 
 
 def hgm_search(**args):
@@ -244,12 +245,14 @@ def render_hgm_webpage(args):
                     'hodge': hodge,
                     'locinfo': locinfo
                     })
-        friends = []
+        AB_data = data["label"].split("_t")[0]
+        friends = [("Motive family "+AB_data.replace("_"," "), url_for(".by_family_label", label = AB_data))]
 #        friends = [('Galois group', "/GaloisGroup/%dT%d" % (gn, gt))]
 #        if unramfriend != '':
 #            friends.append(('Unramified subfield', unramfriend))
 #        if rffriend != '':
 #            friends.append(('Discriminant root field', rffriend))
+
 
         bread = get_bread([(label, ' ')])
         return render_template("hgm-show-motive.html", credit=HGM_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends)
@@ -292,6 +295,7 @@ def render_hgm_family_webpage(args):
 #        if rffriend != '':
 #            friends.append(('Discriminant root field', rffriend))
 
+        #info.update({"plotlink", url_for(".hgm_family_image", A = "A"+".".join(map(str,A)), B = "B"+".".join(map(str,B)))})
         bread = get_bread([(label, ' ')])
         return render_template("hgm-show-family.html", credit=HGM_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends)
 

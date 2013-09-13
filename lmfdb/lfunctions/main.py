@@ -294,7 +294,7 @@ def l_function_artin_page(dimension, conductor, tim_index):
     return render_single_Lfunction(ArtinLfunction, args, request)
 
 # L-function of hypergeometric motive   ########################################
-@l_function_page.route("/HypergeometricMotive/<label>/")
+@l_function_page.route("/Motives/Hypergeometric/Q/<label>/")
 def l_function_hgm_page(label):
     args = {'label': label}
     return render_single_Lfunction(HypergeometricMotiveLfunction, args, request)
@@ -388,7 +388,10 @@ def initLfunction(L, args, request):
     info['args'] = args
 
     info['credit'] = L.credit
-    # info['citation'] = L.citation
+    try:
+        info['citation'] = L.citation
+    except:
+        pass
 
     try:
         info['factorization'] = L.factorization
@@ -565,6 +568,10 @@ def initLfunction(L, args, request):
         if L.sign == 0:           # The root number is now unknown
             info['zeroeslink'] = ''
             info['plotlink'] = ''
+            
+    elif L.Ltype() == "hgmQ":        
+        info['friends'] = [('Hypergeometric family ', friendlink.replace("_t","/t"))]   # The /L/ trick breaks down for motives, because we have a scheme for the L-functions themselves
+        
 
     info['dirichlet'] = lfuncDStex(L, "analytic")
     info['eulerproduct'] = lfuncEPtex(L, "abstract")
@@ -804,8 +811,11 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
     elif arg1 == "SymmetricPower":
         return SymmetricPowerLfunction(power=arg2, underlying_type=arg3, field=arg4, label=arg5)
         
-    elif arg1 == "HypergeometricMotive":
-        return HypergeometricMotiveLfunction(label = arg2)
+    elif arg1 == "Motives" and arg2 == "Hypergeometric" and arg3 == "Q":
+        if arg5:
+            return HypergeometricMotiveLfunction(family = arg4, t = arg5)
+        else:
+            return HypergeometricMotiveLfunction(label = arg4)
 
     elif arg1 == 'Lcalcurl':
         return Lfunction_lcalc(Ltype='lcalcurl', url=temp_args['url'])
