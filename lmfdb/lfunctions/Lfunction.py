@@ -1100,26 +1100,26 @@ class HypergeometricMotiveLfunction(Lfunction):
         if not ('label' in args.keys()):
             raise KeyError("You have to supply a label for a hypergeometric motive L-function")            
         C = base.getDBConnection()
-        self.motive = C.hgm.motives_copy.find_one({"label": args["label"]})
+        self.motive = C.hgm.motives.find_one({"label": args["label"]})
         
         self.label = args["label"]
-        import operator
-        self.conductor = reduce(operator.__mul__, [z[0]**z[1] for z in self.motive["conductor"]])
-        self.factored_conductor = self.motive["conductor"]
+        self.conductor = self.motive["cond"]
+
         self.level = self.conductor
         self.title = ("L-function for the hypergeometric motive with label  "+self.label)
 
-        self.credit = 'Dave Roberts, using Magma.'
+        self.credit = 'Dave Roberts, using Magma'
+        
+        
         
         self.motivic_weight = 0
         self.algebraic = True
         self.coefficient_type = 0
         self.degree = self.motive["degree"]
-        
         try:
-            self.arith_coeffs = self.motive["arith_coeffs"]
+            self.arith_coeffs = self.motive["coeffs"]
         except:
-            self.arith_coeffs = map(Integer, self.motive["arith_coeffs_string"])
+            self.arith_coeffs = map(Integer, self.motive["coeffs_string"])
 
         self.support = "Support by Paul-Olivier Dehaye"
         
@@ -1127,23 +1127,33 @@ class HypergeometricMotiveLfunction(Lfunction):
         self.motivic_weight =  self.motive["weight"]
         
         # level, residues, selfdual, primitive, langlands
-        
-        # Hardcoded for 'A2.2.2.2_B1.1.1.1_t1.2'
+        # will not work for some values!!!!
         self.poles = []
         self.residues = []
         self.primitive = True
         self.langlands = True
-        self.mu_fe = []                     
-        self.nu_fe = [Rational("1/2"),Rational("3/2")]   
+            
+        hodge = self.motive["hodge"]
+        signature = self.motive["sig"]
+        hodge_index = lambda p: hodge[p]
+            # The hodge number p,q
+        
+        from lmfdb.hypergm.hodge import mu_nu
+        
+        
+        
+        self.mu_fe, self.nu_fe = mu_nu(hodge, signature)
+         
         self.selfdual = True 
         self.coefficient_period = 0
 
-        self.compute_kappa_lambda_Q_from_mu_nu()            # Somehow this doesn t work, and I don t know why!
+        #self.compute_kappa_lambda_Q_from_mu_nu()            # Somehow this doesn t work, and I don t know why!
         # That s why I am reassigning just below
-        self.Q_fe = float(sqrt(self.conductor)/2**len(self.nu_fe)/pi**(len(self.mu_fe)/2+len(self.nu_fe)))
+        self.Q_fe = float(sqrt(Integer(self.conductor))/2.**len(self.nu_fe)/pi**(len(self.mu_fe)/2.+len(self.nu_fe)))
         self.kappa_fe = [.5 for m in self.mu_fe] + [1. for n in self.nu_fe] 
         self.lambda_fe = [m/2. for m in self.mu_fe] + [n for n in self.nu_fe]
-        self.dirichlet_coefficients = [Reals()(Integer(x))/Reals()(n+1)**(1.5) for n, x in enumerate(self.arith_coeffs)]
+                
+        self.dirichlet_coefficients = [Reals()(Integer(x))/Reals()(n+1)**(self.motivic_weight/2.) for n, x in enumerate(self.arith_coeffs)]
 
         
         self.texname = "L(s)"  
@@ -1159,15 +1169,16 @@ class HypergeometricMotiveLfunction(Lfunction):
         self.dirichlet_coefficient = [normalize(coeff, i+1, Lexponent) for i, coeff in enumerate(self.arith_coeffs)]
 
         period = 0
-
+        
         self.sageLfunction = lc.Lfunction_D("LfunctionHypergeometric", 0, self.dirichlet_coefficient, period, self.Q_fe, self.sign, self.kappa_fe, self.lambda_fe, self.poles, self.residues)
-
+        
 
     def Ltype(self):
         return "hgmQ"
         
     def Lkey(self):
         return {"label":self.label}
+        
 #############################################################################
 
 class ArtinLfunction(Lfunction):

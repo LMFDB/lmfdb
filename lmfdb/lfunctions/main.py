@@ -324,19 +324,18 @@ def render_single_Lfunction(Lclass, args, request):
     logger.debug(temp_args)
     try:
         L = Lclass(**args)
-        try:
-            if temp_args['download'] == 'lcalcfile':
-                return render_lcalcfile(L, request.url)
-        except Exception as ex:
-            pass # Do nothing
-            
     except Exception as ex:
         from flask import current_app
         if not current_app.debug:
-            info = {'content': 'Sorry, there has been a problem: %s.' % ex.args[0], 'title': 'Error'}
+            info = {'content': 'Sorry, there has been a problem: %s.'%str(ex.args), 'title': 'Error'}
             return render_template('LfunctionSimple.html', info=info, **info), 500
         else:
             raise ex
+    try:
+        if temp_args['download'] == 'lcalcfile':
+            return render_lcalcfile(L, request.url)
+    except KeyError as ex:
+        pass # Do nothing
 
     info = initLfunction(L, temp_args, request)
     return render_template('Lfunction.html', **info)
@@ -358,7 +357,6 @@ def render_lcalcfile(L, url):
 def initLfunction(L, args, request):
     ''' Sets the properties to show on the homepage of an L-function page.
     '''
-
     info = {'title': L.title}
     try:
         info['citation'] = L.citation
@@ -388,10 +386,10 @@ def initLfunction(L, args, request):
     info['args'] = args
 
     info['credit'] = L.credit
-    try:
-        info['citation'] = L.citation
-    except:
-        pass
+    #try:
+    #    info['citation'] = L.citation
+    #except:
+    #    pass
 
     try:
         info['factorization'] = L.factorization
@@ -584,7 +582,6 @@ def initLfunction(L, args, request):
         lcalcUrl = request.url + '&download=lcalcfile'
 
     info['downloads'] = [('Lcalcfile', lcalcUrl)]
-
     return info
 
 
