@@ -570,7 +570,7 @@ def initLfunction(L, args, request):
             info['plotlink'] = ''
             
     elif L.Ltype() == "hgmQ":        
-        info['friends'] = [('Hypergeometric family ', friendlink.replace("_t","/t"))]   # The /L/ trick breaks down for motives, because we have a scheme for the L-functions themselves
+        info['friends'] = [('Hypergeometric motive ', friendlink.replace("_t","/t"))]   # The /L/ trick breaks down for motives, because we have a scheme for the L-functions themselves
         
 
     info['dirichlet'] = lfuncDStex(L, "analytic")
