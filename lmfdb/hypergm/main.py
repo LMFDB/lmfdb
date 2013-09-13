@@ -252,7 +252,8 @@ def render_hgm_webpage(args):
         hodge = data['hodge']
         prop2 = [
             ('Degree', '\(%s\)' % data['degree']),
-            ('Weight',  '\(%s\)' % data['weight'])
+            ('Weight',  '\(%s\)' % data['weight']),
+            ('Conductor', '\(%s\)' % data['cond']),
         ]
         info.update({
                     'A': A,
@@ -263,6 +264,7 @@ def render_hgm_webpage(args):
                     'sign': data['sign'],
                     'sig': data['sig'],
                     'hodge': hodge,
+                    'cond': data['cond'],
                     'locinfo': locinfo
                     })
         friends = []
