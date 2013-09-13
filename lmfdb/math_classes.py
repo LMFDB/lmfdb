@@ -319,7 +319,7 @@ class ArtinRepresentation(object):
             return self.good_factor(p)
 
     def Lfunction(self):
-        from Lfunction import ArtinLfunction
+        from lfunctions.Lfunction import ArtinLfunction
         return ArtinLfunction(dimension = self.dimension(), conductor = self.conductor(), tim_index = self.index())
 
     def indicator(self):
