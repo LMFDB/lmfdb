@@ -9,7 +9,7 @@ import flask
 from lmfdb import base
 from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input, image_callback
 from sage.all import ZZ, var, PolynomialRing, QQ, latex
 from lmfdb.hypergm import hypergm_page, hgm_logger
 
@@ -86,6 +86,17 @@ def index():
     info = {'count': 20}
     return render_template("hgm-index.html", title="Hypergeometric Motives", bread=bread, credit=HGM_credit, info=info)
 
+
+
+@hypergm_page.route("/plot/<AB>")
+def hgm_family_up_down_plot(AB):
+    A,B = AB.split("_")
+    from plot import circle_image
+    A = map(int,A[1:].split("."))
+    B = map(int,B[1:].split("."))
+    G = circle_image(A, B)
+    return image_callback(G)
+
 @hypergm_page.route("/<label>")
 def by_family_label(label):
     return render_hgm_family_webpage({'label': label})
@@ -104,8 +115,7 @@ def search():
         return "ERROR: we always do http get to explicitly display the search parameters"
     else:
         return flask.redirect(404)
-
-
+    
 
 def hgm_search(**args):
     info = to_dict(args)
@@ -295,7 +305,7 @@ def render_hgm_family_webpage(args):
 #        if rffriend != '':
 #            friends.append(('Discriminant root field', rffriend))
 
-        #info.update({"plotlink", url_for(".hgm_family_image", A = "A"+".".join(map(str,A)), B = "B"+".".join(map(str,B)))})
+        info.update({"plotlink": url_for(".hgm_family_up_down_plot", AB  = "A"+".".join(map(str,A))+"_B"+".".join(map(str,B)))})
         bread = get_bread([(label, ' ')])
         return render_template("hgm-show-family.html", credit=HGM_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends)
 
