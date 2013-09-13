@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from sage.misc.functional import is_odd
+from sage.misc.functional import is_odd, is_even
 from sage.rings.integer import Integer
 from sage.rings.power_series_ring import PowerSeriesRing
 from sage.rings.integer_ring import IntegerRing
@@ -28,10 +28,59 @@ def fetch( dct):
 ## Dimension formulas for Gamma(2)
 ####################################################################
 
-# def _dimension_Gamma_2( wt_range, j):
-#     return _vvsf_dimension_Gamma_2( wt_range, j)
+def dimension_Gamma_2( wt_range, j):
+    return _dimension_Gamma_2( wt_range, j, group = 'Gamma(2)')
 
-def _dimension_Gamma_2( wt_range, j):
+def dimension_Gamma1_2( wt_range, j):
+    return _dimension_Gamma_2( wt_range, j, group = 'Gamma1(2)')
+
+def dimension_Gamma0_2( wt_range, j):
+    return _dimension_Gamma_2( wt_range, j, group = 'Gamma0(2)')
+
+def dimension_Sp4Z( wt_range, j):
+    if 0 == j:
+        return _dimension_Sp4Z( wt_range)
+    else:
+        return _dimension_Gamma_2( wt_range, j, group = 'Sp4(Z)')
+
+
+
+def _dimension_Sp4Z( wt_range):
+    """
+    Return the dimensions of subspaces of Siegel modular forms on $Sp(4,Z)$.
+
+    OUTPUT
+        ("Total", "Eisenstein", "Klingen", "Maass", "Interesting")
+    """
+    headers = ['Total', 'Eisenstein', 'Klingen', 'Maass', 'Interesting']
+
+    R = PowerSeriesRing( IntegerRing(), default_prec = wt_range[-1] + 1, names = ('x',))
+    (x,) = R._first_ngens(1)
+    H_all = 1 / (1 - x ** 4) / (1 - x ** 6) / (1 - x ** 10) / (1 - x ** 12)
+    H_Kl = x ** 12 / (1 - x ** 4) / (1 - x ** 6)
+    H_MS = (x ** 10 + x ** 12) / (1 - x ** 4) / (1 - x ** 6)
+
+    dct = dict( (k,
+                 { 'Total': H_all[k], 
+                   'Eisenstein': 1 if k >= 4 else 0,
+                   'Klingen': H_Kl[k],
+                   'Maass': H_MS[k],
+                   'Interesting': H_all[k]-(1 if k >= 4 else 0)-H_Kl[k]-H_MS[k]
+                   }
+                 if is_even(k) else
+                 { 'Total': H_all[k-35], 
+                   'Eisenstein': 0,
+                   'Klingen': 0,
+                   'Maass': 0,
+                   'Interesting': H_all[k-35]
+                   }
+                 ) for k in wt_range)
+
+    return headers, dct
+
+
+
+def _dimension_Gamma_2( wt_range, j, group = 'Gamma(2)'):
     """
     Return the dict
     {(k-> partition ->  [ d(k), e(k), c(k)] for k in wt_range]},
@@ -69,14 +118,53 @@ def _dimension_Gamma_2( wt_range, j):
         cusp[p] = eval(db_cusp[p])
     # total = dict( ( p, eval(db_total[p])) for p in partitions)
     # cusp = dict( ( p, eval(db_cusp[p])) for p in partitions)
-    dct = dict( (k, dict( (p, [total[p][k], total[p][k]-cusp[p][k], cusp[p][k]]) for p in partitions))
-              for k in wt_range)
     
-    for k in dct:
-        dct[k]['All'] = [sum( dct[k][p][j] for p in dct[k]) for j in range(3)]
+    if 'Gamma(2)' == group:
+        dct = dict( (k, dict( (p, [total[p][k], total[p][k]-cusp[p][k], cusp[p][k]])
+                              for p in partitions)) for k in wt_range)
+        for k in dct:
+            dct[k]['All'] = [sum( dct[k][p][j] for p in dct[k]) for j in range(3)]
+            
+        partitions.insert( 0,'All')
+        headers = partitions
 
-    partitions.insert( 0,'All')
-    return partitions, dct
+    elif 'Gamma1(2)' == group:
+        ps = { '3': ['6', '42', '222'],
+               '21': ['51', '42', '321'],
+               '111': ['411', '33']}
+        
+        dct = dict( (k, dict( (p,[
+                            sum( total[q][k] for q in ps[p]),
+                            sum( total[q][k]-cusp[q][k] for q in ps[p]),
+                            sum( cusp[q][k] for q in ps[p]),
+                            ]) for p in ps)) for k in wt_range) 
+        for k in dct:
+            dct[k]['All'] = [sum( dct[k][p][j] for p in dct[k]) for j in range(3)]       
+
+        headers = ps.keys()
+        #['3', '21', '111']
+        headers.sort( reverse = True)
+        headers.insert( 0,'All')
+
+    elif 'Gamma0(2)' == group:
+        headers = ['Total', 'Non cusp', 'Cusp']
+        ps = ['6', '42', '222']
+        dct = dict( (k, { 'Total': sum( total[p][k] for p in ps),
+                          'Non cusp': sum( total[p][k]-cusp[p][k] for p in ps),
+                          'Cusp': sum( cusp[p][k] for p in ps)})
+                    for k in wt_range)
+
+    elif 'Sp4(Z)' == group:
+        headers = ['Total', 'Non cusp', 'Cusp']
+        p = '6'
+        dct = dict( (k, { 'Total': total[p][k],
+                          'Non cusp': total[p][k]-cusp[p][k],
+                          'Cusp': cusp[p][k]})
+                    for k in wt_range)
+    else:
+        raise NotImplemetedError()
+
+    return headers, dct
 
 ################### cut here ######################################
 

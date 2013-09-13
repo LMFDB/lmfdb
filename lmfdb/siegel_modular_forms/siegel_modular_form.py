@@ -50,20 +50,21 @@ def render_webpage(args={}):
 
         if 'Sp4Z' == args['group']:
             info['parent_as_tex'] = 'M_k\\big({\\rm Sp}(4,\\mathbb{Z})\\big)'
-            dimension = siegel_core._dimension_Sp4Z
+            # dimension = siegel_core._dimension_Sp4Z
+            dimension = dimensions.dimension_Sp4Z
             info['generators'] = 'smf.Igusa_generators'
 
         elif 'Gamma0_2' == args['group']:
             info['parent_as_tex'] = 'M_{k,j}\\big(\\Gamma_0(2)\\big)'
-            dimension = dimensions._dimension_Gamma0_2    
+            dimension = dimensions.dimension_Gamma0_2    
 
         elif 'Gamma1_2' == args['group']:
             info['parent_as_tex'] = 'M_{k,j}\\big(\\Gamma_1(2)\\big)'
-            dimension = dimensions._dimension_Gamma1_2
+            dimension = dimensions.dimension_Gamma1_2
 
         elif 'Gamma_2' == args['group']:
             info['parent_as_tex'] = 'M_{k,j}\\big(\\Gamma(2)\\big)'
-            dimension = dimensions._dimension_Gamma_2
+            dimension = dimensions.dimension_Gamma_2
 
         elif 'Sp4Z_2' == args['group']:
             info['parent_as_tex'] = 'M_{k,2}\\big({\\rm Sp}(4,\\mathbb{Z})\\big)'
@@ -171,7 +172,7 @@ def render_webpage(args={}):
                 info['dimensions'] = [(k, dimension(k, tp=int(level))) for k in range(min_wt, max_wt + 1)]
                 bread += [('Dimensions',
                           url_for('ModularForm_GSp4_Q_top_level', group=group, page=page, level=level, weight_range=weight_range))]
-            elif 'Gamma_2' == group:
+            elif 'Gamma_2' == group or 'Gamma0_2' == group or 'Gamma1_2' == group or 'Sp4Z' == group:
                 info['sym_pow'] = sym_pow
                 info['table_headers'], info['dimensions'] = dimension( range( min_wt, max_wt + 1), sym_pow)
                 bread += [('Dimensions',
@@ -195,7 +196,7 @@ def render_webpage(args={}):
         elif 'Sp4Z_2' == group or 'Gamma0_4_half' == group:
             info['table_headers'] = ['Weight', 'Total', 'Non cusp', 'Cusp']
 
-        elif 'Gamma_2' == group:
+        elif 'Gamma_2' == group or 'Gamma0_2' == group or 'Gamma1_2' == group or 'Sp4Z' == group:
              info['table_headers'] = info['table_headers']
 
         else:

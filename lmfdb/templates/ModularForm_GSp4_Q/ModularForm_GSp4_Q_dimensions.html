@@ -68,6 +68,28 @@
   {% endif %}
 </p>  
 
+{% if group == 'Gamma_2' or group == 'Gamma0_2' or group == 'Gamma1_2' or group == 'Sp4Z' %}
+<table>
+  <thead>
+    <tr>
+      <th>Weight</th>
+
+      {% for header in table_headers %}
+      <th>{{ header }}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  {% for k in dimensions %}
+  <tr class = "{{ loop.cycle( 'odd', 'even') }}">
+    <td>{{ k }}</td>
+    {% for header in table_headers %} 
+    <td>{{ dimensions[k][header] }}</td>
+    {% endfor %}
+    </tr>
+  {% endfor %}
+</table>
+
+{% else %}
 <table>
   <thead>
     <tr>
@@ -85,6 +107,7 @@
   </tr>
   {% endfor %}
 </table>
+{% endif %}
 {% endif %}
 
 <script>
