@@ -810,7 +810,7 @@ class WebNewForm(SageObject):
         Init self as form number fi in S_k(N,chi)
         """
         if label<>'' and get_from_db:            
-            d = get_web_newform_from_db(N,k,chi,label):
+            d = get_web_newform_from_db(N,k,chi,label)
             if d <> None:
                 F.__dict__.update(d)
             return 
@@ -929,7 +929,8 @@ class WebNewForm(SageObject):
         emf_logger.debug("before end of __init__ type(f)={0}".format(type(self._f)))
         self._base_ring = self._f.q_eigenform(prec, names='x').base_ring()
         emf_logger.debug("done __init__")
-
+        self.insert_into_db()
+        
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return False
