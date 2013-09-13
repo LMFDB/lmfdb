@@ -170,7 +170,7 @@ class WebModFormSpace(Parent):
 
                 emf_logger.debug("f_data={0}".format(f_data['f']))
                 emf_logger.debug("self_ap={0}".format(self._ap))
-                if self._ap is not None and len(self._ap) >= i+1:
+                if isinstance(self._ap,list) and len(self._ap) >= i+1:
                     f_data['ap'] = self._ap[i]
                 print "\n\n\n Get F"
                 emf_logger.debug("Actually getting F {0},{1}".format(label, i))
@@ -800,20 +800,30 @@ class WebModFormSpace(Parent):
         return s
 
 
-            
+
+
+#def WebNewForm(k, N, chi=0, label='', fi=-1, prec=10, bitprec=53, parent=None, data=None, compute=None, verbose=-1,get_from_db=True):
+#
+#        if F <> None:
+#            return F
+#    return WebNewForm_class(k, N, chi, label, fi, prec, bitprec, parent, data, compute, verbose,get_from_db)
+
 class WebNewForm(SageObject):
     r"""
     Class for representing a (cuspidal) newform on the web.
     """
-    def __init__(self, k, N, chi=0, label='', fi=-1, prec=10, bitprec=53, parent=None, data=None, compute=None, verbose=-1,get_from_db=False):
+    def __init__(self, k, N, chi=0, label='', fi=-1, prec=10, bitprec=53, parent=None, data={}, compute=None, verbose=-1,get_from_db=True):
         r"""
         Init self as form number fi in S_k(N,chi)
         """
+        emf_logger.debug("k,N,chi,label={0}".format( (k,N,chi,label)))
         if label<>'' and get_from_db:            
-            d = get_web_newform_from_db(N,k,chi,label)
-            if d <> None:
-                F.__dict__.update(d)
-            return 
+            if from_db and label<>'':
+                d = self.get_from_db(N,k,chi,label)
+            else:
+                d = {}
+        data.update(d)
+        emf_logger.debug("Got data:{0}".format( data))
         if chi == 'trivial':
             chi = ZZ(0)
         else:
@@ -953,11 +963,12 @@ class WebNewForm(SageObject):
             id = f.get('_id')
             fs = gridfs.GridFS(C[db_name],'WebNewForms')
             f = fs.get(id)
-            emf_logger.debug("Gettig rec={0}".format(f))
-            F = loads(f.read())
-            #self.__dict__ = F.__dict__
-            return F
-        return False
+            emf_logger.debug("Getting rec={0}".format(f))
+            d = loads(f.read())
+            return d
+        return {}
+    
+
     
     def insert_into_db(self):
         emf_logger.debug("inserting self into db!")
@@ -967,7 +978,7 @@ class WebNewForm(SageObject):
               
         fname = "webnewform-{0:0>5}-{1:0>3}-{2:0>3}-{3}".format(self._N,self._k,self._chi,self._label) 
         rec = {'N':int(self._N),'k':int(self._k),'chi':int(self._chi),'label':self._label}
-        id = fs.put(dumps(self.__dict__),filename=fname,N=int(self._N),k=int(self._k),chi=int(self._chi),label=self._label)
+        id = fs.put(dumps(self._to_dict()),filename=fname,N=int(self._N),k=int(self._k),chi=int(self._chi),label=self._label)
         emf_logger.debug("inserted :{0}".format(id))
     
     def __repr__(self):
@@ -1210,7 +1221,6 @@ class WebNewForm(SageObject):
                         E, v = self._f.compact_system_of_eigenvalues(prime_range(ps, pe + 1), names='x')
                     c = E * v
                     # if self._verbose>0:
-                    #    print "c="
                     for app in c:
                         self._ap.append(app)
                 ap = self._ap[pi]
