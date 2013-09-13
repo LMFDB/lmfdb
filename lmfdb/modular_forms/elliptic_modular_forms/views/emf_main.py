@@ -121,7 +121,7 @@ def render_elliptic_modular_forms(level=0, weight=0, character=None, label='', *
 
 @emf.route("/<test>/")
 def redirect_false_route(test=None):
-    args = extract_data_from_jump_to(s)
+    args = extract_data_from_jump_to(test)
     redirect(url_for("render_elliptic_modular_forms", **args), code=301)
     # return render_elliptic_modular_form_navigation_wp(**info)
 
