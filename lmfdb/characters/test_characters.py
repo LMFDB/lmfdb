@@ -31,7 +31,27 @@ class UrlCharacterTest(LmfdbTest):
     #    assert url_character(type='Dirichlet') == '/Character/Dirichlet'
     #    assert url_character(type='Dirichlet', modulus='132') == '/Character/Dirichlet/132'
 
+class DirichletSearchTest(LmfdbTest):
 
+    def test_condbrowse(self): 
+        W = self.tc.get('/Character/?condbrowse=24-41')
+        assert '(\\frac{40}{\\bullet}\\right)' in W.data
+        
+    def test_ordbrowse(self): 
+        W = self.tc.get('/Character/?ordbrowse=17-23')
+        assert '\chi_{ 191 }( 32' in W.data
+
+    def test_modbrowse(self): 
+        W = self.tc.get('/Character/?modbrowse=51-81')
+        """
+        curl '/Character/?modbrowse=51-81' | grep '27' | wc -l
+        each 27 occurs twice
+        """
+        assert W.data.count('27') == 40
+
+    def test_search(self):
+        W = self.tc.get('/Character/?conductor=15&order=4')
+        assert '\displaystyle \chi_{ 45}(17' in W.data
 
 class DirichletCharactersTest(LmfdbTest):
 
