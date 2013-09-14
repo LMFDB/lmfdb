@@ -141,6 +141,11 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
     info['new_decomposition'] = WMFS.print_galois_orbits()
     emf_logger.debug("new_decomp={0}".format(info['new_decomposition']))
     info['nontrivial_new'] = len(info['new_decomposition'])
+    if info['new_decomposition']=='':
+        if info['dimension_newspace'] >0:
+            info['nontrivial_new_info'] = " is unfortunately not in the database yet!" 
+        else:
+            info['nontrivial_new_info'] = " is empty!"
     ## we try to catch well-known bugs...
     info['old_decomposition'] = "n/a"
     if level < N_max_comp:

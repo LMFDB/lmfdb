@@ -26,7 +26,7 @@ Fix complex characters. I.e. embedddings and galois conjugates in a consistent w
 
 """
 from sage.all import ZZ, QQ, DirichletGroup, CuspForms, Gamma0, ModularSymbols, Newforms, trivial_character, is_squarefree, divisors, RealField, ComplexField, prime_range, I, join, gcd, Cusp, Infinity, ceil, CyclotomicField, exp, pi, primes_first_n, euler_phi, RR, prime_divisors, Integer, matrix
-from sage.all import Parent, SageObject, dimension_new_cusp_forms, vector, dimension_modular_forms, dimension_cusp_forms, EisensteinForms, Matrix, floor, denominator, latex, is_prime, prime_pi, next_prime, primes_first_n, previous_prime, factor, loads,save
+from sage.all import Parent, SageObject, dimension_new_cusp_forms, vector, dimension_modular_forms, dimension_cusp_forms, EisensteinForms, Matrix, floor, denominator, latex, is_prime, prime_pi, next_prime, primes_first_n, previous_prime, factor, loads,save,dumps
 import re
 
 from flask import url_for
@@ -46,7 +46,7 @@ try:
 except:
     emf_logger.critical("Could not import dirichlet_conrey!")
 
-db_name = 'modularforms'
+db_name = 'modularforms2'
 from lmfdb.website import dbport
 
 
@@ -92,6 +92,7 @@ class WebModFormSpace(Parent):
         self._newspace = None
         self._character = None
         self._got_ap_from_db = False
+        self._use_db = use_db
         # check what is in the database
         ## dO A SIMPLE TEST TO SEE IF WE EXIST OR NOT.
         if N < 0 or int(chi) > int(euler_phi(N)) or chi < 0:
@@ -166,10 +167,12 @@ class WebModFormSpace(Parent):
                 f_data = dict()
                 f_data['parent'] = self
                 f_data['f'] = self.galois_decomposition()[i]
+
                 emf_logger.debug("f_data={0}".format(f_data['f']))
                 emf_logger.debug("self_ap={0}".format(self._ap))
-                if self._ap is not None and len(self._ap) <= i:
+                if isinstance(self._ap,list) and len(self._ap) >= i+1:
                     f_data['ap'] = self._ap[i]
+                print "\n\n\n Get F"
                 emf_logger.debug("Actually getting F {0},{1}".format(label, i))
                 F = WebNewForm(self._k, self._N, self._chi, label=label, fi=i, prec=self._prec, bitprec=self._bitprec, verbose=self._verbose, data=f_data, parent=self, compute=i)
                 emf_logger.debug("F={0},type(F)={1}".format(F, type(F)))
@@ -199,7 +202,7 @@ class WebModFormSpace(Parent):
         r"""
         Getting the space of modular symbols from the database if it exists. Otherwise compute it and insert it into the database.
         """
-        if not get_what in ['ap', 'Modular_symbols']:
+        if not get_what in ['ap', 'Modular_symbols','Newform_factors']:
             emf_logger.critical("Collection {0} is not implemented!".format(get_what))
         collection = get_what
         emf_logger.debug("collection={0}".format(collection))
@@ -222,33 +225,41 @@ class WebModFormSpace(Parent):
                 if not collection + '.files' in C[db_name].collection_names():
                     emf_logger.critical("Incorrect collection {0} in database {1}. \n Available collections are:{2}".format(collection, db_name, C[db_name].collection_names()))
                 files = C[db_name][collection].files
-                if chi == 0:
-                    key = {'k': int(k), 'N': int(N)}
-                else:
-                    key = {'k': int(k), 'N': int(N), 'chi': int(chi)}
+                key = {'k': int(k), 'N': int(N), 'chi': int(chi)}
                 if get_what == 'ap':
                     key['prec'] = {"$gt": prec - 1}
                 finds = files.find(key)
                 if get_what == 'ap':
                     finds = finds.sort("prec")
+                    self._got_ap_from_db = True                    
                 if self._verbose > 1:
                     emf_logger.debug("files={0}".format(files))
                     emf_logger.debug("key={0}".format(key))
                     emf_logger.debug("finds={0}".format(finds))
                     emf_logger.debug("finds.count()={0}".format(finds.count()))
-                if finds and finds.count() > 0:
+                if get_what=='Newform_factors':
+                    finds = finds.sort("newform")
+                    res = []
+                    for rec in finds:
+                        fid = rec['_id']
+                        fs = gridfs.GridFS(C[db_name], collection)
+                        f = fs.get(fid)
+                        emf_logger.debug("rec={0}".format(rec))
+                        res.append(loads(f.read()))
+                        self._from_db = 1
+                elif finds and finds.count() > 0:
                     rec = finds[0]
                     emf_logger.debug("rec={0}".format(rec))
                     fid = rec['_id']
                     fs = gridfs.GridFS(C[db_name], collection)
                     f = fs.get(fid)
-                    #print f.read()
-                    #save(f.read(),"/home/purem/cvzx53/modym.sobj")
                     res = loads(f.read())
                     # TODO avoid pickling python objects for storing in the database
                     self._from_db = 1
-                    self._id = rec['_id']
-                self._got_ap_from_db = True
+                    if get_what == 'Modular_symbls':
+                        self._id = rec['_id'] 
+                else:
+                    res = []
         except ArithmeticError:
             pass
             #Exception as e:
@@ -312,6 +323,19 @@ class WebModFormSpace(Parent):
         return s
         # return str(self._fullspace)
 
+    def _computation_too_hard(self,comp='decomp'):
+        r"""
+        See if the supplied parameters make computation too hard or if we should try to do it on the fly.
+        TODO: Actually check times.
+        """
+        if comp=='decomp':
+            if self._level > 50:
+                return True
+            if self._chi > 0 and self._N > 5:
+                return True
+            if self._weight+self._N  > 100:
+                return True
+            return False
     # internal methods to generate properties of self
     def galois_decomposition(self):
         r"""
@@ -320,7 +344,19 @@ class WebModFormSpace(Parent):
         from sage.monoids.all import AlphabeticStrings
         if(len(self._galois_decomposition) != 0):
             return self._galois_decomposition
-        L = self._newspace.decomposition()
+        if '_HeckeModule_free_module__decomposition' in self._newspace.__dict__:
+            L = self._newspace.decomposition()
+        else:
+            decomp = self._get_objects(self._k, self._N, self._chi, self._use_db, 'Newform_factors')
+            if len(decomp)>0:
+                L = filter(lambda x: x.is_new() and x.is_cuspidal(), decomp)
+                emf_logger.debug("computed L:".format(L))
+            elif self._use_db or self._computation_too_hard():
+                L = []
+                emf_logger.debug("no decomp in database!")
+            else: # compute
+                L = self._newspace.decomposition()
+                emf_logger.debug("computed L:".format(L))
         self._galois_decomposition = L
         # we also label the compnents
         x = AlphabeticStrings().gens()
@@ -764,15 +800,30 @@ class WebModFormSpace(Parent):
         return s
 
 
-class WebNewForm(SageObject):
 
+
+#def WebNewForm(k, N, chi=0, label='', fi=-1, prec=10, bitprec=53, parent=None, data=None, compute=None, verbose=-1,get_from_db=True):
+#
+#        if F <> None:
+#            return F
+#    return WebNewForm_class(k, N, chi, label, fi, prec, bitprec, parent, data, compute, verbose,get_from_db)
+
+class WebNewForm(SageObject):
     r"""
     Class for representing a (cuspidal) newform on the web.
     """
-    def __init__(self, k, N, chi=0, label='', fi=-1, prec=10, bitprec=53, parent=None, data=None, compute=None, verbose=-1):
+    def __init__(self, k, N, chi=0, label='', fi=-1, prec=10, bitprec=53, parent=None, data={}, compute=None, verbose=-1,get_from_db=True):
         r"""
         Init self as form number fi in S_k(N,chi)
         """
+        emf_logger.debug("k,N,chi,label={0}".format( (k,N,chi,label)))
+        if label<>'' and get_from_db:            
+            if get_from_db and label<>'':
+                d = self.get_from_db(N,k,chi,label)
+            else:
+                d = {}
+        data.update(d)
+        emf_logger.debug("Got data:{0}".format( data))
         if chi == 'trivial':
             chi = ZZ(0)
         else:
@@ -888,7 +939,8 @@ class WebNewForm(SageObject):
         emf_logger.debug("before end of __init__ type(f)={0}".format(type(self._f)))
         self._base_ring = self._f.q_eigenform(prec, names='x').base_ring()
         emf_logger.debug("done __init__")
-
+        self.insert_into_db()
+        
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return False
@@ -900,6 +952,35 @@ class WebNewForm(SageObject):
             return False
         return True
 
+    def get_from_db(self,N,k,chi,label):
+        C = lmfdb.base.getDBConnection()
+        collection = C[db_name].WebNewForms.files
+        s = {'N':int(N),'k':int(k),'chi':int(chi),'label':label}
+        emf_logger.debug("Looking in DB for rec={0}".format(s))
+        f = C[db_name].WebNewForms.files.find_one(s)
+        emf_logger.debug("Found rec={0}".format(f))
+        if f<>None:
+            id = f.get('_id')
+            fs = gridfs.GridFS(C[db_name],'WebNewForms')
+            f = fs.get(id)
+            emf_logger.debug("Getting rec={0}".format(f))
+            d = loads(f.read())
+            return d
+        return {}
+    
+
+    
+    def insert_into_db(self):
+        emf_logger.debug("inserting self into db!")
+        C = lmfdb.base.getDBConnection()
+        collection = C[db_name].WebNewForms.files
+        fs = gridfs.GridFS(C[db_name], 'WebNewForms')
+              
+        fname = "webnewform-{0:0>5}-{1:0>3}-{2:0>3}-{3}".format(self._N,self._k,self._chi,self._label) 
+        rec = {'N':int(self._N),'k':int(self._k),'chi':int(self._chi),'label':self._label}
+        id = fs.put(dumps(self._to_dict()),filename=fname,N=int(self._N),k=int(self._k),chi=int(self._chi),label=self._label)
+        emf_logger.debug("inserted :{0}".format(id))
+    
     def __repr__(self):
         r""" String representation f self.
         """
@@ -1140,7 +1221,6 @@ class WebNewForm(SageObject):
                         E, v = self._f.compact_system_of_eigenvalues(prime_range(ps, pe + 1), names='x')
                     c = E * v
                     # if self._verbose>0:
-                    #    print "c="
                     for app in c:
                         self._ap.append(app)
                 ap = self._ap[pi]
