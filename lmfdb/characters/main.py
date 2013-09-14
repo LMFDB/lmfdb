@@ -320,7 +320,8 @@ def dirichlet_table():
 #    return headers, rows
 
 
-# fixme: remove this
+# fixme: these group tables are needed by number fields pages.
+# should refactor this into WebDirichlet.py
 @characters_page.route("/Dirichlet/grouptable")
 def dirichlet_group_table(**args):
     modulus = request.args.get("modulus", 1, type=int)
@@ -329,11 +330,13 @@ def dirichlet_group_table(**args):
         info["modulus"] = modulus
     info['bread'] = [('Characters','/Character'), ('Dirichlet table', ' ') ]
     info['credit'] = 'Sage'
-    char_number_list = request.args.get("char_number_list")
+    char_number_list = request.args.get("char_number_list",None)
     if char_number_list is not None:
         info['char_number_list'] = char_number_list
         char_number_list = [int(a) for a in char_number_list.split(',')]
         info['poly'] = request.args.get("poly", '???')
+    else:
+        return render_template("404.html", message='grouptable needs char_number_list argument')
     h, c = get_group_table(modulus, char_number_list)
     info['headers'] = h
     info['contents'] = c
