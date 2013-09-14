@@ -25,7 +25,7 @@ TODO:
 Fix complex characters. I.e. embedddings and galois conjugates in a consistent way.
 
 """
-from sage.all import ZZ, QQ, DirichletGroup, CuspForms, Gamma0, ModularSymbols, Newforms, trivial_character, is_squarefree, divisors, RealField, ComplexField, prime_range, I, join, gcd, Cusp, Infinity, ceil, CyclotomicField, exp, pi, primes_first_n, euler_phi, RR, prime_divisors, Integer, matrix,NumberField
+from sage.all import ZZ, QQ, DirichletGroup, CuspForms, Gamma0, ModularSymbols, Newforms, trivial_character, is_squarefree, divisors, RealField, ComplexField, prime_range, I, join, gcd, Cusp, Infinity, ceil, CyclotomicField, exp, pi, primes_first_n, euler_phi, RR, prime_divisors, Integer, matrix,NumberField,PowerSeries_poly,PowerSeriesRing
 from sage.all import Parent, SageObject, dimension_new_cusp_forms, vector, dimension_modular_forms, dimension_cusp_forms, EisensteinForms, Matrix, floor, denominator, latex, is_prime, prime_pi, next_prime, primes_first_n, previous_prime, factor, loads,save,dumps,deepcopy
 import re
 
@@ -1188,7 +1188,7 @@ class WebNewForm(SageObject):
         """
         if prec == None:
             prec = self._prec
-        if isinstance(self._q_expansion,sage.rings.power_series_poly.PowerSeries_poly):
+        if isinstance(self._q_expansion,PowerSeries_poly):
             if self._q_expansion.prec() == self.prec():
                 return self._q_expansion
         if self._q_expansion_str<>'':
