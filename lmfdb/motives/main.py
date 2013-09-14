@@ -36,7 +36,7 @@ def index():
 
 @motive_page.route("/Hypergeometric")
 def index2():
-    bread = get_bread(['Hypergeometric', ' '])
+    bread = get_bread([('Hypergeometric', url_for('.index2'))])
     info = {}
     return render_template("hypergeometric-index.html", title="Hypergeometric Motives", bread=bread, credit=HGM_credit, info=info)
 

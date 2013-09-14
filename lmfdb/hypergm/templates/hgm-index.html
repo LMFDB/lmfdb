@@ -187,72 +187,59 @@ weight</a> <td><input type='text' name='weight' size=10 example='3'>
 </tr>
 <tr>
 <td align=left><a title="Hodge vector [mot.hodgevector]" kwargs="">Hodge vector</a> 
-  <td><input type='text' name='degree' size=10 example='[1,1,1,1]'> 
+  <td><input type='text' name='hodge' size=10 example='[1,1,1,1]'> 
 <span class="formexample"> e.g. [1,1,1,1]</span></td>
 <td>
 </tr>
 </tr>
 <tr>
 <td align=left><a title="A" kwargs="">A</a> 
-  <td><input type='text' name='degree' size=10 example='[3,2,2]'> 
+  <td><input type='text' name='A' size=10 example='[3,2,2]'> 
 <span class="formexample"> e.g. [3,2,2]</span></td>
 <td>
 <td align=left><a title="B" kwargs="">
-B</a> <td><input type='text' name='weight' size=10 example='[6,4]'> 
+B</a> <td><input type='text' name='B' size=10 example='[6,4]'> 
 <span class="formexample"> e.g. [6,4] </span></td>
 </tr>
 <tr>
 <td align=left><a title="A2" kwargs="">A<sub>2</sub></a>
-  <td><input type='text' name='degree' size=10 example='[2,2,1,1]'>
+  <td><input type='text' name='A2' size=10 example='[2,2,1,1]'>
 <span class="formexample"> e.g. [2,2,1,1]</span></td>
 <td>
 <td align=left><a title="B2" kwargs="">
 B<sub>2</sub></a> 
-<td><input type='text' name='weight' size=10 example='[4,2,2]'>
+<td><input type='text' name='B2' size=10 example='[4,2,2]'>
 <span class="formexample"> e.g. [4,2,2] </span></td>
 </tr>
 <tr>
 <td align=left><a title="A3" kwargs="">A<sub>3</sub></a>
-  <td><input type='text' name='degree' size=10 example='[3]'>
+  <td><input type='text' name='A3' size=10 example='[3]'>
 <span class="formexample"> e.g. [3]</span></td>
 <td>
 <td align=left><a title="B3" kwargs="">
 B<sub>3</sub></a> 
-<td><input type='text' name='weight' size=10 example='[3]'>
+<td><input type='text' name='B3' size=10 example='[3]'>
 <span class="formexample"> e.g. [3] </span></td>
 </tr>
 <tr>
 <td align=left><a title="A5" kwargs="">A<sub>5</sub></a>
-  <td><input type='text' name='degree' size=10 example='[]'>
+  <td><input type='text' name='A5' size=10 example='[]'>
 <span class="formexample"> e.g. []</span></td>
 <td>
 <td align=left><a title="B5" kwargs="">
 B<sub>5</sub></a> 
-<td><input type='text' name='weight' size=10 example='[]'>
+<td><input type='text' name='B5' size=10 example='[]'>
 <span class="formexample"> e.g. [] </span></td>
 </tr>
 <tr>
 <td align=left><a title="A7" kwargs="">A<sub>7</sub></a>
-  <td><input type='text' name='degree' size=10 example='[]'>
+  <td><input type='text' name='A7' size=10 example='[]'>
 <span class="formexample"> e.g. []</span></td>
 <td>
 <td align=left><a title="B7" kwargs="">
 B<sub>7</sub></a>
-<td><input type='text' name='weight' size=10 example='[]'>
+<td><input type='text' name='B7' size=10 example='[]'>
 <span class="formexample"> e.g. [] </span></td>
-</tr>
-</table>
-
-<table>
-<tr>
-<td align=left><a title="Degree of a family [hgf.degree]" knowl="hgf.degree" kwa
-rgs="">degree</a>
-  <td><input type='text' name='degree' size=10 example='4'>
-<span class="formexample"> e.g. 4</span></td>
-<td>
-<td align=left><a title="Weight [hgf.weight]" knowl="hnf.weight" kwargs="">
-weight</a> <td><input type='text' name='weight' size=10 example='3'>
-<span class="formexample"> e.g. 3 </span></td>
 </tr>
 </table>
 
@@ -261,32 +248,31 @@ Enter values into the boxes above and the boxes below to obtain the
 list of corresponding hypergeometric motives.  
 <table>
 <tr>
-<td align=left><a title="Conductor [conductor]" knowl="conductor" kwa
-rgs="">conductor</a>
-  <td><input type='text' name='degree' size=10 example='2^13 3^7'>
+<td align=left><a title="Conductor [conductor]" knowl="conductor" kwargs="">conductor</a>
+  <td><input type='text' name='conductor' size=10 example='2^13 3^7'>
 <span class="formexample"> e.g. 2^13 3^7 (or a range like [1..1000000])
 </span></td>
 </tr>
 <tr>
 <td align=left><a title="Specialization point [hgm.specpoint]" 
-knowl="specialization point" kwa rgs="">specialization point $t$</a>
-  <td><input type='text' name='degree' size=10 example='3/2'>
+knowl="specialization point" kwargs="">specialization point $t$</a>
+  <td><input type='text' name='t' size=10 example='3/2'>
 <span class="formexample"> e.g. 3/2 
 (1 has an associated degree drop and is always in the database) 
 </span></td>
 </tr>
 <tr>
 <td align=left><a title="Sign of Functional Equation [sign]" 
-knowl="Sign" kwa rgs="">sign of functional equation $\epsilon$</a>
-  <td><input type='text' name='degree' size=10 example='-1'>
+knowl="Sign" kwargs="">sign of functional equation $\epsilon$</a>
+  <td><input type='text' name='sign' size=10 example='-1'>
 <span class="formexample"> 
 (1 or -1, with -1 occurring only in the symplectic case) 
 </span></td>
 </tr>
 <tr>
 <td align=left><a title="Generic [generic]" 
-knowl="Sign" kwa rgs="">Generic</a>
-  <td><input type='text' name='degree' size=10 example='yes'>
+knowl="Sign" kwargs="">Generic</a>
+  <td><input type='text' name='generic' size=10 example='yes'>
 <span class="formexample"> 
 (yes or no, with no rare, expecially in symplectic cases) 
 </span></td>
@@ -294,12 +280,13 @@ knowl="Sign" kwa rgs="">Generic</a>
 <tr>
 <td align=left><a title="Irreducible? [irreducible]" 
 knowl="Sign" kwa rgs="">Irreducible?</a>
-  <td><input type='text' name='degree' size=10 example='yes'>
+  <td><input type='text' name='irreducible' size=10 example='yes'>
 <span class="formexample"> 
 (yes or no, with no very rare) 
 </span></td>
 </tr>
-<tr> <td> Maximum number of fields to display: </td><td><input type="text" name="count" value="{{info.count}}" size="10"></td>
+<tr> <td> Maximum number of motives to display: </td>
+     <td><input type="text" name="count" value="{{info.count}}" size="10"></td>
           </tr>
   </table>
         <button type="submit" name="Submit" value="Search">Search</button>

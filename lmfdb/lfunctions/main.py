@@ -291,6 +291,13 @@ def l_function_artin_page(dimension, conductor, tim_index):
             'tim_index': tim_index}
     return render_single_Lfunction(ArtinLfunction, args, request)
 
+# L-function of hypergeometric motive   ########################################
+@l_function_page.route("/Motives/Hypergeometric/Q/<label>/")
+def l_function_hgm_page(label):
+    args = {'label': label}
+    return render_single_Lfunction(HypergeometricMotiveLfunction, args, request)
+
+
 
 # L-function of symmetric powers of Elliptic curve #############################
 @l_function_page.route("/SymmetricPower/<power>/EllipticCurve/Q/<label>/")
@@ -315,15 +322,18 @@ def render_single_Lfunction(Lclass, args, request):
     logger.debug(temp_args)
     try:
         L = Lclass(**args)
-        try:
-            if temp_args['download'] == 'lcalcfile':
-                return render_lcalcfile(L, request.url)
-        except Exception as ex:
-            pass # Do nothing
-
     except Exception as ex:
-        info = {'content': 'Sorry, there has been a problem: %s.' % ex.args[0], 'title': 'Error'}
-        return render_template('LfunctionSimple.html', info=info, **info), 500
+        from flask import current_app
+        if not current_app.debug:
+            info = {'content': 'Sorry, there has been a problem: %s.'%str(ex.args), 'title': 'Error'}
+            return render_template('LfunctionSimple.html', info=info, **info), 500
+        else:
+            raise ex
+    try:
+        if temp_args['download'] == 'lcalcfile':
+            return render_lcalcfile(L, request.url)
+    except KeyError as ex:
+        pass # Do nothing
 
     info = initLfunction(L, temp_args, request)
     return render_template('Lfunction.html', **info)
@@ -345,7 +355,6 @@ def render_lcalcfile(L, url):
 def initLfunction(L, args, request):
     ''' Sets the properties to show on the homepage of an L-function page.
     '''
-
     info = {'title': L.title}
     try:
         info['citation'] = L.citation
@@ -375,7 +384,10 @@ def initLfunction(L, args, request):
     info['args'] = args
 
     info['credit'] = L.credit
-    # info['citation'] = L.citation
+    #try:
+    #    info['citation'] = L.citation
+    #except:
+    #    pass
 
     try:
         info['factorization'] = L.factorization
@@ -552,6 +564,10 @@ def initLfunction(L, args, request):
         if L.sign == 0:           # The root number is now unknown
             info['zeroeslink'] = ''
             info['plotlink'] = ''
+            
+    elif L.Ltype() == "hgmQ":        
+        info['friends'] = [('Hypergeometric motive ', friendlink.replace("_t","/t"))]   # The /L/ trick breaks down for motives, because we have a scheme for the L-functions themselves
+        
 
     info['dirichlet'] = lfuncDStex(L, "analytic")
     info['eulerproduct'] = lfuncEPtex(L, "abstract")
@@ -564,7 +580,6 @@ def initLfunction(L, args, request):
         lcalcUrl = request.url + '&download=lcalcfile'
 
     info['downloads'] = [('Lcalcfile', lcalcUrl)]
-
     return info
 
 
@@ -790,6 +805,12 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
 
     elif arg1 == "SymmetricPower":
         return SymmetricPowerLfunction(power=arg2, underlying_type=arg3, field=arg4, label=arg5)
+        
+    elif arg1 == "Motives" and arg2 == "Hypergeometric" and arg3 == "Q":
+        if arg5:
+            return HypergeometricMotiveLfunction(family = arg4, t = arg5)
+        else:
+            return HypergeometricMotiveLfunction(label = arg4)
 
     elif arg1 == 'Lcalcurl':
         return Lfunction_lcalc(Ltype='lcalcurl', url=temp_args['url'])
