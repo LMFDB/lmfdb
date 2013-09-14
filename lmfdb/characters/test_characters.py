@@ -45,7 +45,7 @@ class DirichletSearchTest(LmfdbTest):
     def test_modbrowse(self): 
         W = self.tc.get('/Character/?modbrowse=51-81')
         """
-        curl '/Character/?modbrowse=51-81' | grep '27' | wc -l
+        curl -s '/Character/?modbrowse=51-81' | grep '27' | wc -l
         each 27 occurs twice
         """
         assert W.data.count('27') == 40

@@ -108,18 +108,12 @@ table td.params {
 
   <tbody>
     {% set row_class = cycler('odd', 'even') %}
-    {# Keep track of the row number when iterating
-    A jinja bug prevents just using set on a variable
-    xrange is lazy, so as long as there is no penalty to having
-    a large list.  This will work as long as there are no more than
-    1000000 elements in the range #}
-    {% set counter = range(1000000).__iter__() %}
     {% for line in contents %}
     {% for l in line %}
     {% for chi in l %}
     <tr class="{{ row_class.next() }}">
       <td class="modulus" align="center">
-        <a href="{{url_character(type='Dirichlet', modulus=chi[2], number=chi[0])}}" title="{{counter.next()}}">
+        <a href="{{url_character(type='Dirichlet', modulus=chi[2], number=chi[0])}}" title="{{loop.index}}">
           {% if chi[5] == True %}
           <font color="green">
             {% else %}
