@@ -25,7 +25,8 @@ TODO:
 Fix complex characters. I.e. embedddings and galois conjugates in a consistent way.
 
 """
-from sage.all import ZZ, QQ, DirichletGroup, CuspForms, Gamma0, ModularSymbols, Newforms, trivial_character, is_squarefree, divisors, RealField, ComplexField, prime_range, I, join, gcd, Cusp, Infinity, ceil, CyclotomicField, exp, pi, primes_first_n, euler_phi, RR, prime_divisors, Integer, matrix,NumberField,PowerSeries_poly,PowerSeriesRing
+from sage.all import ZZ, QQ, DirichletGroup, CuspForms, Gamma0, ModularSymbols, Newforms, trivial_character, is_squarefree, divisors, RealField, ComplexField, prime_range, I, join, gcd, Cusp, Infinity, ceil, CyclotomicField, exp, pi, primes_first_n, euler_phi, RR, prime_divisors, Integer, matrix,NumberField,PowerSeriesRing
+from sage.rings.power_series_poly import PowerSeries_poly
 from sage.all import Parent, SageObject, dimension_new_cusp_forms, vector, dimension_modular_forms, dimension_cusp_forms, EisensteinForms, Matrix, floor, denominator, latex, is_prime, prime_pi, next_prime, primes_first_n, previous_prime, factor, loads,save,dumps,deepcopy
 import re
 
@@ -773,6 +774,7 @@ class WebNewForm(SageObject):
         """
         emf_logger.debug("WebNewForm with k,N,chi,label={0}".format( (k,N,chi,label)))
         # Set defaults.
+        emf_logger.debug("incoming data: {0}".format(data))
         d  = {
             '_chi' : int(chi),'_k' : int(k),'_N' : int(N),
             '_label' : str(label),  '_fi' : int(fi),
@@ -788,7 +790,9 @@ class WebNewForm(SageObject):
             '_q_expansion_str' : '',
             '_embeddings' : [],
             '_polynomial' : '',
-            '_polynomial_gen' : '',
+            '_polynomial_gens' : '',
+            '_base_ring_polynomial' : '',
+            '_base_ring_polynomial_gens' : '',
             '_as_polynomial_in_E4_and_E6' : None,
             '_twist_info' : [],
             '_is_CM' : [],
@@ -804,8 +808,8 @@ class WebNewForm(SageObject):
         self.__dict__.update(d)
         if self._label<>'' and get_from_db:            
             d = self.get_from_db(self._N,self._k,self._chi,self._label)
-            data.update(d)
             emf_logger.debug("Got data:{0} from db".format(d))
+            data.update(d)
         emf_logger.debug("data: {0}".format(data))
         self.__dict__.update(data)
         if not isinstance(self._parent,WebModFormSpace):
@@ -823,12 +827,6 @@ class WebNewForm(SageObject):
             self._set_character()
             if self._f == None:
                 self._f = self._parent.galois_decomposition()[self._fi]
-            if self._base_ring == None:
-                try:
-                    p = ZZ[self._polynomial_gen](self._polynomial)
-                    self._base_ring = NumberField(p,names=self._polynomial_gen)
-                except (ValueError,AttributeError):
-                    self._base_ring = self._f.q_eigenform(prec, names='x').base_ring()
             if not self._ap:
                 if len(self._parent._ap)>1:
                     self._ap = parent._ap[i]
@@ -933,7 +931,10 @@ class WebNewForm(SageObject):
             fs.delete(id)
             
         fname = "webnewform-{0:0>5}-{1:0>3}-{2:0>3}-{3}".format(self._N,self._k,self._chi,self._label) 
-        id = fs.put(dumps(self.to_dict(for_db=True)),filename=fname,N=int(self._N),k=int(self._k),chi=int(self._chi),label=self._label,name=self._name)
+        try:
+            id = fs.put(dumps(self.to_dict(for_db=True)),filename=fname,N=int(self._N),k=int(self._k),chi=int(self._chi),label=self._label,name=self._name)
+        except Exception as e:
+            emf_logger.critical("DB insertion failed: {0}".format(e.message))
         emf_logger.debug("inserted :{0}".format(id))
     
     def __repr__(self):
@@ -967,10 +968,7 @@ class WebNewForm(SageObject):
             data.pop('_conrey_character')
             data['_parent']=self._parent.to_dict(for_db=for_db)
             data['_polynomial'] = str(self.polynomial(format=''))
-            if self.base_ring()==QQ:
-                data['_polynomial_gen'] = 'x'
-            else:
-                data['_polynomial_gen'] = str(self.base_ring().gens())
+            data['_base_ring_polynomial'] = str(self.base_ring().absolute_polynomial())
             data.pop('_base_ring')
             data['_q_expansion_str']=self._q_expansion_str 
         return data
@@ -1031,10 +1029,45 @@ class WebNewForm(SageObject):
         return self._chi
 
     def base_ring(self):
+        if self._base_ring == None:
+            try:
+                p = ZZ[self._polynomial_gens](self._polynomial)
+                self._base_ring = NumberField(p,names=self._polynomial_gens)
+            except Exception as e:
+                emf_logger.debug("Could not construct coefficient field from: p={0} and gens={1}. Error:{2}".format(self._polynomial,self._polynomial_gens,e.message))
+                self._base_ring = self._f.base_ring()
+            if self._base_ring == QQ:
+                self._base_ring_polynomial = 'x'
+                self._base_ring_polynomial_gens = 'x'
+            else:
+                self._base_ring_polynomial = str(self._base_ring.relative_polynomial())
+                self._base_ring_polynomial_gens = str(self._base_ring.gens())
         return self._base_ring
 
+    def coefficient_field(self):
+        if self._coefficient_field == None:
+            try:
+                p = self.base_ring()[self._base_ring_polynomial_gens](self._polynomial)
+                self._coefficient_field = NumberField(p,names=self._polynomial_gens)
+            except Exception as e:
+                emf_logger.debug("Could not construct coefficient field from: p={0} and gens={1}. Error: {2}".format(self._polynomial,self._base_ring_polynomial_gens,e.message))
+                self._coefficient_field = self._f.q_eigenform(prec, names='a').base_ring()
+            if self._coefficient_field()==QQ:
+                self._polynomial_gens =  'x'
+                self._polynomial = 'x'
+            else:
+                self._polynomial_gens = str(self._coefficient_field.gens())
+                self._polynomial  = str(self._coefficient_field)
+        return self._coefficient_field
+    
     def degree(self):
-        return _degree(self._base_ring)
+        r"""
+        Degree of the field of coefficient relative to its base ring.
+        """
+        if hasattr(self.base_ring(),'relative_degree'):
+            return self.base_ring().relative_degree()
+        else:            
+            return self.base_ring().degree()
 
     def prec(self):
         return self._prec
@@ -1763,7 +1796,7 @@ class WebNewForm(SageObject):
                 if x.prec() >= bits:  # else recompute
                     return self._satake
         K = self.base_ring()
-        degree = _degree(K)
+        degree = self.degree()
         RF = RealField(bits)
         CF = ComplexField(bits)
         ps = prime_range(prec)
@@ -1857,7 +1890,7 @@ class WebNewForm(SageObject):
         tbl['data'] = list()
         tbl['headersv'] = list()
         K = self.base_ring()
-        degree = _degree(K)
+        degree = self.degree()
         if(self.dimension() > 1):
             tbl['corner_label'] = "\( Embedding \, \\backslash \, p\)"
         else:
@@ -2123,7 +2156,7 @@ class WebNewForm(SageObject):
         """
         cm_vals = self.cm_values()['cm_values']
         K = self.base_ring()
-        degree = _degree(K)
+        degree = self.degree()
         if(self._verbose > 2):
             emf_logger.debug("vals={0}".format(cm_vals))
             emf_logger.debug("errs={0}".format(err))
