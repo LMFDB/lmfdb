@@ -132,6 +132,12 @@ class ArtinRepresentation(object):
         s = [sum([y[j] * zet**j for j in range(len(y))])._latex_() for y in char_vals]
         return s
 
+    def parity(self):
+        par = (self.dimension()-self.trace_complex_conjugation())/2
+        if (par % 2) == 0: return "Even"
+        return "Odd"
+        #return (-1)**par
+
     def __str__(self):
         try:
             return "An Artin representation of conductor " +\
