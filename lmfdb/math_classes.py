@@ -128,9 +128,14 @@ class ArtinRepresentation(object):
         char_vals = self.character()
         charfield = int(self.character_field())
         zet = CyclotomicField(charfield).gen()
-        print char_vals
         s = [sum([y[j] * zet**j for j in range(len(y))])._latex_() for y in char_vals]
         return s
+
+    def parity(self):
+        par = (self.dimension()-self.trace_complex_conjugation())/2
+        if (par % 2) == 0: return "Even"
+        return "Odd"
+        #return (-1)**par
 
     def __str__(self):
         try:
@@ -319,7 +324,7 @@ class ArtinRepresentation(object):
             return self.good_factor(p)
 
     def Lfunction(self):
-        from Lfunction import ArtinLfunction
+        from lfunctions.Lfunction import ArtinLfunction
         return ArtinLfunction(dimension = self.dimension(), conductor = self.conductor(), tim_index = self.index())
 
     def indicator(self):

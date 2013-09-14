@@ -188,14 +188,18 @@ class Lfunction_EC_Q(Lfunction):
         # Extract the L-function information from the elliptic curve
         self.quasidegree = 1
         self.level = self.E.conductor()
-        self.Q_fe = float(sqrt(self.level) / (2 * math.pi))
         self.sign = self.E.lseries().dokchitser().eps
-        self.kappa_fe = [1]
-        self.lambda_fe = [0.5]
-        self.numcoeff = round(self.Q_fe * 220 + 10)
-        # logger.debug("numcoeff: {0}".format(self.numcoeff))
+
         self.mu_fe = []
         self.nu_fe = [Rational('1/2')]
+        
+        self.Q_fe = float(sqrt(self.level) / (2 * math.pi))
+        self.kappa_fe = [1]
+        self.lambda_fe = [0.5]
+        # POD: Consider using self.compute_kappa_lambda_Q_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
+        
+        self.numcoeff = round(self.Q_fe * 220 + 10)
+        # logger.debug("numcoeff: {0}".format(self.numcoeff))
         self.langlands = True
         self.degree = 2
         self.motivic_weight = 1
@@ -314,13 +318,18 @@ class Lfunction_EMF(Lfunction):
                            " not able to compute its L-function")
         # Extract the L-function information from the elliptic modular form
         self.automorphyexp = float(self.weight - 1) / float(2)
-        self.Q_fe = float(sqrt(self.level) / (2 * math.pi))
+        
+        
         # logger.debug("ALeigen: " + str(self.MF.atkin_lehner_eigenvalues()))
+
+        self.mu_fe = []
+        self.nu_fe = [Rational(str(self.weight - 1) + '/2')]
 
         self.kappa_fe = [1]
         self.lambda_fe = [self.automorphyexp]
-        self.mu_fe = []
-        self.nu_fe = [Rational(str(self.weight - 1) + '/2')]
+        self.Q_fe = float(sqrt(self.level) / (2 * math.pi))
+        # POD: Consider using self.compute_kappa_lambda_Q_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
+
         self.selfdual = True
         self.langlands = True
         self.primitive = True
@@ -474,8 +483,18 @@ class Lfunction_HMF(Lfunction):
 
         # Extract the L-function information from the hilbert modular form
         self.automorphyexp = float(self.weight - 1) / float(2)
+        
+        self.mu_fe = []
+        self.nu_fe = [self.automorphyexp for i in range(self.field_degree)]
+        
+        
+        self.kappa_fe = [1 for i in range(self.field_degree)]
+        self.lambda_fe = [self.automorphyexp for i in range(self.field_degree)]
         self.Q_fe = (float(sqrt(self.level)) / (2 * math.pi) **
                      (self.field_degree))
+
+        # POD: Consider using self.compute_kappa_lambda_Q_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
+        
 
         R = QQ['x']
         (x,) = R._first_ngens(1)
@@ -491,10 +510,6 @@ class Lfunction_HMF(Lfunction):
                                                         self.field_degree / 2))
         logger.debug("Sign: " + str(self.sign))
 
-        self.kappa_fe = [1 for i in range(self.field_degree)]
-        self.lambda_fe = [self.automorphyexp for i in range(self.field_degree)]
-        self.mu_fe = []
-        self.nu_fe = [self.automorphyexp for i in range(self.field_degree)]
         self.selfdual = True
         self.langlands = True
         self.primitive = True
@@ -610,12 +625,16 @@ class RiemannZeta(Lfunction):
 
         self.coefficient_type = 1
         self.quasidegree = 1
-        self.Q_fe = float(1 / sqrt(math.pi))
-        self.sign = 1
-        self.kappa_fe = [0.5]
-        self.lambda_fe = [0]
         self.mu_fe = [0]
         self.nu_fe = []
+        
+        self.kappa_fe = [0.5]
+        self.lambda_fe = [0]
+        self.Q_fe = float(1 / sqrt(math.pi))
+        # POD: Consider using self.compute_kappa_lambda_Q_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
+        
+        
+        self.sign = 1
         self.langlands = True
         self.degree = 1
         self.level = 1
@@ -691,13 +710,17 @@ class Lfunction_Dirichlet(Lfunction):
             # Warning: will give nonsense if character is not primitive
             aa = int((1 - chi(-1)) / 2)   # usually denoted \frak a
             self.quasidegree = 1
-            self.Q_fe = float(sqrt(self.charactermodulus) / sqrt(math.pi))
-            self.sign = 1 / (I ** aa * float(sqrt(self.charactermodulus)) /
-                             (chi.gauss_sum_numerical()))
-            self.kappa_fe = [0.5]
-            self.lambda_fe = [0.5 * aa]
             self.mu_fe = [aa]
             self.nu_fe = []
+            
+            
+            self.kappa_fe = [0.5]
+            self.lambda_fe = [0.5 * aa]
+            self.Q_fe = float(sqrt(self.charactermodulus) / sqrt(math.pi))
+            # POD: Consider using self.compute_kappa_lambda_Q_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
+            
+            self.sign = 1 / (I ** aa * float(sqrt(self.charactermodulus)) /
+                             (chi.gauss_sum_numerical()))
             self.langlands = True
             self.primitive = True
             self.degree = 1
@@ -863,8 +886,6 @@ class Lfunction_Maass(Lfunction):
             self.selfdual = True
             self.primitive = True
             self.quasidegree = 2
-            self.Q_fe = float(sqrt(self.level)) / float(math.pi)
-
             logger.debug("Symmetry: {0}".format(self.symmetry))
             if self.symmetry == "odd" or self.symmetry == 1:
                 self.sign = -1
@@ -872,17 +893,23 @@ class Lfunction_Maass(Lfunction):
             else:
                 self.sign = 1
                 aa = 0
+            
+            self.mu_fe = [aa + self.eigenvalue * I, aa - self.eigenvalue * I]
+            self.nu_fe = []
+            
+            self.kappa_fe = [0.5, 0.5]
+            self.lambda_fe = [0.5 * aa + self.eigenvalue *
+                              I / 2, 0.5 * aa - self.eigenvalue * I / 2]
+            self.Q_fe = float(sqrt(self.level)) / float(math.pi)
+            # POD: Consider using self.compute_kappa_lambda_Q_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
+            
+
 
             logger.debug("Sign (without Fricke): {0}".format(self.sign))
             if self.level > 1:
                 self.sign = self.fricke * self.sign
             logger.debug("Sign: {0}".format(self.sign))
 
-            self.kappa_fe = [0.5, 0.5]
-            self.lambda_fe = [0.5 * aa + self.eigenvalue *
-                              I / 2, 0.5 * aa - self.eigenvalue * I / 2]
-            self.mu_fe = [aa + self.eigenvalue * I, aa - self.eigenvalue * I]
-            self.nu_fe = []
             self.langlands = True
             self.degree = 2
             self.poles = []
@@ -962,11 +989,14 @@ class DedekindZeta(Lfunction):   # added by DK
         self.Q_fe = float(sqrt(self.level) / 
                         (2 ** (self.signature[1]) * (math.pi) **
                         (float(self.degreeofN) / 2.0)))
-
         self.kappa_fe = self.signature[0] * [0.5] + self.signature[1] * [1]
         self.lambda_fe = self.quasidegree * [0]
+        # POD: Consider using self.compute_kappa_lambda_Q_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
+        
         self.mu_fe = self.signature[0] * [0]  # not in use?
         self.nu_fe = self.signature[1] * [0]  # not in use?
+        
+        # POD: consider using compute_kappa_lambda_Q_from_mu_nu, this will help standardize interfaces, reuse code, and in general improve testing
         self.langlands = True
         # self.degree = self.signature[0] + 2 * self.signature[1] # N = r1 +2r2
         self.degree = self.degreeofN
@@ -1054,6 +1084,103 @@ class DedekindZeta(Lfunction):   # added by DK
 
 #############################################################################
 
+class HypergeometricMotiveLfunction(Lfunction):
+    """Class representing the hypergeometric L-function
+
+    Two options for parameters: 
+        label, for instance 'A2.2.2.2_B1.1.1.1_t1.2'
+    or
+        family, for instance 'A2.2.2.2_B1.1.1.1'
+        and t for instance 't1.2'
+    """
+    def __init__(self, **args):
+        constructor_logger(self, args)
+        if "t" in args and "family" in args:
+            args["label"] = args["family"] + "_" + args["t"]
+        if not ('label' in args.keys()):
+            raise KeyError("You have to supply a label for a hypergeometric motive L-function")            
+        C = base.getDBConnection()
+        self.motive = C.hgm.motives.find_one({"label": args["label"]})
+        
+        self.label = args["label"]
+        self.conductor = self.motive["cond"]
+
+        self.level = self.conductor
+        self.title = ("L-function for the hypergeometric motive with label  "+self.label)
+
+        self.credit = 'Dave Roberts, using Magma'
+        
+        
+        
+        self.motivic_weight = 0
+        self.algebraic = True
+        self.coefficient_type = 0
+        self.degree = self.motive["degree"]
+        try:
+            self.arith_coeffs = self.motive["coeffs"]
+        except:
+            self.arith_coeffs = map(Integer, self.motive["coeffs_string"])
+
+        self.support = "Support by Paul-Olivier Dehaye"
+        
+        self.sign = self.motive["sign"]
+        self.motivic_weight =  self.motive["weight"]
+        
+        # level, residues, selfdual, primitive, langlands
+        # will not work for some values!!!!
+        self.poles = []
+        self.residues = []
+        self.primitive = True
+        self.langlands = True
+            
+        hodge = self.motive["hodge"]
+        signature = self.motive["sig"]
+        hodge_index = lambda p: hodge[p]
+            # The hodge number p,q
+        
+        from lmfdb.hypergm.hodge import mu_nu
+        
+        
+        
+        self.mu_fe, self.nu_fe = mu_nu(hodge, signature)
+         
+        self.selfdual = True 
+        self.coefficient_period = 0
+
+        #self.compute_kappa_lambda_Q_from_mu_nu()            # Somehow this doesn t work, and I don t know why!
+        # That s why I am reassigning just below
+        self.Q_fe = float(sqrt(Integer(self.conductor))/2.**len(self.nu_fe)/pi**(len(self.mu_fe)/2.+len(self.nu_fe)))
+        self.kappa_fe = [.5 for m in self.mu_fe] + [1. for n in self.nu_fe] 
+        self.lambda_fe = [m/2. for m in self.mu_fe] + [n for n in self.nu_fe]
+                
+        self.dirichlet_coefficients = [Reals()(Integer(x))/Reals()(n+1)**(self.motivic_weight/2.) for n, x in enumerate(self.arith_coeffs)]
+
+        
+        self.texname = "L(s)"  
+        self.texnamecompleteds = "\\Lambda(s)"  
+        if self.selfdual:
+            self.texnamecompleted1ms = "\\Lambda(1-s)" 
+        else:
+            self.texnamecompleted1ms = "\\overline{\\Lambda(1-\\overline{s})}"
+        import sage.libs.lcalc.lcalc_Lfunction as lc
+        
+        Lexponent = self.motivic_weight/2.            
+        normalize =lambda coeff, n, exponent: Reals()(coeff)/n**exponent
+        self.dirichlet_coefficient = [normalize(coeff, i+1, Lexponent) for i, coeff in enumerate(self.arith_coeffs)]
+
+        period = 0
+        
+        self.sageLfunction = lc.Lfunction_D("LfunctionHypergeometric", 0, self.dirichlet_coefficient, period, self.Q_fe, self.sign, self.kappa_fe, self.lambda_fe, self.poles, self.residues)
+        
+
+    def Ltype(self):
+        return "hgmQ"
+        
+    def Lkey(self):
+        return {"label":self.label}
+        
+#############################################################################
+
 class ArtinLfunction(Lfunction):
     """Class representing the Artin L-function
 
@@ -1062,8 +1189,7 @@ class ArtinLfunction(Lfunction):
     """
     def __init__(self, **args):
         constructor_logger(self, args)
-        if not ('dimension' in args.keys() and 'conductor' in args.keys() and
-                'tim_index' in args.keys()):
+        if not ('dimension' in args.keys() and 'conductor' in args.keys() and 'tim_index' in args.keys()):
             raise KeyError("You have to supply dimension, conductor and " +
                            "tim_index for an Artin L-function")    
         
@@ -1082,7 +1208,7 @@ class ArtinLfunction(Lfunction):
         self.algebraic = True
         self.degree = self.artin.dimension()
         self.coefficient_type = 0
-
+        
         if self.degree == 1:
             self.coefficient_period = Integer(self.artin.conductor())
             self.dirichlet_coefficients = self.artin.coefficients_list(
@@ -1091,14 +1217,11 @@ class ArtinLfunction(Lfunction):
             self.coefficient_period = 0
             self.dirichlet_coefficients = self.artin.coefficients_list(
                 upperbound=1000)
+        
+        
 
-        # self.Q_fe = (Integer(self.artin.conductor())/float(math.pi)**
-                        # int(self.degree))
-        self.Q_fe = (sqrt(Integer(self.artin.conductor()) * 1. /
-                          float(math.pi) ** int(self.degree)))
+        
         self.sign = self.artin.root_number()
-        self.kappa_fe = self.artin.kappa_fe()
-        self.lambda_fe = self.artin.lambda_fe()
         self.poles_L = self.artin.poles()
         self.residues_L = self.artin.residues()
         self.poles = self.artin.completed_poles()
@@ -1109,9 +1232,16 @@ class ArtinLfunction(Lfunction):
         self.langlands = self.artin.langlands()
         self.mu_fe = self.artin.mu_fe()
         self.nu_fe = self.artin.nu_fe()
-
+        
+        
+        self.Q_fe = self.Q_fe = float(sqrt(Integer(self.conductor))/2**len(self.nu_fe)/pi**(len(self.mu_fe)/2+len(self.nu_fe)))
+        self.kappa_fe = [.5 for m in self.mu_fe] + [1. for n in self.nu_fe] 
+        self.lambda_fe = [m/2. for m in self.mu_fe] + [n for n in self.nu_fe]
+        
         self.credit = ('Sage, lcalc, and data precomputed in ' +
                        'Magma by Tim Dokchitser')
+        
+        
         self.citation = ''
         self.support = "Support by Paul-Olivier Dehaye"
 
@@ -1121,6 +1251,7 @@ class ArtinLfunction(Lfunction):
             self.texnamecompleted1ms = "\\Lambda(1-s)" 
         else:
             self.texnamecompleted1ms = "\\overline{\\Lambda(1-\\overline{s})}"
+        
         generateSageLfunction(self)
 
     def Ltype(self):
@@ -1204,10 +1335,16 @@ class SymmetricPowerLfunction(Lfunction):
         self.Q_fe = self.S._Q_fe
         self.poles = self.S._poles
         self.residues = self.S._residues
-        self.mu_fe = self.S._mu_fe
-        self.nu_fe = self.S._nu_fe
-        self.kappa_fe = self.mu_fe
-        self.lambda_fe = self.nu_fe
+        self.kappa_fe = self.S._kappa_fe
+        self.lambda_fe = self.S._lambda_fe
+        
+        self.compute_some_mu_nu()
+        
+        
+        
+        #self.mu_fe = self.kappa_fe
+        #self.nu_fe = self.lambda_fe
+        
         self.sign = self.S.root_number
         self.motivic_weight = self.m
         self.selfdual = True
@@ -1305,9 +1442,16 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         self.ev_data = load(loc)
 
         print self.ev_data
+        self.mu_fe = []  # the shifts of the Gamma_R to print
 
+        self.nu_fe = [float(1) / float(2), self.automorphyexp]  # the shift of
+                                                                # the Gamma_C to print
         self.automorphyexp = float(self.weight) - float(1.5)
+        self.kappa_fe = [1, 1]  
+        self.lambda_fe = [float(1) / float(2), self.automorphyexp]  
         self.Q_fe = float(1 / (4 * math.pi ** 2))  # the Q in the FE as in lcalc
+                # POD: Consider using self.compute_kappa_lambda_Q_from_mu_nu or self.lcalc_parameters_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
+
 
         self.sign = (-1) ** float(self.weight)
 
@@ -1324,12 +1468,6 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         self.dirichlet_coefficients = compute_dirichlet_series(
             roots, self.numcoeff)  # these are in the analytic normalization
         # the coefficients from Gamma(ks+lambda)
-        self.kappa_fe = [1, 1]  
-        self.lambda_fe = [float(1) / float(2), self.automorphyexp]  
-        self.mu_fe = []  # the shifts of the Gamma_R to print
-
-        self.nu_fe = [float(1) / float(2), self.automorphyexp]  # the shift of
-                                                                # the Gamma_C to print
         self.selfdual = True
         if self.orbit[0] == 'U':  # if the form isn't a lift but is a cusp form
             self.poles = []  # the L-function is entire

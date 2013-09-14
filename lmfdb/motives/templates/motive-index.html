@@ -3,6 +3,63 @@
 {% block content %}
 
 <p><h2> {{ KNOWL('hgm.defining_parameters', title='Defining Parameters') }}</h2>
-This is just a sample knowl linke
+This is just a sample knowl link
+
+{{ KNOWL('mot.width', title='Width of a motive') }}
+
+<p>
+The theory of motives is complicated but the LMFDB makes use of only
+a small portion of this theory.  This page gives an overview of the
+theory with details in the knowls. <p>
+
+Consider first algebraic varieties $X$ over
+$\Bbb Q$.  Such a variety
+gives rise to a topological
+space $X^{\rm an} = X(\Bbb C)$ and
+so one can consider its cohomology groups
+$H^w(X^{\rm an},\Z)$.  These spaces
+come with extra structures.
+One fundamental structure is that
+for each prime $\ell$ the
+absolute Galois group $\mbox{Gal}({\Bbb Q}/\Bbb Q)$
+acts naturally on the $\ell$-adic completion
+$H^w(X^{\rm an},\Bbb Z_\ell)$. Another
+fundamental structure is that
+$H^w(X^{\rm an},\Z)$ supports
+a mixed Hodge structure. <p>
+
+
+The structures are of a simpler nature when
+one requires that $X$ is smooth and
+projective.   Galois representations are then
+conjecturally semisimple, and mixed Hodge
+structures definitely become pure.
+An independent simplication,
+less essential but helpful for streamlining
+the formalism, is to replace $\Bbb Z$ by
+$\Bbb Q$ as a the coefficient ring. <p>
+
+
+The original definition of motive
+involves algebraic cycles.
+We use here a technically more complicated definition
+in terms of quasialgebraic
+cycles which has the advantage
+of giving a more complete formalism.
+If the Hodge conjecture is true then
+the two definitions agree. <p>
+
+Cohomology groups $H^w(X^{\rm an},\Q)$,
+considered with all their extra structures,
+are motives.
+
+
+Eigenvalues of Frobenius
+operators of Galois representations
+are then constrained.  The
+mixed Hodge structure is then
+pure.
+
+
 
 {% endblock %}

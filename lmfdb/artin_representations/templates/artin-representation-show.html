@@ -2,23 +2,23 @@
 
 {% block content %}
 
-    {#
     <h1> {{ KNOWL('artin.dimension', title='Dimension') }} </h1>
     <p> ${{ object.dimension() }}$ </p>
-    #}
 
-    {#
-    <h1> {{ KNOWL('artin.conductor', title='Artin conductor') }} </h1>
-    <p> ${{ object.conductor() }} $</p>
-    #}
+    <h1> {{ KNOWL('artin.conductor', title='Conductor') }} </h1>
+    <p> ${{ object.conductor_equation() }} $</p>
     
     <h1> {{ KNOWL('artin.number_field', title='Artin number field') }} </h1>
     <p> The splitting field of $f={{ object.number_field_galois_group().polynomial().latex()}}$ 
     over $\Q$.</p>
+
+    <h1> {{ KNOWL('artin.parity', title='Parity') }} </h1>
+    <p> {{ object.parity()}}. </p>
     
     <h1> Associated group action </h1>
     <h3> Abstract isomorphism type</h3>
     <p> {{ object.number_field_galois_group().G_name() }}, of size  ${{ object.number_field_galois_group().size() }}$.</p>
+    {# <p> Gal {{ extra_data.galois_knowl | safe }} </p> #}
     
     <h3> Generators of the action on the roots $r_1 \cdots r_{{object.number_field_galois_group().degree()}}$ of $f$</h3>
     <center>
