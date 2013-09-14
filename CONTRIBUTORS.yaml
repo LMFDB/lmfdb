@@ -28,7 +28,7 @@ name: Robert Bradshaw
 affil: Google Inc.
 ---
 name: Alina Bucur
-url: http://www.math.ucsd.edu/~abucur/
+url: http://www.math.ucsd.edu/~alina/
 affil: University of California, San Diego
 ---
 name: Henri Cohen
@@ -160,6 +160,7 @@ notes:
 ---
 name: Fredrik Str&ouml;mberg
 affil: University of Durham
+url: https://sites.google.com/site/fredrikstroemberg/
 ---
 name: Holly Swisher
 url: http://www.math.oregonstate.edu/people/view/swisherh
@@ -195,3 +196,6 @@ url: http://www.maths.bris.ac.uk/people/profile/matdw
 name: David Yuen
 affil: Lake Forest College
 url: http://www.lakeforest.edu/academics/faculty/yuen/
+---
+name: Patrick Kühn
+affil: Universität Zürich
