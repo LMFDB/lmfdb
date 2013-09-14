@@ -604,11 +604,11 @@ class WebChar(WebCharObject):
         if order2 % 4 == 2:
             order2 = order2 / 2
         if order2 == 1:
-            vf = r'\(\mathbb{Q}\)'
+            vf = r'\(\Q\)'
         elif order2 == 4:
-            vf = r'\(\mathbb{Q}(i)\)'
+            vf = r'\(\Q(i)\)'
         else:
-            vf = r'\(\mathbb{Q}(\zeta_{%d})\)' % order2
+            vf = r'\(\Q(\zeta_{%d})\)' % order2
         self._order2 = order2
         return vf
 
@@ -830,7 +830,7 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
         n = x.numerator()
         n = str(n) + "r" if not n == 1 else "r"
         d = x.denominator()
-        Gtex = '\mathbb{Z}/%s\mathbb{Z}' % mod
+        Gtex = '\Z/%s\Z' % mod
         chitex = self.char2tex(mod, num, tag=False)
         chitexr = self.char2tex(mod, num, 'r', tag=False)
         deftex = r'\sum_{r\in %s} %s e\left(\frac{%s}{%s}\right)'%(Gtex,chitexr,n,d)
@@ -845,7 +845,7 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
         jacobi_sum = chi.jacobi_sum(psi)
         chitex = self.char2tex(mod, num, tag=False)
         psitex = self.char2tex(mod, val, tag=False)
-        Gtex = '\mathbb{Z}/%s\mathbb{Z}' % mod
+        Gtex = '\Z/%s\Z' % mod
         chitexr = self.char2tex(mod, num, 'r', tag=False)
         psitex1r = self.char2tex(mod, val, '1-r', tag=False)
         deftex = r'\sum_{r\in %s} %s %s'%(Gtex,chitexr,psitex1r)
@@ -858,7 +858,7 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
             # there is a bug in sage for modulus = 1
             return r"""
             \( \displaystyle K(%s,%s,\chi_{1}(1,&middot;))
-            = \sum_{r \in \mathbb{Z}/\mathbb{Z}}
+            = \sum_{r \in \Z/\Z}
                  \chi_{1}(1,r) 1^{%s r + %s r^{-1}}
             = 1 \)
             """ % (a, b, a, b)
@@ -874,7 +874,7 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
             k = latex(k)
         return r"""
         \( \displaystyle K(%s,%s,\chi_{%s}(%s,&middot;))
-        = \sum_{r \in \mathbb{Z}/%s\mathbb{Z}}
+        = \sum_{r \in \Z/%s\Z}
              \chi_{%s}(%s,r) e\left(\frac{%s r + %s r^{-1}}{%s}\right)
         = %s. \)""" % (a, b, modulus, number, modulus, modulus, number, a, b, modulus, k)
 
