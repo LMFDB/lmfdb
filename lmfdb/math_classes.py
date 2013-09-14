@@ -128,7 +128,6 @@ class ArtinRepresentation(object):
         char_vals = self.character()
         charfield = int(self.character_field())
         zet = CyclotomicField(charfield).gen()
-        print char_vals
         s = [sum([y[j] * zet**j for j in range(len(y))])._latex_() for y in char_vals]
         return s
 

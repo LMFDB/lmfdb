@@ -32,11 +32,14 @@ def index():
     #if len(request.args) != 0:
     #    return hgm_search(**request.args)
     info = {}
-    return render_template("motive-index.html", title="Motives", bread=bread, credit=HGM_credit, info=info)
+    friends=[('Hypergeometric', url_for(".index2"))]
+    return render_template("motive-index.html", title="Motives", bread=bread, credit=HGM_credit, info=info, friends=friends)
 
 @motive_page.route("/Hypergeometric")
+@motive_page.route("/Hypergeometric/")
 def index2():
     bread = get_bread([('Hypergeometric', url_for('.index2'))])
     info = {}
-    return render_template("hypergeometric-index.html", title="Hypergeometric Motives", bread=bread, credit=HGM_credit, info=info)
+    friends=[('Hypergeometric over $\Q$', url_for("hypergm.index"))]
+    return render_template("hypergeometric-index.html", title="Hypergeometric Motives", bread=bread, credit=HGM_credit, info=info, friends=friends)
 
