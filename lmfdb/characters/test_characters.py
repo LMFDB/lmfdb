@@ -117,7 +117,7 @@ class DirichletCharactersTest(LmfdbTest):
     def test_dirichlet_calc(self):
         W = self.tc.get('/Character/calc-gauss/Dirichlet/4/3?val=3')
         assert '-2.0i' in W.data, "calc gauss"
-        assert '\mathbb{Z}/4\mathbb{Z}' in W.data
+        assert '\Z/4\Z' in W.data
         
         W = self.tc.get('/Character/calc-kloosterman/Dirichlet/91/3?val=52,34')
         assert '3.774980868' in W.data, "kloosterman"
