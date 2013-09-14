@@ -138,6 +138,7 @@ class ArtinRepresentation(object):
 
     def pretty_galois_knowl(self):
         C = getDBConnection()
+        print "****************  Got %d, %d" % (self._data['Galois_nt'][0],self._data['Galois_nt'][1])
         return group_display_knowl(self._data['Galois_nt'][0],self._data['Galois_nt'][1],C)
 
     def __str__(self):
