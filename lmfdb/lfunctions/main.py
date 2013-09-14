@@ -727,27 +727,14 @@ def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, ar
     '''
     L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
 
-    # Compute the first few zeros
-    if L.degree > 2 or L.Ltype() == "maass":  # Too slow to be rigorous here  ( or L.Ltype()=="ellipticmodularform")
-        search_step = 0.02
-        if L.selfdual:
-            allZeros = L.sageLfunction.find_zeros(-search_step / 2, 20, search_step)
-        else:
-            allZeros = L.sageLfunction.find_zeros(-20, 20, search_step)
+    website_zeros = L.compute_quick_zeros(time_allowed = 10)          # This depends on mathematical information, all below is formatting
+    # More semantic this way
+    # Allow 10 seconds
 
-    else:
-        if L.selfdual:
-            number_of_zeros = 6
-        else:
-            number_of_zeros = 8
-        allZeros = L.sageLfunction.find_zeros_via_N(number_of_zeros, not L.selfdual)
-
-    # Sort the zeros and divide them into negative and positive ones
-    allZeros.sort()
     positiveZeros = []
     negativeZeros = []
 
-    for zero in allZeros:
+    for zero in website_zeros:
         if zero.abs() < 1e-10:
             zero = 0
         if zero < 0:

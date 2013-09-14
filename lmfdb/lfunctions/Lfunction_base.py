@@ -71,6 +71,69 @@ class Lfunction:
     ### other useful methods not implemented universally yet
     ############################################################################
 
+    def compute_quick_zeros(self, time_allowed = 10, lower_bound = None, upper_bound = None, step_size = None, count = None, do_negative = False, **kwargs):
+        # Do not pass 0 to either lower bound or step_size
+        # Not dependent on time actually
+        # Manual tuning required
+        if self.degree > 2 or self.Ltype() == "maass":  # Too slow to be rigorous here  ( or self.Ltype()=="ellipticmodularform")
+            step_size = 0.02
+            if self.selfdual:
+                lower_bound = lower_bound or - step_size / 2
+            else:
+                lower_bound = lower_bound or -20
+            allZeros = self.compute_lcalc_zeros(via_N = False, step_size = step_size, upper_bound = upper_bound or 20, lower_bound = lower_bound)
+        else:
+            if self.selfdual:
+                count = count or 6
+            else:
+                count = count or 8
+            allZeros = self.compute_lcalc_zeros(via_N = True, count = count, do_negative = do_negative or not self.selfdual)
+    
+        # Sort the zeros and divide them into negative and positive ones
+        allZeros.sort()
+        return allZeros
+    
+    def compute_realistic_zeros(self, lower_bound = None, upper_bound = None, step_size = None, count = None, do_negative = False, **kwargs):
+        # Do not pass 0 to either lower bound or step_size
+        
+        if self.degree > 2 or self.Ltype() == "maass":  # Too slow to be rigorous here  ( or self.Ltype()=="ellipticmodularform")
+            step_size = 0.02
+            if self.selfdual:
+                lower_bound = lower_bound or - step_size / 2
+            else:
+                lower_bound = lower_bound or -20
+            allZeros = self.compute_lcalc_zeros(via_N = False, step_size = step_size, upper_bound = upper_bound or 20, lower_bound = lower_bound)
+        else:
+            if self.selfdual:
+                count = count or 6
+            else:
+                count = count or 8
+            allZeros = self.compute_lcalc_zeros(via_N = True, count = count, do_negative = do_negative or not self.selfdual)
+    
+        # Sort the zeros and divide them into negative and positive ones
+        allZeros.sort()
+        return allZeros
+    
+    def compute_lcalc_zeros(self, via_N = True, **kwargs):
+        if via_N == True:
+            count = kwargs["count"]
+            do_negative = kwargs["do_negative"]
+            return self.sageLfunction.find_zeros_via_N(count, do_negative)
+        else:
+            T1 = kwargs["lower_bound"]
+            T2 = kwargs["upper_bound"]
+            stepsize = kwargs["step_size"]
+            return self.sageLfunction.find_zeros(T1, T2, stepsize)
+    
+    def compute_zeros(algorithm , **kwargs):
+        if algorithm == "realistic":
+            return self.compute_realistic_zeros(self, **kwargs)
+        if algorithm == "lcalc":
+            return self.compute_lcalc_zeros(self, **kwargs)
+        if algorithm == "quick":
+            return self.compute_quick_zeros(self, **kwargs)
+            
+
     def critical_value(self):
         pass
 
