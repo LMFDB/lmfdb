@@ -214,7 +214,7 @@ def browse_elliptic_modular_forms(level=0, weight=0, character=-1, label='', lim
         info['weight_max'] = 20
         # largs = [ {'level':level,'character':character,'weight_block':k} for k in range(100)]
         disp = ClassicalMFDisplay('modularforms')
-        disp.set_table_browsing(limit=[(2, 20), (level, level)], keys=['Weight', 'Level'],
+        disp.set_table_browsing(limit=[(2, 12), (level, level)], keys=['Weight', 'Level'],
                                 character=character, dimension_table=dimtbl, title='Dimension of cusp forms')
         tbl = disp._table
         if tbl is not None:

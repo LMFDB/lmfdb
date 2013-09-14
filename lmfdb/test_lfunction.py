@@ -134,7 +134,7 @@ class LfunctionTest(LmfdbTest):
 
 
     #------------------------------------------------------
-    # Testing one example of each type of L-function page
+    # Testing plots and zeros of L-functions
     #------------------------------------------------------
     def test_riemannPlot(self):
         L = self.tc.get('/L/Plot/Riemann/')
@@ -148,8 +148,9 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/Zeros/EllipticCurve/Q/56.a/')
         assert '2.791838' in L.data
 
-##    def test_Lemf(self):
+##    def test_LemfPlot(self):
 ##        L = self.tc.get('/L/Plot/ModularForm/GL2/Q/holomorphic/11/2/0/a/0/')
+##        assert 'OK' in str(L)
 
     def test_LdedekindZeros(self):
         L = self.tc.get('/L/Zeros/NumberField/3.1.23.1/')
