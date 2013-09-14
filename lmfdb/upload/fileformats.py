@@ -21,7 +21,10 @@ import json
 from pymongo.cursor import Cursor
 from pymongo.errors import AutoReconnect
 from pymongo.connection import Connection
-from pymongo.objectid import ObjectId
+try:
+  from bson.objectid import ObjectId
+except ImportError:
+  from pymongo.objectid import ObjectId
 import pymongo
 
 from gridfs import GridFS
