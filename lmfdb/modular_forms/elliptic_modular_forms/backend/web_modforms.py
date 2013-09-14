@@ -127,7 +127,7 @@ class WebModFormSpace(Parent):
                 self._modular_symbols = self._get_objects(k, N, chi, use_db, 'Modular_symbols')
             if self._newspace == None:
                 self._newspace = self._modular_symbols.cuspidal_submodule().new_submodule()
-            if self._newforms == []:
+            if self._newforms == [] and self._newspace.dimension()>0:
                 l = len(self.galois_decomposition())
                 for i in range(l):
                     self._newforms.append(None)
@@ -295,18 +295,17 @@ class WebModFormSpace(Parent):
         r"""
         Makes a dictionary of the relevant information.
         """
-        data = dict()
-        data['_group'] = self._group
-        data['_character'] = self._character
-        # data['fullspace'] = self._fullspace
-        data['_modular_symbols'] = self._modular_symbols
-        data['_newspace'] = self._newspace
-        data['_newforms'] = self._newforms
-        if hasattr(self, "_new_modular_symbols"):
-            data['_new_modular_symbols'] = self._new_modular_symbols
-        data['_galois_decomposition'] = self._galois_decomposition
-        data['_galois_orbits_labels'] = self._galois_orbits_labels
-        data['_oldspace_decomposition'] = self._oldspace_decomposition
+        problematic_keys = ['_galois_decomposition',
+                            '_newforms','_newspace',
+                            '_modular_forms',
+                            '_new_modular_symbols',
+                            '_galois_decomposition',
+                            '_oldspace_decomposition']
+        data = {}
+        data.update(self.__dict__)
+        if for_db:
+            for k in problematic_keys:
+                data.pop(k,None)
         return data
 
     def _repr_(self):
@@ -345,6 +344,7 @@ class WebModFormSpace(Parent):
                 emf_logger.debug("computed L:".format(L))
             elif self._use_db or self._computation_too_hard():
                 L = []
+                raise IndexError,"No decomposition was found in the database!"
                 emf_logger.debug("no decomp in database!")
             else: # compute
                 L = self._newspace.decomposition()
@@ -831,7 +831,7 @@ class WebNewForm(SageObject):
             '_base_ring': None,
             '_dimension' : None,
             '_is_rational' : None,
-            '_name' : "{0}.{1}.{2}".format(N,k,label)
+            '_name' : "{0}.{1}{2}".format(N,k,label)
             }
         self.__dict__.update(d)
         if self._label<>'' and get_from_db:            
@@ -845,7 +845,10 @@ class WebNewForm(SageObject):
                 emf_logger.debug("compute parent! label={0}".format(label))
             self._parent = WebModFormSpace(k, N, chi, compute='',data=self._parent)
             emf_logger.debug("finished computing parent")
-        self._check_concistency_of_labels()
+        if self._parent.dimension_newspace()==0:
+            self._dimension=0
+            return 
+        self._check_consistency_of_labels()
         emf_logger.debug("name={0}".format(self._name))
         if compute == 'all':
             emf_logger.debug("compute")
@@ -877,18 +880,19 @@ class WebNewForm(SageObject):
         emf_logger.debug("done __init__")
         self.insert_into_db()
 
-    def _check_concistency_of_labels(self):
+    def _check_consistency_of_labels(self):
         if self._parent == None:
             raise ValueError,"Need parent to check labels!"
         try:
             if self._fi < 0:
                 self._fi = self._parent._galois_orbits_labels.index(self._label)
+                emf_logger.debug(" fi = {0}".format(self._fi))
             if self._label=='':
                 self._label = self._parent._galois_orbits_labels[self._fi]
             if not self._label == self._parent._galois_orbits_labels[self._fi]:
                 raise ValueError
         except (ValueError,KeyError):
-            raise ValueError,"Could not find orbit corresponding to this label:{0} and number:{1}!".format(self._label,self._fi)
+            raise ValueError,"There does not exista newform orbit of the given label: {0} and number:{1}!".format(self._label,self._fi)
         return True
 
     def _set_character(self):
@@ -951,7 +955,7 @@ class WebNewForm(SageObject):
             fs.delete(id)
             
         fname = "webnewform-{0:0>5}-{1:0>3}-{2:0>3}-{3}".format(self._N,self._k,self._chi,self._label) 
-        id = fs.put(dumps(self._to_dict()),filename=fname,N=int(self._N),k=int(self._k),chi=int(self._chi),label=self._label,name=self._name)
+        id = fs.put(dumps(self.to_dict(for_db=True)),filename=fname,N=int(self._N),k=int(self._k),chi=int(self._chi),label=self._label,name=self._name)
         emf_logger.debug("inserted :{0}".format(id))
     
     def __repr__(self):
@@ -960,17 +964,17 @@ class WebNewForm(SageObject):
         if self._f is not None:
             return str(self.q_expansion())
         else:
-            return ""
+            return "0"  ## Zero function
 
     def __reduce__(self):
         r"""
         Reduce self for pickling.
         """
-        data = self._to_dict()
+        data = self.to_dict()
         return(unpickle_wnf_v1, (self._k, self._N, self._chi, self._label,
                                  self._fi, self._prec, self._bitprec, data))
 
-    def _to_dict(self,for_db=False):
+    def to_dict(self,for_db=False):
         r"""
         Export self as a dictionary.
         """
@@ -978,8 +982,10 @@ class WebNewForm(SageObject):
         for k in self.__dict__:
             data[k]=self.__dict__[k]
         ## Get rid of some more complicated keys?
-        problem_keys = ['_parent','_character','_conrey_character',
-                        '_base_ring']
+        problem_keys = ['_parent','_f']
+        if for_db:
+            data.pop('_f')
+            data['_parent']=self._parent.to_dict(for_db=for_db)
         return data
 
     def _from_dict(self, data):
