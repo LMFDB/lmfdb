@@ -822,7 +822,7 @@ class WebNewForm(SageObject):
             if self._base_ring == None:
                 try:
                     p = ZZ['x'](self._polynomial)
-                    self._base_ring = NumberField(p)
+                    self._base_ring = NumberField(p,names='x')
                 except (ValueError,AttributeError):
                     self._base_ring = self._f.q_eigenform(prec, names='x').base_ring()
 
