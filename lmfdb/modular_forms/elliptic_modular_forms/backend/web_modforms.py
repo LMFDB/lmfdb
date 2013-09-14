@@ -784,7 +784,11 @@ class WebNewForm(SageObject):
             '_atkin_lehner_eigenvalues' : {},
             '_parent' : parent,
             '_f' : None,
+            '_q_expansion' : None,
+            '_q_expansion_str' : '',
             '_embeddings' : [],
+            '_polynomial' : '',
+            '_polynomial_gen' : '',
             '_as_polynomial_in_E4_and_E6' : None,
             '_twist_info' : [],
             '_is_CM' : [],
@@ -821,11 +825,10 @@ class WebNewForm(SageObject):
                 self._f = self._parent.galois_decomposition()[self._fi]
             if self._base_ring == None:
                 try:
-                    p = ZZ['x'](self._polynomial)
-                    self._base_ring = NumberField(p,names='x')
+                    p = ZZ[self._polynomial_gen](self._polynomial)
+                    self._base_ring = NumberField(p,names=self._polynomial_gen)
                 except (ValueError,AttributeError):
                     self._base_ring = self._f.q_eigenform(prec, names='x').base_ring()
-
             if not self._ap:
                 if len(self._parent._ap)>1:
                     self._ap = parent._ap[i]
@@ -964,7 +967,12 @@ class WebNewForm(SageObject):
             data.pop('_conrey_character')
             data['_parent']=self._parent.to_dict(for_db=for_db)
             data['_polynomial'] = str(self.polynomial(format=''))
+            if self.base_ring()==QQ:
+                data['_polynomial_gen'] = 'x'
+            else:
+                data['_polynomial_gen'] = str(self.base_ring().gens())
             data.pop('_base_ring')
+            data['_q_expansion_str']=self._q_expansion_str 
         return data
 
     def _from_dict(self, data):
@@ -1174,11 +1182,27 @@ class WebNewForm(SageObject):
             self.insert_into_db()
         return res
 
-    def q_expansion(self, prec=10):
-        if hasattr(self._f, 'q_expansion'):
-            return self._f.q_expansion(ZZ(prec))
-        if hasattr(self._f, 'q_eigenform'):
-            return self._f.q_eigenform(ZZ(prec), names='x')
+    def q_expansion(self, prec=None):
+        r"""
+        Return the q-expansion of self to precision prec.
+        """
+        if prec == None:
+            prec = self._prec
+        if isinstance(self._q_expansion,sage.rings.power_series_poly.PowerSeries_poly):
+            if self._q_expansion.prec() == self.prec():
+                return self._q_expansion
+        if self._q_expansion_str<>'':
+            R = PowerSeriesRing(self.base_ring(), 'q')
+            try:
+                return R(self._q_expansion_str)
+            except ValueError:
+                pass
+        elif hasattr(self._f, 'q_eigenform'):
+            self._q_expansion = self._f.q_eigenform(ZZ(prec), names='x')
+        else:
+            self._q_expansion = ''
+        self._q_expansion_str = str(self._q_expansion.polynomial())
+        return self._q_expansion
 
     def atkin_lehner_eigenvalue(self, Q):
         r""" Return the Atkin-Lehner eigenvalues of self
@@ -1732,7 +1756,7 @@ class WebNewForm(SageObject):
         if not hasattr(self, '_satake'):
             self._satake = {}
         elif(self._satake != {}):
-            if len(self._satake.['ps']) < prime_pi(prec) or len(self._satake['alphas'].get(0,{}).values()) == 0:
+            if len(self._satake['ps']) < prime_pi(prec) or len(self._satake['alphas'].get(0,{}).values()) == 0:
                 self._satake = {}
             else:
                 x = self._satake['thetas'].get(0,{0:0}).values()[0]
@@ -1879,7 +1903,7 @@ class WebNewForm(SageObject):
 
 
         """
-        if(prec is None):
+        if prec == None:
             prec = self._prec
         s = my_latex_from_qexp(str(self.q_expansion(prec)))
 
@@ -1891,8 +1915,9 @@ class WebNewForm(SageObject):
             s = r"\(" + s + r"\)"
         else:
             s = r"\[\begin{align} &" + join(sb, "\cr &") + r"\end{align}\]"
-
+            
         emf_logger.debug("print_q_exp: prec=".format(prec))
+        
         return s
 
     def print_q_expansion_embeddings(self, prec=10, bprec=53):
