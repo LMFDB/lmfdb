@@ -1732,10 +1732,10 @@ class WebNewForm(SageObject):
         if not hasattr(self, '_satake'):
             self._satake = {}
         elif(self._satake != {}):
-            if len(self._satake.values()) < prime_pi(prec) or len(self._satake.values()[0].values()) == 0:
+            if len(self._satake.['ps']) < prime_pi(prec) or len(self._satake['alphas'].get(0,{}).values()) == 0:
                 self._satake = {}
             else:
-                x = self._satake['thetas'].values()[0].values()[0]
+                x = self._satake['thetas'].get(0,{0:0}).values()[0]
                 if x.prec() >= bits:  # else recompute
                     return self._satake
         K = self.base_ring()
