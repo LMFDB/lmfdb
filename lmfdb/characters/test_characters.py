@@ -1,6 +1,7 @@
 from lmfdb.base import LmfdbTest
 from lmfdb.WebCharacter import *
 from lmfdb.utils import url_character
+import unittest
 
 class WebCharacterTest(LmfdbTest):
 
@@ -93,6 +94,21 @@ class DirichletCharactersTest(LmfdbTest):
         assert '/Character/Dirichlet/2/1' in W.data, "next link"
         assert  '/NumberField/1.1.1.1' in W.data
      
+    @unittest.skip("wait for new DirichletConrey")
+    def test_dirichletcharbig(self):
+        """ this is an extremely nice example to check
+            the Conrey naming scheme:
+            for p = 40487, 5 generates Z/pZ but not Z/p^2Z
+            the next one is OK, namely 10.
+            This test makes also sure the code scales.
+        """
+        W = self.tc.get('/Character/Dirichlet/40487/5')
+        assert 'Character group' in W.data
+        assert '40486' in W.data
+        assert '/Character/Dirichlet/4042/1' in W.data, "next link"
+        assert  '/NumberField/1.1.1.1' in W.data
+ 
+
     def test_dirichletchar43(self):
         W = self.tc.get('/Character/Dirichlet/4/3')
         assert 'Kronecker symbol' in W.data
