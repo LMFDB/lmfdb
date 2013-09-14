@@ -819,7 +819,12 @@ class WebNewForm(SageObject):
             self._set_character()
             if self._f == None:
                 self._f = self._parent.galois_decomposition()[self._fi]
-            self._base_ring = self._f.q_eigenform(prec, names='x').base_ring()
+            if self._base_ring == None:
+                try:
+                    p = ZZ['x'](self._polynomial)
+                    self._base_ring = NumberField(p)
+                except (ValueError,AttributeError):
+                    self._base_ring = self._f.q_eigenform(prec, names='x').base_ring()
 
             if not self._ap:
                 if len(self._parent._ap)>1:
@@ -958,6 +963,8 @@ class WebNewForm(SageObject):
             data.pop('_character')
             data.pop('_conrey_character')
             data['_parent']=self._parent.to_dict(for_db=for_db)
+            data['_polynomial'] = str(self.polynomial(format=''))
+            data.pop('_base_ring')
         return data
 
     def _from_dict(self, data):
@@ -1627,7 +1634,7 @@ class WebNewForm(SageObject):
         bits = ceil(int(digits) * int(4))
         CF = ComplexField(bits)
         RF = ComplexField(bits)
-        eps = RF(10 ** -(digits + 1))
+        eps = RF(10 ** - (digits + 1))
         if(self._verbose > 1):
             emf_logger.debug("eps={0}".format(eps))
         K = self.base_ring()
