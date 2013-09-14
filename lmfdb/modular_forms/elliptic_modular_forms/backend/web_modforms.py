@@ -61,7 +61,7 @@ class WebModFormSpace(Parent):
 
 
     """
-    def __init__(self, k, N=1, chi=0, cuspidal=1, prec=10, bitprec=53, data=None, compute=None, use_db=True, verbose=0):
+    def __init__(self, k, N=1, chi=0, cuspidal=1, prec=10, bitprec=53, data={}, use_db=True, verbose=0):
         r"""
         Init self.
 
@@ -72,57 +72,45 @@ class WebModFormSpace(Parent):
         - 'cuspidal' -- 1 if space of cuspforms, 0 if all modforms
         """
         emf_logger.debug("WebModFormSpace with k,N,chi={0}".format( (k,N,chi)))
-        self._cuspidal = cuspidal
-        self._k = ZZ(k)
-        self._N = ZZ(N)
-        if chi == 'trivial':
-            self._chi = ZZ(0)
-        else:
-            self._chi = ZZ(chi)
-        self._prec = ZZ(prec)
-        self.prec = ZZ(prec)
-        self._ap = list()
-        self._verbose = verbose
-        self._bitprec = bitprec
-        self._dimension_newspace = None
-        self._dimension_cusp_forms = None
-        self._dimension_modular_forms = None
-        self._dimension_new_cusp_forms = None
-        self._dimension_new_modular_symbols = None
-        self._galois_decomposition = []
-        self._newspace = None
-        self._character = None
-        self._got_ap_from_db = False
-        self._use_db = use_db
-        # check what is in the database
-        ## dO A SIMPLE TEST TO SEE IF WE EXIST OR NOT.
-        if N < 0 or int(chi) > int(euler_phi(N)) or chi < 0:
-            print "1:", N < 0
-            print "2:", int(chi) > int(euler_phi(N))
-            print "3:", chi < 0
-
-            emf_logger.critical("Could not construct WMFS with: {0}.{1}.{2} and eulerphi-{3}".format(
-                k, N, chi, euler_phi(N)))
-            return None
-        self.__dict__.update( {'_ap' : [], '_group' : None,
-                               '_character' : None,
-                               '_conrey_character' : None,
-                               '_modular_symbols' : None,
-                               '_newspace' : None,
-                               '_newforms' : [],
-                               '_new_modular_symbols' : None,
-                               '_galois_decomposition' : [],
-                               '_galois_orbits_labels' : [],
-                               '_oldspace_decomposition' : []})
-        if isinstance(data, dict):
-            self.__dict__.update(data)
+        d = {
+            '_N': int(N),
+            '_k': int(k),
+            '_chi':int(chi),
+            '_cuspidal' : int(cuspidal),
+            '_prec' : int(prec),
+            '_ap' : [], '_group' : None,
+            '_character' : None,
+            '_conrey_character' : None,
+            '_sage_character_no' : int(chi),
+            '_conrey_character_no' : None,
+            '_modular_symbols' : None,
+            '_newspace' : None,
+            '_newforms' : [],
+            '_new_modular_symbols' : None,
+            '_galois_decomposition' : [],
+            '_galois_orbits_labels' : [],
+            '_oldspace_decomposition' : [],
+            '_ap' : list(),
+            '_verbose' : int(verbose),
+            '_bitprec' : int(bitprec),
+            '_dimension_newspace' : None,
+            '_dimension_cusp_forms' : None,
+            '_dimension_modular_forms' : None,
+            '_dimension_new_cusp_forms' : None,
+            '_dimension_new_modular_symbols' : None,
+            '_galois_decomposition' : [],
+            '_newspace' : None,
+            '_character' : None,
+            '_got_ap_from_db' : False,
+            '_use_db' : int(use_db)}
+        if not isinstance(data,dict):
+            data = {}
+        data.update(d)
+        self.__dict__.update(data)
         try:
             if self._group == None:
                 self._group = Gamma0(N)
-            if self._character == None:
-                self._character = self._get_character(self._chi)
-            if self._conrey_character == None:
-                self._conrey_character = self._get_conrey_character(self._character)
+            #self.conrey_character()
             if self._modular_symbols == None:
                 self._modular_symbols = self._get_objects(k, N, chi, use_db, 'Modular_symbols')
             if self._newspace == None:
@@ -131,12 +119,9 @@ class WebModFormSpace(Parent):
                 l = len(self.galois_decomposition())
                 for i in range(l):
                     self._newforms.append(None)
-                if compute:
-                    self._compute_newforms(compute)
             if self._ap == []:
                 self._ap = self._get_objects(k, N, chi, use_db, 'ap', prec=prec)
                 
-
         except RuntimeError:
             raise RuntimeError("Could not construct space for (k=%s,N=%s,chi=%s)=" % (k, N, self._chi))
         #emf_logger.debug("Setting conrey_character={0}".format(self._conrey_character))
@@ -146,48 +131,27 @@ class WebModFormSpace(Parent):
         else:
             self._is_new = False
 
-    def _compute_newforms(self, compute='all'):
-        r"""
-        Populates self with newforms.
-        """
-        raise NotImplementedError,"Obsolete!"
-    #     emf_logger.debug("Computing! : {0}".format(compute))
-    #     l = len(self.galois_decomposition())
-    #     for i in range(l):
-    #         label = self._galois_orbits_labels[i]
-    #         if compute == i or compute == 'all' or compute == label:
-    #             f_data = dict()
-    #             f_data['parent'] = self
-    #             f_data['f'] = self.galois_decomposition()[i]
-
-    #             emf_logger.debug("f_data={0}".format(f_data['f']))
-    #             emf_logger.debug("self_ap={0}".format(self._ap))
-    #             if isinstance(self._ap,list) and len(self._ap) >= i+1:
-    #                 f_data['ap'] = self._ap[i]
-    #             print "\n\n\n Get F"
-    #             emf_logger.debug("Actually getting F {0},{1}".format(label, i))
-    #             F = WebNewForm(self._k, self._N, self._chi, label=label, fi=i, prec=self._prec, bitprec=self._bitprec, verbose=self._verbose, data=f_data, parent=self, compute=i)
-    #             emf_logger.debug("F={0},type(F)={1}".format(F, type(F)))
-    #             self._newforms[i] = F
-
-    def _get_character(self, k):
+    def _get_character(self,k=None):
         r"""
         Returns canonical representative of the Galois orbit nr. k acting on the ambient space of self.
 
         """
         D = DirichletGroup(self.group().level())
         G = D.galois_orbits(reps_only=True)
+        if k==None:
+            k = self._sage_character_no
         try:
             emf_logger.debug("k={0},G[k]={1}".format(k, G[k]))
             return G[k]
         except IndexError:
             emf_logger.critical("Got character no. {0}, which are outside the scope of Galois orbits of the characters mod {1}!".format(k, self.group().level()))
-            return trivial_character(self.group().level())
+            raise IndexError,"There is no Galois orbit of this index!"
 
-    def _get_conrey_character(self, chi):
-        Dc = DirichletGroup_conrey(chi.modulus())
+
+    def _get_conrey_character(self):
+        Dc = DirichletGroup_conrey(self._N)
         for c in Dc:
-            if c.sage_character() == chi:
+            if c.sage_character() == self.character():
                 return c
 
     def _get_objects(self, k, N, chi, use_db=True, get_what='Modular_symbols', **kwds):
@@ -262,9 +226,9 @@ class WebModFormSpace(Parent):
                 if chi == 0:
                     res = ModularSymbols(N, k, sign=1)
                 else:
-                    emf_logger.debug("character: {0}".format(self._character))
+                    emf_logger.debug("character: {0}".format(self.character()))
                     emf_logger.debug("weight: {0}".format(k))
-                    res = ModularSymbols(self._character, k, sign=1)
+                    res = ModularSymbols(self.character(), k, sign=1)
             elif get_what == 'ap':
                 if self.level() == 1:
                     ## Get the Hecke eigenvalues for level 1.
@@ -283,7 +247,7 @@ class WebModFormSpace(Parent):
         """
         data = self.to_dict()
         # return(WebModFormSpace,(self._k,self._N,self._chi,self.prec,data))
-        return(unpickle_wmfs_v1, (self._k, self._N, self._chi, self._cuspidal, self.prec, self._bitprec, data))
+        return(unpickle_wmfs_v1, (self._k, self._N, self._chi, self._cuspidal, self._prec, self._bitprec, data))
 
     def _save_to_file(self, file):
         r"""
@@ -297,10 +261,12 @@ class WebModFormSpace(Parent):
         """
         problematic_keys = ['_galois_decomposition',
                             '_newforms','_newspace',
-                            '_modular_forms',
+                            '_modular_symbols',
                             '_new_modular_symbols',
                             '_galois_decomposition',
-                            '_oldspace_decomposition']
+                            '_oldspace_decomposition',
+                            '_conrey_character',
+                            '_character']
         data = {}
         data.update(self.__dict__)
         if for_db:
@@ -386,16 +352,16 @@ class WebModFormSpace(Parent):
     def dimension_cusp_forms(self):
         if self._dimension_cusp_forms is None:
             if self._chi != 0:
-                self._dimension_cusp_forms = dimension_cusp_forms(self._character, self._k)
+                self._dimension_cusp_forms = dimension_cusp_forms(self.character(), self._k)
             else:
-                self._dimension_cusp_forms = dimension_cusp_forms(self._N, self._k)
+                self._dimension_cusp_forms = dimension_cusp_forms(self.level(), self._k)
             # self._modular_symbols.cuspidal_submodule().dimension()
         return self._dimension_cusp_forms
 
     def dimension_modular_forms(self):
         if self._dimension_modular_forms is None:
             if self._chi != 0:
-                self._dimension_modular_forms = dimension_modular_forms(self._character, self._k)
+                self._dimension_modular_forms = dimension_modular_forms(self.character(), self._k)
             else:
                 self._dimension_modular_forms = dimension_modular_forms(self._N, self._k)
             # self._dimension_modular_forms=self._modular_symbols.dimension()
@@ -404,7 +370,7 @@ class WebModFormSpace(Parent):
     def dimension_new_cusp_forms(self):
         if self._dimension_new_cusp_forms is None:
             if self._chi != 0:
-                self._dimension_new_cusp_forms = dimension_new_cusp_forms(self._character, self._k)
+                self._dimension_new_cusp_forms = dimension_new_cusp_forms(self.character(), self._k)
             else:
                 self._dimension_new_cusp_forms = dimension_new_cusp_forms(self._N, self._k)
         return self._dimension_new_cusp_forms
@@ -427,25 +393,26 @@ class WebModFormSpace(Parent):
         return self._N
 
     def character(self):
+        if self._character == None:
+            self._character = self._get_character()
         return self._character
 
     def conrey_character(self):
+        if self._conrey_character == None:
+            self._get_conrey_character()
         return self._conrey_character
 
+    def conrey_character_number(self):
+        return self.conrey_character.number()
+    
     def conrey_character_name(self):
         return "\chi_{" + str(self._N) + "}(" + str(self._conrey_character.number()) + ",\cdot)"
 
     def character_order(self):
-        if(self._character != 0):
-            return self._character.order()
-        else:
-            return 1
+        return self.character().order()
 
     def character_conductor(self):
-        if(self._character != 0):
-            return self._character.conductor()
-        else:
-            return 1
+        return self.character().conductor()
 
     def group(self):
         return self._group
@@ -477,18 +444,13 @@ class WebModFormSpace(Parent):
                 F = WebNewForm(self._k, self._N, self._chi, parent=self, label=i)
             
         else:
-            if not (isinstance(i, int) or i in ZZ) and i in self._galois_orbits_labels:
-                ii = self._galois_orbits_labels.index(i)
-            else:
-                ii = i
+            if not i in self._galois_orbits_labels:
+                i = self._galois_orbits_labels.index(i)
             emf_logger.debug("print ii={0}".format(ii))
-            if ii >= 0 and ii <= len(self._newforms):
-                # print "set F!"
+            try:
                 F = self._newforms[ii]
-                if not F:  # then we have to compute something.
-                    emf_logger.debug("compute F")
-                    self._compute_newforms(compute=ii)
-                    F = self._newforms[ii]
+            except IndexError:
+                raise IndexError,"Form nr. {i} does not exist!"
         emf_logger.debug("returning F! :{0}".format(F))
         return F
 
@@ -497,7 +459,7 @@ class WebModFormSpace(Parent):
         Return the q_eigenform nr. orbit in self
         """
         if(prec is None):
-            prec = self.prec
+            prec = self._prec
         return self.galois_decomposition()[orbit].q_eigenform(prec, 'x')
 
     def oldspace_decomposition(self):
@@ -535,7 +497,7 @@ class WebModFormSpace(Parent):
                 emf_logger.debug("Od={0}".format(Od))
             if(d == N and k == 2 or Od == 0):
                 continue
-            if self._character.is_trivial():
+            if self.character().is_trivial():
                 # S=ModularSymbols(ZZ(N/d),k,sign=1).cuspidal_submodule().new_submodule(); Sd=S.dimension()
                 emf_logger.debug("q={0},{1}".format(q, type(q)))
                 emf_logger.debug("k={0},{1}".format(k, type(k)))
@@ -547,13 +509,13 @@ class WebModFormSpace(Parent):
                     check_dim = check_dim + mult * Sd
                     L.append((q, 0, mult, Sd))
             else:
-                xd = self._character.decomposition()
+                xd = self.character().decomposition()
                 for xx in xd:
                     if xx.modulus() == q:
                         Sd = dimension_new_cusp_forms(xx, k)
                         if Sd > 0:
                             # identify this character for internal storage... should be optimized
-                            x_k = self._get_conrey_character(xx).number()
+                            x_k = self.conrey_character(xx).number()
                             mult = len(divisors(ZZ(d)))
                             check_dim = check_dim + mult * Sd
                             L.append((q, x_k, mult, Sd))
@@ -831,6 +793,8 @@ class WebNewForm(SageObject):
             '_base_ring': None,
             '_dimension' : None,
             '_is_rational' : None,
+            '_conrey_character_no' : -1,
+            '_sage_character_no' : -1,
             '_name' : "{0}.{1}{2}".format(N,k,label)
             }
         self.__dict__.update(d)
@@ -843,14 +807,14 @@ class WebNewForm(SageObject):
         if not isinstance(self._parent,WebModFormSpace):
             if self._verbose > 0:
                 emf_logger.debug("compute parent! label={0}".format(label))
-            self._parent = WebModFormSpace(k, N, chi, compute='',data=self._parent)
+            self._parent = WebModFormSpace(k, N, chi, data=self._parent)
             emf_logger.debug("finished computing parent")
         if self._parent.dimension_newspace()==0:
             self._dimension=0
             return 
         self._check_consistency_of_labels()
         emf_logger.debug("name={0}".format(self._name))
-        if compute == 'all':
+        if compute == 'all': ## Compute all data we want.
             emf_logger.debug("compute")
             self._set_character()
             if self._f == None:
@@ -901,16 +865,22 @@ class WebNewForm(SageObject):
         """
         if self._parent == None:
             raise ValueError,"Need parent to check labels!"
+        if self._conrey_character_no>0:
+            self._conrey_character =  DirichletCharacter_conrey(DirichletGroup_conrey(self._N),self._conrey_character_no)
+        else:
+            self._conrey_character = self._parent._conrey_character
         self._character = self._parent._character
-        self._conrey_character = self._parent._conrey_character
+
         if self._character == None or self._conrey_character==None:
-            self._character = DirichletGroup(N).galois_orbits(reps_only=True)[chi]
-            Dc = DirichletGroup_conrey(N)
+            self._character = DirichletGroup(self._N).galois_orbits(reps_only=True)[self._chi]
+            Dc = DirichletGroup_conrey(self._N)
             for c in Dc:
                 if c.sage_character() == self._character:
                     self._conrey_character = c
                     break
-    
+            self._conrey_character_no  = self._conrey_character.number()
+            self._sage_character_no  = self._chi
+        
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return False
@@ -982,9 +952,11 @@ class WebNewForm(SageObject):
         for k in self.__dict__:
             data[k]=self.__dict__[k]
         ## Get rid of some more complicated keys?
-        problem_keys = ['_parent','_f']
+        
         if for_db:
             data.pop('_f')
+            data.pop('_character')
+            data.pop('_conrey_character')
             data['_parent']=self._parent.to_dict(for_db=for_db)
         return data
 
