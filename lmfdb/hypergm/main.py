@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # This Blueprint is about Hypergeometric motives
-# Author: John Jones
+# Author: John Jones 
 
 import re
 import pymongo
@@ -9,7 +9,8 @@ import flask
 from lmfdb import base
 from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input, image_callback
+from lmfdb.number_fields.number_field import parse_list
 from sage.all import ZZ, var, PolynomialRing, QQ, latex
 from lmfdb.hypergm import hypergm_page, hgm_logger
 
@@ -19,7 +20,7 @@ HGM_credit = 'D. Roberts and J. Jones'
 
 
 def get_bread(breads=[]):
-    bc = [("Hypergeometric Motives", url_for(".index"))]
+    bc = [("Motives", url_for("motive.index")), ("Hypergeometric", url_for("motive.index2")), ("$\Q$", url_for(".index"))]
     for b in breads:
         bc.append(b)
     return bc
@@ -32,8 +33,10 @@ def format_coeffs(coeffs):
 
 # Returns a string of val if val = 0, 1, -1, or version with p factored out otherwise
 def factor_out_p(val, p):
-    if val==0 or val==1 or val==-1:
+    if val==0 or val==-1:
         return str(val)
+    if val==1:
+        return '+1'
     s = 1
     if val<0:
         s = -1
@@ -43,6 +46,8 @@ def factor_out_p(val, p):
     out = ''
     if s == -1:
         out += '-'
+    else:
+        out += '+'
     if ord==1:
         out +=  str(p)
     elif ord>1:
@@ -55,27 +60,38 @@ def factor_out_p(val, p):
 
 # c is a list of coefficients
 def poly_with_factored_coeffs(c, p):
-    c = [factor_out_p(b) for b in c]
+    c = [factor_out_p(b,p) for b in c]
     out = ''
     for j in range(len(c)):
+        xpow = 'x^{'+ str(j) +'}'
+        if j == 0:
+            xpow = ''
+        elif j==1:
+            xpow = 'x'
         if c[j] != '0':
-            if c[j] == '1':
+            if c[j] == '+1':
                 if j==0:
-                    out += '+'+c[j]
+                    out += '+1'
                 else:
-                    out += '+x^{'+ j +'}'
+                    out += '+'+xpow
             elif c[j] == '-1':
                 if j==0:
                     out += '-1'
                 else:
-                    out += '-'+'x^{'+j+'}'
+                    out += '-'+ xpow
             else:
-                if c[j][0] == '-':
-                    if j==0:
-                        out += c[j]
+                if j==0:
+                    out += c[j]
+                else:
+                    out += c[j] + xpow
+    if out[0] == '+':
+        out = out[1:]
+    return out
 
 
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
+IF_RE = re.compile(r'^\[\]|(\[\d+(,\d+)*\])$')  # invariant factors
+PAIR_RE = re.compile(r'^\[\d+,\d+\]$')
 
 
 @hypergm_page.route("/")
@@ -84,7 +100,40 @@ def index():
     if len(request.args) != 0:
         return hgm_search(**request.args)
     info = {'count': 20}
-    return render_template("hgm-index.html", title="Hypergeometric Motives", bread=bread, credit=HGM_credit, info=info)
+    return render_template("hgm-index.html", title="Hypergeometric Motives over $\Q$", bread=bread, credit=HGM_credit, info=info)
+
+
+
+@hypergm_page.route("/plot/circle/<AB>")
+def hgm_family_circle_image(AB):
+    A,B = AB.split("_")
+    from plot import circle_image
+    A = map(int,A[1:].split("."))
+    B = map(int,B[1:].split("."))
+    G = circle_image(A, B)
+    return image_callback(G)
+
+@hypergm_page.route("/plot/linear/<AB>")
+def hgm_family_linear_image(AB):
+    # piecewise linear, as opposed to piecewise constant
+    A,B = AB.split("_")
+    from plot import piecewise_linear_image
+    A = map(int,A[1:].split("."))
+    B = map(int,B[1:].split("."))
+    G = piecewise_linear_image(A, B)
+    return image_callback(G)
+
+@hypergm_page.route("/plot/constant/<AB>")
+def hgm_family_constant_image(AB):
+    # piecewise constant
+    A,B = AB.split("_")
+    from plot import piecewise_constant_image
+    A = map(int,A[1:].split("."))
+    B = map(int,B[1:].split("."))
+    G = piecewise_constant_image(A, B)
+    return image_callback(G)
+
+
 
 @hypergm_page.route("/<label>")
 def by_family_label(label):
@@ -104,7 +153,7 @@ def search():
         return "ERROR: we always do http get to explicitly display the search parameters"
     else:
         return flask.redirect(404)
-
+    
 
 def hgm_search(**args):
     info = to_dict(args)
@@ -114,7 +163,15 @@ def hgm_search(**args):
     if 'jump_to' in info:
         return render_hgm_webpage({'label': info['jump_to']})
 
-    for param in ['p', 'n', 'c', 'e', 'gal']:
+    # t, generic, irreducible
+    # 'A', 'B', 'hodge'
+    for param in ['t', 'A', 'B']:
+        if (param == 't' and PAIR_RE.match(info['t'])) or (param == 'A' and IF_RE.match(info[param])) or (param == 'B' and IF_RE.match(info[param])):
+            query[param] = parse_list(info[param])
+        else:
+            print "Bad input"
+            
+    for param in ['degree','weight','sign']:
         if info.get(param):
             info[param] = clean_input(info[param])
             if param == 'gal':
@@ -126,7 +183,7 @@ def hgm_search(**args):
                         tmp = [{'gal': list(x)} for x in gcs]
                         tmp = ['$or', tmp]
                 except NameError as code:
-                    info['err'] = 'Error parsing input for Galois group: unknown group label %s.  It needs to be a <a title = "Galois group labels" knowl="nf.galois_group.name">group label</a>, such as C5 or 5T1, or comma separated list of labels.' % code
+                    info['err'] = 'Error parsing input for A: unknown group label %s.  It needs to be a <a title = "Galois group labels" knowl="nf.galois_group.name">group label</a>, such as C5 or 5T1, or comma separated list of labels.' % code
                     return search_input_error(info, bread)
             else:
                 ran = info[param]
@@ -134,8 +191,7 @@ def hgm_search(**args):
                 if LIST_RE.match(ran):
                     tmp = parse_range2(ran, param)
                 else:
-                    names = {'p': 'prime p', 'n': 'degree', 'c':
-                             'discriminant exponent c', 'e': 'ramification index e'}
+                    names = {'weight': 'weight', 'degree': 'degree', 'sign': 'sign'}
                     info['err'] = 'Error parsing input for the %s.  It needs to be an integer (such as 5), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 2,3,8 or 3-5, 7, 8-11).' % names[param]
                     return search_input_error(info, bread)
             # work around syntax for $or
@@ -179,8 +235,8 @@ def hgm_search(**args):
             pass
 
     # logger.debug(query)
-    res = C.localfields.fields.find(query).sort([('p', pymongo.ASCENDING), (
-        'n', pymongo.ASCENDING), ('c', pymongo.ASCENDING), ('label', pymongo.ASCENDING)])
+    res = C.hgm.motives.find(query).sort([('degree', pymongo.ASCENDING), 
+        ('label', pymongo.ASCENDING)])
     nres = res.count()
     res = res.skip(start).limit(count)
 
@@ -189,10 +245,8 @@ def hgm_search(**args):
     if(start < 0):
         start = 0
 
-    info['fields'] = res
+    info['motives'] = res
     info['number'] = nres
-    info['group_display'] = group_display_shortC(C)
-    info['display_poly'] = format_coeffs
     info['start'] = start
     if nres == 1:
         info['report'] = 'unique match'
@@ -202,7 +256,7 @@ def hgm_search(**args):
         else:
             info['report'] = 'displaying all %s matches' % nres
 
-    return render_template("hgm-search.html", info=info, title="Local Number Field Search Result", bread=bread, credit=HGM_credit)
+    return render_template("hgm-search.html", info=info, title="Hypergeometric Motive over $\Q$ Search Result", bread=bread, credit=HGM_credit)
 
 
 def render_hgm_webpage(args):
@@ -227,11 +281,12 @@ def render_hgm_webpage(args):
         locinfo = data['locinfo']
         for j in range(len(locinfo)):
             locinfo[j] = [primes[j]] + locinfo[j]
-            locinfo[j][2] = PolynomialRing(QQ, 'x')(locinfo[j][2])._latex_()
+            locinfo[j][2] = poly_with_factored_coeffs(locinfo[j][2], primes[j])
         hodge = data['hodge']
         prop2 = [
             ('Degree', '\(%s\)' % data['degree']),
-            ('Weight',  '\(%s\)' % data['weight'])
+            ('Weight',  '\(%s\)' % data['weight']),
+            ('Conductor', '\(%s\)' % data['cond']),
         ]
         info.update({
                     'A': A,
@@ -242,14 +297,18 @@ def render_hgm_webpage(args):
                     'sign': data['sign'],
                     'sig': data['sig'],
                     'hodge': hodge,
+                    'cond': data['cond'],
+                    'req': data['req'],
                     'locinfo': locinfo
                     })
-        friends = []
+        AB_data = data["label"].split("_t")[0]
+        friends = [("Motive family "+AB_data.replace("_"," "), url_for(".by_family_label", label = AB_data))]
 #        friends = [('Galois group', "/GaloisGroup/%dT%d" % (gn, gt))]
 #        if unramfriend != '':
 #            friends.append(('Unramified subfield', unramfriend))
 #        if rffriend != '':
 #            friends.append(('Discriminant root field', rffriend))
+
 
         bread = get_bread([(label, ' ')])
         return render_template("hgm-show-motive.html", credit=HGM_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends)
@@ -292,6 +351,9 @@ def render_hgm_family_webpage(args):
 #        if rffriend != '':
 #            friends.append(('Discriminant root field', rffriend))
 
+        info.update({"plotcircle":  url_for(".hgm_family_circle_image", AB  =  "A"+".".join(map(str,A))+"_B"+".".join(map(str,B)))})
+        info.update({"plotlinear": url_for(".hgm_family_linear_image", AB  = "A"+".".join(map(str,A))+"_B"+".".join(map(str,B)))})
+        info.update({"plotconstant": url_for(".hgm_family_constant_image", AB  = "A"+".".join(map(str,A))+"_B"+".".join(map(str,B)))})
         bread = get_bread([(label, ' ')])
         return render_template("hgm-show-family.html", credit=HGM_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends)
 

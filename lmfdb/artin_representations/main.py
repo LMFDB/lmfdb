@@ -9,11 +9,15 @@ from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
 from lmfdb.artin_representations import artin_representations_page, artin_logger
 from lmfdb.utils import to_dict
-from lmfdb.transitive_group import complete_group_codes, make_galois_pair
+from lmfdb.transitive_group import *
 
 
 from lmfdb.math_classes import *
 from lmfdb.WebNumberField import *
+
+def galois_group_data(n, t):
+    C = getDBConnection()
+    return group_knowl_guts(n, t, C)
 
 
 def initialize_indices():
@@ -92,11 +96,9 @@ def artin_representation_search(**args):
             if len(gcs) > 1:
                 query['Galois_nt'] = {'$in': [x for x in gcs]}
         except NameError as code:
-            errinfo = 'Error parsing input for Galois group: unknown group label %s.  It needs to be a <a title = "Galois group labels" knowl="nf.galois_group.name">group label</a>, such as C5 or 5T1, or comma separated list of labels.' % code
-            # info['err'] = 'Error parsing input for Galois group: unknown group label %s.  It needs to be a <a title = "Galois group labels" knowl="nf.galois_group.name">group label</a>, such as C5 or 5T1, or comma separated list of labels.' % code
-            raise AssertionError(errinfo)
-            #return search_input_error(info, bread)
-
+            info = {}
+            info['err'] = 'Error parsing input for Galois group: unknown group label %s.  It needs to be a <a title = "Galois group labels" knowl="nf.galois_group.name">group label</a>, such as C5 or 5T1, or comma separated list of labels.' % code
+            return search_input_error(info, bread)
 
 
     tmp_conductor = []
@@ -120,7 +122,16 @@ def artin_representation_search(**args):
     elif len(tmp_both) >= 2:
         query["$or"] = tmp_both
 
-    count = int(req.get('count', 20))
+    count_default = 20
+    if req.get('count'):
+        try:
+            count = int(req['count'])
+        except:
+            count = count_default
+            req['count'] = count
+    else:
+        req['count'] = count_default
+        count = count_default
 
     #for i in range(10):
     #    print query
@@ -146,6 +157,9 @@ def artin_representation_search(**args):
 def by_data_no_slash(dim, conductor, index):
     return flask.redirect(url_for(".by_data", dim=dim, conductor=conductor, index=index), code=301)
 
+def search_input_error(info, bread):
+    return render_template("artin-representation-search.html", req=info, title='Artin Representation Search Error', bread=bread)
+
 
 @artin_representations_page.route("/<dim>/<conductor>/<index>/")
 def by_data(dim, conductor, index):
@@ -170,6 +184,9 @@ def render_artin_representation_webpage(dim, conductor, index):
     the_rep = ArtinRepresentation.find_one(
         {'Dim': int(dim), "Conductor": str(conductor), "DBIndex": int(index)})
 
+    extra_data = {}
+    C = base.getDBConnection()
+    extra_data['galois_knowl'] = group_display_knowl(5,3,C)
     artin_logger.info("Found %s" % (the_rep._data))
 
     bread = get_bread([(str("Dimension %s, conductor %s, index %s" % (the_rep.dimension(),
@@ -204,7 +221,7 @@ def render_artin_representation_webpage(dim, conductor, index):
               #("Same degree and conductor", url_for(".by_partial_data", dim = the_rep.dimension(), conductor = the_rep.conductor())),\
               #("L-function", url_for("l_functions.l_function_artin_page",  dimension = the_rep.dimension(), conductor = the_rep.conductor(), tim_index = the_rep.index()))
               #]
-    return render_template("artin-representation-show.html", credit=tim_credit, support=support_credit, title=title, bread=bread, friends=friends, object=the_rep, properties2=properties)
+    return render_template("artin-representation-show.html", credit=tim_credit, support=support_credit, title=title, bread=bread, friends=friends, object=the_rep, properties2=properties, extra_data=extra_data)
 
 
 def render_artin_representation_set_webpage(dim, conductor):
@@ -218,3 +235,4 @@ def render_artin_representation_set_webpage(dim, conductor):
     title = "Artin representations of dimension $%s$ and conductor $%s$" % (dim, conductor)
 
     return render_template("artin-representation-set-show.html", credit=tim_credit, support=support_credit, title=title, bread=bread, object=the_reps)
+
