@@ -790,11 +790,12 @@ def getOneGraphHtmlChar(min_cond, max_cond, min_order, max_order):
 ## Dirichlet L-functions.
 ## ============================================
 def getGraphInfoChar(min_cond, max_cond, min_order, max_order):
-    xfactor = 70
-    yfactor = 30
-    extraSpace = 30
+    xfactor = 50
+    yfactor = 25
+    extraSpace = 40
     (width, height) = (
-        2 * extraSpace + xfactor * (max_order), 2 * extraSpace + yfactor * (max_cond - min_cond + 1))
+        2 * extraSpace + xfactor * max_order, 2 * extraSpace + yfactor * (max_cond - min_cond + 1))
+    logger.debug(width,height)
 ##    url = url_for('.browseGraph',group=group, level=level, sign=sign)
     url = url_for('.browseGraphChar', min_cond=str(min_cond),
                   max_cond=str(max_cond), min_order=str(min_order),
@@ -810,9 +811,9 @@ def getGraphInfoChar(min_cond, max_cond, min_order, max_order):
 ## the Dirichlet L-functions.
 ## ============================================
 def paintSvgChar(min_cond, max_cond, min_order, max_order):
-    xfactor = 70
-    yfactor = 30
-    extraSpace = 20
+    xfactor = 50
+    yfactor = 25
+    extraSpace = 40
     ticlength = 4
     radius = 3
     xdotspacing = 0.10  # horizontal spacing of dots
@@ -827,8 +828,10 @@ def paintSvgChar(min_cond, max_cond, min_order, max_order):
     xMax = int(max_order)
     yMax = int(max_cond)
     yMin = int(min_cond)
-    width = xfactor * xMax + 3 * extraSpace
-    height = yfactor * (yMax - yMin) + 3 * extraSpace
+##    width = xfactor * xMax + 3 * extraSpace
+##    height = yfactor * (yMax - yMin) + 3 * extraSpace
+    width = xfactor * xMax + 2 * extraSpace
+    height = yfactor * (yMax - yMin + 1) + 2 * extraSpace
 
     ans += paintCSChar(width, height, xMax, yMax, yMin, xfactor, yfactor, ticlength)
 
@@ -973,7 +976,7 @@ def paintCSChar(width, height, xMax, yMax, yMin, xfactor, yfactor, ticlength):
 
     xmlText = xmlText + (
         "<text x='5' y='10' style='fill:rgb(102,102,102);font-size:11px;'>Conductor</text>\n")
-    xmlText = xmlText + ("<text x='" + str(width - xfactor + 35) + "' y='" + str(height - 2 * ticlength) +
+    xmlText = xmlText + ("<text x='" + str(width - xfactor + 15) + "' y='" + str(height - 2 * ticlength) +
                          "' style='fill:rgb(102,102,102);font-size:11px;'>Order</text>\n")
 
     return xmlText
