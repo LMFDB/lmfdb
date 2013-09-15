@@ -13,4 +13,4 @@ def body_class():
 
 import main
 
-app.register_blueprint(motive_page, url_prefix="/Motives")
+app.register_blueprint(motive_page, url_prefix="/Motive")
