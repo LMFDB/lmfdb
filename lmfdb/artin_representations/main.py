@@ -15,16 +15,10 @@ from lmfdb.transitive_group import *
 from lmfdb.math_classes import *
 from lmfdb.WebNumberField import *
 
-def galois_group_data(n, t):
-    C = getDBConnection()
-    return group_knowl_guts(n, t, C)
-
-
 def initialize_indices():
-    ArtinRepresentation.collection().ensure_index([("Dim", ASC), ("Conductor_plus", ASC)])
+    ArtinRepresentation.collection().ensure_index([("Dim", ASC), ("Conductor_plus", ASC),("galorbit", ASC)])
     ArtinRepresentation.collection().ensure_index([("Dim", ASC), ("Conductor", ASC)])
     ArtinRepresentation.collection().ensure_index([("Conductor", ASC), ("Dim", ASC)])
-    ArtinRepresentation.collection().ensure_index([("Conductor_plus", ASC), ("Dim", ASC)])
 
 
 def get_bread(breads=[]):
@@ -133,12 +127,27 @@ def artin_representation_search(**args):
         req['count'] = count_default
         count = count_default
 
-    #for i in range(10):
-    #    print query
-    from pymongo import ASCENDING
-    ArtinRepresentation.collection().ensure_index([("Dim", ASCENDING), ("Conductor_plus", ASCENDING)])
-    data = [ArtinRepresentation(data=x) for x in ArtinRepresentation.collection(
-    ).find(query).sort([("Dim", ASCENDING), ("Conductor_plus", ASCENDING)]).limit(count)]
+    #results = ArtinRepresentation.collection().find(query).sort([("Dim", ASC), ("Conductor_plus", ASC), ("galorbit", ASC)]).limit(count)
+    results = ArtinRepresentation.collection().find(query).sort([("Dim", ASC), ("Conductor_plus", ASC), ("galorbit", ASC)])
+    # We step through the data so we can collect Galois conjugate rep'ns
+    data = []
+    galclass = []
+    curclass = '0'
+    cnt = 0
+    for x in results:
+        if cnt > count:
+            break
+        ar = ArtinRepresentation(data=x)
+        if ar.galois_orbit_label() == curclass:
+            galclass.append(ar)
+        else:
+            if curclass != '0':
+                data.append(galclass)
+            curclass = ar.galois_orbit_label()
+            galclass = [ar]
+            cnt += 1
+    #data = [ArtinRepresentation(data=x) for x in results]
+
     return render_template("artin-representation-search.html", req=req, data=data, data_count=len(data), title=title, bread=bread, query=query)
 
 
@@ -200,11 +209,12 @@ def render_artin_representation_webpage(dim, conductor, index):
         processed_root_number = "unknown"
     else:
         processed_root_number = str(the_rep.root_number())
-    properties = [("Root number", processed_root_number),
-                  ("Dimension", str(the_rep.dimension())),
-                  ("Conductor", str(the_rep.conductor())),
-                  ("Factored conductor", "$" + the_rep.factored_conductor_latex() + "$"),
+    properties = [("Dimension", str(the_rep.dimension())),
+                  ("Group", the_rep.group()),
+                  #("Conductor", str(the_rep.conductor())),
+                  ("Conductor", "$" + the_rep.factored_conductor_latex() + "$"),
                   #("Bad primes", str(the_rep.bad_primes())),
+                  ("Root number", processed_root_number),
                   ("Frobenius-Schur indicator", str(the_rep.indicator()))
                   ]
 
