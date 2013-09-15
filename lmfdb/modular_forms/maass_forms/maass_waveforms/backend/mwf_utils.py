@@ -60,10 +60,10 @@ def get_args_mwf(**kwds):
                 'eigenvalue': None, 'browse': None}
     if request.method == 'GET':
         req = to_dict(request.args)
-        print "req:get=", request.args
+        #print "req:get=", request.args
     else:
         req = to_dict(request.form)
-        print "req:post=", request.form
+        #print "req:post=", request.form
     res = {}
     if kwds.get('parameters', []) != []:
         get_params.extend(kwds['parameters'])
