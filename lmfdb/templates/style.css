@@ -960,13 +960,17 @@ div.limit-height {
   font-family:"Times New Roman", Times, serif;
 }
 
+.dirichletseries em {
+  font-style: italic;
+}
+
 .dirichletseries td {
   padding-left:0;
   padding-right:0;
 }
 
 .dirichletseries td:first-child {
-  padding-top:2px;
+  padding-top:3px;
 }
 
 .dirichletseries span.term {
