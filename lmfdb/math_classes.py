@@ -4,7 +4,7 @@ from base import getDBConnection, app
 from utils import url_for, pol_to_html
 from databases.Dokchitser_databases import Dokchitser_ArtinRepresentation_Collection, Dokchitser_NumberFieldGaloisGroup_Collection
 from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField
-from lmfdb.transitive_group import group_display_knowl
+from lmfdb.transitive_group import group_display_knowl, group_display_short
 
 
 def process_algebraic_integer(seq, root_of_unity):
@@ -97,6 +97,9 @@ class ArtinRepresentation(object):
     def index(self):
         return self._data["DBIndex"]
 
+    def galois_orbit_label(self):
+        return self._data["galorbit"]
+
     def number_field_galois_group(self):
         try:
             return self._nf
@@ -136,9 +139,11 @@ class ArtinRepresentation(object):
         return "Odd"
         #return (-1)**par
 
+    def group(self):
+        return group_display_short(self._data['Galois_nt'][0],self._data['Galois_nt'][1], getDBConnection())
+
     def pretty_galois_knowl(self):
         C = getDBConnection()
-        print "****************  Got %d, %d" % (self._data['Galois_nt'][0],self._data['Galois_nt'][1])
         return group_display_knowl(self._data['Galois_nt'][0],self._data['Galois_nt'][1],C)
 
     def __str__(self):
