@@ -799,6 +799,7 @@ class WebNewForm(SageObject):
             '_cm_values' : {},
             '_satake' : {},
             '_base_ring': None,
+            '_coefficient_field': None,
             '_dimension' : None,
             '_is_rational' : None,
             '_conrey_character_no' : -1,
@@ -968,7 +969,6 @@ class WebNewForm(SageObject):
             data.pop('_conrey_character')
             data['_parent']=self._parent.to_dict(for_db=for_db)
             data['_polynomial'] = str(self.polynomial(format=''))
-            data['_base_ring_polynomial'] = str(self.base_ring().absolute_polynomial())
             data.pop('_base_ring')
             data['_q_expansion_str']=self._q_expansion_str 
         return data
@@ -1056,8 +1056,10 @@ class WebNewForm(SageObject):
                 self._polynomial_gens =  'x'
                 self._polynomial = 'x'
             else:
-                self._polynomial_gens = str(self._coefficient_field.gens())
-                self._polynomial  = str(self._coefficient_field)
+                p = self._coefficient_field.relative_polynomial()
+                self._polynomial  = str(p)
+                self._polynomial_gens = str(p.parent().gens())
+
         return self._coefficient_field
     
     def degree(self):
