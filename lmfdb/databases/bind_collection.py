@@ -32,7 +32,6 @@ class ExtendedCollection(Collection):
         # Watch out, subtle bugs can be introduced if using this from the sage command-line, due to the sage interpreter
         # The integers are all wrapped to be sage integers, which causes problems if you store int s in the database
         # POD
-        print self, "ASKED: ", args, kwargs, self._type_conversion
         if len(args) == 0:
             x = self.find_one(kwargs)
         else:
