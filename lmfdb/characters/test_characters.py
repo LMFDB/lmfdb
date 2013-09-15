@@ -1,7 +1,7 @@
 from lmfdb.base import LmfdbTest
 from lmfdb.WebCharacter import *
 from lmfdb.utils import url_character
-import unittest
+import unittest2
 
 class WebCharacterTest(LmfdbTest):
 
@@ -94,7 +94,7 @@ class DirichletCharactersTest(LmfdbTest):
         assert '/Character/Dirichlet/2/1' in W.data, "next link"
         assert  '/NumberField/1.1.1.1' in W.data
      
-    @unittest.skip("wait for new DirichletConrey")
+    @unittest2.skip("wait for new DirichletConrey")
     def test_dirichletcharbig(self):
         """ this is an extremely nice example to check
             the Conrey naming scheme:
