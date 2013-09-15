@@ -68,7 +68,6 @@ def get_character_conductor(a, b):
                 G = DirichletGroup_conrey(modulus)
                 for chi in G:
                     j = chi.number()
-                    print chi.conductor(), j, N
                     if count == 7:
                         break
                     elif chi.conductor() == N:
