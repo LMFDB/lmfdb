@@ -30,6 +30,7 @@ function show_code(system) {
   <div class='pari nodisplay code'>pari: K = bnfinit({{ nf.poly() }}, 1)</div>
   <div class='magma nodisplay code'>&gt; K&lt;a&gt; := NumberField(PolynomialRing(Rationals())!{{info.coefficients}});</div>
 </p>
+
         {% set KNOWL_ID = "nf.%s"|format(info['label_raw']) %}
         <h2>{{ KNOWL_INC(KNOWL_ID+'.top', title='') }}</h2>
 

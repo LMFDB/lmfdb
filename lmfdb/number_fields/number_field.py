@@ -49,16 +49,17 @@ def galois_group_data(n, t):
     C = getDBConnection()
     return group_knowl_guts(n, t, C)
 
-
 def group_cclasses_data(n, t):
     C = getDBConnection()
     return group_cclasses_knowl_guts(n, t, C)
-
 
 def group_character_table_data(n, t):
     C = getDBConnection()
     return group_character_table_knowl_guts(n, t, C)
 
+def number_field_data(label):
+    C = getDBConnection()
+    return nf_knowl_guts(label, C)
 
 def na_text():
     return "Not computed"
@@ -70,6 +71,9 @@ def ctx_galois_groups():
             'group_cclasses_data': group_cclasses_data,
             'group_character_table_data': group_character_table_data}
 
+@app.context_processor
+def ctx_number_fields():
+    return {'number_field_data': number_field_data}
 
 def group_display_shortC(C):
     def gds(nt):

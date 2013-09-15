@@ -5,7 +5,7 @@ import re
 import pymongo
 import bson
 from lmfdb.utils import *
-from lmfdb.transitive_group import group_display_short, WebGaloisGroup
+from lmfdb.transitive_group import group_display_short, WebGaloisGroup, group_display_knowl
 wnflog = make_logger("WNF")
 
 
@@ -13,7 +13,6 @@ def na_text():
     return "Not computed"
 
 ## Turn a list into a string (without brackets)
-
 
 def list2string(li):
     li2 = [str(x) for x in li]
@@ -35,6 +34,37 @@ def psum(val, li):
 def decodedisc(ads, s):
     return ZZ(ads[3:]) * s
 
+def nf_display_knowl(label, C, name=None):
+    if not name:
+        name = "Global Number Field %s" % label
+    return '<a title = "%s [nf.field.data]" knowl="nf.field.data" kwargs="label=%s">%s</a>' % (name, label, name)
+
+def nf_knowl_guts(label, C):
+    out = ''
+    wnf = WebNumberField(label)
+    if wnf.is_null():
+        return 'Cannot find global number field %s' % label
+    out += "Global number field %s" % label
+    out += '<div>'
+    out += 'Defining polynomial: '
+    out += "\(%s\)" % latex(wnf.poly())
+    D = wnf.disc()
+    Dfact = wnf.disc_factored_latex()
+    if D.abs().is_prime() or D == 1:
+        Dfact = "\(%s\)" % str(D)
+    else:
+        D = str(D)
+        Dfact = D + ' = ' + Dfact
+    out += '<br>Discriminant: $'
+    out += Dfact
+    out += '$<br>Signature: '
+    out += wnf.signature()
+    out += '<br>Galois group: '+group_display_knowl(wnf.degree(),wnf.galois_t(),C)
+    out += '</div>'
+    out += '<div align="right">'
+    out += '<a href="%s">%s home page</a>' % (url_for("number_fields.number_field_render_webpage", natural=label),label)
+    out += '</div>'
+    return out
 
 class WebNumberField:
     """
@@ -343,3 +373,4 @@ class WebNumberField:
         from dirichlet_conrey import DirichletGroup_conrey
         f = self.conductor()
         return DirichletGroup_conrey(f)
+
