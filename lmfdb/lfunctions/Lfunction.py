@@ -5,8 +5,9 @@
 # Lfunction_HMF, Lfunction_Maass, Lfunction_SMF2_scalar_valued,
 # DedekindZeta, ArtinLfunction, SymmetricPowerLfunction
 
-from lmfdb import base
 import math
+import re
+
 from Lfunctionutilities import (seriescoeff,
                                 compute_local_roots_SMF2_scalar_valued,
                                 compute_dirichlet_series,
@@ -14,28 +15,25 @@ from Lfunctionutilities import (seriescoeff,
                                 signOfEmfLfunction)
 from LfunctionComp import (nr_of_EC_in_isogeny_class, modform_from_EC,
                            EC_from_modform)
+import LfunctionDatabase
 import LfunctionLcalc
+from Lfunction_base import Lfunction
 from lmfdb.lfunctions import logger
+
 from sage.all import *
 import sage.libs.lcalc.lcalc_Lfunction as lc
 from sage.rings.rational import Rational
-import re
-import pymongo
-import bson
+
 from lmfdb.WebCharacter import WebDirichletCharacter
 from lmfdb.WebNumberField import WebNumberField
-
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms import *
-from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db \
-     import MaassDB
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes \
      import WebMaassForm
-from Lfunction_base import Lfunction
 
 def constructor_logger(object, args):
     ''' Executed when a object is constructed for debugging reasons
     '''
-    logger.info(str(object.__class__) + str(args))
+    logger.debug(str(object.__class__) + str(args))
 
 
 
@@ -43,7 +41,7 @@ def generateSageLfunction(L):
     """ Generate a SageLfunction to do computations
     """
     from lmfdb.lfunctions import logger
-    logger.info("Generating Sage Lfunction with parameters %s and coefficients (maybe shortened in this msg, but there are %s) %s"
+    logger.debug("Generating Sage Lfunction with parameters %s and coefficients (maybe shortened in this msg, but there are %s) %s"
                 % ([L.title, L.coefficient_type, L.coefficient_period,
                 L.Q_fe, L.sign, L.kappa_fe, L.lambda_fe,
                 L.poles, L.residues], len(L.dirichlet_coefficients),
@@ -178,8 +176,7 @@ class Lfunction_EC_Q(Lfunction):
         self.nr_of_curves_in_class = nr_of_EC_in_isogeny_class(self.label)
 
         # Create the elliptic curve
-        curves = base.getDBConnection().elliptic_curves.curves
-        Edata = curves.find_one({'lmfdb_label': self.label + '1'})
+        Edata = LfunctionDatabase.getEllipticCurveData(self.label + '1')
         if Edata is None:
             raise KeyError('No elliptic curve with label %s exists in the database' % self.label)
         else:
@@ -454,14 +451,11 @@ class Lfunction_HMF(Lfunction):
         logger.debug(str(self.character) + str(self.label) + str(self.number))
 
         # Load form from database
-        C = base.getDBConnection()
-        f = C.hmfs.forms.find_one({'label': self.label})
+        (f, F_hmf) = LfunctionDatabase.getHmfData(self.label)
         if f is None:
             raise KeyError("There is no Hilbert modular form with that label")
-        logger.debug(str(args))
 
         F = WebNumberField(f['field_label'])
-        F_hmf = C.hmfs.fields.find_one({'label': f['field_label']})
 
         self.character = args['character']
         if self.character > 0:
@@ -804,24 +798,19 @@ class Lfunction_Maass(Lfunction):
             raise KeyError("You have to supply dbid for the L-function of a "
                            + "Maass form")
 
-        # Initialize default values
-        self.dbName = 'MaassWaveForm'    # Set default database
-        self.dbColl = 'HT'               # Set default collection
-
         # Put the arguments into the object dictionary
+        logger.debug(args['dbid'])
         self.__dict__.update(args)
-
+        logger.debug(self.dbid)
         self.algebraic = False
+
+        [dbName, dbColl, dbEntry] = LfunctionDatabase.getLmaassByDatabaseId(args['dbid'])
         # Fetch the information from the database
-        if self.dbName == 'Lfunction':  # Data from Lemurell
+        if dbColl == 'LemurellMaassHighDegree':  # Data from Lemurell
 
-            connection = base.getDBConnection()
-            db = pymongo.database.Database(connection, self.dbName)
-            collection = pymongo.collection.Collection(db, self.dbColl)
-            dbEntry = collection.find_one({'_id': self.dbid})
-
-            logger.debug('dbEntry')
-            logger.debug(len(dbEntry))
+            logger.debug(dbEntry)
+            a = dbEntry is None
+            logger.debug(a)
             # Extract the L-function information from the database entry
             self.__dict__.update(dbEntry)
             # Kludge to deal with improperly formatted SL or GL in the database
@@ -840,37 +829,26 @@ class Lfunction_Maass(Lfunction):
             import LfunctionLcalc
             LfunctionLcalc.parseLcalcfile_ver1(self, self.lcalcfile)
 
+        elif dbColl == 'FarmerMaass':
+            self.__dict__.update(dbEntry)
+
         else:  # GL2 data from Then or Stromberg
 
-            host = base.getDBConnection().host
-            port = base.getDBConnection().port
-            DB = MaassDB(host=host, port=port)
-            logger.debug("count={0}".format(DB.count()))
-            logger.debug(self.dbid)
+            DB = LfunctionDatabase.getMaassDb()
             self.mf = WebMaassForm(DB, self.dbid, get_dirichlet_c_only=1)
             self.group = 'GL2'
-            logger.debug(self.mf.R)
-            logger.debug(self.mf.symmetry)
+
             # Extract the L-function information from the Maass form object
             self.symmetry = self.mf.symmetry
             self.eigenvalue = float(self.mf.R)
-
             self.level = int(self.mf.level)
             self.charactermodulus = self.level
-
             self.weight = int(self.mf.weight)
             self.characternumber = int(self.mf.character)
-
-            # We now use the Conrey naming scheme for characters
-            # in Maass forms too.
-            # if self.characternumber <> 1:
-            #    raise KeyError, 'TODO L-function of Maass form with
-            #                   non-trivial character not implemented. '
 
             if self.level > 1:
                 try:
                     self.fricke = self.mf.cusp_evs[1]
-                    logger.info("Fricke: {0}".format(self.fricke))
                 except:
                     raise KeyError('No Fricke information available for '
                                    + 'Maass form so not able to compute '
@@ -904,14 +882,10 @@ class Lfunction_Maass(Lfunction):
                               I / 2, 0.5 * aa - self.eigenvalue * I / 2]
             self.Q_fe = float(sqrt(self.level)) / float(math.pi)
             # POD: Consider using self.compute_kappa_lambda_Q_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
-            
 
-
-            logger.debug("Sign (without Fricke): {0}".format(self.sign))
             if self.level > 1:
                 self.sign = self.fricke * self.sign
-            logger.debug("Sign: {0}".format(self.sign))
-
+                
             self.langlands = True
             self.degree = 2
             self.poles = []
@@ -1101,10 +1075,9 @@ class HypergeometricMotiveLfunction(Lfunction):
             args["label"] = args["family"] + "_" + args["t"]
         if not ('label' in args.keys()):
             raise KeyError("You have to supply a label for a hypergeometric motive L-function")            
-        C = base.getDBConnection()
-        self.motive = C.hgm.motives.find_one({"label": args["label"]})
-        
         self.label = args["label"]
+        self.motive = LfunctionDatabase.getHgmData(self.label)
+        
         self.conductor = self.motive["cond"]
 
         self.level = self.conductor
@@ -1236,7 +1209,7 @@ class ArtinLfunction(Lfunction):
         self.nu_fe = self.artin.nu_fe()
         
         
-        self.Q_fe = self.Q_fe = float(sqrt(Integer(self.conductor))/2**len(self.nu_fe)/pi**(len(self.mu_fe)/2+len(self.nu_fe)))
+        self.Q_fe = self.Q_fe = float(sqrt(Integer(self.conductor))/2.**len(self.nu_fe)/pi**(len(self.mu_fe)/2.+len(self.nu_fe)))
         self.kappa_fe = [.5 for m in self.mu_fe] + [1. for n in self.nu_fe] 
         self.lambda_fe = [m/2. for m in self.mu_fe] + [n for n in self.nu_fe]
         
@@ -1300,7 +1273,6 @@ class SymmetricPowerLfunction(Lfunction):
 
         try:
             self.m = int(self.power)
-            logger.debug(self.m)
         except TypeError:
             raise TypeError("The power has to be an integer")
         if self.underlying_type != 'EllipticCurve' or self.field != 'Q':
@@ -1308,9 +1280,7 @@ class SymmetricPowerLfunction(Lfunction):
                             "only for Elliptic Curves over Q")
 
         # Create the elliptic curve
-        self.algebraic = True
-        curves = base.getDBConnection().elliptic_curves.curves
-        Edata = curves.find_one({'lmfdb_label': self.label + '1'})
+        Edata = LfunctionDatabase.getEllipticCurveData(self.label + '1')
         if Edata is None:
             raise KeyError('No elliptic curve with label %s exists in the database' % self.label)
         else:
@@ -1324,6 +1294,7 @@ class SymmetricPowerLfunction(Lfunction):
 
         from lmfdb.symL.symL import SymmetricPowerLFunction
         self.S = SymmetricPowerLFunction(self.E, self.m)
+        self.algebraic = True
         self.title = ("The Symmetric %s $L$-function $L(s,E,\mathrm{sym}^%d)$ of Elliptic Curve Isogeny Class %s"
                       % (ordinal(self.m), self.m, self.label))
 
@@ -1359,37 +1330,6 @@ class SymmetricPowerLfunction(Lfunction):
         self.citation = ' '
         self.credit = ' '
         self.level = self.S.conductor
-        self.euler = ("\\begin{align} L(s,E, \\mathrm{sym}^{%d}) = & \\prod_{p \\nmid %d } \\prod_{j=0}^{%d} \\left(1- \\frac{\\alpha_p^j\\beta_p^{%d-j}}{p^{s}} \\right)^{-1} "
-                      % (self.m, self.E.conductor(),self.m, self.m))
-        for p in self.S.bad_primes:
-            poly = self.S.eulerFactor(p)
-            poly_string = " "
-            if len(poly) > 1:
-                poly_string = "\\\\ & \\times (1"
-                if poly[1] != 0:
-                    if poly[1] == 1:
-                        poly_string += "+%d^{ -s}" % p
-                    elif poly[1] == -1:
-                        poly_string += "-%d^{- s}" % p
-                    elif poly[1] < 0:
-                        poly_string += "%d\\ %d^{- s}" % (poly[1], p)
-                    else:
-                        poly_string += "+%d\\ %d^{- s}" % (poly[1], p)
-
-                for j in range(2, len(poly)):
-                    if poly[j] == 0:
-                        continue
-                    if poly[j] == 1:
-                        poly_string += "%d^{-%d s}" % (p, j)
-                    elif poly[j] == -1:
-                        poly_string += "-%d^{-%d s}" % (p, j)
-                    elif poly[j] < 0:
-                        poly_string += "%d \\ %d^{-%d s}" % (poly[j], p, j)
-                    else:
-                        poly_string += "+%d\\ %d^{-%d s}" % (poly[j], p, j)
-                poly_string += ")^{-1}"
-            self.euler += poly_string
-        self.euler += "\\end{align}"
 
     def Ltype(self):
         return "SymmetricPower"
@@ -1440,12 +1380,8 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
             loc = ("http://data.countnumber.de/Siegel-Modular-Forms/Sp4Z/eigenvalues/"
                    + str(self.weight) + "_" + self.orbit + "-ev.sobj")
 
-        # logger.debug(loc)
         self.ev_data = load(loc)
-
-        print self.ev_data
         self.mu_fe = []  # the shifts of the Gamma_R to print
-
         self.nu_fe = [float(1) / float(2), self.automorphyexp]  # the shift of
                                                                 # the Gamma_C to print
         self.automorphyexp = float(self.weight) - float(1.5)
@@ -1459,17 +1395,14 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
 
         self.level = 1
         self.degree = 4
-        # logger.debug(str(self.degree))
-
         roots = compute_local_roots_SMF2_scalar_valued(
             self.ev_data, self.weight,
             self.number)  # compute the roots of the Euler factors
 
-        # logger.debug(str(self.ev_data))
         self.numcoeff = max([a[0] for a in roots])  # include a_0 = 0
         self.dirichlet_coefficients = compute_dirichlet_series(
             roots, self.numcoeff)  # these are in the analytic normalization
-        # the coefficients from Gamma(ks+lambda)
+                                   # the coefficients from Gamma(ks+lambda)
         self.selfdual = True
         if self.orbit[0] == 'U':  # if the form isn't a lift but is a cusp form
             self.poles = []  # the L-function is entire

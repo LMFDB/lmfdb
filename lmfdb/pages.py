@@ -88,6 +88,11 @@ def edit_board():
     b = [(t, url_for("edit_board"))]
     return render_template(_single_knowl, title=t, kid='content.edit-board', body_class='', bread=b)
 
+@app.route("/citation")
+def citation():
+    t = "How to cite LMFDB"
+    b = [(t, url_for("citation"))]
+    return render_template(_single_knowl, title=t, kid='content.how-to-cite', body_class='', bread=b)
 
 @app.route("/contact")
 def contact():

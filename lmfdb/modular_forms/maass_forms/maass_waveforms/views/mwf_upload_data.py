@@ -73,10 +73,10 @@ def get_args_upload():
     info = dict()
     if request.method == 'GET':
         info = to_dict(request.args)
-        print "req:get=", request.args
+        # print "req:get=", request.args
     else:
         info = to_dict(request.form)
-        print "req:post=", request.form
+        # print "req:post=", request.form
     # fix formatting of certain standard parameters
     info['files'] = request.files['file']
     tmp = get_format_for_file_to_db(info)

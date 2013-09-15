@@ -384,9 +384,9 @@ class MaassDB(object):
 
         # print "SHow collection:",self._show_collection
         for collection in self._show_collection:
-            # print "limit=",limit
-            print "skip=", skip
-            print "limit=", limit
+            if verbose > 0:
+                print "skip=", skip
+                print "limit=", limit
             cname = format_data.get('collection_name', '')
             if cname != '' and cname != collection.name:
                 continue
@@ -394,7 +394,8 @@ class MaassDB(object):
                 continue
             finds = collection.find(find_data, sort=sorting).skip(skip).limit(limit)
             skip = 0
-            print "find[", collection.name, "]=", finds.count()
+            if verbose > 0:
+                print "find[", collection.name, "]=", finds.count()
             limit = limit - finds.count(True)
             for x in finds:
                 res.append(x)
