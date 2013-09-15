@@ -1380,12 +1380,8 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
             loc = ("http://data.countnumber.de/Siegel-Modular-Forms/Sp4Z/eigenvalues/"
                    + str(self.weight) + "_" + self.orbit + "-ev.sobj")
 
-        # logger.debug(loc)
         self.ev_data = load(loc)
-
-        print self.ev_data
         self.mu_fe = []  # the shifts of the Gamma_R to print
-
         self.nu_fe = [float(1) / float(2), self.automorphyexp]  # the shift of
                                                                 # the Gamma_C to print
         self.automorphyexp = float(self.weight) - float(1.5)
@@ -1399,17 +1395,14 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
 
         self.level = 1
         self.degree = 4
-        # logger.debug(str(self.degree))
-
         roots = compute_local_roots_SMF2_scalar_valued(
             self.ev_data, self.weight,
             self.number)  # compute the roots of the Euler factors
 
-        # logger.debug(str(self.ev_data))
         self.numcoeff = max([a[0] for a in roots])  # include a_0 = 0
         self.dirichlet_coefficients = compute_dirichlet_series(
             roots, self.numcoeff)  # these are in the analytic normalization
-        # the coefficients from Gamma(ks+lambda)
+                                   # the coefficients from Gamma(ks+lambda)
         self.selfdual = True
         if self.orbit[0] == 'U':  # if the form isn't a lift but is a cusp form
             self.poles = []  # the L-function is entire

@@ -581,9 +581,7 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
 
 # loop over levels and weights, using plotsector to put the appropriate dots at each lattice point
     for x in range(int(Nmin), int(Nmax) + 1):  # x is the level
-        print "level = " + str(x)
         for y in range(int(kmin), int(kmax) + 1, 2):  # y is the weight
-            print "  weight = " + str(y)
             lid = "(" + str(x) + "," + str(y) + ")"
             linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(y) + "/" + str(x) + "/0/"
             WS = WebModFormSpace(y, x)  # space of modular forms of weight y, level x
@@ -606,7 +604,6 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
             dimensioninfo['dotspacing'] = [xdotspacing, ydotspacing]
             dimensioninfo['edge'] = [[0, 1], [1, 0]]     # unit vectors defining edges of sector
             # dimensioninfo['edgelength'] = [float(dimensioninfo['scale'][0])/float(Nmax), float(dimensioninfo['scale'][1])/float(kmax)] #add comment
-            # print('edgelength = ',dimensioninfo['edgelength'])
             dimensioninfo['edgelength'] = [0.5, 0.5]
             dimensioninfo['dotradius'] = radius
             dimensioninfo['connectinglinewidth'] = dimensioninfo['dotradius'] / 1.5
@@ -659,18 +656,11 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
                         for n in range(numberwithlabel):
                             orbitdescriptionlist.append({'label': label, 'number': n, 'color': signcolour})
                         urlinfo['space']['orbits'].append(orbitdescriptionlist)
-
-#
-#
-#
                 # urlinfo['space']['orbits'][0][0]['color'] = signtocolour(-1)
                 # appearanceinfo['orbitcolor'] = 'rgb(102,102,102)'
                     ans += plotsector(dimensioninfo, appearanceinfo, urlinfo)
 
     ans += "</svg>"
-
-    # print ans
-
     return(ans)
 
 #=====================
@@ -1063,7 +1053,6 @@ def plotsector(dimensioninfo, appearanceinfo, urlinfo):
  # "orbitbase" is the starting point of an orbit, which initially is the "firstdotoffset"
     orbitbase = lincomb(1, vertexlocation, 1, dimensioninfo['firstdotoffset'])
     for orbit in urlinfo['space']['orbits']:
-        print('orbit', orbit)
         # first determine if we should draw a line connecting the dots in an orbit, since want line beneath dots
         # no line if 1 dot or >maxdots
         if len(orbit) > 1 and len(orbit) <= maxdots:
@@ -1081,7 +1070,6 @@ def plotsector(dimensioninfo, appearanceinfo, urlinfo):
             ans += "\n"
             break   # we are done with this orbit if there are more than maxdots cuspforms in the orbit (re-check)***
         dotlocation = orbitbase
-        print('entering orbit loop', len(orbit))
         for orbitelem in orbit:  # loop through the elements in an orbit, drawing a dot and making a link
             orbitcolor = orbitelem['color']
             urlbase += 'label' + "='" + str(orbitelem['label']) + "'&amp;"
@@ -1090,17 +1078,11 @@ def plotsector(dimensioninfo, appearanceinfo, urlinfo):
             ans += "\n"
             # ans += mydot(vertexlocation, scale, dotlocation,
             # dimensioninfo['dotradius'], orbitcolor,"",orbitelem['title'])
-            print('dotlocation_bef:', dotlocation)
             # ans += mydot(offset, scale, dotlocation, dimensioninfo['dotradius'], orbitcolor,"","test title")
             ans += mydot(offset, scale, dotlocation, dimensioninfo['dotradius'], orbitcolor, "", "")
             ans += "</a>"
             ans += "\n"
-            print('orbitcolor:', orbitcolor)
-            print('dotlocation:', dotlocation)
-            print('dotspacing:', dotspacing)
-            print('edge:', edge)
             dotlocation = lincomb(1, dotlocation, dotspacing[1], edge[1])
-            print('dotlocation_aft:', dotlocation)
         orbitbase = lincomb(1, orbitbase, dotspacing[0], edge[0])
     return(ans)
 
