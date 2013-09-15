@@ -79,8 +79,9 @@ When you get lost, the command "bt" shows you exactly where you
 are and "up" helps you to get on step up on the stack.
 Of course, "help [<command>]" will tell you more...
 
-Git Tipps
+Git Tips
 =========
+In your home directory, in the file ~/.gitconfig
 
 ```
 [alias]
@@ -129,55 +130,8 @@ you can mix list or non-list.
 LaTeX Macros
 ------------
 
-The following extra macros may be used in LaTeX on the site:
-  \Z for the rational integers
-  \Q for the rational numbers
-  \R for the real numbers
-  \C for the complex numbers
-  \F for finite fields, as in $\F_5$
-Each produces the corresponding letter in blackboard bold.
+Latex macros are documented in a knowl that will appear when you start editing one. 
 
-One should use the following macros for names of algebraic groups:
-  \GL, \SL, \PGL, \PSL, \Sp, \GSp
-Each produces the group name in upright font.
-
-The convention for indicating the size is $\GL(2)$ or $\GL(2,\Q)$ where
-appropriate instead of $\GL_2$ and $\GL_2(\Q)$.
-
-Mercurial
----------
-
-You can tell Mercurial about your password and nickname other repositories.
-Open .hg/hgrc and edit it like this:
-
-[paths]
-default = !!! ENTER YOUR URL, https://... !!!
-master  = http://lmfdb.googlecode.com/hg
-beta = https://code.google.com/r/jwbober-lmfdb-beta
-
-# infrastructure
-jonathan = http://jwbober-lmfdb.googlecode.com/hg
-harald = http://haraldschilly-content.googlecode.com/hg
-
-# l-functions
-stefan = http://sj-lmfdb2.googlecode.com/hg
-gagan = http://gagandsekhon-lmdb.googlecode.com/hg
-
-# maass forms
-fredrik = http://fredrik314-classicalandmaassforms.googlecode.com/hg
-
-dk = http://dkhuynhms-lmfdb.googlecode.com/hg
-cremona = http://johncremona-lmfdb.googlecode.com/hg
-voight = http://jvoight-lmfdb.googlecode.com/hg
-nils = http://nilsskoruppa-lmfdb.googlecode.com/hg
-rishi = http://rishikes-lmfdb.googlecode.com/hg
-nathan = http://nathancryan-lmfdb.googlecode.com/hg
-sally = http://koutslts-lmfdb.googlecode.com/hg
-michael = http://michaelorubinstein-lmfdb.googlecode.com/hg
-
-[auth]
-default.username = !!! ENTER YOUR GOOGLE ID EMAIL !!!
-default.password = !!! YOUR SPECIAL GOOGLE CODE/PROFILE/SETTINGS PASSWORD !!!
 
 Server Hook
 -----------
@@ -185,7 +139,7 @@ This is in the `hooks/post-receive` in the bare Git repo:
 
 ```
 #!/bin/sh
-# update the lmfdb-git-beta or -prod server depending on the branc
+# update the lmfdb-git-beta or -prod server depending on the branch
 # this is based on http://stackoverflow.com/a/13057643/54236
 
 restart() {
