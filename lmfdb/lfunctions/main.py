@@ -22,9 +22,6 @@ from lmfdb.elliptic_curves.elliptic_curve import cremona_label_regex, lmfdb_labe
 from LfunctionComp import isogenyclasstable
 import LfunctionDatabase
 
-
-
-
 ################################################################################
 #   Route functions, navigation pages
 ################################################################################
@@ -619,7 +616,11 @@ def set_gaga_properties(L):
 @l_function_page.route("/Plot/EllipticCurve/Q/<label>/")
 def l_function_ec_plot(label):
     query = "label = '{0}'".format(label)
-    return render_plotLfunction_from_db("ecplots", "ecplots", query)
+    try:
+        return render_plotLfunction_from_db("ecplots", "ecplots", query)
+    except KeyError:
+        return render_plotLfunction(request, 'EllipticCurve', 'Q', label, None, None, None,
+                                                                          None, None, None)
 
 @l_function_page.route("/Plot/<arg1>/")
 @l_function_page.route("/Plot/<arg1>/<arg2>/")
@@ -653,7 +654,14 @@ def zeroesLfunction(arg1=None, arg2=None, arg3=None, arg4=None, arg5=None, arg6=
 def render_plotLfunction_from_db(db, dbTable, condition):
     data_location = os.path.expanduser(
         "~/data/lfunction_plots/{0}.db".format(db))
-    logger.debug(data_location)
+
+    if not os.path.exists(data_location):
+        # We want to raise some exception so that the calling
+        # function can catch it and fall back to normal plotting
+        # when the database does not exist or doesn't have the
+        # plot. This seems like a reasonable exception to raise.
+        raise KeyError
+
     try:
         db = sqlite3.connect(data_location)
         with db:
@@ -662,6 +670,8 @@ def render_plotLfunction_from_db(db, dbTable, condition):
                                                                   condition)
             cur.execute(query)
             row = cur.fetchone()
+
+        db.close()
 
         start,end,values = row
         values = numpy.frombuffer(values)
@@ -672,8 +682,14 @@ def render_plotLfunction_from_db(db, dbTable, condition):
         p = plot(spline(pairs), -30, 30, thickness = 0.4)
         styleLfunctionPlot(p, 8)
 
-    except:
-        return flask.redirect(404)
+    except (sqlite3.OperationalError, TypeError):
+        # An OperationalError will happen when the database exists for some reason
+        # but it doesn't have the table. A TypeError will happen when there are no
+        # results returned, in which case row will be None and unpacking the tuple
+        # will fail. We turn both of these in KeyErrors, which can be caught by
+        # the calling function to fallback to normal plotting.
+
+        raise KeyError
 
     fn = tempfile.mktemp(suffix=".png")
     p.save(filename=fn, dpi = 100)
