@@ -222,53 +222,54 @@ def get_configuration():
     logfile = "flasklog"
     import base
     dbport = base.DEFAULT_DB_PORT
-    try:
-      import getopt
+    if not sys.argv[0].endswith('nosetests'):
       try:
-          opts, args = getopt.getopt(sys.argv[1:],
-                                     "p:h:l:t",
-                                     ["port=", "host=", "dbport=", "log=", "logfocus=", "debug", "help", "threading", 
-                                      # undocumented, see below
-                                      "enable-reloader", "disable-reloader",
-                                      "enable-debugger", "disable-debugger",
-                                      ])
-      except getopt.GetoptError, err:
-          sys.stderr.write("%s: %s\n" % (sys.argv[0], err))
-          sys.stderr.write("Try '%s --help' for usage\n" % sys.argv[0])
-          #sys.exit(2)
+        import getopt
+        try:
+            opts, args = getopt.getopt(sys.argv[1:],
+                                       "p:h:l:t",
+                                       ["port=", "host=", "dbport=", "log=", "logfocus=", "debug", "help", "threading", 
+                                        # undocumented, see below
+                                        "enable-reloader", "disable-reloader",
+                                        "enable-debugger", "disable-debugger",
+                                        ])
+        except getopt.GetoptError, err:
+            sys.stderr.write("%s: %s\n" % (sys.argv[0], err))
+            sys.stderr.write("Try '%s --help' for usage\n" % sys.argv[0])
+            #sys.exit(2)
 
-      for opt, arg in opts:
-          if opt == "--help":
-              usage()
-              sys.exit()
-          elif opt in ("-p", "--port"):
-              options["port"] = int(arg)
-          elif opt in ("-h", "--host"):
-              options["host"] = arg
-          elif opt in ("-t", "--threading"):
-              threading_opt = True
-          elif opt in ("-l", "--log"):
-              logfile = arg
-          elif opt in ("--dbport"):
-              dbport = int(arg)
-          elif opt == "--debug":
-              options["debug"] = True
-          elif opt == "--logfocus":
-              logfocus = arg
-          # undocumented: the following allow changing the defaults for
-          # these options to werkzeug (they both default to False unless
-          # --debug is set, in which case they default to True but can
-          # be turned off)
-          elif opt == "--enable-reloader":
-              options["use_reloader"] = True
-          elif opt == "--disable-reloader":
-              options["use_reloader"] = False
-          elif opt == "--enable-debugger":
-              options["use_debugger"] = True
-          elif opt == "--disable-debugger":
-              options["use_debugger"] = False
-    except:
-        pass # something happens on the server -> TODO: FIXME
+        for opt, arg in opts:
+            if opt == "--help":
+                usage()
+                sys.exit()
+            elif opt in ("-p", "--port"):
+                options["port"] = int(arg)
+            elif opt in ("-h", "--host"):
+                options["host"] = arg
+            elif opt in ("-t", "--threading"):
+                threading_opt = True
+            elif opt in ("-l", "--log"):
+                logfile = arg
+            elif opt in ("--dbport"):
+                dbport = int(arg)
+            elif opt == "--debug":
+                options["debug"] = True
+            elif opt == "--logfocus":
+                logfocus = arg
+            # undocumented: the following allow changing the defaults for
+            # these options to werkzeug (they both default to False unless
+            # --debug is set, in which case they default to True but can
+            # be turned off)
+            elif opt == "--enable-reloader":
+                options["use_reloader"] = True
+            elif opt == "--disable-reloader":
+                options["use_reloader"] = False
+            elif opt == "--enable-debugger":
+                options["use_debugger"] = True
+            elif opt == "--disable-debugger":
+                options["use_debugger"] = False
+      except:
+          pass # something happens on the server -> TODO: FIXME
     return { 'flask_options' : options, 'dbport' : dbport , 'threading_opt' : threading_opt }
 
 configuration = get_configuration()
