@@ -92,7 +92,7 @@ def make_logger(bp_or_name, hl=False):
     l = logging.getLogger(name)
     l.propagate = False
     if logfocus is None or logfocus == name:
-        l.setLevel(logging.DEBUG)
+        l.setLevel(logging.INFO)
     else:
         l.setLevel(logging.WARNING)
     formatter = LmfdbFormatter(hl=name if hl else None)
