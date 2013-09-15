@@ -20,6 +20,7 @@ from lmfdb.WebCharacter import WebDirichlet
 from lmfdb.lfunctions import l_function_page, logger
 from lmfdb.elliptic_curves.elliptic_curve import cremona_label_regex, lmfdb_label_regex
 from LfunctionComp import isogenyclasstable
+import LfunctionDatabase
 
 
 
@@ -926,9 +927,7 @@ def processMaassNavigation(numrecs=10):
     """
     Produces a table of numrecs Maassforms with Fourier coefficients in the database
     """
-    host = base.getDBConnection().host
-    port = base.getDBConnection().port
-    DB = MaassDB(host=host, port=port)
+    DB = LfunctionDatabase.getMaassDb()
     s = '<h5>Examples of L-functions attached to Maass forms on Hecke congruence groups $\Gamma_0(N)$</h5>'
     s += '<table>\n'
     i = 0

@@ -197,20 +197,20 @@ def lfuncDStex(L, fmt):
     nonzeroterms = 1
     if fmt == "analytic" or fmt == "langlands":
         ans = "\\begin{align}\n"
-        ans = ans + L.texname + "=" + seriescoeff(L.dirichlet_coefficients[0], 0, "literal", "", -
+        ans += L.texname + "=" + seriescoeff(L.dirichlet_coefficients[0], 0, "literal", "", -
                                                   6, 5) + "\\mathstrut&"
         for n in range(1, len(L.dirichlet_coefficients)):
             tmp = seriescoeff(L.dirichlet_coefficients[n], n + 1, "series", "dirichlet", -6, 5)
             if tmp != "":
                 nonzeroterms += 1
-            ans = ans + tmp
+            ans += tmp
             if nonzeroterms > maxcoeffs:
                 break
             if(nonzeroterms % numperline == 0):
-                ans = ans + "\\cr\n"
-                ans = ans + "&"
+                ans += "\\cr\n"
+                ans += "&"
                 nonzeroterms += 1   # This ensures we don t add more than one newline
-        ans = ans + " + \\ \\cdots\n\\end{align}"
+        ans += " + \\ \\cdots\n\\end{align}"
 
     elif fmt == "abstract":
         if L.Ltype() == "riemann":
@@ -218,8 +218,8 @@ def lfuncDStex(L, fmt):
 
         elif L.Ltype() == "dirichlet":
             ans = "\\begin{equation} \n L(s,\\chi) = \\sum_{n=1}^{\\infty} \\chi(n) n^{-s} \n \\end{equation}"
-            ans = ans + "where $\\chi$ is the character modulo " + str(L.charactermodulus)
-            ans = ans + ", number " + str(L.characternumber) + "."
+            ans += "where $\\chi$ is the character modulo " + str(L.charactermodulus)
+            ans += ", number " + str(L.characternumber) + "."
 
         else:
             ans = "\\begin{equation} \n " + L.texname + \
@@ -236,44 +236,79 @@ def lfuncEPtex(L, fmt):
 
     ans = ""
     if fmt == "abstract":
-        if L.Ltype() == "SymmetricPower":
-            ans = L.euler
-            return ans
-
         ans = "\\begin{equation} \n " + L.texname + " = "
         if L.Ltype() == "riemann":
-            ans = ans + "\\prod_p (1 - p^{-s})^{-1}"
+            ans += "\\prod_p (1 - p^{-s})^{-1}"
         elif L.Ltype() == "dirichlet":
-            ans = ans + "\\prod_p (1- \\chi(p) p^{-s})^{-1}"
+            ans += "\\prod_p (1- \\chi(p) p^{-s})^{-1}"
         elif L.Ltype() == "ellipticmodularform":
-            ans = ans + "\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1} \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + \chi(p)p^{-2s})^{-1}"
+            ans += "\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1} \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + \chi(p)p^{-2s})^{-1}"
         elif L.Ltype() == "hilbertmodularform":
-            ans = ans + "\\prod_{\mathfrak{p}\\ \\mathrm{bad}} (1- a(\mathfrak{p}) (N\mathfrak{p})^{-s})^{-1} \\prod_{\mathfrak{p}\\ \\mathrm{good}} (1- a(\mathfrak{p}) (N\mathfrak{p})^{-s} + (N\mathfrak{p})^{-2s})^{-1}"
+            ans += "\\prod_{\mathfrak{p}\\ \\mathrm{bad}} (1- a(\mathfrak{p}) (N\mathfrak{p})^{-s})^{-1} \\prod_{\mathfrak{p}\\ \\mathrm{good}} (1- a(\mathfrak{p}) (N\mathfrak{p})^{-s} + (N\mathfrak{p})^{-2s})^{-1}"
         elif L.Ltype() == "ellipticcurveQ":
-            ans = ans + "\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1} \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + p^{-2s})^{-1}"
+            ans += "\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1} \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + p^{-2s})^{-1}"
         elif L.Ltype() == "maass":
             if L.group == 'GL2':
-                ans = ans + "\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1} \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + \chi(p)p^{-2s})^{-1}"
+                ans += "\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1} \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + \chi(p)p^{-2s})^{-1}"
             elif L.group == 'GL3':
-                ans = ans + "\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1}  \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + \\overline{a(p)} p^{-2s} - p^{-3s})^{-1}"
+                ans += "\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1}  \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + \\overline{a(p)} p^{-2s} - p^{-3s})^{-1}"
             else:
-                ans = ans + "\\prod_p \\ \\prod_{j=1}^{" + str(L.degree) + \
+                ans += "\\prod_p \\ \\prod_{j=1}^{" + str(L.degree) + \
                     "} (1 - \\alpha_{j,p}\\,  p^{-s})^{-1}"
-
+        elif L.Ltype() == "SymmetricPower":
+            ans += lfuncEpSymPower(L)
         elif L.langlands:
             if L.degree > 1:
-                ans = ans + "\\prod_p \\ \\prod_{j=1}^{" + str(L.degree) + \
+                ans += "\\prod_p \\ \\prod_{j=1}^{" + str(L.degree) + \
                     "} (1 - \\alpha_{j,p}\\,  p^{-s})^{-1}"
             else:
-                ans = ans + "\\prod_p \\  (1 - \\alpha_{p}\\,  p^{-s})^{-1}"
+                ans += "\\prod_p \\  (1 - \\alpha_{p}\\,  p^{-s})^{-1}"
 
         else:
             return("No information is available about the Euler product.")
-        ans = ans + " \n \\end{equation}"
+        ans += " \n \\end{equation}"
         return(ans)
     else:
         return("No information is available about the Euler product.")
 
+
+
+def lfuncEpSymPower(L):
+    """ Helper funtion for lfuncEPtex to do the symmetric power L-functions
+    """
+    ans = ''
+    for p in L.S.bad_primes:
+        poly = L.S.eulerFactor(p)
+        poly_string = " "
+        if len(poly) > 1:
+            poly_string = "(1"
+            if poly[1] != 0:
+                if poly[1] == 1:
+                    poly_string += "+%d^{ -s}" % p
+                elif poly[1] == -1:
+                    poly_string += "-%d^{- s}" % p
+                elif poly[1] < 0:
+                    poly_string += "%d\\ %d^{- s}" % (poly[1], p)
+                else:
+                    poly_string += "+%d\\ %d^{- s}" % (poly[1], p)
+
+            for j in range(2, len(poly)):
+                if poly[j] == 0:
+                    continue
+                if poly[j] == 1:
+                    poly_string += "%d^{-%d s}" % (p, j)
+                elif poly[j] == -1:
+                    poly_string += "-%d^{-%d s}" % (p, j)
+                elif poly[j] < 0:
+                    poly_string += "%d \\ %d^{-%d s}" % (poly[j], p, j)
+                else:
+                    poly_string += "+%d\\ %d^{-%d s}" % (poly[j], p, j)
+            poly_string += ")^{-1}"
+        ans += poly_string
+    ans += '\\prod_{p \\nmid %d }\\prod_{j=0}^{%d} ' % (L.E.conductor(),L.m)
+    ans += '\\left(1- \\frac{\\alpha_p^j\\beta_p^{%d-j}}' % L.m
+    ans += '{p^{s}} \\right)^{-1}'    
+    return ans
 
 #---------
 
@@ -314,7 +349,7 @@ def lfuncFEtex(L, fmt):
             for mu in range(len(L.mu_fe) - 1):
                 ans += seriescoeff(L.mu_fe[mu], 0, "literal", "", -6, 5) + ", "
             ans += seriescoeff(L.mu_fe[-1], 0, "literal", "", -6, 5)
-        ans = ans + ":"
+        ans += ":"
         if L.nu_fe != []:
             for nu in range(len(L.nu_fe) - 1):
                 ans += str(L.nu_fe[nu]) + ", "
