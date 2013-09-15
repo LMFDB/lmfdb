@@ -820,6 +820,8 @@ class Lfunction_Maass(Lfunction):
             collection = pymongo.collection.Collection(db, self.dbColl)
             dbEntry = collection.find_one({'_id': self.dbid})
 
+            logger.debug('dbEntry')
+            logger.debug(len(dbEntry))
             # Extract the L-function information from the database entry
             self.__dict__.update(dbEntry)
             # Kludge to deal with improperly formatted SL or GL in the database
@@ -1006,7 +1008,7 @@ class DedekindZeta(Lfunction):   # added by DK
         self.R = wnf.regulator()  # self.NF.regulator()
         self.w = len(self.NF.roots_of_unity())
         # r1 = self.signature[0]
-        self.res = RR(2 ** self.signature[0] * self.h * self.R / self.w)  
+        self.res = RR(2 ** self.signature[0] * self.h * self.R) / self.w
         self.grh = wnf.used_grh()
         if self.degree > 1:
             if wnf.is_abelian():

@@ -4,17 +4,16 @@ from base import getDBConnection, app
 from utils import url_for, pol_to_html
 from databases.Dokchitser_databases import Dokchitser_ArtinRepresentation_Collection, Dokchitser_NumberFieldGaloisGroup_Collection
 from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField
+from lmfdb.transitive_group import group_display_knowl
 
 
 def process_algebraic_integer(seq, root_of_unity):
     return sum(Integer(seq[i]) * root_of_unity ** i for i in range(len(seq)))
 
-
 def process_polynomial_over_algebraic_integer(seq, field, root_of_unity):
     from sage.rings.all import PolynomialRing
     PP = PolynomialRing(field, "x")
     return PP([process_algebraic_integer(x, root_of_unity) for x in seq])
-
 
 class ArtinRepresentation(object):
     @staticmethod
@@ -136,6 +135,11 @@ class ArtinRepresentation(object):
         if (par % 2) == 0: return "Even"
         return "Odd"
         #return (-1)**par
+
+    def pretty_galois_knowl(self):
+        C = getDBConnection()
+        print "****************  Got %d, %d" % (self._data['Galois_nt'][0],self._data['Galois_nt'][1])
+        return group_display_knowl(self._data['Galois_nt'][0],self._data['Galois_nt'][1],C)
 
     def __str__(self):
         try:

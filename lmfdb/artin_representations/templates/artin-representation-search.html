@@ -104,7 +104,8 @@
 	      <th>${{artin.number_field_galois_group().polredabslatex()}}$</th>
 {#	      <th>{{artin.number_field_galois_group().polredabshtml() | safe }}</th> #}
 	  {% endif %}
-	  <td align="center">{{artin.number_field_galois_group().G_name()}}</td>
+	  {# <td align="center">{{artin.number_field_galois_group().G_name()}}</td> #}
+	  <td align="center">{{artin.pretty_galois_knowl() | safe }} </td>
 {#	  <th>${{artin.processed_root_number()}}$</th> #}
 	  <th> ${{artin.indicator()}}$</th>
 	  <th>${{artin.trace_complex_conjugation()}}$</th>
@@ -116,8 +117,8 @@
 {% endif %}
 
 {#
+#}
 <br>
 Original request {{req}} was turned into mongo query <span class="tex2jax_ignore">{{query}}</span>.
 <br>
-#}
 {% endblock %}

@@ -1,5 +1,5 @@
-artin_location = ("limbo", "artrep20130910")
-galois_group_location = ("limbo", "nfgal20130910")
+artin_location = ("limbo", "artrep20130914")
+galois_group_location = ("limbo", "nfgal20130914")
 
 from type_generation import String, Array, Dict, Int, Anything, Float
 
@@ -61,6 +61,7 @@ Dokchitser_ArtinRepresentation = Dict({
     "Galois_nt": Array(Int,Int),                           # Added after Tim by jj
     # Next is whether or not to show this in a search page because of redundancies
     "Show": Int,                                           # Added after Tim by jj
+    "galorbit": Anything,                                  # Added after Tim by jj
 })
 
 
