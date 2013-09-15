@@ -29,7 +29,7 @@ from sage.all import ZZ, QQ, DirichletGroup, CuspForms, Gamma0, ModularSymbols, 
 from sage.rings.power_series_poly import PowerSeries_poly
 from sage.all import Parent, SageObject, dimension_new_cusp_forms, vector, dimension_modular_forms, dimension_cusp_forms, EisensteinForms, Matrix, floor, denominator, latex, is_prime, prime_pi, next_prime, primes_first_n, previous_prime, factor, loads,save,dumps,deepcopy
 import re
-
+import yaml
 from flask import url_for
 
 ## DB modules
@@ -42,13 +42,25 @@ import lmfdb.base
 from lmfdb.modular_forms.elliptic_modular_forms import emf_logger
 from plot_dom import draw_fundamental_domain
 from emf_core import html_table, len_as_printed
+
+from sage.rings.number_field.number_field_base import NumberField as NumberField_class
+
 try:
     from dirichlet_conrey import *
 except:
     emf_logger.critical("Could not import dirichlet_conrey!")
 
 db_name = 'modularforms2'
-from lmfdb.website import dbport
+def connect_to_modularforms_db():
+    try:
+        C = lmfdb.base.getDBConnection()
+    except Exception as e:
+        emf_logger.critical("Could not connect to Database! C={0}. Error: {1}".format(C,e.message))
+    if db_name not in C.database_names():
+        emf_logger.critical("Database {0} does not exist at connection {1}".format(db_name,C))
+    return C[db_name]
+
+
 
 
 class WebModFormSpace(Parent):
@@ -62,7 +74,7 @@ class WebModFormSpace(Parent):
 
 
     """
-    def __init__(self, k, N=1, chi=0, cuspidal=1, prec=10, bitprec=53, data={}, use_db=True, verbose=0):
+    def __init__(self, N=1, k=2, chi=0, cuspidal=1, prec=10, bitprec=53, data={}, use_db=True, verbose=0):
         r"""
         Init self.
 
@@ -111,9 +123,8 @@ class WebModFormSpace(Parent):
         try:
             if self._group == None:
                 self._group = Gamma0(N)
-            #self.conrey_character()
             if self._modular_symbols == None:
-                self._modular_symbols = self._get_objects(k, N, chi, use_db, 'Modular_symbols')
+                self._modular_symbols = self._get_modular_symbols()
             if self._newspace == None:
                 self._newspace = self._modular_symbols.cuspidal_submodule().new_submodule()
             if self._newforms == [] and self._newspace.dimension()>0:
@@ -121,11 +132,9 @@ class WebModFormSpace(Parent):
                 for i in range(l):
                     self._newforms.append(None)
             if self._ap == []:
-                self._ap = self._get_objects(k, N, chi, use_db, 'ap', prec=prec)
-                
+                self._ap = self._get_aps(prec=prec)                
         except RuntimeError:
             raise RuntimeError("Could not construct space for (k=%s,N=%s,chi=%s)=" % (k, N, self._chi))
-        #emf_logger.debug("Setting conrey_character={0}".format(self._conrey_character))
         ### If we can we set these dimensions using formulas
         if(self.dimension() == self.dimension_newspace()):
             self._is_new = True
@@ -148,13 +157,104 @@ class WebModFormSpace(Parent):
             emf_logger.critical("Got character no. {0}, which are outside the scope of Galois orbits of the characters mod {1}!".format(k, self.group().level()))
             raise IndexError,"There is no Galois orbit of this index!"
 
-
     def _get_conrey_character(self):
+        r"""
+        Return the Dirichlet character of self as an element of DirichletGroup_conrey.
+        """
         Dc = DirichletGroup_conrey(self._N)
         for c in Dc:
             if c.sage_character() == self.character():
                 return c
 
+    def db_collection(self,collection):
+        r"""
+        Return a handle to an existing collection from the database.
+
+        """
+        D = connect_to_modularforms_db()
+        if collection not in D.collection_names():
+            emf_logger.critical("Collection {0} is not in database {1} at connection {2}".format(collection,db_name,C))
+        return D[collection]
+
+    def gridfs_collection(self,collection):
+        r"""
+        Return a file handle to a gridfs collection.
+        """
+        if '.files' in collection:
+            collection = collection.split(".")[0]
+        D = connect_to_modularforms_db()
+        return gridfs.GridFS(D, collection)
+        
+    def _get_aps(self, prec=10):
+        r"""
+        Get aps from database they exist.
+        """
+        ap_files = self.db_collection('ap.files')
+        key = {'k': int(self._k), 'N': int(self._N), 'chi': int(self._chi)}
+        key['prec'] = {"$gt": int(prec - 1)}
+        ap_from_db  = ap_files.find(key).sort("prec")
+        emf_logger.debug("finds={0}".format(ap_from_db))
+        emf_logger.debug("finds.count()={0}".format(ap_from_db.count()))
+        fs = self.gridfs_collection('ap')
+        if ap_from_db.count()>0:
+            rec = ap_from_db.next()
+            emf_logger.debug("rec={0}".format(rec))
+            return loads(fs.get(rec['_id']).read())
+        return []
+        #aps = self._modular_symbols.ambient(
+        #    ).compact_newform_eigenvalues(prime_range(prec), names='x')
+        # Insert in db
+        #if insert_into_db:
+        #    
+        #   filename = 'gamma0-aplist-{0:0>6}-{1:0>4}-{2:0>4}-{3}'.format(self._N,self._k,self._chi,self._prec)
+        #   fs.put(dumps(aps),filename,N=int(self._N),k=int(self._k),chi=int(self._chi),prec=int(prec))
+        #return aps
+
+
+    def _get_modular_symbols(self):
+        r"""
+        Get Modular Symbols from database they exist.
+        """
+        modular_symbols = self.db_collection('Modular_symbols.files')
+        key = {'k': int(self._k), 'N': int(self._N), 'chi': int(self._chi)}
+        modular_symbols_from_db  = modular_symbols.find_one(key)
+        emf_logger.debug("found ms={0}".format(modular_symbols_from_db))
+        if modular_symbols_from_db == None:
+            ms = None
+        else:
+            id = modular_symbols_from_db['_id']
+            fs = self.gridfs_collection('Modular_symbols')
+            ms = loads(fs.get(id).read())
+            self._id = id
+        return ms
+
+    def _get_newform_factors(self):
+        r"""
+        Get New form factors from database they exist.
+        """
+        factors = self.db_collection('Newform_factors.files')
+        key = {'k': int(self._k), 'N': int(self._N), 'chi': int(self._chi)}
+        factors_from_db  = factors.find(key)
+        emf_logger.debug("found factors={0}".format(factors_from_db))
+        if factors_from_db.count() == 0:
+            facts = []
+        else:
+            facts = []
+            fs = self.gridfs_collection('Newform_factors')
+            for rec in factors_from_db:
+                facts.append(loads(fs.get(rec['_id']).read()))
+        return facts
+    
+    
+    def __reduce__(self):
+        r"""
+        Used for pickling.
+        """
+        data = self.to_dict()
+        return(unpickle_wmfs_v1, (self._k, self._N, self._chi, self._cuspidal, self._prec, self._bitprec, data))
+            
+
+            
     def _get_objects(self, k, N, chi, use_db=True, get_what='Modular_symbols', **kwds):
         r"""
         Getting the space of modular symbols from the database if it exists. Otherwise compute it and insert it into the database.
@@ -247,7 +347,6 @@ class WebModFormSpace(Parent):
         Used for pickling.
         """
         data = self.to_dict()
-        # return(WebModFormSpace,(self._k,self._N,self._chi,self.prec,data))
         return(unpickle_wmfs_v1, (self._k, self._N, self._chi, self._cuspidal, self._prec, self._bitprec, data))
 
     def _save_to_file(self, file):
@@ -256,9 +355,9 @@ class WebModFormSpace(Parent):
         """
         self.save(file, compress=None)
 
-    def to_dict(self,for_db=False):
+    def to_dict(self):
         r"""
-        Makes a dictionary of the relevant information.
+        Makes a dictionary of the serializable properties of self.
         """
         problematic_keys = ['_galois_decomposition',
                             '_newforms','_newspace',
@@ -267,12 +366,12 @@ class WebModFormSpace(Parent):
                             '_galois_decomposition',
                             '_oldspace_decomposition',
                             '_conrey_character',
-                            '_character']
+                            '_character',
+                            '_group']
         data = {}
         data.update(self.__dict__)
-        if for_db:
-            for k in problematic_keys:
-                data.pop(k,None)
+        for k in problematic_keys:
+            data.pop(k,None)
         return data
 
     def _repr_(self):
@@ -305,7 +404,7 @@ class WebModFormSpace(Parent):
         if '_HeckeModule_free_module__decomposition' in self._newspace.__dict__:
             L = self._newspace.decomposition()
         else:
-            decomp = self._get_objects(self._k, self._N, self._chi, self._use_db, 'Newform_factors')
+            decomp = self._get_newform_factors()
             if len(decomp)>0:
                 L = filter(lambda x: x.is_new() and x.is_cuspidal(), decomp)
                 emf_logger.debug("computed L:".format(L))
@@ -353,27 +452,27 @@ class WebModFormSpace(Parent):
     def dimension_cusp_forms(self):
         if self._dimension_cusp_forms is None:
             if self._chi != 0:
-                self._dimension_cusp_forms = dimension_cusp_forms(self.character(), self._k)
+                self._dimension_cusp_forms = int(dimension_cusp_forms(self.character(), self._k))
             else:
-                self._dimension_cusp_forms = dimension_cusp_forms(self.level(), self._k)
+                self._dimension_cusp_forms = int(dimension_cusp_forms(self.level(), self._k))
             # self._modular_symbols.cuspidal_submodule().dimension()
         return self._dimension_cusp_forms
 
     def dimension_modular_forms(self):
         if self._dimension_modular_forms is None:
             if self._chi != 0:
-                self._dimension_modular_forms = dimension_modular_forms(self.character(), self._k)
+                self._dimension_modular_forms = int(dimension_modular_forms(self.character(), self._k))
             else:
-                self._dimension_modular_forms = dimension_modular_forms(self._N, self._k)
+                self._dimension_modular_forms = int(dimension_modular_forms(self._N, self._k))
             # self._dimension_modular_forms=self._modular_symbols.dimension()
         return self._dimension_modular_forms
 
     def dimension_new_cusp_forms(self):
         if self._dimension_new_cusp_forms is None:
             if self._chi != 0:
-                self._dimension_new_cusp_forms = dimension_new_cusp_forms(self.character(), self._k)
+                self._dimension_new_cusp_forms = int(dimension_new_cusp_forms(self.character(), self._k))
             else:
-                self._dimension_new_cusp_forms = dimension_new_cusp_forms(self._N, self._k)
+                self._dimension_new_cusp_forms = int(dimension_new_cusp_forms(self._N, self._k))
         return self._dimension_new_cusp_forms
 
     def dimension(self):
@@ -440,9 +539,9 @@ class WebModFormSpace(Parent):
         
         if len(self._newforms) == 0:
             if (isinstance(i, int) or i in ZZ):
-                F = WebNewForm(self._k, self._N, self._chi, parent=self, fi=i)
+                F = WebNewForm(self._N,self._k,  self._chi, parent=self, fi=i)
             else:
-                F = WebNewForm(self._k, self._N, self._chi, parent=self, label=i)
+                F = WebNewForm(self._N, self._k, self._chi, parent=self, label=i)
             
         else:
             if not i in self._galois_orbits_labels:
@@ -755,24 +854,15 @@ class WebModFormSpace(Parent):
             s = s + self.print_oldspace_decomposition()
         return s
 
-
-
-
-#def WebNewForm(k, N, chi=0, label='', fi=-1, prec=10, bitprec=53, parent=None, data=None, compute=None, verbose=-1,get_from_db=True):
-#
-#        if F <> None:
-#            return F
-#    return WebNewForm_class(k, N, chi, label, fi, prec, bitprec, parent, data, compute, verbose,get_from_db)
-
 class WebNewForm(SageObject):
     r"""
     Class for representing a (cuspidal) newform on the web.
     """
-    def __init__(self, k, N, chi=0, label='', fi=-1, prec=10, bitprec=53, parent=None, data={}, compute=None, verbose=-1,get_from_db=True):
+    def __init__(self, N, k, chi=0, label='', fi=-1, prec=10, bitprec=53, parent=None, data={}, compute=None, verbose=-1,get_from_db=True):
         r"""
         Init self as form number fi in S_k(N,chi)
         """
-        emf_logger.debug("WebNewForm with k,N,chi,label={0}".format( (k,N,chi,label)))
+        emf_logger.debug("WebNewForm with N,k,chi,label={0}".format( (N,k,chi,label)))
         # Set defaults.
         emf_logger.debug("incoming data: {0}".format(data))
         d  = {
@@ -789,17 +879,15 @@ class WebNewForm(SageObject):
             '_q_expansion' : None,
             '_q_expansion_str' : '',
             '_embeddings' : [],
-            '_polynomial' : '',
-            '_polynomial_gens' : '',
-            '_base_ring_polynomial' : '',
-            '_base_ring_polynomial_gens' : '',
+            '_base_ring': None,
+            '_base_ring_as_dict' : {},
+            '_coefficient_field': None,
+            '_coefficient_field_as_dict': {},
             '_as_polynomial_in_E4_and_E6' : None,
             '_twist_info' : [],
             '_is_CM' : [],
             '_cm_values' : {},
             '_satake' : {},
-            '_base_ring': None,
-            '_coefficient_field': None,
             '_dimension' : None,
             '_is_rational' : None,
             '_conrey_character_no' : -1,
@@ -816,7 +904,7 @@ class WebNewForm(SageObject):
         if not isinstance(self._parent,WebModFormSpace):
             if self._verbose > 0:
                 emf_logger.debug("compute parent! label={0}".format(label))
-            self._parent = WebModFormSpace(k, N, chi, data=self._parent)
+            self._parent = WebModFormSpace(N, k,chi, data=self._parent)
             emf_logger.debug("finished computing parent")
         if self._parent.dimension_newspace()==0:
             self._dimension=0
@@ -933,7 +1021,7 @@ class WebNewForm(SageObject):
             
         fname = "webnewform-{0:0>5}-{1:0>3}-{2:0>3}-{3}".format(self._N,self._k,self._chi,self._label) 
         try:
-            id = fs.put(dumps(self.to_dict(for_db=True)),filename=fname,N=int(self._N),k=int(self._k),chi=int(self._chi),label=self._label,name=self._name)
+            id = fs.put(dumps(self.to_dict()),filename=fname,N=int(self._N),k=int(self._k),chi=int(self._chi),label=self._label,name=self._name)
         except Exception as e:
             emf_logger.critical("DB insertion failed: {0}".format(e.message))
         emf_logger.debug("inserted :{0}".format(id))
@@ -951,26 +1039,32 @@ class WebNewForm(SageObject):
         Reduce self for pickling.
         """
         data = self.to_dict()
-        return(unpickle_wnf_v1, (self._k, self._N, self._chi, self._label,
+        return(unpickle_wnf_v1, (self._N, self._k, self._chi, self._label,
                                  self._fi, self._prec, self._bitprec, data))
 
-    def to_dict(self,for_db=False):
+    def to_yaml(self,for_yaml=False):
+        d = self.to_dict()
+        return yaml.dump(d)
+    
+    def from_yaml(self,s):        
+        d = yaml.load(s)
+        return yaml.load(d)    
+    
+    def to_dict(self):
         r"""
-        Export self as a dictionary.
+        Export self as a serializable dictionary.
         """
+        if self._base_ring_as_dict=={}:
+            self._base_ring_as_dict=number_field_to_dict(self.base_ring())
+        if self._coefficient_field_as_dict=={}:
+            self._coefficient_field_as_dict=number_field_to_dict(self.coefficient_field())
         data = {}
         for k in self.__dict__:
             data[k]=self.__dict__[k]
-        ## Get rid of some more complicated keys?
-        
-        if for_db:
-            data.pop('_f')
-            data.pop('_character')
-            data.pop('_conrey_character')
-            data['_parent']=self._parent.to_dict(for_db=for_db)
-            data['_polynomial'] = str(self.polynomial(format=''))
-            data.pop('_base_ring')
-            data['_q_expansion_str']=self._q_expansion_str 
+        ## Get rid of non-serializable objects.
+        for k in ['_f','_character','_base_ring','_coefficient_field']:
+            data.pop(k)
+        data['_parent']=self._parent.to_dict()
         return data
 
     def _from_dict(self, data):
@@ -1029,37 +1123,25 @@ class WebNewForm(SageObject):
         return self._chi
 
     def base_ring(self):
-        if self._base_ring == None:
-            try:
-                p = ZZ[self._polynomial_gens](self._polynomial)
-                self._base_ring = NumberField(p,names=self._polynomial_gens)
-            except Exception as e:
-                emf_logger.debug("Could not construct coefficient field from: p={0} and gens={1}. Error:{2}".format(self._polynomial,self._polynomial_gens,e.message))
-                self._base_ring = self._f.base_ring()
-            if self._base_ring == QQ:
-                self._base_ring_polynomial = 'x'
-                self._base_ring_polynomial_gens = 'x'
-            else:
-                self._base_ring_polynomial = str(self._base_ring.relative_polynomial())
-                self._base_ring_polynomial_gens = str(self._base_ring.gens())
+        r"""
+        The base ring of self, that is, the field of values of the character of self. 
+        """
+        if isinstance(self._base_ring,NumberField_class):
+            return self._base_ring
+        if self._base_ring_as_dict<>{}:
+            return number_field_from_dict(self._base_ring_as_dict)
+        self._base_ring = self._f.base_ring()
         return self._base_ring
 
     def coefficient_field(self):
-        if self._coefficient_field == None:
-            try:
-                p = self.base_ring()[self._base_ring_polynomial_gens](self._polynomial)
-                self._coefficient_field = NumberField(p,names=self._polynomial_gens)
-            except Exception as e:
-                emf_logger.debug("Could not construct coefficient field from: p={0} and gens={1}. Error: {2}".format(self._polynomial,self._base_ring_polynomial_gens,e.message))
-                self._coefficient_field = self._f.q_eigenform(prec, names='a').base_ring()
-            if self._coefficient_field()==QQ:
-                self._polynomial_gens =  'x'
-                self._polynomial = 'x'
-            else:
-                p = self._coefficient_field.relative_polynomial()
-                self._polynomial  = str(p)
-                self._polynomial_gens = str(p.parent().gens())
-
+        r"""
+        The coefficient field of self, that is, the field generated by the Fourier coefficients of self.
+        """
+        if isinstance(self._coefficient_field,NumberField_class):
+            return self._coefficient_field
+        if self._coefficient_field_as_dict<>{}:
+            return number_field_from_dict(self._coefficient_field_as_dict)
+        self._coefficient_field = self._f.q_eigenform(self._prec, names='x').base_ring()
         return self._coefficient_field
     
     def degree(self):
@@ -1226,17 +1308,18 @@ class WebNewForm(SageObject):
         if isinstance(self._q_expansion,PowerSeries_poly):
             if self._q_expansion.prec() == self.prec():
                 return self._q_expansion
+        q_expansion = ''
         if self._q_expansion_str<>'':
-            R = PowerSeriesRing(self.base_ring(), 'q')
-            try:
-                return R(self._q_expansion_str)
-            except ValueError:
-                pass
-        elif hasattr(self._f, 'q_eigenform'):
-            self._q_expansion = self._f.q_eigenform(ZZ(prec), names='x')
+            R = PowerSeriesRing(self.coefficient_field(), 'q')
+            q_expansion = R(self._q_expansion_str)
+            if q_expansion.degree()>=self.prec()-1: 
+                q_expansion = q_expansion.add_bigoh(prec)
+        if q_expansion == '' and hasattr(self._f, 'q_eigenform'):
+            q_expansion = self._f.q_eigenform(prec, names='x')
         else:
-            self._q_expansion = ''
-        self._q_expansion_str = str(self._q_expansion.polynomial())
+            raise ValueError,"Can not compute a q-expansion!"
+        self._q_expansion = q_expansion
+        self._q_expansion_str = str(q_expansion.polynomial())
         return self._q_expansion
 
     def atkin_lehner_eigenvalue(self, Q):
@@ -1397,7 +1480,7 @@ class WebNewForm(SageObject):
             if(self._verbose > 0):
                 emf_logger.debug("Checking level {0}".format(M))
             for xig in range(euler_phi(M)):
-                (t, glist) = _get_newform(k, M, xig)
+                (t, glist) = _get_newform(M,k, xig)
                 if(not t):
                     return glist
                 for g in glist:
@@ -2292,7 +2375,7 @@ def break_line_at(s, brpt=20):
     return res
 
 
-def _get_newform(k, N, chi, fi=None):
+def _get_newform(N, k, chi, fi=None):
     r"""
     Get an element of the space of newforms, incuding some error handling.
 
@@ -2361,13 +2444,13 @@ def _degree(K):
         return -1  # exit silently
 
 
-def unpickle_wnf_v1(k, N, chi, label, fi, prec, bitprec, data):
-    F = WebNewForm(k=k, N=N, chi=chi, label=label, fi=fi, prec=prec, bitprec=bitprec, data=data)
+def unpickle_wnf_v1(N, k,chi, label, fi, prec, bitprec, data):
+    F = WebNewForm(N=N,k=k, chi=chi, label=label, fi=fi, prec=prec, bitprec=bitprec, data=data)
     return F
 
 
-def unpickle_wmfs_v1(k, N, chi, cuspidal, prec, bitprec, data):
-    M = WebModFormSpace(k, N, chi, cuspidal, prec, bitprec, data)
+def unpickle_wmfs_v1(N, k,chi, cuspidal, prec, bitprec, data):
+    M = WebModFormSpace(N, k, chi, cuspidal, prec, bitprec, data)
     return M
 
 
@@ -2496,3 +2579,42 @@ def my_hecke_images(AA, i, v):
     x = AA.gen(i)
     X = [AA.hecke_operator(n).apply_sparse(x).element() for n in v]
     return matrix(AA.base_ring(), X)
+
+def number_field_to_dict(F):
+
+    r"""
+    INPUT:
+    - 'K' -- Number Field
+    - 't' -- (p,gens) where p is a polynomial in the variable(s) xN with coefficients in K. (The 'x' is just a convention)
+
+    OUTPUT:
+
+    - 'F' -- Number field extending K with relative minimal polynomial p.
+    """
+    if F.base_ring()==QQ:
+        K = 'QQ'
+    else:
+        K = number_field_to_dict(F.base_ring())
+    p = str(F.relative_polynomial())
+    g = map(str,F.relative_polynomial().variables())
+    return {'base':K,'relative polynomial':p,'gens':g}
+
+
+def number_field_from_dict(d):
+    r"""
+    INPUT:
+
+    - 'd' -- {'base':F,'p':p,'g':g } where p is a polynomial in the variable(s) xN with coefficients in K. (The 'x' is just a convention)
+
+    OUTPUT:
+
+    - 'F' -- Number field extending K with relative minimal polynomial p.
+    """
+    K = d['base']; p=d['relative polynomial']; g=d['gens']
+    if K=='QQ':
+        K = QQ
+    elif isinstance(K,dict):
+        K = number_field_from_dict(K)
+    else:
+        raise ValueError,"Could not construct number field!"
+    return NumberField(K[g](p))
