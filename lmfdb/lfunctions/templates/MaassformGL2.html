@@ -1,33 +1,33 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<p>
-Currently in the LMFDB, we have data on L-functions associated to
-{{ KNOWL("mf.maass.mwf",title="Maass cusp forms")}} on
-Hecke congruence groups 
-$\Gamma_0(N)$ with character $\chi$. These L-functions \(L(s,f) = \sum a_n n^{-s} \) have an 
+<div>
+There exist {{ KNOWL("mf.maass.mwf",title="weight 0 Maass cusp forms")}} on
+Hecke congruence groups
+$\Gamma_0(N)$ with even character $\chi$. The L-function \(L(s,f) = \sum a_n n^{-s} \) associated to the Maass cusp form $f$ has an
 {{ KNOWL('lfunction.euler_product', title='Euler product')}}
 of the form
 \[
    L(s,f)= \prod_{p\mid N}  \left(1 - a_p p^{-s} \right)^{-1}\prod_{p\nmid N}  \left(1 - a_p p^{-s} + \chi(p)p^{-2s} \right)^{-1}
 \]
-and satisfies the 
+and satisfies a
 {{ KNOWL("lfunction.functional_equation",title="functional equation")}} of the form
-\begin{equation} 
-\Lambda(s,f) = N^{s/2} \Gamma_{\mathbb{R} }
-\left(s + iR \right) \Gamma_{\mathbb{R} }
-\left(s - iR \right) \cdot L(s, f) =
+\begin{equation}
+\Lambda(s,f) = N^{s/2} \Gamma_{\R}
+\left(s + \delta + iR \right) \Gamma_{\R}
+\left(s + \delta - iR \right) \cdot L(s, f) =
 \varepsilon \Lambda(1-s,f),
 \end{equation}
-where $N$ is the {{ KNOWL("mf.maass.mwf.level",title="level")}} and
+where $N$ is the {{ KNOWL("mf.maass.mwf.level",title="level")}},
 $R$ the {{ KNOWL("mf.maass.mwf.eigenvalue",title="eigenvalue")}} of the
-Maass cusp form.
-</p>
-<p>
-The L-functions below are organized in terms of
-level and eigenvalue.
-</p>
+Maass cusp form and $\delta$ is 1 (or 0) when $f$ is odd (or even).
+</div>
 
 {{contents[0]|safe}}
+
+<br><br>
+<div>
+The eigenvalue is labelled with an 'e' or an 'o' depending on whether the corresponding Maass cusp form is even or odd.
+</div>
 
 {% endblock %}

@@ -69,7 +69,7 @@ def l_function_cuspform_browse_page():
 def l_function_maass_browse_page():
     info = {"bread": get_bread(2, [("MaassForm", url_for('.l_function_maass_browse_page'))])}
     info["contents"] = [processMaassNavigation()]
-    return render_template("MaassformGL2.html", title='L-functions of GL(2) Maass Forms', **info)
+    return render_template("MaassformGL2.html", title='L-functions of GL(2) Maass Forms of weight 0', **info)
 
 
 # L-function of elliptic curves browsing page ##############################################
@@ -565,10 +565,10 @@ def initLfunction(L, args, request):
         if L.sign == 0:           # The root number is now unknown
             info['zeroeslink'] = ''
             info['plotlink'] = ''
-            
-    elif L.Ltype() == "hgmQ":        
+
+    elif L.Ltype() == "hgmQ":
         info['friends'] = [('Hypergeometric motive ', friendlink.replace("_t","/t"))]   # The /L/ trick breaks down for motives, because we have a scheme for the L-functions themselves
-        
+
 
     info['dirichlet'] = lfuncDStex(L, "analytic")
     info['eulerproduct'] = lfuncEPtex(L, "abstract")
@@ -793,7 +793,7 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
 
     elif arg1 == "SymmetricPower":
         return SymmetricPowerLfunction(power=arg2, underlying_type=arg3, field=arg4, label=arg5)
-        
+
     elif arg1 == "Motives" and arg2 == "Hypergeometric" and arg3 == "Q":
         if arg5:
             return HypergeometricMotiveLfunction(family = arg4, t = arg5)
@@ -923,16 +923,16 @@ def processEllipticCurveNavigation(startCond, endCond):
     return s
 
 
-def processMaassNavigation(numrecs=10):
+def processMaassNavigation(numrecs=40):
     """
     Produces a table of numrecs Maassforms with Fourier coefficients in the database
     """
     DB = LfunctionDatabase.getMaassDb()
-    s = '<h5>Examples of L-functions attached to Maass forms on Hecke congruence groups $\Gamma_0(N)$</h5>'
+    s = '<h5>The L-functions attached to the first 5 eigenvalues of weight 0 Maass forms on Hecke congruence groups $\Gamma_0(N)$ with trivial character</h5>'
     s += '<table>\n'
     i = 0
     maxinlevel = 5
-    for level in [3, 5, 7, 10]:
+    for level in [1, 3, 4, 5, 6, 7, 9, 10]:
         j = 0
         s += '<tr>\n'
         s += '<td><bold>N={0}:</bold></td>\n'.format(level)
@@ -944,13 +944,18 @@ def processMaassNavigation(numrecs=10):
             R = f.get('Eigenvalue', 0)
             if R == 0:
                 continue
-            Rst = str(R)[0:min(12, len(str(R)))]
+            if f.get('Symmetry',0) == 1:
+                T = 'o'
+            else:
+                T = 'e'
+            _until = min(12, len(str(R)))
+            Rst = str(R)[:_until]
             idd = f.get('_id', None)
             if idd is None:
                 continue
             idd = str(idd)
             url = url_for('.l_function_maass_page', dbid=idd)
-            s += '<td><a href="{0}">{1}</a>'.format(url, Rst)
+            s += '<td><a href="{0}">{1}</a>{2}'.format(url, Rst, T)
             i += 1
             j += 1
             if i >= numrecs or j >= maxinlevel:
