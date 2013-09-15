@@ -139,6 +139,14 @@ class ArtinRepresentation(object):
         return "Odd"
         #return (-1)**par
 
+    def field_knowl(self):
+        from WebNumberField import nf_display_knowl
+        nfgg = self.number_field_galois_group()
+        if nfgg.url_for():
+            return nf_display_knowl(nfgg.label(), getDBConnection(), nfgg.polredabshtml())
+        else:
+            return nfgg.polredabshtml()
+
     def group(self):
         return group_display_short(self._data['Galois_nt'][0],self._data['Galois_nt'][1], getDBConnection())
 

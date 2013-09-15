@@ -109,13 +109,8 @@
             </td>
             <td>${{artin.dimension()}}$</td>
           <td>${{artin.factored_conductor_latex()}}$</td>
-	  {% if artin.number_field_galois_group().url_for() %}
-{#	     <td><a href="{{artin.number_field_galois_group().url_for()}}">{{artin.number_field_galois_group().polredabshtml() | safe }}</a></td> #}
-	     <td><a href="{{artin.number_field_galois_group().url_for()}}">${{artin.number_field_galois_group().polredabslatex()}}$</a></td>
-	  {% else %}
-	      <td>${{artin.number_field_galois_group().polredabslatex()}}$</td>
-{#	      <td>{{artin.number_field_galois_group().polredabshtml() | safe }}</td> #}
-	  {% endif %}
+          <td>{{ artin.field_knowl()|safe }}</td>
+
 	  {# <td align="center">{{artin.number_field_galois_group().G_name()}}</td> #}
 	  <td align="center">{{artin.pretty_galois_knowl() | safe }} </td>
 {#	  <td>${{artin.processed_root_number()}}$</td> #}
