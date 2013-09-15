@@ -37,6 +37,7 @@ import crystals
 import permutations
 import hypergm
 import motives
+import logging
 
 import raw
 from modular_forms.maass_forms.picard import mwfp
@@ -212,6 +213,10 @@ Usage: %s [OPTION]...
 """ % sys.argv[0]
 
 def get_configuration():
+    global logfocus
+        # I don't think that this global variable does anything at all,
+        # but let's keep track of it anyway.
+
     # default options to pass to the app.run()
     options = {"port": 37777, "host": "127.0.0.1", "debug": False}
     # Default option to pass to _init
@@ -256,6 +261,7 @@ def get_configuration():
                 options["debug"] = True
             elif opt == "--logfocus":
                 logfocus = arg
+                logging.getLogger(arg).setLevel(logging.DEBUG)
             # undocumented: the following allow changing the defaults for
             # these options to werkzeug (they both default to False unless
             # --debug is set, in which case they default to True but can
