@@ -1265,19 +1265,21 @@ class WebNewForm_class(object):
     def q_expansion_embeddings(self, prec=10, bitprec=53,insert_in_db=True):
         r""" Compute all embeddings of self into C which are in the same space as self.
         """
-        emf_logger.debug("q-expansion : insert : {0}".format(insert_in_db))
+        emf_logger.debug("computing embeddings of q-expansions : has {0} embedded coeffs. Want : {1} ".format(len(self._embeddings),prec))
       
         if(len(self._embeddings) > prec):
             bp = self._embeddings[0][0].prec()
+            emf_logger.debug("have precision: {0} and want: {1}".format(bp,bitprec))
             if bp >= bitprec:
                 res = list()
-                #
+                emf_logger.debug("Using known coeffs")
                 for n in range(max(prec, len(self._embeddings))):
                     l = list()
                     for i in range(len(self._embeddings[n])):
                         l.append(self._embeddings[n][i].n(bitprec))
                     res.append(l)
                 return res
+        emf_logger.debug("Computing new!")
         if(bitprec <= 0):
             bitprec = self._bitprec
         if(prec <= 0):
@@ -1302,11 +1304,15 @@ class WebNewForm_class(object):
         return self._embeddings
 
 
-    def coefficient(self, n):
+    def coefficient(self, n,insert_in_db=False):
         emf_logger.debug("In coefficient: n={0}".format(n))
-        if not isinstance(n, (int, Integer)):
-            return self.coefficients(n)
-        return self.coefficients([n, n + 1])[0]
+        if isinstance(n,(list,tuple)):
+            if len(n)>10:
+                insert = True
+            else:
+                insert = insert_in_db
+            return self.coefficients(n,insert)
+        return self.coefficients([n, n + 1],insert_in_db)[0]
 
 
     def coefficients(self, nrange=range(1, 10),insert_in_db=True):
@@ -1520,8 +1526,12 @@ class WebNewForm_class(object):
         r""" Return the Atkin-Lehner eigenvalues of self
         corresponding to Q|N
         """
+        if not (self.character().is_trivial() or self.character().order() == 2):
+            return None
+        
         l = self.atkin_lehner_eigenvalues()
         return l.get(Q)
+
 
     def _compute_atkin_lehner_matrix(self, f, Q):
         ALambient = f.ambient_hecke_module()._compute_atkin_lehner_matrix(ZZ(Q))
@@ -1542,6 +1552,9 @@ class WebNewForm_class(object):
 
 
         """
+        if not (self.character().is_trivial() or self.character().order() == 2):
+            return {}
+        
         if(len(self._atkin_lehner_eigenvalues.keys()) > 0):
             return self._atkin_lehner_eigenvalues
         if(self._chi != 0):
@@ -1578,7 +1591,9 @@ class WebNewForm_class(object):
         Return Atkin-Lehner eigenvalue of A-L involution
         which normalizes cusp if such an inolution exist.
         """
-        res = dict()
+        if not (self.character().is_trivial() or self.character().order() == 2):
+            return {}
+        res = dict()            
         for c in self.parent().group().cusps():
             if c == Infinity:
                 continue
@@ -1595,6 +1610,9 @@ class WebNewForm_class(object):
         Return Atkin-Lehner eigenvalue of A-L involution
         which normalizes cusp if such an involution exist.
         """
+        if not (self.character().is_trivial() or self.character().order() == 2):
+            return None
+        
         x = self.character()
         if(x != 0 and not x.is_trivial()):
             return None
@@ -2312,7 +2330,7 @@ class WebNewForm_class(object):
         r"""
         """
         l = self.atkin_lehner_eigenvalues()
-        if(len(l) == 0):
+        if len(l) == 0:
             return ""
         tbl = dict()
         tbl['headersh'] = list()
@@ -2332,9 +2350,9 @@ class WebNewForm_class(object):
 
     def print_atkin_lehner_eigenvalues_for_all_cusps(self):
         l = self.atkin_lehner_eigenvalues_for_all_cusps()
-        if(l.keys().count(Cusp(Infinity)) == len(l.keys())):
+        if l.keys().count(Cusp(Infinity)) == len(l.keys()):
             return ""
-        if(len(l) == 0):
+        if len(l) == 0:
             return ""
         tbl = dict()
         tbl['headersh'] = list()
