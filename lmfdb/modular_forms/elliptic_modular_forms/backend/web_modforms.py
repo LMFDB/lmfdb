@@ -1289,7 +1289,7 @@ class WebNewForm_class(object):
 
     def coefficient(self, n):
         emf_logger.debug("In coefficient: n={0}".format(n))
-        if not isinstance(n, [int, Integer]):
+        if not isinstance(n, (int, Integer)):
             return self.coefficients(n)
         return self.coefficients([n, n + 1])
 
