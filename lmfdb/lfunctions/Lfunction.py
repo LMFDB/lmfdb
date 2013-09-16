@@ -1177,7 +1177,8 @@ class ArtinLfunction(Lfunction):
         self.nu_fe = self.artin.nu_fe()
         
         
-        self.Q_fe = self.Q_fe = float(sqrt(Integer(self.conductor))/2.**len(self.nu_fe)/pi**(len(self.mu_fe)/2.+len(self.nu_fe)))
+        self.Q_fe = float(sqrt(Integer(self.conductor))/2.**len(self.nu_fe)/pi**(len(self.mu_fe)/2.+len(self.nu_fe)))
+
         self.kappa_fe = [.5 for m in self.mu_fe] + [1. for n in self.nu_fe] 
         self.lambda_fe = [m/2. for m in self.mu_fe] + [n for n in self.nu_fe]
         
