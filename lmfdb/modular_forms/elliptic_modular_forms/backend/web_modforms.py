@@ -68,8 +68,8 @@ def WebNewForm(N, k, chi=0, label='', fi=-1, prec=10, bitprec=53, parent=None, d
     
     try: 
         F = WebNewForm_class(N, k, chi, label, fi, prec, bitprec, parent, data, compute, verbose,get_from_db)
-    except Exception as e:
-        emf_logger.critical("Could not construct WebNewForm with N,k,chi,label={0}. Error: {1}".format( (N,k,chi,label),e.message))
+    except ArithmeticError as e:#Exception as e:
+        emf_logger.critical("Could not construct WebNewForm with N,k,chi,label={0}. Error: {1}".format( (N,k,chi,label),e))
         raise IndexError,"We are very sorry. The sought function could not be found in the database."
     return F
 
@@ -947,8 +947,8 @@ class WebNewForm_class(object):
         if compute: ## Compute all data we want.
             emf_logger.debug("compute")
             if not self._ap:
-                if len(self._parent._ap)>1:
-                    self._ap = parent._ap[i]
+                if self.parent()._ap>self._fi:
+                    self._ap = list(self.parent()._ap[self._fi])
             emf_logger.debug("compute q-expansion")
             self.q_expansion_embeddings(prec, bitprec,insert_in_db=False)
             emf_logger.debug("as polynomial")
@@ -1199,6 +1199,10 @@ class WebNewForm_class(object):
         return self._prec
 
     def parent(self):
+        if not isinstance(self._parent,WebModFormSpace_class):
+            if self._verbose > 0:
+                emf_logger.debug("compute parent! label={0}".format(label))
+            self._parent = WebModFormSpace(self._N, sel.f_k,self._chi, data=self._parent)
         return self._parent
 
     def is_rational(self):
