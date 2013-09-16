@@ -946,16 +946,16 @@ def processEllipticCurveNavigation(startCond, endCond):
     return s
 
 
-def processMaassNavigation(numrecs=40):
+def processMaassNavigation(numrecs=35):
     """
     Produces a table of numrecs Maassforms with Fourier coefficients in the database
     """
     DB = LfunctionDatabase.getMaassDb()
-    s = '<h5>The L-functions attached to the first 5 eigenvalues of weight 0 Maass forms on Hecke congruence groups $\Gamma_0(N)$ with trivial character</h5>'
+    s = '<h5>The L-functions attached to the first 5 eigenvalues of weight 0 Maass newforms on Hecke congruence groups $\Gamma_0(N)$ with trivial character</h5>'
     s += '<table>\n'
     i = 0
     maxinlevel = 5
-    for level in [1, 3, 4, 5, 6, 7, 9, 10]:
+    for level in [1, 2, 3, 4, 5, 6, 7]:
         j = 0
         s += '<tr>\n'
         s += '<td><bold>N={0}:</bold></td>\n'.format(level)
