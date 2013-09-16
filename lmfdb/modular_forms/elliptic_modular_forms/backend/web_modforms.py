@@ -63,9 +63,13 @@ def connect_to_modularforms_db():
 
 def WebNewForm(N, k, chi=0, label='', fi=-1, prec=10, bitprec=53, parent=None, data={}, compute=False, verbose=-1,get_from_db=True):
     r"""
-    COnstructor for WebNewForms with added 'nicer' error message.
+    Constructor for WebNewForms with added 'nicer' error message.
     """
-    
+    ## First check
+    if chi == 0:
+        if k % 2 == 1:
+            emf_logger.debug("Only zero function here with N,k,chi,label={0}.".format( (N,k,chi,label))
+            return 0
     try: 
         F = WebNewForm_class(N, k, chi, label, fi, prec, bitprec, parent, data, compute, verbose,get_from_db)
     except ArithmeticError as e:#Exception as e:
@@ -150,6 +154,9 @@ class WebModFormSpace_class(object):
                 self._group = Gamma0(N)
             if self._modular_symbols == None:
                 self._modular_symbols = self._get_modular_symbols()
+            if self._modular_symbols == None:
+                self._dimension = 0
+                return 
             if self._newspace == None:
                 self._newspace = self._modular_symbols.cuspidal_submodule().new_submodule()
             if self._newforms == [] and self._newspace.dimension()>0:
@@ -919,7 +926,7 @@ class WebNewForm_class(object):
             '_is_CM' : [],
             '_cm_values' : {},
             '_satake' : {},
-            '_dimension' : None,
+            '_dimension' : -1,
             '_is_rational' : None,
             '_character' : None,
             '_conrey_character' : None,
@@ -1050,15 +1057,17 @@ class WebNewForm_class(object):
             fs.delete(id)
             
         fname = "webnewform-{0:0>5}-{1:0>3}-{2:0>3}-{3}".format(self._N,self._k,self._chi,self._label) 
-        try:
-            id = fs.put(dumps(self.to_dict()),filename=fname,N=int(self._N),k=int(self._k),chi=int(self._chi),label=self._label,name=self._name)
-        except Exception as e:
-            emf_logger.critical("DB insertion failed: {0}".format(e.message))
+#        try:
+        id = fs.put(dumps(self.to_dict()),filename=fname,N=int(self._N),k=int(self._k),chi=int(self._chi),label=self._label,name=self._name)
+#        except Exception as e:
+#            emf_logger.critical("DB insertion failed: {0}".format(e.message))
         emf_logger.debug("inserted :{0}".format(id))
     
     def __repr__(self):
         r""" String representation f self.
         """
+        if self.dimension()==0:
+            return "0"
         return str(self.q_expansion())
 
     def __reduce__(self):
@@ -1134,7 +1143,10 @@ class WebNewForm_class(object):
         Return the simple factor of the ambient space corresponding to self. 
         """
         if self._f == None:
-            self._f = self._parent.galois_decomposition()[self._fi]
+            if self._fi >= len(self._parent.galois_decomposition()):
+                self._f = self._parent.galois_decomposition()[self._fi]
+            else:
+                self._f = 0
         return self._f
 
     def character(self):
@@ -1218,16 +1230,15 @@ class WebNewForm_class(object):
         The dimension of this galois orbit is not necessarily equal to the degree of the number field, when we have a character....
         We therefore need this routine to distinguish between the two cases...
         """
-        if not hasattr(self, '_dimension') or self._dimension is None or self._dimension <= 0:
-            P = self.parent()
-            if P.labels().count(self.label()) > 0:
-                j = P.labels().index(self.label())
-                self._dimension = self.parent().galois_decomposition()[j].dimension()
-                return self._dimension
-            else:
-                return 0
-        else:
+        if self._dimension >= 0:
             return self._dimension
+        P = self.parent()
+        if P.labels().count(self.label()) > 0:
+            j = P.labels().index(self.label())
+            self._dimension = self.parent().galois_decomposition()[j].dimension()
+        else:
+            self._dimension =  0
+        return self._dimension
 
     def q_expansion_embeddings(self, prec=10, bitprec=53,insert_in_db=True):
         r""" Compute all embeddings of self into C which are in the same space as self.
