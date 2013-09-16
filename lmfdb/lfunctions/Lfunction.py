@@ -516,9 +516,9 @@ class Lfunction_HMF(Lfunction):
 
         self.dirichlet_coefficients = dcoeffs[1:]
 
-        self.coefficient_period = 0  # HUH?
-        self.coefficient_type = 0  # HUH?
-        self.quasidegree = 1  # HUH?
+        self.coefficient_period = 0
+        self.coefficient_type = 3
+        self.quasidegree = 1
 
         self.checkselfdual()
 
@@ -682,12 +682,12 @@ class Lfunction_Dirichlet(Lfunction):
                     self.selfdual = False
 
             if self.selfdual:
-                self.coefficient_type = 1
+                self.coefficient_type = 2
                 for n in range(0, self.numcoeff - 1):
                     self.dirichlet_coefficients[n] = int(
                         round(self.dirichlet_coefficients[n]))
             else:
-                self.coefficient_type = 2
+                self.coefficient_type = 3
 
             self.texname = "L(s,\\chi)"
             self.texnamecompleteds = "\\Lambda(s,\\chi)"
@@ -794,15 +794,15 @@ class Lfunction_Maass(Lfunction):
 
             # Set properties of the L-function
             self.coefficient_type = 2
-            self.selfdual = True
+            self.checkselfdual()
             self.primitive = True
+            self.degree = 2
             self.quasidegree = 2
-            logger.debug("Symmetry: {0}".format(self.symmetry))
             if self.symmetry == "odd" or self.symmetry == 1:
-                self.sign = -1
+                self.sign = -self.fricke
                 aa = 1
             else:
-                self.sign = 1
+                self.sign = self.fricke
                 aa = 0
             
             self.mu_fe = [aa + self.eigenvalue * I, aa - self.eigenvalue * I]
@@ -814,12 +814,7 @@ class Lfunction_Maass(Lfunction):
             self.Q_fe = float(sqrt(self.level)) / float(math.pi)
             # POD: Consider using self.compute_kappa_lambda_Q_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
 
-            if self.level > 1:
-                self.sign = self.fricke * self.sign
-                
-            self.degree = 2
 
-            self.checkselfdual()
 
             self.texname = "L(s,f)"
             self.texnamecompleteds = "\\Lambda(s,f)"
@@ -957,7 +952,7 @@ class DedekindZeta(Lfunction):   # added by DK
         self.coefficient_period = 0
         self.selfdual = True
         self.primitive = True
-        self.coefficient_type = 0
+        self.coefficient_type = 3
         self.texname = "\\zeta_K(s)"
         self.texnamecompleteds = "\\Lambda_K(s)"
         if self.selfdual:
@@ -1345,7 +1340,7 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         # d = self.dirichlet_coefficients
         # self.dirichlet_coefficients = [ emb(d[i])/float(i)**self.automorphyexp for i in range(1,len(d)) ]
         self.coefficient_period = 0
-        self.coefficient_type = 2
+        self.coefficient_type = 3
         self.quasidegree = 1
 
         # self.checkselfdual()

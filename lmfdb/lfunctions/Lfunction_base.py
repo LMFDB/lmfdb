@@ -13,7 +13,6 @@ class Lfunction:
     def initStandard(self):
         """ Sets some properties that are almost always the same
         """
-        self.coefficient_type = 0
         self.coefficient_period = 0
         self.poles = []
         self.residues = []
