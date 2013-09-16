@@ -27,7 +27,7 @@ Fix complex characters. I.e. embedddings and galois conjugates in a consistent w
 """
 from sage.all import ZZ, QQ, DirichletGroup, CuspForms, Gamma0, ModularSymbols, Newforms, trivial_character, is_squarefree, divisors, RealField, ComplexField, prime_range, I, join, gcd, Cusp, Infinity, ceil, CyclotomicField, exp, pi, primes_first_n, euler_phi, RR, prime_divisors, Integer, matrix,NumberField,PowerSeriesRing
 from sage.rings.power_series_poly import PowerSeries_poly
-from sage.all import Parent, SageObject, dimension_new_cusp_forms, vector, dimension_modular_forms, dimension_cusp_forms, EisensteinForms, Matrix, floor, denominator, latex, is_prime, prime_pi, next_prime, primes_first_n, previous_prime, factor, loads,save,dumps,deepcopy
+from sage.all import Parent, SageObject, dimension_new_cusp_forms, vector, dimension_modular_forms, dimension_cusp_forms, EisensteinForms, Matrix, floor, denominator, latex, is_prime, prime_pi, next_prime, previous_prime,primes_first_n, previous_prime, factor, loads,save,dumps,deepcopy
 import re
 import yaml
 from flask import url_for
@@ -61,9 +61,34 @@ def connect_to_modularforms_db():
     return C[db_name]
 
 
+def WebNewForm(N, k, chi=0, label='', fi=-1, prec=10, bitprec=53, parent=None, data={}, compute=False, verbose=-1,get_from_db=True):
+    r"""
+    COnstructor for WebNewForms with added 'nicer' error message.
+    """
+    
+    try: 
+        F = WebNewForm_class(N, k, chi, label, fi, prec, bitprec, parent, data, compute, verbose,get_from_db)
+    except Exception as e:
+        emf_logger.critical("Could not construct WebNewForm with N,k,chi,label={0}. Error: {1}".format( (N,k,chi,label),e.message))
+        raise IndexError,"We are very sorry. The sought function could not be found in the database."
+    return F
 
 
-class WebModFormSpace(Parent):
+def WebModFormSpace(N=1, k=2, chi=0, cuspidal=1, prec=10, bitprec=53, data={}, verbose=0,**kwds):
+    r"""
+    COnstructor for WebNewForms with added 'nicer' error message.
+    """
+    if cuspidal <> 1:
+        raise IndexError,"We are very sorry. There are only cuspidal spaces currently in the database!"
+    try: 
+        F = WebModFormSpace_class(N, k, chi, cuspidal, prec, bitprec, data, verbose,**kwds)
+    except Exception as e:
+        emf_logger.critical("Could not construct WebModFormSpace with N,k,chi = {0}. Error: {1}".format( (N,k,chi),e.message))
+        raise IndexError,"We are very sorry. The sought function could not be found in the database."
+    return F
+
+
+class WebModFormSpace_class(object):
     r"""
     Space of cuspforms to be presented on the web.
         G  = NS.
@@ -74,7 +99,7 @@ class WebModFormSpace(Parent):
 
 
     """
-    def __init__(self, N=1, k=2, chi=0, cuspidal=1, prec=10, bitprec=53, data={}, use_db=True, verbose=0):
+    def __init__(self, N=1, k=2, chi=0, cuspidal=1, prec=10, bitprec=53, data={}, verbose=0):
         r"""
         Init self.
 
@@ -114,8 +139,8 @@ class WebModFormSpace(Parent):
             '_galois_decomposition' : [],
             '_newspace' : None,
             '_character' : None,
-            '_got_ap_from_db' : False,
-            '_use_db' : int(use_db)}
+            '_got_ap_from_db' : False }
+
         if not isinstance(data,dict):
             data = {}
         data.update(d)
@@ -161,11 +186,15 @@ class WebModFormSpace(Parent):
         r"""
         Return the Dirichlet character of self as an element of DirichletGroup_conrey.
         """
+        if self._conrey_character <> None:
+            return self._conrey_character
         Dc = DirichletGroup_conrey(self._N)
         for c in Dc:
             if c.sage_character() == self.character():
-                return c
-
+                self._conrey_character = c
+                break
+        return self._conrey_character
+        
     def db_collection(self,collection):
         r"""
         Return a handle to an existing collection from the database.
@@ -233,7 +262,7 @@ class WebModFormSpace(Parent):
         Get New form factors from database they exist.
         """
         factors = self.db_collection('Newform_factors.files')
-        key = {'k': int(self._k), 'N': int(self._N), 'chi': int(self._chi)}
+        key = {'k': int(self._k), 'N': int(self._N), 'chi': int(self._chi),}
         factors_from_db  = factors.find(key)
         emf_logger.debug("found factors={0}".format(factors_from_db))
         if factors_from_db.count() == 0:
@@ -503,10 +532,10 @@ class WebModFormSpace(Parent):
         return self._conrey_character
 
     def conrey_character_number(self):
-        return self.conrey_character.number()
+        return self.conrey_character().number()
     
     def conrey_character_name(self):
-        return "\chi_{" + str(self._N) + "}(" + str(self._conrey_character.number()) + ",\cdot)"
+        return "\chi_{" + str(self._N) + "}(" + str(self.conrey_character().number()) + ",\cdot)"
 
     def character_order(self):
         return self.character().order()
@@ -808,7 +837,7 @@ class WebModFormSpace(Parent):
         K = orbit.base_ring()
         is_relative = False
         disc = 1
-        if(K == QQ):
+        if K == QQ:
             poly = ZZ['x'].gen()
             disc = '1'
         else:
@@ -854,11 +883,13 @@ class WebModFormSpace(Parent):
             s = s + self.print_oldspace_decomposition()
         return s
 
-class WebNewForm(SageObject):
+
+class WebNewForm_class(object):
     r"""
     Class for representing a (cuspidal) newform on the web.
+    TODO: Include the computed data in the original database so we won't have to compute here at all.
     """
-    def __init__(self, N, k, chi=0, label='', fi=-1, prec=10, bitprec=53, parent=None, data={}, compute=None, verbose=-1,get_from_db=True):
+    def __init__(self, N, k, chi=0, label='', fi=-1, prec=10, bitprec=53, parent=None, data={}, compute=False, verbose=-1,get_from_db=True):
         r"""
         Init self as form number fi in S_k(N,chi)
         """
@@ -890,6 +921,8 @@ class WebNewForm(SageObject):
             '_satake' : {},
             '_dimension' : None,
             '_is_rational' : None,
+            '_character' : None,
+            '_conrey_character' : None,
             '_conrey_character_no' : -1,
             '_sage_character_no' : -1,
             '_name' : "{0}.{1}{2}".format(N,k,label)
@@ -899,9 +932,9 @@ class WebNewForm(SageObject):
             d = self.get_from_db(self._N,self._k,self._chi,self._label)
             emf_logger.debug("Got data:{0} from db".format(d))
             data.update(d)
-        emf_logger.debug("data: {0}".format(data))
+        #emf_logger.debug("data: {0}".format(data))
         self.__dict__.update(data)
-        if not isinstance(self._parent,WebModFormSpace):
+        if not isinstance(self._parent,WebModFormSpace_class):
             if self._verbose > 0:
                 emf_logger.debug("compute parent! label={0}".format(label))
             self._parent = WebModFormSpace(N, k,chi, data=self._parent)
@@ -911,11 +944,8 @@ class WebNewForm(SageObject):
             return 
         self._check_consistency_of_labels()
         emf_logger.debug("name={0}".format(self._name))
-        if compute == 'all': ## Compute all data we want.
+        if compute: ## Compute all data we want.
             emf_logger.debug("compute")
-            self._set_character()
-            if self._f == None:
-                self._f = self._parent.galois_decomposition()[self._fi]
             if not self._ap:
                 if len(self._parent._ap)>1:
                     self._ap = parent._ap[i]
@@ -932,10 +962,10 @@ class WebNewForm(SageObject):
             self.is_CM(insert_in_db=False)
             emf_logger.debug("compute Satake parameters")
             self.satake_parameters(insert_in_db=False)
-            self._dimension = self._f.dimension()  # 1 # None
+            self._dimension = self.as_factor().dimension()  # 1 # None
             c = self.coefficients(self.prec(),insert_in_db=False)
-        emf_logger.debug("before end of __init__ f={0}".format(self._f))
-        emf_logger.debug("before end of __init__ type(f)={0}".format(type(self._f)))
+        emf_logger.debug("before end of __init__ f={0}".format(self.as_factor()))
+        emf_logger.debug("before end of __init__ type(f)={0}".format(type(self.as_factor())))
         emf_logger.debug("done __init__")
         self.insert_into_db()
 
@@ -964,7 +994,7 @@ class WebNewForm(SageObject):
             self._conrey_character =  DirichletCharacter_conrey(DirichletGroup_conrey(self._N),self._conrey_character_no)
         else:
             self._conrey_character = self._parent._conrey_character
-        self._character = self._parent._character
+        self._character = self.parent().character()
 
         if self._character == None or self._conrey_character==None:
             self._character = DirichletGroup(self._N).galois_orbits(reps_only=True)[self._chi]
@@ -1029,10 +1059,7 @@ class WebNewForm(SageObject):
     def __repr__(self):
         r""" String representation f self.
         """
-        if self._f is not None:
-            return str(self.q_expansion())
-        else:
-            return "0"  ## Zero function
+        return str(self.q_expansion())
 
     def __reduce__(self):
         r"""
@@ -1063,7 +1090,7 @@ class WebNewForm(SageObject):
             data[k]=self.__dict__[k]
         ## Get rid of non-serializable objects.
         for k in ['_f','_character','_base_ring','_coefficient_field']:
-            data.pop(k)
+            data.pop(k,None)
         data['_parent']=self._parent.to_dict()
         return data
 
@@ -1102,16 +1129,26 @@ class WebNewForm(SageObject):
         """
         return self._k
 
+    def as_factor(self):
+        r"""
+        Return the simple factor of the ambient space corresponding to self. 
+        """
+        if self._f == None:
+            self._f = self._parent.galois_decomposition()[self._fi]
+        return self._f
+
     def character(self):
         if self._character == None:
             self._set_character()
         return self._character
 
     def conrey_character(self):
+        if self._conrey_character == None:
+            self._conrey_character = self.parent().conrey_character()
         return self._conrey_character
 
     def conrey_character_name(self):
-        return "\chi_{" + str(self._N) + "}(" + str(self._conrey_character.number()) + ",\cdot)"
+        return "\chi_{" + str(self._N) + "}(" + str(self.conrey_character().number()) + ",\cdot)"
 
     def character_order(self):
         return self._parent.character_order()
@@ -1129,19 +1166,24 @@ class WebNewForm(SageObject):
         if isinstance(self._base_ring,NumberField_class):
             return self._base_ring
         if self._base_ring_as_dict<>{}:
-            return number_field_from_dict(self._base_ring_as_dict)
-        self._base_ring = self._f.base_ring()
+            emf_logger.debug("base_ring={0}".format(self._base_ring_as_dict))
+            self._base_ring = number_field_from_dict(self._base_ring_as_dict)
+        if self._base_ring == None:
+            self._base_ring = self.as_factor().base_ring()
         return self._base_ring
 
     def coefficient_field(self):
         r"""
         The coefficient field of self, that is, the field generated by the Fourier coefficients of self.
         """
+        emf_logger.debug("coef_fld={0}".format(self._coefficient_field))
         if isinstance(self._coefficient_field,NumberField_class):
             return self._coefficient_field
         if self._coefficient_field_as_dict<>{}:
+            emf_logger.debug("coef_fldas_d={0}".format(self._coefficient_field_as_dict))
             return number_field_from_dict(self._coefficient_field_as_dict)
-        self._coefficient_field = self._f.q_eigenform(self._prec, names='x').base_ring()
+        self._coefficient_field = self.as_factor().q_eigenform(self._prec, names='x').base_ring()
+        emf_logger.debug("coef_field={0}".format(self._coefficient_field))
         return self._coefficient_field
     
     def degree(self):
@@ -1220,7 +1262,7 @@ class WebNewForm(SageObject):
                             ccn.append(cn)
                         coeffs.append(ccn)
                 else:
-                    if hasatr(cn,"n"):
+                    if hasattr(cn,"n"):
                         coeffs.append([cn.n(bitprec)])
                     else:
                         coeffs.append([RealField(bitprec)(cn)])
@@ -1271,9 +1313,9 @@ class WebNewForm(SageObject):
                     else:
                         pe = previous_prime(mn)
                     if self.level() == 1:
-                        E, v = my_compact_system_of_eigenvalues(self._f, prime_range(ps, pe + 1), names='x')
+                        E, v = my_compact_system_of_eigenvalues(self.as_factor(), prime_range(ps, pe + 1), names='x')
                     else:
-                        E, v = self._f.compact_system_of_eigenvalues(prime_range(ps, pe + 1), names='x')
+                        E, v = self.as_factor().compact_system_of_eigenvalues(prime_range(ps, pe + 1), names='x')
                     c = E * v
                     # if self._verbose>0:
                     for app in c:
@@ -1288,10 +1330,12 @@ class WebNewForm(SageObject):
                     an = self._coefficients[n]
                 else:
                     try:
-                        an = self._f.eigenvalue(n, 'x')
-                    except IndexError:
-                        atmp = self._f.eigenvalue(next_prime(n), 'x')
-                        an = self._f.eigenvalue(n, 'x')
+                        an = self.as_factor().eigenvalue(n, 'x')
+                    except (TypeError,IndexError):
+                        if n % self._N == 0:
+                            atmp = self.as_factor().eigenvalue(self._N,'x')
+                        print "n=",n,atmp
+                        an = self.as_factor().eigenvalue(n, 'x')
                     # an = self._f.eigenvalue(QQ(n),'x')
                     self._coefficients[n] = an
                 res.append(an)
@@ -1314,12 +1358,14 @@ class WebNewForm(SageObject):
             q_expansion = R(self._q_expansion_str)
             if q_expansion.degree()>=self.prec()-1: 
                 q_expansion = q_expansion.add_bigoh(prec)
-        if q_expansion == '' and hasattr(self._f, 'q_eigenform'):
-            q_expansion = self._f.q_eigenform(prec, names='x')
+        if q_expansion == '' and hasattr(self.as_factor(), 'q_eigenform'):
+            q_expansion = self.as_factor().q_eigenform(prec, names='x')
+        if q_expansion == '':
+            self._q_expansion_str = ''
         else:
-            raise ValueError,"Can not compute a q-expansion!"
+            self._q_expansion_str = str(q_expansion.polynomial())   
         self._q_expansion = q_expansion
-        self._q_expansion_str = str(q_expansion.polynomial())
+
         return self._q_expansion
 
     def atkin_lehner_eigenvalue(self, Q):
@@ -1358,9 +1404,9 @@ class WebNewForm(SageObject):
                 continue
             if(gcd(Q, ZZ(self.level() / Q)) == 1):
                 emf_logger.debug("Q={0}".format(Q))
-                emf_logger.debug("self._f={0}".format(self._f))
+                emf_logger.debug("self.as_factor={0}".format(self.as_factor()))
                 # try:
-                M = self._compute_atkin_lehner_matrix(self._f, ZZ(Q))
+                M = self._compute_atkin_lehner_matrix(self.as_factor(), ZZ(Q))
                     # M=self._f._compute_atkin_lehner_matrix(ZZ(Q))
                 # except:
                 #    emf_logger.critical("Error in computing Atkin Lehner Matrix. Bug is known and due to pickling.")
@@ -1417,7 +1463,7 @@ class WebNewForm(SageObject):
         p = cusp.numerator()
         d = ZZ(cusp * N)
         if(d.divides(N) and gcd(ZZ(N / d), ZZ(d)) == 1):
-            M = self._compute_atkin_lehner_matrix(self._f, ZZ(d))
+            M = self._compute_atkin_lehner_matrix(self.as_factor(), ZZ(d))
             ev = M.eigenvalues()
             if len(ev) > 1:
                 if len(set(ev)) > 1:
@@ -1493,7 +1539,7 @@ class WebNewForm(SageObject):
                             for p in primes_first_n(max_nump):
                                 if(ZZ(p).divides(ZZ(N))):
                                     continue
-                                bf = self._f.q_eigenform(maxp + 1, names='x')[p]
+                                bf = self.as_factor().q_eigenform(maxp + 1, names='x')[p]
                                 bg = g.q_expansion(maxp + 1)[p]
                                 if(bf == 0 and bg == 0):
                                     continue
@@ -1614,7 +1660,7 @@ class WebNewForm(SageObject):
         # for n in range(d+1):
         #    l.append(self._f.q_expansion(d+2)[n])
         # v=vector(l) # (self._f.coefficients(d+1))
-        v = vector(self.coefficients(range(d)),insert_in_db=insert_in_db)
+        v = vector(self.coefficients(range(d),insert_in_db=insert_in_db))
         d = dimension_modular_forms(1, k)
         lv = len(v)
         if(lv < d):
@@ -1806,7 +1852,7 @@ class WebNewForm(SageObject):
                         if(self._verbose > 1):
                             emf_logger.debug("prec={0}".format(prec))
                         print "q=",q
-                        v2 = self._f.q_eigenform(prec).truncate(prec)(q)
+                        v2 = self.as_factor().q_eigenform(prec).truncate(prec)(q)
                         err = abs(v2 - v1)
                         if(self._verbose > 1):
                             emf_logger.debug("err={0}".format(err))
@@ -1893,7 +1939,7 @@ class WebNewForm(SageObject):
         k = self.weight()
         maxp = len(prime_range(prec))
         if len(self._ap) < maxp:
-            E, v = my_compact_system_of_eigenvalues(self._f, ps)
+            E, v = my_compact_system_of_eigenvalues(self.as_factor(), ps)
             ap_vec = E * v
         else:
             ap_vec = self._ap
@@ -1955,7 +2001,7 @@ class WebNewForm(SageObject):
 
     def print_satake_parameters(self, stype=['alphas', 'thetas'], prec=10, bprec=53):
         emf_logger.debug("print_satake={0},{1}".format(prec, bprec))
-        if self._f is None:
+        if self.as_factor() is None:
             return ""
         if len(self.coefficients()) < prec:
             self.coefficients(prec)
@@ -2001,7 +2047,7 @@ class WebNewForm(SageObject):
         r""" Compute the number of Hecke eigenvalues (at primes) we need to check to identify twists of our given form with characters of conductor dividing the level.
         """
         ## initial bound
-        bd = self._f.sturm_bound()
+        bd = self.as_factor().sturm_bound()
         # we do not check primes dividing the level
         bd = bd + len(divisors(self.level()))
         return bd
@@ -2094,39 +2140,23 @@ class WebNewForm(SageObject):
         s = html_table(tbl)
         return s
 
-    def polynomial(self, format='latex'):
+    def polynomial(self, type='base_ring',format='latex'):
         r"""
-        Here we have to check whether f is defined over a base ring over Q or over a CyclotomicField...
+        Return a formatted string representation of the defining polynomial of either the base ring or the coefficient ring of self.
         """
-        K = self.base_ring()
-        if K is None:
-            return ""
-        if(self.dimension() == 1 and K == QQ):
-            if(K == QQ):
-                s = 'x'
-            else:
-                if format == 'latex':
-                    s = latex(K.gen())
-                elif format == 'html':
-                    s = pol_to_html(K.relative_polynomial())
-                else:
-                    s = str(K.relative_polynomial())
+        if type == 'base_ring':
+            if self._base_ring_as_dict=={}:
+                self._base_ring_as_dict  = number_field_to_dict(self.base_ring())
+            p = self._base_ring_as_dict['relative polynomial']
         else:
-            if(K.is_relative()):
-                if format == 'latex':
-                    s = latex(K.relative_polynomial())
-                elif format == 'html':
-                    s = pol_to_html(K.relative_polynomial())
-                else:
-                    s = str(K.relative_polynomial())
-            else:
-                if format == 'latex':
-                    s = latex(self.base_ring().polynomial())
-                elif format == 'html':
-                    s = pol_to_html(K.relative_polynomial())
-                else:
-                    s = str(K.relative_polynomial())
-        return s
+            if self._coefficient_field_as_dict=={}:
+                self._coefficient_field_as_dict  = number_field_to_dict(self.coefficient_field())
+            p = self._coefficient_field_as_dict['relative polynomial']
+        if format == 'latex':
+            p = pol_to_latex(p)
+        elif format == 'html':
+            p = pol_to_html(p)
+        return p
 
     def print_atkin_lehner_eigenvalues(self):
         r"""
@@ -2282,10 +2312,10 @@ class WebNewForm(SageObject):
         q = x.conductor()
         # what level will the twist live on?
         level = self.level()
-        qq = self._character.conductor()
+        qq = self.character().conductor()
         new_level = lcm(self.level(), lcm(q * q, q * qq))
         D = DirichletGroup(new_level)
-        new_x = D(self._character) * D(x) * D(x)
+        new_x = D(self.character()) * D(x) * D(x)
         ix = D.list().index(new_x)
         #  the correct space
         NS = WebModFormSpace(self._k, new_level, ix, self._prec)
@@ -2465,6 +2495,18 @@ def pol_to_html(p):
     s = re.subst("x", "<i>x</i>", s)
     return s
 
+def pol_to_latex(p):
+    r"""
+    Convert polynomial in string format to latex.
+    """
+    s = str(p)
+    s = re.sub("\^(\d*)", "^{\\1}", s)
+    s = re.sub("\_(\d*)", "_{\\1}", s)
+    s = re.sub("\*", "", s)
+    s = re.sub("zeta(\d+)", "\zeta_{\\1}", s)
+    return s
+
+
 ## Added routines to replace sage routines with bugs for level 1
 ##
 
@@ -2591,12 +2633,18 @@ def number_field_to_dict(F):
 
     - 'F' -- Number field extending K with relative minimal polynomial p.
     """
-    if F.base_ring()==QQ:
+    if F.base_ring().absolute_degree()==1:
         K = 'QQ'
     else:
         K = number_field_to_dict(F.base_ring())
-    p = str(F.relative_polynomial())
-    g = map(str,F.relative_polynomial().variables())
+    if F.absolute_degree() == 1:
+        p = 'x'
+        g = ('x',)
+    else:
+        p = F.relative_polynomial()
+        g = str(F.gen())
+        x = p.variables()[0]
+        p = str(p).replace(str(x),str(g))
     return {'base':K,'relative polynomial':p,'gens':g}
 
 
@@ -2617,4 +2665,7 @@ def number_field_from_dict(d):
         K = number_field_from_dict(K)
     else:
         raise ValueError,"Could not construct number field!"
-    return NumberField(K[g](p))
+    F = NumberField(K[g](p),names=g)
+    if F.absolute_degree()==1:
+        F = QQ
+    return F

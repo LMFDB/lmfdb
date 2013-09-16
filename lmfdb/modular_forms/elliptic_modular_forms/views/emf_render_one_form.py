@@ -91,23 +91,21 @@ def set_info_for_one_modular_form(level=None, weight=None, character=None, label
     prec = my_get(info, 'prec', default_prec, int)
     bprec = my_get(info, 'prec', default_bprec, int)
     try:
-        WNF = WebNewForm(weight, level, character, label, verbose=1)
+        WNF = WebNewForm(level,weight, character, label, verbose=1)
         # if info.has_key('download') and info.has_key('tempfile'):
         #     WNF._save_to_file(info['tempfile'])
         #     info['filename']=str(weight)+'-'+str(level)+'-'+str(character)+'-'+label+'.sobj'
         #     return info
-    except IndexError:
+    except IndexError as e:
         WNF = None
-        emf_logger.debug("Could not compute the desired function!")
-        emf_logger.debug("{0},{1},{2}".format(level,weight,character))
-        print level, weight, character, label
-        info['error'] = "Could not compute the desired function!"
+        info['error'] = e.message
     properties2 = list()
     parents = list()
     siblings = list()
     friends = list()
-    if WNF is None or WNF._f is None:
+    if hasattr(WNF,"dimension") and WNF.dimension()==0:
         info['error'] = "This space is empty!"
+
     emf_logger.debug("WNF={0}".format(WNF))    
     name = "Cuspidal newform %s of weight %s for " % (label, weight)
     if level == 1:
@@ -126,11 +124,11 @@ def set_info_for_one_modular_form(level=None, weight=None, character=None, label
         return info
     # info['name']=WNF._name
     info['satake'] = WNF.satake_parameters(prec, bprec)
-    
     # br = 60
     # info['qexp'] =
     # ajax_more(WNF.print_q_expansion,{'prec':5,'br':br},{'prec':10,'br':br},{'prec':20,'br':br},{'prec':100,'br':br},{'prec':200,'br':br})
-    K = WNF.base_ring()
+    #K = WNF.base_ring()
+    #L = WNF.coefficient_field()
     info['qexp'] = WNF.print_q_expansion(prec, 120)
     # c = list(WNF.q_expansion(prec))
     # c = map(lambda x: str(x).replace("*",""), c)
@@ -138,14 +136,21 @@ def set_info_for_one_modular_form(level=None, weight=None, character=None, label
     # emf_logger.debug("c={0}".format(info['c']))
     # info['maxc']=len(c)
     # emf_logger.debug("maxc={0}".format(info['maxc']))
-    info['polynomial'] = str(WNF.polynomial()).replace('x', str(latex(K.gen())))
-    if(K != QQ):
-        info['polynomial_st'] = 'where ' + r'\(' + info['polynomial'] + r'=0\)'
+    c_pol_st = str(WNF.polynomial(type='coefficient_field',format='str'))
+    b_pol_st = str(WNF.polynomial(type='base_ring',format='str'))
+    c_pol_ltx = str(WNF.polynomial(type='coefficient_field',format='latex'))
+    b_pol_ltx = str(WNF.polynomial(type='base_ring',format='latex'))
+    #print "c=",c_pol_ltx
+    #print "b=",b_pol_ltx
+    if c_pol_st <> 'x': ## Field is QQ
+        if b_pol_st <> 'x':
+            info['polynomial_st'] = 'where \({0}\) and \({1}\).'.format(c_pol_ltx,b_pol_ltx)
+        else:
+            info['polynomial_st'] = 'where \({0}\).'.format(c_pol_ltx)         
     else:
         info['polynomial_st'] = ''
-
     info['degree'] = int(WNF.degree())
-    if K == QQ:
+    if b_pol_st == 'x':
         info['is_rational'] = 1
     else:
         info['is_rational'] = 0
@@ -274,9 +279,9 @@ def get_qexp(level, weight, character, label, **kwds):
     if not arg:
         return flask.abort(404)
     try:
-        WNF = WebNewForm(weight, level, chi=character, label=label, prec=prec, verbose=2)
+        WNF = WebNewForm(level, weight, chi=character, label=label, prec=prec, verbose=2)
         nc = max(prec, 5)
         c = WNF.print_q_expansion(nc)
         return c
-    except Exception, e:
-        return "<span style='color:red;'>ERROR: %s</span>" % e
+    except Exception as e:
+        return "<span style='color:red;'>ERROR: %s</span>" % e.message
