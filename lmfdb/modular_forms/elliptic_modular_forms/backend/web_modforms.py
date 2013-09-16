@@ -415,7 +415,7 @@ class WebModFormSpace_class(object):
         TODO: Actually check times.
         """
         if comp=='decomp':
-            if self._level > 50:
+            if self._N > 50:
                 return True
             if self._chi > 0 and self._N > 100:
                 return True
