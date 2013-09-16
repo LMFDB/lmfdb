@@ -81,6 +81,19 @@ Of course, "help [<command>]" will tell you more...
 
 Git Tips
 =========
+
+global .gitignore
+-----------------
+
+Please configure Git to have a global .gitignore for all your projects.
+It should contain all the files which are not project specific, but happen
+on your machine. E.g. temporary files ending in `...~` or `.DS_store`.
+
+[copy paste ready instructions on github](https://help.github.com/articles/ignoring-files#global-gitignore)
+
+.gitconfig
+----------
+
 In your home directory, in the file ~/.gitconfig
 
 ```
