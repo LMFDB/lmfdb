@@ -144,7 +144,7 @@ def set_info_for_one_modular_form(level=None, weight=None, character=None, label
     #print "b=",b_pol_ltx
     if c_pol_st <> 'x': ## Field is QQ
         if b_pol_st <> 'x':
-            info['polynomial_st'] = 'where \({0}\) and \({1}\).'.format(c_pol_ltx,b_pol_ltx)
+            info['polynomial_st'] = 'where \({0}=0\) and \({1}=0\).'.format(c_pol_ltx,b_pol_ltx)
         else:
             info['polynomial_st'] = 'where \({0}\).'.format(c_pol_ltx)         
     else:
