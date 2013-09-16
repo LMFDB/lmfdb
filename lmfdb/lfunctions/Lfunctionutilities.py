@@ -39,6 +39,21 @@ def truncatenumber(numb, precision):
     localprecision = precision
     if numb < 0:
         localprecision = localprecision + 1
+    truncation = float(10 ** (-1.0*localprecision))
+    if float(abs(numb - 1)) < truncation:
+        return("1")
+    elif float(abs(numb - 2)) < truncation:
+        return("2")
+    elif float(abs(numb - 3)) < truncation:
+        return("3")
+    elif float(abs(numb - 4)) < truncation:
+        return("4")
+    elif float(abs(numb)) < truncation:
+        return("0")
+    elif float(abs(numb + 1)) < truncation:
+        return("-1")
+    elif float(abs(numb + 2)) < truncation:
+        return("-2")
     return(str(numb)[0:int(localprecision)])
 
 
@@ -49,6 +64,9 @@ def styleTheSign(sign):
         logger.debug(1 - sign)
         if sign == 0:
             return "unknown"
+        return(seriescoeff(sign, 0, "literal", "", -6, 5))
+# the remaining code in this function can probably be deleted.
+# It does not correctly format 1.23-4.56i, and the seriescoeff function should andle all cases
         if abs(1 - sign) < 1e-10:
             return '1'
         elif abs(1 + sign) < 1e-10:
@@ -67,6 +85,7 @@ def styleTheSign(sign):
 
 
 def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precision):
+  # seriescoefftype can be: series, serieshtml, signed, literal, factor
     truncation = float(10 ** truncationexp)
     if type(coeff) == complex:
         rp = coeff.real
@@ -88,17 +107,30 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
                 ans += truncatenumber(rp, precision)
             else:
                 ans += "&minus;"+truncatenumber(float(abs(rp)), precision)
+        elif seriescoefftype == "factor":
+            ans += "("
+            ans += truncatenumber(rp, precision)
+        else:
+            ans += truncatenumber(rp, precision)
         if ip > 0:
             ans += " + "
         if seriescoefftype == "series" or seriescoefftype == "signed":
             ans += truncatenumber(ip, precision) + " i"
-        if seriescoefftype == "serieshtml":
+        elif seriescoefftype == "serieshtml":
             if ip > 0:
                 ans += truncatenumber(ip, precision)
             else:
                 ans += " &minus; "+truncatenumber(float(abs(ip)), precision)
             ans += "<em>i</em>"
-        return(ans + ")" + seriesvar(index, seriestype))
+        elif seriescoefftype == "factor":
+            ans += truncatenumber(ip, precision) + "i" + ")"
+        else:
+            ans += truncatenumber(ip, precision) + "i"
+        if seriescoefftype == "series" or seriescoefftype == "serieshtml" or seriescoefftype == "signed":
+            return(ans + ")" + seriesvar(index, seriestype))
+        else:
+            return(ans)
+
     elif (float(abs(rp)) < truncation) & (float(abs(ip)) < truncation):
         if seriescoefftype != "literal":
             return("")
@@ -165,9 +197,9 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
                   # yes, em is not the right tag, but it is styled with CSS
         else:
             if seriescoefftype == "series":
-                return(ans + truncatenumber(ip, precision) + " + i" + seriesvar(index, seriestype))
+                return(ans + truncatenumber(ip, precision) + "i " + seriesvar(index, seriestype))
             elif seriescoefftype == "serieshtml":
-                return(ans + truncatenumber(ip, precision) + " + <em>i</em>" + seriesvar(index, seriestype))
+                return(ans + " + " + truncatenumber(ip, precision) + "<em>i</em> " + seriesvar(index, seriestype))
             elif seriescoefftype == "signed":
                 return(ans + "+" + truncatenumber(ip, precision) + "i")
             elif seriescoefftype == "literal" or seriescoefftype == "factor":
@@ -186,7 +218,7 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
             elif seriescoefftype == "signed":
                 return(ans + truncatenumber(ip, precision) + " i")
             elif seriescoefftype == "literal" or seriescoefftype == "factor":
-                return(ans + truncatenumber(ip, precision) + " i")
+                return(ans + truncatenumber(ip, precision) + "i")
 
 #    elif float(abs(ip+1))<truncation:
 #        return("-" + "i"+ seriesvar(index, seriestype))
