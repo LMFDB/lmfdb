@@ -12,7 +12,7 @@ Wiki
 Development
 -----------
 
-* [Getting Going](https://github.com/LMFDB/lmfdb/wiki/GettingGoing) -- cheat sheet for setting up lmfdb
+* [Getting Started](https://github.com/LMFDB/lmfdb/wiki/GettingStarted) -- cheat sheet for setting up lmfdb
 * [Development Guide](https://github.com/LMFDB/lmfdb/wiki/DevelopmentGuide) -- organizing development
 
 Screenshot
