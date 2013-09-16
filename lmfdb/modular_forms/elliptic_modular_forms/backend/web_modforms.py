@@ -1143,10 +1143,10 @@ class WebNewForm_class(object):
         Return the simple factor of the ambient space corresponding to self. 
         """
         if self._f == None:
-            if self._fi >= len(self._parent.galois_decomposition()):
-                self._f = self._parent.galois_decomposition()[self._fi]
+            if self._fi < len(self.parent().galois_decomposition()):
+                self._f = self.parent().galois_decomposition()[self._fi]
             else:
-                self._f = 0
+                self._f = self.parent().modular_symbols()
         return self._f
 
     def character(self):
