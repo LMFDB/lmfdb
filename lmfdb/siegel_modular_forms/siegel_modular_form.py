@@ -72,11 +72,18 @@ def render_webpage(args={}):
 
         elif 'Sp6Z' == args['group']:
             info['parent_as_tex'] = 'M_k\\big({\\rm Sp}(6,\\mathbb{Z})\\big)'
-            dimension = siegel_core._dimension_Sp6Z
+            # dimension = siegel_core._dimension_Sp6Z
+            dimension = dimensions.dimension_Sp6Z
 
         elif 'Sp8Z' == args['group']:
             info['parent_as_tex'] = 'M_k\\big({\\rm Sp}(8,\\mathbb{Z})\\big)'
-            dimension = siegel_core._dimension_Sp8Z
+            # dimension = siegel_core._dimension_Sp8Z
+            dimension = dimensions.dimension_Sp8Z
+
+        elif 'Gamma0_4_half' == group:
+            info['parent_as_tex'] = 'M_{k-1/2}\\big(\\Gamma_0(4)\\big)'
+            # dimension = siegel_core._dimension_Gamma0_4_half
+            dimension = dimensions.dimension_Gamma0_4_half
 
         elif 'Kp' == args['group']:
             info['parent_as_tex'] = 'M_k\\big(K(p)\\big)'
@@ -104,9 +111,7 @@ def render_webpage(args={}):
             info['parent_as_tex'] = 'M_k\\big(\\Gamma_0(4,\\psi_4)\\big)'
             dimension = siegel_core._dimension_Gamma0_4_psi_4
 
-        elif 'Gamma0_4_half' == group:
-            info['parent_as_tex'] = 'M_{k-1/2}\\big(\\Gamma_0(4)\\big)'
-            dimension = siegel_core._dimension_Gamma0_4_half
+ 
 
         else:
             info['error'] = 'Request for unavailable type of Siegel modular form'
@@ -174,7 +179,7 @@ def render_webpage(args={}):
         # A priori the request is reasonable, so we try to get the data for the answer 
         try:
             info['new_method'] = None
-            if 'Gamma_2' == group or 'Gamma0_2' == group or 'Gamma1_2' == group or 'Sp4Z' == group:
+            if 'Gamma_2' == group or 'Gamma0_2' == group or 'Gamma1_2' == group or 'Sp4Z' == group or 'Sp6Z' == group or 'Sp8Z' == group or 'Gamma0_4_half' == group:
                 info['sym_pow'] = sym_pow
                 info['table_headers'], info['dimensions'] = dimension( range( min_wt, max_wt + 1), sym_pow)
                 ####### a hack ########
@@ -199,8 +204,8 @@ def render_webpage(args={}):
         if info['new_method']:
             info['table_headers'] = info['table_headers']
 
-        elif 'Sp8Z' == group:
-            info['table_headers'] = ['Weight', 'Total', 'Ikeda lifts', 'Miyawaki lifts', 'Other']
+        # elif 'Sp8Z' == group:
+        #     info['table_headers'] = ['Weight', 'Total', 'Ikeda lifts', 'Miyawaki lifts', 'Other']
 
         elif 'Sp6Z' == group:
             info['table_headers'] = ['Weight', 'Total', 'Miyawaki lifts I', 'Miyawaki lifts II', 'Other']
