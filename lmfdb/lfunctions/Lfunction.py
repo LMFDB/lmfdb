@@ -295,50 +295,41 @@ class Lfunction_EMF(Lfunction):
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
+        self.initStandard()
         self.algebraic = True
-        # logger.debug(str(self.character)+str(self.label)+str(self.number))
+        self.degree = 2
+        self.quasidegree = 1
+
         self.weight = int(self.weight)
         self.motivic_weight = self.weight - 1
         self.level = int(self.level)
         self.character = int(self.character)
-        # if self.character > 0:
-        # raise KeyError, "The L-function of a modular form with non-trivial
-        # character has not been implemented yet."
         self.number = int(self.number)
+        self.numcoeff = 20 + int(5 * math.ceil(  # Testing NB: Need to learn
+            self.weight * sqrt(self.level)))     # how to use more coefficients
 
         # Create the modular form
         try:
-            self.MF = WebNewForm(self.weight, self.level, self.character,
-                                 self.label, verbose=1)
+            self.MF = WebNewForm(k = self.weight, N = self.level,
+                                 chi = self.character, label = self.label, 
+                                 prec = self.numcoeff, verbose=1)
         except:
             raise KeyError("No data available yet for this modular form, so" +
                            " not able to compute its L-function")
+        
         # Extract the L-function information from the elliptic modular form
         self.automorphyexp = float(self.weight - 1) / float(2)
-        
-        
-        # logger.debug("ALeigen: " + str(self.MF.atkin_lehner_eigenvalues()))
-
         self.mu_fe = []
         self.nu_fe = [Rational(str(self.weight - 1) + '/2')]
-
         self.kappa_fe = [1]
         self.lambda_fe = [self.automorphyexp]
         self.Q_fe = float(sqrt(self.level) / (2 * math.pi))
         # POD: Consider using self.compute_kappa_lambda_Q_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
 
-        self.selfdual = True
-        self.langlands = True
-        self.primitive = True
-        self.degree = 2
-        self.poles = []
-        self.residues = []
-        self.numcoeff = 20 + int(5 * math.ceil(  # Testing NB: Need to learn
-            self.weight * sqrt(self.level)))     # how to use more coefficients
         self.algebraic_coefficients = []
 
         # Get the data for the corresponding elliptic curve if possible
-        if self.level <= modform_translation_limit and self.weight == 2:
+        if self.weight == 2:
             self.ellipticcurve = EC_from_modform(self.level, self.label)
             self.nr_of_curves_in_class = nr_of_EC_in_isogeny_class(
                                                     self.ellipticcurve)
@@ -346,20 +337,16 @@ class Lfunction_EMF(Lfunction):
             self.ellipticcurve = False
 
         # Appending list of Dirichlet coefficients
-        GaloisDegree = self.MF.degree()  # number of forms in the Galois orbit
-        if GaloisDegree == 1:
+        if self.MF.is_rational:
             # when coeffs are rational, q_expansion_embedding()
             # is the list of Fourier coefficients
+            logger.debug(self.MF.base_ring() == QQ)
             self.algebraic_coefficients = self.MF.q_expansion_embeddings(
-                self.numcoeff + 1)[1:self.numcoeff + 1] 
+                prec = self.numcoeff + 1)[1:self.numcoeff + 1]
+            logger.debug(self.algebraic_coefficients)
                                                    
-            self.coefficient_type = 2 # In this case, the L-function also comes
-                                      # from an elliptic curve. We tell that to
-                                      # lcalc, even if the coefficients are not
-                                      # produced using the elliptic curve
         else:
-            # logger.debug("Start computing coefficients.")
-
+            logger.debug("Non-rational field")
             embeddings = self.MF.q_expansion_embeddings(self.numcoeff + 1)
             for n in range(1, self.numcoeff + 1):
                 self.algebraic_coefficients.append(embeddings[n][self.number])
@@ -385,9 +372,6 @@ class Lfunction_EMF(Lfunction):
                              * (-1) ** (float(self.weight / 2)))
         # logger.debug("Sign: " + str(self.sign))
 
-        self.coefficient_period = 0
-
-        self.quasidegree = 1
 
         self.checkselfdual()
 
@@ -800,34 +784,24 @@ class Lfunction_Maass(Lfunction):
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
+        self.initStandard()
         self.algebraic = False
 
         [dbName, dbColl, dbEntry] = LfunctionDatabase.getLmaassByDatabaseId(args['dbid'])
         # Fetch the information from the database
         if dbColl == 'LemurellMaassHighDegree':  # Data from Lemurell
 
-            logger.debug(dbEntry)
-            a = dbEntry is None
-            logger.debug(a)
             # Extract the L-function information from the database entry
             self.__dict__.update(dbEntry)
-            # Kludge to deal with improperly formatted SL or GL in the database
-            # Current database entries only have SL in titles.  Note, this
-            # will break for PSL or PGL.  Ideally, the database entries
-            # should be changed.
-            self.title = re.sub(r'(?<!\\)SL', r'\SL', self.title)
-            self.title = re.sub(r'(?<!\\)GL', r'\GL', self.title)
 
-            self.coefficient_period = 0
-            self.poles = []
-            self.residues = []
-
-            # Extract the L-function information
-            # from the lcalfile in the database
+            # Extract L-function information from lcalfile in the database
             import LfunctionLcalc
             LfunctionLcalc.parseLcalcfile_ver1(self, self.lcalcfile)
 
         elif dbColl == 'FarmerMaass':
+            self.__dict__.update(dbEntry)
+
+        elif dbColl == 'LemurellMaassDegree2':
             self.__dict__.update(dbEntry)
 
         else:  # GL2 data from Then or Stromberg
@@ -884,11 +858,7 @@ class Lfunction_Maass(Lfunction):
             if self.level > 1:
                 self.sign = self.fricke * self.sign
                 
-            self.langlands = True
             self.degree = 2
-            self.poles = []
-            self.residues = []
-            self.coefficient_period = 0
 
             self.checkselfdual()
 

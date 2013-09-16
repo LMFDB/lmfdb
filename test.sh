@@ -25,10 +25,12 @@ else
   WHAT="$@"
 fi
 
+ARGS='-v -s --testmatch="(?:^|[\b_\./-])[Tt]est_"'
+
 if [[ -n $WHAT ]]; then
-   eval "sage -sh -c 'nosetests -v -s $WHAT'"
+   eval "sage -sh -c 'nosetests $ARGS $WHAT'"
 else
    cd lmfdb
-   eval "sage -sh -c 'nosetests -v -s --with-coverage --cover-erase --cover-package=lmfdb $HTML'"
+   eval "sage -sh -c 'nosetests $ARGS --with-coverage --cover-erase --cover-package=lmfdb $HTML'"
 fi
 

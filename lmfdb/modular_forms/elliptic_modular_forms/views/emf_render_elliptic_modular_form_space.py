@@ -37,7 +37,7 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import *
 from lmfdb.modular_forms.elliptic_modular_forms.backend.plot_dom import *
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, EMF_TOP
 ###
-use_db = True  # Should be decided intelligently
+##use_db = True  # Should be decided intelligently
 ###
 
 
@@ -97,16 +97,16 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
         info['error'] = "Got wrong level: %s " % level
         return info
     try:
-        if use_db:
-            WMFS = WebModFormSpace(weight, level, character, use_db=True)
-        else:
-            WMFS = WebModFormSpace(weight, level, character)
+        WMFS = WebModFormSpace(N = level, k = weight, chi = character)
         if 'download' in info and 'tempfile' in info:
             WNF._save_to_file(info['tempfile'])
             info['filename'] = str(weight) + '-' + str(level) + '-' + str(character) + '-' + label + '.sobj'
             return info
-    except RuntimeError:
-                info['error'] = "Sage error: Could not construct the desired space!"
+    except Exception as e:
+        if isinstance(e,IndexError):
+            info['error'] = e.message
+        else:
+            info['error'] = "We are sorry. The sought space can not be found in the database."
     if WMFS.level() == 1:
         info['group'] = "\( \mathrm{SL}_{2}(\mathbb{Z})\)"
     else:

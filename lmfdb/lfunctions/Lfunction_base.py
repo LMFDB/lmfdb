@@ -1,4 +1,5 @@
 from sage.all import imag_part
+from lmfdb.lfunctions import logger
 
 #############################################################################
 # The base Lfunction class. The goal is to make this dependent on the least possible, so it can be loaded from sage or even python
@@ -8,6 +9,18 @@ from sage.all import imag_part
 class Lfunction:
     """Class representing a general L-function
     """
+
+    def initStandard(self):
+        """ Sets some properties that are almost always the same
+        """
+        self.coefficient_period = 0
+        self.poles = []
+        self.residues = []
+        self.langlands = True
+        self.primitive = True
+        self.coefficient_type = 0
+
+    
     def Ltype(self):
         return self._Ltype
 
