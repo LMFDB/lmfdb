@@ -954,7 +954,7 @@ class WebNewForm_class(object):
         if compute: ## Compute all data we want.
             emf_logger.debug("compute")
             if not self._ap:
-                if self.parent()._ap>self._fi:
+                if len(self.parent()._ap)>self._fi:
                     self._ap = list(self.parent()._ap[self._fi])
             emf_logger.debug("compute q-expansion")
             self.q_expansion_embeddings(prec, bitprec,insert_in_db=False)
