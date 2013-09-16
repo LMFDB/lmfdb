@@ -419,7 +419,7 @@ class WebModFormSpace_class(object):
                 return True
             if self._chi > 0 and self._N > 100:
                 return True
-            if self._weight+self._N  > 100:
+            if self._k+self._N  > 100:
                 return True
             return False
     # internal methods to generate properties of self
