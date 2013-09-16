@@ -806,8 +806,7 @@ class Lfunction_Maass(Lfunction):
                 aa = 0
             
             self.mu_fe = [aa + self.eigenvalue * I, aa - self.eigenvalue * I]
-            self.nu_fe = []
-            
+            self.nu_fe = []           
             self.kappa_fe = [0.5, 0.5]
             self.lambda_fe = [0.5 * aa + self.eigenvalue *
                               I / 2, 0.5 * aa - self.eigenvalue * I / 2]
