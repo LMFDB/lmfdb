@@ -402,9 +402,7 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
 
 # loop over levels and weights
     for x in range(int(Nmin), int(Nmax) + 1):  # x is the level
-        logger.info("level = %s" % x)
         for y in range(int(kmin), int(kmax) + 1, 2):  # y is the weight
-            logger.info("  weight = %s" % y)
             lid = "(" + str(x) + "," + str(y) + ")"
             linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(x) + "/" + str(y) + "/0/"
             WS = WebModFormSpace(y, x)
@@ -481,9 +479,6 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
                         ans += "</circle></a>\n"
 
     ans += "</svg>"
-
-    logger.info(ans)
-
     return ans
 
 
@@ -763,7 +758,6 @@ def signtocolour(sign):
 ## ============================================
 def getOneGraphHtmlChar(min_cond, max_cond, min_order, max_order):
     graphInfo = getGraphInfoChar(min_cond, max_cond, min_order, max_order)
-    logger.info("graphInfo %s" % graphInfo)
     ans = ("<embed id='charGraph' src='" + graphInfo['src'] + "' width='" + str(graphInfo['width']) +
            # ans = ("<embed src='/static/images/browseGraphChar_1_35.svg' width='" +
            # str(graphInfo['width']) +

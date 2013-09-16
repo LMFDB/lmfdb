@@ -800,34 +800,24 @@ class Lfunction_Maass(Lfunction):
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
+        self.initStandard()
         self.algebraic = False
 
         [dbName, dbColl, dbEntry] = LfunctionDatabase.getLmaassByDatabaseId(args['dbid'])
         # Fetch the information from the database
         if dbColl == 'LemurellMaassHighDegree':  # Data from Lemurell
 
-            logger.debug(dbEntry)
-            a = dbEntry is None
-            logger.debug(a)
             # Extract the L-function information from the database entry
             self.__dict__.update(dbEntry)
-            # Kludge to deal with improperly formatted SL or GL in the database
-            # Current database entries only have SL in titles.  Note, this
-            # will break for PSL or PGL.  Ideally, the database entries
-            # should be changed.
-            self.title = re.sub(r'(?<!\\)SL', r'\SL', self.title)
-            self.title = re.sub(r'(?<!\\)GL', r'\GL', self.title)
 
-            self.coefficient_period = 0
-            self.poles = []
-            self.residues = []
-
-            # Extract the L-function information
-            # from the lcalfile in the database
+            # Extract L-function information from lcalfile in the database
             import LfunctionLcalc
             LfunctionLcalc.parseLcalcfile_ver1(self, self.lcalcfile)
 
         elif dbColl == 'FarmerMaass':
+            self.__dict__.update(dbEntry)
+
+        elif dbColl == 'LemurellMaassDegree2':
             self.__dict__.update(dbEntry)
 
         else:  # GL2 data from Then or Stromberg
@@ -884,11 +874,7 @@ class Lfunction_Maass(Lfunction):
             if self.level > 1:
                 self.sign = self.fricke * self.sign
                 
-            self.langlands = True
             self.degree = 2
-            self.poles = []
-            self.residues = []
-            self.coefficient_period = 0
 
             self.checkselfdual()
 
