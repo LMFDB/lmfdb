@@ -1286,8 +1286,8 @@ class WebNewForm_class(object):
             if hasattr(cn, 'complex_embeddings'):
                 cn_emb = cn.complex_embeddings(bitprec)
                 coeffs.append(cn_emb)
-                if len(cn_emb) <> deg:
-                    raise ValueError," {0} does not have degree of field {1}".format(cn,self.coefficient_field())
+                if len(cn_emb) < deg:
+                    raise ValueError," {0} does not have degree {1} of field {2}".format(cn,deg,self.coefficient_field())
             else:  
                 cn_emb = [ CF(cn) for i in range(deg) ]
             self._embeddings.append(cn_emb)
@@ -1328,11 +1328,37 @@ class WebNewForm_class(object):
                 self._coefficients[n+1]=c[n]
         for n in nrange:
             res.append(self._coefficients[n])
-        if insert_in_db:
+        if recompute and insert_in_db:
             self.insert_into_db()
         return res
 
+    def one_coefficient(self,n,insert_in_db=True):
+        from sage.all import primes_first_n
+        if n in self._coefficients:
+            return self._coefficients[n]
+        maxp = n.prime_divisors()
+        max_current_p = primes_first_n(len(self._ap))[-1]
+        recompute = False
+        if maxp > max_current_p:  ## Need to compute new prime coefficients.
+            recompute = True
+        if recompute: 
+            prange = prime_range(max_current_p+1,maxp+1)
+            E, v = self.as_factor().compact_system_of_eigenvalues( prange, names='x')
+            c = E * v
+            for ap in c:
+                self._ap.append(c)
 
+                
+    def coefficient_n_from_primes(self,n):
+        r"""
+        Reimplement the algorithm in sage modular/hecke/module.py
+        """
+                
+        if recompute and insert_in_db:
+            self.insert_in_db()
+            
+
+                      
     def coefficients_old(self, nrange=range(1, 10),insert_in_db=True):
         r"""
         Gives the coefficients in a range.
