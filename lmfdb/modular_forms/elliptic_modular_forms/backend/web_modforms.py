@@ -417,7 +417,7 @@ class WebModFormSpace_class(object):
         if comp=='decomp':
             if self._level > 50:
                 return True
-            if self._chi > 0 and self._N > 5:
+            if self._chi > 0 and self._N > 100:
                 return True
             if self._weight+self._N  > 100:
                 return True
@@ -437,7 +437,7 @@ class WebModFormSpace_class(object):
             if len(decomp)>0:
                 L = filter(lambda x: x.is_new() and x.is_cuspidal(), decomp)
                 emf_logger.debug("computed L:".format(L))
-            elif self._use_db or self._computation_too_hard():
+            elif self._computation_too_hard():
                 L = []
                 raise IndexError,"No decomposition was found in the database!"
                 emf_logger.debug("no decomp in database!")
