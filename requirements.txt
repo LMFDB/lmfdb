@@ -4,3 +4,4 @@ flask-login
 flask-markdown
 pymongo
 pyyaml
+unittest2

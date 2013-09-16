@@ -161,7 +161,7 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
             elif seriescoefftype == "series":
                 return(ans + " + i" + seriesvar(index, seriestype))
             elif seriescoefftype == "serieshtml":
-                return(ans + " +<em>i</em>" + seriesvar(index, seriestype))
+                return(ans + " + <em>i</em>" + seriesvar(index, seriestype))
                   # yes, em is not the right tag, but it is styled with CSS
         else:
             if seriescoefftype == "series":
@@ -174,7 +174,10 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
                 return(ans + truncatenumber(ip, precision) + "i")
     elif ip < -1 * truncation:
         if float(abs(ip + 1)) < truncation:
-            return("-i" + seriesvar(index, seriestype))
+            if seriescoefftype == "serieshtml":
+               return(" &minus;  <em>i</em>" + seriesvar(index, seriestype))
+            else:
+               return("-i" + seriesvar(index, seriestype))
         else:
             if seriescoefftype == "series":
                 return(ans + truncatenumber(ip, precision) + "i" + seriesvar(index, seriestype))
@@ -243,7 +246,7 @@ def lfuncDShtml(L, fmt):
         ans = ans + "<td valign='top' padding-top='2px'>" + "$" + L.texname 
         ans = ans + " = "
         # ans = ans + seriescoeff(L.dirichlet_coefficients[0], 0, "literal", "", -6, 5)
-        ans = ans + "1^{\mathstrut}" + "$" 
+        ans = ans + "1^{\mathstrut}" + "$"  + "&nbsp;"
         ans = ans + "</td><td valign='top'>"
 
 
