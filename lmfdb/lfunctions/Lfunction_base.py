@@ -75,7 +75,7 @@ class Lfunction:
         # Do not pass 0 to either lower bound or step_size
         # Not dependent on time actually
         # Manual tuning required
-        if self.degree > 2 or self.Ltype() == "maass":  # Too slow to be rigorous here  ( or self.Ltype()=="ellipticmodularform")
+        if self.degree > 2 or self.Ltype() == "maass" or self.Ltype() == "hgmQ" or self.Ltype() == "artin":  # Too slow to be rigorous here  ( or self.Ltype()=="ellipticmodularform")
             step_size = 0.02
             if self.selfdual:
                 lower_bound = lower_bound or - step_size / 2
@@ -96,7 +96,8 @@ class Lfunction:
     def compute_realistic_zeros(self, lower_bound = None, upper_bound = None, step_size = None, count = None, do_negative = False, **kwargs):
         # Do not pass 0 to either lower bound or step_size
         
-        if self.degree > 2 or self.Ltype() == "maass":  # Too slow to be rigorous here  ( or self.Ltype()=="ellipticmodularform")
+        if self.degree > 2 or self.Ltype() == "maass" or self.Ltype() == "hgmQ" or self.Ltype() == "artin":  # Too slow to be rigorous here  ( or self.Ltype()=="ellipticmodularform")
+            print "being realistic"
             step_size = 0.02
             if self.selfdual:
                 lower_bound = lower_bound or - step_size / 2
