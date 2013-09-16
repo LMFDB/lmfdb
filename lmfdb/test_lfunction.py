@@ -4,7 +4,7 @@ from lfunctions.Lfunctionutilities import *
 from lfunctions.LfunctionLcalc import createLcalcfile_ver1
 from base import LmfdbTest
 import math
-import unittest
+import unittest2
 
 
 class LfunctionTest(LmfdbTest):
@@ -29,7 +29,7 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/EllipticCurve/Q/56.a/')
         assert 'Graph' in L.data
 
-    @unittest.skip("Holomorphic cusp forms not working yet")
+    @unittest2.skip("Holomorphic cusp forms not working yet")
     def test_Lemf(self):
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/11/2/0/a/0/')
         assert 'Graph' in L.data
@@ -150,7 +150,7 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/Zeros/EllipticCurve/Q/56.a/')
         assert '2.791838' in L.data
 
-    @unittest.skip("Holomorphic cusp forms not working yet")
+    @unittest2.skip("Holomorphic cusp forms not working yet")
     def test_LemfPlot(self):
         L = self.tc.get('/L/Plot/ModularForm/GL2/Q/holomorphic/11/2/0/a/0/')
         assert 'OK' in str(L)
@@ -163,7 +163,7 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/Zeros/ArtinRepresentation/2/68/2/')
         assert 'OK' in str(L)
 
-    @unittest.skip("This doesn't work locally at the moment.")
+    @unittest2.skip("This doesn't work locally at the moment.")
     def test_LecPlot(self):
         L = self.tc.get('/L/Plot/EllipticCurve/Q/56.a/')
         assert 'OK' in str(L)

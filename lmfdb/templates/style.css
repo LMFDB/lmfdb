@@ -954,6 +954,34 @@ div.limit-height {
 
 /* end knowl */
 
+/*** Dirichlet series, displayed in HTML instead of MathJax ***/
+
+.dirichletseries {
+  font-family:"Times New Roman", Times, serif;
+}
+
+.dirichletseries em {
+  font-style: italic;
+}
+
+.dirichletseries td {
+  padding-left:0;
+  padding-right:0;
+}
+
+.dirichletseries td:first-child {
+  padding-top:3px;
+}
+
+.dirichletseries span.term {
+  white-space: nowrap;
+}
+
+.dirichletseries sup {
+/*  font-size: 75%;
+*/
+  font-style: italic;
+}
 
 /*** Tables for the Siegel corner ***/
 

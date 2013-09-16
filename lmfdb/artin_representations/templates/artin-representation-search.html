@@ -81,34 +81,41 @@
 
 
 <h2> Results: showing {{data_count}} results </h2>
+<div>
+  Galois conjugate representations are grouped into single lines.
+</div>
 
+<div>
 	<table border=1 cellpadding=5 class="ntdata">
 
 	<thead><tr><th>Result</th>
         <th>{{ KNOWL('artin.dimension', title='Dimension') }}</th>
 	<th>{{ KNOWL('artin.conductor', title='Conductor') }}</th>
 	<th>Defining polynomial of {{ KNOWL('artin.number_field', title='Artin field') }} </th>
-	<th>{{ KNOWL('artin.gg_quotient', title='$G$') }}</th>
+	<th style="text-align: center"> {{ KNOWL('artin.gg_quotient', title='$G$') }}</th>
 {#	<th>{{ KNOWL('artin.root_number', title='Root number') }}</th> #}
 	<th>{{ KNOWL('artin.frobenius_schur_indicator', title='Ind') }}</th>
 	<th>{{ KNOWL('artin.trace_of_complex_conj', title='$\chi(c)$')}}</th>
 	</tr></thead>
 	<tbody>
-        {% for artin in data%}
-          <tr> <th><a href = "{{artin.url_for()}}">{{loop.index}}</a></th><th>${{artin.dimension()}}$</th>
-          <th>${{artin.factored_conductor_latex()}}$</th>
-	  {% if artin.number_field_galois_group().url_for() %}
-{#	     <th><a href="{{artin.number_field_galois_group().url_for()}}">{{artin.number_field_galois_group().polredabshtml() | safe }}</a></th> #}
-	     <th><a href="{{artin.number_field_galois_group().url_for()}}">${{artin.number_field_galois_group().polredabslatex()}}$</a></th>
-	  {% else %}
-	      <th>${{artin.number_field_galois_group().polredabslatex()}}$</th>
-{#	      <th>{{artin.number_field_galois_group().polredabshtml() | safe }}</th> #}
-	  {% endif %}
+
+        {% for galclass in data%}
+        {% set outer_loop = loop %}
+          <tr><td>
+          {% for artin in galclass %}
+            <a href = "{{artin.url_for()}}">{{outer_loop.index}}.{{loop.index}}</a>
+          {% endfor %}
+          {% set artin = galclass[0] %}
+            </td>
+            <td>${{artin.dimension()}}$</td>
+          <td>${{artin.factored_conductor_latex()}}$</td>
+          <td>{{ artin.field_knowl()|safe }}</td>
+
 	  {# <td align="center">{{artin.number_field_galois_group().G_name()}}</td> #}
 	  <td align="center">{{artin.pretty_galois_knowl() | safe }} </td>
-{#	  <th>${{artin.processed_root_number()}}$</th> #}
-	  <th> ${{artin.indicator()}}$</th>
-	  <th>${{artin.trace_complex_conjugation()}}$</th>
+{#	  <td>${{artin.processed_root_number()}}$</td> #}
+	  <td> ${{artin.indicator()}}$</td>
+	  <td>${{artin.trace_complex_conjugation()}}$</td>
 	  </tr>
         {% endfor %}
 	</tbody>
@@ -117,8 +124,8 @@
 {% endif %}
 
 {#
-#}
 <br>
 Original request {{req}} was turned into mongo query <span class="tex2jax_ignore">{{query}}</span>.
 <br>
+#}
 {% endblock %}

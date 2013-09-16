@@ -1,6 +1,7 @@
 from lmfdb.base import LmfdbTest
 from lmfdb.WebCharacter import *
 from lmfdb.utils import url_character
+import unittest2
 
 class WebCharacterTest(LmfdbTest):
 
@@ -31,7 +32,34 @@ class UrlCharacterTest(LmfdbTest):
     #    assert url_character(type='Dirichlet') == '/Character/Dirichlet'
     #    assert url_character(type='Dirichlet', modulus='132') == '/Character/Dirichlet/132'
 
+class DirichletSearchTest(LmfdbTest):
 
+    def test_condbrowse(self): 
+        W = self.tc.get('/Character/?condbrowse=24-41')
+        assert '(\\frac{40}{\\bullet}\\right)' in W.data
+        
+    def test_ordbrowse(self): 
+        W = self.tc.get('/Character/?ordbrowse=17-23')
+        assert '\chi_{ 191 }( 32' in W.data
+
+    def test_modbrowse(self): 
+        W = self.tc.get('/Character/?modbrowse=51-81')
+        """
+        curl -s '/Character/?modbrowse=51-81' | grep '27' | wc -l
+        each 27 occurs twice
+        """
+        assert W.data.count('27') == 40
+
+    def test_search(self):
+        W = self.tc.get('/Character/?conductor=15&order=4')
+        assert '\displaystyle \chi_{ 45}(17' in W.data
+
+class DirichletTableTest(LmfdbTest):
+
+    def test_table(self):
+        get='modulus=35&poly=\%28+x^{6}+\%29+-+\%28+x^{5}+\%29+-+\%28+7+x^{4}+\%29+%2B+\%28+2+x^{3}+\%29+%2B+\%28+7+x^{2}+\%29+-+\%28+2+x+\%29+-+\%28+1+\%29&char_number_list=1%2C4%2C9%2C11%2C16%2C29'
+        W = self.tc.get('/Character/Dirichlet/grouptable?%s'%get)
+        assert '35 }(29' in W.data
 
 class DirichletCharactersTest(LmfdbTest):
 
@@ -66,6 +94,21 @@ class DirichletCharactersTest(LmfdbTest):
         assert '/Character/Dirichlet/2/1' in W.data, "next link"
         assert  '/NumberField/1.1.1.1' in W.data
      
+    @unittest2.skip("wait for new DirichletConrey")
+    def test_dirichletcharbig(self):
+        """ this is an extremely nice example to check
+            the Conrey naming scheme:
+            for p = 40487, 5 generates Z/pZ but not Z/p^2Z
+            the next one is OK, namely 10.
+            This test makes also sure the code scales.
+        """
+        W = self.tc.get('/Character/Dirichlet/40487/5')
+        assert 'Character group' in W.data
+        assert '40486' in W.data
+        assert '/Character/Dirichlet/4042/1' in W.data, "next link"
+        assert  '/NumberField/1.1.1.1' in W.data
+ 
+
     def test_dirichletchar43(self):
         W = self.tc.get('/Character/Dirichlet/4/3')
         assert 'Kronecker symbol' in W.data
@@ -74,7 +117,7 @@ class DirichletCharactersTest(LmfdbTest):
     def test_dirichlet_calc(self):
         W = self.tc.get('/Character/calc-gauss/Dirichlet/4/3?val=3')
         assert '-2.0i' in W.data, "calc gauss"
-        assert '\mathbb{Z}/4\mathbb{Z}' in W.data
+        assert '\Z/4\Z' in W.data
         
         W = self.tc.get('/Character/calc-kloosterman/Dirichlet/91/3?val=52,34')
         assert '3.774980868' in W.data, "kloosterman"

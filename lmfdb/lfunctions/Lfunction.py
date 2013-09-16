@@ -797,9 +797,7 @@ class Lfunction_Maass(Lfunction):
                            + "Maass form")
 
         # Put the arguments into the object dictionary
-        logger.debug(args['dbid'])
         self.__dict__.update(args)
-        logger.debug(self.dbid)
         self.algebraic = False
 
         [dbName, dbColl, dbEntry] = LfunctionDatabase.getLmaassByDatabaseId(args['dbid'])

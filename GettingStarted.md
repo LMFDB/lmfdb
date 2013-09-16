@@ -15,6 +15,7 @@ Installation
     easy_install -U flask-markdown
     easy_install -U flask-cache
     easy_install -U pyyaml
+    easy_install -U unittest2
 ```
   * From the command-line:
     `

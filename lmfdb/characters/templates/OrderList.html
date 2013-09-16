@@ -118,43 +118,43 @@ given {{ KNOWL('character.dirichlet.order', title="order") }}.
 </div>
 
 <div>
-<table class="ntdata" id="chitable">
+  <table class="ntdata" id="chitable">
     <thead class="space">
-    <tr class="space">
+      <tr class="space">
         <th class="spaceleft">Order</th>
         <th class="weight" colspan="{{contents|length}}">
-            <span style="display:block;float:left;margin-right:3px;"> Characters</span></th>
-    </tr>
-</thead>
+          <span style="display:block;float:left;margin-right:3px;"> Characters</span></th>
+      </tr>
+    </thead>
 
     {% set row_class = cycler('odd', 'even') %}
-<tbody>
-    {% for line in contents %}
-        <tr class="{{ row_class.next() }}">
-            <th class="left" > {{ line[0] }}</th>
-                {% for chi in line[1] %}
-            <td>
-                    <div>
-                    <a href="Dirichlet/{{ chi[0] }}/{{chi[1]}}">
-                        {% if chi[2] %}
-                            <font color="green">
-                        {% else %}
-                            <font color="blue">
-                        {% endif %}
-                        {% if chi[3] == 2 %}
-                           {{ chi[4] }} (mod {{chi[0]}})
-                        {% else %}
-                        \( \chi_{ {{chi[0]}} }( {{chi[1]}}, &middot;) \)
-                        {% endif %}
-                    </font>
-                    </a>
-                    </div>
-            </td>
-                {% endfor %}
+    <tbody>
+      {% for line in contents %}
+      <tr class="{{ row_class.next() }}">
+        <th class="left" > {{ line[0] }}</th>
+        {% for chi in line[1] %}
+        <td>
+          <div>
+            <a href="{{url_character(type='Dirichlet',modulus=chi[0],number=chi[1])}}">
+              {% if chi[2] %}
+              <font color="green">
+                {% else %}
+                <font color="blue">
+                  {% endif %}
+                  {% if chi[3] == 2 %}
+                  {{ chi[4] }} (mod {{chi[0]}})
+                  {% else %}
+                  \( \chi_{ {{chi[0]}} }( {{chi[1]}}, &middot;) \)
+                  {% endif %}
+                </font>
+              </a>
+            </div>
+          </td>
+          {% endfor %}
         </tr>
-    {% endfor %}
-</tbody>
-</table>
-</div>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 
-{% endblock %}
+  {% endblock %}

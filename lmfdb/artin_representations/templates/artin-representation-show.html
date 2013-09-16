@@ -5,6 +5,7 @@
     <h2> Basic invariants</h2>
     <table>
         <tr><td>{{ KNOWL('artin.dimension', title='Dimension') }}:<td>${{ object.dimension() }}$ </tr>
+        <tr><td>{{ KNOWL('artin.gg_quotient', title='Group') }}:<td>{{ object.pretty_galois_knowl() | safe }}</td>
         <tr><td>{{ KNOWL('artin.conductor', title='Conductor') }}:<td>${{ object.conductor_equation() }} $</tr>
         <tr><td> {{ KNOWL('artin.number_field', title='Artin number field') }}: <td>Splitting field of
                 $f={{ object.number_field_galois_group().polynomial().latex()}}$ over $\Q$.</tr>
@@ -14,11 +15,6 @@
 
     
     <h2> Galois action </h2>
-    <h3> Group</h3>
-    <div>
-    {{ object.pretty_galois_knowl() | safe }}
-    </div>
-    
      
     <h3>Roots of defining polynomial</h3>
     <div>
@@ -69,17 +65,17 @@
     <div> 
       <center><table class="ntdata">
       <thead><tr><td>Size</td><td>Order</td><td>Action on
-      $r_1 \cdots r_{ {{object.number_field_galois_group().degree()}} }$</td><td>Character value</td></tr></thead>
+      $r_1, \ldots, r_{ {{object.number_field_galois_group().degree()}} }$</td><td>Character value</td></tr></thead>
 
       <tbody>
         {% for gen in object.number_field_galois_group().conjugacy_classes()%}
-            <tr {% if loop.index == object.number_field_galois_group().index_complex_conjugation()%}class="redhighlight"{%endif%}> 
+            <tr {% if loop.index == object.number_field_galois_group().index_complex_conjugation()%}class="bluehighlight"{%endif%}> 
                 <td align="center">${{gen.size()}}$</td><td align="center">${{gen.order()}}$</td><td align="center">${{gen.representative().cycle_string()}}$</td><td align="center">${{ object.character_formatted()[loop.index - 1] }}$</td></tr>
         {% endfor %}
       </tbody>
       </table>
       </center>
-       The red line marks the conjugacy class containing complex conjugation.
+       The blue line marks the conjugacy class containing complex conjugation.
     </div>
     
    

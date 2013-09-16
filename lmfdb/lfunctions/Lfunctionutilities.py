@@ -75,15 +75,29 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
         rp = real_part(coeff)
         ip = imag_part(coeff)
 # below we use float(abs()) instead of abs() to avoid a sage bug
-    if (float(abs(rp)) > truncation) & (float(abs(ip)) > truncation):
+    if (float(abs(rp)) > truncation) & (float(abs(ip)) > truncation):  # has a real and an imaginary part
         ans = ""
         if seriescoefftype == "series" or seriescoefftype == "signed":
             ans += "+"
-        ans += "("
-        ans += truncatenumber(rp, precision)
+            ans += "("
+            ans += truncatenumber(rp, precision)
+        elif seriescoefftype == "serieshtml":
+            ans += " + "
+            ans += "("
+            if rp > 0:
+                ans += truncatenumber(rp, precision)
+            else:
+                ans += "&minus;"+truncatenumber(float(abs(rp)), precision)
         if ip > 0:
-            ans += "+"
-        ans += truncatenumber(ip, precision) + " i"
+            ans += " + "
+        if seriescoefftype == "series" or seriescoefftype == "signed":
+            ans += truncatenumber(ip, precision) + " i"
+        if seriescoefftype == "serieshtml":
+            if ip > 0:
+                ans += truncatenumber(ip, precision)
+            else:
+                ans += " &minus; "+truncatenumber(float(abs(ip)), precision)
+            ans += "<em>i</em>"
         return(ans + ")" + seriesvar(index, seriestype))
     elif (float(abs(rp)) < truncation) & (float(abs(ip)) < truncation):
         if seriescoefftype != "literal":
@@ -104,10 +118,10 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
                 return("+1")
             elif seriescoefftype == "factor":
                 return("")
-            elif seriescoefftype == "series":
+            elif seriescoefftype == "series" or seriescoefftype == "serieshtml":
                 return(ans + " + " + seriesvar(index, seriestype))
         else:
-            if seriescoefftype == "series":
+            if seriescoefftype == "series" or seriescoefftype == "serieshtml":
                 return(" + " + ans + truncatenumber(rp, precision) + seriesvar(index, seriestype))
             elif seriescoefftype == "signed":
                 return(ans + "+" + truncatenumber(rp, precision))
@@ -123,11 +137,15 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
                 return("-" + seriesvar(index, seriestype))
             elif seriescoefftype == "series":  # adding space between minus sign and value
                 return(" - " + seriesvar(index, seriestype))
+            elif seriescoefftype == "serieshtml":  # adding space between minus sign and value
+                return(" &minus; " + seriesvar(index, seriestype))
             else:
                 return("-" + seriesvar(index, seriestype))
         else:
             if seriescoefftype == "series":
                 return(ans + " - " + truncatenumber(float(abs(rp)), precision) + seriesvar(index, seriestype))
+            elif seriescoefftype == "serieshtml":
+                return(ans + " &minus; " + truncatenumber(float(abs(rp)), precision) + seriesvar(index, seriestype))
             elif seriescoefftype == "literal" or seriescoefftype == "factor":
                 return(ans + truncatenumber(rp, precision))
 
@@ -142,19 +160,29 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
                 return("i")
             elif seriescoefftype == "series":
                 return(ans + " + i" + seriesvar(index, seriestype))
+            elif seriescoefftype == "serieshtml":
+                return(ans + " + <em>i</em>" + seriesvar(index, seriestype))
+                  # yes, em is not the right tag, but it is styled with CSS
         else:
             if seriescoefftype == "series":
                 return(ans + truncatenumber(ip, precision) + " + i" + seriesvar(index, seriestype))
+            elif seriescoefftype == "serieshtml":
+                return(ans + truncatenumber(ip, precision) + " + <em>i</em>" + seriesvar(index, seriestype))
             elif seriescoefftype == "signed":
                 return(ans + "+" + truncatenumber(ip, precision) + "i")
             elif seriescoefftype == "literal" or seriescoefftype == "factor":
                 return(ans + truncatenumber(ip, precision) + "i")
     elif ip < -1 * truncation:
         if float(abs(ip + 1)) < truncation:
-            return("-i" + seriesvar(index, seriestype))
+            if seriescoefftype == "serieshtml":
+               return(" &minus;  <em>i</em>" + seriesvar(index, seriestype))
+            else:
+               return("-i" + seriesvar(index, seriestype))
         else:
             if seriescoefftype == "series":
                 return(ans + truncatenumber(ip, precision) + "i" + seriesvar(index, seriestype))
+            elif seriescoefftype == "serieshtml":
+                return(ans + truncatenumber(ip, precision) + "<em>i</em>" + seriesvar(index, seriestype))
             elif seriescoefftype == "signed":
                 return(ans + truncatenumber(ip, precision) + " i")
             elif seriescoefftype == "literal" or seriescoefftype == "factor":
@@ -169,6 +197,8 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
 def seriesvar(index, seriestype):
     if seriestype == "dirichlet":
         return(" \\ " + str(index) + "^{-s}")
+    elif seriestype == "dirichlethtml":
+        return(" " + str(index) + "<sup>-s</sup>")
     elif seriestype == "":
         return("")
     elif seriestype == "qexpansion":
@@ -176,8 +206,82 @@ def seriesvar(index, seriestype):
     else:
         return("")
 
+#-------
 
 def lfuncDStex(L, fmt):
+    return(lfuncDShtml(L, fmt))
+# the Dirichlet series on an L-function home page did not wrap when the window was
+# narrow.  So we made a lfuncDShtml funciton which makes the Dirichlet series in
+# HTML.  Then we redirect the tex version to the html version.
+
+
+def lfuncDShtml(L, fmt):
+    """ Returns the HTML for displaying the Dirichlet series of the L-function L.
+        fmt could be any of the values: "analytic", "langlands", "abstract"
+    """
+
+    if len(L.dirichlet_coefficients) == 0:
+        return '\\text{No Dirichlet coefficients supplied.}'
+
+    numperline = 4
+    maxcoeffs = 20
+    if L.selfdual:
+        numperline = 9  # Actually, we want 8 per line, and one extra addition to counter to ensure
+                        # we add only one newline
+        maxcoeffs = 30
+    ans = ""
+    # Changes to account for very sparse series, only count actual nonzero terms to decide when to go to next line
+    # This actually jumps by 2 whenever we add a newline, to ensure we just add one new line
+    nonzeroterms = 1
+    if fmt == "analytic" or fmt == "langlands":
+      #  ans = "\\begin{align}\n"
+#        ans = ans + "<table class='dirichletseries'><tr>"
+#        ans = ans + "<td valign='top'>" + "$" + L.texname + "$" + "</td>"
+#        ans = ans + "<td valign='top'>" + "&nbsp;=&nbsp;" 
+#        # ans = ans + seriescoeff(L.dirichlet_coefficients[0], 0, "literal", "", -6, 5)
+#        ans = ans + "1<sup>&nbsp;</sup>"
+#        ans = ans + "</td><td valign='top'>"
+
+        ans = ans + "<table class='dirichletseries'><tr>"
+        ans = ans + "<td valign='top' padding-top='2px'>" + "$" + L.texname 
+        ans = ans + " = "
+        # ans = ans + seriescoeff(L.dirichlet_coefficients[0], 0, "literal", "", -6, 5)
+        ans = ans + "1^{\mathstrut}" + "$"  + "&nbsp;"
+        ans = ans + "</td><td valign='top'>"
+
+
+        for n in range(1, len(L.dirichlet_coefficients)):
+            tmp = seriescoeff(L.dirichlet_coefficients[n], n + 1, "serieshtml", "dirichlethtml", -6, 5)
+            if tmp != "":
+                nonzeroterms += 1
+            ans = ans + " <span class='term'>" + tmp + "</span> "  
+                # need a space between spans to allow line breaks. css stops a break within a span
+     
+            if nonzeroterms > maxcoeffs:
+                break
+            if(nonzeroterms % numperline == 0):
+              #  ans = ans + "\\cr\n"     
+                ans = ans + "\n"     # don't need  \cr in the html version
+              #  ans = ans + "&"
+                nonzeroterms += 1   # This ensures we don t add more than one newline
+        ans = ans + " + ...\n</td></tr>\n</table>\n"
+
+    elif fmt == "abstract":
+        if L.Ltype() == "riemann":
+            ans = "\[\\begin{equation} \n \\zeta(s) = \\sum_{n=1}^{\\infty} n^{-s} \n \\end{equation} \]\n"
+
+        elif L.Ltype() == "dirichlet":
+            ans = "\[\\begin{equation} \n L(s,\\chi) = \\sum_{n=1}^{\\infty} \\chi(n) n^{-s} \n \\end{equation}\]"
+            ans = ans + "where $\\chi$ is the character modulo " + str(L.charactermodulus)
+            ans = ans + ", number " + str(L.characternumber) + "."
+
+        else:
+            ans = "\[\\begin{equation} \n " + L.texname + \
+                " = \\sum_{n=1}^{\\infty} a(n) n^{-s} \n \\end{equation}\]"
+    return(ans)
+
+
+def lfuncDStex_old(L, fmt):
     """ Returns the LaTex for displaying the Dirichlet series of the L-function L.
         fmt could be any of the values: "analytic", "langlands", "abstract"
     """

@@ -238,10 +238,9 @@ def link_to_current_source():
 
 
 ### for testing.py ###
-import unittest
+import unittest2
 
-
-class LmfdbTest(unittest.TestCase):
+class LmfdbTest(unittest2.TestCase):
     def setUp(self):
         app.config['TESTING'] = True
         self.app = app
