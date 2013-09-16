@@ -78,19 +78,16 @@ class Lfunction_lcalc(Lfunction):
     def __init__(self, **args):
         constructor_logger(self, args)
         # Initialize some default values
-        self.coefficient_period = 0
-        self.poles = []
-        self.residues = []
+        self.initStandard()
         self.kappa_fe = []
         self.lambda_fe = []
         self.mu_fe = []
         self.nu_fe = []
         self.selfdual = False
-        self.langlands = True
         self.texname = "L(s)"  
         self.texnamecompleteds = "\\Lambda(s)"  
         self.texnamecompleted1ms = "\\overline{\\Lambda(1-\\overline{s})}"  
-        self.primitive = None  # should be changed later
+        self.primitive = None  
         self.citation = ''
         self.credit = ''
         self.motivic_weight = NaN
