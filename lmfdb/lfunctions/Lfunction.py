@@ -731,11 +731,7 @@ class Lfunction_Dirichlet(Lfunction):
 
             # Determine if the character is real
             # (i.e., if the L-function is selfdual)
-            chivals = chi.values_on_gens()
-            self.selfdual = True
-            for v in chivals:
-                if abs(imag_part(v)) > 0.0001:
-                    self.selfdual = False
+            self.selfdual = (chi.multiplicative_order() <= 2)
 
             if self.selfdual:
                 self.coefficient_type = 1
