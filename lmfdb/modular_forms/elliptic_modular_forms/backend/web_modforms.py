@@ -1286,10 +1286,12 @@ class WebNewForm_class(object):
 
         """
         res = []
+        emf_logger.debug("computing coeffs in range {0}".format(nrange))
         if not isinstance(nrange, list):
             M = nrange
             nrange = range(0, M)
         for n in nrange:
+            emf_logger.debug("n= {0}".format(n))
             if n == 1:
                 res.append(1)
             elif n == 0:
@@ -1334,7 +1336,7 @@ class WebNewForm_class(object):
                     except (TypeError,IndexError):
                         if n % self._N == 0:
                             atmp = self.as_factor().eigenvalue(self._N,'x')
-                        print "n=",n,atmp
+                            emf_logger.debug("n= {0},c(n)={1}".format(n,atmp))       
                         an = self.as_factor().eigenvalue(n, 'x')
                     # an = self._f.eigenvalue(QQ(n),'x')
                     self._coefficients[n] = an
