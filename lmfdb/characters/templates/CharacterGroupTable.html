@@ -1,0 +1,100 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+<style type="text/css">
+table.ntdata th.left { 
+    border-right: 2px solid #9b9; 
+    background: #efe;
+    border-bottom: 0;
+    text-align: right;
+}
+
+table.ntdata th.weight {
+  text-align: center;
+  background: #efe;
+  border-bottom: 2px solid #9b9;
+  border-left: 0;
+  vertical-align: center;
+}
+
+table.ntdata thead tr.space {
+  background: #efe;
+  border-bottom: 0;
+}
+
+table.ntdata thead th.spaceleft {
+  border-right: 2px solid #9b9;
+  vertical-align: top;
+}
+.modulus {
+    font-family: serif;
+    vertical-align: top;
+    padding-top: 1em;
+    border-right: 2px solid #8a8;
+}
+.modulus a { display: inline; font-family: serif; }
+.modulus font { display: inline; font-family: serif }
+.chi {
+    padding: 30px 30px;
+    font-family: serif;
+    width: 7em;
+    display: inline;
+    white-space:nowrap;}
+.chi a { display: inline; font-family: serif;}
+#chitable { clear:right; }
+#chitable td div { float: left; padding-left: .5em; padding-right: .5em; }
+#chitable td div>a { text-align: right; }
+#chitable td { text-align: right; vertical-align: middle;  white-space: nowrap; }
+#chitable td.a { background: #DFD; }
+#chitable td.b { background: none; }
+#chitable th { text-align: right; }
+/*table.ntdata tr.even, table.ntdata tr:nth-child(even) { background: none; }*/
+#chitable a.imprimitive { color: blue;}
+#chitable a.primitive { color:green ;}
+
+.primitive {
+  color:green;
+}
+.imprimitive {
+    color:blue;
+}
+.heading {
+    padding: 30px 30px
+    }
+</style>
+
+<h2>
+  Group table for the <a title="character group" knowl='character.dirichlet.group'>character group</a> for $\textrm{Gal}(K/\mathbb{Q})$
+</h2>
+<p>
+$K$ is the global number field defined by {{ poly }}
+
+<div>
+<table class="ntdata" id="chitable">
+    <thead class="space">
+        <tr> 
+        <th class="left" style="text-align:center">$\times$ </th>
+        {% for h in headers %}
+        <th>\(\chi_{ {{modulus}} } ( {{h}}, &middot;)\) </th> 
+        {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in contents %}
+          <tr>
+            <th class="left">
+                <a align="center" href="{{modulus}}/{{row[0]}}">
+                \(\chi_{ {{modulus}} }({{row[0]}}, &middot;)\)
+                 </a>
+             </th>
+           {% for j in row %}
+                  <td>\(\chi_{ {{modulus}} } ( {{j}}, &middot;)\)</td> 
+           {% endfor %}
+          </tr>
+        {% endfor %} 
+    </tbody>    
+    
+</table>
+</div>
+{% endblock %}

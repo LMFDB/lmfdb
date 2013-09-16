@@ -7,7 +7,7 @@ import datetime
 from flask import url_for, make_response
 import lmfdb.base as base
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms import *
-from lmfdb.ListCharacters import get_character_modulus
+from lmfdb.characters.ListCharacters import get_character_modulus
 from lmfdb.lfunctions import logger
 
 ###############################################################################
@@ -258,7 +258,10 @@ def paintSvgFileAll(glslist):  # list of group, level, and (maybe) sign
     ans += paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength)
 
     for (x, y, lid, group, level, sign) in paralist:
-        linkurl = url_for('.l_function_maass_gln_page', group=group, dbid=lid)
+        try:
+            linkurl = url_for('.l_function_maass_gln_page', group=group, dbid=lid)
+        except Exception as ex:  # catch when running a test
+            linkurl = lid
         ans += "<a xlink:href='" + linkurl + "' target='_top'>\n"
         ans += "<circle cx='" + str(float(x) * xfactor)[0:7]
         ans += "' cy='" + str(height - float(y) * yfactor)[0:7]
@@ -268,7 +271,6 @@ def paintSvgFileAll(glslist):  # list of group, level, and (maybe) sign
         ans += "</circle></a>\n"
 
     ans += "</svg>"
-
     return(ans)
 
 
@@ -400,12 +402,10 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
 
 # loop over levels and weights
     for x in range(int(Nmin), int(Nmax) + 1):  # x is the level
-        logger.info("level = %s" % x)
         for y in range(int(kmin), int(kmax) + 1, 2):  # y is the weight
-            logger.info("  weight = %s" % y)
             lid = "(" + str(x) + "," + str(y) + ")"
             linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(x) + "/" + str(y) + "/0/"
-            WS = WebModFormSpace(y, x)
+            WS = WebModFormSpace(N = x, k = y, chi = 0)
             numlabels = len(WS.galois_decomposition())  # one label per Galois orbit
             thelabels = alphabet[0:numlabels]    # list of labels for the Galois orbits for weight y, level x
             countplus = 0   # count how many Galois orbits have sign Plus (+ 1)
@@ -416,7 +416,7 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
             numminuslabels = 0
             for label in thelabels:  # looping over Galois orbit
                 linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(x) + "/" + str(y) + "/0/" + label
-                MF = WebNewForm(y, x, 0, label)   # one of the Galois orbits for weight y, level x
+                MF = WebNewForm(N = x, k = y,chi = 0, label = label)   # one of the Galois orbits for weight y, level x
                 numberwithlabel = MF.degree()  # number of forms in the Galois orbit
                 if x == 1:  # For level 1, the sign is always plus
                     signfe = 1
@@ -479,9 +479,6 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
                         ans += "</circle></a>\n"
 
     ans += "</svg>"
-
-    logger.info(ans)
-
     return ans
 
 
@@ -579,12 +576,10 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
 
 # loop over levels and weights, using plotsector to put the appropriate dots at each lattice point
     for x in range(int(Nmin), int(Nmax) + 1):  # x is the level
-        print "level = " + str(x)
         for y in range(int(kmin), int(kmax) + 1, 2):  # y is the weight
-            print "  weight = " + str(y)
             lid = "(" + str(x) + "," + str(y) + ")"
             linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(y) + "/" + str(x) + "/0/"
-            WS = WebModFormSpace(y, x)  # space of modular forms of weight y, level x
+            WS = WebModFormSpace(N = x, k = y,chi = 0)  # space of modular forms of weight y, level x
             galois_orbits = WS.galois_decomposition()   # make a list of Galois orbits
             numlabels = len(galois_orbits)  # one label per Galois orbit
             thelabels = alphabet[0:numlabels]    # list of labels for the Galois orbits for weight y, level x
@@ -604,7 +599,6 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
             dimensioninfo['dotspacing'] = [xdotspacing, ydotspacing]
             dimensioninfo['edge'] = [[0, 1], [1, 0]]     # unit vectors defining edges of sector
             # dimensioninfo['edgelength'] = [float(dimensioninfo['scale'][0])/float(Nmax), float(dimensioninfo['scale'][1])/float(kmax)] #add comment
-            # print('edgelength = ',dimensioninfo['edgelength'])
             dimensioninfo['edgelength'] = [0.5, 0.5]
             dimensioninfo['dotradius'] = radius
             dimensioninfo['connectinglinewidth'] = dimensioninfo['dotradius'] / 1.5
@@ -632,7 +626,7 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
                 urlinfo['space']['orbits'] = []
                 for label in thelabels:  # looping over Galois orbit: one label per orbit
                     # do '+' case first
-                    MF = WebNewForm(y, x, 0, label)   # one of the Galois orbits for weight y, level x
+                    MF = WebNewForm(N = x, k = y, chi = 0, label = label)   # one of the Galois orbits for weight y, level x
                     numberwithlabel = MF.degree()  # number of forms in the Galois orbit
                     if x == 1:  # For level 1, the sign is always plus
                         signfe = 1
@@ -657,18 +651,11 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
                         for n in range(numberwithlabel):
                             orbitdescriptionlist.append({'label': label, 'number': n, 'color': signcolour})
                         urlinfo['space']['orbits'].append(orbitdescriptionlist)
-
-#
-#
-#
                 # urlinfo['space']['orbits'][0][0]['color'] = signtocolour(-1)
                 # appearanceinfo['orbitcolor'] = 'rgb(102,102,102)'
                     ans += plotsector(dimensioninfo, appearanceinfo, urlinfo)
 
     ans += "</svg>"
-
-    # print ans
-
     return(ans)
 
 #=====================
@@ -771,7 +758,6 @@ def signtocolour(sign):
 ## ============================================
 def getOneGraphHtmlChar(min_cond, max_cond, min_order, max_order):
     graphInfo = getGraphInfoChar(min_cond, max_cond, min_order, max_order)
-    logger.info("graphInfo %s" % graphInfo)
     ans = ("<embed id='charGraph' src='" + graphInfo['src'] + "' width='" + str(graphInfo['width']) +
            # ans = ("<embed src='/static/images/browseGraphChar_1_35.svg' width='" +
            # str(graphInfo['width']) +
@@ -788,11 +774,12 @@ def getOneGraphHtmlChar(min_cond, max_cond, min_order, max_order):
 ## Dirichlet L-functions.
 ## ============================================
 def getGraphInfoChar(min_cond, max_cond, min_order, max_order):
-    xfactor = 70
-    yfactor = 30
-    extraSpace = 30
+    xfactor = 50
+    yfactor = 25
+    extraSpace = 40
     (width, height) = (
-        2 * extraSpace + xfactor * (max_order), 2 * extraSpace + yfactor * (max_cond - min_cond + 1))
+        2 * extraSpace + xfactor * max_order, 2 * extraSpace + yfactor * (max_cond - min_cond + 1))
+    logger.debug(width,height)
 ##    url = url_for('.browseGraph',group=group, level=level, sign=sign)
     url = url_for('.browseGraphChar', min_cond=str(min_cond),
                   max_cond=str(max_cond), min_order=str(min_order),
@@ -808,9 +795,9 @@ def getGraphInfoChar(min_cond, max_cond, min_order, max_order):
 ## the Dirichlet L-functions.
 ## ============================================
 def paintSvgChar(min_cond, max_cond, min_order, max_order):
-    xfactor = 70
-    yfactor = 30
-    extraSpace = 20
+    xfactor = 50
+    yfactor = 25
+    extraSpace = 40
     ticlength = 4
     radius = 3
     xdotspacing = 0.10  # horizontal spacing of dots
@@ -825,8 +812,10 @@ def paintSvgChar(min_cond, max_cond, min_order, max_order):
     xMax = int(max_order)
     yMax = int(max_cond)
     yMin = int(min_cond)
-    width = xfactor * xMax + 3 * extraSpace
-    height = yfactor * (yMax - yMin) + 3 * extraSpace
+##    width = xfactor * xMax + 3 * extraSpace
+##    height = yfactor * (yMax - yMin) + 3 * extraSpace
+    width = xfactor * xMax + 2 * extraSpace
+    height = yfactor * (yMax - yMin + 1) + 2 * extraSpace
 
     ans += paintCSChar(width, height, xMax, yMax, yMin, xfactor, yfactor, ticlength)
 
@@ -971,7 +960,7 @@ def paintCSChar(width, height, xMax, yMax, yMin, xfactor, yfactor, ticlength):
 
     xmlText = xmlText + (
         "<text x='5' y='10' style='fill:rgb(102,102,102);font-size:11px;'>Conductor</text>\n")
-    xmlText = xmlText + ("<text x='" + str(width - xfactor + 35) + "' y='" + str(height - 2 * ticlength) +
+    xmlText = xmlText + ("<text x='" + str(width - xfactor + 15) + "' y='" + str(height - 2 * ticlength) +
                          "' style='fill:rgb(102,102,102);font-size:11px;'>Order</text>\n")
 
     return xmlText
@@ -1058,7 +1047,6 @@ def plotsector(dimensioninfo, appearanceinfo, urlinfo):
  # "orbitbase" is the starting point of an orbit, which initially is the "firstdotoffset"
     orbitbase = lincomb(1, vertexlocation, 1, dimensioninfo['firstdotoffset'])
     for orbit in urlinfo['space']['orbits']:
-        print('orbit', orbit)
         # first determine if we should draw a line connecting the dots in an orbit, since want line beneath dots
         # no line if 1 dot or >maxdots
         if len(orbit) > 1 and len(orbit) <= maxdots:
@@ -1076,7 +1064,6 @@ def plotsector(dimensioninfo, appearanceinfo, urlinfo):
             ans += "\n"
             break   # we are done with this orbit if there are more than maxdots cuspforms in the orbit (re-check)***
         dotlocation = orbitbase
-        print('entering orbit loop', len(orbit))
         for orbitelem in orbit:  # loop through the elements in an orbit, drawing a dot and making a link
             orbitcolor = orbitelem['color']
             urlbase += 'label' + "='" + str(orbitelem['label']) + "'&amp;"
@@ -1085,17 +1072,11 @@ def plotsector(dimensioninfo, appearanceinfo, urlinfo):
             ans += "\n"
             # ans += mydot(vertexlocation, scale, dotlocation,
             # dimensioninfo['dotradius'], orbitcolor,"",orbitelem['title'])
-            print('dotlocation_bef:', dotlocation)
             # ans += mydot(offset, scale, dotlocation, dimensioninfo['dotradius'], orbitcolor,"","test title")
             ans += mydot(offset, scale, dotlocation, dimensioninfo['dotradius'], orbitcolor, "", "")
             ans += "</a>"
             ans += "\n"
-            print('orbitcolor:', orbitcolor)
-            print('dotlocation:', dotlocation)
-            print('dotspacing:', dotspacing)
-            print('edge:', edge)
             dotlocation = lincomb(1, dotlocation, dotspacing[1], edge[1])
-            print('dotlocation_aft:', dotlocation)
         orbitbase = lincomb(1, orbitbase, dotspacing[0], edge[0])
     return(ans)
 

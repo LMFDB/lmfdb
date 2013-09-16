@@ -2,6 +2,7 @@ password.py
 config.ini
 
 *.pyc
+*.pyo
 *.so
 *.o
 *.c
@@ -22,3 +23,5 @@ local.sh
 
 lmfdb/cover
 lmfdb/.coverage
+.coverage
+.DS_Store

@@ -21,12 +21,12 @@ AUTHORS:
 import lmfdb.base
 from lmfdb.base import app
 from flask import render_template, url_for, request, redirect, make_response, send_file
+from lmfdb.utils import url_character
 import bson
 import StringIO
 import pymongo
 from sage.all import is_odd, is_even, dumps
 # mwf = flask.Blueprint('mwf', __name__, template_folder="templates",static_folder="static")
-import lmfdb.utils
 from lmfdb.modular_forms.maass_forms.maass_waveforms import MWF, mwf_logger, mwf
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_utils import *
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import MaassFormTable, WebMaassForm
@@ -503,7 +503,7 @@ def evs_table(search, twodarray=False):
         ## Now get the COnrey number.
         ## First the character
         if k == 0:
-             # s+=url_for('render_Character',level,ch)
+             # s+=url_character(type='Dirichlet',modulus=level,number=ch)
             row['ch'] = f.the_character()  # conrey_character_name(N,chi)
         else:
             row['ch'] = "eta"
@@ -604,7 +604,7 @@ def evs_table2(search, twodarray=False):
         ## Now get the COnrey number.
         ## First the character
         if k == 0:
-            url = url_for('render_Character', arg1=N, arg2=chi)
+            url = url_character(type='Dirichlet', modulus=N, number=chi)
             s = "<a href={0}>{1}</a>".format(url, chi)
             row['ch'] = s
         else:

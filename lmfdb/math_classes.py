@@ -1,20 +1,19 @@
 # -*- coding: utf-8 -*-
 
 from base import getDBConnection, app
-from utils import url_for
+from utils import url_for, pol_to_html
 from databases.Dokchitser_databases import Dokchitser_ArtinRepresentation_Collection, Dokchitser_NumberFieldGaloisGroup_Collection
-from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation
+from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField
+from lmfdb.transitive_group import group_display_knowl, group_display_short
 
 
 def process_algebraic_integer(seq, root_of_unity):
     return sum(Integer(seq[i]) * root_of_unity ** i for i in range(len(seq)))
 
-
 def process_polynomial_over_algebraic_integer(seq, field, root_of_unity):
     from sage.rings.all import PolynomialRing
     PP = PolynomialRing(field, "x")
     return PP([process_algebraic_integer(x, root_of_unity) for x in seq])
-
 
 class ArtinRepresentation(object):
     @staticmethod
@@ -98,6 +97,9 @@ class ArtinRepresentation(object):
     def index(self):
         return self._data["DBIndex"]
 
+    def galois_orbit_label(self):
+        return self._data["galorbit"]
+
     def number_field_galois_group(self):
         try:
             return self._nf
@@ -123,6 +125,34 @@ class ArtinRepresentation(object):
 
     def character(self):
         return CharacterValues(self._data["Character"])
+
+    def character_formatted(self):
+        char_vals = self.character()
+        charfield = int(self.character_field())
+        zet = CyclotomicField(charfield).gen()
+        s = [sum([y[j] * zet**j for j in range(len(y))])._latex_() for y in char_vals]
+        return s
+
+    def parity(self):
+        par = (self.dimension()-self.trace_complex_conjugation())/2
+        if (par % 2) == 0: return "Even"
+        return "Odd"
+        #return (-1)**par
+
+    def field_knowl(self):
+        from WebNumberField import nf_display_knowl
+        nfgg = self.number_field_galois_group()
+        if nfgg.url_for():
+            return nf_display_knowl(nfgg.label(), getDBConnection(), nfgg.polredabshtml())
+        else:
+            return nfgg.polredabshtml()
+
+    def group(self):
+        return group_display_short(self._data['Galois_nt'][0],self._data['Galois_nt'][1], getDBConnection())
+
+    def pretty_galois_knowl(self):
+        C = getDBConnection()
+        return group_display_knowl(self._data['Galois_nt'][0],self._data['Galois_nt'][1],C)
 
     def __str__(self):
         try:
@@ -311,8 +341,8 @@ class ArtinRepresentation(object):
             return self.good_factor(p)
 
     def Lfunction(self):
-        from Lfunction import ArtinLfunction
-        return ArtinLfunction(self.dimension(), self.conductor(), self.index())
+        from lfunctions.Lfunction import ArtinLfunction
+        return ArtinLfunction(dimension = self.dimension(), conductor = self.conductor(), tim_index = self.index())
 
     def indicator(self):
         """ The Frobenius-Schur indicator of the Artin L-function. Will be
@@ -407,6 +437,9 @@ class NumberFieldGaloisGroup(object):
 
     def polredabslatex(self):
         return self.polredabs()._latex_()
+
+    def polredabshtml(self):
+        return pol_to_html(self.polredabs())
 
     def label(self):
         if "label" in self._data.keys():

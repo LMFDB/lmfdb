@@ -5,14 +5,14 @@ Contains basic classes for displaying holomorphic modular forms.
 """
 from sage.all import vector, is_odd, DirichletGroup, is_even, Gamma1, dimension_new_cusp_forms, kronecker_character_upside_down, loads, Integer, latex, join
 from lmfdb.modular_forms.backend.mf_classes import MFDisplay, MFDataTable
-emf_dbname = 'modularforms'
+emf_dbname = 'modularforms2'
 from lmfdb.utils import *
 from lmfdb.modular_forms.elliptic_modular_forms import emf_logger, emf
 try:
     from dirichlet_conrey import *
 except:
     emf_logger.critical("Could not import dirichlet_conrey!")
-
+from sage.misc.cachefunc import cached_method
 
 def connect_db():
     import lmfdb.base
@@ -24,37 +24,53 @@ def connect_mf_db():
 
 
 class DimensionTable(object):
+    r"""
+    Class which reads a table of dimensions from a database.
+
+    NOTE: The assumed format of the database entry is:
+
+    {'group':group,'data':data}
+    where group is 'gamma0' or 'gamma1' and data is a dictionary
+    of the form
+    { N : k : i : d,t }
+    where d is the dimension of cusp forms on Gamma0(N) or Gamma1(N)
+    with weight k and character nr. i.
+    """
     def __init__(self, group=0):
         self._group = group
         self._table = dict()
         db = connect_db()
         dims = db['dimensions']
+        emf_logger.debug('dims table ={0}'.format(dims))
         emf_logger.debug('group={0}'.format(group))
         try:
             if group == 0:
                 rec = dims.find_one({'group': 'gamma0'})
                 self.dimension = self.dimension_gamma0
-#                emf_logger.debug('rec={0}'.format(rec))
+                emf_logger.debug('rec={0}'.format(rec['_id']))
             elif group == 1:
                 rec = dims.find_one({'group': 'gamma1'})
                 self.dimension = self.dimension_gamma1
         except:
+            rec = None
             emf_logger.critical('Critical error: No dimension information for group={0}'.format(group))
-        if rec:
+        if rec<>None:
             self._table = loads(rec['data'])
         else:
             self._table = None
-
+        emf_logger.debug('Have information for levels {0}'.format(self._table.keys()))
+    ## We are now asuming that the entries of the table are tuples (d,t)
+    ## where d is the dimension and t is True if the space is in the database (with its decomposition)
+    @cached_method
     def dimension_gamma0(self, N=1, k=4):
         if self._table is None:
             return "n/a"
         if N in self._table.keys():
-            tblN = self._table[N]
-            if k in tblN.keys():
-                dim = tblN[k]['dimension']
+            if k in self._table[N]:
+                dim = self._table[N][k][0][0]
                 return dim
         return "n/a"
-
+    @cached_method
     def dimension_gamma1(self, arg1, k=3):
         if self._table is None:
             return "n/a"
@@ -67,16 +83,15 @@ class DimensionTable(object):
                 character = -1
             else:
                 return -1
-        emf_logger.debug(
-            'Lookup dimension for Gamma1({0}), weight={1}, character={2}'.format(N, k, character))
-        if N in self._table.keys():
+#        emf_logger.debug(
+#            'Lookup dimension for Gamma1({0}), weight={1}, character={2}'.format(N, k, character))
+        if N in self._table:
             # emf_logger.debug('Have information for level {0}'.format(N))
             tblN = self._table[N]
-            if k in tblN.keys() and character in tblN[k].keys():
+            if k in tblN and character in tblN[k]:
                 # emf_logger.debug('Lookup dimension for Gamma1({0}), weight={1},
                 # character={2}'.format(N,k,character))
-                dim = tblN[k][character]['dimension']
-                # emf_logger.debug('Have dimension for Gamma1({0}), weight={1},
+                dim = tblN[k][character][0]
                 # character={1}'.format(N,k,character))
                 return dim
         return "n/a"
@@ -84,20 +99,15 @@ class DimensionTable(object):
     def is_in_db(self, N=1, k=4, character=0):
         if self._table is None:
             return "n/a"
-        # emf_logger.debug("in is_in_db: N={0},k={1},character={2}".format(N,k,character))
+        emf_logger.debug("in is_in_db: N={0},k={1},character={2}".format(N,k,character))
         if N in self._table.keys():
             # emf_logger.debug("have information for level {0}".format(N))
             tblN = self._table[N]
-            if k in tblN.keys():
+            if k in tblN:
                 # emf_logger.debug("have information for weight {0}".format(k))
-                if self._group == 1:
-                    if character in tblN[k].keys():
-                        in_db = tblN[k][character]['in_db']
-                        # emf_logger.debug("information for character {0}: {1}".format(character,in_db))
-                        return in_db
-                else:
-                    in_db = tblN[k]['in_db']
-                    return in_db
+                t = tblN[k].get(character,(0,False))
+                in_db = t[1]
+                return in_db
         return False
 
 
@@ -105,7 +115,13 @@ class ClassicalMFDisplay(MFDisplay):
 
     def __init__(self, dbname='', **kwds):
         MFDisplay.__init__(self, dbname, **kwds)
-
+        import lmfdb.base
+        Conn = lmfdb.base.getDBConnection()
+        #if dbname == '':
+        dbname = 'modularforms2'
+        self._files = Conn[dbname].Newform_factors.files
+        emf_logger.debug("files : {0}".format(self._files))
+        
     def set_table_browsing(self, skip=[0, 0], limit=[(2, 16), (1, 50)], keys=['Weight', 'Level'], character=0, dimension_table=None, dimension_fun=dimension_new_cusp_forms, title='Dimension of newforms', check_db=True):
         r"""
         Table of Holomorphic modular forms spaces.
@@ -147,9 +163,11 @@ class ClassicalMFDisplay(MFDisplay):
         if dimension_table is not None:
             dimension_fun = dimension_table.dimension
             is_data_in_db = dimension_table.is_in_db
-        else:
-            def is_data_in_db(N, k, character):
-                return False
+        #else:
+        #def is_data_in_db(N, k, character):            
+        #    n = self._files.find({'N':int(N),'k':int(k),'chi':int(character)}).count()
+        #    emf_logger.debug("is_Data_in: N,k,character: {0} no. recs: {1} in {2}".format((N,k,character),n,self._files))
+        #    return n>0
         # fixed level
         if level_ll == level_ul:
             N = level_ll
@@ -166,7 +184,7 @@ class ClassicalMFDisplay(MFDisplay):
                 x = xc.sage_character()
                 row = dict()
                 row['head'] = "\(\chi_{" + str(N) + "}(" + str(xc.number()) + ",\cdot) \)"
-                row['url'] = url_for("render_Character", arg1=N, arg2=xc.number())
+                row['url'] = url_character(type='Dirichlet', modulus=N, number=xc.number())
                 row['cells'] = list()
                 for k in range(wt_ll, wt_ul + 1):
                     if character == 0 and is_odd(k):
@@ -221,10 +239,10 @@ class ClassicalMFDisplay(MFDisplay):
                     xc = Gcreps[xi]
                     row = dict()
                     row['head'] = "\(\chi_{" + str(N) + "}(" + str(xc.number()) + ",\cdot) \)"
-                    row['url'] = url_for("render_Character", arg1=N, arg2=xc.number())
+                    row['url'] = url_character(type='Dirichlet', modulus=N, number=xc.number())
                     row['galois_orbit'] = [
                         {'chi': str(xc.number()),
-                         'url': url_for("render_Character", arg1=N, arg2=xc.number())}
+                         'url': url_character(type='Dirichlet', modulus=N, number=xc.number()) }
                         for xc in g]
                     row['cells'] = []
                     for k in range(wt_ll, wt_ul + 1):
@@ -268,10 +286,13 @@ class ClassicalMFDisplay(MFDisplay):
                         else:
                             url = ''
                     else:
-                        url = url_for('emf.render_elliptic_modular_forms', level=N, weight=k)
+                        if (not check_db) or is_data_in_db(N, k, character):                        url = url_for('emf.render_elliptic_modular_forms', level=N, weight=k)
+                        else:
+                            url = ''
                     if not k in self._table['row_heads']:
                         self._table['row_heads'].append(k)
                     row.append({'N': N, 'k': k, 'url': url, 'dim': d})
+                emf_logger.debug("row:{0}".format(row))
                 self._table['rows'].append(row)
 
     def set_table_one_space(self, title='Galois orbits', **info):

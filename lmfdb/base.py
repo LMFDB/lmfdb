@@ -184,6 +184,9 @@ def fmtdatetime(value, format='%Y-%m-%d %H:%M:%S'):
     else:
         return "-"
 
+@app.template_filter("nl2br")
+def nl2br(s):
+    return s.replace('\n', '<br>\n')
 
 @app.template_filter('obfuscate_email')
 def obfuscate_email(email):
@@ -235,10 +238,9 @@ def link_to_current_source():
 
 
 ### for testing.py ###
-import unittest
+import unittest2
 
-
-class LmfdbTest(unittest.TestCase):
+class LmfdbTest(unittest2.TestCase):
     def setUp(self):
         app.config['TESTING'] = True
         self.app = app

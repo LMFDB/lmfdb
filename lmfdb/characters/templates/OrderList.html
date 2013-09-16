@@ -1,0 +1,160 @@
+{% extends 'homepage.html' %}
+
+
+{% block content %}
+
+<style type="text/css">
+table.ntdata th.left { 
+    border-right: 2px solid #9b9; 
+    background: #efe;
+    border-bottom: 0;
+    text-align: center;
+}
+
+table.ntdata th.weight {
+  text-align: center;
+  background: #efe;
+  border-bottom: 2px solid #9b9;
+  border-left: 0;
+  vertical-align: center;
+}
+
+table.ntdata thead tr.space {
+  background: #efe;
+  border-bottom: 0;
+}
+
+table.ntdata thead th.spaceleft {
+  border-right: 2px solid #9b9;
+  vertical-align: top;
+}
+.conductor {
+    vertical-align: top;
+    padding-top:    .5em;
+    padding-bottom: .5em;
+    border-right: 2px solid #8a8;
+}
+.chi {
+    padding: 5px 5px;
+    width: 3em;
+    float: left;
+    display: inline;
+    white-space:nowrap;
+}
+.chi a { display: inline; text-align: center; font-family: serif;}
+#chitable { clear:right; }
+#chitable td div { float: left; padding-left: .5em; padding-right: .5em; }
+#chitable td div>a { text-align: right; }
+#chitable td { vertical-align: middle;  white-space: nowrap; }
+#chitable td.a { background: #DFD; }
+#chitable td.b { background: none; }
+#chitable th { text-align: center; }
+#chitable .imprimitive a:visited { color:blue;}
+#chitable .primitive   a:visited { color:green;}
+#chitable .imprimitive { display:none; }
+#chitable a { display: inline; }
+#legend {
+  margin: 0 20px 10px 0;
+  border-left: 2px solid #006400;
+}
+#legend td { cursor: pointer; }
+
+.primitive, .primitive a {
+  color:green;
+}
+.imprimitive, .imprimitive a {
+  color:blue;
+}
+</style>
+
+{#<script type="text/javascript">
+$(function() {
+  var lastcols = $("#chitable tr th:last-child, #chitable tr td:last-child");
+  lastcols.hide();
+  $("#showlastcols").click(function () {
+    lastcols.show("slow");
+    $(this).hide();
+  });
+});
+</script>
+#}
+
+<script type="text/javascript">
+var prim = true;
+var impr = false;
+$(function() {
+  $("#legend-imp").hover(
+     function() { $(".imprimitive").css("background", "#DDF"); },
+     function() { $(".imprimitive").css("background", "inherit"); }
+     );
+  $("#legend-imp").click(function() {
+    impr = !impr;
+    $("#chitable .imprimitive").toggle(impr);
+    $("#legend-imp input").prop("checked", impr);
+  });
+  $("#legend-prim").click(function() {
+    prim = !prim;
+    $("#chitable .primitive").toggle(prim);
+    $("#legend-prim input").prop("checked", prim);
+  });
+  $("#legend-prim").hover(
+     function() { $(".primitive").css("background", "#90EE90"); },
+     function() { $(".primitive").css("background", "inherit"); }
+   );
+ }
+);
+            
+</script>
+
+<table style="float:right">
+    <thead align="left">
+        <tr><th><font color = "blue"> &bullet; Imprimitive </font></th></tr>
+        <tr><th><font color = "green"> &bullet; Primitive </font></th><tr/>
+    </thead>
+</table>
+<div>
+The table below displays {{ KNOWL('character.dirichlet', title="Dirichlet characters" ) }} of a
+given {{ KNOWL('character.dirichlet.order', title="order") }}.
+</div>
+
+<div>
+  <table class="ntdata" id="chitable">
+    <thead class="space">
+      <tr class="space">
+        <th class="spaceleft">Order</th>
+        <th class="weight" colspan="{{contents|length}}">
+          <span style="display:block;float:left;margin-right:3px;"> Characters</span></th>
+      </tr>
+    </thead>
+
+    {% set row_class = cycler('odd', 'even') %}
+    <tbody>
+      {% for line in contents %}
+      <tr class="{{ row_class.next() }}">
+        <th class="left" > {{ line[0] }}</th>
+        {% for chi in line[1] %}
+        <td>
+          <div>
+            <a href="{{url_character(type='Dirichlet',modulus=chi[0],number=chi[1])}}">
+              {% if chi[2] %}
+              <font color="green">
+                {% else %}
+                <font color="blue">
+                  {% endif %}
+                  {% if chi[3] == 2 %}
+                  {{ chi[4] }} (mod {{chi[0]}})
+                  {% else %}
+                  \( \chi_{ {{chi[0]}} }( {{chi[1]}}, &middot;) \)
+                  {% endif %}
+                </font>
+              </a>
+            </div>
+          </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% endblock %}

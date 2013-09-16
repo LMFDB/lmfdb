@@ -28,7 +28,7 @@ name: Robert Bradshaw
 affil: Google Inc.
 ---
 name: Alina Bucur
-url: http://www.math.ucsd.edu/~abucur/
+url: http://www.math.ucsd.edu/~alina/
 affil: University of California, San Diego
 ---
 name: Henri Cohen
@@ -45,6 +45,7 @@ url: http://www2.warwick.ac.uk/fac/sci/maths/people/staff/john_cremona/
 ---
 name: Paul-Olivier Dehaye
 url: http://user.math.uzh.ch/dehaye/
+affil: Universitat Zurich
 ---
 name: Lassina Dembele
 url: http://homepages.warwick.ac.uk/staff/L.Dembele/
@@ -115,6 +116,10 @@ url: http://www.maths.bris.ac.uk/~madjp/
 ---
 name: Rishikesh
 ---
+name: David Roberts
+affil: University of Minnesota, Morris
+url: http://cda.mrs.umn.edu/~roberts/index.html
+---
 name: Michael Rubinstein
 url: http://www.math.uwaterloo.ca/~mrubinst/
 affil: University of Waterloo
@@ -155,6 +160,7 @@ notes:
 ---
 name: Fredrik Str&ouml;mberg
 affil: University of Durham
+url: https://sites.google.com/site/fredrikstroemberg/
 ---
 name: Holly Swisher
 url: http://www.math.oregonstate.edu/people/view/swisherh
@@ -190,3 +196,6 @@ url: http://www.maths.bris.ac.uk/people/profile/matdw
 name: David Yuen
 affil: Lake Forest College
 url: http://www.lakeforest.edu/academics/faculty/yuen/
+---
+name: Patrick Kühn
+affil: Universität Zürich

@@ -75,15 +75,29 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
         rp = real_part(coeff)
         ip = imag_part(coeff)
 # below we use float(abs()) instead of abs() to avoid a sage bug
-    if (float(abs(rp)) > truncation) & (float(abs(ip)) > truncation):
+    if (float(abs(rp)) > truncation) & (float(abs(ip)) > truncation):  # has a real and an imaginary part
         ans = ""
         if seriescoefftype == "series" or seriescoefftype == "signed":
             ans += "+"
-        ans += "("
-        ans += truncatenumber(rp, precision)
+            ans += "("
+            ans += truncatenumber(rp, precision)
+        elif seriescoefftype == "serieshtml":
+            ans += " + "
+            ans += "("
+            if rp > 0:
+                ans += truncatenumber(rp, precision)
+            else:
+                ans += "&minus;"+truncatenumber(float(abs(rp)), precision)
         if ip > 0:
-            ans += "+"
-        ans += truncatenumber(ip, precision) + " i"
+            ans += " + "
+        if seriescoefftype == "series" or seriescoefftype == "signed":
+            ans += truncatenumber(ip, precision) + " i"
+        if seriescoefftype == "serieshtml":
+            if ip > 0:
+                ans += truncatenumber(ip, precision)
+            else:
+                ans += " &minus; "+truncatenumber(float(abs(ip)), precision)
+            ans += "<em>i</em>"
         return(ans + ")" + seriesvar(index, seriestype))
     elif (float(abs(rp)) < truncation) & (float(abs(ip)) < truncation):
         if seriescoefftype != "literal":
@@ -104,10 +118,10 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
                 return("+1")
             elif seriescoefftype == "factor":
                 return("")
-            elif seriescoefftype == "series":
+            elif seriescoefftype == "series" or seriescoefftype == "serieshtml":
                 return(ans + " + " + seriesvar(index, seriestype))
         else:
-            if seriescoefftype == "series":
+            if seriescoefftype == "series" or seriescoefftype == "serieshtml":
                 return(" + " + ans + truncatenumber(rp, precision) + seriesvar(index, seriestype))
             elif seriescoefftype == "signed":
                 return(ans + "+" + truncatenumber(rp, precision))
@@ -123,11 +137,15 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
                 return("-" + seriesvar(index, seriestype))
             elif seriescoefftype == "series":  # adding space between minus sign and value
                 return(" - " + seriesvar(index, seriestype))
+            elif seriescoefftype == "serieshtml":  # adding space between minus sign and value
+                return(" &minus; " + seriesvar(index, seriestype))
             else:
                 return("-" + seriesvar(index, seriestype))
         else:
             if seriescoefftype == "series":
                 return(ans + " - " + truncatenumber(float(abs(rp)), precision) + seriesvar(index, seriestype))
+            elif seriescoefftype == "serieshtml":
+                return(ans + " &minus; " + truncatenumber(float(abs(rp)), precision) + seriesvar(index, seriestype))
             elif seriescoefftype == "literal" or seriescoefftype == "factor":
                 return(ans + truncatenumber(rp, precision))
 
@@ -142,19 +160,29 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
                 return("i")
             elif seriescoefftype == "series":
                 return(ans + " + i" + seriesvar(index, seriestype))
+            elif seriescoefftype == "serieshtml":
+                return(ans + " + <em>i</em>" + seriesvar(index, seriestype))
+                  # yes, em is not the right tag, but it is styled with CSS
         else:
             if seriescoefftype == "series":
                 return(ans + truncatenumber(ip, precision) + " + i" + seriesvar(index, seriestype))
+            elif seriescoefftype == "serieshtml":
+                return(ans + truncatenumber(ip, precision) + " + <em>i</em>" + seriesvar(index, seriestype))
             elif seriescoefftype == "signed":
                 return(ans + "+" + truncatenumber(ip, precision) + "i")
             elif seriescoefftype == "literal" or seriescoefftype == "factor":
                 return(ans + truncatenumber(ip, precision) + "i")
     elif ip < -1 * truncation:
         if float(abs(ip + 1)) < truncation:
-            return("-i" + seriesvar(index, seriestype))
+            if seriescoefftype == "serieshtml":
+               return(" &minus;  <em>i</em>" + seriesvar(index, seriestype))
+            else:
+               return("-i" + seriesvar(index, seriestype))
         else:
             if seriescoefftype == "series":
                 return(ans + truncatenumber(ip, precision) + "i" + seriesvar(index, seriestype))
+            elif seriescoefftype == "serieshtml":
+                return(ans + truncatenumber(ip, precision) + "<em>i</em>" + seriesvar(index, seriestype))
             elif seriescoefftype == "signed":
                 return(ans + truncatenumber(ip, precision) + " i")
             elif seriescoefftype == "literal" or seriescoefftype == "factor":
@@ -169,6 +197,8 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
 def seriesvar(index, seriestype):
     if seriestype == "dirichlet":
         return(" \\ " + str(index) + "^{-s}")
+    elif seriestype == "dirichlethtml":
+        return(" " + str(index) + "<sup>-s</sup>")
     elif seriestype == "":
         return("")
     elif seriestype == "qexpansion":
@@ -176,8 +206,82 @@ def seriesvar(index, seriestype):
     else:
         return("")
 
+#-------
 
 def lfuncDStex(L, fmt):
+    return(lfuncDShtml(L, fmt))
+# the Dirichlet series on an L-function home page did not wrap when the window was
+# narrow.  So we made a lfuncDShtml funciton which makes the Dirichlet series in
+# HTML.  Then we redirect the tex version to the html version.
+
+
+def lfuncDShtml(L, fmt):
+    """ Returns the HTML for displaying the Dirichlet series of the L-function L.
+        fmt could be any of the values: "analytic", "langlands", "abstract"
+    """
+
+    if len(L.dirichlet_coefficients) == 0:
+        return '\\text{No Dirichlet coefficients supplied.}'
+
+    numperline = 4
+    maxcoeffs = 20
+    if L.selfdual:
+        numperline = 9  # Actually, we want 8 per line, and one extra addition to counter to ensure
+                        # we add only one newline
+        maxcoeffs = 30
+    ans = ""
+    # Changes to account for very sparse series, only count actual nonzero terms to decide when to go to next line
+    # This actually jumps by 2 whenever we add a newline, to ensure we just add one new line
+    nonzeroterms = 1
+    if fmt == "analytic" or fmt == "langlands":
+      #  ans = "\\begin{align}\n"
+#        ans = ans + "<table class='dirichletseries'><tr>"
+#        ans = ans + "<td valign='top'>" + "$" + L.texname + "$" + "</td>"
+#        ans = ans + "<td valign='top'>" + "&nbsp;=&nbsp;" 
+#        # ans = ans + seriescoeff(L.dirichlet_coefficients[0], 0, "literal", "", -6, 5)
+#        ans = ans + "1<sup>&nbsp;</sup>"
+#        ans = ans + "</td><td valign='top'>"
+
+        ans = ans + "<table class='dirichletseries'><tr>"
+        ans = ans + "<td valign='top' padding-top='2px'>" + "$" + L.texname 
+        ans = ans + " = "
+        # ans = ans + seriescoeff(L.dirichlet_coefficients[0], 0, "literal", "", -6, 5)
+        ans = ans + "1^{\mathstrut}" + "$"  + "&nbsp;"
+        ans = ans + "</td><td valign='top'>"
+
+
+        for n in range(1, len(L.dirichlet_coefficients)):
+            tmp = seriescoeff(L.dirichlet_coefficients[n], n + 1, "serieshtml", "dirichlethtml", -6, 5)
+            if tmp != "":
+                nonzeroterms += 1
+            ans = ans + " <span class='term'>" + tmp + "</span> "  
+                # need a space between spans to allow line breaks. css stops a break within a span
+     
+            if nonzeroterms > maxcoeffs:
+                break
+            if(nonzeroterms % numperline == 0):
+              #  ans = ans + "\\cr\n"     
+                ans = ans + "\n"     # don't need  \cr in the html version
+              #  ans = ans + "&"
+                nonzeroterms += 1   # This ensures we don t add more than one newline
+        ans = ans + " + ...\n</td></tr>\n</table>\n"
+
+    elif fmt == "abstract":
+        if L.Ltype() == "riemann":
+            ans = "\[\\begin{equation} \n \\zeta(s) = \\sum_{n=1}^{\\infty} n^{-s} \n \\end{equation} \]\n"
+
+        elif L.Ltype() == "dirichlet":
+            ans = "\[\\begin{equation} \n L(s,\\chi) = \\sum_{n=1}^{\\infty} \\chi(n) n^{-s} \n \\end{equation}\]"
+            ans = ans + "where $\\chi$ is the character modulo " + str(L.charactermodulus)
+            ans = ans + ", number " + str(L.characternumber) + "."
+
+        else:
+            ans = "\[\\begin{equation} \n " + L.texname + \
+                " = \\sum_{n=1}^{\\infty} a(n) n^{-s} \n \\end{equation}\]"
+    return(ans)
+
+
+def lfuncDStex_old(L, fmt):
     """ Returns the LaTex for displaying the Dirichlet series of the L-function L.
         fmt could be any of the values: "analytic", "langlands", "abstract"
     """
@@ -197,20 +301,20 @@ def lfuncDStex(L, fmt):
     nonzeroterms = 1
     if fmt == "analytic" or fmt == "langlands":
         ans = "\\begin{align}\n"
-        ans = ans + L.texname + "=" + seriescoeff(L.dirichlet_coefficients[0], 0, "literal", "", -
+        ans += L.texname + "=" + seriescoeff(L.dirichlet_coefficients[0], 0, "literal", "", -
                                                   6, 5) + "\\mathstrut&"
         for n in range(1, len(L.dirichlet_coefficients)):
             tmp = seriescoeff(L.dirichlet_coefficients[n], n + 1, "series", "dirichlet", -6, 5)
             if tmp != "":
                 nonzeroterms += 1
-            ans = ans + tmp
+            ans += tmp
             if nonzeroterms > maxcoeffs:
                 break
             if(nonzeroterms % numperline == 0):
-                ans = ans + "\\cr\n"
-                ans = ans + "&"
+                ans += "\\cr\n"
+                ans += "&"
                 nonzeroterms += 1   # This ensures we don t add more than one newline
-        ans = ans + " + \\ \\cdots\n\\end{align}"
+        ans += " + \\ \\cdots\n\\end{align}"
 
     elif fmt == "abstract":
         if L.Ltype() == "riemann":
@@ -218,8 +322,8 @@ def lfuncDStex(L, fmt):
 
         elif L.Ltype() == "dirichlet":
             ans = "\\begin{equation} \n L(s,\\chi) = \\sum_{n=1}^{\\infty} \\chi(n) n^{-s} \n \\end{equation}"
-            ans = ans + "where $\\chi$ is the character modulo " + str(L.charactermodulus)
-            ans = ans + ", number " + str(L.characternumber) + "."
+            ans += "where $\\chi$ is the character modulo " + str(L.charactermodulus)
+            ans += ", number " + str(L.characternumber) + "."
 
         else:
             ans = "\\begin{equation} \n " + L.texname + \
@@ -236,44 +340,79 @@ def lfuncEPtex(L, fmt):
 
     ans = ""
     if fmt == "abstract":
-        if L.Ltype() == "SymmetricPower":
-            ans = L.euler
-            return ans
-
         ans = "\\begin{equation} \n " + L.texname + " = "
         if L.Ltype() == "riemann":
-            ans = ans + "\\prod_p (1 - p^{-s})^{-1}"
+            ans += "\\prod_p (1 - p^{-s})^{-1}"
         elif L.Ltype() == "dirichlet":
-            ans = ans + "\\prod_p (1- \\chi(p) p^{-s})^{-1}"
+            ans += "\\prod_p (1- \\chi(p) p^{-s})^{-1}"
         elif L.Ltype() == "ellipticmodularform":
-            ans = ans + "\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1} \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + \chi(p)p^{-2s})^{-1}"
+            ans += "\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1} \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + \chi(p)p^{-2s})^{-1}"
         elif L.Ltype() == "hilbertmodularform":
-            ans = ans + "\\prod_{\mathfrak{p}\\ \\mathrm{bad}} (1- a(\mathfrak{p}) (N\mathfrak{p})^{-s})^{-1} \\prod_{\mathfrak{p}\\ \\mathrm{good}} (1- a(\mathfrak{p}) (N\mathfrak{p})^{-s} + (N\mathfrak{p})^{-2s})^{-1}"
-        elif L.Ltype() == "ellipticcurve":
-            ans = ans + "\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1} \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + p^{-2s})^{-1}"
+            ans += "\\prod_{\mathfrak{p}\\ \\mathrm{bad}} (1- a(\mathfrak{p}) (N\mathfrak{p})^{-s})^{-1} \\prod_{\mathfrak{p}\\ \\mathrm{good}} (1- a(\mathfrak{p}) (N\mathfrak{p})^{-s} + (N\mathfrak{p})^{-2s})^{-1}"
+        elif L.Ltype() == "ellipticcurveQ":
+            ans += "\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1} \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + p^{-2s})^{-1}"
         elif L.Ltype() == "maass":
             if L.group == 'GL2':
-                ans = ans + "\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1} \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + \chi(p)p^{-2s})^{-1}"
+                ans += "\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1} \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + \chi(p)p^{-2s})^{-1}"
             elif L.group == 'GL3':
-                ans = ans + "\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1}  \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + \\overline{a(p)} p^{-2s} - p^{-3s})^{-1}"
+                ans += "\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1}  \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + \\overline{a(p)} p^{-2s} - p^{-3s})^{-1}"
             else:
-                ans = ans + "\\prod_p \\ \\prod_{j=1}^{" + str(L.degree) + \
+                ans += "\\prod_p \\ \\prod_{j=1}^{" + str(L.degree) + \
                     "} (1 - \\alpha_{j,p}\\,  p^{-s})^{-1}"
-
+        elif L.Ltype() == "SymmetricPower":
+            ans += lfuncEpSymPower(L)
         elif L.langlands:
             if L.degree > 1:
-                ans = ans + "\\prod_p \\ \\prod_{j=1}^{" + str(L.degree) + \
+                ans += "\\prod_p \\ \\prod_{j=1}^{" + str(L.degree) + \
                     "} (1 - \\alpha_{j,p}\\,  p^{-s})^{-1}"
             else:
-                ans = ans + "\\prod_p \\  (1 - \\alpha_{p}\\,  p^{-s})^{-1}"
+                ans += "\\prod_p \\  (1 - \\alpha_{p}\\,  p^{-s})^{-1}"
 
         else:
             return("No information is available about the Euler product.")
-        ans = ans + " \n \\end{equation}"
+        ans += " \n \\end{equation}"
         return(ans)
     else:
         return("No information is available about the Euler product.")
 
+
+
+def lfuncEpSymPower(L):
+    """ Helper funtion for lfuncEPtex to do the symmetric power L-functions
+    """
+    ans = ''
+    for p in L.S.bad_primes:
+        poly = L.S.eulerFactor(p)
+        poly_string = " "
+        if len(poly) > 1:
+            poly_string = "(1"
+            if poly[1] != 0:
+                if poly[1] == 1:
+                    poly_string += "+%d^{ -s}" % p
+                elif poly[1] == -1:
+                    poly_string += "-%d^{- s}" % p
+                elif poly[1] < 0:
+                    poly_string += "%d\\ %d^{- s}" % (poly[1], p)
+                else:
+                    poly_string += "+%d\\ %d^{- s}" % (poly[1], p)
+
+            for j in range(2, len(poly)):
+                if poly[j] == 0:
+                    continue
+                if poly[j] == 1:
+                    poly_string += "%d^{-%d s}" % (p, j)
+                elif poly[j] == -1:
+                    poly_string += "-%d^{-%d s}" % (p, j)
+                elif poly[j] < 0:
+                    poly_string += "%d \\ %d^{-%d s}" % (poly[j], p, j)
+                else:
+                    poly_string += "+%d\\ %d^{-%d s}" % (poly[j], p, j)
+            poly_string += ")^{-1}"
+        ans += poly_string
+    ans += '\\prod_{p \\nmid %d }\\prod_{j=0}^{%d} ' % (L.E.conductor(),L.m)
+    ans += '\\left(1- \\frac{\\alpha_p^j\\beta_p^{%d-j}}' % L.m
+    ans += '{p^{s}} \\right)^{-1}'    
+    return ans
 
 #---------
 
@@ -306,7 +445,6 @@ def lfuncFEtex(L, fmt):
             ans += "\quad (\\text{with }\epsilon \\text{ unknown})"
         ans += "\n\\end{align}\n"
     elif fmt == "selberg":
-        print L.nu_fe, "!!!!!!!"
         ans += "(" + str(int(L.degree)) + ","
         ans += str(int(L.level)) + ","
         ans += "("
@@ -314,7 +452,7 @@ def lfuncFEtex(L, fmt):
             for mu in range(len(L.mu_fe) - 1):
                 ans += seriescoeff(L.mu_fe[mu], 0, "literal", "", -6, 5) + ", "
             ans += seriescoeff(L.mu_fe[-1], 0, "literal", "", -6, 5)
-        ans = ans + ":"
+        ans += ":"
         if L.nu_fe != []:
             for nu in range(len(L.nu_fe) - 1):
                 ans += str(L.nu_fe[nu]) + ", "
@@ -367,7 +505,6 @@ def compute_dirichlet_series(p_list, PREC):
         f = factor(i)
         if len(f) > 1:  # not a prime power
             LL[i] = prod([LL[p ** e] for (p, e) in f])
-    print LL[:5]
     return LL[1:]
 
 
@@ -390,7 +527,6 @@ def compute_local_roots_SMF2_scalar_valued(ev_data, k, embedding):
     logger.debug("Start SMF2")
     K = ev_data[0].parent().fraction_field()  # field of definition for the eigenvalues
     ev = ev_data[1]  # dict of eigenvalues
-    print "ev=--------->>>>>>>", ev
     L = ev.keys()
     m = ZZ(max(L)).isqrt() + 1
     ev2 = {}

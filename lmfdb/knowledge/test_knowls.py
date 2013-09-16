@@ -1,12 +1,13 @@
 # -*- coding: utf8 -*-
 # testing users blueprint
-from base import LmfdbTest
+from lmfdb.base import LmfdbTest
 from flask import url_for
 
 
 class KnowlTestCase(LmfdbTest):
 
-    def knowls_need_to_have_title_and_content(self):
+    def test_knowls_need_to_have_title_and_content(self):
+        knowls = self.C.knowledge.knowls
         a = knowls.find({'title': {"$exists": True}}).count()
         b = knowls.find({'content': {"$exists": True}}).count()
         e = knowls.find().count()

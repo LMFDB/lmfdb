@@ -20,11 +20,11 @@
 
 def wrapper(f):
     def g(*args, **kwargs):
-        print f.__name__, " called with"
-        print "     *args: ", args
-        print "     **kwargs", kwargs
+        #print f.__name__, " called with"
+        #print "     *args: ", args
+        #print "     **kwargs", kwargs
         tmp = f(*args, **kwargs)
-        print f.__name__, "      is returning      ", tmp
+        #print f.__name__, "      is returning      ", tmp
         return tmp
     return g
 

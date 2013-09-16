@@ -7,7 +7,7 @@
 
 <div>
 L-functions can be organized by {{ KNOWL('lfunction.degree', title='degree') }}.
-The 
+The
 {{ KNOWL('lfunction.known_degree1', title='degree 1 L-functions') }} are
 given below.
 </div>
@@ -15,17 +15,19 @@ given below.
 <h2>Browse Degree 1 L-functions</h2>
 
 By {{ KNOWL('lfunction.underlying_object', title='underlying object:') }} <a href="{{url_for('l_functions.l_function_riemann_page')}}">Riemann zeta function</a>
-&nbsp; <a href="{{url_for('l_functions.l_function_dirichlet_browse_page')}}">Dirichlet character</a> 
+&nbsp; <a href="{{url_for('l_functions.l_function_dirichlet_browse_page')}}">Dirichlet character</a>
 {#
 <h2>Search Degree 1 L-functions</h2>
 #}
 
 {% endif %}
 
+
+
 {% if degree==2 %}
 
 <div>
-L-functions can be organized by {{ KNOWL('lfunction.degree', title='degree') }}.  Here are 
+L-functions can be organized by {{ KNOWL('lfunction.degree', title='degree') }}.  Here are
 {{ KNOWL('lfunction.known_degree2', title='examples of L-functions of degree 2') }}.
 </div>
 
@@ -33,8 +35,8 @@ L-functions can be organized by {{ KNOWL('lfunction.degree', title='degree') }}.
 
 
 By {{ KNOWL('lfunction.underlying_object', title='underlying object:') }}
-<a href="{{url_for('l_functions.l_function_cuspform_browse_page')}}">Cusp form for $\GL(2)$</a>
-&nbsp; <a href="{{url_for('l_functions.l_function_maass_browse_page')}}">Maass form for $\GL(2)$</a> &nbsp;
+<a href="{{url_for('l_functions.l_function_cuspform_browse_page')}}">Holomorphic cusp form with trivial character</a>
+&nbsp; <a href="{{url_for('l_functions.l_function_maass_browse_page')}}">Maass form of weight $0$ for $\GL(2)$</a> &nbsp;
 <a href="{{url_for('l_functions.l_function_ec_browse_page')}}">Elliptic curve</a>
 
 {#
@@ -46,15 +48,15 @@ By {{ KNOWL('lfunction.underlying_object', title='underlying object:') }}
 {% if degree==3 %}
 
 <div>
-L-functions can be organized by {{ KNOWL('lfunction.degree', title='degree') }}.  Here are 
+L-functions can be organized by {{ KNOWL('lfunction.degree', title='degree') }}.  Here are
 {{ KNOWL('lfunction.known_degree3', title='examples of L-functions of degree 3') }}.
 </div>
 
 <h2>Browse Degree 3 L-functions</h2>
 
 By {{ KNOWL('lfunction.underlying_object', title='underlying object:') }}
-<a href="{{url_for('l_functions.l_function_maass_gln_browse_page', degree = 'degree3')}}">Maass form for $\GL(3)$</a> 
-&nbsp; <a href="{{url_for('l_functions.l_function_ec_sym2_browse_page')}}">Symmetric square of L-function of Elliptic curve</a> 
+<a href="{{url_for('l_functions.l_function_maass_gln_browse_page', degree = 'degree3')}}">Maass form for $\GL(3)$</a>
+&nbsp; <a href="{{url_for('l_functions.l_function_ec_sym2_browse_page')}}">Symmetric square of L-function of Elliptic curve</a>
 
 {#
 <h2>Search Degree 3 L-functions</h2>
@@ -62,7 +64,7 @@ By {{ KNOWL('lfunction.underlying_object', title='underlying object:') }}
 
 
 {% endif %}
- 
+
 {% if degree==4 %}
 
 <div>
@@ -73,9 +75,9 @@ L-functions can be organized by {{ KNOWL('lfunction.degree', title='degree') }}.
 <h2>Browse Degree 4 L-functions</h2>
 
 By {{ KNOWL('lfunction.underlying_object', title='underlying object:')}}
-<a href="{{url_for('l_functions.l_function_maass_gln_browse_page', degree = 'degree4')}}">Maass form for $\GL(4)$</a> 
+<a href="{{url_for('l_functions.l_function_maass_gln_browse_page', degree = 'degree4')}}">Maass form for $\GL(4)$</a>
 &nbsp; <a href="{{url_for('l_functions.l_function_maass_gln_browse_page', degree = 'degree4')}}#GSp4_Q_Maass">Maass form for $\GSp(4)$</a>
-&nbsp; <a href="{{url_for('l_functions.l_function_ec_sym3_browse_page')}}">Symmetric cube of L-function of Elliptic curve</a> 
+&nbsp; <a href="{{url_for('l_functions.l_function_ec_sym3_browse_page')}}">Symmetric cube of L-function of Elliptic curve</a>
 
 {#
 <h2>Search Degree 4 L-functions</h2>
@@ -83,7 +85,7 @@ By {{ KNOWL('lfunction.underlying_object', title='underlying object:')}}
 
 
 {% endif %}
- 
+
 {% endblock %}
 
 
