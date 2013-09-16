@@ -21,10 +21,21 @@ class RootTest(LmfdbTest):
 
     def test_robots(self):
         r = self.tc.get("/static/robots.txt")
-        assert "Disallow: /" not in r.data
+        assert "Disallow: /static" in r.data
 
     def test_favicon(self):
         assert len(self.tc.get("/favicon.ico").data) > 10
+
+    def test_javscript(self):
+        js = self.tc.get("/static/lmfdb.js").data
+        # click handler def for knowls
+        assert '''$("body").on("click", "*[knowl]", function(evt)''' in js
+
+    def test_css(self):
+        css = self.tc.get("/style.css").data
+        #def for knowls:
+        assert '*[knowl]' in css
+        assert 'border-bottom: 1px dotted #AAF;' in css
 
     def test_db(self):
         assert self.C is not None

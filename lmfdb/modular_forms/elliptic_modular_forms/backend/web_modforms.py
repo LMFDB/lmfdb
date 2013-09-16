@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 #*****************************************************************************
 #  Copyright (C) 2010 Fredrik Strömberg <fredrik314@gmail.com>,
@@ -928,6 +929,9 @@ class WebNewForm_class(object):
             '_satake' : {},
             '_dimension' : -1,
             '_is_rational' : None,
+            '_degree' : 0,
+            '_absolute_degree' : 0,
+            '_relative_degree' : 0,
             '_character' : None,
             '_conrey_character' : None,
             '_conrey_character_no' : -1,
@@ -1198,15 +1202,27 @@ class WebNewForm_class(object):
         emf_logger.debug("coef_field={0}".format(self._coefficient_field))
         return self._coefficient_field
     
-    def degree(self):
+    def relative_degree(self):
         r"""
         Degree of the field of coefficient relative to its base ring.
         """
-        if hasattr(self.base_ring(),'relative_degree'):
-            return self.base_ring().relative_degree()
-        else:            
-            return self.base_ring().degree()
+        if self._relative_degree <= 0:
+            self._relative_degree = self.coefficient_field().relative_degree()
+        return self._relative_degree
 
+    def degree(self):
+        return self.absolute_degree()
+    
+    def absolute_degree(self):
+        r"""
+        Degree of the field of coefficient relative to its base ring.
+        """
+        if self._absolute_degree <= 0:
+            self._absolute_degree = self.coefficient_field().absolute_degree()
+        return self._absolute_degree
+        
+
+        
     def prec(self):
         return self._prec
 
@@ -1219,7 +1235,7 @@ class WebNewForm_class(object):
 
     def is_rational(self):
         if self._is_rational==None:
-            if self.base_ring() == QQ:
+            if self.coefficient_field().degree()==1:
                 self._is_rational  = True
             else:
                 self._is_rational = False
@@ -1260,30 +1276,23 @@ class WebNewForm_class(object):
             bitprec = self._bitprec
         if(prec <= 0):
             prec = self._prec
-        if(self.base_ring() == QQ):
-            self._embeddings = self.coefficients(range(prec),insert_in_db=insert_in_db)
-        else:
-            coeffs = list()
-            # E,v = self._f.compact_system_of_eigenvalues(prec)
-            cc = self.coefficients(range(prec),insert_in_db=insert_in_db)
-            for n in range(ZZ(prec)):
-                cn = cc[n]
-                if(self.degree() > 1):
-                    if hasattr(cn, 'complex_embeddings'):
-                        coeffs.append(cn.complex_embeddings(bitprec))
-                    else:  # real coefficients are repeated for consistency
-                        ccn = []
-                        for j in range(self.degree()):
-                            ccn.append(cn)
-                        coeffs.append(ccn)
-                else:
-                    if hasattr(cn,"n"):
-                        coeffs.append([cn.n(bitprec)])
-                    else:
-                        coeffs.append([RealField(bitprec)(cn)])
-            self._embeddings = coeffs
-            if insert_in_db:
-                self.insert_into_db()
+        coeffs = list()
+        cc = self.coefficients(range(prec),insert_in_db=insert_in_db)
+        CF = ComplexField(bitprec)
+        deg = self.absolute_degree()
+        self._embeddings = []
+        for n in range(prec):
+            cn = cc[n]
+            if hasattr(cn, 'complex_embeddings'):
+                cn_emb = cn.complex_embeddings(bitprec)
+                coeffs.append(cn_emb)
+                if len(cn_emb) <> deg:
+                    raise ValueError," {0} does not have degree of field {1}".format(cn,self.coefficient_field())
+            else:  
+                cn_emb = [ CF(cn) for i in range(deg) ]
+            self._embeddings.append(cn_emb)
+        if insert_in_db:
+            self.insert_into_db()
         return self._embeddings
 
 
@@ -1294,6 +1303,37 @@ class WebNewForm_class(object):
         return self.coefficients([n, n + 1])
 
     def coefficients(self, nrange=range(1, 10),insert_in_db=True):
+        r"""
+        Gives the coefficients in a range.
+        We assume that the self._ap containing Hecke eigenvalues
+        are stored.
+
+        """
+        res = []
+        emf_logger.debug("computing coeffs in range {0}".format(nrange))
+        if not isinstance(nrange, list):
+            M = nrange
+            nrange = range(0, M)
+        recompute = False
+        for n in nrange:
+            if n not in self._coefficients:
+                recompute = True
+        if recompute:
+            maxn = max(nrange)
+            E, v = self.as_factor().compact_system_of_eigenvalues(range(1,maxn+1), names='x')
+            c = E * v
+            par = c[0].parent()
+            self._coefficients[0]=par(0)
+            for n in range(len(c)):
+                self._coefficients[n+1]=c[n]
+        for n in nrange:
+            res.append(self._coefficients[n])
+        if insert_in_db:
+            self.insert_into_db()
+        return res
+
+
+    def coefficients_old(self, nrange=range(1, 10),insert_in_db=True):
         r"""
         Gives the coefficients in a range.
         We assume that the self._ap containing Hecke eigenvalues
@@ -1360,6 +1400,8 @@ class WebNewForm_class(object):
             self.insert_into_db()
         return res
 
+
+    
     def q_expansion(self, prec=None):
         r"""
         Return the q-expansion of self to precision prec.
