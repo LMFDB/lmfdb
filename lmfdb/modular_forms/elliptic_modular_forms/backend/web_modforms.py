@@ -68,7 +68,7 @@ def WebNewForm(N, k, chi=0, label='', fi=-1, prec=10, bitprec=53, parent=None, d
     ## First check
     if chi == 0:
         if k % 2 == 1:
-            emf_logger.debug("Only zero function here with N,k,chi,label={0}.".format( (N,k,chi,label))
+            emf_logger.debug("Only zero function here with N,k,chi,label={0}.".format( (N,k,chi,label)))
             return 0
     try: 
         F = WebNewForm_class(N, k, chi, label, fi, prec, bitprec, parent, data, compute, verbose,get_from_db)
