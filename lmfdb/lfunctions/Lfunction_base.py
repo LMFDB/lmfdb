@@ -18,6 +18,7 @@ class Lfunction:
         self.residues = []
         self.langlands = True
         self.primitive = True
+        self.coefficient_type = 0
 
     
     def Ltype(self):

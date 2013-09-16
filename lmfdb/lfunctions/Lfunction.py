@@ -337,12 +337,12 @@ class Lfunction_EMF(Lfunction):
             self.ellipticcurve = False
 
         # Appending list of Dirichlet coefficients
-        if self.MF.is_rational():
+        if self.MF.is_rational:
             # when coeffs are rational, q_expansion_embedding()
             # is the list of Fourier coefficients
-            logger.debug("After isrational")
+            logger.debug(self.MF.base_ring() == QQ)
             self.algebraic_coefficients = self.MF.q_expansion_embeddings(
-                self.numcoeff + 1)[1:self.numcoeff + 1]
+                prec = self.numcoeff + 1)[1:self.numcoeff + 1]
             logger.debug(self.algebraic_coefficients)
                                                    
         else:
@@ -715,7 +715,11 @@ class Lfunction_Dirichlet(Lfunction):
 
             # Determine if the character is real
             # (i.e., if the L-function is selfdual)
-            self.selfdual = (chi.multiplicative_order() <= 2)
+            chivals = chi.values_on_gens()
+            self.selfdual = True
+            for v in chivals:
+                if abs(imag_part(v)) > 0.0001:
+                    self.selfdual = False
 
             if self.selfdual:
                 self.coefficient_type = 1

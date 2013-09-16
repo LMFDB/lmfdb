@@ -470,7 +470,8 @@ def initLfunction(L, args, request):
                                     url_for('.l_function_emf_page', level=L.modform['level'],
                                             weight=2, character=0, label=L.modform['iso'], number=0)))
         info['friends'].append(
-            ('Symmetric square L-function', url_for(".l_function_ec_sym_page", power='2', label=label)))
+            ('Symmetric square L-function', url_for(".l_function_ec_sym_page",
+                                                    power='2', label=label)))
         info['friends'].append(
             ('Symmetric cube L-function', url_for(".l_function_ec_sym_page", power='3', label=label)))
         info['bread'] = get_bread(2, [('Elliptic curve', url_for('.l_function_ec_browse_page')),
@@ -481,22 +482,28 @@ def initLfunction(L, args, request):
         friendlink = friendlink.rpartition('/')[0]   # number for the L-function
         if L.character:
             info['friends'] = [('Modular form ' + str(
-                L.level) + '.' + str(L.weight) + '.' + str(L.character) + str(L.label), friendlink)]
+                L.level) + '.' + str(L.weight) + '.' + str(L.character) +
+                                str(L.label), friendlink)]
         else:
-            info['friends'] = [('Modular form ' + str(L.level) + '.' + str(L.weight) + str(
-                L.label), friendlink)]
+            info['friends'] = [('Modular form ' + str(L.level) + '.' +
+                                str(L.weight) + str(L.label), friendlink)]
         if L.ellipticcurve:
             info['friends'].append(
-                ('EC isogeny class ' + L.ellipticcurve, url_for("by_ec_label", label=L.ellipticcurve)))
+                ('EC isogeny class ' + L.ellipticcurve,
+                 url_for("by_ec_label", label=L.ellipticcurve)))
             info['friends'].append(('L-function ' + str(L.level) + '.' + str(L.label),
                                     url_for('.l_function_ec_page', label=L.ellipticcurve)))
             for i in range(1, L.nr_of_curves_in_class + 1):
                 info['friends'].append(('Elliptic curve ' + L.ellipticcurve + str(i),
                                        url_for("by_ec_label", label=L.ellipticcurve + str(i))))
             info['friends'].append(
-                ('Symmetric square L-function', url_for(".l_function_ec_sym_page", power='2', label=label)))
+                ('Symmetric square L-function',
+                 url_for(".l_function_ec_sym_page", power='2',
+                         label=L.ellipticcurve)))
             info['friends'].append(
-                ('Symmetric cube L-function', url_for(".l_function_ec_sym_page", power='3', label=label)))
+                ('Symmetric cube L-function',
+                 url_for(".l_function_ec_sym_page", power='3',
+                         label=L.ellipticcurve)))
 
     elif L.Ltype() == 'hilbertmodularform':
         friendlink = '/'.join(friendlink.split('/')[:-1])
