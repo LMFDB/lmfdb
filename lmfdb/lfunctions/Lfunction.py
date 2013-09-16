@@ -292,51 +292,44 @@ class Lfunction_EMF(Lfunction):
             self.addToLink += '/0'
 
         modform_translation_limit = 101
+
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
+        self.initStandard()
         self.algebraic = True
-        # logger.debug(str(self.character)+str(self.label)+str(self.number))
+        self.degree = 2
+        self.quasidegree = 1
+
         self.weight = int(self.weight)
         self.motivic_weight = self.weight - 1
         self.level = int(self.level)
         self.character = int(self.character)
-        # if self.character > 0:
-        # raise KeyError, "The L-function of a modular form with non-trivial
-        # character has not been implemented yet."
         self.number = int(self.number)
+        self.numcoeff = 20 + int(5 * math.ceil(  # Testing NB: Need to learn
+            self.weight * sqrt(self.level)))     # how to use more coefficients
 
         # Create the modular form
         try:
-            self.MF = WebNewForm(N = self.level, k = self.weight, chi = self.character, label = self.label, verbose=1)
+            self.MF = WebNewForm(k = self.weight, N = self.level,
+                                 chi = self.character, label = self.label, 
+                                 prec = self.numcoeff, verbose=1)
         except:
             raise KeyError("No data available yet for this modular form, so" +
                            " not able to compute its L-function")
+        
         # Extract the L-function information from the elliptic modular form
         self.automorphyexp = float(self.weight - 1) / float(2)
-        
-        
-        # logger.debug("ALeigen: " + str(self.MF.atkin_lehner_eigenvalues()))
-
         self.mu_fe = []
         self.nu_fe = [Rational(str(self.weight - 1) + '/2')]
-
         self.kappa_fe = [1]
         self.lambda_fe = [self.automorphyexp]
         self.Q_fe = float(sqrt(self.level) / (2 * math.pi))
         # POD: Consider using self.compute_kappa_lambda_Q_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
 
-        self.selfdual = True
-        self.langlands = True
-        self.primitive = True
-        self.degree = 2
-        self.poles = []
-        self.residues = []
-        self.numcoeff = 20 + int(5 * math.ceil(  # Testing NB: Need to learn
-            self.weight * sqrt(self.level)))     # how to use more coefficients
         self.algebraic_coefficients = []
 
         # Get the data for the corresponding elliptic curve if possible
-        if self.level <= modform_translation_limit and self.weight == 2:
+        if self.weight == 2:
             self.ellipticcurve = EC_from_modform(self.level, self.label)
             self.nr_of_curves_in_class = nr_of_EC_in_isogeny_class(
                                                     self.ellipticcurve)
@@ -344,20 +337,16 @@ class Lfunction_EMF(Lfunction):
             self.ellipticcurve = False
 
         # Appending list of Dirichlet coefficients
-        GaloisDegree = self.MF.degree()  # number of forms in the Galois orbit
-        if GaloisDegree == 1:
+        if self.MF.is_rational():
             # when coeffs are rational, q_expansion_embedding()
             # is the list of Fourier coefficients
+            logger.debug("After isrational")
             self.algebraic_coefficients = self.MF.q_expansion_embeddings(
-                self.numcoeff + 1)[1:self.numcoeff + 1] 
+                self.numcoeff + 1)[1:self.numcoeff + 1]
+            logger.debug(self.algebraic_coefficients)
                                                    
-            self.coefficient_type = 2 # In this case, the L-function also comes
-                                      # from an elliptic curve. We tell that to
-                                      # lcalc, even if the coefficients are not
-                                      # produced using the elliptic curve
         else:
-            # logger.debug("Start computing coefficients.")
-
+            logger.debug("Non-rational field")
             embeddings = self.MF.q_expansion_embeddings(self.numcoeff + 1)
             for n in range(1, self.numcoeff + 1):
                 self.algebraic_coefficients.append(embeddings[n][self.number])
@@ -383,9 +372,6 @@ class Lfunction_EMF(Lfunction):
                              * (-1) ** (float(self.weight / 2)))
         # logger.debug("Sign: " + str(self.sign))
 
-        self.coefficient_period = 0
-
-        self.quasidegree = 1
 
         self.checkselfdual()
 

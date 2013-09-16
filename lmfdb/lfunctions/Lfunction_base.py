@@ -17,6 +17,7 @@ class Lfunction:
         self.poles = []
         self.residues = []
         self.langlands = True
+        self.primitive = True
 
     
     def Ltype(self):
