@@ -13,12 +13,13 @@ class Lfunction:
     def initStandard(self):
         """ Sets some properties that are almost always the same
         """
+        self.coefficient_type = 0
         self.coefficient_period = 0
         self.poles = []
         self.residues = []
         self.langlands = True
         self.primitive = True
-        self.coefficient_type = 0
+        self.citation = ''
 
     
     def Ltype(self):
@@ -88,7 +89,9 @@ class Lfunction:
         # Do not pass 0 to either lower bound or step_size
         # Not dependent on time actually
         # Manual tuning required
-        if self.degree > 2 or self.Ltype() == "maass":  # Too slow to be rigorous here  ( or self.Ltype()=="ellipticmodularform")
+        if (self.degree > 2 or self.Ltype() == "maass" or
+            self.Ltype() == 'lcalcurl'):  # Too slow to be rigorous here  ( or self.Ltype()=="ellipticmodularform")
+            logger.debug('Doing fast zeros')
             step_size = 0.02
             if self.selfdual:
                 lower_bound = lower_bound or - step_size / 2

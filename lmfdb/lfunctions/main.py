@@ -478,8 +478,8 @@ def initLfunction(L, args, request):
                                  (label, url_for('.l_function_ec_page', label=label))])
 
     elif L.Ltype() == 'ellipticmodularform':
-        friendlink = friendlink + L.addToLink        # Strips off the embedding
-        friendlink = friendlink.rpartition('/')[0]   # number for the L-function
+        friendlink = friendlink.rpartition('/')[0] # Strips off the embedding
+                                                   # number for the L-function
         if L.character:
             info['friends'] = [('Modular form ' + str(
                 L.level) + '.' + str(L.weight) + '.' + str(L.character) +

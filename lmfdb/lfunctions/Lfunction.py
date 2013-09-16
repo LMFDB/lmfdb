@@ -87,10 +87,10 @@ class Lfunction_lcalc(Lfunction):
         self.nu_fe = []
         self.selfdual = False
         self.langlands = True
-        self.texname = "L(s)"  # default, will be set later in many cases
-        self.texnamecompleteds = "\\Lambda(s)"  # default, often set later
+        self.texname = "L(s)"  
+        self.texnamecompleteds = "\\Lambda(s)"  
         self.texnamecompleted1ms = "\\overline{\\Lambda(1-\\overline{s})}"  
-        self.primitive = True  # should be changed later
+        self.primitive = None  # should be changed later
         self.citation = ''
         self.credit = ''
         self.motivic_weight = NaN
@@ -154,6 +154,7 @@ class Lfunction_EC_Q(Lfunction):
     #     This is bad, it assumes the label is Cremona's and the ground
     #     field is Q
     def __init__(self, **args):
+        constructor_logger(self, args)
         # Check for compulsory arguments
         if not 'label' in args.keys():
             raise Exception("You have to supply a label for an elliptic " +
@@ -271,25 +272,16 @@ class Lfunction_EMF(Lfunction):
     """
 
     def __init__(self, **args):
+        constructor_logger(self, args)
 
         # Check for compulsory arguments
-        if not ('weight' in args.keys() and 'level' in args.keys()):
-            raise KeyError("You have to supply weight and level for an " +
+        if not ('weight' in args.keys() and 'level' in args.keys()
+                and 'character' in args.keys() and 'label' in args.keys()
+                and 'number' in args.keys()):
+            raise KeyError("You have to supply weight, level, character, " +
+                           "label and number for an " +
                            "elliptic modular form L-function")
         logger.debug(str(args))
-        self.addToLink = ''  # This is to take care of the case where
-                             # character and/or label is not given
-        # Initialize default values
-        if not args['character']:
-            args['character'] = 0  # Trivial character is default
-            self.addToLink = '/0'
-        if not args['label']:
-            args['label'] = 'a'      # No label, OK If space is one-dimensional
-            self.addToLink += '/a'
-        if not args['number']:
-            args['number'] = 0     # Default choice of embedding of the
-                                   # coefficients
-            self.addToLink += '/0'
 
         modform_translation_limit = 101
 
@@ -307,7 +299,7 @@ class Lfunction_EMF(Lfunction):
         self.number = int(self.number)
         self.numcoeff = 20 + int(5 * math.ceil(  # Testing NB: Need to learn
             self.weight * sqrt(self.level)))     # how to use more coefficients
-
+        
         # Create the modular form
         try:
             self.MF = WebNewForm(k = self.weight, N = self.level,
@@ -318,7 +310,7 @@ class Lfunction_EMF(Lfunction):
                            " not able to compute its L-function")
         
         # Extract the L-function information from the elliptic modular form
-        self.automorphyexp = float(self.weight - 1) / float(2)
+        self.automorphyexp = (self.weight - 1) / 2.
         self.mu_fe = []
         self.nu_fe = [Rational(str(self.weight - 1) + '/2')]
         self.kappa_fe = [1]
@@ -326,10 +318,9 @@ class Lfunction_EMF(Lfunction):
         self.Q_fe = float(sqrt(self.level) / (2 * math.pi))
         # POD: Consider using self.compute_kappa_lambda_Q_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
 
-        self.algebraic_coefficients = []
 
         # Get the data for the corresponding elliptic curve if possible
-        if self.weight == 2:
+        if self.weight == 2 and self.MF.is_rational():
             self.ellipticcurve = EC_from_modform(self.level, self.label)
             self.nr_of_curves_in_class = nr_of_EC_in_isogeny_class(
                                                     self.ellipticcurve)
@@ -337,30 +328,17 @@ class Lfunction_EMF(Lfunction):
             self.ellipticcurve = False
 
         # Appending list of Dirichlet coefficients
-        if self.MF.is_rational:
-            # when coeffs are rational, q_expansion_embedding()
-            # is the list of Fourier coefficients
-            logger.debug(self.MF.base_ring() == QQ)
-            self.algebraic_coefficients = self.MF.q_expansion_embeddings(
-                prec = self.numcoeff + 1)[1:self.numcoeff + 1]
-            logger.debug(self.algebraic_coefficients)
-                                                   
-        else:
-            logger.debug("Non-rational field")
-            embeddings = self.MF.q_expansion_embeddings(self.numcoeff + 1)
-            for n in range(1, self.numcoeff + 1):
-                self.algebraic_coefficients.append(embeddings[n][self.number])
-                
-            # In this case the coefficients are neither periodic nor coming
-            # from an elliptic curve so
-            self.coefficient_type = 0
+        embeddings = self.MF.q_expansion_embeddings(self.numcoeff + 1)
+        self.algebraic_coefficients = (embeddings[self.number]
+                                       [1:self.numcoeff + 1])
             
         self.dirichlet_coefficients = []
-        for n in range(1, len(self.algebraic_coefficients) + 1):
+        for n in range(0, len(self.algebraic_coefficients)):
             self.dirichlet_coefficients.append(
-                self.algebraic_coefficients[n - 1] /
+                self.algebraic_coefficients[n] /
                 float(n ** self.automorphyexp))
 
+        # Determining the sign
         if self.level == 1:  # For level 1, the sign is always plus
             self.sign = 1
         else:  # for level>1, calculate sign from Fricke involution and weight
@@ -368,11 +346,12 @@ class Lfunction_EMF(Lfunction):
                 self.sign = signOfEmfLfunction(self.level, self.weight,
                                                self.algebraic_coefficients)
             else:
-                self.sign = (self.MF.atkin_lehner_eigenvalues()[self.level]
-                             * (-1) ** (float(self.weight / 2)))
-        # logger.debug("Sign: " + str(self.sign))
-
-
+                logger.debug('Startin atkin lehner')
+                self.AL = self.MF.atkin_lehner_eigenvalues()
+                logger.debug(self.AL)
+                self.sign = (self.AL[self.level]
+                             * (-1) ** (self.weight / 2.))
+        logger.debug("Sign: " + str(self.sign))
         self.checkselfdual()
 
         self.texname = "L(s,f)"
@@ -390,12 +369,9 @@ class Lfunction_EMF(Lfunction):
         self.title = ("$L(s,f)$, where $f$ is a holomorphic cusp form " +
             "with weight %s, level %s, and %s" % (
             self.weight, self.level, characterName))
-
-        self.citation = ''
-        self.credit = ''
+        self.credit = 'Sage'
 
         generateSageLfunction(self)
-        constructor_logger(self, args)
 
     def Ltype(self):
         return "ellipticmodularform"
