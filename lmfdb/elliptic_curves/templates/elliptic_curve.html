@@ -100,11 +100,8 @@ function show_code(system) {
     
     {% if info.torsion!=1 %}    
     <p><h2> {{ KNOWL('ec.q.torsion_generators', title='Torsion generators') }}</h2>
-    <div class='sage nodisplay code', id = "sagecell1">
-                  <script type="text/code">E.torsion_subgroup().gens() </script></div>
-		  
-
-<div class='pari nodisplay code'>? elltors(E) </div>
+    <div class='sage nodisplay code'> sage: E.torsion_subgroup().gens() </div>
+    <div class='pari nodisplay code'>? elltors(E) </div>
     <div class='magma nodisplay code'>&gt; TorsionSubgroup(E);</div>
     <p> {{ info.tor_gens }} </p></p>
     {%endif %}
