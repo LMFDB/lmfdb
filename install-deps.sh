@@ -1,4 +1,4 @@
-#/bin/sh
+#/bin/bash
 ##
 ## Script to check and install dependencies under the sage shell
 ## Author: Fredrik Stromberg (2013)
@@ -61,7 +61,7 @@ then
     echo "SAGE_ROOT is" $SAGE_ROOT
 fi
 # Cut of any beta etc...
-if [[ `expr match "$SAGEVERSION" 'beta'` -ge 1 ]]
+if [[ "$SAGEVERSION" =~ 'beta' ]]
 then
     TMP=${SAGEVERSION:i:-1} 
     k=`expr index "$TMP" .`

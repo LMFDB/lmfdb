@@ -292,7 +292,6 @@ class Lfunction_EMF(Lfunction):
             self.addToLink += '/0'
 
         modform_translation_limit = 101
-
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
         self.algebraic = True
@@ -308,8 +307,7 @@ class Lfunction_EMF(Lfunction):
 
         # Create the modular form
         try:
-            self.MF = WebNewForm(self.weight, self.level, self.character,
-                                 self.label, verbose=1)
+            self.MF = WebNewForm(N = self.level, k = self.weight, chi = self.character, label = self.label, verbose=1)
         except:
             raise KeyError("No data available yet for this modular form, so" +
                            " not able to compute its L-function")
