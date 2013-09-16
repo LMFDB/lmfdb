@@ -639,13 +639,15 @@ class WebChar(WebCharObject):
     @property
     def friends(self):
         f = []
+        cglink = url_character(type=self.type,number_field=self.nflabel,modulus=self.modlabel)
+        f.append( ("Character group", cglink) )
         if self.nflabel:
-           cglink = '/Character/%s/%s/%s'%(self.type,self.nflabel,self.modlabel)
-           f.append( ("Character group", cglink) )
-           f.append( ('Number Field', '/NumberField/' + self.nflabel) )
-        else:
-           cglink = '/Character/%s/%s'%(self.type,self.modlabel)
-           f.append( ("Character group", cglink) )
+            f.append( ('Number Field', '/NumberField/' + self.nflabel) )
+        if self.type == 'Dirichlet':
+            f.append( ('L function', '/L'+ url_character(type=self.type,
+                                    number_field=self.nflabel,
+                                    modulus=self.modlabel,
+                                    number=self.numlabel) ) )
         f.append( ("Value Field", '/NumberField/' + self.vflabel) )
         return f
 
