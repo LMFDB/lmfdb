@@ -186,10 +186,7 @@ class Lfunction_EC_Q(Lfunction):
         self.mu_fe = []
         self.nu_fe = [Rational('1/2')]
         
-        self.Q_fe = float(sqrt(self.level) / (2 * math.pi))
-        self.kappa_fe = [1]
-        self.lambda_fe = [0.5]
-        # POD: Consider using self.compute_kappa_lambda_Q_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
+	self.compute_kappa_lambda_Q_from_mu_nu()
         
         self.numcoeff = round(self.Q_fe * 220 + 10)
         # logger.debug("numcoeff: {0}".format(self.numcoeff))
@@ -307,11 +304,8 @@ class Lfunction_EMF(Lfunction):
         # Extract the L-function information from the elliptic modular form
         self.automorphyexp = (self.weight - 1) / 2.
         self.mu_fe = []
-        self.nu_fe = [Rational(str(self.weight - 1) + '/2')]
-        self.kappa_fe = [1]
-        self.lambda_fe = [self.automorphyexp]
-        self.Q_fe = float(sqrt(self.level) / (2 * math.pi))
-        # POD: Consider using self.compute_kappa_lambda_Q_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
+        self.nu_fe = [Rational(self.weight - 1)/2]
+	self.compute_kappa_lambda_Q_from_mu_nu()
 
 
         # Get the data for the corresponding elliptic curve if possible
@@ -578,11 +572,9 @@ class RiemannZeta(Lfunction):
         self.mu_fe = [0]
         self.nu_fe = []
         
-        self.kappa_fe = [0.5]
-        self.lambda_fe = [0]
-        self.Q_fe = float(1 / sqrt(math.pi))
-        # POD: Consider using self.compute_kappa_lambda_Q_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
-        
+	import pdb
+	pdb.set_trace()
+	self.compute_kappa_lambda_Q_from_mu_nu()
         
         self.sign = 1
         self.langlands = True
@@ -900,18 +892,11 @@ class DedekindZeta(Lfunction):   # added by DK
         self.quasidegree = sum(self.signature)
         self.level = wnf.disc().abs()  # self.NF.discriminant().abs()
         self.degreeofN = self.NF.degree()
-
-        self.Q_fe = float(sqrt(self.level) / 
-                        (2 ** (self.signature[1]) * (math.pi) **
-                        (float(self.degreeofN) / 2.0)))
-        self.kappa_fe = self.signature[0] * [0.5] + self.signature[1] * [1]
-        self.lambda_fe = self.quasidegree * [0]
-        # POD: Consider using self.compute_kappa_lambda_Q_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
         
-        self.mu_fe = self.signature[0] * [0]  # not in use?
-        self.nu_fe = self.signature[1] * [0]  # not in use?
+        self.mu_fe = self.signature[0] * [0]  
+        self.nu_fe = self.signature[1] * [0] 
+        self.compute_kappa_lambda_Q_from_mu_nu()
         
-        # POD: consider using compute_kappa_lambda_Q_from_mu_nu, this will help standardize interfaces, reuse code, and in general improve testing
         self.langlands = True
         # self.degree = self.signature[0] + 2 * self.signature[1] # N = r1 +2r2
         self.degree = self.degreeofN
@@ -1061,11 +1046,7 @@ class HypergeometricMotiveLfunction(Lfunction):
         self.selfdual = True 
         self.coefficient_period = 0
 
-        #self.compute_kappa_lambda_Q_from_mu_nu()            # Somehow this doesn t work, and I don t know why!
-        # That s why I am reassigning just below
-        self.Q_fe = float(sqrt(Integer(self.conductor))/2.**len(self.nu_fe)/pi**(len(self.mu_fe)/2.+len(self.nu_fe)))
-        self.kappa_fe = [.5 for m in self.mu_fe] + [1. for n in self.nu_fe] 
-        self.lambda_fe = [m/2. for m in self.mu_fe] + [n for n in self.nu_fe]
+        self.compute_kappa_lambda_Q_from_mu_nu()            # Somehow this doesn t work, and I don t know why!
                 
         self.dirichlet_coefficients = [Reals()(Integer(x))/Reals()(n+1)**(self.motivic_weight/2.) for n, x in enumerate(self.arith_coeffs)]
 
@@ -1323,11 +1304,7 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         self.nu_fe = [float(1) / float(2), self.automorphyexp]  # the shift of
                                                                 # the Gamma_C to print
         self.automorphyexp = float(self.weight) - float(1.5)
-        self.kappa_fe = [1, 1]  
-        self.lambda_fe = [float(1) / float(2), self.automorphyexp]  
-        self.Q_fe = float(1 / (4 * math.pi ** 2))  # the Q in the FE as in lcalc
-                # POD: Consider using self.compute_kappa_lambda_Q_from_mu_nu or self.lcalc_parameters_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
-
+	self.compute_kappa_lambda_Q_from_mu_nu()
 
         self.sign = (-1) ** float(self.weight)
 
