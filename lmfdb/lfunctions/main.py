@@ -977,7 +977,9 @@ def processMaassNavigation(numrecs=35):
         j = 0
         s += '<tr>\n'
         s += '<td><bold>N={0}:</bold></td>\n'.format(level)
-        finds = DB.get_Maass_forms({'Level': int(level), 'Character': int(0)})
+        finds = DB.get_Maass_forms({'Level': int(level),
+                                    'char': 1,
+                                    'Newform' : None}, verbose=1)
         for f in finds:
             nc = f.get('Numc', 0)
             if nc <= 0:
