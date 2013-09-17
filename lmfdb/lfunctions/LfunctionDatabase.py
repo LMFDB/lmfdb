@@ -10,7 +10,8 @@ from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db \
 
 def getLmaassByDatabaseId(dbid):
     collList = [('Lfunction','LemurellMaassHighDegree'),
-                ('Lfunction','FarmerMaass')]
+                ('Lfunction','FarmerMaass'),
+                ('Lfunction','LemurellTest')]
     dbName = ''
     dbColl = ''
     dbEntry = None
@@ -24,7 +25,6 @@ def getLmaassByDatabaseId(dbid):
         logger.debug(dbid)
         
         dbEntry = collection.find_one({'_id': dbid})
-#                                       bson.objectid.ObjectId(dbid)})
         if dbEntry is None:
             i += 1
         else:
