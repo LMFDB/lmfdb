@@ -1,7 +1,7 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<p>
+<div>
 This is the browse of the L-functions associated to
 {{ KNOWL("mf.elliptic",title="holomorphic cusp forms")}} \(f\) on Hecke congruence groups
 $\Gamma_0(N)$ with trivial character.
@@ -23,17 +23,17 @@ where  $N$ is the
 {{ KNOWL("mf.elliptic.weight",title="weight")}}
 and \(a_n n^{\frac{k-1}{2} } \)
 are algebraic integers. Since these L-functions are associated to a trivial character, the {{ KNOWL('lfunction.sign', title='sign')}} \(\varepsilon\) is equal to either \(+1\) or \(-1\).
-</p>
-
-<p>
+</div>
+<br>
+<div>
 In the plot below, L-functions are organized by the ordered pair \((N,k)\).
 For a given \((N,k)\), the color indicates the {{ KNOWL('lfunction.sign', title='sign')}}
 of the functional equation, and the horizontal
 grouping indicates the {{ KNOWL('nf.degree', title='degree')}} of the field containing the arithmetically normalized coefficients.
 
 See the {{ KNOWL('lfunction.degree2holo.key', title='legend') }} for more details.
-</p>
 </div>
+
 
 
 {{contents[0]|safe}}

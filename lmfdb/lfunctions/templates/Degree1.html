@@ -1,25 +1,27 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<p>
-L-functions of degree 1 are associated to {{ KNOWL('character.dirichlet', title='Dirichlet characters') }} and they are called
+<div>
+L-functions of {{ KNOWL('lfunction.known_degree1', title='degree 1') }} are associated to {{ KNOWL('character.dirichlet', title='Dirichlet characters') }} and they are called
 {{ KNOWL('lfunction.dirichlet', title='Dirichlet L-functions') }}.
 These L-functions have a {{ KNOWL('lfunction.functional_equation', title='functional equation')}} of the form
 \[
-\Lambda(s,\chi) = q^{s/2} \Gamma_{\R} (s+a) L(s,\chi) = \varepsilon_\chi \Lambda(1-s,\overline{\chi}),
+\Lambda(s,\chi) = q^{s/2} \Gamma_{\R} (s+a) L(s,\chi) = \varepsilon \Lambda(1-s,\overline{\chi}),
 \]
-where $q$ is the conductor of $\chi$ and $a$ is 1 (or 0) when $\chi$ is odd (or even).
+where $q$ is the conductor of $\chi$, $\varepsilon$ is the {{ KNOWL('lfunction.sign', title='sign')}} and $a$ is 1 (or 0) when $\chi$ is odd (or even).
 In particular, the only Dirichlet L-function with conductor 1
 is the <a href="{{url_for('l_functions.l_function_riemann_page')}}">Riemann zeta function</a>.
-</p>
-<p>
+Degree 1 L-functions can also be obtained from Artin representations of dimension 1.
+</div>
+<br>
+<div>
 The plot below shows the {{ KNOWL('character.dirichlet.primitive', title='primitive characters') }}
 arranged by the {{ KNOWL('character.dirichlet.conductor', title='conductor') }} and the
 {{ KNOWL('character.dirichlet.order', title='order') }} of the character,
 with color indicating the {{ KNOWL('character.dirichlet.parity', title='parity')}} (blue is even) of the
 Dirichlet character.  Clicking on an entry will
 take you to the associated Dirichlet L-function.
-</p>
+</div>
 
 <form>
   <p>
