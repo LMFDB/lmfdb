@@ -64,11 +64,14 @@ class Lfunction:
         """ Computes some kappa, lambda and Q from mu, nu, which might not be optimal for computational purposes
         """
         try:
-            self.Q_fe = float(sqrt(Integer(self.conductor))/2.**len(self.nu_fe)/pi**(len(self.mu_fe)/2.+len(self.nu_fe)))
+	    from sage.functions.other import sqrt 
+            from sage.rings.all import Integer
+            from math import pi
+            self.Q_fe = float(sqrt(Integer(self.level))/2.**len(self.nu_fe)/pi**(len(self.mu_fe)/2.+len(self.nu_fe)))
             self.kappa_fe = [.5 for m in self.mu_fe] + [1. for n in self.nu_fe] 
             self.lambda_fe = [m/2. for m in self.mu_fe] + [n for n in self.nu_fe]
-        except:
-            raise Exception("Expecting a mu and a nu to be defined")
+        except Exception as e:
+            raise Exception("Expecting a mu and a nu to be defined"+str(e))
     
     def compute_lcalc_parameters_from_mu_nu(self):
         """ Computes some kappa, lambda and Q from mu, nu, which might not be optimal for computational purposes
@@ -132,7 +135,4 @@ class Lfunction:
     def critical_value(self):
         pass
 
-    def conductor(self, advocate):
-        # Advocate could be IK, CFKRS or B
-        pass
   

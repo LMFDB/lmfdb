@@ -571,24 +571,20 @@ class RiemannZeta(Lfunction):
         self.quasidegree = 1
         self.mu_fe = [0]
         self.nu_fe = []
-        
-	import pdb
-	pdb.set_trace()
-	self.compute_kappa_lambda_Q_from_mu_nu()
-        
         self.sign = 1
         self.langlands = True
         self.degree = 1
         self.level = 1
-        self.dirichlet_coefficients = []
-        for n in range(self.numcoeff):
-            self.dirichlet_coefficients.append(1)
+        self.dirichlet_coefficients = [1 for n in range(self.numcoeff)]
+        
         self.poles = [0, 1]
         self.residues = [-1, 1]
         self.poles_L = [1]  # poles of L(s), used by createLcalcfile_ver2
         self.residues_L = [1]  # residues of L(s) createLcalcfile_ver2
         self.coefficient_period = 0
         self.selfdual = True
+        
+	self.compute_kappa_lambda_Q_from_mu_nu()
         self.texname = "\\zeta(s)"
         self.texnamecompleteds = "\\xi(s)"
         self.texnamecompleted1ms = "\\xi(1-s)"
