@@ -136,8 +136,6 @@ class Lfunction_lcalc(Lfunction):
     def source_object(self):
         return self.filecontents
 
-
-
 #############################################################################
 # The subclasses
 #############################################################################
@@ -747,7 +745,6 @@ class Lfunction_Maass(Lfunction):
                         dbColl  (the name of the collection for the Maass form)
 
     """
-
     def __init__(self, **args):
         constructor_logger(self, args)
 
@@ -1089,7 +1086,6 @@ class HypergeometricMotiveLfunction(Lfunction):
         
         self.sageLfunction = lc.Lfunction_D("LfunctionHypergeometric", 0, self.dirichlet_coefficient, period, self.Q_fe, self.sign, self.kappa_fe, self.lambda_fe, self.poles, self.residues)
         
-
     def Ltype(self):
         return "hgmQ"
         
