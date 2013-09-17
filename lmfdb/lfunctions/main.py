@@ -762,7 +762,7 @@ def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, ar
     '''
     L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
 
-    website_zeros = L.compute_quick_zeros(time_allowed = 10)          # This depends on mathematical information, all below is formatting
+    website_zeros = L.compute_web_zeros(time_allowed = 10)          # This depends on mathematical information, all below is formatting
     # More semantic this way
     # Allow 10 seconds
 
