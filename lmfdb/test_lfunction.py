@@ -134,6 +134,10 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/degree4/EllipticCurve/SymmetricCube/')
         assert 'Elliptic' in L.data
 
+    def test_Lhgm(self):
+        L = self.tc.get('/L/Motives/Hypergeometric/Q/A2.2.2.2_B1.1.1.1_t1.2/')			# To be moved eventually
+        assert 'Graph' in L.data
+
 
     #------------------------------------------------------
     # Testing plots and zeros of L-functions
@@ -167,6 +171,10 @@ class LfunctionTest(LmfdbTest):
     def test_LecPlot(self):
         L = self.tc.get('/L/Plot/EllipticCurve/Q/56.a/')
         assert 'OK' in str(L)
+
+    def test_LHGMZeros(self):
+        L = self.tc.get('/L/Zeros/Motives/Hypergeometric/Q/A2.2.2.2_B1.1.1.1_t1.2/')
+        assert '4.307350233' in L.data
 
 
     #------------------------------------------------------
