@@ -3,93 +3,312 @@
 {% block content %}
 
 <p>
-The database currently contains all extension fields of 
-{{KNOWL('lf.qp',title='$\Q_p$')}} of 
-{{KNOWL('lf.degree',title='degree')}} $n$ up to isomorphism for primes $p<150$
-and $1\leq n \leq 11$.
+A cusp-index of degree $d$ is a weakly increasing 
+list of positive integers $[u_1,\dots,u_k]$ with $\sum_{i=1}^k \phi(u_i) = d$. 
+Hypergeometric families $H(A,B)$ are indexed by pairs 
+$(A,B)$ of cusp-indices of a common degree having no common entries.  
 <p>
 
-      <h2>Browse {{KNOWL('lf', title="local number fields")}}</h2>
+Hypergeometric motives $H(A,B,t)$ in a family $H(A,B)$ are 
+indexed by rational numbers
+$t \not \in \{0,1\}$.  For example $H([3],[1,1],t)$ is the
+motive $H^1(E_{1728t},{\Bbb Q})$ where
+$E_{j}$ is an elliptic curve with $j$-invariant $1728j$.  
+Also special hypergeometric motives $H(A,B,1)$ are defined, having degree
+1 or 2 less than the other $H(A,B,t)$.  
+<p>
+
+The database contains all hypergeometric families of degree $\leq 10$. 
+For each family, it contains the special hypergeometric motive
+associated to $t=1$.  For the smaller degree families, it 
+also contains motives of small conductor coming from 
+specializing at other $t$. 
+<p>
+
+      <h2>Browse {{KNOWL('hgm.familes', title="Hypergeometric Families")}}</h2>
 
 <p>
-The table gives for each $p$ and $n$ shown, the number of degree $n$ extension
-fields
-of $\Q_p$ up to isomorphism.
+The table gives for each degree $n$ and weight $w$ shown, 
+the number of corresponding hypergeometric families.  
+<p>
+<table border=1 cellpadding=5 class='right_align_table'>
+<tr>
+<th>$w$ \ $d$</th>
+<th>1</th> <th>3</th> <th>5</th> <th>7</th> <th>9</th>
+<th>2</th> <th>4</th> <th>6</th> <th>8</th> <th>10</th>
+</tr>
+<tr>
+<th>0</th>
+<td>1</td>
+<td>2</td>
+<td>4</td>
+<td>11</td>
+<td>7</td>
+<td>2</td>
+<td>7</td>
+<td>13</td>
+<td>31</td>
+<td>15</td>
+</tr>
+<tr>
+<th>2</th>
+<td></td>
+<td>6</td>
+<td>48</td>
+<td>217</td>
+<td>924</td>
+<td></td>
+<td>15</td>
+<td>122</td>
+<td>632</td>
+<td>2284</td>
+</tr>
+<tr>
+<th>4</th>
+<td></td>
+<td></td>
+<td>25</td>
+<td>209</td>
+<td>1445</td>
+<td></td>
+<td></td>
+<td>42</td>
+<td>447</td>
+<td>2892</td>
+</tr>
+<tr>
+<th>6</th>
+<td></td>
+<td></td>
+<td></td>
+<td>73</td>
+<td>634</td>
+<td></td>
+<td></td>
+<td></td>
+<td>102</td>
+<td>968</td>
+</tr>
+<tr>
+<th>8</th>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>184</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>213</td>
+</tr>
+<tr>
+<th>1</th>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>6</td>
+<td>43</td>
+<td>146</td>
+<td>540</td>
+<td>1102</td>
+</tr>
+<tr>
+<th>3</th>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>25</td>
+<td>245</td>
+<td>1653</td>
+<td>7207</td>
+</tr>
+<tr>
+<th>5</th>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>73</td>
+<td>727</td>
+<td>5138</td>
+</tr>
+<tr>
+<th>7</th>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>184</td>
+<td>1706</td>
+</tr>
+<tr>
+<th>9</th>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>409</td>
+</tr>
+</table>
 <p>
 
-        <h2>Search</h2>
-      <form name="search" method = "get" action="{{search}}">
-        <table class="">
-          <tr>
-            <td>
-          {{KNOWL('lf.degree',title='Degree')}}:
-            </td><td><input type="text" name="n" value=""
-      placeholder="6"></td>
-      <td>
-	<span class="formexample">e.g. 6, or a range like 3..5</span>
-      </td>
-          </tr>
-          <tr>
-            <td>
-              Prime $p$ for base field  {{KNOWL('lf.qp',title='$\Q_p$')}}:
-            </td><td><input type="text" name="p" value="" placeholder="3"></td>
-      <td>
-	<span class="formexample">e.g. 3, or a range like 3..7</span>
-      </td>
-          </tr>
-          <tr>
-            <td>
-              {{KNOWL('lf.discriminant_exponent',title='Discriminant
-              exponent')}} $c$ :
-            </td><td><input type="text" name="c" value="" placeholder="8"></td>
-      <td>
-	<span class="formexample">e.g. 8, or a range like 2..6</span>
-      </td>
-          </tr>
-          <tr>
-            <td>
-              {{KNOWL('lf.ramification_index',title='Ramification
-              index')}} $e$ :
-            </td><td><input type="text" name="e" value="" placeholder="3"></td>
-      <td>
-	<span class="formexample">e.g. 3, or a range like 2..6</span>
-      </td>
-          </tr>
-          <tr>
-            <td>
-              {{KNOWL('nf.galois_group',title='Galois
-              group')}} $G$ :
-            </td><td><input type="text" name="gal" value="" placeholder="5T3"></td>
-      <td>
-	<span class="formexample">e.g. 5T3, C4, or a list of 
-{{KNOWL('nf.galois_group.name',title='labels')}}
-</span>
-      </td>
-          </tr>
-          <tr>
-          <td>
-              Maximum number of fields to display:
-            </td><td><input type="text" name="count" value="{{info.count}}" size="10"></td>
+<h3> Search for families of HGMs</h3>
+<form>
+<p>
+Enter values into one or more boxes to restrict the list of families returned.
+</p>
+<table border=0 cellpadding=5>
+<tr>
+<td align=left><a title="Degree of a family [hgf.degree]" knowl="hgf.degree" kwargs="">degree</a> 
+  <td><input type='text' name='degree' size=10 example='4'> 
+<span class="formexample"> e.g. 4</span></td>
+<td>
+<td align=left><a title="Weight [hgf.weight]" knowl="hnf.weight" kwargs="">
+weight</a> <td><input type='text' name='weight' size=10 example='3'> 
+<span class="formexample"> e.g. 3 </span></td>
+</tr>
+<tr>
+<td align=left><a title="Hodge vector [mot.hodgevector]" kwargs="">Hodge vector</a> 
+  <td><input type='text' name='hodge' size=10 example='[1,1,1,1]'> 
+<span class="formexample"> e.g. [1,1,1,1]</span></td>
+<td>
+</tr>
+</tr>
+<tr>
+<td align=left><a title="A" kwargs="">A</a> 
+  <td><input type='text' name='A' size=10 example='[3,2,2]'> 
+<span class="formexample"> e.g. [3,2,2]</span></td>
+<td>
+<td align=left><a title="B" kwargs="">
+B</a> <td><input type='text' name='B' size=10 example='[6,4]'> 
+<span class="formexample"> e.g. [6,4] </span></td>
+</tr>
+<tr>
+<td align=left><a title="A2" kwargs="">A<sub>2</sub></a>
+  <td><input type='text' name='A2' size=10 example='[2,2,1,1]'>
+<span class="formexample"> e.g. [2,2,1,1]</span></td>
+<td>
+<td align=left><a title="B2" kwargs="">
+B<sub>2</sub></a> 
+<td><input type='text' name='B2' size=10 example='[4,2,2]'>
+<span class="formexample"> e.g. [4,2,2] </span></td>
+</tr>
+<tr>
+<td align=left><a title="A3" kwargs="">A<sub>3</sub></a>
+  <td><input type='text' name='A3' size=10 example='[3]'>
+<span class="formexample"> e.g. [3]</span></td>
+<td>
+<td align=left><a title="B3" kwargs="">
+B<sub>3</sub></a> 
+<td><input type='text' name='B3' size=10 example='[3]'>
+<span class="formexample"> e.g. [3] </span></td>
+</tr>
+<tr>
+<td align=left><a title="A5" kwargs="">A<sub>5</sub></a>
+  <td><input type='text' name='A5' size=10 example='[]'>
+<span class="formexample"> e.g. []</span></td>
+<td>
+<td align=left><a title="B5" kwargs="">
+B<sub>5</sub></a> 
+<td><input type='text' name='B5' size=10 example='[]'>
+<span class="formexample"> e.g. [] </span></td>
+</tr>
+<tr>
+<td align=left><a title="A7" kwargs="">A<sub>7</sub></a>
+  <td><input type='text' name='A7' size=10 example='[]'>
+<span class="formexample"> e.g. []</span></td>
+<td>
+<td align=left><a title="B7" kwargs="">
+B<sub>7</sub></a>
+<td><input type='text' name='B7' size=10 example='[]'>
+<span class="formexample"> e.g. [] </span></td>
+</tr>
+</table>
+
+<h3> Search for individual HGMs</h3>
+Enter values into the boxes above and the boxes below to obtain the
+list of corresponding hypergeometric motives.  
+<table>
+<tr>
+<td align=left><a title="Conductor [conductor]" knowl="conductor" kwargs="">conductor</a>
+  <td><input type='text' name='conductor' size=10 example='2^13 3^7'>
+<span class="formexample"> e.g. 2^13 3^7 (or a range like [1..1000000])
+</span></td>
+</tr>
+<tr>
+<td align=left><a title="Specialization point [hgm.specpoint]" 
+knowl="specialization point" kwargs="">specialization point $t$</a>
+  <td><input type='text' name='t' size=10 example='3/2'>
+<span class="formexample"> e.g. 3/2 
+(1 has an associated degree drop and is always in the database) 
+</span></td>
+</tr>
+<tr>
+<td align=left><a title="Sign of Functional Equation [sign]" 
+knowl="Sign" kwargs="">sign of functional equation $\epsilon$</a>
+  <td><input type='text' name='sign' size=10 example='-1'>
+<span class="formexample"> 
+(1 or -1, with -1 occurring only in the symplectic case) 
+</span></td>
+</tr>
+<tr>
+<td align=left><a title="Generic [generic]" 
+knowl="Sign" kwargs="">Generic</a>
+  <td><input type='text' name='generic' size=10 example='yes'>
+<span class="formexample"> 
+(yes or no, with no rare, expecially in symplectic cases) 
+</span></td>
+</tr>
+<tr>
+<td align=left><a title="Irreducible? [irreducible]" 
+knowl="Sign" kwa rgs="">Irreducible?</a>
+  <td><input type='text' name='irreducible' size=10 example='yes'>
+<span class="formexample"> 
+(yes or no, with no very rare) 
+</span></td>
+</tr>
+<tr> <td> Maximum number of motives to display: </td>
+     <td><input type="text" name="count" value="{{info.count}}" size="10"></td>
           </tr>
   </table>
         <button type="submit" name="Submit" value="Search">Search</button>
       </form>
 
-    <h2>Find a specific local number field</h2>
+
+    <h2>Find a specific HGM</h2>
 
     <form name="search" method = "get" action="{{search}}">
         <table class="">
 	  <tr>
 	    <td>
-	  Search by {{KNOWL('lf.field.label',title="label")}}
+	  Search by {{KNOWL('hgm.field.label',title="label")}}
           <input type="text" name="jump_to" value=""
-        placeholder="2.4.6.7">
+        placeholder="A2.2_B1.1_t1.2">
 	    </td>
 	    <td>
           <button type="submit" value="Find">Find</button>
 	      </td>
 	      <td>
-		<span class="formexample">a field label, e.g. 2.4.6.7</span>
+		<span class="formexample">an HGM label encoding the triple 
+$(A, B, t)$ </span>
 	      </td>
 	    </tr>
 	  </table>

@@ -1,108 +1,75 @@
-{% extends 'homepage.html' %}
+{% extends 'Charpage.html' %}
 
-{% block content %}
-{#   <div id="header">
-        <div class="logo">
-            <a href="/Character/Dirichlet">{{ title }} home</a>
-        </div>
-        <div class="banner">
-            <span>The logo of the portal could go here... </span>
-        </div>
-    </div>
-#}
-
-<script>
-var cur_system = null;
-function show_code(system) {
-    $('.sage').hide();
-    $('.pari').hide();
-    $('.magma').hide();
-    if (cur_system == null) {
-      $('.'+system).show();
-      cur_system = system;
-    } else {
-      $('.'+system).hide();
-      cur_system = null;
-    }
-}
-</script>
-
-<style>
-.output {
-    padding:20px 0 20px 100px;
-    text-align: left;
-    font-size: 115%;
-}
-table.navi td {
-    padding: 0;
-}
-table.props tr td:first-child {
-    width: 5em;
-}
-#content p, #content form, #content div {
-    margin-left: 20px;
-}
-
-</style>
-        <div align="right">
-            <font size="3">Show commands for:</font>
-            <a onclick="show_code('sage'); return false" href='#'>sage</a>
-        </div>
+{% block description %}
  
-        <div class='sage nodisplay code'>sage: chi = DirichletGroup_conrey({{modulus}})[{{number}}]<br>sage: chi_sage = DirichletGroup_conrey.standard_dirichlet_group({{modulus}})[{{number}}]</br></div>
+        {{ addcode(codeinit,'div') }}
 
+        {% if symbol %}
         {# Kronecker symbol #}
-
-        {% if order|int == 2 %}
         <h2>
-            {{ KNOWL('character.dirichlet.kronecker_symbol') }} representation
+            {{ KNOWL('character.dirichlet.kronecker_symbol', title = 'Kronecker symbol') }} representation
         </h2>
         <div class = 'sage nodisplay code'>sage: chi_sage.kronecker({{conductor}})</div>
         <p>
-        {{ kronsymbol }} (mod {{modulus}})
+        {{ symbol }} (mod {{modulus}})
         </p>
         {% endif %}
 
-        {# Induced character #}
-
-        {% if primitive=="False" %}
+        {# Inducing character #}
+        {% if isprimitive=="No" and indlabel %}
             <h2>
                 Inducing {{ KNOWL('character.dirichlet.primitive', title="primitive character") }}
             </h2>
             <div class = 'sage nodisplay code'>sage: chi.primitive_character()</div>
             <p>
-            <a href="{{ url_for('render_webpage_label', 
-                modulus = inducedchar_modulus, 
-                number  = inducedchar_number)}}">
-                {{inducedchar_tex}}
+            <a href="{{ url_character(
+                type = type,
+                number_field = nflabel,
+                modulus = condlabel, 
+                number  = indlabel)}}">
+                {{inducing}}
             </a>
             </p>
         {% endif %}
 
-        {# Values #}
-        
-        <h2>
-            {{ KNOWL('character.dirichlet.values', title="Values") }}
-        </h2>
-        <div class = 'sage nodisplay code'>sage: chi.values()</div>
-        <p>
-        </p>
-        <div align="left"> 
-            {#{{ logvals }}#}
-            [{{ logvals|join(", " ) }}]
-        </div>
-        
         {# Values on generators #}
-
         <h2>
             {{ KNOWL('character.dirichlet.values_on_gens', title="Values on generators") }}
         </h2>
         <div class = 'sage nodisplay code'>sage: chi_sage.values_on_gens()</div>
+        {{ addcode(codeval,'div') }}
         <p>
-            \( {{ unitgens }} \) &rarr; \( {{ genvalstex }} \)
+            {{ generators }} &rarr; {{ genvalues }}
         </p>
 
+
+        {# Values #}
         
+        {% if values %}
+        <h2>
+           {% if coltruncate %}
+            {{ KNOWL('character.dirichlet.values', title="First values") }}
+           {% else %}
+            {{ KNOWL('character.dirichlet.values', title="Values") }}
+           {% endif %}
+        </h2>
+        <table class="values">
+          <thead>
+           <tr>{% for a in groupelts %}<td>{{a}}</td>{%endfor%}</tr>
+           </thead>
+           <tr>{% for v in values %}<td>{{v}}</td>{%endfor%}</tr>
+         </table>
+        {% endif %}
+
+        {% set value_default = 2 %}
+        <form> value  at 
+            <input id="calc-value-input" size=10 placeholder={{value_default}}>
+            <button id="calc-value-go"> Compute </button>
+            <span class="formexample"> e.g. {{value_default}} </span>
+        </form>
+        <div class="output"><span id="calc-value-output"></span></div>
+        
+                
         {# Basic properties #}
 
         <h2> {{ KNOWL('character.dirichlet.basic_properties', title="Basic properties") }} </h2>
@@ -110,13 +77,14 @@ table.props tr td:first-child {
         <table class="props">
             <tr>
                 <td>
+                  {{ addcode(codecond,'span') }}
                     <span class='sage nodisplay code'>sage: chi.conductor()</span>
                 </td>
             </tr>
             <tr>
                 <td>Conductor</td>
                 <td>=</td>
-                <td>\({{ conductor }}\)</td>
+                <td>{{ conductor }}</td>
             </tr>
             <tr>
                 <td>
@@ -126,26 +94,25 @@ table.props tr td:first-child {
             <tr>
                 <td> Order </td>
                 <td>=</td>
-                <td>\({{ order }} \)</td>
+                <td>{{ order }}</td>
             </tr>
             <tr>
                 <td>
                     <span class='sage nodisplay code'>sage: chi.is_even() or chi.is_odd()</span>
                 </td>
             </tr>
+
+            {% if parity %}
             <tr>
                 <td> Parity </td>
                 <td>=</td>
                 <td> {{ parity }}</td>
             </tr>
+            {% endif %}
             <tr>
                 <td> Real </td>
                 <td>=</td>
-                    {% if sign=="True" %}
-                        <td> Yes</td>
-                    {% else %}
-                        <td> No </td>
-                    {% endif %}
+                <td> {{ isreal }} </td>
             </tr>
             <tr>
                 <td>
@@ -155,28 +122,22 @@ table.props tr td:first-child {
             <tr>
                 <td> Primitive </td>
                 <td>=</td>
-                    {% if primitive=="True" %}
-                        <td>Yes</td> 
-                    {% else %}
-                        <td> No</td>  
-                    {% endif %}
+                <td> {{ isprimitive }} </td>
             </tr>
         </table>
 
          {# Galois Orbits #}
-
         <h2>
             {{ KNOWL('character.dirichlet.galois_orbit', title="Galois orbit") }}
         </h2>
         <div class = 'sage nodisplay code'>sage: chi_sage.galois_orbit()</div>
 
         <p>
-        {% for m,n,label in galoisorbit %}
-        <a href="{{ url_for('render_webpage_label', modulus = m, number  = n)}}">
+        {% for mod,num,label,prim in galoisorbit %}
+        <a href="{{ url_character(type=type, number_field=nflabel, modulus=mod, number=num)}}">
                 {{label}}
             </a>
          {% endfor %}
-
         </p>
 
         {# Fields #}
@@ -186,24 +147,26 @@ table.props tr td:first-child {
         <table>
             <tr>
                 <td> Field of values </td>
-                <td>{{ valuefield }}</td>
+                <td> <a href="/NumberField/{{vflabel}}">{{ valuefield }}</a></td>
             </tr>
-            </tr>
-        {% if nf_pol is defined %}
+            {% if kflabel %}
             <tr>
-                <td>{{ kername }}</td>
-                <td>Field <a href="/NumberField/{{nf_label}}">{{ nf_label }}</a></td>
+                <td>{{ kerfield }}</td>
+                <td> Field <a href="/NumberField/{{kflabel}}">{{ kflabel }}</a>
+                     defined by {{ kfpol }}
+                </td>
             </tr>
-            <tr><td></td>
-                <td>{{ nf_pol }} </td>
-            </tr>
-        {% endif %}
+            {% endif %}
         </table>
+
+        {# sums #}
+        
+        {% if type=='Dirichlet' %}
 
         {# Gauss sum #}
 
         <h2>
-            {{ KNOWL('character.dirichlet.gauss_sum') }}
+            {{ KNOWL('character.dirichlet.gauss_sum', title='Gauss sum') }}
         </h2>
         <div class = 'sage nodisplay code'>sage: chi.gauss_sum()</div>
         {% set gauss_default = 2 %}
@@ -218,7 +181,7 @@ table.props tr td:first-child {
         {# Jacobi sum #}
 
         <h2>
-            {{ KNOWL('character.dirichlet.jacobi_sum') }}
+            {{ KNOWL('character.dirichlet.jacobi_sum', title='Jacobi sum') }}
         </h2>
         <div class = 'sage nodisplay code'>sage: chi_sage.jacobi_sum()</div>
         {% set jacobi_default = 1 %}
@@ -233,7 +196,7 @@ table.props tr td:first-child {
         {# Kloosterman sum #}
 
         <h2>
-            {{ KNOWL('character.dirichlet.kloosterman_sum') }}
+            {{ KNOWL('character.dirichlet.kloosterman_sum', title='Kloosterman sum') }}
         </h2>
         <div class = 'sage nodisplay code'>sage: chi_sage.kloosterman_sum(,)</div>
         {% set kloosterman_default_a = 1 %}
@@ -248,12 +211,23 @@ table.props tr td:first-child {
             </table>
         </form>
         <div class="output"><span id="calc-kloosterman-output"></span></div>
+        {% endif %}
 
 <script type="text/javascript">
+function value_handler(evt) {
+    evt.preventDefault();
+    var val = $("#calc-value-input").val();
+    $("#calc-value-output").load("{{ url_character(type=type, calc='value', number_field = nflabel, modulus = modlabel, number=numlabel) }}" + "?val=" + val, 
+     function() {
+        {# tell mathjx to render the output #}
+        MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-value-output"]);
+     });
+}
+        {% if type=='Dirichlet' %}
 function gauss_handler(evt) {
     evt.preventDefault();
     var val = $("#calc-gauss-input").val();
-    $("#calc-gauss-output").load("{{ url_for('dc_calc_gauss', modulus = modulus, number=number) }}" + "?val=" + val, 
+    $("#calc-gauss-output").load("{{ url_character(type=type, calc='gauss', modulus = modulus, number=number) }}" + "?val=" + val, 
      function() {
         {# tell mathjx to render the output #}
         MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-gauss-output"]);
@@ -262,7 +236,7 @@ function gauss_handler(evt) {
 function jacobi_handler(evt) {
    evt.preventDefault();
    var val = $("#calc-jacobi-input").val();
-   $("#calc-jacobi-output").load("{{ url_for('dc_calc_jacobi', modulus=modulus,number=number) }}" + "?val=" + val,
+   $("#calc-jacobi-output").load("{{ url_character(type=type, calc='jacobi', modulus=modulus,number=number) }}" + "?val=" + val,
      function() {
        {# tell mathjx to render the output #}
        MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-jacobi-output"]);
@@ -272,17 +246,25 @@ function jacobi_handler(evt) {
 function kloosterman_handler(evt) {
    evt.preventDefault();
    var val = $("#calc-kloosterman-input").val();
-   $("#calc-kloosterman-output").load("{{ url_for('dc_calc_kloosterman', modulus=modulus,number=number) }}" + "?val=" + val,
+   $("#calc-kloosterman-output").load("{{ url_character(type=type, calc='kloosterman', modulus=modulus,number=number) }}" + "?val=" + val,
      function() {
        {# tell mathjx to render the output #}
        MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-kloosterman-output"]);
      });
 }
+        {% endif %}
 
 $(function() {
+    $("#calc-value-go").click(function(e) {value_handler(e)});
+        {% if type=='Dirichlet' %}
     $("#calc-gauss-go").click(function(e) {gauss_handler(e)});
     $("#calc-jacobi-go").click(function(e) {jacobi_handler(e)});
     $("#calc-kloosterman-go").click(function(e) {gauss_handler(e)});
+        {% endif %}
+    $("#calc-value-input").keypress(function(e) {
+        if (e.which == 13) value_handler(e);
+        });
+        {% if type=='Dirichlet' %}
     $("#calc-gauss-input").keypress(function(e) {
         if (e.which == 13) gauss_handler(e);
         });
@@ -340,17 +322,11 @@ $(function() {
         kloosterman_slider_handler(event, ui);
       }
      });
+        {% endif %}
 
 });
 </script>
 
-{#  Maybe include the polynomial or other information about the field?
-  {% if order < 16 %}
-    <h2>Associated number field</h2>
-      <div>
-        {{ nfpol }}
-      </div>
-  {% endif %}
-#}
+       
 {% endblock %}
 

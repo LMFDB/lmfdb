@@ -30,6 +30,7 @@ function show_code(system) {
   <div class='pari nodisplay code'>pari: K = bnfinit({{ nf.poly() }}, 1)</div>
   <div class='magma nodisplay code'>&gt; K&lt;a&gt; := NumberField(PolynomialRing(Rationals())!{{info.coefficients}});</div>
 </p>
+
         {% set KNOWL_ID = "nf.%s"|format(info['label_raw']) %}
         <h2>{{ KNOWL_INC(KNOWL_ID+'.top', title='') }}</h2>
 
@@ -214,25 +215,25 @@ pari:
 	<th>{{ KNOWL('artin.dimension', title='Dimension') }}</th>
 	<th>{{ KNOWL('artin.conductor', title='Conductor') }}</th>
 	<th>Defining polynomial of {{ KNOWL('artin.number_field', title='Artin field') }} </th>
-	<th>{{ KNOWL('artin.gg_quotient', title='Galois image $G$') }}</th>
-	<th>Size of $G$</th>
-	<th>{{ KNOWL('artin.root_number', title='Root number') }}</th>
-	<th>{{ KNOWL('artin.frobenius_schur_indicator', title='Frobenius-Schur indicator') }}</th>
-	<th>Trace of complex conjugation</th>
+	<th>{{ KNOWL('artin.gg_quotient', title='$G$') }}</th>
+	{# <th>{{ KNOWL('artin.root_number', title='Root number') }}</th> #}
+	<th>{{ KNOWL('artin.frobenius_schur_indicator', title='Ind') }}</th>
+        <th>{{ KNOWL('artin.trace_of_complex_conj', title='$\chi(c)$')}}</th>
 	</tr></thead>
 	<tbody>
         {% for artin in info["tim_number_field"].artin_representations()%}
           <tr> <td align="right">
               {{info.mydecomp[loop.index-1]}}<a href = "{{artin.url_for()}}">{{loop.index}}</a></td><td align="center">${{artin.dimension()}}$</td>
-	  <td align="center">${{artin.conductor_equation()}}$</td>
+{#	  <td align="center">${{artin.conductor_equation()}}$</td> #}
+	  <td align="center">${{artin.factored_conductor_latex()}}$</td>
 	  {% if artin.number_field_galois_group().url_for() %}
 	     <td align="center"><a href="{{artin.number_field_galois_group().url_for()}}">${{artin.number_field_galois_group().polredabslatex()}}$</a></td>
 	  {% else %}
 	      <td align="center">${{artin.number_field_galois_group().polredabslatex()}}$</td>
 	  {% endif %}
 	  <td align="center">{{artin.number_field_galois_group().G_name()}}</td>
-	  <td align="center">${{artin.number_field_galois_group().size()}}$</td>
-	  <td align="center">${{artin.processed_root_number()}}$</td>
+	{#  <td align="center">${{artin.number_field_galois_group().size()}}$</td> #}
+	  {# <td align="center">${{artin.processed_root_number()}}$</td> #}
 	  <td align="center"> ${{artin.indicator()}}$</td>
 	  <td align="center">${{artin.trace_complex_conjugation()}}$</td>
 	  </tr>
@@ -241,6 +242,7 @@ pari:
 	</table>
 	</center>
         </div>
+        <br />
         <div>
         Data is given for all irreducible 
         representations of the Galois group.  Those marked with 

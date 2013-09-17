@@ -50,8 +50,8 @@ function loadzeros(save_history) {
                 zero_table.deleteRow(-1);
             }
             var lines = request.responseText.split('\n');
-            start = Number(lines[0].split(' ')[0]);
-            document.getElementById("startbox").value = start;
+            end = Number(lines[0].split(' ')[0]);
+            document.getElementById("endbox").value = end;
             var entry = ''
             for(var n = 0; n < lines.length; n++) {
                 if(lines[n] == "") {
@@ -125,8 +125,8 @@ function loadzeros(save_history) {
                     cell.appendChild(a);
                 }
             }
-            end = Number(entry[0])
-            document.getElementById("endbox").value = end;
+            start = Number(entry[0])
+            document.getElementById("startbox").value = start;
         }
     };
     startstr = "";
@@ -149,12 +149,12 @@ function loadzeros(save_history) {
     request.open('GET', listzeros_url + argstring, true);
     request.send(null);
 };
-function next() {
+function prev() {
     start = end;
     end = ''
     loadzeros(true);
 };
-function prev() {
+function next() {
     end = start
     start = ''
     loadzeros(true);

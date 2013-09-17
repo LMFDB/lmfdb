@@ -1,5 +1,5 @@
-artin_location = ("limbo", "artrep20130430")
-galois_group_location = ("limbo", "nfgal20130430")
+artin_location = ("limbo", "artrep20130914")
+galois_group_location = ("limbo", "nfgal20130914")
 
 from type_generation import String, Array, Dict, Int, Anything, Float
 
@@ -52,12 +52,16 @@ Dokchitser_ArtinRepresentation = Dict({
     "HardPrimes": FiniteSequence(TooLargeInt),
     "BadPrimes": FiniteSequence(TooLargeInt),
     "LocalFactors": FiniteSequence(Anything),
-    "DBIndex": IndexAt1,        # Starting at 1    #
+    "DBIndex": IndexAt1,        # Starting at 1 
     "NFGal": FiniteSequence(Anything),
     "Character": Anything,
     "Sign": Int,
     "CharacterField": Int,
-    "Conductor_plus": LenPair                             # Added after Tim, by inject_conductor_len.py
+    "Conductor_plus": LenPair,                             # Added after Tim, by inject_conductor_len.py
+    "Galois_nt": Array(Int,Int),                           # Added after Tim by jj
+    # Next is whether or not to show this in a search page because of redundancies
+    "Show": Int,                                           # Added after Tim by jj
+    "galorbit": Anything,                                  # Added after Tim by jj
 })
 
 

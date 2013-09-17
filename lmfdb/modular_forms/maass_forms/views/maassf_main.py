@@ -1,7 +1,9 @@
-from base import app
+import lmfdb.base
+from lmfdb.base import app
+
 from flask import render_template, url_for
 # from modular_forms.maass_forms import maassf,MAASSF,maassf_logger
-from modular_forms.maass_forms import maassf, MAASSF, maassf_logger
+from lmfdb.modular_forms.maass_forms import maassf, MAASSF, maassf_logger
 
 
 @maassf.context_processor

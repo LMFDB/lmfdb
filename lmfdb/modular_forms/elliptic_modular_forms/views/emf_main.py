@@ -104,6 +104,7 @@ def render_elliptic_modular_forms(level=0, weight=0, character=None, label='', *
         return redirect(url_for("emf.render_elliptic_modular_forms", **args), code=301)
         # return render_elliptic_modular_forms(**args)
     if level > 0 and weight > 0 and character > -1 and label != '':
+        emf_logger.debug("info=%s" % info)
         return render_one_elliptic_modular_form(**info)
     if level > 0 and weight > 0 and character > -1:
         return render_elliptic_modular_form_space(**info)
@@ -121,7 +122,7 @@ def render_elliptic_modular_forms(level=0, weight=0, character=None, label='', *
 
 @emf.route("/<test>/")
 def redirect_false_route(test=None):
-    args = extract_data_from_jump_to(s)
+    args = extract_data_from_jump_to(test)
     redirect(url_for("render_elliptic_modular_forms", **args), code=301)
     # return render_elliptic_modular_form_navigation_wp(**info)
 
@@ -307,7 +308,7 @@ def download_web_modform(info):
             else:
                 X = Newforms(level, weight, names='a')
         else:  # format=='web_new':
-            X = WebNewForm(weight, level, character, label)
+            X = WebNewForm(level, weight, character, label)
     s = X.dumps()
     name = "{0}-{1}-{2}-{3}-web_newform.sobj".format(weight, level, character, label)
     emf_logger.debug("name={0}".format(name))
@@ -671,7 +672,7 @@ def print_list_of_coefficients(info):
     if label == '' or level == -1 or weight == -1:
         return "Need to specify a modular form completely!!"
 
-    WMFS = WebModFormSpace(weight, level, character)
+    WMFS = WebModFormSpace(N = level, k = weight, chi = character)
     if not WMFS:
         return ""
     if('number' in info):

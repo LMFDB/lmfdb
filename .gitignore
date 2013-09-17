@@ -23,3 +23,5 @@ local.sh
 
 lmfdb/cover
 lmfdb/.coverage
+.coverage
+.DS_Store

@@ -1,0 +1,32 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<p><h2> {{ KNOWL('hgm.defining_parameters', title='Defining Parameters') }}</h2>
+
+<p>
+  <p>
+    <table>
+      <tr><td> $A$: </td> <td> ${{ info.A }}$ </td></tr>
+      <tr><td> $B$: </td> <td> ${{ info.B }}$ </td></tr>
+    </table>
+</p>
+
+<p><h2> {{ KNOWL('hgm.invariants', title='Invariants') }}</h2>
+  <p>
+    <table>
+      <tr><td>Hodge vector:<td>&nbsp;&nbsp;<td>${{info.hodge}}$</tr>
+      <tr><td>Determinant:<td>&nbsp;&nbsp;<td>{{info.rf}}</tr>
+      <tr><td>Mod $2$ Galois Image <td> ${{info.gal2}}$ </tr>
+      <tr><td>Mod $3$ Galois Image <td> ${{info.gal3}}$ </tr>
+      <tr><td>Mod $5$ Galois Image <td> ${{info.gal5}}$ </tr>
+      <tr><td>Mod $7$ Galois Image <td> ${{info.gal7}}$ </tr>
+    </table>
+  </p>
+<p><h2> {{ KNOWL('mot.hypgm.circle', title='Roots on the circle') }}</h2>
+  <center>
+      <img src="{{ info.plotcircle}}" width = "25%">
+      <!-- <img src="{{ info.plotlinear}}" >   --> 
+      <!-- <img src="{{ info.plotconstant}}" >  -->
+</center>
+{% endblock %}

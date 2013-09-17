@@ -13,4 +13,4 @@ def body_class():
 
 import main
 
-app.register_blueprint(hypergm_page, url_prefix="/HypergeometricMotive")
+app.register_blueprint(hypergm_page, url_prefix="/Motive/Hypergeometric/Q")

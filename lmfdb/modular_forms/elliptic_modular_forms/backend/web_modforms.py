@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 #*****************************************************************************
 #  Copyright (C) 2010 Fredrik Strömberg <fredrik314@gmail.com>,
@@ -25,10 +26,11 @@ TODO:
 Fix complex characters. I.e. embedddings and galois conjugates in a consistent way.
 
 """
-from sage.all import ZZ, QQ, DirichletGroup, CuspForms, Gamma0, ModularSymbols, Newforms, trivial_character, is_squarefree, divisors, RealField, ComplexField, prime_range, I, join, gcd, Cusp, Infinity, ceil, CyclotomicField, exp, pi, primes_first_n, euler_phi, RR, prime_divisors, Integer, matrix
-from sage.all import Parent, SageObject, dimension_new_cusp_forms, vector, dimension_modular_forms, dimension_cusp_forms, EisensteinForms, Matrix, floor, denominator, latex, is_prime, prime_pi, next_prime, primes_first_n, previous_prime, factor, loads,save
+from sage.all import ZZ, QQ, DirichletGroup, CuspForms, Gamma0, ModularSymbols, Newforms, trivial_character, is_squarefree, divisors, RealField, ComplexField, prime_range, I, join, gcd, Cusp, Infinity, ceil, CyclotomicField, exp, pi, primes_first_n, euler_phi, RR, prime_divisors, Integer, matrix,NumberField,PowerSeriesRing
+from sage.rings.power_series_poly import PowerSeries_poly
+from sage.all import Parent, SageObject, dimension_new_cusp_forms, vector, dimension_modular_forms, dimension_cusp_forms, EisensteinForms, Matrix, floor, denominator, latex, is_prime, prime_pi, next_prime, previous_prime,primes_first_n, previous_prime, factor, loads,save,dumps,deepcopy
 import re
-
+import yaml
 from flask import url_for
 
 ## DB modules
@@ -41,16 +43,57 @@ import lmfdb.base
 from lmfdb.modular_forms.elliptic_modular_forms import emf_logger
 from plot_dom import draw_fundamental_domain
 from emf_core import html_table, len_as_printed
+
+from sage.rings.number_field.number_field_base import NumberField as NumberField_class
+
 try:
     from dirichlet_conrey import *
 except:
     emf_logger.critical("Could not import dirichlet_conrey!")
 
-db_name = 'modularforms'
-from lmfdb.website import dbport
+db_name = 'modularforms2'
+def connect_to_modularforms_db():
+    try:
+        C = lmfdb.base.getDBConnection()
+    except Exception as e:
+        emf_logger.critical("Could not connect to Database! C={0}. Error: {1}".format(C,e.message))
+    if db_name not in C.database_names():
+        emf_logger.critical("Database {0} does not exist at connection {1}".format(db_name,C))
+    return C[db_name]
 
 
-class WebModFormSpace(Parent):
+def WebNewForm(N, k, chi=0, label='', fi=-1, prec=10, bitprec=53, parent=None, data={}, compute=False, verbose=-1,get_from_db=True):
+    r"""
+    Constructor for WebNewForms with added 'nicer' error message.
+    """
+    ## First check
+    if chi == 0:
+        if k % 2 == 1:
+            emf_logger.debug("Only zero function here with N,k,chi,label={0}.".format( (N,k,chi,label)))
+            return 0
+    try: 
+        F = WebNewForm_class(N, k, chi, label, fi, prec, bitprec, parent, data, compute, verbose,get_from_db)
+    except ArithmeticError as e:#Exception as e:
+        emf_logger.critical("Could not construct WebNewForm with N,k,chi,label={0}. Error: {1}".format( (N,k,chi,label),e))
+        raise IndexError,"We are very sorry. The sought function could not be found in the database."
+    return F
+
+
+def WebModFormSpace(N=1, k=2, chi=0, cuspidal=1, prec=10, bitprec=53, data={}, verbose=0,**kwds):
+    r"""
+    COnstructor for WebNewForms with added 'nicer' error message.
+    """
+    if cuspidal <> 1:
+        raise IndexError,"We are very sorry. There are only cuspidal spaces currently in the database!"
+    try: 
+        F = WebModFormSpace_class(N, k, chi, cuspidal, prec, bitprec, data, verbose,**kwds)
+    except Exception as e:
+        emf_logger.critical("Could not construct WebModFormSpace with N,k,chi = {0}. Error: {1}".format( (N,k,chi),e.message))
+        raise IndexError,"We are very sorry. The sought function could not be found in the database."
+    return F
+
+
+class WebModFormSpace_class(object):
     r"""
     Space of cuspforms to be presented on the web.
         G  = NS.
@@ -61,7 +104,7 @@ class WebModFormSpace(Parent):
 
 
     """
-    def __init__(self, k, N=1, chi=0, cuspidal=1, prec=10, bitprec=53, data=None, compute=None, use_db=True, verbose=0):
+    def __init__(self, N=1, k=2, chi=0, cuspidal=1, prec=10, bitprec=53, data={}, verbose=0):
         r"""
         Init self.
 
@@ -71,135 +114,189 @@ class WebModFormSpace(Parent):
         - 'chi' -- character
         - 'cuspidal' -- 1 if space of cuspforms, 0 if all modforms
         """
-        self._cuspidal = cuspidal
-        self._k = ZZ(k)
-        self._N = ZZ(N)
-        if chi == 'trivial':
-            self._chi = ZZ(0)
-        else:
-            self._chi = ZZ(chi)
-        self._prec = ZZ(prec)
-        self.prec = ZZ(prec)
-        self._ap = list()
-        self._verbose = verbose
-        self._bitprec = bitprec
-        self._dimension_newspace = None
-        self._dimension_cusp_forms = None
-        self._dimension_modular_forms = None
-        self._dimension_new_cusp_forms = None
-        self._dimension_new_modular_symbols = None
-        self._galois_decomposition = []
-        self._newspace = None
-        self._character = None
-        self._got_ap_from_db = False
-        # check what is in the database
-        ## dO A SIMPLE TEST TO SEE IF WE EXIST OR NOT.
-        if N < 0 or int(chi) > int(euler_phi(N)) or chi < 0:
-            print "1:", N < 0
-            print "2:", int(chi) > int(euler_phi(N))
-            print "3:", chi < 0
+        emf_logger.debug("WebModFormSpace with k,N,chi={0}".format( (k,N,chi)))
+        d = {
+            '_N': int(N),
+            '_k': int(k),
+            '_chi':int(chi),
+            '_cuspidal' : int(cuspidal),
+            '_prec' : int(prec),
+            '_ap' : [], '_group' : None,
+            '_character' : None,
+            '_conrey_character' : None,
+            '_sage_character_no' : int(chi),
+            '_conrey_character_no' : None,
+            '_modular_symbols' : None,
+            '_newspace' : None,
+            '_newforms' : [],
+            '_new_modular_symbols' : None,
+            '_galois_decomposition' : [],
+            '_galois_orbits_labels' : [],
+            '_oldspace_decomposition' : [],
+            '_ap' : list(),
+            '_verbose' : int(verbose),
+            '_bitprec' : int(bitprec),
+            '_dimension_newspace' : None,
+            '_dimension_cusp_forms' : None,
+            '_dimension_modular_forms' : None,
+            '_dimension_new_cusp_forms' : None,
+            '_dimension_new_modular_symbols' : None,
+            '_galois_decomposition' : [],
+            '_newspace' : None,
+            '_character' : None,
+            '_got_ap_from_db' : False }
 
-            emf_logger.critical("Could not construct WMFS with: {0}.{1}.{2} and eulerphi-{3}".format(
-                k, N, chi, euler_phi(N)))
-            return None
-        if isinstance(data, dict):
-            if 'ap' in data:
-                self._ap = data['ap']
-            if 'group' in data:
-                self._group = data['group']
-            if 'character' in data:
-                self._character = data['character']
-                self._conrey_character = self._get_conrey_character(self._character)
-            if 'modular_symbols' in data:
-                self._modular_symbols = data['modular_symbols']
-            if 'newspace' in data:
-                self._newspace = data['newspace']
-            if 'newforms' in data:
-                self._newforms = data['newforms']
-            if 'new_modular_symbols' in data:
-                self._new_modular_symbols = data['new_modular_symbols']
-            if 'decomposition' in data:
-                self._galois_decomposition = data['galois_decomposition']
-            if 'galois_orbits_labels' in data:
-                self._galois_orbits_labels = data['galois_orbits_labels']
-            if 'oldspace_decomposition' in data:
-                self._oldspace_decomposition = data['oldspace_decomposition']
-        else:
-            try:
+        if not isinstance(data,dict):
+            data = {}
+        data.update(d)
+        self.__dict__.update(data)
+        try:
+            if self._group == None:
                 self._group = Gamma0(N)
-                self._character = self._get_character(self._chi)
-                MS = self._get_objects(k, N, chi, use_db, 'Modular_symbols')
-                self._modular_symbols = MS
-                # self._modular_symbols_cuspidal_new_submodule=MS.cuspidal_submodule().new_submodule()
+            if self._modular_symbols == None:
+                self._modular_symbols = self._get_modular_symbols()
+            if self._modular_symbols == None:
+                self._dimension = 0
+                return 
+            if self._newspace == None:
                 self._newspace = self._modular_symbols.cuspidal_submodule().new_submodule()
-                self._ap = self._get_objects(k, N, chi, use_db, 'ap', prec=prec)
-                # self._fullspace.newforms(names='x')
-                # self._new_modular_symbols=self._modular_symbols.new_submodule()
-                self._galois_decomposition = []
-                self._oldspace_decomposition = []
-                self._galois_orbits_labels = []
-                self._conrey_character = self._get_conrey_character(self._character)
-                self._newforms = list()
+            if self._newforms == [] and self._newspace.dimension()>0:
                 l = len(self.galois_decomposition())
                 for i in range(l):
                     self._newforms.append(None)
-                if compute != '':
-                    self._compute_newforms(compute)
-            except RuntimeError:
-                raise RuntimeError("Could not construct space for (k=%s,N=%s,chi=%s)=" % (k, N, self._chi))
-        emf_logger.debug("Setting conrey_character={0}".format(self._conrey_character))
+            if self._ap == []:
+                self._ap = self._get_aps(prec=prec)                
+        except RuntimeError:
+            raise RuntimeError("Could not construct space for (k=%s,N=%s,chi=%s)=" % (k, N, self._chi))
         ### If we can we set these dimensions using formulas
         if(self.dimension() == self.dimension_newspace()):
             self._is_new = True
         else:
             self._is_new = False
 
-    def _compute_newforms(self, compute='all'):
-        r"""
-        Populates self with newforms.
-        """
-        emf_logger.debug("Computing! : {0}".format(compute))
-        l = len(self.galois_decomposition())
-        for i in range(l):
-            label = self._galois_orbits_labels[i]
-            if compute == i or compute == 'all' or compute == label:
-                f_data = dict()
-                f_data['parent'] = self
-                f_data['f'] = self.galois_decomposition()[i]
-                emf_logger.debug("f_data={0}".format(f_data['f']))
-                emf_logger.debug("self_ap={0}".format(self._ap))
-                if self._ap is not None and len(self._ap) <= i:
-                    f_data['ap'] = self._ap[i]
-                emf_logger.debug("Actually getting F {0},{1}".format(label, i))
-                F = WebNewForm(self._k, self._N, self._chi, label=label, fi=i, prec=self._prec, bitprec=self._bitprec, verbose=self._verbose, data=f_data, parent=self, compute=i)
-                emf_logger.debug("F={0},type(F)={1}".format(F, type(F)))
-                self._newforms[i] = F
-
-    def _get_character(self, k):
+    def _get_character(self,k=None):
         r"""
         Returns canonical representative of the Galois orbit nr. k acting on the ambient space of self.
 
         """
         D = DirichletGroup(self.group().level())
         G = D.galois_orbits(reps_only=True)
+        if k==None:
+            k = self._sage_character_no
         try:
             emf_logger.debug("k={0},G[k]={1}".format(k, G[k]))
             return G[k]
         except IndexError:
             emf_logger.critical("Got character no. {0}, which are outside the scope of Galois orbits of the characters mod {1}!".format(k, self.group().level()))
-            return trivial_character(self.group().level())
+            raise IndexError,"There is no Galois orbit of this index!"
 
-    def _get_conrey_character(self, chi):
-        Dc = DirichletGroup_conrey(chi.modulus())
+    def _get_conrey_character(self):
+        r"""
+        Return the Dirichlet character of self as an element of DirichletGroup_conrey.
+        """
+        if self._conrey_character <> None:
+            return self._conrey_character
+        Dc = DirichletGroup_conrey(self._N)
         for c in Dc:
-            if c.sage_character() == chi:
-                return c
+            if c.sage_character() == self.character():
+                self._conrey_character = c
+                break
+        return self._conrey_character
+        
+    def db_collection(self,collection):
+        r"""
+        Return a handle to an existing collection from the database.
 
+        """
+        D = connect_to_modularforms_db()
+        if collection not in D.collection_names():
+            emf_logger.critical("Collection {0} is not in database {1} at connection {2}".format(collection,db_name,C))
+        return D[collection]
+
+    def gridfs_collection(self,collection):
+        r"""
+        Return a file handle to a gridfs collection.
+        """
+        if '.files' in collection:
+            collection = collection.split(".")[0]
+        D = connect_to_modularforms_db()
+        return gridfs.GridFS(D, collection)
+        
+    def _get_aps(self, prec=10):
+        r"""
+        Get aps from database they exist.
+        """
+        ap_files = self.db_collection('ap.files')
+        key = {'k': int(self._k), 'N': int(self._N), 'chi': int(self._chi)}
+        key['prec'] = {"$gt": int(prec - 1)}
+        ap_from_db  = ap_files.find(key).sort("prec")
+        emf_logger.debug("finds={0}".format(ap_from_db))
+        emf_logger.debug("finds.count()={0}".format(ap_from_db.count()))
+        fs = self.gridfs_collection('ap')
+        if ap_from_db.count()>0:
+            rec = ap_from_db.next()
+            emf_logger.debug("rec={0}".format(rec))
+            return loads(fs.get(rec['_id']).read())
+        return []
+        #aps = self._modular_symbols.ambient(
+        #    ).compact_newform_eigenvalues(prime_range(prec), names='x')
+        # Insert in db
+        #if insert_into_db:
+        #    
+        #   filename = 'gamma0-aplist-{0:0>6}-{1:0>4}-{2:0>4}-{3}'.format(self._N,self._k,self._chi,self._prec)
+        #   fs.put(dumps(aps),filename,N=int(self._N),k=int(self._k),chi=int(self._chi),prec=int(prec))
+        #return aps
+
+
+    def _get_modular_symbols(self):
+        r"""
+        Get Modular Symbols from database they exist.
+        """
+        modular_symbols = self.db_collection('Modular_symbols.files')
+        key = {'k': int(self._k), 'N': int(self._N), 'chi': int(self._chi)}
+        modular_symbols_from_db  = modular_symbols.find_one(key)
+        emf_logger.debug("found ms={0}".format(modular_symbols_from_db))
+        if modular_symbols_from_db == None:
+            ms = None
+        else:
+            id = modular_symbols_from_db['_id']
+            fs = self.gridfs_collection('Modular_symbols')
+            ms = loads(fs.get(id).read())
+            self._id = id
+        return ms
+
+    def _get_newform_factors(self):
+        r"""
+        Get New form factors from database they exist.
+        """
+        factors = self.db_collection('Newform_factors.files')
+        key = {'k': int(self._k), 'N': int(self._N), 'chi': int(self._chi),}
+        factors_from_db  = factors.find(key)
+        emf_logger.debug("found factors={0}".format(factors_from_db))
+        if factors_from_db.count() == 0:
+            facts = []
+        else:
+            facts = []
+            fs = self.gridfs_collection('Newform_factors')
+            for rec in factors_from_db:
+                facts.append(loads(fs.get(rec['_id']).read()))
+        return facts
+    
+    
+    def __reduce__(self):
+        r"""
+        Used for pickling.
+        """
+        data = self.to_dict()
+        return(unpickle_wmfs_v1, (self._k, self._N, self._chi, self._cuspidal, self._prec, self._bitprec, data))
+            
+
+            
     def _get_objects(self, k, N, chi, use_db=True, get_what='Modular_symbols', **kwds):
         r"""
         Getting the space of modular symbols from the database if it exists. Otherwise compute it and insert it into the database.
         """
-        if not get_what in ['ap', 'Modular_symbols']:
+        if not get_what in ['ap', 'Modular_symbols','Newform_factors']:
             emf_logger.critical("Collection {0} is not implemented!".format(get_what))
         collection = get_what
         emf_logger.debug("collection={0}".format(collection))
@@ -222,33 +319,41 @@ class WebModFormSpace(Parent):
                 if not collection + '.files' in C[db_name].collection_names():
                     emf_logger.critical("Incorrect collection {0} in database {1}. \n Available collections are:{2}".format(collection, db_name, C[db_name].collection_names()))
                 files = C[db_name][collection].files
-                if chi == 0:
-                    key = {'k': int(k), 'N': int(N)}
-                else:
-                    key = {'k': int(k), 'N': int(N), 'chi': int(chi)}
+                key = {'k': int(k), 'N': int(N), 'chi': int(chi)}
                 if get_what == 'ap':
                     key['prec'] = {"$gt": prec - 1}
                 finds = files.find(key)
                 if get_what == 'ap':
                     finds = finds.sort("prec")
+                    self._got_ap_from_db = True                    
                 if self._verbose > 1:
                     emf_logger.debug("files={0}".format(files))
                     emf_logger.debug("key={0}".format(key))
                     emf_logger.debug("finds={0}".format(finds))
                     emf_logger.debug("finds.count()={0}".format(finds.count()))
-                if finds and finds.count() > 0:
+                if get_what=='Newform_factors':
+                    finds = finds.sort("newform")
+                    res = []
+                    for rec in finds:
+                        fid = rec['_id']
+                        fs = gridfs.GridFS(C[db_name], collection)
+                        f = fs.get(fid)
+                        emf_logger.debug("rec={0}".format(rec))
+                        res.append(loads(f.read()))
+                        self._from_db = 1
+                elif finds and finds.count() > 0:
                     rec = finds[0]
                     emf_logger.debug("rec={0}".format(rec))
                     fid = rec['_id']
                     fs = gridfs.GridFS(C[db_name], collection)
                     f = fs.get(fid)
-                    #print f.read()
-                    #save(f.read(),"/home/purem/cvzx53/modym.sobj")
                     res = loads(f.read())
                     # TODO avoid pickling python objects for storing in the database
                     self._from_db = 1
-                    self._id = rec['_id']
-                self._got_ap_from_db = True
+                    if get_what == 'Modular_symbls':
+                        self._id = rec['_id'] 
+                else:
+                    res = []
         except ArithmeticError:
             pass
             #Exception as e:
@@ -259,9 +364,9 @@ class WebModFormSpace(Parent):
                 if chi == 0:
                     res = ModularSymbols(N, k, sign=1)
                 else:
-                    emf_logger.debug("character: {0}".format(self._character))
+                    emf_logger.debug("character: {0}".format(self.character()))
                     emf_logger.debug("weight: {0}".format(k))
-                    res = ModularSymbols(self._character, k, sign=1)
+                    res = ModularSymbols(self.character(), k, sign=1)
             elif get_what == 'ap':
                 if self.level() == 1:
                     ## Get the Hecke eigenvalues for level 1.
@@ -279,8 +384,7 @@ class WebModFormSpace(Parent):
         Used for pickling.
         """
         data = self.to_dict()
-        # return(WebModFormSpace,(self._k,self._N,self._chi,self.prec,data))
-        return(unpickle_wmfs_v1, (self._k, self._N, self._chi, self._cuspidal, self.prec, self._bitprec, data))
+        return(unpickle_wmfs_v1, (self._k, self._N, self._chi, self._cuspidal, self._prec, self._bitprec, data))
 
     def _save_to_file(self, file):
         r"""
@@ -290,20 +394,21 @@ class WebModFormSpace(Parent):
 
     def to_dict(self):
         r"""
-        Makes a dictionary of the relevant information.
+        Makes a dictionary of the serializable properties of self.
         """
-        data = dict()
-        data['group'] = self._group
-        data['character'] = self._character
-        # data['fullspace'] = self._fullspace
-        data['modular_symbols'] = self._modular_symbols
-        data['newspace'] = self._newspace
-        data['newforms'] = self._newforms
-        if hasattr(self, "_new_modular_symbols"):
-            data['new_modular_symbols'] = self._new_modular_symbols
-        data['galois_decomposition'] = self._galois_decomposition
-        data['galois_orbits_labels'] = self._galois_orbits_labels
-        data['oldspace_decomposition'] = self._oldspace_decomposition
+        problematic_keys = ['_galois_decomposition',
+                            '_newforms','_newspace',
+                            '_modular_symbols',
+                            '_new_modular_symbols',
+                            '_galois_decomposition',
+                            '_oldspace_decomposition',
+                            '_conrey_character',
+                            '_character',
+                            '_group']
+        data = {}
+        data.update(self.__dict__)
+        for k in problematic_keys:
+            data.pop(k,None)
         return data
 
     def _repr_(self):
@@ -312,6 +417,19 @@ class WebModFormSpace(Parent):
         return s
         # return str(self._fullspace)
 
+    def _computation_too_hard(self,comp='decomp'):
+        r"""
+        See if the supplied parameters make computation too hard or if we should try to do it on the fly.
+        TODO: Actually check times.
+        """
+        if comp=='decomp':
+            if self._N > 50:
+                return True
+            if self._chi > 0 and self._N > 100:
+                return True
+            if self._k+self._N  > 100:
+                return True
+            return False
     # internal methods to generate properties of self
     def galois_decomposition(self):
         r"""
@@ -320,7 +438,20 @@ class WebModFormSpace(Parent):
         from sage.monoids.all import AlphabeticStrings
         if(len(self._galois_decomposition) != 0):
             return self._galois_decomposition
-        L = self._newspace.decomposition()
+        if '_HeckeModule_free_module__decomposition' in self._newspace.__dict__:
+            L = self._newspace.decomposition()
+        else:
+            decomp = self._get_newform_factors()
+            if len(decomp)>0:
+                L = filter(lambda x: x.is_new() and x.is_cuspidal(), decomp)
+                emf_logger.debug("computed L:".format(L))
+            elif self._computation_too_hard():
+                L = []
+                raise IndexError,"No decomposition was found in the database!"
+                emf_logger.debug("no decomp in database!")
+            else: # compute
+                L = self._newspace.decomposition()
+                emf_logger.debug("computed L:".format(L))
         self._galois_decomposition = L
         # we also label the compnents
         x = AlphabeticStrings().gens()
@@ -358,27 +489,27 @@ class WebModFormSpace(Parent):
     def dimension_cusp_forms(self):
         if self._dimension_cusp_forms is None:
             if self._chi != 0:
-                self._dimension_cusp_forms = dimension_cusp_forms(self._character, self._k)
+                self._dimension_cusp_forms = int(dimension_cusp_forms(self.character(), self._k))
             else:
-                self._dimension_cusp_forms = dimension_cusp_forms(self._N, self._k)
+                self._dimension_cusp_forms = int(dimension_cusp_forms(self.level(), self._k))
             # self._modular_symbols.cuspidal_submodule().dimension()
         return self._dimension_cusp_forms
 
     def dimension_modular_forms(self):
         if self._dimension_modular_forms is None:
             if self._chi != 0:
-                self._dimension_modular_forms = dimension_modular_forms(self._character, self._k)
+                self._dimension_modular_forms = int(dimension_modular_forms(self.character(), self._k))
             else:
-                self._dimension_modular_forms = dimension_modular_forms(self._N, self._k)
+                self._dimension_modular_forms = int(dimension_modular_forms(self._N, self._k))
             # self._dimension_modular_forms=self._modular_symbols.dimension()
         return self._dimension_modular_forms
 
     def dimension_new_cusp_forms(self):
         if self._dimension_new_cusp_forms is None:
             if self._chi != 0:
-                self._dimension_new_cusp_forms = dimension_new_cusp_forms(self._character, self._k)
+                self._dimension_new_cusp_forms = int(dimension_new_cusp_forms(self.character(), self._k))
             else:
-                self._dimension_new_cusp_forms = dimension_new_cusp_forms(self._N, self._k)
+                self._dimension_new_cusp_forms = int(dimension_new_cusp_forms(self._N, self._k))
         return self._dimension_new_cusp_forms
 
     def dimension(self):
@@ -399,25 +530,26 @@ class WebModFormSpace(Parent):
         return self._N
 
     def character(self):
+        if self._character == None:
+            self._character = self._get_character()
         return self._character
 
     def conrey_character(self):
+        if self._conrey_character == None:
+            self._get_conrey_character()
         return self._conrey_character
 
+    def conrey_character_number(self):
+        return self.conrey_character().number()
+    
     def conrey_character_name(self):
-        return "\chi_{" + str(self._N) + "}(" + str(self._conrey_character.number()) + ",\cdot)"
+        return "\chi_{" + str(self._N) + "}(" + str(self.conrey_character().number()) + ",\cdot)"
 
     def character_order(self):
-        if(self._character != 0):
-            return self._character.order()
-        else:
-            return 1
+        return self.character().order()
 
     def character_conductor(self):
-        if(self._character != 0):
-            return self._character.conductor()
-        else:
-            return 1
+        return self.character().conductor()
 
     def group(self):
         return self._group
@@ -441,25 +573,21 @@ class WebModFormSpace(Parent):
         r"""
         Return function f in the set of newforms on self.
         """
-        F = None
+        
         if len(self._newforms) == 0:
-            if(isinstance(i, int) or i in ZZ):
-                F = WebNewForm(self._k, self._N, self._chi, parent=self, fi=i)
+            if (isinstance(i, int) or i in ZZ):
+                F = WebNewForm(self._N,self._k,  self._chi, parent=self, fi=i)
             else:
-                F = WebNewForm(self._k, self._N, self._chi, parent=self, label=i)
+                F = WebNewForm(self._N, self._k, self._chi, parent=self, label=i)
+            
         else:
-            if not (isinstance(i, int) or i in ZZ) and i in self._galois_orbits_labels:
-                ii = self._galois_orbits_labels.index(i)
-            else:
-                ii = i
-            emf_logger.debug("print ii={0}".format(ii))
-            if ii >= 0 and ii <= len(self._newforms):
-                # print "set F!"
+            if not i in self._galois_orbits_labels:
+                i = self._galois_orbits_labels.index(i)
+            emf_logger.debug(" ii={0}".format(ii))
+            try:
                 F = self._newforms[ii]
-                if not F:  # then we have to compute something.
-                    emf_logger.debug("compute F")
-                    self._compute_newforms(compute=ii)
-                    F = self._newforms[ii]
+            except IndexError:
+                raise IndexError,"Form nr. {i} does not exist!"
         emf_logger.debug("returning F! :{0}".format(F))
         return F
 
@@ -468,7 +596,7 @@ class WebModFormSpace(Parent):
         Return the q_eigenform nr. orbit in self
         """
         if(prec is None):
-            prec = self.prec
+            prec = self._prec
         return self.galois_decomposition()[orbit].q_eigenform(prec, 'x')
 
     def oldspace_decomposition(self):
@@ -506,7 +634,7 @@ class WebModFormSpace(Parent):
                 emf_logger.debug("Od={0}".format(Od))
             if(d == N and k == 2 or Od == 0):
                 continue
-            if self._character.is_trivial():
+            if self.character().is_trivial():
                 # S=ModularSymbols(ZZ(N/d),k,sign=1).cuspidal_submodule().new_submodule(); Sd=S.dimension()
                 emf_logger.debug("q={0},{1}".format(q, type(q)))
                 emf_logger.debug("k={0},{1}".format(k, type(k)))
@@ -518,13 +646,13 @@ class WebModFormSpace(Parent):
                     check_dim = check_dim + mult * Sd
                     L.append((q, 0, mult, Sd))
             else:
-                xd = self._character.decomposition()
+                xd = self.character().decomposition()
                 for xx in xd:
                     if xx.modulus() == q:
                         Sd = dimension_new_cusp_forms(xx, k)
                         if Sd > 0:
                             # identify this character for internal storage... should be optimized
-                            x_k = self._get_conrey_character(xx).number()
+                            x_k = self.conrey_character(xx).number()
                             mult = len(divisors(ZZ(d)))
                             check_dim = check_dim + mult * Sd
                             L.append((q, x_k, mult, Sd))
@@ -652,12 +780,11 @@ class WebModFormSpace(Parent):
                         ll = 0
                         sss += "<br>"
                     slist.append(sss)
-                    # print i,sss
             else:
                 slist.append(ss)
 
             K = orbit.base_ring()
-            if(K == QQ):
+            if K.absolute_degree() == 1:
                 poly = ZZ['x'].gen()
                 disc = '1'
             else:
@@ -717,7 +844,7 @@ class WebModFormSpace(Parent):
         K = orbit.base_ring()
         is_relative = False
         disc = 1
-        if(K == QQ):
+        if K.absolute_degree() == 1:
             poly = ZZ['x'].gen()
             disc = '1'
         else:
@@ -764,223 +891,277 @@ class WebModFormSpace(Parent):
         return s
 
 
-class WebNewForm(SageObject):
-
+class WebNewForm_class(object):
     r"""
     Class for representing a (cuspidal) newform on the web.
+    TODO: Include the computed data in the original database so we won't have to compute here at all.
     """
-    def __init__(self, k, N, chi=0, label='', fi=-1, prec=10, bitprec=53, parent=None, data=None, compute=None, verbose=-1):
+    def __init__(self, N, k, chi=0, label='', fi=-1, prec=10, bitprec=53, parent=None, data={}, compute=False, verbose=-1,get_from_db=True):
         r"""
         Init self as form number fi in S_k(N,chi)
         """
-        if chi == 'trivial':
-            chi = ZZ(0)
-        else:
-            chi = ZZ(chi)
-        t = False
-        self._chi = ZZ(chi)
-        self._parent = parent
-        self.f = None
-        self._character = trivial_character(N)
-        if self._chi != 0:
-            if self._parent and self._parent._character:
-                self._character = self._parent._character
-                self._conrey_character = self._parent._conrey_character
-            else:
-                self._character = DirichletGroup(N).galois_orbits(reps_only=True)[chi]
-                Dc = DirichletGroup_conrey(N)
-                for c in Dc:
-                    if c.sage_character() == self._character:
-                        self._conrey_character = c
-                        break
-        self.f = None
-        self._label = label
-        self._fi = fi
-        self._prec = prec
-        self._bitprec = bitprec
-        self._k = ZZ(k)
-        self._N = ZZ(N)
-        self._verbose = verbose
-        self._data = dict()  # stores a lot of stuff
-        self._satake = {}
-        self._ap = list()    # List of Hecke eigenvalues (can be long)
-        self._coefficients = dict()  # list of Fourier coefficients (should not be long)
-        self._atkin_lehner_eigenvalues = {}
-        if self._verbose > 0:
-            emf_logger.debug("DATA={0}".format(data))
-        if isinstance(data, dict) and len(data.keys()) > 0:
-            self._from_dict(data)
-        else:
-            self._from_dict({})
-        if self._verbose > 0:
-            emf_logger.debug("self.fi={0}".format(self._fi))
-        if self._parent is None:
+        emf_logger.debug("WebNewForm with N,k,chi,label={0}".format( (N,k,chi,label)))
+        # Set defaults.
+        emf_logger.debug("incoming data: {0}".format(data))
+        d  = {
+            '_chi' : int(chi),'_k' : int(k),'_N' : int(N),
+            '_label' : str(label),  '_fi' : int(fi),
+            '_prec' : int(prec), '_bitprec' : int(bitprec),
+            '_verbose' : int(verbose),
+            '_satake' : {},
+            '_ap' : {},    # List of Hecke eigenvalues (can be long)
+            '_coefficients' : dict(),  # list of Fourier coefficients (should not be long)
+            '_atkin_lehner_eigenvalues' : {},
+            '_parent' : parent,
+            '_f' : None,
+            '_q_expansion' : None,
+            '_q_expansion_str' : '',
+            '_embeddings' : [],
+            '_base_ring': None,
+            '_base_ring_as_dict' : {},
+            '_coefficient_field': None,
+            '_coefficient_field_as_dict': {},
+            '_as_polynomial_in_E4_and_E6' : None,
+            '_twist_info' : [],
+            '_is_CM' : [],
+            '_cm_values' : {},
+            '_satake' : {},
+            '_dimension' : -1,
+            '_is_rational' : None,
+            '_degree' : 0,
+            '_absolute_degree' : 0,
+            '_relative_degree' : 0,
+            '_character' : None,
+            '_conrey_character' : None,
+            '_conrey_character_no' : -1,
+            '_sage_character_no' : -1,
+            '_name' : "{0}.{1}{2}".format(N,k,label)
+            }
+        self.__dict__.update(d)
+        if self._label<>'' and get_from_db:            
+            d = self.get_from_db(self._N,self._k,self._chi,self._label)
+            emf_logger.debug("Got data:{0} from db".format(d))
+            data.update(d)
+        #emf_logger.debug("data: {0}".format(data))
+        self.__dict__.update(data)
+        if not isinstance(self._parent,WebModFormSpace_class):
             if self._verbose > 0:
-                emf_logger.debug("compute parent!")
-                emf_logger.debug("label={0}".format(label))
-                emf_logger.debug("fi={0}".format(fi))
-            if label != '':
-                self._parent = WebModFormSpace(k, N, chi, compute=label)
-            elif fi > 0:
-                self._parent = WebModFormSpace(k, N, chi, compute=fi)
-            else:
-                self._parent = WebModFormSpace(k, N, chi, compute='all')
-            if self._verbose > 0:
-                emf_logger.debug("finished computing parent")
-            j = self._get_index_of_self_in_parent()
-            if self._verbose > 0:
-                emf_logger.debug("j={0}".format(j))
-            if len(self._parent._newforms) and j >= 0:
-                new_data = self._parent.f(j)._to_dict()
-                self._from_dict(new_data)
-            else:
-                return None
-        if self._verbose > 0:
-            emf_logger.debug("parent={0}".format(self._parent))
-        j = self._get_index_of_self_in_parent()
-        if self._verbose > 0:
-            emf_logger.debug("j={0}".format(j))
-            emf_logger.debug("newforms={0}".format(self._parent._newforms))
-        if self._f is None:
-            if j < len(self._parent._newforms) and j >= 0:
-                self._f = self._parent._newforms[j]
-            else:
-                self._f = None
-                return
-
-        self._name = str(self._N) + "." + str(self._k) + str(self._label)
-        if self._f is None:
-            if(self._verbose >= 0):
-                raise IndexError("Requested function does not exist!")
-            else:
-                return
-
+                emf_logger.debug("compute parent! label={0}".format(label))
+            self._parent = WebModFormSpace(N, k,chi, data=self._parent)
+            emf_logger.debug("finished computing parent")
+        if self._parent.dimension_newspace()==0:
+            self._dimension=0
+            return 
+        self._check_consistency_of_labels()
         emf_logger.debug("name={0}".format(self._name))
-
-        emf_logger.debug("data: {0}".format(data))
-        if isinstance(data, dict) and len(data.keys()) > 0:
-            self._from_dict(data)
-
-        elif compute == 'all':
+        if compute: ## Compute all data we want.
             emf_logger.debug("compute")
-            self.q_expansion_embeddings(prec, bitprec)
+            self._update_aps(insert_in_db=False)
+            emf_logger.debug("compute q-expansion")
+            self.q_expansion_embeddings(prec, bitprec,insert_in_db=False)
+            emf_logger.debug("as polynomial")
             if self._N == 1:
-                self.as_polynomial_in_E4_and_E6()
-            # self._as_polynomial_in_E4_and_E6=None
-            self.twist_info(prec)
-            # self._twist_info = []
-            self.is_CM()
-            # self._is_CM = []
-            self.satake_parameters()
-            # self._satake = {}
-            self._dimension = self._f.dimension()  # 1 # None
-            c = self.coefficients(self.prec())
-        else:
-            self._embeddings = []
-            # self.q_expansion_embeddings(prec,bitprec)
-            self._as_polynomial_in_E4_and_E6 = None
-            self._twist_info = []
-            self._is_CM = []
-            self._satake = {}
-            self._dimension = 1  # None
-        emf_logger.debug("before end of __init__ prec={0}".format(prec))
-        emf_logger.debug("before end of __init__ f={0}".format(self._f))
-        emf_logger.debug("before end of __init__ type(f)={0}".format(type(self._f)))
-        self._base_ring = self._f.q_eigenform(prec, names='x').base_ring()
+                self.as_polynomial_in_E4_and_E6(insert_in_db=False)
+            emf_logger.debug("compute twist info")
+            self.twist_info(prec,insert_in_db=False)
+            emf_logger.debug("compute CM-values")
+            self.cm_values(insert_in_db=False)
+            emf_logger.debug("check  CM of self")
+            self.is_CM(insert_in_db=False)
+            emf_logger.debug("compute Satake parameters")
+            self.satake_parameters(insert_in_db=False)
+            self._dimension = self.as_factor().dimension()  # 1 # None
+            c = self.coefficients(self.prec(),insert_in_db=False)
+        emf_logger.debug("before end of __init__ f={0}".format(self.as_factor()))
+        emf_logger.debug("before end of __init__ type(f)={0}".format(type(self.as_factor())))
         emf_logger.debug("done __init__")
+        self.insert_into_db()
 
+    def _check_consistency_of_labels(self):
+        if self._parent == None:
+            raise ValueError,"Need parent to check labels!"
+        try:
+            if self._fi < 0:
+                self._fi = self._parent._galois_orbits_labels.index(self._label)
+                emf_logger.debug(" fi = {0}".format(self._fi))
+            if self._label=='':
+                self._label = self._parent._galois_orbits_labels[self._fi]
+            if not self._label == self._parent._galois_orbits_labels[self._fi]:
+                raise ValueError
+        except (ValueError,KeyError):
+            raise ValueError,"There does not exista newform orbit of the given label: {0} and number:{1}!".format(self._label,self._fi)
+        return True
+
+    def _set_character(self):
+        r"""
+        Initialize the character associated to self.
+        """
+        if self._parent == None:
+            raise ValueError,"Need parent to check labels!"
+        if self._conrey_character_no>0:
+            self._conrey_character =  DirichletCharacter_conrey(DirichletGroup_conrey(self._N),self._conrey_character_no)
+        else:
+            self._conrey_character = self._parent._conrey_character
+        self._character = self.parent().character()
+
+        if self._character == None or self._conrey_character==None:
+            self._character = DirichletGroup(self._N).galois_orbits(reps_only=True)[self._chi]
+            Dc = DirichletGroup_conrey(self._N)
+            for c in Dc:
+                if c.sage_character() == self._character:
+                    self._conrey_character = c
+                    break
+            self._conrey_character_no  = self._conrey_character.number()
+            self._sage_character_no  = self._chi
+        
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return False
-        if self._k != other._k:
-            return False
-        if self._level != other._level:
-            return False
-        if self._character != other._character:
-            return False
-        return True
+        return self._name == other._name
 
+
+    def get_from_db(self,N,k,chi,label):
+        C = lmfdb.base.getDBConnection()
+        collection = C[db_name].WebNewForms.files
+        s = {'N':int(N),'k':int(k),'chi':int(chi),'label':label}
+        emf_logger.debug("Looking in DB for rec={0}".format(s))
+        f = C[db_name].WebNewForms.files.find_one(s)
+        emf_logger.debug("Found rec={0}".format(f))
+        if f<>None:
+            id = f.get('_id')
+            fs = gridfs.GridFS(C[db_name],'WebNewForms')
+            f = fs.get(id)
+            emf_logger.debug("Getting rec={0}".format(f))
+            d = loads(f.read())
+            return d
+        return {}
+    
+
+    
+    def insert_into_db(self):
+        r"""
+        Insert a dictionary of data for self into the database collection
+        WebNewForms.files
+        """
+        emf_logger.debug("inserting self into db!")
+        C = lmfdb.base.getDBConnection()
+        fs = gridfs.GridFS(C[db_name], 'WebNewForms')
+        collection = C[db_name].WebNewForms.files
+        s = {'name':self._name}
+        rec = collection.find_one(s)
+        if rec:
+            id = rec.get('_id')
+        else:
+            id = None
+        if id<>None:
+            emf_logger.debug("Removing self from db with id={0}".format(id))
+            fs.delete(id)
+            
+        fname = "webnewform-{0:0>5}-{1:0>3}-{2:0>3}-{3}".format(self._N,self._k,self._chi,self._label) 
+#        try:
+        id = fs.put(dumps(self.to_dict()),filename=fname,N=int(self._N),k=int(self._k),chi=int(self._chi),label=self._label,name=self._name)
+#        except Exception as e:
+#            emf_logger.critical("DB insertion failed: {0}".format(e.message))
+        emf_logger.debug("inserted :{0}".format(id))
+    
     def __repr__(self):
         r""" String representation f self.
         """
-        if self._f is not None:
-            return str(self.q_expansion())
-        else:
-            return ""
+        if self.dimension()==0:
+            return "0"
+        return str(self.q_expansion())
 
     def __reduce__(self):
         r"""
         Reduce self for pickling.
         """
-        data = self._to_dict()
-        return(unpickle_wnf_v1, (self._k, self._N, self._chi, self._label,
+        data = self.to_dict()
+        return(unpickle_wnf_v1, (self._N, self._k, self._chi, self._label,
                                  self._fi, self._prec, self._bitprec, data))
 
-    def _to_dict(self):
-        data = dict()
-        data['atkin_lehner_eigenvalues'] = self._atkin_lehner_eigenvalues
-        data['parent'] = self._parent
-        data['coefficients'] = self._coefficients
-        data['ap'] = self._ap
-        data['embeddings'] = self._embeddings
-        data['f'] = self._f
-        data['embeddings'] = self._embeddings
-        data['as_poly'] = self._as_polynomial_in_E4_and_E6
-        data['twist_info'] = self._twist_info
-        data['is_CM'] = self._is_CM
-        data['satake'] = self._satake
-        data['dimension'] = self._dimension
+    def to_yaml(self,for_yaml=False):
+        d = self.to_dict()
+        return yaml.dump(d)
+    
+    def from_yaml(self,s):        
+        d = yaml.load(s)
+        return yaml.load(d)    
+    
+    def to_dict(self):
+        r"""
+        Export self as a serializable dictionary.
+        """
+        if self._base_ring_as_dict=={}:
+            self._base_ring_as_dict=number_field_to_dict(self.base_ring())
+        if self._coefficient_field_as_dict=={}:
+            self._coefficient_field_as_dict=number_field_to_dict(self.coefficient_field())
+        data = {}
+        for k in self.__dict__:
+            data[k]=self.__dict__[k]
+        ## Get rid of non-serializable objects.
+        for k in ['_f','_character','_base_ring','_coefficient_field']:
+            data.pop(k,None)
+        data['_parent']=self._parent.to_dict()
         return data
 
     def _from_dict(self, data):
-
-        self._atkin_lehner_eigenvalues = data.get('atkin_lehner_eigenalues', {})
-        # data['atkin_lehner_eigenalues']
-        self._coefficients = data.get('coefficients', {})
-
-        self._parent = data.get('parent', None)
-        self._f = data.get('f', None)
-        self._ap = data.get('ap', [])
-        self._embeddings = data.get('embeddings', [])
-        self._as_polynomial_in_E4_and_E6 = data.get('as_poly', '')
-        self._twist_info = data.get('twist_info', '')
-        self._is_CM = data.get('is_CM', '')
-        self._satake = data.get('satake', {})
-        self._dimension = data.get('dimension', 0)
-
-    def _save_to_file(self, file):
-        r"""
-        Save self to file.
-        """
-        self.save(file, compress=None)
+        self.__dict__.update(data)
+        if isinstance(self._parent,dict):
+            self._parent = WebModFormSpace(self._k,self._N,self._chi,1,self._prec,self._bitprec,data = self._parent)
 
     def level(self):
+        r"""
+        The level of self (assuming it is on a congruence subgroup).
+        """
         return self._N
 
+    def ambient_space(self):
+        r"""
+        The group on which self is defined.
+        """
+        return self.parent().group()
+
     def group(self):
-        if hasattr(self, '_parent'):
-            return self._parent.group()
+        r"""
+        The group on which self is defined.
+        """
+        return self.parent().group()
 
     def label(self):
-        if(not self._label):
-            self._label = self._parent().labels()[self._fi]
+        r"""
+        The label of self.
+        """
         return self._label
 
     def weight(self):
-        if hasattr(self, '_k'):
-            return self._k
+        r"""
+        The label of self.
+        """
+        return self._k
+
+    def as_factor(self):
+        r"""
+        Return the simple factor of the ambient space corresponding to self. 
+        """
+        if self._f == None:
+            if self._fi < len(self.parent().galois_decomposition()):
+                self._f = self.parent().galois_decomposition()[self._fi]
+            else:
+                self._f = self.parent().modular_symbols()
+        return self._f
 
     def character(self):
-        if hasattr(self, '_character'):
-            return self._character
-        else:
-            return trivial_character
+        if self._character == None:
+            self._set_character()
+        return self._character
 
     def conrey_character(self):
+        if self._conrey_character == None:
+            self._conrey_character = self.parent().conrey_character()
         return self._conrey_character
 
     def conrey_character_name(self):
-        return "\chi_{" + str(self._N) + "}(" + str(self._conrey_character.number()) + ",\cdot)"
+        return "\chi_{" + str(self._N) + "}(" + str(self.conrey_character().number()) + ",\cdot)"
 
     def character_order(self):
         return self._parent.character_order()
@@ -988,64 +1169,104 @@ class WebNewForm(SageObject):
     def character_conductor(self):
         return self._parent.character_conductor()
 
-    def chi(self):
-        if hasattr(self, '_chi'):
-            return self._chi
+    def character_value(self,x):
 
+        if self.character().is_trivial():
+            if (x % self._N) <> 0:
+                return self.base_ring()(1)
+            else:
+                return self.base_ring()(0)        
+        return self.character()(x)
+
+    def chi(self):
+        return self._chi
+
+    def base_ring(self):
+        r"""
+        The base ring of self, that is, the field of values of the character of self. 
+        """
+        if isinstance(self._base_ring,NumberField_class):
+            return self._base_ring
+        if self._base_ring_as_dict<>{}:
+            emf_logger.debug("base_ring={0}".format(self._base_ring_as_dict))
+            self._base_ring = number_field_from_dict(self._base_ring_as_dict)
+        if self._base_ring == None:
+            self._base_ring = self.as_factor().base_ring()
+        return self._base_ring
+
+    def coefficient_field(self):
+        r"""
+        The coefficient field of self, that is, the field generated by the Fourier coefficients of self.
+        """
+        emf_logger.debug("coef_fld={0}".format(self._coefficient_field))
+        if isinstance(self._coefficient_field,NumberField_class):
+            return self._coefficient_field
+        if self._coefficient_field_as_dict<>{}:
+            emf_logger.debug("coef_fldas_d={0}".format(self._coefficient_field_as_dict))
+            return number_field_from_dict(self._coefficient_field_as_dict)
+        self._coefficient_field = self.as_factor().q_eigenform(self._prec, names='x').base_ring()
+        emf_logger.debug("coef_field={0}".format(self._coefficient_field))
+        return self._coefficient_field
+    
+    def relative_degree(self):
+        r"""
+        Degree of the field of coefficient relative to its base ring.
+        """
+        if self._relative_degree <= 0:
+            self._relative_degree = self.coefficient_field().relative_degree()
+        return self._relative_degree
+
+    def degree(self):
+        return self.absolute_degree()
+    
+    def absolute_degree(self):
+        r"""
+        Degree of the field of coefficient relative to its base ring.
+        """
+        if self._absolute_degree <= 0:
+            self._absolute_degree = self.coefficient_field().absolute_degree()
+        return self._absolute_degree
+        
+
+        
     def prec(self):
-        if hasattr(self, '_prec'):
-            return self._prec
+        return self._prec
 
     def parent(self):
-        if hasattr(self, '_parent'):
-            return self._parent
+        if not isinstance(self._parent,WebModFormSpace_class):
+            if self._verbose > 0:
+                emf_logger.debug("compute parent! label={0}".format(label))
+            self._parent = WebModFormSpace(self._N, sel.f_k,self._chi, data=self._parent)
+        return self._parent
 
     def is_rational(self):
-        if(self.base_ring() == QQ):
-            return True
-        else:
-            return False
-
-    def _get_index_of_self_in_parent(self):
-        # make sure we have a galois decomposition
-        label = self._label
-        fi = self._fi
-        self._parent.galois_decomposition()
-        if label not in self._parent._galois_orbits_labels:
-            label = ''
-        if fi >= 0 and fi < len(self._parent._galois_orbits_labels):
-            label = self._parent._galois_orbits_labels[fi]
-        if self._parent._galois_orbits_labels.count(label):
-            j = self._parent._galois_orbits_labels.index(label)
-        elif(len(self._parent._galois_orbits_labels) == 1):
-            j = 0
-        elif len(self._parent._galois_orbits_labels) > 0:
-            raise ValueError("The space has dimension > 1. Please specify a label!")
-        else:
-            j = -1  # raise ValueError,"The space is zero-dimensional!"
-        if self._verbose > 1:
-            emf_logger.debug("J={0}".format(j))
-        return j
+        if self._is_rational==None:
+            if self.coefficient_field().degree()==1:
+                self._is_rational  = True
+            else:
+                self._is_rational = False
+        return self._is_rational
 
     def dimension(self):
         r"""
         The dimension of this galois orbit is not necessarily equal to the degree of the number field, when we have a character....
         We therefore need this routine to distinguish between the two cases...
         """
-        if not hasattr(self, '_dimension') or self._dimension is None or self._dimension <= 0:
-            P = self.parent()
-            if P.labels().count(self.label()) > 0:
-                j = P.labels().index(self.label())
-                self._dimension = self.parent().galois_decomposition()[j].dimension()
-                return self._dimension
-            else:
-                return 0
-        else:
+        if self._dimension >= 0:
             return self._dimension
+        P = self.parent()
+        if P.labels().count(self.label()) > 0:
+            j = P.labels().index(self.label())
+            self._dimension = self.parent().galois_decomposition()[j].dimension()
+        else:
+            self._dimension =  0
+        return self._dimension
 
-    def q_expansion_embeddings(self, prec=10, bitprec=53):
+    def q_expansion_embeddings(self, prec=10, bitprec=53,insert_in_db=True):
         r""" Compute all embeddings of self into C which are in the same space as self.
         """
+        emf_logger.debug("q-expansion : insert : {0}".format(insert_in_db))
+      
         if(len(self._embeddings) > prec):
             bp = self._embeddings[0][0].prec()
             if bp >= bitprec:
@@ -1061,46 +1282,34 @@ class WebNewForm(SageObject):
             bitprec = self._bitprec
         if(prec <= 0):
             prec = self._prec
-        if(self.base_ring() == QQ):
-            self._embeddings = self.coefficients(range(prec))
-        else:
-            coeffs = list()
-            # E,v = self._f.compact_system_of_eigenvalues(prec)
-            cc = self.coefficients(range(prec))
-            for n in range(ZZ(prec)):
-                cn = cc[n]
-                if(self.degree() > 1):
-                    if hasattr(cn, 'complex_embeddings'):
-                        coeffs.append(cn.complex_embeddings(bitprec))
-                    else:  # real coefficients are repeated for consistency
-                        ccn = []
-                        for j in range(self.degree()):
-                            ccn.append(cn)
-                        coeffs.append(ccn)
-                else:
-                    coeffs.append([cn.n(bitprec)])
-            self._embeddings = coeffs
+        coeffs = list()
+        cc = self.coefficients(range(prec),insert_in_db=insert_in_db)
+        CF = ComplexField(bitprec)
+        deg = self.absolute_degree()
+        self._embeddings = []
+        for n in range(prec):
+            cn = cc[n]
+            if hasattr(cn, 'complex_embeddings'):
+                cn_emb = cn.complex_embeddings(bitprec)
+                coeffs.append(cn_emb)
+                if len(cn_emb) < deg:
+                    raise ValueError," {0} does not have degree {1} of field {2}".format(cn,deg,self.coefficient_field())
+            else:  
+                cn_emb = [ CF(cn) for i in range(deg) ]
+            self._embeddings.append(cn_emb)
+        if insert_in_db:
+            self.insert_into_db()
         return self._embeddings
 
-    def base_ring(self):
-        if hasattr(self, '_base_ring'):
-            return self._base_ring
-        else:
-            return None
-
-    def degree(self):
-        if hasattr(self, '_base_ring'):
-            return _degree(self._base_ring)
-        else:
-            return None
 
     def coefficient(self, n):
         emf_logger.debug("In coefficient: n={0}".format(n))
-        if not isinstance(n, [int, Integer]):
+        if not isinstance(n, (int, Integer)):
             return self.coefficients(n)
-        return self.coefficients([n, n + 1])
+        return self.coefficients([n, n + 1])[0]
 
-    def coefficients(self, nrange=range(1, 10)):
+
+    def coefficients(self, nrange=range(1, 10),insert_in_db=True):
         r"""
         Gives the coefficients in a range.
         We assume that the self._ap containing Hecke eigenvalues
@@ -1108,18 +1317,133 @@ class WebNewForm(SageObject):
 
         """
         res = []
+        emf_logger.debug("computing coeffs in range {0}".format(nrange))
+        if not isinstance(nrange, list):
+            M = nrange
+            nrange = range(0, M)
+        recompute = False
+        for n in nrange:
+            if n not in self._coefficients:
+                recompute = True
+        if recompute:
+            maxn = max(nrange)
+            E, v = self.as_factor().compact_system_of_eigenvalues(range(1,maxn+1), names='x')
+            c = E * v
+            par = c[0].parent()
+            self._coefficients[0]=par(0)
+            for n in range(len(c)):
+                self._coefficients[n+1]=c[n]
+        for n in nrange:
+            res.append(self._coefficients[n])
+        if recompute and insert_in_db:
+            self.insert_into_db()
+        return res
+
+    def one_coefficient(self,n,insert_in_db=True):
+        from sage.all import primes_first_n
+        if n in self._coefficients:
+            return self._coefficients[n]
+        maxp = n.prime_divisors()
+        max_current_p = primes_first_n(len(self._ap))[-1]
+        recompute = False
+        if maxp > max_current_p:  ## Need to compute new prime coefficients.
+            recompute = True
+        if recompute: 
+            prange = prime_range(max_current_p+1,maxp+1)
+            E, v = self.as_factor().compact_system_of_eigenvalues( prange, names='x')
+            c = E * v
+            for i in range(len(c)):            
+                self._ap[prange[i]] = c[i]
+        
+                
+    def _update_aps(self,insert_in_db=True):        
+        r"""
+        Update ap's from ambient.
+        """
+        emf_logger.debug("before update self_ap={0}".format(self._ap))
+        aps = self._ap
+        if self.parent()._ap == None:
+            return 
+        if len(self.parent()._ap) > self._fi:
+            ambient_aps = self.parent()._ap[self._fi]
+        emf_logger.debug("ambient aps:{0}".format(ambient_aps))
+        try:
+            E, v = ambient_aps
+            if len(aps) < E.rows(): # We have more to update with
+                c = E*v
+                lc = len(c)
+                for i in range(len(c)):
+                    p = primes_first_n(lc)[i]
+                    aps[p] = c[i]
+                emf_logger.debug("after update self_ap={0}".format(self._ap))
+                if insert_in_db:
+                    self.insert_into_db()
+        except Exception as e:
+            emf_logger.debug("Could not update ap's from {0}. Error: {1}".format(ambient_aps,e.message))
+            pass
+
+        
+    def coefficient_n_recursive(self,n):
+        r"""
+        Reimplement the recursive algorithm in sage modular/hecke/module.py
+        We do this because of a bug in sage with .eigenvalue()
+        """
+        from sage.rings import arith
+        F = arith.factor(n)
+        prod = None
+        #if arith.is_prime(n):
+        #    return 
+        ev = self._ap
+        for p, r in F:
+            (p, r) = (int(p), int(r))
+            pow = p**r
+            if not ev.has_key(pow):  # and ev[pow].has_key(name)):
+                # TODO: Optimization -- do something much more
+                # intelligent in case character is not defined.  For
+                # example, compute it using the diamond operators <d>
+                eps = self.character()
+                if eps is None:
+                    Tn_e = self.as_factor()._eigen_nonzero_element(pow)
+                    ev[pow] = self.as_factor()._element_eigenvalue(Tn_e)
+                    #_dict_set(ev, pow, name, 
+                else:
+                    # a_{p^r} := a_p * a_{p^{r-1}} - eps(p)p^{k-1} a_{p^{r-2}}
+                    apr1 = self.coefficient_n_recursive(pow//p)
+                    ap = self.coefficient_n_recursive(p)
+                    k = self.weight()
+                    apr2 = self.coefficient_n_recursive(pow//(p*p))
+                    apow = ap*apr1 - eps(p)*(p**(k-1)) * apr2
+                    ev[pow]=apow
+                    # _dict_set(ev, pow, name, apow)
+            if prod is None:
+                prod = ev[pow]
+            else:
+                prod *= ev[pow]
+        if recompute and insert_in_db:
+            self.insert_in_db()
+            
+
+                      
+    def coefficients_old(self, nrange=range(1, 10),insert_in_db=True):
+        r"""
+        Gives the coefficients in a range.
+        We assume that the self._ap containing Hecke eigenvalues
+        are stored.
+
+        """
+        res = []
+        emf_logger.debug("computing coeffs in range {0}".format(nrange))
         if not isinstance(nrange, list):
             M = nrange
             nrange = range(0, M)
         for n in nrange:
+            emf_logger.debug("n= {0}".format(n))
             if n == 1:
                 res.append(1)
             elif n == 0:
                 res.append(0)
             elif is_prime(n):
                 pi = prime_pi(n) - 1
-                # if self._verbose>0:
-                #    print "pi=",pi
                 if pi < len(self._ap):
                     ap = self._ap[pi]
                 else:
@@ -1135,12 +1459,11 @@ class WebNewForm(SageObject):
                     else:
                         pe = previous_prime(mn)
                     if self.level() == 1:
-                        E, v = my_compact_system_of_eigenvalues(self._f, prime_range(ps, pe + 1), names='x')
+                        E, v = my_compact_system_of_eigenvalues(self.as_factor(), prime_range(ps, pe + 1), names='x')
                     else:
-                        E, v = self._f.compact_system_of_eigenvalues(prime_range(ps, pe + 1), names='x')
+                        E, v = self.as_factor().compact_system_of_eigenvalues(prime_range(ps, pe + 1), names='x')
                     c = E * v
                     # if self._verbose>0:
-                    #    print "c="
                     for app in c:
                         self._ap.append(app)
                 ap = self._ap[pi]
@@ -1153,20 +1476,45 @@ class WebNewForm(SageObject):
                     an = self._coefficients[n]
                 else:
                     try:
-                        an = self._f.eigenvalue(n, 'x')
-                    except IndexError:
-                        atmp = self._f.eigenvalue(next_prime(n), 'x')
-                        an = self._f.eigenvalue(n, 'x')
+                        an = self.as_factor().eigenvalue(n, 'x')
+                    except (TypeError,IndexError):
+                        if n % self._N == 0:
+                            atmp = self.as_factor().eigenvalue(self._N,'x')
+                            emf_logger.debug("n= {0},c(n)={1}".format(n,atmp))       
+                        an = self.as_factor().eigenvalue(n, 'x')
                     # an = self._f.eigenvalue(QQ(n),'x')
                     self._coefficients[n] = an
                 res.append(an)
+        if insert_in_db:
+            self.insert_into_db()
         return res
 
-    def q_expansion(self, prec=10):
-        if hasattr(self._f, 'q_expansion'):
-            return self._f.q_expansion(ZZ(prec))
-        if hasattr(self._f, 'q_eigenform'):
-            return self._f.q_eigenform(ZZ(prec), names='x')
+
+    
+    def q_expansion(self, prec=None):
+        r"""
+        Return the q-expansion of self to precision prec.
+        """
+        if prec == None:
+            prec = self._prec
+        if isinstance(self._q_expansion,PowerSeries_poly):
+            if self._q_expansion.prec() == self.prec():
+                return self._q_expansion
+        q_expansion = ''
+        if self._q_expansion_str<>'':
+            R = PowerSeriesRing(self.coefficient_field(), 'q')
+            q_expansion = R(self._q_expansion_str)
+            if q_expansion.degree()>=self.prec()-1: 
+                q_expansion = q_expansion.add_bigoh(prec)
+        if q_expansion == '' and hasattr(self.as_factor(), 'q_eigenform'):
+            q_expansion = self.as_factor().q_eigenform(prec, names='x')
+        if q_expansion == '':
+            self._q_expansion_str = ''
+        else:
+            self._q_expansion_str = str(q_expansion.polynomial())   
+        self._q_expansion = q_expansion
+
+        return self._q_expansion
 
     def atkin_lehner_eigenvalue(self, Q):
         r""" Return the Atkin-Lehner eigenvalues of self
@@ -1204,9 +1552,9 @@ class WebNewForm(SageObject):
                 continue
             if(gcd(Q, ZZ(self.level() / Q)) == 1):
                 emf_logger.debug("Q={0}".format(Q))
-                emf_logger.debug("self._f={0}".format(self._f))
+                emf_logger.debug("self.as_factor={0}".format(self.as_factor()))
                 # try:
-                M = self._compute_atkin_lehner_matrix(self._f, ZZ(Q))
+                M = self._compute_atkin_lehner_matrix(self.as_factor(), ZZ(Q))
                     # M=self._f._compute_atkin_lehner_matrix(ZZ(Q))
                 # except:
                 #    emf_logger.critical("Error in computing Atkin Lehner Matrix. Bug is known and due to pickling.")
@@ -1263,7 +1611,7 @@ class WebNewForm(SageObject):
         p = cusp.numerator()
         d = ZZ(cusp * N)
         if(d.divides(N) and gcd(ZZ(N / d), ZZ(d)) == 1):
-            M = self._compute_atkin_lehner_matrix(self._f, ZZ(d))
+            M = self._compute_atkin_lehner_matrix(self.as_factor(), ZZ(d))
             ev = M.eigenvalues()
             if len(ev) > 1:
                 if len(set(ev)) > 1:
@@ -1284,7 +1632,7 @@ class WebNewForm(SageObject):
         else:
             return "Unknown"
 
-    def twist_info(self, prec=10):
+    def twist_info(self, prec=10,insert_in_db=True):
         r"""
         Try to find forms of lower level which get twisted into self.
         OUTPUT:
@@ -1304,8 +1652,8 @@ class WebNewForm(SageObject):
         N = self.level()
         k = self.weight()
         if(is_squarefree(ZZ(N))):
-            self._twist_info = [True, self._f]
-            return [True, self._f]
+            self._twist_info = [True, None ]
+            return [True, None]
 
         # We need to check all square factors of N
         twist_candidates = list()
@@ -1326,7 +1674,7 @@ class WebNewForm(SageObject):
             if(self._verbose > 0):
                 emf_logger.debug("Checking level {0}".format(M))
             for xig in range(euler_phi(M)):
-                (t, glist) = _get_newform(k, M, xig)
+                (t, glist) = _get_newform(M,k, xig)
                 if(not t):
                     return glist
                 for g in glist:
@@ -1339,7 +1687,7 @@ class WebNewForm(SageObject):
                             for p in primes_first_n(max_nump):
                                 if(ZZ(p).divides(ZZ(N))):
                                     continue
-                                bf = self._f.q_eigenform(maxp + 1, names='x')[p]
+                                bf = self.as_factor().q_eigenform(maxp + 1, names='x')[p]
                                 bg = g.q_expansion(maxp + 1)[p]
                                 if(bf == 0 and bg == 0):
                                     continue
@@ -1358,7 +1706,7 @@ class WebNewForm(SageObject):
                                 except TypeError:
                                     # we have a  non-rational (i.e. complex) value of the character
                                     XF = xip.parent()
-                                    if((KF == QQ or KF.is_totally_real()) and (KG == QQ or KG.is_totally_real())):
+                                    if((KF.absolute_degree() == 1 or KF.is_totally_real()) and (KG.absolute_degre() == 1 or KG.is_totally_real())):
                                         raise StopIteration
                             ## it is diffcult to compare elements from diferent rings in general but we make some checcks
                             # is it possible to see if there is a larger ring which everything can be
@@ -1390,12 +1738,14 @@ class WebNewForm(SageObject):
         emf_logger.debug("Candidates=v{0}".format(twist_candidates))
         self._twist_info = (False, twist_candidates)
         if(len(twist_candidates) == 0):
-            self._twist_info = [True, self._f]
+            self._twist_info = [True, None]
         else:
             self._twist_info = [False, twist_candidates]
+        if insert_in_db:
+            self.insert_into_db()
         return self._twist_info
 
-    def is_CM(self):
+    def is_CM(self,insert_in_db=True):
         r"""
         Checks if f has complex multiplication and if it has then it returns the character.
 
@@ -1410,7 +1760,7 @@ class WebNewForm(SageObject):
             return self._is_CM
         max_nump = self._number_of_hecke_eigenvalues_to_check()
         # E,v = self._f.compact_system_of_eigenvalues(max_nump+1)
-        coeffs = self.coefficients(range(max_nump + 1))
+        coeffs = self.coefficients(range(max_nump + 1),insert_in_db=insert_in_db)
         nz = coeffs.count(0)  # number of zero coefficients
         nnz = len(coeffs) - nz  # number of non-zero coefficients
         if(nz == 0):
@@ -1435,9 +1785,11 @@ class WebNewForm(SageObject):
             except StopIteration:
                 pass
         self._is_CM = [False, 0]
+        if insert_in_db:
+            self.insert_into_db()
         return self._is_CM
 
-    def as_polynomial_in_E4_and_E6(self):
+    def as_polynomial_in_E4_and_E6(self,insert_in_db=True):
         r"""
         If self is on the full modular group writes self as a polynomial in E_4 and E_6.
         OUTPUT:
@@ -1456,7 +1808,7 @@ class WebNewForm(SageObject):
         # for n in range(d+1):
         #    l.append(self._f.q_expansion(d+2)[n])
         # v=vector(l) # (self._f.coefficients(d+1))
-        v = vector(self.coefficients(range(d)))
+        v = vector(self.coefficients(range(d),insert_in_db=insert_in_db))
         d = dimension_modular_forms(1, k)
         lv = len(v)
         if(lv < d):
@@ -1492,9 +1844,11 @@ class WebNewForm(SageObject):
         except:
             return ""
         self._as_polynomial_in_E4_and_E6 = [poldeg, monomials, X]
+        if insert_in_db:
+            self.insert_into_db()
         return [poldeg, monomials, X]
 
-    def exact_cm_at_i_level_1(self, N=10):
+    def exact_cm_at_i_level_1(self, N=10,insert_in_db=True):
         r"""
         Use formula by Zagier (taken from pari implementation by H. Cohen) to compute the geodesic expansion of self at i
         and evaluate the constant term.
@@ -1521,6 +1875,7 @@ class WebNewForm(SageObject):
         for n in range(1, N + 1):
             term = (tab[n](x=0)) * 12 ** (floor(QQ(n - 1) / QQ(2))) * x ** (n - 1) / factorial(n - 1)
             res = res + term
+        
         return res
     #,O(x^(N+1))))
     # return (sum(n=1,N,subst(tab[n],x,0)*
@@ -1563,7 +1918,7 @@ class WebNewForm(SageObject):
         s = s + "\\right)"
         return "\(" + s + "\)"
 
-    def cm_values(self, digits=12):
+    def cm_values(self, digits=12,insert_in_db=True):
         r""" Computes and returns a list of values of f at a collection of CM points as complex floating point numbers.
 
         INPUT:
@@ -1575,21 +1930,53 @@ class WebNewForm(SageObject):
 
         TODO: Get explicit, algebraic values if possible!
         """
-
+        if self._cm_values <> None:
+            cm_vals = self._cm_values
+        else:
+            cm_vals = self.compute_cm_values_numeric(digits=digits,insert_in_db=insert_in_db)
         emf_logger.debug("in cm_values with digits={0}".format(digits))
         # bits=max(int(53),ceil(int(digits)*int(4)))
+        rho = CyclotomicField(3).gen()
+        zi = CyclotomicField(4).gen()        
+        res = dict()
+        res['embeddings'] = range(self.degree())
+        res['tau_latex'] = dict()
+        res['cm_vals_latex'] = dict()
+        maxl = 0
+        for tau in cm_vals:
+            if tau == zi:
+                res['tau_latex'][tau] = "\(" + latex(I) + "\)"
+            else:
+                res['tau_latex'][tau] = "\(" + latex(tau) + "\)"
+            res['cm_vals_latex'][tau] = dict()
+            for h in cm_vals[tau].keys():
+                res['cm_vals_latex'][tau][h] = "\(" + latex(cm_vals[tau][h]) + "\)"
+                l = len_as_printed(res['cm_vals_latex'][tau][h], False)
+                if l > maxl:
+                    maxl = l
+        res['tau'] = cm_vals.keys()
+        res['cm_vals'] = cm_vals
+        res['max_width'] = maxl
+        return res
+
+
+    def compute_cm_values_numeric(self,digits=12,insert_in_db=True):
+        r"""
+        Compute CM-values numerically.
+        """
+        if self._cm_values <> {}:
+            return self._cm_values
+         # the points we want are i and rho. More can be added later...
         bits = ceil(int(digits) * int(4))
         CF = ComplexField(bits)
         RF = ComplexField(bits)
-        eps = RF(10 ** -(digits + 1))
+        eps = RF(10 ** - (digits + 1))
         if(self._verbose > 1):
             emf_logger.debug("eps={0}".format(eps))
         K = self.base_ring()
-        print "K={0}".format(K)
         # recall that
-        degree = K.absolute_degree()
+        degree = self.degree()
         cm_vals = dict()
-        # the points we want are i and rho. More can be added later...
         rho = CyclotomicField(3).gen()
         zi = CyclotomicField(4).gen()
         points = [rho, zi]
@@ -1604,15 +1991,14 @@ class WebNewForm(SageObject):
                 for h in range(degree):
                     cm_vals[tau][h] = cv
                 continue
-            if(K == QQ):
+            if K.absolute_degree()==1:
                 v1 = CF(0)
                 v2 = CF(1)
                 try:
                     for prec in range(minprec, maxprec, 10):
                         if(self._verbose > 1):
                             emf_logger.debug("prec={0}".format(prec))
-                        print "q=",q
-                        v2 = self._f.q_eigenform(prec).truncate(prec)(q)
+                        v2 = self.as_factor().q_eigenform(prec).truncate(prec)(q)
                         err = abs(v2 - v1)
                         if(self._verbose > 1):
                             emf_logger.debug("err={0}".format(err))
@@ -1633,7 +2019,7 @@ class WebNewForm(SageObject):
                     for prec in range(minprec, maxprec, 10):
                         if(self._verbose > 1):
                             emf_logger.debug("prec={0}".format(prec))
-                        c = self.coefficients(range(prec))
+                        c = self.coefficients(range(prec),insert_in_db=insert_in_db)
                         for h in range(degree):
                             fexp[h] = list()
                             v2[h] = 0
@@ -1659,28 +2045,13 @@ class WebNewForm(SageObject):
                         cm_vals[tau][h] = v2[h]
                     else:
                         cm_vals[tau][h] = None
-        res = dict()
-        res['embeddings'] = range(degree)
-        res['tau_latex'] = dict()
-        res['cm_vals_latex'] = dict()
-        maxl = 0
-        for tau in points:
-            if tau == zi:
-                res['tau_latex'][tau] = "\(" + latex(I) + "\)"
-            else:
-                res['tau_latex'][tau] = "\(" + latex(tau) + "\)"
-            res['cm_vals_latex'][tau] = dict()
-            for h in cm_vals[tau].keys():
-                res['cm_vals_latex'][tau][h] = "\(" + latex(cm_vals[tau][h]) + "\)"
-                l = len_as_printed(res['cm_vals_latex'][tau][h], False)
-                if l > maxl:
-                    maxl = l
-        res['tau'] = points
-        res['cm_vals'] = cm_vals
-        res['max_width'] = maxl
-        return res
+        self._cm_values = cm_vals
+        if insert_in_db:
+            self.insert_in_db()
+        return self._cm_values
 
-    def satake_parameters(self, prec=10, bits=53):
+    
+    def satake_parameters(self, prec=10, bits=53,insert_in_db=True):
         r""" Compute the Satake parameters and return an html-table.
 
         We only do satake parameters for primes p primitive to the level.
@@ -1695,14 +2066,14 @@ class WebNewForm(SageObject):
         if not hasattr(self, '_satake'):
             self._satake = {}
         elif(self._satake != {}):
-            if len(self._satake.values()) < prime_pi(prec) or len(self._satake.values()[0].values()) == 0:
+            if len(self._satake['ps']) < prime_pi(prec) or len(self._satake['alphas'].get(0,{}).values()) == 0:
                 self._satake = {}
             else:
-                x = self._satake['thetas'].values()[0].values()[0]
+                x = self._satake['thetas'].get(0,{0:0}).values()[0]
                 if x.prec() >= bits:  # else recompute
                     return self._satake
-        K = self.base_ring()
-        degree = _degree(K)
+        K = self.coefficient_field()
+        degree = self.degree()
         RF = RealField(bits)
         CF = ComplexField(bits)
         ps = prime_range(prec)
@@ -1712,26 +2083,31 @@ class WebNewForm(SageObject):
         aps = list()
         tps = list()
         k = self.weight()
-        maxp = len(prime_range(prec))
-        if len(self._ap) < maxp:
-            E, v = my_compact_system_of_eigenvalues(self._f, ps)
-            ap_vec = E * v
-        else:
-            ap_vec = self._ap
-        emf_logger.debug("AP={0}".format(ap_vec))
-        emf_logger.debug("K={0}".format(K))
+        #maxp = max(ps)
+        #emf_logger.debug("AP={0}".format(self._ap))
+        #if ps[-1] not in self._ap: 
+        #    c = self.coefficients(ps)
+        #    for i in range(len(c)):
+        #        p = ps[i]
+        #        if p not in self._ap:
+        #            self._ap[p] = c[i]
+        #    #E, v = my_compact_system_of_eigenvalues(self.as_factor(), ps)
+        #    #ap_vec = E * v
+        #    #ap_vec = self._ap
+        #emf_logger.debug("AP={0}".format(self._ap))
+        #emf_logger.debug("K={0}".format(K))
         for j in range(degree):
             alphas[j] = dict()
             thetas[j] = dict()
         for j in xrange(len(ps)):
             p = ps[j]
-            ap = ap_vec[j]
+            ap = self.coefficient(p) #_ap[p]
             if p.divides(self.level()):
                 continue
             self._satake['ps'].append(p)
-            chip = self.character()(p)
+            chip = self.character_value(p)
             # ap=self._f.coefficients(ZZ(prec))[p]
-            if(K == QQ):
+            if K.absolute_degree()==1:
                 f1 = QQ(4 * chip * p ** (k - 1) - ap ** 2)
                 alpha_p = (QQ(ap) + I * f1.sqrt()) / QQ(2)
                 ab = RF(p ** ((k - 1) / 2))
@@ -1739,7 +2115,6 @@ class WebNewForm(SageObject):
                 t_p = CF(norm_alpha).argument()
                 thetas[0][p] = t_p
                 alphas[0][p] = (alpha_p / ab).n(bits)
-                # print "adding thetas=",thetas
             else:
                 for jj in range(degree):
                     app = ap.complex_embeddings(bits)[jj]
@@ -1770,11 +2145,13 @@ class WebNewForm(SageObject):
                 self._satake['thetas_latex'][j][p] = s
 
         emf_logger.debug("satake=".format(self._satake))
+        if insert_in_db:
+            self.insert_into_db()
         return self._satake
 
     def print_satake_parameters(self, stype=['alphas', 'thetas'], prec=10, bprec=53):
         emf_logger.debug("print_satake={0},{1}".format(prec, bprec))
-        if self._f is None:
+        if self.as_factor() is None:
             return ""
         if len(self.coefficients()) < prec:
             self.coefficients(prec)
@@ -1793,8 +2170,8 @@ class WebNewForm(SageObject):
         tbl['atts'] = "border=\"1\""
         tbl['data'] = list()
         tbl['headersv'] = list()
-        K = self.base_ring()
-        degree = _degree(K)
+        K = self.coefficient_field()
+        degree = self.degree()
         if(self.dimension() > 1):
             tbl['corner_label'] = "\( Embedding \, \\backslash \, p\)"
         else:
@@ -1820,7 +2197,7 @@ class WebNewForm(SageObject):
         r""" Compute the number of Hecke eigenvalues (at primes) we need to check to identify twists of our given form with characters of conductor dividing the level.
         """
         ## initial bound
-        bd = self._f.sturm_bound()
+        bd = self.as_factor().sturm_bound()
         # we do not check primes dividing the level
         bd = bd + len(divisors(self.level()))
         return bd
@@ -1840,7 +2217,7 @@ class WebNewForm(SageObject):
 
 
         """
-        if(prec is None):
+        if prec == None:
             prec = self._prec
         s = my_latex_from_qexp(str(self.q_expansion(prec)))
 
@@ -1852,8 +2229,9 @@ class WebNewForm(SageObject):
             s = r"\(" + s + r"\)"
         else:
             s = r"\[\begin{align} &" + join(sb, "\cr &") + r"\end{align}\]"
-
+            
         emf_logger.debug("print_q_exp: prec=".format(prec))
+        
         return s
 
     def print_q_expansion_embeddings(self, prec=10, bprec=53):
@@ -1912,39 +2290,23 @@ class WebNewForm(SageObject):
         s = html_table(tbl)
         return s
 
-    def polynomial(self, format='latex'):
+    def polynomial(self, type='base_ring',format='latex'):
         r"""
-        Here we have to check whether f is defined over a base ring over Q or over a CyclotomicField...
+        Return a formatted string representation of the defining polynomial of either the base ring or the coefficient ring of self.
         """
-        K = self.base_ring()
-        if K is None:
-            return ""
-        if(self.dimension() == 1 and K == QQ):
-            if(K == QQ):
-                s = 'x'
-            else:
-                if format == 'latex':
-                    s = latex(K.gen())
-                elif format == 'html':
-                    s = pol_to_html(K.relative_polynomial())
-                else:
-                    s = str(K.relative_polynomial())
+        if type == 'base_ring':
+            if self._base_ring_as_dict=={}:
+                self._base_ring_as_dict  = number_field_to_dict(self.base_ring())
+            p = self._base_ring_as_dict['relative polynomial']
         else:
-            if(K.is_relative()):
-                if format == 'latex':
-                    s = latex(K.relative_polynomial())
-                elif format == 'html':
-                    s = pol_to_html(K.relative_polynomial())
-                else:
-                    s = str(K.relative_polynomial())
-            else:
-                if format == 'latex':
-                    s = latex(self.base_ring().polynomial())
-                elif format == 'html':
-                    s = pol_to_html(K.relative_polynomial())
-                else:
-                    s = str(K.relative_polynomial())
-        return s
+            if self._coefficient_field_as_dict=={}:
+                self._coefficient_field_as_dict  = number_field_to_dict(self.coefficient_field())
+            p = self._coefficient_field_as_dict['relative polynomial']
+        if format == 'latex':
+            p = pol_to_latex(p)
+        elif format == 'html':
+            p = pol_to_html(p)
+        return p
 
     def print_atkin_lehner_eigenvalues(self):
         r"""
@@ -2058,8 +2420,8 @@ class WebNewForm(SageObject):
         r"""
         """
         cm_vals = self.cm_values()['cm_values']
-        K = self.base_ring()
-        degree = _degree(K)
+        K = self.coefficient_field()
+        degree = self.degree()
         if(self._verbose > 2):
             emf_logger.debug("vals={0}".format(cm_vals))
             emf_logger.debug("errs={0}".format(err))
@@ -2100,10 +2462,10 @@ class WebNewForm(SageObject):
         q = x.conductor()
         # what level will the twist live on?
         level = self.level()
-        qq = self._character.conductor()
+        qq = self.character().conductor()
         new_level = lcm(self.level(), lcm(q * q, q * qq))
         D = DirichletGroup(new_level)
-        new_x = D(self._character) * D(x) * D(x)
+        new_x = D(self.character()) * D(x) * D(x)
         ix = D.list().index(new_x)
         #  the correct space
         NS = WebModFormSpace(self._k, new_level, ix, self._prec)
@@ -2193,7 +2555,7 @@ def break_line_at(s, brpt=20):
     return res
 
 
-def _get_newform(k, N, chi, fi=None):
+def _get_newform(N, k, chi, fi=None):
     r"""
     Get an element of the space of newforms, incuding some error handling.
 
@@ -2224,7 +2586,6 @@ def _get_newform(k, N, chi, fi=None):
 
      """
     t = False
-    # print k,N,chi,fi
     try:
         if(chi == 0):
             emf_logger.debug("EXPLICITLY CALLING NEWFORMS!")
@@ -2251,24 +2612,16 @@ def _degree(K):
     r"""
     Returns the degree of the number field K
     """
-    if(K == QQ):
-        return 1
-    try:
-        return K.absolute_degree()
-        # if(K.is_relative()):
-        #    return K.relative_degree()
-        # return K.degree()
-    except AttributeError:
-        return -1  # exit silently
+    return K.absolute_degree()
 
 
-def unpickle_wnf_v1(k, N, chi, label, fi, prec, bitprec, data):
-    F = WebNewForm(k=k, N=N, chi=chi, label=label, fi=fi, prec=prec, bitprec=bitprec, data=data)
+def unpickle_wnf_v1(N, k,chi, label, fi, prec, bitprec, data):
+    F = WebNewForm(N=N,k=k, chi=chi, label=label, fi=fi, prec=prec, bitprec=bitprec, data=data)
     return F
 
 
-def unpickle_wmfs_v1(k, N, chi, cuspidal, prec, bitprec, data):
-    M = WebModFormSpace(k, N, chi, cuspidal, prec, bitprec, data)
+def unpickle_wmfs_v1(N, k,chi, cuspidal, prec, bitprec, data):
+    M = WebModFormSpace(N, k, chi, cuspidal, prec, bitprec, data)
     return M
 
 
@@ -2282,6 +2635,18 @@ def pol_to_html(p):
     s = re.sub("\*", "", s)
     s = re.subst("x", "<i>x</i>", s)
     return s
+
+def pol_to_latex(p):
+    r"""
+    Convert polynomial in string format to latex.
+    """
+    s = str(p)
+    s = re.sub("\^(\d*)", "^{\\1}", s)
+    s = re.sub("\_(\d*)", "_{\\1}", s)
+    s = re.sub("\*", "", s)
+    s = re.sub("zeta(\d+)", "\zeta_{\\1}", s)
+    return s
+
 
 ## Added routines to replace sage routines with bugs for level 1
 ##
@@ -2397,3 +2762,51 @@ def my_hecke_images(AA, i, v):
     x = AA.gen(i)
     X = [AA.hecke_operator(n).apply_sparse(x).element() for n in v]
     return matrix(AA.base_ring(), X)
+
+def number_field_to_dict(F):
+
+    r"""
+    INPUT:
+    - 'K' -- Number Field
+    - 't' -- (p,gens) where p is a polynomial in the variable(s) xN with coefficients in K. (The 'x' is just a convention)
+
+    OUTPUT:
+
+    - 'F' -- Number field extending K with relative minimal polynomial p.
+    """
+    if F.base_ring().absolute_degree()==1:
+        K = 'QQ'
+    else:
+        K = number_field_to_dict(F.base_ring())
+    if F.absolute_degree() == 1:
+        p = 'x'
+        g = ('x',)
+    else:
+        p = F.relative_polynomial()
+        g = str(F.gen())
+        x = p.variables()[0]
+        p = str(p).replace(str(x),str(g))
+    return {'base':K,'relative polynomial':p,'gens':g}
+
+
+def number_field_from_dict(d):
+    r"""
+    INPUT:
+
+    - 'd' -- {'base':F,'p':p,'g':g } where p is a polynomial in the variable(s) xN with coefficients in K. (The 'x' is just a convention)
+
+    OUTPUT:
+
+    - 'F' -- Number field extending K with relative minimal polynomial p.
+    """
+    K = d['base']; p=d['relative polynomial']; g=d['gens']
+    if K=='QQ':
+        K = QQ
+    elif isinstance(K,dict):
+        K = number_field_from_dict(K)
+    else:
+        raise ValueError,"Could not construct number field!"
+    F = NumberField(K[g](p),names=g)
+    if F.absolute_degree()==1:
+        F = QQ
+    return F

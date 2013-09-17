@@ -14,7 +14,7 @@ from base import *
 
 import pages
 import hilbert_modular_form
-import siegel_modular_form
+import siegel_modular_forms
 import modular_forms
 import elliptic_curves
 import quadratic_twists
@@ -27,7 +27,7 @@ import lfunctions
 import users
 import knowledge
 import upload
-import DirichletCharacter
+import characters
 import local_fields
 import galois_groups
 import number_field_galois_groups
@@ -36,6 +36,8 @@ import zeros
 import crystals
 import permutations
 import hypergm
+import motives
+import logging
 
 import raw
 from modular_forms.maass_forms.picard import mwfp
@@ -83,7 +85,7 @@ map(root_static_file, ['favicon.ico'])
 
 @app.route("/robots.txt")
 def robots_txt():
-    if "lmfdb.org".lower() in request.url_root.lower():
+    if "www.lmfdb.org".lower() in request.url_root.lower():
         fn = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "robots.txt")
         if os.path.exists(fn):
             return open(fn).read()
@@ -153,8 +155,6 @@ def form_example():
     info = {'sidebar': sidebar}
     return render_template("form.html", info=info)
 
-
-
 @app.route('/ModularForm/GSp/Q')
 @app.route('/ModularForm/GSp/Q/<group>')
 @app.route('/ModularForm/GSp/Q/<group>/<page>')
@@ -173,7 +173,7 @@ def ModularForm_GSp4_Q_top_level(group=None, page=None, weight=None, form=None):
         if 'specimen' == page:
             args['weight'] = weight
             args['form'] = form
-    return siegel_modular_form.render_webpage(args)
+    return siegel_modular_forms.siegel_modular_form.render_webpage(args)
 
 
 @app.route('/example_plot')
@@ -213,6 +213,10 @@ Usage: %s [OPTION]...
 """ % sys.argv[0]
 
 def get_configuration():
+    global logfocus
+        # I don't think that this global variable does anything at all,
+        # but let's keep track of it anyway.
+
     # default options to pass to the app.run()
     options = {"port": 37777, "host": "127.0.0.1", "debug": False}
     # Default option to pass to _init
@@ -223,53 +227,55 @@ def get_configuration():
     logfile = "flasklog"
     import base
     dbport = base.DEFAULT_DB_PORT
-    try:
-      import getopt
+    if not sys.argv[0].endswith('nosetests'):
       try:
-          opts, args = getopt.getopt(sys.argv[1:],
-                                     "p:h:l:t",
-                                     ["port=", "host=", "dbport=", "log=", "logfocus=", "debug", "help", "threading", 
-                                      # undocumented, see below
-                                      "enable-reloader", "disable-reloader",
-                                      "enable-debugger", "disable-debugger",
-                                      ])
-      except getopt.GetoptError, err:
-          sys.stderr.write("%s: %s\n" % (sys.argv[0], err))
-          sys.stderr.write("Try '%s --help' for usage\n" % sys.argv[0])
-          #sys.exit(2)
+        import getopt
+        try:
+            opts, args = getopt.getopt(sys.argv[1:],
+                                       "p:h:l:t",
+                                       ["port=", "host=", "dbport=", "log=", "logfocus=", "debug", "help", "threading", 
+                                        # undocumented, see below
+                                        "enable-reloader", "disable-reloader",
+                                        "enable-debugger", "disable-debugger",
+                                        ])
+        except getopt.GetoptError, err:
+            sys.stderr.write("%s: %s\n" % (sys.argv[0], err))
+            sys.stderr.write("Try '%s --help' for usage\n" % sys.argv[0])
+            #sys.exit(2)
 
-      for opt, arg in opts:
-          if opt == "--help":
-              usage()
-              sys.exit()
-          elif opt in ("-p", "--port"):
-              options["port"] = int(arg)
-          elif opt in ("-h", "--host"):
-              options["host"] = arg
-          elif opt in ("-t", "--threading"):
-              threading_opt = True
-          elif opt in ("-l", "--log"):
-              logfile = arg
-          elif opt in ("--dbport"):
-              dbport = int(arg)
-          elif opt == "--debug":
-              options["debug"] = True
-          elif opt == "--logfocus":
-              logfocus = arg
-          # undocumented: the following allow changing the defaults for
-          # these options to werkzeug (they both default to False unless
-          # --debug is set, in which case they default to True but can
-          # be turned off)
-          elif opt == "--enable-reloader":
-              options["use_reloader"] = True
-          elif opt == "--disable-reloader":
-              options["use_reloader"] = False
-          elif opt == "--enable-debugger":
-              options["use_debugger"] = True
-          elif opt == "--disable-debugger":
-              options["use_debugger"] = False
-    except:
-        pass # something happens on the server -> TODO: FIXME
+        for opt, arg in opts:
+            if opt == "--help":
+                usage()
+                sys.exit()
+            elif opt in ("-p", "--port"):
+                options["port"] = int(arg)
+            elif opt in ("-h", "--host"):
+                options["host"] = arg
+            elif opt in ("-t", "--threading"):
+                threading_opt = True
+            elif opt in ("-l", "--log"):
+                logfile = arg
+            elif opt in ("--dbport"):
+                dbport = int(arg)
+            elif opt == "--debug":
+                options["debug"] = True
+            elif opt == "--logfocus":
+                logfocus = arg
+                logging.getLogger(arg).setLevel(logging.DEBUG)
+            # undocumented: the following allow changing the defaults for
+            # these options to werkzeug (they both default to False unless
+            # --debug is set, in which case they default to True but can
+            # be turned off)
+            elif opt == "--enable-reloader":
+                options["use_reloader"] = True
+            elif opt == "--disable-reloader":
+                options["use_reloader"] = False
+            elif opt == "--enable-debugger":
+                options["use_debugger"] = True
+            elif opt == "--disable-debugger":
+                options["use_debugger"] = False
+      except:
+          pass # something happens on the server -> TODO: FIXME
     return { 'flask_options' : options, 'dbport' : dbport , 'threading_opt' : threading_opt }
 
 configuration = get_configuration()

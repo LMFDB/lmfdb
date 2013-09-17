@@ -1,5 +1,7 @@
 from flask import render_template, url_for
 import siegel_core
+import input_parser
+import dimensions
 import pickle
 import urllib
 from sage.all_cmdline import *
@@ -43,13 +45,26 @@ def render_webpage(args={}):
     info['level'] = level
 
     # We check first the key 'group' since it is needed always
-
+    tmp_parent_as_tex = '%s'
     if args['group']:
 
         if 'Sp4Z' == args['group']:
-            info['parent_as_tex'] = 'M_k\\big({\\rm Sp}(4,\\mathbb{Z})\\big)'
-            dimension = siegel_core._dimension_Sp4Z
+            info['parent_as_tex'] = 'M_{k,j}\\big({\\rm Sp}(4,\\mathbb{Z})\\big)'
+            # dimension = siegel_core._dimension_Sp4Z
+            dimension = dimensions.dimension_Sp4Z
             info['generators'] = 'smf.Igusa_generators'
+
+        elif 'Gamma0_2' == args['group']:
+            info['parent_as_tex'] = 'M_{k,j}\\big(\\Gamma_0(2)\\big)'
+            dimension = dimensions.dimension_Gamma0_2    
+
+        elif 'Gamma1_2' == args['group']:
+            info['parent_as_tex'] = 'M_{k,j}\\big(\\Gamma_1(2)\\big)'
+            dimension = dimensions.dimension_Gamma1_2
+
+        elif 'Gamma_2' == args['group']:
+            info['parent_as_tex'] = 'M_{k,j}\\big(\\Gamma(2)\\big)'
+            dimension = dimensions.dimension_Gamma_2
 
         elif 'Sp4Z_2' == args['group']:
             info['parent_as_tex'] = 'M_{k,2}\\big({\\rm Sp}(4,\\mathbb{Z})\\big)'
@@ -94,7 +109,7 @@ def render_webpage(args={}):
             dimension = siegel_core._dimension_Gamma0_4_half
 
         else:
-            info['error'] = 'Request for unvalid type of Siegel modular form'
+            info['error'] = 'Request for unavailable type of Siegel modular form'
             return render_template("ModularForm_GSp4_Q/None.html", **info)
 
         info['learnmore'] += [('The spaces \(' + info['parent_as_tex'] + '\)', url_for(
@@ -103,11 +118,15 @@ def render_webpage(args={}):
                    group=group, page='forms'))]
 
     else:
-        # some nonsense request came in
+        # some nonsense request came in, we answer by nonsense too
         return render_template("ModularForm_GSp4_Q/None.html")
 
-        # We branch now according to the key 'page'
+        # We branch now according to the value of the key 'page'
 
+
+    ##########################################################
+    ## FORM COLLECTION REQUEST
+    ##########################################################
     if page == 'forms':
         try:
             f = urllib.urlopen(DATA + group + '/available_eigenforms.p')
@@ -129,51 +148,58 @@ def render_webpage(args={}):
                                title='Siegel modular forms basic information',
                                bread=bread, **info)
 
+
+    ##########################################################
+    ## DIMENSIONS REQUEST
+    ##########################################################
     if page == 'dimensions':
-        if not weight_range:
-            min_wt = 1
-            max_wt = 16
-        else:
-            info['weight_range'] = weight_range
-            # parse weight_range
-            wr = weight_range.split('-')
-            try:
-                wr = map(int, wr)
-                min_wt = wr[0]
-                if len(wr) == 1:
-                    max_wt = min_wt
-                    if min_wt > 1000000:
-                        info['error'] = 'Input too large: Please enter a smaller number.'
-                        min_wt = 2
-                        max_wt = 50
-                else:
-                    max_wt = wr[1]
-                    if max_wt - min_wt >= 0 and (max_wt - min_wt + 1) * max_wt > 1000000:
-                        min_wt = 2
-                        max_wt = 50
-                        info['error'] = 'Input too large: Please enter a smaller range.'
-                        # raise ValueError('gaga')
-            except ValueError, e:
-                info['error'] = 'Invalid input: ' + e.message
-                min_wt = 2
-                max_wt = 50
 
-##             if info['group'] == "Sp8Z":
-##               info['table_headers'] = ["Weight", "Total", "Ikeda Lifts", "Miyawaki Lifts", "Other"]
-
+        # We check whether the weight_range makes sense to us and, if so, dispatch it 
+        info['weight_range'] = weight_range
         try:
-            if 'Kp' == group:
+            assert info['weight_range'], 'Please enter a valid argument'
+            min_wt, max_wt, sym_pow = input_parser.kj_parser( weight_range)
+            min_wt = Integer( min_wt)
+            if None == max_wt or max_wt < min_wt:
+                max_wt = min_wt
+            if None == sym_pow:
+                sym_pow = 0
+            assert min_wt < 1000000 and (max_wt - min_wt + 1) * max_wt < 10000 and sym_pow < 1000, '%d-%d,%d: Input too large: Please enter smaller range or numbers.' % (max_wt, min_wt, sym_pow)
+        except Exception as e:
+            info['error'] = str(e)
+            return render_template( "ModularForm_GSp4_Q/ModularForm_GSp4_Q_dimensions.html",
+                                    title='Siegel modular forms dimensions \(' + info['parent_as_tex'] + '\)',
+                                    bread=bread, **info)
+
+        # A priori the request is reasonable, so we try to get the data for the answer 
+        try:
+            info['new_method'] = None
+            if 'Gamma_2' == group or 'Gamma0_2' == group or 'Gamma1_2' == group or 'Sp4Z' == group:
+                info['sym_pow'] = sym_pow
+                info['table_headers'], info['dimensions'] = dimension( range( min_wt, max_wt + 1), sym_pow)
+                ####### a hack ########
+                info['new_method'] = 'new_method'
+                bread += [('Dimensions',
+                           url_for('ModularForm_GSp4_Q_top_level', group=group, page=page, level=level, weight_range=weight_range))]
+            elif 'Kp' == group:
                 info['dimensions'] = [(k, dimension(k, tp=int(level))) for k in range(min_wt, max_wt + 1)]
                 bread += [('Dimensions',
-                          url_for('ModularForm_GSp4_Q_top_level', group=group, page=page, level=level, weight_range=weight_range))]
+                           url_for('ModularForm_GSp4_Q_top_level', group=group, page=page, level=level, weight_range=weight_range))]               
             else:
                 info['dimensions'] = [(k, dimension(k)) for k in range(min_wt, max_wt + 1)]
                 bread += [('Dimensions',
                           url_for('ModularForm_GSp4_Q_top_level', group=group, page=page, weight_range=weight_range))]
-        except:
-            info['error'] = 'Functional error'
+        except Exception as e:
+            info['error'] = 'Functional error: %s' % (str(e)) #(sys.exc_info()[0])
+            return render_template( "ModularForm_GSp4_Q/ModularForm_GSp4_Q_dimensions.html",
+                                    title='Siegel modular forms dimensions \(' + info['parent_as_tex'] + '\)',
+                                    bread=bread, **info)
 
-        if 'Sp8Z' == group:
+        # We provide some headers for the 'old' method and ask for rendering an answer
+        if info['new_method']:
+            info['table_headers'] = info['table_headers']
+
+        elif 'Sp8Z' == group:
             info['table_headers'] = ['Weight', 'Total', 'Ikeda lifts', 'Miyawaki lifts', 'Other']
 
         elif 'Sp6Z' == group:
@@ -192,6 +218,10 @@ def render_webpage(args={}):
                                title='Siegel modular forms dimensions \(' + info['parent_as_tex'] + '\)',
                                bread=bread, **info)
 
+
+    ##########################################################
+    ## SPECIFIC FORM REQUEST
+    ##########################################################
     if page == 'specimen':
         info['weight'] = weight
 

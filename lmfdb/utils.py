@@ -29,7 +29,8 @@ def cached(timeout=15 * 60, key='cache::%s::%s'):
                 cache.set(cache_key, rv, timeout=timeout)
             ret = make_response(rv)
             # this header basically says that any cache can store this infinitely long
-            ret.headers['Cache-Control'] = 'max-age=360000, public'
+            # set this down to 600, because we have pagespeed now (hsy)
+            ret.headers['Cache-Control'] = 'max-age=600, public'
             return ret
         return decorated_function
     return decorator
@@ -91,7 +92,16 @@ def make_logger(bp_or_name, hl=False):
         name = bp_or_name
     l = logging.getLogger(name)
     l.propagate = False
-    if logfocus is None or logfocus == name:
+    if logfocus is None:
+        l.setLevel(logging.INFO)
+    elif logfocus == name:
+        # this will NEVER BE TRUE, because logfocus is set AFTER
+        # we have created all of the loggers. This is ok for now,
+        # because we are setting the log level later when we set
+        # the logfocus variable.
+        #
+        # Maybe someday someone will rewrite this so that it makes
+        # sense...
         l.setLevel(logging.DEBUG)
     else:
         l.setLevel(logging.WARNING)
@@ -168,6 +178,30 @@ from lmfdb.base import app
 from flask import url_for, make_response
 import sage.all
 
+###############################################################################
+## url_for modified for characters
+def url_character(**kwargs):
+    if 'type' not in kwargs:
+        return url_for('characters.render_characterNavigation')
+    elif kwargs['type'] == 'Dirichlet':
+        del kwargs['type']
+        if kwargs.get('calc',None):
+            return url_for('characters.dc_calc',**kwargs)
+        else:
+            return url_for('characters.render_Dirichletwebpage',**kwargs)
+    elif kwargs['type'] == 'Hecke':
+        del kwargs['type']
+        if kwargs.get('calc',None):
+            return url_for('characters.hc_calc',**kwargs)
+        else:
+            return url_for('characters.render_Heckewebpage',**kwargs)
+
+## make it available from templates
+@app.context_processor
+def ctx_characters():
+    chardata = {}
+    chardata['url_character'] = url_character
+    return chardata
 
 def to_dict(args):
     d = {}

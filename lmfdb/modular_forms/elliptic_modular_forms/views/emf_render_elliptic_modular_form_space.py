@@ -23,7 +23,7 @@ from flask import render_template, url_for, request, redirect, make_response, se
 import tempfile
 import os
 import re
-from lmfdb.utils import ajax_more, ajax_result, make_logger, to_dict
+from lmfdb.utils import ajax_more, ajax_result, make_logger, to_dict, url_character
 from sage.all import *
 from sage.modular.dirichlet import DirichletGroup
 from lmfdb.base import app, db
@@ -37,7 +37,7 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import *
 from lmfdb.modular_forms.elliptic_modular_forms.backend.plot_dom import *
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, EMF_TOP
 ###
-use_db = True  # Should be decided intelligently
+##use_db = True  # Should be decided intelligently
 ###
 
 
@@ -97,16 +97,16 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
         info['error'] = "Got wrong level: %s " % level
         return info
     try:
-        if use_db:
-            WMFS = WebModFormSpace(weight, level, character, use_db=True)
-        else:
-            WMFS = WebModFormSpace(weight, level, character)
+        WMFS = WebModFormSpace(N = level, k = weight, chi = character)
         if 'download' in info and 'tempfile' in info:
             WNF._save_to_file(info['tempfile'])
             info['filename'] = str(weight) + '-' + str(level) + '-' + str(character) + '-' + label + '.sobj'
             return info
-    except RuntimeError:
-                info['error'] = "Sage error: Could not construct the desired space!"
+    except Exception as e:
+        if isinstance(e,IndexError):
+            info['error'] = e.message
+        else:
+            info['error'] = "We are sorry. The sought space can not be found in the database."
     if WMFS.level() == 1:
         info['group'] = "\( \mathrm{SL}_{2}(\mathbb{Z})\)"
     else:
@@ -118,7 +118,7 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
         conrey_char = WMFS.conrey_character()
         conrey_char_name = WMFS.conrey_character_name()
         info['conrey_character_name'] = '\( ' + conrey_char_name + '\)'
-        info['character_url'] = url_for('render_Character', arg1=WMFS.level(), arg2=conrey_char.number())
+        info['character_url'] = url_character(type='Dirichlet', modulus=WMFS.level(), number=conrey_char.number())
         info['name_new'] = "\(S_{ %s }^{new}(%s,%s) \)" % (WMFS.weight(), WMFS.level(), conrey_char_name)
         info['name_old'] = "\(S_{ %s }^{old}(%s,%s) \)" % (WMFS.weight(), WMFS.level(), conrey_char_name)
     info['dimension_cusp_forms'] = WMFS.dimension_cusp_forms()
@@ -141,6 +141,11 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
     info['new_decomposition'] = WMFS.print_galois_orbits()
     emf_logger.debug("new_decomp={0}".format(info['new_decomposition']))
     info['nontrivial_new'] = len(info['new_decomposition'])
+    if info['new_decomposition']=='':
+        if info['dimension_newspace'] >0:
+            info['nontrivial_new_info'] = " is unfortunately not in the database yet!" 
+        else:
+            info['nontrivial_new_info'] = " is empty!"
     ## we try to catch well-known bugs...
     info['old_decomposition'] = "n/a"
     if level < N_max_comp:

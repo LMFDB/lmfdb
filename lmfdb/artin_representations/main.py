@@ -9,15 +9,16 @@ from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
 from lmfdb.artin_representations import artin_representations_page, artin_logger
 from lmfdb.utils import to_dict
+from lmfdb.transitive_group import *
+
 
 from lmfdb.math_classes import *
-
+from lmfdb.WebNumberField import *
 
 def initialize_indices():
-    ArtinRepresentation.collection().ensure_index([("Dim", ASC), ("Conductor_plus", ASC)])
+    ArtinRepresentation.collection().ensure_index([("Dim", ASC), ("Conductor_plus", ASC),("galorbit", ASC)])
     ArtinRepresentation.collection().ensure_index([("Dim", ASC), ("Conductor", ASC)])
     ArtinRepresentation.collection().ensure_index([("Conductor", ASC), ("Dim", ASC)])
-    ArtinRepresentation.collection().ensure_index([("Conductor_plus", ASC), ("Dim", ASC)])
 
 
 def get_bread(breads=[]):
@@ -80,6 +81,19 @@ def artin_representation_search(**args):
         except:
             raise AssertionError("The Frobenius-Schur indicator can only be 0, 1 or -1")
         query["Indicator"] = int(req["frobenius_schur_indicator"])
+    if req.get("group", "") != "":
+        try:
+            gcs = complete_group_codes(req['group'])
+            if len(gcs) == 1:
+                query['Galois_nt'] = gcs[0]
+# list(gcs[0])
+            if len(gcs) > 1:
+                query['Galois_nt'] = {'$in': [x for x in gcs]}
+        except NameError as code:
+            info = {}
+            info['err'] = 'Error parsing input for Galois group: unknown group label %s.  It needs to be a <a title = "Galois group labels" knowl="nf.galois_group.name">group label</a>, such as C5 or 5T1, or comma separated list of labels.' % code
+            return search_input_error(info, bread)
+
 
     tmp_conductor = []
     if req.get("conductor", "") != "":
@@ -102,14 +116,38 @@ def artin_representation_search(**args):
     elif len(tmp_both) >= 2:
         query["$or"] = tmp_both
 
-    count = int(req.get('count', 20))
+    count_default = 20
+    if req.get('count'):
+        try:
+            count = int(req['count'])
+        except:
+            count = count_default
+            req['count'] = count
+    else:
+        req['count'] = count_default
+        count = count_default
 
-    for i in range(10):
-        print query
-    from pymongo import ASCENDING
-    ArtinRepresentation.collection().ensure_index([("Dim", ASCENDING), ("Conductor_plus", ASCENDING)])
-    data = [ArtinRepresentation(data=x) for x in ArtinRepresentation.collection(
-    ).find(query).sort([("Dim", ASCENDING), ("Conductor_plus", ASCENDING)]).limit(count)]
+    #results = ArtinRepresentation.collection().find(query).sort([("Dim", ASC), ("Conductor_plus", ASC), ("galorbit", ASC)]).limit(count)
+    results = ArtinRepresentation.collection().find(query).sort([("Dim", ASC), ("Conductor_plus", ASC), ("galorbit", ASC)])
+    # We step through the data so we can collect Galois conjugate rep'ns
+    data = []
+    galclass = []
+    curclass = '0'
+    cnt = 0
+    for x in results:
+        if cnt > count:
+            break
+        ar = ArtinRepresentation(data=x)
+        if ar.galois_orbit_label() == curclass:
+            galclass.append(ar)
+        else:
+            if curclass != '0':
+                data.append(galclass)
+            curclass = ar.galois_orbit_label()
+            galclass = [ar]
+            cnt += 1
+    #data = [ArtinRepresentation(data=x) for x in results]
+
     return render_template("artin-representation-search.html", req=req, data=data, data_count=len(data), title=title, bread=bread, query=query)
 
 
@@ -127,6 +165,9 @@ def artin_representation_search(**args):
 @artin_representations_page.route("/<dim>/<conductor>/<index>")
 def by_data_no_slash(dim, conductor, index):
     return flask.redirect(url_for(".by_data", dim=dim, conductor=conductor, index=index), code=301)
+
+def search_input_error(info, bread):
+    return render_template("artin-representation-search.html", req=info, title='Artin Representation Search Error', bread=bread)
 
 
 @artin_representations_page.route("/<dim>/<conductor>/<index>/")
@@ -152,6 +193,9 @@ def render_artin_representation_webpage(dim, conductor, index):
     the_rep = ArtinRepresentation.find_one(
         {'Dim': int(dim), "Conductor": str(conductor), "DBIndex": int(index)})
 
+    extra_data = {}
+    C = base.getDBConnection()
+    extra_data['galois_knowl'] = group_display_knowl(5,3,C)
     artin_logger.info("Found %s" % (the_rep._data))
 
     bread = get_bread([(str("Dimension %s, conductor %s, index %s" % (the_rep.dimension(),
@@ -165,11 +209,12 @@ def render_artin_representation_webpage(dim, conductor, index):
         processed_root_number = "unknown"
     else:
         processed_root_number = str(the_rep.root_number())
-    properties = [("Root number", processed_root_number),
-                  ("Dimension", str(the_rep.dimension())),
-                  ("Conductor", str(the_rep.conductor())),
-                  ("Factored conductor", "$" + the_rep.factored_conductor_latex() + "$"),
+    properties = [("Dimension", str(the_rep.dimension())),
+                  ("Group", the_rep.group()),
+                  #("Conductor", str(the_rep.conductor())),
+                  ("Conductor", "$" + the_rep.factored_conductor_latex() + "$"),
                   #("Bad primes", str(the_rep.bad_primes())),
+                  ("Root number", processed_root_number),
                   ("Frobenius-Schur indicator", str(the_rep.indicator()))
                   ]
 
@@ -186,7 +231,7 @@ def render_artin_representation_webpage(dim, conductor, index):
               #("Same degree and conductor", url_for(".by_partial_data", dim = the_rep.dimension(), conductor = the_rep.conductor())),\
               #("L-function", url_for("l_functions.l_function_artin_page",  dimension = the_rep.dimension(), conductor = the_rep.conductor(), tim_index = the_rep.index()))
               #]
-    return render_template("artin-representation-show.html", credit=tim_credit, support=support_credit, title=title, bread=bread, friends=friends, object=the_rep, properties2=properties)
+    return render_template("artin-representation-show.html", credit=tim_credit, support=support_credit, title=title, bread=bread, friends=friends, object=the_rep, properties2=properties, extra_data=extra_data)
 
 
 def render_artin_representation_set_webpage(dim, conductor):
@@ -200,3 +245,4 @@ def render_artin_representation_set_webpage(dim, conductor):
     title = "Artin representations of dimension $%s$ and conductor $%s$" % (dim, conductor)
 
     return render_template("artin-representation-set-show.html", credit=tim_credit, support=support_credit, title=title, bread=bread, object=the_reps)
+

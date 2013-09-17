@@ -11,11 +11,11 @@ from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db impo
 # from psage.modform.maass.lpkbessel import *
 # build extensions
 
-try:
-    #  from modular_forms.maass_forms.backend.lpkbessel import *
-    from lpkbessel import *
-except Exception as ex:
-    mwf_logger.critical("maass_waveforms/views/mwf_utils.py: couldn't load backend. Exception: '%s' To enable full Maass waveform functionality: compile the cython file lpkbessel.pyx with sage -c create_local_so('lpkbessel.pyx')" % ex)
+#try:
+#    #  from modular_forms.maass_forms.backend.lpkbessel import *
+#    from lpkbessel import *
+#except Exception as ex:
+#    mwf_logger.critical("maass_waveforms/views/mwf_utils.py: couldn't load backend. Exception: '%s' To enable full Maass waveform functionality: compile the cython file lpkbessel.pyx with sage -c create_local_so('lpkbessel.pyx')" % ex)
     # try:
     #  # Builds the kbessel extension build_ext --inplace $*
     #  execfile("setup.py")
@@ -60,10 +60,10 @@ def get_args_mwf(**kwds):
                 'eigenvalue': None, 'browse': None}
     if request.method == 'GET':
         req = to_dict(request.args)
-        print "req:get=", request.args
+        #print "req:get=", request.args
     else:
         req = to_dict(request.form)
-        print "req:post=", request.form
+        #print "req:post=", request.form
     res = {}
     if kwds.get('parameters', []) != []:
         get_params.extend(kwds['parameters'])
@@ -660,6 +660,10 @@ def my_get(dict, key, default, f=None):
 
 
 def eval_maass_form(R, C, M, x, y):
+    r"""
+    
+    """
+    raise NotImplementedError,""
     s = 0
     twopi = RR(2 * Pi)
     twopii = CC(I * 2 * Pi)

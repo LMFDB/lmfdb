@@ -18,7 +18,7 @@ from sage.rings.arith import primes
 
 from lmfdb.transitive_group import *
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, comma, clean_input
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, comma, clean_input, url_character
 
 NF_credit = 'the PARI group, J. Voight, J. Jones, and D. Roberts'
 Completename = 'Completeness of this data'
@@ -49,16 +49,17 @@ def galois_group_data(n, t):
     C = getDBConnection()
     return group_knowl_guts(n, t, C)
 
-
 def group_cclasses_data(n, t):
     C = getDBConnection()
     return group_cclasses_knowl_guts(n, t, C)
-
 
 def group_character_table_data(n, t):
     C = getDBConnection()
     return group_character_table_knowl_guts(n, t, C)
 
+def number_field_data(label):
+    C = getDBConnection()
+    return nf_knowl_guts(label, C)
 
 def na_text():
     return "Not computed"
@@ -70,6 +71,9 @@ def ctx_galois_groups():
             'group_cclasses_data': group_cclasses_data,
             'group_character_table_data': group_character_table_data}
 
+@app.context_processor
+def ctx_number_fields():
+    return {'number_field_data': number_field_data}
 
 def group_display_shortC(C):
     def gds(nt):
@@ -95,20 +99,18 @@ def field_pretty(field_str):
 
 def poly_to_field_label(pol):
     try:
-        pol = PolynomialRing(QQ, 'x')(str(pol))
-        pol *= pol.denominator()
-        R = pol.parent()
-        pol = R(pari(pol).polredabs())
+        wnf = WebNumberField.from_polynomial(pol)
+        return wnf.get_label()
     except:
         return None
-    coeffs = list2string([int(c) for c in pol.coeffs()])
-    d = int(pol.degree())
-    query = {'coeffs': coeffs}
-    C = base.getDBConnection()
-    one = C.numberfields.fields.find_one(query)
-    if one:
-        return one['label']
-    return None
+    #coeffs = list2string([int(c) for c in pol.coeffs()])
+    #d = int(pol.degree())
+    #query = {'coeffs': coeffs}
+    #C = base.getDBConnection()
+    #one = C.numberfields.fields.find_one(query)
+    #if one:
+    #    return one['label']
+    #return None
 
 
 def parse_field_string(F):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
@@ -288,7 +290,7 @@ def render_field_webpage(args):
         conductor = nf.conductor()
         data['conductor'] = conductor
         dirichlet_chars = nf.dirichlet_group()
-        data['dirichlet_group'] = ['<a href = "%s">$\chi_{%s}(%s,&middot;)$</a>' % (url_for("render_Character", arg1=data['conductor'], arg2=j), data['conductor'], j) for j in dirichlet_chars]
+        data['dirichlet_group'] = ['<a href = "%s">$\chi_{%s}(%s,&middot;)$</a>' % (url_character(type='Dirichlet',modulus=data['conductor'], number=j), data['conductor'], j) for j in dirichlet_chars]
         data['dirichlet_group'] = r'$\lbrace$' + ', '.join(data['dirichlet_group']) + r'$\rbrace$'
         if data['conductor'].is_prime() or data['conductor'] == 1:
             data['conductor'] = "\(%s\)" % str(data['conductor'])
@@ -349,7 +351,7 @@ def render_field_webpage(args):
         info['friends'].append(('L-function', "/L/NumberField/%s" % label))
     info['friends'].append(('Galois group', "/GaloisGroup/%dT%d" % (n, t)))
     if 'dirichlet_group' in info:
-        info['friends'].append(('Dirichlet group', url_for("dirichlet_group_table",
+        info['friends'].append(('Dirichlet group', url_for("characters.dirichlet_group_table",
                                                            modulus=int(conductor),
                                                            char_number_list=','.join(
                                                                [str(a) for a in dirichlet_chars]),

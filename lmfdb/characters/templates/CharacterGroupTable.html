@@ -64,49 +64,34 @@ table.ntdata thead th.spaceleft {
     }
 </style>
 
-<h2> Create tables for other moduli: </h2>
-<form>
-    {#<input type="hidden" name="start" value="{{start}}"/>#}
-    <table border="0">
-        <tr>
-            <td align=left> {{ KNOWL('character.dirichlet.modulus', title="modulus") }}  
-                <input type = 'text' name = 'modulus' size=10 value={{modulus}}>
-            </td>
-        </tr>
-    </table>
-    <p></p>
-    <td>
-        <button type='submit' value='refine'>Create again</button>
-    </td>
-</form>
+<h2>
+  Group table for the <a title="character group" knowl='character.dirichlet.group'>character group</a> for $\textrm{Gal}(K/\mathbb{Q})$
+</h2>
+<p>
+$K$ is the global number field defined by {{ poly }}
 
 <div>
 <table class="ntdata" id="chitable">
     <thead class="space">
-        <tr class="space">
-            <th class="spaceleft"></th>
-            <th class="weight" colspan="{{headers|length}}">
-            <span style="display:block;float:left;margin-right:3px;"> Values </span>
-        </tr>
         <tr> 
-        <th class="left"> </th>
+        <th class="left" style="text-align:center">$\times$ </th>
         {% for h in headers %}
-        <th class="weight">{{h}} </th> 
+        <th>\(\chi_{ {{modulus}} } ( {{h}}, &middot;)\) </th> 
         {% endfor %}
         </tr>
     </thead>
     <tbody>
         {% for row in contents %}
-        <tr>
-                <th class="left">
-                    <a class="{% if row[1] -%}primitive{%- else -%}imprimitive{%- endif %}"  align="center" href="{{modulus}}/{{row[0]}}">
-                    \(\chi_{ {{modulus}} } ( {{row[0]}}, &middot;)\)
-            </a>
-                </th>
-                    {% for value in row[2] %}
-                    <td style="font-family: serif;" >{{value}}</td> 
-                    {% endfor %}
-                </tr>
+          <tr>
+            <th class="left">
+                <a align="center" href="{{modulus}}/{{row[0]}}">
+                \(\chi_{ {{modulus}} }({{row[0]}}, &middot;)\)
+                 </a>
+             </th>
+           {% for j in row %}
+                  <td>\(\chi_{ {{modulus}} } ( {{j}}, &middot;)\)</td> 
+           {% endfor %}
+          </tr>
         {% endfor %} 
     </tbody>    
     

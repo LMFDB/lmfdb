@@ -2,24 +2,26 @@
 {% block content %}
 
 <p>
-L-functions associated to {{ KNOWL('character.dirichlet', title='Dirichlet characters') }} are called 
+L-functions of degree 1 are associated to {{ KNOWL('character.dirichlet', title='Dirichlet characters') }} and they are called
 {{ KNOWL('lfunction.dirichlet', title='Dirichlet L-functions') }}.
-These L-functions have a {{ KNOWL('lfunction.functional_equation', title='functional equation')}} of the form 
+These L-functions have a {{ KNOWL('lfunction.functional_equation', title='functional equation')}} of the form
 \[
-\Lambda(s,\chi) = q^{s/2} \Gamma_{\mathbb R} (s+a) L(s,\chi) = \varepsilon_\chi \Lambda(1-s,\overline{\chi}),
+\Lambda(s,\chi) = q^{s/2} \Gamma_{\R} (s+a) L(s,\chi) = \varepsilon_\chi \Lambda(1-s,\overline{\chi}),
 \]
 where $q$ is the conductor of $\chi$ and $a$ is 1 (or 0) when $\chi$ is odd (or even).
+In particular, the only Dirichlet L-function with conductor 1
+is the <a href="{{url_for('l_functions.l_function_riemann_page')}}">Riemann zeta function</a>.
 </p>
 <p>
-The plot below shows the {{ KNOWL('character.dirichlet.primitive', title='primitive characters') }} 
+The plot below shows the {{ KNOWL('character.dirichlet.primitive', title='primitive characters') }}
 arranged by the {{ KNOWL('character.dirichlet.conductor', title='conductor') }} and the
 {{ KNOWL('character.dirichlet.order', title='order') }} of the character,
-with color indicating the {{ KNOWL('character.dirichlet.parity', title='parity')}} of the 
-Dirichlet character.  Clicking on an entry will 
+with color indicating the {{ KNOWL('character.dirichlet.parity', title='parity')}} (blue is even) of the
+Dirichlet character.  Clicking on an entry will
 take you to the associated Dirichlet L-function.
 </p>
 
-<form> 
+<form>
   <p>
     Conductor range: <span id="modRange"></span>
      </p><div class="slider" id="slider-modulus"></div>

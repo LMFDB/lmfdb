@@ -582,6 +582,10 @@ table th, table td {
   padding-right: 10px;
 }
 
+table.ntdata .knowl-header a,
+table.ntdata .knowl-footer a,
+table.ntdata a.knowl-link, 
+table.ntdata a[knowl],
 table a.knowl-link, 
 table a[knowl] {
   display: inline;
@@ -616,10 +620,6 @@ table.ntdata {
   margin-top: 15px;
   margin-bottom: 15px;
 }
-table.ntdata a {
-  display: block;
-}
-
 table.ntdata thead tr {
   background: {{ col_ntdata_bkg }};
   border-bottom: 2px solid {{ col_ntdata_border }};
@@ -954,6 +954,34 @@ div.limit-height {
 
 /* end knowl */
 
+/*** Dirichlet series, displayed in HTML instead of MathJax ***/
+
+.dirichletseries {
+  font-family:"Times New Roman", Times, serif;
+}
+
+.dirichletseries em {
+  font-style: italic;
+}
+
+.dirichletseries td {
+  padding-left:0;
+  padding-right:0;
+}
+
+.dirichletseries td:first-child {
+  padding-top:3px;
+}
+
+.dirichletseries span.term {
+  white-space: nowrap;
+}
+
+.dirichletseries sup {
+/*  font-size: 75%;
+*/
+  font-style: italic;
+}
 
 /*** Tables for the Siegel corner ***/
 

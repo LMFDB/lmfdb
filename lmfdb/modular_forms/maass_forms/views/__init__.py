@@ -1,5 +1,5 @@
-from base import app
-from utils import make_logger
+from lmfdb.base import app
+from lmfdb.utils import make_logger
 import flask
 
 ### The different kinds of Maass forms we have.
