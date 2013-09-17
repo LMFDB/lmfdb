@@ -606,7 +606,7 @@ def set_gaga_properties(L):
     ans = [('Degree', str(L.degree))]
 
     ans.append(('Level', str(L.level)))
-    ans.append(('Sign', styleTheSign(L.sign)))
+    ans.append(('Sign', "$"+styleTheSign(L.sign)+"$"))
 
     if L.selfdual:
         sd = 'Self-dual'
