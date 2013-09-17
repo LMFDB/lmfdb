@@ -66,7 +66,7 @@ def circle_image(A,B):
     C = ComplexField()
     for val in tmp:
         if tmp[val] > 0:
-            G += text(str(tmp[val]),exp(C(2*3.14159*I*val[0]/val[1])), fontsize = 30, axes = False, color = "green")
+            G += text(str(tmp[val]),exp(C(-.2+2*3.14159*I*val[0]/val[1])), fontsize = 30, axes = False, color = "green")
         if tmp[val] < 0:
-            G += text(str(abs(tmp[val])),exp(C(2*3.14159*I*val[0]/val[1])), fontsize = 30, axes = False, color = "red")
+            G += text(str(abs(tmp[val])),exp(C(.2+2*3.14159*I*val[0]/val[1])), fontsize = 30, axes = False, color = "blue")
     return G
