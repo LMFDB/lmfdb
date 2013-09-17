@@ -1289,6 +1289,7 @@ def arg_to_search_parameters(data={}, **kwds):
     numc = data.get('nc', data.get('numc', kwds.get('nc', kwds.get('numc', None))))
     nc1 = data.get('nc1', data.get('numc1', kwds.get('nc1', kwds.get('numc1', numc))))
     nc2 = data.get('nc2', data.get('numc2', kwds.get('nc2', kwds.get('numc2', numc))))
+    newf = data.get('newform', data.get('newf', kwds.get('newform', kwds.get('newf', 'notset'))))  #Allow None
 
     idd = data.get('id', data.get('_id', kwds.get('id', kwds.get('_id', None))))
     if idd is not None:
@@ -1364,4 +1365,8 @@ def arg_to_search_parameters(data={}, **kwds):
             find['Numc']["$gte"] = nc1
         if nc2 is not None:
             find['Numc']["$lte"] = nc2
+
+    if newf != 'notset':
+        find['Newform'] = newf
+        
     return find
