@@ -1,0 +1,25 @@
+
+Want for L functions:
+    - Z plots
+    - first few zeroes
+    - special values
+    - root number
+    - coefficients
+
+Algorithms for computing general L functions rigorously to high precision:
+    A (guessing bad factors)
+    B one L, one s \in CC (lcalc)
+    C one L, many s on the critical line
+    D one s\in CC, many L in a family (cf Dave Platt, Andy is thinking of this first for Dirichlet, then cusp forms)
+    E certficiation of non-algebraic modular forms
+    F Fourier interpolation (compute a bunch of values along grid, Fourier because L functions are band limited, explicit formula has a range in the sum)
+    
+Mostly interested in s of small heights, in this order:
+    1 Dirichlet L functions
+    2 Holomorphic modular forms of low integral weight, or of low level
+    3 Artin representations
+    4 Hecke characters
+    5 Hypergeometric motives
+    
+3, 4, 5 might benefit from C the most
+For 1 and 2, D is maybe most relevant
