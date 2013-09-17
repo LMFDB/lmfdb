@@ -214,7 +214,7 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
             if seriescoefftype == "series":
                 return(ans + truncatenumber(ip, precision) + "i" + seriesvar(index, seriestype))
             elif seriescoefftype == "serieshtml":
-                return(ans + truncatenumber(ip, precision) + "<em>i</em>" + seriesvar(index, seriestype))
+                return(ans + " &minus; " + truncatenumber(float(abs(ip)), precision) + "<em>i</em>" + seriesvar(index, seriestype))
             elif seriescoefftype == "signed":
                 return(ans + truncatenumber(ip, precision) + " i")
             elif seriescoefftype == "literal" or seriescoefftype == "factor":
