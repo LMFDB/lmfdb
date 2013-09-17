@@ -760,8 +760,14 @@ class Lfunction_Maass(Lfunction):
         elif dbColl == 'FarmerMaass':
             self.__dict__.update(dbEntry)
 
-        elif dbColl == 'LemurellMaassDegree2':
+        elif dbColl == 'LemurellTest':
             self.__dict__.update(dbEntry)
+            aa = self.real_shiftsR[0]
+            self.mu_fe = [aa + self.eigenvalue * I, aa - self.eigenvalue * I]
+            self.lambda_fe = [0.5 * self.mu_fe[0], 0.5 * self.mu_fe[1]]
+            self.title = ("$L(s,f)$, where $f$ is a Maass cusp form with "
+                          + "level %s, eigenvalue %s, and %s" % (
+                          self.level, self.eigenvalue, self.characterName))
 
         else:  # GL2 data from Then or Stromberg
 
@@ -824,13 +830,13 @@ class Lfunction_Maass(Lfunction):
                 self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{f})"
 
             if self.characternumber != 1:
-                characterName = (" character \(\chi_{%s}(%s,\cdot)\)"
+                self.characterName = (" character \(\chi_{%s}(%s,\cdot)\)"
                                  % (self.level, self.characternumber))
             else:
-                characterName = " trivial character"
+                self.characterName = " trivial character"
             self.title = ("$L(s,f)$, where $f$ is a Maass cusp form with "
                           + "level %s, eigenvalue %s, and %s" % (
-                          self.level, self.eigenvalue, characterName))
+                          self.level, self.eigenvalue, self.characterName))
             self.citation = ''
             self.credit = ''
 
