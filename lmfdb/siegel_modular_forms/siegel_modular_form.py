@@ -7,9 +7,9 @@ import urllib
 from sage.all_cmdline import *
 import os
 
-# DATA = 'http://data.countnumber.de/Siegel-Modular-Forms/'
+DATA = 'http://data.countnumber.de/Siegel-Modular-Forms/'
 # DATA = '/home/nils/Sandbox/super_current/Siegel-Modular-Forms/'
-DATA = os.path.expanduser("~/data/Siegel-Modular-Forms/")
+# DATA = os.path.expanduser("~/data/Siegel-Modular-Forms/")
 
 
 def render_webpage(args={}):
@@ -49,21 +49,21 @@ def render_webpage(args={}):
     if args['group']:
 
         if 'Sp4Z' == args['group']:
-            info['parent_as_tex'] = 'M_{k,j}\\big({\\rm Sp}(4,\\mathbb{Z})\\big)'
+            info['parent_as_tex'] = 'M_{k}\\big({\\rm Sp}(4,\\mathbb{Z})\\big)'
             # dimension = siegel_core._dimension_Sp4Z
             dimension = dimensions.dimension_Sp4Z
             info['generators'] = 'smf.Igusa_generators'
 
         elif 'Gamma0_2' == args['group']:
-            info['parent_as_tex'] = 'M_{k,j}\\big(\\Gamma_0(2)\\big)'
+            info['parent_as_tex'] = 'M_{k}\\big(\\Gamma_0(2)\\big)'
             dimension = dimensions.dimension_Gamma0_2    
 
         elif 'Gamma1_2' == args['group']:
-            info['parent_as_tex'] = 'M_{k,j}\\big(\\Gamma_1(2)\\big)'
+            info['parent_as_tex'] = 'M_{k}\\big(\\Gamma_1(2)\\big)'
             dimension = dimensions.dimension_Gamma1_2
 
         elif 'Gamma_2' == args['group']:
-            info['parent_as_tex'] = 'M_{k,j}\\big(\\Gamma(2)\\big)'
+            info['parent_as_tex'] = 'M_{k}\\big(\\Gamma(2)\\big)'
             dimension = dimensions.dimension_Gamma_2
 
         elif 'Sp4Z_2' == args['group']:
@@ -335,16 +335,20 @@ def render_webpage(args={}):
                                 [(l, g[1][l]) for l in g[1]],
                                 [(i, f[2][i], __disc(i)) for i in f_keys],
                                 f_url, g_url]
-            # info['friends'] = [ ('Spin L-function', url_for('not_yet_implemented'))]#, \
+##            info['friends'] = [ ('Spin L-function', url_for('not_yet_implemented'))]#, \
 ##                                 ('Standard L-function', url_for('not_yet_implemented')), \
 ##                                 ('First Fourier-Jacobi coefficient', url_for('not_yet_implemented'))]
 
         location = url_for('ModularForm_GSp4_Q_top_level', group=group, page=page, weight=weight, form=form)
         info['form_name'] = form
         bread += [(weight + '_' + form, location)]
+
+        properties2 = [('Type', '$' + info['parent_as_tex'] + '$'),
+                       ('Weight', '%s' % weight)
+
         return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_specimen.html",
                                title='Siegel modular form ' + weight + '_' + form,
-                               bread=bread, **info)
+                               bread=bread, properties2=properties2, **info)
 
     # if a nonexisting page was requested return the homepage of Siegel modular forms
     return render_webpage()
