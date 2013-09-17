@@ -344,7 +344,7 @@ def render_webpage(args={}):
         bread += [(weight + '_' + form, location)]
 
         properties2 = [('Type', '$' + info['parent_as_tex'] + '$'),
-                       ('Weight', '%s' % weight)
+                       ('Weight', '%s' % weight)]
 
         return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_specimen.html",
                                title='Siegel modular form ' + weight + '_' + form,
