@@ -35,19 +35,24 @@ even (or odd).
 
 <h2>Browse Degree 2 L-functions</h2>
 
+<div>
 A sampling of degree 2 L-functions is in the table below.  You can also
 search more complete <a href="/zeros/first/?limit=100&start=0&end=30&degree=2">list of
 degree 2</a> L-functions, or
 browse
 by {{ KNOWL('lfunction.underlying_object', title='underlying object:') }}
-<br>
-<a href="{{url_for('l_functions.l_function_cuspform_browse_page')}}">Holomorphic cusp forms on $\Gamma_0(N)$</a>
-&nbsp; &nbsp;
-<a href="{{url_for('l_functions.l_function_maass_browse_page')}}">Maass forms on $\Gamma_0(N)$</a>
-&nbsp; &nbsp;
-<a href="{{url_for('l_functions.l_function_ec_browse_page')}}">Elliptic curve</a>
+</div>
 
-<br>
+<p>
+<a href="{{url_for('l_functions.l_function_cuspform_browse_page')}}">Holomorphic cusp form</a>
+&nbsp; &nbsp; &nbsp;
+<a href="{{url_for('l_functions.l_function_maass_browse_page')}}">Maass form</a>
+&nbsp; &nbsp; &nbsp;
+<a href="{{url_for('l_functions.l_function_ec_browse_page')}}">Elliptic curve</a>
+&nbsp; &nbsp; &nbsp;
+<a href="/ArtinRepresentation/?dimension=2">Artin representation</a>
+</p>
+
 <br>
 
 <table border=1 cellpadding=5> 
