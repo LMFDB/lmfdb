@@ -61,37 +61,33 @@ def list_zeros(start=None,
         limit = 100
 
     if start is None and end is None:
-        start = 0
+        end = 1000
 
     limit = int(limit)
 
     where_clause = 'WHERE 1=1 '
 
-    if start is None:
-        end = float(end)
+    if end is not None:
         end = str(end)
-        if('.' in end): end = end+'999'
         # fix up rounding errors, otherwise each time you resubmit the page you will lose one line
         if('.' in end): end = end+'999'
+
+    if start is None:
         where_clause += ' AND zero <= ' + end
     elif end is None:
         start = float(start)
         where_clause += ' AND zero >= ' + str(start)
     else:
-        start = float(start)
-        end = float(end)
-        end = str(end)
-        # fix up rounding errors, otherwise each time you resubmit the page you will lose one line
-        if('.' in end): end = end+'999'
         where_clause += ' AND zero >= {} AND zero <= {}'.format(start, end)
 
     if degree is not None and degree != '':
         where_clause += ' AND degree = ' + str(degree)
 
-    # if signature_r is not None:
-    #    where_clause += ' AND signature_r = ' + str(signature_r)
-
-    query = 'SELECT * FROM zeros {} ORDER BY zero DESC LIMIT {}'.format(where_clause, limit)
+    if end is None:
+        query = 'SELECT * FROM (SELECT * FROM zeros {} ORDER BY zero ASC LIMIT {}) ORDER BY zero DESC'.format(
+            where_clause, limit)
+    else:
+        query = 'SELECT * FROM zeros {} ORDER BY zero DESC LIMIT {}'.format(where_clause, limit)
 
     print query
     c = sqlite3.connect(data_location + 'first_zeros.db').cursor()
