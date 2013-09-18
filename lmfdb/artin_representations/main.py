@@ -146,6 +146,7 @@ def artin_representation_search(**args):
             curclass = ar.galois_orbit_label()
             galclass = [ar]
             cnt += 1
+    data.append(galclass)
     #data = [ArtinRepresentation(data=x) for x in results]
 
     return render_template("artin-representation-search.html", req=req, data=data, data_count=len(data), title=title, bread=bread, query=query)

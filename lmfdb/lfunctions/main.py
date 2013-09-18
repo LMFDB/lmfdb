@@ -268,7 +268,10 @@ def l_function_hmf_redirect_2(field, label):
 # L-function of GL(2) Maass form ###############################################
 @l_function_page.route("/ModularForm/GL2/Q/Maass/<dbid>/")
 def l_function_maass_page(dbid):
-    args = {'dbid': bson.objectid.ObjectId(dbid)}
+    try:
+        args = {'dbid': bson.objectid.ObjectId(dbid)}
+    except Exception as ex:
+        args = {'dbid': dbid}
     return render_single_Lfunction(Lfunction_Maass, args, request)
 
 
@@ -810,7 +813,11 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2'and arg3 == 'Q' and arg4 == 'Maass':
         # logger.debug(db)
-        return Lfunction_Maass(dbid=bson.objectid.ObjectId(arg5))
+        try:
+            dbid = bson.objectid.ObjectId(arg5)
+        except Exception as ex:
+            dbid = arg5
+        return Lfunction_Maass(dbid=dbid)
 
     elif arg1 == 'ModularForm' and (arg2 == 'GSp4' or arg2 == 'GL4' or arg2 == 'GL3') and arg3 == 'Q' and arg4 == 'Maass':
         # logger.debug(db)
@@ -962,15 +969,17 @@ def processMaassNavigation(numrecs=35):
     Produces a table of numrecs Maassforms with Fourier coefficients in the database
     """
     DB = LfunctionDatabase.getMaassDb()
-    s = '<h5>The L-functions attached to the first 5 eigenvalues of weight 0 Maass forms on Hecke congruence groups $\Gamma_0(N)$ with trivial character</h5>'
+    s = '<h5>The L-functions attached to the first 4 eigenvalues of weight 0 Maass newforms on Hecke congruence groups $\Gamma_0(N)$ with trivial character</h5>'
     s += '<table>\n'
     i = 0
-    maxinlevel = 5
+    maxinlevel = 4
     for level in [1, 2, 3, 4, 5, 6, 7]:
         j = 0
         s += '<tr>\n'
         s += '<td><bold>N={0}:</bold></td>\n'.format(level)
-        finds = DB.get_Maass_forms({'Level': int(level), 'Character': int(0)})
+        finds = DB.get_Maass_forms({'Level': int(level),
+                                    'char': 1,
+                                    'Newform' : None})
         for f in finds:
             nc = f.get('Numc', 0)
             if nc <= 0:
