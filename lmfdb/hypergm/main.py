@@ -165,7 +165,7 @@ def hgm_search(**args):
 
     # t, generic, irreducible
     # 'A', 'B', 'hodge'
-    for param in ['t', 'A', 'B']:
+    for param in ['A', 'B']:
         if (param == 't' and PAIR_RE.match(info['t'])) or (param == 'A' and IF_RE.match(info[param])) or (param == 'B' and IF_RE.match(info[param])):
             query[param] = parse_list(info[param])
         else:
@@ -235,8 +235,7 @@ def hgm_search(**args):
             pass
 
     # logger.debug(query)
-    res = C.hgm.motives.find(query).sort([('degree', pymongo.ASCENDING), 
-        ('label', pymongo.ASCENDING)])
+    res = C.hgm.motives.find(query).sort([('cond', pymongo.ASCENDING), ('label', pymongo.ASCENDING)])
     nres = res.count()
     res = res.skip(start).limit(count)
 
