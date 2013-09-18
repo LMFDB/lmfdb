@@ -9,25 +9,24 @@
 
 <tr>
 <td align=left> 
-{{KNOWL('lf.degree',title='Degree')}}:</td><td align=left> <input type='text' name='n' size=3 value="{{info.n}}">
+{{KNOWL('lf.degree',title='Degree')}}:</td><td align=left> <input type='text' name='degree' size=3 value="{{info.degree}}">
 </td>
 <td align=left> 
-{{KNOWL('lf.discriminant_exponent',title='Discriminant exponent')}} $c$:
-<td align=left> <input type="text" name="c" size="3" value="{{info.c}}" >
+$A$:
+<td align=left> <input type="text" name="A" size="8" value="{{info.A}}" >
 
-<td align=left> 
-{{KNOWL('nf.galois_group',title='Galois group')}}:
-<td align=left> <input type="text" name="gal" size="8" value="{{info.gal}}" >
+<td align=left>  $B$
+<td align=left> <input type="text" name="B" size="8" value="{{info.B}}" >
 
 </tr>
 <tr>
 <td align=left> 
-Prime $p$:</td><td align=left> <input type="text" name="p" size="3" value="{{info.p}}" ></td>
+$t$:</td><td align=left> <input type="text" name="t" size="3" value="{{info.tt}}" ></td>
 </td>
 <td align=left> 
-{{KNOWL('lf.ramification_index',title='Ramification index')}} $e$:
+$\epsilon$:
 <td align=left> 
-<input type="text" name="e" size="3" value="{{info.e}}" >
+<input type="text" name="sign" size="3" value="{{info.e}}" >
 </tr>
 
 <tr>
@@ -76,24 +75,31 @@ Prime $p$:</td><td align=left> <input type="text" name="p" size="3" value="{{inf
 <table border=1 cellpadding=5 class="ntdata">
 <thead>
 <tr>
-<th>Polynomial</th>
-<th>$p$</th>
-<th>$e$</th>
-<th>$f$</th>
-<th>$c$</th>
-<th>Galois group</th>
+<th>Result</th>
+<th>$A$</th>
+<th>$B$</th>
+<th>$t$</th>
+<th>Conductor</th>
+<th>Degree</th>
+<th>Weight</th>
 </tr>
 </thead>
 <tbody>
 
-{% for field in info.fields: %}
+{% for hgm in info.motives: %}
 <tr>
-<td align='left'><a href="/LocalNumberField/{{field.label}}">{{info.display_poly(field.coeffs)|safe}}</a></td>
-<td>{{field.p}}</td>
-<td>{{field.e}}</td>
-<td>{{field.f}}</td>
-<td>{{field.c}}</td>
-<td>{{info.group_display(field.gal)}}</td>
+<td> 
+<a href="/Motive/Hypergeometric/Q/"> 
+{{ loop.index }}
+</a> 
+</td>
+<td>${{hgm.A}}$</td>
+<td>${{hgm.B}}$</td>
+<td>t</td>
+<td>{{hgm.cond}}</td>
+<td>{{hgm.degree}}</td>
+<td>{{hgm.weight}}</td>
+{# <td>{{info.group_display(field.gal)}}</td> #}
 </tr>
 
 {% endfor %}
