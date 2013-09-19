@@ -128,6 +128,15 @@ def getDBConnection():
 
 app = Flask(__name__)
 
+# If the debug toolbar is installed then use it
+if app.debug:
+  try:
+    from flask_debugtoolbar import DebugToolbarExtension
+    app.config['SECRET_KEY'] = '''shh, it's a secret'''
+    toolbar = DebugToolbarExtension(app)
+  except ImportError:
+    pass
+
 # tell jinja to remove linebreaks
 app.jinja_env.trim_blocks = True
 

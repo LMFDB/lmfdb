@@ -29,7 +29,8 @@ def cached(timeout=15 * 60, key='cache::%s::%s'):
                 cache.set(cache_key, rv, timeout=timeout)
             ret = make_response(rv)
             # this header basically says that any cache can store this infinitely long
-            ret.headers['Cache-Control'] = 'max-age=360000, public'
+            # set this down to 600, because we have pagespeed now (hsy)
+            ret.headers['Cache-Control'] = 'max-age=600, public'
             return ret
         return decorated_function
     return decorator

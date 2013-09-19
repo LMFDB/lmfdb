@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 #*****************************************************************************
 #  Copyright (C) 2010 Fredrik Strömberg <fredrik314@gmail.com>,
@@ -582,7 +583,7 @@ class WebModFormSpace_class(object):
         else:
             if not i in self._galois_orbits_labels:
                 i = self._galois_orbits_labels.index(i)
-            emf_logger.debug("print ii={0}".format(ii))
+            emf_logger.debug(" ii={0}".format(ii))
             try:
                 F = self._newforms[ii]
             except IndexError:
@@ -779,12 +780,11 @@ class WebModFormSpace_class(object):
                         ll = 0
                         sss += "<br>"
                     slist.append(sss)
-                    # print i,sss
             else:
                 slist.append(ss)
 
             K = orbit.base_ring()
-            if(K == QQ):
+            if K.absolute_degree() == 1:
                 poly = ZZ['x'].gen()
                 disc = '1'
             else:
@@ -844,7 +844,7 @@ class WebModFormSpace_class(object):
         K = orbit.base_ring()
         is_relative = False
         disc = 1
-        if K == QQ:
+        if K.absolute_degree() == 1:
             poly = ZZ['x'].gen()
             disc = '1'
         else:
@@ -909,7 +909,7 @@ class WebNewForm_class(object):
             '_prec' : int(prec), '_bitprec' : int(bitprec),
             '_verbose' : int(verbose),
             '_satake' : {},
-            '_ap' : list(),    # List of Hecke eigenvalues (can be long)
+            '_ap' : {},    # List of Hecke eigenvalues (can be long)
             '_coefficients' : dict(),  # list of Fourier coefficients (should not be long)
             '_atkin_lehner_eigenvalues' : {},
             '_parent' : parent,
@@ -928,6 +928,9 @@ class WebNewForm_class(object):
             '_satake' : {},
             '_dimension' : -1,
             '_is_rational' : None,
+            '_degree' : 0,
+            '_absolute_degree' : 0,
+            '_relative_degree' : 0,
             '_character' : None,
             '_conrey_character' : None,
             '_conrey_character_no' : -1,
@@ -953,9 +956,7 @@ class WebNewForm_class(object):
         emf_logger.debug("name={0}".format(self._name))
         if compute: ## Compute all data we want.
             emf_logger.debug("compute")
-            if not self._ap:
-                if len(self.parent()._ap)>self._fi:
-                    self._ap = list(self.parent()._ap[self._fi])
+            self._update_aps(insert_in_db=False)
             emf_logger.debug("compute q-expansion")
             self.q_expansion_embeddings(prec, bitprec,insert_in_db=False)
             emf_logger.debug("as polynomial")
@@ -988,7 +989,7 @@ class WebNewForm_class(object):
             if not self._label == self._parent._galois_orbits_labels[self._fi]:
                 raise ValueError
         except (ValueError,KeyError):
-            raise ValueError,"There does not exista newform orbit of the given label: {0} and number:{1}!".format(self._label,self._fi)
+            raise ValueError,"There does not exist a newform orbit of the given label: {0} and number:{1}!".format(self._label,self._fi)
         return True
 
     def _set_character(self):
@@ -1168,6 +1169,15 @@ class WebNewForm_class(object):
     def character_conductor(self):
         return self._parent.character_conductor()
 
+    def character_value(self,x):
+
+        if self.character().is_trivial():
+            if (x % self._N) <> 0:
+                return self.base_ring()(1)
+            else:
+                return self.base_ring()(0)        
+        return self.character()(x)
+
     def chi(self):
         return self._chi
 
@@ -1198,15 +1208,27 @@ class WebNewForm_class(object):
         emf_logger.debug("coef_field={0}".format(self._coefficient_field))
         return self._coefficient_field
     
-    def degree(self):
+    def relative_degree(self):
         r"""
         Degree of the field of coefficient relative to its base ring.
         """
-        if hasattr(self.base_ring(),'relative_degree'):
-            return self.base_ring().relative_degree()
-        else:            
-            return self.base_ring().degree()
+        if self._relative_degree <= 0:
+            self._relative_degree = self.coefficient_field().relative_degree()
+        return self._relative_degree
 
+    def degree(self):
+        return self.absolute_degree()
+    
+    def absolute_degree(self):
+        r"""
+        Degree of the field of coefficient relative to its base ring.
+        """
+        if self._absolute_degree <= 0:
+            self._absolute_degree = self.coefficient_field().absolute_degree()
+        return self._absolute_degree
+        
+
+        
     def prec(self):
         return self._prec
 
@@ -1219,7 +1241,7 @@ class WebNewForm_class(object):
 
     def is_rational(self):
         if self._is_rational==None:
-            if self.base_ring() == QQ:
+            if self.coefficient_field().degree()==1:
                 self._is_rational  = True
             else:
                 self._is_rational = False
@@ -1243,57 +1265,172 @@ class WebNewForm_class(object):
     def q_expansion_embeddings(self, prec=10, bitprec=53,insert_in_db=True):
         r""" Compute all embeddings of self into C which are in the same space as self.
         """
-        emf_logger.debug("q-expansion : insert : {0}".format(insert_in_db))
+        emf_logger.debug("computing embeddings of q-expansions : has {0} embedded coeffs. Want : {1} ".format(len(self._embeddings),prec))
       
         if(len(self._embeddings) > prec):
             bp = self._embeddings[0][0].prec()
+            emf_logger.debug("have precision: {0} and want: {1}".format(bp,bitprec))
             if bp >= bitprec:
                 res = list()
-                #
+                emf_logger.debug("Using known coeffs")
                 for n in range(max(prec, len(self._embeddings))):
                     l = list()
                     for i in range(len(self._embeddings[n])):
                         l.append(self._embeddings[n][i].n(bitprec))
                     res.append(l)
                 return res
+        emf_logger.debug("Computing new!")
         if(bitprec <= 0):
             bitprec = self._bitprec
         if(prec <= 0):
             prec = self._prec
-        if(self.base_ring() == QQ):
-            self._embeddings = self.coefficients(range(prec),insert_in_db=insert_in_db)
-        else:
-            coeffs = list()
-            # E,v = self._f.compact_system_of_eigenvalues(prec)
-            cc = self.coefficients(range(prec),insert_in_db=insert_in_db)
-            for n in range(ZZ(prec)):
-                cn = cc[n]
-                if(self.degree() > 1):
-                    if hasattr(cn, 'complex_embeddings'):
-                        coeffs.append(cn.complex_embeddings(bitprec))
-                    else:  # real coefficients are repeated for consistency
-                        ccn = []
-                        for j in range(self.degree()):
-                            ccn.append(cn)
-                        coeffs.append(ccn)
-                else:
-                    if hasattr(cn,"n"):
-                        coeffs.append([cn.n(bitprec)])
-                    else:
-                        coeffs.append([RealField(bitprec)(cn)])
-            self._embeddings = coeffs
-            if insert_in_db:
-                self.insert_into_db()
+        coeffs = list()
+        cc = self.coefficients(range(prec),insert_in_db=insert_in_db)
+        CF = ComplexField(bitprec)
+        deg = self.absolute_degree()
+        self._embeddings = []
+        for n in range(prec):
+            cn = cc[n]
+            if hasattr(cn, 'complex_embeddings'):
+                cn_emb = cn.complex_embeddings(bitprec)
+                coeffs.append(cn_emb)
+                if len(cn_emb) < deg:
+                    raise ValueError," {0} does not have degree {1} of field {2}".format(cn,deg,self.coefficient_field())
+            else:  
+                cn_emb = [ CF(cn) for i in range(deg) ]
+            self._embeddings.append(cn_emb)
+        if insert_in_db:
+            self.insert_into_db()
         return self._embeddings
 
 
-    def coefficient(self, n):
+    def coefficient(self, n,insert_in_db=False):
         emf_logger.debug("In coefficient: n={0}".format(n))
-        if not isinstance(n, (int, Integer)):
-            return self.coefficients(n)
-        return self.coefficients([n, n + 1])
+        if isinstance(n,(list,tuple)):
+            if len(n)>10:
+                insert = True
+            else:
+                insert = insert_in_db
+            return self.coefficients(n,insert)
+        return self.coefficients([n, n + 1],insert_in_db)[0]
+
 
     def coefficients(self, nrange=range(1, 10),insert_in_db=True):
+        r"""
+        Gives the coefficients in a range.
+        We assume that the self._ap containing Hecke eigenvalues
+        are stored.
+
+        """
+        res = []
+        emf_logger.debug("computing coeffs in range {0}".format(nrange))
+        if not isinstance(nrange, list):
+            M = nrange
+            nrange = range(0, M)
+        recompute = False
+        for n in nrange:
+            if n not in self._coefficients:
+                recompute = True
+        if recompute:
+            maxn = max(nrange)
+            E, v = self.as_factor().compact_system_of_eigenvalues(range(1,maxn+1), names='x')
+            c = E * v
+            par = c[0].parent()
+            self._coefficients[0]=par(0)
+            for n in range(len(c)):
+                self._coefficients[n+1]=c[n]
+        for n in nrange:
+            res.append(self._coefficients[n])
+        if recompute and insert_in_db:
+            self.insert_into_db()
+        return res
+
+    def one_coefficient(self,n,insert_in_db=True):
+        from sage.all import primes_first_n
+        if n in self._coefficients:
+            return self._coefficients[n]
+        maxp = n.prime_divisors()
+        max_current_p = primes_first_n(len(self._ap))[-1]
+        recompute = False
+        if maxp > max_current_p:  ## Need to compute new prime coefficients.
+            recompute = True
+        if recompute: 
+            prange = prime_range(max_current_p+1,maxp+1)
+            E, v = self.as_factor().compact_system_of_eigenvalues( prange, names='x')
+            c = E * v
+            for i in range(len(c)):            
+                self._ap[prange[i]] = c[i]
+        
+                
+    def _update_aps(self,insert_in_db=True):        
+        r"""
+        Update ap's from ambient.
+        """
+        emf_logger.debug("before update self_ap={0}".format(self._ap))
+        aps = self._ap
+        if self.parent()._ap == None:
+            return 
+        if len(self.parent()._ap) > self._fi:
+            ambient_aps = self.parent()._ap[self._fi]
+        emf_logger.debug("ambient aps:{0}".format(ambient_aps))
+        try:
+            E, v = ambient_aps
+            if len(aps) < E.rows(): # We have more to update with
+                c = E*v
+                lc = len(c)
+                for i in range(len(c)):
+                    p = primes_first_n(lc)[i]
+                    aps[p] = c[i]
+                emf_logger.debug("after update self_ap={0}".format(self._ap))
+                if insert_in_db:
+                    self.insert_into_db()
+        except Exception as e:
+            emf_logger.debug("Could not update ap's from {0}. Error: {1}".format(ambient_aps,e.message))
+            pass
+
+        
+    def coefficient_n_recursive(self,n):
+        r"""
+        Reimplement the recursive algorithm in sage modular/hecke/module.py
+        We do this because of a bug in sage with .eigenvalue()
+        """
+        from sage.rings import arith
+        F = arith.factor(n)
+        prod = None
+        #if arith.is_prime(n):
+        #    return 
+        ev = self._ap
+        for p, r in F:
+            (p, r) = (int(p), int(r))
+            pow = p**r
+            if not ev.has_key(pow):  # and ev[pow].has_key(name)):
+                # TODO: Optimization -- do something much more
+                # intelligent in case character is not defined.  For
+                # example, compute it using the diamond operators <d>
+                eps = self.character()
+                if eps is None:
+                    Tn_e = self.as_factor()._eigen_nonzero_element(pow)
+                    ev[pow] = self.as_factor()._element_eigenvalue(Tn_e)
+                    #_dict_set(ev, pow, name, 
+                else:
+                    # a_{p^r} := a_p * a_{p^{r-1}} - eps(p)p^{k-1} a_{p^{r-2}}
+                    apr1 = self.coefficient_n_recursive(pow//p)
+                    ap = self.coefficient_n_recursive(p)
+                    k = self.weight()
+                    apr2 = self.coefficient_n_recursive(pow//(p*p))
+                    apow = ap*apr1 - eps(p)*(p**(k-1)) * apr2
+                    ev[pow]=apow
+                    # _dict_set(ev, pow, name, apow)
+            if prod is None:
+                prod = ev[pow]
+            else:
+                prod *= ev[pow]
+        if recompute and insert_in_db:
+            self.insert_in_db()
+            
+
+                      
+    def coefficients_old(self, nrange=range(1, 10),insert_in_db=True):
         r"""
         Gives the coefficients in a range.
         We assume that the self._ap containing Hecke eigenvalues
@@ -1313,8 +1450,6 @@ class WebNewForm_class(object):
                 res.append(0)
             elif is_prime(n):
                 pi = prime_pi(n) - 1
-                # if self._verbose>0:
-                #    print "pi=",pi
                 if pi < len(self._ap):
                     ap = self._ap[pi]
                 else:
@@ -1360,6 +1495,8 @@ class WebNewForm_class(object):
             self.insert_into_db()
         return res
 
+
+    
     def q_expansion(self, prec=None):
         r"""
         Return the q-expansion of self to precision prec.
@@ -1389,8 +1526,12 @@ class WebNewForm_class(object):
         r""" Return the Atkin-Lehner eigenvalues of self
         corresponding to Q|N
         """
+        if not (self.character().is_trivial() or self.character().order() == 2):
+            return None
+        
         l = self.atkin_lehner_eigenvalues()
         return l.get(Q)
+
 
     def _compute_atkin_lehner_matrix(self, f, Q):
         ALambient = f.ambient_hecke_module()._compute_atkin_lehner_matrix(ZZ(Q))
@@ -1411,6 +1552,9 @@ class WebNewForm_class(object):
 
 
         """
+        if not (self.character().is_trivial() or self.character().order() == 2):
+            return {}
+        
         if(len(self._atkin_lehner_eigenvalues.keys()) > 0):
             return self._atkin_lehner_eigenvalues
         if(self._chi != 0):
@@ -1447,7 +1591,9 @@ class WebNewForm_class(object):
         Return Atkin-Lehner eigenvalue of A-L involution
         which normalizes cusp if such an inolution exist.
         """
-        res = dict()
+        if not (self.character().is_trivial() or self.character().order() == 2):
+            return {}
+        res = dict()            
         for c in self.parent().group().cusps():
             if c == Infinity:
                 continue
@@ -1464,6 +1610,9 @@ class WebNewForm_class(object):
         Return Atkin-Lehner eigenvalue of A-L involution
         which normalizes cusp if such an involution exist.
         """
+        if not (self.character().is_trivial() or self.character().order() == 2):
+            return None
+        
         x = self.character()
         if(x != 0 and not x.is_trivial()):
             return None
@@ -1575,7 +1724,7 @@ class WebNewForm_class(object):
                                 except TypeError:
                                     # we have a  non-rational (i.e. complex) value of the character
                                     XF = xip.parent()
-                                    if((KF == QQ or KF.is_totally_real()) and (KG == QQ or KG.is_totally_real())):
+                                    if((KF.absolute_degree() == 1 or KF.is_totally_real()) and (KG.absolute_degre() == 1 or KG.is_totally_real())):
                                         raise StopIteration
                             ## it is diffcult to compare elements from diferent rings in general but we make some checcks
                             # is it possible to see if there is a larger ring which everything can be
@@ -1843,7 +1992,6 @@ class WebNewForm_class(object):
         if(self._verbose > 1):
             emf_logger.debug("eps={0}".format(eps))
         K = self.base_ring()
-        print "K={0}".format(K)
         # recall that
         degree = self.degree()
         cm_vals = dict()
@@ -1861,14 +2009,13 @@ class WebNewForm_class(object):
                 for h in range(degree):
                     cm_vals[tau][h] = cv
                 continue
-            if(K == QQ):
+            if K.absolute_degree()==1:
                 v1 = CF(0)
                 v2 = CF(1)
                 try:
                     for prec in range(minprec, maxprec, 10):
                         if(self._verbose > 1):
                             emf_logger.debug("prec={0}".format(prec))
-                        print "q=",q
                         v2 = self.as_factor().q_eigenform(prec).truncate(prec)(q)
                         err = abs(v2 - v1)
                         if(self._verbose > 1):
@@ -1943,7 +2090,7 @@ class WebNewForm_class(object):
                 x = self._satake['thetas'].get(0,{0:0}).values()[0]
                 if x.prec() >= bits:  # else recompute
                     return self._satake
-        K = self.base_ring()
+        K = self.coefficient_field()
         degree = self.degree()
         RF = RealField(bits)
         CF = ComplexField(bits)
@@ -1954,26 +2101,31 @@ class WebNewForm_class(object):
         aps = list()
         tps = list()
         k = self.weight()
-        maxp = len(prime_range(prec))
-        if len(self._ap) < maxp:
-            E, v = my_compact_system_of_eigenvalues(self.as_factor(), ps)
-            ap_vec = E * v
-        else:
-            ap_vec = self._ap
-        emf_logger.debug("AP={0}".format(ap_vec))
-        emf_logger.debug("K={0}".format(K))
+        #maxp = max(ps)
+        #emf_logger.debug("AP={0}".format(self._ap))
+        #if ps[-1] not in self._ap: 
+        #    c = self.coefficients(ps)
+        #    for i in range(len(c)):
+        #        p = ps[i]
+        #        if p not in self._ap:
+        #            self._ap[p] = c[i]
+        #    #E, v = my_compact_system_of_eigenvalues(self.as_factor(), ps)
+        #    #ap_vec = E * v
+        #    #ap_vec = self._ap
+        #emf_logger.debug("AP={0}".format(self._ap))
+        #emf_logger.debug("K={0}".format(K))
         for j in range(degree):
             alphas[j] = dict()
             thetas[j] = dict()
         for j in xrange(len(ps)):
             p = ps[j]
-            ap = ap_vec[j]
+            ap = self.coefficient(p) #_ap[p]
             if p.divides(self.level()):
                 continue
             self._satake['ps'].append(p)
-            chip = self.character()(p)
+            chip = self.character_value(p)
             # ap=self._f.coefficients(ZZ(prec))[p]
-            if(K == QQ):
+            if K.absolute_degree()==1:
                 f1 = QQ(4 * chip * p ** (k - 1) - ap ** 2)
                 alpha_p = (QQ(ap) + I * f1.sqrt()) / QQ(2)
                 ab = RF(p ** ((k - 1) / 2))
@@ -1981,7 +2133,6 @@ class WebNewForm_class(object):
                 t_p = CF(norm_alpha).argument()
                 thetas[0][p] = t_p
                 alphas[0][p] = (alpha_p / ab).n(bits)
-                # print "adding thetas=",thetas
             else:
                 for jj in range(degree):
                     app = ap.complex_embeddings(bits)[jj]
@@ -2037,7 +2188,7 @@ class WebNewForm_class(object):
         tbl['atts'] = "border=\"1\""
         tbl['data'] = list()
         tbl['headersv'] = list()
-        K = self.base_ring()
+        K = self.coefficient_field()
         degree = self.degree()
         if(self.dimension() > 1):
             tbl['corner_label'] = "\( Embedding \, \\backslash \, p\)"
@@ -2179,7 +2330,7 @@ class WebNewForm_class(object):
         r"""
         """
         l = self.atkin_lehner_eigenvalues()
-        if(len(l) == 0):
+        if len(l) == 0:
             return ""
         tbl = dict()
         tbl['headersh'] = list()
@@ -2199,9 +2350,9 @@ class WebNewForm_class(object):
 
     def print_atkin_lehner_eigenvalues_for_all_cusps(self):
         l = self.atkin_lehner_eigenvalues_for_all_cusps()
-        if(l.keys().count(Cusp(Infinity)) == len(l.keys())):
+        if l.keys().count(Cusp(Infinity)) == len(l.keys()):
             return ""
-        if(len(l) == 0):
+        if len(l) == 0:
             return ""
         tbl = dict()
         tbl['headersh'] = list()
@@ -2287,7 +2438,7 @@ class WebNewForm_class(object):
         r"""
         """
         cm_vals = self.cm_values()['cm_values']
-        K = self.base_ring()
+        K = self.coefficient_field()
         degree = self.degree()
         if(self._verbose > 2):
             emf_logger.debug("vals={0}".format(cm_vals))
@@ -2453,7 +2604,6 @@ def _get_newform(N, k, chi, fi=None):
 
      """
     t = False
-    # print k,N,chi,fi
     try:
         if(chi == 0):
             emf_logger.debug("EXPLICITLY CALLING NEWFORMS!")
@@ -2480,15 +2630,7 @@ def _degree(K):
     r"""
     Returns the degree of the number field K
     """
-    if(K == QQ):
-        return 1
-    try:
-        return K.absolute_degree()
-        # if(K.is_relative()):
-        #    return K.relative_degree()
-        # return K.degree()
-    except AttributeError:
-        return -1  # exit silently
+    return K.absolute_degree()
 
 
 def unpickle_wnf_v1(N, k,chi, label, fi, prec, bitprec, data):

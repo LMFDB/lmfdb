@@ -43,6 +43,17 @@ def l_function_dirichlet_browse_page():
                                                           "maxModDefault"], 1, info["maxOrder"])]
     return render_template("Degree1.html", title='Degree 1 L-functions', **info)
 
+# Degree 2 L-functions browsing page ##############################################
+@l_function_page.route("/degree2/")
+def l_function_degree2_browse_page():
+    info = {"bread": get_bread(1, [])}
+#    info["minModDefault"] = 1
+#    info["maxModDefault"] = 20
+#    info["maxOrder"] = 19
+#    info["contents"] = [LfunctionPlot.getOneGraphHtmlChar(info["minModDefault"], info[
+#                                                          "maxModDefault"], 1, info["maxOrder"])]
+    return render_template("Degree2.html", title='Degree 2 L-functions', **info)
+
 # Degree browsing page #########################################################
 @l_function_page.route("/<degree>/")
 def l_function_degree_page(degree):
@@ -257,7 +268,10 @@ def l_function_hmf_redirect_2(field, label):
 # L-function of GL(2) Maass form ###############################################
 @l_function_page.route("/ModularForm/GL2/Q/Maass/<dbid>/")
 def l_function_maass_page(dbid):
-    args = {'dbid': bson.objectid.ObjectId(dbid)}
+    try:
+        args = {'dbid': bson.objectid.ObjectId(dbid)}
+    except Exception as ex:
+        args = {'dbid': dbid}
     return render_single_Lfunction(Lfunction_Maass, args, request)
 
 
@@ -478,8 +492,8 @@ def initLfunction(L, args, request):
                                  (label, url_for('.l_function_ec_page', label=label))])
 
     elif L.Ltype() == 'ellipticmodularform':
-        friendlink = friendlink + L.addToLink        # Strips off the embedding
-        friendlink = friendlink.rpartition('/')[0]   # number for the L-function
+        friendlink = friendlink.rpartition('/')[0] # Strips off the embedding
+                                                   # number for the L-function
         if L.character:
             info['friends'] = [('Modular form ' + str(
                 L.level) + '.' + str(L.weight) + '.' + str(L.character) +
@@ -490,12 +504,12 @@ def initLfunction(L, args, request):
         if L.ellipticcurve:
             info['friends'].append(
                 ('EC isogeny class ' + L.ellipticcurve,
-                 url_for("by_ec_label", label=L.ellipticcurve)))
+                 url_for("ec.by_ec_label", label=L.ellipticcurve)))
             info['friends'].append(('L-function ' + str(L.level) + '.' + str(L.label),
                                     url_for('.l_function_ec_page', label=L.ellipticcurve)))
             for i in range(1, L.nr_of_curves_in_class + 1):
                 info['friends'].append(('Elliptic curve ' + L.ellipticcurve + str(i),
-                                       url_for("by_ec_label", label=L.ellipticcurve + str(i))))
+                                       url_for("ec.by_ec_label", label=L.ellipticcurve + str(i))))
             info['friends'].append(
                 ('Symmetric square L-function',
                  url_for(".l_function_ec_sym_page", power='2',
@@ -595,7 +609,7 @@ def set_gaga_properties(L):
     ans = [('Degree', str(L.degree))]
 
     ans.append(('Level', str(L.level)))
-    ans.append(('Sign', styleTheSign(L.sign)))
+    ans.append(('Sign', "$"+styleTheSign(L.sign)+"$"))
 
     if L.selfdual:
         sd = 'Self-dual'
@@ -751,7 +765,7 @@ def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, ar
     '''
     L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
 
-    website_zeros = L.compute_quick_zeros(time_allowed = 10)          # This depends on mathematical information, all below is formatting
+    website_zeros = L.compute_web_zeros(time_allowed = 10)          # This depends on mathematical information, all below is formatting
     # More semantic this way
     # Allow 10 seconds
 
@@ -799,7 +813,11 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2'and arg3 == 'Q' and arg4 == 'Maass':
         # logger.debug(db)
-        return Lfunction_Maass(dbid=bson.objectid.ObjectId(arg5))
+        try:
+            dbid = bson.objectid.ObjectId(arg5)
+        except Exception as ex:
+            dbid = arg5
+        return Lfunction_Maass(dbid=dbid)
 
     elif arg1 == 'ModularForm' and (arg2 == 'GSp4' or arg2 == 'GL4' or arg2 == 'GL3') and arg3 == 'Q' and arg4 == 'Maass':
         # logger.debug(db)
@@ -946,20 +964,22 @@ def processEllipticCurveNavigation(startCond, endCond):
     return s
 
 
-def processMaassNavigation(numrecs=40):
+def processMaassNavigation(numrecs=35):
     """
     Produces a table of numrecs Maassforms with Fourier coefficients in the database
     """
     DB = LfunctionDatabase.getMaassDb()
-    s = '<h5>The L-functions attached to the first 5 eigenvalues of weight 0 Maass forms on Hecke congruence groups $\Gamma_0(N)$ with trivial character</h5>'
+    s = '<h5>The L-functions attached to the first 4 eigenvalues of weight 0 Maass newforms on Hecke congruence groups $\Gamma_0(N)$ with trivial character</h5>'
     s += '<table>\n'
     i = 0
-    maxinlevel = 5
-    for level in [1, 3, 4, 5, 6, 7, 9, 10]:
+    maxinlevel = 4
+    for level in [1, 2, 3, 4, 5, 6, 7]:
         j = 0
         s += '<tr>\n'
         s += '<td><bold>N={0}:</bold></td>\n'.format(level)
-        finds = DB.get_Maass_forms({'Level': int(level), 'Character': int(0)})
+        finds = DB.get_Maass_forms({'Level': int(level),
+                                    'char': 1,
+                                    'Newform' : None})
         for f in finds:
             nc = f.get('Numc', 0)
             if nc <= 0:

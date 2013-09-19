@@ -9,11 +9,6 @@ logger = lmfdb.utils.make_logger(FirstZeros)
 import sqlite3
 data_location = os.path.expanduser("~/data/zeros/")
 print data_location
-try:
-    db = sqlite3.connect(data_location + 'first_zeros.db')
-    c = db.cursor()
-except:
-    pass
 
 
 @FirstZeros.route("/")
@@ -66,38 +61,36 @@ def list_zeros(start=None,
         limit = 100
 
     if start is None and end is None:
-        start = 0
+        end = 1000
 
     limit = int(limit)
 
     where_clause = 'WHERE 1=1 '
 
+    if end is not None:
+        end = str(end)
+        # fix up rounding errors, otherwise each time you resubmit the page you will lose one line
+        if('.' in end): end = end+'999'
+
     if start is None:
-        end = float(end)
-        where_clause += ' AND zero < ' + str(end)
+        where_clause += ' AND zero <= ' + end
     elif end is None:
         start = float(start)
-        where_clause += ' AND zero > ' + str(start)
+        where_clause += ' AND zero >= ' + str(start)
     else:
-        start = float(start)
-        end = float(end)
-        where_clause += ' AND zero > {} AND zero < {}'.format(start, end)
+        where_clause += ' AND zero >= {} AND zero <= {}'.format(start, end)
 
     if degree is not None and degree != '':
         where_clause += ' AND degree = ' + str(degree)
 
-    # if signature_r is not None:
-    #    where_clause += ' AND signature_r = ' + str(signature_r)
-
-    if start is None:
-        end = float(end)
-        query = 'SELECT * FROM (SELECT * FROM zeros {} ORDER BY zero DESC LIMIT {}) ORDER BY zero ASC'.format(
+    if end is None:
+        query = 'SELECT * FROM (SELECT * FROM zeros {} ORDER BY zero ASC LIMIT {}) ORDER BY zero DESC'.format(
             where_clause, limit)
-        # query = 'SELECT * FROM zeros WHERE zero < {} ORDER BY zero DESC LIMIT {}'.format(end, limit)
     else:
-        query = 'SELECT * FROM zeros {} ORDER BY zero LIMIT {}'.format(where_clause, limit)
+        query = 'SELECT * FROM zeros {} ORDER BY zero DESC LIMIT {}'.format(where_clause, limit)
 
     print query
+    c = sqlite3.connect(data_location + 'first_zeros.db').cursor()
     c.execute(query)
 
     response = flask.Response((" ".join([str(x) for x in row]) + "\n" for row in c))

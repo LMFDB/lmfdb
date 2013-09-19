@@ -29,7 +29,7 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/EllipticCurve/Q/56.a/')
         assert 'Graph' in L.data
 
-    @unittest2.skip("Holomorphic cusp forms not working yet")
+    #@unittest2.skip("Holomorphic cusp forms not working yet")
     def test_Lemf(self):
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/11/2/0/a/0/')
         assert 'Graph' in L.data
@@ -134,6 +134,10 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/degree4/EllipticCurve/SymmetricCube/')
         assert 'Elliptic' in L.data
 
+    def test_Lhgm(self):
+        L = self.tc.get('/L/Motives/Hypergeometric/Q/A2.2.2.2_B1.1.1.1_t1.2/')			# To be moved eventually
+        assert 'Graph' in L.data
+
 
     #------------------------------------------------------
     # Testing plots and zeros of L-functions
@@ -150,9 +154,8 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/Zeros/EllipticCurve/Q/56.a/')
         assert '2.791838' in L.data
 
-    @unittest2.skip("Holomorphic cusp forms not working yet")
     def test_LemfPlot(self):
-        L = self.tc.get('/L/Plot/ModularForm/GL2/Q/holomorphic/11/2/0/a/0/')
+        L = self.tc.get('/L/Plot/ModularForm/GL2/Q/holomorphic/10/3/1/a/0/')
         assert 'OK' in str(L)
 
     def test_LdedekindZeros(self):
@@ -163,10 +166,13 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/Zeros/ArtinRepresentation/2/68/2/')
         assert 'OK' in str(L)
 
-    @unittest2.skip("This doesn't work locally at the moment.")
     def test_LecPlot(self):
         L = self.tc.get('/L/Plot/EllipticCurve/Q/56.a/')
         assert 'OK' in str(L)
+
+    def test_LHGMZeros(self):
+        L = self.tc.get('/L/Zeros/Motives/Hypergeometric/Q/A2.2.2.2_B1.1.1.1_t1.2/')
+        assert '4.307350233' in L.data
 
 
     #------------------------------------------------------
@@ -181,9 +187,10 @@ class LfunctionTest(LmfdbTest):
         svg = paintSvgFileAll([["GSp4", 1]])
         assert "12.4687" in svg
 
-##    def test_paintSVGholo(self):
-##        svg = paintSvgHolo(1,6,2,12)
-##        assert "/L/ModularForm/GL2/Q/holomorphic/4/6/0/a/0" in svg
+    @unittest2.skip("Error in holomorphic cusp forms still")
+    def test_paintSVGholo(self):
+        svg = paintSvgHolo(4,6,4,6)
+        assert "/L/ModularForm/GL2/Q/holomorphic/4/6/0/a/0" in svg
 
     def test_paintSVGchar(self):
         svg = paintSvgChar(1,20,1,12)
