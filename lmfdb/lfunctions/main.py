@@ -504,12 +504,12 @@ def initLfunction(L, args, request):
         if L.ellipticcurve:
             info['friends'].append(
                 ('EC isogeny class ' + L.ellipticcurve,
-                 url_for("by_ec_label", label=L.ellipticcurve)))
+                 url_for("ec.by_ec_label", label=L.ellipticcurve)))
             info['friends'].append(('L-function ' + str(L.level) + '.' + str(L.label),
                                     url_for('.l_function_ec_page', label=L.ellipticcurve)))
             for i in range(1, L.nr_of_curves_in_class + 1):
                 info['friends'].append(('Elliptic curve ' + L.ellipticcurve + str(i),
-                                       url_for("by_ec_label", label=L.ellipticcurve + str(i))))
+                                       url_for("ec.by_ec_label", label=L.ellipticcurve + str(i))))
             info['friends'].append(
                 ('Symmetric square L-function',
                  url_for(".l_function_ec_sym_page", power='2',

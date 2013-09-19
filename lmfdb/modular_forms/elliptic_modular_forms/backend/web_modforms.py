@@ -989,7 +989,7 @@ class WebNewForm_class(object):
             if not self._label == self._parent._galois_orbits_labels[self._fi]:
                 raise ValueError
         except (ValueError,KeyError):
-            raise ValueError,"There does not exista newform orbit of the given label: {0} and number:{1}!".format(self._label,self._fi)
+            raise ValueError,"There does not exist a newform orbit of the given label: {0} and number:{1}!".format(self._label,self._fi)
         return True
 
     def _set_character(self):
