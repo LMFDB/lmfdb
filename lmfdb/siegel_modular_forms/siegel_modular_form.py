@@ -11,6 +11,31 @@ DATA = 'http://data.countnumber.de/Siegel-Modular-Forms/'
 # DATA = '/home/nils/Sandbox/super_current/Siegel-Modular-Forms/'
 # DATA = os.path.expanduser("~/data/Siegel-Modular-Forms/")
 
+##TODO just copied this from hilbert_modular_form.py, probably should be in a lmfdb.tex_utilities file
+def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing polynomials)
+    o_str = pol_str.replace('*', '')
+    ind_mid = o_str.find('/')
+    while ind_mid != -1:
+        ind_start = ind_mid - 1
+        while ind_start >= 0 and o_str[ind_start] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
+            ind_start -= 1
+        ind_end = ind_mid + 1
+        while ind_end < len(o_str) and o_str[ind_end] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
+            ind_end += 1
+        o_str = o_str[:ind_start + 1] + '\\frac{' + o_str[ind_start + 1:ind_mid] + '}{' + o_str[
+            ind_mid + 1:ind_end] + '}' + o_str[ind_end:]
+        ind_mid = o_str.find('/')
+
+    ind_start = o_str.find('^')
+    while ind_start != -1:
+        ind_end = ind_start + 1
+        while ind_end < len(o_str) and o_str[ind_end] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
+            ind_end += 1
+        o_str = o_str[:ind_start + 1] + '{' + o_str[ind_start + 1:ind_end] + '}' + o_str[ind_end:]
+        ind_start = o_str.find('^', ind_end)
+
+    return o_str
+
 def render_webpage(args={}):
     """
     Configure and return a template for the Siegel modular forms pages.
@@ -347,7 +372,14 @@ def render_webpage(args={}):
                                 [(l, g[1][l]) for l in g[1]],
                                 [(i, f[2][i], __disc(i)) for i in f_keys],
                                 f_url, g_url]
-            
+
+            # texify things which are going to be shown on SMF specimen page
+            # replace a2 generator with a to make things prettier 
+            if f[0].parent()!=QQ:
+                info['coeff_field_gen_tex'] = teXify_pol(str(f[0].parent().gen()).replace('a2', 'a'))
+                info['coeff_field_poly_tex'] = teXify_pol(str(f[0].parent().polynomial()).replace('a2', 'a'))
+            info['poly_in_gen_tex'] = teXify_pol(str(f[1]).replace('a2', 'a'))
+
         location = url_for('ModularForm_GSp4_Q_top_level', group=group, page=page, weight=weight, form=form)
         info['form_name'] = form
         bread += [(weight + '_' + form, location)]

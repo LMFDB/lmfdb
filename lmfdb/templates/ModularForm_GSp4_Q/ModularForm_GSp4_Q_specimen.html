@@ -15,11 +15,12 @@
 </h4>
 
 <h2>Number field containing all coefficients</h2>
-<div class="box1"><div class="small">{{ the_form[0] }}</div></div>
+<div class="box1"><div class="small">{% if coeff_field_gen_tex %} Number field in ${{ coeff_field_gen_tex }}$ with defining polynomial ${{ coeff_field_poly_tex }}$
+{% else %} Rational number field. {% endif %}</div></div>
 
 <h2>As polynomial in <a class="knowl-title" knowl="{{ generators }}">generators</a></h2>
 {% if the_form[1] %} 
-<div class="box1"><div class="small">{{ the_form[1] }}</div></div>
+<div class="box1"><div class="small">${{ poly_in_gen_tex }}$</div></div>
 {% else %}
 <div class="box1"><div class="small">Not applicable</div></div>
 {% endif %}
@@ -41,7 +42,7 @@
 <div class="small">
   <table>
     <thead>
-      <tr><th>n</th><th>&lambda;(n)</th></tr>
+      <tr><th>$n$</th><th>$\lambda(n)$</th></tr>
     </thead>
     {% for l,val in the_form[2] %}
     <tr class = "{{ loop.cycle( 'odd', 'even') }}"><td>{{ l }}</td><td>{{ val }}</td></tr>
