@@ -31,6 +31,32 @@ Elliptic Curve 11.a1</a>: modular form<br/>
 <a href="{{ url_for('ec.by_ec_label', label='108.a2') }}">
 Elliptic Curve 108.a2</a>: (\(j(E)=0\) case)<br/>
 </ul>
+
+<br>
+Hilbert Modular Form pages
+<ul>
+<li><a href="{{url_for('hmf.hilbert_modular_form_render_webpage')}}">HMF browse page</a>
+<li>
+<a href="{{url_for('hmf.hilbert_modular_form_render_webpage',
+         field_label='2.2.8.1', count='10')}}">first 10 forms over Qsqrt2</a>
+<li>
+<a href="{{url_for('hmf.render_hmf_webpage', field_label='2.2.5.1', label='2.2.5.1-45.1-a')}}">HMF 2.2.5.1-45.1-a</a>
+<li>
+<a href="{{url_for('l_functions.l_function_hmf_page', field='2.2.5.1',
+         label='2.2.5.1-45.1-a', character='0', number='0')}}">L-function of HMF 2.2.5.1-45.1-a</a>
+<li>
+<a href="{{url_for('hmf.render_hmf_webpage_download',
+         field_label='2.2.5.1', label='2.2.5.1-45.1-a',
+         download_type='sage')}}"> Download Sage code for HMF
+         2.2.5.1-45.1-a</a>
+<li>
+<a href="{{url_for('hmf.render_hmf_webpage_download',
+         field_label='2.2.5.1', label='2.2.5.1-45.1-a',
+         download_type='magma')}}">Download Magma code for HMF
+         2.2.5.1-45.1-a</a>
+</ul>
+
+
 <a href="{{ url_for('number_fields.by_label', label='6.0.11691.1') }}">Number field 6.0.11691.1</a> <br/>
 <a href="{{ url_for('number_fields.by_label', label='4.2.6912.1') }}">Number field 4.2.6912.1</a>Difference with previous is that data on Artin representations is available and might mess up the page <br/>
 <a href="{{ url_for('l_functions.l_function_nf_page', label = "4.2.6912.1")}}"> Dedekind zeta function for 4.2.6912.1</a><br/>

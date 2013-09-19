@@ -3,18 +3,20 @@
 import re
 import pymongo
 
-from base import app, getDBConnection
+import lmfdb.base
+from lmfdb.base import app, getDBConnection
 from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
 from sage.misc.preparser import preparse
+from lmfdb.hilbert_modular_forms import hmf_page, hmf_logger
 
 import sage.all
 from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi
 
-from utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, parse_range
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, parse_range
 
-from number_fields.number_field import parse_list, parse_field_string, field_pretty
+from lmfdb.number_fields.number_field import parse_list, parse_field_string, field_pretty
 
-from WebNumberField import *
+from lmfdb.WebNumberField import *
 
 
 def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing polynomials)
@@ -42,16 +44,16 @@ def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing poly
     return o_str
 
 
-@app.route("/ModularForm/GL2/")
+@hmf_page.route("/")
 def hilbert_modular_form_render_webpage():
     args = request.args
     if len(args) == 0:
         info = {}
         credit = 'Lassina Dembele, Steve Donnelly and <A HREF="http://www.cems.uvm.edu/~voight/">John Voight</A>'
         t = 'Hilbert Cusp Forms'
-        bread = [('Hilbert Modular Forms', url_for("hilbert_modular_form_render_webpage"))]
+        bread = [('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage"))]
         info['learnmore'] = []
-        return render_template("hilbert_modular_form/hilbert_modular_form_all.html", info=info, credit=credit, title=t, bread=bread)
+        return render_template("hilbert_modular_form_all.html", info=info, credit=credit, title=t, bread=bread)
     else:
         return hilbert_modular_form_search(**args)
 
@@ -125,13 +127,13 @@ def hilbert_modular_form_search(**args):
 
     t = 'Hilbert Modular Form search results'
 
-    bread = [('Hilbert Modular Forms', url_for("hilbert_modular_form_render_webpage")), (
+    bread = [('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")), (
         'Search results', ' ')]
     properties = []
-    return render_template("hilbert_modular_form/hilbert_modular_form_search.html", info=info, title=t, properties=properties, bread=bread)
+    return render_template("hilbert_modular_form_search.html", info=info, title=t, properties=properties, bread=bread)
 
 
-@app.route('/ModularForm/GL2/<field_label>/holomorphic/<label>/download/<download_type>')
+@hmf_page.route('/<field_label>/holomorphic/<label>/download/<download_type>')
 def render_hmf_webpage_download(**args):
     if args['download_type'] == 'magma':
         response = make_response(download_hmf_magma(**args))
@@ -241,7 +243,7 @@ def download_hmf_sage(**args):
     return outstr
 
 
-@app.route('/ModularForm/GL2/<field_label>/holomorphic/<label>')
+@hmf_page.route('/<field_label>/holomorphic/<label>')
 def render_hmf_webpage(**args):
     C = getDBConnection()
     data = None
@@ -271,17 +273,20 @@ def render_hmf_webpage(**args):
 
     info.update(data)
 
-    downloadslabel = '/ModularForm/GL2/' + info['field_label'] + '/holomorphic/' + info['label']
-    info['downloads'] = [('Download to Magma', downloadslabel + '/download/magma'), (
-        'Download to Sage', downloadslabel + '/download/sage')]
+    info['downloads'] = [
+        ('Download to Magma', url_for(".render_hmf_webpage_download", field_label=info['field_label'], label=info['label'], download_type='magma')),
+        ('Download to Sage', url_for(".render_hmf_webpage_download", field_label=info['field_label'], label=info['label'], download_type='sage'))
+        ]
     info['friends'] = []
-    info['friends'] = [('L-function', '/L/ModularForm/GL2/' + data['field_label'] + '/holomorphic/' +
-                        info['label'] + '/0/0')]
+    info['friends'] = [('L-function',
+                        url_for("l_functions.l_function_hmf_page", field=info['field_label'], label=info['label'], character='0', number='0'))]
+
 # info['learnmore'] = [('Number Field labels',
 # url_for("render_labels_page")), ('Galois group
 # labels',url_for("render_groups_page")), ('Discriminant
 # ranges',url_for("render_discriminants_page"))]
-    bread = [('Hilbert Modular Forms', url_for("hilbert_modular_form_render_webpage")), ('%s' % data[
+
+    bread = [('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")), ('%s' % data[
                                                                                          'label'], ' ')]
 
     t = "Hilbert Cusp Form %s" % info['label']
@@ -366,4 +371,4 @@ def render_hmf_webpage(**args):
                    ('Base Change?', is_base_change)
                    ]
 
-    return render_template("hilbert_modular_form/hilbert_modular_form.html", downloads=info["downloads"], info=info, properties2=properties2, credit=credit, title=t, bread=bread, friends=info['friends'])
+    return render_template("hilbert_modular_form.html", downloads=info["downloads"], info=info, properties2=properties2, credit=credit, title=t, bread=bread, friends=info['friends'])
