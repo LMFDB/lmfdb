@@ -569,9 +569,10 @@ def initLfunction(L, args, request):
                 info['friends'].append(('Symmetric %s' % ordinal(j), friendlink3))
 
     elif L.Ltype() == 'siegelnonlift' or L.Ltype() == 'siegeleisenstein' or L.Ltype() == 'siegelklingeneisenstein' or L.Ltype() == 'siegelmaasslift':
+        friendlink = friendlink.rpartition('/')[0] #strip off embedding number for L-function
         weight = str(L.weight)
         number = str(L.number)
-        info['friends'] = [('Siegel Modular Form', friendlink)]
+        info['friends'] = [('Siegel Modular Form ' + weight + '_' + L.orbit, friendlink)]
 
     elif L.Ltype() == "artin":
         # info['zeroeslink'] = ''

@@ -11,12 +11,10 @@ DATA = 'http://data.countnumber.de/Siegel-Modular-Forms/'
 # DATA = '/home/nils/Sandbox/super_current/Siegel-Modular-Forms/'
 # DATA = os.path.expanduser("~/data/Siegel-Modular-Forms/")
 
-
 def render_webpage(args={}):
     """
     Configure and return a template for the Siegel modular forms pages.
     """
-
     info = dict(args)
     # info['learnmore'] = [ ('Siegel modular forms', 'http://en.wikipedia.org/wiki/Siegel_modular_form')]
     info['learnmore'] = []
@@ -224,7 +222,7 @@ def render_webpage(args={}):
     ##########################################################
     if page == 'specimen':
         info['weight'] = weight
-
+        
         # try to load data
         try:
             file_name = weight + '_' + form + '.sobj'
@@ -283,6 +281,20 @@ def render_webpage(args={}):
                 for k in f[2]:
                     f[2][k] *= d
 
+                
+            # if implemented, add L-function to friends
+            if 'Sp4Z'== group:
+                numEmbeddings = f[0].parent().degree()
+                info['friends'] = []
+                for embedding in range(0, numEmbeddings):
+                    info['friends'].append(('Spin L-function for ' 
+                                           + str(weight) + '_' + form + '.' + str(embedding), 
+                                           '/L/ModularForm/GSp/Q/Sp4Z/specimen/'
+                                           + str(weight) + '/' + form + '/' + str(embedding))) 
+            
+            #TODO implement remaining spin L-functions, standard L-functions,
+            #     and first Fourier-Jacobi coefficient
+
             try:
                 if not ev_modulus:
                     m = 0
@@ -335,15 +347,12 @@ def render_webpage(args={}):
                                 [(l, g[1][l]) for l in g[1]],
                                 [(i, f[2][i], __disc(i)) for i in f_keys],
                                 f_url, g_url]
-##            info['friends'] = [ ('Spin L-function', url_for('not_yet_implemented'))]#, \
-##                                 ('Standard L-function', url_for('not_yet_implemented')), \
-##                                 ('First Fourier-Jacobi coefficient', url_for('not_yet_implemented'))]
-
+            
         location = url_for('ModularForm_GSp4_Q_top_level', group=group, page=page, weight=weight, form=form)
         info['form_name'] = form
         bread += [(weight + '_' + form, location)]
 
-        properties2 = [('Type', '$' + info['parent_as_tex'] + '$'),
+        properties2 = [('Species', '$' + info['parent_as_tex'] + '$'),
                        ('Weight', '%s' % weight)]
 
         return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_specimen.html",
