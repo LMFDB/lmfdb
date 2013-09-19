@@ -4,10 +4,10 @@
 {% if not error %}
 
 <h2>Galois orbit</h2>
-<h4>Weight: {{ weight }}&nbsp;&nbsp;&nbsp;&nbsp;
+<h4>Weight: {{ info.weight }}&nbsp;&nbsp;&nbsp;&nbsp;
   
-  {% if form %}
-  [{{ form }}]
+  {% if info.form %}
+  [{{ info.form }}]
   {% else %}
   [Need to indicate Maass, Interesting, etc. here]
   {% endif %}
@@ -15,18 +15,17 @@
 </h4>
 
 <h2>Number field containing all coefficients</h2>
-<div class="box1"><div class="small">{% if coeff_field_gen_tex %} Number field in ${{ coeff_field_gen_tex }}$ with defining polynomial ${{ coeff_field_poly_tex }}$
+<div class="box1"><div class="small">{% if info.gen_coeff_field %} Number field in ${{ info.gen_coeff_field }}$ with defining polynomial ${{ info.poly_coeff_field }}$
 {% else %} Rational number field. {% endif %}</div></div>
 
 <h2>As polynomial in <a class="knowl-title" knowl="{{ generators }}">generators</a></h2>
-{% if the_form[1] %} 
-<div class="box1"><div class="small">${{ poly_in_gen_tex }}$</div></div>
+{% if info.poly_in_gens %} 
+<div class="box1"><div class="small">${{ info.poly_in_gens }}$</div></div>
 {% else %}
 <div class="box1"><div class="small">Not applicable</div></div>
 {% endif %}
 
 <h2>Hecke eigenvalues
-  <button name="Eigenvalues" value="Download" onclick="window.location.href = '{{ the_form[5] }}'">Download</button>
 </h2>
   <form action="/ModularForm/GSp/Q" method="get">
     <input type="hidden" name="group" value="{{ group }}" />
@@ -44,14 +43,13 @@
     <thead>
       <tr><th>$n$</th><th>$\lambda(n)$</th></tr>
     </thead>
-    {% for l,val in the_form[2] %}
-    <tr class = "{{ loop.cycle( 'odd', 'even') }}"><td>{{ l }}</td><td>{{ val }}</td></tr>
+    {% for l,val in info.ftd_evals %}
+    <tr class = "{{ loop.cycle( 'odd', 'even') }}"><td>${{ l }}$</td><td>${{ val }}$</td></tr>
     {% endfor %}
   </table>
 </div></div>
 
 <h2>Fourier coefficients
-  <button name="Fourier coefficients" value="Download" onclick="window.location.href = '{{ the_form[4] }}'">Download</button>
 </h2>
 {% if 'Sp8Z' == group %}
 {% set form_index = '\(T=(m_{11}, m_{22}, \dots, m_{34})\)' %}
@@ -100,7 +98,7 @@
     f(\tau,z,\tau')=\sum_{T=(n,r,m)}a(T)\;e^{2\pi i(n\tau+rz+m\tau')}.
     \]
 {% endif %}
-  <form action="/ModularForm/GSp/Q" method="get">
+<!--  <form action="/ModularForm/GSp/Q" method="get">
     <input type="hidden" name="group" value="{{ group }}" />
     <input type="hidden" name="page" value="specimen" /> 
     <input type="hidden" name="form" value="{{ form_name }}" /> 
@@ -109,7 +107,7 @@
     <input type="text" name="fc_modulus" value="{{ fc_modulus }}" size=5 maxlength=5/>
     <span class="formexample">e.g. 17 (0 means no reduction)</span>
     <button type="submit" value="reduce"> Reduce again</button>
-  </form>
+  </form>-->
 </p>
 <div class="box1">
 <div class="small">
@@ -117,8 +115,8 @@
     <thead>
       <tr><th>\(|D|\)</th><th>{{ form_index }}</th><th>\(a(T)\)</th></tr>
     </thead>
-    {% for l,val,disc in the_form[3] %}
-    <tr class = "{{ loop.cycle( 'odd', 'even') }}"><td>{{ disc }}</td><td nowrap=''>{{ l }}</td><td>{{ val }}</td></tr>
+    {% for l,val,disc in info.f_fourier_coeff %}
+    <tr class = "{{ loop.cycle( 'odd', 'even') }}"><td>${{ disc }}$</td><td nowrap=''>${{ l }}$</td><td>${{ val }}$</td></tr>
     {% endfor %}
   </table>
 </div></div>

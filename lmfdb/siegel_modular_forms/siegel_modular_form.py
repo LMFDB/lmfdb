@@ -252,17 +252,18 @@ def render_webpage(args={}):
         try:
             file_name = weight + '_' + form + '.sobj'
             f_url = DATA + group + '/eigenforms/' + file_name
-            # print 'fafaf %s'%f_url
             f = load(f_url)
+
             file_name = weight + '_' + form + '-ev.sobj'
             g_url = DATA + group + '/eigenvalues/' + file_name
-            # print 'gagag %s'%g_url
             g = load(g_url)
+
             loaded = True
         except:
             info['error'] = 'Data not available'
             loaded = False
-        print 'hahahah %s' % loaded
+
+
         if True == loaded:
 
             # throw out disc = 0 keys for cusp forms
@@ -284,9 +285,7 @@ def render_webpage(args={}):
                                       m13, m23, m33, m34, m14, m24, m34, m44])
                 __disc = lambda i: __mat(i).det()
                 __cmp = lambda f1, f2: cmp([__mat(f1).det()] + list(f1), [__mat(f2).det()] + list(f2))
-                # print 'before: ', f_keys
                 f_keys.sort(cmp=__cmp)
-                # print f_keys
 
             if 'Sp6Z' == group:
                 # matrix index is given as [m11/2 m22/2 m33/2 m12 m13 m23]
@@ -294,9 +293,7 @@ def render_webpage(args={}):
                     matrix(ZZ, 3, 3, [2 * a, d, e, d, 2 * b, f, e, f, 2 * c])
                 __disc = lambda i: __mat(i).det()
                 __cmp = lambda f1, f2: cmp([__mat(f1).det()] + list(f1), [__mat(f2).det()] + list(f2))
-                # print 'before: ', f_keys
                 f_keys.sort(cmp=__cmp)
-                # print f_keys
 
             # make the coefficients of the M_k(Sp(4,Z)) forms integral
             if 'Sp4Z' == group:  # or 'Sp4Z_2' == group:
@@ -306,20 +303,14 @@ def render_webpage(args={}):
                 for k in f[2]:
                     f[2][k] *= d
 
-                
-            # if implemented, add L-function to friends
-            if 'Sp4Z'== group:
-                numEmbeddings = f[0].parent().degree()
-                info['friends'] = []
-                for embedding in range(0, numEmbeddings):
-                    info['friends'].append(('Spin L-function for ' 
-                                           + str(weight) + '_' + form + '.' + str(embedding), 
-                                           '/L/ModularForm/GSp/Q/Sp4Z/specimen/'
-                                           + str(weight) + '/' + form + '/' + str(embedding))) 
-            
-            #TODO implement remaining spin L-functions, standard L-functions,
-            #     and first Fourier-Jacobi coefficient
+            # replace a2 generator with a to make things prettier 
+            if f[0].parent()!=QQ:
+                info['gen_coeff_field'] = teXify_pol(str(f[0].parent().gen()).replace('a2', 'a'))
+                info['poly_coeff_field'] = teXify_pol(str(f[0].parent().polynomial()).replace('a2', 'a'))
+            info['poly_in_gens'] = teXify_pol(str(f[1]).replace('a2', 'a'))
 
+            # prepare formatted eigenvalue data
+            ftd_evals = []            
             try:
                 if not ev_modulus:
                     m = 0
@@ -330,11 +321,16 @@ def render_webpage(args={}):
                 if m != 0:
                     if QQ == K:
                         for i in g[1]:
-                            g[1][i] = Integer(g[1][i]) % m
+                            rdcd_eval = Integer(g[1][i]) % m
+                            ftd_evals.append((str(i), teXify_pol(str(rdcd_eval).replace('a2', 'a'))))
                     else:
                         I = K.ideal(m)
                         for i in g[1]:
-                            g[1][i] = I.reduce(g[1][i])
+                            rdcd_eval = I.reduce(g[1][i])
+                            ftd_evals.append((str(i), teXify_pol(str(rdcd_eval).replace('a2', 'a'))))
+                else:
+                    for i in g[1]:
+                        ftd_evals.append((str(i), teXify_pol(str(g[1][i]).replace('a2', 'a'))))
 
             except:
                 info['fc_modulus'] = 0
@@ -367,29 +363,48 @@ def render_webpage(args={}):
             except:
                 info['fc_modulus'] = 0
                 pass
+            # if implemented, add L-function to friends
+            if 'Sp4Z'== group:
+                numEmbeddings = f[0].parent().degree()
+                info['friends'] = []
+                for embedding in range(0, numEmbeddings):
+                    info['friends'].append(('Spin L-function for ' 
+                                           + str(weight) + '_' + form + '.' + str(embedding), 
+                                           '/L/ModularForm/GSp/Q/Sp4Z/specimen/'
+                                           + str(weight) + '/' + form + '/' + str(embedding))) 
+            else:
+                info['friends'] = []            
+            #TODO implement remaining spin L-functions, standard L-functions,
+            #     and first Fourier-Jacobi coefficient
+
 
             info['the_form'] = [f[0].parent(), f[1],
                                 [(l, g[1][l]) for l in g[1]],
                                 [(i, f[2][i], __disc(i)) for i in f_keys],
                                 f_url, g_url]
 
-            # texify things which are going to be shown on SMF specimen page
-            # replace a2 generator with a to make things prettier 
-            if f[0].parent()!=QQ:
-                info['coeff_field_gen_tex'] = teXify_pol(str(f[0].parent().gen()).replace('a2', 'a'))
-                info['coeff_field_poly_tex'] = teXify_pol(str(f[0].parent().polynomial()).replace('a2', 'a'))
-            info['poly_in_gen_tex'] = teXify_pol(str(f[1]).replace('a2', 'a'))
 
-        location = url_for('ModularForm_GSp4_Q_top_level', group=group, page=page, weight=weight, form=form)
-        info['form_name'] = form
-        bread += [(weight + '_' + form, location)]
+            location = url_for('ModularForm_GSp4_Q_top_level', group=group, page=page, weight=weight, form=form)
+            info['form_name'] = form
+            bread += [(weight + '_' + form, location)]
 
-        properties2 = [('Species', '$' + info['parent_as_tex'] + '$'),
-                       ('Weight', '%s' % weight)]
+            properties2 = [('Species', '$' + info['parent_as_tex'] + '$'),
+                          ('Weight', '%s' % weight)]
 
-        return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_specimen.html",
-                               title='Siegel modular form ' + weight + '_' + form,
-                               bread=bread, properties2=properties2, **info)
+            info['form'] = form
+            info['downloads'] = [('Eigenvalues', info['the_form'][5]),
+                                 ('Fourier coefficients', info['the_form'][4])]
+            info['ftd_evals'] = ftd_evals
+
+        return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_specimen.html", 
+                 title = 'Siegel modular form ' + weight + '_' + form,
+                 bread=bread, 
+		 info=info,  
+		 properties2=properties2, friends=info['friends'], downloads=info['downloads']) 
+
+##        return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_specimen.html",
+##                               title='Siegel modular form ' + weight + '_' + form,
+##                               bread=bread, properties2=properties2, **info)
 
     # if a nonexisting page was requested return the homepage of Siegel modular forms
     return render_webpage()
