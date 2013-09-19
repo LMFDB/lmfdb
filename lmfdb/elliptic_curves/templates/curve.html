@@ -365,7 +365,7 @@ All \(p\)-adic regulators are identically \(1\) since the rank is \(0\).
 Note: \(p\)-adic data only exists for primes \(p\ge5\) of good ordinary
 reduction.
 </p>
-        <select onchange="$('#padic').load('{{url_for('padic_data', label=info.label, p='xxx', rank=info.rank).replace('xxx', "'+this.value+'")}}', function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'padic']);}); ">
+        <select onchange="$('#padic').load('{{url_for('.padic_data', label=info.label, p='xxx', rank=info.rank).replace('xxx', "'+this.value+'")}}', function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'padic']);}); ">
         <option value=''>Choose a prime...</option>
         {% for p in info.p_adic_primes %}
         <option value="{{ p }}">{{ p }}</option>

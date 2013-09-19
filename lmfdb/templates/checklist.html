@@ -10,9 +10,9 @@
 Elliptic Curve pages
 <ul>
 <li>
-<a href="{{ url_for('rational_elliptic_curves', conductor='1-99') }}">Elliptic curves/Q, conductor 1-99</a><br/>
+<a href="{{ url_for('ec.rational_elliptic_curves', conductor='1-99') }}">Elliptic curves/Q, conductor 1-99</a><br/>
 <li>
-<a href="{{ url_for('by_ec_label', label='17.a1') }}">
+<a href="{{ url_for('ec.by_ec_label', label='17.a1') }}">
 Elliptic Curve 17.a1</a>: home page<br/>
 <li>
 <a href="{{ url_for("l_functions.l_function_ec_page",label='17.a')}}"> 
@@ -22,15 +22,14 @@ Elliptic Curve 17.a1</a>: L-function<br/>
                                                 label='17.a')}}"> 
 Elliptic Curve 17.a1</a>: symmetric square L-function<br/>
 <li>
-<a href="{{ url_for("rational_elliptic_curves", jinv=8000)}}"> 
-Elliptic Curve 256.a1</a>: list of twists<br/>
+<a href="{{ url_for("ec.rational_elliptic_curves", jinv=8000)}}"> 
+Elliptic Curve 256.a1</a> (\(j=8000\)): list of twists<br/>
 <li>
-<a href="{{ url_for(
-        "emf.render_elliptic_modular_forms", level=11, weight=2, character=0, label='11.1')}}"> 
+<a href="{{ url_for("emf.render_elliptic_modular_forms", level=11, weight=2, character=0, label='a')}}"> 
 Elliptic Curve 11.a1</a>: modular form<br/>
 <li>
-<a href="{{ url_for('by_ec_label', label='108.a2') }}">
-Elliptic Curve 108.a2</a>: j(E)=0 case<br/>
+<a href="{{ url_for('ec.by_ec_label', label='108.a2') }}">
+Elliptic Curve 108.a2</a>: (\(j(E)=0\) case)<br/>
 </ul>
 <a href="{{ url_for('number_fields.by_label', label='6.0.11691.1') }}">Number field 6.0.11691.1</a> <br/>
 <a href="{{ url_for('number_fields.by_label', label='4.2.6912.1') }}">Number field 4.2.6912.1</a>Difference with previous is that data on Artin representations is available and might mess up the page <br/>
