@@ -6,10 +6,11 @@ import pickle
 import urllib
 from sage.all_cmdline import *
 import os
+import sample
 
-# DATA = 'http://data.countnumber.de/Siegel-Modular-Forms/'
-# DATA = '/home/nils/Sandbox/super_current/Siegel-Modular-Forms/'
-DATA = os.path.expanduser("~/data/Siegel-Modular-Forms/")
+DATA = 'http://data.countnumber.de/Siegel-Modular-Forms/'
+# DATA = '/home/nils/Sandbox/Siegel-Modular-Forms/'
+# DATA = os.path.expanduser("~/data/Siegel-Modular-Forms/")
 
 
 def render_webpage(args={}):
@@ -231,19 +232,37 @@ def render_webpage(args={}):
         info['weight'] = weight
 
         # try to load data
-        try:
-            file_name = weight + '_' + form + '.sobj'
-            f_url = DATA + group + '/eigenforms/' + file_name
-            # print 'fafaf %s'%f_url
-            f = load(f_url)
-            file_name = weight + '_' + form + '-ev.sobj'
-            g_url = DATA + group + '/eigenvalues/' + file_name
-            # print 'gagag %s'%g_url
-            g = load(g_url)
-            loaded = True
-        except:
-            info['error'] = 'Data not available'
-            loaded = False
+
+        if 'Kp' == group or 'Sp6Z' == group or 'Sp4Z_2' == group or 'Sp4Z == group':
+            # fetch from mongodb
+            try:
+                smple = sample.Sample( [group], weight + '_' + form)
+                f = (smple.field()(0), smple.explicit_formula(), smple.Fourier_coefficients() if smple.Fourier_coefficients() else {})
+                g = (smple.field()(0), smple.eigenvalues() if smple.eigenvalues() else {})
+
+                file_name = weight + '_' + form + '.sobj'
+                f_url = DATA + group + '/eigenforms/' + file_name
+                file_name = weight + '_' + form + '-ev.sobj'
+                g_url = DATA + group + '/eigenvalues/' + file_name
+
+                loaded = True
+            except Exception as e:
+                info['error'] = 'Data not available: %s %s' % (str(e), weight + '_' + form)
+                loaded = False
+        else:
+            try:
+                file_name = weight + '_' + form + '.sobj'
+                f_url = DATA + group + '/eigenforms/' + file_name
+                # print 'fafaf %s'%f_url
+                f = load(f_url)
+                file_name = weight + '_' + form + '-ev.sobj'
+                g_url = DATA + group + '/eigenvalues/' + file_name
+                # print 'gagag %s'%g_url
+                g = load(g_url)
+                loaded = True
+            except:
+                info['error'] = 'Data not available'
+                loaded = False
         print 'hahahah %s' % loaded
         if True == loaded:
 
@@ -281,12 +300,12 @@ def render_webpage(args={}):
                 # print f_keys
 
             # make the coefficients of the M_k(Sp(4,Z)) forms integral
-            if 'Sp4Z' == group:  # or 'Sp4Z_2' == group:
-                d = lcm(map(lambda n: denominator(n), f[1].coefficients()))
-                f = list(f)
-                f[1] *= d
-                for k in f[2]:
-                    f[2][k] *= d
+            # if 'Sp4Z' == group:  # or 'Sp4Z_2' == group:
+            #     d = lcm(map(lambda n: denominator(n), f[1].coefficients()))
+            #     f = list(f)
+            #     f[1] *= d
+            #     for k in f[2]:
+            #         f[2][k] *= d
 
             try:
                 if not ev_modulus:
@@ -353,3 +372,6 @@ def render_webpage(args={}):
 
     # if a nonexisting page was requested return the homepage of Siegel modular forms
     return render_webpage()
+
+
+
