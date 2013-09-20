@@ -467,7 +467,6 @@ def plot_iso_graph(label):
     E = EllipticCurve(ainvs)
     G = E.isogeny_graph()
     n = G.num_verts()
-    G.relabel(range(1, n + 1))  # proper lmfdb labels...
     P = G.plot(edge_labels=True, layout='spring')
     _, filename = tempfile.mkstemp('.png')
     P.save(filename)
