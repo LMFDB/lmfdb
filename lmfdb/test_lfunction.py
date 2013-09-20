@@ -39,7 +39,7 @@ class LfunctionTest(LmfdbTest):
         assert 'Graph' in L.data
 
     def test_Lhmf(self):
-        L = self.tc.get('/L/ModularForm/GL2/2.2.5.1/holomorphic/2.2.5.1-36.1-a/0/0/')
+        L = self.tc.get('/L/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-36.1-a/0/0/')
         assert 'Graph' in L.data
 
     def test_Lgl3maass(self):
