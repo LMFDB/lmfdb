@@ -304,9 +304,9 @@ def l_function_artin_page(dimension, conductor, tim_index):
     return render_single_Lfunction(ArtinLfunction, args, request)
 
 # L-function of hypergeometric motive   ########################################
-@l_function_page.route("/Motives/Hypergeometric/Q/<label>/")
-def l_function_hgm_page(label):
-    args = {'label': label}
+@l_function_page.route("/Motive/Hypergeometric/Q/<label>/<t>")
+def l_function_hgm_page(label,t):
+    args = {'label': label+'_'+t}
     return render_single_Lfunction(HypergeometricMotiveLfunction, args, request)
 
 
@@ -585,7 +585,11 @@ def initLfunction(L, args, request):
             info['plotlink'] = ''
 
     elif L.Ltype() == "hgmQ":
-        info['friends'] = [('Hypergeometric motive ', friendlink.replace("_t","/t"))]   # The /L/ trick breaks down for motives, because we have a scheme for the L-functions themselves
+        # undo the splitting above
+        newlink = friendlink.rpartition('t')
+        friendlink = newlink[0]+'/t'+newlink[2]
+        #info['friends'] = [('Hypergeometric motive ', friendlink.replace("t","/t"))]   # The /L/ trick breaks down for motives, because we have a scheme for the L-functions themselves
+        info['friends'] = [('Hypergeometric motive ', friendlink)]   # The /L/ trick breaks down for motives, because we have a scheme for the L-functions themselves
 
 
     info['dirichlet'] = lfuncDStex(L, "analytic")

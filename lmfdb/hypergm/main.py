@@ -18,6 +18,17 @@ from lmfdb.transitive_group import *
 
 HGM_credit = 'D. Roberts and J. Jones'
 
+# Helper functions
+
+# A and B are lists, tn and td are num/den for t
+def ab_label(A,B):
+    return "A" + ".".join(map(str,A)) + "_B" + ".".join(map(str,B))
+    
+def make_label(A,B,tn,td):
+    AB_str = ab_label(A,B)
+    t = QQ( "%d/%d" % (tn, td))
+    t_str = "/t%s.%s" % (str(t.numerator()), str(t.denominator()))
+    return AB_str + t_str
 
 def get_bread(breads=[]):
     bc = [("Motives", url_for("motive.index")), ("Hypergeometric", url_for("motive.index2")), ("$\Q$", url_for(".index"))]
@@ -25,15 +36,15 @@ def get_bread(breads=[]):
         bc.append(b)
     return bc
 
-def display_poly(coeffs):
-    return web_latex(coeff_to_poly(coeffs))
-
-def format_coeffs(coeffs):
-    return pol_to_html(str(coeff_to_poly(coeffs)))
+def display_t(tn, td):
+    t = QQ("%d/%d" % (tn, td))
+    if t.denominator() == 1:
+        return str(t.numerator())
+    return "%s/%s" % (str(t.numerator()), str(t.denominator()))
 
 # Returns a string of val if val = 0, 1, -1, or version with p factored out otherwise
 def factor_out_p(val, p):
-    if val==0 or val==-1:
+    if val == 0 or val == -1:
         return str(val)
     if val==1:
         return '+1'
@@ -132,7 +143,6 @@ def hgm_family_constant_image(AB):
     B = map(int,B[1:].split("."))
     G = piecewise_constant_image(A, B)
     return image_callback(G)
-
 
 
 @hypergm_page.route("/<label>")
@@ -254,6 +264,8 @@ def hgm_search(**args):
             info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
         else:
             info['report'] = 'displaying all %s matches' % nres
+    info['make_label'] = make_label
+    info['display_t'] = display_t
 
     return render_template("hgm-search.html", info=info, title="Hypergeometric Motive over $\Q$ Search Result", bread=bread, credit=HGM_credit)
 
@@ -273,8 +285,7 @@ def render_hgm_webpage(args):
         title = 'Hypergeometric Motive:' + label
         A = data['A']
         B = data['B']
-        tn = data['t']['n']
-        td = data['t']['d']
+        tn,td = data['t']
         t = latex(QQ(str(tn)+'/'+str(td)))
         primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71]
         locinfo = data['locinfo']
@@ -300,11 +311,10 @@ def render_hgm_webpage(args):
                     'req': data['req'],
                     'locinfo': locinfo
                     })
-        AB_data = data["label"].split("_t")[0]
+        AB_data, t_data = data["label"].split("_t")
+        #AB_data = data["label"].split("_t")[0]
         friends = [("Motive family "+AB_data.replace("_"," "), url_for(".by_family_label", label = AB_data))]
-#        friends = [('Galois group', "/GaloisGroup/%dT%d" % (gn, gt))]
-#        if unramfriend != '':
-#            friends.append(('Unramified subfield', unramfriend))
+        friends.append(('L-function', url_for("l_functions.l_function_hgm_page", label=AB_data, t='t'+t_data)))
 #        if rffriend != '':
 #            friends.append(('Discriminant root field', rffriend))
 
@@ -361,19 +371,6 @@ def show_slopes(sl):
     if str(sl) == "[]":
         return "None"
     return(sl)
-
-
-def printquad(code, p):
-    if code == [1, 0]:
-        return('$\Q_{%s}$' % p)
-    if code == [1, 1]:
-        return('$\Q_{%s}(\sqrt{*})$' % p)
-    if code == [-1, 1]:
-        return('$\Q_{%s}(\sqrt{-*})$' % p)
-    s = code[0]
-    if code[1] == 1:
-        s = str(s) + '*'
-    return('$\Q_{' + str(p) + '}(\sqrt{' + str(s) + '})$')
 
 
 def search_input_error(info, bread):

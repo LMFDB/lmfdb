@@ -75,7 +75,7 @@ $\epsilon$:
 <table border=1 cellpadding=5 class="ntdata">
 <thead>
 <tr>
-<th>Result</th>
+<th>Label</th>
 <th>$A$</th>
 <th>$B$</th>
 <th>$t$</th>
@@ -89,17 +89,16 @@ $\epsilon$:
 {% for hgm in info.motives: %}
 <tr>
 <td> 
-<a href="/Motive/Hypergeometric/Q/"> 
-{{ loop.index }}
+<a href="/Motive/Hypergeometric/Q/{{info.make_label(hgm.A, hgm.B, hgm.t[0], hgm.t[1])}}"> 
+{{ info.make_label(hgm.A, hgm.B, hgm.t[0], hgm.t[1]) }}
 </a> 
 </td>
 <td>${{hgm.A}}$</td>
 <td>${{hgm.B}}$</td>
-<td>t</td>
-<td>{{hgm.cond}}</td>
-<td>{{hgm.degree}}</td>
-<td>{{hgm.weight}}</td>
-{# <td>{{info.group_display(field.gal)}}</td> #}
+<td>${{info.display_t(hgm.t[0], hgm.t[1])}}$</td>
+<td>${{hgm.cond}}$</td>
+<td>${{hgm.degree}}$</td>
+<td>${{hgm.weight}}$</td>
 </tr>
 
 {% endfor %}
