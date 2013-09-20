@@ -59,8 +59,6 @@ def render_webpage(args={}):
     form = args.get('form')
     page = args.get('page')
     weight_range = args.get('weight_range')
-    ev_modulus = args.get('ev_modulus')
-    fc_modulus = args.get('fc_modulus')
 
     # set info
     info['group'] = group
@@ -247,7 +245,13 @@ def render_webpage(args={}):
     ##########################################################
     if page == 'specimen':
         info['weight'] = weight
-        
+        ev_modulus = args.get('emod')
+        fc_modulus = args.get('fcmod')
+        elow = args.get('elow')
+        ehigh = args.get('ehigh')
+        fclow = args.get('fclow')        
+        fchigh = args.get('fchigh')        
+
         # try to load data
         try:
             file_name = weight + '_' + form + '.sobj'
@@ -263,20 +267,13 @@ def render_webpage(args={}):
             info['error'] = 'Data not available'
             loaded = False
 
-
         if True == loaded:
 
-            # throw out disc = 0 keys for cusp forms
-            f_keys = f[2].keys()
-            if 'Sp4Z' == group and 'E' != form and 'Klingen' != form:
-                f_keys = filter(lambda (a, b, c): b ^ 2 < 4 * a * c, f_keys)
-
-            # sort the table of Fourier coefficients by discriminant, forms in increasing lexicographic order
-            if 'Sp8Z' != group and 'Sp6Z' != group:
+            # define specific methods for computing discriminant and ordering of form
+            if 'Sp8Z' != group and 'Sp6Z' != group: # with current data this is all degree 2 SMFs
                 __disc = lambda (a, b, c): 4 * a * c - b ** 2
                 __cmp = lambda (
                     a, b, c), (A, B, C): cmp((4 * a * c - b ** 2, a, b, c), (4 * A * C - B ** 2, A, B, C))
-                f_keys.sort(cmp=__cmp)
 
             if 'Sp8Z' == group:
                 # matrix index is given as [m11 m22 m33 m44 m12 m13 m23 m14 m24 m34]
@@ -285,7 +282,6 @@ def render_webpage(args={}):
                                       m13, m23, m33, m34, m14, m24, m34, m44])
                 __disc = lambda i: __mat(i).det()
                 __cmp = lambda f1, f2: cmp([__mat(f1).det()] + list(f1), [__mat(f2).det()] + list(f2))
-                f_keys.sort(cmp=__cmp)
 
             if 'Sp6Z' == group:
                 # matrix index is given as [m11/2 m22/2 m33/2 m12 m13 m23]
@@ -293,7 +289,6 @@ def render_webpage(args={}):
                     matrix(ZZ, 3, 3, [2 * a, d, e, d, 2 * b, f, e, f, 2 * c])
                 __disc = lambda i: __mat(i).det()
                 __cmp = lambda f1, f2: cmp([__mat(f1).det()] + list(f1), [__mat(f2).det()] + list(f2))
-                f_keys.sort(cmp=__cmp)
 
             # make the coefficients of the M_k(Sp(4,Z)) forms integral
             if 'Sp4Z' == group:  # or 'Sp4Z_2' == group:
@@ -303,14 +298,31 @@ def render_webpage(args={}):
                 for k in f[2]:
                     f[2][k] *= d
 
-            # replace a2 generator with a to make things prettier 
-            if f[0].parent()!=QQ:
-                info['gen_coeff_field'] = teXify_pol(str(f[0].parent().gen()).replace('a2', 'a'))
-                info['poly_coeff_field'] = teXify_pol(str(f[0].parent().polynomial()).replace('a2', 'a'))
-            info['poly_in_gens'] = teXify_pol(str(f[1]).replace('a2', 'a'))
+            # replace generator with a to make things prettier 
+            if isinstance(f[0].parent(), Field):
+                if f[0].parent()!=QQ:
+                    gen = str(f[0].parent().gen())
+                    info['gen_coeff_field'] = teXify_pol(str(f[0].parent().gen()).replace(gen, 'a'))
+                    info['poly_coeff_field'] = teXify_pol(str(f[0].parent().polynomial()).replace(gen, 'a'))
+                    info['poly_in_gens'] = teXify_pol(str(f[1]).replace(gen, 'a'))
+                else:
+                    info['poly_in_gens'] = teXify_pol(str(f[1]))
+            else:
+                # coefficient field is not a sage field, so just assume its supposed to be rationals
+                info['poly_in_gens'] = teXify_pol(str(f[1]))
 
-            # prepare formatted eigenvalue data
-            ftd_evals = []            
+            # isolate requested eigenvalue indices
+            if not (elow and ehigh):
+                filt_evals = g[1]
+                eval_index = filt_evals.keys()[0:20]
+            else: 
+                elow, ehigh = int(elow), int(ehigh)
+                # filter out to have eigenvalues in [elow, ehigh]
+                filt_evals = {n: lam for n, lam in g[1].iteritems() if int(n)>=elow and int(n)<=ehigh}
+                eval_index = filt_evals.keys()
+
+            # prepare formatted eigenvalues
+            ftd_evals = []
             try:
                 if not ev_modulus:
                     m = 0
@@ -320,22 +332,43 @@ def render_webpage(args={}):
                 K = g[0].parent().fraction_field()
                 if m != 0:
                     if QQ == K:
-                        for i in g[1]:
+                        for i in eval_index:
                             rdcd_eval = Integer(g[1][i]) % m
-                            ftd_evals.append((str(i), teXify_pol(str(rdcd_eval).replace('a2', 'a'))))
+                            ftd_evals.append((str(i), teXify_pol(str(rdcd_eval))))
                     else:
                         I = K.ideal(m)
-                        for i in g[1]:
+                        for i in eval_index:
                             rdcd_eval = I.reduce(g[1][i])
-                            ftd_evals.append((str(i), teXify_pol(str(rdcd_eval).replace('a2', 'a'))))
+                            ftd_evals.append((str(i), teXify_pol(str(rdcd_eval).replace(gen, 'a'))))
                 else:
-                    for i in g[1]:
-                        ftd_evals.append((str(i), teXify_pol(str(g[1][i]).replace('a2', 'a'))))
+                    for i in eval_index:
+                        if QQ == K:
+                            ftd_evals.append((str(i), teXify_pol(str(g[1][i]))))
+                        else:
+                            ftd_evals.append((str(i), teXify_pol(str(g[1][i]).replace(gen, 'a'))))
 
             except:
                 info['fc_modulus'] = 0
                 pass
 
+            # if degree 2 cusp form filter out disc 0 coefficients
+            if group=='Sp4Z' and form!= 'E' and form!='Klingen':
+                f[2] = {n: fc for n, fc in f[2].iteritems() if __disc(n)!=0}
+
+            # isolate requested fourier coefficients
+            if not (fclow and fchigh):
+                filt_fcs = f[2]
+                fc_index = filt_fcs.keys()
+                fc_index.sort(cmp=__cmp)
+                fc_index = fc_index[0:20]
+            else:
+                fclow, fchigh = int(fclow), int(fchigh)
+                filt_fcs = {n: fc for n, fc in f[2].iteritems() if __disc(n)>=fclow and __disc(n)<=fchigh}
+                fc_index = filt_fcs.keys()
+                fc_index.sort(cmp=__cmp)
+
+            # prepare formatted fourier coefficients
+            ftd_fcs = []
             try:
                 if not fc_modulus:
                     m = 0
@@ -346,23 +379,47 @@ def render_webpage(args={}):
                 if m != 0:
                     if 'Sp4Z_2' == group:
                         if QQ == K:
-                            for i in f_keys:
-                                f[2][i] = sum((v[0] % m) * v[1] for v in list(f[2][i]))
+                            for i in fc_index:
+                                ftd_fc =  sum((v[0] % m) * v[1] for v in list(f[2][i]))
+                                ftd_fcs.append((str(i), 
+                                               teXify_pol(str(ftd_fc)), 
+                                               str(__disc(i))))
                         else:
                             I = K.ideal(m)
-                            for i in f_keys:
-                                f[2][i] = sum(I.reduce(v[0]) * v[1] for v in list(f[2][i]))
+                            for i in fc_index:
+                                ftd_fc = sum(I.reduce(v[0]) * v[1] for v in list(f[2][i]))
+                                ftd_fcs.append((str(i), 
+                                                teXify_pol(str(ftd_fc).replace(gen, 'a')), 
+                                                str(__disc(i))))
                     else:
                         if QQ == K:
-                            for i in f_keys:
-                                f[2][i] = Integer(f[2][i]) % m
+                            for i in fc_index:
+                                ftd_fc = Integer(f[2][i]) % m
+                                ftd_fcs.append((str(i), 
+                                                teXify_pol(str(ftd_fc)), 
+                                                str(__disc(i))))
                         else:
                             I = K.ideal(m)
-                            for i in f_keys:
-                                f[2][i] = I.reduce(f[2][i])
+                            for i in fc_index:
+                                ftd_fc = I.reduce(f[2][i])
+                                ftd_fcs.append((str(i), 
+                                                teXify_pol(str(ftd_fc).replace(gen, 'a')), 
+                                                str(__disc(i))))
+                else:
+                    for i in fc_index:
+                        ftd_fc = f[2][i]
+                        if QQ == K:
+                            ftd_fcs.append((str(i),
+                                            teXify_pol(str(ftd_fc)),
+                                            str(__disc(i))))
+                        else:
+                            ftd_fcs.append((str(i), 
+                                            teXify_pol(str(ftd_fc).replace(gen, 'a')), 
+                                            str(__disc(i))))
             except:
                 info['fc_modulus'] = 0
                 pass
+
             # if implemented, add L-function to friends
             if 'Sp4Z'== group:
                 numEmbeddings = f[0].parent().degree()
@@ -374,37 +431,29 @@ def render_webpage(args={}):
                                            + str(weight) + '/' + form + '/' + str(embedding))) 
             else:
                 info['friends'] = []            
+
             #TODO implement remaining spin L-functions, standard L-functions,
             #     and first Fourier-Jacobi coefficient
 
-
-            info['the_form'] = [f[0].parent(), f[1],
-                                [(l, g[1][l]) for l in g[1]],
-                                [(i, f[2][i], __disc(i)) for i in f_keys],
-                                f_url, g_url]
-
-
             location = url_for('ModularForm_GSp4_Q_top_level', group=group, page=page, weight=weight, form=form)
-            info['form_name'] = form
             bread += [(weight + '_' + form, location)]
 
             properties2 = [('Species', '$' + info['parent_as_tex'] + '$'),
                           ('Weight', '%s' % weight)]
 
             info['form'] = form
-            info['downloads'] = [('Eigenvalues', info['the_form'][5]),
-                                 ('Fourier coefficients', info['the_form'][4])]
+            info['downloads'] = [('Eigenvalues', g_url),
+                                 ('Fourier coefficients', f_url)]
             info['ftd_evals'] = ftd_evals
+            info['ftd_fcs'] = ftd_fcs
+            info['location'] = location
 
-        return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_specimen.html", 
+            return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_specimen.html", 
                  title = 'Siegel modular form ' + weight + '_' + form,
                  bread=bread, 
 		 info=info,  
 		 properties2=properties2, friends=info['friends'], downloads=info['downloads']) 
 
-##        return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_specimen.html",
-##                               title='Siegel modular form ' + weight + '_' + form,
-##                               bread=bread, properties2=properties2, **info)
 
     # if a nonexisting page was requested return the homepage of Siegel modular forms
     return render_webpage()

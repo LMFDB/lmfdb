@@ -20,23 +20,18 @@
 
 <h2>As polynomial in <a class="knowl-title" knowl="{{ generators }}">generators</a></h2>
 {% if info.poly_in_gens %} 
-<div class="box1"><div class="small">${{ info.poly_in_gens }}$</div></div>
+<div class="box1"><div class="small">{% if info.poly_in_gens!='0' and info.poly_in_gens!='unknown' %} ${{ info.poly_in_gens }}$ {% else %} Not applicable. {% endif %}</div></div>
 {% else %}
 <div class="box1"><div class="small">Not applicable</div></div>
 {% endif %}
 
 <h2>Hecke eigenvalues
 </h2>
-  <form action="/ModularForm/GSp/Q" method="get">
-    <input type="hidden" name="group" value="{{ group }}" />
-    <input type="hidden" name="page" value="specimen" /> 
-    <input type="hidden" name="form" value="{{ form_name }}" /> 
-    <input type="hidden" name="weight" value="{{ weight }}" /> 
-    <label>The eigenvalues are shown reduced modulo</label>
-    <input type="text" name="ev_modulus" value="{{ ev_modulus }}" size=10 maxlength=10/>
-    <span class="formexample">e.g. 17 (0 means no reduction)</span>
-    <button type="submit" value="reduce"> Reduce again</button>
-  </form>
+{% if not info.emod %} 
+  {% if info.elow and info.ehigh %} Currently showing eigenvalues with no reduction, with $n$ in range $[{{ info.elow }}, {{ info.ehigh }}]$.   {% else %} Currently showing the first few eigenvalues, with no reduction.  {% endif %} 
+{% else %} {% if info.elow and info.ehigh %} Showing eigenvalues reduced modulo ${{ info.emod }}$, with $n$ in range $[{{ info.elow }}, {{ info.ehigh }}]$.
+  {% else %} Currently showing first few eigenvalues, reduced modulo  ${{ info.emod }}$ {% endif %} {% endif %} </br>
+</br> 
 <div class="box1">
 <div class="small">
   <table>
@@ -48,10 +43,12 @@
     {% endfor %}
   </table>
 </div></div>
+<form action={{ info.location }}>
+  <input type="submit" value="Show"> for $n$ between <input type="text" name="elow" size="1"> and <input type="text" name="ehigh" size="1"><form action={{ info.location }}>, reduced modulo <input type="text" name="emod" size="1"> (blank for no reduction).</form>
 
 <h2>Fourier coefficients
 </h2>
-{% if 'Sp8Z' == group %}
+{% if 'Sp8Z' == info.group %}
 {% set form_index = '\(T=(m_{11}, m_{22}, \dots, m_{34})\)' %}
 <p>
   In this table a tuple \((m_{11}, m_{22}, m_{33}, m_{44}, m_{12}, m_{13}, m_{23}, m_{14}, m_{24}, m_{34})\ \) stands for the quadratic form
@@ -69,11 +66,11 @@
   \[
   f(Z)=\sum_{T}a(T)\;e^{2\pi i\big({\rm trace}(TZ)\big)}.
   \]
-  {% if form_name != 'Ikeda' %}
+  {% if info.form != 'Ikeda' %}
   Coefficients for only very few forms are known. The table lists only the known ones. In particular, it is by no means complete for a
   given discriminant \(D\).
   {% endif %}
-{% elif 'Sp6Z' == group %}
+{% elif 'Sp6Z' == info.group %}
   {% set form_index = '\(T=(a, b, c, d, e, f)\)' %}
   <p>
   In this table a tuple \((a, b, c, d, e, f)\ \) stands for the quadratic form
@@ -98,30 +95,23 @@
     f(\tau,z,\tau')=\sum_{T=(n,r,m)}a(T)\;e^{2\pi i(n\tau+rz+m\tau')}.
     \]
 {% endif %}
-<!--  <form action="/ModularForm/GSp/Q" method="get">
-    <input type="hidden" name="group" value="{{ group }}" />
-    <input type="hidden" name="page" value="specimen" /> 
-    <input type="hidden" name="form" value="{{ form_name }}" /> 
-    <input type="hidden" name="weight" value="{{ weight }}" /> 
-    <label>The coefficients are shown reduced modulo</label>
-    <input type="text" name="fc_modulus" value="{{ fc_modulus }}" size=5 maxlength=5/>
-    <span class="formexample">e.g. 17 (0 means no reduction)</span>
-    <button type="submit" value="reduce"> Reduce again</button>
-  </form>-->
 </p>
 <div class="box1">
+  {% if not info.emod %} Currently showing Fourier coefficients with no reduction. {% else %} Currently showing Fourier coefficients with reduction {% endif %} </br>
 <div class="small">
   <table>
     <thead>
       <tr><th>\(|D|\)</th><th>{{ form_index }}</th><th>\(a(T)\)</th></tr>
     </thead>
-    {% for l,val,disc in info.f_fourier_coeff %}
+    {% for l,val,disc in info.ftd_fcs %}
     <tr class = "{{ loop.cycle( 'odd', 'even') }}"><td>${{ disc }}$</td><td nowrap=''>${{ l }}$</td><td>${{ val }}$</td></tr>
     {% endfor %}
   </table>
 </div></div>
-
+<form action={{ info.location }}>
+  <input type="submit" value="Show"> for $|D|$ between <input type="text" name="fclow" size="1"> and <input type="text" name="fchigh" size="1"><form action={{ info.location }}>, reduced modulo <input type="text" name="fcmod" size="1"> (blank for no reduction).</form>
 {% else %}
+
 {% include 'ModularForm_GSp4_Q/None.html' %}
 {% endif %}
 
