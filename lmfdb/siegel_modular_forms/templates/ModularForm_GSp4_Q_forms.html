@@ -1,0 +1,13 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+{% if not error %}
+{% include [ group, '_avail_forms.html']|join %}
+{% else %}
+{% include 'None.html' %}
+{% endif %}
+
+{% endblock %}
+
+
+

@@ -155,26 +155,6 @@ def form_example():
     info = {'sidebar': sidebar}
     return render_template("form.html", info=info)
 
-@app.route('/ModularForm/GSp/Q')
-@app.route('/ModularForm/GSp/Q/<group>')
-@app.route('/ModularForm/GSp/Q/<group>/<page>')
-@app.route('/ModularForm/GSp/Q/<group>/<page>/<weight>')
-@app.route('/ModularForm/GSp/Q/<group>/<page>/<weight>/<form>')
-def ModularForm_GSp4_Q_top_level(group=None, page=None, weight=None, form=None):
-    args = request.args
-    if group:
-        args = {}
-        for k in request.args:
-            args[k] = request.args[k]
-        args['group'] = group
-        if None != weight:
-            page = 'specimen'
-        args['page'] = page
-        if 'specimen' == page:
-            args['weight'] = weight
-            args['form'] = form
-    return siegel_modular_forms.siegel_modular_form.render_webpage(args)
-
 
 @app.route('/example_plot')
 def render_example_plot():
