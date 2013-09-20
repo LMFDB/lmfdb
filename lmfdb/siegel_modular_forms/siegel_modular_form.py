@@ -1,4 +1,4 @@
-from flask import render_template, url_for
+from flask import render_template, url_for, request
 import siegel_core
 import input_parser
 import dimensions
@@ -8,9 +8,34 @@ from sage.all_cmdline import *
 import os
 import sample
 
+from lmfdb.base import app
+from lmfdb.siegel_modular_forms import smf_page
+from lmfdb.siegel_modular_forms import smf_logger
 DATA = 'http://data.countnumber.de/Siegel-Modular-Forms/'
 # DATA = '/home/nils/Sandbox/Siegel-Modular-Forms/'
 # DATA = os.path.expanduser("~/data/Siegel-Modular-Forms/")
+
+
+@app.route('/ModularForm/GSp/Q')
+@app.route('/ModularForm/GSp/Q/<group>')
+@app.route('/ModularForm/GSp/Q/<group>/<page>')
+@app.route('/ModularForm/GSp/Q/<group>/<page>/<weight>')
+@app.route('/ModularForm/GSp/Q/<group>/<page>/<weight>/<form>')
+def ModularForm_GSp4_Q_top_level(group=None, page=None, weight=None, form=None):
+    args = request.args
+    if group:
+        args = {}
+        for k in request.args:
+            args[k] = request.args[k]
+        args['group'] = group
+        if None != weight:
+            page = 'specimen'
+        args['page'] = page
+        if 'specimen' == page:
+            args['weight'] = weight
+            args['form'] = form
+    return render_webpage(args)
+
 
 
 def render_webpage(args={}):
@@ -24,7 +49,7 @@ def render_webpage(args={}):
     bread = [('Siegel modular forms', url_for('ModularForm_GSp4_Q_top_level'))]
 
     if len(args) == 0:
-        return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_navigation.html",
+        return render_template("ModularForm_GSp4_Q_navigation.html",
                                title='Siegel Modular Forms',
                                bread=bread,
                                **info)
@@ -116,7 +141,7 @@ def render_webpage(args={}):
 
         else:
             info['error'] = 'Request for unavailable type of Siegel modular form'
-            return render_template("ModularForm_GSp4_Q/None.html", **info)
+            return render_template("None.html", **info)
 
         info['learnmore'] += [('The spaces \(' + info['parent_as_tex'] + '\)', url_for(
             'ModularForm_GSp4_Q_top_level', group=group, page='basic'))]
@@ -125,7 +150,7 @@ def render_webpage(args={}):
 
     else:
         # some nonsense request came in, we answer by nonsense too
-        return render_template("ModularForm_GSp4_Q/None.html")
+        return render_template("None.html")
 
         # We branch now according to the value of the key 'page'
 
@@ -144,13 +169,13 @@ def render_webpage(args={}):
             forms_exist = False
         if True == forms_exist:
             info['forms'] = [(k, [(form, go[k][form]) for form in go[k]]) for k in go]
-        return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_forms.html",
+        return render_template("ModularForm_GSp4_Q_forms.html",
                                title='Siegel modular forms \(' + info['parent_as_tex'] + '\)',
                                bread=bread, **info)
 
     if page == 'basic':
         bread += [('Basic information', url_for('ModularForm_GSp4_Q_top_level', group=group, page=page))]
-        return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_basic.html",
+        return render_template("ModularForm_GSp4_Q_basic.html",
                                title='Siegel modular forms basic information',
                                bread=bread, **info)
 
@@ -173,7 +198,7 @@ def render_webpage(args={}):
             assert min_wt < 1000000 and (max_wt - min_wt + 1) * max_wt < 10000 and sym_pow < 1000, '%d-%d,%d: Input too large: Please enter smaller range or numbers.' % (max_wt, min_wt, sym_pow)
         except Exception as e:
             info['error'] = str(e)
-            return render_template( "ModularForm_GSp4_Q/ModularForm_GSp4_Q_dimensions.html",
+            return render_template( "ModularForm_GSp4_Q_dimensions.html",
                                     title='Siegel modular forms dimensions \(' + info['parent_as_tex'] + '\)',
                                     bread=bread, **info)
 
@@ -197,7 +222,7 @@ def render_webpage(args={}):
                           url_for('ModularForm_GSp4_Q_top_level', group=group, page=page, weight_range=weight_range))]
         except Exception as e:
             info['error'] = 'Functional error: %s' % (str(e)) #(sys.exc_info()[0])
-            return render_template( "ModularForm_GSp4_Q/ModularForm_GSp4_Q_dimensions.html",
+            return render_template( "ModularForm_GSp4_Q_dimensions.html",
                                     title='Siegel modular forms dimensions \(' + info['parent_as_tex'] + '\)',
                                     bread=bread, **info)
 
@@ -220,7 +245,7 @@ def render_webpage(args={}):
         else:
             info['table_headers'] = ["Weight", "Total", "Eisenstein", "Klingen", "Maass", "Interesting"]
 
-        return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_dimensions.html",
+        return render_template("ModularForm_GSp4_Q_dimensions.html",
                                title='Siegel modular forms dimensions \(' + info['parent_as_tex'] + '\)',
                                bread=bread, **info)
 
@@ -366,7 +391,7 @@ def render_webpage(args={}):
         location = url_for('ModularForm_GSp4_Q_top_level', group=group, page=page, weight=weight, form=form)
         info['form_name'] = form
         bread += [(weight + '_' + form, location)]
-        return render_template("ModularForm_GSp4_Q/ModularForm_GSp4_Q_specimen.html",
+        return render_template("ModularForm_GSp4_Q_specimen.html",
                                title='Siegel modular form ' + weight + '_' + form,
                                bread=bread, **info)
 
