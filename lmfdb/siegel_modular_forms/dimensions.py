@@ -28,7 +28,7 @@ def fetch( dct):
 
 
 ####################################################################
-## Dimension formulas for Gamma(2)
+## Dimension formulas for Gamma(2), Gamma0(2), Gamma1(2), Sp4(Z)
 ####################################################################
 
 def dimension_Gamma_2( wt_range, j):
@@ -168,3 +168,154 @@ def _dimension_Gamma_2( wt_range, j, group = 'Gamma(2)'):
 
     return headers, dct
 
+
+####################################################################
+## Dimension formulas for Sp6Z
+####################################################################
+
+def dimension_Sp6Z( wt_range, j):
+    if j != 0:
+        raise NotImplementedError( 'Dimensions of \(M_{k,j}\) for \(j \neq 0\) not implemented')
+    return _dimension_Sp6Z( wt_range)
+
+
+def _dimension_Sp6Z( wt_range):
+    headers = ['Total', 'Miyawaki lifts I', 'Miyawaki lifts II (conjectured)', 'Other']
+    dct = dict()
+    for k in wt_range:
+        dims =  __dimension_Sp6Z( k)
+        dct[k] = dict( (headers[j],dims[j]) for j in range(4))
+    return headers, dct
+
+
+def __dimension_Sp6Z(wt):
+    """
+    Return the dimensions of subspaces of Siegel modular forms on $Sp(4,Z)$.
+
+    OUTPUT
+    ("Total", "Miyawaki-Type-1", "Miyawaki-Type-2 (conjectured)", "Interesting")
+    Remember, Miywaki type 2 is ONLY CONJECTURED!!
+    """
+    if not is_even(wt):
+        return (0, 0, 0, 0)
+    R = PowerSeriesRing(IntegerRing(), default_prec=wt + 1, names=('x',))
+    (x,) = R._first_ngens(1)
+    R = PowerSeriesRing(IntegerRing(), default_prec=2 * wt - 1, names=('y',))
+    (y,) = R._first_ngens(1)
+    H_all = 1 / ((1 - x ** 4) * (1 - x ** 12) ** 2 * (1 - x ** 14) * (1 - x ** 18) *
+                (1 - x ** 20) * (1 - x ** 30)) * (
+                    1 + x ** 6 + x ** 10 + x ** 12 + 3 * x ** 16 + 2 * x ** 18 + 2 * x ** 20 +
+                    5 * x ** 22 + 4 * x ** 24 + 5 * x ** 26 + 7 * x ** 28 + 6 * x ** 30 + 9 * x ** 32 +
+                    10 * x ** 34 + 10 * x ** 36 + 12 * x ** 38 + 14 * x ** 40 + 15 * x ** 42 + 16 * x ** 44 +
+                    18 * x ** 46 + 18 * x ** 48 + 19 * x ** 50 + 21 * x ** 52 + 19 * x ** 54 + 21 * x ** 56 +
+                    21 * x ** 58 + 19 * x ** 60 + 21 * x ** 62 + 19 * x ** 64 + 18 * x ** 66 + 18 * x ** 68 +
+                    16 * x ** 70 + 15 * x ** 72 + 14 * x ** 74 + 12 * x ** 76 + 10 * x ** 78 + 10 * x ** 80 +
+                    9 * x ** 82 + 6 * x ** 84 + 7 * x ** 86 + 5 * x ** 88 + 4 * x ** 90 + 5 * x ** 92 +
+                    2 * x ** 94 + 2 * x ** 96 + 3 * x ** 98 + x ** 102 + x ** 104 + x ** 108 + x ** 114)
+    H_noncusp = 1 / (1 - x ** 4) / (1 - x ** 6) / (1 - x ** 10) / (1 - x ** 12)
+    H_E = y ** 12 / (1 - y ** 4) / (1 - y ** 6)
+    H_Miyawaki1 = H_E[wt] * H_E[2 * wt - 4]
+    H_Miyawaki2 = H_E[wt - 2] * H_E[2 * wt - 2]
+    a, b, c, d = H_all[wt], H_noncusp[wt], H_Miyawaki1, H_Miyawaki2
+    return (a, c, d, a - b - c - d)
+
+
+
+####################################################################
+## Dimension formulas for Sp8Z
+####################################################################
+
+def dimension_Sp8Z( wt_range, j):
+    if j != 0:
+        raise NotImplementedError( 'Dimensions of \(M_{k,j}\) for \(j \\not= 0\) not implemented')
+
+    headers = ['Total', 'Ikeda lifts', 'Miyawaki lifts', 'Other']
+    dct = dict()
+    for k in wt_range:
+        dims =  _dimension_Sp8Z( k)
+        dct[k] = dict( (headers[j],dims[j]) for j in range(4))
+    return headers, dct
+
+
+def _dimension_Sp8Z(wt):
+    """
+    Return the dimensions of subspaces of Siegel modular forms on $Sp(8,Z)$.
+
+    OUTPUT
+        ('Total', 'Ikeda lifts', 'Miyawaki lifts', 'Other')
+    """
+    if wt > 16:
+        raise NotImplementedError( 'Dimensions of \(M_{k}\) for \(k > 16\) not implemented')
+    if wt == 8:
+        return (1, 1, 0, 0)
+    if wt == 10:
+        return (1, 1, 0, 0)
+    if wt == 12:
+        return (2, 1, 1, 0)
+    if wt == 14:
+        return (3, 2, 1, 0)
+    if wt == 16:
+        return (7, 2, 2, 3)
+    # odd weight is zero up to weight 15
+    return (0, 0, 0, 0)
+
+# def _dimension_Sp8Z( wt_range):
+#     """
+#     Return the dimensions of subspaces of Siegel modular forms on $Sp(8,Z)$.
+
+#     OUTPUT
+#         ('Total', 'Ikeda lifts', 'Miyawaki lifts', 'Other')
+#     """
+#     if wt_range[-1] > 16:
+#         raise NotImplementedError( 'Dimensions of \(M_{k}\) for \(k > 16\) not implemented')
+
+#     headers = ['Total', 'Ikeda lifts', 'Miyawaki lifts', 'Other']
+#     dct = dict ((k, { 'Total':0, 'Ikeda lifts':0, 'Miyawaki lifts':0, 'Other': 0}) for k in range(17))
+#     dct[8]  = { 'Total':1, 'Ikeda lifts':1, 'Miyawaki lifts':0, 'Other': 0}
+#     dct[10] = { 'Total':1, 'Ikeda lifts':1, 'Miyawaki lifts':0, 'Other': 0}
+#     dct[12] = { 'Total':2, 'Ikeda lifts':1, 'Miyawaki lifts':1, 'Other': 0}
+#     dct[14] = { 'Total':3, 'Ikeda lifts':2, 'Miyawaki lifts':1, 'Other': 0}
+#     dct[16] = { 'Total':7, 'Ikeda lifts':2, 'Miyawaki lifts':2, 'Other': 3}
+
+#     return headers, dct
+
+
+
+####################################################################
+## Dimension formulas for Gamma0_4 half integral
+####################################################################
+
+def dimension_Gamma0_4_half( wt_range, j):
+    if j != 0:
+        raise NotImplementedError( 'Dimensions of \(M_{k,j}\) for \(j \neq 0\) not implemented')
+
+    headers = ['Total', 'Non cusp', 'Cusp']
+    dct = dict()
+    for k in wt_range:
+        dims =  _dimension_Gamma0_4_half( k)
+        dct[k] = dict( (headers[j],dims[j]) for j in range(3))
+    return headers, dct
+
+
+def _dimension_Gamma0_4_half(k):
+    """
+    Return the dimensions of subspaces of Siegel modular forms$Gamma0(4)$
+    of half integral weight  k - 1/2.
+
+    INPUT
+        The realweight is k-1/2
+
+    OUTPUT
+        ('Total', 'Non cusp', 'Cusp')
+
+    REMARK
+        Note that formula from Hayashida's and Ibukiyama's paper has formula
+        that coefficient of x^w is for weight (w+1/2). So here w=k-1.
+    """
+    R = PowerSeriesRing( IntegerRing(), default_prec = k, names=('x',))
+    (x,) = R._first_ngens(1)
+    H_all = 1 / (1 - x) / (1 - x ** 2) ** 2 / (1 - x ** 3)
+    H_cusp = (2 * x ** 5 + x ** 7 + x ** 9 - 2 * x ** 11 + 4 * x ** 6 - x ** 8 + x ** 10 - 3 *
+              x ** 12 + x ** 14) / (1 - x ** 2) ** 2 / (1 - x ** 6)
+    a, c = H_all[k - 1], H_cusp[k - 1]
+    return (a, a - c, c)
