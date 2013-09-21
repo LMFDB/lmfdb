@@ -13,7 +13,7 @@ add --debug if you are developing (auto-restart, full stacktrace in browser, ...
 from base import *
 
 import pages
-import hilbert_modular_form
+import hilbert_modular_forms
 import siegel_modular_forms
 import modular_forms
 import elliptic_curves

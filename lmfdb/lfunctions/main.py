@@ -244,21 +244,21 @@ def l_function_emf_redirect_3(level, weight):
 
 
 # L-function of Hilbert modular form ###########################################
-@l_function_page.route("/ModularForm/GL2/<field>/holomorphic/<label>/<character>/<number>/")
+@l_function_page.route("/ModularForm/GL2/TotallyReal/<field>/holomorphic/<label>/<character>/<number>/")
 def l_function_hmf_page(field, label, character, number):
     args = {'field': field, 'label': label, 'character': character,
             'number': number}
     return render_single_Lfunction(Lfunction_HMF, args, request)
 
 
-@l_function_page.route("/ModularForm/GL2/<field>/holomorphic/<label>/<character>/")
+@l_function_page.route("/ModularForm/GL2/TotallyReal/<field>/holomorphic/<label>/<character>/")
 def l_function_hmf_redirect_1(field, label, character):
     logger.debug(field, label, character)
     return flask.redirect(url_for('.l_function_hmf_page', field=field, label=label,
                                   character=character, number='0'), code=301)
 
 
-@l_function_page.route("/ModularForm/GL2/<field>/holomorphic/<label>/")
+@l_function_page.route("/ModularForm/GL2/TotallyReal/<field>/holomorphic/<label>/")
 def l_function_hmf_redirect_2(field, label):
     logger.debug(field, label)
     return flask.redirect(url_for('.l_function_hmf_page', field=field, label=label,
