@@ -37,6 +37,7 @@ import crystals
 import permutations
 import hypergm
 import motives
+import riemann
 import logging
 
 import raw

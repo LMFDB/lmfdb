@@ -1,0 +1,27 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<form align="center">
+Display up to <input type="text" name="digits" value="{{digits}}"/> digits.
+<input type="hidden" name="n" value="{{n}}" />
+</form>
+<br/>
+<div align="center">
+{{KNOWL('riemann.stieltjes.contents', title="Contents of these tables.")}}
+</div>
+<br/>
+<div align="center">
+{% if n > 0 %}
+    <a href="getone?n={{n-1}}&digits={{digits}}" class="navlink">Previous</a>
+{% endif %}
+{% if n < 100000 %}
+<a href="getone?n={{n+1}}&digits={{digits}}" class="navlink">Next</a>
+{% endif %}
+<br/>
+<br/>
+</div>
+<div style="word-wrap:break-word; font-size:large; margin-left:10%; margin-right:10%">
+$\gamma_{ {{n}} } =\ ${{gamma | safe}}
+</div>
+
+{% endblock %}

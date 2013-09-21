@@ -1,0 +1,109 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<script>
+{% if start %}
+var start = {{start}};
+{% else %}
+var start = 0;
+{% endif %}
+
+{% if limit %}
+var limit = {{limit}};
+{% else %}
+var limit = 100;
+{% endif %}
+var startstr = "";
+if(start > 0) {
+    startstr = String(start);
+}
+var limitstr = "";
+if(limit > 0) {
+    limitstr = String(limit);
+}
+var argstring = '?start='+startstr+"&limit="+limitstr;
+listconstants_url = '{{url_for(".list_constants")}}';
+displayconstants_url = '{{url_for(".stieltjes_constants")}}';
+function loadconstants(save_history) {
+    var request = new XMLHttpRequest();
+    request.onreadystatechange = function() {
+        if(request.readyState == 4 && request.status == 200) {
+            var constant_table = document.getElementById('constant_table');
+            var old_length = constant_table.rows.length
+            for(var n = 0; n < old_length - 1; n++) {
+                constant_table.deleteRow(-1);
+            }
+            var lines = request.responseText.split('\n');
+            n = Number(lines[0].split(' ')[0]);
+            val = Number(lines[0].split(' ')[1]);
+            document.getElementById("nbox").value = n;
+            for(var k = 0; k < lines.length; k++) {
+                if(lines[k] == "") {
+                    continue;
+                }
+                var entry = lines[k].split(' ');
+                var row = constant_table.insertRow(-1);
+                var cell = row.insertCell(-1);
+                cell.appendChild(document.createTextNode(entry[0]));
+                cell = row.insertCell(-1);
+                var valueentry = document.createElement('a');
+                valueentry.appendChild(document.createTextNode(entry[1]))
+                valueentry.href="getone?n="+entry[0]
+                cell.appendChild(valueentry);
+                cell = row.insertCell(-1)
+                cell.appendChild(document.createTextNode(entry[2]))
+            }
+        }
+    };
+    startstr = "";
+    if(start > 0) {
+        startstr = String(start);
+    }
+    argstring = '?start='+startstr+"&limit="+limit;
+    if(save_history) {
+        history.pushState({'start' : start, 'limit' : limit}, "stieltjes constatns", displayconstants_url + argstring);
+    }
+    request.open('GET', listconstants_url + argstring, true);
+    request.send(null);
+};
+function next() {
+    start = start + limit;
+    loadconstants(true);
+};
+function prev() {
+    start = start - limit;
+    loadconstants(true);
+};
+var oldonload = window.onload;
+window.onload = function() {
+    if(oldonload) {
+        oldonload();
+    }
+    loadconstants(false);
+};
+window.onpopstate = function(event) {
+    if(event.state) {
+        start = event.state.start;
+        limit = event.state.limit;
+        loadconstants(false);
+    }
+};
+</script>
+<form align="center">
+List <input type="text" name="limit" value="{{limit}}" style="width:5em"/> Stieltjes constants
+starting from <input type="text" value="{{start}}" name="start" id="nbox"/> <button type="submit" value="Go">Go</button>
+</form>
+<br/>
+<div align="center">
+{{KNOWL('riemann.stieltjes.contents', title="Contents of these tables.")}}
+</div>
+<br/>
+<div align="center">
+<a href="#" class="navlink" onclick="prev(); return false">Previous {{limit}}</a>
+<a href="#" class="navlink" onclick="next(); return false">Next {{limit}}</a>
+</div>
+<table class='ntdata' id='constant_table' align="center">
+<thead><td>n</td> <td>{{KNOWL('riemann.stieltjes_constants', title='$\gamma_n$')}}</td> <td>{{KNOWL('riemann.stieltjes.cn', title='$c_n$')}}</td> </thead>
+</table>
+
+{% endblock %}
