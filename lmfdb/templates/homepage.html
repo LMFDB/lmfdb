@@ -140,8 +140,11 @@
     <h2 class="link"> <a href='{{ url_character() }}'> Characters</a></h2>
   <ul>
    <li><a href="{{ url_character() }} ">Dirichlet Characters</a></li>
-   {#<li><a href="{{ url_character(type='Dirichlet') }} ">Dirichlet Characters</a></li>#}
-   {#<li><a href="{{ url_character(type='Hecke') }} ">Hecke Characters</a></li>#}
+   {% if BETA %}
+    <li>New links:</li>
+    <li><a href="{{ url_character(type='Dirichlet') }} ">Dirichlet Characters</a></li>
+    <li><a href="{{ url_character(type='Hecke') }} ">Hecke Characters</a></li>
+   {% endif %}
   </ul>
 
   <h2 class="link">
@@ -165,15 +168,18 @@
 	<h2 class="link">
 	    <a class="artin_representations" href="{{ url_for('artin_representations.index') }}">Artin Representations</a>
 	</h2>
-    
   
-
 
   <h2>Zeros of L-functions</h2>
    <ul>
     <li><a href="{{ url_for('first L-function zeros.firstzeros') }}">First zeros</a></li>
     <li><a href="{{ url_for('zeta zeros.zetazeros') }}">Zeta zeros</a></li>
    </ul>
+
+  {% if BETA %}
+      <h2 class="link"> <a href='{{ url_for("hypergm.index") }}'>Hypergeometric motives</a></h2>
+      <h2 class="link"> <a href='{{ url_for("stieltjes.stieltjes_constants") }}'>Stieltjes constants</a></h2>
+  {% endif %}
 
   <h2 class="link knowl">
      <a class="knowl" href="{{ url_for("knowledge.index") }}">Knowledge</a>

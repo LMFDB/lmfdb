@@ -177,6 +177,11 @@ def ctx_proc_userdata():
     # debug mode?
     vars['DEBUG'] = is_debug_mode
 
+    if os.getenv('BETA') or is_debug_mode():
+        vars['BETA'] = True
+    else:
+        vars['BETA'] = False
+
     return vars
 
 
