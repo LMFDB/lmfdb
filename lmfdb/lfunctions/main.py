@@ -973,11 +973,11 @@ def processMaassNavigation(numrecs=35):
     Produces a table of numrecs Maassforms with Fourier coefficients in the database
     """
     DB = LfunctionDatabase.getMaassDb()
-    s = '<h5>The L-functions attached to the first 4 eigenvalues of weight 0 Maass newforms on Hecke congruence groups $\Gamma_0(N)$ with trivial character</h5>'
+    s = '<h5>The L-functions attached to the first 4 weight 0 Maass newforms with trivial character on Hecke congruence groups $\Gamma_0(N)$</h5>'
     s += '<table>\n'
     i = 0
     maxinlevel = 4
-    for level in [1, 2, 3, 4, 5, 6, 7]:
+    for level in [1, 2, 3, 4, 5, 6, 7, 9]:
         j = 0
         s += '<tr>\n'
         s += '<td><bold>N={0}:</bold></td>\n'.format(level)
