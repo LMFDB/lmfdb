@@ -46,7 +46,7 @@ def l_function_dirichlet_browse_page():
 # Degree 2 L-functions browsing page ##############################################
 @l_function_page.route("/degree2/")
 def l_function_degree2_browse_page():
-    info = {"bread": get_bread(1, [])}
+    info = {"bread": get_bread(2, [])}
 #    info["minModDefault"] = 1
 #    info["maxModDefault"] = 20
 #    info["maxOrder"] = 19
