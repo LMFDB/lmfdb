@@ -65,7 +65,7 @@ class MaassDB(object):
         except:  # AutoReconnect:
             logger.critical("No database found at {0}".format(constr))
             logger.critical("Please specifiy other host/port")
-            return 0
+            return False
         D = Con['MaassWaveForms']
         self._mongo_db = D
         if not self._collection_name in D.collection_names():
@@ -90,8 +90,7 @@ class MaassDB(object):
         self._collection_progress = D['Progress']
         self._collection_coeff_progress = D['CoeffProgress']
         self._job_history = D['job_history']
-        # print "successfully set up mongodb!"
-        return 1
+        return True
 
     # def setup_file(self,dir='',filename='maassforms_db'):
     #     fname = dir+filename+".txt"
@@ -108,28 +107,36 @@ class MaassDB(object):
         r"""
         Write the maass form G to the database of self
         """
-        self.check_data(data)
-        if self._db_type == 'mongo':
-            self.put_maass_form_mongo(data)
-        else:
-            self.put_maass_form_file(data)
+        try:
+            self.check_data(data)
+            if self._db_type == 'mongo':
+                self.put_maass_form_mongo(data)
+            else:
+                mwf_logger.info('Form not stored. Storing to file not set up.')
+                #self.put_maass_form_file(data)
+        except KeyError as ex:
+            mwf_logger.info(str(ex.args))
 
     def check_data(self, data):
         r"""
         Check that the format is what we want...
-        data = dict with keys [level,weight,ch,sym_type,R,err,M0,Y,F]
+        data = dict with keys [level,weight,character,Symmetry,Eigenvalue,
+        error,M0, Conrey (True/false), Cusp_evs
+        Y,F,dim]
         where G is an optional MaassWaveForm object
         Y and M are the parameters used to compute the Maass form in question
+        Raises a KeyError if a key is missing or data is not a dict
         """
         if not isinstance(data, dict):
-            return 0
-        if 'level' not in data or 'R' not in data:
-            return 0
-        if 'err' not in data:
-            return 0
+            raise KeyError('Data not a dictionary')
+        if 'level' not in data:
+            raise KeyError('level not in data keys')
+        if 'Eigenvalue' not in data:
+            raise KeyError('Eigenvalue not in data keys')
+        if 'error' not in data:
+            raise KeyError('err not in data keys')
         ## The rest have default values
-        return 1
-        # level,weight,ch,sym_type,R,er,M0,Y,G=data
+        # weight=0,ch=1,sym_type,M0,Y,G=data
 
     def put_maass_form_mongo(self, data):
         R = float(data.get('Eigenvalue', 0))
@@ -144,7 +151,8 @@ class MaassDB(object):
         F = data.get("F")
         cn_evs = data.get("Cusp_evs", [])
         # Check if this record already exists
-        isin, numc0, errin, idd0 = self.is_data_in_table_mongo(level, weight, ch, sym_type, R, err)
+        isin, numc0, errin, idd0 = self.is_data_in_table_mongo(level,
+                                                weight, ch, sym_type, R, err)
         mwf_logger.debug("Is in database:".format(isin))
         if not data.get('Conrey', False):
             # Then we have to convert the character to Conrey's label
@@ -158,11 +166,11 @@ class MaassDB(object):
                        'date': bson.datetime.datetime.utcnow(),
                        'Cusp_evs': cn_evs
                        }
-        ## If data is already there with a better error estimate
+        ## If data is already there with equal or better error estimate
         ## Then we leave it be.
         idd = 0
         if isin == 0:
-            logger.debug("inserting:".format(insert_data))
+            mwf_logger.debug("inserting:".format(insert_data))
             idd = self._collection.insert(insert_data)
         else:
             if (isin == 1 and (errin == 0 or errin > err)):
@@ -342,18 +350,17 @@ class MaassDB(object):
         res = []
         for collection in self._show_collection:
             f = collection.find(find_data)
-            if f.count() == 0:
-                continue
-            for x in f:
-                xid = x.get('_id', None)
-                if not xid:
-                    if self._verbose > 0:
-                        print "Error: got record without id:{0}".format(x)
-                        mwf_logger.debug("coeffid={0}".format(coeff_id))
-                res.append(x['_id'])
+            if f.count() > 0:
+                for x in f:
+                    xid = x.get('_id', None)
+                    if not xid:
+                        if self._verbose > 0:
+                            mwf_logger.debug("Error: got record without id:{0}".format(x))
+                            mwf_logger.debug("coeffid={0}".format(coeff_id))
+                    res.append(x['_id'])
         return res
 
-    def get_Maass_forms(self, data={}, **kwds):
+    def get_Maass_forms(self, data={}, fields = None, **kwds):
         verbose = kwds.get('verbose', 0)
         collection = kwds.get('collection', 'all')
         if verbose > 0:
@@ -370,12 +377,12 @@ class MaassDB(object):
             format_data = arg_to_format_parameters(data, **kwds)
         else:
             format_data = arg_to_format_parameters({}, **kwds)
-        sorting = [('Weight', pymongo.ASCENDING), (
-            'Level', pymongo.ASCENDING), ('Character', pymongo.ASCENDING), ('Eigenvalue', pymongo.ASCENDING)]
+        sorting = [('Weight', pymongo.ASCENDING), ('Level', pymongo.ASCENDING),
+             ('Character', pymongo.ASCENDING), ('Eigenvalue', pymongo.ASCENDING)]
         if verbose > 0:
             print "find_data=", find_data
             print "format_data=", format_data
-        # f = self._collection.find(find_data)
+
         res = []
         skip0 = format_data['skip']
         skip = skip0
@@ -392,14 +399,14 @@ class MaassDB(object):
                 continue
             if limit <= 0:
                 continue
-            finds = collection.find(find_data, sort=sorting).skip(skip).limit(limit)
+            finds = collection.find(find_data, fields,
+                                    sort=sorting).skip(skip).limit(limit)
             skip = 0
             if verbose > 0:
                 print "find[", collection.name, "]=", finds.count()
             limit = limit - finds.count(True)
             for x in finds:
                 res.append(x)
-        # print "len=",len(res)
         return res
 
     def get_coefficients(self, data={}, verbose=0, **kwds):
@@ -430,7 +437,8 @@ class MaassDB(object):
                             Rst = str(R).split(".")
                             Rst = (Rst[0] + "." + Rst[1][0:10])[0:12]
                             fname = '{0}-{1}-{2}-{3}-{4}'.format(
-                                f.get('Level'), f.get('Weight'), f.get('Character'), f.get('Symmetry'), Rst)
+                                f.get('Level'), f.get('Weight'),
+                                f.get('Character'), f.get('Symmetry'), Rst)
                             return C1, fname
                         else:
                             return C1
@@ -602,14 +610,16 @@ class MaassDB(object):
                 f = list(self._collection_progress.find())
                 if len(f) > 0:
                     jobid = f[jobnr]['_id']
-            self.deregister_work(jobid)
+            self.de
+            (jobid)
             if self._verbose > 0:
                 print "removed job nr. ", jobnr
         # update the self._list_of_jobs??
 
     def Dirchars(self, N, parity=0, conrey=True, verbose=0, refresh=False):
         r"""
-        Returns a list of (Conrey) indices of representatives of even or odd  Dirichlet characters mod N
+        Returns a list of (Conrey) indices of representatives of
+        even or odd  Dirichlet characters mod N
         """
         if conrey:
             f = self._mongo_db.DirChars.find_one({'Modulus': int(N), 'Parity': int(parity), 'Conrey': int(1)})
@@ -965,18 +975,9 @@ class MaassDB(object):
                        'Cusp_evs': cn_evs,
                        'Message': message
                        }
-        ## If data is already there with a better error estimate
-        ## Then we leave it be.
-        # idd=0
-        # if isin==0:
-        print "inserting:", insert_data
+        mwf_logger.debug("inserting:", insert_data)
         idd = self._collection_problems.insert(insert_data)
-        # else:
-        #    if (isin==1 and (errin==0 or errin>err)):
-        #        key={'_id':idd0}
-        #        idd =
 
-        # self._collection.update(key,insert_data,upsert=True)
     def sync_dbs(self, other, search={}, update=False, verbose=0):
         r"""
         Copy the data from self to other (of type MaassDB)
