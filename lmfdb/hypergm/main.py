@@ -180,8 +180,10 @@ def hgm_search(**args):
         return render_hgm_webpage({'label': info['jump_to']})
 
     family_search = False
-    if info.get('Submit Family'):
+    if info.get('Submit Family') or info.get('family'):
         family_search = True
+
+        
 
     # generic, irreducible not in DB yet
     for param in ['A', 'B', 'hodge', 'A2', 'B2', 'A3', 'B3', 'A5', 'B5', 'A7', 'B7']:
