@@ -17,20 +17,22 @@ $A$:
 
 <td align=left>  $B$
 <td align=left> <input type="text" name="B" size="8" value="{{info.B}}" >
-
 </tr>
+
+{% if not info.family %}
 <tr>
 <td align=left> 
-$t$:</td><td align=left> <input type="text" name="t" size="3" value="{{info.tt}}" ></td>
+$t$:</td><td align=left> <input type="text" name="t" size="3" value="{{info.t}}" ></td>
 </td>
 <td align=left> 
 $\epsilon$:
 <td align=left> 
 <input type="text" name="sign" size="3" value="{{info.e}}" >
 </tr>
+{% endif %}
 
 <tr>
-<td align='left' colspan='4'>Maximum number of fields to display: <input type='text' name='count' value="{{info.count}}" size='10'>
+<td align='left' colspan='4'>Maximum number of motives to display: <input type='text' name='count' value="{{info.count}}" size='10'>
 </td>
 </tr>
 
@@ -47,12 +49,12 @@ $\epsilon$:
 <form>
 <table border=0 cellpadding=5>
 <tr>
-<td>Field:&nbsp;&nbsp;</td>
+<td>Motive:&nbsp;&nbsp;</td>
 <td ><input type='text' name='jump_to' size=60 value="{{info.label}}"> </td>
 <td><button type='submit' value='Find'>Find</button></td>
 </tr>
 <tr>
-<td colspan="3" rowspan="2"><span class="formexample"> a field label, e.g. 2.4.6.7</span></td>
+<td colspan="3" rowspan="2"><span class="formexample"> a motive label, e.g. 2.4.6.7</span></td>
 </tr>
 </table>
 </form>
@@ -78,8 +80,10 @@ $\epsilon$:
 <th>Label</th>
 <th>$A$</th>
 <th>$B$</th>
-<th>$t$</th>
-<th>Conductor</th>
+{% if not info.family %}
+    <th>$t$</th>
+    <th>Conductor</th>
+{% endif %}
 <th>Degree</th>
 <th>Weight</th>
 </tr>
@@ -89,14 +93,22 @@ $\epsilon$:
 {% for hgm in info.motives: %}
 <tr>
 <td> 
-<a href="/Motive/Hypergeometric/Q/{{info.make_label(hgm.A, hgm.B, hgm.t[0], hgm.t[1])}}"> 
-{{ info.make_label(hgm.A, hgm.B, hgm.t[0], hgm.t[1]) }}
-</a> 
+{% if info.family %}
+    <a href="/Motive/Hypergeometric/Q/{{info.ab_label(hgm.A, hgm.B)}}"> 
+    {{ info.ab_label(hgm.A, hgm.B) }}
+    </a> 
+{% else %}
+    <a href="/Motive/Hypergeometric/Q/{{info.make_link(hgm.A, hgm.B, hgm.t[0], hgm.t[1])}}"> 
+    {{ info.make_label(hgm.A, hgm.B, hgm.t[0], hgm.t[1]) }}
+    </a> 
+{% endif %}
 </td>
 <td>${{hgm.A}}$</td>
 <td>${{hgm.B}}$</td>
-<td>${{info.display_t(hgm.t[0], hgm.t[1])}}$</td>
-<td>${{hgm.cond}}$</td>
+{% if not info.family %}
+    <td>${{info.display_t(hgm.t[0], hgm.t[1])}}$</td>
+    <td>${{hgm.cond}}$</td>
+{% endif %}
 <td>${{hgm.degree}}$</td>
 <td>${{hgm.weight}}$</td>
 </tr>

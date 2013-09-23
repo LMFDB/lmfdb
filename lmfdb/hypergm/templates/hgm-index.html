@@ -39,8 +39,8 @@ the number of corresponding hypergeometric families.
 </tr>
 <tr>
 <th>0</th>
-<td>1</td>
-<td>2</td>
+<td><a href="?w=0&degree=1&family=1">1</a></td>
+<td><a href="?w=0&degree=3&family=1">2</a></td>
 <td>4</td>
 <td>11</td>
 <td>7</td>
@@ -177,68 +177,68 @@ Enter values into one or more boxes to restrict the list of families returned.
 </p>
 <table border=0 cellpadding=5>
 <tr>
-<td align=left><a title="Degree of a family [hgf.degree]" knowl="hgf.degree" kwargs="">degree</a> 
+<td align=left> {{KNOWL('hgm.degree', title="degree")}}
   <td><input type='text' name='degree' size=10 example='4'> 
 <span class="formexample"> e.g. 4</span></td>
 <td>
-<td align=left><a title="Weight [hgf.weight]" knowl="hnf.weight" kwargs="">
-weight</a> <td><input type='text' name='weight' size=10 example='3'> 
+<td align=left> {{KNOWL('hgm.weight', title="weight")}}
+<td><input type='text' name='weight' size=10 example='3'> 
 <span class="formexample"> e.g. 3 </span></td>
 </tr>
 <tr>
-<td align=left><a title="Hodge vector [mot.hodgevector]" kwargs="">Hodge vector</a> 
+<td align=left> {{KNOWL('mot.hodgevector', title="Hodge vector")}}
   <td><input type='text' name='hodge' size=10 example='[1,1,1,1]'> 
 <span class="formexample"> e.g. [1,1,1,1]</span></td>
 <td>
 </tr>
 </tr>
 <tr>
-<td align=left><a title="A" kwargs="">A</a> 
+<td align=left><a title="A">A</a> 
   <td><input type='text' name='A' size=10 example='[3,2,2]'> 
 <span class="formexample"> e.g. [3,2,2]</span></td>
 <td>
-<td align=left><a title="B" kwargs="">
+<td align=left><a title="B">
 B</a> <td><input type='text' name='B' size=10 example='[6,4]'> 
 <span class="formexample"> e.g. [6,4] </span></td>
 </tr>
 <tr>
-<td align=left><a title="A2" kwargs="">A<sub>2</sub></a>
-  <td><input type='text' name='A2' size=10 example='[2,2,1,1]'>
+<td align=left><a title="A2">A<sub>2</sub></a>
+  <td><input type='text' name='a2' size=10 example='[2,2,1,1]'>
 <span class="formexample"> e.g. [2,2,1,1]</span></td>
 <td>
-<td align=left><a title="B2" kwargs="">
+<td align=left><a title="B2">
 B<sub>2</sub></a> 
-<td><input type='text' name='B2' size=10 example='[4,2,2]'>
+<td><input type='text' name='b2' size=10 example='[4,2,2]'>
 <span class="formexample"> e.g. [4,2,2] </span></td>
 </tr>
 <tr>
-<td align=left><a title="A3" kwargs="">A<sub>3</sub></a>
-  <td><input type='text' name='A3' size=10 example='[3]'>
+<td align=left><a title="A3">A<sub>3</sub></a>
+  <td><input type='text' name='a3' size=10 example='[3]'>
 <span class="formexample"> e.g. [3]</span></td>
 <td>
-<td align=left><a title="B3" kwargs="">
+<td align=left><a title="B3">
 B<sub>3</sub></a> 
-<td><input type='text' name='B3' size=10 example='[3]'>
+<td><input type='text' name='b3' size=10 example='[3]'>
 <span class="formexample"> e.g. [3] </span></td>
 </tr>
 <tr>
-<td align=left><a title="A5" kwargs="">A<sub>5</sub></a>
-  <td><input type='text' name='A5' size=10 example='[ ]'>
+<td align=left><a title="A5">A<sub>5</sub></a>
+  <td><input type='text' name='a5' size=10 example='[ ]'>
 <span class="formexample"> e.g. [ ]</span></td>
 <td>
-<td align=left><a title="B5" kwargs="">
+<td align=left><a title="B5">
 B<sub>5</sub></a> 
-<td><input type='text' name='B5' size=10 example='[ ]'>
+<td><input type='text' name='b5' size=10 example='[ ]'>
 <span class="formexample"> e.g. [ ] </span></td>
 </tr>
 <tr>
-<td align=left><a title="A7" kwargs="">A<sub>7</sub></a>
-  <td><input type='text' name='A7' size=10 example='[ ]'>
+<td align=left><a title="A7">A<sub>7</sub></a>
+  <td><input type='text' name='a7' size=10 example='[ ]'>
 <span class="formexample"> e.g. [ ]</span></td>
 <td>
-<td align=left><a title="B7" kwargs="">
+<td align=left><a title="B7">
 B<sub>7</sub></a>
-<td><input type='text' name='B7' size=10 example='[ ]'>
+<td><input type='text' name='b7' size=10 example='[ ]'>
 <span class="formexample"> e.g. [ ] </span></td>
 </tr>
 </table>
@@ -248,48 +248,49 @@ Enter values into the boxes above and the boxes below to obtain the
 list of corresponding hypergeometric motives.  
 <table>
 <tr>
-<td align=left><a title="Conductor [conductor]" knowl="conductor" kwargs="">conductor</a>
+<td align=left> {{KNOWL('hgm.conductor', title="conductor")}}
   <td><input type='text' name='conductor' size=10 example='2^13 3^7'>
 <span class="formexample"> e.g. 2^13 3^7 (or a range like [1..1000000])
 </span></td>
 </tr>
 <tr>
-<td align=left><a title="Specialization point [hgm.specpoint]" 
-knowl="specialization point" kwargs="">specialization point $t$</a>
+<td align=left> {{KNOWL('hgm.specpoint', title="Specialization point $t$")}}
   <td><input type='text' name='t' size=10 example='3/2'>
 <span class="formexample"> e.g. 3/2 
 (1 has an associated degree drop and is always in the database) 
 </span></td>
 </tr>
 <tr>
-<td align=left><a title="Sign of Functional Equation [sign]" 
-knowl="Sign" kwargs="">sign of functional equation $\epsilon$</a>
+<td align=left> {{KNOWL('lfunction.sign', title="sign of functional equatoin $\epsilon$")}}
   <td><input type='text' name='sign' size=10 example='-1'>
 <span class="formexample"> 
 (1 or -1, with -1 occurring only in the symplectic case) 
 </span></td>
 </tr>
+
+{#  Need data in the database for these
 <tr>
-<td align=left><a title="Generic [generic]" 
-knowl="Sign" kwargs="">Generic</a>
+<td align=left> {{KNOWL('hgm.generic', title="Generic")}}
   <td><input type='text' name='generic' size=10 example='yes'>
 <span class="formexample"> 
 (yes or no, with no rare, expecially in symplectic cases) 
 </span></td>
 </tr>
 <tr>
-<td align=left><a title="Irreducible? [irreducible]" 
-knowl="Sign" kwa rgs="">Irreducible?</a>
+<td align=left> {{KNOWL('hgm.irreducible', title="Irreducible")}}
   <td><input type='text' name='irreducible' size=10 example='yes'>
 <span class="formexample"> 
 (yes or no, with no very rare) 
 </span></td>
 </tr>
+#}
+
 <tr> <td> Maximum number of motives to display: </td>
      <td><input type="text" name="count" value="{{info.count}}" size="10"></td>
           </tr>
   </table>
-        <button type="submit" name="Submit" value="Search">Search</button>
+        <button type="submit" name="Submit" value="Search">Search for motives</button>
+        <button type="submit" name="Submit Family" value="Search Family">Search for families</button>
       </form>
 
 
@@ -299,7 +300,7 @@ knowl="Sign" kwa rgs="">Irreducible?</a>
         <table class="">
 	  <tr>
 	    <td>
-	  Search by {{KNOWL('hgm.field.label',title="label")}}
+	  Search by {{KNOWL('hgm.label',title="label")}}
           <input type="text" name="jump_to" value=""
         placeholder="A2.2_B1.1_t1.2">
 	    </td>

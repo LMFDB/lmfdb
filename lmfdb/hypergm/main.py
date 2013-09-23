@@ -24,7 +24,13 @@ HGM_credit = 'D. Roberts and J. Jones'
 def ab_label(A,B):
     return "A" + ".".join(map(str,A)) + "_B" + ".".join(map(str,B))
     
-def make_label(A,B,tn,td):
+def make_abt_label(A,B,tn,td):
+    AB_str = ab_label(A,B)
+    t = QQ( "%d/%d" % (tn, td))
+    t_str = "_t%s.%s" % (str(t.numerator()), str(t.denominator()))
+    return AB_str + t_str
+
+def make_abt_link(A,B,tn,td):
     AB_str = ab_label(A,B)
     t = QQ( "%d/%d" % (tn, td))
     t_str = "/t%s.%s" % (str(t.numerator()), str(t.denominator()))
@@ -173,37 +179,46 @@ def hgm_search(**args):
     if 'jump_to' in info:
         return render_hgm_webpage({'label': info['jump_to']})
 
-    # t, generic, irreducible
-    # 'A', 'B', 'hodge'
-    for param in ['A', 'B']:
-        if (param == 't' and PAIR_RE.match(info['t'])) or (param == 'A' and IF_RE.match(info[param])) or (param == 'B' and IF_RE.match(info[param])):
-            query[param] = parse_list(info[param])
-        else:
-            print "Bad input"
-            
-    for param in ['degree','weight','sign']:
+    family_search = False
+    if info.get('Submit Family'):
+        family_search = True
+
+    # generic, irreducible not in DB yet
+    for param in ['A', 'B', 'hodge', 'A2', 'B2', 'A3', 'B3', 'A5', 'B5', 'A7', 'B7']:
         if info.get(param):
-            info[param] = clean_input(info[param])
-            if param == 'gal':
-                try:
-                    gcs = complete_group_codes(info[param])
-                    if len(gcs) == 1:
-                        tmp = ['gal', list(gcs[0])]
-                    if len(gcs) > 1:
-                        tmp = [{'gal': list(x)} for x in gcs]
-                        tmp = ['$or', tmp]
-                except NameError as code:
-                    info['err'] = 'Error parsing input for A: unknown group label %s.  It needs to be a <a title = "Galois group labels" knowl="nf.galois_group.name">group label</a>, such as C5 or 5T1, or comma separated list of labels.' % code
-                    return search_input_error(info, bread)
+            if IF_RE.match(info[param]):
+                query[param] = parse_list(info[param])
             else:
-                ran = info[param]
-                ran = ran.replace('..', '-')
-                if LIST_RE.match(ran):
-                    tmp = parse_range2(ran, param)
-                else:
-                    names = {'weight': 'weight', 'degree': 'degree', 'sign': 'sign'}
-                    info['err'] = 'Error parsing input for the %s.  It needs to be an integer (such as 5), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 2,3,8 or 3-5, 7, 8-11).' % names[param]
-                    return search_input_error(info, bread)
+                name = param
+                if field == 'hodge':
+                    name = 'Hodge vector'
+                info['err'] = 'Error parsing input for %s.  It needs to be a list of integers in square brackets, such as [2,3] or [1,1,1]' % name
+                return search_input_error(info, bread)
+
+    if info.get('t') and not family_search:
+        try:
+            print 't is '+ info['t']
+            tsage = QQ(str(info['t']))
+            tlist = [int(tsage.numerator()), int(tsage.denominator())]
+            query['t'] = tlist
+        except:
+            info['err'] = 'Error parsing input for t.  It needs to be a rational number, such as 2/3 or -3'
+
+    if info.get('conductor') and not family_search:
+        dealwithcond = 1
+        
+    for param in ['degree','weight','sign']:
+        # We don't look at sign in family searches
+        if info.get(param) and not (param == 'sign' and family_search):
+            info[param] = clean_input(info[param])
+            ran = info[param]
+            ran = ran.replace('..', '-')
+            if LIST_RE.match(ran):
+                tmp = parse_range2(ran, param)
+            else:
+                names = {'weight': 'weight', 'degree': 'degree', 'sign': 'sign'}
+                info['err'] = 'Error parsing input for the %s.  It needs to be an integer (such as 5), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 2,3,8 or 3-5, 7, 8-11).' % names[param]
+                return search_input_error(info, bread)
             # work around syntax for $or
             # we have to foil out multiple or conditions
             if tmp[0] == '$or' and '$or' in query:
@@ -245,7 +260,10 @@ def hgm_search(**args):
             pass
 
     # logger.debug(query)
-    res = C.hgm.motives.find(query).sort([('cond', pymongo.ASCENDING), ('label', pymongo.ASCENDING)])
+    if family_search:
+        res = C.hgm.families.find(query).sort([('label', pymongo.ASCENDING)])
+    else:
+        res = C.hgm.motives.find(query).sort([('cond', pymongo.ASCENDING), ('label', pymongo.ASCENDING)])
     nres = res.count()
     res = res.skip(start).limit(count)
 
@@ -264,10 +282,16 @@ def hgm_search(**args):
             info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
         else:
             info['report'] = 'displaying all %s matches' % nres
-    info['make_label'] = make_label
+    info['make_label'] = make_abt_label
+    info['make_link'] = make_abt_link
+    info['ab_label'] = ab_label
     info['display_t'] = display_t
+    info['family'] = family_search
 
-    return render_template("hgm-search.html", info=info, title="Hypergeometric Motive over $\Q$ Search Result", bread=bread, credit=HGM_credit)
+    if family_search:
+        return render_template("hgm-search.html", info=info, title="Hypergeometric Motive over $\Q$ Search Result", bread=bread, credit=HGM_credit)
+    else:
+        return render_template("hgm-search.html", info=info, title="Hypergeometric Motive over $\Q$ Search Result", bread=bread, credit=HGM_credit)
 
 
 def render_hgm_webpage(args):
