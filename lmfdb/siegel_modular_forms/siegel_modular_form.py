@@ -247,10 +247,8 @@ def render_webpage(args={}):
         info['weight'] = weight
         ev_modulus = args.get('emod')
         fc_modulus = args.get('fcmod')
-        elow = args.get('elow')
-        ehigh = args.get('ehigh')
-        fclow = args.get('fclow')        
-        fchigh = args.get('fchigh')        
+        erange = args.get('erange')
+        fcrange = args.get('fcrange')
 
         # try to load data
         try:
@@ -312,14 +310,25 @@ def render_webpage(args={}):
                 info['poly_in_gens'] = teXify_pol(str(f[1]))
 
             # isolate requested eigenvalue indices
-            if not (elow and ehigh):
+            if erange=='all':
                 filt_evals = g[1]
-                eval_index = filt_evals.keys()[0:20]
-            else: 
-                elow, ehigh = int(elow), int(ehigh)
-                # filter out to have eigenvalues in [elow, ehigh]
-                filt_evals = {n: lam for n, lam in g[1].iteritems() if int(n)>=elow and int(n)<=ehigh}
                 eval_index = filt_evals.keys()
+                info['erangedesc']= 'all available eigenvalues'
+            else:
+                if erange:
+                    spliterange = erange.split('-')
+                    if len(spliterange)>1 and spliterange[0].isdigit() and spliterange[1].isdigit():
+                        elow, ehigh = int(spliterange[0]), int(spliterange[1])
+                        # filter out to have eigenvalues in [elow, ehigh]
+                        filt_evals = {n: lam for n, lam in g[1].iteritems() if int(n)>=elow and int(n)<=ehigh}
+                        eval_index = filt_evals.keys()
+                        info['erangedesc'] = 'eigenvalues with $n$ in [' + `elow` + ', ' + `ehigh` + ']'
+                else:
+                    # can't make sense of the range, return a default
+                    info['erange'] = ''
+                    filt_evals = g[1]
+                    eval_index = filt_evals.keys()[0:20]
+                    info['erangedesc'] = 'the first few eigenvalues'
 
             # prepare formatted eigenvalues
             ftd_evals = []
@@ -340,32 +349,45 @@ def render_webpage(args={}):
                         for i in eval_index:
                             rdcd_eval = I.reduce(g[1][i])
                             ftd_evals.append((str(i), teXify_pol(str(rdcd_eval).replace(gen, 'a'))))
+                    info['emoddesc'] = 'reduced modulo ' + `m` + '.'
                 else:
                     for i in eval_index:
                         if QQ == K:
                             ftd_evals.append((str(i), teXify_pol(str(g[1][i]))))
                         else:
                             ftd_evals.append((str(i), teXify_pol(str(g[1][i]).replace(gen, 'a'))))
-
+                    info['emoddesc'] = 'with no reduction.'     
             except:
-                info['fc_modulus'] = 0
                 pass
+
+            
 
             # if degree 2 cusp form filter out disc 0 coefficients
             if group=='Sp4Z' and form!= 'E' and form!='Klingen':
                 f[2] = {n: fc for n, fc in f[2].iteritems() if __disc(n)!=0}
 
-            # isolate requested fourier coefficients
-            if not (fclow and fchigh):
+            if (fcrange=='all'):
                 filt_fcs = f[2]
                 fc_index = filt_fcs.keys()
                 fc_index.sort(cmp=__cmp)
-                fc_index = fc_index[0:20]
+                info['fcrangedesc'] = 'all available Fourier coefficients'
             else:
-                fclow, fchigh = int(fclow), int(fchigh)
-                filt_fcs = {n: fc for n, fc in f[2].iteritems() if __disc(n)>=fclow and __disc(n)<=fchigh}
-                fc_index = filt_fcs.keys()
-                fc_index.sort(cmp=__cmp)
+                if fcrange:
+                    splitfcrange = fcrange.split('-')
+                    if len(splitfcrange)>1 and splitfcrange[0].isdigit() and splitfcrange[1].isdigit():
+                        fclow, fchigh = int(splitfcrange[0]), int(splitfcrange[1])
+                        filt_fcs = {n: fc for n, fc in f[2].iteritems() if __disc(n)>=fclow and __disc(n)<=fchigh}
+                        fc_index = filt_fcs.keys()
+                        fc_index.sort(cmp=__cmp)
+                        info['fcrangedesc'] = 'Fourier coefficients with index such that $D$ is in [' + `fclow` + ', ' + `fchigh` + ']'
+                else:
+                    # can't make sense of the range, return a default
+                    info['fcrange'] = '' 
+                    filt_fcs = f[2]
+                    fc_index = filt_fcs.keys()
+                    fc_index.sort(cmp=__cmp)
+                    fc_index = fc_index[0:20]
+                    info['fcrangedesc'] = 'the first few Fourier coefficients'
 
             # prepare formatted fourier coefficients
             ftd_fcs = []
@@ -405,6 +427,7 @@ def render_webpage(args={}):
                                 ftd_fcs.append((str(i), 
                                                 teXify_pol(str(ftd_fc).replace(gen, 'a')), 
                                                 str(__disc(i))))
+                    info['fcmoddesc'] = 'reduced modulo ' + `m` + '.'
                 else:
                     for i in fc_index:
                         ftd_fc = f[2][i]
@@ -416,8 +439,8 @@ def render_webpage(args={}):
                             ftd_fcs.append((str(i), 
                                             teXify_pol(str(ftd_fc).replace(gen, 'a')), 
                                             str(__disc(i))))
+                    info['fcmoddesc'] = 'with no reduction.'
             except:
-                info['fc_modulus'] = 0
                 pass
 
             # if implemented, add L-function to friends
@@ -442,8 +465,8 @@ def render_webpage(args={}):
                           ('Weight', '%s' % weight)]
 
             info['form'] = form
-            info['downloads'] = [('Eigenvalues', g_url),
-                                 ('Fourier coefficients', f_url)]
+            info['downloads'] = [('Fourier coefficients', f_url),
+                                 ('Eigenvalues', g_url)]
             info['ftd_evals'] = ftd_evals
             info['ftd_fcs'] = ftd_fcs
             info['location'] = location

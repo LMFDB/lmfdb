@@ -27,11 +27,7 @@
 
 <h2>Hecke eigenvalues
 </h2>
-{% if not info.emod %} 
-  {% if info.elow and info.ehigh %} Currently showing eigenvalues with no reduction, with $n$ in range $[{{ info.elow }}, {{ info.ehigh }}]$.   {% else %} Currently showing the first few eigenvalues, with no reduction.  {% endif %} 
-{% else %} {% if info.elow and info.ehigh %} Showing eigenvalues reduced modulo ${{ info.emod }}$, with $n$ in range $[{{ info.elow }}, {{ info.ehigh }}]$.
-  {% else %} Currently showing first few eigenvalues, reduced modulo  ${{ info.emod }}$ {% endif %} {% endif %} </br>
-</br> 
+Currently showing {{ info.erangedesc }}, {{info.emoddesc }}</br> 
 <div class="box1">
 <div class="small">
   <table>
@@ -44,8 +40,12 @@
   </table>
 </div></div>
 <form action={{ info.location }}>
-  <input type="submit" value="Show"> for $n$ between <input type="text" name="elow" size="1"> and <input type="text" name="ehigh" size="1"><form action={{ info.location }}>, reduced modulo <input type="text" name="emod" size="1"> (blank for no reduction).</form>
-
+  <input type="hidden" name="fcrange" value={{ info.fcrange }}>
+  <input type="hidden" name="fcmod" value={{ info.fcmod }}>
+  Range: <input type="text" name="erange" size="1"> e.g. $2$-$5$, all.  Blank for default. </br>
+Reduction modulus: <input type="text" name="emod" size="1"> e.g. $11$.  Blank (or $0$) for no reduction.</br>
+  <input type="submit" value="Show">
+</form>
 <h2>Fourier coefficients
 </h2>
 {% if 'Sp8Z' == info.group %}
@@ -97,7 +97,7 @@
 {% endif %}
 </p>
 <div class="box1">
-  {% if not info.emod %} Currently showing Fourier coefficients with no reduction. {% else %} Currently showing Fourier coefficients with reduction {% endif %} </br>
+Currently showing {{ info.fcrangedesc }}, {{ info.fcmoddesc }}</br>
 <div class="small">
   <table>
     <thead>
@@ -109,7 +109,11 @@
   </table>
 </div></div>
 <form action={{ info.location }}>
-  <input type="submit" value="Show"> for $|D|$ between <input type="text" name="fclow" size="1"> and <input type="text" name="fchigh" size="1"><form action={{ info.location }}>, reduced modulo <input type="text" name="fcmod" size="1"> (blank for no reduction).</form>
+   <input type="hidden" name="erange" value={{ info.erange }}>
+   <input type="hidden" name="emod" value={{ info.emod}}>
+   Range: <input type="text" name="fcrange" size="1"> e.g. $3$-$20$, all.  Blank for default. </br>
+Reduction modulus: <input type="text" name="fcmod" size="1"> e.g. $11$.  Blank (or $0$) for no reduction. </br> <input type="submit" value="Show">
+</form>
 {% else %}
 
 {% include 'ModularForm_GSp4_Q/None.html' %}
