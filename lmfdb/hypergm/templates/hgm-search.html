@@ -125,11 +125,11 @@ $\epsilon$:
 <tr>
 <td> 
 {% if info.family %}
-    <a href="/Motive/Hypergeometric/Q/{{info.ab_label(hgm.A, hgm.B)}}"> 
+    <a href="{{url_for('.by_family_label', label=info.ab_label(hgm.A, hgm.B))}}"> 
     {{ info.ab_label(hgm.A, hgm.B) }}
     </a> 
 {% else %}
-    <a href="/Motive/Hypergeometric/Q/{{info.make_link(hgm.A, hgm.B, hgm.t[0], hgm.t[1])}}"> 
+    <a href="{{url_for('.by_label', label=info.ab_label(hgm.A, hgm.B), t=info.make_t_label(hgm.t))}}"> 
     {{ info.make_label(hgm.A, hgm.B, hgm.t[0], hgm.t[1]) }}
     </a> 
 {% endif %}

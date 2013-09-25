@@ -27,14 +27,12 @@ def ab_label(A,B):
 def make_abt_label(A,B,tn,td):
     AB_str = ab_label(A,B)
     t = QQ( "%d/%d" % (tn, td))
-    t_str = "_t%s.%s" % (str(t.numerator()), str(t.denominator()))
+    t_str = "_t%s.%s" % (t.numerator(), t.denominator())
     return AB_str + t_str
 
-def make_abt_link(A,B,tn,td):
-    AB_str = ab_label(A,B)
-    t = QQ( "%d/%d" % (tn, td))
-    t_str = "/t%s.%s" % (str(t.numerator()), str(t.denominator()))
-    return AB_str + t_str
+def make_t_label(t):
+    tsage = QQ("%d/%d" % (t[0], t[1]))
+    return "t%s.%s" % (tsage.numerator(), tsage.denominator())
 
 def get_bread(breads=[]):
     bc = [("Motives", url_for("motive.index")), ("Hypergeometric", url_for("motive.index2")), ("$\Q$", url_for(".index"))]
@@ -46,7 +44,7 @@ def display_t(tn, td):
     t = QQ("%d/%d" % (tn, td))
     if t.denominator() == 1:
         return str(t.numerator())
-    return "%s/%s" % (str(t.numerator()), str(t.denominator()))
+    return "%s/%s" % (t.numerator(), t.denominator())
 
 # Returns a string of val if val = 0, 1, -1, or version with p factored out otherwise
 def factor_out_p(val, p):
@@ -216,7 +214,7 @@ def hgm_search(**args):
                 cond = info['conductor']
                 try:
                     cond = re.sub(r'(\d)\s+(\d)', r'\1 * \2', cond) # implicit multiplication of numbers
-                    cond = re.sub(r'\.\.', r'-', cond) # all ranges use -
+                    cond = cond.replace(r'..', r'-') # all ranges use -
                     cond = re.sub(r'[a..zA..Z]', '', cond)
                     cond = clean_input(cond)
                     tmp = parse_range2(cond, 'cond', myZZ)
@@ -226,7 +224,7 @@ def hgm_search(**args):
             else: # not conductor
                 info[param] = clean_input(info[param])
                 ran = info[param]
-                ran = ran.replace('\.\.', '-')
+                ran = ran.replace(r'..', r'-')
                 if LIST_RE.match(ran):
                     tmp = parse_range2(ran, param)
                 else:
@@ -298,7 +296,7 @@ def hgm_search(**args):
         else:
             info['report'] = 'displaying all %s matches' % nres
     info['make_label'] = make_abt_label
-    info['make_link'] = make_abt_link
+    info['make_t_label'] = make_t_label
     info['ab_label'] = ab_label
     info['display_t'] = display_t
     info['family'] = family_search
