@@ -5,10 +5,12 @@ import unittest2
 
 
 class PermalinkTest(LmfdbTest):
+
     """
     the following tests check if the url_for() actually gives
     what we expect
     """
+
     def ec(self):
         assert url_for('by_ec_label', label='17.a3') == '/EllipticCurve/Q/17.a3'
 
@@ -33,7 +35,7 @@ class RootTest(LmfdbTest):
 
     def test_css(self):
         css = self.tc.get("/style.css").data
-        #def for knowls:
+        # def for knowls:
         assert '*[knowl]' in css
         assert 'border-bottom: 1px dotted #AAF;' in css
 
