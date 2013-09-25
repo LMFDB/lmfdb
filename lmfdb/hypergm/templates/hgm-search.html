@@ -9,25 +9,56 @@
 
 <tr>
 <td align=left> 
-{{KNOWL('lf.degree',title='Degree')}}:</td><td align=left> <input type='text' name='degree' size=3 value="{{info.degree}}">
+{{KNOWL('hgm.degree',title='Degree')}}:</td><td align=left> <input type='text' name='degree' size="8" value="{{info.degree}}">
 </td>
+<td> {{KNOWL('hgm.weight', title="weight")}} </td>
+<td><input type='text' name='weight' size="8" example='3' value="{{info.weight}}"> </td>
 <td align=left> 
 $A$:
 <td align=left> <input type="text" name="A" size="8" value="{{info.A}}" >
 
-<td align=left>  $B$
-<td align=left> <input type="text" name="B" size="8" value="{{info.B}}" >
+<td align=left>  $B$ </td>
+<td align=left> <input type="text" name="B" size="8" value="{{info.B}}" > </td>
+<td align=left> {{KNOWL('mot.hodgevector', title="Hodge vector")}}
+  <td align=left><input type='text' name='hodge' size="8" value="{{info.hodge}}" > </td>
+</tr>
+
+<tr>
+<td align=left><a title="A2">A<sub>2</sub></a>
+  <td><input type='text' name='a2' size="8" value="{{info.a2}}">
+<td align=left><a title="A3">A<sub>3</sub></a>
+  <td><input type='text' name='a3' size="8" value="{{info.a3}}">
+<td align=left><a title="A5">A<sub>5</sub></a>
+  <td><input type='text' name='a5' size="8" value="{{info.a5}}">
+<td align=left><a title="A7">A<sub>7</sub></a>
+  <td><input type='text' name='a7' size="8" value="{{info.a7}}">
+</tr>
+<tr>
+<td align=left><a title="B2">
+B<sub>2</sub></a> 
+<td><input type='text' name='b2' size="8" value="{{info.b2}}">
+<td align=left><a title="B3">
+B<sub>3</sub></a> 
+<td><input type='text' name='b3' size="8" value="{{info.b3}}">
+<td align=left><a title="B5">
+B<sub>5</sub></a> 
+<td><input type='text' name='b5' size="8" value="{{info.b5}}">
+<td align=left><a title="B7">
+B<sub>7</sub></a>
+<td><input type='text' name='b7' size="8" value="{{info.b7}}">
 </tr>
 
 {% if not info.family %}
 <tr>
+<td align=left> {{KNOWL('hgm.conductor', title="conductor")}}
+  <td><input type='text' name='conductor' size=10 value="{{info.conductor}}">
 <td align=left> 
 $t$:</td><td align=left> <input type="text" name="t" size="3" value="{{info.t}}" ></td>
 </td>
 <td align=left> 
 $\epsilon$:
 <td align=left> 
-<input type="text" name="sign" size="3" value="{{info.e}}" >
+<input type="text" name="sign" size="3" value="{{info.sign}}" >
 </tr>
 {% endif %}
 

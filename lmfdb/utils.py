@@ -452,7 +452,7 @@ def parse_range2(arg, key, parse_singleton=int):
     if type(arg) == parse_singleton:
         return [key, arg]
     if ',' in arg:
-        tmp = [parse_range2(a, key) for a in arg.split(',')]
+        tmp = [parse_range2(a, key, parse_singleton) for a in arg.split(',')]
         tmp = [{a[0]: a[1]} for a in tmp]
         return ['$or', tmp]
     elif '-' in arg[1:]:
