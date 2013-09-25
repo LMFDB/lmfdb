@@ -1,0 +1,6 @@
+{
+  "description": "Kp_basic.html", 
+  "dimension": "lmfdb.siegel_modular_forms.siegel_core.dimKp", 
+  "latex_name": "M_2\\big(K(p)\\big)", 
+  "name": "Kp2"
+}

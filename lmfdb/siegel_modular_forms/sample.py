@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import pymongo
 from sage.rings.integer import Integer
 from sage.misc.sage_eval import sage_eval

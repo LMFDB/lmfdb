@@ -1,0 +1,32 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+{% if not error %}
+
+<h2>Available samples</h2>
+{% for name in avail_samples %}
+<a href = "{{ name }}">{{ name }} &nbsp;</a>
+{% endfor %}
+
+{{ forms }}
+{% include [ [ 'includes/', col.name(), '_avail_forms.html']|join, 'Not_available.html'] %}
+
+<h2>Dimensions</h2>
+{% if col.computes_dimensions() %}
+it does
+{% else %}
+<p>- not implemented -</p>
+{% endif %}
+
+<h2>Miscellaneous</h2>
+{% include [ [ 'includes/basic/', col.name(), '_basic.html']|join, 'Not_available.html'] %}
+
+
+{% else %}
+{% include 'None.html' %}
+{% endif %}
+
+{% endblock %}
+
+
+
