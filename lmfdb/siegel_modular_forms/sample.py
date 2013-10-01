@@ -63,8 +63,8 @@ class Sample_class (sage.structure.sage_object.SageObject):
         self.__name = doc.get( 'name')
         weight = doc.get( 'weight')
         field = doc.get( 'field')
-        fcs = None #doc.get( 'Fourier_coefficients')
-        evs = None #doc.get( 'eigenvalues')
+        fcs = doc.get( 'Fourier_coefficients')
+        evs = doc.get( 'eigenvalues')
         self.__weight = Integer( weight) if weight else weight
         R = PolynomialRing( IntegerRing(), name = 'x')
         self.__field = sage_eval( field, locals = R.gens_dict()) if field else field
@@ -79,6 +79,9 @@ class Sample_class (sage.structure.sage_object.SageObject):
         self.__evs = dict( (eval(l), sage_eval( evs[l], locals = loc_f)) for l in evs)\
             if evs else evs
         self.__explicit_formula = doc.get( 'explicit_formula')
+        self.__type = doc.get( 'type')
+        self.__is_eigenform = doc.get( 'is_eigenform')
+        self.__is_integral = doc.get( 'is_integral')
 
 
     def collection( self):
@@ -101,6 +104,15 @@ class Sample_class (sage.structure.sage_object.SageObject):
 
     def explicit_formula( self):
         return self.__explicit_formula
+
+    def type( self):
+        return self.__type
+
+    def is_eigenform( self):
+        return self.__is_eigenform
+
+    def is_integral( self):
+        return self.__is_integral
 
 
 
