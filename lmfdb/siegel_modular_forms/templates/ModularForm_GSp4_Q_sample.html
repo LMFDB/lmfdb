@@ -1,0 +1,100 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+{% if not error %}
+<script>
+    $(document).ready( function() {
+	$("#toggle").click( function() {
+	    var toggle = document.getElementById( "toggle");
+	    if ( toggle.innerHTML == "Hide") {
+		$("#def_polynomial").hide("Slow");
+		toggle.innerHTML = "Show";
+		console.log( "Hide on");
+	    }
+	    else {
+		$("#def_polynomial").show("Slow");
+		toggle.innerHTML = "Hide";
+		console.log( "Show on");
+	    }
+	});
+        $("#toggle1").click( function() {
+	    var toggle1 = document.getElementById( "toggle1") 
+	    if ( toggle1.innerHTML == "Hide") {
+		$("#explicit_formula").hide("Slow");
+		toggle1.innerHTML = "Show";
+		console.log( "Hide on");
+	    }
+	    else {
+		$("#explicit_formula").show("Slow");
+		toggle1.innerHTML = "Hide";
+		console.log( "Show on");
+	    }
+	});
+    });
+</script>
+<p>
+  <button value="Download" onclick="window.location.href = '/home/lmfdb/data/Siegel-Modular-Forms/Sp4Z/eigenvalues/40_Maass-ev.sobj'">Download</button>
+  this sample in JavaScript object notation (json).
+</p>
+
+<h2>Basic properties</h2>
+<table>
+    <tr> <td>Type</td> <td>{{ sam.type()|default('unknown') }}</td> </tr>
+  <tr> <td>Weight</td> <td>${{ sam.weight()|default('unknown') }}$</td> </tr>
+  <tr> <td>Is Hecke eigenform</td> <td>{{ sam.is_eigenform()|default('unknown') }}</td> </tr>
+  <tr> <td>Has integral Fourier coefficients</td> <td>{{ sam.is_integral()|default('unknown') }}</td> </tr>
+  <tr> <td>Degree of field</td> <td>${{ sam.field().degree()|default('unknown') }}$</td> </tr>
+</table>
+
+{% if sam.field().degree() > 1 %}
+<h2>Field</h2>
+<table>
+    <tr> <td>Discriminant</td> <td>${{ latex(sam.field().discriminant().factor()) }}$</td> </tr>
+  <tr> <td>Signature</td> <td>{{ sam.field().signature() }}</td> </tr>
+  <tr> <td>Is Galois</td> <td>{{ sam.field().is_galois() }}</td> </tr>
+  <tr>
+    <td>Field equation</td>
+    {% set pol = latex(sam.field().defining_polynomial()) %}
+    {% if pol|count > 100 %}
+    <td>
+      <button id ="toggle">Show</button>&nbsp;
+      <span id="def_polynomial" style="display: none;">	
+	${{ pol }}$
+      </span>
+    </td>
+    {% else %}
+    <td>${{ pol }}$</td>
+    {% endif %}
+  </tr>
+</table>
+{% endif %}
+
+{% set ex_fo = sam.explicit_formula() %}
+{% if ex_fo %}
+<h2>Explicit formula</h2>
+{% if ex_fo|count > 200 %}
+<button id ="toggle1">Show</button>&nbsp;
+<span id="explicit_formula" style="display: none;">
+    {{ ex_fo }}
+</span>
+{% else %}
+{{ ex_fo }}
+{% endif %}
+{% endif %}
+
+{% set evs = sam.eigenvalues() %}
+{% if evs %}
+<h2>Eigenvalues</h2>
+{% endif %}
+
+{% set fcs = sam.Fourier_coefficients() %} 
+{% if fcs %}
+<h2>Fouriercoefficients</h2>
+{% endif %}
+
+{% else %}
+{% include 'None.html' %}
+{% endif %}
+
+{% endblock %}
+
