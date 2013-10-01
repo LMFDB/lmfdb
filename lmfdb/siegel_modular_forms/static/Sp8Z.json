@@ -1,6 +1,6 @@
 {
-  "description": "Sp8Z_basic.html", 
+  "description": "includes/Sp8Z_basic.html", 
   "dimension": "lmfdb.siegel_modular_forms.dimensions.dimension_Sp8Z", 
-  "latex_name": "M_{k,j}\\big({\\rm Sp}(8,\\mathbb{Z})\\big)", 
+  "latex_name": "M_k\\left(\\textrm{Sp}(8,\\mathbb{Z})\\right)", 
   "name": "Sp8Z"
 }

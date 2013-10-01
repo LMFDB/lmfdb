@@ -40,11 +40,30 @@ def dimension_Gamma1_2( wt_range, j):
 def dimension_Gamma0_2( wt_range, j):
     return _dimension_Gamma_2( wt_range, j, group = 'Gamma0(2)')
 
-def dimension_Sp4Z( wt_range, j):
-    if 0 == j:
-        return _dimension_Sp4Z( wt_range)
-    else:
-        return _dimension_Gamma_2( wt_range, j, group = 'Sp4(Z)')
+def dimension_Sp4Z( wt_range):
+    """
+    <ul>
+      <li><span class="emph">Total</span>: The full space.</li>
+      <li><span class="emph">Eisenstein</span>: The subspace of Siegel Eisenstein series.</li>
+      <li><span class="emph">Klingen</span>: The subspace of Klingen Eisenstein series.</li>
+      <li><span class="emph">Maass</span>: The subspace of Maass liftings.</li>
+      <li><span class="emph">Interesting</span>: The subspace spanned by cuspidal eigenforms that are not Maass liftings.</li>
+    </ul>
+    """
+    return _dimension_Sp4Z( wt_range)
+
+def dimension_Sp4Z_2( wt_range):
+    """
+    <ul>
+      <li><span class="emph">Total</span>: The full space.</li>
+      <li><span class="emph">Non cusp</span>: The subspace of non cusp forms.</li>
+      <li><span class="emph">Cusp</span>: The subspace of cusp form.</li>
+    </ul>
+    """
+    return _dimension_Gamma_2( wt_range, 2, group = 'Sp4(Z)')
+
+def dimension_Sp4Z_j( wt_range, j):
+    return _dimension_Gamma_2( wt_range, j, group = 'Sp4(Z)')
 
 
 
@@ -173,9 +192,15 @@ def _dimension_Gamma_2( wt_range, j, group = 'Gamma(2)'):
 ## Dimension formulas for Sp6Z
 ####################################################################
 
-def dimension_Sp6Z( wt_range, j):
-    if j != 0:
-        raise NotImplementedError( 'Dimensions of \(M_{k,j}\) for \(j \neq 0\) not implemented')
+def dimension_Sp6Z( wt_range):
+    """
+    <ul>
+      <li><span class="emph">Total</span>: The full space.</li>
+      <li><span class="emph">Miyawaki lifts I</span>: The subspace of Miyawaki lifts of type I.</li>
+      <li><span class="emph">Miyawaki lifts II</span>: The subspace of (conjectured) Miyawaki lifts of type II.</li>
+      <li><span class="emph">Other</span>: The subspace of cusp forms which are not Miyawaki lifts of type I or II.</li>
+    </ul>
+    """
     return _dimension_Sp6Z( wt_range)
 
 
@@ -190,7 +215,7 @@ def _dimension_Sp6Z( wt_range):
 
 def __dimension_Sp6Z(wt):
     """
-    Return the dimensions of subspaces of Siegel modular forms on $Sp(4,Z)$.
+    Return the dimensions of subspaces of Siegel modular forms on $Sp(6,Z)$.
 
     OUTPUT
     ("Total", "Miyawaki-Type-1", "Miyawaki-Type-2 (conjectured)", "Interesting")
@@ -225,10 +250,15 @@ def __dimension_Sp6Z(wt):
 ## Dimension formulas for Sp8Z
 ####################################################################
 
-def dimension_Sp8Z( wt_range, j):
-    if j != 0:
-        raise NotImplementedError( 'Dimensions of \(M_{k,j}\) for \(j \\not= 0\) not implemented')
-
+def dimension_Sp8Z( wt_range):
+    """
+    <ul>
+      <li><span class="emph">Total</span>: The subspace of cusp forms.</li>
+      <li><span class="emph">Ikeda lifts</span>: The subspace of Ikeda lifts.</li>
+      <li><span class="emph">Miyawaki lifts</span>: The subspace of Miyawaki lifts.</li>
+      <li><span class="emph">Other</span>: The subspace that are not Ikeda or Miyawaki lifts.</li>
+    </ul>
+    """
     headers = ['Total', 'Ikeda lifts', 'Miyawaki lifts', 'Other']
     dct = dict()
     for k in wt_range:
@@ -245,7 +275,7 @@ def _dimension_Sp8Z(wt):
         ('Total', 'Ikeda lifts', 'Miyawaki lifts', 'Other')
     """
     if wt > 16:
-        raise NotImplementedError( 'Dimensions of \(M_{k}\) for \(k > 16\) not implemented')
+        raise NotImplementedError( 'Dimensions of $M_{k}(Sp(8,Z))$ for \(k > 16\) not implemented')
     if wt == 8:
         return (1, 1, 0, 0)
     if wt == 10:
@@ -285,10 +315,7 @@ def _dimension_Sp8Z(wt):
 ## Dimension formulas for Gamma0_4 half integral
 ####################################################################
 
-def dimension_Gamma0_4_half( wt_range, j):
-    if j != 0:
-        raise NotImplementedError( 'Dimensions of \(M_{k,j}\) for \(j \neq 0\) not implemented')
-
+def dimension_Gamma0_4_half( wt_range):
     headers = ['Total', 'Non cusp', 'Cusp']
     dct = dict()
     for k in wt_range:

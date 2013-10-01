@@ -1,6 +1,5 @@
 {
-  "description": "Gamma1_2_basic.html", 
   "dimension": "lmfdb.siegel_modular_forms.dimensions.dimension_Gamma1_2", 
-  "latex_name": "M_{k,j}\\big(\\Gamma_1(2)\\big)", 
+  "latex_name": "M_{k,j}\\left(\\Gamma_1(2)\\right)", 
   "name": "Gamma1_2"
 }

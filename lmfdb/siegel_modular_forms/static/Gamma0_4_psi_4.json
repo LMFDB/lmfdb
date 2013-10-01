@@ -1,6 +1,5 @@
 {
-  "description": "Gamma0_4_psi_4_basic.html", 
-  "dimension": "lmfdb.siegel_modular_forms.siegel_core._dimension_Gamma0_4_psi_4", 
-  "latex_name": "M_k\\big(\\Gamma_0(4,\\psi_4)\\big)",
+  "description": "includes/Gamma0_4_psi_4_basic.html", 
+  "latex_name": "M_k\\left(\\Gamma_0(4),\\psi_4\\right)",
   "name": "Gamma0_4_psi_4"
 }

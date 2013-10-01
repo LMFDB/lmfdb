@@ -7,35 +7,64 @@ from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
 from sage.rings.integer_ring import IntegerRing
 
 
-def find_sample( dct):
+DB = None
 
-    # DB_URL = 'mongodb://localhost:40000/'
-    # client = pymongo.MongoClient( DB_URL)
-    import lmfdb.base
-    client = lmfdb.base.getDBConnection()
+class DataBase():
+    def __init__( self, DB_URL = None):
+        if DB_URL:
+            import pymongo
+            self.__client = pymongo.MongoClient( DB_URL)
+        else:
+            import lmfdb.base
+            self.__client = lmfdb.base.getDBConnection()
+            self.__db = self.__client.siegel_modular_forms
+          
+    # def count( self, dct, collection = 'samples'):
+    #     col = self.__db[collection]
+    #     return col.find( dct).count()
 
-    db = client.siegel_modular_forms
-    smps = db.samples
-    smple = smps.find_one( dct)
-    client.close()
-    return smple
+    def find_one( self, *dct, **kwargs):
+        collection = kwargs.get( 'collection', 'samples')
+        col = self.__db[collection]
+        return col.find_one( *dct)
+
+    def find( self, *dct, **kwargs):
+        collection = kwargs.get( 'collection', 'samples')
+        col = self.__db[collection]
+        return col.find( *dct)
+
+    def __del__( self):
+        self.__client.close()
+
+
+# def find_sample( dct):
+
+#     # DB_URL = 'mongodb://localhost:40000/'
+#     # client = pymongo.MongoClient( DB_URL)
+#     import lmfdb.base
+#     client = lmfdb.base.getDBConnection()
+
+#     db = client.siegel_modular_forms
+#     smps = db.samples
+#     smple = smps.find_one( dct)
+#     client.close()
+#     return smple
 
 
 
-class Sample (sage.structure.sage_object.SageObject):
+class Sample_class (sage.structure.sage_object.SageObject):
     """
-
+    A wrapper around a database entry providing the various
+    properties a sage objects.
     """
-    def __init__( self, collection, name):
-        dct = { 'collection': collection, 'name': name}
-        smple = find_sample( dct)
-        assert smple, '%s: sample does not exist' % dct
-        self.__collection = collection
-        self.__name = name
-        weight = smple.get( 'weight')
-        field = smple.get( 'field')
-        fcs = smple.get('Fourier_coefficients')
-        evs = smple.get( 'eigenvalues')
+    def __init__( self, doc):
+
+        self.__collection = doc.get( 'collection')
+        self.__name = doc.get( 'name')
+        weight = doc.get( 'weight')
+        field = doc.get( 'field')
+        fcs = None #doc.get( 'Fourier_coefficients')
+        evs = None #doc.get( 'eigenvalues')
         self.__weight = Integer( weight) if weight else weight
         R = PolynomialRing( IntegerRing(), name = 'x')
         self.__field = sage_eval( field, locals = R.gens_dict()) if field else field
@@ -49,7 +78,7 @@ class Sample (sage.structure.sage_object.SageObject):
         loc = self.field().gens_dict()
         self.__evs = dict( (eval(l), sage_eval( evs[l], locals = loc_f)) for l in evs)\
             if evs else evs
-        self.__explicit_formula = smple.get( 'explicit_formula')
+        self.__explicit_formula = doc.get( 'explicit_formula')
 
 
     def collection( self):
@@ -74,5 +103,29 @@ class Sample (sage.structure.sage_object.SageObject):
         return self.__explicit_formula
 
 
+
+def Sample( collection, name):
+    """
+
+    """
+    global DB
+    if not DB:
+        DB = DataBase() 
     
-            
+    doc = DB.find_one( dct, { 'Fourier_coefficients': 0, 'eigenvalues': 0})
+    return Sample_class( doc) if doc else None
+
+
+
+def Samples( dct):
+    """
+
+    """
+    global DB
+    if not DB:
+        DB = DataBase() 
+    
+    docs = DB.find( dct, { 'Fourier_coefficients': 0, 'eigenvalues': 0})
+    return [ Sample_class( doc) for doc in docs]
+    
+    
