@@ -6,8 +6,8 @@
 <h2>Galois orbit</h2>
 <h4>Weight: {{ weight }}&nbsp;&nbsp;&nbsp;&nbsp;
   
-  {% if form %}
-  [{{ form }}]
+  {% if form_name %}
+  [{{ form_name }}]
   {% else %}
   [Need to indicate Maass, Interesting, etc. here]
   {% endif %}
@@ -15,42 +15,38 @@
 </h4>
 
 <h2>Number field containing all coefficients</h2>
-<div class="box1"><div class="small">{{ the_form[0] }}</div></div>
+<div class="box1"><div class="small">{% if gen_coeff_field %} Number field in ${{ gen_coeff_field }}$ with defining polynomial ${{ poly_coeff_field }}$
+{% else %} Rational number field. {% endif %}</div></div>
 
 <h2>As polynomial in <a class="knowl-title" knowl="{{ generators }}">generators</a></h2>
-{% if the_form[1] %} 
-<div class="box1"><div class="small">{{ the_form[1] }}</div></div>
+{% if poly_in_gens %} 
+<div class="box1"><div class="small">{% if poly_in_gens!='0' and poly_in_gens!='unknown' and poly_in_gens!='None'%} ${{ poly_in_gens }}$ {% else %} Not applicable. {% endif %}</div></div>
 {% else %}
 <div class="box1"><div class="small">Not applicable</div></div>
 {% endif %}
 
 <h2>Hecke eigenvalues
-  <button name="Eigenvalues" value="Download" onclick="window.location.href = '{{ the_form[5] }}'">Download</button>
 </h2>
-  <form action="/ModularForm/GSp/Q" method="get">
-    <input type="hidden" name="group" value="{{ group }}" />
-    <input type="hidden" name="page" value="specimen" /> 
-    <input type="hidden" name="form" value="{{ form_name }}" /> 
-    <input type="hidden" name="weight" value="{{ weight }}" /> 
-    <label>The eigenvalues are shown reduced modulo</label>
-    <input type="text" name="ev_modulus" value="{{ ev_modulus }}" size=10 maxlength=10/>
-    <span class="formexample">e.g. 17 (0 means no reduction)</span>
-    <button type="submit" value="reduce"> Reduce again</button>
-  </form>
+Currently showing {{ erangedesc }}, {{ emoddesc }}</br> 
 <div class="box1">
 <div class="small">
   <table>
     <thead>
-      <tr><th>n</th><th>&lambda;(n)</th></tr>
+      <tr><th>$n$</th><th>$\lambda(n)$</th></tr>
     </thead>
-    {% for l,val in the_form[2] %}
-    <tr class = "{{ loop.cycle( 'odd', 'even') }}"><td>{{ l }}</td><td>{{ val }}</td></tr>
+    {% for l,val in ftd_evals %}
+    <tr class = "{{ loop.cycle( 'odd', 'even') }}"><td>${{ l }}$</td><td>${{ val }}$</td></tr>
     {% endfor %}
   </table>
 </div></div>
-
+<form action={{ location }}>
+  <input type="hidden" name="fcrange" value={{ fcrange }}>
+  <input type="hidden" name="fcmod" value={{ fcmod }}>
+  Range: <input type="text" name="erange" size="1"> e.g. $2$-$5$, all.  Blank for default. </br>
+Reduction modulus: <input type="text" name="emod" size="1"> e.g. $11$.  Blank (or $0$) for no reduction.</br>
+  <input type="submit" value="Show">
+</form>
 <h2>Fourier coefficients
-  <button name="Fourier coefficients" value="Download" onclick="window.location.href = '{{ the_form[4] }}'">Download</button>
 </h2>
 {% if 'Sp8Z' == group %}
 {% set form_index = '\(T=(m_{11}, m_{22}, \dots, m_{34})\)' %}
@@ -70,11 +66,11 @@
   \[
   f(Z)=\sum_{T}a(T)\;e^{2\pi i\big({\rm trace}(TZ)\big)}.
   \]
-  {% if form_name != 'Ikeda' %}
+  {% if info.form != 'Ikeda' %}
   Coefficients for only very few forms are known. The table lists only the known ones. In particular, it is by no means complete for a
   given discriminant \(D\).
   {% endif %}
-{% elif 'Sp6Z' == group %}
+{% elif 'Sp6Z' == info.group %}
   {% set form_index = '\(T=(a, b, c, d, e, f)\)' %}
   <p>
   In this table a tuple \((a, b, c, d, e, f)\ \) stands for the quadratic form
@@ -99,29 +95,25 @@
     f(\tau,z,\tau')=\sum_{T=(n,r,m)}a(T)\;e^{2\pi i(n\tau+rz+m\tau')}.
     \]
 {% endif %}
-  <form action="/ModularForm/GSp/Q" method="get">
-    <input type="hidden" name="group" value="{{ group }}" />
-    <input type="hidden" name="page" value="specimen" /> 
-    <input type="hidden" name="form" value="{{ form_name }}" /> 
-    <input type="hidden" name="weight" value="{{ weight }}" /> 
-    <label>The coefficients are shown reduced modulo</label>
-    <input type="text" name="fc_modulus" value="{{ fc_modulus }}" size=5 maxlength=5/>
-    <span class="formexample">e.g. 17 (0 means no reduction)</span>
-    <button type="submit" value="reduce"> Reduce again</button>
-  </form>
 </p>
 <div class="box1">
+Currently showing {{ fcrangedesc }}, {{ fcmoddesc }}</br>
 <div class="small">
   <table>
     <thead>
       <tr><th>\(|D|\)</th><th>{{ form_index }}</th><th>\(a(T)\)</th></tr>
     </thead>
-    {% for l,val,disc in the_form[3] %}
-    <tr class = "{{ loop.cycle( 'odd', 'even') }}"><td>{{ disc }}</td><td nowrap=''>{{ l }}</td><td>{{ val }}</td></tr>
+    {% for l,val,disc in ftd_fcs %}
+    <tr class = "{{ loop.cycle( 'odd', 'even') }}"><td>${{ disc }}$</td><td nowrap=''>${{ l }}$</td><td>${{ val }}$</td></tr>
     {% endfor %}
   </table>
 </div></div>
-
+<form action={{ location }}>
+   <input type="hidden" name="erange" value={{ erange }}>
+   <input type="hidden" name="emod" value={{ emod}}>
+   Range: <input type="text" name="fcrange" size="1"> e.g. $3$-$20$, all.  Blank for default. </br>
+Reduction modulus: <input type="text" name="fcmod" size="1"> e.g. $11$.  Blank (or $0$) for no reduction. </br> <input type="submit" value="Show">
+</form>
 {% else %}
 {% include 'None.html' %}
 {% endif %}
