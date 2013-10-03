@@ -97,7 +97,7 @@ def ModularForm_GSp4_Q_top_level( page = None):
         a=b=None
     sam = sample.Samples( { 'collection': a, 'name': b})
     if len( sam) > 0:
-        return prepare_sample_page( sam[0], bread)
+        return prepare_sample_page( sam[0], request.args, bread)
 
     # return an error: better emit a 500    
     info = { 'error': 'Requested page does not exist' }
@@ -177,10 +177,16 @@ def prepare_dimension_page( args, bread):
 ##########################################################
 ## SPECIFIC FORM REQUEST
 ##########################################################
-def prepare_sample_page( sam, bread):
+def prepare_sample_page( sam, args, bread):
     info = {'sam': sam, 'latex': latex}
 
-
+    
+    info['evs_to_show'] = args.get( 'indices', [])
+    if info['evs_to_show'] != []:
+        info['evs_to_show'] = [ Integer(l) for l in eval( info['evs_to_show'])]
+    info['fcs_to_show'] = args.get( 'dets', [])
+    if info['fcs_to_show']:
+        info['fcs_to_show'] = [Integer(d) for d in eval(info['fcs_to_show'])]
     bread.append( (sam.collection()[0] + '.' + sam.name(), '/' + sam.collection()[0] + '.' + sam.name()))
     return render_template( "ModularForm_GSp4_Q_sample.html",
                             title='Siegel modular forms sample ' + sam.collection()[0] + '.'+ sam.name(),

@@ -6,23 +6,20 @@ import sage.structure.sage_object
 from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
 from sage.rings.integer_ring import IntegerRing
 
-
 DB = None
 
 class DataBase():
+    """
+    DB_URL = 'mongodb://localhost:40000/'
+    """
     def __init__( self, DB_URL = None):
         if DB_URL:
-            import pymongo
             self.__client = pymongo.MongoClient( DB_URL)
         else:
             import lmfdb.base
             self.__client = lmfdb.base.getDBConnection()
-            self.__db = self.__client.siegel_modular_forms
-          
-    # def count( self, dct, collection = 'samples'):
-    #     col = self.__db[collection]
-    #     return col.find( dct).count()
-
+        self.__db = self.__client.siegel_modular_forms_experimental
+            
     def find_one( self, *dct, **kwargs):
         collection = kwargs.get( 'collection', 'samples')
         col = self.__db[collection]
@@ -37,53 +34,47 @@ class DataBase():
         self.__client.close()
 
 
-# def find_sample( dct):
-
-#     # DB_URL = 'mongodb://localhost:40000/'
-#     # client = pymongo.MongoClient( DB_URL)
-#     import lmfdb.base
-#     client = lmfdb.base.getDBConnection()
-
-#     db = client.siegel_modular_forms
-#     smps = db.samples
-#     smple = smps.find_one( dct)
-#     client.close()
-#     return smple
-
-
 
 class Sample_class (sage.structure.sage_object.SageObject):
     """
-    A wrapper around a database entry providing the various
-    properties a sage objects.
+    A wrapper around a database entry providing various
+    properties as a sage object.
     """
     def __init__( self, doc):
 
         self.__collection = doc.get( 'collection')
         self.__name = doc.get( 'name')
+
         weight = doc.get( 'weight')
+        self.__weight = sage_eval( weight) if weight else weight
+       
         field = doc.get( 'field')
-        fcs = doc.get( 'Fourier_coefficients')
-        evs = doc.get( 'eigenvalues')
-        self.__weight = Integer( weight) if weight else weight
         R = PolynomialRing( IntegerRing(), name = 'x')
         self.__field = sage_eval( field, locals = R.gens_dict()) if field else field
-        loc_f = self.__field.gens_dict()
-        P = PolynomialRing( self.__field, names = 'x,y')
-        loc = P.gens_dict()
-        loc.update ( loc_f)
-        self.__fcs = dict( (tuple( eval(f)),
-                            sage_eval( fcs[f], locals = loc))
-                           for f in fcs) if fcs else fcs
-        loc = self.field().gens_dict()
-        self.__evs = dict( (eval(l), sage_eval( evs[l], locals = loc_f)) for l in evs)\
-            if evs else evs
+
         self.__explicit_formula = doc.get( 'explicit_formula')
         self.__type = doc.get( 'type')
         self.__is_eigenform = doc.get( 'is_eigenform')
         self.__is_integral = doc.get( 'is_integral')
 
+        self.__id = doc.get( '_id')
 
+        # eigenvalues
+        # evs = doc.get( 'eigenvalues')
+        # loc_f = self.__field.gens_dict()
+        # self.__evs = dict( (eval(l), sage_eval( evs[l], locals = loc_f)) for l in evs)\
+        #     if evs else evs
+
+        # Fourier coefficients
+        # fcs = doc.get( 'Fourier_coefficients')
+        # P = PolynomialRing( self.__field, names = 'x,y')
+        # loc = P.gens_dict()
+        # loc.update ( loc_f)
+        # self.__fcs = dict( (tuple( eval(f)),
+        #                     sage_eval( fcs[f], locals = loc))
+        #                    for f in fcs) if fcs else fcs
+
+ 
     def collection( self):
         return self.__collection
 
@@ -96,12 +87,6 @@ class Sample_class (sage.structure.sage_object.SageObject):
     def field( self):
         return self.__field
 
-    def Fourier_coefficients( self):
-        return self.__fcs
-
-    def eigenvalues( self):
-        return self.__evs
-
     def explicit_formula( self):
         return self.__explicit_formula
 
@@ -113,17 +98,62 @@ class Sample_class (sage.structure.sage_object.SageObject):
 
     def is_integral( self):
         return self.__is_integral
+ 
+    def available_eigenvalues( self):
+        evs = DB.find( { 'owner_id': self.__id,
+                             'data_type': 'ev',
+                         },
+                       { 'data': 0})
+        ls  = [ Integer( ev['index']) for ev in evs]
+        ls.sort()
+        return  ls
+
+
+    def eigenvalues( self, index_list):
+        evs = DB.find( { 'owner_id': self.__id,
+                         'data_type': 'ev',
+                         'index': { '$in': [ str(l) for l in index_list]}
+                         })
+        loc_f = self.__field.gens_dict() 
+        return dict( (eval(ev['index']),sage_eval( ev['data'], locals = loc_f)) for  ev in evs)
+
+
+    def available_Fourier_coefficients( self):
+        fcs = DB.find( { 'owner_id': self.__id,
+                         'data_type': 'fc',
+                         },
+                       { 'data': 0})
+        ls  = [ Integer( fcd['det']) for fcd in fcs]
+        ls.sort()
+        return  ls
+
+
+    def Fourier_coefficients( self, det_list):
+        fcs = DB.find( { 'owner_id': self.__id,
+                         'data_type': 'fc',
+                         'det': { '$in': [ str(d) for d in det_list]}
+                         })
+        P = PolynomialRing( self.__field, names = 'x,y')
+        loc = P.gens_dict()
+        loc.update ( self.__field.gens_dict())
+        return dict( (Integer(fcd['det']),
+                      dict( (tuple( eval(f)), sage_eval( fcd['data'][f], locals = loc))
+                            for f in fcd['data'] ))
+                     for fcd in fcs)
+
 
 
 
 def Sample( collection, name):
     """
-
+    Return a light instance of Sample_class, where 'light' means
+    'without eigenvalues and Fourier coefficients'.
     """
     global DB
     if not DB:
         DB = DataBase() 
     
+    dct = { 'collection': collection, 'name': name}
     doc = DB.find_one( dct, { 'Fourier_coefficients': 0, 'eigenvalues': 0})
     return Sample_class( doc) if doc else None
 
@@ -131,13 +161,14 @@ def Sample( collection, name):
 
 def Samples( dct):
     """
-
+    Return a result of a database query as list of light instances
+    of Sample_class.
     """
     global DB
     if not DB:
         DB = DataBase() 
     
+    dct.update( { 'field': { '$exists': True}})
     docs = DB.find( dct, { 'Fourier_coefficients': 0, 'eigenvalues': 0})
     return [ Sample_class( doc) for doc in docs]
-    
-    
+
