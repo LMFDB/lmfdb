@@ -49,10 +49,12 @@
 {% if sam.field() %}
 <h2>Field</h2>
 {% if sam.field().degree() == 1 %}
+{% set K='\mathbb{Q}' %}
 <table>
   <tr> <td>Field</td> <td>$\mathbb{Q}$</td> </tr>
 </table>
-{% else %} 
+{% else %}
+{% set K='\mathbb{Q}(a)' %} 
 <table>
   <tr> <td>Field</td> <td>$\mathbb{Q}(a)$</td> </tr>
   <tr> <td>Discriminant</td> <td>{# ${{ latex(sam.field().discriminant().factor()) }}$ #}</td> </tr>
@@ -82,82 +84,160 @@
 <h2>Explicit formula</h2>
 {% if ex_fo|count > 200 %}
 <button id ="toggle1">Show</button>&nbsp;
-<div class="small">
-    <span id="explicit_formula" style="display: none;">
-      {{ ex_fo }}
-    </span>
-</div>
+<span id="explicit_formula" style="display: none;">
+  <div class="small">
+    {{ ex_fo }}
+  </div>      
+</span>
 {% else %}
 {{ ex_fo }}
 {% endif %}
 {% endif %}
 
+
+{% set red = ideal_l.reduce %}
+{% set mod_l = '' if 0 == ideal_l else ' \\bmod \\mathfrak{l}' %}
 {% set evs = sam.available_eigenvalues() %}
 {% if evs|count > 0 %}
-<h2>Eigenvalues</h2>
-<table>
-  <tr>
-    <td>Eigenvalues $\lambda(l)$ of $T(l)$ for $l$ from</td>
-    <td>
-      {% for l in evs %} 
-      <a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', page=sam.collection()[0]+'.'+sam.name(), indices='[%s]'%l) }}">{{ l }}</a>
-      {% endfor %}
-    </td>
-  </tr>
-</table>
-{% if evs_to_show|count > 0 %}
+<h2>Eigenvalues $\lambda(l)$ of $T(l)$</h2>
+{% if evs_to_show|count == 0 %}
+{% set evs_to_show = evs[:1] %}
+{% endif %}
 {% set ev_dict = sam.eigenvalues( evs_to_show) %}
 <div class="small">
   <table>
     <thead>
-      <tr><th>l</th><th>$\lambda(l)$</th></tr>
+      <tr><th>$l$</th><th>${{ '\lambda(l)' + mod_l }}$</th></tr>
     </thead>
     {% for l in ev_dict|sort %}
     <tr class = "{{ loop.cycle( 'odd', 'even') }}">
-      <td valign="top">{{ l }}</td><td>{{ ev_dict[l] }}</td>
+      <td valign="top">{{ l }}</td><td>{{ red(ev_dict[l]) }}</td>
     </tr>
     {% endfor %}
   </table>
 </div>
 {% endif %}
-{% endif %}
 
 {% set fcs = sam.available_Fourier_coefficients() %} 
 {% if fcs|count > 0 %}
-<h2>Fourier coefficients</h2>
-<table>
-  <tr>
-    <td>Fourier coefficients $c(F)$ for $\det(F)$ from</td>
-    <td>
-      {% for d in fcs %} 
-      <a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', page=sam.collection()[0]+'.'+sam.name(), dets='[%s]'%d) }}">{{ d }}</a>
-      {% endfor %}
-    </td>
-  </tr>
-</table>
-{% if fcs_to_show|count > 0 %}
+<h2>Fourier coefficients $c(F)$</h2>
+{% if fcs_to_show|count == 0 %}
+{% set fcs_to_show = fcs[1:2] %}
+{% endif %}
 {% set fc_dict = sam.Fourier_coefficients( fcs_to_show) %}
 <div class="small">
   <table>
     <thead>
-      <tr><th>\(\det(F)\)</th><th>F</th><th>\(c(F)\)</th></tr>
+      <tr><th>\(\det(F)\)</th><th>F</th><th>${{ 'c(F)' + mod_l }}$</th></tr>
     </thead>
     {% for d in fc_dict|sort %}
     <tr class = "{{ loop.cycle( 'odd', 'even') }}">
       {% set dk = fc_dict[d].keys()|sort %}
       <td rowspan="{{ dk|count }}" valign="top">{{ d }}</td>
-      <td>{{ dk[0] }}</td><td>{{ fc_dict[d][dk[0]] }}</td>
+      <td>{{ dk[0] }}</td><td>{{ red(fc_dict[d][dk[0]]) }}</td>
     </tr>
     {% for F in dk[1:]%}
     <tr>
-      <td>{{ F }}</td><td>{{ fc_dict[d][F] }}</td>
+      <td>{{ F }}</td><td>{{ red(fc_dict[d][F]) }}</td>
     </tr>
     {% endfor %}
     {% endfor %}
   </table>
 </div>
 {% endif %}
+
+{% if evs|count > 0 or fcs|count > 0 %}
+<h2>Find more</h2>
+<h3>Find more
+{% if evs|count > 0 %}$\lambda(l)${% endif %}
+{% if evs|count > 0 and fcs|count > 0%} and {% endif %}
+{% if fcs|count > 0 %}$c(F)${% endif %} reduced modulo an ideal $\mathfrak{l}$ of ${{ K }}$
+</h3>
+<table>
+  {% if evs|count > 0 %}
+  <tr valign="top">
+    <td>More $\lambda(l)$ available for $l$ from</td>
+    <td>
+      <div class="small">
+      {% for l in evs %} 
+      <a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', page=sam.collection()[0]+'.'+sam.name(), indices=l) }}">{{ l }}</a>
+      {% endfor %}
+      </div>
+    </td>
+  </tr>
+  {% endif %}
+  {% if fcs|count > 0 %}
+  <tr valign="top">
+    <td>More $c(F)$ available for $\det(F)$ in</td>
+    <td>
+      <div class="small">
+      {% for d in fcs %} 
+      <a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', page=sam.collection()[0]+'.'+sam.name(), dets=d) }}">{{ d }}</a>
+      {% endfor %}
+      </div>
+    </td>
+  </tr>
+  {% endif %}
+</table>
+
+<br />
+
+<script type="text/javascript">
+    function validate_modulus() {
+	var m = document.getElementById( "modulus_field").value
+	
+	try {
+	    gens = m.trim().split( /\s+/);
+	    a = 1;
+	    for ( n=0; n< gens.length; n++) {
+		b = eval( gens[n]);
+	    }
+	    return true;
+	}
+	catch(err) {
+	    txt ="Check the field for the reducing ideal $\mathfrak{l}$.\n\nThe generators must be expressions which define rational polynomials in $a$ and which must not contain spaces.";
+	    alert(txt);
+	    return false;
+	}
+
+    }
+</script> 
+<form id="EvFcForm" action="{{ '/ModularForm/GSp/Q/'+sam.collection()[0]+'.'+sam.name() }}" method="get" onsubmit="return validate_modulus()">
+  <table>
+    {% if evs|count > 0 %}
+    <tr>
+      <td>
+	<input name="indices" value="{{ evs_to_show|join(' ') }}" size="30" example="2 3 5" pattern="^(\s*\d+)+\s*$">list of l</input>
+        <br />
+	<span class="formexample">e.g. 2 or 2 3 5</span>
+      </td><td></td>
+    </tr>
+    {% endif %}
+    {% if fcs|count > 0 %}
+    <tr>
+      <td>
+	<input name="dets" value="{{ fcs_to_show|join(' ') }}" size="30" example="4 7 21" pattern="^(\s*\d+)+\s*$">list of $\det(F)$</input>
+        <br />
+	<span class="formexample">e.g. 3 or 3 7 41</span>
+      </td><td></td>
+    </tr>
+    {% endif %}
+    <tr>
+      <td>
+	<input id="modulus_field" name="modulus" value="{{ ideal_l.gens()|join('#')|replace(' ','')|replace('#',' ') }}" size="30" example="3 a+5">generators of $\mathfrak{l}$</input>
+	<br />
+	<span class="formexample">e.g. 17 or 3 a^2+1</span>
+      </td>
+      <td>
+	<button type="submit" name="submit" value="submit">Find</button>
+      </td>
+    </tr>
+  </table>
+</form>
 {% endif %}
+
+{{ ideal_l }}
+
 
 {% else %}
 {% include 'None.html' %}

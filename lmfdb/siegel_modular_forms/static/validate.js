@@ -7,8 +7,8 @@
 	var p2 = "^\\s*(\\d{1,4})\\s*\\+\\s*(\\d{1,2})\\s*";
 
 	for (var i=1; i < col['args'].length; i++) {
-	    p1 += "," + e;
-	    p2 += "," + e;	    
+	    p1 += "\\s+" + e;
+	    p2 += "\\s+" + e;	    
 	}
 	p1 += "$";
 	p2 += "$";
@@ -38,7 +38,7 @@
 	    return true
 	}
 	else {
-	    alert( "Submit comma separated values (< 9999) representing '" + col["args"] +"'\n(first one can be of the form 'dddd+dd').");
+	    alert( "Submit white space separated values (< 9999) representing '" + col["args"] + "'\n(first one can be of the form 'dddd+dd').");
 	    return false;
 	}
 	alert( "Too big");

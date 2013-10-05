@@ -13,32 +13,9 @@ from lmfdb.siegel_modular_forms import smf_page
 from lmfdb.siegel_modular_forms import smf_logger
 import json
 
-#DB_URL = 'mongodb://localhost:40000/'
 DATA = 'http://data.countnumber.de/Siegel-Modular-Forms/'
 COLNS = None
 DB = None
-
-# class DataBase():
-#     def __init__( self, DB_URL = None):
-#         if DB_URL:
-#             import pymongo
-#             self.__client = pymongo.MongoClient( DB_URL)
-#         else:
-#             import lmfdb.base
-#             self.__client = lmfdb.base.getDBConnection()
-#             self.__db = self.__client.siegel_modular_forms
-          
-#     def count( self, dct, collection = 'samples'):
-#         col = self.__db[collection]
-#         return col.find( dct).count()
-
-#     def lookup( self, dct, collection = 'samples'):
-#         col = self.__db[collection]
-#         return col.find_one( dct)
-
-#     def list( self, dct, collection = 'samples'):
-#         col = self.__db[collection]
-#         return col.find( dct)
 
 
 def rescan_collection():
@@ -68,10 +45,6 @@ def rescan_collection():
 @app.route('/ModularForm/GSp/Q/<page>/')
 def ModularForm_GSp4_Q_top_level( page = None):
 
-    # global DB
-    # if not DB:
-    #     DB = DataBase() 
-    # args = dict( request.args)
     if not COLNS or request.args.get('empty_cache'):
         # we trigger a (re)scan for available collections
         rescan_collection()
@@ -105,6 +78,9 @@ def ModularForm_GSp4_Q_top_level( page = None):
 
 
 
+##########################################################
+## HOME PAGE OF SIEGEL MODULAR FORMS
+##########################################################
 def prepare_main_page( bread):
     info = { 'number_of_collections': len(COLNS),
              'number_of_samples': len(sample.Samples( {})),
@@ -183,14 +159,46 @@ def prepare_sample_page( sam, args, bread):
     
     info['evs_to_show'] = args.get( 'indices', [])
     if info['evs_to_show'] != []:
-        info['evs_to_show'] = [ Integer(l) for l in eval( info['evs_to_show'])]
+        try:
+            info['evs_to_show'] = [ Integer(l) for l in info['evs_to_show'].split()]
+        except Exception as e:
+            info['error'] = 'list of l: %s' % str(e)
+            info['evs_to_show'] = []
+
     info['fcs_to_show'] = args.get( 'dets', [])
-    if info['fcs_to_show']:
-        info['fcs_to_show'] = [Integer(d) for d in eval(info['fcs_to_show'])]
+    if info['fcs_to_show'] != []:
+        try:
+            info['fcs_to_show'] = [Integer(d) for d in info['fcs_to_show'].split()]
+        except Exception as e:
+            info['error'] = 'list of det(F): %s' % str(e)
+            info['fcs_to_show'] = []
+
+    null_ideal = sam.field().ring_of_integers().ideal(0)
+    info['ideal_l'] = args.get( 'modulus', null_ideal)
+    if info['ideal_l'] != 0:
+        try:
+            O = sam.field().ring_of_integers()
+            id_gens = [O(str(b)) for b in info['ideal_l'].split()]
+            info['ideal_l'] = O.ideal(id_gens)
+        except Exception as e:
+            info['error'] = 'list of generators: %s' % str(e)
+            info['ideal_l'] = null_ideal
+
     bread.append( (sam.collection()[0] + '.' + sam.name(), '/' + sam.collection()[0] + '.' + sam.name()))
     return render_template( "ModularForm_GSp4_Q_sample.html",
                             title='Siegel modular forms sample ' + sam.collection()[0] + '.'+ sam.name(),
                             bread=bread, **info)
+
+
+
+
+
+
+
+
+
+
+
     # try to load data
 
     if 'Kp' == group or 'Sp6Z' == group or 'Sp4Z_2' == group or 'Sp4Z == group':
