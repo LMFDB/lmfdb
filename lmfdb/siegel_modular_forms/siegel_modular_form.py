@@ -62,7 +62,7 @@ def ModularForm_GSp4_Q_top_level( page = None):
     if 'dimensions' == page:
         return prepare_dimension_page( request.args, bread)
     if 'search_results' == page:
-        return prepare_search_result_page( request.args, bread)
+        return prepare_search_results_page( request.args, bread)
     # check whether there is a sample called page
     try:
         a,b=page.split('.')
@@ -148,6 +148,28 @@ def prepare_dimension_page( args, bread):
     return render_template( "ModularForm_GSp4_Q_dimensions.html",
                             title='Siegel modular forms dimensions',
                             bread=bread, **info)
+
+
+
+##########################################################
+## SEARCH RESULTS
+##########################################################
+def prepare_search_results_page( args, bread):
+
+    info = {'all':args}
+    query = args.get('query')
+    try:
+        query = json.loads( query)
+        results = sample.Samples( query)
+        info.update( {'results': results})
+    except Exception as e:
+        info.update( {'error': str(e)})
+
+    bread.append( ('search results', 'search_results'))
+    return render_template( "ModularForm_GSp4_Q_search_results.html",
+                            title='Siegel modular forms search results',
+                            bread=bread, **info)
+
 
 
 ##########################################################

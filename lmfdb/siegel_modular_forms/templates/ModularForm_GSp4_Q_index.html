@@ -25,26 +25,26 @@
 </p>
 <p>
   By degree:
-  <a href = "?degree=2">$2$</a>
-  <a href = "?degree=3">$3$</a>
-  <a href = "?degree=4">$4$</a>
+  <a href = "search_results?degree=2">$2$</a>
+  <a href = "search_results?degree=3">$3$</a>
+  <a href = "search_results?degree=4">$4$</a>
 </p>
 <p>
   By weight:
-  <a href = "?weight=2">$2$</a>
-  <a href = "?weight=4-10">$4$-$10$</a>
-  <a href = "?weight=11-20"$11$-$20$</a>
-  <a href = "?weight=21-30">$21$-$30$</a>
-  <a href = "?weight=31-">$31$-...</a>
+  <a href = "search_results?weight=2">$2$</a>
+  <a href = "search_results?weight=4-10">$4$-$10$</a>
+  <a href = "search_results?weight=11-20"$11$-$20$</a>
+  <a href = "search_results?weight=21-30">$21$-$30$</a>
+  <a href = "search_results?weight=31-">$31$-...</a>
 </p>
 <p>
   By degree of its field of definition:
-  <a href = "?field=1">$1$</a>
-  <a href = "?field=2">$2$</a>
-  <a href = "?field=3">$3$</a>
-  <a href = "?field=4">$4$</a>
-  <a href = "?field=5">$5$</a>
-  <a href = "?field=6-">$6$-...</a>
+  <a href = "search_results?degree_of_field=1">$1$</a>
+  <a href = "search_results?degree_of_field=2">$2$</a>
+  <a href = "search_results?degree_of_field=3">$3$</a>
+  <a href = "search_results?degree_of_field=4">$4$</a>
+  <a href = "search_results?degree_of_field=5">$5$</a>
+  <a href = "search_results?degree_of_field=6-">$6$-...</a>
 </p>
 
 </br>
@@ -65,7 +65,7 @@
 {% include 'includes/form_for_dimension_search.html' %}
 
 <h2>Search for samples</h2>
-<p>-todo-</p>
+<p>{% include 'includes/form_for_sample_search.html' %}</p>
 
 <h2>
   Find a specific form by its
@@ -75,7 +75,7 @@
 </h2>
 <form>
   <input name='label' size=25 example="SP4Z.26.Ups.1">
-  <button type='submit' name='jump' value='label'>label</button>
+  <button type='submit' name='jump' value='label'>Find</button>
   <br><span class="formexample">e.g. SP4Z.26.Ups.1 or Kp.PY.277
   </span>
 </form>
