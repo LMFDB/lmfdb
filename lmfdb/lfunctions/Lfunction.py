@@ -1253,7 +1253,6 @@ class SymmetricPowerLfunction(Lfunction):
         return {"power": power, "underlying_type": underlying_type,
                 "field": field}
 
-
 #############################################################################
 
 class Lfunction_SMF2_scalar_valued(Lfunction):
@@ -1283,6 +1282,7 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         self.__dict__.update(args)
         self.algebraic = True
         self.weight = int(self.weight)
+        self.motivic_weight = 2*self.weight - 3 # taken from A. Panchiskin's talk @ Oberwolfach, Oct. 2007 
         self.number = int(self.number)
 
         # Load the eigenvalues
@@ -1297,14 +1297,14 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
 
         self.ev_data = load(loc)
         self.mu_fe = []  # the shifts of the Gamma_R to print
+        self.automorphyexp = float(self.weight) - float(1.5)
         self.nu_fe = [float(1) / float(2), self.automorphyexp]  # the shift of
                                                                 # the Gamma_C to print
-        self.automorphyexp = float(self.weight) - float(1.5)
+        self.level = 1
 	self.compute_kappa_lambda_Q_from_mu_nu()
 
         self.sign = (-1) ** float(self.weight)
 
-        self.level = 1
         self.degree = 4
         roots = compute_local_roots_SMF2_scalar_valued(
             self.ev_data, self.weight,
