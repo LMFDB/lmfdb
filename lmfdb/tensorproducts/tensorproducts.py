@@ -148,20 +148,12 @@ class TensorProduct(SageObject):
         compute the new coefficients of the Dirichlet series of self
         by multiplying simply with chi(n).
         This will be wrong when the hyptothesis does not hold
+
+        Note : this is still algebraically normalised s <-> 2-s
         """
         li = self.E.anlist(upper_bound)
         for n in range(1,len(li)):
             li[n] *= self.chi(n)
-            # now renormalise it for s <-> 1-s as the functional equation
-            li[n] /= sqrt(float(n))
         return li
 
-
-            #sage: L = Dokchitser(conductor=1, gammaV=[0], weight=1, eps=-11, poles=[1], residues=[-1], init='1')
-            #sage: L.check_functional_equation()
-            #-9.73967861488124
-        #"""
-        #self.__check_init()
-        #z = self.gp().eval('checkfeq(%s)'%T).replace(' ','')
-        #return self.__CC(z)
 
