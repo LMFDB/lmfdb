@@ -5,7 +5,7 @@ AUTHORS: Chris Wuthrich, 2014
 Example:
 
     sage: import lmfdb
-    sage: from lmfdb.tensorproducts.tensorproducts import *
+    sage: from lmfdb.tensor_products.tensor_products_def import *
     sage: V = TensorProduct("11.a2", 37, 4)
     sage: V.conductor()
     15059
@@ -79,6 +79,10 @@ class TensorProduct(SageObject):
 
         (more to come)
         """
+        self.modulus = modulus
+        self.number = number
+        self.Elabel = Elabel
+
         C = lmfdb.base.getDBConnection()
         Edata = C.elliptic_curves.curves.find_one({'lmfdb_label': Elabel})
         if Edata is None:
@@ -106,17 +110,29 @@ class TensorProduct(SageObject):
         self.NE = NE
         self.Nchi = Nchi
         self.N = self.conductor()
- #       self.root_number = self.root_number()
 
+    # this function moves out later
+    # be aware the char of index 0 and modulo 1 has is_trivial False
     def temp(self):
         # check if chi is the trivial character, in which case we return the
         # elliptic curve
         if self.chi.is_trivial():
             from lmfdb.elliptic_curve.elliptic_curve import render_curve_webpage_by_label
-            return render_curve_webpage_by_label(label=Elabel)
+            return render_curve_webpage_by_label(label=self.Elabel)
         # check if chi is of order  two. in which case we return the quadratic
         # twist of the elliptic curve
-        #if self.chi_sage.order() == 2:
+        if self.chi.multiplicative_order() == 2:
+            D = self.Nchi
+            twopart = 1
+            while D % 2 == 0:
+                twopart *= 2
+            if twopart == 8:
+                D *= 2
+            D *= int(chi(-1))
+            Et = self.E.quadratic_twist(D)
+            Etlabel = Et.label()
+            from lmfdb.elliptic_curve.elliptic_curve import render_curve_webpage_by_label
+            return render_curve_webpage_by_label(label=Etlabel)
 
     def conductor(self):
         """
@@ -156,4 +172,13 @@ class TensorProduct(SageObject):
             li[n] *= self.chi(n)
         return li
 
+    def Lfunction(self):
+        """
+        The L-function object associated to this class
+        """
+        from lmfdb.lfunctions.Lfunction import Lfunction_TensorProduct
+        args = {'ellipticcurvelabel':self.Elabel,
+                'charactermodulus':self.modulus,
+                'characternumber':self.number}
+        return Lfunction_TensorProduct(**args)
 

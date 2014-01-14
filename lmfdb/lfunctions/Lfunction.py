@@ -29,6 +29,7 @@ from lmfdb.WebNumberField import WebNumberField
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms import *
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes \
      import WebMaassForm
+from lmfdb.tensor_products.tensor_products_defs import TensorProduct
 
 def constructor_logger(object, args):
     ''' Executed when a object is constructed for debugging reasons
@@ -1398,7 +1399,7 @@ class Lfunction_TensorProduct(Lfunction):
         # Check for compulsory arguments
         if not ('charactermodulus' in args.keys()
                 and 'characternumber' in args.keys()
-                and 'ellipticcurvelabel' in args.key() ):
+                and 'ellipticcurvelabel' in args.keys() ):
             raise KeyError("You have to supply charactermodulus, "
                            + "characternumber and a curve label "
                            + "for the L-function of "
@@ -1427,7 +1428,10 @@ class Lfunction_TensorProduct(Lfunction):
         self.degree = 2
         self.quasidegree = 1
         self.level = int(self.tp.conductor())
-        self.sign = int(self.tp.root_number())
+        self.sign = self.tp.root_number()
+        self.coefficient_type = 3
+        self.coefficient_period = 0
+
 
         # We may want to change this later to a better estimate.
         self.numcoeff = 20 + ceil(sqrt(self.tp.conductor()))
@@ -1436,7 +1440,7 @@ class Lfunction_TensorProduct(Lfunction):
         self.nu_fe = [Rational('1/2')]
         self.compute_kappa_lambda_Q_from_mu_nu()
 
-        li = self.tp.an_list(upper_limit=self.numcoeff)
+        li = self.tp.an_list(upper_bound=self.numcoeff)
         for n in range(1,len(li)):
             # now renormalise it for s <-> 1-s as the functional equation
             li[n] /= sqrt(float(n))
@@ -1444,10 +1448,7 @@ class Lfunction_TensorProduct(Lfunction):
 
         self.texname = "L(s,E,\\chi)"
         self.texnamecompleteds = "\\Lambda(s,E,\\chi)"
-        self.title = ("$L(s,E,\\chi)$, where $E$ is the elliptic curve " +
-            "%a and $\\chi$ is the Dirichlet character of conductor %s," +
-            "modulo %s, number %s"%(self.Elabel, self.chi.conductor(),
-                                    self.charactermodulus, self.characternumber) )
+        self.title = "$L(s,E,\\chi)$, where $E$ is the elliptic curve %s and $\\chi$ is the Dirichlet character of conductor %s, modulo %s, number %s"%(self.ellipticcurvelabel, self.tp.chi.conductor(), self.charactermodulus, self.characternumber)
 
         self.credit = 'Workshop in Besancon, 2014'
 
