@@ -32,6 +32,7 @@ import local_fields
 import galois_groups
 import number_field_galois_groups
 import artin_representations
+import tensor_products
 import zeros
 import crystals
 import permutations

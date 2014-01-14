@@ -1,7 +1,17 @@
 {% extends "homepage.html" %}
 
 {% block content %}
-
-Here we take two objects in the database and form a page for the tensor product object.  For now these two objects are the elliptic curve 11.a2 (EllipticCurve/Q/11.a1) and the Dirichlet character 13/2 (Character/Dirichlet/13/2).
-
+<form>
+  <table>
+    <tr> 
+      <td> <input type='text' name='obj1' size = '10' placeholder="EllipticCurve/Q/11.a1"></td>
+    </tr>
+    <tr>
+      <td> <input type='text' name='obj2' size = '10' placeholder="Character/Dirichlet/13/2"></td>
+    </tr>
+    <tr>
+      <td>  <button type='submit' value='Tensor'> Tensor these </button> </td>
+    </tr>
+  </table>
+</form> 
 {% endblock %}

@@ -29,30 +29,35 @@ def index():
     if len(args)==0:
         return render_template("tensor-products-index.html", title="Tensor products", bread=bread)
     else:
-        obj1 = 'EllipticCurve%2FQ%2f11.a1'
-        obj2 = 'Character%2FDirichlet%2F13%2F2'
-        tensor_product_object = TensorProduct(obj1, obj2)
+        obj1 = args.get('obj1')
+        obj2 = args.get('obj2')
+        print obj1
+        print obj2
+        info = TensorProduct(obj1, obj2)
         if tensor_product_object == None:
             return render_template("not_yet_implemented.html")
         else:
-            return render_template("tensor-products-show.html", title="Tensor products", bread=bread, tensor_product_object=tensor_product_object)
+            return render_template("tensor-products-show.html", title="Tensor products", bread=bread, info=info)
 
 class TensorProduct:
     def __init__(self, obj1, obj2):
-        path_to_obj1 = obj1.split('%2F')
-        path_to_obj2 = obj2.split('%2F')
-        # obj[0] tells us what type of object
+        self.obj1link = obj1
+        self.obj2link = obj2
+        self.obj1path = obj1.split('/')
+        self.obj2path = obj2.split('/')
+        self.obj1type = self.obj1path[0]
+        self.obj2type = self.obj2path[0]
+
         objTypes = Set([obj1[0], obj2[0]])
         if objTypes==Set(['EllipticCurve', 'Character']):
-            print "do something"
+            ellCurveLabel = obj1[1]
+            charLabel = obj2[1]
+            return tp_ell_curve_dirichlet_char(ellCurveLabel, charLabel)
         else:
             return None
         
-def tp_ell_curve_dirichlet_char(ellCurve, char):
+def tp_ell_curve_dirichlet_char(ellCurveLabel, charLabel):
     # read ellCurve and char from database
-    C = lmfdb.base.getDBConnection()
-    E = C.elliptic_curves.find_one({'lmfdb_label':label})
-    chi = 'something'
 
     # put Christian's code in here
 
