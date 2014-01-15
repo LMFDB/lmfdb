@@ -193,18 +193,35 @@ class GaloisRepresentation( Lfunction):
         self.motivic_weight = V.motivic_weight + W.motivic_weight
         self.weight = V.weight + W.weight - 1
 
-        self.conductor = ???
+        bad2 = ZZ(W.conductor).prime_factors()
+        s2 = set(bad2)
+        cross_bad = [x for x in ZZ(V.conductor).prime_factors() if x in s2]
+
+        N = W.conductor ** V.dimension
+        N *= V.conductor ** W.dimension
+        for p in cross_bad:
+            n1_tame = V.dimension - V.local_factor(p).degree()
+            n1_tame = W.dimension - W.local_factor(p).degree()
+            N = N // p ** (n1_tame * n2_tame)
+        self.conductor = N
+        
         self.sign = ??
-        self.mu_fe =
-        self.mu_fe =
-        self.gammaV =
+
+        from lfmdb.lfunctions.HodgeTransformations import *
+        h1 = selberg_to_hodge(V.motivic_weight,V.mu_fe,V.nu_fe)
+        h2 = selberg_to_hodge(W.motivic_weight,W.mu_fe,W.nu_fe)
+        h = tensor_hodge(h1, h2)
+        w,m,n = hodge_to_selberg(h)
+        self.mu_fe = m
+        self.nu_fe = n
+        _, self.gammaV = gamma_factors(h)
 
         self.langlands = False # status 2014 :)
 
         #self.primitive = False
         self.set_dokchitser_Lfunction()
         self.set_number_of_coefficients()
-        self.dirichlet_coefficients =
+        self.dirichlet_coefficients = ??
 
         self.selfdual = all( abs(an.imag) < 0.0001 for an in self.dirichlet_coefficients[:100]) # why not 100 :)
 
