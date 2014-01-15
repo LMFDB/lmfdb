@@ -9,11 +9,18 @@ sage: from lmfdb.tensor_products.galois_reps import *
 sage: V = GaloisRepresentation(EllipticCurve("37a1"))
 sage: V.motivic_weight
 1
+
 sage: from lmfdb.WebCharacter import *
 sage: chi = WebDirichletCharacter(modulus=37,number=4)
 sage: V = GaloisRepresentation(chi)
 sage: V.langlands
 True
+
+sage: from lmfdb.math_classes import ArtinRepresentation
+sage: rho = ArtinRepresentation(2,23,1)
+sage: V = GaloisRepresentation(rho)
+sage: V.dim
+2
 
 """
 
@@ -156,10 +163,11 @@ class GaloisRepresentation( Lfunction):
         self.motivic_weight = 0
         self.conductor = rho.conductor()
         self.sign = rho.root_number()
-        self.mu_fe = rho.mu_fe
-        self.nu_fe = rho.nu_fe
+        self.mu_fe = rho.mu_fe()
+        self.nu_fe = rho.nu_fe()
         self.gammaV = [0 for i in range(rho.number_of_eigenvalues_plus_one_complex_conjugation())]
-        self.gammaV.append([1 for i in range(rho.number_of_eigenvalues_minus_one_complex_conjugation())])
+        for i in range(rho.number_of_eigenvalues_minus_one_complex_conjugation() ):
+            self.gammaV.append(1)
         self.langlands = rho.langlands()
         self.selfdual = rho.selfdual()
         self.primitive = rho.primitive()
@@ -168,6 +176,7 @@ class GaloisRepresentation( Lfunction):
         self.dirichlet_coefficients = rho.coefficients_list()
         self.coefficient_type = 0
         self.coefficient_period = 0
+        self.ld.gp().quit()
 
 
 ## These are used when creating the classes with the above
@@ -240,8 +249,20 @@ class GaloisRepresentation( Lfunction):
         This method replaces the class LFunction in lmfdb.lfunctions.Lfunction
         to generate the page for this sort of class.
         """
-        self.title = ""
         self.compute_kappa_lambda_Q_from_mu_nu()
+
+        self.title = ""
+        self.texname = "L(s,\\rho)"
+        self.texnamecompleteds = "\\Lambda(s,\\rho)"
+        self.title = "$L(s,\\rho)$, where $\\rho$ is a Galois representation"
+
+        self.credit = 'Workshop in Besancon, 2014'
+
         from lmfdb.lfunctions.Lfunction import generateSageLfunction
         generateSageLfunction(self)
 
+    def Ltype(self):
+        return "galoisrepresentation"
+
+    def Lkey(self):
+        return {"galoisrepresentation":self.title}
