@@ -71,6 +71,9 @@ class GaloisRepresentation( Lfunction):
         if isinstance(thingy, lmfdb.math_classes.ArtinRepresentation):
             self.init_artin_rep(thingy)
 
+        if isinstance(thingy, lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms.WebNewForm):
+            self.init_elliptic_modular_form(thingy)
+
         self.level = self.conductor
         self.degree = self.dim
         self.poles = []
@@ -176,6 +179,48 @@ class GaloisRepresentation( Lfunction):
         self.dirichlet_coefficients = rho.coefficients_list()
         self.coefficient_type = 0
         self.coefficient_period = 0
+        self.ld.gp().quit()
+
+    def init_elliptic_modular_form(self, F):
+        """
+        Initiate with an Elliptic Modular Form.
+        """
+        self.original_object = [F]
+        self.object_type = "Elliptic Modular newform"
+        self.dim = 2
+        self.weight = ZZ(F.weight())
+        self.motivic_weight = ZZ(F.weight()) -1
+        self.conductor = F.level()
+        self.langlands = True
+        self.mu_fe = []
+        self.nu_fe = [ZZ(F.weight()-1)/ZZ(2)]
+        self.set_dokchitser_Lfunction()
+        self.set_number_of_coefficients()
+        self.primitive = True
+        self.selfdual = True
+        
+        # Determining the Dirichlet coefficients. This code stolen from
+        # lmfdb.lfunctions.Lfunction.Lfunction_EMF
+        self.automorphyexp = (self.weight - 1) / 2.
+        embeddings = F.q_expansion_embeddings(self.numcoeff + 1)
+        self.algebraic_coefficients = []
+        for n in range(1, self.numcoeff + 1):
+            self.algebraic_coefficients.append(embeddings[n][F._fi])
+            
+        self.dirichlet_coefficients = []
+        for n in range(1, len(self.algebraic_coefficients) + 1):
+            self.dirichlet_coefficients.append(
+                self.algebraic_coefficients[n-1] /
+                float(n ** self.automorphyexp))
+        # Need to finish here, determination of sign.
+        AL = F.atkin_lehner_eigenvalues()
+        self.sign = AL[self.conductor] * (-1) ** (self.weight / 2.)
+        self.gammaV = [0,1] # Check with the Dokchitsers?
+       # if self.selfdual:
+       #     self.coefficient_type = 2
+       # else:
+       #     self.coefficient_type = 3
+       # self.coefficient_period = chi.modulus()
         self.ld.gp().quit()
 
 
