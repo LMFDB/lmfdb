@@ -28,20 +28,34 @@ def index():
     args = request.args
     bread = get_bread()
     if len(args)==0:
-        return render_template("tensor-products-index.html", title="Tensor products", bread=bread)
+        return render_template("tensor_products_index.html", title="Tensor products", bread=bread)
     else:
-        obj1 = args.get('obj1').split('/')
-        obj2 = args.get('obj2').split('/')
+        obj1link = args.get('obj1')
+        obj2link = args.get('obj2')
+        obj1 = obj1link.split('/')
+        obj2 = obj2link.split('/')
         obj1type = obj1[0]
         obj2type = obj2[0]
+
         if (obj1type, obj2type)==('EllipticCurve', 'Character'):
             tp = TensorProduct(obj1[2], int(obj2[2]), int(obj2[3]))
-            info = {'conductor':tp.conductor(),
-                    'root_number':tp.root_number()}
-            friends = [('Elliptic curve %s' % obj1[2], obj1)]
-            t = "Tensor product of elliptic curve %s and Dirichlet character " % obj1[2]
-            return render_template("tensor-products-show.html", title=t, bread=bread, info=info)
+            info = {'conductor':tp.conductor()}
+
+            properties2 = {'Conductor':info['conductor']}
+            
+            friends = []
+            friends.append(('L function', ''))
+            friends.append(('Elliptic Curve %s' % obj1[2], url_for("ec.by_ec_label", label=obj1[2])))
+            friends.append(('Dirichlet Character $\chi_{%s}(%s, \cdot)$' % (obj2[2], obj2[3]), url_for("characters.render_Dirichletwebpage", modulus=int(obj2[2]), number=int(obj2[3])) ))
+            friends.append(('L-function for Elliptic Curve %s' % obj1[2], url_for("l_functions.l_function_ec_page", label=obj1[2])))
+            friends.append(('L-function for Dirichlet Character $\chi_{%s}(%s, \cdot)$' % (obj2[2], obj2[3]), url_for("l_functions.l_function_dirichlet_page", modulus = int(obj2[2]), number=int(obj2[3])) ))
+            
+            t = "Tensor product of Elliptic Curve %s and Dirichlet Character $\chi_{%s}(%s, \cdot)$" % (obj1[2], obj2[2], obj2[3])
         else:
-            info = None
+            tp = None
+
+        if tp:
+            return render_template("tensor_products_show.html", title=t, bread=bread, info=info, friends=friends)
+        else:
             return render_template("not_yet_implemented.html")
 
