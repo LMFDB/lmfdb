@@ -55,6 +55,9 @@ class GaloisRepresentation(SageObject):
         if isinstance(thingy, lmfdb.WebCharacter.WebDirichletCharacter):
             self.init_dir_char(thingy)
 
+        if isinstance(thingy, lmfdb.math_classes.ArtinRepresentation):
+            self.init_artin_rep(thingy)
+
 ## Various ways to construct such a class
 
     def init_elliptic_curve(self, E):
@@ -125,6 +128,37 @@ class GaloisRepresentation(SageObject):
         else:
             self.coefficient_type = 3
         self.coefficient_period = chi.modulus()
+
+    def init_artin_rep(self, rho):
+        """
+        Initiate with an Artin representation
+ 
+        """
+        if rho.dimension() == 1:
+            self.init_dir_char(WebDirichletCharacter(modulus=rho.conductor()),number=numbah)
+        else:
+            self.original_object = [rho]
+            self.object_type = "Artin representation"
+            self.dim = rho.dimension()
+            self.degree = self.dim
+            self.weight = 0
+            self.motivic_weight = 0
+            self.conductor = rho.conductor()
+            self.sign = rho.root_number()
+            self.mu_fe = rho.mu_fe
+            self.nu_fe = rho.nu_fe
+            self.gammaV = [0 for i in range(rho.number_of_eigenvalues_plus_one_complex_conjugation)]
+            self.gammaV.append([1 for i in range(rho.number_of_eigenvalues_minus_one_complex_conjugation)])
+            self.langlands = rho.langlands()
+            self.selfdual = rho.selfdual()
+            self.primitive = rho.primitive()
+            self.set_dokchitser_Lfunction()
+            self.set_number_of_coefficients()
+            self.dirichlet_coefficients = rho.coefficients_list()
+            self.coefficient_type = 0
+            self.coefficient_period = chi.modulus()
+            self.coefficient_period = 0
+    
 
 
 ## These are used when creating the classes with the above
