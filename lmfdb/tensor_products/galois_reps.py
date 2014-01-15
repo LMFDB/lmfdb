@@ -4,6 +4,16 @@ AUTHORS: Chris Wuthrich, 2014
 
 Example:
 
+sage: import lmfdb
+sage: from lmfdb.tensor_products.galois_reps import *
+sage: V = GaloisRepresentation(EllipticCurve("37a1"))
+sage: V.motivic_weight
+1
+sage: from lmfdb.WebCharacter import *
+sage: chi = WebDirichletCharacter(modulus=37,number=4)
+sage: V = GaloisRepresentation(chi)
+sage: V.langlands
+True
 
 """
 
@@ -18,7 +28,7 @@ Example:
 #import os
 #import weakref
 
-#import lmfdb.base
+import lmfdb.base
 from lmfdb.WebCharacter import *
 
 from sage.structure.sage_object import SageObject
@@ -41,6 +51,9 @@ class GaloisRepresentation(SageObject):
 
         if isinstance(thingy, sage.schemes.elliptic_curves.ell_rational_field.EllipticCurve_rational_field):
             self.init_elliptic_curve(thingy)
+
+        if isinstance(thingy, lmfdb.WebCharacter.WebDirichletCharacter):
+            self.init_dir_char(thingy)
 
 ## Various ways to construct such a class
 
@@ -67,8 +80,8 @@ class GaloisRepresentation(SageObject):
         self.motivic_weight = 1
         self.conductor = E.conductor()
         self.sign = E.root_number()
-        self.mu = []
-        self.nu = [ZZ(1)/ZZ(2)]
+        self.mu_fe = []
+        self.nu_fe = [ZZ(1)/ZZ(2)]
         self.gammaV = [0, 1]
         self.langlands = True
         self.selfdual = True
@@ -78,6 +91,40 @@ class GaloisRepresentation(SageObject):
         self.dirichlet_coefficients = E.anlist(self.numcoeff)[1:]
         self.coefficient_type = 2
         self.coefficient_period = 0
+
+    def init_dir_char(self, chi):
+        """
+        Initiate with a Web Dirichlet character.
+        """
+        self.original_object = [chi]
+        chi = chi.chi.primitive_character()
+        self.object_type = "dirichletcharacter"
+        self.dim = 1
+        self.degree = self.dim
+        self.weight = 0
+        self.motivic_weight = 0
+        self.conductor = chi.conductor()
+        if chi.is_odd():
+            aa = 1
+            bb = complex(0,1)
+        else:
+            aa = 0
+            bb = 1
+        self.sign = chi.gauss_sum_numerical() / (bb * float(sqrt(chi.modulus())) )
+        self.mu_fe = [aa]
+        self.nu_fe = []
+        self.gammaV = [aa]
+        self.langlands = True
+        self.selfdual = all(  abs(chi(m).imag) < 0.0001 for m in range(chi.modulus() ) )
+        self.primitive = True
+        self.set_dokchitser_Lfunction()
+        self.set_number_of_coefficients()
+        self.dirichlet_coefficients = [ chi(m) for m in range(self.numcoeff + 1) ]
+        if self.selfdual:
+            self.coefficient_type = 2
+        else:
+            self.coefficient_type = 3
+        self.coefficient_period = chi.modulus()
 
 
 ## These are used when creating the classes with the above
@@ -121,6 +168,7 @@ class GaloisRepresentation(SageObject):
         Root number
         """
         return self.sign
+
 
     def dimension(self):
         """
