@@ -35,6 +35,7 @@ from sage.structure.sage_object import SageObject
 #from sage.schemes.elliptic_curves.constructor import EllipticCurve
 #from sage.rings.rational import Rational
 from sage.rings.integer_ring import ZZ
+from sage.rings.complex_field import ComplexField
 
 class GaloisRepresentation(SageObject):
 
@@ -47,7 +48,11 @@ class GaloisRepresentation(SageObject):
         It can be used for tensor two such together (mul below) and a
         L-function class can be extracted from it.
         """
-        self.sign = 0 # not yet set
+
+        # this is an important global variable.
+        # it is the maximum of the imag parts of values s at
+        # which we will compute L(s,.)
+        self.max_imaginary_part = "40"
 
         if isinstance(thingy, sage.schemes.elliptic_curves.ell_rational_field.EllipticCurve_rational_field):
             self.init_elliptic_curve(thingy)
@@ -91,6 +96,7 @@ class GaloisRepresentation(SageObject):
         self.dirichlet_coefficients = E.anlist(self.numcoeff)[1:]
         self.coefficient_type = 2
         self.coefficient_period = 0
+        self.ld.gp().quit()
 
     def init_dir_char(self, chi):
         """
@@ -106,11 +112,13 @@ class GaloisRepresentation(SageObject):
         self.conductor = chi.conductor()
         if chi.is_odd():
             aa = 1
-            bb = complex(0,1)
+            bb = I
         else:
             aa = 0
             bb = 1
         self.sign = chi.gauss_sum_numerical() / (bb * float(sqrt(chi.modulus())) )
+        # this has now type python complex. later we need a gp complex
+        self.sign = ComplexField()(self.sign)
         self.mu_fe = [aa]
         self.nu_fe = []
         self.gammaV = [aa]
@@ -125,7 +133,7 @@ class GaloisRepresentation(SageObject):
         else:
             self.coefficient_type = 3
         self.coefficient_period = chi.modulus()
-
+        self.ld.gp().quit()
 
 ## These are used when creating the classes with the above
 
@@ -133,7 +141,9 @@ class GaloisRepresentation(SageObject):
         """
         The L-function calling Dokchitser's code
         """
-        if self.sign != 0:
+        if hasattr(self, "sign"):
+            # print type(self.sign)
+            # type complex would yield an error here.
             self.ld = Dokchitser(conductor = self.conductor,
                                 gammaV = self.gammaV,
                                 weight = self.motivic_weight,
@@ -142,14 +152,19 @@ class GaloisRepresentation(SageObject):
                                 residues = [])
         else:
             # find the sign from the functional equation
-            self.sign = 0
+            raise NotImplementedError
 
 
     def set_number_of_coefficients(self):
         """
         Determines the number of coefficients needed using Dokchitser's
         """
-        self.numcoeff = 1000
+        if not hasattr(self, "ld"):
+            self.set_dokchitser_Lfunction()
+        # note the following line only sets all the variables in the
+        # gp session of Dokchitser
+        self.ld._gp_eval("MaxImaginaryPart = %s"%self.max_imaginary_part)
+        self.numcoeff = self.ld.num_coeffs()
 
 ## A function that gives back a L-function class as used later
 
