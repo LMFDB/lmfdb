@@ -1381,7 +1381,7 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
 #############################################################################
 
 
-class Lfunction_TensorProduct(Lfunction):
+class TensorProductLfunction(Lfunction):
     """
     Class representing the L-function of a tensor product
     (currently only of a elliptic curve with a Dirichlet character)

@@ -1,0 +1,49 @@
+{% extends "homepage.html" %}
+{% block content %}
+
+  <p>Please browse to two (collections of) objects in the database, then click the tensor product button.</p>
+  <iframe id='iframe1' src={{ url_for('EC_toplevel')}} width=100% height=500px></iframe></br>
+  <iframe id='iframe2' src={{ url_character() }} width=100% height=500px></iframe></br>
+<form>
+  <input id='obj1input' type='hidden' name='obj1'>
+  <input id='obj2input' type='hidden' name='obj2'>
+  <button id='submitbutton'>Tensor these</button>
+</form>
+
+<script type='text/javascript'>
+</script>
+
+<script type='text/javascript'>
+function printHey() {
+  alert("hey");
+}
+function getLabelFromURL(loc)  {
+  if (loc.href.indexOf('EllipticCurve')!=-1) {
+    // extract the label of the elliptic curve
+    var lab = loc.href.split('label=')[1].split('&')[0];
+    var base = 'EllipticCurve/Q/';
+    return base.concat(lab);
+  }
+  else if (loc.href.indexOf('Character/Dirichlet')!=-1) {
+    // extract modulus/number
+    var lab = loc.href.split('Character/Dirichlet/')[1];
+    var base = 'Character/Dirichlet/';
+    return base.concat(lab);
+  }
+}
+
+  document.getElementById('submitbutton').onclick = function() {
+    var loc1 = document.getElementById('iframe1').contentWindow.location;
+    var loc2 = document.getElementById('iframe2').contentWindow.location;
+    
+    var lab1 = getLabelFromURL(loc1);
+    var lab2 = getLabelFromURL(loc2);
+
+    document.getElementById('obj1input').value = lab1;
+    document.getElementById('obj2input').value = lab2; 
+  }
+
+</script>
+
+ 
+{% endblock content %}

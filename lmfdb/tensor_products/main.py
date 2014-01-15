@@ -28,7 +28,7 @@ def index():
     args = request.args
     bread = get_bread()
     if len(args)==0:
-        return render_template("tensor-products-index.html", title="Tensor products", bread=bread)
+        return render_template("tensor_products_index.html", title="Tensor products", bread=bread)
     else:
         obj1link = args.get('obj1')
         obj2link = args.get('obj2')
@@ -55,7 +55,7 @@ def index():
             tp = None
 
         if tp:
-            return render_template("tensor-products-show.html", title=t, bread=bread, info=info, friends=friends)
+            return render_template("tensor_products_show.html", title=t, bread=bread, info=info, friends=friends)
         else:
             return render_template("not_yet_implemented.html")
 

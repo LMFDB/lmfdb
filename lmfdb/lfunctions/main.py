@@ -309,7 +309,11 @@ def l_function_hgm_page(label,t):
     args = {'label': label+'_'+t}
     return render_single_Lfunction(HypergeometricMotiveLfunction, args, request)
 
-
+# L-function of tensor product object
+@l_function_page.route("/TensorProduct/<objects>")
+def l_function_tensor_product_page(charactermodulus, characternumber, ellipticcurvelabel):
+    args = {'charactermodulus':charactermodulus, 'characternumber':characternumber, 'ellipticcurvelabel':ellipticcurvelabel}
+    return render_single_Lfunction(TensorProductLfunction, args)
 
 # L-function of symmetric powers of Elliptic curve #############################
 @l_function_page.route("/SymmetricPower/<power>/EllipticCurve/Q/<label>/")
