@@ -58,17 +58,12 @@ import os
 import weakref
 
 import lmfdb.base
-
+from lmfdb.WebCharacter import *
 
 from sage.structure.sage_object import SageObject
 from sage.misc.all import verbose
-
-# import sage.rings.all
 from sage.schemes.elliptic_curves.constructor import EllipticCurve
-#from sage.rings.arith import binomial
-#from sympowlmfdb import sympowlmfdb
 
-from lmfdb.WebCharacter import *
 
 class TensorProduct(SageObject):
 
@@ -181,4 +176,16 @@ class TensorProduct(SageObject):
                 'charactermodulus':self.modulus,
                 'characternumber':self.number}
         return Lfunction_TensorProduct(**args)
+
+    def dokchitser_Lfunction(self):
+        """
+        The L-function calling dokchitser's code
+        """
+        ld = Dokchitser(conductor=self.tp.conductor(),
+                        gammaV=[0,1],
+                        weight=2,
+                        eps=self.root_number(),
+                        poles=[],
+                        residues=[])
+        return ld
 
