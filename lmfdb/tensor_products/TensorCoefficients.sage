@@ -116,6 +116,15 @@ def tensor_get_an_no_deg1(L1,L2,d1,d2,BadPrimeInfo):
  all_an_from_prime_powers(Z)
  return Z
 
+def tensor_get_an(L1,L2,d1,d2,BadPrimeInfo):
+ if d1==1:
+  return tensor_get_an_deg1(L2,L1,[[bpi[0],bpi[2]] for bpi in BadPrimeInfo])
+ if d2==1:
+  return tensor_get_an_deg1(L1,L2,[[bpi[0],bpi[1]] for bpi in BadPrimeInfo])
+ return tensor_get_an_no_deg1(L1,L2,d1,d2,BadPrimeInfo)
+
+########################################################################
+
 def test_tensprod_121_chi():
  C121=[1,2,-1,2,1,-2,2,0,-2,2,0,-2,-4,4,-1,-4,2,-4,0,2,-2,0,\
  -1,0,-4,-8,5,4,0,-2,7,-8,0,4,2,-4,3,0,4,0,8,-4,6,0,-2,-2,\
@@ -146,8 +155,9 @@ def test_tensprod_121_chi():
  -15,-4,7,16,-12,0,3,14,-2,16,-10,0,17,8,4,14,-4,-6,-2,4,0,0]
  R.<t>=PowerSeriesRing(ZZ)
  assert ANS==tensor_get_an_deg1(C121,chi,[[11,1-t]])
+ assert ANS==tensor_get_an(C121,chi,2,1,[[11,1-t,1]])
 
-test_tensprod_121_chi()
+test_tensprod_121_chi() # run test
 
 def test_tensprod_11a_17a():
  C11=[1,-2,-1,2,1,2,-2,0,-2,-2,1,-2,4,4,-1,-4,-2,4,0,2,2,-2,\
@@ -183,4 +193,4 @@ def test_tensprod_11a_17a():
  B17=[17,1+2*t+17*t**2,1-t]
  assert ANS==tensor_get_an_no_deg1(C11,C17,2,2,[B11,B17])
 
-test_tensprod_11a_17a()
+test_tensprod_11a_17a() # run tests
