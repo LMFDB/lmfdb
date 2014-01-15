@@ -126,10 +126,23 @@ def SelbergToHodge(wt,R,C):
   S.append(c-ZZ(wt)/2+1)
  return HodgeStructure(wt,S)
 
+def root_number_at_oo(hodge): # Table 5.3 of Deligne, page 17
+ u=0
+ for h in hodge:
+  if h[0]<h[1]:
+   u=u+(h[1]-h[0]+1)
+  if h[0]==h[1]:
+   eps=(h[2]+h[0])%2
+   u=u+h[2] # h[2] is simply eps in Deligne's notation
+ return u%4 # returns 0,1,2,3 currently
 
 # Some testing code
 
 def test_me():
+ assert root_number_at_oo(HodgeStructure(2,[0,0,1]))==0 # Sym^2 E
+ assert root_number_at_oo([[0,0,1]])==1 # imaginary quad field
+ assert root_number_at_oo(HodgeStructure(1,[0,1]))==2 # ec
+ assert root_number_at_oo(HodgeStructure(3,[0,1]))==0 # modform wt 4
  assert HodgeStructure(1,[0,1])==[[0,1,2],[1,0,2]]
  assert HodgeStructure(2,[0,0,1])==[[0,2,2],[1,1,1],[2,0,2]]
  assert HodgeStructure(2,[0,-1,1])==[[0,2,2],[1,1,0],[2,0,2]]
