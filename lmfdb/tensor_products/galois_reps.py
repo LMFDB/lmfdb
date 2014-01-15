@@ -71,10 +71,15 @@ class GaloisRepresentation( Lfunction):
         if isinstance(thingy, lmfdb.math_classes.ArtinRepresentation):
             self.init_artin_rep(thingy)
 
+        if isinstance(thingy,"list") and len(thingy) = 2:
+            if isinstance(thingy[0], "GaloisRepresentation") and isinstance(thingy[1], "GaloisRepresentation"):
+                self.init_tensor_product(thingy[0], thingy[1])
+
         self.level = self.conductor
         self.degree = self.dim
         self.poles = []
         self.residues = []
+        self.algebraic = True
 
 ## Various ways to construct such a class
 
@@ -158,7 +163,6 @@ class GaloisRepresentation( Lfunction):
         self.original_object = [rho]
         self.object_type = "Artin representation"
         self.dim = rho.dimension()
-        self.degree = self.dim
         self.weight = 0
         self.motivic_weight = 0
         self.conductor = rho.conductor()
@@ -176,6 +180,36 @@ class GaloisRepresentation( Lfunction):
         self.dirichlet_coefficients = rho.coefficients_list()
         self.coefficient_type = 0
         self.coefficient_period = 0
+        self.ld.gp().quit()
+
+    def init_tensor_product(self, V, W):
+        """
+        We are given two Galois representations and we
+        will return their tensor product.
+        """
+        self.original_object = V.original_object + W.original_object
+        self.object_type = "tensorproduct"
+        self.dim = V.dim * W.dim
+        self.motivic_weight = V.motivic_weight + W.motivic_weight
+        self.weight = V.weight + W.weight - 1
+
+        self.conductor = ???
+        self.sign = ??
+        self.mu_fe =
+        self.mu_fe =
+        self.gammaV =
+
+        self.langlands = False # status 2014 :)
+
+        #self.primitive = False
+        self.set_dokchitser_Lfunction()
+        self.set_number_of_coefficients()
+        self.dirichlet_coefficients =
+
+        self.selfdual = all( abs(an.imag) < 0.0001 for an in self.dirichlet_coefficients[:100]) # why not 100 :)
+
+        self.coefficient_type = max(V.coefficient_type, W.coefficient_type)
+        self.coefficient_period = V.coefficient_period().lcm(W.coefficient_period)
         self.ld.gp().quit()
 
 
@@ -209,6 +243,15 @@ class GaloisRepresentation( Lfunction):
         # gp session of Dokchitser
         self.ld._gp_eval("MaxImaginaryPart = %s"%self.max_imaginary_part)
         self.numcoeff = self.ld.num_coeffs()
+
+## The tensor product
+
+    def __mul__(self, other):
+        """
+        The tensor product of two galois representations
+        is represented here by *
+        """
+        return GaloisRepresentation([self,other])
 
 ## A function that gives back a L-function class as used later
 
@@ -251,7 +294,6 @@ class GaloisRepresentation( Lfunction):
         """
         self.compute_kappa_lambda_Q_from_mu_nu()
 
-        self.title = ""
         self.texname = "L(s,\\rho)"
         self.texnamecompleteds = "\\Lambda(s,\\rho)"
         self.title = "$L(s,\\rho)$, where $\\rho$ is a Galois representation"

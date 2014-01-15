@@ -6,7 +6,15 @@
 # Copied from Magma code largely for GammaFactors and HodgeStructure
 # Format of HodgeStructure is <p,q,eps>, where eps is 2 when p!=q (else 0,1)
 
+from sage.rings.integer_ring import ZZ
+
 def HodgeStructure(wt,gamma): # gamma is motivic, max is 1
+ """
+ Input wt an integer
+       gamma a list of integers.
+
+ Output : list of lists of integers
+ """
  t=1
  H=[]
  while 2*t > 2-wt:
@@ -21,22 +29,27 @@ def HodgeStructure(wt,gamma): # gamma is motivic, max is 1
    H.append([1-t,wt-1+t,2]) # eps is 2 when p!=q
   t = t-1
  if wt%2 == 0:
-  e=1-(wt/2)
+  wt2 = wt//2
+  e=1-wt2
   m=gamma.count(e)
   for i in range(1,m+1):
    gamma.remove(e)
-   H.append([wt/2,wt/2,1])
-  e=-wt/2
+   H.append([wt2,wt2,1])
+  e=-wt2
   m=gamma.count(e)
   for i in range(1,m+1):
    gamma.remove(e)
-   H.append([wt/2,wt/2,0])
+   H.append([wt2,wt2,0])
  if len(gamma) != 0:
   raise ValueError('Gamma factors not Hodge')
  H.sort()
  return H
 
-def GammaFactors(hodge): # weight is just the sum, format is <p,q,eps>
+def GammaFactors(hodge):
+ """
+ inverse of HodgeStructure
+ weight is just the sum, format is <p,q,eps>
+ """
  wt=hodge[0][0]+hodge[0][1]
  G=[]
  for h in hodge:
@@ -49,6 +62,10 @@ def GammaFactors(hodge): # weight is just the sum, format is <p,q,eps>
  return wt,G # also returns the weight, convention is it comes first
 
 def TensorHodge(H1,H2):
+ """
+ Takes two hodge structures and returns
+ the hodge structure of the tensor product
+ """
  H=[]
  for h1 in H1:
   for h2 in H2:
@@ -67,12 +84,16 @@ def TensorHodge(H1,H2):
  return H
 
 def HodgeToSelberg(hodge): # normalised for s->(1-s)
+ """
+ Takes a Hodge structure, returns a
+ weight, mu, nu
+ """
  R=[]
  C=[]
  wt=hodge[0][0]+hodge[0][1]
  for h in hodge:
   if h[0] > h[1]:
-   C.append(-h[1]+wt/2) # sage rational
+   C.append(-h[1]+ZZ(wt)/2) # sage rational
  E=[] # also, R-pairs should be put in C
  for h in hodge:
   if h[0] == h[1]:
@@ -91,15 +112,18 @@ def HodgeToSelberg(hodge): # normalised for s->(1-s)
    R.append(1)
  R.sort()
  C.sort()
- return wt,R,C # R and C are called mu and nu elsewhere
+ return wt, R, C # R and C are called mu and nu elsewhere
 
 def SelbergToHodge(wt,R,C):
+ """
+ inverse of the above
+ """
  S=[]
  for r in R: # weight must be even in any case
-  S.append(r-wt/2)
+  S.append(r-ZZ(wt)/2)
  for c in C:
-  S.append(c-wt/2)
-  S.append(c-wt/2+1)
+  S.append(c-ZZ(wt)/2)
+  S.append(c-ZZ(wt)/2+1)
  return HodgeStructure(wt,S)
 
 
