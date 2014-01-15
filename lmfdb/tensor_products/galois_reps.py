@@ -29,7 +29,8 @@ True
 #import weakref
 
 import lmfdb.base
-from lmfdb.WebCharacter import *
+from lmfdb.WebCharacter import * #WebDirichletCharacter
+from lmfdb.lfunctions.Lfunction_base import Lfunction
 
 from sage.structure.sage_object import SageObject
 #from sage.schemes.elliptic_curves.constructor import EllipticCurve
@@ -37,7 +38,7 @@ from sage.structure.sage_object import SageObject
 from sage.rings.integer_ring import ZZ
 from sage.rings.complex_field import ComplexField
 
-class GaloisRepresentation(SageObject):
+class GaloisRepresentation( Lfunction):
 
     def __init__(self, thingy):
         """
@@ -60,6 +61,11 @@ class GaloisRepresentation(SageObject):
         if isinstance(thingy, lmfdb.WebCharacter.WebDirichletCharacter):
             self.init_dir_char(thingy)
 
+        self.level = self.conductor
+        self.degree = self.dim
+        self.poles = []
+        self.residues = []
+
 ## Various ways to construct such a class
 
     def init_elliptic_curve(self, E):
@@ -80,7 +86,6 @@ class GaloisRepresentation(SageObject):
         self.original_object = [E]
         self.object_type = "ellipticcurve"
         self.dim = 2
-        self.degree = self.dim
         self.weight = 2
         self.motivic_weight = 1
         self.conductor = E.conductor()
@@ -106,7 +111,6 @@ class GaloisRepresentation(SageObject):
         chi = chi.chi.primitive_character()
         self.object_type = "dirichletcharacter"
         self.dim = 1
-        self.degree = self.dim
         self.weight = 0
         self.motivic_weight = 0
         self.conductor = chi.conductor()
@@ -198,4 +202,15 @@ class GaloisRepresentation(SageObject):
         return self.motivic_weight
 
 
+## Now to the L-function itself
+
+    def lfunction(self):
+        """
+        This method replaces the class LFunction in lmfdb.lfunctions.Lfunction
+        to generate the page for this sort of class.
+        """
+        self.title = ""
+        self.compute_kappa_lambda_Q_from_mu_nu()
+        from lmfdb.lfunctions.Lfunction import generateSageLfunction
+        generateSageLfunction(self)
 
