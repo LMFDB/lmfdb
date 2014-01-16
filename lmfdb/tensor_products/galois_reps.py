@@ -49,13 +49,12 @@ from lmfdb.WebCharacter import * #WebDirichletCharacter
 from lmfdb.lfunctions.Lfunction_base import Lfunction
 from lmfdb.lfunctions.HodgeTransformations import selberg_to_hodge, hodge_to_selberg, tensor_hodge, gamma_factors
 
-
 from sage.structure.sage_object import SageObject
-#from sage.schemes.elliptic_curves.constructor import EllipticCurve
-#from sage.rings.rational import Rational
 from sage.rings.integer_ring import ZZ
 from sage.rings.complex_field import ComplexField
 from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
+from sage.rings.power_series_ring import PowerSeriesRing
+from sage.rings.fast_arith import prime_range
 
 class GaloisRepresentation( Lfunction):
 
@@ -309,9 +308,6 @@ class GaloisRepresentation( Lfunction):
             N = N // p ** (n1_tame * n2_tame)
         self.conductor = N
 
-
-        self.sign = 1 # NotImplementedError
-
         h1 = selberg_to_hodge(V.motivic_weight,V.mu_fe,V.nu_fe)
         h2 = selberg_to_hodge(W.motivic_weight,W.mu_fe,W.nu_fe)
         h = tensor_hodge(h1, h2)
@@ -321,6 +317,8 @@ class GaloisRepresentation( Lfunction):
         _, self.gammaV = gamma_factors(h)
 
         self.langlands = False # status 2014 :)
+
+        self.sign = 1 # NotImplementedError
 
         #self.primitive = False
         self.set_dokchitser_Lfunction()
@@ -392,7 +390,7 @@ class GaloisRepresentation( Lfunction):
             raise ValueError("You asked for a type that we don't have")
 
 
-    def renormlaise_coefficients(li):
+    def renormalise_coefficients(li):
         """
         This turns a list of algebraically normalised coefficients
         as above into a list of automorphically normalised,
@@ -456,7 +454,7 @@ class GaloisRepresentation( Lfunction):
         """
         self.compute_kappa_lambda_Q_from_mu_nu()
         self.dirichlet_coefficients = self.algebraic_coefficients(self.numcoeff+1)
-        self.renormlaise_coefficients(self.dirichlet_coefficients)
+        self.renormalise_coefficients(self.dirichlet_coefficients)
 
         self.texname = "L(s,\\rho)"
         self.texnamecompleteds = "\\Lambda(s,\\rho)"
@@ -473,4 +471,290 @@ class GaloisRepresentation( Lfunction):
     # does not have keys in the previous sense really.
     def Lkey(self):
         return {"galoisrepresentation":self.title}
+
+
+#########################
+# This is copied from Mark Watkin's code:
+
+def tensor_get_an(L1, L2, d1, d2, BadPrimeInfo):
+    """
+    Takes two lists of list of Dirichlet coefficients
+    and returns the list of their tensor product
+    Input: two lists L1, L2, two dimensions d1, d2 and
+    information about bad primes.
+    BadPrimeInfo is a list of list of the form [p,f1,f2]
+    where p is a prime and f1, f2 are two euler factors at p.
+    The function will take the tensor prod at f1,f2 at bad primes;
+    if have the right answer, give this as one of the two, and the
+    other as 1-t. If one of L1 and L2 is deg 1, then this calls
+    a special function, with a different BadPrime methodology.
+    """
+    if d1==1:
+        return tensor_get_an_deg1(L2,L1,[[bpi[0],tensor_local_factors(bpi[1],bpi[2],d1*d2)] for bpi in BadPrimeInfo])
+    if d2==1:
+        return tensor_get_an_deg1(L1,L2,[[bpi[0],tensor_local_factors(bpi[1],bpi[2],d1*d2)] for bpi in BadPrimeInfo])
+    return tensor_get_an_no_deg1(L1,L2,d1,d2,BadPrimeInfo)
+
+def tensor_get_an_no_deg1(L1, L2, d1, d2, BadPrimeInfo):
+    """
+    Same as the above in the case no dimension is 1
+    """
+    if d1==1 or d2==1:
+        raise ValueError('min(d1,d2) should not be 1, use direct method then')
+    s1 = len(L1)
+    s2 = len(L2)
+    if s1 < s2:
+        S = s1
+    if s2 <= s1:
+        S = s2
+    BadPrimes = []
+    for bpi in BadPrimeInfo:
+        BadPrimes.append(bpi[0])
+    P = prime_range(S+1)
+    Z = S * [1]
+    for p in P:
+        S = RealField()(S)
+        f = S.log(base=p).floor()
+        q = 1
+        E1 = []
+        E2 = []
+        if not p in BadPrimes:
+            for i in range(f):
+                q=q*p
+                E1.append(L1[q-1])
+                E2.append(L2[q-1])
+            e1 = list_to_euler_factor(E1,f+1)
+            e2 = list_to_euler_factor(E2,f+1)
+            ld1 = d1
+            ld2 = d2
+        else: # either convolve, or have one input be the answer and other 1-t
+            i = BadPrimes.index(p)
+            e1 = BadPrimeInfo[i][1]
+            e2 = BadPrimeInfo[i][2]
+            ld1 = e1.degree()
+            ld2 = e2.degree()
+            F = e1.list()[0].parent().fraction_field()
+            R = PowerSeriesRing(F, "T", default_prec=f+1)
+            e1 = R(e1)
+            e2 = R(e2)
+        E = tensor_local_factors(e1,e2,f)
+        A = euler_factor_to_list(E,f)
+        while len(A) < f:
+            A.append(0)
+        q = 1
+        for i in range(f):
+            q = q*p
+            Z[q-1]=A[i]
+    all_an_from_prime_powers(Z)
+    return Z
+
+def tensor_get_an_deg1(L, D, BadPrimeInfo):
+    """
+    Same as above, except that the BadPrimeInfo
+    is now a list of lists of the form
+    [p,f] where f is a polynomial.
+    """
+    s1 = len(L)
+    s2 = len(D)
+    if s1 < s2:
+        S = s1
+    if s2 <= s1:
+        S = s2
+    BadPrimes = []
+    for bpi in BadPrimeInfo:
+        BadPrimes.append(bpi[0])
+    P = prime_range(S+1)
+    Z = S * [1]
+    for p in P:
+        S = RealField()(len(L))
+        f = S.log(base=p).floor()
+        q = 1
+        u = 1
+        e = D[p-1]
+        if not p in BadPrimes:
+            for i in range(f):
+                q = q*p
+                u = u*e
+                Z[q-1] = u*L[q-1]
+        else:
+            i = BadPrimes.index(p)
+            e = BadPrimeInfo[i][1]
+            ld = e.degree()
+            F = e.list()[0].parent().fraction_field()
+            R = PowerSeriesRing(F, "T", default_prec=f+1)
+            e = R(e)
+            A = euler_factor_to_list(e,f)
+            for i in range(f):
+                q = q*p
+                Z[q-1] = A[i]
+    all_an_from_prime_powers(Z)
+    return Z
+
+def all_an_from_prime_powers(L):
+    """
+    L is a list of an such that the terms
+    are correct for all n which are prime powers
+    and all others are equal to 1;
+    this function changes the list in place to make
+    the correct ans for all n
+    """
+    S = ZZ(len(L))
+    for p in prime_range(S+1):
+        q = 1
+        Sr = RealField()(len(L))
+        f = Sr.log(base=p).floor()
+        for k in range(f):
+            q = q*p
+            for m in range(2, 1+(S//q)):
+                if (m%p) != 0:
+                    L[m*q-1] = L[m*q-1] * L[q-1]
+
+
+def euler_factor_to_list(P, prec):
+    """
+    P a polynomial (or power series)
+    returns the list [a_p, a_p^2, ...
+    """
+    R = PowerSeriesRing(P[0].parent().fraction_field(), "T", default_prec=prec+1)
+    return ((1/R(P.truncate().coeffs())).truncate().coeffs())[1:]
+
+
+def get_euler_factor(L,p):
+    """
+    takes L list of all ans and p is a prime
+    it returns the euler factor at p
+    # utility function to get an Euler factor, unused
+    """
+    S = RealField()(len(L))
+    f = S.log(base=p).floor()
+    E = []
+    q = 1
+    for i in range(f):
+        q = q*p
+        E.append(L[q-1])
+    return list_to_euler_factor(E,f)
+
+
+def list_to_euler_factor(L,d):
+    """
+    takes a list [a_p, a_p^2,...
+    and returns the euler factor
+    """
+    if isinstance(L[0], int):
+        L[0] = ZZ(L[0])
+    R = PowerSeriesRing(L[0].parent().fraction_field(), "T")
+    T = R.gens()[0]
+    f =  1/ R([1]+L)
+    f = f.add_bigoh(d+1)
+    return f
+
+def tensor_local_factors(f1, f2, d):
+    """
+    takes two euler factors f1, f2 and a prec and
+    returns the euler factor for the tensor
+    product (with respect to that precision d
+    """
+    R = PowerSeriesRing(f1.parent().base_ring().fraction_field(), "T")
+    if not f1.parent().is_exact(): # ideally f1,f2 should already be in PSR
+        if f1.prec() < d:
+            raise ValueError
+    if not f2.parent().is_exact(): # but the user might give them as polys...
+        if f2.prec() < d:
+            raise ValueError
+    f1 = R(f1)
+    f2 = R(f2)
+    if f1==1 or f2==1:
+        f = R(1)
+        f = f.add_bigoh(d+1)
+        return f
+    l1 = f1.log().derivative()
+    p1 = l1.prec()
+    c1 = l1.list()
+    while len(c1) < p1:
+        c1.append(0)
+    l2 = f2.log().derivative()
+    p2 = l2.prec()
+    c2 = l2.list()
+    while len(c2) < p2:
+        c2.append(0)
+    C = [0] * len(c1)
+    for i in range(len(c1)):
+        C[i] = c1[i] * c2[i]
+    E = - R(C).integral()
+    E = E.add_bigoh(d+1)
+    E = E.exp() # coerce to R
+    return E
+
+## test functions to check if the above agrees with magma
+
+def test_tensprod_121_chi():
+    C121=[1,2,-1,2,1,-2,2,0,-2,2,0,-2,-4,4,-1,-4,2,-4,0,2,-2,0,\
+    -1,0,-4,-8,5,4,0,-2,7,-8,0,4,2,-4,3,0,4,0,8,-4,6,0,-2,-2,\
+    8,4,-3,-8,-2,-8,-6,10,0,0,0,0,5,-2,-12,14,-4,-8,-4,0,-7,4,\
+    1,4,-3,0,-4,6,4,0,0,8,10,-4,1,16,6,-4,2,12,0,0,15,-4,-8,\
+    -2,-7,16,0,8,-7,-6,0,-8,-2,-4,-16,0,-2,-12,-18,10,-10,0,-3,\
+    -8,9,0,-1,0,8,10,4,0,0,-24,-8,14,-9,-8,-8,0,-6,-8,18,0,0,\
+    -14,5,0,-7,2,-10,4,-8,-6,0,8,0,-8,3,6,10,8,-2,0,-4,0,7,8,\
+    -7,20,6,-8,-2,2,4,16,0,12,12,0,3,4,0,12,6,0,-8,0,-5,30,\
+    -15,-4,7,-16,12,0,3,-14,0,16,10,0,17,8,-4,-14,4,-6,2,0,0,0]
+    chi=[1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,\
+    1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,1,\
+    -1,1,1,1,-1,-1,-1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1,\
+    1,1,1,-1,-1,-1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1,1,\
+    1,1,-1,-1,-1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1,1,1,\
+    1,-1,-1,-1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1,1,1,1,\
+    -1,-1,-1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1,1,1,1,-1,\
+    -1,-1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1,1,1,1,-1,-1,\
+    -1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1]
+    ANS=[1,-2,-1,2,1,2,-2,0,-2,-2,1,-2,4,4,-1,-4,-2,4,0,2,2,-2,\
+    -1,0,-4,-8,5,-4,0,2,7,8,-1,4,-2,-4,3,0,-4,0,-8,-4,-6,2,-2,\
+    2,8,4,-3,8,2,8,-6,-10,1,0,0,0,5,-2,12,-14,4,-8,4,2,-7,-4,\
+    1,4,-3,0,4,-6,4,0,-2,8,-10,-4,1,16,-6,4,-2,12,0,0,15,4,-8,\
+    -2,-7,-16,0,-8,-7,6,-2,-8,2,-4,-16,0,2,12,18,10,10,-2,-3,8,\
+    9,0,-1,0,-8,-10,4,0,1,-24,8,14,-9,-8,8,0,6,-8,-18,-2,0,14,\
+    5,0,-7,-2,10,-4,-8,6,4,8,0,-8,3,6,-10,-8,2,0,4,4,7,-8,-7,\
+    20,6,8,2,-2,4,-16,-1,12,-12,0,3,4,0,-12,-6,0,8,-4,-5,-30,\
+    -15,-4,7,16,-12,0,3,14,-2,16,-10,0,17,8,4,14,-4,-6,-2,4,0,0]
+    R = PowerSeriesRing(ZZ, "T")
+    T = R.gens()[0]
+    assert ANS==tensor_get_an_deg1(C121,chi,[[11,1-T]])
+    assert ANS==tensor_get_an(C121,chi,2,1,[[11,1-T,1-T]])
+    assert get_euler_factor(ANS,2)==(1+2*T+2*T**2+O(T**8))
+    assert get_euler_factor(ANS,3)==(1+T+3*T**2+O(T**5))
+    assert get_euler_factor(ANS,5)==(1-T+5*T**2+O(T**4))
+
+def test_tensprod_11a_17a():
+    C11=[1,-2,-1,2,1,2,-2,0,-2,-2,1,-2,4,4,-1,-4,-2,4,0,2,2,-2,\
+    -1,0,-4,-8,5,-4,0,2,7,8,-1,4,-2,-4,3,0,-4,0,-8,-4,-6,2,-2,\
+    2,8,4,-3,8,2,8,-6,-10,1,0,0,0,5,-2,12,-14,4,-8,4,2,-7,-4,\
+    1,4,-3,0,4,-6,4,0,-2,8,-10,-4,1,16,-6,4,-2,12,0,0,15,4,-8,\
+    -2,-7,-16,0,-8,-7,6,-2,-8,2,-4,-16,0,2,12,18,10,10,-2,-3,8,\
+    9,0,-1,0,-8,-10,4,0,1,-24,8,14,-9,-8,8,0,6,-8,-18,-2,0,14,\
+    5,0,-7,-2,10,-4,-8,6,4,8,0,-8,3,6,-10,-8,2,0,4,4,7,-8,-7,\
+    20,6,8,2,-2,4,-16,-1,12,-12,0,3,4,0,-12,-6,0,8,-4,-5,-30,\
+    -15,-4,7,16,-12,0,3,14,-2,16,-10,0,17,8,4,14,-4,-6,-2,4,0,0]
+    C17=[1,-1,0,-1,-2,0,4,3,-3,2,0,0,-2,-4,0,-1,1,3,-4,2,0,0,4,\
+    0,-1,2,0,-4,6,0,4,-5,0,-1,-8,3,-2,4,0,-6,-6,0,4,0,6,-4,0,\
+    0,9,1,0,2,6,0,0,12,0,-6,-12,0,-10,-4,-12,7,4,0,4,-1,0,8,\
+    -4,-9,-6,2,0,4,0,0,12,2,9,6,-4,0,-2,-4,0,0,10,-6,-8,-4,0,\
+    0,8,0,2,-9,0,1,-10,0,8,-6,0,-6,8,0,6,0,0,-4,-14,0,-8,-6,\
+    6,12,4,0,-11,10,0,-4,12,12,8,3,0,-4,16,0,-16,-4,0,3,-6,0,\
+    -8,8,0,4,0,3,-12,6,0,2,-10,0,-16,-12,-3,0,-8,0,-2,-12,0,10,\
+    16,-9,24,6,0,4,-4,0,-9,2,12,-4,22,0,-4,0,0,-10,12,-6,-2,8,\
+    0,12,4,0,0,0,0,-8,-16,0,2,-2,0,-9,-18,0,-20,-3]
+    ANS=[1,2,0,2,-2,0,-8,8,15,-4,0,0,-8,-16,0,12,-2,30,0,-4,0,0,\
+    -4,0,29,-16,0,-16,0,0,28,-8,0,-4,16,30,-6,0,0,-16,48,0,-24,\
+    0,-30,-8,0,0,22,58,0,-16,-36,0,0,-64,0,0,-60,0,-120,56,-120,\
+    -8,16,0,-28,-4,0,32,12,120,-24,-12,0,0,0,0,-120,-24,144,96,\
+    24,0,4,-48,0,0,150,-60,64,-8,0,0,0,0,-14,44,0,58,-20,0,-128,\
+    -64,0,-72,144,0,60,0,0,-96,-126,0,8,0,-120,-120,16,0,-11,-240,\
+    0,56,-158,-240,64,-32,0,32,-288,0,0,-56,0,-16,42,0,-80,32,0,\
+    24,0,180,0,-48,0,-12,100,0,-32,0,-30,0,-56,0,14,-240,0,16,32,\
+    288,96,96,0,48,48,0,142,8,0,-48,-132,0,-232,0,0,300,-180,-60,\
+    -14,128,0,-32,12,0,0,0,0,0,-272,0,8,-28,0,44,36,0,0,232]
+    R = PowerSeriesRing(ZZ, "T")
+    T = R.gens()[0]
+    B11=[11,1-T,1+11*T**2]
+    B17=[17,1+2*T+17*T**2,1-T]
+    assert ANS==tensor_get_an_no_deg1(C11,C17,2,2,[B11,B17])
 
