@@ -71,12 +71,13 @@ class GaloisRepresentation( Lfunction):
         if isinstance(thingy, lmfdb.math_classes.ArtinRepresentation):
             self.init_artin_rep(thingy)
 
-        if isinstance(thingy, lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms.WebNewForm):
+        if isinstance(thingy,
+			lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms.WebNewForm_class):
             self.init_elliptic_modular_form(thingy)
 
-        if isinstance(thingy,"list") and len(thingy) = 2:
-            if isinstance(thingy[0], "GaloisRepresentation") and isinstance(thingy[1], "GaloisRepresentation"):
-                self.init_tensor_product(thingy[0], thingy[1])
+      #  if isinstance(thingy,"list") and len(thingy) == 2:
+      #      if isinstance(thingy[0], "GaloisRepresentation") and isinstance(thingy[1], "GaloisRepresentation"):
+      #          self.init_tensor_product(thingy[0], thingy[1])
 
         self.level = self.conductor
         self.degree = self.dim
@@ -203,12 +204,17 @@ class GaloisRepresentation( Lfunction):
         self.langlands = True
         self.mu_fe = []
         self.nu_fe = [ZZ(F.weight()-1)/ZZ(2)]
-        self.set_dokchitser_Lfunction()
-        self.set_number_of_coefficients()
         self.primitive = True
         self.selfdual = True
+	self.coefficient_type = 2
         
-        # Determining the Dirichlet coefficients. This code stolen from
+        AL = F.atkin_lehner_eigenvalues()
+        self.sign = AL[self.conductor] * (-1) ** (self.weight / 2.)
+        self.gammaV = [0,1] # Check with the Dokchitsers?
+        self.set_dokchitser_Lfunction()
+        self.set_number_of_coefficients()
+        
+	# Determining the Dirichlet coefficients. This code stolen from
         # lmfdb.lfunctions.Lfunction.Lfunction_EMF
         self.automorphyexp = (self.weight - 1) / 2.
         embeddings = F.q_expansion_embeddings(self.numcoeff + 1)
@@ -221,63 +227,55 @@ class GaloisRepresentation( Lfunction):
             self.dirichlet_coefficients.append(
                 self.algebraic_coefficients[n-1] /
                 float(n ** self.automorphyexp))
-        # Need to finish here, determination of sign.
-        AL = F.atkin_lehner_eigenvalues()
-        self.sign = AL[self.conductor] * (-1) ** (self.weight / 2.)
-        self.gammaV = [0,1] # Check with the Dokchitsers?
-       # if self.selfdual:
-       #     self.coefficient_type = 2
-       # else:
-       #     self.coefficient_type = 3
-       # self.coefficient_period = chi.modulus()
         self.ld.gp().quit()
+
     
-    def init_tensor_product(self, V, W):
-        """
-        We are given two Galois representations and we
-        will return their tensor product.
-        """
-        self.original_object = V.original_object + W.original_object
-        self.object_type = "tensorproduct"
-        self.dim = V.dim * W.dim
-        self.motivic_weight = V.motivic_weight + W.motivic_weight
-        self.weight = V.weight + W.weight - 1
+   # def init_tensor_product(self, V, W):
+   #     """
+   #     We are given two Galois representations and we
+   #     will return their tensor product.
+   #     """
+   #     self.original_object = V.original_object + W.original_object
+   #     self.object_type = "tensorproduct"
+   #     self.dim = V.dim * W.dim
+   #     self.motivic_weight = V.motivic_weight + W.motivic_weight
+   #     self.weight = V.weight + W.weight - 1
 
-        bad2 = ZZ(W.conductor).prime_factors()
-        s2 = set(bad2)
-        cross_bad = [x for x in ZZ(V.conductor).prime_factors() if x in s2]
+   #     bad2 = ZZ(W.conductor).prime_factors()
+   #     s2 = set(bad2)
+   #     cross_bad = [x for x in ZZ(V.conductor).prime_factors() if x in s2]
 
-        N = W.conductor ** V.dimension
-        N *= V.conductor ** W.dimension
-        for p in cross_bad:
-            n1_tame = V.dimension - V.local_factor(p).degree()
-            n1_tame = W.dimension - W.local_factor(p).degree()
-            N = N // p ** (n1_tame * n2_tame)
-        self.conductor = N
+   #     N = W.conductor ** V.dimension
+   #     N *= V.conductor ** W.dimension
+   #     for p in cross_bad:
+   #         n1_tame = V.dimension - V.local_factor(p).degree()
+   #         n1_tame = W.dimension - W.local_factor(p).degree()
+   #         N = N // p ** (n1_tame * n2_tame)
+   #     self.conductor = N
 
-        #self.sign = NotImplementedError
+   #     #self.sign = NotImplementedError
 
-        from lfmdb.lfunctions.HodgeTransformations import *
-        h1 = selberg_to_hodge(V.motivic_weight,V.mu_fe,V.nu_fe)
-        h2 = selberg_to_hodge(W.motivic_weight,W.mu_fe,W.nu_fe)
-        h = tensor_hodge(h1, h2)
-        w,m,n = hodge_to_selberg(h)
-        self.mu_fe = m
-        self.nu_fe = n
-        _, self.gammaV = gamma_factors(h)
+   #     from lfmdb.lfunctions.HodgeTransformations import *
+   #     h1 = selberg_to_hodge(V.motivic_weight,V.mu_fe,V.nu_fe)
+   #     h2 = selberg_to_hodge(W.motivic_weight,W.mu_fe,W.nu_fe)
+   #     h = tensor_hodge(h1, h2)
+   #     w,m,n = hodge_to_selberg(h)
+   #     self.mu_fe = m
+   #     self.nu_fe = n
+   #     _, self.gammaV = gamma_factors(h)
 
-        self.langlands = False # status 2014 :)
+   #     self.langlands = False # status 2014 :)
 
-        #self.primitive = False
-        self.set_dokchitser_Lfunction()
-        self.set_number_of_coefficients()
-        #self.dirichlet_coefficients = NotImplementedError
+   #     #self.primitive = False
+   #     self.set_dokchitser_Lfunction()
+   #     self.set_number_of_coefficients()
+   #     #self.dirichlet_coefficients = NotImplementedError
 
-        self.selfdual = all( abs(an.imag) < 0.0001 for an in self.dirichlet_coefficients[:100]) # why not 100 :)
+   #     self.selfdual = all( abs(an.imag) < 0.0001 for an in self.dirichlet_coefficients[:100]) # why not 100 :)
 
-        self.coefficient_type = max(V.coefficient_type, W.coefficient_type)
-        self.coefficient_period = V.coefficient_period().lcm(W.coefficient_period)
-        self.ld.gp().quit()
+   #     self.coefficient_type = max(V.coefficient_type, W.coefficient_type)
+   #     self.coefficient_period = V.coefficient_period().lcm(W.coefficient_period)
+   #     self.ld.gp().quit()
 
 
 ## These are used when creating the classes with the above
