@@ -12,13 +12,14 @@ from lmfdb.utils import to_dict
 from lmfdb.transitive_group import *
 from string import split
 from sets import Set
-from sage.schemes.elliptic_curves.constructor import EllipticCurve
 
 from lmfdb.math_classes import *
 from lmfdb.WebNumberField import *
-from tensor_products_defs import TensorProduct
+
 from galois_reps import GaloisRepresentation
+from sage.schemes.elliptic_curves.constructor import EllipticCurve
 from lmfdb.WebCharacter import *
+from lmfdb.modular_forms.elliptic_modular_forms import WebNewForm
 
 def get_bread(breads=[]):
     bc = [("Tensor products", url_for(".index"))]
@@ -79,15 +80,29 @@ def show():
 
 def galois_rep_from_path(p):
     C = getDBConnection()
+
     if p[0]=='EllipticCurve':
         # create the sage elliptic curve then create Galois rep object
         data = C.elliptic_curves.curves.find_one({'lmfdb_label':p[2]})
         ainvs = [int(a) for a in data['ainvs']]
         E = EllipticCurve(ainvs)
         return GaloisRepresentation(E)
+
     elif (p[0]=='Character' and p[1]=='Dirichlet'):
         dirichletArgs = {'type':'Dirichlet', 'modulus':int(p[2]), 'number':int(p[3])}
         chi = WebDirichletCharacter(**dirichletArgs)
-        return GaloisRepresentation(chi) 
+        return GaloisRepresentation(chi)
+ 
+    elif (p[0]=='ModularForm'):
+        N = int(p[4])
+        k = int(p[5])
+        chi = p[6] # this should be zero; TODO check this is the case
+        label = p[7] # this is a, b, c, etc.; chooses the galois orbit
+        embedding = p[8] # this is the embedding of that galois orbit
+        form = WebNewForm(N, k, chi=chi, label=label) 
+        return GaloisRepresentation(form, embedding)
+
+    elif (p[0]=='ArtinRepresentation'):
+        return 
     else:
         return

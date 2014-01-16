@@ -37,9 +37,7 @@
 
 <form action='/TensorProducts/show/'>
   <input id='obj1input' type='hidden' name='obj1'>
-  <input id='obj1embeddinginput' type='hidden' name='emb1'>
   <input id='obj2input' type='hidden' name='obj2'>
-  <input id='obj2embeddinginput' type='hidden' name='emb2'>
   Once both frames have loaded, you can <button id='submitbutton'>tensor these.</button>
 </form>
 
@@ -89,14 +87,18 @@ function getNiceLabelFromURL(loc)  {
     var lab2 = getNiceLabelFromURL(loc2);
 
     if (lab1.indexOf('ModularForm/GL2/Q/holomorphic')!=-1) {
-      document.getElementById('obj1embeddinginput').value = '0';
+      document.getElementById('obj1input').value = lab1.concat('0');
+    }
+    else {
+      document.getElementById('obj1input').value = lab1;
     } 
     if (lab2.indexOf('ModularForm/GL2/Q/holomorphic')!=-1) {
-      document.getElementById('obj2embeddinginput').value = '0';
+      document.getElementById('obj2input').value = lab2.concat('0'); 
     }
-
-    document.getElementById('obj1input').value = lab1;
-    document.getElementById('obj2input').value = lab2; 
+    else {
+      document.getElementById('obj2input').value = lab2; 
+    }
+    
   }
 
 </script>
