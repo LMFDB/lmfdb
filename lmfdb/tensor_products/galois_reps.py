@@ -478,11 +478,15 @@ def tensor_get_an(L1, L2, d1, d2, BadPrimeInfo):
     information about bad primes.
     BadPrimeInfo is a list of list of the form [p,f1,f2]
     where p is a prime and f1, f2 are two euler factors at p.
+    The function will take the tensor prod at f1,f2 at bad primes;
+    if have the right answer, give this as one of the two, and the
+    other as 1-t. If one of L1 and L2 is deg 1, then this calls
+    a special function, with a different BadPrime methodology.
     """
     if d1==1:
-        return tensor_get_an_deg1(L2,L1,[[bpi[0],bpi[2]] for bpi in BadPrimeInfo])
+        return tensor_get_an_deg1(L2,L1,[[bpi[0],tensor_local_factors(bpi[1],bpi[2],d1*d2)] for bpi in BadPrimeInfo])
     if d2==1:
-        return tensor_get_an_deg1(L1,L2,[[bpi[0],bpi[1]] for bpi in BadPrimeInfo])
+        return tensor_get_an_deg1(L1,L2,[[bpi[0],tensor_local_factors(bpi[1],bpi[2],d1*d2)] for bpi in BadPrimeInfo])
     return tensor_get_an_no_deg1(L1,L2,d1,d2,BadPrimeInfo)
 
 def tensor_get_an_no_deg1(L1, L2, d1, d2, BadPrimeInfo):
@@ -517,7 +521,7 @@ def tensor_get_an_no_deg1(L1, L2, d1, d2, BadPrimeInfo):
             e2 = list_to_euler_factor(E2,f+1)
             ld1 = d1
             ld2 = d2
-        else: # can either convolve, or have one input be the answer and other 1-t
+        else: # either convolve, or have one input be the answer and other 1-t
             i = BadPrimes.index(p)
             e1 = BadPrimeInfo[i][1]
             e2 = BadPrimeInfo[i][2]
@@ -571,7 +575,7 @@ def tensor_get_an_deg1(L, D, BadPrimeInfo):
             e = BadPrimeInfo[i][1]
             ld = e.degree()
             F = e.list()[0].parent().fraction_field()
-            R = PowerSeriesRing(F, "T", default_prec=ld+1)
+            R = PowerSeriesRing(F, "T", default_prec=f+1)
             e = R(e)
             A = euler_factor_to_list(e,f)
             for i in range(f):
@@ -705,7 +709,7 @@ def test_tensprod_121_chi():
     -15,-4,7,16,-12,0,3,14,-2,16,-10,0,17,8,4,14,-4,-6,-2,4,0,0]
     R.<T>=PowerSeriesRing(ZZ)
     assert ANS==tensor_get_an_deg1(C121,chi,[[11,1-T]])
-    assert ANS==tensor_get_an(C121,chi,2,1,[[11,1-T,1]])
+    assert ANS==tensor_get_an(C121,chi,2,1,[[11,1-T,1-T]])
     assert get_euler_factor(ANS,2)==(1+2*T+2*T^2+O(T^8))
     assert get_euler_factor(ANS,3)==(1+T+3*T^2+O(T^5))
     assert get_euler_factor(ANS,5)==(1-T+5*T^2+O(T^4))
