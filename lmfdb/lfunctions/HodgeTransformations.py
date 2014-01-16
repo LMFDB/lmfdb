@@ -137,7 +137,6 @@ def root_number_at_oo(hodge): # Table 5.3 of Deligne, page 17
   if h[0]<h[1]:
    u=u+(h[1]-h[0]+1)
   if h[0]==h[1]:
-   eps=(h[2]+h[0])%2
    u=u+h[2] # h[2] is simply eps in Deligne's notation
  return u%4
 
