@@ -94,24 +94,10 @@ def hodge_to_selberg(hodge): # normalised for s->(1-s)
  for h in hodge:
   if h[0] > h[1]:
    C.append(-h[1]+ZZ(wt)/2) # sage rational
- E=[] # also, R-pairs should be put in C
- for h in hodge:
-  if h[0] == h[1]:
-   E.append(h[2])
- m=E.count(0)
- n=E.count(1)
- if m >= n:
-  for i in range(0,n):
-   C.append(0)
-  for i in range(0,m-n):
-   R.append(0)
- if m < n:
-  for i in range(0,m):
-   C.append(0)
-  for i in range(0,n-m):
-   R.append(1)
+  if h[0]==h[1]: # R-pairs could go in C, but LMFDB does not do this!
+   R.append(h[2]) # either 0 or 1
  R.sort()
- C.sort()
+ C.sort() # everything in C must be positive, according to convention
  return wt, R, C # R and C are called mu and nu elsewhere
 
 def selberg_to_hodge(wt,R,C):
@@ -124,7 +110,7 @@ def selberg_to_hodge(wt,R,C):
  for c in C:
   S.append(c-ZZ(wt)/2)
   S.append(c-ZZ(wt)/2+1)
- return HodgeStructure(wt,S)
+ return hodge_structure(wt,S)
 
 def root_number_at_oo(hodge): # Table 5.3 of Deligne, page 17
  """
@@ -142,37 +128,38 @@ def root_number_at_oo(hodge): # Table 5.3 of Deligne, page 17
 
 # Some testing code
 
-#def test_me():
- #assert root_number_at_oo(HodgeStructure(2,[0,0,1]))==0 # Sym^2 E
- #assert root_number_at_oo([[0,0,1]])==1 # imaginary quad field
- #assert root_number_at_oo(HodgeStructure(1,[0,1]))==2 # ec
- #assert root_number_at_oo(HodgeStructure(3,[0,1]))==0 # modform wt 4
- #assert HodgeStructure(1,[0,1])==[[0,1,2],[1,0,2]]
- #assert HodgeStructure(2,[0,0,1])==[[0,2,2],[1,1,1],[2,0,2]]
- #assert HodgeStructure(2,[0,-1,1])==[[0,2,2],[1,1,0],[2,0,2]]
- #assert GammaFactors([[0,3,2],[1,2,2],[2,1,2],[3,0,2]])==(3,[-1,0,0,1])
- #assert GammaFactors([[0,0,0],[0,0,0],[0,0,1]])==(0,[0,0,1])
- #assert GammaFactors([[0,1,2],[1,0,2]])==(1,[0,1])
+def test_me():
+ assert root_number_at_oo(hodge_structure(2,[0,0,1]))==0 # Sym^2 E
+ assert root_number_at_oo([[0,0,1]])==1 # imaginary quad field
+ assert root_number_at_oo(hodge_structure(1,[0,1]))==2 # ec
+ assert root_number_at_oo(hodge_structure(3,[0,1]))==0 # modform wt 4
+ assert hodge_structure(1,[0,1])==[[0,1,2],[1,0,2]]
+ assert hodge_structure(2,[0,0,1])==[[0,2,2],[1,1,1],[2,0,2]]
+ assert hodge_structure(2,[0,-1,1])==[[0,2,2],[1,1,0],[2,0,2]]
+ assert gamma_factors([[0,3,2],[1,2,2],[2,1,2],[3,0,2]])==(3,[-1,0,0,1])
+ assert gamma_factors([[0,0,0],[0,0,0],[0,0,1]])==(0,[0,0,1])
+ assert gamma_factors([[0,1,2],[1,0,2]])==(1,[0,1])
 
- #assert HodgeToSelberg(HodgeStructure(3,[-1,0,0,1]))==(3,[],[1/2,3/2])
- #assert HodgeToSelberg([[0,0,0],[0,0,1],[0,0,1]])==(0,[1],[0])
- #assert HodgeToSelberg([[0,0,0],[0,0,0],[0,0,1]])==(0,[0],[0])
- #assert SelbergToHodge(3,[],[1/2,3/2])==[[0,3,2],[1,2,2],[2,1,2],[3,0,2]]
- #assert SelbergToHodge(1,[],[1/2])==[[0,1,2],[1,0,2]]
- #assert GammaFactors(SelbergToHodge(0,[1],[0]))==(0,[0,1,1])
+ assert hodge_to_selberg(hodge_structure(3,[-1,0,0,1]))\
+        ==(3,[],[ZZ(1)/2,ZZ(3)/2])
+ assert hodge_to_selberg([[0,0,0],[0,0,1],[0,0,1]])==(0,[0,1,1],[])
+ assert hodge_to_selberg([[0,0,0],[0,0,0],[0,0,1]])==(0,[0,0,1],[])
+ assert selberg_to_hodge(3,[],[ZZ(1)/2,ZZ(3)/2])\
+        ==[[0,3,2],[1,2,2],[2,1,2],[3,0,2]]
+ assert selberg_to_hodge(1,[],[ZZ(1)/2])==[[0,1,2],[1,0,2]]
 
- #U=[[0,1,2],[1,0,2]]
- #assert HodgeToSelberg(TensorHodge(U,U))==(2,[],[0,1])
- #A=[[0,2,2],[2,0,2],[1,1,1]]
- #B=[[0,2,2],[2,0,2],[1,1,0]]
- #assert HodgeToSelberg(TensorHodge(A,B))==(4,[1],[0,1,1,2])
- #assert TensorHodge(A,A)==TensorHodge(B,B)
- #assert HodgeToSelberg(TensorHodge(A,A))==(4,[0],[0,1,1,2])
- #Y=HodgeStructure(0,[0,0,0,0,1,1])
- #Z=HodgeStructure(0,[0,1,1,1,1,1])
- #assert HodgeToSelberg(TensorHodge(A,Y))==(2,[1,1],[0,0,1,1,1,1,1,1])
- #assert HodgeToSelberg(TensorHodge(A,Z))==(2,[0,0,0,0],[0,1,1,1,1,1,1])
- #assert HodgeToSelberg(TensorHodge(B,Y))==(2,[0,0],[0,0,1,1,1,1,1,1])
- #assert HodgeToSelberg(TensorHodge(B,Z))==(2,[1,1,1,1],[0,1,1,1,1,1,1])
+ U=[[0,1,2],[1,0,2]]
+ assert hodge_to_selberg(tensor_hodge(U,U))==(2,[0,1],[1])
+ A=[[0,2,2],[2,0,2],[1,1,1]]
+ B=[[0,2,2],[2,0,2],[1,1,0]]
+ assert hodge_to_selberg(tensor_hodge(A,B))==(4,[0,1,1],[1,1,2])
+ assert tensor_hodge(A,A)==tensor_hodge(B,B)
+ assert hodge_to_selberg(tensor_hodge(A,A))==(4,[0,0,1],[1,1,2])
+ Y=hodge_structure(0,[0,0,0,0,1,1])
+ Z=hodge_structure(0,[0,1,1,1,1,1])
+ assert hodge_to_selberg(tensor_hodge(A,Y))==(2,[0,0,1,1,1,1],[1,1,1,1,1,1])
+ assert hodge_to_selberg(tensor_hodge(A,Z))==(2,[0,0,0,0,0,1],[1,1,1,1,1,1])
+ assert hodge_to_selberg(tensor_hodge(B,Y))==(2,[0,0,0,0,1,1],[1,1,1,1,1,1])
+ assert hodge_to_selberg(tensor_hodge(B,Z))==(2,[0,1,1,1,1,1],[1,1,1,1,1,1])
 
-#test_me()
+# test_me()
