@@ -170,8 +170,6 @@ def test_tensprod_121_chi():
  assert get_euler_factor(ANS,3)==(1+t+3*t^2+O(t^5))
  assert get_euler_factor(ANS,5)==(1-t+5*t^2+O(t^4))
 
-test_tensprod_121_chi() # run test
-
 def test_tensprod_11a_17a():
  C11=[1,-2,-1,2,1,2,-2,0,-2,-2,1,-2,4,4,-1,-4,-2,4,0,2,2,-2,\
  -1,0,-4,-8,5,-4,0,2,7,8,-1,4,-2,-4,3,0,-4,0,-8,-4,-6,2,-2,\
@@ -206,4 +204,5 @@ def test_tensprod_11a_17a():
  B17=[17,1+2*t+17*t**2,1-t]
  assert ANS==tensor_get_an_no_deg1(C11,C17,2,2,[B11,B17])
 
-test_tensprod_11a_17a() # run tests
+test_tensprod_121_chi() # run test
+test_tensprod_11a_17a() # run test
