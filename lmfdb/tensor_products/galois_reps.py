@@ -44,6 +44,7 @@ from sage.structure.sage_object import SageObject
 #from sage.rings.rational import Rational
 from sage.rings.integer_ring import ZZ
 from sage.rings.complex_field import ComplexField
+from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
 
 class GaloisRepresentation( Lfunction):
 
@@ -71,7 +72,7 @@ class GaloisRepresentation( Lfunction):
         if isinstance(thingy, lmfdb.math_classes.ArtinRepresentation):
             self.init_artin_rep(thingy)
 
-        if isinstance(thingy,"list") and len(thingy) = 2:
+        if isinstance(thingy, list) and len(thingy) == 2:
             if isinstance(thingy[0], "GaloisRepresentation") and isinstance(thingy[1], "GaloisRepresentation"):
                 self.init_tensor_product(thingy[0], thingy[1])
 
@@ -119,6 +120,12 @@ class GaloisRepresentation( Lfunction):
             we get the inverse of the local factor
             of the L-function
             """
+            R = PolynomialRing(ZZ, "T")
+            T = R.gens()[0]
+            N = self.conductor
+            if N % p != 0 : # good reduction
+                return 1 - E.ap(p) * T + p * T ** 2
+
             return 1
 
         self.local_euler_factor = eu
@@ -206,13 +213,13 @@ class GaloisRepresentation( Lfunction):
         N *= V.conductor ** W.dimension
         for p in cross_bad:
             n1_tame = V.dimension - V.local_factor(p).degree()
-            n1_tame = W.dimension - W.local_factor(p).degree()
+            n2_tame = W.dimension - W.local_factor(p).degree()
             N = N // p ** (n1_tame * n2_tame)
         self.conductor = N
 
         #self.sign = NotImplementedError
 
-        from lfmdb.lfunctions.HodgeTransformations import *
+        from lfmdb.lfunctions.HodgeTransformations import selberg_to_hodge, tensor_hodge, gamma_factors
         h1 = selberg_to_hodge(V.motivic_weight,V.mu_fe,V.nu_fe)
         h2 = selberg_to_hodge(W.motivic_weight,W.mu_fe,W.nu_fe)
         h = tensor_hodge(h1, h2)
