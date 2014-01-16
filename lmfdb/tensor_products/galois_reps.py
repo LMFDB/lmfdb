@@ -75,9 +75,9 @@ class GaloisRepresentation( Lfunction):
         if isinstance(thingy, lmfdb.math_classes.ArtinRepresentation):
             self.init_artin_rep(thingy)
 
-        if isinstance(thingy,
-			lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms.WebNewForm_class):
-            self.init_elliptic_modular_form(thingy)
+        if isinstance(thingy, list) and len(thingy) == 2:
+            if isinstance(thingy[0],lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms.WebNewForm_class) and isinstance(thingy[1],sage.rings.integer.Integer):
+                self.init_elliptic_modular_form(thingy[0],thingy[1])
 
         if isinstance(thingy, list) and len(thingy) == 2:
             if isinstance(thingy[0], "GaloisRepresentation") and isinstance(thingy[1], "GaloisRepresentation"):
@@ -232,11 +232,12 @@ class GaloisRepresentation( Lfunction):
         self.local_euler_factor = eu
         self.ld.gp().quit()
 
-    def init_elliptic_modular_form(self, F):
+    def init_elliptic_modular_form(self, F, number):
         """
         Initiate with an Elliptic Modular Form.
         """
-        self.original_object = [F]
+        self.number = number
+        #self.original_object = [formlist]
         self.object_type = "Elliptic Modular newform"
         self.dim = 2
         self.weight = ZZ(F.weight())
@@ -247,7 +248,7 @@ class GaloisRepresentation( Lfunction):
         self.nu_fe = [ZZ(F.weight()-1)/ZZ(2)]
         self.primitive = True
         self.selfdual = True
-	self.coefficient_type = 2
+        self.coefficient_type = 2
         
         AL = F.atkin_lehner_eigenvalues()
         self.sign = AL[self.conductor] * (-1) ** (self.weight / 2.)
@@ -255,19 +256,33 @@ class GaloisRepresentation( Lfunction):
         self.set_dokchitser_Lfunction()
         self.set_number_of_coefficients()
         
-	# Determining the Dirichlet coefficients. This code stolen from
+	    # Determining the Dirichlet coefficients. This code stolen from
         # lmfdb.lfunctions.Lfunction.Lfunction_EMF
         self.automorphyexp = (self.weight - 1) / 2.
         embeddings = F.q_expansion_embeddings(self.numcoeff + 1)
         self.algebraic_coefficients = []
         for n in range(1, self.numcoeff + 1):
-            self.algebraic_coefficients.append(embeddings[n][F._fi])
+            self.algebraic_coefficients.append(embeddings[n][self.number])
             
         self.dirichlet_coefficients = []
         for n in range(1, len(self.algebraic_coefficients) + 1):
-            self.dirichlet_coefficients.append(
-                self.algebraic_coefficients[n-1] /
-                float(n ** self.automorphyexp))
+            self.dirichlet_coefficients.append(self.algebraic_coefficients[n-1] / float(n ** self.automorphyexp))
+        
+        def eu(p):
+            """
+            Local euler factor
+            """
+            R = PolynomialRing(ZZ, "T")
+            T = R.gens()[0]
+            N = self.conductor
+            if N % p != 0 : # good reduction
+                return 1 - E.ap(p) * T + p * T**2
+            elif N % (p**2) != 0: # multiplicative reduction
+                return 1 - E.ap(p) * T
+            else:
+                return R(1)
+
+        
         self.ld.gp().quit()
 
     
