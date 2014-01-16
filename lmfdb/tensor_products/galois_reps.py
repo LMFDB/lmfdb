@@ -588,9 +588,9 @@ def all_an_from_prime_powers(L):
     """
     L is a list of an such that the terms
     are correct for all n which are prime powers
-    and it changes the list in place to make
-    the correect ans for all n
-    # values at prime powers to all n, slow?
+    and all others are equal to 1;
+    this function changes the list in place to make
+    the correct ans for all n
     """
     S = ZZ(len(L))
     for p in prime_range(S+1):
