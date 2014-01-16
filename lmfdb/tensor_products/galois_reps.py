@@ -9,18 +9,21 @@ sage: from lmfdb.tensor_products.galois_reps import *
 sage: V = GaloisRepresentation(EllipticCurve("37a1"))
 sage: V.motivic_weight
 1
+sage: V.local_euler_factor(37)
 
 sage: from lmfdb.WebCharacter import *
 sage: chi = WebDirichletCharacter(modulus=37,number=4)
 sage: V = GaloisRepresentation(chi)
 sage: V.langlands
 True
+sage: V.local_euler_factor(101)
 
 sage: from lmfdb.math_classes import ArtinRepresentation
 sage: rho = ArtinRepresentation(2,23,1)
 sage: V = GaloisRepresentation(rho)
 sage: V.dim
 2
+sage: V.local_euler_factor(43)
 
 """
 
@@ -124,9 +127,11 @@ class GaloisRepresentation( Lfunction):
             T = R.gens()[0]
             N = self.conductor
             if N % p != 0 : # good reduction
-                return 1 - E.ap(p) * T + p * T ** 2
-
-            return 1
+                return 1 - E.ap(p) * T + p * T**2
+            elif N % (p**2) != 0: # multiplicative reduction
+                return 1 - E.ap(p) * T
+            else:
+                return R(1)
 
         self.local_euler_factor = eu
 
@@ -140,7 +145,9 @@ class GaloisRepresentation( Lfunction):
         self.dim = 1
         self.weight = 0
         self.motivic_weight = 0
-        self.conductor = chi.conductor()
+        self.conductor = ZZ(chi.conductor())
+        self.bad_semistable_primes = []
+        self.bad_pot_good = self.conductor.prime_factors()
         if chi.is_odd():
             aa = 1
             bb = I
@@ -164,6 +171,19 @@ class GaloisRepresentation( Lfunction):
         else:
             self.coefficient_type = 3
         self.coefficient_period = chi.modulus()
+
+        def eu(p):
+            """
+            local euler factor
+            """
+            R = PolynomialRing(ComplexField(), "T")
+            T = R.gens()[0]
+            if self.conductor % p != 0:
+                return  1 - ComplexField()(chi(p)) * T
+            else:
+                return R(1)
+
+        self.local_euler_factor = eu
         self.ld.gp().quit()
 
 
@@ -177,7 +197,9 @@ class GaloisRepresentation( Lfunction):
         self.dim = rho.dimension()
         self.weight = 0
         self.motivic_weight = 0
-        self.conductor = rho.conductor()
+        self.conductor = ZZ(rho.conductor())
+        self.bad_semistable_primes = []
+        self.bad_pot_good = self.conductor.prime_factors()
         self.sign = rho.root_number()
         self.mu_fe = rho.mu_fe()
         self.nu_fe = rho.nu_fe()
@@ -192,6 +214,18 @@ class GaloisRepresentation( Lfunction):
         self.dirichlet_coefficients = rho.coefficients_list()
         self.coefficient_type = 0
         self.coefficient_period = 0
+
+        def eu(p):
+            """
+            local euler factor
+            """
+            f = rho.local_factor(p)
+            co = [ZZ(round(x)) for x in f.coeffs()]
+            R = PolynomialRing(ZZ, "T")
+            T = R.gens()[0]
+            return sum( co[n] * T**n for n in range(len(co)))
+
+        self.local_euler_factor = eu
         self.ld.gp().quit()
 
     def init_tensor_product(self, V, W):
@@ -212,8 +246,8 @@ class GaloisRepresentation( Lfunction):
         N = W.conductor ** V.dimension
         N *= V.conductor ** W.dimension
         for p in cross_bad:
-            n1_tame = V.dimension - V.local_factor(p).degree()
-            n2_tame = W.dimension - W.local_factor(p).degree()
+            n1_tame = V.dimension - V.local_euler_factor(p).degree()
+            n2_tame = W.dimension - W.local_euler_factor(p).degree()
             N = N // p ** (n1_tame * n2_tame)
         self.conductor = N
 
