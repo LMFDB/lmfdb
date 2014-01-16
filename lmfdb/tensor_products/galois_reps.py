@@ -27,9 +27,12 @@ sage: V.local_euler_factor(43)
 
 sage: from lmfdb.modular_forms.elliptic_modular_forms import WebNewForm
 sage: F = WebNewForm(11,10,fi=1)
-sage: V = GaloisRepresentation(F)
-sage: V.sign
+sage: W = GaloisRepresentation(F)
+sage: W.sign
 1.0
+
+sage: VW = GaloisRepresentation([V,W])
+
 """
 
 ########################################################################
@@ -46,6 +49,8 @@ sage: V.sign
 import lmfdb.base
 from lmfdb.WebCharacter import * #WebDirichletCharacter
 from lmfdb.lfunctions.Lfunction_base import Lfunction
+from lmfdb.lfunctions.HodgeTransformations import selberg_to_hodge, hodge_to_selberg, tensor_hodge, gamma_factors
+
 
 from sage.structure.sage_object import SageObject
 #from sage.schemes.elliptic_curves.constructor import EllipticCurve
@@ -85,7 +90,7 @@ class GaloisRepresentation( Lfunction):
             self.init_elliptic_modular_form(thingy)
 
         if isinstance(thingy, list) and len(thingy) == 2:
-            if isinstance(thingy[0], "GaloisRepresentation") and isinstance(thingy[1], "GaloisRepresentation"):
+            if isinstance(thingy[0], GaloisRepresentation) and isinstance(thingy[1], GaloisRepresentation):
                 self.init_tensor_product(thingy[0], thingy[1])
 
         self.level = self.conductor
@@ -118,7 +123,6 @@ class GaloisRepresentation( Lfunction):
         self.primitive = True
         self.set_dokchitser_Lfunction()
         self.set_number_of_coefficients()
-        self.dirichlet_coefficients = E.anlist(self.numcoeff)[1:]
         self.coefficient_type = 2
         self.coefficient_period = 0
         self.ld.gp().quit()
@@ -219,7 +223,6 @@ class GaloisRepresentation( Lfunction):
         self.primitive = rho.primitive()
         self.set_dokchitser_Lfunction()
         self.set_number_of_coefficients()
-        self.dirichlet_coefficients = rho.coefficients_list()
         self.coefficient_type = 0
         self.coefficient_period = 0
 
@@ -252,6 +255,7 @@ class GaloisRepresentation( Lfunction):
         self.primitive = True
         self.selfdual = True
         self.coefficient_type = 2
+        self.coefficient_period = 0
 
         AL = F.atkin_lehner_eigenvalues()
         self.sign = AL[self.conductor] * (-1) ** (self.weight / 2.)
@@ -297,17 +301,17 @@ class GaloisRepresentation( Lfunction):
                                           "Here the behaviour at %s is too wild."%p)
         ## add a hypothesis to exclude the poles.
 
-        N = W.conductor ** V.dimension
-        N *= V.conductor ** W.dimension
+        N = W.conductor ** V.dim
+        N *= V.conductor ** W.dim
         for p in bad_primes:
-            n1_tame = V.dimension - V.local_euler_factor(p).degree()
-            n2_tame = W.dimension - W.local_euler_factor(p).degree()
+            n1_tame = V.dim - V.local_euler_factor(p).degree()
+            n2_tame = W.dim - W.local_euler_factor(p).degree()
             N = N // p ** (n1_tame * n2_tame)
         self.conductor = N
 
-        #self.sign = NotImplementedError
 
-        from lfmdb.lfunctions.HodgeTransformations import selberg_to_hodge, tensor_hodge, gamma_factors
+        self.sign = 1 # NotImplementedError
+
         h1 = selberg_to_hodge(V.motivic_weight,V.mu_fe,V.nu_fe)
         h2 = selberg_to_hodge(W.motivic_weight,W.mu_fe,W.nu_fe)
         h = tensor_hodge(h1, h2)
@@ -321,12 +325,11 @@ class GaloisRepresentation( Lfunction):
         #self.primitive = False
         self.set_dokchitser_Lfunction()
         self.set_number_of_coefficients()
-        #self.dirichlet_coefficients = NotImplementedError
 
-        self.selfdual = all( abs(an.imag) < 0.0001 for an in self.dirichlet_coefficients[:100]) # why not 100 :)
+        #self.selfdual = all( abs(an.imag) < 0.0001 for an in self.dirichlet_coefficients[:100]) # why not 100 :)
 
         self.coefficient_type = max(V.coefficient_type, W.coefficient_type)
-        self.coefficient_period = V.coefficient_period().lcm(W.coefficient_period)
+        self.coefficient_period = ZZ(V.coefficient_period).lcm(W.coefficient_period)
         self.ld.gp().quit()
 
 
@@ -360,6 +363,38 @@ class GaloisRepresentation( Lfunction):
         # gp session of Dokchitser
         self.ld._gp_eval("MaxImaginaryPart = %s"%self.max_imaginary_part)
         self.numcoeff = self.ld.num_coeffs()
+
+## produce coefficients
+
+    def algebraic_coefficients(number_of_terms):
+        """
+        Computes the list [a1,a2,... of coefficients up
+        to a bound
+        This is in the alg. normalisation, i.e. s <-> w+1-s
+        """
+        if self.object_type == "ellipticcurve":
+            return E.anlist(number_of_terms)[1:]
+        elif self.object_type == "dirichletcharacter":
+            return [ chi(m) for m in range(number_of_terms) ]
+        elif self.object_type == "Artin representation":
+            return rho.coefficients_list(upperbound=number_of_terms)
+        elif self.object_type == "Elliptic Modular newform":
+            return None
+        elif self.object_type == "tensorproduct":
+            return None
+        else:
+            raise ValueError("You asked for a type that we don't have")
+
+
+    def renormlaise_coefficients(li):
+        """
+        This turns a list of algebraically normalised coefficients
+        as above into a list of automorphically normalised,
+        i.e. s <-> 1-s
+        """
+        for n in range(1,len(li)):
+            li[n] /= sqrt(float(n)**self.motivic_weight)
+
 
 ## The tensor product
 
@@ -408,6 +443,8 @@ class GaloisRepresentation( Lfunction):
         lmfdb.lfunctions.Lfunction.
         """
         self.compute_kappa_lambda_Q_from_mu_nu()
+        self.dirichlet_coefficients = self.algebraic_coefficients(self.numcoeff+1)
+        self.renormlaise_coefficients(self.dirichlet_coefficients)
 
         self.texname = "L(s,\\rho)"
         self.texnamecompleteds = "\\Lambda(s,\\rho)"
