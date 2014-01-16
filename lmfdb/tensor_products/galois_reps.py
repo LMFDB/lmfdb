@@ -1,6 +1,6 @@
 r"""
 
-AUTHORS: Alberto Camara, Chris Wuthrich, 2014
+AUTHORS: Alberto Camara, Mark Watkins, Chris Wuthrich, 2014
 
 Example:
 
@@ -31,12 +31,17 @@ sage: V4.sign
 sage: V4.algebraic_coefficients(10)
 
 sage: VW = GaloisRepresentation([V1,V2])
-sage: VW.algebraic_coefficients(10)
+sage: VW.algebraic_coefficients(10), VW.conductor, VW.sign
 sage: VW = GaloisRepresentation([V1,V3])
+sage: VW.algebraic_coefficients(10), VW.conductor, VW.sign
 sage: VW = GaloisRepresentation([V1,V4])
+sage: VW.algebraic_coefficients(10), VW.conductor, VW.sign
 sage: VW = GaloisRepresentation([V2,V3])
+sage: VW.algebraic_coefficients(10), VW.conductor, VW.sign
 sage: VW = GaloisRepresentation([V2,V4])
+sage: VW.algebraic_coefficients(10), VW.conductor, VW.sign
 sage: VW = GaloisRepresentation([V3,V4])
+sage: VW.algebraic_coefficients(10), VW.conductor, VW.sign
 
 
 sage: V = GaloisRepresentation(EllipticCurve("37a1"))
@@ -47,7 +52,7 @@ sage: VW.algebraic_coefficients(38)[36] == -38
 """
 
 ########################################################################
-#       Copyright (C) Alberto Camara, Chris Wuthrich 2014
+#    Copyright (C) Alberto Camara, Mark Watkins, Chris Wuthrich 2014
 #
 #  Distributed under the terms of the GNU General Public License (GPL)
 #
@@ -89,20 +94,28 @@ class GaloisRepresentation( Lfunction):
         if isinstance(thingy, sage.schemes.elliptic_curves.ell_rational_field.EllipticCurve_rational_field):
             self.init_elliptic_curve(thingy)
 
-        if isinstance(thingy, lmfdb.WebCharacter.WebDirichletCharacter):
+        elif isinstance(thingy, lmfdb.WebCharacter.WebDirichletCharacter):
             self.init_dir_char(thingy)
 
-        if isinstance(thingy, lmfdb.math_classes.ArtinRepresentation):
+        elif isinstance(thingy, lmfdb.math_classes.ArtinRepresentation):
             self.init_artin_rep(thingy)
 
-        if isinstance(thingy, list) and len(thingy) == 2:
-            if isinstance(thingy[0],lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms.WebNewForm_class) and isinstance(thingy[1],sage.rings.integer.Integer):
-                self.init_elliptic_modular_form(thingy[0],thingy[1])
+        elif (isinstance(thingy, list) and
+              len(thingy) == 2 and
+              isinstance(thingy[0],lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms.WebNewForm_class) and
+              isinstance(thingy[1],sage.rings.integer.Integer) ):
+            self.init_elliptic_modular_form(thingy[0],thingy[1])
 
-        if isinstance(thingy, list) and len(thingy) == 2:
-            if isinstance(thingy[0], GaloisRepresentation) and isinstance(thingy[1], GaloisRepresentation):
-                self.init_tensor_product(thingy[0], thingy[1])
+        elif (isinstance(thingy, list) and
+              len(thingy) == 2 and
+              isinstance(thingy[0], GaloisRepresentation) and
+              isinstance(thingy[1], GaloisRepresentation) ):
+            self.init_tensor_product(thingy[0], thingy[1])
 
+        else:
+            raise ValueError("GaloisRepresentations are currently not implemented for that type (%s) of objects"%type(thingy))
+
+        # set a few common variables
         self.level = self.conductor
         self.degree = self.dim
         self.poles = []
@@ -146,7 +159,7 @@ class GaloisRepresentation( Lfunction):
             we get the inverse of the local factor
             of the L-function
             """
-            R = PolynomialRing(ZZ, "T")
+            R = PolynomialRing(QQ, "T")
             T = R.gens()[0]
             N = self.conductor
             if N % p != 0 : # good reduction
@@ -199,7 +212,11 @@ class GaloisRepresentation( Lfunction):
             """
             local euler factor
             """
-            R = PolynomialRing(ComplexField(), "T")
+            if self.selfdual:
+                K = QQ
+            else:
+                K = ComplexField()
+            R = PolynomialRing(K, "T")
             T = R.gens()[0]
             if self.conductor % p != 0:
                 return  1 - ComplexField()(chi(p)) * T
@@ -242,7 +259,7 @@ class GaloisRepresentation( Lfunction):
             """
             f = rho.local_factor(p)
             co = [ZZ(round(x)) for x in f.coeffs()]
-            R = PolynomialRing(ZZ, "T")
+            R = PolynomialRing(QQ, "T")
             T = R.gens()[0]
             return sum( co[n] * T**n for n in range(len(co)))
 
@@ -281,15 +298,15 @@ class GaloisRepresentation( Lfunction):
             """
             Local euler factor
             """
-            embeddings = F.q_expansion_embeddings(p + 1)
-            K =
-            R = PolynomialRing(ZZ, "T")
+            ans = F.q_expansion_embeddings(p + 1)
+            K = ComplexField()
+            R = PolynomialRing(K, "T")
             T = R.gens()[0]
             N = self.conductor
             if N % p != 0 : # good reduction
-                return 1 - embeddings[p-1][self.number] * T + T**2
+                return 1 - ans[p-1][self.number] * T + T**2
             elif N % (p**2) != 0: # semistable reduction
-                return 1 - embeddings[p-1][self.number] * T
+                return 1 - ans[p-1][self.number] * T
             else:
                 return R(1)
 
@@ -444,23 +461,22 @@ class GaloisRepresentation( Lfunction):
     def algebraic_coefficients(self, number_of_terms):
         """
         Computes the list [a1,a2,... of coefficients up
-        to a bound
+        to a bound. Note that [0] is a1.
         This is in the alg. normalisation, i.e. s <-> w+1-s
         """
 
-        ## corrently they start at he wrong
         if self.object_type == "ellipticcurve":
             return self.original_object[0].anlist(number_of_terms)[1:]
         elif self.object_type == "dirichletcharacter":
             chi = self.original_object[0].chi.primitive_character()
-            return [ chi(m) for m in range(number_of_terms) ]
+            return [ chi(m) for m in range(1, number_of_terms) ]
         elif self.object_type == "Artin representation":
             rho = self.original_object[0]
             return rho.coefficients_list(upperbound=number_of_terms)
         elif self.object_type == "Elliptic Modular newform":
             F = self.original_object[0][0]
             i = self.original_object[0][1]
-            embeddings = F.q_expansion_embeddings(number_of_terms)
+            embeddings = F.q_expansion_embeddings(number_of_terms)[1:]
             return [x[i] for x in embeddings]
         elif self.object_type == "tensorproduct":
             V = self.V1
@@ -491,14 +507,6 @@ class GaloisRepresentation( Lfunction):
         """
         return GaloisRepresentation([self,other])
 
-## A function that gives back a L-function class as used later
-
-    def Lfunction(self):
-        """
-        The L-function object associated to this class
-        """
-        from lmfdb.lfunctions.Lfunction import Lfunction_TensorProduct
-        return Lfunction_GaloisRep(self)
 
 ## various direct accessible functions
 
@@ -691,7 +699,8 @@ def euler_factor_to_list(P, prec):
     P a polynomial (or power series)
     returns the list [a_p, a_p^2, ...
     """
-    R = PowerSeriesRing(P[0].parent().fraction_field(), "T", default_prec=prec+1)
+    K = P[0].parent()
+    R = PowerSeriesRing(K, "T", default_prec=prec+1)
     return ((1/R(P.truncate().coeffs())).truncate().coeffs())[1:]
 
 
@@ -717,8 +726,10 @@ def list_to_euler_factor(L,d):
     and returns the euler factor
     """
     if isinstance(L[0], int):
-        L[0] = ZZ(L[0])
-    R = PowerSeriesRing(L[0].parent().fraction_field(), "T")
+        K = QQ
+    else:
+        K = L[0].parent()
+    R = PowerSeriesRing(K, "T")
     T = R.gens()[0]
     f =  1/ R([1]+L)
     f = f.add_bigoh(d+1)
@@ -730,7 +741,14 @@ def tensor_local_factors(f1, f2, d):
     returns the euler factor for the tensor
     product (with respect to that precision d
     """
-    R = PowerSeriesRing(f1.parent().base_ring().fraction_field(), "T")
+    # base rings are either QQ or CC
+    K1 = f1.base_ring()
+    K2 = f2.base_ring()
+    if K1 == ComplexField() or K2 == ComplexField():
+        K = ComplexField()
+    else:
+        K = QQ
+    R = PowerSeriesRing(K, "T")
     if not f1.parent().is_exact(): # ideally f1,f2 should already be in PSR
         if f1.prec() < d:
             raise ValueError
