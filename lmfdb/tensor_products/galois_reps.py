@@ -33,6 +33,11 @@ sage: W.algebraic_coefficients(10)
 sage: VW = GaloisRepresentation([V,W])
 sage: VW.algebraic_coefficients(10)
 
+sage: V = GaloisRepresentation(EllipticCurve("37a1"))
+sage: W = GaloisRepresentation(EllipticCurve("37b1"))
+sage: VW = GaloisRepresentation([V,W])
+sage: VW.algebraic_coefficients(38)[36] == -38
+
 """
 
 ########################################################################
@@ -337,7 +342,7 @@ class GaloisRepresentation( Lfunction):
             if p in scommon:
                 E = tensor_local_factors(f1,f2,V.dim*W.dim)
                 T = f1.parent().gens()[0] # right answer is E(T)*E(pT)
-                self.bad_primes_info.append([p,E*E(p*T),1-T]
+                self.bad_primes_info.append([p,E*E(p*T),1-T])
             else:
                 self.bad_primes_info.append([p,f1,f2])
 
