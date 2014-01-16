@@ -634,6 +634,8 @@ def list_to_euler_factor(L,d):
     takes a list [a_p, a_p^2,...
     and returns the euler factor
     """
+    if isinstance(L[0], int):
+        L[0] = ZZ(L[0])
     R = PowerSeriesRing(L[0].parent().fraction_field(), "T")
     T = R.gens()[0]
     f =  1/ R([1]+L)
@@ -707,12 +709,13 @@ def test_tensprod_121_chi():
     5,0,-7,-2,10,-4,-8,6,4,8,0,-8,3,6,-10,-8,2,0,4,4,7,-8,-7,\
     20,6,8,2,-2,4,-16,-1,12,-12,0,3,4,0,-12,-6,0,8,-4,-5,-30,\
     -15,-4,7,16,-12,0,3,14,-2,16,-10,0,17,8,4,14,-4,-6,-2,4,0,0]
-    R.<T>=PowerSeriesRing(ZZ)
+    R = PowerSeriesRing(ZZ, "T")
+    T = R.gens()[0]
     assert ANS==tensor_get_an_deg1(C121,chi,[[11,1-T]])
     assert ANS==tensor_get_an(C121,chi,2,1,[[11,1-T,1-T]])
-    assert get_euler_factor(ANS,2)==(1+2*T+2*T^2+O(T^8))
-    assert get_euler_factor(ANS,3)==(1+T+3*T^2+O(T^5))
-    assert get_euler_factor(ANS,5)==(1-T+5*T^2+O(T^4))
+    assert get_euler_factor(ANS,2)==(1+2*T+2*T**2+O(T**8))
+    assert get_euler_factor(ANS,3)==(1+T+3*T**2+O(T**5))
+    assert get_euler_factor(ANS,5)==(1-T+5*T**2+O(T**4))
 
 def test_tensprod_11a_17a():
     C11=[1,-2,-1,2,1,2,-2,0,-2,-2,1,-2,4,4,-1,-4,-2,4,0,2,2,-2,\
@@ -743,7 +746,8 @@ def test_tensprod_11a_17a():
     24,0,180,0,-48,0,-12,100,0,-32,0,-30,0,-56,0,14,-240,0,16,32,\
     288,96,96,0,48,48,0,142,8,0,-48,-132,0,-232,0,0,300,-180,-60,\
     -14,128,0,-32,12,0,0,0,0,0,-272,0,8,-28,0,44,36,0,0,232]
-    R.<T>=PowerSeriesRing(ZZ)
+    R = PowerSeriesRing(ZZ, "T")
+    T = R.gens()[0]
     B11=[11,1-T,1+11*T**2]
     B17=[17,1+2*T+17*T**2,1-T]
     assert ANS==tensor_get_an_no_deg1(C11,C17,2,2,[B11,B17])
