@@ -491,10 +491,10 @@ def tensor_get_an(L1, L2, d1, d2, BadPrimeInfo):
 
 def tensor_get_an_no_deg1(L1, L2, d1, d2, BadPrimeInfo):
     """
-    Same as the above in the case no dimenstion is 1
+    Same as the above in the case no dimension is 1
     """
     if d1==1 or d2==1:
-        raise ValueError('d1 and d2 should not be 1, use direct method for those')
+        raise ValueError('min(d1,d2) should not be 1, use direct method then')
     s1 = len(L1)
     s2 = len(L2)
     if s1 < s2:
@@ -597,7 +597,7 @@ def all_an_from_prime_powers(L):
         q = 1
         Sr = RealField()(len(L))
         f = Sr.log(base=p).floor()
-        for k in range(1,1+f):
+        for k in range(f):
             q = q*p
             for m in range(2, 1+(S//q)):
                 if (m%p) != 0:
