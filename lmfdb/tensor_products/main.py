@@ -20,6 +20,7 @@ from galois_reps import GaloisRepresentation
 from sage.schemes.elliptic_curves.constructor import EllipticCurve
 from lmfdb.WebCharacter import *
 from lmfdb.modular_forms.elliptic_modular_forms import WebNewForm
+from lmfdb.lfunctions import *
 
 def get_bread(breads=[]):
     bc = [("Tensor products", url_for(".index"))]
@@ -58,23 +59,12 @@ def show():
 
     # currently only implemented tp of two things
     if len(galoisRepObjs)==2:
-#         tp = mult(galoisRepObjs[0], galoisRepObjs[1]) # form the multiplication in the galois reps class, which implements tensor product
-
-#         info = {'conductor':tp.conductor()}
-
-#         properties2 = {'Conductor':info['conductor']}
-            
+        tp = galoisRepObjs[0] # TODO this should be the tensor product 
 #         friends = []
-#         friends.append(('L function', ''))
-#         friends.append(('Elliptic Curve %s' % obj1[2], url_for("ec.by_ec_label", label=obj1[2])))
-#         friends.append(('Dirichlet Character $\chi_{%s}(%s, \cdot)$' % (obj2[2], obj2[3]), url_for("characters.render_Dirichletwebpage", modulus=int(obj2[2]), number=int(obj2[3])) ))
 #         friends.append(('L-function for Elliptic Curve %s' % obj1[2], url_for("l_functions.l_function_ec_page", label=obj1[2])))
 #         friends.append(('L-function for Dirichlet Character $\chi_{%s}(%s, \cdot)$' % (obj2[2], obj2[3]), url_for("l_functions.l_function_dirichlet_page", modulus = int(obj2[2]), number=int(obj2[3])) ))
-            
-#         t = "Tensor product of Elliptic Curve %s and Dirichlet Character $\chi_{%s}(%s, \cdot)$" % (obj1[2], obj2[2], obj2[3])
-
-        return render_template("tensor_products_show.html", title='', bread=bread, info=[], friends=[])
-
+   
+        return render_template("not_yet_implemented.html")  
     else:
         return render_template("not_yet_implemented.html")
 
@@ -100,9 +90,13 @@ def galois_rep_from_path(p):
         label = p[7] # this is a, b, c, etc.; chooses the galois orbit
         embedding = p[8] # this is the embedding of that galois orbit
         form = WebNewForm(N, k, chi=chi, label=label) 
-        return GaloisRepresentation(form, embedding)
+        return GaloisRepresentation([form, embedding])
 
     elif (p[0]=='ArtinRepresentation'):
-        return 
+        dim = p[1]
+        conductor = p[2]
+        index = p[3]
+        rho = ArtinRepresentation(dim, conductor, index)
+        return GaloisRepresentation(rho)
     else:
         return

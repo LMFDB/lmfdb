@@ -417,7 +417,7 @@ class GaloisRepresentation( Lfunction):
         """
         The L-function object associated to this class
         """
-        from lmfdb.lfunctions.Lfunction import Lfunction_TensorProduct
+        from lmfdb.lfunctions.Lfunction import Lfunction_GaloisRep
         return Lfunction_GaloisRep(self)
 
 ## various direct accessible functions
@@ -435,6 +435,12 @@ class GaloisRepresentation( Lfunction):
         Dimension = Degree
         """
         return self.dim
+
+    def conductor(self):
+        """
+        Conductor
+        """
+        return self.conductor
 
 
 ## Now to the L-function itself

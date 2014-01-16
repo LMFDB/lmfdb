@@ -190,6 +190,12 @@ def l_function_dirichlet_page(modulus, number):
     return render_single_Lfunction(Lfunction_Dirichlet, args, request)
 
 
+# L-function of tensor product #################################################
+@l_function_page.route("/TensorProduct/")
+def l_function_tensor_product_page(galoisrep):
+    args = {}
+    return render_single_Lfunction(GaloisRepresentationLfunction, args, request)
+
 # L-function of Elliptic curve #################################################
 @l_function_page.route("/EllipticCurve/Q/<label>/")
 def l_function_ec_page(label):
@@ -309,17 +315,12 @@ def l_function_hgm_page(label,t):
     args = {'label': label+'_'+t}
     return render_single_Lfunction(HypergeometricMotiveLfunction, args, request)
 
-# L-function of tensor product object
-@l_function_page.route("/TensorProduct/<objects>")
-def l_function_tensor_product_page(charactermodulus, characternumber, ellipticcurvelabel):
-    args = {'charactermodulus':charactermodulus, 'characternumber':characternumber, 'ellipticcurvelabel':ellipticcurvelabel}
-    return render_single_Lfunction(TensorProductLfunction, args)
-
 # L-function of symmetric powers of Elliptic curve #############################
 @l_function_page.route("/SymmetricPower/<power>/EllipticCurve/Q/<label>/")
 def l_function_ec_sym_page(power, label):
     args = {'power': power, 'underlying_type': 'EllipticCurve', 'field': 'Q', 'label': label}
     return render_single_Lfunction(SymmetricPowerLfunction, args, request)
+
 
 
 # L-function from lcalcfile with given url #####################################
