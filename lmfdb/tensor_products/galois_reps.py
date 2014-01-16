@@ -1,6 +1,6 @@
 r"""
 
-AUTHORS: Chris Wuthrich, 2014
+AUTHORS: Alberto Camara, Chris Wuthrich, 2014
 
 Example:
 
@@ -25,7 +25,7 @@ sage: V.dim
 """
 
 ########################################################################
-#       Copyright (C) Chris Wuthrich 2014
+#       Copyright (C) Alberto Camara, Chris Wuthrich 2014
 #
 #  Distributed under the terms of the GNU General Public License (GPL)
 #
@@ -87,16 +87,6 @@ class GaloisRepresentation( Lfunction):
         """
         Returns the Galois rep of an elliptic curve over Q
         """
-        # needed ?
-        # Remove the ending number (if given) in the label to only get isogeny
-        # class
-        #while self.label[len(self.label) - 1].isdigit():
-            #self.label = self.label[0:len(self.label) - 1]
-        ## Create the elliptic curve in the database
-        #Edata = LfunctionDatabase.getEllipticCurveData(self.label + '1')
-        #if Edata is None:
-            #raise KeyError('No elliptic curve with label %s exists in the database' % self.label)
-        #self.db_object = Edata
 
         self.original_object = [E]
         self.object_type = "ellipticcurve"
@@ -104,6 +94,8 @@ class GaloisRepresentation( Lfunction):
         self.weight = 2
         self.motivic_weight = 1
         self.conductor = E.conductor()
+        self.bad_semistable_primes = [ fa[0] for fa in self.conductor.factor() if fa[1]==1 ]
+        self.bad_pot_good = [p for p in self.conductor.prime_factors() if E.j_invariant().valuation(p) > 0 ]
         self.sign = E.root_number()
         self.mu_fe = []
         self.nu_fe = [ZZ(1)/ZZ(2)]
@@ -117,6 +109,19 @@ class GaloisRepresentation( Lfunction):
         self.coefficient_type = 2
         self.coefficient_period = 0
         self.ld.gp().quit()
+
+        def eu(p):
+            """
+            Local Euler factor passed as a function
+            whose input is a prime and
+            whose output is a polynomial
+            such that evaluated at p^-s,
+            we get the inverse of the local factor
+            of the L-function
+            """
+            return 1
+
+        self.local_euler_factor = eu
 
     def init_dir_char(self, chi):
         """
@@ -204,8 +209,8 @@ class GaloisRepresentation( Lfunction):
             n1_tame = W.dimension - W.local_factor(p).degree()
             N = N // p ** (n1_tame * n2_tame)
         self.conductor = N
-        
-        self.sign = ??
+
+        #self.sign = NotImplementedError
 
         from lfmdb.lfunctions.HodgeTransformations import *
         h1 = selberg_to_hodge(V.motivic_weight,V.mu_fe,V.nu_fe)
@@ -221,7 +226,7 @@ class GaloisRepresentation( Lfunction):
         #self.primitive = False
         self.set_dokchitser_Lfunction()
         self.set_number_of_coefficients()
-        self.dirichlet_coefficients = ??
+        #self.dirichlet_coefficients = NotImplementedError
 
         self.selfdual = all( abs(an.imag) < 0.0001 for an in self.dirichlet_coefficients[:100]) # why not 100 :)
 
@@ -295,12 +300,6 @@ class GaloisRepresentation( Lfunction):
         """
         return self.dim
 
-    def weight(self):
-        """
-        Motivic weight
-        """
-        return self.motivic_weight
-
 
 ## Now to the L-function itself
 
@@ -308,6 +307,10 @@ class GaloisRepresentation( Lfunction):
         """
         This method replaces the class LFunction in lmfdb.lfunctions.Lfunction
         to generate the page for this sort of class.
+
+        After asking for this method the object should have all
+        methods and attributes as one of the subclasses of Lfunction in
+        lmfdb.lfunctions.Lfunction.
         """
         self.compute_kappa_lambda_Q_from_mu_nu()
 
@@ -323,5 +326,6 @@ class GaloisRepresentation( Lfunction):
     def Ltype(self):
         return "galoisrepresentation"
 
+    # does not have keys in the previous sense really.
     def Lkey(self):
         return {"galoisrepresentation":self.title}
