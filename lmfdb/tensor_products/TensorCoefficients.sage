@@ -1,4 +1,30 @@
 
+def tensor_good_local_factors(f1,f2,d):
+ R.<t>=PowerSeriesRing(f1.parent().base_ring().fraction_field())
+ if not f1.parent().is_exact():	# ideally f1,f2 should already be in PSR
+  assert f1.prec()>=d
+ if not f2.parent().is_exact(): # but the user might give them as polys...
+  assert f2.prec()>=d
+ f1=R(f1)
+ f2=R(f2)
+ if f1==1 or f2==1:
+  return 1+O(t**(d+1))
+ l1=f1.log().derivative()
+ p1=l1.prec()
+ c1=l1.list()
+ while len(c1)<p1:
+  c1.append(0)
+ l2=f2.log().derivative()
+ p2=l2.prec()
+ c2=l2.list()
+ while len(c2)<p2:
+  c2.append(0)
+ C=[0]*len(c1)
+ for i in range(0,len(c1)):
+  C[i]=c1[i]*c2[i]
+ E=(-(R(C).integral()+O(t**(d+1)))).exp() # coerce to R
+ return E
+
 def list_to_euler_factor(L,d):
  R.<t>=PowerSeriesRing(L[0].parent().fraction_field())
  return 1/R([1]+L)+O(t**(d+1))
