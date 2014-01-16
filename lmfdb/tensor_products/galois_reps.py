@@ -27,7 +27,7 @@ sage: V.local_euler_factor(43)
 
 sage: from lmfdb.modular_forms.elliptic_modular_forms import WebNewForm
 sage: F = WebNewForm(11,10,fi=1)
-sage: V = GaloisRepresentation(F)
+sage: V = GaloisRepresentation([F,0])
 sage: V.sign
 1.0
 """
