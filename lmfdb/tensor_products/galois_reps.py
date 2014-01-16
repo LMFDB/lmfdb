@@ -6,32 +6,38 @@ Example:
 
 sage: import lmfdb
 sage: from lmfdb.tensor_products.galois_reps import *
-sage: V = GaloisRepresentation(EllipticCurve("37a1"))
-sage: V.motivic_weight
-sage: V.local_euler_factor(37)
+sage: V1 = GaloisRepresentation(EllipticCurve("37a1"))
+sage: V1.motivic_weight
+sage: V1.local_euler_factor(37)
 
 sage: from lmfdb.WebCharacter import *
 sage: chi = WebDirichletCharacter(modulus=37,number=4)
-sage: V = GaloisRepresentation(chi)
-sage: V.langlands
-sage: V.local_euler_factor(101)
+sage: V2 = GaloisRepresentation(chi)
+sage: V2.langlands
+sage: V2.local_euler_factor(101)
 
 sage: from lmfdb.math_classes import ArtinRepresentation
 sage: rho = ArtinRepresentation(2,23,1)
-sage: V = GaloisRepresentation(rho)
-sage: V.dim
-sage: V.local_euler_factor(43)
-sage: V.algebraic_coefficients(10)
+sage: V3 = GaloisRepresentation(rho)
+sage: V3.dim
+sage: V3.local_euler_factor(43)
+sage: V3.algebraic_coefficients(10)
 
 
 sage: from lmfdb.modular_forms.elliptic_modular_forms import WebNewForm
 sage: F = WebNewForm(11,10,fi=1)
-sage: W = GaloisRepresentation([F,0])
-sage: W.sign
-sage: W.algebraic_coefficients(10)
+sage: V4 = GaloisRepresentation([F,0])
+sage: V4.sign
+sage: V4.algebraic_coefficients(10)
 
-sage: VW = GaloisRepresentation([V,W])
+sage: VW = GaloisRepresentation([V1,V2])
 sage: VW.algebraic_coefficients(10)
+sage: VW = GaloisRepresentation([V1,V3])
+sage: VW = GaloisRepresentation([V1,V4])
+sage: VW = GaloisRepresentation([V2,V3])
+sage: VW = GaloisRepresentation([V2,V4])
+sage: VW = GaloisRepresentation([V3,V4])
+
 
 sage: V = GaloisRepresentation(EllipticCurve("37a1"))
 sage: W = GaloisRepresentation(EllipticCurve("37b1"))
@@ -253,7 +259,11 @@ class GaloisRepresentation( Lfunction):
         self.dim = 2
         self.weight = ZZ(F.weight())
         self.motivic_weight = ZZ(F.weight()) - 1
-        self.conductor = F.level()
+        self.conductor = ZZ(F.level())
+        self.bad_semistable_primes = [fa[0] for fa in self.conductor.factor() if fa[1]==1 ]
+        # should be including primes of bad red that are pot good
+        # however I don't know how to recognise them
+        self.bad_pot_good = []
         self.langlands = True
         self.mu_fe = []
         self.nu_fe = [ZZ(F.weight()-1)/ZZ(2)]
@@ -271,16 +281,18 @@ class GaloisRepresentation( Lfunction):
             """
             Local euler factor
             """
+            embeddings = F.q_expansion_embeddings(p + 1)
+            K =
             R = PolynomialRing(ZZ, "T")
             T = R.gens()[0]
             N = self.conductor
-            embeddings = F.q_expansion_embeddings(p + 1)
             if N % p != 0 : # good reduction
                 return 1 - embeddings[p-1][self.number] * T + T**2
             elif N % (p**2) != 0: # semistable reduction
                 return 1 - embeddings[p-1][self.number] * T
             else:
                 return R(1)
+
         self.local_euler_factor = eu
         self.ld.gp().quit()
 
@@ -346,16 +358,44 @@ class GaloisRepresentation( Lfunction):
             else:
                 self.bad_primes_info.append([p,f1,f2])
 
-        self.sign = root_number_at_oo(h)
-        self.sign /= root_number_at_oo(h1) ** V.dim
-        self.sign /= root_number_at_oo(h2) ** W.dim
+        CC = ComplexField()
+        I = CC.gens()[0]
+        self.sign = I ** root_number_at_oo(h)
+        self.sign /= I ** (root_number_at_oo(h1) * V.dim)
+        self.sign /= I ** (root_number_at_oo(h2) * W.dim)
         self.sign *= V.sign ** W.dim
         self.sign *= W.sign ** V.dim
         for p in bad_primes:
             if p not in V.bad_semistable_primes or p not in V.bad_semistable_primes:
                 f1 = V.local_euler_factor(p)
                 f2 = W.local_euler_factor(p)
-                
+                det1 = f1.leading_coefficient() * (-1) ** f1.degree()
+                det2 = f2.leading_coefficient() * (-1) ** f2.degree()
+                n1_tame = V.dim - f1.degree()
+                n2_tame = W.dim - f2.degree()
+                n1_wild = ZZ(V.conductor).valuation(p) - n1_tame
+                n2_wild = ZZ(VWconductor).valuation(p) - n2_tame
+                # additionally, we would need to correct this by
+                # replacing det1 by chi1(p) if p is semistable for V
+                # however for all the possible input this currently does
+                # not affect the sign
+                if p in V.bad_semistable_primes:
+                    chi1p = 1 # here
+                else:
+                    chi1p = det1
+                if p in W.bad_semistable_primes:
+                    chi2p = 1 # here
+                else:
+                    chi2p = det2
+
+                corr = chi1p ** n2_wild
+                corr *= det1 ** n2_tame
+                corr *= chi2p ** n1_wild
+                corr *= det2 ** n1_tame
+                corr *= (-1) ** (n1_tame * n2_tame)
+
+                self.sign *= corr/corr.abs()
+
         #self.primitive = False
         self.set_dokchitser_Lfunction()
         self.set_number_of_coefficients()
@@ -407,6 +447,8 @@ class GaloisRepresentation( Lfunction):
         to a bound
         This is in the alg. normalisation, i.e. s <-> w+1-s
         """
+
+        ## corrently they start at he wrong
         if self.object_type == "ellipticcurve":
             return self.original_object[0].anlist(number_of_terms)[1:]
         elif self.object_type == "dirichletcharacter":
