@@ -2,24 +2,19 @@
 {% block content %}
 
 <style>
-#outerdiv
-{
+#outerdiv {
   width:100%;
   height:500px;
   overflow:hidden;
   position:relative;
 }
-
-#iframe1
-{
+#iframe1 {
   position:absolute;
   left:-210px;
   width:100%;
   height:500px;
 }
-
-#iframe2
-{
+#iframe2 {
   position:absolute;
   left:-210px;
   width:100%;
@@ -29,19 +24,11 @@
 
 <p>Please browse to an object in each of the two frames below, then click the tensor product button at the bottom:</p>
 <div id='outerdiv'>
-  {% if type1 == 'EllipticCurve' %}
-    <iframe id='iframe1' src={{ url_for('EC_toplevel')}} ></iframe>
-  {% elif type1 == 'Character/Dirichlet' %}
-    <iframe id='iframe1' src={{ url_character() }}></iframe>
-  {% endif %}
+  <iframe id='iframe1' src={{ type1 }}></iframe>
 </div></br>
 
 <div id='outerdiv'>
-  {% if type2 == 'EllipticCurve' %}
-    <iframe id='iframe2' src={{ url_for('EC_toplevel')}}></iframe></br>
-  {% elif type2 == 'Character/Dirichlet' %}
-    <iframe id='iframe2' src={{ url_character() }}></iframe></br>
-  {% endif %}
+  <iframe id='iframe2' src={{ type2 }}></iframe>
 </div></br>
 
 <form action='/TensorProducts/show/'>
@@ -51,30 +38,43 @@
 </form>
 
 <script type='text/javascript'>
-function getNiceLabelFromURL(loc)  {
 
-  if (loc.href.indexOf('EllipticCurve')!=-1) {
-    if (loc.href.indexOf('label=')!=-1) {
-      // seems that ell curve has been referenced by a label, extract it
-      var endLab = loc.href.split('label=')[1].split('&')[0];
-      var base = 'EllipticCurve/Q/';
+  function getNiceLabelFromURL(type, loc)  {
+    alert("calling function");
+    if (loc.href.indexOf('EllipticCurve/Q'!=-1) {
+      alert("detected elliptic curve");
+      if (loc.href.indexOf('label=')!=-1) {
+        // seems that ell curve has been referenced by a label, extract it
+        var endLab = loc.href.split('label=')[1].split('&')[0];
+        var base = 'EllipticCurve/Q/';
+        return base.concat(endLab);
+      }
+      else {
+        // at time of writing, it seems that if label is not passed as an argument then we must have a link of the form EllipticCure/Q/<label> already
+        var endLab = loc.href.split('EllipticCurve/Q/')[1]; // to remove http and hostname
+        var base = 'EllipticCurve/Q/';
+        return base.concat(endLab);
+      }
+    }
+    
+    else if (loc.href.indexOf('Character/Dirichlet')!=-1) {
+      alert("detected dirichlet character");
+      // seems that it's only possible to reference Dirichlet character as  
+      var endLab = loc.href.split('Character/Dirichlet/')[1]; // to remote http and hostname
+      var base = 'Character/Dirichlet/';
       return base.concat(endLab);
     }
-    else {
-      // at time of writing, it seems that if label is not passed as an argument then we must have a link of the form EllipticCure/Q/<label> already
-      var endLab = loc.href.split('EllipticCurve/Q/')[1]; // to remove http and hostname
-      var base = 'EllipticCurve/Q/';
-      return base.concat(endLab);
+
+    else if (loc.href.indexOf('/ModularForm/GL2/Q/holomorphic')!=-1) {
+      alert("detected cusp form");
+      return 'cuspform';
+    }
+
+    else if (loc.href.indexOf('/ArtinRepresentation')!=-1) {
+      alert("detected artin rep");
+      return 'artinrep';
     }
   }
-
-  else if (loc.href.indexOf('Character/Dirichlet')!=-1) {
-    // seems that it's only possible to reference Dirichlet character as  
-    var endLab = loc.href.split('Character/Dirichlet/')[1]; // to remote http and hostname
-    var base = 'Character/Dirichlet/';
-    return base.concat(endLab);
-  }
-}
 
   document.getElementById('submitbutton').onclick = function() {
     var loc1 = document.getElementById('iframe1').contentWindow.location;

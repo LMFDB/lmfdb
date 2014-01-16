@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-# This Blueprint is about Artin representations
-# Author: Paul-Olivier Dehaye
+# Blueprint for tensor product pages
+# Author: Martin Dickson
 
 import pymongo
 ASC = pymongo.ASCENDING
