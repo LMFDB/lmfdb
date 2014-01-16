@@ -1,6 +1,6 @@
 r"""
 
-AUTHORS: Chris Wuthrich, 2014
+AUTHORS: Alberto Camara, Chris Wuthrich, 2014
 
 Example:
 
@@ -25,7 +25,7 @@ sage: V.dim
 """
 
 ########################################################################
-#       Copyright (C) Chris Wuthrich 2014
+#       Copyright (C) Alberto Camara, Chris Wuthrich 2014
 #
 #  Distributed under the terms of the GNU General Public License (GPL)
 #
@@ -74,10 +74,15 @@ class GaloisRepresentation( Lfunction):
         if isinstance(thingy, lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms.WebNewForm):
             self.init_elliptic_modular_form(thingy)
 
+        if isinstance(thingy,"list") and len(thingy) = 2:
+            if isinstance(thingy[0], "GaloisRepresentation") and isinstance(thingy[1], "GaloisRepresentation"):
+                self.init_tensor_product(thingy[0], thingy[1])
+
         self.level = self.conductor
         self.degree = self.dim
         self.poles = []
         self.residues = []
+        self.algebraic = True
 
 ## Various ways to construct such a class
 
@@ -85,16 +90,6 @@ class GaloisRepresentation( Lfunction):
         """
         Returns the Galois rep of an elliptic curve over Q
         """
-        # needed ?
-        # Remove the ending number (if given) in the label to only get isogeny
-        # class
-        #while self.label[len(self.label) - 1].isdigit():
-            #self.label = self.label[0:len(self.label) - 1]
-        ## Create the elliptic curve in the database
-        #Edata = LfunctionDatabase.getEllipticCurveData(self.label + '1')
-        #if Edata is None:
-            #raise KeyError('No elliptic curve with label %s exists in the database' % self.label)
-        #self.db_object = Edata
 
         self.original_object = [E]
         self.object_type = "ellipticcurve"
@@ -102,6 +97,8 @@ class GaloisRepresentation( Lfunction):
         self.weight = 2
         self.motivic_weight = 1
         self.conductor = E.conductor()
+        self.bad_semistable_primes = [ fa[0] for fa in self.conductor.factor() if fa[1]==1 ]
+        self.bad_pot_good = [p for p in self.conductor.prime_factors() if E.j_invariant().valuation(p) > 0 ]
         self.sign = E.root_number()
         self.mu_fe = []
         self.nu_fe = [ZZ(1)/ZZ(2)]
@@ -115,6 +112,19 @@ class GaloisRepresentation( Lfunction):
         self.coefficient_type = 2
         self.coefficient_period = 0
         self.ld.gp().quit()
+
+        def eu(p):
+            """
+            Local Euler factor passed as a function
+            whose input is a prime and
+            whose output is a polynomial
+            such that evaluated at p^-s,
+            we get the inverse of the local factor
+            of the L-function
+            """
+            return 1
+
+        self.local_euler_factor = eu
 
     def init_dir_char(self, chi):
         """
@@ -161,7 +171,6 @@ class GaloisRepresentation( Lfunction):
         self.original_object = [rho]
         self.object_type = "Artin representation"
         self.dim = rho.dimension()
-        self.degree = self.dim
         self.weight = 0
         self.motivic_weight = 0
         self.conductor = rho.conductor()
@@ -222,6 +231,53 @@ class GaloisRepresentation( Lfunction):
        #     self.coefficient_type = 3
        # self.coefficient_period = chi.modulus()
         self.ld.gp().quit()
+    
+    def init_tensor_product(self, V, W):
+        """
+        We are given two Galois representations and we
+        will return their tensor product.
+        """
+        self.original_object = V.original_object + W.original_object
+        self.object_type = "tensorproduct"
+        self.dim = V.dim * W.dim
+        self.motivic_weight = V.motivic_weight + W.motivic_weight
+        self.weight = V.weight + W.weight - 1
+
+        bad2 = ZZ(W.conductor).prime_factors()
+        s2 = set(bad2)
+        cross_bad = [x for x in ZZ(V.conductor).prime_factors() if x in s2]
+
+        N = W.conductor ** V.dimension
+        N *= V.conductor ** W.dimension
+        for p in cross_bad:
+            n1_tame = V.dimension - V.local_factor(p).degree()
+            n1_tame = W.dimension - W.local_factor(p).degree()
+            N = N // p ** (n1_tame * n2_tame)
+        self.conductor = N
+
+        #self.sign = NotImplementedError
+
+        from lfmdb.lfunctions.HodgeTransformations import *
+        h1 = selberg_to_hodge(V.motivic_weight,V.mu_fe,V.nu_fe)
+        h2 = selberg_to_hodge(W.motivic_weight,W.mu_fe,W.nu_fe)
+        h = tensor_hodge(h1, h2)
+        w,m,n = hodge_to_selberg(h)
+        self.mu_fe = m
+        self.nu_fe = n
+        _, self.gammaV = gamma_factors(h)
+
+        self.langlands = False # status 2014 :)
+
+        #self.primitive = False
+        self.set_dokchitser_Lfunction()
+        self.set_number_of_coefficients()
+        #self.dirichlet_coefficients = NotImplementedError
+
+        self.selfdual = all( abs(an.imag) < 0.0001 for an in self.dirichlet_coefficients[:100]) # why not 100 :)
+
+        self.coefficient_type = max(V.coefficient_type, W.coefficient_type)
+        self.coefficient_period = V.coefficient_period().lcm(W.coefficient_period)
+        self.ld.gp().quit()
 
 
 ## These are used when creating the classes with the above
@@ -255,6 +311,15 @@ class GaloisRepresentation( Lfunction):
         self.ld._gp_eval("MaxImaginaryPart = %s"%self.max_imaginary_part)
         self.numcoeff = self.ld.num_coeffs()
 
+## The tensor product
+
+    def __mul__(self, other):
+        """
+        The tensor product of two galois representations
+        is represented here by *
+        """
+        return GaloisRepresentation([self,other])
+
 ## A function that gives back a L-function class as used later
 
     def Lfunction(self):
@@ -280,12 +345,6 @@ class GaloisRepresentation( Lfunction):
         """
         return self.dim
 
-    def weight(self):
-        """
-        Motivic weight
-        """
-        return self.motivic_weight
-
 
 ## Now to the L-function itself
 
@@ -293,10 +352,13 @@ class GaloisRepresentation( Lfunction):
         """
         This method replaces the class LFunction in lmfdb.lfunctions.Lfunction
         to generate the page for this sort of class.
+
+        After asking for this method the object should have all
+        methods and attributes as one of the subclasses of Lfunction in
+        lmfdb.lfunctions.Lfunction.
         """
         self.compute_kappa_lambda_Q_from_mu_nu()
 
-        self.title = ""
         self.texname = "L(s,\\rho)"
         self.texnamecompleteds = "\\Lambda(s,\\rho)"
         self.title = "$L(s,\\rho)$, where $\\rho$ is a Galois representation"
@@ -309,5 +371,6 @@ class GaloisRepresentation( Lfunction):
     def Ltype(self):
         return "galoisrepresentation"
 
+    # does not have keys in the previous sense really.
     def Lkey(self):
         return {"galoisrepresentation":self.title}
