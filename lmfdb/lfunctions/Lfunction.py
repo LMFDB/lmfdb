@@ -30,6 +30,7 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms import *
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes \
      import WebMaassForm
 from lmfdb.tensor_products.tensor_products_defs import TensorProduct
+from lmfdb.tensor_products.galois_reps import GaloisRepresentation
 
 def constructor_logger(object, args):
     ''' Executed when a object is constructed for debugging reasons
@@ -1463,3 +1464,18 @@ class TensorProductLfunction(Lfunction):
         return {"ellipticcurvelabel": self.Elabel,
                 "charactermodulus": self.charactermodulus,
                 "characternumber": self.characternumber}
+
+#############################################################################
+
+
+# class GaloisRepresentationLfunction(Lfunction, GaloisRepresentation):
+#    """
+#    Class representing the L-function of a general galois representation
+#    This is mainly used for twisting two such constructed from other
+#    classes above.
+#
+#    Most of the values are inherited from GaloisRepresentation, where
+#    things are done a bit more systematic.
+#    """
+#
+# This is implemented in lmfdb.tensor_products.galois_reps instead.
