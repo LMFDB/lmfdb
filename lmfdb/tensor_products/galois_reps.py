@@ -29,7 +29,9 @@ sage: F = WebNewForm(11,10,fi=1)
 sage: W = GaloisRepresentation([F,0])
 sage: W.sign
 sage: W.algebraic_coefficients(10)
+
 sage: VW = GaloisRepresentation([V,W])
+sage: VW.algebraic_coefficients(10)
 
 """
 
@@ -285,27 +287,37 @@ class GaloisRepresentation( Lfunction):
         """
         self.original_object = V.original_object + W.original_object
         self.object_type = "tensorproduct"
+        self.V1 = V
+        self.V2 = W
         self.dim = V.dim * W.dim
         self.motivic_weight = V.motivic_weight + W.motivic_weight
+        self.langlands = False # status 2014 :)
 
         bad2 = ZZ(W.conductor).prime_factors()
-        s2 = set(bad2)
-        bad_primes = [x for x in ZZ(V.conductor).prime_factors() if x in s2]
+        bad_primes = [x for x in ZZ(V.conductor).prime_factors() if x in bad2]
         for p in bad_primes:
             if ((p not in V.bad_semistable_primes or p not in W.bad_pot_good) and
-                (p not in W.bad_semistable_primes or p not in V.bad_pot_good)):
+                (p not in W.bad_semistable_primes or p not in V.bad_pot_good) and
+                (p not in V.bad_semistable_primes or p not in W.bad_semistable_primes)):
                  raise NotImplementedError("Currently tensor products of " +
                                           "Galois representations are only" +
                                           "implemented under some conditions.\n" +
-                                          "Here the behaviour at %s is too wild."%p)
+                                          "Here the behaviour at %s is too wild as" +
+                                          "the rep is not semistable for both factors."%p)
         ## add a hypothesis to exclude the poles.
+
+        scommon = [x for x in V.bad_semistable_primes if x in W.bad_semistable_primes]
+        #euler factor = old * old(T -> pT)
 
         N = W.conductor ** V.dim
         N *= V.conductor ** W.dim
         for p in bad_primes:
             n1_tame = V.dim - V.local_euler_factor(p).degree()
             n2_tame = W.dim - W.local_euler_factor(p).degree()
-            N = N // p ** (n1_tame * n2_tame)
+            nn = n1_tame * n2_tame
+            if p in scommon:
+                nn *= 2
+            N = N // p ** nn
         self.conductor = N
 
         h1 = selberg_to_hodge(V.motivic_weight,V.mu_fe,V.nu_fe)
@@ -316,7 +328,13 @@ class GaloisRepresentation( Lfunction):
         self.nu_fe = n
         _, self.gammaV = gamma_factors(h)
 
-        self.langlands = False # status 2014 :)
+        # this is used in getting the Dirichlet coefficients.
+        self.bad_primes_info = []
+        for p in bad_primes:
+            # we have to check if this works in all bad cases !
+            f1 = V.local_euler_factor(p)
+            f2 = W.local_euler_factor(p)
+            self.bad_primes_info.append([p,f1,f2])
 
         self.sign = 1 # NotImplementedError
 
@@ -324,7 +342,7 @@ class GaloisRepresentation( Lfunction):
         self.set_dokchitser_Lfunction()
         self.set_number_of_coefficients()
 
-        self.selfdual = all( abs(an.imag) < 0.0001 for an in self.algebraic_coefficients(50))
+        #self.selfdual = all( abs(an.imag) < 0.0001 for an in self.algebraic_coefficients(50))
         # why not 100 :)
 
         self.coefficient_type = max(V.coefficient_type, W.coefficient_type)
@@ -385,7 +403,11 @@ class GaloisRepresentation( Lfunction):
             embeddings = F.q_expansion_embeddings(number_of_terms)
             return [x[i] for x in embeddings]
         elif self.object_type == "tensorproduct":
-            return None
+            V = self.V1
+            W = self.V2
+            L1 = V.algebraic_coefficients(number_of_terms)
+            L2 = W.algebraic_coefficients(number_of_terms)
+            return tensor_get_an(L1, L2, V.dim, W.dim, self.bad_primes_info)
         else:
             raise ValueError("You asked for a type that we don't have")
 
