@@ -1,9 +1,19 @@
 
-def CreateEulerFactorApproxFromList(L,d):
+def list_to_euler_factor(L,d):
  R.<t>=PowerSeriesRing(L[0].parent().fraction_field())
  return 1/R([1]+L)+O(t**(d+1))
 
-def EulerFactorToList(L,f):
+def get_euler_factor(L,p): # utility function to get an Euler factor, unused
+ S=len(L)
+ f=floor(log(S*1.0)/log(p*1.0))
+ E=[]
+ q=1
+ for i in range(0,f):
+  q=q*p
+  E.append(L[q-1])
+ return list_to_euler_factor(E,f)
+
+def euler_factor_to_list(L,f):
  R.<t>=PowerSeriesRing(L[0].parent().fraction_field(),default_prec=f+1)
  return ((1/R(L.truncate().coeffs())).truncate().coeffs())[1:]
 
@@ -46,7 +56,7 @@ def tensor_get_an_deg1(L,D,BadPrimeInfo): # BPI must be just [p,f] here
    F=e.list()[0].parent().fraction_field()
    R.<z>=PowerSeriesRing(F,default_prec=ld+1)
    e=R(e)
-   A=EulerFactorToList(e,f)
+   A=euler_factor_to_list(e,f)
    for i in range(0,f):
     q=q*p
     Z[q-1]=A[i]
@@ -77,8 +87,8 @@ def tensor_get_an_no_deg1(L1,L2,d1,d2,BadPrimeInfo):
     q=q*p
     E1.append(L1[q-1])
     E2.append(L2[q-1])
-   e1=CreateEulerFactorApproxFromList(E1,d1*d2+1)
-   e2=CreateEulerFactorApproxFromList(E2,d1*d2+1)
+   e1=list_to_euler_factor(E1,d1*d2+1)
+   e2=list_to_euler_factor(E2,d1*d2+1)
    ld1=d1
    ld2=d2
   else: # can either convolve, or have one input be the answer and other 1-t
@@ -106,7 +116,7 @@ def tensor_get_an_no_deg1(L1,L2,d1,d2,BadPrimeInfo):
    C[i]=c1[i]*c2[i]
   t=(e1-e1+1).integral() # hack, very
   E=(-(e1.parent(C).integral()+O(t**(ld1*ld2+1)))).exp() # coerce to e1.parent
-  A=EulerFactorToList(E,f)
+  A=euler_factor_to_list(E,f)
   while len(A)<f:
    A.append(0)
   q=1
@@ -156,8 +166,9 @@ def test_tensprod_121_chi():
  R.<t>=PowerSeriesRing(ZZ)
  assert ANS==tensor_get_an_deg1(C121,chi,[[11,1-t]])
  assert ANS==tensor_get_an(C121,chi,2,1,[[11,1-t,1]])
-
-test_tensprod_121_chi() # run test
+ assert get_euler_factor(ANS,2)==(1+2*t+2*t^2+O(t^8))
+ assert get_euler_factor(ANS,3)==(1+t+3*t^2+O(t^5))
+ assert get_euler_factor(ANS,5)==(1-t+5*t^2+O(t^4))
 
 def test_tensprod_11a_17a():
  C11=[1,-2,-1,2,1,2,-2,0,-2,-2,1,-2,4,4,-1,-4,-2,4,0,2,2,-2,\
@@ -193,4 +204,5 @@ def test_tensprod_11a_17a():
  B17=[17,1+2*t+17*t**2,1-t]
  assert ANS==tensor_get_an_no_deg1(C11,C17,2,2,[B11,B17])
 
-test_tensprod_11a_17a() # run tests
+test_tensprod_121_chi() # run test
+test_tensprod_11a_17a() # run test
