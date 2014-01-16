@@ -8,29 +8,27 @@ sage: import lmfdb
 sage: from lmfdb.tensor_products.galois_reps import *
 sage: V = GaloisRepresentation(EllipticCurve("37a1"))
 sage: V.motivic_weight
-1
 sage: V.local_euler_factor(37)
 
 sage: from lmfdb.WebCharacter import *
 sage: chi = WebDirichletCharacter(modulus=37,number=4)
 sage: V = GaloisRepresentation(chi)
 sage: V.langlands
-True
 sage: V.local_euler_factor(101)
 
 sage: from lmfdb.math_classes import ArtinRepresentation
 sage: rho = ArtinRepresentation(2,23,1)
 sage: V = GaloisRepresentation(rho)
 sage: V.dim
-2
 sage: V.local_euler_factor(43)
+sage: V.algebraic_coefficients(10)
+
 
 sage: from lmfdb.modular_forms.elliptic_modular_forms import WebNewForm
 sage: F = WebNewForm(11,10,fi=1)
-sage: V = GaloisRepresentation([F,0])
-sage: V.sign
-1.0
-
+sage: W = GaloisRepresentation([F,0])
+sage: W.sign
+sage: W.algebraic_coefficients(10)
 sage: VW = GaloisRepresentation([V,W])
 
 """
@@ -244,7 +242,7 @@ class GaloisRepresentation( Lfunction):
         Initiate with an Elliptic Modular Form.
         """
         self.number = number
-        #self.original_object = [formlist]
+        self.original_object = [[F,number]]
         self.object_type = "Elliptic Modular newform"
         self.dim = 2
         self.weight = ZZ(F.weight())
@@ -262,16 +260,7 @@ class GaloisRepresentation( Lfunction):
         self.gammaV = [0,1]
         self.set_dokchitser_Lfunction()
         self.set_number_of_coefficients()
-        # Determining the Dirichlet coefficients. This code stolen from
-        # lmfdb.lfunctions.Lfunction.Lfunction_EMF
-        self.automorphyexp = (self.weight - 1) / 2.
-        embeddings = F.q_expansion_embeddings(self.numcoeff + 1)
-        self.algebraic_coefficients = []
-        for n in range(1, self.numcoeff + 1):
-            self.algebraic_coefficients.append(embeddings[n][self.number])
-        self.dirichlet_coefficients = []
-        for n in range(1, len(self.algebraic_coefficients) + 1):
-            self.dirichlet_coefficients.append(self.algebraic_coefficients[n-1] / float(n ** self.automorphyexp))
+
         def eu(p):
             """
             Local euler factor
@@ -337,7 +326,8 @@ class GaloisRepresentation( Lfunction):
         self.set_dokchitser_Lfunction()
         self.set_number_of_coefficients()
 
-        #self.selfdual = all( abs(an.imag) < 0.0001 for an in self.dirichlet_coefficients[:100]) # why not 100 :)
+        self.selfdual = all( abs(an.imag) < 0.0001 for an in self.algebraic_coefficients(50))
+        # why not 100 :)
 
         self.coefficient_type = max(V.coefficient_type, W.coefficient_type)
         self.coefficient_period = ZZ(V.coefficient_period).lcm(W.coefficient_period)
@@ -377,20 +367,25 @@ class GaloisRepresentation( Lfunction):
 
 ## produce coefficients
 
-    def algebraic_coefficients(number_of_terms):
+    def algebraic_coefficients(self, number_of_terms):
         """
         Computes the list [a1,a2,... of coefficients up
         to a bound
         This is in the alg. normalisation, i.e. s <-> w+1-s
         """
         if self.object_type == "ellipticcurve":
-            return E.anlist(number_of_terms)[1:]
+            return self.original_object[0].anlist(number_of_terms)[1:]
         elif self.object_type == "dirichletcharacter":
+            chi = self.original_object[0].chi.primitive_character()
             return [ chi(m) for m in range(number_of_terms) ]
         elif self.object_type == "Artin representation":
+            rho = self.original_object[0]
             return rho.coefficients_list(upperbound=number_of_terms)
         elif self.object_type == "Elliptic Modular newform":
-            return None
+            F = self.original_object[0][0]
+            i = self.original_object[0][1]
+            embeddings = F.q_expansion_embeddings(number_of_terms)
+            return [x[i] for x in embeddings]
         elif self.object_type == "tensorproduct":
             return None
         else:
