@@ -49,7 +49,7 @@ sage: VW.algebraic_coefficients(10)
 import lmfdb.base
 from lmfdb.WebCharacter import * #WebDirichletCharacter
 from lmfdb.lfunctions.Lfunction_base import Lfunction
-from lmfdb.lfunctions.HodgeTransformations import selberg_to_hodge, hodge_to_selberg, tensor_hodge, gamma_factors
+from lmfdb.lfunctions.HodgeTransformations import selberg_to_hodge, root_number_at_oo, hodge_to_selberg, tensor_hodge, gamma_factors
 
 from sage.structure.sage_object import SageObject
 from sage.rings.integer_ring import ZZ
@@ -336,8 +336,16 @@ class GaloisRepresentation( Lfunction):
             f2 = W.local_euler_factor(p)
             self.bad_primes_info.append([p,f1,f2])
 
-        self.sign = 1 # NotImplementedError
-
+        self.sign = root_number_at_oo(h)
+        self.sign /= root_number_at_oo(h1) ** V.dim
+        self.sign /= root_number_at_oo(h2) ** W.dim
+        self.sign *= V.sign ** W.dim
+        self.sign *= W.sign ** V.dim
+        for p in bad_primes:
+            if p not in V.bad_semistable_primes or p not in V.bad_semistable_primes:
+                f1 = V.local_euler_factor(p)
+                f2 = W.local_euler_factor(p)
+                
         #self.primitive = False
         self.set_dokchitser_Lfunction()
         self.set_number_of_coefficients()
