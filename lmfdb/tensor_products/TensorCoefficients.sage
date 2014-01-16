@@ -1,4 +1,30 @@
 
+def tensor_local_factors(f1,f2,d):
+ R.<t>=PowerSeriesRing(f1.parent().base_ring().fraction_field())
+ if not f1.parent().is_exact():	# ideally f1,f2 should already be in PSR
+  assert f1.prec()>=d
+ if not f2.parent().is_exact(): # but the user might give them as polys...
+  assert f2.prec()>=d
+ f1=R(f1)
+ f2=R(f2)
+ if f1==1 or f2==1:
+  return 1+O(t**(d+1))
+ l1=f1.log().derivative()
+ p1=l1.prec()
+ c1=l1.list()
+ while len(c1)<p1:
+  c1.append(0)
+ l2=f2.log().derivative()
+ p2=l2.prec()
+ c2=l2.list()
+ while len(c2)<p2:
+  c2.append(0)
+ C=[0]*len(c1)
+ for i in range(0,len(c1)):
+  C[i]=c1[i]*c2[i]
+ E=(-(R(C).integral()+O(t**(d+1)))).exp() # coerce to R
+ return E
+
 def list_to_euler_factor(L,d):
  R.<t>=PowerSeriesRing(L[0].parent().fraction_field())
  return 1/R([1]+L)+O(t**(d+1))
@@ -87,8 +113,8 @@ def tensor_get_an_no_deg1(L1,L2,d1,d2,BadPrimeInfo):
     q=q*p
     E1.append(L1[q-1])
     E2.append(L2[q-1])
-   e1=list_to_euler_factor(E1,d1*d2+1)
-   e2=list_to_euler_factor(E2,d1*d2+1)
+   e1=list_to_euler_factor(E1,f+1)
+   e2=list_to_euler_factor(E2,f+1)
    ld1=d1
    ld2=d2
   else: # can either convolve, or have one input be the answer and other 1-t
@@ -98,24 +124,10 @@ def tensor_get_an_no_deg1(L1,L2,d1,d2,BadPrimeInfo):
    ld1=e1.degree()
    ld2=e2.degree()
    F=e1.list()[0].parent().fraction_field()
-   R.<z>=PowerSeriesRing(F,default_prec=ld1*ld2+1)
+   R.<z>=PowerSeriesRing(F,default_prec=f+1)
    e1=R(e1)
    e2=R(e2)
-  l1=e1.log().derivative()
-  l2=e2.log().derivative()
-  p1=l1.prec()
-  c1=l1.list()
-  while len(c1)<p1:
-   c1.append(0)
-  p2=l2.prec()
-  c2=l2.list()
-  while len(c2)<p2:
-   c2.append(0)
-  C=[0]*len(c1)
-  for i in range(0,len(c1)): # guess c1 and c2 are same size?
-   C[i]=c1[i]*c2[i]
-  t=(e1-e1+1).integral() # hack, very
-  E=(-(e1.parent(C).integral()+O(t**(ld1*ld2+1)))).exp() # coerce to e1.parent
+  E=tensor_local_factors(e1,e2,f)
   A=euler_factor_to_list(E,f)
   while len(A)<f:
    A.append(0)
