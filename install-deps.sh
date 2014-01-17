@@ -73,7 +73,7 @@ if [ $verbose -ge 1 ]
 then
     echo $SAGE_MINORVERSION
 fi
-if [ $SAGE_MAJORVERSION -ge 5 ]  && [ $SAGE_MINORVERSION -ge 7  ]
+if [ $SAGE_MAJORVERSION -ge 5 ]  && [ $SAGE_MINORVERSION -ge 7  ] || [ $SAGE_MAJORVERSION -ge 6 ]
 then
    echo "Sage version $SAGE_MAJORVERSION.$SAGE_MINORVERSION is ok!"
 else
@@ -99,7 +99,7 @@ fi
 ### TODO: add different tested versions of the dependencies (possibly different for different sage versions)
 checked_versions="8 10 11"
 
-deps="flask flask-login flask-cache flask-markdown pymongo pyyaml"
+deps="flask flask-login flask-cache flask-markdown pymongo pyyaml unittest2"
 #deps="flask==0.10.1 flask-login==0.2.6 flask-cache==0.12 flask-markdown==0.3 pymongo==2.4.1 pyyaml==3.10"
 
 if ! [[ $checked_versions =~ $SAGE_MINORVERSION  ]]
@@ -157,7 +157,7 @@ done
 ## First see if we already have it and if not we get an egg and install it.
 ##
 test=`$sage_exec -c "import dirichlet_conrey; print sys.modules.get('dirichlet_conrey')==None"` 
-if [ $test = "True" ]
+if [ $test='True' ]
 then
     if [ $verbose -gt 0 ]
     then
