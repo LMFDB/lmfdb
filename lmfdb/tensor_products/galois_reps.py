@@ -390,14 +390,14 @@ class GaloisRepresentation( Lfunction):
             raise ValueError("You asked for a type that we don't have")
 
 
-    def renormalise_coefficients(li):
+    def renormalise_coefficients(self):
         """
         This turns a list of algebraically normalised coefficients
         as above into a list of automorphically normalised,
         i.e. s <-> 1-s
         """
-        for n in range(1,len(li)):
-            li[n] /= sqrt(float(n)**self.motivic_weight)
+        for n in range(1,len(self.dirichlet_coefficients)):
+            self.dirichlet_coefficients[n] /= sqrt(float(n)**self.motivic_weight)
 
 
 ## The tensor product
@@ -454,10 +454,11 @@ class GaloisRepresentation( Lfunction):
         """
         self.compute_kappa_lambda_Q_from_mu_nu()
         self.dirichlet_coefficients = self.algebraic_coefficients(self.numcoeff+1)
-        self.renormalise_coefficients(self.dirichlet_coefficients)
+        self.renormalise_coefficients()
 
         self.texname = "L(s,\\rho)"
         self.texnamecompleteds = "\\Lambda(s,\\rho)"
+        self.texnamecompleted1ms = "\\Lambda(1-s, \\widehat{\\rho})" 
         self.title = "$L(s,\\rho)$, where $\\rho$ is a Galois representation"
 
         self.credit = 'Workshop in Besancon, 2014'

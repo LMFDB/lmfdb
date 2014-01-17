@@ -7,14 +7,16 @@ ASC = pymongo.ASCENDING
 import flask
 from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
-from lmfdb.tensor_products import tensor_products_page, tensor_products_logger
+from lmfdb.tensor_products import tensor_products_page, tensor_products_logger 
 from lmfdb.utils import to_dict
 from lmfdb.transitive_group import *
 from string import split
 from sets import Set
+from sage.all import *
 
 from lmfdb.math_classes import *
 from lmfdb.WebNumberField import *
+from lmfdb.lfunctions.Lfunctionutilities import *
 
 from galois_reps import GaloisRepresentation
 from sage.schemes.elliptic_curves.constructor import EllipticCurve
@@ -63,8 +65,16 @@ def show():
 #         friends = []
 #         friends.append(('L-function for Elliptic Curve %s' % obj1[2], url_for("l_functions.l_function_ec_page", label=obj1[2])))
 #         friends.append(('L-function for Dirichlet Character $\chi_{%s}(%s, \cdot)$' % (obj2[2], obj2[3]), url_for("l_functions.l_function_dirichlet_page", modulus = int(obj2[2]), number=int(obj2[3])) ))
-   
-        return render_template("not_yet_implemented.html")  
+  
+        tp.lfunction()
+
+        info = {}
+        info['dirichlet'] = lfuncDStex(tp, "analytic")
+        info['eulerproduct'] = lfuncEPtex(tp, "abstract")
+        info['functionalequation'] = lfuncFEtex(tp, "analytic")
+        info['functionalequationSelberg'] = lfuncFEtex(tp, "selberg")
+
+        return render_template('Lfunction.html', **info)  
     else:
         return render_template("not_yet_implemented.html")
 
