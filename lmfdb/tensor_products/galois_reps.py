@@ -330,15 +330,32 @@ class GaloisRepresentation( Lfunction):
         bad2 = ZZ(W.conductor).prime_factors()
         bad_primes = [x for x in ZZ(V.conductor).prime_factors() if x in bad2]
         for p in bad_primes:
-            if ((p not in V.bad_semistable_primes or p not in W.bad_pot_good) and
-                (p not in W.bad_semistable_primes or p not in V.bad_pot_good) and
-                (p not in V.bad_semistable_primes or p not in W.bad_semistable_primes)):
+            if ( V.conductor % p != 0 and W.conductor % p != 0 and
+                p not in V.bad_semistable_primes and p not in W.bad_semistable_primes) :
+            # this condition above only applies to the current type of objects
+            # for general reps we would have to test the lines below
+            # to be certain that the formulae are correct.
+            #if ((p not in V.bad_semistable_primes or p not in W.bad_pot_good) and
+                #(p not in W.bad_semistable_primes or p not in V.bad_pot_good) and
+                #(p not in V.bad_semistable_primes or p not in W.bad_semistable_primes)):
                  raise NotImplementedError("Currently tensor products of " +
                                           "Galois representations are only" +
                                           "implemented under some conditions.\n" +
                                           "Here the behaviour at %s is too wild as" +
                                           "the rep is not semistable for both factors."%p)
-        ## add a hypothesis to exclude the poles.
+
+        # check for the possibily of getting poles
+        if V.weight == W.weight and V.conductor == W.conductor :
+            Vans = V.algebraic_coefficients(50)
+            Wans = W.algebraic_coefficients(50)
+            CC = ComplexField()
+            if ((Vans[2] in ZZ and Wans[2] in ZZ and
+                all(Vans[n] == Wans[n] for n in range(1,50) ) ) or
+                all( CC(Vans[n]) == CC(Wans[n]) for n in range(1,50) ) ):
+                    raise NotImplementedError("It seems you are asking to tensor a "+
+                                              "Galois representation with its dual " +
+                                              "which results in the L-function having "+
+                                              "a pole. This is not implemented here.")
 
         scommon = [x for x in V.bad_semistable_primes if x in W.bad_semistable_primes]
 
@@ -415,10 +432,12 @@ class GaloisRepresentation( Lfunction):
 
         #self.primitive = False
         self.set_dokchitser_Lfunction()
+        # maybe we should change this to take as many coefficients as implemented
+        # in other Lfunctions
         self.set_number_of_coefficients()
 
-        #self.selfdual = all( abs(an.imag) < 0.0001 for an in self.algebraic_coefficients(50))
-        # why not 100 :)
+        someans = self.algebraic_coefficients(50) # why not.
+        self.selfdual = all( abs(an.imag) < 0.0001 for an in someans)
 
         self.coefficient_type = max(V.coefficient_type, W.coefficient_type)
         self.coefficient_period = ZZ(V.coefficient_period).lcm(W.coefficient_period)
@@ -442,6 +461,11 @@ class GaloisRepresentation( Lfunction):
                                 residues = [])
         else:
             # find the sign from the functional equation
+            # this should be implemented later:
+            # one can pass a variable 'x' to the function
+            # checking the functional equation
+            # and it will return a linear polynomial in x
+            # such that the root must be the sign
             raise NotImplementedError
 
 
@@ -455,6 +479,9 @@ class GaloisRepresentation( Lfunction):
         # gp session of Dokchitser
         self.ld._gp_eval("MaxImaginaryPart = %s"%self.max_imaginary_part)
         self.numcoeff = self.ld.num_coeffs()
+        # to be on the safe side, we make sure to have a min of terms
+        if self.numcoeff < 100:
+            self.numcoeff = 100
 
 ## produce coefficients
 
