@@ -687,8 +687,8 @@ def tensor_get_an_deg1(L, D, BadPrimeInfo):
         BadPrimes.append(bpi[0])
     P = prime_range(S+1)
     Z = S * [1]
+    S = RealField()(S) # fix bug
     for p in P:
-        S = RealField()(len(L))
         f = S.log(base=p).floor()
         q = 1
         u = 1
