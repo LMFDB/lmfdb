@@ -697,7 +697,6 @@ def tensor_get_an_deg1(L, D, BadPrimeInfo):
         else:
             i = BadPrimes.index(p)
             e = BadPrimeInfo[i][1]
-            ld = e.degree()
             F = e.list()[0].parent().fraction_field()
             R = PowerSeriesRing(F, "T", default_prec=f+1)
             e = R(e)
@@ -735,8 +734,10 @@ def euler_factor_to_list(P, prec):
     """
     K = P[0].parent()
     R = PowerSeriesRing(K, "T", default_prec=prec+1)
-    return ((1/R(P.truncate().coeffs())).truncate().coeffs())[1:]
-
+    L = ((1/R(P.truncate().coeffs())).truncate().coeffs())[1:]
+    while len(L) < prec: # include zeros at end
+        L.append(0)
+    return L
 
 def get_euler_factor(L,p):
     """
