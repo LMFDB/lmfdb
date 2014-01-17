@@ -488,14 +488,15 @@ class GaloisRepresentation( Lfunction):
             raise ValueError("You asked for a type that we don't have")
 
 
-    def renormalise_coefficients(li):
+    def renormalise_coefficients(self, li):
         """
         This turns a list of algebraically normalised coefficients
         as above into a list of automorphically normalised,
         i.e. s <-> 1-s
         """
-        for n in range(1,len(li)):
-            li[n] /= sqrt(float(n)**self.motivic_weight)
+        # this also turns them into floats and complex.
+        for n in range(len(li)):
+            li[n] /= sqrt(float(n+1)**self.motivic_weight)
 
 
 ## The tensor product
