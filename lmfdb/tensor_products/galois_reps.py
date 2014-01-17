@@ -288,8 +288,10 @@ class GaloisRepresentation( Lfunction):
         self.selfdual = True
         self.coefficient_type = 2
         self.coefficient_period = 0
-        AL = F.atkin_lehner_eigenvalues()
-        self.sign = AL[self.conductor] * (-1) ** (self.weight / 2.)
+	self.sign = (-1) ** (self.weight / 2.)
+	if self.conductor != 1:
+            AL = F.atkin_lehner_eigenvalues()
+            self.sign = AL[self.conductor] * self.sign
         self.gammaV = [0,1]
         self.set_dokchitser_Lfunction()
         self.set_number_of_coefficients()
@@ -961,4 +963,18 @@ def test_tensprod_11a_17a():
  #1.00000000000000,
  #0.000000000000000,
  #0.000000000000000]
+#sage: F = WebNewForm(13,6,fi=1)
+#sage: V = GaloisRepresentation([F,2])
+#sage: V.lfunction()
+#sage: V.dirichlet_coefficients[:10]
+#[1.00000000000000,
+ #1.93884868019520,
+ #-1.01350067313149,
+ #2.75913420469466,
+ #-0.923149364468465,
+ #-1.96502444247794,
+ #-0.581577296211895,
+ #3.41069503105848,
+ #0.0271836144379852,
+ #-1.78984692692272]
 
