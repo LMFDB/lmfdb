@@ -1,40 +1,58 @@
 r"""
 
-AUTHORS: Alberto Camara, Chris Wuthrich, 2014
+AUTHORS: Alberto Camara, Mark Watkins, Chris Wuthrich, 2014
 
 Example:
 
 sage: import lmfdb
 sage: from lmfdb.tensor_products.galois_reps import *
-sage: V = GaloisRepresentation(EllipticCurve("37a1"))
-sage: V.motivic_weight
-sage: V.local_euler_factor(37)
+sage: V1 = GaloisRepresentation(EllipticCurve("37a1"))
+sage: V1.motivic_weight
+sage: V1.local_euler_factor(37)
 
 sage: from lmfdb.WebCharacter import *
 sage: chi = WebDirichletCharacter(modulus=37,number=4)
-sage: V = GaloisRepresentation(chi)
-sage: V.langlands
-sage: V.local_euler_factor(101)
+sage: V2 = GaloisRepresentation(chi)
+sage: V2.langlands
+sage: V2.local_euler_factor(101)
 
 sage: from lmfdb.math_classes import ArtinRepresentation
 sage: rho = ArtinRepresentation(2,23,1)
-sage: V = GaloisRepresentation(rho)
-sage: V.dim
-sage: V.local_euler_factor(43)
-sage: V.algebraic_coefficients(10)
+sage: V3 = GaloisRepresentation(rho)
+sage: V3.dim
+sage: V3.local_euler_factor(43)
+sage: V3.algebraic_coefficients(10)
 
 
 sage: from lmfdb.modular_forms.elliptic_modular_forms import WebNewForm
 sage: F = WebNewForm(11,10,fi=1)
-sage: W = GaloisRepresentation([F,0])
-sage: W.sign
-sage: W.algebraic_coefficients(10)
+sage: V4 = GaloisRepresentation([F,0])
+sage: V4.sign
+sage: V4.algebraic_coefficients(10)
+
+sage: VW = GaloisRepresentation([V1,V2])
+sage: VW.algebraic_coefficients(10), VW.conductor, VW.sign
+sage: VW = GaloisRepresentation([V1,V3])
+sage: VW.algebraic_coefficients(10), VW.conductor, VW.sign
+sage: VW = GaloisRepresentation([V1,V4])
+sage: VW.algebraic_coefficients(10), VW.conductor, VW.sign
+sage: VW = GaloisRepresentation([V2,V3])
+sage: VW.algebraic_coefficients(10), VW.conductor, VW.sign
+sage: VW = GaloisRepresentation([V2,V4])
+sage: VW.algebraic_coefficients(10), VW.conductor, VW.sign
+sage: VW = GaloisRepresentation([V3,V4])
+sage: VW.algebraic_coefficients(10), VW.conductor, VW.sign
+
+
+sage: V = GaloisRepresentation(EllipticCurve("37a1"))
+sage: W = GaloisRepresentation(EllipticCurve("37b1"))
 sage: VW = GaloisRepresentation([V,W])
+sage: VW.algebraic_coefficients(38)[36] == -38
 
 """
 
 ########################################################################
-#       Copyright (C) Alberto Camara, Chris Wuthrich 2014
+#    Copyright (C) Alberto Camara, Mark Watkins, Chris Wuthrich 2014
 #
 #  Distributed under the terms of the GNU General Public License (GPL)
 #
@@ -47,7 +65,7 @@ sage: VW = GaloisRepresentation([V,W])
 import lmfdb.base
 from lmfdb.WebCharacter import * #WebDirichletCharacter
 from lmfdb.lfunctions.Lfunction_base import Lfunction
-from lmfdb.lfunctions.HodgeTransformations import selberg_to_hodge, hodge_to_selberg, tensor_hodge, gamma_factors
+from lmfdb.lfunctions.HodgeTransformations import selberg_to_hodge, root_number_at_oo, hodge_to_selberg, tensor_hodge, gamma_factors
 
 from sage.structure.sage_object import SageObject
 from sage.rings.integer_ring import ZZ
@@ -76,20 +94,28 @@ class GaloisRepresentation( Lfunction):
         if isinstance(thingy, sage.schemes.elliptic_curves.ell_rational_field.EllipticCurve_rational_field):
             self.init_elliptic_curve(thingy)
 
-        if isinstance(thingy, lmfdb.WebCharacter.WebDirichletCharacter):
+        elif isinstance(thingy, lmfdb.WebCharacter.WebDirichletCharacter):
             self.init_dir_char(thingy)
 
-        if isinstance(thingy, lmfdb.math_classes.ArtinRepresentation):
+        elif isinstance(thingy, lmfdb.math_classes.ArtinRepresentation):
             self.init_artin_rep(thingy)
 
-        if isinstance(thingy, list) and len(thingy) == 2:
-            if isinstance(thingy[0],lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms.WebNewForm_class) and isinstance(thingy[1],sage.rings.integer.Integer):
-                self.init_elliptic_modular_form(thingy[0],thingy[1])
+        elif (isinstance(thingy, list) and
+              len(thingy) == 2 and
+              isinstance(thingy[0],lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms.WebNewForm_class) and
+              isinstance(thingy[1],sage.rings.integer.Integer) ):
+            self.init_elliptic_modular_form(thingy[0],thingy[1])
 
-        if isinstance(thingy, list) and len(thingy) == 2:
-            if isinstance(thingy[0], GaloisRepresentation) and isinstance(thingy[1], GaloisRepresentation):
-                self.init_tensor_product(thingy[0], thingy[1])
+        elif (isinstance(thingy, list) and
+              len(thingy) == 2 and
+              isinstance(thingy[0], GaloisRepresentation) and
+              isinstance(thingy[1], GaloisRepresentation) ):
+            self.init_tensor_product(thingy[0], thingy[1])
 
+        else:
+            raise ValueError("GaloisRepresentations are currently not implemented for that type (%s) of objects"%type(thingy))
+
+        # set a few common variables
         self.level = self.conductor
         self.degree = self.dim
         self.poles = []
@@ -133,7 +159,7 @@ class GaloisRepresentation( Lfunction):
             we get the inverse of the local factor
             of the L-function
             """
-            R = PolynomialRing(ZZ, "T")
+            R = PolynomialRing(QQ, "T")
             T = R.gens()[0]
             N = self.conductor
             if N % p != 0 : # good reduction
@@ -186,7 +212,11 @@ class GaloisRepresentation( Lfunction):
             """
             local euler factor
             """
-            R = PolynomialRing(ComplexField(), "T")
+            if self.selfdual:
+                K = QQ
+            else:
+                K = ComplexField()
+            R = PolynomialRing(K, "T")
             T = R.gens()[0]
             if self.conductor % p != 0:
                 return  1 - ComplexField()(chi(p)) * T
@@ -229,7 +259,7 @@ class GaloisRepresentation( Lfunction):
             """
             f = rho.local_factor(p)
             co = [ZZ(round(x)) for x in f.coeffs()]
-            R = PolynomialRing(ZZ, "T")
+            R = PolynomialRing(QQ, "T")
             T = R.gens()[0]
             return sum( co[n] * T**n for n in range(len(co)))
 
@@ -246,7 +276,11 @@ class GaloisRepresentation( Lfunction):
         self.dim = 2
         self.weight = ZZ(F.weight())
         self.motivic_weight = ZZ(F.weight()) - 1
-        self.conductor = F.level()
+        self.conductor = ZZ(F.level())
+        self.bad_semistable_primes = [fa[0] for fa in self.conductor.factor() if fa[1]==1 ]
+        # should be including primes of bad red that are pot good
+        # however I don't know how to recognise them
+        self.bad_pot_good = []
         self.langlands = True
         self.mu_fe = []
         self.nu_fe = [ZZ(F.weight()-1)/ZZ(2)]
@@ -264,16 +298,18 @@ class GaloisRepresentation( Lfunction):
             """
             Local euler factor
             """
-            R = PolynomialRing(ZZ, "T")
+            ans = F.q_expansion_embeddings(p + 1)
+            K = ComplexField()
+            R = PolynomialRing(K, "T")
             T = R.gens()[0]
             N = self.conductor
-            embeddings = F.q_expansion_embeddings(p + 1)
             if N % p != 0 : # good reduction
-                return 1 - embeddings[p-1][self.number] * T + T**2
+                return 1 - ans[p-1][self.number] * T + T**2
             elif N % (p**2) != 0: # semistable reduction
-                return 1 - embeddings[p-1][self.number] * T
+                return 1 - ans[p-1][self.number] * T
             else:
                 return R(1)
+
         self.local_euler_factor = eu
         self.ld.gp().quit()
 
@@ -285,27 +321,36 @@ class GaloisRepresentation( Lfunction):
         """
         self.original_object = V.original_object + W.original_object
         self.object_type = "tensorproduct"
+        self.V1 = V
+        self.V2 = W
         self.dim = V.dim * W.dim
         self.motivic_weight = V.motivic_weight + W.motivic_weight
+        self.langlands = False # status 2014 :)
 
         bad2 = ZZ(W.conductor).prime_factors()
-        s2 = set(bad2)
-        bad_primes = [x for x in ZZ(V.conductor).prime_factors() if x in s2]
+        bad_primes = [x for x in ZZ(V.conductor).prime_factors() if x in bad2]
         for p in bad_primes:
             if ((p not in V.bad_semistable_primes or p not in W.bad_pot_good) and
-                (p not in W.bad_semistable_primes or p not in V.bad_pot_good)):
+                (p not in W.bad_semistable_primes or p not in V.bad_pot_good) and
+                (p not in V.bad_semistable_primes or p not in W.bad_semistable_primes)):
                  raise NotImplementedError("Currently tensor products of " +
                                           "Galois representations are only" +
                                           "implemented under some conditions.\n" +
-                                          "Here the behaviour at %s is too wild."%p)
+                                          "Here the behaviour at %s is too wild as" +
+                                          "the rep is not semistable for both factors."%p)
         ## add a hypothesis to exclude the poles.
+
+        scommon = [x for x in V.bad_semistable_primes if x in W.bad_semistable_primes]
 
         N = W.conductor ** V.dim
         N *= V.conductor ** W.dim
         for p in bad_primes:
             n1_tame = V.dim - V.local_euler_factor(p).degree()
             n2_tame = W.dim - W.local_euler_factor(p).degree()
-            N = N // p ** (n1_tame * n2_tame)
+            nn = n1_tame * n2_tame
+            if p in scommon:
+                nn *= 2
+            N = N // p ** nn
         self.conductor = N
 
         h1 = selberg_to_hodge(V.motivic_weight,V.mu_fe,V.nu_fe)
@@ -316,15 +361,63 @@ class GaloisRepresentation( Lfunction):
         self.nu_fe = n
         _, self.gammaV = gamma_factors(h)
 
-        self.langlands = False # status 2014 :)
+        # this is used in getting the Dirichlet coefficients.
+        self.bad_primes_info = []
+        for p in bad_primes:
+            # we have to check if this works in all bad cases !
+            f1 = V.local_euler_factor(p)
+            f2 = W.local_euler_factor(p)
+            # might be dodgy if f1 or f2 is an approx to the Euler factor
+            if p in scommon:
+                E = tensor_local_factors(f1,f2,V.dim*W.dim)
+                T = f1.parent().gens()[0] # right answer is E(T)*E(pT)
+                self.bad_primes_info.append([p,E*E(p*T),1-T])
+            else:
+                self.bad_primes_info.append([p,f1,f2])
 
-        self.sign = 1 # NotImplementedError
+        CC = ComplexField()
+        I = CC.gens()[0]
+        self.sign = I ** root_number_at_oo(h)
+        self.sign /= I ** (root_number_at_oo(h1) * V.dim)
+        self.sign /= I ** (root_number_at_oo(h2) * W.dim)
+        self.sign *= V.sign ** W.dim
+        self.sign *= W.sign ** V.dim
+        for p in bad_primes:
+            if p not in V.bad_semistable_primes or p not in V.bad_semistable_primes:
+                f1 = V.local_euler_factor(p)
+                f2 = W.local_euler_factor(p)
+                det1 = f1.leading_coefficient() * (-1) ** f1.degree()
+                det2 = f2.leading_coefficient() * (-1) ** f2.degree()
+                n1_tame = V.dim - f1.degree()
+                n2_tame = W.dim - f2.degree()
+                n1_wild = ZZ(V.conductor).valuation(p) - n1_tame
+                n2_wild = ZZ(VWconductor).valuation(p) - n2_tame
+                # additionally, we would need to correct this by
+                # replacing det1 by chi1(p) if p is semistable for V
+                # however for all the possible input this currently does
+                # not affect the sign
+                if p in V.bad_semistable_primes:
+                    chi1p = 1 # here
+                else:
+                    chi1p = det1
+                if p in W.bad_semistable_primes:
+                    chi2p = 1 # here
+                else:
+                    chi2p = det2
+
+                corr = chi1p ** n2_wild
+                corr *= det1 ** n2_tame
+                corr *= chi2p ** n1_wild
+                corr *= det2 ** n1_tame
+                corr *= (-1) ** (n1_tame * n2_tame)
+
+                self.sign *= corr/corr.abs()
 
         #self.primitive = False
         self.set_dokchitser_Lfunction()
         self.set_number_of_coefficients()
 
-        self.selfdual = all( abs(an.imag) < 0.0001 for an in self.algebraic_coefficients(50))
+        #self.selfdual = all( abs(an.imag) < 0.0001 for an in self.algebraic_coefficients(50))
         # why not 100 :)
 
         self.coefficient_type = max(V.coefficient_type, W.coefficient_type)
@@ -368,24 +461,29 @@ class GaloisRepresentation( Lfunction):
     def algebraic_coefficients(self, number_of_terms):
         """
         Computes the list [a1,a2,... of coefficients up
-        to a bound
+        to a bound. Note that [0] is a1.
         This is in the alg. normalisation, i.e. s <-> w+1-s
         """
+
         if self.object_type == "ellipticcurve":
             return self.original_object[0].anlist(number_of_terms)[1:]
         elif self.object_type == "dirichletcharacter":
             chi = self.original_object[0].chi.primitive_character()
-            return [ chi(m) for m in range(number_of_terms) ]
+            return [ chi(m) for m in range(1, number_of_terms) ]
         elif self.object_type == "Artin representation":
             rho = self.original_object[0]
             return rho.coefficients_list(upperbound=number_of_terms)
         elif self.object_type == "Elliptic Modular newform":
             F = self.original_object[0][0]
             i = self.original_object[0][1]
-            embeddings = F.q_expansion_embeddings(number_of_terms)
+            embeddings = F.q_expansion_embeddings(number_of_terms)[1:]
             return [x[i] for x in embeddings]
         elif self.object_type == "tensorproduct":
-            return None
+            V = self.V1
+            W = self.V2
+            L1 = V.algebraic_coefficients(number_of_terms)
+            L2 = W.algebraic_coefficients(number_of_terms)
+            return tensor_get_an(L1, L2, V.dim, W.dim, self.bad_primes_info)
         else:
             raise ValueError("You asked for a type that we don't have")
 
@@ -396,8 +494,9 @@ class GaloisRepresentation( Lfunction):
         as above into a list of automorphically normalised,
         i.e. s <-> 1-s
         """
-        for n in range(1,len(self.dirichlet_coefficients)):
-            self.dirichlet_coefficients[n] /= sqrt(float(n)**self.motivic_weight)
+        # this also turns them into floats and complex.
+        for n in range(len(self.dirichlet_coefficients)):
+            self.dirichlet_coefficients[n] /= sqrt(float(n+1)**self.motivic_weight)
 
 
 ## The tensor product
@@ -408,15 +507,6 @@ class GaloisRepresentation( Lfunction):
         is represented here by *
         """
         return GaloisRepresentation([self,other])
-
-## A function that gives back a L-function class as used later
-
-    def Lfunction(self):
-        """
-        The L-function object associated to this class
-        """
-        from lmfdb.lfunctions.Lfunction import Lfunction_GaloisRep
-        return Lfunction_GaloisRep(self)
 
 ## various direct accessible functions
 
@@ -616,7 +706,8 @@ def euler_factor_to_list(P, prec):
     P a polynomial (or power series)
     returns the list [a_p, a_p^2, ...
     """
-    R = PowerSeriesRing(P[0].parent().fraction_field(), "T", default_prec=prec+1)
+    K = P[0].parent()
+    R = PowerSeriesRing(K, "T", default_prec=prec+1)
     return ((1/R(P.truncate().coeffs())).truncate().coeffs())[1:]
 
 
@@ -642,8 +733,10 @@ def list_to_euler_factor(L,d):
     and returns the euler factor
     """
     if isinstance(L[0], int):
-        L[0] = ZZ(L[0])
-    R = PowerSeriesRing(L[0].parent().fraction_field(), "T")
+        K = QQ
+    else:
+        K = L[0].parent()
+    R = PowerSeriesRing(K, "T")
     T = R.gens()[0]
     f =  1/ R([1]+L)
     f = f.add_bigoh(d+1)
@@ -655,7 +748,14 @@ def tensor_local_factors(f1, f2, d):
     returns the euler factor for the tensor
     product (with respect to that precision d
     """
-    R = PowerSeriesRing(f1.parent().base_ring().fraction_field(), "T")
+    # base rings are either QQ or CC
+    K1 = f1.base_ring()
+    K2 = f2.base_ring()
+    if K1 == ComplexField() or K2 == ComplexField():
+        K = ComplexField()
+    else:
+        K = QQ
+    R = PowerSeriesRing(K, "T")
     if not f1.parent().is_exact(): # ideally f1,f2 should already be in PSR
         if f1.prec() < d:
             raise ValueError
@@ -758,4 +858,107 @@ def test_tensprod_11a_17a():
     B11=[11,1-T,1+11*T**2]
     B17=[17,1+2*T+17*T**2,1-T]
     assert ANS==tensor_get_an_no_deg1(C11,C17,2,2,[B11,B17])
+
+### comparison with previous implementation.
+
+#sage: E = EllipticCurve("11a1")
+#sage: from lmfdb.tensor_products.galois_reps import *
+#sage: V = GaloisRepresentation(E)
+#sage: V.lfunction()
+#sage: V.dirichlet_coefficients[:10]
+#[1.0,
+ #-1.414213562373095,
+ #-0.5773502691896258,
+ #1.0,
+ #0.4472135954999579,
+ #0.8164965809277261,
+ #-0.7559289460184544,
+ #0.0,
+ #-0.6666666666666666,
+ #-0.6324555320336759]
+
+#sage: chi = WebDirichletCharacter(modulus=5,number=2)
+#sage: V = GaloisRepresentation(chi)
+#sage: V.lfunction()
+#sage: V.dirichlet_coefficients[:10]
+#[(1+0j),
+ #(6.123233995736766e-17+1j),
+ #(-1.8369701987210297e-16-1j),
+ #(-1+1.2246467991473532e-16j),
+ #0j,
+ #(1+0j),
+ #(6.123233995736766e-17+1j),
+ #(-1.8369701987210297e-16-1j),
+ #(-1+1.2246467991473532e-16j),
+ #0j]
+#sage: chi = WebDirichletCharacter(modulus=5,number=4)
+#sage: V = GaloisRepresentation(chi)
+#sage: V.lfunction()
+#sage: V.dirichlet_coefficients[:10]
+#[(1+0j),
+ #(-1+1.2246467991473532e-16j),
+ #(-1+1.2246467991473532e-16j),
+ #(1+0j),
+ #0j,
+ #(1+0j),
+ #(-1+1.2246467991473532e-16j),
+ #(-1+1.2246467991473532e-16j),
+ #(1+0j),
+ #0j]
+
+#sage: rho = ArtinRepresentation(1,5,1)
+#sage: V = GaloisRepresentation(rho)
+#sage: V.lfunction()
+#sage: V.dirichlet_coefficients[:10]
+#[1.0,
+ #-1.00000000000000,
+ #-1.00000000000000,
+ #1.00000000000000,
+ #0.0,
+ #1.00000000000000,
+ #-1.00000000000000,
+ #-1.00000000000000,
+ #1.00000000000000,
+ #0.0]
+#sage: rho = ArtinRepresentation(1,5,2)
+#sage: V.lfunction()
+#sage: V.dirichlet_coefficients[:10]
+#[1.0,
+ #-1.00000000000000,
+ #-1.00000000000000,
+ #1.00000000000000,
+ #0.0,
+ #1.00000000000000,
+ #-1.00000000000000,
+ #-1.00000000000000,
+ #1.00000000000000,
+ #0.0]
+#sage: rho = ArtinRepresentation(1,4,1)
+#sage: V = GaloisRepresentation(rho)
+#sage: V.lfunction()
+#sage: V.dirichlet_coefficients[:10]
+#[1.0,
+ #0.0,
+ #-1.00000000000000,
+ #0.0,
+ #1.00000000000000,
+ #0.000000000000000,
+ #-1.00000000000000,
+ #0.0,
+ #1.00000000000000,
+ #0.000000000000000]
+#sage: rho = ArtinRepresentation(2,23,1)
+#sage: V = GaloisRepresentation(rho)
+#sage: V.lfunction()
+#sage: V.dirichlet_coefficients[:10]
+#[1.0,
+ #-1.00000000000000,
+ #-1.00000000000000,
+ #0.000000000000000,
+ #0.000000000000000,
+ #1.00000000000000,
+ #0.000000000000000,
+ #1.00000000000000,
+ #0.000000000000000,
+ #0.000000000000000]
 
