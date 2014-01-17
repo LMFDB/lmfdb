@@ -437,7 +437,11 @@ class GaloisRepresentation( Lfunction):
         self.set_number_of_coefficients()
 
         someans = self.algebraic_coefficients(50) # why not.
-        self.selfdual = all( abs(an.imag) < 0.0001 for an in someans)
+        if all( x in ZZ for x in someans):
+            self.selfdual = True
+        else:
+            CC = ComplexField()
+            self.selfdual = all( CC(an).imag().abs() < 0.0001 for an in someans)
 
         self.coefficient_type = max(V.coefficient_type, W.coefficient_type)
         self.coefficient_period = ZZ(V.coefficient_period).lcm(W.coefficient_period)
