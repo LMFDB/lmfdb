@@ -634,8 +634,8 @@ def tensor_get_an_no_deg1(L1, L2, d1, d2, BadPrimeInfo):
         BadPrimes.append(bpi[0])
     P = prime_range(S+1)
     Z = S * [1]
+    S = RealField()(S)
     for p in P:
-        S = RealField()(S)
         f = S.log(base=p).floor()
         q = 1
         E1 = []
