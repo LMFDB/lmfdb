@@ -29,8 +29,6 @@ from lmfdb.WebNumberField import WebNumberField
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms import *
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes \
      import WebMaassForm
-from lmfdb.tensor_products.tensor_products_defs import TensorProduct
-from lmfdb.tensor_products.galois_reps import GaloisRepresentation
 
 def constructor_logger(object, args):
     ''' Executed when a object is constructed for debugging reasons

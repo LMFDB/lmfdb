@@ -25,6 +25,8 @@ from lmfdb.WebCharacter import *
 from lmfdb.modular_forms.elliptic_modular_forms import WebNewForm
 from lmfdb.lfunctions import *
 
+# The method "show" shows the page for the Lfunction of a tensor product object.  This is registered on to the tensor_products_page blueprint rather than going via the l_function blueprint, hence the idiosyncrasies.  Sorry about that.  The reason is due to a difference in implementation; the tensor products are not (currently) in the database and the current L functions framewo  
+
 def get_bread(breads=[]):
     bc = [("Tensor products", url_for(".index"))]
     for b in breads:
@@ -88,6 +90,13 @@ def show():
                        ('Conductor', '$'+str(tp.cond())+'$')]
         info['properties2'] = properties2
 
+        if (tp.numcoeff > len(tp.dirichlet_coefficients)+10):
+            info['zeroswarning'] = 'These zeros may be inaccurate because we use only %s terms rather than the theoretically required %s terms' %(len(tp.dirichlet_coefficients), tp.numcoeff)
+            info['svwarning'] = 'These special values may also be inaccurate, for the same reason.'
+        else:
+            info['zeroswarning'] = ''       
+            info['svwarning'] = '' 
+    
         info['tpzeroslink'] = zeros(tp) 
         info['sv1'] = specialValueString(tp, 1, '1')
         info['sv12'] = specialValueString(tp, 0.5, '1/2')
