@@ -557,7 +557,7 @@ class GaloisRepresentation( Lfunction):
         """
         return self.dim
 
-    def conductor(self):
+    def cond(self):
         """
         Conductor
         """

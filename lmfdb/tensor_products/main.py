@@ -60,13 +60,21 @@ def show():
     for p in objPaths:
         galoisRepObjs.append(galois_rep_from_path(p))
 
+    if len(galoisRepObjs)==1:
+        gr = galoisRepObjs[0]
+        gr.lfunction()
+
+        info = {}
+        info['dirichlet'] = lfuncDStex(tp, "analytic")
+        info['eulerproduct'] = lfuncEPtex(tp, "abstract")
+        info['functionalequation'] = lfuncFEtex(tp, "analytic")
+        info['functionalequationSelberg'] = lfuncFEtex(tp, "selberg")
+
+        return render_template('Lfunction.html', **info)
+
     # currently only implemented tp of two things
     if len(galoisRepObjs)==2:
         tp = GaloisRepresentation([galoisRepObjs[0], galoisRepObjs[1]])
-#         friends = []
-#         friends.append(('L-function for Elliptic Curve %s' % obj1[2], url_for("l_functions.l_function_ec_page", label=obj1[2])))
-#         friends.append(('L-function for Dirichlet Character $\chi_{%s}(%s, \cdot)$' % (obj2[2], obj2[3]), url_for("l_functions.l_function_dirichlet_page", modulus = int(obj2[2]), number=int(obj2[3])) ))
-  
         tp.lfunction()
 
         info = {}
@@ -75,9 +83,50 @@ def show():
         info['functionalequation'] = lfuncFEtex(tp, "analytic")
         info['functionalequationSelberg'] = lfuncFEtex(tp, "selberg")
 
+        properties2 = [('Root number', '$'+str(tp.root_number())+'$'),
+                       ('Dimension', '$'+str(tp.dimension())+'$'),
+                       ('Conductor', '$'+str(tp.cond())+'$')]
+        info['properties2'] = properties2
+
+        info['tpzeroslink'] = zeros(tp) 
+        info['sv1'] = specialValueString(tp, 1, '1')
+        info['sv12'] = specialValueString(tp, 0.5, '1/2')
+
+#        friends = []
+#        friends.append(('L-function of first object', url_for('.show', obj1=objLinks[0])))
+#        friends.append(('L-function of second object', url_for('.show', obj2=objLinks[1]))) 
+#        info['friends'] = friends
+
+        info['eulerproduct'] = '\prod_{p} det(1 - Frob_p p^{-s} | (V \otimes W)^{I_p})^{-1}'
+
         return render_template('Lfunction.html', **info)  
     else:
         return render_template("not_yet_implemented.html")
+
+def zeros(L):
+    website_zeros = L.compute_heuristic_zeros()          # This depends on mathematical information, all below is formatting
+    # More semantic this way
+    # Allow 10 seconds
+
+    positiveZeros = []
+    negativeZeros = []
+
+    for zero in website_zeros:
+        if zero.abs() < 1e-10:
+            zero = 0
+        if zero < 0:
+            negativeZeros.append(zero)
+        else:
+            positiveZeros.append(zero)
+
+    # Format the html string to render
+    positiveZeros = str(positiveZeros)
+    negativeZeros = str(negativeZeros)
+    if len(positiveZeros) > 2 and len(negativeZeros) > 2:  # Add comma and empty space between negative and positive
+        negativeZeros = negativeZeros.replace("]", ", ]")
+
+    return "<span class='redhighlight'>{0}</span><span class='bluehighlight'>{1}</span>".format(
+        negativeZeros[1:len(negativeZeros) - 1], positiveZeros[1:len(positiveZeros) - 1])
 
 def galois_rep_from_path(p):
     C = getDBConnection()
