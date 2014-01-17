@@ -1,24 +1,28 @@
 # -*- coding: utf-8 -*-
-# This Blueprint is about Artin representations
-# Author: Paul-Olivier Dehaye
+# Blueprint for tensor product pages
+# Author: Martin Dickson
 
 import pymongo
 ASC = pymongo.ASCENDING
 import flask
 from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
-from lmfdb.tensor_products import tensor_products_page, tensor_products_logger
+from lmfdb.tensor_products import tensor_products_page, tensor_products_logger 
 from lmfdb.utils import to_dict
 from lmfdb.transitive_group import *
 from string import split
 from sets import Set
-from sage.schemes.elliptic_curves.constructor import EllipticCurve
+from sage.all import *
 
 from lmfdb.math_classes import *
 from lmfdb.WebNumberField import *
-from tensor_products_defs import TensorProduct
+from lmfdb.lfunctions.Lfunctionutilities import *
+
 from galois_reps import GaloisRepresentation
+from sage.schemes.elliptic_curves.constructor import EllipticCurve
 from lmfdb.WebCharacter import *
+from lmfdb.modular_forms.elliptic_modular_forms import WebNewForm
+from lmfdb.lfunctions import *
 
 def get_bread(breads=[]):
     bc = [("Tensor products", url_for(".index"))]
@@ -57,37 +61,52 @@ def show():
 
     # currently only implemented tp of two things
     if len(galoisRepObjs)==2:
-#         tp = mult(galoisRepObjs[0], galoisRepObjs[1]) # form the multiplication in the galois reps class, which implements tensor product
-
-#         info = {'conductor':tp.conductor()}
-
-#         properties2 = {'Conductor':info['conductor']}
-            
+        tp = galoisRepObjs[0] # TODO this should be the tensor product 
 #         friends = []
-#         friends.append(('L function', ''))
-#         friends.append(('Elliptic Curve %s' % obj1[2], url_for("ec.by_ec_label", label=obj1[2])))
-#         friends.append(('Dirichlet Character $\chi_{%s}(%s, \cdot)$' % (obj2[2], obj2[3]), url_for("characters.render_Dirichletwebpage", modulus=int(obj2[2]), number=int(obj2[3])) ))
 #         friends.append(('L-function for Elliptic Curve %s' % obj1[2], url_for("l_functions.l_function_ec_page", label=obj1[2])))
 #         friends.append(('L-function for Dirichlet Character $\chi_{%s}(%s, \cdot)$' % (obj2[2], obj2[3]), url_for("l_functions.l_function_dirichlet_page", modulus = int(obj2[2]), number=int(obj2[3])) ))
-            
-#         t = "Tensor product of Elliptic Curve %s and Dirichlet Character $\chi_{%s}(%s, \cdot)$" % (obj1[2], obj2[2], obj2[3])
+  
+        tp.lfunction()
 
-        return render_template("tensor_products_show.html", title='', bread=bread, info=[], friends=[])
+        info = {}
+        info['dirichlet'] = lfuncDStex(tp, "analytic")
+        info['eulerproduct'] = lfuncEPtex(tp, "abstract")
+        info['functionalequation'] = lfuncFEtex(tp, "analytic")
+        info['functionalequationSelberg'] = lfuncFEtex(tp, "selberg")
 
+        return render_template('Lfunction.html', **info)  
     else:
         return render_template("not_yet_implemented.html")
 
 def galois_rep_from_path(p):
     C = getDBConnection()
+
     if p[0]=='EllipticCurve':
         # create the sage elliptic curve then create Galois rep object
         data = C.elliptic_curves.curves.find_one({'lmfdb_label':p[2]})
         ainvs = [int(a) for a in data['ainvs']]
         E = EllipticCurve(ainvs)
         return GaloisRepresentation(E)
+
     elif (p[0]=='Character' and p[1]=='Dirichlet'):
         dirichletArgs = {'type':'Dirichlet', 'modulus':int(p[2]), 'number':int(p[3])}
         chi = WebDirichletCharacter(**dirichletArgs)
-        return GaloisRepresentation(chi) 
+        return GaloisRepresentation(chi)
+ 
+    elif (p[0]=='ModularForm'):
+        N = int(p[4])
+        k = int(p[5])
+        chi = p[6] # this should be zero; TODO check this is the case
+        label = p[7] # this is a, b, c, etc.; chooses the galois orbit
+        embedding = p[8] # this is the embedding of that galois orbit
+        form = WebNewForm(N, k, chi=chi, label=label) 
+        return GaloisRepresentation([form, embedding])
+
+    elif (p[0]=='ArtinRepresentation'):
+        dim = p[1]
+        conductor = p[2]
+        index = p[3]
+        rho = ArtinRepresentation(dim, conductor, index)
+        return GaloisRepresentation(rho)
     else:
         return
