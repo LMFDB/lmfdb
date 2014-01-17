@@ -79,27 +79,34 @@ function getNiceLabelFromURL(loc)  {
   }
 }
 
-  document.getElementById('submitbutton').onclick = function() {
-    var loc1 = document.getElementById('iframe1').contentWindow.location;
-    var loc2 = document.getElementById('iframe2').contentWindow.location;
-    
-    var lab1 = getNiceLabelFromURL(loc1);
-    var lab2 = getNiceLabelFromURL(loc2);
+function getEmbedding(lab) {
+  alert("have a modular form so need an embedding.  taking embedding=0 for now")
+}
 
-    if (lab1.indexOf('ModularForm/GL2/Q/holomorphic')!=-1) {
-      document.getElementById('obj1input').value = lab1.concat('0');
-    }
-    else {
-      document.getElementById('obj1input').value = lab1;
-    } 
-    if (lab2.indexOf('ModularForm/GL2/Q/holomorphic')!=-1) {
-      document.getElementById('obj2input').value = lab2.concat('0'); 
-    }
-    else {
-      document.getElementById('obj2input').value = lab2; 
-    }
+document.getElementById('submitbutton').onclick = function() {
+  var loc1 = document.getElementById('iframe1').contentWindow.location;
+  var loc2 = document.getElementById('iframe2').contentWindow.location;
     
+  var lab1 = getNiceLabelFromURL(loc1);
+  var lab2 = getNiceLabelFromURL(loc2);
+
+  if (lab1.indexOf('ModularForm/GL2/Q/holomorphic')!=-1) {
+    getEmbedding(lab1);
   }
+
+  if (lab1.indexOf('ModularForm/GL2/Q/holomorphic')!=-1) {
+    document.getElementById('obj1input').value = lab1.concat('0');
+  }
+  else {
+    document.getElementById('obj1input').value = lab1;
+  } 
+  if (lab2.indexOf('ModularForm/GL2/Q/holomorphic')!=-1) {
+    document.getElementById('obj2input').value = lab2.concat('0'); 
+  }
+  else {
+    document.getElementById('obj2input').value = lab2; 
+  }    
+}
 
 </script>
 

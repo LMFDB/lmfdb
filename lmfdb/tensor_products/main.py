@@ -17,6 +17,7 @@ from sage.all import *
 from lmfdb.math_classes import *
 from lmfdb.WebNumberField import *
 from lmfdb.lfunctions.Lfunctionutilities import *
+from lmfdb.lfunctions import *
 
 from galois_reps import GaloisRepresentation
 from sage.schemes.elliptic_curves.constructor import EllipticCurve
@@ -61,7 +62,7 @@ def show():
 
     # currently only implemented tp of two things
     if len(galoisRepObjs)==2:
-        tp = galoisRepObjs[0] # TODO this should be the tensor product 
+        tp = GaloisRepresentation([galoisRepObjs[0], galoisRepObjs[1]])
 #         friends = []
 #         friends.append(('L-function for Elliptic Curve %s' % obj1[2], url_for("l_functions.l_function_ec_page", label=obj1[2])))
 #         friends.append(('L-function for Dirichlet Character $\chi_{%s}(%s, \cdot)$' % (obj2[2], obj2[3]), url_for("l_functions.l_function_dirichlet_page", modulus = int(obj2[2]), number=int(obj2[3])) ))
@@ -100,7 +101,7 @@ def galois_rep_from_path(p):
         label = p[7] # this is a, b, c, etc.; chooses the galois orbit
         embedding = p[8] # this is the embedding of that galois orbit
         form = WebNewForm(N, k, chi=chi, label=label) 
-        return GaloisRepresentation([form, embedding])
+        return GaloisRepresentation([form, ZZ(embedding)])
 
     elif (p[0]=='ArtinRepresentation'):
         dim = p[1]
