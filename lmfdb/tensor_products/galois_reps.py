@@ -670,7 +670,6 @@ def tensor_get_an_deg1(L, D, BadPrimeInfo):
         else:
             i = BadPrimes.index(p)
             e = BadPrimeInfo[i][1]
-            ld = e.degree()
             F = e.list()[0].parent().fraction_field()
             R = PowerSeriesRing(F, "T", default_prec=f+1)
             e = R(e)
