@@ -853,3 +853,106 @@ def test_tensprod_11a_17a():
     B17=[17,1+2*T+17*T**2,1-T]
     assert ANS==tensor_get_an_no_deg1(C11,C17,2,2,[B11,B17])
 
+### comparison with previous implementation.
+
+#sage: E = EllipticCurve("11a1")
+#sage: from lmfdb.tensor_products.galois_reps import *
+#sage: V = GaloisRepresentation(E)
+#sage: V.lfunction()
+#sage: V.dirichlet_coefficients[:10]
+#[1.0,
+ #-1.414213562373095,
+ #-0.5773502691896258,
+ #1.0,
+ #0.4472135954999579,
+ #0.8164965809277261,
+ #-0.7559289460184544,
+ #0.0,
+ #-0.6666666666666666,
+ #-0.6324555320336759]
+
+#sage: chi = WebDirichletCharacter(modulus=5,number=2)
+#sage: V = GaloisRepresentation(chi)
+#sage: V.lfunction()
+#sage: V.dirichlet_coefficients[:10]
+#[(1+0j),
+ #(6.123233995736766e-17+1j),
+ #(-1.8369701987210297e-16-1j),
+ #(-1+1.2246467991473532e-16j),
+ #0j,
+ #(1+0j),
+ #(6.123233995736766e-17+1j),
+ #(-1.8369701987210297e-16-1j),
+ #(-1+1.2246467991473532e-16j),
+ #0j]
+#sage: chi = WebDirichletCharacter(modulus=5,number=4)
+#sage: V = GaloisRepresentation(chi)
+#sage: V.lfunction()
+#sage: V.dirichlet_coefficients[:10]
+#[(1+0j),
+ #(-1+1.2246467991473532e-16j),
+ #(-1+1.2246467991473532e-16j),
+ #(1+0j),
+ #0j,
+ #(1+0j),
+ #(-1+1.2246467991473532e-16j),
+ #(-1+1.2246467991473532e-16j),
+ #(1+0j),
+ #0j]
+
+#sage: rho = ArtinRepresentation(1,5,1)
+#sage: V = GaloisRepresentation(rho)
+#sage: V.lfunction()
+#sage: V.dirichlet_coefficients[:10]
+#[1.0,
+ #-1.00000000000000,
+ #-1.00000000000000,
+ #1.00000000000000,
+ #0.0,
+ #1.00000000000000,
+ #-1.00000000000000,
+ #-1.00000000000000,
+ #1.00000000000000,
+ #0.0]
+#sage: rho = ArtinRepresentation(1,5,2)
+#sage: V.lfunction()
+#sage: V.dirichlet_coefficients[:10]
+#[1.0,
+ #-1.00000000000000,
+ #-1.00000000000000,
+ #1.00000000000000,
+ #0.0,
+ #1.00000000000000,
+ #-1.00000000000000,
+ #-1.00000000000000,
+ #1.00000000000000,
+ #0.0]
+#sage: rho = ArtinRepresentation(1,4,1)
+#sage: V = GaloisRepresentation(rho)
+#sage: V.lfunction()
+#sage: V.dirichlet_coefficients[:10]
+#[1.0,
+ #0.0,
+ #-1.00000000000000,
+ #0.0,
+ #1.00000000000000,
+ #0.000000000000000,
+ #-1.00000000000000,
+ #0.0,
+ #1.00000000000000,
+ #0.000000000000000]
+#sage: rho = ArtinRepresentation(2,23,1)
+#sage: V = GaloisRepresentation(rho)
+#sage: V.lfunction()
+#sage: V.dirichlet_coefficients[:10]
+#[1.0,
+ #-1.00000000000000,
+ #-1.00000000000000,
+ #0.000000000000000,
+ #0.000000000000000,
+ #1.00000000000000,
+ #0.000000000000000,
+ #1.00000000000000,
+ #0.000000000000000,
+ #0.000000000000000]
+
