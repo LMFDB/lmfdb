@@ -32,16 +32,22 @@ sage: V4.algebraic_coefficients(10)
 
 sage: VW = GaloisRepresentation([V1,V2])
 sage: VW.algebraic_coefficients(10), VW.conductor, VW.sign
+sage: %time VW.lfunction(), VW.numcoeff, len(VW.dirichlet_coefficients)
 sage: VW = GaloisRepresentation([V1,V3])
 sage: VW.algebraic_coefficients(10), VW.conductor, VW.sign
+sage: %time VW.lfunction(), VW.numcoeff, len(VW.dirichlet_coefficients)
 sage: VW = GaloisRepresentation([V1,V4])
 sage: VW.algebraic_coefficients(10), VW.conductor, VW.sign
+sage: %time VW.lfunction(), VW.numcoeff, len(VW.dirichlet_coefficients)
 sage: VW = GaloisRepresentation([V2,V3])
 sage: VW.algebraic_coefficients(10), VW.conductor, VW.sign
+sage: %time VW.lfunction(), VW.numcoeff, len(VW.dirichlet_coefficients)
 sage: VW = GaloisRepresentation([V2,V4])
 sage: VW.algebraic_coefficients(10), VW.conductor, VW.sign
+sage: %time VW.lfunction(), VW.numcoeff, len(VW.dirichlet_coefficients)
 sage: VW = GaloisRepresentation([V3,V4])
 sage: VW.algebraic_coefficients(10), VW.conductor, VW.sign
+sage: %time VW.lfunction(), VW.numcoeff, len(VW.dirichlet_coefficients)
 
 
 sage: V = GaloisRepresentation(EllipticCurve("37a1"))
@@ -148,6 +154,7 @@ class GaloisRepresentation( Lfunction):
         self.set_number_of_coefficients()
         self.coefficient_type = 2
         self.coefficient_period = 0
+        self.besancon_bound = 50000
         self.ld.gp().quit()
 
         def eu(p):
@@ -207,6 +214,7 @@ class GaloisRepresentation( Lfunction):
         else:
             self.coefficient_type = 3
         self.coefficient_period = chi.modulus()
+        self.besancon_bound = 10000
 
         def eu(p):
             """
@@ -252,6 +260,7 @@ class GaloisRepresentation( Lfunction):
         self.set_number_of_coefficients()
         self.coefficient_type = 0
         self.coefficient_period = 0
+        self.besancon_bound = 3000
 
         def eu(p):
             """
@@ -295,6 +304,7 @@ class GaloisRepresentation( Lfunction):
         self.gammaV = [0,1]
         self.set_dokchitser_Lfunction()
         self.set_number_of_coefficients()
+        self.besancon_bound = 300
 
         def eu(p):
             """
@@ -328,6 +338,7 @@ class GaloisRepresentation( Lfunction):
         self.dim = V.dim * W.dim
         self.motivic_weight = V.motivic_weight + W.motivic_weight
         self.langlands = False # status 2014 :)
+        self.besancon_bound = min(V.besancon_bound, W.besancon_bound)
 
         bad2 = ZZ(W.conductor).prime_factors()
         bad_primes = [x for x in ZZ(V.conductor).prime_factors() if x in bad2]
@@ -478,6 +489,8 @@ class GaloisRepresentation( Lfunction):
     def set_number_of_coefficients(self):
         """
         Determines the number of coefficients needed using Dokchitser's
+        Note is the number we SHOULD compute. However we will cap this to
+        a smaller size later.
         """
         if not hasattr(self, "ld"):
             self.set_dokchitser_Lfunction()
@@ -486,8 +499,8 @@ class GaloisRepresentation( Lfunction):
         self.ld._gp_eval("MaxImaginaryPart = %s"%self.max_imaginary_part)
         self.numcoeff = self.ld.num_coeffs()
         # to be on the safe side, we make sure to have a min of terms
-        if self.numcoeff < 100:
-            self.numcoeff = 100
+        if self.numcoeff < 50:
+            self.numcoeff = 50
 
 ## produce coefficients
 
@@ -576,7 +589,12 @@ class GaloisRepresentation( Lfunction):
         lmfdb.lfunctions.Lfunction.
         """
         self.compute_kappa_lambda_Q_from_mu_nu()
-        self.dirichlet_coefficients = self.algebraic_coefficients(self.numcoeff+1)
+
+        # when tensoring a modular form with a dim > 1 rep, we run
+        # into having to compute a lot of coefficients and this will
+        # take a lot of time. We cut it down and print a warning
+        number_of_terms = min(self.numcoeff, self.besancon_bound)
+        self.dirichlet_coefficients = self.algebraic_coefficients(number_of_terms+1)
         self.renormalise_coefficients()
 
         self.texname = "L(s,\\rho)"
