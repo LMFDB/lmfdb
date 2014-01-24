@@ -57,9 +57,6 @@ def body_class():
 
 met = ['GET', 'POST']
 
-from lmfdb.modular_forms.elliptic_modular_forms import cache
-
-@cache.memoize(50)
 @emf.route("/", methods=met)
 @emf.route("/<int:level>/", methods=met)
 @emf.route("/<int:level>/<int:weight>/", methods=met)
