@@ -35,31 +35,49 @@ with character
     <tr>
       <th>Form</th>
       <th>Dim.</th>
+      <th align="left">\(q\)-expansion of eigenform</th>  
+    </tr>
+    <!--tr>     
       <th>Defining polynomial</th>
       <th>Discriminant</th>
-      <th align="left">\(q\)-expansion of eigenform</th>
-    </tr>
+    </tr !-->
   </thead>
   <tbody>
     {% for form in galois_orbits %}
     <tr>
       <td><a href="{{form.url}}">{{form.full_label}}</a></td>
       <td>{{ form.dim }}</td>
-      <td>{{ form.poly }}</td>
-      <td>{{ form.disc }}
-        {% if form.is_relative %}
-        {% set got_a_relative_nf = 1 %}
-        \( {}^{*} \)
-        {% endif %}
-      </td>
       <td>{{ form.qexp }}</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td>
+        <table>
+          <thead>
+            <tr>
+              <th>information about the number field containing the coefficients</th>
+          </tr>
+          </thead>
+          <tr><td>polynomial:</td><td> {{ form.poly }}</td>
+          <tr>
+            <td>
+              {% if form.is_relative %}
+              Discriminant of relative Number Field:
+              {% else %}
+              Discriminant: 
+              {%endif %}
+            </td>
+            <td>
+              {{ form.disc }}
+            </td>
+          </tr>
+        </table>
+      </td>
     </tr>
     {% endfor %}
   </tbody>
 </table>
-{% if got_a_relative_nf == 1 %}
-\( {}^{*} \) denotes a relative discriminant.
-{% endif %}
  {% else %}
 {{ name_new }} {{ nontrivial_new_info }}
 {% endif %}
