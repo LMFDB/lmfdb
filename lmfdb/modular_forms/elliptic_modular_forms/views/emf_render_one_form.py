@@ -34,7 +34,7 @@ from lmfdb.modular_forms.backend.mf_utils import my_get
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_core import *
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import *
 from lmfdb.modular_forms.elliptic_modular_forms.backend.plot_dom import *
-from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, default_prec, default_bprec, EMF_TOP, N_max_extra_comp, N_max_comp, N_max_db, k_max_db, k_max_comp
+from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, default_prec, default_bprec, default_display_bprec,EMF_TOP, N_max_extra_comp, N_max_comp, N_max_db, k_max_db, k_max_comp
 
 
 def render_one_elliptic_modular_form(level, weight, character, label, **kwds):
@@ -89,9 +89,11 @@ def set_info_for_one_modular_form(level=None, weight=None, character=None, label
         emf_logger.critical(s)
     emf_logger.debug("In set_info_for_one_mf: info={0}".format(info))
     prec = my_get(info, 'prec', default_prec, int)
-    bprec = my_get(info, 'prec', default_bprec, int)
+    bprec = my_get(info, 'bprec', default_display_bprec, int)
+    emf_logger.debug("PREC: {0}".format(prec))
+    emf_logger.debug("BITPREC: {0}".format(bprec))    
     try:
-        WNF = WebNewForm(level,weight, character, label, verbose=1)
+        WNF = WebNewForm(N=level,k=weight, chi=character, label=label, verbose=1)
         # if info.has_key('download') and info.has_key('tempfile'):
         #     WNF._save_to_file(info['tempfile'])
         #     info['filename']=str(weight)+'-'+str(level)+'-'+str(character)+'-'+label+'.sobj'
@@ -106,7 +108,7 @@ def set_info_for_one_modular_form(level=None, weight=None, character=None, label
     if hasattr(WNF,"dimension") and WNF.dimension()==0:
         info['error'] = "This space is empty!"
 
-    emf_logger.debug("WNF={0}".format(WNF))    
+#    emf_logger.debug("WNF={0}".format(WNF))    
     name = "Cuspidal newform %s of weight %s for " % (label, weight)
     if level == 1:
         name += "\(\mathrm{SL}_{2}(\mathbb{Z})\)"
@@ -123,13 +125,16 @@ def set_info_for_one_modular_form(level=None, weight=None, character=None, label
     if 'error' in info:
         return info
     # info['name']=WNF._name
-    info['satake'] = WNF.satake_parameters(prec, bprec)
-    # br = 60
+    ## Until we have figured out how to do the embeddings correctly we don't display the Satake
+    ## parameters for non-trivial characters....
+    if WNF.degree()==1:
+        info['satake'] = WNF.satake_parameters(prec, bprec)
+   # br = 60
     # info['qexp'] =
     # ajax_more(WNF.print_q_expansion,{'prec':5,'br':br},{'prec':10,'br':br},{'prec':20,'br':br},{'prec':100,'br':br},{'prec':200,'br':br})
     #K = WNF.base_ring()
     #L = WNF.coefficient_field()
-    info['qexp'] = WNF.print_q_expansion(prec, 120)
+    info['qexp'] = WNF.print_q_expansion(prec=prec, br=120)
     # c = list(WNF.q_expansion(prec))
     # c = map(lambda x: str(x).replace("*",""), c)
     # info['c'] = map(lambda x: x.replace(, c)
@@ -143,14 +148,14 @@ def set_info_for_one_modular_form(level=None, weight=None, character=None, label
     #print "c=",c_pol_ltx
     #print "b=",b_pol_ltx
     if c_pol_st <> 'x': ## Field is QQ
-        if b_pol_st <> 'x':
+        if b_pol_st <> 'x' and WNF.relative_degree()>1:
             info['polynomial_st'] = 'where \({0}=0\) and \({1}=0\).'.format(c_pol_ltx,b_pol_ltx)
         else:
-            info['polynomial_st'] = 'where \({0}\).'.format(c_pol_ltx)         
+            info['polynomial_st'] = 'where \({0}=0\).'.format(c_pol_ltx)         
     else:
         info['polynomial_st'] = ''
     info['degree'] = int(WNF.degree())
-    if b_pol_st == 'x':
+    if WNF.degree()==1:
         info['is_rational'] = 1
     else:
         info['is_rational'] = 0
@@ -167,7 +172,8 @@ def set_info_for_one_modular_form(level=None, weight=None, character=None, label
     #    info['embeddings'] =  ajax_more2(WNF.print_q_expansion_embeddings,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more coeffs.','higher precision'])
     # else:
     #    info['embeddings'] = ''
-    info['embeddings'] = WNF.q_expansion_embeddings(prec, bprec)
+    emf_logger.debug("PREC2: {0}".format(prec))
+    info['embeddings'] = WNF.q_expansion_embeddings(prec, bprec,format='latex')
     info['embeddings_len'] = len(info['embeddings'])
     properties2 = []
     if (ZZ(level)).is_squarefree():
@@ -190,6 +196,8 @@ def set_info_for_one_modular_form(level=None, weight=None, character=None, label
         info['is_cm'] = WNF.is_CM()
         info['CM'] = WNF.print_is_CM()
         info['CM_values'] = WNF.cm_values(digits=digits)
+        if len(info['CM_values']['tau'])==0:
+            info.pop('CM_values')
         if(WNF.is_CM()[0]):
             s = '- Is a CM-form<br>'
         else:
@@ -265,7 +273,7 @@ def set_info_for_one_modular_form(level=None, weight=None, character=None, label
     info['parents'] = parents
     info['siblings'] = siblings
     info['friends'] = friends
-
+    info['max_cn']=WNF.max_cn()
     return info
 
 import flask

@@ -57,7 +57,9 @@ def body_class():
 
 met = ['GET', 'POST']
 
+from lmfdb.modular_forms.elliptic_modular_forms import cache
 
+@cache.memoize(50)
 @emf.route("/", methods=met)
 @emf.route("/<int:level>/", methods=met)
 @emf.route("/<int:level>/<int:weight>/", methods=met)
@@ -135,6 +137,7 @@ def get_args(request, level=0, weight=0, character=-1, label='', keys=[]):
         dd = to_dict(request.args)
     else:
         dd = to_dict(request.form)
+    emf_logger.debug("REQUEST:{0}".format(dd))
     info = dict()
     info['level'] = my_get(dd, 'level', level, int)
     info['weight'] = my_get(dd, 'weight', weight, int)
@@ -218,7 +221,7 @@ met = ['GET', 'POST']
 
 @emf.route("/Download/<int:level>/<int:weight>/<int:character>/<label>", methods=['GET', 'POST'])
 def get_downloads(level=None, weight=None, character=None, label=None, **kwds):
-    keys = ['download', 'download_file', 'tempfile', 'format', 'number']
+    keys = ['download', 'download_file', 'tempfile', 'format', 'number','bitprec']
     info = get_args(request, level, weight, character, label, keys=keys)
     # info = to_dict(request.form)
     # info['level']=level; info['weight']=weight; info['character']=character; info['label']=label
@@ -257,7 +260,7 @@ def render_plot(grouptype=0, level=1):
     if isinstance(domain, sage.plot.plot.Graphics):
         emf_logger.debug('Got a Graphics object')
         _, filename = tempfile.mkstemp('.png')
-        P.save(filename)
+        domain.save(filename)
         data = open(filename).read()
         os.unlink(filename)
     else:
@@ -308,8 +311,8 @@ def download_web_modform(info):
             else:
                 X = Newforms(level, weight, names='a')
         else:  # format=='web_new':
-            X = WebNewForm(level, weight, character, label)
-    s = X.dumps()
+            X = WebNewForm(N=level, k=weight, chi=character, label=label)
+    s = dumps(X)
     name = "{0}-{1}-{2}-{3}-web_newform.sobj".format(weight, level, character, label)
     emf_logger.debug("name={0}".format(name))
     info['filename'] = name
@@ -324,87 +327,7 @@ def download_web_modform(info):
         info['error'] = "Could not send file!"
 
 
-# return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
-    # first check database.
-######### OBSOLETE
-## def make_table_of_characters(level,weight,**kwds):
-##     r""" Make a table of spaces S_k(N,\chi) for all compatible characters chi.
-##     """
-##     if level>0:
-##       D=DirichletGroup(level); l=D.list()
-##     else:
-##       D=list(); l=[]
-##     #print "D=",D
-##     s = "List of \(S_{%s} (%s, \chi_{n}) \)" %(weight,level)
-##     s+="<a name=\"#"+str(level)+"\"></a>"
-##     tbl=dict()
-##     tbl['headersv']=['order of \(\chi_{n}\):','dimension:']
-##     tbl['headersh']=list()
-##     tbl['corner_label']="\( n \):"
-##     tbl['data']=list()
-##     tbl['atts']="class=\"nt_data\" border=\"0\" padding=\"25\""
-##     tbl['data_format']='html'
-##     row=list()
-##     rowlen = 25
-##     ii=0
-##     dims = dict()
-##     for chi in range(0,len(l)):
-##         x=D[chi]; d=dimension_new_cusp_forms(x,weight)
-##         dims[chi]=d
-##     num_non_zero = (map(lambda x:  x>0,dims.values())).count(True)
-##     print "Number of non_zer0",num_non_zero
-##     if num_non_zero == 1:
-##         d = max(dims.values())
-##         chi = dims.keys()[dims.values().index(d)]
-##         return chi
-##     numrows = ceil(map(lambda x: x>0,dims).count(True)/rowlen)
-##     tbl['col_width']=dict()
-##     ci=0
-##     for chi in range(0,len(l)):
-##         d = dims[chi]
-##         if d==0:
-##             continue
-##         tbl['headersh'].append(chi)
-##         tbl['col_width'][ii]=["100"]
-##         x = l[chi]
-##         order = x.order()
-##         #st = " %s (order %s) " %(chi,order)
-##         ii=ii+1
-##         row.append(order)
-##         if(ii>rowlen and len(row)>0):
-##             print "appending row:",row
-##             tbl['data'].append(row)
-##             s=s+html_table(tbl)
-##             tbl['headersh']=list(); tbl['data']=list(); row=list()
-##             ii=0
-##     if(len(row)>0):
-##         tbl['data'].append(row)
-##         #if (len(row)>0 or len(tbl['data'])>0):
-##         #    ss=html_table(tbl)
-##         #    s=s+ss
-##     row = list()
-##     ii=0
-##     for chi in range(0,len(l)):
-##         d = dims[chi]
-##         if d==0:
-##             continue
-##         url = url_for('emf.render_elliptic_modular_forms',level=level,weight=weight,character=chi)
-##         row.append("<a href=\""+url+"\">"+str(d)+"</a>")
-##         ii=ii+1
-##         if(ii>rowlen and len(row)>0):
-##             print "appending row:",row
-##             tbl['data'].append(row)
-##             s=s+html_table(tbl)
-##             tbl['headersh']=list(); tbl['data']=list(); row=list()
-##             ii=0
-##     if(len(row)>0):
-##         tbl['data'].append(row)
-##         if (len(row)>0 or len(tbl['data'])>0):
-##             ss=html_table(tbl)
-##             s=s+ss
-##         else:
-##             s="All spaces are zero-dimensional!"
-##     return s
+
 def make_table_of_dimensions(level_start=1, level_stop=50, weight_start=1, weight_stop=24, char=0, **kwds):
     r"""
     make an html table with information about spaces of modular forms
@@ -664,6 +587,7 @@ def print_list_of_coefficients(info):
     level = my_get(info, 'level', -1, int)
     weight = my_get(info, 'weight', -1, int)
     prec = my_get(info, 'prec', 12, int)  # number of digits
+    bitprec = my_get(info, 'bitprec', 12, int)  # number of digits                
     character = my_get(info, 'character', '', str)  # int(info.get('weight',0))
     if character == '':
         character = 0
@@ -679,10 +603,6 @@ def print_list_of_coefficients(info):
         number = int(info['number'])
     else:
         number = max(WMFS.sturm_bound() + 1, 20)
-    if('prec' in info):
-        bprec = int(ceil(prec * 3.4))
-    else:
-        bprec = 53
     FS = list()
     if(label is not None):
         FS.append(WMFS.f(label))
@@ -701,27 +621,33 @@ def print_list_of_coefficients(info):
                 coefs += F.label()
             else:
                 coefs += F.label()
-        coefs += print_coefficients_for_one_form(F, number, info['format'])
+        coefs += print_coefficients_for_one_form(F, number, info['format'],bitprec=bitprec)
     ss = coefs
     return ss
 
 
-def print_coefficients_for_one_form(F, number, fmt):
-    emf_logger.debug("in print coef 1 form: format={0}".format(fmt))
-    s = ""
-    if fmt == "q_expansion_one_line":
+def print_coefficients_for_one_form(F, number, fmt,bitprec=53):
+    emf_logger.debug("in print {2} coefs for 1 form: format={0} bitprec={1}".format(fmt,bitprec,number))
+    # Start with some meta-data 
+    s = "## level={N}, weight={k}, character={ch},label={label} \n".format(N=F.level(),k=F.weight(),ch=F.chi(),label=F.label())
+    max_cn = F.max_cn()
+    if number > max_cn:
+        number = max_cn
+    if fmt == "q_expansion":
         s += F.print_q_expansion(number)
-    if fmt == "q_expansion_table":
-        qe = F.q_expansion(number).list()
-        if F.dimension() > 1:
-            s += F.polynomial()
+    if fmt == "coefficients":
+        qe = F.coefficients(range(number))
+        if F.degree() > 1:
+            s += "## "+str(F.polynomial(type='coefficient_field'))+"=0"
         s += "\n"
-        for c in qe:
-            s += str(c) + "\n"
+        for n in range(len(qe)):
+            c=qe[n]
+            s += "{n} \t {c} \n".format(n=n,c=c)
     if fmt == "embeddings":
-        embeddings = F.q_expansion_embeddings(number)
+        embeddings = F.q_expansion_embeddings(number,bitprec=bitprec,format='numeric')
         if F.degree() > 1:
             for j in range(F.degree()):
+                s+="# Embedding nr. {j} \n".format(j=j)
                 for n in range(number):
                     s += str(n) + "\t" + str(embeddings[n][j]) + "\n"
         else:
