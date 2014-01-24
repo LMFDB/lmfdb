@@ -218,16 +218,17 @@ in the field of complex numbers. The values are shown in the table below.
 </div>
   {% endif %}
 <h2>Download Fourier coefficients</h2>
+We have {{ info.max_cn }} coefficients available from the database. 
 <form name="get_coefficients" method="post"  action="{{url_for('.get_downloads',level=level,weight=weight,character=character,label=label)}}">
   <input type="hidden" name="download" value="coefficients"/>
   Get / compute  <input type="text" size="10" name="number" value="10"/> 
   coefficients in the following format:
   <ul>
     <li> 
-      <label><input type=radio name="format" checked value="q_expansion_one_line" onclick="return selectCFormat(event)"> q-expansion (on one line)</label>
+      <label><input type=radio name="format" checked value="q_expansion" onclick="return selectCFormat(event)"> q-expansion (on one line)</label>
     </li>
     <li> 
-      <label><input type=radio name="format" checked value="q_expansion_table" onclick="return selectCFormat(event)"> q-expansion (table)</label>
+      <label><input type=radio name="format" checked value="coefficients" onclick="return selectCFormat(event)"> a table of coefficients (algebraic)</label>
     </li>
     <li>
       <label><input type=radio name="format" value="embeddings" onclick="return selectCFormat(event)"> Complex embeddings </label>
