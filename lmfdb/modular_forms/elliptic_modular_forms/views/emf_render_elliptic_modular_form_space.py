@@ -27,7 +27,7 @@ from lmfdb.utils import ajax_more, ajax_result, make_logger, to_dict, url_charac
 from sage.all import *
 from sage.modular.dirichlet import DirichletGroup
 from lmfdb.base import app, db
-from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms import WebModFormSpace, WebNewForm
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms import WebModFormSpace, WebNewForm,connect_to_modularforms_db
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_classes import ClassicalMFDisplay, DimensionTable
 from lmfdb.modular_forms import MF_TOP
 from lmfdb.modular_forms.elliptic_modular_forms import N_max_comp, k_max_comp, N_max_db, k_max_db
@@ -90,8 +90,14 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
     info['weight'] = weight
     info['character'] = character
     emf_logger.debug("info={0}".format(info))
-    if(level > N_max_db or weight > k_max_db):
-        info['error'] = "Currently not available"
+#    DB = connect_to_modularforms_db()
+#    if level <> None and weight <> None and character <> None:
+#        s = {'N':int(level),'k':int(weight),'chi':int(character)}
+#        if DB.Newform_factors.files.find(s).count()==0:
+#            
+    #    if(level > N_max_db or weight > k_max_db):
+#        info['error'] = "Currently not available"
+#    
     WMFS = None
     if level <= 0:
         info['error'] = "Got wrong level: %s " % level
@@ -107,6 +113,7 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
             info['error'] = e.message
         else:
             info['error'] = "We are sorry. The sought space can not be found in the database."
+        return info
     if WMFS.level() == 1:
         info['group'] = "\( \mathrm{SL}_{2}(\mathbb{Z})\)"
     else:
@@ -209,4 +216,5 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
     lifts.append(('Half-Integral Weight Forms', '/ModularForm/Mp2/Q'))
     lifts.append(('Siegel Modular Forms', '/ModularForm/GSp4/Q'))
     info['lifts'] = lifts
+    #emf_logger.debug("Info = {0}".format(info))
     return info
