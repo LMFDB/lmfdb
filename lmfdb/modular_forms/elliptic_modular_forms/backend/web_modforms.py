@@ -153,11 +153,14 @@ class WebModFormSpace_class(object):
             '_galois_orbit_poly_info':{}
             }
         self.__dict__.update(d)
-        data.update(d)
+        #data.update(d)
+        emf_logger.debug("Incoming data:{0} ".format(data))
         if get_from_db:            
             d = self.get_from_db()
             emf_logger.debug("Got data:{0} from db".format(d))
-            data.update(d)
+        if data == None:
+            data = {}
+        data.update(d)        
         self.__dict__.update(data)
         
         try:
