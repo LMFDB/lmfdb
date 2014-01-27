@@ -108,7 +108,7 @@ class WebModFormSpace_class(object):
 
 
     """
-    def __init__(self, N=1, k=2, chi=0, cuspidal=1, prec=10, bitprec=53, data={}, verbose=0):
+    def __init__(self, N=1, k=2, chi=0, cuspidal=1, prec=10, bitprec=53, data={}, verbose=0,get_from_db=True):
         r"""
         Init self.
 
@@ -147,14 +147,19 @@ class WebModFormSpace_class(object):
             '_galois_decomposition' : [],
             '_newspace' : None,
             '_character' : None,
+            '_name' : "{0}.{1}.{2}".format(N,k,chi),
             '_got_ap_from_db' : False ,
-            '_version': float(emf_version)
+            '_version': float(emf_version),
+            '_galois_orbit_poly_info':{}
             }
-
-        if not isinstance(data,dict):
-            data = {}
+        self.__dict__.update(d)
         data.update(d)
+        if get_from_db:            
+            d = self.get_from_db()
+            emf_logger.debug("Got data:{0} from db".format(d))
+            data.update(d)
         self.__dict__.update(data)
+        
         try:
             if self._group == None:
                 self._group = Gamma0(N)
@@ -169,8 +174,8 @@ class WebModFormSpace_class(object):
             if self._newforms == {} and self._newspace.dimension()>0:
                 for i in self.labels():
                     self._newforms[i]=None
-            if len(self._ap) == 0:
-                self._ap = self._get_aps(prec=prec)                
+            #if len(self._ap) == 0:
+            #    self._ap = self._get_aps(prec=prec)                
         except RuntimeError:
             raise RuntimeError("Could not construct space for (k=%s,N=%s,chi=%s)=" % (k, N, self._chi))
         ### If we can we set these dimensions using formulas
@@ -178,7 +183,48 @@ class WebModFormSpace_class(object):
             self._is_new = True
         else:
             self._is_new = False
-
+        self.insert_into_db()
+        
+    def insert_into_db(self):
+        r"""
+        Insert a dictionary of data for self into the collection WebModularforms.files
+        """
+        emf_logger.debug("inserting self into db! name={0}".format(self._name))
+        C = lmfdb.base.getDBConnection()
+        fs = gridfs.GridFS(C[db_name], 'WebModformspace')
+        collection = C[db_name].WebModformspace.files
+        s = {'name':self._name}
+        rec = collection.find_one(s)
+        if rec:
+            id = rec.get('_id')
+        else:
+            id = None
+        if id<>None:
+            emf_logger.debug("Removing self from db with id={0}".format(id))
+            fs.delete(id)
+            
+        fname = "webmodformspace-{0:0>5}-{1:0>3}-{2:0>3}".format(self._N,self._k,self._chi) 
+        d = self.to_dict()
+        d.pop('_ap',None) # Since the ap's are already in the database we don't need them here
+        id = fs.put(dumps(d),filename=fname,N=int(self._N),k=int(self._k),chi=int(self._chi),name=self._name)
+        emf_logger.debug("inserted :{0}".format(id))
+        
+    def get_from_db(self):
+        C = lmfdb.base.getDBConnection()
+        collection = C[db_name].WebModformspace.files
+        s = {'name':self._name}
+        emf_logger.debug("Looking in DB for rec={0}".format(s))
+        f = C[db_name].WebModformspace.files.find_one(s)
+        emf_logger.debug("Found rec={0}".format(f))
+        if f<>None:
+            id = f.get('_id')
+            fs = gridfs.GridFS(C[db_name],'WebModformspace')
+            f = fs.get(id)
+            emf_logger.debug("Getting rec={0}".format(f))
+            d = loads(f.read())
+            return d
+        return {}
+            
     def _get_character(self,k=None):
         r"""
         Returns canonical representative of the Galois orbit nr. k acting on the ambient space of self.
@@ -227,7 +273,7 @@ class WebModFormSpace_class(object):
         D = connect_to_modularforms_db()
         return gridfs.GridFS(D, collection)
         
-    def _get_aps(self, prec=10):
+    def _get_aps(self, prec=-1):
         r"""
         Get aps from database if they exist.
         """
@@ -244,25 +290,17 @@ class WebModFormSpace_class(object):
         for rec in ap_from_db:
             emf_logger.debug("rec={0}".format(rec))
             a = self.labels()[rec['newform']]
-            prec = rec['prec']
-            if aplist.get(a,{}).get(prec,None)==None:
+            cur_prec = rec['prec']
+            if aplist.get(a,{}).get(cur_prec,None)==None:
                 aplist[a][prec]=loads(fs.get(rec['_id']).read())
-            
+            if cur_prec > prec and prec>0: # We are happy with these coefficients.
+                return 
         return aplist
 
-    def aps(self):
+    def aps(self,prec=-1):
         if self._ap == None or self._ap == {}:
-            self._ap = self._get_aps()
+            self._ap = self._get_aps(prec)
         return self._ap
-        #aps = self._modular_symbols.ambient(
-        #    ).compact_newform_eigenvalues(prime_range(prec), names='x')
-        # Insert in db
-        #if insert_into_db:
-        #    
-        #   filename = 'gamma0-aplist-{0:0>6}-{1:0>4}-{2:0>4}-{3}'.format(self._N,self._k,self._chi,self._prec)
-        #   fs.put(dumps(aps),filename,N=int(self._N),k=int(self._k),chi=int(self._chi),prec=int(prec))
-        #return aps
-
 
     def _get_modular_symbols(self):
         r"""
@@ -308,92 +346,92 @@ class WebModFormSpace_class(object):
             
 
             
-    def _get_objects(self, k, N, chi, use_db=True, get_what='Modular_symbols', **kwds):
-        r"""
-        Getting the space of modular symbols from the database if it exists. Otherwise compute it and insert it into the database.
-        """
-        if not get_what in ['ap', 'Modular_symbols','Newform_factors']:
-            emf_logger.critical("Collection {0} is not implemented!".format(get_what))
-        collection = get_what
-        emf_logger.debug("collection={0}".format(collection))
-        res = None
-        if 'prec' in kwds:
-            prec = kwds['prec']
-        elif get_what == 'ap':
-            prec = 10
-        self._from_db = 0
-        try:
-            if use_db:
-                emf_logger.debug("dbport={0}".format(dbport))
-                C = lmfdb.base.getDBConnection()
-                emf_logger.debug("C={0}".format(C))
-                if not C:
-                    emf_logger.critical("Could not connect to Database! C={0}".format(C))
-                if not db_name in C.database_names():
-                    emf_logger.critical("Incorrect database name {0}. \n Available databases are:{1}".format(
-                        db_name, C.database_names()))
-                if not collection + '.files' in C[db_name].collection_names():
-                    emf_logger.critical("Incorrect collection {0} in database {1}. \n Available collections are:{2}".format(collection, db_name, C[db_name].collection_names()))
-                files = C[db_name][collection].files
-                key = {'k': int(k), 'N': int(N), 'chi': int(chi)}
-                if get_what == 'ap':
-                    key['prec'] = {"$gt": prec - 1}
-                finds = files.find(key)
-                if get_what == 'ap':
-                    finds = finds.sort("prec")
-                    self._got_ap_from_db = True                    
-                if self._verbose > 1:
-                    emf_logger.debug("files={0}".format(files))
-                    emf_logger.debug("key={0}".format(key))
-                    emf_logger.debug("finds={0}".format(finds))
-                    emf_logger.debug("finds.count()={0}".format(finds.count()))
-                if get_what=='Newform_factors':
-                    finds = finds.sort("newform")
-                    res = []
-                    for rec in finds:
-                        fid = rec['_id']
-                        fs = gridfs.GridFS(C[db_name], collection)
-                        f = fs.get(fid)
-                        emf_logger.debug("rec={0}".format(rec))
-                        res.append(loads(f.read()))
-                        self._from_db = 1
-                elif finds and finds.count() > 0:
-                    rec = finds[0]
-                    emf_logger.debug("rec={0}".format(rec))
-                    fid = rec['_id']
-                    fs = gridfs.GridFS(C[db_name], collection)
-                    f = fs.get(fid)
-                    res = loads(f.read())
-                    # TODO avoid pickling python objects for storing in the database
-                    self._from_db = 1
-                    if get_what == 'Modular_symbls':
-                        self._id = rec['_id'] 
-                else:
-                    res = []
-        except ArithmeticError:
-            pass
-            #Exception as e:
-            #emf_logger.critical("Error: {0}".format(e))
-            # pass
-        if not res and not use_db:
-            if get_what == 'Modular_symbols':
-                if chi == 0:
-                    res = ModularSymbols(N, k, sign=1)
-                else:
-                    emf_logger.debug("character: {0}".format(self.character()))
-                    emf_logger.debug("weight: {0}".format(k))
-                    res = ModularSymbols(self.character(), k, sign=1)
-            elif get_what == 'ap':
-                if self.level() == 1:
-                    ## Get the Hecke eigenvalues for level 1.
-                    ## Have to do this manually due to bug in Sage:
-                    res = my_compact_newform_eigenvalues(
-                        self._modular_symbols.ambient(), prime_range(prec), names='x')
-                else:
-                    res = self._modular_symbols.ambient(
-                    ).compact_newform_eigenvalues(prime_range(prec), names='x')
-        emf_logger.debug("res={0}".format(res))
-        return res
+    # def _get_objects(self, k, N, chi, use_db=True, get_what='Modular_symbols', **kwds):
+    #     r"""
+    #     Getting the space of modular symbols from the database if it exists. Otherwise compute it and insert it into the database.
+    #     """
+    #     if not get_what in ['ap', 'Modular_symbols','Newform_factors']:
+    #         emf_logger.critical("Collection {0} is not implemented!".format(get_what))
+    #     collection = get_what
+    #     emf_logger.debug("collection={0}".format(collection))
+    #     res = None
+    #     if 'prec' in kwds:
+    #         prec = kwds['prec']
+    #     elif get_what == 'ap':
+    #         prec = 10
+    #     self._from_db = 0
+    #     try:
+    #         if use_db:
+    #             emf_logger.debug("dbport={0}".format(dbport))
+    #             C = lmfdb.base.getDBConnection()
+    #             emf_logger.debug("C={0}".format(C))
+    #             if not C:
+    #                 emf_logger.critical("Could not connect to Database! C={0}".format(C))
+    #             if not db_name in C.database_names():
+    #                 emf_logger.critical("Incorrect database name {0}. \n Available databases are:{1}".format(
+    #                     db_name, C.database_names()))
+    #             if not collection + '.files' in C[db_name].collection_names():
+    #                 emf_logger.critical("Incorrect collection {0} in database {1}. \n Available collections are:{2}".format(collection, db_name, C[db_name].collection_names()))
+    #             files = C[db_name][collection].files
+    #             key = {'k': int(k), 'N': int(N), 'chi': int(chi)}
+    #             if get_what == 'ap':
+    #                 key['prec'] = {"$gt": prec - 1}
+    #             finds = files.find(key)
+    #             if get_what == 'ap':
+    #                 finds = finds.sort("prec")
+    #                 self._got_ap_from_db = True                    
+    #             if self._verbose > 1:
+    #                 emf_logger.debug("files={0}".format(files))
+    #                 emf_logger.debug("key={0}".format(key))
+    #                 emf_logger.debug("finds={0}".format(finds))
+    #                 emf_logger.debug("finds.count()={0}".format(finds.count()))
+    #             if get_what=='Newform_factors':
+    #                 finds = finds.sort("newform")
+    #                 res = []
+    #                 for rec in finds:
+    #                     fid = rec['_id']
+    #                     fs = gridfs.GridFS(C[db_name], collection)
+    #                     f = fs.get(fid)
+    #                     emf_logger.debug("rec={0}".format(rec))
+    #                     res.append(loads(f.read()))
+    #                     self._from_db = 1
+    #             elif finds and finds.count() > 0:
+    #                 rec = finds[0]
+    #                 emf_logger.debug("rec={0}".format(rec))
+    #                 fid = rec['_id']
+    #                 fs = gridfs.GridFS(C[db_name], collection)
+    #                 f = fs.get(fid)
+    #                 res = loads(f.read())
+    #                 # TODO avoid pickling python objects for storing in the database
+    #                 self._from_db = 1
+    #                 if get_what == 'Modular_symbls':
+    #                     self._id = rec['_id'] 
+    #             else:
+    #                 res = []
+    #     except ArithmeticError:
+    #         pass
+    #         #Exception as e:
+    #         #emf_logger.critical("Error: {0}".format(e))
+    #         # pass
+    #     if not res and not use_db:
+    #         if get_what == 'Modular_symbols':
+    #             if chi == 0:
+    #                 res = ModularSymbols(N, k, sign=1)
+    #             else:
+    #                 emf_logger.debug("character: {0}".format(self.character()))
+    #                 emf_logger.debug("weight: {0}".format(k))
+    #                 res = ModularSymbols(self.character(), k, sign=1)
+    #         elif get_what == 'ap':
+    #             if self.level() == 1:
+    #                 ## Get the Hecke eigenvalues for level 1.
+    #                 ## Have to do this manually due to bug in Sage:
+    #                 res = my_compact_newform_eigenvalues(
+    #                     self._modular_symbols.ambient(), prime_range(prec), names='x')
+    #             else:
+    #                 res = self._modular_symbols.ambient(
+    #                 ).compact_newform_eigenvalues(prime_range(prec), names='x')
+    #     emf_logger.debug("res={0}".format(res))
+    #     return res
 
     def __reduce__(self):
         r"""
@@ -460,13 +498,14 @@ class WebModFormSpace_class(object):
             decomp = self._get_newform_factors()
             if len(decomp)>0:
                 L = filter(lambda x: x.is_new() and x.is_cuspidal(), decomp)
-                emf_logger.debug("computed L:".format(L))
+                emf_logger.debug("computed L:{0}".format(L))
             elif self._computation_too_hard():
                 L = []
                 raise IndexError,"No decomposition was found in the database!"
                 emf_logger.debug("no decomp in database!")
             else: # compute
                 L = self._newspace.decomposition()
+                emf_logger.debug("newspace :".format(self._newspace))                                
                 emf_logger.debug("computed L:".format(L))
         self._galois_decomposition = L
         # we also label the compnents
@@ -479,7 +518,8 @@ class WebModFormSpace_class(object):
                 j2 = floor(QQ(j) / QQ(26))
                 label = str(x[j1]).lower()
                 label = label + str(j2)
-            self._galois_orbits_labels.append(label)
+            if label not in self._galois_orbits_labels:
+                self._galois_orbits_labels.append(label)
         return L
 
     def galois_orbit_label(self, j):
@@ -729,7 +769,9 @@ class WebModFormSpace_class(object):
             ), weight=self.weight(), label=o['label'], character=self._chi)
             o['dim'] = self._galois_decomposition[j].dimension()
             emf_logger.debug('dim({0}={1})'.format(j, o['dim']))
-            poly, disc, is_relative = self.galois_orbit_poly_info(j, prec)
+            oi = self.galois_orbit_poly_info(j, prec)
+            emf_logger.debug('orbit pol. info ={0}'.format(oi))            
+            poly, disc, is_relative = oi
             o['poly'] = "\( {0} \)".format(latex(poly))
             o['disc'] = "\( {0} \)".format(latex(disc))
             o['is_relative'] = is_relative
@@ -795,18 +837,19 @@ class WebModFormSpace_class(object):
                     slist.append(sss)
             else:
                 slist.append(ss)
-
+            
             K = orbit.base_ring()
             if K.absolute_degree() == 1:
                 poly = ZZ['x'].gen()
                 disc = '1'
             else:
-                poly = K.defining_polynomial()
-                if(K.is_relative()):
-                    disc = factor(K.relative_discriminant().absolute_norm())
-                    is_relative = True
-                else:
-                    disc = factor(K.discriminant())
+                poly,disc,is_relative = self.galois_orbit_poly_info(j)
+                #poly = K.defining_polynomial()
+                #if(K.is_relative()):
+                #    disc = factor(K.relative_discriminant().absolute_norm())
+                #    is_relative = True
+                #else:
+                #    disc = factor(K.discriminant())
             tbl['data'].append([dim, poly, disc, slist])
         # we already formatted the table
         tbl['data_format'] = {3: 'html'}
@@ -851,10 +894,13 @@ class WebModFormSpace_class(object):
         return ss
 
     def galois_orbit_poly_info(self, orbitnr, prec=10):
+
+        if self._galois_orbit_poly_info.get(orbitnr)<>None:
+            return self._galois_orbit_poly_info[orbitnr]
         orbit = self.galois_orbit(orbitnr, prec)
         emf_logger.debug("in orbit_poly_info orbit:{0}".format(orbit))
         if not orbit:
-            return ''
+            return '',0,False
         K = orbit.base_ring()
         is_relative = False
         disc = 1
@@ -870,8 +916,10 @@ class WebModFormSpace_class(object):
                 is_relative = True
             else:
                 disc = factor(K.discriminant())
-        emf_logger.debug("end orbit_poly_info")        
-        return poly, disc, is_relative
+        emf_logger.debug("end orbit_poly_info")
+        self._galois_orbit_poly_info[orbitnr] = poly, disc, is_relative
+        self.insert_into_db()
+        return self._galois_orbit_poly_info[orbitnr]
 
     def print_geometric_data(self):
         r""" Print data about the underlying group.
@@ -1087,7 +1135,9 @@ class WebNewForm_class(object):
             
         fname = "webnewform-{0:0>5}-{1:0>3}-{2:0>3}-{3}".format(self._N,self._k,self._chi,self._label) 
 #        try:
-        id = fs.put(dumps(self.to_dict()),filename=fname,N=int(self._N),k=int(self._k),chi=int(self._chi),label=self._label,name=self._name)
+        d = self.to_dict()
+        d.pop('_ap',None) ## This is already stored in this format in the database
+        id = fs.put(dumps(d),filename=fname,N=int(self._N),k=int(self._k),chi=int(self._chi),label=self._label,name=self._name)
 #        except Exception as e:
 #            emf_logger.critical("DB insertion failed: {0}".format(e.message))
         emf_logger.debug("inserted :{0}".format(id))
@@ -1317,7 +1367,10 @@ class WebNewForm_class(object):
             self._embeddings = []
         if self._embeddings_latex == None:
             self._embeddings_latex = []            
-        # If we need more coefficients than we have then we need to compute more.
+        # If we need more coefficients or higher precision than we currently have then we need to compute more.
+        #
+        if len(self._embeddings)>0:
+            self._bitprec = self._embeddings[0][0].prec()
         if bitprec > self._bitprec: # Then we recompute
             self._embeddings = []
         nstart = len(self._embeddings)
@@ -1486,6 +1539,7 @@ class WebNewForm_class(object):
         else:
             i = max(l)
         ambient_aps = ambient_aps[i]
+        emf_logger.debug("i={0}".format(i))
         emf_logger.debug("ambient_aps={0}".format(ambient_aps))
         try:
             E, v = ambient_aps
