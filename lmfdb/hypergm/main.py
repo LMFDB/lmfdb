@@ -11,7 +11,7 @@ from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
 from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input, image_callback
 from lmfdb.number_fields.number_field import parse_list
-from sage.all import ZZ, var, PolynomialRing, QQ, latex
+from sage.all import ZZ, var, PolynomialRing, QQ, latex, gp
 from lmfdb.hypergm import hypergm_page, hgm_logger
 
 from lmfdb.transitive_group import *
@@ -24,11 +24,15 @@ HGM_credit = 'D. Roberts and J. Jones'
 def ab_label(A,B):
     return "A" + ".".join(map(str,A)) + "_B" + ".".join(map(str,B))
     
-def make_label(A,B,tn,td):
+def make_abt_label(A,B,tn,td):
     AB_str = ab_label(A,B)
     t = QQ( "%d/%d" % (tn, td))
-    t_str = "/t%s.%s" % (str(t.numerator()), str(t.denominator()))
+    t_str = "_t%s.%s" % (t.numerator(), t.denominator())
     return AB_str + t_str
+
+def make_t_label(t):
+    tsage = QQ("%d/%d" % (t[0], t[1]))
+    return "t%s.%s" % (tsage.numerator(), tsage.denominator())
 
 def get_bread(breads=[]):
     bc = [("Motives", url_for("motive.index")), ("Hypergeometric", url_for("motive.index2")), ("$\Q$", url_for(".index"))]
@@ -40,7 +44,7 @@ def display_t(tn, td):
     t = QQ("%d/%d" % (tn, td))
     if t.denominator() == 1:
         return str(t.numerator())
-    return "%s/%s" % (str(t.numerator()), str(t.denominator()))
+    return "%s/%s" % (t.numerator(), t.denominator())
 
 # Returns a string of val if val = 0, 1, -1, or version with p factored out otherwise
 def factor_out_p(val, p):
@@ -99,6 +103,10 @@ def poly_with_factored_coeffs(c, p):
         out = out[1:]
     return out
 
+# Assume values have already been stripped of alphabetic
+# characters and *'s inserted for multiplication
+def myZZ(val):
+    return int(ZZ(gp(val)))
 
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 IF_RE = re.compile(r'^\[\]|(\[\d+(,\d+)*\])$')  # invariant factors
@@ -173,31 +181,50 @@ def hgm_search(**args):
     if 'jump_to' in info:
         return render_hgm_webpage({'label': info['jump_to']})
 
-    # t, generic, irreducible
-    # 'A', 'B', 'hodge'
-    for param in ['A', 'B']:
-        if (param == 't' and PAIR_RE.match(info['t'])) or (param == 'A' and IF_RE.match(info[param])) or (param == 'B' and IF_RE.match(info[param])):
-            query[param] = parse_list(info[param])
-        else:
-            print "Bad input"
-            
-    for param in ['degree','weight','sign']:
+    family_search = False
+    if info.get('Submit Family') or info.get('family'):
+        family_search = True
+
+    # generic, irreducible not in DB yet
+    for param in ['A', 'B', 'hodge', 'A2', 'B2', 'A3', 'B3', 'A5', 'B5', 'A7', 'B7']:
         if info.get(param):
             info[param] = clean_input(info[param])
-            if param == 'gal':
-                try:
-                    gcs = complete_group_codes(info[param])
-                    if len(gcs) == 1:
-                        tmp = ['gal', list(gcs[0])]
-                    if len(gcs) > 1:
-                        tmp = [{'gal': list(x)} for x in gcs]
-                        tmp = ['$or', tmp]
-                except NameError as code:
-                    info['err'] = 'Error parsing input for A: unknown group label %s.  It needs to be a <a title = "Galois group labels" knowl="nf.galois_group.name">group label</a>, such as C5 or 5T1, or comma separated list of labels.' % code
-                    return search_input_error(info, bread)
+            if IF_RE.match(info[param]):
+                query[param] = parse_list(info[param])
             else:
+                name = param
+                if field == 'hodge':
+                    name = 'Hodge vector'
+                info['err'] = 'Error parsing input for %s.  It needs to be a list of integers in square brackets, such as [2,3] or [1,1,1]' % name
+                return search_input_error(info, bread)
+
+    if info.get('t') and not family_search:
+        info['t'] = clean_input(info['t'])
+        try:
+            tsage = QQ(str(info['t']))
+            tlist = [int(tsage.numerator()), int(tsage.denominator())]
+            query['t'] = tlist
+        except:
+            info['err'] = 'Error parsing input for t.  It needs to be a rational number, such as 2/3 or -3'
+
+    for param in ['degree','weight','sign', 'conductor']:
+        # We don't look at sign in family searches
+        if info.get(param) and not ((param == 'sign' or param=='conductor') and family_search):
+            if param=='conductor':
+                cond = info['conductor']
+                try:
+                    cond = re.sub(r'(\d)\s+(\d)', r'\1 * \2', cond) # implicit multiplication of numbers
+                    cond = cond.replace(r'..', r'-') # all ranges use -
+                    cond = re.sub(r'[a..zA..Z]', '', cond)
+                    cond = clean_input(cond)
+                    tmp = parse_range2(cond, 'cond', myZZ)
+                except:
+                    info['err'] = 'Error parsing input for conductor.  It needs to be an integer (e.g., 8), a range of integers (e.g. 10-100), or a list of such (e.g., 5,7,8,10-100).  Integers may be given in factored form (e.g. 2^5 3^2) %s' % cond
+                    return search_input_error(info, bread)
+            else: # not conductor
+                info[param] = clean_input(info[param])
                 ran = info[param]
-                ran = ran.replace('..', '-')
+                ran = ran.replace(r'..', r'-')
                 if LIST_RE.match(ran):
                     tmp = parse_range2(ran, param)
                 else:
@@ -216,6 +243,7 @@ def hgm_search(**args):
                 tmp[1] = newors
             query[tmp[0]] = tmp[1]
 
+    #print query
     count_default = 20
     if info.get('count'):
         try:
@@ -245,7 +273,10 @@ def hgm_search(**args):
             pass
 
     # logger.debug(query)
-    res = C.hgm.motives.find(query).sort([('cond', pymongo.ASCENDING), ('label', pymongo.ASCENDING)])
+    if family_search:
+        res = C.hgm.families.find(query).sort([('label', pymongo.ASCENDING)])
+    else:
+        res = C.hgm.motives.find(query).sort([('cond', pymongo.ASCENDING), ('label', pymongo.ASCENDING)])
     nres = res.count()
     res = res.skip(start).limit(count)
 
@@ -264,10 +295,16 @@ def hgm_search(**args):
             info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
         else:
             info['report'] = 'displaying all %s matches' % nres
-    info['make_label'] = make_label
+    info['make_label'] = make_abt_label
+    info['make_t_label'] = make_t_label
+    info['ab_label'] = ab_label
     info['display_t'] = display_t
+    info['family'] = family_search
 
-    return render_template("hgm-search.html", info=info, title="Hypergeometric Motive over $\Q$ Search Result", bread=bread, credit=HGM_credit)
+    if family_search:
+        return render_template("hgm-search.html", info=info, title="Hypergeometric Motive over $\Q$ Search Result", bread=bread, credit=HGM_credit)
+    else:
+        return render_template("hgm-search.html", info=info, title="Hypergeometric Motive over $\Q$ Search Result", bread=bread, credit=HGM_credit)
 
 
 def render_hgm_webpage(args):
