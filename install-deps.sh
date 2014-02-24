@@ -59,6 +59,7 @@ if [ $verbose = 1 ]
 then
     echo "sage_exec is " $sage_exec
     echo "SAGE_ROOT is" $SAGE_ROOT
+    echo "SAGEVERSION is" $SAGEVERSION
 fi
 # Cut of any beta etc...
 if [[ "$SAGEVERSION" =~ 'beta' ]]
@@ -69,9 +70,14 @@ then
 else
     SAGE_MINORVERSION=${SAGEVERSION:i:j-i-1} 
 fi
+if [[ "$SAGE_MINORVERSION" =~ '.' ]]
+then
+    j=`expr index "$SAGE_MINORVERSION" .`
+    SAGE_MINORVERSION=${SAGE_MINORVERSION:0:j-1} 
+fi
 if [ $verbose -ge 1 ]
 then
-    echo $SAGE_MINORVERSION
+    echo "SAGE_MINORVERSION is " $SAGE_MINORVERSION
 fi
 if [ $SAGE_MAJORVERSION -ge 5 ]  && [ $SAGE_MINORVERSION -ge 7  ] || [ $SAGE_MAJORVERSION -ge 6 ]
 then
@@ -156,14 +162,14 @@ done
 ###
 ## First see if we already have it and if not we get an egg and install it.
 ##
-test=`$sage_exec -c "import dirichlet_conrey; print sys.modules.get('dirichlet_conrey')==None"` 
+test=`$sage_exec -c "print sys.modules.get('dirichlet_conrey')==None"` 
 if [ $test='True' ]
 then
     if [ $verbose -gt 0 ]
     then
         echo "Do not have dirichlet_conrey!"
     fi
-    . "$SAGE_ROOT/spkg/bin/sage-env" >&2
+    . ""$sage_env"" >&2
     if [ $dry_run = 1 ]
     then
         easy_install -n http://sage.math.washington.edu/home/stromberg/pub/DirichletConrey-0.1-py2.7-linux-x86_64.egg
