@@ -492,7 +492,17 @@ def render_isogeny_class(iso_class):
     cremona_iso = E1data['iso']
     ainvs = [int(a) for a in E1data['ainvs']]
     E1 = EllipticCurve(ainvs)
-    curves, mat = E1.isogeny_class()
+    ver = sage.version.version.split('.') # e.g. "6.1.beta2"
+    ma = int(ver[0])
+    mi = int(ver[1])
+    if ma>6 or ma==6 and mi>1:
+        # Code for Sage 6.2 and later:
+        isogeny_class = E1.isogeny_class()
+        curves = isogeny_class.curves
+        mat = isogeny_class.matrix()
+    else:
+        # Code for Sage 6.1 and before:
+        curves, mat = E1.isogeny_class()
     size = len(curves)
     # Create a list of the curves in the class from the database, so
     # they are in the correct order!
