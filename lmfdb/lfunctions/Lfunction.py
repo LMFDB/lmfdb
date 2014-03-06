@@ -273,7 +273,6 @@ class Lfunction_EMF(Lfunction):
             raise KeyError("You have to supply weight, level, character, " +
                            "label and number for an " +
                            "elliptic modular form L-function")
-        logger.debug(str(args))
 
         modform_translation_limit = 101
 
@@ -296,7 +295,7 @@ class Lfunction_EMF(Lfunction):
         try:
             self.MF = WebNewForm(k = self.weight, N = self.level,
                                  chi = self.character, label = self.label, 
-                                 prec = self.numcoeff, verbose=1)
+                                 prec = self.numcoeff, verbose=0)
         except:
             raise KeyError("No data available yet for this modular form, so" +
                            " not able to compute its L-function")
