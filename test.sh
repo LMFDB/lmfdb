@@ -25,7 +25,7 @@ else
   WHAT="$@"
 fi
 
-ARGS='-v -s --testmatch="(?:^|[\b_\./-])[Tt]est_"'
+ARGS='-v -s --with-doctest --testmatch="(?:^|[\b_\./-])[Tt]est_"'
 
 if [[ -n $WHAT ]]; then
    eval "sage -sh -c 'nosetests $ARGS $WHAT'"

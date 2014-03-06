@@ -36,13 +36,35 @@ def ModularForm_GSp4_Q_top_level(group=None, page=None, weight=None, form=None):
             args['form'] = form
     return render_webpage(args)
 
+##TODO just copied this from hilbert_modular_form.py, probably should be in a lmfdb.tex_utilities file
+def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing polynomials)
+    o_str = pol_str.replace('*', '')
+    ind_mid = o_str.find('/')
+    while ind_mid != -1:
+        ind_start = ind_mid - 1
+        while ind_start >= 0 and o_str[ind_start] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
+            ind_start -= 1
+        ind_end = ind_mid + 1
+        while ind_end < len(o_str) and o_str[ind_end] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
+            ind_end += 1
+        o_str = o_str[:ind_start + 1] + '\\frac{' + o_str[ind_start + 1:ind_mid] + '}{' + o_str[
+            ind_mid + 1:ind_end] + '}' + o_str[ind_end:]
+        ind_mid = o_str.find('/')
 
+    ind_start = o_str.find('^')
+    while ind_start != -1:
+        ind_end = ind_start + 1
+        while ind_end < len(o_str) and o_str[ind_end] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
+            ind_end += 1
+        o_str = o_str[:ind_start + 1] + '{' + o_str[ind_start + 1:ind_end] + '}' + o_str[ind_end:]
+        ind_start = o_str.find('^', ind_end)
+
+    return o_str
 
 def render_webpage(args={}):
     """
     Configure and return a template for the Siegel modular forms pages.
     """
-
     info = dict(args)
     # info['learnmore'] = [ ('Siegel modular forms', 'http://en.wikipedia.org/wiki/Siegel_modular_form')]
     info['learnmore'] = []
@@ -62,8 +84,6 @@ def render_webpage(args={}):
     form = args.get('form')
     page = args.get('page')
     weight_range = args.get('weight_range')
-    ev_modulus = args.get('ev_modulus')
-    fc_modulus = args.get('fc_modulus')
 
     # set info
     info['group'] = group
@@ -75,21 +95,21 @@ def render_webpage(args={}):
     if args['group']:
 
         if 'Sp4Z' == args['group']:
-            info['parent_as_tex'] = 'M_{k,j}\\big({\\rm Sp}(4,\\mathbb{Z})\\big)'
+            info['parent_as_tex'] = 'M_{k}\\big({\\rm Sp}(4,\\mathbb{Z})\\big)'
             # dimension = siegel_core._dimension_Sp4Z
             dimension = dimensions.dimension_Sp4Z
             info['generators'] = 'smf.Igusa_generators'
 
         elif 'Gamma0_2' == args['group']:
-            info['parent_as_tex'] = 'M_{k,j}\\big(\\Gamma_0(2)\\big)'
+            info['parent_as_tex'] = 'M_{k}\\big(\\Gamma_0(2)\\big)'
             dimension = dimensions.dimension_Gamma0_2    
 
         elif 'Gamma1_2' == args['group']:
-            info['parent_as_tex'] = 'M_{k,j}\\big(\\Gamma_1(2)\\big)'
+            info['parent_as_tex'] = 'M_{k}\\big(\\Gamma_1(2)\\big)'
             dimension = dimensions.dimension_Gamma1_2
 
         elif 'Gamma_2' == args['group']:
-            info['parent_as_tex'] = 'M_{k,j}\\big(\\Gamma(2)\\big)'
+            info['parent_as_tex'] = 'M_{k}\\big(\\Gamma(2)\\big)'
             dimension = dimensions.dimension_Gamma_2
 
         elif 'Sp4Z_2' == args['group']:
@@ -255,10 +275,13 @@ def render_webpage(args={}):
     ##########################################################
     if page == 'specimen':
         info['weight'] = weight
+        ev_modulus = args.get('emod')
+        fc_modulus = args.get('fcmod')
+        erange = args.get('erange')
+        fcrange = args.get('fcrange')
 
         # try to load data
-
-        if 'Kp' == group or 'Sp6Z' == group or 'Sp4Z_2' == group or 'Sp4Z == group':
+        if 'Kp' == group or 'Sp4Z_2' == group or 'Sp4Z' == group:
             # fetch from mongodb
             try:
                 smple = sample.Sample( [group], weight + '_' + form)
@@ -288,20 +311,14 @@ def render_webpage(args={}):
             except:
                 info['error'] = 'Data not available'
                 loaded = False
-        print 'hahahah %s' % loaded
+
         if True == loaded:
 
-            # throw out disc = 0 keys for cusp forms
-            f_keys = f[2].keys()
-            if 'Sp4Z' == group and 'E' != form and 'Klingen' != form:
-                f_keys = filter(lambda (a, b, c): b ^ 2 < 4 * a * c, f_keys)
-
-            # sort the table of Fourier coefficients by discriminant, forms in increasing lexicographic order
-            if 'Sp8Z' != group and 'Sp6Z' != group:
+            # define specific methods for computing discriminant and ordering of form
+            if 'Sp8Z' != group and 'Sp6Z' != group: # with current data this is all degree 2 SMFs
                 __disc = lambda (a, b, c): 4 * a * c - b ** 2
                 __cmp = lambda (
                     a, b, c), (A, B, C): cmp((4 * a * c - b ** 2, a, b, c), (4 * A * C - B ** 2, A, B, C))
-                f_keys.sort(cmp=__cmp)
 
             if 'Sp8Z' == group:
                 # matrix index is given as [m11 m22 m33 m44 m12 m13 m23 m14 m24 m34]
@@ -310,9 +327,6 @@ def render_webpage(args={}):
                                       m13, m23, m33, m34, m14, m24, m34, m44])
                 __disc = lambda i: __mat(i).det()
                 __cmp = lambda f1, f2: cmp([__mat(f1).det()] + list(f1), [__mat(f2).det()] + list(f2))
-                # print 'before: ', f_keys
-                f_keys.sort(cmp=__cmp)
-                # print f_keys
 
             if 'Sp6Z' == group:
                 # matrix index is given as [m11/2 m22/2 m33/2 m12 m13 m23]
@@ -320,9 +334,6 @@ def render_webpage(args={}):
                     matrix(ZZ, 3, 3, [2 * a, d, e, d, 2 * b, f, e, f, 2 * c])
                 __disc = lambda i: __mat(i).det()
                 __cmp = lambda f1, f2: cmp([__mat(f1).det()] + list(f1), [__mat(f2).det()] + list(f2))
-                # print 'before: ', f_keys
-                f_keys.sort(cmp=__cmp)
-                # print f_keys
 
             # make the coefficients of the M_k(Sp(4,Z)) forms integral
             # if 'Sp4Z' == group:  # or 'Sp4Z_2' == group:
@@ -332,6 +343,42 @@ def render_webpage(args={}):
             #     for k in f[2]:
             #         f[2][k] *= d
 
+            # replace generator with a to make things prettier 
+            if isinstance(f[0].parent(), Field):
+                if f[0].parent()!=QQ:
+                    gen = str(f[0].parent().gen())
+                    info['gen_coeff_field'] = teXify_pol(str(f[0].parent().gen()).replace(gen, 'a'))
+                    info['poly_coeff_field'] = teXify_pol(str(f[0].parent().polynomial()).replace(gen, 'a'))
+                    info['poly_in_gens'] = teXify_pol(str(f[1]).replace(gen, 'a'))
+                else:
+                    info['poly_in_gens'] = teXify_pol(str(f[1]))
+            else:
+                # coefficient field is not a sage field, so just assume its supposed to be rationals
+                info['poly_in_gens'] = teXify_pol(str(f[1]))
+
+            # isolate requested eigenvalue indices
+            if erange=='all':
+                filt_evals = g[1]
+                eval_index = filt_evals.keys()
+                info['erangedesc']= 'all available eigenvalues'
+            else:
+                if erange:
+                    spliterange = erange.split('-')
+                    if len(spliterange)>1 and spliterange[0].isdigit() and spliterange[1].isdigit():
+                        elow, ehigh = int(spliterange[0]), int(spliterange[1])
+                        # filter out to have eigenvalues in [elow, ehigh]
+                        filt_evals = {n: lam for n, lam in g[1].iteritems() if int(n)>=elow and int(n)<=ehigh}
+                        eval_index = filt_evals.keys()
+                        info['erangedesc'] = 'eigenvalues with $n$ in [' + `elow` + ', ' + `ehigh` + ']'
+                else:
+                    # can't make sense of the range, return a default
+                    info['erange'] = ''
+                    filt_evals = g[1]
+                    eval_index = filt_evals.keys()[0:20]
+                    info['erangedesc'] = 'the first few eigenvalues'
+
+            # prepare formatted eigenvalues
+            ftd_evals = []
             try:
                 if not ev_modulus:
                     m = 0
@@ -341,17 +388,50 @@ def render_webpage(args={}):
                 K = g[0].parent().fraction_field()
                 if m != 0:
                     if QQ == K:
-                        for i in g[1]:
-                            g[1][i] = Integer(g[1][i]) % m
+                        for i in eval_index:
+                            rdcd_eval = Integer(g[1][i]) % m
+                            ftd_evals.append((str(i), teXify_pol(str(rdcd_eval))))
                     else:
                         I = K.ideal(m)
-                        for i in g[1]:
-                            g[1][i] = I.reduce(g[1][i])
-
+                        for i in eval_index:
+                            rdcd_eval = I.reduce(g[1][i])
+                            ftd_evals.append((str(i), teXify_pol(str(rdcd_eval).replace(gen, 'a'))))
+                    info['emoddesc'] = 'reduced modulo ' + `m` + '.'
+                else:
+                    for i in eval_index:
+                        if QQ == K:
+                            ftd_evals.append((str(i), teXify_pol(str(g[1][i]))))
+                        else:
+                            ftd_evals.append((str(i), teXify_pol(str(g[1][i]).replace(gen, 'a'))))
+                    info['emoddesc'] = 'with no reduction.'     
             except:
-                info['fc_modulus'] = 0
                 pass
 
+            if (fcrange=='all'):
+                filt_fcs = f[2]
+                fc_index = filt_fcs.keys()
+                fc_index.sort(cmp=__cmp)
+                info['fcrangedesc'] = 'all available Fourier coefficients'
+            else:
+                if fcrange:
+                    splitfcrange = fcrange.split('-')
+                    if len(splitfcrange)>1 and splitfcrange[0].isdigit() and splitfcrange[1].isdigit():
+                        fclow, fchigh = int(splitfcrange[0]), int(splitfcrange[1])
+                        filt_fcs = {n: fc for n, fc in f[2].iteritems() if __disc(n)>=fclow and __disc(n)<=fchigh}
+                        fc_index = filt_fcs.keys()
+                        fc_index.sort(cmp=__cmp)
+                        info['fcrangedesc'] = 'Fourier coefficients with index such that $D$ is in [' + `fclow` + ', ' + `fchigh` + ']'
+                else:
+                    # can't make sense of the range, return a default
+                    info['fcrange'] = '' 
+                    filt_fcs = f[2]
+                    fc_index = filt_fcs.keys()
+                    fc_index.sort(cmp=__cmp)
+                    fc_index = fc_index[0:20]
+                    info['fcrangedesc'] = 'the first few Fourier coefficients'
+
+            # prepare formatted fourier coefficients
+            ftd_fcs = []
             try:
                 if not fc_modulus:
                     m = 0
@@ -362,38 +442,81 @@ def render_webpage(args={}):
                 if m != 0:
                     if 'Sp4Z_2' == group:
                         if QQ == K:
-                            for i in f_keys:
-                                f[2][i] = sum((v[0] % m) * v[1] for v in list(f[2][i]))
+                            for i in fc_index:
+                                ftd_fc =  sum((v[0] % m) * v[1] for v in list(f[2][i]))
+                                ftd_fcs.append((str(i), 
+                                               teXify_pol(str(ftd_fc)), 
+                                               str(__disc(i))))
                         else:
                             I = K.ideal(m)
-                            for i in f_keys:
-                                f[2][i] = sum(I.reduce(v[0]) * v[1] for v in list(f[2][i]))
+                            for i in fc_index:
+                                ftd_fc = sum(I.reduce(v[0]) * v[1] for v in list(f[2][i]))
+                                ftd_fcs.append((str(i), 
+                                                teXify_pol(str(ftd_fc).replace(gen, 'a')), 
+                                                str(__disc(i))))
                     else:
                         if QQ == K:
-                            for i in f_keys:
-                                f[2][i] = Integer(f[2][i]) % m
+                            for i in fc_index:
+                                ftd_fc = Integer(f[2][i]) % m
+                                ftd_fcs.append((str(i), 
+                                                teXify_pol(str(ftd_fc)), 
+                                                str(__disc(i))))
                         else:
                             I = K.ideal(m)
-                            for i in f_keys:
-                                f[2][i] = I.reduce(f[2][i])
+                            for i in fc_index:
+                                ftd_fc = I.reduce(f[2][i])
+                                ftd_fcs.append((str(i), 
+                                                teXify_pol(str(ftd_fc).replace(gen, 'a')), 
+                                                str(__disc(i))))
+                    info['fcmoddesc'] = 'reduced modulo ' + `m` + '.'
+                else:
+                    for i in fc_index:
+                        ftd_fc = f[2][i]
+                        if QQ == K:
+                            ftd_fcs.append((str(i),
+                                            teXify_pol(str(ftd_fc)),
+                                            str(__disc(i))))
+                        else:
+                            ftd_fcs.append((str(i), 
+                                            teXify_pol(str(ftd_fc).replace(gen, 'a')), 
+                                            str(__disc(i))))
+                    info['fcmoddesc'] = 'with no reduction.'
             except:
-                info['fc_modulus'] = 0
                 pass
 
-            info['the_form'] = [f[0].parent(), f[1],
-                                [(l, g[1][l]) for l in g[1]],
-                                [(i, f[2][i], __disc(i)) for i in f_keys],
-                                f_url, g_url]
-            # info['friends'] = [ ('Spin L-function', url_for('not_yet_implemented'))]#, \
-##                                 ('Standard L-function', url_for('not_yet_implemented')), \
-##                                 ('First Fourier-Jacobi coefficient', url_for('not_yet_implemented'))]
 
-        location = url_for('ModularForm_GSp4_Q_top_level', group=group, page=page, weight=weight, form=form)
-        info['form_name'] = form
-        bread += [(weight + '_' + form, location)]
-        return render_template("ModularForm_GSp4_Q_specimen.html",
-                               title='Siegel modular form ' + weight + '_' + form,
-                               bread=bread, **info)
+            location = url_for('ModularForm_GSp4_Q_top_level', group=group, page=page, weight=weight, form=form)
+            properties2 = [('Species', '$' + info['parent_as_tex'] + '$'),
+                          ('Weight', '%s' % weight)]
+
+            # if implemented, add L-function to friends
+            if 'Sp4Z'== group:
+                numEmbeddings = f[0].parent().degree()
+                friends = []
+                for embedding in range(0, numEmbeddings):
+                    friends.append(('Spin L-function for ' 
+                                           + str(weight) + '_' + form + '.' + str(embedding), 
+                                           '/L/ModularForm/GSp/Q/Sp4Z/specimen/'
+                                           + str(weight) + '/' + form + '/' + str(embedding))) 
+            else:
+                friends = []            
+            #TODO implement remaining spin L-functions, standard L-functions,
+            # and first Fourier-Jacobi coefficient
+
+            downloads = [('Fourier coefficients', f_url),
+                             ('Eigenvalues', g_url)]
+
+            location = url_for('ModularForm_GSp4_Q_top_level', group=group, page=page, weight=weight, form=form)
+            bread += [(weight + '_' + form, location)]
+
+            info['ftd_evals'] = ftd_evals
+            info['ftd_fcs'] = ftd_fcs
+            info['location'] = location
+            info['form_name'] = form
+
+            return render_template("ModularForm_GSp4_Q_specimen.html", 
+                 title = 'Siegel modular form ' + weight + '_' + form,
+                 bread=bread, properties2=properties2, friends=friends, downloads=downloads, **info) 
 
     # if a nonexisting page was requested return the homepage of Siegel modular forms
     return render_webpage()

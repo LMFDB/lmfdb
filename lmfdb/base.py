@@ -52,6 +52,7 @@ AUTO_RECONNECT_ATTEMPTS = 0
 DEFAULT_DB_PORT = 37010
 dbport = DEFAULT_DB_PORT
 
+
 def _db_reconnect(func):
     """
     Wrapper to automatically reconnect when mongodb throws a AutoReconnect exception.
@@ -66,7 +67,7 @@ def _db_reconnect(func):
         while True:
             try:
                 return func(*args, **kwargs)
-            except AutoReconnect, e:
+            except AutoReconnect as e:
                 AUTO_RECONNECT_ATTEMPTS += 1
                 if AUTO_RECONNECT_ATTEMPTS > AUTO_RECONNECT_MAX:
                     AUTO_RECONNECT_ATTEMPTS = 0
@@ -85,7 +86,7 @@ def _db_reconnect(func):
 # _db_reconnect(Connection._send_message_with_response)
 
 
-def _init(dbport, readwrite_password, parallel_authentication = False):
+def _init(dbport, readwrite_password, parallel_authentication=False):
     global _C
     logging.info("establishing db connection at port %s ..." % dbport)
     _C = Connection(port=dbport)
@@ -130,12 +131,12 @@ app = Flask(__name__)
 
 # If the debug toolbar is installed then use it
 if app.debug:
-  try:
-    from flask_debugtoolbar import DebugToolbarExtension
-    app.config['SECRET_KEY'] = '''shh, it's a secret'''
-    toolbar = DebugToolbarExtension(app)
-  except ImportError:
-    pass
+    try:
+        from flask_debugtoolbar import DebugToolbarExtension
+        app.config['SECRET_KEY'] = '''shh, it's a secret'''
+        toolbar = DebugToolbarExtension(app)
+    except ImportError:
+        pass
 
 # tell jinja to remove linebreaks
 app.jinja_env.trim_blocks = True
@@ -198,9 +199,11 @@ def fmtdatetime(value, format='%Y-%m-%d %H:%M:%S'):
     else:
         return "-"
 
+
 @app.template_filter("nl2br")
 def nl2br(s):
     return s.replace('\n', '<br>\n')
+
 
 @app.template_filter('obfuscate_email')
 def obfuscate_email(email):
@@ -216,7 +219,7 @@ def urlencode(kwargs):
     import urllib
     return urllib.urlencode(kwargs)
 
-### start: link to google code at the bottom
+# start: link to google code at the bottom
 
 
 def git_infos():
@@ -248,13 +251,41 @@ _latest_changeset = '<a href="%s%s">%s</a>' % (_url_changeset, git_rev, git_date
 def link_to_current_source():
     return {'current_source': _current_source, 'latest_changeset': _latest_changeset}
 
-### end: google code links
+# end: google code links
 
 
-### for testing.py ###
+# for testing.py ###
 import unittest2
 
+
+class DoctestExampleTest(object):
+
+    """
+    This is a general purpose class with a doctest
+    """
+
+    def __init__(self, k):
+        self.k = k
+
+    def i_am_tested(self, n):
+        """
+        >>> det = DoctestExampleTest(5)
+        >>> det.i_am_tested(1)
+        47
+        """
+        return n * 42 + self.k
+
+    def __str__(self):
+        """
+        >>> det = DoctestExampleTest(42)
+        >>> print(det)
+        I am 42
+        """
+        return "I am %d" % self.k
+
+
 class LmfdbTest(unittest2.TestCase):
+
     def setUp(self):
         app.config['TESTING'] = True
         self.app = app
