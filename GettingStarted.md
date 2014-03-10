@@ -3,8 +3,7 @@ Installation
 
   * To contribute, see below on sharing your work.  To simply run a copy of the site move into a new directory and type
 ```
-    git init
-    git clone git@github.com:LMFDB/lmfdb.git
+    git clone git@github.com:LMFDB/lmfdb.git lmfdb
 ```
 
   * Install dependencies, i.e. you need Sage. Inside the Sage environment `sage -sh`:
@@ -16,6 +15,8 @@ Installation
     easy_install -U flask-cache
     easy_install -U pyyaml
     easy_install -U unittest2
+    # optional packages:
+    easy_install -U coverage
 ```
   * From the command-line:
     `
