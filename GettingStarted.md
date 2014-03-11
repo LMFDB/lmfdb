@@ -56,8 +56,6 @@ if it doesn't compile, update sage's cython and then try again:
     `sage -sh`
     `easy_install -U cython`
     `exit`
-either case, rebuild sage afterwards:
-    `sage -b`
 ```
 
 * Lfunction plots:
