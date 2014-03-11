@@ -870,7 +870,7 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
             """ % (a, b, a, b)
         chi = self.chi.sage_character()
         k = chi.kloosterman_sum_numerical(100, a, b)
-        k = complex2str(k, 5)
+        k = complex2str(k, 10)
         return r"""
         \( \displaystyle K(%s,%s,\chi_{%s}(%s,&middot;))
         = \sum_{r \in \Z/%s\Z}

@@ -13,7 +13,7 @@ class WebCharacterTest(LmfdbTest):
       assert WebDirichlet.number2label(num) == numlabel
     
   def test_Heckemethods(self):
-      from sage.all import *
+      from sage.all import NumberField
       x = var('x')
       k = NumberField(x**3-x**2+x+1,'a')
       modlabel, numlabel = '82.-5a0+1a2', '5.3.3'
