@@ -171,7 +171,7 @@ class LfunctionTest(LmfdbTest):
         assert 'OK' in str(L)
 
     def test_LHGMZeros(self):
-        L = self.tc.get('/L/Zeros/Motives/Hypergeometric/Q/A2.2.2.2_B1.1.1.1_t1.2/')
+        L = self.tc.get('/L/Zeros/Motive/Hypergeometric/Q/A2.2.2.2_B1.1.1.1_t1.2/')
         assert '4.307350233' in L.data
 
 
