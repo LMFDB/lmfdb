@@ -55,7 +55,7 @@ def qexpansion(field_label=None):
             magma.eval('primes_str := [' + ','.join([st for st in F_hmf["primes"]]) + '];')
             magma.eval('primes := [ideal<ZF | {F!x : x in I}> : I in primes_str];')
 
-            if not F_hmf.has_key('narrow_class_number']:
+            if not F_hmf.has_key('narrow_class_number'):
                 F_hmf['narrow_class_number'] = eval(preparse(magma.eval('NarrowClassNumber(F);')))
 
         if v["hecke_polynomial"] != 'x':
