@@ -207,9 +207,22 @@ def hgm_search(**args):
         except:
             info['err'] = 'Error parsing input for t.  It needs to be a rational number, such as 2/3 or -3'
 
-    for param in ['degree','weight','sign', 'conductor']:
-        # We don't look at sign in family searches
-        if info.get(param) and not ((param == 'sign' or param=='conductor') and family_search):
+    # sign can only be 1, -1, +1
+    if info.get('sign'):
+        sign = info['sign']
+        sign = re.sub(r'\s','',sign)
+        sign = clean_input(sign)
+        if sign == '+1':
+            sign = '1'
+        if not (sign == '1' or sign == '-1'):
+            info['err'] = 'Error parsing input %s for sign.  It needs to be 1 or -1' % sign
+            return search_input_error(info, bread)
+        query['sign'] = int(sign)
+
+
+    for param in ['degree','weight','conductor']:
+        # We don't look at conductor in family searches
+        if info.get(param) and not (param=='conductor' and family_search):
             if param=='conductor':
                 cond = info['conductor']
                 try:
@@ -228,7 +241,7 @@ def hgm_search(**args):
                 if LIST_RE.match(ran):
                     tmp = parse_range2(ran, param)
                 else:
-                    names = {'weight': 'weight', 'degree': 'degree', 'sign': 'sign'}
+                    names = {'weight': 'weight', 'degree': 'degree'}
                     info['err'] = 'Error parsing input for the %s.  It needs to be an integer (such as 5), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 2,3,8 or 3-5, 7, 8-11).' % names[param]
                     return search_input_error(info, bread)
             # work around syntax for $or
