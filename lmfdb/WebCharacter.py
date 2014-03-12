@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Author: Pascal Molin, molin.maths@gmail.com
 import math
 # from Lfunctionutilities import pair2complex, splitcoeff, seriescoeff
 from sage.all import *
@@ -11,6 +12,54 @@ try:
 except:
     logger.critical("dirichlet_conrey.pyx cython file is not available ...")
 from HeckeCharacters import *
+
+"""
+Any character object is obtained as a double inheritance of
+
+1. a family (currently: Dirichlet/Z or Hecke/K)
+
+2. an object type (list of groups, character group, character)
+
+The code thus defines, from the generic top class WebCharObject
+
+1. the mathematical family classes
+
+   - WebDirichlet
+
+   - WebHecke
+
+2. the mathematical objects classes
+
+   - WebCharFamily
+
+   - WebCharGroup
+
+   - WebChar
+
+and one obtains:
+
+- WebDirichletFamily
+
+- WebDirichletGroup
+
+- WebDirichletCharacter
+
+- WebHeckeFamily
+
+- WebHeckeGroup
+
+- WebHeckeCharacter
+
+plus the additional WebHeckeExamples which collects interesting examples
+of Hecke characters but could be converted to a yaml file [TODO]
+
+"""
+
+#############################################################################
+###
+###    small utilities to be removed one day
+###
+#############################################################################
 
 def evalpolelt(label,gen,genlabel='a'):
     """ label is a compact polynomial expression in genlabel                    
@@ -126,7 +175,6 @@ class WebDirichlet(WebCharObject):
         if self.modlabel:
             self.modulus = m = int(self.modlabel)
             self.H = H = DirichletGroup_conrey(m)
-            self.H_sage = H.standard_dirichlet_group()
         self.credit = 'Sage'
         self.codelangs = ('pari', 'sage')
         logger.debug('###### WebDirichletComputed')
@@ -154,7 +202,9 @@ class WebDirichlet(WebCharObject):
 
     @property
     def generators(self):
-        return self.textuple(map(str, self.H_sage.unit_gens()))
+        #import pdb; pdb.set_trace()
+        #assert self.H.gens() is not None
+        return self.textuple(map(str, self.H.gens()))
 
     """ for Dirichlet over Z, everything is described using integers """
     @staticmethod
@@ -433,12 +483,12 @@ class WebCharFamily(WebCharObject):
         self.maxrows, self.rowtruncate = 25, False
         WebCharObject.__init__(self, **args)
 
-    #def structure(self, G):
-    #    return self.struct2tex(G.invariants())
+    def structure(self, G):
+        return self.struct2tex(G.invariants())
 
-    #def struct2tex(self, inv):
-    #    if not inv: inv = (1,)
-    #    return '\(%s\)'%('\\times '.join(['C_{%s}'%d for d in inv]))
+    def struct2tex(self, inv):
+        if not inv: inv = (1,)
+        return '\(%s\)'%('\\times '.join(['C_{%s}'%d for d in inv]))
 
     def add_row(self, modulus):
         G = self.chargroup(modulus)
@@ -489,6 +539,7 @@ class WebCharGroup(WebCharObject):
     def structure(self):
         inv = self.H.invariants()
         return '\(%s\)'%('\\times '.join(['C_{%s}'%d for d in inv]))
+
     @property
     def codestruct(self):
         return [('sage','G.invariants()'), ('pari','G.cyc')]
@@ -700,8 +751,7 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
 
     @property
     def codeinit(self):
-        return [('sage', 'H = DirichletGroup_conrey(%i)\n'%(self.modulus)
-                       + 'H_sage = H.standard_dirichlet_group()'),
+        return [('sage', 'H = DirichletGroup_conrey(%i)\n'%(self.modulus)),
                 ('pari', 'G = znstar(%i)'%(self.modulus) ) ]
 
     @property
@@ -710,22 +760,17 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
 
     @property
     def codegen(self):
-        return [('sage', 'H_sage.unit_gens()'),
+        return [('sage', 'H.gens()'),
                 ('pari', 'G.gen') ]
 
     @property
-    def structure(self):
-        inv = self.H_sage.generator_orders()
-        return '\(%s\)'%('\\times '.join(['C_{%s}'%d for d in inv]))
-
-    @property
     def codestruct(self):
-        return [('sage', 'H_sage.generator_orders()'),
+        return [('sage', 'H.invariants()'),
                 ('pari', 'G.cyc') ]
       
     @property
     def order(self):
-        return self.H_sage.order()
+        return self.H.order()
 
 class WebDirichletCharacter(WebChar, WebDirichlet):
     """
@@ -739,8 +784,6 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
         self.number = n = int(self.numlabel)
         assert gcd(m, n) == 1
         self.chi = chi = self.H[n]
-        self.chi_sage = chi_sage = chi.sage_character()
-        logger.debug('########### WebDirichletCharacter computed')
 
     @property
     def codeinit(self):
@@ -748,7 +791,6 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
                        + 'chi = H[%i]'%(self.number)),
                 ]
         
-
     @property
     def title(self):
         return r"Dirichlet Character %s" % (self.texname)
@@ -784,7 +826,7 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
 
     @property
     def genvalues(self):
-        logvals = [self.chi.logvalue(k) for k in self.H_sage.unit_gens()]
+        logvals = [self.chi.logvalue(k) for k in self.H.gens()]
         return self.textuple( map(self.texlogvalue, logvals) )
 
     @property
@@ -792,8 +834,8 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
         order = self.order
         mod, num = self.modulus, self.number
         prim = self.isprimitive
-        orbit = [ power_mod(num, k, mod) for k in xrange(1, order) if gcd(k,order) == 1 ]
-        return [ self._char_desc(num, prim=prim) for num in orbit ]
+        orbit = ( power_mod(num, k, mod) for k in xrange(1, order) if gcd(k, order) == 1)
+        return ( self._char_desc(num, prim=prim) for num in orbit )
 
     @property
     def symbol(self):
@@ -951,12 +993,12 @@ class WebHeckeFamily(WebCharFamily, WebHecke):
     def chargroup(self, mod):
         return RayClassGroup(self.k,mod).dual_group()
 
-    def structure(self, H):
-        return self.struct2tex(H.invariants())
+    #def structure(self, H):
+    #    return self.struct2tex(H.invariants())
 
-    def struct2tex(self, inv):
-        if not inv: inv = (1,)
-        return '\(%s\)'%('\\times '.join(['C_{%s}'%d for d in inv]))
+    #def struct2tex(self, inv):
+    #    if not inv: inv = (1,)
+    #    return '\(%s\)'%('\\times '.join(['C_{%s}'%d for d in inv]))
 
     def first_chars(self, H):
         r = []
