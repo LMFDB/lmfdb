@@ -108,7 +108,7 @@ class Lfunction:
         return self.compute_lcalc_zeros(via_N = True, count = count, do_negative = do_negative or not self.selfdual)
 
     def compute_heuristic_zeros(self, step_size = 0.02, upper_bound = 20, lower_bound = None):
-        if not self.selfdual:
+        if self.selfdual:
             lower_bound = lower_bound or - step_size / 2
         else:
             lower_bound = lower_bound or -20

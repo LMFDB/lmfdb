@@ -840,7 +840,7 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
     elif arg1 == "SymmetricPower":
         return SymmetricPowerLfunction(power=arg2, underlying_type=arg3, field=arg4, label=arg5)
 
-    elif arg1 == "Motives" and arg2 == "Hypergeometric" and arg3 == "Q":
+    elif arg1 == "Motive" and arg2 == "Hypergeometric" and arg3 == "Q":
         if arg5:
             return HypergeometricMotiveLfunction(family = arg4, t = arg5)
         else:
