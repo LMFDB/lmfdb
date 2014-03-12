@@ -39,6 +39,16 @@ def evalpolelt(label,gen,genlabel='a'):
         res += c*gen**e           
     return res              
 
+def complex2str(g, digits=10):
+    real = round(g.real(), digits)
+    imag = round(g.imag(), digits)
+    if imag == 0.:
+        return str(real)
+    elif real == 0.:
+        return str(imag) + 'i'
+    else:
+        return str(real) + '+' + str(imag) + 'i'
+
 #############################################################################
 ###
 ###    Class for Web objects
@@ -819,14 +829,7 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
         mod, num = self.modulus, self.number
         chi = self.chi.sage_character()
         g = chi.gauss_sum_numerical(100, val)
-        real = round(g.real(), 10)
-        imag = round(g.imag(), 10)
-        if imag == 0.:
-            g = str(real)
-        elif real == 0.:
-            g = str(imag) + "i"
-        else:
-            g = latex(g)
+        g = complex2str(g)
         from sage.rings.rational import Rational
         x = Rational('%s/%s' % (val, mod))
         n = x.numerator()
@@ -851,6 +854,7 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
         chitexr = self.char2tex(mod, num, 'r', tag=False)
         psitex1r = self.char2tex(mod, val, '1-r', tag=False)
         deftex = r'\sum_{r\in %s} %s %s'%(Gtex,chitexr,psitex1r)
+        from sage.all import latex
         return r"\( \displaystyle J(%s,%s) = %s = %s.\)" % (chitex, psitex, deftex, latex(jacobi_sum))
 
     def kloosterman_sum(self, arg):
@@ -866,14 +870,7 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
             """ % (a, b, a, b)
         chi = self.chi.sage_character()
         k = chi.kloosterman_sum_numerical(100, a, b)
-        real = round(k.real(), 5)
-        imag = round(k.imag(), 5)
-        if imag == 0:
-            k = str(real)
-        elif real == 0:
-            k = str(imag) + "i"
-        else:
-            k = latex(k)
+        k = complex2str(k, 10)
         return r"""
         \( \displaystyle K(%s,%s,\chi_{%s}(%s,&middot;))
         = \sum_{r \in \Z/%s\Z}
