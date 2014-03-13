@@ -16,6 +16,13 @@ links:
   - [ tables of zeroes, /zeros/first/ ]
   - [ Hilbert modular forms, /ModularForm/GL2/TotallyReal/?field_label=Qsqrt5 ]
 ---
+title: get code and investigate beyond
+image: code
+content: many objects suggest the appropriate commands for making
+  computions with the computer systems Sage, Magma and Pari.
+links:
+  - [ elliptic curves, /EllipticCurve/Q/234446.a1 ]
+---
 title: search
 image: search
 content: find mathematical object having given properties,
@@ -52,9 +59,8 @@ image: zeta
 links: 
   - [ Riemann zeta function, /L/Riemann/ ]
   - [ Dirichlet L-functions, /L/degree1/ ]
-  - [ Elliptic curves, /EllipticCurve/Q/ ]
+  - [ Elliptic curve, /EllipticCurve/Q/234446.a1 ]
   - [ Siegel modular forms, /ModularForm/GSp/Q/Sp4Z_2/basic ]
-  - [ hypergeometric motives ]
 ---
 title: learn mathematics
 content: knowls are a smart way to learn or remember definitions without
