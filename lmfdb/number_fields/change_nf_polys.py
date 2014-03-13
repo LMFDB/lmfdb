@@ -4,7 +4,7 @@ import gzip
 import re
 import sys
 import time
-import base
+from lmfdb import base
 
 from pymongo.connection import Connection
 fields = Connection(port=dbport).numberfields.fields

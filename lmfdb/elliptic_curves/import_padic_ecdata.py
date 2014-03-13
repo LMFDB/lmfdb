@@ -2,7 +2,7 @@
 import os.path
 import sys
 from sage.all import SQLDatabase
-import base
+from lmfdb import base
 
 padic_db = base.getDBConnection().ellcurves.padic_db
 padic_db.ensure_index("label")

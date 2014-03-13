@@ -50,7 +50,7 @@ import os
 import random
 import glob
 import pymongo
-import base
+from lmfdb import base
 from sage.rings.all import ZZ
 
 print "calling base._init()"
