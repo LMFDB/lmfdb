@@ -186,7 +186,7 @@ def hgm_search(**args):
         family_search = True
 
     # generic, irreducible not in DB yet
-    for param in ['A', 'B', 'hodge', 'A2', 'B2', 'A3', 'B3', 'A5', 'B5', 'A7', 'B7']:
+    for param in ['A', 'B', 'hodge', 'a2', 'b2', 'a3', 'b3', 'a5', 'b5', 'a7', 'b7']:
         if info.get(param):
             info[param] = clean_input(info[param])
             if IF_RE.match(info[param]):
