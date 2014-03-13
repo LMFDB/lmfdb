@@ -63,7 +63,11 @@ $\epsilon$:
 {% endif %}
 
 <tr>
+{% if not info.family %}
 <td align='left' colspan='4'>Maximum number of motives to display: <input type='text' name='count' value="{{info.count}}" size='10'>
+{% else %}
+<td align='left' colspan='4'>Maximum number of families to display: <input type='text' name='count' value="{{info.count}}" size='10'>
+{% endif %}
 </td>
 </tr>
 
@@ -72,6 +76,9 @@ $\epsilon$:
 <button type='submit' value='refine'>Search again</button>
 </td></tr>
 </table>
+{% if info.family %}
+<input type='hidden' name='family' value='{{ info.family }}'>
+{% endif %}
 </form>
 
 {% if info.err is defined %}
@@ -117,6 +124,7 @@ $\epsilon$:
 {% endif %}
 <th>Degree</th>
 <th>Weight</th>
+<th>Hodge</th>
 </tr>
 </thead>
 <tbody>
@@ -142,6 +150,7 @@ $\epsilon$:
 {% endif %}
 <td>${{hgm.degree}}$</td>
 <td>${{hgm.weight}}$</td>
+<td>${{hgm.hodge}}$</td>
 </tr>
 
 {% endfor %}

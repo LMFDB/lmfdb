@@ -16,7 +16,7 @@ from lmfdb.hypergm import hypergm_page, hgm_logger
 
 from lmfdb.transitive_group import *
 
-HGM_credit = 'D. Roberts and J. Jones'
+HGM_credit = 'D. Roberts'
 
 # Helper functions
 
@@ -208,7 +208,7 @@ def hgm_search(**args):
             info['err'] = 'Error parsing input for t.  It needs to be a rational number, such as 2/3 or -3'
 
     # sign can only be 1, -1, +1
-    if info.get('sign'):
+    if info.get('sign') and not family_search:
         sign = info['sign']
         sign = re.sub(r'\s','',sign)
         sign = clean_input(sign)
@@ -315,7 +315,7 @@ def hgm_search(**args):
     info['family'] = family_search
 
     if family_search:
-        return render_template("hgm-search.html", info=info, title="Hypergeometric Motive over $\Q$ Search Result", bread=bread, credit=HGM_credit)
+        return render_template("hgm-search.html", info=info, title="Hypergeometric Family over $\Q$ Search Result", bread=bread, credit=HGM_credit)
     else:
         return render_template("hgm-search.html", info=info, title="Hypergeometric Motive over $\Q$ Search Result", bread=bread, credit=HGM_credit)
 

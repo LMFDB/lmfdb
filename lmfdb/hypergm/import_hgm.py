@@ -15,6 +15,10 @@ saving = True
 def makeb(n, d):
     return bson.SON([('n', n), ('d', d)])
 
+def fix_t(t):
+    tsage = QQ("%d/%d" % (t[0], t[1]))
+    return [tsage.numerator(), tsage.denominator()]
+
 tot = len(li)
 print "finished importing li, number = %s" % tot
 count = 0
@@ -29,6 +33,7 @@ for F in li:
     Bstr = '.'.join([str(x) for x in B])
     tstr = str(tnd[0])+'.'+str(tnd[1])
     label = "A%s_B%s_t%s" % (Astr, Bstr, tstr)
+    tnd = fix_t(tnd)
     data = {
         'label': label,
         'degree': degree,
@@ -36,10 +41,10 @@ for F in li:
         'A': A,
         'B': B,
         't': tnd,
-	'hodge': hodge,
-	'sign': sign,
-	'sig': sig,
-	'locinfo': locinfo,
+        'hodge': hodge,
+        'sign': sign,
+        'sig': sig,
+        'locinfo': locinfo,
         'req':req,
         'a2':a2,
         'b2':b2,
