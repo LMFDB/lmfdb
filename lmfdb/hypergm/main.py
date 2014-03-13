@@ -191,6 +191,7 @@ def hgm_search(**args):
             info[param] = clean_input(info[param])
             if IF_RE.match(info[param]):
                 query[param] = parse_list(info[param])
+                query[param].sort(reverse=True)
             else:
                 name = param
                 if field == 'hodge':
