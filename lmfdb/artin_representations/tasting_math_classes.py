@@ -2,6 +2,7 @@
 
 print "importing base"
 from lmfdb import base
+from lmfdb.website import dbport
 print ".....done"
 print "initializing connection"
 base._init(dbport, "")
@@ -19,17 +20,21 @@ print ".....done"
 
 
 # l = ArtinLfunction(dimension = "1", conductor = "5", tim_index = "2")
-k = 0
-
-for x in ArtinRepresentation.find():
-    try:
-        tmp = [x.local_factor(p) for p in [11, 13, 17, 19, 23] if not self.is_bad_prime(p)]
-        print tmp
-        print x
-    except:
-        pass
-    k += 1
-    if k > 100:
-        break
+###
+## this was run during nosetests, should not, anyway it is not a
+## nice test
+##
+###k = 0
+###
+###for x in ArtinRepresentation.find():
+###    try:
+###        tmp = [x.local_factor(p) for p in [11, 13, 17, 19, 23] if not self.is_bad_prime(p)]
+###        print tmp
+###        print x
+###    except:
+###        pass
+###    k += 1
+###    if k > 100:
+###        break
 
 # nf = l.artin.number_field_galois_group()

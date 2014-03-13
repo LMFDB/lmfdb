@@ -41,6 +41,7 @@ from bson import BSON
 # local imports
 import lmfdb.base
 from lmfdb.modular_forms.elliptic_modular_forms import emf_logger
+from lmfdb.website import dbport
 from plot_dom import draw_fundamental_domain
 from emf_core import html_table, len_as_printed
 

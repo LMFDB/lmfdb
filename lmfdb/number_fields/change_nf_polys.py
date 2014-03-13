@@ -5,6 +5,7 @@ import re
 import sys
 import time
 from lmfdb import base
+from lmfdb.website import dbport
 
 from pymongo.connection import Connection
 fields = Connection(port=dbport).numberfields.fields
