@@ -3,12 +3,12 @@
 
 
 <style type="text/css">
-table.boxes {table-layout: fixed; width: 100%; padding: 0; margin: 10px; }
+table.boxes {table-layout: fixed; width: 100%; padding: 0; margin: 25px; }
 table.boxes > tbody > tr > td { padding: 0 25px 35px 0; height: 150px; overflow: hidden; }
-table.box { background: #efe; width: 100%; padding: 0; border-radius: 10px;}
+table.box { background: #efe; width: 95%; padding: 0; border-radius: 10px;}
 table.box > tbody > tr > td { vertical-align: top; text-align: left; margin: 0; padding: 0; }
-table.box td.img { width: 150px; padding: 0; height: 150px; border-top-left-radius: 10px; }
-table.box td.title { font-weight: bold; font-size: 110%; background: #bfb; height: 30%; padding: 5px 0 10px 15px; border-top-right-radius: 10px;}
+table.box td.img { background: #fff; width: 150px; padding: 0; padding-right: 2px; height: 150px; border-top-left-radius: 10px; }
+table.box td.title { font-weight: bold; font-size: 110%; background: #bfb; height: 1em; padding: 5px 0 5px 15px; border-top-right-radius: 10px;}
 table.box td.content { font-size: 90%; height: 25%; padding-left: 15px }
 table.box td.links { vertical-align: bottom; font-size: 80%; padding-left: 15px; padding-bottom: 5px;}
 table.box td.links > a { padding: 0 5px 0 0; }
@@ -41,6 +41,10 @@ table.box td.links > a { padding: 0 5px 0 0; }
  {% endfor %}
 </tr>
 </table>
+
+<div class="announce">
+{{ KNOWL_INC('intro.news') }}
+</div>
 
 
 {#

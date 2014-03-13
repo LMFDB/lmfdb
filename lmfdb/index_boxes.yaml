@@ -14,15 +14,16 @@ image: search
 content: find mathematical object having given properties,
   e.g. number fields, elliptic curves...
 links:
-  - [ elliptic curves, /EllipticCurve/Q/ ]
-  - [ number fields, /NumberField/ ]
+  - [ elliptic curves search, /EllipticCurve/Q/ ]
+  - [ number fields search, /NumberField/ ]
 ---
 title: a database
 image: families
 content: the LMFDB is a huge database of a lot of objects
-  obtained after heavy computations. Anyone can upload and make
+  obtained from heavy computations. Anyone can upload and make
   available his own data.
 links:
+  - [ elliptic curves, '/EllipticCurve/Q/?conductor=1-99' ]
   - [ Maass forms, /L/degree3/MaassForm/ ]
   - [ tables of zeroes, /zeros/first/ ]
   - [ Hilbert modular forms, '/ModularForm/GL2/TotallyReal/?field_label=Qsqrt5' ]
@@ -49,13 +50,15 @@ image: map
 content: the lmfdb explores both known and conjectural links
   between mathematical objects
 links:
-  - [ the L functions picture, /bigpicture ]
+  - [ the great L functions map, /bigpicture ]
 ---
 title: navigate
 image: related
-content: all objects are linked together
+content: the LMFDB philosophy is that any mathematical object should have
+  its homepage, and show links to its natural friends, so that navigation
+  is easy.
 links:
-  - [ all objects, None ]
+  - [ the lmfdb web of objects, notyetavailable ]
   - [ elliptic curve, L/EllipticCurve/Q/5077.a/ ]
 ---
 title: get code and investigate beyond
