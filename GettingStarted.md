@@ -15,8 +15,9 @@ Installation
     easy_install -U flask-cache
     easy_install -U pyyaml
     easy_install -U unittest2
-    # optional packages:
+    # optional packages, necessary for contributing:
     easy_install -U coverage
+    easy_install -U nose
 ```
   * From the command-line:
     `
