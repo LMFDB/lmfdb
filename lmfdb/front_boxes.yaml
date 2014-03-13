@@ -1,0 +1,74 @@
+---
+title: navigate
+image: related
+content: all objects are linked together
+links:
+  - [ all objects, None ]
+  - [ elliptic curve, L/EllipticCurve/Q/5077.a/ ]
+---
+title: a database
+image: families
+content: the LMFDB is a huge database of a lot of objects
+  obtained after heavy computations. Anyone can upload and make
+  available its own data.
+links:
+  - [ Maass forms, /L/degree3/MaassForm/ ]
+  - [ tables of zeroes, /zeros/first/ ]
+  - [ Hilbert modular forms, /ModularForm/GL2/TotallyReal/?field_label=Qsqrt5 ]
+---
+title: search
+image: search
+content: find mathematical object having given properties,
+  e.g. number fields, elliptic curves...
+links:
+  - [ elliptic curves, /EllipticCurve/Q/ ]
+  - [ number fields, /NumberField/ ]
+---
+title: a reference
+image: cite
+content: experts can use the lmfdb as a reference and cite
+  its urls in papers
+links:
+  - [ citation policy, /citation ]
+---
+title: plot L functions
+image: plot
+content: all L functions pages show plots of the Z function, allowing
+  to check visually the Riemann hypothesis
+links:
+  - [ riemann zeta, /L/Riemann/]
+  - [ elliptic curve, /L/EllipticCurve/Q/234446.a/]
+---
+title: explore links
+image: links
+content: the lmfdb explores both known and conjectural links
+  between mathematical objects
+links:
+  - [ the L functions picture, /bigpicture ]
+---
+title: Hall of fame
+content: the lmfdb contains both classical et new contemporary research objects
+image: zeta
+links: 
+  - [ Riemann zeta function, /L/Riemann/ ]
+  - [ Dirichlet L-functions, /L/degree1/ ]
+  - [ Elliptic curves, /EllipticCurve/Q/ ]
+  - [ Siegel modular forms, /ModularForm/GSp/Q/Sp4Z_2/basic ]
+  - [ hypergeometric motives ]
+---
+title: learn mathematics
+content: knowls are a smart way to learn or remember definitions without
+  loosing context
+image: knowledge
+links:
+  - [ introductory page, /introduction ]
+  - [ knowledge page, /knowledge ]
+---
+title: free data, free software
+content: The LMFDB is a free collaboration.
+  It relies heavily on the computer algebra systems Sage, Magma and Pari
+image: github
+links:
+  - [ github source, github ]
+  - [ 
+...
