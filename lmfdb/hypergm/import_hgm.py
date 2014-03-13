@@ -24,7 +24,7 @@ for F in li:
     count += 1
     print "%d of %d: %s" % (count, tot, F)
     degree, weight, A, B, tnd, hodge, sign, sig, locinfo, req, a2, b2, a3, b3, a5, b5, a7, b7, ae2, be2, ae3, be3, ae5, be5, ae7, be7, coeffs, cond = F
-    t = makeb(tnd[0], tnd[1])
+#    t = makeb(tnd[0], tnd[1])
     Astr = '.'.join([str(x) for x in A])
     Bstr = '.'.join([str(x) for x in B])
     tstr = str(tnd[0])+'.'+str(tnd[1])
@@ -35,7 +35,7 @@ for F in li:
         'weight': weight,
         'A': A,
         'B': B,
-        't': t,
+        't': tnd,
 	'hodge': hodge,
 	'sign': sign,
 	'sig': sig,
