@@ -63,12 +63,36 @@ Each file should begin with a short copyright information,
 mentioning the people who are mainly involved in coding
 this particular python file. 
 
+Testing
+-------
+
+The project uses unittests.
+
+- Any contribution to the master LMFDB branch must pass all the tests
+
+  from the lmfdb folder:
+  ```
+  ./test.sh
+  ```
+  It takes a few minutes. If sage or some additional parts are missing it may fail,
+  consider updating
+  (see [Getting Started](https://github.com/LMFDB/lmfdb/wiki/GettingStarted) )
+
+- New blueprints and features should include a `test_<name>.py` file
+  which runs tests on all functions.
+
+- A code coverage diagnostic can be obtained via
+  ```
+  ./test.sh html
+  ```
+  it produces beautiful coverage scores in `lmfdb/cover/index.html`
+
 Pro Tipp: Debugging
 -------------------
 Just add
-
+```
   import pdb; pdb.set_trace()
-
+```
 somewhere (e.g. protected inside a sensible if) this magic
 line and you will end up inside the interactive python
 debugger. there, you can check for the local variables with dir()
