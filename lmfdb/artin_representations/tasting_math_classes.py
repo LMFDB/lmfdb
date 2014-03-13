@@ -1,7 +1,7 @@
 # This is not a unittest, just a quick script
 
 print "importing base"
-import base
+from lmfdb import base
 print ".....done"
 print "initializing connection"
 base._init(dbport, "")
