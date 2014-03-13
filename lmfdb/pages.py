@@ -4,6 +4,43 @@ from base import app
 from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
 
 
+class Box(object):
+    def __init__(self, title):
+        self.title = title
+        self.content = None
+        self.links = []
+        self.target = "/"
+        self.img = None
+
+    def add_link(self, title, href):
+        self.links.append((title, href))
+
+@app.route("/")
+def index():
+    ec = Box("Elliptic Curves")
+    ec.content = """
+        some HTML
+        """
+    ec.target = url_for("EC_toplevel")
+    ec.add_link("L-Functions", url_for('l_functions.l_function_top_page'))
+    ec.add_link("L-Functions", url_for('l_functions.l_function_top_page'))
+
+    lf = Box("L-Functions")
+    lf.add_link("L-Functions", url_for('l_functions.l_function_top_page'))
+    lf.add_link("L-Functions", url_for('l_functions.l_function_top_page'))
+
+    ab = Box("Another Box")
+    ab.add_link("L-Functions", url_for('l_functions.l_function_top_page'))
+    ab.add_link("L-Functions", url_for('l_functions.l_function_top_page'))
+
+    boxes = [ ec, lf, ab, ab, ab ]
+    return render_template("index-boxes.html",
+        titletag="The L-functions and modular forms database",
+        title="",
+        bread=None,
+        boxes = boxes)
+
+
 @app.route("/about")
 def about():
     return render_template("about.html", title="About")
