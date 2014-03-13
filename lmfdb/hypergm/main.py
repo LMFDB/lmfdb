@@ -191,7 +191,7 @@ def hgm_search(**args):
             info[param] = clean_input(info[param])
             if IF_RE.match(info[param]):
                 query[param] = parse_list(info[param])
-                query[param].sort(reverse=True)
+                query[param].sort()
             else:
                 name = param
                 if field == 'hodge':
@@ -404,8 +404,7 @@ def render_hgm_family_webpage(args):
                     'gal5': data['gal5'],
                     'gal7': data['gal7'],
                     })
-        friends = []
-#        friends = [('Galois group', "/GaloisGroup/%dT%d" % (gn, gt))]
+        friends = [('Motives in the family', url_for('hypergm.index')+"?A=%s&B=%s" % (str(A), str(B)))]
 #        if unramfriend != '':
 #            friends.append(('Unramified subfield', unramfriend))
 #        if rffriend != '':
