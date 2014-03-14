@@ -12,10 +12,12 @@ table.box td.title { font-weight: bold; font-size: 110%; background: #bfb; heigh
 table.box td.content { font-size: 90%; height: 25%; padding-left: 15px }
 table.box td.links { vertical-align: bottom; font-size: 80%; padding-left: 15px; padding-bottom: 5px;}
 table.box td.links > a { padding: 0 5px 0 0; }
+div.user { font-size: 90%; padding: 0px; }
+div.user ul li { line-height: 80%; }
 </style>
 
-<div class="announce">
-{{ KNOWL_INC('users.' + userid + ".note") }}
+<div class="user">
+{{ KNOWL_INC('users.' + userid|lower + '.note') }}
 </div>
 
 <table class="boxes">
