@@ -66,11 +66,7 @@ this particular python file.
 Testing
 -------
 
-The project uses unittests.
-
-- Any contribution to the master LMFDB branch must pass all the tests
-
-  from the lmfdb folder:
+- Any contribution to the master LMFDB branch must *pass all the tests*. From the lmfdb folder:
   ```
   ./test.sh
   ```
