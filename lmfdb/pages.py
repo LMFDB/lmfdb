@@ -57,26 +57,9 @@ def index():
     global boxes
     #if boxes is None: # FIXME: restore
     boxes = load_boxes()
+    tmpl = "index-boxes.html" if g.BETA else "index.html"
 
-    """
-    ec = Box("Elliptic Curves")
-    ec.content = " some HTML "
-    ec.target = url_for("EC_toplevel")
-    ec.add_link("L-Functions", url_for('l_functions.l_function_top_page'))
-    ec.add_link("L-Functions", url_for('l_functions.l_function_top_page'))
-
-    lf = Box("L-Functions")
-    lf.add_link("L-Functions", url_for('l_functions.l_function_top_page'))
-    lf.add_link("L-Functions", url_for('l_functions.l_function_top_page'))
-
-    ab = Box("Another Box")
-    ab.add_link("L-Functions", url_for('l_functions.l_function_top_page'))
-    ab.add_link("L-Functions", url_for('l_functions.l_function_top_page'))
-
-    boxes = [ ec, lf, ab, ab, ab ]
-    """
-
-    return render_template("index-boxes.html",
+    return render_template(tmpl,
         titletag="The L-functions and modular forms database",
         title="",
         bread=None,
