@@ -15,8 +15,9 @@ Installation
     easy_install -U flask-cache
     easy_install -U pyyaml
     easy_install -U unittest2
-    # optional packages:
+    # optional packages, necessary for contributing:
     easy_install -U coverage
+    easy_install -U nose
 ```
   * From the command-line:
     `
@@ -60,13 +61,13 @@ if it doesn't compile, update sage's cython and then try again:
 
 * Lfunction plots:
 
-To get plots locally:
+To get plots locally, for sage <= 6.2, need a patch
 
-From within sage
+From within sage directory
 ```
-     hg_sage.apply("http://trac.sagemath.org/raw-attachment/ticket/8621/trac8621.patch")
-     hg_sage.apply("http://trac.sagemath.org/raw-attachment/ticket/8621/trac8621_review_rebase.patch")
-
+     git remote add trac git://trac.sagemath.org/sage.git -t master
+     git fetch trac u/chapoton/8621 
+     git checkout -b patch8621 FETCH_HEAD
 ```
 
 Then rebuild:
