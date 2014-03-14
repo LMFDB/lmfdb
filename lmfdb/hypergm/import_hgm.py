@@ -30,6 +30,14 @@ for F in li:
     degree, weight, A, B, tnd, hodge, sign, sig, locinfo, req, a2, b2, a3, b3, a5, b5, a7, b7, ae2, be2, ae3, be3, ae5, be5, ae7, be7, coeffs, cond = F
 #    t = makeb(tnd[0], tnd[1])
     tnd = fix_t(tnd)
+    A.sort()
+    B.sort()
+    if A[0] < B[0]:
+        temp = A
+        A = B
+        B = temp
+        # May want to swap the A_p and B_p later
+
     Astr = '.'.join([str(x) for x in A])
     Bstr = '.'.join([str(x) for x in B])
     tstr = str(tnd[0])+'.'+str(tnd[1])
