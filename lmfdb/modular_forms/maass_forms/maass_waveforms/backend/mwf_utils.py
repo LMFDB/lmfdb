@@ -101,6 +101,7 @@ def get_maassform_by_id(maass_id, fields=None):
     try:
         obj = bson.ObjectId(str(maass_id))
     except bson.errors.InvalidId:
+        data = dict()
         data['error'] = "Invalid id for object in database!"
         # return render_template("mwf_browse.html", info=info)
     else:

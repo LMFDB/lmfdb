@@ -363,6 +363,7 @@ class MaassDB(object):
     def get_Maass_forms(self, data={}, fields = None, **kwds):
         verbose = kwds.get('verbose', 0)
         collection = kwds.get('collection', 'all')
+        do_sort = kwds.get('do_sort', True)
         if verbose > 0:
             print "get_Maass_forms for data=", data
         if isinstance(data, bson.objectid.ObjectId):
@@ -399,8 +400,12 @@ class MaassDB(object):
                 continue
             if limit <= 0:
                 continue
-            finds = collection.find(find_data, fields,
+            if do_sort:
+                finds = collection.find(find_data, fields,
                                     sort=sorting).skip(skip).limit(limit)
+            else:
+                finds = collection.find(find_data, fields)
+                
             skip = 0
             if verbose > 0:
                 print "find[", collection.name, "]=", finds.count()

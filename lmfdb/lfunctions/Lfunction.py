@@ -41,11 +41,10 @@ def generateSageLfunction(L):
     """ Generate a SageLfunction to do computations
     """
     from lmfdb.lfunctions import logger
-    logger.debug("Generating Sage Lfunction with parameters %s and coefficients (maybe shortened in this msg, but there are %s) %s"
+    logger.debug("Generating Sage Lfunction with parameters %s and there are %s coefficients "
                 % ([L.title, L.coefficient_type, L.coefficient_period,
                 L.Q_fe, L.sign, L.kappa_fe, L.lambda_fe,
-                L.poles, L.residues], len(L.dirichlet_coefficients),
-                L.dirichlet_coefficients[:20]))
+                L.poles, L.residues], len(L.dirichlet_coefficients)))
     import sage.libs.lcalc.lcalc_Lfunction as lc
     L.sageLfunction = lc.Lfunction_C(L.title, L.coefficient_type,
                                         L.dirichlet_coefficients,
@@ -784,7 +783,7 @@ class Lfunction_Maass(Lfunction):
 
             if self.level > 1:
                 try:
-                    self.fricke = self.mf.cusp_evs[1]
+                    self.fricke = self.mf.fricke()
                 except:
                     raise KeyError('No Fricke information available for '
                                    + 'Maass form so not able to compute '
@@ -819,7 +818,6 @@ class Lfunction_Maass(Lfunction):
             # POD: Consider using self.compute_kappa_lambda_Q_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
 
 
-
             self.texname = "L(s,f)"
             self.texnamecompleteds = "\\Lambda(s,f)"
 
@@ -837,7 +835,7 @@ class Lfunction_Maass(Lfunction):
                           + "level %s, eigenvalue %s, and %s" % (
                           self.level, self.eigenvalue, self.characterName))
             self.citation = ''
-            self.credit = ''
+            self.credit = self.mf.contributor_name
 
         generateSageLfunction(self)
 
