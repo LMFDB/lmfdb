@@ -14,6 +14,9 @@ table.box td.links { vertical-align: bottom; font-size: 80%; padding-left: 15px;
 table.box td.links > a { padding: 0 5px 0 0; }
 div.user { font-size: 90%; padding: 0px; }
 div.user ul li { line-height: 80%; }
+table.boxes td.img {
+		border: 10px solid #efe;
+}
 </style>
 
 <div class="user">
@@ -26,7 +29,7 @@ div.user ul li { line-height: 80%; }
     <td>
     <table class="box">
       <tr>
-        <td class="img" rowspan="3"><img heigt="150" width="150" src="{{ box.img }}" /></td>
+        <td class="img" rowspan="3"><img height="150" width="150" src="{{ box.img }}" /></td>
         <td class="title">{{ box.title }}</td>
       </tr>
       <tr><td class="content">{{ box.content|safe }}</td></tr>
