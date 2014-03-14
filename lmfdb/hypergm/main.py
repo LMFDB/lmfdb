@@ -46,6 +46,10 @@ def display_t(tn, td):
         return str(t.numerator())
     return "%s/%s" % (t.numerator(), t.denominator())
 
+# For displaying factored conductors
+def factorint(inp):
+    return latex(ZZ(inp).factor())
+
 # Returns a string of val if val = 0, 1, -1, or version with p factored out otherwise
 def factor_out_p(val, p):
     if val == 0 or val == -1:
@@ -314,6 +318,7 @@ def hgm_search(**args):
     info['ab_label'] = ab_label
     info['display_t'] = display_t
     info['family'] = family_search
+    info['factorint'] = factorint
 
     if family_search:
         return render_template("hgm-search.html", info=info, title="Hypergeometric Family over $\Q$ Search Result", bread=bread, credit=HGM_credit)
@@ -349,6 +354,11 @@ def render_hgm_webpage(args):
             ('Weight',  '\(%s\)' % data['weight']),
             ('Conductor', '\(%s\)' % data['cond']),
         ]
+        # Now add factorization of conductor
+        Cond = ZZ(data['cond'])
+        if not (Cond.abs().is_prime() or Cond == 1):
+            data['cond'] = "%s=%s" % (str(Cond), factorint(data['cond']))
+
         info.update({
                     'A': A,
                     'B': B,

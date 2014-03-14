@@ -17,7 +17,7 @@ def makeb(n, d):
 
 def fix_t(t):
     tsage = QQ("%d/%d" % (t[0], t[1]))
-    return [tsage.numerator(), tsage.denominator()]
+    return [int(tsage.numerator()), int(tsage.denominator())]
 
 tot = len(li)
 print "finished importing li, number = %s" % tot
@@ -26,14 +26,16 @@ count = 0
 for F in li:
 # for F in li[0:1]:
     count += 1
-    print "%d of %d: %s" % (count, tot, F)
+    print "%d of %d: " % (count, tot)
     degree, weight, A, B, tnd, hodge, sign, sig, locinfo, req, a2, b2, a3, b3, a5, b5, a7, b7, ae2, be2, ae3, be3, ae5, be5, ae7, be7, coeffs, cond = F
 #    t = makeb(tnd[0], tnd[1])
+    tnd = fix_t(tnd)
     Astr = '.'.join([str(x) for x in A])
     Bstr = '.'.join([str(x) for x in B])
     tstr = str(tnd[0])+'.'+str(tnd[1])
     label = "A%s_B%s_t%s" % (Astr, Bstr, tstr)
-    tnd = fix_t(tnd)
+    print str(tnd)
+    print "\n"
     data = {
         'label': label,
         'degree': degree,
