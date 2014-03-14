@@ -26,8 +26,8 @@ field) and value types (with examples):
    - conductor_ideal    *     string
    - conductor_norm     *     int
    - number             *     int    (number of curve in isogeny class, from 1) 
-   - ainvs              *     list of 5 NFelts Weierstrass coefficients
-   - jinv               *     string (1 NFelt)
+   - ainvs              *     list of 5 list of d lists of 2 ints
+   - jinv               *     list of d lists of 2 STRINGS
    - cm                 *     int (a negative discriminant, or 0)
    - base_change        *     boolean (True, False)
    - rank                     int
@@ -35,8 +35,8 @@ field) and value types (with examples):
    - analytic_rank            int
    - torsion_order            int
    - torsion_structure        list of 0, 1 or 2 ints
-   - gens                     list of strings
-   - torsion_gens             list of strings
+   - gens                     list of lists of 3 lists of d lists of 2 ints
+   - torsion_gens             list of lists of 3 lists of d lists of 2 ints
    - sha_an                   int
 
    Each NFelt is a string concatenating rational coefficients with
@@ -93,18 +93,18 @@ def nf_lookup(label):
     r"""
     Returns a NumberField from its label, caching the result.
     """
-    print "Looking up number field with label %s" % label
+    #print "Looking up number field with label %s" % label
     if label in nf_lookup_table:
-        print "We already have it: %s" % nf_lookup_table[label]
+        #print "We already have it: %s" % nf_lookup_table[label]
         return nf_lookup_table[label]
-    print "We do not have it yet, finding in database..."
+    #print "We do not have it yet, finding in database..."
     field = conn.numberfields.fields.find_one({'label': label})
     if not field:
         raise ValueError("Invalid field label: %s" % label)
-    print "Found it!"
+    #print "Found it!"
     coeffs = [ZZ(c) for c in field['coeffs'].split(",")]
     K = NumberField(PolynomialRing(QQ,'x')(coeffs),'a')
-    print "The field with label %s is %s" % (label, K)
+    #print "The field with label %s is %s" % (label, K)
     nf_lookup_table[label] = K
     return K
 
@@ -156,6 +156,24 @@ def NFelt(a):
     """
     return ",".join([str(c) for c in list(a)])
 
+def QorZ_list(a):
+    r"""
+    Return the list representation of the rational number.
+    """
+    return [int(a.numerator()), int(a.denominator())]
+
+def K_list(a):
+    r"""
+    Return the list representation of the number field element.
+    """
+    return [QorZ_list(c) for c in list(a)]
+
+def NFelt_list(a):
+    r"""
+    Return the list representation of the NFelt string.
+    """
+    return [QorZ_list(QQ(c)) for c in a.split(",")]  
+
 def parse_point(E, s):
     r"""
     Returns a point on E defined by the string s.
@@ -168,6 +186,16 @@ def point_string(P):
     r"""Return a string representation of a point on an elliptic curve
     """
     return "["+":".join([NFelt(c) for c in list(P)])+"]"
+
+def point_string_to_list(s):
+    r"""Return a list representation of a point string
+    """
+    return [[QorZ_list(QQ(a)) for a in c.split(",")] for c in s[1:-1].split(":")]
+
+def point_list(P):
+    r"""Return a list representation of a point on an elliptic curve
+    """
+    return [K_list(c) for c in list(P)]
 
 def field_data(s):
     r"""
@@ -216,14 +244,17 @@ def curves(line):
     # Create the field and curve to compute the j-invariant:
     dummy, deg, sig, abs_disc = field_data(field_label)
     K = nf_lookup(field_label)
-    E = EllipticCurve([parse_NFelt(K,a) for a in ainvs])
-    jinv = NFelt(E.j_invariant())
+    ainvs = [parse_NFelt(K,ai) for ai in ainvs] # list of K-elements
+    E = EllipticCurve(ainvs)
+    ainvs = [K_list(ai) for ai in ainvs] # lists for database
+    jinv = K_list(E.j_invariant())
+    jinv = [[str(a) for a in c] for c in jinv]
 
     # get torsion order, structure and generators:
     torgroup = E.torsion_subgroup()
     ntors = int(torgroup.order())
     torstruct = [int(n) for n in list(torgroup.invariants())]
-    torgens = [point_string(P.element()) for P in torgroup.gens()]
+    torgens = [point_list(P.element()) for P in torgroup.gens()]
 
     return label, {
         'field_label' : field_label,
@@ -281,7 +312,7 @@ def curve_data(line):
     if ra!="?":
         edata['analytic_rank'] = int(ra)
     ngens = int(data[7])
-    edata['gens'] = data[7:7+ngens]
+    edata['gens'] = [point_string_to_list(g) for g in data[8:8+ngens]]
     sha = data[8+ngens]
     if sha!="?":
         edata['sha_an'] = int(sha)
@@ -309,7 +340,7 @@ def upload_to_db(base_path, filename_suffix):
         count = 0
         for line in h.readlines():
             label, data = parse(line)
-            if count%5000==0:
+            if count%100==0:
                 print "read %s" % label
             count += 1
             if label not in data_to_insert:
@@ -326,8 +357,8 @@ def upload_to_db(base_path, filename_suffix):
     vals = data_to_insert.values()
     count = 0
     for val in vals:
-        print val
+        #print val
         nfcurves.update({'label': val['label']}, {"$set": val}, upsert=True)
         count += 1
-        if 1: #count % 5000 == 0:
+        if count % 100 == 0:
             print "inserted %s" % (val['label'])
