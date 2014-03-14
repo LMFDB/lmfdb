@@ -11,7 +11,7 @@ import gzip
 import re
 import sys
 import time
-import base
+from lmfdb import base
 
 fields = base.getDBConnection().numberfields.fields
 fields.ensure_index('degree')
