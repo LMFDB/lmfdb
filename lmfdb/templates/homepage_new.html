@@ -70,11 +70,6 @@
 <style type="text/css">
 #sidebar .test { color:rgb(150,0,0);}
 #sidebar .test a { color:rgb(150,0,0);}
-#sidebar .list li {
-    padding: 3px;
-}
-#sidebar h2 {
-      margin: 10px 0px 0px;
 </style>
    {% endif %}
 
@@ -140,50 +135,10 @@
     </span>
    </li>
   {% if BETA %}
-  <li class="test">Operations
-&nbsp;
-&nbsp;
-&nbsp;
-  Zeroes</li>
+  <li class="test">Tensor products</li>
+  <li class="test">Zeroes</li>
     {% endif %}
   </ul>
-
-
-
-
-
-  <h2 class="link">
-       <a class="mf"    href="{{ url_for('mf.modular_form_main_page') }}">Modular Forms</a>
-  </h2>
-  <ul class="list">
-{% if BETA %}
-   <li class="test">\(\GL(2)\): <a class="emf"  href="{{ url_for('emf.render_elliptic_modular_forms') }}">Classical</a>
-<a class="mwf"  href="{{ url_for('mwf.render_maass_waveforms') }}">Maass</a></li>
-   <li class="test">
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<a href="{{ url_for('hmf.hilbert_modular_form_render_webpage') }}">Hilbert</a> 
-<a href="">Bianchi</a></li>
-   <li class="test">\(\GL(3)\): <a href="">Cohomological</a></li>
-<li>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp
-<a href="">Maass</a></li>
-   <li class="test"><a href="">U(2,1)</a> <a              href="{{ url_for('ModularForm_GSp4_Q_top_level') }}">Siegel</a> &nbsp;  other</li>
-  </ul>
-{% else %}
-   <li><a class="emf"  href="{{ url_for('emf.render_elliptic_modular_forms') }}">Classical, $\GL(2)/\Q$</a></li>
-   <li><a class="mwf"  href="{{ url_for('mwf.render_maass_waveforms') }}">Maass, $\GL(2)/\Q$</a></li>
-   <li><a              href="{{ url_for('hmf.hilbert_modular_form_render_webpage') }}">Hilbert</a></li>
-   <li><a              href="{{ url_for('ModularForm_GSp4_Q_top_level') }}">Siegel</a> </li>
-  </ul>
-   {# <li><a href="{{ url_for('quadratic_twists') }}">Quadratic Twists</a></li> #}
-{#
-  <h2 class="link">
-       <a class="mf"    href="{{ url_for('mf.modular_form_main_page') }}">Maass Forms</a></h2>
-  <ul>
-   <li><a class="mwfp" href="{{ url_for('mwfp.render_picard_maass_forms') }}">for \(\PSL(2,\Z[i])\)</a></li>
-  </ul>
-#}
-    {% endif %}	
 
 
 {% if BETA %}
@@ -191,39 +146,23 @@
   <h2>Elliptic Curves</h2>
   <ul class="list">
 <li><a href="{{ url_for('EC_toplevel') }}  ">Elliptic Curves/\(\Q\)</a></li>
-  </ul>
 {% endif %}     
-
-
-
-{% if BETA %}
-    <h2> Varieties</h2>
-  <ul class="list">
-   <li>Elliptic Curves over:</li> <li><a href="{{ url_for('EC_toplevel') }}">\(\Q\)</a> <a href="">\(\Q(\sqrt{d})\)</a> <a href="">\(\Q(\sqrt{-d})\)</a> <a href="">other</a>
-    <li class="test"><a href="">Hyperelliptic curves</a></li>
-    <li class="test">Surfaces: <a href="">Abelian</a>  <a href="">K3</a></li>
-    <li class="test">Higher:  Calabi-Yau</li>
   </ul>
-{% endif %}
 
 
 
 
 
-{% if BETA %}
-  <h2>Number Fields</h2>
+  <h2> Fields</h2>
     <ul class="list">
-    <li><a class = "number_fields" href="{{ url_for('number_fields.number_field_render_webpage') }}">Global</a> <a href="{{ url_for('local_fields.index') }}">Local</a></li>
+{% if BETA %}
+    <li class="test"><a class = "number_fields" href="{{ url_for('number_fields.number_field_render_webpage') }}">Global</a> <a href="{{ url_for('local_fields.index') }}">Local</a></li>
 
-<!--
 <li class="test"><a href="">Finite</a> <a href="">Function</a>
--->
 </li>
 
 <li><a href="{{ url_for('galois_groups.index') }}">Galois Groups</a></li>
 {% else %}
-  <h2> Fields</h2>
-    <ul class="list">
       <li><a class = "number_fields" href="{{ url_for('number_fields.number_field_render_webpage') }}">Global Number Fields</a></li>
       <li class="test"><a class="artin_representations" href="{{ url_for('artin_representations.index') }}">Artin Representations</a></li>
       <li><a href="{{ url_for('local_fields.index') }}">Local Number Fields</a></li>
@@ -252,6 +191,52 @@
 
 
 
+{% if BETA %}
+    <h2> Varieties</h2>
+  <ul class="list">
+   <li class="test">Elliptic Curves over: <a href="{{ url_for('EC_toplevel') }}">\(\Q\)</a> <a href="">\(\Q(\sqrt{d})\)</a> <a href="">\(\Q(\sqrt{-d})\)</a> <a href="">other fields</a>
+    <li class="test"><a href="">Hyperelliptic curves</a></li>
+    <li class="test">Surfaces: <a href="">Abelian</a>  <a href="">K3</a></li>
+    <li class="test"><a href="">Calbi-Yau 3-folds</a></li>
+  </ul>
+{% endif %}
+
+
+
+
+
+
+
+
+
+  <h2 class="link">
+       <a class="mf"    href="{{ url_for('mf.modular_form_main_page') }}">Modular Forms</a>
+  </h2>
+  <ul class="list">
+{% if BETA %}
+   <li class="test">\(\GL(2)/\Q\): <a class="emf"  href="{{ url_for('emf.render_elliptic_modular_forms') }}">Classical</a>
+<a class="mwf"  href="{{ url_for('mwf.render_maass_waveforms') }}">Maass</a></li>
+   <li class="test"><a href="{{ url_for('hmf.hilbert_modular_form_render_webpage') }}">Hilbert</a> 
+<a href="">Bianchi</a></li>
+   <li class="test">\(\GL(3)/\Q\): <a href="">Cohomological</a>
+<a href="">Maass</a></li>
+   <li class="test"><a href="">U(2,1)</a> <a              href="{{ url_for('ModularForm_GSp4_Q_top_level') }}">Siegel</a> </li>
+  </ul>
+{% else %}
+   <li><a class="emf"  href="{{ url_for('emf.render_elliptic_modular_forms') }}">Classical, $\GL(2)/\Q$</a></li>
+   <li><a class="mwf"  href="{{ url_for('mwf.render_maass_waveforms') }}">Maass, $\GL(2)/\Q$</a></li>
+   <li><a              href="{{ url_for('hmf.hilbert_modular_form_render_webpage') }}">Hilbert</a></li>
+   <li><a              href="{{ url_for('ModularForm_GSp4_Q_top_level') }}">Siegel</a> </li>
+  </ul>
+   {# <li><a href="{{ url_for('quadratic_twists') }}">Quadratic Twists</a></li> #}
+{#
+  <h2 class="link">
+       <a class="mf"    href="{{ url_for('mf.modular_form_main_page') }}">Maass Forms</a></h2>
+  <ul>
+   <li><a class="mwfp" href="{{ url_for('mwfp.render_picard_maass_forms') }}">for \(\PSL(2,\Z[i])\)</a></li>
+  </ul>
+#}
+	
 <!--
 	<h2 class="link">
 	    <a class="artin_representations" href="{{ url_for('artin_representations.index') }}">Artin Representations</a>
@@ -262,23 +247,24 @@
 <!--
       <h2 class="link"> <a href='{{ url_for("hypergm.index") }}'>Hypergeometric motives</a></h2>
 -->
+      <h2>Motives</h2>
+<ul class="list">
+<li class="test">Hypergeometric over: <a href="">\(\Q\)</a> <a href="">\(\Q(\sqrt{d})\)</a></li>
+<li class="test">$G_2$</li>
+</ul>
+
 
 <h2>Representations</h2>
 <ul class="list">
-<li class="test"> <a href='{{ url_character() }}'> Characters:</a></li>
-<li>&nbsp;&nbsp;&nbsp;
+<li class="test"> <a href='{{ url_character() }}'> Characters:</a>
+    <!--
+    <li>New links:</li>
+    -->
     <a href="{{ url_character(type='Dirichlet') }} ">Dirichlet</a>
     <a href="{{ url_character(type='Hecke') }} ">Hecke</a></li>
 <li class="test"><a class="artin_representations" href="{{ url_for('artin_representations.index') }}">Artin</a> <a href="">Galois</a> </li>
 <li class="test"><a href="">Automorphic</a></li>
 </ul>
-
-      <h2>Motives</h2>
-<ul class="list">
-<li class="test">Hypergeometric: <a href="">\(/\Q\)</a> <a href="">\(/\Q(\sqrt{d})\)</a></li>
-<li class="test">$G_2$</li>
-</ul>
-
   {% endif %}
 
 {% if BETA %}
@@ -290,11 +276,10 @@
    </ul>
  {% endif %}
 
- 
-{% if BETA %}
+{# {% if BETA %}
       <h2 class="link"> <a href='{{ url_for("stieltjes.stieltjes_constants") }}'>Stieltjes constants</a></h2>
   {% endif %}
-
+#}
   <h2 class="link knowl">
      <a class="knowl" href="{{ url_for("knowledge.index") }}">Knowledge</a>
   </h2>
