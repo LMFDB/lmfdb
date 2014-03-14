@@ -195,7 +195,6 @@ class LfunctionTest(LmfdbTest):
 
     def test_paintSVGchar(self):
         svg = paintSvgChar(1,20,1,12)
-        print svg
         assert "/L/Character/Dirichlet/8/5" in svg
 
 ##    def test_number_of_coefficients_needed(self):

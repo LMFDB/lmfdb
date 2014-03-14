@@ -678,7 +678,7 @@ class Lfunction_Dirichlet(Lfunction):
                 self.coefficient_type = 2
                 for n in range(0, self.numcoeff - 1):
                     self.dirichlet_coefficients[n] = int(
-                        round(self.dirichlet_coefficients[n]))
+                        round(real(self.dirichlet_coefficients[n])))
             else:
                 self.coefficient_type = 3
 
