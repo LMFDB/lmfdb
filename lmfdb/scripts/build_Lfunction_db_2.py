@@ -1,7 +1,7 @@
 # This builds a database of L-functions that occur (maybe on the fly) on the website
 #
 import pymongo
-import base
+from lmfdb import base
 
 C = base.getDBConnection()
 db = C.Lfunctions
