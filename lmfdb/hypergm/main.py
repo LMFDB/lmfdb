@@ -52,6 +52,7 @@ def factorint(inp):
 
 # Returns a string of val if val = 0, 1, -1, or version with p factored out otherwise
 def factor_out_p(val, p):
+    val = ZZ(val)
     if val == 0 or val == -1:
         return str(val)
     if val==1:
@@ -60,7 +61,7 @@ def factor_out_p(val, p):
     if val<0:
         s = -1
         val = -val
-    ord = ZZ(val).valuation(p)
+    ord = val.valuation(p)
     val = val/p**ord
     out = ''
     if s == -1:
