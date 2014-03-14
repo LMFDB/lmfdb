@@ -170,6 +170,7 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/Plot/EllipticCurve/Q/56.a/')
         assert 'OK' in str(L)
 
+    @unittest2.skip("hypergeometric motives not yet available on master")
     def test_LHGMZeros(self):
         L = self.tc.get('/L/Zeros/Motive/Hypergeometric/Q/A2.2.2.2_B1.1.1.1_t1.2/')
         assert '4.307350233' in L.data
@@ -194,7 +195,7 @@ class LfunctionTest(LmfdbTest):
 
     def test_paintSVGchar(self):
         svg = paintSvgChar(1,20,1,12)
-        assert "/L/Character/Dirichlet/8/7" in svg
+        assert "/L/Character/Dirichlet/8/5" in svg
 
 ##    def test_number_of_coefficients_needed(self):
 ##        nr = number_of_coefficients_needed(1 / sqrt(math.pi),
