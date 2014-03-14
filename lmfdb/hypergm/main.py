@@ -16,7 +16,7 @@ from lmfdb.hypergm import hypergm_page, hgm_logger
 
 from lmfdb.transitive_group import *
 
-HGM_credit = 'D. Roberts and J. Jones'
+HGM_credit = 'D. Roberts'
 
 # Helper functions
 
@@ -46,8 +46,13 @@ def display_t(tn, td):
         return str(t.numerator())
     return "%s/%s" % (t.numerator(), t.denominator())
 
+# For displaying factored conductors
+def factorint(inp):
+    return latex(ZZ(inp).factor())
+
 # Returns a string of val if val = 0, 1, -1, or version with p factored out otherwise
 def factor_out_p(val, p):
+    val = ZZ(val)
     if val == 0 or val == -1:
         return str(val)
     if val==1:
@@ -56,7 +61,7 @@ def factor_out_p(val, p):
     if val<0:
         s = -1
         val = -val
-    ord = ZZ(val).valuation(p)
+    ord = val.valuation(p)
     val = val/p**ord
     out = ''
     if s == -1:
@@ -186,11 +191,12 @@ def hgm_search(**args):
         family_search = True
 
     # generic, irreducible not in DB yet
-    for param in ['A', 'B', 'hodge', 'A2', 'B2', 'A3', 'B3', 'A5', 'B5', 'A7', 'B7']:
+    for param in ['A', 'B', 'hodge', 'a2', 'b2', 'a3', 'b3', 'a5', 'b5', 'a7', 'b7']:
         if info.get(param):
             info[param] = clean_input(info[param])
             if IF_RE.match(info[param]):
                 query[param] = parse_list(info[param])
+                query[param].sort()
             else:
                 name = param
                 if field == 'hodge':
@@ -207,9 +213,22 @@ def hgm_search(**args):
         except:
             info['err'] = 'Error parsing input for t.  It needs to be a rational number, such as 2/3 or -3'
 
-    for param in ['degree','weight','sign', 'conductor']:
-        # We don't look at sign in family searches
-        if info.get(param) and not ((param == 'sign' or param=='conductor') and family_search):
+    # sign can only be 1, -1, +1
+    if info.get('sign') and not family_search:
+        sign = info['sign']
+        sign = re.sub(r'\s','',sign)
+        sign = clean_input(sign)
+        if sign == '+1':
+            sign = '1'
+        if not (sign == '1' or sign == '-1'):
+            info['err'] = 'Error parsing input %s for sign.  It needs to be 1 or -1' % sign
+            return search_input_error(info, bread)
+        query['sign'] = int(sign)
+
+
+    for param in ['degree','weight','conductor']:
+        # We don't look at conductor in family searches
+        if info.get(param) and not (param=='conductor' and family_search):
             if param=='conductor':
                 cond = info['conductor']
                 try:
@@ -228,7 +247,7 @@ def hgm_search(**args):
                 if LIST_RE.match(ran):
                     tmp = parse_range2(ran, param)
                 else:
-                    names = {'weight': 'weight', 'degree': 'degree', 'sign': 'sign'}
+                    names = {'weight': 'weight', 'degree': 'degree'}
                     info['err'] = 'Error parsing input for the %s.  It needs to be an integer (such as 5), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 2,3,8 or 3-5, 7, 8-11).' % names[param]
                     return search_input_error(info, bread)
             # work around syntax for $or
@@ -300,9 +319,10 @@ def hgm_search(**args):
     info['ab_label'] = ab_label
     info['display_t'] = display_t
     info['family'] = family_search
+    info['factorint'] = factorint
 
     if family_search:
-        return render_template("hgm-search.html", info=info, title="Hypergeometric Motive over $\Q$ Search Result", bread=bread, credit=HGM_credit)
+        return render_template("hgm-search.html", info=info, title="Hypergeometric Family over $\Q$ Search Result", bread=bread, credit=HGM_credit)
     else:
         return render_template("hgm-search.html", info=info, title="Hypergeometric Motive over $\Q$ Search Result", bread=bread, credit=HGM_credit)
 
@@ -335,6 +355,11 @@ def render_hgm_webpage(args):
             ('Weight',  '\(%s\)' % data['weight']),
             ('Conductor', '\(%s\)' % data['cond']),
         ]
+        # Now add factorization of conductor
+        Cond = ZZ(data['cond'])
+        if not (Cond.abs().is_prime() or Cond == 1):
+            data['cond'] = "%s=%s" % (str(Cond), factorint(data['cond']))
+
         info.update({
                     'A': A,
                     'B': B,
@@ -390,8 +415,7 @@ def render_hgm_family_webpage(args):
                     'gal5': data['gal5'],
                     'gal7': data['gal7'],
                     })
-        friends = []
-#        friends = [('Galois group', "/GaloisGroup/%dT%d" % (gn, gt))]
+        friends = [('Motives in the family', url_for('hypergm.index')+"?A=%s&B=%s" % (str(A), str(B)))]
 #        if unramfriend != '':
 #            friends.append(('Unramified subfield', unramfriend))
 #        if rffriend != '':

@@ -8,7 +8,8 @@ import os
 import json
 
 sys.path.append("../")
-import base
+from lmfdb import base
+from lmfdb.website import dbport
 from pymongo.connection import Connection
 base._init(dbport, "")
 C = base.getDBConnection()

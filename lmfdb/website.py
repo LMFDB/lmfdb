@@ -124,6 +124,24 @@ def css():
         response.headers['Cache-Control'] = 'public, max-age=600'
     return response
 
+@app.before_request
+def get_menu_cookie():
+    from flask import g
+    g.show_menu = request.cookies.get('showmenu') != "False"
+
+@app.after_request
+def set_menu_cookie(response):
+    from flask import g
+    response.set_cookie("showmenu", str(g.show_menu))
+    return response
+
+
+@app.route('/_menutoggle/<show>')
+def menutoggle(show):
+    from flask import g
+    g.show_menu = show != "False"
+    url = request.referrer or url_for('index')
+    return redirect(url)
 
 @app.route('/a/<int:a>')
 def a(a):

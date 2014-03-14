@@ -1,4 +1,5 @@
 from lmfdb.math_classes import ArtinRepresentation
+from lmfdb.website import dbport
 
 import base
 base._init(dbport, "")

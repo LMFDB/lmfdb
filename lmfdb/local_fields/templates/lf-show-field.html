@@ -2,6 +2,13 @@
 
 {% block content %}
 
+<style>
+table,td {
+  border-right:solid 30px transparent;
+} 
+</style>
+  
+
 <p><h2> {{ KNOWL('lf.defining_polynomial', title='Defining polynomial') }}</h2>
 
 <p>
@@ -11,34 +18,34 @@
     </table>
 </p>
 
-<p><h2> {{ KNOWL('lf.invariants', title='Invariants') }}</h2>
+<h2> {{ KNOWL('lf.invariants', title='Invariants') }}</h2>
   <p>
     <table>
-      <tr><td>Base field:<td>&nbsp;&nbsp;<td>$\Q_{ {{info.p}} }$</tr>
-      <tr><td>Degree $d$ :<td>&nbsp;&nbsp;<td>${{info.n}}$</tr>
-      <tr><td>Ramification exponent $e$ :<td>&nbsp;&nbsp;<td>${{info.e}}$</tr>
-      <tr><td>Residue field degree $f$ :<td>&nbsp;&nbsp;<td>${{info.f}}$</tr>
-      <tr><td>Discriminant exponent $c$ :<td>&nbsp;&nbsp;<td>${{info.c}}$</tr>
-      <tr><td>Discriminant root field:<td>&nbsp;&nbsp;<td>{{info.rf}}</tr>
-      <tr><td>Root number:<td>&nbsp;&nbsp;<td>{{info.hw}}</tr>
-      <tr><td> $|\textrm{Aut}(K/\Q_{ {{info.p}} })|$:<td>&nbsp;&nbsp;<td>${{info.aut}}$</tr>
+      <tr><td>Base field:</td> <td>$\Q_{ {{info.p}} }$</td></tr>
+      <tr><td>Degree $d$ :</td> <td>${{info.n}}$</td></tr>
+      <tr><td>Ramification exponent $e$ :</td> <td>${{info.e}}$</td></tr>
+      <tr><td>Residue field degree $f$ :</td> <td>${{info.f}}$</td></tr>
+      <tr><td>Discriminant exponent $c$ :</td> <td>${{info.c}}$</td></tr>
+      <tr><td>Discriminant root field:</td> <td>{{info.rf}}</td></tr>
+      <tr><td>Root number:</td> <td>{{info.hw}}</td></tr>
+      <tr><td> $|\textrm{Aut}(K/\Q_{ {{info.p}} })|$:</td> <td>${{info.aut}}$</td></tr>
     </table>
   </p>
 
   <p><h2>{{ KNOWL('lf.unramified_totally_ramified_tower', title='Unramified/totally ramified tower') }}</h2>
     <table>
-      <tr><td>Unramified subfield:<td>&nbsp;&nbsp;<td>{{info.unram}}</tr>
-      <tr><td>Relative Eisenstein polynomial:<td>&nbsp;&nbsp;<td>{{info.eisen}}</tr>
+      <tr><td>Unramified subfield:</td><td>{{info.unram}}</tr>
+      <tr><td>Relative Eisenstein polynomial:</td><td>{{info.eisen}}</tr>
     </table>
   </p>
   <p><h2>{{ KNOWL('lf.galois_invariants', title='Invariants of the Galois closure') }}</h2>
     <table>
-      <tr><td>Galois group:<td>&nbsp;&nbsp;<td>{{info.gal|safe}}</tr>
-      <tr><td>Inertia group:<td>&nbsp;&nbsp;<td>{{info.inertia|safe}}</tr>
-      <tr><td>Unramified degree:<td>&nbsp;&nbsp;<td>${{info.u}}$</tr>
-      <tr><td>Tame degree:<td>&nbsp;&nbsp;<td>${{info.t}}$</tr>
-      <tr><td>Wild slopes:<td>&nbsp;&nbsp;<td>{{info.slopes}}</tr>
-      <tr><td>GMS:<td>&nbsp;&nbsp;<td>${{info.gms}}$</tr>
+      <tr><td>Galois group:</td><td>{{info.gal|safe}}</td></tr>
+      <tr><td>Inertia group:</td><td>{{info.inertia|safe}}</td></tr>
+      <tr><td>Unramified degree:</td><td>${{info.u}}$</td></tr>
+      <tr><td>Tame degree:</td><td>${{info.t}}$</td></tr>
+      <tr><td>Wild slopes:</td><td>{{info.slopes}}</td></tr>
+      <tr><td>GMS:</td><td>${{info.gms}}$</td></tr>
     </table>
   </p>
 
