@@ -15,8 +15,10 @@
 
 <p>
 <table>
+<tr><td> Weight:<td> {{ info.weight }} </tr>
 <tr><td> Level norm:<td> {{ info.level_norm }} </tr>
 <tr><td> Level:<td> ${{ info.level_ideal }}$ </tr>
+<tr><td> Label:<td> ${{ info.label_suffix }}$ </tr>
 <tr><td> Dimension:<td> {{ info.dimension }} </tr>
 <tr><td> Is CM?:<td> {{ info.is_CM }} </tr>
 <tr><td> Is base change?:<td> {{ info.is_base_change }} </tr>
@@ -29,14 +31,8 @@
  <p><a href='{{ info.label }}/download/sage' target='_blank'>Download to Sage</a></p>
 #}
 
-  <h2>  $q$-expansion  </h2>
 
-<p>$f=(f_{\mathfrak{a}})$ is a tuple of holomorphic functions 
-$f_{\mathfrak{a}}:\mathcal{H}^{[F:\mathbb{Q}]} \to \mathbb{C}$ indexed by the strict class group of $F$, with<br>
-$\displaystyle{f_{\mathfrak{a}}(z) = \sum_{u \in (\mathfrak{ad})_+^{-1}} a_{u\mathfrak{ad}} q^{\mathrm{Tr}(uz)}}$<br>
-where $\mathfrak{d}$ is the different of $F$ and $q=e^{2\pi i}$.</p>
-
-  <h2>  Hecke eigenvalues  </h2>
+  <h2>  Hecke eigenvalues ({{ KNOWL('mf.hilbert.q_expansion', title='$q$-expansion') }}) </h2>
 
 <p>
 <table>
