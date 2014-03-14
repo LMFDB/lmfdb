@@ -265,7 +265,11 @@ body.knowl #header {
 
 
 #main {
+{% if g.show_menu %}
   margin:  0px 0px 0px 200px;
+{% else %}
+  margin:  0px 0px 0px 0px;
+{% endif %}
   padding: 0px 0px 0px 10px;
   min-height: 700px;
   /* border: 1px solid purple; */

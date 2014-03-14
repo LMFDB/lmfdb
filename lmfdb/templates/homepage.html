@@ -20,6 +20,12 @@
           <a href="{{ feedbackpage }}" target="_blank">
              Feedback</a>
             &middot;
+          {% if g.show_menu %}
+             <a href="{{ url_for("menutoggle", show=False)}}">Hide Menu</a>
+          {% else %}
+             <a href="{{ url_for("menutoggle", show=True)}}">Show Menu</a>
+          {% endif %}
+            &middot;
           {% if user_is_admin -%}
             <a href="{{ url_for('users.register') }}">Registertokens</a>
             &middot;
@@ -55,6 +61,7 @@
 </div>
 
 {% block sidebar -%} 
+{% if g.show_menu %}
  {% macro entry(title, entries) -%}
    {% if entries %}
     <h2>{{ title }}</h2>
@@ -253,6 +260,7 @@
  {%- endif %}
 
 </div>
+{% endif %} {# of g.show_menu #}
 {%- endblock sidebar %}
 
  {% macro rightnavig(title, entries) -%}
