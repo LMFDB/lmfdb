@@ -1,11 +1,194 @@
 {% extends "homepage.html" %}
 
 {% block content %}
+<style>
+<div.ip>span { white-space: nowrap; font-family: serif; }
+</style>
+
+<script>
+var cur_system = null;
+function show_code(system) {
+    $('.sage').hide();
+    $('.pari').hide();
+    $('.magma').hide();
+    if (cur_system == system) {
+      $('.'+system).hide();
+      cur_system = null;
+      } else {
+      $('.'+system).show();
+      cur_system = system;
+    }
+  }
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script><script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script><script src="http://aleph.sagemath.org/embedded_sagecell.js">
+  
+
+</script><style type="text/css">
+  .sagecell .CodeMirror-scroll {
+    height: auto;
+    overflow-y: hidden;
+    overflow-x: auto;
+  }
+
+  .sagecell-practice .CodeMirror-scroll {
+    height: 150px;
+  }
+
+  .sagecell button.sagecell_evalButton {
+      font-size: 80%;
+  }
+
+  .sagecell_sessionContainer {
+      margin-bottom:1em;
+  
+  }
+
+  </style>
+
+    <div align ="right">
+      Show commands using:  <a onclick="show_code('sage'); return false" href='#'>sage</a>,
+        <a onclick="show_code('pari'); return false" href='#'>pari</a>,
+        <a onclick="show_code('magma'); return false" href='#'>magma</a>
+    </div>
+
 
 <h2> {{ KNOWL('ecnf.defining_polynomial', title='Defining polynomial') }}</h2>
 
 <div>
-{{ ec }}
+  <h2>  Base Field  <a href="{{ url_for('number_fields.by_label', label=ec.field.label) }}">{{ ec.field.pretty_label }}</a> </h2>
+<p>
+<table>
+<!--<tr><td>Label:<td><a href="{{ url_for('number_fields.by_label', label=ec.field.label) }}">{{ec.field.label}}</a> </tr>-->
+<tr><td>Degree:<td>              {{ ec.field.degree }} </tr>
+<tr><td>Discriminant:<td>        {{ ec.field.disc }} </tr>
+<tr><td>Defining polynomial:<td> {{ ec.field.poly }} </tr>
+<tr><td>Generator:<td>           {{ ec.field.generator }} </tr>
+<tr><td>Fundamental units:<td>   {{ ec.field.funits }} </tr>
+</table>
+</p>
+</div>
+
+<div>
+<h2>Weierstass Equation</h2>
+{{ ec.equn }}
+<h2>Invariants</h2>
+
+        <table>
+        <tr>
+        <td>
+         \(\mathfrak{N} \)</td>
+        <td>=</td>
+        <td>{{ ec.cond }}</td>
+        <td>=</td>
+        <td>{{ ec.fact_cond }}</td>
+        </tr>
+
+        <tr>
+        <td>
+         \(\Delta\)</td>
+        <td>=</td>
+        <td>{{ ec.disc }}</td>
+        <td>=</td>
+        <td>{{ ec.fact_disc }}</td>
+        </tr>
+
+        <tr>
+        <td>
+         \(j\)</td>
+        <td>=</td>
+        <td>{{ ec.j }}</td>
+        <td>=</td>
+        <td>{{ ec.fact_j }}</td>
+        </tr>
+
+        <tr>
+        <td> \( \text{End} (E) \)</td>
+        <td>=</td>
+        <td>{{ ec.End }}</td>
+        <td>&nbsp;</td>
+        <td>({%if not ec.cm_bool %} no {%endif %}    
+{{ KNOWL('ec.complex_multiplication', title='Complex Multiplication') }})
+        </td>
+        </tr>
+
+</table>
+</div>
+
+<div>
+<h2> Torsion subgroup </h2>
+<table>
+<tr>
+<th>Structure:</th>
+<td>{{ ec.tor_struct_pretty }}</td>
+</tr>
+    {% if ec.tr %}
+<tr>
+<th>{% if ec.tr==1 %}Generator{% else %}Generators{% endif %}:</th>
+<td>{{ ec.torsion_gens }}</td>
+</tr>
+    {% endif %}
+</table>
+</div>
+
+<div>
+    <h2> Local data </h2>
+
+<table>
+<tr>
+<th>prime</th>
+<th>{{KNOWL('ec.q.tamagawa_numbers', title='Tamagawa number')}}</th>
+<th>{{KNOWL('ec.q.kodaira_symbol', title='Kodaira symbol')}}</th>
+<th>{{KNOWL('ec.q.reduction_type', title='Reduction type')}}</th>
+</tr>
+{% for pr in ec.local_data %}
+<tr>
+<td align=center> {{pr.p}}</td>
+<td align=center>\({{pr.tamagawa_number}}\)</td>
+<td align=center>{{pr.kodaira_symbol}}</td>
+<td align=center>
+{% if pr.reduction_type==0 %}
+ Additive
+ {% elif pr.reduction_type==1 %}
+  Split multiplicative
+  {% elif pr.reduction_type==-1 %}
+   Non-split multiplicative
+{% endif %}
+</td>
+</tr>
+{% endfor %}
+</table>
+</div>
+
+{% if ec.field.real_quadratic  %}
+
+<div>
+<h2>Hilbert modular form</h2>
+<a href="{{url_for('hmf.render_hmf_webpage', field_label=ec.field.label, label=ec.hmf_label)}}">HMF {{ec.hmf_label}}</a>
+</div>
+
+{% elif ec.field.imag_quadratic %}
+
+<div>
+<h2>Bianchi modular form</h2>
+{#
+<a href="{{url_for('hmf.render_hmf_webpage', --
+  --field_label=ec.field.label, label=ec.bmf_label)}}">BMF --
+  --{{ec.bmf_label}}</a>
+#}
+Bianchi modular forms not yet available.
+</div>
+
+{% endif %}
+
+
+<hr>
+<div>
+Raw elliptic curve data: {{ ec.__dict__ }}
+</div>
+<hr>
+<div>
+Raw number field data: {{ ec.field.__dict__ }}
 </div>
 
 {% endblock %}
