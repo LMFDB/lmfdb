@@ -1,6 +1,3 @@
-import sys
-LMFDB_FOLDER = "../../../../../"
-sys.path.append(LMFDB_FOLDER)
 from lmfdb import base
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db \
      import MaassDB
@@ -71,11 +68,6 @@ def paintSvgMaass(min_level, max_level, min_R, max_R, weight = 0, char = 1,
         ans += "<title>{0}</title></circle></a>\n".format(f['Eigenvalue'])
 
     ans += "</svg>"
-
-    f = open('/home/stefan/Documents/TestMaassSVG.svg', 'w')
-    f.write(ans)
-    f.close()
-
     return ans
 
 
@@ -147,5 +139,3 @@ def paintCSMaass(width, height, xMin, xMax, yMin, yMax,
     ans += "style='fill:rgb(102,102,102);font-size:14px;'>R</text>\n"
 
     return ans
-
-#paintSvgMaass(1, 10, 0, 10)
