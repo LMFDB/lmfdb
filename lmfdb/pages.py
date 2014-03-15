@@ -3,7 +3,6 @@ import os
 from base import app
 from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
 
-
 @app.route("/about")
 def about():
     return render_template("about.html", title="About")
@@ -23,6 +22,49 @@ contribs = sorted(contribs, key = lambda x : x['name'].split()[-1])
 @app.route("/acknowledgment")
 def acknowledgment():
     return render_template("acknowledgment.html", title="Acknowledgments", contribs = contribs)
+
+
+class Box(object):
+    def __init__(self, title):
+        self.title = title
+        self.content = None
+        self.links = []
+        self.target = "/"
+        self.img = None
+
+    def add_link(self, title, href):
+        self.links.append((title, href))
+
+boxes = None
+
+def load_boxes():
+    boxes = []
+    listboxes = yaml.load_all(open(os.path.join(_curdir, "index_boxes.yaml")))
+    for b in listboxes:
+        print b
+        B = Box(b['title'])
+        B.content = b['content']
+        if 'image' in b:
+            B.img = url_for('static', filename='images/'+b['image']+'.png')
+        for title, url in b['links']:
+            B.add_link(title, url)
+        boxes.append(B)
+    return boxes
+
+@app.route("/")
+def index():
+
+    global boxes
+    #if boxes is None: # FIXME: restore
+    boxes = load_boxes()
+    tmpl = "index-boxes.html" if g.BETA else "index.html"
+
+    return render_template(tmpl,
+        titletag="The L-functions and modular forms database",
+        title="",
+        bread=None,
+        boxes = boxes)
+
 
 # geeky pages have humans.txt
 @app.route("/humans.txt")

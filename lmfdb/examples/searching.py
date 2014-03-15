@@ -5,7 +5,7 @@
 from pymongo import *
 import random
 from math import floor, ceil
-import base
+from lmfdb import base
 
 conn = base.getDBConnection()
 test = conn.testdb.test

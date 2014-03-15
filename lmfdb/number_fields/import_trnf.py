@@ -12,7 +12,7 @@ import re
 import sys
 import time
 import pymongo
-import base
+from lmfdb import base
 
 fields = base.getDBConnection().numberfields.fields
 fields.ensure_index('degree')
