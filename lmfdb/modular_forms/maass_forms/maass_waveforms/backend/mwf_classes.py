@@ -122,13 +122,17 @@ class WebMaassForm(object):
         self.weight = f.get('Weight', 0)
         self.character = f.get('Character', 0)
         self.cusp_evs = f.get('Cusp_evs', [])
+        self._fricke = f.get('Fricke', 0)
         self.error = f.get('Error', 0)
         self.level = f.get('Level', None)
         ## Contributor key
         self.contr = f.get('Contributor', '')
         md = db._mongo_db['metadata'].find_one({'c_name': self.contr})
         ## Contributor full name
-        self.contributor_name = md.get('contributor', self.contr)
+        try:
+            self.contributor_name = md.get('contributor', self.contr)
+        except:
+            self.contributor_name = self.contr
         self.num_coeff = f.get('Numc', 0)
         if self.R is None or self.level is None:
             return
@@ -139,15 +143,16 @@ class WebMaassForm(object):
         self._fnr = kwds.get('fnr', 0)
         if self._get_coeffs:
             self.coeffs = f.get('Coefficient', [0, 1, 0, 0, 0])
-            res = {}
-            for n in range(len(self.coeffs)):
-                res[n] = self.coeffs[n]
-            self.coeffs = res
+
             if self._get_dirichlet_c_only:
                 # if self.coeffs<>[0,1,0,0,0]:
                 if len(self.coeffs) == 1:
                     self.coeffs = self.coeffs[0]
             else:
+                res = {}
+                for n in range(len(self.coeffs)):
+                    res[n] = self.coeffs[n]
+                self.coeffs = res
                 self.coeffs = {0: {0: self.coeffs}}
 
         else:
@@ -225,7 +230,10 @@ class WebMaassForm(object):
         if len(self.cusp_evs) > 1:
             return self.cusp_evs[1]
         else:
-            return "undefined"
+            if self._fricke == 0:
+                return "undefined"
+            else:
+                return self._fricke
 
     def atkinlehner(self):
         if len(self.cusp_evs) == 0:
