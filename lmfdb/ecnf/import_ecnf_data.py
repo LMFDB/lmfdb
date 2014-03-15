@@ -228,6 +228,8 @@ def curves(line):
     """
     # Parse the line and form the full label:
     data = split(line)
+    if len(data)!=13:
+        print "line %s does not have 13 fields, skipping" % line
     field_label = data[0]       # string
     conductor_label = data[1]   # string
     iso_label = data[2]         # string 
@@ -294,6 +296,8 @@ def curve_data(line):
     """
     # Parse the line and form the full label:
     data = split(line)
+    if len(data)!=9:
+        print "line %s does not have 9 fields, skipping" % line
     field_label = data[0]       # string
     conductor_label = data[1]   # string
     iso_label = data[2]         # string 
