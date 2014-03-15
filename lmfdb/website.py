@@ -65,9 +65,9 @@ def not_found_500(error):
     return render_template("500.html"), 500
 
 
-@app.route("/")
-def index():
-    return render_template('index.html', titletag="The L-functions and modular forms database", title="", bread=None)
+#@app.route("/")
+#def index():
+#    return render_template('index.html', titletag="The L-functions and modular forms database", title="", bread=None)
 
 
 def root_static_file(name):
