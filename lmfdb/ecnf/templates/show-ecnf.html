@@ -181,7 +181,7 @@ Bianchi modular forms not yet available.
 
 {% endif %}
 
-
+{% if DEBUG %}
 <hr>
 <div>
 Raw elliptic curve data: {{ ec.__dict__ }}
@@ -190,5 +190,6 @@ Raw elliptic curve data: {{ ec.__dict__ }}
 <div>
 Raw number field data: {{ ec.field.__dict__ }}
 </div>
+{% endif %}
 
 {% endblock %}
