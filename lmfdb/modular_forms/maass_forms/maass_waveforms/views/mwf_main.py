@@ -32,6 +32,7 @@ from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_utils import *
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import MaassFormTable, WebMaassForm
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import MaassDB
 from mwf_upload_data import *
+from mwf_plot import paintSvgMaass
 logger = mwf_logger
 import json
 try:
@@ -682,3 +683,13 @@ def evs_table2(search, twodarray=False):
     evs['totalrecords_filtered'] = DB.count(search, filtered=True)
 
     return evs
+
+@mwf.route("/BrowseGraph/<min_level>/<max_level>/<min_R>/<max_R>/")
+def render_maass_browse_graph(min_level, max_level, min_R, max_R):
+    info = {}
+    info['contents'] = [paintSvgMaass(min_level, max_level, min_R, max_R)]
+    info['min_level'] = min_level
+    info['max_level'] = max_level
+    info['min_R'] = min_R
+    info['max_R'] = max_R
+    return render_template("mwf_browse_graph.html", title='Browsing graph of Maass forms', **info)

@@ -1,0 +1,47 @@
+---
+title: A Database
+image: families
+content: The LMFDB is an extensive database of mathematical objects arising in Number Theory.
+links:
+  - [ elliptic curves, '/EllipticCurve/Q/?conductor=1-99' ]
+  - [ Maass forms, /L/degree3/MaassForm/ ]
+  - [ tables of zeroes, /zeros/first/ ]
+  - [ Hilbert modular forms, '/ModularForm/GL2/TotallyReal/?field_label=Qsqrt5' ]
+---
+title: Hall of Fame
+content: Noteworthy examples&#58;
+image: fame
+links: 
+  - [ Riemann zeta function, /L/Riemann/ ]
+  - [ Dirichlet L-functions, /L/degree1/ ]
+  - [ Elliptic curve, /EllipticCurve/Q/234446.a1 ]
+  - [ Siegel modular forms, /ModularForm/GSp/Q/Sp4Z_2/basic ]
+---
+title: Search and Navigate
+image: search
+content: Search for objects with specific properties,
+    or browse categories.
+links:
+  - [ elliptic curves, /EllipticCurve/Q/ ]
+  - [ number fields, /NumberField/ ]
+---
+title: Visualize Data
+image: plot
+content: Explore individual plots or view distributions of various objects.
+links:
+  - [ riemann zeta, /L/Riemann/]
+  - [ elliptic curve, /L/EllipticCurve/Q/234446.a/]
+---
+title: Explore and Learn
+image: map
+content: The LMFDB makes visible the connections predicted by the Langlands program.
+    Knowls offer background information when you need it.
+links:
+  - [ LMFDB map, /bigpicture ]
+---
+title: Code and Open Software
+image: compute
+content: Download the data, download the code, or see how the data were generated.
+links:
+  - [ github source, github ]
+...

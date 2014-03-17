@@ -155,6 +155,9 @@ def is_debug_mode():
     from flask import current_app
     return current_app.debug
 
+@app.before_request
+def set_beta_state():
+    g.BETA = os.getenv('BETA') is not None or is_debug_mode()
 
 @app.context_processor
 def ctx_proc_userdata():
@@ -179,12 +182,8 @@ def ctx_proc_userdata():
     vars['LINK_EXT'] = lambda a, b: '<a href="%s" target="_blank">%s</a>' % (b, a)
 
     # debug mode?
-    vars['DEBUG'] = is_debug_mode
-
-    if os.getenv('BETA') or is_debug_mode():
-        vars['BETA'] = True
-    else:
-        vars['BETA'] = False
+    vars['DEBUG'] = is_debug_mode()
+    vars['BETA'] = g.BETA
 
     return vars
 
