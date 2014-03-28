@@ -83,7 +83,9 @@ class ECNF(object):
         searches for a specific elliptic curve in the ecnf collection by its label
         """
         data = db_ecnf().find_one({"label" : label})
-        return ECNF(data)
+        if data:
+            return ECNF(data)
+        print "No such curve in the database: %s" % label
 
     def make_E(self):
         coeffs = self.ainvs # list of 5 lists of d lists of 2 ints
@@ -95,6 +97,7 @@ class ECNF(object):
         # Conductor, discriminant, j-invariant
         N = E.conductor()
         self.cond = web_latex(N)
+        self.cond_norm = web_latex(N.norm())
         self.fact_cond = web_latex(N.factor())
         D = E.discriminant()
         self.disc = web_latex(D)
@@ -108,7 +111,7 @@ class ECNF(object):
         self.fact_j = web_latex(j.factor())
 
         # CM and End(E)
-        self.cm_bool = 0
+        self.cm_bool = "no"
         self.End = "\(\Z\)"
         if self.cm:
             self.cm_bool = "yes (\(%s\))" % self.cm
@@ -117,8 +120,13 @@ class ECNF(object):
                 self.End = "\(\Z[\sqrt{%s}]\)"%(d4)
             else:            
                 self.End = "\(\Z[(1+\sqrt{%s})/2]\)" % self.cm
+
+        # Base change
+        self.bc = "no"
+        if self.base_change: self.bc = "yes"
         
         # Torsion
+        self.ntors = web_latex(self.torsion_order)
         self.tr = len(self.torsion_structure)
         if self.tr==0:
             self.tor_struct_pretty = "Trivial"
@@ -131,6 +139,15 @@ class ECNF(object):
                         for P in self.torsion_gens]
         self.torsion_gens = ",".join([web_latex(P) for P in torsion_gens])
         
+
+        # Rank etc
+        try:
+            self.rk = web_latex(self.rank)
+        except AttributeError:
+            self.rk = "not known"
+#       if rank in self:
+#            self.r = web_latex(self.rank)
+
         # Local data
         self.local_data = []
         for p in N.prime_factors():
@@ -168,11 +185,25 @@ def show_ecnf(nf, label):
     ec = ECNF.by_label(label)
     title = "Elliptic Curve %s over Number Field %s" % (label, ec.field.pretty_label)
     info = {}
+    properties = [
+('Base field', ec.field.pretty_label),
+('Label' , ec.label),
+('Conductor' , ec.cond),
+('Conductor norm' , ec.cond_norm),
+('j-invariant' , ec.j),
+('CM' , ec.cm_bool),
+('Base change' , ec.bc),
+('Torsion order' , ec.ntors),
+('Rank' , ec.rk),
+]
+    
     return render_template("show-ecnf.html",
         credit=credit,
         title=title,
         bread=bread,
         ec=ec,
+        properties = properties,
+        properties2 = properties,
         info=info)
 
 
