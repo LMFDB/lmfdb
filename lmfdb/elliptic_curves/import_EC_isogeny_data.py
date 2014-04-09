@@ -11,7 +11,7 @@ import re
 import sys
 import time
 import pymongo
-import base
+from lmfdb import base
 
 conn = base.getDBConnection()
 isogeny = conn.ellcurves.isogeny

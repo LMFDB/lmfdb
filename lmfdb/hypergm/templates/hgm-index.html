@@ -2,92 +2,102 @@
 
 {% block content %}
 
-<p>
+<style type="text/css">
+    .rightline { border-right: 2px solid black; }
+    tr.topline td, tr.topline th { border-top: 2px solid black; }
+</style>
+
+
+<div>
 A cusp-index of degree $d$ is a weakly increasing 
 list of positive integers $[u_1,\dots,u_k]$ with $\sum_{i=1}^k \phi(u_i) = d$. 
 Hypergeometric families $H(A,B)$ are indexed by pairs 
 $(A,B)$ of cusp-indices of a common degree having no common entries.  
-<p>
+</div>
 
+<div>
 Hypergeometric motives $H(A,B,t)$ in a family $H(A,B)$ are 
 indexed by rational numbers
 $t \not \in \{0,1\}$.  For example $H([3],[1,1],t)$ is the
 motive $H^1(E_{1728t},{\Bbb Q})$ where
 $E_{j}$ is an elliptic curve with $j$-invariant $1728j$.  
 Also special hypergeometric motives $H(A,B,1)$ are defined, having degree
-1 or 2 less than the other $H(A,B,t)$.  
-<p>
+$1$ or $2$ less than the other $H(A,B,t)$.  
+</div>
 
+<div>
 The database contains all hypergeometric families of degree $\leq 10$. 
 For each family, it contains the special hypergeometric motive
 associated to $t=1$.  For the smaller degree families, it 
 also contains motives of small conductor coming from 
 specializing at other $t$. 
-<p>
+</div>
 
       <h2>Browse {{KNOWL('hgm.familes', title="Hypergeometric Families")}}</h2>
 
-<p>
+<div>
 The table gives for each degree $n$ and weight $w$ shown, 
 the number of corresponding hypergeometric families.  
-<p>
+</div>
+
+<div>
 <table border=1 cellpadding=5 class='right_align_table'>
 <tr>
 <th>$w$ \ $d$</th>
-<th>1</th> <th>3</th> <th>5</th> <th>7</th> <th>9</th>
+<th>1</th> <th>3</th> <th>5</th> <th>7</th> <th class="rightline">9</th>
 <th>2</th> <th>4</th> <th>6</th> <th>8</th> <th>10</th>
 </tr>
 <tr>
 <th>0</th>
-<td>1</td>
-<td>2</td>
-<td>4</td>
-<td>11</td>
-<td>7</td>
-<td>2</td>
-<td>7</td>
-<td>13</td>
-<td>31</td>
-<td>15</td>
+<td><a href="?weight=0&degree=1&family=1">1</a></td>
+<td><a href="?weight=0&degree=3&family=1">2</a></td>
+<td><a href="?weight=0&degree=5&family=1">4</a></td>
+<td><a href="?weight=0&degree=7&family=1">11</a></td>
+<td class="rightline"><a href="?weight=0&degree=9&family=1">7</a></td>
+<td><a href="?weight=0&degree=2&family=1">2</a></td>
+<td><a href="?weight=0&degree=4&family=1">7</a></td>
+<td><a href="?weight=0&degree=6&family=1">13</a></td>
+<td><a href="?weight=0&degree=8&family=1">31</a></td>
+<td><a href="?weight=0&degree=10&family=1">15</a></td>
 </tr>
 <tr>
 <th>2</th>
 <td></td>
-<td>6</td>
-<td>48</td>
-<td>217</td>
-<td>924</td>
+<td><a href="?weight=2&degree=3&family=1">6</a></td>
+<td><a href="?weight=2&degree=5&family=1">48</a></td>
+<td><a href="?weight=2&degree=7&family=1">217</a></td>
+<td class="rightline"><a href="?weight=2&degree=9&family=1">924</a></td>
 <td></td>
-<td>15</td>
-<td>122</td>
-<td>632</td>
-<td>2284</td>
+<td><a href="?weight=2&degree=4&family=1">15</a></td>
+<td><a href="?weight=2&degree=6&family=1">122</a></td>
+<td><a href="?weight=2&degree=8&family=1">632</a></td>
+<td><a href="?weight=2&degree=10&family=1">2284</a></td>
 </tr>
 <tr>
 <th>4</th>
 <td></td>
 <td></td>
-<td>25</td>
-<td>209</td>
-<td>1445</td>
+<td><a href="?weight=4&degree=5&family=1">25</a></td>
+<td><a href="?weight=4&degree=7&family=1">209</a></td>
+<td class="rightline"><a href="?weight=4&degree=9&family=1">1445</a></td>
 <td></td>
 <td></td>
-<td>42</td>
-<td>447</td>
-<td>2892</td>
+<td><a href="?weight=4&degree=6&family=1">42</a></td>
+<td><a href="?weight=4&degree=8&family=1">447</a></td>
+<td><a href="?weight=4&degree=10&family=1">2892</a></td>
 </tr>
 <tr>
 <th>6</th>
 <td></td>
 <td></td>
 <td></td>
-<td>73</td>
-<td>634</td>
+<td><a href="?weight=6&degree=7&family=1">73</a></td>
+<td class="rightline"><a href="?weight=6&degree=9&family=1">634</a></td>
 <td></td>
 <td></td>
 <td></td>
-<td>102</td>
-<td>968</td>
+<td><a href="?weight=6&degree=8&family=1">102</a></td>
+<td><a href="?weight=6&degree=10&family=1">968</a></td>
 </tr>
 <tr>
 <th>8</th>
@@ -95,25 +105,25 @@ the number of corresponding hypergeometric families.
 <td></td>
 <td></td>
 <td></td>
-<td>184</td>
+<td class="rightline"><a href="?weight=8&degree=9&family=1">184</a></td>
 <td></td>
 <td></td>
 <td></td>
 <td></td>
-<td>213</td>
+<td><a href="?weight=8&degree=10&family=1">213</a></td>
 </tr>
-<tr>
-<th>1</th>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td>6</td>
-<td>43</td>
-<td>146</td>
-<td>540</td>
-<td>1102</td>
+<tr class="topline">
+<th >1</th>
+<td ></td>
+<td ></td>
+<td ></td>
+<td ></td>
+<td class="rightline"></td>
+<td ><a href="?weight=1&degree=2&family=1">6</a></td>
+<td ><a href="?weight=1&degree=4&family=1">43</a></td>
+<td ><a href="?weight=1&degree=6&family=1">146</a></td>
+<td ><a href="?weight=1&degree=8&family=1">540</a></td>
+<td ><a href="?weight=1&degree=10&family=1">1102</a></td>
 </tr>
 <tr>
 <th>3</th>
@@ -121,12 +131,12 @@ the number of corresponding hypergeometric families.
 <td></td>
 <td></td>
 <td></td>
+<td class="rightline"></td>
 <td></td>
-<td></td>
-<td>25</td>
-<td>245</td>
-<td>1653</td>
-<td>7207</td>
+<td><a href="?weight=3&degree=4&family=1">25</a></td>
+<td><a href="?weight=3&degree=6&family=1">245</a></td>
+<td><a href="?weight=3&degree=8&family=1">1653</a></td>
+<td><a href="?weight=3&degree=10&family=1">7207</a></td>
 </tr>
 <tr>
 <th>5</th>
@@ -134,12 +144,12 @@ the number of corresponding hypergeometric families.
 <td></td>
 <td></td>
 <td></td>
+<td class="rightline"></td>
 <td></td>
 <td></td>
-<td></td>
-<td>73</td>
-<td>727</td>
-<td>5138</td>
+<td><a href="?weight=5&degree=6&family=1">73</a></td>
+<td><a href="?weight=5&degree=8&family=1">727</a></td>
+<td><a href="?weight=5&degree=10&family=1">5138</a></td>
 </tr>
 <tr>
 <th>7</th>
@@ -147,12 +157,12 @@ the number of corresponding hypergeometric families.
 <td></td>
 <td></td>
 <td></td>
+<td class="rightline"></td>
 <td></td>
 <td></td>
 <td></td>
-<td></td>
-<td>184</td>
-<td>1706</td>
+<td><a href="?weight=7&degree=8&family=1">184</a></td>
+<td><a href="?weight=7&degree=10&family=1">1706</a></td>
 </tr>
 <tr>
 <th>9</th>
@@ -160,15 +170,15 @@ the number of corresponding hypergeometric families.
 <td></td>
 <td></td>
 <td></td>
+<td class="rightline"></td>
 <td></td>
 <td></td>
 <td></td>
 <td></td>
-<td></td>
-<td>409</td>
+<td><a href="?weight=9&degree=10&family=1">409</a></td>
 </tr>
 </table>
-<p>
+</div>
 
 <h3> Search for families of HGMs</h3>
 <form>
@@ -177,68 +187,64 @@ Enter values into one or more boxes to restrict the list of families returned.
 </p>
 <table border=0 cellpadding=5>
 <tr>
-<td align=left><a title="Degree of a family [hgf.degree]" knowl="hgf.degree" kwargs="">degree</a> 
+<td align=left> {{KNOWL('hgm.degree', title="degree")}}
   <td><input type='text' name='degree' size=10 example='4'> 
 <span class="formexample"> e.g. 4</span></td>
 <td>
-<td align=left><a title="Weight [hgf.weight]" knowl="hnf.weight" kwargs="">
-weight</a> <td><input type='text' name='weight' size=10 example='3'> 
+<td align=left> {{KNOWL('hgm.weight', title="weight")}}
+<td><input type='text' name='weight' size=10 example='3'> 
 <span class="formexample"> e.g. 3 </span></td>
 </tr>
 <tr>
-<td align=left><a title="Hodge vector [mot.hodgevector]" kwargs="">Hodge vector</a> 
+<td align=left> {{KNOWL('mot.hodgevector', title="Hodge vector")}}
   <td><input type='text' name='hodge' size=10 example='[1,1,1,1]'> 
 <span class="formexample"> e.g. [1,1,1,1]</span></td>
 <td>
 </tr>
 </tr>
 <tr>
-<td align=left><a title="A" kwargs="">A</a> 
+<td align=left>A
   <td><input type='text' name='A' size=10 example='[3,2,2]'> 
 <span class="formexample"> e.g. [3,2,2]</span></td>
 <td>
-<td align=left><a title="B" kwargs="">
-B</a> <td><input type='text' name='B' size=10 example='[6,4]'> 
+<td align=left>B 
+  <td><input type='text' name='B' size=10 example='[6,4]'> 
 <span class="formexample"> e.g. [6,4] </span></td>
 </tr>
 <tr>
-<td align=left><a title="A2" kwargs="">A<sub>2</sub></a>
-  <td><input type='text' name='A2' size=10 example='[2,2,1,1]'>
+<td align=left>A<sub>2</sub>
+  <td><input type='text' name='a2' size=10 example='[2,2,1,1]'>
 <span class="formexample"> e.g. [2,2,1,1]</span></td>
 <td>
-<td align=left><a title="B2" kwargs="">
-B<sub>2</sub></a> 
-<td><input type='text' name='B2' size=10 example='[4,2,2]'>
+<td align=left>B<sub>2</sub>
+<td><input type='text' name='b2' size=10 example='[4,2,2]'>
 <span class="formexample"> e.g. [4,2,2] </span></td>
 </tr>
 <tr>
-<td align=left><a title="A3" kwargs="">A<sub>3</sub></a>
-  <td><input type='text' name='A3' size=10 example='[3]'>
+<td align=left>A<sub>3</sub>
+  <td><input type='text' name='a3' size=10 example='[3]'>
 <span class="formexample"> e.g. [3]</span></td>
 <td>
-<td align=left><a title="B3" kwargs="">
-B<sub>3</sub></a> 
-<td><input type='text' name='B3' size=10 example='[3]'>
+<td align=left> B<sub>3</sub> 
+<td><input type='text' name='b3' size=10 example='[3]'>
 <span class="formexample"> e.g. [3] </span></td>
 </tr>
 <tr>
-<td align=left><a title="A5" kwargs="">A<sub>5</sub></a>
-  <td><input type='text' name='A5' size=10 example='[ ]'>
+<td align=left>A<sub>5</sub>
+  <td><input type='text' name='a5' size=10 example='[ ]'>
 <span class="formexample"> e.g. [ ]</span></td>
 <td>
-<td align=left><a title="B5" kwargs="">
-B<sub>5</sub></a> 
-<td><input type='text' name='B5' size=10 example='[ ]'>
+<td align=left> B<sub>5</sub>
+<td><input type='text' name='b5' size=10 example='[ ]'>
 <span class="formexample"> e.g. [ ] </span></td>
 </tr>
 <tr>
-<td align=left><a title="A7" kwargs="">A<sub>7</sub></a>
-  <td><input type='text' name='A7' size=10 example='[ ]'>
+<td align=left>A<sub>7</sub>
+  <td><input type='text' name='a7' size=10 example='[ ]'>
 <span class="formexample"> e.g. [ ]</span></td>
 <td>
-<td align=left><a title="B7" kwargs="">
-B<sub>7</sub></a>
-<td><input type='text' name='B7' size=10 example='[ ]'>
+<td align=left> B<sub>7</sub>
+<td><input type='text' name='b7' size=10 example='[ ]'>
 <span class="formexample"> e.g. [ ] </span></td>
 </tr>
 </table>
@@ -248,48 +254,49 @@ Enter values into the boxes above and the boxes below to obtain the
 list of corresponding hypergeometric motives.  
 <table>
 <tr>
-<td align=left><a title="Conductor [conductor]" knowl="conductor" kwargs="">conductor</a>
+<td align=left> {{KNOWL('hgm.conductor', title="conductor")}}
   <td><input type='text' name='conductor' size=10 example='2^13 3^7'>
 <span class="formexample"> e.g. 2^13 3^7 (or a range like [1..1000000])
 </span></td>
 </tr>
 <tr>
-<td align=left><a title="Specialization point [hgm.specpoint]" 
-knowl="specialization point" kwargs="">specialization point $t$</a>
+<td align=left> {{KNOWL('hgm.specpoint', title="Specialization point $t$")}}
   <td><input type='text' name='t' size=10 example='3/2'>
 <span class="formexample"> e.g. 3/2 
 (1 has an associated degree drop and is always in the database) 
 </span></td>
 </tr>
 <tr>
-<td align=left><a title="Sign of Functional Equation [sign]" 
-knowl="Sign" kwargs="">sign of functional equation $\epsilon$</a>
+<td align=left> {{KNOWL('lfunction.sign', title="sign of functional equation $\epsilon$")}}
   <td><input type='text' name='sign' size=10 example='-1'>
 <span class="formexample"> 
 (1 or -1, with -1 occurring only in the symplectic case) 
 </span></td>
 </tr>
+
+{#  Need data in the database for these
 <tr>
-<td align=left><a title="Generic [generic]" 
-knowl="Sign" kwargs="">Generic</a>
+<td align=left> {{KNOWL('hgm.generic', title="Generic")}}
   <td><input type='text' name='generic' size=10 example='yes'>
 <span class="formexample"> 
 (yes or no, with no rare, expecially in symplectic cases) 
 </span></td>
 </tr>
 <tr>
-<td align=left><a title="Irreducible? [irreducible]" 
-knowl="Sign" kwa rgs="">Irreducible?</a>
+<td align=left> {{KNOWL('hgm.irreducible', title="Irreducible")}}
   <td><input type='text' name='irreducible' size=10 example='yes'>
 <span class="formexample"> 
 (yes or no, with no very rare) 
 </span></td>
 </tr>
+#}
+
 <tr> <td> Maximum number of motives to display: </td>
      <td><input type="text" name="count" value="{{info.count}}" size="10"></td>
           </tr>
   </table>
-        <button type="submit" name="Submit" value="Search">Search</button>
+        <button type="submit" name="Submit" value="Search">Search for motives</button>
+        <button type="submit" name="Submit Family" value="Search Family">Search for families</button>
       </form>
 
 
@@ -299,7 +306,7 @@ knowl="Sign" kwa rgs="">Irreducible?</a>
         <table class="">
 	  <tr>
 	    <td>
-	  Search by {{KNOWL('hgm.field.label',title="label")}}
+	  Search by {{KNOWL('hgm.label',title="label")}}
           <input type="text" name="jump_to" value=""
         placeholder="A2.2_B1.1_t1.2">
 	    </td>

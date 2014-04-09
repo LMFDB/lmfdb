@@ -6,7 +6,7 @@ import pymongo
 from pymongo import Connection
 import sage.libs.lcalc.lcalc_Lfunction as lc
 
-import base
+from lmfdb import base
 C = base.getDBConnection()
 db = C.Lfunctions
 

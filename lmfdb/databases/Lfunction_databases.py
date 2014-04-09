@@ -8,16 +8,14 @@ lfunction_location = ("limbo", "lfunction20130910")
 
 collection = C[lfunction_location[0]][lfunction_location[1]]
 
-from operators import itemgetter
-
 def schema_extract(x, **types_dict):
     # each kwarg is a a key, value pair
     # the key is the name of the attribute and the field in the database
-    # value is the type to be used internally in the database
-    return {key : value(itemgetter(key)(x)) for key, value in types_dict}
+    # dtype is the datatype to be used internally in the database
+    return {key : dtype(x[key]) for key, dtype in types_dict}
 
-database_format:
-    {        # We are dealing with many sources of Lfunctions, so we                     need to cast everything to make sure we control the type
+# We are dealing with many sources of Lfunctions, so we need to cast everything to make sure we control the type
+database_format = {        
         "mu_fe" : int, 
         "nu_fe" : int, 
         "sign": int, 
@@ -26,8 +24,7 @@ database_format:
         "motivic_weight": bool,
         "algebraic": bool,
         "Ltype": str,
-        "original_mathematical_object": str,
-        
+        "original_mathematical_object": str
     }
     
 def query_Lfunction():

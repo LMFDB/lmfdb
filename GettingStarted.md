@@ -3,8 +3,7 @@ Installation
 
   * To contribute, see below on sharing your work.  To simply run a copy of the site move into a new directory and type
 ```
-    git init
-    git clone git@github.com:LMFDB/lmfdb.git
+    git clone git@github.com:LMFDB/lmfdb.git lmfdb
 ```
 
   * Install dependencies, i.e. you need Sage. Inside the Sage environment `sage -sh`:
@@ -16,6 +15,9 @@ Installation
     easy_install -U flask-cache
     easy_install -U pyyaml
     easy_install -U unittest2
+    # optional packages, necessary for contributing:
+    easy_install -U coverage
+    easy_install -U nose
 ```
   * From the command-line:
     `
@@ -55,19 +57,17 @@ if it doesn't compile, update sage's cython and then try again:
     `sage -sh`
     `easy_install -U cython`
     `exit`
-either case, rebuild sage afterwards:
-    `sage -b`
 ```
 
 * Lfunction plots:
 
-To get plots locally:
+To get plots locally, for sage <= 6.2, need a patch
 
-From within sage
+From within sage directory
 ```
-     hg_sage.apply("http://trac.sagemath.org/raw-attachment/ticket/8621/trac8621.patch")
-     hg_sage.apply("http://trac.sagemath.org/raw-attachment/ticket/8621/trac8621_review_rebase.patch")
-
+     git remote add trac git://trac.sagemath.org/sage.git -t master
+     git fetch trac u/chapoton/8621 
+     git checkout -b patch8621 FETCH_HEAD
 ```
 
 Then rebuild:
