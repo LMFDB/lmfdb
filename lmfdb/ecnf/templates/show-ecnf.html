@@ -64,6 +64,7 @@ function show_code(system) {
 <tr><td>Defining polynomial:<td> {{ ec.field.poly }} </tr>
 <tr><td>Generator:<td>           {{ ec.field.generator }} </tr>
 <tr><td>Fundamental units:<td>   {{ ec.field.funits }} </tr>
+<tr><td>Class Number:<td>        {{ ec.field.class_number }} </tr>
 </table>
 </p>
 </div>
@@ -90,6 +91,8 @@ function show_code(system) {
          \(N(\mathfrak{N}) \)</td>
         <td>=</td>
         <td>{{ ec.cond_norm }}</td>
+        <td>=</td>
+        <td>{{ ec.fact_cond_norm }}</td>
         </tr>
 
         <tr>
@@ -98,8 +101,10 @@ function show_code(system) {
          \(\Delta\)</td>
         <td>=</td>
         <td>{{ ec.disc }}</td>
+        {% if ec.fact_disc %}
         <td>=</td>
         <td>{{ ec.fact_disc }}</td>
+        {% endif %}
         </tr>
 
         <tr>
@@ -108,8 +113,10 @@ function show_code(system) {
          \(j\)</td>
         <td>=</td>
         <td>{{ ec.j }}</td>
+        {% if ec.fact_j %}
         <td>=</td>
         <td>{{ ec.fact_j }}</td>
+        {% endif %}
         </tr>
 
         <tr>
@@ -118,8 +125,9 @@ function show_code(system) {
         <td>=</td>
         <td>{{ ec.End }}</td>
         <td>&nbsp;</td>
-        <td>({%if not ec.cm_bool %} no {%endif %}    
-{{ KNOWL('ec.complex_multiplication', title='Complex Multiplication') }})
+        <td>({%if not ec.cm %} no {%endif %}
+   {{ KNOWL('ec.complex_multiplication', title='Complex Multiplication')}}
+            )
         </td>
         </tr>
 

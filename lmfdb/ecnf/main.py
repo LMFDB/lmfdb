@@ -9,7 +9,7 @@ ASC = pymongo.ASCENDING
 from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, redirect
 from lmfdb.utils import image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input
-from sage.all import ZZ, var, PolynomialRing, QQ
+from sage.all import ZZ, var, PolynomialRing, QQ, GCD
 from lmfdb.ecnf import ecnf_page, logger
 from lmfdb.number_fields.number_field import parse_field_string, field_pretty
 
@@ -35,10 +35,10 @@ class FIELD(object):
     Number Field wrapper
     """
     names = {'2.0.4.1': 'i',
-             '2.2.5.1': 'phi', 
+             '2.2.5.1': 'phi',
              '4.0.125.1': 'zeta5',
              }
-    
+
     def __init__(self, label):
         dbdata = db_nfdb().find_one({'label': label})
         self.__dict__.update(dbdata)
@@ -57,9 +57,13 @@ class FIELD(object):
         self.funits = ",".join([web_latex(u) for u in self.K.units()])
         self.real_quadratic = (self.signature=='2,0')
         self.imag_quadratic = (self.signature=='0,1')
+        self.class_number = self.K.class_number()
 
     def parse_NFelt(self,s):
-        return self.K([QQ(c) for c in s.split(",")])
+        """
+        convert a list of d strings (rationals) to a field element
+        """
+        return self.K([QQ(str(c)) for c in s])
 
 class ECNF(object):
     """
@@ -88,8 +92,8 @@ class ECNF(object):
         print "No such curve in the database: %s" % label
 
     def make_E(self):
-        coeffs = self.ainvs # list of 5 lists of d lists of 2 ints
-        self.ainvs = [self.field.K([QQ(tuple(c)) for c in x]) for x in coeffs]
+        coeffs = self.ainvs # list of 5 lists of d strings
+        self.ainvs = [self.field.parse_NFelt(x) for x in coeffs]
         from sage.schemes.elliptic_curves.all import EllipticCurve
         self.E = E = EllipticCurve(self.ainvs)
         self.equn = web_latex(E)
@@ -98,17 +102,32 @@ class ECNF(object):
         N = E.conductor()
         self.cond = web_latex(N)
         self.cond_norm = web_latex(N.norm())
-        self.fact_cond = web_latex(N.factor())
+        if N.norm()==1:  # since the factorization of (1) displays as "1"
+            self.fact_cond = self.cond
+        else:
+            self.fact_cond = web_latex(N.factor())
+        self.fact_cond_norm = web_latex(N.norm().factor())
         D = E.discriminant()
         self.disc = web_latex(D)
-        self.fact_disc = web_latex(D.factor())
+        try:
+            self.fact_disc = web_latex(D.factor())
+        except ValueError: # if not all prime ideal factors principal
+            pass
+            #self.fact_disc = web_latex(self.field.K.ideal(D).factor())
         j = E.j_invariant()
-        n = j.numerator()
         d = j.denominator()
-        self.j = web_latex(n)
+        n = d*j # numerator exists for quadratic fields only!
+        g = GCD(list(n))
+        n1 = n/g
+        self.j = web_latex(n1)
         if d!=1:
             self.j = "("+self.j+")\(/\)"+web_latex(d)
-        self.fact_j = web_latex(j.factor())
+        if g>1: self.j = web_latex(g) + self.j
+        try:
+            self.fact_j = web_latex(j.factor())
+        except ValueError: # if not all prime ideal factors principal
+            pass
+            #self.fact_j = self.j
 
         # CM and End(E)
         self.cm_bool = "no"
@@ -118,13 +137,13 @@ class ECNF(object):
             if self.cm%4==0:
                 d4 = ZZ(self.cm)//4
                 self.End = "\(\Z[\sqrt{%s}]\)"%(d4)
-            else:            
+            else:
                 self.End = "\(\Z[(1+\sqrt{%s})/2]\)" % self.cm
 
         # Base change
         self.bc = "no"
         if self.base_change: self.bc = "yes"
-        
+
         # Torsion
         self.ntors = web_latex(self.torsion_order)
         self.tr = len(self.torsion_structure)
@@ -134,11 +153,10 @@ class ECNF(object):
             self.tor_struct_pretty = "\(\Z/%s\Z\)" % self.torsion_structure[0]
         if self.tr==2:
             self.tor_struct_pretty = "\(\Z/%s\Z\times\Z/%s\Z\)" % self.torsion_structure
-        torsion_gens = [E([self.field.K([QQ(tuple(c)) for c in x])
-                           for x in P])
+        torsion_gens = [E([self.field.parse_NFelt(x) for x in P])
                         for P in self.torsion_gens]
         self.torsion_gens = ",".join([web_latex(P) for P in torsion_gens])
-        
+
 
         # Rank etc
         try:
@@ -162,7 +180,7 @@ class ECNF(object):
             self.hmf_label = self.field.label+"-"+self.conductor_label+"-"+self.iso_label
         if self.field.imag_quadratic:
             self.bmf_label = self.field.label+"-"+self.conductor_label+"-"+self.iso_label
-        
+
 def get_bread(*breads):
     bc = [("ECNF", url_for(".index"))]
     map(bc.append, breads)
@@ -171,7 +189,7 @@ def get_bread(*breads):
 @ecnf_page.route("/")
 def index():
     bread = get_bread()
-    return render_template("ecnf-index.html", 
+    return render_template("ecnf-index.html",
         title="Elliptic Curve Number Field",
         bread=bread)
 
@@ -187,6 +205,7 @@ def show_ecnf(nf, label):
     info = {}
     properties = [
 ('Base field', ec.field.pretty_label),
+('Class number', str(ec.field.class_number)),
 ('Label' , ec.label),
 ('Conductor' , ec.cond),
 ('Conductor norm' , ec.cond_norm),
@@ -196,7 +215,7 @@ def show_ecnf(nf, label):
 ('Torsion order' , ec.ntors),
 ('Rank' , ec.rk),
 ]
-    
+
     return render_template("show-ecnf.html",
         credit=credit,
         title=title,

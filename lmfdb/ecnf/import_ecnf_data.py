@@ -22,10 +22,10 @@ field) and value types (with examples):
    - label              *     string (see below)
    - short_label        *     string
    - conductor_label    *     string
-   - iso_label          *     string (letter code of isogeny class)  
+   - iso_label          *     string (letter code of isogeny class)
    - conductor_ideal    *     string
    - conductor_norm     *     int
-   - number             *     int    (number of curve in isogeny class, from 1) 
+   - number             *     int    (number of curve in isogeny class, from 1)
    - ainvs              *     list of 5 list of d lists of 2 ints
    - jinv               *     list of d lists of 2 STRINGS
    - cm                 *     int (a negative discriminant, or 0)
@@ -143,7 +143,7 @@ def ideal_from_label(K,lab):
     N, c, d = [ZZ(c) for c in lab[1:-1].split(",")]
     a = N//d
     return K.ideal(a,K([c,d]))
-                    
+
 def parse_NFelt(K, s):
     r"""
     Returns an element of K defined by the string s.
@@ -166,13 +166,14 @@ def K_list(a):
     r"""
     Return the list representation of the number field element.
     """
-    return [QorZ_list(c) for c in list(a)]
+    #return [QorZ_list(c) for c in list(a)]  # old: [num,den]
+    return [str(c) for c in list(a)]         # new: "num/den"
 
 def NFelt_list(a):
     r"""
     Return the list representation of the NFelt string.
     """
-    return [QorZ_list(QQ(c)) for c in a.split(",")]  
+    return [QorZ_list(QQ(c)) for c in a.split(",")]
 
 def parse_point(E, s):
     r"""
@@ -216,7 +217,7 @@ def curves(line):
     'abs_disc', 'label', 'short_label', conductor_label',
     'conductor_ideal', 'conductor_norm', 'iso_label', 'number',
     'ainvs', 'jinv', 'cm', 'base_change',
-    'torsion_order', 'torsion_structure', 'torsion_gens'. 
+    'torsion_order', 'torsion_structure', 'torsion_gens'.
 
     Input line fields (13):
 
@@ -232,25 +233,32 @@ def curves(line):
         print "line %s does not have 13 fields, skipping" % line
     field_label = data[0]       # string
     conductor_label = data[1]   # string
-    iso_label = data[2]         # string 
+    iso_label = data[2]         # string
     number = int(data[3])       # int
-    short_label = "%s.%s%s" % (conductor_label, iso_label, str(number))
+    short_label = "%s-%s%s" % (conductor_label, iso_label, str(number))
     label = "%s-%s" % (field_label, short_label)
 
-    conductor_ideal = data[4]     # string 
+    conductor_ideal = data[4]     # string
     conductor_norm = int(data[5]) # int
     ainvs = data[6:11]            # list of 5 NFelt strings
-    cm = int(data[11])            # int 
+    cm = int(data[11])            # int
     base_change = (data[12]==1)   # bool
 
     # Create the field and curve to compute the j-invariant:
     dummy, deg, sig, abs_disc = field_data(field_label)
     K = nf_lookup(field_label)
-    ainvs = [parse_NFelt(K,ai) for ai in ainvs] # list of K-elements
-    E = EllipticCurve(ainvs)
-    ainvs = [K_list(ai) for ai in ainvs] # lists for database
+    ainvsK = [parse_NFelt(K,ai) for ai in ainvs] # list of K-elements
+    ainvs = [[str(c) for c in ai] for ai in ainvsK]
+    E = EllipticCurve(ainvsK)
     jinv = K_list(E.j_invariant())
-    jinv = [[str(a) for a in c] for c in jinv]
+
+    # Here we should check that the conductor of the constructed curve
+    # agrees with the input conductor....
+    if E.conductor().norm()==conductor_norm:
+        pass
+        #print "Conductor norms agree: %s" % conductor_norm
+    else:
+        raise RuntimeError("Wrong conductor for input line %s" % line)
 
     # get torsion order, structure and generators:
     torgroup = E.torsion_subgroup()
@@ -300,9 +308,9 @@ def curve_data(line):
         print "line %s does not have 9 fields, skipping" % line
     field_label = data[0]       # string
     conductor_label = data[1]   # string
-    iso_label = data[2]         # string 
+    iso_label = data[2]         # string
     number = int(data[3])       # int
-    short_label = "%s.%s%s" % (conductor_label, iso_label, str(number))
+    short_label = "%s-%s%s" % (conductor_label, iso_label, str(number))
     label = "%s-%s" % (field_label, short_label)
 
     edata = {'label': label}
@@ -331,6 +339,7 @@ def upload_to_db(base_path, filename_suffix):
     curves_filename = 'curves.%s' % (filename_suffix)
     curve_data_filename = 'curve_data.%s' % (filename_suffix)
     file_list = [curves_filename, curve_data_filename]
+#    file_list = [curves_filename]
 
     data_to_insert = {}  # will hold all the data to be inserted
 
