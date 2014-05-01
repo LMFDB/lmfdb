@@ -346,6 +346,23 @@ class WebNumberField:
         f = self.conductor()
         if f == 1:  # To make the trivial case work correctly
             return [1]
+        # Can do quadratic fields directly
+        if self.degree() == 2000:
+            if is_odd(f):
+                return [1, f-1]
+            f1 = f/4
+            if is_odd(f1):
+                return [1, f-1]
+            # we now want f with all powers of 2 removed
+            f1 = f1/2
+            if is_even(f1):
+                raise Exception('Invalid conductor')
+            if (self.disc()/8) % 4 == 3:
+                return [1, 4*f1-1]
+            # Finally we want congruent to 5 mod 8 and -1 mod f1
+            if (f1 % 4) == 3:
+                return [1, 2*f1-1]
+            return [1, 6*f1-1]
         if euler_phi(f) > dir_group_size_bound:
             return []
         G = DirichletGroup_conrey(f)
