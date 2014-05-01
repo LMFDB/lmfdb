@@ -346,8 +346,10 @@ class WebNumberField:
         f = self.conductor()
         if f == 1:  # To make the trivial case work correctly
             return [1]
+        if euler_phi(f) > dir_group_size_bound:
+            return []
         # Can do quadratic fields directly
-        if self.degree() == 2000:
+        if self.degree() == 2:
             if is_odd(f):
                 return [1, f-1]
             f1 = f/4
@@ -363,8 +365,6 @@ class WebNumberField:
             if (f1 % 4) == 3:
                 return [1, 2*f1-1]
             return [1, 6*f1-1]
-        if euler_phi(f) > dir_group_size_bound:
-            return []
         G = DirichletGroup_conrey(f)
         pram = f.prime_factors()
         P = Primes()
