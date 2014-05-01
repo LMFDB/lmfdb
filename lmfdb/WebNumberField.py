@@ -8,6 +8,7 @@ from lmfdb.utils import *
 from lmfdb.transitive_group import group_display_short, WebGaloisGroup, group_display_knowl
 wnflog = make_logger("WNF")
 
+dir_group_size_bound = 10000
 
 def na_text():
     return "Not computed"
@@ -345,6 +346,8 @@ class WebNumberField:
         f = self.conductor()
         if f == 1:  # To make the trivial case work correctly
             return [1]
+        if euler_phi(f) > dir_group_size_bound:
+            return []
         G = DirichletGroup_conrey(f)
         pram = f.prime_factors()
         P = Primes()
