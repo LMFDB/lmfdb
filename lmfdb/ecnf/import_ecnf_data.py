@@ -28,7 +28,7 @@ field) and value types (with examples):
    - number             *     int    (number of curve in isogeny class, from 1)
    - ainvs              *     list of 5 list of d lists of 2 ints
    - jinv               *     list of d lists of 2 STRINGS
-   - cm                 *     int (a negative discriminant, or 0)
+   - cm                 *     either int (a negative discriminant, or 0) or '?'
    - base_change        *     boolean (True, False)
    - rank                     int
    - rank_bounds              list of 2 ints
@@ -206,6 +206,21 @@ def field_data(s):
     sig = [r1, (deg-r1)//2]
     return [s, deg, sig, abs_disc]
 
+@cached_function
+def get_cm_list(K):
+    return cm_j_invariants_and_orders(K)
+
+def get_cm(j):
+    r"""
+    Returns the CM discriminant for this j-invariant, or 0
+    """
+    if not j.is_integral():
+        return 0
+    for d,f,j1 in get_cm_list(j.parent()):
+        if j==j1:
+            return int(d*f*f)
+    return 0
+
 whitespace = re.compile(r'\s+')
 
 def split(line):
@@ -241,7 +256,9 @@ def curves(line):
     conductor_ideal = data[4]     # string
     conductor_norm = int(data[5]) # int
     ainvs = data[6:11]            # list of 5 NFelt strings
-    cm = int(data[11])            # int
+    cm = data[11]                 # int or '?'
+    if cm!='?':
+        cm = int(cm)
     base_change = (data[12]==1)   # bool
 
     # Create the field and curve to compute the j-invariant:
@@ -250,7 +267,12 @@ def curves(line):
     ainvsK = [parse_NFelt(K,ai) for ai in ainvs] # list of K-elements
     ainvs = [[str(c) for c in ai] for ai in ainvsK]
     E = EllipticCurve(ainvsK)
-    jinv = K_list(E.j_invariant())
+    j = E.j_invariant()
+    jinv = K_list(j)
+    if cm=='?':
+        cm = get_cm(j)
+        if cm:
+            print "cm=%s for j=%s" %(cm,j)
 
     # Here we should check that the conductor of the constructed curve
     # agrees with the input conductor....
@@ -344,8 +366,11 @@ def upload_to_db(base_path, filename_suffix):
     data_to_insert = {}  # will hold all the data to be inserted
 
     for f in file_list:
-        h = open(os.path.join(base_path, f))
-        print "opened %s" % os.path.join(base_path, f)
+        try:
+            h = open(os.path.join(base_path, f))
+            print "opened %s" % os.path.join(base_path, f)
+        except IOError:
+            continue # in case not all prefixes exist
 
         parse = globals()[f[:f.find('.')]]
 

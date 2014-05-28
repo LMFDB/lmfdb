@@ -1,0 +1,143 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+{# {{ data.query }}  #}
+
+{#
+
+<h2> Further refine search </h2>
+
+<form id='re-search'>
+<input type="hidden" name="start" value="{{data.start}}"/>
+<table border="0">
+
+<tr>
+<td align=left>{{ KNOWL('ec.q.conductor', title='Conductor') }}</td>
+<td align=left>{{ KNOWL('ec.q.j_invariant', title='j-invariant') }}</td>
+<td align=left>{{ KNOWL('ec.q.rank', title='Rank') }}</td>
+<td align=left>{{ KNOWL('ec.q.torsion_order', title='Torsion order') }}</td>
+<td align=left>{{ KNOWL('ec.q.torsion_subgroup', title='Torsion structure') }}</td>
+<td align=left>{{ KNOWL('ec.q.analytic_sha_order', title='Analytic order of &#1064;') }}</td>
+<td align=left>{{ KNOWL('ec.q.optimal', title='Optimal only') }}</td>
+</tr>
+
+<tr>
+<td align=left><input type='text' name='conductor' size=10 value={{data.conductor}}></td>
+<td align=left><input type='text' name='jinv'size=5 value={{data.jinv}}></td>
+<td align=left><input type='text' name='rank'size=2 value={{data.rank}}></td>
+<td align=left><input type='text' name='torsion' size=5 value={{data.torsion}}> </td>
+<td align=left><input type='text' name='torsion_structure' size=5 value={{data.torsion_structure}}> </td>
+<td align=left><input type='text' name='sha_an' size=5 value={{data.sha_an}}> </td>
+<td align=left>
+<select name='optimal'>
+{% if data.optimal=='on' %}
+  <option value="">No</option>
+  <option selected="yes" value="on">Yes</option>
+{% else %}
+  <option value="">No</option>
+  <option value="on">Yes</option>
+{% endif %}
+</select>
+</td>
+</tr>
+
+<tr>
+<td align=left>{{KNOWL('ec.q.surjective_prime', title='surjective primes')}} 
+</td>
+<td align=left colspan=2>{{KNOWL('ec.q.non-surjective_prime', title='non-surjective primes')}} 
+</td>
+<td align=left colspan=3>Maximum number of curves to display
+</td>
+</tr>
+<tr>
+<td align=left>
+   <input type='text' name='surj_primes' size=10 value={{data.surj_primes}}>
+</td>
+<td align=left colspan=2>
+  <select name='surj_quantifier'>
+{% if data.surj_quantifier=='exactly' %}
+  <option value='include'>include</option>
+  <option selected="yes" value='exactly'>exactly</option>
+{% else %}
+  <option value='include'>include</option>
+  <option value='exactly'>exactly</option>
+{% endif %}
+  </select>
+<input type='text' name='nonsurj_primes' size=10  value={{data.nonsurj_primes}}>
+</td>
+<td align=left colspan=3><input type='text' name='count' value={{data.count}} size=10>
+</td>
+</tr>
+
+<tr> <td>
+<button type='submit' value='refine'>Search again</button>
+</td> </tr>
+</table>
+</form>
+
+#}
+
+{% if data.err is defined %}
+
+<h2>Error</h2>
+<div>
+  {{ data.err|safe }}
+  <p>
+  Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
+</div>
+
+{% else %}
+
+<style type="text/css">
+table td.center {
+  text-align: center;
+}
+table td.params {
+  text-align: left;
+  font-family: monospace;
+}
+
+</style>
+
+<h2> Results ({{data.report}})</h2>
+<table>
+<tr>
+  <th class="center">Field label</th>
+  <th class="center">Conductor norm</th>
+  <th class="center">Conductor label</th>
+  <th class="center">Curve label</th>
+  <th class="center">{{ KNOWL('ec.weierstrass_coeffs',  title='Weierstrass Coefficients') }}</th>
+</tr>
+{% for curve in data.curves: %}
+<tr>
+<td class="center"><a href="{{ url_for('number_fields.by_label',
+                            label=curve.field_label) }}">{{curve.field.pretty_label}}</a></td>
+<td class="center">{{curve.conductor_norm}}</td>
+<td class="center">{{curve.conductor_label}}</td>
+<td class="center"><a href="{{ url_for('.show_ecnf1',full_label=curve.label) }} ">{{curve.short_label}}</a></td>
+<td class="params">{{curve.latex_ainvs}}</td>
+</tr>
+{% endfor %}
+</table>
+
+<hr>
+<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
+
+{% endif %}
+
+{#
+<form>
+Download all search results for
+<input type="submit" name="Submit" value="gp">
+<input type="submit" name="Submit" value="sage">
+<input type="submit" name="Submit" value="mathematica">
+</form>
+#}
+
+Query was: {{data.query}}
+
+
+
+{% endblock %}

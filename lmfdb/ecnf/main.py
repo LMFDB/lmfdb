@@ -94,6 +94,7 @@ class ECNF(object):
     def make_E(self):
         coeffs = self.ainvs # list of 5 lists of d strings
         self.ainvs = [self.field.parse_NFelt(x) for x in coeffs]
+        self.latex_ainvs = web_latex(self.ainvs)
         from sage.schemes.elliptic_curves.all import EllipticCurve
         self.E = E = EllipticCurve(self.ainvs)
         self.equn = web_latex(E)
@@ -121,8 +122,18 @@ class ECNF(object):
         n1 = n/g
         self.j = web_latex(n1)
         if d!=1:
-            self.j = "("+self.j+")\(/\)"+web_latex(d)
-        if g>1: self.j = web_latex(g) + self.j
+            if n1>1:
+                #self.j = "("+self.j+")\(/\)"+web_latex(d)
+                self.j = web_latex(r"\frac{%s}{%s}" % (self.j,d))
+            else:
+                self.j = web_latex(d)
+        if g>1:
+            if n1>1:
+                self.j = web_latex(g) + self.j
+            else:
+                self.j = web_latex(g)
+        self.j = web_latex(j)
+
         try:
             self.fact_j = web_latex(j.factor())
         except ValueError: # if not all prime ideal factors principal
@@ -152,7 +163,7 @@ class ECNF(object):
         if self.tr==1:
             self.tor_struct_pretty = "\(\Z/%s\Z\)" % self.torsion_structure[0]
         if self.tr==2:
-            self.tor_struct_pretty = "\(\Z/%s\Z\times\Z/%s\Z\)" % self.torsion_structure
+            self.tor_struct_pretty = "\(\Z/%s\Z\times\Z/%s\Z\)" % tuple(self.torsion_structure)
         torsion_gens = [E([self.field.parse_NFelt(x) for x in P])
                         for P in self.torsion_gens]
         self.torsion_gens = ",".join([web_latex(P) for P in torsion_gens])
@@ -188,19 +199,34 @@ def get_bread(*breads):
 
 @ecnf_page.route("/")
 def index():
+#    if 'jump' in request.args:
+#        return show_ecnf1(request.args['label'])
+    if len(request.args)>0:
+        return elliptic_curve_search(data=request.args)
     bread = get_bread()
+    data = {}
+    data['fields'] = [(nf,field_pretty(nf)) for nf in db_ecnf().distinct("field_label") if int(nf.split(".")[2])<10000]
     return render_template("ecnf-index.html",
-        title="Elliptic Curve Number Field",
+        title="Elliptic Curves over Number Fields",
+        data=data,
         bread=bread)
 
+
+@ecnf_page.route("/<full_label>")
+def show_ecnf1(full_label):
+    label_parts = full_label.split("-",1)
+    field_label = label_parts[0]
+    label = label_parts[1]
+    return show_ecnf(field_label,label)
 
 @ecnf_page.route("/<nf>/<label>")
 def show_ecnf(nf, label):
     nf_label = parse_field_string(nf)
     bread = get_bread((label, url_for(".show_ecnf", label = label, nf = nf_label)))
-    label = nf_label + "-" + label
-    print label
+    label = "-".join([nf_label, label])
+    print "looking up curve with full label=%s" % label
     ec = ECNF.by_label(label)
+    print ec
     title = "Elliptic Curve %s over Number Field %s" % (label, ec.field.pretty_label)
     info = {}
     properties = [
@@ -225,6 +251,87 @@ def show_ecnf(nf, label):
         properties2 = properties,
         info=info)
 
+
+def elliptic_curve_search(**args):
+    print "args=%s" % args
+    data = to_dict(args['data'])
+    print "data=%s" % data
+    if 'jump' in data:
+        label = info.get('label', '').replace(" ", "")
+        print label
+        return show_ecnf1(label)
+
+    print "about to search database using data %s" % data
+    query = {}
+
+    if 'conductor_norm' in data:
+        Nnorm = clean_input(data['conductor_norm'])
+        Nnorm = Nnorm.replace('..', '-').replace(' ', '')
+        tmp = parse_range2(Nnorm, 'conductor_norm')
+        if tmp[0] == '$or' and '$or' in query:
+            newors = []
+            for y in tmp[1]:
+                oldors = [dict.copy(x) for x in query['$or']]
+                for x in oldors:
+                    x.update(y)
+                newors.extend(oldors)
+            tmp[1] = newors
+        query[tmp[0]] = tmp[1]
+
+    if 'field' in data:
+        query['field_label'] = data['field']
+
+    data['query'] = query
+
+# process count and start if not default:
+
+    count_default = 100
+    if data.get('count'):
+        try:
+            count = int(data['count'])
+        except:
+            count = count_default
+    else:
+        count = count_default
+    data['count'] = count
+
+    start_default = 0
+    if data.get('start'):
+        try:
+            start = int(data['start'])
+            if(start < 0):
+                start += (1 - (start + 1) / count) * count
+        except:
+            start = start_default
+    else:
+        start = start_default
+
+# make the query and trim results according to start/count:
+
+    cursor = db_ecnf().find(query)
+    nres = cursor.count()
+    if(start >= nres):
+        start -= (1 + (start - nres) / count) * count
+    if(start < 0):
+        start = 0
+    res = cursor.sort([('conductor_norm', ASC)]).skip(start).limit(count)
+
+    bread = []#[('Elliptic Curves over Number Fields', url_for(".elliptic_curve_search")),             ('Search Results', '.')]
+
+    data['curves'] = [ECNF(e) for e in res]
+    data['number'] = nres
+    data['start'] = start
+    if nres == 1:
+        data['report'] = 'unique match'
+    else:
+        if nres > count or start != 0:
+            data['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
+        else:
+            data['report'] = 'displaying all %s matches' % nres
+    credit = 'many contributors'
+    t = 'Elliptic Curves'
+    print "report = %s" % data['report']
+    return render_template("ecnf-search-results.html", data=data, credit=credit, bread=bread, title=t)
 
 @ecnf_page.route("/search", methods=["GET", "POST"])
 def search():

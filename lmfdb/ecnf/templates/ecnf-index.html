@@ -4,6 +4,71 @@
 
 <h2>Search page for Elliptic Curves over Number Fields</h2>
 
-... not much more to see here.
+<div>
+The database currently contains elliptic curves over a few number
+fields only.
+</div>
+
+<h2> Browse {{ KNOWL('ec',title='elliptic curves')}} over {{
+KNOWL('nf',title = "number fields")}} (other than $\Q$)</h2>
+
+<p>
+By base {{ KNOWL('nf',title = "number field")}}:
+{% for nf in data.fields %}
+<a href="?field={{nf[0]}}">{{nf[1]}}</a>&nbsp;
+{% endfor %}
+</p>
+
+<h2> Find a specific curve by label</h2>
+<form>
+<input type='text' name='label' size=25 example="2.2.5.1-31.1-a1">
+<button type='submit' name='jump' value='label' >label</button>
+<br><span class="formexample">e.g. 2.2.5.1-31.1-a1</span>
+{% if err_msg %}
+<br>
+<span class="errmsg">{{err_msg}}</span>
+{% endif %}
+</form>
+
+<h2> Search </h2>
+Please enter a value or leave blank:
+<p></p>
+<form>
+  <table>
+    <tr>
+     <td>{{ KNOWL('nf',title = "base number field") }}</td>
+     <td>
+     <input type='text' name='field' example="2.2.5.1" size=10 value="{{field_label}}" />
+     </td>
+     <td><span class="formexample"> e.g. 2.2.5.1 or Qqsrt5</span></td>
+    </tr>
+
+   <tr>
+     <td>Conductor norm</td>
+     <td>
+     <input type='text' name='conductor_norm' example="65" size=10 value="{{conductor_norm}}" />
+     </td>
+     <td><span class="formexample"> e.g. 65 or 1-100</span></td>
+
+    </tr>
+ <tr>
+  <td align=left colspan=4>Maximum number of curves to display <input type='text' name='count' value={{count}} 10 />
+  </td>
+ </tr>
+
+
+  </table>
+<p></p>
+<td><button type='submit' value='Search'>Search</button></td>
+
+</form>
+
+{% if DEBUG %}
+<hr>
+<div>
+Raw field data: {{ data.fields }}
+</div>
+{% endif %}
+
 
 {% endblock %}
