@@ -52,7 +52,18 @@ Please enter a value or leave blank:
 
     </tr>
  <tr>
-  <td align=left colspan=4>Maximum number of curves to display <input type='text' name='count' value={{count}} 10 />
+  <td align=left>Include isogenous curves</td>
+  <td>
+         <select name='include_isogenous'>
+           <option value="off">No</option>
+           <option value="on" selected="yes">Yes</option>
+         </select>
+  </td>
+ </tr>
+ <tr>
+  <td align=left>Maximum number of curves to display</td>
+  <td>
+  <input type='text' name='count'  example='10' size=10 value="{{count}}" />
   </td>
  </tr>
 

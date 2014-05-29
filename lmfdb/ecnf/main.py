@@ -13,7 +13,7 @@ from sage.all import ZZ, var, PolynomialRing, QQ, GCD
 from lmfdb.ecnf import ecnf_page, logger
 from lmfdb.number_fields.number_field import parse_field_string, field_pretty
 
-credit = "John Cremona, Paul Gunnells, Dan Yasaki, Alyson Deines, John Voight"
+credit = "John Cremona, Paul Gunnells, Dan Yasaki, Alyson Deines, John Voight, Warren Moore, Haluk Sengun"
 
 ecnf = None
 nfdb = None
@@ -30,6 +30,8 @@ def db_nfdb():
         nfdb = getDBConnection().numberfields.fields
     return nfdb
 
+field_list = {}
+
 class FIELD(object):
     """
     Number Field wrapper
@@ -40,9 +42,11 @@ class FIELD(object):
              }
 
     def __init__(self, label):
+        print "Creating a Field object with label %s" % label
         dbdata = db_nfdb().find_one({'label': label})
         self.__dict__.update(dbdata)
         self.make_K()
+        field_list[label] = self
 
     def make_K(self):
         coeffs = map(int, self.coeffs.split(","))
@@ -55,6 +59,8 @@ class FIELD(object):
         self.generator = web_latex(self.K.gen())
         self.disc = web_latex(self.K.discriminant())
         self.funits = ",".join([web_latex(u) for u in self.K.units()])
+        if not self.funits:
+            self.funits = "None"
         self.real_quadratic = (self.signature=='2,0')
         self.imag_quadratic = (self.signature=='0,1')
         self.class_number = self.K.class_number()
@@ -64,6 +70,11 @@ class FIELD(object):
         convert a list of d strings (rationals) to a field element
         """
         return self.K([QQ(str(c)) for c in s])
+
+def make_field(label):
+    if label in field_list:
+        return field_list[label]
+    return FIELD(label)
 
 class ECNF(object):
     """
@@ -78,7 +89,7 @@ class ECNF(object):
         """
         #del dbdata["_id"]
         self.__dict__.update(dbdata)
-        self.field = FIELD(self.field_label)
+        self.field = make_field(self.field_label)
         self.make_E()
 
     @staticmethod
@@ -116,29 +127,31 @@ class ECNF(object):
             pass
             #self.fact_disc = web_latex(self.field.K.ideal(D).factor())
         j = E.j_invariant()
-        d = j.denominator()
-        n = d*j # numerator exists for quadratic fields only!
-        g = GCD(list(n))
-        n1 = n/g
-        self.j = web_latex(n1)
-        if d!=1:
-            if n1>1:
+        if j:
+            d = j.denominator()
+            n = d*j # numerator exists for quadratic fields only!
+            g = GCD(list(n))
+            n1 = n/g
+            self.j = web_latex(n1)
+            if d!=1:
+                if n1>1:
                 #self.j = "("+self.j+")\(/\)"+web_latex(d)
-                self.j = web_latex(r"\frac{%s}{%s}" % (self.j,d))
-            else:
-                self.j = web_latex(d)
-        if g>1:
-            if n1>1:
-                self.j = web_latex(g) + self.j
-            else:
-                self.j = web_latex(g)
+                    self.j = web_latex(r"\frac{%s}{%s}" % (self.j,d))
+                else:
+                    self.j = web_latex(d)
+                if g>1:
+                    if n1>1:
+                        self.j = web_latex(g) + self.j
+                    else:
+                        self.j = web_latex(g)
         self.j = web_latex(j)
 
-        try:
-            self.fact_j = web_latex(j.factor())
-        except ValueError: # if not all prime ideal factors principal
-            pass
-            #self.fact_j = self.j
+        self.fact_j = self.j
+        if j:
+            try:
+                self.fact_j = web_latex(j.factor())
+            except ValueError: # if not all prime ideal factors principal
+                pass
 
         # CM and End(E)
         self.cm_bool = "no"
@@ -197,6 +210,9 @@ def get_bread(*breads):
     map(bc.append, breads)
     return bc
 
+def web_ainvs(field_label, ainvs):
+    return web_latex([make_field(field_label).parse_NFelt(x) for x in ainvs])
+
 @ecnf_page.route("/")
 def index():
 #    if 'jump' in request.args:
@@ -205,7 +221,7 @@ def index():
         return elliptic_curve_search(data=request.args)
     bread = get_bread()
     data = {}
-    data['fields'] = [(nf,field_pretty(nf)) for nf in db_ecnf().distinct("field_label") if int(nf.split(".")[2])<10000]
+    data['fields'] = [(nf,field_pretty(nf)) for nf in db_ecnf().distinct("field_label") if int(nf.split(".")[2])<200]
     return render_template("ecnf-index.html",
         title="Elliptic Curves over Number Fields",
         data=data,
@@ -224,9 +240,8 @@ def show_ecnf(nf, label):
     nf_label = parse_field_string(nf)
     bread = get_bread((label, url_for(".show_ecnf", label = label, nf = nf_label)))
     label = "-".join([nf_label, label])
-    print "looking up curve with full label=%s" % label
+    #print "looking up curve with full label=%s" % label
     ec = ECNF.by_label(label)
-    print ec
     title = "Elliptic Curve %s over Number Field %s" % (label, ec.field.pretty_label)
     info = {}
     properties = [
@@ -253,19 +268,17 @@ def show_ecnf(nf, label):
 
 
 def elliptic_curve_search(**args):
-    print "args=%s" % args
-    data = to_dict(args['data'])
-    print "data=%s" % data
-    if 'jump' in data:
+    #print "args=%s" % args
+    info = to_dict(args['data'])
+    #print "info=%s" % info
+    if 'jump' in info:
         label = info.get('label', '').replace(" ", "")
-        print label
         return show_ecnf1(label)
 
-    print "about to search database using data %s" % data
     query = {}
 
-    if 'conductor_norm' in data:
-        Nnorm = clean_input(data['conductor_norm'])
+    if 'conductor_norm' in info:
+        Nnorm = clean_input(info['conductor_norm'])
         Nnorm = Nnorm.replace('..', '-').replace(' ', '')
         tmp = parse_range2(Nnorm, 'conductor_norm')
         if tmp[0] == '$or' and '$or' in query:
@@ -278,27 +291,29 @@ def elliptic_curve_search(**args):
             tmp[1] = newors
         query[tmp[0]] = tmp[1]
 
-    if 'field' in data:
-        query['field_label'] = data['field']
+    if 'include_isogenous' in info and info['include_isogenous'] == 'off':
+        query['number'] = 1
 
-    data['query'] = query
+    if 'field' in info:
+        query['field_label'] = info['field']
+
+    info['query'] = query
 
 # process count and start if not default:
 
-    count_default = 100
-    if data.get('count'):
+    count_default = 20
+    if info.get('count'):
         try:
-            count = int(data['count'])
+            count = int(info['count'])
         except:
             count = count_default
     else:
         count = count_default
-    data['count'] = count
 
     start_default = 0
-    if data.get('start'):
+    if info.get('start'):
         try:
-            start = int(data['start'])
+            start = int(info['start'])
             if(start < 0):
                 start += (1 - (start + 1) / count) * count
         except:
@@ -314,24 +329,27 @@ def elliptic_curve_search(**args):
         start -= (1 + (start - nres) / count) * count
     if(start < 0):
         start = 0
-    res = cursor.sort([('conductor_norm', ASC)]).skip(start).limit(count)
+    res = cursor.sort([('field_label', ASC), ('conductor_norm', ASC), ('conductor_label', ASC), ('iso_label', ASC), ('number', ASC)]).skip(start).limit(count)
 
     bread = []#[('Elliptic Curves over Number Fields', url_for(".elliptic_curve_search")),             ('Search Results', '.')]
 
-    data['curves'] = [ECNF(e) for e in res]
-    data['number'] = nres
-    data['start'] = start
+    info['curves'] = res # [ECNF(e) for e in res]
+    info['number'] = nres
+    info['start'] = start
+    info['count'] = count
+    info['field_pretty'] = field_pretty
+    info['web_ainvs'] = web_ainvs
     if nres == 1:
-        data['report'] = 'unique match'
+        info['report'] = 'unique match'
     else:
         if nres > count or start != 0:
-            data['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
+            info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
         else:
-            data['report'] = 'displaying all %s matches' % nres
+            info['report'] = 'displaying all %s matches' % nres
     credit = 'many contributors'
     t = 'Elliptic Curves'
-    print "report = %s" % data['report']
-    return render_template("ecnf-search-results.html", data=data, credit=credit, bread=bread, title=t)
+    #print "report = %s" % info['report']
+    return render_template("ecnf-search-results.html", info=info, credit=credit, bread=bread, title=t)
 
 @ecnf_page.route("/search", methods=["GET", "POST"])
 def search():
