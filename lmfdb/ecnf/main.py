@@ -58,6 +58,7 @@ class FIELD(object):
         self.poly = web_latex(self.K.defining_polynomial())
         self.generator = web_latex(self.K.gen())
         self.disc = web_latex(self.K.discriminant())
+        self.unit_rank = len(self.K.units())
         self.funits = ",".join([web_latex(u) for u in self.K.units()])
         if not self.funits:
             self.funits = "None"
@@ -176,7 +177,7 @@ class ECNF(object):
         if self.tr==1:
             self.tor_struct_pretty = "\(\Z/%s\Z\)" % self.torsion_structure[0]
         if self.tr==2:
-            self.tor_struct_pretty = "\(\Z/%s\Z\times\Z/%s\Z\)" % tuple(self.torsion_structure)
+            self.tor_struct_pretty = r"\(\Z/%s\Z\times\Z/%s\Z\)" % tuple(self.torsion_structure)
         torsion_gens = [E([self.field.parse_NFelt(x) for x in P])
                         for P in self.torsion_gens]
         self.torsion_gens = ",".join([web_latex(P) for P in torsion_gens])
@@ -195,6 +196,7 @@ class ECNF(object):
         for p in N.prime_factors():
             self.local_info = E.local_data(p, algorithm="generic")
             self.local_data.append({'p': web_latex(p),
+                               'norm': web_latex(p.norm().factor()),
                                'tamagawa_number': self.local_info.tamagawa_number(),
                                'kodaira_symbol': web_latex(self.local_info.kodaira_symbol()).replace('$', ''),
                                'reduction_type': self.local_info.bad_reduction_type()
