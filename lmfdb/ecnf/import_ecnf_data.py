@@ -259,7 +259,7 @@ def curves(line):
     cm = data[11]                 # int or '?'
     if cm!='?':
         cm = int(cm)
-    base_change = (data[12]==1)   # bool
+    base_change = (data[12]=='1')   # bool
 
     # Create the field and curve to compute the j-invariant:
     dummy, deg, sig, abs_disc = field_data(field_label)
