@@ -1102,7 +1102,7 @@ class WebNewForm_class(object):
     def get_from_db(self,N,k,chi,label):
         C = lmfdb.base.getDBConnection()
         collection = C[db_name].WebNewforms.files
-        s = {'N':int(N),'k':int(k),'chi':int(chi),'label':label}
+        s = {'N':int(N),'k':int(k),'chi':int(chi),'label':label,'version':float(emf_version)}
         emf_logger.debug("Looking in DB for rec={0}".format(s))
         f = C[db_name].WebNewforms.files.find_one(s)
         emf_logger.debug("Found rec={0}".format(f))
@@ -1126,7 +1126,7 @@ class WebNewForm_class(object):
         C = lmfdb.base.getDBConnection()
         fs = gridfs.GridFS(C[db_name], 'WebNewforms')
         collection = C[db_name].WebNewforms.files
-        s = {'name':self._name}
+        s = {'name':self._name,'version':float(self._version)}
         rec = collection.find_one(s)
         if rec:
             id = rec.get('_id')
@@ -1140,7 +1140,7 @@ class WebNewForm_class(object):
 #        try:
         d = self.to_dict()
         d.pop('_ap',None) ## This is already stored in this format in the database
-        id = fs.put(dumps(d),filename=fname,N=int(self._N),k=int(self._k),chi=int(self._chi),label=self._label,name=self._name)
+        id = fs.put(dumps(d),filename=fname,N=int(self._N),k=int(self._k),chi=int(self._chi),label=self._label,name=self._name,version=float(self._version))
 #        except Exception as e:
 #            emf_logger.critical("DB insertion failed: {0}".format(e.message))
         emf_logger.debug("inserted :{0}".format(id))
@@ -1299,7 +1299,13 @@ class WebNewForm_class(object):
         if self._coefficient_field_as_dict<>{}:
             emf_logger.debug("coef_fldas_d={0}".format(self._coefficient_field_as_dict))
             return number_field_from_dict(self._coefficient_field_as_dict)
-        self._coefficient_field = self.as_factor().q_eigenform(self._prec, names='x').base_ring()
+        ## Get field from the ap's # Necessary because change in sage implementation
+        self._update_aps()
+        #self._coefficient_field = self.as_factor().q_eigenform(self._prec, names='x').base_ring()
+        try:
+            self._coefficient_field = self._ap[2].parent()
+        except KeyError:
+            self._coefficient_field = self.as_factor().q_eigenform(self._prec, names='x').base_ring()
         emf_logger.debug("coef_field={0}".format(self._coefficient_field))
         return self._coefficient_field
     
@@ -1481,6 +1487,7 @@ class WebNewForm_class(object):
         if self._ap == None or self._ap == {}:
             self._update_aps()
         ev = self._ap
+        K = self._ap[2].parent()
         for p, r in F:
             (p, r) = (int(p), int(r))
             pr = p**r
@@ -1491,7 +1498,7 @@ class WebNewForm_class(object):
                 # TODO: Optimization -- do something much more
                 # intelligent in case character is not defined.  For
                 # example, compute it using the diamond operators <d>
-                eps = self.character_value(p)
+                eps = K(self.character_value(p))
                 # a_{p^r} := a_p * a_{p^{r-1}} - eps(p)p^{k-1} a_{p^{r-2}}
                 apr1 = self.coefficient_n_recursive(pr//p)
                 ap = self.coefficient_n_recursive(p)
