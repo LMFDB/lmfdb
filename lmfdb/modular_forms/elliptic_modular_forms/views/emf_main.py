@@ -161,7 +161,7 @@ def render_elliptic_modular_form_navigation_wp(**args):
     weight = my_get(info, 'weight', 0, int)
     character = my_get(info, 'character', 0, int)
     label = info.get('label', '')
-    disp = ClassicalMFDisplay('modularforms')
+    disp = ClassicalMFDisplay('modularforms2')
     emf_logger.debug("info={0}".format(info))
     emf_logger.debug("level=%s, %s" % (level, type(level)))
     emf_logger.debug("label=%s, %s" % (label, type(label)))

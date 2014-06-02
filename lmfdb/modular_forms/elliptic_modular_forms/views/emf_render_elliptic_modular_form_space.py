@@ -111,8 +111,9 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
     except Exception as e:
         if isinstance(e,IndexError):
             info['error'] = e.message
-        else:
-            info['error'] = "We are sorry. The sought space can not be found in the database."
+        WMFS = None
+    if WMFS == None:
+        info['error'] = "We are sorry. The sought space can not be found in the database."
         return info
     if WMFS.level() == 1:
         info['group'] = "\( \mathrm{SL}_{2}(\mathbb{Z})\)"

@@ -292,7 +292,10 @@ class WebModFormSpace_class(object):
             aplist[self.labels()[i]]={}
         for rec in ap_from_db:
             emf_logger.debug("rec={0}".format(rec))
-            a = self.labels()[rec['newform']]
+            ni = rec.get('newform')
+            if ni == None:
+                return
+            a = self.labels()[ni]
             cur_prec = rec['prec']
             if aplist.get(a,{}).get(cur_prec,None)==None:
                 aplist[a][prec]=loads(fs.get(rec['_id']).read())
