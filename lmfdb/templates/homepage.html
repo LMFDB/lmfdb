@@ -168,8 +168,9 @@
 	<h2 class="link">
 	    <a class="artin_representations" href="{{ url_for('artin_representations.index') }}">Artin Representations</a>
 	</h2>
-
-  <h2 class="link"><a class="tensor_products" href="{{ url_for('tensor_products.index') }}">Tensor products</a></h2>  
+  {% if BETA %}
+    <h2 class="link"><a class="tensor_products" href="{{ url_for('tensor_products.index') }}">Tensor products</a></h2>  
+  {% endif %}
 
   <h2>Zeros of L-functions</h2>
    <ul>

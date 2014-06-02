@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 r"""
 
 AUTHORS: Alberto Camara, Mark Watkins, Chris Wuthrich, 2014
@@ -440,7 +441,7 @@ class GaloisRepresentation( Lfunction):
                 n1_tame = V.dim - f1.degree()
                 n2_tame = W.dim - f2.degree()
                 n1_wild = ZZ(V.conductor).valuation(p) - n1_tame
-                n2_wild = ZZ(VWconductor).valuation(p) - n2_tame
+                n2_wild = ZZ(W.conductor).valuation(p) - n2_tame
                 # additionally, we would need to correct this by
                 # replacing det1 by chi1(p) if p is semistable for V
                 # however for all the possible input this currently does
