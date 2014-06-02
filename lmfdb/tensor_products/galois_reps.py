@@ -398,9 +398,9 @@ class GaloisRepresentation( Lfunction):
             n1_tame = V.dim - V.local_euler_factor(p).degree()
             n2_tame = W.dim - W.local_euler_factor(p).degree()
             nn = n1_tame * n2_tame
-            if p in scommon:
-                nn *= 2
             N = N // p ** nn
+            if p in scommon: # both are degree 1 in this case
+                N = N // p
         self.conductor = N
 
         h1 = selberg_to_hodge(V.motivic_weight,V.mu_fe,V.nu_fe)
@@ -421,7 +421,7 @@ class GaloisRepresentation( Lfunction):
             if p in scommon:
                 E = tensor_local_factors(f1,f2,V.dim*W.dim)
                 T = f1.parent().gens()[0] # right answer is E(T)*E(pT)
-                self.bad_primes_info.append([p,E*E(p*T),1-T])
+                self.bad_primes_info.append([p,E*E(p*T),1-T]) #bad_primes_info.append() with 1-T as the second argument is equivalent to taking the first argument as the results (it does a convolution, as in the next line)
             else:
                 self.bad_primes_info.append([p,f1,f2])
 
