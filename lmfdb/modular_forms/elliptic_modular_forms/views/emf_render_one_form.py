@@ -198,7 +198,9 @@ def set_info_for_one_modular_form(level=None, weight=None, character=None, label
         info['CM_values'] = WNF.cm_values(digits=digits)
         if len(info['CM_values']['tau'])==0:
             info.pop('CM_values')
-        if(WNF.is_CM()[0]):
+        if(WNF.is_CM()[0])==None:
+            s = '- Unknown (insufficient data)<br>'
+        elif(WNF.is_CM()[0]):
             s = '- Is a CM-form<br>'
         else:
             s = '- Is not a CM-form<br>'

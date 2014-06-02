@@ -294,13 +294,15 @@ class WebModFormSpace_class(object):
             emf_logger.debug("rec={0}".format(rec))
             ni = rec.get('newform')
             if ni == None:
-                return
+                for a in self.labels():
+                    aplist[a][prec]=(None,None)
+                return aplist
             a = self.labels()[ni]
             cur_prec = rec['prec']
             if aplist.get(a,{}).get(cur_prec,None)==None:
                 aplist[a][prec]=loads(fs.get(rec['_id']).read())
             if cur_prec > prec and prec>0: # We are happy with these coefficients.
-                return 
+                return aplist
         return aplist
 
     def aps(self,prec=-1):
@@ -1389,7 +1391,10 @@ class WebNewForm_class(object):
         emf_logger.debug("has embeddings{0}:".format(nstart))
         deg = self.absolute_degree()
         for n in range(nstart,prec):
-            cn = self.coefficient(n)
+            try:
+                cn = self.coefficient(n)
+            except IndexError:
+                break
             if hasattr(cn, 'complex_embeddings'):
                 cn_emb = cn.complex_embeddings(bitprec)
             else:
@@ -1398,7 +1403,12 @@ class WebNewForm_class(object):
         nstart = len(self._embeddings_latex)
         emf_logger.debug("has embeddings_latex:{0}".format(nstart))            
         for n in range(nstart,prec):
-            cn_emb=self._embeddings[n]
+            try: 
+                cn_emb=self._embeddings[n]
+            except IndexError:
+                if self._embeddings==[]:
+                    break
+                continue
             cn_emb_latex = []
             for x in cn_emb:
                 t = my_complex_latex(x,display_bprec)
@@ -1489,6 +1499,8 @@ class WebNewForm_class(object):
         prod = None
         if self._ap == None or self._ap == {}:
             self._update_aps()
+            if self._ap == {}:
+               raise IndexError,"Have no coefficients!"
         ev = self._ap
         K = self._ap[2].parent()
         for p, r in F:
@@ -1932,7 +1944,10 @@ class WebNewForm_class(object):
             return self._is_CM
         max_nump = self._number_of_hecke_eigenvalues_to_check()
         # E,v = self._f.compact_system_of_eigenvalues(max_nump+1)
-        coeffs = self.coefficients(range(max_nump + 1),insert_in_db=insert_in_db)
+        try:
+            coeffs = self.coefficients(range(max_nump + 1),insert_in_db=insert_in_db)
+        except IndexError: 
+           return None,None
         nz = coeffs.count(0)  # number of zero coefficients
         nnz = len(coeffs) - nz  # number of non-zero coefficients
         if(nz == 0):
@@ -2257,7 +2272,10 @@ class WebNewForm_class(object):
             thetas[j] = dict()
         for j in xrange(len(ps)):
             p = ps[j]
-            ap = self.coefficient(p) #_ap[p]
+            try:
+                ap = self.coefficient(p) 
+            except IndexError:
+                break
             # Remove bad primes
             if p.divides(self.level()):
                 continue
