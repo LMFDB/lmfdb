@@ -363,15 +363,14 @@ class GaloisRepresentation( Lfunction):
         bad2 = ZZ(W.conductor).prime_factors()
         bad_primes = [x for x in ZZ(V.conductor).prime_factors() if x in bad2]
         for p in bad_primes:
-            if ( V.conductor % p != 0 and W.conductor % p != 0 and
-                p not in V.bad_semistable_primes and p not in W.bad_semistable_primes) :
-            # this condition above only applies to the current type of objects
-            # for general reps we would have to test the lines below
-            # to be certain that the formulae are correct.
-            #if ((p not in V.bad_semistable_primes or p not in W.bad_pot_good) and
-                #(p not in W.bad_semistable_primes or p not in V.bad_pot_good) and
-                #(p not in V.bad_semistable_primes or p not in W.bad_semistable_primes)):
-                 raise NotImplementedError("Currently tensor products of " +
+            if ( p not in V.bad_semistable_primes and p not in W.bad_semistable_primes) :
+                # this condition above only applies to the current type of objects
+                # for general reps we would have to test the lines below
+                # to be certain that the formulae are correct.
+                #if ((p not in V.bad_semistable_primes or p not in W.bad_pot_good) and
+                    #(p not in W.bad_semistable_primes or p not in V.bad_pot_good) and
+                    #(p not in V.bad_semistable_primes or p not in W.bad_semistable_primes)):
+                raise NotImplementedError("Currently tensor products of " +
                                           "Galois representations are only" +
                                           "implemented under some conditions.\n" +
                                           "Here the behaviour at %s is too wild as" +
