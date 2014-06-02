@@ -316,8 +316,8 @@ class GaloisRepresentation( Lfunction):
         self.selfdual = True
         self.coefficient_type = 2
         self.coefficient_period = 0
-	self.sign = (-1) ** (self.weight / 2.)
-	if self.conductor != 1:
+        self.sign = (-1) ** (self.weight / 2.)
+        if self.conductor != 1:
             AL = F.atkin_lehner_eigenvalues()
             self.sign = AL[self.conductor] * self.sign
         self.gammaV = [0,1]
