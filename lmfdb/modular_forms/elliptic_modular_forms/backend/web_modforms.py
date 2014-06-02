@@ -132,6 +132,7 @@ class WebModFormSpace_class(object):
             '_conrey_character_no' : None,
             '_conrey_character_name' : None,
             '_conrey_character_order' : None,
+            '_conrey_character_conductor' : None,
             '_modular_symbols' : None,
             '_sturm_bound' : None,
             '_newspace' : None,
@@ -519,9 +520,9 @@ class WebModFormSpace_class(object):
         return self._conrey_character
 
     def conrey_character_number(self):
-        if not (self._conrey_character_number >0):
-          self._conrey_character_number = self.conrey_character().number()
-        return self._conrey_character_number
+        if not (self._conrey_character_no >0):
+          self._conrey_character_no = self.conrey_character().number()
+        return self._conrey_character_no
     
     def conrey_character_name(self):
         if self._conrey_character_name == None:
@@ -1007,11 +1008,11 @@ class WebNewForm_class(object):
         """
         if self._parent == None:
             raise ValueError,"Need parent to check labels!"
-        if self._conrey_character_no>0:
+        if self._conrey_character_no>0 and self._conrey_character==None:
             self._conrey_character =  DirichletCharacter_conrey(DirichletGroup_conrey(self._N),self._conrey_character_no)
         else:
-            self._conrey_character = self._parent._conrey_character
-            self._conrey_character_no = self._conrey_character.number()
+            self._conrey_character = self._parent.conrey_character()
+            self._conrey_character_no = self._parent.conrey_character_number()
         self._character = self.parent().character()
 
         if self._character == None or self._conrey_character==None:
