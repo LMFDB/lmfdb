@@ -76,6 +76,10 @@ sage: VW.algebraic_coefficients(38)[36] == -38
 #* Obviously this class should be moved over to sage at some point and should
 #integrate well with dokchitsers package as well as lcalc
 #
+
+#* This code is specific to tensor products of dimension \leq 2.  To handle
+# higher dimension there are several pieces of code which one must check 
+# still hold true.
 ########################################################################
 # (C) Alberto Camara, Martin Dickson, Mark Watkins, Chris Wuthrich 2014
 #       LMFDB workshop in Besancon with Tim and Vlad Dokchitser
