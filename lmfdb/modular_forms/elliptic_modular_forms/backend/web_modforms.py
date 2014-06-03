@@ -21,6 +21,9 @@ AUTHORS:
  - Fredrik Stroemberg
  - Stephan Ehlen
 
+
+NOTE: We are now working completely with the Conrey naming scheme.
+ 
 TODO:
 Fix complex characters. I.e. embedddings and galois conjugates in a consistent way.
 
@@ -53,13 +56,117 @@ except:
 
 from web_modform_space import WebModFormSpace_class,WebModFormSpace
 
+
+class NewWebChar(object):
+    r"""
+    Temporary class which should be replaced with 
+    WebDirichletCharcter once this is ok.
     
-def WebNewForm(N=1, k=2, chi=0, label='', prec=10, bitprec=53, display_bprec=26, parent=None, data={}, compute=False, verbose=-1,get_from_db=True):
+    """
+    def __init__(self,modulus=0,number=0):
+        r"""
+        Init self as character of given number and modulus.
+        """
+        assert modulus >0 and number >0:
+        self._modulus = modulus
+        self._number = number
+
+        self._character = None  
+        self._order = None
+        self._conductor = None
+        self._character_latex_name = None
+        self._sage_character = None
+        self._url = None
+        self._values_algebraic = {}
+        self._values_float = {}
+        
+    def modulus(self):
+        r"""
+        Return the modulus of self.
+        """
+        return self._modulus
+    def number(self):
+        r"""
+        Return the number of self.
+        """
+        return self._number
+    def character(self):
+        r"""
+        Return self as a DirichletCharacter_conrey
+        """
+        if self._character == None:
+            self._character = DirichletCharacter_conrey(DirichletGroup_conrey(self._N),self._chi)
+        return self._character
+
+    def conductor(self):
+        r"""
+        Return the conductor of self.
+        """
+        if self._conductor == None:
+            self._conductor = self.character().conductor()
+        return self._conductor
+
+    def order(self):
+        r"""
+        Return the conductor of self.
+        """
+        if self._order == None:
+            self._order = self.character().order()
+        return self._order
+
+    def sage_character(self):
+        r"""
+        Return self as a sage character (e.g. so that we can get algebraic values)
+
+        """
+        ## Is cached in Conrey character
+        if self._sage_character == None:
+            self._sage_character = self.character.sage_character()
+        return self._sage_character
+        
+    def character_latex_name(self):
+        r"""
+        Return the latex representation of the character of self.
+        """
+        if self._character_latex_name==None:
+            self._character_latex_name = "\chi_{" + str(self.modulus()) + "}(" + str(self.number()) + ",\cdot)"
+        return self._character_latex_name
+
+    def value(self,x,value_format='algebraic'):
+        r"""
+        Return the value of self as an algebraic integer or float.
+        """
+        x = int(x)
+        if value_format =='algebraic':
+            y = self._values_algebraic.get(x)
+            if y == None:
+                y = self._values_algebraic[x]=self.sage_character()(x)
+            else:
+                self._values_algebraic[x]=y
+            return self._values_algebraic[x]
+        elif value_format=='float':  ## floating point
+            y = self._values_float.get(x)
+            if y == None:
+                y = self._values_float[x]=self.character()(x)
+            else:
+                self._values_float[x]=y
+            return self._values_float[x]
+        else:
+            raise ValueError,"Format {0} is not known!".format(value_format)
+    def url(self):
+        r"""
+        Return the url of self.
+        """
+        if self._url == None:
+            self._url = url_for('render_Dirichletwebpage',modulus=self.modulus(),number=self.number())
+        return self._url
+    
+def WebNewForm(N=1, k=2, chi=1, label='', prec=10, bitprec=53, display_bprec=26, parent=None, data={}, compute=False, verbose=-1,get_from_db=True):
     r"""
     Constructor for WebNewForms with added 'nicer' error message.
     """
     ## First check
-    if chi == 0:
+    if chi == 1:
         if k % 2 == 1:
             emf_logger.debug("Only zero function here with N,k,chi,label={0}.".format( (N,k,chi,label)))
             return 0
@@ -82,7 +189,7 @@ class WebNewForm_class(object):
     Class for representing a (cuspidal) newform on the web.
     TODO: Include the computed data in the original database so we won't have to compute here at all.
     """
-    def __init__(self, N=1, k=2, chi=0, label='', prec=10, bitprec=53, display_bprec=26,parent=None, data={}, compute=False, verbose=-1,get_from_db=True):
+    def __init__(self, N=1, k=2, chi=1, label='', prec=10, bitprec=53, display_bprec=26,parent=None, data={}, compute=False, verbose=-1,get_from_db=True):
         r"""
         Init self as form with given label in S_k(N,chi)
         """
@@ -121,9 +228,7 @@ class WebNewForm_class(object):
             '_absolute_degree' : 0,
             '_relative_degree' : 0,
             '_character' : None,
-            '_conrey_character' : None,
-            '_conrey_character_no' : -1,
-            '_sage_character_no' : -1,
+            '_character_naming_scheme' : 'Conrey', # To make it clear in case someone simply looks at a dictionary.
             '_name' : "{0}.{1}.{2}{3}".format(N,k,chi,label),
             '_version': float(emf_version)            
             }
@@ -169,146 +274,7 @@ class WebNewForm_class(object):
         emf_logger.debug("done __init__")
         self.insert_into_db()
 
-    def _check_consistency_of_labels(self):
-        if self._label not in self.parent().labels():
-            raise ValueError,"There does not exist a newform orbit of the given label: {0}!".format(self._label)
-        # emf_logger.debug(" labels= {0}".format(self._parent._galois_orbits_labels))
-        # emf_logger.debug(" fi= {0}".format(self._fi))        
-        # if self._parent == None:
-        #     raise ValueError,"Need parent to check labels!"
-        # try:
-        #     if self._fi < 0:
-        #         emf_logger.debug(" labels= {0}".format(self._parent._galois_orbits_labels))
-        #         self._fi = self._parent._galois_orbits_labels.index(self._label)
-        #         emf_logger.debug(" fi = {0}".format(self._fi))
-        #     if self._label=='':
-        #         self._label = self._parent._galois_orbits_labels[self._fi]
-        #     if not self._label == self._parent._galois_orbits_labels[self._fi]:
-        #         raise ValueError
-        # except (ValueError,KeyError):
-        #     raise ValueError,"There does not exist a newform orbit of the given label: {0} and number:{1}!".format(self._label,self._fi)
-        return True
-
-    def _set_character(self):
-        r"""
-        Initialize the character associated to self.
-        """
-        if self._parent == None:
-            raise ValueError,"Need parent to check labels!"
-        if self._conrey_character_no>0 and self._conrey_character==None:
-            self._conrey_character =  DirichletCharacter_conrey(DirichletGroup_conrey(self._N),self._conrey_character_no)
-        else:
-            self._conrey_character = self._parent.conrey_character()
-            self._conrey_character_no = self._parent.conrey_character_number()
-        self._character = self.parent().character()
-
-        if self._character == None or self._conrey_character==None:
-            self._character = DirichletGroup(self._N).galois_orbits(reps_only=True)[self._chi]
-            Dc = DirichletGroup_conrey(self._N)
-            for c in Dc:
-                if c.sage_character() == self._character:
-                    self._conrey_character = c
-                    break
-            self._conrey_character_no  = self._conrey_character.number()
-            self._sage_character_no  = self._chi
-        
-    def __eq__(self, other):
-        if not isinstance(other, type(self)):
-            return False
-        return self._name == other._name
-
-
-    def get_from_db(self,N,k,chi,label):
-        C = lmfdb.base.getDBConnection()
-        collection = C[db_name].WebNewforms.files
-        s = {'N':int(N),'k':int(k),'chi':int(chi),'label':label,'version':float(emf_version)}
-        emf_logger.debug("Looking in DB for rec={0}".format(s))
-        f = C[db_name].WebNewforms.files.find_one(s)
-        emf_logger.debug("Found rec={0}".format(f))
-        if f<>None:
-            id = f.get('_id')
-            fs = gridfs.GridFS(C[db_name],'WebNewforms')
-            f = fs.get(id)
-            emf_logger.debug("Getting rec={0}".format(f))
-            d = loads(f.read())
-            return d
-        return {}
-    
-
-    
-    def insert_into_db(self):
-        r"""
-        Insert a dictionary of data for self into the database collection
-        WebNewforms.files
-        """
-        emf_logger.debug("inserting self into db! name={0}".format(self._name))
-        C = lmfdb.base.getDBConnection()
-        fs = gridfs.GridFS(C[db_name], 'WebNewforms')
-        collection = C[db_name].WebNewforms.files
-        s = {'name':self._name,'version':float(self._version)}
-        rec = collection.find_one(s)
-        if rec:
-            id = rec.get('_id')
-        else:
-            id = None
-        if id<>None:
-            emf_logger.debug("Removing self from db with id={0}".format(id))
-            fs.delete(id)
-            
-        fname = "webnewform-{0:0>5}-{1:0>3}-{2:0>3}-{3}".format(self._N,self._k,self._chi,self._label) 
-#        try:
-        d = self.to_dict()
-        d.pop('_ap',None) ## This is already stored in this format in the database
-        id = fs.put(dumps(d),filename=fname,N=int(self._N),k=int(self._k),chi=int(self._chi),label=self._label,name=self._name,version=float(self._version))
-#        except Exception as e:
-#            emf_logger.critical("DB insertion failed: {0}".format(e.message))
-        emf_logger.debug("inserted :{0}".format(id))
-    
-    def __repr__(self):
-        r""" String representation f self.
-        """
-        if self.dimension()==0:
-            return "0"
-        return str(self.q_expansion())
-
-    def __reduce__(self):
-        r"""
-        Reduce self for pickling.
-        """
-        data = self.to_dict()
-        return(unpickle_wnf_v1, (self._N, self._k, self._chi, self._label,
-                                 self._prec, self._bitprec, self._display_bprec,self._parent,data))
-
-    def to_yaml(self,for_yaml=False):
-        d = self.to_dict()
-        return yaml.dump(d)
-    
-    def from_yaml(self,s):        
-        d = yaml.load(s)
-        return yaml.load(d)    
-    
-    def to_dict(self):
-        r"""
-        Export self as a serializable dictionary.
-        """
-        if self._base_ring_as_dict=={}:
-            self._base_ring_as_dict=number_field_to_dict(self.base_ring())
-        if self._coefficient_field_as_dict=={}:
-            self._coefficient_field_as_dict=number_field_to_dict(self.coefficient_field())
-        data = {}
-        for k in self.__dict__:
-            data[k]=self.__dict__[k]
-        ## Get rid of non-serializable objects.
-        for k in ['_f','_character','_base_ring','_coefficient_field','_conrey_character']:
-            data.pop(k,None)
-        data['_parent']=self._parent.to_dict()
-        return data
-
-    def _from_dict(self, data):
-        self.__dict__.update(data)
-        if isinstance(self._parent,dict):
-            self._parent = WebModFormSpace(self._k,self._N,self._chi,1,self._prec,self._bitprec,data = self._parent)
-
+### Get basic properties of self
     def level(self):
         r"""
         The level of self (assuming it is on a congruence subgroup).
@@ -333,6 +299,12 @@ class WebNewForm_class(object):
         """
         return self._label
 
+    def chi(self):
+        r"""
+        Return the number of the character of self (in the Conrey ordering/naming scheme)
+        """
+        return self._chi
+        
     def weight(self):
         r"""
         The weight of self.
@@ -344,18 +316,7 @@ class WebNewForm_class(object):
         The name, or *complete* label, of self.
         """
         return self._name
-    
-    def fi(self):
-        r"""
-        The number of self in the Galois orbits of self.parent()
-        """
-        if self._fi == None:
-            if self._label not in self.parent().labels():
-                raise ValueError,"Self (with label {0}) is not in the set of Galois orbits of self.parent()!".format(self._label)
-            self._fi = self.parent().labels().index(self._label)
-        return self._fi
-    
-    
+
     def as_factor(self):
         r"""
         Return the simple factor of the ambient space corresponding to self. 
@@ -365,35 +326,149 @@ class WebNewForm_class(object):
         return self._f
 
     def character(self):
+        r"""
+        Return the character of self.
+        """
         if self._character == None:
-            self._set_character()
+            self._character = NewWebChar(modulus=self.level(),number=self.chi())
         return self._character
 
-    def conrey_character(self):
-        if self._conrey_character == None:
-            self._conrey_character = self.parent().conrey_character()
-        return self._conrey_character
+    def fi(self):
+        r"""
+        The number of self in the Galois orbits of self.parent()
+        """
+        if self._fi == None:
+            if self._label not in self.parent().labels():
+                raise ValueError,"Self (with label {0}) is not in the set of Galois orbits of self.parent()!".format(self._label)
+            self._fi = self.parent().labels().index(self._label)
+        return self._fi
 
-    def conrey_character_name(self):
-        return "\chi_{" + str(self._N) + "}(" + str(self.conrey_character().number()) + ",\cdot)"
+    def prec(self):
+        r"""
+        Return the precision of self.
+        """
+        return self._prec
+         
 
-    def character_order(self):
-        return self._parent.character_order()
+            
+## Functions related to storing / fetching data from database
+##  
+    def to_dict(self):
+        r"""
+        Export self as a serializable dictionary.
+        """
+        if self._base_ring_as_dict=={}:
+            self._base_ring_as_dict=number_field_to_dict(self.base_ring())
+        if self._coefficient_field_as_dict=={}:
+            self._coefficient_field_as_dict=number_field_to_dict(self.coefficient_field())
+        data = {}
+        for k in self.__dict__:
+            data[k]=self.__dict__[k]
+        ## Get rid of non-serializable objects.
+        for k in ['_f','_character','_base_ring','_coefficient_field','_conrey_character']:
+            data.pop(k,None)
+        data['_parent']=self._parent.to_dict()
+        return data
 
-    def character_conductor(self):
-        return self._parent.character_conductor()
+    def _from_dict(self, data):
+        self.__dict__.update(data)
+        if isinstance(self._parent,dict):
+            self._parent = WebModFormSpace(self._k,self._N,self._chi,1,self._prec,self._bitprec,data = self._parent)
 
-    def character_value(self,x):
+    def to_yaml(self,for_yaml=False):
+        r"""
+        Export self in yaml format
+        """
+        d = self.to_dict()
+        return yaml.dump(d)
+    
+    def from_yaml(self,s):        
+        r"""
+        Import data from a yaml formatted string
+        """
 
-        if self.character().is_trivial():
-            if (x % self._N) == 0 and self._N>1:
-                return self.base_ring()(0)
-            else:
-                return self.base_ring()(1)        
-        return self.character()(x)
+        d = yaml.load(s)
+        return yaml.load(d)    
+    
+    def get_from_db(self,N,k,chi,label):
+        r"""
+        Fetch dictionary from the database
+        """
+        C = connect_to_modularforms_db()
+        s = {'name':self.name(),'version':float(emf_version)}
+        emf_logger.debug("Looking in DB for rec={0}".format(s))
+        f = C.WebNewforms.files.find_one(s)
+        emf_logger.debug("Found rec={0}".format(f))
+        if f<>None:
+            id = f.get('_id')
+            fs = gridfs.GridFS(C[db_name],'WebNewforms')
+            f = fs.get(id)
+            emf_logger.debug("Getting rec={0}".format(f))
+            d = loads(f.read())
+            return d
+        return {}
+    
+    def insert_into_db(self):
+        r"""
+        Insert a dictionary of data for self into the database collection
+        WebNewforms.files
+        """
+        emf_logger.debug("inserting self into db! name={0}".format(self._name))
+        C = lmfdb.base.getDBConnection()
+        fs = gridfs.GridFS(C[db_name], 'WebNewforms')
+        collection = C[db_name].WebNewforms.files
+        s = {'name':self._name,'version':float(self._version)}
+        rec = collection.find_one(s)
+        if rec:
+            id = rec.get('_id')
+        else:
+            id = None
+        if id<>None:
+            emf_logger.debug("Removing self from db with id={0}".format(id))
+            fs.delete(id)
+            
+        fname = "webnewform-{0:0>5}-{1:0>3}-{2:0>3}-{3}".format(self._N,self._k,self._chi,self._label) 
+        d = self.to_dict()
+        d.pop('_ap',None)
+        ## The ap's are already stored in this format in the database
+        ## so we don't store them here again.
+        id = fs.put(dumps(d),filename=fname,N=int(self._N),k=int(self._k),chi=int(self._chi),label=self._label,name=self._name,version=float(self._version))
+#        except Exception as e:
+#            emf_logger.critical("DB insertion failed: {0}".format(e.message))
+        emf_logger.debug("inserted :{0}".format(id))
+    
+    
 
-    def chi(self):
-        return self._chi
+            
+
+##  Internal functions
+##        
+    def _check_consistency_of_labels(self):
+        if self._label not in self.parent().labels():
+            raise ValueError,"There does not exist a newform orbit of the given label: {0}!".format(self._label)
+        return True
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        return self._name == other._name
+
+
+    def __repr__(self):
+        r""" String representation f self.
+        """
+        if self.dimension()==0:
+            return "0"
+        return str(self.q_expansion())
+
+    def __reduce__(self):
+        r"""
+        Reduce self for pickling.
+        """
+        data = self.to_dict()
+        return(unpickle_wnf_v1, (self._N, self._k, self._chi, self._label,
+                                 self._prec, self._bitprec, self._display_bprec,self._parent,data))
+
 
     def base_ring(self):
         r"""
@@ -420,7 +495,6 @@ class WebNewForm_class(object):
             return number_field_from_dict(self._coefficient_field_as_dict)
         ## Get field from the ap's # Necessary because change in sage implementation
         self._update_aps()
-        #self._coefficient_field = self.as_factor().q_eigenform(self._prec, names='x').base_ring()
         try:
             self._coefficient_field = self._ap[2].parent()
         except KeyError:
@@ -447,10 +521,6 @@ class WebNewForm_class(object):
             self._absolute_degree = self.coefficient_field().absolute_degree()
         return self._absolute_degree
         
-
-        
-    def prec(self):
-        return self._prec
 
     def parent(self):
         if not isinstance(self._parent,WebModFormSpace_class):
@@ -627,7 +697,7 @@ class WebNewForm_class(object):
                 # TODO: Optimization -- do something much more
                 # intelligent in case character is not defined.  For
                 # example, compute it using the diamond operators <d>
-                eps = K(self.character_value(p))
+                eps = K(self.character().value(p))
                 # a_{p^r} := a_p * a_{p^{r-1}} - eps(p)p^{k-1} a_{p^{r-2}}
                 apr1 = self.coefficient_n_recursive(pr//p)
                 ap = self.coefficient_n_recursive(p)
