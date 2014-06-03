@@ -58,9 +58,9 @@ def render_elliptic_modular_form_space(level=None, weight=None, character=None, 
         dimtbl = DimensionTable()
     else:
         dimtbl = DimensionTable(1)
-    if not dimtbl.is_in_db(level, weight, character):
-        emf_logger.debug("Data not available")
-        return render_template("not_available.html")
+    #if not dimtbl.is_in_db(level, weight, character):
+    #    emf_logger.debug("Data not available")
+    #    return render_template("not_available.html")
     emf_logger.debug("Created dimension table in render_elliptic_modular_form_space")
     info = set_info_for_modular_form_space(**info)
     emf_logger.debug("keys={0}".format(info.keys()))
@@ -123,12 +123,12 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
         info['name_new'] = "\(S_{ %s }^{new}(%s) \)" % (WMFS.weight(), WMFS.level())
         info['name_old'] = "\(S_{ %s }^{old}(%s) \)" % (WMFS.weight(), WMFS.level())
     else:
-        conrey_char = WMFS.conrey_character()
-        conrey_char_name = WMFS.conrey_character_name()
-        info['conrey_character_name'] = '\( ' + conrey_char_name + '\)'
-        info['character_url'] = url_character(type='Dirichlet', modulus=WMFS.level(), number=conrey_char.number())
-        info['name_new'] = "\(S_{ %s }^{new}(%s,%s) \)" % (WMFS.weight(), WMFS.level(), conrey_char_name)
-        info['name_old'] = "\(S_{ %s }^{old}(%s,%s) \)" % (WMFS.weight(), WMFS.level(), conrey_char_name)
+        character = WMFS.character()
+        char_name = WMFS.character().latex_name()
+        info['character_name'] = '\( ' + char_name + '\)'
+        info['character_url'] = url_character(type='Dirichlet', modulus=WMFS.level(), number=character.number())
+        info['name_new'] = "\(S_{ %s }^{new}(%s,%s) \)" % (WMFS.weight(), WMFS.level(), char_name)
+        info['name_old'] = "\(S_{ %s }^{old}(%s,%s) \)" % (WMFS.weight(), WMFS.level(), char_name)
     info['dimension_cusp_forms'] = WMFS.dimension_cusp_forms()
     info['dimension_mod_forms'] = WMFS.dimension_modular_forms()
     info['dimension_new_cusp_forms'] = WMFS.dimension_new_cusp_forms()

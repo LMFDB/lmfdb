@@ -56,6 +56,7 @@ class WebChar(object):
             '_number' : number,
             '_character': None,
             '_order': None,
+            '_is_trivial': None,            
             '_conductor': None,
             '_latex_name': None,
             '_name': None,
@@ -164,7 +165,15 @@ class WebChar(object):
         if self._sage_character is None:
             self._sage_character = self.character().sage_character()
         return self._sage_character
-        
+
+    def is_trivial(self):
+        r"""
+        Check if self is trivial.
+        """
+        if self._is_trivial is None:
+            self._is_trivial = self.character().is_trivial()
+        return self._is_trivial
+            
     def latex_name(self):
         r"""
         Return the latex representation of the character of self.

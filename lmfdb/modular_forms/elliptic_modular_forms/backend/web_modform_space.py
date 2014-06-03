@@ -168,7 +168,7 @@ class WebModFormSpace_class(object):
         """
         if self._character is None:
             self._character = WebChar(self.level(),self.chi())
-        
+        return self._character
     def group(self):
         r"""
         The group of self.
@@ -372,7 +372,7 @@ class WebModFormSpace_class(object):
     # internal methods to generate properties of self
     def galois_decomposition(self):
         r"""
-        We compose the new subspace into galois orbits.
+        We compose the new subspace into galois orbits of new cusp forms.
         """
         from sage.monoids.all import AlphabeticStrings
         if(len(self._galois_decomposition) != 0):
@@ -383,7 +383,7 @@ class WebModFormSpace_class(object):
             decomp = self.newform_factors()
             if len(decomp)>0:
                 L = filter(lambda x: x.is_new() and x.is_cuspidal(), decomp)
-                emf_logger.debug("computed L:{0}".format(L))
+                emf_logger.debug("found L:{0}".format(L))
             elif self._computation_too_hard():
                 L = []
                 raise IndexError,"No decomposition was found in the database!"
@@ -518,13 +518,13 @@ class WebModFormSpace_class(object):
         emf_logger.debug("returning F! :{0}".format(F))
         return F
 
-#    def galois_orbit(self, orbit, prec=None):
-#        r"""
-#        Return the q_eigenform nr. orbit in self
-#        """
-#        if(prec is None):
-#            prec = self._prec
-#        return self.galois_decomposition()[orbit].q_eigenform(prec, 'x')
+    def galois_orbit(self, orbit,prec=None):
+        r"""
+        Return the q_eigenform nr. orbit in self
+        """
+        if prec is None:
+            prec = self._prec
+        return self.galois_decomposition()[orbit].q_eigenform(prec, 'x')
 
     def oldspace_decomposition(self):
         r"""
@@ -769,7 +769,9 @@ class WebModFormSpace_class(object):
         return ss
 
     def galois_orbit_poly_info(self, orbitnr, prec=10):
-
+        r"""
+        Set the information about the defining polynomial of a Galois orbit.
+        """
         if self._galois_orbit_poly_info.get(orbitnr)<>None:
             return self._galois_orbit_poly_info[orbitnr]
         orbit = self.galois_orbit(orbitnr, prec)

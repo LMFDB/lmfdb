@@ -117,12 +117,13 @@ def set_info_for_one_modular_form(level=None, weight=None, character=None, label
         name += "\(\mathrm{SL}_{2}(\mathbb{Z})\)"
     else:
         name += "\(\Gamma_0(%s)\)" % (level)
-    if int(character) != 0 and hasattr(WNF,"conrey_character"):
-        conrey_char = WNF.conrey_character()
-        conrey_char_name = WNF.conrey_character_name()
-        name += " with character \(%s\)" % (conrey_char_name)
-    else:
+    if int(character) == 0 or int(character)==1:
         name += " with trivial character"
+    else:
+        character = WNF.character()
+        char_name = WNF.character().name()
+        name += " with character \(%s\)" % (char_name)
+
     info['name'] = name
     info['title'] = 'Modular Form ' + info['name']
     if 'error' in info:
