@@ -47,121 +47,12 @@ from plot_dom import draw_fundamental_domain
 from emf_core import html_table, len_as_printed
 
 from sage.rings.number_field.number_field_base import NumberField as NumberField_class
-from lmfdb.modular_forms.elliptic_modular_forms.backend import connect_to_modularforms_db
-
-try:
-    from dirichlet_conrey import *
-except:
-    emf_logger.critical("Could not import dirichlet_conrey!")
-
+from lmfdb.modular_forms.elliptic_modular_forms.backend import connect_to_modularforms_db,get_files_from_gridfs
 from web_modform_space import WebModFormSpace_class,WebModFormSpace
+from web_character import WebChar
 
-
-class NewWebChar(object):
-    r"""
-    Temporary class which should be replaced with 
-    WebDirichletCharcter once this is ok.
     
-    """
-    def __init__(self,modulus=0,number=0):
-        r"""
-        Init self as character of given number and modulus.
-        """
-        assert modulus >0 and number >0:
-        self._modulus = modulus
-        self._number = number
-
-        self._character = None  
-        self._order = None
-        self._conductor = None
-        self._character_latex_name = None
-        self._sage_character = None
-        self._url = None
-        self._values_algebraic = {}
-        self._values_float = {}
-        
-    def modulus(self):
-        r"""
-        Return the modulus of self.
-        """
-        return self._modulus
-    def number(self):
-        r"""
-        Return the number of self.
-        """
-        return self._number
-    def character(self):
-        r"""
-        Return self as a DirichletCharacter_conrey
-        """
-        if self._character == None:
-            self._character = DirichletCharacter_conrey(DirichletGroup_conrey(self._N),self._chi)
-        return self._character
-
-    def conductor(self):
-        r"""
-        Return the conductor of self.
-        """
-        if self._conductor == None:
-            self._conductor = self.character().conductor()
-        return self._conductor
-
-    def order(self):
-        r"""
-        Return the conductor of self.
-        """
-        if self._order == None:
-            self._order = self.character().order()
-        return self._order
-
-    def sage_character(self):
-        r"""
-        Return self as a sage character (e.g. so that we can get algebraic values)
-
-        """
-        ## Is cached in Conrey character
-        if self._sage_character == None:
-            self._sage_character = self.character.sage_character()
-        return self._sage_character
-        
-    def character_latex_name(self):
-        r"""
-        Return the latex representation of the character of self.
-        """
-        if self._character_latex_name==None:
-            self._character_latex_name = "\chi_{" + str(self.modulus()) + "}(" + str(self.number()) + ",\cdot)"
-        return self._character_latex_name
-
-    def value(self,x,value_format='algebraic'):
-        r"""
-        Return the value of self as an algebraic integer or float.
-        """
-        x = int(x)
-        if value_format =='algebraic':
-            y = self._values_algebraic.get(x)
-            if y == None:
-                y = self._values_algebraic[x]=self.sage_character()(x)
-            else:
-                self._values_algebraic[x]=y
-            return self._values_algebraic[x]
-        elif value_format=='float':  ## floating point
-            y = self._values_float.get(x)
-            if y == None:
-                y = self._values_float[x]=self.character()(x)
-            else:
-                self._values_float[x]=y
-            return self._values_float[x]
-        else:
-            raise ValueError,"Format {0} is not known!".format(value_format)
-    def url(self):
-        r"""
-        Return the url of self.
-        """
-        if self._url == None:
-            self._url = url_for('render_Dirichletwebpage',modulus=self.modulus(),number=self.number())
-        return self._url
-    
-def WebNewForm(N=1, k=2, chi=1, label='', prec=10, bitprec=53, display_bprec=26, parent=None, data={}, compute=False, verbose=-1,get_from_db=True):
+def WebNewForm(N=1, k=2, chi=1, label='', prec=10, bitprec=53, display_bprec=26, parent=None, data=None, compute=False, verbose=-1,get_from_db=True):
     r"""
     Constructor for WebNewForms with added 'nicer' error message.
     """
@@ -170,10 +61,8 @@ def WebNewForm(N=1, k=2, chi=1, label='', prec=10, bitprec=53, display_bprec=26,
         if k % 2 == 1:
             emf_logger.debug("Only zero function here with N,k,chi,label={0}.".format( (N,k,chi,label)))
             return 0
-    if data<>{}:
-        emf_logger.debug("incoming data in construction : {0}".format(data.get('N'),data.get('k'),data.get('chi')))
-    else:
-        emf_logger.debug("No incoming data!")
+    if data is None: data = {}
+    emf_logger.debug("incoming data in construction : {0}".format(data.get('N'),data.get('k'),data.get('chi')))
     try: 
         F = WebNewForm_class(N=N, k=k, chi=chi, label=label, prec=prec, bitprec = bitprec, display_bprec=display_bprec, parent = parent, data = data, compute = compute, verbose = verbose,get_from_db = get_from_db)
     except ArithmeticError as e:#Exception as e:
@@ -189,14 +78,14 @@ class WebNewForm_class(object):
     Class for representing a (cuspidal) newform on the web.
     TODO: Include the computed data in the original database so we won't have to compute here at all.
     """
-    def __init__(self, N=1, k=2, chi=1, label='', prec=10, bitprec=53, display_bprec=26,parent=None, data={}, compute=False, verbose=-1,get_from_db=True):
+    def __init__(self, N=1, k=2, chi=1, label='', prec=10, bitprec=53, display_bprec=26,parent=None, data=None, compute=False, verbose=-1,get_from_db=True):
         r"""
         Init self as form with given label in S_k(N,chi)
         """
         emf_logger.debug("WebNewForm with N,k,chi,label={0}".format( (N,k,chi,label)))
         # Set defaults.
-        emf_logger.debug("incoming data in construction : {0},{1},{2},{3}".format(data.get('N'),data.get('k'),data.get('chi'),data.get('label')))        
-        #emf_logger.debug("incoming data: {0}".format(data))
+        emf_logger.debug("incoming data in construction : {0},{1},{2},{3}".format(data.get('N'),data.get('k'),data.get('chi'),data.get('label')))
+        if data is None: data = {}
         d  = {
             '_chi' : int(chi),'_k' : int(k),'_N' : int(N),
             '_label' : str(label), '_fi':None,
@@ -211,8 +100,12 @@ class WebNewForm_class(object):
             '_f' : None,
             '_q_expansion' : None,
             '_q_expansion_str' : '',
-            '_embeddings' : [],
-            '_embeddings_latex' : [],            
+            '_embeddings' :
+                {
+                'prec':0,
+                'bitprec':bitprec,
+                'values':[],
+                'latex':[]},
             '_base_ring': None,
             '_base_ring_as_dict' : {},
             '_coefficient_field': None,
@@ -222,11 +115,11 @@ class WebNewForm_class(object):
             '_is_CM' : [],
             '_cm_values' : {},
             '_satake' : {},
-            '_dimension' : -1,
+            '_dimension' : None,
             '_is_rational' : None,
-            '_degree' : 0,
-            '_absolute_degree' : 0,
-            '_relative_degree' : 0,
+            '_degree' : None,
+            '_absolute_degree' : None,
+            '_relative_degree' : None,
             '_character' : None,
             '_character_naming_scheme' : 'Conrey', # To make it clear in case someone simply looks at a dictionary.
             '_name' : "{0}.{1}.{2}{3}".format(N,k,chi,label),
@@ -235,6 +128,9 @@ class WebNewForm_class(object):
         self.__dict__.update(d)
         emf_logger.debug("label = {0}".format(label))
         emf_logger.debug("label = {0}".format(self._label))
+        insert_in_db = False
+        if data <> {}: # Check if we add something which was not in the database
+            insert_in_db = True
         if self._label<>'' and get_from_db:            
             d = self.get_from_db(self._N,self._k,self._chi,self._label)
             emf_logger.debug("Got data:{0} from db".format(d))
@@ -253,7 +149,7 @@ class WebNewForm_class(object):
         emf_logger.debug("name={0}".format(self._name))
         if compute: ## Compute all data we want.
             emf_logger.debug("compute")
-            self._update_aps(insert_in_db=False)
+            t0 = self._update_aps(insert_in_db=False)
             emf_logger.debug("compute q-expansion")
             self.q_expansion_embeddings(prec, bitprec,insert_in_db=False)
             emf_logger.debug("as polynomial")
@@ -321,7 +217,7 @@ class WebNewForm_class(object):
         r"""
         Return the simple factor of the ambient space corresponding to self. 
         """
-        if self._f == None:
+        if self._f is None:
             self._f = self.parent().galois_decomposition()[self.fi()]
         return self._f
 
@@ -329,15 +225,15 @@ class WebNewForm_class(object):
         r"""
         Return the character of self.
         """
-        if self._character == None:
-            self._character = NewWebChar(modulus=self.level(),number=self.chi())
+        if self._character is None:
+            self._character = WebChar(modulus=self.level(),number=self.chi())
         return self._character
 
     def fi(self):
         r"""
         The number of self in the Galois orbits of self.parent()
         """
-        if self._fi == None:
+        if self._fi is None:
             if self._label not in self.parent().labels():
                 raise ValueError,"Self (with label {0}) is not in the set of Galois orbits of self.parent()!".format(self._label)
             self._fi = self.parent().labels().index(self._label)
@@ -401,7 +297,7 @@ class WebNewForm_class(object):
         emf_logger.debug("Found rec={0}".format(f))
         if f<>None:
             id = f.get('_id')
-            fs = gridfs.GridFS(C[db_name],'WebNewforms')
+            fs = get_files_from_gridfs('WebNewforms')
             f = fs.get(id)
             emf_logger.debug("Getting rec={0}".format(f))
             d = loads(f.read())
@@ -414,11 +310,10 @@ class WebNewForm_class(object):
         WebNewforms.files
         """
         emf_logger.debug("inserting self into db! name={0}".format(self._name))
-        C = lmfdb.base.getDBConnection()
-        fs = gridfs.GridFS(C[db_name], 'WebNewforms')
-        collection = C[db_name].WebNewforms.files
+        C = connect_to_modularforms_db('WebNewForms.files')
+        fs = get_files_from_gridfs('WebNewforms')
         s = {'name':self._name,'version':float(self._version)}
-        rec = collection.find_one(s)
+        rec = C.find_one(s)
         if rec:
             id = rec.get('_id')
         else:
@@ -479,7 +374,7 @@ class WebNewForm_class(object):
         if self._base_ring_as_dict<>{}:
             emf_logger.debug("base_ring={0}".format(self._base_ring_as_dict))
             self._base_ring = number_field_from_dict(self._base_ring_as_dict)
-        if self._base_ring == None:
+        if self._base_ring is None:
             self._base_ring = self.as_factor().base_ring()
         return self._base_ring
 
@@ -506,7 +401,7 @@ class WebNewForm_class(object):
         r"""
         Degree of the field of coefficient relative to its base ring.
         """
-        if self._relative_degree <= 0:
+        if self._relative_degree is None:
             self._relative_degree = self.coefficient_field().absolute_degree()/self.base_ring().absolute_degree()
         return self._relative_degree
 
@@ -517,7 +412,7 @@ class WebNewForm_class(object):
         r"""
         Degree of the field of coefficient relative to its base ring.
         """
-        if self._absolute_degree <= 0:
+        if self._absolute_degree is None:
             self._absolute_degree = self.coefficient_field().absolute_degree()
         return self._absolute_degree
         
@@ -530,7 +425,7 @@ class WebNewForm_class(object):
         return self._parent
 
     def is_rational(self):
-        if self._is_rational==None:
+        if self._is_rational is None:
             if self.coefficient_field().degree()==1:
                 self._is_rational  = True
             else:
@@ -551,30 +446,34 @@ class WebNewForm_class(object):
         else:
             self._dimension =  0
         return self._dimension
-
-
     def q_expansion_embeddings(self, prec=10, bitprec=53,format='numeric',display_bprec=26,insert_in_db=True):
+        if format=='latex':
+            return self._embeddings['latex']
+        else:
+            return self._embeddings['values']
+            
+    def _q_expansion_embeddings(self, prec=10, bitprec=53,format='numeric',display_bprec=26,insert_in_db=True):
         r""" Compute all embeddings of self into C which are in the same space as self.
+        Return 0 if we didn't compute anything new, otherwise return 1.
         """
         emf_logger.debug("computing embeddings of q-expansions : has {0} embedded coeffs. Want : {1} with bitprec={2}".format(len(self._embeddings),prec,bitprec))
         if display_bprec > bitprec:
             display_bprec = bitprec
-        width = 0
+        ## First check if we have sufficient data
+        if self._embeddings['prec'] >= prec or self._embeddings['bitprec'] >= bitprec:
+            return 0 ## We should already have sufficient data.
+        ## Else we compute new embeddings.
         CF = ComplexField(bitprec)
-        if self._embeddings == None:
-            self._embeddings = []
-        if self._embeddings_latex == None:
-            self._embeddings_latex = []            
-        # If we need more coefficients or higher precision than we currently have then we need to compute more.
-        #
-        if len(self._embeddings)>0:
-            self._bitprec = self._embeddings[0][0].prec()
-        if bitprec > self._bitprec: # Then we recompute
-            self._embeddings = []
+        # First wee if we need higher precision, in which case we reset all coefficients:
+        if self._embeddings['bitprec'] < bitprec:
+            self._embeddings['values']=[]
+            self._embeddings['latex']=[]
+            self._embeddings['prec']=0
+        # See if we have need of more coefficients
         nstart = len(self._embeddings)
-        emf_logger.debug("has embeddings{0}:".format(nstart))
-        deg = self.absolute_degree()
-        for n in range(nstart,prec):
+        emf_logger.debug("Should have {0} embeddings".format(self._embeddings['prec']))
+        emf_logger.debug("Computing new stuff !")
+        for n in range(self._embeddings['prec'],prec):
             try:
                 cn = self.coefficient(n)
             except IndexError:
@@ -583,38 +482,20 @@ class WebNewForm_class(object):
                 cn_emb = cn.complex_embeddings(bitprec)
             else:
                 cn_emb = [ CF(cn) for i in range(deg) ]
-            self._embeddings.append(cn_emb)
-        nstart = len(self._embeddings_latex)
-        emf_logger.debug("has embeddings_latex:{0}".format(nstart))            
-        for n in range(nstart,prec):
-            try: 
-                cn_emb=self._embeddings[n]
-            except IndexError:
-                if self._embeddings==[]:
-                    break
-                continue
-            cn_emb_latex = []
-            for x in cn_emb:
+            self._embeddings['values'].append(cn_emb)
+        self._embeddings['prec'] = len(self._embeddings['values'])
+        # See if we also need to recompute the latex strings
+        if display_bprec > self._embeddings['bitprec']:
+            self._embeddings['latex'] = []  ## Have to redo these
+        numc = len(self._embeddidngs['latex'])
+        for n in range(numc,prec):
+            cn_emb = []
+            for x in self._embeddings['values'][n]:
                 t = my_complex_latex(x,display_bprec)
-                cn_emb_latex.append(t)
-
-            self._embeddings_latex.append(cn_emb_latex)                   
-            if n<=6:
-                for i in range(deg):
-                    emf_logger.debug("embedding of C={0}".format(cn_emb_latex))
-                    emf_logger.debug("embedding of C[{0}][{1}]={2}".format(n,i,self._embeddings[n][i].n(bitprec)))
-        if insert_in_db:
-            self.insert_into_db()
-        if format=='latex':
-            return self._embeddings_latex
-        else:
-            if bitprec < self._embeddings[0][0].prec():
-                res = []
-                for x in self._embeddings:
-                    res.append([y.n(bitprec) for y in x])
-                return res
-            else:
-                return self._embeddings
+            cn_emb_latex.append(t)
+            self._embeddidngs['latex'].append(cn_emb)
+        emf_logger.debug("has embeddings_latex:{0}".format(nstart))
+        return 1
 
     def is_cuspidal(self):
         return 1
@@ -628,7 +509,7 @@ class WebNewForm_class(object):
             if self.is_cuspidal():
                 return self.coefficient_field()(0)
         c = self._coefficients.get(n,None)
-        if c == None:
+        if c is None:
             c = self.coefficients([n],insert_in_db)[0] 
         return c
 
@@ -649,7 +530,7 @@ class WebNewForm_class(object):
         for n in nrange:
             c = self._coefficients.get(n,None)
             emf_logger.debug("c({0}) in self._coefficients={1}".format(n,c))            
-            if c == None:
+            if c is None:
                 if n == 0 and self.is_cuspidal():
                     c = self.coefficient_field()(0)
                 else:
@@ -681,7 +562,7 @@ class WebNewForm_class(object):
             return 1
         F = arith.factor(n)
         prod = None
-        if self._ap == None or self._ap == {}:
+        if self._ap is None or self._ap == {}:
             self._update_aps()
             if self._ap == {}:
                raise IndexError,"Have no coefficients!"
@@ -731,14 +612,15 @@ class WebNewForm_class(object):
     def _update_aps(self,maxp_needed=None,insert_in_db=True):        
         r"""
         Update ap's from parent ambient.
+        Return 1 if we have computed / fetched something, else 0
         """
         emf_logger.debug("before update self_ap={0}".format(self._ap))
         aps = self._ap
         ambient_aps = self.parent().aps().get(self.label(),{})
         if ambient_aps == {}:
-            return
+            return 0 
         if self._ap <> {} and max(ambient_aps.keys())<=max(self._ap.keys()):
-            return
+            return 0
         # Otherwise we can get something new. Let's take the appripriate file
         l=ambient_aps.keys(); l.sort()
         if maxp_needed <> None:
@@ -764,8 +646,7 @@ class WebNewForm_class(object):
         except Exception as e:
             emf_logger.debug("Could not update ap's from {0}. Error: {1}".format(ambient_aps,e.message))
             pass
-
-    
+        return 1
  
                       
     def coefficients_old(self, nrange=range(1, 10),insert_in_db=True):
@@ -839,7 +720,7 @@ class WebNewForm_class(object):
         r"""
         Return the q-expansion of self to precision prec.
         """
-        if prec == None:
+        if prec is None:
             prec = self._prec
 
         if not isinstance(self._q_expansion,PowerSeries_poly):
@@ -907,7 +788,7 @@ class WebNewForm_class(object):
         
         if(len(self._atkin_lehner_eigenvalues.keys()) > 0):
             return self._atkin_lehner_eigenvalues
-        if(self._chi != 0):
+        if self._chi != 1:
             return {}
         res = dict()
         for Q in divisors(self.level()):
@@ -1591,7 +1472,7 @@ class WebNewForm_class(object):
 
 
         """
-        if prec == None:
+        if prec is None:
             prec = self._prec
         emf_logger.debug("PREC2: {0}".format(prec))
         s = my_latex_from_qexp(str(self.q_expansion(prec)))
