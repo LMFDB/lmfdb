@@ -128,5 +128,10 @@ Sharing Your Work
 ```
    Here, the option -u tells git to set up the remote branch `origin/new_feature` to be the corresponding upstream
    branch you push to.
+ * Also, you should make sure from time to time that you pull the latest changes from the official LMFDB repository.
+   For this reason, we added it to the remotes. Now you can do
+```
+    git pull --rebase upstream 
+```
  * Tell the [lmdb mailing list](https://groups.google.com/forum/#!forum/lmdb) that you have some new code!
  * You should also issue a pull request at github (from your feature branch `new_feature`) at the same time.
