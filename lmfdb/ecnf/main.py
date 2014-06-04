@@ -72,6 +72,10 @@ class FIELD(object):
         """
         return self.K([QQ(str(c)) for c in s])
 
+    def field_knowl(self):
+        from lmfdb.WebNumberField import nf_display_knowl
+        return nf_display_knowl(self.label, getDBConnection(), self.pretty_label)
+
 def make_field(label):
     if label in field_list:
         return field_list[label]
@@ -203,9 +207,23 @@ class ECNF(object):
                                })
 
         if self.field.real_quadratic:
-            self.hmf_label = self.field.label+"-"+self.conductor_label+"-"+self.iso_label
+            self.hmf_label = "-".join([self.field.label,self.conductor_label,self.iso_label])
         if self.field.imag_quadratic:
-            self.bmf_label = self.field.label+"-"+self.conductor_label+"-"+self.iso_label
+            self.bmf_label = "-".join([self.field.label,self.conductor_label,self.iso_label])
+
+        self.properties = [
+            ('Base field', self.field.pretty_label),
+            ('Label' , self.label),
+            ('Conductor' , self.cond),
+            ('Conductor norm' , self.cond_norm),
+            ('j-invariant' , self.j),
+            ('CM' , self.cm_bool),
+            ('Base change' , self.bc),
+            ('Torsion order' , self.ntors),
+            ('Rank' , self.rk),
+            ]
+
+
 
 def get_bread(*breads):
     bc = [("ECNF", url_for(".index"))]
@@ -223,7 +241,9 @@ def index():
         return elliptic_curve_search(data=request.args)
     bread = get_bread()
     data = {}
-    data['fields'] = [(nf,field_pretty(nf)) for nf in db_ecnf().distinct("field_label") if int(nf.split(".")[2])<200]
+    nfs = db_ecnf().distinct("field_label")
+    nfs = ['2.0.4.1', '2.2.5.1', '3.1.23.1']
+    data['fields'] = [(nf,field_pretty(nf)) for nf in nfs if int(nf.split(".")[2])<200]
     return render_template("ecnf-index.html",
         title="Elliptic Curves over Number Fields",
         data=data,
@@ -244,28 +264,16 @@ def show_ecnf(nf, label):
     label = "-".join([nf_label, label])
     #print "looking up curve with full label=%s" % label
     ec = ECNF.by_label(label)
-    title = "Elliptic Curve %s over Number Field %s" % (label, ec.field.pretty_label)
+    title = "Elliptic Curve %s over Number Field %s" % (ec.short_label, ec.field.pretty_label)
     info = {}
-    properties = [
-('Base field', ec.field.pretty_label),
-('Class number', str(ec.field.class_number)),
-('Label' , ec.label),
-('Conductor' , ec.cond),
-('Conductor norm' , ec.cond_norm),
-('j-invariant' , ec.j),
-('CM' , ec.cm_bool),
-('Base change' , ec.bc),
-('Torsion order' , ec.ntors),
-('Rank' , ec.rk),
-]
 
     return render_template("show-ecnf.html",
         credit=credit,
         title=title,
         bread=bread,
         ec=ec,
-        properties = properties,
-        properties2 = properties,
+#        properties = ec.properties,
+        properties2 = ec.properties,
         info=info)
 
 

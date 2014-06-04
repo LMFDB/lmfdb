@@ -2,8 +2,6 @@
 
 {% block content %}
 
-<h2>Search page for Elliptic Curves over Number Fields</h2>
-
 <div>
 The database currently contains elliptic curves over a few number
 fields only.
@@ -19,6 +17,70 @@ By base {{ KNOWL('nf',title = "number field")}}:
 {% endfor %}
 </p>
 
+<h2> Search </h2>
+Please enter a value or leave blank:
+<p></p>
+<form>
+  <table>
+    <tr>
+     <td>Base {{ KNOWL('nf',title = "number field") }}</td>
+     <td>
+     <input type='text' name='field' example="2.2.5.1" size=10 value="{{field_label}}" />
+     </td>
+     <td><span class="formexample"> e.g. 2.2.5.1 or Qsqrt5</span></td>
+    </tr>
+
+   <tr>
+     <td>{{ KNOWL('ec.conductor',title = "Conductor") }} norm</td>
+     <td>
+     <input type='text' name='conductor_norm' example="65" size=10 value="{{conductor_norm}}" />
+     </td>
+     <td><span class="formexample"> e.g. 65 or 1-100</span></td>
+
+  <td align=left>Include isogenous curves?</td>
+  <td>
+         <select name='include_isogenous'>
+           <option value="off">No</option>
+           <option value="on" selected="yes">Yes</option>
+         </select>
+  </td>
+ </tr>
+
+    <tr>
+          <td>
+          {{ KNOWL('ec.torsion_order',title="torsion order") }}
+          </td>
+          <td>
+          <input type='text' name='torsion' example="2" size=10 value="{{torsion}}" />
+          </td>
+          <td>
+          <span class="formexample"> e.g. 2 </span>
+          </td>
+
+          <td>
+          {{ KNOWL('ec.torsion_structure', title="torsion structure") }}
+          </td>
+          <td>
+          <input type='text' name='torsion_structure' example="[2,4]" size=10 value="{{torsion_structure}}" />
+          </td>
+          <td>
+          <span class="formexample"> e.g. [2,4] </span>
+          </td>
+      </tr>
+
+ <tr>
+  <td align=left>Maximum number of curves to display</td>
+  <td>
+  <input type='text' name='count'  example='10' size=10 value="{{count}}" />
+  </td>
+ </tr>
+
+  </table>
+<p></p>
+<td><button type='submit' value='Search'>Search</button></td>
+<p></p>
+</form>
+
 <h2> Find a specific curve by label</h2>
 <form>
 <input type='text' name='label' size=25 example="2.2.5.1-31.1-a1">
@@ -30,49 +92,6 @@ By base {{ KNOWL('nf',title = "number field")}}:
 {% endif %}
 </form>
 
-<h2> Search </h2>
-Please enter a value or leave blank:
-<p></p>
-<form>
-  <table>
-    <tr>
-     <td>Base {{ KNOWL('nf',title = "number field") }}</td>
-     <td>
-     <input type='text' name='field' example="2.2.5.1" size=10 value="{{field_label}}" />
-     </td>
-     <td><span class="formexample"> e.g. 2.2.5.1 or Qqsrt5</span></td>
-    </tr>
-
-   <tr>
-     <td>Conductor norm</td>
-     <td>
-     <input type='text' name='conductor_norm' example="65" size=10 value="{{conductor_norm}}" />
-     </td>
-     <td><span class="formexample"> e.g. 65 or 1-100</span></td>
-
-    </tr>
- <tr>
-  <td align=left>Include isogenous curves?</td>
-  <td>
-         <select name='include_isogenous'>
-           <option value="off">No</option>
-           <option value="on" selected="yes">Yes</option>
-         </select>
-  </td>
- </tr>
- <tr>
-  <td align=left>Maximum number of curves to display</td>
-  <td>
-  <input type='text' name='count'  example='10' size=10 value="{{count}}" />
-  </td>
- </tr>
-
-
-  </table>
-<p></p>
-<td><button type='submit' value='Search'>Search</button></td>
-
-</form>
 
 {% if DEBUG %}
 <hr>

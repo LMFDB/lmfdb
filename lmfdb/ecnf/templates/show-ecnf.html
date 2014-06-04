@@ -55,26 +55,19 @@ function show_code(system) {
 #}
 
 <div>
-  <h2>  Base Field  <a href="{{ url_for('number_fields.by_label', label=ec.field.label) }}">{{ ec.field.pretty_label }}</a> </h2>
+  <h2>  Base Field   {{ ec.field.field_knowl()|safe }}
+
+<a href="{{ url_for('number_fields.by_label',
+         label=ec.field.label)}}">{{ ec.field.pretty_label }}</a>
+
+</h2>
 <p>
-<table>
-<!--<tr><td>Label:<td><a href="{{ url_for('number_fields.by_label', label=ec.field.label) }}">{{ec.field.label}}</a> </tr>-->
-<tr><td>Degree:<td>              {{ ec.field.degree }} </tr>
-<tr><td>Discriminant:<td>        {{ ec.field.disc }} </tr>
-<tr><td>Generator:<td>           {{ ec.field.generator }},
-    <td> with minimal polynomial {{ ec.field.poly }}</tr>
-<tr>
-<td>
-Fundamental {% if ec.field.unit_rank == 1 %}unit{% else %}units{% endif %}:
-</td>
-<td>   {{ ec.field.funits }}</tr>
-<tr><td>Class Number:<td>        {{ ec.field.class_number }} </tr>
-</table>
+Generator {{ ec.field.generator }}, with minimal polynomial {{ ec.field.poly }}
 </p>
 </div>
 
 <div>
-<h2>Weierstass Equation</h2>
+<h2>Weierstrass Equation</h2>
 {{ ec.equn }}
 <h2>Invariants</h2>
 
