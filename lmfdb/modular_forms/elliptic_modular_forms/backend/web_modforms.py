@@ -137,8 +137,8 @@ class WebNewForm_class(object):
         # Fetch data
         if self._label<>'' and get_from_db:            
             d = self.get_from_db(self._N, self._k, self._chi, self._label)
-            emf_logger.debug("Got data:{0} from db".format(d))
-            data.update(d)
+            emf_logger.debug("Got data in WebNewForm: {0} from db".format(d))
+            self.__dict__.update(d)
             
         if not isinstance(self._parent,WebModFormSpace_class):
             if self._verbose > 0:
@@ -975,22 +975,30 @@ class WebNewForm_class(object):
 
         EXAMPLES::
         """
-        [t, l] = self.twist_info(prec)
-        if(t):
-            return "f is minimal."
+        t = self.twist_info(prec)
+        if isinstance(t,list) and len(t)==2:
+            [t, l] = t
+            if(t):
+                return "f is minimal."
+            else:
+                return "f is a twist of " + str(l[0])
         else:
-            return "f is a twist of " + str(l[0])
+            return "Not available."
 
     def print_is_CM(self):
         r"""
         """
-        [t, x] = self.is_CM()
-        if(t):
-            ix = x.parent().list().index(x)
-            m = x.parent().modulus()
-            s = "f has CM with character nr. %s modulo %s of order %s " % (ix, m, x.order())
+        t = self.is_CM()
+        if isinstance(t,list) and len(t)==2:
+            [t, x] = t
+            if(t):
+                ix = x.parent().list().index(x)
+                m = x.parent().modulus()
+                s = "f has CM with character nr. %s modulo %s of order %s " % (ix, m, x.order())
+            else:
+                s = ""
         else:
-            s = ""
+            s = "Not available."
         return s
 
     def present(self):
