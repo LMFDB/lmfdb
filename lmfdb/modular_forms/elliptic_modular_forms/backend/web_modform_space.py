@@ -45,7 +45,6 @@ def WebModFormSpace(N=1, k=2, chi=1, cuspidal=1, prec=10, bitprec=53, data=None,
     r"""
     Constructor for WebNewForms with added 'nicer' error message.
     """
-    if data is None: data = {}
     if cuspidal <> 1:
         raise IndexError,"We are very sorry. There are only cuspidal spaces currently in the database!"
     #try: 
@@ -296,21 +295,27 @@ class WebModFormSpace_class(object):
 
     def f(self, i):
         r"""
-        Return function f in the set of newforms on self. Here i is either a label, e.g. 'a' or an integer.
+          Return function f in the set of newforms on self. Here i is either a label, e.g. 'a' or an integer.
         """
+        from web_modforms import WebNewForm
+        
         if (isinstance(i, int) or i in ZZ):
-            if i <len(self.labels()):
+            if i < len(self.labels()):
                 i = self.labels()[i]
             else:
                 raise IndexError,"Form nr. {i} does not exist!".format(i=i)
-        if not i in self._galois_orbits_labels:
-            raise IndexError,"Form wih label: {i} does not exist!".format(i=i)
+        #if not i in self._galois_orbits_labels:
+        #    raise IndexError,"Form wih label: {i} does not exist!".format(i=i)
         if self._newforms.has_key(i) and self._newforms[i]<>None:
             F = self._newforms[i]
         else:
             F = WebNewForm(N=self._N,k=self._k,  chi=self._chi, parent=self, label=i)
+            self._newforms[i] = F
         emf_logger.debug("returning F! :{0}".format(F))
         return F
+
+    def galois_decomposition(self):
+        return self._galois_decomposition
 
     def galois_orbit(self, orbit,prec=None):
         r"""

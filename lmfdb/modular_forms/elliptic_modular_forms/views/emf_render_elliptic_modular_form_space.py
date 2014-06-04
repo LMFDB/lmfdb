@@ -27,7 +27,8 @@ from lmfdb.utils import ajax_more, ajax_result, make_logger, to_dict, url_charac
 from sage.all import *
 from sage.modular.dirichlet import DirichletGroup
 from lmfdb.base import app, db
-from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms import WebModFormSpace, WebNewForm,connect_to_modularforms_db
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms import WebNewForm,connect_to_modularforms_db
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_classes import ClassicalMFDisplay, DimensionTable
 from lmfdb.modular_forms import MF_TOP
 from lmfdb.modular_forms.elliptic_modular_forms import N_max_comp, k_max_comp, N_max_db, k_max_db
@@ -194,9 +195,9 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
     par_url = '?level=' + str(level) + '&weight=' + str(weight)
     parents.append((par_lbl, par_url))
     info['parents'] = parents
-    if 'character' in info:
-        info['character_order'] = WMFS.character_order()
-        info['character_conductor'] = WMFS.character_conductor()
+    #if 'character' in info:
+        #info['character_order'] = WMFS.character_order()
+        #info['character_conductor'] = WMFS.character_conductor()
     friends = list()
     lifts = list()
     if(('label' not in info) and info['old_decomposition'] != 'n/a'):

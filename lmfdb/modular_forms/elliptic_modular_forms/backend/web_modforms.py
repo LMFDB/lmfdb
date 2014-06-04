@@ -50,7 +50,6 @@ from emf_core import html_table, len_as_printed
 
 from sage.rings.number_field.number_field_base import NumberField as NumberField_class
 from lmfdb.modular_forms.elliptic_modular_forms.backend import connect_to_modularforms_db,get_files_from_gridfs
-from web_modform_space import WebModFormSpace_class,WebModFormSpace
 from web_character import WebChar
 
     
@@ -63,10 +62,9 @@ def WebNewForm(N=1, k=2, chi=1, label='', prec=10, bitprec=53, display_bprec=26,
         if k % 2 == 1:
             emf_logger.debug("Only zero function here with N,k,chi,label={0}.".format( (N,k,chi,label)))
             return 0
-    if data is None: data = {}
-    emf_logger.debug("incoming data in construction : {0}".format(data.get('N'),data.get('k'),data.get('chi')))
+    if not data is None: emf_logger.debug("incoming data in construction : {0}".format(data.get('N'),data.get('k'),data.get('chi')))
     try: 
-        F = WebNewForm_class(N=N, k=k, chi=chi, label=label, prec=prec, bitprec = bitprec, display_bprec=display_bprec, parent = parent, data = data, compute = compute, verbose = verbose,get_from_db = get_from_db)
+        F = WebNewForm_class(N=N, k=k, chi=chi, label=label, prec=prec, bitprec = bitprec, display_bprec=display_bprec, parent = parent, data = data, compute = compute, verbose = verbose, get_from_db = get_from_db)
     except ArithmeticError as e:#Exception as e:
         emf_logger.critical("Could not construct WebNewForm with N,k,chi,label={0}. Error: {1}".format( (N,k,chi,label),e))
         raise IndexError,"We are very sorry. The sought function could not be found in the database."
@@ -77,14 +75,23 @@ class WebNewForm_class(object):
     r"""
     Class for representing a (cuspidal) newform on the web.
     """
+    
     def __init__(self, N=1, k=2, chi=1, label='', prec=10, bitprec=53, display_bprec=26,parent=None, data=None, compute=False, verbose=-1,get_from_db=True):
         r"""
         Init self as form with given label in S_k(N,chi)
         """
+        from web_modform_space import WebModFormSpace_class, WebModFormSpace
+        
         emf_logger.debug("WebNewForm with N,k,chi,label={0}".format( (N,k,chi,label)))
+        if not data is None and isinstance(data, dict):
+            emf_logger.debug("incoming data in construction : {0},{1},{2},{3}".format(data.get('N'),data.get('k'),data.get('chi'),data.get('label')))
+            # Check if we add something which was not in the database
+            self.__dict__.update(data)
+            self.insert_into_db()
+        else:
+            data = {}
+
         # Set defaults.
-        emf_logger.debug("incoming data in construction : {0},{1},{2},{3}".format(data.get('N'),data.get('k'),data.get('chi'),data.get('label')))
-        if data is None: data = {}
         d  = {
             '_chi' : int(chi),'_k' : int(k),'_N' : int(N),
             '_label' : str(label), '_fi':None,
@@ -129,14 +136,9 @@ class WebNewForm_class(object):
 
         # Fetch data
         if self._label<>'' and get_from_db:            
-            d = self.get_from_db(self._N,self._k,self._chi,self._label)
+            d = self.get_from_db(self._N, self._k, self._chi, self._label)
             emf_logger.debug("Got data:{0} from db".format(d))
             data.update(d)
-            
-        # Check if we add something which was not in the database
-        if data <> {}:
-            self.__dict__.update(data)
-            self.insert_into_db()
             
         if not isinstance(self._parent,WebModFormSpace_class):
             if self._verbose > 0:
@@ -151,8 +153,6 @@ class WebNewForm_class(object):
         # What?
         self._check_consistency_of_labels()
         emf_logger.debug("name={0}".format(self._name))
-        emf_logger.debug("before end of __init__ f={0}".format(self.as_factor()))
-        emf_logger.debug("before end of __init__ type(f)={0}".format(type(self.as_factor())))
         emf_logger.debug("done __init__")
 
 ### Get basic properties of self
@@ -198,14 +198,6 @@ class WebNewForm_class(object):
         """
         return self._name
 
-    def as_factor(self):
-        r"""
-        Return the simple factor of the ambient space corresponding to self. 
-        """
-        if self._f is None:
-            self._f = self.parent().galois_decomposition()[self.fi()]
-        return self._f
-
     def character(self):
         r"""
         Return the character of self.
@@ -229,9 +221,7 @@ class WebNewForm_class(object):
         Return the precision of self.
         """
         return self._prec
-         
-
-            
+                     
 ## Functions related to storing / fetching data from database
 ##  
     def to_dict(self):
@@ -358,8 +348,8 @@ class WebNewForm_class(object):
         if self._base_ring_as_dict<>{}:
             emf_logger.debug("base_ring={0}".format(self._base_ring_as_dict))
             self._base_ring = number_field_from_dict(self._base_ring_as_dict)
-        if self._base_ring is None:
-            self._base_ring = self.as_factor().base_ring()
+        #if self._base_ring is None:
+        #    self._base_ring = self.as_factor().base_ring()
         return self._base_ring
 
     def coefficient_field(self):
@@ -377,7 +367,8 @@ class WebNewForm_class(object):
         try:
             self._coefficient_field = self._ap[2].parent()
         except KeyError:
-            self._coefficient_field = self.as_factor().q_eigenform(self._prec, names='x').base_ring()
+            emf_logger.debug("Cannot determine coefficient_field")
+            self._coefficient_field = None
         emf_logger.debug("coef_field={0}".format(self._coefficient_field))
         return self._coefficient_field
     
@@ -386,7 +377,8 @@ class WebNewForm_class(object):
         Degree of the field of coefficient relative to its base ring.
         """
         if self._relative_degree is None:
-            self._relative_degree = self.coefficient_field().absolute_degree()/self.base_ring().absolute_degree()
+            if self._coefficient_field() is not None:
+                self._relative_degree = self.coefficient_field().absolute_degree()/self.base_ring().absolute_degree()
         return self._relative_degree
 
     def degree(self):
@@ -397,11 +389,13 @@ class WebNewForm_class(object):
         Degree of the field of coefficient relative to its base ring.
         """
         if self._absolute_degree is None:
-            self._absolute_degree = self.coefficient_field().absolute_degree()
+            if not self.coefficient_field() is None:
+                self._absolute_degree = self.coefficient_field().absolute_degree()
         return self._absolute_degree
         
 
     def parent(self):
+        from web_modform_space import WebModFormSpace_class, WebModFormSpace
         if not isinstance(self._parent,WebModFormSpace_class):
             if self._verbose > 0:
                 emf_logger.debug("compute parent! label={0}".format(label))
@@ -633,17 +627,18 @@ class WebNewForm_class(object):
             if self._q_expansion_str<>'':
                 R = PowerSeriesRing(self.coefficient_field(), 'q')
                 q_expansion = R(self._q_expansion_str)
-                if q_expansion.degree()>=self.prec()-1: 
+                if q_expansion.degree() >= self.prec() - 1: 
                     q_expansion = q_expansion.add_bigoh(prec)
             if q_expansion == '':
                 self._q_expansion_str = ''
             else:
                 self._q_expansion_str = str(q_expansion.polynomial())   
             self._q_expansion = q_expansion
-        if self._q_expansion.prec() <= prec:
-            return self._q_expansion
-        elif self._q_expansion.prec() > prec:
-            return self._q_expansion.truncate_powerseries(prec)
+        if not self._q_expansion == '':
+            if self._q_expansion.prec() <= prec:
+                return self._q_expansion
+            elif self._q_expansion.prec() > prec:
+                return self._q_expansion.truncate_powerseries(prec)
         return self._q_expansion
 
     def atkin_lehner_eigenvalue(self, Q):
