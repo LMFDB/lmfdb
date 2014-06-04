@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 #*****************************************************************************
-#  Copyright (C) 2010 Fredrik Strömberg <fredrik314@gmail.com>,
-#  Stephan Ehlen <>
+#  Copyright (C) 2010
+#  Fredrik Strömberg <fredrik314@gmail.com>,
+#  Stephan Ehlen <stephan.j.ehlen@gmail.com>
+# 
 #  Distributed under the terms of the GNU General Public License (GPL)
 #
 #    This code is distributed in the hope that it will be useful,
@@ -153,14 +155,6 @@ class WebModFormSpace_class(object):
         """
         return self._group
 
-    ## More complicated properties (might need computation or database calls)
-    def modular_symbols(self):
-        r"""
-        Return the modular symbols of self.
-        
-        """
-        return self._modular_symbols
-
     def aps(self,prec=-1):
         r"""
         Return a list of aps, that is, Hecke eigenvalues of prime indices, for self.
@@ -227,45 +221,8 @@ class WebModFormSpace_class(object):
                 aplist[a][prec]=loads(fs.get(rec['_id']).read())
             if cur_prec > prec and prec>0: # We are happy with these coefficients.
                 return aplist
-        return aplist
-
-    def _get_modular_symbols(self):
-        r"""
-        Get Modular Symbols from database they exist.
-        """
-        modular_symbols = connect_to_modularforms_db('Modular_symbols.files')
-        key = {'k': int(self._k), 'N': int(self._N), 'cchi': int(self._chi)}
-        modular_symbols_from_db  = modular_symbols.find_one(key)
-        emf_logger.debug("found ms={0}".format(modular_symbols_from_db))
-        if modular_symbols_from_db is None:
-            ms = None
-        else:
-            id = modular_symbols_from_db['_id']
-            fs = get_files_from_gridfs('Modular_symbols')
-            ms = loads(fs.get(id).read())
-            self._id = id
-        return ms
-
-  
-            
-    def _get_newform_factors(self):
-        r"""
-        Get New form factors from database they exist.
-        """
-        factors = connect_to_modularforms_db('Newform_factors.files')
-        key = {'k': int(self._k), 'N': int(self._N), 'cchi': int(self._chi),}
-        factors_from_db  = factors.find(key)
-        emf_logger.debug("found factors={0}".format(factors_from_db))
-        if factors_from_db.count() == 0:
-            facts = []
-        else:
-            facts = []
-            fs = get_files_from_gridfs('Newform_factors')
-            for rec in factors_from_db:
-                facts.append(loads(fs.get(rec['_id']).read()))
-        return facts
-    
- 
+        return aplist  
+             
     def __repr__(self):
         r"""
         Return string representation of self.
@@ -324,7 +281,6 @@ class WebModFormSpace_class(object):
             return self.dimension_modular_forms()
         else:
             raise ValueError("Do not know the dimension of space of type {0}".format(self._cuspidal))
-
 
   
     def sturm_bound(self):
@@ -570,37 +526,3 @@ class WebModFormSpace_class(object):
         self._galois_orbit_poly_info[orbitnr] = poly, disc, is_relative
         self.insert_into_db()
         return self._galois_orbit_poly_info[orbitnr]
-
-    def print_geometric_data(self):
-        r""" Print data about the underlying group.
-        """
-
-        return print_geometric_data_Gamma0N(self.level())
-        # s="<div>"
-        # s=s+"\("+latex(G)+"\)"+" : "
-        # s=s+"\((\\textrm{index}; \\textrm{genus}, \\nu_2,\\nu_3)=("
-        # s=s+str(G.index())+";"+str(G.genus())+","
-        # s=s+str(G.nu2())+","+str(G.nu3())
-        # s=s+")\)</div>"
-        # return s
-
-    def present(self):
-        r"""
-        Present self.
-        """
-        if(self._is_new):
-            new = "^{new}"
-        else:
-            new = ""
-        if(self._chi == 1):
-            s = "<h1>\(S" + new + "_{%s}(%s)\)</h1>" % (self._k, self._N)
-        else:
-            s = "<h1>\(S" + new + "_{%s}(%s,\chi_{%s})\)</h1>" % (self._k, self._N, self._chi)
-        s = s + "<h2>Geometric data</h2>"
-        s = s + self.print_geometric_data()
-        s = s + "<h2>Galois orbits</h2>"
-        s = s + self.print_galois_orbits()
-        if(not self._is_new):
-            s = s + "<h2>Decomposition of the Oldspace</h2>"
-            s = s + self.print_oldspace_decomposition()
-        return s

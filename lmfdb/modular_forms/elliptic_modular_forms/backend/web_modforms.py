@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 #*****************************************************************************
-#  Copyright (C) 2010 Fredrik Strömberg <fredrik314@gmail.com>,
-#  Stephan Ehlen <>
+#  Copyright (C) 2014
+#  Fredrik Strömberg <fredrik314@gmail.com>,
+#  Stephan Ehlen <stephan.j.ehlen@gmail.com>
+# 
 #  Distributed under the terms of the GNU General Public License (GPL)
 #
 #    This code is distributed in the hope that it will be useful,
@@ -71,12 +73,9 @@ def WebNewForm(N=1, k=2, chi=1, label='', prec=10, bitprec=53, display_bprec=26,
     return F
 
 
-
-
 class WebNewForm_class(object):
     r"""
     Class for representing a (cuspidal) newform on the web.
-    TODO: Include the computed data in the original database so we won't have to compute here at all.
     """
     def __init__(self, N=1, k=2, chi=1, label='', prec=10, bitprec=53, display_bprec=26,parent=None, data=None, compute=False, verbose=-1,get_from_db=True):
         r"""
@@ -126,49 +125,35 @@ class WebNewForm_class(object):
             '_version': float(emf_version)            
             }
         self.__dict__.update(d)
-        emf_logger.debug("label = {0}".format(label))
         emf_logger.debug("label = {0}".format(self._label))
-        insert_in_db = False
-        if data <> {}: # Check if we add something which was not in the database
-            insert_in_db = True
+
+        # Fetch data
         if self._label<>'' and get_from_db:            
             d = self.get_from_db(self._N,self._k,self._chi,self._label)
             emf_logger.debug("Got data:{0} from db".format(d))
             data.update(d)
-        #emf_logger.debug("data: {0}".format(data))
-        self.__dict__.update(data)
+            
+        # Check if we add something which was not in the database
+        if data <> {}:
+            self.__dict__.update(data)
+            self.insert_into_db()
+            
         if not isinstance(self._parent,WebModFormSpace_class):
             if self._verbose > 0:
-                emf_logger.debug("compute parent! label={0}".format(label))
+                emf_logger.debug("getting parent! label={0}".format(label))
+            # Does this make sense here??
             self._parent = WebModFormSpace(N, k,chi, data=self._parent)
-            emf_logger.debug("finished computing parent")
+            emf_logger.debug("finished getting parent")
+            
         if self._parent.dimension_newspace()==0:
             self._dimension=0
-            return 
+            return
+        # What?
         self._check_consistency_of_labels()
         emf_logger.debug("name={0}".format(self._name))
-        if compute: ## Compute all data we want.
-            emf_logger.debug("compute")
-            t0 = self._update_aps(insert_in_db=False)
-            emf_logger.debug("compute q-expansion")
-            self.q_expansion_embeddings(prec, bitprec,insert_in_db=False)
-            emf_logger.debug("as polynomial")
-            if self._N == 1:
-                self.as_polynomial_in_E4_and_E6(insert_in_db=False)
-            emf_logger.debug("compute twist info")
-            self.twist_info(prec,insert_in_db=False)
-            emf_logger.debug("compute CM-values")
-            self.cm_values(insert_in_db=False)
-            emf_logger.debug("check  CM of self")
-            self.is_CM(insert_in_db=False)
-            emf_logger.debug("compute Satake parameters")
-            self.satake_parameters(insert_in_db=False)
-            self._dimension = self.as_factor().dimension()  # 1 # None
-            #c = self.coefficients(self.prec(),insert_in_db=False)
         emf_logger.debug("before end of __init__ f={0}".format(self.as_factor()))
         emf_logger.debug("before end of __init__ type(f)={0}".format(type(self.as_factor())))
         emf_logger.debug("done __init__")
-        self.insert_into_db()
 
 ### Get basic properties of self
     def level(self):
@@ -364,7 +349,6 @@ class WebNewForm_class(object):
         return(unpickle_wnf_v1, (self._N, self._k, self._chi, self._label,
                                  self._prec, self._bitprec, self._display_bprec,self._parent,data))
 
-
     def base_ring(self):
         r"""
         The base ring of self, that is, the field of values of the character of self. 
@@ -434,18 +418,15 @@ class WebNewForm_class(object):
 
     def dimension(self):
         r"""
-        The dimension of this galois orbit is not necessarily equal to the degree of the number field, when we have a character....
-        We therefore need this routine to distinguish between the two cases...
+        Return the dimension of the intersection of the galois orbit corresponding to ```self```
+        and the surrounding space.
+        
+        NOTE:
+        The dimension returned is not necessarily equal to the degree of the number field
+        when we have a character!
         """
-        if self._dimension >= 0:
-            return self._dimension
-        P = self.parent()
-        if P.labels().count(self.label()) > 0:
-            j = P.labels().index(self.label())
-            self._dimension = self.parent().galois_decomposition()[j].dimension()
-        else:
-            self._dimension =  0
         return self._dimension
+
     def q_expansion_embeddings(self, prec=10, bitprec=53,format='numeric',display_bprec=26,insert_in_db=True):
         if format=='latex':
             return self._embeddings['latex']
@@ -538,15 +519,6 @@ class WebNewForm_class(object):
                     c = self.coefficient_n_recursive(n,insert_in_db)
                     self._coefficients[n]=c
             res.append(c)
-            #maxn = max(nrange)
-            #E, v = self.as_factor().compact_system_of_eigenvalues(range(1,maxn+1), names='a')
-            #c = E * v
-            #par = c[0].parent()
-            #self._coefficients[0]=par(0)
-            #for n in range(len(c)):
-            #    self._coefficients[n+1]=c[n]
-        #for n in nrange:
-        #    res.append(self._coefficients[n])
         if recompute and insert_in_db:
             self.insert_into_db()
         return res
@@ -648,74 +620,7 @@ class WebNewForm_class(object):
             pass
         return 1
  
-                      
-    def coefficients_old(self, nrange=range(1, 10),insert_in_db=True):
-        r"""
-        Gives the coefficients in a range.
-        We assume that the self._ap containing Hecke eigenvalues
-        are stored.
-
-        """
-        res = []
-        emf_logger.debug("computing coeffs in range {0}".format(nrange))
-        if not isinstance(nrange, list):
-            M = nrange
-            nrange = range(0, M)
-        for n in nrange:
-            emf_logger.debug("n= {0}".format(n))
-            if n == 1:
-                res.append(1)
-            elif n == 0:
-                res.append(0)
-            elif is_prime(n):
-                pi = prime_pi(n) - 1
-                if pi < len(self._ap):
-                    ap = self._ap[pi]
-                else:
-                    # fill up the ap vector
-                    prims = primes_first_n(len(self._ap))
-                    if len(prims) > 0:
-                        ps = next_prime(primes_first_n(len(self._ap))[-1])
-                    else:
-                        ps = ZZ(2)
-                    mn = max(nrange)
-                    if is_prime(mn):
-                        pe = mn
-                    else:
-                        pe = previous_prime(mn)
-                    if self.level() == 1:
-                        E, v = my_compact_system_of_eigenvalues(self.as_factor(), prime_range(ps, pe + 1), names='x')
-                    else:
-                        E, v = self.as_factor().compact_system_of_eigenvalues(prime_range(ps, pe + 1), names='x')
-                    c = E * v
-                    # if self._verbose>0:
-                    for app in c:
-                        self._ap.append(app)
-                ap = self._ap[pi]
-                res.append(ap)
-                # we store up to self.prec coefficients which are not prime
-                if n <= self.prec():
-                    self._coefficients[n] = ap
-            else:
-                if n in self._coefficients:
-                    an = self._coefficients[n]
-                else:
-                    try:
-                        an = self.as_factor().eigenvalue(n, 'x')
-                    except (TypeError,IndexError):
-                        if n % self._N == 0:
-                            atmp = self.as_factor().eigenvalue(self._N,'x')
-                            emf_logger.debug("n= {0},c(n)={1}".format(n,atmp))       
-                        an = self.as_factor().eigenvalue(n, 'x')
-                    # an = self._f.eigenvalue(QQ(n),'x')
-                    self._coefficients[n] = an
-                res.append(an)
-        if insert_in_db:
-            self.insert_into_db()
-        return res
-
-
-    
+                          
     def q_expansion(self, prec=None):
         r"""
         Return the q-expansion of self to precision prec.
@@ -730,27 +635,15 @@ class WebNewForm_class(object):
                 q_expansion = R(self._q_expansion_str)
                 if q_expansion.degree()>=self.prec()-1: 
                     q_expansion = q_expansion.add_bigoh(prec)
-            if q_expansion == '' and hasattr(self.as_factor(), 'q_eigenform'):
-                q_expansion = self.as_factor().q_eigenform(prec, names='x')
             if q_expansion == '':
                 self._q_expansion_str = ''
             else:
                 self._q_expansion_str = str(q_expansion.polynomial())   
             self._q_expansion = q_expansion
-        if self._q_expansion.prec() == prec:
+        if self._q_expansion.prec() <= prec:
             return self._q_expansion
         elif self._q_expansion.prec() > prec:
             return self._q_expansion.truncate_powerseries(prec)
-        else:
-            if prec <= self.max_cn():
-                R = PowerSeriesRing(self.coefficient_field(), 'q')                
-                q = R.gen()
-                ### Get q=expansion from coefficients.... 
-                p = self._q_expansion.polynomial()
-                for i in range(p.degree()+1,prec+1):
-                    p+=self.coefficient(i)*q**i
-                p.add_bigoh(prec+1)
-                self._q_expansion = p
         return self._q_expansion
 
     def atkin_lehner_eigenvalue(self, Q):
@@ -764,15 +657,8 @@ class WebNewForm_class(object):
         return l.get(Q)
 
 
-    def _compute_atkin_lehner_matrix(self, f, Q):
-        ALambient = f.ambient_hecke_module()._compute_atkin_lehner_matrix(ZZ(Q))
-        B = f.free_module().echelonized_basis_matrix()
-        P = B.pivots()
-        M = B * ALambient.matrix_from_columns(P)
-        return M
-
     def atkin_lehner_eigenvalues(self):
-        r""" Compute the Atkin-Lehner eigenvalues of self.
+        r""" Return the Atkin-Lehner eigenvalues of self.
 
            EXAMPLES::
 
@@ -784,100 +670,22 @@ class WebNewForm_class(object):
 
         """
         if not (self.character().is_trivial() or self.character().order() == 2):
-            return {}
+            return None
         
         if(len(self._atkin_lehner_eigenvalues.keys()) > 0):
             return self._atkin_lehner_eigenvalues
-        if self._chi != 1:
-            return {}
-        res = dict()
-        for Q in divisors(self.level()):
-            if(Q == 1):
-                continue
-            if(gcd(Q, ZZ(self.level() / Q)) == 1):
-                emf_logger.debug("Q={0}".format(Q))
-                emf_logger.debug("self.as_factor={0}".format(self.as_factor()))
-                # try:
-                M = self._compute_atkin_lehner_matrix(self.as_factor(), ZZ(Q))
-                    # M=self._f._compute_atkin_lehner_matrix(ZZ(Q))
-                # except:
-                #    emf_logger.critical("Error in computing Atkin Lehner Matrix. Bug is known and due to pickling.")
-                # M=self._f.atkin_lehner_operator(ZZ(Q)).matrix()
-                try:
-                    ev = M.eigenvalues()
-                except:
-                    emf_logger.critical("Could not get Atkin-Lehner eigenvalues!")
-                    self._atkin_lehner_eigenvalues = {}
-                    return {}
-                emf_logger.debug("eigenvalues={0}".format(ev))
-                if len(ev) > 1:
-                    if len(set(ev)) > 1:
-                        emf_logger.critical("Should be one Atkin-Lehner eigenvalue. Got: {0}".format(ev))
-                res[Q] = ev[0]
-        self._atkin_lehner_eigenvalues = res
-        return res
-
-    def atkin_lehner_eigenvalues_for_all_cusps(self):
-        r"""
-        Return Atkin-Lehner eigenvalue of A-L involution
-        which normalizes cusp if such an inolution exist.
-        """
-        if not (self.character().is_trivial() or self.character().order() == 2):
-            return {}
-        res = dict()            
-        for c in self.parent().group().cusps():
-            if c == Infinity:
-                continue
-            l = self.atkin_lehner_at_cusp(c)
-            emf_logger.debug("l={0},{0}".format(c, l))
-            if(l):
-                (Q, ep) = l
-                res[c] = [Q, ep]
-                # res[c]=ep
-        return res
-
-    def atkin_lehner_at_cusp(self, cusp):
-        r"""
-        Return Atkin-Lehner eigenvalue of A-L involution
-        which normalizes cusp if such an involution exist.
-        """
-        if not (self.character().is_trivial() or self.character().order() == 2):
-            return None
-        
-        x = self.character()
-        if(x != 0 and not x.is_trivial()):
-            return None
-        if(cusp == Cusp(Infinity)):
-            return (ZZ(0), 1)
-        elif(cusp == Cusp(0)):
-            try:
-                return (self.level(), self.atkin_lehner_eigenvalues()[self.level()])
-            except:
-                return None
-        cusp = QQ(cusp)
-        N = self.level()
-        q = cusp.denominator()
-        p = cusp.numerator()
-        d = ZZ(cusp * N)
-        if(d.divides(N) and gcd(ZZ(N / d), ZZ(d)) == 1):
-            M = self._compute_atkin_lehner_matrix(self.as_factor(), ZZ(d))
-            ev = M.eigenvalues()
-            if len(ev) > 1:
-                if len(set(ev)) > 1:
-                    emf_logger.critical("Should be one Atkin-Lehner eigenvalue. Got: {0} ".format(ev))
-            return (ZZ(d), ev[0])
-        else:
-            return None
 
     def is_minimal(self):
         r"""
         Returns True if self is a twist and otherwise False.
         """
-        [t, f] = self.twist_info()
-        if(t):
-            return True
-        elif(t == False):
-            return False
+        if isinstance(self.twist_info(), list):
+            if len(self.twist_info()) == 2:
+                [t, f] = self.twist_info()
+                if(t):
+                    return True
+                elif(t == False):
+                    return False
         else:
             return "Unknown"
 
@@ -893,110 +701,12 @@ class WebNewForm_class(object):
 
         EXAMPLES::
 
-
-
         """
-        if(len(self._twist_info) > 0):
-            return self._twist_info
-        N = self.level()
-        k = self.weight()
-        if(is_squarefree(ZZ(N))):
-            self._twist_info = [True, None ]
-            return [True, None]
-
-        # We need to check all square factors of N
-        twist_candidates = list()
-        KF = self.base_ring()
-        # check how many Hecke eigenvalues we need to check
-        max_nump = self._number_of_hecke_eigenvalues_to_check()
-        maxp = max(primes_first_n(max_nump))
-        for d in divisors(N):
-            if(d == 1):
-                continue
-            # we look at all d such that d^2 divdes N
-            if(not ZZ(d ** 2).divides(ZZ(N))):
-                continue
-            D = DirichletGroup(d)
-            # check possible candidates to twist into f
-            # g in S_k(M,chi) wit M=N/d^2
-            M = ZZ(N / d ** 2)
-            if(self._verbose > 0):
-                emf_logger.debug("Checking level {0}".format(M))
-            for xig in range(euler_phi(M)):
-                (t, glist) = _get_newform(M,k, xig)
-                if(not t):
-                    return glist
-                for g in glist:
-                    if(self._verbose > 1):
-                        emf_logger.debug("Comparing to function {0}".format(g))
-                    KG = g.base_ring()
-                    # we now see if twisting of g by xi in D gives us f
-                    for xi in D:
-                        try:
-                            for p in primes_first_n(max_nump):
-                                if(ZZ(p).divides(ZZ(N))):
-                                    continue
-                                bf = self.as_factor().q_eigenform(maxp + 1, names='x')[p]
-                                bg = g.q_expansion(maxp + 1)[p]
-                                if(bf == 0 and bg == 0):
-                                    continue
-                                elif(bf == 0 and bg != 0 or bg == 0 and bf != 0):
-                                    raise StopIteration()
-                                if(ZZ(p).divides(xi.conductor())):
-                                    raise ArithmeticError("")
-                                xip = xi(p)
-                                # make a preliminary check that the base rings match with respect to being
-                                # real or not
-                                try:
-                                    QQ(xip)
-                                    XF = QQ
-                                    if(KF != QQ or KG != QQ):
-                                        raise StopIteration
-                                except TypeError:
-                                    # we have a  non-rational (i.e. complex) value of the character
-                                    XF = xip.parent()
-                                    if((KF.absolute_degree() == 1 or KF.is_totally_real()) and (KG.absolute_degre() == 1 or KG.is_totally_real())):
-                                        raise StopIteration
-                            ## it is diffcult to compare elements from diferent rings in general but we make some checcks
-                            # is it possible to see if there is a larger ring which everything can be
-                            # coerced into?
-                                ok = False
-                                try:
-                                    a = KF(bg / xip)
-                                    b = KF(bf)
-                                    ok = True
-                                    if(a != b):
-                                        raise StopIteration()
-                                except TypeError:
-                                    pass
-                                try:
-                                    a = KG(bg)
-                                    b = KG(xip * bf)
-                                    ok = True
-                                    if(a != b):
-                                        raise StopIteration()
-                                except TypeError:
-                                    pass
-                                if(not ok):  # we could coerce and the coefficients were equal
-                                    return "Could not compare against possible candidates!"
-                                # otherwise if we are here we are ok and found a candidate
-                            twist_candidates.append([M, g.q_expansion(prec), xi])
-                        except StopIteration:
-                            # they are not equal
-                            pass
-        emf_logger.debug("Candidates=v{0}".format(twist_candidates))
-        self._twist_info = (False, twist_candidates)
-        if(len(twist_candidates) == 0):
-            self._twist_info = [True, None]
-        else:
-            self._twist_info = [False, twist_candidates]
-        if insert_in_db:
-            self.insert_into_db()
         return self._twist_info
 
     def is_CM(self,insert_in_db=True):
         r"""
-        Checks if f has complex multiplication and if it has then it returns the character.
+        Returns if f has complex multiplication and if it has then it returns the character.
 
         OUTPUT:
 
@@ -1005,100 +715,8 @@ class WebNewForm_class(object):
         EXAMPLES::
 
         """
-        if(len(self._is_CM) > 0):
-            return self._is_CM
-        max_nump = self._number_of_hecke_eigenvalues_to_check()
-        # E,v = self._f.compact_system_of_eigenvalues(max_nump+1)
-        try:
-            coeffs = self.coefficients(range(max_nump + 1),insert_in_db=insert_in_db)
-        except IndexError: 
-           return None,None
-        nz = coeffs.count(0)  # number of zero coefficients
-        nnz = len(coeffs) - nz  # number of non-zero coefficients
-        if(nz == 0):
-            self._is_CM = [False, 0]
-            return self._is_CM
-        # probaly checking too many
-        for D in range(3, ceil(QQ(max_nump) / QQ(2))):
-            try:
-                for x in DirichletGroup(D):
-                    if(x.order() != 2):
-                        continue
-                    # we know that for CM we need x(p) = -1 => c(p)=0
-                    # (for p not dividing N)
-                    if(x.values().count(-1) > nz):
-                        raise StopIteration()  # do not have CM with this char
-                    for p in prime_range(max_nump + 1):
-                        if(x(p) == -1 and coeffs[p] != 0):
-                            raise StopIteration()  # do not have CM with this char
-                    # if we are here we have CM with x.
-                    self._is_CM = [True, x]
-                    return self._is_CM
-            except StopIteration:
-                pass
-        self._is_CM = [False, 0]
-        if insert_in_db:
-            self.insert_into_db()
         return self._is_CM
 
-    def as_polynomial_in_E4_and_E6(self,insert_in_db=True):
-        r"""
-        If self is on the full modular group writes self as a polynomial in E_4 and E_6.
-        OUTPUT:
-        -''X'' -- vector (x_1,...,x_n)
-        with f = Sum_{i=0}^{k/6} x_(n-i) E_6^i * E_4^{k/4-i}
-        i.e. x_i is the coefficient of E_6^(k/6-i)*
-        """
-        if(self.level() != 1):
-            raise NotImplementedError("Only implemented for SL(2,Z). Need more generators in general.")
-        if(self._as_polynomial_in_E4_and_E6 is not None and self._as_polynomial_in_E4_and_E6 != ''):
-            return self._as_polynomial_in_E4_and_E6
-        d = self._parent.dimension_modular_forms()  # dimension of space of modular forms
-        k = self.weight()
-        K = self.base_ring()
-        l = list()
-        # for n in range(d+1):
-        #    l.append(self._f.q_expansion(d+2)[n])
-        # v=vector(l) # (self._f.coefficients(d+1))
-        v = vector(self.coefficients(range(d),insert_in_db=insert_in_db))
-        d = dimension_modular_forms(1, k)
-        lv = len(v)
-        if(lv < d):
-            raise ArithmeticError("not enough Fourier coeffs")
-        e4 = EisensteinForms(1, 4).basis()[0].q_expansion(lv + 2)
-        e6 = EisensteinForms(1, 6).basis()[0].q_expansion(lv + 2)
-        m = Matrix(K, lv, d)
-        lima = floor(k / 6)  # lima=k\6;
-        if((lima - (k / 2)) % 2 == 1):
-            lima = lima - 1
-        poldeg = lima
-        col = 0
-        monomials = dict()
-        while(lima >= 0):
-            deg6 = ZZ(lima)
-            deg4 = (ZZ((ZZ(k / 2) - 3 * lima) / 2))
-            e6p = (e6 ** deg6)
-            e4p = (e4 ** deg4)
-            monomials[col] = [deg4, deg6]
-            eis = e6p * e4p
-            for i in range(1, lv + 1):
-                m[i - 1, col] = eis.coefficients()[i - 1]
-            lima = lima - 2
-            col = col + 1
-        if (col != d):
-            raise ArithmeticError("bug dimension")
-        # return [m,v]
-        if self._verbose > 0:
-            emf_logger.debug("m={0}".format(m, type(m)))
-            emf_logger.debug("v={0}".format(v, type(v)))
-        try:
-            X = m.solve_right(v)
-        except:
-            return ""
-        self._as_polynomial_in_E4_and_E6 = [poldeg, monomials, X]
-        if insert_in_db:
-            self.insert_into_db()
-        return [poldeg, monomials, X]
 
     def exact_cm_at_i_level_1(self, N=10,insert_in_db=True):
         r"""
@@ -1108,70 +726,10 @@ class WebNewForm_class(object):
         INPUT:
         -''N'' -- integer, the length of the expansion to use.
         """
-        try:
-            [poldeg, monomials, X] = self.as_polynomial_in_E4_and_E6()
-        except:
-            return ""
-        k = self.weight()
-        tab = dict()
-        QQ['x']
-        tab[0] = 0 * x ** 0
-        tab[1] = X[0] * x ** poldeg
-        for ix in range(1, len(X)):
-            tab[1] = tab[1] + QQ(X[ix]) * x ** monomials[ix][1]
-        for n in range(1, N + 1):
-            tmp = -QQ(k + 2 * n - 2) / QQ(12) * x * tab[n] + (x ** 2 - QQ(1)) / QQ(2) * ((tab[
-                                                                                          n]).derivative())
-            tab[n + 1] = tmp - QQ((n - 1) * (n + k - 2)) / QQ(144) * tab[n - 1]
-        res = 0
-        for n in range(1, N + 1):
-            term = (tab[n](x=0)) * 12 ** (floor(QQ(n - 1) / QQ(2))) * x ** (n - 1) / factorial(n - 1)
-            res = res + term
-        
-        return res
-    #,O(x^(N+1))))
-    # return (sum(n=1,N,subst(tab[n],x,0)*
+        raise NotImplementedError
 
-    def as_homogeneous_polynomial(self):
-        r"""
-        Represent self as a homogenous polynomial in E6/E4^(3/2)
-        """
-
-    def print_as_polynomial_in_E4_and_E6(self):
-        r"""
-
-        """
-        if(self.level() != 1):
-            return ""
-        try:
-            [poldeg, monomials, X] = self.as_polynomial_in_E4_and_E6()
-        except ValueError:
-            return ""
-        s = ""
-        e4 = "E_{4}"
-        e6 = "E_{6}"
-        dens = map(denominator, X)
-        g = gcd(dens)
-        s = "\\frac{1}{" + str(g) + "}\left("
-        for n in range(len(X)):
-            c = X[n] * g
-            if(c == -1):
-                s = s + "-"
-            elif(c != 1):
-                s = s + str(c)
-            if(n > 0 and c > 0):
-                s = s + "+"
-            d4 = monomials[n][0]
-            d6 = monomials[n][1]
-            if(d6 > 0):
-                s = s + e6 + "^{" + str(d6) + "}"
-            if(d4 > 0):
-                s = s + e4 + "^{" + str(d4) + "}"
-        s = s + "\\right)"
-        return "\(" + s + "\)"
-
-    def cm_values(self, digits=12,insert_in_db=True):
-        r""" Computes and returns a list of values of f at a collection of CM points as complex floating point numbers.
+    def cm_values(self):
+        r""" Returns a list of values of f at a collection of CM points as complex floating point numbers.
 
         INPUT:
 
@@ -1182,129 +740,10 @@ class WebNewForm_class(object):
 
         TODO: Get explicit, algebraic values if possible!
         """
-        if self._cm_values <> None:
-            cm_vals = self._cm_values
-        else:
-            cm_vals = self.compute_cm_values_numeric(digits=digits,insert_in_db=insert_in_db)
-        emf_logger.debug("in cm_values with digits={0}".format(digits))
-        # bits=max(int(53),ceil(int(digits)*int(4)))
-        rho = CyclotomicField(3).gen()
-        zi = CyclotomicField(4).gen()        
-        res = dict()
-        res['embeddings'] = range(self.degree())
-        res['tau_latex'] = dict()
-        res['cm_vals_latex'] = dict()
-        maxl = 0
-        for tau in cm_vals:
-            if tau == zi:
-                res['tau_latex'][tau] = "\(" + latex(I) + "\)"
-            else:
-                res['tau_latex'][tau] = "\(" + latex(tau.n(self._display_bprec)) + "\)"
-            res['cm_vals_latex'][tau] = dict()
-            for h in cm_vals[tau].keys():
-                res['cm_vals_latex'][tau][h] = "\(" + latex(cm_vals[tau][h].n(self._display_bprec)) + "\)"
-                l = len_as_printed(res['cm_vals_latex'][tau][h], False)
-                if l > maxl:
-                    maxl = l
-        res['tau'] = cm_vals.keys()
-        res['cm_vals'] = cm_vals
-        res['max_width'] = maxl
-        return res
-
-
-    def compute_cm_values_numeric(self,digits=12,insert_in_db=True):
-        r"""
-        Compute CM-values numerically.
-        """
-        if isinstance(self._cm_values,dict) and self._cm_values  <> {}:
-            return self._cm_values
-         # the points we want are i and rho. More can be added later...
-        bits = ceil(int(digits) * int(4))
-        CF = ComplexField(bits)
-        RF = ComplexField(bits)
-        eps = RF(10 ** - (digits + 1))
-        if(self._verbose > 1):
-            emf_logger.debug("eps={0}".format(eps))
-        K = self.base_ring()
-        # recall that
-        degree = self.degree()
-        cm_vals = dict()
-        rho = CyclotomicField(3).gen()
-        zi = CyclotomicField(4).gen()
-        points = [rho, zi]
-        maxprec = 1000  # max size of q-expansion
-        minprec = 10  # max size of q-expansion
-        for tau in points:
-            q = CF(exp(2 * pi * I * tau))
-            fexp = dict()
-            cm_vals[tau] = dict()
-            if(tau == I and self.level() == -1):
-                # cv=    #"Exact(soon...)" #_cohen_exact_formula(k)
-                for h in range(degree):
-                    cm_vals[tau][h] = cv
-                continue
-            if K.absolute_degree()==1:
-                v1 = CF(0)
-                v2 = CF(1)
-                try:
-                    for prec in range(minprec, maxprec, 10):
-                        if(self._verbose > 1):
-                            emf_logger.debug("prec={0}".format(prec))
-                        v2 = self.as_factor().q_eigenform(prec).truncate(prec)(q)
-                        err = abs(v2 - v1)
-                        if(self._verbose > 1):
-                            emf_logger.debug("err={0}".format(err))
-                        if(err < eps):
-                            raise StopIteration()
-                        v1 = v2
-                    cm_vals[tau][0] = None
-                except StopIteration:
-                    cm_vals[tau][0] = v2
-            else:
-                v1 = dict()
-                v2 = dict()
-                err = dict()
-                for h in range(degree):
-                    v1[h] = 1
-                    v2[h] = 0
-                try:
-                    for prec in range(minprec, maxprec, 10):
-                        if(self._verbose > 1):
-                            emf_logger.debug("prec={0}".format(prec))
-                        c = self.coefficients(range(prec),insert_in_db=insert_in_db)
-                        for h in range(degree):
-                            fexp[h] = list()
-                            v2[h] = 0
-                            for n in range(prec):
-                                cn = c[n]
-                                if hasattr(cn, 'complex_embeddings'):
-                                    cc = cn.complex_embeddings(CF.prec())[h]
-                                else:
-                                    cc = CF(cn)
-                                v2[h] = v2[h] + cc * q ** n
-                            err[h] = abs(v2[h] - v1[h])
-                            if(self._verbose > 1):
-                                emf_logger.debug("v1[{0}]={1}".format(h,v1[h]))
-                                emf_logger.debug("v2[{0}]={1}".format(h,v2[h]))
-                                emf_logger.debug("err[{0}]={2}".format(h,err[h]))
-                            if(max(err.values()) < eps):
-                                raise StopIteration()
-                            v1[h] = v2[h]
-                except StopIteration:
-                    pass
-                for h in range(degree):
-                    if(err[h] < eps):
-                        cm_vals[tau][h] = v2[h]
-                    else:
-                        cm_vals[tau][h] = None
-        self._cm_values = cm_vals
-        if insert_in_db:
-            self.insert_into_db()
         return self._cm_values
-
     
-    def satake_parameters(self, prec=10, bits=53,insert_in_db=True):
-        r""" Compute the Satake parameters and return an html-table.
+    def satake_parameters(self):
+        r""" Return an html-table containing the Satake parameters.
 
         We only do satake parameters for primes p primitive to the level.
         By defintion the S. parameters are given as the roots of
@@ -1319,89 +758,6 @@ class WebNewForm_class(object):
             ## We only implement this for trival or quadratic characters.
             ## Otherwise there is difficulty to figure out what the embeddings mean... 
             return 
-        K = self.coefficient_field()
-        degree = self.degree()
-        RF = RealField(bits)
-        CF = ComplexField(bits)
-        ps = prime_range(prec)
-
-        self._satake['ps'] = []
-        alphas = dict()
-        thetas = dict()
-        aps = list()
-        tps = list()
-        k = self.weight()
-
-        for j in range(degree):
-            alphas[j] = dict()
-            thetas[j] = dict()
-        for j in xrange(len(ps)):
-            p = ps[j]
-            try:
-                ap = self.coefficient(p) 
-            except IndexError:
-                break
-            # Remove bad primes
-            if p.divides(self.level()):
-                continue
-            self._satake['ps'].append(p)
-            chip = self.character_value(p)
-            emf_logger.debug("p={0}".format(p))
-            emf_logger.debug("chip={0} of type={1}".format(chip,type(chip)))
-            if hasattr(chip,'complex_embeddings'):
-                emf_logger.debug("embeddings(chip)={0}".format(chip.complex_embeddings()))
-            emf_logger.debug("ap={0}".format(ap))
-            emf_logger.debug("K={0}".format(K))                        
-            
-            # ap=self._f.coefficients(ZZ(prec))[p]
-            if K.absolute_degree()==1:
-                f1 = QQ(4 * chip * p ** (k - 1) - ap ** 2)
-                alpha_p = (QQ(ap) + I * f1.sqrt()) / QQ(2)
-                ab = RF(p ** ((k - 1) / 2))
-                norm_alpha = alpha_p / ab
-                t_p = CF(norm_alpha).argument()
-                thetas[0][p] = t_p
-                alphas[0][p] = (alpha_p / ab).n(bits)
-            else:
-                for jj in range(degree):
-                    app = ap.complex_embeddings(bits)[jj]
-                    emf_logger.debug("chip={0}".format(chip))
-                    emf_logger.debug("app={0}".format(app))
-                    emf_logger.debug("jj={0}".format(jj))            
-                    if not hasattr(chip,'complex_embeddings'):
-                        f1 = (4 * CF(chip) * p ** (k - 1) - app ** 2)
-                    else:
-                        f1 = (4 * chip.complex_embeddings(bits)[jj] * p ** (k - 1) - app ** 2)
-                    alpha_p = (app + I * abs(f1).sqrt())
-                    # ab=RF(/RF(2)))
-                    # alpha_p=alpha_p/RealField(bits)(2)
-                    emf_logger.debug("f1={0}".format(f1))
-                    
-                    alpha_p = alpha_p / RF(2)
-                    emf_logger.debug("alpha_p={0}".format(alpha_p))                    
-                    t_p = CF(alpha_p).argument()
-                    # tps.append(t_p)
-                    # aps.append(alpha_p)
-                    alphas[jj][p] = alpha_p
-                    thetas[jj][p] = t_p
-        self._satake['alphas'] = alphas
-        self._satake['thetas'] = thetas
-        self._satake['alphas_latex'] = dict()
-        self._satake['thetas_latex'] = dict()
-        for j in self._satake['alphas'].keys():
-            self._satake['alphas_latex'][j] = dict()
-            for p in self._satake['alphas'][j].keys():
-                s = latex(self._satake['alphas'][j][p])
-                self._satake['alphas_latex'][j][p] = s
-        for j in self._satake['thetas'].keys():
-            self._satake['thetas_latex'][j] = dict()
-            for p in self._satake['thetas'][j].keys():
-                s = latex(self._satake['thetas'][j][p])
-                self._satake['thetas_latex'][j][p] = s
-
-        emf_logger.debug("satake=".format(self._satake))
-        if insert_in_db:
-            self.insert_into_db()
         return self._satake
 
     def print_satake_parameters(self, stype=['alphas', 'thetas'], prec=10, bprec=53):
@@ -1811,59 +1167,6 @@ def break_line_at(s, brpt=20):
     return res
 
 
-def _get_newform(N, k, chi, fi=None):
-    r"""
-    Get an element of the space of newforms, incuding some error handling.
-
-    INPUT:
-
-     - ''k'' -- positive integer : the weight
-     - ''N'' -- positive integer (default 1) : level
-     - ''chi'' -- non-neg. integer (default 0) use character nr. chi
-     - ''fi'' -- integer (default 0) We want to use the element nr. fi f=Newforms(N,k)[fi]. fi=-1 returns the whole list
-     - ''prec'' -- integer (the number of coefficients to get)
-
-    OUTPUT:
-
-    -''t'' -- bool, returning True if we succesfully created the space and picked the wanted f
-    -''f'' -- equals f if t=True, otherwise contains an error message.
-
-    EXAMPLES::
-
-
-        sage: _get_newform(16,10,1)
-        (False, 'Could not construct space $S^{new}_{16}(10)$')
-        sage: _get_newform(10,16,1)
-        (True, q - 68*q^3 + 1510*q^5 + O(q^6))
-        sage: _get_newform(10,16,3)
-        (True, q + 156*q^3 + 870*q^5 + O(q^6))
-        sage: _get_newform(10,16,4)
-        (False, '')
-
-     """
-    t = False
-    try:
-        if(chi == 0):
-            emf_logger.debug("EXPLICITLY CALLING NEWFORMS!")
-            S = Newforms(N, k, names='x')
-        else:
-            S = Newforms(DirichletGroup(N)[chi], k, names='x')
-        if(fi >= 0 and fi < len(S)):
-            f = S[fi]
-            t = True
-        elif(fi == -1 or fi is None):
-            t = True
-            return (t, S)
-        else:
-            f = ""
-    except RuntimeError:
-        if(chi == 0):
-            f = "Could not construct space $S^{new}_{%s}(%s)$" % (k, N)
-        else:
-            f = "Could not construct space $S^{new}_{%s}(%s,\chi_{%s})$" % (k, N, chi)
-    return (t, f)
-
-
 def _degree(K):
     r"""
     Returns the degree of the number field K
@@ -1906,113 +1209,6 @@ def pol_to_latex(p):
 
 ## Added routines to replace sage routines with bugs for level 1
 ##
-
-
-def my_compact_system_of_eigenvalues(AA, v, names='alpha', nz=None):
-    r"""
-    Return a compact system of eigenvalues `a_n` for
-    `n\in v`. This should only be called on simple factors of
-    modular symbols spaces.
-
-    INPUT:
-
-
-    -  ``v`` - a list of positive integers
-
-    -  ``nz`` - (default: None); if given specifies a
-       column index such that the dual module has that column nonzero.
-
-
-    OUTPUT:
-
-
-    -  ``E`` - matrix such that E\*v is a vector with
-       components the eigenvalues `a_n` for `n \in v`.
-
-    -  ``v`` - a vector over a number field
-
-
-    EXAMPLES::
-
-        sage: M = ModularSymbols(43,2,1)[2]; M
-        Modular Symbols subspace of dimension 2 of Modular Symbols space of dimension 4 for Gamma_0(43) of weight 2 with sign 1 over Rational Field
-        sage: E, v = M.compact_system_of_eigenvalues(prime_range(10))
-        sage: E
-        [ 3 -2]
-        [-3  2]
-        [-1  2]
-        [ 1 -2]
-        sage: v
-        (1, -1/2*alpha + 3/2)
-        sage: E*v
-        (alpha, -alpha, -alpha + 2, alpha - 2)
-    """
-    if nz is None:
-        nz = AA._eigen_nonzero()
-    M = AA.ambient()
-    try:
-        E = my_hecke_images(M, nz, v) * AA.dual_free_module().basis_matrix().transpose()
-    except AttributeError:
-        # TODO!!!
-        raise NotImplementedError("ambient space must implement hecke_images but doesn't yet")
-    v = AA.dual_eigenvector(names=names, lift=False, nz=nz)
-    return E, v
-
-
-def my_compact_newform_eigenvalues(AA, v, names='alpha'):
-    r"""
-    """
-
-    if AA.sign() == 0:
-        raise ValueError("sign must be nonzero")
-    v = list(v)
-
-    # Get decomposition of this space
-    D = AA.cuspidal_submodule().new_subspace().decomposition()
-    for A in D:
-        # since sign is zero and we're on the new cuspidal subspace
-        # each factor is definitely simple.
-        A._is_simple = True
-        B = [A.dual_free_module().basis_matrix().transpose() for A in D]
-
-        # Normalize the names strings.
-        names = ['%s%s' % (names, i) for i in range(len(B))]
-
-        # Find an integer i such that the i-th columns of the basis for the
-        # dual modules corresponding to the factors in D are all nonzero.
-        nz = None
-        for i in range(AA.dimension()):
-            # Decide if this i works, i.e., ith row of every element of B is nonzero.
-            bad = False
-            for C in B:
-                if C.row(i) == 0:
-                    # i is bad.
-                    bad = True
-                    continue
-            if bad:
-                continue
-            # It turns out that i is not bad.
-            nz = i
-            break
-
-        if nz is not None:
-            R = my_hecke_images(AA, nz, v)
-            return [(R * m, D[i].dual_eigenvector(names=names[i], lift=False, nz=nz)) for i, m in enumerate(B)]
-        else:
-            # No single i works, so we do something less uniform.
-            ans = []
-            cache = {}
-            for i in range(len(D)):
-                nz = D[i]._eigen_nonzero()
-                if nz in cache:
-                    R = cache[nz]
-                else:
-                    R = my_hecke_images(AA, nz, v)
-                    cache[nz] = R
-                ans.append((R * B[i], D[i].dual_eigenvector(names=names[i], lift=False, nz=nz)))
-            return ans
-
-
 def my_hecke_images(AA, i, v):
     # Use slow generic algorithm
     x = AA.gen(i)
