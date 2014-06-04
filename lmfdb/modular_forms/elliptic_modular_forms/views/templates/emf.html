@@ -78,7 +78,7 @@ in the field of complex numbers. The values are shown in the table below.
     </th>
     {% for n in range(1,embeddings_len) %}
     <td style="white-space:nowrap;">
-      {{ embeddings[n][h] }}
+      \({{ embeddings[n][h] }}\)
     </td>
     {% endfor %}
   </tr>
@@ -87,11 +87,11 @@ in the field of complex numbers. The values are shown in the table below.
 </table>
 {% endif %}
 <h2> Detailed data</h2>
+{% if satake is defined %}
 <div>
   The first few {{KNOWL('mf.elliptic.satake_parameters',title='Satake parameters')}} \(\alpha_p\) and angles \(\theta_p = \textrm{Arg}(\alpha_p) \) are
 </div>
 <br>
-{% if satake is defined %}
 <table class="ntdata">
   <thead>
     <tr>
@@ -218,20 +218,21 @@ in the field of complex numbers. The values are shown in the table below.
 </div>
   {% endif %}
 <h2>Download Fourier coefficients</h2>
+We have {{ info.max_cn }} coefficients available from the database. 
 <form name="get_coefficients" method="post"  action="{{url_for('.get_downloads',level=level,weight=weight,character=character,label=label)}}">
   <input type="hidden" name="download" value="coefficients"/>
   Get / compute  <input type="text" size="10" name="number" value="10"/> 
   coefficients in the following format:
   <ul>
     <li> 
-      <label><input type=radio name="format" checked value="q_expansion_one_line" onclick="return selectCFormat(event)"> q-expansion (on one line)</label>
+      <label><input type=radio name="format" checked value="q_expansion" onclick="return selectCFormat(event)"> q-expansion (on one line)</label>
     </li>
     <li> 
-      <label><input type=radio name="format" checked value="q_expansion_table" onclick="return selectCFormat(event)"> q-expansion (table)</label>
+      <label><input type=radio name="format" checked value="coefficients" onclick="return selectCFormat(event)"> a table of coefficients (algebraic)</label>
     </li>
     <li>
       <label><input type=radio name="format" value="embeddings" onclick="return selectCFormat(event)"> Complex embeddings </label>
-      with <input type="text" size="10" name="prec" value="15"> digits precision.     
+      with <input type="text" size="10" name="bitprec" value="15"> digits precision.     
     </li>
   </ul>
 {#  <input type="button" name="Submit" value="Get coefficients"> #}
