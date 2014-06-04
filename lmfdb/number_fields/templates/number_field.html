@@ -67,7 +67,13 @@ function show_code(system) {
             <tr><td colspan="3">Extension is Galois and abelian</tr>
             <tr><td>Conductor:<td>&nbsp;&nbsp;<td>{{info.conductor}}</tr>
             <tr><td>Dirichlet
-				group:<td>&nbsp;&nbsp;<td>{{info.dirichlet_group|safe}}</tr> 
+				group:<td>&nbsp;&nbsp;<td>
+                {% if info.dirichlet_group is defined %}
+                {{info.dirichlet_group|safe}}
+                {% else %}
+                not computed
+                {% endif %}
+                </tr> 
   {% elif info.is_galois %}
             <tr><td colspan="3">Extension is Galois</tr>
   {% endif %}

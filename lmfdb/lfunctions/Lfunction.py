@@ -896,7 +896,7 @@ class DedekindZeta(Lfunction):   # added by DK
         self.res = RR(2 ** self.signature[0] * self.h * self.R) / self.w
         self.grh = wnf.used_grh()
         if self.degree > 1:
-            if wnf.is_abelian():
+            if wnf.is_abelian() and len(wnf.dirichlet_group())>0:
                 cond = wnf.conductor()
                 dir_group = wnf.dirichlet_group()
                 # Remove 1 from the list
