@@ -66,10 +66,6 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/NumberField/3.3.81.1/')
         assert 'Graph' in L.data
 
-    def test_Ltensorproduct(self):
-        L = self.tc.get('TensorProducts/show/?obj1=Character%2FDirichlet%2F13%2F2&obj2=EllipticCurve%2FQ%2F11.a2')
-        assert 'Graph' in L.data
-
     def test_Lartin(self):
         L = self.tc.get('/L/ArtinRepresentation/2/68/2/')
         assert 'Graph' in L.data
