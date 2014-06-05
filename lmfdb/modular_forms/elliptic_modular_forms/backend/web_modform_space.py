@@ -186,6 +186,25 @@ class WebModFormSpace_class(object):
 
         """
         return self._character_orbit_rep
+
+    def to_dict(self):
+        r"""
+        Makes a dictionary of the serializable properties of self.
+        """
+        problematic_keys = ['_galois_decomposition',
+                            '_newforms','_newspace',
+                            '_modular_symbols',
+                            '_new_modular_symbols',
+                            '_galois_decomposition',
+                            '_oldspace_decomposition',
+                            '_conrey_character',
+                            '_character',
+                            '_group']
+        data = {}
+        data.update(self.__dict__)
+        for k in problematic_keys:
+            data.pop(k,None)
+        return data
     
     ## Database fetching functions.
             
