@@ -338,7 +338,7 @@ class WebModFormSpace_class(object):
         emf_logger.debug("returning F! :{0}".format(F))
         return F
 
-    ### Functions which prints properties with more formatting.
+    
 
     def to_web_dict(self):
         d = {}
