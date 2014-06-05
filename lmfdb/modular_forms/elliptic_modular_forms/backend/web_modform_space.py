@@ -77,6 +77,8 @@ class WebModFormSpace_class(object):
         - 'chi' -- character
         - 'cuspidal' -- 1 if space of cuspforms, 0 if all modforms
         """
+        from web_modforms import WebNewForm
+        
         if data is None: data = {}
         emf_logger.debug("WebModFormSpace with k,N,chi={0}".format( (k,N,chi)))
         d = {
@@ -104,7 +106,6 @@ class WebModFormSpace_class(object):
             '_dimension_modular_forms' : None,
             '_dimension_new_cusp_forms' : None,
             '_dimension_new_modular_symbols' : None,
-            '_galois_decomposition' : [],
             '_newspace' : None,
             '_name' : "{0}.{1}.{2}".format(N,k,chi),
             '_got_ap_from_db' : False ,
@@ -122,6 +123,9 @@ class WebModFormSpace_class(object):
             data = {}
         data.update(d)        
         self.__dict__.update(data)
+        if get_from_db:
+            for l in self.labels():
+                self._newforms[l] = WebNewForm(N=self._N, k=self._k,  chi=self._chi, parent=self, label=l)
 
     ### Return elementary properties of self.
     def weight(self):
@@ -165,6 +169,9 @@ class WebModFormSpace_class(object):
         Return newform factors of self.
         """
         return self._newform_factors
+
+    def newforms(self):
+        return self._newforms
                             
     def character_orbit_rep(self,k=None):
         r"""

@@ -4,21 +4,11 @@
 
 {% block content %}
 
-<h1>Newforms of weight {{ weight }} for {{ group }}
-{% if character is defined and character>0 %} 
-with character
-<a href='{{character_url}}'> 
-{{character_name}}
-</a>
-{% else %} 
-   with trivial character.
-{% endif %}
 {% if is_empty is not defined %}
 
 {% if extra_info is defined %}
 <span style="font-size:50%">({{ extra_info |safe }})</span>
 {% endif %}
-</h1>
 
 {% if error is defined %}
 {{ error |safe }}
@@ -33,36 +23,30 @@ with character
 <table>
   <thead>
     <tr>
-      <th>Form</th>
-      <th>Dim.</th>
-      <th>Defining polynomial</th>
-      <th>Discriminant</th>
+      <th>Name</th>
+      <th>Dimension</th>
+      <th>#-field</th>
       <th align="left">\(q\)-expansion of eigenform</th>
     </tr>
   </thead>
   <tbody>
-    {% for form in galois_orbits %}
+    {% for form in newforms %}
     <tr>
-      <td><a href="{{form.url}}">{{form.full_label}}</a></td>
-      <td>{{ form.dim }}</td>
-      <td>{{ form.poly }}</td>
-      <td>{{ form.disc }}
-        {% if form.is_relative %}
-        {% set got_a_relative_nf = 1 %}
-        \( {}^{*} \)
-        {% endif %}
-      </td>
-      <td>{{ form.qexp }}</td>
+      <td><a href="{{form.url() }}">{{form.name()}}</a></td>
+      <td>{{ form.dimension() }}</td>
+      <td><a href="{{ form.number_field_url() }}">{{ form.number_field_label() }}</a></td>
+      <td>{{ form.q_expansion() }}</td>
     </tr>
     {% endfor %}
   </tbody>
 </table>
-{% if got_a_relative_nf == 1 %}
-\( {}^{*} \) denotes a relative discriminant.
-{% endif %}
- {% else %}
+The dimension in the table is the dimension of the Galois orbit defined by the newform
+intersected with {{ new_name }}. (TODO: make stuff into KNOWLS)
+
+{% else %}
 {{ name_new }} {{ nontrivial_new_info }}
 {% endif %}
+
 {% if old_decomposition != "" %}
 <h2> Decomposition of {{name_old}} into lower level spaces</h2>
 {{ old_decomposition | safe }}

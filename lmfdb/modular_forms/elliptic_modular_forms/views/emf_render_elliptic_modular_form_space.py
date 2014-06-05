@@ -72,11 +72,13 @@ def render_elliptic_modular_form_space(level=None, weight=None, character=None, 
         emf_logger.debug("Dimension of newforms is one!")
         info['label'] = 'a'
         return redirect(url_for('emf.render_elliptic_modular_forms', **info))
-    info['title'] = "Newforms of weight %s on \(\Gamma_{0}(%s)\)" % (weight, level)
+    info['title'] = "Newforms of weight %s for \(\Gamma_{0}(%s)\) with character \(\chi_{%s}(%s, \cdot)\)" % (weight, level, level, character)
     bread = [(EMF_TOP, url_for('emf.render_elliptic_modular_forms'))]
     bread.append(("Level %s" % level, url_for('emf.render_elliptic_modular_forms', level=level)))
     bread.append(
         ("Weight %s" % weight, url_for('emf.render_elliptic_modular_forms', level=level, weight=weight)))
+    bread.append(
+        ("Character \(\chi_{%s}(%s, \cdot)\)" % (level, character), url_for('emf.render_elliptic_modular_forms', level=level, weight=weight, character=character)))
     # emf_logger.debug("friends={0}".format(friends))
     info['bread'] = bread
     return render_template("emf_space.html", **info)
@@ -105,15 +107,17 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
         return info
     try:
         WMFS = WebModFormSpace(N = level, k = weight, chi = character)
+        emf_logger.debug("Created WebModFormSpace %s"%WMFS)
         if 'download' in info and 'tempfile' in info:
             WNF._save_to_file(info['tempfile'])
             info['filename'] = str(weight) + '-' + str(level) + '-' + str(character) + '-' + label + '.sobj'
             return info
     except Exception as e:
+        emf_logger.debug(e)
         if isinstance(e,IndexError):
             info['error'] = e.message
         WMFS = None
-    if WMFS == None:
+    if WMFS is None:
         info['error'] = "We are sorry. The sought space can not be found in the database."
         return info
     if WMFS.level() == 1:
@@ -136,25 +140,21 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
     info['dimension_newspace'] = WMFS.dimension_newspace()
     info['dimension_oldspace'] = WMFS.dimension_oldspace()
     info['dimension'] = WMFS.dimension()
-    info['galois_orbits'] = WMFS.get_all_galois_orbit_info()
+    info['newforms'] = WMFS.newforms().values()
+    emf_logger.debug('WMFS.newforms() = {0}'.format(info['newforms']))
+    if isinstance(info['newforms'], list) and WMFS.dimension_new_cusp_forms() > 0:
+        info['nontrivial_new'] = True
     lifts = list()
     if WMFS.dimension() == 0:  # we don't need to work with an empty space
         info['sturm_bound'] = 0
-        info['new_decomposition'] = ''
         info['is_empty'] = 1
         lifts.append(('Half-Integral Weight Forms', '/ModularForm/Mp2/Q'))
         lifts.append(('Siegel Modular Forms', '/ModularForm/GSp4/Q'))
         info['lifts'] = lifts
         return info
     info['sturm_bound'] = WMFS.sturm_bound()
-    info['new_decomposition'] = WMFS.print_galois_orbits()
-    emf_logger.debug("new_decomp={0}".format(info['new_decomposition']))
-    info['nontrivial_new'] = len(info['new_decomposition'])
-    if info['new_decomposition']=='':
-        if info['dimension_newspace'] >0:
-            info['nontrivial_new_info'] = " is unfortunately not in the database yet!" 
-        else:
-            info['nontrivial_new_info'] = " is empty!"
+    if info['dimension_newspace'] == 0:
+        info['nontrivial_new_info'] = " is empty!"
     ## we try to catch well-known bugs...
     info['old_decomposition'] = "n/a"
     if level < N_max_comp:

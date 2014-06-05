@@ -16,7 +16,9 @@
 r"""
 Routines for rendering webpages for holomorphic modular forms on GL(2,Q)
 
-AUTHOR: Fredrik Strömberg
+AUTHORS:
+ - Fredrik Strömberg
+ - Stephan Ehlen
 
 """
 from flask import render_template, url_for, request, redirect, make_response, send_file
@@ -70,9 +72,9 @@ def render_one_elliptic_modular_form(level, weight, character, label, **kwds):
     bread.append(("of level %s" % level, url2))
     bread.append(("weight %s" % weight, url3))
     if int(character) == 0:
-        bread.append(("and trivial character", url4))
+        bread.append(("trivial character", url4))
     else:
-        bread.append(("and character \(\chi_{%s}\)" % character, url4))
+        bread.append(("character \(\chi_{%s}(%s, \cdot)\)" % (level, character), url4))
     info['bread'] = bread
     return render_template("emf.html", **info)
 
@@ -182,61 +184,55 @@ def set_info_for_one_modular_form(level=None, weight=None, character=None, label
     info['embeddings_len'] = len(info['embeddings'])
     properties2 = []
     if (ZZ(level)).is_squarefree():
-        info['twist_info'] = WNF.print_twist_info()
-        info['is_minimal'] = info['twist_info'][0]
-        if(info['twist_info'][0]):
-            s = '- Is minimal<br>'
-        else:
-            s = '- Is a twist of lower level<br>'
-        properties2 = [('Twist info', s)]
+        info['twist_info'] = WNF.twist_info()
+        if isinstance(info['twist_info'], list) and len(info['twist_info'])>0:
+            info['is_minimal'] = info['twist_info'][0]
+            if(info['twist_info'][0]):
+                s = '- Is minimal<br>'
+            else:
+                s = '- Is a twist of lower level<br>'
+            properties2 = [('Twist info', s)]
     else:
         info['twist_info'] = 'Twist info currently not available.'
         properties2 = [('Twist info', 'not available')]
     args = list()
     for x in range(5, 200, 10):
         args.append({'digits': x})
-    digits = 7
     alev = None
-    if level < N_max_extra_comp:
-        info['is_cm'] = WNF.is_CM()
-        info['CM'] = WNF.print_is_CM()
-        info['CM_values'] = WNF.cm_values(digits=digits)
-        if len(info['CM_values']['tau'])==0:
-            info.pop('CM_values')
-        if(WNF.is_CM()[0])==None:
-            s = '- Unknown (insufficient data)<br>'
-        elif(WNF.is_CM()[0]):
-            s = '- Is a CM-form<br>'
-        else:
-            s = '- Is not a CM-form<br>'
-        properties2.append(('CM info', s))
-        alev = WNF.atkin_lehner_eigenvalues()
-        if len(alev.keys()) > 0:
-            s1 = " Atkin-Lehner eigenvalues "
-            s2 = ""
-            for Q in alev.keys():
-                s2 += "\( \omega_{ %s } \) : %s <br>" % (Q, alev[Q])
-            properties2.append((s1, s2))
-        # properties.append(s)
-        emf_logger.debug("properties={0}".format(properties2))
+    CM = WNF.cm_values()
+    if CM is not None:
+        if CM.has_key('tau') and len(CM['tau']) != 0:
+            info['CM_values'] = CM
+    CM = WNF.is_CM()
+    info['is_cm'] = CM
+    if(WNF.is_CM()) == None or len(WNF.is_CM()) == 0:
+        s = '- Unknown (insufficient data)<br>'
+    elif(WNF.is_CM()[0]):
+        s = '- Is a CM-form<br>'
     else:
-        properties2.append(("CM info", "not available"))
-        if level != 1:
-            properties2.append(("Atkin-Lehner eigenvalues", "not available"))
+        s = '- Is not a CM-form<br>'
+    properties2.append(('CM info', s))
+    alev = WNF.atkin_lehner_eigenvalues()
     info['atkinlehner'] = None
-    if alev and level != 1:
+    if isinstance(alev,dict) and len(alev.keys())>0 and level != 1:
+        s1 = " Atkin-Lehner eigenvalues "
+        s2 = ""
+        for Q in alev.keys():
+            s2 += "\( \omega_{ %s } \) : %s <br>" % (Q, alev[Q])
+        properties2.append((s1, s2))
+        emf_logger.debug("properties={0}".format(properties2))
         alev = WNF.atkin_lehner_eigenvalues_for_all_cusps()
-        info['atkinlehner'] = list()
-        # info['atkin_lehner_cusps']=list()
-        for c in alev.keys():
-            if(c == Cusp(Infinity)):
-                continue
-            s = "\(" + latex(c) + "\)"
-            Q = alev[c][0]
-            ev = alev[c][1]
-            info['atkinlehner'].append([Q, c, ev])
+        if isinstance(alev,dict) and len(alev.keys())>0:
+            info['atkinlehner'] = list()
+            for c in alev.keys():
+                if(c == Cusp(Infinity)):
+                    continue
+                s = "\(" + latex(c) + "\)"
+                Q = alev[c][0]
+                ev = alev[c][1]
+                info['atkinlehner'].append([Q, c, ev])
     if(level == 1):
-        info['explicit_formulas'] = WNF.print_as_polynomial_in_E4_and_E6()
+        info['explicit_formulas'] = WNF.as_polynomial_in_E4_and_E6()
     cur_url = '?&level=' + str(level) + '&weight=' + str(weight) + '&character=' + str(character) + \
         '&label=' + str(label)
     if(len(WNF.parent().galois_decomposition()) > 1):
