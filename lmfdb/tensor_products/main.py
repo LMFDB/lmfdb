@@ -76,39 +76,44 @@ def show():
 
     # currently only implemented tp of two things
     if len(galoisRepObjs)==2:
-        tp = GaloisRepresentation([galoisRepObjs[0], galoisRepObjs[1]])
-        tp.lfunction()
+ 
+        try: 
+            tp = GaloisRepresentation([galoisRepObjs[0], galoisRepObjs[1]])
+            tp.lfunction()
 
-        info = {}
-        info['dirichlet'] = lfuncDStex(tp, "analytic")
-        info['eulerproduct'] = lfuncEPtex(tp, "abstract")
-        info['functionalequation'] = lfuncFEtex(tp, "analytic")
-        info['functionalequationSelberg'] = lfuncFEtex(tp, "selberg")
+            info = {}
+            info['dirichlet'] = lfuncDStex(tp, "analytic")
+            info['eulerproduct'] = lfuncEPtex(tp, "abstract")
+            info['functionalequation'] = lfuncFEtex(tp, "analytic")
+            info['functionalequationSelberg'] = lfuncFEtex(tp, "selberg")
 
-        properties2 = [('Root number', '$'+str(tp.root_number())+'$'),
-                       ('Dimension', '$'+str(tp.dimension())+'$'),
-                       ('Conductor', '$'+str(tp.cond())+'$')]
-        info['properties2'] = properties2
+            properties2 = [('Root number', '$'+str(tp.root_number()).replace('*','').replace('I','i')+'$'),
+                           ('Dimension', '$'+str(tp.dimension())+'$'),
+                           ('Conductor', '$'+str(tp.cond())+'$')]
+            info['properties2'] = properties2
 
-        if (tp.numcoeff > len(tp.dirichlet_coefficients)+10):
-            info['zeroswarning'] = 'These zeros may be inaccurate because we use only %s terms rather than the theoretically required %s terms' %(len(tp.dirichlet_coefficients), tp.numcoeff)
-            info['svwarning'] = 'These special values may also be inaccurate, for the same reason.'
-        else:
-            info['zeroswarning'] = ''       
-            info['svwarning'] = '' 
+            if (tp.numcoeff > len(tp.dirichlet_coefficients)+10):
+                info['zeroswarning'] = 'These zeros may be inaccurate because we use only %s terms rather than the theoretically required %s terms' %(len(tp.dirichlet_coefficients), tp.numcoeff)
+                info['svwarning'] = 'These special values may also be inaccurate, for the same reason.'
+            else:
+                info['zeroswarning'] = ''       
+                info['svwarning'] = '' 
     
-        info['tpzeroslink'] = zeros(tp) 
-        info['sv1'] = specialValueString(tp, 1, '1')
-        info['sv12'] = specialValueString(tp, 0.5, '1/2')
+            info['tpzeroslink'] = zeros(tp) 
+            info['sv1'] = specialValueString(tp, 1, '1')
+            info['sv12'] = specialValueString(tp, 0.5, '1/2')
 
-#        friends = []
-#        friends.append(('L-function of first object', url_for('.show', obj1=objLinks[0])))
-#        friends.append(('L-function of second object', url_for('.show', obj2=objLinks[1]))) 
-#        info['friends'] = friends
+#            friends = []
+#            friends.append(('L-function of first object', url_for('.show', obj1=objLinks[0])))
+#            friends.append(('L-function of second object', url_for('.show', obj2=objLinks[1]))) 
+#            info['friends'] = friends
 
-        info['eulerproduct'] = '\prod_{p} det(1 - Frob_p p^{-s} | (V \otimes W)^{I_p})^{-1}'
+            info['eulerproduct'] = 'L(s, V \otimes W) = \prod_{p} \det(1 - Frob_p p^{-s} | (V \otimes W)^{I_p})^{-1}'
 
-        return render_template('Lfunction.html', **info)  
+            return render_template('Lfunction.html', **info)
+        except Exception as ex:
+            info = {'content': 'Sorry, there was a problem: ' + str(ex.args), 'title':'Error'}
+            return render_template('LfunctionSimple.html', **info) 
     else:
         return render_template("not_yet_implemented.html")
 
