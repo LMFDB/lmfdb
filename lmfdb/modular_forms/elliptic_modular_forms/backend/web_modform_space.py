@@ -27,14 +27,14 @@ AUTHORS:
 NOTE: Now NOTHING should be computed.
  """
 
-from sage.all import ZZ, QQ, DirichletGroup, CuspForms, Gamma0, ModularSymbols, Newforms, trivial_character, is_squarefree, divisors, RealField, ComplexField, prime_range, I, join, gcd, Cusp, Infinity, ceil, CyclotomicField, exp, pi, primes_first_n, euler_phi, RR, prime_divisors, Integer, matrix,NumberField,PowerSeriesRing
+from sage.all import ZZ, Gamma0, Gamma1, RealField, ComplexField, prime_range, join, ceil, RR, Integer, matrix, NumberField, PowerSeriesRing, Parent, SageObject, loads, save, dumps, deepcopy
 from sage.rings.power_series_poly import PowerSeries_poly
-from sage.all import Parent, SageObject, dimension_new_cusp_forms, vector, dimension_modular_forms, dimension_cusp_forms, EisensteinForms, Matrix, floor, denominator, latex, is_prime, prime_pi, next_prime, previous_prime,primes_first_n, previous_prime, factor, loads,save,dumps,deepcopy
+from sage.all import Matrix, latex
 import re
 import yaml
 from flask import url_for
 
-from lmfdb.modular_forms.elliptic_modular_forms import emf_logger,emf_version
+from lmfdb.modular_forms.elliptic_modular_forms import emf_logger, emf_version
 from emf_core import html_table, len_as_printed
 
 from sage.rings.number_field.number_field_base import NumberField as NumberField_class
@@ -59,12 +59,10 @@ def WebModFormSpace(N=1, k=2, chi=1, cuspidal=1, prec=10, bitprec=53, data=None,
 class WebModFormSpace_class(object):
     r"""
     Space of cuspforms to be presented on the web.
-        G  = NS.
 
     EXAMPLES::
 
     sage: WS=WebModFormSpace(2,39)
-
 
     """
     def __init__(self, N=1, k=2, chi=1, cuspidal=1, prec=10, bitprec=53, data=None, verbose=0,
@@ -154,6 +152,11 @@ class WebModFormSpace_class(object):
         r"""
         The group of self.
         """
+        if self._group is None:
+            if self.character().is_trivial():
+                self._group = Gamma0(self.level())
+            else:
+                self._group = Gamma1(self.level())
         return self._group
 
     def aps(self,prec=-1):
@@ -161,12 +164,6 @@ class WebModFormSpace_class(object):
         Return a list of aps, that is, Hecke eigenvalues of prime indices, for self.
         """
         return self._ap
-
-    def newform_factors(self):
-        r"""
-        Return newform factors of self.
-        """
-        return self._newform_factors
 
     def newforms(self):
         return self._newforms
