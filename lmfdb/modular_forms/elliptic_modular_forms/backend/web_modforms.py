@@ -221,15 +221,15 @@ class WebNewForm_class(object):
             self._character = WebChar(modulus=self.level(),number=self.chi())
         return self._character
 
-    def fi(self):
+    def newform_number(self):
         r"""
         The number of self in the Galois orbits of self.parent()
         """
-        if self._fi is None:
+        if self._newform_number is None:
             if self._label not in self.parent().labels():
                 raise ValueError,"Self (with label {0}) is not in the set of Galois orbits of self.parent()!".format(self._label)
-            self._fi = self.parent().labels().index(self._label)
-        return self._fi
+            self._newform_number = self.parent().labels().index(self._label)
+        return self._newform_number
 
     def prec(self):
         r"""
