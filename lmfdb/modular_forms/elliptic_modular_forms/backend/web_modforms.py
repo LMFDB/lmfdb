@@ -291,8 +291,6 @@ class WebNewForm_class(object):
         r"""
         Get aps from database if they exist.
         """
-        if self._ap <> {}:
-            return 
         ap_files = connect_to_modularforms_db('ap.files')
         key = {'name': self.name()}
         key['prec'] = {"$gt": int(prec - 1)}
@@ -364,9 +362,8 @@ class WebNewForm_class(object):
             emf_logger.debug("coef_fldas_d={0}".format(self._coefficient_field_as_dict))
             return number_field_from_dict(self._coefficient_field_as_dict)
         ## Get field from the ap's # Necessary because change in sage implementation
-        self._update_aps()
         try:
-            self._coefficient_field = self._ap[2].parent()
+            self._coefficient_field = self.coefficient(2).parent()
         except KeyError:
             emf_logger.debug("Cannot determine coefficient_field")
             self._coefficient_field = None
@@ -540,7 +537,7 @@ class WebNewForm_class(object):
             return 1
         F = arith.factor(n)
         prod = None
-        if self._ap is None or self._ap == {}:
+        if self._ap is None or self._ap == {} or self.max_cn() < n:
             try:
                 self._get_aps(prec=n)
             except IndexError:
