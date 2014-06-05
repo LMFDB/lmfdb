@@ -109,7 +109,7 @@ class WebModFormSpace_class(object):
             '_dimension_new_modular_symbols' : None,
             '_newspace' : None,
             '_name' : "{0}.{1}.{2}".format(N,k,chi),
-            '_got_ap_from_db' : False ,
+            '_got_ap_from_db' : False,
             '_version': float(emf_version),
             '_galois_orbit_poly_info':{}
             }
@@ -128,6 +128,7 @@ class WebModFormSpace_class(object):
         data.update(d)        
         self.__dict__.update(data)
         if get_all_newforms_from_db:
+            self._get_aps()
             for l in self.labels():
                 self._newforms[l] = WebNewForm(N=self._N, k=self._k,  chi=self._chi, parent=self, label=l)
 

@@ -289,14 +289,30 @@ def web_latex(x):
         return "\( %s \)" % sage.all.latex(x)
 
 
-def web_latex_split_on_pm(x):
+def web_latex_split_on(x, on=['+', '-']):
     if isinstance(x, (str, unicode)):
         return x
     else:
         A = "\( %s \)" % sage.all.latex(x)
-        A = A.replace('+', '\) + \(')
-        A = A.replace('-', '\) - \(')
-        return A
+        for s in on:
+            A = A.replace(s, '\) ' + s + ' \(')
+    return A
+    
+def web_latex_split_on_pm(x):
+    return web_latex_split_on(x)
+
+def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
+
+    def insert_latex(s):
+        return s.group(1) + '\) \('
+
+    if isinstance(x, (str, unicode)):
+        return x
+    else:
+        A = "\( %s \)" % sage.all.latex(x)
+        c = re.compile(r)
+        A = c.sub(insert_latex, A)
+    return A
 
 
 class LinkedList(object):
