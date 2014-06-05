@@ -294,7 +294,7 @@ class WebNewForm_class(object):
         if self._ap <> {}:
             return 
         ap_files = connect_to_modularforms_db('ap.files')
-        key = {'name': self._name, 'prec': {'$gt': prec}}
+        key = {'name': self.name()}
         key['prec'] = {"$gt": int(prec - 1)}
 
         ap_from_db  = ap_files.find_one(key)
@@ -309,39 +309,6 @@ class WebNewForm_class(object):
         for i in range(len(c)):
             p = primes_first_n(lc)[i]
             self._ap[p] = c[i]
-
-    
-    def insert_into_db(self):
-        r"""
-        Insert a dictionary of data for self into the database collection
-        WebNewforms.files
-        """
-        emf_logger.debug("inserting self into db! name={0}".format(self._name))
-        C = connect_to_modularforms_db('WebNewForms.files')
-        fs = get_files_from_gridfs('WebNewforms')
-        s = {'name':self._name,'version':float(self._version)}
-        rec = C.find_one(s)
-        if rec:
-            id = rec.get('_id')
-        else:
-            id = None
-        if id<>None:
-            emf_logger.debug("Removing self from db with id={0}".format(id))
-            fs.delete(id)
-            
-        fname = "webnewform-{0:0>5}-{1:0>3}-{2:0>3}-{3}".format(self._N,self._k,self._chi,self._label) 
-        d = self.to_dict()
-        d.pop('_ap',None)
-        ## The ap's are already stored in this format in the database
-        ## so we don't store them here again.
-        id = fs.put(dumps(d),filename=fname,N=int(self._N),k=int(self._k),chi=int(self._chi),label=self._label,name=self._name,version=float(self._version))
-#        except Exception as e:
-#            emf_logger.critical("DB insertion failed: {0}".format(e.message))
-        emf_logger.debug("inserted :{0}".format(id))
-    
-    
-
-            
 
 ##  Internal functions
 ##        

@@ -200,7 +200,7 @@ class WebChar(object):
         return self._name
 
             
-    def value(self,x,value_format='algebraic'):
+    def value(self, x, value_format='algebraic'):
         r"""
         Return the value of self as an algebraic integer or float.
         """
