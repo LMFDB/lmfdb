@@ -30,9 +30,12 @@ TODO:
 Fix complex characters. I.e. embedddings and galois conjugates in a consistent way.
 
 """
-from sage.all import QQ, DirichletGroup, divisors, ComplexField, join, primes_first_n, matrix, NumberField, PowerSeriesRing
+from sage.all import divisors, ComplexField, join, primes_first_n, matrix, NumberField, PowerSeriesRing
 from sage.rings.power_series_poly import PowerSeries_poly
+from sage.rings.integer_ring import ZZ
+from sage.rings.rational_field import QQ
 from sage.all import Parent, SageObject, dimension_new_cusp_forms, vector, dimension_modular_forms, dimension_cusp_forms, Matrix, floor, latex, loads, save, dumps, deepcopy
+from sage.rings.infinity import Infinity
 import re
 import yaml
 from flask import url_for
@@ -670,6 +673,39 @@ class WebNewForm_class(object):
                 res[c] = [Q, ep]
                 # res[c]=ep
         return res
+
+    def atkin_lehner_at_cusp(self, cusp):
+        r"""
+        Return Atkin-Lehner eigenvalue of A-L involution
+        which normalizes cusp if such an involution exist.
+        """
+        if not (self.character().is_trivial() or self.character().order() == 2):
+            return None
+        
+        x = self.character()
+        if(x != 0 and not x.is_trivial()):
+            return None
+        if(cusp == Cusp(Infinity)):
+            return (ZZ(0), 1)
+        elif(cusp == Cusp(0)):
+            try:
+                return (self.level(), self.atkin_lehner_eigenvalues()[self.level()])
+            except:
+                return None
+        cusp = QQ(cusp)
+        N = self.level()
+        q = cusp.denominator()
+        p = cusp.numerator()
+        d = ZZ(cusp * N)
+        if(d.divides(N) and gcd(ZZ(N / d), ZZ(d)) == 1):
+            M = self._compute_atkin_lehner_matrix(self.as_factor(), ZZ(d))
+            ev = M.eigenvalues()
+            if len(ev) > 1:
+                if len(set(ev)) > 1:
+                    emf_logger.critical("Should be one Atkin-Lehner eigenvalue. Got: {0} ".format(ev))
+            return (ZZ(d), ev[0])
+        else:
+            return None
 
     
     def is_minimal(self):
