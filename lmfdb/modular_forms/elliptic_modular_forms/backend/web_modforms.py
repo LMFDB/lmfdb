@@ -298,7 +298,7 @@ class WebNewForm_class(object):
         ap_from_db  = ap_files.find_one(key)
         if ap_from_db is None:
             raise IndexError("No record found.")
-
+            
         emf_logger.debug("finds={0}".format(ap_from_db))
         emf_logger.debug("finds.count()={0}".format(ap_from_db.count()))
 
