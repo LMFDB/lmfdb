@@ -338,8 +338,6 @@ class WebModFormSpace_class(object):
         emf_logger.debug("returning F! :{0}".format(F))
         return F
 
-    
-
     def to_web_dict(self):
         d = {}
         dd = self.__dict__

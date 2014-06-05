@@ -131,8 +131,8 @@ class WebNewForm_class(object):
             '_character_naming_scheme' : 'Conrey', # To make it clear in case someone simply looks at a dictionary.
             '_name' : "{0}.{1}.{2}{3}".format(N,k,chi,label),
             '_sturm_bound' : None,
-            '_newform_number':None
-            '_version': float(emf_version)            
+            '_newform_number':None,
+            '_version': float(emf_version)
             }
         self.__dict__.update(d)
         emf_logger.debug("label = {0}".format(self._label))
