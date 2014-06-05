@@ -78,7 +78,6 @@ class WebModFormSpace_class(object):
         - 'chi' -- character
         - 'cuspidal' -- 1 if space of cuspforms, 0 if all modforms
         """
-        from web_modforms import WebNewForm
         
         if data is None: data = {}
         emf_logger.debug("WebModFormSpace with k,N,chi={0}".format( (k,N,chi)))
@@ -225,6 +224,7 @@ class WebModFormSpace_class(object):
         return {}
 
     def get_all_newforms_from_db(self):
+        from web_modforms import WebNewForm
         for l in self.labels():
             self._newforms[l] = WebNewForm(N=self._N, k=self._k,  chi=self._chi, parent=self, label=l)
             

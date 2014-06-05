@@ -2,7 +2,7 @@
 
 {% set got_a_relative_nf = 0 %}
 
-{% if character.order() == 1 %}
+{% if character is not defined or character.order() == 1 %}
   {% set new_name = "\( S_{%s}^{\mathrm{new}}(%s) \)"|format(weight, level) %}
   {% set old_name = "\( S_{%s}^{\mathrm{old}}(%s) \)"|format(weight, level) %}
 {% else %}
