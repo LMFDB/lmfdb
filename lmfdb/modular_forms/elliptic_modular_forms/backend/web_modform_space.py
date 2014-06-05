@@ -305,7 +305,7 @@ class WebModFormSpace_class(object):
 
     def labels(self):
         r"""
-
+          Return the labels.
         """
         return self._galois_orbits_labels
 
