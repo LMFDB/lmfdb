@@ -645,13 +645,31 @@ class WebNewForm_class(object):
            sage: get_atkin_lehner_eigenvalues(4,14,1)
            '{2: -1, 14: 1, 7: -1}'
 
-
         """
         if not (self.character().is_trivial() or self.character().order() == 2):
             return None
         
         if(len(self._atkin_lehner_eigenvalues.keys()) > 0):
             return self._atkin_lehner_eigenvalues
+
+    def atkin_lehner_eigenvalues_for_all_cusps(self):
+        r"""
+        Return Atkin-Lehner eigenvalue of A-L involution
+        which normalizes cusp if such an inolution exist.
+        """
+        if not (self.character().is_trivial() or self.character().order() == 2):
+            return {}
+        res = dict()            
+        for c in self.parent().group().cusps():
+            if c == Infinity:
+                continue
+            l = self.atkin_lehner_at_cusp(c)
+            emf_logger.debug("l={0},{0}".format(c, l))
+            if(l):
+                (Q, ep) = l
+                res[c] = [Q, ep]
+                # res[c]=ep
+        return res
 
     
     def is_minimal(self):
@@ -726,7 +744,7 @@ class WebNewForm_class(object):
 
     
     def satake_parameters(self):
-        r""" Return an html-table containing the Satake parameters.
+        r""" Return the Satake parameters.
 
         We only do satake parameters for primes p primitive to the level.
         By defintion the S. parameters are given as the roots of
@@ -740,7 +758,7 @@ class WebNewForm_class(object):
         if self.character().order()>2:
             ## We only implement this for trival or quadratic characters.
             ## Otherwise there is difficulty to figure out what the embeddings mean... 
-            return 
+            return None
         return self._satake
 
     
