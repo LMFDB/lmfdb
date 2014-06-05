@@ -20,7 +20,7 @@ from lmfdb.transitive_group import *
 
 from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, comma, clean_input, url_character
 
-NF_credit = 'the PARI group, J. Voight, J. Jones, and D. Roberts'
+NF_credit = 'the PARI group, J. Voight, J. Jones, D. Roberts, J. Kl&uuml;ners, G. Malle'
 Completename = 'Completeness of this data'
 
 # Remove whitespace first in all cases
@@ -79,23 +79,6 @@ def group_display_shortC(C):
     def gds(nt):
         return group_display_short(nt['n'], nt['t'], C)
     return gds
-
-
-def field_pretty(field_str):
-    d, r, D, i = field_str.split('.')
-    if d == '1':  # Q
-        return '\(\Q\)'
-    if d == '2':  # quadratic field
-        D = ZZ(int(D)).squarefree_part()
-        if r == '0':
-            D = -D
-        return '\(\Q(\sqrt{' + str(D) + '}) \)'
-    for n in [5, 7, 8, 9, 10]:
-        if field_str == parse_field_string('Qzeta' + str(n)):
-            return '\(\Q(\zeta_%s) \)' % n
-    return field_str
-#    TODO:  pretty-printing of more fields of higher degree
-
 
 def poly_to_field_label(pol):
     try:
@@ -280,6 +263,7 @@ def render_field_webpage(args):
         return search_input_error(info, bread)
 
     info['wnf'] = nf
+    from lmfdb.WebNumberField import nf_display_knowl
     data['degree'] = nf.degree()
     data['class_number'] = nf.class_number()
     t = nf.galois_t()
