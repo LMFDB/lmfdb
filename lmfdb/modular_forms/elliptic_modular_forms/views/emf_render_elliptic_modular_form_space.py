@@ -24,7 +24,7 @@ import tempfile
 import os
 import re
 from lmfdb.utils import ajax_more, ajax_result, make_logger, to_dict, url_character
-from sage.all import *
+from sage.all import uniq
 from sage.modular.dirichlet import DirichletGroup
 from lmfdb.base import app, db
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms import WebNewForm,connect_to_modularforms_db
@@ -132,7 +132,8 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
     friends = list()
     for f in WMFS.newforms().values():
         friends.append(('Number field ' + f.number_field_label(), f.number_field_url()))
-    friends.append(("Dirichlet character " + WMFS.character().latex_name(), WMFS.character().url()))
+    friends = uniq(friends)
+    friends.append(("Dirichlet character \(" + WMFS.character().latex_name() + "\)", WMFS.character().url()))
     info['friends'] = friends
     
     return info
