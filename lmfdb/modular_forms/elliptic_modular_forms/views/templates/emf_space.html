@@ -2,6 +2,14 @@
 
 {% set got_a_relative_nf = 0 %}
 
+{% if character.order() == 1 %}
+  {% set new_name = "\( S_{%s}^{\mathrm{new}}(%s) \)"|format(weight, level) %}
+  {% set old_name = "\( S_{%s}^{\mathrm{old}}(%s) \)"|format(weight, level) %}
+{% else %}
+  {% set new_name = "\( S_{%s}^{\mathrm{new}}(%s) \)"|format(weight, character.latex_name()) %}
+  {% set old_name = "\( S_{%s}^{\mathrm{old}}(%s) \)"|format(weight, character.latex_name()) %}
+{% endif %}
+
 {% block content %}
 
 {% if is_empty is not defined %}
@@ -30,7 +38,7 @@
     </tr>
   </thead>
   <tbody>
-    {% for form in newforms %}
+    {% for form in newforms.values() %}
     <tr>
       <td><a href="{{form.url() }}">{{form.name()}}</a></td>
       <td>{{ form.dimension() }}</td>

@@ -142,16 +142,13 @@ class WebNewForm_class(object):
             d = self.get_from_db(self._N, self._k, self._chi, self._label)
             emf_logger.debug("Got data in WebNewForm: {0} from db".format(d))
             self.__dict__.update(d)
+            if parent is not None:
+                self._parent = parent
 
-        if parent is not None:
-            # we have to do that again
-            # otherwise we run into an infinite loop
-            # of fetching from the DB
-            self._parent = parent
-        if not isinstance(self._parent,WebModFormSpace_class):
-            emf_logger.debug("getting parent! label={0}".format(label))
-            self._parent = WebModFormSpace(N, k,chi, data=self._parent)
-            emf_logger.debug("finished getting parent")                
+        if isinstance(self._parent,dict) or self._parent is None:
+            emf_logger.debug("setting parent! label={0}".format(label))
+            self._parent = WebModFormSpace(N, k, chi, get_from_db=get_from_db, data=parent)
+            emf_logger.debug("finished getting parent")
             
         if self._parent.dimension_newspace()==0:
             self._dimension=0
@@ -652,15 +649,15 @@ class WebNewForm_class(object):
 
         if not isinstance(self._q_expansion,PowerSeries_poly):
             q_expansion = ''
+            R = PowerSeriesRing(self.coefficient_field(), 'q')
+            q = R.gen()
             if self._q_expansion_str<>'':
-                R = PowerSeriesRing(self.coefficient_field(), 'q')
                 q_expansion = R(self._q_expansion_str)
                 if q_expansion.degree() >= self.prec() - 1: 
                     q_expansion = q_expansion.add_bigoh(prec)
-            if q_expansion == '':
-                self._q_expansion_str = ''
             else:
-                self._q_expansion_str = str(q_expansion.polynomial())   
+                q_expansion = sum(self.coefficient(n)*q**n for n in range(1,prec)) 
+            self._q_expansion_str = str(q_expansion.polynomial())   
             self._q_expansion = q_expansion
         if not self._q_expansion == '':
             if self._q_expansion.prec() <= prec:

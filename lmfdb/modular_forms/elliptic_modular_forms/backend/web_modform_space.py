@@ -67,9 +67,10 @@ class WebModFormSpace_class(object):
 
 
     """
-    def __init__(self, N=1, k=2, chi=1, cuspidal=1, prec=10, bitprec=53, data=None, verbose=0,get_from_db=True):
+    def __init__(self, N=1, k=2, chi=1, cuspidal=1, prec=10, bitprec=53, data=None, verbose=0,
+                 get_from_db=True, get_all_newforms_from_db = False):
         r"""
-        Init self.
+        Init the WebModFormSpace.
 
         INPUT:
         - 'k' -- weight
@@ -123,7 +124,7 @@ class WebModFormSpace_class(object):
             data = {}
         data.update(d)        
         self.__dict__.update(data)
-        if get_from_db:
+        if get_all_newforms_from_db:
             for l in self.labels():
                 self._newforms[l] = WebNewForm(N=self._N, k=self._k,  chi=self._chi, parent=self, label=l)
 
@@ -152,6 +153,7 @@ class WebModFormSpace_class(object):
         if self._character is None:
             self._character = WebChar(self.level(),self.chi())
         return self._character
+    
     def group(self):
         r"""
         The group of self.
@@ -227,6 +229,7 @@ class WebModFormSpace_class(object):
                 aplist[a][prec]=loads(fs.get(rec['_id']).read())
             if cur_prec > prec and prec>0: # We are happy with these coefficients.
                 return aplist
+        self._ap = aplist
         return aplist  
              
     def __repr__(self):
@@ -245,6 +248,9 @@ class WebModFormSpace_class(object):
         return self._galois_orbits_labels[j]
 
     ###  Dimension formulas, calculates dimensions of subspaces of self.
+    def is_cuspidal(self):
+        return self._cuspidal == 1
+    
     def dimension_newspace(self):
         r"""
         The dimension of the subspace of newforms in self.
@@ -255,7 +261,7 @@ class WebModFormSpace_class(object):
         r"""
         The dimension of the subspace of oldforms in self.
         """
-        if self._cuspidal == 1:
+        if self.is_cuspidal():
             return self.dimension_cusp_forms() - self.dimension_new_cusp_forms()
         return self.dimension_modular_forms() - self.dimension_newspace()
 
@@ -290,7 +296,9 @@ class WebModFormSpace_class(object):
 
   
     def sturm_bound(self):
-        r""" Return the Sturm bound of S_k(N,xi), i.e. the number of coefficients necessary to determine a form uniquely in the space.
+        r"""
+          Return the Sturm bound of S_k(N,xi),
+          i.e. the trivial upper bound number of coefficients necessary to determine a form uniquely in the space.
         """
         return self._sturm_bound
 
@@ -321,220 +329,29 @@ class WebModFormSpace_class(object):
         emf_logger.debug("returning F! :{0}".format(F))
         return F
 
-    def galois_decomposition(self):
-        return self._galois_decomposition
-
-    def galois_orbit(self, orbit,prec=None):
-        r"""
-        Return the q_eigenform nr. orbit in self
-        """
-        if prec is None:
-            prec = self._prec
-        return self.galois_decomposition()[orbit].q_eigenform(prec, 'x')
-
     ### Functions which prints properties with more formatting.
-    def print_oldspace_decomposition(self):
-        r""" Print the oldspace decomposition of self.
-        """
-        if(len(self._oldspace_decomposition) == 0):
-            self._oldspace_decomposition = self.oldspace_decomposition()
 
-        O = self._oldspace_decomposition
-
-        n = 0
-        s = ""
-        if(self._chi != 1):
-            s = "\[S_{%s}^{old}(%s,{%s}) = " % (self._k, self._N, self.conrey_character_name())
+    def to_web_dict(self):
+        d = {}
+        dd = self.__dict__
+        for k, v in dd.items():
+            d[k[1:]] = v
+        d['dimension_oldspace'] = self.dimension_oldspace()
+        d['character'] = self.character()
+        d['weight'] = self.weight()
+        d['dimension'] = self.dimension()
+        # properties for the sidebar
+        prop = []
+        if self.is_cuspidal():
+            prop = [('Dimension newforms', [d['dimension_newspace']])]
+            prop.append(('Dimension oldforms', [d['dimension_oldspace']]))
         else:
-            s = "\[S_{%s}^{old}(%s) = " % (self._k, self._N)
-        if(len(O) == 0):
-            s = s + "\left\{ 0 \\right\}"
-        for n in range(len(O)):
-            (N, chi, m, d) = O[n]
-            if(self._chi != 1):
-                s = s + " %s\cdot S_{%s}^{new}(%s,\chi_{%s}({%s}, \cdot))" % (m, self._k, N, N, chi)
-            else:
-                s = s + " %s\cdot S_{%s}^{new}(%s)" % (m, self._k, N)
-            if(n < len(O) - 1 and len(O) > 1):
-                s = s + "\\oplus "
-        s = s + "\]"
-        return s
-
-    def get_all_galois_orbit_info(self, prec=10, qexp_max_len=50):
-        r"""
-        Set the info for all galois orbits (newforms) in list of  dictionaries.
-        """
-        emf_logger.debug('In get_all_galois_orbit_info')
-        from sage.monoids.all import AlphabeticStrings
-        L = self.galois_decomposition()
-        emf_logger.debug('have Galois decomposition: L={0}'.format(L))
-        if(len(L) == 0):
-            self._orbit_info = []
-        x = AlphabeticStrings().gens()
-        res = []
-        for j in range(len(self._galois_decomposition)):
-            o = dict()
-            label = self._galois_orbits_labels[j]
-            o['label'] = label
-            full_label = "{0}.{1}".format(self.level(), self.weight())
-            if self._chi != 1:
-                full_label = full_label + ".{0}".format(self._chi)
-            full_label = full_label + label
-            o['full_label'] = full_label
-            o['url'] = url_for('emf.render_elliptic_modular_forms', level=self.level(
-            ), weight=self.weight(), label=o['label'], character=self._chi)
-            o['dim'] = self._galois_decomposition[j].dimension()
-            emf_logger.debug('dim({0}={1})'.format(j, o['dim']))
-            oi = self.galois_orbit_poly_info(j, prec)
-            emf_logger.debug('orbit pol. info ={0}'.format(oi))            
-            poly, disc, is_relative = oi
-            o['poly'] = "\( {0} \)".format(latex(poly))
-            o['disc'] = "\( {0} \)".format(latex(disc))
-            o['is_relative'] = is_relative
-            emf_logger.debug('before qexp!')
-            o['qexp'] = self.qexp_orbit_as_string(j, prec, qexp_max_len)
-            emf_logger.debug('qexp({0}={1})'.format(j, o['qexp']))
-            res.append(o)
-        return res
-
-    def print_galois_orbits(self, prec=10, qexp_max_len=50):
-        r"""
-        Print the Galois orbits of self.
-
-        """
-        from sage.monoids.all import AlphabeticStrings
-        L = self.galois_decomposition()
-        emf_logger.debug("L=".format(L))
-        if(len(L) == 0):
-            return ""
-        x = AlphabeticStrings().gens()
-        tbl = dict()
-        tbl['headersh'] = ["dim.", "defining poly.", "discriminant", "\(q\)-expansion of eigenform"]
-        tbl['atts'] = "border=\"1\""
-        tbl['headersv'] = list()
-        tbl['data'] = list()
-        tbl['corner_label'] = ""
-        is_relative = False
-        for j in range(len(self._galois_decomposition)):
-            label = self._galois_orbits_labels[j]
-            # url="?weight="+str(self.weight())+"&level="+str(self.level())+"&character="+str(self.character())+"&label="+label
-            url = url_for('emf.render_elliptic_modular_forms', level=self.level(),
-                          weight=self.weight(), label=label, character=self._chi)
-            header = "<a href=\"" + url + "\">" + label + "</a>"
-            tbl['headersv'].append(header)
-            dim = self._galois_decomposition[j].dimension()
-            orbit = self.galois_orbit(j, prec)
-            # we might to truncate the power series
-            # if it is too long
-            cc = orbit.coefficients()
-
-            slist = list()
-            i = 1
-            # try to split up the orbit if too long
-            s = str(orbit)
-            ss = "\(" + my_latex_from_qexp(s) + "\)"
-            ll = 0
-            if len(s) > qexp_max_len:
-                emf_logger.debug("LEN > MAX!")
-                sl = ss.split('}')
-                for i in range(len(sl) - 1):
-                    sss = ''
-                    if i > 0 and i < len(sl) - 1:
-                        sss = '\('
-                    sss += sl[i]
-                    if i < len(sl) - 2:
-                        sss += '}\)'
-                    else:
-                        sss += '})\)'
-                    ll = ll + len(str(sl[i]))
-                    if ll > qexp_max_len:
-                        ll = 0
-                        sss += "<br>"
-                    slist.append(sss)
-            else:
-                slist.append(ss)
-            
-            K = orbit.base_ring()
-            if K.absolute_degree() == 1:
-                poly = ZZ['x'].gen()
-                disc = '1'
-            else:
-                poly,disc,is_relative = self.galois_orbit_poly_info(j)
-                #poly = K.defining_polynomial()
-                #if(K.is_relative()):
-                #    disc = factor(K.relative_discriminant().absolute_norm())
-                #    is_relative = True
-                #else:
-                #    disc = factor(K.discriminant())
-            tbl['data'].append([dim, poly, disc, slist])
-        # we already formatted the table
-        tbl['data_format'] = {3: 'html'}
-        tbl['col_width'] = {3: '200'}
-        tbl['atts'] = 'width="200" border="1"'
-        s = html_table(tbl)
-        if(is_relative):
-            s = s + "<br><small>For relative number fields we list the absolute norm of the discriminant)</small>"
-        return s
-
-    def qexp_orbit_as_string(self, orbitnr, prec=20, qexp_max_len=50):
-        orbit = self.galois_orbit(orbitnr, prec)
-        if not orbit:
-            return ''
-        # if it is too long
-        cc = orbit.coefficients()
-        slist = list()
-        i = 1
-        # try to split up the orbit if too long
-        s = str(orbit)
-        ss = "\(" + my_latex_from_qexp(s) + "\)"
-        ll = 0
-        if len(s) > qexp_max_len:
-            emf_logger.debug("LEN > MAX!")
-            sl = ss.split('}')
-            for i in range(len(sl) - 1):
-                sss = ''
-                if i > 0 and i < len(sl) - 1:
-                    sss = '\('
-                sss += sl[i]
-                if i < len(sl) - 2:
-                    sss += '}\)'
-                else:
-                    sss += '})\)'
-                ll = ll + len(str(sl[i]))
-                if ll > qexp_max_len:
-                    ll = 0
-                    sss += "<br>"
-                slist.append(sss)
-        else:
-            slist.append(ss)
-        return ss
-
-    def galois_orbit_poly_info(self, orbitnr, prec=10):
-        r"""
-        Set the information about the defining polynomial of a Galois orbit.
-        """
-        if self._galois_orbit_poly_info.get(orbitnr)<>None:
-            return self._galois_orbit_poly_info[orbitnr]
-        orbit = self.galois_orbit(orbitnr, prec)
-        emf_logger.debug("in orbit_poly_info orbit:{0}".format(orbit))
-        if not orbit:
-            return '',0,False
-        K = orbit.base_ring()
-        is_relative = False
-        disc = 1
-        if K.absolute_degree() == 1:
-            poly = ZZ['x'].gen()
-            disc = '1'
-        else:
-            emf_logger.debug("before poly")                    
-            poly = K.defining_polynomial()
-            emf_logger.debug("after poly")                                
-            if(K.is_relative()):
-                disc = factor(K.relative_discriminant().absolute_norm())
-                is_relative = True
-            else:
-                disc = factor(K.discriminant())
-        emf_logger.debug("end orbit_poly_info")
-        self._galois_orbit_poly_info[orbitnr] = poly, disc, is_relative
-        self.insert_into_db()
-        return self._galois_orbit_poly_info[orbitnr]
+            prop = [('Dimension modular forms', [d['dimension_mod_forms']])]
+            prop.append(('Dimension cusp forms', [d['dimension_cusp_forms']]))
+            prop.append(('Sturm bound', [self.sturm_bound()]))
+        d['properties2'] = prop
+        if isinstance(d['newforms'], dict) and self.dimension_new_cusp_forms() > 0:
+            d['nontrivial_new'] = True
+        if d['dimension_newspace'] == 0:
+            d['nontrivial_new_info'] = " is empty!"
+        return d

@@ -32,6 +32,8 @@ from flask import url_for
 from sage.all import dumps,loads
 from lmfdb.modular_forms.elliptic_modular_forms import emf_logger,emf_version
 from sage.rings.number_field.number_field_base import NumberField as NumberField_class
+from sage.all import copy
+from lmfdb.utils import url_character
 
 from lmfdb.modular_forms.elliptic_modular_forms.backend import connect_to_modularforms_db,get_files_from_gridfs
 try:
@@ -65,8 +67,9 @@ class WebChar(object):
             '_values_float': None,
             '_values_algebraic': None }
         self.__dict__.update(d)
+        emf_logger.debug('In WebChar, self.__dict__ = {0}'.format(self.__dict__))
         data = self.get_from_db()
-        if data <> {}:
+        if isinstance(data, dict) and len(data.values()) > 0:
             self.__dict__.update(data)
         if data == {} and  compute:
             self.conductor()
@@ -77,6 +80,7 @@ class WebChar(object):
                 self.value(i,value_format='float')
                 self.value(i,value_format='algebraic')
             self.insert_into_db()
+        emf_logger.debug('In WebChar, self.__dict__ = {0}'.format(self.__dict__))
 
         
     def get_from_db(self):
@@ -115,7 +119,7 @@ class WebChar(object):
             fs.delete(id)
             
         fname = "webchar-{0:0>4}-{1:0>3}".format(self._modulus,self._number) 
-        d = self.__dict__
+        d = copy(self.__dict__)
         d.pop('_url') ## This should be recomputed
         id = fs.put(dumps(d),filename=fname,n=int(self._modulus),k=int(self._number))
         emf_logger.debug("inserted :{0}".format(id))
@@ -186,6 +190,7 @@ class WebChar(object):
         Return the string representation of the character of self.
         """
         return self.name()
+    
     def name(self):
         r"""
         Return the string representation of the character of self.
@@ -220,12 +225,13 @@ class WebChar(object):
             return self._values_float[x]
         else:
             raise ValueError,"Format {0} is not known!".format(value_format)
+        
     def url(self):
         r"""
         Return the url of self.
         """
-        if self._url is None:
-            self._url = url_for('render_Dirichletwebpage',modulus=self.modulus(),number=self.number())
+        if hasattr(self, '_url') and self._url is None:
+            self._url = url_character(type='Dirichlet',modulus=self.modulus(), number=self.number())
         return self._url
     
    
