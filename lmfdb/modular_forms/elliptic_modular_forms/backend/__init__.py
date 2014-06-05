@@ -32,7 +32,7 @@ def get_files_from_gridfs(collection='',create=True):
     if 'files' not in collection:
         collection_name = collection + '.files'
     else:
-        collection = collection.split('.')[0]
+        collection_name = collection.split('.')[0]
     if collection_name not in C.collection_names() and not create:
         error_st = "Collection {0} is not in database {1} at connection {2}".format(collection,db_name,C)
         emf_logger.critical(error_st)
