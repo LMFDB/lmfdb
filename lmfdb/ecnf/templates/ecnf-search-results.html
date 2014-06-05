@@ -69,7 +69,7 @@ table td.params {
 <h2> Results ({{info.report}})</h2>
 <table>
 <tr>
-  <th class="center">Field label</th>
+  <th class="center">Field</th>
   <th class="center">Conductor norm</th>
   <th class="center">Conductor label</th>
   <th class="center">Curve label</th>
@@ -77,8 +77,14 @@ table td.params {
 </tr>
 {% for curve in info.curves: %}
 <tr>
-<td class="center"><a href="{{ url_for('number_fields.by_label',
-                            label=curve.field_label) }}">{{info.field_pretty(curve.field_label)}}</a></td>
+<td class="center">
+ {{ curve.field_knowl|safe }}
+{#
+<a href="{{ url_for('number_fields.by_label',
+                            label=curve.field_label)
+                            }}">{{info.field_pretty(curve.field_label)}}</a>
+#}
+</td>
 <td class="center">{{curve.conductor_norm}}</td>
 <td class="center">{{curve.conductor_label}}</td>
 <td class="center"><a href="{{ url_for('.show_ecnf1',full_label=curve.label) }} ">{{curve.short_label}}</a></td>

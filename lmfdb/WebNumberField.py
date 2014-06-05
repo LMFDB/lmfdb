@@ -56,14 +56,14 @@ def nf_knowl_guts(label, C):
     else:
         D = str(D)
         Dfact = D + ' = ' + Dfact
-    out += '<br>Discriminant: $'
+    out += '<br>Discriminant: '
     out += Dfact
-    out += '$<br>Signature: '
-    out += wnf.signature()
+    out += '<br>Signature: '
+    out += str(wnf.signature())
     out += '<br>Galois group: '+group_display_knowl(wnf.degree(),wnf.galois_t(),C)
     out += '</div>'
     out += '<div align="right">'
-    out += '<a href="%s">%s home page</a>' % (url_for("number_fields.number_field_render_webpage", natural=label),label)
+    out += '<a href="%s">%s home page</a>' % (str(url_for("number_fields.number_field_render_webpage", natural=label)),label)
     out += '</div>'
     return out
 

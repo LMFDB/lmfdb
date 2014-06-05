@@ -55,12 +55,7 @@ function show_code(system) {
 #}
 
 <div>
-  <h2>  Base Field   {{ ec.field.field_knowl()|safe }}
-
-<a href="{{ url_for('number_fields.by_label',
-         label=ec.field.label)}}">{{ ec.field.pretty_label }}</a>
-
-</h2>
+  <h2>  Base Field   {{ ec.field.field_knowl()|safe }} </h2>
 <p>
 Generator {{ ec.field.generator }}, with minimal polynomial {{ ec.field.poly }}
 </p>

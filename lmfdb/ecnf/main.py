@@ -12,6 +12,7 @@ from lmfdb.utils import image_src, web_latex, to_dict, parse_range, parse_range2
 from sage.all import ZZ, var, PolynomialRing, QQ, GCD
 from lmfdb.ecnf import ecnf_page, logger
 from lmfdb.number_fields.number_field import parse_field_string, field_pretty
+from lmfdb.WebNumberField import nf_display_knowl, WebNumberField
 
 credit = "John Cremona, Paul Gunnells, Dan Yasaki, Alyson Deines, John Voight, Warren Moore, Haluk Sengun"
 
@@ -73,7 +74,6 @@ class FIELD(object):
         return self.K([QQ(str(c)) for c in s])
 
     def field_knowl(self):
-        from lmfdb.WebNumberField import nf_display_knowl
         return nf_display_knowl(self.label, getDBConnection(), self.pretty_label)
 
 def make_field(label):
@@ -343,6 +343,10 @@ def elliptic_curve_search(**args):
 
     bread = []#[('Elliptic Curves over Number Fields', url_for(".elliptic_curve_search")),             ('Search Results', '.')]
 
+    res = list(res)
+    for e in res:
+        e['field_knowl'] = nf_display_knowl(e['field_label'], getDBConnection(), e['field_label'])
+        print e['field_knowl']
     info['curves'] = res # [ECNF(e) for e in res]
     info['number'] = nres
     info['start'] = start
