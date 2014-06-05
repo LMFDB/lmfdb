@@ -292,14 +292,13 @@ class WebNewForm_class(object):
         Get aps from database if they exist.
         """
         ap_files = connect_to_modularforms_db('ap.files')
-        key = {'k': int(self._k), 'N': int(self._N), 'chi': int(self._chi), 'label' : self.label(), 'prec': {'$gt': prec}}
+        key = {'k': int(self._k), 'N': int(self._N), 'cchi': int(self._chi), 'label' : self.label(), 'prec': {'$gt': prec}}
         key['prec'] = {"$gt": int(prec - 1)}
 
-        try:
-            ap_from_db  = ap_files.find_one(key)
-        except:
+        ap_from_db  = ap_files.find_one(key)
+        if ap_from_db is None:
             raise IndexError("No record found.")
-
+            
         emf_logger.debug("finds={0}".format(ap_from_db))
         emf_logger.debug("finds.count()={0}".format(ap_from_db.count()))
 
