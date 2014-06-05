@@ -82,7 +82,6 @@ class WebNewForm_class(object):
         Init self as form with given label in S_k(N,chi)
         """
         from web_modform_space import WebModFormSpace_class, WebModFormSpace
-        
         emf_logger.debug("WebNewForm with N,k,chi,label={0}".format( (N,k,chi,label)))
         if not data is None and isinstance(data, dict):
             emf_logger.debug("incoming data in construction : {0},{1},{2},{3}".format(data.get('N'),data.get('k'),data.get('chi'),data.get('label')))
@@ -150,14 +149,15 @@ class WebNewForm_class(object):
             self._parent = parent
         if not isinstance(self._parent,WebModFormSpace_class):
             emf_logger.debug("getting parent! label={0}".format(label))
-            self._parent = WebModFormSpace(N, k,chi, data=self._parent)
+            self._parent = WebModFormSpace(N, k,chi, data=self._parent,get_from_db=get_from_db)
             emf_logger.debug("finished getting parent")                
             
         if self._parent.dimension_newspace()==0:
             self._dimension=0
             return
         # What?
-        self._check_consistency_of_labels()
+        if get_from_db:
+            self._check_consistency_of_labels()
         emf_logger.debug("name={0}".format(self._name))
         emf_logger.debug("done __init__")
 

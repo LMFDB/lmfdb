@@ -115,10 +115,13 @@ class WebModFormSpace_class(object):
         self.__dict__.update(d)
         #data.update(d)
         emf_logger.debug("Incoming data:{0} ".format(data))
-        d = self.get_from_db()
-        emf_logger.debug("Got data:{0} from db".format(d))
-        if d == {}:
-            raise ValueError,"The form is not in the database!"
+        if get_from_db:
+           d = self.get_from_db()
+           emf_logger.debug("Got data:{0} from db".format(d))
+           if d == {}:
+               raise ValueError,"The form is not in the database!"
+        else:
+           d = {}
         if data is None:
             data = {}
         data.update(d)        
@@ -233,8 +236,13 @@ class WebModFormSpace_class(object):
         r"""
         Return string representation of self.
         """
-        s = 'Space of Cusp forms on ' + str(self.group()) + ' of weight ' + str(self._k)
-        s += ' and dimension ' + str(self.dimension())
+        
+        if self.chi())==1:
+            s = 'Space of Cusp forms on Gamma0({0}) of weight {1}'.format(self.level(),self.weight())
+        else:
+            s = 'Space of Cusp forms on Gamma0({0}) of weight {1} and character no. {2}'.format(self.level(),self.weight(),self.chi())
+        
+#        s += ' and dimension ' + str(self.dimension())
         return s
 
 
