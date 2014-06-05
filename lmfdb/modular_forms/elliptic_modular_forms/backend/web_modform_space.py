@@ -90,25 +90,19 @@ class WebModFormSpace_class(object):
             '_ap' : {}, '_group' : None,
             '_character' : None,
             '_character_orbit_rep' : None,
-            '_modular_symbols' : None,
             '_sturm_bound' : None,
-            '_newspace' : None,
             '_newforms' : {},
-            '_new_modular_symbols' : None,
-            '_galois_decomposition' : [],
             '_galois_orbits_labels' : [],
             '_oldspace_decomposition' : [],
-            '_newform_factors' : None,
             '_verbose' : int(verbose),
             '_bitprec' : int(bitprec),
+            '_dimension': None,
             '_dimension_newspace' : None,
             '_dimension_cusp_forms' : None,
             '_dimension_modular_forms' : None,
             '_dimension_new_cusp_forms' : None,
             '_dimension_new_modular_symbols' : None,
-            '_newspace' : None,
             '_name' : "{0}.{1}.{2}".format(N,k,chi),
-            '_got_ap_from_db' : False,
             '_version': float(emf_version),
             '_galois_orbit_poly_info':{}
             }
@@ -263,7 +257,12 @@ class WebModFormSpace_class(object):
         The dimension of the subspace of oldforms in self.
         """
         if self.is_cuspidal():
-            return self.dimension_cusp_forms() - self.dimension_new_cusp_forms()
+            if self.dimension_cusp_forms() is not None and self.dimension_new_cusp_forms() is not None:
+                return self.dimension_cusp_forms() - self.dimension_new_cusp_forms()
+            else:
+                return None
+        if self.dimension_modular_forms() is None or self.dimension_newspace() is None:
+            return None
         return self.dimension_modular_forms() - self.dimension_newspace()
 
     def dimension_cusp_forms(self):
@@ -286,15 +285,14 @@ class WebModFormSpace_class(object):
 
     def dimension(self):
         r"""
-        The dimension of the space of modular forms or cusp forms, depending of self is cuspidal or not.
+          The dimension of the space of modular forms or cusp forms, depending of self is cuspidal or not.
         """
-        if self._cuspidal == 1:
-            return self.dimension_cusp_forms()
-        elif self._cuspidal == 0:
-            return self.dimension_modular_forms()
-        else:
-            raise ValueError("Do not know the dimension of space of type {0}".format(self._cuspidal))
-
+        if self._dimension is None:
+            if self.is_cuspidal():
+                self._dimension = self.dimension_cusp_forms()
+            else:
+                self._dimension = self.dimension_modular_forms()
+        return self._dimension
   
     def sturm_bound(self):
         r"""

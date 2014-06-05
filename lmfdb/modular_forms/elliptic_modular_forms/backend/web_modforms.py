@@ -119,6 +119,7 @@ class WebNewForm_class(object):
             '_satake' : {},
             '_dimension' : None,
             '_is_rational' : None,
+            '_absolute_polynomial': None,
             '_degree' : None,
             '_absolute_degree' : None,
             '_relative_degree' : None,
@@ -335,11 +336,10 @@ class WebNewForm_class(object):
         data = self.to_dict()
         return(unpickle_wnf_v1, (self._N, self._k, self._chi, self._label,
                                  self._prec, self._bitprec, self._display_bprec,self._parent,data))
-
     
     def base_ring(self):
         r"""
-        The base ring of self, that is, the field of values of the character of self. 
+        The base ring of self, that is, the field of values of the character of self.
         """
         if isinstance(self._base_ring,NumberField_class):
             return self._base_ring
@@ -350,6 +350,8 @@ class WebNewForm_class(object):
         #    self._base_ring = self.as_factor().base_ring()
         return self._base_ring
 
+    def base_field(self):
+        return self.base_ring()
     
     def coefficient_field(self):
         r"""
@@ -369,12 +371,22 @@ class WebNewForm_class(object):
             self._coefficient_field = None
         emf_logger.debug("coef_field={0}".format(self._coefficient_field))
         return self._coefficient_field
-
     
     def coefficient_field_disc(self):
         if self._coefficient_field is not None:
-            return self._coefficient_field.disc()
+            return self._coefficient_field.relative_disc()
 
+    def absolute_polynomial(self):
+        r"""
+          Return a defining polynomial field of definition of the coefficients in the $q$-expansion of self
+          as a number field over $\mathbb{Q}$.
+        """
+        if self.coefficient_field().is_absolute():
+            return self.polynomial()
+        else:
+            if self._absolute_polynomial is not None:
+                return self._absolute_polynomial
+            return self.coefficient_field().absolute_polynomial()
     
     def relative_degree(self):
         r"""
@@ -384,12 +396,10 @@ class WebNewForm_class(object):
             if self._coefficient_field() is not None:
                 self._relative_degree = self.coefficient_field().absolute_degree()/self.base_ring().absolute_degree()
         return self._relative_degree
-
     
     def degree(self):
         return self.absolute_degree()
 
-    
     def absolute_degree(self):
         r"""
         Degree of the field of coefficient relative to its base ring.
@@ -398,8 +408,7 @@ class WebNewForm_class(object):
             if not self.coefficient_field() is None:
                 self._absolute_degree = self.coefficient_field().absolute_degree()
         return self._absolute_degree
-        
-    
+            
     def parent(self):
         from web_modform_space import WebModFormSpace_class, WebModFormSpace
         if not isinstance(self._parent,WebModFormSpace_class):
@@ -410,22 +419,24 @@ class WebNewForm_class(object):
 
     
     def is_rational(self):
+        r"""
+          Returns True if the coefficient field of self is equal to the rational numbers.
+        """
         if self._is_rational is None:
-            if self.coefficient_field().degree()==1:
+            if self.coefficient_field().absolute_degree() == 1:
                 self._is_rational  = True
             else:
                 self._is_rational = False
         return self._is_rational
-
     
     def dimension(self):
         r"""
         Return the dimension of the intersection of the galois orbit corresponding to ```self```
         and the surrounding space.
         
-        NOTE:
-        The dimension returned is not necessarily equal to the degree of the number field
-        when we have a character!
+        NOTE::
+          The dimension returned is not necessarily equal to the degree of the number field
+          when we have a character!
         """
         return self._dimension
 
@@ -479,7 +490,6 @@ class WebNewForm_class(object):
             self._embeddidngs['latex'].append(cn_emb)
         emf_logger.debug("has embeddings_latex:{0}".format(nstart))
         return 1
-
     
     def is_cuspidal(self):
         return True
@@ -496,7 +506,6 @@ class WebNewForm_class(object):
         if c is None:
             c = self.coefficients([n],insert_in_db)[0] 
         return c
-
 
     def coefficients(self, nrange=range(1, 10),insert_in_db=True):
         r"""
@@ -526,7 +535,7 @@ class WebNewForm_class(object):
             self.insert_into_db()
         return res
        
-    def coefficient_n_recursive(self,n,insert_in_db=False):
+    def coefficient_n_recursive(self, n, insert_in_db=False):
         r"""
           Reimplement the recursive algorithm in sage modular/hecke/module.py
           We do this because of a bug in sage with .eigenvalue()
@@ -577,54 +586,13 @@ class WebNewForm_class(object):
             self.insert_into_db()
         return prod
 
-    
     def max_cn(self):
         r"""
         The largest N for which we are sure that we can compute a(n) for all 1<=n<=N
         """
         if self._ap.keys()==[]:
             return 1
-        return max(self._ap.keys())+1
-    
-    def _update_aps(self,maxp_needed=None,insert_in_db=True):        
-        r"""
-        Update ap's from parent ambient.
-        Return 1 if we have computed / fetched something, else 0
-        """
-        emf_logger.debug("before update self_ap={0}".format(self._ap))
-        aps = self._ap
-        ambient_aps = self.parent().aps().get(self.label(),{})
-        if ambient_aps == {}:
-            return 0 
-        if self._ap <> {} and max(ambient_aps.keys())<=max(self._ap.keys()):
-            return 0
-        # Otherwise we can get something new. Let's take the appripriate file
-        l=ambient_aps.keys(); l.sort()
-        if maxp_needed <> None:
-            for i in l:
-                if i>=maxp_needed: # This set of coefficients should be ok.
-                    break
-        else:
-            i = max(l)
-        ambient_aps = ambient_aps[i]
-        emf_logger.debug("i={0}".format(i))
-        emf_logger.debug("ambient_aps={0}".format(ambient_aps))
-        try:
-            E, v = ambient_aps
-            if len(aps) < E.rows(): # We have more to update with
-                c = E*v
-                lc = len(c)
-                for i in range(len(c)):
-                    p = primes_first_n(lc)[i]
-                    aps[p] = c[i]
-                emf_logger.debug("after update self_ap={0}".format(self._ap))
-                if insert_in_db:
-                    self.insert_into_db()
-        except Exception as e:
-            emf_logger.debug("Could not update ap's from {0}. Error: {1}".format(ambient_aps,e.message))
-            pass
-        return 1
- 
+        return max(self._ap.keys()) + 1 
                           
     def q_expansion(self, prec=None):
         r"""
@@ -906,22 +874,37 @@ class WebNewForm_class(object):
             p = pol_to_html(p)
         return p
 
-    def number_field_label(self, pretty = True):
+    def coefficient_field_label(self, pretty = True):
         r"""
-          Returns the LMFDB label of the oefficient field.
+          Returns the LMFDB label of the (absolute) coefficient field.
         """
-        p = self.polynomial() 
-        if p is None:
-            l = poly_to_field_label('x')
-        else:
-            l = poly_to_field_label(p)
+        p = self.absolute_polynomial()
+        l = poly_to_field_label(p)
         if l == "1.1.1.1" and pretty:
             return "\( \Q \)"
         else:
             return l
 
-    def number_field_url(self):
-        return url_for("number_fields.by_label", label=self.number_field_label(pretty = False))
+    def coefficient_field_url(self):
+        return url_for("number_fields.by_label", label=self.coefficient_field_label(pretty = False))
+
+    def base_field_label(self, pretty = True):
+        r"""
+          Returns the LMFDB label of the base field.
+        """
+        F = self.base_ring()
+        if F.degree() == 1:
+            p = 'x'
+        else:
+            p = F.polynomial()
+        l = poly_to_field_label(p)
+        if l == "1.1.1.1" and pretty:
+            return "\( \Q \)"
+        else:
+            return l
+
+    def base_field_url(self):
+        return url_for("number_fields.by_label", label=self.base_field_label(pretty = False))
 
 ###
 ### Independent helper functions

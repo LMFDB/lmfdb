@@ -26,15 +26,15 @@
 
 {% if nontrivial_new %}
 <h2>
-  Decomposition of {{name_new}} into galois orbits
+  Decomposition of {{name_new}} into {{ KNOWL('mf.elliptic.galois-orbits',title='galois orbits')}}
 </h2>
 <table>
   <thead>
     <tr>
-      <th>Name</th>
-      <th>Dimension</th>
-      <th>#-field</th>
-      <th align="left">\(q\)-expansion of eigenform</th>
+      <th>{{ KNOWL('mf.elliptic.name',title='Name')}}</th>
+      <th>{{ KNOWL('mf.elliptic.dimension_galois_orbit',title='Dimension')}}</th>
+      <th>{{ KNOWL('mf.elliptic.coefficient_field',title='Field')}}</th>
+      <th align="left">{{ KNOWL('mf.elliptic.q-expansion-of-eigenform',title='$q$-expansion of eigenform')}}</th>
     </tr>
   </thead>
   <tbody>
@@ -42,21 +42,19 @@
     <tr>
       <td><a href="{{form.url() }}">{{form.name()}}</a></td>
       <td>{{ form.dimension() }}</td>
-      <td><a href="{{ form.number_field_url() }}">{{ form.number_field_label() }}</a></td>
+      <td><a href="{{ form.coefficient_field_url() }}">{{ form.coefficient_field_label() }}</a></td>
       <td>{{ form.q_expansion_latex() }}</td>
     </tr>
     {% endfor %}
   </tbody>
 </table>
-The dimension in the table is the dimension of the Galois orbit defined by the newform
-intersected with {{ new_name }}. (TODO: make stuff into KNOWLS)
 
 {% else %}
 {{ name_new }} {{ nontrivial_new_info }}
 {% endif %}
 
 {% if old_decomposition != "" %}
-<h2> Decomposition of {{name_old}} into lower level spaces</h2>
+<h2> Decomposition of {{name_old}} into {{ KNOWL('mf.elliptic.oldspace',title='lower level spaces')}}</h2>
 {{ old_decomposition | safe }}
 {% endif %}
 	

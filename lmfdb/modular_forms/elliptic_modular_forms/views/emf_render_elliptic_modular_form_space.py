@@ -130,7 +130,8 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
 
     friends = list()
     for f in WMFS.newforms().values():
-        friends.append(('Number field ' + f.number_field_label(), f.number_field_url()))
+        friends.append(('Number field ' + f.coefficient_field_label(), f.coefficient_field_url()))
+    friends.append(('Number field ' + f.base_field_label(), f.base_field_url()))
     friends = uniq(friends)
     friends.append(("Dirichlet character \(" + WMFS.character().latex_name() + "\)", WMFS.character().url()))
     info['friends'] = friends
