@@ -308,8 +308,6 @@ class WebNewForm_class(object):
             p = primes_first_n(lc)[i]
             self._ap[p] = c[i]
 
-        return self._ap 
-
 ##  Internal functions
 ##        
     def _check_consistency_of_labels(self):
