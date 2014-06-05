@@ -38,7 +38,6 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import *
 from lmfdb.modular_forms.elliptic_modular_forms.backend.plot_dom import *
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, EMF_TOP
 ###
-##use_db = True  # Should be decided intelligently
 ###
 
 

@@ -151,6 +151,7 @@ class WebNewForm_class(object):
             return
         # What?
         if get_from_db:
+            self._get_aps()
             self._check_consistency_of_labels()
         emf_logger.debug("name={0}".format(self._name))
         emf_logger.debug("done __init__")
@@ -265,7 +266,6 @@ class WebNewForm_class(object):
         r"""
         Import data from a yaml formatted string
         """
-
         d = yaml.load(s)
         return yaml.load(d)    
     
@@ -286,6 +286,27 @@ class WebNewForm_class(object):
             d = loads(f.read())
             return d
         return {}
+
+    def _get_aps(self, prec=-1):
+        r"""
+        Get aps from database if they exist.
+        """
+        ap_files = connect_to_modularforms_db('ap.files')
+        key = {'k': int(self._k), 'N': int(self._N), 'chi': int(self._chi), 'label' : self.label(), 'prec': {'$gt': prec}}
+        key['prec'] = {"$gt": int(prec - 1)}
+
+        try:
+            ap_from_db  = ap_files.find_one(key)
+        except:
+            raise IndexError("No record found.")
+
+        emf_logger.debug("finds={0}".format(ap_from_db))
+        emf_logger.debug("finds.count()={0}".format(ap_from_db.count()))
+
+        fs = get_files_from_gridfs('ap')
+        self._ap = loads(fs.get(ap_from_db['_id']).read())
+
+        return self._ap
     
     def insert_into_db(self):
         r"""
@@ -532,7 +553,7 @@ class WebNewForm_class(object):
                 else:
                     recompute = True
                     c = self.coefficient_n_recursive(n,insert_in_db)
-                    self._coefficients[n]=c
+                    self._coefficients[n] = c
             res.append(c)
         if recompute and insert_in_db:
             self.insert_into_db()
@@ -540,8 +561,8 @@ class WebNewForm_class(object):
        
     def coefficient_n_recursive(self,n,insert_in_db=False):
         r"""
-        Reimplement the recursive algorithm in sage modular/hecke/module.py
-        We do this because of a bug in sage with .eigenvalue()
+          Reimplement the recursive algorithm in sage modular/hecke/module.py
+          We do this because of a bug in sage with .eigenvalue()
         """
         from sage.rings import arith
         emf_logger.debug("computing c({0}) using recursive algortithm".format(n))
@@ -550,8 +571,9 @@ class WebNewForm_class(object):
         F = arith.factor(n)
         prod = None
         if self._ap is None or self._ap == {}:
-            self._update_aps()
-            if self._ap == {}:
+            try:
+                self._get_aps(prec=n)
+            except IndexError:
                raise IndexError,"Have no coefficients!"
         ev = self._ap
         K = self._ap[2].parent()

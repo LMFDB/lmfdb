@@ -128,9 +128,7 @@ class WebModFormSpace_class(object):
         data.update(d)        
         self.__dict__.update(data)
         if get_all_newforms_from_db:
-            self._get_aps()
-            for l in self.labels():
-                self._newforms[l] = WebNewForm(N=self._N, k=self._k,  chi=self._chi, parent=self, label=l)
+            self.get_all_newforms_from_db()
 
     ### Return elementary properties of self.
     def weight(self):
@@ -226,36 +224,10 @@ class WebModFormSpace_class(object):
             return d
         return {}
 
-    def _get_aps(self, prec=-1):
-        r"""
-        Get aps from database if they exist.
-        """
-        ap_files = connect_to_modularforms_db('ap.files')
-        key = {'k': int(self._k), 'N': int(self._N), 'cchi': int(self._chi)}
-        key['prec'] = {"$gt": int(prec - 1)}
-        ap_from_db  = ap_files.find(key).sort("prec")
-        emf_logger.debug("finds={0}".format(ap_from_db))
-        emf_logger.debug("finds.count()={0}".format(ap_from_db.count()))
-        fs = get_files_from_gridfs('ap')
-        aplist = {}
-        for i in range(len(self.labels())):
-            aplist[self.labels()[i]]={}
-        for rec in ap_from_db:
-            emf_logger.debug("rec={0}".format(rec))
-            ni = rec.get('newform')
-            if ni is None:
-                for a in self.labels():
-                    aplist[a][prec]=None
-                return aplist
-            a = self.labels()[ni]
-            cur_prec = rec['prec']
-            if aplist.get(a,{}).get(cur_prec,None) is None:
-                aplist[a][prec]=loads(fs.get(rec['_id']).read())
-            if cur_prec > prec and prec>0: # We are happy with these coefficients.
-                return aplist
-        self._ap = aplist
-        return aplist  
-             
+    def get_all_newforms_from_db(self):
+        for l in self.labels():
+            self._newforms[l] = WebNewForm(N=self._N, k=self._k,  chi=self._chi, parent=self, label=l)
+            
     def __repr__(self):
         r"""
         Return string representation of self.
