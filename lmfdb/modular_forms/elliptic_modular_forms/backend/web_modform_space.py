@@ -149,6 +149,7 @@ class WebModFormSpace_class(object):
         Return the character number (chi) of self.
         """
         return self._chi
+    
     def character(self):
         r"""
         Return the character of self.
@@ -240,7 +241,7 @@ class WebModFormSpace_class(object):
         Return string representation of self.
         """
         
-        if self.chi())==1:
+        if self.character().is_trivial():
             s = 'Space of Cusp forms on Gamma0({0}) of weight {1}'.format(self.level(),self.weight())
         else:
             s = 'Space of Cusp forms on Gamma0({0}) of weight {1} and character no. {2}'.format(self.level(),self.weight(),self.chi())
