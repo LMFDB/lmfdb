@@ -297,12 +297,16 @@ class WebNewForm_class(object):
 
         ap_from_db  = ap_files.find_one(key)
         if ap_from_db is None:
-            raise IndexError("No record found.")
-            
+            raise IndexError("No record found for {0} with key:{1}.".format(ap_files,key))
         emf_logger.debug("finds={0}".format(ap_from_db))
 
         fs = get_files_from_gridfs('ap')
-        self._ap = loads(fs.get(ap_from_db['_id']).read())
+        E,v = loads(fs.get(ap_from_db['_id']).read())
+        c = E*v
+        lc = len(c)
+        for i in range(len(c)):
+            p = primes_first_n(lc)[i]
+            self._ap[p] = c[i]
 
         return self._ap 
 
@@ -360,9 +364,8 @@ class WebNewForm_class(object):
             emf_logger.debug("coef_fldas_d={0}".format(self._coefficient_field_as_dict))
             return number_field_from_dict(self._coefficient_field_as_dict)
         ## Get field from the ap's # Necessary because change in sage implementation
-        self._update_aps()
         try:
-            self._coefficient_field = self._ap[2].parent()
+            self._coefficient_field = self.coefficient(2).parent()
         except KeyError:
             emf_logger.debug("Cannot determine coefficient_field")
             self._coefficient_field = None
@@ -536,7 +539,7 @@ class WebNewForm_class(object):
             return 1
         F = arith.factor(n)
         prod = None
-        if self._ap is None or self._ap == {}:
+        if self._ap is None or self._ap == {} or self.max_cn() < n:
             try:
                 self._get_aps(prec=n)
             except IndexError:
