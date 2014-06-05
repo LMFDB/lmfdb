@@ -291,21 +291,25 @@ class WebNewForm_class(object):
         r"""
         Get aps from database if they exist.
         """
+        if self._ap <> {}:
+            return 
         ap_files = connect_to_modularforms_db('ap.files')
-        key = {'k': int(self._k), 'N': int(self._N), 'cchi': int(self._chi), 'label' : self.label(), 'prec': {'$gt': prec}}
+        key = {'name': self._name, 'prec': {'$gt': prec}}
         key['prec'] = {"$gt": int(prec - 1)}
 
         ap_from_db  = ap_files.find_one(key)
         if ap_from_db is None:
-            raise IndexError("No record found.")
-            
+            raise IndexError("No record found for {0} with key:{1}.".format(ap_files,key))
         emf_logger.debug("finds={0}".format(ap_from_db))
-        emf_logger.debug("finds.count()={0}".format(ap_from_db.count()))
 
         fs = get_files_from_gridfs('ap')
-        self._ap = loads(fs.get(ap_from_db['_id']).read())
+        E,v = loads(fs.get(ap_from_db['_id']).read())
+        c = E*v
+        lc = len(c)
+        for i in range(len(c)):
+            p = primes_first_n(lc)[i]
+            self._ap[p] = c[i]
 
-        return self._ap
     
     def insert_into_db(self):
         r"""
