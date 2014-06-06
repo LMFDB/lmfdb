@@ -263,7 +263,10 @@ class WebNewForm_class(object):
     def character_galois_orbit(self):
         return self.parent().character_galois_orbit()
 
-    def _web_character_used_in_computation(self):
+    def web_character_used_in_computation(self):
+        r"""
+          Return a WebCharacter that corresponds to the character that was used during computation.
+        """
         return self.parent()._web_character_used_in_computation()
 
     def newform_number(self):
@@ -613,7 +616,7 @@ class WebNewForm_class(object):
                 # TODO: Optimization -- do something much more
                 # intelligent in case character is not defined.  For
                 # example, compute it using the diamond operators <d>
-                eps = K(self._web_character_used_in_computation().value(p))
+                eps = K(self.web_character_used_in_computation().value(p))
                 # a_{p^r} := a_p * a_{p^{r-1}} - eps(p)p^{k-1} a_{p^{r-2}}
                 apr1 = self.coefficient_n_recursive(pr//p)
                 ap = self.coefficient_n_recursive(p)

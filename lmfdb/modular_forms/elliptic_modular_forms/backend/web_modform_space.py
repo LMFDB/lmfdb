@@ -215,9 +215,9 @@ class WebModFormSpace_class(object):
         """
         return self._character_orbit_rep
 
-    def _web_character_used_in_computation(self):
+    def web_character_used_in_computation(self):
         r"""
-          Return a WebCharacter that corresponds to the charactr that was used during computation.
+          Return a WebCharacter that corresponds to the character that was used during computation.
         """
         if self._web_character_used_in_computation is None:
             self._web_character_used_in_computation = WebChar(self._level, self._character_used_in_computation)
