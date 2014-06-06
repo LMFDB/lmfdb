@@ -112,7 +112,7 @@ class WebModFormSpace_class(object):
            d = self.get_from_db()
            emf_logger.debug("Got data:{0} from db".format(d))
            if d == {}:
-               raise ValueError,"The form is not in the database!"
+               raise ValueError,"The space is not in the database, params: N={0}, k={1}, chi={2}".format(N,k,chi)
         else:
            d = {}
         if data is None:
