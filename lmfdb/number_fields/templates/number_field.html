@@ -155,6 +155,26 @@ function show_code(system) {
             {{ info.character_table | safe }}</tr>
           </table>
 
+        <p><h2> {{ KNOWL('nf.intermediate_fields', title='Intermediate fields') }}</h2>
+        <p>
+        {% if nf.subfields()==[] %}
+        <table>
+          <tr><td>
+            The extension is primitive: there are no intermediate fields 
+            between this field and $\Q$.
+          </td></tr>
+        </table>
+        {% else %}
+        <table>
+          <tr><td>
+            {{ nf.subfields_show() | safe }}
+          </td></tr>
+        </table>
+        <p>
+        Fields in the database are given up to isomorphism.  Isomorphic 
+        intermediate fields are shown with their multiplicities.
+        {% endif %}
+
         <p><h2> {{ KNOWL('nf.frobenius_cycle_types', title='Frobenius cycle types') }}</h2>
         <p><center>
            <table class="ntdata" >
