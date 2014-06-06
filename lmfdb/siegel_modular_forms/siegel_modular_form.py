@@ -506,10 +506,13 @@ def render_webpage(args={}):
                     pass
 
                 elif form.endswith('Maass'):
-                    # form is a Maass lift, so link to corresponding cusp form
-                    # on SL(2, Z)
-                    pass                
-
+                    # link the the underlying elliptic modular form.  This
+                    # datum is not included with the modular form, so just
+                    # link to the unique Galois orbit of full level and
+                    # weight 2k-2 (this code assumes Maeda).
+                    ellWeight = 2*int(weight) - 2
+                    friends.append(('Elliptic modular form',
+                      '/ModularForm/GL2/Q/holomorphic/1/' + str(ellWeight)))
                 else:
                     # there are no other lifts to full level, so the L-function
                     # is primitive and therefore interesting
