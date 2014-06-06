@@ -45,17 +45,6 @@ def render_one_elliptic_modular_form(level, weight, character, label, **kwds):
     Renders the webpage for one elliptic modular form.
 
     """
-    if character == 0:
-        dimtbl = DimensionTable()
-    else:
-        dimtbl = DimensionTable(1)
-    emf_logger.debug("Created dimension table")
-    if not dimtbl.is_in_db(level, weight, character):
-        ## We now check explicitly
-        C = lmfdb.base.getDBConnection()
-        if C['modularforms2']['Newform_factors.files'].find().count()==0:
-            emf_logger.debug("Data not available")
-            return render_template("not_available.html")
     citation = ['Sage:' + version()]
     info = set_info_for_one_modular_form(level, weight,
                                          character, label, **kwds)
@@ -64,18 +53,6 @@ def render_one_elliptic_modular_form(level, weight, character, label, **kwds):
     ## Check if we want to download either file of the function or Fourier coefficients
     if 'download' in info and 'error' not in info:
         return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
-    url1 = url_for("emf.render_elliptic_modular_forms")
-    url2 = url_for("emf.render_elliptic_modular_forms", level=level)
-    url3 = url_for("emf.render_elliptic_modular_forms", level=level, weight=weight)
-    url4 = url_for("emf.render_elliptic_modular_forms", level=level, weight=weight, character=character)
-    bread = [(EMF_TOP, url1)]
-    bread.append(("of level %s" % level, url2))
-    bread.append(("weight %s" % weight, url3))
-    if int(character) == 0:
-        bread.append(("trivial character", url4))
-    else:
-        bread.append(("character \(\chi_{%s}(%s, \cdot)\)" % (level, character), url4))
-    info['bread'] = bread
     return render_template("emf.html", **info)
 
 
@@ -107,28 +84,36 @@ def set_info_for_one_modular_form(level=None, weight=None, character=None, label
     except IndexError as e:
         WNF = None
         info['error'] = e.message
+    url1 = url_for("emf.render_elliptic_modular_forms")
+    url2 = url_for("emf.render_elliptic_modular_forms", level=level)
+    url3 = url_for("emf.render_elliptic_modular_forms", level=level, weight=weight)
+    url4 = url_for("emf.render_elliptic_modular_forms", level=level, weight=weight, character=character)
+    bread = [(EMF_TOP, url1)]
+    bread.append(("of level %s" % level, url2))
+    bread.append(("weight %s" % weight, url3))
+    if int(character) == 0:
+        bread.append(("trivial character", url4))
+    else:
+        bread.append(("character %s" % (WNF.character().latex_name()), url4))
+    info['bread'] = bread
+    
     properties2 = list()
-    parents = list()
-    siblings = list()
     friends = list()
+    space_url = url_for('emf.render_elliptic_modular_forms',level=level, weight=weight, character=character)
+    friends.append(('\( S_{k} (\Gamma_0(' + str(level) + '), %s )\)', space_url))
+    friends.append(('Number field ' + WNF.coefficient_field_label(), WNF.coefficient_field_url()))
+    friends.append(('Number field ' + WNF.base_field_label(), WNF.base_field_url()))
+    friends = uniq(friends)
+    friends.append(("Dirichlet character \(" + WNF.character().latex_name() + "\)", WNF.character().url()))
+    
     if hasattr(WNF,"dimension") and WNF.dimension()==0:
         info['error'] = "This space is empty!"
 
 #    emf_logger.debug("WNF={0}".format(WNF))    
-    name = "Cuspidal newform %s of weight %s for " % (label, weight)
-    if level == 1:
-        name += "\(\mathrm{SL}_{2}(\mathbb{Z})\)"
-    else:
-        name += "\(\Gamma_0(%s)\)" % (level)
-    if int(character) == 0 or int(character)==1:
-        name += " with trivial character"
-    else:
-        character = WNF.character()
-        char_name = WNF.character().name()
-        name += " with character \(%s\)" % (char_name)
 
-    info['name'] = name
-    info['title'] = 'Modular Form ' + info['name']
+    #info['name'] = name
+    info['title'] = 'Modular Form ' + WNF.name()
+    
     if 'error' in info:
         return info
     # info['name']=WNF._name
@@ -136,18 +121,8 @@ def set_info_for_one_modular_form(level=None, weight=None, character=None, label
     ## parameters for non-trivial characters....
     if WNF.degree()==1:
         info['satake'] = WNF.satake_parameters()
-   # br = 60
-    # info['qexp'] =
-    # ajax_more(WNF.print_q_expansion,{'prec':5,'br':br},{'prec':10,'br':br},{'prec':20,'br':br},{'prec':100,'br':br},{'prec':200,'br':br})
-    #K = WNF.base_ring()
-    #L = WNF.coefficient_field()
-    info['qexp'] = WNF.q_expansion_latex(prec=prec)
-    # c = list(WNF.q_expansion(prec))
-    # c = map(lambda x: str(x).replace("*",""), c)
-    # info['c'] = map(lambda x: x.replace(, c)
-    # emf_logger.debug("c={0}".format(info['c']))
-    # info['maxc']=len(c)
-    # emf_logger.debug("maxc={0}".format(info['maxc']))
+    info['qexp'] = ajax_more(WNF.q_expansion_latex,{'prec':10},{'prec':20},{'prec':100},{'prec':200})
+    # info['qexp'] = WNF.q_expansion_latex(prec=prec)
     c_pol_st = str(WNF.polynomial(type='coefficient_field',format='str'))
     b_pol_st = str(WNF.polynomial(type='base_ring',format='str'))
     c_pol_ltx = str(WNF.polynomial(type='coefficient_field',format='latex'))
@@ -270,11 +245,7 @@ def set_info_for_one_modular_form(level=None, weight=None, character=None, label
         s = 'Elliptic curve isogeny class ' + llabel
         url = '/EllipticCurve/Q/' + llabel
         friends.append((s, url))
-    space_url = '?&level=' + str(level) + '&weight=' + str(weight) + '&character=' + str(character)
-    parents.append(('\( S_{k} (\Gamma_0(' + str(level) + '),\chi )\)', space_url))
     info['properties2'] = properties2
-    info['parents'] = parents
-    info['siblings'] = siblings
     info['friends'] = friends
     info['max_cn']=WNF.max_cn()
     return info

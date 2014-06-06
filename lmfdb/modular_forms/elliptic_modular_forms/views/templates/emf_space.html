@@ -1,7 +1,5 @@
 {% extends 'homepage.html' %}
 
-{% set got_a_relative_nf = 0 %}
-
 {% if character is not defined or character.order() == 1 %}
   {% set new_name = "\( S_{%s}^{\mathrm{new}}(%s) \)"|format(weight, level) %}
   {% set old_name = "\( S_{%s}^{\mathrm{old}}(%s) \)"|format(weight, level) %}
@@ -31,7 +29,7 @@
 <table>
   <thead>
     <tr>
-      <th>{{ KNOWL('mf.elliptic.name',title='Name')}}</th>
+      <th>{{ KNOWL('mf.elliptic.label',title='Label')}}</th>
       <th>{{ KNOWL('mf.elliptic.dimension_galois_orbit',title='Dimension')}}</th>
       <th>{{ KNOWL('mf.elliptic.coefficient_field',title='Field')}}</th>
       <th align="left">{{ KNOWL('mf.elliptic.q-expansion-of-eigenform',title='$q$-expansion of eigenform')}}</th>

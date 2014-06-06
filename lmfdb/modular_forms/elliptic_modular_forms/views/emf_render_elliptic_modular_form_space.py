@@ -52,16 +52,6 @@ def render_elliptic_modular_form_space(level=None, weight=None, character=None, 
     info['level'] = level
     info['weight'] = weight
     info['character'] = character
-    # if kwds.has_key('character') and kwds['character']=='*':
-    #    return render_elliptic_modular_form_space_list_chars(level,weight)
-    if character == 0:
-        dimtbl = DimensionTable()
-    else:
-        dimtbl = DimensionTable(1)
-    #if not dimtbl.is_in_db(level, weight, character):
-    #    emf_logger.debug("Data not available")
-    #    return render_template("not_available.html")
-    emf_logger.debug("Created dimension table in render_elliptic_modular_form_space")
     info = set_info_for_modular_form_space(**info)
     emf_logger.debug("keys={0}".format(info.keys()))
     if 'download' in kwds and 'error' not in kwds:
@@ -112,7 +102,7 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
         info = WMFS.to_web_dict()
 
     ## we try to catch well-known bugs...
-    info['old_decomposition'] = "n/a"
+    info['old_decomposition'] = WMFS.oldspace_decomposition()
     # properties for the sidebar
     ## Make parent spaces of S_k(N,chi) for the sidebar
     par_lbl = '\( S_{*} (\Gamma_0(' + str(level) + '),\cdot )\)'
