@@ -867,38 +867,6 @@ class WebNewForm_class(object):
         return url_for('emf.render_elliptic_modular_forms', level=self.level(), weight=self.weight(), character=self.chi(), label=self.label())
 
     ## printing functions
-    def print_q_expansion(self, prec=None, br=0):
-        r"""
-        Print the q-expansion of self.
-
-        INPUT:
-
-        OUTPUT:
-
-        - ''s'' string giving the coefficients of f as polynomals in x
-
-        EXAMPLES::
-
-
-        """
-        if prec is None:
-            prec = self._prec
-        emf_logger.debug("PREC2: {0}".format(prec))
-        s = my_latex_from_qexp(str(self.q_expansion(prec)))
-        emf_logger.debug("q-exp-str: {0}".format(s))        
-        sb = list()
-        if br > 0:
-            sb = break_line_at(s, br)
-            emf_logger.debug("print_q_exp: sb={0}".format(sb))
-        if len(sb) <= 1:
-            s = r"\(" + s + r"\)"
-        else:
-            s = r"\[\begin{align} &" + join(sb, "\cr &") + r"\end{align}\]"
-            
-        emf_logger.debug("print_q_exp: prec=".format(prec))
-        
-        return s
-
     def print_q_expansion_embeddings(self, prec=10, bprec=53):
         r"""
         Print all embeddings of Fourier coefficients of the newform self.
@@ -1018,7 +986,7 @@ class WebNewForm_class(object):
         Insert a dictionary of data for self into the database collection
         WebNewforms.files
         """
-        wmf_logger.debug("inserting self into db! name={0}".format(self._name))
+        emf_logger.debug("inserting self into db! name={0}".format(self._name))
         C = connect_to_modularforms_db('WebNewforms.files')
         fs = get_files_from_gridfs('WebNewforms')
         s = {'name':self._name,'version':float(self._version)}
@@ -1028,7 +996,7 @@ class WebNewForm_class(object):
         else:
             id = None
         if id<>None:
-            wmf_logger.debug("Removing self from db with id={0}".format(id))
+            emf_logger.debug("Removing self from db with id={0}".format(id))
             fs.delete(id)
             
         fname = "webnewform-{0:0>5}-{1:0>3}-{2:0>3}-{3}".format(self._N,self._k,self._chi,self._label) 
@@ -1039,7 +1007,7 @@ class WebNewForm_class(object):
         id = fs.put(dumps(d),filename=fname, N=int(self._N), k=int(self._k), chi=int(self._chi),\
                     label=self._label, name=self._name, version=float(self._version),\
                     character_galois_orbit=map(int,self.parent().character_galois_orbit()))
-        wmf_logger.debug("inserted :{0}".format(id))
+        emf_logger.debug("inserted :{0}".format(id))
 
 ###
 ### Independent helper functions
