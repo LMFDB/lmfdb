@@ -436,11 +436,11 @@ class WebNewForm_class(object):
           as a number field over $\mathbb{Q}$.
         """
         if self.coefficient_field().is_absolute():
-            return self.polynomial()
+            self._absolute_polynomial = self.polynomial()
         else:
-            if self._absolute_polynomial is not None:
-                return self._absolute_polynomial
-            return self.coefficient_field().absolute_polynomial()
+            if self._absolute_polynomial is None:
+                self._absolute_polynomial = self.coefficient_field().absolute_polynomial()
+        return self._absolute_polynomial
     
     def relative_degree(self):
         r"""
@@ -672,7 +672,7 @@ class WebNewForm_class(object):
                     self._q_expansion += self.coefficient(n)*q**n
         self._q_expansion_str = str(self._q_expansion.polynomial())
         assert isinstance(self._q_expansion,PowerSeries_poly)
-        assert isinstance(self._q_expansion,str)
+        assert isinstance(self._q_expansion_str,str)
         return self._q_expansion.truncate_powerseries(prec)
 
     def q_expansion_latex(self, prec=None):
