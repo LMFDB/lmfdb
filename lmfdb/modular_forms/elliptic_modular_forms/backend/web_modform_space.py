@@ -101,7 +101,8 @@ class WebModFormSpace_class(object):
             '_dimension_new_cusp_forms' : None,
             '_name' : "{0}.{1}.{2}".format(N,k,chi),
             '_version': float(emf_version),
-            '_galois_orbit_poly_info':{}
+            '_galois_orbit_poly_info':{},
+            '_web_character_used_in_computation':None
             }
         self.__dict__.update(d)
 
