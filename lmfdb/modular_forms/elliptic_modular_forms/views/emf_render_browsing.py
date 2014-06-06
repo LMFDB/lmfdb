@@ -99,7 +99,7 @@ def browse_elliptic_modular_forms_ranges(**kwds):
     default = {}
     default['level'] = '1-12'
     default['weight'] = '2-36'
-    default['character'] = 0
+    default['character'] = 1
     info = dict()
     args = to_dict(request.args)
     emf_logger.debug("args={0}".format(args))

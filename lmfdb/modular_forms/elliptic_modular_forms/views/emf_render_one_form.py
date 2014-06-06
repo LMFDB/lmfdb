@@ -100,7 +100,7 @@ def set_info_for_one_modular_form(level=None, weight=None, character=None, label
     properties2 = list()
     friends = list()
     space_url = url_for('emf.render_elliptic_modular_forms',level=level, weight=weight, character=character)
-    friends.append(('\( S_{k} (\Gamma_0(' + str(level) + '), %s )\)', space_url))
+    friends.append(('\( S_{k}(' + str(level) + ', %s )\)'%(WNF.character().latex_name()), space_url))
     friends.append(('Number field ' + WNF.coefficient_field_label(), WNF.coefficient_field_url()))
     friends.append(('Number field ' + WNF.base_field_label(), WNF.base_field_url()))
     friends = uniq(friends)
