@@ -123,7 +123,7 @@ class WebModFormSpace_class(object):
             self.get_all_newforms_from_db()
 
     def _check_if_all_stored(self):
-        f = WebModFormsSpace(k=self.weight(), N=self.level(), chi=self.chi())
+        f = WebModFormSpace(k=self.weight(), N=self.level(), chi=self.chi())
         f._check_if_all_computed()
 
     def _check_if_all_computed(self):
@@ -134,7 +134,6 @@ class WebModFormSpace_class(object):
             '_character_used_in_computation': None,
             '_cuspidal' : int(0),
             '_prec' : int(0),
-            '_character' : None,
             '_sturm_bound' : None,
             '_hecke_orbits_labels' : [],
             '_oldspace_decomposition' : [],

@@ -81,6 +81,7 @@
 
 
 <h2> Results: showing {{data_count}} results </h2>
+{% if data_count > 0 %}
 <div>
   Galois conjugate representations are grouped into single lines.
 </div>
@@ -120,7 +121,7 @@
         {% endfor %}
 	</tbody>
 	</table>
-
+  {% endif %}
 {% endif %}
 
 {#

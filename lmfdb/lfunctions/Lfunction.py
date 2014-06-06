@@ -1367,3 +1367,104 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
     
     def Lkey():
         return {"weight": self.weight, "orbit": self.orbit}
+
+#############################################################################
+
+
+class TensorProductLfunction(Lfunction):
+    """
+    Class representing the L-function of a tensor product
+    (currently only of a elliptic curve with a Dirichlet character)
+
+    arguments are
+
+    - charactermodulus
+    - characternumber
+    - ellipticcurvelabel
+
+    """
+
+    def __init__(self, **args):
+
+        # Check for compulsory arguments
+        if not ('charactermodulus' in args.keys()
+                and 'characternumber' in args.keys()
+                and 'ellipticcurvelabel' in args.keys() ):
+            raise KeyError("You have to supply charactermodulus, "
+                           + "characternumber and a curve label "
+                           + "for the L-function of "
+                           + "a tensor product")
+
+        # Put the arguments into the object dictionary
+        self.__dict__.update(args)
+        self.charactermodulus = int(self.charactermodulus)
+        self.characternumber = int(self.characternumber)
+        self.Elabel = self.ellipticcurvelabel
+
+        # Create the tensor product
+        # try catch later
+        self.tp = TensorProduct(self. Elabel, self.charactermodulus,
+                                self.characternumber)
+        chi = self.tp.chi
+        E = self.tp.E
+
+        self.motivic_weight = 1
+        self.weight = 2
+        self.algebraic = True
+        self.poles = []
+        self.residues = []
+        self.langlands = True
+        self.primitive = True
+        self.degree = 2
+        self.quasidegree = 1
+        self.level = int(self.tp.conductor())
+        self.sign = self.tp.root_number()
+        self.coefficient_type = 3
+        self.coefficient_period = 0
+
+
+        # We may want to change this later to a better estimate.
+        self.numcoeff = 20 + ceil(sqrt(self.tp.conductor()))
+
+        self.mu_fe = []
+        self.nu_fe = [Rational('1/2')]
+        self.compute_kappa_lambda_Q_from_mu_nu()
+
+        li = self.tp.an_list(upper_bound=self.numcoeff)
+        for n in range(1,len(li)):
+            # now renormalise it for s <-> 1-s as the functional equation
+            li[n] /= sqrt(float(n))
+        self.dirichlet_coefficients = li
+
+        self.texname = "L(s,E,\\chi)"
+        self.texnamecompleteds = "\\Lambda(s,E,\\chi)"
+        self.title = "$L(s,E,\\chi)$, where $E$ is the elliptic curve %s and $\\chi$ is the Dirichlet character of conductor %s, modulo %s, number %s"%(self.ellipticcurvelabel, self.tp.chi.conductor(), self.charactermodulus, self.characternumber)
+
+        self.credit = 'Workshop in Besancon, 2014'
+
+        generateSageLfunction(self)
+
+        constructor_logger(self, args)
+
+    def Ltype(self):
+        return "tensorproduct"
+
+    def Lkey(self):
+        return {"ellipticcurvelabel": self.Elabel,
+                "charactermodulus": self.charactermodulus,
+                "characternumber": self.characternumber}
+
+#############################################################################
+
+
+# class GaloisRepresentationLfunction(Lfunction, GaloisRepresentation):
+#    """
+#    Class representing the L-function of a general galois representation
+#    This is mainly used for twisting two such constructed from other
+#    classes above.
+#
+#    Most of the values are inherited from GaloisRepresentation, where
+#    things are done a bit more systematic.
+#    """
+#
+# This is implemented in lmfdb.tensor_products.galois_reps instead.
