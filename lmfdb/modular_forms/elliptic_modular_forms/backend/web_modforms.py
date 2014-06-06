@@ -30,7 +30,7 @@ TODO:
 Fix complex characters. I.e. embedddings and galois conjugates in a consistent way.
 
 """
-from sage.all import divisors, ComplexField, join, primes_first_n, matrix, NumberField, PowerSeriesRing
+from sage.all import divisors, ComplexField, join, primes_first_n, matrix, NumberField, PowerSeriesRing, polygen
 from sage.rings.power_series_poly import PowerSeries_poly
 from sage.rings.integer_ring import ZZ
 from sage.rings.rational_field import QQ
@@ -440,10 +440,10 @@ class WebNewForm_class(object):
           Return a defining polynomial field of definition of the coefficients in the $q$-expansion of self
           as a number field over $\mathbb{Q}$.
         """
-        if self.coefficient_field().is_absolute():
-            self._absolute_polynomial = self.coefficient_field().polynomial()
-        else:
-            if self._absolute_polynomial is None:
+        if self._absolute_polynomial is None:
+            if self.coefficient_field().absolute_degree() == 1:
+                self._absolute_polynomial = polygen(QQ)
+            else:
                 self._absolute_polynomial = self.coefficient_field().absolute_polynomial()
         return self._absolute_polynomial
     
