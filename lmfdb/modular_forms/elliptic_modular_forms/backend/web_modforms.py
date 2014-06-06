@@ -1011,7 +1011,7 @@ class WebNewForm_class(object):
         d.pop('_character',None)
         d.pop('_as_factor',None)
         id = fs.put(dumps(d),filename=fname, N=int(self._N), k=int(self._k), chi=int(self._chi),\
-                    label=self._label, name=self._name, version=float(self._version),\
+                    label=self._label, galois_orbit_name=self.galois_orbit_name(), version=float(self._version),\
                     character_galois_orbit=map(int,self.parent().character_galois_orbit()))
         emf_logger.debug("inserted :{0}".format(id))
 

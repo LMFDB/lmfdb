@@ -426,7 +426,8 @@ class WebModFormSpace_class(object):
         fname = "webmodformspace-{0:0>5}-{1:0>3}-{2:0>3}".format(self._N,self._k,self._chi) 
         d = self.to_dict()
         d.pop('_ap',None) # Since the ap's are already in the database we don't need them here
-        id = fs.put(dumps(d),filename=fname,N=int(self._N),k=int(self._k),chi=int(self._chi),name=self._name,version=emf_version,
+        id = fs.put(dumps(d),filename=fname,N=int(self._N),k=int(self._k),chi=int(self._chi),\
+                    galois_orbit_name=self.galois_orbit_name(),version=emf_version,\
                     character_galois_orbit=map(int,self.character_galois_orbit()))
         emf_logger.debug("inserted :{0}".format(id))
     
