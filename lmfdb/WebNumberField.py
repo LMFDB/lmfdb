@@ -10,6 +10,30 @@ wnflog = make_logger("WNF")
 
 dir_group_size_bound = 10000
 
+# Dictionary of field label: n for abs(disc(Q(zeta_n)))
+# Does all cyclotomic fields of degree n s.t. 2<n<25
+cycloinfo = {'4.0.125.1': 5, '6.0.16807.1': 7, '4.0.256.1': 8,
+  '6.0.19683.1': 9, '10.0.2357947691.1': 11, '4.0.144.1': 12,
+  '12.0.1792160394037.1': 13, '8.0.1265625.1': 15, '8.0.16777216.1': 16,
+  '16.0.2862423051509815793.1': 17, '18.0.5480386857784802185939.1': 19,
+  '8.0.4000000.1': 20, '12.0.205924456521.1': 21,
+  '22.0.39471584120695485887249589623.1': 23, '8.0.5308416.1': 24,
+  '20.0.2910383045673370361328125.1': 25,
+  '18.0.2954312706550833698643.1': 27, '12.0.1157018619904.1': 28,
+  '16.0.18446744073709551616.1': 32, '20.0.328307557444402776721569.1': 33,
+  '24.0.304383340063522342681884765625.1': 35,
+  '12.0.1586874322944.1': 36,
+  '24.0.1706902865139206151939937338729.1': 39,
+  '16.0.1048576000000000000.1': 40,
+  '20.0.5829995856912430117421056.1': 44,
+  '24.0.572565594852444156646728515625.1': 45,
+  '16.0.1846757322198614016.1': 48,
+  '24.0.53885714612646242347927893704704.1': 52,
+  '24.0.22459526297810799636782730182656.1': 56,
+  '16.0.104976000000000000.1': 60,
+  '24.0.42247883974617233597120303333376.1': 72,
+  '24.0.711435861303500483618465120256.1': 84}
+
 def na_text():
     return "Not computed"
 
@@ -25,6 +49,19 @@ def string2list(s):
     if s == '':
         return []
     return [int(a) for a in s.split(',')]
+
+def field_pretty(label):
+    d, r, D, i = label.split('.')
+    if d == '1':  # Q
+        return '\(\Q\)'
+    if d == '2':  # quadratic field
+        D = ZZ(int(D)).squarefree_part()
+        if r == '0':
+            D = -D
+        return '\(\Q(\sqrt{' + str(D) + '}) \)'
+    if label in cycloinfo:
+        return '\(\Q(\zeta_{%d})\)' % cycloinfo[label]
+    return label
 
 def psum(val, li):
     tot=0
@@ -54,8 +91,7 @@ def nf_knowl_guts(label, C):
     if D.abs().is_prime() or D == 1:
         Dfact = "\(%s\)" % str(D)
     else:
-        D = str(D)
-        Dfact = D + ' = ' + Dfact
+        Dfact = '%s = \(%s\)' % (str(D),Dfact)
     out += '<br>Discriminant: '
     out += Dfact
     out += '<br>Signature: '
@@ -128,6 +164,9 @@ class WebNumberField:
             return None
         return self.label
 
+    def field_pretty(self):
+        return field_pretty(self.get_label())
+
     # Return discriminant as a sage int
     def disc(self):
         return decodedisc(self._data['disc_abs_key'], self._data['disc_sign'])
@@ -169,6 +208,25 @@ class WebNumberField:
 
     def haskey(self, key):
         return key in self._data
+
+    def subfields(self):
+        if not self.haskey('subfields'):
+            return []
+        return self._data['subfields']
+
+    def subfields_show(self):
+        subs = self.subfields()
+        if subs == []:
+            return []
+        C = base.getDBConnection()
+        subs = [[self.from_coeffs(a[0]), a[1]] for a in subs]
+        subs = [[nf_display_knowl(a[0].get_label(),C,a[0].field_pretty()), a[1]] for a in subs]
+        def do_mult(ent):
+            if ent[1]==1:
+                return ent[0]
+            return "%s x%d" % (ent[0], ent[1])
+        subs = [do_mult(a) for a in subs]
+        return ', '.join(subs)
 
     def K(self):
         if not self.haskey('K'):
