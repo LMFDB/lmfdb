@@ -672,7 +672,7 @@ class WebNewForm_class(object):
                     self._q_expansion += self.coefficient(n)*q**n
         self._q_expansion_str = str(self._q_expansion.polynomial())
         assert isinstance(self._q_expansion,PowerSeries_poly)
-        assert isinstance(self._q_expansion,str)
+        assert isinstance(self._q_expansion_str,str)
         return self._q_expansion.truncate_powerseries(prec)
 
     def q_expansion_latex(self, prec=None):
