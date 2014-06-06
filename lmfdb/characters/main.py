@@ -81,6 +81,7 @@ def render_characterNavigation():
         return character_search(**args)
 
     else:
+       info['title'] = 'Dirichlet Characters'
        return render_template('CharacterNavigate.html', **info)
 
 @characters_page.route("/Dirichlet/")

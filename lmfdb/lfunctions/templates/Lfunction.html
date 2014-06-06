@@ -26,6 +26,9 @@
 
  {% if zeroeslink %}
      <div><span id="zeroes"></span></div>
+ {% elif tpzeroslink %}
+     {{zeroswarning}}.
+     <div><span id="tpzeros">{{tpzeroslink|safe}}</span></div>
  {% else %}
      <div>Not enough information (Dirichlet series coefficients/sign of the functional equation) to compute zeros.</div>
  {% endif %}
@@ -61,6 +64,7 @@
   $(function() {
       $("#zeroes").load("{{ zeroeslink|safe }}");
   });
+  
 </script>
 
 {% endblock %}
