@@ -90,7 +90,7 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
             WNF._save_to_file(info['tempfile'])
             info['filename'] = str(weight) + '-' + str(level) + '-' + str(character) + '-' + label + '.sobj'
             return info
-    except Exception as e:
+    except ValueError as e:
         emf_logger.debug(e)
         if isinstance(e,IndexError):
             info['error'] = e.message

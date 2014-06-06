@@ -146,7 +146,6 @@ class WebModFormSpace_class(object):
             assert hasattr(self, p)
             assert self.__dict__[p]  is not needed[p]
             
-
     ### Return elementary properties of self.
     def weight(self):
         r"""
@@ -264,8 +263,6 @@ class WebModFormSpace_class(object):
             s = 'Space of Cusp forms on Gamma0({0}) of weight {1}'.format(self.level(),self.weight())
         else:
             s = 'Space of Cusp forms on Gamma0({0}) of weight {1} and character no. {2}'.format(self.level(),self.weight(),self.chi())
-        
-#        s += ' and dimension ' + str(self.dimension())
         return s
 
 

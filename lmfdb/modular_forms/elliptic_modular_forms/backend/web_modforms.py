@@ -76,7 +76,7 @@ class WebNewForm_class(object):
     Class for representing a (cuspidal) newform on the web.
     """
     
-    def __init__(self, N=1, k=2, character_orbit_rep=1, label='', prec=10, bitprec=53, display_bprec=26,parent=None, data=None, compute=False, verbose=-1,get_from_db=True):
+    def __init__(self, N=1, k=2, chi=1, label='', prec=10, bitprec=53, display_bprec=26,parent=None, data=None, compute=False, verbose=-1,get_from_db=True):
         r"""
         Init self as form with given label in S_k(N,chi)
         """
@@ -185,9 +185,7 @@ class WebNewForm_class(object):
                 'bitprec':bitprec,
                 'values':[],
                 'latex':[]},
-            '_base_ring': None,
             '_base_ring_as_dict' : {},
-            '_coefficient_field': None,
             '_coefficient_field_as_dict': {},
             '_twist_info' : [],
             '_is_CM' : [],
@@ -322,7 +320,7 @@ class WebNewForm_class(object):
         d = yaml.load(s)
         return yaml.load(d)    
     
-    def get_from_db(self,N,k,chi,label):
+    def get_from_db(self, N, k, chi, label):
         r"""
         Fetch dictionary from the database
         """
@@ -345,7 +343,7 @@ class WebNewForm_class(object):
         Get aps from database if they exist.
         """
         ap_files = connect_to_modularforms_db('ap.files')
-        key = {'name': self.name()}
+        key = {'k': self.weight(), 'N': self.level(), 'character_galois_orbit': {'$all': [int(self._chi)]}}
         key['prec'] = {"$gt": int(prec - 1)}
 
         ap_from_db  = ap_files.find_one(key)
