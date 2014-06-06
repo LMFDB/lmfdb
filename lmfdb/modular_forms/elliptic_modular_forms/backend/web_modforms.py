@@ -250,6 +250,12 @@ class WebNewForm_class(object):
         The name, or *complete* label, of self.
         """
         return self._name
+
+    def galois_orbit_name(self):
+        r"""
+        Returns a canonical name for the galois orbit of self.
+        """
+        return "{0}.{1}.{2}{3}".format(self.level(), self.weight(), self._character_orbit_rep, self._label)
     
     
     def character(self):
@@ -989,7 +995,7 @@ class WebNewForm_class(object):
         emf_logger.debug("inserting self into db! name={0}".format(self._name))
         C = connect_to_modularforms_db('WebNewforms.files')
         fs = get_files_from_gridfs('WebNewforms')
-        s = {'name':self._name,'version':float(self._version)}
+        s = {'galois_orbit_name':self.galois_orbit_name(),'version':float(self._version)}
         rec = C.find_one(s)
         if rec:
             id = rec.get('_id')
