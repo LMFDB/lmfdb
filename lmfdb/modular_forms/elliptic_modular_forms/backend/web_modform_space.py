@@ -35,11 +35,11 @@ import yaml
 from flask import url_for
 
 from lmfdb.modular_forms.elliptic_modular_forms import emf_logger, emf_version
-from emf_core import html_table, len_as_printed
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_core import html_table, len_as_printed
 
 from sage.rings.number_field.number_field_base import NumberField as NumberField_class
 from lmfdb.modular_forms.elliptic_modular_forms.backend import connect_to_modularforms_db,get_files_from_gridfs
-from web_character import WebChar
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_character import WebChar
 
 def WebModFormSpace(N=1, k=2, chi=1, cuspidal=1, prec=10, bitprec=53, data=None, verbose=0,**kwds):
     r"""
@@ -85,7 +85,8 @@ class WebModFormSpace_class(object):
             '_character_used_in_computation': None,
             '_cuspidal' : int(cuspidal),
             '_prec' : int(prec),
-            '_ap' : {}, '_group' : None,
+            '_ap' : {},
+            '_group' : None,
             '_character' : None,
             '_sturm_bound' : None,
             '_newforms' : {},
@@ -143,8 +144,8 @@ class WebModFormSpace_class(object):
             }
         
         for p in needed.keys():
-            assert hasattr(self, p)
-            assert self.__dict__[p]  is not needed[p]
+            assert hasattr(self, p), "Missing property " + p
+            assert self.__dict__[p] is not needed[p], "Did you store " + p + "? It has value" + needed[p]
             
     ### Return elementary properties of self.
     def weight(self):
@@ -220,7 +221,7 @@ class WebModFormSpace_class(object):
           Return a WebCharacter that corresponds to the character that was used during computation.
         """
         if self._web_character_used_in_computation is None:
-            self._web_character_used_in_computation = WebChar(self._level, self._character_used_in_computation)
+            self._web_character_used_in_computation = WebChar(self.level(), self._character_used_in_computation)
         return self._web_character_used_in_computation
 
     def to_dict(self):

@@ -99,7 +99,8 @@ class WebNewForm_class(object):
             '_character_orbit_rep' : None,
             '_character_galois_orbit': [],
             '_label' : str(label), '_fi':None,
-            '_prec' : int(prec), '_bitprec' : int(bitprec),
+            '_prec' : int(prec),
+            '_bitprec' : int(bitprec),
             '_display_bprec':int(display_bprec),
             '_verbose' : int(verbose),
             '_satake' : {},
@@ -113,7 +114,7 @@ class WebNewForm_class(object):
             '_embeddings' :
                 {
                 'prec':0,
-                'bitprec':bitprec,
+                'bitprec': bitprec,
                 'values':[],
                 'latex':[]},
             '_base_ring': None,
@@ -180,7 +181,7 @@ class WebNewForm_class(object):
             '_embeddings' :
                 {
                 'prec':0,
-                'bitprec':bitprec,
+                'bitprec':0,
                 'values':[],
                 'latex':[]},
             '_base_ring_as_dict' : {},
@@ -198,8 +199,8 @@ class WebNewForm_class(object):
             }
         
         for p in needed.keys():
-            assert hasattr(self, p)
-            assert self.__dict__[p]  is not needed[p]
+            assert hasattr(self, p), "Missing property " + p
+            assert self.__dict__[p] is not needed[p], "Did you store " + p + "? It has value" + needed[p]
 
 ### Get basic properties of self
     
