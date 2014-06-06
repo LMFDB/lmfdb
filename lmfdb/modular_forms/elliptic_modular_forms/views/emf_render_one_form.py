@@ -135,13 +135,13 @@ def set_info_for_one_modular_form(level=None, weight=None, character=None, label
     ## Until we have figured out how to do the embeddings correctly we don't display the Satake
     ## parameters for non-trivial characters....
     if WNF.degree()==1:
-        info['satake'] = WNF.satake_parameters(prec, bprec)
+        info['satake'] = WNF.satake_parameters()
    # br = 60
     # info['qexp'] =
     # ajax_more(WNF.print_q_expansion,{'prec':5,'br':br},{'prec':10,'br':br},{'prec':20,'br':br},{'prec':100,'br':br},{'prec':200,'br':br})
     #K = WNF.base_ring()
     #L = WNF.coefficient_field()
-    info['qexp'] = WNF.print_q_expansion(prec=prec, br=120)
+    info['qexp'] = WNF.q_expansion_latex(prec=prec)
     # c = list(WNF.q_expansion(prec))
     # c = map(lambda x: str(x).replace("*",""), c)
     # info['c'] = map(lambda x: x.replace(, c)
@@ -235,8 +235,8 @@ def set_info_for_one_modular_form(level=None, weight=None, character=None, label
         info['explicit_formulas'] = WNF.as_polynomial_in_E4_and_E6()
     cur_url = '?&level=' + str(level) + '&weight=' + str(weight) + '&character=' + str(character) + \
         '&label=' + str(label)
-    if(len(WNF.parent().galois_decomposition()) > 1):
-        for label_other in WNF.parent()._galois_orbits_labels:
+    if(len(WNF.parent().labels()) > 1):
+        for label_other in WNF.parent().labels():
             if(label_other != label):
                 s = 'Modular form '
                 if character:

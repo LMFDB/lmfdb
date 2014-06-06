@@ -86,7 +86,7 @@ class WebChar(object):
         
     def get_from_db(self):
         r"""
-        Fetch self from database.
+          Fetch the data defining this WebCharacter from database.
         """
         db = connect_to_modularforms_db('WebChar.files')
         s = {'modulus':self._modulus,'number':self._number,'version':emf_version}
