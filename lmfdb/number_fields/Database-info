@@ -24,6 +24,7 @@ class_group ---> 3  (string, can be blank of class_number=1)
 units ---> (string)
 reg ---> 3.2345 (float)
 used_grh ---> True (boolean)
+reduced ---> 0 or 1 (0 if the polynomial is not polredabs'ed)
 
 Deprecated fields:
 -----------------

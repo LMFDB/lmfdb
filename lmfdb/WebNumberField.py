@@ -11,7 +11,7 @@ wnflog = make_logger("WNF")
 dir_group_size_bound = 10000
 
 # Dictionary of field label: n for abs(disc(Q(zeta_n)))
-# Does all cyclotomic fields of degree n s.t. 2<n<25
+# Does all cyclotomic fields of degree n s.t. 2<n<24
 cycloinfo = {'4.0.125.1': 5, '6.0.16807.1': 7, '4.0.256.1': 8,
   '6.0.19683.1': 9, '10.0.2357947691.1': 11, '4.0.144.1': 12,
   '12.0.1792160394037.1': 13, '8.0.1265625.1': 15, '8.0.16777216.1': 16,
@@ -42,7 +42,6 @@ def na_text():
 def list2string(li):
     li2 = [str(x) for x in li]
     return ','.join(li2)
-
 
 def string2list(s):
     s = str(s)
@@ -166,6 +165,14 @@ class WebNumberField:
 
     def field_pretty(self):
         return field_pretty(self.get_label())
+
+    # Is the polynomial polredabs'ed
+    def is_reduced(self):
+        if not self.haskey('reduced'):
+            return True
+        if self._data['reduced'] == 0:
+            return False
+        return True
 
     # Return discriminant as a sage int
     def disc(self):
