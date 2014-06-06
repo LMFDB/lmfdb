@@ -260,6 +260,9 @@ class WebNewForm_class(object):
             self._character = WebChar(modulus=self.level(),number=self.chi())
         return self._character
 
+    def character_galois_orbit(self):
+        return self.parent().character_galois_orbit()
+
     def newform_number(self):
         r"""
         The number of self in the Hecke orbits of self.parent()
