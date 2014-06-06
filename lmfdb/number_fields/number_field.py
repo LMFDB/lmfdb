@@ -129,20 +129,20 @@ def parse_field_string(F):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
             if d == 1:
                 return '1.1.1.1'
             deg = euler_phi(d)
-            if deg > 20:
-                return fail_string
+            if deg > 23:
+                return '%s is not ' % F
             adisc = CyclotomicField(d).discriminant().abs()  # uses formula!
             return '%s.0.%s.1' % (deg, adisc)
         return fail_string
     # check if a polynomial was entered
     F = F.replace('X', 'x')
     if 'x' in F:
-        F = F.replace('^', '**')
+        F1 = F.replace('^', '**')
         # print F
-        F = poly_to_field_label(F)
-        if F:
-            return F
-        return fail_string
+        F1 = poly_to_field_label(F1)
+        if F1:
+            return F1
+        return str(F + ' is not ')
     return F
 
 
