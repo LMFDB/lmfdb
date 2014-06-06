@@ -95,76 +95,7 @@ display: inline;
 }
 #sidebar h2 {
       margin: 10px 0px 0px;}
-</style>
-   {% endif %}
 
-
-<div id="sidebar">
-{% if BETA %}
-<h2 class="link">
-   <a href="{{ url_for('introduction') }}">Introduction and more</a>
-  </h2>
-{% else %}
-  <h2 class="link">
-   <a href="{{ url_for('introduction') }}">Introduction</a>
-  </h2>
-  <ul class="list">
-    <li class="intro" style="padding-left: 0;">
-     <span>
-        <a href="{{url_for('introduction_features')}}">Features</a>
-        <a href="{{url_for('introduction_tutorial')}}">Tutorial</a>
-     </span>
-   </li>
-  </ul><ul>
-   <li class="bigpicture">
-    <a href="{{ url_for('bigpicture') }}">Map of LMFDB</a>
-   </li>
-   <li class="roadmap">
-    <a href="{{ url_for('roadmap') }}">Future Plans</a>
-   </li>
-  </ul>
-{% endif %}
-
-
-  <h2 class="link">
-   <a href="{{ url_for('l_functions.l_function_top_page') }}">L-functions</a>
-  </h2>
-  <ul class="list">
-   <li  class="test">
-    Degree:
-    {% if user_is_authenticated and (username == 'MichaelRubinstein' or username == 'Jonathan Bober' or username == 'Ralph Furmaniak' or username == 'Harald Schilly') %}
-      <span id="span1" style="position:relative;display:none">
-      <a class="lfunction"  href="{{url_for('l_functions.l_function_degree_page', degree='degree1')}}"><img src="/static/images/1dot.svg"/></a>
-      <a class="lfunction"  href="{{url_for('l_functions.l_function_degree_page', degree='degree2')}}"><img src="/static/images/2dot.svg"/></a>
-      <a class="lfunction"  href="{{url_for('l_functions.l_function_degree_page', degree='degree3')}}"><img src="/static/images/3dot.svg"/></a>
-      <a class="lfunction"  href="{{url_for('l_functions.l_function_degree_page', degree='degree4')}}"><img src="/static/images/4dot.svg"/></a>
-      </span>
-      <script>
-        if(Math.random()<0.02) {
-        $().ready(function() {
-	  $('#span2').hide();
-	  $('#span1').show();
-	  setTimeout(function() {
-	    $('#span1').hide();
-	    $('#span2').show();
-	  }, 1000);
-	});
-	}
-      </script>
-    {% endif %}
-    <a href="{{url_for('l_functions.l_function_degree_page', degree= 'degree1')}}">1</a>
-    <a href="{{url_for('l_functions.l_function_degree_page', degree= 'degree2')}}">2</a>
-    <a href="{{url_for('l_functions.l_function_degree_page', degree= 'degree3')}}">3</a>
-    <a href="{{url_for('l_functions.l_function_degree_page', degree= 'degree4')}}">4</a>
-    <a href="">5+</a>
-   </li>
-  {% if BETA %}
-  <li><a href="">Operations</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="">Zeros</a></li>
-    {% endif %}
-  </ul>
-
-
-<style type="text/css">
 .rotation  {
              -moz-transform: rotate(270deg);
              -webkit-transform: rotate(270deg);
@@ -211,35 +142,121 @@ display: inline;
 	background: #fff }
 
 </style>
+   {% endif %}
+
+
+<div id="sidebar">
+{% if BETA %}
+<h2 class="link">
+   <a href="{{ url_for('introduction') }}">Introduction and more</a>
+  </h2>
+<table class="short">
+<tr>
+<td width="100""><ul class="list">
+	<li><a href="{{ url_for('introduction') }}">Introduction</a></li>
+	<li><a href="{{url_for('introduction_tutorial')}}">Tutorial</a></li>
+	<li><a href="{{ url_for('bigpicture') }}">Map</a></li>
+	<li><a href="{{ url_for('citation') }}">Citation</a></li>
+	</ul></td>
+<td width="100"><ul class="list">
+	<li><a href="{{url_for('introduction_features')}}">Features</a></li>
+	<li><a href="{{ url_for('contact') }}">Contact</a></li>
+	<li></li>
+	<li><a href="{{ url_for('roadmap') }}">Future Plans</a></li>
+	</ul></td>
+</tr>
+</table> 
+
+{% else %}
+  <h2 class="link">
+   <a href="{{ url_for('introduction') }}">Introduction</a>
+  </h2>
+  <ul class="list">
+    <li class="intro" style="padding-left: 0;">
+     <span>
+        <a href="{{url_for('introduction_features')}}">Features</a>
+        <a href="{{url_for('introduction_tutorial')}}">Tutorial</a>
+     </span>
+   </li>
+  </ul><ul>
+   <li class="bigpicture">
+    <a href="{{ url_for('bigpicture') }}">Map of LMFDB</a>
+   </li>
+   <li class="roadmap">
+    <a href="{{ url_for('roadmap') }}">Future Plans</a>
+   </li>
+  </ul>
+{% endif %}
+
+
+  <h2 class="link">
+   <a href="{{ url_for('l_functions.l_function_top_page') }}">L-functions</a>
+  </h2>
+  <ul class="list">
+   <li>
+    Degree:
+    {% if user_is_authenticated and (username == 'MichaelRubinstein' or username == 'Jonathan Bober' or username == 'Ralph Furmaniak' or username == 'Harald Schilly') %}
+      <span id="span1" style="position:relative;display:none">
+      <a class="lfunction"  href="{{url_for('l_functions.l_function_degree_page', degree='degree1')}}"><img src="/static/images/1dot.svg"/></a>
+      <a class="lfunction"  href="{{url_for('l_functions.l_function_degree_page', degree='degree2')}}"><img src="/static/images/2dot.svg"/></a>
+      <a class="lfunction"  href="{{url_for('l_functions.l_function_degree_page', degree='degree3')}}"><img src="/static/images/3dot.svg"/></a>
+      <a class="lfunction"  href="{{url_for('l_functions.l_function_degree_page', degree='degree4')}}"><img src="/static/images/4dot.svg"/></a>
+      </span>
+      <script>
+        if(Math.random()<0.02) {
+        $().ready(function() {
+	  $('#span2').hide();
+	  $('#span1').show();
+	  setTimeout(function() {
+	    $('#span1').hide();
+	    $('#span2').show();
+	  }, 1000);
+	});
+	}
+      </script>
+    {% endif %}
+    <a href="{{url_for('l_functions.l_function_degree_page', degree= 'degree1')}}">1</a>
+    <a href="{{url_for('l_functions.l_function_degree_page', degree= 'degree2')}}">2</a>
+    <a href="{{url_for('l_functions.l_function_degree_page', degree= 'degree3')}}">3</a>
+    <a href="{{url_for('l_functions.l_function_degree_page', degree= 'degree4')}}">4</a>
+    <a class="test" href="">5+</a>
+   </li>
+  {% if BETA %}
+  <li><a href="/TensorProducts">Operations</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="zeros/first/">Zeros</a></li>
+    {% endif %}
+  </ul>
+
+
+
   <h2 class="link">
        <a class="mf"    href="{{ url_for('mf.modular_form_main_page') }}">Modular Forms</a>
   </h2>
 {% if BETA %}
 <table class="short">
 <tr>
-<td width="15" class="borc"><p class="rotation">\(\GL(2)\)</p></td>
+<td width="15" class="borc"><p class="test rotation">\(\GL(2)\)</p></td>
 <td width="185"class="bor">
 <ul class="list">
 <li><a class="emf"  href="{{ url_for('emf.render_elliptic_modular_forms') }}">Classical</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="mwf"  href="{{ url_for('mwf.render_maass_waveforms') }}">Maass</a></li>
-<li class="test"><a href="{{ url_for('hmf.hilbert_modular_form_render_webpage') }}">Hilbert</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="">Bianchi</a></li>
+<li><a href="{{ url_for('hmf.hilbert_modular_form_render_webpage') }}">Hilbert</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a class="test" href="">Bianchi</a></li>
 <li class="test"><a href="">Half-integer</a></li>
 <li class="test"><a href="">Non-congruence</a></li>
 	</ul></td>
 </tr>
 <tr> 
-<td class="off" width="15"  bgcolor="#fff"><p class="rotation">\(\GL(3)\)</p></td>
+<td class="off" width="15"  bgcolor="#fff"><p class="test rotation">\(\GL(3)\)</p></td>
 <td width="185" bgcolor="#fff" class="bor">
 <ul class="list">
-<li><a href="">Cohomological</a></li> 
-<li><a href="">Maass</a></li></ul></td>
+<li><a class="test" href="">Cohomological</a></li> 
+<li><a href="{{ url_for('mwf.render_maass_waveforms') }}">Maass</a></li></ul></td>
 </ul></td>
 </tr>
 <tr> 
 <td width="15px" ><p class="rotation"> </p></td>
 <td width="185px" class="nbor">
 <ul class="list">
-<li><a href="">U(2,1)</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="{{ url_for('ModularForm_GSp4_Q_top_level') }}">Siegel</a></li>
-<li><a href="">others</a></li>
+<li><a class="test" href="">U(2,1)</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="{{ url_for('ModularForm_GSp4_Q_top_level') }}">Siegel</a></li>
+<li><a class="test" href="">others</a></li>
 </ul></td>
 </tr>
 </table>   
@@ -278,32 +295,29 @@ display: inline;
 <h2> Varieties</h2>
 <table class="short">
 <tr>
-<td width="15px"  class="borc"><p class="rotation">Curves</p></td>
+<td width="15px"  class="borc"><p class="test rotation">Curves</p></td>
 <td width="185px" class="bor">
 <ul class="list">
-	<li>Elliptic 
+	<li><a class="test" href="">Elliptic</a> 
 	<ul class="list">
-		<li><a href="{{ url_for('EC_toplevel') }}">/\(\Q\)</a>&nbsp;&nbsp;<a href="">/\(\F_{q}(t)\)</a></li>
-		<li><a href="">/Number Fields</a>
-		<li><a href="">\(\Q\)-curves</a></li>
+		<li><a href="{{ url_for('EC_toplevel') }}">/\(\Q\)</a>&nbsp;&nbsp;<a class="test" href="">/\(\F_{q}(t)\)</a></li>
+		<li><a class="test" href="">/Number Fields</a>
+		<li><a class="test" href="">\(\Q\)-curves</a></li>
 	</ul></li>
 	
-	<li>Hyperelliptic 
+	<li><a class="test" href="">Hyperelliptic</a> 
 	<ul class="list">
-		<li><a href="{{ url_for('EC_toplevel') }}">/\(\Q\)</a>&nbsp;&nbsp;<a href="">/\(\F_{q}(t)\)</a></li>
-		<li><a href="">/Number Fields</a>
+		<li><a class="test" href="{{ url_for('EC_toplevel') }}">/\(\Q\)</a>&nbsp;&nbsp;<a class="test"  href="">/\(\F_{q}(t)\)</a></li>
+		<li><a class="test"  href="">/Number Fields</a>
 	</ul></li>
-	<li>Belyi&nbsp;&nbsp;&nbsp;&nbsp;Shimura</li>
-	<li>Genus: <a href="">3</a>,<a href="">4</a>,<a href="">5+</a></li>
-</ul>
-</td>
-</tr>
-<tr> 
-<td  width="15" class="off" bgcolor="#fff" border-top="100px"><p class="rotation">Surfaces</p></td>
+	<li><a class="test" href="">Belyi</a>&nbsp;&nbsp;&nbsp;&nbsp;<a class="test" href="">Shimura</a></li>
+	<li><a class="test" href="">Genus:</a> <a class="test" href="">3</a>,<a class="test" href="">4</a>,<a class="test" href="">5+</a></li>
+</ul></td></tr><tr> 
+<td  width="15" class="off" bgcolor="#fff" border-top="100px"><p class="rotation"><a class="test" href="">Surfaces</a></p></td>
 <td width="185"  bgcolor="#fff" class="bor">
 <ul class="list">
-<li><a href="">Abelian</a></li> 
-<li><a href="">K3</a></li>
+<li><a class="test" href="">Abelian</a></li> 
+<li><a class="test" href="">\(K3\)</a></li>
 </ul></td>
 </tr>
 <tr> 
@@ -328,7 +342,7 @@ display: inline;
 
 <table class="short">
 <tr><td><ul class="list">
-<li class="test">Number fields</li></ul></td><td>
+<li>Number fields</li></ul></td><td>
 <ul class="list">
 	<li><a href="{{ url_for('number_fields.number_field_render_webpage') }}">Global</a></li>
 	<li><a href="{{ url_for('local_fields.index') }}">Local</a></li>
@@ -351,11 +365,9 @@ display: inline;
 <li class="test">Subgroups of</li></ul></td>
 <td>
 <ul class="list">
-	<li><a href="{{ url_character(type='Dirichlet') }} "> \(\SL(2)\)</a></li>
-	<li><a href="{{ url_character(type='Hecke') }} ">\(\GL(2,\F_q)\)</a></li>
-</ul>
-</td>
-</tr>
+	<li><a  class="test" href=""> \(\SL(2)\)</a></li>
+	<li><a  class="test" href="">\(\GL(2,\F_q)\)</a></li>
+</ul></td></tr>
 </table> 
 
 
@@ -394,18 +406,14 @@ display: inline;
 
 <h2>Representations</h2>
 <table class="short">
-<tr>
-<td><ul class="list">
-<li class="test">Characters</li></ul></td>
+<tr><td><ul class="list">
+<li>Characters</li></ul></td>
 <td>
 <ul class="list">
 	<li><a href="{{ url_character(type='Dirichlet') }} ">Dirichlet</a></li>
 	<li><a href="{{ url_character(type='Hecke') }} ">Hecke</a></li>
-</ul>
-</td>
-</tr>
-<tr> 
-<td>
+</ul></td></tr>
+<tr> <td>
 <ul class="list">
 <li class="test"><a class="artin_representations" href="{{ url_for('artin_representations.index') }}">Artin</a> <a href="">Galois</a> </li>
 <li class="test"><a href="">Automorphic</a></li>
@@ -414,22 +422,17 @@ display: inline;
 
 <h2>Motives</h2>
 <table class="short">
-<tr>
-<td width="8%" vertical-align="left" line-height="0px"><ul class="list">
-<li class="test">Hypergeometric</li></ul></td>
-<td width="92%">
-<ul class="list">
-<li> <a href="">/\(\Q\)</a> </li>
-<li> <a href="">/\(\Q(\sqrt{d})\)</a></li>
-</ul>
-</td>
-</tr>
+<tr><td vertical-align="left" line-height="0px">
+	<ul class="list">
+	<li class="test">Hypergeometric</li></ul></td><td>
+	<ul class="list">
+	<li> <a class="test" href="">/\(\Q\)</a> </li>
+	<li> <a class="test" href="">/\(\Q(\sqrt{d})\)</a></li>
+	</ul></td></tr>
 <tr> 
-<td>
-<ul class="list">
-<li class="test">Jacobi&nbsp;&nbsp;$G_2$</li>
-</ul>
-</td>
+<td width="100"><a  class="test" href="">Jacobi</a></td>
+<td width="100"><a  class="test" href="">\(G_2\)</a></td>
+</tr>
 </table> 
 
   {% endif %}
