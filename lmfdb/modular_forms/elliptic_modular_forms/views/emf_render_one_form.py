@@ -235,8 +235,8 @@ def set_info_for_one_modular_form(level=None, weight=None, character=None, label
         info['explicit_formulas'] = WNF.as_polynomial_in_E4_and_E6()
     cur_url = '?&level=' + str(level) + '&weight=' + str(weight) + '&character=' + str(character) + \
         '&label=' + str(label)
-    if(len(WNF.parent().galois_decomposition()) > 1):
-        for label_other in WNF.parent()._galois_orbits_labels:
+    if(len(WNF.parent().labels()) > 1):
+        for label_other in WNF.parent().labels():
             if(label_other != label):
                 s = 'Modular form '
                 if character:

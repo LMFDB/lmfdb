@@ -34,8 +34,9 @@ from sage.all import divisors, ComplexField, join, primes_first_n, matrix, Numbe
 from sage.rings.power_series_poly import PowerSeries_poly
 from sage.rings.integer_ring import ZZ
 from sage.rings.rational_field import QQ
-from sage.all import Parent, SageObject, dimension_new_cusp_forms, vector, dimension_modular_forms, dimension_cusp_forms, Matrix, floor, latex, loads, save, dumps, deepcopy
+from sage.modular.cusps import Cusp
 from sage.rings.infinity import Infinity
+from sage.all import Parent, SageObject, dimension_new_cusp_forms, vector, dimension_modular_forms, dimension_cusp_forms, Matrix, floor, latex, loads, save, dumps, deepcopy
 import re
 import yaml
 from flask import url_for
