@@ -199,7 +199,7 @@ class WebNewForm_class(object):
             '_degree' : None,
             '_absolute_degree' : None,
             '_relative_degree' : None,
-            '_name' : ""),
+            '_name' : "",
             '_sturm_bound' : None,
             '_newform_number':None,
             '_version': float(0)
