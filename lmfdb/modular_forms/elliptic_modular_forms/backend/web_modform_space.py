@@ -78,7 +78,7 @@ class WebModFormSpace_class(object):
         d = {
             '_N': int(N),
             '_k': int(k),
-            '_chi': int(chi)
+            '_chi': int(chi),
             '_character_orbit_rep': None,
             '_character_galois_orbit': [],
             '_character_galois_orbit_embeddings': {},
