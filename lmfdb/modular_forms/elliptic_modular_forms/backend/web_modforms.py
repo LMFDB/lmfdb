@@ -166,6 +166,10 @@ class WebNewForm_class(object):
         emf_logger.debug("name={0}".format(self._name))
         emf_logger.debug("done __init__")
 
+    def _check_if_all_stored(self):
+        f = WebNewForm(k=self.weight(), N=self.level(), chi=self.chi(), label=self.label())
+        f._check_if_all_computed()
+        
     def _check_if_all_computed(self):
         needed  = {
             '_character_orbit_rep' : None,
@@ -470,7 +474,6 @@ class WebNewForm_class(object):
                 emf_logger.debug("compute parent! label={0}".format(label))
             self._parent = WebModFormSpace(self._N, sel.f_k,self._chi, data=self._parent)
         return self._parent
-
     
     def is_rational(self):
         r"""

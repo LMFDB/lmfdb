@@ -121,6 +121,10 @@ class WebModFormSpace_class(object):
         if get_all_newforms_from_db:
             self.get_all_newforms_from_db()
 
+    def _check_if_all_stored(self):
+        f = WebModFormsSpace(k=self.weight(), N=self.level(), chi=self.chi())
+        f._check_if_all_computed()
+
     def _check_if_all_computed(self):
         needed = {
             '_character_orbit_rep': None,
