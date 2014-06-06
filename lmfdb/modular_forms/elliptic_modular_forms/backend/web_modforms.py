@@ -76,7 +76,7 @@ class WebNewForm_class(object):
     Class for representing a (cuspidal) newform on the web.
     """
     
-    def __init__(self, N=1, k=2, character_orbit_rep=1, label='', prec=10, bitprec=53, display_bprec=26,parent=None, data=None, compute=False, verbose=-1,get_from_db=True):
+    def __init__(self, N=1, k=2, chi=1, label='', prec=10, bitprec=53, display_bprec=26,parent=None, data=None, compute=False, verbose=-1,get_from_db=True):
         r"""
         Init self as form with given label in S_k(N,chi)
         """
