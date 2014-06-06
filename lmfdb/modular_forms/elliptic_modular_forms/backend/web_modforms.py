@@ -451,7 +451,7 @@ class WebNewForm_class(object):
         Degree of the field of coefficient relative to its base ring.
         """
         if self._relative_degree is None:
-            if self._coefficient_field() is not None:
+            if self.coefficient_field() is not None:
                 self._relative_degree = self.coefficient_field().absolute_degree()/self.base_ring().absolute_degree()
         return self._relative_degree
     
@@ -857,20 +857,14 @@ class WebNewForm_class(object):
 
     
     def sturm_bound(self):
-        return self._sturm_bound
-
+        r"""
+          Return the Sturm bound of $S_k(N,\chi)$,
+          i.e. the trivial upper bound number of coefficients necessary to determine a form uniquely in the space.
+        """
+        return self.parent().sturm_bound()
     
     def url(self):
         return url_for('emf.render_elliptic_modular_forms', level=self.level(), weight=self.weight(), character=self.chi(), label=self.label())
-
-    def _number_of_hecke_eigenvalues_to_check(self):
-        r""" Compute the number of Hecke eigenvalues (at primes) we need to check to identify twists of our given form with characters of conductor dividing the level.
-        """
-        ## initial bound
-        bd = self.as_factor().sturm_bound()
-        # we do not check primes dividing the level
-        bd = bd + len(divisors(self.level()))
-        return bd
 
     ## printing functions
     def print_q_expansion(self, prec=None, br=0):

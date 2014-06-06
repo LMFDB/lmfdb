@@ -342,6 +342,8 @@ class WebModFormSpace_class(object):
           Return the Sturm bound of S_k(N,xi),
           i.e. the trivial upper bound number of coefficients necessary to determine a form uniquely in the space.
         """
+        if self._sturm_bound is None:
+            self._sturm_bound = self.group().sturm_bound()
         return self._sturm_bound
 
     def labels(self):
