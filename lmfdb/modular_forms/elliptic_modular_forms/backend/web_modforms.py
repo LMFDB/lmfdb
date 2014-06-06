@@ -165,6 +165,50 @@ class WebNewForm_class(object):
         emf_logger.debug("name={0}".format(self._name))
         emf_logger.debug("done __init__")
 
+    def _check_if_all_computed(self):
+        needed  = {
+            '_character_orbit_rep' : None,
+            '_character_galois_orbit': [],
+            '_label' : str(''),
+            '_fi': None,
+            '_prec' : int(0),
+            '_bitprec' : int(0),
+            '_display_bprec':int(0),
+            '_satake' : {},
+            '_coefficients' : dict(),  # list of Fourier coefficients (should not be long)
+            '_atkin_lehner_eigenvalues' : {},
+            '_q_expansion' : None,
+            '_q_expansion_str' : '',
+            '_embeddings' :
+                {
+                'prec':0,
+                'bitprec':bitprec,
+                'values':[],
+                'latex':[]},
+            '_base_ring': None,
+            '_base_ring_as_dict' : {},
+            '_coefficient_field': None,
+            '_coefficient_field_as_dict': {},
+            '_twist_info' : [],
+            '_is_CM' : [],
+            '_cm_values' : {},
+            '_satake' : {},
+            '_dimension' : None,
+            '_is_rational' : None,
+            '_absolute_polynomial': None,
+            '_degree' : None,
+            '_absolute_degree' : None,
+            '_relative_degree' : None,
+            '_name' : "{0}.{1}.{2}{3}".format(N,k,chi,label),
+            '_sturm_bound' : None,
+            '_newform_number':None,
+            '_version': float(emf_version)
+            }
+        
+        for p in needed.keys():
+            assert hasattr(self, p)
+            assert self.__dict__[p]  is not needed[p]
+
 ### Get basic properties of self
     
     def level(self):
@@ -226,7 +270,7 @@ class WebNewForm_class(object):
 
     def newform_number(self):
         r"""
-        The number of self in the Galois orbits of self.parent()
+        The number of self in the Hecke orbits of self.parent()
         """
         if self._newform_number is None:
             if self._label not in self.parent().labels():
