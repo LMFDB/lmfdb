@@ -199,10 +199,10 @@ class WebNewForm_class(object):
             '_degree' : None,
             '_absolute_degree' : None,
             '_relative_degree' : None,
-            '_name' : "{0}.{1}.{2}{3}".format(N,k,chi,label),
+            '_name' : ""),
             '_sturm_bound' : None,
             '_newform_number':None,
-            '_version': float(emf_version)
+            '_version': float(0)
             }
         
         for p in needed.keys():
