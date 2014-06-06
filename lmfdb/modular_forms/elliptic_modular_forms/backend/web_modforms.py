@@ -493,6 +493,8 @@ class WebNewForm_class(object):
         return self._dimension
 
     def q_expansion_embeddings(self, prec=10, bitprec=53,format='numeric',display_bprec=26,insert_in_db=True):
+        if prec > self._prec or bitprec > self._bitprec or self._embeddings['prec'] == 0:
+            _q_expansion_embeddings(prec,bitprec,format,display_bprec)
         if format=='latex':
             return self._embeddings['latex']
         else:
@@ -1006,6 +1008,38 @@ class WebNewForm_class(object):
 
     def base_field_url(self):
         return url_for("number_fields.by_label", label=self.base_field_label(pretty = False))
+
+
+## Functions related to storing / fetching data from database
+##  
+    
+    def insert_into_db(self):
+        r"""
+        Insert a dictionary of data for self into the database collection
+        WebNewforms.files
+        """
+        wmf_logger.debug("inserting self into db! name={0}".format(self._name))
+        C = connect_to_modularforms_db('WebNewforms.files')
+        fs = get_files_from_gridfs('WebNewforms')
+        s = {'name':self._name,'version':float(self._version)}
+        rec = C.find_one(s)
+        if rec:
+            id = rec.get('_id')
+        else:
+            id = None
+        if id<>None:
+            wmf_logger.debug("Removing self from db with id={0}".format(id))
+            fs.delete(id)
+            
+        fname = "webnewform-{0:0>5}-{1:0>3}-{2:0>3}-{3}".format(self._N,self._k,self._chi,self._label) 
+        d = self.to_dict()
+        d.pop('_ap',None)
+        d.pop('_character',None)
+        d.pop('_as_factor',None)
+        id = fs.put(dumps(d),filename=fname, N=int(self._N), k=int(self._k), chi=int(self._chi),\
+                    label=self._label, name=self._name, version=float(self._version),\
+                    character_galois_orbit=map(int,self.parent().character_galois_orbit()))
+        wmf_logger.debug("inserted :{0}".format(id))
 
 ###
 ### Independent helper functions
