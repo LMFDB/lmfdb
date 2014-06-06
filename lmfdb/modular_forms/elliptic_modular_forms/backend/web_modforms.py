@@ -170,12 +170,10 @@ class WebNewForm_class(object):
             '_character_orbit_rep' : None,
             '_character_galois_orbit': [],
             '_label' : str(''),
-            '_fi': None,
             '_prec' : int(0),
             '_bitprec' : int(0),
             '_display_bprec':int(0),
             '_satake' : {},
-            '_coefficients' : dict(),  # list of Fourier coefficients (should not be long)
             '_atkin_lehner_eigenvalues' : {},
             '_q_expansion' : None,
             '_q_expansion_str' : '',
