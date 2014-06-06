@@ -670,7 +670,7 @@ class WebNewForm_class(object):
             if self._q_expansion.degree() < prec:
                 for n in xrange(self._q_expansion.degree(),prec):
                     self._q_expansion += self.coefficient(n)*q**n
-                self._q_expansion_str = str(self._q_expansion.polynomial()) 
+        self._q_expansion_str = str(self._q_expansion.polynomial()) 
         return self._q_expansion.truncate_powerseries(prec)
 
     def q_expansion_latex(self, prec=None):
