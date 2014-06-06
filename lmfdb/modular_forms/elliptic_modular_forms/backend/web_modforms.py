@@ -185,10 +185,6 @@ class WebNewForm_class(object):
                 'latex':[]},
             '_base_ring_as_dict' : {},
             '_coefficient_field_as_dict': {},
-            '_twist_info' : [],
-            '_is_CM' : [],
-            '_cm_values' : {},
-            '_satake' : {},
             '_dimension' : None,
             '_is_rational' : None,
             '_absolute_polynomial': None,
@@ -263,6 +259,9 @@ class WebNewForm_class(object):
         if self._character is None:
             self._character = WebChar(modulus=self.level(),number=self.chi())
         return self._character
+
+    def character_galois_orbit(self):
+        return self.parent().character_galois_orbit()
 
     def newform_number(self):
         r"""

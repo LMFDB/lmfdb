@@ -174,6 +174,9 @@ class WebModFormSpace_class(object):
             if hasattr(self, '_character_galois_orbit_embeddings') and self._character_galois_orbit_embeddings is not None:
                 self._character.set_embeddings(self._character_galois_orbit_embeddings)
         return self._character
+
+    def character_galois_orbit(self):
+        return self._character_galois_orbit
     
     def group(self):
         r"""
