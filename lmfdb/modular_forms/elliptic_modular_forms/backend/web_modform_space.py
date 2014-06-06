@@ -196,9 +196,16 @@ class WebModFormSpace_class(object):
         return self._ap
 
     def newforms(self):
+        r"""
+          Return a dictionary of the form label => WebNewForm containing
+          representatives of the irredicible Hecke orbits in the WebModFormSpace ``self```.
+        """
         return self._newforms
 
     def oldspace_decomposition(self):
+        r"""
+          Return the oldspace decomposition of ```self```.
+        """
         return self._oldspace_decomposition
                             
     def character_orbit_rep(self,k=None):
@@ -209,6 +216,9 @@ class WebModFormSpace_class(object):
         return self._character_orbit_rep
 
     def _web_character_used_in_computation(self):
+        r"""
+          Return a WebCharacter that corresponds to the charactr that was used during computation.
+        """
         if self._web_character_used_in_computation is None:
             self._web_character_used_in_computation = WebChar(self._level, self._character_used_in_computation)
         return self._web_character_used_in_computation
