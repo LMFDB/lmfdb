@@ -167,6 +167,9 @@ class WebNumberField:
     def field_pretty(self):
         return field_pretty(self.get_label())
 
+    def knowl(self):
+        return nf_display_knowl(self.get_label(), base.getDBConnection(), self.field_pretty())
+
     # Return discriminant as a sage int
     def disc(self):
         return decodedisc(self._data['disc_abs_key'], self._data['disc_sign'])
@@ -202,6 +205,12 @@ class WebNumberField:
 
     def degree(self):
         return self._data['degree']
+
+    def is_real_quadratic(self):
+        return self.signature()==[2,0]
+
+    def is_imag_quadratic(self):
+        return self.signature()==[0,1]
 
     def poly(self):
         return coeff_to_poly(string2list(self._data['coeffs']))

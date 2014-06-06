@@ -55,9 +55,9 @@ function show_code(system) {
 #}
 
 <div>
-  <h2>  Base Field   {{ ec.field.field_knowl()|safe }} </h2>
+  <h2>  Base Field   {{ ec.field.knowl()|safe }} </h2>
 <p>
-Generator {{ ec.field.generator }}, with minimal polynomial {{ ec.field.poly }}
+Generator {{ ec.field.generator }}, with minimal polynomial {{ ec.field.poly() }}
 </p>
 </div>
 
@@ -177,26 +177,6 @@ No primes of bad reduction.
 {% endif %}
 </div>
 
-{% if ec.field.real_quadratic  %}
-
-<div>
-<h2>Hilbert modular form</h2>
-<a href="{{url_for('hmf.render_hmf_webpage', field_label=ec.field.label, label=ec.hmf_label)}}">HMF {{ec.hmf_label}}</a>
-</div>
-
-{% elif ec.field.imag_quadratic %}
-
-<div>
-<h2>Bianchi modular form</h2>
-{#
-<a href="{{url_for('hmf.render_hmf_webpage', --
-  --field_label=ec.field.label, label=ec.bmf_label)}}">BMF --
-  --{{ec.bmf_label}}</a>
-#}
-Bianchi modular forms data not yet available.
-</div>
-
-{% endif %}
 
 {% if DEBUG %}
 <hr>
