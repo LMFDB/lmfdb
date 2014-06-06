@@ -15,39 +15,6 @@
 <div id="qexp">
 <h2> {{ KNOWL('mf.elliptic.q-expansion',title='q-expansion')}}</h2>
 {{ qexp | safe }}
-<br>
-{# Get the q-expansion #}
-{#
-<span id="qexp">
-\( 
-{% if c[0] and not c[0][0] == '0' %}
-  {% set nstart=0 %}
-{% else %}
-  {% set nstart=1 %}
-{% endif %} 
-{% for n in range(nstart,maxc) %}
-  {% if not c[n][0] == '0' %}
-    {%  if n>1 and not c[n][0]=='-' %}
-    + 
-    {% endif %}
-    {% if c[n].find('+') > -1 or c[n].find('-') > -1 %}
-      {% set parens = 1 %}
-    {% endif %}
-    {% if not c[n] == '1' %}
-      {% if parens is defined %} ( {% endif %}
-        {{ c[n] }} 
-      {% if parens is defined %} ) {% endif %}
-    {% endif %}
-    {% if n==1 %} 
-     q
-    {% else %}
-     q^{  {{n}} } 
-    {% endif %}
-#  {% endif %}
-{% endfor %}
- + O(q^{ {{maxc}} })
-\) 
-</span> #}
 </div>
 {{ polynomial_st | safe }}
 <br>

@@ -94,13 +94,13 @@ def set_info_for_one_modular_form(level=None, weight=None, character=None, label
     if int(character) == 0:
         bread.append(("trivial character", url4))
     else:
-        bread.append(("character %s" % (WNF.character().latex_name()), url4))
+        bread.append(("\( %s \)" % (WNF.character().latex_name()), url4))
     info['bread'] = bread
     
     properties2 = list()
     friends = list()
     space_url = url_for('emf.render_elliptic_modular_forms',level=level, weight=weight, character=character)
-    friends.append(('\( S_{k}(' + str(level) + ', %s )\)'%(WNF.character().latex_name()), space_url))
+    friends.append(('\( S_{%s}(%s, %s)\)'%(WNF.weight(), WNF.level(), WNF.character().latex_name()), space_url))
     friends.append(('Number field ' + WNF.coefficient_field_label(), WNF.coefficient_field_url()))
     friends.append(('Number field ' + WNF.base_field_label(), WNF.base_field_url()))
     friends = uniq(friends)

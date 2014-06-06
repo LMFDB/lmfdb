@@ -435,7 +435,7 @@ class WebNewForm_class(object):
           as a number field over $\mathbb{Q}$.
         """
         if self.coefficient_field().is_absolute():
-            self._absolute_polynomial = self.polynomial()
+            self._absolute_polynomial = self.coefficient_field().polynomial()
         else:
             if self._absolute_polynomial is None:
                 self._absolute_polynomial = self.coefficient_field().absolute_polynomial()
@@ -673,8 +673,12 @@ class WebNewForm_class(object):
         assert isinstance(self._q_expansion_str,str)
         return self._q_expansion.truncate_powerseries(prec)
 
-    def q_expansion_latex(self, prec=None):
-        return web_latex_split_on_re(self.q_expansion(prec))
+    def q_expansion_latex(self, prec=None, name=None):
+        wl = web_latex_split_on_re(self.q_expansion(prec))
+        if name is not None:
+            return wl.replace(str(self.q_expansion().base_ring().gen()), name)
+        else:
+            return wl
 
     def atkin_lehner_eigenvalue(self, Q):
         r""" Return the Atkin-Lehner eigenvalues of self
@@ -686,7 +690,6 @@ class WebNewForm_class(object):
         l = self.atkin_lehner_eigenvalues()
         return l.get(Q)
 
-    
     def atkin_lehner_eigenvalues(self):
         r""" Return the Atkin-Lehner eigenvalues of self.
 
@@ -951,9 +954,10 @@ class WebNewForm_class(object):
         return s
     
     
-    def polynomial(self, type='base_ring',format='latex'):
+    def polynomial(self, type='base_ring', format='latex'):
         r"""
-        Return a formatted string representation of the defining polynomial of either the base ring or the coefficient ring of self.
+        Return a formatted string representation of the defining polynomial of either the base ring
+        or the coefficient ring of self depending on ```type```.
         """
         if type == 'base_ring':
             if self.base_ring() is None:
@@ -966,7 +970,7 @@ class WebNewForm_class(object):
                 self._coefficient_field_as_dict  = number_field_to_dict(self.coefficient_field())
             p = self._coefficient_field_as_dict['relative polynomial']
         if format == 'latex':
-            p = pol_to_latex(p)
+            p = latex(p)
         elif format == 'html':
             p = pol_to_html(p)
         return p

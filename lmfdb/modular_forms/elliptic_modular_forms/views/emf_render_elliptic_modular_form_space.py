@@ -105,13 +105,13 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
     info['old_decomposition'] = WMFS.oldspace_decomposition()
     # properties for the sidebar
     ## Make parent spaces of S_k(N,chi) for the sidebar
-    par_lbl = '\( S_{*} (\Gamma_0(' + str(level) + '),\cdot )\)'
-    par_url = '?level=' + str(level)
-    parents = [[par_lbl, par_url]]
-    par_lbl = '\( S_{k} (\Gamma_0(' + str(level) + '),\cdot )\)'
-    par_url = '?level=' + str(level) + '&weight=' + str(weight)
-    parents.append((par_lbl, par_url))
-    info['parents'] = parents
+    # par_lbl = '\( S_{*} (\Gamma_0(' + str(level) + '),\cdot )\)'
+    # par_url = '?level=' + str(level)
+    # parents = [[par_lbl, par_url]]
+    # par_lbl = '\( S_{k} (\Gamma_0(' + str(level) + '),\cdot )\)'
+    # par_url = '?level=' + str(level) + '&weight=' + str(weight)
+    # parents.append((par_lbl, par_url))
+    # info['parents'] = parents
     
     lifts = list()
     lifts.append(('Half-Integral Weight Forms', '/ModularForm/Mp2/Q'))
