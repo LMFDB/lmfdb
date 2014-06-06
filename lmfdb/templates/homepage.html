@@ -56,9 +56,12 @@
         <div id="navi">{{ navi_raw|safe }}</div>
       {%- endif %} 
       {# this span inside a div thing is necessary to align it at the bottom, see css #}
+
       <div id="title"><span id="title-content">{{ title|safe }}</span></div>
+
     </div>
 </div>
+
 
 {% block sidebar -%} 
 {% if g.show_menu %}
@@ -73,15 +76,25 @@
    {% endif %}
  {%- endmacro %}
 
+
    {% if BETA %}
 <style type="text/css">
 #sidebar .test { color:rgb(150,0,0);}
-#sidebar .test a { color:rgb(150,0,0);}
-#sidebar .list li {
-    padding: 3px;
+#sidebar .test a { color:rgb(150,0,0);
+display: inline;
+  background: none;
+  padding: 0px;}
+/*#sidebar .list li {
+    padding: px;
+}*/
+#sidebar .list a {
+  display: inline;
+  background: none;
+  padding: 0px;
+
 }
 #sidebar h2 {
-      margin: 10px 0px 0px;
+      margin: 10px 0px 0px;}
 </style>
    {% endif %}
 
@@ -117,7 +130,7 @@
    <a href="{{ url_for('l_functions.l_function_top_page') }}">L-functions</a>
   </h2>
   <ul class="list">
-   <li>
+   <li  class="test">
     Degree:
     {% if user_is_authenticated and (username == 'MichaelRubinstein' or username == 'Jonathan Bober' or username == 'Ralph Furmaniak' or username == 'Harald Schilly') %}
       <span id="span1" style="position:relative;display:none">
@@ -139,43 +152,99 @@
 	}
       </script>
     {% endif %}
-    <span id="span2">
-    <a class="lfunction"  href="{{url_for('l_functions.l_function_degree_page', degree= 'degree1')}}">1</a>
-    <a class="lfunction"  href="{{url_for('l_functions.l_function_degree_page', degree= 'degree2')}}">2</a>
-    <a class="lfunction"  href="{{url_for('l_functions.l_function_degree_page', degree= 'degree3')}}">3</a>
-    <a class="lfunction"  href="{{url_for('l_functions.l_function_degree_page', degree= 'degree4')}}">4</a>
-    </span>
+    <a href="{{url_for('l_functions.l_function_degree_page', degree= 'degree1')}}">1</a>
+    <a href="{{url_for('l_functions.l_function_degree_page', degree= 'degree2')}}">2</a>
+    <a href="{{url_for('l_functions.l_function_degree_page', degree= 'degree3')}}">3</a>
+    <a href="{{url_for('l_functions.l_function_degree_page', degree= 'degree4')}}">4</a>
+    <a href="">5+</a>
    </li>
   {% if BETA %}
-  <li class="test">Operations
-&nbsp;
-&nbsp;
-&nbsp;
-  Zeros</li>
+  <li><a href="">Operations</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="">Zeros</a></li>
     {% endif %}
   </ul>
 
 
+<style type="text/css">
+.rotation  {
+             -moz-transform: rotate(270deg);
+             -webkit-transform: rotate(270deg);
+             -o-transform: rotate(270deg);
+             -ms-transform: rotate(270deg);
+             transform: rotate(270deg); }
 
 
+#sidebar table th, table td {
+	text-align: left;
+	padding: 0px;
+}
 
+#sidebar table.short{
+	border-width: 5px;
+	border-style: solid;
+	padding: 0px;
+	border-spacing: 0px;
+	border-color: #efe;
+	border-collapse: separate;
+}
+
+#sidebar table.short td.bor{
+/*	border-bottom: 5px solid #fff;
+*/	padding: 0px;
+	text-align: left;
+}
+
+#sidebar table.short td.nbor{
+	padding: 0px; text-align: left;
+}
+
+#sidebar table.short td.borc{
+	text-align: center;
+/*	border-bottom: 5px solid #fff;
+*/	padding: 0px;
+}
+ 
+
+#sidebar table.short td.off { 
+	text-align: center;	
+/*	border-bottom: 5px solid #fff;
+*/	padding: 0px
+	background: #fff }
+
+</style>
   <h2 class="link">
        <a class="mf"    href="{{ url_for('mf.modular_form_main_page') }}">Modular Forms</a>
   </h2>
 {% if BETA %}
-  <ul class="list">
-   <li class="test">\(\GL(2)\): <a class="emf"  href="{{ url_for('emf.render_elliptic_modular_forms') }}">Classical</a>
-<a class="mwf"  href="{{ url_for('mwf.render_maass_waveforms') }}">Maass</a></li>
-   <li class="test">
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<a href="{{ url_for('hmf.hilbert_modular_form_render_webpage') }}">Hilbert</a> 
-<a href="">Bianchi</a></li>
-   <li class="test">\(\GL(3)\): <a href="">Cohomological</a></li>
-<li>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp
-<a href="">Maass</a></li>
-   <li class="test"><a href="">U(2,1)</a> <a              href="{{ url_for('ModularForm_GSp4_Q_top_level') }}">Siegel</a> &nbsp;  other</li>
-  </ul>
+<table class="short">
+<tr>
+<td width="15" class="borc"><p class="rotation">\(\GL(2)\)</p></td>
+<td width="185"class="bor">
+<ul class="list">
+<li><a class="emf"  href="{{ url_for('emf.render_elliptic_modular_forms') }}">Classical</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="mwf"  href="{{ url_for('mwf.render_maass_waveforms') }}">Maass</a></li>
+<li class="test"><a href="{{ url_for('hmf.hilbert_modular_form_render_webpage') }}">Hilbert</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="">Bianchi</a></li>
+<li class="test"><a href="">Half-integer</a></li>
+<li class="test"><a href="">Non-congruence</a></li>
+	</ul></td>
+</tr>
+<tr> 
+<td class="off" width="15"  bgcolor="#fff"><p class="rotation">\(\GL(3)\)</p></td>
+<td width="185" bgcolor="#fff" class="bor">
+<ul class="list">
+<li><a href="">Cohomological</a></li> 
+<li><a href="">Maass</a></li></ul></td>
+</ul></td>
+</tr>
+<tr> 
+<td width="15px" ><p class="rotation"> </p></td>
+<td width="185px" class="nbor">
+<ul class="list">
+<li><a href="">U(2,1)</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="{{ url_for('ModularForm_GSp4_Q_top_level') }}">Siegel</a></li>
+<li><a href="">others</a></li>
+</ul></td>
+</tr>
+</table>   
+
+ 
 {% else %}
   <ul>
    <li><a class="emf"  href="{{ url_for('emf.render_elliptic_modular_forms') }}">Classical, $\GL(2)/\Q$</a></li>
@@ -205,14 +274,49 @@
 
 
 {% if BETA %}
-    <h2> Varieties</h2>
-  <ul class="list">
-   <li>Elliptic Curves over:</li> <li><a href="{{ url_for('EC_toplevel') }}">\(\Q\)</a> <a href="">\(\Q(\sqrt{d})\)</a> <a href="">\(\Q(\sqrt{-d})\)</a> <a href="">other</a>
-    <li class="test"><a href="">$\Q$-curves</a></li>
-    <li class="test"><a href="">Hyperelliptic curves</a></li>
-    <li class="test">Surfaces: <a href="">Abelian</a>  <a href="">K3</a></li>
-    <li class="test">Higher:  Calabi-Yau</li>
-  </ul>
+
+<h2> Varieties</h2>
+<table class="short">
+<tr>
+<td width="15px"  class="borc"><p class="rotation">Curves</p></td>
+<td width="185px" class="bor">
+<ul class="list">
+	<li>Elliptic 
+	<ul class="list">
+		<li><a href="{{ url_for('EC_toplevel') }}">/\(\Q\)</a>&nbsp;&nbsp;<a href="">/\(\F_{q}(t)\)</a></li>
+		<li><a href="">/Number Fields</a>
+		<li><a href="">\(\Q\)-curves</a></li>
+	</ul></li>
+	
+	<li>Hyperelliptic 
+	<ul class="list">
+		<li><a href="{{ url_for('EC_toplevel') }}">/\(\Q\)</a>&nbsp;&nbsp;<a href="">/\(\F_{q}(t)\)</a></li>
+		<li><a href="">/Number Fields</a>
+	</ul></li>
+	<li>Belyi&nbsp;&nbsp;&nbsp;&nbsp;Shimura</li>
+	<li>Genus: <a href="">3</a>,<a href="">4</a>,<a href="">5+</a></li>
+</ul>
+</td>
+</tr>
+<tr> 
+<td  width="15" class="off" bgcolor="#fff" border-top="100px"><p class="rotation">Surfaces</p></td>
+<td width="185"  bgcolor="#fff" class="bor">
+<ul class="list">
+<li><a href="">Abelian</a></li> 
+<li><a href="">K3</a></li>
+</ul></td>
+</tr>
+<tr> 
+<td width="15" class="nbor" > </p></td>
+<td width="185" class="nbor" >
+<ul class="list">
+<li class="test"><a href="">Calabi-Yau</a></li>
+<li class="test"><a href="">Shimura varieties</a></li>
+<li class="test"><a href="">Higher</a></li></li>
+</ul></td>
+</tr>
+</table>   
+
 {% endif %}
 
 
@@ -220,16 +324,41 @@
 
 
 {% if BETA %}
-  <h2>Number Fields</h2>
-    <ul class="list">
-    <li><a class = "number_fields" href="{{ url_for('number_fields.number_field_render_webpage') }}">Global</a> <a href="{{ url_for('local_fields.index') }}">Local</a></li>
+<h2>Fields</h2>
 
-<!--
-<li class="test"><a href="">Finite</a> <a href="">Function</a>
--->
-</li>
+<table class="short">
+<tr><td><ul class="list">
+<li class="test">Number fields</li></ul></td><td>
+<ul class="list">
+	<li><a href="{{ url_for('number_fields.number_field_render_webpage') }}">Global</a></li>
+	<li><a href="{{ url_for('local_fields.index') }}">Local</a></li>
+</ul></td></tr> <tr><td>
+<ul class="list">
+<li class="test"><a href="">Function Fields</a></li>
+</ul></td></tr>
+</table> 
+  
 
+<h2>Groups</h2>
+<table class="short">
+<tr>
+<td>
+<ul class="list">
 <li><a href="{{ url_for('galois_groups.index') }}">Galois Groups</a></li>
+
+<tr>
+<td><ul class="list">
+<li class="test">Subgroups of</li></ul></td>
+<td>
+<ul class="list">
+	<li><a href="{{ url_character(type='Dirichlet') }} "> \(\SL(2)\)</a></li>
+	<li><a href="{{ url_character(type='Hecke') }} ">\(\GL(2,\F_q)\)</a></li>
+</ul>
+</td>
+</tr>
+</table> 
+
+
 {% else %}
   <h2> Fields</h2>
     <ul>
@@ -240,20 +369,11 @@
       {#  Please keep the commented part, I might reinstate some of it POD
       #<li><a class = "number_field_galois_groups" href="{{ url_for('number_field_galois_groups.index') }}">Galois Groups (only logged in)</a></li>
       #}
+     </ul>
 {% endif %}
-</ul>
 
 
 
-
-
-{% if BETA %}
-{% else %}
-    <h2 class="link"> <a href='{{ url_character() }}'> Characters</a></h2>
-  <ul>
-   <li><a href="{{ url_character() }} ">Dirichlet Characters</a></li>
-{% endif %}
-  </ul>
 
 
 
@@ -273,23 +393,44 @@
 -->
 
 <h2>Representations</h2>
+<table class="short">
+<tr>
+<td><ul class="list">
+<li class="test">Characters</li></ul></td>
+<td>
 <ul class="list">
-<li class="test"> <a href='{{ url_character() }}'> Characters:</a></li>
-<li>&nbsp;&nbsp;&nbsp;
-    <a href="{{ url_character(type='Dirichlet') }} ">Dirichlet</a>
-    <a href="{{ url_character(type='Hecke') }} ">Hecke</a></li>
+	<li><a href="{{ url_character(type='Dirichlet') }} ">Dirichlet</a></li>
+	<li><a href="{{ url_character(type='Hecke') }} ">Hecke</a></li>
+</ul>
+</td>
+</tr>
+<tr> 
+<td>
+<ul class="list">
 <li class="test"><a class="artin_representations" href="{{ url_for('artin_representations.index') }}">Artin</a> <a href="">Galois</a> </li>
 <li class="test"><a href="">Automorphic</a></li>
-</ul>
+</ul></td>
+</table> 
 
-      <h2>Motives</h2>
+<h2>Motives</h2>
+<table class="short">
+<tr>
+<td width="8%" vertical-align="left" line-height="0px"><ul class="list">
+<li class="test">Hypergeometric</li></ul></td>
+<td width="92%">
 <ul class="list">
-<li class="test">Hypergeometric: <a href="">\(/\Q\)</a> <a href="">\(/\Q(\sqrt{d})\)</a></li>
-<li class="test">$G_2$</li>
+<li> <a href="">/\(\Q\)</a> </li>
+<li> <a href="">/\(\Q(\sqrt{d})\)</a></li>
 </ul>
-  {% if BETA %}
-    <h2 class="link"><a class="tensor_products" href="{{ url_for('tensor_products.index') }}">Tensor products</a></h2>  
-  {% endif %}
+</td>
+</tr>
+<tr> 
+<td>
+<ul class="list">
+<li class="test">Jacobi&nbsp;&nbsp;$G_2$</li>
+</ul>
+</td>
+</table> 
 
   {% endif %}
 
@@ -304,12 +445,15 @@
 
  
 {% if BETA %}
-      <h2 class="link"> <a href='{{ url_for("stieltjes.stieltjes_constants") }}'>Stieltjes constants</a></h2>
+      <h2 class="link"> <a href='{{ url_for("stieltjes.stieltjes_constants") }}'>Miscellaneous</a></h2>
   {% endif %}
 
   <h2 class="link knowl">
      <a class="knowl" href="{{ url_for("knowledge.index") }}">Knowledge</a>
   </h2>
+
+
+
    {{ entry("Data", getUploadedFor(request.path, true) ) }}
   {# {% if user_is_authenticated %} {% endif %} #}
 
@@ -318,6 +462,15 @@
     {{ entry(topic, content) }}
   {%- endfor %}
  {%- endif %}
+
+
+
+
+
+
+
+
+
 
 </div>
 {% else %}
@@ -375,7 +528,6 @@
     </div>
     {%- endif %}
 
-
 <div id="main">
   {# <div id="mathjax-info">
     <img src="{{ url_for('static', filename='images/progress-green.gif') }}" />
@@ -425,5 +577,7 @@
       {{ latest_changeset|safe }}
     </div>
 </div>
+
+
 
 {%- endblock body %}
