@@ -12,12 +12,12 @@ content: <p><ul class="list"><li><a href="/L/Riemann/">Riemann zeta function</a>
     <li><a href="/ModularForm/GL2/Q/holomorphic/1/12/0/a/">Ramanujan \(\Delta\) function</a>and <a href="/L/ModularForm/GL2/Q/holomorphic/1/12/0/a/">its L-function </a></li>
     <li><a href="/EllipticCurve/Q/234446.a1">First Rank 4 Elliptic curve</a> and <a href="/L/EllipticCurve/Q/234446.a/">its L-function </a></li>
     </ul></p>
-image: fame
+image: plot
 control: 0
 links:
   - [ 0,0 ]
 ---
-title: Search and Navigate
+title: Search and Browse
 image: search2
 content: <p>Search for objects with specific properties,
     or browse categories.</p><p>Browse&#58;<a href="/L/">L-functions,</a><a href="/ModularForm/">Modular forms,</a><a href="/EllipticCurve/Q/">Elliptic curves,</a>
@@ -43,7 +43,7 @@ links:
 ---
 title: Code and Open Software
 image: compute
-content: <p>Download the data, download the code, or see how the data were generated.</p><p><a href="https://github.com/LMFDB/lmfdb">Github</a> &nbsp;&nbsp;&nbsp;&nbsp;<a href="http://sagemath.org/">Sage</a> &nbsp;&nbsp;&nbsp;<a href="http://pari.math.u-bordeaux.fr/">Pari/GP</a> &nbsp;&nbsp;&nbsp;&nbsp;<a href="http://magma.maths.usyd.edu.au/magma/">Magma</a> &nbsp;&nbsp;&nbsp;&nbsp;<a href="https://www.python.org/">Python</a></p>
+content: <p>Download the data, download the code, or see how the data were generated.</p><p><a href="https://github.com/LMFDB/lmfdb">GitHub</a> &nbsp;&nbsp;&nbsp;&nbsp;<a href="http://sagemath.org/">Sage</a> &nbsp;&nbsp;&nbsp;<a href="http://pari.math.u-bordeaux.fr/">Pari/GP</a> &nbsp;&nbsp;&nbsp;&nbsp;<a href="http://magma.maths.usyd.edu.au/magma/">Magma</a> &nbsp;&nbsp;&nbsp;&nbsp;<a href="https://www.python.org/">Python</a></p>
 control: 0
 links:
   - [ 0,0 ]
