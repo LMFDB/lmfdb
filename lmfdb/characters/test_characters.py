@@ -45,10 +45,11 @@ class DirichletSearchTest(LmfdbTest):
     def test_modbrowse(self): 
         W = self.tc.get('/Character/?modbrowse=51-81')
         """
-        curl -s '/Character/?modbrowse=51-81' | grep '27' | wc -l
-        each 27 occurs twice
+        curl -s '/Character/?modbrowse=51-81' | grep 'Dirichlet/[0-9][0-9]/27' | wc -l
+        There are 20 characters of conductor 27 in this modulus range
         """
-        assert W.data.count('27') == 40
+        import re
+        assert len(re.findall('Dirichlet/[0-9][0-9]/27',W.data)) == 20
 
     def test_search(self):
         W = self.tc.get('/Character/?conductor=15&order=4')
