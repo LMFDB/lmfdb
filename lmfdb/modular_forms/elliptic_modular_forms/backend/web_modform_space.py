@@ -254,7 +254,7 @@ class WebModFormSpace_class(object):
         Fetch data from the database.
         """
         db = connect_to_modularforms_db('WebModformspace.files')
-        s = {'name':self._name,'version':emf_version}
+        s = {'k': self._k, 'N': self._N, 'character_galois_orbit': {'$all': [int(self._chi)]}, 'version': float(emf_version)}
         emf_logger.debug("Looking in DB for rec={0}".format(s))
         f = db.find_one(s)
         emf_logger.debug("Found rec={0}".format(f))
