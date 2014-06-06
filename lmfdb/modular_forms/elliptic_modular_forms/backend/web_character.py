@@ -65,7 +65,8 @@ class WebChar(object):
             '_sage_character': None,
             '_url': None,
             '_values_float': None,
-            '_values_algebraic': None }
+            '_values_algebraic': None,
+            '_embeddings': None}
         self.__dict__.update(d)
         emf_logger.debug('In WebChar, self.__dict__ = {0}'.format(self.__dict__))
         if get_from_db:
@@ -137,6 +138,7 @@ class WebChar(object):
         Return the number of self.
         """
         return self._number
+    
     def character(self):
         r"""
         Return self as a DirichletCharacter_conrey
@@ -178,6 +180,25 @@ class WebChar(object):
         if self._is_trivial is None:
             self._is_trivial = self.character().is_trivial()
         return self._is_trivial
+
+    def embeddings(self):
+        r"""
+          Returns a dictionary that maps the Conrey numbers
+          of the Dirichlet characters in the Galois orbit of ```self```
+          to the powers of $\zeta_{\phi(N)}$ so that the corresponding
+          embeddings map the labels.
+
+          Let $\zeta_{\phi(N)}$ be the generator of the cyclotomic field
+          of $N$-th roots of unity which is the base field
+          for the coefficients of a modular form contained in the database.
+          Considering the space $S_k(N,\chi)$, where $\chi = \chi_N(m, \cdot)$,
+          if embeddings()[m] = n, then $\zeta_{\phi(N)}$ is mapped to
+          $\mathrm{exp}(2\pi i n /\phi(N))$.
+        """
+        return self._embeddings
+
+    def set_embeddings(self, d):
+        self._embeddings = d
             
     def latex_name(self):
         r"""

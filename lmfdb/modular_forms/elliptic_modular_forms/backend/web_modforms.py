@@ -76,7 +76,7 @@ class WebNewForm_class(object):
     Class for representing a (cuspidal) newform on the web.
     """
     
-    def __init__(self, N=1, k=2, chi=1, label='', prec=10, bitprec=53, display_bprec=26,parent=None, data=None, compute=False, verbose=-1,get_from_db=True):
+    def __init__(self, N=1, k=2, character_orbit_rep=1, label='', prec=10, bitprec=53, display_bprec=26,parent=None, data=None, compute=False, verbose=-1,get_from_db=True):
         r"""
         Init self as form with given label in S_k(N,chi)
         """
@@ -93,7 +93,11 @@ class WebNewForm_class(object):
 
         # Set defaults.
         d  = {
-            '_chi' : int(chi),'_k' : int(k),'_N' : int(N),
+            '_k' : int(k),
+            '_N' : int(N),
+            '_chi': int(chi),
+            '_character_orbit_rep' : None,
+            '_character_galois_orbit': [],
             '_label' : str(label), '_fi':None,
             '_prec' : int(prec), '_bitprec' : int(bitprec),
             '_display_bprec':int(display_bprec),
@@ -279,7 +283,7 @@ class WebNewForm_class(object):
         Fetch dictionary from the database
         """
         C = connect_to_modularforms_db()
-        s = {'name':self.name(),'version':float(emf_version)}
+        s = {'k': self._k, 'N': self._N, 'character_galois_orbit': {'$all': [int(self._chi)]}, 'version': float(emf_version)}
         emf_logger.debug("Looking in DB for rec={0}".format(s))
         f = C.WebNewforms.files.find_one(s)
         emf_logger.debug("Found rec={0}".format(f))
@@ -605,25 +609,21 @@ class WebNewForm_class(object):
         if prec is None:
             prec = self._prec
 
+        R = PowerSeriesRing(self.coefficient_field(), 'q')
+        q = R.gen()
+            
         if not isinstance(self._q_expansion,PowerSeries_poly):
             q_expansion = ''
-            R = PowerSeriesRing(self.coefficient_field(), 'q')
-            q = R.gen()
             if self._q_expansion_str<>'':
                 R = PowerSeriesRing(self.coefficient_field(), 'q')
                 q_expansion = R(self._q_expansion_str)
-                if q_expansion.degree() >= self.prec() - 1: 
-                    q_expansion = q_expansion.add_bigoh(prec)
-            else:
-                q_expansion = sum(self.coefficient(n)*q**n for n in range(1,prec)) 
-            self._q_expansion_str = str(q_expansion.polynomial())   
-            self._q_expansion = q_expansion
-        if not self._q_expansion == '':
-            if self._q_expansion.prec() <= prec:
-                return self._q_expansion
-            elif self._q_expansion.prec() > prec:
-                return self._q_expansion.truncate_powerseries(prec)
-        return self._q_expansion
+                self._q_expansion = q_expansion
+        else:
+            if self._q_expansion.degree() < prec:
+                for n in xrange(self._q_expansion.degree(),prec):
+                    self._q_expansion += self.coefficient(n)*q**n
+                self._q_expansion_str = str(self._q_expansion.polynomial()) 
+        return self._q_expansion.truncate_powerseries(prec)
 
     def q_expansion_latex(self, prec=None):
         return web_latex_split_on_re(self.q_expansion(prec))

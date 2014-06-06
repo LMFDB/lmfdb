@@ -47,12 +47,8 @@ def WebModFormSpace(N=1, k=2, chi=1, cuspidal=1, prec=10, bitprec=53, data=None,
     """
     if cuspidal <> 1:
         raise IndexError,"We are very sorry. There are only cuspidal spaces currently in the database!"
-    #try: 
+
     F = WebModFormSpace_class(N=N, k=k, chi=chi, cuspidal=cuspidal, prec=prec, bitprec=bitprec, data=data, verbose=verbose,**kwds)
-    #except Exception as e:
-    #    emf_logger.critical("Could not construct WebModFormSpace with N,k,chi = {0}. Error: {1}".format( (N,k,chi),e.message))
-    #    #raise e
-    #    #raise IndexError,"We are very sorry. The sought space could not be found in the database."
     return F
 
 
@@ -82,15 +78,18 @@ class WebModFormSpace_class(object):
         d = {
             '_N': int(N),
             '_k': int(k),
-            '_chi':int(chi),
+            '_chi': int(chi)
+            '_character_orbit_rep': None,
+            '_character_galois_orbit': [],
+            '_character_galois_orbit_embeddings': {},
+            '_character_used_in_computation': None,
             '_cuspidal' : int(cuspidal),
             '_prec' : int(prec),
             '_ap' : {}, '_group' : None,
             '_character' : None,
-            '_character_orbit_rep' : None,
             '_sturm_bound' : None,
             '_newforms' : {},
-            '_galois_orbits_labels' : [],
+            '_hecke_orbits_labels' : [],
             '_oldspace_decomposition' : [],
             '_verbose' : int(verbose),
             '_bitprec' : int(bitprec),
@@ -99,13 +98,12 @@ class WebModFormSpace_class(object):
             '_dimension_cusp_forms' : None,
             '_dimension_modular_forms' : None,
             '_dimension_new_cusp_forms' : None,
-            '_dimension_new_modular_symbols' : None,
             '_name' : "{0}.{1}.{2}".format(N,k,chi),
             '_version': float(emf_version),
             '_galois_orbit_poly_info':{}
             }
         self.__dict__.update(d)
-        #data.update(d)
+
         emf_logger.debug("Incoming data:{0} ".format(data))
         if get_from_db:
            d = self.get_from_db()
@@ -116,10 +114,38 @@ class WebModFormSpace_class(object):
            d = {}
         if data is None:
             data = {}
-        data.update(d)        
+        data.update(d)
         self.__dict__.update(data)
         if get_all_newforms_from_db:
             self.get_all_newforms_from_db()
+
+    def _check_if_all_computed(self):
+        needed = {
+            '_character_orbit_rep': None,
+            '_character_galois_orbit': [],
+            '_character_galois_orbit_embeddings': {},
+            '_character_used_in_computation': None,
+            '_cuspidal' : int(cuspidal),
+            '_prec' : int(prec),
+            '_group' : None,
+            '_character' : None,
+            '_sturm_bound' : None,
+            '_hecke_orbits_labels' : [],
+            '_oldspace_decomposition' : [],
+            '_bitprec' : int(bitprec),
+            '_dimension': None,
+            '_dimension_newspace' : None,
+            '_dimension_cusp_forms' : None,
+            '_dimension_modular_forms' : None,
+            '_dimension_new_cusp_forms' : None,
+            '_version': float(emf_version),
+            '_galois_orbit_poly_info': {}
+            }
+        
+        for p in needed.keys():
+            assert hasattr(self, p)
+            assert self.__dict__[p]  is not needed[p]
+            
 
     ### Return elementary properties of self.
     def weight(self):
@@ -145,7 +171,9 @@ class WebModFormSpace_class(object):
         Return the character of self.
         """
         if self._character is None:
-            self._character = WebChar(self.level(),self.chi())
+            self._character = WebChar(self.level(), self.chi())
+            if hasattr(self, '_character_galois_orbit_embeddings') and self._character_galois_orbit_embeddings is not None:
+                self._character.set_embeddings(self._character_galois_orbit_embeddings)
         return self._character
     
     def group(self):
@@ -167,6 +195,9 @@ class WebModFormSpace_class(object):
 
     def newforms(self):
         return self._newforms
+
+    def oldspace_decomposition(self):
+        return self._oldspace_decomposition
                             
     def character_orbit_rep(self,k=None):
         r"""
@@ -179,11 +210,9 @@ class WebModFormSpace_class(object):
         r"""
         Makes a dictionary of the serializable properties of self.
         """
-        problematic_keys = ['_galois_decomposition',
-                            '_newforms','_newspace',
+        problematic_keys = ['_newforms','_newspace',
                             '_modular_symbols',
                             '_new_modular_symbols',
-                            '_galois_decomposition',
                             '_oldspace_decomposition',
                             '_conrey_character',
                             '_character',

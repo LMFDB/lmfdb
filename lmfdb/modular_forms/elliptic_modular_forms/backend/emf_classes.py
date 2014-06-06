@@ -128,7 +128,7 @@ class ClassicalMFDisplay(MFDisplay):
         self._files = Conn[dbname].Newform_factors.files
         emf_logger.debug("files db : {0} with nr. of recs:{1}".format(self._files,self._files.find().count()))
         
-    def set_table_browsing(self, skip=[0, 0], limit=[(2, 16), (1, 50)], keys=['Weight', 'Level'], character=0, dimension_table=None, dimension_fun=dimension_new_cusp_forms, title='Dimension of newforms', check_db=True):
+    def set_table_browsing(self, skip=[0, 0], limit=[(2, 16), (1, 50)], keys=['Weight', 'Level'], character=1, dimension_table=None, dimension_fun=dimension_new_cusp_forms, title='Dimension of newforms', check_db=True):
         r"""
         Table of Holomorphic modular forms spaces.
         Skip tells you how many chunks of data you want to skip (from the geginning) and limit tells you how large each chunk is.
@@ -180,26 +180,19 @@ class ClassicalMFDisplay(MFDisplay):
             # specific character =0,1
             if character == 0 or character == 1:
                 self._table['rowhead'] = 'Weight'
-                if character == 0:
+                if character == 1:
                     xc = DirichletGroup_conrey(N)[1]
-                else:
-                    D = DirichletGroup_conrey(N)
-                    for xc in D:
-                        if xc.sage_character() == kronecker_character_upside_down(N):
-                            break
                 x = xc.sage_character()
                 row = dict()
                 row['head'] = "\(\chi_{" + str(N) + "}(" + str(xc.number()) + ",\cdot) \)"
                 row['url'] = url_character(type='Dirichlet', modulus=N, number=xc.number())
                 row['cells'] = list()
                 for k in range(wt_ll, wt_ul + 1):
-                    if character == 0 and is_odd(k):
+                    if character == 1 and is_odd(k):
                         continue
                     try:
-                        if character == 0:
+                        if character == 1:
                             d = dimension_fun(N, k)
-                        elif character == 1:
-                            d = dimension_fun(x, k)
                     except Exception as ex:
                         emf_logger.critical("Exception: {0}. \n Could not compute the dimension with function {0}".format(ex, dimension_fun))
                     if (not check_db) or is_data_in_db(N, k, character):
@@ -217,12 +210,6 @@ class ClassicalMFDisplay(MFDisplay):
                 Greps = [X[0] for X in G]
                 Dc = DirichletGroup_conrey(N)
                 Gcreps = dict()
-                # A security check, if we have at least weight 2 and trivial character,
-                # otherwise don't show anything
-                #if check_db and not is_data_in_db(N, 2, 0):
-                #    emf_logger.debug("No data for level {0} and weight 2, trivial character".format(N)#)
-                #self._table = None
-                #    return None
                 Gc = dict()
                 for xi, g in enumerate(G):
                     Gc[xi] = list()
@@ -268,24 +255,19 @@ class ClassicalMFDisplay(MFDisplay):
                     self._table['rows'].append(row)
         else:
             for k in range(wt_ll, wt_ul + 1):
-                if character == 0 and is_odd(k):
+                if character == 1 and is_odd(k):
                         continue
                 row = []
                 for N in range(level_ll, level_ul + 1):
                     if not N in self._table['col_heads']:
                         self._table['col_heads'].append(N)
                     try:
-                        if character == 0:
-                            d = dimension_fun(N, k)
-                        elif character == 1:
-                            x = kronecker_character_upside_down(N)
-                            d = dimension_fun(x, k)
-                        else:
+                        if character == 1:
                             d = dimension_fun(N, k)
                     except Exception as ex:
                         emf_logger.critical("Exception: {0}. \n Could not compute the dimension with function {0}".format(ex, dimension_fun))
                     # emf_logger.debug("N,k,char,dim: {0},{1},{2},{3}".format(N,k,character,d))
-                    if character == 0 or character == 1:
+                    if character == 1:
                         if (not check_db) or is_data_in_db(N, k, character):
                             url = url_for(
                                 'emf.render_elliptic_modular_forms', level=N, weight=k, character=character)

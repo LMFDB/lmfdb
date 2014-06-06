@@ -69,7 +69,7 @@ def render_elliptic_modular_forms(level=0, weight=0, character=None, label='', *
     Default input of same type as required. Note that for holomorphic modular forms: level=0 or weight=0 are non-existent.
     """
     if character is None and level == 0 and weight == 0:
-        character = 0
+        character = 1
     elif character is None:
         character = -1
     emf_logger.debug(
@@ -160,7 +160,7 @@ def render_elliptic_modular_form_navigation_wp(**args):
     info = to_dict(args)
     level = my_get(info, 'level', 0, int)
     weight = my_get(info, 'weight', 0, int)
-    character = my_get(info, 'character', 0, int)
+    character = my_get(info, 'character', 1, int)
     label = info.get('label', '')
     disp = ClassicalMFDisplay('modularforms2')
     emf_logger.debug("info={0}".format(info))
@@ -192,7 +192,7 @@ def render_elliptic_modular_form_navigation_wp(**args):
     if is_set['weight']:
         wt_range = (weight, weight)
     else:
-        if character == 0:
+        if character == 1:
             wt_range = (2, 12)
         else:
             wt_range = (2, 12)
@@ -200,7 +200,7 @@ def render_elliptic_modular_form_navigation_wp(**args):
         level_range = (level, level)
     else:
         level_range = (1, 24)
-    if character == 0:
+    if character == 1:
         info['grouptype'] = 0
         info['groupother'] = 1
     else:
