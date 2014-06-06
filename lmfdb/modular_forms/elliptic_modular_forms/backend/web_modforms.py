@@ -199,8 +199,8 @@ class WebNewForm_class(object):
             }
         
         for p in needed.keys():
-            assert hasattr(self, p), "Missing property " + p
-            assert self.__dict__[p] is not needed[p], "Did you store " + p + "? It has value" + needed[p]
+            assert hasattr(self, p), "Missing property {0}".format(p)
+            assert self.__dict__[p] is not needed[p], "Did you store {0}? It has value {1}".format(p,needed[p])
 
 ### Get basic properties of self
     
@@ -670,7 +670,9 @@ class WebNewForm_class(object):
             if self._q_expansion.degree() < prec:
                 for n in xrange(self._q_expansion.degree(),prec):
                     self._q_expansion += self.coefficient(n)*q**n
-        self._q_expansion_str = str(self._q_expansion.polynomial()) 
+        self._q_expansion_str = str(self._q_expansion.polynomial())
+        assert isinstance(self._q_expansion,PowerSeries_poly)
+        assert isinstance(self._q_expansion,str)
         return self._q_expansion.truncate_powerseries(prec)
 
     def q_expansion_latex(self, prec=None):
