@@ -76,7 +76,7 @@ class WebNewForm_class(object):
     Class for representing a (cuspidal) newform on the web.
     """
     
-    def __init__(self, N=1, k=2, chi=1, label='', prec=10, bitprec=53, display_bprec=26,parent=None, data=None, compute=False, verbose=-1,get_from_db=True):
+    def __init__(self, N=1, k=2, character_orbit_rep=1, label='', prec=10, bitprec=53, display_bprec=26,parent=None, data=None, compute=False, verbose=-1,get_from_db=True):
         r"""
         Init self as form with given label in S_k(N,chi)
         """
@@ -93,7 +93,11 @@ class WebNewForm_class(object):
 
         # Set defaults.
         d  = {
-            '_chi' : int(chi),'_k' : int(k),'_N' : int(N),
+            '_k' : int(k),
+            '_N' : int(N),
+            '_chi': int(chi),
+            '_character_orbit_rep' : None,
+            '_character_galois_orbit': [],
             '_label' : str(label), '_fi':None,
             '_prec' : int(prec), '_bitprec' : int(bitprec),
             '_display_bprec':int(display_bprec),
@@ -279,7 +283,7 @@ class WebNewForm_class(object):
         Fetch dictionary from the database
         """
         C = connect_to_modularforms_db()
-        s = {'name':self.name(),'version':float(emf_version)}
+        s = {'k': self._k, 'N': self._N, 'character_galois_orbit': {'$all': [int(self._chi)]}, 'version': float(emf_version)}
         emf_logger.debug("Looking in DB for rec={0}".format(s))
         f = C.WebNewforms.files.find_one(s)
         emf_logger.debug("Found rec={0}".format(f))
