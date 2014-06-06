@@ -269,7 +269,7 @@ class WebModFormSpace_class(object):
         return {}
 
     def get_all_newforms_from_db(self):
-        from web_modforms import WebNewForm
+        from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms import WebNewForm
         for l in self.labels():
             self._newforms[l] = WebNewForm(N=self._N, k=self._k,  chi=self._chi, parent=self, label=l)
             
@@ -354,7 +354,7 @@ class WebModFormSpace_class(object):
         r"""
           Return function f in the set of newforms on self. Here i is either a label, e.g. 'a' or an integer.
         """
-        from web_modforms import WebNewForm
+        from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms import WebNewForm
         
         if (isinstance(i, int) or i in ZZ):
             if i < len(self.labels()):
