@@ -47,7 +47,7 @@ class WebChar(object):
     WebDirichletCharcter once this is ok.
     
     """
-    def __init__(self,modulus=0,number=0,compute=True):
+    def __init__(self,modulus=0,number=0,get_from_db=True,compute=True):
         r"""
         Init self as character of given number and modulus.
         """
@@ -68,7 +68,8 @@ class WebChar(object):
             '_values_algebraic': None }
         self.__dict__.update(d)
         emf_logger.debug('In WebChar, self.__dict__ = {0}'.format(self.__dict__))
-        data = self.get_from_db()
+        if get_from_db:
+            data = self.get_from_db()
         if isinstance(data, dict) and len(data.values()) > 0:
             self.__dict__.update(data)
         if data == {} and  compute:
