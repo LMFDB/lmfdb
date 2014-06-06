@@ -14,7 +14,7 @@ from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicFie
 
 from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, parse_range
 
-from lmfdb.number_fields.number_field import parse_list, parse_field_string, field_pretty
+from lmfdb.number_fields.number_field import parse_list, parse_field_string
 
 from lmfdb.WebNumberField import *
 
