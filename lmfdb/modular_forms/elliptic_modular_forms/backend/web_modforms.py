@@ -664,6 +664,8 @@ class WebNewForm_class(object):
                 R = PowerSeriesRing(self.coefficient_field(), 'q')
                 q_expansion = R(self._q_expansion_str)
                 self._q_expansion = q_expansion
+            else:
+                self._q_expansion = sum(self.coefficient(n)*q**n for n in range(1,prec))
         else:
             if self._q_expansion.degree() < prec:
                 for n in xrange(self._q_expansion.degree(),prec):
