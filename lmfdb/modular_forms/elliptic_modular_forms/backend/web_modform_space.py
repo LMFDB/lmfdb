@@ -73,7 +73,8 @@ class WebModFormSpace_class(object):
         - 'cuspidal' -- 1 if space of cuspforms, 0 if all modforms
         """
         
-        if data is None: data = {}
+        if data is None:
+            data = {}
         emf_logger.debug("WebModFormSpace with k,N,chi={0}".format( (k,N,chi)))
         d = {
             '_N': int(N),

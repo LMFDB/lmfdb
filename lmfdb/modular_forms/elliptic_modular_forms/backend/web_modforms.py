@@ -145,7 +145,7 @@ class WebNewForm_class(object):
 
         # Fetch data
         if self._label<>'' and get_from_db:            
-            d = self.get_from_db(self._N, self._k, self._chi, self._label)
+            d = self.get_from_db()
             emf_logger.debug("Got data in WebNewForm: {0} from db".format(d))
             self.__dict__.update(d)
             if parent is not None:
@@ -307,7 +307,7 @@ class WebNewForm_class(object):
     def _from_dict(self, data):
         self.__dict__.update(data)
         if isinstance(self._parent,dict):
-            self._parent = WebModFormSpace(self._k,self._N,self._chi,1,self._prec,self._bitprec,data = self._parent)
+            self._parent = WebModFormSpace(self._k,self._N,self._chi,1,self._prec,self._bitprec, data = self._parent)
 
     def to_yaml(self,for_yaml=False):
         r"""
@@ -323,12 +323,12 @@ class WebNewForm_class(object):
         d = yaml.load(s)
         return yaml.load(d)    
     
-    def get_from_db(self, N, k, chi, label):
+    def get_from_db(self):
         r"""
         Fetch dictionary from the database
         """
         C = connect_to_modularforms_db()
-        s = {'k': self._k, 'N': self._N, 'character_galois_orbit': {'$all': [int(self._chi)]}, 'version': float(emf_version)}
+        s = {'k': self._k, 'N': self._N, 'character_galois_orbit': {'$all': [int(self._chi)]}, 'version': float(emf_version), 'label': self._label}
         emf_logger.debug("Looking in DB for rec={0}".format(s))
         f = C.WebNewforms.files.find_one(s)
         emf_logger.debug("Found rec={0}".format(f))
