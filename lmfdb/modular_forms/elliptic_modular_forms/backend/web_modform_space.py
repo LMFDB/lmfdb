@@ -133,8 +133,6 @@ class WebModFormSpace_class(object):
             '_character_used_in_computation': None,
             '_cuspidal' : int(0),
             '_prec' : int(0),
-            '_group' : None,
-            '_character' : None,
             '_sturm_bound' : None,
             '_hecke_orbits_labels' : [],
             '_oldspace_decomposition' : [],
