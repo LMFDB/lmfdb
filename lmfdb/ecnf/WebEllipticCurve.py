@@ -129,9 +129,10 @@ class ECNF(object):
             else:
                 self.End = "\(\Z[(1+\sqrt{%s})/2]\)" % self.cm
 
-        # Base change
-        self.bc = "no"
-        if self.base_change: self.bc = "yes"
+        # Q-curve / Base change
+        self.qc = "no"
+        if self.q_curve:
+            self.qc = "yes"
 
         # Torsion
         self.ntors = web_latex(self.torsion_order)
@@ -181,9 +182,16 @@ class ECNF(object):
             ('Conductor norm' , self.cond_norm),
             ('j-invariant' , self.j),
             ('CM' , self.cm_bool),
-            ('Base change' , self.bc),
+            ('Q-curve' , self.qc)]
+
+        if self.base_change:
+            self.properties += [('base-change', 'yes')]
+
+        self.properties += [
             ('Torsion order' , self.ntors),
             ('Rank' , self.rk),
             ]
 
+        if self.base_change:
+            self.friends += [('Base-change of %s'  % self.base_change, url_for("ec.by_ec_label", label=self.base_change))]
 

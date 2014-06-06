@@ -29,7 +29,8 @@ field) and value types (with examples):
    - ainvs              *     list of 5 list of d lists of 2 ints
    - jinv               *     list of d lists of 2 STRINGS
    - cm                 *     either int (a negative discriminant, or 0) or '?'
-   - base_change        *     boolean (True, False)
+   - q_curve            *     boolean (True, False)
+   - base_change        *     False or label of elliptic curve over Q
    - rank                     int
    - rank_bounds              list of 2 ints
    - analytic_rank            int
@@ -59,7 +60,8 @@ import random
 import glob
 import pymongo
 import base
-from sage.rings.all import ZZ
+from sage.rings.all import ZZ, QQ
+from sage.databases.cremona import cremona_to_lmfdb
 
 print "calling base._init()"
 dbport=37010
@@ -231,7 +233,7 @@ def curves(line):
     containing fields with keys 'field_label', 'degree', 'signature',
     'abs_disc', 'label', 'short_label', conductor_label',
     'conductor_ideal', 'conductor_norm', 'iso_label', 'number',
-    'ainvs', 'jinv', 'cm', 'base_change',
+    'ainvs', 'jinv', 'cm', 'q_curve', 'base_change',
     'torsion_order', 'torsion_structure', 'torsion_gens'.
 
     Input line fields (13):
@@ -259,7 +261,7 @@ def curves(line):
     cm = data[11]                 # int or '?'
     if cm!='?':
         cm = int(cm)
-    base_change = (data[12]=='1')   # bool
+    q_curve = (data[12]=='1')   # bool
 
     # Create the field and curve to compute the j-invariant:
     dummy, deg, sig, abs_disc = field_data(field_label)
@@ -288,6 +290,19 @@ def curves(line):
     torstruct = [int(n) for n in list(torgroup.invariants())]
     torgens = [point_list(P.element()) for P in torgroup.gens()]
 
+    # get label of elliptic curve over Q for base_change cases
+    base_change = q_curve # will look up label later
+
+    if base_change:
+        #print "Q-curve, testing for base-change..."
+        E1 = E.descend_to(QQ)
+        if E1:
+            base_change = cremona_to_lmfdb(E1.label())
+            #print "...is base change of %s" % base_change
+        else:
+            base_change = False
+            #print "...is not base change"
+
     return label, {
         'field_label' : field_label,
         'degree': deg,
@@ -303,6 +318,7 @@ def curves(line):
         'ainvs': ainvs,
         'jinv': jinv,
         'cm': cm,
+        'q_curve': q_curve,
         'base_change': base_change,
         'torsion_order': ntors,
         'torsion_structure': torstruct,
@@ -326,7 +342,8 @@ def curve_data(line):
     """
     # Parse the line and form the full label:
     data = split(line)
-    if len(data)!=9:
+    ngens = int(data[7])
+    if len(data)!=9+ngens:
         print "line %s does not have 9 fields, skipping" % line
     field_label = data[0]       # string
     conductor_label = data[1]   # string
@@ -360,8 +377,9 @@ filename_base_list = ['curves', 'curve_data']
 def upload_to_db(base_path, filename_suffix):
     curves_filename = 'curves.%s' % (filename_suffix)
     curve_data_filename = 'curve_data.%s' % (filename_suffix)
-    file_list = [curves_filename, curve_data_filename]
-#    file_list = [curves_filename]
+#    file_list = [curves_filename, curve_data_filename]
+    file_list = [curves_filename]
+#    file_list = [curve_data_filename]
 
     data_to_insert = {}  # will hold all the data to be inserted
 
