@@ -262,12 +262,6 @@ class WebModFormSpace_class(object):
         return s
 
 
-    def galois_orbit_label(self, j):
-        r"""
-        Return the label of the Galois orbit nr. j
-        """
-        return self._galois_orbits_labels[j]
-
     ###  Dimension formulas, calculates dimensions of subspaces of self.
     def is_cuspidal(self):
         return self._cuspidal == 1
@@ -331,7 +325,7 @@ class WebModFormSpace_class(object):
         r"""
           Return the labels.
         """
-        return self._galois_orbits_labels
+        return self._hecke_orbits_labels
 
     def f(self, i):
         r"""
