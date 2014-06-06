@@ -146,7 +146,6 @@ class WebModFormSpace_class(object):
             assert hasattr(self, p)
             assert self.__dict__[p]  is not needed[p]
             
-
     ### Return elementary properties of self.
     def weight(self):
         r"""
@@ -206,16 +205,23 @@ class WebModFormSpace_class(object):
         """
         return self._character_orbit_rep
 
+    def _web_character_used_in_computation(self):
+        if self._web_character_used_in_computation is None:
+            self._web_character_used_in_computation = WebChar(self._level, self._character_used_in_computation)
+        return self._web_character_used_in_computation
+
     def to_dict(self):
         r"""
         Makes a dictionary of the serializable properties of self.
         """
-        problematic_keys = ['_newforms','_newspace',
+        problematic_keys = ['_newforms',
+                            '_newspace',
                             '_modular_symbols',
                             '_new_modular_symbols',
                             '_oldspace_decomposition',
                             '_conrey_character',
                             '_character',
+                            '_web_character_used_in_computation',
                             '_group']
         data = {}
         data.update(self.__dict__)
@@ -257,8 +263,6 @@ class WebModFormSpace_class(object):
             s = 'Space of Cusp forms on Gamma0({0}) of weight {1}'.format(self.level(),self.weight())
         else:
             s = 'Space of Cusp forms on Gamma0({0}) of weight {1} and character no. {2}'.format(self.level(),self.weight(),self.chi())
-        
-#        s += ' and dimension ' + str(self.dimension())
         return s
 
 

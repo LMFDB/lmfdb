@@ -29,7 +29,7 @@ Fix complex characters. I.e. embedddings and galois conjugates in a consistent w
 
 """
 from flask import url_for
-from sage.all import dumps,loads
+from sage.all import dumps,loads, euler_phi
 from lmfdb.modular_forms.elliptic_modular_forms import emf_logger,emf_version
 from sage.rings.number_field.number_field_base import NumberField as NumberField_class
 from sage.all import copy
@@ -132,6 +132,9 @@ class WebChar(object):
         Return the modulus of self.
         """
         return self._modulus
+
+    def modulus_euler_phi(self):
+        return euler_phi(self._modulus)
         
     def number(self):
         r"""
@@ -199,6 +202,21 @@ class WebChar(object):
 
     def set_embeddings(self, d):
         self._embeddings = d
+
+    def embedding(self):
+        r"""
+          Let $\zeta_{\phi(N)}$ be the generator of the cyclotomic field
+          of $N$-th roots of unity which is the base field
+          for the coefficients of a modular form contained in the database.
+          If ```self``` is given as $\chi = \chi_N(m, \cdot)$ in the Conrey naming scheme,
+          then we have to apply the map
+          \[
+            \zeta_{\phi(N)} \mapsto \mathrm{exp}(2\pi i n /\phi(N))
+          \]
+          to the coefficients of normalized newforms in $S_k(N,\chi)$
+          as in the database in order to obtain the coefficients corresponding to ```self```
+          (that is to elements in $S_k(N,\chi)$).
+        """
             
     def latex_name(self):
         r"""

@@ -170,12 +170,10 @@ class WebNewForm_class(object):
             '_character_orbit_rep' : None,
             '_character_galois_orbit': [],
             '_label' : str(''),
-            '_fi': None,
             '_prec' : int(0),
             '_bitprec' : int(0),
             '_display_bprec':int(0),
             '_satake' : {},
-            '_coefficients' : dict(),  # list of Fourier coefficients (should not be long)
             '_atkin_lehner_eigenvalues' : {},
             '_q_expansion' : None,
             '_q_expansion_str' : '',
@@ -185,9 +183,7 @@ class WebNewForm_class(object):
                 'bitprec':bitprec,
                 'values':[],
                 'latex':[]},
-            '_base_ring': None,
             '_base_ring_as_dict' : {},
-            '_coefficient_field': None,
             '_coefficient_field_as_dict': {},
             '_twist_info' : [],
             '_is_CM' : [],
@@ -322,7 +318,7 @@ class WebNewForm_class(object):
         d = yaml.load(s)
         return yaml.load(d)    
     
-    def get_from_db(self,N,k,chi,label):
+    def get_from_db(self, N, k, chi, label):
         r"""
         Fetch dictionary from the database
         """
@@ -345,7 +341,7 @@ class WebNewForm_class(object):
         Get aps from database if they exist.
         """
         ap_files = connect_to_modularforms_db('ap.files')
-        key = {'name': self.name()}
+        key = {'k': self.weight(), 'N': self.level(), 'character_galois_orbit': {'$all': [int(self._chi)]}}
         key['prec'] = {"$gt": int(prec - 1)}
 
         ap_from_db  = ap_files.find_one(key)
@@ -615,7 +611,7 @@ class WebNewForm_class(object):
                 # TODO: Optimization -- do something much more
                 # intelligent in case character is not defined.  For
                 # example, compute it using the diamond operators <d>
-                eps = K(self.character().value(p))
+                eps = K(self._web_character_used_in_computation().value(p))
                 # a_{p^r} := a_p * a_{p^{r-1}} - eps(p)p^{k-1} a_{p^{r-2}}
                 apr1 = self.coefficient_n_recursive(pr//p)
                 ap = self.coefficient_n_recursive(p)
