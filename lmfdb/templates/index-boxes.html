@@ -3,19 +3,21 @@
 
 
 <style type="text/css">
-table.boxes {table-layout: fixed; width: 100%; padding: 0; margin: 25px; }
-table.boxes > tbody > tr > td { padding: 0 25px 35px 0; height: 150px; overflow: hidden; }
-table.box { background: #efe; width: 95%; padding: 0; border-radius: 10px;}
-table.box > tbody > tr > td { vertical-align: top; text-align: left; margin: 0; padding: 0; }
-table.box td.img { background: #fff; width: 150px; padding: 0; padding-right: 2px; height: 150px; border-top-left-radius: 10px; }
-table.box td.title { font-weight: bold; font-size: 110%; background: #bfb; height: 1em; padding: 5px 0 5px 15px; border-top-right-radius: 10px;}
-table.box td.content { font-size: 90%; height: 25%; padding-left: 15px }
-table.box td.links { vertical-align: bottom; font-size: 80%; padding-left: 15px; padding-bottom: 5px;}
-table.box td.links > a { padding: 0 5px 0 0; }
+table.boxes {table-layout: fixed; width: 100%; padding: 10; margin: 0px; margin-left: 15px; }
+table.boxes > tbody > tr > td { padding: 0 25px 35px 0; overflow: hidden; }
+table.box { background: #fff; width: 100%; padding: 0; border-radius: 0px; }
+table.box td.img { background: #efe; width: 150px; height: 150px; border: 15; padding-left: 5px; padding-bottom: 0px; padding-top: 5px; padding-right: 5px;} 
+table.box img {border: 15; padding: 5;}
+table td.title { font-weight: bold; font-size: 110%; background: #bfb; height: 2em; padding: 5;padding-left: 10px; border-top-right-radius: 10px;}
+table td.content { background: #efe; font-size: 90%; padding-left: 15px; padding-bottom: 5px; vertical-align: top}
 div.user { font-size: 90%; padding: 0px; }
 div.user ul li { line-height: 80%; }
-table.boxes td.img {
-		border: 10px solid #efe;
+table.box td.content ul.list {
+	margin: 0px;
+	padding-left: 15px; padding-bottom: 5px;
+	list-style-type: none;
+	list-style-position: inside;
+	line-height: 135%;
 }
 </style>
 
@@ -29,16 +31,12 @@ table.boxes td.img {
     <td>
     <table class="box">
       <tr>
-        <td class="img" rowspan="3"><img height="150" width="150" src="{{ box.img }}" /></td>
+        <td class="img" rowspan="3" vertical-align="middle"><img height="150" width="150" src="{{ box.img }}"></td>
         <td class="title">{{ box.title }}</td>
       </tr>
-      <tr><td class="content">{{ box.content|safe }}</td></tr>
-      <tr><td class="links">
-            {% for t, h in box.links %}
-              <a href="{{ h }}">{{ t }}</a>
-            {% endfor %}
-      </td></tr>
-      </tr>
+	<tr>
+      <td class="content">{{ box.content|safe }}</tr>
+     </tr>
     </table>
     </td>
 
@@ -47,9 +45,8 @@ table.boxes td.img {
 </tr>
 </table>
 
-<div class="announce">
-{{ KNOWL_INC('intro.news') }}
-</div>
+
+
 
 
 {#

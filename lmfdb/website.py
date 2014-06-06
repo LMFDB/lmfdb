@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+#-*- coding: utf8 -*-
 # LMFDB - L-function and Modular Forms Database web-site - www.lmfdb.org
 # Copyright (C) 2010-2012 by the LMFDB authors
 #
@@ -33,6 +33,7 @@ import local_fields
 import galois_groups
 import number_field_galois_groups
 import artin_representations
+import tensor_products
 import zeros
 import crystals
 import permutations
