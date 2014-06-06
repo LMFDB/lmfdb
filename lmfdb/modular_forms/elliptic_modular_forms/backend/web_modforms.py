@@ -500,7 +500,7 @@ class WebNewForm_class(object):
 
     def q_expansion_embeddings(self, prec=10, bitprec=53,format='numeric',display_bprec=26,insert_in_db=True):
         if prec > self._prec or bitprec > self._bitprec or self._embeddings['prec'] == 0:
-            _q_expansion_embeddings(prec,bitprec,format,display_bprec)
+            self._q_expansion_embeddings(prec,bitprec,format,display_bprec)
         if format=='latex':
             return self._embeddings['latex']
         else:
@@ -541,13 +541,13 @@ class WebNewForm_class(object):
         # See if we also need to recompute the latex strings
         if display_bprec > self._embeddings['bitprec']:
             self._embeddings['latex'] = []  ## Have to redo these
-        numc = len(self._embeddidngs['latex'])
+        numc = len(self._embeddings['latex'])
         for n in range(numc,prec):
             cn_emb = []
             for x in self._embeddings['values'][n]:
                 t = my_complex_latex(x,display_bprec)
             cn_emb_latex.append(t)
-            self._embeddidngs['latex'].append(cn_emb)
+            self._embeddings['latex'].append(cn_emb)
         emf_logger.debug("has embeddings_latex:{0}".format(nstart))
         return 1
     
