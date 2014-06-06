@@ -615,7 +615,7 @@ class WebNewForm_class(object):
                 # TODO: Optimization -- do something much more
                 # intelligent in case character is not defined.  For
                 # example, compute it using the diamond operators <d>
-                eps = K(self.character().value(p))
+                eps = K(self._web_character_used_in_computation().value(p))
                 # a_{p^r} := a_p * a_{p^{r-1}} - eps(p)p^{k-1} a_{p^{r-2}}
                 apr1 = self.coefficient_n_recursive(pr//p)
                 ap = self.coefficient_n_recursive(p)
