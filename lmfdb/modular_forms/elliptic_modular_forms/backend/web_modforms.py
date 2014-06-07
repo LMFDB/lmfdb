@@ -54,7 +54,7 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend import connect_to_modula
 from web_character import WebChar
 
     
-def WebNewForm(N=1, k=2, chi=1, label='', prec=10, bitprec=53, display_bprec=26, parent=None, data=None, compute=False, verbose=-1,get_from_db=True):
+def WebNewForm(N=1, k=2, chi=1, label='', prec=10, bitprec=53, display_bprec=26, parent=None, data=None, compute=False, verbose=-1,get_from_db=True,get_parent_from_db=True):
     r"""
     Constructor for WebNewForms with added 'nicer' error message.
     """
@@ -65,7 +65,7 @@ def WebNewForm(N=1, k=2, chi=1, label='', prec=10, bitprec=53, display_bprec=26,
             return 0
     if not data is None: emf_logger.debug("incoming data in construction : {0}".format(data.get('N'),data.get('k'),data.get('chi')))
     try: 
-        F = WebNewForm_class(N=N, k=k, chi=chi, label=label, prec=prec, bitprec = bitprec, display_bprec=display_bprec, parent = parent, data = data, compute = compute, verbose = verbose, get_from_db = get_from_db)
+        F = WebNewForm_class(N=N, k=k, chi=chi, label=label, prec=prec, bitprec = bitprec, display_bprec=display_bprec, parent = parent, data = data, compute = compute, verbose = verbose, get_from_db = get_from_db,get_parent_from_db=get_parent_from_db)
     except ArithmeticError as e:#Exception as e:
         emf_logger.critical("Could not construct WebNewForm with N,k,chi,label={0}. Error: {1}".format( (N,k,chi,label),e))
         raise IndexError,"We are very sorry. The sought function could not be found in the database."
@@ -77,7 +77,7 @@ class WebNewForm_class(object):
     Class for representing a (cuspidal) newform on the web.
     """
     
-    def __init__(self, N=1, k=2, chi=1, label='', prec=10, bitprec=53, display_bprec=26,parent=None, data=None, compute=False, verbose=-1,get_from_db=True):
+    def __init__(self, N=1, k=2, chi=1, label='', prec=10, bitprec=53, display_bprec=26,parent=None, data=None, compute=False, verbose=-1,get_from_db=True,get_parent_from_db=True):
         r"""
         Init self as form with given label in S_k(N,chi)
         """
@@ -154,7 +154,7 @@ class WebNewForm_class(object):
 
         if isinstance(self._parent,dict) or self._parent is None:
             emf_logger.debug("setting parent! label={0}".format(label))
-            self._parent = WebModFormSpace(N, k, chi, get_from_db=get_from_db, data=parent)
+            self._parent = WebModFormSpace(N, k, chi, get_from_db=get_parent_from_db, data=parent)
             emf_logger.debug("finished getting parent")
             
         if self._parent.dimension_newspace()==0:
