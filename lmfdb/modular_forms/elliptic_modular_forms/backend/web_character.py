@@ -112,8 +112,8 @@ class WebChar(object):
         fs = get_files_from_gridfs('WebChar')
         s = {'name':self._name,'version':emf_version}
         rec = db.find_one(s)
-        id = rec.get('_id')
-        if not id is None:
+        if not rec is None:
+            id = rec.get('_id')
             emf_logger.debug("Removing self from db with id={0}".format(id))
             fs.delete(id)
             
