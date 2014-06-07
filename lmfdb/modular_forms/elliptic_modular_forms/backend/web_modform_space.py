@@ -262,14 +262,14 @@ class WebModFormSpace_class(object):
         r"""
         Fetch data from the database.
         """
-        db = connect_to_modularforms_db('WebModformspace.files')
-        s = {'k': self._k, 'N': self._N, 'character_galois_orbit': {'$all': [int(self._chi)]}, 'version': float(emf_version)}
+        db = connect_to_modularforms_db('webmodformspace.files')
+        s = {'k': self._k, 'N': self._N, 'character_galois_orbit': {"$all": [int(self._chi)]}, 'version': float(emf_version)}
         emf_logger.debug("Looking in DB for rec={0}".format(s))
         f = db.find_one(s)
         emf_logger.debug("Found rec={0}".format(f))
         if f<>None:
             id = f.get('_id')
-            fs = get_files_from_gridfs('WebModformspace')
+            fs = get_files_from_gridfs('webmodformspace')
             f = fs.get(id)
             emf_logger.debug("Getting rec={0}".format(f))
             d = loads(f.read())
@@ -410,14 +410,14 @@ class WebModFormSpace_class(object):
         r"""
           Insert a dictionary of data for self into the collection WebModularforms.files
         """
-        emf_logger.debug("Check if we insert this webmodform space into db! name={0}".format(self._name))
-        db = connect_to_modularforms_db('WebModformspace.files')
-        fs = get_files_from_gridfs('WebModformspace')
+        db = connect_to_modularforms_db('webmodformspace.files')
+        fs = get_files_from_gridfs('webmodformspace')
         fname = "webmodformspace-{0:0>5}-{1:0>3}-{2:0>3}".format(self._N,self._k,self._chi)
+        emf_logger.debug("Check if we insert this webmodform space into db! fname={0}".format(fname))
         s = {'filename':fname, 'version':emf_version}
         if fs.exists(s):
+            emf_logger.debug("We already have this space in the database and we do not reinsert it!")
             if not update:
-                emf_logger.debug("We already have this space in the database and we do not reinsert it!")
                 return True
             fid = fs.find(s)['_id']
             fs.delete(fid)
