@@ -998,12 +998,9 @@ class WebNewForm_class(object):
         s = {'galois_orbit_name':self.galois_orbit_name(),'version':float(self._version)}
         rec = C.find_one(s)
         if rec:
-            id = rec.get('_id')
-        else:
-            id = None
-        if id<>None:
-            emf_logger.debug("Removing self from db with id={0}".format(id))
-            fs.delete(id)
+            fid = rec.get('_id')
+            emf_logger.debug("Removing self from db with id={0}".format(fid))
+            fs.delete(fid)
             
         fname = "webnewform-{0:0>5}-{1:0>3}-{2:0>3}-{3}".format(self._N,self._k,self._chi,self._label) 
         d = self.to_dict()

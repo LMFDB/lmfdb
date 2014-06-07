@@ -415,13 +415,10 @@ class WebModFormSpace_class(object):
         fs = get_files_from_gridfs('WebModformspace')
         s = {'galois_orbit_name':self.galois_orbit_name(), 'version':emf_version}
         rec = db.find_one(s)
-        if rec:
-            id = rec.get('_id')
-        else:
-            id = None
-        if id<>None:
-            emf_logger.debug("Removing self from db with id={0}".format(id))
-            fs.delete(id)
+        if rec is not None:
+            fid = rec['_id']
+            emf_logger.debug("Removing self from db with id={0}".format(fid))
+            fs.delete(fid)
             
         fname = "webmodformspace-{0:0>5}-{1:0>3}-{2:0>3}".format(self._N,self._k,self._chi) 
         d = self.to_dict()
