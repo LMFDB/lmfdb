@@ -45,6 +45,7 @@ from lmfdb.utils import web_latex_split_on_re
 # local imports
 import lmfdb.base
 from lmfdb.modular_forms.elliptic_modular_forms import emf_logger,emf_version
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label
 from plot_dom import draw_fundamental_domain
 from emf_core import html_table, len_as_printed
 
@@ -113,7 +114,7 @@ class WebNewForm_class(object):
             '_q_expansion_str' : '',
             '_embeddings' :
                 {
-                'prec':0,
+                'prec': int(0),
                 'bitprec': bitprec,
                 'values':[],
                 'latex':[]},
@@ -255,8 +256,7 @@ class WebNewForm_class(object):
         r"""
         Returns a canonical name for the galois orbit of self.
         """
-        return "{0}.{1}.{2}{3}".format(self.level(), self.weight(), self._character_orbit_rep, self._label)
-    
+        return newform_label(self.level(), self.weight(), self.parent().character_orbit_rep(), self._label)
     
     def character(self):
         r"""
