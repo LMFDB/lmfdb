@@ -336,11 +336,11 @@ class WebNewForm_class(object):
         C = connect_to_modularforms_db()
         s = {'k': self._k, 'N': self._N, 'character_galois_orbit': {'$all': [int(self._chi)]}, 'version': float(emf_version), 'label': self._label}
         emf_logger.debug("Looking in DB for rec={0}".format(s))
-        f = C.WebNewforms.files.find_one(s)
+        f = C.webnewforms.files.find_one(s)
         emf_logger.debug("Found rec={0}".format(f))
         if f<>None:
             id = f.get('_id')
-            fs = get_files_from_gridfs('WebNewforms')
+            fs = get_files_from_gridfs('webnewforms')
             f = fs.get(id)
             emf_logger.debug("Getting rec={0}".format(f))
             d = loads(f.read())

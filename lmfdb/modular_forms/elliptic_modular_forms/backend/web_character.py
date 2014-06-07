@@ -89,10 +89,10 @@ class WebChar(object):
         r"""
           Fetch the data defining this WebCharacter from database.
         """
-        db = connect_to_modularforms_db('WebChar.files')
+        db = connect_to_modularforms_db('webchar.files')
         s = {'modulus':self._modulus,'number':self._number,'version':emf_version}
         emf_logger.debug("Looking in DB for WebChar rec={0}".format(s))
-        fs = get_files_from_gridfs('WebChar')
+        fs = get_files_from_gridfs('webchar')
         #f = db.find_one(s)
         f = fs.find(s)
         #emf_logger.debug("Found rec={0}".format(f))
@@ -107,8 +107,8 @@ class WebChar(object):
         r"""
         Insert a dictionary of data for self into the collection WebModularforms.files
         """
-        db = connect_to_modularforms_db('WebChar.files')
-        fs = get_files_from_gridfs('WebChar')
+        db = connect_to_modularforms_db('webchar.files')
+        fs = get_files_from_gridfs('webchar')
         fname = "webchar-{0:0>4}-{1:0>3}".format(self._modulus,self._number)
         emf_logger.debug("Check if we will insert this web char into db! fname={0}".format(fname))
         s = {'fname':fname,'version':emf_version}
