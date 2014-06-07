@@ -406,21 +406,24 @@ class WebModFormSpace_class(object):
             d['nontrivial_new_info'] = " is empty!"
         return d
 
-    def insert_into_db(self):
+    def insert_into_db(self,update=False):
         r"""
           Insert a dictionary of data for self into the collection WebModularforms.files
         """
-        emf_logger.debug("inserting self into db! name={0}".format(self._name))
+        emf_logger.debug("Check if we insert this webmodform space into db! name={0}".format(self._name))
         db = connect_to_modularforms_db('WebModformspace.files')
         fs = get_files_from_gridfs('WebModformspace')
-        s = {'galois_orbit_name':self.galois_orbit_name(), 'version':emf_version}
-        rec = db.find_one(s)
-        if rec is not None:
-            fid = rec['_id']
-            emf_logger.debug("Removing self from db with id={0}".format(fid))
+        fname = "webmodformspace-{0:0>5}-{1:0>3}-{2:0>3}".format(self._N,self._k,self._chi)
+        s = {'filename':fname, 'version':emf_version}
+        if fs.exists(s):
+            if not update:
+                emf_logger.debug("We already have this space in the database and we do not reinsert it!")
+                return True
+            fid = fs.find(s)['_id']
             fs.delete(fid)
+            emf_logger.debug("Removing self from db with s={0} and id={1}".format(s,id))
             
-        fname = "webmodformspace-{0:0>5}-{1:0>3}-{2:0>3}".format(self._N,self._k,self._chi) 
+
         d = self.to_dict()
         d.pop('_ap',None) # Since the ap's are already in the database we don't need them here
         id = fs.put(dumps(d),filename=fname,N=int(self._N),k=int(self._k),chi=int(self._chi),\

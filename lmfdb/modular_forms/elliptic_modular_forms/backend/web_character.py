@@ -94,7 +94,7 @@ class WebChar(object):
         emf_logger.debug("Looking in DB for WebChar rec={0}".format(s))
         f = db.find_one(s)
         emf_logger.debug("Found rec={0}".format(f))
-        if f<>None:
+        if f is not None:
             id = f.get('_id')
             fs = get_files_from_gridfs('WebChar')
             f = fs.get(id)
@@ -107,20 +107,19 @@ class WebChar(object):
         r"""
         Insert a dictionary of data for self into the collection WebModularforms.files
         """
-        emf_logger.debug("inserting self into db! name={0}".format(self._name))
+        emf_logger.debug("inserting web char into db! name={0}".format(self._name))
         db = connect_to_modularforms_db('WebChar.files')
         fs = get_files_from_gridfs('WebChar')
-        s = {'name':self._name,'version':emf_version}
+        fname = "webchar-{0:0>4}-{1:0>3}".format(self._modulus,self._number)
+        s = {'fname':fname,'version':emf_version}
         rec = db.find_one(s)
-        if rec:
-            id = rec.get('_id')
-        else:
-            id = None
-        if id<>None:
-            emf_logger.debug("Removing self from db with id={0}".format(id))
-            fs.delete(id)
-            
-        fname = "webchar-{0:0>4}-{1:0>3}".format(self._modulus,self._number) 
+        if fs.exists(s):
+            if not update: 
+                return True
+            fid = fs.find(s)['_id']
+            fs.delete(fid)
+            emf_logger.debug("Removing self from db with s={0} and id={1}".format(s,id))
+
         d = copy(self.__dict__)
         d.pop('_url') ## This should be recomputed
         id = fs.put(dumps(d),filename=fname,n=int(self._modulus),k=int(self._number))
