@@ -234,6 +234,7 @@ class WebModFormSpace_class(object):
           Return a WebCharacter that corresponds to the character that was used during computation.
         """
         emf_logger.debug("self._web_character_used_in_computation={0}".format(self._web_character_used_in_computation))
+        emf_logger.debug("self._character_used_in_computation={0}".format(self._character_used_in_computation))
         if self._web_character_used_in_computation is None:
             self._web_character_used_in_computation = WebChar(self.level(), self._character_used_in_computation)
         return self._web_character_used_in_computation
