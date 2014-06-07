@@ -92,28 +92,29 @@ class WebChar(object):
         db = connect_to_modularforms_db('WebChar.files')
         s = {'modulus':self._modulus,'number':self._number,'version':emf_version}
         emf_logger.debug("Looking in DB for WebChar rec={0}".format(s))
-        f = db.find_one(s)
-        emf_logger.debug("Found rec={0}".format(f))
-        if f is not None:
-            id = f.get('_id')
-            fs = get_files_from_gridfs('WebChar')
-            f = fs.get(id)
-            emf_logger.debug("Getting rec={0}".format(f))
-            d = loads(f.read())
+        fs = get_files_from_gridfs('WebChar')
+        #f = db.find_one(s)
+        f = fs.find(s)
+        #emf_logger.debug("Found rec={0}".format(f))
+        if f.count()>0:
+            d = loads(f.next().read())
+            emf_logger.debug("Getting rec={0}".format(d))
             return d
-        return {}
+        else:
+            return {}
         
-    def insert_into_db(self):
+    def insert_into_db(self,update=False):
         r"""
         Insert a dictionary of data for self into the collection WebModularforms.files
         """
-        emf_logger.debug("inserting web char into db! name={0}".format(self._name))
         db = connect_to_modularforms_db('WebChar.files')
         fs = get_files_from_gridfs('WebChar')
         fname = "webchar-{0:0>4}-{1:0>3}".format(self._modulus,self._number)
+        emf_logger.debug("Check if we will insert this web char into db! fname={0}".format(fname))
         s = {'fname':fname,'version':emf_version}
         rec = db.find_one(s)
         if fs.exists(s):
+            emf_logger.debug("We alreaydy have this webchar in the databse")
             if not update: 
                 return True
             fid = fs.find(s)['_id']
@@ -122,7 +123,7 @@ class WebChar(object):
 
         d = copy(self.__dict__)
         d.pop('_url') ## This should be recomputed
-        id = fs.put(dumps(d),filename=fname,n=int(self._modulus),k=int(self._number))
+        id = fs.put(dumps(d),filename=fname,modulus=int(self._modulus),number=int(self._number))
         emf_logger.debug("inserted :{0}".format(id))
     
         
