@@ -527,6 +527,7 @@ class WebNewForm_class(object):
         nstart = len(self._embeddings)
         emf_logger.debug("Should have {0} embeddings".format(self._embeddings['prec']))
         emf_logger.debug("Computing new stuff !")
+        deg = self.coefficient_field().absolute_degree()
         for n in range(self._embeddings['prec'],prec):
             try:
                 cn = self.coefficient(n)
