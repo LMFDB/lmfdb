@@ -123,6 +123,7 @@ class WebChar(object):
 
         d = copy(self.__dict__)
         d.pop('_url') ## This should be recomputed
+        d.pop('_character') ## The Conrey character is not correctly pickled anyway
         id = fs.put(dumps(d),filename=fname,modulus=int(self._modulus),number=int(self._number))
         emf_logger.debug("inserted :{0}".format(id))
     
