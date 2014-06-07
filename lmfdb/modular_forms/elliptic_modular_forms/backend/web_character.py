@@ -52,6 +52,7 @@ class WebChar(object):
         Init self as character of given number and modulus.
         """
         if modulus <= 0 or number <=0:
+            wmf_logger.critical("Modulus {0} and number {1} does not correspond to a character".format(modulus,number))
             raise ValueError,"Modulus {0} and number {1} does not correspond to a character".format(modulus,number)
         d = {
             '_modulus' : modulus,
