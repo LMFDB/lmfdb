@@ -406,20 +406,20 @@ class WebModFormSpace_class(object):
             d['nontrivial_new_info'] = " is empty!"
         return d
 
-    def insert_into_db(self):
+    def insert_into_db(self,update=False):
         r"""
           Insert a dictionary of data for self into the collection WebModularforms.files
         """
-        emf_logger.debug("inserting self into db! name={0}".format(self._name))
+        emf_logger.debug("Check if we insert this webmodform space into db! name={0}".format(self._name))
         db = connect_to_modularforms_db('WebModformspace.files')
         fs = get_files_from_gridfs('WebModformspace')
         s = {'galois_orbit_name':self.galois_orbit_name(), 'version':emf_version}
-        rec = db.find_one(s)
-        if rec:
+        res = db.find(s)
+        if res.count()>0 and not update:
+            emf_logger.debug("We already have this space in the database and we do not reinsert it!")
+            return True
+        for rec in res:
             id = rec.get('_id')
-        else:
-            id = None
-        if id<>None:
             emf_logger.debug("Removing self from db with id={0}".format(id))
             fs.delete(id)
             
