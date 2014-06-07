@@ -275,6 +275,7 @@ class WebNewForm_class(object):
         r"""
           Return a WebCharacter that corresponds to the character that was used during computation.
         """
+        emf_logger.debug("get web character used in computation!")
         return self.parent().web_character_used_in_computation()
 
     def newform_number(self):
