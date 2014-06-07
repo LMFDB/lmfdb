@@ -262,7 +262,7 @@ class WebNewForm_class(object):
         r"""
         Return the character of self.
         """
-        if self._character is None
+        if self._character is None:
             if self._chi is None:
                 print "Character is none!"
             self._character = WebChar(modulus=self.level(),number=self.chi())
