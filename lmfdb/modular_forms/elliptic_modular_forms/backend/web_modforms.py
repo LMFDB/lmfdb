@@ -36,7 +36,7 @@ from sage.rings.integer_ring import ZZ
 from sage.rings.rational_field import QQ
 from sage.modular.cusps import Cusp
 from sage.rings.infinity import Infinity
-from sage.all import Parent, SageObject, dimension_new_cusp_forms, vector, dimension_modular_forms, dimension_cusp_forms, Matrix, floor, latex, loads, save, dumps, deepcopy
+from sage.all import Parent, SageObject, dimension_new_cusp_forms, vector, dimension_modular_forms, dimension_cusp_forms, Matrix, floor, latex, loads, save, dumps, deepcopy,PolynomialRing
 import re
 import yaml
 from flask import url_for
@@ -680,7 +680,10 @@ class WebNewForm_class(object):
             if self._q_expansion.degree() < prec:
                 for n in xrange(self._q_expansion.degree(),prec):
                     self._q_expansion += self.coefficient(n)*q**n
-        self._q_expansion_str = str(self._q_expansion.polynomial())
+        ## In to print in ascending order we use our own Q-polynomial ring
+        K = self._q_expansion.base_ring()
+        QR = PolynomialRing(K,1,name='q',order='neglex')
+        self._q_expansion_str = str(QR(self._q_expansion.polynomial()))
         assert isinstance(self._q_expansion,PowerSeries_poly)
         assert isinstance(self._q_expansion_str,str)
         return self._q_expansion.truncate_powerseries(prec)
