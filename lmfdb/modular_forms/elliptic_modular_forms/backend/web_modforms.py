@@ -562,7 +562,7 @@ class WebNewForm_class(object):
         r"""
         Return coefficient nr. n
         """
-        emf_logger.debug("In coefficient: n={0}".format(n))
+        #emf_logger.debug("In coefficient: n={0}".format(n))
         if n==0:
             if self.is_cuspidal():
                 return self.coefficient_field()(0)
@@ -586,7 +586,7 @@ class WebNewForm_class(object):
         recompute = False
         for n in nrange:
             c = self._coefficients.get(n,None)
-            emf_logger.debug("c({0}) in self._coefficients={1}".format(n,c))            
+            #emf_logger.debug("c({0}) in self._coefficients={1}".format(n,c))            
             if c is None:
                 if n == 0 and self.is_cuspidal():
                     c = self.coefficient_field()(0)
@@ -596,7 +596,7 @@ class WebNewForm_class(object):
                     self._coefficients[n] = c
             res.append(c)
         if recompute and insert_in_db:
-            self.insert_into_db()
+            self.insert_into_db(update=True)
         return res
        
     def coefficient_n_recursive(self, n, insert_in_db=False):
@@ -605,7 +605,7 @@ class WebNewForm_class(object):
           We do this because of a bug in sage with .eigenvalue()
         """
         from sage.rings import arith
-        emf_logger.debug("computing c({0}) using recursive algortithm".format(n))
+        #emf_logger.debug("computing c({0}) using recursive algortithm".format(n))
         if n==1:
             return 1
         F = arith.factor(n)
@@ -647,7 +647,7 @@ class WebNewForm_class(object):
             else:
                 prod *= ev[pr]
         if insert_in_db:
-            self.insert_into_db()
+            self.insert_into_db(update=True)
         return prod
 
     def max_cn(self):
@@ -991,22 +991,25 @@ class WebNewForm_class(object):
 ## Functions related to storing / fetching data from database
 ##  
     
-    def insert_into_db(self):
+    def insert_into_db(self,update=False):
         r"""
         Insert a dictionary of data for self into the database collection
         WebNewforms.files
         """
-        emf_logger.debug("inserting self into db! name={0}".format(self._name))
+        fname = "webnewform-{0:0>5}-{1:0>3}-{2:0>3}-{3}".format(self._N,self._k,self._chi,self._label)
+        s = {'filename':fname,'version':float(self._version)}
+        emf_logger.debug("Check if we insert self into db! s={0}".format(s))
         C = connect_to_modularforms_db('WebNewforms.files')
         fs = get_files_from_gridfs('WebNewforms')
-        s = {'galois_orbit_name':self.galois_orbit_name(),'version':float(self._version)}
-        rec = C.find_one(s)
-        if rec:
-            fid = rec.get('_id')
-            emf_logger.debug("Removing self from db with id={0}".format(fid))
+        if fs.exists(s):
+            emf_logger.debug("We already have this form in the db!")
+            if not update:
+                return True
+            fid = fs.find(s)['_id']
             fs.delete(fid)
+            emf_logger.debug("Removing self from db with s={0} ad id={0}".format(s,fid))
             
-        fname = "webnewform-{0:0>5}-{1:0>3}-{2:0>3}-{3}".format(self._N,self._k,self._chi,self._label) 
+
         d = self.to_dict()
         d.pop('_ap',None)
         d.pop('_character',None)
