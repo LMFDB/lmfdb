@@ -578,7 +578,7 @@ class WebNewForm_class(object):
         are stored.
 
         """
-        emf_logger.debug("computing coeffs in range {0}".format(nrange))
+        #emf_logger.debug("computing coeffs in range {0}".format(nrange))
         if not isinstance(nrange, list):
             M = nrange
             nrange = range(0, M)
@@ -994,13 +994,13 @@ class WebNewForm_class(object):
     def insert_into_db(self,update=False):
         r"""
         Insert a dictionary of data for self into the database collection
-        WebNewforms.files
+        webnewforms.files
         """
         fname = "webnewform-{0:0>5}-{1:0>3}-{2:0>3}-{3}".format(self._N,self._k,self._chi,self._label)
         s = {'filename':fname,'version':float(self._version)}
         emf_logger.debug("Check if we insert self into db! s={0}".format(s))
-        C = connect_to_modularforms_db('WebNewforms.files')
-        fs = get_files_from_gridfs('WebNewforms')
+        C = connect_to_modularforms_db('webnewforms.files')
+        fs = get_files_from_gridfs('webnewforms')
         if fs.exists(s):
             emf_logger.debug("We already have this form in the db!")
             if not update:
