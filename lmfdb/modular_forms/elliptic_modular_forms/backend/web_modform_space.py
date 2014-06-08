@@ -107,7 +107,7 @@ class WebModFormSpace_class(object):
             }
         self.__dict__.update(d)
 
-        emf_logger.debug("Incoming data:{0} ".format(data))
+        emf_logger.debug("Incoming data:{0} get_from_db:{1}".format(data,get_from_db))
         if get_from_db:
            d = self.get_from_db()
            emf_logger.debug("Got data:{0} from db".format(d))

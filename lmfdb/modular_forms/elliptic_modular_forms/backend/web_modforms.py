@@ -154,6 +154,7 @@ class WebNewForm_class(object):
 
         if isinstance(self._parent,dict) or self._parent is None:
             emf_logger.debug("setting parent! label={0}".format(label))
+            emf_logger.debug("get_parent_from_db={0}".format(get_parent_from_db))
             self._parent = WebModFormSpace(N, k, chi, get_from_db=get_parent_from_db, data=parent)
             emf_logger.debug("finished getting parent")
             
