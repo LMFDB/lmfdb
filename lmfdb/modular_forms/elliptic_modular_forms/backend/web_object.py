@@ -50,6 +50,11 @@ class WebProperty(object):
         self.store = store
         self.meta = meta
         self._default_value = default_value
+        # Set if this Property
+        # is updated from store/meta when updating from db
+        # note that store always overrides meta
+        self.update_from_meta = True
+        self.update_from_store = True
 
     @property
     def default_value(self):
@@ -104,7 +109,7 @@ class WebProperties(object):
     def __getitem__(self, n):
         return self._d[n]
 
-    def __setitem__(self, p):
+    def add_property(self, p):
         self._d[p.name] = p
 
     def __iter__(self):
@@ -121,6 +126,8 @@ class WebObject(object):
     """
 
     def __init__(self, params, dbkey, collection_name,
+                 use_separate_meta = True,
+                 use_gridfs = True,
                  update_from_db=False, **kwargs):
         r"""
           Initialze self. Set default values.
@@ -139,8 +146,15 @@ class WebObject(object):
 
         self._params = params
         self._collection_name = collection_name
-        self._file_collection = connect_to_modularforms_db(collection_name + '.files')
-        self._meta_collection = connect_to_modularforms_db(collection_name + '.meta')
+        if use_gridfs:
+            self._file_collection = connect_to_modularforms_db(collection_name + '.files')
+        if use_separate_meta:
+            self._meta_collection = connect_to_modularforms_db(collection_name + '.meta')
+        else:
+            if use_gridfs:
+                self._meta_collection = connect_to_modularforms_db(collection_name + '.files')
+            else:
+                self._meta_collection = connect_to_modularforms_db(collection_name)
         self._files = get_files_from_gridfs(collection_name)
         if isinstance(dbkey, str):
             self._dbkey = [dbkey]
@@ -337,7 +351,7 @@ class WebObject(object):
                 rec = coll.find_one(meta_key)
                 for p in self._meta_properties:
                     # Note that we give preference to store_properties
-                    if rec.has_key(p.name) and not p in self._store_properties:
+                    if p.update_from_meta and rec.has_key(p.name) and not p in self._store_properties:
                         setattr(self, p.name, p.from_meta(rec[p.name]))
             else:
                 if not ignore_non_existent:
@@ -349,7 +363,7 @@ class WebObject(object):
             fid = coll.find_one(key)['_id']
             d = loads(fs.get(fid).read())
             for p in self._store_properties:
-                if d.has_key(p.name):
+                if p.update_from_store and d.has_key(p.name):
                     setattr(self, p.name, p.from_store(d[p.name]))
         else:
             if not ignore_non_existent:
@@ -364,6 +378,12 @@ class WebInt(WebProperty):
 
     def __init__(self, name, store=True, meta=True, default_value=int(0)):
         super(WebInt, self).__init__(name, int, int, store, meta, default_value)
+        print self.__class__
+
+class WebBool(WebProperty):
+
+    def __init__(self, name, store=True, meta=True, default_value=True):
+        super(WebBool, self).__init__(name, int, int, store, meta, default_value)
         print self.__class__
 
 class WebFloat(WebProperty):
@@ -402,8 +422,104 @@ class WebSageObject(WebProperty):
     def from_store(self, f):
         return loads(f)
 
+class WebPoly(WebProperty):
+    def __init__(self, name, store=True, meta=True,
+                 default_value=None):
+        super(WebPoly, self).__init__(name, store_data_type=PowerSeries_poly, meta_data_type=str, store=store, meta=meta, default_value=default_value)
+
+    def to_store(self, f):
+        return dumps(f)
+
+    def from_store(self, f):
+        return loads(f)
+
+    def to_meta(self, f):
+        return str(f)
+
+    def from_meta(self, f):
+        raise NotImplementedError
+
 class WebNoStoreObject(WebProperty):
 
     def __init__(self, name, default_value=None):
         super(WebNoStoreObject, self).__init__(name, meta=False, store=False, default_value=default_value)
+
+
+class WebNumberField(WebDict):
+    
+    def __init__(self, name, store=True, meta=True, default_value=None):
+        if default_value == None:
+            default_value = {}
+        super(WebDict, self).__init__(name, dict, dict, store, meta, default_value)
+
+    def to_store(self, K):
+        return number_field_to_dict(K)
+
+    def from_store(self, k):
+        return number_field_from_dict(k)
+
+    def to_meta(self, K):
+        r"""
+        We store the LMFDB label of the absolute field
+        in the meta collection.
+        """
+        if K.absolute_degree() == 1:
+            p = 'x'
+        else:
+            p = K.absolute_polynomial()
+
+        l = poly_to_field_label(p)
+
+        return l
+
+    def from_meta(self, k):
+        raise NotImplementedError
+            
+
+def number_field_to_dict(F):
+
+    r"""
+    INPUT:
+    - 'K' -- Number Field
+    - 't' -- (p,gens) where p is a polynomial in the variable(s) xN with coefficients in K. (The 'x' is just a convention)
+
+    OUTPUT:
+
+    - 'F' -- Number field extending K with relative minimal polynomial p.
+    """
+    if F.base_ring().absolute_degree()==1:
+        K = 'QQ'
+    else:
+        K = number_field_to_dict(F.base_ring())
+    if F.absolute_degree() == 1:
+        p = 'x'
+        g = ('x',)
+    else:
+        p = F.relative_polynomial()
+        g = str(F.gen())
+        x = p.variables()[0]
+        p = str(p).replace(str(x),str(g))
+    return {'base':K,'relative polynomial':p,'gens':g}
         
+
+def number_field_from_dict(d):
+    r"""
+    INPUT:
+
+    - 'd' -- {'base':F,'p':p,'g':g } where p is a polynomial in the variable(s) xN with coefficients in K. (The 'x' is just a convention)
+
+    OUTPUT:
+
+    - 'F' -- Number field extending K with relative minimal polynomial p.
+    """
+    K = d['base']; p=d['relative polynomial']; g=d['gens']
+    if K=='QQ':
+        K = QQ
+    elif isinstance(K,dict):
+        K = number_field_from_dict(K)
+    else:
+        raise ValueError,"Could not construct number field!"
+    F = NumberField(K[g](p),names=g)
+    if F.absolute_degree()==1:
+        F = QQ
+    return F

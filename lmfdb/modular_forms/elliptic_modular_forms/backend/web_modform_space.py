@@ -38,6 +38,7 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import (
      WebList,
      WebSageObject,
      WebNoStoreObject,
+     WebProperty,
      WebProperties
      )
 
@@ -148,7 +149,7 @@ class WebModFormSpace(WebObject):
             WebInt('dimension_modular_forms'),
             WebInt('dimension_new_cusp_forms'),
             WebInt('cuspidal', default_value=int(1)),
-            WebInt('prec', default_value=int(prec)), #precision of q-expansion
+            WebInt('prec', default_value=int(prec)), #precision of q-expansions
             WebSageObject('group'),
             WebInt('sturm_bound'),
             WebHeckeOrbitDict('hecke_orbits'),
@@ -172,3 +173,20 @@ class WebModFormSpace(WebObject):
     def __repr__(self):
         return "Space of (Web) Modular Forms of level {N}, weight {k}, and character {chi}".format(
             k=self.weight, N=self.level, chi=self.character)
+
+
+class WebModFormSpaceProperty(WebProperty):
+
+    def __init__(self, name, level=1, weight=12,
+                 character=1, default_value=None):        
+        self.level = level
+        self.weight = weight
+        self.character = character
+        self.update_from_meta = False
+        self.update_from_store = False
+        if default_value is None:
+            default_value = WebModFormSpace(self.level, self.weight, self.character)
+        super(WebModFormSpaceProperty, self).__init__(name, default_value = default_value)
+
+    def to_meta(self, M):
+        return M.galois_orbit_label
