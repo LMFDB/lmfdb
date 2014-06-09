@@ -8,10 +8,11 @@ fields only.
 </div>
 
 <h2> Browse {{ KNOWL('ec',title='elliptic curves')}} over {{
-KNOWL('nf',title = "number fields")}} (other than $\Q$)</h2>
+KNOWL('nf',title = "number fields")}} (including $\Q$)</h2>
 
 <p>
 By base {{ KNOWL('nf',title = "number field")}}:
+<a href="{{ url_for('EC_toplevel') }}">\(\Q\)</a>
 {% for nf in data.fields %}
 <a href="?field={{nf[0]}}">{{nf[1]}}</a>&nbsp;
 {% endfor %}
