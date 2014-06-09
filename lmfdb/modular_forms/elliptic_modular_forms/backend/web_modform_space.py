@@ -76,17 +76,18 @@ from sage.all import (
 from sage.rings.power_series_poly import PowerSeries_poly
 
 
-class WebHeckeOrbits(WebList):
+class WebHeckeOrbits(WebDict):
     r"""
     Collection of WebNewforms for easy access by name.
     """
 
-    def __init__(self, name, level, weight, character):
+    def __init__(self, name, level, weight, character, parent=None):
         self.level = level
         self.weight = weight
         self.character = character
+        self.parent=parent
         super(WebHeckeOrbits, self).__init__(
-            name, list, list, True, True, []
+            name, True, True, {}
             )
 
     def to_meta(self, l):
@@ -96,10 +97,12 @@ class WebHeckeOrbits(WebList):
         return self.to_meta(l)
 
     def from_meta(self, l):
-        return {a : WebNewForm(level, weight, character, a) for a in l}
+        from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
+        return {a : WebNewForm(self.level, self.weight, self.character, a, parent=self.parent)
+                for a in l}
 
     def from_store(self, l):
-        return from_meta(self, l)
+        return self.from_meta(l)
     
 
     
@@ -152,7 +155,8 @@ class WebModFormSpace(WebObject):
             WebInt('prec', default_value=int(prec)), #precision of q-expansions
             WebSageObject('group'),
             WebInt('sturm_bound'),
-            WebHeckeOrbitDict('hecke_orbits'),
+            WebHeckeOrbits('hecke_orbits', level, weight,
+                           character, self),
             WebDict('oldspace_decomposition'),
             WebInt('bitprec', default_value=bitprec),            
             WebFloat('version', default_value=float(emf_version))

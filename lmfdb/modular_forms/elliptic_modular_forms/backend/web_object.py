@@ -23,10 +23,13 @@ AUTHORS:
  
 """
 
-from sage.all import SageObject,dumps,loads
+
 from lmfdb.modular_forms.elliptic_modular_forms import emf_version
 from lmfdb.modular_forms.elliptic_modular_forms.backend import get_files_from_gridfs, connect_to_modularforms_db
+from lmfdb.number_fields.number_field import poly_to_field_label
+
 from sage.rings.power_series_poly import PowerSeries_poly
+from sage.all import SageObject,dumps,loads
 
 class WebProperty(object):
     r"""
@@ -72,7 +75,10 @@ class WebProperty(object):
         if val is None and self.default_value is not None:
             val = self.default_value
         if val is not None:
-            return self.store_data_type(val)
+            try:
+                return self.store_data_type(val)
+            except:
+                raise TypeError("Error with value {0}".format(val))
         else:
             return None
 
@@ -148,6 +154,7 @@ class WebObject(object):
         self._collection_name = collection_name
         if use_gridfs:
             self._file_collection = connect_to_modularforms_db(collection_name + '.files')
+        self.use_separate_meta = use_separate_meta
         if use_separate_meta:
             self._meta_collection = connect_to_modularforms_db(collection_name + '.meta')
         else:
@@ -298,12 +305,16 @@ class WebObject(object):
                 fs.delete(fid)
         # insert
         s = dumps(self.store_dict())
+        if not self.use_separate_meta:
+            key.update(self.meta_dict())
         try:
             fs.put(s, **key)
         except Error, e:
             print "Error inserting record: {0}".format(e)
         #fid = coll.find_one(key)['_id']
         # insert extended record
+        if not self.use_separate_meta:
+            return True
         coll = self._meta_collection
         meta_key = self.params_dict()
         meta_key.update(key)
@@ -317,6 +328,7 @@ class WebObject(object):
                 coll.update(meta_key, meta)
         else:
             coll.insert(meta)
+        return True
         
 
     def delete_from_db(self, all=False):
