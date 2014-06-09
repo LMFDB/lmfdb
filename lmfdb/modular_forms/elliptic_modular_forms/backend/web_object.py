@@ -225,18 +225,15 @@ class WebObject(object):
         Return a dictionary where the keys are the dbkeys of ``self``` and
         the values are the corresponding values of ```self```.
         """
-        return { key : getattr(self, key) for key in self._dbkey }
+        return { key : self._properties[key].to_meta(getattr(self, key)) for key in self._dbkey }       
 
     def params_dict(self):
         r"""
         Return a dictionary where the keys are the params of ``self``` and
         the values are the corresponding values of ```self```.
         """
-        d = { key : getattr(self, key) for key in self._params }
-        for p in self._properties:
-            if d.has_key(p.name):
-                d[p.name] = p.to_meta(d[p.name])
-        return d
+
+        return { key : self._properties[key].to_meta(getattr(self, key)) for key in self._params }
 
     def meta_dict(self):
         r"""
