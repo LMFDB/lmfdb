@@ -23,10 +23,14 @@ AUTHORS:
  
 """
 
+from sage.all import SageObject,dumps,loads
 from lmfdb.modular_forms.elliptic_modular_forms import emf_version
 from lmfdb.modular_forms.elliptic_modular_forms.backend import get_files_from_gridfs, connect_to_modularforms_db
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_character import WebChar
 from sage.rings.power_series_poly import PowerSeries_poly
+
+class WebProperties(dict):
+    pass
 
 class WebProperty(object):
     r"""
@@ -35,9 +39,17 @@ class WebProperty(object):
     meta: True if this property should be stored in the meta record (mongo)
     """
 
-    def __init__(self, name, data_type, store=True, meta=False, default_value=None):
+    def __init__(self, name, store_data_type=None, meta_data_type=None, store=True, meta=False, default_value=None):
         self.name = name
-        self.type = data_type
+        # default to str
+        if store_data_type is not None:
+            self.store_data_type = store_data_type
+        else:
+            self.store_data_type = str
+        if meta_data_type is not None:
+            self.meta_data_type = meta_data_type
+        else:
+            self.meta_data_type = str
         self.store = store
         self.meta = meta
         self.default_value = default_value
@@ -46,7 +58,7 @@ class WebProperty(object):
         if val is None and self.default_value is not None:
             val = self.default_value
         if val is not None:
-            return self.type(val)
+            return self.meta_data_type(val)
         else:
             return None
     
@@ -54,7 +66,7 @@ class WebProperty(object):
         if val is None and self.default_value is not None:
             val = self.default_value
         if val is not None:
-            return self.type(val)
+            return self.store_data_type(val)
         else:
             return None
 
@@ -115,6 +127,8 @@ class WebObject(object):
 
         if update_from_db:
             self.update_from_db()
+
+        print self.__class__
         
 
     def meta_properties(self):

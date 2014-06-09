@@ -27,7 +27,11 @@ AUTHORS:
  
  """
 
-from web_object import WebInt, WebFloat, WebStr, WebList, WebDict, WebSageObject, WebNoStoreObject, WebObject
+from modular_forms.elliptic_modular_forms.backend.web_object import \
+     WebObject, WebInt, WebStr, WebFloat,\
+     WebDict, WebList, WebSageObject, WebNoStoreObject
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_character import WebChar
+from lmfdb.modular_forms.elliptic_modular_forms import emf_version
 
 class WebNewformProperty(WebSageObject):
 
@@ -35,7 +39,7 @@ class WebNewformProperty(WebSageObject):
         super(WebNewformProperty, self).__init__(name, PowerSeries_poly, store, meta, default_value)
         
         
-class WebModFormSpace_test(WebObject):
+class WebModFormSpace(WebObject):
     r"""
     Space of modular forms to be presented on the web.
 
@@ -59,7 +63,10 @@ class WebModFormSpace_test(WebObject):
     {}
     sage: M1.update_from_db()
     sage: M1.newforms
-    {'a': q - 24*q^2 + 252*q^3 - 1472*q^4 + 4830*q^5 - 6048*q^6 - 16744*q^7 + 84480*q^8 - 113643*q^9 - 115920*q^10 + 534612*q^11 - 370944*q^12 - 577738*q^13 + 401856*q^14 + 1217160*q^15 + 987136*q^16 - 6905934*q^17 + 2727432*q^18 + 10661420*q^19 + O(q^20)}    
+    {'a': q - 24*q^2 + 252*q^3 - 1472*q^4 + 4830*q^5 - 6048*q^6 - 16744*q^7 + 84480*q^8 - 113643*q^9 - \
+    115920*q^10 + 534612*q^11 - 370944*q^12 - 577738*q^13 + 401856*q^14 + 1217160*q^15 + 987136*q^16 - \
+    6905934*q^17 + 2727432*q^18 + 10661420*q^19 + O(q^20)}
+
     """
 
     def __init__(self, level=1, weight=12, character=1, prec=10, bitprec=53):
