@@ -24,9 +24,10 @@ AUTHORS:
 
  - Fredrik Stroemberg
  - Stephan Ehlen
-
-NOTE: Now NOTHING should be computed.
+ 
  """
+
+from web_object import WebInt, WebFloat, WebStr, WebList, WebDict, WebSageObject, WebNoStoreObject, WebObject
 
 class WebNewformProperty(WebSageObject):
 
@@ -58,34 +59,7 @@ class WebModFormSpace_test(WebObject):
     {}
     sage: M1.update_from_db()
     sage: M1.newforms
-    {'a': q - 24*q^2 + 252*q^3 - 1472*q^4 + 4830*q^5 - 6048*q^6 - 16744*q^7 + 84480*q^8 - 113643*q^9 - 115920*q^10 + 534612*q^11 - 370944*q^12 - 577738*q^13 + 401856*q^14 + 1217160*q^15 + 987136*q^16 - 6905934*q^17 + 2727432*q^18 + 10661420*q^19 + O(q^20)}
-    sage: list(M1._file_collection.find())
-    [{u'_id': ObjectId('53959d040f0d05ae375cc983'),
-    u'chunkSize': 261120,
-    u'galois_orbit_name': u'1.12.1',
-    u'length': 713,
-    u'md5': u'dbb35ffeed0fec207128ec12e7275092',
-    u'uploadDate': datetime.datetime(2014, 6, 9, 11, 39, 49, 14000)}]
-    sage: list(M1._meta_collection.find())
-    [{u'_id': ObjectId('53951dc39cdd401077730ae5'),
-    u'bitprec': 53,
-    u'character': 1,
-    u'character_orbit_rep': 0,
-    u'character_used_in_computation': 0,
-    u'cuspidal': 1,
-    u'dimension': 1,
-    u'dimension_cusp_forms': 1,
-    u'dimension_modular_forms': 0,
-    u'dimension_new_cusp_forms': 0,
-    u'dimension_newspace': 1,
-    u'galois_orbit_name': u'1.12.1',
-    u'level': 1,
-    u'naming_scheme': u'Conrey',
-    u'prec': 10,
-    u'sturm_bound': 0,
-    u'version': 1.2,
-    u'weight': 12}]
-
+    {'a': q - 24*q^2 + 252*q^3 - 1472*q^4 + 4830*q^5 - 6048*q^6 - 16744*q^7 + 84480*q^8 - 113643*q^9 - 115920*q^10 + 534612*q^11 - 370944*q^12 - 577738*q^13 + 401856*q^14 + 1217160*q^15 + 987136*q^16 - 6905934*q^17 + 2727432*q^18 + 10661420*q^19 + O(q^20)}    
     """
 
     def __init__(self, level=1, weight=12, character=1, prec=10, bitprec=53):
@@ -100,7 +74,7 @@ class WebModFormSpace_test(WebObject):
             WebDict('character_galois_orbit_embeddings', default_value={}),
             WebInt('character_orbit_rep'),
             WebInt('character_used_in_computation'),
-            NoStoreObject('web_character_used_in_computation', WebChar),
+            WebNoStoreObject('web_character_used_in_computation', WebChar),
             WebInt('cuspidal', default_value=int(1)),
             WebInt('prec', default_value=int(prec)),
             WebList('ap'),
@@ -117,11 +91,17 @@ class WebModFormSpace_test(WebObject):
             WebInt('dimension_new_cusp_forms'),
             WebFloat('version', default_value=float(emf_version))
                     ]
+        
         super(WebModFormSpace_test, self).__init__(
             params=['level', 'weight', 'character'],
             dbkey=['galois_orbit_name'],
-            collection_name='webmodformspace_test')
+            collection_name='webmodformspace_test',
+            update_from_db=True)
+
+    def init_dynamic_properties(self):
+        
 
     def __repr__(self):
-        return "Space of (Web) Modular Forms of weight {k},
-        level {N} and character {chi}".format(self.weight, self.level, self.character)
+        return "Space of (Web) Modular Forms of weight {k},\
+        level {N} and character {chi}".format(
+            self.weight, self.level, self.character)

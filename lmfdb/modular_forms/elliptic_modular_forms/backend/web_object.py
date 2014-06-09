@@ -73,7 +73,8 @@ class WebObject(object):
     A base class for the object we store in the database.
     """
 
-    def __init__(self, params, dbkey, collection_name, **kwargs):
+    def __init__(self, params, dbkey, collection_name,
+                 update_from_db=False, **kwargs):
         r"""
           Initialze self. Set default values.
           params: a dictionary - The parameters that are needed to initialize a WebObject of this type.
@@ -111,6 +112,9 @@ class WebObject(object):
         for p in self._properties:
             if not hasattr(self, p.name):
                 setattr(self, p.name, p.default_value)
+
+        if update_from_db:
+            self.update_from_db()
         
 
     def meta_properties(self):
@@ -164,6 +168,14 @@ class WebObject(object):
             assert v is not None, "Did you store {0}? It has value {1}".format(p, v)
         return True
 
+    def init_dynamic_properties(self):
+        r"""
+        This function is called after __init__
+        and should be overriden to initialize
+        any properties of self that should be generated on the fly.
+        """
+        pass
+        
     def key_dict(self):
         r"""
         Return a dictionary where the keys are the dbkeys of ``self``` and
@@ -326,7 +338,8 @@ class WebList(WebProperty):
 
 class WebSageObject(WebProperty):
 
-    def __init__(self, name, datatype=SageObject, store=True, meta=False, default_value=None):
+    def __init__(self, name, datatype=SageObject, store=True,
+                 meta=False, default_value=None):
         super(WebSageObject, self).__init__(name, datatype, store, meta, default_value)
 
     def to_store(self, f):
