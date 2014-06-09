@@ -27,17 +27,11 @@ AUTHORS:
  
  """
 
-from modular_forms.elliptic_modular_forms.backend.web_object import \
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import \
      WebObject, WebInt, WebStr, WebFloat,\
-     WebDict, WebList, WebSageObject, WebNoStoreObject
-from lmfdb.modular_forms.elliptic_modular_forms.backend.web_character import WebChar
+     WebDict, WebList, WebSageObject, WebNoStoreObject, WebProperties
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_character import WebChar, WebCharProperty
 from lmfdb.modular_forms.elliptic_modular_forms import emf_version
-
-class WebNewformProperty(WebSageObject):
-
-    def __init__(self, name, store=False, meta=False, default_value=None):
-        super(WebNewformProperty, self).__init__(name, PowerSeries_poly, store, meta, default_value)
-        
         
 class WebModFormSpace(WebObject):
     r"""
@@ -69,22 +63,22 @@ class WebModFormSpace(WebObject):
 
     """
 
-    def __init__(self, level=1, weight=12, character=1, prec=10, bitprec=53):
-        self._properties = [
+    def __init__(self, level=1, weight=12, character=1, prec=10, bitprec=53, update_from_db=True):
+        self._properties = WebProperties(
             WebInt('level', default_value=level),
             WebInt('weight', default_value=weight),
-            WebInt('character', default_value=character),
-            WebInt('dimension'),
-            WebStr('galois_orbit_name'),
-            WebStr('naming_scheme', default_value='Conrey'),
+            WebCharProperty('character', modulus=level, default_value=character),
             WebList('character_galois_orbit', default_value=[character]),
             WebDict('character_galois_orbit_embeddings', default_value={}),
             WebInt('character_orbit_rep'),
             WebInt('character_used_in_computation'),
+            WebInt('dimension'),
+            WebStr('galois_orbit_name'),
+            WebStr('naming_scheme', default_value='Conrey'),
             WebNoStoreObject('web_character_used_in_computation', WebChar),
             WebInt('cuspidal', default_value=int(1)),
-            WebInt('prec', default_value=int(prec)),
-            WebList('ap'),
+            WebInt('prec', default_value=int(prec)), #precision of q-expansion
+            WebList('eigenvalues'), #aps
             WebSageObject('group'),
             WebInt('sturm_bound'),
             WebDict('newforms'),
@@ -97,18 +91,17 @@ class WebModFormSpace(WebObject):
             WebInt('dimension_modular_forms'),
             WebInt('dimension_new_cusp_forms'),
             WebFloat('version', default_value=float(emf_version))
-                    ]
+                    )
         
-        super(WebModFormSpace_test, self).__init__(
+        super(WebModFormSpace, self).__init__(
             params=['level', 'weight', 'character'],
             dbkey=['galois_orbit_name'],
             collection_name='webmodformspace_test',
-            update_from_db=True)
+            update_from_db=update_from_db)
 
     def init_dynamic_properties(self):
         pass
 
     def __repr__(self):
-        return "Space of (Web) Modular Forms of weight {k},\
-        level {N} and character {chi}".format(
-            self.weight, self.level, self.character)
+        return "Space of (Web) Modular Forms of level {N}, weight {k}, and character {chi}".format(
+            k=self.weight, N=self.level, chi=self.character)

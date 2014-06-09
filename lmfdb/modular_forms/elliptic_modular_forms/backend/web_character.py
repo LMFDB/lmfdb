@@ -34,6 +34,7 @@ from lmfdb.modular_forms.elliptic_modular_forms import emf_logger,emf_version
 from sage.rings.number_field.number_field_base import NumberField as NumberField_class
 from sage.all import copy
 from lmfdb.utils import url_character
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import WebObject, WebProperty, WebInt, WebProperties, WebStr, WebNoStoreObject, WebDict, WebFloat
 
 from lmfdb.modular_forms.elliptic_modular_forms.backend import connect_to_modularforms_db,get_files_from_gridfs
 try:
@@ -41,150 +42,88 @@ try:
 except:
     emf_logger.critical("Could not import dirichlet_conrey!")
 
-class WebChar(object):
+class WebCharProperty(WebInt):
+    def __init__(self, name, modulus=1, default_value=1):        
+        self.modulus = modulus
+        print self.modulus
+        c = WebChar(self.modulus, default_value)
+        print c
+        super(WebCharProperty, self).__init__(name, default_value = c)
+
+    def to_store(self, c):
+        if not isinstance(c, WebChar) and not isinstance(c, DirichletCharacter_conrey):
+            raise ValueError("Wrong type, expected DirichletCharacter_conrey or WebChar or DirichletCharacter, got: {0}".format(type(c)))
+        if isinstance(c,WebChar):
+            return c.number
+        else:
+            return c.number()
+
+    def from_store(self, n):
+        return WebChar(self.modulus, n)
+
+    def from_meta(self, n):
+        return self.from_store(n)
+
+    def to_meta(self, c):
+        return self.to_store(c)
+    
+
+class WebChar(WebObject):
     r"""
-    Temporary class which should be replaced with 
+    Class which should/might be replaced with 
     WebDirichletCharcter once this is ok.
     
     """
-    def __init__(self,modulus=0,number=0,get_from_db=True,compute=True):
-        r"""
-        Init self as character of given number and modulus.
-        """
-        if modulus <= 0 or number <=0:
-            emf_logger.critical("Modulus {0} and number {1} does not correspond to a character".format(modulus,number))
-            raise ValueError,"Modulus {0} and number {1} does not correspond to a character".format(modulus,number)
-        d = {
-            '_modulus' : modulus,
-            '_number' : number,
-            '_character': None,
-            '_order': None,
-            '_is_trivial': None,            
-            '_conductor': None,
-            '_latex_name': None,
-            '_name': None,
-            '_sage_character': None,
-            '_url': None,
-            '_values_float': None,
-            '_values_algebraic': None,
-            '_embeddings': None}
-        self.__dict__.update(d)
+    def __init__(self, modulus=1, number=1, update_from_db=True, compute=True):
+        self._properties = WebProperties(
+            WebInt('conductor'),
+            WebInt('modulus', default_value=modulus),
+            WebInt('number', default_value=number),
+            WebInt('modulus_euler_phi'),
+            WebInt('order'),
+            WebStr('latex_name', store=True, meta=False),
+            WebNoStoreObject('sage_character', DirichletCharacter),
+            WebDict('_values_algebraic'),
+            WebDict('_values_float'),
+            WebDict('_embeddings'),            
+            WebFloat('version', default_value=float(emf_version))
+            )
+        super(WebChar, self).__init__(
+            params=['modulus', 'number'],
+            dbkey=['modulus', 'number'],
+            collection_name='webchar_test',
+            update_from_db=update_from_db
+            )
+        if compute:
+            self.compute()
+            self.save_to_db()
         emf_logger.debug('In WebChar, self.__dict__ = {0}'.format(self.__dict__))
-        if get_from_db:
-            data = self.get_from_db()
-        if isinstance(data, dict) and len(data.values()) > 0:
-            self.__dict__.update(data)
-        if data == {} and  compute:
-            self.conductor()
-            self.order()
-            self.latex_name()
-            self.sage_character()
-            for i in range(self.modulus()):
+
+    def compute(self):
+        c = self.character
+        if self.conductor == 0:            
+            self.conductor = c.conductor()
+        if self.order == 0:
+            self.order = c.multiplicative_order()
+        if self.latex_name == '':
+            self.latex_name = "\chi_{" + str(self.modulus) + "}(" + str(self.number) + ", \cdot)"
+        if self._values_algebraic == {} or self._values_float == {}:
+            for i in range(self.modulus):
                 self.value(i,value_format='float')
                 self.value(i,value_format='algebraic')
-            self.insert_into_db()
-        emf_logger.debug('In WebChar, self.__dict__ = {0}'.format(self.__dict__))
+        if self.modulus_euler_phi == 0:
+            self.modulus_euler_phi = euler_phi(self.modulus)
 
-        
-    def get_from_db(self):
-        r"""
-          Fetch the data defining this WebCharacter from database.
-        """
-        db = connect_to_modularforms_db('webchar.files')
-        s = {'modulus':self._modulus,'number':self._number,'version':emf_version}
-        emf_logger.debug("Looking in DB for WebChar rec={0}".format(s))
-        fs = get_files_from_gridfs('webchar')
-        #f = db.find_one(s)
-        f = fs.find(s)
-        #emf_logger.debug("Found rec={0}".format(f))
-        if f.count()>0:
-            d = loads(f.next().read())
-            emf_logger.debug("Getting rec={0}".format(d))
-            return d
-        else:
-            return {}
-        
-    def insert_into_db(self,update=False):
-        r"""
-        Insert a dictionary of data for self into the collection WebModularforms.files
-        """
-        db = connect_to_modularforms_db('webchar.files')
-        fs = get_files_from_gridfs('webchar')
-        fname = "webchar-{0:0>4}-{1:0>3}".format(self._modulus,self._number)
-        emf_logger.debug("Check if we will insert this web char into db! fname={0}".format(fname))
-        s = {'fname':fname,'version':emf_version}
-        rec = db.find_one(s)
-        if fs.exists(s):
-            emf_logger.debug("We alreaydy have this webchar in the databse")
-            if not update: 
-                return True
-            fid = fs.find(s)['_id']
-            fs.delete(fid)
-            emf_logger.debug("Removing self from db with s={0} and id={1}".format(s,id))
-
-        d = copy(self.__dict__)
-        d.pop('_url') ## This should be recomputed
-        d.pop('_character') ## The Conrey character is not correctly pickled anyway
-        id = fs.put(dumps(d),filename=fname,modulus=int(self._modulus),number=int(self._number))
-        emf_logger.debug("inserted :{0}".format(id))
-    
-        
-    def modulus(self):
-        r"""
-        Return the modulus of self.
-        """
-        return self._modulus
-
-    def modulus_euler_phi(self):
-        return euler_phi(self._modulus)
-        
-    def number(self):
-        r"""
-        Return the number of self.
-        """
-        return self._number
-    
-    def character(self):
-        r"""
-        Return self as a DirichletCharacter_conrey
-        """
-        if self._character is None:
-            self._character = DirichletCharacter_conrey(DirichletGroup_conrey(self._modulus),self._number)
-        return self._character
-
-    def conductor(self):
-        r"""
-        Return the conductor of self.
-        """
-        if self._conductor is None:
-            self._conductor = self.character().conductor()
-        return self._conductor
-
-    def order(self):
-        r"""
-        Return the conductor of self.
-        """
-        if self._order is None:
-            self._order = self.character().multiplicative_order()
-        return self._order
-
-    def sage_character(self):
-        r"""
-        Return self as a sage character (e.g. so that we can get algebraic values)
-
-        """
-        ## Is cached in Conrey character
-        if self._sage_character is None:
-            self._sage_character = self.character().sage_character()
-        return self._sage_character
+    def init_dynamic_properties(self):
+        self.character = DirichletCharacter_conrey(DirichletGroup_conrey(self.modulus),self.number)
+        self.sage_character = self.character.sage_character()
+        self.name = "Character nr. {0} of modulus {1}".format(self.number,self.modulus)
 
     def is_trivial(self):
         r"""
         Check if self is trivial.
-        """
-        if self._is_trivial is None:
-            self._is_trivial = self.character().is_trivial()
-        return self._is_trivial
+        """        
+        return self.character.is_trivial()
 
     def embeddings(self):
         r"""
@@ -219,28 +158,13 @@ class WebChar(object):
           as in the database in order to obtain the coefficients corresponding to ```self```
           (that is to elements in $S_k(N,\chi)$).
         """
+        return self.embeddings[self.number]
             
-    def latex_name(self):
-        r"""
-        Return the latex representation of the character of self.
-        """
-        if self._latex_name is None:
-            self._latex_name = "\chi_{" + str(self.modulus()) + "}(" + str(self.number()) + ",\cdot)"
-        return self._latex_name
     def __repr__(self):
         r"""
         Return the string representation of the character of self.
         """
-        return self.name()
-    
-    def name(self):
-        r"""
-        Return the string representation of the character of self.
-        """    
-        if self._name is None:
-            self._name = "Character nr. {0} of modulus {1}".format(self.number(),self.modulus())
-        return self._name
-
+        return self.name
             
     def value(self, x, value_format='algebraic'):
         r"""
@@ -252,7 +176,7 @@ class WebChar(object):
                 self._values_algebraic = {}
             y = self._values_algebraic.get(x)
             if y is None:
-                y = self._values_algebraic[x]=self.sage_character()(x)
+                y = self._values_algebraic[x]=self.sage_character(x)
             else:
                 self._values_algebraic[x]=y
             return self._values_algebraic[x]
@@ -261,7 +185,7 @@ class WebChar(object):
                 self._values_float = {}
             y = self._values_float.get(x)
             if y is None:
-                y = self._values_float[x]=self.character()(x)
+                y = self._values_float[x]=self.character(x)
             else:
                 self._values_float[x]=y
             return self._values_float[x]
@@ -273,7 +197,7 @@ class WebChar(object):
         Return the url of self.
         """
         if hasattr(self, '_url') and self._url is None:
-            self._url = url_character(type='Dirichlet',modulus=self.modulus(), number=self.number())
+            self._url = url_character(type='Dirichlet',modulus=self.modulus, number=self.number)
         return self._url
     
    
