@@ -81,6 +81,7 @@ class WebObject(object):
                  This can also be a list of strings if the key is a compound.
           collection_name: a database collection name to store the values in
                            We assume that the meta collection is given by collection_name.files
+                           And we keep a meta collection in collection_name.meta
         """
 
         # This has to be overridden by classes that inherit from WebObject
@@ -90,7 +91,8 @@ class WebObject(object):
 
         self._params = params
         self._collection_name = collection_name
-        self._collection = connect_to_modularforms_db(collection_name + '.files')
+        self._file_collection = connect_to_modularforms_db(collection_name + '.files')
+        self._meta_collection = connect_to_modularforms_db(collection_name + '.meta')
         self._files = get_files_from_gridfs(collection_name)
         if isinstance(dbkey, str):
             self._dbkey = [dbkey]
@@ -164,9 +166,21 @@ class WebObject(object):
 
     def key_dict(self):
         r"""
-        Return a dictionary where the keys are the dbkeys of ``self``` and the values are the corresponding values of ```self```.
+        Return a dictionary where the keys are the dbkeys of ``self``` and
+        the values are the corresponding values of ```self```.
         """
         return { key : getattr(self, key) for key in self._dbkey }
+
+    def params_dict(self):
+        r"""
+        Return a dictionary where the keys are the params of ``self``` and
+        the values are the corresponding values of ```self```.
+        """
+        d = { key : getattr(self, key) for key in self._params }
+        for p in self._properties:
+            if d.has_key(p.name):
+                d[p.name] = p.to_meta(d[p.name])
+        return d
 
     def meta_dict(self):
         r"""
@@ -188,8 +202,8 @@ class WebObject(object):
         r"""
           Get the meta record from the database. This is the mongodb record in collection_name.files.
         """
-        coll = self._collection
-        rec = coll.find_one(self.key_dict())
+        coll = self._meta_collection
+        rec = coll.find_one(self.meta_dict())
         return { p.name: p.from_meta(rec[p.name]) for p in self._meta_properties if rec.has_key(p.name) }
 
     def save_to_db(self, update = True):
@@ -199,7 +213,7 @@ class WebObject(object):
         """
         fs = self._files
         key = self.key_dict()
-        coll = self._collection
+        coll = self._file_collection
         if fs.exists(key):
             if not update:
                 return True
@@ -207,35 +221,70 @@ class WebObject(object):
                 fid = coll.find_one(key)['_id']
                 fs.delete(fid)
         # insert
-        meta = self.meta_dict()
         s = dumps(self.store_dict())
-        fs.put(s, **meta)
+        try:
+            fs.put(s, **key)
+        except Error, e:
+            print "Error inserting record: {0}".format(e)
+        #fid = coll.find_one(key)['_id']
+        # insert extended record
+        coll = self._meta_collection
+        meta_key = self.params_dict()
+        meta_key.update(key)
+        print meta_key
+        meta = self.meta_dict()
+        #meta['fid'] = fid
+        if coll.find(meta_key).count()>0:
+            if not update:
+                return True
+            else:
+                coll.update(meta_key, meta)
+        else:
+            coll.insert(meta)
+        
 
-    def delete_from_db(self):
+    def delete_from_db(self, all=False):
         r"""
         Deletes ```self``` to the database, i.e.
         deletes the meta record and the file in the gridfs file system.
         """
-        fs = self._files
-        key = self.key_dict()
-        coll = self._collection
-        if fs.exists(key):
-            fid = coll.find_one(key)['_id']
-            fs.delete(fid)
-        else:
-            raise IndexError("Record does not exist")
-
-    def update_from_db(self):
-        r"""
-        Updates the properties of ```self``` from the database using the dbkey.
-        """
-        fs = self._files
-        key = self.key_dict()
-        if fs.exists(key):
+        coll = self._meta_collection
+        meta_key = self.params_dict()
+        ct = coll.find(meta_key).count()
+        if ct > 0:
+            if ct ==1 or all:
+                coll.remove(meta_key)
+        if ct <= 1 or all:
+            fs = self._files
+            key = self.key_dict()
             coll = self._collection
+            if fs.exists(key):
+                fid = coll.find_one(key)['_id']
+                fs.delete(fid)
+            else:
+                raise IndexError("Record does not exist")
+
+    def update_from_db(self, meta = True):
+        r"""
+        Updates the properties of ```self``` from the database using params and dbkey.
+        """
+        if meta:
+            coll = self._meta_collection
+            meta_key = self.params_dict()
+            if coll.find(meta_key).count()>0:
+                rec = coll.find_one(meta_key)
+                for p in self._meta_properties:
+                    if rec.has_key(p.name):
+                        setattr(self, p.name, p.from_meta(rec[p.name]))
+            else:
+                raise IndexError("Meta record does not exist")
+        fs = self._files
+        key = self.key_dict()
+        if fs.exists(key):
+            coll = self._file_collection
             fid = coll.find_one(key)['_id']
             d = loads(fs.get(fid).read())
-            for p in self._properties:
+            for p in self._store_properties:
                 if d.has_key(p.name):
                     setattr(self, p.name, p.from_store(d[p.name]))
         else:
@@ -328,6 +377,6 @@ class WebModFormSpace_test(WebObject):
             WebInt('dimension_new_cusp_forms'),
             WebFloat('version', default_value=float(emf_version))
                     ]
-        super(WebModFormSpace_test, self).__init__(params=['level', 'weight', 'conrey_character'],
+        super(WebModFormSpace_test, self).__init__(params=['level', 'weight', 'character'],
                                                   dbkey=['galois_orbit_name'],
                                                   collection_name='webmodformspace_test')
