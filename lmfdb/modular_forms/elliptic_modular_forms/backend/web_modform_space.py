@@ -106,7 +106,7 @@ class WebModFormSpace(WebObject):
             update_from_db=True)
 
     def init_dynamic_properties(self):
-        
+        pass
 
     def __repr__(self):
         return "Space of (Web) Modular Forms of weight {k},\
