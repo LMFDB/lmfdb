@@ -23,6 +23,7 @@ AUTHORS:
  
 """
 
+from sage.all import SageObject,dumps,loads
 from lmfdb.modular_forms.elliptic_modular_forms import emf_version
 from lmfdb.modular_forms.elliptic_modular_forms.backend import get_files_from_gridfs, connect_to_modularforms_db
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_character import WebChar
