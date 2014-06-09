@@ -28,11 +28,7 @@ special_names = {'2.0.4.1': 'i',
 field_list = {} # cached collection of enhanced WebNumberFields, keyed by label
 
 def FIELD(label):
-    nf = WebNumberField(label)
-    nf.generator = web_latex('a')
-    if label in special_names:
-        nf._data['K'] = nf.K().change_names(special_names[label])
-        nf.generator = web_latex(nf.K().gen())
+    nf = WebNumberField(label, gen_name=special_names.get(label, 'a'))
     nf.parse_NFelt = lambda s: nf.K()([QQ(str(c)) for c in s])
     return nf
 
@@ -62,7 +58,9 @@ class ECNF(object):
         """
         searches for a specific elliptic curve in the ecnf collection by its label
         """
+        print "label = %s" % label
         data = db_ecnf().find_one({"label" : label})
+        print "data = %s" % data
         if data:
             return ECNF(data)
         print "No such curve in the database: %s" % label
@@ -131,8 +129,11 @@ class ECNF(object):
 
         # Q-curve / Base change
         self.qc = "no"
-        if self.q_curve:
-            self.qc = "yes"
+        try:
+            if self.q_curve:
+                self.qc = "yes"
+        except AttributeError: # in case the db entry does not have this field set
+            pass
 
         # Torsion
         self.ntors = web_latex(self.torsion_order)

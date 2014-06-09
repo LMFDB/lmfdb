@@ -42,12 +42,9 @@ def index():
         bread=bread)
 
 
-@ecnf_page.route("/<full_label>")
-def show_ecnf1(full_label):
-    label_parts = full_label.split("-",1)
-    field_label = label_parts[0]
-    label = label_parts[1]
-    return show_ecnf(field_label,label)
+@ecnf_page.route("/<nf>")
+def show_ecnf1(nf):
+    return elliptic_curve_search(data={'field':nf})
 
 @ecnf_page.route("/<nf>/<label>")
 def show_ecnf(nf, label):
@@ -76,7 +73,10 @@ def elliptic_curve_search(**args):
     #print "info=%s" % info
     if 'jump' in info:
         label = info.get('label', '').replace(" ", "")
-        return show_ecnf1(label)
+        label_parts = label.split("-",1)
+        nf = label_parts[0]
+        label = label_parts[1]
+        return show_ecnf(nf,label)
 
     query = {}
 

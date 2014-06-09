@@ -13,4 +13,4 @@ def body_class():
 
 import main
 
-app.register_blueprint(ecnf_page, url_prefix="/EllipticCurveNF")
+app.register_blueprint(ecnf_page, url_prefix="/EllipticCurve")
