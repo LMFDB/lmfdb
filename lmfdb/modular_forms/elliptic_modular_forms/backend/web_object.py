@@ -95,6 +95,12 @@ class WebProperties(object):
         for p in args:
             self._d[p.name] = p
 
+    def names(self):
+        return self._d.keys()
+
+    def list(self):
+        return self._d.values()
+
     def __getitem__(self, n):
         return self._d[n]
 
@@ -103,6 +109,9 @@ class WebProperties(object):
 
     def __iter__(self):
         return self._d.itervalues()
+
+    def __repr__(self):
+        return "Collection of {0} WebProperties".format(len(self._d.keys()))
 
         
 
@@ -327,7 +336,8 @@ class WebObject(object):
             if coll.find(meta_key).count()>0:
                 rec = coll.find_one(meta_key)
                 for p in self._meta_properties:
-                    if rec.has_key(p.name):
+                    # Note that we give preference to store_properties
+                    if rec.has_key(p.name) and not p in self._store_properties:
                         setattr(self, p.name, p.from_meta(rec[p.name]))
             else:
                 if not ignore_non_existent:

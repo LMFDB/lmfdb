@@ -27,12 +27,81 @@ AUTHORS:
  
  """
 
-from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import \
-     WebObject, WebInt, WebStr, WebFloat,\
-     WebDict, WebList, WebSageObject, WebNoStoreObject, WebProperties
-from lmfdb.modular_forms.elliptic_modular_forms.backend.web_character import WebChar, WebCharProperty
-from lmfdb.modular_forms.elliptic_modular_forms import emf_version
-        
+from flask import url_for
+
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import (
+     WebObject,
+     WebInt,
+     WebStr,
+     WebFloat,
+     WebDict,
+     WebList,
+     WebSageObject,
+     WebNoStoreObject,
+     WebProperties
+     )
+
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_character import (
+     WebChar,
+     WebCharProperty
+     )
+
+from lmfdb.modular_forms.elliptic_modular_forms import (
+     emf_version,
+     emf_logger
+     )
+
+from sage.rings.number_field.number_field_base import (
+     NumberField
+     )
+
+from sage.all import (
+     ZZ,
+     Gamma0,
+     Gamma1,
+     RealField,
+     ComplexField,
+     prime_range,
+     join,
+     ceil,
+     RR,
+     Integer,
+     matrix,
+     PowerSeriesRing,
+     Matrix,
+     latex
+     )
+     
+from sage.rings.power_series_poly import PowerSeries_poly
+
+
+class WebHeckeOrbits(WebList):
+    r"""
+    Collection of WebNewforms for easy access by name.
+    """
+
+    def __init__(self, name, level, weight, character):
+        self.level = level
+        self.weight = weight
+        self.character = character
+        super(WebHeckeOrbits, self).__init__(
+            name, list, list, True, True, []
+            )
+
+    def to_meta(self, l):
+        return l.keys()
+
+    def to_store(self, l):
+        return self.to_meta(l)
+
+    def from_meta(self, l):
+        return {a : WebNewForm(level, weight, character, a) for a in l}
+
+    def from_store(self, l):
+        return from_meta(self, l)
+    
+
+    
 class WebModFormSpace(WebObject):
     r"""
     Space of modular forms to be presented on the web.
@@ -68,39 +137,37 @@ class WebModFormSpace(WebObject):
             WebInt('level', default_value=level),
             WebInt('weight', default_value=weight),
             WebCharProperty('character', modulus=level, default_value=character),
-            WebList('character_galois_orbit', default_value=[character]),
-            WebDict('character_galois_orbit_embeddings', default_value={}),
-            WebInt('character_orbit_rep'),
-            WebInt('character_used_in_computation'),
-            WebInt('dimension'),
+            WebStr('character_naming_scheme', default_value='Conrey'),
+            WebList('_character_galois_orbit', default_value=[character]),
+            WebDict('_character_galois_orbit_embeddings', default_value={}),
+            WebCharProperty('character_orbit_rep', modulus=level),
+            WebCharProperty('character_used_in_computation', modulus=level),
             WebStr('galois_orbit_name'),
-            WebStr('naming_scheme', default_value='Conrey'),
-            WebNoStoreObject('web_character_used_in_computation', WebChar),
-            WebInt('cuspidal', default_value=int(1)),
-            WebInt('prec', default_value=int(prec)), #precision of q-expansion
-            WebList('eigenvalues'), #aps
-            WebSageObject('group'),
-            WebInt('sturm_bound'),
-            WebDict('newforms'),
-            WebList('hecke_orbit_labels'),
-            WebSageObject('oldspace_decomposition'),
-            WebInt('bitprec', default_value=bitprec),
             WebInt('dimension'),
-            WebInt('dimension_newspace'),
             WebInt('dimension_cusp_forms'),
             WebInt('dimension_modular_forms'),
             WebInt('dimension_new_cusp_forms'),
+            WebInt('cuspidal', default_value=int(1)),
+            WebInt('prec', default_value=int(prec)), #precision of q-expansion
+            WebSageObject('group'),
+            WebInt('sturm_bound'),
+            WebHeckeOrbitDict('hecke_orbits'),
+            WebDict('oldspace_decomposition'),
+            WebInt('bitprec', default_value=bitprec),            
             WebFloat('version', default_value=float(emf_version))
                     )
         
         super(WebModFormSpace, self).__init__(
             params=['level', 'weight', 'character'],
-            dbkey=['galois_orbit_name'],
+            dbkey='galois_orbit_name',
             collection_name='webmodformspace_test',
             update_from_db=update_from_db)
 
     def init_dynamic_properties(self):
-        pass
+        if self.character.is_trivial():
+            self.group = Gamma0(self.level)
+        else:
+            self.group = Gamma1(self.level)
 
     def __repr__(self):
         return "Space of (Web) Modular Forms of level {N}, weight {k}, and character {chi}".format(
