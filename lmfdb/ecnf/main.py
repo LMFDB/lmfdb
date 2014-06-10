@@ -18,7 +18,7 @@ from lmfdb.WebNumberField import nf_display_knowl, WebNumberField
 ecnf_credit = "John Cremona, Alyson Deines, Paul Gunnells, Warren Moore, Haluk Sengun, John Voight, Dan Yasaki"
 
 def get_bread(*breads):
-    bc = [("ECNF", url_for(".index"))]
+    bc = [("Elliptic Curves", url_for(".index"))]
     map(bc.append, breads)
     return bc
 
@@ -44,16 +44,53 @@ def index():
 
 @ecnf_page.route("/<nf>")
 def show_ecnf1(nf):
-    return elliptic_curve_search(data={'field':nf})
+    if request.args:
+        return elliptic_curve_search(data=request.args)
+    start = 0
+    count = 20
+    query = {'field_label' : nf}
+    cursor = db_ecnf().find(query)
+    nres = cursor.count()
+    if(start >= nres):
+        start -= (1 + (start - nres) / count) * count
+    if(start < 0):
+        start = 0
+    res = cursor.sort([('field_label', ASC), ('conductor_norm', ASC), ('conductor_label', ASC), ('iso_label', ASC), ('number', ASC)]).skip(start).limit(count)
+
+    bread = [('Elliptic Curves', url_for(".index")),
+             (nf, url_for('.show_ecnf1', nf=nf))]
+
+    res = list(res)
+    for e in res:
+        e['field_knowl'] = nf_display_knowl(e['field_label'], getDBConnection(), e['field_label'])
+    info = {}
+    info['field'] = nf
+    info['query'] = query
+    info['curves'] = res # [ECNF(e) for e in res]
+    info['number'] = nres
+    info['start'] = start
+    info['count'] = count
+    info['field_pretty'] = field_pretty
+    info['web_ainvs'] = web_ainvs
+    if nres == 1:
+        info['report'] = 'unique match'
+    else:
+        if nres > count or start != 0:
+            info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
+        else:
+            info['report'] = 'displaying all %s matches' % nres
+    t = 'Elliptic Curves over %s' % field_pretty(nf)
+    return render_template("ecnf-search-results.html", info=info, credit=ecnf_credit, bread=bread, title=t)
 
 @ecnf_page.route("/<nf>/<label>")
 def show_ecnf(nf, label):
     nf_label = parse_field_string(nf)
-    bread = get_bread((label, url_for(".show_ecnf", label = label, nf = nf_label)))
     label = "-".join([nf_label, label])
-    #print "looking up curve with full label=%s" % label
     ec = ECNF.by_label(label)
     title = "Elliptic Curve %s over Number Field %s" % (ec.short_label, ec.field.field_pretty())
+    bread = [("Elliptic Curves", url_for(".index"))]
+    bread.append((ec.field.field_pretty(),url_for(".show_ecnf1", nf=nf_label)))
+    bread.append((ec.short_label, url_for(".show_ecnf", label = ec.short_label, nf = nf_label)))
     info = {}
 
     return render_template("show-ecnf.html",
@@ -68,9 +105,7 @@ def show_ecnf(nf, label):
 
 
 def elliptic_curve_search(**args):
-    #print "args=%s" % args
     info = to_dict(args['data'])
-    #print "info=%s" % info
     if 'jump' in info:
         label = info.get('label', '').replace(" ", "")
         label_parts = label.split("-",1)
@@ -134,12 +169,13 @@ def elliptic_curve_search(**args):
         start = 0
     res = cursor.sort([('field_label', ASC), ('conductor_norm', ASC), ('conductor_label', ASC), ('iso_label', ASC), ('number', ASC)]).skip(start).limit(count)
 
-    bread = []#[('Elliptic Curves over Number Fields', url_for(".elliptic_curve_search")),             ('Search Results', '.')]
+    bread = []#[('Elliptic Curves over Number Fields', url_for(".elliptic_curve_search")),             ]
+    bread = [('Elliptic Curves', url_for(".index")),
+             ('Search Results', '.')]
 
     res = list(res)
     for e in res:
         e['field_knowl'] = nf_display_knowl(e['field_label'], getDBConnection(), e['field_label'])
-        print e['field_knowl']
     info['curves'] = res # [ECNF(e) for e in res]
     info['number'] = nres
     info['start'] = start
@@ -153,10 +189,10 @@ def elliptic_curve_search(**args):
             info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
         else:
             info['report'] = 'displaying all %s matches' % nres
-    t = 'Elliptic Curves'
-    #print "report = %s" % info['report']
+    t = 'Elliptic Curve search results'
     return render_template("ecnf-search-results.html", info=info, credit=ecnf_credit, bread=bread, title=t)
 
+# Harald wrote the following and it is not used -- JEC
 @ecnf_page.route("/search", methods=["GET", "POST"])
 def search():
     if request.method == "GET":
