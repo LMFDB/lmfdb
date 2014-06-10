@@ -179,7 +179,7 @@ class WebChar(WebObject, CachedRepresentation):
           as in the database in order to obtain the coefficients corresponding to ```self```
           (that is to elements in $S_k(N,\chi)$).
         """
-        return self.embeddings[self.number]
+        return self._embeddings[self.number]
             
     def __repr__(self):
         r"""
