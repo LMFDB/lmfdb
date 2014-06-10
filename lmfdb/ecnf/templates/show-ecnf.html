@@ -66,7 +66,7 @@ Generator \({{ ec.field.generator_name() }}\), with minimal polynomial \({{ec.fi
 {{ ec.equn }}
 <h2>Invariants</h2>
 
-        <table>
+        <table cellpadding="5">
         <tr>
           <td>Conductor</td>
         <td>
@@ -146,7 +146,7 @@ Generator \({{ ec.field.generator_name() }}\), with minimal polynomial \({{ec.fi
     <h2> Local data at primes of bad reduction </h2>
 
 {% if ec.local_data %}
-<table>
+<table cellpadding="5">
 <tr>
 <th>prime</th>
 <th>Norm</th>
@@ -156,10 +156,18 @@ Generator \({{ ec.field.generator_name() }}\), with minimal polynomial \({{ec.fi
 </tr>
 {% for pr in ec.local_data %}
 <tr>
-<td align=center> {{pr.p}}</td>
-<td align=center> {{pr.norm}}</td>
-<td align=center>\({{pr.tamagawa_number}}\)</td>
-<td align=center>{{pr.kodaira_symbol}}</td>
+<td align=center>
+{{pr.p}}
+</td>
+<td align=center>
+{{pr.norm}}
+</td>
+<td align=center>
+\({{pr.tamagawa_number}}\)
+</td>
+<td align=center>
+{{pr.kodaira_symbol}}
+</td>
 <td align=center>
 {% if pr.reduction_type==0 %}
  Additive
