@@ -362,9 +362,11 @@ class WebObject(object):
             if coll.find(meta_key).count()>0:
                 rec = coll.find_one(meta_key)
                 for p in self._meta_properties:
-                    # Note that we give preference to store_properties
-                    if p.update_from_meta and rec.has_key(p.name) and not p in self._store_properties:
-                        setattr(self, p.name, p.from_meta(rec[p.name]))
+                    if p.update_from_meta and rec.has_key(p.name):
+                        try:
+                            setattr(self, p.name, p.from_meta(rec[p.name]))
+                        except NotImplementedError:
+                            continue                           
             else:
                 if not ignore_non_existent:
                     raise IndexError("Meta record does not exist")
