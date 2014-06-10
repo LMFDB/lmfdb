@@ -24,12 +24,12 @@ AUTHORS:
 """
 
 
-from lmfdb.modular_forms.elliptic_modular_forms import emf_version
+from lmfdb.modular_forms.elliptic_modular_forms import emf_version, emf_logger
 from lmfdb.modular_forms.elliptic_modular_forms.backend import get_files_from_gridfs, connect_to_modularforms_db
 from lmfdb.number_fields.number_field import poly_to_field_label
 
 from sage.rings.power_series_poly import PowerSeries_poly
-from sage.all import SageObject,dumps,loads
+from sage.all import SageObject,dumps,loads, QQ, NumberField
 
 class WebProperty(object):
     r"""
@@ -38,8 +38,8 @@ class WebProperty(object):
     meta: True if this property should be stored in the meta record (mongo)
     """
 
-    def __init__(self, name, store_data_type=None, meta_data_type=None, store=True, meta=False, default_value=None):
-        print 'Default:', default_value
+    def __init__(self, name, store_data_type=None, meta_data_type=None, store=True, meta=False, default_value=None, update_from_meta=True, update_from_store=True):
+        #print 'Default:', default_value
         self.name = name
         # default to str
         if store_data_type is not None:
@@ -56,8 +56,8 @@ class WebProperty(object):
         # Set if this Property
         # is updated from store/meta when updating from db
         # note that store always overrides meta
-        self.update_from_meta = True
-        self.update_from_store = True
+        self.update_from_meta = update_from_meta
+        self.update_from_store = update_from_store
 
     @property
     def default_value(self):
@@ -174,19 +174,22 @@ class WebObject(object):
         self._store_properties = WebProperties([p for p in self._properties if p.store])
         self._meta_properties = WebProperties([p for p in self._properties if p.meta])
 
-        print hasattr(self, 'level')
+        #print hasattr(self, 'level')
 
         for key, value in kwargs.iteritems():
             setattr(self, key, value)
 
         for p in self._properties:
             if not hasattr(self, p.name):
-                print "Setting {0} = {1}".format(p.name, p.default_value)
+                #emf_logger.debug()
+                #print "Setting {0} = {1}".format(p.name, p.default_value)
                 setattr(self, p.name, p.default_value)
 
         if update_from_db:
+            #emf_logger.debug('Update requested for {0}'.format(self.__dict__))
             self.update_from_db()
-            
+
+        #emf_logger.debug('init_dynamic_properties will be called for {0}'.format(self.__dict__))
         self.init_dynamic_properties()
         
 
@@ -310,7 +313,7 @@ class WebObject(object):
         try:
             fs.put(s, **key)
         except Error, e:
-            print "Error inserting record: {0}".format(e)
+            emf_logger.warn("Error inserting record: {0}".format(e))
         #fid = coll.find_one(key)['_id']
         # insert extended record
         if not self.use_separate_meta:
@@ -318,7 +321,7 @@ class WebObject(object):
         coll = self._meta_collection
         meta_key = self.params_dict()
         meta_key.update(key)
-        print meta_key
+        #print meta_key
         meta = self.meta_dict()
         #meta['fid'] = fid
         if coll.find(meta_key).count()>0:
@@ -356,6 +359,8 @@ class WebObject(object):
         r"""
         Updates the properties of ```self``` from the database using params and dbkey.
         """
+        from web_character import WebCharProperty
+        emf_logger.debug("Updating {c} from db".format(c=self.__class__))
         if meta:
             coll = self._meta_collection
             meta_key = self.params_dict()
@@ -364,6 +369,8 @@ class WebObject(object):
                 for p in self._meta_properties:
                     if p.update_from_meta and rec.has_key(p.name):
                         try:
+                            if isinstance(p, WebCharProperty):
+                                emf_logger.debug('setting WebCharProperty {0} for {1} from meta'.format(p.name, self.__class__))
                             setattr(self, p.name, p.from_meta(rec[p.name]))
                         except NotImplementedError:
                             continue                           
@@ -378,6 +385,8 @@ class WebObject(object):
             d = loads(fs.get(fid).read())
             for p in self._store_properties:
                 if p.update_from_store and d.has_key(p.name):
+                    if isinstance(p, WebCharProperty):
+                        emf_logger.debug('setting WebCharProperty {0} for {1} from store'.format(p.name, self.__class__))
                     setattr(self, p.name, p.from_store(d[p.name]))
         else:
             if not ignore_non_existent:
@@ -390,15 +399,15 @@ class WebObject(object):
         
 class WebInt(WebProperty):
 
-    def __init__(self, name, store=True, meta=True, default_value=int(0)):
-        super(WebInt, self).__init__(name, int, int, store, meta, default_value)
-        print self.__class__
+    def __init__(self, name, store=True, meta=True, default_value=int(0), **kwargs):
+        super(WebInt, self).__init__(name, int, int, store, meta, default_value, **kwargs)
+        #print self.__class__
 
 class WebBool(WebProperty):
 
     def __init__(self, name, store=True, meta=True, default_value=True):
         super(WebBool, self).__init__(name, int, int, store, meta, default_value)
-        print self.__class__
+        #print self.__class__
 
 class WebFloat(WebProperty):
 

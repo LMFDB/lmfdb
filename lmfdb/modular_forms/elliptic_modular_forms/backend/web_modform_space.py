@@ -74,6 +74,7 @@ from sage.all import (
      )
      
 from sage.rings.power_series_poly import PowerSeries_poly
+from sage.structure.unique_representation import CachedRepresentation
 
 
 class WebHeckeOrbits(WebDict):
@@ -85,7 +86,7 @@ class WebHeckeOrbits(WebDict):
         self.level = level
         self.weight = weight
         self.character = character
-        self.parent=parent
+        self.parent = parent
         super(WebHeckeOrbits, self).__init__(
             name, True, True, {}
             )
@@ -97,7 +98,7 @@ class WebHeckeOrbits(WebDict):
         return self.to_meta(l)
 
     def from_meta(self, l):
-        from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
+        from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm        
         return {a : WebNewForm(self.level, self.weight, self.character, a, parent=self.parent)
                 for a in l}
 
@@ -106,7 +107,7 @@ class WebHeckeOrbits(WebDict):
     
 
     
-class WebModFormSpace(WebObject):
+class WebModFormSpace(WebObject, CachedRepresentation):
     r"""
     Space of modular forms to be presented on the web.
 
@@ -186,11 +187,12 @@ class WebModFormSpaceProperty(WebProperty):
         self.level = level
         self.weight = weight
         self.character = character
-        self.update_from_meta = False
-        self.update_from_store = False
         if default_value is None:
             default_value = WebModFormSpace(self.level, self.weight, self.character)
-        super(WebModFormSpaceProperty, self).__init__(name, default_value = default_value)
+        super(WebModFormSpaceProperty, self).__init__(name,
+                                                      update_from_store=False,
+                                                      update_from_meta=False,
+                                                      default_value = default_value)
 
     def to_meta(self, M):
         return M.galois_orbit_label

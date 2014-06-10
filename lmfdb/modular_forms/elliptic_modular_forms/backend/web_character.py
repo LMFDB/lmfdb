@@ -33,6 +33,8 @@ from sage.all import dumps,loads, euler_phi
 from lmfdb.modular_forms.elliptic_modular_forms import emf_logger,emf_version
 from sage.rings.number_field.number_field_base import NumberField as NumberField_class
 from sage.all import copy
+
+from sage.structure.unique_representation import CachedRepresentation
 from lmfdb.utils import url_character
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import WebObject, WebProperty, WebInt, WebProperties, WebStr, WebNoStoreObject, WebDict, WebFloat
 
@@ -42,24 +44,32 @@ try:
 except:
     emf_logger.critical("Could not import dirichlet_conrey!")
 
+import logging
+emf_logger.setLevel(logging.DEBUG)
+
 class WebCharProperty(WebInt):
-    def __init__(self, name, modulus=1, default_value=1):        
+    def __init__(self, name, modulus=1, default_value=1, **kwargs):        
         self.modulus = modulus
-        print self.modulus
-        c = WebChar(self.modulus, default_value)
-        print c
-        super(WebCharProperty, self).__init__(name, default_value = c)
+        print self.modulus, type(default_value)
+        update_from_store = True
+        if isinstance(default_value, WebChar):
+            emf_logger.debug('got WebChar {0}'.format(default_value))
+            c = default_value
+        else:
+            c = WebChar(self.modulus, default_value, update_from_db=True, compute=False)
+        super(WebCharProperty, self).__init__(name, default_value = c, **kwargs)
 
     def to_store(self, c):
         if not isinstance(c, WebChar) and not isinstance(c, DirichletCharacter_conrey):
-            raise ValueError("Wrong type, expected DirichletCharacter_conrey or WebChar or DirichletCharacter, got: {0}".format(type(c)))
+            return int(c)
         if isinstance(c,WebChar):
             return c.number
         else:
             return c.number()
 
     def from_store(self, n):
-        return WebChar(self.modulus, n)
+        emf_logger.debug('converting {0} from store in WebCharProperty {1}'.format(n, self.name))
+        return WebChar(self.modulus, n, compute=False)
 
     def from_meta(self, n):
         return self.from_store(n)
@@ -67,14 +77,13 @@ class WebCharProperty(WebInt):
     def to_meta(self, c):
         return self.to_store(c)
     
-
-class WebChar(WebObject):
+class WebChar(WebObject, CachedRepresentation):
     r"""
     Class which should/might be replaced with 
     WebDirichletCharcter once this is ok.
     
     """
-    def __init__(self, modulus=1, number=1, update_from_db=True, compute=True):
+    def __init__(self, modulus=1, number=1, update_from_db=True, compute=False):
         self._properties = WebProperties(
             WebInt('conductor'),
             WebInt('modulus', default_value=modulus),
@@ -97,7 +106,8 @@ class WebChar(WebObject):
         if compute:
             self.compute()
             self.save_to_db()
-        emf_logger.debug('In WebChar, self.__dict__ = {0}'.format(self.__dict__))
+        #emf_logger.debug('In WebChar, self.__dict__ = {0}'.format(self.__dict__))
+        emf_logger.debug('In WebChar, self.number = {0}'.format(self.number))
 
     def compute(self):
         c = self.character
@@ -115,9 +125,11 @@ class WebChar(WebObject):
             self.modulus_euler_phi = euler_phi(self.modulus)
 
     def init_dynamic_properties(self):
-        self.character = DirichletCharacter_conrey(DirichletGroup_conrey(self.modulus),self.number)
-        self.sage_character = self.character.sage_character()
-        self.name = "Character nr. {0} of modulus {1}".format(self.number,self.modulus)
+        if self.number is not None:            
+            emf_logger.debug('number: {0}'.format(self.number))
+            self.character = DirichletCharacter_conrey(DirichletGroup_conrey(self.modulus),self.number)
+            self.sage_character = self.character.sage_character()
+            self.name = "Character nr. {0} of modulus {1}".format(self.number,self.modulus)
 
     def is_trivial(self):
         r"""
