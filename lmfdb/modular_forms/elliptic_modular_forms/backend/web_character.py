@@ -49,18 +49,17 @@ emf_logger.setLevel(logging.DEBUG)
 
 class WebCharProperty(WebInt):
     def __init__(self, name, modulus=1, default_value=1, **kwargs):        
-        self.modulus = modulus
-        print self.modulus, type(default_value)
-        update_from_store = True
+        self.modulus = modulus        
         if isinstance(default_value, WebChar):
             emf_logger.debug('got WebChar {0}'.format(default_value))
             c = default_value
         else:
-            c = WebChar(self.modulus, default_value, update_from_db=True, compute=False)
+            c = WebChar(self.modulus, default_value, update_from_db=True, compute=True)
         super(WebCharProperty, self).__init__(name, default_value = c, **kwargs)
 
     def to_store(self, c):
-        if not isinstance(c, WebChar) and not isinstance(c, DirichletCharacter_conrey):
+        if not isinstance(c, WebChar) \
+               and not isinstance(c, DirichletCharacter_conrey):
             return int(c)
         if isinstance(c,WebChar):
             return c.number
@@ -69,7 +68,7 @@ class WebCharProperty(WebInt):
 
     def from_store(self, n):
         emf_logger.debug('converting {0} from store in WebCharProperty {1}'.format(n, self.name))
-        return WebChar(self.modulus, n, compute=False)
+        return WebChar(self.modulus, n, compute=True)
 
     def from_meta(self, n):
         return self.from_store(n)
@@ -104,25 +103,35 @@ class WebChar(WebObject, CachedRepresentation):
             update_from_db=update_from_db
             )
         if compute:
-            self.compute()
-            self.save_to_db()
+            self.compute(save=True)            
         #emf_logger.debug('In WebChar, self.__dict__ = {0}'.format(self.__dict__))
         emf_logger.debug('In WebChar, self.number = {0}'.format(self.number))
 
-    def compute(self):
+    def compute(self, save=True):
+        emf_logger.debug('in compute for WebChar number {0} of modulus {1}'.format(self.number, self.modulus))
         c = self.character
+        changed = False
         if self.conductor == 0:            
             self.conductor = c.conductor()
+            changed = True
         if self.order == 0:
             self.order = c.multiplicative_order()
+            changed = True
         if self.latex_name == '':
             self.latex_name = "\chi_{" + str(self.modulus) + "}(" + str(self.number) + ", \cdot)"
+            changed = True
         if self._values_algebraic == {} or self._values_float == {}:
+            changed = True
             for i in range(self.modulus):
                 self.value(i,value_format='float')
                 self.value(i,value_format='algebraic')
         if self.modulus_euler_phi == 0:
+            changed = True
             self.modulus_euler_phi = euler_phi(self.modulus)
+        if changed and save:
+            self.save_to_db()
+        else:            
+            emf_logger.debug('Not saving.')
 
     def init_dynamic_properties(self):
         if self.number is not None:            

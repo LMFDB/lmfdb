@@ -451,10 +451,12 @@ class WebPoly(WebProperty):
         super(WebPoly, self).__init__(name, store_data_type=PowerSeries_poly, meta_data_type=str, store=store, meta=meta, default_value=default_value)
 
     def to_store(self, f):
-        return dumps(f)
-
+        if f is None:
+            return None
+        return f
+    
     def from_store(self, f):
-        return loads(f)
+        return f
 
     def to_meta(self, f):
         return str(f)
