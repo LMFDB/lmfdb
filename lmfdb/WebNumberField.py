@@ -98,7 +98,7 @@ def nf_knowl_guts(label, C):
     out += '<br>Galois group: '+group_display_knowl(wnf.degree(),wnf.galois_t(),C)
     out += '</div>'
     out += '<div align="right">'
-    out += '<a href="%s">%s home page</a>' % (url_for("number_fields.number_field_render_webpage", natural=label),label)
+    out += '<a href="%s">%s home page</a>' % (str(url_for("number_fields.number_field_render_webpage", natural=label)),label)
     out += '</div>'
     return out
 
@@ -106,8 +106,9 @@ class WebNumberField:
     """
      Class for retrieving number field information from the database
     """
-    def __init__(self, label, data=None):
+    def __init__(self, label, data=None, gen_name='a'):
         self.label = label
+        self.gen_name = gen_name
         if data is None:
             self._data = self._get_dbdata()
         else:
@@ -166,6 +167,9 @@ class WebNumberField:
     def field_pretty(self):
         return field_pretty(self.get_label())
 
+    def knowl(self):
+        return nf_display_knowl(self.get_label(), base.getDBConnection(), self.field_pretty())
+
     # Is the polynomial polredabs'ed
     def is_reduced(self):
         if not self.haskey('reduced'):
@@ -210,6 +214,12 @@ class WebNumberField:
     def degree(self):
         return self._data['degree']
 
+    def is_real_quadratic(self):
+        return self.signature()==[2,0]
+
+    def is_imag_quadratic(self):
+        return self.signature()==[0,1]
+
     def poly(self):
         return coeff_to_poly(string2list(self._data['coeffs']))
 
@@ -237,8 +247,11 @@ class WebNumberField:
 
     def K(self):
         if not self.haskey('K'):
-            self._data['K'] = NumberField(self.poly(), 'a')
+            self._data['K'] = NumberField(self.poly(), self.gen_name)
         return self._data['K']
+
+    def generator_name(self):
+        return web_latex(self.gen_name)
 
     def unit_rank(self):
         if not self.haskey('unit_rank'):

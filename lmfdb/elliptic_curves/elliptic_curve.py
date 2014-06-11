@@ -188,8 +188,8 @@ def rational_elliptic_curves(err_args=None):
         'stats_url': url_for(".statistics")
     }
     credit = 'John Cremona and Andrew Sutherland'
-    t = 'Elliptic curves/$\Q$'
-    bread = [('Elliptic Curves', url_for(".rational_elliptic_curves")), ('Elliptic curves/$\Q$', ' ')]
+    t = 'Elliptic curves over $\Q$'
+    bread = [('Elliptic Curves', url_for("ecnf.index")), ('$\Q$', ' ')]
     return render_template("browse_search.html", info=info, credit=credit, title=t, bread=bread, **err_args)
 
 @ec_page.route("/stats")
@@ -207,8 +207,8 @@ def statistics():
         'sha_counts': sha_counts
     }
     credit = 'John Cremona'
-    t = 'Elliptic curves/$\Q$: statistics'
-    bread = [('Elliptic Curves', url_for(".rational_elliptic_curves")), ('Elliptic curves/$\Q$: statistics', ' ')]
+    t = 'Elliptic curves over $\Q$: statistics'
+    bread = [('Elliptic Curves', url_for(".rational_elliptic_curves")), ('$\Q$: statistics', ' ')]
     return render_template("statistics.html", info=info, credit=credit, title=t, bread=bread)
 
 
@@ -396,7 +396,7 @@ def elliptic_curve_search(**args):
     credit = 'John Cremona'
     if 'non-surjective_primes' in query:
         credit += 'and Andrew Sutherland'
-    t = 'Elliptic Curves'
+    t = 'Elliptic Curves search results'
     return render_template("search_results.html", info=info, credit=credit, bread=bread, title=t)
 
 
@@ -825,8 +825,9 @@ def render_curve_webpage_by_label(label):
     else:
         t = "Elliptic Curve %s (Cremona label %s)" % (info['label'], info['cremona_label'])
 
-    bread = [('Elliptic Curves ', url_for(".rational_elliptic_curves")), ('Elliptic curves %s' %
-             lmfdb_label, ' ')]
+    bread = [('Elliptic Curves ', url_for("ecnf.index")),
+             ('$\Q$',url_for(".rational_elliptic_curves")),
+             (lmfdb_label, '.')]
 
     return render_template("curve.html",
                            properties2=properties2, credit=credit, bread=bread, title=t, info=info, friends=info['friends'], downloads=info['downloads'])
