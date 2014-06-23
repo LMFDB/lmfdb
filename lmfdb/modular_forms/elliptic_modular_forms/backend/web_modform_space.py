@@ -24,21 +24,90 @@ AUTHORS:
 
  - Fredrik Stroemberg
  - Stephan Ehlen
-
-NOTE: Now NOTHING should be computed.
+ 
  """
 
-from web_object import  WebObject,WebInt,WebStr,WebFloat,WebDict,WebList,WebSageObject,NoStoreObject
-from web_character import WebChar
-from lmfdb.modular_forms.elliptic_modular_forms import emf_version
+from flask import url_for
 
-class WebNewformProperty(WebSageObject):
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import (
+     WebObject,
+     WebInt,
+     WebStr,
+     WebFloat,
+     WebDict,
+     WebList,
+     WebSageObject,
+     WebNoStoreObject,
+     WebProperty,
+     WebProperties
+     )
 
-    def __init__(self, name, store=False, meta=False, default_value=None):
-        super(WebNewformProperty, self).__init__(name, PowerSeries_poly, store, meta, default_value)
-        
-        
-class WebModFormSpace(WebObject):
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_character import (
+     WebChar,
+     WebCharProperty
+     )
+
+from lmfdb.modular_forms.elliptic_modular_forms import (
+     emf_version,
+     emf_logger
+     )
+
+from sage.rings.number_field.number_field_base import (
+     NumberField
+     )
+
+from sage.all import (
+     ZZ,
+     Gamma0,
+     Gamma1,
+     RealField,
+     ComplexField,
+     prime_range,
+     join,
+     ceil,
+     RR,
+     Integer,
+     matrix,
+     PowerSeriesRing,
+     Matrix,
+     latex
+     )
+     
+from sage.rings.power_series_poly import PowerSeries_poly
+from sage.structure.unique_representation import CachedRepresentation
+
+
+class WebHeckeOrbits(WebDict):
+    r"""
+    Collection of WebNewforms for easy access by name.
+    """
+
+    def __init__(self, name, level, weight, character, parent=None):
+        self.level = level
+        self.weight = weight
+        self.character = character
+        self.parent = parent
+        super(WebHeckeOrbits, self).__init__(
+            name, True, True, {}
+            )
+
+    def to_meta(self, l):
+        return l.keys()
+
+    def to_store(self, l):
+        return self.to_meta(l)
+
+    def from_meta(self, l):
+        from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm        
+        return {a : WebNewForm(self.level, self.weight, self.character, a, parent=self.parent)
+                for a in l}
+
+    def from_store(self, l):
+        return self.from_meta(l)
+    
+
+    
+class WebModFormSpace(WebObject, CachedRepresentation):
     r"""
     Space of modular forms to be presented on the web.
 
@@ -62,69 +131,68 @@ class WebModFormSpace(WebObject):
     {}
     sage: M1.update_from_db()
     sage: M1.newforms
-    {'a': q - 24*q^2 + 252*q^3 - 1472*q^4 + 4830*q^5 - 6048*q^6 - 16744*q^7 + 84480*q^8 - 113643*q^9 - 115920*q^10 + 534612*q^11 - 370944*q^12 - 577738*q^13 + 401856*q^14 + 1217160*q^15 + 987136*q^16 - 6905934*q^17 + 2727432*q^18 + 10661420*q^19 + O(q^20)}
-    sage: list(M1._file_collection.find())
-    [{u'_id': ObjectId('53959d040f0d05ae375cc983'),
-    u'chunkSize': 261120,
-    u'galois_orbit_name': u'1.12.1',
-    u'length': 713,
-    u'md5': u'dbb35ffeed0fec207128ec12e7275092',
-    u'uploadDate': datetime.datetime(2014, 6, 9, 11, 39, 49, 14000)}]
-    sage: list(M1._meta_collection.find())
-    [{u'_id': ObjectId('53951dc39cdd401077730ae5'),
-    u'bitprec': 53,
-    u'character': 1,
-    u'character_orbit_rep': 0,
-    u'character_used_in_computation': 0,
-    u'cuspidal': 1,
-    u'dimension': 1,
-    u'dimension_cusp_forms': 1,
-    u'dimension_modular_forms': 0,
-    u'dimension_new_cusp_forms': 0,
-    u'dimension_newspace': 1,
-    u'galois_orbit_name': u'1.12.1',
-    u'level': 1,
-    u'naming_scheme': u'Conrey',
-    u'prec': 10,
-    u'sturm_bound': 0,
-    u'version': 1.2,
-    u'weight': 12}]
+    {'a': q - 24*q^2 + 252*q^3 - 1472*q^4 + 4830*q^5 - 6048*q^6 - 16744*q^7 + 84480*q^8 - 113643*q^9 - \
+    115920*q^10 + 534612*q^11 - 370944*q^12 - 577738*q^13 + 401856*q^14 + 1217160*q^15 + 987136*q^16 - \
+    6905934*q^17 + 2727432*q^18 + 10661420*q^19 + O(q^20)}
 
     """
 
-    def __init__(self, level=1, weight=12, character=1, prec=10, bitprec=53):
-        self._properties = [
+    def __init__(self, level=1, weight=12, character=1, prec=10, bitprec=53, update_from_db=True):
+        self._properties = WebProperties(
             WebInt('level', default_value=level),
             WebInt('weight', default_value=weight),
-            WebInt('character', default_value=character),
-            WebInt('dimension'),
+            WebCharProperty('character', modulus=level, default_value=character),
+            WebStr('character_naming_scheme', default_value='Conrey'),
+            WebList('_character_galois_orbit', default_value=[character]),
+            WebDict('_character_galois_orbit_embeddings', default_value={}),
+            WebCharProperty('character_orbit_rep', modulus=level),
+            WebCharProperty('character_used_in_computation', modulus=level),
             WebStr('galois_orbit_name'),
-            WebStr('naming_scheme', default_value='Conrey'),
-            WebList('character_galois_orbit', default_value=[character]),
-            WebDict('character_galois_orbit_embeddings', default_value={}),
-            WebInt('character_orbit_rep'),
-            WebInt('character_used_in_computation'),
-            NoStoreObject('web_character_used_in_computation', WebChar),
-            WebInt('cuspidal', default_value=int(1)),
-            WebInt('prec', default_value=int(prec)),
-            WebList('ap'),
-            WebSageObject('group'),
-            WebInt('sturm_bound'),
-            WebDict('newforms'),
-            WebList('hecke_orbit_labels'),
-            WebSageObject('oldspace_decomposition'),
-            WebInt('bitprec', default_value=bitprec),
             WebInt('dimension'),
-            WebInt('dimension_newspace'),
             WebInt('dimension_cusp_forms'),
             WebInt('dimension_modular_forms'),
             WebInt('dimension_new_cusp_forms'),
+            WebInt('cuspidal', default_value=int(1)),
+            WebInt('prec', default_value=int(prec)), #precision of q-expansions
+            WebSageObject('group'),
+            WebInt('sturm_bound'),
+            WebHeckeOrbits('hecke_orbits', level, weight,
+                           character, self),
+            WebDict('oldspace_decomposition'),
+            WebInt('bitprec', default_value=bitprec),            
             WebFloat('version', default_value=float(emf_version))
-                    ]
+                    )
+        
         super(WebModFormSpace, self).__init__(
             params=['level', 'weight', 'character'],
-            dbkey=['galois_orbit_name'],
-            collection_name='webmodformspace_test')
+            dbkey='galois_orbit_name',
+            collection_name='webmodformspace_test',
+            update_from_db=update_from_db)
+
+    def init_dynamic_properties(self):
+        if self.character.is_trivial():
+            self.group = Gamma0(self.level)
+        else:
+            self.group = Gamma1(self.level)
 
     def __repr__(self):
-        return "Space of (Web) Modular Forms of weight {0}, level {1} and character {2}".format(self.weight, self.level, self.character)
+        return "Space of (Web) Modular Forms of level {N}, weight {k}, and character {chi}".format(
+            k=self.weight, N=self.level, chi=self.character)
+
+
+class WebModFormSpaceProperty(WebProperty):
+
+    def __init__(self, name, level=1, weight=12,
+                 character=1, default_value=None):        
+        self.level = level
+        self.weight = weight
+        self.character = character
+        if default_value is None:
+            default_value = WebModFormSpace(self.level, self.weight, self.character)
+        super(WebModFormSpaceProperty, self).__init__(name,
+                                                      update_from_store=False,
+                                                      update_from_meta=False,
+                                                      default_value = default_value)
+
+    def to_meta(self, M):
+        return M.galois_orbit_label
