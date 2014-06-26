@@ -41,6 +41,8 @@ def newform_label(level, weight, character, label, embedding=None):
     else:
         return "{0}.{1}.{2}{3}.{4}".format(level, weight, character, label, embedding)
 
+def space_label(level, weight, character):
+    return "{0}.{1}.{2}".format(level, weight, character)
 
 def parse_range(arg, parse_singleton=int):
     # TODO: graceful errors
