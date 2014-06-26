@@ -87,7 +87,8 @@ from sage.all import (
      vector,
      latex,
      primes_first_n,
-     loads
+     loads,
+     dumps
      )
 
 from sage.structure.unique_representation import CachedRepresentation
@@ -183,6 +184,7 @@ class WebNewForm(WebObject, CachedRepresentation):
             WebNumberField('coefficient_field'),
             WebList('twist_info'),
             WebBool('is_cm'),
+            WebBool('is_cuspidal',default_value=True),
             WebDict('satake'),
             WebDict('_atkin_lehner_eigenvalues'),
             WebBool('is_rational'),
@@ -216,8 +218,8 @@ class WebNewForm(WebObject, CachedRepresentation):
         """
         #emf_logger.debug("In coefficient: n={0}".format(n))
         if n==0:
-            if self.is_cuspidal():
-                return self.coefficient_field()(0)
+            if self.is_cuspidal:
+                return self.coefficient_field(0)
         c = self._coefficients.get(n, None)
         if c is None:
             c = self.coefficients([n])[0] 
@@ -230,7 +232,7 @@ class WebNewForm(WebObject, CachedRepresentation):
         are stored.
 
         """
-        #emf_logger.debug("computing coeffs in range {0}".format(nrange))
+        emf_logger.debug("computing coeffs in range {0}".format(nrange))
         if not isinstance(nrange, list):
             M = nrange
             nrange = range(0, M)
@@ -240,8 +242,8 @@ class WebNewForm(WebObject, CachedRepresentation):
             c = self._coefficients.get(n, None)
             #emf_logger.debug("c({0}) in self._coefficients={1}".format(n,c))            
             if c is None:
-                if n == 0 and self.is_cuspidal():
-                    c = self.coefficient_field()(0)
+                if n == 0 and self.is_cuspidal:
+                    c = self.coefficient_field(0)
                 else:
                     recompute = True
                     c = self.coefficient_n_recursive(n)
@@ -263,13 +265,16 @@ class WebNewForm(WebObject, CachedRepresentation):
         F = arith.factor(n)
         prod = None        
         ev = self.eigenvalues
-        K = ev[2].parent()
+        if ev.has_eigenvalue(2):
+            K = ev[2].parent()
+        else:
+            raise StopIteration,"Newform does not have eigenvalue a(2)!"
         for p, r in F:
             (p, r) = (int(p), int(r))
             pr = p**r
             if not ev.has_eigenvalue(p):
                 # Here the question is whether we start computing or only use from database...
-                raise ValueError,"p={0} is outside the range of computed primes (primes up to {1})!".format(p,max(ev.keys()))
+                raise ValueError,"p={0} is outside the range of computed primes (primes up to {1})!".format(p,max(ev.primes()))
             if not ev.has_eigenvalue(pr):  # and ev[pow].has_key(name)):
                 # TODO: Optimization -- do something much more
                 # intelligent in case character is not defined.  For
