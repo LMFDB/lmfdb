@@ -40,6 +40,6 @@ def get_files_from_gridfs(collection='',create=True):
     return gridfs.GridFS(C,collection)
         
 
-from web_modforms import WebNewForm, html_table
+from web_newforms import WebNewForm # html_table
 from web_modform_space import WebModFormSpace
 from emf_classes import *

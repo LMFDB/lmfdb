@@ -125,9 +125,9 @@ class WebModFormSpace(WebObject, CachedRepresentation):
     sage: M.dimension_cusp_forms=1
     sage: M.newforms = {'a': delta_qexp(20)}
     sage: M.save_to_db()
-    {'galois_orbit_name': '1.12.1', 'character': 1, 'weight': 12, 'level': 1}
+    {'hecke_orbit_name': '1.12.1', 'character': 1, 'weight': 12, 'level': 1}
     sage: M1=WebModFormSpace(1,12)
-    sage: M1.galois_orbit_name
+    sage: M1.hecke_orbit_name
     ''
     sage: M1.newforms
     {}
@@ -139,7 +139,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
 
     """
 
-    def __init__(self, level=1, weight=12, character=1, prec=10, bitprec=53, update_from_db=True):
+    def __init__(self, level=1, weight=12, character=1, cuspidal = 1, prec=10, bitprec=53, update_from_db=True):
         self._properties = WebProperties(
             WebInt('level', default_value=level),
             WebInt('weight', default_value=weight),
@@ -149,25 +149,26 @@ class WebModFormSpace(WebObject, CachedRepresentation):
             WebDict('_character_galois_orbit_embeddings', default_value={}),
             WebCharProperty('character_orbit_rep', modulus=level),
             WebCharProperty('character_used_in_computation', modulus=level),
-            WebStr('galois_orbit_name', default_value=space_label(level, weight, character)),
+            WebStr('hecke_orbit_name', default_value=space_label(level, weight, character)),
             WebInt('dimension'),
             WebInt('dimension_cusp_forms'),
             WebInt('dimension_modular_forms'),
             WebInt('dimension_new_cusp_forms'),
-            WebInt('cuspidal', default_value=int(1)),
+            WebInt('dimension_oldforms'),            
+            WebInt('cuspidal', default_value=int(cuspidal)),
             WebInt('prec', default_value=int(prec)), #precision of q-expansions
             WebSageObject('group'),
             WebInt('sturm_bound'),
             WebHeckeOrbits('hecke_orbits', level, weight,
                            character, self),
-            WebDict('oldspace_decomposition'),
+            WebList('oldspace_decomposition'),
             WebInt('bitprec', default_value=bitprec),            
             WebFloat('version', default_value=float(emf_version))
                     )
         
         super(WebModFormSpace, self).__init__(
             params=['level', 'weight', 'character'],
-            dbkey='galois_orbit_name',
+            dbkey='hecke_orbit_name',
             collection_name='webmodformspace_test',
             update_from_db=update_from_db)
 
@@ -197,4 +198,4 @@ class WebModFormSpaceProperty(WebProperty):
                                                       default_value = default_value)
 
     def to_meta(self, M):
-        return M.galois_orbit_label
+        return M.hecke_orbit_name

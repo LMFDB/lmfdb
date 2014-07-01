@@ -316,7 +316,7 @@ class WebNewForm(WebObject, CachedRepresentation):
         r""" Return the Atkin-Lehner eigenvalues of self
         corresponding to Q|N
         """
-        if not (self.character().is_trivial() or self.character().order() == 2):
+        if not (self.character.is_trivial() or self.character.order == 2):
             return None
         
         l = self.atkin_lehner_eigenvalues()
@@ -333,7 +333,7 @@ class WebNewForm(WebObject, CachedRepresentation):
            '{2: -1, 14: 1, 7: -1}'
 
         """
-        if not (self.character().is_trivial() or self.character().order() == 2):
+        if not (self.character.is_trivial() or self.character.order == 2):
             return None
         
         if(len(self._atkin_lehner_eigenvalues.keys()) > 0):
