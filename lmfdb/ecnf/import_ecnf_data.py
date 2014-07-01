@@ -30,7 +30,7 @@ field) and value types (with examples):
    - jinv               *     list of d lists of 2 STRINGS
    - cm                 *     either int (a negative discriminant, or 0) or '?'
    - q_curve            *     boolean (True, False)
-   - base_change        *     False or label of elliptic curve over Q
+   - base_change        *     list of labels of elliptic curve over Q
    - rank                     int
    - rank_bounds              list of 2 ints
    - analytic_rank            int
@@ -70,6 +70,7 @@ print "getting connection"
 conn = base.getDBConnection()
 print "setting nfcurves"
 nfcurves = conn.elliptic_curves.nfcurves
+qcurves = conn.elliptic_curves.curves
 
 # The following ensure_index command checks if there is an index on
 # label, conductor, rank and torsion. If there is no index it creates
@@ -193,7 +194,7 @@ def point_string(P):
 def point_string_to_list(s):
     r"""Return a list representation of a point string
     """
-    return [[QorZ_list(QQ(a)) for a in c.split(",")] for c in s[1:-1].split(":")]
+    return s[1:-1].split(":")
 
 def point_list(P):
     r"""Return a list representation of a point on an elliptic curve
@@ -295,12 +296,13 @@ def curves(line):
 
     if base_change:
         #print "Q-curve, testing for base-change..."
-        E1 = E.descend_to(QQ)
-        if E1:
-            base_change = cremona_to_lmfdb(E1.label())
-            #print "...is base change of %s" % base_change
+        E1list = E.descend_to(QQ)
+        if len(E1list):
+            print "%s is base change of %s" % (E,E1list)
+            base_change = [cremona_to_lmfdb(E1.label()) for E1 in E1list]
+            print "...with labels %s" % base_change
         else:
-            base_change = False
+            base_change = []
             #print "...is not base change"
 
     return label, {
@@ -344,7 +346,7 @@ def curve_data(line):
     data = split(line)
     ngens = int(data[7])
     if len(data)!=9+ngens:
-        print "line %s does not have 9 fields, skipping" % line
+        print "line %s does not have 9 fields (excluding gens), skipping" % line
     field_label = data[0]       # string
     conductor_label = data[1]   # string
     iso_label = data[2]         # string
@@ -377,8 +379,8 @@ filename_base_list = ['curves', 'curve_data']
 def upload_to_db(base_path, filename_suffix):
     curves_filename = 'curves.%s' % (filename_suffix)
     curve_data_filename = 'curve_data.%s' % (filename_suffix)
-#    file_list = [curves_filename, curve_data_filename]
-    file_list = [curves_filename]
+    file_list = [curves_filename, curve_data_filename]
+#    file_list = [curves_filename]
 #    file_list = [curve_data_filename]
 
     data_to_insert = {}  # will hold all the data to be inserted
