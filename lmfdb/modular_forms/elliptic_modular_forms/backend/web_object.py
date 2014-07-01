@@ -181,9 +181,12 @@ class WebObject(object):
 
         for p in self._properties:
             if not hasattr(self, p.name):
-                #emf_logger.debug()
-                #print "Setting {0} = {1}".format(p.name, p.default_value)
+                emf_logger.debug("Setting {0} = {1}".format(p.name, p.default_value))
                 setattr(self, p.name, p.default_value)
+                #a = p.name
+                #def s(self):
+                #    return getattr(self, a)
+                #setattr(self, p.name, types.MethodType(s,self))
 
         if update_from_db:
             #emf_logger.debug('Update requested for {0}'.format(self.__dict__))
@@ -474,7 +477,7 @@ class WebNumberField(WebDict):
     
     def __init__(self, name, store=True, meta=True, default_value=None):
         if default_value == None:
-            default_value = {}
+            default_value = QQ
         super(WebDict, self).__init__(name, dict, dict, store, meta, default_value)
 
     def to_store(self, K):
@@ -525,6 +528,8 @@ def number_field_to_dict(F):
         x = p.variables()[0]
         p = str(p).replace(str(x),str(g))
     return {'base':K,'relative polynomial':p,'gens':g}
+
+QQdict = number_field_to_dict(QQ)
         
 
 def number_field_from_dict(d):

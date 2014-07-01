@@ -47,6 +47,8 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.web_character import (
      WebCharProperty
      )
 
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, space_label
+
 from lmfdb.modular_forms.elliptic_modular_forms import (
      emf_version,
      emf_logger
@@ -147,7 +149,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
             WebDict('_character_galois_orbit_embeddings', default_value={}),
             WebCharProperty('character_orbit_rep', modulus=level),
             WebCharProperty('character_used_in_computation', modulus=level),
-            WebStr('galois_orbit_name'),
+            WebStr('galois_orbit_name', default_value=space_label(level, weight, character)),
             WebInt('dimension'),
             WebInt('dimension_cusp_forms'),
             WebInt('dimension_modular_forms'),

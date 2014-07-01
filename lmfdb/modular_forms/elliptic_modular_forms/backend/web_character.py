@@ -62,9 +62,9 @@ class WebCharProperty(WebInt):
                and not isinstance(c, DirichletCharacter_conrey):
             return int(c)
         if isinstance(c,WebChar):
-            return c.number
+            return int(c.number)
         else:
-            return c.number()
+            return int(c.number())
 
     def from_store(self, n):
         emf_logger.debug('converting {0} from store in WebCharProperty {1}'.format(n, self.name))

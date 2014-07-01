@@ -55,6 +55,7 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import
      WebModFormSpaceProperty
      )
 
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, space_label
 
 from lmfdb.modular_forms.elliptic_modular_forms import (
      emf_version,
@@ -174,7 +175,7 @@ class WebNewForm(WebObject, CachedRepresentation):
                             update_from_store = True if parent is None
                             else False),
             WebStr('character_naming_scheme', default_value='Conrey'),
-            WebStr('hecke_orbit_label'),
+            WebStr('hecke_orbit_label', default_value=newform_label(level, weight, character, label)),
             WebStr('label', default_value=label),
             WebInt('dimension'),
             WebqExp('q_expansion', prec=prec),
@@ -191,7 +192,10 @@ class WebNewForm(WebObject, CachedRepresentation):
             WebPoly('absolute_polynomial'),
             WebInt('sturm_bound'),
             WebFloat('version', default_value=float(emf_version)),
-            WebModFormSpaceProperty('parent', default_value=parent),            
+            WebModFormSpaceProperty('parent', default_value=parent,
+                                              level = level,
+                                              weight = weight,
+                                              character = character),
             )
         super(WebNewForm, self).__init__(
             params=['level', 'weight', 'character', 'label'],
