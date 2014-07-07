@@ -46,35 +46,6 @@ except:
 
 import logging
 emf_logger.setLevel(logging.DEBUG)
-
-class WebCharProperty(WebInt):
-    def __init__(self, name, modulus=1, default_value=1, **kwargs):        
-        self.modulus = modulus        
-        if isinstance(default_value, WebChar):
-            emf_logger.debug('got WebChar {0}'.format(default_value))
-            c = default_value
-        else:
-            c = WebChar(self.modulus, default_value, update_from_db=True, compute=True)
-        super(WebCharProperty, self).__init__(name, default_value = c, **kwargs)
-
-    def to_store(self, c):
-        if not isinstance(c, WebChar) \
-               and not isinstance(c, DirichletCharacter_conrey):
-            return int(c)
-        if isinstance(c,WebChar):
-            return int(c.number)
-        else:
-            return int(c.number())
-
-    def from_store(self, n):
-        emf_logger.debug('converting {0} from store in WebCharProperty {1}'.format(n, self.name))
-        return WebChar(self.modulus, n, compute=True)
-
-    def from_meta(self, n):
-        return self.from_store(n)
-
-    def to_meta(self, c):
-        return self.to_store(c)
     
 class WebChar(WebObject, CachedRepresentation):
     r"""
@@ -82,11 +53,16 @@ class WebChar(WebObject, CachedRepresentation):
     WebDirichletCharcter once this is ok.
     
     """
+
+    _params=['modulus', 'number']
+    _dbkey=['modulus', 'number']
+    _collection_name='webchar_test'
+    
     def __init__(self, modulus=1, number=1, update_from_db=True, compute=False):
         self._properties = WebProperties(
             WebInt('conductor'),
-            WebInt('modulus', default_value=modulus),
-            WebInt('number', default_value=number),
+            WebInt('modulus', value=modulus),
+            WebInt('number', value=number),
             WebInt('modulus_euler_phi'),
             WebInt('order'),
             WebStr('latex_name', store=True, meta=False),
@@ -94,12 +70,9 @@ class WebChar(WebObject, CachedRepresentation):
             WebDict('_values_algebraic'),
             WebDict('_values_float'),
             WebDict('_embeddings'),            
-            WebFloat('version', default_value=float(emf_version))
+            WebFloat('version', value=float(emf_version))
             )
         super(WebChar, self).__init__(
-            params=['modulus', 'number'],
-            dbkey=['modulus', 'number'],
-            collection_name='webchar_test',
             update_from_db=update_from_db
             )
         if compute:
@@ -220,5 +193,44 @@ class WebChar(WebObject, CachedRepresentation):
         if hasattr(self, '_url') and self._url is None:
             self._url = url_character(type='Dirichlet',modulus=self.modulus, number=self.number)
         return self._url
+
+
+class WebCharProperty(WebInt):
+    
+    def __init__(self, name, modulus=1, number=int(1), **kwargs):
+        #self._default_value = WebChar(modulus, number, update_from_db=True, compute=True)
+        self.modulus = modulus
+        self.number = number
+        c = None
+        if not kwargs.has_key('value'):
+            c = WebChar(self.modulus, number, update_from_db=True, compute=True)
+        elif kwargs['value'] is not None:
+            c = value
+        else:
+            self._default_value = WebChar(modulus, number, update_from_db=True, compute=True)
+        if c is None:
+            super(WebCharProperty, self).__init__(name, **kwargs)
+        else:
+            super(WebCharProperty, self).__init__(name, value=c, **kwargs)
+
+    def to_store(self):
+        c = self._value
+        if not isinstance(c, WebChar) \
+               and not isinstance(c, DirichletCharacter_conrey):
+            return int(c)
+        if isinstance(c,WebChar):
+            return int(c.number)
+        else:
+            return int(c.number())
+
+    def from_store(self, n):
+        emf_logger.debug('converting {0} from store in WebCharProperty {1}'.format(n, self.name))
+        return WebChar(self.modulus, n, compute=True)
+
+    def from_meta(self, n):
+        return self.from_store(n)
+
+    def to_meta(self):
+        return self.to_store()
     
    

@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 #*****************************************************************************
 #  Copyright (C) 2010
@@ -62,7 +61,7 @@ from lmfdb.modular_forms.elliptic_modular_forms import (
      emf_logger
      )
 
-from lmfdb.number_fields.number_field import poly_to_field_label
+from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty
 from lmfdb.utils import web_latex_split_on_re
 
 from sage.rings.number_field.number_field_base import (
@@ -91,6 +90,9 @@ from sage.all import (
      loads
      )
 
+from sage.matrix.matrix_integer_dense import Matrix_integer_dense
+from sage.modules.vector_integer_dense import Vector_integer_dense
+
 from sage.structure.unique_representation import CachedRepresentation
 
 class WebqExp(WebPoly):
@@ -117,24 +119,26 @@ class WebqExp(WebPoly):
 
 class WebEigenvalues(WebObject, CachedRepresentation):
 
+    _params = ['level', 'weight', 'character', 'label']
+    _dbkey = ['level', 'weight', 'character', 'label']
+    _collection_name = 'ap_test'
+
     def __init__(self, level=1, weight=12, character=1, label='a', prec=10, update_from_db=True):
         self._properties = WebProperties(
-            WebSageObject('E', Matrix),
-            WebSageObject('v', vector),
-            WebInt('level', default_value=level),
-            WebInt('weight', default_value=weight),
-            WebInt('character', default_value=character),            
-            WebStr('label', default_value=label),            
+            WebSageObject('E', None, Matrix),
+            WebSageObject('v', None, vector),
+            WebInt('level', value=level),
+            WebInt('weight', value=weight),
+            WebInt('character', value=character),            
+            WebStr('label', value=label),            
             )
         super(WebEigenvalues, self).__init__(
-            params=['level', 'weight', 'character', 'label'],
-            dbkey=['level', 'weight', 'character', 'label'],
-            collection_name='ap_test',
             use_separate_meta=False,
             update_from_db=update_from_db
             )
 
     def init_dynamic_properties(self):
+        emf_logger.debug("E = {0}".format(self.E))
         if not self.E is None and not self.v is None:
             c = self.E*self.v
             lc = len(c)
@@ -160,18 +164,31 @@ class WebEigenvalues(WebObject, CachedRepresentation):
     def __iter__(self):
         return self._ap.itervalues()
 
+    def __len__(self):
+        return len(self._ap)
+
+    def __contains__(self, a):
+        return a in self._ap
+
+    def __repr__(self):
+        return "Collection of {0} eigenvalues.".format(len(self._ap))
+
     
 class WebNewForm(WebObject, CachedRepresentation):
 
+    _params = ['level', 'weight', 'character', 'label']
+    _dbkey = ['hecke_orbit_label']
+    _collection_name = 'webnewforms_test'
+
     def __init__(self, level=1, weight=12, character=1, label='a', prec=10, bitprec=53, parent=None, update_from_db=True):
         self._properties = WebProperties(
-            WebInt('level', default_value=level),
-            WebInt('weight', default_value=weight),
+            WebInt('level', value=level),
+            WebInt('weight', value=weight),
             WebCharProperty('character', modulus=level,
-                            default_value=
-                            character if parent is None
+                            number=character,
+                            value = None if parent is None
                             else parent.character,
-                            update_from_store = True if parent is None
+                            include_in_update = True if parent is None
                             else False),
             WebStr('character_naming_scheme', default_value='Conrey'),
             WebStr('hecke_orbit_label', default_value=newform_label(level, weight, character, label)),
@@ -190,15 +207,12 @@ class WebNewForm(WebObject, CachedRepresentation):
             WebPoly('absolute_polynomial'),
             WebInt('sturm_bound'),
             WebFloat('version', default_value=float(emf_version)),
-            WebModFormSpaceProperty('parent', default_value=parent,
+            WebModFormSpaceProperty('parent', value=parent,
                                               level = level,
                                               weight = weight,
                                               character = character),
             )
         super(WebNewForm, self).__init__(
-            params=['level', 'weight', 'character', 'label'],
-            dbkey='hecke_orbit_label',
-            collection_name='webnewforms_test',
             update_from_db=update_from_db
             )
         
@@ -343,8 +357,8 @@ class WebNewForm(WebObject, CachedRepresentation):
         """
         p = self.absolute_polynomial
         l = poly_to_field_label(p)
-        if l == "1.1.1.1" and pretty:
-            return "\( \Q \)"
+        if pretty:
+            return field_pretty(l)
         else:
             return l
 
@@ -361,8 +375,8 @@ class WebNewForm(WebObject, CachedRepresentation):
         else:
             p = F.polynomial()
         l = poly_to_field_label(p)
-        if l == "1.1.1.1" and pretty:
-            return "\( \Q \)"
+        if pretty:
+            return field_pretty(l)
         else:
             return l
 

@@ -31,6 +31,9 @@ from lmfdb.number_fields.number_field import poly_to_field_label
 from sage.rings.power_series_poly import PowerSeries_poly
 from sage.all import SageObject,dumps,loads, QQ, NumberField
 
+import pymongo
+import gridfs
+
 class WebProperty(object):
     r"""
     A meta data type for the properties of a WebObject.
@@ -38,9 +41,15 @@ class WebProperty(object):
     meta: True if this property should be stored in the meta record (mongo)
     """
 
-    def __init__(self, name, store_data_type=None, meta_data_type=None, store=True, meta=False, default_value=None, update_from_meta=True, update_from_store=True):
-        #print 'Default:', default_value
+    _default_value = None
+
+    def __init__(self, name, value=None, store_data_type=None, meta_data_type=None, store=True, meta=False, default_value=None, include_in_update=True):
         self.name = name
+        if default_value is not None:
+            self._default_value = default_value
+        if value is None:
+            value = self._default_value
+        self._value = value
         # default to str
         if store_data_type is not None:
             self.store_data_type = store_data_type
@@ -52,28 +61,31 @@ class WebProperty(object):
             self.meta_data_type = str
         self.store = store
         self.meta = meta
-        self._default_value = default_value
-        # Set if this Property
-        # is updated from store/meta when updating from db
-        # note that store always overrides meta
-        self.update_from_meta = update_from_meta
-        self.update_from_store = update_from_store
 
-    @property
+        self.include_in_update = include_in_update
+        
+    def value(self):
+        return self._value
+
+    def set_value(self, val):
+        self._value = val
+    
     def default_value(self):
-        return self._default_value
+        if hasattr(self, '_default_value'):
+            return self._default_value
+        else:
+            return None
 
-    def to_meta(self, val=None):
-        if val is None and self.default_value is not None:
-            val = self.default_value
+    def to_meta(self):
+        val = self._value
+        print val
         if val is not None:
             return self.meta_data_type(val)
         else:
             return None
     
-    def to_store(self, val=None):
-        if val is None and self.default_value is not None:
-            val = self.default_value
+    def to_store(self):
+        val = self._value
         if val is not None:
             try:
                 return self.store_data_type(val)
@@ -88,8 +100,14 @@ class WebProperty(object):
     def from_meta(self, val):
         return val
 
+    def set_from_store(self, val):
+        self._value = self.from_store(val)
+
+    def set_from_meta(self, val):
+        self._value = self.from_meta(val)
+
     def __repr__(self):
-        return self.name
+        return "{0}".format(self.name)#, self.value)
 
 class WebProperties(object):
     r"""
@@ -118,12 +136,20 @@ class WebProperties(object):
     def add_property(self, p):
         self._d[p.name] = p
 
+    def append(self, p):
+        self.add_property(p)
+
     def __iter__(self):
         return self._d.itervalues()
 
+    def __len__(self):
+        return len(self._d.keys())
+
+    def __contains__(self, a):
+        return a in self._d
+
     def __repr__(self):
         return "Collection of {0} WebProperties".format(len(self._d.keys()))
-
         
 
 class WebObject(object):
@@ -131,46 +157,57 @@ class WebObject(object):
     A base class for the object we store in the database.
     """
 
-    def __init__(self, params, dbkey, collection_name,
+    _collection_name = None
+    _params = None
+    _dbkey = None
+    _properties = None
+
+    r"""
+          _params: a dictionary - The parameters that are needed to initialize a WebObject of this type.
+          _dbkey: a string - the field in the database that is the unique identifier for this object
+                 This can also be a list of strings if the key is a compound.
+          _collection_name: a database collection name to store the values in
+                           We assume that the meta collection is given by 'collection_name.files'
+                           And we keep a meta collection in 'collection_name.meta'
+    """
+
+    _properties = WebProperties()
+
+    @staticmethod
+    def connect_to_db(coll=''):
+        return connect_to_modularforms_db(coll)
+
+    @classmethod
+    def get_files_from_gridfs(cls, coll):
+        C = cls.connect_to_db()
+        return gridfs.GridFS(C,coll)
+
+    def __init__(self,
                  use_separate_meta = True,
                  use_gridfs = True,
                  update_from_db=False, **kwargs):
-        r"""
-          Initialze self. Set default values.
-          params: a dictionary - The parameters that are needed to initialize a WebObject of this type.
-          dbkey: a string - the field in the database that is the unique identifier for this object
-                 This can also be a list of strings if the key is a compound.
-          collection_name: a database collection name to store the values in
-                           We assume that the meta collection is given by collection_name.files
-                           And we keep a meta collection in collection_name.meta
-        """
+
+        print "in WebObject.__init__"
+        print self._properties
 
         # This has to be overridden by classes that inherit from WebObject
         # Should be a list of WebProperty objects
         if not hasattr(self, '_properties') or self._properties == None:
             self._properties = WebProperties()
 
-        self._params = params
-        self._collection_name = collection_name
         if use_gridfs:
-            self._file_collection = connect_to_modularforms_db(collection_name + '.files')
+            self._file_collection = self.connect_to_db(self._collection_name + '.files')
         self.use_separate_meta = use_separate_meta
         if use_separate_meta:
-            self._meta_collection = connect_to_modularforms_db(collection_name + '.meta')
+            self._meta_collection = self.connect_to_db(self._collection_name + '.meta')
         else:
             if use_gridfs:
-                self._meta_collection = connect_to_modularforms_db(collection_name + '.files')
+                self._meta_collection = self.connect_to_db(self._collection_name + '.files')
             else:
-                self._meta_collection = connect_to_modularforms_db(collection_name)
-        self._files = get_files_from_gridfs(collection_name)
-        if isinstance(dbkey, str):
-            self._dbkey = [dbkey]
-        elif isinstance(dbkey, list):
-            self._dbkey = dbkey
-        else:
-            raise ValueError("dbkey has to be a list or a string, got {0}".format(dbkey))
+                self._meta_collection = self.connect_to_db(self._collection_name)
+        self._files = self.get_files_from_gridfs(self._collection_name)
 
-        # Initialize _properties, _store_properties and _meta_properties to be simpler
+        # Initialize _store_properties and _meta_properties to be simpler
         self._store_properties = WebProperties([p for p in self._properties if p.store])
         self._meta_properties = WebProperties([p for p in self._properties if p.meta])
 
@@ -180,22 +217,31 @@ class WebObject(object):
             setattr(self, key, value)
 
         for p in self._properties:
-            if not hasattr(self, p.name):
-                emf_logger.debug("Setting {0} = {1}".format(p.name, p.default_value))
-                setattr(self, p.name, p.default_value)
-                #a = p.name
-                #def s(self):
-                #    return getattr(self, a)
-                #setattr(self, p.name, types.MethodType(s,self))
-
+            emf_logger.debug("Adding {0}".format(p.name))
+            self.__dict__[p.name] = p
+                
         if update_from_db:
             #emf_logger.debug('Update requested for {0}'.format(self.__dict__))
             self.update_from_db()
 
         #emf_logger.debug('init_dynamic_properties will be called for {0}'.format(self.__dict__))
         self.init_dynamic_properties()
-        
 
+    def __getattribute__(self, n):
+        try:
+            return object.__getattribute__(self, '_properties')[n].value()
+        except:
+            return object.__getattribute__(self, n)
+
+    def __setattr__(self, n, v):
+        try:
+            self._properties[n].set_value(v)
+        except:
+            object.__setattr__(self, n, v)
+
+    def collection_name(self):
+        return self._collection_name
+        
     def meta_properties(self):
         r"""
          Return a dictionary with keys equal to the properties of self and values representing the data types.
@@ -219,17 +265,20 @@ class WebObject(object):
         # contained in the new object.
         params = { key : getattr(self, key) for key in self._params }
         f = self.__class__(**params)
+        f.update_from_db()
         f._check_if_all_computed()
         # Now we check completeness and consistency of the meta record
         rec = f.get_meta_record()
         for p in self._meta_properties:
             assert rec.has_key(p.name), "Missing property {0} in meta record.".format(p)
-            v = getattr(f, p)
+            v = getattr(f, p.name)
             got = type(v)
-            expected = p.type
-            assert got is expected, "Property {0} has wrong type. Got {1}, expected {2}".format(got, expected)
-            mf = p.to_meta(getattr(f, p.name))
-            ms = p.to_meta(getattr(self, p.name))
+            expected = p.meta_data_type
+            assert got is expected, "Property {0} has wrong type. Got {1}, expected {2}".format(p.name, got, expected)
+            s = getattr(self, p.name)
+            assert v == s, "Error restoring Property {0}. Got {1}, expected {2}".format(p.name, v, s)
+            mf = f._properties[p.name].to_meta()
+            ms = p.to_meta()
             r = rec[p.name]
             assert mf == r and ms == r, \
                    "Evaluation of {0} failed. Meta record is {1} but property_to_eta returned {2}".format(p, m, r)
@@ -243,7 +292,7 @@ class WebObject(object):
             assert hasattr(self, p.name), "Missing property {0}".format(p)
             v = getattr(self, p.name)
             got = type(v)
-            expected = p.type
+            expected = p.store_data_type
             assert got is expected, "Property {0} has wrong type. Got {1}, expected {2}".format(got, expected)
             assert v is not None, "Did you store {0}? It has value {1}".format(p, v)
         return True
@@ -261,7 +310,9 @@ class WebObject(object):
         Return a dictionary where the keys are the dbkeys of ``self``` and
         the values are the corresponding values of ```self```.
         """
-        return { key : self._properties[key].to_meta(getattr(self, key)) for key in self._dbkey }       
+        emf_logger.debug('dbkey: {0}'.format(self._dbkey))
+        emf_logger.debug('properties: {0}'.format(self._properties))
+        return { key : self._properties[key].to_meta() for key in self._dbkey }       
 
     def params_dict(self):
         r"""
@@ -269,7 +320,7 @@ class WebObject(object):
         the values are the corresponding values of ```self```.
         """
 
-        return { key : self._properties[key].to_meta(getattr(self, key)) for key in self._params }
+        return { key : self._properties[key].to_meta() for key in self._params }
 
     def meta_dict(self):
         r"""
@@ -277,7 +328,7 @@ class WebObject(object):
         and values given by the corresponding values of self. We also apply the function to_meta() to the values
         to assure that we have the right data type (this is handy for complex conversions as well).
         """
-        return { p.name : p.to_meta(getattr(self, p.name)) for p in self._meta_properties }
+        return { p.name : p.to_meta() for p in self._meta_properties }
 
     def store_dict(self):
         r"""
@@ -285,7 +336,7 @@ class WebObject(object):
         and values given by the corresponding values of self. We also apply the to_store() function to the values
         to assure that we have the right data type (this is handy for complex conversions as well).
         """
-        return { p.name : p.to_store(getattr(self, p.name)) for p in self._store_properties }
+        return { p.name : p.to_store() for p in self._store_properties }
 
     def get_meta_record(self):
         r"""
@@ -307,7 +358,7 @@ class WebObject(object):
             if not update:
                 return True
             else:
-                fid = coll.find_one(key)['_id']
+                fid = coll.find_one(key, fields=['_id'])['_id']
                 fs.delete(fid)
         # insert
         s = dumps(self.store_dict())
@@ -362,19 +413,19 @@ class WebObject(object):
         r"""
         Updates the properties of ```self``` from the database using params and dbkey.
         """
-        from web_character import WebCharProperty
-        emf_logger.debug("Updating {c} from db".format(c=self.__class__))
         if meta:
             coll = self._meta_collection
             meta_key = self.params_dict()
             if coll.find(meta_key).count()>0:
-                rec = coll.find_one(meta_key)
-                for p in self._meta_properties:
-                    if p.update_from_meta and rec.has_key(p.name):
+                props_to_fetch = [p.name for p in self._meta_properties
+                                  if (p.include_in_update and not p in self._store_properties)
+                                  or p.name in self._params]
+                rec = coll.find_one(meta_key, fields = props_to_fetch)
+                for pn in props_to_fetch:
+                    p = self._properties[pn]
+                    if rec.has_key(pn):
                         try:
-                            if isinstance(p, WebCharProperty):
-                                emf_logger.debug('setting WebCharProperty {0} for {1} from meta'.format(p.name, self.__class__))
-                            setattr(self, p.name, p.from_meta(rec[p.name]))
+                            p.set_from_meta(rec[pn])
                         except NotImplementedError:
                             continue                           
             else:
@@ -387,10 +438,8 @@ class WebObject(object):
             fid = coll.find_one(key)['_id']
             d = loads(fs.get(fid).read())
             for p in self._store_properties:
-                if p.update_from_store and d.has_key(p.name):
-                    if isinstance(p, WebCharProperty):
-                        emf_logger.debug('setting WebCharProperty {0} for {1} from store'.format(p.name, self.__class__))
-                    setattr(self, p.name, p.from_store(d[p.name]))
+                if p.include_in_update and d.has_key(p.name):
+                    p.set_from_store(d[p.name])
         else:
             if not ignore_non_existent:
                 raise IndexError("Record does not exist")
@@ -398,62 +447,90 @@ class WebObject(object):
     def __repr__(self):
         return "WebObject"
 
+class WebObjectTest(WebObject):
+
+    #Needs to be set for this class to work
+    DB = None
+
+    @classmethod
+    def connect_to_db(cls, c=''):
+        if c != '':
+            return cls.DB[c]
+        else:
+            return cls.DB
+    
+    _collection_name = 'test'
+    _dbkey = ['id']
+    _params = ['id']
+
+    def __init__(self, **kwargs):
+
+        self._properties = WebProperties([WebInt('test_property'), WebInt('id')])
+        super(WebObjectTest, self).__init__(self, **kwargs)
+    
+
 # Define some simple data types with reasonable default values
         
 class WebInt(WebProperty):
 
-    def __init__(self, name, store=True, meta=True, default_value=int(0), **kwargs):
-        super(WebInt, self).__init__(name, int, int, store, meta, default_value, **kwargs)
+    _default_value = int(0)
+
+    def __init__(self, name, value=None, store=True, meta=True, **kwargs):
+        super(WebInt, self).__init__(name, value, int, int, store, meta, **kwargs)
         #print self.__class__
 
 class WebBool(WebProperty):
 
-    def __init__(self, name, store=True, meta=True, default_value=True):
-        super(WebBool, self).__init__(name, int, int, store, meta, default_value)
+    _default_value = True
+
+    def __init__(self, name, value=None, store=True, meta=True, **kwargs):
+        super(WebBool, self).__init__(name, value, int, int, store, meta, **kwargs)
         #print self.__class__
 
 class WebFloat(WebProperty):
 
-    def __init__(self, name, store=True, meta=True, default_value=int(0)):
-        super(WebFloat, self).__init__(name, float, float, store, meta, default_value)
+    _default_value = float(0)
+
+    def __init__(self, name, value=None, store=True, meta=True, **kwargs):
+        super(WebFloat, self).__init__(name, value, float, float, store, meta, **kwargs)
 
 class WebStr(WebProperty):
 
-    def __init__(self, name, store=True, meta=True, default_value=''):
-        super(WebStr, self).__init__(name, str, str, store, meta, default_value)
+    def __init__(self, name, value=None, store=True, meta=True, **kwargs):
+        self._default_value = ''
+        super(WebStr, self).__init__(name, value, str, str, store, meta, **kwargs)
 
 class WebDict(WebProperty):
 
-    def __init__(self, name, store=True, meta=False, default_value=None):
-        if default_value == None:
-            default_value = {}
-        super(WebDict, self).__init__(name, dict, dict, store, meta, default_value)
+    def __init__(self, name, value=None, store=True, meta=False, **kwargs):
+        self._default_value = {}
+        super(WebDict, self).__init__(name, value, dict, dict, store, meta, **kwargs)
 
 class WebList(WebProperty):
 
-    def __init__(self, name, store=True, meta=False, default_value=None):
-        if default_value == None:
-            default_value = []
-        super(WebList, self).__init__(name, list, list, store, meta, default_value)
+    def __init__(self, name, value=None, store=True, meta=False, **kwargs):
+        self._default_value = []
+        super(WebList, self).__init__(name, value, list, list, store, meta, **kwargs)
 
 class WebSageObject(WebProperty):
 
-    def __init__(self, name, datatype=SageObject, store=True,
-                 meta=False, default_value=None):
-        super(WebSageObject, self).__init__(name, store_data_type=datatype, meta_data_type=str, store=store, meta=meta, default_value=default_value)
+    def __init__(self, name, value=None, datatype=SageObject, store=True,
+                 meta=False, **kwargs):
+        super(WebSageObject, self).__init__(name, value, store_data_type=datatype, meta_data_type=str, store=store, meta=meta, **kwargs)
 
-    def to_store(self, f):
-        return dumps(f)
+    def to_store(self):
+        return dumps(self._value)
 
     def from_store(self, f):
         return loads(f)
 
 class WebPoly(WebProperty):
-    def __init__(self, name, store=True, meta=True,
-                 default_value=None):
-        super(WebPoly, self).__init__(name, store_data_type=PowerSeries_poly, meta_data_type=str, store=store, meta=meta, default_value=default_value)
+    def __init__(self, name, value=None, store=True, meta=True,
+                 **kwargs):
+        super(WebPoly, self).__init__(name, value, store_data_type=PowerSeries_poly, meta_data_type=str, store=store, meta=meta, **kwargs)
 
-    def to_store(self, f):
+    def to_store(self):
+        f = self._value
         if f is None:
             return None
         return f
@@ -461,36 +538,38 @@ class WebPoly(WebProperty):
     def from_store(self, f):
         return f
 
-    def to_meta(self, f):
-        return str(f)
+    def to_meta(self):
+        return str(self._value)
 
     def from_meta(self, f):
         raise NotImplementedError
 
 class WebNoStoreObject(WebProperty):
 
-    def __init__(self, name, default_value=None):
-        super(WebNoStoreObject, self).__init__(name, meta=False, store=False, default_value=default_value)
+    def __init__(self, name, value=None, **kwargs):
+        super(WebNoStoreObject, self).__init__(name, value, meta=False, store=False, **kwargs)
 
 
 class WebNumberField(WebDict):
     
-    def __init__(self, name, store=True, meta=True, default_value=None):
-        if default_value == None:
-            default_value = QQ
-        super(WebDict, self).__init__(name, dict, dict, store, meta, default_value)
+    def __init__(self, name, value=None,
+                 store=True, meta=True, **kwargs):
+        self._default_value = QQ
+        super(WebDict, self).__init__(name, value, dict, dict, store, meta, **kwargs)
 
-    def to_store(self, K):
-        return number_field_to_dict(K)
+    def to_store(self):
+        return number_field_to_dict(self._value)
 
     def from_store(self, k):
         return number_field_from_dict(k)
 
-    def to_meta(self, K):
+    def to_meta(self):
         r"""
         We store the LMFDB label of the absolute field
         in the meta collection.
         """
+        K = self._value
+        
         if K.absolute_degree() == 1:
             p = 'x'
         else:

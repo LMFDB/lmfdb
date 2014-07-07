@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #*****************************************************************************
-#  Copyright (C) 2010
+#  Copyright (C) 2014
 #  Fredrik Strömberg <fredrik314@gmail.com>,
 #  Stephan Ehlen <stephan.j.ehlen@gmail.com>
 # 
@@ -76,6 +76,7 @@ from sage.all import (
      )
      
 from sage.rings.power_series_poly import PowerSeries_poly
+
 from sage.structure.unique_representation import CachedRepresentation
 
 
@@ -90,7 +91,7 @@ class WebHeckeOrbits(WebDict):
         self.character = character
         self.parent = parent
         super(WebHeckeOrbits, self).__init__(
-            name, True, True, {}
+            name, {}, True, True
             )
 
     def to_meta(self, l):
@@ -139,36 +140,37 @@ class WebModFormSpace(WebObject, CachedRepresentation):
 
     """
 
+    _params = ['level', 'weight', 'character']
+    _dbkey = ['galois_orbit_name']
+    _collection_name = 'webmodformspace_test'
+
     def __init__(self, level=1, weight=12, character=1, prec=10, bitprec=53, update_from_db=True):
         self._properties = WebProperties(
             WebInt('level', default_value=level),
             WebInt('weight', default_value=weight),
-            WebCharProperty('character', modulus=level, default_value=character),
-            WebStr('character_naming_scheme', default_value='Conrey'),
-            WebList('_character_galois_orbit', default_value=[character]),
-            WebDict('_character_galois_orbit_embeddings', default_value={}),
+            WebCharProperty('character', modulus=level, number=character),
+            WebStr('character_naming_scheme', value='Conrey'),
+            WebList('_character_galois_orbit', value=[character]),
+            WebDict('_character_galois_orbit_embeddings', value={}),
             WebCharProperty('character_orbit_rep', modulus=level),
             WebCharProperty('character_used_in_computation', modulus=level),
-            WebStr('galois_orbit_name', default_value=space_label(level, weight, character)),
+            WebStr('galois_orbit_name', value=space_label(level, weight, character)),
             WebInt('dimension'),
             WebInt('dimension_cusp_forms'),
             WebInt('dimension_modular_forms'),
             WebInt('dimension_new_cusp_forms'),
-            WebInt('cuspidal', default_value=int(1)),
-            WebInt('prec', default_value=int(prec)), #precision of q-expansions
+            WebInt('cuspidal', value=int(1)),
+            WebInt('prec', value=int(prec)), #precision of q-expansions
             WebSageObject('group'),
             WebInt('sturm_bound'),
             WebHeckeOrbits('hecke_orbits', level, weight,
                            character, self),
             WebDict('oldspace_decomposition'),
-            WebInt('bitprec', default_value=bitprec),            
-            WebFloat('version', default_value=float(emf_version))
+            WebInt('bitprec', value=bitprec),            
+            WebFloat('version', value=float(emf_version))
                     )
         
         super(WebModFormSpace, self).__init__(
-            params=['level', 'weight', 'character'],
-            dbkey='galois_orbit_name',
-            collection_name='webmodformspace_test',
             update_from_db=update_from_db)
 
     def init_dynamic_properties(self):
@@ -185,16 +187,15 @@ class WebModFormSpace(WebObject, CachedRepresentation):
 class WebModFormSpaceProperty(WebProperty):
 
     def __init__(self, name, level=1, weight=12,
-                 character=1, default_value=None):        
+                 character=1, value=None):        
         self.level = level
         self.weight = weight
         self.character = character
-        if default_value is None:
-            default_value = WebModFormSpace(self.level, self.weight, self.character)
+        if value is None:
+            value = WebModFormSpace(self.level, self.weight, self.character)
         super(WebModFormSpaceProperty, self).__init__(name,
-                                                      update_from_store=False,
-                                                      update_from_meta=False,
-                                                      default_value = default_value)
+                                                      include_in_update=False,
+                                                      value = value)
 
     def to_meta(self, M):
         return M.galois_orbit_label

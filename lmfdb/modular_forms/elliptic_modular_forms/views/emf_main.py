@@ -27,7 +27,7 @@ from lmfdb.utils import ajax_more, ajax_result, make_logger, to_dict
 from sage.all import *
 from sage.modular.dirichlet import DirichletGroup
 from lmfdb.base import app, db
-from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms import WebNewForm
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_classes import ClassicalMFDisplay, DimensionTable
 from lmfdb.modular_forms import MF_TOP
