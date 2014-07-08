@@ -43,6 +43,7 @@ class DimensionTable(object):
         dims = db['dimensions']
         emf_logger.debug('dims table ={0}'.format(dims))
         emf_logger.debug('group={0}'.format(group))
+        rec = None
         try:
             if group == 0:
                 rec = dims.find_one({'group': 'gamma0'})
@@ -52,7 +53,6 @@ class DimensionTable(object):
                 rec = dims.find_one({'group': 'gamma1'})
                 self.dimension = self.dimension_gamma1
         except:
-            rec = None
             emf_logger.critical('Critical error: No dimension information for group={0}'.format(group))
         if rec<>None:
             self._table = loads(rec['data'])
@@ -68,7 +68,8 @@ class DimensionTable(object):
             return "n/a"
         if N in self._table.keys():
             if k in self._table[N]:
-                dim = self._table[N][k][0][0]
+                
+                dim = self._table[N][k]['dimension'] #[0][0]
                 return dim
         return "n/a"
     @cached_method
@@ -92,7 +93,7 @@ class DimensionTable(object):
             if k in tblN and character in tblN[k]:
                 # emf_logger.debug('Lookup dimension for Gamma1({0}), weight={1},
                 # character={2}'.format(N,k,character))
-                dim = tblN[k][character][0]
+                dim = tblN[k][character]['dimension']
                 # character={1}'.format(N,k,character))
                 return dim
         return "n/a"
@@ -106,8 +107,8 @@ class DimensionTable(object):
             tblN = self._table[N]
             if k in tblN:
                 # emf_logger.debug("have information for weight {0}".format(k))
-                t = tblN[k].get(character,(0,False))
-                in_db = t[1]
+                t = tblN[k].get(character,{})
+                in_db = t.get('is_in_db',False)
                 emf_logger.debug("is_in_db: {0}".format(t)) 
                 return in_db
         return False
@@ -125,10 +126,11 @@ class ClassicalMFDisplay(MFDisplay):
         Conn = lmfdb.base.getDBConnection()
         #if dbname == '':
         dbname = 'modularforms2'
-        self._files = Conn[dbname].Newform_factors.files
+        #self._files = Conn[dbname].newform_factors.files
+        self._files = Conn[dbname].webmodformspace_test.files
         emf_logger.debug("files db : {0} with nr. of recs:{1}".format(self._files,self._files.find().count()))
         
-    def set_table_browsing(self, skip=[0, 0], limit=[(2, 16), (1, 50)], keys=['Weight', 'Level'], character=1, dimension_table=None, dimension_fun=dimension_new_cusp_forms, title='Dimension of newforms', check_db=True):
+    def set_table_browsing(self, skip=[0, 0], limit=[(1, 16), (1, 50)], keys=['Weight', 'Level'], character=1, dimension_table=None, dimension_fun=dimension_new_cusp_forms, title='Dimension of newforms', check_db=True):
         r"""
         Table of Holomorphic modular forms spaces.
         Skip tells you how many chunks of data you want to skip (from the geginning) and limit tells you how large each chunk is.
@@ -169,6 +171,12 @@ class ClassicalMFDisplay(MFDisplay):
         if dimension_table is not None:
             dimension_fun = dimension_table.dimension
             is_data_in_db = dimension_table.is_in_db
+        else:
+            def dimension_fun(N,k):
+                return "n/a"
+            def is_data_in_db(N,k,i):
+                return False
+        emf_logger.debug("dimension_fun  = {0} level_ul ll={1}".format(dimension_fun,(level_ul,level_ll)))
         #else:
         #def is_data_in_db(N, k, character):            
         #    n = self._files.find({'N':int(N),'k':int(k),'chi':int(character)}).count()
@@ -177,6 +185,7 @@ class ClassicalMFDisplay(MFDisplay):
         # fixed level
         if level_ll == level_ul:
             N = level_ll
+            emf_logger.debug("dimension_fun  = {0},N={2}".format(dimension_fun,N))
             # specific character =0,1
             if character == 0 or character == 1:
                 self._table['rowhead'] = 'Weight'
@@ -239,6 +248,7 @@ class ClassicalMFDisplay(MFDisplay):
                         for xc in g]
                     row['cells'] = []
                     for k in range(wt_ll, wt_ul + 1):
+                        d = 'n/a'
                         if not k in self._table['col_heads']:
                             # emf_logger.debug("Adding to col_heads:{0}s".format(k))
                             self._table['col_heads'].append(k)
@@ -261,11 +271,12 @@ class ClassicalMFDisplay(MFDisplay):
                 for N in range(level_ll, level_ul + 1):
                     if not N in self._table['col_heads']:
                         self._table['col_heads'].append(N)
-                    try:
-                        if character == 1:
-                            d = dimension_fun(N, k)
-                    except Exception as ex:
-                        emf_logger.critical("Exception: {0}. \n Could not compute the dimension with function {0}".format(ex, dimension_fun))
+                    #try:
+                    if character == 1:
+                        d = dimension_fun(N, k)
+                    #except Exception as ex:
+                    #d = 'n/a'
+                    #    emf_logger.critical("Exception: {0}. \n Could not compute the dimension with function {0}".format(ex, dimension_fun))
                     # emf_logger.debug("N,k,char,dim: {0},{1},{2},{3}".format(N,k,character,d))
                     if character == 1:
                         if (not check_db) or is_data_in_db(N, k, character):

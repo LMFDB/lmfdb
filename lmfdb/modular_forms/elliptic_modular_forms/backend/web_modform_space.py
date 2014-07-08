@@ -178,6 +178,9 @@ class WebModFormSpace(WebObject, CachedRepresentation):
                     )
         
         super(WebModFormSpace, self).__init__(
+            params=['level', 'weight', 'character'],
+            dbkey='galois_orbit_name',
+            collection_name='webmodformspace_test',
             update_from_db=update_from_db)
 
     def init_dynamic_properties(self):

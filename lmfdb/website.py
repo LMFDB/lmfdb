@@ -17,6 +17,7 @@ import hilbert_modular_forms
 import siegel_modular_forms
 import modular_forms
 import elliptic_curves
+import ecnf
 import quadratic_twists
 import plot_example
 import number_fields
