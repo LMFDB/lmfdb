@@ -101,6 +101,18 @@ class WebqExp(WebPoly):
                  default_value=None):
         super(WebqExp, self).__init__(name, default_value=default_value)
 
+    def latex(self, prec=None, name=None):
+        if prec is None:
+            qe = self.value()
+        else:
+            qe = self.value().truncate_powerseries(prec)
+        wl = web_latex_split_on_re(qe)
+        
+        if name is not None:
+            return wl.replace(str(self.value().base_ring().gen()), name)
+        else:
+            return wl
+
     def from_fs(self, f):
         if f is None:
             return None
@@ -120,7 +132,7 @@ class WebqExp(WebPoly):
 class WebEigenvalues(WebObject, CachedRepresentation):
 
     _key = ['hecke_orbit_label']
-    _file_key = ['hecke_orbit_label']
+    _file_key = ['hecke_orbit_label', 'prec']
     _collection_name = 'ap_test'
 
     def __init__(self, hecke_orbit_label, prec=10, update_from_db=True):
@@ -137,7 +149,11 @@ class WebEigenvalues(WebObject, CachedRepresentation):
             update_from_db=update_from_db
             )
 
-        self._add_to_fs_query = {'prec': {'gt': self.prec}}
+    def update_from_db(self, ignore_non_existent = True, \
+                       add_to_fs_query=None, add_to_db_query=None):
+
+        self._add_to_fs_query = {'prec': {'$gt': self.prec-1}}
+        super(WebEigenvalues,self).update_from_db(ignore_non_existent, add_to_fs_query, add_to_db_query)
 
     def init_dynamic_properties(self):
         emf_logger.debug("E = {0}".format(self.E))
@@ -183,13 +199,18 @@ class WebNewForm(WebObject, CachedRepresentation):
     _collection_name = 'webnewforms_test'
 
     def __init__(self, level=1, weight=12, character=1, label='a', prec=10, bitprec=53, parent=None, update_from_db=True):
+        if isinstance(character, WebChar):
+            character_number = character.number
+        else:
+            character_number = character
+            character = None if parent is None else parent.character
+        
         self._properties = WebProperties(
             WebInt('level', value=level),
             WebInt('weight', value=weight),
             WebCharProperty('character', modulus=level,
-                            number=character,
-                            value = None if parent is None
-                            else parent.character,
+                            number=character_number,
+                            value = character,
                             include_in_update = True if parent is None
                             else False),
             WebStr('character_naming_scheme', default_value='Conrey'),
@@ -220,18 +241,14 @@ class WebNewForm(WebObject, CachedRepresentation):
 
         # We're setting the WebEigenvalues property after calling __init__ of the base class
         # because it will set hecke_orbit_label from the db first
-        self.eigenvalues = WebEigenvalues(self.hecke_orbit_label)
+        self.eigenvalues = WebEigenvalues(self.hecke_orbit_label, prec = self.prec)
 
     def q_expansion_latex(self, prec=None, name=None):
-        wl = web_latex_split_on_re(self.q_expansion(prec))
-        if name is not None:
-            return wl.replace(str(self.q_expansion().base_ring().gen()), name)
-        else:
-            return wl
+        return self._properties['q_expansion'].latex(prec, name)
 
     def coefficient(self, n):
         r"""
-        Return coefficient nr. n
+          Return coefficient nr. n
         """
         #emf_logger.debug("In coefficient: n={0}".format(n))
         if n==0:
@@ -244,10 +261,9 @@ class WebNewForm(WebObject, CachedRepresentation):
 
     def coefficients(self, nrange=range(1, 10), save_to_db=True):
         r"""
-        Gives the coefficients in a range.
-        We assume that the self._ap containing Hecke eigenvalues
-        are stored.
-
+         Gives the coefficients in a range.
+         We assume that the self._ap containing Hecke eigenvalues
+         are stored.
         """
         #emf_logger.debug("computing coeffs in range {0}".format(nrange))
         if not isinstance(nrange, list):

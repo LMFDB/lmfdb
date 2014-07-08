@@ -203,9 +203,9 @@ class WebCharProperty(WebInt):
         self.number = number
         c = None
         if not kwargs.has_key('value'):
-            c = WebChar(self.modulus, number, update_from_db=True, compute=True)
+            c = WebChar(modulus, number, update_from_db=True, compute=True)
         elif kwargs['value'] is not None:
-            c = value
+            c = kwargs.pop('value')
         else:
             self._default_value = WebChar(modulus, number, update_from_db=True, compute=True)
         if c is None:

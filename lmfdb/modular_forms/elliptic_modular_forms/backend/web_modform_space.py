@@ -146,10 +146,16 @@ class WebModFormSpace(WebObject, CachedRepresentation):
     _collection_name = 'webmodformspace_test'
 
     def __init__(self, level=1, weight=12, character=1, prec=10, bitprec=53, update_from_db=True):
+
+        if isinstance(character, WebChar):
+            character_number = character.number
+        else:
+            character_number = character
+            
         self._properties = WebProperties(
             WebInt('level', value=level),
             WebInt('weight', value=weight),
-            WebCharProperty('character', modulus=level, number=character),
+            WebCharProperty('character', modulus=level, number=character_number),
             WebStr('character_naming_scheme', value='Conrey', save_to_fs=True),
             WebList('_character_galois_orbit', default_value=[character]),
             WebDict('_character_galois_orbit_embeddings', default_value={}),
@@ -188,7 +194,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
 class WebModFormSpaceProperty(WebProperty):
 
     def __init__(self, name, level=1, weight=12,
-                 character=1, value=None):        
+                 character=1, value=None):
         self.level = level
         self.weight = weight
         self.character = character
@@ -196,7 +202,12 @@ class WebModFormSpaceProperty(WebProperty):
             value = WebModFormSpace(self.level, self.weight, self.character)
         super(WebModFormSpaceProperty, self).__init__(name,
                                                       include_in_update=False,
+                                                      save_to_db=True,
+                                                      save_to_fs=False,
                                                       value = value)
 
+    def to_fs(self):
+        return self.value().galois_orbit_name
+
     def to_db(self):
-        return self.value().galois_orbit_label
+        return self.to_fs()

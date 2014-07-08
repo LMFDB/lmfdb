@@ -93,7 +93,7 @@ class WebProperty(object):
           Returns the value of self in the db_data_type which then can be stored in the db.
         """
         val = self._value
-        print val
+        print val, self.name
         if val is not None:
             return self.db_data_type(val)
         else:
@@ -125,7 +125,7 @@ class WebProperty(object):
         self._value = self.from_db(val)
 
     def __repr__(self):
-        return "{0}: {1}".format(self.name, self.value)
+        return "{0}: {1}".format(self.name, self._value)
 
 class WebProperties(object):
     r"""
@@ -306,6 +306,7 @@ class WebObject(object):
         # We recreate self from the db and check if everything is
         # contained in the new object.
         params = { k : getattr(self, k) for k in self._key }
+        print params
         f = self.__class__(**params)
         f.update_from_db()
         f._check_if_all_computed()
@@ -343,8 +344,8 @@ class WebObject(object):
             v = getattr(self, p.name)
             got = type(self._properties[p.name].to_fs())
             expected = p.fs_data_type
-            assert got is expected, "Property {0} has wrong type. Got {1}, expected {2}".format(got, expected)
-            assert v.has_been_set(), "Did we compute {0}? It has not been set yet.".format(p)
+            assert p.has_been_set(), "Did we compute {0}? It has not been set yet.".format(p.name)
+            assert got is expected, "Property {0} has wrong type. Got {1}, expected {2}".format(p.name, got, expected)
         return True
 
     def init_dynamic_properties(self):
@@ -466,19 +467,31 @@ class WebObject(object):
         """
         if add_to_db_query is None:
             add_to_db_query = self._add_to_db_query
+        elif self._add_to_db_query is not None:
+            q=add_to_db_query
+            add_to_db_query = copy(self._add_to_db_query)
+            add_to_db_query.update(q)
+
         if add_to_fs_query is None:
             add_to_fs_query = self._add_to_fs_query
+        elif self._add_to_fs_query is not None:
+            q=add_to_fs_query
+            add_to_fs_query = copy(self._add_to_fs_query)
+            add_to_fs_query.update(q)
+            
+        emf_logger.debug("add_to_fs_query: {0}".format(add_to_fs_query))
+        emf_logger.debug("self._add_to_fs_query: {0}".format(self._add_to_fs_query))
         
         if self._use_separate_db or not self._use_gridfs:
             coll = self._collection
             key = self.key_dict()
             if add_to_db_query is not None:
                 key.update(add_to_db_query)
-            emf_logger.debug("key: {0}", key)
+            emf_logger.debug("key: {0}".format(key))
             if coll.find(key).count()>0:
                 props_to_fetch = [p.name for p in self._db_properties
                                   if (p.include_in_update and not p in self._db_properties)
-                                  or p.name in self._params]
+                                  or p.name in self._key]
                 rec = coll.find_one(key, fields = props_to_fetch)
                 for pn in props_to_fetch:
                     p = self._properties[pn]
@@ -494,8 +507,9 @@ class WebObject(object):
             fs = self._files
             file_key = self.file_key_dict()
             if add_to_fs_query is not None:
-                file_key.update(add_to_db_query)
-            emf_logger.debug("file_key: {0}", file_key)
+                file_key.update(add_to_fs_query)
+            emf_logger.debug("add_to_fs_query: {0}".format(add_to_fs_query))
+            emf_logger.debug("file_key: {0}".format(file_key))
             if fs.exists(file_key):
                 coll = self._file_collection
                 fid = coll.find_one(file_key)['_id']
