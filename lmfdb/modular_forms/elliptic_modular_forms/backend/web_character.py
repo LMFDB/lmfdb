@@ -54,9 +54,9 @@ class WebChar(WebObject, CachedRepresentation):
     
     """
 
-    _params=['modulus', 'number']
-    _dbkey=['modulus', 'number']
-    _collection_name='webchar_test'
+    _key = ['modulus', 'number']
+    _file_key = ['modulus', 'number']
+    _collection_name = 'webchar_test'
     
     def __init__(self, modulus=1, number=1, update_from_db=True, compute=False):
         self._properties = WebProperties(
@@ -65,7 +65,7 @@ class WebChar(WebObject, CachedRepresentation):
             WebInt('number', value=number),
             WebInt('modulus_euler_phi'),
             WebInt('order'),
-            WebStr('latex_name', store=True, meta=False),
+            WebStr('latex_name'),
             WebNoStoreObject('sage_character', DirichletCharacter),
             WebDict('_values_algebraic'),
             WebDict('_values_float'),
@@ -213,7 +213,7 @@ class WebCharProperty(WebInt):
         else:
             super(WebCharProperty, self).__init__(name, value=c, **kwargs)
 
-    def to_store(self):
+    def to_db(self):
         c = self._value
         if not isinstance(c, WebChar) \
                and not isinstance(c, DirichletCharacter_conrey):
@@ -223,14 +223,14 @@ class WebCharProperty(WebInt):
         else:
             return int(c.number())
 
-    def from_store(self, n):
+    def from_db(self, n):
         emf_logger.debug('converting {0} from store in WebCharProperty {1}'.format(n, self.name))
         return WebChar(self.modulus, n, compute=True)
 
-    def from_meta(self, n):
-        return self.from_store(n)
+    def from_fs(self, n):
+        return self.from_db(n)
 
-    def to_meta(self):
-        return self.to_store()
+    def to_fs(self):
+        return self.to_db()
     
    

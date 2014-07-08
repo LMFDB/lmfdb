@@ -37,38 +37,52 @@ import gridfs
 class WebProperty(object):
     r"""
     A meta data type for the properties of a WebObject.
-    store: True if this property should be stored in gridfs
-    meta: True if this property should be stored in the meta record (mongo)
     """
 
     _default_value = None
 
-    def __init__(self, name, value=None, store_data_type=None, meta_data_type=None, store=True, meta=False, default_value=None, include_in_update=True):
+    def __init__(self, name, value=None, fs_data_type=None, db_data_type=None, \
+                 save_to_fs=True, save_to_db=False, default_value=None, include_in_update=True):
+        r"""
+        INPUT:
+            - save_to_fs -- bool: True if this property should be stored in gridfs
+            - save_to_db -- bool: True if this property should be stored in the db record (mongo)
+        """
         self.name = name
         if default_value is not None:
             self._default_value = default_value
         if value is None:
             value = self._default_value
+            self._has_been_set = False
+        else:
+            self._has_been_set = True
         self._value = value
         # default to str
-        if store_data_type is not None:
-            self.store_data_type = store_data_type
+        if fs_data_type is not None:
+            self.fs_data_type = fs_data_type
         else:
-            self.store_data_type = str
-        if meta_data_type is not None:
-            self.meta_data_type = meta_data_type
+            self.fs_data_type = str
+            
+        if db_data_type is not None:
+            self.db_data_type = db_data_type
         else:
-            self.meta_data_type = str
-        self.store = store
-        self.meta = meta
+            self.db_data_type = str
+        self.save_to_fs = save_to_fs
+        self.save_to_db = save_to_db
 
         self.include_in_update = include_in_update
+
+        if not hasattr(self, '_add_to_db_query'):
+            self._add_to_db_query = None
+        if not hasattr(self, '_add_to_fs_query'):
+            self._add_to_fs_query = None
         
     def value(self):
         return self._value
 
     def set_value(self, val):
         self._value = val
+        self._has_been_set = True
     
     def default_value(self):
         if hasattr(self, '_default_value'):
@@ -76,38 +90,47 @@ class WebProperty(object):
         else:
             return None
 
-    def to_meta(self):
+    def has_been_set(self):
+        return self._has_been_set
+
+    def to_db(self):
+        r"""
+          Returns the value of self in the db_data_type which then can be stored in the db.
+        """
         val = self._value
         print val
         if val is not None:
-            return self.meta_data_type(val)
+            return self.db_data_type(val)
         else:
             return None
     
-    def to_store(self):
+    def to_fs(self):
+        r"""
+          Returns the value of self in the fs_data_type which then can be stored in gridfs.
+        """
         val = self._value
         if val is not None:
             try:
-                return self.store_data_type(val)
+                return self.fs_data_type(val)
             except:
                 raise TypeError("Error with value {0}".format(val))
         else:
             return None
 
-    def from_store(self, val):
+    def from_fs(self, val):
         return val
 
-    def from_meta(self, val):
+    def from_db(self, val):
         return val
 
-    def set_from_store(self, val):
-        self._value = self.from_store(val)
+    def set_from_fs(self, val):
+        self._value = self.from_fs(val)
 
-    def set_from_meta(self, val):
-        self._value = self.from_meta(val)
+    def set_from_db(self, val):
+        self._value = self.from_db(val)
 
     def __repr__(self):
-        return "{0}".format(self.name)#, self.value)
+        return "{0}: {1}".format(self.name, self.value)
 
 class WebProperties(object):
     r"""
@@ -126,6 +149,12 @@ class WebProperties(object):
 
     def names(self):
         return self._d.keys()
+
+    def db_properties(self):
+        return WebProperties([p for p in self if p.save_to_db])
+
+    def fs_properties(self):
+        return WebProperties([p for p in self if p.save_to_fs])
 
     def list(self):
         return self._d.values()
@@ -158,17 +187,16 @@ class WebObject(object):
     """
 
     _collection_name = None
-    _params = None
-    _dbkey = None
+    _key = None
+    _file_key = None
     _properties = None
 
     r"""
-          _params: a dictionary - The parameters that are needed to initialize a WebObject of this type.
-          _dbkey: a string - the field in the database that is the unique identifier for this object
+          _key: a list - The parameters that are needed to initialize a WebObject of this type.
+          _file_key:  a string - the field in the database that is the unique identifier for this object
                  This can also be a list of strings if the key is a compound.
-          _collection_name: a database collection name to store the values in
-                           We assume that the meta collection is given by 'collection_name.files'
-                           And we keep a meta collection in 'collection_name.meta'
+          _collection_name: a database collection name to use
+                            We assume that the gridfs collection is given by 'collection_name.files'
     """
 
     _properties = WebProperties()
@@ -183,33 +211,47 @@ class WebObject(object):
         return gridfs.GridFS(C,coll)
 
     def __init__(self,
-                 use_separate_meta = True,
+                 use_separate_db = True,
                  use_gridfs = True,
                  update_from_db=False, **kwargs):
+        r"""
+        INPUT:
+          - use_gridfs -- bool: If True we use gridfs to store (large) properties of self
+          - use_separate_db -- bool: Only valid if use_gridfs.
+                          If True, then we use the collection corresponding to self._collection_name
+                          to store (relatively small, searchable) data instead of the gridfs collection (collection_name.files).
+                          This is for instance useful if we would like to have several records in the db
+                          pointing to the same file.
+          - update_from_db -- bool: If True, we update self from db during init.
+        """
 
-        print "in WebObject.__init__"
-        print self._properties
+        # check consistency of parameters
+        if not use_gridfs and use_separate_db:
+            raise ValueError("Inconsistent parameters: do set use_seperate_db and not use_gridfs")
 
         # This has to be overridden by classes that inherit from WebObject
         # Should be a list of WebProperty objects
-        if not hasattr(self, '_properties') or self._properties == None:
+        if not hasattr(self, '_properties') or self._properties is None:
             self._properties = WebProperties()
 
+        # set the collections and the gridfs
+        self._use_gridfs = use_gridfs
         if use_gridfs:
             self._file_collection = self.connect_to_db(self._collection_name + '.files')
-        self.use_separate_meta = use_separate_meta
-        if use_separate_meta:
-            self._meta_collection = self.connect_to_db(self._collection_name + '.meta')
-        else:
-            if use_gridfs:
-                self._meta_collection = self.connect_to_db(self._collection_name + '.files')
-            else:
-                self._meta_collection = self.connect_to_db(self._collection_name)
+        self._use_separate_db = use_separate_db
+        self._collection = self.connect_to_db(self._collection_name)
+        if use_gridfs and not use_separate_db:
+                self._collection = self.connect_to_db(self._collection_name + '.files')
         self._files = self.get_files_from_gridfs(self._collection_name)
 
-        # Initialize _store_properties and _meta_properties to be simpler
-        self._store_properties = WebProperties([p for p in self._properties if p.store])
-        self._meta_properties = WebProperties([p for p in self._properties if p.meta])
+        # Initialize _db_properties and _db_properties to be easily accesible
+        self._db_properties = self._properties.db_properties()
+        self._fs_properties = self._properties.fs_properties()
+
+        # check that the file key is contained in the _db_properties
+        for k in self._file_key:
+            assert k in self._db_properties, \
+                   "The file key has to be contained in self._db_properties. This is not the case for {0}".format(k)
 
         #print hasattr(self, 'level')
 
@@ -242,59 +284,67 @@ class WebObject(object):
     def collection_name(self):
         return self._collection_name
         
-    def meta_properties(self):
+    def db_properties(self):
         r"""
          Return a dictionary with keys equal to the properties of self and values representing the data types.
         """
-        return self._meta_properties
+        return self._db_properties
             
 
-    def store_properties(self):
+    def fs_properties(self):
         r"""
          Return a dictionary with keys equal to the properties of self
-         which are stored in the database and values representing data types.
+         which are stored in the file system (gridfs) and values representing the corresponding WebProperties.
         """
-        return self._store_properties
+        return self._fs_properties
 
     def _check_if_all_saved(self):
         r"""
-        We check if all properties have been saved.
-        In the file store and in the meta record.
+         We check if all properties have been saved.
+         In gridfs and in the db record.
         """
         # We recreate self from the db and check if everything is
         # contained in the new object.
-        params = { key : getattr(self, key) for key in self._params }
+        params = { k : getattr(self, k) for k in self._key }
         f = self.__class__(**params)
         f.update_from_db()
         f._check_if_all_computed()
-        # Now we check completeness and consistency of the meta record
-        rec = f.get_meta_record()
-        for p in self._meta_properties:
+        # Now we check completeness and consistency of the db record
+        rec = f.get_db_record()
+        for p in self._db_properties:
             assert rec.has_key(p.name), "Missing property {0} in meta record.".format(p)
             v = getattr(f, p.name)
-            got = type(v)
-            expected = p.meta_data_type
+            dbf = f._properties[p.name].to_db()
+            got = type(dbf)
+            expected = p.db_data_type
             assert got is expected, "Property {0} has wrong type. Got {1}, expected {2}".format(p.name, got, expected)
             s = getattr(self, p.name)
             assert v == s, "Error restoring Property {0}. Got {1}, expected {2}".format(p.name, v, s)
-            mf = f._properties[p.name].to_meta()
-            ms = p.to_meta()
+            dbs = p.to_db()
             r = rec[p.name]
-            assert mf == r and ms == r, \
-                   "Evaluation of {0} failed. Meta record is {1} but property_to_eta returned {2}".format(p, m, r)
+            assert dbf == r and dbs == r, \
+                   "Evaluation of {0} failed. DB record is {1}, property.to_db() returned {2} and the restored object property.to_db() returns {3}".format(p, r, dbs, dbf)
+        for p in self._fs_properties:
+            fsf = f._properties[p.name].to_fs()
+            got = type(fsf)
+            expected = p.fs_data_type
+            assert got is expected, "Property {0} has wrong type. Got {1}, expected {2}".format(p.name, got, expected)
+            fss = p.to_fs()
+            assert dbs == fss, \
+                   "Evaluation of {0} failed. Property.to_fs() returned {1} and the restored object property.to_fs() returns {2}".format(p, fsf, fss)
         return True
         
     def _check_if_all_computed(self):
         r"""
-        We check if all properties in self._store_properties are set.
+        We check if all properties in self._properties are set correctly.
         """
-        for p in self._store_properties:
+        for p in self._properties:
             assert hasattr(self, p.name), "Missing property {0}".format(p)
             v = getattr(self, p.name)
-            got = type(v)
-            expected = p.store_data_type
+            got = type(self._properties[p.name].to_fs())
+            expected = p.fs_data_type
             assert got is expected, "Property {0} has wrong type. Got {1}, expected {2}".format(got, expected)
-            assert v is not None, "Did you store {0}? It has value {1}".format(p, v)
+            assert v.has_been_set(), "Did we compute {0}? It has not been set yet.".format(p)
         return True
 
     def init_dynamic_properties(self):
@@ -305,86 +355,86 @@ class WebObject(object):
         """
         pass
         
-    def key_dict(self):
+    def file_key_dict(self):
         r"""
         Return a dictionary where the keys are the dbkeys of ``self``` and
         the values are the corresponding values of ```self```.
         """
         emf_logger.debug('dbkey: {0}'.format(self._dbkey))
         emf_logger.debug('properties: {0}'.format(self._properties))
-        return { key : self._properties[key].to_meta() for key in self._dbkey }       
+        return { key : self._properties[key].to_db() for key in self._file_key }
 
-    def params_dict(self):
+    def key_dict(self):
         r"""
-        Return a dictionary where the keys are the params of ``self``` and
+        Return a dictionary where the keys are the keys of ``self``` and
         the values are the corresponding values of ```self```.
         """
 
-        return { key : self._properties[key].to_meta() for key in self._params }
+        return { key : self._properties[key].to_db() for key in self._key }
 
-    def meta_dict(self):
+    def db_dict(self):
         r"""
-        Return a dictionary with keys given by the keys of self._meta_properties
-        and values given by the corresponding values of self. We also apply the function to_meta() to the values
+        Return a dictionary with keys given by the keys of self._db_properties
+        and values given by the corresponding values of self. We also apply the function to_db() to the values
         to assure that we have the right data type (this is handy for complex conversions as well).
         """
-        return { p.name : p.to_meta() for p in self._meta_properties }
+        return { p.name : p.to_db() for p in self._db_properties }
 
-    def store_dict(self):
+    def fs_dict(self):
         r"""
-        Return a dictionary with keys given by the keys of self._store_properties
-        and values given by the corresponding values of self. We also apply the to_store() function to the values
+        Return a dictionary with keys given by the keys of self._fs_properties
+        and values given by the corresponding values of self. We also apply the to_fs() function to the values
         to assure that we have the right data type (this is handy for complex conversions as well).
         """
-        return { p.name : p.to_store() for p in self._store_properties }
+        return { p.name : p.to_fs() for p in self._fs_properties }
 
-    def get_meta_record(self):
+    def get_db_record(self):
         r"""
-          Get the meta record from the database. This is the mongodb record in collection_name.files.
+          Get the db record from the database. This is the mongodb record in self._collection_name.
         """
-        coll = self._meta_collection
-        rec = coll.find_one(self.meta_dict())
-        return { p.name: p.from_meta(rec[p.name]) for p in self._meta_properties if rec.has_key(p.name) }
+        coll = self._db_collection
+        rec = coll.find_one(self.key_dict())
+        return { p.name: p.from_db(rec[p.name]) for p in self._db_properties if rec.has_key(p.name) }
 
     def save_to_db(self, update = True):
         r"""
-        Saves ```self``` to the database, i.e.
-        save the meta record and the file in the gridfs file system.
+         Saves ```self``` to the database, i.e.
+         save the meta record and the file in the gridfs file system.
         """
         fs = self._files
-        key = self.key_dict()
+        file_key = self.file_key_dict()
         coll = self._file_collection
-        if fs.exists(key):
+        if fs.exists(file_key):
             if not update:
                 return True
             else:
-                fid = coll.find_one(key, fields=['_id'])['_id']
+                fid = coll.find_one(file_key, fields=['_id'])['_id']
                 fs.delete(fid)
         # insert
-        s = dumps(self.store_dict())
-        if not self.use_separate_meta:
-            key.update(self.meta_dict())
+        s = dumps(self.fs_dict())
+        if not self._use_separate_db:
+            file_key.update(self.db_dict())
         try:
-            fs.put(s, **key)
+            fs.put(s, **file_key)
         except Error, e:
             emf_logger.warn("Error inserting record: {0}".format(e))
         #fid = coll.find_one(key)['_id']
         # insert extended record
-        if not self.use_separate_meta:
+        if not self._use_separate_db:
             return True
-        coll = self._meta_collection
-        meta_key = self.params_dict()
-        meta_key.update(key)
+        coll = self._db_collection
+        key = self.key_dict()
+        #key.update(file_key)
         #print meta_key
-        meta = self.meta_dict()
+        dbd = self.db_dict()
         #meta['fid'] = fid
-        if coll.find(meta_key).count()>0:
+        if coll.find(key).count()>0:
             if not update:
                 return True
             else:
-                coll.update(meta_key, meta)
+                coll.update(key, dbd)
         else:
-            coll.insert(meta)
+            coll.insert(dbd)
         return True
         
 
@@ -393,56 +443,69 @@ class WebObject(object):
         Deletes ```self``` to the database, i.e.
         deletes the meta record and the file in the gridfs file system.
         """
-        coll = self._meta_collection
-        meta_key = self.params_dict()
-        ct = coll.find(meta_key).count()
+        coll = self._db_collection
+        key = self.key_dict()
+        ct = coll.find(key).count()
         if ct > 0:
-            if ct ==1 or all:
-                coll.remove(meta_key)
+            if ct == 1 or all:
+                coll.remove(key)
         if ct <= 1 or all:
             fs = self._files
-            key = self.key_dict()
+            file_key = self.file_key_dict()
             coll = self._collection
-            if fs.exists(key):
-                fid = coll.find_one(key)['_id']
+            if fs.exists(file_key):
+                fid = coll.find_one(file_key)['_id']
                 fs.delete(fid)
             else:
                 raise IndexError("Record does not exist")
 
-    def update_from_db(self, meta = True, ignore_non_existent = True):
+    def update_from_db(self, ignore_non_existent = True, \
+                       add_to_fs_query=None, add_to_db_query=None):
         r"""
         Updates the properties of ```self``` from the database using params and dbkey.
         """
-        if meta:
-            coll = self._meta_collection
-            meta_key = self.params_dict()
-            if coll.find(meta_key).count()>0:
-                props_to_fetch = [p.name for p in self._meta_properties
-                                  if (p.include_in_update and not p in self._store_properties)
+        if add_to_db_query is None:
+            add_to_db_query = self._add_to_db_query
+        if add_to_fs_query is None:
+            add_to_fs_query = self._add_to_fs_query
+        
+        if self._use_separate_db or not self._use_gridfs:
+            coll = self._db_collection
+            key = self.key_dict()
+            if add_to_db_query is not None:
+                key.update(add_to_db_query)
+            emf_logger.debug("key: {0}", key)
+            if coll.find(key).count()>0:
+                props_to_fetch = [p.name for p in self._db_properties
+                                  if (p.include_in_update and not p in self._db_properties)
                                   or p.name in self._params]
-                rec = coll.find_one(meta_key, fields = props_to_fetch)
+                rec = coll.find_one(key, fields = props_to_fetch)
                 for pn in props_to_fetch:
                     p = self._properties[pn]
                     if rec.has_key(pn):
                         try:
-                            p.set_from_meta(rec[pn])
+                            p.set_from_db(rec[pn])
                         except NotImplementedError:
                             continue                           
             else:
                 if not ignore_non_existent:
-                    raise IndexError("Meta record does not exist")
-        fs = self._files
-        key = self.key_dict()
-        if fs.exists(key):
-            coll = self._file_collection
-            fid = coll.find_one(key)['_id']
-            d = loads(fs.get(fid).read())
-            for p in self._store_properties:
-                if p.include_in_update and d.has_key(p.name):
-                    p.set_from_store(d[p.name])
-        else:
-            if not ignore_non_existent:
-                raise IndexError("Record does not exist")
+                    raise IndexError("DB record does not exist")
+        if self._use_gridfs:
+            fs = self._files
+            file_key = self.file_key_dict()
+            if add_to_fs_query is not None:
+                file_key.update(add_to_db_query)
+            emf_logger.debug("file_key: {0}", file_key)
+            if fs.exists(file_key):
+                coll = self._file_collection
+                fid = coll.find_one(file_key)['_id']
+                d = loads(fs.get(fid).read())
+                for p in self._fs_properties:
+                    if p.include_in_update and d.has_key(p.name):
+                        p.set_from_fs(d[p.name])
+            else:
+                if not ignore_non_existent:
+                    raise IndexError("File does not exist")
 
     def __repr__(self):
         return "WebObject"
@@ -475,98 +538,103 @@ class WebInt(WebProperty):
 
     _default_value = int(0)
 
-    def __init__(self, name, value=None, store=True, meta=True, **kwargs):
-        super(WebInt, self).__init__(name, value, int, int, store, meta, **kwargs)
+    def __init__(self, name, value=None, save_to_fs=False, save_to_db=True, **kwargs):
+        super(WebInt, self).__init__(name, value, int, int, save_to_fs=save_to_fs, save_to_db=save_to_db, **kwargs)
         #print self.__class__
 
 class WebBool(WebProperty):
 
     _default_value = True
 
-    def __init__(self, name, value=None, store=True, meta=True, **kwargs):
-        super(WebBool, self).__init__(name, value, int, int, store, meta, **kwargs)
+    def __init__(self, name, value=None, save_to_fs=False, save_to_db=True, **kwargs):
+        super(WebBool, self).__init__(name, value, int, int, save_to_fs=save_to_fs, save_to_db=save_to_db, **kwargs)
         #print self.__class__
 
 class WebFloat(WebProperty):
 
     _default_value = float(0)
 
-    def __init__(self, name, value=None, store=True, meta=True, **kwargs):
-        super(WebFloat, self).__init__(name, value, float, float, store, meta, **kwargs)
+    def __init__(self, name, value=None, save_to_fs=False, save_to_db=True, **kwargs):
+        super(WebFloat, self).__init__(name, value, float, float, save_to_fs=save_to_fs, save_to_db=save_to_db, **kwargs)
 
 class WebStr(WebProperty):
 
-    def __init__(self, name, value=None, store=True, meta=True, **kwargs):
-        self._default_value = ''
-        super(WebStr, self).__init__(name, value, str, str, store, meta, **kwargs)
+    _default_value = ''
+
+    def __init__(self, name, value=None, save_to_db=True, save_to_fs=False, **kwargs):
+        super(WebStr, self).__init__(name, value, str, str, save_to_fs=save_to_fs, save_to_db=save_to_db, **kwargs)
 
 class WebDict(WebProperty):
 
-    def __init__(self, name, value=None, store=True, meta=False, **kwargs):
+    def __init__(self, name, value=None, save_to_fs=True, save_to_db=False, **kwargs):
         self._default_value = {}
-        super(WebDict, self).__init__(name, value, dict, dict, store, meta, **kwargs)
+        super(WebDict, self).__init__(name, value, dict, dict, save_to_fs=save_to_fs, save_to_db=save_to_db, **kwargs)
 
 class WebList(WebProperty):
 
-    def __init__(self, name, value=None, store=True, meta=False, **kwargs):
+    def __init__(self, name, value=None, save_to_fs=True, save_to_db=False, **kwargs):
         self._default_value = []
-        super(WebList, self).__init__(name, value, list, list, store, meta, **kwargs)
+        super(WebList, self).__init__(name, value, list, list, save_to_db=save_to_db, save_to_fs=save_to_fs, **kwargs)
 
 class WebSageObject(WebProperty):
 
-    def __init__(self, name, value=None, datatype=SageObject, store=True,
-                 meta=False, **kwargs):
-        super(WebSageObject, self).__init__(name, value, store_data_type=datatype, meta_data_type=str, store=store, meta=meta, **kwargs)
+    _default_value = None
 
-    def to_store(self):
+    def __init__(self, name, value=None, datatype=SageObject, save_to_fs=True,
+                 save_to_db=False, **kwargs):
+        super(WebSageObject, self).__init__(name, value, fs_data_type=datatype, db_data_type=str, \
+                                            save_to_db=save_to_db, save_to_fs=save_to_fs, **kwargs)
+
+    def to_fs(self):
         return dumps(self._value)
 
-    def from_store(self, f):
+    def from_fs(self, f):
         return loads(f)
 
 class WebPoly(WebProperty):
-    def __init__(self, name, value=None, store=True, meta=True,
+    def __init__(self, name, value=None, save_to_fs=True, save_to_db=True,
                  **kwargs):
-        super(WebPoly, self).__init__(name, value, store_data_type=PowerSeries_poly, meta_data_type=str, store=store, meta=meta, **kwargs)
+        super(WebPoly, self).__init__(name, value, fs_data_type=PowerSeries_poly, \
+                                      db_data_type=str, save_to_fs=save_to_fs, save_to_db=save_to_db, **kwargs)
 
-    def to_store(self):
+    def to_fs(self):
         f = self._value
         if f is None:
             return None
         return f
     
-    def from_store(self, f):
+    def from_fs(self, f):
         return f
 
-    def to_meta(self):
+    def to_db(self):
         return str(self._value)
 
-    def from_meta(self, f):
+    def from_db(self, f):
         raise NotImplementedError
 
 class WebNoStoreObject(WebProperty):
 
     def __init__(self, name, value=None, **kwargs):
-        super(WebNoStoreObject, self).__init__(name, value, meta=False, store=False, **kwargs)
+        super(WebNoStoreObject, self).__init__(name, value, save_to_fs=False, save_to_db=False, **kwargs)
 
 
 class WebNumberField(WebDict):
     
     def __init__(self, name, value=None,
-                 store=True, meta=True, **kwargs):
+                 save_to_fs=True, save_to_db=True, **kwargs):
         self._default_value = QQ
-        super(WebDict, self).__init__(name, value, dict, dict, store, meta, **kwargs)
+        super(WebDict, self).__init__(name, value, dict, dict, save_to_fs=save_to_fs, save_to_db=save_to_db, **kwargs)
 
-    def to_store(self):
+    def to_fs(self):
         return number_field_to_dict(self._value)
 
-    def from_store(self, k):
+    def from_fs(self, k):
         return number_field_from_dict(k)
 
-    def to_meta(self):
+    def to_db(self):
         r"""
         We store the LMFDB label of the absolute field
-        in the meta collection.
+        in the db.
         """
         K = self._value
         
@@ -579,7 +647,7 @@ class WebNumberField(WebDict):
 
         return l
 
-    def from_meta(self, k):
+    def from_db(self, k):
         raise NotImplementedError
             
 

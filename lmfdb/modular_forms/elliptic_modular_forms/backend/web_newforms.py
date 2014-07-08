@@ -101,7 +101,7 @@ class WebqExp(WebPoly):
                  default_value=None):
         super(WebqExp, self).__init__(name, default_value=default_value)
 
-    def from_store(self, f):
+    def from_fs(self, f):
         if f is None:
             return None
         f=loads(f)
@@ -111,7 +111,7 @@ class WebqExp(WebPoly):
         except:
             return f
 
-    def to_store(self, f):
+    def to_fs(self, f):
         if f is None:
             return None
         return dumps(f.polynomial())
@@ -119,23 +119,25 @@ class WebqExp(WebPoly):
 
 class WebEigenvalues(WebObject, CachedRepresentation):
 
-    _params = ['level', 'weight', 'character', 'label']
-    _dbkey = ['level', 'weight', 'character', 'label']
+    _key = ['hecke_orbit_label']
+    _file_key = ['hecke_orbit_label']
     _collection_name = 'ap_test'
 
-    def __init__(self, level=1, weight=12, character=1, label='a', prec=10, update_from_db=True):
+    def __init__(self, hecke_orbit_label, prec=10, update_from_db=True):
         self._properties = WebProperties(
             WebSageObject('E', None, Matrix),
             WebSageObject('v', None, vector),
-            WebInt('level', value=level),
-            WebInt('weight', value=weight),
-            WebInt('character', value=character),            
-            WebStr('label', value=label),            
+            WebStr('hecke_orbit_label', value=hecke_orbit_label),
+            WebInt('prec', value=prec)
             )
+        
         super(WebEigenvalues, self).__init__(
-            use_separate_meta=False,
+            use_gridfs=True,
+            use_separate_db=False,
             update_from_db=update_from_db
             )
+
+        self._add_to_fs_query = {'prec': {'gt': self.prec}}
 
     def init_dynamic_properties(self):
         emf_logger.debug("E = {0}".format(self.E))
@@ -176,8 +178,8 @@ class WebEigenvalues(WebObject, CachedRepresentation):
     
 class WebNewForm(WebObject, CachedRepresentation):
 
-    _params = ['level', 'weight', 'character', 'label']
-    _dbkey = ['hecke_orbit_label']
+    _key = ['level', 'weight', 'character', 'label']
+    _file_key = ['hecke_orbit_label']
     _collection_name = 'webnewforms_test'
 
     def __init__(self, level=1, weight=12, character=1, label='a', prec=10, bitprec=53, parent=None, update_from_db=True):
@@ -206,7 +208,7 @@ class WebNewForm(WebObject, CachedRepresentation):
             WebBool('is_rational'),
             WebPoly('absolute_polynomial'),
             WebInt('sturm_bound'),
-            WebFloat('version', default_value=float(emf_version)),
+            WebFloat('version', default_value=float(emf_version), save_to_fs=True),
             WebModFormSpaceProperty('parent', value=parent,
                                               level = level,
                                               weight = weight,
@@ -215,11 +217,10 @@ class WebNewForm(WebObject, CachedRepresentation):
         super(WebNewForm, self).__init__(
             update_from_db=update_from_db
             )
-        
-        self.eigenvalues = WebEigenvalues(self.level,
-                                          self.weight,
-                                          self.character.number,
-                                          self.label)
+
+        # We're setting the WebEigenvalues property after calling __init__ of the base class
+        # because it will set hecke_orbit_label from the db first
+        self.eigenvalues = WebEigenvalues(self.hecke_orbit_label)
 
     def q_expansion_latex(self, prec=None, name=None):
         wl = web_latex_split_on_re(self.q_expansion(prec))

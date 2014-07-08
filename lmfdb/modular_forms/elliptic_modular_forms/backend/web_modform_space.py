@@ -91,22 +91,22 @@ class WebHeckeOrbits(WebDict):
         self.character = character
         self.parent = parent
         super(WebHeckeOrbits, self).__init__(
-            name, {}, True, True
+            name, None, save_to_db=True, save_to_fs=False
             )
 
-    def to_meta(self, l):
+    def to_db(self, l):
         return l.keys()
 
-    def to_store(self, l):
-        return self.to_meta(l)
+    def to_fs(self, l):
+        return self.to_db(l)
 
-    def from_meta(self, l):
+    def from_db(self, l):
         from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm        
-        return {a : WebNewForm(self.level, self.weight, self.character, a, parent=self.parent)
-                for a in l}
+        return {lbl : WebNewForm(self.level, self.weight, self.character, lbl, parent=self.parent)
+                for lbl in l}
 
-    def from_store(self, l):
-        return self.from_meta(l)
+    def from_fs(self, l):
+        return self.from_db(l)
     
 
     
@@ -146,20 +146,20 @@ class WebModFormSpace(WebObject, CachedRepresentation):
 
     def __init__(self, level=1, weight=12, character=1, prec=10, bitprec=53, update_from_db=True):
         self._properties = WebProperties(
-            WebInt('level', default_value=level),
-            WebInt('weight', default_value=weight),
+            WebInt('level', value=level),
+            WebInt('weight', value=weight),
             WebCharProperty('character', modulus=level, number=character),
-            WebStr('character_naming_scheme', value='Conrey'),
-            WebList('_character_galois_orbit', value=[character]),
-            WebDict('_character_galois_orbit_embeddings', value={}),
-            WebCharProperty('character_orbit_rep', modulus=level),
-            WebCharProperty('character_used_in_computation', modulus=level),
-            WebStr('galois_orbit_name', value=space_label(level, weight, character)),
+            WebStr('character_naming_scheme', value='Conrey', save_to_fs=True),
+            WebList('_character_galois_orbit', default_value=[character]),
+            WebDict('_character_galois_orbit_embeddings', default_value={}),
+            WebCharProperty('character_orbit_rep', modulus=level, save_to_fs=True),
+            WebCharProperty('character_used_in_computation', modulus=level, save_to_fs=True),
+            WebStr('galois_orbit_name', default_value=space_label(level, weight, character), save_to_fs=True),
             WebInt('dimension'),
             WebInt('dimension_cusp_forms'),
             WebInt('dimension_modular_forms'),
             WebInt('dimension_new_cusp_forms'),
-            WebInt('cuspidal', value=int(1)),
+            WebBool('cuspidal', default_value=True),
             WebInt('prec', value=int(prec)), #precision of q-expansions
             WebSageObject('group'),
             WebInt('sturm_bound'),
@@ -167,7 +167,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
                            character, self),
             WebDict('oldspace_decomposition'),
             WebInt('bitprec', value=bitprec),            
-            WebFloat('version', value=float(emf_version))
+            WebFloat('version', value=float(emf_version), save_to_fs=True)
                     )
         
         super(WebModFormSpace, self).__init__(
@@ -197,5 +197,5 @@ class WebModFormSpaceProperty(WebProperty):
                                                       include_in_update=False,
                                                       value = value)
 
-    def to_meta(self, M):
+    def to_db(self, M):
         return M.galois_orbit_label
