@@ -3,7 +3,6 @@ import re
 from pymongo import ASCENDING, DESCENDING
 import lmfdb.base
 from lmfdb.utils import comma, make_logger
-from sage.structure.unique_representation import CachedRepresentation
 
 def format_percentage(num, denom):
     return "%10.2f"%((100.0*num)/denom)
@@ -18,7 +17,7 @@ def get_stats():
         the_ECstats = ECstats()
     return the_ECstats
 
-class ECstats(CachedRepresentation):
+class ECstats(object):
     """
     Class for creating and displaying statistics for elliptic curves over Q
     """
