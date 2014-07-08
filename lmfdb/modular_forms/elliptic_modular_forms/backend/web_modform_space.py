@@ -145,7 +145,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
     _file_key = ['galois_orbit_name']
     _collection_name = 'webmodformspace_test'
 
-    def __init__(self, level=1, weight=12, character=1, prec=10, bitprec=53, update_from_db=True):
+    def __init__(self, level=1, weight=12, cuspidal=True,character=1, prec=10, bitprec=53, update_from_db=True):
 
         if isinstance(character, WebChar):
             character_number = character.number
@@ -166,7 +166,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
             WebInt('dimension_cusp_forms'),
             WebInt('dimension_modular_forms'),
             WebInt('dimension_new_cusp_forms'),
-            WebBool('cuspidal', default_value=True),
+            WebBool('cuspidal', value=cuspidal),
             WebInt('prec', value=int(prec)), #precision of q-expansions
             WebSageObject('group'),
             WebInt('sturm_bound'),
