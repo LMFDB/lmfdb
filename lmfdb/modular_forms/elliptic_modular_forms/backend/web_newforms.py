@@ -117,7 +117,7 @@ class WebqExp(WebPoly):
     def from_fs(self, f):
         if f is None:
             return None
-        f=loads(f)
+        print "f", f
         try:
             f = f.truncate_powerseries(prec)
             return f
@@ -128,7 +128,7 @@ class WebqExp(WebPoly):
         if self.value() is None:
             return None
         print type(self.value()), self.value()
-        return dumps(self.value().polynomial())
+        return self.value()
 
 
 class WebEigenvalues(WebObject, CachedRepresentation):

@@ -170,7 +170,10 @@ class WebProperties(object):
         return len(self._d.keys())
 
     def __contains__(self, a):
-        return a in self._d
+        if isinstance(a, str):
+            return a in self._d
+        elif isinstance(a, WebProperty):
+            return a.name in self._d
 
     def __repr__(self):
         return "Collection of {0} WebProperties".format(len(self._d.keys()))
@@ -490,7 +493,7 @@ class WebObject(object):
             emf_logger.debug("key: {0}".format(key))
             if coll.find(key).count()>0:
                 props_to_fetch = [p.name for p in self._db_properties
-                                  if (p.include_in_update and not p in self._db_properties)
+                                  if (p.include_in_update and not p.name in self._fs_properties)
                                   or p.name in self._key]
                 rec = coll.find_one(key, fields = props_to_fetch)
                 for pn in props_to_fetch:
