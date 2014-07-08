@@ -36,6 +36,7 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import (
      WebFloat,
      WebDict,
      WebList,
+     WebBool,
      WebSageObject,
      WebNoStoreObject,
      WebProperty,
@@ -94,11 +95,11 @@ class WebHeckeOrbits(WebDict):
             name, None, save_to_db=True, save_to_fs=False
             )
 
-    def to_db(self, l):
-        return l.keys()
+    def to_db(self):
+        return self.value().keys()
 
-    def to_fs(self, l):
-        return self.to_db(l)
+    def to_fs(self):
+        return self.to_db()
 
     def from_db(self, l):
         from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm        
@@ -140,8 +141,8 @@ class WebModFormSpace(WebObject, CachedRepresentation):
 
     """
 
-    _params = ['level', 'weight', 'character']
-    _dbkey = ['galois_orbit_name']
+    _key = ['level', 'weight', 'character']
+    _file_key = ['galois_orbit_name']
     _collection_name = 'webmodformspace_test'
 
     def __init__(self, level=1, weight=12, character=1, prec=10, bitprec=53, update_from_db=True):
@@ -197,5 +198,5 @@ class WebModFormSpaceProperty(WebProperty):
                                                       include_in_update=False,
                                                       value = value)
 
-    def to_db(self, M):
-        return M.galois_orbit_label
+    def to_db(self):
+        return self.value().galois_orbit_label

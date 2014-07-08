@@ -36,7 +36,7 @@ import gridfs
 
 class WebProperty(object):
     r"""
-    A meta data type for the properties of a WebObject.
+    A base class for the data types for the properties of a WebObject.
     """
 
     _default_value = None
@@ -71,11 +71,6 @@ class WebProperty(object):
         self.save_to_db = save_to_db
 
         self.include_in_update = include_in_update
-
-        if not hasattr(self, '_add_to_db_query'):
-            self._add_to_db_query = None
-        if not hasattr(self, '_add_to_fs_query'):
-            self._add_to_fs_query = None
         
     def value(self):
         return self._value
@@ -261,6 +256,11 @@ class WebObject(object):
         for p in self._properties:
             emf_logger.debug("Adding {0}".format(p.name))
             self.__dict__[p.name] = p
+
+        if not hasattr(self, '_add_to_db_query'):
+            self._add_to_db_query = None
+        if not hasattr(self, '_add_to_fs_query'):
+            self._add_to_fs_query = None
                 
         if update_from_db:
             #emf_logger.debug('Update requested for {0}'.format(self.__dict__))
@@ -360,7 +360,7 @@ class WebObject(object):
         Return a dictionary where the keys are the dbkeys of ``self``` and
         the values are the corresponding values of ```self```.
         """
-        emf_logger.debug('dbkey: {0}'.format(self._dbkey))
+        emf_logger.debug('key: {0}'.format(self._key))
         emf_logger.debug('properties: {0}'.format(self._properties))
         return { key : self._properties[key].to_db() for key in self._file_key }
 
@@ -392,7 +392,7 @@ class WebObject(object):
         r"""
           Get the db record from the database. This is the mongodb record in self._collection_name.
         """
-        coll = self._db_collection
+        coll = self._collection
         rec = coll.find_one(self.key_dict())
         return { p.name: p.from_db(rec[p.name]) for p in self._db_properties if rec.has_key(p.name) }
 
@@ -422,7 +422,7 @@ class WebObject(object):
         # insert extended record
         if not self._use_separate_db:
             return True
-        coll = self._db_collection
+        coll = self._collection
         key = self.key_dict()
         #key.update(file_key)
         #print meta_key
@@ -443,7 +443,7 @@ class WebObject(object):
         Deletes ```self``` to the database, i.e.
         deletes the meta record and the file in the gridfs file system.
         """
-        coll = self._db_collection
+        coll = self._collection
         key = self.key_dict()
         ct = coll.find(key).count()
         if ct > 0:
@@ -470,7 +470,7 @@ class WebObject(object):
             add_to_fs_query = self._add_to_fs_query
         
         if self._use_separate_db or not self._use_gridfs:
-            coll = self._db_collection
+            coll = self._collection
             key = self.key_dict()
             if add_to_db_query is not None:
                 key.update(add_to_db_query)
@@ -523,8 +523,8 @@ class WebObjectTest(WebObject):
             return cls.DB
     
     _collection_name = 'test'
-    _dbkey = ['id']
-    _params = ['id']
+    _key = ['id']
+    _file_key = ['id']
 
     def __init__(self, **kwargs):
 

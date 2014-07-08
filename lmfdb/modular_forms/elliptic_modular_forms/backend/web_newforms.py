@@ -111,10 +111,10 @@ class WebqExp(WebPoly):
         except:
             return f
 
-    def to_fs(self, f):
-        if f is None:
+    def to_fs(self):
+        if self.value() is None:
             return None
-        return dumps(f.polynomial())
+        return dumps(self.value().polynomial())
 
 
 class WebEigenvalues(WebObject, CachedRepresentation):
