@@ -395,7 +395,7 @@ class WebObject(object):
         """
         coll = self._collection
         rec = coll.find_one(self.key_dict())
-        return { p.name: p.from_db(rec[p.name]) for p in self._db_properties if rec.has_key(p.name) }
+        return rec
 
     def save_to_db(self, update = True):
         r"""
@@ -624,7 +624,7 @@ class WebPoly(WebProperty):
         return str(self._value)
 
     def from_db(self, f):
-        raise NotImplementedError
+        return f
 
 class WebNoStoreObject(WebProperty):
 
@@ -662,7 +662,7 @@ class WebNumberField(WebDict):
         return l
 
     def from_db(self, k):
-        raise NotImplementedError
+        return k
             
 
 def number_field_to_dict(F):

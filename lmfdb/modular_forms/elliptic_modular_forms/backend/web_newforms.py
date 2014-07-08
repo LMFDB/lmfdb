@@ -127,6 +127,7 @@ class WebqExp(WebPoly):
     def to_fs(self):
         if self.value() is None:
             return None
+        print type(self.value()), self.value()
         return dumps(self.value().polynomial())
 
 
@@ -214,7 +215,7 @@ class WebNewForm(WebObject, CachedRepresentation):
                             value = character,
                             include_in_update = True if parent is None
                             else False),
-            WebStr('character_naming_scheme', default_value='Conrey'),
+            WebStr('character_naming_scheme', value='Conrey'),
             WebStr('hecke_orbit_label', default_value=newform_label(level, weight, character, label)),
             WebStr('label', default_value=label),
             WebInt('dimension'),
