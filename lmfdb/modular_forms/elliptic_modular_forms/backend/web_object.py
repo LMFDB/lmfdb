@@ -420,7 +420,10 @@ class WebObject(object):
             file_key.update(self.db_dict())
         try:
             fs.put(s, **file_key)
-        except Error, e:
+            
+            print "s=",s
+            print "file_key=",file_key
+        except Exception, e:
             emf_logger.warn("Error inserting record: {0}".format(e))
         #fid = coll.find_one(key)['_id']
         # insert extended record

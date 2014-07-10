@@ -141,6 +141,7 @@ class WebEigenvalues(WebObject, CachedRepresentation):
         self._properties = WebProperties(
             WebSageObject('E', None, Matrix),
             WebSageObject('v', None, vector),
+            WebDict('meta',value={}),
             WebStr('hecke_orbit_label', value=hecke_orbit_label),
             WebInt('prec', value=prec)
             )
