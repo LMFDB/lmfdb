@@ -137,7 +137,7 @@ class WebEigenvalues(WebObject, CachedRepresentation):
     _file_key = ['hecke_orbit_label', 'prec']
     _collection_name = 'ap_test'
 
-    def __init__(self, hecke_orbit_label, prec=10, update_from_db=True):
+    def __init__(self, hecke_orbit_label, prec=10, update_from_db=True, auto_update = True):
         self._properties = WebProperties(
             WebSageObject('E', None, Matrix),
             WebSageObject('v', None, vector),
@@ -145,6 +145,8 @@ class WebEigenvalues(WebObject, CachedRepresentation):
             WebStr('hecke_orbit_label', value=hecke_orbit_label),
             WebInt('prec', value=prec)
             )
+
+        self.auto_update = True
         
         super(WebEigenvalues, self).__init__(
             use_gridfs=True,
@@ -177,6 +179,10 @@ class WebEigenvalues(WebObject, CachedRepresentation):
         return self._ap.has_key(p)
 
     def __getitem__(self, p):
+        if self.auto_update and not self.has_eigenvalue(p):
+            self.prec = p
+            self.update_from_db()
+            self.init_dynamic_properties()
         return self._ap[p]
 
     def __setitem__(self, p, v):

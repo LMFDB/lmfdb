@@ -41,8 +41,8 @@ class WebProperty(object):
 
     _default_value = None
 
-    def __init__(self, name, value=None, fs_data_type=None, db_data_type=None, \
-                 save_to_fs=True, save_to_db=False, default_value=None, include_in_update=True
+    def __init__(self, name, value=None, fs_data_type=None, db_data_type=None,
+                 save_to_fs=True, save_to_db=False, default_value=None, include_in_update=True,
                  required = True):
         r"""
         INPUT:
