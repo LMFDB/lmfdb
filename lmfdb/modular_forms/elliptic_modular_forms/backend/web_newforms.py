@@ -216,7 +216,7 @@ class WebNewForm(WebObject, CachedRepresentation):
                             include_in_update = True if parent is None
                             else False),
             WebStr('character_naming_scheme', value='Conrey'),
-            WebStr('hecke_orbit_label', default_value=newform_label(level, weight, character, label)),
+            WebStr('hecke_orbit_label', default_value=newform_label(level, weight, character_number, label)),
             WebStr('label', default_value=label),
             WebInt('dimension'),
             WebqExp('q_expansion', prec=prec),
