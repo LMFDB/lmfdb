@@ -42,7 +42,8 @@ class WebProperty(object):
     _default_value = None
 
     def __init__(self, name, value=None, fs_data_type=None, db_data_type=None, \
-                 save_to_fs=True, save_to_db=False, default_value=None, include_in_update=True):
+                 save_to_fs=True, save_to_db=False, default_value=None, include_in_update=True
+                 required = True):
         r"""
         INPUT:
             - save_to_fs -- bool: True if this property should be stored in gridfs
@@ -71,6 +72,8 @@ class WebProperty(object):
         self.save_to_db = save_to_db
 
         self.include_in_update = include_in_update
+
+        self.required = required
         
     def value(self):
         return self._value
@@ -343,7 +346,8 @@ class WebObject(object):
         We check if all properties in self._properties are set correctly.
         """
         for p in self._properties:
-            assert hasattr(self, p.name), "Missing property {0}".format(p)
+            if p.required:
+                assert hasattr(self, p.name), "Missing property {0}".format(p)
             v = getattr(self, p.name)
             got = type(self._properties[p.name].to_fs())
             expected = p.fs_data_type
