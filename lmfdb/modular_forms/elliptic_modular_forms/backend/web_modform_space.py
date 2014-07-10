@@ -172,8 +172,8 @@ class WebModFormSpace(WebObject, CachedRepresentation):
             WebInt('sturm_bound'),
             WebHeckeOrbits('hecke_orbits', level, weight,
                            character, self),
-            WebDict('oldspace_decomposition'),
-            WebInt('bitprec', value=bitprec),            
+            WebDict('oldspace_decomposition', required=False),
+            WebInt('bitprec', value=bitprec),
             WebFloat('version', value=float(emf_version), save_to_fs=True)
                     )
         
