@@ -1,3 +1,4 @@
+# -*- coding: utf8 -*-
 from lmfdb.base import LmfdbTest
 import math
 import unittest2

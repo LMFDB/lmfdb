@@ -1,4 +1,4 @@
-
+# -*- coding: utf8 -*-
 
 from lmfdb.base import LmfdbTest
 
