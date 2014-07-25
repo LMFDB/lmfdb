@@ -24,16 +24,16 @@ padding : 4px;
 </style>
 
         <h1>
-            {{ info.label }}</h1>
+            {{ info.lmfdb_iso }}</h1>
             <div>
       Show commands for:  <a onclick="show_code('sage'); return false" href='#'>sage</a>
             </div>
-        <div class='sage nodisplay code'>sage: E = EllipticCurve('{{info.label}}1')<br>sage: E.isogeny_class()</div>
-        
+        <div class='sage nodisplay code'>sage: E = EllipticCurve('{{info.lmfdb_iso}}1')<br>sage: E.isogeny_class()</div>
+
         <h2>Modular form </h2>
         <div class='sage nodisplay code'>sage: E.q_eigenform(10)</div>
         <p>
-            {{ info.f | safe }}
+            {{ info.newform | safe }}
         </p>
 
 <h2>Curves in the class</h2>

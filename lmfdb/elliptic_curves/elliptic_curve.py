@@ -12,6 +12,7 @@ from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range2, 
 from lmfdb.number_fields.number_field import parse_list
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.ec_stats import get_stats
+from lmfdb.elliptic_curves.isog_class import ECisog_class
 
 import sage.all
 from sage.all import ZZ, QQ, EllipticCurve, latex, matrix, srange
@@ -345,6 +346,7 @@ def by_ec_label(label):
     try:
         N, iso, number = lmfdb_label_regex.match(label).groups()
     except AttributeError:
+        ec_logger.info("%s not a valid lmfdb label, trying cremona")
         try:
             N, iso, number = cremona_label_regex.match(label).groups()
         except AttributeError:
@@ -363,7 +365,6 @@ def by_ec_label(label):
                 return elliptic_curve_jump_error(label, {})
             ec_logger.debug(url_for(".by_ec_label", label=data['lmfdb_label']))
             return redirect(url_for(".by_ec_label", label=data['lmfdb_iso']), 301)
-        # N,d1, iso,d2, number = sw_label_regex.match(label).groups()
     if number:
         return render_curve_webpage_by_label(label=label)
     else:
@@ -409,107 +410,18 @@ def plot_iso_graph(label):
 
 
 def render_isogeny_class(iso_class):
-    info = {}
     credit = 'John Cremona'
-    lmfdb_iso = iso_class  # e.g. '11.a'
-    N, iso, number = lmfdb_label_regex.match(lmfdb_iso).groups()
-
-    CDB = lmfdb.base.getDBConnection().elliptic_curves.curves
-
-    E1data = CDB.find_one({'lmfdb_label': lmfdb_iso + '1'})
-    if E1data is None:
-        return elliptic_curve_jump_error(lmfdb_iso, {})
-
-    cremona_iso = E1data['iso']
-    ainvs = [int(a) for a in E1data['ainvs']]
-    E1 = EllipticCurve(ainvs)
-    ver = sage.version.version.split('.') # e.g. "6.1.beta2"
-    ma = int(ver[0])
-    mi = int(ver[1])
-    if ma>6 or ma==6 and mi>1:
-        # Code for Sage 6.2 and later:
-        isogeny_class = E1.isogeny_class()
-        curves = isogeny_class.curves
-        mat = isogeny_class.matrix()
-    else:
-        # Code for Sage 6.1 and before:
-        curves, mat = E1.isogeny_class()
-    size = len(curves)
-    # Create a list of the curves in the class from the database, so
-    # they are in the correct order!
-    db_curves = [E1]
-    optimal_flags = [False] * size
-    degrees = [0] * size
-    if 'degree' in E1data:
-        degrees[0] = E1data['degree']
-    else:
-        try:
-            degrees[0] = E1.modular_degree()
-        except RuntimeError:
-            pass
-    cremona_labels = [E1data['label']] + [0] * (size - 1)
-    if E1data['number'] == 1:
-        optimal_flags[0] = True
-    for i in range(2, size + 1):
-        Edata = CDB.find_one({'lmfdb_label': lmfdb_iso + str(i)})
-        E = EllipticCurve([int(a) for a in Edata['ainvs']])
-        cremona_labels[i - 1] = Edata['label']
-        if Edata['number'] == 1:
-            optimal_flags[i - 1] = True
-        if 'degree' in Edata:
-            degrees[i - 1] = Edata['degree']
-        else:
-            try:
-                degrees[i - 1] = E.modular_degree()
-            except RuntimeError:
-                pass
-        db_curves.append(E)
-
-    if cremona_iso == '990h':  # this isogeny class is labeled wrong in Cremona's tables
-        optimal_flags = [False, False, True, False]
-
-    # Now work out the permutation needed to match the two lists of curves:
-    perm = [db_curves.index(E) for E in curves]
-    # Apply the same permutation to the isogeny matrix:
-    mat = [[mat[perm[i], perm[j]] for j in range(size)] for i in range(size)]
-
-    info = {'label': lmfdb_iso}
-    info['optimal_ainvs'] = ainvs
-    info['rank'] = E1data['rank']
-    info['isogeny_matrix'] = latex(matrix(mat))
-
-    # info['f'] = ajax_more(E.q_eigenform, 10, 20, 50, 100, 250)
-    info['f'] = web_latex(E.q_eigenform(10))
-    info['graph_img'] = url_for('.plot_iso_graph', label=lmfdb_iso)
-
-    info['curves'] = [[lmfdb_iso + str(i + 1), cremona_labels[i], str(
-        list(c.ainvs())), c.torsion_order(), degrees[i], optimal_flags[i]] for i, c in enumerate(db_curves)]
-
-    friends = []
-#   friends.append(('Quadratic Twist', "/quadratic_twists/%s" % (lmfdb_iso)))
-    friends.append(('L-function', url_for("l_functions.l_function_ec_page", label=lmfdb_iso)))
-    friends.append(('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page",
-                                                           power='2', label=lmfdb_iso)))
-    friends.append(('Symmetric 4th power L-function', url_for("l_functions.l_function_ec_sym_page",
-                                                              power='4', label=lmfdb_iso)))
-# render_one_elliptic_modular_form(level,weight,character,label,**kwds)
-
-    friends.append(('Modular form ' + lmfdb_iso.replace(
-        '.', '.2'), url_for("emf.render_elliptic_modular_forms", level=N, weight=2, character=0, label=iso)))
-
-    info['friends'] = friends
-
-    info['downloads'] = [('Download coeffients of q-expansion', url_for(".download_EC_qexp", label=lmfdb_iso, limit=100)),
-                         ('Download stored data for curves in this class', url_for(".download_EC_all", label=lmfdb_iso))]
-
-    if lmfdb_iso == cremona_iso:
-        t = "Elliptic Curve Isogeny Class %s" % lmfdb_iso
-    else:
-        t = "Elliptic Curve Isogeny Class %s (Cremona label %s)" % (lmfdb_iso, cremona_iso)
-    bread = [('Elliptic Curves ', url_for(".rational_elliptic_curves")), ('isogeny class %s' % lmfdb_iso, ' ')]
-
-    return render_template("iso_class.html", info=info, bread=bread, credit=credit, title=t, friends=info['friends'], downloads=info['downloads'])
-
+    class_data = ECisog_class.by_label(iso_class)
+    if class_data == "Invalid label" or class_data == "Class not found":
+        print "ERROR %s" % class_data
+        return None
+    return render_template("iso_class.html",
+                           info=class_data,
+                           bread=class_data.bread,
+                           credit=credit,
+                           title=class_data.title,
+                           friends=class_data.friends,
+                           downloads=class_data.downloads)
 
 @ec_page.route("/modular_form_display/<label>/<number>")
 def modular_form_display(label, number):

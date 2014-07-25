@@ -17,8 +17,8 @@ The documents in the collection 'curves' in the database 'elliptic_curves' have 
    - 'label':  (string) full Cremona label, e.g. '1225a2'
    - 'lmfdb_label':  (string) full LMFDB label, e.g. '1225.a2'
    - 'conductor': (int) conductor, e.g. 1225
-   - 'iso': (string) Cremona isogeny class code, e.g. 'a'
-   - 'lmfdb_iso': (string) LMFDB isogeny class code, e.g. 'a'
+   - 'iso': (string) Cremona isogeny class code, e.g. '11a'
+   - 'lmfdb_iso': (string) LMFDB isogeny class code, e.g. '11.a'
    - 'number': (int) Cremona curve number within its class, e.g. 2
    - 'lmfdb_number': (int) LMFDB curve number within its class, e.g. 2
    - 'ainvs': (list of strings) list of a-invariants, e.g. ['0', '1', '1', '10617', '75394']
