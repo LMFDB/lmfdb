@@ -5,7 +5,7 @@ import os
 from pymongo import ASCENDING, DESCENDING
 from flask import url_for, make_response
 import lmfdb.base
-from lmfdb.utils import comma, make_logger, web_latex
+from lmfdb.utils import comma, make_logger, web_latex, encode_plot
 from lmfdb.elliptic_curves import ec_page, ec_logger
 
 import sage.all
@@ -92,15 +92,9 @@ class ECisog_class(object):
         # Create isogeny graph url:
 
         n = self.graph.num_verts()
-        self.graph_plot = self.graph.plot(edge_labels=True, layout='spring')
-        _, filename = tempfile.mkstemp('.png')
-        self.graph_plot.save(filename)
-        data = open(filename).read()
-        os.unlink(filename)
-        import base64
-        img64 = base64.encodestring(data)
-        self.graph_img = "data:image/png;base64," + img64
- 
+        P = self.graph.plot(edge_labels=True, layout='spring')
+        self.graph_img = encode_plot(P)
+
         # Create a list of the curves in the class from the database, so
         # they are in the correct order!
 
