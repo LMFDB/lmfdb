@@ -413,8 +413,7 @@ def render_isogeny_class(iso_class):
     credit = 'John Cremona'
     class_data = ECisog_class.by_label(iso_class)
     if class_data == "Invalid label" or class_data == "Class not found":
-        print "ERROR %s" % class_data
-        return None
+        return elliptic_curve_jump_error(iso_class, {}, wellformed_label=True)
     return render_template("iso_class.html",
                            info=class_data,
                            bread=class_data.bread,

@@ -79,14 +79,14 @@ padding : 4px;
     <h2>Matrix of isogeny degrees</h2>
    <div class='sage nodisplay code'>sage: E.isogeny_class()[1]</div>
     <p>
-    \({{info.isogeny_matrix}}\)
+    \({{info.isogeny_matrix_str}}\)
     </p>
 
 
         <h2>Isogeny graph</h2>
         <div class='sage nodisplay code'>sage: E.isogeny_graph().plot(edge_labels=True,layout='spring',vertex_size=250,)<br>(Note: the following graph has been relabeled<br>to respect the Cremona labeling)</div>
         <center>
-        <img width="300" height="300" src="{{info.graph_img}}" />
+        <img src="{{info.graph_img}}" />
         </center>
 
 {% endblock %}

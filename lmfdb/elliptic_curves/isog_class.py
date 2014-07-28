@@ -73,31 +73,22 @@ class ECisog_class(object):
         self.ainvs = [int(a) for a in self.ainvs_str]
         self.E = EllipticCurve(self.ainvs)
 
-        # Sage's isogeny class function changed in version 6.2:
-        ver = sage.version.version.split('.') # e.g. "6.1.beta2"
-        ma = int(ver[0])
-        mi = int(ver[1])
-        if ma>6 or ma==6 and mi>1:
-            # Code for Sage 6.2 and later:
-            isogeny_class = self.E.isogeny_class()
-            self.curves = isogeny_class.curves
-            self.mat = isogeny_class.matrix()
-            self.graph = isogeny_class.graph()
-        else:
-            # Code for Sage 6.1 and before:
-            self.curves, self.mat = self.E.isogeny_class()
-            self.graph = self.E.isogeny_graph()
-        size = len(self.curves)
+        try:
+            # Extract the isogeny degree matrix from the database
+            size = len(self.isogeny_matrix)
+            from sage.matrix.all import Matrix
+            self.isogeny_matrix = Matrix(self.isogeny_matrix)
+        except AttributeError:
+            # Failsafe: construct it from scratch
+            self.isogeny_matrix = self.E.isogeny_class(order="lmfdb").matrix()
+            size = self.isogeny_matrix.nrows()
 
-        # Create isogeny graph url:
-
-        n = self.graph.num_verts()
-        P = self.graph.plot(edge_labels=True, layout='spring')
+        # Create isogeny graph:
+        self.graph = make_graph(self.isogeny_matrix)
+        P = self.graph.plot(edge_labels=True) # , layout='spring')
         self.graph_img = encode_plot(P)
 
-        # Create a list of the curves in the class from the database, so
-        # they are in the correct order!
-
+        # Create a list of the curves in the class from the database
         self.db_curves = [self.E]
         self.optimal_flags = [False] * size
         self.degrees = [0] * size
@@ -129,20 +120,15 @@ class ECisog_class(object):
                     pass
             self.db_curves.append(Ei)
 
+
         if self.iso == '990h':  # this isogeny class is labeled wrong in Cremona's tables
             self.optimal_flags = [False, False, True, False]
 
-        # Now work out the permutation needed to match the two lists of curves:
-        perm = [self.db_curves.index(Ei) for Ei in self.curves]
-        # Apply the same permutation to the isogeny matrix:
-        self.mat = [[self.mat[perm[i], perm[j]] for j in range(size)]
-                                                for i in range(size)]
-
-        self.isogeny_matrix = latex(matrix(self.mat))
+        self.isogeny_matrix_str = latex(matrix(self.isogeny_matrix))
         self.newform = web_latex(self.E.q_eigenform(10))
         self.curves = [[self.lmfdb_iso + str(i + 1), self.cremona_labels[i],
-                        str(list(c.ainvs())), c.torsion_order(), self.degrees[i],
-                        self.optimal_flags[i]]
+                        str(list(c.ainvs())), c.torsion_order(),
+                        self.degrees[i], self.optimal_flags[i]]
                        for i, c in enumerate(self.db_curves)]
 
 
@@ -162,3 +148,85 @@ class ECisog_class(object):
             self.title = "Elliptic Curve Isogeny Class %s (Cremona label %s)" % (self.lmfdb_iso, self.iso)
 
         self.bread = [('Elliptic Curves ', url_for(".rational_elliptic_curves")), ('isogeny class %s' % self.lmfdb_iso, ' ')]
+
+
+def make_graph(M):
+    """
+    Code extracted from Sage's elliptic curve isogeny class (reshaped
+    in the case maxdegree==12)
+    """
+    from sage.schemes.elliptic_curves.ell_curve_isogeny import fill_isogeny_matrix, unfill_isogeny_matrix
+    from sage.graphs.graph import Graph
+    n = M.nrows() # = M.ncols()
+    G = Graph(unfill_isogeny_matrix(M), format='weighted_adjacency_matrix')
+    MM = fill_isogeny_matrix(M)
+    # The maximum degree classifies the shape of the isogeny
+    # graph, though the number of vertices is often enough.
+    # This only holds over Q, so this code will need to change
+    # once other isogeny classes are implemented.
+    if n == 1:
+        # one vertex
+        pass
+    elif n == 2:
+        # one edge, two vertices.  We align horizontally and put
+        # the lower number on the left vertex.
+        G.set_pos(pos={0:[-0.5,0],1:[0.5,0]})
+    else:
+        maxdegree = max(max(MM))
+        if n == 3:
+            # o--o--o
+            centervert = [i for i in range(3) if max(MM.row(i)) < maxdegree][0]
+            other = [i for i in range(3) if i != centervert]
+            G.set_pos(pos={centervert:[0,0],other[0]:[-1,0],other[1]:[1,0]})
+        elif maxdegree == 4:
+            # o--o<8
+            centervert = [i for i in range(4) if max(MM.row(i)) < maxdegree][0]
+            other = [i for i in range(4) if i != centervert]
+            G.set_pos(pos={centervert:[0,0],other[0]:[0,1],other[1]:[-0.8660254,-0.5],other[2]:[0.8660254,-0.5]})
+        elif maxdegree == 27:
+            # o--o--o--o
+            centers = [i for i in range(4) if list(MM.row(i)).count(3) == 2]
+            left = [j for j in range(4) if MM[centers[0],j] == 3 and j not in centers][0]
+            right = [j for j in range(4) if MM[centers[1],j] == 3 and j not in centers][0]
+            G.set_pos(pos={left:[-1.5,0],centers[0]:[-0.5,0],centers[1]:[0.5,0],right:[1.5,0]})
+        elif n == 4:
+            # square
+            opp = [i for i in range(1,4) if not MM[0,i].is_prime()][0]
+            other = [i for i in range(1,4) if i != opp]
+            G.set_pos(pos={0:[1,1],other[0]:[-1,1],opp:[-1,-1],other[1]:[1,-1]})
+        elif maxdegree == 8:
+            # 8>o--o<8
+            centers = [i for i in range(6) if list(MM.row(i)).count(2) == 3]
+            left = [j for j in range(6) if MM[centers[0],j] == 2 and j not in centers]
+            right = [j for j in range(6) if MM[centers[1],j] == 2 and j not in centers]
+            G.set_pos(pos={centers[0]:[-0.5,0],left[0]:[-1,0.8660254],left[1]:[-1,-0.8660254],centers[1]:[0.5,0],right[0]:[1,0.8660254],right[1]:[1,-0.8660254]})
+        elif maxdegree == 18:
+            # two squares joined on an edge
+            centers = [i for i in range(6) if list(MM.row(i)).count(3) == 2]
+            top = [j for j in range(6) if MM[centers[0],j] == 3]
+            bl = [j for j in range(6) if MM[top[0],j] == 2][0]
+            br = [j for j in range(6) if MM[top[1],j] == 2][0]
+            G.set_pos(pos={centers[0]:[0,0.5],centers[1]:[0,-0.5],top[0]:[-1,0.5],top[1]:[1,0.5],bl:[-1,-0.5],br:[1,-0.5]})
+        elif maxdegree == 16:
+            # tree from bottom, 3 regular except for the leaves.
+            centers = [i for i in range(8) if list(MM.row(i)).count(2) == 3]
+            center = [i for i in centers if len([j for j in centers if MM[i,j] == 2]) == 2][0]
+            centers.remove(center)
+            bottom = [j for j in range(8) if MM[center,j] == 2 and j not in centers][0]
+            left = [j for j in range(8) if MM[centers[0],j] == 2 and j != center]
+            right = [j for j in range(8) if MM[centers[1],j] == 2 and j != center]
+            G.set_pos(pos={center:[0,0],bottom:[0,-1],centers[0]:[-0.8660254,0.5],centers[1]:[0.8660254,0.5],left[0]:[-0.8660254,1.5],right[0]:[0.8660254,1.5],left[1]:[-1.7320508,0],right[1]:[1.7320508,0]})
+        elif maxdegree == 12:
+            # tent
+            centers = [i for i in range(8) if list(MM.row(i)).count(2) == 3]
+            left = [j for j in range(8) if MM[centers[0],j] == 2]
+            right = []
+            for i in range(3):
+                right.append([j for j in range(8) if MM[centers[1],j] == 2 and MM[left[i],j] == 3][0])
+            G.set_pos(pos={centers[0]:[-0.3,0],centers[1]:[0.3,0],
+                           left[0]:[-0.14,0.15], right[0]:[0.14,0.15],
+                           left[1]:[-0.14,-0.15],right[1]:[0.14,-0.15],
+                           left[2]:[-0.14,-0.3],right[2]:[0.14,-0.3]})
+
+    G.relabel(range(1,n+1))
+    return G
