@@ -72,6 +72,7 @@ class ECisog_class(object):
         self.ainvs_str = self.ainvs
         self.ainvs = [int(a) for a in self.ainvs_str]
         self.E = EllipticCurve(self.ainvs)
+        self.CM = self.E.has_cm()
 
         try:
             # Extract the isogeny degree matrix from the database
@@ -85,8 +86,9 @@ class ECisog_class(object):
 
         # Create isogeny graph:
         self.graph = make_graph(self.isogeny_matrix)
-        P = self.graph.plot(edge_labels=True) # , layout='spring')
+        P = self.graph.plot(edge_labels=True)
         self.graph_img = encode_plot(P)
+        self.graph_link = '<img src="%s" width="200" height="150"/>' % self.graph_img
 
         # Create a list of the curves in the class from the database
         self.db_curves = [self.E]
@@ -139,8 +141,16 @@ class ECisog_class(object):
         ('Symmetric 4th power L-function', url_for("l_functions.l_function_ec_sym_page", power='4', label=self.lmfdb_iso)),
         ('Modular form ' + self.lmfdb_iso.replace('.', '.2'), url_for("emf.render_elliptic_modular_forms", level=N, weight=2, character=0, label=iso))]
 
-        self.downloads = [('Download coeffients of q-expansion', url_for(".download_EC_qexp", label=self.lmfdb_iso, limit=100)),
-                         ('Download stored data for curves in this class', url_for(".download_EC_all", label=self.lmfdb_iso))]
+        self.properties = [('Label', self.lmfdb_iso),
+                           (None, self.graph_link),
+                           ('Conductor', '\(%s\)' % N),
+                           ('CM', '%s' % self.CM),
+                           ('Rank', '\(%s\)' % self.rank)
+                           ]
+
+
+        self.downloads = [('Download coeffients of newform', url_for(".download_EC_qexp", label=self.lmfdb_iso, limit=100)),
+                         ('Download stored data for all curves', url_for(".download_EC_all", label=self.lmfdb_iso))]
 
         if self.lmfdb_iso == self.iso:
             self.title = "Elliptic Curve Isogeny Class %s" % self.lmfdb_iso

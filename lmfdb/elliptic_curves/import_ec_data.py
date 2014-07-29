@@ -395,7 +395,8 @@ def add_isogeny_matrices(N1,N2):
         label = C['label']
         lmfdb_label = C['lmfdb_label']
         lmfdb_iso = C['lmfdb_iso']
-        M = EllipticCurve(label).isogeny_class(order="lmfdb").matrix()
+        E = EllipticCurve([int(a) for a in C['ainvs']])
+        M = E.isogeny_class(order="lmfdb").matrix()
         mat = [list([int(c) for c in r]) for r in M.rows()]
         n = len(mat)
         print "%s curves in class %s" % (n,lmfdb_iso)
