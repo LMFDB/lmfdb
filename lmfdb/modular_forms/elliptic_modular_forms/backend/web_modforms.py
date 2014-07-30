@@ -62,7 +62,7 @@ def connect_to_modularforms_db():
     return C[db_name]
 
 
-def WebNewForm(N=1, k=2, chi=0, label='', prec=10, bitprec=53, display_bprec=26, parent=None, data={}, compute=False, verbose=-1,get_from_db=True):
+def WebNewForm(N=1, k=2, chi=0, label='', prec=10, bitprec=53, display_bprec=26, parent=None, data=None, compute=False, verbose=-1,get_from_db=True):
     r"""
     Constructor for WebNewForms with added 'nicer' error message.
     """
@@ -71,19 +71,19 @@ def WebNewForm(N=1, k=2, chi=0, label='', prec=10, bitprec=53, display_bprec=26,
         if k % 2 == 1:
             emf_logger.debug("Only zero function here with N,k,chi,label={0}.".format( (N,k,chi,label)))
             return 0
-    if data<>{}:
+    if not data is None:
         emf_logger.debug("incoming data in construction : {0}".format(data.get('N'),data.get('k'),data.get('chi')))
     else:
         emf_logger.debug("No incoming data!")
     try: 
         F = WebNewForm_class(N=N, k=k, chi=chi, label=label, prec=prec, bitprec = bitprec, display_bprec=display_bprec, parent = parent, data = data, compute = compute, verbose = verbose,get_from_db = get_from_db)
-    except ArithmeticError as e:#Exception as e:
+    except (ArithmeticError,ValueError) as e:#Exception as e:
         emf_logger.critical("Could not construct WebNewForm with N,k,chi,label={0}. Error: {1}".format( (N,k,chi,label),e))
         raise IndexError,"We are very sorry. The sought function could not be found in the database."
     return F
 
 
-def WebModFormSpace(N=1, k=2, chi=0, cuspidal=1, prec=10, bitprec=53, data={}, verbose=0,**kwds):
+def WebModFormSpace(N=1, k=2, chi=0, cuspidal=1, prec=10, bitprec=53, data=None, verbose=0,**kwds):
     r"""
     Constructor for WebNewForms with added 'nicer' error message.
     """
@@ -108,7 +108,7 @@ class WebModFormSpace_class(object):
 
 
     """
-    def __init__(self, N=1, k=2, chi=0, cuspidal=1, prec=10, bitprec=53, data={}, verbose=0,get_from_db=True):
+    def __init__(self, N=1, k=2, chi=0, cuspidal=1, prec=10, bitprec=53, data=None, verbose=0,get_from_db=True):
         r"""
         Init self.
 
@@ -119,6 +119,8 @@ class WebModFormSpace_class(object):
         - 'cuspidal' -- 1 if space of cuspforms, 0 if all modforms
         """
         emf_logger.debug("WebModFormSpace with k,N,chi={0}".format( (k,N,chi)))
+        if data is None:
+            data = {}
         d = {
             '_N': int(N),
             '_k': int(k),
@@ -895,13 +897,16 @@ class WebNewForm_class(object):
     Class for representing a (cuspidal) newform on the web.
     TODO: Include the computed data in the original database so we won't have to compute here at all.
     """
-    def __init__(self, N=1, k=2, chi=0, label='', prec=10, bitprec=53, display_bprec=26,parent=None, data={}, compute=False, verbose=-1,get_from_db=True):
+    def __init__(self, N=1, k=2, chi=0, label='', prec=10, bitprec=53, display_bprec=26,parent=None, data=None, compute=False, verbose=-1,get_from_db=True):
         r"""
         Init self as form with given label in S_k(N,chi)
         """
+        if data is None:
+            data = {}
         emf_logger.debug("WebNewForm with N,k,chi,label={0}".format( (N,k,chi,label)))
         # Set defaults.
-        emf_logger.debug("incoming data in construction : {0},{1},{2},{3}".format(data.get('N'),data.get('k'),data.get('chi'),data.get('label')))        
+        emf_logger.debug("incoming data in construction : {0},{1},{2},{3}".format(data.get('N'),data.get('k'),data.get('chi'),data.get('label')))
+
         #emf_logger.debug("incoming data: {0}".format(data))
         d  = {
             '_chi' : int(chi),'_k' : int(k),'_N' : int(N),
@@ -2751,7 +2756,12 @@ def pol_to_html(p):
     s = re.sub("\^(\d*)", "<sup>\\1</sup>", s)
     s = re.sub("\_(\d*)", "<sub>\\1</sub>", s)
     s = re.sub("\*", "", s)
+    ## For some reason we have either a or a1 as variable in the polynomials....
+    s = re.sub("a1","x",s)
+    s = re.sub("a","x",s)
+    s = re.sub("zetx","zeta",s)
     s = re.subst("x", "<i>x</i>", s)
+
     return s
 
 def pol_to_latex(p):
@@ -2762,6 +2772,9 @@ def pol_to_latex(p):
     s = re.sub("\^(\d*)", "^{\\1}", s)
     s = re.sub("\_(\d*)", "_{\\1}", s)
     s = re.sub("\*", "", s)
+    s = re.sub("a1","x",s)
+    s = re.sub("a","x",s)
+    s = re.sub("zetx","zeta",s)
     s = re.sub("zeta(\d+)", "\zeta_{\\1}", s)
     return s
 
