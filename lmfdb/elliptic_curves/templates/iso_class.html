@@ -2,10 +2,6 @@
 
 {% block content %}
 
-<script type="text/javascript"
-        src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
-<script type="text/javascript"
-src="http://code.jquery.com/jquery-latest.min.js"></script>
 <script type="text/javascript">
 var cur_system = null;
 function show_code(system) {
@@ -22,8 +18,6 @@ function show_code(system) {
 }
 </script>
 
-        <h1>Class {{ info.lmfdb_iso }}</h1>
-
         <div align="right">
           Show commands for:
           <a onclick="show_code('sage'); return false" href='#'>sage</a>
@@ -33,9 +27,11 @@ function show_code(system) {
           sage: E.isogeny_class()
         </div>
 
-        <h2>Modular form {{ info.lmfdb_iso }} </h2>
-        <div class='sage nodisplay code'>sage: E.q_eigenform(10)</div>
-    <div>
+<h2><a href="{{info.newform_link}}">
+            Modular form {{ info.newform_label }}</a>
+</h2>
+<div class='sage nodisplay code'>sage: E.q_eigenform(10)</div>
+<div>
     <form>
         <div class="output">
           <span id="modform_output">{{ info.newform | safe }}
@@ -43,9 +39,9 @@ function show_code(system) {
         </div>
         <div class="emptyspace"><br>
         </div>
-        <button id="morebutton">More coefficients</button>
+        <button id="morebutton">Show more coefficients</button>
     </form>
-    </div>
+</div>
 
 <style type="text/css">
 #isogeny_class_table th, #isogeny_class_table td {
@@ -55,8 +51,8 @@ text-align: center;
 </style>
 
 
-<h2>Curves in the class {{info.lmfdb_label}}</h2>
-        <div class='sage nodisplay code'>sage: E.isogeny_class().curves</div>
+<h2>Elliptic curves in class {{info.lmfdb_iso}}</h2>
+<div class='sage nodisplay code'>sage: E.isogeny_class().curves</div>
 <table id = "isogeny_class_table">
 <tr>
 <th>{{ KNOWL('ec.q.lmfdb_label', title='LMFDB label')}}</th>
@@ -88,34 +84,33 @@ text-align: center;
 {% endfor %}
 </table>
 
-        <h2>Rank</h2>
-        <div class='sage nodisplay code'>sage: E.rank()</div>
-        <p>
-        \({{ info.rank}}\)
-        </p>
+<h2>Rank</h2>
+<div class='sage nodisplay code'>sage: E.rank()</div>
+<p>
+  \({{ info.rank}}\)
+</p>
 
 
-    <h2>Matrix of isogeny degrees</h2>
-   <div class='sage nodisplay code'>sage: E.isogeny_class().matrix()</div>
-    <p>
-    Rows and columns are indexed by the LMFDB number of the curve in
-    the class.
-    </p>
-    <p>
-    \({{info.isogeny_matrix_str}}\)
-    </p>
+<h2>Matrix of isogeny degrees</h2>
+<div class='sage nodisplay code'>sage: E.isogeny_class().matrix()</div>
+<p>
+  Rows and columns are indexed by the LMFDB number of the curve in
+  the class.
+</p>
+<p>
+  \({{info.isogeny_matrix_str}}\)
+</p>
 
-        <h2>Isogeny graph</h2>
-        <div class='sage nodisplay code'>
-          sage: E.isogeny_graph().plot(edge_labels=True)
-        </div>
-        <p>
-          Only edges corresponding to isogenies of prime degree are
-          shown.
-        </p>
-        <center>
-        <img src="{{info.graph_img}}" />
-        </center>
+<h2>Isogeny graph</h2>
+<div class='sage nodisplay code'>
+  sage: E.isogeny_graph().plot(edge_labels=True)
+</div>
+<p>
+  Only edges corresponding to isogenies of prime degree are shown.
+</p>
+<center>
+  <img src="{{info.graph_img}}" />
+</center>
 
 <script type="text/javascript">
 var number_of_coefficients = 10;
@@ -132,8 +127,6 @@ $(function() {
     $("#morebutton").click(function(e) {more_handler(e)});
 });
 </script>
-
-
 
 {% endblock %}
 

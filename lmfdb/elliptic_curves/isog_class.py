@@ -127,19 +127,28 @@ class ECisog_class(object):
             self.optimal_flags = [False, False, True, False]
 
         self.isogeny_matrix_str = latex(matrix(self.isogeny_matrix))
-        self.newform = web_latex(self.E.q_eigenform(10))
-        self.curves = [[self.lmfdb_iso + str(i + 1), self.cremona_labels[i],
-                        str(list(c.ainvs())), c.torsion_order(),
-                        self.degrees[i], self.optimal_flags[i]]
-                       for i, c in enumerate(self.db_curves)]
-
 
         N, iso, number = lmfdb_label_regex.match(self.lmfdb_iso).groups()
+
+        self.newform = web_latex(self.E.q_eigenform(10))
+        self.newform_label = self.lmfdb_iso.replace('.', '.2')
+        self.newform_link = url_for("emf.render_elliptic_modular_forms", level=N, weight=2, character=0, label=iso)
+
+        self.lfunction_link = url_for("l_functions.l_function_ec_page", label=self.lmfdb_iso)
+
+        self.curves = [[self.lmfdb_iso + str(i + 1),
+                        self.cremona_labels[i],
+                        str(list(c.ainvs())),
+                        c.torsion_order(),
+                        self.degrees[i],
+                        self.optimal_flags[i]]
+                       for i, c in enumerate(self.db_curves)]
+
         self.friends = [
-        ('L-function', url_for("l_functions.l_function_ec_page", label=self.lmfdb_iso)),
+        ('L-function', self.lfunction_link),
         ('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', label=self.lmfdb_iso)),
         ('Symmetric 4th power L-function', url_for("l_functions.l_function_ec_sym_page", power='4', label=self.lmfdb_iso)),
-        ('Modular form ' + self.lmfdb_iso.replace('.', '.2'), url_for("emf.render_elliptic_modular_forms", level=N, weight=2, character=0, label=iso))]
+        ('Modular form ' + self.newform_label, self.newform_link)]
 
         self.properties = [('Label', self.lmfdb_iso),
                            (None, self.graph_link),
