@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-r""" Import number field data from Cremona tables.  Note: This code 
+r""" Import number field data.  Note: This code 
 can be run on all files in any order. Even if you rerun this code 
 on previously entered files, it should have no affect.  This code 
 checks if the entry exists, if so returns that and updates with 
