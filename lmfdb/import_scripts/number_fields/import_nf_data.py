@@ -6,7 +6,7 @@ checks if the entry exists, if so returns that and updates with
 new information. If the entry does not exist then it creates it 
 and returns that.
 
-Initial version (Warwick 2014)
+Initial version (Warwick 2014), modified 7/14
 
 Data is imported to the collection 'fields' in the database 'numberfields'.
 The structure of the database entries is described in lmfdb/Database-info.
@@ -159,7 +159,8 @@ def do_import(ll):
         label = base_label(d,sig[0],absD,index)
         data['label'] = label
         data['ramps'] = [str(x) for x in prime_factors(D)]
-        data['subfields'] = subs
+        subs = [[makels(z[0]), z[1]] for z in subs]
+        data['subs'] = subs
 ############
         if h>0:
             data['class_number'] = h
