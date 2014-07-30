@@ -302,33 +302,32 @@ class WebNewForm(WebObject, CachedRepresentation):
         """
         from sage.rings import arith
         #emf_logger.debug("computing c({0}) using recursive algortithm".format(n))
-        if n==1:
-            return 1
-        F = arith.factor(n)
-        prod = None        
         ev = self.eigenvalues
         if ev.has_eigenvalue(2):
             K = ev[2].parent()
         else:
             raise StopIteration,"Newform does not have eigenvalue a(2)!"
+        prod = K(1)
+        F = arith.factor(n)
         for p, r in F:
             (p, r) = (int(p), int(r))
             pr = p**r
             if not ev.has_eigenvalue(p):
                 # Here the question is whether we start computing or only use from database...
                 raise ValueError,"p={0} is outside the range of computed primes (primes up to {1})!".format(p,max(ev.primes()))
-            if not ev.has_eigenvalue(pr):  # and ev[pow].has_key(name)):
-                # TODO: Optimization -- do something much more
-                # intelligent in case character is not defined.  For
-                # example, compute it using the diamond operators <d>
-                eps = K(self.parent.character_used_in_computation.value(p))
-                # a_{p^r} := a_p * a_{p^{r-1}} - eps(p)p^{k-1} a_{p^{r-2}}
-                apr1 = self.coefficient_n_recursive(pr//p)
-                ap = self.coefficient_n_recursive(p)
-                k = self.weight
-                apr2 = self.coefficient_n_recursive(pr//(p*p))
-                apow = ap*apr1 - eps*(p**(k-1)) * apr2
-                ev[pr]=apow
+            elif self._coefficients.get(pr) is None:
+                if r == 1:
+                    c = ev[p]
+                else:
+                    eps = K(self.parent.character_used_in_computation.value(p))
+                    # a_{p^r} := a_p * a_{p^{r-1}} - eps(p)p^{k-1} a_{p^{r-2}}
+                    apr1 = self.coefficient_n_recursive(pr//p)
+                    ap = self.coefficient_n_recursive(p)
+                    k = self.weight
+                    apr2 = self.coefficient_n_recursive(pr//(p*p))
+                    c = ap*apr1 - eps*(p**(k-1)) * apr2
+                    #ev[pr]=c
+                self._coefficients[pr]=c
                 #if self._verbose>1:
                 #    print "eps=",eps
                 #    print "a[",pr//p,"]=",apr1
@@ -336,10 +335,7 @@ class WebNewForm(WebObject, CachedRepresentation):
                 #    print "a[",pr,"]=",apow                
                 #    print "a[",p,"]=",ap
                 # _dict_set(ev, pow, name, apow)
-            if prod is None:
-                prod = ev[pr]
-            else:
-                prod *= ev[pr]
+            prod *= self._coefficients[pr]
         return prod
 
     def max_cn(self):
