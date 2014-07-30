@@ -1,0 +1,200 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+<style>
+<div.ip>span { white-space: nowrap; font-family: serif; }
+</style>
+
+<script>
+var cur_system = null;
+function show_code(system) {
+    $('.sage').hide();
+    $('.pari').hide();
+    $('.magma').hide();
+    if (cur_system == system) {
+      $('.'+system).hide();
+      cur_system = null;
+      } else {
+      $('.'+system).show();
+      cur_system = system;
+    }
+  }
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script><script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script><script src="http://aleph.sagemath.org/embedded_sagecell.js">
+  
+
+</script><style type="text/css">
+  .sagecell .CodeMirror-scroll {
+    height: auto;
+    overflow-y: hidden;
+    overflow-x: auto;
+  }
+
+  .sagecell-practice .CodeMirror-scroll {
+    height: 150px;
+  }
+
+  .sagecell button.sagecell_evalButton {
+      font-size: 80%;
+  }
+
+  .sagecell_sessionContainer {
+      margin-bottom:1em;
+  
+  }
+
+  </style>
+
+{#
+    <div align ="right">
+      Show commands using:  <a onclick="show_code('sage'); return false" href='#'>sage</a>,
+        <a onclick="show_code('pari'); return false" href='#'>pari</a>,
+        <a onclick="show_code('magma'); return false" href='#'>magma</a>
+    </div>
+#}
+
+<div>
+  <h2>  Base Field   {{ ec.field.knowl()|safe }} </h2>
+<p>
+Generator \({{ ec.field.generator_name() }}\), with minimal polynomial \({{ec.field.poly()}}\)
+</p>
+</div>
+
+<div>
+<h2>Weierstrass Equation</h2>
+{{ ec.equn }}
+<h2>Invariants</h2>
+
+        <table cellpadding="5">
+        <tr>
+          <td>Conductor</td>
+        <td>
+         \(\mathfrak{N} \)</td>
+        <td>=</td>
+        <td>{{ ec.cond }}</td>
+        <td>=</td>
+        <td>{{ ec.fact_cond }}</td>
+        </tr>
+
+        <tr>
+          <td>Conductor norm</td>
+        <td>
+         \(N(\mathfrak{N}) \)</td>
+        <td>=</td>
+        <td>{{ ec.cond_norm }}</td>
+        <td>=</td>
+        <td>{{ ec.fact_cond_norm }}</td>
+        </tr>
+
+        <tr>
+          <td>Discriminant</td>
+        <td>
+         \(\Delta\)</td>
+        <td>=</td>
+        <td>{{ ec.disc }}</td>
+        {% if ec.fact_disc %}
+        <td>=</td>
+        <td>{{ ec.fact_disc }}</td>
+        {% endif %}
+        </tr>
+
+        <tr>
+          <td>\(j\)-invariant</td>
+        <td>
+         \(j\)</td>
+        <td>=</td>
+        <td>{{ ec.j }}</td>
+        {% if ec.fact_j %}
+        <td>=</td>
+        <td>{{ ec.fact_j }}</td>
+        {% endif %}
+        </tr>
+
+        <tr>
+          <td>Endomorphism ring</td>
+        <td> \( \text{End} (E) \)</td>
+        <td>=</td>
+        <td>{{ ec.End }}</td>
+        <td>&nbsp;</td>
+        <td>({%if not ec.cm %} no {%endif %}
+   {{ KNOWL('ec.complex_multiplication', title='Complex Multiplication')}}
+            )
+        </td>
+        </tr>
+
+</table>
+</div>
+
+<div>
+<h2> Torsion subgroup </h2>
+<table>
+<tr>
+<th>Structure:</th>
+<td>{{ ec.tor_struct_pretty }}</td>
+</tr>
+    {% if ec.tr %}
+<tr>
+<th>{% if ec.tr==1 %}Generator{% else %}Generators{% endif %}:</th>
+<td>{{ ec.torsion_gens }}</td>
+</tr>
+    {% endif %}
+</table>
+</div>
+
+<div>
+    <h2> Local data at primes of bad reduction </h2>
+
+{% if ec.local_data %}
+<table cellpadding="5">
+<tr>
+<th>prime</th>
+<th>Norm</th>
+<th>{{KNOWL('ec.q.tamagawa_numbers', title='Tamagawa number')}}</th>
+<th>{{KNOWL('ec.q.kodaira_symbol', title='Kodaira symbol')}}</th>
+<th>{{KNOWL('ec.q.reduction_type', title='Reduction type')}}</th>
+</tr>
+{% for pr in ec.local_data %}
+<tr>
+<td align=center>
+{{pr.p}}
+</td>
+<td align=center>
+{{pr.norm}}
+</td>
+<td align=center>
+\({{pr.tamagawa_number}}\)
+</td>
+<td align=center>
+{{pr.kodaira_symbol}}
+</td>
+<td align=center>
+{% if pr.reduction_type==0 %}
+ Additive
+ {% elif pr.reduction_type==1 %}
+  Split multiplicative
+  {% elif pr.reduction_type==-1 %}
+   Non-split multiplicative
+{% endif %}
+</td>
+</tr>
+{% endfor %}
+</table>
+{% else %}
+No primes of bad reduction.
+{% endif %}
+</div>
+
+
+{% if DEBUG %}
+<hr>
+<div>
+Raw elliptic curve data: {{ ec.__dict__ }}
+</div>
+<hr>
+<div>
+Raw number field data: {{ ec.field.__dict__ }}
+</div>
+{% endif %}
+
+{% endblock %}

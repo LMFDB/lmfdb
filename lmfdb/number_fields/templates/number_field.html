@@ -34,8 +34,13 @@ function show_code(system) {
         {% set KNOWL_ID = "nf.%s"|format(info['label_raw']) %}
         <h2>{{ KNOWL_INC(KNOWL_ID+'.top', title='') }}</h2>
 
-        <p><h2> {{ KNOWL('nf.defining_polynomial.normalization', title='Normalized') }}
+        <p><h2> 
+        {% if nf.is_reduced() %}
+          {{ KNOWL('nf.defining_polynomial.normalization', title='Normalized') }}
         {{ KNOWL('nf.defining_polynomial', title='defining polynomial') }}</h2>
+        {% else %}
+        {{ KNOWL('nf.defining_polynomial', title='Defining polynomial') }}</h2>
+        {% endif %}
         <div class='sage nodisplay code'>sage: K.defining_polynomial()</div>
         <div class='pari nodisplay code'>pari: K.pol</div>
         <div class='magma nodisplay code'>&gt; DefiningPolynomial(K);</div>
@@ -67,7 +72,13 @@ function show_code(system) {
             <tr><td colspan="3">Extension is Galois and abelian</tr>
             <tr><td>Conductor:<td>&nbsp;&nbsp;<td>{{info.conductor}}</tr>
             <tr><td>Dirichlet
-				group:<td>&nbsp;&nbsp;<td>{{info.dirichlet_group|safe}}</tr> 
+				group:<td>&nbsp;&nbsp;<td>
+                {% if info.dirichlet_group is defined %}
+                {{info.dirichlet_group|safe}}
+                {% else %}
+                not computed
+                {% endif %}
+                </tr> 
   {% elif info.is_galois %}
             <tr><td colspan="3">Extension is Galois</tr>
   {% endif %}
@@ -148,6 +159,26 @@ function show_code(system) {
             <tr><td>
             {{ info.character_table | safe }}</tr>
           </table>
+
+        <p><h2> {{ KNOWL('nf.intermediate_fields', title='Intermediate fields') }}</h2>
+        <p>
+        {% if nf.subfields()==[] %}
+        <table>
+          <tr><td>
+            The extension is primitive: there are no intermediate fields 
+            between this field and $\Q$.
+          </td></tr>
+        </table>
+        {% else %}
+        <table>
+          <tr><td>
+            {{ nf.subfields_show() | safe }}
+          </td></tr>
+        </table>
+        <p>
+        Fields in the database are given up to isomorphism.  Isomorphic 
+        intermediate fields are shown with their multiplicities.
+        {% endif %}
 
         <p><h2> {{ KNOWL('nf.frobenius_cycle_types', title='Frobenius cycle types') }}</h2>
         <p><center>

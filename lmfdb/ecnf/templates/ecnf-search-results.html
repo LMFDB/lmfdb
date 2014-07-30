@@ -1,0 +1,114 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+<h2> Refine search </h2>
+
+<form id='re-search'>
+<input type="hidden" name="start" value="{{info.start}}"/>
+<input type="hidden" name="count" value="{{info.count}}"/>
+
+<table border="0">
+
+<tr>
+<td align=left>Field</td>
+<td align=left>Conductor norm</td>
+<td align=left>Include isogenous curves</td>
+</tr>
+
+<tr>
+<td><input type='text' name='field' example="{{info.field}}" size=10
+           value="{{info.field}}" /></td>
+<td align=left><input type='text' name='conductor_norm' size=10
+                      value="{{info.conductor_norm}}"></td>
+<td>         <select name='include_isogenous'>
+{% if info.query.number %}
+           <option value="off" selected="yes">No</option>
+           <option value="on">Yes</option>
+{% else %}
+           <option value="off">No</option>
+           <option value="on" selected="yes">Yes</option>
+{% endif %}
+         </select>
+</td>
+</tr>
+
+<tr>
+<td>
+<button type='submit' value='refine'>Search again</button>
+</td> </tr>
+</table>
+
+</form>
+
+{% if info.err is defined %}
+
+<h2>Error</h2>
+<div>
+  {{ info.err|safe }}
+  <p>
+  Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
+</div>
+
+{% else %}
+
+<style type="text/css">
+table td.center {
+  text-align: center;
+}
+table td.params {
+  text-align: left;
+  font-family: monospace;
+}
+
+</style>
+
+<h2> Results ({{info.report}})</h2>
+<table>
+<tr>
+  <th class="center">Field</th>
+  <th class="center">Conductor norm</th>
+  <th class="center">Conductor label</th>
+  <th class="center">Curve label</th>
+  <th align="left">{{ KNOWL('ec.weierstrass_coeffs',  title='Weierstrass Coefficients') }}</th>
+</tr>
+{% for curve in info.curves: %}
+<tr>
+<td class="center">
+ {{ curve.field_knowl|safe }}
+</td>
+<td class="center">{{curve.conductor_norm}}</td>
+<td class="center">{{curve.conductor_label}}</td>
+<td class="center"><a href="{{ url_for('.show_ecnf',nf=curve.field_label,label=curve.short_label) }} ">{{curve.short_label}}</a></td>
+<td class="left">{{info.web_ainvs(curve.field_label,curve.ainvs)}}</td>
+</tr>
+{% endfor %}
+</table>
+
+<hr>
+<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
+
+{% endif %}
+
+{#
+<form>
+Download all search results for
+<input type="submit" name="Submit" value="gp">
+<input type="submit" name="Submit" value="sage">
+<input type="submit" name="Submit" value="mathematica">
+</form>
+#}
+
+{% if DEBUG %}
+<hr>
+<div>
+Query was: {{info.query}}
+</div>
+Start = {{info.start}}, Count = {{info.count}}
+Field label = {{info.field}}
+{% endif %}
+
+
+
+{% endblock %}

@@ -20,7 +20,7 @@ from lmfdb.transitive_group import *
 
 from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, comma, clean_input, url_character
 
-NF_credit = 'the PARI group, J. Voight, J. Jones, and D. Roberts'
+NF_credit = 'the PARI group, J. Voight, J. Jones, D. Roberts, J. Kl&uuml;ners, G. Malle'
 Completename = 'Completeness of this data'
 
 # Remove whitespace first in all cases
@@ -80,23 +80,6 @@ def group_display_shortC(C):
         return group_display_short(nt['n'], nt['t'], C)
     return gds
 
-
-def field_pretty(field_str):
-    d, r, D, i = field_str.split('.')
-    if d == '1':  # Q
-        return '\(\Q\)'
-    if d == '2':  # quadratic field
-        D = ZZ(int(D)).squarefree_part()
-        if r == '0':
-            D = -D
-        return '\(\Q(\sqrt{' + str(D) + '}) \)'
-    for n in [5, 7, 8, 9, 10]:
-        if field_str == parse_field_string('Qzeta' + str(n)):
-            return '\(\Q(\zeta_%s) \)' % n
-    return field_str
-#    TODO:  pretty-printing of more fields of higher degree
-
-
 def poly_to_field_label(pol):
     try:
         wnf = WebNumberField.from_polynomial(pol)
@@ -146,20 +129,20 @@ def parse_field_string(F):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
             if d == 1:
                 return '1.1.1.1'
             deg = euler_phi(d)
-            if deg > 20:
-                return fail_string
+            if deg > 23:
+                return '%s is not ' % F
             adisc = CyclotomicField(d).discriminant().abs()  # uses formula!
             return '%s.0.%s.1' % (deg, adisc)
         return fail_string
     # check if a polynomial was entered
     F = F.replace('X', 'x')
     if 'x' in F:
-        F = F.replace('^', '**')
+        F1 = F.replace('^', '**')
         # print F
-        F = poly_to_field_label(F)
-        if F:
-            return F
-        return fail_string
+        F1 = poly_to_field_label(F1)
+        if F1:
+            return F1
+        return str(F + ' is not ')
     return F
 
 
@@ -280,6 +263,7 @@ def render_field_webpage(args):
         return search_input_error(info, bread)
 
     info['wnf'] = nf
+    from lmfdb.WebNumberField import nf_display_knowl
     data['degree'] = nf.degree()
     data['class_number'] = nf.class_number()
     t = nf.galois_t()
@@ -290,8 +274,9 @@ def render_field_webpage(args):
         conductor = nf.conductor()
         data['conductor'] = conductor
         dirichlet_chars = nf.dirichlet_group()
-        data['dirichlet_group'] = ['<a href = "%s">$\chi_{%s}(%s,&middot;)$</a>' % (url_character(type='Dirichlet',modulus=data['conductor'], number=j), data['conductor'], j) for j in dirichlet_chars]
-        data['dirichlet_group'] = r'$\lbrace$' + ', '.join(data['dirichlet_group']) + r'$\rbrace$'
+        if len(dirichlet_chars)>0:
+            data['dirichlet_group'] = ['<a href = "%s">$\chi_{%s}(%s,&middot;)$</a>' % (url_character(type='Dirichlet',modulus=data['conductor'], number=j), data['conductor'], j) for j in dirichlet_chars]
+            data['dirichlet_group'] = r'$\lbrace$' + ', '.join(data['dirichlet_group']) + r'$\rbrace$'
         if data['conductor'].is_prime() or data['conductor'] == 1:
             data['conductor'] = "\(%s\)" % str(data['conductor'])
         else:
@@ -325,6 +310,9 @@ def render_field_webpage(args):
     grh_label = '<small>(<a title="assuming GRH" knowl="nf.assuming_grh">assuming GRH</a>)</small>' if nf.used_grh() else ''
     # Short version for properties
     grh_lab = nf.short_grh_string()
+    if 'Not' in str(data['class_number']):
+        grh_lab=''
+        grh_label=''
     pretty_label = field_pretty(label)
     if label != pretty_label:
         pretty_label = "%s: %s" % (label, pretty_label)

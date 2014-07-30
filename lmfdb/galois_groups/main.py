@@ -227,6 +227,7 @@ def render_group_webpage(args):
             info['label'] = label
             return search_input_error(info, bread)
         title = 'Galois Group:' + label
+        wgg = WebGaloisGroup.from_data(data)
         n = data['n']
         t = data['t']
         data['yesno'] = yesno
@@ -256,7 +257,7 @@ def render_group_webpage(args):
         data['subinfo'] = subfield_display(C, n, data['subs'])
         data['resolve'] = resolve_display(C, data['resolve'])
 #    if len(data['resolve']) == 0: data['resolve'] = 'None'
-        data['otherreps'] = otherrep_display(n, t, C, data['repns'])
+        data['otherreps'] = wgg.otherrep_list()
         query={'galois': bson.SON([('n', n), ('t', t)])}
         C = base.getDBConnection()
         one = C.numberfields.fields.find_one(query)

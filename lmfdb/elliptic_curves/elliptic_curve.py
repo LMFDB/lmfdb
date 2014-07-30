@@ -11,6 +11,8 @@ import os
 from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range2, web_latex_split_on_pm, comma, clean_input
 from lmfdb.number_fields.number_field import parse_list
 from lmfdb.elliptic_curves import ec_page, ec_logger
+from lmfdb.elliptic_curves.ec_stats import get_stats
+
 import sage.all
 from sage.all import ZZ, QQ, EllipticCurve, latex, matrix, srange
 q = ZZ['x'].gen()
@@ -18,72 +20,6 @@ q = ZZ['x'].gen()
 #########################
 #   Utility functions
 #########################
-
-ncurves = nclasses = max_N = max_rank = None
-rank_counts = sha_counts = max_sha = tor_counts = None
-init_ecdb_flag = False
-init_ecdb_stats_flag = False
-
-
-def init_ecdb_count():
-    global ncurves, nclasses, max_N, max_rank, init_ecdb_flag
-    if not init_ecdb_flag:
-        print "Computing elliptic curve counts..."
-        ecdb = lmfdb.base.getDBConnection().elliptic_curves.curves
-        ncurves = ecdb.count()
-        nclasses = ecdb.find({'number': 1}).count()
-        max_N = ecdb.find().sort('conductor', DESCENDING).limit(1)[0]['conductor']
-        max_rank = ecdb.find().sort('rank', DESCENDING).limit(1)[0]['rank']
-        print "... finished computing elliptic curve counts."
-        init_ecdb_flag = True
-
-def format_percentage(num, denom):
-    return "%10.2f"%((100.0*num)/denom)
-
-def init_ecdb_stats():
-    global rank_counts, max_sha, sha_counts, tor_counts, init_ecdb_stats_flag
-    init_ecdb_count() # sets max_rank
-    if not init_ecdb_stats_flag:
-        print "Computing elliptic curve stats..."
-        ecdb = lmfdb.base.getDBConnection().elliptic_curves.curves
-        rank_counts = []
-        for r in range(max_rank+1):
-            ncu = ecdb.find({'rank': r}).count()
-            ncl = ecdb.find({'rank': r, 'number': 1}).count()
-            prop = format_percentage(ncl,nclasses)
-            rank_counts.append({'r': r, 'ncurves': ncu, 'nclasses': ncl, 'prop': prop})
-        tor_counts = []
-        tor_counts2 = []
-        for t in  [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 16]:
-            ncu = ecdb.find({'torsion': t}).count()
-            if t in [4,8,12]: # two possible structures
-                ncyc = ecdb.find({'torsion_structure': [str(t)]}).count()
-                gp = "\(C_{%s}\)"%t
-                prop = format_percentage(ncyc,ncurves)
-                tor_counts.append({'t': t, 'gp': gp, 'ncurves': ncyc, 'prop': prop})
-                nncyc = ncu-ncyc
-                gp = "\(C_{2}\\times C_{%s}\)"%(t//2)
-                prop = format_percentage(nncyc,ncurves)
-                tor_counts2.append({'t': t, 'gp': gp, 'ncurves': nncyc, 'prop': prop})
-            elif t==16: # all C_2 x C_8
-                gp = "\(C_{2}\\times C_{8}\)"
-                prop = format_percentage(ncu,ncurves)
-                tor_counts2.append({'t': t, 'gp': gp, 'ncurves': ncu, 'prop': prop})
-            else: # all cyclic
-                gp = "\(C_{%s}\)"%t
-                prop = format_percentage(ncu,ncurves)
-                tor_counts.append({'t': t, 'gp': gp, 'ncurves': ncu, 'prop': prop})
-        tor_counts = tor_counts+tor_counts2
-        max_sha = ecdb.find().sort('sha_an', DESCENDING).limit(1)[0]['sha_an']
-        sha_counts = []
-        from math import sqrt
-        for s in range(1,int(sqrt(max_sha))+1):
-            s2 = s*s
-            nc = ecdb.find({'sha_an': { '$gt': s2-0.1, '$lt': s2+0.1}}).count()
-            if nc:
-                sha_counts.append({'s': s, 'ncurves': nc})
-        print "... finished computing elliptic curve stats."
-        init_ecdb_stats_flag = True
 
 cremona_label_regex = re.compile(r'(\d+)([a-z]+)(\d*)')
 lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
@@ -174,41 +110,36 @@ def rational_elliptic_curves(err_args=None):
             for field in ['conductor', 'jinv', 'torsion', 'rank', 'sha_an', 'optimal', 'torsion_structure', 'msg']:
                 err_args[field] = ''
             err_args['count'] = '100'
-    init_ecdb_count()
-    conductor_list_endpoints = [1, 100, 1000, 10000, 100000, max_N + 1]
+    counts = get_stats().counts()
+
+    conductor_list_endpoints = [1, 100, 1000, 10000, 100000, counts['max_N'] + 1]
     conductor_list = ["%s-%s" % (start, end - 1) for start, end in zip(conductor_list_endpoints[:-1],
                                                                        conductor_list_endpoints[1:])]
+    rank_list = range(counts['max_rank'] + 1)
+    torsion_list = range(1,11) + [12, 16]
     info = {
-        'rank_list': range(max_rank + 1),
-        'torsion_list': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 16],
+        'rank_list': rank_list,
+        'torsion_list': torsion_list,
         'conductor_list': conductor_list,
-        'ncurves': comma(ncurves),
-        'max_N': comma(max_N),
-        'max_rank': max_rank,
+        'counts': counts,
         'stats_url': url_for(".statistics")
     }
     credit = 'John Cremona and Andrew Sutherland'
-    t = 'Elliptic curves/$\Q$'
-    bread = [('Elliptic Curves', url_for(".rational_elliptic_curves")), ('Elliptic curves/$\Q$', ' ')]
+    t = 'Elliptic curves over $\Q$'
+    bread = [('Elliptic Curves', url_for("ecnf.index")), ('$\Q$', ' ')]
     return render_template("browse_search.html", info=info, credit=credit, title=t, bread=bread, **err_args)
 
 @ec_page.route("/stats")
 def statistics():
-    init_ecdb_count()
-    init_ecdb_stats()
     info = {
-        'ncurves': comma(ncurves),
-        'nclasses': comma(nclasses),
-        'max_N': comma(max_N),
-        'max_rank': max_rank,
-        'rank_counts': rank_counts,
-        'tor_counts': tor_counts,
-        'max_sha': max_sha,
-        'sha_counts': sha_counts
+        'counts': get_stats().counts(),
+        'stats': get_stats().stats(),
     }
     credit = 'John Cremona'
-    t = 'Elliptic curves/$\Q$: statistics'
-    bread = [('Elliptic Curves', url_for(".rational_elliptic_curves")), ('Elliptic curves/$\Q$: statistics', ' ')]
+    t = 'Elliptic curves over $\Q$: statistics'
+    bread = [('Elliptic Curves', url_for("ecnf.index")),
+             ('$\Q$', url_for(".rational_elliptic_curves")),
+             ('statistics', ' ')]
     return render_template("statistics.html", info=info, credit=credit, title=t, bread=bread)
 
 
@@ -396,7 +327,7 @@ def elliptic_curve_search(**args):
     credit = 'John Cremona'
     if 'non-surjective_primes' in query:
         credit += 'and Andrew Sutherland'
-    t = 'Elliptic Curves'
+    t = 'Elliptic Curves search results'
     return render_template("search_results.html", info=info, credit=credit, bread=bread, title=t)
 
 
@@ -492,7 +423,17 @@ def render_isogeny_class(iso_class):
     cremona_iso = E1data['iso']
     ainvs = [int(a) for a in E1data['ainvs']]
     E1 = EllipticCurve(ainvs)
-    curves, mat = E1.isogeny_class()
+    ver = sage.version.version.split('.') # e.g. "6.1.beta2"
+    ma = int(ver[0])
+    mi = int(ver[1])
+    if ma>6 or ma==6 and mi>1:
+        # Code for Sage 6.2 and later:
+        isogeny_class = E1.isogeny_class()
+        curves = isogeny_class.curves
+        mat = isogeny_class.matrix()
+    else:
+        # Code for Sage 6.1 and before:
+        curves, mat = E1.isogeny_class()
     size = len(curves)
     # Create a list of the curves in the class from the database, so
     # they are in the correct order!
@@ -815,8 +756,9 @@ def render_curve_webpage_by_label(label):
     else:
         t = "Elliptic Curve %s (Cremona label %s)" % (info['label'], info['cremona_label'])
 
-    bread = [('Elliptic Curves ', url_for(".rational_elliptic_curves")), ('Elliptic curves %s' %
-             lmfdb_label, ' ')]
+    bread = [('Elliptic Curves ', url_for("ecnf.index")),
+             ('$\Q$',url_for(".rational_elliptic_curves")),
+             (lmfdb_label, '.')]
 
     return render_template("curve.html",
                            properties2=properties2, credit=credit, bread=bread, title=t, info=info, friends=info['friends'], downloads=info['downloads'])
