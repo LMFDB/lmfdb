@@ -324,13 +324,13 @@ def comp_dict_by_label(d1, d2):
 
 def upload_to_db(base_path, min_N, max_N):
 #    allcurves data all exists also in allgens
-#    allcurves_filename = 'allcurves.%s-%s'%(min_N,max_N)
-    allbsd_filename = 'allbsd.%s-%s' % (min_N, max_N)
-    allgens_filename = 'allgens.%s-%s' % (min_N, max_N)
-    intpts_filename = 'intpts.%s-%s' % (min_N, max_N)
-    alldegphi_filename = 'alldegphi.%s-%s' % (min_N, max_N)
-    alllabels_filename = 'alllabels.%s-%s' % (min_N, max_N)
-    galreps_filename = 'galrep.%s-%s' % (min_N, max_N)
+#    allcurves_filename = 'allcurves/allcurves.%s-%s'%(min_N,max_N)
+    allbsd_filename = 'allbsd/allbsd.%s-%s' % (min_N, max_N)
+    allgens_filename = 'allgens/allgens.%s-%s' % (min_N, max_N)
+    intpts_filename = 'intpts/intpts.%s-%s' % (min_N, max_N)
+    alldegphi_filename = 'alldegphi/alldegphi.%s-%s' % (min_N, max_N)
+    alllabels_filename = 'alllabels/alllabels.%s-%s' % (min_N, max_N)
+    galreps_filename = 'galrep/galrep.%s-%s' % (min_N, max_N)
     file_list = [allbsd_filename, allgens_filename, intpts_filename, alldegphi_filename, alllabels_filename, galreps_filename]
 #    file_list = [galreps_filename]
 
@@ -340,7 +340,7 @@ def upload_to_db(base_path, min_N, max_N):
         h = open(os.path.join(base_path, f))
         print "opened %s" % os.path.join(base_path, f)
 
-        parse = globals()[f[:f.find('.')]]
+        parse = globals()[f[f.find('/')+1:f.find('.')]]
 
         t = time.time()
         count = 0
