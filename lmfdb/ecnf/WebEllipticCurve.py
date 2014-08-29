@@ -185,8 +185,9 @@ class ECNF(object):
             ('CM' , self.cm_bool)]
 
         if self.base_change:
-            self.properties += [('base-change', 'yes')]
+            self.properties += [('base-change', 'yes: %s' % ','.join([str(lab) for lab in self.base_change]))]
         else:
+            self.base_change = [] # in case it was False instead of []
             self.properties += [('Q-curve' , self.qc)]
 
         self.properties += [

@@ -253,7 +253,9 @@ def curves(line):
     conductor_label = data[1]   # string
     iso_label = data[2]         # string
     number = int(data[3])       # int
-    short_label = "%s-%s%s" % (conductor_label, iso_label, str(number))
+    short_class_label = "%s-%s" % (conductor_label, iso_label)
+    short_label = "%s%s" % (short_class_label, str(number))
+    class_label = "%s-%s" % (field_label, short_class_label)
     label = "%s-%s" % (field_label, short_label)
 
     conductor_ideal = data[4]     # string
@@ -278,7 +280,7 @@ def curves(line):
             print "cm=%s for j=%s" %(cm,j)
 
     # Here we should check that the conductor of the constructed curve
-    # agrees with the input conductor....
+    # agrees with the input conductor.  We just check the norm.
     if E.conductor().norm()==conductor_norm:
         pass
         #print "Conductor norms agree: %s" % conductor_norm
@@ -286,30 +288,35 @@ def curves(line):
         raise RuntimeError("Wrong conductor for input line %s" % line)
 
     # get torsion order, structure and generators:
+    print("E = %s over %s" % (ainvsK,K))
     torgroup = E.torsion_subgroup()
+    print("torsion = %s" % torgroup)
     ntors = int(torgroup.order())
     torstruct = [int(n) for n in list(torgroup.invariants())]
     torgens = [point_list(P.element()) for P in torgroup.gens()]
 
-    # get label of elliptic curve over Q for base_change cases
-    base_change = q_curve # will look up label later
+    # get label of elliptic curve over Q for base_change cases (a
+    # subset of Q-curves)
 
-    if base_change:
-        #print "Q-curve, testing for base-change..."
+    if q_curve:
+        #print "%s is a Q-curve, testing for base-change..." % label
         E1list = E.descend_to(QQ)
         if len(E1list):
-            print "%s is base change of %s" % (E,E1list)
             base_change = [cremona_to_lmfdb(E1.label()) for E1 in E1list]
-            print "...with labels %s" % base_change
+            print "%s is base change of %s" % (label,base_change)
         else:
             base_change = []
-            #print "...is not base change"
+            print "%s is a Q-curve, but not base-change..." % label
+    else:
+        base_change = []
 
     return label, {
         'field_label' : field_label,
         'degree': deg,
         'signature': sig,
         'abs_disc': abs_disc,
+        'class_label': class_label,
+        'short_class_label': short_class_label,
         'label': label,
         'short_label': short_label,
         'conductor_label': conductor_label,
@@ -344,6 +351,8 @@ def curve_data(line):
     """
     # Parse the line and form the full label:
     data = split(line)
+    if len(data)<9:
+        print "line %s does not have 9 fields (excluding gens), skipping" % line
     ngens = int(data[7])
     if len(data)!=9+ngens:
         print "line %s does not have 9 fields (excluding gens), skipping" % line
@@ -396,10 +405,12 @@ def upload_to_db(base_path, filename_suffix):
 
         t = time.time()
         count = 0
+        print "Starting to read lines from file %s" % f
         for line in h.readlines():
+            #if count==10: break # for testing
             label, data = parse(line)
             if count%100==0:
-                print "read %s" % label
+                print "read %s from %s" % (label, f)
             count += 1
             if label not in data_to_insert:
                 data_to_insert[label] = {'label': label}
@@ -410,7 +421,7 @@ def upload_to_db(base_path, filename_suffix):
                         raise RuntimeError("Inconsistent data for %s" % label)
                 else:
                     curve[key] = data[key]
-        print "finished reading %s lines from file" % count
+        print "finished reading %s lines from file %s" % (count, f)
 
     vals = data_to_insert.values()
     count = 0
