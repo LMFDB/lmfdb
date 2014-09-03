@@ -227,16 +227,16 @@ class WebNumberField:
         return key in self._data
 
     def subfields(self):
-        if not self.haskey('subfields'):
+        if not self.haskey('subs'):
             return []
-        return self._data['subfields']
+        return self._data['subs']
 
     def subfields_show(self):
         subs = self.subfields()
         if subs == []:
             return []
         C = base.getDBConnection()
-        subs = [[self.from_coeffs(a[0]), a[1]] for a in subs]
+        subs = [[self.from_coeffs(string2list(a[0])), a[1]] for a in subs]
         subs = [[nf_display_knowl(a[0].get_label(),C,a[0].field_pretty()), a[1]] for a in subs]
         def do_mult(ent):
             if ent[1]==1:
