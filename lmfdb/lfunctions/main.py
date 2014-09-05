@@ -47,12 +47,15 @@ def l_function_dirichlet_browse_page():
 @l_function_page.route("/degree2/")
 def l_function_degree2_browse_page():
     info = {"bread": get_bread(2, [])}
-#    info["minModDefault"] = 1
-#    info["maxModDefault"] = 20
-#    info["maxOrder"] = 19
-#    info["contents"] = [LfunctionPlot.getOneGraphHtmlChar(info["minModDefault"], info[
-#                                                          "maxModDefault"], 1, info["maxOrder"])]
     return render_template("Degree2.html", title='Degree 2 L-functions', **info)
+
+# Degree 3 L-functions browsing page ##############################################
+@l_function_page.route("/degree3/")
+def l_function_degree3_browse_page():
+    info = {"bread": get_bread(3, [])}
+    return render_template("Degree3.html", title='Degree 3 L-functions', **info)
+
+
 
 # Degree browsing page #########################################################
 @l_function_page.route("/<degree>/")

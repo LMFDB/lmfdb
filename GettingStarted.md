@@ -113,5 +113,25 @@ Sharing Your Work
     git clone git@github.com:YourGithubUserId/lmfdb.git
 ```
   using your own github user id. 
- * Push your code to the fork.
+ * Add the (official) LMFDB repository as a remote called `upstream`
+```
+    git remote add upstream git@github.com:LMFDB/lmfdb.git
+```
+ * You should make a new branch if you want to work on a new feature.
+   The following command creates a new branch named `new_feature` and switches to that branch.
+```
+    git checkout -b new_feature
+```
+ * Push your code to your own fork.
+```
+    git push -u origin new_feature
+```
+   Here, the option -u tells git to set up the remote branch `origin/new_feature` to be the corresponding upstream
+   branch you push to.
+ * Also, you should make sure from time to time that you pull the latest changes from the official LMFDB repository.
+   For this reason, we added it to the remotes. Now you can do
+```
+    git pull --rebase upstream 
+```
  * Tell the [lmdb mailing list](https://groups.google.com/forum/#!forum/lmdb) that you have some new code!
+ * You should also issue a pull request at github (from your feature branch `new_feature`) at the same time.
