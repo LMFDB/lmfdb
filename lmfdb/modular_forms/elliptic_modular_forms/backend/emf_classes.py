@@ -58,7 +58,8 @@ class DimensionTable(object):
             self._table = loads(rec['data'])
         else:
             self._table = None
-        emf_logger.debug('Have information for levels {0}'.format(self._table.keys()))
+        if self._table <> None:
+            emf_logger.debug('Have information for levels {0}'.format(self._table.keys()))
     ## We are now asuming that the entries of the table are tuples (d,t)
     ## where d is the dimension and t is True if the space is in the database (with its decomposition)
     @cached_method
@@ -107,20 +108,25 @@ class DimensionTable(object):
                 # emf_logger.debug("have information for weight {0}".format(k))
                 t = tblN[k].get(character,(0,False))
                 in_db = t[1]
+                emf_logger.debug("is_in_db: {0}".format(t)) 
                 return in_db
         return False
 
 
 class ClassicalMFDisplay(MFDisplay):
+    r"""
+    Display a table of holomorphic modular forms.
 
+    """
     def __init__(self, dbname='', **kwds):
+        emf_logger.debug("in ClassicalMFDisplay kwds={0}".format(kwds))
         MFDisplay.__init__(self, dbname, **kwds)
         import lmfdb.base
         Conn = lmfdb.base.getDBConnection()
         #if dbname == '':
         dbname = 'modularforms2'
         self._files = Conn[dbname].Newform_factors.files
-        emf_logger.debug("files : {0}".format(self._files))
+        emf_logger.debug("files db : {0} with nr. of recs:{1}".format(self._files,self._files.find().count()))
         
     def set_table_browsing(self, skip=[0, 0], limit=[(2, 16), (1, 50)], keys=['Weight', 'Level'], character=0, dimension_table=None, dimension_fun=dimension_new_cusp_forms, title='Dimension of newforms', check_db=True):
         r"""
@@ -213,10 +219,10 @@ class ClassicalMFDisplay(MFDisplay):
                 Gcreps = dict()
                 # A security check, if we have at least weight 2 and trivial character,
                 # otherwise don't show anything
-                if check_db and not is_data_in_db(N, 2, 0):
-                    emf_logger.debug("No data for level {0} and weight 2, trivial character".format(N))
-                    self._table = None
-                    return None
+                #if check_db and not is_data_in_db(N, 2, 0):
+                #    emf_logger.debug("No data for level {0} and weight 2, trivial character".format(N)#)
+                #self._table = None
+                #    return None
                 Gc = dict()
                 for xi, g in enumerate(G):
                     Gc[xi] = list()
