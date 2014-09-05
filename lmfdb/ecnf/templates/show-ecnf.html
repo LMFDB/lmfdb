@@ -61,12 +61,20 @@ Generator \({{ ec.field.generator_name() }}\), with minimal polynomial \({{ec.fi
 </p>
 </div>
 
+<style type="text/css">
+#invariants th, #invariants  td {
+padding : 4px;
+text-align: left;
+cellpadding="5";
+}
+</style>
+
 <div>
 <h2>Weierstrass Equation</h2>
 {{ ec.equn }}
 <h2>Invariants</h2>
 
-        <table cellpadding="5">
+        <table id="invariants">
         <tr>
           <td>Conductor</td>
         <td>
