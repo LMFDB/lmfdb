@@ -24,7 +24,7 @@ try:
 except:
     logger.fatal("It looks like the SPKGes gap_packages and database_gap are not installed on the server.  Please install them via 'sage -i ...' and try again.")
 
-from lmfdb.transitive_group import group_display_short, group_display_long, group_display_inertia, group_knowl_guts, subfield_display, otherrep_display, resolve_display, conjclasses, generators, chartable, aliastable, WebGaloisGroup
+from lmfdb.transitive_group import group_display_short, group_display_long, group_display_inertia, group_knowl_guts, galois_module_knowl_guts, subfield_display, otherrep_display, resolve_display, conjclasses, generators, chartable, aliastable, WebGaloisGroup
 
 GG_credit = 'GAP, Magma, and J. Jones'
 
@@ -46,9 +46,15 @@ def group_alias_table():
     return aliastable(C)
 
 
+def galois_module_data(n, t, index):
+    C = base.getDBConnection()
+    return galois_module_knowl_guts(n, t, index, C)
+
+
 @app.context_processor
 def ctx_galois_groups():
-    return {'group_alias_table': group_alias_table}
+    return {'group_alias_table': group_alias_table,
+            'galois_module_data': galois_module_data}
 
 
 def group_display_shortC(C):
@@ -235,7 +241,7 @@ def render_group_webpage(args):
         data['orderfac'] = latex(ZZ(order).factor())
         orderfac = latex(ZZ(order).factor())
         data['ordermsg'] = "$%s=%s$" % (order, latex(orderfac))
-        if ZZ(order) == 1:
+        if order == 1:
             data['ordermsg'] = "$1$"
         if ZZ(order).is_prime():
             data['ordermsg'] = "$%s$ (is prime)" % order

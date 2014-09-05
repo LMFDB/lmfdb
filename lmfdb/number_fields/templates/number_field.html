@@ -180,6 +180,19 @@ function show_code(system) {
         intermediate fields are shown with their multiplicities.
         {% endif %}
 
+{% if nf.unit_galois_action() %}
+        <p><h2> {{ KNOWL('nf.multiplicative_gal_module', title='Multiplicative Galois Module Structure') }}</h2>
+            <table>
+            <tr><td>
+              $U_{K^{gal}}/\textrm{Tors}(U_{K^{gal}}) \cong$ {{nf.unit_galois_action_show()|safe}}
+           </tr>
+    {% if nf.unit_galois_action_type_knowl() %}
+            <tr><td>
+                Galois action is {{ nf.unit_galois_action_type_knowl()|safe }}
+            </tr>
+    {% endif %}
+           </table>
+{% endif %}
         <p><h2> {{ KNOWL('nf.frobenius_cycle_types', title='Frobenius cycle types') }}</h2>
         <p><center>
            <table class="ntdata" >
