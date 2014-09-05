@@ -209,8 +209,8 @@ def get_new_and_oldspace_decomposition(k, N, xi=0):
         S = ModularSymbols(ZZ(N / d), k, sign=1).cuspidal_submodule().new_submodule()
         Sd = S.dimension()
         if(Sd == 0):
-            logger.info("%s, %s" % (O, Od))
-            logger.info("%s, %s" % (S, Sd))
+            logger.debug("%s, %s" % (O, Od))
+            logger.debug("%s, %s" % (S, Sd))
         mult = len(divisors(ZZ(d)))
         check_dim = check_dim + mult * Sd
         L.append((ZZ(N / d), mult, Sd))
@@ -764,7 +764,7 @@ def find_inverse_images_of_twists(k, N=1, chi=0, fi=0, prec=10, verbose=0):
     if(is_squarefree(ZZ(N))):
         return [True, f]
     # We need to check all square factors of N
-    logger.info("investigating: %s" % f)
+    logger.debug("investigating: %s" % f)
     N_sqfree = squarefree_part(ZZ(N))
     Nsq = ZZ(N / N_sqfree)
     twist_candidates = list()
@@ -780,7 +780,7 @@ def find_inverse_images_of_twists(k, N=1, chi=0, fi=0, prec=10, verbose=0):
         # check possible candidates to twist into f
         # g in S_k(M,chi) wit M=N/d^2
         M = ZZ(N / d ** 2)
-        logger.info("Checking level %s" % M)
+        logger.debug("Checking level %s" % M)
         for xig in range(euler_phi(M)):
             (t, glist) = _get_newform(k, M, xig)
             if(not t):
@@ -969,7 +969,7 @@ def html_table(tbl):
     if(len(data) != nrows):
         logger.error("wrong number of rows!")
     for i in range(nrows):
-        logger.info("len(%s)=%s" % (i, len(data[i])))
+        logger.debug("len(%s)=%s" % (i, len(data[i])))
         if(len(data[i]) != ncols):
             logger.error("wrong number of cols [=%s]!" % ncols)
 
@@ -1026,7 +1026,7 @@ def html_table(tbl):
     s = s + row
     for r in range(nrows):
         l = len_as_printed(str(tbl["headersv"][r])) * 10
-        logger.info("l=%s  head=%s" % (l, tbl["headersv"]))
+        logger.debug("l=%s  head=%s" % (l, tbl["headersv"]))
         row = "<tr><td width=\"%s\">" % l
         row += sheaderv + str(tbl['headersv'][r]) + "</td>"
         for k in range(ncols):
