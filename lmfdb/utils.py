@@ -550,3 +550,23 @@ def debug():
     don't forget to remove the debug() from your code!!!
     """
     assert current_app.debug is False, "Don't panic! You're here by request of debug()"
+
+def encode_plot(P):
+    """
+    Convert a plot object to base64-encoded png format.
+
+    The resulting object is a base64-encoded version of the png
+    formatted plot, which can be displayed in web pages with no
+    further intervention.
+    """
+    from StringIO import StringIO
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+    from base64 import b64encode
+    from urllib import quote
+
+    virtual_file = StringIO()
+    fig = P.matplotlib()
+    fig.set_canvas(FigureCanvasAgg(fig))
+    fig.savefig(virtual_file, format='png')
+    virtual_file.seek(0)
+    return "data:image/png;base64," + quote(b64encode(virtual_file.buf))

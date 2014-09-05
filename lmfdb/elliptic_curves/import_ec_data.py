@@ -17,8 +17,8 @@ The documents in the collection 'curves' in the database 'elliptic_curves' have 
    - 'label':  (string) full Cremona label, e.g. '1225a2'
    - 'lmfdb_label':  (string) full LMFDB label, e.g. '1225.a2'
    - 'conductor': (int) conductor, e.g. 1225
-   - 'iso': (string) Cremona isogeny class code, e.g. 'a'
-   - 'lmfdb_iso': (string) LMFDB isogeny class code, e.g. 'a'
+   - 'iso': (string) Cremona isogeny class code, e.g. '11a'
+   - 'lmfdb_iso': (string) LMFDB isogeny class code, e.g. '11.a'
    - 'number': (int) Cremona curve number within its class, e.g. 2
    - 'lmfdb_number': (int) LMFDB curve number within its class, e.g. 2
    - 'ainvs': (list of strings) list of a-invariants, e.g. ['0', '1', '1', '10617', '75394']
@@ -369,3 +369,39 @@ def upload_to_db(base_path, min_N, max_N):
         count += 1
         if count % 5000 == 0:
             print "inserted %s" % (val['label'])
+
+
+# A one-off script to add isogeny matrices to the database
+
+def add_isogeny_matrices(N1,N2):
+    """
+    Add the 'isogeny_matrix' field to every curve in the database
+    whose conductor is between N1 and N2 inclusive.  The matrix is
+    stored as a list of n lists of n ints, where n is the size of the
+    class and the (i,j) entry is the degree of a cyclic isogeny from
+    curve i to curve j in the class, using the lmfdb numbering within
+    each class.  Hence this matrix is exactly the same for all curves
+    in the class.  This was added in July 2014 to save recomputing the
+    complete isogeny class every time despite the fact that the curves
+    in the class were already in the database.
+    """
+    query = {}
+    query['conductor'] = { '$gt': int(N1)-1, '$lt': int(N2)+1 }
+    query['lmfdb_number'] = int(1)
+    res = curves.find(query)
+    res = res.sort([('conductor', pymongo.ASCENDING),
+                    ('lmfdb_iso', pymongo.ASCENDING)])
+    for C in res:
+        label = C['label']
+        lmfdb_label = C['lmfdb_label']
+        lmfdb_iso = C['lmfdb_iso']
+        E = EllipticCurve([int(a) for a in C['ainvs']])
+        M = E.isogeny_class(order="lmfdb").matrix()
+        mat = [list([int(c) for c in r]) for r in M.rows()]
+        n = len(mat)
+        print "%s curves in class %s" % (n,lmfdb_iso)
+        for label_i in [lmfdb_iso+str(i+1) for i in  range(n)]:
+            data = {}
+            data['lmfdb_label'] = label_i
+            data['isogeny_matrix'] = mat
+            curves.update({'lmfdb_label': label_i}, {"$set": data}, upsert=True)
