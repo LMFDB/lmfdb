@@ -276,8 +276,6 @@ class WebNumberField:
         gmods = C.transitivegroups.Gmodules
         n = self.degree()
         t = self.galois_t()
-        #ugm = [[str(gmods.find_one({'n': n, 't': t, 'index': z[0]})['name']), z[1]] for z in ugm]
-        #print "******************************* "+ str(ugm)
         ugm = [[galois_module_knowl(n, t, z[0], C), int(z[1])] for z in ugm]
         #ugm = [do_mult(a) for a in ugm]
         ans = ugm[0][0]
