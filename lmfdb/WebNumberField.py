@@ -251,7 +251,11 @@ class WebNumberField:
         return self._data['K']
 
     def generator_name(self):
-        return web_latex(self.gen_name)
+        #Add special case code for the generator if desired:
+        if self.gen_name=='phi':
+            return '\phi'
+        else:
+            return web_latex(self.gen_name)
 
     def unit_rank(self):
         if not self.haskey('unit_rank'):
