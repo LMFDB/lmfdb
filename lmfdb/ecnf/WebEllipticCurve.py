@@ -182,17 +182,19 @@ class ECNF(object):
             ('Conductor' , self.cond),
             ('Conductor norm' , self.cond_norm),
             ('j-invariant' , self.j),
-            ('CM' , self.cm_bool),
-            ('Q-curve' , self.qc)]
+            ('CM' , self.cm_bool)]
 
         if self.base_change:
-            self.properties += [('base-change', 'yes')]
+            self.properties += [('base-change', 'yes: %s' % ','.join([str(lab) for lab in self.base_change]))]
+        else:
+            self.base_change = [] # in case it was False instead of []
+            self.properties += [('Q-curve' , self.qc)]
 
         self.properties += [
             ('Torsion order' , self.ntors),
             ('Rank' , self.rk),
             ]
 
-        if self.base_change:
-            self.friends += [('Base-change of %s'  % self.base_change, url_for("ec.by_ec_label", label=self.base_change))]
+        for E0 in self.base_change:
+            self.friends += [('Base-change of %s /\(\Q\)' % E0 , url_for("ec.by_ec_label", label=E0))]
 
