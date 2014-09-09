@@ -24,7 +24,9 @@ try:
 except:
     logger.fatal("It looks like the SPKGes gap_packages and database_gap are not installed on the server.  Please install them via 'sage -i ...' and try again.")
 
-from lmfdb.transitive_group import group_display_short, group_display_long, group_display_inertia, group_knowl_guts, subfield_display, otherrep_display, resolve_display, conjclasses, generators, chartable, aliastable, WebGaloisGroup
+from lmfdb.transitive_group import group_display_short, group_display_long, group_display_inertia, group_knowl_guts, galois_module_knowl_guts, subfield_display, otherrep_display, resolve_display, conjclasses, generators, chartable, aliastable, WebGaloisGroup, galois_module_knowl
+
+#import lmfdb.WebNumberField
 
 GG_credit = 'GAP, Magma, and J. Jones'
 
@@ -35,6 +37,11 @@ def get_bread(breads=[]):
         bc.append(b)
     return bc
 
+def int_reps_are_complete(intreps):
+    for r in intreps:
+        if 'complete' in r:
+            return r['complete']
+    return -1
 
 def galois_group_data(n, t):
     C = base.getDBConnection()
@@ -46,9 +53,15 @@ def group_alias_table():
     return aliastable(C)
 
 
+def galois_module_data(n, t, index):
+    C = base.getDBConnection()
+    return galois_module_knowl_guts(n, t, index, C)
+
+
 @app.context_processor
 def ctx_galois_groups():
-    return {'group_alias_table': group_alias_table}
+    return {'group_alias_table': group_alias_table,
+            'galois_module_data': galois_module_data}
 
 
 def group_display_shortC(C):
@@ -235,7 +248,7 @@ def render_group_webpage(args):
         data['orderfac'] = latex(ZZ(order).factor())
         orderfac = latex(ZZ(order).factor())
         data['ordermsg'] = "$%s=%s$" % (order, latex(orderfac))
-        if ZZ(order) == 1:
+        if order == 1:
             data['ordermsg'] = "$1$"
         if ZZ(order).is_prime():
             data['ordermsg'] = "$%s$ (is prime)" % order
@@ -260,8 +273,14 @@ def render_group_webpage(args):
         data['otherreps'] = wgg.otherrep_list()
         query={'galois': bson.SON([('n', n), ('t', t)])}
         C = base.getDBConnection()
-        one = C.numberfields.fields.find_one(query)
+        intreps = C.transitivegroups.Gmodules.find({'n': n, 't': t})
+        # turn cursor into a list
+        intreps = [z for z in intreps]
+        data['int_reps'] = [galois_module_knowl(n, t, z['index'], C) for z in intreps]
+        data['int_reps_complete'] = int_reps_are_complete(intreps)
+
         friends = []
+        one = C.numberfields.fields.find_one(query)
         if one:
             friends.append(('Number fields with this Galois group', url_for('number_fields.number_field_render_webpage')+"?galois_group=%dT%d" % (n, t) )) 
         prop2 = [
