@@ -294,8 +294,8 @@ def web_latex_split_on_pm(x):
         return x
     else:
         A = "\( %s \)" % sage.all.latex(x)
-        A = A.replace('+', '\) + \(')
-        A = A.replace('-', '\) - \(')
+        A = A.replace('+', '\)\( {}+ ')
+        A = A.replace('-', '\)\( {}- ')
         return A
 
 
