@@ -42,4 +42,4 @@ def get_files_from_gridfs(collection='',create=True):
 
 from web_newforms import WebNewForm # html_table
 from web_modform_space import WebModFormSpace
-from emf_classes import *
+
