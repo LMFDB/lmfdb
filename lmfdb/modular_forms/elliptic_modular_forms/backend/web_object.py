@@ -96,7 +96,7 @@ class WebProperty(object):
           Returns the value of self in the db_data_type which then can be stored in the db.
         """
         val = self._value
-        print val, self.name
+        #print val, self.name
         if val is not None:
             return self.db_data_type(val)
         else:
@@ -214,7 +214,9 @@ class WebObject(object):
     def __init__(self,
                  use_separate_db = True,
                  use_gridfs = True,
-                 update_from_db=False, **kwargs):
+                 update_from_db=False,
+                 init_dynamic_properties=True,
+                 **kwargs):
         r"""
         INPUT:
           - use_gridfs -- bool: If True we use gridfs to store (large) properties of self
@@ -260,7 +262,7 @@ class WebObject(object):
             setattr(self, key, value)
 
         for p in self._properties:
-            emf_logger.debug("Adding {0}".format(p.name))
+            emf_logger.debug("Adding {0} : {1}".format(p.name,p))
             self.__dict__[p.name] = p
 
         if not hasattr(self, '_add_to_db_query'):
@@ -270,10 +272,13 @@ class WebObject(object):
                 
         if update_from_db:
             #emf_logger.debug('Update requested for {0}'.format(self.__dict__))
+            emf_logger.debug('Update requested')
             self.update_from_db()
 
         #emf_logger.debug('init_dynamic_properties will be called for {0}'.format(self.__dict__))
-        self.init_dynamic_properties()
+        if init_dynamic_properties:
+            emf_logger.debug('init_dynamic_properties will be called')
+            self.init_dynamic_properties()
 
     def __getattribute__(self, n):
         try:
@@ -312,7 +317,7 @@ class WebObject(object):
         # We recreate self from the db and check if everything is
         # contained in the new object.
         params = { k : getattr(self, k) for k in self._key }
-        print params
+        emf_logger.debug("in check. params={0}".format(params))
         f = self.__class__(**params)
         f.update_from_db()
         f._check_if_all_computed()
