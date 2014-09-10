@@ -262,7 +262,7 @@ class WebObject(object):
             setattr(self, key, value)
 
         for p in self._properties:
-            emf_logger.debug("Adding {0} : {1}".format(p.name,p))
+            #emf_logger.debug("Adding {0} : {1}".format(p.name,p))
             self.__dict__[p.name] = p
 
         if not hasattr(self, '_add_to_db_query'):
