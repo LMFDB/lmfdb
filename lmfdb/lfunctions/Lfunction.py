@@ -26,7 +26,7 @@ from sage.rings.rational import Rational
 
 from lmfdb.WebCharacter import WebDirichletCharacter
 from lmfdb.WebNumberField import WebNumberField
-from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms import *
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes \
      import WebMaassForm
 
