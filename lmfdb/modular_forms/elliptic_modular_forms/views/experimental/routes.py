@@ -6,7 +6,7 @@ Include all experimental routes here for clarity so that we see all routes which
 from lmfdb.modular_forms.elliptic_modular_forms import  emf_logger, emf
 from flask import request,render_template
 import json
-from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_draw_dots import paintSvgHolomorphic
+from lmfdb.modular_forms.elliptic_modular_forms.backend.experimental.emf_draw_dots import paintSvgHolomorphic
 
 met = ["GET","POST"]
 @emf.route("/DataTables/",methods=met)
@@ -22,7 +22,7 @@ def show_dots(min_level, max_level, min_weight, max_weight):
     info['max_level'] = max_level
     info['min_weight'] = min_weight
     info['max_weight'] = max_weight
-    return render_template("emf_browse_graph.html", title='Browsing dimensions of modular forms in the database', **info)
+    return render_template("experimental/emf_browse_graph.html", title='Browsing dimensions of modular forms in the database', **info)
 
       
 
