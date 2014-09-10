@@ -8,7 +8,7 @@ import flask
 from lmfdb import base
 from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, make_logger, clean_input
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, make_logger, clean_input, list_to_latex_matrix
 import os
 import re
 import bson
@@ -269,15 +269,21 @@ def render_group_webpage(args):
         data['cclasses'] = conjclasses(G, n)
         data['subinfo'] = subfield_display(C, n, data['subs'])
         data['resolve'] = resolve_display(C, data['resolve'])
-#    if len(data['resolve']) == 0: data['resolve'] = 'None'
         data['otherreps'] = wgg.otherrep_list()
         query={'galois': bson.SON([('n', n), ('t', t)])}
         C = base.getDBConnection()
-        intreps = C.transitivegroups.Gmodules.find({'n': n, 't': t})
+        intreps = C.transitivegroups.Gmodules.find({'n': n, 't': t}).sort('index', pymongo.ASCENDING)
         # turn cursor into a list
         intreps = [z for z in intreps]
-        data['int_reps'] = [galois_module_knowl(n, t, z['index'], C) for z in intreps]
-        data['int_reps_complete'] = int_reps_are_complete(intreps)
+        if len(intreps) > 0:
+            data['int_rep_classes'] = [str(z[0]) for z in intreps[0]['gens']]
+            for onerep in intreps:
+                onerep['gens']=[list_to_latex_matrix(z[1]) for z in onerep['gens']]
+                #onerep.update({'gens': onerep['gens'][1]})
+                #onerep.update({'gens': [str(onerep['gens'][0]), list_to_latex_matrix(onerep['gens'][1]])})
+            data['int_reps'] = intreps
+            #data['int_reps'] = [galois_module_knowl(n, t, z['index'], C) for z in intreps]
+            data['int_reps_complete'] = int_reps_are_complete(intreps)
 
         friends = []
         one = C.numberfields.fields.find_one(query)

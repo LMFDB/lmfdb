@@ -9,7 +9,7 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 import sage.all
 from sage.all import ZZ, latex, AbelianGroup, pari, gap
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, list_to_latex_matrix
 
 from pymongo.connection import Connection
 
@@ -94,7 +94,6 @@ class WebGaloisGroup:
         return ans
 
 ############  Misc Functions
-
 
 def base_label(n, t):
     return str(n) + "T" + str(t)
@@ -289,19 +288,8 @@ def galois_module_knowl_guts(n, t, index, C):
     out += "<blockquote>"
     out += "Dimension: %s" % str(mymod['dim'])
     out += r"<br>Action: $$\begin{align*}"
-    # helper function: make latex matrix
-    def mmatrix(li):
-        dim = str(len(li[0]))
-        mm = r"\left(\begin{array}{*{"+dim+ r"}{r}}"
-        for row in li:
-            row = [str(a) for a in row]
-            mm += ' & '.join(row)
-            mm += r'\\'
-        mm = mm[:-2] # remove final line break
-        mm += r'\end{array}\right)'
-        return mm
     for g in mymod['gens']:
-        matg = mmatrix(g[1])
+        matg = list_to_latex_matrix(g[1])
         out += "%s &\\mapsto %s \\\\" %(str(g[0]), matg)
     out = out[:-2]
     out += r"\end{align*}$$"

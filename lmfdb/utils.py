@@ -298,6 +298,17 @@ def web_latex_split_on_pm(x):
         A = A.replace('-', '\)\( {}- ')
         return A
 
+# make latex matrix from list of lists
+def list_to_latex_matrix(li):
+    dim = str(len(li[0]))
+    mm = r"\left(\begin{array}{*{"+dim+ r"}{r}}"
+    for row in li:
+        row = [str(a) for a in row]
+        mm += ' & '.join(row)
+        mm += r'\\'
+    mm = mm[:-2] # remove final line break
+    mm += r'\end{array}\right)'
+    return mm
 
 class LinkedList(object):
     __slots__ = ('value', 'next', 'timestamp')
