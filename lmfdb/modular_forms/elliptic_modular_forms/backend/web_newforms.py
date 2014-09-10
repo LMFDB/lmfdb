@@ -184,8 +184,11 @@ class WebEigenvalues(WebObject, CachedRepresentation):
         r"""
         Check how many coefficients we can generate from the eigenvalues in the database.
         """
-        from sage.all import next_prime 
-        prec_in_db = self.get_db_record().get('prec')
+        from sage.all import next_prime
+        rec = self.get_db_record()
+        if rec is None:
+            return 0
+        prec_in_db = rec.get('prec')
         return next_prime(prec_in_db)-1
         
     def __getitem__(self, p):
@@ -361,7 +364,7 @@ class WebNewForm(WebObject, CachedRepresentation):
             (p, r) = (int(p), int(r))
             pr = p**r
             cp = self._coefficients.get(p)
-            emf_logger.debug("c{0} = {1}".format(p,cp))
+#            emf_logger.debug("c{0} = {1}".format(p,cp))
             if cp is None:
                 if ev.has_eigenvalue(p):
                     cp = ev[p]
