@@ -117,7 +117,7 @@ class WebqExp(WebPoly):
     def from_fs(self, f):
         if f is None:
             return None
-        print "f", f
+        #print "f", f
         try:
             f = f.truncate_powerseries(prec)
             return f
@@ -127,7 +127,7 @@ class WebqExp(WebPoly):
     def to_fs(self):
         if self.value() is None:
             return None
-        print type(self.value()), self.value()
+        #print type(self.value()), self.value()
         return self.value()
 
 
@@ -135,9 +135,9 @@ class WebEigenvalues(WebObject, CachedRepresentation):
 
     _key = ['hecke_orbit_label']
     _file_key = ['hecke_orbit_label', 'prec']
-    _collection_name = 'ap_test'
+    _collection_name = 'webeigenvalues'
 
-    def __init__(self, hecke_orbit_label, prec=10, update_from_db=True, auto_update = True):
+    def __init__(self, hecke_orbit_label, prec=10, update_from_db=True, auto_update = True,init_dynamic_properties=True):
         self._properties = WebProperties(
             WebSageObject('E', None, Matrix),
             WebSageObject('v', None, vector),
@@ -147,17 +147,18 @@ class WebEigenvalues(WebObject, CachedRepresentation):
             )
 
         self.auto_update = True
-        
+        self._ap = {}        
         super(WebEigenvalues, self).__init__(
             use_gridfs=True,
             use_separate_db=False,
-            update_from_db=update_from_db
+            update_from_db=update_from_db,
+            init_dynamic_properties=init_dynamic_properties
             )
 
     def update_from_db(self, ignore_non_existent = True, \
                        add_to_fs_query=None, add_to_db_query=None):
 
-        self._add_to_fs_query = {'prec': {'$gt': self.prec-1}}
+        self._add_to_fs_query = {'prec': {'$gt': int(self.prec-1)}}
         super(WebEigenvalues,self).update_from_db(ignore_non_existent, add_to_fs_query, add_to_db_query)
 
     def init_dynamic_properties(self):
@@ -165,9 +166,10 @@ class WebEigenvalues(WebObject, CachedRepresentation):
         if not self.E is None and not self.v is None:
             c = self.E*self.v
             lc = len(c)
+            primes_to_lc = primes_first_n(lc)
             self._ap = {}
             for i in range(len(c)):
-                p = primes_first_n(lc)[i]
+                p = primes_to_lc[i]
                 self._ap[p] = c[i]
         else:
             self._ap = {}
@@ -178,6 +180,14 @@ class WebEigenvalues(WebObject, CachedRepresentation):
     def has_eigenvalue(self, p):
         return self._ap.has_key(p)
 
+    def max_coefficient_in_db(self):
+        r"""
+        Check how many coefficients we can generate from the eigenvalues in the database.
+        """
+        from sage.all import next_prime 
+        prec_in_db = self.get_db_record().get('prec')
+        return next_prime(prec_in_db)-1
+        
     def __getitem__(self, p):
         if self.auto_update and not self.has_eigenvalue(p):
             self.prec = p
@@ -205,7 +215,7 @@ class WebNewForm(WebObject, CachedRepresentation):
 
     _key = ['level', 'weight', 'character', 'label']
     _file_key = ['hecke_orbit_label']
-    _collection_name = 'webnewforms_test'
+    _collection_name = 'webnewforms'
 
     def __init__(self, level=1, weight=12, character=1, label='a', prec=10, bitprec=53, parent=None, update_from_db=True):
         if isinstance(character, WebChar):
@@ -228,9 +238,11 @@ class WebNewForm(WebObject, CachedRepresentation):
             WebInt('dimension'),
             WebqExp('q_expansion', prec=prec),
             WebDict('_coefficients'),
+            WebDict('_embeddings'),
             WebInt('prec', default_value=int(prec)), #precision of q-expansion
             WebNumberField('base_ring'),
             WebNumberField('coefficient_field'),
+            WebInt('coefficient_field_degree'),
             WebList('twist_info', required = False),
             WebBool('is_cm', required = False),
             WebBool('is_cuspidal',default_value=True),
@@ -250,8 +262,18 @@ class WebNewForm(WebObject, CachedRepresentation):
 
         # We're setting the WebEigenvalues property after calling __init__ of the base class
         # because it will set hecke_orbit_label from the db first
-        self.eigenvalues = WebEigenvalues(self.hecke_orbit_label, prec = self.prec)
 
+        ## 
+        ## We don't init the eigenvalues (since E*v is slow)
+        ## unless we (later) request a coefficient which is not
+        ## in self._coefficients
+        
+        self.eigenvalues = WebEigenvalues(self.hecke_orbit_label, prec = self.prec,init_dynamic_properties=False)
+
+    def __repr__(self):
+        s = "WebNewform in S_{0}({1},chi_{2}) with label {3}".format(self.weight,self.level,self.character.number,self.label)
+        return s
+        
     def q_expansion_latex(self, prec=None, name=None):
         return self._properties['q_expansion'].latex(prec, name)
 
@@ -268,6 +290,25 @@ class WebNewForm(WebObject, CachedRepresentation):
             c = self.coefficients([n])[0] 
         return c
 
+    def coefficient_embedding(self,n,i):
+        r"""
+        Return the i-th complex embedding of coefficient C(n).
+        Note that if it is not in the dictionary we compute the embedding (but not the coefficient).
+        """
+        embc = self._embeddings['values'].get(n,None)
+        bitprec = self._embeddings['bitprec']
+        if embc is None:
+            c = self.coefficient(n)
+            if hasattr(c,"complex_embeddings"):
+                embc = c.complex_embeddings(bitprec)
+            else:
+                embc = [ComplexField(bitprec)(c)]
+            self._embeddings['values'][n]=embc
+        if i > len(embc):
+            raise ValueError,"Embedding nr. {0} does not exist of a number field of degree {1}".format(i,self.coefficient_field.absolute_degree())
+        return embc[i]
+        
+        
     def coefficients(self, nrange=range(1, 10), save_to_db=True):
         r"""
          Gives the coefficients in a range.
@@ -301,40 +342,48 @@ class WebNewForm(WebObject, CachedRepresentation):
           We do this because of a bug in sage with .eigenvalue()
         """
         from sage.rings import arith
-        #emf_logger.debug("computing c({0}) using recursive algortithm".format(n))
         ev = self.eigenvalues
-        if ev.has_eigenvalue(2):
-            K = ev[2].parent()
+
+        c2 = self._coefficients.get(2)
+        if c2 is not None:
+            K = c2.parent()
         else:
-            raise StopIteration,"Newform does not have eigenvalue a(2)!"
+            if ev.max_coefficient_in_db() >= 2:
+                ev.init_dynamic_properties()
+            else:
+                raise StopIteration,"Newform does not have eigenvalue a(2)!"
+            self._coefficients[2]=ev[2]
+            K = ev[2].parent()
         prod = K(1)
+        emf_logger.debug("K= {0}".format(K))        
         F = arith.factor(n)
         for p, r in F:
             (p, r) = (int(p), int(r))
             pr = p**r
-            if not ev.has_eigenvalue(p):
-                # Here the question is whether we start computing or only use from database...
+            cp = self._coefficients.get(p)
+            emf_logger.debug("c{0} = {1}".format(p,cp))
+            if cp is None:
+                if ev.has_eigenvalue(p):
+                    cp = ev[p]
+                elif ev.max_coefficient_in_db() >= p:
+                    ev.init_dynamic_properties()
+                    cp = ev[p]
+            if cp is None:
                 raise ValueError,"p={0} is outside the range of computed primes (primes up to {1})!".format(p,max(ev.primes()))
-            elif self._coefficients.get(pr) is None:
+            if self._coefficients.get(pr) is None:
                 if r == 1:
-                    c = ev[p]
+                    c = cp
                 else:
                     eps = K(self.parent.character_used_in_computation.value(p))
                     # a_{p^r} := a_p * a_{p^{r-1}} - eps(p)p^{k-1} a_{p^{r-2}}
                     apr1 = self.coefficient_n_recursive(pr//p)
-                    ap = self.coefficient_n_recursive(p)
+                    #ap = self.coefficient_n_recursive(p)
                     k = self.weight
                     apr2 = self.coefficient_n_recursive(pr//(p*p))
-                    c = ap*apr1 - eps*(p**(k-1)) * apr2
-                    #ev[pr]=c
+                    c = cp*apr1 - eps*(p**(k-1)) * apr2
+                    emf_logger.debug("c({0})={1}".format(pr,c))
+                            #ev[pr]=c
                 self._coefficients[pr]=c
-                #if self._verbose>1:
-                #    print "eps=",eps
-                #    print "a[",pr//p,"]=",apr1
-                #    print "a[",pr//(p*p),"]=",apr2                
-                #    print "a[",pr,"]=",apow                
-                #    print "a[",p,"]=",ap
-                # _dict_set(ev, pow, name, apow)
             prod *= self._coefficients[pr]
         return prod
 
@@ -374,7 +423,7 @@ class WebNewForm(WebObject, CachedRepresentation):
             return self._atkin_lehner_eigenvalues
     
     def url(self):
-        return url_for('emf.render_elliptic_modular_forms', level=self.level, weight=self.weight, character=self.character.numer(), label=self.label)
+        return url_for('emf.render_elliptic_modular_forms', level=self.level, weight=self.weight, character=self.character.number, label=self.label)
 
     def coefficient_field_label(self, pretty = True):
         r"""

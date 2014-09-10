@@ -56,7 +56,7 @@ class WebChar(WebObject, CachedRepresentation):
 
     _key = ['modulus', 'number']
     _file_key = ['modulus', 'number']
-    _collection_name = 'webchar_test'
+    _collection_name = 'webchar'
     
     def __init__(self, modulus=1, number=1, update_from_db=True, compute=False):
         r"""

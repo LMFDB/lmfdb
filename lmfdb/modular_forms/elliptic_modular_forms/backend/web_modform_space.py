@@ -94,7 +94,7 @@ class WebHeckeOrbits(WebDict):
         super(WebHeckeOrbits, self).__init__(
             name, None, save_to_db=True, save_to_fs=False
             )
-
+        
     def to_db(self):
         return self.value().keys()
 
@@ -143,7 +143,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
 
     _key = ['level', 'weight', 'character']
     _file_key = ['galois_orbit_name']
-    _collection_name = 'webmodformspace_test'
+    _collection_name = 'webmodformspace'
 
     def __init__(self, level=1, weight=12, cuspidal=True,character=1, prec=10, bitprec=53, update_from_db=True):
 
@@ -180,7 +180,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
         super(WebModFormSpace, self).__init__(
             params=['level', 'weight', 'character'],
             dbkey='galois_orbit_name',
-            collection_name='webmodformspace_test',
+            collection_name='webmodformspace',
             update_from_db=update_from_db)
 
     def init_dynamic_properties(self):
