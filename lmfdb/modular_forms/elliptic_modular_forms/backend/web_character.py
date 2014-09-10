@@ -29,7 +29,7 @@ Fix complex characters. I.e. embedddings and galois conjugates in a consistent w
 
 """
 from flask import url_for
-from sage.all import dumps,loads, euler_phi
+from sage.all import dumps,loads, euler_phi,gcd
 from lmfdb.modular_forms.elliptic_modular_forms import emf_logger,emf_version
 from sage.rings.number_field.number_field_base import NumberField as NumberField_class
 from sage.all import copy
@@ -59,6 +59,14 @@ class WebChar(WebObject, CachedRepresentation):
     _collection_name = 'webchar_test'
     
     def __init__(self, modulus=1, number=1, update_from_db=True, compute=False):
+        r"""
+        Init self.
+
+        """
+        if not gcd(number,modulus)==1:
+            raise ValueError,"Character number {0} of modulus {1} does not exist!".format(number,modulus)
+        if number > modulus:
+            number = number % modulus
         self._properties = WebProperties(
             WebInt('conductor'),
             WebInt('modulus', value=modulus),
@@ -190,7 +198,7 @@ class WebChar(WebObject, CachedRepresentation):
         r"""
         Return the url of self.
         """
-        if hasattr(self, '_url') and self._url is None:
+        if not hasattr(self, '_url') or self._url is None:
             self._url = url_character(type='Dirichlet',modulus=self.modulus, number=self.number)
         return self._url
 
