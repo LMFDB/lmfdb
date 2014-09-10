@@ -62,33 +62,24 @@ class DimensionTable(object):
             emf_logger.debug('Have information for levels {0}'.format(self._table.keys()))
     ## We are now asuming that the entries of the table are tuples (d,t)
     ## where d is the dimension and t is True if the space is in the database (with its decomposition)
+
     @cached_method
     def dimension_gamma0(self, N=1, k=4):
         if self._table is None:
             return "n/a"
         if N in self._table.keys():
             if k in self._table[N]:
-                
-                dim = self._table[N][k]['dimension'] #[0][0]
+                try: 
+                    t,dim = self._table[N][k] #['dimension'] #[0][0]
+                except ValueError:
+                    dim,t = self._table[N][k][0] #['dimension'] #[0][0]
                 return dim
         return "n/a"
     @cached_method
-    def dimension_gamma1(self, arg1, k=3):
+    def dimension_gamma1(self, N = 1, k=3, chi=1):
         if self._table is None:
             return "n/a"
-        if type(arg1) == sage.modular.dirichlet.DirichletCharacter:
-            N = arg1.modulus()
-            character = arg1.parent().galois_orbits().index(arg1.galois_orbit())
-        else:
-            if type(arg1) == int or type(arg1) == Integer:
-                N = arg1
-                character = -1
-            else:
-                return -1
-#        emf_logger.debug(
-#            'Lookup dimension for Gamma1({0}), weight={1}, character={2}'.format(N, k, character))
         if N in self._table:
-            # emf_logger.debug('Have information for level {0}'.format(N))
             tblN = self._table[N]
             if k in tblN and character in tblN[k]:
                 # emf_logger.debug('Lookup dimension for Gamma1({0}), weight={1},
@@ -108,7 +99,10 @@ class DimensionTable(object):
             if k in tblN:
                 # emf_logger.debug("have information for weight {0}".format(k))
                 t = tblN[k].get(character,{})
-                in_db = t.get('is_in_db',False)
+                try: 
+                    in_db = t.get('is_in_db',False)
+                except AttributeError:
+                    in_db = t[1]
                 emf_logger.debug("is_in_db: {0}".format(t)) 
                 return in_db
         return False
@@ -272,10 +266,10 @@ class ClassicalMFDisplay(MFDisplay):
                     if not N in self._table['col_heads']:
                         self._table['col_heads'].append(N)
                     #try:
-                    if character == 1:
+                    if character == 0:
                         d = dimension_fun(N, k)
-                    #except Exception as ex:
-                    #d = 'n/a'
+                    else:
+                        d = 'n/a'
                     #    emf_logger.critical("Exception: {0}. \n Could not compute the dimension with function {0}".format(ex, dimension_fun))
                     # emf_logger.debug("N,k,char,dim: {0},{1},{2},{3}".format(N,k,character,d))
                     if character == 1:
@@ -285,7 +279,8 @@ class ClassicalMFDisplay(MFDisplay):
                         else:
                             url = ''
                     else:
-                        if (not check_db) or is_data_in_db(N, k, character):                        url = url_for('emf.render_elliptic_modular_forms', level=N, weight=k)
+                        if (not check_db) or is_data_in_db(N, k, character):
+                            url = url_for('emf.render_elliptic_modular_forms', level=N, weight=k)
                         else:
                             url = ''
                     if not k in self._table['row_heads']:
