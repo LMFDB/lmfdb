@@ -1,3 +1,6 @@
+{#                                             #}
+{# Template for displaying a WebModFormSpace   #}
+{#                                             #}
 {% extends 'homepage.html' %}
 
 {% if character is not defined or character.order() == 1 %}
@@ -10,17 +13,26 @@
 
 {% block content %}
 
-{% if is_empty is not defined %}
-
-{% if extra_info is defined %}
-<span style="font-size:50%">({{ extra_info |safe }})</span>
-{% endif %}
-
 {% if error is defined %}
 {{ error |safe }}
 <br>
 {{ sage_version | safe}}
 {% else %}
+
+{% if space.dimension == 0 %}
+  <h2>This space is empty!</h2>
+   {% if  space.weight % 2 == 0 and space.character.value(-1) == -1 %}
+     The weight is even and the character is odd.
+   {% endif %}
+   {% if space.weight % 2 != 0 and space.character.value(-1) == 1 %}
+     The weight is odd and the character is even.
+   {% endif %}
+
+{% else %}
+
+{% if extra_info is defined %}
+<span style="font-size:50%">({{ extra_info |safe }})</span>
+{% endif %}
 
 {% if nontrivial_new %}
 <h2>
@@ -36,12 +48,13 @@
     </tr>
   </thead>
   <tbody>
-    {% for form in newforms.values() %}
-    <tr>
-      <td><a href="{{form.url() }}">{{form.name()}}</a></td>
-      <td>{{ form.dimension() }}</td>
-      <td><a href="{{ form.coefficient_field_url() }}">{{ form.coefficient_field_label() }}</a></td>
-      <td>{{ form.q_expansion_latex() }}</td>
+    {% for label in space.hecke_orbits %}
+       {% set f = space.hecke_orbits[label] %}
+       <tr>
+      <td><a href="{{f.url() }}">{{ f.hecke_orbit_label }}</a></td>
+      <td>{{ f.dimension }}</td>
+      <td><a href="{{ f.coefficient_field_url() }}">{{ f.coefficient_field_label() }}</a></td>
+      <td>{{ f.q_expansion_latex() }}</td>
     </tr>
     {% endfor %}
   </tbody>
@@ -57,14 +70,12 @@
 {{ name_new }} {{ nontrivial_new_info }}
 {% endif %}
 
-{% if old_decomposition != "" %}
+{% if space.oldspace_decomposition != "" %}
 <h2> Decomposition of {{name_old}} into {{ KNOWL('mf.elliptic.oldspace',title='lower level spaces')}}</h2>
-{{ old_decomposition | safe }}
+{{ space.oldspace_decomposition | safe }}
 {% endif %}
 	
 {% endif %}
 {{ test | safe }}
-{% else %}
-<h2>This space is empty!</h2>
 {% endif %}
 {% endblock %}
