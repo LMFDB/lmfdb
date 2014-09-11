@@ -2,6 +2,15 @@
 
 {% block content %}
 
+<style>
+table.reptable td, table.reptable th {
+    text-align:center;
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+</style>
+
+
   <p><h2>{{ KNOWL('gg.group_action_invariants', title='Group action invariants') }}</h2>
     <table>
       <tr><td>Degree $n$ :<td>&nbsp;&nbsp;<td>${{info.n}}$</tr>
@@ -61,9 +70,7 @@
       <tr><td>Character table:<td>&nbsp;&nbsp;<td><pre>
 {{info.chartable}}
 </pre></td></tr>
-    </table>
-  </div>
-</p>
+    </table> </div> </p>
 {% if info.int_reps %}
 <div><h2>{{ KNOWL('gg.int_modules', title='Indecomposable integral representations') }}</h2>
 </div>
@@ -75,12 +82,24 @@ Complete
 Partial
 {% endif %}
 list of indecomposable integral representations:
-{% for rep in info['int_reps'] %}
-    {% if not loop.first %}
-  ,
-    {% endif %}
-  {{ rep|safe }}
-{% endfor %}
+  <p>
+  <div>
+    <table class="ntdata reptable">
+        <tr><th>{{ KNOWL('gg.int_modules.names', title='Name') }}</th> <th>Dim</th> 
+        {% for gen in info['int_rep_classes'] %}
+          <th> ${{ gen | safe  }} \mapsto $ </th>
+        {% endfor %}
+        </tr>
+    {% for rep in info['int_reps'] %}
+      <tr>
+          <td> {{ rep['name'] | safe }} </td> <td> ${{rep['dim'] }}$ </td> 
+        {% for gen in rep['gens'] %}
+          <td> ${{ gen | safe  }}$ </td>
+        {% endfor %}
+      </tr>
+    {% endfor %}
+    </table>
+  </div>
 </table>
 {% endif %}
 
