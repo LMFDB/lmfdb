@@ -226,7 +226,7 @@ class WebNewForm(WebObject, CachedRepresentation):
         else:
             character_number = character
             character = None if parent is None else parent.character
-        
+            
         self._properties = WebProperties(
             WebInt('level', value=level),
             WebInt('weight', value=weight),
@@ -257,7 +257,7 @@ class WebNewForm(WebObject, CachedRepresentation):
             WebModFormSpaceProperty('parent', value=parent,
                                               level = level,
                                               weight = weight,
-                                              character = character),
+                                              character = character_number),
             )
         super(WebNewForm, self).__init__(
             update_from_db=update_from_db
@@ -358,7 +358,7 @@ class WebNewForm(WebObject, CachedRepresentation):
             self._coefficients[2]=ev[2]
             K = ev[2].parent()
         prod = K(1)
-        emf_logger.debug("K= {0}".format(K))        
+        #emf_logger.debug("K= {0}".format(K))        
         F = arith.factor(n)
         for p, r in F:
             (p, r) = (int(p), int(r))

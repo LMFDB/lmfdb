@@ -151,7 +151,9 @@ class WebModFormSpace(WebObject, CachedRepresentation):
             character_number = character.number
         else:
             character_number = character
-            
+        emf_logger.debug("level={0}".format(level))
+        emf_logger.debug("character={0},type={1}".format(character,type(character)))         
+        emf_logger.debug("character_number={0}".format(character_number))         
         self._properties = WebProperties(
             WebInt('level', value=level),
             WebInt('weight', value=weight),
@@ -196,11 +198,11 @@ class WebModFormSpace(WebObject, CachedRepresentation):
 
 class WebModFormSpaceProperty(WebProperty):
 
-    def __init__(self, name, level=1, weight=12,
-                 character=1, value=None):
+    def __init__(self, name, level=1, weight=12, character=1, value=None):
         self.level = level
         self.weight = weight
         self.character = character
+        #emf_logger.debug("CCCCharacter = {0}".format(self.character))
         if value is None:
             value = WebModFormSpace(self.level, self.weight, self.character)
         super(WebModFormSpaceProperty, self).__init__(name,
