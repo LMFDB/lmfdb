@@ -145,7 +145,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
     _file_key = ['galois_orbit_name']
     _collection_name = 'webmodformspace'
 
-    def __init__(self, level=1, weight=12, cuspidal=True,character=1, prec=10, bitprec=53, update_from_db=True):
+    def __init__(self, level=1, weight=12, character=1,cuspidal=True, prec=10, bitprec=53, update_from_db=True):
 
         if isinstance(character, WebChar):
             character_number = character.number
