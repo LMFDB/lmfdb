@@ -1534,3 +1534,20 @@ div.box {
 	border: 1px solid #8080FF;
 	background-color: #E5E5FF;
 }
+
+/* Styling of Maass form plot */
+
+div.maassformplot {
+        width: 720px;
+        height: 800px;
+        overflow: hidden;
+        position: relative;
+}
+
+div.maassformplot img {
+        position: absolute;
+        top: -200px;
+        left: -870px;
+}
+
+/* End of styling of Maass form plot */

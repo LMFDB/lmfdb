@@ -25,7 +25,7 @@ from lmfdb.utils import url_character
 import bson
 import StringIO
 import pymongo
-from sage.all import is_odd, is_even, dumps
+from sage.all import is_odd, is_even, dumps, loads
 # mwf = flask.Blueprint('mwf', __name__, template_folder="templates",static_folder="static")
 from lmfdb.modular_forms.maass_forms.maass_waveforms import MWF, mwf_logger, mwf
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_utils import *
@@ -176,6 +176,22 @@ def render_one_maass_waveform(maass_id, **kwds):
         # mwf_logger.debug("id1={0}".format(id))
         return render_one_maass_waveform_wp(info)
 
+@mwf.route("/plot/<maass_id>")
+def plot_maassform(maass_id):
+    DB = connect_db()
+    data = DB.get_maassform_plot_by_id(maass_id)
+    data = data['plot']
+    response = make_response(loads(data))
+    response.headers['Content-type'] = 'image/png'
+    return response
+
+@mwf.route("/download/<maass_id>")
+def download_maassform(maass_id):
+    DB = connect_db()
+    MF = WebMaassForm(DB, maass_id)
+    response = make_response(MF.download_text())
+    response.headers['Content-type'] = 'text/plain'
+    return response
 
 def render_one_maass_waveform_wp(info):
     r"""
@@ -189,6 +205,8 @@ def render_one_maass_waveform_wp(info):
     level = info['MF'].level
     dim = info['MF'].dim
     numc = info['MF'].num_coeff
+    if info['MF'].has_plot():
+        info['plotlink'] = url_for('mwf.plot_maassform', maass_id=maass_id)
     # Create the link to the L-function (put in '/L' at the beginning and '/' before '?'
     Llink = "/L" + url_for('mwf.render_one_maass_waveform', maass_id=maass_id)  # + '/?db=' + info['db']
     if dim == 1:
@@ -197,7 +215,23 @@ def render_one_maass_waveform_wp(info):
              ('Of Level {0}'.format(level),
              url_for('.render_maass_waveforms', level=level))]
 
-    info["downloads"] = []
+    # Navigation to previous and next form
+    next_form_id = info['MF'].next_maassform_id()
+    if next_form_id:
+        next_data = (r"$f_{\text next}$", url_for('mwf.render_one_maass_waveform',
+                                                                maass_id = next_form_id) )
+    else:
+        next_data = ('','')
+    prev_form_id = info['MF'].prev_maassform_id()
+    if prev_form_id:
+        prev_data = (r"$f_{\text prev}$", url_for('mwf.render_one_maass_waveform',
+                                                                maass_id = prev_form_id) )
+    else:
+        prev_data = ('','')
+        
+    info['navi'] = ( prev_data, next_data )
+    
+    info["downloads"] = [ ('All stored data of the form', url_for('mwf.download_maassform', maass_id=maass_id)) ]
     lenc = 20
     mwf_logger.debug("count={0}".format(DB.count()))
     ch = info['MF'].character
@@ -224,7 +258,7 @@ def render_one_maass_waveform_wp(info):
                   ]
     if dim > 1 and info['MF'].the_character() == "trivial":
         properties.append(("Possibly oldform", []))
-    info['title'] = "Maass forms on \(\Gamma_{0}( %s )\)" % (info['MF'].level)
+    info['title'] = "Maass form on \(\Gamma_{0}( %s )\) with $R=%s$" % (info['MF'].level, info['MF'].R)
     info['bread'] = bread
     info['properties2'] = properties
 
@@ -250,59 +284,6 @@ def render_one_maass_waveform_wp(info):
     # coeffurl=url_for('mwf.render_one_maass_waveform',maass_id=maass_id,download='coefficients')
     #    info['downloads'] = [('Coefficients', coeffurl) ]
     return render_template("mwf_one_form.html", **info)
-
-
-def render_one_maass_waveform_wp_old(info):
-    r"""
-    Render the webpage of one Maass waveform.
-    """
-    info["check"] = []
-    # info["check"].append(["Hecke relation",url_for('not_yet_implemented')])
-    # info["check"].append(["Ramanujan-Petersson conjecture",url_for('not_yet_implemented')])
-    maass_id = info['maass_id']
-    # dbname=info['db']
-    info["friends"] = []
-    info["friends"].append(["L-function", "L/" + url_for('.render_one_maass_waveform', maass_id=maass_id)])
-    info["downloads"] = []
-    # info["downloads"].append(["Maass form data",url_for('not_yet_implemented')])
-    bread = [('Maass forms', url_for('.render_maass_waveforms'))]
-    properties = []
-    data = get_maassform_by_id(maass_id)
-    lenc = 20
-    if 'error' not in data:
-        [title, maass_info] = set_info_for_maass_form(data)
-        info["maass_data"] = maass_info
-        # rint "data=",info["maass_data"]
-        numc = data['num_coeffs']
-        mwf_logger.debug("numc={0}".format(numc))
-        if(numc > 0):
-            # if numc > 10:
-                # largs = [{'maass_id':maass_id,'number':k} for k in range(10,numc,50)]
-                # mwf_logger.debug("largs={0}".format(largs))
-            info['coefficients'] = make_table_of_coefficients(maass_id, len, offest)  # ,largs,text='more')
-            # else:
-            #    info['coefficients']=make_table_of_coefficients(maass_id)
-        else:
-            info["maass_data"].append(['Coefficients', ''])
-
-            s = 'No coefficients in the database for this form!'
-            info['coefficients'] = s
-        # info['list_spaces']=ajax_once(make_table_of_spaces_fixed_level,*largs,text='more',maass_id=maass_id)
-        # info["coefficients"]=table_of_coefficients(
-        info["credit"] = GetNameOfPerson(data['dbname'])
-        level = data['Level']
-        R = data['Eigenvalue']
-        title = "Maass forms on \(\Gamma_{0}(%s)\) with R=%s" % (level, R)
-        ## We see if there is a plot file associated to this waveform
-        if 'plot' in data:
-            mwf_logger.error("file={0}".format(data['plot']))
-    else:
-        # print "data=",data
-        title = "Could not find this Maass form in the database!"
-        info['error'] = data['error']
-
-    bread = [('Maass forms', url_for('.render_maass_waveforms'))]
-    return render_template("mwf_one_maass_form.html", info=info, title=title, bread=bread, properties=properties)
 
 
 def render_search_results_wp(info, search):
