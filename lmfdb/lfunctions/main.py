@@ -449,6 +449,23 @@ def initLfunction(L, args, request):
                                            url_for('.l_function_maass_browse_page')),
                                           ('\(' + L.texname + '\)', request.url)])
             info['friends'] = [('Maass Form ', friendlink)]
+
+            # Navigation to previous and next form
+            next_form_id = L.mf.next_maassform_id()
+            if next_form_id:
+                next_data = (r"$L(s,f_{\text next})$", '/L' + url_for('mwf.render_one_maass_waveform',
+                                                                        maass_id = next_form_id) )
+            else:
+                next_data = ('','')
+            prev_form_id = L.mf.prev_maassform_id()
+            if prev_form_id:
+                prev_data = (r"$L(s,f_{\text prev}$)", '/L' + url_for('mwf.render_one_maass_waveform',
+                                                                        maass_id = prev_form_id) )
+            else:
+                prev_data = ('','')
+                
+            info['navi'] = ( prev_data, next_data )
+
         else:
             info['bread'] = get_bread(L.degree,
                                       [('Maass Form', url_for('.l_function_maass_gln_browse_page',

@@ -826,8 +826,8 @@ class Lfunction_Maass(Lfunction):
             else:
                 self.characterName = " trivial character"
             self.title = ("$L(s,f)$, where $f$ is a Maass cusp form with "
-                          + "level %s, eigenvalue %s, and %s" % (
-                          self.level, self.eigenvalue, self.characterName))
+                          + "level %s and $R= %s$" % (
+                          self.level, self.eigenvalue))
             self.citation = ''
             self.credit = self.mf.contributor_name
 
