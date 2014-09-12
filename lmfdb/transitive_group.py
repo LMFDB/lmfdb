@@ -9,7 +9,7 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 import sage.all
 from sage.all import ZZ, latex, AbelianGroup, pari, gap
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, list_to_latex_matrix
 
 from pymongo.connection import Connection
 
@@ -53,7 +53,7 @@ class WebGaloisGroup:
         return False
 
     def order(self):
-        return self._data['order']
+        return int(self._data['order'])
 
     def display_short(self):
         if self._data['pretty']:
@@ -94,7 +94,6 @@ class WebGaloisGroup:
         return ans
 
 ############  Misc Functions
-
 
 def base_label(n, t):
     return str(n) + "T" + str(t)
@@ -139,6 +138,14 @@ def group_display_knowl(n, t, C, name=None):
     if not name:
         name = group_display_short(n, t, C)
     return '<a title = "' + name + ' [nf.galois_group.data]" knowl="nf.galois_group.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
+
+
+def galois_module_knowl(n, t, index, C):
+    data = C.transitivegroups.Gmodules.find_one({'n': n, 't': t, 'index': index})
+    if data is None:
+        return 'Error'
+    name = data['name']
+    return '<a title = "%s [nf.galois_group.gmodule]" knowl="nf.galois_group.gmodule" kwargs="n=%d&t=%d&ind=%d">%s</a>'%(name, n, t, index, name)
 
 
 def cclasses_display_knowl(n, t, C, name=None):
@@ -268,6 +275,26 @@ def group_character_table_knowl_guts(n, t, C):
     inf += '</pre>'
     inf += '</blockquote></div>'
     return(inf)
+
+
+def galois_module_knowl_guts(n, t, index, C):
+    mymod = C.transitivegroups.Gmodules.find_one({'n': int(n), 't': int(t), 'index': int(index)})
+    if mymod is None:
+        return 'Database call failed'
+    name = mymod['name']
+    out = "$\\Z[G]$ module %s with $G=$ " % str(name)
+    out += group_display_knowl(n, t, C)
+    out += " = %sT%s " %(n, t)
+    out += "<blockquote>"
+    out += "Dimension: %s" % str(mymod['dim'])
+    out += r"<br>Action: $$\begin{align*}"
+    for g in mymod['gens']:
+        matg = list_to_latex_matrix(g[1])
+        out += "%s &\\mapsto %s \\\\" %(str(g[0]), matg)
+    out = out[:-2]
+    out += r"\end{align*}$$"
+    out += "</blockquote>"
+    return out
 
 
 def subfield_display(C, n, subs):

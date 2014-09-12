@@ -2,6 +2,7 @@
 
 import pymongo
 ASC = pymongo.ASCENDING
+import time
 import flask
 import lmfdb.base as base
 from lmfdb.base import app, getDBConnection, url_for
@@ -745,6 +746,7 @@ def download_search(info, res):
     com1 = ''  # multiline comment start
     com2 = ''  # multiline comment end
     filename = 'fields.gp'
+    mydate = time.strftime("%d %B %Y")
     if dltype == 'sage':
         com = '#'
         filename = 'fields.sage'
@@ -754,15 +756,24 @@ def download_search(info, res):
         com2 = '*)'
         delim = 'brace'
         filename = 'fields.ma'
+    if dltype == 'magma':
+        com = ''
+        com1 = '/*'
+        com2 = '*/'
+        delim = 'magma'
+        filename = 'fields.m'
     s = com1 + "\n"
-    s += com + ' Global number fields downloaded from the LMFDB\n'
+    s += com + ' Global number fields downloaded from the LMFDB downloaded %s\n'% mydate
     s += com + ' Below is a list called data. Each entry has the form:\n'
     s += com + '   [polynomial, discriminant, t-number, class group]\n'
     s += com + ' Here the t-number is for the Galois group\n'
     s += com + ' If a class group was not computed, the entry is [-1]\n'
     s += '\n' + com2
     s += '\n'
-    s += 'data = ['
+    if dltype == 'magma':
+        s += 'data := ['
+    else:
+        s += 'data = ['
     s += '\\\n'
     for f in res:
         wnf = WebNumberField.from_data(f)
@@ -775,6 +786,10 @@ def download_search(info, res):
     if delim == 'brace':
         s = s.replace('[', '{')
         s = s.replace(']', '}')
+    if delim == 'magma':
+        s = s.replace('[', '[*')
+        s = s.replace(']', '*]')
+        s += ';'
     strIO = StringIO.StringIO()
     strIO.write(s)
     strIO.seek(0)

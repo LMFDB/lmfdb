@@ -116,6 +116,8 @@ def artin_representation_search(**args):
     elif len(tmp_both) >= 2:
         query["$or"] = tmp_both
 
+    # Only show 1 polynomial per representation
+    query["Show"] = 1
     count_default = 20
     if req.get('count'):
         try:

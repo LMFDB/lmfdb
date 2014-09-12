@@ -38,7 +38,8 @@ Please enter a value or leave blank:
      </td>
      <td><span class="formexample"> e.g. 65 or 1-100</span></td>
 
-  <td align=left>Include isogenous curves?</td>
+  <td align=left>Include {{ KNOWL('ec.isogeny',title="isogenous") }}
+  curves?</td>
   <td>
          <select name='include_isogenous'>
            <option value="off">No</option>
@@ -59,7 +60,7 @@ Please enter a value or leave blank:
           </td>
 
           <td>
-          {{ KNOWL('ec.torsion_structure', title="torsion structure") }}
+          {{ KNOWL('ec.torsion_subgroup', title="torsion structure") }}
           </td>
           <td>
           <input type='text' name='torsion_structure' example="[2,4]" size=10 value="{{torsion_structure}}" />
