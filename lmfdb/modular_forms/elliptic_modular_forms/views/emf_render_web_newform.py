@@ -21,33 +21,21 @@ AUTHORS:
  - Stephan Ehlen
 
 """
-from flask import render_template, url_for, request, redirect, make_response, send_file
-import tempfile
-import os
-import re
-from lmfdb.utils import ajax_more, ajax_result, make_logger
-from sage.all import *
-from sage.modular.dirichlet import DirichletGroup
-from lmfdb.base import app, db
-from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms import WebNewForm
-from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace
-from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_classes import ClassicalMFDisplay, DimensionTable
-from lmfdb.modular_forms import MF_TOP
+from flask import render_template, url_for,  send_file
+from sage.all import version,uniq
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
+from lmfdb.utils import to_dict
 from lmfdb.modular_forms.backend.mf_utils import my_get
-from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_core import *
-from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import *
-from lmfdb.modular_forms.elliptic_modular_forms.backend.plot_dom import *
-from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, default_prec, default_bprec, default_display_bprec,EMF_TOP, N_max_extra_comp, N_max_comp, N_max_db, k_max_db, k_max_comp
+from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, default_prec, default_bprec, default_display_bprec,EMF_TOP
 
 
-def render_one_elliptic_modular_form(level, weight, character, label, **kwds):
+def render_web_newform(level, weight, character, label, **kwds):
     r"""
     Renders the webpage for one elliptic modular form.
 
     """
     citation = ['Sage:' + version()]
-    info = set_info_for_one_modular_form(level, weight,
-                                         character, label, **kwds)
+    info = set_info_for_web_newform(level, weight, character, label, **kwds)
     emf_logger.debug("info={0}".format(info))
     err = info.get('error', '')
     ## Check if we want to download either file of the function or Fourier coefficients
@@ -56,7 +44,7 @@ def render_one_elliptic_modular_form(level, weight, character, label, **kwds):
     return render_template("emf.html", **info)
 
 
-def set_info_for_one_modular_form(level=None, weight=None, character=None, label=None, **kwds):
+def set_info_for_web_newform(level=None, weight=None, character=None, label=None, **kwds):
     r"""
     Set the info for on modular form.
 
@@ -76,7 +64,7 @@ def set_info_for_one_modular_form(level=None, weight=None, character=None, label
     emf_logger.debug("PREC: {0}".format(prec))
     emf_logger.debug("BITPREC: {0}".format(bprec))    
     try:
-        WNF = WebNewForm(N=level,k=weight, chi=character, label=label, verbose=1)
+        WNF = WebNewForm(level=level,weight=weight, character=character, label=label)
         # if info.has_key('download') and info.has_key('tempfile'):
         #     WNF._save_to_file(info['tempfile'])
         #     info['filename']=str(weight)+'-'+str(level)+'-'+str(character)+'-'+label+'.sobj'
@@ -94,50 +82,59 @@ def set_info_for_one_modular_form(level=None, weight=None, character=None, label
     if int(character) == 0:
         bread.append(("trivial character", url4))
     else:
-        bread.append(("\( %s \)" % (WNF.character().latex_name()), url4))
+        bread.append(("\( %s \)" % (WNF.character.latex_name), url4))
     info['bread'] = bread
     
     properties2 = list()
     friends = list()
     space_url = url_for('emf.render_elliptic_modular_forms',level=level, weight=weight, character=character)
-    friends.append(('\( S_{%s}(%s, %s)\)'%(WNF.weight(), WNF.level(), WNF.character().latex_name()), space_url))
+    friends.append(('\( S_{%s}(%s, %s)\)'%(WNF.weight, WNF.level, WNF.character.latex_name), space_url))
     friends.append(('Number field ' + WNF.coefficient_field_label(), WNF.coefficient_field_url()))
     friends.append(('Number field ' + WNF.base_field_label(), WNF.base_field_url()))
     friends = uniq(friends)
-    friends.append(("Dirichlet character \(" + WNF.character().latex_name() + "\)", WNF.character().url()))
+    friends.append(("Dirichlet character \(" + WNF.character.latex_name + "\)", WNF.character.url()))
     
-    if hasattr(WNF,"dimension") and WNF.dimension()==0:
+    if WNF.dimension==0:
         info['error'] = "This space is empty!"
 
 #    emf_logger.debug("WNF={0}".format(WNF))    
 
     #info['name'] = name
-    info['title'] = 'Modular Form ' + WNF.name()
+    info['title'] = 'Modular Form ' + WNF.hecke_orbit_label
     
     if 'error' in info:
         return info
     # info['name']=WNF._name
     ## Until we have figured out how to do the embeddings correctly we don't display the Satake
     ## parameters for non-trivial characters....
-    if WNF.degree()==1:
-        info['satake'] = WNF.satake_parameters()
+
+    cdeg = WNF.coefficient_field.absolute_degree()
+    bdeg = WNF.base_ring.absolute_degree()
+    if WNF.coefficient_field.absolute_degree() == 1:
+        rdeg = 1
+    else:
+        rdeg = WNF.coefficient_field.relative_degree()
+    if cdeg==1:
+        info['satake'] = WNF.satake
     info['qexp'] = ajax_more(WNF.q_expansion_latex,{'prec':10},{'prec':20},{'prec':100},{'prec':200})
     # info['qexp'] = WNF.q_expansion_latex(prec=prec)
-    c_pol_st = str(WNF.polynomial(type='coefficient_field',format='str'))
-    b_pol_st = str(WNF.polynomial(type='base_ring',format='str'))
-    c_pol_ltx = str(WNF.polynomial(type='coefficient_field',format='latex'))
-    b_pol_ltx = str(WNF.polynomial(type='base_ring',format='latex'))
+    #c_pol_st = str(WNF.absolute_polynomial)
+    #b_pol_st = str(WNF.polynomial(type='base_ring',format='str'))
+    #b_pol_ltx = str(WNF.polynomial(type='base_ring',format='latex'))
     #print "c=",c_pol_ltx
     #print "b=",b_pol_ltx
-    if c_pol_st <> 'x': ## Field is QQ
-        if b_pol_st <> 'x' and WNF.relative_degree()>1:
+    if cdeg > 1: ## Field is QQ
+        if bdeg > 1 and rdeg>1:
+            c_pol_ltx = str(WNF.coefficient_field.relative_polynomial())
+            b_pol_ltx = str(WNF.base_ring.absolute_polynomial())            
             info['polynomial_st'] = 'where \({0}=0\) and \({1}=0\).'.format(c_pol_ltx,b_pol_ltx)
         else:
+            c_pol_ltx = str(WNF.coefficient_field.relative_polynomial())
             info['polynomial_st'] = 'where \({0}=0\).'.format(c_pol_ltx)         
     else:
         info['polynomial_st'] = ''
-    info['degree'] = int(WNF.degree())
-    if WNF.degree()==1:
+    info['degree'] = int(cdeg)
+    if cdeg==1:
         info['is_rational'] = 1
     else:
         info['is_rational'] = 0
