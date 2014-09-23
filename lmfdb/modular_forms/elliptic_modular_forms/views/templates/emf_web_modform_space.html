@@ -4,11 +4,15 @@
 {% extends 'homepage.html' %}
 
 {% if character is not defined or character.order() == 1 %}
-  {% set new_name = "\( S_{%s}^{\mathrm{new}}(%s) \)"|format(weight, level) %}
-  {% set old_name = "\( S_{%s}^{\mathrm{old}}(%s) \)"|format(weight, level) %}
+  {% set new_name = "\( S_{%s}^{\mathrm{new}}(%s) \)"|format(space.weight, space.level) %}
+  {% set old_name = "\( S_{%s}^{\mathrm{old}}(%s) \)"|format(space.weight, space.level) %}
 {% else %}
-  {% set new_name = "\( S_{%s}^{\mathrm{new}}(%s) \)"|format(weight, character.latex_name()) %}
-  {% set old_name = "\( S_{%s}^{\mathrm{old}}(%s) \)"|format(weight, character.latex_name()) %}
+  {% set new_name = "\( S_{%s}^{\mathrm{new}}(%s) \)"|format(space.weight, space.character.latex_name()) %}
+  {% set old_name = "\( S_{%s}^{\mathrm{old}}(%s) \)"|format(space.weight, space.character.latex_name()) %}
+{% endif %}
+{% if not q_expansion_prec is defined %}
+  {# The number of coefficient of the q-expansion which we show on this page #}
+  {% set q_expansion_prec = 10 %}
 {% endif %}
 
 {% block content %}
@@ -34,7 +38,10 @@
 <span style="font-size:50%">({{ extra_info |safe }})</span>
 {% endif %}
 
-{% if nontrivial_new %}
+{% if space.dimension_new_cusp_forms > 0 %}
+<style>
+table.td.center {text-align : center;}
+</style>
 <h2>
   Decomposition of {{name_new}} into {{ KNOWL('mf.elliptic.hecke-orbits',title='irreducible Hecke orbits')}}
 </h2>
@@ -52,17 +59,19 @@
        {% set f = space.hecke_orbits[label] %}
        <tr>
       <td><a href="{{f.url() }}">{{ f.hecke_orbit_label }}</a></td>
-      <td>{{ f.dimension }}</td>
-      <td><a href="{{ f.coefficient_field_url() }}">{{ f.coefficient_field_label() }}</a></td>
-      <td>{{ f.q_expansion_latex() }}</td>
+      <td align="center">
+        {{ f.dimension }}</td>
+      <td align="center">
+        <a href="{{ f.coefficient_field_url() }}">{{ f.coefficient_field_label() }}</a></td>
+      <td>{{ f.q_expansion_latex(q_expansion_prec) }}</td>
     </tr>
     {% endfor %}
   </tbody>
 </table>
 
-{% if character.order() > 2%}
-{% set n=character.modulus_euler_phi() %}
-{% set m=character.embedding() %}
+{% if space.character.order > 2%}
+{% set n=space.character.modulus_euler_phi() %}
+{% set m=space.character.embedding() %}
   Here, $\zeta_{{n}} = \mathrm{exp}(2 \pi i {{m}}/n)$.
 {% endif %}
 
@@ -70,7 +79,7 @@
 {{ name_new }} {{ nontrivial_new_info }}
 {% endif %}
 
-{% if space.oldspace_decomposition != "" %}
+{% if space.oldspace_decomposition != {} and space.dimension_cusp_forms > space.dimension_new_cusp_forms %}
 <h2> Decomposition of {{name_old}} into {{ KNOWL('mf.elliptic.oldspace',title='lower level spaces')}}</h2>
 {{ space.oldspace_decomposition | safe }}
 {% endif %}
