@@ -160,6 +160,7 @@ class WebEigenvalues(WebObject, CachedRepresentation):
 
         self._add_to_fs_query = {'prec': {'$gt': int(self.prec-1)}}
         super(WebEigenvalues,self).update_from_db(ignore_non_existent, add_to_fs_query, add_to_db_query)
+        print "_ap=",self._ap
 
     def init_dynamic_properties(self):
         emf_logger.debug("E = {0}".format(self.E))
@@ -196,7 +197,7 @@ class WebEigenvalues(WebObject, CachedRepresentation):
             self.prec = p
             self.update_from_db()
             self.init_dynamic_properties()
-        return self._ap[p]
+        return self._ap.get(p)
 
     def __setitem__(self, p, v):
         self._ap[p] = v
@@ -248,12 +249,14 @@ class WebNewForm(WebObject, CachedRepresentation):
             WebInt('coefficient_field_degree'),
             WebList('twist_info', required = False),
             WebBool('is_cm', required = False),
+            WebDict('_cm_values',required=False),
             WebBool('is_cuspidal',default_value=True),
             WebDict('satake', required=False),
             WebDict('_atkin_lehner_eigenvalues', required=False),
             WebBool('is_rational'),
             WebPoly('absolute_polynomial'),
             WebFloat('version', value=float(emf_version), save_to_fs=True),
+            WebDict('explicit_formulas',required=False),
             WebModFormSpaceProperty('parent', value=parent,
                                               level = level,
                                               weight = weight,
