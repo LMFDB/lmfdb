@@ -423,12 +423,14 @@ class WebObject(object):
             else:
                 fid = coll.find_one(file_key, fields=['_id'])['_id']
                 fs.delete(fid)
+                emf_logger.debug("Deleted file with fid={0}".format(fid))
         # insert
         s = dumps(self.fs_dict())
         if not self._use_separate_db:
             file_key.update(self.db_dict())
         try:
-            fs.put(s, **file_key)
+            t = fs.put(s, **file_key)
+            emf_logger.debug("Inserted file t={0}, filekey={1}".format(t,file_key))
         except Exception, e:
             emf_logger.warn("Error inserting record: {0}".format(e))
         #fid = coll.find_one(key)['_id']
@@ -440,6 +442,7 @@ class WebObject(object):
         #key.update(file_key)
         #print meta_key
         dbd = self.db_dict()
+        emf_logger.debug("updat with dbd={0}".format(dbd))
         #meta['fid'] = fid
         if coll.find(key).count()>0:
             if not update:
@@ -526,7 +529,13 @@ class WebObject(object):
                 coll = self._file_collection
                 fid = coll.find_one(file_key)['_id']
                 d = loads(fs.get(fid).read())
+                emf_logger.debug("col={0}".format(coll))
+                emf_logger.debug("rec={0}".format(coll.find_one(file_key)))
+                emf_logger.debug("type(d)={0}".format(type(d)))                                
+                emf_logger.debug("d.keys()={0}".format(d.keys()))                
                 for p in self._fs_properties:
+                    emf_logger.debug("p={0}, update:{1}".format(p,p.include_in_update))
+                    emf_logger.debug("d[{0}]={1}".format(p.name,type(d.get(p.name))))
                     if p.include_in_update and d.has_key(p.name):
                         p.set_from_fs(d[p.name])
             else:
