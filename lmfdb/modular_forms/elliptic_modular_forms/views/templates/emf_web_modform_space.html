@@ -22,7 +22,8 @@
 <br>
 {{ sage_version | safe}}
 {% else %}
-
+{{ space | safe }}
+dim = {{ space.dimension | safe }}
 {% if space.dimension == 0 %}
   <h2>This space is empty!</h2>
    {% if  space.weight % 2 == 0 and space.character.value(-1) == -1 %}
