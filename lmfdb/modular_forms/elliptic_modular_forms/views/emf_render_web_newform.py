@@ -22,9 +22,9 @@ AUTHORS:
 
 """
 from flask import render_template, url_for,  send_file
-from sage.all import version,uniq
+from sage.all import version,uniq,ZZ
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
-from lmfdb.utils import to_dict
+from lmfdb.utils import to_dict,ajax_more
 from lmfdb.modular_forms.backend.mf_utils import my_get
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, default_prec, default_bprec, default_display_bprec,EMF_TOP
 
@@ -41,7 +41,7 @@ def render_web_newform(level, weight, character, label, **kwds):
     ## Check if we want to download either file of the function or Fourier coefficients
     if 'download' in info and 'error' not in info:
         return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
-    return render_template("emf.html", **info)
+    return render_template("emf_web_newform.html", **info)
 
 
 def set_info_for_web_newform(level=None, weight=None, character=None, label=None, **kwds):
@@ -152,11 +152,11 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     # else:
     #    info['embeddings'] = ''
     emf_logger.debug("PREC2: {0}".format(prec))
-    info['embeddings'] = WNF.q_expansion_embeddings(prec, bprec,format='latex')
+    info['embeddings'] = WNF._embeddings['values'] #q_expansion_embeddings(prec, bprec,format='latex')
     info['embeddings_len'] = len(info['embeddings'])
     properties2 = []
     if (ZZ(level)).is_squarefree():
-        info['twist_info'] = WNF.twist_info()
+        info['twist_info'] = WNF.twist_info
         if isinstance(info['twist_info'], list) and len(info['twist_info'])>0:
             info['is_minimal'] = info['twist_info'][0]
             if(info['twist_info'][0]):
@@ -171,15 +171,14 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     for x in range(5, 200, 10):
         args.append({'digits': x})
     alev = None
-    CM = WNF.cm_values()
+    CM = WNF._cm_values
     if CM is not None:
         if CM.has_key('tau') and len(CM['tau']) != 0:
             info['CM_values'] = CM
-    CM = WNF.is_CM()
-    info['is_cm'] = CM
-    if(WNF.is_CM()) == None or len(WNF.is_CM()) == 0:
+    info['is_cm'] = WNF.is_cm
+    if WNF.is_cm is None:
         s = '- Unknown (insufficient data)<br>'
-    elif(WNF.is_CM()[0]):
+    elif WNF.is_cm is True:
         s = '- Is a CM-form<br>'
     else:
         s = '- Is not a CM-form<br>'
@@ -204,11 +203,13 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
                 ev = alev[c][1]
                 info['atkinlehner'].append([Q, c, ev])
     if(level == 1):
-        info['explicit_formulas'] = WNF.as_polynomial_in_E4_and_E6()
+        poly = WNF.explicit_formulas.get('as_polynomial_in_E4_and_E6','')
+        if poly <> '':
+            info['explicit_formulas'] = poly
     cur_url = '?&level=' + str(level) + '&weight=' + str(weight) + '&character=' + str(character) + \
         '&label=' + str(label)
-    if(len(WNF.parent().labels()) > 1):
-        for label_other in WNF.parent().labels():
+    if len(WNF.parent.hecke_orbits) > 1:
+        for label_other in WNF.parent.hecke_orbits.keys():
             if(label_other != label):
                 s = 'Modular form '
                 if character:
@@ -229,15 +230,15 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     # %(level,weight,character,label,0)
     url = '/L' + url_for(
         'emf.render_elliptic_modular_forms', level=level, weight=weight, character=character, label=label)
-    if WNF.degree() > 1:
-        for h in range(WNF.degree()):
+    if WNF.coefficient_field_degree > 1:
+        for h in range(WNF.coefficient_field_degree):
             s0 = s + ".{0}".format(h)
             url0 = url + "{0}/".format(h)
             friends.append((s0, url0))
     else:
         friends.append((s, url))
     # if there is an elliptic curve over Q associated to self we also list that
-    if WNF.weight() == 2 and WNF.degree() == 1:
+    if WNF.weight == 2 and WNF.coefficient_field_degree == 1:
         llabel = str(level) + '.' + label
         s = 'Elliptic curve isogeny class ' + llabel
         url = '/EllipticCurve/Q/' + llabel
