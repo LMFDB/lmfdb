@@ -16,7 +16,7 @@
 r"""
 Routines for rendering webpages for holomorphic modular forms on GL(2,Q)
 
-AUTHOR: Fredrik Strömberg
+AUTHOR: Fredrik Strömberg  <fredrik314@gmail.com>
 
 """
 from flask import render_template, url_for, send_file
@@ -56,9 +56,12 @@ def render_web_modform_space(level=None, weight=None, character=None, label=None
         ("Character \(\chi_{%s}(%s, \cdot)\)" % (level, character), url_for('emf.render_elliptic_modular_forms', level=level, weight=weight, character=character)))
     # emf_logger.debug("friends={0}".format(friends))
     info['bread'] = bread
+    emf_logger.debug("info={0}".format(info))
     return render_template("emf_web_modform_space.html", **info)
 
 
+
+    
 def set_info_for_modular_form_space(level=None, weight=None, character=None, label=None, **kwds):
     r"""
       Set information about a space of modular forms.
