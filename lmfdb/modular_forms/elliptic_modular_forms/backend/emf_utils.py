@@ -26,10 +26,12 @@ from lmfdb.utils import *
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf, emf_logger, default_prec
 logger = emf_logger
 from sage.all import dimension_new_cusp_forms, vector, dimension_modular_forms, dimension_cusp_forms, is_odd, loads, dumps, Gamma0, Gamma1, Gamma
+from sage.misc.cachefunc import cached_function 
 from lmfdb.modular_forms.backend.mf_utils import my_get
 from plot_dom import draw_fundamental_domain
 import lmfdb.base
 from bson.binary import *
+
 try:
     from dirichlet_conrey import *
 except:
@@ -307,3 +309,57 @@ def sage_character_to_conrey_index(chi, N):
         if c.sage_character() == chi:
             return c.number()
     return -1
+
+
+@cached_function
+def dirichlet_character_sage_galois_orbits_reps(N):
+    """
+    Return representatives for the Galois orbits of Dirichlet characters of level N.
+    """
+    return [X[0] for X in DirichletGroup(N).galois_orbits()]
+
+@cached_function
+def dirichlet_character_conrey_galois_orbits_reps(N):
+    """
+    Return list of representatives for the Galois orbits of Conrey Dirichlet characters of level N.
+    We always take the one that has the smallest index.
+    """
+    D = DirichletGroup_conrey(N)
+    if N == 1:
+        return [D[1]]
+    Ds = dirichlet_character_sage_galois_orbits_reps(N)
+    Dl = list(D)
+    reps=[]
+    for x in D:
+        if x not in Dl:
+            continue
+        orbit_of_x = sorted(x.galois_orbit())
+        reps.append(orbit_of_x[0])
+        for xx in orbit_of_x:
+            if xx not in Dl:
+                continue
+            Dl.remove(xx)
+    return reps
+    
+
+@cached_function
+def dimension_from_db(level,weight,chi=None,group='gamma0'):
+    import json
+    db = lmfdb.base.getDBConnection()['modularforms2']['webmodformspace_dimension']
+    q = db.find_one({'group':group})
+    dim_table = {}
+    if q:
+        dim_table = q.get('data',{})
+        dim_table = json.loads(dim_table)
+    if group=='gamma0' and chi<>None:
+        d,t = dim_table.get(str(level),{}).get(str(weight),{}).get(str(chi),[-1,0])
+        return  d,t
+    elif chi is None:
+        d,t = dim_table.get(str(level),{}).get(str(weight),[-1,0])
+        return  d,t
+    elif chi == 'all':
+        res = {level: {weight:{}}}
+        dtable = dim_table.get(str(level),{}).get(str(weight),{})
+        for i in dtable.keys():
+            res[level][weight][int(i)] = dtable[i]
+        return res
