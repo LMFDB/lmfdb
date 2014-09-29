@@ -178,7 +178,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
             WebInt('bitprec', value=bitprec),
             WebFloat('version', value=float(emf_version), save_to_fs=True)
                     )
-        
+        emf_logger.debug("have set properties!!")
         super(WebModFormSpace, self).__init__(
             params=['level', 'weight', 'character'],
             dbkey='galois_orbit_name',
