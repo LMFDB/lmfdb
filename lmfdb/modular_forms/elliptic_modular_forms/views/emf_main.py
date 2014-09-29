@@ -28,6 +28,7 @@ from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import render_fd_plot
 from emf_render_web_newform import render_web_newform
 from emf_render_web_modform_space import render_web_modform_space
+from emf_render_web_modform_space_gamma1 import render_web_modform_space_gamma1
 
 from emf_render_navigation import render_elliptic_modular_form_navigation_wp
 
@@ -93,10 +94,10 @@ def render_elliptic_modular_forms(level=0, weight=0, character=None, label='', *
         emf_logger.debug("args=%s" % args)
         return redirect(url_for("emf.render_elliptic_modular_forms", **args), code=301)
         # return render_elliptic_modular_forms(**args)
-    if level > 0 and weight > 0 and character > -1 and label != '':
+    if level > 0 and weight > 0 and character > 0 and label != '':
         emf_logger.debug("info=%s" % info)
         return render_web_newform(**info)
-    if level > 0 and weight > 0 and character > -1:
+    if level > 0 and weight > 0 and character > 0:
         return render_web_modform_space(**info)
     if level > 0 and weight > 0:
         return render_web_modform_space_gamma1(**info)
