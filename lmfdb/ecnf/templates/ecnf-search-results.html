@@ -80,7 +80,7 @@ table td.params {
 </td>
 <td class="center">{{curve.conductor_norm}}</td>
 <td class="center">{{curve.conductor_label}}</td>
-<td class="center"><a href="{{ url_for('.show_ecnf',nf=curve.field_label,label=curve.short_label) }} ">{{curve.short_label}}</a></td>
+<td class="center"><a href="{{ url_for('.show_ecnf',nf=curve.field_label,class_label=curve.short_class_label,number=curve.numb) }} ">{{curve.short_label}}</a></td>
 <td class="left">{{info.web_ainvs(curve.field_label,curve.ainvs)}}</td>
 </tr>
 {% endfor %}

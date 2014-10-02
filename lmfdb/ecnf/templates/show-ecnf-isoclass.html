@@ -1,0 +1,92 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+<script type="text/javascript">
+var cur_system = null;
+function show_code(system) {
+    $('.sage').hide();
+    $('.pari').hide();
+    $('.magma').hide();
+    if (cur_system == null) {
+      $('.'+system).show();
+      cur_system = system;
+    } else {
+      $('.'+system).hide();
+      cur_system = null;
+    }
+}
+</script>
+
+<!--
+        <div align="right">
+          Show commands for:
+          <a onclick="show_code('sage'); return false" href='#'>sage</a>
+        </div>
+        <div class='sage nodisplay code'>
+          sage: E = EllipticCurve('{{info.lmfdb_iso}}1')<br>
+          sage: E.isogeny_class()
+        </div>
+-->
+
+
+<style type="text/css">
+#isogeny_class_table th, #isogeny_class_table td {
+padding : 4px;
+text-align: center;
+}
+</style>
+
+
+<h2>Elliptic curves in class {{cl.short_label}}</h2>
+<table id = "isogeny_class_table">
+<tr>
+<th>label</th>
+<th>Weierstrass coefficients</th>
+</tr>
+{% for c in cl.curves %}
+<tr>
+<td> {{c[0]}}
+<td> {{c[1]}}
+</tr>
+{% endfor %}
+</table>
+
+
+
+<h2>Matrix of isogeny degrees</h2>
+<p>
+  Rows and columns are indexed by the LMFDB number of the curve in
+  the class.
+</p>
+<p>
+  \({{cl.isogeny_matrix_str}}\)
+</p>
+
+<h2>Isogeny graph</h2>
+<p>
+  Only edges corresponding to isogenies of prime degree are shown.
+</p>
+<center>
+  <img src="{{cl.graph_img}}" />
+</center>
+
+<script type="text/javascript">
+var number_of_coefficients = 10;
+function more_handler(evt) {
+    number_of_coefficients += number_of_coefficients;
+    evt.preventDefault();
+    $("#modform_output").load("/EllipticCurve/Q/modular_form_display/{{info.lmfdb_label}}/"+number_of_coefficients,
+        function() {
+            {# tell mathjx to render the output #}
+            MathJax.Hub.Queue(['Typeset', MathJax.Hub, "modform_output"]);
+        });
+}
+$(function() {
+    $("#morebutton").click(function(e) {more_handler(e)});
+});
+</script>
+
+{% endblock %}
+
+
