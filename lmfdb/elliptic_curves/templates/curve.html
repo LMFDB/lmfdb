@@ -283,6 +283,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
         <button id="morebutton">More coefficients</button>
     </form>
     </p>
+
     <p><h3> {{ KNOWL('ec.q.modular_degree', title='Modular degree') }}
       and {{ KNOWL('ec.q.optimal', title='Optimality') }}</h3>
       {% if data.data.degree==0 %}
@@ -413,7 +414,7 @@ var number_of_coefficients = 10;
 function more_handler(evt) {
     number_of_coefficients += number_of_coefficients;
     evt.preventDefault();
-    $("#modform_output").load("/EllipticCurve/Q/modular_form_display/{{data.lmfdb_label}}/"+number_of_coefficients,
+    $("#modform_output").load("{{data.modform_display}}"+number_of_coefficients,
         function() {
             {# tell mathjx to render the output #}
             MathJax.Hub.Queue(['Typeset', MathJax.Hub, "modform_output"]);

@@ -112,9 +112,9 @@ table td.params {
 </tr>
 {% for curve in info.curves: %}
 <tr>
-<td class="center"><a href="/EllipticCurve/Q/{{curve.lmfdb_label}}">{{curve.lmfdb_label}}</a></td>
+<td class="center"><a href="{{info.curve_url(curve)}}">{{curve.lmfdb_label}}</a></td>
 <td class="center">{{curve.label}}</td>
-<td class="center"><a href="/EllipticCurve/Q/{{curve.lmfdb_iso}}">{{curve.lmfdb_iso}}</a></td>
+<td class="center"><a href="{{info.iso_url(curve)}}">{{curve.lmfdb_iso}}</a></td>
 <td class="params">{{info.format_ainvs(curve.ainvs)}}</td>
 <td class="center">{{curve.rank}}</td>
 <td class="center">{{curve.torsion}}</td>

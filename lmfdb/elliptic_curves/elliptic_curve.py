@@ -294,6 +294,8 @@ def elliptic_curve_search(**args):
                        ]).skip(start).limit(count)
     info['curves'] = res
     info['format_ainvs'] = format_ainvs
+    info['curve_url'] = lambda dbc: url_for(".by_ec_label", label=dbc['lmfdb_label'])
+    info['iso_url'] = lambda dbc: url_for(".by_ec_label", label=dbc['lmfdb_iso'])
     info['number'] = nres
     info['start'] = start
     if nres == 1:
@@ -359,6 +361,8 @@ def render_isogeny_class(iso_class):
         return elliptic_curve_jump_error(iso_class, {}, wellformed_label=False)
     if class_data == "Class not found":
         return elliptic_curve_jump_error(iso_class, {}, wellformed_label=True)
+    class_data.modform_display = url_for(".modular_form_display", label=class_data.lmfdb_iso+"1", number="")
+
     return render_template("iso_class.html",
                            properties2=class_data.properties,
                            info=class_data,
@@ -428,6 +432,7 @@ def render_curve_webpage_by_label(label):
         return elliptic_curve_jump_error(label, {}, wellformed_label=False)
     if data is "Curve not found":
         return elliptic_curve_jump_error(label, {}, wellformed_label=True)
+    data.modform_display = url_for(".modular_form_display", label=data.lmfdb_label, number="")
 
     return render_template("curve.html",
                            properties2=data.properties,

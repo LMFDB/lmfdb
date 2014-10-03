@@ -167,7 +167,7 @@ class WebEC(object):
 
         # Minimal quadratic twist
 
-        E_pari = self.E.pari_curve(prec=200)
+        E_pari = self.E.pari_curve()
         from sage.libs.pari.all import PariError
         try:
             minq = self.E.minimal_quadratic_twist()[0]

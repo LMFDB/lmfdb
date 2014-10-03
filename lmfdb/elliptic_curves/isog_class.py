@@ -136,12 +136,13 @@ class ECisog_class(object):
 
         self.lfunction_link = url_for("l_functions.l_function_ec_page", label=self.lmfdb_iso)
 
-        self.curves = [[self.lmfdb_iso + str(i + 1),
-                        self.cremona_labels[i],
-                        str(list(c.ainvs())),
-                        c.torsion_order(),
-                        self.degrees[i],
-                        self.optimal_flags[i]]
+        self.curves = [dict([('label',self.lmfdb_iso + str(i + 1)),
+                             ('url',url_for(".by_ec_label", label=self.lmfdb_iso) + str(i + 1)),
+                             ('cremona_label',self.cremona_labels[i]),
+                             ('ainvs',str(list(c.ainvs()))),
+                             ('torsion',c.torsion_order()),
+                             ('degree',self.degrees[i]),
+                             ('optimal',self.optimal_flags[i])])
                        for i, c in enumerate(self.db_curves)]
 
         self.friends = [
