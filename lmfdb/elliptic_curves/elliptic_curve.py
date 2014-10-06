@@ -35,9 +35,10 @@ def db_ec():
 #   Utility functions
 #########################
 
-cremona_label_regex = re.compile(r'(\d+)([a-z]+)(\d*)')
-lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
-sw_label_regex = re.compile(r'sw(\d+)(\.)(\d+)(\.*)(\d*)')
+cremona_label_regex = re.compile(r'(\d+)([a-z]+)(\d*)') # e.g. 11a, 11a1
+lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)') # e.g. 11.a, 11.a1
+# The next one is not currently in use:
+sw_label_regex = re.compile(r'sw(\d+)(\.)(\d+)(\.*)(\d*)') # e.g. sw11.1.1
 
 LIST_RE = re.compile(r'^(\d+|(\d+-(\d+)?))(,(\d+|(\d+-(\d+)?)))*$')
 TORS_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
@@ -52,8 +53,6 @@ def format_ainvs(ainvs):
     """
     return [ZZ(a) for a in ainvs]
 
-
-
 def cmp_label(lab1, lab2):
     from sage.databases.cremona import parse_cremona_label, class_to_int
     a, b, c = parse_cremona_label(lab1)
@@ -66,15 +65,9 @@ def cmp_label(lab1, lab2):
 #    Top level
 #########################
 
-
 @app.route("/EC")
 def EC_redirect():
-    return redirect(url_for("ec.rational_elliptic_curves", **request.args))
-
-
-@app.route("/EllipticCurve")
-def EC_toplevel():
-    return redirect(url_for("ec.rational_elliptic_curves", **request.args))
+    return redirect(url_for(".rational_elliptic_curves", **request.args))
 
 #########################
 #  Search/navigate
