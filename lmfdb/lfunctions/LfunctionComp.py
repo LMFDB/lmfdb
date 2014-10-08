@@ -6,7 +6,7 @@ from lmfdb import base
 from pymongo import ASCENDING
 import lmfdb.utils
 from lmfdb.lfunctions import logger
-from lmfdb.elliptic_curves.elliptic_curve import lmfdb_label_regex
+from lmfdb.elliptic_curves.web_ec import lmfdb_label_regex
 
 
 def isogenyclasstable(Nmin, Nmax):

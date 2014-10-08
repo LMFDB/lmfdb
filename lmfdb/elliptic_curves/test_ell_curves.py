@@ -9,11 +9,11 @@ class EllCurveTest(LmfdbTest):
     # All tests should pass
     #
     def test_int_points(self):
-		L = self.tc.get('/EllipticCurve/Q/234446.a1')
+		L = self.tc.get('/EllipticCurve/Q/234446/a/1')
 		assert '4532, 302803' in L.data
 	
     def test_Cremona_label(self):
-		L = self.tc.get('/EllipticCurve/Q/?label=400.e3&jump=label+or+isogeny+class')
+		L = self.tc.get('/EllipticCurve/Q/400/e/3')
 		assert '15, 50' in L.data
 
     def test_Cremona_label_mal(self):
@@ -51,7 +51,7 @@ class EllCurveTest(LmfdbTest):
 		assert '[0, 0, 0, -36705844875, 2706767485056250]' in L.data
 
     def test_isogeny_class(self):
-		L = self.tc.get('/EllipticCurve/Q/11.a')
+		L = self.tc.get('/EllipticCurve/Q/11/a')
 		assert '[0, -1, 1, 0, 0]' in L.data
 
     def test_dl_qexp(self):

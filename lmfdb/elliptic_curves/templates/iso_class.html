@@ -27,22 +27,6 @@ function show_code(system) {
           sage: E.isogeny_class()
         </div>
 
-<h2><a href="{{info.newform_link}}">
-            Modular form {{ info.newform_label }}</a>
-</h2>
-<div class='sage nodisplay code'>sage: E.q_eigenform(10)</div>
-<div>
-    <form>
-        <div class="output">
-          <span id="modform_output">{{ info.newform | safe }}
-          </span>
-        </div>
-        <div class="emptyspace"><br>
-        </div>
-        <button id="morebutton">Show more coefficients</button>
-    </form>
-</div>
-
 <style type="text/css">
 #isogeny_class_table th, #isogeny_class_table td {
 padding : 4px;
@@ -87,14 +71,34 @@ text-align: center;
 <h2>Rank</h2>
 <div class='sage nodisplay code'>sage: E.rank()</div>
 <p>
-  \({{ info.rank}}\)
+{% if info.ncurves==1 %} The elliptic curve {{info.curves[0].label}} has
+{% else %} The elliptic curves in class {{info.lmfdb_iso}} have
+{% endif %}
+rank \({{ info.rank}}\).
 </p>
 
+<h2><a href="{{info.newform_link}}">
+            Modular form {{ info.newform_label }}</a>
+</h2>
+<div class='sage nodisplay code'>sage: E.q_eigenform(10)</div>
+<div>
+    <form>
+        <div class="output">
+          <span id="modform_output">{{ info.newform | safe }}
+          </span>
+        </div>
+        <div class="emptyspace"><br>
+        </div>
+        <button id="morebutton">Show more coefficients</button>
+    </form>
+</div>
+
+{% if info.ncurves>1 %}
 
 <h2>Matrix of isogeny degrees</h2>
 <div class='sage nodisplay code'>sage: E.isogeny_class().matrix()</div>
 <p>
-  Rows and columns are indexed by the LMFDB number of the curve in
+  Rows and columns are indexed by the number of the curve in
   the class.
 </p>
 <p>
@@ -111,6 +115,8 @@ text-align: center;
 <center>
   <img src="{{info.graph_img}}" />
 </center>
+
+{% endif %}
 
 <script type="text/javascript">
 var number_of_coefficients = 10;
