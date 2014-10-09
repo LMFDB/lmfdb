@@ -12,7 +12,7 @@ KNOWL('nf',title = "number fields")}} (including $\Q$)</h2>
 
 <p>
 By base {{ KNOWL('nf',title = "number field")}}:
-<a href="{{ url_for('EC_toplevel') }}">\(\Q\)</a>
+<a href="{{ url_for('ec.rational_elliptic_curves') }}">\(\Q\)</a>
 {% for nf in data.fields %}
 , <a href="{{url_for('.show_ecnf1',nf=nf[0])}}">{{nf[1]}}</a>
 {% endfor %}
