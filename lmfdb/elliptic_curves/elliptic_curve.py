@@ -111,14 +111,14 @@ def statistics():
     return render_template("statistics.html", info=info, credit=credit, title=t, bread=bread)
 
 
-@ec_page.route("/<int:conductor>")
+@ec_page.route("/<int:conductor>/")
 def by_conductor(conductor):
     return elliptic_curve_search(conductor=conductor, **request.args)
 
 
 def elliptic_curve_jump_error(label, args, wellformed_label=False, cremona_label=False, missing_curve=False):
     err_args = {}
-    for field in ['conductor', 'torsion', 'rank', 'sha_an', 'optimal', 'torsion_structure']:
+    for field in []:#'conductor', 'torsion', 'rank', 'sha_an', 'optimal', 'torsion_structure']:
         err_args[field] = args.get(field, '')
     err_args['count'] = args.get('count', '100')
     if wellformed_label:
@@ -138,6 +138,9 @@ def elliptic_curve_search(**args):
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('$\Q$', url_for(".rational_elliptic_curves")),
              ('Search Results', '.')]
+    if 'SearchAgain' in args:
+        return rational_elliptic_curves()
+
     if 'jump' in args:
         label = info.get('label', '').replace(" ", "")
         m = match_lmfdb_label(label)
@@ -317,15 +320,15 @@ def search_input_error(info, bread):
 #  Specific curve pages
 ##########################
 
+@ec_page.route("/<int:conductor>/<iso_label>/")
+def by_double_iso_label(conductor,iso_label):
+    full_iso_label = str(conductor)+"."+iso_label
+    return render_isogeny_class(full_iso_label)
+
 @ec_page.route("/<int:conductor>/<iso_label>/<int:number>")
 def by_triple_label(conductor,iso_label,number):
     full_label = str(conductor)+"."+iso_label+str(number)
     return render_curve_webpage_by_label(full_label)
-
-@ec_page.route("/<int:conductor>/<iso_label>")
-def by_double_iso_label(conductor,iso_label):
-    full_iso_label = str(conductor)+"."+iso_label
-    return render_isogeny_class(full_iso_label)
 
 # The following function determines whether the given label is in
 # LMFDB or Cremona format, and also whether it is a curve label or an

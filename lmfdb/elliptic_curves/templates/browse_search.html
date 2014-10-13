@@ -7,6 +7,25 @@
 An {{KNOWL("ec", title="elliptic curve")}} is a {{KNOWL("ag.curve.smooth",title="smooth")}} projective {{KNOWL("ag.curve",title="curve")}} of {{KNOWL("ag.curve.genus",title="genus")}} 1 with a rational basepoint $O$. 
 </div>
 #}
+<style type="text/css">
+.error_message {
+   border: 1px solid red;
+   border-width: 2px;
+   padding: 4px;
+   font-size: 180%;
+   font-weight: bold;
+   color: red;
+   margin: 20px;
+}
+</style>
+{% if err_msg %}
+<p class="error_message">
+{{err_msg}}
+</p>
+
+<a href={{url_for('ec.rational_elliptic_curves')}}>Search again</a>
+
+{% else %}
 <div>
 The database currently contains the Cremona database of all
 {{info.counts.ncurves_c}} elliptic curves with {{ KNOWL('ec.q.conductor',title
@@ -46,9 +65,6 @@ By {{ KNOWL('ec.q.torsion_order', torsion=t,title="torsion order") }}:
 <br><span class="formexample">e.g. 11.a2 or 389.a or Cremona:11a1 or 
 [0,1,1,-2,0] or [-3024, 46224]
 </span>
-{% if err_msg %}
-<br><span class="errmsg">{{err_msg}}</span>
-{% endif %}
 </form>
 
 <h2> Search </h2>
@@ -160,4 +176,8 @@ Please enter a value or leave blank:
 <td><button type='submit' value='Search'>Search</button></td>
 
 </form>
+
+{% endif %}
+
+
 {% endblock %}
