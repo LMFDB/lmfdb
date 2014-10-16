@@ -61,14 +61,22 @@ Generator \({{ ec.field.generator_name() }}\), with minimal polynomial \({{ec.fi
 </p>
 </div>
 
+<style type="text/css">
+#invariants th, #invariants  td {
+padding : 4px;
+text-align: left;
+cellpadding="5";
+}
+</style>
+
 <div>
-<h2>Weierstrass Equation</h2>
+<h2>{{ KNOWL('ec.weierstrass_coeffs',  title='Weierstrass Equation') }}</h2>
 {{ ec.equn }}
 <h2>Invariants</h2>
 
-        <table cellpadding="5">
+        <table id="invariants">
         <tr>
-          <td>Conductor</td>
+          <td>{{ KNOWL('ec.conductor',  title='Conductor') }}</td>
         <td>
          \(\mathfrak{N} \)</td>
         <td>=</td>
@@ -88,7 +96,7 @@ Generator \({{ ec.field.generator_name() }}\), with minimal polynomial \({{ec.fi
         </tr>
 
         <tr>
-          <td>Discriminant</td>
+          <td>{{ KNOWL('ec.discriminant',  title='Discriminant') }}</td>
         <td>
          \(\Delta\)</td>
         <td>=</td>
@@ -100,7 +108,7 @@ Generator \({{ ec.field.generator_name() }}\), with minimal polynomial \({{ec.fi
         </tr>
 
         <tr>
-          <td>\(j\)-invariant</td>
+          <td>{{ KNOWL('ec.j_invariant',  title='\(j\)-invariant') }}</td>
         <td>
          \(j\)</td>
         <td>=</td>
@@ -127,7 +135,7 @@ Generator \({{ ec.field.generator_name() }}\), with minimal polynomial \({{ec.fi
 </div>
 
 <div>
-<h2> Torsion subgroup </h2>
+<h2> {{ KNOWL('ec.torsion_subgroup', title="Torsion subgroup") }} </h2>
 <table>
 <tr>
 <th>Structure:</th>

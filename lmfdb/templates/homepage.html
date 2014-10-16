@@ -284,7 +284,7 @@ display: inline;
 {% else %}
   <h2>Elliptic Curves</h2>
   <ul>
-<li><a href="{{ url_for('EC_toplevel') }}  ">Elliptic Curves/\(\Q\)</a></li>
+<li><a href="{{ url_for('ec.rational_elliptic_curves') }}  ">Elliptic Curves/\(\Q\)</a></li>
 <li class="test"><a href="{{ url_for('ecnf.index') }}">over other number fields</a></li>
   </ul>
 {% endif %}     
@@ -301,14 +301,14 @@ display: inline;
 <ul class="list">
 	<li><a class="test" href="">Elliptic</a> 
 	<ul class="list">
-		<li><a href="{{ url_for('EC_toplevel') }}">/\(\Q\)</a>&nbsp;&nbsp;<a class="test" href="">/\(\F_{q}(t)\)</a></li>
+		<li><a href="{{ url_for('ec.rational_elliptic_curves') }}">/\(\Q\)</a>&nbsp;&nbsp;<a class="test" href="">/\(\F_{q}(t)\)</a></li>
 		<li><a class="test" href="">/Number Fields</a>
 		<li><a class="test" href="">\(\Q\)-curves</a></li>
 	</ul></li>
 	
 	<li><a class="test" href="">Hyperelliptic</a> 
 	<ul class="list">
-		<li><a class="test" href="{{ url_for('EC_toplevel') }}">/\(\Q\)</a>&nbsp;&nbsp;<a class="test"  href="">/\(\F_{q}(t)\)</a></li>
+		<li><a class="test" href="{{ url_for('ec.rational_elliptic_curves') }}">/\(\Q\)</a>&nbsp;&nbsp;<a class="test"  href="">/\(\F_{q}(t)\)</a></li>
 		<li><a class="test"  href="">/Number Fields</a>
 	</ul></li>
 	<li><a class="test" href="">Belyi</a>&nbsp;&nbsp;&nbsp;&nbsp;<a class="test" href="">Shimura</a></li>

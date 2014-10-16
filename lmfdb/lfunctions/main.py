@@ -18,7 +18,7 @@ from Lfunctionutilities import (lfuncDStex, lfuncEPtex, lfuncFEtex,
                                 truncatenumber, styleTheSign, specialValueString)
 from lmfdb.WebCharacter import WebDirichlet
 from lmfdb.lfunctions import l_function_page, logger
-from lmfdb.elliptic_curves.elliptic_curve import cremona_label_regex, lmfdb_label_regex
+from lmfdb.elliptic_curves.web_ec import cremona_label_regex, lmfdb_label_regex
 from LfunctionComp import isogenyclasstable
 import LfunctionDatabase
 
@@ -47,12 +47,15 @@ def l_function_dirichlet_browse_page():
 @l_function_page.route("/degree2/")
 def l_function_degree2_browse_page():
     info = {"bread": get_bread(2, [])}
-#    info["minModDefault"] = 1
-#    info["maxModDefault"] = 20
-#    info["maxOrder"] = 19
-#    info["contents"] = [LfunctionPlot.getOneGraphHtmlChar(info["minModDefault"], info[
-#                                                          "maxModDefault"], 1, info["maxOrder"])]
     return render_template("Degree2.html", title='Degree 2 L-functions', **info)
+
+# Degree 3 L-functions browsing page ##############################################
+@l_function_page.route("/degree3/")
+def l_function_degree3_browse_page():
+    info = {"bread": get_bread(3, [])}
+    return render_template("Degree3.html", title='Degree 3 L-functions', **info)
+
+
 
 # Degree browsing page #########################################################
 @l_function_page.route("/<degree>/")

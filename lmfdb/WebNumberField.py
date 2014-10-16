@@ -5,7 +5,7 @@ import re
 import pymongo
 import bson
 from lmfdb.utils import *
-from lmfdb.transitive_group import group_display_short, WebGaloisGroup, group_display_knowl
+from lmfdb.transitive_group import group_display_short, WebGaloisGroup, group_display_knowl, galois_module_knowl
 wnflog = make_logger("WNF")
 
 dir_group_size_bound = 10000
@@ -70,6 +70,11 @@ def psum(val, li):
 
 def decodedisc(ads, s):
     return ZZ(ads[3:]) * s
+
+def do_mult(ent):
+    if ent[1]==1:
+        return ent[0]
+    return "%s x%d" % (ent[0], ent[1])
 
 def nf_display_knowl(label, C, name=None):
     if not name:
@@ -238,12 +243,48 @@ class WebNumberField:
         C = base.getDBConnection()
         subs = [[self.from_coeffs(string2list(a[0])), a[1]] for a in subs]
         subs = [[nf_display_knowl(a[0].get_label(),C,a[0].field_pretty()), a[1]] for a in subs]
-        def do_mult(ent):
-            if ent[1]==1:
-                return ent[0]
-            return "%s x%d" % (ent[0], ent[1])
         subs = [do_mult(a) for a in subs]
         return ', '.join(subs)
+
+    def unit_galois_action(self):
+        if not self.haskey('unitsGmodule'):
+            if self.signature()==[0,2] and self.galois_t() ==2:
+                return [[1,1]]
+            # We don't have C_4 classification yet
+            #if self.signature()==[2,0] or self.signature()==[0,2]:
+            #    return [[1,1]]
+            return []
+        return self._data['unitsGmodule']
+
+    def unit_galois_action_type_knowl(self):
+        if not self.haskey('unitsType'):
+            return None
+        ty = self._data['unitsType']
+        knowlid = ty.replace(' ','_')
+        knowlid = knowlid.replace('(','')
+        knowlid = knowlid.replace(')','')
+        knowlid = knowlid.replace(')','')
+        knowlid = knowlid.lower()
+        knowlid = 'nf.galois_group.gmodule_v4_'+knowlid
+        return '<a title = "%s [%s]" knowl="%s">%s</a>' % (ty, knowlid, knowlid, ty)
+
+    def unit_galois_action_show(self):
+        ugm = self.unit_galois_action()
+        if ugm == []:
+            return ''
+        C = base.getDBConnection()
+        gmods = C.transitivegroups.Gmodules
+        n = self.degree()
+        t = self.galois_t()
+        ugm = [[galois_module_knowl(n, t, z[0], C), int(z[1])] for z in ugm]
+        #ugm = [do_mult(a) for a in ugm]
+        ans = ugm[0][0]
+        ugm[0][1] -= 1
+        for j in range(len(ugm)):
+            while ugm[j][1]>0:
+                ans += r' $\oplus$ '+ugm[j][0]
+                ugm[j][1] -= 1
+        return ans
 
     def K(self):
         if not self.haskey('K'):
@@ -251,7 +292,11 @@ class WebNumberField:
         return self._data['K']
 
     def generator_name(self):
-        return web_latex(self.gen_name)
+        #Add special case code for the generator if desired:
+        if self.gen_name=='phi':
+            return '\phi'
+        else:
+            return web_latex(self.gen_name)
 
     def unit_rank(self):
         if not self.haskey('unit_rank'):

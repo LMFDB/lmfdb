@@ -23,7 +23,7 @@ class ECstats(object):
     """
 
     def __init__(self):
-        logger.info("Constructing an instance of ECstats")
+        logger.debug("Constructing an instance of ECstats")
         self.ecdb = lmfdb.base.getDBConnection().elliptic_curves.curves
         self._counts = {}
         self._stats = {}
@@ -40,7 +40,7 @@ class ECstats(object):
     def init_ecdb_count(self):
         if self._counts:
             return
-        logger.info("Computing elliptic curve counts...")
+        logger.debug("Computing elliptic curve counts...")
         ecdb = self.ecdb
         counts = {}
         ncurves = ecdb.count()
@@ -54,13 +54,13 @@ class ECstats(object):
         counts['max_N_c'] = comma(max_N)
         counts['max_rank'] = ecdb.find().sort('rank', DESCENDING).limit(1)[0]['rank']
         self._counts  = counts
-        logger.info("... finished computing elliptic curve counts.")
-        #logger.info("%s" % self._counts)
+        logger.debug("... finished computing elliptic curve counts.")
+        #logger.debug("%s" % self._counts)
 
     def init_ecdb_stats(self):
         if self._stats:
             return
-        logger.info("Computing elliptic curve stats...")
+        logger.debug("Computing elliptic curve stats...")
         ecdb = self.ecdb
         counts = self._counts
         stats = {}
@@ -104,6 +104,6 @@ class ECstats(object):
                 sha_counts.append({'s': s, 'ncurves': nc})
         stats['sha_counts'] = sha_counts
         self._stats = stats
-        logger.info("... finished computing elliptic curve stats.")
-        #logger.info("%s" % self._stats)
+        logger.debug("... finished computing elliptic curve stats.")
+        #logger.debug("%s" % self._stats)
 
