@@ -427,7 +427,22 @@ class WebNewForm(WebObject, CachedRepresentation):
         
         if(len(self._atkin_lehner_eigenvalues.keys()) > 0):
             return self._atkin_lehner_eigenvalues
-    
+
+    def atkin_lehner_eigenvalues_for_all_cusps(self):
+        r"""
+        """
+        self._atkin_lehner_eigenvalues_at_cusps = {}
+        G =Gamma0(self.level)
+        for c in Gamma0(self.level).cusps():
+            aev = self.atkin_lehner_eigenvalues()
+            if aev is None:
+                self._atkin_lehner_eigenvalues_at_cusps = None
+            else:
+                for Q,ev in aev.items():
+                    if G.are_equivalent(c,Q/self.level):
+                        self._atkin_lehner_eigenvalues_at_cusps[c] = Q,ev
+        return self._atkin_lehner_eigenvalues_at_cusps
+        
     def url(self):
         return url_for('emf.render_elliptic_modular_forms', level=self.level, weight=self.weight, character=self.character.number, label=self.label)
 
