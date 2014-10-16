@@ -26,6 +26,7 @@ from lmfdb.modular_forms.backend.mf_utils import my_get
 from lmfdb.utils import to_dict
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import render_fd_plot
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_download_utils import get_coefficients
 from emf_render_web_newform import render_web_newform
 from emf_render_web_modform_space import render_web_modform_space
 from emf_render_web_modform_space_gamma1 import render_web_modform_space_gamma1
