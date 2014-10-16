@@ -3,8 +3,13 @@ r"""
 Routines for helping with the download of modular forms data.
 
 """
-
-
+import StringIO
+from flask import send_file
+from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace
+from lmfdb.modular_forms.backend.mf_utils import my_get
+from sage.all import latex
 
 def get_coefficients(info):
     emf_logger.debug("IN GET_COEFFICIENTS!!!")
@@ -74,13 +79,17 @@ def print_list_of_coefficients(info):
     bitprec = my_get(info, 'bitprec', 12, int)  # number of digits                
     character = my_get(info, 'character', '', str)  # int(info.get('weight',0))
     if character == '':
-        character = 0
+        character = '1'
     label = info.get('label', '')
+    if character.isalnum():
+        character = int(character)
+    else:
+        return "The character '{0}' is not well-defined!".format(character)
     print "--------------"
     if label == '' or level == -1 or weight == -1:
         return "Need to specify a modular form completely!!"
 
-    WMFS = WebModFormSpace(N = level, k = weight, chi = character)
+    WMFS = WebModFormSpace(level= level, weight = weight, cuspidal=True,character = character)
     if not WMFS:
         return ""
     if('number' in info):
@@ -88,12 +97,13 @@ def print_list_of_coefficients(info):
     else:
         number = max(WMFS.sturm_bound() + 1, 20)
     FS = list()
-    if(label is not None):
-        FS.append(WMFS.f(label))
+    f  = WMFS.hecke_orbits.get(label)
+    if f is not None:
+        FS.append(f)
     else:
         for a in WMFS.labels():
             FS.append(WMFS.f(a))
-    shead = "Cusp forms of weight " + str(weight) + "on \(" + latex(WMFS.group()) + "\)"
+    shead = "Cusp forms of weight " + str(weight) + "on \(" + latex(WMFS.group) + "\)"
     s = ""
     if((character is not None) and (character > 0)):
         s = s + " and character \( \chi_{" + str(character) + "}\)"
@@ -111,27 +121,32 @@ def print_list_of_coefficients(info):
 
 
 
-def print_coefficients_for_one_form(F, number, fmt,bitprec=53):
+def print_coefficients_for_one_form(F, number, fmt="q_expansion",bitprec=53):
     emf_logger.debug("in print {2} coefs for 1 form: format={0} bitprec={1}".format(fmt,bitprec,number))
     # Start with some meta-data 
-    s = "## level={N}, weight={k}, character={ch},label={label} \n".format(N=F.level(),k=F.weight(),ch=F.chi(),label=F.label())
-    max_cn = F.max_cn()
-    if number > max_cn:
-        number = max_cn
+    s = "## level={N}, weight={k}, character={ch},label={label} \n".format(N=F.level,k=F.weight,ch=F.character.number,label=F.label)
+    #max_cn = F.max_cn()
+    #emf_logger.debug("evs={0}".format(F.eigenvalues))
+    #emf_logger.debug("primes={0}".format(F.eigenvalues.primes()))
+    #if number > max_cn:
+    #    number = max_cn
+    ## TODO: add check that we have sufficiently many coefficients!
     if fmt == "q_expansion":
-        s += F.print_q_expansion(number)
+        s += F.q_expansion(number)
     if fmt == "coefficients":
         qe = F.coefficients(range(number))
-        if F.degree() > 1:
+        deg = F.coefficient_field_degree
+        if deg > 1:
             s += "## "+str(F.polynomial(type='coefficient_field'))+"=0"
         s += "\n"
         for n in range(len(qe)):
             c=qe[n]
             s += "{n} \t {c} \n".format(n=n,c=c)
+        emf_logger.debug("qe={0}".format(qe))
     if fmt == "embeddings":
         embeddings = F.q_expansion_embeddings(number,bitprec=bitprec,format='numeric')
-        if F.degree() > 1:
-            for j in range(F.degree()):
+        if deg > 1:
+            for j in range(deg):
                 s+="# Embedding nr. {j} \n".format(j=j)
                 for n in range(number):
                     s += str(n) + "\t" + str(embeddings[n][j]) + "\n"
