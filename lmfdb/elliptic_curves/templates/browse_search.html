@@ -59,7 +59,11 @@ By {{ KNOWL('ec.q.torsion_order', torsion=t,title="torsion order") }}:
 <h2> Find a specific curve or {{
   KNOWL('ec.isogeny_class',title="isogeny class") }} by coefficients or 
   {{ KNOWL('ec.q.lmfdb_label',title="LMFDB label") }} </h2>
+{% if err_msg %}
+<form action="/EllipticCurve/Q/">
+{% else %}
 <form>
+{% endif %}
 <input type='text' name='label' size=25 example="11.a2">
 <button type='submit' name='jump' value='label or isogeny class' >label or isogeny class</button>
 <br><span class="formexample">e.g. 11.a2 or 389.a or Cremona:11a1 or 
