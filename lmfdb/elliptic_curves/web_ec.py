@@ -15,6 +15,8 @@ cremona_label_regex = re.compile(r'(\d+)([a-z]+)(\d*)')
 lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
 lmfdb_iso_label_regex = re.compile(r'([a-z]+)(\d*)')
 sw_label_regex = re.compile(r'sw(\d+)(\.)(\d+)(\.*)(\d*)')
+weierstrass_eqn_regex = re.compile(r'\[(-?\d+),(-?\d+),(-?\d+),(-?\d+),(-?\d+)\]')
+short_weierstrass_eqn_regex = re.compile(r'\[(-?\d+),(-?\d+)\]')
 
 def match_lmfdb_label(lab):
     return lmfdb_label_regex.match(lab)
@@ -98,7 +100,7 @@ class WebEC(object):
 
             - dbdata: the data from the database
         """
-        logger.info("Constructing an instance of ECisog_class")
+        logger.debug("Constructing an instance of ECisog_class")
         self.__dict__.update(dbdata)
         # Next lines because the hyphens make trouble
         self.xintcoords = parse_list(dbdata['x-coordinates_of_integral_points'])

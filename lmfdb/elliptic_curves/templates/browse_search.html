@@ -9,12 +9,10 @@ An {{KNOWL("ec", title="elliptic curve")}} is a {{KNOWL("ag.curve.smooth",title=
 #}
 <style type="text/css">
 .error_message {
-   border: 1px solid red;
-   border-width: 2px;
    padding: 4px;
-   font-size: 180%;
-   font-weight: bold;
    color: red;
+   font-size: 120%;
+   font-weight: bold;
    margin: 20px;
 }
 </style>
@@ -22,8 +20,9 @@ An {{KNOWL("ec", title="elliptic curve")}} is a {{KNOWL("ag.curve.smooth",title=
 <p class="error_message">
 {{err_msg}}
 </p>
-
-<a href={{url_for('ec.rational_elliptic_curves')}}>Search again</a>
+<p>
+  <input type=button value="Search again" onClick="history.go(-1)">
+</p>
 
 {% else %}
 <div>
@@ -60,12 +59,13 @@ By {{ KNOWL('ec.q.torsion_order', torsion=t,title="torsion order") }}:
   KNOWL('ec.isogeny_class',title="isogeny class") }} by coefficients or 
   {{ KNOWL('ec.q.lmfdb_label',title="LMFDB label") }} </h2>
 {% if err_msg %}
-<form action="/EllipticCurve/Q/">
+<form action={{url_for('ec.rational_elliptic_curves')}}>
 {% else %}
 <form>
 {% endif %}
 <input type='text' name='label' size=25 example="11.a2">
-<button type='submit' name='jump' value='label or isogeny class' >label or isogeny class</button>
+<button type='submit' name='jump' value='curve or isogeny class label'
+        >curve, label or isogeny class label</button>
 <br><span class="formexample">e.g. 11.a2 or 389.a or Cremona:11a1 or 
 [0,1,1,-2,0] or [-3024, 46224]
 </span>

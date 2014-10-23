@@ -32,7 +32,7 @@ class ECisog_class(object):
 
             - dbdata: the data from the database
         """
-        logger.info("Constructing an instance of ECisog_class")
+        logger.debug("Constructing an instance of ECisog_class")
         self.__dict__.update(dbdata)
         self.make_class()
 
