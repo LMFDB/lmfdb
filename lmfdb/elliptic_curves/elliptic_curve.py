@@ -198,7 +198,7 @@ def elliptic_curve_search(**args):
             if not LIST_RE.match(ran):
                 names = {'conductor': 'conductor', 'torsion': 'torsion order', 'rank':
                          'rank', 'sha': 'analytic order of &#1064;'}
-                info['err'] = 'Error parsing input for the %s.  It needs to be an integer (such as 5), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 2,3,8 or 3-5, 7, 8-11).' % names[field]
+                info['err'] = 'Error parsing input for the %s.  It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).' % names[field]
                 return search_input_error(info, bread)
             # Past input check
             tmp = parse_range2(ran, field)
