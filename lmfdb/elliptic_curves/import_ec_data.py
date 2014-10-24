@@ -79,6 +79,7 @@ curves.ensure_index('rank')
 curves.ensure_index('torsion')
 curves.ensure_index('degree')
 curves.ensure_index('jinv')
+curves.ensure_index('sha')
 
 print "finished indices"
 

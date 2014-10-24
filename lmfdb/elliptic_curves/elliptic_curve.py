@@ -75,7 +75,7 @@ def rational_elliptic_curves(err_args=None):
             return elliptic_curve_search(**request.args)
         else:
             err_args = {}
-            for field in ['conductor', 'jinv', 'torsion', 'rank', 'sha_an', 'optimal', 'torsion_structure', 'msg']:
+            for field in ['conductor', 'jinv', 'torsion', 'rank', 'sha', 'optimal', 'torsion_structure', 'msg']:
                 err_args[field] = ''
             err_args['count'] = '100'
     counts = get_stats().counts()
@@ -118,7 +118,7 @@ def by_conductor(conductor):
 
 def elliptic_curve_jump_error(label, args, wellformed_label=False, cremona_label=False, missing_curve=False):
     err_args = {}
-    for field in ['conductor', 'torsion', 'rank', 'sha_an', 'optimal', 'torsion_structure']:
+    for field in ['conductor', 'torsion', 'rank', 'sha', 'optimal', 'torsion_structure']:
         err_args[field] = args.get(field, '')
     err_args['count'] = args.get('count', '100')
     if wellformed_label:
@@ -190,14 +190,14 @@ def elliptic_curve_search(**args):
             return search_input_error(info, bread)
         query['jinv'] = str(QQ(j)) # to simplify e.g. 1728/1
 
-    for field in ['conductor', 'torsion', 'rank', 'sha_an']:
+    for field in ['conductor', 'torsion', 'rank', 'sha']:
         if info.get(field):
             info[field] = clean_input(info[field])
             ran = info[field]
             ran = ran.replace('..', '-').replace(' ', '')
             if not LIST_RE.match(ran):
                 names = {'conductor': 'conductor', 'torsion': 'torsion order', 'rank':
-                         'rank', 'sha_an': 'analytic order of &#1064;'}
+                         'rank', 'sha': 'analytic order of &#1064;'}
                 info['err'] = 'Error parsing input for the %s.  It needs to be an integer (such as 5), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 2,3,8 or 3-5, 7, 8-11).' % names[field]
                 return search_input_error(info, bread)
             # Past input check
@@ -212,10 +212,7 @@ def elliptic_curve_search(**args):
                         x.update(y)
                     newors.extend(oldors)
                 tmp[1] = newors
-            if field=='sha_an': # database sha_an values are not all exact!
-                query[tmp[0]] = { '$gt': tmp[1]-0.1, '$lt': tmp[1]+0.1}
-            else:
-                query[tmp[0]] = tmp[1]
+            query[tmp[0]] = tmp[1]
 
     if 'optimal' in info and info['optimal'] == 'on':
         # fails on 990h3
