@@ -13,7 +13,7 @@ from lmfdb.number_fields.number_field import parse_list
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.ec_stats import get_stats
 from lmfdb.elliptic_curves.isog_class import ECisog_class
-from lmfdb.elliptic_curves.web_ec import WebEC, parse_list, parse_points, match_lmfdb_label, match_lmfdb_iso_label, match_cremona_label, split_lmfdb_label, split_lmfdb_iso_label, split_cremona_label
+from lmfdb.elliptic_curves.web_ec import WebEC, parse_list, parse_points, match_lmfdb_label, match_lmfdb_iso_label, match_cremona_label, split_lmfdb_label, split_lmfdb_iso_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex
 
 import sage.all
 from sage.all import ZZ, QQ, EllipticCurve, latex, matrix, srange
@@ -75,7 +75,7 @@ def rational_elliptic_curves(err_args=None):
             return elliptic_curve_search(**request.args)
         else:
             err_args = {}
-            for field in ['conductor', 'jinv', 'torsion', 'rank', 'sha_an', 'optimal', 'torsion_structure', 'msg']:
+            for field in ['conductor', 'jinv', 'torsion', 'rank', 'sha', 'optimal', 'torsion_structure', 'msg']:
                 err_args[field] = ''
             err_args['count'] = '100'
     counts = get_stats().counts()
@@ -111,22 +111,22 @@ def statistics():
     return render_template("statistics.html", info=info, credit=credit, title=t, bread=bread)
 
 
-@ec_page.route("/<int:conductor>")
+@ec_page.route("/<int:conductor>/")
 def by_conductor(conductor):
     return elliptic_curve_search(conductor=conductor, **request.args)
 
 
 def elliptic_curve_jump_error(label, args, wellformed_label=False, cremona_label=False, missing_curve=False):
     err_args = {}
-    for field in ['conductor', 'torsion', 'rank', 'sha_an', 'optimal', 'torsion_structure']:
+    for field in ['conductor', 'torsion', 'rank', 'sha', 'optimal', 'torsion_structure']:
         err_args[field] = args.get(field, '')
     err_args['count'] = args.get('count', '100')
     if wellformed_label:
-        err_args['err_msg'] = "No curve or isogeny class in database has label %s" % label
+        err_args['err_msg'] = "No curve or isogeny class in the database has label %s" % label
     elif cremona_label:
         err_args['err_msg'] = "To search for a Cremona label use 'Cremona:%s'" % label
     elif missing_curve:
-        err_args['err_msg'] = "The elliptic curve %s is not in the database (conductor = %s)" % (label, args.get('conductor','?'))
+        err_args['err_msg'] = "The elliptic curve %s (conductor = %s) is not in the database" % (label, args.get('conductor','?'))
     else:
         err_args['err_msg'] = "%s does not define a recognised elliptic curve over $\mathbb{Q}$" % label
     return rational_elliptic_curves(err_args)
@@ -138,6 +138,9 @@ def elliptic_curve_search(**args):
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('$\Q$', url_for(".rational_elliptic_curves")),
              ('Search Results', '.')]
+    if 'SearchAgain' in args:
+        return rational_elliptic_curves()
+
     if 'jump' in args:
         label = info.get('label', '').replace(" ", "")
         m = match_lmfdb_label(label)
@@ -165,10 +168,7 @@ def elliptic_curve_search(**args):
             try:
                 labvec = lab.split(',')
                 labvec = [QQ(str(z)) for z in labvec] # Rationals allowed
-                try:
-                    E = EllipticCurve(labvec)
-                except (ValueError, ArithmeticError):
-                    return elliptic_curve_jump_error(label, info)
+                E = EllipticCurve(labvec)
                 # Now we do have a valid curve over Q, but it might
                 # not be in the database.
                 ainvs = [str(c) for c in E.minimal_model().ainvs()]
@@ -177,7 +177,7 @@ def elliptic_curve_search(**args):
                     info['conductor'] = E.conductor()
                     return elliptic_curve_jump_error(label, info, missing_curve=True)
                 return by_ec_label(data['lmfdb_label'])
-            except (ValueError, ArithmeticError):
+            except (TypeError, ValueError, ArithmeticError):
                 return elliptic_curve_jump_error(label, info)
         else:
             query['label'] = ''
@@ -188,17 +188,17 @@ def elliptic_curve_search(**args):
         if not QQ_RE.match(j):
             info['err'] = 'Error parsing input for the j-invariant.  It needs to be a rational number.'
             return search_input_error(info, bread)
-        query['jinv'] = j
+        query['jinv'] = str(QQ(j)) # to simplify e.g. 1728/1
 
-    for field in ['conductor', 'torsion', 'rank', 'sha_an']:
+    for field in ['conductor', 'torsion', 'rank', 'sha']:
         if info.get(field):
             info[field] = clean_input(info[field])
             ran = info[field]
             ran = ran.replace('..', '-').replace(' ', '')
             if not LIST_RE.match(ran):
                 names = {'conductor': 'conductor', 'torsion': 'torsion order', 'rank':
-                         'rank', 'sha_an': 'analytic order of &#1064;'}
-                info['err'] = 'Error parsing input for the %s.  It needs to be an integer (such as 5), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 2,3,8 or 3-5, 7, 8-11).' % names[field]
+                         'rank', 'sha': 'analytic order of &#1064;'}
+                info['err'] = 'Error parsing input for the %s.  It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).' % names[field]
                 return search_input_error(info, bread)
             # Past input check
             tmp = parse_range2(ran, field)
@@ -212,10 +212,7 @@ def elliptic_curve_search(**args):
                         x.update(y)
                     newors.extend(oldors)
                 tmp[1] = newors
-            if field=='sha_an': # database sha_an values are not all exact!
-                query[tmp[0]] = { '$gt': tmp[1]-0.1, '$lt': tmp[1]+0.1}
-            else:
-                query[tmp[0]] = tmp[1]
+            query[tmp[0]] = tmp[1]
 
     if 'optimal' in info and info['optimal'] == 'on':
         # fails on 990h3
@@ -298,6 +295,8 @@ def elliptic_curve_search(**args):
     info['start'] = start
     if nres == 1:
         info['report'] = 'unique match'
+    elif nres == 2:
+        info['report'] = 'displaying both matches'
     else:
         if nres > count or start != 0:
             info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
@@ -317,15 +316,15 @@ def search_input_error(info, bread):
 #  Specific curve pages
 ##########################
 
+@ec_page.route("/<int:conductor>/<iso_label>/")
+def by_double_iso_label(conductor,iso_label):
+    full_iso_label = str(conductor)+"."+iso_label
+    return render_isogeny_class(full_iso_label)
+
 @ec_page.route("/<int:conductor>/<iso_label>/<int:number>")
 def by_triple_label(conductor,iso_label,number):
     full_label = str(conductor)+"."+iso_label+str(number)
     return render_curve_webpage_by_label(full_label)
-
-@ec_page.route("/<int:conductor>/<iso_label>")
-def by_double_iso_label(conductor,iso_label):
-    full_iso_label = str(conductor)+"."+iso_label
-    return render_isogeny_class(full_iso_label)
 
 # The following function determines whether the given label is in
 # LMFDB or Cremona format, and also whether it is a curve label or an
@@ -337,11 +336,16 @@ def by_ec_label(label):
     try:
         N, iso, number = split_lmfdb_label(label)
     except AttributeError:
-        ec_logger.info("%s not a valid lmfdb label, trying cremona")
+        ec_logger.debug("%s not a valid lmfdb label, trying cremona")
         try:
             N, iso, number = split_cremona_label(label)
         except AttributeError:
-            return elliptic_curve_jump_error(label, {})
+            ec_logger.debug("%s not a valid cremona label either, trying Weierstrass")
+            eqn = label.replace(" ","")
+            if weierstrass_eqn_regex.match(eqn) or short_weierstrass_eqn_regex.match(eqn):
+                return by_weierstrass(eqn)
+            else:
+                return elliptic_curve_jump_error(label, {})
 
         # We permanently redirect to the lmfdb label
         if number:
@@ -361,6 +365,23 @@ def by_ec_label(label):
     else:
         return redirect(url_for(".by_double_iso_label", conductor=N, iso_label=iso))
 
+def by_weierstrass(eqn):
+    w = weierstrass_eqn_regex.match(eqn)
+    if not w:
+        w = short_weierstrass_eqn_regex.match(eqn)
+    if not w:
+        return elliptic_curve_jump_error(eqn, {})
+    try:
+        ainvs = [ZZ(ai) for ai in w.groups()]
+    except TypeError:
+        return elliptic_curve_jump_error(eqn, {})
+    E = EllipticCurve(ainvs).global_minimal_model()
+    N = E.conductor()
+    ainvs = [str(ai) for ai in E.ainvs()]
+    data = db_ec().find_one({'ainvs': ainvs})
+    if data is None:
+        return elliptic_curve_jump_error(eqn, {'conductor':N}, missing_curve=True)
+    return redirect(url_for(".by_ec_label", label=data['lmfdb_label']), 301)
 
 def render_isogeny_class(iso_class):
     credit = 'John Cremona'

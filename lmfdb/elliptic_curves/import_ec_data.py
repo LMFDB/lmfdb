@@ -35,10 +35,15 @@ The documents in the collection 'curves' in the database 'elliptic_curves' have 
    - 'real_period': (float) real period, e.g. 0.3727205103624245
    - 'degree': (int) degree of modular parametrization, e.g. 1984
    - 'non-surjective_primes': (list of ints) primes p for which the
-     mod p Galois representation is not surjective, e.g. [5]
+      mod p Galois representation is not surjective, e.g. [5]
    - 'galois_images': (list of strings) Sutherland codes for the
-     images of the mod p Galois representations for the primes in
-     'non-surjective_primes' e.g. ['5B']
+      images of the mod p Galois representations for the primes in
+      'non-surjective_primes' e.g. ['5B']
+   - 'isogeny_matrix': (list of lists of ints) isogeny matrix for curves in the class
+   - 'sha_an': (float) analytic order of sha (approximate unless r=0)
+   - 'sha': (int) analytic order of sha (rounded value of sha_an)
+   - 'sha_primes': (list of ints) primes dividing sha
+   - 'torsion_primes': (list of ints) primes dividing torsion
 """
 
 import os.path
@@ -74,6 +79,7 @@ curves.ensure_index('rank')
 curves.ensure_index('torsion')
 curves.ensure_index('degree')
 curves.ensure_index('jinv')
+curves.ensure_index('sha')
 
 print "finished indices"
 
@@ -109,9 +115,10 @@ def split(line):
 def allbsd(line):
     r""" Parses one line from an allbsd file.  Returns the label and a
     dict containing fields with keys 'conductor', 'iso', 'number',
-    'ainvs', 'rank', 'torsion', 'tamagawa_product', 'real_period',
-    'special_value', 'regulator', 'sha_an', all values being strings
-    or ints.
+    'ainvs', 'rank', 'torsion', 'torsion_primes', 'tamagawa_product',
+    'real_period', 'special_value', 'regulator', 'sha_an', 'sha',
+    'sha_primes', all values being strings or floats or ints or lists
+    of ints.
 
     Input line fields:
 
@@ -125,19 +132,31 @@ def allbsd(line):
     data = split(line)
     label = data[0] + data[1] + data[2]
     ainvs = parse_ainvs(data[3])
-    return label, {
+
+    torsion = ZZ(data[5])
+    sha_an = RR(data[10])
+    sha = sha_an.round()
+    sha_primes = sha.prime_divisors()
+    torsion_primes = torsion.prime_divisors()
+
+    data = {
         'conductor': int(data[0]),
         'iso': data[0] + data[1],
         'number': int(data[2]),
         'ainvs': ainvs,
         'rank': int(data[4]),
-        'torsion': int(data[5]),
         'tamagawa_product': int(data[6]),
         'real_period': float(data[7]),
         'special_value': float(data[8]),
         'regulator': float(data[9]),
-        'sha_an': float(data[10]),
-    }
+        'sha_an': float(sha_an),
+        'sha':  int(sha),
+        'sha_primes':  [int(p) for p in sha_primes],
+        'torsion':  int(torsion),
+        'torsion_primes':  [int(p) for p in torsion_primes]
+        }
+
+    return label, data
 
 # Next function redundant as all data in allcurves is also in allgens
 
@@ -405,3 +424,30 @@ def add_isogeny_matrices(N1,N2):
             data['lmfdb_label'] = label_i
             data['isogeny_matrix'] = mat
             curves.update({'lmfdb_label': label_i}, {"$set": data}, upsert=True)
+
+# A one-off script to add (1) exact Sha order; (2) prime factors of Sha; (3) prime factors of torsion
+
+def add_sha_tor_primes(N1,N2):
+    """
+    Add the 'sha', 'sha_primes', 'torsion_primes' fields to every
+    curve in the database whose conductor is between N1 and N2
+    inclusive.
+    """
+    query = {}
+    query['conductor'] = { '$gte': int(N1), '$lte': int(N2) }
+    res = curves.find(query)
+    res = res.sort([('conductor', pymongo.ASCENDING)])
+    n = 0
+    for C in res:
+        label = C['lmfdb_label']
+        if n%1000==0: print label
+        n += 1
+        torsion = ZZ(C['torsion'])
+        sha = RR(C['sha_an']).round()
+        sha_primes = sha.prime_divisors()
+        torsion_primes = torsion.prime_divisors()
+        data = {}
+        data['sha'] = int(sha)
+        data['sha_primes'] = [int(p) for p in sha_primes]
+        data['torsion_primes'] = [int(p) for p in torsion_primes]
+        curves.update({'lmfdb_label': label}, {"$set": data}, upsert=True)

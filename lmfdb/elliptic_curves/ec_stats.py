@@ -94,12 +94,12 @@ class ECstats(object):
                 prop = format_percentage(ncu,ncurves)
                 tor_counts.append({'t': t, 'gp': gp, 'ncurves': ncu, 'prop': prop})
         stats['tor_counts'] = tor_counts+tor_counts2
-        stats['max_sha'] = ecdb.find().sort('sha_an', DESCENDING).limit(1)[0]['sha_an']
+        stats['max_sha'] = ecdb.find().sort('sha', DESCENDING).limit(1)[0]['sha']
         sha_counts = []
-        from math import sqrt
-        for s in range(1,int(sqrt(stats['max_sha']))+1):
+        from sage.misc.functional import isqrt
+        for s in range(1,1+isqrt(stats['max_sha'])):
             s2 = s*s
-            nc = ecdb.find({'sha_an': { '$gt': s2-0.1, '$lt': s2+0.1}}).count()
+            nc = ecdb.find({'sha': s2}).count()
             if nc:
                 sha_counts.append({'s': s, 'ncurves': nc})
         stats['sha_counts'] = sha_counts
