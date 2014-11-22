@@ -186,7 +186,7 @@ Varieties</h2>
  <td width="40" class="borc rotation"><p class="test rotation">Curves</p></td><td class="bor">
 <ul class="list">
 <li><span class="subtitle">Elliptic</span>
-<div class="parts"><span class="subitem"><a href="{{url_for('EC_toplevel')}}">$/\Q$</a></span> <span class="subitem"><div class="future">$/\F_{q}(t)$</div></span> <span class="subitem"><a href="{{url_for('ecnf.index')}}">/NumberFields</a></span> <span class="subitem"><div class="future">$\Q$-curves</div></span> </div></li>
+<div class="parts"><span class="subitem"><a href="{{url_for('ec.rational_elliptic_curves')}}">$/\Q$</a></span> <span class="subitem"><div class="future">$/\F_{q}(t)$</div></span> <span class="subitem"><a href="{{url_for('ecnf.index')}}">/NumberFields</a></span> <span class="subitem"><div class="future">$\Q$-curves</div></span> </div></li>
 <li><span class="subtitle">Hyperelliptic</span>
 <div class="parts"><span class="subitem">$/\Q$</span> <span class="subitem"><div class="future">$/\F_{q}(t)$</div></span> <span class="subitem">/NumberFields</span> </div></li>
 <li><span class="subtitle"><div class="future">Shimura</div></span></li>
