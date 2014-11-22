@@ -101,7 +101,7 @@
          - title: Elliptic
            parts:
              - title: $/\Q$
-               url_for: "'EC_toplevel'"
+               url_for: "'ec.rational_elliptic_curves'"
              - title: $/\F_{q}(t)$
                status: future
              - title: /NumberFields
