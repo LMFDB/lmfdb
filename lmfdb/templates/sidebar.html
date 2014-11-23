@@ -1,0 +1,119 @@
+{%- include "sidebar.css" -%}
+
+<div id="sidebar">
+{% for key, heading, value in sidebar.data %}
+{{heading | safe}}
+
+{% if value.type == 'L' %}
+
+<div class="L">
+<span class="heading">{{value.firstpart.heading}}</span>
+{% for item in value.firstpart.entries %}
+<span class="L">{{item.url | safe}}</span>
+{% endfor %}
+</div>
+
+<div class="L">
+{% for item in value.secondpart.parts %}
+<span class="L">{{item.url | safe}}</span>
+{% endfor %}
+</div>
+
+<div class="L">
+{% for item in value.thirdpart.parts %}
+<span class="L">{{item.url | safe}}</span>
+{% endfor %}
+</div>
+
+{% elif value.type == '2 column' %}
+
+<table class="short">
+{% for entry in value.parts %}
+<tr> {# want alternating colours here #}
+{% if entry.style == "rotate" %}
+ <td width=40 class="borc rotation">
+ <p class="test rotation">
+{% elif entry.style == "full" %}
+ <td scope="col" colspan="2" class="full">
+{% else %}
+ <td class="bor">
+{% endif %} {# switch on style #}
+
+{{entry.url | safe}}
+
+{% if entry.style == "full" %}
+</td>
+{% else %}
+</td>
+{% if entry.part2 %}
+<td class="bor">
+{% endif %}
+{% endif %}
+
+{% if entry.part2 %}
+<ul class="list">
+{% for pt2 in entry.part2 %}
+<li>
+<span class="subtitle">{{pt2.url | safe}}</span>
+<div class="parts">
+{% for it2 in pt2.parts %}
+<span class="subitem">{{it2.url | safe}}</span>
+{% endfor %}
+</div>
+</li>
+{% endfor %} {# for pt2 #}
+</ul>
+</td>
+{% endif %}  {# if part2 #}
+
+</tr>
+{% endfor %} {# for item #}
+</table>     {# end of 2 column case #}
+
+{% elif value.type == 'multilevel' %}
+
+<table class="short">
+{% for entry in value.parts %}
+<tr>
+{% if entry.style == "rotate" %}
+<td width="40" class="borc rotation"><p class="test rotation">
+{% elif entry.style == "full" %}
+<td scope="col" colspan="2" class="full">
+{% else %}
+<td class="borc"><p>
+{% endif %}
+{{ entry.url | safe }}
+{% if entry.style == "full" %}
+</td>
+{% else %}
+</p></td><td class="bor">
+{% endif %}
+{% if entry.part2 %}
+<ul class="list">
+{% for pt2 in entry.part2 %}
+<li>
+<span class="subtitle">{{ pt2.url | safe }}</span>
+{% if pt2.parts %}
+<div class="parts">
+{% for it2 in pt2.parts %}
+<span class="subitem">{{ it2.url | safe}}</span>
+{% endfor %}
+</div>
+{% endif %} {# if parts in pt2 #}
+</li>
+{% endfor %} {# for pt2 #}
+</ul>
+{% endif %} {# if part2 in entry #}
+</td>
+</tr>
+{% endfor %} {# for entry #}
+</table>
+
+{% elif value.type == 'single' %}
+{# nothing needs doing #}
+
+
+{% endif %} {# branch on type #}
+{% endfor %} {# loop over main headings #}
+</div>
+
