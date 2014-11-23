@@ -62,9 +62,9 @@
     </div>
 </div>
 
-
-{% block sidebar -%} 
+{% block sidebar -%}
 {% if g.show_menu %}
+{#  This macro is not used! #}
  {% macro entry(title, entries) -%}
    {% if entries %}
     <h2>{{ title }}</h2>
@@ -76,8 +76,7 @@
    {% endif %}
  {%- endmacro %}
 
-{%- include "thetoc1" -%}
-
+{%- include "sidebar.html" -%}
 
 {% if BETA %}
 
@@ -88,17 +87,6 @@
 
    {{ entry("Data", getUploadedFor(request.path, true) ) }}
   {# {% if user_is_authenticated %} {% endif %} #}
-
-{#
- {% if sidebar -%}
-  {% for topic, content in sidebar -%}
-    {{ entry(topic, content) }}
-  {%- endfor %}
- {%- endif %}
-
-</div>
-
-#}
 
 {% else %}
 <style type="text/css">
