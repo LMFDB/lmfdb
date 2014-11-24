@@ -172,9 +172,9 @@
       url_for: "characters.render_characterNavigation"
       part2:
          - title: Dirichlet
-           url_character:  "Dirichlet"
+           url_for:  "characters.render_Dirichletwebpage"
          - title: Hecke
-           url_character:  "Hecke"
+           url_for:  "characters.render_Heckewebpage"
     - title: Artin
       style: full
       url_for: "artin_representations.index"
