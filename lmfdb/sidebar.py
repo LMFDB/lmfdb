@@ -3,7 +3,6 @@
 import os
 import yaml
 from flask import url_for
-from lmfdb.utils import url_character
 
 def linked_name(item, level=""):
     """ take the dictionary describing a TOC entry and return the
@@ -13,8 +12,6 @@ def linked_name(item, level=""):
         if 'url_for' in item:
             url = url_for(item['url_for'],**item.get('url_args',dict()))
             return ''.join(['<h2 class="link"><a href="',url,'">',item['title'],'</a></h2>\n'])
-        elif 'url' in item:
-            return ''.join(['<h2 class="link"><a href="',item['url'],'">',item['title'],'</a></h2>\n'])
         else:
             return ''.join(['<h2>',item['title'],'</h2>\n'])
 
@@ -22,11 +19,6 @@ def linked_name(item, level=""):
         if 'url_for' in item:
             url = url_for(item['url_for'],**item.get('url_args',dict()))
             this_entry = ''.join(['<a href="',url,'">',item['title'],'</a>'])
-        elif 'url_character' in item:
-            url = url_character(type=item['url_character'])
-            this_entry = ''.join(['<a href="',url,'">',item['title'],'</a>'])
-        elif 'url' in item:
-            this_entry = ''.join(['<a href="',item['url'],'">',item['title'],'</a>'])
         else:
             this_entry = item['title']
 
