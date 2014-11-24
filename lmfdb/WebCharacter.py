@@ -5,7 +5,7 @@ import math
 from sage.all import *
 import re
 from flask import url_for
-from lmfdb.utils import parse_range, make_logger, url_character
+from lmfdb.utils import parse_range, make_logger
 logger = make_logger("DC")
 from WebNumberField import WebNumberField
 try:
@@ -98,6 +98,24 @@ def complex2str(g, digits=10):
         return str(imag) + 'i'
     else:
         return str(real) + '+' + str(imag) + 'i'
+
+###############################################################################
+## url_for modified for characters
+def url_character(**kwargs):
+    if 'type' not in kwargs:
+        return url_for('characters.render_characterNavigation')
+    elif kwargs['type'] == 'Dirichlet':
+        del kwargs['type']
+        if kwargs.get('calc',None):
+            return url_for('characters.dc_calc',**kwargs)
+        else:
+            return url_for('characters.render_Dirichletwebpage',**kwargs)
+    elif kwargs['type'] == 'Hecke':
+        del kwargs['type']
+        if kwargs.get('calc',None):
+            return url_for('characters.hc_calc',**kwargs)
+        else:
+            return url_for('characters.render_Heckewebpage',**kwargs)
 
 #############################################################################
 ###

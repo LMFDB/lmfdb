@@ -1,6 +1,5 @@
 from lmfdb.base import LmfdbTest
 from lmfdb.WebCharacter import *
-from lmfdb.utils import url_character
 import unittest2
 
 class WebCharacterTest(LmfdbTest):

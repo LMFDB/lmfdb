@@ -10,7 +10,7 @@ from sage.all import *
 import tempfile
 import os
 from pymongo import ASCENDING
-from lmfdb.utils import to_dict, parse_range, make_logger, url_character
+from lmfdb.utils import to_dict, parse_range, make_logger
 from lmfdb.WebCharacter import *
 from lmfdb.characters import characters_page, logger
 import ListCharacters
@@ -19,6 +19,13 @@ try:
     from dirichlet_conrey import *
 except:
     logger.critical("dirichlet_conrey.pyx cython file is not available ...")
+
+#### make url_character available from templates
+@app.context_processor
+def ctx_characters():
+    chardata = {}
+    chardata['url_character'] = url_character
+    return chardata
 
 ###############################################################################
 #   Route functions
