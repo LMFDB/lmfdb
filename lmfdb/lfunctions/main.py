@@ -12,7 +12,7 @@ import numpy
 import pymongo
 from Lfunction import *
 import LfunctionPlot as LfunctionPlot
-from lmfdb.utils import to_dict, url_character
+from lmfdb.utils import to_dict
 import bson
 from Lfunctionutilities import (lfuncDStex, lfuncEPtex, lfuncFEtex,
                                 truncatenumber, styleTheSign, specialValueString)

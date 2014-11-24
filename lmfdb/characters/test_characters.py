@@ -27,7 +27,7 @@ class UrlCharacterTest(LmfdbTest):
     pass
     # FIXME: this test does not work, why ???
     #def test_url_character(self):
-    #    assert url_character() == '/Character/'
+    #    assert url_for('characters.render_characterNavigation') == '/Character/'
     #    assert url_character(type='Hecke') == '/Character/Hecke'
     #    assert url_character(type='Dirichlet') == '/Character/Dirichlet'
     #    assert url_for('characters.render_Dirichletwebpage', modulus='132') == '/Character/Dirichlet/132'

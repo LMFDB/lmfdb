@@ -21,7 +21,6 @@ AUTHORS:
 import lmfdb.base
 from lmfdb.base import app
 from flask import render_template, url_for, request, redirect, make_response, send_file
-from lmfdb.utils import url_character
 import bson
 import StringIO
 import pymongo

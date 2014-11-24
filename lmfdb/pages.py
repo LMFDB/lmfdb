@@ -41,7 +41,6 @@ def load_boxes():
     boxes = []
     listboxes = yaml.load_all(open(os.path.join(_curdir, "index_boxes.yaml")))
     for b in listboxes:
-        print b
         B = Box(b['title'])
         B.content = b['content']
         if 'image' in b:

@@ -4,6 +4,7 @@ import math
 # from Lfunctionutilities import pair2complex, splitcoeff, seriescoeff
 from sage.all import *
 import re
+from flask import url_for
 from lmfdb.utils import parse_range, make_logger, url_character
 logger = make_logger("DC")
 from WebNumberField import WebNumberField

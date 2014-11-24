@@ -23,7 +23,7 @@ from flask import render_template, url_for, request, redirect, make_response, se
 import tempfile
 import os
 import re
-from lmfdb.utils import ajax_more, ajax_result, make_logger, to_dict, url_character
+from lmfdb.utils import ajax_more, ajax_result, make_logger, to_dict
 from sage.all import *
 from sage.modular.dirichlet import DirichletGroup
 from lmfdb.base import app, db
