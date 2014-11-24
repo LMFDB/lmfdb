@@ -504,7 +504,7 @@ def evs_table(search, twodarray=False):
         ## Now get the COnrey number.
         ## First the character
         if k == 0:
-             # s+=url_character(type='Dirichlet',modulus=level,number=ch)
+             # s+=url_for('characters.render_Dirichletwebpage',modulus=level,number=ch)
             row['ch'] = f.the_character()  # conrey_character_name(N,chi)
         else:
             row['ch'] = "eta"
@@ -605,7 +605,7 @@ def evs_table2(search, twodarray=False):
         ## Now get the COnrey number.
         ## First the character
         if k == 0:
-            url = url_character(type='Dirichlet', modulus=N, number=chi)
+            url = url_for('characters.render_Dirichletwebpage', modulus=N, number=chi)
             s = "<a href={0}>{1}</a>".format(url, chi)
             row['ch'] = s
         else:

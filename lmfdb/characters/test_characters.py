@@ -30,7 +30,7 @@ class UrlCharacterTest(LmfdbTest):
     #    assert url_character() == '/Character/'
     #    assert url_character(type='Hecke') == '/Character/Hecke'
     #    assert url_character(type='Dirichlet') == '/Character/Dirichlet'
-    #    assert url_character(type='Dirichlet', modulus='132') == '/Character/Dirichlet/132'
+    #    assert url_for('characters.render_Dirichletwebpage', modulus='132') == '/Character/Dirichlet/132'
 
 class DirichletSearchTest(LmfdbTest):
 

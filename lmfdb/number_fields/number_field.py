@@ -276,7 +276,7 @@ def render_field_webpage(args):
         data['conductor'] = conductor
         dirichlet_chars = nf.dirichlet_group()
         if len(dirichlet_chars)>0:
-            data['dirichlet_group'] = ['<a href = "%s">$\chi_{%s}(%s,&middot;)$</a>' % (url_character(type='Dirichlet',modulus=data['conductor'], number=j), data['conductor'], j) for j in dirichlet_chars]
+            data['dirichlet_group'] = ['<a href = "%s">$\chi_{%s}(%s,&middot;)$</a>' % (url_for('characters.render_Dirichletwebpage',modulus=data['conductor'], number=j), data['conductor'], j) for j in dirichlet_chars]
             data['dirichlet_group'] = r'$\lbrace$' + ', '.join(data['dirichlet_group']) + r'$\rbrace$'
         if data['conductor'].is_prime() or data['conductor'] == 1:
             data['conductor'] = "\(%s\)" % str(data['conductor'])

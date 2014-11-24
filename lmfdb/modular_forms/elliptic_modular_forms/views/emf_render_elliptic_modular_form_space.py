@@ -126,7 +126,7 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
         conrey_char = WMFS.conrey_character()
         conrey_char_name = WMFS.conrey_character_name()
         info['conrey_character_name'] = '\( ' + conrey_char_name + '\)'
-        info['character_url'] = url_character(type='Dirichlet', modulus=WMFS.level(), number=conrey_char.number())
+        info['character_url'] = url_for('characters.render_Dirichletwebpage', modulus=WMFS.level(), number=conrey_char.number())
         info['name_new'] = "\(S_{ %s }^{new}(%s,%s) \)" % (WMFS.weight(), WMFS.level(), conrey_char_name)
         info['name_old'] = "\(S_{ %s }^{old}(%s,%s) \)" % (WMFS.weight(), WMFS.level(), conrey_char_name)
     info['dimension_cusp_forms'] = WMFS.dimension_cusp_forms()

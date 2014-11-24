@@ -216,7 +216,7 @@ def character_search(**args):
             number = int(str(label).partition('.')[2])
         except ValueError:
             return "<span style='color:red;'>ERROR: bad query</span>"
-        return redirect(url_character(type='Dirichlet',modulus=modulus, number=number))
+        return redirect(url_for('characters.render_Dirichletwebpage',modulus=modulus, number=number))
     else:
         for field in ['modulus', 'conductor', 'order']:
             if info.get(field):
@@ -295,7 +295,7 @@ def kronecker_symbol(chi):
 def dirichlet_table():
     args = to_dict(request.args)
     mod = args.get('modulus',1)
-    return redirect(url_character(type='Dirichlet',modulus=mod))
+    return redirect(url_for('characters.render_Dirichletwebpage',modulus=mod))
 
 #    info = to_dict(args)
 #    info['modulus'] = modulus

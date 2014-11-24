@@ -458,7 +458,7 @@ def initLfunction(L, args, request):
     elif L.Ltype() == 'riemann':
         info['bread'] = get_bread(1, [('Riemann Zeta', request.url)])
         info['friends'] = [('\(\mathbb Q\)', url_for('number_fields.by_label', label='1.1.1.1')), ('Dirichlet Character \(\\chi_{1}(1,\\cdot)\)',
-                           url_character(type='Dirichlet', modulus=1, number=1))]
+                           url_for('characters.render_Dirichletwebpage', modulus=1, number=1))]
 
     elif L.Ltype() == 'dirichlet':
         mod, num = L.charactermodulus, L.characternumber

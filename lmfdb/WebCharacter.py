@@ -959,7 +959,7 @@ class WebHeckeExamples(WebHecke):
     def add_row(self, nflabel):
         nf = WebNumberField(nflabel)
         #nflink = (nflabel, url_for('number_fields.by_label',label=nflabel))
-        nflink = (nflabel, url_character(type='Hecke',number_field=nflabel))
+        nflink = (nflabel, url_for('characters.render_Heckewebpage',number_field=nflabel))
         F = WebHeckeFamily(number_field=nflabel)
         self._contents.append( (nflink, nf.signature(), nf.web_poly() ) )
 

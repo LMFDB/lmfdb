@@ -3,7 +3,7 @@
 <h4>Checklist in /templates/checklist.html</h4>
 
 <a href="{{ url_for('l_functions.l_function_riemann_page')}}">Riemann zeta function</a> This better work<br/>
-<a href="{{ url_character(type='Dirichlet', modulus = 13, number = 2)}}">Dirichlet character 13.2</a> <br/>
+<a href="{{ url_for('characters.render_Dirichletwebpage', modulus = 13, number = 2)}}">Dirichlet character 13.2</a> <br/>
 <a href="{{ url_for('l_functions.l_function_dirichlet_page', modulus=13,number=2)}}">Dirichlet L-function character 13.2</a> <br/>
 <a href="{{ url_for('index')}}">index</a>: menu, more entries if logged in, sidebar and main page have same structure<br/>
 <br>
