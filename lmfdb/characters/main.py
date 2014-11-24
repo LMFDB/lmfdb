@@ -97,6 +97,7 @@ def render_Dirichletwebpage(modulus=None, number=None):
     args['number'] = number
 
     if modulus == None:
+        return render_characterNavigation() # waiting for new landing page
         info = WebDirichletFamily(**args).to_dict()
         #logger.info(info)
         return render_template('CharFamily.html', **info)

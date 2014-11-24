@@ -68,6 +68,7 @@ class DirichletCharactersTest(LmfdbTest):
         W = self.tc.get('/Character/')
         assert 'Browse' in W.data and 'search' in W.data
 
+    @unittest2.skip("wait extra level")
     def test_dirichletfamily(self):
         W = self.tc.get('/Character/Dirichlet/')
         assert '/Character/Dirichlet/11/3' in W.data, "7th first conductor"
