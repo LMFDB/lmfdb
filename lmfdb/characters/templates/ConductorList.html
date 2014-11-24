@@ -136,7 +136,7 @@ given {{ KNOWL('character.dirichlet.conductor', title="conductor") }}.
         {% for chi in line[1] %}
         <td>
           <div>
-            <a href="{{url_character(type='Dirichlet',modulus=chi[0],number=chi[1]) }}">
+            <a href="{{url_for('characters.render_Dirichletwebpage',modulus=chi[0],number=chi[1]) }}">
               {% if chi[2] %}
               <font color="green">
                 {% else %}

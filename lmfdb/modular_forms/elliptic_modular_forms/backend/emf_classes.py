@@ -190,7 +190,7 @@ class ClassicalMFDisplay(MFDisplay):
                 x = xc.sage_character()
                 row = dict()
                 row['head'] = "\(\chi_{" + str(N) + "}(" + str(xc.number()) + ",\cdot) \)"
-                row['url'] = url_character(type='Dirichlet', modulus=N, number=xc.number())
+                row['url'] = url_for('characters.render_Dirichletwebpage', modulus=N, number=xc.number())
                 row['cells'] = list()
                 for k in range(wt_ll, wt_ul + 1):
                     if character == 0 and is_odd(k):
@@ -245,10 +245,10 @@ class ClassicalMFDisplay(MFDisplay):
                     xc = Gcreps[xi]
                     row = dict()
                     row['head'] = "\(\chi_{" + str(N) + "}(" + str(xc.number()) + ",\cdot) \)"
-                    row['url'] = url_character(type='Dirichlet', modulus=N, number=xc.number())
+                    row['url'] = url_for('characters.render_Dirichletwebpage', modulus=N, number=xc.number())
                     row['galois_orbit'] = [
                         {'chi': str(xc.number()),
-                         'url': url_character(type='Dirichlet', modulus=N, number=xc.number()) }
+                         'url': url_for('characters.render_Dirichletwebpage', modulus=N, number=xc.number()) }
                         for xc in g]
                     row['cells'] = []
                     for k in range(wt_ll, wt_ul + 1):

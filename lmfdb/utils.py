@@ -178,31 +178,6 @@ from lmfdb.base import app
 from flask import url_for, make_response
 import sage.all
 
-###############################################################################
-## url_for modified for characters
-def url_character(**kwargs):
-    if 'type' not in kwargs:
-        return url_for('characters.render_characterNavigation')
-    elif kwargs['type'] == 'Dirichlet':
-        del kwargs['type']
-        if kwargs.get('calc',None):
-            return url_for('characters.dc_calc',**kwargs)
-        else:
-            return url_for('characters.render_Dirichletwebpage',**kwargs)
-    elif kwargs['type'] == 'Hecke':
-        del kwargs['type']
-        if kwargs.get('calc',None):
-            return url_for('characters.hc_calc',**kwargs)
-        else:
-            return url_for('characters.render_Heckewebpage',**kwargs)
-
-## make it available from templates
-@app.context_processor
-def ctx_characters():
-    chardata = {}
-    chardata['url_character'] = url_character
-    return chardata
-
 def to_dict(args):
     d = {}
     for key in args:
