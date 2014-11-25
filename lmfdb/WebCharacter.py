@@ -2,8 +2,6 @@
 # Author: Pascal Molin, molin.maths@gmail.com
 import math
 # from Lfunctionutilities import pair2complex, splitcoeff, seriescoeff
-from sage.all import *
-import re
 from flask import url_for
 from lmfdb.utils import parse_range, make_logger
 logger = make_logger("DC")

@@ -7,7 +7,7 @@
 # License as published by the Free Software Foundation; either
 # version 2 of the License, or (at your option) any later version.
 
-import sys
+import os
 import logging
 from time import sleep
 from flask import Flask, session, g, render_template, url_for, request, redirect
@@ -15,13 +15,12 @@ from pymongo import Connection
 from pymongo.cursor import Cursor
 from pymongo.errors import AutoReconnect
 from pymongo.connection import Connection
-from sage.all import *
+from sage.all import db, r
 from functools import wraps
 from werkzeug.contrib.cache import SimpleCache
 
 # logfocus
 logfocus = None
-
 
 def set_logfocus(lf):
     global logfocus

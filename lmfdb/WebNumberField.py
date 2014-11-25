@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import lmfdb.base as base
-from sage.all import *
-import re
-import pymongo
-import bson
-from lmfdb.utils import *
+from flask import url_for
+from sage.all import ZZ, QQ, AbelianGroup, NumberField, PolynomialRing, \
+    latex, pari, euler_phi, gap, CyclotomicField, is_odd, is_even, Primes
+from lmfdb.utils import make_logger, pol_to_html, coeff_to_poly, \
+    web_latex, web_latex_split_on_pm
 from lmfdb.transitive_group import group_display_short, WebGaloisGroup, group_display_knowl, galois_module_knowl
 wnflog = make_logger("WNF")
 
