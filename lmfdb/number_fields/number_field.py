@@ -302,7 +302,7 @@ def render_field_webpage(args):
         ram_primes = r'\textrm{None}'
     data['frob_data'], data['seeram'] = frobs(nf.K())
     data['phrase'] = group_phrase(n, t, C)
-    zk = pari(nf.K()).nf_subst('a')
+    zk = pari(nf.K())#          .nf_subst('a')
     zk = list(zk.nf_get_zk())
     Ra = PolynomialRing(QQ, 'a')
     zk = [latex(Ra(x)) for x in zk]
@@ -418,8 +418,14 @@ def parse_power(pair):
 
 @nf_page.route("/<label>")
 def by_label(label):
-    return render_field_webpage({'label': split_label(label)})
-
+    if FIELD_LABEL_RE.match(label):
+        return render_field_webpage({'label': split_label(label)})
+    parsed_label = parse_field_string(label)
+    # This will cause a reasonable error page to be displayed if not valid
+    if FIELD_LABEL_RE.match(parsed_label):
+        return render_field_webpage({'label': split_label(parsed_label)})
+    else:
+        return render_field_webpage({'label': parsed_label})
 
 def parse_list(L):
     L = str(L)
