@@ -93,16 +93,19 @@ sage: VW.algebraic_coefficients(38)[36] == -38
 #import weakref
 
 import lmfdb.base
-from lmfdb.WebCharacter import * #WebDirichletCharacter
+from lmfdb.WebCharacter import WebDirichletCharacter
 from lmfdb.lfunctions.Lfunction_base import Lfunction
 from lmfdb.lfunctions.HodgeTransformations import selberg_to_hodge, root_number_at_oo, hodge_to_selberg, tensor_hodge, gamma_factors
 
 from sage.structure.sage_object import SageObject
 from sage.rings.integer_ring import ZZ
 from sage.rings.complex_field import ComplexField
+from sage.rings.all import I
 from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
 from sage.rings.power_series_ring import PowerSeriesRing
 from sage.rings.fast_arith import prime_range
+import sage.schemes.elliptic_curves.ell_rational_field
+from sage.all import sqrt, QQ, Dokchitser, RealField, O
 
 class GaloisRepresentation( Lfunction):
 
