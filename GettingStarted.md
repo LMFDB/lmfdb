@@ -2,27 +2,26 @@ Installation
 ============
 
 * To contribute, see below on sharing your work. To simply run a copy of the site move into a new directory and type
-```
-    git clone git@github.com:LMFDB/lmfdb.git lmfdb
-```
+  ```
+     git clone git@github.com:LMFDB/lmfdb.git lmfdb
+  ```
 
 * Make sure you have sage (>=6.4) installed and that
   `sage` is available from the commandline
 
 * Install dependencies (in the `lmfdb/` directory):
-```
-    sage -i gap_packages
-    sage -i database_gap
-    sage -i pip
-    sage -pip install -r requirements.txt
-```
+  ```
+      sage -i gap_packages
+      sage -i database_gap
+      sage -i pip
+      sage -pip install -r requirements.txt
+  ```
 
   * [optional] Memcache:
-```
+
    ` easy_install -U python-memcached` or even better and only possible if you have the dev headers: ` easy_install -U pylibmc `
    install *memcached* (e.g. ` apt-get install memcached `)
-   run the service at 127.0.0.1:11211
-```
+   run the service at `127.0.0.1:11211`
 
 Running
 =======
@@ -33,15 +32,14 @@ Running
   ```
   (please send your public SSH key to Harald Schilly, Jonathan Bober or John Cremona to make it work)
 
-    * -C for compression of communication
-    * -N to not open a remote shell, just a blocking command in the shell (end connection with Ctrl-C)
-
-* If you don't have access to this server, you can temporarily start your own mongodb server and use it locally.
-  There is no data (obviously) but it will work.
-  Mongo locally:
-    ` 
-    mongod --port 40000 --dbpath [db_directory] --smallfiles 
-    `
+  * -C for compression of communication
+  * -N to not open a remote shell, just a blocking command in the shell (end connection with Ctrl-C)
+  * If you don't have access to this server, you can temporarily start your own mongodb server and use it locally.
+    There is no data (obviously) but it will work.
+    Mongo locally:
+    ``` 
+       mongod --port 40000 --dbpath [db_directory] --smallfiles 
+    ``` 
 
 * Then launch the webserver
   ```
