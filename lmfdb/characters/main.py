@@ -1,23 +1,20 @@
 # -*- coding: utf-8 -*-
 # Characters.py
 
-import re
-
-from lmfdb.base import app, r
+from lmfdb.base import app
 import flask
-from flask import Flask, session, g, render_template, url_for, make_response, request, redirect
-from sage.all import *
-import tempfile
-import os
-from pymongo import ASCENDING
+from flask import render_template, url_for, request, redirect
 from lmfdb.utils import to_dict, parse_range, make_logger
-from lmfdb.WebCharacter import *
-from lmfdb.characters import characters_page, logger
+from lmfdb.WebCharacter import WebDirichletFamily, WebDirichletGroup, \
+    url_character, WebDirichletCharacter, WebHeckeFamily, WebHeckeGroup, \
+    WebHeckeExamples, WebHeckeCharacter
+from lmfdb.characters import characters_page
 import ListCharacters
 
 try:
-    from dirichlet_conrey import *
+    import dirichlet_conrey
 except:
+    from lmfdb.characters import logger
     logger.critical("dirichlet_conrey.pyx cython file is not available ...")
 
 #### make url_character available from templates
@@ -231,7 +228,6 @@ def character_search(**args):
         info['bread'] = [('Characters','/Character'), ('search results', ' ') ]
         info['credit'] = 'Sage'
         if (len(query) != 0):
-            from sage.modular.dirichlet import DirichletGroup
             info['contents'] = charactertable(query)
             info['title'] = 'Dirichlet Characters'
             return render_template("character_search.html", **info)

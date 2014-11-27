@@ -1,23 +1,15 @@
 # -*- coding: utf8 -*-
 # ListCharacters.py
 
-import re
-
-from flask import render_template, url_for, make_response
-from sage.all import *
-import tempfile
-import os
-import pymongo
-from lmfdb.WebCharacter import *
-from lmfdb.utils import to_dict
-from sage.rings.arith import euler_phi
-
-# from dirichlet_conrey import *
+try:
+    import dirichlet_conrey
+except:
+    from lmfdb.characters import logger
+    logger.critical("dirichlet_conrey.pyx cython file is not available ...")
 
 
 def get_character_modulus(a, b, limit=7):
     from dirichlet_conrey import DirichletGroup_conrey
-    # from DirichletCharacter import kronecker_symbol as k
     headers = range(1, limit)
     headers.append("more")
     entries = {}

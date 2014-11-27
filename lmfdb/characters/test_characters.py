@@ -1,5 +1,5 @@
 from lmfdb.base import LmfdbTest
-from lmfdb.WebCharacter import *
+from lmfdb.WebCharacter import WebDirichlet, WebHecke
 import unittest2
 
 class WebCharacterTest(LmfdbTest):
