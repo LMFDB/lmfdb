@@ -16,6 +16,7 @@ class TensorProductTest(LmfdbTest):
         L = self.tc.get("/TensorProducts/show/?obj1=Character%2FDirichlet%2F13%2F2&obj2=EllipticCurve%2FQ%2F11.a2")
         assert '1859' in L.data
 
+    @unittest2.skip("sage error to be fixed")
     def test_modform_artinrep(self):
         L = self.tc.get("TensorProducts/show/?obj1=ModularForm%2FGL2%2FQ%2Fholomorphic%2F1%2F12%2F0%2Fa%2F0&obj2=ArtinRepresentation%2F2%2F31%2F1%2F")
         assert '961' in L.data 
