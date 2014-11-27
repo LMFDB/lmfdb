@@ -14,6 +14,7 @@ Installation
       sage -i gap_packages
       sage -i database_gap
       sage -i pip
+      sage -b
       sage -pip install -r requirements.txt
   ```
 
