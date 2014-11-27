@@ -1,83 +1,23 @@
 Installation
 ============
 
-  * To contribute, see below on sharing your work.  To simply run a copy of the site move into a new directory and type
+* To contribute, see below on sharing your work. To simply run a copy of the site move into a new directory and type
 ```
     git clone git@github.com:LMFDB/lmfdb.git lmfdb
 ```
 
-  * Install dependencies, i.e. you need Sage. Inside the Sage environment `sage -sh`:
+* Make sure you have sage (>=6.4) installed and that
+  `sage` is available from the commandline
+
+* Install dependencies (in the `lmfdb/` directory):
 ```
-    easy_install -U flask
-    easy_install -U flask-login
-    easy_install -U pymongo
-    easy_install -U flask-markdown
-    easy_install -U flask-cache
-    easy_install -U pyyaml
-    easy_install -U unittest2
-    # optional packages, necessary for contributing:
-    easy_install -U coverage
-    easy_install -U nose
-```
-  * From the command-line:
-    `
     sage -i gap_packages
-    ` 
-  (should check if we really need gap_packages.)
-    `
-    sage -i database_gap 
-    `
-    
-  * Regarding !MathJax: No longer necessary to install !MathJax.
-
-  `
-  ssh -C -N -L 37010:localhost:37010 mongo-user@lmfdb.warwick.ac.uk
-  ` 
-  (please send your public SSH key to Harald Schilly, Jonathan Bober or John Cremona to make it work)
-
-    * -C for compression of communication
-    * -N to not open a remote shell, just a blocking command in the shell (end connection with Ctrl-C)
-  If you don't have access to this server, you can temporarily start your own mongodb server and use it locally. There is no data (obviously) but it will work.
-    * Mongo locally:
-    ` 
-    mongod --port 40000 --dbpath [db_directory] --smallfiles 
-    `
-
-Note: Inside Sage, you might have to update the setuptools first, i.e. ` easy_install -U setuptools `
-
-Optional Parts
---------------
-
-* `dirichlet_conrey.pyx`:
-```
-goto [https://github.com/jwbober/conrey-dirichlet-characters its github page]
-download dirichlet_conrey.pyx and setup.py
-run: `sage setup.py install`
-if it doesn't compile, update sage's cython and then try again:
-    `sage -sh`
-    `easy_install -U cython`
-    `exit`
+    sage -i database_gap
+    sage -i pip
+    sage -pip install -r requirements.txt
 ```
 
-* Lfunction plots:
-
-To get plots locally, for sage <= 6.2, need a patch
-
-From within sage directory
-```
-     git remote add trac git://trac.sagemath.org/sage.git -t master
-     git fetch trac u/chapoton/8621 
-     git checkout -b patch8621 FETCH_HEAD
-```
-
-Then rebuild:
-
-```
-     sage -b
-```
-
-* Memcache:
-
+  * [optional] Memcache:
 ```
    ` easy_install -U python-memcached` or even better and only possible if you have the dev headers: ` easy_install -U pylibmc `
    install *memcached* (e.g. ` apt-get install memcached `)
@@ -87,7 +27,30 @@ Then rebuild:
 Running
 =======
 
-Once everything is setup, `sage -python start-lmfdb.py` should do the trick, but there can be some problems running in debug mode, so you might have omit the `--debug` (`--debug` doesn't work right now, but will soon!).  Once the server is running, visit http://localhost:37777/
+* You need to connect to the lmfdb database
+  ```
+     ssh -C -N -L 37010:localhost:37010 mongo-user@lmfdb.warwick.ac.uk 
+  ```
+  (please send your public SSH key to Harald Schilly, Jonathan Bober or John Cremona to make it work)
+
+    * -C for compression of communication
+    * -N to not open a remote shell, just a blocking command in the shell (end connection with Ctrl-C)
+
+* If you don't have access to this server, you can temporarily start your own mongodb server and use it locally.
+  There is no data (obviously) but it will work.
+  Mongo locally:
+    ` 
+    mongod --port 40000 --dbpath [db_directory] --smallfiles 
+    `
+
+* Then launch the webserver
+  ```
+     sage -python start-lmfdb.py
+  ```
+  should do the trick, but there can be some problems running in debug mode, so you might have omit the `--debug`
+  (`--debug` doesn't work right now, but will soon!).
+
+* Once the server is running, visit http://localhost:37777/
 
 Maybe, you have to suppress loading of your local python libraries: `sage -python -s start-lmfdb.py`
 
