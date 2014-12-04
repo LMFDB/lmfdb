@@ -286,8 +286,11 @@ def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
     else:
         A = "\( %s \)" % sage.all.latex(x)
         c = re.compile(r)
+        A = A.replace('+', '\)\( {}+ ')
+        A = A.replace('-', '\)\( {}- ')
         A = c.sub(insert_latex, A)
     return A
+
 
 # make latex matrix from list of lists
 def list_to_latex_matrix(li):

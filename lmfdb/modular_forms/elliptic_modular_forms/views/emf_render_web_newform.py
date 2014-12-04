@@ -22,7 +22,7 @@ AUTHORS:
 
 """
 from flask import render_template, url_for,  send_file
-from sage.all import version,uniq,ZZ
+from sage.all import version,uniq,ZZ,Cusp,Infinity,latex
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
 from lmfdb.utils import to_dict,ajax_more
 from lmfdb.modular_forms.backend.mf_utils import my_get
