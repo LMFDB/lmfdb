@@ -34,26 +34,31 @@ def paintSvgHolomorphic(min_level, max_level, min_weight, max_weight, char = 1,
                         xfactor, yfactor, ticlength, xshift)
 
     # Fetch Maass forms from database
-    db = base.getDBConnection()['modularforms2']['webmodformspace_test']
+    db = base.getDBConnection()['modularforms2']['webmodformspace']
     search = {'level': {"$gt": int(xMin-1),"$lt": int(xMax)},
               'weight': {"$gt": int(yMin),"$lt": int(yMax)}}
     if char == 1:
         search['character_orbit_rep']={"$lt":int(2)}
-
+#    search['dimension']={"$gt":int(0)}
     fields = ['Level', 'Weight']
     dimensions = db.find(search)
     # Loop through all forms and add a clickable dot for each
     for f in dimensions:
-        linkurl = "/ModularForm/GL2/Q/holomorhpic/{0}/{1}/".format(f['level'],f['weight'],f['character_orbit_rep'])
+        linkurl = "/ModularForm/GL2/Q/holomorphic/{0}/{1}/".format(f['level'],f['weight'],f['character_orbit_rep'])
         x = (f['level'] - xMin) * xfactor + xshift
         y = (f['weight'] - yMin + 1) * yfactor
-        
-        color = color_neither
-            
-        ans += "<a xlink:href='{0}' target='_top'>".format(linkurl)
-        ans += "<circle cx='{0}' cy='{1}' ".format(str(x)[0:6],str(y))
-        ans += "r='{0}'  style='fill:{1}'>".format(str(radius),color)
-        ans += "<title>{0}</title></circle></a>\n".format(f['galois_orbit_name'])
+        if f['dimension']>0:
+            color = color_neither
+            ans += "<a xlink:href='{0}' target='_top'>".format(linkurl)
+            ans += "<circle cx='{0}' cy='{1}' ".format(str(x)[0:6],str(y))
+            ans += "r='{0}'  style='fill:{1}'>".format(str(radius),color)
+            ans += "<title>{0}</title></circle></a>\n".format(f['galois_orbit_name'])
+        else:
+            color = 'rgb(255,0,0)'
+            ans += "<a xlink:href='{0}' target='_top'>".format(linkurl)
+            ans += "<circle cx='{0}' cy='{1}' ".format(str(x)[0:6],str(y))
+            ans += "r='{0}'  style='fill:{1}'>".format(str(radius),color)
+            ans += "<title>{0}</title></circle></a>\n".format(f['galois_orbit_name'])            
     ans += "</svg>"
     return ans
 
