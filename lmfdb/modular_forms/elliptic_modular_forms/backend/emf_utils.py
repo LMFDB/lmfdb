@@ -77,38 +77,33 @@ def extract_limits_as_tuple(arg, field, defaults=(1, 10)):
 
 
 def extract_data_from_jump_to(s):
-    label = None
-    weight = None
-    character = None
-    level = None
-    weight = 2  # this is default for jumping
-    character = 0  # this is default for jumping
+    label = ''
+    weight = 0
+    character = 0
+    level = 1
     if s == 'delta':
         weight = 12
         level = 1
         label = "a"
-        exit
-    # first see if we have a label or not, i.e. if we have precisely one string of letters at the end
-    test = re.findall("[a-z]+", s)
-    if len(test) == 1:
-        label = test[0]
     else:
-        label = 'a'  # the default is the first one
-    # emf_logger.debug("label1={0}".format(label))
-    # the first string of integers should be the level
-    test = re.findall("\d+", s)
-    emf_logger.debug("level mat={0}".format(test))
-    if test:
-        level = int(test[0])
-    if len(test) > 1:  # we also have weight
-        weight = int(test[1])
-    if len(test) > 2:  # we also have character
-        character = int(test[2])
+        # first see if we have a label or not, i.e. if we have precisely one string of letters at the end
+        test = re.findall("[a-z]+", s)
+        if len(test) == 1:
+            label = test[0]
+            # emf_logger.debug("label1={0}".format(label))
+            # the first string of integers should be the level
+        test = re.findall("\d+", s)
+        if not test is None and len(test)>0:
+            level = int(test[0])
+            if len(test) > 1:  # we also have weight
+                weight = int(test[1])
+            if len(test) > 2:  # we also have character
+                character = int(test[2])
     emf_logger.debug("label=%s" % label)
     emf_logger.debug("level=%s" % level)
     args = dict()
     args['level'] = int(level)
-    args['weight'] = int(weight)
+    args['weight'] = int(weight) 
     args['character'] = int(character)
     args['label'] = label
     return args
