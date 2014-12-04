@@ -160,7 +160,7 @@ class WebEigenvalues(WebObject, CachedRepresentation):
 
         self._add_to_fs_query = {'prec': {'$gt': int(self.prec-1)}}
         super(WebEigenvalues,self).update_from_db(ignore_non_existent, add_to_fs_query, add_to_db_query)
-        print "_ap=",self._ap
+        #print "_ap=",self._ap
 
     def init_dynamic_properties(self):
         emf_logger.debug("E = {0}".format(self.E))
@@ -435,7 +435,12 @@ class WebNewForm(WebObject, CachedRepresentation):
         r"""
           Returns the LMFDB label of the (absolute) coefficient field.
         """
-        p = self.absolute_polynomial
+        F = self.coefficient_field
+        #emf_logger.debug("pol={0}".format(p))
+        if F.degree() == 1:
+            p = 'x'
+        else:
+            p = F.polynomial()
         l = poly_to_field_label(p)
         if pretty:
             return field_pretty(l)
