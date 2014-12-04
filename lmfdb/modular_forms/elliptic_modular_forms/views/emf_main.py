@@ -25,7 +25,7 @@ from lmfdb.base import app, db
 from lmfdb.modular_forms.backend.mf_utils import my_get
 from lmfdb.utils import to_dict
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf
-from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import render_fd_plot
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import render_fd_plot,extract_data_from_jump_to
 from emf_render_web_newform import render_web_newform
 from emf_render_web_modform_space import render_web_modform_space
 from emf_render_web_modform_space_gamma1 import render_web_modform_space_gamma1
@@ -101,9 +101,6 @@ def render_elliptic_modular_forms(level=0, weight=0, character=None, label='', *
         return render_web_modform_space(**info)
     if level > 0 and weight > 0:
         return render_web_modform_space_gamma1(**info)
-    if (level > 0 and weight == 0) or (weight > 0 and level == 0):
-        emf_logger.debug("Have level or weight only!")
-        return browse_elliptic_modular_forms(**info)
     # Otherwise we go to the main navigation page
     return render_elliptic_modular_form_navigation_wp(**info)
 
@@ -149,20 +146,15 @@ def render_plot(grouptype=0, level=1):
     response.headers['Content-type'] = 'image/png'
     return response
 
-from emf_render_navigation import _browse_web_modform_spaces_in_ranges
 
-@emf.route("/ranges", methods=["GET"])
-def browse_web_modform_spaces_in_ranges(**kwds):
-    return _browse_web_modform_spaces_in_ranges(**kwdgs)
-
-## By including this we have a lot of additional routes.
+## By including this we get additional routes which we use to test various new features
 from experimental import *
 
 # If we don't match any arglist above we see if we have only a label
 @emf.route("/<test>/")
 def redirect_false_route(test=None):
     args = extract_data_from_jump_to(test)
-    redirect(url_for("render_elliptic_modular_forms", **args), code=301)
+    return redirect(url_for("emf.render_elliptic_modular_forms",**args), code=301)
     # return render_elliptic_modular_form_navigation_wp(**info)
 
 def get_args(request, level=0, weight=0, character=-1, label='', keys=[]):
