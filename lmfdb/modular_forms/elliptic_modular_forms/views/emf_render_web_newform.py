@@ -192,16 +192,15 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
             s2 += "\( \omega_{ %s } \) : %s <br>" % (Q, alev[Q])
         properties2.append((s1, s2))
         emf_logger.debug("properties={0}".format(properties2))
-        alev = WNF.atkin_lehner_eigenvalues_for_all_cusps()
-        if isinstance(alev,dict) and len(alev.keys())>0:
-            info['atkinlehner'] = list()
-            for c in alev.keys():
-                if(c == Cusp(Infinity)):
-                    continue
-                s = "\(" + latex(c) + "\)"
-                Q = alev[c][0]
-                ev = alev[c][1]
-                info['atkinlehner'].append([Q, c, ev])
+        # alev = WNF.atkin_lehner_eigenvalues_for_all_cusps() 
+        # if isinstance(alev,dict) and len(alev.keys())>0:
+        #     emf_logger.debug("alev={0}".format(alev))
+        #     info['atkinlehner'] = list()
+        #     for Q in alev.keys():
+        #         s = "\(" + latex(c) + "\)"
+        #         Q = alev[c][0]
+        #         ev = alev[c][1]
+        #         info['atkinlehner'].append([Q, c, ev])
     if(level == 1):
         poly = WNF.explicit_formulas.get('as_polynomial_in_E4_and_E6','')
         if poly <> '':
