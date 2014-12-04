@@ -7,6 +7,9 @@ Routines for helping with the download of modular forms data.
 
 
 def get_coefficients(info):
+    r"""
+    Return a file with the Fourier coefficients in desired format.
+    """
     emf_logger.debug("IN GET_COEFFICIENTS!!!")
     level = my_get(info, 'level', -1, int)
     weight = my_get(info, 'weight', -1, int)
@@ -29,6 +32,10 @@ def get_coefficients(info):
 
 
 def download_web_modform(info):
+    r"""
+    Return a dump of a WebNewForm object.
+
+    """
     emf_logger.debug("IN GET_WEB_MODFORM!!! info={0}".format(info))
     level = my_get(info, 'level', -1, int)
     weight = my_get(info, 'weight', -1, int)
