@@ -52,6 +52,8 @@ table.ntdata thead th.spaceleft {
 {{ error | safe }}
 </div>
 {% endif %}
+{#{ table | safe}#}
+
 
 {% include 'geometric.html' %}
 
@@ -112,7 +114,11 @@ The complete Galois orbits are listed in the second table below.
             {% if cell.url != '' %}
                <a href="{{cell.url}}">{{cell.dim}}</a>
             {% else %}
-	       {{cell.dim}}
+               {% if cell.dim < 0 %}
+                  n/a
+               {% else %}
+	          {{cell.dim}}
+               {% endif %}
 	    {% endif %}
             </td>
 	  {% endif %}
