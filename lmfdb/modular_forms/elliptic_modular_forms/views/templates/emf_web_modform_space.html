@@ -3,12 +3,15 @@
 {#                                             #}
 {% extends 'homepage.html' %}
 
-{% if character is not defined or character.order() == 1 %}
+
+{% if space is defined %}
+{% if character is not defined or character.order() == 1%}
   {% set new_name = "\( S_{%s}^{\mathrm{new}}(%s) \)"|format(space.weight, space.level) %}
   {% set old_name = "\( S_{%s}^{\mathrm{old}}(%s) \)"|format(space.weight, space.level) %}
 {% else %}
   {% set new_name = "\( S_{%s}^{\mathrm{new}}(%s) \)"|format(space.weight, space.character.latex_name()) %}
   {% set old_name = "\( S_{%s}^{\mathrm{old}}(%s) \)"|format(space.weight, space.character.latex_name()) %}
+{% endif %}
 {% endif %}
 {% if not q_expansion_prec is defined %}
   {# The number of coefficient of the q-expansion which we show on this page #}
@@ -22,9 +25,8 @@
 <br>
 {{ sage_version | safe}}
 {% else %}
-{{ space | safe }}
-dim = {{ space.dimension | safe }}
-{% if space.dimension == 0 %}
+   {#{ space | safe }} dim = {{ space.dimension | safe } #}
+{% if space.dimension_new_cusp_forms == 0 %}
   <h2>This space is empty!</h2>
    {% if  space.weight % 2 == 0 and space.character.value(-1) == -1 %}
      The weight is even and the character is odd.
@@ -71,13 +73,13 @@ table.td.center {text-align : center;}
 </table>
 
 {% if space.character.order > 2%}
-{% set n=space.character.modulus_euler_phi() %}
-{% set m=space.character.embedding() %}
-  Here, $\zeta_{{n}} = \mathrm{exp}(2 \pi i {{m}}/n)$.
+  {% set n=space.character.modulus_euler_phi() %}
+  {% set m=space.character.embedding() %}
+   Here, $\zeta_{{n}} = \mathrm{exp}(2 \pi i {{m}}/n)$.
 {% endif %}
 
 {% else %}
-{{ name_new }} {{ nontrivial_new_info }}
+{{  name_new }} {{ nontrivial_new_info }}
 {% endif %}
 
 {% if space.oldspace_decomposition != {} and space.dimension_cusp_forms > space.dimension_new_cusp_forms %}
