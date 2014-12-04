@@ -660,9 +660,9 @@ class Lfunction_Dirichlet(Lfunction):
             self.degree = 1
             self.coefficient_period = self.charactermodulus
             self.level = self.charactermodulus
-            self.numcoeff = self.coefficient_period
 
-            self.dirichlet_coefficients = [ CC(z.real,z.imag) for z in chi.values() ]
+            chival = [ CC(z.real,z.imag) for z in chi.values()]
+            self.dirichlet_coefficients = [ chival[k % self.level] for k in range(1,self.numcoeff) ]
 
             self.poles = []
             self.residues = []

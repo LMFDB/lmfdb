@@ -2,6 +2,7 @@
 
 import pymongo
 ASC = pymongo.ASCENDING
+import time
 import flask
 import lmfdb.base as base
 from lmfdb.base import app, getDBConnection, url_for
@@ -18,7 +19,7 @@ from sage.rings.arith import primes
 
 from lmfdb.transitive_group import *
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, comma, clean_input, url_character
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, comma, clean_input
 
 NF_credit = 'the PARI group, J. Voight, J. Jones, D. Roberts, J. Kl&uuml;ners, G. Malle'
 Completename = 'Completeness of this data'
@@ -275,7 +276,7 @@ def render_field_webpage(args):
         data['conductor'] = conductor
         dirichlet_chars = nf.dirichlet_group()
         if len(dirichlet_chars)>0:
-            data['dirichlet_group'] = ['<a href = "%s">$\chi_{%s}(%s,&middot;)$</a>' % (url_character(type='Dirichlet',modulus=data['conductor'], number=j), data['conductor'], j) for j in dirichlet_chars]
+            data['dirichlet_group'] = ['<a href = "%s">$\chi_{%s}(%s,&middot;)$</a>' % (url_for('characters.render_Dirichletwebpage',modulus=data['conductor'], number=j), data['conductor'], j) for j in dirichlet_chars]
             data['dirichlet_group'] = r'$\lbrace$' + ', '.join(data['dirichlet_group']) + r'$\rbrace$'
         if data['conductor'].is_prime() or data['conductor'] == 1:
             data['conductor'] = "\(%s\)" % str(data['conductor'])
@@ -745,6 +746,7 @@ def download_search(info, res):
     com1 = ''  # multiline comment start
     com2 = ''  # multiline comment end
     filename = 'fields.gp'
+    mydate = time.strftime("%d %B %Y")
     if dltype == 'sage':
         com = '#'
         filename = 'fields.sage'
@@ -754,15 +756,24 @@ def download_search(info, res):
         com2 = '*)'
         delim = 'brace'
         filename = 'fields.ma'
+    if dltype == 'magma':
+        com = ''
+        com1 = '/*'
+        com2 = '*/'
+        delim = 'magma'
+        filename = 'fields.m'
     s = com1 + "\n"
-    s += com + ' Global number fields downloaded from the LMFDB\n'
+    s += com + ' Global number fields downloaded from the LMFDB downloaded %s\n'% mydate
     s += com + ' Below is a list called data. Each entry has the form:\n'
     s += com + '   [polynomial, discriminant, t-number, class group]\n'
     s += com + ' Here the t-number is for the Galois group\n'
     s += com + ' If a class group was not computed, the entry is [-1]\n'
     s += '\n' + com2
     s += '\n'
-    s += 'data = ['
+    if dltype == 'magma':
+        s += 'data := ['
+    else:
+        s += 'data = ['
     s += '\\\n'
     for f in res:
         wnf = WebNumberField.from_data(f)
@@ -775,6 +786,10 @@ def download_search(info, res):
     if delim == 'brace':
         s = s.replace('[', '{')
         s = s.replace(']', '}')
+    if delim == 'magma':
+        s = s.replace('[', '[*')
+        s = s.replace(']', '*]')
+        s += ';'
     strIO = StringIO.StringIO()
     strIO.write(s)
     strIO.seek(0)

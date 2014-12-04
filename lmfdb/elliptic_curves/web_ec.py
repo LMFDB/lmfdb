@@ -13,7 +13,28 @@ from sage.all import EllipticCurve, latex, matrix, ZZ, QQ
 
 cremona_label_regex = re.compile(r'(\d+)([a-z]+)(\d*)')
 lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
+lmfdb_iso_label_regex = re.compile(r'([a-z]+)(\d*)')
 sw_label_regex = re.compile(r'sw(\d+)(\.)(\d+)(\.*)(\d*)')
+weierstrass_eqn_regex = re.compile(r'\[(-?\d+),(-?\d+),(-?\d+),(-?\d+),(-?\d+)\]')
+short_weierstrass_eqn_regex = re.compile(r'\[(-?\d+),(-?\d+)\]')
+
+def match_lmfdb_label(lab):
+    return lmfdb_label_regex.match(lab)
+
+def match_lmfdb_iso_label(lab):
+    return lmfdb_iso_label_regex.match(lab)
+
+def match_cremona_label(lab):
+    return cremona_label_regex.match(lab)
+
+def split_lmfdb_label(lab):
+    return lmfdb_label_regex.match(lab).groups()
+
+def split_lmfdb_iso_label(lab):
+    return lmfdb_iso_label_regex.match(lab).groups()
+
+def split_cremona_label(lab):
+    return cremona_label_regex.match(lab).groups()
 
 logger = make_logger("ec")
 
@@ -79,7 +100,7 @@ class WebEC(object):
 
             - dbdata: the data from the database
         """
-        logger.info("Constructing an instance of ECisog_class")
+        logger.debug("Constructing an instance of ECisog_class")
         self.__dict__.update(dbdata)
         # Next lines because the hyphens make trouble
         self.xintcoords = parse_list(dbdata['x-coordinates_of_integral_points'])
@@ -93,13 +114,12 @@ class WebEC(object):
         collection by its label, which can be either in LMFDB or
         Cremona format.
         """
-        print "curve label = %s" % label
         try:
-            N, iso, number = lmfdb_label_regex.match(label).groups()
+            N, iso, number = split_lmfdb_label(label)
             data = db_ec().find_one({"lmfdb_label" : label})
         except AttributeError:
             try:
-                N, iso, number = cremona_label_regex.match(label).groups()
+                N, iso, number = split_cremona_label(label)
                 data = db_ec().find_one({"label" : label})
             except AttributeError:
                 return "Invalid label" # caller must catch this and raise an error
@@ -167,7 +187,7 @@ class WebEC(object):
 
         # Minimal quadratic twist
 
-        E_pari = self.E.pari_curve(prec=200)
+        E_pari = self.E.pari_curve()
         from sage.libs.pari.all import PariError
         try:
             minq = self.E.minimal_quadratic_twist()[0]
@@ -179,6 +199,7 @@ class WebEC(object):
         else:
             minq_ainvs = [str(c) for c in minq.ainvs()]
             data['minq_label'] = db_ec().find_one({'ainvs': minq_ainvs})['lmfdb_label']
+        minq_N, minq_iso, minq_number = split_lmfdb_label(data['minq_label'])
 
         # rational and integral points
 
@@ -214,7 +235,7 @@ class WebEC(object):
             data['galois_images'] = [trim_galois_image_code(s) for s in self.galois_images]
             data['non_surjective_primes'] = self.non_surjective_primes
         except AttributeError:
-            print "No Galois image data"
+            #print "No Galois image data"
             data['galois_images'] = []
             data['non_surjective_primes'] = []
 
@@ -273,17 +294,17 @@ class WebEC(object):
         bsd['tamagawa_factors'] = r' \cdot '.join(str(c.factor()) for c in tamagawa_numbers)
         bsd['tamagawa_product'] = sage.misc.all.prod(tamagawa_numbers)
 
-        mod_form_iso = lmfdb_label_regex.match(self.lmfdb_iso).groups()[1]
+        cond, iso, num = split_lmfdb_label(self.lmfdb_label)
         data['newform'] =  web_latex(self.E.q_eigenform(10))
 
         self.friends = [
-            ('Isogeny class ' + self.lmfdb_iso, url_for(".by_ec_label", label=self.lmfdb_iso)),
-            ('Minimal quadratic twist ' + data['minq_label'], url_for(".by_ec_label", label=data['minq_label'])),
+            ('Isogeny class ' + self.lmfdb_iso, url_for(".by_double_iso_label", conductor=N, iso_label=iso)),
+            ('Minimal quadratic twist ' + data['minq_label'], url_for(".by_triple_label", conductor=minq_N, iso_label=minq_iso, number=minq_number)),
             ('All twists ', url_for(".rational_elliptic_curves", jinv=self.jinv)),
             ('L-function', url_for("l_functions.l_function_ec_page", label=self.lmfdb_label)),
             ('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', label=self.lmfdb_iso)),
             ('Symmetric 4th power L-function', url_for("l_functions.l_function_ec_sym_page", power='4', label=self.lmfdb_iso)),
-            ('Modular form ' + self.lmfdb_iso.replace('.', '.2'), url_for("emf.render_elliptic_modular_forms", level=int(N), weight=2, character=0, label=mod_form_iso))]
+            ('Modular form ' + self.lmfdb_iso.replace('.', '.2'), url_for("emf.render_elliptic_modular_forms", level=int(N), weight=2, character=0, label=iso))]
 
         self.downloads = [('Download coeffients of q-expansion', url_for(".download_EC_qexp", label=self.lmfdb_label, limit=100)),
                           ('Download all stored data', url_for(".download_EC_all", label=self.lmfdb_label))]
@@ -300,9 +321,10 @@ class WebEC(object):
                            ('Torsion Structure', '\(%s\)' % mw['tor_struct'])
                            ]
 
-        if self.lmfdb_iso == self.iso:
-            self.title = "Elliptic Curve %s" % self.lmfdb_label
-        else:
-            self.title = "Elliptic Curve %s (Cremona label %s)" % (self.lmfdb_label, self.label)
+        self.title = "Elliptic Curve %s (Cremona label %s)" % (self.lmfdb_label, self.label)
 
-        self.bread = [('Elliptic Curves ', url_for(".rational_elliptic_curves")), ('isogeny class %s' % self.lmfdb_iso, ' ')]
+        self.bread = [('Elliptic Curves', url_for("ecnf.index")),
+                           ('$\Q$', url_for(".rational_elliptic_curves")),
+                           ('%s' % N, url_for(".by_conductor", conductor=N)),
+                           ('%s' % iso, url_for(".by_double_iso_label", conductor=N, iso_label=iso)),
+                           ('%s' % num,' ')]

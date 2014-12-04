@@ -10,7 +10,7 @@ from sage.all import *
 import tempfile
 import os
 from pymongo import ASCENDING
-from lmfdb.utils import to_dict, parse_range, make_logger, url_character
+from lmfdb.utils import to_dict, parse_range, make_logger
 from lmfdb.WebCharacter import *
 from lmfdb.characters import characters_page, logger
 import ListCharacters
@@ -19,6 +19,13 @@ try:
     from dirichlet_conrey import *
 except:
     logger.critical("dirichlet_conrey.pyx cython file is not available ...")
+
+#### make url_character available from templates
+@app.context_processor
+def ctx_characters():
+    chardata = {}
+    chardata['url_character'] = url_character
+    return chardata
 
 ###############################################################################
 #   Route functions
@@ -97,6 +104,7 @@ def render_Dirichletwebpage(modulus=None, number=None):
     args['number'] = number
 
     if modulus == None:
+        return render_characterNavigation() # waiting for new landing page
         info = WebDirichletFamily(**args).to_dict()
         #logger.info(info)
         return render_template('CharFamily.html', **info)
@@ -215,7 +223,7 @@ def character_search(**args):
             number = int(str(label).partition('.')[2])
         except ValueError:
             return "<span style='color:red;'>ERROR: bad query</span>"
-        return redirect(url_character(type='Dirichlet',modulus=modulus, number=number))
+        return redirect(url_for('characters.render_Dirichletwebpage',modulus=modulus, number=number))
     else:
         for field in ['modulus', 'conductor', 'order']:
             if info.get(field):
@@ -294,7 +302,7 @@ def kronecker_symbol(chi):
 def dirichlet_table():
     args = to_dict(request.args)
     mod = args.get('modulus',1)
-    return redirect(url_character(type='Dirichlet',modulus=mod))
+    return redirect(url_for('characters.render_Dirichletwebpage',modulus=mod))
 
 #    info = to_dict(args)
 #    info['modulus'] = modulus

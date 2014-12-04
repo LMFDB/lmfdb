@@ -102,10 +102,6 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/degree4/')
         assert 'Maass' in L.data
 
-    def test_Ldegree1Dirichlet(self):
-        L = self.tc.get('/L/degree1/Dirichlet/')
-        assert 'Dirichlet' in L.data
-
     def test_Ldegree2CuspForm(self):
         L = self.tc.get('/L/degree2/CuspForm/')
         assert 'Holomorphic' in L.data

@@ -12,13 +12,13 @@ import numpy
 import pymongo
 from Lfunction import *
 import LfunctionPlot as LfunctionPlot
-from lmfdb.utils import to_dict, url_character
+from lmfdb.utils import to_dict
 import bson
 from Lfunctionutilities import (lfuncDStex, lfuncEPtex, lfuncFEtex,
                                 truncatenumber, styleTheSign, specialValueString)
 from lmfdb.WebCharacter import WebDirichlet
 from lmfdb.lfunctions import l_function_page, logger
-from lmfdb.elliptic_curves.elliptic_curve import cremona_label_regex, lmfdb_label_regex
+from lmfdb.elliptic_curves.web_ec import cremona_label_regex, lmfdb_label_regex
 from LfunctionComp import isogenyclasstable
 import LfunctionDatabase
 
@@ -47,12 +47,15 @@ def l_function_dirichlet_browse_page():
 @l_function_page.route("/degree2/")
 def l_function_degree2_browse_page():
     info = {"bread": get_bread(2, [])}
-#    info["minModDefault"] = 1
-#    info["maxModDefault"] = 20
-#    info["maxOrder"] = 19
-#    info["contents"] = [LfunctionPlot.getOneGraphHtmlChar(info["minModDefault"], info[
-#                                                          "maxModDefault"], 1, info["maxOrder"])]
     return render_template("Degree2.html", title='Degree 2 L-functions', **info)
+
+# Degree 3 L-functions browsing page ##############################################
+@l_function_page.route("/degree3/")
+def l_function_degree3_browse_page():
+    info = {"bread": get_bread(3, [])}
+    return render_template("Degree3.html", title='Degree 3 L-functions', **info)
+
+
 
 # Degree browsing page #########################################################
 @l_function_page.route("/<degree>/")
@@ -454,8 +457,7 @@ def initLfunction(L, args, request):
 
     elif L.Ltype() == 'riemann':
         info['bread'] = get_bread(1, [('Riemann Zeta', request.url)])
-        info['friends'] = [('\(\mathbb Q\)', url_for('number_fields.by_label', label='1.1.1.1')), ('Dirichlet Character \(\\chi_{1}(1,\\cdot)\)',
-                                                                                                   url_character(type='Dirichlet', modulus=1, number=1))]
+        info['friends'] = [('\(\mathbb Q\)', url_for('number_fields.by_label', label='1.1.1.1')), ('Dirichlet Character \(\\chi_{1}(1,\\cdot)\)',url_for('characters.render_Dirichletwebpage', modulus=1, number=1))]
 
     elif L.Ltype() == 'dirichlet':
         mod, num = L.charactermodulus, L.characternumber

@@ -12,8 +12,8 @@
 
 <tr>
 <td align=left>Field</td>
-<td align=left>Conductor norm</td>
-<td align=left>Include isogenous curves</td>
+<td align=left>{{ KNOWL('ec.conductor',title = "Conductor") }} norm</td>
+<td align=left>Include {{ KNOWL('ec.isogeny',title="isogenous") }} curves</td>
 </tr>
 
 <tr>
@@ -55,21 +55,22 @@
 <style type="text/css">
 table td.center {
   text-align: center;
+  padding : 4px;
 }
 table td.params {
   text-align: left;
   font-family: monospace;
 }
-
 </style>
+
 
 <h2> Results ({{info.report}})</h2>
 <table>
 <tr>
   <th class="center">Field</th>
-  <th class="center">Conductor norm</th>
-  <th class="center">Conductor label</th>
-  <th class="center">Curve label</th>
+  <th class="center">{{ KNOWL('ec.conductor',title = "Conductor") }} norm</th>
+  <th class="center">{{ KNOWL('ec.conductor_label',title = "Conductor label") }}</th>
+  <th class="center">{{ KNOWL('ec.curve_label',title = "Curve label") }}</th>
   <th align="left">{{ KNOWL('ec.weierstrass_coeffs',  title='Weierstrass Coefficients') }}</th>
 </tr>
 {% for curve in info.curves: %}

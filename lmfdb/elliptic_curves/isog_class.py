@@ -7,13 +7,10 @@ from flask import url_for, make_response
 import lmfdb.base
 from lmfdb.utils import comma, make_logger, web_latex, encode_plot
 from lmfdb.elliptic_curves import ec_page, ec_logger
+from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_lmfdb_iso_label, split_cremona_label
 
 import sage.all
 from sage.all import EllipticCurve, latex, matrix
-
-cremona_label_regex = re.compile(r'(\d+)([a-z]+)(\d*)')
-lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
-sw_label_regex = re.compile(r'sw(\d+)(\.)(\d+)(\.*)(\d*)')
 
 logger = make_logger("ec")
 
@@ -35,7 +32,7 @@ class ECisog_class(object):
 
             - dbdata: the data from the database
         """
-        logger.info("Constructing an instance of ECisog_class")
+        logger.debug("Constructing an instance of ECisog_class")
         self.__dict__.update(dbdata)
         self.make_class()
 
@@ -47,16 +44,16 @@ class ECisog_class(object):
         label (e.g. "11.a1") or a class label (e.g. "11.a") in either
         LMFDB or Cremona format.
         """
-        print "label = %s" % label
+        #print "label = %s" % label
         try:
-            N, iso, number = lmfdb_label_regex.match(label).groups()
+            N, iso, number = split_lmfdb_label(label)
             if number:
                 data = db_ec().find_one({"lmfdb_label" : label})
             else:
                 data = db_ec().find_one({"lmfdb_label" : label+"1"})
         except AttributeError:
             try:
-                N, iso, number = cremona_label_regex.match(label).groups()
+                N, iso, number = split_cremona_label(label)
                 if number:
                     data = db_ec().find_one({"label" : label})
                 else:
@@ -83,6 +80,7 @@ class ECisog_class(object):
             # Failsafe: construct it from scratch
             self.isogeny_matrix = self.E.isogeny_class(order="lmfdb").matrix()
             size = self.isogeny_matrix.nrows()
+        self.ncurves = size
 
         # Create isogeny graph:
         self.graph = make_graph(self.isogeny_matrix)
@@ -128,7 +126,7 @@ class ECisog_class(object):
 
         self.isogeny_matrix_str = latex(matrix(self.isogeny_matrix))
 
-        N, iso, number = lmfdb_label_regex.match(self.lmfdb_iso).groups()
+        N, iso, number = split_lmfdb_label(self.lmfdb_iso)
 
         self.newform = web_latex(self.E.q_eigenform(10))
         self.newform_label = self.lmfdb_iso.replace('.', '.2')
@@ -136,12 +134,13 @@ class ECisog_class(object):
 
         self.lfunction_link = url_for("l_functions.l_function_ec_page", label=self.lmfdb_iso)
 
-        self.curves = [[self.lmfdb_iso + str(i + 1),
-                        self.cremona_labels[i],
-                        str(list(c.ainvs())),
-                        c.torsion_order(),
-                        self.degrees[i],
-                        self.optimal_flags[i]]
+        self.curves = [dict([('label',self.lmfdb_iso + str(i + 1)),
+                             ('url',url_for(".by_triple_label", conductor=N, iso_label=iso, number=i+1)),
+                             ('cremona_label',self.cremona_labels[i]),
+                             ('ainvs',str(list(c.ainvs()))),
+                             ('torsion',c.torsion_order()),
+                             ('degree',self.degrees[i]),
+                             ('optimal',self.optimal_flags[i])])
                        for i, c in enumerate(self.db_curves)]
 
         self.friends = [
@@ -151,10 +150,11 @@ class ECisog_class(object):
         ('Modular form ' + self.newform_label, self.newform_link)]
 
         self.properties = [('Label', self.lmfdb_iso),
-                           (None, self.graph_link),
+                           ('Number of curves', str(self.ncurves)),
                            ('Conductor', '\(%s\)' % N),
                            ('CM', '%s' % self.CM),
-                           ('Rank', '\(%s\)' % self.rank)
+                           ('Rank', '\(%s\)' % self.rank),
+                           ('Graph', ''),(None, self.graph_link)
                            ]
 
 
@@ -166,7 +166,10 @@ class ECisog_class(object):
         else:
             self.title = "Elliptic Curve Isogeny Class %s (Cremona label %s)" % (self.lmfdb_iso, self.iso)
 
-        self.bread = [('Elliptic Curves ', url_for(".rational_elliptic_curves")), ('isogeny class %s' % self.lmfdb_iso, ' ')]
+        self.bread = [('Elliptic Curves', url_for("ecnf.index")),
+                      ('$\Q$', url_for(".rational_elliptic_curves")),
+                      ('%s' % N, url_for(".by_conductor", conductor=N)),
+                      ('%s' % iso, ' ')]
 
 
 def make_graph(M):

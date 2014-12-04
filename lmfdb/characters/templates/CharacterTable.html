@@ -99,7 +99,7 @@ table.ntdata thead th.spaceleft {
         {% for row in contents %}
         <tr>
           <th class="left">
-            <a class="{% if row[1] -%}primitive{%- else -%}imprimitive{%- endif %}"  align="center" href="{{url_character(type='Dirichlet',modulus=modulus,number=row[0])}}">
+            <a class="{% if row[1] -%}primitive{%- else -%}imprimitive{%- endif %}"  align="center" href="{{url_for('characters.render_Dirichletwebpage',modulus=modulus,number=row[0])}}">
               \(\chi_{ {{modulus}} } ( {{row[0]}}, &middot;)\)
             </a>
           </th>

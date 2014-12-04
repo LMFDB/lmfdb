@@ -178,31 +178,6 @@ from lmfdb.base import app
 from flask import url_for, make_response
 import sage.all
 
-###############################################################################
-## url_for modified for characters
-def url_character(**kwargs):
-    if 'type' not in kwargs:
-        return url_for('characters.render_characterNavigation')
-    elif kwargs['type'] == 'Dirichlet':
-        del kwargs['type']
-        if kwargs.get('calc',None):
-            return url_for('characters.dc_calc',**kwargs)
-        else:
-            return url_for('characters.render_Dirichletwebpage',**kwargs)
-    elif kwargs['type'] == 'Hecke':
-        del kwargs['type']
-        if kwargs.get('calc',None):
-            return url_for('characters.hc_calc',**kwargs)
-        else:
-            return url_for('characters.render_Heckewebpage',**kwargs)
-
-## make it available from templates
-@app.context_processor
-def ctx_characters():
-    chardata = {}
-    chardata['url_character'] = url_character
-    return chardata
-
 def to_dict(args):
     d = {}
     for key in args:
@@ -314,6 +289,17 @@ def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
         A = c.sub(insert_latex, A)
     return A
 
+# make latex matrix from list of lists
+def list_to_latex_matrix(li):
+    dim = str(len(li[0]))
+    mm = r"\left(\begin{array}{*{"+dim+ r"}{r}}"
+    for row in li:
+        row = [str(a) for a in row]
+        mm += ' & '.join(row)
+        mm += r'\\'
+    mm = mm[:-2] # remove final line break
+    mm += r'\end{array}\right)'
+    return mm
 
 class LinkedList(object):
     __slots__ = ('value', 'next', 'timestamp')
