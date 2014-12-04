@@ -178,8 +178,7 @@ def render_elliptic_modular_form_navigation_wp(**args):
             info['table'][n]={}
             for k in weight_range:
                 info['table'][n][k] = table.get(str(n),{}).get(str(k),"{}").get(str(character),"n/a")
-    print "table[10]=",table["10"]["4"]
-    print "table[10]=",info['table'][10]
+
     info['col_heads'] = level_range
     info['row_heads'] = weight_range
     return render_template("emf_browse_spaces.html", info=info, title=title, bread=bread)
