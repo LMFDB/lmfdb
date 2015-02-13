@@ -40,7 +40,17 @@ The documents in the collection 'curves' in the database 'elliptic_curves' have 
    - 'galois_images': (list of strings) Sutherland codes for the
       images of the mod p Galois representations for the primes in
       'non-surjective_primes' e.g. ['5B']
-   - 'isogeny_matrix': (list of lists of ints) isogeny matrix for curves in the class
+   - '2adic_index': (int) the index of the 2-adic representation in
+      GL(2,Z2) (or 0 for CM curves, which have infinite index)
+   - '2adic_log_level': (int) the smallest n such that the image
+      contains the kernel of reduction modulo 2^n (or None for CM curves)
+   - '2adic_gens': (list of lists of 4 ints) list of entries [a,b,c,d]
+      of matrices in GL(2,Z/2^nZ) generating the image where n is the
+      log_level (None for CM curves)
+   - '2adic_label': (string) Rouse label of the associated modular
+      curve (None for CM curves)
+   - 'isogeny_matrix': (list of lists of ints) isogeny matrix for
+     curves in the class
    - 'sha_an': (float) analytic order of sha (approximate unless r=0)
    - 'sha': (int) analytic order of sha (rounded value of sha_an)
    - 'sha_primes': (list of ints) primes dividing sha
@@ -239,6 +249,49 @@ def allgens(line):
         'torsion_generators': ["%s" % parse_tgens(tgens[1:-1]) for tgens in data[6 + rank:]],
     }
 
+def twoadic(line):
+    r""" Parses one line from a 2adic file.  Returns the label and a dict
+    containing fields with keys '2adic_index', '2adic_log_level',
+    '2adic_gens' and '2adic_label'.
+
+    Input line fields:
+
+    conductor iso number ainvs index level gens label
+
+    Sample input lines:
+
+    110005 a 2 [1,-1,1,-185793,29503856] 12 4 [[3,0,0,1],[3,2,2,3],[3,0,0,3]] X24
+    27 a 1 [0,0,1,0,-7] inf inf [] CM
+    """
+    data = split(line)
+    assert len(data)==8
+    label = data[0] + data[1] + data[2]
+    model = data[7]
+    if model == 'CM':
+        return label, {
+            '2adic_index': int(0),
+            '2adic_log_level': None,
+            '2adic_gens': None,
+            '2adic_label': None,
+        }
+
+    index = int(data[4])
+    level = ZZ(data[5])
+    log_level = int(level.valuation(2))
+    assert 2**log_level==level
+    if data[6]=='[]':
+        gens=[]
+    else:
+        gens = data[6][1:-1].replace('],[','];[').split(';')
+        gens = [[int(c) for c in g[1:-1].split(',')] for g in gens]
+
+    return label, {
+            '2adic_index': index,
+            '2adic_log_level': log_level,
+            '2adic_gens': gens,
+            '2adic_label': model,
+    }
+
 
 def intpts(line):
     r""" Parses one line from an intpts file.  Returns the label and a
@@ -356,19 +409,30 @@ def cmp_label(lab1, lab2):
 def comp_dict_by_label(d1, d2):
     return cmp_label(d1['label'], d2['label'])
 
+# To run this go into the top-level lmfdb directory, run sage and give
+# the command
+# %runfile lmfdb/elliptic_curves/import_ec_data.py
+#
 
 def upload_to_db(base_path, min_N, max_N):
-#    allcurves data all exists also in allgens
-#    allcurves_filename = 'allcurves/allcurves.%s-%s'%(min_N,max_N)
     allbsd_filename = 'allbsd/allbsd.%s-%s' % (min_N, max_N)
     allgens_filename = 'allgens/allgens.%s-%s' % (min_N, max_N)
     intpts_filename = 'intpts/intpts.%s-%s' % (min_N, max_N)
     alldegphi_filename = 'alldegphi/alldegphi.%s-%s' % (min_N, max_N)
     alllabels_filename = 'alllabels/alllabels.%s-%s' % (min_N, max_N)
     galreps_filename = 'galrep/galrep.%s-%s' % (min_N, max_N)
-    file_list = [allbsd_filename, allgens_filename, intpts_filename, alldegphi_filename, alllabels_filename, galreps_filename]
-#    file_list = [galreps_filename]
-#    file_list = [allgens_filename]
+    twoadic_filename = '2adic/2adic.%s-%s' % (min_N, max_N)
+    file_list = [allbsd_filename, allgens_filename, intpts_filename, alldegphi_filename, alllabels_filename, galreps_filename,twoadic_filename]
+#    file_list = [twoadic_filename]
+
+    parsing_dict = {}
+    for f in file_list:
+        prefix = f[f.find('/')+1:f.find('.')]
+        if prefix == '2adic':
+            parsing_dict[f] = twoadic
+        else:
+            parsing_dict[f] = globals()[prefix]
+
 
     data_to_insert = {}  # will hold all the data to be inserted
 
@@ -376,8 +440,7 @@ def upload_to_db(base_path, min_N, max_N):
         h = open(os.path.join(base_path, f))
         print "opened %s" % os.path.join(base_path, f)
 
-        parse = globals()[f[f.find('/')+1:f.find('.')]]
-
+        parse=parsing_dict[f]
         t = time.time()
         count = 0
         for line in h.readlines():
