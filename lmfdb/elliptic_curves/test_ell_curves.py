@@ -79,3 +79,11 @@ class EllCurveTest(LmfdbTest):
         assert '101592.p1' in L.data
         L = self.tc.get('EllipticCurve/Q/?start=0&conductor=&jinv=&rank=&torsion=&torsion_structure=&sha=8.999&optimal=&surj_primes=&surj_quantifier=include&nonsurj_primes=&count=100')
         assert 'Error' in L.data
+
+    def test_disc_factor(self):
+        """
+        Test for factorization of large discriminants
+        """
+        L = self.tc.get('/EllipticCurve/Q/26569/a/1')
+        assert '\(-1 \cdot 163^{9} \)' in L.data
+

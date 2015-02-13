@@ -97,7 +97,8 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
     <div class='sage nodisplay code'><img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">&nbsp;E.gens()</div>
     <div class='pari nodisplay code'> </div>
     <div class='magma nodisplay code'><img src = "http://upload.wikimedia.org/wikipedia/en/e/ee/Magma-logo.png" width="50px"> Generators(E);</div>
-    <p> {{ data.mw.generators }} </p></p>
+    <div style='overflow:auto'><p> {{ data.mw.generators }} </p></div>
+    </p>
     {%endif %}
 
     {% if data.mw.tor_order!=1 %}
