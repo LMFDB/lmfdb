@@ -105,6 +105,12 @@ class WebEC(object):
         # Next lines because the hyphens make trouble
         self.xintcoords = parse_list(dbdata['x-coordinates_of_integral_points'])
         self.non_surjective_primes = dbdata['non-surjective_primes']
+        # Next lines because the python identifiers cannot start with 2
+        self.twoadic_index = dbdata['2adic_index']
+        self.twoadic_log_level = dbdata['2adic_log_level']
+        self.twoadic_gens = dbdata['2adic_gens']
+        self.twoadic_label = dbdata['2adic_label']
+        # All other fields are handled here
         self.make_curve()
 
     @staticmethod
@@ -241,6 +247,9 @@ class WebEC(object):
         data['galois_data'] = [{'p': p,'image': im }
                                for p,im in zip(data['non_surjective_primes'],
                                                data['galois_images'])]
+
+        from sage.matrix.all import Matrix
+        data['twoadic_gen_matrices'] = ','.join([latex(Matrix(2,2,M)) for M in self.twoadic_gens])
 
         # Leading term of L-function & BSD data
 
