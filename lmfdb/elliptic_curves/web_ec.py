@@ -248,8 +248,9 @@ class WebEC(object):
                                for p,im in zip(data['non_surjective_primes'],
                                                data['galois_images'])]
 
-        from sage.matrix.all import Matrix
-        data['twoadic_gen_matrices'] = ','.join([latex(Matrix(2,2,M)) for M in self.twoadic_gens])
+        if self.twoadic_gens:
+            from sage.matrix.all import Matrix
+            data['twoadic_gen_matrices'] = ','.join([latex(Matrix(2,2,M)) for M in self.twoadic_gens])
 
         # Leading term of L-function & BSD data
 

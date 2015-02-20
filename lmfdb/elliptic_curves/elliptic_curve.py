@@ -466,6 +466,8 @@ def render_curve_webpage_by_label(label):
     except AttributeError:
         return elliptic_curve_jump_error(label, {}, wellformed_label=False)
 
+    if data.twoadic_label:
+        credit = credit.replace(' and',',') + ' and Jeremy Rouse'
     data.modform_display = url_for(".modular_form_display", label=lmfdb_label, number="")
 
     return render_template("curve.html",
