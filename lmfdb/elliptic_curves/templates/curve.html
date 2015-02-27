@@ -337,16 +337,16 @@ text-align: center;
 </table>
 
 
-    <h2> {{KNOWL('ec.q.galois_rep', title='Galois Representations')}} </h2>
+    <h2> {{KNOWL('ec.galois_rep', title='Galois Representations')}} </h2>
 
 {% if data.data.CMD %} {% else %}
 {% if data.twoadic_index == 1 %}
-The 2-adic representation attached to this elliptic curve is
+The {{KNOWL('ec.galois_rep',title='2-adic representation')}} attached to this elliptic curve is
     surjective.
 {% else %}
 
 <p>
-The image of the 2-adic representation attached to this elliptic curve
+The image of the {{KNOWL('ec.galois_rep',title='2-adic representation')}} attached to this elliptic curve
 is the subgroup of $\GL(2,\Z_2)$ with {{KNOWL('ec.rouse_label', title='Rouse label')}}
 {{data.twoadic_label}}.
 </p>
@@ -363,13 +363,13 @@ data.twoadic_index }}.
 {% if data.data.galois_data %}
 <p>
 {% if data.data.CMD %}
-The mod \( p \) {{KNOWL('ec.q.galois_rep', title='Galois
+The mod \( p \) {{KNOWL('ec.galois_rep', title='Galois
 Representations')}} of an elliptic curve with {{
 KNOWL('ec.complex_multiplication', title='Complex Multiplication') }}
 are non-surjective for all primes \( p \).  We only show the image for
 primes \( p\le 37 \).
 {% else %}
-The mod \( p \) {{KNOWL('ec.q.galois_rep', title='Galois
+The mod \( p \) {{KNOWL('ec.galois_rep', title='Galois
 Representation')}} is surjective for all primes \( p \) except those
     listed.
 {% endif %}
@@ -388,7 +388,7 @@ Representation')}} is surjective for all primes \( p \) except those
 </table>
 {% else %}
 <p>
-The mod \( p \) {{KNOWL('ec.q.galois_rep', title='Galois
+The mod \( p \) {{KNOWL('ec.galois_rep', title='Galois
 Representation')}} is surjective for all primes \( p \).
 </p>
 {% endif %}
