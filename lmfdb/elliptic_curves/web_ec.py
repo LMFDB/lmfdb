@@ -11,6 +11,8 @@ from lmfdb.elliptic_curves import ec_page, ec_logger
 import sage.all
 from sage.all import EllipticCurve, latex, matrix, ZZ, QQ
 
+ROUSE_URL_PREFIX = "http://users.wfu.edu/rouseja/2adic/" # Needs to be changed whenever J. Rouse and D. Zureick-Brown move their data
+
 cremona_label_regex = re.compile(r'(\d+)([a-z]+)(\d*)')
 lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
 lmfdb_iso_label_regex = re.compile(r'([a-z]+)(\d*)')
@@ -251,7 +253,7 @@ class WebEC(object):
         if self.twoadic_gens:
             from sage.matrix.all import Matrix
             data['twoadic_gen_matrices'] = ','.join([latex(Matrix(2,2,M)) for M in self.twoadic_gens])
-
+            data['twoadic_rouse_url'] = ROUSE_URL_PREFIX + self.twoadic_label + ".html"
         # Leading term of L-function & BSD data
 
         bsd = self.bsd = {}
