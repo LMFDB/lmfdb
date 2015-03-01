@@ -135,7 +135,7 @@ class WebNumberField:
 
     @classmethod
     def from_polredabs(cls, pol):
-        return cls.from_coeffs([int(c) for c in pol.coeffs()])
+        return cls.from_coeffs([int(c) for c in pol.coefficients(sparse=False)])
 
     @classmethod
     def from_polynomial(cls, pol):
@@ -143,7 +143,7 @@ class WebNumberField:
         pol *= pol.denominator()
         R = pol.parent()
         pol = R(pari(pol).polredabs())
-        return cls.from_coeffs([int(c) for c in pol.coeffs()])
+        return cls.from_coeffs([int(c) for c in pol.coefficients(sparse=False)])
 
     # If we already have the database entry
     @classmethod
@@ -157,7 +157,7 @@ class WebNumberField:
             return cls('none')  # Forced to fail
         pol = pari.polcyclo(n)
         R = PolynomialRing(QQ, 'x')
-        coeffs = R(pol.polredabs()).coeffs()
+        coeffs = R(pol.polredabs()).coefficients(sparse=False)
         return cls.from_coeffs(coeffs)
 
     def _get_dbdata(self):

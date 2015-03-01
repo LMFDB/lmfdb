@@ -72,6 +72,7 @@ class ECNF(object):
         from sage.schemes.elliptic_curves.all import EllipticCurve
         self.E = E = EllipticCurve(self.ainvs)
         self.equn = web_latex(E)
+        self.numb = str(self.number)
 
         # Conductor, discriminant, j-invariant
         N = E.conductor()

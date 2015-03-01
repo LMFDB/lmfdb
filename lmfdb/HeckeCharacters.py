@@ -53,7 +53,7 @@ class RayClassGroup(AbelianGroup_class):
             return AbelianGroupElement(args[0], self)
         except:
             I = self.__number_field.ideal(*args, **kwargs)
-            return AbelianGroupElement(self.log(I), self)
+            return AbelianGroupElement(self, self.log(I))
 
     @cached_method
     def dual_group(self, base_ring=None):
@@ -62,7 +62,7 @@ class RayClassGroup(AbelianGroup_class):
     def __str__(self):
       return "Ray class group of modulus %s over %s" \
            %(self.modulus(),self.__number_field)
-        
+
     def __repr__(self):
       return self.__str__()
 
@@ -114,7 +114,7 @@ class HeckeChar(DualAbelianGroupElement):
         ray_class_group = hecke_char_group.group()
         if not isinstance(x, (list,tuple)) or len(x) != ray_class_group.ngens():
             x = ray_class_group(x).list()
-        DualAbelianGroupElement.__init__(self, x, hecke_char_group)
+        DualAbelianGroupElement.__init__(self, hecke_char_group, x)
         self.__repr = None
         self.__element_vector = x
 

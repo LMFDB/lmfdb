@@ -39,6 +39,8 @@ field) and value types (with examples):
    - gens                     list of lists of 3 lists of d lists of 2 ints
    - torsion_gens             list of lists of 3 lists of d lists of 2 ints
    - sha_an                   int
+   - isogeny_matrix     *     list of list of ints (degrees)
+
 
    Each NFelt is a string concatenating rational coefficients with
    respect to a power basis for the number field, using the defining
@@ -288,9 +290,9 @@ def curves(line):
         raise RuntimeError("Wrong conductor for input line %s" % line)
 
     # get torsion order, structure and generators:
-    print("E = %s over %s" % (ainvsK,K))
+    #print("E = %s over %s" % (ainvsK,K))
     torgroup = E.torsion_subgroup()
-    print("torsion = %s" % torgroup)
+    #print("torsion = %s" % torgroup)
     ntors = int(torgroup.order())
     torstruct = [int(n) for n in list(torgroup.invariants())]
     torgens = [point_list(P.element()) for P in torgroup.gens()]
@@ -380,6 +382,36 @@ def curve_data(line):
         edata['sha_an'] = int(sha)
     return label, edata
 
+def isoclass(line):
+    r""" Parses one line from an isovlass file.  Returns the label and a dict
+    containing fields with keys .
+
+    Input line fields (5); the first 4 are the standard labels and the
+    5th the isogeny matrix as a list of lists of ints.
+
+    field_label conductor_label iso_label number isogeny_matrix
+
+    Sample input line:
+
+    2.0.4.1 [65,18,1] a 1 [[1,6,3,18,9,2],[6,1,2,3,6,3],[3,2,1,6,3,6],[18,3,6,1,2,9],[9,6,3,2,1,18],[2,3,6,9,18,1]]
+    """
+    # Parse the line and form the full label:
+    data = split(line)
+    if len(data)<5:
+        print "isoclass line %s does not have 5 fields (excluding gens), skipping" % line
+    field_label = data[0]       # string
+    conductor_label = data[1]   # string
+    iso_label = data[2]         # string
+    number = int(data[3])       # int
+    short_label = "%s-%s%s" % (conductor_label, iso_label, str(number))
+    label = "%s-%s" % (field_label, short_label)
+
+    mat = data[4]
+    mat = [[int(a) for a in r.split(",")] for r in mat[2:-2].split("],[")]
+
+    edata = {'label': label, 'isogeny_matrix': mat}
+    return label, edata
+
 filename_base_list = ['curves', 'curve_data']
 
 ############################################################
@@ -388,7 +420,8 @@ filename_base_list = ['curves', 'curve_data']
 def upload_to_db(base_path, filename_suffix):
     curves_filename = 'curves.%s' % (filename_suffix)
     curve_data_filename = 'curve_data.%s' % (filename_suffix)
-    file_list = [curves_filename, curve_data_filename]
+    isoclass_filename = 'isoclass.%s' % (filename_suffix)
+    file_list = [curves_filename, curve_data_filename, isoclass_filename]
 #    file_list = [curves_filename]
 #    file_list = [curve_data_filename]
 

@@ -163,11 +163,10 @@ class WebEC(object):
 
         # CM and endomorphism ring
 
-        data['CMD'] = 0
+        data['CMD'] = self.cm
         data['CM'] = "no"
         data['EndE'] = "\(\Z\)"
-        if self.E.has_cm():
-            data['CMD'] = self.E.cm_discriminant()
+        if self.cm:
             data['CM'] = "yes (\(D=%s\))" % data['CMD']
             if data['CMD']%4==0:
                 d4 = ZZ(data['CMD'])//4
