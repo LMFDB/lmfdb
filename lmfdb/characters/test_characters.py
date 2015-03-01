@@ -1,5 +1,5 @@
 from lmfdb.base import LmfdbTest
-from lmfdb.WebCharacter import *
+from lmfdb.WebCharacter import WebDirichlet, WebHecke
 import unittest2
 
 class WebCharacterTest(LmfdbTest):
@@ -12,7 +12,7 @@ class WebCharacterTest(LmfdbTest):
       assert WebDirichlet.number2label(num) == numlabel
     
   def test_Heckemethods(self):
-      from sage.all import NumberField
+      from sage.all import NumberField, var
       x = var('x')
       k = NumberField(x**3-x**2+x+1,'a')
       modlabel, numlabel = '82.-5a0+1a2', '5.3.3'

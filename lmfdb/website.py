@@ -10,7 +10,8 @@
 start this via $ sage -python website.py --port <portnumber>
 add --debug if you are developing (auto-restart, full stacktrace in browser, ...)
 """
-from base import *
+
+from base import app, request, render_template
 
 import pages
 import hilbert_modular_forms
@@ -46,6 +47,7 @@ import raw
 from modular_forms.maass_forms.picard import mwfp
 
 import sys
+import os
 
 try:
     import password
@@ -54,7 +56,6 @@ try:
 except:
     logging.warning("no password!")
     readwrite_password = ''
-
 
 @app.errorhandler(404)
 def not_found_404(error):
@@ -75,7 +76,6 @@ def root_static_file(name):
     import flask
 
     def static_fn():
-        import os
         fn = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", name)
         if os.path.exists(fn):
             return open(fn).read()

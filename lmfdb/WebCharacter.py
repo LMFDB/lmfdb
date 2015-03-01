@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
 # Author: Pascal Molin, molin.maths@gmail.com
 import math
+from sage.misc.cachefunc import cached_method
+from sage.all import gcd, Rational, power_mod, gp
 # from Lfunctionutilities import pair2complex, splitcoeff, seriescoeff
-from sage.all import *
-import re
 from flask import url_for
 from lmfdb.utils import parse_range, make_logger
 logger = make_logger("DC")
 from WebNumberField import WebNumberField
 try:
-    from dirichlet_conrey import *
+    from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
 except:
     logger.critical("dirichlet_conrey.pyx cython file is not available ...")
-from HeckeCharacters import *
+from HeckeCharacters import HeckeChar, RayClassGroup
 
 """
 Any character object is obtained as a double inheritance of

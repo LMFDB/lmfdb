@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 # HeckeCharacters.py
 
-from sage.all import *
+from sage.misc.cachefunc import cached_method
 from sage.groups.abelian_gps.abelian_group import AbelianGroup_class
 from sage.groups.abelian_gps.abelian_group_element import AbelianGroupElement
 from sage.groups.abelian_gps.dual_abelian_group import DualAbelianGroup_class, DualAbelianGroupElement
 from sage.groups.abelian_gps.dual_abelian_group import DualAbelianGroup_class, DualAbelianGroupElement
+from sage.all import gp, xmrange
 
 class RayClassGroup(AbelianGroup_class):
     def __init__(self, number_field, mod_ideal = 1, mod_archimedean = None):
