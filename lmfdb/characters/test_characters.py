@@ -144,25 +144,21 @@ class HeckeCharactersTest(LmfdbTest):
         W = self.tc.get('/Character/Hecke/')
         assert '2.2.8.1' in W.data
 
-    @unittest2.skip("hecke characters broken with sage 6.1")
     def test_heckefamily(self):
         W = self.tc.get('/Character/Hecke/3.1.44.1')
         assert 'C_{5}' in W.data
 
-    @unittest2.skip("hecke characters broken with sage 6.1")
     def test_heckegroup(self):
         W = self.tc.get('/Character/Hecke/3.1.44.1/4.0')
         assert 'Related objects' in W.data
         assert 'primitive' in W.data
 
-    @unittest2.skip("hecke characters broken with sage 6.1")
     def test_heckechar(self):
         #W = self.tc.get('/Character/Hecke/7.3.674057.1')
         W = self.tc.get('/Character/Hecke/2.0.4.1/5./2')
         assert 'Related objects' in W.data
         assert 'primitive' in W.data
 
-    @unittest2.skip("hecke characters broken with sage 6.1")
     def test_hecke_calc(self):
         W = self.tc.get('/Character/calc-value/Hecke/2.0.4.1/5./1?val=1-a')
         assert '(1-a)=i' in W.data
