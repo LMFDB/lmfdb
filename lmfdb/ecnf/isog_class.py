@@ -56,19 +56,24 @@ class ECNF_isoclass(object):
             return "Invalid label" # caller must catch this and raise an error
 
         if data:
-            if 'isogeny_matrix' in data:
-                return ECNF_isoclass(data)
-            else:
-                return "No isogeny matrix found" # caller must catch these
-        return "Class not found"                 # and raise an error
+            return ECNF_isoclass(data)
+        return "Class not found" # caller must catch this and raise an error
 
     def make_class(self):
         self.ECNF = ECNF.by_label(self.label)
 
-        # Extract the isogeny degree matrix from the database
-        size = len(self.isogeny_matrix)
-        from sage.matrix.all import Matrix
-        self.isogeny_matrix = Matrix(self.isogeny_matrix)
+        # Create a list of the curves in the class from the database
+        self.db_curves = [ECNF(c) for c in db_ec().find(
+            {'field_label' : self.field_label, 'conductor_label' :
+             self.conductor_label, 'iso_label' : self.iso_label}).sort('number')]
+        size = len(self.db_curves)
+
+        # Extract the isogeny degree matrix from the database if possible, else create it
+        if hasattr(self,'isogeny_matrix'):
+            from sage.matrix.all import Matrix
+            self.isogeny_matrix = Matrix(self.isogeny_matrix)
+        else:
+            self.isogeny_matrix = make_iso_matrix(self.db_curves)
 
         # Create isogeny graph:
         self.graph = make_graph(self.isogeny_matrix)
@@ -77,14 +82,26 @@ class ECNF_isoclass(object):
         self.graph_link = '<img src="%s" width="200" height="150"/>' % self.graph_img
         self.isogeny_matrix_str = latex(matrix(self.isogeny_matrix))
 
-        # Create a list of the curves in the class from the database
-        self.db_curves = [self.ECNF] + [ECNF.by_label(self.class_label + str(i))
-                                          for i in range(2, size + 1)]
+        self.curves = [[c.short_label, c.urls['curve'], c.latex_ainvs] for c in self.db_curves]
 
-        self.curves = [[c.short_label, c.latex_ainvs]
-                       for i, c in enumerate(self.db_curves)]
+        self.urls = {}
+        self.urls['class'] = url_for(".show_ecnf_isoclass", nf = self.field_label, conductor_label=self.conductor_label, class_label = self.iso_label)
+        self.urls['conductor'] = url_for(".show_ecnf_conductor", nf = self.field_label, conductor_label=self.conductor_label)
+        self.urls['field'] = url_for('.show_ecnf1', nf=self.ECNF.field_label)
+        self.field = self.ECNF.field
+        if self.field.is_real_quadratic():
+            self.hmf_label = "-".join([self.field.label,self.conductor_label,self.iso_label])
+            self.urls['hmf'] = url_for('hmf.render_hmf_webpage', field_label=self.field.label, label=self.hmf_label)
+
+        if self.field.is_imag_quadratic():
+            self.bmf_label = "-".join([self.field.label,self.conductor_label,self.iso_label])
+
 
         self.friends = []
+        if self.field.is_real_quadratic():
+            self.friends += [('Hilbert Modular Form '+self.hmf_label, self.urls['hmf'])]
+        if self.field.is_imag_quadratic():
+            self.friends += [('Bianchi Modular Form %s not yet available' % self.bmf_label, '')]
 
         self.properties = [('Label', self.ECNF.label),
                            (None, self.graph_link),
@@ -92,8 +109,9 @@ class ECNF_isoclass(object):
                            ]
 
         self.bread = [('Elliptic Curves ', url_for(".index")),
-                      (self.ECNF.field_label, url_for('.show_ecnf1', nf=self.ECNF.field_label)),
-                      ('isogeny class %s' % self.ECNF.short_label, ' ')]
+                      (self.ECNF.field_label, self.urls['field']),
+                      (self.ECNF.conductor_label, self.urls['conductor']),
+                      ('isogeny class %s' % self.ECNF.short_label, self.urls['class'])]
 
 
 def make_graph(M):
@@ -176,3 +194,26 @@ def make_graph(M):
 
     G.relabel(range(1,n+1))
     return G
+
+def make_iso_matrix(clist): # clist is a list of ECNFs
+    Elist = [E.E for E in clist]
+    cl = Elist[0].isogeny_class()
+    perm = dict([(i,cl.index(E)) for i,E in enumerate(Elist)])
+    return permute_mat(cl.matrix(), perm, True)
+
+def invert_perm(perm):
+    n = len(perm)
+    iperm = [0]*n # just to set the length
+    for i in range(n):
+        iperm[perm[i]] = i
+    return iperm
+
+def permute_mat(M, perm, inverse=False):
+    """permute rows and columns of M according to perm.  M should be
+    square, n x n, and perm a list which is a permutation of range(n).
+    If inverse is not False the inverse permutation is used.
+    """
+    iperm = [int(i) for i in perm]
+    if inverse:
+        iperm = invert_perm(iperm)
+    return M.matrix_from_rows_and_columns(iperm,iperm)

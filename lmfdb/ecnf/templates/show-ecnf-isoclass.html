@@ -30,24 +30,16 @@ function show_code(system) {
 -->
 
 
-<style type="text/css">
-#isogeny_class_table th, #isogeny_class_table td {
-padding : 4px;
-text-align: center;
-}
-</style>
-
-
 <h2>Elliptic curves in class {{cl.short_label}}</h2>
-<table id = "isogeny_class_table">
+<table>
 <tr>
-<th>label</th>
-<th>Weierstrass coefficients</th>
+<th>{{ KNOWL('ec.curve_label',title = "Curve label") }}</th>
+<th>{{ KNOWL('ec.weierstrass_coeffs',  title='Weierstrass Coefficients') }}</th>
 </tr>
 {% for c in cl.curves %}
 <tr>
-<td> {{c[0]}}
-<td> {{c[1]}}
+<td> <a href={{c[1]}}>{{c[0]}}</a>
+<td> {{c[2]}}
 </tr>
 {% endfor %}
 </table>
@@ -55,6 +47,8 @@ text-align: center;
 
 
 <h2>Matrix of isogeny degrees</h2>
+
+{% if cl.isogeny_matrix %}
 <p>
   Rows and columns are indexed by the LMFDB number of the curve in
   the class.
@@ -62,14 +56,21 @@ text-align: center;
 <p>
   \({{cl.isogeny_matrix_str}}\)
 </p>
+{% else %}
+<p>Not available.</p>
+{% endif %}
 
 <h2>Isogeny graph</h2>
+{% if cl.isogeny_matrix %}
 <p>
   Only edges corresponding to isogenies of prime degree are shown.
 </p>
 <center>
   <img src="{{cl.graph_img}}" />
 </center>
+{% else %}
+<p>Not available.</p>
+{% endif %}
 
 <script type="text/javascript">
 var number_of_coefficients = 10;
@@ -86,6 +87,14 @@ $(function() {
     $("#morebutton").click(function(e) {more_handler(e)});
 });
 </script>
+
+{% if DEBUG %}
+<hr>
+<div>
+Raw isogeny class data: {{ cl.__dict__ }}
+</div>
+{% endif %}
+
 
 {% endblock %}
 
