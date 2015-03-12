@@ -27,3 +27,18 @@ class NumberFieldTest(LmfdbTest):
     def test_search_disc(self):
 		L = self.tc.get('/NumberField/?start=&paging=0&degree=&signature=&galois_group=&class_number=&class_group=&ur_primes=&discriminant=1988-2014&ram_quantifier=all&ram_primes=&count=')
 		assert '401' in L.data # factor of one of the discriminants
+
+    def test_url_label(self):
+		L = self.tc.get('/NumberField/2.2.5.1')
+		assert '0.481211825059603' in L.data # regulator
+
+    def test_url_naturallabel(self):
+		L = self.tc.get('/NumberField/Qsqrt5')
+		assert '0.481211825059603' in L.data # regulator
+
+    def test_url_naturallabel(self):
+		L = self.tc.get('/NumberField/junk')
+		assert 'No such field: junk in the database' in L.data # error mesage
+
+
+
