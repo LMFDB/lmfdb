@@ -29,7 +29,6 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/EllipticCurve/Q/56.a/')
         assert 'Graph' in L.data
 
-    #@unittest2.skip("Holomorphic cusp forms not working yet")
     def test_Lemf(self):
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/11/2/0/a/0/')
         assert 'Graph' in L.data
@@ -166,7 +165,6 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/Plot/EllipticCurve/Q/56.a/')
         assert 'OK' in str(L)
 
-    @unittest2.skip("hypergeometric motives not yet available on master") 
     def test_LHGMZeros(self):
         L = self.tc.get('/L/Zeros/Motive/Hypergeometric/Q/A2.2.2.2_B1.1.1.1_t1.2/')
         assert '4.307350233' in L.data
@@ -184,7 +182,6 @@ class LfunctionTest(LmfdbTest):
         svg = paintSvgFileAll([["GSp4", 1]])
         assert "12.4687" in svg
 
-    @unittest2.skip("Error in holomorphic cusp forms still")
     def test_paintSVGholo(self):
         svg = paintSvgHolo(4,6,4,6)
         assert "/L/ModularForm/GL2/Q/holomorphic/4/6/0/a/0" in svg

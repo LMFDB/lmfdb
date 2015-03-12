@@ -77,7 +77,7 @@ class SymmetricPowerLFunction(SageObject):
         if m % 2 == 0:
             F = F * (1 - p ** (m // 2) * x)
 
-        return F.coeffs()
+        return F.coefficients(sparse=False)
 
     def an_list(self, upperbound=100000):
         from sage.rings.fast_arith import prime_range
