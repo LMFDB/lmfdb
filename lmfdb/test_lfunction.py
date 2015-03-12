@@ -29,7 +29,6 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/EllipticCurve/Q/56.a/')
         assert 'Graph' in L.data
 
-    #@unittest2.skip("Holomorphic cusp forms not working yet")
     def test_Lemf(self):
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/11/2/0/a/0/')
         assert 'Graph' in L.data
@@ -183,7 +182,6 @@ class LfunctionTest(LmfdbTest):
         svg = paintSvgFileAll([["GSp4", 1]])
         assert "12.4687" in svg
 
-    #@unittest2.skip("Error in holomorphic cusp forms still")
     def test_paintSVGholo(self):
         svg = paintSvgHolo(4,6,4,6)
         assert "/L/ModularForm/GL2/Q/holomorphic/4/6/0/a/0" in svg
