@@ -50,6 +50,9 @@ field) and value types (with examples):
    label = “%s-%s” % (field_label, short_label)
    short_label = “%s.%s%s” % (conductor_label, iso_label, str(number))
 
+To run the functions in this file, cd to the top-level lmfdb directory, start sage and use the command
+
+   sage: %runfile lmfdb/ecnf/import_ecnf_data.py
 """
 
 import os.path
@@ -61,15 +64,16 @@ import os
 import random
 import glob
 import pymongo
-import base
+from lmfdb.base import _init as init
+from lmfdb.base import getDBConnection
 from sage.rings.all import ZZ, QQ
 from sage.databases.cremona import cremona_to_lmfdb
 
 print "calling base._init()"
 dbport=37010
-base._init(dbport, '')
+init(dbport, '')
 print "getting connection"
-conn = base.getDBConnection()
+conn = getDBConnection()
 print "setting nfcurves"
 nfcurves = conn.elliptic_curves.nfcurves
 qcurves = conn.elliptic_curves.curves
@@ -422,6 +426,7 @@ def upload_to_db(base_path, filename_suffix):
     curve_data_filename = 'curve_data.%s' % (filename_suffix)
     isoclass_filename = 'isoclass.%s' % (filename_suffix)
     file_list = [curves_filename, curve_data_filename, isoclass_filename]
+#    file_list = [isoclass_filename]
 #    file_list = [curves_filename]
 #    file_list = [curve_data_filename]
 
@@ -464,3 +469,137 @@ def upload_to_db(base_path, filename_suffix):
         count += 1
         if count % 100 == 0:
             print "inserted %s" % (val['label'])
+
+def make_curves_line(ec):
+    r""" for ec a curve object from the database, create a line of text to
+    match the corresponding raw input line from a curves file.
+
+    Output line fields (13):
+
+    field_label conductor_label iso_label number conductor_ideal conductor_norm a1 a2 a3 a4 a6 cm base_change
+
+    Sample output line:
+
+    2.0.4.1 [65,18,1] a 1 [65,18,1] 65 1,1 1,1 0,1 -1,1 -1,0 0 0
+    """
+    output_fields = [ec['field_label'],
+                     ec['conductor_label'],
+                     ec['iso_label'],
+                     str(ec['number']),
+                     ec['conductor_ideal'],
+                     str(ec['conductor_norm'])
+                     ] + [",".join(t) for t in ec['ainvs']
+                     ] + [str(ec['cm']),str(int(len(ec['base_change'])>0)) ]
+    return " ".join(output_fields)
+
+def make_curve_data_line(ec):
+    r""" for ec a curve object from the database, create a line of text to
+    match the corresponding raw input line from a curve_data file.
+
+    Output line fields (9+n where n is the 8th); all but the first 4
+    are optional and if not known should contain"?" except that the 8th
+    should contain 0.
+
+    field_label conductor_label iso_label number rank rank_bounds analytic_rank ngens gen_1 ... gen_n sha_an
+
+    Sample output line:
+
+    2.0.4.1 [65,18,1] a 1 0 ? 0 0 ?
+    """
+    rk = '?'
+    if 'rank' in ec:
+        rk = str(ec['rank'])
+    rk_bds = '?'
+    if 'rank_bounds' in ec:
+        rk_bds = str(ec['rank_bounds']).replace(" ","")
+    an_rk = '?'
+    if 'analytic_rank' in ec:
+        an_rk = str(ec['analytic_rank'])
+    ngens = '0'
+    gens_str = []
+    if 'gens' in ec:
+        gens_str = ["["+":".join([c for c in P])+"]" for P in ec['gens']]
+        ngens = str(len(gens_str))
+    sha = '?'
+    if 'sha_an' in ec:
+        sha = str(int(ec['sha_an']))
+
+    output_fields = [ec['field_label'],
+                     ec['conductor_label'],
+                     ec['iso_label'],
+                     str(ec['number']),
+                     rk, rk_bds, an_rk,
+                     ngens] + gens_str + [sha]
+    return " ".join(output_fields)
+
+
+def make_isoclass_line(ec):
+    r""" for ec a curve object from the database, create a line of text to
+    match the corresponding raw input line from an isoclass file.
+
+    Output line fields (15):
+
+    field_label conductor_label iso_label number isogeny_matrix
+
+    Sample output line:
+
+    2.0.4.1 [65,18,1] a 1 [[1,6,3,18,9,2],[6,1,2,3,6,3],[3,2,1,6,3,6],[18,3,6,1,2,9],[9,6,3,2,1,18],[2,3,6,9,18,1]]
+    """
+    mat = ''
+    if 'isogeny_matrix' in ec:
+        mat = str(ec['isogeny_matrix']).replace(' ','')
+    else:
+        print("Making isogeny matrix for class %s" % ec['label'])
+        from lmfdb.ecnf.isog_class import permute_mat
+        from lmfdb.ecnf.WebEllipticCurve import FIELD
+        K = FIELD(ec['field_label'])
+        curves = nfcurves.find({'field_label' : ec['field_label'],
+                                'conductor_label' : ec['conductor_label'],
+                                'iso_label' : ec['iso_label']}).sort('number')
+        Elist = [EllipticCurve([K.parse_NFelt(x) for x in c['ainvs']]) for c in curves]
+        cl = Elist[0].isogeny_class()
+        perm = dict([(i,cl.index(E)) for i,E in enumerate(Elist)])
+        mat = permute_mat(cl.matrix(), perm, True)
+        n = len(Elist)
+        mat = str([list(ri) for ri in mat.rows()]).replace(" ","")
+
+    output_fields = [ec['field_label'],
+                     ec['conductor_label'],
+                     ec['iso_label'],
+                     str(ec['number']),
+                     mat]
+    return " ".join(output_fields)
+
+
+def download_curve_data(field_label, base_path, min_norm=0, max_norm=None):
+    r""" Extract curve data for the given field for curves with conductor
+    norm in the given range, and write to output files in the same
+    format as in the curves/curve_data/isoclass input files.
+    """
+    query = {}
+    query['field_label'] = field_label
+    query['conductor_norm'] = {'$gte' : int(min_norm)}
+    if max_norm:
+        query['conductor_norm']['$lte'] = int(max_norm)
+    else:
+        max_norm = 'infinity'
+    cursor = nfcurves.find(query)
+    ASC = pymongo.ASCENDING
+    res = cursor.sort([('conductor_norm', ASC), ('conductor_label', ASC), ('iso_label', ASC), ('number', ASC)])
+
+    file = {}
+    prefixes = ['curves', 'curve_data', 'isoclass']
+    suffix = ''.join([".",field_label,".",str(min_norm),"-",str(max_norm)])
+    for prefix in prefixes:
+        filename = os.path.join(base_path, ''.join([prefix,suffix]))
+        file[prefix] = open(filename,'w')
+
+    for ec in res:
+        file['curves'].write(make_curves_line(ec)+"\n")
+        file['curve_data'].write(make_curve_data_line(ec)+"\n")
+        if ec['number'] == 1:
+            file['isoclass'].write(make_isoclass_line(ec)+"\n")
+
+    for prefix in prefixes:
+        file[prefix].close()
+
