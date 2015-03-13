@@ -603,3 +603,56 @@ def download_curve_data(field_label, base_path, min_norm=0, max_norm=None):
     for prefix in prefixes:
         file[prefix].close()
 
+def findvar(L):
+    for x in L:
+        for c in x:
+            if c.isalpha():
+                return c.encode()
+    return None
+
+def hmf_field_primes(field_label):
+    primes = conn.hmfs.fields.find_one({'label' : field_label})['primes']
+    var = findvar(primes)
+    R = PolynomialRing(QQ,var)
+    idlstr = ideals[i][1:-1].replace(' ','').split(',')
+    N = ZZ(idlstr[0]) #norm
+    n = ZZ(idlstr[1]) #smallest integer
+    P = R(idlstr[2].encode()) #other generator as a polynomial
+    gen = P(F.gen())
+    idl = F.ideal(n,gen)
+
+def check_curve_labels(field_label='2.2.5.1', verbose=False):
+    r""" Go through all curves with the given field label, assumed totally
+    real, test whether a Hilbert Modular Form exists with the same
+    label.
+    """
+    hmfs = conn.hmfs
+    forms = hmfs.forms
+    fields = hmfs.fields
+    query = {}
+    query['field_label'] = field_label
+    query['number'] = 1
+    cursor = nfcurves.find(query)
+    nfound = 0
+    nnotfound = 0
+    from lmfdb.ecnf.WebEllipticCurve import FIELD
+    K = FIELD(ec['field_label'])
+
+    for ec in cursor:
+        hmf_label = "-".join([ec['field_label'],ec['conductor_label'],ec['iso_label']])
+        f = forms.find_one({'field_label' : field_label, 'label' : hmf_label})
+        if f:
+            if verbose:
+                print("hmf with label %s found" % hmf_label)
+            nfound +=1
+            E = EllipticCurve([K.parse_NFelt(x) for x in ec['ainvs']])
+
+        else:
+            if verbose:
+                print("No hmf with label %s found!" % hmf_label)
+            nnotfound +=1
+    n = nfound+nnotfound
+    if nnotfound:
+        print("Out of %s forms, %s were found but %s were not found" % (n,nfound,nnotfound))
+    else:
+        print("Out of %s forms, all %s were found" % (n,nfound))
