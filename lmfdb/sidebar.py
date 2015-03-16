@@ -59,8 +59,6 @@ class SideBar(object):
                     item['url'] = linked_name(item)
                 for item in data['secondpart']['parts']:
                     item['url'] = linked_name(item)
-                for item in data['thirdpart']['parts']:
-                    item['url'] = linked_name(item)
 
             if data['type'] == '2 column':
                 for entry in data['parts']:

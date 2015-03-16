@@ -1,15 +1,16 @@
 <style type="text/css">
 #sidebar .L a {
     display: inline;
+    padding: 4px;
 }
 
 #sidebar .L {
-    padding-right: 1em;
+    padding-right: 4px;
 }
 
 #sidebar .heading {
-    padding-right: 1em;
-    margin-bottom: 1em;
+    padding-right: 1px;
+    margin-bottom: 1px;
 }
 
 #sidebar div.L {
@@ -24,7 +25,7 @@
 }
 
 #sidebar table td .subtitle {
-    color: black;
+    color: #390;
 }
 
 #sidebar table td.borc .subtitle .future {
@@ -95,10 +96,10 @@ p.rotation  {
 }
 
 #sidebar table.short{
-        width: 200px;
-        table-layout:fixed;
-	border-width: 5px;
-        border-bottom: 0px;
+    width: 200px;
+    table-layout:fixed;
+	border-width: 2px;
+    border-bottom: 0px;
 	border-style: solid;
 	padding: 0px;
 	border-spacing: 0px;
@@ -134,4 +135,27 @@ p.rotation  {
 */	padding: 0px
 	background: #fff }
 
+
+
+#sidebar ul:first-child a:first-child,
+#sidebar h2:first-child a:first-child,
+#sidebar h2:first-child {
+  margin: 0;
+  border-top-right-radius: 0px;
+  -moz-border-radius-topright: 0px;
+}
+#sidebar ul:last-child li:last-child,
+#sidebar ul:last-child li:last-child a {
+  border-bottom-right-radius: 0px;
+  -moz-border-radius-bottomright: 0px;
+}
+
+
+#sidebar .list li {
+  padding: 2px 0px;
+}
+
+#sidebar .list a {
+  padding: 0px;
+}
 </style>
