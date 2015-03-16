@@ -54,9 +54,6 @@
           url_for: "first L-function zeros.firstzeros"
         - title: $\zeta$&nbsp;zeros
           url_for: "zeta zeros.zetazeros"
-   thirdpart:
-       type: 2 column
-       parts:
         - title: Operations
           url_for: "tensor_products.index"
 
@@ -120,11 +117,14 @@
              - title: $\Q$-curves
                status: future
          - title: Hyperelliptic
+           status: future
            parts:
              - title: $/\Q$
+               status: future
              - title: $/\F_{q}(t)$
                status: future
              - title: /NumberFields
+               status: future
          - title: Shimura
            status: future
          - title: Belyi
