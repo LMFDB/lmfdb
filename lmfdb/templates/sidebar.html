@@ -13,7 +13,6 @@
 <span class="L">{{item.url | safe}}</span>
 {% endfor %}
 </div>
-
 <table class="short">
 <tr>
 {% for item in value.secondpart.parts %}
@@ -22,56 +21,6 @@
 {% endfor %}</tr>
 </table>
 
-{% elif value.type == '2 column' %}
-
-<table class="short">
-{% for entry in value.parts %}
-<!--{% if loop.index is even -%}-->
-<!--<tr bgcolor="#fff">-->
-<!--{% else %}-->
-<tr> 
-<!--{# want alternating colours here #}-->
-<!--{%- endif %}-->
-{% if entry.style == "rotate" %}
- <td width=40 class="borc rotation">
- <p class="test rotation">
-{% elif entry.style == "full" %}
- <td scope="col" colspan="2" class="full">
-{% else %}
- <td class="bor">
-{% endif %} {# switch on style #}
-
-{{entry.url | safe}}
-
-{% if entry.style == "full" %}
-</td>
-{% else %}
-</td>
-{% if entry.part2 %}
-<td class="bor">
-{% endif %}
-{% endif %}
-
-{% if entry.part2 %}
-<ul class="list">
-{% for pt2 in entry.part2 %}
-<li>
-<span class="subtitle">{{pt2.url | safe}}</span>
-<div class="parts">
-{% for it2 in pt2.parts %}
-<span class="subitem">{{it2.url | safe}}</span>
-{% endfor %}
-</div>
-</li>
-{% endfor %} {# for pt2 #}
-</ul>
-</td>
-{% endif %}  {# if part2 #}
-
-{% endfor %} {# for item #}{% if loop.index is even -%}
-</tr>
-{%- endif %}
-</table>     {# end of 2 column case #}
 
 
 {% elif value.type == 'multilevel' %}
@@ -91,11 +40,7 @@
 <td class="borc"><p>
 {% endif %}
 {{ entry.url | safe }}
-{% if entry.style == "full" %}
-</td>
-{% else %}
 </p></td><td class="bor">
-{% endif %}
 {% if entry.part2 %}
 <ul class="list">
 {% for pt2 in entry.part2 %}
@@ -122,40 +67,25 @@
 {% elif value.type == 'simple' %}
 
 <table class="short">
+<tr>
 {% for entry in value.parts %}
-<tr> {# no alternating colours here #}
-{% if entry.style == "full" %}
-<td scope="col" colspan="2" class="full">
-{% else %}
-<td class="borc">
-{% endif %}
-{{ entry.url | safe }}
-{% if entry.style == "full" %}
-</td>
-{% else %}
-</p></td><td class="bor">
-{% endif %}
+<td scope="col" width="50%">{{entry.url | safe}}
 {% if entry.part2 %}
-<ul class="list">
+<td scope="col" width="30%">
 {% for pt2 in entry.part2 %}
-<li>
 <span class="subtitle">{{ pt2.url | safe }}</span>
 {% if pt2.parts %}
 <div class="parts">
 {% for it2 in pt2.parts %}
 <span class="subitem">{{ it2.url | safe}}</span>
-{% endfor %}
-</div>
+{% endfor %}</div>
 {% endif %} {# if parts in pt2 #}
-</li>
 {% endfor %} {# for pt2 #}
-</ul>
-{% endif %} {# if part2 in entry #}
-</td>
+</td>{% if loop.index0 is even -%}</tr><tr>{%- endif %}{% endif %}
+{% if loop.index is even -%}</tr><tr>{%- endif %}
+{% endfor %}
 </tr>
-{% endfor %} {# for entry #}
 </table>
-
 
 
 {% elif value.type == 'single' %}

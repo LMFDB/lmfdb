@@ -10,6 +10,7 @@
 
 #sidebar .heading {
     padding-right: 1px;
+    padding-left: 2px;
     margin-bottom: 1px;
 }
 
@@ -20,7 +21,8 @@
 }
 
 #sidebar table td a {
-    padding: 2px 5px; 
+    display: block;
+    padding: 2px; 
     border-radius: 0;
 }
 
@@ -30,6 +32,7 @@
 
 #sidebar table td.borc .subtitle .future {
     margin-left: 5px;
+    padding: 2px 5px
 }
 
 #sidebar table td.borc .subtitle a {
@@ -74,7 +77,7 @@ display: inline;
     padding: px;
 }*/
 #sidebar .list a {
-  display: inline;
+  display: block;
   background: none;
   padding: 0px;
 
@@ -92,7 +95,7 @@ p.rotation  {
 
 #sidebar table th, #sidebar table td {
 	text-align: left;
-	padding: 0px;
+	padding: 2px;
 }
 
 #sidebar table.short{
@@ -101,7 +104,7 @@ p.rotation  {
 	border-width: 2px;
     border-bottom: 0px;
 	border-style: solid;
-	padding: 0px;
+	padding: 2px;
 	border-spacing: 0px;
 	border-color: #efe;
 	border-collapse: separate;
@@ -109,7 +112,7 @@ p.rotation  {
 
 #sidebar table.short td.bor{
 /*	border-bottom: 5px solid #fff;
-*/	padding: 0px;
+	padding: 0px;*/
 	text-align: left;
 }
 
@@ -120,19 +123,19 @@ p.rotation  {
 #sidebar table.short td.borc{
 	text-align: center;
 /*	border-bottom: 5px solid #fff;
-*/	padding: 0px;
+	padding: 0px;*/
 }
  
 #sidebar table.short td.full{
         text-align: left;
 /*      border-bottom: 5px solid #fff;
-*/      padding: 0px;
+      padding: 0px;*/
 }
 
 #sidebar table.short td.off { 
 	text-align: center;	
 /*	border-bottom: 5px solid #fff;
-*/	padding: 0px
+	padding: 0px*/
 	background: #fff }
 
 

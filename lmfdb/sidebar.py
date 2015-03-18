@@ -69,7 +69,7 @@ class SideBar(object):
                         for item in pt2['parts']:
                             item['url'] = linked_name(item)
 
-            if data['type'] == 'multilevel':
+            if data['type'] in ['multilevel', 'simple']:
                 for entry in data['parts']:
                     entry['url'] = linked_name(entry)
                     if 'part2' in entry:
@@ -78,3 +78,4 @@ class SideBar(object):
                             if 'parts' in pt2:
                                 for item in pt2['parts']:
                                     item['url'] = linked_name(item)
+
