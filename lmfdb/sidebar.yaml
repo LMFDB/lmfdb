@@ -1,6 +1,6 @@
 ---
 1intro:
-   type: 2 column
+   type: simple
    heading:
       title: Introduction and more
       url_for: "introduction"
@@ -48,7 +48,7 @@
         - title: "5+"
           status: future
    secondpart:
-       type: 2 column
+       type: multilevel
        parts:
         - title: First zeros
           url_for: "first L-function zeros.firstzeros"
@@ -149,7 +149,7 @@
            status: future
 
 5Fields:
-   type: multilevel
+   type: simple
    heading:
       title: Fields
    parts:
@@ -160,11 +160,10 @@
          - title: Local
            url_for:  "local_fields.index"
     - title: Function fields
-      style: full
       status: future
 
 6Repn:
-   type: multilevel
+   type: simple
    heading:
       title: Representations
    parts:
@@ -176,17 +175,14 @@
          - title: Hecke
            url_for:  "characters.render_Heckewebpage"
     - title: Artin
-      style: full
       url_for: "artin_representations.index"
-    - title: Galois
-      style: full
-      status: future
     - title: Automorphic
-      style: full
+      status: future
+    - title: Galois
       status: future
 
 7Mot:
-   type: multilevel
+   type: simple
    heading:
       title: Motives
    parts:
@@ -198,24 +194,23 @@
          - title: $/\Q(\sqrt{d})$
            status: future
     - title: Jacobi
-      part2:
-         - title: $G_2$
-           status: future
+      status: future
+    - title: $G_2$
+      status: future
 
 8Groups:
-   type: multilevel
+   type: simple
    heading:
       title: Groups
    parts:
-    - title: Galois groups
-      style: full
-      url_for: "galois_groups.index"
     - title: Subgroups of
       part2:
          - title: $\SL(2)$
            status:  future
          - title: $\GL(2,\F_p)$
            status:  future
+    - title: Galois groups
+      url_for: "galois_groups.index"
 
 9Know:
    type: single
