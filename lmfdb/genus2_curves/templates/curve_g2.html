@@ -27,13 +27,21 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 <script src="http://aleph.sagemath.org/embedded_sagecell.js"></script>
 
     {% set KNOWL_ID = "ec.q.%s"|format(data['label']) %}
-    <h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
-    <h2> {{ KNOWL('ec.q.minimal_weierstrass_equation', title='Minimal Weierstrass equation') }} </h2>
 
-<p>  {{ data.label }} </p>
-<p>  {{ data.data.disc }} </p>
-<p>  {{ data.data.min_eqn }} </p>
+<!--<h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>-->
+
+    <h2> {{ KNOWL('g2c.minimal_discriminant', title='Minimal discriminant') }} </h2>
+<p>  \({{ data.data.disc }}\) </p>
+    <h2> {{ KNOWL('g2c.minimal_equation', title='Minimal equation') }} </h2>
+<p>  ${{ data.data.min_eqn }}$ </p>
+
+    <h2> {{ KNOWL('g2c.igusa_clebsch', title='Igusa-Clebsch invariants') }} </h2>
 <p>  {{ data.data.igusa_clebsch }} </p>
+    <h2> {{ KNOWL('g2c.aut_grp', title='Automorphism group over $\Q$') }} </h2>
+<p>  {{ data.data.igusa_clebsch }} </p>
+    <h2> {{ KNOWL('g2c.geom_aut_grp', title='Automorphism group over $\overline{\Q}$') }} </h2>
+<p>  {{ data.data.igusa_clebsch }} </p>
+
 
 
 {% endblock %}
