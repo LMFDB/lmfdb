@@ -157,8 +157,9 @@ class G2Cisog_class(object):
         else:
             self.title = "Elliptic Curve Isogeny Class %s (Cremona label %s)" % (self.lmfdb_iso, self.iso)
 
-        self.bread = [('Elliptic Curves', url_for("ecnf.index")),
-                      ('$\Q$', url_for(".rational_elliptic_curves")),
+        self.bread = [
+#('Elliptic Curves', url_for("ecnf.index")),
+                      ('$\Q$', url_for(".rational_genus_2_curves")),
                       ('%s' % N, url_for(".by_conductor", conductor=N)),
                       ('%s' % iso, ' ')]
 

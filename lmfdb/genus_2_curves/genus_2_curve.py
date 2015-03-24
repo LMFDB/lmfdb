@@ -53,7 +53,6 @@ def rational_genus_2_curves(err_args=None):
                 err_args[field] = ''
             err_args['count'] = '100'
     info = {
-        'stats_url': url_for(".statistics")
     }
     credit = 'Genus 2 Team'
     t = 'Genus 2 curves over $\Q$'
@@ -71,7 +70,8 @@ def by_conductor(conductor):
 def genus_2_curve_search(**args):
     info = to_dict(args)
     query = {}
-    bread = [('Genus 2 Curves', url_for("ecnf.index")),
+    bread = [
+# ('Genus 2 Curves', url_for("ecnf.index")),
              ('$\Q$', url_for(".rational_genus_2_curves")),
              ('Search Results', '.')]
     if 'SearchAgain' in args:

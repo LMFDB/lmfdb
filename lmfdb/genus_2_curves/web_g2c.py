@@ -252,7 +252,8 @@ class WebG2C(object):
 
         self.title = "Genus 2 Curve %s" % (self.label)
 
-        self.bread = [('Elliptic Curves', url_for("ecnf.index")),
+        self.bread = [
+# ('Elliptic Curves', url_for("ecnf.index")),
                            ('$\Q$', url_for(".rational_genus_2_curves")),
                            ('%s' % N, url_for(".by_conductor", conductor=N)),
                            ('%s' % iso, url_for(".by_double_iso_label", conductor=N, iso_label=iso)),
