@@ -9,7 +9,7 @@ from lmfdb.utils import comma, make_logger, web_latex, encode_plot
 from lmfdb.genus2_curves import g2c_page, g2c_logger
 
 import sage.all
-from sage.all import EllipticCurve, latex, matrix, ZZ, QQ
+from sage.all import EllipticCurve, latex, matrix, ZZ, QQ, PolynomialRing
 
 logger = make_logger("g2c")
 
@@ -21,6 +21,12 @@ def db_g2c():
         g2cdb = lmfdb.base.getDBConnection().genus2_curves.curves
     return g2cdb
 
+def list_to_min_eqn(L):
+    xpoly_rng = PolynomialRing(QQ,'x')
+    ypoly_rng = PolynomialRing(xpoly_rng,'y')
+    poly_tup = [xpoly_rng(tup) for tup in L]
+    lhs = ypoly_rng([0,poly_tup[1],1])
+    return str(lhs).replace("*","") + " = " + str(poly_tup[0]).replace("*","")
 
 class WebG2C(object):
     """
@@ -67,14 +73,16 @@ class WebG2C(object):
         data = self.data = {}
         data['label'] = self.label
         data['disc'] = self.disc
-        data['igusa_clebsch'] = self.igusa_clebsch
-        data['min_eqn'] = web_latex(self.min_eqn)
+        data['igusa_clebsch'] = web_latex(self.igusa_clebsch)
+        data['min_eqn'] = list_to_min_eqn(self.min_eqn)
+        # TODO: once aut group info in database, uncomment
+        #data['aut_grp'] = web_latex(self.aut_grp)
+        #data['geom_aut_grp'] = web_latex(self.geom_aut_grp)
         self.friends = []
-
         self.downloads = []
 
 
-        self.properties = [('Label', self.label)]
+        self.properties = [('Label', self.label), ('Minimal discriminant', '\( %s \)' % self.disc)]
         self.title = "Genus 2 Curve %s" % (self.label)
         self.bread = [
 # ('Elliptic Curves', url_for("ecnf.index")),
