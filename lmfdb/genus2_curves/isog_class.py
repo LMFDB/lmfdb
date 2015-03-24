@@ -7,7 +7,7 @@ from flask import url_for, make_response
 import lmfdb.base
 from lmfdb.utils import comma, make_logger, web_latex, encode_plot
 from lmfdb.genus2_curves.web_g2c import g2c_page, g2c_logger, list_to_min_eqn
-from sage.all import QQ
+from sage.all import QQ, PolynomialRing
 
 logger = make_logger("g2c")
 
@@ -55,6 +55,7 @@ class G2Cisog_class(object):
         curves_data = db_g2c().find({"isog_class" : self.label})
         self.curves = [ {"label" : c.label, "equation_formatted" : list_to_min_eqn(c.equation)} for c in curves_data ]
         self.ncurves = curves_data.count()
+        self.bad_lfactors = [ [c[0], list_to_poly(c[1])] for c in self.bad_lfactors]
         self.friends = [
 #        ('L-function', self.lfunction_link),
 #        ('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', label=self.lmfdb_iso)),
