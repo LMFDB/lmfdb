@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
-
+import pymongo
 from pymongo import ASCENDING, DESCENDING
 import lmfdb.base
 from lmfdb.base import app
@@ -8,11 +8,11 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 import tempfile
 import os
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range2, web_latex_split_on_pm, comma, clean_input
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range2, web_latex_split_on_pm, comma, clean_input, parse_range
 from lmfdb.number_fields.number_field import parse_list
 from lmfdb.genus2_curves import g2c_page, g2c_logger
 from lmfdb.genus2_curves.isog_class import G2Cisog_class
-from lmfdb.genus2_curves.web_g2c import WebG2C
+from lmfdb.genus2_curves.web_g2c import WebG2C, list_to_min_eqn
 
 import sage.all
 from sage.all import ZZ, QQ, EllipticCurve, latex, matrix, srange
@@ -66,28 +66,64 @@ def rational_genus2_curves(err_args=None):
 def by_conductor(conductor):
     return genus2_curve_search(conductor=conductor, **request.args)
 
+def split_label(label_string):
+    L = label_string.split(".")
+    return L
 
 def genus2_curve_search(**args):
     info = to_dict(args)
-    query = {}
+    query = {}  # database callable
     bread = [
 # ('Genus 2 Curves', url_for("ecnf.index")),
              ('$\Q$', url_for(".rational_genus2_curves")),
              ('Search Results', '.')]
-    if 'SearchAgain' in args:
-        return rational_genus2_curves()
+    #if 'SearchAgain' in args:
+    #    return rational_genus2_curves()
 
     if 'jump' in args:
-        label = info.get('label', '').replace(" ", "")
-        m = match_lmfdb_label(label)
-        if m:
-            try:
-                return by_g2c_label(label)
-            except ValueError:
-                return search_input_error(info, bread)
-        else:
-            query['label'] = ''
+        return render_curve_webpage_by_label(info["jump"])
 
+    for field in ["cond", "disc"]:
+        if info.get(field):
+            query[field] = parse_range(info[field])
+    if info.get("count"):
+        try:
+            count = int(info["count"])
+        except:
+            count = 100
+    else:
+        count = 100
+
+    info["query"] = dict(query)
+    res = db_g2c().find(query).sort([("cond", pymongo.ASCENDING),
+                                     ("label", pymongo.ASCENDING)
+                                 ]).limit(count)
+    nres = res.count()
+    if nres == 1:
+        info["report"] = "unique match"
+    else:
+        if nres > count:
+            info["report"] = "displaying first %s of %s matches" % (count, nres)
+        else:
+            info["report"] = "displaying all %s matches" % nres
+    res_clean = []
+    for v in res:
+        v_clean = {}
+        v_clean["label"] = v["label"]
+        v_clean["equation_formatted"] = list_to_min_eqn(v["min_eqn"])
+        res_clean.append(v_clean)
+
+    info["curves"] = res_clean
+
+    #conductor,iso_label,disc,number
+    info["curve_url"] = lambda dbc: url_for(".by_full_label",
+                                            conductor=split_label(dbc['label'])[0],
+                                            iso_label=split_label(dbc['label'])[1],
+                                            disc=split_label(dbc['label'])[2],
+                                            number=split_label(dbc['label'])[3]   )
+    
+    '''
+    
     if info.get('jinv'):
         j = clean_input(info['jinv'])
         j = j.replace('+', '')
@@ -208,9 +244,10 @@ def genus2_curve_search(**args):
             info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
         else:
             info['report'] = 'displaying all %s matches' % nres
+'''
     credit = 'Genus 2 Team'
     t = 'Genus 2 Curves search results'
-    return render_template("search_results.html", info=info, credit=credit, bread=bread, title=t)
+    return render_template("search_results_g2.html", info=info, credit=credit, bread=bread, title=t)
 
 
 def search_input_error(info, bread):
