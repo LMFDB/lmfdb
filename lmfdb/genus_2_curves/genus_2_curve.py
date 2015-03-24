@@ -60,16 +60,16 @@ def cmp_label(lab1, lab2):
 #    Top level
 #########################
 
-@app.route("/EC")
-def EC_redirect():
-    return redirect(url_for("ec.rational_elliptic_curves", **request.args))
+@app.route("/G2C")
+def G2C_redirect():
+    return redirect(url_for("g2c.rational_genus_2_curves", **request.args))
 
 #########################
 #  Search/navigate
 #########################
 
 @ec_page.route("/")
-def rational_elliptic_curves(err_args=None):
+def rational_genus_2_curves(err_args=None):
     if err_args is None:
         if len(request.args) != 0:
             return elliptic_curve_search(**request.args)
@@ -106,7 +106,7 @@ def statistics():
     credit = 'John Cremona'
     t = 'Elliptic curves over $\Q$: statistics'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
-             ('$\Q$', url_for(".rational_elliptic_curves")),
+             ('$\Q$', url_for(".rational_genus_2_curves")),
              ('statistics', ' ')]
     return render_template("statistics.html", info=info, credit=credit, title=t, bread=bread)
 
@@ -129,17 +129,17 @@ def elliptic_curve_jump_error(label, args, wellformed_label=False, cremona_label
         err_args['err_msg'] = "The elliptic curve %s (conductor = %s) is not in the database" % (label, args.get('conductor','?'))
     else:
         err_args['err_msg'] = "%s does not define a recognised elliptic curve over $\mathbb{Q}$" % label
-    return rational_elliptic_curves(err_args)
+    return rational_genus_2_curves(err_args)
 
 
 def elliptic_curve_search(**args):
     info = to_dict(args)
     query = {}
     bread = [('Elliptic Curves', url_for("ecnf.index")),
-             ('$\Q$', url_for(".rational_elliptic_curves")),
+             ('$\Q$', url_for(".rational_genus_2_curves")),
              ('Search Results', '.')]
     if 'SearchAgain' in args:
-        return rational_elliptic_curves()
+        return rational_genus_2_curves()
 
     if 'jump' in args:
         label = info.get('label', '').replace(" ", "")
