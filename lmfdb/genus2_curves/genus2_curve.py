@@ -274,11 +274,11 @@ def render_isogeny_class(iso_class):
     credit = 'Genus 2 Team'
     class_data = G2Cisog_class.by_label(iso_class)
 
-    return render_template("iso_class.html",
+    return render_template("isogeny_class_g2.html",
                            properties2=class_data.properties,
-                           info=class_data,
                            bread=class_data.bread,
                            credit=credit,
+                           info=class_data,
                            title=class_data.title,
                            friends=class_data.friends,
                            downloads=class_data.downloads)
