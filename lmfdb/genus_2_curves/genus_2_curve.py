@@ -58,7 +58,7 @@ def rational_genus_2_curves(err_args=None):
     t = 'Genus 2 curves over $\Q$'
     bread = []
 #    bread = [('Genus 2 Curves', url_for("ecnf.index")), ('$\Q$', ' ')]
-    return render_template("browse_search.html", info=info, credit=credit, title=t, bread=bread, **err_args)
+    return render_template("browse_search_g2.html", info=info, credit=credit, title=t, bread=bread, **err_args)
 
 
 
