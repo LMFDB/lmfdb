@@ -25,6 +25,7 @@ import lfunction_db
 import lfunctions
 # import maass_form_picard
 # import maass_waveforms
+import genus_2_curves
 import users
 import knowledge
 import upload

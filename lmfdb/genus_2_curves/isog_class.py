@@ -6,25 +6,25 @@ from pymongo import ASCENDING, DESCENDING
 from flask import url_for, make_response
 import lmfdb.base
 from lmfdb.utils import comma, make_logger, web_latex, encode_plot
-from lmfdb.elliptic_curves import ec_page, ec_logger
-from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_lmfdb_iso_label, split_cremona_label
+from lmfdb.genus_2_curves import g2c_page, g2c_logger
+# from lmfdb.genus_2_curves.web_g2c import split_lmfdb_label, split_lmfdb_iso_label, split_cremona_label
 
 import sage.all
 from sage.all import EllipticCurve, latex, matrix
 
-logger = make_logger("ec")
+logger = make_logger("g2c")
 
-ecdb = None
+g2cdb = None
 
-def db_ec():
-    global ecdb
-    if ecdb is None:
-        ecdb = lmfdb.base.getDBConnection().elliptic_curves.curves
-    return ecdb
+def db_g2c():
+    global g2cdb
+    if g2cdb is None:
+        g2cdb = lmfdb.base.getDBConnection().genus_2_curves.curves
+    return g2cdb
 
-class ECisog_class(object):
+class G2Cisog_class(object):
     """
-    Class for an isogeny class of elliptic curves over Q
+    Class for an isogeny class of genus 2 curves over Q
     """
     def __init__(self, dbdata):
         """
@@ -32,40 +32,31 @@ class ECisog_class(object):
 
             - dbdata: the data from the database
         """
-        logger.debug("Constructing an instance of ECisog_class")
+        logger.debug("Constructing an instance of G2Cisog_class")
         self.__dict__.update(dbdata)
         self.make_class()
 
     @staticmethod
     def by_label(label):
         """
-        Searches for a specific elliptic curve isogeny class in the
-        curves collection by its label, which can be either a curve
-        label (e.g. "11.a1") or a class label (e.g. "11.a") in either
-        LMFDB or Cremona format.
+        Searches for a specific genus 2 curve isogeny class in the
+        curves collection by its label.
         """
-        #print "label = %s" % label
         try:
-            N, iso, number = split_lmfdb_label(label)
+            N, iso, D, number = split_label(label)
             if number:
-                data = db_ec().find_one({"lmfdb_label" : label})
+                data = db_g2c().find_one({"label" : label})
             else:
-                data = db_ec().find_one({"lmfdb_label" : label+"1"})
+                data = db_g2c().find_one({"label" : label+"1"})
         except AttributeError:
-            try:
-                N, iso, number = split_cremona_label(label)
-                if number:
-                    data = db_ec().find_one({"label" : label})
-                else:
-                    data = db_ec().find_one({"label" : label+"1"})
-            except AttributeError:
-                return "Invalid label" # caller must catch this and raise an error
+            return "Invalid label" # caller must catch this and raise an error
 
         if data:
-            return ECisog_class(data)
+            return G2Cisog_class(data)
         return "Class not found" # caller must catch this and raise an error
 
     def make_class(self):
+        """
         self.ainvs_str = self.ainvs
         self.ainvs = [int(a) for a in self.ainvs_str]
         self.E = EllipticCurve(self.ainvs)
@@ -133,7 +124,7 @@ class ECisog_class(object):
         self.newform_link = url_for("emf.render_elliptic_modular_forms", level=N, weight=2, character=0, label=iso)
 
         self.lfunction_link = url_for("l_functions.l_function_ec_page", label=self.lmfdb_iso)
-
+        """
         self.curves = [dict([('label',self.lmfdb_iso + str(i + 1)),
                              ('url',url_for(".by_triple_label", conductor=N, iso_label=iso, number=i+1)),
                              ('cremona_label',self.cremona_labels[i]),
