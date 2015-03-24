@@ -1,0 +1,39 @@
+{% extends 'homepage.html' %}
+{% block content %}
+<style>
+<div.ip>span { white-space: nowrap; font-family: serif; }
+</style>
+
+<script>
+var cur_system = null;
+function show_code(system) {
+    $('.sage').hide();
+    $('.pari').hide();
+    $('.magma').hide();
+    if (cur_system == system) {
+      $('.'+system).hide();
+      cur_system = null;
+      } else {
+      $('.'+system).show();
+      cur_system = system;
+    }
+  }
+</script>
+
+<script type="text/javascript"
+        src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+<script type="text/javascript"
+src="http://code.jquery.com/jquery-latest.min.js"></script>
+<script src="http://aleph.sagemath.org/embedded_sagecell.js"></script>
+
+    {% set KNOWL_ID = "ec.q.%s"|format(data['label']) %}
+    <h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
+    <h2> {{ KNOWL('ec.q.minimal_weierstrass_equation', title='Minimal Weierstrass equation') }} </h2>
+
+<p>  {{ data.label }} </p>
+<p>  {{ data.data.disc }} </p>
+<p>  {{ data.data.min_eqn }} </p>
+<p>  {{ data.data.igusa_clebsch }} </p>
+
+
+{% endblock %}
