@@ -6,7 +6,7 @@ from pymongo import ASCENDING, DESCENDING
 from flask import url_for, make_response
 import lmfdb.base
 from lmfdb.utils import comma, make_logger, web_latex, encode_plot
-from lmfdb.genus2_curves.web_g2c import g2c_page, g2c_logger, list_to_min_eqn
+from lmfdb.genus2_curves.web_g2c import g2c_page, g2c_logger, list_to_min_eqn, end_alg_name, st_group_name
 from sage.all import QQ, PolynomialRing
 
 logger = make_logger("g2c")
@@ -61,7 +61,8 @@ class G2Cisog_class(object):
         self.curves = [ {"label" : c['label'], "equation_formatted" : list_to_min_eqn(c['min_eqn']), "url": url_for_label(c['label'])} for c in curves_data ]
         self.ncurves = curves_data.count()
         self.bad_lfactors = [ [c[0], list_to_poly(c[1])] for c in self.bad_lfactors]
-        self.real_end_alg_name = self.real_end_alg
+        self.real_end_alg_name = end_alg_name(self.real_end_alg)
+        self.st_group_name = st_group_name(self.st_group)
 
         # TODO:  When these cells are in the database, uncomment below
         #self.end_alg_name = self.end_alg
