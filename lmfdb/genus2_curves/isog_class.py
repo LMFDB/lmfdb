@@ -64,12 +64,6 @@ class G2Cisog_class(object):
         self.real_end_alg_name = end_alg_name(self.real_end_alg)
         self.st_group_name = st_group_name(self.st_group)
 
-        # TODO:  When these cells are in the database, uncomment below
-        #self.end_alg_name = self.end_alg
-        #self.rat_end_alg_name = self.rat_end_alg
-        #self.geom_end_alg_name = self.geom_end_alg
-        #self.fullrat_end_alg_name = self.full_rat_end_alg
-
         x = self.label.split('.')[1]
         
         self.friends = [
