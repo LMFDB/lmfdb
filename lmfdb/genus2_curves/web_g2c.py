@@ -76,10 +76,10 @@ class WebG2C(object):
         # Weierstrass equation
 
         data = self.data = {}
-        #data['label'] = self.label
-        #data['disc'] = self.disc
-        # TODO:  Since the original fields are from the database, why do we need to
-        disc = ZZ(self.abs_disc) * ZZ(self.disc_sign)
+
+        disc = ZZ(self.disc_sign) * ZZ(self.disc_key[3:]) 
+        # to deal with disc_key, uncomment line above and remove line below
+        #disc = ZZ(self.disc_sign) * ZZ(self.abs_disc)
         data['disc'] = disc
         data['cond'] = ZZ(self.cond)
         data['min_eqn'] = list_to_min_eqn(self.min_eqn)
