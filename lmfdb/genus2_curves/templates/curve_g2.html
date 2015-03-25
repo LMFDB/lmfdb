@@ -30,17 +30,59 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
 <!--<h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>-->
 
-    <h2> {{ KNOWL('g2c.minimal_discriminant', title='Minimal discriminant') }} </h2>
-<p>  \({{ data.data.disc }}\) </p>
     <h2> {{ KNOWL('g2c.minimal_equation', title='Minimal equation') }} </h2>
 <p>  ${{ data.data.min_eqn }}$ </p>
 
-    <h2> {{ KNOWL('g2c.igusa_clebsch', title='Igusa-Clebsch invariants') }} </h2>
-<p>  {{ data.data.igusa_clebsch }} </p>
+    <h2> {{ KNOWL('g2c.invariants', title='Invariants') }}  </h2>
+        <table>
+
+        <tr>
+          <td> \( N \) </td>
+	  <td>&nbsp;=&nbsp;</td>
+	  <td>\( {{ data.cond }} \)</td>
+          <td>&nbsp;=&nbsp;</td>
+          <td>{{ data.data.cond_factor_latex }}</td>
+        </tr>
+        <tr>
+          <td> \( \Delta \) </td>
+	  <td>&nbsp;=&nbsp;</td>
+	  <td>\({{ data.disc }}\)</td>
+          <td>&nbsp;=&nbsp;</td>
+          <td>{{ data.data.disc_factor_latex }}</td>
+        </tr>
+
+	</table>
+
+
+	<h2> {{ KNOWL('g2c.igusa_clebsch', title='Igusa-Clebsch invariants') }} </h2>
+
+	<table>
+	<tr>
+          <td> \( I_4 \) </td>
+	  <td>=</td>
+	  <td>\({{ data.igusa_clebsch[0] }}\)</td>
+        </tr>
+	<tr>
+          <td> \( I_6 \) </td>
+	  <td>=</td>
+	  <td>\({{ data.igusa_clebsch[1] }}\)</td>
+        </tr>
+	<tr>
+          <td> \( I_8 \) </td>
+	  <td>=</td>
+	  <td>\({{ data.igusa_clebsch[2] }}\)</td>
+        </tr>
+	<tr>
+          <td> \( I_{10} \) </td>
+	  <td>=</td>
+	  <td>\({{ data.igusa_clebsch[3]}}\)</td>
+        </tr>
+	</table>
+
     <h2> {{ KNOWL('g2c.aut_grp', title='Automorphism group over $\Q$') }} </h2>
-<p>  {{ data.data.igusa_clebsch }} </p>
+<p>   \({{ data.data.aut_grp}} = {{data.aut_grp}}\) </p>
     <h2> {{ KNOWL('g2c.geom_aut_grp', title='Automorphism group over $\overline{\Q}$') }} </h2>
-<p>  {{ data.data.igusa_clebsch }} </p>
+<p>  \({{ data.data.geom_aut_grp}} = {{data.aut_grp}}\) </p>
 
 
 
