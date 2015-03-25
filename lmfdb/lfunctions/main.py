@@ -324,7 +324,11 @@ def l_function_ec_sym_page(power, label):
     args = {'power': power, 'underlying_type': 'EllipticCurve', 'field': 'Q', 'label': label}
     return render_single_Lfunction(SymmetricPowerLfunction, args, request)
 
-
+# L-function of genus 2 curve/Q ########################################
+@l_function_page.route("/Genus2Curve/Q/<cond>/<x>/<absdisc>/<num>/")
+def l_function_genus2_page(cond,x,absdisc,num):
+    args = {'label': cond+'.'+x+'.'+absdisc+'.'+num}
+    return render_single_Lfunction(Lfunction_genus2_Q, args, request)
 
 # L-function from lcalcfile with given url #####################################
 @l_function_page.route("/Lcalcurl/")
@@ -854,6 +858,9 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         else:
             return HypergeometricMotiveLfunction(label = arg4)
 
+    elif arg1 == "Genus2Curve" and arg2 == "Q":
+        return Lfunction_genus2_Q(label=str(arg3)+'.'+str(arg4)+'.'+str(arg5)+'.'+str(arg6))
+    
     elif arg1 == 'Lcalcurl':
         return Lfunction_lcalc(Ltype='lcalcurl', url=temp_args['url'])
 
