@@ -28,6 +28,17 @@ def list_to_min_eqn(L):
     lhs = ypoly_rng([0,poly_tup[1],1])
     return str(lhs).replace("*","") + " = " + str(poly_tup[0]).replace("*","")
 
+
+def end_alg_name(name):
+    name_dict = {"M_2(R)":"\\mathrm{M}_2(\R)", "R":"\\R","C x R":"\\C \times \\R", "R x R":"\\R x \\R", "M_2(C)":"\\mathrm{M}_2(\C)", "C x C":"\\C \times \\C"}
+    return name_dict[name]
+
+def st_group_name(name):
+    if name == 'USp(4)':
+        return '\\mathrm{USp}(4)'
+    else:
+        return name
+
 def groupid_to_meaningful(groupid):
     if groupid[0] < 120:
         return group_dict[str(groupid).replace(" ","")]
@@ -38,6 +49,7 @@ def isog_label(label):
     #get isog label from full label
     L = label.split(".")
     return L[0]+ "." + L[1]
+
 
 class WebG2C(object):
     """
@@ -97,7 +109,7 @@ class WebG2C(object):
         data['tor_struct'] = ' \\times '.join(['\Z/{%s}\Z' % n for n in tor_struct])
         isogeny_label = isog_label(self.label)
         isogeny_class = db_g2c().isogeny_classes.find_one({'label' : isogeny_label})
-        data['real_end_alg'] = isogeny_class['real_end_alg']
+        data['real_end_alg'] = end_alg_name(isogeny_class['real_end_alg'])
 
 
         #data['real_end_alg'] = isogeny_label
