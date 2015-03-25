@@ -70,8 +70,7 @@ class WebG2C(object):
     def make_curve(self):
         # To start with the data fields of self are just those from
         # the database.  We need to reformat these, construct the
-        # actual elliptic curve E, and compute some further (easy)
-        # data about it.
+        # and compute some further (easy) data about it.
         #
 
         # Weierstrass equation
@@ -86,7 +85,7 @@ class WebG2C(object):
         #data['igusa_clebsch10'] = self.igusa_clebsch[3]
         data['min_eqn'] = list_to_min_eqn(self.min_eqn)
         data['disc_factor_latex'] = web_latex(factor(int(self.disc)))
-        data['cond'] = self.cond
+        #data['cond'] = self.cond
         data['cond_factor_latex'] = web_latex(factor(int(self.cond)))
         data['aut_grp'] = groupid_to_meaningful(self.aut_grp)
         data['geom_aut_grp'] = groupid_to_meaningful(self.geom_aut_grp)
