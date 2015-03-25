@@ -78,14 +78,17 @@ class WebG2C(object):
         data = self.data = {}
         data['label'] = self.label
         data['disc'] = self.disc
+        # TODO:  Since the original fields are from the database, why do we need to
+        # put them in a dictionary? 
         #data['igusa_clebsch'] = self.igusa_clebsch
         #data['igusa_clebsch4'] = self.igusa_clebsch[0]
         #data['igusa_clebsch6'] = self.igusa_clebsch[1]
         #data['igusa_clebsch8'] = self.igusa_clebsch[2]
         #data['igusa_clebsch10'] = self.igusa_clebsch[3]
+        #data['cond'] = self.cond
+        N = self.cond
         data['min_eqn'] = list_to_min_eqn(self.min_eqn)
         data['disc_factor_latex'] = web_latex(factor(int(self.disc)))
-        #data['cond'] = self.cond
         data['cond_factor_latex'] = web_latex(factor(int(self.cond)))
         data['aut_grp'] = groupid_to_meaningful(self.aut_grp)
         data['geom_aut_grp'] = groupid_to_meaningful(self.geom_aut_grp)
@@ -98,9 +101,11 @@ class WebG2C(object):
                            ('I-C invariants','\(%s\)' % self.igusa_clebsch)]
         self.title = "Genus 2 Curve %s" % (self.label)
         self.bread = [
-# ('Elliptic Curves', url_for("ecnf.index")),
-#                           ('$\Q$', url_for(".rational_genus2_curves")),
-#                           ('%s' % N, url_for(".by_conductor", conductor=N)),
+            # Genus 2 Curves should go to a page like was created for ecnf
+            #('Genus 2 Curves', url_for(".rational_genus2_curves")),
+            #('$\Q$', url_for(".rational_genus2_curves")),
+            ('Genus 2 Curves over $\Q$', url_for(".rational_genus2_curves")),
+            ('%s' % N, url_for(".by_conductor", conductor=N)),
 #                           ('%s' % iso, url_for(".by_double_iso_label", conductor=N, iso_label=iso)),
 #                           ('%s' % num,' ')
         ]
