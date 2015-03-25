@@ -9,7 +9,7 @@ import tempfile
 import os
 
 from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range2, web_latex_split_on_pm, comma, clean_input, parse_range
-from lmfdb.number_fields.number_field import parse_list
+from lmfdb.number_fields.number_field import parse_list, parse_discs, make_disc_key
 from lmfdb.genus2_curves import g2c_page, g2c_logger
 from lmfdb.genus2_curves.isog_class import G2Cisog_class, url_for_label
 from lmfdb.genus2_curves.web_g2c import WebG2C, list_to_min_eqn
@@ -96,9 +96,56 @@ def genus2_curve_search(**args):
     if 'jump' in args:
         return render_curve_webpage_by_label(info["jump"])
 
-    for field in ["cond", "disc"]:
-        if info.get(field):
-            query[field] = parse_range(info[field])
+    if info.get("abs_disc"):
+        field = "abs_disc"
+        ran = info[field]
+        ran = ran.replace('..', '-').replace(' ','')
+        # Past input check
+        dlist = parse_discs(ran)
+        tmp = g2_list_to_query(dlist)
+
+        if len(tmp) == 1:
+            tmp = tmp[0]
+        else:
+            query[tmp[0][0]] = tmp[0][1]
+            tmp = tmp[1]
+
+        print tmp
+
+        # work around syntax for $or
+        # we have to foil out multiple or conditions
+        if tmp[0] == '$or' and '$or' in query:
+            newors = []
+            for y in tmp[1]:
+                oldors = [dict.copy(x) for x in query['$or']]
+                for x in oldors:
+                    x.update(y)
+                newors.extend(oldors)
+            tmp[1] = newors
+        query[tmp[0]] = tmp[1]
+
+    if info.get("cond"):
+        field = "cond"
+        ran = info[field]
+        ran = ran.replace('..', '-').replace(' ','')
+        # Past input check
+        tmp = parse_range2(ran, field)
+
+        print tmp
+
+        # work around syntax for $or
+        # we have to foil out multiple or conditions
+        if tmp[0] == '$or' and '$or' in query:
+            newors = []
+            for y in tmp[1]:
+                oldors = [dict.copy(x) for x in query['$or']]
+                for x in oldors:
+                    x.update(y)
+                newors.extend(oldors)
+            tmp[1] = newors
+        query[tmp[0]] = tmp[1]
+
+
     if info.get("count"):
         try:
             count = int(info["count"])
@@ -128,7 +175,7 @@ def genus2_curve_search(**args):
 
     info["curves"] = res_clean
 
-    info["curve_url"] = url_for_label
+    info["curve_url"] = lambda dbc: url_for_label(dbc['label'])
     #conductor,iso_label,disc,number
     #info["curve_url"] = lambda dbc: url_for(".by_full_label",
     #                                        conductor=split_label(dbc['label'])[0],
@@ -139,6 +186,35 @@ def genus2_curve_search(**args):
     credit = 'Genus 2 Team'
     t = 'Genus 2 Curves search results'
     return render_template("search_results_g2.html", info=info, credit=credit, bread=bread, title=t)
+
+def g2_list_to_query(dlist):
+    # if there is only one part, we don't need an $or
+    if len(dlist) == 1:
+        dlist = dlist[0]
+        if type(dlist) == list:
+            s0, d0 = make_disc_key(dlist[0])
+            s1, d1 = make_disc_key(dlist[1])
+            if s0 < 0:
+                return [['abs_disc', {'$gte': d1, '$lte': d0}]]
+            else:
+                return [['abs_disc', {'$lte': d1, '$gte': d0}]]
+        else:
+            s0, d0 = make_disc_key(dlist)
+            return [['abs_disc', d0]]
+    # Now dlist has length >1
+    ans = []
+    for x in dlist:
+        if type(x) == list:
+            s0, d0 = make_disc_key(x[0])
+            s1, d1 = make_disc_key(x[1])
+            if s0 < 0:
+                ans.append({ 'abs_disc': {'$gte': d1, '$lte': d0}})
+            else:
+                ans.append({ 'abs_disc': {'$lte': d1, '$gte': d0}})
+        else:
+            s0, d0 = make_disc_key(x)
+            ans.append({'abs_disc': d0})
+    return [['$or', ans]]
 
 
 def search_input_error(info, bread):
