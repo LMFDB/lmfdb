@@ -86,6 +86,7 @@ def split_label(label_string):
     L = label_string.split(".")
     return L
 
+
 def genus2_curve_search(**args):
     info = to_dict(args)
     query = {}  # database callable
@@ -136,7 +137,10 @@ def genus2_curve_search(**args):
                                             iso_label=split_label(dbc['label'])[1],
                                             disc=split_label(dbc['label'])[2],
                                             number=split_label(dbc['label'])[3]   )
+<<<<<<< HEAD
     
+=======
+>>>>>>> 79f079a543631d94f46472587c1e8f94be570279
     credit = 'Genus 2 Team'
     t = 'Genus 2 Curves search results'
     return render_template("search_results_g2.html", info=info, credit=credit, bread=bread, title=t)
@@ -159,6 +163,7 @@ def by_full_label(conductor,iso_label,disc,number):
     full_label = str(conductor)+"."+iso_label+"."+str(disc)+"."+str(number)
     g2c_logger.debug(full_label)
     return render_curve_webpage_by_label(full_label)
+
 
 # The following function determines whether the given label is in
 # LMFDB or Cremona format, and also whether it is a curve label or an
