@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 import re
 import os
@@ -69,10 +68,13 @@ class G2Cisog_class(object):
         #self.rat_end_alg_name = self.rat_end_alg
         #self.geom_end_alg_name = self.geom_end_alg
         #self.fullrat_end_alg_name = self.full_rat_end_alg
+
+        x = self.label.split('.')[1]
         
         self.friends = [
-         ('L-function', ".")]  # self.lfunction_link)
-#         ('Siegel modular form ' + self.newform_label, self.newform_link),
+          ('L-function', '.'),
+#         ('L-function', url_for("l_functions.l_function_genus2_page", cond=self.cond,x=x)),
+         ('Siegel modular form someday', '.')] 
 #         ('Modular form ' + self.newform_label, self.newform_link)]
 
         self.properties = [('Label', self.label),

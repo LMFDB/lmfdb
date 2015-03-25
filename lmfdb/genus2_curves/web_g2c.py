@@ -103,9 +103,16 @@ class WebG2C(object):
         #data['real_end_alg'] = isogeny_label
 
         # add more
-        
-        self.friends = []
-        self.downloads = []
+
+        x = self.label.split('.')[1]
+        self.friends = [
+          ('L-function', '.'),
+#         ('L-function', url_for("l_functions.l_function_genus2_page", cond=self.cond,x=x)),
+        self.friends = [
+             ('L-function', '.'),
+             ('Siegel modular form someday', '.')]
+        self.downloads = [
+             ('Download Euler factors', '.')]
         iso = self.label.split('.')[1]
         num = '.'.join(self.label.split('.')[2:4])
         self.properties = [('Label', self.label),

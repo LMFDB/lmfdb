@@ -1519,10 +1519,9 @@ class Lfunction_genus2_Q(Lfunction):
  
         self.compute_kappa_lambda_Q_from_mu_nu()
         
-        self.numcoeff = int(round(self.Q_fe * 220 + 10))
-        if self.numcoeff > 10000:
-            self.numcoeff = 10000
-        self.numcoeff = 1000
+        #self.numcoeff = int(round(self.Q_fe * 10000 + 10))
+        #if self.numcoeff > 10000:
+        self.numcoeff = 10000
         self.langlands = True
         self.motivic_weight = 1
         self.selfdual = True

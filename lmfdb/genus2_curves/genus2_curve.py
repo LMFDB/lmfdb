@@ -72,9 +72,9 @@ def index_Q(err_args=None):
     info = {
     }
     credit = 'Genus 2 Team'
-    t = 'Genus 2 curves over $\Q$'
+    title = 'Genus 2 curves over $\Q$'
     bread = [('Genus 2 Curves', url_for(".index")), ('$\Q$', ' ')]
-    return render_template("browse_search_g2.html", info=info, credit=credit, title=t, bread=bread, **err_args)
+    return render_template("browse_search_g2.html", info=info, credit=credit, title=title, bread=bread, **err_args)
 
 @g2c_page.route("/Q/<int:conductor>/")
 def by_conductor(conductor):
@@ -96,9 +96,9 @@ def genus2_curve_search(**args):
     if 'jump' in args:
         return render_curve_webpage_by_label(info["jump"])
 
-    if info.get("disc"):
-        field = "disc_key"
-        ran = info['disc']
+    if info.get("abs_disc"):
+        field = "abs_disc"
+        ran = info[field]
         ran = ran.replace('..', '-').replace(' ','')
         # Past input check
         dlist = parse_discs(ran)
@@ -176,16 +176,10 @@ def genus2_curve_search(**args):
     info["curves"] = res_clean
 
     info["curve_url"] = lambda dbc: url_for_label(dbc['label'])
-    #conductor,iso_label,disc,number
-    #info["curve_url"] = lambda dbc: url_for(".by_full_label",
-    #                                        conductor=split_label(dbc['label'])[0],
-   #                                         iso_label=split_label(dbc['label'])[1],
-   #                                         disc=split_label(dbc['label'])[2],
-   #                                         number=split_label(dbc['label'])[3]   )
 
     credit = 'Genus 2 Team'
-    t = 'Genus 2 Curves search results'
-    return render_template("search_results_g2.html", info=info, credit=credit, bread=bread, title=t)
+    title = 'Genus 2 Curves search results'
+    return render_template("search_results_g2.html", info=info, credit=credit, bread=bread, title=title)
 
 def g2_list_to_query(dlist):
     # if there is only one part, we don't need an $or
@@ -195,12 +189,12 @@ def g2_list_to_query(dlist):
             s0, d0 = make_disc_key(dlist[0])
             s1, d1 = make_disc_key(dlist[1])
             if s0 < 0:
-                return [['disc_key', {'$gte': d1, '$lte': d0}]]
+                return [['abs_disc', {'$gte': d1, '$lte': d0}]]
             else:
-                return [['disc_key', {'$lte': d1, '$gte': d0}]]
+                return [['abs_disc', {'$lte': d1, '$gte': d0}]]
         else:
             s0, d0 = make_disc_key(dlist)
-            return [['disc_key', d0]]
+            return [['abs_disc', d0]]
     # Now dlist has length >1
     ans = []
     for x in dlist:
@@ -208,12 +202,12 @@ def g2_list_to_query(dlist):
             s0, d0 = make_disc_key(x[0])
             s1, d1 = make_disc_key(x[1])
             if s0 < 0:
-                ans.append({ 'disc_key': {'$gte': d1, '$lte': d0}})
+                ans.append({ 'abs_disc': {'$gte': d1, '$lte': d0}})
             else:
-                ans.append({ 'disc_key': {'$lte': d1, '$gte': d0}})
+                ans.append({ 'abs_disc': {'$lte': d1, '$gte': d0}})
         else:
             s0, d0 = make_disc_key(x)
-            ans.append({'disc_key': d0})
+            ans.append({'abs_disc': d0})
     return [['$or', ans]]
 
 
@@ -258,10 +252,10 @@ def render_isogeny_class(iso_class):
                            friends=class_data.friends,
                            downloads=class_data.downloads)
 
+
 def render_curve_webpage_by_label(label):
     credit = 'Genus 2 Team'
     data = WebG2C.by_label(label)
-    
     
     return render_template("curve_g2.html",
                            properties2=data.properties,
