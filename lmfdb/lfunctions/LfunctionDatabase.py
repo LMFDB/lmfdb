@@ -55,15 +55,6 @@ def getHmfData(label):
         f = None
         F_hmf = None
     return (f, F_hmf)
-def getHmfData(label):
-    connection = base.getDBConnection()
-    try:
-        f = connection.hmfs.forms.find_one({'label': label})
-        F_hmf = connection.hmfs.fields.find_one({'label': f['field_label']})
-    except:
-        f = None
-        F_hmf = None
-    return (f, F_hmf)
 
 def getMaassDb():
     host = base.getDBConnection().host

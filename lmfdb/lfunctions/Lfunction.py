@@ -1522,7 +1522,7 @@ class Lfunction_genus2_Q(Lfunction):
         #self.numcoeff = int(round(self.Q_fe * 10000 + 10))
         #if self.numcoeff > 10000:
             #self.numcoeff = 10000
-        self.numcoeff = 1000
+        self.numcoeff = 10000
         self.langlands = True
         self.motivic_weight = 1
         self.selfdual = True
