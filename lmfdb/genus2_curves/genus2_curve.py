@@ -36,14 +36,31 @@ def db_g2c():
 
 @app.route("/G2C")
 def G2C_redirect():
-    return redirect(url_for("g2c.rational_genus2_curves", **request.args))
+    return redirect(url_for(".index", **request.args))
 
 #########################
 #  Search/navigate
 #########################
 
 @g2c_page.route("/")
-def rational_genus2_curves(err_args=None):
+def index(err_args=None):
+    if err_args is None:
+        if len(request.args) != 0:
+            return genus2_curve_search(**request.args)
+        else:
+            err_args = {}
+            for field in ['conductor', 'jinv', 'torsion', 'rank', 'sha', 'optimal', 'torsion_structure', 'msg']:
+                err_args[field] = ''
+            err_args['count'] = '100'
+    info = {
+    }
+    credit = 'Genus 2 Team'
+    title = 'Genus 2 curves'
+    bread = [('Genus 2 Curves', url_for(".index"))]
+    return render_template("browse_search_g2_nf.html", info=info, credit=credit, title=title, bread=bread, **err_args)
+
+@g2c_page.route("/Q/")
+def index_Q(err_args=None):
     if err_args is None:
         if len(request.args) != 0:
             return genus2_curve_search(**request.args)
@@ -56,15 +73,14 @@ def rational_genus2_curves(err_args=None):
     }
     credit = 'Genus 2 Team'
     t = 'Genus 2 curves over $\Q$'
-    bread = []
-#    bread = [('Genus 2 Curves', url_for("ecnf.index")), ('$\Q$', ' ')]
+    bread = [('Genus 2 Curves', url_for(".index")), ('$\Q$', ' ')]
     return render_template("browse_search_g2.html", info=info, credit=credit, title=t, bread=bread, **err_args)
 
 
 
-@g2c_page.route("/<int:conductor>/")
+@g2c_page.route("/Q/<int:conductor>/")
 def by_conductor(conductor):
-    return genus2_curve_search(conductor=conductor, **request.args)
+    return genus2_curve_search(cond=conductor, **request.args)
 
 def split_label(label_string):
     L = label_string.split(".")
@@ -73,9 +89,8 @@ def split_label(label_string):
 def genus2_curve_search(**args):
     info = to_dict(args)
     query = {}  # database callable
-    bread = [
-# ('Genus 2 Curves', url_for("ecnf.index")),
-             ('$\Q$', url_for(".rational_genus2_curves")),
+    bread = [('Genus 2 Curves', url_for(".index")),
+             ('$\Q$', url_for(".index_Q")),
              ('Search Results', '.')]
     #if 'SearchAgain' in args:
     #    return rational_genus2_curves()
@@ -257,12 +272,12 @@ def search_input_error(info, bread):
 #  Specific curve pages
 ##########################
 
-@g2c_page.route("/<int:conductor>/<iso_label>/")
+@g2c_page.route("/Q/<int:conductor>/<iso_label>/")
 def by_double_iso_label(conductor,iso_label):
     full_iso_label = str(conductor)+"."+iso_label
     return render_isogeny_class(full_iso_label)
 
-@g2c_page.route("/<int:conductor>/<iso_label>/<int:disc>/<int:number>")
+@g2c_page.route("/Q/<int:conductor>/<iso_label>/<int:disc>/<int:number>")
 def by_full_label(conductor,iso_label,disc,number):
     full_label = str(conductor)+"."+iso_label+"."+str(disc)+"."+str(number)
     g2c_logger.debug(full_label)
@@ -272,7 +287,7 @@ def by_full_label(conductor,iso_label,disc,number):
 # LMFDB or Cremona format, and also whether it is a curve label or an
 # isogeny class label, and calls the appropriate function
 
-@g2c_page.route("/<label>")
+@g2c_page.route("/Q/<label>")
 def by_g2c_label(label):
     g2c_logger.debug(label)
     try:

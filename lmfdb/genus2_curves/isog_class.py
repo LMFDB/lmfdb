@@ -57,11 +57,9 @@ class G2Cisog_class(object):
         self.ncurves = curves_data.count()
         self.bad_lfactors = [ [c[0], list_to_poly(c[1])] for c in self.bad_lfactors]
         self.friends = [
-#        ('L-function', self.lfunction_link),
-#        ('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', label=self.lmfdb_iso)),
-#        ('Symmetric 4th power L-function', url_for("l_functions.l_function_ec_sym_page", power='4', label=self.lmfdb_iso)),
-#        ('Modular form ' + self.newform_label, self.newform_link)]
-         ]
+         ('L-function', ".")]  # self.lfunction_link)
+#         ('Siegel modular form ' + self.newform_label, self.newform_link),
+#         ('Modular form ' + self.newform_label, self.newform_link)]
 
         self.properties = [('Label', self.label),
                            ('Number of curves', str(self.ncurves)),
@@ -69,13 +67,13 @@ class G2Cisog_class(object):
                            ]
 
         self.title = "Genus 2 Isogeny Class %s" % (self.label)
-        self.downloads = []
-#                         ('Download coeffients of newform', url_for(".download_EC_qexp", label=self.lmfdb_iso, limit=100)),
-#                         ('Download stored data for all curves', url_for(".download_EC_all", label=self.lmfdb_iso))]
+        self.downloads = [
+                          ('Download Euler factors', ".")] # url_for(".download_g2c_eulerfactors", label=self.label)),
+#                          ('Download stored data for all curves', url_for(".download_g2c_all", label=self.label))]
         
         self.bread = [
-#('Elliptic Curves', url_for("ecnf.index")),
-#                      ('$\Q$', url_for(".rational_genus2_curves")),
-#                      ('%s' % N, url_for(".by_conductor", conductor=N)),
-#                      ('%s' % iso, ' ')
+                       ('Genus 2 Curves', url_for(".index")),
+                       ('$\Q$', url_for(".index_Q")),
+                       ('%s' % self.cond, url_for(".by_conductor", conductor=self.cond)),
+                       ('%s' % self.label, ' ')
                      ]

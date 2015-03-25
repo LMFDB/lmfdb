@@ -14,4 +14,4 @@ def body_class():
 
 import genus2_curve
 
-app.register_blueprint(g2c_page, url_prefix="/Genus2Curve/Q")
+app.register_blueprint(g2c_page, url_prefix="/Genus2Curve")
