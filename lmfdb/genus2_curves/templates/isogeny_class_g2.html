@@ -48,6 +48,15 @@ text-align: center;
 Sato-Tate group: ${{ info.st_group }}$
 </p>
 
+<h2> {{ KNOWL('g2c.jac_endomorphisms', title='Endomorphisms of the Jacobian') }} </h2>
+<table>
+  <tr>  <td>\(\mathrm{End}(J) \)</td><td>\(\cong\)</td><td>\({{info.end_alg_name}}\)</td></tr>
+  <tr>  <td>\(\mathrm{End}(J) \otimes \Q\)</td><td>\(\cong\)</td><td>\({{info.rat_end_alg_name}}\)</td></tr>
+  <tr>  <td>\(\mathrm{End}(J) \otimes \R\)</td><td>\(\cong\)</td><td>\({{info.real_end_alg_name}}\)</td></tr>
+  <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}})\)</td><td>\(\cong\)</td><td>\({{info.geom_end_alg_name}}\)</td></tr>
+  <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}}) \otimes \Q\)</td><td>\(\cong\)</td><td>\({{info.fullrat_end_alg_name}}\)</td></tr>
+</table>
+
 <h2>Some motivic stuff here</h2>
 
 {% endblock %}

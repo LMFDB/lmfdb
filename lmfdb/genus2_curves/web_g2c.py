@@ -89,7 +89,8 @@ class WebG2C(object):
         data['aut_grp'] = groupid_to_meaningful(self.aut_grp)
         data['geom_aut_grp'] = groupid_to_meaningful(self.geom_aut_grp)
         data['igusa_clebsch'] = [ZZ(a)  for a in self.igusa_clebsch]
-        data['torsion'] = [ZZ(a)  for a in self.torsion]
+        tor_struct = [ZZ(a)  for a in self.torsion]
+        data['tor_struct'] = ' \\times '.join(['\Z/{%s}\Z' % n for n in tor_struct])
         self.friends = []
         self.downloads = []
 
