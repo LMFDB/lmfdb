@@ -98,12 +98,9 @@ class WebG2C(object):
                            ('Discriminant', '%s' % data['disc']),
                            ('Invariants', '%s </br> %s </br> %s </br> %s' % tuple(data['igusa_clebsch']))]
         self.title = "Genus 2 Curve %s" % (self.label)
-        self.bread = [
-            # Genus 2 Curves should go to a page like was created for ecnf
-            #('Genus 2 Curves', url_for(".rational_genus2_curves")),
-            #('$\Q$', url_for(".rational_genus2_curves")),
-            ('Genus 2 Curves over $\Q$', url_for(".rational_genus2_curves")),
-            ('%s' % cond, url_for(".by_conductor", conductor=cond)),
-#                           ('%s' % iso, url_for(".by_double_iso_label", conductor=N, iso_label=iso)),
-#                           ('%s' % num,' ')
-        ]
+        self.bread = []
+#            ('Genus 2 Curves', url_for(".index")),
+#            ('$\Q$', url_for(".index_Q")),
+#            ('%s' % cond, url_for(".by_conductor", cond=self.cond))]
+#            ('%s' % class, url_for(".by_double_iso_label", conductor=N, iso_label=iso)),
+#            ('%s' % num,' ')
