@@ -79,10 +79,9 @@ class WebG2C(object):
         #data['label'] = self.label
         #data['disc'] = self.disc
         # TODO:  Since the original fields are from the database, why do we need to
-        cond = ZZ(self.cond)
         disc = ZZ(self.abs_disc) * ZZ(self.disc_sign)
         data['disc'] = disc
-        data['cond'] = cond
+        data['cond'] = ZZ(self.cond)
         data['min_eqn'] = list_to_min_eqn(self.min_eqn)
         data['disc_factor_latex'] = web_latex(factor(data['disc']))
         data['cond_factor_latex'] = web_latex(factor(int(self.cond)))
@@ -92,15 +91,16 @@ class WebG2C(object):
         data['torsion'] = [ZZ(a)  for a in self.torsion]
         self.friends = []
         self.downloads = []
-
+        iso = self.label.split('.')[1]
+        num = '.'.join(self.label.split('.')[2:4])
         self.properties = [('Label', self.label),
                            ('Conductor','%s' % self.cond),
                            ('Discriminant', '%s' % data['disc']),
                            ('Invariants', '%s </br> %s </br> %s </br> %s' % tuple(data['igusa_clebsch']))]
         self.title = "Genus 2 Curve %s" % (self.label)
-        self.bread = []
-#            ('Genus 2 Curves', url_for(".index")),
-#            ('$\Q$', url_for(".index_Q")),
-#            ('%s' % cond, url_for(".by_conductor", cond=self.cond))]
-#            ('%s' % class, url_for(".by_double_iso_label", conductor=N, iso_label=iso)),
-#            ('%s' % num,' ')
+        self.bread = [
+             ('Genus 2 Curves', url_for(".index")),
+             ('$\Q$', url_for(".index_Q")),
+             ('%s' % self.cond, url_for(".by_conductor", conductor=self.cond)),
+             ('%s' % iso, url_for(".by_double_iso_label", conductor=self.cond, iso_label=iso)),
+             ('Genus 2 curve %s' % num, url_for(".by_g2c_label", label=self.label))]
