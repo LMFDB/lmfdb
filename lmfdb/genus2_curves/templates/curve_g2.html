@@ -39,14 +39,14 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
         <tr>
           <td> \( N \) </td>
 	  <td>&nbsp;=&nbsp;</td>
-	  <td>\( {{ data.cond }} \)</td>
+	  <td>\( {{ data.data.cond }} \)</td>
           <td>&nbsp;=&nbsp;</td>
           <td>{{ data.data.cond_factor_latex }}</td>
         </tr>
         <tr>
           <td> \( \Delta \) </td>
 	  <td>&nbsp;=&nbsp;</td>
-	  <td>\({{ data.disc }}\)</td>
+	  <td>\({{ data.data.disc }}\)</td>
           <td>&nbsp;=&nbsp;</td>
           <td>{{ data.data.disc_factor_latex }}</td>
         </tr>
@@ -60,30 +60,29 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 	<tr>
           <td> \( I_4 \) </td>
 	  <td>=</td>
-	  <td>\({{ data.igusa_clebsch[0] }}\)</td>
+	  <td>\({{ data.data.igusa_clebsch[0] }}\)</td>
         </tr>
 	<tr>
           <td> \( I_6 \) </td>
 	  <td>=</td>
-	  <td>\({{ data.igusa_clebsch[1] }}\)</td>
+	  <td>\({{ data.data.igusa_clebsch[1] }}\)</td>
         </tr>
 	<tr>
           <td> \( I_8 \) </td>
 	  <td>=</td>
-	  <td>\({{ data.igusa_clebsch[2] }}\)</td>
+	  <td>\({{ data.data.igusa_clebsch[2] }}\)</td>
         </tr>
 	<tr>
           <td> \( I_{10} \) </td>
 	  <td>=</td>
-	  <td>\({{ data.igusa_clebsch[3]}}\)</td>
+	  <td>\({{ data.data.igusa_clebsch[3]}}\)</td>
         </tr>
 	</table>
 
-    <h2> {{ KNOWL('g2c.aut_grp', title='Automorphism group over $\Q$') }} </h2>
-<p>   \({{ data.data.aut_grp}} \) </p>
-    <h2> {{ KNOWL('g2c.geom_aut_grp', title='Automorphism group over $\overline{\Q}$') }} </h2>
-<p>  \({{ data.data.geom_aut_grp}} \) </p>
-
-
+    <h2> {{ KNOWL('g2c.aut_grp', title='Automorphism group') }} </h2>
+<table>
+<tr>  <td>Over \(\Q\)</td> <td>\({{ data.data.aut_grp}} \)</td> </tr>
+<tr>  <td>Over \(\overline{\Q}\)</td> <td>\({{ data.data.geom_aut_grp}} \) </td></tr>
+</table>
 
 {% endblock %}
