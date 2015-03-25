@@ -18,7 +18,7 @@ g2cdb = None
 def db_g2c():
     global g2cdb
     if g2cdb is None:
-        g2cdb = lmfdb.base.getDBConnection().genus2_curves.curves
+        g2cdb = lmfdb.base.getDBConnection().genus2_curves
     return g2cdb
 
 def list_to_min_eqn(L):
@@ -33,6 +33,11 @@ def groupid_to_meaningful(groupid):
         return group_dict[str(groupid).replace(" ","")]
     else:
         return groupid
+
+def isog_label(label):
+    #get isog label from full label
+    L = label.split(".")
+    return L[0]+ "." + L[1]
 
 class WebG2C(object):
     """
@@ -58,7 +63,7 @@ class WebG2C(object):
         """
         try:
             print label
-            data = db_g2c().find_one({"label" : label})
+            data = db_g2c().curves.find_one({"label" : label})
             
         except AttributeError:
             return "Invalid label" # caller must catch this and raise an error
@@ -90,6 +95,15 @@ class WebG2C(object):
         data['igusa_clebsch'] = [ZZ(a)  for a in self.igusa_clebsch]
         tor_struct = [ZZ(a)  for a in self.torsion]
         data['tor_struct'] = ' \\times '.join(['\Z/{%s}\Z' % n for n in tor_struct])
+        isogeny_label = isog_label(self.label)
+        isogeny_class = db_g2c().isogeny_classes.find_one({'label' : isogeny_label})
+        data['real_end_alg'] = isogeny_class['real_end_alg']
+
+
+        #data['real_end_alg'] = isogeny_label
+
+        # add more
+        
         self.friends = []
         self.downloads = []
         iso = self.label.split('.')[1]
