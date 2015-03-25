@@ -16,7 +16,7 @@ g2cdb = None
 def db_g2c():
     global g2cdb
     if g2cdb is None:
-        g2cdb = lmfdb.base.getDBConnection().genus2_curves.isogeny_classes
+        g2cdb = lmfdb.base.getDBConnection().genus2_curves
     return g2cdb
 
 def list_to_poly(s):
@@ -43,7 +43,7 @@ class G2Cisog_class(object):
         curves collection by its label.
         """
         try:
-            data = db_g2c().find_one({"label" : label})
+            data = db_g2c().isogeny_classes.find_one({"label" : label})
         except AttributeError:
             return "Invalid label" # caller must catch this and raise an error
 
@@ -52,8 +52,8 @@ class G2Cisog_class(object):
         return "Class not found" # caller must catch this and raise an error
 
     def make_class(self):
-        curves_data = db_g2c().find({"isog_class" : self.label})
-        self.curves = [ {"label" : c.label, "equation_formatted" : list_to_min_eqn(c.equation)} for c in curves_data ]
+        curves_data = db_g2c().curves.find({"class" : self.label})
+        self.curves = [ {"label" : c['label'], "equation_formatted" : list_to_min_eqn(c['min_eqn'])} for c in curves_data ]
         self.ncurves = curves_data.count()
         self.bad_lfactors = [ [c[0], list_to_poly(c[1])] for c in self.bad_lfactors]
         self.friends = [
