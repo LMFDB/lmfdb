@@ -1504,11 +1504,11 @@ class Lfunction_genus2_Q(Lfunction):
         logger.debug(str(self.label) + str(self.number))
 
         # Load form from database
-        (C,isoclass) = LfunctionDatabase.getGenus2CurveData(self.label)
-        if C is None:
-            raise KeyError("There is no genus 2 curve with that label")
+        isoclass = LfunctionDatabase.getGenus2IsogenyClass(self.label)
+        if isoclass is None:
+            raise KeyError("There is no genus 2 isogeny class with that label")
 
-        ## Extract the L-function information from the genus 2 curve
+        ## Extract the L-function information
         self.degree = 4
         self.quasidegree = 2
         self.level = isoclass['cond']
@@ -1521,7 +1521,8 @@ class Lfunction_genus2_Q(Lfunction):
         
         #self.numcoeff = int(round(self.Q_fe * 10000 + 10))
         #if self.numcoeff > 10000:
-        self.numcoeff = 10000
+            #self.numcoeff = 10000
+        self.numcoeff = 1000
         self.langlands = True
         self.motivic_weight = 1
         self.selfdual = True
@@ -1545,10 +1546,10 @@ class Lfunction_genus2_Q(Lfunction):
 
         self.checkselfdual()
 
-        self.texname = "L(s,C)"
-        self.texnamecompleteds = "\\Lambda(s,C)"
-        self.texnamecompleted1ms = "\\Lambda(1-s,C)"
-        self.title = ("$L(s,C)$, " + "where $C$ is a genus 2 curve "
+        self.texname = "L(s,A)"
+        self.texnamecompleteds = "\\Lambda(s,A)"
+        self.texnamecompleted1ms = "\\Lambda(1-s,A)"
+        self.title = ("$L(s,A)$, " + "where $A$ is an abelian surface "
                       + "of conductor " + str(self.level))
 
         self.citation = ''

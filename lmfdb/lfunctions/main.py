@@ -325,9 +325,9 @@ def l_function_ec_sym_page(power, label):
     return render_single_Lfunction(SymmetricPowerLfunction, args, request)
 
 # L-function of genus 2 curve/Q ########################################
-@l_function_page.route("/Genus2Curve/Q/<cond>/<x>/<absdisc>/<num>/")
-def l_function_genus2_page(cond,x,absdisc,num):
-    args = {'label': cond+'.'+x+'.'+absdisc+'.'+num}
+@l_function_page.route("/Genus2Curve/Q/<cond>/<x>/")
+def l_function_genus2_page(cond,x):
+    args = {'label': cond+'.'+x}
     return render_single_Lfunction(Lfunction_genus2_Q, args, request)
 
 # L-function from lcalcfile with given url #####################################
@@ -480,6 +480,17 @@ def initLfunction(L, args, request):
         charname = WebDirichlet.char2tex(smod, snum)
         info['bread'] = get_bread(1, [(charname, request.url)])
         info['friends'] = [('Dirichlet Character ' + str(charname), friendlink)]
+
+    elif L.Ltype() == 'genus2curveQ':
+        label = L.label
+        cond = int(label.split('.')[0])
+        iso_label = label.split('.')[1]
+#        info['friends'] = [('Isogeny class ' + label, url_for("genus2_curve.by_double_iso_label", conductor=cond, iso_label=iso_label ))]
+        info['friends'] = [('Isogeny class ' + label, friendlink)]
+#        info['bread'] = get_bread(4, [('Genus 2 curve', url_for('.l_function_g2c_browse_page')),
+#                                      (label, url_for('.l_function_genus2_page', label=label))])
+        info['bread'] = get_bread(4, [('Genus 2 curve', '.'),
+                                       (label, '.')])
 
     elif L.Ltype() == 'ellipticcurveQ':
         label = L.label
@@ -859,7 +870,7 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
             return HypergeometricMotiveLfunction(label = arg4)
 
     elif arg1 == "Genus2Curve" and arg2 == "Q":
-        return Lfunction_genus2_Q(label=str(arg3)+'.'+str(arg4)+'.'+str(arg5)+'.'+str(arg6))
+        return Lfunction_genus2_Q(label=str(arg3)+'.'+str(arg4))
     
     elif arg1 == 'Lcalcurl':
         return Lfunction_lcalc(Ltype='lcalcurl', url=temp_args['url'])

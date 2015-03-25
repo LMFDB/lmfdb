@@ -72,9 +72,8 @@ class G2Cisog_class(object):
         x = self.label.split('.')[1]
         
         self.friends = [
-          ('L-function', '.'),
-#         ('L-function', url_for("l_functions.l_function_genus2_page", cond=self.cond,x=x)),
-         ('Siegel modular form someday', '.')] 
+          ('L-function', url_for("l_functions.l_function_genus2_page", cond=self.cond,x=x)),
+          ('Siegel modular form someday', '.')] 
 #         ('Modular form ' + self.newform_label, self.newform_link)]
 
         self.properties = [('Label', self.label),
