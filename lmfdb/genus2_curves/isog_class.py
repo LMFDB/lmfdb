@@ -22,6 +22,11 @@ def db_g2c():
 def list_to_poly(s):
     return str(PolynomialRing(QQ, 'x')(s)).replace('*','')
 
+def url_for_label(label):
+    # returns the label
+    L = label.split(".")
+    return url_for(".by_full_label", conductor=L[0], iso_label=L[1], disc=L[2], number=L[3])
+
 class G2Cisog_class(object):
     """
     Class for an isogeny class of genus 2 curves over Q
@@ -53,7 +58,7 @@ class G2Cisog_class(object):
 
     def make_class(self):
         curves_data = db_g2c().curves.find({"class" : self.label})
-        self.curves = [ {"label" : c['label'], "equation_formatted" : list_to_min_eqn(c['min_eqn'])} for c in curves_data ]
+        self.curves = [ {"label" : c['label'], "equation_formatted" : list_to_min_eqn(c['min_eqn']), "url": url_for_label(c['label'])} for c in curves_data ]
         self.ncurves = curves_data.count()
         self.bad_lfactors = [ [c[0], list_to_poly(c[1])] for c in self.bad_lfactors]
         self.friends = [
