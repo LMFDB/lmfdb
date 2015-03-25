@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 import re
 import os
@@ -23,7 +24,7 @@ def list_to_poly(s):
     return str(PolynomialRing(QQ, 'x')(s)).replace('*','')
 
 def url_for_label(label):
-    # returns the label
+    # returns the url for label
     L = label.split(".")
     return url_for(".by_full_label", conductor=L[0], iso_label=L[1], disc=L[2], number=L[3])
 
@@ -61,6 +62,14 @@ class G2Cisog_class(object):
         self.curves = [ {"label" : c['label'], "equation_formatted" : list_to_min_eqn(c['min_eqn']), "url": url_for_label(c['label'])} for c in curves_data ]
         self.ncurves = curves_data.count()
         self.bad_lfactors = [ [c[0], list_to_poly(c[1])] for c in self.bad_lfactors]
+        self.real_end_alg_name = self.real_end_alg
+
+        # TODO:  When these cells are in the database, uncomment below
+        #self.end_alg_name = self.end_alg
+        #self.rat_end_alg_name = self.rat_end_alg
+        #self.geom_end_alg_name = self.geom_end_alg
+        #self.fullrat_end_alg_name = self.full_rat_end_alg
+        
         self.friends = [
          ('L-function', ".")]  # self.lfunction_link)
 #         ('Siegel modular form ' + self.newform_label, self.newform_link),
