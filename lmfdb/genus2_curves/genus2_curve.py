@@ -76,8 +76,6 @@ def index_Q(err_args=None):
     bread = [('Genus 2 Curves', url_for(".index")), ('$\Q$', ' ')]
     return render_template("browse_search_g2.html", info=info, credit=credit, title=t, bread=bread, **err_args)
 
-
-
 @g2c_page.route("/Q/<int:conductor>/")
 def by_conductor(conductor):
     return genus2_curve_search(cond=conductor, **request.args)
@@ -85,7 +83,6 @@ def by_conductor(conductor):
 def split_label(label_string):
     L = label_string.split(".")
     return L
-
 
 def genus2_curve_search(**args):
     info = to_dict(args)
@@ -170,37 +167,7 @@ def by_full_label(conductor,iso_label,disc,number):
 @g2c_page.route("/Q/<label>")
 def by_g2c_label(label):
     g2c_logger.debug(label)
-    try:
-        N, iso, number = split_lmfdb_label(label)
-    except AttributeError:
-        ec_logger.debug("%s not a valid lmfdb label, trying cremona")
-        try:
-            N, iso, number = split_cremona_label(label)
-        except AttributeError:
-            ec_logger.debug("%s not a valid cremona label either, trying Weierstrass")
-            eqn = label.replace(" ","")
-            if weierstrass_eqn_regex.match(eqn) or short_weierstrass_eqn_regex.match(eqn):
-                return by_weierstrass(eqn)
-            else:
-                return elliptic_curve_jump_error(label, {})
-
-        # We permanently redirect to the lmfdb label
-        if number:
-            data = db_ec().find_one({'label': label})
-            if data is None:
-                return elliptic_curve_jump_error(label, {})
-            ec_logger.debug(url_for(".by_ec_label", label=data['lmfdb_label']))
-            return redirect(url_for(".by_ec_label", label=data['lmfdb_label']), 301)
-        else:
-            data = db_ec().find_one({'iso': label})
-            if data is None:
-                return elliptic_curve_jump_error(label, {})
-            ec_logger.debug(url_for(".by_ec_label", label=data['lmfdb_label']))
-            return redirect(url_for(".by_ec_label", label=data['lmfdb_iso']), 301)
-    if number:
-        return redirect(url_for(".by_triple_label", conductor=N, iso_label=iso, number=number))
-    else:
-        return redirect(url_for(".by_double_iso_label", conductor=N, iso_label=iso))
+    return render_curve_webpage_by_label(label)
 
 def render_isogeny_class(iso_class):
     credit = 'Genus 2 Team'
