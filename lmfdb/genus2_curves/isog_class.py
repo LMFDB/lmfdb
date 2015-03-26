@@ -102,26 +102,40 @@ class G2Cisog_class(object):
         self.curves = [ {"label" : c['label'], "equation_formatted" : list_to_min_eqn(c['min_eqn']), "url": url_for_label(c['label'])} for c in curves_data ]
         self.ncurves = curves_data.count()
         self.bad_lfactors = [ [c[0], list_to_factored_poly_otherorder(c[1])] for c in self.bad_lfactors]
-        self.end_alg_name = end_alg_name(self.end_alg)
-        self.rat_end_alg_name = end_alg_name(self.rat_end_alg)
-        self.real_end_alg_name = end_alg_name(self.real_end_alg)
-        self.geom_end_alg_name = end_alg_name(self.geom_end_alg)
-        self.rat_geom_end_alg_name = end_alg_name(self.rat_geom_end_alg)
-        self.real_geom_end_alg_name = end_alg_name(self.real_geom_end_alg)
+        for endalgtype in ['end_alg', 'rat_end_alg', 'real_end_alg', 'geom_end_alg', 'rat_geom_end_alg', 'real_geom_end_alg']:
+            if hasattr(self, endalgtype):
+                setattr(self,endalgtype + '_name',end_alg_name(getattr(self,endalgtype)))
+            else:
+                setattr(self,endalgtype + '_name','')
 
         self.st_group_name = st_group_name(self.st_group)
+
+        if self.is_gl2_type:
+            self.is_gl2_type_name = 'yes'
+        else:
+            self.is_gl2_type_name = 'no'
 
         x = self.label.split('.')[1]
         
         self.friends = [
           ('L-function', url_for("l_functions.l_function_genus2_page", cond=self.cond,x=x)),
-          ('Siegel modular form someday', '.')] 
-#         ('Modular form ' + self.newform_label, self.newform_link)]
+          ('Siegel modular form someday', '.')]
+
+        self.ecproduct_wurl = []
+        if getattr(self, 'ecproduct'):
+            for i in range(2):
+                curve_label = self.ecproduct[i]
+                crv_url = url_for("ec.by_ec_label", label=curve_label)
+                if i == 1 or len(set(self.ecproduct)) <> 1:
+                    self.friends.append(('Elliptic curve ' + curve_label, crv_url))
+                self.ecproduct_wurl.append({'label' : curve_label, 'url' : crv_url})
 
         self.properties = [('Label', self.label),
                            ('Number of curves', str(self.ncurves)),
-                           ('Conductor', '\(%s\)' % self.cond),
-                           ]
+                           ('Conductor','%s' % self.cond),
+                           ('Sato-Tate group', '\(%s\)' % self.st_group_name),
+                           ('\(\mathrm{End}(J_{\overline{\Q}}) \otimes \R\)','\(%s\)' % self.real_geom_end_alg_name),
+                           ('\(\mathrm{GL}_2\)-type','%s' % self.is_gl2_type_name)]
 
         self.title = "Genus 2 Isogeny Class %s" % (self.label)
         self.downloads = [

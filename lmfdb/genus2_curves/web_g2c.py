@@ -11,6 +11,8 @@ from lmfdb.genus2_curves.data import group_dict
 import sage.all
 from sage.all import EllipticCurve, latex, matrix, ZZ, QQ, PolynomialRing, factor
 
+from lmfdb.WebNumberField import *
+
 logger = make_logger("g2c")
 
 g2cdb = None
@@ -124,14 +126,31 @@ class WebG2C(object):
             tor_struct = [ZZ(a)  for a in self.torsion]
             data['tor_struct'] = ' \\times '.join(['\Z/{%s}\Z' % n for n in tor_struct])
         isogeny_class = db_g2c().isogeny_classes.find_one({'label' : isog_label(self.label)})
+<<<<<<< HEAD
         data['end_alg_name'] = end_alg_name(isogeny_class['end_alg'])
         data['rat_end_alg_name'] = end_alg_name(isogeny_class['rat_end_alg'])
         data['real_end_alg_name'] = end_alg_name(isogeny_class['real_end_alg'])
         data['geom_end_alg_name'] = end_alg_name(isogeny_class['geom_end_alg'])
         data['rat_geom_end_alg_name'] = end_alg_name(isogeny_class['rat_geom_end_alg'])
         data['real_geom_end_alg_name'] = end_alg_name(isogeny_class['real_geom_end_alg'])
+=======
+        for endalgtype in ['end_alg', 'rat_end_alg', 'real_end_alg', 'geom_end_alg', 'rat_geom_end_alg', 'real_geom_end_alg']:
+            if endalgtype in isogeny_class:
+                data[endalgtype + '_name'] = end_alg_name(isogeny_class[endalgtype])
+            else:
+                data[endalgtype + '_name'] = ''
+
+        data['geom_end_field'] = isogeny_class['geom_end_field']
+        if data['geom_end_field'] <> '':
+            nf = WebNumberField(data['geom_end_field'])
+            data['geom_end_field'] = teXify_pol(str(nf.poly()))
+
+>>>>>>> c43956fd5d0f881c01f9a174491a35ce2692498a
         data['st_group_name'] = st_group_name(isogeny_class['st_group'])
-        data['is_gl2_type'] = isogeny_class['is_gl2_type']
+        if isogeny_class['is_gl2_type']:
+            data['is_gl2_type'] = 'yes'
+        else:
+            data['is_gl2_type'] = 'no'
 
         x = self.label.split('.')[1]
         self.friends = [
@@ -145,7 +164,10 @@ class WebG2C(object):
         self.properties = [('Label', self.label),
                            ('Conductor','%s' % self.cond),
                            ('Discriminant', '%s' % data['disc']),
-                           ('Invariants', '%s </br> %s </br> %s </br> %s'% tuple(data['igusa_clebsch'])), ('Sato-Tate group', '\(%s\)' % data['st_group_name']), ('\(\mathrm{End}(J_{\overline{\Q}}) \otimes \R\)','\(%s\)' % data['real_geom_end_alg_name']),('\(\mathrm{GL}_2\)-type','%s' % data['is_gl2_type'])]
+                           ('Invariants', '%s </br> %s </br> %s </br> %s'% tuple(data['igusa_clebsch'])), 
+                           ('Sato-Tate group', '\(%s\)' % data['st_group_name']), 
+                           ('\(\mathrm{End}(J_{\overline{\Q}}) \otimes \R\)','\(%s\)' % data['real_geom_end_alg_name']),
+                           ('\(\mathrm{GL}_2\)-type','%s' % data['is_gl2_type'])]
         self.title = "Genus 2 Curve %s" % (self.label)
         self.bread = [
              ('Genus 2 Curves', url_for(".index")),

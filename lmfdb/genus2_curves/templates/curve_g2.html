@@ -95,7 +95,6 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 Sato-Tate group: \({{ data.data.st_group_name }}\)
 </p>
 
-<!-- FIXME:    Fix here, then mimic in isog -->
 <h2> {{ KNOWL('g2c.jac_endomorphisms', title='Endomorphisms of the Jacobian') }} </h2>
 <table>
   <tr>  <td>\(\mathrm{End}(J) \)</td><td>\(\simeq\)</td><td>\({{data.data.end_alg_name}}\)</td></tr>
@@ -105,5 +104,8 @@ Sato-Tate group: \({{ data.data.st_group_name }}\)
   <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}}) \otimes \Q\)</td><td>\(\simeq\)</td><td>\({{data.data.rat_geom_end_alg_name}}\)</td></tr>
   <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}}) \otimes \R\)</td><td>\(\simeq\)</td><td>\({{data.data.real_geom_end_alg_name}}\)</td></tr>
 </table>
+
+<p>Field over which all endomorphisms are defined: 
+<A HREF="/NumberField/{{info.geom_end_field }}">{{info.geom_end_field}}</A></p>
 
 {% endblock %}
