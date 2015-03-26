@@ -10,6 +10,7 @@ over the rational numbers.
 
 <h2> Browse {{ KNOWL('g2c.???', title='genus 2 curves over $\Q$') }} </h2>
 
+Some of our favorite curves.
 {% for curve in info.browse_curves: %}
   <td> <a href = "{{info.curve_url(curve)}}"> {{curve.label}} </a> </td> 
 {% endfor %}

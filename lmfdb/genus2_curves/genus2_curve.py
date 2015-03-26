@@ -52,6 +52,11 @@ def index_Q():
     if len(request.args) != 0:
         return genus2_curve_search(**request.args)
     info = {'count' : curve_count}
+    info["curve_url"] =  lambda dbc: url_for_label(dbc['label'])
+    info["browse_curves"] = [
+        db_g2c().curves.find_one({"label":"169.a.169.1"}),
+        db_g2c().curves.find_one({"label":"169.a.169.1"})
+    ]
     credit = 'Genus 2 Team'
     title = 'Genus 2 curves over $\Q$'
     bread = [('Genus 2 Curves', url_for(".index")), ('$\Q$', ' ')]
