@@ -26,7 +26,7 @@ g2cdb = None
 def db_g2c():
     global g2cdb
     if g2cdb is None:
-        g2cdb = lmfdb.base.getDBConnection().genus2_curves.curves
+        g2cdb = lmfdb.base.getDBConnection().genus2_curves
     return g2cdb
 
 
@@ -96,9 +96,9 @@ def genus2_curve_search(**args):
     if 'jump' in args:
         return render_curve_webpage_by_label(info["jump"])
 
-    if info.get("abs_disc"):
+    if info.get("disc"):
         field = "abs_disc"
-        ran = info[field]
+        ran = info["disc"]
         ran = ran.replace('..', '-').replace(' ','')
         # Past input check
         dlist = parse_discs(ran)
@@ -155,7 +155,7 @@ def genus2_curve_search(**args):
         count = 100
 
     info["query"] = dict(query)
-    res = db_g2c().find(query).sort([("cond", pymongo.ASCENDING),
+    res = db_g2c().curves.find(query).sort([("cond", pymongo.ASCENDING),
                                      ("label", pymongo.ASCENDING)
                                  ]).limit(count)
     nres = res.count()
@@ -189,12 +189,12 @@ def g2_list_to_query(dlist):
             s0, d0 = make_disc_key(dlist[0])
             s1, d1 = make_disc_key(dlist[1])
             if s0 < 0:
-                return [['abs_disc', {'$gte': d1, '$lte': d0}]]
+                return [['disc_key', {'$gte': d1, '$lte': d0}]]
             else:
-                return [['abs_disc', {'$lte': d1, '$gte': d0}]]
+                return [['disc_key', {'$lte': d1, '$gte': d0}]]
         else:
             s0, d0 = make_disc_key(dlist)
-            return [['abs_disc', d0]]
+            return [['disc_key', d0]]
     # Now dlist has length >1
     ans = []
     for x in dlist:
@@ -202,12 +202,12 @@ def g2_list_to_query(dlist):
             s0, d0 = make_disc_key(x[0])
             s1, d1 = make_disc_key(x[1])
             if s0 < 0:
-                ans.append({ 'abs_disc': {'$gte': d1, '$lte': d0}})
+                ans.append({ 'disc_key': {'$gte': d1, '$lte': d0}})
             else:
-                ans.append({ 'abs_disc': {'$lte': d1, '$gte': d0}})
+                ans.append({ 'disc_key': {'$lte': d1, '$gte': d0}})
         else:
             s0, d0 = make_disc_key(x)
-            ans.append({'abs_disc': d0})
+            ans.append({'disc_key': d0})
     return [['$or', ans]]
 
 
