@@ -34,6 +34,7 @@ def list_to_min_eqn(L):
 def end_alg_name(name):
     name_dict = {
         "Z":"\\Z",
+        "Q":"\\Q",        
         "R":"\\R",
         "C":"\\C",
         "R x R":"\\R \\times \\R",
