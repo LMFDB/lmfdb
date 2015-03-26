@@ -40,6 +40,7 @@ def end_alg_name(name):
         "R x R":"\\R \\times \\R",
         "C x R":"\\C \\times \\R",
         "C x C":"\\C \\times \\C",
+        "M_2(Q)":"\\mathrm{M}_2(\\Q)",
         "M_2(R)":"\\mathrm{M}_2(\\R)",
         "M_2(C)":"\\mathrm{M}_2(\\C)"
     }
