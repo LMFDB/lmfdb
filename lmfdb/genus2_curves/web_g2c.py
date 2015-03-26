@@ -34,7 +34,7 @@ def end_alg_name(name):
         "Z":"\\Z",
         "R":"\\R",
         "C":"\\C",
-        "R x R":"\\R x \\R",
+        "R x R":"\\R \times \\R",
         "C x R":"\\C \times \\R",
         "C x C":"\\C \times \\C",
         "M_2(R)":"\\mathrm{M}_2(\R)",
