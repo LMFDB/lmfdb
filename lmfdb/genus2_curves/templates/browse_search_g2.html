@@ -16,6 +16,13 @@ By {{ KNOWL('g2c.conductor', title='conductor')}}:
 {% endfor %}
 </p>
 
+<p>
+By {{ KNOWL('g2c.discriminant', title='discriminant')}}:
+{% for rnge in info.discriminant_list %}
+<a href="?disc={{rnge}}">{{rnge}}</a>
+{% endfor %}
+</p>
+
 Some of our favorite curves.
 {% for curve in info.browse_curves: %}
  <a href = "{{info.curve_url(curve)}}"> {{curve.label}} </a>  

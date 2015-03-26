@@ -55,9 +55,11 @@ def index_Q():
     info["curve_url"] =  lambda dbc: url_for_label(dbc['label'])
     info["browse_curves"] = [
         db_g2c().curves.find_one({"label":"169.a.169.1"}),
-        db_g2c().curves.find_one({"label":"169.a.169.1"})
+        db_g2c().curves.find_one({"label":"1152.a.147456.1"}),
+        db_g2c().curves.find_one({"label":"12500.a.12500.1"})
     ]
     info["conductor_list"] = ['1-499', '500-999', '1000-99999','100000-1000000'   ]
+    info["discriminant_list"] = ['1-499', '500-999', '1000-99999','100000-1000000'   ]
     credit = 'Genus 2 Team'
     title = 'Genus 2 curves over $\Q$'
     bread = [('Genus 2 Curves', url_for(".index")), ('$\Q$', ' ')]
