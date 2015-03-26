@@ -11,6 +11,8 @@ from lmfdb.genus2_curves.data import group_dict
 import sage.all
 from sage.all import EllipticCurve, latex, matrix, ZZ, QQ, PolynomialRing, factor
 
+from lmfdb.WebNumberField import *
+
 logger = make_logger("g2c")
 
 g2cdb = None
@@ -128,6 +130,11 @@ class WebG2C(object):
                 data[endalgtype + '_name'] = end_alg_name(isogeny_class[endalgtype])
             else:
                 data[endalgtype + '_name'] = ''
+
+        data['geom_end_field'] = isogeny_class['geom_end_field']
+        if data['geom_end_field'] <> '':
+            nf = WebNumberField(data['geom_end_field'])
+            data['geom_end_field'] = teXify_pol(str(nf.poly()))
 
         data['st_group_name'] = st_group_name(isogeny_class['st_group'])
         if isogeny_class['is_gl2_type']:

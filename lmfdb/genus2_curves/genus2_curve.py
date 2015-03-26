@@ -43,38 +43,19 @@ def G2C_redirect():
 #########################
 
 @g2c_page.route("/")
-def index(err_args=None):
-    curve_count = db_g2c().curves.count()  # Only over Q for now
-    if err_args is None:
-        if len(request.args) != 0:
-            return genus2_curve_search(**request.args)
-        else:
-            err_args = {}
-            for field in ['conductor', 'jinv', 'torsion', 'rank', 'sha', 'optimal', 'torsion_structure', 'msg']:
-                err_args[field] = ''
-            err_args['count'] = '100'
-    info = {'count' : curve_count}
-    credit = 'Genus 2 Team'
-    title = 'Genus 2 curves'
-    bread = [('Genus 2 Curves', url_for(".index"))]
-    return render_template("browse_search_g2_nf.html", info=info, credit=credit, title=title, bread=bread, **err_args)
+def index():
+    return redirect(url_for(".index_Q", **request.args))
 
 @g2c_page.route("/Q/")
-def index_Q(err_args=None):
+def index_Q():
     curve_count = db_g2c().curves.count()
-    if err_args is None:
-        if len(request.args) != 0:
-            return genus2_curve_search(**request.args)
-        else:
-            err_args = {}
-            for field in ['conductor', 'jinv', 'torsion', 'rank', 'sha', 'optimal', 'torsion_structure', 'msg']:
-                err_args[field] = ''
-            err_args['count'] = '100'
+    if len(request.args) != 0:
+        return genus2_curve_search(**request.args)
     info = {'count' : curve_count}
     credit = 'Genus 2 Team'
     title = 'Genus 2 curves over $\Q$'
     bread = [('Genus 2 Curves', url_for(".index")), ('$\Q$', ' ')]
-    return render_template("browse_search_g2.html", info=info, credit=credit, title=title, bread=bread, **err_args)
+    return render_template("browse_search_g2.html", info=info, credit=credit, title=title, bread=bread)
 
 @g2c_page.route("/Q/<int:conductor>/")
 def by_conductor(conductor):
