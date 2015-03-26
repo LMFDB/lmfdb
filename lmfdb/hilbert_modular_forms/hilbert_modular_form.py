@@ -367,8 +367,8 @@ def render_hmf_webpage(**args):
                    ('Level', '$' + teXify_pol(data['level_ideal']) + '$'),
                    ('Label', '%s' % data['label_suffix']),
                    ('Dimension', '%s' % data['dimension']),
-                   ('CM?', is_CM),
-                   ('Base Change?', is_base_change)
+                   ('CM', is_CM),
+                   ('Base Change', is_base_change)
                    ]
 
     return render_template("hilbert_modular_form.html", downloads=info["downloads"], info=info, properties2=properties2, credit=credit, title=t, bread=bread, friends=info['friends'])

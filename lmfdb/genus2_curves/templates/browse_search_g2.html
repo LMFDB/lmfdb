@@ -3,12 +3,17 @@
 
 <!-- from hmf/template/hilbermodularformall-->
 
-<h2> Browse {{ KNOWL('g2c.???', title='genus 2 curves over $\Q$') }} </h2>
-
 <p>
-The database currently contains {{info.counts.total}} genus 2 curves
+The database currently contains {{info.count}} genus 2 curves
 over the rational numbers. 
 </p>
+
+<h2> Browse {{ KNOWL('g2c.???', title='genus 2 curves over $\Q$') }} </h2>
+
+{% for curve in info.browse_curves: %}
+  <td> <a href = "{{info.curve_url(curve)}}"> {{curve.label}} </a> </td> 
+{% endfor %}
+
 
 <h2> Search </h2>
 

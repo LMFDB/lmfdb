@@ -101,7 +101,7 @@ class G2Cisog_class(object):
         curves_data = db_g2c().curves.find({"class" : self.label}).sort([("disc_key", pymongo.ASCENDING), ("label", pymongo.ASCENDING)])
         self.curves = [ {"label" : c['label'], "equation_formatted" : list_to_min_eqn(c['min_eqn']), "url": url_for_label(c['label'])} for c in curves_data ]
         self.ncurves = curves_data.count()
-        self.bad_lfactors = [ [c[0], list_to_factored_poly(c[1])] for c in self.bad_lfactors]
+        self.bad_lfactors = [ [c[0], list_to_factored_poly_otherorder(c[1])] for c in self.bad_lfactors]
         self.end_alg_name = end_alg_name(self.end_alg)
         self.rat_end_alg_name = end_alg_name(self.rat_end_alg)
         self.real_end_alg_name = end_alg_name(self.real_end_alg)
