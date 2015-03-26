@@ -119,13 +119,16 @@ class G2Cisog_class(object):
         
         self.friends = [
           ('L-function', url_for("l_functions.l_function_genus2_page", cond=self.cond,x=x)),
-          ('Siegel modular form someday', '.')] 
-#         ('Modular form ' + self.newform_label, self.newform_link)]
+          ('Siegel modular form someday', '.')]
 
-        self.properties = [('Label', self.label),
-                           ('Number of curves', str(self.ncurves)),
-                           ('Conductor', '\(%s\)' % self.cond),
-                           ]
+        self.ecproduct_wurl = []
+        if getattr(self, 'ecproduct'):
+            for i in range(2):
+                curve_label = self.ecproduct[i]
+                crv_url = url_for("ec.by_ec_label", label=curve_label)
+                if i == 1 or len(set(self.ecproduct)) <> 1:
+                    self.friends.append(('Elliptic curve ' + curve_label, crv_url))
+                self.ecproduct_wurl.append({'label' : curve_label, 'url' : crv_url})
 
         self.properties = [('Label', self.label),
                            ('Number of curves', str(self.ncurves)),

@@ -61,7 +61,12 @@ Sato-Tate group: ${{ info.st_group_name }}$
 <p>Field over which all endomorphisms are defined: 
 <A HREF="/NumberField/{{info.geom_end_field }}">{{info.geom_end_field}}</A></p>
 
-<h2>Motivic information</h2>
+<h2>Isogenies</h2>
+
+{% if info.ecproduct_wurl != [] %}
+<p>\(J\) is isogenous over \(\Q\) to <a href="{{info.ecproduct_wurl[0].url}}">{{info.ecproduct_wurl[0].label}}</a> \(\times\)
+<a href="{{info.ecproduct_wurl[1].url}}">{{info.ecproduct_wurl[1].label}}</a>.</p>
+{% endif %}
 
 {% endblock %}
 
