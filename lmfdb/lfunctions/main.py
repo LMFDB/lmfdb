@@ -21,6 +21,8 @@ from lmfdb.lfunctions import l_function_page, logger
 from lmfdb.elliptic_curves.web_ec import cremona_label_regex, lmfdb_label_regex
 from LfunctionComp import isogenyclasstable
 import LfunctionDatabase
+from lmfdb import base
+from pymongo import ASCENDING
 
 ################################################################################
 #   Route functions, navigation pages
@@ -122,6 +124,14 @@ def l_function_ec_sym3_browse_page():
     info["contents"] = [processSymPowerEllipticCurveNavigation(11, 17, 3)]
     return render_template("ellipticcurve.html",
                            title='Symmetric cube L-functions of Elliptic Curves', **info)
+
+# L-function of genus 2 curves browsing page ##############################################
+@l_function_page.route("/degree4/Genus2Curve/")
+def l_function_genus2_browse_page():
+    info = {"bread": get_bread(2, [("Genus 2 curve", url_for('.l_function_genus2_browse_page'))])}
+    info["representation"] = ''
+    info["contents"] = [processGenus2CurveNavigation(169, 700)]
+    return render_template("genus2curve.html", title='L-functions of Genus 2 Curves', **info)
 
 
 ###########################################################################
@@ -324,7 +334,11 @@ def l_function_ec_sym_page(power, label):
     args = {'power': power, 'underlying_type': 'EllipticCurve', 'field': 'Q', 'label': label}
     return render_single_Lfunction(SymmetricPowerLfunction, args, request)
 
-
+# L-function of genus 2 curve/Q ########################################
+@l_function_page.route("/Genus2Curve/Q/<cond>/<x>/")
+def l_function_genus2_page(cond,x):
+    args = {'label': cond+'.'+x}
+    return render_single_Lfunction(Lfunction_genus2_Q, args, request)
 
 # L-function from lcalcfile with given url #####################################
 @l_function_page.route("/Lcalcurl/")
@@ -854,6 +868,9 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         else:
             return HypergeometricMotiveLfunction(label = arg4)
 
+    elif arg1 == "Genus2Curve" and arg2 == "Q":
+        return Lfunction_genus2_Q(label=str(arg3)+'.'+str(arg4))
+    
     elif arg1 == 'Lcalcurl':
         return Lfunction_lcalc(Ltype='lcalcurl', url=temp_args['url'])
 
@@ -1070,6 +1087,50 @@ def processSymPowerEllipticCurveNavigation(startCond, endCond, power):
         counter += 1
         s += '<td><a href="' + url_for('.l_function_ec_sym_page', power=str(power),
                                        label=label) + '">%s</a></td>\n' % label
+
+        if counter == nr_of_columns:
+            s += '</tr>\n'
+            counter = 0
+
+    if counter > 0:
+        s += '</tr>\n'
+
+    s += '</table>\n'
+    return s
+
+def processGenus2CurveNavigation(startCond, endCond):
+    """
+    Produces a table of all L-functions of genus 2 curves with conductors
+    from startCond to endCond
+    """
+    Nmin = startCond
+    if Nmin < 169:
+        Nmin = 169
+
+    Nmax = endCond
+    if Nmax > 10000:
+        Nmax = 10000
+
+    query = {'cond': {'$lte': Nmax, '$gte': Nmin}}
+
+    # Get all the isogeny classes and sort them according to conductor
+    cursor = base.getDBConnection().genus2_curves.isogeny_classes.find(query)
+    iso_list = cursor.sort([('cond', ASCENDING), ('label', ASCENDING)])
+
+    s = '<h5>Examples of L-functions attached to isogeny classes of genus 2 curves</h5>'
+    s += '<table>'
+
+    logger.debug(iso_list)
+
+    counter = 0
+    nr_of_columns = 10
+    for iso in iso_list:
+        if counter == 0:
+            s += '<tr>'
+
+        counter += 1
+        condx = iso['label'].split('.')
+        s += '<td><a href="' + url_for('.l_function_genus2_page',cond=condx[0], x=condx[1]) + '">%s</a></td>\n' % iso['label']
 
         if counter == nr_of_columns:
             s += '</tr>\n'
