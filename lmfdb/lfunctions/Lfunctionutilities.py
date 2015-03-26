@@ -500,7 +500,21 @@ def specialValueString(L, s, sLatex):
     ''' Returns the LaTex to dislpay for L(s)
     '''
     number_of_decimals = 10
-    val = L.sageLfunction.value(s)
+    val = None
+    if hasattr(L,"lfunc_data"):
+        s_alg = s+pari(L.lfunc_data['analytic_normalization'])
+        for x in pari(L.lfunc_data['special_values']):
+        #s_alg=s+Rational('1/2')
+        #for x in L.lfunc_data['special_values']:
+            # the numbers here are always half integers
+            # so this comparison is exact
+            if x[0] == s_alg:
+                val = CC(x[1])
+            #if pari(x[0]) == s_alg:
+                #val = CC(pari(x[1]))
+                break
+    if val is None:
+        val = L.sageLfunction.value(s)
     lfunction_value_tex = L.texname.replace('(s', '(' + sLatex)
     # We must test for NaN first, since it would show as zero otherwise
     # Try "RR(NaN) < float(1e-10)" in sage -- GT

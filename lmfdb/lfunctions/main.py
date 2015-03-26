@@ -759,20 +759,25 @@ def render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8
 
 
 def getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9):
-    plotStep = .1
     pythonL = generateLfunctionFromUrl(
         arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
-    L = pythonL.sageLfunction
-    # HSY: I got exceptions that "L.hardy_z_function" doesn't exist
-    # SL: Reason, it's not in the distribution of Sage
-    if not hasattr(L, "hardy_z_function"):
-        return None
-    # FIXME there could be a filename collission
-    fn = tempfile.mktemp(suffix=".png")
-    #F = [(i, L.hardy_z_function(CC(.5, i)).real()) for i in srange(-30, 30, .1)]
-    F = [(i, L.hardy_z_function(i).real()) for i in srange(-30, 30, plotStep)]
+
+    if hasattr(pythonL,"lfunc_data"):
+        F = pari(pythonL.lfunc_data['plot'])
+        #F = pythonL.lfunc_data['plot']
+    else:    
+        L = pythonL.sageLfunction
+        # HSY: I got exceptions that "L.hardy_z_function" doesn't exist
+        # SL: Reason, it's not in the distribution of Sage
+        if not hasattr(L, "hardy_z_function"):
+            return None
+        # FIXME there could be a filename collission
+        #F = [(i, L.hardy_z_function(CC(.5, i)).real()) for i in srange(-30, 30, .1)]
+        plotStep = .1
+        F = [(i, L.hardy_z_function(i).real()) for i in srange(-30, 30, plotStep)]
     p = line(F)
     styleLfunctionPlot(p, 10)
+    fn = tempfile.mktemp(suffix=".png")
     p.save(filename=fn)
     data = file(fn).read()
     os.remove(fn)
@@ -792,9 +797,15 @@ def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, ar
     '''
     L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
 
-    website_zeros = L.compute_web_zeros(time_allowed = 10)          # This depends on mathematical information, all below is formatting
-    # More semantic this way
-    # Allow 10 seconds
+    if hasattr(L,"lfunc_data"):
+        website_zeros = pari(L.lfunc_data['zeros'])
+        #website_zeros = L.lfunc_data['zeros']
+        #website_zeros = [RR(x) for x in website_zeros]
+    else:
+        # This depends on mathematical information, all below is formatting
+        # More semantic this way
+        # Allow 10 seconds
+        website_zeros = L.compute_web_zeros(time_allowed = 10)
 
     positiveZeros = []
     negativeZeros = []

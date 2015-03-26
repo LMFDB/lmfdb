@@ -36,7 +36,55 @@ def constructor_logger(object, args):
     '''
     logger.debug(str(object.__class__) + str(args))
 
+def an_from_data(euler_factors,upperbound=30):
+    PP = sage.rings.all.PowerSeriesRing(sage.rings.all.RationalField(), 'x', 30)
+    result = upperbound * [1]
 
+    for i in range(0,len(euler_factors)):
+        p = nth_prime(i+1)
+        f = (1 / (PP(euler_factors[i]))).padded_list()
+        k = 1
+        while True:
+            if p ** k > upperbound:
+                break
+            for j in range(1 + upperbound // (p ** k)):
+                if j % p == 0:
+                    continue
+                result[j*p**k-1] *= f[k]
+            k += 1
+
+    return result
+
+def makeLfromdata(L):
+    data = L.lfunc_data
+    L.degree = data['degree']
+    L.level = data['conductor']
+    #L.level = 196
+    L.sign = pari(data['root_number'])
+    #L.sign = CC(data['root_number'])
+    L.mu_fe = [x+pari(data['analytic_normalization'])
+        for x in pari(data['gamma_factors'])[0]]
+    L.nu_fe = [x+pari(data['analytic_normalization'])
+        for x in pari(data['gamma_factors'])[1]]
+    #L.mu_fe = []
+    #L.nu_fe = [Rational('1/2'),Rational('1/2')]
+    L.compute_kappa_lambda_Q_from_mu_nu()
+    L.langlands = True
+    L.poles = []
+    L.residues = []
+    L.coefficient_period = 0
+    L.coefficient_type = 2
+    L.numcoeff = 30
+    L.dirichlet_coefficients_unnormalized = an_from_data(pari(data['euler_factors']),L.numcoeff)
+    #L.dirichlet_coefficients_unnormalized = an_from_data(data['euler_factors'],L.numcoeff)
+    L.normalize_by = pari(data['analytic_normalization'])
+    #L.normalize_by = Rational('1/2')
+    L.dirichlet_coefficients = L.dirichlet_coefficients_unnormalized
+    for n in range(0, len(L.dirichlet_coefficients)):
+        an = L.dirichlet_coefficients[n]
+        L.dirichlet_coefficients[n] = float(an/(n+1)**L.normalize_by)
+    L.checkselfdual()
+    generateSageLfunction(L)
 
 def generateSageLfunction(L):
     """ Generate a SageLfunction to do computations
@@ -1340,7 +1388,7 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         self.coefficient_type = 3
         self.quasidegree = 1
 
-        # self.checkselfdual()
+        self.checkselfdual()
 
         self.texname = "L(s,F)"
         self.texnamecompleteds = "\\Lambda(s,F)"
@@ -1464,31 +1512,6 @@ class Lfunction_genus2_Q(Lfunction):
 
     """
 
-    def anlist(self,isoclass,upperbound=10000):
-        PP = sage.rings.all.PowerSeriesRing(sage.rings.all.RationalField(), 'x', 30)
-        result = upperbound * [1]
-
-        for pL in isoclass['bad_lfactors']+isoclass['good_lfactors']:
-            p = pL[0]
-            if len(pL) == 2:
-              L = pL[1]
-            else:
-              L = [1,pL[1],pL[2],pL[1]*p,p*p]
-            euler_factor = (1 / (PP(L))).padded_list()
-
-            k = 1
-            while True:
-                if p ** k > upperbound:
-                    break
-                for j in range(1 + upperbound // (p ** k)):
-                    if j % p == 0:
-                        continue
-                    result[j*p**k-1] *= euler_factor[k]
-
-                k += 1
-
-        return result
-
     def __init__(self, **args):
         # Check for compulsory arguments
         if not ('label' in args.keys()):
@@ -1499,63 +1522,29 @@ class Lfunction_genus2_Q(Lfunction):
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
         self.label = args['label']
-        self.algebraic = True
-        self.number = int(0)
-        logger.debug(str(self.label) + str(self.number))
 
         # Load form from database
         isoclass = LfunctionDatabase.getGenus2IsogenyClass(self.label)
         if isoclass is None:
             raise KeyError("There is no genus 2 isogeny class with that label")
 
-        ## Extract the L-function information
-        self.degree = 4
-        self.quasidegree = 2
-        self.level = isoclass['cond']
-        self.sign = isoclass['root_number']
-
-        self.mu_fe = []
-        self.nu_fe = [Rational('1/2'),Rational('1/2')]
- 
-        self.compute_kappa_lambda_Q_from_mu_nu()
-        
-        #self.numcoeff = int(round(self.Q_fe * 10000 + 10))
-        #if self.numcoeff > 10000:
-            #self.numcoeff = 10000
-        self.numcoeff = 10000
-        self.langlands = True
-        self.motivic_weight = 1
-        self.selfdual = True
+        self.algebraic = True
+        self.number = int(0)
         self.primitive = False
-        self.poles = []
-        self.residues = []
-
-        ## Compute Dirichlet coefficients
-
-        self.dirichlet_coefficients = self.anlist(isoclass,self.numcoeff)
-        self.coefficient_period = 0
-        self.coefficient_type = 2
-
-        # Renormalize the coefficients
-        self.dirichlet_coefficients_unnormalized = (
-            self.dirichlet_coefficients[:])
-        self.normalize_by = Rational('1/2')
-        for n in range(0, len(self.dirichlet_coefficients)):
-            an = self.dirichlet_coefficients[n]
-            self.dirichlet_coefficients[n] = float(an) / float(sqrt(n + 1))
-
-        self.checkselfdual()
-
+        self.motivic_weight = 1
+        self.quasidegree = 2
         self.texname = "L(s,A)"
         self.texnamecompleteds = "\\Lambda(s,A)"
         self.texnamecompleted1ms = "\\Lambda(1-s,A)"
         self.title = ("$L(s,A)$, " + "where $A$ is an abelian surface "
-                      + "of conductor " + str(self.level))
-
+                      + "of conductor " + str(isoclass['cond']))
         self.citation = ''
         self.credit = ''
 
-        generateSageLfunction(self)
+        # Extract the L-function information
+        self.lfunc_data = isoclass['lfunc_data']
+        makeLfromdata(self)
+
         constructor_logger(self, args)
 
     def Ltype(self):
