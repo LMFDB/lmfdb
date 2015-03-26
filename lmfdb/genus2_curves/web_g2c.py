@@ -131,6 +131,7 @@ class WebG2C(object):
         #data['rat_geom_end_alg_name'] = end_alg_name(isogeny_class['rat_geom_end_alg'])
         data['real_geom_end_alg_name'] = end_alg_name(isogeny_class['real_geom_end_alg'])
         data['st_group_name'] = st_group_name(isogeny_class['st_group'])
+        data['is_gl2_type'] = isogeny_class['is_gl2_type']
 
         x = self.label.split('.')[1]
         self.friends = [
@@ -144,7 +145,7 @@ class WebG2C(object):
         self.properties = [('Label', self.label),
                            ('Conductor','%s' % self.cond),
                            ('Discriminant', '%s' % data['disc']),
-                           ('Invariants', '%s </br> %s </br> %s </br> %s'% tuple(data['igusa_clebsch'])), ('Sato-Tate group', '\(%s\)' % data['st_group_name']), ('\(\mathrm{End}(J) \otimes \R\)','\(%s\)' % data['real_end_alg_name'])]
+                           ('Invariants', '%s </br> %s </br> %s </br> %s'% tuple(data['igusa_clebsch'])), ('Sato-Tate group', '\(%s\)' % data['st_group_name']), ('\(\mathrm{End}(J_{\overline{\Q}}) \otimes \R\)','\(%s\)' % data['real_geom_end_alg_name']),('\(\mathrm{GL}_2\)-type','%s' % data['is_gl2_type'])]
         self.title = "Genus 2 Curve %s" % (self.label)
         self.bread = [
              ('Genus 2 Curves', url_for(".index")),
