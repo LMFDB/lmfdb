@@ -502,10 +502,10 @@ def specialValueString(L, s, sLatex):
     number_of_decimals = 10
     val = None
     if hasattr(L,"lfunc_data"):
-        s_alg = s+pari(L.lfunc_data['analytic_normalization'])
-        for x in pari(L.lfunc_data['special_values']):
-        #s_alg=s+Rational('1/2')
-        #for x in L.lfunc_data['special_values']:
+        #s_alg = s+pari(L.lfunc_data['analytic_normalization'])
+        #for x in pari(L.lfunc_data['special_values']):
+        s_alg=s+Rational('1/2')
+        for x in L.lfunc_data['special_values']:
             # the numbers here are always half integers
             # so this comparison is exact
             if x[0] == s_alg:
