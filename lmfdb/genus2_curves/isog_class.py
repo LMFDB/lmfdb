@@ -139,6 +139,22 @@ class G2Cisog_class(object):
                 self.friends.append(('Elliptic curve ' + curve_label, crv_url))
                 self.ecquadratic_wurl.append({'label' : curve_label, 'url' : crv_url, 'nf' : crv_spl[0]})
 
+        if hasattr(self, 'mfproduct'):
+            for i in range(len(self.mfproduct)):
+                mf_label = self.mfproduct[i]
+                mf_spl = mf_label.split('.')
+                mf_spl.append(mf_spl[2][-1])
+                mf_spl[2] = mf_spl[2][:-1] # Need a splitting function
+                mf_url = url_for("emf.render_elliptic_modular_forms", level=mf_spl[0], weight=mf_spl[1], character=mf_spl[2], label=mf_spl[3])
+                self.friends.append(('Modular form ' + mf_label, mf_url))
+
+        if hasattr(self, 'mfquadratic'):
+            for i in range(len(self.mfquadratic)):   # Only Hilbert forms for now
+                mf_label = self.mfquadratic[i]
+                mf_spl = mf_label.split('-')
+                mf_url = url_for("hmf.render_hmf_webpage", field_level=mf_spl[0], label=mf_label)
+                self.friends.append(('Hilbert modular form ' + mf_label, mf_url))
+
         self.properties = [('Label', self.label),
                            ('Number of curves', str(self.ncurves)),
                            ('Conductor','%s' % self.cond),
