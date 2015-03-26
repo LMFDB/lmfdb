@@ -122,7 +122,7 @@ class G2Cisog_class(object):
           ('Siegel modular form someday', '.')]
 
         self.ecproduct_wurl = []
-        if getattr(self, 'ecproduct'):
+        if hasattr(self, 'ecproduct'):
             for i in range(2):
                 curve_label = self.ecproduct[i]
                 crv_url = url_for("ec.by_ec_label", label=curve_label)
