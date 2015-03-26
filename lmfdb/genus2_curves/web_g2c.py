@@ -114,7 +114,7 @@ class WebG2C(object):
             tor_struct = [ZZ(a)  for a in self.torsion]
             data['tor_struct'] = ' \\times '.join(['\Z/{%s}\Z' % n for n in tor_struct])
         isogeny_class = db_g2c().isogeny_classes.find_one({'label' : isog_label(self.label)})
-        data['real_end_alg_name'] = end_alg_name(isogeny_class['real_end_alg'])
+        data['real_end_alg_name'] = web_latex(end_alg_name(isogeny_class['real_end_alg']))
         data['st_group_name'] = st_group_name(isogeny_class['st_group'])
         # add more endomorphism algebras
 
@@ -130,7 +130,7 @@ class WebG2C(object):
         self.properties = [('Label', self.label),
                            ('Conductor','%s' % self.cond),
                            ('Discriminant', '%s' % data['disc']),
-                           ('Invariants', '%s </br> %s </br> %s </br> %s' % tuple(data['igusa_clebsch']))]
+                           ('Invariants', '%s </br> %s </br> %s </br> %s'% tuple(data['igusa_clebsch'])), ('Sato-Tate group', '\(%s\)' % data['st_group_name']), ('Real end alg','\(%s\)' % data['real_end_alg_name'])]
         self.title = "Genus 2 Curve %s" % (self.label)
         self.bread = [
              ('Genus 2 Curves', url_for(".index")),
