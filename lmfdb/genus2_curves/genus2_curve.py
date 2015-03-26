@@ -11,7 +11,7 @@ import os
 from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range2, web_latex_split_on_pm, comma, clean_input, parse_range
 from lmfdb.number_fields.number_field import parse_list, parse_discs, make_disc_key
 from lmfdb.genus2_curves import g2c_page, g2c_logger
-from lmfdb.genus2_curves.isog_class import G2Cisog_class, url_for_label
+from lmfdb.genus2_curves.isog_class import G2Cisog_class, url_for_label, isog_url_for_label
 from lmfdb.genus2_curves.web_g2c import WebG2C, list_to_min_eqn
 
 import sage.all
@@ -26,7 +26,7 @@ g2cdb = None
 def db_g2c():
     global g2cdb
     if g2cdb is None:
-        g2cdb = lmfdb.base.getDBConnection().genus2_curves.curves
+        g2cdb = lmfdb.base.getDBConnection().genus2_curves
     return g2cdb
 
 
@@ -96,9 +96,9 @@ def genus2_curve_search(**args):
     if 'jump' in args:
         return render_curve_webpage_by_label(info["jump"])
 
-    if info.get("abs_disc"):
+    if info.get("disc"):
         field = "abs_disc"
-        ran = info[field]
+        ran = info["disc"]
         ran = ran.replace('..', '-').replace(' ','')
         # Past input check
         dlist = parse_discs(ran)
@@ -126,7 +126,7 @@ def genus2_curve_search(**args):
 
     if info.get("cond"):
         field = "cond"
-        ran = info[field]
+        ran = str(info[field])
         ran = ran.replace('..', '-').replace(' ','')
         # Past input check
         tmp = parse_range2(ran, field)
@@ -155,9 +155,12 @@ def genus2_curve_search(**args):
         count = 100
 
     info["query"] = dict(query)
-    res = db_g2c().find(query).sort([("cond", pymongo.ASCENDING),
-                                     ("label", pymongo.ASCENDING)
-                                 ]).limit(count)
+    #res = db_g2c().curves.find(query).sort([("cond", pymongo.ASCENDING),
+    #("label", pymongo.ASCENDING)]).limit(count)
+    res = db_g2c().curves.find(query).sort([("cond", pymongo.ASCENDING),
+                                            ("class", pymongo.ASCENDING),
+                                            ("disc_key", pymongo.ASCENDING),
+                                            ("label", pymongo.ASCENDING)])
     nres = res.count()
     if nres == 1:
         info["report"] = "unique match"
@@ -170,13 +173,14 @@ def genus2_curve_search(**args):
     for v in res:
         v_clean = {}
         v_clean["label"] = v["label"]
+        v_clean["isog_label"] = v["class"]
         v_clean["equation_formatted"] = list_to_min_eqn(v["min_eqn"])
         res_clean.append(v_clean)
 
     info["curves"] = res_clean
 
     info["curve_url"] = lambda dbc: url_for_label(dbc['label'])
-
+    info["isog_url"] = lambda dbc: isog_url_for_label(dbc['label'])
     credit = 'Genus 2 Team'
     title = 'Genus 2 Curves search results'
     return render_template("search_results_g2.html", info=info, credit=credit, bread=bread, title=title)
@@ -189,12 +193,12 @@ def g2_list_to_query(dlist):
             s0, d0 = make_disc_key(dlist[0])
             s1, d1 = make_disc_key(dlist[1])
             if s0 < 0:
-                return [['abs_disc', {'$gte': d1, '$lte': d0}]]
+                return [['disc_key', {'$gte': d1, '$lte': d0}]]
             else:
-                return [['abs_disc', {'$lte': d1, '$gte': d0}]]
+                return [['disc_key', {'$lte': d1, '$gte': d0}]]
         else:
             s0, d0 = make_disc_key(dlist)
-            return [['abs_disc', d0]]
+            return [['disc_key', d0]]
     # Now dlist has length >1
     ans = []
     for x in dlist:
@@ -202,12 +206,12 @@ def g2_list_to_query(dlist):
             s0, d0 = make_disc_key(x[0])
             s1, d1 = make_disc_key(x[1])
             if s0 < 0:
-                ans.append({ 'abs_disc': {'$gte': d1, '$lte': d0}})
+                ans.append({ 'disc_key': {'$gte': d1, '$lte': d0}})
             else:
-                ans.append({ 'abs_disc': {'$lte': d1, '$gte': d0}})
+                ans.append({ 'disc_key': {'$lte': d1, '$gte': d0}})
         else:
             s0, d0 = make_disc_key(x)
-            ans.append({'abs_disc': d0})
+            ans.append({'disc_key': d0})
     return [['$or', ans]]
 
 
