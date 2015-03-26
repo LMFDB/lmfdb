@@ -148,9 +148,9 @@ class G2Cisog_class(object):
                 mf_url = url_for("emf.render_elliptic_modular_forms", level=mf_spl[0], weight=mf_spl[1], character=mf_spl[2], label=mf_spl[3])
                 self.friends.append(('Modular form ' + mf_label, mf_url))
 
-        if hasattr(self, 'mfquadratic'):
-            for i in range(len(self.mfquadratic)):   # Only Hilbert forms for now
-                mf_label = self.mfquadratic[i]
+        if hasattr(self, 'mfhilbert'):
+            for i in range(len(self.mfhilbert)):
+                mf_label = self.mfhilbert[i]
                 mf_spl = mf_label.split('-')
                 mf_url = url_for("hmf.render_hmf_webpage", field_level=mf_spl[0], label=mf_label)
                 self.friends.append(('Hilbert modular form ' + mf_label, mf_url))
