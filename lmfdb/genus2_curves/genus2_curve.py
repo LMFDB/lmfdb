@@ -51,7 +51,7 @@ def index_Q():
     curve_count = db_g2c().curves.count()
     if len(request.args) != 0:
         return genus2_curve_search(**request.args)
-    info = {'count' : curve_count}
+    info = {'count' : curve_count }
     credit = 'Genus 2 Team'
     title = 'Genus 2 curves over $\Q$'
     bread = [('Genus 2 Curves', url_for(".index")), ('$\Q$', ' ')]
