@@ -12,7 +12,7 @@ from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range2, 
 from lmfdb.number_fields.number_field import parse_list, parse_discs, make_disc_key
 from lmfdb.genus2_curves import g2c_page, g2c_logger
 from lmfdb.genus2_curves.isog_class import G2Cisog_class, url_for_label, isog_url_for_label
-from lmfdb.genus2_curves.web_g2c import WebG2C, list_to_min_eqn
+from lmfdb.genus2_curves.web_g2c import WebG2C, list_to_min_eqn, isog_label
 
 import sage.all
 from sage.all import ZZ, QQ, EllipticCurve, latex, matrix, srange
@@ -104,6 +104,14 @@ def genus2_curve_search(**args):
                 newors.extend(oldors)
             tmp[1] = newors
         query[tmp[0]] = tmp[1]
+        
+    if info.get("is_gl2_type"):
+       query['is_gl2_type']=bool(info['is_gl2_type'])    
+
+    if info.get("st_group"):
+       query['st_group']=info['st_group']
+    #if True:
+        #query['st_group']='USp(4)'
 
     if info.get("cond"):
         field = "cond"
@@ -151,10 +159,14 @@ def genus2_curve_search(**args):
         else:
             info["report"] = "displaying all %s matches" % nres
     res_clean = []
+    
+    
     for v in res:
         v_clean = {}
         v_clean["label"] = v["label"]
         v_clean["isog_label"] = v["class"]
+        isogeny_class = db_g2c().isogeny_classes.find_one({'label' : isog_label(v["label"])})
+        v_clean["is_gl2_type"] = isogeny_class["is_gl2_type"]
         v_clean["equation_formatted"] = list_to_min_eqn(v["min_eqn"])
         res_clean.append(v_clean)
 
