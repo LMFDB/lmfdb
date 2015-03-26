@@ -81,8 +81,8 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
     <h2> {{ KNOWL('g2c.aut_grp', title='Automorphism group') }} </h2>
 <table>
-<tr>  <td>\(\mathrm{Aut}(X)\)</td><td>\(\simeq\)</td> <td>\({{ data.data.aut_grp}} \)</td> </tr>
-<tr>  <td>\(\mathrm{Aut}(X_{\overline{\Q}})\)</td><td>\(\simeq\)</td>  <td>\({{ data.data.geom_aut_grp}} \) </td></tr>
+<tr>  <td>\(\mathrm{Aut}(X)\)</td><td>\(\simeq\)</td> <td>\({{ data.data.aut_grp}} \)</td> <td>(GAP id {{data.aut_grp}})</td></tr>
+<tr>  <td>\(\mathrm{Aut}(X_{\overline{\Q}})\)</td><td>\(\simeq\)</td>  <td>\({{ data.data.geom_aut_grp}} \) </td> <td>(GAP id {{data.geom_aut_grp}})</td></tr>
 </table>
 
 <h2> {{ KNOWL('g2c.torsion', title='Torsion') }} </h2>
@@ -92,16 +92,18 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
 <h2>Sato-Tate group:</h2>
 <p>
-Sato-Tate group: ${{ data.data.st_group_name }}$
+Sato-Tate group: \({{ data.data.st_group_name }}\)
 </p>
 
+<!-- FIXME:    Fix here, then mimic in isog -->
 <h2> {{ KNOWL('g2c.jac_endomorphisms', title='Endomorphisms of the Jacobian') }} </h2>
 <table>
   <tr>  <td>\(\mathrm{End}(J) \)</td><td>\(\simeq\)</td><td>\({{data.data.end_alg_name}}\)</td></tr>
   <tr>  <td>\(\mathrm{End}(J) \otimes \Q\)</td><td>\(\simeq\)</td><td>\({{data.data.rat_end_alg_name}}\)</td></tr>
+  <tr>  <td>\(\mathrm{End}(J) \otimes \R\)</td><td>\(\simeq\)</td><td>\({{data.data.real_end_alg_name}}\)</td></tr>
   <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}})\)</td><td>\(\simeq\)</td><td>\({{data.data.geom_end_alg_name}}\)</td></tr>
-  <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}}) \otimes \Q\)</td><td>\(\simeq\)</td><td>\({{data.data.fullrat_end_alg_name}}\)</td></tr>
-  <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}}) \otimes \R\)</td><td>\(\simeq\)</td><td>\({{data.data.real_end_alg_name}}\)</td></tr>
+  <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}}) \otimes \Q\)</td><td>\(\simeq\)</td><td>\({{data.data.rat_geom_end_alg_name}}\)</td></tr>
+  <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}}) \otimes \R\)</td><td>\(\simeq\)</td><td>\({{data.data.real_geom_end_alg_name}}\)</td></tr>
 </table>
 
 {% endblock %}

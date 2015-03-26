@@ -30,7 +30,16 @@ def list_to_min_eqn(L):
 
 
 def end_alg_name(name):
-    name_dict = {"M_2(R)":"\\mathrm{M}_2(\R)", "R":"\\R","C x R":"\\C \times \\R", "R x R":"\\R x \\R", "M_2(C)":"\\mathrm{M}_2(\C)", "C x C":"\\C \times \\C", "C":"\\C"}
+    name_dict = {
+        "Z":"\\Z",
+        "R":"\\R",
+        "C":"\\C",
+        "R x R":"\\R x \\R",
+        "C x R":"\\C \times \\R",
+        "C x C":"\\C \times \\C",
+        "M_2(R)":"\\mathrm{M}_2(\R)",
+        "M_2(C)":"\\mathrm{M}_2(\C)"
+    }
     if name in name_dict.keys():
         return name_dict[name]
     else:
@@ -114,9 +123,14 @@ class WebG2C(object):
             tor_struct = [ZZ(a)  for a in self.torsion]
             data['tor_struct'] = ' \\times '.join(['\Z/{%s}\Z' % n for n in tor_struct])
         isogeny_class = db_g2c().isogeny_classes.find_one({'label' : isog_label(self.label)})
+        # FIXME: once drew enters in the database, remove uncomment below
+        #data['end_alg_name'] = end_alg_name(isogeny_class['end_alg'])
+        #data['rat_end_alg_name'] = end_alg_name(isogeny_class['rat_end_alg'])
         data['real_end_alg_name'] = end_alg_name(isogeny_class['real_end_alg'])
+        #data['geom_end_alg_name'] = end_alg_name(isogeny_class['geom_end_alg'])
+        #data['rat_geom_end_alg_name'] = end_alg_name(isogeny_class['rat_geom_end_alg'])
+        data['real_geom_end_alg_name'] = end_alg_name(isogeny_class['real_geom_end_alg'])
         data['st_group_name'] = st_group_name(isogeny_class['st_group'])
-        # add more endomorphism algebras
 
         x = self.label.split('.')[1]
         self.friends = [
@@ -130,7 +144,7 @@ class WebG2C(object):
         self.properties = [('Label', self.label),
                            ('Conductor','%s' % self.cond),
                            ('Discriminant', '%s' % data['disc']),
-                           ('Invariants', '%s </br> %s </br> %s </br> %s' % tuple(data['igusa_clebsch']))]
+                           ('Invariants', '%s </br> %s </br> %s </br> %s'% tuple(data['igusa_clebsch'])), ('Sato-Tate group', '\(%s\)' % data['st_group_name']), ('\(\mathrm{End}(J) \otimes \R\)','\(%s\)' % data['real_end_alg_name'])]
         self.title = "Genus 2 Curve %s" % (self.label)
         self.bread = [
              ('Genus 2 Curves', url_for(".index")),
