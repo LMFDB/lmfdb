@@ -32,6 +32,7 @@ def list_to_min_eqn(L):
 def end_alg_name(name):
     name_dict = {
         "Z":"\\Z",
+        "Q":"\\Q",        
         "R":"\\R",
         "C":"\\C",
         "R x R":"\\R \\times \\R",
@@ -123,12 +124,11 @@ class WebG2C(object):
             tor_struct = [ZZ(a)  for a in self.torsion]
             data['tor_struct'] = ' \\times '.join(['\Z/{%s}\Z' % n for n in tor_struct])
         isogeny_class = db_g2c().isogeny_classes.find_one({'label' : isog_label(self.label)})
-        # FIXME: once drew enters in the database, remove uncomment below
-        #data['end_alg_name'] = end_alg_name(isogeny_class['end_alg'])
-        #data['rat_end_alg_name'] = end_alg_name(isogeny_class['rat_end_alg'])
+        data['end_alg_name'] = end_alg_name(isogeny_class['end_alg'])
+        data['rat_end_alg_name'] = end_alg_name(isogeny_class['rat_end_alg'])
         data['real_end_alg_name'] = end_alg_name(isogeny_class['real_end_alg'])
-        #data['geom_end_alg_name'] = end_alg_name(isogeny_class['geom_end_alg'])
-        #data['rat_geom_end_alg_name'] = end_alg_name(isogeny_class['rat_geom_end_alg'])
+        data['geom_end_alg_name'] = end_alg_name(isogeny_class['geom_end_alg'])
+        data['rat_geom_end_alg_name'] = end_alg_name(isogeny_class['rat_geom_end_alg'])
         data['real_geom_end_alg_name'] = end_alg_name(isogeny_class['real_geom_end_alg'])
         data['st_group_name'] = st_group_name(isogeny_class['st_group'])
         data['is_gl2_type'] = isogeny_class['is_gl2_type']

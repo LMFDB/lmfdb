@@ -129,8 +129,9 @@ def genus2_curve_search(**args):
 
     if info.get("st_group"):
        query['st_group']=info['st_group']
-    #if True:
-        #query['st_group']='USp(4)'
+
+    if info.get("real_geom_end_alg"):
+       query['real_geom_end_alg']=info['real_geom_end_alg']
 
     if info.get("cond"):
         field = "cond"
