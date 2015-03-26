@@ -155,9 +155,12 @@ def genus2_curve_search(**args):
         count = 100
 
     info["query"] = dict(query)
+    #res = db_g2c().curves.find(query).sort([("cond", pymongo.ASCENDING),
+    #("label", pymongo.ASCENDING)]).limit(count)
     res = db_g2c().curves.find(query).sort([("cond", pymongo.ASCENDING),
-                                     ("label", pymongo.ASCENDING)
-                                 ]).limit(count)
+                                            ("class", pymongo.ASCENDING),
+                                            ("disc_key", pymongo.ASCENDING),
+                                            ("label", pymongo.ASCENDING)])
     nres = res.count()
     if nres == 1:
         info["report"] = "unique match"
