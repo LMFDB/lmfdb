@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 import os
-
+import pymongo
 from pymongo import ASCENDING, DESCENDING
 from flask import url_for, make_response
 import lmfdb.base
@@ -60,7 +60,7 @@ class G2Cisog_class(object):
         return "Class not found" # caller must catch this and raise an error
 
     def make_class(self):
-        curves_data = db_g2c().curves.find({"class" : self.label})
+        curves_data = db_g2c().curves.find({"class" : self.label}).sort([("disc_key", pymongo.ASCENDING)])
         self.curves = [ {"label" : c['label'], "equation_formatted" : list_to_min_eqn(c['min_eqn']), "url": url_for_label(c['label'])} for c in curves_data ]
         self.ncurves = curves_data.count()
         self.bad_lfactors = [ [c[0], list_to_factored_poly(c[1])] for c in self.bad_lfactors]
