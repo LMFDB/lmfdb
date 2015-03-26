@@ -126,7 +126,7 @@ def genus2_curve_search(**args):
 
     if info.get("cond"):
         field = "cond"
-        ran = info[field]
+        ran = str(info[field])
         ran = ran.replace('..', '-').replace(' ','')
         # Past input check
         tmp = parse_range2(ran, field)

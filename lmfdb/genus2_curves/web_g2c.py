@@ -30,8 +30,11 @@ def list_to_min_eqn(L):
 
 
 def end_alg_name(name):
-    name_dict = {"M_2(R)":"\\mathrm{M}_2(\R)", "R":"\\R","C x R":"\\C \times \\R", "R x R":"\\R x \\R", "M_2(C)":"\\mathrm{M}_2(\C)", "C x C":"\\C \times \\C"}
-    return name_dict[name]
+    name_dict = {"M_2(R)":"\\mathrm{M}_2(\R)", "R":"\\R","C x R":"\\C \times \\R", "R x R":"\\R x \\R", "M_2(C)":"\\mathrm{M}_2(\C)", "C x C":"\\C \times \\C", "C":"\\C"}
+    if name in name_dict.keys():
+        return name_dict[name]
+    else:
+        return name
 
 def st_group_name(name):
     if name == 'USp(4)':
