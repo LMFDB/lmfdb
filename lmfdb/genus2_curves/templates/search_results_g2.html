@@ -6,11 +6,13 @@
 <table class="ntdata">
 <tr>
 <th>Label</th>
+<th>Isogeny class</th>
 <th>Equation</th>
 </tr>
 {% for curve in info.curves: %}
 <tr>
   <td> <a href = "{{info.curve_url(curve)}}"> {{curve.label}} </a> </td>
+  <td> <a href = "{{info.isog_url(curve)}}"> {{curve.isog_label}} </a> </td>
   <td> \({{curve.equation_formatted}}\) </td>
 </tr>
 {% endfor %}

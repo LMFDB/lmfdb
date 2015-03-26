@@ -11,7 +11,7 @@ import os
 from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range2, web_latex_split_on_pm, comma, clean_input, parse_range
 from lmfdb.number_fields.number_field import parse_list, parse_discs, make_disc_key
 from lmfdb.genus2_curves import g2c_page, g2c_logger
-from lmfdb.genus2_curves.isog_class import G2Cisog_class, url_for_label
+from lmfdb.genus2_curves.isog_class import G2Cisog_class, url_for_label, isog_url_for_label
 from lmfdb.genus2_curves.web_g2c import WebG2C, list_to_min_eqn
 
 import sage.all
@@ -173,13 +173,14 @@ def genus2_curve_search(**args):
     for v in res:
         v_clean = {}
         v_clean["label"] = v["label"]
+        v_clean["isog_label"] = v["class"]
         v_clean["equation_formatted"] = list_to_min_eqn(v["min_eqn"])
         res_clean.append(v_clean)
 
     info["curves"] = res_clean
 
     info["curve_url"] = lambda dbc: url_for_label(dbc['label'])
-
+    info["isog_url"] = lambda dbc: isog_url_for_label(dbc['label'])
     credit = 'Genus 2 Team'
     title = 'Genus 2 Curves search results'
     return render_template("search_results_g2.html", info=info, credit=credit, bread=bread, title=title)

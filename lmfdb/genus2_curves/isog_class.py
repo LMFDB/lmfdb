@@ -30,6 +30,12 @@ def url_for_label(label):
     L = label.split(".")
     return url_for(".by_full_label", conductor=L[0], iso_label=L[1], disc=L[2], number=L[3])
 
+def isog_url_for_label(label):
+    # returns the isogeny class url for curve label
+    # TODO FIX: replace by full label line by approporiate
+    L = label.split(".")
+    return url_for(".by_double_iso_label", conductor=L[0], iso_label=L[1])
+
 class G2Cisog_class(object):
     """
     Class for an isogeny class of genus 2 curves over Q
