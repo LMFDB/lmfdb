@@ -130,6 +130,15 @@ class G2Cisog_class(object):
                     self.friends.append(('Elliptic curve ' + curve_label, crv_url))
                 self.ecproduct_wurl.append({'label' : curve_label, 'url' : crv_url})
 
+        self.ecquadratic_wurl = []
+        if hasattr(self, 'ecquadratic'):
+            for i in range(len(self.ecquadratic)):
+                curve_label = self.ecquadratic[i]
+                crv_spl = curve_label.split('-')
+                crv_url = url_for("ecnf.show_ecnf_isoclass", nf = crv_spl[0], conductor_label = crv_spl[1], class_label = crv_spl[2])
+                self.friends.append(('Elliptic curve ' + curve_label, crv_url))
+                self.ecquadratic_wurl.append({'label' : curve_label, 'url' : crv_url, 'nf' : crv_spl[0]})
+
         self.properties = [('Label', self.label),
                            ('Number of curves', str(self.ncurves)),
                            ('Conductor','%s' % self.cond),

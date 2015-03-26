@@ -50,10 +50,8 @@ Sato-Tate group: ${{ info.st_group_name }}$
 
 <h2> {{ KNOWL('g2c.jac_endomorphisms', title='Endomorphisms of the Jacobian') }} </h2>
 <table>
-  <tr>  <td>\(\mathrm{End}(J) \)</td><td>\(\simeq\)</td><td>\({{info.end_alg_name}}\)</td></tr>
   <tr>  <td>\(\mathrm{End}(J) \otimes \Q\)</td><td>\(\simeq\)</td><td>\({{info.rat_end_alg_name}}\)</td></tr>
   <tr>  <td>\(\mathrm{End}(J) \otimes \R\)</td><td>\(\simeq\)</td><td>\({{info.real_end_alg_name}}\)</td><td>\([ \ \mathrm{Is} \ \  \mathrm{GL}_2\mathrm{-type:} \ \){{info.is_gl2_type}} {{']'}}</td></tr>
-  <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}})\)</td><td>\(\simeq\)</td><td>\({{info.geom_end_alg_name}}\)</td></tr>
   <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}}) \otimes \Q\)</td><td>\(\simeq\)</td><td>\({{info.rat_geom_end_alg_name}}\)</td></tr>
   <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}}) \otimes \R\)</td><td>\(\simeq\)</td><td>\({{info.real_geom_end_alg_name}}\)</td></tr>
 </table>
@@ -66,6 +64,13 @@ Sato-Tate group: ${{ info.st_group_name }}$
 {% if info.ecproduct_wurl != [] %}
 <p>\(J\) is isogenous over \(\Q\) to <a href="{{info.ecproduct_wurl[0].url}}">{{info.ecproduct_wurl[0].label}}</a> \(\times\)
 <a href="{{info.ecproduct_wurl[1].url}}">{{info.ecproduct_wurl[1].label}}</a>.</p>
+{% endif %}
+
+{% if info.ecquadratic_wurl != [] %}
+{% for c in info.ecquadratic_wurl %}
+<p>\(J\) is isogenous over \(\Q\) to \(\mathrm{Res}_{F/\Q}(\)<a href="{{c.url}}">{{c.label}}</a>\()\), where \(F=\) 
+<A HREF="/NumberField/{{c.nf}}">{{c.nf}}</A>.</p>
+{% endfor %}
 {% endif %}
 
 {% endblock %}
