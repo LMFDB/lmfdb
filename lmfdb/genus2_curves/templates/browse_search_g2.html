@@ -9,6 +9,12 @@ over the rational numbers.
 </p>
 
 <h2> Browse {{ KNOWL('g2c.???', title='genus 2 curves over $\Q$') }} </h2>
+<p>
+By {{ KNOWL('g2c.conductor', title='conductor')}}:
+{% for rnge in info.conductor_list %}
+<a href="?cond={{rnge}}">{{rnge}}</a>
+{% endfor %}
+</p>
 
 Some of our favorite curves.
 {% for curve in info.browse_curves: %}

@@ -57,6 +57,7 @@ def index_Q():
         db_g2c().curves.find_one({"label":"169.a.169.1"}),
         db_g2c().curves.find_one({"label":"169.a.169.1"})
     ]
+    info["conductor_list"] = ['1-499', '500-999', '1000-99999','100000-1000000'   ]
     credit = 'Genus 2 Team'
     title = 'Genus 2 curves over $\Q$'
     bread = [('Genus 2 Curves', url_for(".index")), ('$\Q$', ' ')]
