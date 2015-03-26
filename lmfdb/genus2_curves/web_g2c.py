@@ -34,11 +34,11 @@ def end_alg_name(name):
         "Z":"\\Z",
         "R":"\\R",
         "C":"\\C",
-        "R x R":"\\R \times \\R",
-        "C x R":"\\C \times \\R",
-        "C x C":"\\C \times \\C",
-        "M_2(R)":"\\mathrm{M}_2(\R)",
-        "M_2(C)":"\\mathrm{M}_2(\C)"
+        "R x R":"\\R \\times \\R",
+        "C x R":"\\C \\times \\R",
+        "C x C":"\\C \\times \\C",
+        "M_2(R)":"\\mathrm{M}_2(\\R)",
+        "M_2(C)":"\\mathrm{M}_2(\\C)"
     }
     if name in name_dict.keys():
         return name_dict[name]

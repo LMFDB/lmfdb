@@ -8,12 +8,14 @@
 <th>Label</th>
 <th>Isogeny class</th>
 <th>Equation</th>
+<th>\( \mathrm{GL}_2\mathrm{-type}\)</th>
 </tr>
 {% for curve in info.curves: %}
 <tr>
   <td> <a href = "{{info.curve_url(curve)}}"> {{curve.label}} </a> </td>
   <td> <a href = "{{info.isog_url(curve)}}"> {{curve.isog_label}} </a> </td>
   <td> \({{curve.equation_formatted}}\) </td>
+  <td> {{curve.is_gl2_type}} </td>
 </tr>
 {% endfor %}
 </table>
