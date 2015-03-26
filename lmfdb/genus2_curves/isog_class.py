@@ -25,6 +25,38 @@ def list_to_poly(s):
 def list_to_factored_poly(s):
     return str(factor(PolynomialRing(ZZ, 't')(s))).replace('*','')
 
+def list_to_factored_poly_otherorder(s):
+    if len(s) == 1:
+        return str(s[0])
+    sfacts = factor(PolynomialRing(ZZ, 'T')(s))
+    outstr = ''
+    for v in sfacts:
+        vcf = v[0].list()
+        started = False
+        if len(sfacts) > 1 or v[1] > 1:
+            outstr += '('
+        for i in range(len(vcf)):
+            if vcf[i] <> 0:
+                if started and vcf[i] > 0:
+                    outstr += '+'
+                started = True
+                if i == 0:
+                    outstr += str(vcf[i])
+                else:
+                    if abs(vcf[i]) <> 1:
+                        outstr += str(vcf[i])
+                    elif vcf[i] == -1:
+                        outstr += '-'
+                    if i == 1:
+                        outstr += 'T'
+                    elif i > 1:
+                        outstr += 'T^{' + str(i) + '}'
+        if len(sfacts) > 1 or v[1] > 1:
+            outstr += ')'
+        if v[1] > 1:
+            outstr += '^{' + str(v[1]) + '}'        
+    return outstr
+
 def url_for_label(label):
     # returns the url for label
     L = label.split(".")
@@ -69,7 +101,7 @@ class G2Cisog_class(object):
         curves_data = db_g2c().curves.find({"class" : self.label}).sort([("disc_key", pymongo.ASCENDING), ("label", pymongo.ASCENDING)])
         self.curves = [ {"label" : c['label'], "equation_formatted" : list_to_min_eqn(c['min_eqn']), "url": url_for_label(c['label'])} for c in curves_data ]
         self.ncurves = curves_data.count()
-        self.bad_lfactors = [ [c[0], list_to_factored_poly(c[1])] for c in self.bad_lfactors]
+        self.bad_lfactors = [ [c[0], list_to_factored_poly_otherorder(c[1])] for c in self.bad_lfactors]
         self.real_end_alg_name = end_alg_name(self.real_end_alg)
         self.st_group_name = st_group_name(self.st_group)
 
