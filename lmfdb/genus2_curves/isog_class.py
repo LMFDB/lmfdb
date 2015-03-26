@@ -152,7 +152,7 @@ class G2Cisog_class(object):
             for i in range(len(self.mfhilbert)):
                 mf_label = self.mfhilbert[i]
                 mf_spl = mf_label.split('-')
-                mf_url = url_for("hmf.render_hmf_webpage", field_level=mf_spl[0], label=mf_label)
+                mf_url = url_for("hmf.render_hmf_webpage", field_label=mf_spl[0], label=mf_label)
                 self.friends.append(('Hilbert modular form ' + mf_label, mf_url))
 
         self.properties = [('Label', self.label),
