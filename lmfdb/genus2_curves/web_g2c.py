@@ -167,7 +167,7 @@ class WebG2C(object):
             else:
                 data['is_geom_simple_name'] = 'no'
         else:
-            data['is_simple_name'] = '?'
+            data['is_geom_simple_name'] = '?'
 
         x = self.label.split('.')[1]
         self.friends = [
