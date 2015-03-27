@@ -1,8 +1,6 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<!-- from hmf/template/hilbermodularformall-->
-
 <p>
 The database currently contains {{info.count}} genus 2 curves
 over the rational numbers. 
@@ -23,7 +21,7 @@ By {{ KNOWL('g2c.discriminant', title='discriminant')}}:
 {% endfor %}
 </p>
 
-Some of our favorite curves.
+Some of our favorite curves:
 {% for curve in info.browse_curves: %}
  <a href = "{{info.curve_url(curve)}}"> {{curve.label}} </a>  
 {% endfor %}
@@ -61,50 +59,50 @@ Some of our favorite curves.
     <tr>
       <td><select name='st_group'>
                    <option ></option>
-                   <option value='J(C_2)'>J(C_2)</option>
-                   <option value='J(C_4)'>J(C_4)</option>
-                   <option value='J(C_6)'>J(C_6)</option>
-                   <option value='J(D_2)'>J(D_2)</option>
-                   <option value='J(D_3)'>J(D_3)</option>
-                   <option value='J(D_4)'>J(D_4)</option>
-                   <option value='J(D_6)'>J(D_6)</option>
-                   <option value='J(T)'>J(T)</option>
-                   <option value='J(O)'>J(O)</option>
-                   <option value='C{2,1}'>C_{2,1}</option>
-                   <option value='C_{6,1}'>C_{6,1}</option>
-                   <option value='D_{2,1}'>D_{2,1}</option>
-                   <option value='D_{3,2}'>D_{3,2}</option>
-                   <option value='D_{4,1}'>D_{4,1}</option>
-                   <option value='D_{4,2}'>D_{4,2}</option>
-                   <option value='D_{6,1}'>D_{6,1}</option>
-                   <option value='D_{6,2}'>D_{6,2}</option>
-                   <option value='O_1'>O_1</option>
-                   <option value='E_1'>E_1</option>
-                   <option value='E_2'>E_2</option>
-                   <option value='E_3'>E_3</option>
-                   <option value='E_4'>E_4</option>
-                   <option value='E_6'>E_6</option>
-                   <option value='J(E_1)'>J(E_1)</option>
-                   <option value='J(E_2)'>J(E_2)</option>
-                   <option value='J(E_3)'>J(E_3)</option>
-                   <option value='J(E_4)'>J(E_4)</option>
-                   <option value='J(E_6)'>J(E_6)</option>
-                   <option value='F_{a,b}'>F_{a,b}</option>
-                   <option value='F_{ac}'>F_{ac}</option>
-                   <option value='N(G_{1,3})'>N(G_{1,3})</option>
-                   <option value='G_{3,3}'>G_{3,3}</option>
-                   <option value='N(G_{3,3})'>N(G_{3,3})</option>
+                   <option value='J(C_2)'>\(J(C_2)\)</option>
+                   <option value='J(C_4)'>\(J(C_4)\)</option>
+                   <option value='J(C_6)'>\(J(C_6)\)</option>
+                   <option value='J(D_2)'>\(J(D_2)\)</option>
+                   <option value='J(D_3)'>\(J(D_3)\)</option>
+                   <option value='J(D_4)'>\(J(D_4)\)</option>
+                   <option value='J(D_6)'>\(J(D_6)\)</option>
+                   <option value='J(T)'>\(J(T)\)</option>
+                   <option value='J(O)'>\(J(O)\)</option>
+                   <option value='C{2,1}'>\(C_{2,1}\)</option>
+                   <option value='C_{6,1}'>\(C_{6,1}\)</option>
+                   <option value='D_{2,1}'>\(D_{2,1}\)</option>
+                   <option value='D_{3,2}'>\(D_{3,2}\)</option>
+                   <option value='D_{4,1}'>\(D_{4,1}\)</option>
+                   <option value='D_{4,2}'>\(D_{4,2}\)</option>
+                   <option value='D_{6,1}'>\(D_{6,1}\)</option>
+                   <option value='D_{6,2}'>\(D_{6,2}\)</option>
+                   <option value='O_1'>\(O_1\)</option>
+                   <option value='E_1'>\(E_1\)</option>
+                   <option value='E_2'>\(E_2\)</option>
+                   <option value='E_3'>\(E_3\)</option>
+                   <option value='E_4'>\(E_4\)</option>
+                   <option value='E_6'>\(E_6\)</option>
+                   <option value='J(E_1)'>\(J(E_1)\)</option>
+                   <option value='J(E_2)'>\(J(E_2)\)</option>
+                   <option value='J(E_3)'>\(J(E_3)\)</option>
+                   <option value='J(E_4)'>\(J(E_4)\)</option>
+                   <option value='J(E_6)'>\(J(E_6)\)</option>
+                   <option value='F_{a,b}'>\(F_{a,b}\)</option>
+                   <option value='F_{ac}'>\(F_{ac}\)</option>
+                   <option value='N(G_{1,3})'>\( N(G_{1,3})\)</option>
+                   <option value='G_{3,3}'>\(G_{3,3}\)</option>
+                   <option value='N(G_{3,3})'>\( N(G_{3,3}) \)</option>
                    <option value='USp(4)'>USp(4)</option>
 </td>
 
 <td><select name='real_geom_end_alg'>
-    <option value=''></option>
-    <option value='M_2(C)'>U(1)</option>
-    <option value='M_2(R)'>SU(2)</option>
-    <option value='C x C'>G_{1,1}</option>
-    <option value='C x R'>G_{1,3}</option>
-    <option value='R x R'>G_{3,3}</option>
-    <option value='R'>USp(4)</option>
+                   <option value=''></option>
+                   <option value='M_2(C)'>\(U(1)\)</option>
+                   <option value='M_2(R)'>\(SU(2)\)</option>
+                   <option value='C x C'>\(G_{1,1}\)</option>
+                   <option value='C x R'>\(G_{1,3}\)</option>
+                   <option value='R x R'>\(G_{3,3}\)</option>
+                   <option value='R'>\(USp(4)\)</option>
 </select></td>
 </tr>
 
