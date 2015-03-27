@@ -14,7 +14,7 @@ from Lfunction import *
 import LfunctionPlot as LfunctionPlot
 from lmfdb.utils import to_dict
 import bson
-from Lfunctionutilities import (lfuncDStex, lfuncEPtex, lfuncFEtex,
+from Lfunctionutilities import (p2sage, lfuncDStex, lfuncEPtex, lfuncFEtex,
                                 truncatenumber, styleTheSign, specialValueString)
 from lmfdb.WebCharacter import WebDirichlet
 from lmfdb.lfunctions import l_function_page, logger
@@ -763,8 +763,7 @@ def getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, ar
         arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
 
     if hasattr(pythonL,"lfunc_data"):
-        #F = pari(pythonL.lfunc_data['plot'])
-        F = pythonL.lfunc_data['plot']
+        F = p2sage(pythonL.lfunc_data['plot'])
     else:    
         L = pythonL.sageLfunction
         # HSY: I got exceptions that "L.hardy_z_function" doesn't exist
@@ -798,9 +797,7 @@ def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, ar
     L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
 
     if hasattr(L,"lfunc_data"):
-        #website_zeros = pari(L.lfunc_data['zeros'])
-        website_zeros = L.lfunc_data['zeros']
-        website_zeros = [RR(x) for x in website_zeros]
+        website_zeros = p2sage(L.lfunc_data['zeros'])
     else:
         # This depends on mathematical information, all below is formatting
         # More semantic this way

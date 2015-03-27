@@ -9,7 +9,7 @@
 import math
 import re
 
-from Lfunctionutilities import (seriescoeff,
+from Lfunctionutilities import (p2sage, seriescoeff,
                                 compute_local_roots_SMF2_scalar_valued,
                                 compute_dirichlet_series,
                                 number_of_coefficients_needed,
@@ -59,14 +59,11 @@ def makeLfromdata(L):
     data = L.lfunc_data
     L.degree = data['degree']
     L.level = data['conductor']
-    #L.sign = pari(data['root_number'])
-    L.sign = CC(data['root_number'])
-    #L.mu_fe = [x+pari(data['analytic_normalization'])
-        #for x in pari(data['gamma_factors'])[0]]
-    #L.nu_fe = [x+pari(data['analytic_normalization'])
-        #for x in pari(data['gamma_factors'])[1]]
-    L.mu_fe = []
-    L.nu_fe = [Rational('1/2'),Rational('1/2')]
+    L.sign = p2sage(data['root_number'])
+    L.mu_fe = [x+p2sage(data['analytic_normalization'])
+        for x in p2sage(data['gamma_factors'])[0]]
+    L.nu_fe = [x+p2sage(data['analytic_normalization'])
+        for x in p2sage(data['gamma_factors'])[1]]
     L.compute_kappa_lambda_Q_from_mu_nu()
     L.langlands = True
     L.poles = []
@@ -74,10 +71,8 @@ def makeLfromdata(L):
     L.coefficient_period = 0
     L.coefficient_type = 2
     L.numcoeff = 30
-    #L.dirichlet_coefficients_unnormalized = an_from_data(pari(data['euler_factors']),L.numcoeff)
-    L.dirichlet_coefficients_unnormalized = an_from_data(data['euler_factors'],L.numcoeff)
-    #L.normalize_by = pari(data['analytic_normalization'])
-    L.normalize_by = Rational('1/2')
+    L.dirichlet_coefficients_unnormalized = an_from_data(p2sage(data['euler_factors']),L.numcoeff)
+    L.normalize_by = p2sage(data['analytic_normalization'])
     L.dirichlet_coefficients = L.dirichlet_coefficients_unnormalized
     for n in range(0, len(L.dirichlet_coefficients)):
         an = L.dirichlet_coefficients[n]

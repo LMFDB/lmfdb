@@ -9,6 +9,11 @@ from sage.all import *
 # Functions for displaying numbers in correct format etc.
 ###############################################################
 
+def p2sage(s):
+    # convert python type to sage
+    # this interprets strings, so e.g. '1/2' gets converted to Rational
+    return sage_eval(str(s))
+
 def pair2complex(pair):
     ''' Turns the pair into a complex number.
     '''
@@ -502,16 +507,12 @@ def specialValueString(L, s, sLatex):
     number_of_decimals = 10
     val = None
     if hasattr(L,"lfunc_data"):
-        #s_alg = s+pari(L.lfunc_data['analytic_normalization'])
-        #for x in pari(L.lfunc_data['special_values']):
-        s_alg=s+Rational('1/2')
-        for x in L.lfunc_data['special_values']:
+        s_alg = s+p2sage(L.lfunc_data['analytic_normalization'])
+        for x in p2sage(L.lfunc_data['special_values']):
             # the numbers here are always half integers
             # so this comparison is exact
             if x[0] == s_alg:
-                val = CC(x[1])
-            #if pari(x[0]) == s_alg:
-                #val = CC(pari(x[1]))
+                val = x[1]
                 break
     if val is None:
         val = L.sageLfunction.value(s)
