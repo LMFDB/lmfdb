@@ -50,9 +50,12 @@ Sato-Tate group: ${{ info.st_group_name }}$
 
 <h2> {{ KNOWL('g2c.jac_endomorphisms', title='Endomorphisms of the Jacobian') }} </h2>
 <table>
-  <tr>  <td>\(\mathrm{End}(J) \otimes \Q\)</td><td>\(\simeq\)</td><td>\({{info.rat_end_alg_name}}\)</td></tr>
-  <tr>  <td>\(\mathrm{End}(J) \otimes \R\)</td><td>\(\simeq\)</td><td>\({{info.real_end_alg_name}}\)</td><td>\([ \ \mathrm{Is} \ \  \mathrm{GL}_2\mathrm{-type:} \ \){{info.is_gl2_type}} {{']'}}</td></tr>
-  <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}}) \otimes \Q\)</td><td>\(\simeq\)</td><td>\({{info.rat_geom_end_alg_name}}\)</td></tr>
+  <tr>  <td>\(\mathrm{End}(J) \otimes \Q\)</td><td>\(\simeq\)</td><td>\({{info.rat_end_alg_name}}\)</td>
+<td>[Is simple over \(\Q \): {{info.is_simple}}]</td></tr>
+  <tr>  <td>\(\mathrm{End}(J) \otimes \R\)</td><td>\(\simeq\)</td><td>\({{info.real_end_alg_name}}\)</td>
+<td>[Is \(\mathrm{GL}_2-\)type: {{info.is_gl2_type}}]</td></tr>
+  <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}}) \otimes \Q\)</td><td>\(\simeq\)</td><td>\({{info.rat_geom_end_alg_name}}\)</td>
+<td>[Is simple over \(\overline{\Q} \): {{info.is_simple}}]</td></tr>
   <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}}) \otimes \R\)</td><td>\(\simeq\)</td><td>\({{info.real_geom_end_alg_name}}\)</td></tr>
 </table>
 
@@ -60,6 +63,10 @@ Sato-Tate group: ${{ info.st_group_name }}$
 <A HREF="/NumberField/{{info.geom_end_field }}">{{info.geom_end_field}}</A></p>
 
 <h2>Isogenies</h2>
+
+{% if info.ecproduct_wurl == [] and info.ecquadratic_wurl == [] %}
+<p>None currently known.</p>
+{% endif %}
 
 {% if info.ecproduct_wurl != [] %}
 <p>\(J\) is isogenous over \(\Q\) to <a href="{{info.ecproduct_wurl[0].url}}">{{info.ecproduct_wurl[0].label}}</a> \(\times\)

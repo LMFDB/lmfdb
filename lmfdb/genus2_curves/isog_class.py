@@ -114,6 +114,20 @@ class G2Cisog_class(object):
             self.is_gl2_type_name = 'yes'
         else:
             self.is_gl2_type_name = 'no'
+        if hasattr(self, 'is_simple'):
+            if self.is_simple:
+                self.is_simple_name = 'yes'
+            else:
+                self.is_simple_name = 'no'
+        else:
+            self.is_simple_name = ''
+        if hasattr(self, 'is_geom_simple'):
+            if self.is_geom_simple:
+                self.is_geom_simple_name = 'yes'
+            else:
+                self.is_geom_simple_name = 'no'
+        else:
+            self.is_geom_simple_name = ''
 
         x = self.label.split('.')[1]
         
