@@ -31,13 +31,21 @@ def list_to_min_eqn(L):
     lhs = ypoly_rng([0,poly_tup[1],1])
     return str(lhs).replace("*","") + " = " + str(poly_tup[0]).replace("*","")
 
-
+# need to come up with a function that deal with the quadratic fields in the dictionary
 def end_alg_name(name):
     name_dict = {
         "Z":"\\Z",
-        "Q":"\\Q",        
+        "Q":"\\Q",      
+        "Q x Qsqrt-4":"\\Q \\times \\Q(\\sqrt{-1})",
+        "Q x Qsqrt-7":"\\Q \\times \\Q(\\sqrt{-7})",
+        "Q x Qsqrt-11":"\\Q \\times \\Q(\\sqrt{-11})",
+        "Q x Qsqrt-3":"\\Q \\times \\Q(\\sqrt{-3})",
+        "Q x Qsqrt-19":"\\Q \\times \\Q(\\sqrt{-19})",
+        "Q x Qsqrt-8":"\\Q \\times \\Q(\\sqrt{-2})",
+        "Q x Qsqrt-67":"\\Q \\times \\Q(\\sqrt{-67})",
         "R":"\\R",
         "C":"\\C",
+        "Q x Q":"\\Q \\times \\Q",
         "R x R":"\\R \\times \\R",
         "C x R":"\\C \\times \\R",
         "C x C":"\\C \\times \\C",
@@ -123,7 +131,7 @@ class WebG2C(object):
         data['geom_aut_grp'] = groupid_to_meaningful(self.geom_aut_grp)
         data['igusa_clebsch'] = [ZZ(a)  for a in self.igusa_clebsch]
         if len(self.torsion) == 0:
-            data['tor_struct'] = '0'
+            data['tor_struct'] = '\mathrm{trivial}'
         else:
             tor_struct = [ZZ(a)  for a in self.torsion]
             data['tor_struct'] = ' \\times '.join(['\Z/{%s}\Z' % n for n in tor_struct])
