@@ -98,18 +98,18 @@ Sato-Tate group: \({{ data.data.st_group_name }}\)
 <h2> {{ KNOWL('g2c.jac_endomorphisms', title='Endomorphisms of the Jacobian') }} </h2>
 <table>
   <tr>  <td>\(\mathrm{End}(J) \)</td><td>\(\simeq\)</td><td>\({{data.data.end_ring_name}}\)</td></tr>
-  <tr>  <td>\(\mathrm{End}(J) \otimes \Q\)</td><td>\(\simeq\)</td><td>\({{info.rat_end_alg_name}}\)</td>
-<td>[Is simple over \(\Q \): {{info.is_simple_name}}]</td></tr>
-  <tr>  <td>\(\mathrm{End}(J) \otimes \R\)</td><td>\(\simeq\)</td><td>\({{info.real_end_alg_name}}\)</td>
-<td>[Is \(\mathrm{GL}_2-\)type: {{info.is_gl2_type_name}}]</td></tr>
+  <tr>  <td>\(\mathrm{End}(J) \otimes \Q\)</td><td>\(\simeq\)</td><td>\({{data.data.rat_end_alg_name}}\)</td>
+<td>[Is simple over \(\Q \): {{data.data.is_simple_name}}]</td></tr>
+  <tr>  <td>\(\mathrm{End}(J) \otimes \R\)</td><td>\(\simeq\)</td><td>\({{data.data.real_end_alg_name}}\)</td>
+<td>[Is \(\mathrm{GL}_2-\)type: {{data.data.is_gl2_type_name}}]</td></tr>
   <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}})\)</td><td>\(\simeq\)</td><td>\({{data.data.geom_end_ring_name}}\)</td></tr>
-  <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}}) \otimes \Q\)</td><td>\(\simeq\)</td><td>\({{info.rat_geom_end_alg_name}}\)</td>
-<td>[Is simple over \(\overline{\Q} \): {{info.is_geom_simple_name}}]</td></tr>
-  <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}}) \otimes \R\)</td><td>\(\simeq\)</td><td>\({{info.real_geom_end_alg_name}}\)</td></tr>
+  <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}}) \otimes \Q\)</td><td>\(\simeq\)</td><td>\({{data.data.rat_geom_end_alg_name}}\)</td>
+<td>[Is simple over \(\overline{\Q} \): {{data.data.is_geom_simple_name}}]</td></tr>
+  <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}}) \otimes \R\)</td><td>\(\simeq\)</td><td>\({{data.data.real_geom_end_alg_name}}\)</td></tr>
 
 </table>
 
 <p>Field over which all endomorphisms are defined: 
-<A HREF="/NumberField/{{info.geom_end_field }}">{{info.geom_end_field}}</A></p>
+<A HREF="/NumberField/{{data.data.geom_end_field}}">{{data.data.geom_end_field_name}}</A></p>
 
 {% endblock %}

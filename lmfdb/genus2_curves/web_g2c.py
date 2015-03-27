@@ -145,14 +145,29 @@ class WebG2C(object):
 
         data['geom_end_field'] = isogeny_class['geom_end_field']
         if data['geom_end_field'] <> '':
-            nf = WebNumberField(data['geom_end_field'])
-            data['geom_end_field'] = teXify_pol(str(nf.poly()))
+            data['geom_end_field_name'] = field_pretty(data['geom_end_field'])
+        else:
+            data['geom_end_field_name'] = ''        
 
         data['st_group_name'] = st_group_name(isogeny_class['st_group'])
         if isogeny_class['is_gl2_type']:
-            data['is_gl2_type'] = 'yes'
+            data['is_gl2_type_name'] = 'yes'
         else:
-            data['is_gl2_type'] = 'no'
+            data['is_gl2_type_name'] = 'no'
+        if 'is_simple' in isogeny_class:
+            if isogeny_class['is_simple']:
+                data['is_simple_name'] = 'yes'
+            else:
+                data['is_simple_name'] = 'no'
+        else:
+            data['is_simple_name'] = '?'
+        if 'is_geom_simple' in isogeny_class:
+            if isogeny_class['is_geom_simple']:
+                data['is_geom_simple_name'] = 'yes'
+            else:
+                data['is_geom_simple_name'] = 'no'
+        else:
+            data['is_simple_name'] = '?'
 
         x = self.label.split('.')[1]
         self.friends = [
@@ -169,7 +184,7 @@ class WebG2C(object):
                            ('Invariants', '%s </br> %s </br> %s </br> %s'% tuple(data['igusa_clebsch'])), 
                            ('Sato-Tate group', '\(%s\)' % data['st_group_name']), 
                            ('\(\mathrm{End}(J_{\overline{\Q}}) \otimes \R\)','\(%s\)' % data['real_geom_end_alg_name']),
-                           ('\(\mathrm{GL}_2\)-type','%s' % data['is_gl2_type'])]
+                           ('\(\mathrm{GL}_2\)-type','%s' % data['is_gl2_type_name'])]
         self.title = "Genus 2 Curve %s" % (self.label)
         self.bread = [
              ('Genus 2 Curves', url_for(".index")),
