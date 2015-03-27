@@ -116,11 +116,9 @@ def genus2_curve_search(**args):
     if info.get("is_gl2_type"):
        query['is_gl2_type']=bool(info['is_gl2_type'])    
 
-    if info.get("st_group"):
-       query['st_group']=info['st_group']
-
-    if info.get("real_geom_end_alg"):
-       query['real_geom_end_alg']=info['real_geom_end_alg']
+    for fld in ['aut_group', 'geom_aut_group','st_group','real_geom_end_alg']:
+        if info.get(fld):
+            query[fld] = info[fld]
 
     if info.get("cond"):
         field = "cond"
