@@ -50,14 +50,14 @@ Some of our favorite curves:
 
 <tr>
 <td>{{ KNOWL('g2c.st_group', title='Sato-Tate group') }}</td>
-<td colspan="2" align="center">
+<td colspan="2">
   <table>
     <tr>
-      <td align = "center">{{ KNOWL('g2c.st_group', title='Sato-Tate group') }}</td>
-      <td align = "center">{{ KNOWL('g2c.st_group_identity_comp',title = 'Identity component') }}</td>
+      <td align = "center">\( \mathrm{ST} \)</td>
+      <td align = "center">\( \mathrm{ST}_0 \)</td>
     </tr>
     <tr>
-      <td><select name='st_group'>
+      <td><select name='st_group' width="80" style="width: 80px">
                    <option ></option>
                    <option value='J(C_2)'>\(J(C_2)\)</option>
                    <option value='J(C_4)'>\(J(C_4)\)</option>
@@ -95,8 +95,8 @@ Some of our favorite curves:
                    <option value='USp(4)'>USp(4)</option>
 </td>
 
-<td><select name='real_geom_end_alg'>
-                   <option value=''></option>
+<td><select name='real_geom_end_alg' width="80" style="width: 80px">
+                   <option ></option>
                    <option value='M_2(C)'>\(U(1)\)</option>
                    <option value='M_2(R)'>\(SU(2)\)</option>
                    <option value='C x C'>\(G_{1,1}\)</option>
@@ -113,20 +113,32 @@ Some of our favorite curves:
 
 <tr>
 <td>{{ KNOWL('g2c.aut_grp', title='Automorphism group') }}</td>
-<td colspan="2" align="center">
+<td colspan="2">
   <table>
     <tr>
       <td align = "center"> \(\mathrm{Aut}(X)\) </td>
       <td align = "center"> \(\mathrm{Aut}(X_{\overline{\Q}})\) </td>
     </tr>
     <tr>
-      <td align = "center"><select name='aut_grp'>
-	  <option value=''></option>
-	  <option value=''>autgrpname</option>
+      <td align = "center"><select name='aut_grp' width="80" style="width: 80px">
+                   <option ></option>
+                   <option value=[2, 1]>\(C_2\)</option>
+                   <option value='[4, 1]'>\(C_4\)</option>                   
+                   <option value='[4, 2]'>\(V_4\)</option>
+                   <option value='[6, 2]'>\(C_6\)</option>                   
+                   <option value='[8, 3]'>\(D_8\)</option>                   
+                   <option value='[12, 4]'>\(D_{12}\)</option>
+
       </select></td>
-      <td align = "center"><select name='aut_grp_geom'>
-	  <option value=''></option>
-	  <option value='autgrptype'>autgrpname</option>
+      <td align = "center"><select name='geom_aut_grp' width="80" style="width: 80px">
+	               <option ></option>
+                   <option value='[2, 1]'>\(C_2\)</option>
+                   <option value='[4, 2]'>\(V_4\)</option>
+                   <option value='[8, 3]'>\(D_8\)</option>
+                   <option value='[10, 2]'>\(C_{10}\)</option>
+                   <option value='[12, 4]'>\(D_{12}\)</option>
+                   <option value='[24, 8]'>\(2D_{12}\)</option>
+                   <option value='[48, 29]'>\(\tilde{S}_4\)</option>
       </select></td>
     </tr>
   </table>
