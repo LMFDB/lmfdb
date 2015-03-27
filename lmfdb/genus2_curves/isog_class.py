@@ -8,6 +8,7 @@ import lmfdb.base
 from lmfdb.utils import comma, make_logger, web_latex, encode_plot
 from lmfdb.genus2_curves.web_g2c import g2c_page, g2c_logger, list_to_min_eqn, end_alg_name, st_group_name
 from sage.all import QQ, PolynomialRing, factor,ZZ
+from lmfdb.WebNumberField import field_pretty
 
 logger = make_logger("g2c")
 
@@ -109,6 +110,11 @@ class G2Cisog_class(object):
                 setattr(self,endalgtype + '_name','')
 
         self.st_group_name = st_group_name(self.st_group)
+
+        if hasattr(self, 'geom_end_field'):
+            self.geom_end_field_name = field_pretty(self.geom_end_field)
+        else:
+            self.geom_end_field_name = ''
 
         if self.is_gl2_type:
             self.is_gl2_type_name = 'yes'
