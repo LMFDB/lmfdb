@@ -621,7 +621,7 @@ def hmf_field_primes(field_label):
     gen = P(F.gen())
     idl = F.ideal(n,gen)
 
-def check_curve_labels(field_label='2.2.5.1', verbose=False):
+def check_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, verbose=False):
     r""" Go through all curves with the given field label, assumed totally
     real, test whether a Hilbert Modular Form exists with the same
     label.
@@ -632,11 +632,16 @@ def check_curve_labels(field_label='2.2.5.1', verbose=False):
     query = {}
     query['field_label'] = field_label
     query['number'] = 1
+    query['conductor_norm'] = {'$gte' : int(min_norm)}
+    if max_norm:
+        query['conductor_norm']['$lte'] = int(max_norm)
+    else:
+        max_norm = 'infinity'
     cursor = nfcurves.find(query)
     nfound = 0
     nnotfound = 0
     from lmfdb.ecnf.WebEllipticCurve import FIELD
-    K = FIELD(ec['field_label'])
+    K = FIELD(field_label)
 
     for ec in cursor:
         hmf_label = "-".join([ec['field_label'],ec['conductor_label'],ec['iso_label']])
@@ -645,7 +650,7 @@ def check_curve_labels(field_label='2.2.5.1', verbose=False):
             if verbose:
                 print("hmf with label %s found" % hmf_label)
             nfound +=1
-            E = EllipticCurve([K.parse_NFelt(x) for x in ec['ainvs']])
+            #E = EllipticCurve([K.parse_NFelt(x) for x in ec['ainvs']])
 
         else:
             if verbose:
