@@ -9,7 +9,7 @@ from lmfdb.utils import comma, make_logger, web_latex, encode_plot
 from lmfdb.genus2_curves import g2c_page, g2c_logger
 from lmfdb.genus2_curves.data import group_dict
 import sage.all
-from sage.all import EllipticCurve, latex, matrix, ZZ, QQ, PolynomialRing, factor
+from sage.all import latex, matrix, ZZ, QQ, PolynomialRing, factor
 from lmfdb.hilbert_modular_forms.hilbert_modular_form import teXify_pol
 
 from lmfdb.WebNumberField import *

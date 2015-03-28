@@ -15,7 +15,7 @@ from lmfdb.genus2_curves.isog_class import G2Cisog_class, url_for_label, isog_ur
 from lmfdb.genus2_curves.web_g2c import WebG2C, list_to_min_eqn, isog_label
 
 import sage.all
-from sage.all import ZZ, QQ, EllipticCurve, latex, matrix, srange
+from sage.all import ZZ, QQ, latex, matrix, srange
 q = ZZ['x'].gen()
 
 #########################
@@ -217,10 +217,6 @@ def g2_list_to_query(dlist):
             ans.append({'disc_key': d0})
     return [['$or', ans]]
 
-
-def search_input_error(info, bread):
-    return render_template("search_results.html", info=info, title='Genus 2 Search Input Error', bread=bread)
-
 ##########################
 #  Specific curve pages
 ##########################
@@ -236,10 +232,6 @@ def by_full_label(conductor,iso_label,disc,number):
     g2c_logger.debug(full_label)
     return render_curve_webpage_by_label(full_label)
 
-
-# The following function determines whether the given label is in
-# LMFDB or Cremona format, and also whether it is a curve label or an
-# isogeny class label, and calls the appropriate function
 
 @g2c_page.route("/Q/<label>")
 def by_g2c_label(label):
