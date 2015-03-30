@@ -35,7 +35,7 @@ def get_logfocus():
 # global db connection instance
 _C = None
 
-readonly_dbs = ['HTPicard', 'Lfunction', 'Lfunctions', 'MaassWaveForm', 'genus2_curves', 
+readonly_dbs = ['HTPicard', 'Lfunction', 'Lfunctions', 'MaassWaveForm',
                 'ellcurves', 'elliptic_curves', 'hmfs', 'modularforms', 'modularforms_2010',
                 'mwf_dbname', 'numberfields', 'quadratic_twists', 'test', 'limbo']
 

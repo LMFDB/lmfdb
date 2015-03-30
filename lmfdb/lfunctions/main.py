@@ -407,7 +407,9 @@ def initLfunction(L, args, request):
     # (however, I'm not sure this is true if L is not primitive -- GT)
 
     # Now we usually display both
-    if L.Ltype() != "artin" or (L.Ltype() == "artin" and L.sign != 0):
+    if L.Ltype() == "genus2curveQ":
+        info['sv12'] = specialValueString(L, 0.5, '1/2')
+    elif L.Ltype() != "artin" or (L.Ltype() == "artin" and L.sign != 0):
     #    if is_even(L.degree) :
     #        info['sv12'] = specialValueString(L, 0.5, '1/2')
     #    if is_odd(L.degree):

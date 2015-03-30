@@ -37,6 +37,25 @@ def getEllipticCurveData(label):
     curves = connection.elliptic_curves.curves
     return curves.find_one({'lmfdb_label': label})
     
+def getGenus2Ldata(hash):
+    connection = base.getDBConnection()
+    g2 = connection.genus2_curves
+    try:
+        Ldata = g2.Lfunctions.find_one({'hash': hash})
+    except:
+        Ldata = None
+    return Ldata
+    
+def getHmfData(label):
+    connection = base.getDBConnection()
+    try:
+        f = connection.hmfs.forms.find_one({'label': label})
+        F_hmf = connection.hmfs.fields.find_one({'label': f['field_label']})
+    except:
+        f = None
+        F_hmf = None
+    return (f, F_hmf)
+    
 def getGenus2IsogenyClass(label):
     connection = base.getDBConnection()
     g2 = connection.genus2_curves
