@@ -57,8 +57,11 @@ def an_from_data(euler_factors,upperbound=30):
 
 def makeLfromdata(L):
     data = L.lfunc_data
+    L.algebraic = data['algebraic']
     L.degree = data['degree']
     L.level = data['conductor']
+    L.primitive = data['primitive']
+    L.motivic_weight = data['motivic_weight']
     L.sign = p2sage(data['root_number'])
     L.mu_fe = [x+p2sage(data['analytic_normalization'])
         for x in p2sage(data['gamma_factors'])[0]]
@@ -1522,10 +1525,7 @@ class Lfunction_genus2_Q(Lfunction):
         if isoclass is None:
             raise KeyError("There is no genus 2 isogeny class with that label")
 
-        self.algebraic = True
         self.number = int(0)
-        self.primitive = False
-        self.motivic_weight = 1
         self.quasidegree = 2
         self.texname = "L(s,A)"
         self.texnamecompleteds = "\\Lambda(s,A)"
@@ -1536,7 +1536,8 @@ class Lfunction_genus2_Q(Lfunction):
         self.credit = ''
 
         # Extract the L-function information
-        self.lfunc_data = isoclass['lfunc_data']
+        #self.lfunc_data = isoclass['lfunc_data']
+        self.lfunc_data = LfunctionDatabase.getGenus2Ldata(isoclass['hash'])
         makeLfromdata(self)
 
         constructor_logger(self, args)
