@@ -35,6 +35,11 @@ def get_logfocus():
 # global db connection instance
 _C = None
 
+# Note: the original intention was to have all databases and
+# collections read-only except to users who could authenticate
+# themselves with a password.  But this never worked, and this list
+# (which is in any case incomplete) is now redundant.
+
 readonly_dbs = ['HTPicard', 'Lfunction', 'Lfunctions', 'MaassWaveForm',
                 'ellcurves', 'elliptic_curves', 'hmfs', 'modularforms', 'modularforms_2010',
                 'mwf_dbname', 'numberfields', 'quadratic_twists', 'test', 'limbo']
@@ -90,6 +95,9 @@ def _init(dbport, readwrite_password, parallel_authentication=False):
     global _C
     logging.info("establishing db connection at port %s ..." % dbport)
     _C = Connection(port=dbport)
+
+    # Disabling authentication completely as it does not work:
+    return
 
     def db_auth_task(db, readonly=False):
         if readonly or readwrite_password == '':
