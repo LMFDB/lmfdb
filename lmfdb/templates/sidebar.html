@@ -2,6 +2,8 @@
 
 <div id="sidebar">
 {% for key, heading, value in sidebar.data %}
+{% if BETA or not value.status %}{# an entire section may be omitted e.g. Motives #}
+
 {{heading | safe}}
 
 {% if value.type == 'L' %}
@@ -27,12 +29,12 @@
 
 <table class="short">
 {% for entry in value.parts %}
-	{% if entry.status %} 
+	{% if entry.status %}
 		{%if BETA %}
 			{% if loop.index is even %}{# want alternating colours here #}
 				<tr bgcolor="#fff">
 			{% else %}
-				<tr> 
+				<tr>
 			{% endif %}{# end alternating colours #}
 			{% if entry.style == "rotate" %}
 				<td width="40" class="borc rotation"><p class="test rotation">{{ entry.url | safe }}</p></td>
@@ -83,11 +85,11 @@
 			</td>
 			</tr>
 		{% endif %}{# this concludes the BETA flag #}
-	{% else %}{# this look through entries with stautus not set #}
+	{% else %}{# this look through entries with status not set #}
 		{% if loop.index is even %}{# want alternating colours here #}
 			<tr bgcolor="#fff">
 		{% else %}
-			<tr> 
+			<tr>
 		{% endif %}
 		{% if entry.style == "rotate" %}
 			<td width="40" class="borc rotation"><p class="test rotation">{{ entry.url | safe }}</p></td>
@@ -137,7 +139,7 @@
 						<table class="short2">
 						<tr>
 						{% for pt3 in pt2.part3 %}
-							{% if BETA or pt3.status != "future" %}{# modify this loop if you do not want to display in the production site the pt3 with status beta #}
+							{% if BETA or not pt3.status %}
 								{% if pt3.colspan == "onecolumn" %}
 									{% if loop.index is odd %}
 										</tr><tr>
@@ -174,29 +176,29 @@
 
 {% elif value.type == 'simple' %}
 
-<table class="short">
-<tr>
-{% for entry in value.parts %}
+   <table class="short">
+   <tr>
+   {% for entry in value.parts %}
 	{% if entry.colspan == "onecolumn" %}
 		{% if loop.index is even %}
 			</tr><tr>
-		{% endif %}
-	{% endif %}
-	{% if entry.status == "future" %}
+		{% endif %}{# if loop.index is even #}
+	{% endif %}{# if entry.colspan == "onecolumn" #}
+	{% if entry.status %}
 		{% if BETA %}
 			<td scope="col" width="50%">{{entry.url | safe}}
 		{% endif %}
 	{% else %}
 		<td scope="col" width="50%">{{entry.url | safe}}
-	{% endif %}
+	{% endif %}{# if entry.status #}
 	{% if entry.part2 %}
 		<td scope="col" width="30%">
 		{% for pt2 in entry.part2 %}
-			{% if pt2.status == "future" %}
+			{% if pt2.status %}
 				{% if BETA %}
 					<span class="subtitle">{{ pt2.url | safe }}</span>
 				{% endif %}
-			{% else %}
+			{% else %}{# if pt2.status #}
 				<span class="subtitle">{{ pt2.url | safe }}</span>
 			{% endif %}
 			{% if pt2.part3 %}
@@ -208,30 +210,33 @@
 						{% endif %}
 					{% else %}
 						<span class="subitem">{{ pt3.url | safe}}</span>
-					{% endif %}
-				{% endfor %}</div>
-			{% endif %} {# if part3 in pt2 #}
-		{% endfor %} {# for pt2 #}
+					{% endif %}{# if pt3.status == "future" #}
+				{% endfor %}{# for pt3 in pt2.part3 #}
+                                </div>
+			{% endif %} {# if pt2.part3 #}
+		{% endfor %} {# for pt2 in entry.part2 #}
 		</td>
-	{% endif %}
+	{% endif %}{# if entry.part2 #}
 	{% if entry.colspan == "onecolumn" %}
 		{% if loop.index is odd %}
 			</tr><tr>
 		{% endif %}
+	{% endif %}{# if entry.colspan == "onecolumn" #}
+	{%if loop.index is even %}
+                </tr><tr>
 	{% endif %}
-	{%if loop.index is even %}</tr><tr>
-	{%- endif %}
-{% endfor %}
+    {% endfor %}{# for entry in value.parts #}
 </tr>
 </table>
 
 
 {% elif value.type == 'single' %}
-{# nothing needs doing #}
 
+{# nothing needs doing as only the header appears, e.g. Knowledge #}
 
-{% endif %} {# branch on type #}
-{% endfor %} {# loop over main headings #}
+{% endif %} {# if value.type == ... #}
+{% endif %} {# if BETA or not value.status #}
+{% endfor %} {# for key, heading, value in sidebar.data #}
 
 </div>
 

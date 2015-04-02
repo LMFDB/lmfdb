@@ -197,6 +197,7 @@
 
 7Mot:
    type: simple
+   status: beta
    heading:
       title: Motives
    parts:
