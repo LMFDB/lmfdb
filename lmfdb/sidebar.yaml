@@ -27,7 +27,7 @@
       url_for: "l_functions.l_function_top_page"
    firstpart:
       type: head_row
-      heading: Degree
+      heading: "Degree:"
       entries:
         - title: "1"
           url_for: "l_functions.l_function_degree_page"
@@ -74,26 +74,28 @@
            url_for: "hmf.hilbert_modular_form_render_webpage"
          - title: Bianchi
            status: future
-         - title: Half-integer
+         - title: Half-integral
            status: future
          - title: Noncongruence
            status: future
+           colspan: onecolumn
      - title: GL(3)
        style: rotate
        part2:
-         - title: Cohomological
-           status: future
          - title: Maass
            url_for: "l_functions.l_function_maass_gln_browse_page"
            url_args:
              degree: 'degree3'
+         - title: Cohomological
+           status: future
+           colspan: onecolumn
      - title: Other
        style: rotate
        part2:
-         - title: U(2,1)
-           status: future
          - title: Siegel
            url_for: "ModularForm_GSp4_Q_top_level"
+         - title: U(2,1)
+           status: future
          - title: Other
            status: future
 
@@ -105,8 +107,8 @@
      - title: Curves
        style: rotate
        part2:
-         - title: Elliptic
-           parts:
+         - title: "Elliptic:"
+           part3:
              - title: $/\Q$
                url_for: "ec.rational_elliptic_curves"
              - title: $/\F_{q}(t)$
@@ -114,25 +116,31 @@
              - title: /NumberFields
                url_for: "ecnf.index"
                status: beta
+               colspan: onecolumn
              - title: $\Q$-curves
                status: future
-         - title: Hyperelliptic
+           colspan: onecolumn
+         - title: "Hyperelliptic:"
            status: future
-           parts:
+           part3:
              - title: $/\Q$
                status: future
              - title: $/\F_{q}(t)$
                status: future
              - title: /NumberFields
                status: future
+               colspan: onecolumn
+           colspan: onecolumn
          - title: Shimura
            status: future
          - title: Belyi
            status: future
          - title: Higher genus
            status: future
+           colspan: onecolumn
      - title: 2-d
        style: rotate
+       status: future_rotated
        part2:
          - title: Abelian
            status: future
@@ -140,11 +148,13 @@
            status: future
      - title: $3^+$-d
        style: rotate
+       status: future_rotated
        part2:
          - title: Calabi-Yau
            status: future
          - title: Shimura varieties
            status: future
+           colspan: onecolumn 
          - title: Higher
            status: future
 
@@ -153,12 +163,13 @@
    heading:
       title: Fields
    parts:
-    - title: Number fields
+    - title: "Number fields:"
       part2:
          - title: Global
            url_for:  "number_fields.number_field_render_webpage"
          - title: Local
            url_for:  "local_fields.index"
+      colspan: onecolumn
     - title: Function fields
       status: future
 
@@ -167,16 +178,19 @@
    heading:
       title: Representations
    parts:
-    - title: Characters
+    - title: "Characters:"
       url_for: "characters.render_characterNavigation"
       part2:
          - title: Dirichlet
            url_for:  "characters.render_Dirichletwebpage"
          - title: Hecke
            url_for:  "characters.render_Heckewebpage"
+      colspan: onecolumn
     - title: Artin
       url_for: "artin_representations.index"
     - title: Automorphic
+      status: future
+    - title: dummy
       status: future
     - title: Galois
       status: future
@@ -186,13 +200,14 @@
    heading:
       title: Motives
    parts:
-    - title: Hypergeometric
+    - title: "Hypergeometric:"
       part2:
          - title: $/\Q$
            status:  beta
            url_for:  "hypergm.index"
          - title: $/\Q(\sqrt{d})$
            status: future
+      colspan: onecolumn
     - title: Jacobi
       status: future
     - title: $G_2$
@@ -209,6 +224,8 @@
            status:  future
          - title: $\GL(2,\F_p)$
            status:  future
+      status: future
+      colspan: onecolumn
     - title: Galois groups
       url_for: "galois_groups.index"
 
