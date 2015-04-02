@@ -1,7 +1,7 @@
 <style type="text/css">
 #sidebar .L a {
     display: inline;
-    padding: 4px;
+    padding: 2px;
 }
 
 #sidebar .L {
@@ -40,7 +40,7 @@
 }
 
 #sidebar table td p {
-    padding: 2px 5px;
+    padding: 2px 0px;
 }
 
 #sidebar table td.full .future  {
@@ -99,8 +99,8 @@ p.rotation  {
 }
 
 #sidebar table.short{
-    width: 200px;
-    table-layout:fixed;
+    width: 100%;
+    table-layout: fixed;
 	border-width: 2px;
     border-bottom: 0px;
 	border-style: solid;
@@ -153,12 +153,24 @@ p.rotation  {
   -moz-border-radius-bottomright: 0px;
 }
 
-
 #sidebar .list li {
   padding: 2px 0px;
 }
 
 #sidebar .list a {
   padding: 0px;
+}
+
+#sidebar table.short2{
+    width: 100%;
+    table-layout:fixed;
+	padding: 10px;
+	border-spacing: 0px;
+	border-color: #efe;
+	border-collapse: collapse;
+}
+
+#sidebar table.short2 td{
+	padding-left: 10px;
 }
 </style>

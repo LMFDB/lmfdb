@@ -4,22 +4,22 @@
 {% for key, heading, value in sidebar.data %}
 {{heading | safe}}
 
-
 {% if value.type == 'L' %}
-
-<div class="L">
-<span class="heading">{{value.firstpart.heading}}</span>
-{% for item in value.firstpart.entries %}
-<span class="L">{{item.url | safe}}</span>
-{% endfor %}
-</div>
-<table class="short">
-<tr>
-{% for item in value.secondpart.parts %}
-<td>{{item.url | safe}}
-</td>{% if loop.index is even -%}</tr><tr>{%- endif %}
-{% endfor %}</tr>
-</table>
+	<div class="L">
+	<span class="heading">{{value.firstpart.heading}}</span>
+	{% for item in value.firstpart.entries %}
+		{% if item.status != "future" or BETA %}
+			<span class="L">{{item.url | safe}}</span>
+		{% endif %}
+	{% endfor %}
+	</div>
+	<table class="short">
+	<tr>
+	{% for item in value.secondpart.parts %}
+		<td>{{item.url | safe}}</td>
+		{% if loop.index is even -%}</tr><tr>{%- endif %}
+	{% endfor %}</tr>
+	</table>
 
 
 
@@ -27,41 +27,149 @@
 
 <table class="short">
 {% for entry in value.parts %}
-{% if loop.index is even -%}
-<tr bgcolor="#fff">
-{% else %}
-<tr> {# want alternating colours here #}
-{%- endif %}
-{% if entry.style == "rotate" %}
-<td width="40" class="borc rotation"><p class="test rotation">
-{% elif entry.style == "full" %}
-<td scope="col" colspan="2" class="full">
-{% else %}
-<td class="borc"><p>
-{% endif %}
-{{ entry.url | safe }}
-</p></td><td class="bor">
-{% if entry.part2 %}
-<ul class="list">
-{% for pt2 in entry.part2 %}
-<li>
-<span class="subtitle">{{ pt2.url | safe }}</span>
-{% if pt2.parts %}
-<div class="parts">
-{% for it2 in pt2.parts %}
-<span class="subitem">{{ it2.url | safe}}</span>
-{% endfor %}
-</div>
-{% endif %} {# if parts in pt2 #}
-</li>
-{% endfor %} {# for pt2 #}
-</ul>
-{% endif %} {# if part2 in entry #}
-</td>
-</tr>
+	{% if entry.status %} 
+		{%if BETA %}
+			{% if loop.index is even %}{# want alternating colours here #}
+				<tr bgcolor="#fff">
+			{% else %}
+				<tr> 
+			{% endif %}{# end alternating colours #}
+			{% if entry.style == "rotate" %}
+				<td width="40" class="borc rotation"><p class="test rotation">{{ entry.url | safe }}</p></td>
+			{% else %}
+				<td scope="col" colspan="2" class="full">{{ entry.url | safe }}</td>
+			{% endif %}{# end rotation first column if needed #}
+			<td class="bor">
+			{% if entry.part2 %}
+				<table class="short2">
+				<tr class="bor">
+				{% for pt2 in entry.part2 %}
+					{% if pt2.colspan == "onecolumn"%}
+						{% if loop.index is even -%}
+							</tr><tr>
+						{% endif %}
+						<td colspan="2">
+					{% else %}
+						<td>
+					{% endif %}
+					<span class="subtitle">{{ pt2.url | safe }}</span>
+					{% if pt2.part3 %}
+						<table class="short2"><tr>
+						{% for pt3 in pt2.part3 %}
+							{% if pt3.colspan == "onecolumn"%}
+								{% if loop.index is even -%}
+									</tr><tr>
+								{% endif %}
+								<td colspan="2">
+							{% else %}
+								<td>
+							{%endif%}
+							{{ pt3.url | safe}}</td>
+							{% if loop.index is even%}</tr><tr>{%- endif %}
+						{% endfor %}
+						</tr></table>
+					{% endif %} {# if part3 in pt2 #}
+					{% if pt2.colspan == "onecolumn"%}
+						</td></tr><tr>
+					{% else %}
+						</td>
+					{%- endif %}
+					</td>
+					{% if loop.index is even -%}</tr><tr>{%- endif %}
+				{% endfor %} {# for pt2 #}
+				</tr>
+				</table>
+			{% endif %} {# if part2 in entry #}
+			</td>
+			</tr>
+		{% endif %}{# this concludes the BETA flag #}
+	{% else %}{# this look through entries with stautus not set #}
+		{% if loop.index is even %}{# want alternating colours here #}
+			<tr bgcolor="#fff">
+		{% else %}
+			<tr> 
+		{% endif %}
+		{% if entry.style == "rotate" %}
+			<td width="40" class="borc rotation"><p class="test rotation">{{ entry.url | safe }}</p></td>
+		{% else %}
+			<td scope="col" colspan="2" class="full">{{ entry.url | safe }}</td>
+		{% endif %}
+		<td class="bor">
+		{% if entry.part2 %}
+			<table class="short2">
+			<tr class="bor">
+			{% for pt2 in entry.part2 %}
+				{% if pt2.colspan == "onecolumn"%}
+					</tr><tr><td colspan="2">
+				{% else %}
+					<td>
+				{% endif %}
+				{% if pt2.status %}
+					{%if BETA %}
+						<span class="subtitle">{{ pt2.url | safe }}</span>
+						{% if pt2.part3 %}
+							<table class="short2" border="0">
+							<tr>
+							{% for pt3 in pt2.part3 %}
+								{% if pt3.colspan == "onecolumn" %}
+									{% if loop.index is even -%}
+										</tr><tr>
+									{% endif %}
+									<td colspan="2">
+								{% else %}
+									<td>
+								{% endif %}
+								<span class="subtitle">{{ pt3.url | safe }}</span></td>
+								{% if pt3.colspan == "onecolumn" %}
+									{% if loop.index is odd %}
+										</tr><tr>
+									{% endif %}
+								{% endif %}
+								{% if loop.index is even -%}</tr><tr>{% endif %}
+							{% endfor %}
+							</tr>
+							</table>
+						{% endif %}
+					{% endif %}
+				{% else %}
+					<span class="subtitle">{{ pt2.url | safe }}</span>
+					{% if pt2.part3 %}
+						<table class="short2">
+						<tr>
+						{% for pt3 in pt2.part3 %}
+							{% if BETA or pt3.status != "future" %}{# modify this loop if you do not want to display in the production site the pt3 with status beta #}
+								{% if pt3.colspan == "onecolumn" %}
+									{% if loop.index is odd %}
+										</tr><tr>
+									{% endif %}
+									<td colspan="3">
+								{% else %}
+									<td>
+								{% endif %}
+								<span class="subtitle">{{ pt3.url | safe }}</span></td>
+								{% if pt3.colspan == "onecolumn" %}
+									{% if loop.index is odd %}
+										</tr><tr>
+									{% endif %}
+								{% endif %}
+								{% if loop.index is even -%}
+									</tr><tr>
+								{% endif %}
+							{% endif %}
+						{% endfor %}
+						</tr>
+						</table>
+					{% endif %}
+				{% endif %}
+				</td>
+				{% if loop.index is even -%}</tr><tr>{% endif %}
+			{% endfor %} {# if part2 in entry #}
+			</tr>
+			</table>
+		{% endif %}
+	{% endif %}
 {% endfor %} {# for entry #}
 </table>
-
 
 
 {% elif value.type == 'simple' %}
@@ -69,20 +177,50 @@
 <table class="short">
 <tr>
 {% for entry in value.parts %}
-<td scope="col" width="50%">{{entry.url | safe}}
-{% if entry.part2 %}
-<td scope="col" width="30%">
-{% for pt2 in entry.part2 %}
-<span class="subtitle">{{ pt2.url | safe }}</span>
-{% if pt2.parts %}
-<div class="parts">
-{% for it2 in pt2.parts %}
-<span class="subitem">{{ it2.url | safe}}</span>
-{% endfor %}</div>
-{% endif %} {# if parts in pt2 #}
-{% endfor %} {# for pt2 #}
-</td>{% if loop.index0 is even -%}</tr><tr>{%- endif %}{% endif %}
-{% if loop.index is even -%}</tr><tr>{%- endif %}
+	{% if entry.colspan == "onecolumn" %}
+		{% if loop.index is even %}
+			</tr><tr>
+		{% endif %}
+	{% endif %}
+	{% if entry.status == "future" %}
+		{% if BETA %}
+			<td scope="col" width="50%">{{entry.url | safe}}
+		{% endif %}
+	{% else %}
+		<td scope="col" width="50%">{{entry.url | safe}}
+	{% endif %}
+	{% if entry.part2 %}
+		<td scope="col" width="30%">
+		{% for pt2 in entry.part2 %}
+			{% if pt2.status == "future" %}
+				{% if BETA %}
+					<span class="subtitle">{{ pt2.url | safe }}</span>
+				{% endif %}
+			{% else %}
+				<span class="subtitle">{{ pt2.url | safe }}</span>
+			{% endif %}
+			{% if pt2.part3 %}
+				<div class="parts">
+				{% for pt3 in pt2.part3 %}
+					{% if pt3.status == "future" %}
+						{% if BETA %}
+							<span class="subitem">{{ pt3.url | safe}}</span>
+						{% endif %}
+					{% else %}
+						<span class="subitem">{{ pt3.url | safe}}</span>
+					{% endif %}
+				{% endfor %}</div>
+			{% endif %} {# if part3 in pt2 #}
+		{% endfor %} {# for pt2 #}
+		</td>
+	{% endif %}
+	{% if entry.colspan == "onecolumn" %}
+		{% if loop.index is odd %}
+			</tr><tr>
+		{% endif %}
+	{% endif %}
+	{%if loop.index is even %}</tr><tr>
+	{%- endif %}
 {% endfor %}
 </tr>
 </table>

@@ -21,7 +21,8 @@ def linked_name(item, level=""):
             this_entry = ''.join(['<a href="',url,'">',item['title'],'</a>'])
         else:
             this_entry = item['title']
-
+        if this_entry == 'dummy':
+            this_entry = '&nbsp;'
         if 'status' in item and item['status'] == 'future':
             this_entry = ''.join(['<div class="future">',this_entry,'</div>'])
 
@@ -75,7 +76,7 @@ class SideBar(object):
                     if 'part2' in entry:
                         for pt2 in entry['part2']:
                             pt2['url'] = linked_name(pt2)
-                            if 'parts' in pt2:
-                                for item in pt2['parts']:
+                            if 'part3' in pt2:
+                                for item in pt2['part3']:
                                     item['url'] = linked_name(item)
 
