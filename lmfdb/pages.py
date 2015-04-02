@@ -56,7 +56,9 @@ def index():
     if the_boxes is None:
         the_boxes = load_boxes()
     boxes = the_boxes
-    tmpl = "index-boxes.html" if g.BETA else "index.html"
+    tmpl = "index-boxes.html"
+    # We used to have an old version of the home page:
+    # tmpl = "index-boxes.html" if g.BETA else "index.html"
 
     return render_template(tmpl,
         titletag="The L-functions and modular forms database",
