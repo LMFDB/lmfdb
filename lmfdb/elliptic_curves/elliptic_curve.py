@@ -97,6 +97,20 @@ def rational_elliptic_curves(err_args=None):
     bread = [('Elliptic Curves', url_for("ecnf.index")), ('$\Q$', ' ')]
     return render_template("browse_search.html", info=info, credit=credit, title=t, bread=bread, **err_args)
 
+@ec_page.route("/random")
+def random_curve():
+    from sage.misc.prandom import randint
+    n = get_stats().counts()['ncurves']
+    n = randint(0,n-1)
+    return render_curve_webpage_by_label(db_ec().find()[n]['label'])
+
+@ec_page.route("/curve_of_the_day")
+def todays_curve():
+    from datetime import date
+    mordells_birthday = date(1888,1,28)
+    n = (date.today()-mordells_birthday).days
+    return render_curve_webpage_by_label(db_ec().find({'number' : int(1)})[n]['label'])
+
 @ec_page.route("/stats")
 def statistics():
     info = {
