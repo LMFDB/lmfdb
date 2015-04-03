@@ -245,6 +245,8 @@ def git_infos():
     return cmd_output
 
 git_rev, git_date = git_infos()
+from sage.env import SAGE_VERSION
+
 """
 Creates link to the source code at the most recent commit.
 """
@@ -259,7 +261,9 @@ _latest_changeset = '<a href="%s%s">%s</a>' % (_url_changeset, git_rev, git_date
 
 @app.context_processor
 def link_to_current_source():
-    return {'current_source': _current_source, 'latest_changeset': _latest_changeset}
+    return {'current_source': _current_source,
+            'latest_changeset': _latest_changeset,
+            'sage_version': 'SageMath version %s' % SAGE_VERSION}
 
 # end: google code links
 
