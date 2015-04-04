@@ -35,6 +35,11 @@ def get_logfocus():
 # global db connection instance
 _C = None
 
+# Note: the original intention was to have all databases and
+# collections read-only except to users who could authenticate
+# themselves with a password.  But this never worked, and this list
+# (which is in any case incomplete) is now redundant.
+
 readonly_dbs = ['HTPicard', 'Lfunction', 'Lfunctions', 'MaassWaveForm',
                 'ellcurves', 'elliptic_curves', 'hmfs', 'modularforms', 'modularforms_2010',
                 'mwf_dbname', 'numberfields', 'quadratic_twists', 'test', 'limbo']
@@ -90,6 +95,9 @@ def _init(dbport, readwrite_password, parallel_authentication=False):
     global _C
     logging.info("establishing db connection at port %s ..." % dbport)
     _C = Connection(port=dbport)
+
+    # Disabling authentication completely as it does not work:
+    return
 
     def db_auth_task(db, readonly=False):
         if readonly or readwrite_password == '':
@@ -237,6 +245,8 @@ def git_infos():
     return cmd_output
 
 git_rev, git_date = git_infos()
+from sage.env import SAGE_VERSION
+
 """
 Creates link to the source code at the most recent commit.
 """
@@ -251,7 +261,9 @@ _latest_changeset = '<a href="%s%s">%s</a>' % (_url_changeset, git_rev, git_date
 
 @app.context_processor
 def link_to_current_source():
-    return {'current_source': _current_source, 'latest_changeset': _latest_changeset}
+    return {'current_source': _current_source,
+            'latest_changeset': _latest_changeset,
+            'sage_version': 'SageMath version %s' % SAGE_VERSION}
 
 # end: google code links
 
