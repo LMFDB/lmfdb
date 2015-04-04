@@ -30,8 +30,11 @@ def list_to_factored_poly_otherorder(s):
     if len(s) == 1:
         return str(s[0])
     sfacts = factor(PolynomialRing(ZZ, 'T')(s))
+    sfacts_fc = [[v[0],v[1]] for v in sfacts]
+    if sfacts.unit() == -1:
+        sfacts_fc[0][0] *= -1
     outstr = ''
-    for v in sfacts:
+    for v in sfacts_fc:
         vcf = v[0].list()
         started = False
         if len(sfacts) > 1 or v[1] > 1:
