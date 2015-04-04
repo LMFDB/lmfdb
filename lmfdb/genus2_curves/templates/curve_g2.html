@@ -1,0 +1,115 @@
+{% extends 'homepage.html' %}
+{% block content %}
+<style>
+<div.ip>span { white-space: nowrap; font-family: serif; }
+</style>
+
+<script>
+var cur_system = null;
+function show_code(system) {
+    $('.sage').hide();
+    $('.pari').hide();
+    $('.magma').hide();
+    if (cur_system == system) {
+      $('.'+system).hide();
+      cur_system = null;
+      } else {
+      $('.'+system).show();
+      cur_system = system;
+    }
+  }
+</script>
+
+<script type="text/javascript"
+        src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+<script type="text/javascript"
+src="http://code.jquery.com/jquery-latest.min.js"></script>
+<script src="http://aleph.sagemath.org/embedded_sagecell.js"></script>
+
+    {% set KNOWL_ID = "ec.q.%s"|format(data['label']) %}
+
+<!--<h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>-->
+
+    <h2> {{ KNOWL('g2c.minimal_equation', title='Minimal equation') }} </h2>
+<p>  ${{ data.data.min_eqn }}$ </p>
+
+    <h2> {{ KNOWL('g2c.invariants', title='Invariants') }}  </h2>
+        <table>
+
+        <tr>
+          <td> \( N \) </td>
+	  <td>&nbsp;=&nbsp;</td>
+	  <td>\( {{ data.data.cond }} \)</td>
+          <td>&nbsp;=&nbsp;</td>
+          <td>{{ data.data.cond_factor_latex }}</td>
+        </tr>
+        <tr>
+          <td> \( \Delta \) </td>
+	  <td>&nbsp;=&nbsp;</td>
+	  <td>\({{ data.data.disc }}\)</td>
+          <td>&nbsp;=&nbsp;</td>
+          <td>{{ data.data.disc_factor_latex }}</td>
+        </tr>
+
+	</table>
+
+
+	<h2> {{ KNOWL('g2c.igusa_clebsch', title='Igusa-Clebsch invariants') }} </h2>
+
+	<table>
+	<tr>
+          <td> \( I_4 \) </td>
+	  <td>=</td>
+	  <td>\({{ data.data.igusa_clebsch[0] }}\)</td>
+        </tr>
+	<tr>
+          <td> \( I_6 \) </td>
+	  <td>=</td>
+	  <td>\({{ data.data.igusa_clebsch[1] }}\)</td>
+        </tr>
+	<tr>
+          <td> \( I_8 \) </td>
+	  <td>=</td>
+	  <td>\({{ data.data.igusa_clebsch[2] }}\)</td>
+        </tr>
+	<tr>
+          <td> \( I_{10} \) </td>
+	  <td>=</td>
+	  <td>\({{ data.data.igusa_clebsch[3]}}\)</td>
+        </tr>
+	</table>
+
+    <h2> {{ KNOWL('g2c.aut_grp', title='Automorphism group') }} </h2>
+<table>
+<tr>  <td>\(\mathrm{Aut}(X)\)</td><td>\(\simeq\)</td> <td>\({{ data.data.aut_grp}} \)</td> <td>(GAP id : {{data.aut_grp}})</td></tr>
+<tr>  <td>\(\mathrm{Aut}(X_{\overline{\Q}})\)</td><td>\(\simeq\)</td>  <td>\({{ data.data.geom_aut_grp}} \) </td> <td>(GAP id : {{data.geom_aut_grp}})</td></tr>
+</table>
+
+<h2> {{ KNOWL('g2c.torsion', title='Torsion') }} </h2>
+\({{data.data.tor_struct}}\)
+
+
+
+<h2>Sato-Tate group</h2>
+<p>
+Sato-Tate group: \({{ data.data.st_group_name }}\)
+</p>
+
+<h2> {{ KNOWL('g2c.jac_endomorphisms', title='Endomorphisms of the Jacobian') }} </h2>
+<table>
+  <tr>  <td>\(\mathrm{End}(J) \)</td><td>\(\simeq\)</td><td>\({{data.data.end_ring_name}}\)</td></tr>
+  <tr>  <td>\(\mathrm{End}(J) \otimes \Q\)</td><td>\(\simeq\)</td><td>\({{data.data.rat_end_alg_name}}\)</td>
+<td>[Is simple over \(\Q \): {{data.data.is_simple_name}}]</td></tr>
+  <tr>  <td>\(\mathrm{End}(J) \otimes \R\)</td><td>\(\simeq\)</td><td>\({{data.data.real_end_alg_name}}\)</td>
+<td>[Is \(\mathrm{GL}_2-\)type: {{data.data.is_gl2_type_name}}]</td></tr>
+  <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}})\)</td><td>\(\simeq\)</td><td>\({{data.data.geom_end_ring_name}}\)</td></tr>
+  <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}}) \otimes \Q\)</td><td>\(\simeq\)</td><td>\({{data.data.rat_geom_end_alg_name}}\)</td>
+<td>[Is simple over \(\overline{\Q} \): {{data.data.is_geom_simple_name}}]</td></tr>
+  <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}}) \otimes \R\)</td><td>\(\simeq\)</td><td>\({{data.data.real_geom_end_alg_name}}\)</td></tr>
+
+</table>
+
+<p>Field over which all endomorphisms are defined: 
+<A HREF="/NumberField/{{data.data.geom_end_field}}">{{data.data.geom_end_field_name}}</A></p>
+
+{% endblock %}

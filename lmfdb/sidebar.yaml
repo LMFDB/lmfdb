@@ -121,10 +121,11 @@
                status: future
            colspan: onecolumn
          - title: "Hyperelliptic:"
-           status: future
+           status: beta
            part3:
              - title: $/\Q$
-               status: future
+               status: beta
+               url_for: "g2c.index_Q"
              - title: $/\F_{q}(t)$
                status: future
              - title: /NumberFields
