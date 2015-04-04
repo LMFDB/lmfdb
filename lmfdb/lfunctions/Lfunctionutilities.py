@@ -519,7 +519,7 @@ def specialValueString(L, s, sLatex):
     lfunction_value_tex = L.texname.replace('(s', '(' + sLatex)
     # We must test for NaN first, since it would show as zero otherwise
     # Try "RR(NaN) < float(1e-10)" in sage -- GT
-    if val.real().is_NaN():
+    if CC(val).real().is_NaN():
         return "\\[{0}=\\infty\\]".format(lfunction_value_tex)
     elif val.abs() < 1e-10:
         return "\\[{0}=0\\]".format(lfunction_value_tex)
