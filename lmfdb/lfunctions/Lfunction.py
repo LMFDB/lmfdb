@@ -37,12 +37,14 @@ def constructor_logger(object, args):
     logger.debug(str(object.__class__) + str(args))
 
 def an_from_data(euler_factors,upperbound=30):
-    PP = sage.rings.all.PowerSeriesRing(sage.rings.all.RationalField(), 'x', 30)
+    PP = sage.rings.all.PowerSeriesRing(sage.rings.all.RationalField(), 'x', Integer(upperbound).nbits())
     result = upperbound * [1]
 
     for i in range(0,len(euler_factors)):
         p = nth_prime(i+1)
-        f = (1 / (PP(euler_factors[i]))).padded_list()
+        if p > upperbound:
+            break
+        f = (1 / (PP(euler_factors[i]))).padded_list(Integer(upperbound).nbits())
         k = 1
         while True:
             if p ** k > upperbound:
