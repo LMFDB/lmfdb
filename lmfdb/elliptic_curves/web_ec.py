@@ -11,6 +11,8 @@ from lmfdb.elliptic_curves import ec_page, ec_logger
 import sage.all
 from sage.all import EllipticCurve, latex, matrix, ZZ, QQ
 
+ROUSE_URL_PREFIX = "http://users.wfu.edu/rouseja/2adic/" # Needs to be changed whenever J. Rouse and D. Zureick-Brown move their data
+
 cremona_label_regex = re.compile(r'(\d+)([a-z]+)(\d*)')
 lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
 lmfdb_iso_label_regex = re.compile(r'([a-z]+)(\d*)')
@@ -105,6 +107,12 @@ class WebEC(object):
         # Next lines because the hyphens make trouble
         self.xintcoords = parse_list(dbdata['x-coordinates_of_integral_points'])
         self.non_surjective_primes = dbdata['non-surjective_primes']
+        # Next lines because the python identifiers cannot start with 2
+        self.twoadic_index = dbdata['2adic_index']
+        self.twoadic_log_level = dbdata['2adic_log_level']
+        self.twoadic_gens = dbdata['2adic_gens']
+        self.twoadic_label = dbdata['2adic_label']
+        # All other fields are handled here
         self.make_curve()
 
     @staticmethod
@@ -242,6 +250,10 @@ class WebEC(object):
                                for p,im in zip(data['non_surjective_primes'],
                                                data['galois_images'])]
 
+        if self.twoadic_gens:
+            from sage.matrix.all import Matrix
+            data['twoadic_gen_matrices'] = ','.join([latex(Matrix(2,2,M)) for M in self.twoadic_gens])
+            data['twoadic_rouse_url'] = ROUSE_URL_PREFIX + self.twoadic_label + ".html"
         # Leading term of L-function & BSD data
 
         bsd = self.bsd = {}
