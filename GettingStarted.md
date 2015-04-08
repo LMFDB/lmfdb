@@ -6,7 +6,7 @@ Installation
      git clone git@github.com:LMFDB/lmfdb.git lmfdb
   ```
 
-* Make sure you have sage (>=6.4) installed and that
+* Make sure you have sage (>=6.5) installed and that
   `sage` is available from the commandline
 
 * Install dependencies (in the `lmfdb/` directory):
