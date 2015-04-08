@@ -5,7 +5,7 @@ import sys
 import time
 import sage.misc.preparser
 import subprocess
-from pymongo import Connection
+from pymongo.connection import Connection
 
 hmf_forms = Connection(port=dbport).hmfs.forms
 hmf_forms = Connection(port=dbport).hmfs.forms

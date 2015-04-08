@@ -1,6 +1,6 @@
 # Code for creating plots for browsing L-functions
 
-from pymongo import Connection
+from pymongo.connection import Connection
 import math
 import cmath
 import datetime

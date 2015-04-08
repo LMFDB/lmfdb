@@ -11,7 +11,6 @@ import sys
 import logging
 from time import sleep
 from flask import Flask, session, g, render_template, url_for, request, redirect
-from pymongo import Connection
 from pymongo.cursor import Cursor
 from pymongo.errors import AutoReconnect
 from pymongo.connection import Connection
