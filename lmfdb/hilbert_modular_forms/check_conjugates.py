@@ -169,3 +169,36 @@ def checkadd_conj(label, levelbound=oo):
     print("\nAdded "+str(count)+" new conjugate forms.")
     return None
 
+def HilbField(label):
+    nf = WebNumberField(label)#, gen_name=special_names.get(label, 'a'))
+    assert nf is not None
+    Fdata = base.getDBConnection().hmfs.fields.find_one({'label':label})
+    assert Fdata is not None
+    F = nf.K()
+    nf.ideals = Fdata['ideals']
+    nf.primes = Fdata['primes']
+    var = findvar(nf.ideals)
+    R = PolynomialRing(QQ,var)
+    nf.polyR = R
+    return nf
+
+def iter_ideals(R,F,ideals):
+    ilabel = 1
+    norm = ZZ(0)
+    for idlstr in ideals:
+        N,n,idl,_ = str2ideal(R,F,idlstr)
+        assert idl.norm() == N and idl.smallest_integer() == n
+        if N != norm:
+            ilabel = ZZ(1)
+            norm = N
+        label = N.str() + '.' + ilabel.str()
+        yield {'label':label, 'ideal':idl}
+        ilabel += 1
+
+def HilbIdeals(nf):
+    return iter_ideals(nf.polyR, nf.K(), nf.ideals)
+
+def HilbPrimes(nf):
+    return iter_ideals(nf.polyR, nf.K(), nf.primes)
+
+
