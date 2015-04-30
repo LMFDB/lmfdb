@@ -603,23 +603,7 @@ def download_curve_data(field_label, base_path, min_norm=0, max_norm=None):
     for prefix in prefixes:
         file[prefix].close()
 
-def findvar(L):
-    for x in L:
-        for c in x:
-            if c.isalpha():
-                return c.encode()
-    return None
-
-def hmf_field_primes(field_label):
-    primes = conn.hmfs.fields.find_one({'label' : field_label})['primes']
-    var = findvar(primes)
-    R = PolynomialRing(QQ,var)
-    idlstr = ideals[i][1:-1].replace(' ','').split(',')
-    N = ZZ(idlstr[0]) #norm
-    n = ZZ(idlstr[1]) #smallest integer
-    P = R(idlstr[2].encode()) #other generator as a polynomial
-    gen = P(F.gen())
-    idl = F.ideal(n,gen)
+from lmfdb.hilbert_modular_forms.hilbert_field import HilbertNumberField
 
 def check_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, verbose=False):
     r""" Go through all curves with the given field label, assumed totally
@@ -640,8 +624,8 @@ def check_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, verbose
     cursor = nfcurves.find(query)
     nfound = 0
     nnotfound = 0
-    from lmfdb.ecnf.WebEllipticCurve import FIELD
-    K = FIELD(field_label)
+    K = HilbertNumberField(field_label)
+    primes = [P['ideal'] for P in K.primes_iter(20)]
 
     for ec in cursor:
         hmf_label = "-".join([ec['field_label'],ec['conductor_label'],ec['iso_label']])
@@ -650,14 +634,75 @@ def check_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, verbose
             if verbose:
                 print("hmf with label %s found" % hmf_label)
             nfound +=1
-            #E = EllipticCurve([K.parse_NFelt(x) for x in ec['ainvs']])
-
+            ainvsK = [K.K()([QQ(str(c)) for c in ai]) for ai in ec['ainvs']]
+            E = EllipticCurve(ainvsK)
+            good_flags = [E.has_good_reduction(P) for P in primes]
+            good_primes = [P for (P,flag) in zip(primes,good_flags) if flag]
+            aplist = [E.reduction(P).trace_of_frobenius() for P in good_primes[:10]]
+            print("ap from curve: %s" % aplist)
+            f_aplist = [int(a) for a in f['hecke_eigenvalues'][:20]]
+            f_aplist = [ap for ap,flag in zip(f_aplist,good_flags) if flag][:10]
+            print("ap from  form: %s" % f_aplist)
         else:
             if verbose:
                 print("No hmf with label %s found!" % hmf_label)
             nnotfound +=1
     n = nfound+nnotfound
     if nnotfound:
-        print("Out of %s forms, %s were found but %s were not found" % (n,nfound,nnotfound))
+        print("Out of %s forms, %s were found and %s were not found" % (n,nfound,nnotfound))
     else:
         print("Out of %s forms, all %s were found" % (n,nfound))
+
+def make_conductor(ecnfdata, hfield):
+    N,c,d = [ZZ(c) for c in ecnfdata['conductor_ideal'][1:-1].split(',')]
+    return hfield.K().ideal([N//d,c+d*hfield.K().gen()])
+
+def check_ideal_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, verbose=False):
+    r""" Go through all curves with the given field label, assumed totally
+    real, check whether the ideal label agrees with the level_label of
+    the associated Hilbert Modular Form.
+    """
+    hmfs = conn.hmfs
+    forms = hmfs.forms
+    fields = hmfs.fields
+    query = {}
+    query['field_label'] = field_label
+    query['conductor_norm'] = {'$gte' : int(min_norm)}
+    if max_norm:
+        query['conductor_norm']['$lte'] = int(max_norm)
+    else:
+        max_norm = 'infinity'
+    cursor = nfcurves.find(query)
+    nfound = 0
+    nnotfound = 0
+    K = HilbertNumberField(field_label)
+    primes = [P['ideal'] for P in K.primes_iter(20)]
+    remap = {}
+
+    for ec in cursor:
+        conductor = make_conductor(ec,K)
+        cond_label = ec['conductor_label']
+        level = K.ideal(cond_label)
+        try:
+            new_cond_label = remap[cond_label]
+        except KeyError:
+            new_cond_label = K.ideal_label(conductor)
+            remap[cond_label] = new_cond_label
+        if conductor==level:
+            if verbose:
+                print("conductor label ok for curve %s" % ec['label'])
+        else:
+            print("conductor label for curve %s is wrong, should be %s not %s" % (ec['label'],new_cond_label, cond_label))
+            iso = ec['iso_label']
+            num = str(ec['number'])
+            newlabeldata = {}
+            newlabeldata['conductor_label'] = new_cond_label
+            newlabeldata['short_class_label'] = '-'.join([new_cond_label,iso])
+            newlabeldata['short_label'] = ''.join([newlabeldata['short_class_label'],num])
+            newlabeldata['class_label'] = '-'.join([field_label,
+                                                    newlabeldata['short_class_label']])
+            newlabeldata['label'] = '-'.join([field_label,
+                                              newlabeldata['short_label']])
+            nfcurves.update({'_id': ec['_id']}, {"$set": newlabeldata}, upsert=True)
+
+    return dict([(k,remap[k]) for k in remap if not k==remap[k]])
