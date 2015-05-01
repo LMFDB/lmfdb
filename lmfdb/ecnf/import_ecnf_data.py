@@ -470,6 +470,14 @@ def upload_to_db(base_path, filename_suffix):
         if count % 100 == 0:
             print "inserted %s" % (val['label'])
 
+######################################################################
+#
+# Code to download data from the database, (re)creating file curves.*,
+# curve_data.*, isoclass.*
+#
+######################################################################
+
+
 def make_curves_line(ec):
     r""" for ec a curve object from the database, create a line of text to
     match the corresponding raw input line from a curves file.
@@ -603,61 +611,21 @@ def download_curve_data(field_label, base_path, min_norm=0, max_norm=None):
     for prefix in prefixes:
         file[prefix].close()
 
+######################################################################
+#
+# Code to check conductor labels agree with Hilbert Modular Form level
+# labels for a real quadratic field.  So far run on all curves over
+# Q(sqrt(5)).
+#
+######################################################################
+
 from lmfdb.hilbert_modular_forms.hilbert_field import HilbertNumberField
-
-def check_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, verbose=False):
-    r""" Go through all curves with the given field label, assumed totally
-    real, test whether a Hilbert Modular Form exists with the same
-    label.
-    """
-    hmfs = conn.hmfs
-    forms = hmfs.forms
-    fields = hmfs.fields
-    query = {}
-    query['field_label'] = field_label
-    query['number'] = 1
-    query['conductor_norm'] = {'$gte' : int(min_norm)}
-    if max_norm:
-        query['conductor_norm']['$lte'] = int(max_norm)
-    else:
-        max_norm = 'infinity'
-    cursor = nfcurves.find(query)
-    nfound = 0
-    nnotfound = 0
-    K = HilbertNumberField(field_label)
-    primes = [P['ideal'] for P in K.primes_iter(20)]
-
-    for ec in cursor:
-        hmf_label = "-".join([ec['field_label'],ec['conductor_label'],ec['iso_label']])
-        f = forms.find_one({'field_label' : field_label, 'label' : hmf_label})
-        if f:
-            if verbose:
-                print("hmf with label %s found" % hmf_label)
-            nfound +=1
-            ainvsK = [K.K()([QQ(str(c)) for c in ai]) for ai in ec['ainvs']]
-            E = EllipticCurve(ainvsK)
-            good_flags = [E.has_good_reduction(P) for P in primes]
-            good_primes = [P for (P,flag) in zip(primes,good_flags) if flag]
-            aplist = [E.reduction(P).trace_of_frobenius() for P in good_primes[:10]]
-            print("ap from curve: %s" % aplist)
-            f_aplist = [int(a) for a in f['hecke_eigenvalues'][:20]]
-            f_aplist = [ap for ap,flag in zip(f_aplist,good_flags) if flag][:10]
-            print("ap from  form: %s" % f_aplist)
-        else:
-            if verbose:
-                print("No hmf with label %s found!" % hmf_label)
-            nnotfound +=1
-    n = nfound+nnotfound
-    if nnotfound:
-        print("Out of %s forms, %s were found and %s were not found" % (n,nfound,nnotfound))
-    else:
-        print("Out of %s forms, all %s were found" % (n,nfound))
 
 def make_conductor(ecnfdata, hfield):
     N,c,d = [ZZ(c) for c in ecnfdata['conductor_ideal'][1:-1].split(',')]
     return hfield.K().ideal([N//d,c+d*hfield.K().gen()])
 
-def check_ideal_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, verbose=False):
+def check_ideal_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=False, verbose=False):
     r""" Go through all curves with the given field label, assumed totally
     real, check whether the ideal label agrees with the level_label of
     the associated Hilbert Modular Form.
@@ -677,32 +645,177 @@ def check_ideal_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, verbose
     nnotfound = 0
     K = HilbertNumberField(field_label)
     primes = [P['ideal'] for P in K.primes_iter(20)]
-    remap = {}
+    remap = {} # remap[old_label] = new_label
 
     for ec in cursor:
-        conductor = make_conductor(ec,K)
+        fix_needed = False
         cond_label = ec['conductor_label']
-        level = K.ideal(cond_label)
-        try:
+        if cond_label in remap:
             new_cond_label = remap[cond_label]
-        except KeyError:
+            fix_needed=(cond_label!=new_cond_label)
+            if not fix_needed:
+                if verbose:
+                    print("conductor label %s ok" % cond_label)
+        else:
+            conductor = make_conductor(ec,K)
+            level = K.ideal(cond_label)
             new_cond_label = K.ideal_label(conductor)
             remap[cond_label] = new_cond_label
-        if conductor==level:
-            if verbose:
-                print("conductor label ok for curve %s" % ec['label'])
-        else:
+            fix_needed=(cond_label!=new_cond_label)
+
+        if fix_needed:
             print("conductor label for curve %s is wrong, should be %s not %s" % (ec['label'],new_cond_label, cond_label))
-            iso = ec['iso_label']
-            num = str(ec['number'])
-            newlabeldata = {}
-            newlabeldata['conductor_label'] = new_cond_label
-            newlabeldata['short_class_label'] = '-'.join([new_cond_label,iso])
-            newlabeldata['short_label'] = ''.join([newlabeldata['short_class_label'],num])
-            newlabeldata['class_label'] = '-'.join([field_label,
-                                                    newlabeldata['short_class_label']])
-            newlabeldata['label'] = '-'.join([field_label,
-                                              newlabeldata['short_label']])
-            nfcurves.update({'_id': ec['_id']}, {"$set": newlabeldata}, upsert=True)
+            if fix:
+                iso = ec['iso_label']
+                num = str(ec['number'])
+                newlabeldata = {}
+                newlabeldata['conductor_label'] = new_cond_label
+                newlabeldata['short_class_label'] = '-'.join([new_cond_label,iso])
+                newlabeldata['short_label'] = ''.join([newlabeldata['short_class_label'],num])
+                newlabeldata['class_label'] = '-'.join([field_label,
+                                                        newlabeldata['short_class_label']])
+                newlabeldata['label'] = '-'.join([field_label,
+                                                  newlabeldata['short_label']])
+                nfcurves.update({'_id': ec['_id']}, {"$set": newlabeldata}, upsert=True)
+        else:
+            if verbose:
+                print("conductor label %s ok" % cond_label)
 
     return dict([(k,remap[k]) for k in remap if not k==remap[k]])
+
+######################################################################
+#
+# Code to check isogeny class labels agree with Hilbert Modular Form
+# labels of each level, for a real quadratic field.  Tesing on all
+# curves over Q(sqrt(5)); not yet run.
+#
+######################################################################
+
+def check_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=False, verbose=False):
+    r""" Go through all curves with the given field label, assumed totally
+    real, test whether a Hilbert Modular Form exists with the same
+    label.
+    """
+    hmfs = conn.hmfs
+    forms = hmfs.forms
+    fields = hmfs.fields
+    query = {}
+    query['field_label'] = field_label
+    query['number'] = 1 # only look at first curve in each isogeny class
+    query['conductor_norm'] = {'$gte' : int(min_norm)}
+    if max_norm:
+        query['conductor_norm']['$lte'] = int(max_norm)
+    else:
+        max_norm = 'infinity'
+    cursor = nfcurves.find(query)
+    nfound = 0
+    nnotfound = 0
+    nok = 0
+    bad_curves = []
+    K = HilbertNumberField(field_label)
+    primes = [P['ideal'] for P in K.primes_iter(20)]
+    curve_ap = {} # curve_ap[conductor_label] will be a dict iso -> ap
+    form_ap = {}  # form_ap[conductor_label]  will be a dict iso -> ap
+
+    # Step 1: look at all curves (one per isogeny class), check that
+    # there is a Hilbert newform of the same label, and if so compare
+    # ap-lists.  The dicts curve_ap and form_ap strose these when
+    # there is disagreement:
+    # e.g. curve_ap[conductor_label][iso_label] = aplist.
+
+    for ec in cursor:
+        hmf_label = "-".join([ec['field_label'],ec['conductor_label'],ec['iso_label']])
+        f = forms.find_one({'field_label' : field_label, 'label' : hmf_label})
+        if f:
+            if verbose:
+                print("hmf with label %s found" % hmf_label)
+            nfound +=1
+            ainvsK = [K.K()([QQ(str(c)) for c in ai]) for ai in ec['ainvs']]
+            E = EllipticCurve(ainvsK)
+            good_flags = [E.has_good_reduction(P) for P in primes]
+            good_primes = [P for (P,flag) in zip(primes,good_flags) if flag]
+            aplist = [E.reduction(P).trace_of_frobenius() for P in good_primes[:10]]
+            f_aplist = [int(a) for a in f['hecke_eigenvalues'][:20]]
+            f_aplist = [ap for ap,flag in zip(f_aplist,good_flags) if flag][:10]
+            if aplist==f_aplist:
+                nok += 1
+                if verbose:
+                    print("Curve %s and newform agree!" % ec['short_label'])
+            else:
+                bad_curves.append(ec['short_label'])
+                print("Curve %s does NOT agree with newform" % ec['short_label'])
+                if verbose:
+                    print("ap from curve: %s" % aplist)
+                    print("ap from  form: %s" % f_aplist)
+                if not ec['conductor_label'] in curve_ap:
+                    curve_ap[ec['conductor_label']] = {}
+                    form_ap[ec['conductor_label']] = {}
+                curve_ap[ec['conductor_label']][ec['iso_label']] = aplist
+                form_ap[ec['conductor_label']][f['label_suffix']] = f_aplist
+        else:
+            if verbose:
+                print("No hmf with label %s found!" % hmf_label)
+            nnotfound +=1
+
+    # Report progress:
+
+    n = nfound+nnotfound
+    if nnotfound:
+        print("Out of %s forms, %s were found and %s were not found" % (n,nfound,nnotfound))
+    else:
+        print("Out of %s classes of curve, all %s had newforms with the same label" % (n,nfound))
+    if nfound==nok:
+        print("All curves agree with matching newforms")
+    else:
+        print("%s curves agree with matching newforms, %s do not" % (nok,nfound-nok))
+        #print("Bad curves: %s" % bad_curves)
+
+    # Step 2: for each conductor_label for which there was a
+    # discrepancy, create a dict giving the permutation curve -->
+    # newform, so remap[conductor_label][iso_label] = form_label
+
+    remap = {}
+    for level in curve_ap.keys():
+        remap[level] = {}
+        c_dat = curve_ap[level]
+        f_dat = form_ap[level]
+        for a in c_dat.keys():
+            aplist = c_dat[a]
+            for b in f_dat.keys():
+                if aplist==f_dat[b]:
+                    remap[level][a] = b
+                    break
+    if verbose:
+        print("remap: %s" % remap)
+
+    # Step 3, for through all curves with these bad conductors and
+    # create new labels for them, update the database with these (if
+    # fix==True)
+
+    for level in remap.keys():
+        perm = remap[level]
+        print("Fixing iso labels for conductor %s using map %s" % (level,perm))
+        query = {}
+        query['field_label'] = field_label
+        query['conductor_label'] = level
+        cursor = nfcurves.find(query)
+        for ec in cursor:
+            iso = ec['iso_label']
+            if iso in perm:
+                new_iso = perm[iso]
+                if verbose:
+                    print("--mapping class %s to class %s" % (iso,new_iso))
+                num = str(ec['number'])
+                newlabeldata = {}
+                newlabeldata['iso_label'] = new_iso
+                newlabeldata['short_class_label'] = '-'.join([level,new_iso])
+                newlabeldata['class_label'] = '-'.join([field_label,
+                                                        newlabeldata['short_class_label']])
+                newlabeldata['short_label'] = ''.join([newlabeldata['short_class_label'],num])
+                newlabeldata['label'] = '-'.join([field_label,
+                                                  newlabeldata['short_label']])
+                if verbose:
+                    print("new data fields: %s" % newlabeldata)
+                if fix:
+                    nfcurves.update({'_id': ec['_id']}, {"$set": newlabeldata}, upsert=True)
+
