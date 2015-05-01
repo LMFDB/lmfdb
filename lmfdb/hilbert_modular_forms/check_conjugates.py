@@ -74,6 +74,11 @@ def conjstringideal(F,stridl,g):
     N,n,_,gen = str2ideal(F,stridl)
     return '[' + str(N) + ',' + str(n) + ',' + str(g(gen)) + ']'
 
+def conjform_label(f, ig, cideals):
+    level_label = cideals[(f['level_label'],ig)]
+    short_label = level_label + '-' + f['label_suffix']
+    return f['field_label'] + '-' + short_label
+
 def conjform(f, g, ig, cideals, cprimes, F): #ig index of g in auts
     if f['is_base_change'][0:3] == 'yes':
         return None
@@ -90,13 +95,28 @@ def conjform(f, g, ig, cideals, cprimes, F): #ig index of g in auts
     H = f['hecke_eigenvalues']
     Hg = copy(f['hecke_eigenvalues'])
     fg['hecke_eigenvalues'] = Hg
+
+    attained  = [False for i in range(len(H))]
     for i in range(len(H)):
-        Hg[cprimes[ig][i]] = H[i]
+        if cprimes[ig][i] < len(H):
+            attained[cprimes[ig][i]] = True
+    maxi = 0
+    while maxi < len(H):
+        if not attained[maxi]:
+            break
+        maxi += 1
+    if maxi < len(H):
+        print("truncating list of eigenvalues (missing conjugate prime)")
+    del Hg[maxi:]
+
+    for i in range(len(H)):
+        if cprimes[ig][i] < maxi:
+            Hg[cprimes[ig][i]] = H[i]
 
     del fg['_id']
     return fg
 
-def checkadd_conj(label, min_level_norm=0, max_level_norm=None):
+def checkadd_conj(label, min_level_norm=0, max_level_norm=None, fix=False):
     count = 0
     query = {}
     query['field_label'] = label
@@ -120,13 +140,17 @@ def checkadd_conj(label, min_level_norm=0, max_level_norm=None):
     for f in ftoconj:
         print("Testing form %s" % f['label'])
         for g in auts:
-            fg = conjform(f, g, auts.index(g), cideals, cprimes, F)
-            if fg != None:
-                fgdb = forms.find_one({'label':fg['label']})
-                if fgdb == None:
-                    print("conjugate not present, adding it : "+fg['label'])
-                    #forms.insert(fg)
-                    count += 1
+            ig = auts.index(g)
+            fg_label = conjform_label(f, ig, cideals)
+            fgdb = forms.find_one({'label':fg_label})
+            if fgdb == None:
+                print("conjugate not present")
+                if fix:
+                    fg = conjform(f, g, ig, cideals, cprimes, F)
+                    if fg != None: #else: is a lift (self-conjugate), should have been detected
+                        print("adding it : "+fg['label'])
+                        forms.insert(fg)
+                        count += 1
     print("\nAdded "+str(count)+" new conjugate forms.")
     return None
 

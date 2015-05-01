@@ -113,7 +113,6 @@ class HilbertNumberField(WebNumberField):
         self.primes = self.Fdata['primes']
         self.var = findvar(self.ideals)
         WebNumberField.__init__(self,label,gen_name=self.var)
-        print self.K()
 
     def _iter_ideals(self, primes=False, number=None):
         """
