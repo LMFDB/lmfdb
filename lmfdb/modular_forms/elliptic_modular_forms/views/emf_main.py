@@ -104,7 +104,7 @@ def render_elliptic_modular_forms(level=0, weight=0, character=None, label='', *
     # Otherwise we go to the main navigation page
     return render_elliptic_modular_form_navigation_wp(**info)
 
-from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_download_utils import download_web_modform
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_download_utils import download_web_modform,get_coefficients
 
 @emf.route("/Download/<int:level>/<int:weight>/<int:character>/<label>", methods=['GET', 'POST'])
 def get_downloads(level=None, weight=None, character=None, label=None, **kwds):
