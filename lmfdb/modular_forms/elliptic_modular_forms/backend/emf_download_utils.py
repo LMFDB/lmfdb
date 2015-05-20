@@ -142,14 +142,18 @@ def print_coefficients_for_one_form(F, number, fmt="q_expansion",bitprec=53):
         s += F.q_expansion(number)
     if fmt == "coefficients":
         qe = F.coefficients(range(number))
-        deg = F.coefficient_field_degree
-        if deg > 1:
-            s += "## "+str(F.polynomial(type='coefficient_field'))+"=0"
-        s += "\n"
+        emf_logger.debug("F={0}".format(F))
+        #deg=0 [emf_download_utils.py:147
+        pol = F.coefficient_field.polynomial()
+        #emf_logger.debug("deg={0}".format(deg))        
+        if pol.degree > 1:
+            s += "## coefficient field : "+str(pol)+"=0"
+            s += "\n"
         for n in range(len(qe)):
             c=qe[n]
             s += "{n} \t {c} \n".format(n=n,c=c)
         emf_logger.debug("qe={0}".format(qe))
+         
     if fmt == "embeddings":
         embeddings = F.q_expansion_embeddings(number,bitprec=bitprec,format='numeric')
         if deg > 1:

@@ -448,7 +448,7 @@ class WebNewForm(WebObject, CachedRepresentation):
 
     def coefficient_field_label(self, pretty = True):
         r"""
-          Returns the LMFDB label of the (absolute) coefficient field.
+          Returns the LMFDB label of the (absolute) coefficient field (if it exists).
         """
         F = self.coefficient_field
         #emf_logger.debug("pol={0}".format(p))
@@ -457,6 +457,8 @@ class WebNewForm(WebObject, CachedRepresentation):
         else:
             p = F.polynomial()
         l = poly_to_field_label(p)
+        if l is None:
+            return ''        
         if pretty:
             return field_pretty(l)
         else:
