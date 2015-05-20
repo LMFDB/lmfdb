@@ -56,7 +56,6 @@ def set_info_for_gamma1(level,weight,weight2=None):
     from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import dimension_from_db,dirichlet_character_conrey_galois_orbits_reps
     from sage.all import DirichletGroup
     from dirichlet_conrey import DirichletGroup_conrey
-    from lmfdb.utils import url_character
     G = dirichlet_character_conrey_galois_orbits_reps(level)
     dim_table = dimension_from_db(level,weight,chi='all',group='gamma1')
     if weight<> None and weight2>weight:
@@ -70,11 +69,11 @@ def set_info_for_gamma1(level,weight,weight2=None):
         xi = x.number()
         table['galois_orbits_reps'][xi]= {'head' : "\(\chi_{" + str(level) + "}(" + str(xi) + ",\cdot) \)",
                                               'chi': str(x.number()),
-                                              'url': url_character(type='Dirichlet', modulus=level, number=xi) }
+                                              'url': url_for('characters.render_Dirichletwebpage', modulus=level, number=xi) }
         table['galois_orbit'][xi]= [
             {'head' : "\({0}\)".format(xc.number()),
              'chi': str(xc.number()),
-             'url': url_character(type='Dirichlet', modulus=level, number=xc.number()) }
+             'url': url_for('characters.render_Dirichletwebpage', modulus=level, number=xc.number()) }
             for xc in x.galois_orbit()]
         tmp_gal_count = len(table['galois_orbit'][xi])
         if tmp_gal_count > max_gal_count:

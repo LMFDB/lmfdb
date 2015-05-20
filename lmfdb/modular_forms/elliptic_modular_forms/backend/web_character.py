@@ -35,7 +35,7 @@ from sage.rings.number_field.number_field_base import NumberField as NumberField
 from sage.all import copy
 
 from sage.structure.unique_representation import CachedRepresentation
-from lmfdb.utils import url_character
+#from lmfdb.WebCharacter import url_character
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import WebObject, WebProperty, WebInt, WebProperties, WebStr, WebNoStoreObject, WebDict, WebFloat
 
 from lmfdb.modular_forms.elliptic_modular_forms.backend import connect_to_modularforms_db,get_files_from_gridfs
@@ -199,7 +199,7 @@ class WebChar(WebObject, CachedRepresentation):
         Return the url of self.
         """
         if not hasattr(self, '_url') or self._url is None:
-            self._url = url_character(type='Dirichlet',modulus=self.modulus, number=self.number)
+            self._url = url_for('characters.render_Dirichletwebpage',modulus=self.modulus, number=self.number)
         return self._url
 
 
