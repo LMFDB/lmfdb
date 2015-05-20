@@ -288,6 +288,8 @@ def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
         c = re.compile(r)
         A = A.replace('+', '\)\( {}+ ')
         A = A.replace('-', '\)\( {}- ')
+        A = A.replace('\left(','\left( {}\\right.') # parantheses needs to be balanced
+        A = A.replace('\\right)','\left.\\right)')        
         A = c.sub(insert_latex, A)
     return A
 
