@@ -3,7 +3,6 @@
 # license: Apache 2.0
 
 
-from pymongo import *
 import base
 
 db = base.getDBConnection().db
