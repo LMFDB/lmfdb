@@ -11,8 +11,6 @@ from sage.all import ZZ, latex, AbelianGroup, pari, gap
 
 from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, list_to_latex_matrix
 
-from pymongo.connection import Connection
-
 MAX_GROUP_DEGREE = 23
 
 ############  Galois group object
