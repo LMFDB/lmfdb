@@ -67,11 +67,10 @@ class DirichletCharactersTest(LmfdbTest):
         W = self.tc.get('/Character/')
         assert 'Browse' in W.data and 'search' in W.data
 
-    @unittest2.skip("wait extra level")
     def test_dirichletfamily(self):
         W = self.tc.get('/Character/Dirichlet/')
-        assert '/Character/Dirichlet/11/3' in W.data, "7th first conductor"
-        assert 'C_{2}\\times C_{2}' in W.data
+        assert 'Find a specific' in W.data
+        assert 'Dirichlet character \(\displaystyle\chi_{13}(2,&middot;)\)' in W.data
 
     def test_dirichletgroup(self):
         W = self.tc.get('/Character/Dirichlet/23')
@@ -144,25 +143,21 @@ class HeckeCharactersTest(LmfdbTest):
         W = self.tc.get('/Character/Hecke/')
         assert '2.2.8.1' in W.data
 
-    @unittest2.skip("hecke characters broken with sage 6.1")
     def test_heckefamily(self):
         W = self.tc.get('/Character/Hecke/3.1.44.1')
         assert 'C_{5}' in W.data
 
-    @unittest2.skip("hecke characters broken with sage 6.1")
     def test_heckegroup(self):
         W = self.tc.get('/Character/Hecke/3.1.44.1/4.0')
         assert 'Related objects' in W.data
         assert 'primitive' in W.data
 
-    @unittest2.skip("hecke characters broken with sage 6.1")
     def test_heckechar(self):
         #W = self.tc.get('/Character/Hecke/7.3.674057.1')
         W = self.tc.get('/Character/Hecke/2.0.4.1/5./2')
         assert 'Related objects' in W.data
         assert 'primitive' in W.data
 
-    @unittest2.skip("hecke characters broken with sage 6.1")
     def test_hecke_calc(self):
         W = self.tc.get('/Character/calc-value/Hecke/2.0.4.1/5./1?val=1-a')
         assert '(1-a)=i' in W.data

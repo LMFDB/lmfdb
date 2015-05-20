@@ -14,7 +14,7 @@ name: Salman Baig
 ---
 name: Jennifer Balakrishnan
 url: http://www.math.harvard.edu/~jen/
-affil: Harvard
+affil: University of Oxford
 ---
 name: Jennifer Beineke
 url: http://mars.wne.edu/~jbeineke/
@@ -68,12 +68,16 @@ name: Tim Dokchitser
 url: http://www.maths.bris.ac.uk/~matyd/
 affil: University of Bristol
 ---
+name: Bas Edixhoven
+affil: Universiteit Leiden
+---
 name: Stephan Ehlen
 url: http://www3.mathematik.tu-darmstadt.de/index.php?id=2037
 affil: Technische Universität Darmstadt
 ---
 name: David W. Farmer
 email: farmer@aimath.org
+affil: AIM
 ---
 name: Markus Fraczek
 email: markus.fraczek@gmail.com
@@ -89,7 +93,6 @@ name: William Hart
 affil: Technische Universit&auml;t Kaiserslautern
 ---
 name: Ghaith Hiary
-affil: University of Bristol
 ---
 name: Duc Khiem Huynh
 url: http://www.math.uwaterloo.ca/~dkhuynh/
@@ -108,6 +111,7 @@ url: http://math.ucsd.edu/~kedlaya/
 affil: University of California, San Diego
 ---
 name: Kamal Khuri-Makdisi
+affil: American University Beirut
 ---
 name: Sally Koutsoliotas
 url: http://www.bucknell.edu/x18772.xml
@@ -119,10 +123,10 @@ affil: Göteborgs Universitet
 ---
 name: Nicolas Mascot
 email: nmascot@math.u-bordeaux1.fr
-affil: Université de Bordeaux
+affil: University of Warwick
 ---
 name: Mark McConnell
-email: mmcconnell17704@yahoo.com 
+email: mmcconnell17704@yahoo.com
 affil: Princeton
 ---
 name: Robert Miller
@@ -139,7 +143,7 @@ affil: University of Warwick
 name: Aurel Page
 url: http://www.normalesup.org/~page/index-en.html
 email: aurel.page@normalesup.org
-affil: Université de Bordeaux
+affil: University of Warwick
 ---
 name: David Platt
 affil: University of Bristol
@@ -172,8 +176,7 @@ location: Vienna, Austria
 name: Gagan Sekhon
 ---
 name: Haluk Sengun
-affil: University of Warwick
-url: http://www2.warwick.ac.uk/fac/sci/maths/people/staff/haluk_sengun/
+affil: University of Sheffield
 ---
 name: Samir Siksek
 affil: University of Warwick
@@ -187,7 +190,7 @@ name: William Stein
 url: http://wstein.org/
 affil: University of Washington
 notes:
-  - Creator of <a href="http://www.sagemath.org">Sage</a>
+  - Creator of <a href="http://www.sagemath.org">SageMath</a>
 ---
 name: Andrew Sutherland
 url: http://math.mit.edu/~drew
@@ -204,7 +207,7 @@ affil: Oregon State University
 ---
 name: Gonzalo Tornaria
 url: http://www.cmat.edu.uy/~tornaria/
-affil: Universidad de la Uruguay
+affil: Universidad de la República, Uruguay
 ---
 name: Holger Then
 url: http://www.maths.bris.ac.uk/~mahlt/

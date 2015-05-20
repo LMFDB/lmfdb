@@ -3,12 +3,13 @@
 # We subclass it here:
 # RiemannZeta, Lfunction_Dirichlet, Lfunction_EC_Q, Lfunction_EMF,
 # Lfunction_HMF, Lfunction_Maass, Lfunction_SMF2_scalar_valued,
-# DedekindZeta, ArtinLfunction, SymmetricPowerLfunction
+# DedekindZeta, ArtinLfunction, SymmetricPowerLfunction,
+# Lfunction_genus2_Q
 
 import math
 import re
 
-from Lfunctionutilities import (seriescoeff,
+from Lfunctionutilities import (p2sage, seriescoeff,
                                 compute_local_roots_SMF2_scalar_valued,
                                 compute_dirichlet_series,
                                 number_of_coefficients_needed,
@@ -35,7 +36,54 @@ def constructor_logger(object, args):
     '''
     logger.debug(str(object.__class__) + str(args))
 
+def an_from_data(euler_factors,upperbound=30):
+    PP = sage.rings.all.PowerSeriesRing(sage.rings.all.RationalField(), 'x', Integer(upperbound).nbits())
+    result = upperbound * [1]
 
+    for i in range(0,len(euler_factors)):
+        p = nth_prime(i+1)
+        if p > upperbound:
+            break
+        f = (1 / (PP(euler_factors[i]))).padded_list(Integer(upperbound).nbits())
+        k = 1
+        while True:
+            if p ** k > upperbound:
+                break
+            for j in range(1 + upperbound // (p ** k)):
+                if j % p == 0:
+                    continue
+                result[j*p**k-1] *= f[k]
+            k += 1
+
+    return result
+
+def makeLfromdata(L):
+    data = L.lfunc_data
+    L.algebraic = data['algebraic']
+    L.degree = data['degree']
+    L.level = data['conductor']
+    L.primitive = data['primitive']
+    L.motivic_weight = data['motivic_weight']
+    L.sign = p2sage(data['root_number'])
+    L.mu_fe = [x+p2sage(data['analytic_normalization'])
+        for x in p2sage(data['gamma_factors'])[0]]
+    L.nu_fe = [x+p2sage(data['analytic_normalization'])
+        for x in p2sage(data['gamma_factors'])[1]]
+    L.compute_kappa_lambda_Q_from_mu_nu()
+    L.langlands = True
+    L.poles = []
+    L.residues = []
+    L.coefficient_period = 0
+    L.coefficient_type = 2
+    L.numcoeff = 30
+    L.dirichlet_coefficients_unnormalized = an_from_data(p2sage(data['euler_factors']),L.numcoeff)
+    L.normalize_by = p2sage(data['analytic_normalization'])
+    L.dirichlet_coefficients = L.dirichlet_coefficients_unnormalized
+    for n in range(0, len(L.dirichlet_coefficients)):
+        an = L.dirichlet_coefficients[n]
+        L.dirichlet_coefficients[n] = float(an/(n+1)**L.normalize_by)
+    L.checkselfdual()
+    generateSageLfunction(L)
 
 def generateSageLfunction(L):
     """ Generate a SageLfunction to do computations
@@ -185,7 +233,7 @@ class Lfunction_EC_Q(Lfunction):
         self.mu_fe = []
         self.nu_fe = [Rational('1/2')]
         
-	self.compute_kappa_lambda_Q_from_mu_nu()
+        self.compute_kappa_lambda_Q_from_mu_nu()
         
         self.numcoeff = round(self.Q_fe * 220 + 10)
         # logger.debug("numcoeff: {0}".format(self.numcoeff))
@@ -207,7 +255,7 @@ class Lfunction_EC_Q(Lfunction):
         self.normalize_by = Rational('1/2')
 
         # Renormalize the coefficients
-        for n in range(0, len(self.dirichlet_coefficients) - 1):
+        for n in range(0, len(self.dirichlet_coefficients)):
             an = self.dirichlet_coefficients[n]
             self.dirichlet_coefficients[n] = float(an) / float(sqrt(n + 1))
 
@@ -303,7 +351,7 @@ class Lfunction_EMF(Lfunction):
         self.automorphyexp = (self.weight - 1) / 2.
         self.mu_fe = []
         self.nu_fe = [Rational(self.weight - 1)/2]
-	self.compute_kappa_lambda_Q_from_mu_nu()
+        self.compute_kappa_lambda_Q_from_mu_nu()
 
 
         # Get the data for the corresponding elliptic curve if possible
@@ -581,7 +629,7 @@ class RiemannZeta(Lfunction):
         self.coefficient_period = 0
         self.selfdual = True
         
-	self.compute_kappa_lambda_Q_from_mu_nu()
+        self.compute_kappa_lambda_Q_from_mu_nu()
         self.texname = "\\zeta(s)"
         self.texnamecompleteds = "\\xi(s)"
         self.texnamecompleted1ms = "\\xi(1-s)"
@@ -1291,7 +1339,7 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         self.nu_fe = [float(1) / float(2), self.automorphyexp]  # the shift of
                                                                 # the Gamma_C to print
         self.level = 1
-	self.compute_kappa_lambda_Q_from_mu_nu()
+        self.compute_kappa_lambda_Q_from_mu_nu()
 
         self.sign = (-1) ** float(self.weight)
 
@@ -1338,7 +1386,7 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         self.coefficient_type = 3
         self.quasidegree = 1
 
-        # self.checkselfdual()
+        self.checkselfdual()
 
         self.texname = "L(s,F)"
         self.texnamecompleteds = "\\Lambda(s,F)"
@@ -1452,6 +1500,55 @@ class TensorProductLfunction(Lfunction):
         return {"ellipticcurvelabel": self.Elabel,
                 "charactermodulus": self.charactermodulus,
                 "characternumber": self.characternumber}
+
+#############################################################################
+
+class Lfunction_genus2_Q(Lfunction):
+    """Class representing the L-function of a genus 2 curve over Q
+
+    Compulsory parameters: label
+
+    """
+
+    def __init__(self, **args):
+        # Check for compulsory arguments
+        if not ('label' in args.keys()):
+            raise KeyError("You have to supply label for a genus 2 curve " +
+                           "L-function")
+        logger.debug(str(args))
+
+        # Put the arguments into the object dictionary
+        self.__dict__.update(args)
+        self.label = args['label']
+
+        # Load form from database
+        isoclass = LfunctionDatabase.getGenus2IsogenyClass(self.label)
+        if isoclass is None:
+            raise KeyError("There is no genus 2 isogeny class with that label")
+
+        self.number = int(0)
+        self.quasidegree = 2
+        self.texname = "L(s,A)"
+        self.texnamecompleteds = "\\Lambda(s,A)"
+        self.texnamecompleted1ms = "\\Lambda(1-s,A)"
+        self.title = ("$L(s,A)$, " + "where $A$ is an abelian surface "
+                      + "of conductor " + str(isoclass['cond']))
+        self.citation = ''
+        self.credit = ''
+
+        # Extract the L-function information
+        #self.lfunc_data = isoclass['lfunc_data']
+        self.lfunc_data = LfunctionDatabase.getGenus2Ldata(isoclass['hash'])
+        makeLfromdata(self)
+
+        constructor_logger(self, args)
+
+    def Ltype(self):
+        return "genus2curveQ"
+        
+    def Lkey(self):
+        return {"label", self.label}
+
 
 #############################################################################
 

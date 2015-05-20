@@ -9,6 +9,11 @@ from sage.all import *
 # Functions for displaying numbers in correct format etc.
 ###############################################################
 
+def p2sage(s):
+    # convert python type to sage
+    # this interprets strings, so e.g. '1/2' gets converted to Rational
+    return sage_eval(str(s))
+
 def pair2complex(pair):
     ''' Turns the pair into a complex number.
     '''
@@ -500,11 +505,21 @@ def specialValueString(L, s, sLatex):
     ''' Returns the LaTex to dislpay for L(s)
     '''
     number_of_decimals = 10
-    val = L.sageLfunction.value(s)
+    val = None
+    if hasattr(L,"lfunc_data"):
+        s_alg = s+p2sage(L.lfunc_data['analytic_normalization'])
+        for x in p2sage(L.lfunc_data['special_values']):
+            # the numbers here are always half integers
+            # so this comparison is exact
+            if x[0] == s_alg:
+                val = x[1]
+                break
+    if val is None:
+        val = L.sageLfunction.value(s)
     lfunction_value_tex = L.texname.replace('(s', '(' + sLatex)
     # We must test for NaN first, since it would show as zero otherwise
     # Try "RR(NaN) < float(1e-10)" in sage -- GT
-    if val.real().is_NaN():
+    if CC(val).real().is_NaN():
         return "\\[{0}=\\infty\\]".format(lfunction_value_tex)
     elif val.abs() < 1e-10:
         return "\\[{0}=0\\]".format(lfunction_value_tex)

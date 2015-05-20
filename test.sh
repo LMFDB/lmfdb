@@ -27,10 +27,16 @@ fi
 
 ARGS='-v -s --testmatch="(?:^|[\b_\./-])[Tt]est_"'
 
+SAGE_COMMAND=$SAGE
+if [[ "$SAGE_COMMAND" == "" ]]; then
+  SAGE_COMMAND=sage
+fi
+echo "Using Sage command $SAGE_COMMAND"
+
 if [[ -n $WHAT ]]; then
-   eval "sage -sh -c 'nosetests $ARGS $WHAT'"
+   eval "$SAGE_COMMAND -sh -c 'nosetests $ARGS $WHAT'"
 else
    cd lmfdb
-   eval "sage -sh -c 'nosetests $ARGS --with-coverage --cover-erase --cover-package=lmfdb $HTML'"
+   eval "$SAGE_COMMAND -sh -c 'nosetests $ARGS --with-coverage --cover-erase --cover-package=lmfdb $HTML'"
 fi
 

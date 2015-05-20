@@ -58,9 +58,7 @@ class ECNF(object):
         """
         searches for a specific elliptic curve in the ecnf collection by its label
         """
-        print "label = %s" % label
         data = db_ecnf().find_one({"label" : label})
-        print "data = %s" % data
         if data:
             return ECNF(data)
         print "No such curve in the database: %s" % label
@@ -72,6 +70,7 @@ class ECNF(object):
         from sage.schemes.elliptic_curves.all import EllipticCurve
         self.E = E = EllipticCurve(self.ainvs)
         self.equn = web_latex(E)
+        self.numb = str(self.number)
 
         # Conductor, discriminant, j-invariant
         N = E.conductor()
@@ -168,13 +167,27 @@ class ECNF(object):
                                'reduction_type': self.local_info.bad_reduction_type()
                                })
 
-        self.friends = []
+        # URLs of self and related objects:
+        self.urls = {}
+        self.urls['curve'] = url_for(".show_ecnf", nf = self.field_label, conductor_label=self.conductor_label, class_label = self.iso_label, number = self.number)
+        self.urls['class'] = url_for(".show_ecnf_isoclass", nf = self.field_label, conductor_label=self.conductor_label, class_label = self.iso_label)
+        self.urls['conductor'] = url_for(".show_ecnf_conductor", nf = self.field_label, conductor_label=self.conductor_label)
+        self.urls['field'] = url_for(".show_ecnf1", nf=self.field_label)
+
         if self.field.is_real_quadratic():
-            hmf_label = "-".join([self.field.label,self.conductor_label,self.iso_label])
-            self.friends += [('Hilbert Modular Form '+hmf_label, url_for('hmf.render_hmf_webpage', field_label=self.field.label, label=hmf_label))]
+            self.hmf_label = "-".join([self.field.label,self.conductor_label,self.iso_label])
+            self.urls['hmf'] = url_for('hmf.render_hmf_webpage', field_label=self.field.label, label=self.hmf_label)
+
         if self.field.is_imag_quadratic():
-            bmf_label = "-".join([self.field.label,self.conductor_label,self.iso_label])
-            self.friends += [('Bianchi Modular Form not yet available','')]
+            self.bmf_label = "-".join([self.field.label,self.conductor_label,self.iso_label])
+
+
+        self.friends = []
+        self.friends += [('Isogeny class '+self.short_class_label, self.urls['class'])]
+        if self.field.is_real_quadratic():
+            self.friends += [('Hilbert Modular Form '+self.hmf_label, self.urls['hmf'])]
+        if self.field.is_imag_quadratic():
+            self.friends += [('Bianchi Modular Form %s not yet available' % self.bmf_label, '')]
 
         self.properties = [
             ('Base field', self.field.field_pretty()),

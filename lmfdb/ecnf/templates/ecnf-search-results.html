@@ -64,12 +64,23 @@ table td.params {
 </style>
 
 
-<h2> Results ({{info.report}})</h2>
+<h2> Results ({{info.report}})
+{% if info.start > 0 %}
+<a href="#" class="navlink"
+   onclick="decrease_start_by_count_and_submit_form('re-search');return
+            false">Previous</A>
+{% endif %}
+{% if info.more > 0 %}
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
+{% endif %}
+
+</h2>
 <table>
 <tr>
   <th class="center">Field</th>
   <th class="center">{{ KNOWL('ec.conductor',title = "Conductor") }} norm</th>
   <th class="center">{{ KNOWL('ec.conductor_label',title = "Conductor label") }}</th>
+  <th class="center">{{ KNOWL('ec.isogeny_class',title = "Isogeny class")}} label</th>
   <th class="center">{{ KNOWL('ec.curve_label',title = "Curve label") }}</th>
   <th align="left">{{ KNOWL('ec.weierstrass_coeffs',  title='Weierstrass Coefficients') }}</th>
 </tr>
@@ -80,15 +91,22 @@ table td.params {
 </td>
 <td class="center">{{curve.conductor_norm}}</td>
 <td class="center">{{curve.conductor_label}}</td>
-<td class="center"><a href="{{ url_for('.show_ecnf',nf=curve.field_label,label=curve.short_label) }} ">{{curve.short_label}}</a></td>
+<td class="center"><a href="{{ url_for('.show_ecnf_isoclass',nf=curve.field_label,conductor_label=curve.conductor_label,class_label=curve.iso_label) }} ">{{curve.short_class_label}}</a></td>
+<td class="center"><a href="{{ url_for('.show_ecnf',nf=curve.field_label,conductor_label=curve.conductor_label,class_label=curve.iso_label,number=curve.number) }} ">{{curve.short_label}}</a></td>
 <td class="left">{{info.web_ainvs(curve.field_label,curve.ainvs)}}</td>
 </tr>
 {% endfor %}
 </table>
 
 <hr>
-<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
+{% if info.start > 0 %}
+<a href="#" class="navlink"
+   onclick="decrease_start_by_count_and_submit_form('re-search');return
+            false">Previous</A>
+{% endif %}
+{% if info.more > 0 %}
 <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
+{% endif %}
 
 {% endif %}
 

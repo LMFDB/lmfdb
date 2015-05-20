@@ -1,0 +1,85 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+<style type="text/css">
+#isogeny_class_table th, #isogeny_class_table td {
+padding : 4px;
+text-align: center;
+}
+</style>
+
+<h2>Genus 2 curves in class {{info.label}}</h2>
+<table id = "isogeny_class_table">
+<tr>
+<th>{{ KNOWL('g2c.q.label', title='Label')}}</th>
+<th>{{ KNOWL('g2c.q.equation', title='Equation') }}</th>
+</tr>
+{% for c in info.curves %}
+<tr>
+<td class="center"><a href="{{c.url}}">{{c.label}}</a></td>
+<td align="center">\({{c.equation_formatted}}\)</td>
+{% endfor %}
+</table>
+
+<h2>$L$-factor information</h2>
+
+<p>
+<table>
+<tr><td> Root number:<td> {{ info.root_number }} </tr>
+<tr><td> Bad $L$-factors:<td>
+<table id = "bad_lfactors_table">
+<tr>
+<th>Prime</th>
+<th>$L$-Factor</th>
+</tr>
+{% for c in info.bad_lfactors %}
+<tr><td class="center">\({{ c[0] }}\)</a></td><td align="center">\( {{ c[1] }}\)</td></tr>
+{% endfor %}
+</table>
+
+</table>
+
+<p>
+
+<h2>Sato-Tate group</h2>
+
+<p>
+Sato-Tate group: ${{ info.st_group_name }}$
+</p>
+
+<h2> {{ KNOWL('g2c.jac_endomorphisms', title='Endomorphisms of the Jacobian') }} </h2>
+<table>
+  <tr>  <td>\(\mathrm{End}(J) \otimes \Q\)</td><td>\(\simeq\)</td><td>\({{info.rat_end_alg_name}}\)</td>
+<td>[Is simple over \(\Q \): {{info.is_simple_name}}]</td></tr>
+  <tr>  <td>\(\mathrm{End}(J) \otimes \R\)</td><td>\(\simeq\)</td><td>\({{info.real_end_alg_name}}\)</td>
+<td>[Is \(\mathrm{GL}_2-\)type: {{info.is_gl2_type_name}}]</td></tr>
+  <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}}) \otimes \Q\)</td><td>\(\simeq\)</td><td>\({{info.rat_geom_end_alg_name}}\)</td>
+<td>[Is simple over \(\overline{\Q} \): {{info.is_geom_simple_name}}]</td></tr>
+  <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}}) \otimes \R\)</td><td>\(\simeq\)</td><td>\({{info.real_geom_end_alg_name}}\)</td></tr>
+</table>
+
+<p>Field over which all endomorphisms are defined: 
+<A HREF="/NumberField/{{info.geom_end_field }}">{{info.geom_end_field_name}}</A></p>
+
+<h2>Isogenies</h2>
+
+{% if info.ecproduct_wurl == [] and info.ecquadratic_wurl == [] %}
+<p>None currently known.</p>
+{% endif %}
+
+{% if info.ecproduct_wurl != [] %}
+<p>\(J\) is isogenous over \(\Q\) to <a href="{{info.ecproduct_wurl[0].url}}">{{info.ecproduct_wurl[0].label}}</a> \(\times\)
+<a href="{{info.ecproduct_wurl[1].url}}">{{info.ecproduct_wurl[1].label}}</a>.</p>
+{% endif %}
+
+{% if info.ecquadratic_wurl != [] %}
+{% for c in info.ecquadratic_wurl %}
+<p>\(J\) is isogenous over \(\Q\) to \(\mathrm{Res}_{F/\Q}(\)<a href="{{c.url}}">{{c.label}}</a>\()\), where \(F=\) 
+<A HREF="/NumberField/{{c.nf}}">{{c.nf}}</A>.</p>
+{% endfor %}
+{% endif %}
+
+{% endblock %}
+
+
