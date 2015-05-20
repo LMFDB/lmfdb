@@ -504,10 +504,10 @@ class WebObject(object):
                 key.update(add_to_db_query)
             emf_logger.debug("key: {0}".format(key))
             if coll.find(key).count()>0:
-                props_to_fetch = [p.name for p in self._db_properties
+                props_to_fetch = {p.name:True for p in self._db_properties
                                   if (p.include_in_update and not p.name in self._fs_properties)
-                                  or p.name in self._key]
-                rec = coll.find_one(key, fields = props_to_fetch)
+                                  or p.name in self._key}
+                rec = coll.find_one(key, projection = props_to_fetch)
                 for pn in props_to_fetch:
                     p = self._properties[pn]
                     if rec.has_key(pn):
