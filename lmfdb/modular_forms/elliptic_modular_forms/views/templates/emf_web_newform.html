@@ -40,8 +40,8 @@ that preserve the character are shown in the table below.
       \( v_{ {{h}} }(a(n)) \)
     </th>
     {% for n in range(1,embeddings_len) %}
-    <td style="white-space:nowrap;">
-      \({{ embeddings[n][h] }}\)
+    <td style="white-space:nowrap;" align=right>
+      \({{ embeddings[n][h] |replace("*I", "i")}}\)
     </td>
     {% endfor %}
   </tr>
