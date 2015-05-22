@@ -5,3 +5,7 @@ flask-markdown
 pymongo==2.8
 pyyaml
 unittest2
+coverage
+nose
+cython
+git+git://github.com/jwbober/conrey-dirichlet-characters.git@master#egg=dirichlet_conrey
