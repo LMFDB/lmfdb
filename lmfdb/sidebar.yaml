@@ -203,6 +203,7 @@
       title: Motives
    parts:
     - title: "Hypergeometric:"
+      status: beta
       part2:
          - title: $/\Q$
            status:  beta
