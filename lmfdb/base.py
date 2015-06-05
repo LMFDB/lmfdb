@@ -11,10 +11,8 @@ import sys
 import logging
 from time import sleep
 from flask import Flask, session, g, render_template, url_for, request, redirect
-from pymongo import Connection
 from pymongo.cursor import Cursor
 from pymongo.errors import AutoReconnect
-from pymongo.connection import Connection
 from sage.all import *
 from functools import wraps
 from werkzeug.contrib.cache import SimpleCache
@@ -32,8 +30,25 @@ def get_logfocus():
     global logfocus
     return logfocus
 
-# global db connection instance
+# global db connection instance (will be set by the first call to
+# getDBConnection() and should always be obtained from that)
 _C = None
+
+def getDBConnection():
+    return _C
+
+def makeDBConnection(dbport):
+    global _C
+    if not _C:
+        logging.info("establishing db connection at port %s ..." % dbport)
+        import pymongo
+        logging.info("using pymongo version %s" % pymongo.version)
+        if pymongo.version_tuple[0] < 3:
+            from pymongo import Connection
+            _C = Connection(port=dbport)
+        else:
+            from pymongo.mongo_client import MongoClient
+            _C = MongoClient(port=dbport)
 
 # Note: the original intention was to have all databases and
 # collections read-only except to users who could authenticate
@@ -92,19 +107,18 @@ def _db_reconnect(func):
 
 
 def _init(dbport, readwrite_password, parallel_authentication=False):
-    global _C
-    logging.info("establishing db connection at port %s ..." % dbport)
-    _C = Connection(port=dbport)
+    makeDBConnection(dbport)
+    C = getDBConnection()
 
     # Disabling authentication completely as it does not work:
     return
 
     def db_auth_task(db, readonly=False):
         if readonly or readwrite_password == '':
-            _C[db].authenticate(readonly_username, readonly_password)
+            C[db].authenticate(readonly_username, readonly_password)
             logging.info("authenticated readonly on database %s" % db)
         else:
-            _C[db].authenticate(readwrite_username, readwrite_password)
+            C[db].authenticate(readwrite_username, readwrite_password)
             logging.info("authenticated readwrite on database %s" % db)
 
     if parallel_authentication:
@@ -130,10 +144,6 @@ def _init(dbport, readwrite_password, parallel_authentication=False):
         for db in readonly_dbs:
             db_auth_task(db, True)
         logging.info(">>> db auth done")
-
-
-def getDBConnection():
-    return _C
 
 app = Flask(__name__)
 
