@@ -90,7 +90,8 @@ def show_ecnf1(nf):
         return elliptic_curve_search(data=request.args)
     start = 0
     count = 50
-    query = {'field_label' : nf}
+    nf_label = parse_field_string(nf)
+    query = {'field_label' : nf_label}
     cursor = db_ecnf().find(query)
     nres = cursor.count()
     if(start >= nres):
@@ -100,13 +101,13 @@ def show_ecnf1(nf):
     res = cursor.sort([('field_label', ASC), ('conductor_norm', ASC), ('conductor_label', ASC), ('iso_label', ASC), ('number', ASC)]).skip(start).limit(count)
 
     bread = [('Elliptic Curves', url_for(".index")),
-             (nf, url_for('.show_ecnf1', nf=nf))]
+             (nf_label, url_for('.show_ecnf1', nf=nf_label))]
 
     res = list(res)
     for e in res:
         e['field_knowl'] = nf_display_knowl(e['field_label'], getDBConnection(), e['field_label'])
     info = {}
-    info['field'] = nf
+    info['field'] = nf_label
     info['query'] = query
     info['curves'] = res # [ECNF(e) for e in res]
     info['number'] = nres
@@ -122,12 +123,13 @@ def show_ecnf1(nf):
             info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
         else:
             info['report'] = 'displaying all %s matches' % nres
-    t = 'Elliptic Curves over %s' % field_pretty(nf)
+    t = 'Elliptic Curves over %s' % field_pretty(nf_label)
     return render_template("ecnf-search-results.html", info=info, credit=ecnf_credit, bread=bread, title=t)
 
 @ecnf_page.route("/<nf>/<conductor_label>/")
 def show_ecnf_conductor(nf, conductor_label):
-    return elliptic_curve_search(data={'nf_label':nf, 'conductor_label':conductor_label}, **request.args)
+    nf_label = parse_field_string(nf)
+    return elliptic_curve_search(data={'nf_label':nf_label, 'conductor_label':conductor_label}, **request.args)
 
 @ecnf_page.route("/<nf>/<conductor_label>/<class_label>/")
 def show_ecnf_isoclass(nf, conductor_label, class_label):
@@ -208,7 +210,7 @@ def elliptic_curve_search(**args):
         query['number'] = 1
 
     if 'field' in info:
-        query['field_label'] = info['field']
+        query['field_label'] = parse_field_string(info['field'])
 
     info['query'] = query
 

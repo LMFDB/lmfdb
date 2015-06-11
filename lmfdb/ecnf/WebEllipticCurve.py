@@ -1,9 +1,10 @@
 from flask import url_for
-from sage.all import ZZ, var, PolynomialRing, QQ, GCD
+from sage.all import ZZ, var, PolynomialRing, QQ, GCD, prod
 from lmfdb.base import app, getDBConnection
-from lmfdb.utils import image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input
+from lmfdb.utils import image_src, web_latex, web_latex_ideal_fact, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input
 from lmfdb.number_fields.number_field import parse_field_string, field_pretty
 from lmfdb.WebNumberField import WebNumberField
+from kraus import (non_minimal_primes, is_global_minimal_model, has_global_minimal_model, minimal_discriminant_ideal)
 
 ecnf = None
 nfdb = None
@@ -79,15 +80,45 @@ class ECNF(object):
         if N.norm()==1:  # since the factorization of (1) displays as "1"
             self.fact_cond = self.cond
         else:
-            self.fact_cond = web_latex(N.factor())
+            self.fact_cond = web_latex_ideal_fact(N.factor())
         self.fact_cond_norm = web_latex(N.norm().factor())
-        D = E.discriminant()
+
+        D = self.field.K().ideal(E.discriminant())
         self.disc = web_latex(D)
-        try:
-            self.fact_disc = web_latex(D.factor())
-        except ValueError: # if not all prime ideal factors principal
-            pass
-            #self.fact_disc = web_latex(self.field.K.ideal(D).factor())
+        self.disc_norm = web_latex(D.norm())
+        if D.norm()==1:  # since the factorization of (1) displays as "1"
+            self.fact_disc = self.disc
+        else:
+            self.fact_disc = web_latex_ideal_fact(D.factor())
+        self.fact_disc_norm = web_latex(D.norm().factor())
+
+        # Minimal model?
+        #
+        # All curves in the database should be given
+        # by models which are globally minimal if possible, else
+        # minimal at all but one prime.  But we do not rely on this
+        # here, and the display should be correct if either (1) there
+        # exists a global minimal model but this model is not; or (2)
+        # this model is non-minimal at more than one prime.
+        #
+        self.non_min_primes = non_minimal_primes(E)
+        self.is_minimal = (len(self.non_min_primes)==0)
+        self.has_minimal_model = True
+        if not self.is_minimal:
+            self.non_min_prime = ','.join([web_latex(P) for P in self.non_min_primes])
+            self.has_minimal_model = has_global_minimal_model(E)
+
+        if not self.is_minimal:
+            Dmin = minimal_discriminant_ideal(E)
+            self.mindisc = web_latex(Dmin)
+            self.mindisc_norm = web_latex(Dmin.norm())
+            if Dmin.norm()==1:  # since the factorization of (1) displays as "1"
+                self.fact_mindisc = self.mindisc
+            else:
+                self.fact_mindisc = web_latex_ideal_fact(Dmin.factor())
+            self.fact_mindisc_norm = web_latex(Dmin.norm().factor())
+
+
         j = E.j_invariant()
         if j:
             d = j.denominator()
@@ -108,11 +139,13 @@ class ECNF(object):
                         self.j = web_latex(g)
         self.j = web_latex(j)
 
-        self.fact_j = self.j
-        if j:
+        self.fact_j = None
+        if j.is_zero():
+            self.fact_j = web_latex(j)
+        else:
             try:
                 self.fact_j = web_latex(j.factor())
-            except ValueError: # if not all prime ideal factors principal
+            except (ArithmeticError,ValueError): # if not all prime ideal factors principal
                 pass
 
         # CM and End(E)
@@ -152,7 +185,7 @@ class ECNF(object):
         try:
             self.rk = web_latex(self.rank)
         except AttributeError:
-            self.rk = "not known"
+            self.rk = "not recorded"
 #       if rank in self:
 #            self.r = web_latex(self.rank)
 
@@ -164,7 +197,9 @@ class ECNF(object):
                                'norm': web_latex(p.norm().factor()),
                                'tamagawa_number': self.local_info.tamagawa_number(),
                                'kodaira_symbol': web_latex(self.local_info.kodaira_symbol()).replace('$', ''),
-                               'reduction_type': self.local_info.bad_reduction_type()
+                               'reduction_type': self.local_info.bad_reduction_type(),
+                                'ord_den_j': max(0,E.j_invariant().valuation(p)),
+                                'ord_mindisc': self.local_info.discriminant_valuation()
                                })
 
         # URLs of self and related objects:
