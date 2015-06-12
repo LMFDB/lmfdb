@@ -184,7 +184,7 @@ class WebG2C(object):
         iso = self.label.split('.')[1]
         num = '.'.join(self.label.split('.')[2:4])
         C = list_to_curve(self.min_eqn)
-        self.plot = encode_plot(self.C.plot())        
+        self.plot = encode_plot(C.plot())        
         self.plot_link = '<img src="%s" width="200" height="150"/>' % self.plot
         self.properties = [('Label', self.label),
                            (None, self.plot_link),
