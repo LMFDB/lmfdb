@@ -31,6 +31,11 @@ def list_to_min_eqn(L):
     lhs = ypoly_rng([0,poly_tup[1],1])
     return str(lhs).replace("*","") + " = " + str(poly_tup[0]).replace("*","")
 
+def list_to_curve(L):
+    xpoly_rng = PolynomialRing(QQ,'x')
+    poly_tup = [xpoly_rng(tup) for tup in L]
+    return HyperellipticCurve(poly_tup[0],poly_tup[1])
+
 # need to come up with a function that deal with the quadratic fields in the dictionary
 def end_alg_name(name):
     name_dict = {
@@ -192,3 +197,5 @@ class WebG2C(object):
              ('%s' % self.cond, url_for(".by_conductor", conductor=self.cond)),
              ('%s' % iso, url_for(".by_double_iso_label", conductor=self.cond, iso_label=iso)),
              ('Genus 2 curve %s' % num, url_for(".by_g2c_label", label=self.label))]
+        C = list_to_curve(self.min_eqn)
+        self.plot = encode_plot(self.C.plot())
