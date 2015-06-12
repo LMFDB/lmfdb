@@ -183,7 +183,11 @@ class WebG2C(object):
              ('Download Euler factors', '.')]
         iso = self.label.split('.')[1]
         num = '.'.join(self.label.split('.')[2:4])
+        C = list_to_curve(self.min_eqn)
+        self.plot = encode_plot(self.C.plot())        
+        self.plot_link = '<img src="%s" width="200" height="150"/>' % self.plot
         self.properties = [('Label', self.label),
+                           (None, self.plot_link),
                            ('Conductor','%s' % self.cond),
                            ('Discriminant', '%s' % data['disc']),
                            ('Invariants', '%s </br> %s </br> %s </br> %s'% tuple(data['igusa_clebsch'])), 
@@ -197,5 +201,3 @@ class WebG2C(object):
              ('%s' % self.cond, url_for(".by_conductor", conductor=self.cond)),
              ('%s' % iso, url_for(".by_double_iso_label", conductor=self.cond, iso_label=iso)),
              ('Genus 2 curve %s' % num, url_for(".by_g2c_label", label=self.label))]
-        C = list_to_curve(self.min_eqn)
-        self.plot = encode_plot(self.C.plot())
