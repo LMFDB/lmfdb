@@ -43,6 +43,8 @@ def eqn_list_to_curve_plot(L):
     f = poly_tup[0]
     h = poly_tup[1]
     g = f+h**2/4
+    if len(g.real_roots())==0:
+        return text("$X(\mathbb{R})=\emptyset$",(1,1),fontsize=50)
     X0 = [real(z[0]) for z in g.base_extend(CC).roots()]+[real(z[0]) for z in g.derivative().base_extend(CC).roots()]
     a,b = inflate_interval(min(X0),max(X0))
     if b-a<0.5:
