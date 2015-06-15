@@ -193,14 +193,12 @@ class ECNF(object):
             ('Base field', self.field.field_pretty()),
             ('Label' , self.label)]
         
-        #Qx = PolynomialRing(QQ,'x')
-        #K = NumberField(polynomial=Qx(self.field.poly()),name='t')
+        # Plot
         K = E.base_field()
         SR = K.embeddings(RR)
         n1 = len(SR)
         if(n1):
-            ER = [E.base_extend(s) for s in SR]
-            X = [e.plot() for e in ER]
+            X = [E.base_extend(s).plot() for s in SR]
             a = min([x.xmin() for x in X])
             b = max([x.xmax() for x in X])
             cols = rainbow(n1)
@@ -208,7 +206,7 @@ class ECNF(object):
             for i in range(n1):
                 s = SR[i]
                 c = cols[i]
-                X += ER[i].plot(xmin=a,xmax=b,color=c,legend_label=str(s.im_gens()[0]))
+                X += E.base_extend(s).plot(xmin=a,xmax=b,color=c,legend_label="$"+self.field.generator_name()+" \mapsto$ "+str(s.im_gens()[0].n(20)))
             self.plot = encode_plot(X)
             self.plot_link = '<img src="%s" width="200" height="150"/>' % self.plot
             self.properties += [(None, self.plot_link)]
