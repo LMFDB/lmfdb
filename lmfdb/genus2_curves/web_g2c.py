@@ -31,10 +31,43 @@ def list_to_min_eqn(L):
     lhs = ypoly_rng([0,poly_tup[1],1])
     return str(lhs).replace("*","") + " = " + str(poly_tup[0]).replace("*","")
 
-def list_to_curve(L):
+def eqn_list_to_curve_plot(L):
     xpoly_rng = PolynomialRing(QQ,'x')
     poly_tup = [xpoly_rng(tup) for tup in L]
-    return HyperellipticCurve(poly_tup[0],poly_tup[1])
+    f = poly_tup[0]
+    h = poly_tup[1]
+    g = f+h^2/4
+    X0 = g.real_roots()
+    a = min(X0)
+    b = max(X0)
+    c = (a+b)/2
+    d = (b-a)/2
+    d *= 1.2
+    a = c-d
+    b = c+d
+    y = var('y')
+    Y = []
+    npts = 100
+    s = 2*d/npts
+    u = a
+    m = M = 0
+    for i in range(npts+1):
+        v = g(u)
+        if v>0:
+            v = sqrt(v)
+            w = -h(u)/2
+            z = v+w
+            if z<m:
+                m = z
+            if z>M:
+                M = z
+            z = w-v
+            if z<m:
+                m = z
+            if z>M:
+                M = z
+        u += s
+    return implicit_plot(y^2+y*h(x)-f(x),(x,a,b),(y,m,M))
 
 # need to come up with a function that deal with the quadratic fields in the dictionary
 def end_alg_name(name):
@@ -183,8 +216,7 @@ class WebG2C(object):
              ('Download Euler factors', '.')]
         iso = self.label.split('.')[1]
         num = '.'.join(self.label.split('.')[2:4])
-        C = list_to_curve(self.min_eqn)
-        self.plot = encode_plot(C.plot())        
+        self.plot = encode_plot(eqn_list_to_curve_plot(self.min_eqn))
         self.plot_link = '<img src="%s" width="200" height="150"/>' % self.plot
         self.properties = [('Label', self.label),
                            (None, self.plot_link),
