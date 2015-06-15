@@ -9,7 +9,7 @@ from lmfdb.utils import comma, make_logger, web_latex, encode_plot
 from lmfdb.genus2_curves import g2c_page, g2c_logger
 from lmfdb.genus2_curves.data import group_dict
 import sage.all
-from sage.all import latex, matrix, ZZ, QQ, PolynomialRing, factor
+from sage.all import latex, matrix, ZZ, QQ, PolynomialRing, factor, implicit_plot
 from lmfdb.hilbert_modular_forms.hilbert_modular_form import teXify_pol
 
 from lmfdb.WebNumberField import *
@@ -31,24 +31,28 @@ def list_to_min_eqn(L):
     lhs = ypoly_rng([0,poly_tup[1],1])
     return str(lhs).replace("*","") + " = " + str(poly_tup[0]).replace("*","")
 
+def inflate_interval(a,b):
+    c = (a+b)/2
+    d = (b-a)/2
+    d *= 1.4
+    return (c-d,c+d)
+
 def eqn_list_to_curve_plot(L):
     xpoly_rng = PolynomialRing(QQ,'x')
     poly_tup = [xpoly_rng(tup) for tup in L]
     f = poly_tup[0]
     h = poly_tup[1]
-    g = f+h^2/4
-    X0 = g.real_roots()
-    a = min(X0)
-    b = max(X0)
-    c = (a+b)/2
-    d = (b-a)/2
-    d *= 1.2
-    a = c-d
-    b = c+d
-    y = var('y')
-    Y = []
+    g = f+h**2/4
+    X0 = [real(z[0]) for z in g.base_extend(CC).roots()]+[real(z[0]) for z in g.derivative().base_extend(CC).roots()]
+    a,b = inflate_interval(min(X0),max(X0))
+    if b-a<0.5:
+        #x = var('x')
+        #y = var('y')
+        #return implicit_plot(y**2+y*h(x)-f(x),(x,-5,5),(y,-5,5),aspect_ratio='automatic')
+        a = -6
+        b = 6
     npts = 100
-    s = 2*d/npts
+    s = (b-a)/npts
     u = a
     m = M = 0
     for i in range(npts+1):
@@ -57,6 +61,7 @@ def eqn_list_to_curve_plot(L):
             v = sqrt(v)
             w = -h(u)/2
             z = v+w
+            print u
             if z<m:
                 m = z
             if z>M:
@@ -67,7 +72,13 @@ def eqn_list_to_curve_plot(L):
             if z>M:
                 M = z
         u += s
-    return implicit_plot(y^2+y*h(x)-f(x),(x,a,b),(y,m,M))
+    (m,M) = inflate_interval(m,M)
+    if m==0 and M==0:
+        m = -10
+        M = 10
+    x = var('x')
+    y = var('y')
+    return implicit_plot(y**2+y*h(x)-f(x),(x,a,b),(y,m,M),aspect_ratio='automatic')
 
 # need to come up with a function that deal with the quadratic fields in the dictionary
 def end_alg_name(name):
