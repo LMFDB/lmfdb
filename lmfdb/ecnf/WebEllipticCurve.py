@@ -197,12 +197,15 @@ class ECNF(object):
         SR = K.embeddings(RR)
         n1 = len(SR)
         if(n1):
+            X = [E.base_extend(s).plot() for s in SR]
+            a = min([xmin(x) for x in X])
+            b = max([xmax(x) for x in X])
             cols = rainbow(n1)
             X = plot([])
             for i in range(n1):
                 s = SR[i]
                 c = cols[i]
-                X += E.base_extend(s).plot(color=c,legend_label=s.im_gens()[0])
+                X += E.base_extend(s).plot(xmin=a,xmax=b,color=c,legend_label=s.im_gens()[0])
             self.plot = encode_plot(X)
             self.plot_link = '<img src="%s" width="200" height="150"/>' % self.plot
             self.properties += [(None, self.plot_link)]
