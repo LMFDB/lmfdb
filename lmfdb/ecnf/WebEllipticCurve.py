@@ -1,7 +1,7 @@
 from flask import url_for
-from sage.all import ZZ, var, PolynomialRing, QQ, GCD, RR, NumberField
+from sage.all import ZZ, var, PolynomialRing, QQ, GCD, RR, rainbow, plot
 from lmfdb.base import app, getDBConnection
-from lmfdb.utils import image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input
+from lmfdb.utils import image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input, encode_plot
 from lmfdb.number_fields.number_field import parse_field_string, field_pretty
 from lmfdb.WebNumberField import WebNumberField
 
@@ -193,19 +193,22 @@ class ECNF(object):
             ('Base field', self.field.field_pretty()),
             ('Label' , self.label)]
         
-        K.<Kgen> = NumberField(self.field.poly)
+        #Qx = PolynomialRing(QQ,'x')
+        #K = NumberField(polynomial=Qx(self.field.poly()),name='t')
+        K = E.base_field()
         SR = K.embeddings(RR)
         n1 = len(SR)
         if(n1):
-            X = [E.base_extend(s).plot() for s in SR]
-            a = min([xmin(x) for x in X])
-            b = max([xmax(x) for x in X])
+            ER = [E.base_extend(s) for s in SR]
+            X = [e.plot() for e in ER]
+            a = min([x.xmin() for x in X])
+            b = max([x.xmax() for x in X])
             cols = rainbow(n1)
             X = plot([])
             for i in range(n1):
                 s = SR[i]
                 c = cols[i]
-                X += E.base_extend(s).plot(xmin=a,xmax=b,color=c,legend_label=s.im_gens()[0])
+                X += ER[i].plot(xmin=a,xmax=b,color=c,legend_label=str(s.im_gens()[0]))
             self.plot = encode_plot(X)
             self.plot_link = '<img src="%s" width="200" height="150"/>' % self.plot
             self.properties += [(None, self.plot_link)]
