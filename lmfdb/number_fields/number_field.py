@@ -105,6 +105,7 @@ def parse_field_string(F):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
     if F == 'Qi':
         return '2.0.4.1'
     # remove non-ascii characters from F
+    F = F.replace(u'\u2212', '-')
     F = re.sub(r'[^\x00-\x7F]+','', F)
     fail_string = str(F + ' is not a valid field label or name or polynomial, or is not ')
     if len(F) == 0:
