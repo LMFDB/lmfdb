@@ -206,6 +206,9 @@ def elliptic_curve_search(**args):
     if 'conductor_label' in info:
         query['conductor_label'] = info['conductor_label']
 
+    if 'torsion' in info:
+        query['torsion_order'] = info['torsion']
+
     if 'include_isogenous' in info and info['include_isogenous'] == 'off':
         query['number'] = 1
 
