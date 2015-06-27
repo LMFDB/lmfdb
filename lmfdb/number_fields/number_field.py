@@ -104,6 +104,10 @@ def parse_field_string(F):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
         return '1.1.1.1'
     if F == 'Qi':
         return '2.0.4.1'
+    # Change unicode dash with minus sign
+    F = F.replace(u'\u2212', '-')
+    # remove non-ascii characters from F
+    F = F.decode('utf8').encode('ascii', 'ignore')
     fail_string = str(F + ' is not a valid field label or name or polynomial, or is not ')
     if len(F) == 0:
         return "Entry for the field was left blank.  You need to enter a field label, field name, or a polynomial."
