@@ -497,7 +497,7 @@ class WebNumberField:
         while p in pram:
             p = P.next(p)
         fres = K.factor(p)[0][0].residue_class_degree()
-        a = p ** fres
+        a = (p ** fres) % f
         S = set(G[a].kernel())
         timeout = 10000
         while len(S) != self.degree():
@@ -505,7 +505,7 @@ class WebNumberField:
             p = P.next(p)
             if p not in pram:
                 fres = K.factor(p)[0][0].residue_class_degree()
-                a = p ** fres
+                a = (p ** fres) % f
                 S = S.intersection(G[a].kernel())
             if timeout == 0:
                 raise Exception('timeout in dirichlet group')
