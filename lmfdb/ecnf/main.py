@@ -75,14 +75,53 @@ def index():
     if len(request.args)>0:
         return elliptic_curve_search(data=request.args)
     bread = get_bread()
+
+# the dict data will hold additional information to be displayed on
+# the main browse and search page
+
     data = {}
-    data['fields'] = [['the rational field',(('1.1.1.1',[url_for('ec.rational_elliptic_curves'),'$\Q$']),)]]
+
+# data['fields'] holds data for a sample of number fields of different
+# signatures for a general browse:
+
+    data['fields'] = []
+    # Rationals
+    data['fields'].append(['the rational field',(('1.1.1.1',[url_for('ec.rational_elliptic_curves'),'$\Q$']),)])
+    # Real quadratics (only a sample)
     rqfs = ['2.2.%s.1' %str(d) for d in [5,89,229,497]]
     data['fields'].append(['real quadratic fields',((nf,[url_for('.show_ecnf1',nf=nf),field_pretty(nf)]) for nf in rqfs)])
+    # Imaginary quadratics
     iqfs = ['2.0.%s.1' %str(d) for d in [1,2,3,7,11]]
     data['fields'].append(['imaginary quadratic fields',((nf,[url_for('.show_ecnf1',nf=nf),field_pretty(nf)]) for nf in iqfs)])
+    # Cubics
     cubics = ['3.1.23.1']
     data['fields'].append(['cubic fields',((nf,[url_for('.show_ecnf1',nf=nf),field_pretty(nf)]) for nf in cubics)])
+
+# data['highlights'] holds data (URL and descriptive text) for a
+# sample of elliptic curves with interesting features:
+
+    data['highlights'] = []
+    data['highlights'].append(
+        ['A curve with $C_3\\times C_3$ torsion',
+         url_for('.show_ecnf', nf='2.0.3.1', class_label='a', conductor_label='[2268,36,18]', number=int(1))]
+    )
+    data['highlights'].append(
+        ['A curve with $C_4\\times C_4$ torsion',
+         url_for('.show_ecnf', nf='2.0.4.1', class_label='b', conductor_label='[5525,870,5]', number=int(9))]
+    )
+    data['highlights'].append(
+        ['A curve with CM by $\\sqrt{-267}$',
+         url_for('.show_ecnf', nf='2.2.89.1', class_label='a', conductor_label='81.1', number=int(1))]
+    )
+    data['highlights'].append(
+        ['An isogeny class with isogenies of degree $3$ and $89$ (and $267$)',
+         url_for('.show_ecnf_isoclass', nf='2.2.89.1', class_label='a', conductor_label='81.1')]
+    )
+    data['highlights'].append(
+        ['A curve with everywhere good reduction, but no global minimal model',
+         url_for('.show_ecnf', nf='2.2.229.1', class_label='a', conductor_label='1.1', number=int(1))]
+    )
+
     return render_template("ecnf-index.html",
         title="Elliptic Curves over Number Fields",
         data=data,
