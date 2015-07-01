@@ -11,10 +11,11 @@ fields other than $\Q$, mostly quadratic fields.
 KNOWL('nf',title = "number fields")}}</h2>
 
 <p>
+All curves in the database
 <ul>
 {% for types in data.fields %}
 <li>
-Over {{types[0]}}:
+over {{types[0]}}:
 {% for label,f in types[1] %}{% if loop.index0 %},{% endif %}
  <a href="{{f[0]}}">{{f[1]}}</a>
 {% endfor %}
@@ -22,6 +23,16 @@ Over {{types[0]}}:
 {% endfor %}
 </ul>
 </p>
+
+<p>
+Curves with interesting properties:
+<ul>
+{% for item in data.highlights %}
+<li><a href="{{item[1]}}">{{item[0]}}</li>
+{% endfor %}
+</ul>
+</p>
+
 
 <h2> Search </h2>
 Please enter a value or leave blank:
