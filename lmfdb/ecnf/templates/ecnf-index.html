@@ -4,18 +4,23 @@
 
 <div>
 The database currently contains elliptic curves over a few number
-fields only.
+fields other than $\Q$, mostly quadratic fields.
 </div>
 
 <h2> Browse {{ KNOWL('ec',title='elliptic curves')}} over {{
-KNOWL('nf',title = "number fields")}} (including $\Q$)</h2>
+KNOWL('nf',title = "number fields")}}</h2>
 
 <p>
-By base {{ KNOWL('nf',title = "number field")}}:
-<a href="{{ url_for('ec.rational_elliptic_curves') }}">\(\Q\)</a>
-{% for nf in data.fields %}
-, <a href="{{url_for('.show_ecnf1',nf=nf[0])}}">{{nf[1]}}</a>
+<ul>
+{% for types in data.fields %}
+<li>
+Over {{types[0]}}:
+{% for label,f in types[1] %}{% if loop.index0 %},{% endif %}
+ <a href="{{f[0]}}">{{f[1]}}</a>
 {% endfor %}
+</li>
+{% endfor %}
+</ul>
 </p>
 
 <h2> Search </h2>
