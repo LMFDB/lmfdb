@@ -14,11 +14,12 @@
 <td align=left>Field</td>
 <td align=left>{{ KNOWL('ec.conductor',title = "Conductor") }} norm</td>
 <td align=left>Include {{ KNOWL('ec.isogeny',title="isogenous") }} curves</td>
+<td align=left>{{ KNOWL('ec.torsion_order',title="torsion order") }}</td>
+<td align=left>{{ KNOWL('ec.torsion_subgroup', title="torsion structure") }}</td>
 </tr>
 
 <tr>
-<td><input type='text' name='field' example="{{info.field}}" size=10
-           value="{{info.field}}" /></td>
+<td><input type='text' name='field' size=10 value="{{info.field}}" /></td>
 <td align=left><input type='text' name='conductor_norm' size=10
                       value="{{info.conductor_norm}}"></td>
 <td>         <select name='include_isogenous'>
@@ -31,6 +32,13 @@
 {% endif %}
          </select>
 </td>
+          <td>
+          <input type='text' name='torsion' size=10 value="{{info.torsion}}" />
+          </td>
+          <td>
+          <input type='text' name='torsion_structure' size=10 value="{{info.torsion_structure}}" />
+          </td>
+
 </tr>
 
 <tr>
