@@ -26,7 +26,7 @@ TODO:
 Fix complex characters. I.e. embedddings and galois conjugates in a consistent way.
 
 """
-from sage.all import ZZ, QQ, DirichletGroup, CuspForms, Gamma0, ModularSymbols, Newforms, trivial_character, is_squarefree, divisors, RealField, ComplexField, prime_range, I, join, gcd, Cusp, Infinity, ceil, CyclotomicField, exp, pi, primes_first_n, euler_phi, RR, prime_divisors, Integer, matrix,NumberField,PowerSeriesRing
+from sage.all import ZZ, QQ, DirichletGroup, CuspForms, Gamma0, ModularSymbols, Newforms, trivial_character, is_squarefree, divisors, RealField, ComplexField, prime_range, I, gcd, Cusp, Infinity, ceil, CyclotomicField, exp, pi, primes_first_n, euler_phi, RR, prime_divisors, Integer, matrix,NumberField,PowerSeriesRing
 from sage.rings.power_series_poly import PowerSeries_poly
 from sage.all import Parent, SageObject, dimension_new_cusp_forms, vector, dimension_modular_forms, dimension_cusp_forms, EisensteinForms, Matrix, floor, denominator, latex, is_prime, prime_pi, next_prime, previous_prime,primes_first_n, previous_prime, factor, loads,save,dumps,deepcopy
 import re
@@ -2351,7 +2351,7 @@ class WebNewForm_class(object):
         if len(sb) <= 1:
             s = r"\(" + s + r"\)"
         else:
-            s = r"\[\begin{align} &" + join(sb, "\cr &") + r"\end{align}\]"
+            s = r"\[\begin{align} &" + "\cr &".join(sb) + r"\end{align}\]"
             
         emf_logger.debug("print_q_exp: prec=".format(prec))
         
@@ -2669,7 +2669,7 @@ def break_line_at(s, brpt=20):
         l = len_as_printed(stmp) + len_as_printed(sl[j])
         #emf_logger.debug("l={0}".format(l))
         if l < brpt:
-            stmp = join([stmp, sl[j]])
+            stmp = "".join([stmp, sl[j]])
         else:
             res.append(stmp)
             stmp = sl[j]
