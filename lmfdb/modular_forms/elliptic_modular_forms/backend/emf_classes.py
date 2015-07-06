@@ -3,7 +3,7 @@ r"""
 Contains basic classes for displaying holomorphic modular forms.
 
 """
-from sage.all import vector, is_odd, DirichletGroup, is_even, Gamma1, dimension_new_cusp_forms, kronecker_character_upside_down, loads, Integer, latex, join
+from sage.all import vector, is_odd, DirichletGroup, is_even, Gamma1, dimension_new_cusp_forms, kronecker_character_upside_down, loads, Integer, latex
 from lmfdb.modular_forms.backend.mf_classes import MFDisplay, MFDataTable
 emf_dbname = 'modularforms2'
 from lmfdb.utils import *

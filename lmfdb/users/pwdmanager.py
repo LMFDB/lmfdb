@@ -207,7 +207,7 @@ def get_user_list():
     returns a list of tuples: [('user_db_id', 'full_name'),…]
     full_name could be None
     """
-    users_cursor = get_users().find(fields=["full_name"])
+    users_cursor = get_users().find({}, ["full_name"])
     ret = []
     for e in users_cursor:
         name = e['full_name'] or e['_id']

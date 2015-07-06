@@ -2,7 +2,7 @@ flask
 flask-cache
 flask-login
 flask-markdown
-pymongo==2.8
+pymongo
 pyyaml
 unittest2
 coverage
