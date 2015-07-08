@@ -113,6 +113,11 @@ class HilbertNumberField(WebNumberField):
         self.primes = self.Fdata['primes']
         self.var = findvar(self.ideals)
         WebNumberField.__init__(self,label,gen_name=self.var)
+        self.ideal_dict = {}
+        self.label_dict = {}
+        for I in self.ideals_iter():
+            self.ideal_dict[I['label']]=I['ideal']
+            self.label_dict[I['ideal']]=I['label']
 
     def _iter_ideals(self, primes=False, number=None):
         """
@@ -145,27 +150,29 @@ class HilbertNumberField(WebNumberField):
         return self._iter_ideals(False,number)
 
     def ideal_label(self, idl):
-        for I in self.ideals_iter():
-            if I['ideal']==idl:
-                return I['label']
-        return None
+        try:
+            return self.label_dict[idl]
+        except KeyError:
+            return None
 
     def ideal(self, lab):
-        for I in self.ideals_iter():
-            if I['label']==lab:
-                return I['ideal']
-        return None
+        try:
+            return self.ideal_dict[lab]
+        except KeyError:
+            return None
 
     def prime_label(self, idl):
-        for I in self.primes_iter():
-            if I['ideal']==idl:
-                return I['label']
-        return None
+        return self.ideal_label(idl)
+        # for I in self.primes_iter():
+        #     if I['ideal']==idl:
+        #         return I['label']
+        # return None
 
     def prime(self, lab):
-        for I in self.primes_iter():
-            if I['label']==lab:
-                return I['ideal']
-        return None
+        return self.ideal(lab)
+        # for I in self.primes_iter():
+        #     if I['label']==lab:
+        #         return I['ideal']
+        # return None
 
 

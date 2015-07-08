@@ -464,8 +464,7 @@ class WebNumberField:
 
         return []
 
-    def dirichlet_group(self):
-        from dirichlet_conrey import DirichletGroup_conrey
+    def dirichlet_group(self, prime_bound=10000):
         f = self.conductor()
         if f == 1:  # To make the trivial case work correctly
             return [1]
@@ -488,29 +487,21 @@ class WebNumberField:
             if (f1 % 4) == 3:
                 return [1, 2*f1-1]
             return [1, 6*f1-1]
+
+        from dirichlet_conrey import DirichletGroup_conrey
         G = DirichletGroup_conrey(f)
-        pram = f.prime_factors()
-        P = Primes()
-        p = P.first()
         K = self.K()
+        S = Set(G[1].kernel()) # trivial character, kernel is whole group
 
-        while p in pram:
-            p = P.next(p)
-        fres = K.factor(p)[0][0].residue_class_degree()
-        a = p ** fres
-        S = set(G[a].kernel())
-        timeout = 10000
-        while len(S) != self.degree():
-            timeout -= 1
-            p = P.next(p)
-            if p not in pram:
-                fres = K.factor(p)[0][0].residue_class_degree()
-                a = p ** fres
-                S = S.intersection(G[a].kernel())
-            if timeout == 0:
-                raise Exception('timeout in dirichlet group')
+        for P in K.primes_of_bounded_norm_iter(ZZ(prime_bound)):
+            a = P.norm() % f
+            if gcd(a,f)>1:
+                continue
+            S = S.intersection(Set(G[a].kernel()))
+            if len(S) == self.degree():
+                return list(S)
 
-        return [b for b in S]
+        raise Exception('Failure in dirichlet group for K=%s using prime bound %s' % (K,prime_bound))
 
     def full_dirichlet_group(self):
         from dirichlet_conrey import DirichletGroup_conrey
