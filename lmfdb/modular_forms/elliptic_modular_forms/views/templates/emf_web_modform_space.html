@@ -58,7 +58,8 @@ table.td.center {text-align : center;}
     </tr>
   </thead>
   <tbody>
-    {% for label in space.hecke_orbits %}
+    {% set orbits = space.hecke_orbits | sort %}
+    {% for label in orbits %}
        {% set f = space.hecke_orbits[label] %}
        <tr>
       <td><a href="{{f.url() }}">{{ f.hecke_orbit_label }}</a></td>
