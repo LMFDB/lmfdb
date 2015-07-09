@@ -116,7 +116,8 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
         rdeg = WNF.coefficient_field.relative_degree()
     if cdeg==1:
         info['satake'] = WNF.satake
-    info['qexp'] = ajax_more(WNF.q_expansion_latex,{'prec':10},{'prec':20},{'prec':100},{'prec':200})
+    info['qexp'] = ajax_more(WNF.q_expansion_latex,{'prec':10,'name':'a'},{'prec':20,'name':'a'},{'prec':100,'name':'a'},{'prec':200,'name':'a'})
+    
     # info['qexp'] = WNF.q_expansion_latex(prec=prec)
     #c_pol_st = str(WNF.absolute_polynomial)
     #b_pol_st = str(WNF.polynomial(type='base_ring',format='str'))
@@ -125,12 +126,20 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     #print "b=",b_pol_ltx
     if cdeg > 1: ## Field is QQ
         if bdeg > 1 and rdeg>1:
-            c_pol_ltx = str(WNF.coefficient_field.relative_polynomial())
-            b_pol_ltx = str(WNF.base_ring.absolute_polynomial())            
+            p1 = WNF.coefficient_field.relative_polynomial()
+            c_pol_ltx = latex(p1)
+            lgc = p1.variables()[0]
+            c_pol_ltx = c_pol_ltx.replace(lgc,'a')
+            z = p1.base_ring().gens()[0]
+            p2 = z.minpoly()
+            b_pol_ltx = latex(p2)
+            b_pol_ltx = b_pol_ltx.replace(latex(p2.variables()[0]),latex(z)) 
             info['polynomial_st'] = 'where \({0}=0\) and \({1}=0\).'.format(c_pol_ltx,b_pol_ltx)
         else:
-            c_pol_ltx = str(WNF.coefficient_field.relative_polynomial())
-            info['polynomial_st'] = 'where \({0}=0\).'.format(c_pol_ltx)         
+            c_pol_ltx = latex(WNF.coefficient_field.relative_polynomial())
+            lgc = str(latex(WNF.coefficient_field.relative_polynomial().variables()[0]))
+            c_pol_ltx = c_pol_ltx.replace(lgc,'a')
+            info['polynomial_st'] = 'where \({0}=0\)'.format(c_pol_ltx)         
     else:
         info['polynomial_st'] = ''
     info['degree'] = int(cdeg)

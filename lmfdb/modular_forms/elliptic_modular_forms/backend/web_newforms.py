@@ -110,7 +110,7 @@ class WebqExp(WebPoly):
         wl = web_latex_split_on_re(qe)
         
         if name is not None:
-            return wl.replace(str(self.value().base_ring().gen()), name)
+            return wl.replace(latex(self.value().base_ring().gen()), name)
         else:
             return wl
 
