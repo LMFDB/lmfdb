@@ -139,7 +139,7 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
             c_pol_ltx = latex(WNF.coefficient_field.relative_polynomial())
             lgc = str(latex(WNF.coefficient_field.relative_polynomial().variables()[0]))
             c_pol_ltx = c_pol_ltx.replace(lgc,'a')
-            info['polynomial_st'] = 'where \({0}=0\)'.format(c_pol_ltx)         
+            info['polynomial_st'] = 'where \({0}=0\)'.format(c_pol_ltx) 
     else:
         info['polynomial_st'] = ''
     info['degree'] = int(cdeg)

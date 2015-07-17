@@ -387,7 +387,7 @@ class WebNewForm(WebObject, CachedRepresentation):
                     k = self.weight
                     apr2 = self.coefficient_n_recursive(pr//(p*p))
                     c = cp*apr1 - eps*(p**(k-1)) * apr2
-                    emf_logger.debug("c({0})={1}".format(pr,c))
+                    #emf_logger.debug("c({0})={1}".format(pr,c))
                             #ev[pr]=c
                 self._coefficients[pr]=c
             prod *= self._coefficients[pr]
