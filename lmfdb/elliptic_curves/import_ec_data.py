@@ -32,7 +32,7 @@ The documents in the collection 'curves' in the database 'elliptic_curves' have 
    - 'gens': (list of strings) list of generators of infinite order, e.g. ['(0:0:1)']
    - 'regulator': (float) regulator, e.g. 1.0
    - 'tamagawa_product': (int) product of Tamagawa numbers, e.g. 4
-   - 'special_value': (float) special value of derivative of L-function, e.g.1.490882041449698
+   - 'special_value': (float) special value of r'th derivative of L-function (divided by r!), e.g.1.490882041449698
    - 'real_period': (float) real period, e.g. 0.3727205103624245
    - 'degree': (int) degree of modular parametrization, e.g. 1984
    - 'non-surjective_primes': (list of ints) primes p for which the

@@ -258,9 +258,10 @@ class WebEC(object):
 
         bsd = self.bsd = {}
 
-        if mw['rank'] >= 2:
-            bsd['lder_name'] = "L^{(%s)}(E,1)" % mw['rank']
-        elif mw['rank']:
+        r = self.rank
+        if r >= 2:
+            bsd['lder_name'] = "L^{(%s)}(E,1)/%s!" % (r,r)
+        elif r:
             bsd['lder_name'] = "L'(E,1)"
         else:
             bsd['lder_name'] = "L(E,1)"
