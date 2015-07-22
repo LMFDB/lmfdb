@@ -1,0 +1,23 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<h2>  Form  </h2>
+
+<p>
+<table>
+<tr><td> Weight:<td> ${{ info.weight }}/2$ </tr>
+<tr><td> Level:<td> ${{ info.level }}$ </tr>
+<tr><td> Character:<td> ${{ info.character}}$ </tr>
+<tr><td> Label:<td> {{ info.label}} </tr>
+<tr><td> Dimension:<td> ${{ info.dimension }}$ </tr>
+<tr><td> Dimension theta:<td> ${{ info.dimtheta}}$ </tr>
+<tr><td> Newpart:<td> {{info.new}} </tr>
+<tr><td> <td> {{info.new[0]}} </tr>
+<tr><td> <td> {{info.new[1]}} </tr>
+<tr><td> Theta:<td> {{info.theta}} </tr>
+</table>
+</p>
+
+
+
+{% endblock %}

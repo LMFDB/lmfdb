@@ -1,0 +1,41 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<h2> Browse {{ KNOWL('mf.half_integral_weight', title='Half Itegral Weight Cusp Forms') }} </h2>
+
+<h2> Search </h2>
+
+<form>
+<table>
+<tr>
+<td>Level</td>  
+<td><input type='text' name='level' placeholder='20' size=10>
+<td><span class="formexample"> e.g. 12, 20, 28</td>
+</tr>
+<tr>
+<td>Weight</td>
+<td><input type='text' name='weight' placeholder='3/2' size=10>
+<td><span class="formexample"> e.g. 1/2, 3/2</td>
+</tr>
+<tr>
+<td>Character</td>
+<td><input type='text' name='character' placeholder='1.1' size=10>
+<td><span class="formexample"> character label, e.g. 1.1</td>
+</tr>
+<tr>
+<td colspan=3><button type='submit' value='Search'>Search</button>
+</td>
+</tr>
+</table>
+</form>
+
+<h2> Find a specific form by label </h2>
+
+<form>
+<input type='text' name='label' placeholder='92.3_2.1.1'>
+<button type='submit'>Label</button>
+<br><span class="formexample">e.g. 92.3_2.1.1 </span>
+</form>
+
+
+{% endblock %}
