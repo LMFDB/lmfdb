@@ -6,7 +6,7 @@ Include all experimental routes here for clarity so that we see all routes which
 from lmfdb.modular_forms.elliptic_modular_forms import  emf_logger, emf
 from flask import request,render_template
 import json
-from lmfdb.modular_forms.elliptic_modular_forms.backend.experimental.emf_draw_dots import paintSvgHolomorphic
+from lmfdb.modular_forms.elliptic_modular_forms.backend.experimental.emf_draw_dots import paintSvgHolomorphic,paintSvgHolomorphic2
 
 met = ["GET","POST"]
 @emf.route("/DataTables/",methods=met)
@@ -18,6 +18,18 @@ def test(**kwds):
 def show_dots(min_level, max_level, min_weight, max_weight):
     info = {}
     info['contents'] = [paintSvgHolomorphic(min_level, max_level, min_weight, max_weight,char=1)]
+    info['min_level'] = min_level
+    info['max_level'] = max_level
+    info['min_weight'] = min_weight
+    info['max_weight'] = max_weight
+    return render_template("experimental/emf_browse_graph.html", title='Browsing dimensions of modular forms in the database', **info)
+
+
+@emf.route("/DotsPlot/<min_level>/<max_level>/<min_weight>/<max_weight>/<complete>/",methods=met)
+def show_dots2(min_level, max_level, min_weight, max_weight,complete):
+    info = {}
+    char = 1
+    info['contents'] = [paintSvgHolomorphic2(min_level, max_level, min_weight, max_weight,char,complete=complete)]
     info['min_level'] = min_level
     info['max_level'] = max_level
     info['min_weight'] = min_weight
