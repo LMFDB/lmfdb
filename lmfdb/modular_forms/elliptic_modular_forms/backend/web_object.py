@@ -427,7 +427,7 @@ class WebObject(object):
             if not update:
                 return True
             else:
-                fid = coll.find_one(file_key, fields=['_id'])['_id']
+                fid = coll.find_one(file_key, projection=['_id'])['_id']
                 fs.delete(fid)
                 emf_logger.debug("Deleted file with fid={0}".format(fid))
         # insert
