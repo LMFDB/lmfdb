@@ -448,7 +448,7 @@ class WebObject(object):
         #key.update(file_key)
         #print meta_key
         dbd = self.db_dict()
-        emf_logger.debug("updat with dbd={0}".format(dbd))
+        emf_logger.debug("update with dbd={0}".format(dbd.keys()))
         #meta['fid'] = fid
         if coll.find(key).count()>0:
             if not update:
