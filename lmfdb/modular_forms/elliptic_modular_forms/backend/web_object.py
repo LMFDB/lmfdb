@@ -191,7 +191,8 @@ class WebObject(object):
     _key = None
     _file_key = None
     _properties = None
-
+    _has_updated_from_db = False
+    
     r"""
           _key: a list - The parameters that are needed to initialize a WebObject of this type.
           _file_key:  a string - the field in the database that is the unique identifier for this object
@@ -273,8 +274,13 @@ class WebObject(object):
         if update_from_db:
             #emf_logger.debug('Update requested for {0}'.format(self.__dict__))
             emf_logger.debug('Update requested')
-            self.update_from_db()
-
+            try:
+                self.update_from_db()
+                self._has_updated_from_db = True
+            except:
+                # update failed, we may need to compute instead.
+                # I return here since init_dynamic_properties() may need something from the database
+                return 
         #emf_logger.debug('init_dynamic_properties will be called for {0}'.format(self.__dict__))
         if init_dynamic_properties:
             emf_logger.debug('init_dynamic_properties will be called')
@@ -421,7 +427,7 @@ class WebObject(object):
             if not update:
                 return True
             else:
-                fid = coll.find_one(file_key, fields=['_id'])['_id']
+                fid = coll.find_one(file_key, projection=['_id'])['_id']
                 fs.delete(fid)
                 emf_logger.debug("Deleted file with fid={0}".format(fid))
         # insert
@@ -442,7 +448,7 @@ class WebObject(object):
         #key.update(file_key)
         #print meta_key
         dbd = self.db_dict()
-        emf_logger.debug("updat with dbd={0}".format(dbd))
+        emf_logger.debug("update with dbd={0}".format(dbd.keys()))
         #meta['fid'] = fid
         if coll.find(key).count()>0:
             if not update:
@@ -528,9 +534,12 @@ class WebObject(object):
             if fs.exists(file_key):
                 coll = self._file_collection
                 fid = coll.find_one(file_key)['_id']
-                d = loads(fs.get(fid).read())
                 emf_logger.debug("col={0}".format(coll))
                 emf_logger.debug("rec={0}".format(coll.find_one(file_key)))
+                try: 
+                    d = loads(fs.get(fid).read())
+                except ValueError as e:
+                    raise ValueError("Wrong format in database! : {0}".format(e))
                 emf_logger.debug("type(d)={0}".format(type(d)))                                
                 emf_logger.debug("d.keys()={0}".format(d.keys()))                
                 for p in self._fs_properties:

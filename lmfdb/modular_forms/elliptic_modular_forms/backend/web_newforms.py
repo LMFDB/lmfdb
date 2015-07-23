@@ -376,7 +376,7 @@ class WebNewForm(WebObject, CachedRepresentation):
                     ev.init_dynamic_properties()
                     cp = ev[p]
             if cp is None:
-                raise ValueError,"p={0} is outside the range of computed primes (primes up to {1})!".format(p,max(ev.primes()))
+                raise ValueError,"p={0} is outside the range of computed primes (primes up to {1})! for label:{2}".format(p,max(ev.primes(),self.label))
             if self._coefficients.get(pr) is None:
                 if r == 1:
                     c = cp
