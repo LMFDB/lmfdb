@@ -530,7 +530,10 @@ class WebObject(object):
                 fid = coll.find_one(file_key)['_id']
                 emf_logger.debug("col={0}".format(coll))
                 emf_logger.debug("rec={0}".format(coll.find_one(file_key)))
-                d = loads(fs.get(fid).read())
+                try: 
+                    d = loads(fs.get(fid).read())
+                except ValueError as e:
+                    raise ValueError("Wrong format in database! : {0}".format(e.message))
                 emf_logger.debug("type(d)={0}".format(type(d)))                                
                 emf_logger.debug("d.keys()={0}".format(d.keys()))                
                 for p in self._fs_properties:
