@@ -191,7 +191,8 @@ class WebObject(object):
     _key = None
     _file_key = None
     _properties = None
-
+    _has_updated_from_db = False
+    
     r"""
           _key: a list - The parameters that are needed to initialize a WebObject of this type.
           _file_key:  a string - the field in the database that is the unique identifier for this object
@@ -273,8 +274,12 @@ class WebObject(object):
         if update_from_db:
             #emf_logger.debug('Update requested for {0}'.format(self.__dict__))
             emf_logger.debug('Update requested')
-            self.update_from_db()
-
+            try:
+                self.update_from_db()
+                self._has_updated_from_db = True
+            except:
+                # update failed, we may need to compute instead.
+                return
         #emf_logger.debug('init_dynamic_properties will be called for {0}'.format(self.__dict__))
         if init_dynamic_properties:
             emf_logger.debug('init_dynamic_properties will be called')
@@ -533,7 +538,7 @@ class WebObject(object):
                 try: 
                     d = loads(fs.get(fid).read())
                 except ValueError as e:
-                    raise ValueError("Wrong format in database! : {0}".format(e.message))
+                    raise ValueError("Wrong format in database! : {0}".format(e))
                 emf_logger.debug("type(d)={0}".format(type(d)))                                
                 emf_logger.debug("d.keys()={0}".format(d.keys()))                
                 for p in self._fs_properties:
