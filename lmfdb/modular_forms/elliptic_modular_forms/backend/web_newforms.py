@@ -283,6 +283,7 @@ class WebNewForm(WebObject, CachedRepresentation):
     def q_expansion_latex(self, prec=None, name=None):
         return self._properties['q_expansion'].latex(prec, name)
 
+    
     def coefficient(self, n):
         r"""
           Return coefficient nr. n

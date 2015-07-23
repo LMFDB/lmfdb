@@ -129,7 +129,7 @@ def print_list_of_coefficients(info):
 
 
 def print_coefficients_for_one_form(F, number, fmt="q_expansion",bitprec=53):
-    emf_logger.debug("in print {2} coefs for 1 form: format={0} bitprec={1}".format(fmt,bitprec,number))
+    emf_logger.debug("in print {2} coefs for 1 form: format={0} bitprec={1}, F={3}".format(fmt,bitprec,number,F))
     # Start with some meta-data 
     s = "## level={N}, weight={k}, character={ch},label={label} \n".format(N=F.level,k=F.weight,ch=F.character.number,label=F.label)
     #max_cn = F.max_cn()
@@ -139,30 +139,35 @@ def print_coefficients_for_one_form(F, number, fmt="q_expansion",bitprec=53):
     #    number = max_cn
     ## TODO: add check that we have sufficiently many coefficients!
     if fmt == "q_expansion":
-        s += F.q_expansion(number)
+        s += str(F.q_expansion.truncate_powerseries(number))
     if fmt == "coefficients":
         qe = F.coefficients(range(number))
         emf_logger.debug("F={0}".format(F))
         #deg=0 [emf_download_utils.py:147
-        pol = F.coefficient_field.polynomial()
+        deg = F.coefficient_field.degree()
         #emf_logger.debug("deg={0}".format(deg))        
-        if pol.degree > 1:
+        if deg > 1:
+            pol = F.coefficient_field.polynomial()
             s += "## coefficient field : "+str(pol)+"=0"
             s += "\n"
+        else:
+            s += "## coefficient field : Rational Field"
+            s += "\n"            
         for n in range(len(qe)):
             c=qe[n]
             s += "{n} \t {c} \n".format(n=n,c=c)
         emf_logger.debug("qe={0}".format(qe))
          
     if fmt == "embeddings":
-        embeddings = F.q_expansion_embeddings(number,bitprec=bitprec,format='numeric')
-        if deg > 1:
+        #embeddings = F.q_expansion_embeddings(number,bitprec=bitprec,format='numeric')
+        if F.coefficient_field.degree() > 1:
             for j in range(deg):
                 s+="# Embedding nr. {j} \n".format(j=j)
+
                 for n in range(number):
-                    s += str(n) + "\t" + str(embeddings[n][j]) + "\n"
+                    s += str(n) + "\t" + str(F.coefficient_embedding(n,j)) + "\n"
         else:
             for n in range(number):
-                s += str(n) + "\t" + str(embeddings[n]) + "\n"
+                s += str(n) + "\t" + str(F.coefficient_embedding(n,0)) + "\n"
     emf_logger.debug("s={0}".format(s))
     return s
