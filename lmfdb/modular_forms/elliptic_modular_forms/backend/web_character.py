@@ -84,11 +84,11 @@ class WebChar(WebObject, CachedRepresentation):
             update_from_db=update_from_db
             )
         if self._has_updated_from_db is False:
+            self.init_dynamic_properties() # this was not done if we exited early
             compute = True
         if compute:
             self.compute(save=True)            
-        if self._has_updated_from_db is False:
-            self.init_dynamic_properties()
+            
         #emf_logger.debug('In WebChar, self.__dict__ = {0}'.format(self.__dict__))
         emf_logger.debug('In WebChar, self.number = {0}'.format(self.number))
 
