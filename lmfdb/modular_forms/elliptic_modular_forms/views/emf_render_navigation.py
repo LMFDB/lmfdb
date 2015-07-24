@@ -162,8 +162,8 @@ def render_elliptic_modular_form_navigation_wp(**args):
         q = db.find_one({'group':'gamma1'})
         if q:
             table = q.get('data',{})
-    table = json.loads(table)
-#    print "table=",table
+    if table <> {}:
+        table = json.loads(table)
     info['table'] = {}
     level_range = range(limits_level[0],limits_level[1]+1)
     weight_range = range(limits_weight[0],limits_weight[1]+1)
@@ -172,13 +172,16 @@ def render_elliptic_modular_form_navigation_wp(**args):
         for n in level_range:
             info['table'][n]={}
             for k in weight_range:
-                info['table'][n][k] = table.get(str(n),{}).get(str(k),"n/a")
+                if table.has_key(n):
+                    if table[n].has_key(k):
+                        info['table'][n][k] = table[n][k] #.get(str(n),{}).get(str(k),"n/a")
     else:
         for n in level_range:
             info['table'][n]={}
             for k in weight_range:
                 info['table'][n][k] = table.get(str(n),{}).get(str(k),"{}").get(str(character),"n/a")
-
+    print "table=\n",table
+    info['table']=table
     info['col_heads'] = level_range
     info['row_heads'] = weight_range
     return render_template("emf_browse_spaces.html", info=info, title=title, bread=bread)

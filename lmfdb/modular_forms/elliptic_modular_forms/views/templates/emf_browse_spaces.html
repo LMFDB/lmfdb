@@ -177,15 +177,17 @@ table.ntdata thead th.spaceleft {
 	              {% set url = url_for('emf.render_elliptic_modular_forms',level=N,weight=k) %}
                       {% set dim = table[N][k][0] %}
                       {% set indb = table[N][k][1] %}
-              {% else %}
-                  {% set dim ="n/a" %}
-              {% endif %}
-              {% if indb == 1  and dim >0 %}
-                <a href="{{url}}">{{dim}}</a>
-              {% else %}
-		{{dim}}
-	      {% endif  %}
-               {% endif %}
+                  {% else %}
+                      {% set dim ="n/a" %}
+                  {% endif %}
+                  {% if indb == 1  and dim >0 %}
+                     <a href="{{url}}">{{dim}}</a>
+                  {% else %}
+                     {{dim}}
+              {% endif  %}
+           {% else %}
+               <small>n/a</small>
+           {% endif %}
             </td>
             {% endfor %}
           </tr>
@@ -193,7 +195,7 @@ table.ntdata thead th.spaceleft {
         </tbody>
       </table>
     </td>
-
+    <small>"n/a" means that there is no information about this space in our database.</small>
 {% include 'select_ranges.html' %}
 
   <h1>Find a specific cusp form from the database</h1>
