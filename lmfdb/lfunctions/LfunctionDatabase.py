@@ -76,8 +76,9 @@ def getHmfData(label):
     return (f, F_hmf)
 
 def getMaassDb():
-    host = base.getDBConnection().host
-    port = base.getDBConnection().port
+    # NB although base.getDBConnection().PORT works it gives the
+    # default port number of 27017 and not the actual one!
+    host, port = base.getDBConnection().address
     return MaassDB(host=host, port=port)
     
 def getHgmData(label):

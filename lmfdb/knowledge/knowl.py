@@ -90,7 +90,7 @@ def set_locked(knowl, who):
 
 
 def get_knowl(ID, fields={"history": 0, "_keywords": 0}):
-    return get_knowls().find_one({'_id': ID}, projection=fields)
+    return get_knowls().find_one({'_id': ID}, fields)
 
 
 def knowl_title(kid):
@@ -98,7 +98,7 @@ def knowl_title(kid):
     just the title, used in the knowls in the templates for the pages.
     returns None, if knowl does not exist.
     """
-    k = get_knowl(kid, fields=['title'])
+    k = get_knowl(kid, ['title'])
     return k['title'] if k else None
 
 
@@ -106,7 +106,7 @@ def knowl_exists(kid):
     """
     checks, if the given knowl with ID=@kid exists
     """
-    return get_knowl(kid, fields={}) is not None
+    return get_knowl(kid) is not None
 
 
 def extract_cat(kid):
@@ -127,7 +127,7 @@ def refresh_knowl_categories():
     knowl should be a simple set union with the existing list of categories
     """
     # assumes that all actual knowls have a title field
-    cats = set((extract_cat(_['_id']) for _ in get_knowls().find(fields=[])))
+    cats = set((extract_cat(_['_id']) for _ in get_knowls().find({},[])))
     # set the categories list in the categories document in the 'meta' collection
     get_meta().save({'_id': CAT_ID, 'categories': sorted(cats)})
     return str(cats)
@@ -150,8 +150,8 @@ def get_categories():
 def get_knowls_by_category(cat):
     """searching for IDs that start with cat and continue with a dot + at least one char"""
     # TODO later on search for the knowl field 'cat'
-    # return get_knowls().find({'_id' : { "$regex" : r"^%s\..+" % cat }}, fields=['title'])
-    return get_knowls().find({'cat': cat}, fields=['title'])
+    # return get_knowls().find({'_id' : { "$regex" : r"^%s\..+" % cat }}, ['title'])
+    return get_knowls().find({'cat': cat}, ['title'])
 
 import re
 text_keywords = re.compile(r"\b[a-zA-Z0-9-]{3,}\b")
@@ -257,7 +257,7 @@ class Knowl(object):
         a = []
         if len(a_query) > 0:
             users = getDBConnection().userdb.users
-            a = users.find({"$or": a_query}, fields=["full_name"])
+            a = users.find({"$or": a_query}, ["full_name"])
         return a
 
     @property
@@ -326,7 +326,7 @@ class Knowl(object):
         the given fields.
         """
         if not self._title or not self._content:
-            data = get_knowl(self._id, fields=fields)
+            data = get_knowl(self._id, fields)
             if data:
                 self._title = data['title']
                 self._content = data['content']

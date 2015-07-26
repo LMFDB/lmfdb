@@ -25,7 +25,7 @@ AUTHOR: Fredrik Stroemberg
 
 """
 
-from sage.all import ZZ, Newform, is_squarefree, squarefree_part, factor, is_square, divisors, DirichletGroup, QQ, xgcd, prime_factors, Gamma0, html, I, ceil, ComplexField, RealField, dimension_cusp_forms, sturm_bound, latex, join, Gamma1
+from sage.all import ZZ, Newform, is_squarefree, squarefree_part, factor, is_square, divisors, DirichletGroup, QQ, xgcd, prime_factors, Gamma0, html, I, ceil, ComplexField, RealField, dimension_cusp_forms, sturm_bound, latex, Gamma1
 import re
 
 from lmfdb.modular_forms.elliptic_modular_forms import emf_logger as logger
@@ -1083,7 +1083,7 @@ def len_as_printed(s, format='latex'):
     subs = re.findall("_{?(\d*)", s)  # a list of all  subscripts
     ssubs = "".join(subs)
     ss = re.sub("\^{?(\d*)}?", "", ss)  # remove exponenents
-    # logger.debug(join([ss,ssubs,sexps]))
+    # logger.debug("".join([ss,ssubs,sexps]))
     tot_len = (ss.count(")") + ss.count("(")) * lenpar
     tot_len += ss.count("q") * lenq
     tot_len += len(re.findall("\d", s)) * lendig
