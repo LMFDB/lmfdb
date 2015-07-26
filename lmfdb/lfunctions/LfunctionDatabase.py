@@ -79,8 +79,8 @@ def getMaassDb():
     # NB although base.getDBConnection().PORT works it gives the
     # default port number of 27017 and not the actual one!
     if pymongo.version_tuple[0] < 3:
-        host = base.getDBConnection().HOST
-        port = base.getDBConnection().PORT
+        host = base.getDBConnection().host
+        port = base.getDBConnection().port
     else:
         host, port = base.getDBConnection().address
     return MaassDB(host=host, port=port)
