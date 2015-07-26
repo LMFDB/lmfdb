@@ -32,7 +32,11 @@ def connect_db():
     if _DB is None:
         # NB although base.getDBConnection().PORT works it gives the
         # default port number of 27017 and not the actual one!
-        host, port = lmfdb.base.getDBConnection().address
+        if pymongo.version_tuple[0] < 3:
+            host = base.getDBConnection().HOST
+            port = base.getDBConnection().PORT
+        else:
+            host, port = lmfdb.base.getDBConnection().address
         _DB = MaassDB(host=host, port=port, show_collection='all')
     return _DB
 

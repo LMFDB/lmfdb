@@ -38,7 +38,11 @@ def paintSvgMaass(min_level, max_level, min_R, max_R, weight = 0, char = 1,
     # Fetch Maass forms from database
     # NB although base.getDBConnection().PORT works it gives the
     # default port number of 27017 and not the actual one!
-    host, port = base.getDBConnection().address
+    if pymongo.version_tuple[0] < 3:
+        host = base.getDBConnection().HOST
+        port = base.getDBConnection().PORT
+    else:
+        host, port = base.getDBConnection().address
     db = MaassDB(host=host, port=port)
     search = {'level1': yMin, 'level2': yMax, 'char': char,
               'R1': xMin, 'R2': xMax, 'Newform' : None, 'weight' : weight}
