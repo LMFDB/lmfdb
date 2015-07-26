@@ -57,7 +57,8 @@ function show_code(system) {
 <div>
   <h2>  Base Field   {{ ec.field.knowl()|safe }} </h2>
 <p>
-Generator \({{ ec.field.generator_name() }}\), with minimal polynomial \({{ec.field.poly()}}\)
+Generator \({{ ec.field.generator_name() }}\), with minimal polynomial
+\({{ec.field.poly()}}\), class number \({{ec.field.class_number()}}\).
 </p>
 </div>
 
@@ -71,7 +72,24 @@ cellpadding="5";
 
 <div>
 <h2>{{ KNOWL('ec.weierstrass_coeffs',  title='Weierstrass Equation') }}</h2>
+<p>
 {{ ec.equn }}
+</p>
+<p>
+  {% if ec.is_minimal %}
+  This is a global minimal model.
+  {% else %}
+  This is not a global minimal model: it is minimal at all primes except
+  {{ ec.non_min_prime }}.
+  {% if ec.has_minimal_model %}
+  However, a minimal model does exist.
+  {% else %}
+  No global minimal model exists.
+  {% endif %}
+  {% endif %}
+</p>
+
+
 <h2>Invariants</h2>
 
         <table id="invariants">
@@ -96,9 +114,9 @@ cellpadding="5";
         </tr>
 
         <tr>
-          <td>{{ KNOWL('ec.discriminant',  title='Discriminant') }}</td>
+          <td>{{ KNOWL('ec.discriminant',  title='Discriminant ideal') }}</td>
         <td>
-         \(\Delta\)</td>
+         \((\Delta)\)</td>
         <td>=</td>
         <td>{{ ec.disc }}</td>
         {% if ec.fact_disc %}
@@ -106,6 +124,40 @@ cellpadding="5";
         <td>{{ ec.fact_disc }}</td>
         {% endif %}
         </tr>
+
+        <tr>
+          <td>Discriminant norm</td>
+        <td>
+         \(N(\Delta)\)</td>
+        <td>=</td>
+        <td>{{ ec.disc_norm }}</td>
+        <td>=</td>
+        <td>{{ ec.fact_disc_norm }}</td>
+        </tr>
+
+{% if not ec.is_minimal %}
+        <tr>
+          <td>{{ KNOWL('ec.discriminant',  title='Minimal Discriminant ideal') }}</td>
+        <td>
+         \(\Delta_{min}\)</td>
+        <td>=</td>
+        <td>{{ ec.mindisc }}</td>
+        {% if ec.fact_mindisc %}
+        <td>=</td>
+        <td>{{ ec.fact_mindisc }}</td>
+        {% endif %}
+        </tr>
+
+        <tr>
+          <td>Minimal discriminant norm</td>
+        <td>
+         \(N(\Delta_{min})\)</td>
+        <td>=</td>
+        <td>{{ ec.mindisc_norm }}</td>
+        <td>=</td>
+        <td>{{ ec.fact_mindisc_norm }}</td>
+        </tr>
+{% endif %}
 
         <tr>
           <td>{{ KNOWL('ec.j_invariant',  title='\(j\)-invariant') }}</td>
@@ -135,6 +187,11 @@ cellpadding="5";
 </div>
 
 <div>
+<h2> {{ KNOWL('ec.mordell-weil', title="Mordell-Weil rank and generators") }} </h2>
+Not yet determined.
+</div>
+
+<div>
 <h2> {{ KNOWL('ec.torsion_subgroup', title="Torsion subgroup") }} </h2>
 <table>
 <tr>
@@ -161,6 +218,8 @@ cellpadding="5";
 <th>{{KNOWL('ec.q.tamagawa_numbers', title='Tamagawa number')}}</th>
 <th>{{KNOWL('ec.q.kodaira_symbol', title='Kodaira symbol')}}</th>
 <th>{{KNOWL('ec.q.reduction_type', title='Reduction type')}}</th>
+<th>ord(\(\Delta_{min}\))</th>
+<th>ord\({}_-(j\))</th>
 </tr>
 {% for pr in ec.local_data %}
 <tr>
@@ -184,6 +243,12 @@ cellpadding="5";
   {% elif pr.reduction_type==-1 %}
    Non-split multiplicative
 {% endif %}
+</td>
+<td align=center>
+{{ pr.ord_mindisc }}
+</td>
+<td align=center>
+{{ pr.ord_den_j }}
 </td>
 </tr>
 {% endfor %}
