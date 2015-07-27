@@ -9,6 +9,9 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 from sage.misc.preparser import preparse
 from lmfdb.half_integral_weight_forms import hiwf_page, hiwf_logger
 
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range2, web_latex_split_on_pm, comma, clean_input
+from lmfdb.number_fields.number_field import parse_list
+
 import sage.all
 from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi
 
@@ -46,6 +49,18 @@ def half_integral_weight_form_search(**args):
         if info.get(field):
             if field == 'weight':
                 weight = int(info[field]*2)
+            
+	w = clean_input(info['jinv'])
+        j = j.replace('+', '')
+        if not QQ_RE.match(j):
+            info['err'] = 'Error parsing input for the j-invariant.  It needs to be a rational number.'
+            return search_input_error(info, bread)
+        query['jinv'] = str(QQ(j)) # to simplify e.g. 1728/1
+
+
+
+
+
                 query['weight'] = weight       
             elif field == 'character':
                 query[field] = parse_field_string(info[field])
