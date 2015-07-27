@@ -31,10 +31,10 @@ def list_to_min_eqn(L):
     lhs = ypoly_rng([0,poly_tup[1],1])
     return str(lhs).replace("*","") + " = " + str(poly_tup[0]).replace("*","")
 
-def inflate_interval(a,b):
+def inflate_interval(a,b,x=1.5):
     c = (a+b)/2
     d = (b-a)/2
-    d *= 1.4
+    d *= x
     return (c-d,c+d)
 
 def eqn_list_to_curve_plot(L):
@@ -46,7 +46,7 @@ def eqn_list_to_curve_plot(L):
     if len(g.real_roots())==0 and g(0)<0:
         return text("$X(\mathbb{R})=\emptyset$",(1,1),fontsize=50)
     X0 = [real(z[0]) for z in g.base_extend(CC).roots()]+[real(z[0]) for z in g.derivative().base_extend(CC).roots()]
-    a,b = inflate_interval(min(X0),max(X0))
+    a,b = inflate_interval(min(X0),max(X0),1.7)
     if b-a<0.5:
         #x = var('x')
         #y = var('y')
@@ -63,7 +63,6 @@ def eqn_list_to_curve_plot(L):
             v = sqrt(v)
             w = -h(u)/2
             z = v+w
-            print u
             if z<m:
                 m = z
             if z>M:
@@ -74,13 +73,13 @@ def eqn_list_to_curve_plot(L):
             if z>M:
                 M = z
         u += s
-    (m,M) = inflate_interval(m,M)
+    (m,M) = inflate_interval(m,M,1.2)
     if m==0 and M==0:
         m = -10
         M = 10
     x = var('x')
     y = var('y')
-    return implicit_plot(y**2+y*h(x)-f(x),(x,a,b),(y,m,M),aspect_ratio='automatic')
+    return implicit_plot(y**2+y*h(x)-f(x),(x,a,b),(y,m,M),aspect_ratio='automatic',plot_points=500)
 
 # need to come up with a function that deal with the quadratic fields in the dictionary
 def end_alg_name(name):
