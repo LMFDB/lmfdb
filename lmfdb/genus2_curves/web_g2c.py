@@ -46,40 +46,45 @@ def eqn_list_to_curve_plot(L):
     if len(g.real_roots())==0 and g(0)<0:
         return text("$X(\mathbb{R})=\emptyset$",(1,1),fontsize=50)
     X0 = [real(z[0]) for z in g.base_extend(CC).roots()]+[real(z[0]) for z in g.derivative().base_extend(CC).roots()]
-    a,b = inflate_interval(min(X0),max(X0),1.7)
-    if b-a<0.5:
-        #x = var('x')
-        #y = var('y')
-        #return implicit_plot(y**2+y*h(x)-f(x),(x,-5,5),(y,-5,5),aspect_ratio='automatic')
-        a = -6
-        b = 6
+    a,b = inflate_interval(min(X0),max(X0),1.5)
+    groots = [a]+g.real_roots()+[b]
+    if b-a<1e-7:
+        a=-3
+        b=3
+        groots=[a,b]
+    ngints = len(groots)-1
+    plotzones = []
     npts = 100
-    s = (b-a)/npts
-    u = a
-    m = M = 0
-    for i in range(npts+1):
-        v = g(u)
-        if v>0:
-            v = sqrt(v)
-            w = -h(u)/2
-            z = v+w
-            if z<m:
-                m = z
-            if z>M:
-                M = z
-            z = w-v
-            if z<m:
-                m = z
-            if z>M:
-                M = z
-        u += s
-    (m,M) = inflate_interval(m,M,1.2)
-    if m==0 and M==0:
-        m = -10
-        M = 10
+    for j in range(ngints):
+        c = groots[j]
+        d = groots[j+1]
+        if g((c+d)/2)<0:
+            continue
+        (c,d) = inflate_interval(c,d,1.1)
+        s = (d-c)/npts
+        u = c
+        m = M = 0
+        for i in range(npts+1):
+            v = g(u)
+            if v>0:
+                v = sqrt(v)
+                w = -h(u)/2
+                z = v+w
+                if z<m:
+                    m = z
+                if z>M:
+                    M = z
+                z = w-v
+                if z<m:
+                    m = z
+                if z>M:
+                    M = z
+            u += s
+        (m,M) = inflate_interval(m,M,1.2)
+        plotzones.append((c,d,m,M))
     x = var('x')
     y = var('y')
-    return implicit_plot(y**2+y*h(x)-f(x),(x,a,b),(y,m,M),aspect_ratio='automatic',plot_points=500)
+    return sum(implicit_plot(y**2+y*h(x)-f(x),(x,R[0],R[1]),(y,R[2],R[3]),aspect_ratio='automatic',plot_points=500) for R in plotzones)
 
 # need to come up with a function that deal with the quadratic fields in the dictionary
 def end_alg_name(name):
