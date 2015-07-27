@@ -108,7 +108,9 @@ For anyone who would like to attempt it, the following steps should theoreticall
  * The default Sage appliance does not have enough space to install LMFDB's prerequisites.  Moreover, the default
    file type (vmdk) installed by `VirtualBox` does not support resizing.  You will need to
    increase the available space by cloning into a vdi file, increasing the space and cloning back, following the
-   instructions [here](http://stackoverflow.com/questions/11659005/how-to-resize-a-virtualbox-vmdk-file)
+   instructions [here](http://stackoverflow.com/questions/11659005/how-to-resize-a-virtualbox-vmdk-file) and
+   [here](http://www.howtogeek.com/124622/how-to-enlarge-a-virtual-machines-disk-in-virtualbox-or-vmware/).  We had
+   trouble at this stage: make sure to keep the .ova file in case you screw up your virtual image.
  * The resulting disk image needs to be repartitioned to make the space available.  Unfortunately, the Sage appliance
    does not include gparted, the linux partition editor.  So, you'll need to install gparted into the appliance
    (perhaps following instructions [here](https://gembuls.wordpress.com/2011/02/12/how-to-install-epel-repository-on-centos/))
