@@ -13,7 +13,7 @@ from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range2, 
 from lmfdb.number_fields.number_field import parse_list
 
 import sage.all
-from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi
+from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange
 
 from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, parse_range
 
@@ -21,6 +21,8 @@ from lmfdb.number_fields.number_field import parse_list, parse_field_string
 
 from lmfdb.WebNumberField import *
 
+
+QQ_RE = re.compile(r'^-?\d+(/\d+)?$')
 
 @hiwf_page.route("/")
 def half_integral_weight_form_render_webpage():
@@ -48,27 +50,14 @@ def half_integral_weight_form_search(**args):
     for field in ['character', 'weight', 'level']:
         if info.get(field):
             if field == 'weight':
-                weight = int(info[field]*2)
-            
-	w = clean_input(info['jinv'])
-        j = j.replace('+', '')
-        if not QQ_RE.match(j):
-            info['err'] = 'Error parsing input for the j-invariant.  It needs to be a rational number.'
-            return search_input_error(info, bread)
-        query['jinv'] = str(QQ(j)) # to simplify e.g. 1728/1
-
-
-
-
-
-                query['weight'] = weight       
+                query[field] = int(info[field])      
             elif field == 'character':
                 query[field] = parse_field_string(info[field])
             elif field == 'label':
                 query[field] = info[field]
             elif field == 'level':
                 query[field] = int(info[field])
-
+    
     info['query'] = dict(query)
     res = C.halfintegralmf.forms.find(query).sort([('level', pymongo.ASCENDING), ('label', pymongo.ASCENDING)])
     nres = res.count()
@@ -89,6 +78,7 @@ def half_integral_weight_form_search(**args):
         v_clean['label'] = v['label']
         v_clean['weight'] = v['weight']
         v_clean['character'] = v['character']
+	v_clean['dimension'] = v['dim']
         res_clean.append(v_clean)
 
     info['forms'] = res_clean

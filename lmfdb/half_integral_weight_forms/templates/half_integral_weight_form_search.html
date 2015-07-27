@@ -13,14 +13,14 @@
 </tr>
 {% for form in info.forms: %}
 <tr>
-<td align='left'><a href="{{url_for('hiwf.render_hiwf_webpage', label=form.label)}}">
-    {{form.label}} </a></td>
+<td align='left'><a href="{{url_for('hiwf.render_hiwf_webpage', label=form.label)}}">{{form.label}} </a></td>
 <td>${{form.level}}$</td>
-<td>{{form.weight}}</td>
+<td>{{form.weight}}/2</td>
 <td>{{form.character}}</td>
 <td>{{form.dimension}}</td>
 </tr>
 {% endfor %}
+
 </table>
 
 <br>
