@@ -9,7 +9,7 @@ from lmfdb.utils import comma, make_logger, web_latex, encode_plot
 from lmfdb.genus2_curves import g2c_page, g2c_logger
 from lmfdb.genus2_curves.data import group_dict
 import sage.all
-from sage.all import latex, matrix, ZZ, QQ, PolynomialRing, factor
+from sage.all import latex, matrix, ZZ, QQ, PolynomialRing, factor, implicit_plot
 from lmfdb.hilbert_modular_forms.hilbert_modular_form import teXify_pol
 
 from lmfdb.WebNumberField import *
@@ -30,6 +30,53 @@ def list_to_min_eqn(L):
     poly_tup = [xpoly_rng(tup) for tup in L]
     lhs = ypoly_rng([0,poly_tup[1],1])
     return str(lhs).replace("*","") + " = " + str(poly_tup[0]).replace("*","")
+
+def inflate_interval(a,b,x=1.5):
+    c = (a+b)/2
+    d = (b-a)/2
+    d *= x
+    return (c-d,c+d)
+
+def eqn_list_to_curve_plot(L):
+    xpoly_rng = PolynomialRing(QQ,'x')
+    poly_tup = [xpoly_rng(tup) for tup in L]
+    f = poly_tup[0]
+    h = poly_tup[1]
+    g = f+h**2/4
+    if len(g.real_roots())==0 and g(0)<0:
+        return text("$X(\mathbb{R})=\emptyset$",(1,1),fontsize=50)
+    X0 = [real(z[0]) for z in g.base_extend(CC).roots()]+[real(z[0]) for z in g.derivative().base_extend(CC).roots()]
+    a,b = inflate_interval(min(X0),max(X0),1.5)
+    groots = [a]+g.real_roots()+[b]
+    if b-a<1e-7:
+        a=-3
+        b=3
+        groots=[a,b]
+    ngints = len(groots)-1
+    plotzones = []
+    npts = 100
+    for j in range(ngints):
+        c = groots[j]
+        d = groots[j+1]
+        if g((c+d)/2)<0:
+            continue
+        (c,d) = inflate_interval(c,d,1.1)
+        s = (d-c)/npts
+        u = c
+        yvals = []
+        for i in range(npts+1):
+            v = g(u)
+            if v>0:
+                v = sqrt(v)
+                w = -h(u)/2
+                yvals.append(w+v)
+                yvals.append(w-v)
+            u += s
+        (m,M) = inflate_interval(min(yvals),max(yvals),1.2)
+        plotzones.append((c,d,m,M))
+    x = var('x')
+    y = var('y')
+    return sum(implicit_plot(y**2+y*h(x)-f(x),(x,R[0],R[1]),(y,R[2],R[3]),aspect_ratio='automatic',plot_points=500) for R in plotzones)
 
 # need to come up with a function that deal with the quadratic fields in the dictionary
 def end_alg_name(name):
@@ -178,7 +225,10 @@ class WebG2C(object):
              ('Download Euler factors', '.')]
         iso = self.label.split('.')[1]
         num = '.'.join(self.label.split('.')[2:4])
+        self.plot = encode_plot(eqn_list_to_curve_plot(self.min_eqn))
+        self.plot_link = '<img src="%s" width="200" height="150"/>' % self.plot
         self.properties = [('Label', self.label),
+                           (None, self.plot_link),
                            ('Conductor','%s' % self.cond),
                            ('Discriminant', '%s' % data['disc']),
                            ('Invariants', '%s </br> %s </br> %s </br> %s'% tuple(data['igusa_clebsch'])), 
