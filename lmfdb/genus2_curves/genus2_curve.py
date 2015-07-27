@@ -17,6 +17,8 @@ from lmfdb.genus2_curves.web_g2c import WebG2C, list_to_min_eqn, isog_label
 import sage.all
 from sage.all import ZZ, QQ, latex, matrix, srange
 q = ZZ['x'].gen()
+# credit_string = "KNOWL('g2c.credit', title='The Genus 2 Team')" 
+credit_string = "Andrew Booker, Andrew Sutherland, John Voight, and Dan Yasaki"
 
 #########################
 #   Database connection
@@ -60,7 +62,7 @@ def index_Q():
     ]
     info["conductor_list"] = ['1-499', '500-999', '1000-99999','100000-1000000'   ]
     info["discriminant_list"] = ['1-499', '500-999', '1000-99999','100000-1000000'   ]
-    credit = 'Genus 2 Team'
+    credit =  credit_string
     title = 'Genus 2 curves over $\Q$'
     bread = [('Genus 2 Curves', url_for(".index")), ('$\Q$', ' ')]
     return render_template("browse_search_g2.html", info=info, credit=credit, title=title, bread=bread)
@@ -184,7 +186,7 @@ def genus2_curve_search(**args):
 
     info["curve_url"] = lambda dbc: url_for_label(dbc['label'])
     info["isog_url"] = lambda dbc: isog_url_for_label(dbc['label'])
-    credit = 'Genus 2 Team'
+    credit = credit_string
     title = 'Genus 2 Curves search results'
     return render_template("search_results_g2.html", info=info, credit=credit, bread=bread, title=title)
 
@@ -239,7 +241,7 @@ def by_g2c_label(label):
     return render_curve_webpage_by_label(label)
 
 def render_isogeny_class(iso_class):
-    credit = 'Genus 2 Team'
+    credit = credit_string
     class_data = G2Cisog_class.by_label(iso_class)
 
     return render_template("isogeny_class_g2.html",
@@ -253,7 +255,7 @@ def render_isogeny_class(iso_class):
 
 
 def render_curve_webpage_by_label(label):
-    credit = 'Genus 2 Team'
+    credit = credit_string
     data = WebG2C.by_label(label)
     
     return render_template("curve_g2.html",
