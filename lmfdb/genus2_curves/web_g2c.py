@@ -63,24 +63,16 @@ def eqn_list_to_curve_plot(L):
         (c,d) = inflate_interval(c,d,1.1)
         s = (d-c)/npts
         u = c
-        m = M = 0
+        yvals = []
         for i in range(npts+1):
             v = g(u)
             if v>0:
                 v = sqrt(v)
                 w = -h(u)/2
-                z = v+w
-                if z<m:
-                    m = z
-                if z>M:
-                    M = z
-                z = w-v
-                if z<m:
-                    m = z
-                if z>M:
-                    M = z
+                yvals.append(w+v)
+                yvals.append(w-v)
             u += s
-        (m,M) = inflate_interval(m,M,1.2)
+        (m,M) = inflate_interval(min(yvals),max(yvals),1.2)
         plotzones.append((c,d,m,M))
     x = var('x')
     y = var('y')
