@@ -92,6 +92,8 @@ def makeLfromdata(L):
     for n in range(0, len(L.dirichlet_coefficients)):
         an = L.dirichlet_coefficients[n]
         L.dirichlet_coefficients[n] = float(an/(n+1)**L.normalize_by)
+    # Note: a better name would be L.dirichlet_coefficients_analytic, but that
+    # would require more global changes.
     L.checkselfdual()  # needs to be changed to read from database
     generateSageLfunction(L)  # DF: why is this needed if pulling from database?
 
