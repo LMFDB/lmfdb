@@ -231,6 +231,15 @@ class WebNumberField:
     def haskey(self, key):
         return key in self._data
 
+    # Warning, this produces our prefered integral basis
+    # But, if you have the sage number field do computations,
+    # they will be in terms of a different basis
+    def zk(self):
+        if self.haskey('zk'):
+            zkstrings = self._data['zk']
+            return [str(u) for u in zkstrings]
+        return list(pari(self.poly()).nfbasis())
+
     def subfields(self):
         if not self.haskey('subs'):
             return []
