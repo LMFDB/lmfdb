@@ -841,6 +841,7 @@ div > *[knowl], p > *[knowl] {
 .knowl-error {
    color: red;
    border-bottom: 0;
+   text-decoration: underline;
 }
 
 .knowl-qm {
