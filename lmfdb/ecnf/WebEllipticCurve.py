@@ -261,7 +261,7 @@ class ECNF(object):
             ('Label' , self.label)]
         
         # Plot
-        if(E.base_field().signature()[0]):
+        if E.base_field().signature()[0]:
             self.plot = encode_plot(EC_nf_plot(E,self.field.generator_name()))
             self.plot_link = '<img src="%s" width="200" height="150"/>' % self.plot
             self.properties += [(None, self.plot_link)]
