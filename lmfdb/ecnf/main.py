@@ -284,6 +284,11 @@ def elliptic_curve_search(**args):
     if 'include_isogenous' in info and info['include_isogenous'] == 'off':
         query['number'] = 1
 
+    if 'include_base_change' in info and info['include_base_change'] == 'off':
+        query['base_change'] = []
+    else:
+        info['include_base_change'] = "on"
+
     if 'field' in info:
         query['field_label'] = parse_field_string(info['field'])
 
