@@ -57,6 +57,11 @@ def an_from_data(euler_factors,upperbound=30):
 
     return result
 
+# Convert the information extracted from the database to the format
+# expected by the L-functions homepage template.
+# As of July 2015, some of the fields are hard coded specifically
+# for L-functions of genus 2 curves.  Need to update after the
+# general data format has been specified.
 def makeLfromdata(L):
     data = L.lfunc_data
     L.algebraic = data['algebraic']
@@ -65,6 +70,7 @@ def makeLfromdata(L):
     L.primitive = data['primitive']
     L.motivic_weight = data['motivic_weight']
     L.sign = p2sage(data['root_number'])
+           # p2sage converts from the python string format in the database.
     L.mu_fe = [x+p2sage(data['analytic_normalization'])
         for x in p2sage(data['gamma_factors'])[0]]
     L.nu_fe = [x+p2sage(data['analytic_normalization'])
@@ -1540,7 +1546,9 @@ class Lfunction_genus2_Q(Lfunction):
         self.credit = ''
 
         # Extract the L-function information
-        #self.lfunc_data = isoclass['lfunc_data']
+        # The data are stored in a database, so extract it and then convert
+        # to the format expected by the L-function homepage template.
+
         self.lfunc_data = LfunctionDatabase.getGenus2Ldata(isoclass['hash'])
         makeLfromdata(self)
 
