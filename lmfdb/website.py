@@ -43,6 +43,7 @@ import hypergm
 import motives
 import riemann
 import logging
+import lattice
 
 import raw
 from modular_forms.maass_forms.picard import mwfp
