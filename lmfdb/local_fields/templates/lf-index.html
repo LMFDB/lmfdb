@@ -3,10 +3,12 @@
 {% block content %}
 
 <style>
-td
+table.number_table td
 {
 text-align:right;
 }
+
+
 </style>
 
 <p>
@@ -23,7 +25,7 @@ The table gives for each $p$ and $n$ shown, the number of degree $n$ extension
 fields
 of $\Q_p$ up to isomorphism.
 <p>
-<table border=1 cellpadding=5 class='right_align_table'>
+<table border=1 cellpadding=5 class='number_table'>
 <tr>
 <th>$p$ \ $n$</th>
 <th>2</th> <th>3</th> <th>4</th> <th>5</th> <th>6</th>
@@ -71,8 +73,8 @@ of $\Q_p$ up to isomorphism.
         <h2>Search</h2>
       <form name="search" method = "get" action="{{search}}">
         <table class="">
-          <tr>
-            <td>
+          <tr align=left>
+            <td align=right>
           {{KNOWL('lf.degree',title='Degree')}}:
             </td><td><input type="text" name="n" value=""
       placeholder="6"></td>
@@ -81,7 +83,7 @@ of $\Q_p$ up to isomorphism.
       </td>
           </tr>
           <tr>
-            <td>
+            <td align=right>
               Prime $p$ for base field  {{KNOWL('lf.qp',title='$\Q_p$')}}:
             </td><td><input type="text" name="p" value="" placeholder="3"></td>
       <td>
@@ -89,7 +91,7 @@ of $\Q_p$ up to isomorphism.
       </td>
           </tr>
           <tr>
-            <td>
+            <td align=right>
               {{KNOWL('lf.discriminant_exponent',title='Discriminant
               exponent')}} $c$ :
             </td><td><input type="text" name="c" value="" placeholder="8"></td>
@@ -98,7 +100,7 @@ of $\Q_p$ up to isomorphism.
       </td>
           </tr>
           <tr>
-            <td>
+            <td align=right>
               {{KNOWL('lf.ramification_index',title='Ramification
               index')}} $e$ :
             </td><td><input type="text" name="e" value="" placeholder="3"></td>
@@ -107,7 +109,7 @@ of $\Q_p$ up to isomorphism.
       </td>
           </tr>
           <tr>
-            <td>
+            <td align=right>
               {{KNOWL('nf.galois_group',title='Galois
               group')}} $G$ :
             </td><td><input type="text" name="gal" value="" placeholder="5T3"></td>
@@ -118,7 +120,7 @@ of $\Q_p$ up to isomorphism.
       </td>
           </tr>
           <tr>
-          <td>
+          <td align=right>
               Maximum number of fields to display:
             </td><td><input type="text" name="count" value="{{info.count}}" size="10"></td>
           </tr>
