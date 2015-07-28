@@ -1,435 +1,299 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <title></title>
-  <meta name="Generator" content="Cocoa HTML Writer">
-  <meta name="CocoaVersion" content="1187.39">
-  <style type="text/css">
-    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Times}
-    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; text-align: right; font: 12.0px Times}
-    p.p3 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Times; min-height: 14.0px}
-    p.p4 {margin: 0.0px 0.0px 12.0px 0.0px; font: 12.0px Times; min-height: 14.0px}
-    p.p6 {margin: 0.0px 0.0px 12.0px 0.0px; font: 12.0px Times}
-    p.p7 {margin: 0.0px 0.0px 0.0px 0.0px; text-align: center; font: 12.0px Times}
-    p.p8 {margin: 0.0px 0.0px 0.0px 0.0px; text-align: center; font: 12.0px Times; min-height: 14.0px}
-    p.p9 {margin: 0.0px 0.0px 0.0px 0.0px; text-align: center; font: 12.0px Times; color: #0000ee}
-    span.s1 {text-decoration: underline ; color: #0000ee}
-    span.s2 {font: 12.0px 'Apple Symbols'}
-    span.s3 {text-decoration: underline}
-    td.td1 {width: 81.0px; margin: 0.5px 0.5px 0.5px 0.5px; padding: 1.0px 1.0px 1.0px 1.0px}
-    td.td2 {width: 6.0px; margin: 0.5px 0.5px 0.5px 0.5px; padding: 1.0px 1.0px 1.0px 1.0px}
-    td.td3 {width: 524.0px; margin: 0.5px 0.5px 0.5px 0.5px; padding: 1.0px 1.0px 1.0px 1.0px}
-    td.td4 {width: 619.0px; margin: 0.5px 0.5px 0.5px 0.5px; padding: 1.0px 1.0px 1.0px 1.0px}
-    td.td5 {width: 90.0px; margin: 0.5px 0.5px 0.5px 0.5px; padding: 1.0px 1.0px 1.0px 1.0px}
-    td.td6 {width: 238.0px; margin: 0.5px 0.5px 0.5px 0.5px; padding: 1.0px 1.0px 1.0px 1.0px}
-    td.td7 {width: 149.0px; margin: 0.5px 0.5px 0.5px 0.5px; padding: 1.0px 1.0px 1.0px 1.0px}
-    td.td8 {width: 408.0px; margin: 0.5px 0.5px 0.5px 0.5px; padding: 1.0px 1.0px 1.0px 1.0px}
-    td.td9 {width: 153.0px; margin: 0.5px 0.5px 0.5px 0.5px; padding: 1.0px 1.0px 1.0px 1.0px}
-    td.td10 {width: 442.0px; margin: 0.5px 0.5px 0.5px 0.5px; padding: 1.0px 1.0px 1.0px 1.0px}
-    td.td11 {width: 53.0px; margin: 0.5px 0.5px 0.5px 0.5px; padding: 1.0px 1.0px 1.0px 1.0px}
-    td.td12 {width: 77.0px; margin: 0.5px 0.5px 0.5px 0.5px; padding: 1.0px 1.0px 1.0px 1.0px}
-    td.td13 {width: 144.0px; margin: 0.5px 0.5px 0.5px 0.5px; padding: 1.0px 1.0px 1.0px 1.0px}
-    td.td14 {width: 141.0px; margin: 0.5px 0.5px 0.5px 0.5px; padding: 1.0px 1.0px 1.0px 1.0px}
-    td.td15 {width: 161.0px; margin: 0.5px 0.5px 0.5px 0.5px; padding: 1.0px 1.0px 1.0px 1.0px}
-    td.td16 {width: 187.0px; margin: 0.5px 0.5px 0.5px 0.5px; padding: 1.0px 1.0px 1.0px 1.0px}
-    td.td17 {width: 278.0px; margin: 0.5px 0.5px 0.5px 0.5px; padding: 1.0px 1.0px 1.0px 1.0px}
-    td.td18 {width: 228.0px; margin: 0.5px 0.5px 0.5px 0.5px; padding: 1.0px 1.0px 1.0px 1.0px}
-    td.td19 {width: 182.0px; margin: 0.5px 0.5px 0.5px 0.5px; padding: 1.0px 1.0px 1.0px 1.0px}
-    td.td20 {width: 109.0px; margin: 0.5px 0.5px 0.5px 0.5px; padding: 1.0px 1.0px 1.0px 1.0px}
-    td.td21 {width: 197.0px; margin: 0.5px 0.5px 0.5px 0.5px; padding: 1.0px 1.0px 1.0px 1.0px}
-  </style>
-</head>
-<body>
-<p class="p1">{% extends 'homepage.html' %} {% block content %} {# Displays individual number field homepage #}</p>
-<p class="p2">Show commands for: <span class="s1">sage</span>, <span class="s1">pari</span>, <span class="s1">magma</span></p>
-<p class="p3"><br></p>
-<p class="p1">{% set nf = info.wnf %}</p>
-<p class="p4"><br></p>
-<p class="p1">sage: K = NumberField({{ nf.poly() }},'a')</p>
-<p class="p1">pari: K = bnfinit({{ nf.poly() }}, 1)</p>
-<p class="p1">&gt; K&lt;a&gt; := NumberField(PolynomialRing(Rationals())!{{info.coefficients}});</p>
-<p class="p4"><br></p>
-<p class="p1">{% set KNOWL_ID = "nf.%s"|format(info['label_raw']) %}</p>
-<h2 style="margin: 0.0px 0.0px 14.0px 0.0px; font: 18.0px Times"><b>{{ KNOWL_INC(KNOWL_ID+'.top', title='') }}</b></h2>
-<p class="p4"><br></p>
-<h2 style="margin: 0.0px 0.0px 14.0px 0.0px; font: 18.0px Times"><b>{% if nf.is_reduced() %} {{ KNOWL('nf.defining_polynomial.normalization', title='Normalized') }} {{ KNOWL('nf.defining_polynomial', title='defining polynomial') }}</b></h2>
-<p class="p1">{% else %} {{ KNOWL('nf.defining_polynomial', title='Defining polynomial') }} {% endif %}</p>
-<p class="p1">sage: K.defining_polynomial()</p>
-<p class="p1">pari: K.pol</p>
-<p class="p1">&gt; DefiningPolynomial(K);</p>
-<p class="p6">{{ info.polynomial }}</p>
-<p class="p4"><br></p>
-<h2 style="margin: 0.0px 0.0px 14.0px 0.0px; font: 18.0px Times"><b>{{ KNOWL('nf.invariants', title='Invariants') }}</b></h2>
-<p class="p1">sage: K.degree()</p>
-<p class="p1">sage: K.signature()</p>
-<p class="p1">sage: K.disc()</p>
-<p class="p1">sage: K.disc().support()</p>
-<p class="p1">pari: poldegree(K.pol)</p>
-<p class="p1">pari: K.sign</p>
-<p class="p1">pari: K.disc</p>
-<p class="p1">pari: factor(abs(K.disc))[,1]~</p>
-<p class="p1">&gt; Degree(K);</p>
-<p class="p1">&gt; Signature(K);</p>
-<p class="p1">&gt; Discriminant(K);</p>
-<p class="p1">&gt; PrimeDivisors(Discriminant(K));</p>
-<p class="p6">{% if info.is_abelian %} {% elif info.is_galois %} {% endif %}</p>
-<table cellspacing="0" cellpadding="0">
-  <tbody>
-    <tr>
-      <td valign="middle" class="td1">
-        <p class="p1">Degree:</p>
-      </td>
-      <td valign="middle" class="td2">
-        <p class="p1">  </p>
-      </td>
-      <td valign="middle" class="td3">
-        <p class="p1">${{info.degree}}$</p>
-      </td>
-    </tr>
-    <tr>
-      <td valign="middle" class="td1">
-        <p class="p1">Signature:</p>
-      </td>
-      <td valign="middle" class="td2">
-        <p class="p1">  </p>
-      </td>
-      <td valign="middle" class="td3">
-        <p class="p1">${{info.signature}}$</p>
-      </td>
-    </tr>
-    <tr>
-      <td valign="middle" class="td1">
-        <p class="p1">Discriminant:</p>
-      </td>
-      <td valign="middle" class="td2">
-        <p class="p1">  </p>
-      </td>
-      <td valign="middle" class="td3">
-        <p class="p1">{{info.discriminant}}</p>
-      </td>
-    </tr>
-    <tr>
-      <td valign="middle" class="td1">
-        <p class="p1">Ramified primes:</p>
-      </td>
-      <td valign="middle" class="td2">
-        <p class="p1">  </p>
-      </td>
-      <td valign="middle" class="td3">
-        <p class="p1">${{info.ram_primes}}$</p>
-      </td>
-    </tr>
-    <tr>
-      <td colspan="3" valign="middle" class="td4">
-        <p class="p1"> </p>
-      </td>
-    </tr>
-    <tr>
-      <td colspan="3" valign="middle" class="td4">
-        <p class="p1">Extension is Galois and abelian</p>
-      </td>
-    </tr>
-    <tr>
-      <td valign="middle" class="td1">
-        <p class="p1">Conductor:</p>
-      </td>
-      <td valign="middle" class="td2">
-        <p class="p1">  </p>
-      </td>
-      <td valign="middle" class="td3">
-        <p class="p1">{{info.conductor}}</p>
-      </td>
-    </tr>
-    <tr>
-      <td valign="middle" class="td1">
-        <p class="p1">Dirichlet group:</p>
-      </td>
-      <td valign="middle" class="td2">
-        <p class="p1">  </p>
-      </td>
-      <td valign="middle" class="td3">
-        <p class="p1">{% if info.dirichlet_group is defined %} {{info.dirichlet_group|safe}} {% else %} not computed {% endif %}</p>
-      </td>
-    </tr>
-    <tr>
-      <td colspan="3" valign="middle" class="td4">
-        <p class="p1">Extension is Galois</p>
-      </td>
-    </tr>
-  </tbody>
-</table>
-<p class="p1">{% if info.degree==1 %}</p>
-<p class="p4"><br></p>
-<h2 style="margin: 0.0px 0.0px 14.0px 0.0px; font: 18.0px Times"><b>{{ KNOWL('nf.integral_basis', title='Integral basis') }}</b></h2>
-<p class="p1">{% endif %} {% if info.degree!=1 %}</p>
-<p class="p4"><br></p>
-<h2 style="margin: 0.0px 0.0px 14.0px 0.0px; font: 18.0px Times"><b>{{ KNOWL('nf.integral_basis', title='Integral basis') }} (with respect to {{ KNOWL('nf.field_generator', title='field generator') }} \(a\))</b></h2>
-<p class="p1">{% endif %}</p>
-<p class="p1">sage: K.integral_basis()</p>
-<p class="p1">pari: K.zk</p>
-<p class="p1">&gt; IntegralBasis(K);</p>
-<p class="p6">{{ info.integral_basis }}</p>
-<p class="p4"><br></p>
-<h2 style="margin: 0.0px 0.0px 14.0px 0.0px; font: 18.0px Times"><b>{{ KNOWL('nf.ideal_class_group', title='Class group') }} and {{ KNOWL('nf.class_number', title='class number') }}</b></h2>
-<p class="p1">sage: K.class_group().invariants()</p>
-<p class="p1">pari: K.clgp</p>
-<p class="p1">&gt; ClassGroup(K);</p>
-<p class="p6">{{ info.class_group }} {{ info.grh_label|safe }}</p>
-<p class="p4"><br></p>
-<h2 style="margin: 0.0px 0.0px 14.0px 0.0px; font: 18.0px Times"><b>{{ KNOWL('nf.unit_group', title='Unit group') }}</b></h2>
-<p class="p1">sage: UK = K.unit_group()</p>
-<p class="p1">sage: UK.rank()</p>
-<p class="p1">sage: UK.torsion_generator()</p>
-<p class="p1">sage: UK.roots_of_unity()</p>
-<p class="p1">sage: K.regulator()</p>
-<p class="p1">pari: #K.fu</p>
-<p class="p1">pari: K.tu[2]</p>
-<p class="p1">pari: K.fu</p>
-<p class="p1">pari: K.reg</p>
-<p class="p1">&gt; UnitRank(K);</p>
-<p class="p1">&gt; K!f(TorsionSubgroup(UK).1);</p>
-<p class="p1">&gt; [K!Integers(K)!f(u) : u in Generators(UK)];</p>
-<p class="p1">&gt; Regulator(K);</p>
-<p class="p6">{% if info.unit_rank==1 %} {% endif %} {% if info.unit_rank&gt;1 %} {% endif %}</p>
-<table cellspacing="0" cellpadding="0">
-  <tbody>
-    <tr>
-      <td valign="middle" class="td5">
-        <p class="p1">Rank:</p>
-      </td>
-      <td valign="middle" class="td2">
-        <p class="p1">  </p>
-      </td>
-      <td valign="middle" class="td6">
-        <p class="p1">${{info.unit_rank}}$</p>
-      </td>
-    </tr>
-    <tr>
-      <td valign="middle" class="td5">
-        <p class="p1">Torsion generator:</p>
-      </td>
-      <td valign="middle" class="td2">
-        <p class="p1">  </p>
-      </td>
-      <td valign="middle" class="td6">
-        <p class="p1">{{info.root_of_unity}}</p>
-      </td>
-    </tr>
-    <tr>
-      <td valign="middle" class="td5">
-        <p class="p1">Fundamental unit:</p>
-      </td>
-      <td valign="middle" class="td2">
-        <p class="p1">  </p>
-      </td>
-      <td valign="middle" class="td6">
-        <p class="p1">{{info.fund_units|safe}} {{ info.grh_label|safe }}</p>
-      </td>
-    </tr>
-    <tr>
-      <td valign="middle" class="td5">
-        <p class="p1">Fundamental units:</p>
-      </td>
-      <td valign="middle" class="td2">
-        <p class="p1">  </p>
-      </td>
-      <td valign="middle" class="td6">
-        <p class="p1">{{info.fund_units|safe}} {{ info.grh_label|safe }}</p>
-      </td>
-    </tr>
-    <tr>
-      <td valign="middle" class="td5">
-        <p class="p1">Regulator:</p>
-      </td>
-      <td valign="middle" class="td2">
-        <p class="p1">  </p>
-      </td>
-      <td valign="middle" class="td6">
-        <p class="p1">{{info.regulator}} {{ info.grh_label|safe }}</p>
-      </td>
-    </tr>
-  </tbody>
-</table>
-<p class="p4"><br></p>
-<h2 style="margin: 0.0px 0.0px 14.0px 0.0px; font: 18.0px Times"><b>{{ KNOWL('nf.galois_group', title='Galois group') }}</b></h2>
-<p class="p1">sage: K.galois_group(type='pari')</p>
-<p class="p1">pari: polgalois(pol)</p>
-<p class="p1">&gt; GaloisGroup(K);</p>
-<p class="p6">{{ info.galois_group | safe }}:</p>
-<table cellspacing="0" cellpadding="0">
-  <tbody>
-    <tr>
-      <td valign="middle" class="td7">
-        <p class="p1">{{ info.phrase }}</p>
-      </td>
-    </tr>
-    <tr>
-      <td valign="middle" class="td7">
-        <p class="p1">{{ info.cclasses | safe }}</p>
-      </td>
-    </tr>
-    <tr>
-      <td valign="middle" class="td7">
-        <p class="p1">{{ info.character_table | safe }}</p>
-      </td>
-    </tr>
-  </tbody>
-</table>
-<p class="p4"><br></p>
-<h2 style="margin: 0.0px 0.0px 14.0px 0.0px; font: 18.0px Times"><b>{{ KNOWL('nf.intermediate_fields', title='Intermediate fields') }}</b></h2>
-<p class="p6">{% if nf.subfields()==[] %}</p>
-<table cellspacing="0" cellpadding="0">
-  <tbody>
-    <tr>
-      <td valign="middle" class="td8">
-        <p class="p1">The extension is primitive: there are no intermediate fields between this field and $\Q$.</p>
-      </td>
-    </tr>
-  </tbody>
-</table>
-<p class="p6">{% else %}</p>
-<table cellspacing="0" cellpadding="0">
-  <tbody>
-    <tr>
-      <td valign="middle" class="td9">
-        <p class="p1">{{ nf.subfields_show() | safe }}</p>
-      </td>
-    </tr>
-  </tbody>
-</table>
-<p class="p6">Fields in the database are given up to isomorphism. Isomorphic intermediate fields are shown with their multiplicities. {% endif %} {% if nf.unit_galois_action() %}</p>
-<p class="p4"><br></p>
-<h2 style="margin: 0.0px 0.0px 14.0px 0.0px; font: 18.0px Times"><b>{{ KNOWL('nf.multiplicative_gal_module', title='Multiplicative Galois module structure') }}</b></h2>
-<p class="p1">{% if nf.unit_galois_action_type_knowl() %} {% endif %}</p>
-<table cellspacing="0" cellpadding="0">
-  <tbody>
-    <tr>
-      <td valign="middle" class="td10">
-        <p class="p1">$U_{K^{gal}}/\textrm{Tors}(U_{K^{gal}}) \cong$ {{nf.unit_galois_action_show()|safe}}</p>
-      </td>
-    </tr>
-    <tr>
-      <td valign="middle" class="td10">
-        <p class="p1">Galois action is {{ nf.unit_galois_action_type_knowl()|safe }}</p>
-      </td>
-    </tr>
-  </tbody>
-</table>
-<p class="p1">{% endif %}</p>
-<p class="p4"><br></p>
-<h2 style="margin: 0.0px 0.0px 14.0px 0.0px; font: 18.0px Times"><b>{{ KNOWL('nf.frobenius_cycle_types', title='Frobenius cycle types') }}</b></h2>
-<p class="p1">{% for p in info.frob_data %} {% endfor %} {% for p in info.frob_data %} {% endfor %}</p>
-<table cellspacing="0" cellpadding="0">
-  <tbody>
-    <tr>
-      <td valign="middle" class="td11">
-        <p class="p7"><b>$p$</b></p>
-      </td>
-      <td valign="middle" class="td12">
-        <p class="p7">{{ p[0] | safe }}</p>
-      </td>
-    </tr>
-    <tr>
-      <td valign="middle" class="td11">
-        <p class="p7"><b>Cycle type</b></p>
-      </td>
-      <td valign="middle" class="td12">
-        <p class="p7">{{ p[1] | safe }}</p>
-      </td>
-    </tr>
-  </tbody>
-</table>
-<p class="p4"><br></p>
-<p class="p6">{% if info.seeram %} In the table, <i>R</i> denotes a ramified prime. {% endif %} Cycle lengths which are repeated in a cycle type are indicated by exponents.</p>
-<p class="p4"><br></p>
-<p class="p1">To obtain a list of [\(e_i, f_i\)] for the factorization of the ideal \(p\mathcal{O}_K\)<span class="Apple-converted-space"> </span></p>
-<p class="p1">pari:<span class="Apple-converted-space"> </span></p>
-<p class="p1">p = 7; \\ set a prime<span class="Apple-converted-space"> </span></p>
-<p class="p1">idealfactors = idealprimedec(K, p); \\ get the data<span class="Apple-converted-space"> </span></p>
-<p class="p1">vector(length(idealfactors), j, [idealfactors[j][3], idealfactors[j][4]])</p>
-<p class="p1">sage:<span class="Apple-converted-space"> </span></p>
-<p class="p1">p = 7 # set a prime<span class="Apple-converted-space"> </span></p>
-<p class="p1">idealfactors = K.factor(p) # get the data<span class="Apple-converted-space"> </span></p>
-<p class="p1">[[e, primefactor.residue_class_degree()] for primefactor,e in idealfactors]</p>
-<p class="p3"><br></p>
-<p class="p1">p := 7; # set a prime<span class="Apple-converted-space"> </span></p>
-<p class="p1">idealfactors := Factorization(p*Integers(K)); # get the data<span class="Apple-converted-space"> </span></p>
-<p class="p1">[<span class="s2">≶</span>Valuation(Norm(primefactor[1]), p), primefactor[2]&gt; : primefactor in idealfactors];</p>
-<p class="p1">{% if info.get("tim_number_field", False) %}</p>
-<p class="p4"><br></p>
-<h2 style="margin: 0.0px 0.0px 14.0px 0.0px; font: 18.0px Times"><b>{{ KNOWL('artin', title='Artin representations') }}</b></h2>
-<p class="p7">{# #} {% for artin in info["tim_number_field"].artin_representations()%} {# #} {% if artin.number_field_galois_group().url_for() %} {% else %} {% endif %} {# #} {# #} {% endfor %}</p>
-<table cellspacing="0" cellpadding="0">
-  <tbody>
-    <tr>
-      <td valign="middle" class="td13">
-        <p class="p8"><b></b><br></p>
-      </td>
-      <td valign="middle" class="td14">
-        <p class="p7"><b>{{ KNOWL('artin.dimension', title='Dimension') }}</b></p>
-      </td>
-      <td valign="middle" class="td15">
-        <p class="p7"><b>{{ KNOWL('artin.conductor', title='Conductor') }}</b></p>
-      </td>
-      <td valign="middle" class="td16">
-        <p class="p7"><b>Defining polynomial of {{ KNOWL('artin.number_field', title='Artin field') }}</b></p>
-      </td>
-      <td valign="middle" class="td17">
-        <p class="p7"><b>{{ KNOWL('artin.gg_quotient', title='$G$') }}</b></p>
-      </td>
-      <td valign="middle" class="td17">
-        <p class="p7"><b>{{ KNOWL('artin.root_number', title='Root number') }}</b></p>
-      </td>
-      <td valign="middle" class="td6">
-        <p class="p7"><b>{{ KNOWL('artin.frobenius_schur_indicator', title='Ind') }}</b></p>
-      </td>
-      <td valign="middle" class="td18">
-        <p class="p7"><b>{{ KNOWL('artin.trace_of_complex_conj', title='$\chi(c)$')}}</b></p>
-      </td>
-    </tr>
-    <tr>
-      <td valign="middle" class="td13">
-        <p class="p2">{{info.mydecomp[loop.index-1]}}<a href="file:///Users/Rachel/lmfdb/lmfdb/number_fields/templates/%7B%7Bartin.url_for()%7D%7D"><span class="s1">{{loop.index}}</span></a></p>
-      </td>
-      <td valign="middle" class="td14">
-        <p class="p7">${{artin.dimension()}}$</p>
-      </td>
-      <td valign="middle" class="td15">
-        <p class="p7">${{artin.conductor_equation()}}$</p>
-      </td>
-      <td valign="middle" class="td16">
-        <p class="p7">${{artin.factored_conductor_latex()}}$</p>
-      </td>
-      <td valign="middle" class="td17">
-        <p class="p9"><span class="s3"><a href="file:///Users/Rachel/lmfdb/lmfdb/number_fields/templates/%7B%7Bartin.number_field_galois_group().url_for()%7D%7D">${{artin.number_field_galois_group().polredabslatex()}}$</a></span></p>
-      </td>
-      <td valign="middle" class="td17">
-        <p class="p7">${{artin.number_field_galois_group().polredabslatex()}}$</p>
-      </td>
-      <td valign="middle" class="td6">
-        <p class="p7">{{artin.number_field_galois_group().G_name()}}</p>
-      </td>
-      <td valign="middle" class="td18">
-        <p class="p7">${{artin.number_field_galois_group().size()}}$</p>
-      </td>
-      <td valign="middle" class="td19">
-        <p class="p7">${{artin.processed_root_number()}}$</p>
-      </td>
-      <td valign="middle" class="td20">
-        <p class="p7">${{artin.indicator()}}$</p>
-      </td>
-      <td valign="middle" class="td21">
-        <p class="p7">${{artin.trace_complex_conjugation()}}$</p>
-      </td>
-    </tr>
-  </tbody>
-</table>
-<p class="p3"><br></p>
-<p class="p1">Data is given for all irreducible representations of the Galois group. Those marked with * are associated with this field.</p>
-<p class="p1">{% endif %}</p>
-<h2 style="margin: 0.0px 0.0px 14.0px 0.0px; font: 18.0px Times"><b>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</b></h2>
-<p class="p1">{% endblock %}</p>
-</body>
-</html>
+{% extends 'homepage.html' %}
+{% block content %}
+{# Displays individual number field homepage #}
+<script>
+var cur_system = null;
+function show_code(system) {
+    $('.sage').hide();
+    $('.pari').hide();
+    $('.magma').hide();
+    if (cur_system == system) {
+      $('.'+system).hide();
+      cur_system = null;
+    } else {
+      $('.'+system).show();
+      cur_system = system;
+    }
+}
+</script>
+
+    <div align ="right">
+      Show commands for:  <a onclick="show_code('sage'); return false" href='#'>sage</a>,
+        <a onclick="show_code('pari'); return false" href='#'>pari</a>,
+        <a onclick="show_code('magma'); return false" href='#'>magma</a>
+    </div>
+    <div></div>
+
+{% set nf = info.wnf %}
+<p>
+  <div class='sage nodisplay code'>sage: K = NumberField({{ nf.poly() }},'a')</div>
+  <div class='pari nodisplay code'>pari: K = bnfinit({{ nf.poly() }}, 1)</div>
+  <div class='magma nodisplay code'>&gt; K&lt;a&gt; := NumberField(PolynomialRing(Rationals())!{{info.coefficients}});</div>
+</p>
+
+        {% set KNOWL_ID = "nf.%s"|format(info['label_raw']) %}
+        <h2>{{ KNOWL_INC(KNOWL_ID+'.top', title='') }}</h2>
+
+        <p><h2> 
+        {% if nf.is_reduced() %}
+          {{ KNOWL('nf.defining_polynomial.normalization', title='Normalized') }}
+        {{ KNOWL('nf.defining_polynomial', title='defining polynomial') }}</h2>
+        {% else %}
+        {{ KNOWL('nf.defining_polynomial', title='Defining polynomial') }}</h2>
+        {% endif %}
+        <div class='sage nodisplay code'>sage: K.defining_polynomial()</div>
+        <div class='pari nodisplay code'>pari: K.pol</div>
+        <div class='magma nodisplay code'>&gt; DefiningPolynomial(K);</div>
+        <p>
+            {{ info.polynomial }}
+        </p>
+
+        <p><h2> {{ KNOWL('nf.invariants', title='Invariants') }}</h2>
+        <div class='sage nodisplay code'>sage: K.degree()</div>
+        <div class='sage nodisplay code'>sage: K.signature()</div>
+        <div class='sage nodisplay code'>sage: K.disc()</div>
+        <div class='sage nodisplay code'>sage: K.disc().support()</div>
+        <div class='pari nodisplay code'>pari: poldegree(K.pol)</div>
+        <div class='pari nodisplay code'>pari: K.sign</div>
+        <div class='pari nodisplay code'>pari: K.disc</div>
+        <div class='pari nodisplay code'>pari: factor(abs(K.disc))[,1]~</div>
+        <div class='magma nodisplay code'>&gt; Degree(K);</div>
+        <div class='magma nodisplay code'>&gt; Signature(K);</div>
+        <div class='magma nodisplay code'>&gt; Discriminant(K);</div>
+        <div class='magma nodisplay code'>&gt; PrimeDivisors(Discriminant(K));</div>
+        <p>
+          <table>
+            <tr><td>Degree:<td>&nbsp;&nbsp;<td>${{info.degree}}$</tr>
+            <tr><td>Signature:<td>&nbsp;&nbsp;<td>${{info.signature}}$</tr>
+            <tr><td>Discriminant:<td>&nbsp;&nbsp;<td>{{info.discriminant}}</tr>
+            <tr><td>Ramified primes:<td>&nbsp;&nbsp;<td>${{info.ram_primes}}$</tr>
+  {% if info.is_abelian %}
+			<tr><td colspan="3">&nbsp;</tr>
+            <tr><td colspan="3">Extension is Galois and abelian</tr>
+            <tr><td>Conductor:<td>&nbsp;&nbsp;<td>{{info.conductor}}</tr>
+            <tr><td>Dirichlet
+				group:<td>&nbsp;&nbsp;<td>
+                {% if info.dirichlet_group is defined %}
+                {{info.dirichlet_group|safe}}
+                {% else %}
+                not computed
+                {% endif %}
+                </tr> 
+  {% elif info.is_galois %}
+            <tr><td colspan="3">Extension is Galois</tr>
+  {% endif %}
+
+          </table>
+        </p>
+
+{% if info.degree==1 %}
+        <p><h2> {{ KNOWL('nf.integral_basis', title='Integral basis') }} </h2>
+{% endif %}
+{% if info.degree!=1 %}
+        <p><h2> {{ KNOWL('nf.integral_basis', title='Integral basis') }} (with respect to {{ KNOWL('nf.field_generator', title='field generator') }} \(a\))</h2>
+{% endif %}
+        <div class='sage nodisplay code'>sage: K.integral_basis()</div>
+        <div class='pari nodisplay code'>pari: K.zk</div>
+        <div class='magma nodisplay code'>&gt; IntegralBasis(K);</div>
+        <p>
+            {{ info.integral_basis }}
+        </p>
+
+        <p><h2> {{ KNOWL('nf.ideal_class_group', title='Class group') }} and  {{ KNOWL('nf.class_number', title='class number') }}</h2>
+        <div class='sage nodisplay code'>sage: K.class_group().invariants()</div>
+        <div class='pari nodisplay code'>pari: K.clgp</div>
+        <div class='magma nodisplay code'>&gt; ClassGroup(K);</div>
+	<p>
+          {{ info.class_group }}
+          {{ info.grh_label|safe }}
+        </p>
+
+
+        <p><h2> {{ KNOWL('nf.unit_group', title='Unit group') }}</h2>
+        <div class='sage nodisplay code'>sage: UK = K.unit_group()</div>
+        <div class='sage nodisplay code'>sage: UK.rank()</div>
+        <div class='sage nodisplay code'>sage: UK.torsion_generator()</div>
+        <div class='sage nodisplay code'>sage: UK.roots_of_unity()</div>
+        <div class='sage nodisplay code'>sage: K.regulator()</div>
+
+        <div class='pari nodisplay code'>pari: #K.fu</div>
+        <div class='pari nodisplay code'>pari: K.tu[2]</div>
+        <div class='pari nodisplay code'>pari: K.fu</div>
+        <div class='pari nodisplay code'>pari: K.reg</div>
+
+        <div class='magma nodisplay code'>&gt; UnitRank(K);</div>
+        <div class='magma nodisplay code'>&gt; K!f(TorsionSubgroup(UK).1);</div>
+        <div class='magma nodisplay code'>&gt; [K!Integers(K)!f(u) : u in Generators(UK)];</div>
+        <div class='magma nodisplay code'>&gt; Regulator(K);</div>
+        <p>
+          <table>
+            <tr><td>Rank:<td>&nbsp;&nbsp;<td>${{info.unit_rank}}$</tr>
+            <tr><td>Torsion generator:<td>&nbsp;&nbsp;<td>{{info.root_of_unity}}</tr>
+{% if info.unit_rank==1 %}
+            <tr><td>Fundamental unit:<td>&nbsp;&nbsp;<td>{{info.fund_units|safe}}
+          {{ info.grh_label|safe }}
+</tr>
+{% endif %}
+{% if info.unit_rank>1 %}
+            <tr><td>Fundamental units:<td>&nbsp;&nbsp;<td>{{info.fund_units|safe}}
+          {{ info.grh_label|safe }}
+</tr>
+{% endif %}
+            <tr><td>Regulator:<td>&nbsp;&nbsp;<td>{{info.regulator}}
+          {{ info.grh_label|safe }}
+           </tr>
+          </table>
+        </p>
+
+
+        <p><h2> {{ KNOWL('nf.galois_group', title='Galois group') }}</h2>
+        <div class='sage nodisplay code'>sage: K.galois_group(type='pari')</div>
+        <div class='pari nodisplay code'>pari: polgalois(pol)</div>
+        <div class='magma nodisplay code'>&gt; GaloisGroup(K);</div>
+        <p>
+            {{ info.galois_group | safe }}:
+          <table>
+            <tr><td>{{ info.phrase }}</tr>
+            <tr><td>
+            {{ info.cclasses | safe }}</tr>
+            <tr><td>
+            {{ info.character_table | safe }}</tr>
+          </table>
+
+        <p><h2> {{ KNOWL('nf.intermediate_fields', title='Intermediate fields') }}</h2>
+        <p>
+        {% if nf.subfields()==[] %}
+        <table>
+          <tr><td>
+            The extension is primitive: there are no intermediate fields 
+            between this field and $\Q$.
+          </td></tr>
+        </table>
+        {% else %}
+        <table>
+          <tr><td>
+            {{ nf.subfields_show() | safe }}
+          </td></tr>
+        </table>
+        <p>
+        Fields in the database are given up to isomorphism.  Isomorphic 
+        intermediate fields are shown with their multiplicities.
+        {% endif %}
+
+{% if nf.unit_galois_action() %}
+        <p><h2> {{ KNOWL('nf.multiplicative_gal_module', title='Multiplicative Galois module structure') }}</h2>
+            <table>
+            <tr><td>
+              $U_{K^{gal}}/\textrm{Tors}(U_{K^{gal}}) \cong$ {{nf.unit_galois_action_show()|safe}}
+           </tr>
+    {% if nf.unit_galois_action_type_knowl() %}
+            <tr><td>
+                Galois action is {{ nf.unit_galois_action_type_knowl()|safe }}
+            </tr>
+    {% endif %}
+           </table>
+{% endif %}
+        <p><h2> {{ KNOWL('nf.frobenius_cycle_types', title='Frobenius cycle types') }}</h2>
+           <table class="ntdata" style='text-align: center'>
+	    <thead>
+             <tr><th>$p$</th>
+            {% for p in info.frob_data %}
+            <td>{{ p[0] | safe }} </td>
+            {% endfor %}
+             </tr>
+	    </thead>
+	    <tbody>
+             <tr><th>Cycle type</th>
+            {% for p in info.frob_data %}
+            <td>{{ p[1] | safe }} </td>
+            {% endfor %}
+             </tr>
+	     </tbody>
+           </table>
+        </p>
+
+
+<p>
+   {% if info.seeram %}
+   In the table, <i>R</i> denotes a ramified prime.  
+   {% endif %}
+   Cycle lengths 
+   which are repeated in a cycle type are indicated by exponents.
+        <p>
+  <div class='pari nodisplay code'>
+   To obtain a list of [\(e_i, f_i\)] for the factorization of the ideal
+ \(p\mathcal{O}_K\) <br>
+pari: 
+<br>
+  p = 7;  \\ set a prime
+<br>
+  idealfactors = idealprimedec(K, p); \\ get the data
+<br>
+  vector(length(idealfactors), j, [idealfactors[j][3], idealfactors[j][4]])
+</div>
+  <div class='sage nodisplay code'>
+   sage:
+<br>
+  p = 7   # set a prime
+<br>
+  idealfactors = K.factor(p)  # get the data
+<br>
+  [[e, primefactor.residue_class_degree()] for primefactor,e in idealfactors]
+  </div>
+  <div class='magma nodisplay code'>
+<br>
+  p := 7;   # set a prime
+<br>
+  idealfactors := Factorization(p*Integers(K));  # get the data
+<br>
+  [&lg;Valuation(Norm(primefactor[1]), p), primefactor[2]&gt; : primefactor in idealfactors];
+</div>
+
+{% if info.get("tim_number_field", False) %}
+	<p><h2> {{ KNOWL('artin', title='Artin representations') }}</h2>
+        <div>
+	<center>
+	<table>
+
+	<thead><tr><th></th>
+	<th>{{ KNOWL('artin.dimension', title='Dimension') }}</th>
+	<th>{{ KNOWL('artin.conductor', title='Conductor') }}</th>
+	<th>Defining polynomial of {{ KNOWL('artin.number_field', title='Artin field') }} </th>
+	<th>{{ KNOWL('artin.gg_quotient', title='$G$') }}</th>
+	{# <th>{{ KNOWL('artin.root_number', title='Root number') }}</th> #}
+	<th>{{ KNOWL('artin.frobenius_schur_indicator', title='Ind') }}</th>
+        <th>{{ KNOWL('artin.trace_of_complex_conj', title='$\chi(c)$')}}</th>
+	</tr></thead>
+	<tbody>
+        {% for artin in info["tim_number_field"].artin_representations()%}
+          <tr> <td align="right">
+              {{info.mydecomp[loop.index-1]}}<a href = "{{artin.url_for()}}">{{loop.index}}</a></td><td align="center">${{artin.dimension()}}$</td>
+{#	  <td align="center">${{artin.conductor_equation()}}$</td> #}
+	  <td align="center">${{artin.factored_conductor_latex()}}$</td>
+	  {% if artin.number_field_galois_group().url_for() %}
+	     <td align="center"><a href="{{artin.number_field_galois_group().url_for()}}">${{artin.number_field_galois_group().polredabslatex()}}$</a></td>
+	  {% else %}
+	      <td align="center">${{artin.number_field_galois_group().polredabslatex()}}$</td>
+	  {% endif %}
+	  <td align="center">{{artin.number_field_galois_group().G_name()}}</td>
+	{#  <td align="center">${{artin.number_field_galois_group().size()}}$</td> #}
+	  {# <td align="center">${{artin.processed_root_number()}}$</td> #}
+	  <td align="center"> ${{artin.indicator()}}$</td>
+	  <td align="center">${{artin.trace_complex_conjugation()}}$</td>
+	  </tr>
+        {% endfor %}
+	</tbody>
+	</table>
+	</center>
+        </div>
+        <br />
+        <div>
+        Data is given for all irreducible 
+        representations of the Galois group.  Those marked with 
+        * are associated with this field.
+	</div>
+	{% endif %}
+
+        <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
+
+{% endblock %}
