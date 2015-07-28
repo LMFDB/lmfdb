@@ -71,6 +71,13 @@ def index_Q():
 def by_conductor(conductor):
     return genus2_curve_search(cond=conductor, **request.args)
 
+@g2c_page.route("/random")
+def random_curve():
+    from sage.misc.prandom import randint
+    n = get_stats().counts()['ncurves']
+    n = randint(0,n-1)
+    return render_curve_webpage_by_label(db_g2c().curves.find()[n]['label'])
+
 def split_label(label_string):
     L = label_string.split(".")
     return L
@@ -146,30 +153,51 @@ def genus2_curve_search(**args):
             tmp[1] = newors
         query[tmp[0]] = tmp[1]
 
-
-    if info.get("count"):
-        try:
-            count = int(info["count"])
-        except:
-            count = 100
-    else:
-        count = 100
-
     info["query"] = dict(query)
+
+    count_default = 50
+    if info.get('count'):
+        try:
+            count = int(info['count'])
+        except:
+            count = count_default
+    else:
+        count = count_default
+    info['count'] = count
+
+    start_default = 0
+    if info.get('start'):
+        try:
+            start = int(info['start'])
+            if(start < 0):
+                start += (1 - (start + 1) / count) * count
+        except:
+            start = start_default
+    else:
+        start = start_default
+
+    cursor = db_g2c().curves.find(query)
+    nres = cursor.count()
+    print "**************", start, nres, count
+    if(start >= nres):
+        start -= (1 + (start - nres) / count) * count
+    if(start < 0):
+        start = 0
+
     #res = db_g2c().curves.find(query).sort([("cond", pymongo.ASCENDING),
     #("label", pymongo.ASCENDING)]).limit(count)
-    res = db_g2c().curves.find(query).sort([("cond", pymongo.ASCENDING),
+    res = cursor.sort([("cond", pymongo.ASCENDING),
                                             ("class", pymongo.ASCENDING),
                                             ("disc_key", pymongo.ASCENDING),
-                                            ("label", pymongo.ASCENDING)])
+                                            ("label", pymongo.ASCENDING)]).skip(start).limit(count)
     nres = res.count()
     if nres == 1:
         info["report"] = "unique match"
     else:
-        if nres > count:
-            info["report"] = "displaying first %s of %s matches" % (count, nres)
+        if nres > count or start != 0:
+            info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
         else:
-            info["report"] = "displaying all %s matches" % nres
+            info['report'] = 'displaying all %s matches' % nres
     res_clean = []
     
     
@@ -186,6 +214,8 @@ def genus2_curve_search(**args):
 
     info["curve_url"] = lambda dbc: url_for_label(dbc['label'])
     info["isog_url"] = lambda dbc: isog_url_for_label(dbc['label'])
+    info["start"] = start
+    info["count"] = count
     credit = credit_string
     title = 'Genus 2 Curves search results'
     return render_template("search_results_g2.html", info=info, credit=credit, bread=bread, title=title)
