@@ -14,6 +14,17 @@
 <tr><td> Newpart:<td> {{info.new}} </tr>
 <tr><td> <td> {{info.new[0]}} </tr>
 <tr><td> <td> {{info.new[1]}} </tr>
+{% for n in info.new %}
+	{% for h in n.hiwf %}
+		<tr><td><td>
+		{% for i lte {{ h|length }} %}
+			{{i}}q^{{i}}
+		{% endfor %}
+		</tr>
+	{% endfor %}
+	<tr><td>Newform:<td><A HREF="/ModularForm/GL2/Q/holomorphic/{{n.mf}}">{{n.mf}}</A> </tr>
+	<tr><td>Number field:<td><A HREF="/NumberField/{{n.nf}}">{{n.nf}}</A> </tr>
+{% endfor %}
 <tr><td> Theta:<td> {{info.theta}} </tr>
 </table>
 </p>

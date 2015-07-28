@@ -22,8 +22,6 @@ from lmfdb.number_fields.number_field import parse_list, parse_field_string
 from lmfdb.WebNumberField import *
 
 
-QQ_RE = re.compile(r'^-?\d+(/\d+)?$')
-
 @hiwf_page.route("/")
 def half_integral_weight_form_render_webpage():
     args = request.args
@@ -89,6 +87,13 @@ def half_integral_weight_form_search(**args):
     return render_template("half_integral_weight_form_search.html", info=info, title=t, properties=properties, bread=bread)
 
 
+
+def print_q_expansion(list):
+     Qa.<a>=PolynomialRing(QQ)
+     Qq.<q>=PowerSeriesRing(Qa)
+     return "$"+str(q*Qq([Qa(c) for c in list])))+"$"
+
+
 @hiwf_page.route('/<label>')
 def render_hiwf_webpage(**args):
     C = getDBConnection()
@@ -113,8 +118,19 @@ def render_hiwf_webpage(**args):
     dimnew=dim-dimtheta	
     info['dimension'] = dim
     info['dimtheta']= dimtheta
-    info['new']= f['newpart']
+    new=[]
+    for n in f['newpart']:
+	v= {}	
+        v['dim'] = n['dim_image']
+	for         v['hiwf'] = n['half_forms']
+        v['hiwf'] = n['half_forms']
+        v['mf'] = n['mf_label']
+	v['nf'] = n['nf_label']
+	new.append(v)
+    info['new']= new
     info['theta']=f['thetas']
     return render_template("half_integral_weight_form.html", info=info, credit=credit, title=t, bread=bread)
+
+
 
 
