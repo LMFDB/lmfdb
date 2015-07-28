@@ -91,7 +91,7 @@ def index():
     rqfs = ['2.2.%s.1' %str(d) for d in [5,89,229,497]]
     data['fields'].append(['real quadratic fields',((nf,[url_for('.show_ecnf1',nf=nf),field_pretty(nf)]) for nf in rqfs)])
     # Imaginary quadratics
-    iqfs = ['2.0.%s.1' %str(d) for d in [1,2,3,7,11]]
+    iqfs = ['2.0.%s.1' %str(d) for d in [4,8,3,7,11]]
     data['fields'].append(['imaginary quadratic fields',((nf,[url_for('.show_ecnf1',nf=nf),field_pretty(nf)]) for nf in iqfs)])
     # Cubics
     cubics = ['3.1.23.1']
