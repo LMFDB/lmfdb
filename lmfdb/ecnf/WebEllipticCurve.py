@@ -1,5 +1,5 @@
 from flask import url_for
-from sage.all import ZZ, var, PolynomialRing, QQ, GCD, RR, rainbow, implicit_plot, plot
+from sage.all import ZZ, var, PolynomialRing, QQ, GCD, RealField, rainbow, implicit_plot, plot, text
 from lmfdb.base import app, getDBConnection
 from lmfdb.utils import image_src, web_latex, web_latex_ideal_fact, encode_plot
 from lmfdb.WebNumberField import WebNumberField
@@ -42,20 +42,32 @@ def EC_R_plot(ainvs,xmin,xmax,ymin,ymax,colour,legend):
    y=var('y')
    c=(xmin+xmax)/2
    d=(xmax-xmin)
-   return implicit_plot(y**2+ainvs[0]*x*y+ainvs[2]*y-x**3-ainvs[1]*x**2-ainvs[3]*x-ainvs[4],(x,xmin,xmax),(y,ymin,ymax),plot_points=1000,aspect_ratio="automatic",color=colour)+plot(0,xmin=c-1e-5*d,xmax=c+1e-5*d,ymin=ymin,ymax=ymax,aspect_ratio="automatic",color=colour,legend_label=legend) # Add an extra plot outside the visible frame because implicit plots are buugy in that their legend does not show (http://trac.sagemath.org/ticket/15903) 
+   return implicit_plot(y**2+ainvs[0]*x*y+ainvs[2]*y-x**3-ainvs[1]*x**2-ainvs[3]*x-ainvs[4],(x,xmin,xmax),(y,ymin,ymax),plot_points=1000,aspect_ratio="automatic",color=colour)+plot(0,xmin=c-1e-5*d,xmax=c+1e-5*d,ymin=ymin,ymax=ymax,aspect_ratio="automatic",color=colour,legend_label=legend) # Add an extra plot outside the visible frame because implicit plots are buggy: their legend does not show (http://trac.sagemath.org/ticket/15903) 
 
 def EC_nf_plot(E,base_field_gen_name):
     K = E.base_field()
-    SR = K.embeddings(RR)
-    n1 = len(SR)
+    n1 = K.signature()[0]
     if n1 == 0:
         return plot([])
-    X = [E.base_extend(s).plot() for s in SR]
+    prec = 53
+    maxprec = 10**6
+    while prec < maxprec: # Try to base change to R. May fail if resulting curve is almost singular, so increase precision.
+        try:
+            SR = K.embeddings(RealField(prec))
+            X = [E.base_extend(s) for s in SR]
+            break
+        except ArithmeticError:
+            prec *= 2
+    if prec >= maxprec:
+        return text("Unable to plot",(1,1),fontsize="xx-large")
+    X = [e.plot() for e in X]
     xmin = min([x.xmin() for x in X])
     xmax = max([x.xmax() for x in X])
     ymin = min([x.ymin() for x in X])
     ymax = max([x.ymax() for x in X])
-    cols = rainbow(n1)
+    cols = ["blue","red","green","orange","brown"] # Preset colours, because rainbow tends to return too pale ones
+    if n1 > len(cols):
+        cols = rainbow(n1)
     return sum([EC_R_plot([SR[i](a) for a in E.ainvs()],xmin,xmax,ymin,ymax,cols[i],"$"+base_field_gen_name+" \mapsto$ "+str(SR[i].im_gens()[0].n(20))) for i in range(n1)])
 
 class ECNF(object):
@@ -249,8 +261,7 @@ class ECNF(object):
             ('Label' , self.label)]
         
         # Plot
-        n1 = len(E.base_field().embeddings(RR))
-        if(n1):
+        if E.base_field().signature()[0]:
             self.plot = encode_plot(EC_nf_plot(E,self.field.generator_name()))
             self.plot_link = '<img src="%s" width="200" height="150"/>' % self.plot
             self.properties += [(None, self.plot_link)]
