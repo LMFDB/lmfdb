@@ -76,17 +76,13 @@
    {% endif %}
  {%- endmacro %}
 
+<div id="sidebar">
 {%- include "sidebar.html" -%}
 
-{% if BETA %}
+{{ entry("Data", getUploadedFor(request.path, true) ) }}
 
-      {#  Please keep the commented part, I might reinstate some of it POD
-      #<li><a class = "number_field_galois_groups" href="{{ url_for('number_field_galois_groups.index') }}">Galois Groups (only logged in)</a></li>
-      #}
-{% endif %}
+</div>
 
-   {{ entry("Data", getUploadedFor(request.path, true) ) }}
-  {# {% if user_is_authenticated %} {% endif %} #}
 
 {% else %}
 <style type="text/css">
