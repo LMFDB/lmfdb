@@ -7,25 +7,27 @@
 <table>
 <tr><td> Weight:<td> ${{ info.weight }}/2$ </tr>
 <tr><td> Level:<td> ${{ info.level }}$ </tr>
-<tr><td> Character:<td> ${{ info.character}}$ </tr>
+<tr><td> Character:<td> <A HREF="Character/Dirichlet/{{info.ch_lab}}">${{info.char}}$</A> </tr>
+</tr>
 <tr><td> Label:<td> {{ info.label}} </tr>
 <tr><td> Dimension:<td> ${{ info.dimension }}$ </tr>
-<tr><td> Dimension theta:<td> ${{ info.dimtheta}}$ </tr>
-<tr><td> Newpart:<td> {{info.new}} </tr>
-<tr><td> <td> {{info.new[0]}} </tr>
-<tr><td> <td> {{info.new[1]}} </tr>
+<tr><td> Dimension theta:<td> ${{info.dimtheta}}$ </tr>
 {% for n in info.new %}
-	{% for h in n.hiwf %}
-		<tr><td><td>
-		{% for i lte {{ h|length }} %}
-			{{i}}q^{{i}}
-		{% endfor %}
-		</tr>
-	{% endfor %}
 	<tr><td>Newform:<td><A HREF="/ModularForm/GL2/Q/holomorphic/{{n.mf}}">{{n.mf}}</A> </tr>
-	<tr><td>Number field:<td><A HREF="/NumberField/{{n.nf}}">{{n.nf}}</A> </tr>
+	<tr><td>where $\Q(a)$ is the number field:<td><A HREF="/NumberField/{{n.nf}}">{{n.nf}}</A> </tr>
+	{% for h in n.hiwf %}
+		<tr><td> <td> ${{h}}$ </tr>
+	{% endfor %}
 {% endfor %}
-<tr><td> Theta:<td> {{info.theta}} </tr>
+<tr><td> Theta:<td>
+{% if info.dimtheta == 0  %}
+	$S_0({{info.level}}, {{info.char}})$
+{% else %}
+	{% for n in info.theta %}
+		<A HREF="Character/Dirichlet/{{n[0]}}">${{n[1]}}$</A>
+	{% endfor %}
+{% endif %}	
+</td></tr>
 </table>
 </p>
 

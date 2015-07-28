@@ -13,7 +13,7 @@ from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range2, 
 from lmfdb.number_fields.number_field import parse_list
 
 import sage.all
-from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange
+from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange, PowerSeriesRing
 
 from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, parse_range
 
@@ -89,9 +89,23 @@ def half_integral_weight_form_search(**args):
 
 
 def print_q_expansion(list):
-     Qa.<a>=PolynomialRing(QQ)
-     Qq.<q>=PowerSeriesRing(Qa)
-     return "$"+str(q*Qq([Qa(c) for c in list])))+"$"
+     list=[str(c) for c in list]
+     Qa=PolynomialRing(QQ,'a')
+     a = QQ['a'].gen()
+     Qq=PowerSeriesRing(Qa,'q')
+     return str(Qq([c for c in list]).add_bigoh(len(list)+1))
+
+
+
+def my_latex_from_qexp(s):
+    ss = ""
+    ss += re.sub('x\d', 'x', s)
+    ss = re.sub("\^(\d+)", "^{\\1}", ss)
+    ss = re.sub('\*', '', ss)
+    ss = re.sub('zeta(\d+)', 'zeta_{\\1}', ss)
+    ss = re.sub('zeta', '\zeta', ss)
+    ss += ""
+    return ss
 
 
 @hiwf_page.route('/<label>')
@@ -118,17 +132,35 @@ def render_hiwf_webpage(**args):
     dimnew=dim-dimtheta	
     info['dimension'] = dim
     info['dimtheta']= dimtheta
+    chi = f['character']
+    info['ch_lab']= chi.replace('.','/')
+    chi1=chi.split(".")	
+    chi2="\chi_{"+chi1[0]+"}("+chi1[1]+",\cdot)"	
+    info['char']= chi2
     new=[]
     for n in f['newpart']:
 	v= {}	
         v['dim'] = n['dim_image']
-	for         v['hiwf'] = n['half_forms']
-        v['hiwf'] = n['half_forms']
+	s=[]
+	for h in n['half_forms']:
+		s.append(my_latex_from_qexp(print_q_expansion(h)))		
+        v['hiwf'] = s
         v['mf'] = n['mf_label']
 	v['nf'] = n['nf_label']
 	new.append(v)
     info['new']= new
-    info['theta']=f['thetas']
+    if dimtheta !=0:
+	theta=[]
+	for m in f['thetas']:
+		for n in m:
+			n_lab= n.replace('.','/')
+			n_l=n.split(".")	
+		    	n_lat="\chi_{"+n_l[0]+"}("+n_l[1]+",\cdot)"	
+			v=[n_lab, n_lat]
+			theta.append(v)
+	info['theta']= theta
+    else:
+	info['theta']= f['thetas']
     return render_template("half_integral_weight_form.html", info=info, credit=credit, title=t, bread=bread)
 
 
