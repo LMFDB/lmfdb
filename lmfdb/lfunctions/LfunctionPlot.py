@@ -78,7 +78,7 @@ def getGroupHtml(group):
     if group == 'GSp4':
         ans = "<h3 id='GSp4_Q_Maass'>Maass cusp forms for GSp(4)</h3>\n"
         ans += "<div>Currently in the LMFDB, we have data on L-functions associated "
-        ans += "to Maass cusp forms for GSp(4) of level 1."
+        ans += "to Maass cusp forms for GSp(4) of level 1. "
         ans += "These satisfy a functional equation with \\(\\Gamma\\)-factors\n"
         ans += "\\begin{equation}"
         ans += "\\Gamma_\\R(s + i \\mu_1)"
@@ -91,7 +91,7 @@ def getGroupHtml(group):
     elif group == 'GL4':
         ans = "<h3 id='GL4_Q_Maass'>Maass cusp forms for GL(4)</h3>\n"
         ans += "<div>Currently in the LMFDB, we have data on L-functions associated "
-        ans += "to Maass cusp forms for GL(4) of level 1."
+        ans += "to Maass cusp forms for GL(4) of level 1. "
         ans += "These satisfy a functional equation with \\(\\Gamma\\)-factors\n"
         ans += "\\begin{equation}"
         ans += "\\Gamma_\R(s + i \\mu_1)"
@@ -101,10 +101,20 @@ def getGroupHtml(group):
         ans += "\\end{equation}\n"
         ans += "where \\(\\mu_1 + \\mu_2 = \\mu_3 + \\mu_4\\).</div>\n"
 
+# template code to generate a knowl
+# {{ KNOWL('mf.maass.gl3',  title='Maass cusp forms for GL(3)') }}
+# the rendered html
+# <a title="Maass cusp forms for GL(3) [mf.maass.gl3]" knowl="mf.maass.gl3" kwargs="">Maass cusp forms for GL(3)</a>
+# but this is for a knowl that exists.  if it doesn't yet exist, it should look something like
+#      <div class="knowl knowl-error">
+#      'mf.maass.gl3'
+#      <a href="/knowledge/edit/mf.maass.gl3">Maass cusp forms for GL(3)</a>
+#      </div>
+
     elif group == 'GL3':
         ans = "<h3 id='GL3_Q_Maass'>Maass cusp forms for GL(3)</h3>\n"
         ans += "<div>Currently in the LMFDB, we have data on L-functions associated "
-        ans += "to Maass cusp forms for GL(3) of level 1 and 4."
+        ans += "to Maass cusp forms for GL(3) of levels 1 and 4. "
         ans += "These satisfy a functional equation with \\(\\Gamma\\)-factors\n"
         ans += "\\begin{equation}"
         ans += "\\Gamma_\\R(s + i \\mu_1)"
