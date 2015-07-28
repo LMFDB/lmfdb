@@ -76,20 +76,23 @@ def makeLfromdata(L):
     L.nu_fe = [x+p2sage(data['analytic_normalization'])
         for x in p2sage(data['gamma_factors'])[1]]
     L.compute_kappa_lambda_Q_from_mu_nu()
+    # start items specific to hyperelliptic curves
     L.langlands = True
     L.poles = []
     L.residues = []
     L.coefficient_period = 0
     L.coefficient_type = 2
+    # end items specific to hyperelliptic curves
     L.numcoeff = 30
+    # an(analytic) = An(arithmetic)/n^(motivic_weight/2), where an/An are Dir. coeffs
     L.dirichlet_coefficients_unnormalized = an_from_data(p2sage(data['euler_factors']),L.numcoeff)
     L.normalize_by = p2sage(data['analytic_normalization'])
     L.dirichlet_coefficients = L.dirichlet_coefficients_unnormalized
     for n in range(0, len(L.dirichlet_coefficients)):
         an = L.dirichlet_coefficients[n]
         L.dirichlet_coefficients[n] = float(an/(n+1)**L.normalize_by)
-    L.checkselfdual()
-    generateSageLfunction(L)
+    L.checkselfdual()  # needs to be changed to read from database
+    generateSageLfunction(L)  # DF: why is this needed if pulling from database?
 
 def generateSageLfunction(L):
     """ Generate a SageLfunction to do computations
