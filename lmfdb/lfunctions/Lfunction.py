@@ -36,6 +36,7 @@ def constructor_logger(object, args):
     '''
     logger.debug(str(object.__class__) + str(args))
 
+# Compute Dirichlet coefficients from Euler factors.
 def an_from_data(euler_factors,upperbound=30):
     PP = sage.rings.all.PowerSeriesRing(sage.rings.all.RationalField(), 'x', Integer(upperbound).nbits())
     result = upperbound * [1]
@@ -85,9 +86,9 @@ def makeLfromdata(L):
     # end items specific to hyperelliptic curves
     L.numcoeff = 30
     # an(analytic) = An(arithmetic)/n^(motivic_weight/2), where an/An are Dir. coeffs
-    L.dirichlet_coefficients_unnormalized = an_from_data(p2sage(data['euler_factors']),L.numcoeff)
+    L.dirichlet_coefficients_arithmetic = an_from_data(p2sage(data['euler_factors']),L.numcoeff)
     L.normalize_by = p2sage(data['analytic_normalization'])
-    L.dirichlet_coefficients = L.dirichlet_coefficients_unnormalized
+    L.dirichlet_coefficients = L.dirichlet_coefficients_arithmetic[:]
     for n in range(0, len(L.dirichlet_coefficients)):
         an = L.dirichlet_coefficients[n]
         L.dirichlet_coefficients[n] = float(an/(n+1)**L.normalize_by)
@@ -259,7 +260,7 @@ class Lfunction_EC_Q(Lfunction):
         #remove a0
         self.dirichlet_coefficients = self.E.anlist(self.numcoeff)[1:]
 
-        self.dirichlet_coefficients_unnormalized = (
+        self.dirichlet_coefficients_arithmetic = (
             self.dirichlet_coefficients[:])
         self.normalize_by = Rational('1/2')
 
