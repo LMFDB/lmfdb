@@ -67,7 +67,7 @@ def show():
         gr.lfunction()
 
         info = {}
-        info['dirichlet'] = lfuncDStex(tp, "analytic")
+        info['dirichlet'] = lfuncDShtml(tp, "analytic")
         info['eulerproduct'] = lfuncEPtex(tp, "abstract")
         info['functionalequation'] = lfuncFEtex(tp, "analytic")
         info['functionalequationSelberg'] = lfuncFEtex(tp, "selberg")
@@ -82,7 +82,7 @@ def show():
             tp.lfunction()
 
             info = {}
-            info['dirichlet'] = lfuncDStex(tp, "analytic")
+            info['dirichlet'] = lfuncDShtml(tp, "analytic")
             info['eulerproduct'] = lfuncEPtex(tp, "abstract")
             info['functionalequation'] = lfuncFEtex(tp, "analytic")
             info['functionalequationSelberg'] = lfuncFEtex(tp, "selberg")

@@ -246,7 +246,8 @@ def seriesvar(index, seriestype):
 #-------
 
 def lfuncDStex(L, fmt):
-    return(lfuncDShtml(L, fmt))
+    return("unused")
+    #return(lfuncDShtml(L, fmt))
 # the Dirichlet series on an L-function home page did not wrap when the window was
 # narrow.  So we made a lfuncDShtml funciton which makes the Dirichlet series in
 # HTML.  Then we redirect the tex version to the html version.

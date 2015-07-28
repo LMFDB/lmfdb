@@ -14,7 +14,7 @@ from Lfunction import *
 import LfunctionPlot as LfunctionPlot
 from lmfdb.utils import to_dict
 import bson
-from Lfunctionutilities import (p2sage, lfuncDStex, lfuncEPtex, lfuncFEtex,
+from Lfunctionutilities import (p2sage, lfuncDShtml, lfuncEPtex, lfuncFEtex,
                                 truncatenumber, styleTheSign, specialValueString)
 from lmfdb.WebCharacter import WebDirichlet
 from lmfdb.lfunctions import l_function_page, logger
@@ -617,7 +617,7 @@ def initLfunction(L, args, request):
         info['friends'] = [('Hypergeometric motive ', friendlink)]   # The /L/ trick breaks down for motives, because we have a scheme for the L-functions themselves
 
 
-    info['dirichlet'] = lfuncDStex(L, "analytic")
+    info['dirichlet'] = lfuncDShtml(L, "analytic")
     info['eulerproduct'] = lfuncEPtex(L, "abstract")
     info['functionalequation'] = lfuncFEtex(L, "analytic")
     info['functionalequationSelberg'] = lfuncFEtex(L, "selberg")
