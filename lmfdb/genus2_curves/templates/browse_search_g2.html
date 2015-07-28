@@ -15,7 +15,7 @@ By {{ KNOWL('g2c.conductor', title='conductor')}}:
 </p>
 
 <p>
-By {{ KNOWL('g2c.discriminant', title='discriminant')}}:
+By {{ KNOWL('g2c.abs_discriminant', title='absolute discriminant')}}:
 {% for rnge in info.discriminant_list %}
 <a href="?disc={{rnge}}">{{rnge}}</a>
 {% endfor %}
@@ -32,24 +32,24 @@ Some of our favorite curves:
 <form>
 <table>
 <tr>
-<td>Conductor</td>  
+<td>By {{ KNOWL('g2c.conductor', title='conductor') }}</td>  
 <td><input type='text' name='cond' placeholder='169' size=10>
 <td><span class="formexample"> e.g. 169, 100-1000 </span></td>
 </tr>
 <tr>
-<td>{{ KNOWL('g2c.discriminant', title='Absolute Discriminant') }}</td>
+<td>By {{ KNOWL('g2c.abs_discriminant', title='absolute discriminant') }}</td>
 <td><input type='text' name='disc' placeholder='169' size=10>
 <td><span class="formexample"> e.g. 169, 0-1000</td>
 </tr>
 
 <tr>
-<td>{{ KNOWL('g2c.gl2type', title='GL_2-type') }}</td>
+<td>By {{ KNOWL('g2c.gl2type', title='GL_2-type') }}</td>
 <td><input type='text' name='is_gl2_type' placeholder='true' size=10>
 <td><span class="formexample"> e.g. true, false</td>
 </tr>
 
 <tr>
-<td>{{ KNOWL('g2c.st_group', title='Sato-Tate group') }}</td>
+<td>By {{ KNOWL('g2c.st_group', title='Sato-Tate group') }}</td>
 <td colspan="2">
   <table>
     <tr>
