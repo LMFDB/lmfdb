@@ -1,6 +1,5 @@
 {%- include "sidebar.css" -%}
 
-<div id="sidebar">
 {% for key, heading, value in sidebar.data %}
 {% if BETA or not value.status %}{# an entire section may be omitted e.g. Motives #}
 
@@ -237,6 +236,4 @@
 {% endif %} {# if value.type == ... #}
 {% endif %} {# if BETA or not value.status #}
 {% endfor %} {# for key, heading, value in sidebar.data #}
-
-</div>
 
