@@ -139,14 +139,24 @@ table td.params {
 {% endif %}
 
 
-{#
+
 <form>
-Download all search results for
+Download all search results for 
 <input type="submit" name="Submit" value="gp">
 <input type="submit" name="Submit" value="sage">
-<input type="submit" name="Submit" value="mathematica">
+<input type="submit" name="Submit" value="magma">
+<input type="hidden" name="download" value="1"/>
+<input type="hidden" name="signature" value="{{info.signature}}"/>
+<input type="hidden" name="galois_group" value="{{info.galois_group}}"/>
+<input type="hidden" name="class_number" value="{{info.class_number}}"/>
+<input type="hidden" name="class_group" value="{{info.class_group}}"/>
+<input type="hidden" name="ur_primes" value="{{info.ur_primes}}"/>
+<input type="hidden" name="ram_primes" value="{{info.ram_primes}}"/>
+<input type="hidden" name="ram_quantifier" value="{{info.ram_quantifier}}"/>
+<input type="hidden" name="discriminant" value="{{info.discriminant}}"/>
+
 </form>
-#}
+
 
 {#
 Query was: {{info.query}}
