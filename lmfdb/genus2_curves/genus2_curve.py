@@ -216,8 +216,6 @@ def genus2_curve_search(**args):
     if(start < 0):
         start = 0
 
-    #res = db_g2c().curves.find(query).sort([("cond", pymongo.ASCENDING),
-    #("label", pymongo.ASCENDING)]).limit(count)
     res = cursor.sort([("cond", pymongo.ASCENDING),
                                             ("class", pymongo.ASCENDING),
                                             ("disc_key", pymongo.ASCENDING),
