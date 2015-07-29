@@ -1,3 +1,47 @@
+
+def group_alias_table():
+    C = base.getDBConnection()
+    return aliastable(C)
+
+def group_alias_table():
+    C = base.getDBConnection()
+    return aliastable(C)
+
+def group_alias_table():
+    C = base.getDBConnection()
+    return aliastable(C)
+
+def group_alias_table():
+    C = base.getDBConnection()
+    return aliastable(C)
+
+def group_alias_table():
+    C = base.getDBConnection()
+    return aliastable(C)
+
+def group_alias_table():
+    C = base.getDBConnection()
+    return aliastable(C)
+
+def group_alias_table():
+    C = base.getDBConnection()
+    return aliastable(C)
+
+def group_alias_table():
+    C = base.getDBConnection()
+    return aliastable(C)
+
+def group_alias_table():
+    C = base.getDBConnection()
+    return aliastable(C)
+
+def group_alias_table():
+    C = base.getDBConnection()
+    return aliastable(C)
+
+def group_alias_table():
+    C = base.getDBConnection()
+    return aliastable(C)
 # -*- coding: utf-8 -*-
 # This Blueprint is about Galois Groups
 # Author: John Jones
@@ -270,6 +314,8 @@ def render_group_webpage(args):
         data['subinfo'] = subfield_display(C, n, data['subs'])
         data['resolve'] = resolve_display(C, data['resolve'])
         data['otherreps'] = wgg.otherrep_list()
+        if len(data['otherreps']) == 0:
+            data['otherreps']="There is no other low degree representation."
         query={'galois': bson.SON([('n', n), ('t', t)])}
         C = base.getDBConnection()
         intreps = C.transitivegroups.Gmodules.find({'n': n, 't': t}).sort('index', pymongo.ASCENDING)
