@@ -36,19 +36,19 @@
     </tr>
     <tr>
       <td><select name='st_group' width="80" style="width: 80px" >
-                   <option value='{{info.st_group}}'>{{info.st_group}}</option>
+                   <option value='{{info.st_group}}'>{{info.st_group_dict[info.st_group]}}</option>
                    <option ></option>
-		   {% for G in info.st_group_list%}
-                   <option value={{G[0]}}>{{G[1]}}</option>
+		   {% for G in info.st_group_dict.keys()%}
+                   <option value='{{G}}'>{{info.st_group_dict[G]}}</option>
 		   {% endfor %}
 </select>
 </td>
 
 <td><select name='real_geom_end_alg' width="80" style="width: 80px">
-                   <option value='{{info.real_geom_end_alg}}'>{{info.real_geom_end_alg}}</option>
+                   <option value='{{info.real_geom_end_alg}}'>{{info.real_geom_end_alg_dict[info.real_geom_end_alg]}}</option>
                    <option ></option>
-		   {% for G in info.real_geom_end_alg_list%}
-                   <option value={{G[0]}}>{{G[1]}}</option>
+		   {% for G in info.real_geom_end_alg_dict.keys()%}
+                   <option value='{{G}}'>{{info.real_geom_end_alg_dict[G]}}</option>
 		   {% endfor %}
 </select></td>
 </tr>
@@ -56,7 +56,7 @@
 </tr>
 
 <tr>
-<td>{{ KNOWL('g2c.aut_grp', title='Automorphism group') }}</td>
+<td>By {{ KNOWL('g2c.aut_grp', title='Automorphism group') }}</td>
 <td colspan="2">
   <table>
     <tr>
@@ -65,18 +65,18 @@
     </tr>
     <tr>
       <td align = "center"><select name='aut_grp' width="80" style="width: 80px">
-                   <option value='{{info.aut_grp}}'>{{info.aut_grp}}</option>
+                   <option value='{{info.aut_grp}}'>{{info.aut_grp_dict[info.aut_grp]}}</option>
                    <option ></option>
-		   {% for G in info.aut_grp_list%}
-                   <option value={{G[0]}}>{{G[1]}}</option>
+		   {% for G in info.aut_grp_dict.keys()%}
+                   <option value='{{G}}'>{{info.aut_grp_dict[G]}}</option>
 		   {% endfor %}
       </select></td>
       <td align = "center"><select name='geom_aut_grp' width="80" style="width: 80px">
 	           	  	    
-	<option value='{{info.geom_aut_grp}}'>{{info.geom_aut_grp}}</option>
+	<option value='{{info.geom_aut_grp}}'>{{info.geom_aut_grp_dict[info.geom_aut_grp]}}</option>
 	           <option ></option>
-		   {% for G in info.geom_aut_grp_list%}
-                   <option value={{G[0]}}>{{G[1]}}</option>
+		   {% for G in info.geom_aut_grp_dict.keys()%}
+                   <option value='{{G}}'>{{info.geom_aut_grp_dict[G]}}</option>
 		   {% endfor %}
       </select></td>
     </tr>
