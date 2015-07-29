@@ -52,29 +52,29 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
         </tr>
 	
         <tr>
-          <td> \( I_4 \) </td>
-	  <td>&nbsp;:&nbsp;</td>
+          <td> \( I_2 \) </td>
+	  <td>&nbsp;=&nbsp;</td>
 	  <td>\({{ data.data.invs[0] }}\)</td>
           <td>&nbsp;=&nbsp;</td>
 	  <td>{{ data.data.invs_factor_latex[0] }}</td>
         </tr>
 	<tr>
-          <td> \( I_6 \) </td>
-	  <td>&nbsp;:&nbsp;</td>
+          <td> \( I_4 \) </td>
+	  <td>&nbsp;=&nbsp;</td>
 	  <td>\({{ data.data.invs[1] }}\)</td>
           <td>&nbsp;=&nbsp;</td>
 	  <td>{{ data.data.invs_factor_latex[1] }}</td>
         </tr>
 	<tr>
-          <td> \( I_8 \) </td>
-	  <td>&nbsp;:&nbsp;</td>
+          <td> \( I_6 \) </td>
+	  <td>&nbsp;=&nbsp;</td>
 	  <td>\({{ data.data.invs[2] }}\)</td>
           <td>&nbsp;=&nbsp;</td>
 	  <td>{{ data.data.invs_factor_latex[2] }}</td>
         </tr>
 	<tr>
           <td> \( I_{10} \) </td>
-	  <td>&nbsp;:&nbsp;</td>
+	  <td>&nbsp;=&nbsp;</td>
 	  <td>\({{ data.data.invs[3]}}\)</td>
           <td>&nbsp;=&nbsp;</td>
 	  <td>{{ data.data.invs_factor_latex[3] }}</td>
@@ -87,10 +87,11 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 <tr>  <td>\(\mathrm{Aut}(X_{\overline{\Q}})\)</td><td>\(\simeq\)</td>  <td>\({{ data.data.geom_aut_grp}} \) </td> <td>(GAP id : {{data.geom_aut_grp}})</td></tr>
 </table>
 
+<h2> {{ KNOWL('g2c.num_rat_wpts', title='Number of rational Weierstrass points') }} </h2>
+\({{data.data.num_rat_wpts}}\)
+
 <h2> {{ KNOWL('g2c.torsion', title='Torsion') }} </h2>
 \({{data.data.tor_struct}}\)
-
-
 
 <h2> {{KNOWL('g2c.st_group', title='Sato-Tate group') }} </h2>
 <p>
