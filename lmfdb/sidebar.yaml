@@ -120,7 +120,7 @@
              - title: $\Q$-curves
                status: future
            colspan: onecolumn
-         - title: "Hyperelliptic:"
+         - title: "Genus 2:"
            status: beta
            part3:
              - title: $/\Q$
