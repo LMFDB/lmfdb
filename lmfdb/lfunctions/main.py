@@ -618,6 +618,7 @@ def initLfunction(L, args, request):
 
 
     info['dirichlet'] = lfuncDShtml(L, "analytic")
+    info['dirichlet_arithmetic'] = lfuncDShtml(L, "arithmetic")
     info['eulerproduct'] = lfuncEPtex(L, "abstract")
     info['functionalequation'] = lfuncFEtex(L, "analytic")
     info['functionalequationSelberg'] = lfuncFEtex(L, "selberg")

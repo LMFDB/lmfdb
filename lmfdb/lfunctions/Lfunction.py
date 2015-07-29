@@ -1543,11 +1543,7 @@ class Lfunction_genus2_Q(Lfunction):
 
         self.number = int(0)
         self.quasidegree = 2
-        self.texname = "L(s,A)"
-        self.texnamecompleteds = "\\Lambda(s,A)"
-        self.texnamecompleted1ms = "\\Lambda(1-s,A)"
-        self.title = ("$L(s,A)$, " + "where $A$ is an abelian surface "
-                      + "of conductor " + str(isoclass['cond']))
+
         self.citation = ''
         self.credit = ''
 
@@ -1557,6 +1553,21 @@ class Lfunction_genus2_Q(Lfunction):
 
         self.lfunc_data = LfunctionDatabase.getGenus2Ldata(isoclass['hash'])
         makeLfromdata(self)
+
+        # Need an option for the arithmetic normalization, leaving the
+        # analytic normalization as the default.
+        self.texname = "L(s,A)"
+        self.texname_arithmetic = "L(A,s)"
+        self.texnamecompleteds = "\\Lambda(s,A)"
+        self.texnamecompleted1ms = "\\Lambda(1-s,A)"
+        self.texnamecompleteds_arithmetic = "\\Lambda(A,s)"
+        self.texnamecompleted1ms_arithmetic = "\\Lambda(".str(L.motivic_weight + 1)."-s,A)"
+#        self.title = ("$L(s,A)$, " + "where $A$ is genus 2 curve "
+#                      + "of conductor " + str(isoclass['cond']))
+        self.title_end = ("where $A$ is genus 2 curve "
+                      + "of conductor " + str(isoclass['cond']))
+        self.title_arithmetic = self.texname_arithmetic.", ".self.title_end
+        self.title = self.texname.", ".self.title_end
 
         constructor_logger(self, args)
 

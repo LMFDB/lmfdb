@@ -180,9 +180,11 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
                 return("-" + seriesvar(index, seriestype))
         else:
             if seriescoefftype == "series":
-                return(ans + " - " + truncatenumber(float(abs(rp)), precision) + seriesvar(index, seriestype))
+#                return(ans + " - " + truncatenumber(float(abs(rp)), precision) + seriesvar(index, seriestype))
+                return(ans + " - " + truncatenumber(-1*rp, precision) + seriesvar(index, seriestype))
             elif seriescoefftype == "serieshtml":
-                return(ans + " &minus; " + truncatenumber(float(abs(rp)), precision) + seriesvar(index, seriestype))
+#                return(ans + " &minus; " + truncatenumber(float(abs(rp)), precision) + seriesvar(index, seriestype))
+                return(ans + " &minus; " + truncatenumber(-1*rp, precision) + seriesvar(index, seriestype))
             elif seriescoefftype == "literal" or seriescoefftype == "factor":
                 return(ans + truncatenumber(rp, precision))
 
@@ -271,7 +273,8 @@ def lfuncDShtml(L, fmt):
     # Changes to account for very sparse series, only count actual nonzero terms to decide when to go to next line
     # This actually jumps by 2 whenever we add a newline, to ensure we just add one new line
     nonzeroterms = 1
-    if fmt == "analytic" or fmt == "langlands":
+#    if fmt == "analytic" or fmt == "langlands":
+    if fmt in ["analytic", "langlands", "arithmetic"]:
       #  ans = "\\begin{align}\n"
 #        ans = ans + "<table class='dirichletseries'><tr>"
 #        ans = ans + "<td valign='top'>" + "$" + L.texname + "$" + "</td>"
@@ -287,9 +290,19 @@ def lfuncDShtml(L, fmt):
         ans = ans + "1^{\mathstrut}" + "$"  + "&nbsp;"
         ans = ans + "</td><td valign='top'>"
 
+        if fmt == "arithmetic":
+            ds_length = len(L.dirichlet_coefficients_arithmetic)
+        else:
+            ds_length = len(L.dirichlet_coefficients)
 
-        for n in range(1, len(L.dirichlet_coefficients)):
-            tmp = seriescoeff(L.dirichlet_coefficients[n], n + 1, "serieshtml", "dirichlethtml", -6, 5)
+        for n in range(1, ds_length):
+            if fmt == "arithmetic":
+                tmp = seriescoeff(L.dirichlet_coefficients_arithmetic[n], n + 1,
+                    "serieshtml", "dirichlethtml", -6, 5)
+            else:
+                tmp = seriescoeff(L.dirichlet_coefficients[n], n + 1,
+                    "serieshtml", "dirichlethtml", -6, 5)
+
             if tmp != "":
                 nonzeroterms += 1
             ans = ans + " <span class='term'>" + tmp + "</span> "  
