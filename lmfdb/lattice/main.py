@@ -10,7 +10,7 @@ from sage.all import ZZ, var, PolynomialRing, QQ, latex
 
 from lmfdb.lattice import lattice_page, lattice_logger
 
-lattice_credit = 'someone'
+lattice_credit = 'Samuele Anni, Anna Haensch, Gabriele Nebe and Neil Sloane'
 
 
 def get_bread(breads=[]):
@@ -27,5 +27,5 @@ def index():
     bread = get_bread([])
     info = {}
     friends=[]
-    return render_template("lattice-index.html", title="Lattice label", bread=bread, credit=lattice_credit, info=info, friends=friends)
+    return render_template("lattice-index.html", title="Integral Lattices", bread=bread, credit=lattice_credit, info=info, friends=friends)
 
