@@ -283,7 +283,7 @@ class WebG2C(object):
              ('%s' % iso, url_for(".by_double_iso_label", conductor=self.cond, iso_label=iso)),
              ('Genus 2 curve %s' % num, url_for(".by_g2c_label", label=self.label))]
 
-    def render_curve_webpage_by_label(label):
-        credit = credit_string
-        data = WebG2C.by_label(label)
-        return render_template("curve_g2.html", credit=credit, **data)
+#    def render_curve_webpage_by_label(label):
+#        credit = credit_string
+#        data = WebG2C.by_label(label)
+#        return render_template("curve_g2.html", credit=credit, **data)
