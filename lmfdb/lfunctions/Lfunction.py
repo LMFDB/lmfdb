@@ -1547,6 +1547,10 @@ class Lfunction_genus2_Q(Lfunction):
         self.citation = ''
         self.credit = ''
 
+        self.title = "not really the title"
+        self.texname = "LLLLLLL"
+        self.texnamecompleteds = "AAAAAAA"
+        self.texnamecompleted1ms = "BBBBBBB"
         # Extract the L-function information
         # The data are stored in a database, so extract it and then convert
         # to the format expected by the L-function homepage template.
@@ -1561,13 +1565,13 @@ class Lfunction_genus2_Q(Lfunction):
         self.texnamecompleteds = "\\Lambda(s,A)"
         self.texnamecompleted1ms = "\\Lambda(1-s,A)"
         self.texnamecompleteds_arithmetic = "\\Lambda(A,s)"
-        self.texnamecompleted1ms_arithmetic = "\\Lambda(".str(L.motivic_weight + 1)."-s,A)"
+        self.texnamecompleted1ms_arithmetic = "\\Lambda(" + str(self.motivic_weight + 1) + "-s,A)"
 #        self.title = ("$L(s,A)$, " + "where $A$ is genus 2 curve "
 #                      + "of conductor " + str(isoclass['cond']))
         self.title_end = ("where $A$ is genus 2 curve "
                       + "of conductor " + str(isoclass['cond']))
-        self.title_arithmetic = self.texname_arithmetic.", ".self.title_end
-        self.title = self.texname.", ".self.title_end
+        self.title_arithmetic = self.texname_arithmetic + ", " + self.title_end
+        self.title = self.texname + ", " + self.title_end
 
         constructor_logger(self, args)
 
