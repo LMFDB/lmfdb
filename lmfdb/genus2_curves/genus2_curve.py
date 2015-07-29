@@ -105,7 +105,7 @@ def by_conductor(conductor):
 @g2c_page.route("/random")
 def random_curve():
     from sage.misc.prandom import randint
-    n = get_stats().counts()['ncurves']
+    n = db_g2c().curves.count()
     n = randint(0,n-1)
     return render_curve_webpage_by_label(db_g2c().curves.find()[n]['label'])
 
@@ -251,6 +251,7 @@ def genus2_curve_search(**args):
     info["isog_url"] = lambda dbc: isog_url_for_label(dbc['label'])
     info["start"] = start
     info["count"] = count
+    info["more"] = int(start+count<nres)
     credit = credit_string
     title = 'Genus 2 Curves search results'
     return render_template("search_results_g2.html", info=info, credit=credit, bread=bread, title=title)
