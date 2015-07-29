@@ -1,7 +1,7 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<h2>  Form  </h2>
+<h2>  Half Integral Weight Cusp Forms Space  </h2>
 
 <p>
 <table>
@@ -11,17 +11,36 @@
 </tr>
 <tr><td> Label:<td> {{ info.label}} </tr>
 <tr><td> Dimension:<td> ${{ info.dimension }}$ </tr>
-<tr><td> Dimension theta:<td> ${{info.dimtheta}}$ </tr>
+</table>
+</p>
+
+
+<h2> {{ KNOWL('mf.half_integral_weight.shimura_decomposition', title='Shimura Decomposition')}} </h2>
+<p>
+<table>
+<tr><td> Dimension $S_0({{info.level}}, {{info.char}})$:<td> ${{info.dimtheta}}$ </tr>
+<tr><td> Dimension $S'_0({{info.level}}, {{info.char}})$:<td> ${{info.dimnew}}$ </tr>
+</table>
+</p>
+<p>
+<table border="1" padding=5px>
+<tr> <td>Classical newforms</td> <td>Hecke eigenvalue field</td><td>Half integral weight cuspforms</td></tr>
+<tr>
 {% for n in info.new %}
-	<tr><td>Newform:<td><A HREF="/ModularForm/GL2/Q/holomorphic/{{n.mf}}">{{n.mf}}</A> </tr>
-	<tr><td>where $\Q(a)$ is the number field:<td><A HREF="/NumberField/{{n.nf}}">{{n.nf}}</A> </tr>
-	{% for h in n.hiwf %}
-		<tr><td> <td> ${{h}}$ </tr>
-	{% endfor %}
+	<td><A HREF="/ModularForm/GL2/Q/holomorphic/{{n.mf}}">{{n.mf}}</A></td>
+	<td>$\Q(a)$, label <A HREF="/NumberField/{{n.nf}}">{{n.nf}}</A></td>
+	<td>{% for h in n.hiwf %}
+		<br><item>${{h}}$</item><br>
+	{% endfor %}<br></td></tr>
 {% endfor %}
-<tr><td> Theta:<td>
+</tr>
+</table>
+</p>
+
+<table>
+<tr><td> Theta subspace:</td><td>
 {% if info.dimtheta == 0  %}
-	$S_0({{info.level}}, {{info.char}})$
+	$S_0({{info.level}}, {{info.char}})=\emptyset$
 {% else %}
 	{% for n in info.theta %}
 		<A HREF="Character/Dirichlet/{{n[0]}}">${{n[1]}}$</A>
@@ -29,6 +48,7 @@
 {% endif %}	
 </td></tr>
 </table>
+
 </p>
 
 

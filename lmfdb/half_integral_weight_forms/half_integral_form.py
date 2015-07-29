@@ -132,6 +132,7 @@ def render_hiwf_webpage(**args):
     dimnew=dim-dimtheta	
     info['dimension'] = dim
     info['dimtheta']= dimtheta
+    info['dimnew'] = dimnew
     chi = f['character']
     info['ch_lab']= chi.replace('.','/')
     chi1=chi.split(".")	
