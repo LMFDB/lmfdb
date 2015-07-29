@@ -1,6 +1,3 @@
-def group_alias_table():
-    C = base.getDBConnection()
-    return aliastable(C)
 # -*- coding: utf-8 -*-
 # This Blueprint is about Galois Groups
 # Author: John Jones
