@@ -60,7 +60,7 @@ Some of our favorite curves:
       <td><select name='st_group' width="80" style="width: 80px">
                    <option ></option>
 		   {% for G in info.st_group_list%}
-                   <option value='{{G[0]}}'>{{G[1]}}</option>
+                   <option value={{G[0]}}>{{G[1]}}</option>
 		   {% endfor %}
       </select></td>
 
