@@ -1,5 +1,5 @@
 # This is the list of contributors to LMFDB
-# They are listed on /acknowledgement and mabye elsewhere
+# They are listed on /acknowledgement and maybe elsewhere
 # the 'name' field is mandatory, all others currently optional
 #  - affil: university or company affiliation
 #  - url: homepage
@@ -213,6 +213,8 @@ name: Holger Then
 url: http://www.maths.bris.ac.uk/~mahlt/
 affil: University of Bristol
 ---
+name: Christelle Vincent
+---
 name: John Voight
 url: http://www.math.dartmouth.edu/~jvoight
 affil: Dartmouth College
@@ -243,3 +245,4 @@ url: http://www.lakeforest.edu/academics/faculty/yuen/
 ---
 name: Patrick Kühn
 affil: Universität Zürich
+
