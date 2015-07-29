@@ -22,8 +22,21 @@
 
 <tr>
 <td>By {{ KNOWL('g2c.gl2type', title='GL_2-type') }}</td>
-<td><input type='text' name='is_gl2_type' placeholder='true' size=10 value = "{{info.is_gl2_type}}">
-<td><span class="formexample"> e.g. true, false</td>
+<td><select name='is_gl2_type' width="80" style="width: 80px">
+{% if info.is_gl2_type=='True' %}
+  <option value="True">True</option>
+  <option value="False">False</option>
+  <option ></option>
+{% elif info.is_gl2_type=='False'%}
+  <option value="False">False</option>
+  <option value="True">True</option>
+  <option ></option>
+{% else %}
+  <option ></option>
+  <option value="True">True</option>
+  <option value="False">False</option>
+{% endif %}
+      </select></td>
 </tr>
 
 <tr>

@@ -143,7 +143,6 @@ def genus2_curve_search(**args):
             query[tmp[0][0]] = tmp[0][1]
             tmp = tmp[1]
 
-
         # work around syntax for $or
         # we have to foil out multiple or conditions
         if tmp[0] == '$or' and '$or' in query:
@@ -157,34 +156,36 @@ def genus2_curve_search(**args):
         query[tmp[0]] = tmp[1]
         
     if info.get("is_gl2_type"):
-       query['is_gl2_type']=bool(info['is_gl2_type'])    
+        if info['is_gl2_type'] == "True":
+            query['is_gl2_type']= True
+        elif info['is_gl2_type'] == "False":
+            query['is_gl2_type']= False
 
     for fld in ['aut_grp', 'geom_aut_grp','st_group','real_geom_end_alg']:
         if info.get(fld):
             query[fld] = info[fld]
-    for fld in ['aut_grp', 'geom_aut_grp']:
+    for fld in ['aut_grp', 'geom_aut_grp', 'torsion']: # look like [2, 4]
         if info.get(fld):
             query[fld] = eval(info[fld])
 
-    if info.get("cond"):
-        field = "cond"
-        ran = str(info[field])
-        ran = ran.replace('..', '-').replace(' ','')
-        # Past input check
-        tmp = parse_range2(ran, field)
-
-
-        # work around syntax for $or
-        # we have to foil out multiple or conditions
-        if tmp[0] == '$or' and '$or' in query:
-            newors = []
-            for y in tmp[1]:
-                oldors = [dict.copy(x) for x in query['$or']]
-                for x in oldors:
-                    x.update(y)
-                newors.extend(oldors)
-            tmp[1] = newors
-        query[tmp[0]] = tmp[1]
+    for fld in ["cond", "num_rat_wpts", "torsion_order", "two_selmer_rank"]:
+        if info.get(fld):
+            field = fld
+            ran = str(info[field])
+            ran = ran.replace('..', '-').replace(' ','')
+            # Past input check
+            tmp = parse_range2(ran, field)
+            # work around syntax for $or
+            # we have to foil out multiple or conditions
+            if tmp[0] == '$or' and '$or' in query:
+                newors = []
+                for y in tmp[1]:
+                    oldors = [dict.copy(x) for x in query['$or']]
+                    for x in oldors:
+                        x.update(y)
+                    newors.extend(oldors)
+                tmp[1] = newors
+            query[tmp[0]] = tmp[1]
 
     info["query"] = dict(query)
 
