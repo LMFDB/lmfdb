@@ -1249,7 +1249,7 @@ class SymmetricPowerLfunction(Lfunction):
         from lmfdb.symL.symL import SymmetricPowerLFunction
         self.S = SymmetricPowerLFunction(self.E, self.m)
         self.algebraic = True
-        self.title = ("The Symmetric %s $L$-function $L(s,E,\mathrm{sym}^%d)$ of Elliptic Curve Isogeny Class %s"
+        self.title = ("The Symmetric %s $L$-function $L(s,E,\mathrm{sym}^{%d})$ of Elliptic Curve Isogeny Class %s"
                       % (ordinal(self.m), self.m, self.label))
 
         self.dirichlet_coefficients = self.S._coeffs
@@ -1276,7 +1276,7 @@ class SymmetricPowerLfunction(Lfunction):
         self.motivic_weight = self.m
         self.selfdual = True
         self.langlands = True
-        self.texname = "L(s, E, \mathrm{sym}^%d)" % self.m  
+        self.texname = "L(s, E, \mathrm{sym}^{%d})" % self.m  
         self.texnamecompleteds = "\\Lambda(s,E,\mathrm{sym}^{%d})" % self.S.m
         self.texnamecompleted1ms = ("\\Lambda(1-{s}, E,\mathrm{sym}^{%d})"
                                     % self.S.m)
