@@ -29,8 +29,8 @@ import re
 import json
 from sage.all import os
 
-from pymongo.mongo_client import MongoClient
-gmods = MongoClient(port=37010).transitivegroups.Gmodules
+from pymongo.connection import Connection
+gmods = Connection(port=37010).transitivegroups.Gmodules
 
 def sd(f):
   for k in f.keys():
