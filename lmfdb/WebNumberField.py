@@ -101,6 +101,7 @@ def nf_knowl_guts(label, C):
     out += '<br>Signature: '
     out += str(wnf.signature())
     out += '<br>Galois group: '+group_display_knowl(wnf.degree(),wnf.galois_t(),C)
+    out += '<br>Class number: %s' % str(wnf.class_number())
     out += '</div>'
     out += '<div align="right">'
     out += '<a href="%s">%s home page</a>' % (str(url_for("number_fields.number_field_render_webpage", natural=label)),label)
