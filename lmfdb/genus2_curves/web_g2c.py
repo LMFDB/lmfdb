@@ -122,6 +122,46 @@ def isog_label(label):
     L = label.split(".")
     return L[0]+ "." + L[1]
 
+def scalar_mult(c,P,W):
+    # Scalar multiplication in a weighted projective space
+    l = len(P)
+    Q = [c**(W[n]) * P[n] for n in range(l)]
+    return Q
+
+def normalize_invariants(I):
+    # This is the tuple of weights for Igusa-Clebsch invariants.
+    # It is later refined to deal with curves for which some of these vanish
+    # If using Igusa invariants instead, one only needs to modify this to
+    #  W_b = [1,2,3,4,5]
+    W_b = [1,2,3,5]
+    I_b = I
+    l_b = len(W_b)
+    # Eliminating elements of the weight with zero entries in W_b
+    for n in range(l_b):
+        if I[n] == 0:
+            W_b[n] = 0
+    # Smaller invariant tuples obtained by excluding zeroes
+    W_s = [ W_b[n] for n in range(l_b) if I[n] != 0 ]
+    I_s = [ I_b[n] for n in range(l_b) if I[n] != 0 ]
+    l_s = len(W_s)
+    # Finding the normalized weights, both big and small
+    dW = gcd(W_s)
+    W_bn = [ ZZ(w/dW) for w in W_b ]
+    W_sn = [ ZZ(w/dW) for w in W_s ]
+    # Normalization of the invariants by the appropriate weight
+    dI = gcd(I_s)
+    Fac = dI.factor()
+    ps = [ fac[0] for fac in Fac]
+    prod = 1
+    for p in ps:
+        e = floor(min([ valuation(I_s[n],p)/W_sn[n] for n in range(l_s) ]))
+        prod = prod * p**e
+    # Final weighted multiplication
+    I_n = scalar_mult(1/prod,I,W_bn)
+    I_n = [ ZZ(i) for i in I_n ]
+    return I_n
+# We may want to preserve some factors in the gcd here to factor the invariants when these get bigger, though currently this is not needed
+
 
 class WebG2C(object):
     """
@@ -176,7 +216,10 @@ class WebG2C(object):
         data['cond_factor_latex'] = web_latex(factor(int(self.cond)))
         data['aut_grp'] = groupid_to_meaningful(self.aut_grp)
         data['geom_aut_grp'] = groupid_to_meaningful(self.geom_aut_grp)
-        data['igusa_clebsch'] = [ZZ(a)  for a in self.igusa_clebsch]
+        # Retain actual polynomial Igusa-Clebsch invariants:
+        #data['igusa_clebsch'] = [ZZ(a) for a in self.igusa_clebsch]
+        data['invs'] = normalize_invariants([ZZ(a) for a in self.igusa_clebsch])
+        data['invs_factor_latex'] = [web_latex(factor(i)) for i in data['invs']]
         if len(self.torsion) == 0:
             data['tor_struct'] = '\mathrm{trivial}'
         else:
@@ -231,7 +274,7 @@ class WebG2C(object):
                            (None, self.plot_link),
                            ('Conductor','%s' % self.cond),
                            ('Discriminant', '%s' % data['disc']),
-                           ('Invariants', '%s </br> %s </br> %s </br> %s'% tuple(data['igusa_clebsch'])), 
+                           ('Invariants', '%s </br> %s </br> %s </br> %s'% tuple(data['invs'])), 
                            ('Sato-Tate group', '\(%s\)' % data['st_group_name']), 
                            ('\(\mathrm{End}(J_{\overline{\Q}}) \otimes \R\)','\(%s\)' % data['real_geom_end_alg_name']),
                            ('\(\mathrm{GL}_2\)-type','%s' % data['is_gl2_type_name'])]

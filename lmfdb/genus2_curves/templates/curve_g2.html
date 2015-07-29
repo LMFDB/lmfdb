@@ -50,32 +50,34 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
           <td>&nbsp;=&nbsp;</td>
           <td>{{ data.data.disc_factor_latex }}</td>
         </tr>
-
-	</table>
-
-
-	<h2> {{ KNOWL('g2c.igusa_clebsch', title='Igusa-Clebsch invariants') }} </h2>
-
-	<table>
-	<tr>
+	
+        <tr>
           <td> \( I_4 \) </td>
-	  <td>=</td>
-	  <td>\({{ data.data.igusa_clebsch[0] }}\)</td>
+	  <td>&nbsp;:&nbsp;</td>
+	  <td>\({{ data.data.invs[0] }}\)</td>
+          <td>&nbsp;=&nbsp;</td>
+	  <td>{{ data.data.invs_factor_latex[0] }}</td>
         </tr>
 	<tr>
           <td> \( I_6 \) </td>
-	  <td>=</td>
-	  <td>\({{ data.data.igusa_clebsch[1] }}\)</td>
+	  <td>&nbsp;:&nbsp;</td>
+	  <td>\({{ data.data.invs[1] }}\)</td>
+          <td>&nbsp;=&nbsp;</td>
+	  <td>{{ data.data.invs_factor_latex[1] }}</td>
         </tr>
 	<tr>
           <td> \( I_8 \) </td>
-	  <td>=</td>
-	  <td>\({{ data.data.igusa_clebsch[2] }}\)</td>
+	  <td>&nbsp;:&nbsp;</td>
+	  <td>\({{ data.data.invs[2] }}\)</td>
+          <td>&nbsp;=&nbsp;</td>
+	  <td>{{ data.data.invs_factor_latex[2] }}</td>
         </tr>
 	<tr>
           <td> \( I_{10} \) </td>
-	  <td>=</td>
-	  <td>\({{ data.data.igusa_clebsch[3]}}\)</td>
+	  <td>&nbsp;:&nbsp;</td>
+	  <td>\({{ data.data.invs[3]}}\)</td>
+          <td>&nbsp;=&nbsp;</td>
+	  <td>{{ data.data.invs_factor_latex[3] }}</td>
         </tr>
 	</table>
 
