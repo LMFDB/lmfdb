@@ -143,7 +143,6 @@ def genus2_curve_search(**args):
             query[tmp[0][0]] = tmp[0][1]
             tmp = tmp[1]
 
-        print tmp
 
         # work around syntax for $or
         # we have to foil out multiple or conditions
@@ -165,7 +164,6 @@ def genus2_curve_search(**args):
             query[fld] = info[fld]
     for fld in ['aut_grp', 'geom_aut_grp']:
         if info.get(fld):
-            print "*********************", info[fld]
             query[fld] = eval(info[fld])
 
     if info.get("cond"):
@@ -175,7 +173,6 @@ def genus2_curve_search(**args):
         # Past input check
         tmp = parse_range2(ran, field)
 
-        print tmp
 
         # work around syntax for $or
         # we have to foil out multiple or conditions
