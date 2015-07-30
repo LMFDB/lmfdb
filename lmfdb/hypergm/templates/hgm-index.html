@@ -180,6 +180,30 @@ the number of corresponding hypergeometric families.
 </table>
 </div>
 
+
+
+    <h2>Find a specific HGM</h2>
+
+    <form name="search" method = "get" action="{{search}}">
+        <table class="">
+	  <tr>
+	    <td>
+	  Search by {{KNOWL('hgm.label',title="label")}}
+          <input type="text" name="jump_to" value=""
+        placeholder="A2.2_B1.1_t1.2">
+	    </td>
+	    <td>
+          <button type="submit" value="Find">Find</button>
+	      </td>
+	      <td>
+		<span class="formexample">an HGM label encoding the triple 
+$(A, B, t)$ </span>
+	      </td>
+	    </tr>
+	  </table>
+	  </form>
+
+
 <h3> Search for families of HGMs</h3>
 <form>
 <p>
@@ -299,27 +323,6 @@ list of corresponding hypergeometric motives.
         <button type="submit" name="Submit Family" value="Search Family">Search for families</button>
       </form>
 
-
-    <h2>Find a specific HGM</h2>
-
-    <form name="search" method = "get" action="{{search}}">
-        <table class="">
-	  <tr>
-	    <td>
-	  Search by {{KNOWL('hgm.label',title="label")}}
-          <input type="text" name="jump_to" value=""
-        placeholder="A2.2_B1.1_t1.2">
-	    </td>
-	    <td>
-          <button type="submit" value="Find">Find</button>
-	      </td>
-	      <td>
-		<span class="formexample">an HGM label encoding the triple 
-$(A, B, t)$ </span>
-	      </td>
-	    </tr>
-	  </table>
-	  </form>
 
 
 
