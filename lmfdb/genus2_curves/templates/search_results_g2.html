@@ -10,18 +10,32 @@
 
 <table>
 <tr>
-<td>By {{ KNOWL('g2c.conductor', title='conductor') }}</td>  
-<td><input type='text' name='cond' placeholder='169' size=10 value="{{info.cond}}">
-<td><span class="formexample"> e.g. 169, 100-1000 </span></td>
+<td>{{ KNOWL('g2c.conductor', title='conductor') }}</td>  
+<td>{{ KNOWL('g2c.abs_discriminant', title='absolute discriminant')}}</td>
+<td>#{{ KNOWL('g2c.weierstrass_pts', title='Weierstrass points') }}</td>  
+<td>{{ KNOWL('g2c.torsion_subgroup', title='torsion structure')}}</td>  
+<td>{{ KNOWL('g2c.torsion_order', title='torsion order')}}</td>  
+<td>{{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank')}}</td>  
 </tr>
 <tr>
-<td>By {{ KNOWL('g2c.abs_discriminant', title='absolute discriminant') }}</td>
-<td><input type='text' name='disc' placeholder='169' size=10 value="{{info.disc}}">
-<td><span class="formexample"> e.g. 169, 0-1000</td>
+<tr>
+<td><input type='text' name='cond' placeholder='169' size=10 value="{{info.cond}}"></td>
+<td><input type='text' name='disc' placeholder='169' size=10 value="{{info.disc}}"></td>
+<td><input type='text' name='num_rat_wpts' placeholder='1' size=10 value="{{info.num_rat_wpts}}">
+<td><input type='text' name='torsion' placeholder='[2, 4]' size=10 value="{{info.torsion}}">
+<td><input type='text' name='torsion_order' placeholder='2' size=10 value="{{info.torsion_order}}">
+<td><input type='text' name='two_selmer_rank' placeholder='1' size=10 value="{{info.two_selmer_rank}}">
+</tr>
+<tr>
+<td>{{ KNOWL('g2c.gl2type', title='\(\GL_2\)-type') }}</td>
+<td>{{ KNOWL('g2c.st_group', title='\(\mathrm{ST}\)') }}</td>
+<td>{{ KNOWL('g2c.real_geom_end_alg', title='\(\mathrm{ST}_0\)') }}</td>
+<td>{{ KNOWL('g2c.aut_grp', title='\(\mathrm{Aut}(X)\)') }}</td>
+<td>{{ KNOWL('g2c.geom_aut_grp',   title='\(\mathrm{Aut}(X_{\overline{\Q}})\)') }}</td>
+<td>Maximum number</td>
 </tr>
 
 <tr>
-<td>By {{ KNOWL('g2c.gl2type', title='GL_2-type') }}</td>
 <td><select name='is_gl2_type' width="80" style="width: 80px">
 {% if info.is_gl2_type=='True' %}
   <option value="True">True</option>
@@ -36,78 +50,43 @@
   <option value="True">True</option>
   <option value="False">False</option>
 {% endif %}
-      </select></td>
-</tr>
+</select></td>
 
-<tr>
-<td>By {{ KNOWL('g2c.st_group', title='Sato-Tate group') }}</td>
-<td colspan="2">
-  <table>
-    <tr>
-      <td align = "center">\( \mathrm{ST} \)</td>
-      <td align = "center">\( \mathrm{ST}_0 \)</td>
-    </tr>
-    <tr>
-      <td><select name='st_group' width="80" style="width: 80px" >
-                   <option value='{{info.st_group}}'>{{info.st_group_dict[info.st_group]}}</option>
-                   <option ></option>
-		   {% for G in info.st_group_dict.keys()%}
-                   <option value='{{G}}'>{{info.st_group_dict[G]}}</option>
-		   {% endfor %}
-</select>
+<td><select name='st_group' width="80" style="width: 80px" >
+    <option value='{{info.st_group}}'>{{info.st_group_dict[info.st_group]}}</option>
+    <option ></option>
+    {% for G in info.st_group_dict.keys()%}
+    <option value='{{G}}'>{{info.st_group_dict[G]}}</option>
+    {% endfor %}
+  </select>
 </td>
 
 <td><select name='real_geom_end_alg' width="80" style="width: 80px">
-                   <option value='{{info.real_geom_end_alg}}'>{{info.real_geom_end_alg_dict[info.real_geom_end_alg]}}</option>
-                   <option ></option>
-		   {% for G in info.real_geom_end_alg_dict.keys()%}
-                   <option value='{{G}}'>{{info.real_geom_end_alg_dict[G]}}</option>
-		   {% endfor %}
+    <option value='{{info.real_geom_end_alg}}'>{{info.real_geom_end_alg_dict[info.real_geom_end_alg]}}</option>
+    <option ></option>
+    {% for G in info.real_geom_end_alg_dict.keys()%}
+    <option value='{{G}}'>{{info.real_geom_end_alg_dict[G]}}</option>
+    {% endfor %}
 </select></td>
-</tr>
-  </table>
-</tr>
 
-<tr>
-<td>By {{ KNOWL('g2c.aut_grp', title='automorphism group') }}</td>
-<td colspan="2">
-  <table>
-    <tr>
-      <td align = "center"> \(\mathrm{Aut}(X)\) </td>
-      <td align = "center"> \(\mathrm{Aut}(X_{\overline{\Q}})\) </td>
-    </tr>
-    <tr>
-      <td align = "center"><select name='aut_grp' width="80" style="width: 80px">
-                   <option value='{{info.aut_grp}}'>{{info.aut_grp_dict[info.aut_grp]}}</option>
-                   <option ></option>
-		   {% for G in info.aut_grp_dict.keys()%}
-                   <option value='{{G}}'>{{info.aut_grp_dict[G]}}</option>
-		   {% endfor %}
-      </select></td>
-      <td align = "center"><select name='geom_aut_grp' width="80" style="width: 80px">
-	           	  	    
-	<option value='{{info.geom_aut_grp}}'>{{info.geom_aut_grp_dict[info.geom_aut_grp]}}</option>
-	           <option ></option>
-		   {% for G in info.geom_aut_grp_dict.keys()%}
-                   <option value='{{G}}'>{{info.geom_aut_grp_dict[G]}}</option>
-		   {% endfor %}
-      </select></td>
-    </tr>
-  </table>
-</tr>
-<tr>
-
-<tr>
-<td>Maximum number</td>
-<td><input type='text' name='count' value="{{info.count}}" size=10></td>
-<td><span class="formexample"> &nbsp;</td>
-</tr>
-<tr>
-<td>
-<button type='submit' value='refine'>Search again</button>
-</td> 
+<td ><select name='aut_grp' width="80" style="width: 80px">
+    <option value='{{info.aut_grp}}'>{{info.aut_grp_dict[info.aut_grp]}}</option>
+    <option ></option>
+    {% for G in info.aut_grp_dict.keys()%}
+    <option value='{{G}}'>{{info.aut_grp_dict[G]}}</option>
+    {% endfor %}
+</select></td>
+<td ><select name='geom_aut_grp' width="80" style="width: 80px">
+    <option value='{{info.geom_aut_grp}}'>{{info.geom_aut_grp_dict[info.geom_aut_grp]}}</option>
+    <option ></option>
+    {% for G in info.geom_aut_grp_dict.keys()%}
+    <option value='{{G}}'>{{info.geom_aut_grp_dict[G]}}</option>
+    {% endfor %}
+</select></td>
+<td><input type='text' name='count' value="{{info.count}}" 	   size=10></td>
 </tr>
 </table>
+<button type='submit' value='refine'>Search again</button>
 </form>
 
 <h2> Results ({{info.report}})
