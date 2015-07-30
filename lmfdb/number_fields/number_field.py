@@ -838,7 +838,10 @@ def download_search(info, res):
             [str(wnf.poly()), str(wnf.disc()), str(wnf.galois_t()), str(wnf.class_group_invariants_raw())])
         s += '[' + entry + ']' + ',\\\n'
     s = s[:-3]
-    s += ']\n'
+    if dltype == 'gp':
+        s += '];\n'
+    else:
+        s += ']\n'
     if delim == 'brace':
         s = s.replace('[', '{')
         s = s.replace(']', '}')
