@@ -34,32 +34,46 @@ def string2list(s):
   return [int(a) for a in s.split(',')]
 
 def base_label(dimension,determinant,level,class_number):
-    return ".".join([str(dimension),str(determinant),str(level),str(class_number),str(n)])
+    return ".".join([str(dimension),str(determinant),str(level),str(class_number)])
 
 def last_label(base_label, n):
-    return ".".join([str(dimension),str(determinant),str(level),str(class_number),str(n)])
+    return ".".join([str(base_label),str(n)])
 
 ## Main importing function
 
+label_dict={}
+
+def label_lookup(base_label):
+    if base_label in label_dict:
+	n=label_dict[base_label]+1
+	label_dict[base_label]=n
+    	return n
+    label_dict[base_label]=1
+    return 1	
+
 def do_import(ll):
-    level,weight,character,dim,dimtheta,thetas,newpart  = ll
-    mykeys = ['', '', '', '', '', '', '']
+    dim,det,level,density,hermite,minimum,kissing,shortest,aut,theta_series,class_number,genus_reps,name,comments = ll
+    mykeys = ['dim','det','level','density','hermite', 'minimum','kissing','shortest','aut','theta_series','class_number','genus_reps','name','comments']
     data = {}
     for j in range(len(mykeys)):
         data[mykeys[j]] = ll[j]
 	
-    label = base_label(data['dimension'],data['determinant'],data['level'], data['class_number'])
+    blabel = base_label(data['dim'],data['det'],data['level'], data['class_number'])
+    data['base_label'] = blabel
+    data['index'] = label_lookup(blabel)
+    label= last_label(blabel, data['index'])
     data['label'] = label
-    form = forms.find_one({'label': label})
+ 
+    lattice = lattices.find_one({'label': label})
 
-    if form is None:
-        print "new form"
-        form = data
+    if lattice is None:
+        print "new lattice"
+        lattice = data
     else:
         print "form already in database"
-        form.update(data)
+        lattice.update(data)
     if saving:
-        forms.save(form)
+        lattices.save(lattice)
 
 # Loop over files
 
