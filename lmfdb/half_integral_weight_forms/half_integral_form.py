@@ -75,7 +75,8 @@ def half_integral_weight_form_search(**args):
         v_clean['level'] = v['level']
         v_clean['label'] = v['label']
         v_clean['weight'] = v['weight']
-        v_clean['character'] = v['character']
+        v_clean['ch_lab']= v['character'].replace('.','/')
+        v_clean['char']= "\chi_{"+v['character'].split(".")[0]+"}("+v['character'].split(".")[1]+",\cdot)"
 	v_clean['dimension'] = v['dim']
         res_clean.append(v_clean)
 
@@ -106,6 +107,7 @@ def my_latex_from_qexp(s):
     ss = re.sub('zeta', '\zeta', ss)
     ss += ""
     return ss
+
 
 
 @hiwf_page.route('/<label>')
@@ -149,6 +151,7 @@ def render_hiwf_webpage(**args):
         v['hiwf'] = s
         v['mf'] = n['mf_label']
 	v['nf'] = n['nf_label']
+	v['field_knowl'] = nf_display_knowl(n['nf_label'], getDBConnection(), n['nf_label'])
 	new.append(v)
     info['new']= new
     if dimtheta !=0:
