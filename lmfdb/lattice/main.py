@@ -14,7 +14,7 @@ lattice_credit = 'Samuele Anni, Anna Haensch, Gabriele Nebe and Neil Sloane'
 
 
 def get_bread(breads=[]):
-    bc = [("lattices", url_for(".index"))]
+    bc = [("Lattices", url_for(".index"))]
     for b in breads:
         bc.append(b)
     return bc
