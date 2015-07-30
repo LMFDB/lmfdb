@@ -32,7 +32,6 @@
 <td>{{ KNOWL('g2c.real_geom_end_alg', title='\(\mathrm{ST}_0\)') }}</td>
 <td>{{ KNOWL('g2c.aut_grp', title='\(\mathrm{Aut}(X)\)') }}</td>
 <td>{{ KNOWL('g2c.geom_aut_grp',   title='\(\mathrm{Aut}(X_{\overline{\Q}})\)') }}</td>
-<td>Maximum number</td>
 </tr>
 
 <tr>
@@ -83,10 +82,13 @@
     <option value='{{G}}'>{{info.geom_aut_grp_dict[G]}}</option>
     {% endfor %}
 </select></td>
-<td><input type='text' name='count' value="{{info.count}}" 	   size=10></td>
-</tr>
-</table>
+<!--<td><input type='text' name='count' value="{{info.count}}" 	   size=10></td>
+</tr>-->
+<tr>
+<td>
 <button type='submit' value='refine'>Search again</button>
+</td> </tr>
+</table>
 </form>
 
 <h2> Results ({{info.report}})
