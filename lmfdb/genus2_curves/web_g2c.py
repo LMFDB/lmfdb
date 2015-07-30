@@ -207,7 +207,8 @@ class WebG2C(object):
         #disc = ZZ(self.disc_sign) * ZZ(self.abs_disc)
         data['disc'] = disc
         data['cond'] = ZZ(self.cond)
-        data['min_eqn'] = list_to_min_eqn(self.min_eqn)
+        data['min_eqn'] = self.min_eqn
+        data['min_eqn_display'] = list_to_min_eqn(self.min_eqn)
         data['disc_factor_latex'] = web_latex(factor(data['disc']))
         data['cond_factor_latex'] = web_latex(factor(int(self.cond)))
         data['aut_grp'] = groupid_to_meaningful(self.aut_grp)
@@ -262,7 +263,7 @@ class WebG2C(object):
             ('L-function', url_for("l_functions.l_function_genus2_page", cond=self.cond,x=x)),
             ('Siegel modular form someday', '.')]
         self.downloads = [
-             ('Download Euler factors', '.')]
+             ('Download all stored data', '.')]
         iso = self.label.split('.')[1]
         num = '.'.join(self.label.split('.')[2:4])
         self.plot = encode_plot(eqn_list_to_curve_plot(self.min_eqn))
