@@ -838,10 +838,19 @@ div > *[knowl], p > *[knowl] {
   position: relative;
 }
 
+table .knowl a {
+    padding: 0;
+}
+
 .knowl-error {
-   color: red;
+   color: purple;
    border-bottom: 0;
    text-decoration: underline;
+}
+
+.knowl-error a {
+   font-size:60%;
+   color: purple;
 }
 
 .knowl-qm {

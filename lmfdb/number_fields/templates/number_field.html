@@ -70,9 +70,9 @@ function show_code(system) {
   {% if info.is_abelian %}
 			<tr><td colspan="3">&nbsp;</tr>
             <tr><td colspan="3">Extension is Galois and abelian</tr>
-            <tr><td>Conductor:<td>&nbsp;&nbsp;<td>{{info.conductor}}</tr>
-            <tr><td>Dirichlet
-				group:<td>&nbsp;&nbsp;<td>
+                <tr><td>{{KNOWL('nf.conductor', title='Conductor')}}:<td>&nbsp;&nbsp;<td>{{info.conductor}}</tr>
+            <tr><td>{{ KNOWL('nf.dirichlet_group', title="Dirichlet group") }}:
+                <td>&nbsp;&nbsp;<td>
                 {% if info.dirichlet_group is defined %}
                 {{info.dirichlet_group|safe}}
                 {% else %}

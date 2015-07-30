@@ -1,5 +1,5 @@
 # This is the list of contributors to LMFDB
-# They are listed on /acknowledgement and mabye elsewhere
+# They are listed on /acknowledgement and maybe elsewhere
 # the 'name' field is mandatory, all others currently optional
 #  - affil: university or company affiliation
 #  - url: homepage
@@ -47,6 +47,10 @@ name: John Cremona
 affil: University of Warwick
 url: http://www2.warwick.ac.uk/fac/sci/maths/people/staff/john_cremona/
 ---
+name: Rachel Davis
+affil: Purdue University
+url: http://www.math.purdue.edu/~davis705
+---
 name: Paul-Olivier Dehaye
 url: http://user.math.uzh.ch/dehaye/
 affil: Universitat Zurich
@@ -86,6 +90,10 @@ affil: University of Warwick
 name: Ralph Furmaniak
 affil: Stanford University
 url: http://stanford.edu/~rfurman/
+---
+name: Anna Haensch
+affil: Duquesne University
+url: http://www.mathcs.duq.edu/~haensch/
 ---
 name: Jonthan Hanke
 ---
@@ -213,6 +221,8 @@ name: Holger Then
 url: http://www.maths.bris.ac.uk/~mahlt/
 affil: University of Bristol
 ---
+name: Christelle Vincent
+---
 name: John Voight
 url: http://www.math.dartmouth.edu/~jvoight
 affil: Dartmouth College
@@ -243,3 +253,4 @@ url: http://www.lakeforest.edu/academics/faculty/yuen/
 ---
 name: Patrick Kühn
 affil: Universität Zürich
+
