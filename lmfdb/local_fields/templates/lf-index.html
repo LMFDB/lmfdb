@@ -70,6 +70,31 @@ of $\Q_p$ up to isomorphism.
 </table>
 <p>
 
+
+
+
+    <h2>Find a specific local number field</h2>
+
+    <form name="search" method = "get" action="{{search}}">
+        <table class="">
+	  <tr>
+	    <td>
+	  Search by {{KNOWL('lf.field.label',title="label")}}
+          <input type="text" name="jump_to" value=""
+        placeholder="2.4.6.7">
+	    </td>
+	    <td>
+          <button type="submit" value="Find">Find</button>
+	      </td>
+	      <td>
+		<span class="formexample">a field label, e.g. 2.4.6.7</span>
+	      </td>
+	    </tr>
+	  </table>
+	  </form>
+
+
+
         <h2>Search</h2>
       <form name="search" method = "get" action="{{search}}">
         <table class="">
@@ -128,25 +153,6 @@ of $\Q_p$ up to isomorphism.
         <button type="submit" name="Submit" value="Search">Search</button>
       </form>
 
-    <h2>Find a specific local number field</h2>
-
-    <form name="search" method = "get" action="{{search}}">
-        <table class="">
-	  <tr>
-	    <td>
-	  Search by {{KNOWL('lf.field.label',title="label")}}
-          <input type="text" name="jump_to" value=""
-        placeholder="2.4.6.7">
-	    </td>
-	    <td>
-          <button type="submit" value="Find">Find</button>
-	      </td>
-	      <td>
-		<span class="formexample">a field label, e.g. 2.4.6.7</span>
-	      </td>
-	    </tr>
-	  </table>
-	  </form>
 
 
 
