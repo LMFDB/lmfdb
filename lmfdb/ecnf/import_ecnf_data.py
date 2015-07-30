@@ -425,7 +425,7 @@ def curve_data(line):
 
 
 def isoclass(line):
-    r""" Parses one line from an isovlass file.  Returns the label and a dict
+    r""" Parses one line from an isoclass file.  Returns the label and a dict
     containing fields with keys .
 
     Input line fields (5); the first 4 are the standard labels and the
@@ -455,6 +455,42 @@ def isoclass(line):
     edata = {'label': label, 'isogeny_matrix': mat}
     return label, edata
 
+def galrep(line):
+    r""" Parses one line from a galrep file.  Returns the label and a
+    dict containing two fields: 'non-surjective_primes', a list of
+    primes p for which the Galois representation modulo p is not
+    surjective (cut off at p=37 for CM curves for which this would
+    otherwise contain all primes), 'galois_images', a list of strings
+    encoding the image when not surjective, following Sutherland's
+    coding scheme for subgroups of GL(2,p).  Note that these codes
+    start with a 1 or 2 digit prime followed a letter in
+    ['B','C','N','S'].
+
+    Input line fields (4+); the first 4 are the standard labels and
+    any remaining ones are galrep codes.
+
+    field_label conductor_label iso_label number codes
+
+    Sample input line (not genuine):
+
+    2.0.4.1 [65,18,1] a 1 2B 5B.1.2
+
+    """
+    data = split(line)
+    field_label = data[0]       # string
+    conductor_label = data[1]   # string
+    iso_label = data[2]         # string
+    number = int(data[3])       # int
+    short_label = "%s-%s%s" % (conductor_label, iso_label, str(number))
+    label = "%s-%s" % (field_label, short_label)
+
+    image_codes = data[4:]
+    pr = [ int(s[:2]) if s[1].isdigit() else int(s[:1]) for s in image_codes]
+    return label, {
+        'non-surjective_primes': pr,
+        'galois_images': image_codes,
+    }
+
 filename_base_list = ['curves', 'curve_data']
 
 #
@@ -464,10 +500,12 @@ def upload_to_db(base_path, filename_suffix):
     curves_filename = 'curves.%s' % (filename_suffix)
     curve_data_filename = 'curve_data.%s' % (filename_suffix)
     isoclass_filename = 'isoclass.%s' % (filename_suffix)
-    file_list = [curves_filename, curve_data_filename, isoclass_filename]
+    galrep_filename = 'galrep.%s' % (filename_suffix)
+#    file_list = [curves_filename, curve_data_filename, isoclass_filename]
 #    file_list = [isoclass_filename]
 #    file_list = [curves_filename]
 #    file_list = [curve_data_filename]
+    file_list = [galrep_filename]
 
     data_to_insert = {}  # will hold all the data to be inserted
 

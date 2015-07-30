@@ -93,6 +93,7 @@ class ECNF(object):
         # del dbdata["_id"]
         self.__dict__.update(dbdata)
         self.field = make_field(self.field_label)
+        self.non_surjective_primes = dbdata.get('non-surjective_primes',None)
         self.make_E()
 
     @staticmethod
@@ -266,6 +267,17 @@ class ECNF(object):
                                     'ord_mindisc': self.local_info.discriminant_valuation(),
                                     'ord_cond': self.local_info.conductor_valuation()
                                     })
+
+        # Images of Galois representations
+
+        if not hasattr(self,'galois_images'):
+            #print "No Galois image data"
+            self.galois_images = []
+            self.non_surjective_primes = []
+
+        self.galois_data = [{'p': p,'image': im }
+                               for p,im in zip(self.non_surjective_primes,
+                                               self.galois_images)]
 
         # URLs of self and related objects:
         self.urls = {}
