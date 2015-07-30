@@ -38,6 +38,18 @@ Curves with interesting properties:
 </p>
 
 
+<h2> Find a specific curve by label</h2>
+<form>
+<input type='text' name='label' size=25 example="2.2.5.1-31.1-a1">
+<button type='submit' name='jump' value='label' >label</button>
+<br><span class="formexample">e.g. 2.2.5.1-31.1-a1</span>
+{% if err_msg %}
+<br>
+<span class="errmsg">{{err_msg}}</span>
+{% endif %}
+</form>
+
+
 <h2> Search </h2>
 Please enter a value or leave blank:
 <p></p>
@@ -111,16 +123,7 @@ Please enter a value or leave blank:
 <p></p>
 </form>
 
-<h2> Find a specific curve by label</h2>
-<form>
-<input type='text' name='label' size=25 example="2.2.5.1-31.1-a1">
-<button type='submit' name='jump' value='label' >label</button>
-<br><span class="formexample">e.g. 2.2.5.1-31.1-a1</span>
-{% if err_msg %}
-<br>
-<span class="errmsg">{{err_msg}}</span>
-{% endif %}
-</form>
+
 
 
 {% if DEBUG %}
