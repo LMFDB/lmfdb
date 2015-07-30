@@ -81,66 +81,59 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
       </select></td>
 </tr>
 <tr>
-<td>{{ KNOWL('g2c.st_group', title='Sato-Tate group') }}</td>
-<td colspan="2">
-  <table>
-    <tr>
-      <td align = "center">\( \mathrm{ST} \)</td>
-      <td align = "center">\( \mathrm{ST}_0 \)</td>
-    </tr>
-    <tr>
-      <td><select name='st_group' width="80" style="width: 80px">
-                   <option ></option>
-		   {% for G in info.st_group_dict.keys()%}
-                   <option value='{{G}}'>{{info.st_group_dict[G]}}</option>
-		   {% endfor %}
-      </select></td>
-
-      <td><select name='real_geom_end_alg' width="80" style="width: 80px">
-                   <option ></option>
-		   {% for G in info.real_geom_end_alg_dict.keys()%}
-                   <option value='{{G}}'>{{info.real_geom_end_alg_dict[G]}}</option>
-		   {% endfor %}
-      </select></td>
-    </tr>
-  </table>
+  <td>{{ KNOWL('g2c.st_group', title='Sato-Tate group') }}</td>
+  <td colspan="2">
+    <table>
+      <tr>
+	<td align = "center">{{ KNOWL('g2c.st_group', title='\( \mathrm{ST}\)') }}</td>
+	<td align = "center">{{KNOWL('g2c.real_geom_end_alg',title='\( \mathrm{ST}_0 \)')}}</td>
+      </tr>
+      <tr>
+	<td><select name='st_group' width="80" style="width: 80px">
+            <option ></option>
+	    {% for G in info.st_group_dict.keys()%}
+            <option value='{{G}}'>{{info.st_group_dict[G]}}</option>
+	    {% endfor %}
+	</select></td>
+	
+	<td><select name='real_geom_end_alg' width="80" style="width: 							       80px">
+            <option ></option>
+	    {% for G in info.real_geom_end_alg_dict.keys()%}
+            <option value='{{G}}'>{{info.real_geom_end_alg_dict[G]}}</option>
+	    {% endfor %}
+	</select></td>
+      </tr>
+    </table>
 </tr>
 
-
 <tr>
-<td>{{ KNOWL('g2c.aut_grp', title='automorphism group') }}</td>
-<td colspan="2">
-  <table>
-    <tr>
-      <td align = "center"> \(\mathrm{Aut}(X)\) </td>
-      <td align = "center"> \(\mathrm{Aut}(X_{\overline{\Q}})\) </td>
-    </tr>
-    <tr>
-      <td align = "center"><select name='aut_grp' width="80" style="width: 80px">
-                   <option ></option>
-		   {% for G in info.aut_grp_dict.keys()%}
-                   <option value='{{G}}'>{{info.aut_grp_dict[G]}}</option>
-		   {% endfor %}
-      </select></td>
-      <td align = "center"><select name='geom_aut_grp' width="80" style="width: 80px">
-	           <option ></option>
-		   {% for G in info.geom_aut_grp_dict.keys()%}
-                   <option value='{{G}}'>{{info.geom_aut_grp_dict[G]}}</option>
-		   {% endfor %}
-      </select></td>
-    </tr>
-  </table>
+  <td>{{ KNOWL('g2c.aut_grp', title='automorphism group') }}</td>
+  <td colspan="2">
+    <table>
+      <tr>
+	<td align = "center"> {{ KNOWL('g2c.aut_grp', title='\(\mathrm{Aut}(X)\)') }} </td>
+	<td align = "center"> {{ KNOWL('g2c.geom_aut_grp',   title='\(\mathrm{Aut}(X_{\overline{\Q}})\)') }}	</td>
+      </tr>
+      <tr>
+	<td align = "center"><select name='aut_grp' width="80" 				     style="width: 80px">
+            <option ></option>
+	    {% for G in info.aut_grp_dict.keys()%}
+            <option value='{{G}}'>{{info.aut_grp_dict[G]}}</option>
+	    {% endfor %}
+	</select></td>
+	<td align = "center"><select name='geom_aut_grp' width="80" 				     style="width: 80px">
+	    <option ></option>
+	    {% for G in info.geom_aut_grp_dict.keys()%}
+            <option value='{{G}}'>{{info.geom_aut_grp_dict[G]}}</option>
+	    {% endfor %}
+	</select></td>
+      </tr>
+    </table>
 </tr>
 <tr>
-
-<tr>
-<td>Maximum number</td>
-<td><input type='text' name='count' value=50 size=10></td>
-<td><span class="formexample"> &nbsp;</td>
-</tr>
-<tr>
-
-</td>
+  <td>Maximum number</td>
+  <td><input type='text' name='count' value=50 size=10></td>
+  <td><span class="formexample"> &nbsp;</td>
 </tr>
 </table>
 <button type='submit' value='Search'>Search</button>
