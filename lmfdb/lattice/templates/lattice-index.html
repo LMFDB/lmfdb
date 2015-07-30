@@ -2,26 +2,98 @@
 
 {% block content %}
 
+<p>
+The database currently contains a database of {{ KNOWL('lattice.definition', title='integral lattices') }} from the <a href="http://www.math.rwth-aachen.de/~Gabriele.Nebe/LATTICES/">Catalogue of Lattices</a>, of {{ KNOWL('lattice.dimension', title='dimension') }} up to XXXXXXXXXXXXXX. 
+</p><p>
+In the case of {{ KNOWL('lattice.primitive', title='primitive') }} {{ KNOWL('lattice.definition', title='integral lattices') }} of {{ KNOWL('lattice.class_number', title='class number') }} one the database is complete.
+</p>
+
+<h2> Browse {{ KNOWL('lattice.definition', title='Integral Lattices') }}</h2>
+
+<p>
+By {{ KNOWL('lattice.dimension', title='Dimension') }}: <a>2</a>,&nbsp;<a>3</a>,&nbsp;<a>4</a>,&nbsp;<a>5</a>,&nbsp;<a>6</a>,&nbsp;<a>7</a>,&nbsp;<a>8</a>,&nbsp;<a>9</a>,&nbsp;<a>10</a>
+</p>
+<p>
+By {{ KNOWL('lattice.determinant', title='Determinant') }}: <a>1-99</a>&nbsp;&nbsp;&nbsp;<a>100-199</a>&nbsp;&nbsp;&nbsp;<a>200-299</a>
+</p>
+<p>
+By {{ KNOWL('lattice.class_number', title='Class number') }}: <a>1</a>,&nbsp;<a>2</a>,&nbsp;<a>3</a>,&nbsp;<a>4</a>
+</p>
+<p>
+A <a>random integral lattice</a> from the database.
+<br>
+</p>
+
+
+<h2> Search </h2>
+
+<p>Please enter a value or leave blank:</p>
+<form>
 <table>
-<tr><td>Label:</td><td>?</td></tr>
-<tr><td>{{ KNOWL('lattice.dimension', title='Dimension') }}:</td><td>$3$</td></tr>
-<tr><td>{{ KNOWL('lattice.class_number', title='Class Number') }}:</td><td>1</td></tr>
-<tr><td>{{ KNOWL('lattice.name', title='Name') }}:</td><td>D$3$</td></tr>
-<tr><td>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>4</td></tr>
-<tr><td>{{ KNOWL('lattice.kissing', title='Kissing Number') }}:</td><td>12</td></tr>
-<tr><td>{{ KNOWL('lattice.density', title='Density') }}:</td><td>.176776695297E+00</td></tr>
-<tr><td>Group order:</td><td>48</td></tr>
-<tr><td>{{ KNOWL('lattice.hermite_number', title='Hermite number') }}:</td><td>.125992104989E+01</td></tr>
-<tr><td>Basis:</td><td>$(1, 1, 0), (1, -1, 0), (0, 1, -1)$</td></tr>
-<tr><td>{{ KNOWL('lattice.minimal_vector', title='Minimal vector')}} length:</td><td>$2$</td></tr>
-<tr><td>{{ KNOWL('lattice.minimal_vector', title='Minimal vector')}} list:</td><td>$(0,-1,-1), (1, -1, -1), (0, 0, -1), (1, 0, -1), (0, -1, 0), (-1, 0, -0)$</td></tr>
-<tr><td>{{ KNOWL('lattice.triangular', title='Triangular basis') }}:</td><td>$(2,0,0), (1, -1, 0), (0, 1, -1),$</td></tr>
-<tr><td>{{ KNOWL('lattice.gram', title='Gram matrix') }}:</td><td>$\begin{pmatrix}
-2 &0 &1\\
-0 &2 &-1\\
-1 &-1 &2\end{pmatrix}$</td></tr>
-<tr><td>{{ KNOWL('lattice.theta', title='Theta series') }}:</td><td>$1+12q^2+6q^4+24q^6+12q^8+O(q^{10})$</td></tr>
-<tr><td>Comments:</td><td>This is the face-centered cubic (or f.c.c.) lattice.</td></tr>
+<tr>
+<td align= right>{{ KNOWL('lattice.dimension', title='Dimension') }}:</td>
+<td><input type='text' name='weight' placeholder='3' size=10>
+<td><span class="formexample"> e.g. 2, 3, 5</td>
+</tr>
+
+<tr>
+<td align= right>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td>
+<td><input type='text' name='weight' placeholder='1' size=10>
+<td><span class="formexample"> e.g. 1, 2, 3</td>
+</tr>
+<tr>
+<td align= right>{{ KNOWL('lattice.level', title='Level') }}:</td>
+<td><input type='text' name='weight' placeholder='48' size=10>
+<td><span class="formexample"> e.g. 48, 336, 456 </td>
+</tr>
+
+<tr>
+<td align= right>{{ KNOWL('lattice.gram', title='Gram matrix') }}:</td>
+<td><input type='text' name='weight' placeholder='[5,1,23]' size=10>
+<td><span class="formexample"> e.g. enter $[5,1,23]$ for the {{ KNOWL('lattice.gram', title='Gram matrix') }} $\begin{pmatrix}5 & 1\\ 1& 23\end{pmatrix}$</td>
+</tr>
+<tr>
+<td align= right>{{ KNOWL('lattice.minimal_vector', title='Minimal vector')}} length:</td>
+<td><input type='text' name='weight' placeholder='1' size=10>
+<td><span class="formexample"> e.g. 1, 2, 3</td>
+</tr>
+
+<tr>
+<td align= right>{{ KNOWL('lattice.class_number', title='Class number') }}:</td>
+<td><input type='text' name='weight' placeholder='1' size=10>
+<td><span class="formexample"> e.g. 1, 2, 3</td>
+</tr>
+
+<tr>
+<td align= right>Group order:</td>
+<td><input type='text' name='weight' placeholder='2' size=10>
+<td><span class="formexample"> e.g. 2, 48, 696729600</td>
+</tr>
+
+<tr>
+<td align= right>{{ KNOWL('lattice.theta', title='Theta series weight') }}:</td>
+<td><input type='text' name='weight' placeholder='3' size=5>&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;2
+<td><span class="formexample"> e.g. 1/2, 3/2</td>
+</tr>
+
+<tr><td align= right>{{ KNOWL('lattice.name', title='Name') }}:</td>
+<td><input type='text' name='level' placeholder='D3' size=10>
+<td><span class="formexample"> e.g. $D3$, $E8$, Leech lattice</td>
+</tr>
+
 </table>
+</form>
+
+
+<h2> Find a specific integral lattice by label </h2>
+
+<form>
+<input type='text' name='label' placeholder='3.4.16.1.a'>
+<button type='submit'>Label</button>
+<br><span class="formexample">e.g. 3.4.16.1.a </span>
+</form>
+
+
+
 
 {% endblock %}
