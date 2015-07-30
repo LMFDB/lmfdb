@@ -74,7 +74,7 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 </tr>
 <tr>
 <td>{{ KNOWL('g2c.gl2type', title='$\GL_2$-type') }}</td>
-<td><select name='is_gl2_type' width="80" style="width: 80px">
+<td><select name='is_gl2_type' width="90" style="width: 90px">
                    <option ></option>
                    <option value='True'>True</option>
                    <option value='False'>False</option>
@@ -89,14 +89,14 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 	<td align = "center">{{KNOWL('g2c.real_geom_end_alg',title='\( \mathrm{ST}_0 \)')}}</td>
       </tr>
       <tr>
-	<td><select name='st_group' width="80" style="width: 80px">
+	<td><select name='st_group' width="90" style="width: 90px">
             <option ></option>
 	    {% for G in info.st_group_dict.keys()%}
             <option value='{{G}}'>{{info.st_group_dict[G]}}</option>
 	    {% endfor %}
 	</select></td>
 	
-	<td><select name='real_geom_end_alg' width="80" style="width: 							       80px">
+	<td><select name='real_geom_end_alg' width="90" style="width: 							       90px">
             <option ></option>
 	    {% for G in info.real_geom_end_alg_dict.keys()%}
             <option value='{{G}}'>{{info.real_geom_end_alg_dict[G]}}</option>
@@ -115,13 +115,13 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 	<td align = "center"> {{ KNOWL('g2c.geom_aut_grp',   title='\(\mathrm{Aut}(X_{\overline{\Q}})\)') }}	</td>
       </tr>
       <tr>
-	<td align = "center"><select name='aut_grp' width="80" 				     style="width: 80px">
+	<td align = "center"><select name='aut_grp' width="90" 				     style="width: 90px">
             <option ></option>
 	    {% for G in info.aut_grp_dict.keys()%}
             <option value='{{G}}'>{{info.aut_grp_dict[G]}}</option>
 	    {% endfor %}
 	</select></td>
-	<td align = "center"><select name='geom_aut_grp' width="80" 				     style="width: 80px">
+	<td align = "center"><select name='geom_aut_grp' width="90" 				     style="width: 90px">
 	    <option ></option>
 	    {% for G in info.geom_aut_grp_dict.keys()%}
             <option value='{{G}}'>{{info.geom_aut_grp_dict[G]}}</option>
@@ -135,9 +135,13 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
   <td><input type='text' name='count' value=50 size=10></td>
   <td><span class="formexample"> &nbsp;</td>
 </tr>
+<tr>
+<td><button type='submit' value='Search'>Search</button></td>
+</tr>
 </table>
-<button type='submit' value='Search'>Search</button>
+
 </form>
+
 
 
 {% endblock %}

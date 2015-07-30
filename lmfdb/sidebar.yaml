@@ -203,6 +203,7 @@
       title: Motives
    parts:
     - title: "Hypergeometric:"
+      status: beta
       part2:
          - title: $/\Q$
            status:  beta
@@ -220,6 +221,8 @@
    heading:
       title: Groups
    parts:
+    - title: Galois groups
+      url_for: "galois_groups.index"
     - title: Subgroups of
       part2:
          - title: $\SL(2)$
@@ -228,8 +231,8 @@
            status:  future
       status: future
       colspan: onecolumn
-    - title: Galois groups
-      url_for: "galois_groups.index"
+    - title: Lattices
+      status: future
 
 9Know:
    type: single
