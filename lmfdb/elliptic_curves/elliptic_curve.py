@@ -102,14 +102,21 @@ def random_curve():
     from sage.misc.prandom import randint
     n = get_stats().counts()['ncurves']
     n = randint(0,n-1)
-    return render_curve_webpage_by_label(db_ec().find()[n]['label'])
+    label = db_ec().find()[n]['label']
+    # This version leaves the word 'random' in the URL:
+    # return render_curve_webpage_by_label(label)
+    # This version uses the curve's own URL:
+    return redirect(url_for(".by_ec_label", label=label), 301)
+
 
 @ec_page.route("/curve_of_the_day")
 def todays_curve():
     from datetime import date
     mordells_birthday = date(1888,1,28)
     n = (date.today()-mordells_birthday).days
-    return render_curve_webpage_by_label(db_ec().find({'number' : int(1)})[n]['label'])
+    label = db_ec().find({'number' : int(1)})[n]['label']
+    #return render_curve_webpage_by_label(label)
+    return redirect(url_for(".by_ec_label", label=label), 301)
 
 @ec_page.route("/stats")
 def statistics():
