@@ -138,9 +138,10 @@ def render_hiwf_webpage(**args):
     chi1=chi.split(".")	
     chi2="\chi_{"+chi1[0]+"}("+chi1[1]+",\cdot)"	
     info['char']= chi2
+    info['newpart']=f['newpart']
     new=[]
     for n in f['newpart']:
-	v= {}	
+	v={}	
         v['dim'] = n['dim_image']
 	s=[]
 	for h in n['half_forms']:
