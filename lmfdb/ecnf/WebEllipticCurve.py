@@ -234,10 +234,6 @@ class ECNF(object):
                                 'ord_mindisc': self.local_info.discriminant_valuation()
                                })
 
-        twists = list(db_ecnf().find({"field_label" : self.field_label, "jinv": self.jinv}))
-        self.twists = [[e['short_label'],url_for(".show_ecnf",nf=e['field_label'],conductor_label=e['conductor_label'],class_label=e['iso_label'],number=e['number'])] for e in twists if e['label']!=self.label]
-        no_other_twists = int(len(self.twists)==0)
-
         # URLs of self and related objects:
         self.urls = {}
         self.urls['curve'] = url_for(".show_ecnf", nf = self.field_label, conductor_label=self.conductor_label, class_label = self.iso_label, number = self.number)
@@ -255,11 +251,7 @@ class ECNF(object):
 
         self.friends = []
         self.friends += [('Isogeny class '+self.short_class_label, self.urls['class'])]
-        if no_other_twists:
-            self.friends += [('No other twists in database','')]
-        else:
-            for tw in self.twists:
-                self.friends += [('Twist %s' % tw[0], tw[1])]
+        self.friends += [('Twists',url_for('ecnf.index',field_label=self.field_label,jinv=self.jinv))]
         if self.field.is_real_quadratic():
             self.friends += [('Hilbert Modular Form '+self.hmf_label, self.urls['hmf'])]
         if self.field.is_imag_quadratic():
