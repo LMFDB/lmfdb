@@ -17,6 +17,35 @@ from lmfdb.genus2_curves.web_g2c import WebG2C, list_to_min_eqn, isog_label
 import sage.all
 from sage.all import ZZ, QQ, latex, matrix, srange
 q = ZZ['x'].gen()
+# credit_string = "KNOWL('g2c.credit', title='The Genus 2 Team')" 
+credit_string = "Andrew Booker, Andrew Sutherland, John Voight, and Dan Yasaki"
+
+st_temp = ['J(C_2)','J(C_4)','J(C_6)','J(D_2)', 'J(D_3)','J(D_4)','J(D_6)', 'J(T)', 'J(O)','C{2,1}','C_{6,1}','D_{2,1}','D_{3,2}','D_{4,1}','D_{4,2}','D_{6,1}','D_{6,2}','O_1','E_1','E_2','E_3','E_4','E_6','J(E_1)','J(E_2)','J(E_3)','J(E_4)','J(E_6)','F_{a,b}','F_{ac}','N(G_{1,3})','G_{3,3}','N(G_{3,3})','USp(4)']
+st_group_dict = {a:a for a in st_temp}
+real_geom_end_alg_dict = {
+        'M_2(C)':'U(1)',
+        'M_2(R)':'SU(2)',
+        'C x C':'G_{1,1}',
+        'C x R':'G_{1,3}',
+        'R x R':'G_{3,3}',
+        'R':'USp(4)'
+        }
+aut_grp_dict = {
+        '[2, 1]':'C_2',
+        '[4, 1]':'C_4',                   
+        '[4, 2]':'V_4',
+        '[6, 2]':'C_6',                   
+        '[8, 3]':'D_8',                   
+        '[12, 4]':'D_{12}'
+        }
+geom_aut_grp_dict = {
+        '[2, 1]':'C_2',
+        '[4, 2]':'V_4',
+        '[8, 3]':'D_8',
+        '[10, 2]':'C_{10}',
+        '[12, 4]':'D_{12}',
+        '[24, 8]':'2D_{12}',
+        '[48, 29]':'tilde{S}_4'}
 
 #########################
 #   Database connection
@@ -60,7 +89,11 @@ def index_Q():
     ]
     info["conductor_list"] = ['1-499', '500-999', '1000-99999','100000-1000000'   ]
     info["discriminant_list"] = ['1-499', '500-999', '1000-99999','100000-1000000'   ]
-    credit = 'Genus 2 Team'
+    info["st_group_dict"] = st_group_dict
+    info["real_geom_end_alg_dict"] = real_geom_end_alg_dict
+    info["aut_grp_dict"] = aut_grp_dict
+    info["geom_aut_grp_dict"] = geom_aut_grp_dict
+    credit =  credit_string
     title = 'Genus 2 curves over $\Q$'
     bread = [('Genus 2 Curves', url_for(".index")), ('$\Q$', ' ')]
     return render_template("browse_search_g2.html", info=info, credit=credit, title=title, bread=bread)
@@ -69,12 +102,23 @@ def index_Q():
 def by_conductor(conductor):
     return genus2_curve_search(cond=conductor, **request.args)
 
+@g2c_page.route("/random")
+def random_curve():
+    from sage.misc.prandom import randint
+    n = db_g2c().curves.count()
+    n = randint(0,n-1)
+    return render_curve_webpage_by_label(db_g2c().curves.find()[n]['label'])
+
 def split_label(label_string):
     L = label_string.split(".")
     return L
 
 def genus2_curve_search(**args):
     info = to_dict(args)
+    info["st_group_dict"] = st_group_dict
+    info["real_geom_end_alg_dict"] = real_geom_end_alg_dict
+    info["aut_grp_dict"] = aut_grp_dict
+    info["geom_aut_grp_dict"] = geom_aut_grp_dict
     query = {}  # database callable
     bread = [('Genus 2 Curves', url_for(".index")),
              ('$\Q$', url_for(".index_Q")),
@@ -99,8 +143,6 @@ def genus2_curve_search(**args):
             query[tmp[0][0]] = tmp[0][1]
             tmp = tmp[1]
 
-        print tmp
-
         # work around syntax for $or
         # we have to foil out multiple or conditions
         if tmp[0] == '$or' and '$or' in query:
@@ -114,60 +156,79 @@ def genus2_curve_search(**args):
         query[tmp[0]] = tmp[1]
         
     if info.get("is_gl2_type"):
-       query['is_gl2_type']=bool(info['is_gl2_type'])    
+        if info['is_gl2_type'] == "True":
+            query['is_gl2_type']= True
+        elif info['is_gl2_type'] == "False":
+            query['is_gl2_type']= False
 
     for fld in ['aut_grp', 'geom_aut_grp','st_group','real_geom_end_alg']:
         if info.get(fld):
             query[fld] = info[fld]
-    for fld in ['aut_grp', 'geom_aut_grp']:
+    for fld in ['aut_grp', 'geom_aut_grp', 'torsion']: # look like [2, 4]
         if info.get(fld):
             query[fld] = eval(info[fld])
 
-    if info.get("cond"):
-        field = "cond"
-        ran = str(info[field])
-        ran = ran.replace('..', '-').replace(' ','')
-        # Past input check
-        tmp = parse_range2(ran, field)
-
-        print tmp
-
-        # work around syntax for $or
-        # we have to foil out multiple or conditions
-        if tmp[0] == '$or' and '$or' in query:
-            newors = []
-            for y in tmp[1]:
-                oldors = [dict.copy(x) for x in query['$or']]
-                for x in oldors:
-                    x.update(y)
-                newors.extend(oldors)
-            tmp[1] = newors
-        query[tmp[0]] = tmp[1]
-
-
-    if info.get("count"):
-        try:
-            count = int(info["count"])
-        except:
-            count = 100
-    else:
-        count = 100
+    for fld in ["cond", "num_rat_wpts", "torsion_order", "two_selmer_rank"]:
+        if info.get(fld):
+            field = fld
+            ran = str(info[field])
+            ran = ran.replace('..', '-').replace(' ','')
+            # Past input check
+            tmp = parse_range2(ran, field)
+            # work around syntax for $or
+            # we have to foil out multiple or conditions
+            if tmp[0] == '$or' and '$or' in query:
+                newors = []
+                for y in tmp[1]:
+                    oldors = [dict.copy(x) for x in query['$or']]
+                    for x in oldors:
+                        x.update(y)
+                    newors.extend(oldors)
+                tmp[1] = newors
+            query[tmp[0]] = tmp[1]
 
     info["query"] = dict(query)
-    #res = db_g2c().curves.find(query).sort([("cond", pymongo.ASCENDING),
-    #("label", pymongo.ASCENDING)]).limit(count)
-    res = db_g2c().curves.find(query).sort([("cond", pymongo.ASCENDING),
+
+    count_default = 50
+    if info.get('count'):
+        try:
+            count = int(info['count'])
+        except:
+            count = count_default
+    else:
+        count = count_default
+    info['count'] = count
+
+    start_default = 0
+    if info.get('start'):
+        try:
+            start = int(info['start'])
+            if(start < 0):
+                start += (1 - (start + 1) / count) * count
+        except:
+            start = start_default
+    else:
+        start = start_default
+
+    cursor = db_g2c().curves.find(query)
+    nres = cursor.count()
+    if(start >= nres):
+        start -= (1 + (start - nres) / count) * count
+    if(start < 0):
+        start = 0
+
+    res = cursor.sort([("cond", pymongo.ASCENDING),
                                             ("class", pymongo.ASCENDING),
                                             ("disc_key", pymongo.ASCENDING),
-                                            ("label", pymongo.ASCENDING)])
+                                            ("label", pymongo.ASCENDING)]).skip(start).limit(count)
     nres = res.count()
     if nres == 1:
         info["report"] = "unique match"
     else:
-        if nres > count:
-            info["report"] = "displaying first %s of %s matches" % (count, nres)
+        if nres > count or start != 0:
+            info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
         else:
-            info["report"] = "displaying all %s matches" % nres
+            info['report'] = 'displaying all %s matches' % nres
     res_clean = []
     
     
@@ -184,7 +245,10 @@ def genus2_curve_search(**args):
 
     info["curve_url"] = lambda dbc: url_for_label(dbc['label'])
     info["isog_url"] = lambda dbc: isog_url_for_label(dbc['label'])
-    credit = 'Genus 2 Team'
+    info["start"] = start
+    info["count"] = count
+    info["more"] = int(start+count<nres)
+    credit = credit_string
     title = 'Genus 2 Curves search results'
     return render_template("search_results_g2.html", info=info, credit=credit, bread=bread, title=title)
 
@@ -239,7 +303,7 @@ def by_g2c_label(label):
     return render_curve_webpage_by_label(label)
 
 def render_isogeny_class(iso_class):
-    credit = 'Genus 2 Team'
+    credit = credit_string
     class_data = G2Cisog_class.by_label(iso_class)
 
     return render_template("isogeny_class_g2.html",
@@ -253,7 +317,7 @@ def render_isogeny_class(iso_class):
 
 
 def render_curve_webpage_by_label(label):
-    credit = 'Genus 2 Team'
+    credit = credit_string
     data = WebG2C.by_label(label)
     
     return render_template("curve_g2.html",

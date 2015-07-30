@@ -1,9 +1,9 @@
 from flask import url_for
-from sage.all import ZZ, var, PolynomialRing, QQ, GCD
+from sage.all import ZZ, var, PolynomialRing, QQ, GCD, RealField, rainbow, implicit_plot, plot, text
 from lmfdb.base import app, getDBConnection
-from lmfdb.utils import image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input
-from lmfdb.number_fields.number_field import parse_field_string, field_pretty
+from lmfdb.utils import image_src, web_latex, web_latex_ideal_fact, encode_plot
 from lmfdb.WebNumberField import WebNumberField
+from kraus import (non_minimal_primes, is_global_minimal_model, has_global_minimal_model, minimal_discriminant_ideal)
 
 ecnf = None
 nfdb = None
@@ -36,6 +36,39 @@ def make_field(label):
     if label in field_list:
         return field_list[label]
     return FIELD(label)
+
+def EC_R_plot(ainvs,xmin,xmax,ymin,ymax,colour,legend):
+   x=var('x')
+   y=var('y')
+   c=(xmin+xmax)/2
+   d=(xmax-xmin)
+   return implicit_plot(y**2+ainvs[0]*x*y+ainvs[2]*y-x**3-ainvs[1]*x**2-ainvs[3]*x-ainvs[4],(x,xmin,xmax),(y,ymin,ymax),plot_points=1000,aspect_ratio="automatic",color=colour)+plot(0,xmin=c-1e-5*d,xmax=c+1e-5*d,ymin=ymin,ymax=ymax,aspect_ratio="automatic",color=colour,legend_label=legend) # Add an extra plot outside the visible frame because implicit plots are buggy: their legend does not show (http://trac.sagemath.org/ticket/15903) 
+
+def EC_nf_plot(E,base_field_gen_name):
+    K = E.base_field()
+    n1 = K.signature()[0]
+    if n1 == 0:
+        return plot([])
+    prec = 53
+    maxprec = 10**6
+    while prec < maxprec: # Try to base change to R. May fail if resulting curve is almost singular, so increase precision.
+        try:
+            SR = K.embeddings(RealField(prec))
+            X = [E.base_extend(s) for s in SR]
+            break
+        except ArithmeticError:
+            prec *= 2
+    if prec >= maxprec:
+        return text("Unable to plot",(1,1),fontsize="xx-large")
+    X = [e.plot() for e in X]
+    xmin = min([x.xmin() for x in X])
+    xmax = max([x.xmax() for x in X])
+    ymin = min([x.ymin() for x in X])
+    ymax = max([x.ymax() for x in X])
+    cols = ["blue","red","green","orange","brown"] # Preset colours, because rainbow tends to return too pale ones
+    if n1 > len(cols):
+        cols = rainbow(n1)
+    return sum([EC_R_plot([SR[i](a) for a in E.ainvs()],xmin,xmax,ymin,ymax,cols[i],"$"+base_field_gen_name+" \mapsto$ "+str(SR[i].im_gens()[0].n(20))) for i in range(n1)])
 
 class ECNF(object):
     """
@@ -79,15 +112,45 @@ class ECNF(object):
         if N.norm()==1:  # since the factorization of (1) displays as "1"
             self.fact_cond = self.cond
         else:
-            self.fact_cond = web_latex(N.factor())
+            self.fact_cond = web_latex_ideal_fact(N.factor())
         self.fact_cond_norm = web_latex(N.norm().factor())
-        D = E.discriminant()
+
+        D = self.field.K().ideal(E.discriminant())
         self.disc = web_latex(D)
-        try:
-            self.fact_disc = web_latex(D.factor())
-        except ValueError: # if not all prime ideal factors principal
-            pass
-            #self.fact_disc = web_latex(self.field.K.ideal(D).factor())
+        self.disc_norm = web_latex(D.norm())
+        if D.norm()==1:  # since the factorization of (1) displays as "1"
+            self.fact_disc = self.disc
+        else:
+            self.fact_disc = web_latex_ideal_fact(D.factor())
+        self.fact_disc_norm = web_latex(D.norm().factor())
+
+        # Minimal model?
+        #
+        # All curves in the database should be given
+        # by models which are globally minimal if possible, else
+        # minimal at all but one prime.  But we do not rely on this
+        # here, and the display should be correct if either (1) there
+        # exists a global minimal model but this model is not; or (2)
+        # this model is non-minimal at more than one prime.
+        #
+        self.non_min_primes = non_minimal_primes(E)
+        self.is_minimal = (len(self.non_min_primes)==0)
+        self.has_minimal_model = True
+        if not self.is_minimal:
+            self.non_min_prime = ','.join([web_latex(P) for P in self.non_min_primes])
+            self.has_minimal_model = has_global_minimal_model(E)
+
+        if not self.is_minimal:
+            Dmin = minimal_discriminant_ideal(E)
+            self.mindisc = web_latex(Dmin)
+            self.mindisc_norm = web_latex(Dmin.norm())
+            if Dmin.norm()==1:  # since the factorization of (1) displays as "1"
+                self.fact_mindisc = self.mindisc
+            else:
+                self.fact_mindisc = web_latex_ideal_fact(Dmin.factor())
+            self.fact_mindisc_norm = web_latex(Dmin.norm().factor())
+
+
         j = E.j_invariant()
         if j:
             d = j.denominator()
@@ -108,11 +171,13 @@ class ECNF(object):
                         self.j = web_latex(g)
         self.j = web_latex(j)
 
-        self.fact_j = self.j
-        if j:
+        self.fact_j = None
+        if j.is_zero():
+            self.fact_j = web_latex(j)
+        else:
             try:
                 self.fact_j = web_latex(j.factor())
-            except ValueError: # if not all prime ideal factors principal
+            except (ArithmeticError,ValueError): # if not all prime ideal factors principal
                 pass
 
         # CM and End(E)
@@ -152,7 +217,7 @@ class ECNF(object):
         try:
             self.rk = web_latex(self.rank)
         except AttributeError:
-            self.rk = "not known"
+            self.rk = "not recorded"
 #       if rank in self:
 #            self.r = web_latex(self.rank)
 
@@ -164,7 +229,9 @@ class ECNF(object):
                                'norm': web_latex(p.norm().factor()),
                                'tamagawa_number': self.local_info.tamagawa_number(),
                                'kodaira_symbol': web_latex(self.local_info.kodaira_symbol()).replace('$', ''),
-                               'reduction_type': self.local_info.bad_reduction_type()
+                               'reduction_type': self.local_info.bad_reduction_type(),
+                                'ord_den_j': max(0,-E.j_invariant().valuation(p)),
+                                'ord_mindisc': self.local_info.discriminant_valuation()
                                })
 
         # URLs of self and related objects:
@@ -188,10 +255,18 @@ class ECNF(object):
             self.friends += [('Hilbert Modular Form '+self.hmf_label, self.urls['hmf'])]
         if self.field.is_imag_quadratic():
             self.friends += [('Bianchi Modular Form %s not yet available' % self.bmf_label, '')]
-
+        
         self.properties = [
             ('Base field', self.field.field_pretty()),
-            ('Label' , self.label),
+            ('Label' , self.label)]
+        
+        # Plot
+        if E.base_field().signature()[0]:
+            self.plot = encode_plot(EC_nf_plot(E,self.field.generator_name()))
+            self.plot_link = '<img src="%s" width="200" height="150"/>' % self.plot
+            self.properties += [(None, self.plot_link)]
+
+        self.properties += [
             ('Conductor' , self.cond),
             ('Conductor norm' , self.cond_norm),
             ('j-invariant' , self.j),

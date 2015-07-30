@@ -17,7 +17,7 @@
             <input type="text" placeholder="search ..." name="q" size="13" />
           </form>
             &middot;
-          <a href="{{ feedbackpage }}" target="_blank">
+          <a href="{{ feedbackpage }}" target=_blank">
              Feedback</a>
             &middot;
           {% if g.show_menu %}
@@ -76,17 +76,13 @@
    {% endif %}
  {%- endmacro %}
 
+<div id="sidebar">
 {%- include "sidebar.html" -%}
 
-{% if BETA %}
+{{ entry("Data", getUploadedFor(request.path, true) ) }}
 
-      {#  Please keep the commented part, I might reinstate some of it POD
-      #<li><a class = "number_field_galois_groups" href="{{ url_for('number_field_galois_groups.index') }}">Galois Groups (only logged in)</a></li>
-      #}
-{% endif %}
+</div>
 
-   {{ entry("Data", getUploadedFor(request.path, true) ) }}
-  {# {% if user_is_authenticated %} {% endif %} #}
 
 {% else %}
 <style type="text/css">
@@ -168,7 +164,7 @@
 
 <div id="footer">
     {% if credit -%}
-      &copy; Data computed by {{ credit|safe }}.<br />
+      Data computed by {{ credit|safe }}.<br />
     {%- endif %}
     
     {% if support -%}

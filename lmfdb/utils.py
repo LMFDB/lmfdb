@@ -263,6 +263,13 @@ def web_latex(x):
     else:
         return "\( %s \)" % sage.all.latex(x)
 
+# if you just use web_latex(x) where x is a factored ideal then the
+# parentheses are doubled which does not look good!
+def web_latex_ideal_fact(x):
+    y = web_latex(x)
+    y = y.replace("(\\left(","\\left(")
+    y = y.replace("\\right))","\\right)")
+    return y
 
 def web_latex_split_on(x, on=['+', '-']):
     if isinstance(x, (str, unicode)):

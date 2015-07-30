@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 import re
+import time
 
 from pymongo import ASCENDING, DESCENDING
 import lmfdb.base
 from lmfdb.base import app
-from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
+from flask import Flask, session, g, render_template, url_for, request, redirect, make_response, send_file
 import tempfile
 import os
+import StringIO
 
 from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range2, web_latex_split_on_pm, comma, clean_input
 from lmfdb.number_fields.number_field import parse_list
@@ -102,14 +104,21 @@ def random_curve():
     from sage.misc.prandom import randint
     n = get_stats().counts()['ncurves']
     n = randint(0,n-1)
-    return render_curve_webpage_by_label(db_ec().find()[n]['label'])
+    label = db_ec().find()[n]['label']
+    # This version leaves the word 'random' in the URL:
+    # return render_curve_webpage_by_label(label)
+    # This version uses the curve's own URL:
+    return redirect(url_for(".by_ec_label", label=label), 301)
+
 
 @ec_page.route("/curve_of_the_day")
 def todays_curve():
     from datetime import date
     mordells_birthday = date(1888,1,28)
     n = (date.today()-mordells_birthday).days
-    return render_curve_webpage_by_label(db_ec().find({'number' : int(1)})[n]['label'])
+    label = db_ec().find({'number' : int(1)})[n]['label']
+    #return render_curve_webpage_by_label(label)
+    return redirect(url_for(".by_ec_label", label=label), 301)
 
 @ec_page.route("/stats")
 def statistics():
@@ -270,8 +279,10 @@ def elliptic_curve_search(**args):
             info['err'] = 'Error parsing input for nonsurjective primes.  It needs to be a prime (such as 5), or a comma-separated list of primes (such as 2,3,11).'
             return search_input_error(info, bread)
 
-    info['query'] = query
-
+    if 'download' in info and info['download'] != '0':
+        res = db_ec().find(query).sort([ ('conductor', ASCENDING), ('lmfdb_iso', ASCENDING), ('lmfdb_number', ASCENDING) ])
+        return download_search(info, res)
+    
     count_default = 100
     if info.get('count'):
         try:
@@ -577,6 +588,57 @@ def download_EC_all(label):
     response = make_response('\n'.join(str(an) for an in dump_data))
     response.headers['Content-type'] = 'text/plain'
     return response
+
+
+def download_search(info, res):
+    dltype = info['Submit']
+    delim = 'bracket'
+    com = r'\\'  # single line comment start
+    com1 = ''  # multiline comment start
+    com2 = ''  # multiline comment end
+    filename = 'elliptic_curves.gp'
+    mydate = time.strftime("%d %B %Y")
+    if dltype == 'sage':
+        com = '#'
+        filename = 'elliptic_curves.sage'
+    if dltype == 'magma':
+        com = ''
+        com1 = '/*'
+        com2 = '*/'
+        delim = 'magma'
+        filename = 'elliptic_curves.m'
+    s = com1 + "\n"
+    s += com + ' Elliptic curves downloaded from the LMFDB downloaded %s\n'% mydate
+    s += com + ' Below is a list called data. Each entry has the form:\n'
+    s += com + '   [Weierstrass Coefficients]\n'
+    s += '\n' + com2
+    s += '\n'
+    if dltype == 'magma':
+        s += 'data := ['
+    else:
+        s += 'data = ['
+    s += '\\\n'
+    for f in res:
+        entry = str(f['ainvs'])
+        entry = entry.replace('u','')
+        entry = entry.replace('\'','')
+        s += entry + ',\\\n'
+    s = s[:-3]
+    s += ']\n'
+    if delim == 'brace':
+        s = s.replace('[', '{')
+        s = s.replace(']', '}')
+    if delim == 'magma':
+        s = s.replace('[', '[*')
+        s = s.replace(']', '*]')
+        s += ';'
+    strIO = StringIO.StringIO()
+    strIO.write(s)
+    strIO.seek(0)
+    return send_file(strIO,
+                     attachment_filename=filename,
+                     as_attachment=True)
+
 
 #@ec_page.route("/download_Rub_data")
 # def download_Rub_data():

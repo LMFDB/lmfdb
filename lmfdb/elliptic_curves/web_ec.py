@@ -197,15 +197,20 @@ class WebEC(object):
         E_pari = self.E.pari_curve()
         from sage.libs.pari.all import PariError
         try:
-            minq = self.E.minimal_quadratic_twist()[0]
+            minq, minqD = self.E.minimal_quadratic_twist()
         except PariError:  # this does occur with 164411a1
             ec.debug("PariError computing minimal quadratic twist of elliptic curve %s" % lmfdb_label)
             minq = self.E
+            minqD = 1
+        data['minq_D'] = minqD
         if self.E == minq:
             data['minq_label'] = self.lmfdb_label
+            data['minq_info'] = '(itself)'
         else:
             minq_ainvs = [str(c) for c in minq.ainvs()]
             data['minq_label'] = db_ec().find_one({'ainvs': minq_ainvs})['lmfdb_label']
+            data['minq_info'] = '(by %s)' % minqD
+
         minq_N, minq_iso, minq_number = split_lmfdb_label(data['minq_label'])
 
         # rational and integral points
@@ -258,9 +263,10 @@ class WebEC(object):
 
         bsd = self.bsd = {}
 
-        if mw['rank'] >= 2:
-            bsd['lder_name'] = "L^{(%s)}(E,1)" % mw['rank']
-        elif mw['rank']:
+        r = self.rank
+        if r >= 2:
+            bsd['lder_name'] = "L^{(%s)}(E,1)/%s!" % (r,r)
+        elif r:
             bsd['lder_name'] = "L'(E,1)"
         else:
             bsd['lder_name'] = "L(E,1)"
@@ -310,7 +316,7 @@ class WebEC(object):
 
         self.friends = [
             ('Isogeny class ' + self.lmfdb_iso, url_for(".by_double_iso_label", conductor=N, iso_label=iso)),
-            ('Minimal quadratic twist ' + data['minq_label'], url_for(".by_triple_label", conductor=minq_N, iso_label=minq_iso, number=minq_number)),
+            ('Minimal quadratic twist %s %s' % (data['minq_info'], data['minq_label']), url_for(".by_triple_label", conductor=minq_N, iso_label=minq_iso, number=minq_number)),
             ('All twists ', url_for(".rational_elliptic_curves", jinv=self.jinv)),
             ('L-function', url_for("l_functions.l_function_ec_page", label=self.lmfdb_label)),
             ('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', label=self.lmfdb_iso)),

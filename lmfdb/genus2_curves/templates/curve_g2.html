@@ -26,12 +26,20 @@ function show_code(system) {
 src="http://code.jquery.com/jquery-latest.min.js"></script>
 <script src="http://aleph.sagemath.org/embedded_sagecell.js"></script>
 
-    {% set KNOWL_ID = "ec.q.%s"|format(data['label']) %}
+    {% set KNOWL_ID = "g2c.%s"|format(data['label']) %}
 
 <!--<h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>-->
 
+    <div align ="center">
+      Show commands using:  <a onclick="show_code('sage'); return false" href='#'>sage</a>,
+        <a onclick="show_code('magma'); return false" href='#'>magma</a>
+    </div>
+
     <h2> {{ KNOWL('g2c.minimal_equation', title='Minimal equation') }} </h2>
-<p>  ${{ data.data.min_eqn }}$ </p>
+    <p> ${{ data.data.min_eqn_display }}$ </p>
+
+    <div class='sage nodisplay code'><img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">&nbsp; R.&lt;x&gt; = PolynomialRing(QQ); C = HyperellipticCurve(R({{data.data.min_eqn[0]}}), R({{data.data.min_eqn[1]}}))</div>
+    <div class='magma nodisplay code'><img src = "http://i.stack.imgur.com/0468s.png" width="50px"> R&lt;x&gt; := PolynomialRing(Rationals()); C := HyperellipticCurve(R!{{data.data.min_eqn[0]}}, R!{{data.data.min_eqn[1]}});</div>
 
     <h2> {{ KNOWL('g2c.invariants', title='Invariants') }}  </h2>
         <table>
@@ -50,32 +58,34 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
           <td>&nbsp;=&nbsp;</td>
           <td>{{ data.data.disc_factor_latex }}</td>
         </tr>
-
-	</table>
-
-
-	<h2> {{ KNOWL('g2c.igusa_clebsch', title='Igusa-Clebsch invariants') }} </h2>
-
-	<table>
+	
+        <tr>
+          <td> \( I_2 \) </td>
+	  <td>&nbsp;=&nbsp;</td>
+	  <td>\({{ data.data.invs[0] }}\)</td>
+          <td>&nbsp;=&nbsp;</td>
+	  <td>{{ data.data.invs_factor_latex[0] }}</td>
+        </tr>
 	<tr>
           <td> \( I_4 \) </td>
-	  <td>=</td>
-	  <td>\({{ data.data.igusa_clebsch[0] }}\)</td>
+	  <td>&nbsp;=&nbsp;</td>
+	  <td>\({{ data.data.invs[1] }}\)</td>
+          <td>&nbsp;=&nbsp;</td>
+	  <td>{{ data.data.invs_factor_latex[1] }}</td>
         </tr>
 	<tr>
           <td> \( I_6 \) </td>
-	  <td>=</td>
-	  <td>\({{ data.data.igusa_clebsch[1] }}\)</td>
-        </tr>
-	<tr>
-          <td> \( I_8 \) </td>
-	  <td>=</td>
-	  <td>\({{ data.data.igusa_clebsch[2] }}\)</td>
+	  <td>&nbsp;=&nbsp;</td>
+	  <td>\({{ data.data.invs[2] }}\)</td>
+          <td>&nbsp;=&nbsp;</td>
+	  <td>{{ data.data.invs_factor_latex[2] }}</td>
         </tr>
 	<tr>
           <td> \( I_{10} \) </td>
-	  <td>=</td>
-	  <td>\({{ data.data.igusa_clebsch[3]}}\)</td>
+	  <td>&nbsp;=&nbsp;</td>
+	  <td>\({{ data.data.invs[3]}}\)</td>
+          <td>&nbsp;=&nbsp;</td>
+	  <td>{{ data.data.invs_factor_latex[3] }}</td>
         </tr>
 	</table>
 
@@ -85,14 +95,23 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 <tr>  <td>\(\mathrm{Aut}(X_{\overline{\Q}})\)</td><td>\(\simeq\)</td>  <td>\({{ data.data.geom_aut_grp}} \) </td> <td>(GAP id : {{data.geom_aut_grp}})</td></tr>
 </table>
 
+<h2> {{ KNOWL('g2c.num_rat_wpts', title='Number of rational Weierstrass points') }} </h2>
+\({{data.data.num_rat_wpts}}\)
+<hr>
+
+<h2> {{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank') }} </h2>
+\({{data.data.two_selmer_rank}}\)
+
 <h2> {{ KNOWL('g2c.torsion', title='Torsion') }} </h2>
 \({{data.data.tor_struct}}\)
 
-
-
-<h2>Sato-Tate group</h2>
+<h2> {{KNOWL('g2c.st_group', title='Sato-Tate group') }} </h2>
 <p>
-Sato-Tate group: \({{ data.data.st_group_name }}\)
+{% if data.data.real_geom_end_alg == 'R'%}
+\(\mathrm{ST} = {{ data.data.st_group_name }}\)
+{% else %}
+\(\mathrm{ST} = {{ data.data.st_group_name }} \quad \mathrm{ST}_0 = {{ data.data.st0_group_name}}\)
+{% endif %}
 </p>
 
 <h2> {{ KNOWL('g2c.jac_endomorphisms', title='Endomorphisms of the Jacobian') }} </h2>

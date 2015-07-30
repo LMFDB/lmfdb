@@ -101,6 +101,9 @@ def nf_knowl_guts(label, C):
     out += '<br>Signature: '
     out += str(wnf.signature())
     out += '<br>Galois group: '+group_display_knowl(wnf.degree(),wnf.galois_t(),C)
+    out += '<br>Class number: %s ' % str(wnf.class_number())
+    if wnf.can_class_number():
+        out += wnf.short_grh_string()
     out += '</div>'
     out += '<div align="right">'
     out += '<a href="%s">%s home page</a>' % (str(url_for("number_fields.number_field_render_webpage", natural=label)),label)
@@ -230,6 +233,15 @@ class WebNumberField:
 
     def haskey(self, key):
         return key in self._data
+
+    # Warning, this produces our prefered integral basis
+    # But, if you have the sage number field do computations,
+    # they will be in terms of a different basis
+    def zk(self):
+        if self.haskey('zk'):
+            zkstrings = self._data['zk']
+            return [str(u) for u in zkstrings]
+        return list(pari(self.poly()).nfbasis())
 
     def subfields(self):
         if not self.haskey('subs'):

@@ -575,9 +575,11 @@ class Lfunction_HMF(Lfunction):
             self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{f})"
         self.title = ("$L(s,f)$, " + "where $f$ is a holomorphic Hilbert cusp "
                       + "form with parallel weight " + str(self.weight)
-                      + ", level norm " + str(f['level_norm'])
-                      + ", and character "
-                      + str(self.character))
+                      + ", level norm " + str(f['level_norm']) )
+        if self.character:
+            self.title += ", and character " + str(self.character)
+        else:
+            self.title += ", and trivial character"
 
         self.citation = ''
         self.credit = ''
@@ -1248,7 +1250,7 @@ class SymmetricPowerLfunction(Lfunction):
         from lmfdb.symL.symL import SymmetricPowerLFunction
         self.S = SymmetricPowerLFunction(self.E, self.m)
         self.algebraic = True
-        self.title = ("The Symmetric %s $L$-function $L(s,E,\mathrm{sym}^%d)$ of Elliptic Curve Isogeny Class %s"
+        self.title = ("The Symmetric %s $L$-function $L(s,E,\mathrm{sym}^{%d})$ of Elliptic Curve Isogeny Class %s"
                       % (ordinal(self.m), self.m, self.label))
 
         self.dirichlet_coefficients = self.S._coeffs
@@ -1275,7 +1277,7 @@ class SymmetricPowerLfunction(Lfunction):
         self.motivic_weight = self.m
         self.selfdual = True
         self.langlands = True
-        self.texname = "L(s, E, \mathrm{sym}^%d)" % self.m  
+        self.texname = "L(s, E, \mathrm{sym}^{%d})" % self.m  
         self.texnamecompleteds = "\\Lambda(s,E,\mathrm{sym}^{%d})" % self.S.m
         self.texnamecompleted1ms = ("\\Lambda(1-{s}, E,\mathrm{sym}^{%d})"
                                     % self.S.m)

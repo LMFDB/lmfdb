@@ -70,9 +70,9 @@ function show_code(system) {
   {% if info.is_abelian %}
 			<tr><td colspan="3">&nbsp;</tr>
             <tr><td colspan="3">Extension is Galois and abelian</tr>
-            <tr><td>Conductor:<td>&nbsp;&nbsp;<td>{{info.conductor}}</tr>
-            <tr><td>Dirichlet
-				group:<td>&nbsp;&nbsp;<td>
+                <tr><td>{{KNOWL('nf.conductor', title='Conductor')}}:<td>&nbsp;&nbsp;<td>{{info.conductor}}</tr>
+            <tr><td>{{ KNOWL('nf.dirichlet_group', title="Dirichlet group") }}:
+                <td>&nbsp;&nbsp;<td>
                 {% if info.dirichlet_group is defined %}
                 {{info.dirichlet_group|safe}}
                 {% else %}
@@ -122,7 +122,7 @@ function show_code(system) {
         <div class='pari nodisplay code'>pari: K.reg</div>
 
         <div class='magma nodisplay code'>&gt; UnitRank(K);</div>
-        <div class='magma nodisplay code'>&gt; K!f(TorsionSubgroup(UK).1);</div>
+        <div class='magma nodisplay code'>&gt; UK,f:=UnitGroup(K); K!f(TorsionSubgroup(UK).1);</div>
         <div class='magma nodisplay code'>&gt; [K!Integers(K)!f(u) : u in Generators(UK)];</div>
         <div class='magma nodisplay code'>&gt; Regulator(K);</div>
         <p>
@@ -148,7 +148,7 @@ function show_code(system) {
 
         <p><h2> {{ KNOWL('nf.galois_group', title='Galois group') }}</h2>
         <div class='sage nodisplay code'>sage: K.galois_group(type='pari')</div>
-        <div class='pari nodisplay code'>pari: polgalois(pol)</div>
+        <div class='pari nodisplay code'>pari: polgalois(K.pol)</div>
         <div class='magma nodisplay code'>&gt; GaloisGroup(K);</div>
         <p>
             {{ info.galois_group | safe }}:
@@ -181,7 +181,7 @@ function show_code(system) {
         {% endif %}
 
 {% if nf.unit_galois_action() %}
-        <p><h2> {{ KNOWL('nf.multiplicative_gal_module', title='Multiplicative Galois Module Structure') }}</h2>
+        <p><h2> {{ KNOWL('nf.multiplicative_gal_module', title='Multiplicative Galois module structure') }}</h2>
             <table>
             <tr><td>
               $U_{K^{gal}}/\textrm{Tors}(U_{K^{gal}}) \cong$ {{nf.unit_galois_action_show()|safe}}
@@ -242,11 +242,11 @@ pari:
   </div>
   <div class='magma nodisplay code'>
 <br>
-  p := 7;   # set a prime
+  p := 7;   // set a prime
 <br>
-  idealfactors := Factorization(p*Integers(K));  # get the data
+  idealfactors := Factorization(p*Integers(K));  // get the data
 <br>
-  [&lg;Valuation(Norm(primefactor[1]), p), primefactor[2]&gt; : primefactor in idealfactors];
+  [&lt;primefactor[2], Valuation(Norm(primefactor[1]), p)&gt; : primefactor in idealfactors];
 </div>
 
 {% if info.get("tim_number_field", False) %}

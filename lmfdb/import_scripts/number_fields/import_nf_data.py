@@ -50,8 +50,9 @@ import re
 import json
 from sage.all import *
 
-from pymongo.connection import Connection
-fields = Connection(port=37010).numberfields.fields
+#from pymongo.connection import Connection
+from pymongo.mongo_client import MongoClient
+fields = MongoClient(port=37010).numberfields.fields
 
 saving = True 
 
