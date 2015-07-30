@@ -151,6 +151,6 @@ def citation():
 
 @app.route("/contact")
 def contact():
-    t = "Contact"
+    t = "Contact and feedback"
     b = [(t, url_for("contact"))]
     return render_template('contact.html', title=t, body_class='', bread=b)
