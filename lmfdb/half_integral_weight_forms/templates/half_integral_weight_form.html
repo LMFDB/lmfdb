@@ -22,9 +22,19 @@
 <tr><td> Dimension $S'_0({{info.level}}, {{info.char}})$:<td> ${{info.dimnew}}$ </tr>
 </table>
 </p>
+
+
+{% if info.dimtheta != 0  %}
+<table>
+<tr><td> Theta subspace:</td><td>
+	{% for n in info.theta %}
+		<A HREF="Character/Dirichlet/{{n[0]}}">${{n[1]}}$</A>
+	{% endfor %}	
+</td></tr>
+</table>
+{% endif %}
+
 <p>
-<p>{{info.new}}</p>
-<p>{{info.newpart}}</p>
 <table border="1" padding=5px>
 <tr> <td>Classical newforms</td> <td>Hecke eigenvalue field</td><td>Half integral weight cuspforms</td></tr>
 <tr>
@@ -39,17 +49,7 @@
 </table>
 </p>
 
-<table>
-<tr><td> Theta subspace:</td><td>
-{% if info.dimtheta == 0  %}
-	$S_0({{info.level}}, {{info.char}})=\emptyset$
-{% else %}
-	{% for n in info.theta %}
-		<A HREF="Character/Dirichlet/{{n[0]}}">${{n[1]}}$</A>
-	{% endfor %}
-{% endif %}	
-</td></tr>
-</table>
+
 
 </p>
 

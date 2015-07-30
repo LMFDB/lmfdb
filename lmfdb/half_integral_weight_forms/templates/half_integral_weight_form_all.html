@@ -3,6 +3,15 @@
 
 <h2> Browse {{ KNOWL('mf.half_integral_weight', title='Half Itegral Weight Cusp Forms') }} for $\Gamma_0$</h2>
 
+
+<h2> Find a specific form by label </h2>
+
+<form>
+<input type='text' name='label' placeholder='92.3_2.1.1'>
+<button type='submit'>Label</button>
+<br><span class="formexample">e.g. 92.3_2.1.1 </span>
+</form>
+
 <h2> Search </h2>
 
 <form>
@@ -22,7 +31,7 @@
 <tr>
 <td>Character</td>
 <td><input type='text' name='character' placeholder='1.1' size=10>
-<td><span class="formexample"> character label, e.g. 1.1</td>
+<td><span class="formexample"> character label, e.g. n.m for $\chi_n(m,\cdot)$ </td>
 </tr>
 <tr>
 <td colspan=3><button type='submit' value='Search'>Search</button>
@@ -31,13 +40,6 @@
 </table>
 </form>
 
-<h2> Find a specific form by label </h2>
-
-<form>
-<input type='text' name='label' placeholder='92.3_2.1.1'>
-<button type='submit'>Label</button>
-<br><span class="formexample">e.g. 92.3_2.1.1 </span>
-</form>
 
 
 {% endblock %}
