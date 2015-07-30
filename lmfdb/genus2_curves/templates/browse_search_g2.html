@@ -52,15 +52,6 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 <td><input type='text' name='disc' placeholder='169' size=10>
 <td><span class="formexample"> e.g. 169, 0-1000</td>
 </tr>
-
-<tr>
-<td>{{ KNOWL('g2c.gl2type', title='$\GL_2$-type') }}</td>
-<td><select name='is_gl2_type' width="80" style="width: 80px">
-                   <option ></option>
-                   <option value='True'>True</option>
-                   <option value='False'>False</option>
-      </select></td>
-</tr>
 <tr>
 <td>{{ KNOWL('g2c.weierstrass_pts', title='rational Weierstrass points') }}</td>  
 <td><input type='text' name='num_rat_wpts' placeholder='1' size=10>
@@ -80,6 +71,14 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 <td>{{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank')}}</td>  
 <td><input type='text' name='two_selmer_rank' placeholder='1' size=10>
 <td><span class="formexample"> e.g. 1 </span></td>
+</tr>
+<tr>
+<td>{{ KNOWL('g2c.gl2type', title='$\GL_2$-type') }}</td>
+<td><select name='is_gl2_type' width="80" style="width: 80px">
+                   <option ></option>
+                   <option value='True'>True</option>
+                   <option value='False'>False</option>
+      </select></td>
 </tr>
 <tr>
 <td>{{ KNOWL('g2c.st_group', title='Sato-Tate group') }}</td>
