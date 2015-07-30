@@ -615,8 +615,9 @@ def download_search(info, res):
         s += 'data = ['
     s += '\\\n'
     for f in res:
-        wnf = WebEC(f).data
-        entry = str(wnf['ainvs'])
+        entry = str(f['ainvs'])
+        entry = entry.replace('u','')
+        entry = entry.replace('\'','')
         s += entry + ',\\\n'
     s = s[:-3]
     s += ']\n'
