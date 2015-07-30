@@ -347,7 +347,9 @@ class WebModFormSpace_class(object):
             facts = []
             fs = self.gridfs_collection('Newform_factors')
             for rec in factors_from_db:
-                facts.append(loads(fs.get(rec['_id']).read()))
+                factor =  loads(fs.get(rec['_id']).read())
+                if factor.__dict__.get('_ModularSymbolsSubspace__is_cuspidal',False):
+                    facts.append(factor)
         return facts
     
     
@@ -607,7 +609,7 @@ class WebModFormSpace_class(object):
         for d in divisors(N):
             if(d == 1):
                 continue
-            q = N.divide_knowing_divisible_by(d)
+            q = ZZ(N).divide_knowing_divisible_by(d)
             if(self._verbose > 1):
                 emf_logger.debug("d={0}".format(d))
             # since there is a bug in the current version of sage

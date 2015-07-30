@@ -163,7 +163,7 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
         except:
             emf_logger.critical("Error in computing oldspace decomposition")
             O = []
-            info['old_decomposition'] = "n/a"
+            info['old_decomposition'] = ""
             (A, B, C) = sys.exc_info()
             # build an error message...
             errtype = A.__name__

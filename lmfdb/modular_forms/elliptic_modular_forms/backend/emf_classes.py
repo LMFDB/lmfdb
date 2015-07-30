@@ -97,7 +97,14 @@ class DimensionTable(object):
                 return dim
         return "n/a"
 
+    @cached_method
     def is_in_db(self, N=1, k=4, character=0):
+        factors = connect_db()['Newform_factors.files']
+        key = {'k': int(k), 'N': int(N), 'chi': int(character)}
+        if factors.find(key).count()>0:
+            return True
+        else:
+            return False
         if self._table is None:
             return "n/a"
         emf_logger.debug("in is_in_db: N={0},k={1},character={2}".format(N,k,character))
