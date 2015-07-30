@@ -196,6 +196,7 @@ def ctx_proc_userdata():
     import knowledge
     vars['meta_description'] = knowledge.knowl.Knowl("intro.description").content
     vars['shortthanks'] = r'This project is supported by <a href="%s">grants</a> from the US National Science Foundation and the UK Engineering and Physical Sciences Research Council.' % (url_for('acknowledgment') + "#sponsors")
+#    vars['feedbackpage'] = url_for('contact')
     vars['feedbackpage'] = r"https://docs.google.com/spreadsheet/viewform?formkey=dDJXYXBleU1BMTFERFFIdjVXVmJqdlE6MQ"
     vars['LINK_EXT'] = lambda a, b: '<a href="%s" target="_blank">%s</a>' % (b, a)
 

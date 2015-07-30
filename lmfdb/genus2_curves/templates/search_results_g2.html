@@ -1,14 +1,110 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<h2> Results ({{info.report}})</h2>
 
+<h2> Refine search </h2>
+
+<form id='re-search'>
+<input type="hidden" name="start" value="{{info.start}}"/>
+<input type="hidden" name="count" value="{{info.count}}"/>
+
+<table>
+<tr>
+<td>{{ KNOWL('g2c.conductor', title='conductor') }}</td>  
+<td>{{ KNOWL('g2c.abs_discriminant', title='absolute discriminant')}}</td>
+<td>#{{ KNOWL('g2c.num_rat_wpts', title='Weierstrass points') }}</td>  
+<td>{{ KNOWL('g2c.torsion', title='torsion structure')}}</td>  
+<td>{{ KNOWL('g2c.torsion_order', title='torsion order')}}</td>  
+<td>{{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank')}}</td>  
+</tr>
+<tr>
+<tr>
+<td><input type='text' name='cond' placeholder='169' size=10 value="{{info.cond}}"></td>
+<td><input type='text' name='disc' placeholder='169' size=10 value="{{info.disc}}"></td>
+<td><input type='text' name='num_rat_wpts' placeholder='1' size=10 value="{{info.num_rat_wpts}}">
+<td><input type='text' name='torsion' placeholder='[2, 4]' size=10 value="{{info.torsion}}">
+<td><input type='text' name='torsion_order' placeholder='2' size=10 value="{{info.torsion_order}}">
+<td><input type='text' name='two_selmer_rank' placeholder='1' size=10 value="{{info.two_selmer_rank}}">
+</tr>
+<tr>
+<td>{{ KNOWL('g2c.gl2type', title='\(\GL_2\)-type') }}</td>
+<td>{{ KNOWL('g2c.st_group', title='\(\mathrm{ST}\)') }}</td>
+<td>{{ KNOWL('g2c.real_geom_end_alg', title='\(\mathrm{ST}_0\)') }}</td>
+<td>{{ KNOWL('g2c.aut_grp', title='\(\mathrm{Aut}(X)\)') }}</td>
+<td>{{ KNOWL('g2c.geom_aut_grp',   title='\(\mathrm{Aut}(X_{\overline{\Q}})\)') }}</td>
+<td>Maximum number</td>
+</tr>
+
+<tr>
+<td><select name='is_gl2_type' width="80" style="width: 80px">
+{% if info.is_gl2_type=='True' %}
+  <option value="True">True</option>
+  <option value="False">False</option>
+  <option ></option>
+{% elif info.is_gl2_type=='False'%}
+  <option value="False">False</option>
+  <option value="True">True</option>
+  <option ></option>
+{% else %}
+  <option ></option>
+  <option value="True">True</option>
+  <option value="False">False</option>
+{% endif %}
+</select></td>
+
+<td><select name='st_group' width="80" style="width: 80px" >
+    <option value='{{info.st_group}}'>{{info.st_group_dict[info.st_group]}}</option>
+    <option ></option>
+    {% for G in info.st_group_dict.keys()%}
+    <option value='{{G}}'>{{info.st_group_dict[G]}}</option>
+    {% endfor %}
+  </select>
+</td>
+
+<td><select name='real_geom_end_alg' width="80" style="width: 80px">
+    <option value='{{info.real_geom_end_alg}}'>{{info.real_geom_end_alg_dict[info.real_geom_end_alg]}}</option>
+    <option ></option>
+    {% for G in info.real_geom_end_alg_dict.keys()%}
+    <option value='{{G}}'>{{info.real_geom_end_alg_dict[G]}}</option>
+    {% endfor %}
+</select></td>
+
+<td ><select name='aut_grp' width="80" style="width: 80px">
+    <option value='{{info.aut_grp}}'>{{info.aut_grp_dict[info.aut_grp]}}</option>
+    <option ></option>
+    {% for G in info.aut_grp_dict.keys()%}
+    <option value='{{G}}'>{{info.aut_grp_dict[G]}}</option>
+    {% endfor %}
+</select></td>
+<td ><select name='geom_aut_grp' width="80" style="width: 80px">
+    <option value='{{info.geom_aut_grp}}'>{{info.geom_aut_grp_dict[info.geom_aut_grp]}}</option>
+    <option ></option>
+    {% for G in info.geom_aut_grp_dict.keys()%}
+    <option value='{{G}}'>{{info.geom_aut_grp_dict[G]}}</option>
+    {% endfor %}
+</select></td>
+<td><input type='text' name='count' value="{{info.count}}" 	   size=10></td>
+</tr>
+</table>
+<button type='submit' value='refine'>Search again</button>
+</form>
+
+<h2> Results ({{info.report}})
+{% if info.start > 0 %}
+<a href="#" class="navlink"
+   onclick="decrease_start_by_count_and_submit_form('re-search');return
+            false">Previous</A>
+{% endif %}
+{% if info.more > 0 %}
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
+{% endif %}
+</h2>
 <table class="ntdata">
 <tr>
-<th>Label</th>
-<th>Isogeny class</th>
-<th>Equation</th>
-<th>\( \mathrm{GL}_2\mathrm{-type}\)</th>
+<th>{{ KNOWL('g2c.q.label', title='Label') }}</th>
+<th>{{ KNOWL('g2c.q.isogeny_class', title='Isogeny class') }}</th>
+<th>{{ KNOWL('g2c.q.equation', title='Equation') }}</th>
+<th>{{ KNOWL('g2c.gl2type', title='\(\GL_2\)-type') }}</th>
 </tr>
 {% for curve in info.curves: %}
 <tr>
@@ -19,6 +115,16 @@
 </tr>
 {% endfor %}
 </table>
+
+<hr>
+{% if info.start > 0 %}
+<a href="#" class="navlink"
+   onclick="decrease_start_by_count_and_submit_form('re-search');return
+            false">Previous</A>
+{% endif %}
+{% if info.more > 0 %}
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
+{% endif %}
 
 <br>
 <!--
