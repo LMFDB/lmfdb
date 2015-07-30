@@ -55,7 +55,7 @@ function show_code(system) {
 #}
 
 <div>
-  <h2>  Base Field   {{ ec.field.knowl()|safe }} </h2>
+  <h2>  Base field   {{ ec.field.knowl()|safe }} </h2>
 <p>
 Generator \({{ ec.field.generator_name() }}\), with minimal polynomial
 \({{ec.field.poly()}}\), class number \({{ec.field.class_number()}}\).
@@ -71,7 +71,7 @@ cellpadding="5";
 </style>
 
 <div>
-<h2>{{ KNOWL('ec.weierstrass_coeffs',  title='Weierstrass Equation') }}</h2>
+<h2>{{ KNOWL('ec.weierstrass_coeffs',  title='Weierstrass equation') }}</h2>
 <p>
 {{ ec.equn }}
 </p>
@@ -177,7 +177,7 @@ cellpadding="5";
         <td>=</td>
         <td>{{ ec.End }}</td>
         <td>&nbsp;</td>
-        <td>({%if not ec.cm %} no {%endif %}
+        <td>({%if not ec.cm %}no {%endif %}
    {{ KNOWL('ec.complex_multiplication', title='Complex Multiplication')}}
             )
         </td>
@@ -208,18 +208,18 @@ Not yet determined.
 </div>
 
 <div>
-    <h2> Local data at primes of bad reduction </h2>
+    <h2>{{KNOWL('local_data', title='Local data')}} at primes of {{KNOWL('ec.bad_reduction', title='bad reduction')}} </h2>
 
 {% if ec.local_data %}
 <table cellpadding="5">
 <tr>
 <th>prime</th>
-<th>Norm</th>
-<th>{{KNOWL('ec.q.tamagawa_numbers', title='Tamagawa number')}}</th>
-<th>{{KNOWL('ec.q.kodaira_symbol', title='Kodaira symbol')}}</th>
-<th>{{KNOWL('ec.q.reduction_type', title='Reduction type')}}</th>
-<th>ord(\(\Delta_{min}\))</th>
-<th>ord\({}_-(j\))</th>
+<th>norm</th>
+<th>{{KNOWL('ec.tamagawa_numbers', title='Tamagawa number')}}</th>
+<th>{{KNOWL('ec.kodaira_symbol', title='Kodaira symbol')}}</th>
+<th>{{KNOWL('ec.reduction_type', title='reduction type')}}</th>
+<th>{{KNOWL('ec.minimal_discriminant.order', title='ord(\(\Delta_{min}\))')}}</th>
+<th>{{KNOWL('ec.j_invariant.denominator_order', title ='ord\({}_-(j\))')}}</th>
 </tr>
 {% for pr in ec.local_data %}
 <tr>
