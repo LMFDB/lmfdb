@@ -62,11 +62,17 @@ def base_label(level,weight,character):
 ## Main importing function
 
 def do_import(ll):
-    level,weight,character,dim,dimtheta,thetas,newpart  = ll
+    level,weight,character,dim,dimtheta,thetas,newpart0  = ll
     mykeys = ['level', 'weight', 'character', 'dim', 'dimtheta', 'thetas', 'newpart']
     data = {}
     for j in range(len(mykeys)):
         data[mykeys[j]] = ll[j]
+    newpart = []
+    for mf_label,nf_label,dim_image,half_forms in newpart0:
+        entry = {'mf_label' : mf_label, 'nf_label' : nf_label, 'dim_image' : dim_image, 'half_forms' : half_forms}
+        newpart.append(entry)
+    data['newpart'] = newpart
+        
     label = base_label(data['level'],data['weight'],data['character'])
     data['label'] = label
     form = forms.find_one({'label': label})
