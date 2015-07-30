@@ -979,9 +979,11 @@ div.limit-height {
   padding-right:0;
 }
 
+/*
 .dirichletseries td:first-child {
   padding-top:3px;
 }
+*/
 
 .dirichletseries span.term {
   white-space: nowrap;

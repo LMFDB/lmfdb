@@ -69,7 +69,10 @@ def makeLfromdata(L):
     L.degree = data['degree']
     L.level = data['conductor']
     L.primitive = data['primitive']
-    L.motivic_weight = data['motivic_weight']
+    # Convert L.motivic_weight from python 'int' type to sage integer type.
+    # This is necessary because later we need to do L.motivic_weight/2
+    # when we write Gamma-factors in the arithmetic normalization.
+    L.motivic_weight = ZZ(data['motivic_weight'])
     L.sign = p2sage(data['root_number'])
            # p2sage converts from the python string format in the database.
     L.mu_fe = [x+p2sage(data['analytic_normalization'])
@@ -1565,13 +1568,13 @@ class Lfunction_genus2_Q(Lfunction):
         self.texnamecompleteds = "\\Lambda(s,A)"
         self.texnamecompleted1ms = "\\Lambda(1-s,A)"
         self.texnamecompleteds_arithmetic = "\\Lambda(A,s)"
-        self.texnamecompleted1ms_arithmetic = "\\Lambda(" + str(self.motivic_weight + 1) + "-s,A)"
+        self.texnamecompleted1ms_arithmetic = "\\Lambda(A, " + str(self.motivic_weight + 1) + "-s)"
 #        self.title = ("$L(s,A)$, " + "where $A$ is genus 2 curve "
 #                      + "of conductor " + str(isoclass['cond']))
-        self.title_end = ("where $A$ is genus 2 curve "
+        self.title_end = ("where $A$ is a genus 2 curve "
                       + "of conductor " + str(isoclass['cond']))
-        self.title_arithmetic = self.texname_arithmetic + ", " + self.title_end
-        self.title = self.texname + ", " + self.title_end
+        self.title_arithmetic = "$" + self.texname_arithmetic + "$" + ", " + self.title_end
+        self.title = "$" + self.texname + "$" + ", " + self.title_end
 
         constructor_logger(self, args)
 
