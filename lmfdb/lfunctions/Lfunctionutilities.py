@@ -187,7 +187,7 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
                 return(ans + "-" + truncatenumber(-1*rp, precision))
             elif seriescoefftype == "serieshtml":
 #                return(ans + " &minus; " + truncatenumber(float(abs(rp)), precision) + seriesvar(index, seriestype))
-                return(ans + " &minus; " + truncatenumber(-1*rp, precision) + seriesvar(index, seriestype))
+                return(ans + " &minus; " + truncatenumber(-1*rp, precision) + "&middot;" +  seriesvar(index, seriestype))
             elif seriescoefftype == "literal" or seriescoefftype == "factor":
                 return(ans + truncatenumber(rp, precision))
 
@@ -240,7 +240,9 @@ def seriesvar(index, seriestype):
     if seriestype == "dirichlet":
         return(" \\ " + str(index) + "^{-s}")
     elif seriestype == "dirichlethtml":
-        return(" " + str(index) + "<sup>-s</sup>")
+      # WARNING: the following change has consequences which need to be addressed! (DF and SK, July 29, 2015)
+      #  return(" " + str(index) + "<sup>-s</sup>")
+        return(str(index) + "<sup>-s</sup>")
     elif seriestype == "":
         return("")
     elif seriestype == "qexpansion":
