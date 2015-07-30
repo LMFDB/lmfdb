@@ -279,11 +279,8 @@ def elliptic_curve_search(**args):
             info['err'] = 'Error parsing input for nonsurjective primes.  It needs to be a prime (such as 5), or a comma-separated list of primes (such as 2,3,11).'
             return search_input_error(info, bread)
 
-    #C = lmfdb.base.getDBConnection()
-    
-    res = db_ec().find(query).sort([ ('conductor', ASCENDING), ('lmfdb_iso', ASCENDING), ('lmfdb_number', ASCENDING) ])
-    
     if 'download' in info and info['download'] != '0':
+        res = db_ec().find(query).sort([ ('conductor', ASCENDING), ('lmfdb_iso', ASCENDING), ('lmfdb_number', ASCENDING) ])
         return download_search(info, res)
     
     count_default = 100
