@@ -159,7 +159,7 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
                 return(ans + " + " + seriesvar(index, seriestype))
         else:
             if seriescoefftype == "series" or seriescoefftype == "serieshtml":
-                return(" + " + ans + truncatenumber(rp, precision) + seriesvar(index, seriestype))
+                return(" + " + ans + truncatenumber(rp, precision) + "&middot;" + seriesvar(index, seriestype))
             elif seriescoefftype == "signed":
                 return(ans + "+" + truncatenumber(rp, precision))
             elif seriescoefftype == "literal" or seriescoefftype == "factor":
@@ -203,13 +203,13 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
             elif seriescoefftype == "series":
                 return(ans + " + i" + seriesvar(index, seriestype))
             elif seriescoefftype == "serieshtml":
-                return(ans + " + <em>i</em>" + seriesvar(index, seriestype))
+                return(ans + " + <em>i</em>" + "&middot;" + seriesvar(index, seriestype))
                   # yes, em is not the right tag, but it is styled with CSS
         else:
             if seriescoefftype == "series":
                 return(ans + truncatenumber(ip, precision) + "i " + seriesvar(index, seriestype))
             elif seriescoefftype == "serieshtml":
-                return(ans + " + " + truncatenumber(ip, precision) + "<em>i</em> " + seriesvar(index, seriestype))
+                return(ans + " + " + truncatenumber(ip, precision) + "<em>i</em> " + "&middot;" + seriesvar(index, seriestype))
             elif seriescoefftype == "signed":
                 return(ans + "+" + truncatenumber(ip, precision) + "i")
             elif seriescoefftype == "literal" or seriescoefftype == "factor":
@@ -219,12 +219,12 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
             if seriescoefftype == "serieshtml":
                return(" &minus;  <em>i</em>" + seriesvar(index, seriestype))
             else:
-               return("-i" + seriesvar(index, seriestype))
+               return("-i" + "&middot;" + seriesvar(index, seriestype))
         else:
             if seriescoefftype == "series":
                 return(ans + truncatenumber(ip, precision) + "i" + seriesvar(index, seriestype))
             elif seriescoefftype == "serieshtml":
-                return(ans + " &minus; " + truncatenumber(float(abs(ip)), precision) + "<em>i</em>" + seriesvar(index, seriestype))
+                return(ans + " &minus; " + truncatenumber(float(abs(ip)), precision) + "<em>i</em>" + "&middot;" + seriesvar(index, seriestype))
             elif seriescoefftype == "signed":
                 return(ans + truncatenumber(ip, precision) + " i")
             elif seriescoefftype == "literal" or seriescoefftype == "factor":
