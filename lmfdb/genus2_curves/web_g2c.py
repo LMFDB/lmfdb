@@ -8,11 +8,11 @@ import lmfdb.base
 from lmfdb.utils import comma, make_logger, web_latex, encode_plot
 from lmfdb.genus2_curves import g2c_page, g2c_logger
 from lmfdb.genus2_curves.data import group_dict
-import sage.all
+#import sage.all
 from sage.all import latex, matrix, ZZ, QQ, PolynomialRing, factor, implicit_plot
 from lmfdb.hilbert_modular_forms.hilbert_modular_form import teXify_pol
-
 from lmfdb.WebNumberField import *
+from itertools import izip
 
 logger = make_logger("g2c")
 
@@ -122,6 +122,42 @@ def isog_label(label):
     L = label.split(".")
     return L[0]+ "." + L[1]
 
+def scalar_div(c,P,W):
+    # Scalar division in a weighted projective space
+    return [p//(c**w) for (p,w) in izip(P,W)]
+
+def normalize_invariants(I):
+    # This is the tuple of weights for Igusa-Clebsch invariants.
+    # It is later refined to deal with curves for which some of these vanish
+    # If using Igusa invariants instead, one only needs to modify this to
+    #  W_b = [1, 2, 3, 4, 5]
+    W_b = [1, 2, 3, 5]
+    I_b = I
+    l_b = len(W_b)
+    # Eliminating elements of the weight with zero entries in W_b
+    for n in range(l_b):
+        if I_b[n] == 0:
+            W_b[n] = 0
+    # Smaller invariant tuples obtained by excluding zeroes
+    W_s = [W_b[n] for n in range(l_b) if I_b[n] != 0]
+    I_s = [I_b[n] for n in range(l_b) if I_b[n] != 0]
+    # Finding the normalized weights, both big and small
+    dW = gcd(W_s)
+    W_bn = [w//dW for w in W_b]
+    W_sn = [w//dW for w in W_s]
+    # Normalization of the invariants by the appropriate weight
+    dI = gcd(I_s)
+    if dI == 1:
+        return I
+    ps = dI.prime_divisors()
+    Z = zip(I_s, W_sn)
+    c = prod([p**floor(min([ floor(valuation(i,p)/w) for (i,w) in Z ])) for p in ps], 1)
+    # Final weighted multiplication
+    I_n = scalar_div(c, I,W_bn)
+    I_n = [ZZ(i) for i in I_n]
+    return I_n
+# We may want to preserve some factors in the gcd here to factor the invariants when these get bigger, though currently this is not needed
+
 
 class WebG2C(object):
     """
@@ -176,7 +212,11 @@ class WebG2C(object):
         data['cond_factor_latex'] = web_latex(factor(int(self.cond)))
         data['aut_grp'] = groupid_to_meaningful(self.aut_grp)
         data['geom_aut_grp'] = groupid_to_meaningful(self.geom_aut_grp)
-        data['igusa_clebsch'] = [ZZ(a)  for a in self.igusa_clebsch]
+        # Retain actual polynomial Igusa-Clebsch invariants:
+        #data['igusa_clebsch'] = [ZZ(a) for a in self.igusa_clebsch]
+        data['invs'] = normalize_invariants([ZZ(a) for a in self.igusa_clebsch])
+        data['invs_factor_latex'] = [web_latex(factor(i)) for i in data['invs']]
+        data['num_rat_wpts'] = ZZ(self.num_rat_wpts)
         if len(self.torsion) == 0:
             data['tor_struct'] = '\mathrm{trivial}'
         else:
@@ -231,7 +271,7 @@ class WebG2C(object):
                            (None, self.plot_link),
                            ('Conductor','%s' % self.cond),
                            ('Discriminant', '%s' % data['disc']),
-                           ('Invariants', '%s </br> %s </br> %s </br> %s'% tuple(data['igusa_clebsch'])), 
+                           ('Invariants', '%s </br> %s </br> %s </br> %s'% tuple(data['invs'])), 
                            ('Sato-Tate group', '\(%s\)' % data['st_group_name']), 
                            ('\(\mathrm{End}(J_{\overline{\Q}}) \otimes \R\)','\(%s\)' % data['real_geom_end_alg_name']),
                            ('\(\mathrm{GL}_2\)-type','%s' % data['is_gl2_type_name'])]
@@ -242,3 +282,8 @@ class WebG2C(object):
              ('%s' % self.cond, url_for(".by_conductor", conductor=self.cond)),
              ('%s' % iso, url_for(".by_double_iso_label", conductor=self.cond, iso_label=iso)),
              ('Genus 2 curve %s' % num, url_for(".by_g2c_label", label=self.label))]
+
+#    def render_curve_webpage_by_label(label):
+#        credit = credit_string
+#        data = WebG2C.by_label(label)
+#        return render_template("curve_g2.html", credit=credit, **data)
