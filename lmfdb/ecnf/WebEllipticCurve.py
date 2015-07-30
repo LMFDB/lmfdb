@@ -230,7 +230,7 @@ class ECNF(object):
                                'tamagawa_number': self.local_info.tamagawa_number(),
                                'kodaira_symbol': web_latex(self.local_info.kodaira_symbol()).replace('$', ''),
                                'reduction_type': self.local_info.bad_reduction_type(),
-                                'ord_den_j': max(0,E.j_invariant().valuation(p)),
+                                'ord_den_j': max(0,-E.j_invariant().valuation(p)),
                                 'ord_mindisc': self.local_info.discriminant_valuation()
                                })
 
