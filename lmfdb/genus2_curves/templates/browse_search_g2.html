@@ -38,6 +38,14 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 </form>
 
 
+<h2> Find a specific curve by label </h2>
+
+<form>
+<input type='text' name='jump' placeholder='169.a.169.1'>
+<button type='submit'>Label</button>
+<br><span class="formexample">e.g. 169.a.169.1 </span>
+</form>
+
 <h2> Search </h2>
 
 <form>
@@ -138,6 +146,7 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 </table>
 <button type='submit' value='Search'>Search</button>
 </form>
+
 
 
 {% endblock %}
