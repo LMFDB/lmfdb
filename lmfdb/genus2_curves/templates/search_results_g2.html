@@ -32,11 +32,10 @@
 <td>{{ KNOWL('g2c.real_geom_end_alg', title='\(\mathrm{ST}_0\)') }}</td>
 <td>{{ KNOWL('g2c.aut_grp', title='\(\mathrm{Aut}(X)\)') }}</td>
 <td>{{ KNOWL('g2c.geom_aut_grp',   title='\(\mathrm{Aut}(X_{\overline{\Q}})\)') }}</td>
-<td>Maximum number</td>
 </tr>
 
 <tr>
-<td><select name='is_gl2_type' width="80" style="width: 80px">
+<td><select name='is_gl2_type' width="90" style="width: 90px">
 {% if info.is_gl2_type=='True' %}
   <option value="True">True</option>
   <option value="False">False</option>
@@ -52,7 +51,7 @@
 {% endif %}
 </select></td>
 
-<td><select name='st_group' width="80" style="width: 80px" >
+<td><select name='st_group' width="90" style="width: 90px" >
     <option value='{{info.st_group}}'>{{info.st_group_dict[info.st_group]}}</option>
     <option ></option>
     {% for G in info.st_group_dict.keys()%}
@@ -61,7 +60,7 @@
   </select>
 </td>
 
-<td><select name='real_geom_end_alg' width="80" style="width: 80px">
+<td><select name='real_geom_end_alg' width="90" style="width: 90px">
     <option value='{{info.real_geom_end_alg}}'>{{info.real_geom_end_alg_dict[info.real_geom_end_alg]}}</option>
     <option ></option>
     {% for G in info.real_geom_end_alg_dict.keys()%}
@@ -69,24 +68,27 @@
     {% endfor %}
 </select></td>
 
-<td ><select name='aut_grp' width="80" style="width: 80px">
+<td ><select name='aut_grp' width="90" style="width: 90px">
     <option value='{{info.aut_grp}}'>{{info.aut_grp_dict[info.aut_grp]}}</option>
     <option ></option>
     {% for G in info.aut_grp_dict.keys()%}
     <option value='{{G}}'>{{info.aut_grp_dict[G]}}</option>
     {% endfor %}
 </select></td>
-<td ><select name='geom_aut_grp' width="80" style="width: 80px">
+<td ><select name='geom_aut_grp' width="90" style="width: 90px">
     <option value='{{info.geom_aut_grp}}'>{{info.geom_aut_grp_dict[info.geom_aut_grp]}}</option>
     <option ></option>
     {% for G in info.geom_aut_grp_dict.keys()%}
     <option value='{{G}}'>{{info.geom_aut_grp_dict[G]}}</option>
     {% endfor %}
 </select></td>
-<td><input type='text' name='count' value="{{info.count}}" 	   size=10></td>
-</tr>
-</table>
+<!--<td><input type='text' name='count' value="{{info.count}}" 	   size=10></td>
+</tr>-->
+<tr>
+<td>
 <button type='submit' value='refine'>Search again</button>
+</td> </tr>
+</table>
 </form>
 
 <h2> Results ({{info.report}})
@@ -101,9 +103,9 @@
 </h2>
 <table class="ntdata">
 <tr>
-<th>{{ KNOWL('g2c.q.label', title='Label') }}</th>
-<th>{{ KNOWL('g2c.q.isogeny_class', title='Isogeny class') }}</th>
-<th>{{ KNOWL('g2c.q.equation', title='Equation') }}</th>
+<th>{{ KNOWL('g2c.label', title='Label') }}</th>
+<th>{{ KNOWL('g2c.isogeny_class', title='Isogeny class') }}</th>
+<th>{{ KNOWL('g2c.equation', title='Equation') }}</th>
 <th>{{ KNOWL('g2c.gl2type', title='\(\GL_2\)-type') }}</th>
 </tr>
 {% for curve in info.curves: %}

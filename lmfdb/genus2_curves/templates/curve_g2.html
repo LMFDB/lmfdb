@@ -97,13 +97,21 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
 <h2> {{ KNOWL('g2c.num_rat_wpts', title='Number of rational Weierstrass points') }} </h2>
 \({{data.data.num_rat_wpts}}\)
+<hr>
+
+<h2> {{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank') }} </h2>
+\({{data.data.two_selmer_rank}}\)
 
 <h2> {{ KNOWL('g2c.torsion', title='Torsion') }} </h2>
 \({{data.data.tor_struct}}\)
 
 <h2> {{KNOWL('g2c.st_group', title='Sato-Tate group') }} </h2>
 <p>
-\({{ data.data.st_group_name }}\)
+{% if data.data.real_geom_end_alg == 'R'%}
+\(\mathrm{ST} = {{ data.data.st_group_name }}\)
+{% else %}
+\(\mathrm{ST} = {{ data.data.st_group_name }} \quad \mathrm{ST}_0 = {{ data.data.st0_group_name}}\)
+{% endif %}
 </p>
 
 <h2> {{ KNOWL('g2c.jac_endomorphisms', title='Endomorphisms of the Jacobian') }} </h2>
