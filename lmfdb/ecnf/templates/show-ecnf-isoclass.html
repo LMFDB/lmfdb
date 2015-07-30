@@ -46,13 +46,9 @@ function show_code(system) {
 
 
 
-<h2>{{ KNOWL('ec.isogeny_matrix',title='Matrix of isogeny degrees') }}</h2>
+<h2>{{ KNOWL('ec.isogeny_matrix',title='Isogeny matrix') }}</h2>
 
 {% if cl.isogeny_matrix %}
-<p>
-  Rows and columns are indexed by the LMFDB number of the curve in
-  the class.
-</p>
 <p>
   \({{cl.isogeny_matrix_str}}\)
 </p>
@@ -62,9 +58,6 @@ function show_code(system) {
 
 <h2>{{ KNOWL('ec.isogeny_graph',title='Isogeny graph') }}</h2>
 {% if cl.isogeny_matrix %}
-<p>
-  Only edges corresponding to isogenies of prime degree are shown.
-</p>
 <center>
   <img src="{{cl.graph_img}}" />
 </center>
