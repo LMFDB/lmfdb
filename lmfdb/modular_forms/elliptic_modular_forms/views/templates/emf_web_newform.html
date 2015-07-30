@@ -126,7 +126,7 @@ that preserve the character are shown in the table below.
 
 {% if explicit_formulas is defined %}
 <h2> {{KNOWL('mf.elliptic.explicit_formula',title='')}}Explicit Formulas</h2>
-    {{ explicit_formulas }}
+  {{ explicit_formulas }}
 {% endif %}
 <h2>{{ KNOWL_INC(KNOWL_ID+'.formulas', title='') }}</h2>
 
@@ -180,29 +180,42 @@ that preserve the character are shown in the table below.
   </ul>
 </div>
   {% endif %}
-<h2>Download Fourier coefficients</h2>
-We have {{ info.max_cn }} coefficients available from the database. 
+<h2>Download Fourier coefficients </h2>
+
+We have {{ max_cn }} coefficients available from the database. 
 <form name="get_coefficients" method="post"  action="{{url_for('.get_downloads',level=level,weight=weight,character=character,label=label)}}">
   <input type="hidden" name="download" value="coefficients"/>
-  Get / compute  <input type="text" size="10" name="number" value="10"/> 
+  Get  <input type="text" size="10" name="number" value="10"/> 
   coefficients in the following format:
   <ul>
     <li> 
-      <label><input type=radio name="format" checked value="q_expansion" onclick="return selectCFormat(event)"> q-expansion (on one line)</label>
+      <label><input type=radio name="format" checked
+    value="q_expansion" onclick="return selectCFormat(event)">
+    q-expansion (text format)</label>
     </li>
     <li> 
-      <label><input type=radio name="format" checked value="coefficients" onclick="return selectCFormat(event)"> a table of coefficients (algebraic)</label>
+      <label><input type=radio name="format" checked
+    value="coefficients" onclick="return selectCFormat(event)"> a
+    algebraic coefficients (text format)</label>
     </li>
     <li>
-      <label><input type=radio name="format" value="embeddings" onclick="return selectCFormat(event)"> Complex embeddings </label>
-      with <input type="text" size="10" name="bitprec" value="15"> digits precision.     
+      <label><input type=radio name="format" value="embeddings"
+    onclick="return selectCFormat(event)">
+    complex embeddings (double 
+    precision, text format) </label>
+      <!-- with <input type="text" size="10" name="bitprec" value="15"> digits precision.     -->
+    </li>
+    <li>
+    <label><input type=radio name="format" value="sage"
+    onclick="return selectCFormat(event)">
+    sage objects (algebraic, sage pickle) </label>
     </li>
   </ul>
 {#  <input type="button" name="Submit" value="Get coefficients"> #}
  <input type="submit" name="Submit" value="Get coefficients">
 </form>
 
-<h2>Download as {{KNOWL('sage',title='Sage')}} Object</h2>
+<h2>Download this newform as {{KNOWL('sage',title='Sage')}} Object</h2>
 <form name="download_object_form" method="post"  action="{{url_for('.render_elliptic_modular_forms')}}">
   <input type="hidden" name="download" value="object">
   <input type="hidden" name="level" value="{{level }}">
@@ -212,8 +225,8 @@ We have {{ info.max_cn }} coefficients available from the database.
   <input type="submit" name="Submit" value="Download" Onclick="document.download.submit()">
 </form>
 <div class="formexample"> 
-  Note: In order to use this data file you currently need to download
-  and import the entire lmfdb from: 
+<!--  Note: In order to use this data file you currently need to download
+  and import the entire lmfdb from:  -->
 <a href="https://github.com/LMFDB/lmfdb">lmfdb at github</a>. 
 {#
 <form name="download_file" method="post"  action="{{url_for('.render_elliptic_modular_forms')}}">

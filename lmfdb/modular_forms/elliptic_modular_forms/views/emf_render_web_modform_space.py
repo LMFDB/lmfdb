@@ -58,8 +58,7 @@ def render_web_modform_space(level=None, weight=None, character=None, label=None
     info['bread'] = bread
     emf_logger.debug("info={0}".format(info))
     if info.has_key('space'):
-        emf_logger.debug("space={0}".format(info['space']))
-        
+        emf_logger.debug("space={0}".format(info['space']))        
         emf_logger.debug("dimension={0}".format(info['space'].dimension))    
     return render_template("emf_web_modform_space.html", **info)
 
@@ -93,6 +92,12 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
         info['error'] = "We are sorry. The sought space can not be found in the database. "+"<br> Detailed information: {0}".format(info.get('error',''))
         return info
     else:
+        ### Somehow the Hecke orbits are sometimes not in the space...
+        #if WMFS.dimension_new_cusp_forms()<>len(WMFS.hecke_orbits):
+        #    ## Try to add them here... 
+        #    for d in range(len(WMFS.dimension_new_cusp_forms())):
+        #        F = 
+        #        WMFS.hecke_orbits.append(F)
         info = {'space':WMFS}
 #    info['old_decomposition'] = WMFS.oldspace_decomposition()
 

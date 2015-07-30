@@ -77,7 +77,6 @@ from sage.all import (
      RealField,
      ComplexField,
      prime_range,
-     join,
      ceil,
      RR,
      Integer,
@@ -222,12 +221,17 @@ class WebNewForm(WebObject, CachedRepresentation):
     _collection_name = 'webnewforms'
 
     def __init__(self, level=1, weight=12, character=1, label='a', prec=10, bitprec=53, parent=None, update_from_db=True):
+        emf_logger.critical("In WebNewForm {0}".format((level,weight,character,parent,update_from_db)))
         if isinstance(character, WebChar):
             character_number = character.number
         else:
             character_number = character
             character = None if parent is None else parent.character
-            
+            if not isinstance(label,basestring):
+                if isinstance(label,(int,Integer)):
+                    label = orbit_label(label)
+                else:
+                    raise ValueError,"Need label either string or integer! We got:{0}".format(label)
         self._properties = WebProperties(
             WebInt('level', value=level),
             WebInt('weight', value=weight),
@@ -262,10 +266,11 @@ class WebNewForm(WebObject, CachedRepresentation):
                                               weight = weight,
                                               character = character_number),
             )
+        emf_logger.critical("After init properties 1")
         super(WebNewForm, self).__init__(
             update_from_db=update_from_db
             )
-
+        emf_logger.critical("After init properties 2")
         # We're setting the WebEigenvalues property after calling __init__ of the base class
         # because it will set hecke_orbit_label from the db first
 
@@ -275,6 +280,7 @@ class WebNewForm(WebObject, CachedRepresentation):
         ## in self._coefficients
         
         self.eigenvalues = WebEigenvalues(self.hecke_orbit_label, prec = self.prec,init_dynamic_properties=False)
+        emf_logger.critical("After init properties 3")
 
     def __repr__(self):
         s = "WebNewform in S_{0}({1},chi_{2}) with label {3}".format(self.weight,self.level,self.character.number,self.label)
@@ -309,10 +315,14 @@ class WebNewForm(WebObject, CachedRepresentation):
             if hasattr(c,"complex_embeddings"):
                 embc = c.complex_embeddings(bitprec)
             else:
-                embc = [ComplexField(bitprec)(c)]
+                embc = [ComplexField(bitprec)(c) for x in range(self.coefficient_field_degree)]
             self._embeddings['values'][n]=embc
+        else:
+            if len(embc) < self.coefficient_field_degree:
+                embc = [embc[0] for x in range(self.coefficient_field_degree)]
+                self._embeddings['values'][n]=embc
         if i > len(embc):
-            raise ValueError,"Embedding nr. {0} does not exist of a number field of degree {1}".format(i,self.coefficient_field.absolute_degree())
+            raise ValueError,"Embedding nr. {0} does not exist of a number field of degree {1},embc={2}".format(i,self.coefficient_field.absolute_degree(),embc)
         return embc[i]
         
         
@@ -398,9 +408,11 @@ class WebNewForm(WebObject, CachedRepresentation):
         r"""
         The largest N for which we are sure that we can compute a(n) for all 1<=n<=N
         """
-        if self.eigenvalues.primes()==[]:
-            return 1
-        return max(self.eigenvalues.primes()) + 1
+        return self.eigenvalues.max_coefficient_in_db()
+
+        #if self.eigenvalues.primes()==[]:
+        #    return 1
+        #return max(self.eigenvalues.primes()) + 1
 
     def atkin_lehner_eigenvalue(self, Q):
         r""" Return the Atkin-Lehner eigenvalues of self
@@ -478,6 +490,8 @@ class WebNewForm(WebObject, CachedRepresentation):
         else:
             p = F.polynomial()
         l = poly_to_field_label(p)
+        if l is None:
+            return ''
         if pretty:
             return field_pretty(l)
         else:
@@ -485,3 +499,18 @@ class WebNewForm(WebObject, CachedRepresentation):
 
     def base_field_url(self):
         return url_for("number_fields.by_label", label=self.base_field_label(pretty = False))
+
+
+from sage.all import cached_function,AlphabeticStrings
+       
+@cached_function
+def orbit_label(j):
+    x = AlphabeticStrings().gens()
+    j1 = j % 26
+    label = str(x[j1]).lower()
+    j  = (j - j1) / 26 -1
+    while j >= 0:
+        j1 = j % 26
+        label = str(x[j1]).lower() + label
+        j = (j - j1) / 26 - 1
+    return label

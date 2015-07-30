@@ -9,7 +9,7 @@ from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace
 from lmfdb.modular_forms.backend.mf_utils import my_get
-from sage.all import latex
+from sage.all import latex,dumps
 
 def get_coefficients(info):
     r"""
@@ -25,9 +25,15 @@ def get_coefficients(info):
     label = info.get('label', '')
     # we only want one form or one embedding
     s = print_list_of_coefficients(info)
+    print "s=",s
+    if info['format']=="sage":
+        ending = "sobj"
+    else:
+        ending = "txt"
     info['filename'] = str(weight) + '-' + str(
-        level) + '-' + str(character) + '-' + label + 'coefficients-0to' + info['number'] + '.txt'
+        level) + '-' + str(character) + '-' + label + 'coefficients-0to' + info['number'] + "."+ending
     # return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
+    
     strIO = StringIO.StringIO()
     strIO.write(s)
     strIO.seek(0)
@@ -85,6 +91,7 @@ def print_list_of_coefficients(info):
     prec = my_get(info, 'prec', 12, int)  # number of digits
     bitprec = my_get(info, 'bitprec', 12, int)  # number of digits                
     character = my_get(info, 'character', '', str)  # int(info.get('weight',0))
+    fmt = info.get("format","q_expansion")
     if character == '':
         character = '1'
     label = info.get('label', '')
@@ -108,23 +115,34 @@ def print_list_of_coefficients(info):
     if f is not None:
         FS.append(f)
     else:
-        for a in WMFS.labels():
-            FS.append(WMFS.f(a))
+        for label in WMFS.hecke_orbits:
+            FS.append(WMFS.f(label))
     shead = "Cusp forms of weight " + str(weight) + "on \(" + latex(WMFS.group) + "\)"
     s = ""
     if((character is not None) and (character > 0)):
         s = s + " and character \( \chi_{" + str(character) + "}\)"
         # s="<table><tr><td>"
     coefs = ""
+    if fmt == "sage":
+        res = []
     for F in FS:
         if len(FS) > 1:
             if info['format'] == 'html':
                 coefs += F.label()
             else:
                 coefs += F.label()
-        coefs += print_coefficients_for_one_form(F, number, info['format'],bitprec=bitprec)
-    ss = coefs
-    return ss
+        if fmt == "sage":
+            qe = F.coefficients(range(number))
+            res.append(qe)
+        else:
+            coefs += print_coefficients_for_one_form(F, number, info['format'],bitprec=bitprec)
+    if not fmt == "sage":
+        return s+"\n"+coefs
+    else:
+        if len(res)==1:
+            res = res[0]
+        print "res=",res
+        return dumps(res)
 
 
 
@@ -142,7 +160,7 @@ def print_coefficients_for_one_form(F, number, fmt="q_expansion",bitprec=53):
         s += str(F.q_expansion.truncate_powerseries(number))
     if fmt == "coefficients":
         qe = F.coefficients(range(number))
-        emf_logger.debug("F={0}".format(F))
+        #emf_logger.debug("F={0}".format(F))
         #deg=0 [emf_download_utils.py:147
         deg = F.coefficient_field.degree()
         #emf_logger.debug("deg={0}".format(deg))        
@@ -160,14 +178,12 @@ def print_coefficients_for_one_form(F, number, fmt="q_expansion",bitprec=53):
          
     if fmt == "embeddings":
         #embeddings = F.q_expansion_embeddings(number,bitprec=bitprec,format='numeric')
-        if F.coefficient_field.degree() > 1:
-            for j in range(deg):
-                s+="# Embedding nr. {j} \n".format(j=j)
-
-                for n in range(number):
-                    s += str(n) + "\t" + str(F.coefficient_embedding(n,j)) + "\n"
-        else:
+        deg = F.coefficient_field.degree()
+        for j in range(deg):
+            if deg > 1:
+                s+="# Embedding nr. {j} \n".format(j=j)            
             for n in range(number):
-                s += str(n) + "\t" + str(F.coefficient_embedding(n,0)) + "\n"
+                s += str(n) + "\t" + str(F.coefficient_embedding(n,j)) + "\n"
+        
     emf_logger.debug("s={0}".format(s))
     return s

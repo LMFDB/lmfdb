@@ -167,6 +167,8 @@ table.ntdata thead th.spaceleft {
               <a href="{{ row_url }}">{{ k }}</a>
             </th>
             {% for N in info.col_heads  %}
+            {% set indb = 0 %}
+            {% set dim = 0 %}
             <td class="center">
               {% if table[N] is defined and table[N][k] is defined %}
                   {% if info.grouptype == 0 and table[N][k][0] is defined %}
@@ -186,7 +188,7 @@ table.ntdata thead th.spaceleft {
                      {{dim}}
               {% endif  %}
            {% else %}
-               <small>n/a</small>
+               <small style="color:gray">n/a</small>
            {% endif %}
             </td>
             {% endfor %}

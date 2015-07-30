@@ -165,23 +165,30 @@ def render_elliptic_modular_form_navigation_wp(**args):
     if table <> {}:
         table = json.loads(table)
     info['table'] = {}
+    
     level_range = range(limits_level[0],limits_level[1]+1)
     weight_range = range(limits_weight[0],limits_weight[1]+1)
+    #print "levels=",level_range
+    #print "weights=",weight_range
     if character == 1:
         weight_range = filter(is_even,weight_range)
         for n in level_range:
             info['table'][n]={}
+            sn = unicode(n)
             for k in weight_range:
-                if table.has_key(n):
-                    if table[n].has_key(k):
-                        info['table'][n][k] = table[n][k] #.get(str(n),{}).get(str(k),"n/a")
+                info['table'][n][k]={}
+                sk = unicode(k)
+                if table.has_key(sn):
+                    if table[sn].has_key(sk):
+                        info['table'][n][k] = table[sn][sk] #.get(str(n),{}).get(str(k),"n/a")
     else:
         for n in level_range:
             info['table'][n]={}
             for k in weight_range:
                 info['table'][n][k] = table.get(str(n),{}).get(str(k),"{}").get(str(character),"n/a")
-    print "table=\n",table
-    info['table']=table
+    #print "table=\n",table
+    #print "info=\n",info
+    #info['table']=table
     info['col_heads'] = level_range
     info['row_heads'] = weight_range
     return render_template("emf_browse_spaces.html", info=info, title=title, bread=bread)

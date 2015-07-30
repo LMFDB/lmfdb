@@ -22,8 +22,9 @@ AUTHORS:
 
 """
 from flask import render_template, url_for,  send_file
-from sage.all import version,uniq,ZZ,Cusp,Infinity,latex
+from sage.all import version,uniq,ZZ,Cusp,Infinity,latex,QQ
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace
 from lmfdb.utils import to_dict,ajax_more
 from lmfdb.modular_forms.backend.mf_utils import my_get
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, default_prec, default_bprec, default_display_bprec,EMF_TOP
@@ -36,7 +37,7 @@ def render_web_newform(level, weight, character, label, **kwds):
     """
     citation = ['Sage:' + version()]
     info = set_info_for_web_newform(level, weight, character, label, **kwds)
-    emf_logger.debug("info={0}".format(info))
+    emf_logger.debug("info={0}".format(info.keys()))
     err = info.get('error', '')
     ## Check if we want to download either file of the function or Fourier coefficients
     if 'download' in info and 'error' not in info:
@@ -64,7 +65,9 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     emf_logger.debug("PREC: {0}".format(prec))
     emf_logger.debug("BITPREC: {0}".format(bprec))    
     try:
-        WNF = WebNewForm(level=level,weight=weight, character=character, label=label)
+        M = WebModFormSpace(level=level,weight=weight,character=character)
+        WNF = WebNewForm(level=level,weight=weight, character=character, label=label,parent=M)
+        emf_logger.critical("defned webnewform for rendering!")
         # if info.has_key('download') and info.has_key('tempfile'):
         #     WNF._save_to_file(info['tempfile'])
         #     info['filename']=str(weight)+'-'+str(level)+'-'+str(character)+'-'+label+'.sobj'
@@ -213,7 +216,31 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     if(level == 1):
         poly = WNF.explicit_formulas.get('as_polynomial_in_E4_and_E6','')
         if poly <> '':
-            info['explicit_formulas'] = poly
+            d,monom,coeffs = poly
+            emf_logger.critical("poly={0}".format(poly))
+
+            info['explicit_formulas'] = '\('
+            for i in range(d):
+                c = QQ(coeffs[i])
+                s = ""
+                if d>1 and i >0 and c>0:
+                    s="+"
+                if c<0:
+                    s="-"
+                if c.denominator()>1:
+                    cc = "\\frac{{ {0} }}{{ {1} }}".format(abs(c.numerator()),c.denominator())
+                else:
+                    cc = str(abs(c))
+                s += "{0} \cdot ".format(cc)
+                a = monom[i][0]; b = monom[i][1]
+                if a == 0 and b<>0:
+                    s+="E_6^{{ {0} }}".format(b)
+                elif b ==0 and a<>0:
+                    s+="E_4^{{ {0} }}".format(a)
+                else:
+                    s+="E_4^{{ {0} }}E_6^{{ {1} }}".format(a,b)
+                info['explicit_formulas'] += s
+            info['explicit_formulas'] += " \)"            
     cur_url = '?&level=' + str(level) + '&weight=' + str(weight) + '&character=' + str(character) + \
         '&label=' + str(label)
     if len(WNF.parent.hecke_orbits) > 1:

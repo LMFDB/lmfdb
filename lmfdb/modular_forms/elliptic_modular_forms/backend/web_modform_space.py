@@ -66,7 +66,6 @@ from sage.all import (
      RealField,
      ComplexField,
      prime_range,
-     join,
      ceil,
      RR,
      Integer,
@@ -102,6 +101,7 @@ class WebHeckeOrbits(WebDict):
         return self.to_db()
 
     def from_db(self, l):
+        print "l=",l
         from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm        
         return {lbl : WebNewForm(self.level, self.weight, self.character, lbl, parent=self.parent)
                 for lbl in l}
@@ -178,12 +178,13 @@ class WebModFormSpace(WebObject, CachedRepresentation):
             WebInt('bitprec', value=bitprec),
             WebFloat('version', value=float(emf_version), save_to_fs=True)
                     )
-        emf_logger.debug("have set properties!!")
+        emf_logger.critical("Have set properties of space 1 !!")
         super(WebModFormSpace, self).__init__(
             params=['level', 'weight', 'character'],
             dbkey='galois_orbit_name',
             collection_name='webmodformspace',
             update_from_db=update_from_db)
+        emf_logger.critical("Have set properties of space 2 !!")        
 
     def init_dynamic_properties(self):
         if self.character.is_trivial():

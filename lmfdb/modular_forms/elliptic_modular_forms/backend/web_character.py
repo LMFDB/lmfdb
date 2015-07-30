@@ -63,6 +63,7 @@ class WebChar(WebObject, CachedRepresentation):
         Init self.
 
         """
+        emf_logger.critical("In WebChar {0}".format((modulus,number,update_from_db,compute)))
         if not gcd(number,modulus)==1:
             raise ValueError,"Character number {0} of modulus {1} does not exist!".format(number,modulus)
         if number > modulus:
@@ -74,6 +75,7 @@ class WebChar(WebObject, CachedRepresentation):
             WebInt('modulus_euler_phi'),
             WebInt('order'),
             WebStr('latex_name'),
+            WebStr('label',value="{0}.{1}".format(modulus,number)),
             WebNoStoreObject('sage_character', DirichletCharacter),
             WebDict('_values_algebraic'),
             WebDict('_values_float'),

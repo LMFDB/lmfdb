@@ -25,7 +25,7 @@
 <br>
 {{ sage_version | safe}}
 {% else %}
-   {#{ space | safe }} dim = {{ space.dimension | safe } #}
+
 {% if space.dimension_new_cusp_forms == 0 %}
   <h2>This space is empty!</h2>
    {% if  space.weight % 2 == 0 and space.character.value(-1) == -1 %}
@@ -40,7 +40,7 @@
 {% if extra_info is defined %}
 <span style="font-size:50%">({{ extra_info |safe }})</span>
 {% endif %}
-
+{{ space | safe }}
 {% if space.dimension_new_cusp_forms > 0 %}
 <style>
 table.td.center {text-align : center;}
@@ -48,6 +48,10 @@ table.td.center {text-align : center;}
 <h2>
   Decomposition of {{name_new}} into {{ KNOWL('mf.elliptic.hecke-orbits',title='irreducible Hecke orbits')}}
 </h2>
+{% if  space.hecke_orbits=={} %}
+   Problem with Hecke orbits in the datbase!
+{% else %}
+
 <table>
   <thead>
     <tr>
@@ -72,7 +76,7 @@ table.td.center {text-align : center;}
     {% endfor %}
   </tbody>
 </table>
-
+{% endif %}
 {% if space.character.order > 2%}
   {% set n=space.character.modulus_euler_phi() %}
   {% set m=space.character.embedding() %}

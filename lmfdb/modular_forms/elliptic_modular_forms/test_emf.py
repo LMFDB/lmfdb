@@ -4,7 +4,7 @@ from lmfdb.base import LmfdbTest
 from flask import request
 
 from views.emf_main import *
-
+emf_logger.setLevel(0)
 
 class CmfTest(LmfdbTest):
     def test_browse_page(self):
@@ -30,15 +30,12 @@ class CmfTest(LmfdbTest):
         r"""
         Check that the weight 2 form of level 11 works.
         """
-        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/1/12/1/")        
-        assert '2q^{2}' in page.data
-        assert '2q^{4}' in page.data
-        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/1/12/1/a/")                
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/11/2/1/a/")                
         assert '2q^{2}' in page.data
         assert '2q^{4}' in page.data
         assert '2.3561944901' in page.data
         ## We also check that the L-function works
-        page = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/1/12/1/a/0/')
+        page = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/11/2/1/a/0/')
         assert '0.253841860' in page.data
         
         

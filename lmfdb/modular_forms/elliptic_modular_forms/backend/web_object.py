@@ -534,17 +534,17 @@ class WebObject(object):
             if fs.exists(file_key):
                 coll = self._file_collection
                 fid = coll.find_one(file_key)['_id']
-                emf_logger.debug("col={0}".format(coll))
-                emf_logger.debug("rec={0}".format(coll.find_one(file_key)))
+                #emf_logger.debug("col={0}".format(coll))
+                #emf_logger.debug("rec={0}".format(coll.find_one(file_key)))
                 try: 
                     d = loads(fs.get(fid).read())
                 except ValueError as e:
                     raise ValueError("Wrong format in database! : {0}".format(e))
-                emf_logger.debug("type(d)={0}".format(type(d)))                                
-                emf_logger.debug("d.keys()={0}".format(d.keys()))                
+                #emf_logger.debug("type(d)={0}".format(type(d)))                                
+                #emf_logger.debug("d.keys()={0}".format(d.keys()))                
                 for p in self._fs_properties:
-                    emf_logger.debug("p={0}, update:{1}".format(p,p.include_in_update))
-                    emf_logger.debug("d[{0}]={1}".format(p.name,type(d.get(p.name))))
+                    #emf_logger.debug("p={0}, update:{1}".format(p,p.include_in_update))
+                    #emf_logger.debug("d[{0}]={1}".format(p.name,type(d.get(p.name))))
                     if p.include_in_update and d.has_key(p.name):
                         p.set_from_fs(d[p.name])
             else:
