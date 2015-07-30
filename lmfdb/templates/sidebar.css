@@ -52,6 +52,18 @@
     display: inherit;
 }
 
+
+#sidebar .beta { 
+    color:purple;
+    display: inherit;
+}
+
+
+#sidebar .beta a { 
+    color:purple;
+}
+
+
 #sidebar table td .parts {
     padding-left: 15px;
 }

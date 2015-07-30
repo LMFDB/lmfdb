@@ -147,7 +147,11 @@
 								{% else %}
 									<td>
 								{% endif %}
-								<span class="subtitle">{{ pt3.url | safe }}</span></td>
+								{% if pt3.status == "beta" and BETA %}
+									<span class="beta", class="subtitle">{{ pt3.url | safe }}</span></td>						
+								{% else %}									
+									<span class="subtitle">{{ pt3.url | safe }}</span></td>
+								{% endif %}								
 								{% if pt3.colspan == "onecolumn" %}
 									{% if loop.index is odd %}
 										</tr><tr>
@@ -206,6 +210,10 @@
 					{% if pt3.status == "future" %}
 						{% if BETA %}
 							<span class="subitem">{{ pt3.url | safe}}</span>
+						{% endif %}
+					{% elif pt3.status == "beta" %}
+						{% if BETA %}
+							<span class="beta", class="subitem">{{ pt3.url | safe}}</span>
 						{% endif %}
 					{% else %}
 						<span class="subitem">{{ pt3.url | safe}}</span>

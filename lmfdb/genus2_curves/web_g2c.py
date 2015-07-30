@@ -105,6 +105,20 @@ def end_alg_name(name):
     else:
         return name
 
+def st0_group_name(name):
+    st0_dict = {
+        'M_2(C)':'\\mathrm{U}(1)',
+        'M_2(R)':'\\mathrm{SU}(2)',
+        'C x C':'G_{1,1}',
+        'C x R':'G_{1,3}',
+        'R x R':'G_{3,3}',
+        'R':'\\mathrm{USp}(4)'
+        }
+    if name in st0_dict.keys():
+        return st0_dict[name]
+    else:
+        return name
+
 def st_group_name(name):
     if name == 'USp(4)':
         return '\\mathrm{USp}(4)'
@@ -218,13 +232,14 @@ class WebG2C(object):
         data['invs'] = normalize_invariants([ZZ(a) for a in self.igusa_clebsch])
         data['invs_factor_latex'] = [web_latex(factor(i)) for i in data['invs']]
         data['num_rat_wpts'] = ZZ(self.num_rat_wpts)
+        data['two_selmer_rank'] = ZZ(self.two_selmer_rank)
         if len(self.torsion) == 0:
             data['tor_struct'] = '\mathrm{trivial}'
         else:
             tor_struct = [ZZ(a)  for a in self.torsion]
             data['tor_struct'] = ' \\times '.join(['\Z/{%s}\Z' % n for n in tor_struct])
         isogeny_class = db_g2c().isogeny_classes.find_one({'label' : isog_label(self.label)})
-
+        data['real_geom_end_alg'] = self.real_geom_end_alg
         for endalgtype in ['end_ring', 'rat_end_alg', 'real_end_alg', 'geom_end_ring', 'rat_geom_end_alg', 'real_geom_end_alg']:
             if endalgtype in isogeny_class:
                 data[endalgtype + '_name'] = end_alg_name(isogeny_class[endalgtype])
@@ -237,6 +252,7 @@ class WebG2C(object):
         else:
             data['geom_end_field_name'] = ''        
 
+        data['st0_group_name'] = st0_group_name(isogeny_class['real_geom_end_alg'])
         data['st_group_name'] = st_group_name(isogeny_class['st_group'])
         if isogeny_class['is_gl2_type']:
             data['is_gl2_type_name'] = 'yes'
