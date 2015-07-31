@@ -398,7 +398,7 @@ def lfuncEPtex(L, fmt):
     """ Returns the LaTex for displaying the Euler product of the L-function L.
         fmt could be any of the values: "abstract"
     """
-    if L.Ltype() == "genus2curveQ":
+    if L.Ltype() == "genus2curveQ" and fmt == "arithmetic":
         return lfuncEPhtml(L, fmt)
 
     ans = ""
@@ -455,8 +455,8 @@ def lfuncEPhtml(L,fmt):
 #    ans += "\[f_p(T) = 1 - a_p T + b_p T^2 + \chi(p) a_p p T^3 + \chi(p) p^2 T^4 \]"
     ans += "\[f_p(T) = 1 - a_p T + b_p T^2 -  a_p p T^3 + p^2 T^4 \]"
 #    ans += "with $b_p = a_{p^2} - a_p^2$ and $\chi$ is the central character of the L-function."
-    ans += "with $b_p = a_{p^2} - a_p^2$. "
-    ans += "If $p|"  + str(L.level) + "$, then $f_p$ is a polynomial of degree at most 3,"
+    ans += "with $b_p = a_p^2 - a_{p^2}$. "
+    ans += "If $p \mid "  + str(L.level) + "$, then $f_p$ is a polynomial of degree at most 3, "
     ans += "with $f_p(0) = 1$."
     factN = list(factor(L.level))
     bad_primes = []
