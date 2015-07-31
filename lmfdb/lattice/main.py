@@ -6,7 +6,10 @@ from lmfdb import base
 from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
 from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input
-from sage.all import ZZ, var, PolynomialRing, QQ, latex
+
+import sage.all
+
+from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange, PowerSeriesRing
 
 from lmfdb.lattice import lattice_page, lattice_logger
 
@@ -20,6 +23,11 @@ def get_bread(breads=[]):
     return bc
 
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
+
+
+
+def vect_to_matrix(v):
+	return latex(matrix(v))	
 
 
 @lattice_page.route("/")
@@ -53,7 +61,7 @@ def lattice_search(**args):
         args = {'label': info['label']}
         return render_lattice_webpage(**args)
     query = {}
-    for field in ['dim','det','level', 'gram', 'minimum', 'class_number', 'aut', 'theta_weight', 'name']:
+    for field in ['dim','det','level', 'gram', 'minimum', 'class_number', 'aut', 'name']:
         if info.get(field):
 		if field == 'dim':
 			query[field] = int(info[field])
@@ -90,18 +98,7 @@ def lattice_search(**args):
 	v_clean['dim']=v['dim']
 	v_clean['det']=v['det']
 	v_clean['level']=v['level']
-	v_clean['gram']=v['gram']
-	v_clean['density']=v['density']
-	v_clean['hermite']=v['hermite']
-	v_clean['minimum']=v['minimum']
-	v_clean['kissing']=v['kissing']
-	v_clean['shortest']=v['shortest']
-	v_clean['aut']=v['aut']
-	v_clean['theta_series']=v['theta_series']
-	v_clean['class_number']=v['class_number']
-	v_clean['genus_reps']=v['genus_reps']
-	v_clean['name']=v['name']
-	v_clean['comments']=v['comments']
+	v_clean['gram']=vect_to_matrix(v['gram'])
         res_clean.append(v_clean)
 
     info['lattices'] = res_clean
@@ -128,26 +125,29 @@ def render_lattice_webpage(**args):
     info['friends'] = []
 
     bread = [('Lattice', url_for(".lattice_render_webpage")), ('%s' % data['label'], ' ')]
-    t = "Integral Lattice %s" % info['label']
     credit = lattice_credit
-    f = C.halfintegralmf.forms.find_one({'dim': data['dim'],'det': data['det'],'level': data['level'],'gram': data['gram'],'minimum': data['minimum'],'class_number': data['class_number'],'aut': data[ 'aut'],'name': data['name']})
-    info['dim']=f['dim']
-    info['det']=f['det']
-    info['level']=f['level']
-    info['gram']=f['gram']
-    info['density']=f['density']
-    info['hermite']=f['hermite']
-    info['minimum']=f['minimum']
-    info['kissing']=f['kissing']
-    info['shortest']=f['shortest']
-    info['aut']=f['aut']
-    info['theta_series']=f['theta_series']
-    info['class_number']=f['class_number']
-    info['genus_reps']=f['genus_reps']
-    info['name']=f['name']
-    info['comments']=f['comments']
+    f = C.Lattices.lat.find_one({'dim': data['dim'],'det': data['det'],'level': data['level'],'gram': data['gram'],'minimum': data['minimum'],'class_number': data['class_number'],'aut': data[ 'aut'],'name': data['name']})
+    info['dim']= int(f['dim'])
+    info['det']= int(f['det'])
+    info['level']=int(f['level'])
+    info['gram']=vect_to_matrix(f['gram'])
+    info['density']=str(f['density'])
+    info['hermite']=str(f['hermite'])
+    info['minimum']=int(f['minimum'])
+    info['kissing']=int(f['kissing'])
+    info['shortest']=str(f['shortest'])
+    info['aut']=int(f['aut'])
+    info['theta_series']=str(f['theta_series'])
+    info['class_number']=int(f['class_number'])
+    info['genus_reps']=vect_to_matrix(f['genus_reps'])
+    info['name']=str(f['name'])
+    info['comments']=str(f['comments'])
 
-    dim = f['dim']
+    if info['name'] == "":
+	t = "Integral Lattice %s" % info['label']
+    else:
+	t = "Integral Lattice %s" % info['label'] % info['name']
+
     return render_template("lattice-single.html", info=info, credit=credit, title=t, bread=bread)
 
 

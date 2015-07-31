@@ -41,49 +41,52 @@ A <a>random integral lattice</a> from the database.
 <table>
 <tr>
 <td align= right>{{ KNOWL('lattice.dimension', title='Dimension') }}:</td>
-<td><input type='text' name='weight' placeholder='3' size=10>
+<td><input type='text' name='dim' placeholder='3' size=10>
 <td><span class="formexample"> e.g. 2, 3, 5</td>
 </tr>
 
 <tr>
 <td align= right>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td>
-<td><input type='text' name='weight' placeholder='1' size=10>
+<td><input type='text' name='det' placeholder='1' size=10>
 <td><span class="formexample"> e.g. 1, 2, 3</td>
 </tr>
 <tr>
 <td align= right>{{ KNOWL('lattice.level', title='Level') }}:</td>
-<td><input type='text' name='weight' placeholder='48' size=10>
+<td><input type='text' name='level' placeholder='48' size=10>
 <td><span class="formexample"> e.g. 48, 336, 456 </td>
 </tr>
 
 <tr>
 <td align= right>{{ KNOWL('lattice.gram', title='Gram matrix') }}:</td>
-<td><input type='text' name='weight' placeholder='[5,1,23]' size=10>
+<td><input type='text' name='gram' placeholder='[5,1,23]' size=10>
 <td><span class="formexample"> e.g. enter $[5,1,23]$ for the {{ KNOWL('lattice.gram', title='Gram matrix') }} $\begin{pmatrix}5 & 1\\ 1& 23\end{pmatrix}$</td>
 </tr>
 <tr>
 <td align= right>{{ KNOWL('lattice.minimal_vector', title='Minimal vector')}} length:</td>
-<td><input type='text' name='weight' placeholder='1' size=10>
+<td><input type='text' name='minimum' placeholder='1' size=10>
 <td><span class="formexample"> e.g. 1, 2, 3</td>
 </tr>
 
 <tr>
 <td align= right>{{ KNOWL('lattice.class_number', title='Class number') }}:</td>
-<td><input type='text' name='weight' placeholder='1' size=10>
+<td><input type='text' name='class_number' placeholder='1' size=10>
 <td><span class="formexample"> e.g. 1, 2, 3</td>
 </tr>
 
 <tr>
 <td align= right>Group order:</td>
-<td><input type='text' name='weight' placeholder='2' size=10>
+<td><input type='text' name='aut' placeholder='2' size=10>
 <td><span class="formexample"> e.g. 2, 48, 696729600</td>
 </tr>
 
 <tr><td align= right>{{ KNOWL('lattice.name', title='Name') }}:</td>
-<td><input type='text' name='level' placeholder='D3' size=10>
+<td><input type='text' name='name' placeholder='D3' size=10>
 <td><span class="formexample"> e.g. $D3$, $E8$, Leech lattice</td>
 </tr>
-
+<tr>
+<td colspan=3><button type='submit' value='Search'>Search</button>
+</td>
+</tr>
 </table>
 </form>
 
