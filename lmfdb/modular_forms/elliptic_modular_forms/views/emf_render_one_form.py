@@ -150,6 +150,7 @@ def set_info_for_one_modular_form(level=None, weight=None, character=None, label
     b_pol_ltx = str(WNF.polynomial(type='base_ring',format='latex'))
     #print "c=",c_pol_ltx
     #print "b=",b_pol_ltx
+    c_pol_ltx = c_pol_ltx.replace('x0','x')
     if c_pol_st <> 'x': ## Field is QQ
         if b_pol_st <> 'x' and WNF.relative_degree()>1:
             info['polynomial_st'] = 'where \({0}=0\) and \({1}=0\).'.format(c_pol_ltx,b_pol_ltx)
