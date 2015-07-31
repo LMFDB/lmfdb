@@ -42,6 +42,8 @@ field) and value types (with examples):
    - torsion_gens             list of lists of 3 lists of d strings
    - sha_an                   int
    - isogeny_matrix     *     list of list of ints (degrees)
+   - non-surjective_primes    list of ints
+   - galois_images            list of strings
 
 
    Each NFelt is a string concatenating rational coefficients with
