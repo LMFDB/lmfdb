@@ -2,7 +2,7 @@
 
 {% block content %}
 
-{% if user_is_authenticated and dirichlet_arithmetic -%}
+{% if BETA and user_is_authenticated and dirichlet_arithmetic -%}
  <div>{{ KNOWL('lfunction.normalization', title='Normalization') }}: <button class='active'>arithmetic</button>
 <button class='inactive'>analytic</button></div>
 {% else %}
@@ -11,14 +11,14 @@
 {% endif %}
 
  <h2> {{ KNOWL('lfunction.dirichlet_series', title='Dirichlet series') }}</h2>
-{% if user_is_authenticated and dirichlet_arithmetic -%}
+{% if BETA and user_is_authenticated and dirichlet_arithmetic -%}
  <div>{{ dirichlet_arithmetic|safe }}</div>
 {% else %}
  <div>{{ dirichlet|safe }}</div>
 {% endif %}
 
  <h2>{{ KNOWL('lfunction.functional_equation',title='Functional equation') }}</h2>
-{% if user_is_authenticated and dirichlet_arithmetic -%}
+{% if BETA and user_is_authenticated and dirichlet_arithmetic -%}
  <div id="functionalEqText">\[{{ functionalequation_arithmetic }}\]</div>
 {% else %}
  <div id="functionalEqText">\[{{ functionalequation }}\]</div>
@@ -29,7 +29,7 @@
 </div>
 
  <h2>{{ KNOWL('lfunction.euler_product', title='Euler product') }}</h2>
-{% if user_is_authenticated and dirichlet_arithmetic -%}
+{% if BETA and user_is_authenticated and dirichlet_arithmetic -%}
  <div>\[{{ eulerproduct_arithmetic }}\]</div>
 {% else %}
  <div>\[{{ eulerproduct }}\]</div>
@@ -43,7 +43,7 @@
  {% endif %}
 
 <h2>Particular Values</h2>
-{% if user_is_authenticated and dirichlet_arithmetic -%}
+{% if BETA and user_is_authenticated and dirichlet_arithmetic -%}
    {% if sv_critical_arithmetic or sv_edge_arithmetic %}
       <div>
       {% if sv_critical_arithmetic %}
