@@ -47,14 +47,13 @@
    {% if sv_critical_arithmetic or sv_edge_arithmetic %}
       <div>
       {% if sv_critical_arithmetic %}
-          {{ sv_critical_arithmetic }}<br>
+          {{ sv_critical_arithmetic }}
       {% endif %}
       {% if sv_edge_arithmetic %}
           {% if Ltype=="riemann" or Ltype=="dedekindzeta" %}
               <div align="center">Pole at \(s=1\)</div>
-                       <br>
           {% else %}
-              {{ sv_edge_arithmetic }}<br>
+              {{ sv_edge_arithmetic }}
           {% endif %}
       {% endif %}
      </div>

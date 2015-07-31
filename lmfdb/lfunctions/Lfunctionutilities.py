@@ -449,10 +449,31 @@ def lfuncEPhtml(L,fmt):
     """ Euler product as a formula and a table of local factors.
     """
     ans = ""
-    ans += "Just testing"
-    bad_primes = [2,5,7,181]
-    good_primes = [3,11,13,17,19,23]
-    eptable = "<table>\n<tr><td></td><td>$p$</td><td>$f_p$</td></tr>\n"
+    texform_gen = "\[L(A,s) = "
+    texform_gen += "\prod_{p \\text{ prime}} f_p(p^{-s})^{-1} \]\n"
+    ans += texform_gen + "where, for $p\\nmid " + str(L.level) + "$,\n"
+#    ans += "\[f_p(T) = 1 - a_p T + b_p T^2 + \chi(p) a_p p T^3 + \chi(p) p^2 T^4 \]"
+    ans += "\[f_p(T) = 1 - a_p T + b_p T^2 -  a_p p T^3 + p^2 T^4 \]"
+#    ans += "with $b_p = a_{p^2} - a_p^2$ and $\chi$ is the central character of the L-function."
+    ans += "with $b_p = a_{p^2} - a_p^2$. "
+    ans += "If $p|"  + str(L.level) + "$, then $f_p$ is a polynomial of degree at most 3,"
+    ans += "with $f_p(0) = 1$."
+    factN = list(factor(L.level))
+    bad_primes = []
+    for j in factN:
+        bad_primes.append(j[0])
+    eulerlim = 10
+    good_primes = []
+    for j in range(1, eulerlim):
+        this_prime = Primes().unrank(j)
+        if this_prime not in bad_primes:
+            good_primes.append(this_prime)
+#    bad_primes = [2,5,7,181]
+#    good_primes = [3,11,13,17,19,23]
+    eptable = "<table class='ntdata euler'>\n"
+    eptable += "<thead>"
+    eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th><th class='weight'>$f_p$</th></tr>\n"
+    eptable += "</thead>"
     numfactors = len(L.localfactors)
     goodorbad = "bad"
     for j in bad_primes:
@@ -464,15 +485,18 @@ def lfuncEPhtml(L,fmt):
         except IndexError:
             eptable += "<tr><td></td><td>" + str(j) + "</td><td>" + "not available" + "</td></tr>\n"
         goodorbad = ""
+#    eptable += "<tr><td></td><td></td><td></td></tr>\n"
+#    eptable += "<tr><td></td><td></td><td></td></tr>\n"
     goodorbad = "good"
+    firsttime = " class='first'"
     for j in good_primes:
         this_prime_index = prime_pi(j) - 1
-        eptable += ("<tr><td>" + goodorbad + "</td><td>" + str(j) + "</td><td>" +
+        eptable += ("<tr" + firsttime + "><td>" + goodorbad + "</td><td>" + str(j) + "</td><td>" +
                     "$" + list_to_factored_poly_otherorder(L.localfactors[this_prime_index]) + "$" +
                     "</td></tr>\n")
         goodorbad = ""
+        firsttime = ""
     eptable += "</table>\n"
-    ans += str(numfactors)
 #    ans += str(L.localfactors)
     ans += eptable
     return(ans)
