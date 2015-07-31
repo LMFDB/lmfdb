@@ -97,20 +97,25 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
 <h2> {{ KNOWL('g2c.num_rat_wpts', title='Number of rational Weierstrass points') }} </h2>
 \({{data.data.num_rat_wpts}}\)
-<hr>
-
-<h2> {{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank') }} </h2>
+<h2>
+Properties related to the {{KNOWL('g2c.jacobian', title='Jacobian')}}
+</h2>
+<h2>
+{{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank') }} 
+</h2>
 \({{data.data.two_selmer_rank}}\)
+<h2>
+{{ KNOWL('g2c.torsion', title='Torsion') }}
+</h2>
+\({{data.data.tor_struct}}\) 
 
-<h2> {{ KNOWL('g2c.torsion', title='Torsion') }} </h2>
-\({{data.data.tor_struct}}\)
 
 <h2> {{KNOWL('g2c.st_group', title='Sato-Tate group') }} </h2>
 <p>
 {% if data.data.real_geom_end_alg == 'R'%}
 \(\mathrm{ST} = {{ data.data.st_group_name }}\)
 {% else %}
-\(\mathrm{ST} = {{ data.data.st_group_name }} \quad \mathrm{ST}_0 = {{ data.data.st0_group_name}}\)
+\(\mathrm{ST} = {{ data.data.st_group_name }}, \quad \mathrm{ST}^0 = {{ data.data.st0_group_name}}\)
 {% endif %}
 </p>
 
@@ -118,12 +123,12 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 <table>
   <tr>  <td>\(\mathrm{End}(J) \)</td><td>\(\simeq\)</td><td>\({{data.data.end_ring_name}}\)</td></tr>
   <tr>  <td>\(\mathrm{End}(J) \otimes \Q\)</td><td>\(\simeq\)</td><td>\({{data.data.rat_end_alg_name}}\)</td>
-<td>[Is simple over \(\Q \): {{data.data.is_simple_name}}]</td></tr>
+<td>[Simple over \(\Q \): {{data.data.is_simple_name}}]</td></tr>
   <tr>  <td>\(\mathrm{End}(J) \otimes \R\)</td><td>\(\simeq\)</td><td>\({{data.data.real_end_alg_name}}\)</td>
-<td>[Is \(\mathrm{GL}_2-\)type: {{data.data.is_gl2_type_name}}]</td></tr>
+<td>[\(\mathrm{GL}_2-\)type: {{data.data.is_gl2_type_name}}]</td></tr>
   <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}})\)</td><td>\(\simeq\)</td><td>\({{data.data.geom_end_ring_name}}\)</td></tr>
   <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}}) \otimes \Q\)</td><td>\(\simeq\)</td><td>\({{data.data.rat_geom_end_alg_name}}\)</td>
-<td>[Is simple over \(\overline{\Q} \): {{data.data.is_geom_simple_name}}]</td></tr>
+<td>[Simple over \(\overline{\Q} \): {{data.data.is_geom_simple_name}}]</td></tr>
   <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}}) \otimes \R\)</td><td>\(\simeq\)</td><td>\({{data.data.real_geom_end_alg_name}}\)</td></tr>
 
 </table>

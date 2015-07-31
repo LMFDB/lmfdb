@@ -12,7 +12,7 @@ from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range2, 
 from lmfdb.number_fields.number_field import parse_list, parse_discs, make_disc_key
 from lmfdb.genus2_curves import g2c_page, g2c_logger
 from lmfdb.genus2_curves.isog_class import G2Cisog_class, url_for_label, isog_url_for_label
-from lmfdb.genus2_curves.web_g2c import WebG2C, list_to_min_eqn, isog_label
+from lmfdb.genus2_curves.web_g2c import WebG2C, list_to_min_eqn, isog_label, st_group_name
 
 import sage.all
 from sage.all import ZZ, QQ, latex, matrix, srange
@@ -85,7 +85,8 @@ def index_Q():
     info["browse_curves"] = [
         db_g2c().curves.find_one({"label":"169.a.169.1"}),
         db_g2c().curves.find_one({"label":"1152.a.147456.1"}),
-        db_g2c().curves.find_one({"label":"12500.a.12500.1"})
+        db_g2c().curves.find_one({"label":"12500.a.12500.1"}),
+        db_g2c().curves.find_one({"label":"23552.a.23552.1"})
     ]
     info["conductor_list"] = ['1-499', '500-999', '1000-99999','100000-1000000'   ]
     info["discriminant_list"] = ['1-499', '500-999', '1000-99999','100000-1000000'   ]
@@ -164,9 +165,12 @@ def genus2_curve_search(**args):
     for fld in ['aut_grp', 'geom_aut_grp','st_group','real_geom_end_alg']:
         if info.get(fld):
             query[fld] = info[fld]
-    for fld in ['aut_grp', 'geom_aut_grp', 'torsion']: # look like [2, 4]
+    for fld in ['aut_grp', 'geom_aut_grp', 'torsion', 'igusa_clebsch']: # look like [2, 4]
         if info.get(fld):
-            query[fld] = eval(info[fld])
+            query[fld] = str(info[fld])
+    if info.get('ic0'):
+        query['igusa_clebsch']=[info['ic0'], info['ic1'], info['ic2'], info['ic3'] ]
+        
 
     for fld in ["cond", "num_rat_wpts", "torsion_order", "two_selmer_rank"]:
         if info.get(fld):
@@ -238,7 +242,12 @@ def genus2_curve_search(**args):
         v_clean["isog_label"] = v["class"]
         isogeny_class = db_g2c().isogeny_classes.find_one({'label' : isog_label(v["label"])})
         v_clean["is_gl2_type"] = isogeny_class["is_gl2_type"]
+        if isogeny_class["is_gl2_type"] == True:
+            v_clean["is_gl2_type_display"] = '&#10004;' #checkmark
+        else:
+            v_clean["is_gl2_type_display"] = ''
         v_clean["equation_formatted"] = list_to_min_eqn(v["min_eqn"])
+        v_clean["st_group_name"] = st_group_name(isogeny_class['st_group'])
         res_clean.append(v_clean)
 
     info["curves"] = res_clean
