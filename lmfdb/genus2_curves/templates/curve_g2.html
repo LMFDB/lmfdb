@@ -97,9 +97,9 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
 <h2> {{ KNOWL('g2c.num_rat_wpts', title='Number of rational Weierstrass points') }} </h2>
 \({{data.data.num_rat_wpts}}\)
-<h2>
+<h4>
 Properties related to the {{KNOWL('g2c.jacobian', title='Jacobian')}}
-</h2>
+</h4>
 <h2>
 {{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank') }} 
 </h2>
@@ -120,15 +120,14 @@ Properties related to the {{KNOWL('g2c.jacobian', title='Jacobian')}}
 </p>
 
 <h2> {{ KNOWL('g2c.jac_endomorphisms', title='Endomorphisms of the Jacobian') }} </h2>
+{{data.data.endomorphism_statement}}
 <table>
-  <tr>  <td>\(\mathrm{End}(J) \)</td><td>\(\simeq\)</td><td>\({{data.data.end_ring_name}}\)</td></tr>
   <tr>  <td>\(\mathrm{End}(J) \otimes \Q\)</td><td>\(\simeq\)</td><td>\({{data.data.rat_end_alg_name}}\)</td>
-<td>[Simple over \(\Q \): {{data.data.is_simple_name}}]</td></tr>
+</tr>
   <tr>  <td>\(\mathrm{End}(J) \otimes \R\)</td><td>\(\simeq\)</td><td>\({{data.data.real_end_alg_name}}\)</td>
-<td>[\(\mathrm{GL}_2-\)type: {{data.data.is_gl2_type_name}}]</td></tr>
-  <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}})\)</td><td>\(\simeq\)</td><td>\({{data.data.geom_end_ring_name}}\)</td></tr>
+</tr>
   <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}}) \otimes \Q\)</td><td>\(\simeq\)</td><td>\({{data.data.rat_geom_end_alg_name}}\)</td>
-<td>[Simple over \(\overline{\Q} \): {{data.data.is_geom_simple_name}}]</td></tr>
+</tr>
   <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}}) \otimes \R\)</td><td>\(\simeq\)</td><td>\({{data.data.real_geom_end_alg_name}}\)</td></tr>
 
 </table>
