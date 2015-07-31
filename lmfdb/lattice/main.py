@@ -106,7 +106,7 @@ def lattice_search(**args):
     t = 'Integral Lattices search results'
     bread = [('Lattices', url_for(".lattice_render_webpage")),('Search results', ' ')]
     properties = []
-    return render_template("lattice-search.html", info=info, title=t, properties=properties, bread=bread)
+    return render_template("lattice_search.html", info=info, title=t, properties=properties, bread=bread)
 
 
 
