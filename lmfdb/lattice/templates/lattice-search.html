@@ -5,6 +5,7 @@
 
 <table class="ntdata">
 <tr>
+<th>{{ KNOWL('lattice.label', title='Label') }}</th>
 <th>{{ KNOWL('lattice.dimension', title='Dimension') }}</th>
 <th>{{ KNOWL('lattice.determinant', title='Determinant') }}</th>
 <th>{{ KNOWL('lattice.level', title='Level')}}</th>
@@ -12,7 +13,7 @@
 </tr>
 {% for form in info.lattices %}
 <tr>
-<td align='left'><a href="{{url_for('lattice.lattice_render_webpage', label=form.label)}}">{{form.label}} </a></td>
+<td align='left'><a href="{{url_for('lattice.render_lattice_webpage', label=form.label)}}">{{form.label}} </a></td>
 <td>${{form.dim}}$</td>
 <td>${{form.det}}$</td>
 <td>${{form.level}}$</td>

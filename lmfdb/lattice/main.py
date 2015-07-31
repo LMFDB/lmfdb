@@ -27,15 +27,7 @@ LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
 
 def vect_to_matrix(v):
-	return latex(matrix(v))	
-
-
-@lattice_page.route("/")
-def index():
-    bread = get_bread([])
-    info = {}
-    friends=[]
-    return render_template("lattice-index.html", title="Integral Lattices", bread=bread, credit=lattice_credit, info=info, friends=friends)
+	return str(latex(matrix(v)))	
 
 
 @lattice_page.route("/")
@@ -95,6 +87,7 @@ def lattice_search(**args):
     res_clean = []
     for v in res:
         v_clean = {}
+	v_clean['label']=v['label']
 	v_clean['dim']=v['dim']
 	v_clean['det']=v['det']
 	v_clean['level']=v['level']
@@ -106,7 +99,7 @@ def lattice_search(**args):
     t = 'Integral Lattices search results'
     bread = [('Lattices', url_for(".lattice_render_webpage")),('Search results', ' ')]
     properties = []
-    return render_template("lattice_search.html", info=info, title=t, properties=properties, bread=bread)
+    return render_template("lattice-search.html", info=info, title=t, properties=properties, bread=bread)
 
 
 
@@ -139,14 +132,14 @@ def render_lattice_webpage(**args):
     info['aut']=int(f['aut'])
     info['theta_series']=str(f['theta_series'])
     info['class_number']=int(f['class_number'])
-    info['genus_reps']=vect_to_matrix(f['genus_reps'])
+    info['genus_reps']=[vect_to_matrix(n) for n in f['genus_reps']]
     info['name']=str(f['name'])
     info['comments']=str(f['comments'])
 
     if info['name'] == "":
 	t = "Integral Lattice %s" % info['label']
     else:
-	t = "Integral Lattice %s" % info['label'] % info['name']
+	t = "Integral Lattice "+info['label']+" ("+info['name']+")"
 
     return render_template("lattice-single.html", info=info, credit=credit, title=t, bread=bread)
 

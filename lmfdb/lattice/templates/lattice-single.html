@@ -3,7 +3,7 @@
 {% block content %}
 
 <h2> {{ KNOWL('lattice.gram_matrix', title='Gram Matrix') }} </h2>
-<p>${%info.gram %}$</p>
+<p>${{info.gram}}$</p>
 
 <h2> Lattice Invariants </h2>
 
@@ -28,7 +28,9 @@
 <table>
 <tr><td align=right>Class number:</td><td>${{info.class_number }}$</td></tr>
 <tr><td align=right>Genus representatives:</td><td>
-${{info.genus_reps }}$
+{% for n in info.genus_reps %}
+${{n}}$
+{% endfor %}
 </td></tr>
 </table>
 
