@@ -1,0 +1,69 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<style>
+
+
+</style>
+
+<h2> {{ KNOWL('lattice.gram_matrix', title='Gram Matrix') }} </h2>
+
+$\begin{pmatrix}
+2 &0 &1\\
+0 &2 &-1\\
+1 &-1 &2\end{pmatrix}$
+
+<h2> Lattice Invariants </h2>
+
+<table>
+    <tr><td align=right>{{ KNOWL('lattice.dimension', title='Dimension') }}:</td><td>$3$</td></tr>
+    <tr><td align=right>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>4</td></tr>
+    <tr><td align=right>{{ KNOWL('lattice.level', title='Level') }}:</td><td>$12$</td></tr>
+    <tr><td align=right>{{ KNOWL('lattice.density', title='Density') }}:</td><td>.176776695297E+00</td></tr>
+    <tr><td align=right>{{ KNOWL('lattice.hermite_number', title='Hermite number') }}:</td><td>.125992104989E+01</td></tr>
+    <tr><td align=right>{{ KNOWL('lattice.minimal_vector', title='Minimal vector')}} length:</td><td>$2$</td></tr>
+    <tr><td align=right>{{ KNOWL('lattice.kissing', title='Kissing Number') }}:</td><td>12</td></tr>
+    <tr><td align=right>Normalized {{ KNOWL('lattice.minimal_vector', title='minimal vector')}} list:</td><td>$(0,-1,-1), (1, -1, -1), (0, 0, -1), (1, 0, -1), (0, -1, 0), (-1, 0, -0)$</td></tr>
+    
+</table>
+
+<h2> {{ KNOWL('lattice.aut_grp', title='Automorphism Group') }} </h2>
+
+<table>
+    <tr><td align=right>Group order:</td><td>48</td></tr>
+    <tr><td align=right>Group structure:</td><td>Matrix Group over $\mathbb{Z}$</td></tr>
+    <tr><td align=right>Group generators:</td><td>
+        $\begin{pmatrix}
+        -1 &0 &0\\
+        0 &1 &0\\
+        0 &-1 &-1\end{pmatrix}$$\begin{pmatrix}
+        -1 &0 &1\\
+        0 &-1 &-1\\
+        -1 &1 &1\end{pmatrix}$
+    </td></tr>
+</table>
+
+<h2> {{ KNOWL('lattice.theta', title='Theta Series') }} </h2>
+
+$1+12q^2+6q^4+24q^6+12q^8+O(q^{10})$
+
+<h2> {{ KNOWL('lattice.genus', title='Genus Structure') }} </h2>
+
+<table>
+<tr><td align=right>Class number:</td><td>1</td></tr>
+<tr><td align=right>Genus representatives:</td><td>
+$\begin{pmatrix}
+1 &0 &0\\
+0 &2 &0\\
+0 &0 &8\end{pmatrix}$
+</td></tr>
+</table>
+
+<h2> {{ KNOWL('lattice.lattice_local', title='Local Properties') }} </h2>
+
+<h2> Comments </h2>
+
+This is the face-centered cubic lattice which is among the lattices corresponding to the highest density {{ KNOWL('lattice.sphere_packing', title='sphere packing')}}.
+
+        {% endblock %}
