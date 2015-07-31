@@ -322,8 +322,9 @@ class WebModFormSpace_class(object):
         """
         modular_symbols = self.db_collection('Modular_symbols.files')
         key = {'k': int(self._k), 'N': int(self._N), 'chi': int(self._chi)}
+#        key = {'hecke_orbit_label':"{0}.{1}.{2}".format(self._N,self._k,self._chi)}
         modular_symbols_from_db  = modular_symbols.find_one(key)
-        emf_logger.debug("found ms={0}".format(modular_symbols_from_db))
+        emf_logger.debug("found ms={0} for key:{1}".format(modular_symbols_from_db,key))
         if modular_symbols_from_db == None:
             ms = None
         else:
@@ -698,9 +699,7 @@ class WebModFormSpace_class(object):
             o = dict()
             label = self._galois_orbits_labels[j]
             o['label'] = label
-            full_label = "{0}.{1}".format(self.level(), self.weight())
-            if self._chi != 0:
-                full_label = full_label + ".{0}".format(self._chi)
+            full_label = "{0}.{1}.{2}".format(self.level(), self.weight(),self.conrey_character_number())
             full_label = full_label + label
             o['full_label'] = full_label
             o['url'] = url_for('emf.render_elliptic_modular_forms', level=self.level(
