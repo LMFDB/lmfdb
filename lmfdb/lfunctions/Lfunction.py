@@ -97,6 +97,7 @@ def makeLfromdata(L):
         L.dirichlet_coefficients[n] = float(an/(n+1)**L.normalize_by)
     # Note: a better name would be L.dirichlet_coefficients_analytic, but that
     # would require more global changes.
+    L.localfactors = p2sage(data['euler_factors'])
     L.checkselfdual()  # needs to be changed to read from database
     generateSageLfunction(L)  # DF: why is this needed if pulling from database?
 

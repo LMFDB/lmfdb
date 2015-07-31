@@ -30,7 +30,7 @@
 
  <h2>{{ KNOWL('lfunction.euler_product', title='Euler product') }}</h2>
 {% if BETA and user_is_authenticated and dirichlet_arithmetic -%}
- <div>\[{{ eulerproduct_arithmetic }}\]</div>
+ <div>{{ eulerproduct_arithmetic|safe }}</div>
 {% else %}
  <div>\[{{ eulerproduct }}\]</div>
 {% endif %}

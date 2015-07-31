@@ -3,7 +3,7 @@
 import re
 from lmfdb.lfunctions import logger
 from sage.all import *
-
+from lmfdb.genus2_curves.isog_class import list_to_factored_poly_otherorder
 
 ###############################################################
 # Functions for displaying numbers in correct format etc.
@@ -398,6 +398,8 @@ def lfuncEPtex(L, fmt):
     """ Returns the LaTex for displaying the Euler product of the L-function L.
         fmt could be any of the values: "abstract"
     """
+    if L.Ltype() == "genus2curveQ":
+        return lfuncEPhtml(L, fmt)
 
     ans = ""
     if fmt == "abstract" or fmt == "arithmetic":
@@ -443,7 +445,37 @@ def lfuncEPtex(L, fmt):
     else:
         return("No information is available about the Euler product.")
 
-
+def lfuncEPhtml(L,fmt):
+    """ Euler product as a formula and a table of local factors.
+    """
+    ans = ""
+    ans += "Just testing"
+    bad_primes = [2,5,7,181]
+    good_primes = [3,11,13,17,19,23]
+    eptable = "<table>\n<tr><td></td><td>$p$</td><td>$f_p$</td></tr>\n"
+    numfactors = len(L.localfactors)
+    goodorbad = "bad"
+    for j in bad_primes:
+        this_prime_index = prime_pi(j) - 1  # list starts at 0
+        try:
+            eptable += ("<tr><td>" + goodorbad + "</td><td>" + str(j) + "</td><td>" + 
+                        "$" + list_to_factored_poly_otherorder(L.localfactors[this_prime_index]) + "$" +
+                        "</td></tr>\n")
+        except IndexError:
+            eptable += "<tr><td></td><td>" + str(j) + "</td><td>" + "not available" + "</td></tr>\n"
+        goodorbad = ""
+    goodorbad = "good"
+    for j in good_primes:
+        this_prime_index = prime_pi(j) - 1
+        eptable += ("<tr><td>" + goodorbad + "</td><td>" + str(j) + "</td><td>" +
+                    "$" + list_to_factored_poly_otherorder(L.localfactors[this_prime_index]) + "$" +
+                    "</td></tr>\n")
+        goodorbad = ""
+    eptable += "</table>\n"
+    ans += str(numfactors)
+#    ans += str(L.localfactors)
+    ans += eptable
+    return(ans)
 
 def lfuncEpSymPower(L):
     """ Helper funtion for lfuncEPtex to do the symmetric power L-functions
