@@ -20,6 +20,22 @@ function show_code(system) {
   }
 </script>
 
+<script>
+var cur_invstyle = null;
+function show_invs(invstyle) {
+    $('.igusa_clebsch').hide();
+    $('.igusa').hide();
+    $('.g2').hide();
+    if (cur_invstyle == invstyle) {
+      $('.'+invstyle).hide();
+      cur_invstyle = null;
+      } else {
+      $('.'+invstyle).show();
+      cur_invstyle = invstyle;
+    }
+  }
+</script>
+
 <script type="text/javascript"
         src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <script type="text/javascript"
@@ -34,7 +50,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
       Show commands using:  <a onclick="show_code('sage'); return false" href='#'>sage</a>,
         <a onclick="show_code('magma'); return false" href='#'>magma</a>
     </div>
-
+    
     <h2> {{ KNOWL('g2c.minimal_equation', title='Minimal equation') }} </h2>
     <p> ${{ data.data.min_eqn_display }}$ </p>
 
@@ -43,7 +59,6 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
     <h2> {{ KNOWL('g2c.invariants', title='Invariants') }}  </h2>
         <table>
-
         <tr>
           <td> \( N \) </td>
 	  <td>&nbsp;=&nbsp;</td>
@@ -58,36 +73,92 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
           <td>&nbsp;=&nbsp;</td>
           <td>{{ data.data.disc_factor_latex }}</td>
         </tr>
-	
-        <tr>
+        <tr class='igusa_clebsch'>
           <td> \( I_2 \) </td>
-	  <td>&nbsp;=&nbsp;</td>
-	  <td>\({{ data.data.invs[0] }}\)</td>
           <td>&nbsp;=&nbsp;</td>
-	  <td>{{ data.data.invs_factor_latex[0] }}</td>
+          <td>\({{ data.data.ic_norm[0] }}\)</td>
+          <td>&nbsp;=&nbsp;</td>
+          <td>{{ data.data.ic_norm_factor_latex[0] }}</td>
         </tr>
-	<tr>
+        <tr class='igusa_clebsch'>
           <td> \( I_4 \) </td>
-	  <td>&nbsp;=&nbsp;</td>
-	  <td>\({{ data.data.invs[1] }}\)</td>
           <td>&nbsp;=&nbsp;</td>
-	  <td>{{ data.data.invs_factor_latex[1] }}</td>
+          <td>\({{ data.data.ic_norm[1] }}\)</td>
+          <td>&nbsp;=&nbsp;</td>
+          <td>{{ data.data.ic_norm_factor_latex[1] }}</td>
         </tr>
-	<tr>
+        <tr class='igusa_clebsch'>
           <td> \( I_6 \) </td>
-	  <td>&nbsp;=&nbsp;</td>
-	  <td>\({{ data.data.invs[2] }}\)</td>
           <td>&nbsp;=&nbsp;</td>
-	  <td>{{ data.data.invs_factor_latex[2] }}</td>
+          <td>\({{ data.data.ic_norm[2] }}\)</td>
+          <td>&nbsp;=&nbsp;</td>
+          <td>{{ data.data.ic_norm_factor_latex[2] }}</td>
         </tr>
-	<tr>
+        <tr class='igusa_clebsch'>
           <td> \( I_{10} \) </td>
-	  <td>&nbsp;=&nbsp;</td>
-	  <td>\({{ data.data.invs[3]}}\)</td>
           <td>&nbsp;=&nbsp;</td>
-	  <td>{{ data.data.invs_factor_latex[3] }}</td>
+          <td>\({{ data.data.ic_norm[3]}}\)</td>
+          <td>&nbsp;=&nbsp;</td>
+          <td>{{ data.data.ic_norm_factor_latex[3] }}</td>
         </tr>
-	</table>
+        <tr class='igusa nodisplay'>
+          <td> \( J_2 \) </td>
+          <td>&nbsp;=&nbsp;</td>
+          <td>\({{ data.data.igusa_norm[0] }}\)</td>
+          <td>&nbsp;=&nbsp;</td>
+          <td>{{ data.data.igusa_norm_factor_latex[0] }}</td>
+        </tr>
+        <tr class='igusa nodisplay'>
+          <td> \( J_4 \) </td>
+          <td>&nbsp;=&nbsp;</td>
+          <td>\({{ data.data.igusa_norm[1] }}\)</td>
+          <td>&nbsp;=&nbsp;</td>
+          <td>{{ data.data.igusa_norm_factor_latex[1] }}</td>
+        </tr>
+        <tr class='igusa nodisplay'>
+          <td> \( J_6 \) </td>
+          <td>&nbsp;=&nbsp;</td>
+          <td>\({{ data.data.igusa_norm[2] }}\)</td>
+          <td>&nbsp;=&nbsp;</td>
+          <td>{{ data.data.igusa_norm_factor_latex[2] }}</td>
+        </tr>
+        <tr class='igusa nodisplay'>
+          <td> \( J_8 \) </td>
+          <td>&nbsp;=&nbsp;</td>
+          <td>\({{ data.data.igusa_norm[3] }}\)</td>
+          <td>&nbsp;=&nbsp;</td>
+          <td>{{ data.data.igusa_norm_factor_latex[3] }}</td>
+        </tr>
+        <tr class='igusa nodisplay'>
+          <td> \( J_{10} \) </td>
+          <td>&nbsp;=&nbsp;</td>
+          <td>\({{ data.data.igusa_norm[4]}}\)</td>
+          <td>&nbsp;=&nbsp;</td>
+          <td>{{ data.data.igusa_norm_factor_latex[4] }}</td>
+        </tr>
+        <tr class='g2 nodisplay'>
+          <td> \( g_1 \) </td>
+          <td>&nbsp;=&nbsp;</td>
+          <td>\({{ data.data.g2[0] }}\)</td>
+        </tr>
+        <tr class='g2 nodisplay'>
+          <td> \( g_2 \) </td>
+          <td>&nbsp;=&nbsp;</td>
+          <td>\({{ data.data.g2[1] }}\)</td>
+        </tr>
+        <tr class='g2 nodisplay'>
+          <td> \( g_3 \) </td>
+          <td>&nbsp;=&nbsp;</td>
+          <td>\({{ data.data.g2[2] }}\)</td>
+        </tr>
+        <table>
+
+    <div>
+      Convert to preferred geometric invariants:
+      <a onclick="show_invs('igusa_clebsch'); return false" href='#'>Igusa-Clebsch (default)</a>,
+      <a onclick="show_invs('igusa'); return false" href='#'>Igusa</a>,
+      <a onclick="show_invs('g2'); return false" href='#'>G2</a>
+    </div>
 
     <h2> {{ KNOWL('g2c.aut_grp', title='Automorphism group') }} </h2>
 <table>
