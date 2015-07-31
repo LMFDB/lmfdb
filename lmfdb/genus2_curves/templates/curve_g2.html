@@ -67,6 +67,17 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
           <td>&nbsp;=&nbsp;</td>
           <td>{{ data.data.disc_factor_latex }}</td>
         </tr>
+        </table>
+        <div class='igusa_clebsch'>
+            Igusa-Clebsch invariants:
+        </div>
+        <div class='igusa nodisplay'>
+            Igusa invariants:
+        </div>
+        <div class='g2 nodisplay'>
+            G2 invariants:
+        </div>
+        <table>
         <tr class='igusa_clebsch'>
           <td> \( I_2 \) </td>
           <td>&nbsp;=&nbsp;</td>
@@ -146,13 +157,22 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
           <td>\({{ data.data.g2[2] }}\)</td>
         </tr>
         <table>
+        <div class='igusa_clebsch'>
+            Alternative geometric invariants: 
+            <a onclick="show_invs('igusa'); return false" href='#'>Igusa</a>,
+            <a onclick="show_invs('g2'); return false" href='#'>G2</a>
+        </div>
+        <div class='igusa nodisplay'>
+            Alternative geometric invariants: 
+            <a onclick="show_invs('igusa_clebsch'); return false" href='#'>Igusa-Clebsch</a>,
+            <a onclick="show_invs('g2'); return false" href='#'>G2</a>
+        </div>
+        <div class='g2 nodisplay'>
+            Alternative geometric invariants: 
+            <a onclick="show_invs('igusa_clebsch'); return false" href='#'>Igusa-Clebsch</a>,
+            <a onclick="show_invs('igusa'); return false" href='#'>Igusa</a>
+        </div>
 
-    <div>
-      Available geometric invariants:
-      <a onclick="show_invs('igusa_clebsch'); return false" href='#'>Igusa-Clebsch</a>&nbsp;/
-      <a onclick="show_invs('igusa'); return false" href='#'>Igusa</a>&nbsp;/
-      <a onclick="show_invs('g2'); return false" href='#'>G2</a>
-    </div>
 
     <h2> {{ KNOWL('g2c.aut_grp', title='Automorphism group') }} </h2>
 <table>
