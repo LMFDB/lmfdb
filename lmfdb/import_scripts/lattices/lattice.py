@@ -52,8 +52,8 @@ def label_lookup(base_label):
     return 1	
 
 def do_import(ll):
-    dim,det,level,density,hermite,minimum,kissing,shortest,aut,theta_series,class_number,genus_reps,name,comments = ll
-    mykeys = ['dim','det','level','density','hermite', 'minimum','kissing','shortest','aut','theta_series','class_number','genus_reps','name','comments']
+    dim,det,level,gram,density,hermite,minimum,kissing,shortest,aut,theta_series,class_number,genus_reps,name,comments = ll
+    mykeys = ['dim','det','level','gram','density','hermite', 'minimum','kissing','shortest','aut','theta_series','class_number','genus_reps','name','comments']
     data = {}
     for j in range(len(mykeys)):
         data[mykeys[j]] = ll[j]
@@ -64,7 +64,7 @@ def do_import(ll):
     label= last_label(blabel, data['index'])
     data['label'] = label
  
-    lattice = lattices.find_one({'label': label})
+    lattice = lat.find_one({'label': label})
 
     if lattice is None:
         print "new lattice"
@@ -73,7 +73,7 @@ def do_import(ll):
         print "form already in database"
         lattice.update(data)
     if saving:
-        lattices.save(lattice)
+        lat.save(lattice)
 
 # Loop over files
 
