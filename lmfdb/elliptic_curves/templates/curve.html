@@ -212,7 +212,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
         </tr>
         <tr>
         <td colspan="4"> 
-           \( \text{Reg} \) </td><td>&nbsp;=&nbsp;</td><td> \({{ data.bsd.reg }}\)</td>
+           \( \text{Reg} \) </td><td>&nbsp;&approx;&nbsp;</td><td> \({{ data.bsd.reg }}\dots\)</td>
         </tr>
 
         <tr>
@@ -224,7 +224,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
         </tr>
         <tr>
         <td colspan="4">
-           \( \Omega \) </td><td>&nbsp;=&nbsp;</td><td> \({{ data.bsd.omega }}\)</td>
+           \( \Omega \) </td><td>&nbsp;&approx;&nbsp;</td><td> \({{ data.bsd.omega }}\dots\)</td>
         </tr>
 
         <tr>
@@ -263,8 +263,16 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
         </tr>
         <tr>
         <td colspan="4"> &#1064;\(_{\text{an}} \) </td>
+        {% if data.rank > 1 %}
+        <td>&nbsp;&approx;&nbsp;</td>
+        {% else %}
         <td>&nbsp;=&nbsp;</td>
-        <td>\({{ data.bsd.sha }}\)</td>
+        {% endif %}
+        <td>\({{ data.bsd.sha }}\)
+          {% if data.rank > 1 %}
+          ({{ KNOWL('ec.q.analytic_sha_order',title="approximate value")}})
+          {% endif %}
+        </td>
         </tr>
 
         </table>
