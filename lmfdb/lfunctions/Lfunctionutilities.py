@@ -132,7 +132,7 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
         else:
             ans += truncatenumber(ip, precision) + "i"
         if seriescoefftype == "series" or seriescoefftype == "serieshtml" or seriescoefftype == "signed":
-            return(ans + ")" + seriesvar(index, seriestype))
+            return(ans + ")" + " " + seriesvar(index, seriestype))
         else:
             return(ans)
 
@@ -489,45 +489,84 @@ def lfuncFEtex(L, fmt):
     """ Returns the LaTex for displaying the Functional equation of the L-function L.
         fmt could be any of the values: "analytic", "selberg"
     """
+    if fmt == "arithmetic":
+        mu_list = [mu - L.motivic_weight/2 for mu in L.mu_fe]
+        nu_list = [nu - L.motivic_weight/2 for nu in L.nu_fe]
+        mu_list.sort()
+        nu_list.sort()
+        texname = L.texname_arithmetic
+        try:
+            tex_name_s = L.texnamecompleteds_arithmetic
+            tex_name_1ms = L.texnamecompleted1ms_arithmetic
+        except AttributeError:
+            tex_name_s = L.texnamecompleteds
+            tex_name_1ms = L.texnamecompleted1ms
 
+    else:
+        mu_list = L.mu_fe[:]
+        nu_list = L.nu_fe[:]
+        texname = L.texname
+        tex_name_s = L.texnamecompleteds
+        tex_name_1ms = L.texnamecompleted1ms
     ans = ""
-    if fmt == "analytic":
-        ans = "\\begin{align}\n" + L.texnamecompleteds + "=\\mathstrut &"
+#    if fmt == "analytic":
+#        ans = "\\begin{align}\n" + L.texnamecompleteds + "=\\mathstrut &"
+#        if L.level > 1:
+#            # ans+=latex(L.level)+"^{\\frac{s}{2}}"
+#            ans += latex(L.level) + "^{s/2}"
+#        for mu in L.mu_fe:
+#            ans += "\Gamma_{\R}(s" + seriescoeff(mu, 0, "signed", "", -6, 5) + ")"
+#        for nu in L.nu_fe:
+#            ans += "\Gamma_{\C}(s" + seriescoeff(nu, 0, "signed", "", -6, 5) + ")"
+#        ans += " \\cdot " + L.texname + "\\cr\n"
+#        ans += "=\\mathstrut & "
+#        if L.sign == 0:
+#            ans += "\epsilon \cdot "
+#        else:
+#            ans += seriescoeff(L.sign, 0, "factor", "", -6, 5)
+#        ans += L.texnamecompleted1ms
+#        if L.sign == 0 and L.degree == 1:
+#            ans += "\quad (\\text{with }\epsilon \\text{ not computed})"
+#        if L.sign == 0 and L.degree > 1:
+#            ans += "\quad (\\text{with }\epsilon \\text{ unknown})"
+#        ans += "\n\\end{align}\n"
+#    elif fmt == "arithmetic":
+    if fmt == "arithmetic" or fmt == "analytic":
+        ans = "\\begin{align}\n" + tex_name_s + "=\\mathstrut &"
         if L.level > 1:
             # ans+=latex(L.level)+"^{\\frac{s}{2}}"
             ans += latex(L.level) + "^{s/2}"
-        for mu in L.mu_fe:
-            ans += "\Gamma_{\R}(s" + seriescoeff(mu, 0, "signed", "", -6, 5) + ")"
-        for nu in L.nu_fe:
-            ans += "\Gamma_{\C}(s" + seriescoeff(nu, 0, "signed", "", -6, 5) + ")"
-        ans += " \\cdot " + L.texname + "\\cr\n"
+        # set up to accommodate multiplicity of Gamma factors
+        old_mu = ""
+        curr_mu_exp = 0
+        for mu in mu_list:
+            if mu == old_mu:
+                curr_mu_exp += 1
+            else:
+                old_mu = mu
+                curr_mu_exp = 1
+                ans += "\Gamma_{\R}(s" + seriescoeff(mu, 0, "signed", "", -6, 5) + ")"
+        if curr_mu_exp >= 2:
+            ans += "^{" + str(curr_mu_exp) + "}"
+        # set up to accommodate multiplicity of Gamma factors
+        old_nu = ""
+        curr_nu_exp = 0
+        for nu in nu_list:
+            if nu == old_nu:
+                curr_nu_exp += 1
+            else:
+                old_nu = nu
+                curr_nu_exp = 1
+                ans += "\Gamma_{\C}(s" + seriescoeff(nu, 0, "signed", "", -6, 5) + ")"
+        if curr_nu_exp >= 2:
+            ans += "^{" + str(curr_nu_exp) + "}"
+        ans += " \\cdot " + texname + "\\cr\n"
         ans += "=\\mathstrut & "
         if L.sign == 0:
             ans += "\epsilon \cdot "
         else:
             ans += seriescoeff(L.sign, 0, "factor", "", -6, 5)
-        ans += L.texnamecompleted1ms
-        if L.sign == 0 and L.degree == 1:
-            ans += "\quad (\\text{with }\epsilon \\text{ not computed})"
-        if L.sign == 0 and L.degree > 1:
-            ans += "\quad (\\text{with }\epsilon \\text{ unknown})"
-        ans += "\n\\end{align}\n"
-    elif fmt == "arithmetic":
-        ans = "\\begin{align}\n" + L.texnamecompleteds_arithmetic + "=\\mathstrut &"
-        if L.level > 1:
-            # ans+=latex(L.level)+"^{\\frac{s}{2}}"
-            ans += latex(L.level) + "^{s/2}"
-        for mu in L.mu_fe:
-            ans += "\Gamma_{\R}(s" + seriescoeff(mu - L.motivic_weight/2, 0, "signed", "", -6, 5) + ")"
-        for nu in L.nu_fe:
-            ans += "\Gamma_{\C}(s" + seriescoeff(nu - L.motivic_weight/2, 0, "signed", "", -6, 5) + ")"
-        ans += " \\cdot " + L.texname_arithmetic + "\\cr\n"
-        ans += "=\\mathstrut & "
-        if L.sign == 0:
-            ans += "\epsilon \cdot "
-        else:
-            ans += seriescoeff(L.sign, 0, "factor", "", -6, 5)
-        ans += L.texnamecompleted1ms_arithmetic
+        ans += tex_name_1ms
         if L.sign == 0 and L.degree == 1:
             ans += "\quad (\\text{with }\epsilon \\text{ not computed})"
         if L.sign == 0 and L.degree > 1:

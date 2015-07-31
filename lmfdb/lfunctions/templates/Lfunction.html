@@ -3,9 +3,11 @@
 {% block content %}
 
 {% if user_is_authenticated and dirichlet_arithmetic -%}
- <div>{{ KNOWL('lfunction.normalization', title='Normalization') }}: <button type='submit'>arithmetic</button></div>
+ <div>{{ KNOWL('lfunction.normalization', title='Normalization') }}: <button class='active'>arithmetic</button>
+<button class='inactive'>analytic</button></div>
 {% else %}
- <div>{{ KNOWL('lfunction.normalization', title='Normalization') }}: <button type='submit'>analytic</button></div>
+ <div>{{ KNOWL('lfunction.normalization', title='Normalization') }}: <button class='inactive'>arithmetic</button>
+<button class='active'>analytic</button></div>
 {% endif %}
 
  <h2> {{ KNOWL('lfunction.dirichlet_series', title='Dirichlet series') }}</h2>
@@ -22,7 +24,7 @@
  <div id="functionalEqText">\[{{ functionalequation }}\]</div>
 {% endif %}
 
- <div style="margin-left: 5ex">
+ <div>
    {{ KNOWL('lfunction.selbergdata', title="Selberg data") }}: ${{ functionalequationSelberg }}$
 </div>
 
@@ -38,17 +40,6 @@
   <div align="center">
     {{ factorization|safe }} 
   </div>
- {% endif %}
-
- <h2> Imaginary part of the first few zeros on the {{ KNOWL('lfunction.critical_line', title='critical line') }}</h2>
-
- {% if zeroeslink %}
-     <div><span id="zeroes"></span></div>
- {% elif tpzeroslink %}
-     {{zeroswarning}}.
-     <div><span id="tpzeros">{{tpzeroslink|safe}}</span></div>
- {% else %}
-     <div>Not enough information (Dirichlet series coefficients/sign of the functional equation) to compute zeros.</div>
  {% endif %}
 
 <h2>Particular Values</h2>
@@ -74,14 +65,13 @@
    {% if sv_critical or sv_edge %}
       <div>
       {% if sv_critical %}
-          {{ sv_critical }}<br>
+          {{ sv_critical }}
       {% endif %}
       {% if sv_edge %}
           {% if Ltype=="riemann" or Ltype=="dedekindzeta" %}
               <div align="center">Pole at \(s=1\)</div>
-                       <br>
           {% else %}
-              {{ sv_edge }}<br>
+              {{ sv_edge }}
           {% endif %}
       {% endif %}
      </div>
@@ -89,6 +79,17 @@
       <div>Not enough information (Dirichlet series coefficients/sign of the functional equation) to compute special values.</div>
    {% endif %}
 {% endif %}
+
+ <h2> Imaginary part of the first few zeros on the {{ KNOWL('lfunction.critical_line', title='critical line') }}</h2>
+
+ {% if zeroeslink %}
+     <div><span id="zeroes"></span></div>
+ {% elif tpzeroslink %}
+     {{zeroswarning}}.
+     <div><span id="tpzeros">{{tpzeroslink|safe}}</span></div>
+ {% else %}
+     <div>Not enough information (Dirichlet series coefficients/sign of the functional equation) to compute zeros.</div>
+ {% endif %}
 
     <h2> Graph of the {{ KNOWL('lfunction.zfunction', title='$Z$-function') }} along center part of the {{ KNOWL('lfunction.critical_line', title='critical line') }} </h2>
 

@@ -546,6 +546,11 @@ button, select {
   min-width: 75px;
 }
 
+button.inactive {
+  background: #EEE; 
+  border: 1px solid #EDD;
+}
+
 body.knowl form button, 
 body.knowl form select {
   border: 2px solid #AAD;
@@ -662,11 +667,11 @@ div.literature {
 }
 
 .redhighlight {
-  color: red;
+  color: #888888;
 }
 
 .bluehighlight {
-  color: blue;
+  color: black;
 }
 
 
