@@ -26,13 +26,7 @@ function show_invs(invstyle) {
     $('.igusa_clebsch').hide();
     $('.igusa').hide();
     $('.g2').hide();
-    if (cur_invstyle == invstyle) {
-      $('.'+invstyle).hide();
-      cur_invstyle = null;
-      } else {
-      $('.'+invstyle).show();
-      cur_invstyle = invstyle;
-    }
+    $('.'+invstyle).show();
   }
 </script>
 
