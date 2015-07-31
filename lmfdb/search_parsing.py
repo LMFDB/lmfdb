@@ -5,6 +5,12 @@ LIST_RE = re.compile(r'^(\d+|(\d+-(\d+)?))(,(\d+|(\d+-(\d+)?)))*$')
 BRACKETED_POSINT_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
 QQ_RE = re.compile(r'^-?\d+(/\d+)?$')
 LIST_POSINT_RE = re.compile(r'^(\d+)(,\d+)*$')
+## RE from number_field.py
+#LIST_RE = re.compile(r'^(-?\d+|(-?\d+--?\d+))(,(-?\d+|(-?\d+--?\d+)))*$')
+#LIST_SIMPLE_RE = re.compile(r'^(-?\d+)(,-?\d+)*$'
+#PAIR_RE = re.compile(r'^\[\d+,\d+\]$')
+#IF_RE = re.compile(r'^\[\]|(\[\d+(,\d+)*\])$')  # invariant factors
+
 
 from lmfdb.transitive_group import complete_group_codes, make_galois_pair
 
