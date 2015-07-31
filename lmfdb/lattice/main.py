@@ -131,42 +131,23 @@ def render_lattice_webpage(**args):
     t = "Integral Lattice %s" % info['label']
     credit = lattice_credit
     f = C.halfintegralmf.forms.find_one({'dim': data['dim'],'det': data['det'],'level': data['level'],'gram': data['gram'],'minimum': data['minimum'],'class_number': data['class_number'],'aut': data[ 'aut'],'name': data['name']})
- 
+    info['dim']=f['dim']
+    info['det']=f['det']
+    info['level']=f['level']
+    info['gram']=f['gram']
+    info['density']=f['density']
+    info['hermite']=f['hermite']
+    info['minimum']=f['minimum']
+    info['kissing']=f['kissing']
+    info['shortest']=f['shortest']
+    info['aut']=f['aut']
+    info['theta_series']=f['theta_series']
+    info['class_number']=f['class_number']
+    info['genus_reps']=f['genus_reps']
+    info['name']=f['name']
+    info['comments']=f['comments']
+
     dim = f['dim']
-    dimtheta = f['dimtheta']
-    dimnew=dim-dimtheta	
-    info['dimension'] = dim
-    info['dimtheta']= dimtheta
-    info['dimnew'] = dimnew
-    chi = f['character']
-    info['ch_lab']= chi.replace('.','/')
-    chi1=chi.split(".")	
-    chi2="\chi_{"+chi1[0]+"}("+chi1[1]+",\cdot)"	
-    info['char']= chi2
-    new=[]
-    for n in f['newpart']:
-	v= {}	
-        v['dim'] = n['dim_image']
-	s=[]
-	for h in n['half_forms']:
-		s.append(my_latex_from_qexp(print_q_expansion(h)))		
-        v['lattice'] = s
-        v['mf'] = n['mf_label']
-	v['nf'] = n['nf_label']
-	new.append(v)
-    info['new']= new
-    if dimtheta !=0:
-	theta=[]
-	for m in f['thetas']:
-		for n in m:
-			n_lab= n.replace('.','/')
-			n_l=n.split(".")	
-		    	n_lat="\chi_{"+n_l[0]+"}("+n_l[1]+",\cdot)"	
-			v=[n_lab, n_lat]
-			theta.append(v)
-	info['theta']= theta
-    else:
-	info['theta']= f['thetas']
     return render_template("lattice-single.html", info=info, credit=credit, title=t, bread=bread)
 
 
