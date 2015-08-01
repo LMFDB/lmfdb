@@ -286,6 +286,28 @@ def render_group_webpage(args):
             data['int_reps'] = intreps
             #data['int_reps'] = [galois_module_knowl(n, t, z['index'], C) for z in intreps]
             data['int_reps_complete'] = int_reps_are_complete(intreps)
+            dcq = data['moddecompuniq']
+            if dcq[0] == 0:
+                data['decompunique'] = 0
+            else:
+                data['decompunique'] = dcq[0]
+                data['isoms'] = dcq[1]
+#***************************
+#Make a helper which builds the isomorphisms.
+#Make list of knowl strings
+#Then make them sums as below
+#Finish with a list of pairs
+#        ugm = [[galois_module_knowl(n, t, z[0], C), int(z[1])] for z in ugm]
+#        #ugm = [do_mult(a) for a in ugm]
+#        ans = ugm[0][0]
+#        ugm[0][1] -= 1
+#        for j in range(len(ugm)):
+#            while ugm[j][1]>0:
+#                ans += r' $\oplus$ '+ugm[j][0]
+#                ugm[j][1] -= 1
+#        return ans
+#***************************
+
 
         friends = []
         one = C.numberfields.fields.find_one(query)

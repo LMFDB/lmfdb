@@ -42,8 +42,11 @@ getsubs(pol)=
 
 doit(pol)=
 {
-    my(nf,bnf=0,elapsed=0,nogrh=0,h=-1,clgp=[],reg=0,fu="",extras=0,subs);
+    my(nf,bnf=0,elapsed=0,nogrh=0,h=-1,clgp=[],reg=0,fu="",extras=0,subs,zk);
     nf=nfinit(pol);
+    zk=nfbasis(pol);
+    zk=subst(zk,x,a);
+    zk=apply(z->Str(z), zk);
     gettime();
     iferr(alarm(shortt,bnf=bnfinit(nf,1)),E,1);
     if(bnf,
