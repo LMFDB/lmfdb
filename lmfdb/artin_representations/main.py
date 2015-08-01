@@ -135,10 +135,7 @@ def artin_representation_search(**args):
     data = []
     galclass = []
     curclass = '0'
-    cnt = 0
     for x in results:
-        if cnt > count:
-            break
         ar = ArtinRepresentation(data=x)
         if ar.galois_orbit_label() == curclass:
             galclass.append(ar)
@@ -147,9 +144,11 @@ def artin_representation_search(**args):
                 data.append(galclass)
             curclass = ar.galois_orbit_label()
             galclass = [ar]
-            cnt += 1
-    if cnt > 0:
-        data.append(galclass)
+        if len(data) >= count:
+            break
+    #these lines made an extra artin-rep appear, without its galois friends
+    #if cnt > 0 & cnt < count:
+        #data.append(galclass)
     #data = [ArtinRepresentation(data=x) for x in results]
 
     return render_template("artin-representation-search.html", req=req, data=data, data_count=len(data), title=title, bread=bread, query=query)
