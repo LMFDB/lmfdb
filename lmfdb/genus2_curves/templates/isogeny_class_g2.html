@@ -22,16 +22,18 @@ text-align: center;
 {% endfor %}
 </table>
 
-<h2>{{ KNOWL('g2c.L_function_information', title='$L$-function information')}}</h2>
+<h2>{{ KNOWL('g2c.L_function_information', title='L-function information')}}</h2>
 
 <p>
+<!-- Someone please redo this table with css.-->
 <table>
-<tr><td> {{ KNOWL('g2c.root_number', title='Root number') }}:<td> {{ info.root_number }} </tr>
-<tr><td> {{ KNOWL('g2c.bad_L_factors', title='Bad $L$-factors') }}:<td>
+<tr><td> {{ KNOWL('g2c.root_number', title='Root number') }}:<td> \({{ info.root_number }}\) </tr>
+<tr> <td>&nbsp;</td> </tr> 
+<tr><td valign=top> {{ KNOWL('g2c.bad_L_factors', title='Bad L-factors') }}:<td>
 <table id = "bad_lfactors_table">
 <tr>
 <th>Prime</th>
-<th>$L$-Factor</th>
+<th>L-Factor</th>
 </tr>
 {% for c in info.bad_lfactors %}
 <tr><td class="center">\({{ c[0] }}\)</a></td><td align="center">\( {{ c[1] }}\)</td></tr>
@@ -52,13 +54,14 @@ text-align: center;
 </p>
 
 <h2> {{ KNOWL('g2c.jac_endomorphisms', title='Endomorphisms of the Jacobian') }} </h2>
+{{info.endomorphism_statement}}
 <table>
   <tr>  <td>\(\mathrm{End}(J) \otimes \Q\)</td><td>\(\simeq\)</td><td>\({{info.rat_end_alg_name}}\)</td>
-<td>[Is simple over \(\Q \): {{info.is_simple_name}}]</td></tr>
+</tr>
   <tr>  <td>\(\mathrm{End}(J) \otimes \R\)</td><td>\(\simeq\)</td><td>\({{info.real_end_alg_name}}\)</td>
-<td>[Is \(\mathrm{GL}_2-\)type: {{info.is_gl2_type_name}}]</td></tr>
+</tr>
   <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}}) \otimes \Q\)</td><td>\(\simeq\)</td><td>\({{info.rat_geom_end_alg_name}}\)</td>
-<td>[Is simple over \(\overline{\Q} \): {{info.is_geom_simple_name}}]</td></tr>
+</tr>
   <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}}) \otimes \R\)</td><td>\(\simeq\)</td><td>\({{info.real_geom_end_alg_name}}\)</td></tr>
 </table>
 

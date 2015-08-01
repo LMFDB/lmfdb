@@ -255,29 +255,33 @@ class WebG2C(object):
         data['st0_group_name'] = st0_group_name(isogeny_class['real_geom_end_alg'])
         data['st_group_name'] = st_group_name(isogeny_class['st_group'])
         if isogeny_class['is_gl2_type']:
-            data['is_gl2_type_name'] = 'yes'
+            data['is_gl2_type_name'] = 'yes' # shows in side
+            data['is_gl2_type_display'] = '&#x2713;' # checkmark, shows in search results
+            gl2_statement = 'of \(\GL_2\)-type'
         else:
-            data['is_gl2_type_name'] = 'no'
-        if 'is_simple' in isogeny_class:
-            if isogeny_class['is_simple']:
-                data['is_simple_name'] = 'yes'
-            else:
-                data['is_simple_name'] = 'no'
-        else:
-            data['is_simple_name'] = '?'
-        if 'is_geom_simple' in isogeny_class:
-            if isogeny_class['is_geom_simple']:
-                data['is_geom_simple_name'] = 'yes'
-            else:
-                data['is_geom_simple_name'] = 'no'
-        else:
-            data['is_geom_simple_name'] = '?'
+            data['is_gl2_type_name'] = 'no'  # shows in side
+            data['is_gl2_display'] = ''      # shows in search results
+            gl2_statement = 'not of \(\GL_2\)-type'
 
+        if 'is_simple' in isogeny_class and 'is_geom_simple' in isogeny_class:
+            if isogeny_class['is_geom_simple']:
+                simple_statement = "simple over \(\overline{\Q}\), "
+            elif isogeny_class['is_simple']:
+                simple_statement = "simple over \(\Q\) but not simple over \(\overline{\Q}\), "
+            else:
+                simple_statement = "not simple over \(\Q\), "
+        else:
+            simple_statement = ""  # leave empty since not computed.
+        data['endomorphism_statement'] = simple_statement + gl2_statement
         x = self.label.split('.')[1]
         self.friends = [
             ('Isogeny class %s' % isog_label(self.label), url_for(".by_double_iso_label", conductor = self.cond, iso_label = x)),
             ('L-function', url_for("l_functions.l_function_genus2_page", cond=self.cond,x=x)),
-            ('Siegel modular form someday', '.')]
+            
+            ('Twists',url_for(".index_Q", ic0 = self.igusa_clebsch[0], ic1 = self.igusa_clebsch[1],ic2 = self.igusa_clebsch[2],ic3 = self.igusa_clebsch[3])),
+#            ('Twists2',url_for(".index_Q", igusa_clebsch = str(self.igusa_clebsch)))  #doesn't work.
+            #('Siegel modular form someday', '.')
+            ]
         self.downloads = [
              ('Download all stored data', '.')]
         iso = self.label.split('.')[1]

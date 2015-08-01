@@ -6,7 +6,7 @@ from pymongo import ASCENDING, DESCENDING
 from flask import url_for, make_response
 import lmfdb.base
 from lmfdb.utils import comma, make_logger, web_latex, encode_plot
-from lmfdb.genus2_curves.web_g2c import g2c_page, g2c_logger, list_to_min_eqn, end_alg_name, st_group_name
+from lmfdb.genus2_curves.web_g2c import g2c_page, g2c_logger, list_to_min_eqn, end_alg_name, st_group_name, st0_group_name
 from sage.all import QQ, PolynomialRing, factor,ZZ
 from lmfdb.WebNumberField import field_pretty
 
@@ -113,6 +113,7 @@ class G2Cisog_class(object):
                 setattr(self,endalgtype + '_name','')
 
         self.st_group_name = st_group_name(self.st_group)
+        self.st0_group_name = st0_group_name(self.st_group)
 
         if hasattr(self, 'geom_end_field') and self.geom_end_field <> '':
             self.geom_end_field_name = field_pretty(self.geom_end_field)
@@ -121,28 +122,40 @@ class G2Cisog_class(object):
 
         if self.is_gl2_type:
             self.is_gl2_type_name = 'yes'
+            gl2_statement = 'of \(\GL_2\)-type'
         else:
             self.is_gl2_type_name = 'no'
-        if hasattr(self, 'is_simple'):
-            if self.is_simple:
-                self.is_simple_name = 'yes'
-            else:
-                self.is_simple_name = 'no'
-        else:
-            self.is_simple_name = '?'
-        if hasattr(self, 'is_geom_simple'):
+            gl2_statement = 'not of \(\GL_2\)-type'
+            
+        if hasattr(self, 'is_simple') and hasattr(self, 'is_geom_simple'):
             if self.is_geom_simple:
-                self.is_geom_simple_name = 'yes'
+                simple_statement = "simple over \(\overline{\Q}\), "
+            elif self.is_simple:
+                simple_statement = "simple over \(\Q\) but not simple over \(\overline{\Q}\), "
             else:
-                self.is_geom_simple_name = 'no'
+                simple_statement = "not simple over \(\Q\), "
         else:
-            self.is_geom_simple_name = '?'
+            simple_statement = ""  # leave empty since not computed.
+        self.endomorphism_statement = simple_statement + gl2_statement
+            #if self.is_simple:
+            #    self.is_simple_name = 'yes'
+            #else:
+            #    self.is_simple_name = 'no'
+        #else:
+         #   self.is_simple_name = '?'
+        #if 
+        #    if self.is_geom_simple:
+        #        self.is_geom_simple_name = 'yes'
+        #    else:
+        #        self.is_geom_simple_name = 'no'
+        #else:
+        #    self.is_geom_simple_name = '?'
 
         x = self.label.split('.')[1]
         
         self.friends = [
-          ('L-function', url_for("l_functions.l_function_genus2_page", cond=self.cond,x=x)),
-          ('Siegel modular form someday', '.')]
+          ('L-function', url_for("l_functions.l_function_genus2_page", cond=self.cond,x=x))
+]
 
         self.ecproduct_wurl = []
         if hasattr(self, 'ecproduct'):
