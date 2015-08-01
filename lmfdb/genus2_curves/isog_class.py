@@ -122,22 +122,34 @@ class G2Cisog_class(object):
 
         if self.is_gl2_type:
             self.is_gl2_type_name = 'yes'
+            gl2_statement = 'of \(\GL_2\)-type'
         else:
             self.is_gl2_type_name = 'no'
-        if hasattr(self, 'is_simple'):
-            if self.is_simple:
-                self.is_simple_name = 'yes'
-            else:
-                self.is_simple_name = 'no'
-        else:
-            self.is_simple_name = '?'
-        if hasattr(self, 'is_geom_simple'):
+            gl2_statement = 'not of \(\GL_2\)-type'
+            
+        if hasattr(self, 'is_simple') and hasattr(self, 'is_geom_simple'):
             if self.is_geom_simple:
-                self.is_geom_simple_name = 'yes'
+                simple_statement = "simple over \(\overline{\Q}\), "
+            elif self.is_simple:
+                simple_statement = "simple over \(\Q\) but not simple over \(\overline{\Q}\), "
             else:
-                self.is_geom_simple_name = 'no'
+                simple_statement = "not simple over \(\Q\), "
         else:
-            self.is_geom_simple_name = '?'
+            simple_statement = ""  # leave empty since not computed.
+        self.endomorphism_statement = simple_statement + gl2_statement
+            #if self.is_simple:
+            #    self.is_simple_name = 'yes'
+            #else:
+            #    self.is_simple_name = 'no'
+        #else:
+         #   self.is_simple_name = '?'
+        #if 
+        #    if self.is_geom_simple:
+        #        self.is_geom_simple_name = 'yes'
+        #    else:
+        #        self.is_geom_simple_name = 'no'
+        #else:
+        #    self.is_geom_simple_name = '?'
 
         x = self.label.split('.')[1]
         
