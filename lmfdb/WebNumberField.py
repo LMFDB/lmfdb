@@ -253,8 +253,17 @@ class WebNumberField:
         if subs == []:
             return []
         C = base.getDBConnection()
-        subs = [[self.from_coeffs(string2list(a[0])), a[1]] for a in subs]
-        subs = [[nf_display_knowl(a[0].get_label(),C,a[0].field_pretty()), a[1]] for a in subs]
+        def myhelper(coefmult):
+            coef = string2list(coefmult[0])
+            subfield = self.from_coeffs(coef)
+            if subfield._data is None:
+                deg = len(coef) - 1
+                mypol = sage.all.latex(coeff_to_poly(coef))
+                mypol = mypol.replace(' ','').replace('+','%2B').replace('{', '%7B').replace('}','%7d')
+                mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">Deg %d</a>' % (mypol,deg)
+                return [mypol, coefmult[1]]
+            return [nf_display_knowl(subfield.get_label(),C,subfield.field_pretty()), coefmult[1]]
+        subs = [myhelper(a) for a in subs]
         subs = [do_mult(a) for a in subs]
         return ', '.join(subs)
 
