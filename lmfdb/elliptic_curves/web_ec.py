@@ -163,7 +163,7 @@ class WebEC(object):
             data['j_inv_factor'] = latex(data['j_invariant'].factor())
         data['j_inv_str'] = unicode(str(data['j_invariant']))
         data['j_inv_latex'] = web_latex(data['j_invariant'])
-        data['disc'] = self.E.discriminant()
+        data['disc'] = D = self.E.discriminant()
         data['disc_latex'] = web_latex(data['disc'])
         data['disc_factor'] = latex(data['disc'].factor())
         data['cond_factor'] =latex(N.factor())
@@ -296,7 +296,7 @@ class WebEC(object):
 
         local_data = self.local_data = []
         # if we use E.tamagawa_numbers() it calls E.local_data(p) which
-        # crashes on some curves e.g. 164411a1
+        # used to crash on some curves e.g. 164411a1
         tamagawa_numbers = []
         for p in bad_primes:
             local_info = self.E.local_data(p, algorithm="generic")
@@ -306,9 +306,15 @@ class WebEC(object):
             tamagawa_numbers.append(ZZ(local_info.tamagawa_number()))
             local_data_p['kodaira_symbol'] = web_latex(local_info.kodaira_symbol()).replace('$', '')
             local_data_p['reduction_type'] = local_info.bad_reduction_type()
+            local_data_p['ord_cond'] = local_info.conductor_valuation()
+            local_data_p['ord_disc'] = local_info.discriminant_valuation()
+            local_data_p['ord_den_j'] = max(0,-self.E.j_invariant().valuation(p))
             local_data.append(local_data_p)
 
-        bsd['tamagawa_factors'] = r' \cdot '.join(str(c.factor()) for c in tamagawa_numbers)
+        if len(bad_primes)>1:
+            bsd['tamagawa_factors'] = r' \cdot '.join(str(c.factor()) for c in tamagawa_numbers)
+        else:
+            bsd['tamagawa_factors'] = ''
         bsd['tamagawa_product'] = sage.misc.all.prod(tamagawa_numbers)
 
         cond, iso, num = split_lmfdb_label(self.lmfdb_label)
