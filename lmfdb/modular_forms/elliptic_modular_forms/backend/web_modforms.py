@@ -78,7 +78,7 @@ def WebNewForm(N=1, k=2, chi=0, label='', prec=10, bitprec=53, display_bprec=26,
     try: 
         F = WebNewForm_class(N=N, k=k, chi=chi, label=label, prec=prec, bitprec = bitprec, display_bprec=display_bprec, parent = parent, data = data, compute = compute, verbose = verbose,get_from_db = get_from_db)
     except (ArithmeticError,ValueError) as e:#Exception as e:
-        emf_logger.critical("Could not construct WebNewForm with N,k,chi,label={0}. Error: {1}".format( (N,k,chi,label),e))
+        emf_logger.debug("Could not construct WebNewForm with N,k,chi,label={0}. Error: {1}".format( (N,k,chi,label),e))
         raise IndexError,"We are very sorry. The sought function could not be found in the database."
     return F
 
@@ -92,7 +92,7 @@ def WebModFormSpace(N=1, k=2, chi=0, cuspidal=1, prec=10, bitprec=53, data=None,
     try: 
         F = WebModFormSpace_class(N=N, k=k, chi=chi, cuspidal=cuspidal, prec=prec, bitprec=bitprec, data=data, verbose=verbose,**kwds)
     except Exception as e:
-        emf_logger.critical("Could not construct WebModFormSpace with N,k,chi = {0}. Error: {1}".format( (N,k,chi),e.message))
+        emf_logger.debug("Could not construct WebModFormSpace with N,k,chi = {0}. Error: {1}".format( (N,k,chi),e.message))
         raise IndexError,"We are very sorry. The sought space could not be found in the database."
     return F
 
