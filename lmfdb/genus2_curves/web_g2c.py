@@ -136,16 +136,32 @@ def isog_label(label):
     L = label.split(".")
     return L[0]+ "." + L[1]
 
+def igusa_clebsch_to_igusa(I):
+    # Conversion from Igusa-Clebsch to Igusa
+    J2 = I[0]//8
+    J4 = (4*J2**2 - I[1])//96
+    J6 = (8*J2**3 - 160*J2*J4 - I[2])//576
+    J8 = (J2*J6 - J4**2)//4
+    J10 = I[3]//4096
+    return [J2,J4,J6,J8,J10]
+
+def igusa_to_g2(J):
+    # Conversion from Igusa to G2
+    if J[0] != 0:
+        return [J[0]**5/J[4], J[0]**3*J[1]/J[4], J[0]**2*J[2]/J[4]]
+    elif J[1] != 0:
+        return [0, J[1]**5/J[4]**2, J[1]*J[2]/J[4]]
+    else:
+        return [0,0,J[2]**5/J[4]**3]
+
 def scalar_div(c,P,W):
     # Scalar division in a weighted projective space
     return [p//(c**w) for (p,w) in izip(P,W)]
 
-def normalize_invariants(I):
-    # This is the tuple of weights for Igusa-Clebsch invariants.
-    # It is later refined to deal with curves for which some of these vanish
-    # If using Igusa invariants instead, one only needs to modify this to
-    #  W_b = [1, 2, 3, 4, 5]
-    W_b = [1, 2, 3, 5]
+def normalize_invariants(I,W):
+    # Normalizes integral invariants to remove factors
+    # Tuple of weights:
+    W_b = W
     I_b = I
     l_b = len(W_b)
     # Eliminating elements of the weight with zero entries in W_b
@@ -227,10 +243,13 @@ class WebG2C(object):
         data['cond_factor_latex'] = web_latex(factor(int(self.cond)))
         data['aut_grp'] = groupid_to_meaningful(self.aut_grp)
         data['geom_aut_grp'] = groupid_to_meaningful(self.geom_aut_grp)
-        # Retain actual polynomial Igusa-Clebsch invariants:
-        #data['igusa_clebsch'] = [ZZ(a) for a in self.igusa_clebsch]
-        data['invs'] = normalize_invariants([ZZ(a) for a in self.igusa_clebsch])
-        data['invs_factor_latex'] = [web_latex(factor(i)) for i in data['invs']]
+        data['igusa_clebsch'] = [ZZ(a) for a in self.igusa_clebsch]
+        data['igusa'] = igusa_clebsch_to_igusa(data['igusa_clebsch'])
+        data['g2'] = igusa_to_g2(data['igusa'])
+        data['ic_norm'] = normalize_invariants(data['igusa_clebsch'],[1,2,3,5])
+        data['igusa_norm'] = normalize_invariants(data['igusa'],[1,2,3,4,5])
+        data['ic_norm_factor_latex'] = [web_latex(factor(i)) for i in data['ic_norm']]
+        data['igusa_norm_factor_latex'] = [web_latex(factor(j)) for j in data['igusa_norm']]
         data['num_rat_wpts'] = ZZ(self.num_rat_wpts)
         data['two_selmer_rank'] = ZZ(self.two_selmer_rank)
         if len(self.torsion) == 0:
@@ -292,7 +311,7 @@ class WebG2C(object):
                            (None, self.plot_link),
                            ('Conductor','%s' % self.cond),
                            ('Discriminant', '%s' % data['disc']),
-                           ('Invariants', '%s </br> %s </br> %s </br> %s'% tuple(data['invs'])), 
+                           ('Invariants', '%s </br> %s </br> %s </br> %s'% tuple(data['ic_norm'])), 
                            ('Sato-Tate group', '\(%s\)' % data['st_group_name']), 
                            ('\(\mathrm{End}(J_{\overline{\Q}}) \otimes \R\)','\(%s\)' % data['real_geom_end_alg_name']),
                            ('\(\mathrm{GL}_2\)-type','%s' % data['is_gl2_type_name'])]
