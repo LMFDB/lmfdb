@@ -231,7 +231,8 @@ class ECNF(object):
                                'kodaira_symbol': web_latex(self.local_info.kodaira_symbol()).replace('$', ''),
                                'reduction_type': self.local_info.bad_reduction_type(),
                                 'ord_den_j': max(0,-E.j_invariant().valuation(p)),
-                                'ord_mindisc': self.local_info.discriminant_valuation()
+                                'ord_mindisc': self.local_info.discriminant_valuation(),
+                                'ord_cond': self.local_info.conductor_valuation()
                                })
 
         # URLs of self and related objects:

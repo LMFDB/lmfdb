@@ -211,8 +211,12 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
         </td>
         </tr>
         <tr>
-        <td colspan="4"> 
-           \( \text{Reg} \) </td><td>&nbsp;&approx;&nbsp;</td><td> \({{ data.bsd.reg }}\)</td>
+        <td colspan="4">\( \text{Reg} \) </td>
+        {% if data.rank==0 %}
+        <td>&nbsp;=&nbsp;</td><td> \(1\)</td>
+        {% else %}
+        <td>&nbsp;&approx;&nbsp;</td><td> \({{ data.bsd.reg }}\)</td>
+        {% endif %}
         </tr>
 
         <tr>
@@ -238,8 +242,11 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
         <td colspan="4">
          \( \prod_p c_p \)</td>
         <td>&nbsp;=&nbsp;</td>
-        <td>\( {{ data.bsd.tamagawa_product }} \) &nbsp;=&nbsp;
-        \( {{ data.bsd.tamagawa_factors }} \)</td>
+        <td>\( {{ data.bsd.tamagawa_product }} \)
+          {% if data.bsd.tamagawa_factors %}
+          &nbsp;=&nbsp;\( {{ data.bsd.tamagawa_factors }} \)
+          {% endif %}
+        </td>
         </tr>
 
         <tr>
@@ -268,9 +275,10 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
         &nbsp;</td>
         <td>\({{data.bsd.sha }}\)
           {% if data.rank > 1 %}
-          (approximate value)
+          ({{ KNOWL('ec.q.analytic_sha_value',title="rounded") }})
+          {% else %}
+          ({{ KNOWL('ec.q.analytic_sha_value',title="exact") }})
           {% endif %}
-          {{ KNOWL('ec.q.analytic_sha_value',title="?") }}
         </td>
         </tr>
 
@@ -341,7 +349,10 @@ text-align: center;
 <th>prime</th>
 <th>{{KNOWL('ec.q.tamagawa_numbers', title='Tamagawa number')}}</th>
 <th>{{KNOWL('ec.q.kodaira_symbol', title='Kodaira symbol')}}</th>
-<th>{{KNOWL('ec.q.reduction_type', title='reduction type')}}</th>
+<th>{{KNOWL('ec.q.reduction_type', title='Reduction type')}}</th>
+<th>{{KNOWL('ec.conductor_valuation', title='ord(\(N\))')}}</th>
+<th>{{KNOWL('ec.discriminant_valuation', title='ord(\(\Delta\))')}}</th>
+<th>{{KNOWL('ec.j_invariant_denominator_valuation', title='ord\((j)_{-}\)')}}</th>
 </tr>
 {% for pr in data.local_data %}
 <tr>
@@ -357,6 +368,9 @@ text-align: center;
    Non-split multiplicative
 {% endif %}
 </td>
+<td>{{pr.ord_cond}}</td>
+<td>{{pr.ord_disc}}</td>
+<td>{{pr.ord_den_j}}</td>
 </tr>
 {% endfor %}
 </table>
