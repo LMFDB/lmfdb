@@ -1,67 +1,114 @@
 Installation
 ============
 
-* To contribute, see below on sharing your work. To simply run a copy of the site move into a new directory and type
+* To develop and contribute new code, see below on Sharing Your
+  Work. If you only want to run a copy of the site move into a new
+  directory and type
   ```
      git clone git@github.com:LMFDB/lmfdb.git lmfdb
   ```
+  but follow the instructions below (under Sharing Your Work) instead
+  to set up your own fork on github and clone from there instead.
 
-* Make sure you have sage (>=6.5) installed and that
-  `sage` is available from the commandline
+* Make sure you have sage (>=6.8) installed and that
+  `sage` is available from the commandline.
 
-* Install dependencies (in the `lmfdb/` directory):
+* Install dependencies.  This requires you to have write access to the
+  Sage installation directory, so should be no problem on a personal
+  machine, but if yo are using a system-wide Sage install on a shared
+  machine, you will need ask a system administrator to do this step.
   ```
       sage -i gap_packages
       sage -i database_gap
       sage -i pip
       sage -b
+      # in the `lmfdb/` directory:
       sage -pip install -r requirements.txt
   ```
 
-  * [optional] Memcache:
+  * [optional] Memcache.  This speeds up recompilation of python
+    modules during development.  It requires both installing the
+    appropriate package for your Operating System and installing an
+    additional python module.  The first line below needs to be run in
+    a Sage shell, and the for second you need to be a super-user to
+    install memcached if your machine does not have it.  *This step is
+    not at all necessary and can safely be ignored!*
 
-   ` easy_install -U python-memcached` or even better and only possible if you have the dev headers: ` easy_install -U pylibmc `
+   ` easy_install -U python-memcached` or even better and only
+   possible if you have the dev headers: ` easy_install -U pylibmc `
    install *memcached* (e.g. ` apt-get install memcached `)
    run the service at `127.0.0.1:11211`
 
 Running
 =======
 
-* You need to connect to the lmfdb database
+* You need to connect to the lmfdb database on the machine
+  lmfdb.warwick.ac.uk, using ssh tunelling so that your local
+  machine's port 37010 (where the code expects the database to be
+  running) maps to the same port number on the database server.  For
+  this to work you must first send your public SSH key to Harald
+  Schilly, Jonathan Bober or John Cremona who will install it on the
+  database server (currently lmfdb.warwick.ac.uk).  To mke life easy,
+  the necessary ssh command is in the lmfdb root directory in the
+  script warwick.sh, so just type
   ```
-     ssh -C -N -L 37010:localhost:37010 mongo-user@lmfdb.warwick.ac.uk 
+     ./warwick.sh &
   ```
-  (please send your public SSH key to Harald Schilly, Jonathan Bober or John Cremona to make it work)
+  * the ampersand here maked this run in the background so you should
+  not have to run this more than once unless you close the current
+  shell or logout.
 
-  * -C for compression of communication
-  * -N to not open a remote shell, just a blocking command in the shell (end connection with Ctrl-C)
-  * If you don't have access to this server, you can temporarily start your own mongodb server and use it locally.
-    There is no data (obviously) but it will work.
-    Mongo locally:
-    ``` 
-       mongod --port 40000 --dbpath [db_directory] --smallfiles 
-    ``` 
+  * If you don't have access to this server, you can temporarily start
+    your own mongodb server and use it locally.  There is no data
+    (obviously) but it will work.
 
-* Then launch the webserver
+    To start mongo locally (after installing mongo on your machine):
+    ```
+       mongod --port 40000 --dbpath [db_directory] --smallfiles
+    ```
+
+  * Now you can launch the webserver like this:
   ```
-     sage -python start-lmfdb.py
+     sage -python start-lmfdb.py --debug
   ```
-  should do the trick, but there can be some problems running in debug mode, so you might have omit the `--debug`
-  (`--debug` doesn't work right now, but will soon!).
+  * The effect of the (optional) --debug is that you will be running
+  with the beta flag switched on as at beta.lmfdb.org, and also that
+  if code fails your browser will show useful debugging information.
+  Without --debug what you see will be more like www.lmfdb.org.
 
-* Once the server is running, visit http://localhost:37777/
+  * Once the server is running, visit http://localhost:37777/
 
-Maybe, you have to suppress loading of your local python libraries: `sage -python -s start-lmfdb.py`
+  * You may have to suppress loading of your local python libraries: `sage -python -s start-lmfdb.py`
 
-If you use a local MongoDB instance, specify its port:  `sage  -python start-lmfdb.py --debug --dbport 40000` 
+  * If you use a local MongoDB instance, specify its port:  `sage  -python start-lmfdb.py --debug --dbport 40000`
+
+  * If several people are running their own version of the webserver
+    on the same machine, they cannot all use port 37777 -- or if they
+    try, they will get very confused.  In this case all involved
+    should agree to using a sequence of port numbers from 37700
+    upwards and allocate one such number to each user, then add it to
+    the command line: e.g. `sage -python ./start-lmfdb.py --debug -p
+    37702`.  Then, to avoinf having to remember that, it is a good
+    idea to define an alias for this.  e.g. with bash you can insert
+    the line
+    `function start_lmfdb () { sage -python ./start-lmfdb.py --debug -p 37702; }`
+    in your .bashrc file, so that all you have to type to start the
+    server is start_lmfdb.
+
+    * When running with --debug, whenever a python (*.py) file changes
+      the server will reload automatically.  If you save while editing
+      at a point where such a file is not syntactically correct, the
+      server will crash and you will need to start_lmfdb again.   Any
+      changes to html files will not cause the server to restart, so
+      you will need to reload the pages in your borowser.  Changes in
+      the yaml files which are read only once at statyup will require
+      you to manually stop the server and restart it.
 
 Troubleshooting
 ===============
 
-Sometimes the `pymongo` module is not able to connect to the database.
-It works, if you force it to an earlier version:
-
-    easy_install pymongo==2.4.1
+If the `pymongo` module is not able to connect to the database, make
+sure that the warwick.sh script is still running.
 
 Sharing Your Work
 =================
@@ -74,7 +121,8 @@ Sharing Your Work
     git init
     git clone git@github.com:YourGithubUserId/lmfdb.git
 ```
-  using your own github user id. 
+  using your own github user id.  Your github repository will be known
+  to git as a remote called `origin`.
  * Add the (official) LMFDB repository as a remote called `upstream`
 ```
     git remote add upstream git@github.com:LMFDB/lmfdb.git
@@ -88,15 +136,33 @@ Sharing Your Work
 ```
     git push -u origin new_feature
 ```
-   Here, the option -u tells git to set up the remote branch `origin/new_feature` to be the corresponding upstream
-   branch you push to.
- * Also, you should make sure from time to time that you pull the latest changes from the official LMFDB repository.
-   For this reason, we added it to the remotes. Now you can do
-```
-    git pull --rebase upstream 
-```
- * Tell the [lmdb mailing list](https://groups.google.com/forum/#!forum/lmdb) that you have some new code!
- * You should also issue a pull request at github (from your feature branch `new_feature`) at the same time.
+   Here, the option -u tells git to set up the remote branch `origin/new_feature` to be the corresponding upstream  branch you push to.
+ * Also, you should make sure from time to time that you pull the
+ * latest changes from the official LMFDB repository.  There are three
+ * branches upstream to be aware of: prod, beta and master:
+
+   - prod is changed rarely and contains the code currently running at
+     www.lmfdb.org
+   - beta is changed more often and contains the code currently running at
+     beta.lmfdb.org
+   - master is the development branch.
+
+   Normal developers only need to be aware of the master
+   (=development) branch.
+
+   * To pull in the most recent changes there to your own master
+   branch locally and update your github repository too: ``` git
+   checkout master git pull upstream master git push origin master ```
+
+   * To rebase your current working branch on the latest master: ```
+   git pull --rebase upstream master ``` * Tell the [lmdb mailing
+   list](https://groups.google.com/forum/#!forum/lmdb) that you have
+   some new code!  * You should also issue a pull request at github
+   (from your feature branch `new_feature`) at the same time.  Make
+   sure that your pull request is to the lmfdb master branch, whatever
+   your own develpment branch is called.  Others will review your
+   code, and release managers will (eventually, if all is well) merge
+   it into the master branch.
 
 LMFDB On Windows
 ================
