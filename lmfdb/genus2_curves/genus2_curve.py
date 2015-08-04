@@ -103,7 +103,7 @@ def index_Q():
 def by_conductor(conductor):
     return genus2_curve_search(cond=conductor, **request.args)
 
-@g2c_page.route("/random")
+@g2c_page.route("/Q/random")
 def random_curve():
     from sage.misc.prandom import randint
     n = db_g2c().curves.count()
