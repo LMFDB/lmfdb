@@ -78,7 +78,7 @@ def WebNewForm(N=1, k=2, chi=0, label='', prec=10, bitprec=53, display_bprec=26,
     try: 
         F = WebNewForm_class(N=N, k=k, chi=chi, label=label, prec=prec, bitprec = bitprec, display_bprec=display_bprec, parent = parent, data = data, compute = compute, verbose = verbose,get_from_db = get_from_db)
     except (ArithmeticError,ValueError) as e:#Exception as e:
-        emf_logger.critical("Could not construct WebNewForm with N,k,chi,label={0}. Error: {1}".format( (N,k,chi,label),e))
+        emf_logger.debug("Could not construct WebNewForm with N,k,chi,label={0}. Error: {1}".format( (N,k,chi,label),e))
         raise IndexError,"We are very sorry. The sought function could not be found in the database."
     return F
 
@@ -92,7 +92,7 @@ def WebModFormSpace(N=1, k=2, chi=0, cuspidal=1, prec=10, bitprec=53, data=None,
     try: 
         F = WebModFormSpace_class(N=N, k=k, chi=chi, cuspidal=cuspidal, prec=prec, bitprec=bitprec, data=data, verbose=verbose,**kwds)
     except Exception as e:
-        emf_logger.critical("Could not construct WebModFormSpace with N,k,chi = {0}. Error: {1}".format( (N,k,chi),e.message))
+        emf_logger.debug("Could not construct WebModFormSpace with N,k,chi = {0}. Error: {1}".format( (N,k,chi),e.message))
         raise IndexError,"We are very sorry. The sought space could not be found in the database."
     return F
 
@@ -322,8 +322,9 @@ class WebModFormSpace_class(object):
         """
         modular_symbols = self.db_collection('Modular_symbols.files')
         key = {'k': int(self._k), 'N': int(self._N), 'chi': int(self._chi)}
+#        key = {'hecke_orbit_label':"{0}.{1}.{2}".format(self._N,self._k,self._chi)}
         modular_symbols_from_db  = modular_symbols.find_one(key)
-        emf_logger.debug("found ms={0}".format(modular_symbols_from_db))
+        emf_logger.debug("found ms={0} for key:{1}".format(modular_symbols_from_db,key))
         if modular_symbols_from_db == None:
             ms = None
         else:
@@ -347,7 +348,9 @@ class WebModFormSpace_class(object):
             facts = []
             fs = self.gridfs_collection('Newform_factors')
             for rec in factors_from_db:
-                facts.append(loads(fs.get(rec['_id']).read()))
+                factor =  loads(fs.get(rec['_id']).read())
+                if factor.__dict__.get('_ModularSymbolsSubspace__is_cuspidal',False):
+                    facts.append(factor)
         return facts
     
     
@@ -607,7 +610,7 @@ class WebModFormSpace_class(object):
         for d in divisors(N):
             if(d == 1):
                 continue
-            q = N.divide_knowing_divisible_by(d)
+            q = ZZ(N).divide_knowing_divisible_by(d)
             if(self._verbose > 1):
                 emf_logger.debug("d={0}".format(d))
             # since there is a bug in the current version of sage
@@ -696,9 +699,7 @@ class WebModFormSpace_class(object):
             o = dict()
             label = self._galois_orbits_labels[j]
             o['label'] = label
-            full_label = "{0}.{1}".format(self.level(), self.weight())
-            if self._chi != 0:
-                full_label = full_label + ".{0}".format(self._chi)
+            full_label = "{0}.{1}.{2}".format(self.level(), self.weight(),self.conrey_character_number())
             full_label = full_label + label
             o['full_label'] = full_label
             o['url'] = url_for('emf.render_elliptic_modular_forms', level=self.level(

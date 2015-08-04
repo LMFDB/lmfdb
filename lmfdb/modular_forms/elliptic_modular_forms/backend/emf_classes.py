@@ -97,10 +97,20 @@ class DimensionTable(object):
                 return dim
         return "n/a"
 
+    @cached_method
     def is_in_db(self, N=1, k=4, character=0):
+        factors = connect_db()['Newform_factors.files']
+        key = {'k': int(k), 'N': int(N), 'chi': int(character)}
+        emf_logger.debug("in is_in_db: key:{0}".format(key))
+        if factors.find(key).count()>0:
+            t = True
+        else:
+            t= False
+        emf_logger.debug("exist or not : {0}".format(t))
+        return t
         if self._table is None:
             return "n/a"
-        emf_logger.debug("in is_in_db: N={0},k={1},character={2}".format(N,k,character))
+
         if N in self._table.keys():
             # emf_logger.debug("have information for level {0}".format(N))
             tblN = self._table[N]
@@ -126,8 +136,11 @@ class ClassicalMFDisplay(MFDisplay):
         #if dbname == '':
         dbname = 'modularforms2'
         self._files = Conn[dbname].Newform_factors.files
-        emf_logger.debug("files db : {0} with nr. of recs:{1}".format(self._files,self._files.find().count()))
-        
+        try:
+            emf_logger.debug("files db : {0} with nr. of recs:{1}".format(self._files,self._files.find().count()))
+        except:
+            pass
+            emf_logger.debug("Could not connect to pymongo!")
     def set_table_browsing(self, skip=[0, 0], limit=[(2, 16), (1, 50)], keys=['Weight', 'Level'], character=0, dimension_table=None, dimension_fun=dimension_new_cusp_forms, title='Dimension of newforms', check_db=True):
         r"""
         Table of Holomorphic modular forms spaces.
@@ -169,6 +182,8 @@ class ClassicalMFDisplay(MFDisplay):
         if dimension_table is not None:
             dimension_fun = dimension_table.dimension
             is_data_in_db = dimension_table.is_in_db
+        factors = connect_db()['Newform_factors.files']
+        list_of_data = factors.distinct('hecke_orbit_label')
         #else:
         #def is_data_in_db(N, k, character):            
         #    n = self._files.find({'N':int(N),'k':int(k),'chi':int(character)}).count()
@@ -181,16 +196,17 @@ class ClassicalMFDisplay(MFDisplay):
             if character == 0 or character == 1:
                 self._table['rowhead'] = 'Weight'
                 if character == 0:
-                    xc = DirichletGroup_conrey(N)[1]
+                    cchi = 1 #xc = DirichletGroup_conrey(N)[1]
                 else:
                     D = DirichletGroup_conrey(N)
                     for xc in D:
                         if xc.sage_character() == kronecker_character_upside_down(N):
+                            cchi = xc.number()
                             break
                 x = xc.sage_character()
                 row = dict()
-                row['head'] = "\(\chi_{" + str(N) + "}(" + str(xc.number()) + ",\cdot) \)"
-                row['url'] = url_for('characters.render_Dirichletwebpage', modulus=N, number=xc.number())
+                row['head'] = "\(\chi_{" + str(N) + "}(" + str(cchi) + ",\cdot) \)"
+                row['url'] = url_for('characters.render_Dirichletwebpage', modulus=N, number=cchi)
                 row['cells'] = list()
                 for k in range(wt_ll, wt_ul + 1):
                     if character == 0 and is_odd(k):
@@ -202,7 +218,7 @@ class ClassicalMFDisplay(MFDisplay):
                             d = dimension_fun(x, k)
                     except Exception as ex:
                         emf_logger.critical("Exception: {0}. \n Could not compute the dimension with function {0}".format(ex, dimension_fun))
-                    if (not check_db) or is_data_in_db(N, k, character):
+                    if (not check_db) or "{0}.{1}.{2}a".format(N,k,cchi) in list_of_data: #is_data_in_db(N, k, character):
                         url = url_for(
                             'emf.render_elliptic_modular_forms', level=N, weight=k, character=character)
                     else:
@@ -243,12 +259,13 @@ class ClassicalMFDisplay(MFDisplay):
                     emf_logger.debug('xi,g={0},{1}'.format(xi, g))
                     x = Greps[xi]
                     xc = Gcreps[xi]
+                    cchi = xc.number()
                     row = dict()
-                    row['head'] = "\(\chi_{" + str(N) + "}(" + str(xc.number()) + ",\cdot) \)"
-                    row['url'] = url_for('characters.render_Dirichletwebpage', modulus=N, number=xc.number())
+                    row['head'] = "\(\chi_{" + str(N) + "}(" + str(cchi) + ",\cdot) \)"
+                    row['url'] = url_for('characters.render_Dirichletwebpage', modulus=N, number=cchi)
                     row['galois_orbit'] = [
                         {'chi': str(xc.number()),
-                         'url': url_for('characters.render_Dirichletwebpage', modulus=N, number=xc.number()) }
+                         'url': url_for('characters.render_Dirichletwebpage', modulus=N, number=cchi) }
                         for xc in g]
                     row['cells'] = []
                     for k in range(wt_ll, wt_ul + 1):
@@ -259,7 +276,7 @@ class ClassicalMFDisplay(MFDisplay):
                             d = dimension_fun(x, k)
                         except Exception as ex:
                             emf_logger.critical("Exception: {0} \n Could not compute the dimension with function {1}".format(ex, dimension_fun))
-                        if (not check_db) or is_data_in_db(N, k, xi):
+                        if (not check_db) or  "{0}.{1}.{2}a".format(N,k,cchi) in list_of_data: #is_data_in_db(N, k, xi):
                             url = url_for(
                                 'emf.render_elliptic_modular_forms', level=N, weight=k, character=xi)
                         else:
@@ -286,13 +303,16 @@ class ClassicalMFDisplay(MFDisplay):
                         emf_logger.critical("Exception: {0}. \n Could not compute the dimension with function {0}".format(ex, dimension_fun))
                     # emf_logger.debug("N,k,char,dim: {0},{1},{2},{3}".format(N,k,character,d))
                     if character == 0 or character == 1:
-                        if (not check_db) or is_data_in_db(N, k, character):
+                        if (not check_db) or "{0}.{1}.{2}a".format(N,k,1) in list_of_data: #is_data_in_db(N, k, character): 
                             url = url_for(
                                 'emf.render_elliptic_modular_forms', level=N, weight=k, character=character)
                         else:
                             url = ''
                     else:
-                        if (not check_db) or is_data_in_db(N, k, character):                        url = url_for('emf.render_elliptic_modular_forms', level=N, weight=k)
+                        t1 =  "{0}.{1}.{2}a".format(N,k,1)
+                        t2 =  "{0}.{1}.{2}a".format(N,k,2)
+                        if (not check_db) or t1 in list_of_data or t2 in list_of_data: # is_data_in_db(N, k, character):
+                            url = url_for('emf.render_elliptic_modular_forms', level=N, weight=k)
                         else:
                             url = ''
                     if not k in self._table['row_heads']:

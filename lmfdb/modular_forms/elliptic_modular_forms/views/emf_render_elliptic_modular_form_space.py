@@ -45,7 +45,7 @@ def render_elliptic_modular_form_space(level=None, weight=None, character=None, 
     r"""
     Render the webpage for a elliptic modular forms space.
     """
-    emf_logger.debug("In render_ellitpic_modular_form_space kwds: {0}".format(kwds))
+    emf_logger.debug("In render_elliptic_modular_form_space kwds: {0}".format(kwds))
     emf_logger.debug(
         "Input: level={0},weight={1},character={2},label={3}".format(level, weight, character, label))
     info = to_dict(kwds)
@@ -60,7 +60,18 @@ def render_elliptic_modular_form_space(level=None, weight=None, character=None, 
         dimtbl = DimensionTable(1)
     if not dimtbl.is_in_db(level, weight, character):
         emf_logger.debug("Data not available")
-        return render_template("not_available.html")
+        if character == 0:
+            d = dimension_new_cusp_forms(level,weight)
+        else:
+            D = DirichletGroup(level)
+            x = D.galois_orbits(reps_only=True)[character]
+            d = dimension_new_cusp_forms(x,weight)
+        if d>0:
+            return render_template("not_available.html")
+        else:
+            info['is_empty'] = True 
+            return render_template("emf_space.html", **info)
+        
     emf_logger.debug("Created dimension table in render_elliptic_modular_form_space")
     info = set_info_for_modular_form_space(**info)
     emf_logger.debug("keys={0}".format(info.keys()))
@@ -163,7 +174,7 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
         except:
             emf_logger.critical("Error in computing oldspace decomposition")
             O = []
-            info['old_decomposition'] = "n/a"
+            info['old_decomposition'] = ""
             (A, B, C) = sys.exc_info()
             # build an error message...
             errtype = A.__name__
