@@ -38,6 +38,14 @@ class CmfTest(LmfdbTest):
         page = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/11/2/1/a/0/')
         assert '0.2538' in page.data
         
+    def test_non_triv_character(self):
+        r"""
+        Check that non-trivial characters are also working.
+        """
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/10/3/2/")                
+        assert '2\zeta_{4}q^{4}' in page.data
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/10/3/2/a/")                
+        assert '2\zeta_{4}q^{4}' in page.data
         
     def test_get_args(self):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/13/10/0/")
@@ -46,3 +54,9 @@ class CmfTest(LmfdbTest):
     def test_empty(self):
         page = self.tc("ModularForm/GL2/Q/holomorphic/2/12/1/")
         assert 'is empty' in page.data
+
+    def test_not_in_db(self):
+        page = self.tc.get("ModularForm/GL2/Q/holomorphic/20000/12/1/")
+        assert 'not available yet' in page.data
+        page = self.tc.get("ModularForm/GL2/Q/holomorphic/20000/12/1/a/")        
+        assert 'could not be found in the database' in page.data        
