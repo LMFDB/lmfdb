@@ -6,7 +6,7 @@ import flask
 default_prec = 10   # The default number of terms in a q-expansion
 default_bprec = 53  # The default number of bits of precision to compute for floating point data
 default_display_bprec = 26  # The default number of bits of precision to display for floating point data
-emf_version = 1.2
+emf_version = 2.0
 EMF_TOP = "Holomorphic Modular Forms"  # The name to use for the top of this catergory
 EMF = "emf"  # The current blueprint name
 emf = flask.Blueprint(EMF, __name__, template_folder="views/templates", static_folder="views/static")
@@ -19,6 +19,8 @@ N_max_Gamma0_fdraw = 300
 N_max_db = 5000
 k_max_db = 12
 N_max_extra_comp = 500
+
+use_cache= True
 
 import views
 import backend

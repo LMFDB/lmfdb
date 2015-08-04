@@ -30,7 +30,7 @@ Fix complex characters. I.e. embedddings and galois conjugates in a consistent w
 """
 from flask import url_for
 from sage.all import dumps,loads, euler_phi,gcd
-from lmfdb.modular_forms.elliptic_modular_forms import emf_logger,emf_version
+from lmfdb.modular_forms.elliptic_modular_forms import emf_logger,emf_version,use_cache
 from sage.rings.number_field.number_field_base import NumberField as NumberField_class
 from sage.all import copy
 
@@ -82,6 +82,7 @@ class WebChar(WebObject, CachedRepresentation):
             WebDict('_embeddings'),            
             WebFloat('version', value=float(emf_version))
             )
+        emf_logger.debug('Set properties in WebChar!')
         super(WebChar, self).__init__(
             update_from_db=update_from_db
             )
@@ -217,11 +218,11 @@ class WebCharProperty(WebInt):
         self.number = number
         c = None
         if not kwargs.has_key('value'):
-            c = WebChar(modulus, number, update_from_db=True, compute=True)
+            c = WebChar_cached(modulus, number, update_from_db=True, compute=True)
         elif kwargs['value'] is not None:
             c = kwargs.pop('value')
         else:
-            self._default_value = WebChar(modulus, number, update_from_db=True, compute=True)
+            self._default_value = WebChar_cached(modulus, number, update_from_db=True, compute=True)
         if c is None:
             super(WebCharProperty, self).__init__(name, **kwargs)
         else:
@@ -248,3 +249,18 @@ class WebCharProperty(WebInt):
         return self.to_db()
     
    
+from lmfdb.utils import cache
+def WebChar_cached(modulus,number,**kwds):
+    if use_cache:
+        label = "{0}.{1}".format(modulus,number)
+        X= cache.get(label)
+        emf_logger.critical("Looking for cached  char:{0}".format(label))
+        if X is None:
+            emf_logger.debug("X was not in cache!")
+            X = WebChar(modulus,number,**kwds)
+            cache.set(label, X, timeout=5 * 60)
+        else:
+            emf_logger.critical("X was in cache!")
+    else:
+        X = WebChar(modulus,number,**kwds)
+    return X

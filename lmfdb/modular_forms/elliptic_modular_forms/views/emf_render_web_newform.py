@@ -23,12 +23,11 @@ AUTHORS:
 """
 from flask import render_template, url_for,  send_file
 from sage.all import version,uniq,ZZ,Cusp,Infinity,latex,QQ
-from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
-from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm_cached
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace_cached
 from lmfdb.utils import to_dict,ajax_more
 from lmfdb.modular_forms.backend.mf_utils import my_get
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, default_prec, default_bprec, default_display_bprec,EMF_TOP
-
 
 def render_web_newform(level, weight, character, label, **kwds):
     r"""
@@ -65,8 +64,8 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     emf_logger.debug("PREC: {0}".format(prec))
     emf_logger.debug("BITPREC: {0}".format(bprec))    
     try:
-        M = WebModFormSpace(level=level,weight=weight,character=character)
-        WNF = WebNewForm(level=level,weight=weight, character=character, label=label,parent=M)
+        M = WebModFormSpace_cached(level=level,weight=weight,character=character)
+        WNF = WebNewForm_cached(level=level,weight=weight, character=character, label=label,parent=M)
         emf_logger.critical("defned webnewform for rendering!")
         # if info.has_key('download') and info.has_key('tempfile'):
         #     WNF._save_to_file(info['tempfile'])
@@ -294,7 +293,7 @@ def get_qexp(level, weight, character, label, **kwds):
     if not arg:
         return flask.abort(404)
     try:
-        WNF = WebNewForm(level, weight, chi=character, label=label, prec=prec, verbose=2)
+        WNF = WebNewForm_cached(level, weight, chi=character, label=label, prec=prec, verbose=2)
         nc = max(prec, 5)
         c = WNF.print_q_expansion(nc)
         return c

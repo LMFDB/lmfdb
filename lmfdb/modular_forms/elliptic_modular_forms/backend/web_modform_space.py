@@ -85,14 +85,16 @@ class WebHeckeOrbits(WebDict):
     Collection of WebNewforms for easy access by name.
     """
 
-    def __init__(self, name, level, weight, character, parent=None):
+    def __init__(self, name, level, weight, character, parent=None,**kwds):
+        emf_logger.debug("Get Hecke orbits!")
         self.level = level
         self.weight = weight
         self.character = character
         self.parent = parent
         super(WebHeckeOrbits, self).__init__(
-            name, None, save_to_db=True, save_to_fs=False
+            name, None, save_to_db=True, save_to_fs=False,**kwds
             )
+        emf_logger.critical("Initiated Hecke orbits!")
         
     def to_db(self):
         return self.value().keys()
@@ -101,16 +103,25 @@ class WebHeckeOrbits(WebDict):
         return self.to_db()
 
     def from_db(self, l):
-        print "l=",l
-        from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm        
-        return {lbl : WebNewForm(self.level, self.weight, self.character, lbl, parent=self.parent)
-                for lbl in l}
+        emf_logger.critical("Get Hecke orbits for labels : {0}!".format(l))
+        from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm_cached,WebNewForm
+        res = {}
+        for lbl in l:
+            #F = WebNewForm(self.level, self.weight, self.character, lbl, parent=self.parent)
+            F = WebNewForm_cached(self.level, self.weight, self.character, lbl, parent=self.parent)
+            emf_logger.debug("Got F for label {0} : {1}".format(lbl,F))
+            res[lbl]=F
+#            return {lbl : WebNewForm_cached(self.level, self.weight, self.character, lbl, parent=self.parent)
+#                for lbl in l}
+        emf_logger.critical("Got Hecke orbits!")
+
+        return res
+
 
     def from_fs(self, l):
         return self.from_db(l)
     
 
-    
 class WebModFormSpace(WebObject, CachedRepresentation):
     r"""
     Space of modular forms to be presented on the web.
@@ -145,8 +156,12 @@ class WebModFormSpace(WebObject, CachedRepresentation):
     _file_key = ['galois_orbit_name']
     _collection_name = 'webmodformspace'
 
-    def __init__(self, level=1, weight=12, character=1,cuspidal=True, prec=10, bitprec=53, update_from_db=True):
+    def __init__(self, level=1, weight=12, character=1,cuspidal=True, prec=10, bitprec=53, update_from_db=True,update_hecke_orbits=True):
 
+        # I added this reduction since otherwise there is a problem with
+        # caching the hecke orbits (since they have self as  parent)
+        self._reduction = (type(self),(level,weight,character),
+                           {'cuspidal':cuspidal, 'prec':prec, 'bitprec':bitprec, 'update_from_db':update_from_db,'update_hecke_orbits':update_hecke_orbits})
         if isinstance(character, WebChar):
             character_number = character.number
         else:
@@ -173,7 +188,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
             WebSageObject('group'),
             WebInt('sturm_bound'),
             WebHeckeOrbits('hecke_orbits', level, weight,
-                           character, self),
+                           character, self,include_in_update=update_hecke_orbits),
             WebDict('oldspace_decomposition', required=False),
             WebInt('bitprec', value=bitprec),
             WebFloat('version', value=float(emf_version), save_to_fs=True)
@@ -193,21 +208,24 @@ class WebModFormSpace(WebObject, CachedRepresentation):
             self.group = Gamma1(self.level)
 
     def __repr__(self):
-        return "Space of (Web) Modular Forms of level {N}, weight {k}, and character {chi}".format(
-            k=self.weight, N=self.level, chi=self.character)
+        if self.character.is_trivial:
+            return "Space of (Web) Modular Forms of level {N}, weight {k}, and trivial character".format(
+                k=self.weight, N=self.level)
+        return "Space of (Web) Modular Forms of level {N}, weight {k}, and character number {chi}  modulo {N}".format(
+            k=self.weight, N=self.level, chi=self.character.number)
 
 
 class WebModFormSpaceProperty(WebProperty):
 
-    def __init__(self, name, level=1, weight=12, character=1, value=None):
+    def __init__(self, name, level=1, weight=12, character=1, value=None,update_hecke_orbits=False,include_in_update=False):
         self.level = level
         self.weight = weight
         self.character = character
-        #emf_logger.debug("CCCCharacter = {0}".format(self.character))
+        emf_logger.debug("CCCCharacter = {0}".format(self.character))
         if value is None:
-            value = WebModFormSpace(self.level, self.weight, self.character)
+            value = WebModFormSpace_cached(self.level, self.weight, self.character,update_hecke_orbits=update_hecke_orbits)
         super(WebModFormSpaceProperty, self).__init__(name,
-                                                      include_in_update=False,
+                                                      include_in_update=include_in_update,
                                                       save_to_db=True,
                                                       save_to_fs=False,
                                                       value = value)
@@ -217,3 +235,24 @@ class WebModFormSpaceProperty(WebProperty):
 
     def to_db(self):
         return self.to_fs()
+
+
+    
+from lmfdb.utils import cache
+from lmfdb.modular_forms.elliptic_modular_forms import use_cache
+def WebModFormSpace_cached(level,weight,character,**kwds):
+    if use_cache: 
+        label = space_label(level, weight, character)
+        M= cache.get(label)
+        emf_logger.critical("Looking for cached space:{0}".format(label))
+        if M is None:
+            emf_logger.debug("M was not in cache!")
+            M = WebModFormSpace(level,weight,character,**kwds)
+            cache.set(label, M, timeout=5 * 60)
+        else:
+            emf_logger.critical("M was in cache!")
+    else:
+        M = WebModFormSpace(level,weight,character,**kwds)
+    return M
+
+

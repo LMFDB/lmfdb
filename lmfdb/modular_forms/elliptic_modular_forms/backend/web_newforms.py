@@ -221,7 +221,8 @@ class WebNewForm(WebObject, CachedRepresentation):
     _collection_name = 'webnewforms'
 
     def __init__(self, level=1, weight=12, character=1, label='a', prec=10, bitprec=53, parent=None, update_from_db=True):
-        emf_logger.critical("In WebNewForm {0}".format((level,weight,character,parent,update_from_db)))
+        emf_logger.critical("In WebNewForm {0}".format((level,weight,character,label,parent,update_from_db)))
+        self._reduction = (type(self),(level,weight,character,label),{'prec':prec,'bitprec':bitprec,'parent':parent,'update_from_db':update_from_db})
         if isinstance(character, WebChar):
             character_number = character.number
         else:
@@ -232,13 +233,15 @@ class WebNewForm(WebObject, CachedRepresentation):
                     label = orbit_label(label)
                 else:
                     raise ValueError,"Need label either string or integer! We got:{0}".format(label)
+
+        emf_logger.critical("Before init properties 0")
         self._properties = WebProperties(
             WebInt('level', value=level),
             WebInt('weight', value=weight),
             WebCharProperty('character', modulus=level,
                             number=character_number,
                             value = character,
-                            include_in_update = True if parent is None
+                            include_in_update = True if character is None
                             else False),
             WebStr('character_naming_scheme', value='Conrey'),
             WebStr('hecke_orbit_label', default_value=newform_label(level, weight, character_number, label)),
@@ -262,9 +265,12 @@ class WebNewForm(WebObject, CachedRepresentation):
             WebFloat('version', value=float(emf_version), save_to_fs=True),
             WebDict('explicit_formulas',required=False),
             WebModFormSpaceProperty('parent', value=parent,
-                                              level = level,
-                                              weight = weight,
-                                              character = character_number),
+                                    level = level,
+                                    weight = weight,
+                                    character = character_number,
+                                    update_hecke_orbits=False)
+#                                    include_in_update = True if parent is None
+#                                    else False),
             )
         emf_logger.critical("After init properties 1")
         super(WebNewForm, self).__init__(
@@ -514,3 +520,32 @@ def orbit_label(j):
         label = str(x[j1]).lower() + label
         j = (j - j1) / 26 - 1
     return label
+
+
+
+from lmfdb.utils import cache
+from lmfdb.modular_forms.elliptic_modular_forms import use_cache
+
+def WebNewForm_cached(level,weight,character,label,**kwds):
+    if use_cache: 
+        nlabel = newform_label(level, weight, character, label)
+        F= cache.get(nlabel)
+        emf_logger.critical("Looking for cached form:{0}".format(nlabel))
+        if F is None:
+            emf_logger.debug("F was not in cache!")
+            F = WebNewForm(level,weight,character,label,**kwds)
+            emf_logger.debug("Computed F")
+            try:
+                cache.set(nlabel, F , timeout=15 * 60) # keep 15 minutes
+            except Exception as e:
+                print e.message
+            emf_logger.debug("Inserted F in cache!")
+        else:
+            emf_logger.critical("F was in cache!")
+    else:
+        F = WebNewForm(level,weight,character,label,**kwds)
+        emf_logger.critical("Computed F not using cache!")
+    return F
+
+
+

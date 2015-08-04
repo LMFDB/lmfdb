@@ -49,6 +49,7 @@ class WebProperty(object):
             - save_to_fs -- bool: True if this property should be stored in gridfs
             - save_to_db -- bool: True if this property should be stored in the db record (mongo)
         """
+        #emf_logger.debug("In WebProperty of {0}".format(name))
         self.name = name
         if default_value is not None:
             self._default_value = default_value
@@ -207,7 +208,9 @@ class WebObject(object):
     def connect_to_db(coll=''):
         return connect_to_modularforms_db(coll)
 
+    from sage.all import cached_method
     @classmethod
+    @cached_method
     def get_files_from_gridfs(cls, coll):
         C = cls.connect_to_db()
         return gridfs.GridFS(C,coll)
@@ -228,7 +231,7 @@ class WebObject(object):
                           pointing to the same file.
           - update_from_db -- bool: If True, we update self from db during init.
         """
-
+        emf_logger.debug('Create web object!')
         # check consistency of parameters
         if not use_gridfs and use_separate_db:
             raise ValueError("Inconsistent parameters: do set use_seperate_db and not use_gridfs")
@@ -244,10 +247,14 @@ class WebObject(object):
             self._file_collection = self.connect_to_db(self._collection_name + '.files')
         self._use_separate_db = use_separate_db
         self._collection = self.connect_to_db(self._collection_name)
+        emf_logger.debug('Connected to db!')
         if use_gridfs and not use_separate_db:
-                self._collection = self.connect_to_db(self._collection_name + '.files')
+                self._collection = self._file_collection
+                #self.connect_to_db(self._collection_name + '.files')
+        emf_logger.debug('Connected to db 2!')                
+#        self._files = self.get_files_from_gridfs(self._collection_name)
         self._files = self.get_files_from_gridfs(self._collection_name)
-
+        emf_logger.debug('Connected to db and got files!')
         # Initialize _db_properties and _db_properties to be easily accesible
         self._db_properties = self._properties.db_properties()
         self._fs_properties = self._properties.fs_properties()
@@ -500,19 +507,24 @@ class WebObject(object):
             add_to_fs_query = copy(self._add_to_fs_query)
             add_to_fs_query.update(q)
             
-        emf_logger.debug("add_to_fs_query: {0}".format(add_to_fs_query))
-        emf_logger.debug("self._add_to_fs_query: {0}".format(self._add_to_fs_query))
-        
+        #emf_logger.debug("add_to_fs_query: {0}".format(add_to_fs_query))
+        #emf_logger.debug("self._add_to_fs_query: {0}".format(self._add_to_fs_query))
+        emf_logger.debug("db_properties: {0}".format(self._db_properties))
         if self._use_separate_db or not self._use_gridfs:
             coll = self._collection
             key = self.key_dict()
             if add_to_db_query is not None:
                 key.update(add_to_db_query)
-            emf_logger.debug("key: {0}".format(key))
+            emf_logger.debug("key: {0} for {1}".format(key,self._collection_name))
             if coll.find(key).count()>0:
-                props_to_fetch = {p.name:True for p in self._db_properties
-                                  if (p.include_in_update and not p.name in self._fs_properties)
-                                  or p.name in self._key}
+                props_to_fetch = { }  #p.name:True for p in self._key}
+                for p in self._db_properties:
+                    if p.include_in_update and not p.name in self._fs_properties:
+                        props_to_fetch[p.name] = True
+#                props_to_fetch = {p.name:True for p in self._db_properties
+#                                  if (p.include_in_update and not p.name in self._fs_properties)
+#                                  or p.name in self._key}
+                emf_logger.debug("props_to_fetch: {0}".format(props_to_fetch))                
                 rec = coll.find_one(key, projection = props_to_fetch)
                 for pn in props_to_fetch:
                     p = self._properties[pn]
@@ -522,6 +534,7 @@ class WebObject(object):
                         except NotImplementedError:
                             continue                           
             else:
+                emf_logger.critical("record with key:{0} was not found!".format(key))
                 if not ignore_non_existent:
                     raise IndexError("DB record does not exist")
         if self._use_gridfs:
