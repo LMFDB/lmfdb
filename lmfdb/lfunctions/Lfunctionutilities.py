@@ -459,8 +459,6 @@ def lfuncEPhtml(L,fmt):
     ans += "with $f_p(0) = 1$."
     factN = list(factor(L.level))
     bad_primes = []
-#    for j in factN:
-#        bad_primes.append(j[0])
     for lf in L.bad_lfactors:
         bad_primes.append(lf[0])
     eulerlim = 10
@@ -475,20 +473,14 @@ def lfuncEPhtml(L,fmt):
     eptable += "</thead>"
     numfactors = len(L.localfactors)
     goodorbad = "bad"
-#    for j in bad_primes:
     for lf in L.bad_lfactors:
-#        this_prime_index = prime_pi(j) - 1  # list starts at 0
         try:
-   #         eptable += ("<tr><td>" + goodorbad + "</td><td>" + str(j) + "</td><td>" + 
             eptable += ("<tr><td>" + goodorbad + "</td><td>" + str(lf[0]) + "</td><td>" + 
-               #         "$" + list_to_factored_poly_otherorder(L.localfactors[this_prime_index]) + "$" +
                         "$" + list_to_factored_poly_otherorder(lf[1]) + "$" +
                         "</td></tr>\n")
         except IndexError:
             eptable += "<tr><td></td><td>" + str(j) + "</td><td>" + "not available" + "</td></tr>\n"
         goodorbad = ""
-#    eptable += "<tr><td></td><td></td><td></td></tr>\n"
-#    eptable += "<tr><td></td><td></td><td></td></tr>\n"
     goodorbad = "good"
     firsttime = " class='first'"
     for j in good_primes:
@@ -499,7 +491,6 @@ def lfuncEPhtml(L,fmt):
         goodorbad = ""
         firsttime = ""
     eptable += "</table>\n"
-#    ans += str(L.localfactors)
     ans += eptable
     return(ans)
 
