@@ -178,7 +178,7 @@ def genus2_curve_search(**args):
             query[fld] = info[fld]
     for fld in ['aut_grp', 'geom_aut_grp','torsion']:
         if info.get(fld):
-            query[fld] = eval(info[fld])
+            query[fld] = map(int,info[fld].strip()[1:-1].split(","))
     if info.get('ic0'):
         query['igusa_clebsch']=[info['ic0'], info['ic1'], info['ic2'], info['ic3'] ]
         

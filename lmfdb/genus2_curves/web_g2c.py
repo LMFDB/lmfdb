@@ -189,7 +189,7 @@ def normalize_invariants(I,W):
 # We may want to preserve some factors in the gcd here to factor the invariants when these get bigger, though currently this is not needed
 
 def zfactor(n):
-    return n if n != 0 else 0
+    return factor(n) if n != 0 else 0
 
 class WebG2C(object):
     """
