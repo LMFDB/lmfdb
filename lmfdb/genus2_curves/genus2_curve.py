@@ -103,12 +103,18 @@ def index_Q():
 def by_conductor(conductor):
     return genus2_curve_search(cond=conductor, **request.args)
 
-@g2c_page.route("/random")
+@g2c_page.route("/Q/random")
 def random_curve():
     from sage.misc.prandom import randint
     n = db_g2c().curves.count()
     n = randint(0,n-1)
-    return render_curve_webpage_by_label(db_g2c().curves.find()[n]['label'])
+    label = db_g2c().curves.find()[n]['label']
+    # This version leaves the word 'random' in the URL:
+    #return render_curve_webpage_by_label(label)
+    # This version uses the curve's own URL:
+    return redirect(url_for(".by_g2c_label", label=label), 301)
+
+
 
 def split_label(label_string):
     L = label_string.split(".")
