@@ -1,7 +1,12 @@
 {% extends 'homepage.html' %}
 {% block content %}
 <style>
+/* seems to be unused?
 <div.ip>span { white-space: nowrap; font-family: serif; }
+*/
+.toggle {margin-top:5px; margin-left:20px;}
+div.properties-body table tr td.label { vertical-align: top; }
+#content > h2.subhead { color:black;}
 </style>
 
 <script>
@@ -157,24 +162,15 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
           <td>&nbsp;=&nbsp;</td>
           <td>\({{ data.data.g2[2] }}\)</td>
         </tr>
-        <table>
-        <br>
-        <div class='igusa_clebsch'>
-            Alternative geometric invariants: 
-            <a onclick="show_invs('igusa'); return false" href='#'>Igusa</a>,
-            <a onclick="show_invs('g2'); return false" href='#'>G2</a>
+        </table>
+        <div class="toggle">Alternative geometric invariants:
+          <span class='igusa g2 nodisplay'>
+             <a onclick="show_invs('igusa_clebsch'); return false" href='#'>Igusa-Clebsch</a>,</span>
+          <span class='igusa_clebsch g2'>
+             <a onclick="show_invs('igusa'); return false" href='#'>Igusa</a><span class='igusa_clebsch'>,</span></span>
+          <span class='igusa_clebsch igusa'>
+             <a onclick="show_invs('g2'); return false" href='#'>G2</a></span>
         </div>
-        <div class='igusa nodisplay'>
-            Alternative geometric invariants: 
-            <a onclick="show_invs('igusa_clebsch'); return false" href='#'>Igusa-Clebsch</a>,
-            <a onclick="show_invs('g2'); return false" href='#'>G2</a>
-        </div>
-        <div class='g2 nodisplay'>
-            Alternative geometric invariants: 
-            <a onclick="show_invs('igusa_clebsch'); return false" href='#'>Igusa-Clebsch</a>,
-            <a onclick="show_invs('igusa'); return false" href='#'>Igusa</a>
-        </div>
-
 
     <h2> {{ KNOWL('g2c.aut_grp', title='Automorphism group') }} </h2>
 <table>
@@ -184,20 +180,20 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
 <h2> {{ KNOWL('g2c.num_rat_wpts', title='Number of rational Weierstrass points') }} </h2>
 \({{data.data.num_rat_wpts}}\)
-<h4>
+<h2 class='subhead'>
 Properties related to the {{KNOWL('g2c.jacobian', title='Jacobian')}}
-</h4>
-<h2>
+</h2>
+<h3>
 {{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank') }} 
-</h2>
+</h3>
 \({{data.data.two_selmer_rank}}\)
-<h2>
+<h3>
 {{ KNOWL('g2c.torsion', title='Torsion') }}
-</h2>
+</h3>
 \({{data.data.tor_struct}}\) 
 
 
-<h2> {{KNOWL('g2c.st_group', title='Sato-Tate group') }} </h2>
+<h3> {{KNOWL('g2c.st_group', title='Sato-Tate group') }} </h3>
 <p>
 {% if data.data.real_geom_end_alg == 'R'%}
 \(\mathrm{ST} = {{ data.data.st_group_name }}\)
@@ -206,7 +202,7 @@ Properties related to the {{KNOWL('g2c.jacobian', title='Jacobian')}}
 {% endif %}
 </p>
 
-<h2> {{ KNOWL('g2c.jac_endomorphisms', title='Endomorphisms of the Jacobian') }} </h2>
+<h3> {{ KNOWL('g2c.jac_endomorphisms', title='Endomorphisms of the Jacobian') }} </h3>
 {{data.data.endomorphism_statement}}
 <table>
   <tr>  <td>\(\mathrm{End}(J) \otimes \Q\)</td><td>\(\simeq\)</td><td>\({{data.data.rat_end_alg_name}}\)</td>
