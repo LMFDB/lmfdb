@@ -3,7 +3,7 @@
 {% block content %}
 
 {% if BETA and user_is_authenticated and dirichlet_arithmetic -%}
- <div>{{ KNOWL('lfunction.normalization', title='Normalization') }}: <button class='active'>arithmetic</button>
+ <div align='center'>{{ KNOWL('lfunction.normalization', title='Normalization') }}: <button class='active'>arithmetic</button>
 <button class='inactive'>analytic</button></div>
 {% else %}
  <div>{{ KNOWL('lfunction.normalization', title='Normalization') }}: <button class='inactive'>arithmetic</button>

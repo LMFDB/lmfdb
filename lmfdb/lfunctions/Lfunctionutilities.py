@@ -183,7 +183,6 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
 #                return(ans + " - " + truncatenumber(float(abs(rp)), precision) + seriesvar(index, seriestype))
                 return(ans + " - " + truncatenumber(-1*rp, precision) + seriesvar(index, seriestype))
             elif seriescoefftype == "signed":
-                print "      about to return ",rp,"   ",type(rp)
                 return(ans + "-" + truncatenumber(-1*rp, precision))
             elif seriescoefftype == "serieshtml":
 #                return(ans + " &minus; " + truncatenumber(float(abs(rp)), precision) + seriesvar(index, seriestype))
@@ -460,27 +459,30 @@ def lfuncEPhtml(L,fmt):
     ans += "with $f_p(0) = 1$."
     factN = list(factor(L.level))
     bad_primes = []
-    for j in factN:
-        bad_primes.append(j[0])
+#    for j in factN:
+#        bad_primes.append(j[0])
+    for lf in L.bad_lfactors:
+        bad_primes.append(lf[0])
     eulerlim = 10
     good_primes = []
-    for j in range(1, eulerlim):
+    for j in range(0, eulerlim):
         this_prime = Primes().unrank(j)
         if this_prime not in bad_primes:
             good_primes.append(this_prime)
-#    bad_primes = [2,5,7,181]
-#    good_primes = [3,11,13,17,19,23]
     eptable = "<table class='ntdata euler'>\n"
     eptable += "<thead>"
     eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th><th class='weight'>$f_p$</th></tr>\n"
     eptable += "</thead>"
     numfactors = len(L.localfactors)
     goodorbad = "bad"
-    for j in bad_primes:
-        this_prime_index = prime_pi(j) - 1  # list starts at 0
+#    for j in bad_primes:
+    for lf in L.bad_lfactors:
+#        this_prime_index = prime_pi(j) - 1  # list starts at 0
         try:
-            eptable += ("<tr><td>" + goodorbad + "</td><td>" + str(j) + "</td><td>" + 
-                        "$" + list_to_factored_poly_otherorder(L.localfactors[this_prime_index]) + "$" +
+   #         eptable += ("<tr><td>" + goodorbad + "</td><td>" + str(j) + "</td><td>" + 
+            eptable += ("<tr><td>" + goodorbad + "</td><td>" + str(lf[0]) + "</td><td>" + 
+               #         "$" + list_to_factored_poly_otherorder(L.localfactors[this_prime_index]) + "$" +
+                        "$" + list_to_factored_poly_otherorder(lf[1]) + "$" +
                         "</td></tr>\n")
         except IndexError:
             eptable += "<tr><td></td><td>" + str(j) + "</td><td>" + "not available" + "</td></tr>\n"
@@ -651,7 +653,6 @@ def lfuncFEtex(L, fmt):
 def specialValueString(L, s, sLatex, normalization="analytic"):
     ''' Returns the LaTex to dislpay for L(s)
     '''
-    print "normalization",normalization,"  ",sLatex
     number_of_decimals = 10
     val = None
     if hasattr(L,"lfunc_data"):

@@ -98,6 +98,7 @@ def makeLfromdata(L):
     # Note: a better name would be L.dirichlet_coefficients_analytic, but that
     # would require more global changes.
     L.localfactors = p2sage(data['euler_factors'])
+    L.bad_lfactors = data['bad_lfactors']
     L.checkselfdual()  # needs to be changed to read from database
     generateSageLfunction(L)  # DF: why is this needed if pulling from database?
 
