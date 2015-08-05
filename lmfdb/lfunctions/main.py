@@ -14,7 +14,7 @@ from Lfunction import *
 import LfunctionPlot as LfunctionPlot
 from lmfdb.utils import to_dict
 import bson
-from Lfunctionutilities import (p2sage, lfuncDStex, lfuncEPtex, lfuncFEtex,
+from Lfunctionutilities import (p2sage, lfuncDShtml, lfuncEPtex, lfuncFEtex,
                                 truncatenumber, styleTheSign, specialValueString)
 from lmfdb.WebCharacter import WebDirichlet
 from lmfdb.lfunctions import l_function_page, logger
@@ -390,6 +390,11 @@ def initLfunction(L, args, request):
     ''' Sets the properties to show on the homepage of an L-function page.
     '''
     info = {'title': L.title}
+#    if 'title_arithmetic' in L:
+    try:
+        info['title_arithmetic'] = L.title_arithmetic
+    except AttributeError:
+        pass
     try:
         info['citation'] = L.citation
     except AttributeError:
@@ -408,14 +413,15 @@ def initLfunction(L, args, request):
 
     # Now we usually display both
     if L.Ltype() == "genus2curveQ":
-        info['sv12'] = specialValueString(L, 0.5, '1/2')
+        info['sv_critical'] = specialValueString(L, 0.5, '1/2')
+        info['sv_critical_arithmetic'] = specialValueString(L, 0.5, str(ZZ(1)/2 + L.motivic_weight/2),'arithmetic')
     elif L.Ltype() != "artin" or (L.Ltype() == "artin" and L.sign != 0):
     #    if is_even(L.degree) :
-    #        info['sv12'] = specialValueString(L, 0.5, '1/2')
+    #        info['sv_critical'] = specialValueString(L, 0.5, '1/2')
     #    if is_odd(L.degree):
-    #        info['sv1'] = specialValueString(L, 1, '1')
-        info['sv1'] = specialValueString(L, 1, '1')
-        info['sv12'] = specialValueString(L, 0.5, '1/2')
+    #        info['sv_edge'] = specialValueString(L, 1, '1')
+        info['sv_edge'] = specialValueString(L, 1, '1')
+        info['sv_critical'] = specialValueString(L, 0.5, '1/2')
 
     info['args'] = args
 
@@ -617,10 +623,15 @@ def initLfunction(L, args, request):
         info['friends'] = [('Hypergeometric motive ', friendlink)]   # The /L/ trick breaks down for motives, because we have a scheme for the L-functions themselves
 
 
-    info['dirichlet'] = lfuncDStex(L, "analytic")
+    # the code below should be in Lfunction.py
+    info['dirichlet'] = lfuncDShtml(L, "analytic")
     info['eulerproduct'] = lfuncEPtex(L, "abstract")
     info['functionalequation'] = lfuncFEtex(L, "analytic")
     info['functionalequationSelberg'] = lfuncFEtex(L, "selberg")
+    if L.Ltype() == "genus2curveQ":
+        info['dirichlet_arithmetic'] = lfuncDShtml(L, "arithmetic")
+        info['eulerproduct_arithmetic'] = lfuncEPtex(L, "arithmetic")
+        info['functionalequation_arithmetic'] = lfuncFEtex(L, "arithmetic")
 
     if len(request.args) == 0:
         lcalcUrl = request.url + '?download=lcalcfile'
