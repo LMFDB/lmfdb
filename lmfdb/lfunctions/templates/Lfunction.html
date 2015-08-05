@@ -2,18 +2,41 @@
 
 {% block content %}
 
+{% if BETA and user_is_authenticated and dirichlet_arithmetic -%}
+ <div align='center'>{{ KNOWL('lfunction.normalization', title='Normalization') }}: <button class='active'>arithmetic</button>
+<button class='inactive'>analytic</button></div>
+{% elif BETA and user_is_authenticated %}
+ <div align='center'>{{ KNOWL('lfunction.normalization', title='Normalization') }}: <button class='inactive'>arithmetic</button>
+<button class='active'>analytic</button></div>
+{% elif BETA %}
+<div align='center'>{{ KNOWL('lfunction.normalization', title='Normalization') }}: 
+<button class='active'>analytic</button></div>
+{% endif %}
+
  <h2> {{ KNOWL('lfunction.dirichlet_series', title='Dirichlet series') }}</h2>
+{% if BETA and user_is_authenticated and dirichlet_arithmetic -%}
+ <div>{{ dirichlet_arithmetic|safe }}</div>
+{% else %}
  <div>{{ dirichlet|safe }}</div>
+{% endif %}
 
  <h2>{{ KNOWL('lfunction.functional_equation',title='Functional equation') }}</h2>
-
+{% if BETA and user_is_authenticated and dirichlet_arithmetic -%}
+ <div id="functionalEqText">\[{{ functionalequation_arithmetic }}\]</div>
+{% else %}
  <div id="functionalEqText">\[{{ functionalequation }}\]</div>
- <div style="margin-left: 5ex">
+{% endif %}
+
+ <div>
    {{ KNOWL('lfunction.selbergdata', title="Selberg data") }}: ${{ functionalequationSelberg }}$
 </div>
 
  <h2>{{ KNOWL('lfunction.euler_product', title='Euler product') }}</h2>
+{% if BETA and user_is_authenticated and dirichlet_arithmetic -%}
+ <div>{{ eulerproduct_arithmetic|safe }}</div>
+{% else %}
  <div>\[{{ eulerproduct }}\]</div>
+{% endif %}
 
  {% if factorization is defined %}
  <h2>Factorization</h2>
@@ -21,6 +44,43 @@
     {{ factorization|safe }} 
   </div>
  {% endif %}
+
+<h2>Particular Values</h2>
+{% if BETA and user_is_authenticated and dirichlet_arithmetic -%}
+   {% if sv_critical_arithmetic or sv_edge_arithmetic %}
+      <div>
+      {% if sv_critical_arithmetic %}
+          {{ sv_critical_arithmetic }}
+      {% endif %}
+      {% if sv_edge_arithmetic %}
+          {% if Ltype=="riemann" or Ltype=="dedekindzeta" %}
+              <div align="center">Pole at \(s=1\)</div>
+          {% else %}
+              {{ sv_edge_arithmetic }}
+          {% endif %}
+      {% endif %}
+     </div>
+   {% else %}
+      <div>Not enough information (Dirichlet series coefficients/sign of the functional equation) to compute special values.</div>
+   {% endif %}
+{% else %}
+   {% if sv_critical or sv_edge %}
+      <div>
+      {% if sv_critical %}
+          {{ sv_critical }}
+      {% endif %}
+      {% if sv_edge %}
+          {% if Ltype=="riemann" or Ltype=="dedekindzeta" %}
+              <div align="center">Pole at \(s=1\)</div>
+          {% else %}
+              {{ sv_edge }}
+          {% endif %}
+      {% endif %}
+     </div>
+   {% else %}
+      <div>Not enough information (Dirichlet series coefficients/sign of the functional equation) to compute special values.</div>
+   {% endif %}
+{% endif %}
 
  <h2> Imaginary part of the first few zeros on the {{ KNOWL('lfunction.critical_line', title='critical line') }}</h2>
 
@@ -31,25 +91,6 @@
      <div><span id="tpzeros">{{tpzeroslink|safe}}</span></div>
  {% else %}
      <div>Not enough information (Dirichlet series coefficients/sign of the functional equation) to compute zeros.</div>
- {% endif %}
-
-<h2>Particular Values</h2>
-{% if sv12 or sv1 %}
-      <div>
-      {% if sv12 %}
-          {{ sv12 }}<br>
-      {% endif %}
-      {% if sv1 %}
-          {% if Ltype=="riemann" or Ltype=="dedekindzeta" %}
-              <div align="center">Pole at \(s=1\)</div>
-                       <br>
-          {% else %}
-              {{ sv1 }}<br>
-          {% endif %}
-      {% endif %}
-     </div>
- {% else %}
-      <div>Not enough information (Dirichlet series coefficients/sign of the functional equation) to compute special values.</div>
  {% endif %}
 
     <h2> Graph of the {{ KNOWL('lfunction.zfunction', title='$Z$-function') }} along center part of the {{ KNOWL('lfunction.critical_line', title='critical line') }} </h2>

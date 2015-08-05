@@ -546,6 +546,11 @@ button, select {
   min-width: 75px;
 }
 
+button.inactive {
+  background: #EEE; 
+  border: 1px solid #EDD;
+}
+
 body.knowl form button, 
 body.knowl form select {
   border: 2px solid #AAD;
@@ -662,11 +667,11 @@ div.literature {
 }
 
 .redhighlight {
-  color: red;
+  color: #888888;
 }
 
 .bluehighlight {
-  color: blue;
+  color: black;
 }
 
 
@@ -788,6 +793,43 @@ body.knowl table.ntdata tr:nth-child(odd) {
 body.knowl table.ntdata tr:nth-child(even) {
  background: white;
 }
+
+/* next 4 copied from Dir Char templates */
+/* should be deleted from those 4 templates */
+table.ntdata th.left {
+    border-right: 2px solid #9b9;
+    background: #efe;
+    border-bottom: 0;
+    text-align: center;
+}
+
+table.ntdata th.weight {
+  text-align: center;
+  background: #efe;
+  border-bottom: 2px solid #9b9;
+  border-left: 0;
+  vertical-align: center;
+}
+
+table.ntdata thead tr.space {
+  background: #efe;
+  border-bottom: 0;
+}
+
+table.ntdata thead th.spaceleft {
+  border-right: 2px solid #9b9;
+  vertical-align: top;
+}
+
+table.ntdata tr.first {
+  border-top: 2px solid #9b9;
+}
+
+table.euler {
+    margin-left:auto; 
+    margin-right:auto;
+}
+
 .knowl-content {
   padding: 0 10px;
 }
@@ -979,9 +1021,11 @@ div.limit-height {
   padding-right:0;
 }
 
+/*
 .dirichletseries td:first-child {
   padding-top:3px;
 }
+*/
 
 .dirichletseries span.term {
   white-space: nowrap;

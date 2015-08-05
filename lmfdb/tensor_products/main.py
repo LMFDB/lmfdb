@@ -67,7 +67,7 @@ def show():
         gr.lfunction()
 
         info = {}
-        info['dirichlet'] = lfuncDStex(tp, "analytic")
+        info['dirichlet'] = lfuncDShtml(tp, "analytic")
         info['eulerproduct'] = lfuncEPtex(tp, "abstract")
         info['functionalequation'] = lfuncFEtex(tp, "analytic")
         info['functionalequationSelberg'] = lfuncFEtex(tp, "selberg")
@@ -82,7 +82,7 @@ def show():
             tp.lfunction()
 
             info = {}
-            info['dirichlet'] = lfuncDStex(tp, "analytic")
+            info['dirichlet'] = lfuncDShtml(tp, "analytic")
             info['eulerproduct'] = lfuncEPtex(tp, "abstract")
             info['functionalequation'] = lfuncFEtex(tp, "analytic")
             info['functionalequationSelberg'] = lfuncFEtex(tp, "selberg")
@@ -100,8 +100,8 @@ def show():
                 info['svwarning'] = '' 
     
             info['tpzeroslink'] = zeros(tp) 
-            info['sv1'] = specialValueString(tp, 1, '1')
-            info['sv12'] = specialValueString(tp, 0.5, '1/2')
+            info['sv_edge'] = specialValueString(tp, 1, '1')
+            info['sv_critical'] = specialValueString(tp, 0.5, '1/2')
 
 #            friends = []
 #            friends.append(('L-function of first object', url_for('.show', obj1=objLinks[0])))
