@@ -5,8 +5,8 @@
 {% if BETA and user_is_authenticated and dirichlet_arithmetic -%}
  <div align='center'>{{ KNOWL('lfunction.normalization', title='Normalization') }}: <button class='active'>arithmetic</button>
 <button class='inactive'>analytic</button></div>
-{% else %}
- <div>{{ KNOWL('lfunction.normalization', title='Normalization') }}: <button class='inactive'>arithmetic</button>
+{% elif BETA and user_is_authenticated %}
+ <div align='center'>{{ KNOWL('lfunction.normalization', title='Normalization') }}: <button class='inactive'>arithmetic</button>
 <button class='active'>analytic</button></div>
 {% endif %}
 
