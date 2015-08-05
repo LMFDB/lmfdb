@@ -294,6 +294,11 @@ class WebG2C(object):
         else:
             simple_statement = ""  # leave empty since not computed.
         data['endomorphism_statement'] = simple_statement + gl2_statement
+        
+        if data['disc'] % 4096 == 0:
+            ind2 = [a[0] for a in isogeny_class['bad_lfactors']].index(2)
+            bad2 = isogeny_class['bad_lfactors'][ind2][1]
+            data['magma_cond_option'] = ': ExcFactors:=[*<2,Valuation('+str(data['cond'])+',2),R!'+str(bad2)+'>*]'
         x = self.label.split('.')[1]
         self.friends = [
             ('Isogeny class %s' % isog_label(self.label), url_for(".by_double_iso_label", conductor = self.cond, iso_label = x)),
