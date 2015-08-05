@@ -320,6 +320,8 @@ class WebEC(object):
         cond, iso, num = split_lmfdb_label(self.lmfdb_label)
         data['newform'] =  web_latex(self.E.q_eigenform(10))
 
+        self.make_code_snippets()
+
         self.friends = [
             ('Isogeny class ' + self.lmfdb_iso, url_for(".by_double_iso_label", conductor=N, iso_label=iso)),
             ('Minimal quadratic twist %s %s' % (data['minq_info'], data['minq_label']), url_for(".by_triple_label", conductor=minq_N, iso_label=minq_iso, number=minq_number)),
@@ -351,3 +353,58 @@ class WebEC(object):
                            ('%s' % N, url_for(".by_conductor", conductor=N)),
                            ('%s' % iso, url_for(".by_double_iso_label", conductor=N, iso_label=iso)),
                            ('%s' % num,' ')]
+
+    def make_code_snippets(self):
+        sagecode = dict()
+        gpcode = dict()
+        magmacode = dict()
+
+        #utility function to save typing!
+
+        def set_code(key, s, g, m):
+            sagecode[key] = s
+            gpcode[key] = g
+            magmacode[key] = m
+
+        # prompt
+        set_code('prompt',
+                 '$\\tt sage$: ',
+                 '$\\tt gp?$ ',
+                 '$\\tt Magma>$ ')
+
+        # logo
+        set_code('logo',
+                 '<img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">',
+                 '<img src = "http://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">',
+                 '<img src = "http://i.stack.imgur.com/0468s.png" width="50px">')
+        # overwrite the above until we get something which looks reasonable
+        set_code('logo', '', '', '')
+
+        # curve
+        set_code('curve',
+                 'E = EllipticCurve(%s)'   % self.data['ainvs'],
+                 'E = ellinit(%s)'         % self.data['ainvs'],
+                 'E := EllipticCurve(%s);' % self.data['ainvs'])
+
+        # generators
+        set_code('gens',
+                 'E.gens()',
+                 '(not implemented)',
+                 'Generators(E);')
+
+        # torsion
+        set_code('tors', 'E.torsion_subgroup().gens()',
+                 'elltors(E)',
+                 'TorsionSubgroup(E);')
+
+        # integral points
+        set_code('intpts', 'E.integral_points()',
+                 '(not implemented)',
+                 'IntegralPoints(E);')
+
+        # conductor
+        set_code('cond', 'E.conductor().factor()',
+                 'ellglobalred(E)[1]',
+                 'Conductor(E);')
+
+        self.code = {'sage': sagecode, 'gp': gpcode, 'magma': magmacode}
