@@ -1,7 +1,6 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-
 <h2> Refine search </h2>
 
 <form id='re-search'>
@@ -10,7 +9,7 @@
 
 <table>
 <tr>
-<td>{{ KNOWL('g2c.conductor', title='conductor') }}</td>  
+<td>{{ KNOWL('ag.conductor', title='conductor') }}</td>  
 <td>{{ KNOWL('g2c.abs_discriminant', title='absolute discriminant')}}</td>
 <td>{{ KNOWL('g2c.num_rat_wpts', title='Weierstrass points') }}</td>  
 <td>{{ KNOWL('g2c.torsion', title='torsion structure')}}</td>  
@@ -35,59 +34,67 @@
 </tr>
 
 <tr>
-<td><select name='is_gl2_type' width="90" style="width: 90px">
+<td><select name='is_gl2_type' width="122" style="width: 122px">
+  <option ></option>
 {% if info.is_gl2_type=='True' %}
-  <option value="True">True</option>
-  <option value="False">False</option>
-  <option ></option>
-{% elif info.is_gl2_type=='False'%}
-  <option value="False">False</option>
-  <option value="True">True</option>
-  <option ></option>
+  <option value="True" selected>True</option>
 {% else %}
-  <option ></option>
   <option value="True">True</option>
+{% endif %}
+{% if info.is_gl2_type == 'False' %}
+  <option value="False" selected>False</option>
+{% else %}
   <option value="False">False</option>
 {% endif %}
 </select></td>
 
-<td><select name='st_group' width="90" style="width: 90px" >
-    <option value='{{info.st_group}}'>{{info.st_group_dict[info.st_group]}}</option>
+<td><select name='st_group' width="122" style="width: 122px" >
     <option ></option>
-    {% for G in info.st_group_dict.keys()%}
-    <option value='{{G}}'>{{info.st_group_dict[G]}}</option>
-    {% endfor %}
-  </select>
-</td>
-
-<td><select name='real_geom_end_alg' width="90" style="width: 90px">
-    <option value='{{info.real_geom_end_alg}}'>{{info.real_geom_end_alg_dict[info.real_geom_end_alg]}}</option>
-    <option ></option>
-    {% for G in info.real_geom_end_alg_dict.keys()%}
-    <option value='{{G}}'>{{info.real_geom_end_alg_dict[G]}}</option>
+    {% for G in info.st_group_list %}
+        {% if  G == info.st_group %}
+            <option value='{{G}}' selected>{{info.st_group_dict[G]}}</option>
+        {% else %}
+            <option value='{{G}}'>{{info.st_group_dict[G]}}</option>
+        {% endif %}
     {% endfor %}
 </select></td>
 
-<td ><select name='aut_grp' width="90" style="width: 90px">
-    <option value='{{info.aut_grp}}'>{{info.aut_grp_dict[info.aut_grp]}}</option>
+<td><select name='real_geom_end_alg' width="122" style="width: 122px">
     <option ></option>
-    {% for G in info.aut_grp_dict.keys()%}
-    <option value='{{G}}'>{{info.aut_grp_dict[G]}}</option>
+    {% for G in info.real_geom_end_alg_list %}
+        {% if G == info.real_geom_end_alg %}
+            <option value='{{G}}' selected>{{info.real_geom_end_alg_dict[G]}}</option>
+        {% else %}
+            <option value='{{G}}'>{{info.real_geom_end_alg_dict[G]}}</option>
+        {% endif %}
     {% endfor %}
 </select></td>
-<td ><select name='geom_aut_grp' width="90" style="width: 90px">
-    <option value='{{info.geom_aut_grp}}'>{{info.geom_aut_grp_dict[info.geom_aut_grp]}}</option>
+
+<td ><select name='aut_grp' width="122" style="width: 122px">
     <option ></option>
-    {% for G in info.geom_aut_grp_dict.keys()%}
-    <option value='{{G}}'>{{info.geom_aut_grp_dict[G]}}</option>
+    {% for G in info.aut_grp_list %}
+        {% if G == info.aut_grp %}
+            <option value='{{G}}' selected>{{info.aut_grp_dict[G]}}</option>
+        {% else %}
+            <option value='{{G}}'>{{info.aut_grp_dict[G]}}</option>
+        {% endif %}
     {% endfor %}
 </select></td>
-<!--<td><input type='text' name='count' value="{{info.count}}" 	   size=10></td>
-</tr>-->
-<tr>
+
+<td ><select name='geom_aut_grp' width="122" style="width: 122px">
+    <option ></option>
+    {% for G in info.geom_aut_grp_list %}
+        {% if G == info.geom_aut_grp %}
+            <option value='{{G}}' selected>{{info.geom_aut_grp_dict[G]}}</option>
+        {% else %}
+            <option value='{{G}}'>{{info.geom_aut_grp_dict[G]}}</option>
+        {% endif %}
+    {% endfor %}
+</select></td>
 <td>
-<button type='submit' value='refine'>Search again</button>
-</td> </tr>
+<button type='submit' value='refine'  width="122" style="width: 122px">Search again</button>
+</td>
+</tr>
 </table>
 </form>
 

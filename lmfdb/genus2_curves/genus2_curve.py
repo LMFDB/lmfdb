@@ -17,19 +17,21 @@ from lmfdb.genus2_curves.web_g2c import WebG2C, list_to_min_eqn, isog_label, st_
 import sage.all
 from sage.all import ZZ, QQ, latex, matrix, srange
 q = ZZ['x'].gen()
-# credit_string = "KNOWL('g2c.credit', title='The Genus 2 Team')" 
 credit_string = "Andrew Booker, Andrew Sutherland, John Voight, and Dan Yasaki"
 
-st_temp = ['J(C_2)','J(C_4)','J(C_6)','J(D_2)', 'J(D_3)','J(D_4)','J(D_6)', 'J(T)', 'J(O)','C{2,1}','C_{6,1}','D_{2,1}','D_{3,2}','D_{4,1}','D_{4,2}','D_{6,1}','D_{6,2}','O_1','E_1','E_2','E_3','E_4','E_6','J(E_1)','J(E_2)','J(E_3)','J(E_4)','J(E_6)','F_{a,b}','F_{ac}','N(G_{1,3})','G_{3,3}','N(G_{3,3})','USp(4)']
-st_group_dict = {a:a for a in st_temp}
+# lists determine display order in drop down lists, dictionary key is the database entry, dictionary value is the display value
+st_group_list = ['J(C_2)','J(C_4)','J(C_6)','J(D_2)', 'J(D_3)','J(D_4)','J(D_6)', 'J(T)', 'J(O)','C{2,1}','C_{6,1}','D_{2,1}','D_{3,2}','D_{4,1}','D_{4,2}','D_{6,1}','D_{6,2}','O_1','E_1','E_2','E_3','E_4','E_6','J(E_1)','J(E_2)','J(E_3)','J(E_4)','J(E_6)','F_{a,b}','F_{ac}','N(G_{1,3})','G_{3,3}','N(G_{3,3})','USp(4)']
+st_group_dict = {a:a for a in st_group_list}
+real_geom_end_alg_list = ['M_2(C)','M_2(R)','C x C', 'C x R', 'R x R', 'R']
 real_geom_end_alg_dict = {
         'M_2(C)':'U(1)',
         'M_2(R)':'SU(2)',
-        'C x C':'G_{1,1}',
-        'C x R':'G_{1,3}',
-        'R x R':'G_{3,3}',
+        'C x C':'U(1) x U(1)',
+        'C x R':'U(1) x SU(2)',
+        'R x R':'SU(2) x SU(2)',
         'R':'USp(4)'
         }
+aut_grp_list = ['[2, 1]', '[4, 1]','[4, 2]','[6, 2]','[8, 3]','[12, 4]']
 aut_grp_dict = {
         '[2, 1]':'C_2',
         '[4, 1]':'C_4',                   
@@ -38,6 +40,7 @@ aut_grp_dict = {
         '[8, 3]':'D_8',                   
         '[12, 4]':'D_{12}'
         }
+geom_aut_grp_list = ['[2, 1]', '[4, 2]','[8, 3]','[10, 2]','[12, 4]','[24, 8]','[48, 29]']
 geom_aut_grp_dict = {
         '[2, 1]':'C_2',
         '[4, 2]':'V_4',
@@ -90,9 +93,13 @@ def index_Q():
     ]
     info["conductor_list"] = ['1-499', '500-999', '1000-99999','100000-1000000'   ]
     info["discriminant_list"] = ['1-499', '500-999', '1000-99999','100000-1000000'   ]
+    info["st_group_list"] = st_group_list
     info["st_group_dict"] = st_group_dict
+    info["real_geom_end_alg_list"] = real_geom_end_alg_list
     info["real_geom_end_alg_dict"] = real_geom_end_alg_dict
+    info["aut_grp_list"] = aut_grp_list
     info["aut_grp_dict"] = aut_grp_dict
+    info["geom_aut_grp_list"] = geom_aut_grp_list
     info["geom_aut_grp_dict"] = geom_aut_grp_dict
     credit =  credit_string
     title = 'Genus 2 curves over $\Q$'
@@ -122,9 +129,13 @@ def split_label(label_string):
 
 def genus2_curve_search(**args):
     info = to_dict(args)
+    info["st_group_list"] = st_group_list
     info["st_group_dict"] = st_group_dict
+    info["real_geom_end_alg_list"] = real_geom_end_alg_list
     info["real_geom_end_alg_dict"] = real_geom_end_alg_dict
+    info["aut_grp_list"] = aut_grp_list
     info["aut_grp_dict"] = aut_grp_dict
+    info["geom_aut_grp_list"] = geom_aut_grp_list
     info["geom_aut_grp_dict"] = geom_aut_grp_dict
     query = {}  # database callable
     bread = [('Genus 2 Curves', url_for(".index")),
@@ -168,12 +179,12 @@ def genus2_curve_search(**args):
         elif info['is_gl2_type'] == "False":
             query['is_gl2_type']= False
 
-    for fld in ['aut_grp', 'geom_aut_grp','st_group','real_geom_end_alg']:
+    for fld in ['st_group', 'real_geom_end_alg','igusa_clebsch']:
         if info.get(fld):
             query[fld] = info[fld]
-    for fld in ['aut_grp', 'geom_aut_grp', 'torsion', 'igusa_clebsch']: # look like [2, 4]
+    for fld in ['aut_grp', 'geom_aut_grp','torsion']:
         if info.get(fld):
-            query[fld] = str(info[fld])
+            query[fld] = map(int,info[fld].strip()[1:-1].split(","))
     if info.get('ic0'):
         query['igusa_clebsch']=[info['ic0'], info['ic1'], info['ic2'], info['ic3'] ]
         

@@ -113,7 +113,7 @@ class G2Cisog_class(object):
                 setattr(self,endalgtype + '_name','')
 
         self.st_group_name = st_group_name(self.st_group)
-        self.st0_group_name = st0_group_name(self.st_group)
+        self.st0_group_name = st0_group_name(self.real_geom_end_alg)
 
         if hasattr(self, 'geom_end_field') and self.geom_end_field <> '':
             self.geom_end_field_name = field_pretty(self.geom_end_field)

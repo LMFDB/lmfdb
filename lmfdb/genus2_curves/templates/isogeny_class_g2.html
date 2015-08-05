@@ -9,7 +9,7 @@ text-align: center;
 }
 </style>
 
-<h2>Genus 2 curves in class {{info.label}}</h2>
+<h2>Genus 2 curves in {{KNOWL("g2c.isogeny_class", title="isogeny class" )}} {{info.label}}</h2>
 <table id = "isogeny_class_table">
 <tr>
 <th>{{ KNOWL('g2c.label', title='Label')}}</th>
@@ -22,14 +22,14 @@ text-align: center;
 {% endfor %}
 </table>
 
-<h2>{{ KNOWL('g2c.L_function_information', title='L-function information')}}</h2>
+<h2>{{KNOWL('g2c.lfunction', title='L-function')}} data</h2>
 
 <p>
 <!-- Someone please redo this table with css.-->
 <table>
-<tr><td> {{ KNOWL('g2c.root_number', title='Root number') }}:<td> \({{ info.root_number }}\) </tr>
+<tr><td> {{KNOWL('lfunction.sign', title='Root number')}}:<td> \({{ info.root_number }}\) </tr>
 <tr> <td>&nbsp;</td> </tr> 
-<tr><td valign=top> {{ KNOWL('g2c.bad_L_factors', title='Bad L-factors') }}:<td>
+<tr><td valign=top> {{ KNOWL('g2c.bad_lfactors', title='Bad L-factors') }}:<td>
 <table id = "bad_lfactors_table">
 <tr>
 <th>Prime</th>
@@ -49,7 +49,7 @@ text-align: center;
 {% if info.real_geom_end_alg == 'R'%}
 \(\mathrm{ST} = {{ info.st_group_name }}\)
 {% else %}
-\(\mathrm{ST} = {{ info.st_group_name }} \quad \mathrm{ST}_0 = {{ info.st0_group_name}}\)
+\(\mathrm{ST} = {{ info.st_group_name }}, \quad \mathrm{ST}_0 = {{ info.st0_group_name}}\)
 {% endif %}
 </p>
 
@@ -68,7 +68,7 @@ text-align: center;
 <p>Field over which all endomorphisms are defined: 
 <A HREF="/NumberField/{{info.geom_end_field }}">{{info.geom_end_field_name}}</A></p>
 
-<h2>{{ KNOWL('g2c.isogenies', title='Isogenies') }}</h2>
+<h2>{{ KNOWL('ag.isogeny', title='Isogenies') }}</h2>
 
 {% if info.ecproduct_wurl == [] and info.ecquadratic_wurl == [] %}
 <p>None currently known.</p>

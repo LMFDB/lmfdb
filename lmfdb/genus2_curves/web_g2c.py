@@ -109,9 +109,9 @@ def st0_group_name(name):
     st0_dict = {
         'M_2(C)':'\\mathrm{U}(1)',
         'M_2(R)':'\\mathrm{SU}(2)',
-        'C x C':'G_{1,1}',
-        'C x R':'G_{1,3}',
-        'R x R':'G_{3,3}',
+        'C x C':'\\mathrm{U}(1)\\times\\mathrm{U}(1)',
+        'C x R':'\\mathrm{U}(1)\\times\\mathrm{SU}(2)',
+        'R x R':'\\mathrm{SU}(2)\\times\\mathrm{SU}(2)',
         'R':'\\mathrm{USp}(4)'
         }
     if name in st0_dict.keys():
@@ -188,6 +188,8 @@ def normalize_invariants(I,W):
     return I_n
 # We may want to preserve some factors in the gcd here to factor the invariants when these get bigger, though currently this is not needed
 
+def zfactor(n):
+    return factor(n) if n != 0 else 0
 
 class WebG2C(object):
     """
@@ -248,8 +250,8 @@ class WebG2C(object):
         data['g2'] = igusa_to_g2(data['igusa'])
         data['ic_norm'] = normalize_invariants(data['igusa_clebsch'],[1,2,3,5])
         data['igusa_norm'] = normalize_invariants(data['igusa'],[1,2,3,4,5])
-        data['ic_norm_factor_latex'] = [web_latex(factor(i)) for i in data['ic_norm']]
-        data['igusa_norm_factor_latex'] = [web_latex(factor(j)) for j in data['igusa_norm']]
+        data['ic_norm_factor_latex'] = [web_latex(zfactor(i)) for i in data['ic_norm']]
+        data['igusa_norm_factor_latex'] = [web_latex(zfactor(j)) for j in data['igusa_norm']]
         data['num_rat_wpts'] = ZZ(self.num_rat_wpts)
         data['two_selmer_rank'] = ZZ(self.two_selmer_rank)
         if len(self.torsion) == 0:
