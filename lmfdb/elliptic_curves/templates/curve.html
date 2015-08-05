@@ -60,9 +60,9 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 #}
 
     <div align ="center">
-      Show commands using:  <a onclick="show_code('sage'); return false" href='#'>sage</a>,
-        <a onclick="show_code('pari'); return false" href='#'>pari</a>,
-        <a onclick="show_code('magma'); return false" href='#'>magma</a>
+      Show commands using:  <a onclick="show_code('sage'); return false" href='#'>sagemath</a>,
+        <a onclick="show_code('pari'); return false" href='#'>pari/gp</a>,
+        <a onclick="show_code('magma'); return false" href='#'>Magma</a>
     </div>
 
 {#
@@ -180,9 +180,15 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
         <tr>
         <td colspan="4">
-            <span class='sage nodisplay code'><img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">&nbsp;E.discriminant().factor()</span>
-            <span class='pari nodisplay code'><img src = "http://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">&nbsp;E.disc</span>
-            <span class='magma nodisplay code'><img src = "http://i.stack.imgur.com/0468s.png" width="50px"> Discriminant(E);</span>
+          <div class='sage nodisplay code'>
+            {{data.code.sage.prompt}}&nbsp;{{data.code.sage.disc}}
+          </div>
+          <div class='pari nodisplay code'>
+            {{data.code.gp.prompt}}&nbsp;{{data.code.gp.disc}}
+          </div>
+          <div class='magma nodisplay code'>
+            {{data.code.magma.prompt}}&nbsp;{{data.code.magma.disc}}
+          </div>
         </td>
         </tr>
         <tr>
@@ -195,9 +201,15 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
         <tr>
         <td colspan="4">
-            <span class='sage nodisplay code'><img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">&nbsp;E.j_invariant().factor()</span>
-            <span class='pari nodisplay code'><img src = "http://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">&nbsp;E.j</span>
-            <span class='magma nodisplay code'><img src = "http://i.stack.imgur.com/0468s.png" width="50px"> jInvariant(E);</span>
+          <div class='sage nodisplay code'>
+            {{data.code.sage.prompt}}&nbsp;{{data.code.sage.jinv}}
+          </div>
+          <div class='pari nodisplay code'>
+            {{data.code.gp.prompt}}&nbsp;{{data.code.gp.jinv}}
+          </div>
+          <div class='magma nodisplay code'>
+            {{data.code.magma.prompt}}&nbsp;{{data.code.magma.jinv}}
+          </div>
         </td>
         </tr>
         <tr>
@@ -227,9 +239,15 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
         <tr>
         <td colspan="4">
-            <span class='sage nodisplay code'><img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">&nbsp;E.rank()</span>
-            <span class='pari nodisplay code'></span>
-            <span class='magma nodisplay code'><img src = "http://i.stack.imgur.com/0468s.png" width="50px"> Rank(E);</span>
+          <div class='sage nodisplay code'>
+            {{data.code.sage.prompt}}&nbsp;{{data.code.sage.rank}}
+          </div>
+          <div class='pari nodisplay code'>
+            {{data.code.gp.prompt}}&nbsp;{{data.code.gp.rank}}
+          </div>
+          <div class='magma nodisplay code'>
+            {{data.code.magma.prompt}}&nbsp;{{data.code.magma.rank}}
+          </div>
         </td>
         </tr>
         <tr>
@@ -241,9 +259,15 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
         <tr>
         <td colspan="4">
-            <span class='sage nodisplay code'><img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">&nbsp;E.regulator()</span>
-            <span class='pari nodisplay code'></span>
-            <span class='magma nodisplay code'><img src = "http://i.stack.imgur.com/0468s.png" width="50px"> Regulator(E);</span>
+          <div class='sage nodisplay code'>
+            {{data.code.sage.prompt}}&nbsp;{{data.code.sage.reg}}
+          </div>
+          <div class='pari nodisplay code'>
+            {{data.code.gp.prompt}}&nbsp;{{data.code.gp.reg}}
+          </div>
+          <div class='magma nodisplay code'>
+            {{data.code.magma.prompt}}&nbsp;{{data.code.magma.reg}}
+          </div>
         </td>
         </tr>
         <tr>
@@ -257,9 +281,15 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
         <tr>
         <td colspan="4">
-            <span class='sage nodisplay code'><img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">&nbsp;E.period_lattice().omega()</span>
-            <span class='pari nodisplay code'><img src = "http://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">&nbsp;E.omega[1]</span>
-            <span class='magma nodisplay code'><img src = "http://i.stack.imgur.com/0468s.png" width="50px"> RealPeriod(E);</span>
+          <div class='sage nodisplay code'>
+            {{data.code.sage.prompt}}&nbsp;{{data.code.sage.real_period}}
+          </div>
+          <div class='pari nodisplay code'>
+            {{data.code.gp.prompt}}&nbsp;{{data.code.gp.real_period}}
+          </div>
+          <div class='magma nodisplay code'>
+            {{data.code.magma.prompt}}&nbsp;{{data.code.magma.real_period}}
+          </div>
         </td>
         </tr>
         <tr>
@@ -269,9 +299,15 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
         <tr>
         <td colspan="4">
-            <span class='sage nodisplay code'><img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">&nbsp;E.tamagawa_numbers()</span>
-            <span class='pari nodisplay code'></span>
-            <span class='magma nodisplay code'><img src = "http://i.stack.imgur.com/0468s.png" width="50px"> TamagawaNumbers(E);</span>
+          <div class='sage nodisplay code'>
+            {{data.code.sage.prompt}}&nbsp;{{data.code.sage.cp}}
+          </div>
+          <div class='pari nodisplay code'>
+            {{data.code.gp.prompt}}&nbsp;{{data.code.gp.cp}}
+          </div>
+          <div class='magma nodisplay code'>
+            {{data.code.magma.prompt}}&nbsp;{{data.code.magma.cp}}
+          </div>
         </td>
         </tr>
         <tr>
@@ -287,21 +323,33 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
         <tr>
         <td colspan="4">
-            <span class='sage nodisplay code'><img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">&nbsp;E.torsion_order()</span>
-            <span class='pari nodisplay code'><img src = "http://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">&nbsp;elltors(E)[1]</span>
-            <span class='magma nodisplay code'><img src = "http://i.stack.imgur.com/0468s.png" width="50px"> OrderTorsionSubgroup(E);</span>
+          <div class='sage nodisplay code'>
+            {{data.code.sage.prompt}}&nbsp;{{data.code.sage.ntors}}
+          </div>
+          <div class='pari nodisplay code'>
+            {{data.code.gp.prompt}}&nbsp;{{data.code.gp.ntors}}
+          </div>
+          <div class='magma nodisplay code'>
+            {{data.code.magma.prompt}}&nbsp;{{data.code.magma.ntors}}
+          </div>
         </td>
         </tr>
         <tr>
         <td colspan="4"> \( \#E_{\text{tor}} \)</td>
         <td>&nbsp;=&nbsp;</td><td>\({{ data.mw.tor_order }}\)</td>
         </tr>
-	
+
         <tr>
         <td colspan="4">
-            <span class='sage nodisplay code'><img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">&nbsp;E.sha().an_numerical()</span>
-            <span class='pari nodisplay code'></span>
-            <span class='magma nodisplay code'><img src = "http://i.stack.imgur.com/0468s.png" width="50px"> MordellWeilShaInformation(E);</span>
+          <div class='sage nodisplay code'>
+            {{data.code.sage.prompt}}&nbsp;{{data.code.sage.sha}}
+          </div>
+          <div class='pari nodisplay code'>
+            {{data.code.gp.prompt}}&nbsp;{{data.code.gp.sha}}
+          </div>
+          <div class='magma nodisplay code'>
+            {{data.code.magma.prompt}}&nbsp;{{data.code.magma.sha}}
+          </div>
         </td>
         </tr>
         <tr>

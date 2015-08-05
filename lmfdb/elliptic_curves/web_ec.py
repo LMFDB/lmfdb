@@ -359,18 +359,20 @@ class WebEC(object):
         gpcode = dict()
         magmacode = dict()
 
-        #utility function to save typing!
+        # utility function to save typing!
 
         def set_code(key, s, g, m):
             sagecode[key] = s
             gpcode[key] = g
             magmacode[key] = m
 
+        pari_not_implemented = '\\\\ (not implemented)'
+
         # prompt
         set_code('prompt',
-                 '$\\tt sage$: ',
-                 '$\\tt gp?$ ',
-                 '$\\tt Magma>$ ')
+                 'sage:',
+                 'gp:',
+                 'magma:')
 
         # logo
         set_code('logo',
@@ -389,7 +391,7 @@ class WebEC(object):
         # generators
         set_code('gens',
                  'E.gens()',
-                 '(not implemented)',
+                 pari_not_implemented,
                  'Generators(E);')
 
         # torsion
@@ -399,12 +401,53 @@ class WebEC(object):
 
         # integral points
         set_code('intpts', 'E.integral_points()',
-                 '(not implemented)',
+                 pari_not_implemented,
                  'IntegralPoints(E);')
 
         # conductor
         set_code('cond', 'E.conductor().factor()',
                  'ellglobalred(E)[1]',
                  'Conductor(E);')
+
+        # discriminant
+        set_code('disc', 'E.dicriminant().factor()',
+                 'E.disc',
+                 'Discriminant(E);')
+
+        # j-invariant
+        set_code('jinv', 'E.j_invariant().factor()',
+                 'E.j',
+                 'jInvariant(E);')
+
+        # rank
+        set_code('rank', 'E.rank()',
+                 pari_not_implemented,
+                 'Rank(E);')
+
+        # regulator
+        set_code('reg', 'E.regulator()',
+                 pari_not_implemented,
+                 'Regulator(E);')
+
+        # regulator
+        set_code('real_period', 'E.period_lattice().omega()',
+                 'E.omega[1]',
+                 'RealPeriod(E);')
+
+        # Tamagawa numbers
+        set_code('cp', 'E.tamagawa_numbers()',
+                 'E.omega[1]',
+                 'RealPeriod(E);')
+
+        # torsion order
+        set_code('ntors', 'E.torsion_order()',
+                 'elltors(E)[1]',
+                 'OrderTorsionSubgroup(E);')
+
+        # analytic order of sha
+        set_code('sha', 'E.sha().an_numerical()',
+                 pari_not_implemented,
+                 'MordellWeilShaInformation(E);')
+
 
         self.code = {'sage': sagecode, 'gp': gpcode, 'magma': magmacode}
