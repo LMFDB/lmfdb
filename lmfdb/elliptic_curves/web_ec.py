@@ -366,7 +366,8 @@ class WebEC(object):
             gpcode[key] = g
             magmacode[key] = m
 
-        pari_not_implemented = '\\\\ (not implemented)'
+        pari_not_implemented = '\\\\ (not yet implemented)'
+        magma_not_implemented = '// (not yet implemented)'
 
         # prompt
         set_code('prompt',
@@ -384,9 +385,9 @@ class WebEC(object):
 
         # curve
         set_code('curve',
-                 'E = EllipticCurve(%s)'   % self.data['ainvs'],
-                 'E = ellinit(%s)'         % self.data['ainvs'],
-                 'E := EllipticCurve(%s);' % self.data['ainvs'])
+                 'E = EllipticCurve(%s)    # or: E = EllipticCurve("%s")'  % (self.data['ainvs'],self.label),
+                 'E = ellinit(%s)       \\\\ or E = ellinit("%s")'         % (self.data['ainvs'],self.label),
+                 'E := EllipticCurve(%s); // or: E := EllipticCurve("%s");' % (self.data['ainvs'],self.label))
 
         # generators
         set_code('gens',
@@ -449,5 +450,35 @@ class WebEC(object):
                  pari_not_implemented,
                  'MordellWeilShaInformation(E);')
 
+        # q-expansion of eigenform
+        set_code('qexp', 'E.q_eigenform(10)',
+                 'xy = elltaniyama(E); deriv(xy[1])/(2*xy[2]+E.a1*xy[1]+E.a3)',
+                 'ModularForm(E);')
 
-        self.code = {'sage': sagecode, 'gp': gpcode, 'magma': magmacode}
+        # modular degree
+        set_code('moddeg', 'E.modular_degree()',
+                 pari_not_implemented,
+                 'ModularDegree(E);')
+
+        # special value
+        set_code('L1', 'r = E.rank(); E.lseries().dokchitser().derivative(1,r)/r.factorial()',
+                 'ar = ellanalyticrank(E); ar[2]/factorial(ar[1])',
+                 'Lr1 where r,Lr1 := AnalyticRank(E: Precision:=12);')
+
+        # local data
+        set_code('localdata', 'E.local_data()',
+                 'ellglobalred(E)[5]',
+                 '[LocalInformation(E,p) : p in BadPrimes(E)];')
+
+        # mod-l Galois representation
+        set_code('galrep', 'rho = E.galois_representation(); [rho.image_type(p) for p in rho.non_surjective()]',
+                 pari_not_implemented,
+                 '[GaloisRepresentation(E,p): p in PrimesUpTo(20)];')
+
+        # p-adic regulators
+        set_code('padicreg', '[E.padic_regulator(p) for p in primes(3,20)]',
+                 pari_not_implemented,
+                 magma_not_implemented)
+
+
+        self.code = {'sage': sagecode, 'pari': gpcode, 'magma': magmacode}

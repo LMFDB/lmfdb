@@ -1588,3 +1588,13 @@ div.box {
 	border: 1px solid #8080FF;
 	background-color: #E5E5FF;
 }
+
+div.codebox {
+    padding: 5px;
+    text-padding: 10px;
+    overflow: auto;
+    border: 1px solid #8080FF;
+    border-radius: 5px;
+    background-color: #E5E5FF;
+    box-shadow: 3px 3px 3px #8080FF;
+}
