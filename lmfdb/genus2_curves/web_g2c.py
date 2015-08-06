@@ -275,6 +275,7 @@ class WebG2C(object):
 
         data['st0_group_name'] = st0_group_name(isogeny_class['real_geom_end_alg'])
         data['st_group_name'] = st_group_name(isogeny_class['st_group'])
+        data['isogeny_class'] = isogeny_class
         if isogeny_class['is_gl2_type']:
             data['is_gl2_type_name'] = 'yes' # shows in side
             data['is_gl2_type_display'] = '&#x2713;' # checkmark, shows in search results
@@ -295,11 +296,10 @@ class WebG2C(object):
             simple_statement = ""  # leave empty since not computed.
         data['endomorphism_statement'] = simple_statement + gl2_statement
         
-        if data['disc'] % 4096 == 0:
-            ind2 = [a[0] for a in isogeny_class['bad_lfactors']].index(2)
-            bad2 = isogeny_class['bad_lfactors'][ind2][1]
-            data['magma_cond_option'] = ': ExcFactors:=[*<2,Valuation('+str(data['cond'])+',2),R!'+str(bad2)+'>*]'
         x = self.label.split('.')[1]
+
+        self.make_code_snippets()
+
         self.friends = [
             ('Isogeny class %s' % isog_label(self.label), url_for(".by_double_iso_label", conductor = self.cond, iso_label = x)),
             ('L-function', url_for("l_functions.l_function_genus2_page", cond=self.cond,x=x)),
@@ -330,7 +330,97 @@ class WebG2C(object):
              ('%s' % iso, url_for(".by_double_iso_label", conductor=self.cond, iso_label=iso)),
              ('Genus 2 curve %s' % num, url_for(".by_g2c_label", label=self.label))]
 
-#    def render_curve_webpage_by_label(label):
-#        credit = credit_string
-#        data = WebG2C.by_label(label)
-#        return render_template("curve_g2.html", credit=credit, **data)
+    def make_code_snippets(self):
+        sagecode = dict()
+        gpcode = dict()
+        magmacode = dict()
+
+        #utility function to save typing!
+
+        def set_code(key, s, g, m):
+            sagecode[key] = s
+            gpcode[key] = g
+            magmacode[key] = m
+        sage_not_implemented = '# (not yet implemented)'
+        pari_not_implemented = '\\\\ (not yet implemented)'
+        magma_not_implemented = '// (not yet implemented)'
+
+        # prompt
+        set_code('prompt',
+                 'sage:',
+                 'gp:',
+                 'magma:')
+
+        # logo
+        set_code('logo',
+                 '<img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">',
+                 '<img src = "http://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">',
+                 '<img src = "http://i.stack.imgur.com/0468s.png" width="50px">')
+        # overwrite the above until we get something which looks reasonable
+        set_code('logo', '', '', '')
+
+        # curve
+        set_code('curve',
+                 'R.<x> = PolynomialRing(QQ); C = HyperellipticCurve(R(%s), R(%s))'   % (self.data['min_eqn'][0],self.data['min_eqn'][1]),
+                 pari_not_implemented, # pari code goes here
+                 'R<x> := PolynomialRing(Rationals()); C := HyperellipticCurve(R!%s, R!%s);'   % (self.data['min_eqn'][0],self.data['min_eqn'][1]) 
+                 )
+        if self.data['disc'] % 4096 == 0:
+            ind2 = [a[0] for a in self.data['isogeny_class']['bad_lfactors']].index(2)
+            bad2 = self.data['isogeny_class']['bad_lfactors'][ind2][1]
+            magma_cond_option = ': ExcFactors:=[*<2,Valuation('+str(data['cond'])+',2),R!'+str(bad2)+'>*]'
+        else:
+            magma_cond_option = ''
+        set_code('cond',
+                 sage_not_implemented, # sage code goes here
+                 pari_not_implemented, # pari code goes here
+                 'Conductor(LSeries(C%s)); Factorization($1);' % magma_cond_option
+                 )
+        set_code('disc',
+                 sage_not_implemented, # sage code goes here
+                 pari_not_implemented, # pari code goes here
+                 'Discriminant(C); Factorization(Integers()!$1);'
+                 )
+        set_code('igusa_clebsch',
+                 'C.igusa_clebsch_invariants(); [factor(a) for a in _]', # sage code goes here
+                 pari_not_implemented, # pari code goes here
+                 'IgusaClebschInvariants(C); [Factorization(Integers()!a): a in $1];'
+                 )
+        set_code('igusa',
+                 sage_not_implemented, # sage code goes here
+                 pari_not_implemented, # pari code goes here
+                 'IgusaInvariants(C); [Factorization(Integers()!a): a in $1];'
+                 )
+        set_code('g2',
+                 sage_not_implemented, # sage code goes here
+                 pari_not_implemented, # pari code goes here
+                 'G2Invariants(C);'
+                 )
+        set_code('aut',
+                 sage_not_implemented, # sage code goes here
+                 pari_not_implemented, # pari code goes here
+                 'AutomorphismGroup(C); IdentifyGroup($1);'
+                 )
+        set_code('autQbar',
+                 sage_not_implemented, # sage code goes here
+                 pari_not_implemented, # pari code goes here
+                 'AutomorphismGroup(ChangeRing(C,AlgebraicClosure(Rationals()))); IdentifyGroup($1);'
+                 )
+        set_code('num_rat_wpts',
+                 sage_not_implemented, # sage code goes here
+                 pari_not_implemented, # pari code goes here
+                 '#Roots(HyperellipticPolynomials(SimplifiedModel(C)));'
+                 )
+        set_code('two_selmer',
+                 sage_not_implemented, # sage code goes here
+                 pari_not_implemented, # pari code goes here
+                 'TwoSelmerGroup(Jacobian(C)); NumberOfGenerators($1);'
+                 )
+        set_code('tor_struct',
+                 sage_not_implemented, # sage code goes here
+                 pari_not_implemented, # pari code goes here
+                 'TorsionSubgroup(Jacobian(SimplifiedModel(C))); AbelianInvariants($1);'
+                 )
+
+
+        self.code = {'sage': sagecode, 'pari': gpcode, 'magma': magmacode}
