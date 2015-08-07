@@ -261,12 +261,18 @@ class WebG2C(object):
             data['tor_struct'] = ' \\times '.join(['\Z/{%s}\Z' % n for n in tor_struct])
         isogeny_class = db_g2c().isogeny_classes.find_one({'label' : isog_label(self.label)})
         data['real_geom_end_alg'] = self.real_geom_end_alg
+        end_alg_title_dict = {'end_ring': '\\mathrm{End}(J)', 
+                              'rat_end_alg': '\\mathrm{End}(J) \\otimes \\Q',
+                              'real_end_alg': '\\mathrm{End}(J) \otimes \R',
+                              'geom_end_ring': '\\mathrm{End}(J_{\\overline{\\Q}})', 
+                              'rat_geom_end_alg': '\\mathrm{End}(J_{\\overline{\\Q}}) \\otimes \\Q',
+                              'real_geom_end_alg':'\\mathrm{End}(J_{\\overline{\\Q}}) \\otimes \\R'}
         for endalgtype in ['end_ring', 'rat_end_alg', 'real_end_alg', 'geom_end_ring', 'rat_geom_end_alg', 'real_geom_end_alg']:
             if endalgtype in isogeny_class:
-                data[endalgtype + '_name'] = end_alg_name(isogeny_class[endalgtype])
+                data[endalgtype + '_name'] = [end_alg_title_dict[endalgtype],end_alg_name(isogeny_class[endalgtype])]
             else:
-                data[endalgtype + '_name'] = ''
-
+                data[endalgtype + '_name'] = [end_alg_title_dict[endalgtype],'']
+        
         data['geom_end_field'] = isogeny_class['geom_end_field']
         if data['geom_end_field'] <> '':
             data['geom_end_field_name'] = field_pretty(data['geom_end_field'])
@@ -305,7 +311,7 @@ class WebG2C(object):
             ('L-function', url_for("l_functions.l_function_genus2_page", cond=self.cond,x=x)),
             
             ('Twists',url_for(".index_Q", ic0 = self.igusa_clebsch[0], ic1 = self.igusa_clebsch[1],ic2 = self.igusa_clebsch[2],ic3 = self.igusa_clebsch[3])),
-#            ('Twists2',url_for(".index_Q", igusa_clebsch = str(self.igusa_clebsch)))  #doesn't work.
+            #('Twists2',url_for(".index_Q", igusa_clebsch = str(self.igusa_clebsch)))  #doesn't work.
             #('Siegel modular form someday', '.')
             ]
         self.downloads = [
@@ -320,7 +326,7 @@ class WebG2C(object):
                            ('Discriminant', '%s' % data['disc']),
                            ('Invariants', '%s </br> %s </br> %s </br> %s'% tuple(data['ic_norm'])), 
                            ('Sato-Tate group', '\(%s\)' % data['st_group_name']), 
-                           ('\(\mathrm{End}(J_{\overline{\Q}}) \otimes \R\)','\(%s\)' % data['real_geom_end_alg_name']),
+                           ('\(%s\)' % data['real_geom_end_alg_name'][0],'\(%s\)' % data['real_geom_end_alg_name'][1]),
                            ('\(\mathrm{GL}_2\)-type','%s' % data['is_gl2_type_name'])]
         self.title = "Genus 2 Curve %s" % (self.label)
         self.bread = [
@@ -382,7 +388,7 @@ class WebG2C(object):
                  'Discriminant(C); Factorization(Integers()!$1);'
                  )
         set_code('igusa_clebsch',
-                 'C.igusa_clebsch_invariants(); [factor(a) for a in _]', # sage code goes here
+                 'C.igusa_clebsch_invariants(); [factor(a) for a in _]',
                  pari_not_implemented, # pari code goes here
                  'IgusaClebschInvariants(C); [Factorization(Integers()!a): a in $1];'
                  )

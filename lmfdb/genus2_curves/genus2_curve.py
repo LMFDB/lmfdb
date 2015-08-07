@@ -179,10 +179,10 @@ def genus2_curve_search(**args):
         elif info['is_gl2_type'] == "False":
             query['is_gl2_type']= False
 
-    for fld in ['st_group', 'real_geom_end_alg','igusa_clebsch']:
+    for fld in ['st_group', 'real_geom_end_alg']:
         if info.get(fld):
             query[fld] = info[fld]
-    for fld in ['aut_grp', 'geom_aut_grp','torsion']:
+    for fld in ['aut_grp', 'geom_aut_grp','torsion','igusa_clebsch']:
         if info.get(fld):
             query[fld] = map(int,info[fld].strip()[1:-1].split(","))
     if info.get('ic0'):
