@@ -8,6 +8,13 @@
 div.properties-body table tr td.label { vertical-align: top; }
 #content > h2.subhead { color:black;}
 </style>
+{% macro code(codes, languages, item) %}
+{% for L in languages %}
+<div class="{{ [L,'nodisplay', 'codebox'] | join(' ')}}">
+  {{codes[L]['prompt']}}&nbsp;{{codes[L][item]}}
+</div>
+{% endfor %}
+{% endmacro %}
 
 <script>
 var cur_system = null;
@@ -20,9 +27,10 @@ function show_code(system) {
       cur_system = null;
       } else {
       $('.'+system).show();
+      $('.'+system).css('display','inline-block');
       cur_system = system;
     }
-  }
+}
 </script>
 
 <script>
@@ -39,25 +47,32 @@ function show_invs(invstyle) {
         src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <script type="text/javascript"
 src="http://code.jquery.com/jquery-latest.min.js"></script>
+{#
 <script src="http://aleph.sagemath.org/embedded_sagecell.js"></script>
-
+#}
     {% set KNOWL_ID = "g2c.%s"|format(data['label']) %}
 
 <!--<h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>-->
 
     <div align ="center">
-      Show commands using:  <a onclick="show_code('sage'); return false" href='#'>sage</a>,
-        <a onclick="show_code('magma'); return false" href='#'>magma</a>
+      Show commands using:  
+      <a onclick="show_code('sage'); return false" href='#'>sagemath</a>,
+<!--      <a onclick="show_code('pari'); return false" href='#'>pari/gp</a>,
+No pari/gp commands yet!
+-->
+      <a onclick="show_code('magma'); return false" href='#'>magma</a>
     </div>
     
     <h2> {{ KNOWL('g2c.minimal_equation', title='Minimal equation') }} </h2>
+    {{code(data.code,['sage','magma'],'curve')}}
     <p> ${{ data.data.min_eqn_display }}$ </p>
-
-    <div class='sage nodisplay code'><img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">&nbsp; R.&lt;x&gt; = PolynomialRing(QQ); C = HyperellipticCurve(R({{data.data.min_eqn[0]}}), R({{data.data.min_eqn[1]}}))</div>
-    <div class='magma nodisplay code'><img src = "http://i.stack.imgur.com/0468s.png" width="50px"> R&lt;x&gt; := PolynomialRing(Rationals()); C := HyperellipticCurve(R!{{data.data.min_eqn[0]}}, R!{{data.data.min_eqn[1]}});</div>
-
     <h2> {{ KNOWL('g2c.invariants', title='Invariants') }}  </h2>
-        <table>
+    <table>
+      <tr>
+	<td colspan="6">
+	  {{code(data.code,['magma'],'cond')}}
+	</td>
+      </tr>
         <tr>
           <td> \( N \) </td>
 	  <td>&nbsp;=&nbsp;</td>
@@ -65,6 +80,11 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
           <td>&nbsp;=&nbsp;</td>
           <td>{{ data.data.cond_factor_latex }}</td>
         </tr>
+      <tr>
+	<td colspan="6">
+	  {{code(data.code,['magma'],'disc')}}
+	</td>
+      </tr>
         <tr>
           <td> \( \Delta \) </td>
 	  <td>&nbsp;=&nbsp;</td>
@@ -75,13 +95,16 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
         </table>
         <br>
         <div class='igusa_clebsch'>
-            {{KNOWL("g2c.igusa_clebsch_invariants", title="Igusa-Clebsch invariants")}}
+          {{KNOWL("g2c.igusa_clebsch_invariants", title="Igusa-Clebsch 	  invariants")}}
+	  <p>{{code(data.code,['sage','magma'],'igusa_clebsch')}}</p>
         </div>
         <div class='igusa nodisplay'>
-            {{KNOWL("g2c.igusa_invariants", title="Igusa invariants")}}
+          {{KNOWL("g2c.igusa_invariants", title="Igusa invariants")}}
+	  <p>{{code(data.code,['magma'],'igusa')}}</p>
         </div>
         <div class='g2 nodisplay'>
-            {{KNOWL("g2c.g2_invariants", title="G2 invariants")}}
+          {{KNOWL("g2c.g2_invariants", title="G2 invariants")}}
+	  <p>{{code(data.code,['magma'],'g2')}}</p>
         </div>
         <table>
         <tr class='igusa_clebsch'>
@@ -173,24 +196,38 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
         </div>
 
     <h2> {{ KNOWL('g2c.aut_grp', title='Automorphism group') }} </h2>
+
 <table>
+<tr>
+<td colspan="6">
+{{code(data.code,['magma'],'aut')}}
+</td>
+</tr>
 <tr>  <td>\(\mathrm{Aut}(X)\)</td><td>\(\simeq\)</td> <td>\({{ data.data.aut_grp}} \)</td> <td>(GAP id : {{data.aut_grp}})</td></tr>
+<tr>
+<td colspan="6">
+{{code(data.code,['magma'],'autQbar')}}
+</td>
+</tr>
 <tr>  <td>\(\mathrm{Aut}(X_{\overline{\Q}})\)</td><td>\(\simeq\)</td>  <td>\({{ data.data.geom_aut_grp}} \) </td> <td>(GAP id : {{data.geom_aut_grp}})</td></tr>
 </table>
 
-<h2> {{ KNOWL('g2c.num_rat_wpts', title='Number of rational Weierstrass points') }} </h2>
-\({{data.data.num_rat_wpts}}\)
+    <h2> {{ KNOWL('g2c.num_rat_wpts', title='Number of rational Weierstrass points') }} </h2>
+{{code(data.code,['magma'],'num_rat_wpts')}}
+<p>\({{data.data.num_rat_wpts}}\) </p>
 <h2 class='subhead'>
 Properties related to the {{KNOWL('g2c.jacobian', title='Jacobian')}}
 </h2>
 <h3>
 {{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank') }} 
 </h3>
-\({{data.data.two_selmer_rank}}\)
+{{code(data.code,['magma'],'two_selmer')}}
+<p>\({{data.data.two_selmer_rank}}\)</p>
 <h3>
 {{ KNOWL('g2c.torsion', title='Torsion') }}
 </h3>
-\({{data.data.tor_struct}}\) 
+{{code(data.code,['magma'],'tor_struct')}}
+<p>\({{data.data.tor_struct}}\) </p>
 
 
 <h3> {{KNOWL('g2c.st_group', title='Sato-Tate group') }} </h3>
@@ -203,7 +240,7 @@ Properties related to the {{KNOWL('g2c.jacobian', title='Jacobian')}}
 </p>
 
 <h3> {{ KNOWL('g2c.jac_endomorphisms', title='Endomorphisms of the Jacobian') }} </h3>
-{{data.data.endomorphism_statement}}
+<p>{{data.data.endomorphism_statement}}</p>
 <table>
   <tr>  <td>\(\mathrm{End}(J) \otimes \Q\)</td><td>\(\simeq\)</td><td>\({{data.data.rat_end_alg_name}}\)</td>
 </tr>
