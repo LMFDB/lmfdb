@@ -320,6 +320,8 @@ class WebEC(object):
         cond, iso, num = split_lmfdb_label(self.lmfdb_label)
         data['newform'] =  web_latex(self.E.q_eigenform(10))
 
+        self.make_code_snippets()
+
         self.friends = [
             ('Isogeny class ' + self.lmfdb_iso, url_for(".by_double_iso_label", conductor=N, iso_label=iso)),
             ('Minimal quadratic twist %s %s' % (data['minq_info'], data['minq_label']), url_for(".by_triple_label", conductor=minq_N, iso_label=minq_iso, number=minq_number)),
@@ -351,3 +353,132 @@ class WebEC(object):
                            ('%s' % N, url_for(".by_conductor", conductor=N)),
                            ('%s' % iso, url_for(".by_double_iso_label", conductor=N, iso_label=iso)),
                            ('%s' % num,' ')]
+
+    def make_code_snippets(self):
+        sagecode = dict()
+        gpcode = dict()
+        magmacode = dict()
+
+        # utility function to save typing!
+
+        def set_code(key, s, g, m):
+            sagecode[key] = s
+            gpcode[key] = g
+            magmacode[key] = m
+
+        pari_not_implemented = '\\\\ (not yet implemented)'
+        magma_not_implemented = '// (not yet implemented)'
+
+        # prompt
+        set_code('prompt',
+                 'sage:',
+                 'gp:',
+                 'magma:')
+
+        # logo
+        set_code('logo',
+                 '<img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">',
+                 '<img src = "http://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">',
+                 '<img src = "http://i.stack.imgur.com/0468s.png" width="50px">')
+        # overwrite the above until we get something which looks reasonable
+        set_code('logo', '', '', '')
+
+        # curve
+        set_code('curve',
+                 'E = EllipticCurve(%s)    # or: E = EllipticCurve("%s")'  % (self.data['ainvs'],self.label),
+                 'E = ellinit(%s)       \\\\ or E = ellinit("%s")'         % (self.data['ainvs'],self.label),
+                 'E := EllipticCurve(%s); // or: E := EllipticCurve("%s");' % (self.data['ainvs'],self.label))
+
+        # generators
+        set_code('gens',
+                 'E.gens()',
+                 pari_not_implemented,
+                 'Generators(E);')
+
+        # torsion
+        set_code('tors', 'E.torsion_subgroup().gens()',
+                 'elltors(E)',
+                 'TorsionSubgroup(E);')
+
+        # integral points
+        set_code('intpts', 'E.integral_points()',
+                 pari_not_implemented,
+                 'IntegralPoints(E);')
+
+        # conductor
+        set_code('cond', 'E.conductor().factor()',
+                 'ellglobalred(E)[1]',
+                 'Conductor(E);')
+
+        # discriminant
+        set_code('disc', 'E.dicriminant().factor()',
+                 'E.disc',
+                 'Discriminant(E);')
+
+        # j-invariant
+        set_code('jinv', 'E.j_invariant().factor()',
+                 'E.j',
+                 'jInvariant(E);')
+
+        # rank
+        set_code('rank', 'E.rank()',
+                 pari_not_implemented,
+                 'Rank(E);')
+
+        # regulator
+        set_code('reg', 'E.regulator()',
+                 pari_not_implemented,
+                 'Regulator(E);')
+
+        # regulator
+        set_code('real_period', 'E.period_lattice().omega()',
+                 'E.omega[1]',
+                 'RealPeriod(E);')
+
+        # Tamagawa numbers
+        set_code('cp', 'E.tamagawa_numbers()',
+                 'E.omega[1]',
+                 'RealPeriod(E);')
+
+        # torsion order
+        set_code('ntors', 'E.torsion_order()',
+                 'elltors(E)[1]',
+                 'OrderTorsionSubgroup(E);')
+
+        # analytic order of sha
+        set_code('sha', 'E.sha().an_numerical()',
+                 pari_not_implemented,
+                 'MordellWeilShaInformation(E);')
+
+        # q-expansion of eigenform
+        set_code('qexp', 'E.q_eigenform(10)',
+                 'xy = elltaniyama(E); deriv(xy[1])/(2*xy[2]+E.a1*xy[1]+E.a3)',
+                 'ModularForm(E);')
+
+        # modular degree
+        set_code('moddeg', 'E.modular_degree()',
+                 pari_not_implemented,
+                 'ModularDegree(E);')
+
+        # special value
+        set_code('L1', 'r = E.rank(); E.lseries().dokchitser().derivative(1,r)/r.factorial()',
+                 'ar = ellanalyticrank(E); ar[2]/factorial(ar[1])',
+                 'Lr1 where r,Lr1 := AnalyticRank(E: Precision:=12);')
+
+        # local data
+        set_code('localdata', 'E.local_data()',
+                 'ellglobalred(E)[5]',
+                 '[LocalInformation(E,p) : p in BadPrimes(E)];')
+
+        # mod-l Galois representation
+        set_code('galrep', 'rho = E.galois_representation(); [rho.image_type(p) for p in rho.non_surjective()]',
+                 pari_not_implemented,
+                 '[GaloisRepresentation(E,p): p in PrimesUpTo(20)];')
+
+        # p-adic regulators
+        set_code('padicreg', '[E.padic_regulator(p) for p in primes(3,20)]',
+                 pari_not_implemented,
+                 magma_not_implemented)
+
+
+        self.code = {'sage': sagecode, 'pari': gpcode, 'magma': magmacode}
