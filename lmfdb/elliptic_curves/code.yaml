@@ -9,17 +9,23 @@ logo:
   magma: <img src = "http://i.stack.imgur.com/0468s.png" width="50px">
 
 not-implemented:
-  sage:  # (not yet implemented)
-  pari:  \\\\ (not yet implemented)
-  magma: // (not yet implemented)
+  sage: |
+    # (not yet implemented)
+  pari: |
+    \\\\ (not yet implemented)
+  magma: |
+    // (not yet implemented)
 
 curve:
   sage: |
-    E = EllipticCurve(%s)    # or: E = EllipticCurve("%s")
+    E = EllipticCurve(%s)    # or
+    E = EllipticCurve("%s")
   pari: |
-    E = ellinit(%s)       \\\\ or E = ellinit("%s")
+    E = ellinit(%s)       \\ or
+    E = ellinit("%s")
   magma: |
-    E := EllipticCurve(%s); // or: E := EllipticCurve("%s");
+    E := EllipticCurve(%s); // or
+    E := EllipticCurve("%s");
 
 gens:
   sage:  E.gens()
@@ -95,7 +101,7 @@ L1:
   pari:  |
     ar = ellanalyticrank(E);
     ar[2]/factorial(ar[1])
-  magma:
+  magma: |
     Lr1 where r,Lr1 := AnalyticRank(E: Precision:=12);
 
 localdata:
@@ -114,5 +120,6 @@ galrep:
     [GaloisRepresentation(E,p): p in PrimesUpTo(20)];
 
 padicreg:
-  sage: [E.padic_regulator(p) for p in primes(3,20)]
+  sage: |
+    [E.padic_regulator(p) for p in primes(3,20)]
 

@@ -8,7 +8,7 @@
 {% for L in codes[item] %}
 {# N.B. whitespace is preserved in the following div since the CSS has
 white-space: pre in order to keep line breaks! #}
-<div class="{{ [L,'nodisplay', 'codebox'] | join(' ')}}">{{codes.prompt[L]}}&nbsp;{{codes[item][L]}}</div>
+<div class="{{ [L,'nodisplay', 'codebox'] | join(' ')}}">{% for code in codes[item][L] %}{{codes.prompt[L]}}&nbsp;{{code}}<br>{% endfor %}</div>
 {% endfor %}
 {% endmacro %}
 

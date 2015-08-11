@@ -365,3 +365,11 @@ class WebEC(object):
 
         for lang in ['sage', 'pari', 'magma']:
             self.code['curve'][lang] = self.code['curve'][lang] % (self.data['ainvs'],self.label)
+
+        for k in self.code:
+            if k != 'prompt':
+                for lang in self.code[k]:
+                    self.code[k][lang] = self.code[k][lang].split("\n")
+                    # remove final empty line
+                    if len(self.code[k][lang][-1])==0:
+                        self.code[k][lang] = self.code[k][lang][:-1]
