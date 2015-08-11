@@ -100,49 +100,38 @@ function show_code(system) {
 
 
         <p><h2> {{ KNOWL('nf.unit_group', title='Unit group') }}</h2>
-        <div class='sage nodisplay code'>sage: UK = K.unit_group()</div>
-        <div class='sage nodisplay code'>sage: UK.rank()</div>
-        <div class='sage nodisplay code'>sage: UK.torsion_generator()</div>
-        <div class='sage nodisplay code'>sage: UK.roots_of_unity()</div>
-        <div class='sage nodisplay code'>sage: K.regulator()</div>
-
-        <div class='pari nodisplay code'>pari: #K.fu</div>
-        <div class='pari nodisplay code'>pari: K.tu[2]</div>
-        <div class='pari nodisplay code'>pari: K.fu</div>
-        <div class='pari nodisplay code'>pari: K.reg</div>
-
-        <div class='magma nodisplay code'>&gt; UnitRank(K);</div>
-        <div class='magma nodisplay code'>&gt; UK,f:=UnitGroup(K); K!f(TorsionSubgroup(UK).1);</div>
-        <div class='magma nodisplay code'>&gt; [K!Integers(K)!f(u) : u in Generators(UK)];</div>
-        <div class='magma nodisplay code'>&gt; Regulator(K);</div>
         <p>
+          {{ code(nf.code,'unit_group') }}
           <table>
-            <tr><td>Rank:<td>&nbsp;&nbsp;<td>${{info.unit_rank}}$</tr>
-            <tr><td>Torsion generator:<td>&nbsp;&nbsp;<td>{{info.root_of_unity}}</tr>
+            <tr><td>Rank:<td>&nbsp;&nbsp;<td>${{info.unit_rank}}$
+            <td>{{ code(nf.code,'unit_rank') }}</tr>
+            <tr><td>Torsion generator:<td>&nbsp;&nbsp;<td>{{info.root_of_unity}}
+            <td>{{ code(nf.code,'unit_torsion_gen') }}</tr>
 {% if info.unit_rank==1 %}
             <tr><td>Fundamental unit:<td>&nbsp;&nbsp;<td>{{info.fund_units|safe}}
           {{ info.grh_label|safe }}
+<td>{{ code(nf.code,'fundamental_units') }}
 </tr>
 {% endif %}
 {% if info.unit_rank>1 %}
             <tr><td>Fundamental units:<td>&nbsp;&nbsp;<td>{{info.fund_units|safe}}
           {{ info.grh_label|safe }}
-</tr>
+
+            <td>{{ code(nf.code,'fundamental_units') }}</tr>
 {% endif %}
             <tr><td>Regulator:<td>&nbsp;&nbsp;<td>{{info.regulator}}
           {{ info.grh_label|safe }}
+            <td>{{ code(nf.code,'regulator') }}
            </tr>
           </table>
         </p>
 
 
         <p><h2> {{ KNOWL('nf.galois_group', title='Galois group') }}</h2>
-        <div class='sage nodisplay code'>sage: K.galois_group(type='pari')</div>
-        <div class='pari nodisplay code'>pari: polgalois(K.pol)</div>
-        <div class='magma nodisplay code'>&gt; GaloisGroup(K);</div>
         <p>
             {{ info.galois_group | safe }}:
-          <table>
+            {{ code(nf.code,'galois_group') }}
+            <table>
             <tr><td>{{ info.phrase }}</tr>
             <tr><td>
             {{ info.cclasses | safe }}</tr>
