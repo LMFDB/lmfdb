@@ -9,9 +9,12 @@ logo:
   magma: <img src = "http://i.stack.imgur.com/0468s.png" width="50px">
 
 not-implemented:
-  sage:  # (not yet implemented)
-  pari:  \\\\ (not yet implemented)
-  magma: // (not yet implemented)
+  sage: |
+    # (not yet implemented)
+  pari: |
+    \\ (not yet implemented)
+  magma: |
+    // (not yet implemented)
 
 field:
   sage:  K = NumberField(%s,"a")

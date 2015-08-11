@@ -4,7 +4,9 @@
 
 {% macro code(codes, item) %}
 {% for L in codes[item] %}
-<div class="{{ [L,'nodisplay', 'codebox'] | join(' ')}}">{{codes.prompt[L]}}&nbsp;{{codes[item][L]}}</div>
+{# N.B. whitespace is preserved in the following div since the CSS has
+white-space: pre in order to keep line breaks! #}
+<div class="{{ [L,'nodisplay', 'codebox'] | join(' ')}}">{% for code in codes[item][L] %}{{codes.prompt[L]}}&nbsp;{{code}}<br>{% endfor %}</div>
 {% endfor %}
 {% endmacro %}
 
@@ -100,6 +102,7 @@ function show_code(system) {
         <p><h2> {{ KNOWL('nf.unit_group', title='Unit group') }}</h2>
         <p>
           {{ code(nf.code,'unit_group') }}
+
           <table>
             <tr><td>Rank:<td>&nbsp;&nbsp;<td>${{info.unit_rank}}$
             <td>{{ code(nf.code,'unit_rank') }}</tr>
@@ -107,16 +110,15 @@ function show_code(system) {
             <td>{{ code(nf.code,'unit_torsion_gen') }}</tr>
 {% if info.unit_rank==1 %}
             <tr><td>Fundamental unit:<td>&nbsp;&nbsp;<td>{{info.fund_units|safe}}
-          {{ info.grh_label|safe }}
-<td>{{ code(nf.code,'fundamental_units') }}
-</tr>
-{% endif %}
-{% if info.unit_rank>1 %}
+                {{ info.grh_label|safe }}
+              <td>{{ code(nf.code,'fundamental_units') }}
+            </tr>
+            {% endif %}
+            {% if info.unit_rank>1 %}
             <tr><td>Fundamental units:<td>&nbsp;&nbsp;<td>{{info.fund_units|safe}}
-          {{ info.grh_label|safe }}
-
+                {{ info.grh_label|safe }}
             <td>{{ code(nf.code,'fundamental_units') }}</tr>
-{% endif %}
+            {% endif %}
             <tr><td>Regulator:<td>&nbsp;&nbsp;<td>{{info.regulator}}
           {{ info.grh_label|safe }}
             <td>{{ code(nf.code,'regulator') }}
