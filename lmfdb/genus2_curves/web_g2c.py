@@ -191,6 +191,51 @@ def normalize_invariants(I,W):
 def zfactor(n):
     return factor(n) if n != 0 else 0
 
+
+def get_end_data(isogeny_class):
+    data = {}
+    end_alg_title_dict = {'end_ring': '\\mathrm{End}(J)', 
+                          'rat_end_alg': '\\mathrm{End}(J) \\otimes \\Q',
+                          'real_end_alg': '\\mathrm{End}(J) \otimes \R',
+                          'geom_end_ring': '\\mathrm{End}(J_{\\overline{\\Q}})', 
+                          'rat_geom_end_alg': '\\mathrm{End}(J_{\\overline{\\Q}}) \\otimes \\Q',
+                          'real_geom_end_alg':'\\mathrm{End}(J_{\\overline{\\Q}}) \\otimes \\R'}
+    for endalgtype in ['end_ring', 'rat_end_alg', 'real_end_alg', 'geom_end_ring', 'rat_geom_end_alg', 'real_geom_end_alg']:
+        if endalgtype in isogeny_class:
+            data[endalgtype + '_name'] = [end_alg_title_dict[endalgtype],end_alg_name(isogeny_class[endalgtype])]
+        else:
+            data[endalgtype + '_name'] = [end_alg_title_dict[endalgtype],'']
+        
+    data['geom_end_field'] = isogeny_class['geom_end_field']
+    if data['geom_end_field'] <> '':
+        data['geom_end_field_name'] = field_pretty(data['geom_end_field'])
+    else:
+        data['geom_end_field_name'] = ''        
+
+    data['st0_group_name'] = st0_group_name(isogeny_class['real_geom_end_alg'])
+    data['st_group_name'] = st_group_name(isogeny_class['st_group'])
+    data['isogeny_class'] = isogeny_class
+    if isogeny_class['is_gl2_type']:
+        data['is_gl2_type_name'] = 'yes' # shows in side
+        data['is_gl2_type_display'] = '&#x2713;' # checkmark, shows in search results
+        gl2_statement = 'of \(\GL_2\)-type'
+    else:
+        data['is_gl2_type_name'] = 'no'  # shows in side
+        data['is_gl2_display'] = ''      # shows in search results
+        gl2_statement = 'not of \(\GL_2\)-type'
+
+    if 'is_simple' in isogeny_class and 'is_geom_simple' in isogeny_class:
+        if isogeny_class['is_geom_simple']:
+            simple_statement = "simple over \(\overline{\Q}\), "
+        elif isogeny_class['is_simple']:
+            simple_statement = "simple over \(\Q\) but not simple over \(\overline{\Q}\), "
+        else:
+            simple_statement = "not simple over \(\Q\), "
+    else:
+        simple_statement = ""  # leave empty since not computed.
+    data['endomorphism_statement'] = simple_statement + gl2_statement
+    return data
+
 class WebG2C(object):
     """
     Class for a genus 2 curve over Q
@@ -260,48 +305,9 @@ class WebG2C(object):
             tor_struct = [ZZ(a)  for a in self.torsion]
             data['tor_struct'] = ' \\times '.join(['\Z/{%s}\Z' % n for n in tor_struct])
         isogeny_class = db_g2c().isogeny_classes.find_one({'label' : isog_label(self.label)})
-        data['real_geom_end_alg'] = self.real_geom_end_alg
-        end_alg_title_dict = {'end_ring': '\\mathrm{End}(J)', 
-                              'rat_end_alg': '\\mathrm{End}(J) \\otimes \\Q',
-                              'real_end_alg': '\\mathrm{End}(J) \otimes \R',
-                              'geom_end_ring': '\\mathrm{End}(J_{\\overline{\\Q}})', 
-                              'rat_geom_end_alg': '\\mathrm{End}(J_{\\overline{\\Q}}) \\otimes \\Q',
-                              'real_geom_end_alg':'\\mathrm{End}(J_{\\overline{\\Q}}) \\otimes \\R'}
-        for endalgtype in ['end_ring', 'rat_end_alg', 'real_end_alg', 'geom_end_ring', 'rat_geom_end_alg', 'real_geom_end_alg']:
-            if endalgtype in isogeny_class:
-                data[endalgtype + '_name'] = [end_alg_title_dict[endalgtype],end_alg_name(isogeny_class[endalgtype])]
-            else:
-                data[endalgtype + '_name'] = [end_alg_title_dict[endalgtype],'']
-        
-        data['geom_end_field'] = isogeny_class['geom_end_field']
-        if data['geom_end_field'] <> '':
-            data['geom_end_field_name'] = field_pretty(data['geom_end_field'])
-        else:
-            data['geom_end_field_name'] = ''        
-
-        data['st0_group_name'] = st0_group_name(isogeny_class['real_geom_end_alg'])
-        data['st_group_name'] = st_group_name(isogeny_class['st_group'])
-        data['isogeny_class'] = isogeny_class
-        if isogeny_class['is_gl2_type']:
-            data['is_gl2_type_name'] = 'yes' # shows in side
-            data['is_gl2_type_display'] = '&#x2713;' # checkmark, shows in search results
-            gl2_statement = 'of \(\GL_2\)-type'
-        else:
-            data['is_gl2_type_name'] = 'no'  # shows in side
-            data['is_gl2_display'] = ''      # shows in search results
-            gl2_statement = 'not of \(\GL_2\)-type'
-
-        if 'is_simple' in isogeny_class and 'is_geom_simple' in isogeny_class:
-            if isogeny_class['is_geom_simple']:
-                simple_statement = "simple over \(\overline{\Q}\), "
-            elif isogeny_class['is_simple']:
-                simple_statement = "simple over \(\Q\) but not simple over \(\overline{\Q}\), "
-            else:
-                simple_statement = "not simple over \(\Q\), "
-        else:
-            simple_statement = ""  # leave empty since not computed.
-        data['endomorphism_statement'] = simple_statement + gl2_statement
-        
+        end_data = get_end_data(isogeny_class)
+        for key in end_data.keys():
+            data[key] = end_data[key]
         x = self.label.split('.')[1]
 
         self.make_code_snippets()
@@ -374,7 +380,7 @@ class WebG2C(object):
         if self.data['disc'] % 4096 == 0:
             ind2 = [a[0] for a in self.data['isogeny_class']['bad_lfactors']].index(2)
             bad2 = self.data['isogeny_class']['bad_lfactors'][ind2][1]
-            magma_cond_option = ': ExcFactors:=[*<2,Valuation('+str(data['cond'])+',2),R!'+str(bad2)+'>*]'
+            magma_cond_option = ': ExcFactors:=[*<2,Valuation('+str(self.data['cond'])+',2),R!'+str(bad2)+'>*]'
         else:
             magma_cond_option = ''
         set_code('cond',
