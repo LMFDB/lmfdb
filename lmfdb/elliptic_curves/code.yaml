@@ -1,0 +1,125 @@
+prompt:
+  sage:   'sage:'
+  pari:   'gp:'
+  magma:  'magma:'
+
+logo:
+  sage: <img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
+  pari: <img src = "http://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">
+  magma: <img src = "http://i.stack.imgur.com/0468s.png" width="50px">
+
+not-implemented:
+  sage: |
+    # (not yet implemented)
+  pari: |
+    \\\\ (not yet implemented)
+  magma: |
+    // (not yet implemented)
+
+curve:
+  sage: |
+    E = EllipticCurve(%s)    # or
+    E = EllipticCurve("%s")
+  pari: |
+    E = ellinit(%s)       \\ or
+    E = ellinit("%s")
+  magma: |
+    E := EllipticCurve(%s); // or
+    E := EllipticCurve("%s");
+
+gens:
+  sage:  E.gens()
+  magma: Generators(E);
+
+tors:
+  sage:  E.torsion_subgroup().gens()
+  pari:  elltors(E)
+  magma: TorsionSubgroup(E);
+
+intpts:
+  sage:  E.integral_points()
+  magma: IntegralPoints(E);
+
+cond:
+  sage:  E.conductor().factor()
+  pari:  ellglobalred(E)[1]
+  magma: Conductor(E);
+
+disc:
+  sage:  E.dicriminant().factor()
+  pari:  E.disc
+  magma: Discriminant(E);
+
+jinv:
+  sage:  E.j_invariant().factor()
+  pari:  E.j
+  magma: jInvariant(E);
+
+rank:
+  sage:  E.rank()
+  magma: Rank(E);
+
+reg:
+  sage:  E.regulator()
+  magma: Regulator(E);
+
+real_period:
+  sage:  E.period_lattice().omega()
+  pari:  E.omega[1]
+  magma: RealPeriod(E);
+
+cp:
+  sage:  E.tamagawa_numbers()
+  pari:  E.omega[1]
+  magma: RealPeriod(E);
+
+
+ntors:
+  sage:  E.torsion_order()
+  pari:  elltors(E)[1]
+  magma: OrderTorsionSubgroup(E);
+
+sha:
+  sage:  E.sha().an_numerical()
+  magma: MordellWeilShaInformation(E);
+
+qexp:
+  sage:  E.q_eigenform(10)
+  pari:  |
+    xy = elltaniyama(E);
+    deriv(xy[1])/(2*xy[2]+E.a1*xy[1]+E.a3)
+  magma: ModularForm(E);
+
+moddeg:
+  sage:  E.modular_degree()
+  magma: ModularDegree(E);
+
+L1:
+  sage:  |
+    r = E.rank();
+    E.lseries().dokchitser().derivative(1,r)/r.factorial()
+  pari:  |
+    ar = ellanalyticrank(E);
+    ar[2]/factorial(ar[1])
+  magma: |
+    Lr1 where r,Lr1 := AnalyticRank(E: Precision:=12);
+
+localdata:
+  sage:
+    E.local_data()
+  pari:
+    ellglobalred(E)[5]
+  magma: |
+    [LocalInformation(E,p) : p in BadPrimes(E)];
+
+galrep:
+  sage:  |
+    rho = E.galois_representation();
+    [rho.image_type(p) for p in rho.non_surjective()]
+  magma: |
+    [GaloisRepresentation(E,p): p in PrimesUpTo(20)];
+
+padicreg:
+  sage: |
+    [E.padic_regulator(p) for p in primes(3,20)]
+

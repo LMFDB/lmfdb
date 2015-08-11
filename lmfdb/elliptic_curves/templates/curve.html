@@ -4,11 +4,11 @@
 <div.ip>span { white-space: nowrap; font-family: serif; }
 </style>
 
-{% macro code(codes, languages, item) %}
-{% for L in languages %}
-    <div class="{{ [L,'nodisplay', 'codebox'] | join(' ')}}">
-      {{codes[L]['prompt']}}&nbsp;{{codes[L][item]}}
-    </div>
+{% macro code(codes, item) %}
+{% for L in codes[item] %}
+{# N.B. whitespace is preserved in the following div since the CSS has
+white-space: pre in order to keep line breaks! #}
+<div class="{{ [L,'nodisplay', 'codebox'] | join(' ')}}">{% for code in codes[item][L] %}{{codes.prompt[L]}}&nbsp;{{code}}<br>{% endfor %}</div>
 {% endfor %}
 {% endmacro %}
 
@@ -85,7 +85,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
     <h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
     <h2> {{ KNOWL('ec.q.minimal_weierstrass_equation', title='Minimal Weierstrass equation') }} </h2>
 
-    {{ code(data.code,['sage','pari','magma'],'curve') }}
+    {{ code(data.code,'curve') }}
 
     <p> {{ data.data.equation }} </p>
 
@@ -103,20 +103,20 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
     {% if data.mw.rank!=0 %}
     <p><h3> Infinite order Mordell-Weil generators </h3>
-      {{ code(data.code,['sage','magma'],'gens') }}
+      {{ code(data.code,'gens') }}
       <div style='overflow:auto'><p> {{ data.mw.generators }} </p></div>
     </p>
     {%endif %}
 
     {% if data.mw.tor_order!=1 %}
     <h2> {{ KNOWL('ec.q.torsion_generators', title='Torsion generators') }}</h2>
-      {{ code(data.code,['sage','pari','magma'],'tors') }}
+      {{ code(data.code,'tors') }}
     <p> {{ data.mw.tor_gens }} </p>
     {%endif %}
 
 
     <p><h2> {{ KNOWL('ec.q.integral_points', title='Integral points') }}</h2>
-      {{ code(data.code,['sage','magma'],'intpts') }}
+      {{ code(data.code,'intpts') }}
     {% if data.xintcoords %}
     <div class="ip">
       <p>
@@ -133,7 +133,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
         <tr>
         <td colspan="6">
-          {{ code(data.code,['sage','pari','magma'],'cond') }}
+          {{ code(data.code,'cond') }}
         </td>
         </tr>
         <tr>
@@ -146,7 +146,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
         <tr>
         <td colspan="6">
-          {{ code(data.code,['sage','pari','magma'],'disc') }}
+          {{ code(data.code,'disc') }}
         </td>
         </tr>
         <tr>
@@ -159,7 +159,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
         <tr>
         <td colspan="6">
-          {{ code(data.code,['sage','pari','magma'],'jinv') }}
+          {{ code(data.code,'jinv') }}
         </td>
         </tr>
         <tr>
@@ -189,7 +189,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
         <tr>
         <td colspan="4">
-          {{ code(data.code,['sage','magma'],'rank') }}
+          {{ code(data.code,'rank') }}
         </td>
         </tr>
         <tr>
@@ -202,7 +202,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
         <tr>
         <td colspan="4">
-          {{ code(data.code,['sage','magma'],'reg') }}
+          {{ code(data.code,'reg') }}
         </td>
         </tr>
         <tr>
@@ -216,7 +216,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
         <tr>
         <td colspan="4">
-          {{ code(data.code,['sage','pari','magma'],'real_period') }}
+          {{ code(data.code,'real_period') }}
         </td>
         </tr>
         <tr>
@@ -226,7 +226,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
         <tr>
         <td colspan="4">
-          {{ code(data.code,['sage','pari','magma'],'cp') }}
+          {{ code(data.code,'cp') }}
         </td>
         </tr>
         <tr>
@@ -241,7 +241,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
         <tr>
         <td colspan="4">
-          {{ code(data.code,['sage','pari','magma'],'ntors') }}
+          {{ code(data.code,'ntors') }}
         </td>
         </tr>
         <tr>
@@ -251,7 +251,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
         <tr>
         <td colspan="4">
-          {{ code(data.code,['sage','magma'],'sha') }}
+          {{ code(data.code,'sha') }}
         </td>
         </tr>
         <tr>
@@ -275,7 +275,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
     <h2> {{KNOWL('ec.q.modular_parametrization', title='Modular invariants')}}</h2>
     <h3> {{KNOWL('ec.q.modular_form', title='Modular form')}} </h3>
-          {{ code(data.code,['sage','pari','magma'],'qexp') }}
+          {{ code(data.code,'qexp') }}
     <p>
     <form>
         <div class="output"><span id="modform_output">{{ data.data.newform | safe }}</span></div>
@@ -286,7 +286,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
     <h3> {{ KNOWL('ec.q.modular_degree', title='Modular degree') }}
       and {{ KNOWL('ec.q.optimal', title='optimality') }}</h3>
-    {{ code(data.code,['sage','magma'],'moddeg') }}
+    {{ code(data.code,'moddeg') }}
       {% if data.data.degree==0 %}
       Not available
       {% else %}
@@ -301,7 +301,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
     <p>
       <h3> {{KNOWL('ec.q.special_value', title='Special L-value', special_value = data.special_value)}} attached to the curve </h3>
-    {{ code(data.code,['sage','pari','magma'],'L1') }}
+    {{ code(data.code,'L1') }}
     <p>
         \( {{ data.bsd.lder_name }} = {{ data.bsd.lder }} \)
     </p>
@@ -315,7 +315,7 @@ text-align: center;
 }
 </style>
 
-    {{ code(data.code,['sage','pari','magma'],'localdata') }}
+    {{ code(data.code,'localdata') }}
 
 <table id = "local_data">
 <tr>
@@ -373,7 +373,7 @@ data.twoadic_index }}.
 {% endif %}
 
 
-    {{ code(data.code,['sage','magma'],'galrep') }}
+    {{ code(data.code,'galrep') }}
 
 {% if data.data.galois_data %}
 <p>
@@ -412,7 +412,7 @@ representation')}} is surjective for all primes \( p \).
 
     <h2> p-adic data </h2>
 
-    {{ code(data.code,['sage'],'padicreg') }}
+    {{ code(data.code,'padicreg') }}
 
     <p>
 {% if data.bsd.rank==0 %}

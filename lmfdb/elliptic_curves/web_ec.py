@@ -2,6 +2,7 @@
 import re
 import tempfile
 import os
+import yaml
 from pymongo import ASCENDING, DESCENDING
 from flask import url_for, make_response
 import lmfdb.base
@@ -355,130 +356,20 @@ class WebEC(object):
                            ('%s' % num,' ')]
 
     def make_code_snippets(self):
-        sagecode = dict()
-        gpcode = dict()
-        magmacode = dict()
+        # read in code.yaml from current directory:
 
-        # utility function to save typing!
+        _curdir = os.path.dirname(os.path.abspath(__file__))
+        self.code =  yaml.load(open(os.path.join(_curdir, "code.yaml")))
 
-        def set_code(key, s, g, m):
-            sagecode[key] = s
-            gpcode[key] = g
-            magmacode[key] = m
+        # Fill in placeholders for this specific curve:
 
-        pari_not_implemented = '\\\\ (not yet implemented)'
-        magma_not_implemented = '// (not yet implemented)'
+        for lang in ['sage', 'pari', 'magma']:
+            self.code['curve'][lang] = self.code['curve'][lang] % (self.data['ainvs'],self.label)
 
-        # prompt
-        set_code('prompt',
-                 'sage:',
-                 'gp:',
-                 'magma:')
-
-        # logo
-        set_code('logo',
-                 '<img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">',
-                 '<img src = "http://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">',
-                 '<img src = "http://i.stack.imgur.com/0468s.png" width="50px">')
-        # overwrite the above until we get something which looks reasonable
-        set_code('logo', '', '', '')
-
-        # curve
-        set_code('curve',
-                 'E = EllipticCurve(%s)    # or: E = EllipticCurve("%s")'  % (self.data['ainvs'],self.label),
-                 'E = ellinit(%s)       \\\\ or E = ellinit("%s")'         % (self.data['ainvs'],self.label),
-                 'E := EllipticCurve(%s); // or: E := EllipticCurve("%s");' % (self.data['ainvs'],self.label))
-
-        # generators
-        set_code('gens',
-                 'E.gens()',
-                 pari_not_implemented,
-                 'Generators(E);')
-
-        # torsion
-        set_code('tors', 'E.torsion_subgroup().gens()',
-                 'elltors(E)',
-                 'TorsionSubgroup(E);')
-
-        # integral points
-        set_code('intpts', 'E.integral_points()',
-                 pari_not_implemented,
-                 'IntegralPoints(E);')
-
-        # conductor
-        set_code('cond', 'E.conductor().factor()',
-                 'ellglobalred(E)[1]',
-                 'Conductor(E);')
-
-        # discriminant
-        set_code('disc', 'E.dicriminant().factor()',
-                 'E.disc',
-                 'Discriminant(E);')
-
-        # j-invariant
-        set_code('jinv', 'E.j_invariant().factor()',
-                 'E.j',
-                 'jInvariant(E);')
-
-        # rank
-        set_code('rank', 'E.rank()',
-                 pari_not_implemented,
-                 'Rank(E);')
-
-        # regulator
-        set_code('reg', 'E.regulator()',
-                 pari_not_implemented,
-                 'Regulator(E);')
-
-        # regulator
-        set_code('real_period', 'E.period_lattice().omega()',
-                 'E.omega[1]',
-                 'RealPeriod(E);')
-
-        # Tamagawa numbers
-        set_code('cp', 'E.tamagawa_numbers()',
-                 'E.omega[1]',
-                 'RealPeriod(E);')
-
-        # torsion order
-        set_code('ntors', 'E.torsion_order()',
-                 'elltors(E)[1]',
-                 'OrderTorsionSubgroup(E);')
-
-        # analytic order of sha
-        set_code('sha', 'E.sha().an_numerical()',
-                 pari_not_implemented,
-                 'MordellWeilShaInformation(E);')
-
-        # q-expansion of eigenform
-        set_code('qexp', 'E.q_eigenform(10)',
-                 'xy = elltaniyama(E); deriv(xy[1])/(2*xy[2]+E.a1*xy[1]+E.a3)',
-                 'ModularForm(E);')
-
-        # modular degree
-        set_code('moddeg', 'E.modular_degree()',
-                 pari_not_implemented,
-                 'ModularDegree(E);')
-
-        # special value
-        set_code('L1', 'r = E.rank(); E.lseries().dokchitser().derivative(1,r)/r.factorial()',
-                 'ar = ellanalyticrank(E); ar[2]/factorial(ar[1])',
-                 'Lr1 where r,Lr1 := AnalyticRank(E: Precision:=12);')
-
-        # local data
-        set_code('localdata', 'E.local_data()',
-                 'ellglobalred(E)[5]',
-                 '[LocalInformation(E,p) : p in BadPrimes(E)];')
-
-        # mod-l Galois representation
-        set_code('galrep', 'rho = E.galois_representation(); [rho.image_type(p) for p in rho.non_surjective()]',
-                 pari_not_implemented,
-                 '[GaloisRepresentation(E,p): p in PrimesUpTo(20)];')
-
-        # p-adic regulators
-        set_code('padicreg', '[E.padic_regulator(p) for p in primes(3,20)]',
-                 pari_not_implemented,
-                 magma_not_implemented)
-
-
-        self.code = {'sage': sagecode, 'pari': gpcode, 'magma': magmacode}
+        for k in self.code:
+            if k != 'prompt':
+                for lang in self.code[k]:
+                    self.code[k][lang] = self.code[k][lang].split("\n")
+                    # remove final empty line
+                    if len(self.code[k][lang][-1])==0:
+                        self.code[k][lang] = self.code[k][lang][:-1]
