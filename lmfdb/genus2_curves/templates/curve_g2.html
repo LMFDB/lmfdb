@@ -95,7 +95,7 @@ No pari/gp commands yet!
         </table>
         <br>
         <div class='igusa_clebsch'>
-          {{KNOWL("g2c.igusa_clebsch_invariants", title="Igusa-Clebsch 	  invariants")}}
+          {{KNOWL("g2c.igusa_clebsch_invariants", title="Igusa-Clebsch invariants")}}
 	  <p>{{code(data.code,['sage','magma'],'igusa_clebsch')}}</p>
         </div>
         <div class='igusa nodisplay'>
@@ -242,17 +242,14 @@ Properties related to the {{KNOWL('g2c.jacobian', title='Jacobian')}}
 <h3> {{ KNOWL('g2c.jac_endomorphisms', title='Endomorphisms of the Jacobian') }} </h3>
 <p>{{data.data.endomorphism_statement}}</p>
 <table>
-  <tr>  <td>\(\mathrm{End}(J) \otimes \Q\)</td><td>\(\simeq\)</td><td>\({{data.data.rat_end_alg_name}}\)</td>
-</tr>
-  <tr>  <td>\(\mathrm{End}(J) \otimes \R\)</td><td>\(\simeq\)</td><td>\({{data.data.real_end_alg_name}}\)</td>
-</tr>
-  <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}}) \otimes \Q\)</td><td>\(\simeq\)</td><td>\({{data.data.rat_geom_end_alg_name}}\)</td>
-</tr>
-  <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}}) \otimes \R\)</td><td>\(\simeq\)</td><td>\({{data.data.real_geom_end_alg_name}}\)</td></tr>
-
+{% for endalgtype in ['end_ring_name', 'rat_end_alg_name', 'real_end_alg_name', 'geom_end_ring_name', 'rat_geom_end_alg_name', 'real_geom_end_alg_name'] %}
+{% if data.data[endalgtype][1] != '' %}
+<tr>  <td> \({{data.data[endalgtype][0]}}\)</td><td>\(\simeq\)</td><td>\({{data.data[endalgtype][1]}}\)</td></tr>
+{% endif %}
+{% endfor %}
 </table>
-
+{% if data.data.geom_end_field_name != '' %}
 <p>Field over which all endomorphisms are defined: 
-<A HREF="/NumberField/{{data.data.geom_end_field}}">{{data.data.geom_end_field_name}}</A></p>
-
+<a href="/NumberField/{{data.data.geom_end_field}}">{{data.data.geom_end_field_name}}</a></p>
+{% endif %}
 {% endblock %}
