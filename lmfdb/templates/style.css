@@ -1597,4 +1597,5 @@ div.codebox {
     border-radius: 5px;
     background-color: #E5E5FF;
     box-shadow: 3px 3px 3px #8080FF;
+    white-space: pre;
 }
