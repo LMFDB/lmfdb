@@ -4,9 +4,7 @@
 
 {% macro code(codes, item) %}
 {% for L in codes[item] %}
-<div class="{{ [L,'nodisplay', 'codebox'] | join(' ')}}">
-{{codes.prompt[L]}}&nbsp;{{codes[item][L]}}
-</div>
+<div class="{{ [L,'nodisplay', 'codebox'] | join(' ')}}">{{codes.prompt[L]}}&nbsp;{{codes[item][L]}}</div>
 {% endfor %}
 {% endmacro %}
 
@@ -196,37 +194,11 @@ function show_code(system) {
    {% if info.seeram %}
    In the table, <i>R</i> denotes a ramified prime.  
    {% endif %}
-   Cycle lengths 
-   which are repeated in a cycle type are indicated by exponents.
+   Cycle lengths which are repeated in a cycle type are indicated by
+   exponents.
         <p>
-  <div class='pari nodisplay code'>
-   To obtain a list of [\(e_i, f_i\)] for the factorization of the ideal
- \(p\mathcal{O}_K\) <br>
-pari: 
-<br>
-  p = 7;  \\ set a prime
-<br>
-  idealfactors = idealprimedec(K, p); \\ get the data
-<br>
-  vector(length(idealfactors), j, [idealfactors[j][3], idealfactors[j][4]])
-</div>
-  <div class='sage nodisplay code'>
-   sage:
-<br>
-  p = 7   # set a prime
-<br>
-  idealfactors = K.factor(p)  # get the data
-<br>
-  [[e, primefactor.residue_class_degree()] for primefactor,e in idealfactors]
-  </div>
-  <div class='magma nodisplay code'>
-<br>
-  p := 7;   // set a prime
-<br>
-  idealfactors := Factorization(p*Integers(K));  // get the data
-<br>
-  [&lt;primefactor[2], Valuation(Norm(primefactor[1]), p)&gt; : primefactor in idealfactors];
-</div>
+          {{ code(nf.code,'prime_cycle_types') }}
+        </p>
 
 {% if info.get("tim_number_field", False) %}
 	<p><h2> {{ KNOWL('artin', title='Artin representations') }}</h2>

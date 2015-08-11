@@ -14,7 +14,7 @@ not-implemented:
   magma: // (not yet implemented)
 
 field:
-  sage:  K = NumberField(%s),"a")
+  sage:  K = NumberField(%s,"a")
   pari:  K = bnfinit(%s, 1)
   magma: K<a> := NumberField(PolynomialRing(Rationals())!%s);
 
@@ -86,3 +86,15 @@ galois_group:
   pari: polgalois(K.pol)
   magma: GaloisGroup(K);
 
+prime_cycle_types:
+  sage: |
+    p = 7;  # to obtain a list of $[e_i,f_i]$ for the factorization of the ideal $p\mathcal{O}_K$:
+    [(e, pr.norm().valuation(p)) for pr,e in K.factor(p)]
+  pari: |
+    p = 7;  \\ to obtain a list of $[e_i,f_i]$ for the factorization of the ideal $p\mathcal{O}_K$:
+    idealfactors = idealprimedec(K, p); \\ get the data
+    vector(length(idealfactors), j, [idealfactors[j][3], idealfactors[j][4]])
+  magma: |
+    p := 7;  // to obtain a list of $[e_i,f_i]$ for the factorization of the ideal $p\mathcal{O}_K$:
+    idealfactors := Factorization(p*Integers(K));  // get the data
+    [<primefactor[2], Valuation(Norm(primefactor[1]), p)> : primefactor in idealfactors];
