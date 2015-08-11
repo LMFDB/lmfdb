@@ -1,6 +1,15 @@
 {% extends 'homepage.html' %}
 {% block content %}
 {# Displays individual number field homepage #}
+
+{% macro code(codes, item) %}
+{% for L in codes[item] %}
+<div class="{{ [L,'nodisplay', 'codebox'] | join(' ')}}">
+{{codes.prompt[L]}}&nbsp;{{codes[item][L]}}
+</div>
+{% endfor %}
+{% endmacro %}
+
 <script>
 var cur_system = null;
 function show_code(system) {
@@ -12,23 +21,22 @@ function show_code(system) {
       cur_system = null;
     } else {
       $('.'+system).show();
+      $('.'+system).css('display','inline-block');
       cur_system = system;
     }
 }
 </script>
 
     <div align ="right">
-      Show commands for:  <a onclick="show_code('sage'); return false" href='#'>sage</a>,
-        <a onclick="show_code('pari'); return false" href='#'>pari</a>,
+      Show commands for:  <a onclick="show_code('sage'); return false" href='#'>sagemath</a>,
+        <a onclick="show_code('pari'); return false" href='#'>pari/gp</a>,
         <a onclick="show_code('magma'); return false" href='#'>magma</a>
     </div>
     
 
 {% set nf = info.wnf %}
 <p>
-  <div class='sage nodisplay code'>sage: K = NumberField({{ nf.poly() }},'a')</div>
-  <div class='pari nodisplay code'>pari: K = bnfinit({{ nf.poly() }}, 1)</div>
-  <div class='magma nodisplay code'>&gt; K&lt;a&gt; := NumberField(PolynomialRing(Rationals())!{{info.coefficients}});</div>
+   {{ code(nf.code,'field') }}
 </p>
 
         {% set KNOWL_ID = "nf.%s"|format(info['label_raw']) %}
@@ -41,32 +49,18 @@ function show_code(system) {
         {% else %}
         {{ KNOWL('nf.defining_polynomial', title='Defining polynomial') }}</h2>
         {% endif %}
-        <div class='sage nodisplay code'>sage: K.defining_polynomial()</div>
-        <div class='pari nodisplay code'>pari: K.pol</div>
-        <div class='magma nodisplay code'>&gt; DefiningPolynomial(K);</div>
         <p>
             {{ info.polynomial }}
+        {{ code(nf.code,'poly') }}
         </p>
 
         <p><h2> {{ KNOWL('nf.invariants', title='Invariants') }}</h2>
-        <div class='sage nodisplay code'>sage: K.degree()</div>
-        <div class='sage nodisplay code'>sage: K.signature()</div>
-        <div class='sage nodisplay code'>sage: K.disc()</div>
-        <div class='sage nodisplay code'>sage: K.disc().support()</div>
-        <div class='pari nodisplay code'>pari: poldegree(K.pol)</div>
-        <div class='pari nodisplay code'>pari: K.sign</div>
-        <div class='pari nodisplay code'>pari: K.disc</div>
-        <div class='pari nodisplay code'>pari: factor(abs(K.disc))[,1]~</div>
-        <div class='magma nodisplay code'>&gt; Degree(K);</div>
-        <div class='magma nodisplay code'>&gt; Signature(K);</div>
-        <div class='magma nodisplay code'>&gt; Discriminant(K);</div>
-        <div class='magma nodisplay code'>&gt; PrimeDivisors(Discriminant(K));</div>
         <p>
           <table>
-            <tr><td>Degree:<td>&nbsp;&nbsp;<td>${{info.degree}}$</tr>
-            <tr><td>Signature:<td>&nbsp;&nbsp;<td>${{info.signature}}$</tr>
-            <tr><td>Discriminant:<td>&nbsp;&nbsp;<td>{{info.discriminant}}</tr>
-            <tr><td>Ramified primes:<td>&nbsp;&nbsp;<td>${{info.ram_primes}}$</tr>
+            <tr><td>Degree:<td>&nbsp;&nbsp;<td>${{info.degree}}$<td>{{ code(nf.code,'degree') }}
+            <tr><td>Signature:<td>&nbsp;&nbsp;<td>${{info.signature}}$<td>{{ code(nf.code,'signature') }}
+             <tr><td>Discriminant:<td>&nbsp;&nbsp;<td>{{info.discriminant}}<td>{{ code(nf.code,'discriminant') }}
+            <tr><td>Ramified primes:<td>&nbsp;&nbsp;<td>${{info.ram_primes}}$<td>{{ code(nf.code,'ramified_primes') }}
   {% if info.is_abelian %}
 			<tr><td colspan="3">&nbsp;</tr>
             <tr><td colspan="3">Extension is Galois and abelian</tr>
@@ -92,20 +86,16 @@ function show_code(system) {
 {% if info.degree!=1 %}
         <p><h2> {{ KNOWL('nf.integral_basis', title='Integral basis') }} (with respect to {{ KNOWL('nf.field_generator', title='field generator') }} \(a\))</h2>
 {% endif %}
-        <div class='sage nodisplay code'>sage: K.integral_basis()</div>
-        <div class='pari nodisplay code'>pari: K.zk</div>
-        <div class='magma nodisplay code'>&gt; IntegralBasis(K);</div>
         <p>
             {{ info.integral_basis }}
+            {{ code(nf.code,'integral_basis') }}
         </p>
 
         <p><h2> {{ KNOWL('nf.ideal_class_group', title='Class group') }} and  {{ KNOWL('nf.class_number', title='class number') }}</h2>
-        <div class='sage nodisplay code'>sage: K.class_group().invariants()</div>
-        <div class='pari nodisplay code'>pari: K.clgp</div>
-        <div class='magma nodisplay code'>&gt; ClassGroup(K);</div>
 	<p>
           {{ info.class_group }}
           {{ info.grh_label|safe }}
+          {{ code(nf.code,'class_group') }}
         </p>
 
 

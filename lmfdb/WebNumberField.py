@@ -4,6 +4,7 @@ from sage.all import *
 import re
 import pymongo
 import bson
+import yaml
 from lmfdb.utils import *
 from lmfdb.transitive_group import group_display_short, WebGaloisGroup, group_display_knowl, galois_module_knowl
 wnflog = make_logger("WNF")
@@ -121,6 +122,7 @@ class WebNumberField:
             self._data = self._get_dbdata()
         else:
             self._data = data
+        self.make_code_snippets()
 
     # works with a string, or a list of coefficients
     @classmethod
@@ -529,3 +531,11 @@ class WebNumberField:
         f = self.conductor()
         return DirichletGroup_conrey(f)
 
+    def make_code_snippets(self):
+         # read in code.yaml from numberfields directory:
+        _curdir = os.path.dirname(os.path.abspath(__file__))
+        self.code = yaml.load(open(os.path.join(_curdir, "number_fields/code.yaml")))
+        # Fill in placeholders for this specific field:
+        for lang in ['sage', 'pari']:
+            self.code['field'][lang] = self.code['field'][lang] % self.poly()
+        self.code['field']['magma'] = self.code['field']['magma'] % self.coeffs()
