@@ -194,12 +194,12 @@ def zfactor(n):
 
 def get_end_data(isogeny_class):
     data = {}
-    end_alg_title_dict = {'end_ring': '\\mathrm{End}(J)', 
-                          'rat_end_alg': '\\mathrm{End}(J) \\otimes \\Q',
-                          'real_end_alg': '\\mathrm{End}(J) \otimes \R',
-                          'geom_end_ring': '\\mathrm{End}(J_{\\overline{\\Q}})', 
-                          'rat_geom_end_alg': '\\mathrm{End}(J_{\\overline{\\Q}}) \\otimes \\Q',
-                          'real_geom_end_alg':'\\mathrm{End}(J_{\\overline{\\Q}}) \\otimes \\R'}
+    end_alg_title_dict = {'end_ring': r'\End(J)', 
+                          'rat_end_alg': r'\End(J) \otimes \Q',
+                          'real_end_alg': r'\End(J) \otimes \R',
+                          'geom_end_ring': r'\End(J_{\overline{\Q}})', 
+                          'rat_geom_end_alg': r'\End(J_{\overline{\Q}}) \otimes \Q',
+                          'real_geom_end_alg':'\End(J_{\overline{\Q}}) \otimes \R'}
     for endalgtype in ['end_ring', 'rat_end_alg', 'real_end_alg', 'geom_end_ring', 'rat_geom_end_alg', 'real_geom_end_alg']:
         if endalgtype in isogeny_class:
             data[endalgtype + '_name'] = [end_alg_title_dict[endalgtype],end_alg_name(isogeny_class[endalgtype])]

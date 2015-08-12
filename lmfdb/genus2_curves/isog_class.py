@@ -107,12 +107,12 @@ class G2Cisog_class(object):
         self.ncurves = curves_data.count()
         self.bad_lfactors = [ [c[0], list_to_factored_poly_otherorder(c[1])] for c in self.bad_lfactors]
         ## duplication of get_end_alg.  need to clean up!
-        end_alg_title_dict = {'end_ring': '\\mathrm{End}(J)', 
-                              'rat_end_alg': '\\mathrm{End}(J) \\otimes \\Q',
-                              'real_end_alg': '\\mathrm{End}(J) \otimes \R',
-                              'geom_end_ring': '\\mathrm{End}(J_{\\overline{\\Q}})', 
-                              'rat_geom_end_alg': '\\mathrm{End}(J_{\\overline{\\Q}}) \\otimes \\Q',
-                              'real_geom_end_alg':'\\mathrm{End}(J_{\\overline{\\Q}}) \\otimes \\R'}
+        end_alg_title_dict = {'end_ring': r'\End(J)', 
+                              'rat_end_alg': r'\End(J) \otimes \Q',
+                              'real_end_alg': r'\End(J) \otimes \R',
+                              'geom_end_ring': r'\End(J_{\overline{\Q}})', 
+                              'rat_geom_end_alg': r'\End(J_{\overline{\Q}}) \otimes \Q',
+                              'real_geom_end_alg':'\End(J_{\overline{\Q}}) \otimes \R'}
         for endalgtype in ['end_ring', 'rat_end_alg', 'real_end_alg', 'geom_end_ring', 'rat_geom_end_alg', 'real_geom_end_alg']:
             if hasattr(self, endalgtype):
                 setattr(self,endalgtype + '_name',[end_alg_title_dict[endalgtype],end_alg_name(getattr(self,endalgtype))])
@@ -185,7 +185,6 @@ class G2Cisog_class(object):
                            ('Conductor','%s' % self.cond),
                            ('Sato-Tate group', '\(%s\)' % self.st_group_name),
                            ('\(%s\)' % self.real_geom_end_alg_name[0],'\(%s\)' % self.real_geom_end_alg_name[1]),
-                           #('\(\mathrm{End}(J_{\overline{\Q}}) \otimes \R\)','\(%s\)' % self.real_geom_end_alg_name),
                            ('\(\mathrm{GL}_2\)-type','%s' % self.is_gl2_type_name)]
 
         self.title = "Genus 2 Isogeny Class %s" % (self.label)
