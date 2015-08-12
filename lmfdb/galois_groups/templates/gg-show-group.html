@@ -101,6 +101,21 @@ list of indecomposable integral representations:
     </table>
   </div>
 </table>
+  {% if info['decompunique'] == 0 %}
+    The decomposition of an arbitrary integral representation as a direct
+    sum of indecomposables is unique.
+  {% elif info['decompunique'] == 1 %}
+       The decomposition of an arbitrary integral representation as a direct
+       sum of indecomposables is not unique, in general. It
+       is unique up to the following isomorphisms:
+    <table>
+    {% for isom in info['isoms'] %}
+      <tr>
+      <td> x
+      </tr>
+    {% endfor %}
+    </table>
+  {% endif %}
 {% endif %}
 
 {% endblock %}
