@@ -263,8 +263,7 @@ def output_magma_field(field_label,K,Plist,outfilename=None, verbose=False):
 
     NOTE:
 
-    Assumes the primes are principal: only the first generator is used
-    in the Magma ideal construction.
+    Does not assumes the primes are principal.
 
     OUTPUT:
 
