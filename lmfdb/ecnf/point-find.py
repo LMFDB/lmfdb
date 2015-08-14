@@ -27,13 +27,182 @@ nfcurves = conn.elliptic_curves.nfcurves
 qcurves = conn.elliptic_curves.curves
 fields = conn.numberfields.fields
 
-############################################################
+def MWShaInfo(E, HeightBound = None):
+    r"""
+    Interface to Magma's MordellWeilShaInformation function
+
+    INPUT:
+
+    - E : an elliptic curve defined over a number field (including Q)
+
+    OUTPUT:
+
+    a triple [rank_low_up, gens, sha_bound_dict] where
+
+    - rank_bounds is a list of 2 integers [r1,r2] such r1 <= rank(E) <= r2
+
+    - gens is a list of r1 independent points on E
+
+    - sha_bound_dict is a dict with keys positive integers n, values rank bounds for Sha[n].
+
+    EXAMPLE::
+
+        sage: E = EllipticCurve('5077a1')
+        sage: MWShaInfo(E)
+        [[3, 3], [(2 : -1 : 1), (9/4 : -15/8 : 1), (-1 : 3 : 1)], {2: [0, 0]}]
+
+    """
+    if HeightBound == None:
+        MWSI = magma(E).MordellWeilShaInformation(nvals=3)
+    else:
+        MWSI = magma(E).MordellWeilShaInformation(nvals=3, HeightBound=HeightBound)
+    rank_bounds = MWSI[0].sage()
+    gens = [E(P.Eltseq().sage()) for P in MWSI[1]]
+    sha_bound_dict = dict(MWSI[2].sage())
+    return [rank_bounds, gens, sha_bound_dict]
+
+def map_points(maps, source, Plist):
+    r""" Given a matrix of isogenies and a list of points on one curve (with
+    index 'source'), returns a list of their images on each other curve.
+    Since the isogenies only exist for some i,j pairs, we need to know
+    an index 'source' such that following the maps from that curve will
+    cover the class, and the initial points must be on that curve.
+    """
+    ncurves = len(maps)
+    if ncurves==1:
+        return [Plist]
+    Qlists = [[]]*ncurves
+    Qlists[source] = Plist
+    if len(Plist)==0:
+        return Qlists
+    nfill = 1
+    #while True: // OK if input satisfies the conditions, but otherwise would loop for ever
+    for nstep in range(ncurves): # upper bound for number if iterations needed
+        for i in range(ncurves):
+            for j in range(ncurves):
+                if Qlists[i]!=[] and (maps[i][j] != 0) and Qlists[j]==[]:
+                    print("Mapping from %s to %s at step %s" % (i,j,nstep))
+                    Qlists[j] = [maps[i][j](P) for P in Qlists[i]]
+                    nfill += 1
+                    if nfill==ncurves:
+                        return Qlists
+    if nfill<ncurves:
+        raise RuntimeError("In map_points, failed to cover the class!")
+
+def MWInfo_class(Cl, HeightBound=None):
+    r"""
+    Get MW info for all curves in the class
+
+    INPUT:
+
+    - Cl: an isogeny class
+
+    OUTPUT:
+
+    A list of pairs [rank_bounds, gens], one for each curve in the class.
+    """
+    source = find_source(Cl.isogenies())
+    MWI = MWShaInfo(Cl.curves[source], HeightBound=HeightBound)[:2] # ignore Sha part
+    return [[MWI[0],pts] for pts in map_points(Cl.isogenies(), source, MWI[1])]
+
+def find_source(maps):
+    r""" maps is an nxn array representing a directed graph on n vertices,
+    with some entries 0 and some non-zero.  There will be at least one
+    index i such that starting from vertex i you can reach every
+    vertex, and we return such an i.  For example if
+    maps=[[0,0],[1,0]] then vertex 1 is good but vertex 0 is not!
+    """
+    n = len(maps)
+    mat = [[int((maps[i][j]!=0) or (i==j)) for j in range(n)] for i in range(n)]
+    #print("mat = %s" % mat)
+    children = [[j for j in range(n) if mat[i][j]] for i in range(n)]
+    for nstep in range(n): # upper bound for number if iterations needed
+        for i in range(n):
+            for j in children[i]:
+                children[i] = union(children[i],children[j])
+                if len(children[i])==n:
+                    #print("source = %s" % i)
+                    return i
+    raise ValueError("find_source problem with mat=%s: at end, children = %s but no source found!" % (mat,children))
+
+def MWInfo_curves(curves, HeightBound=None):
+    r""" Get MW info for all curves in the list; this is a list of all
+    curves in a class in some order, where we do not have the maps
+    between them, so we recompute the class with maps and take into
+    account the order of the curves.
+
+    INPUT:
+
+    - Cl: an isogeny class
+
+    OUTPUT:
+
+    A list of pairs [rank_bounds, gens], one for each class.
+    """
+    Cl = curves[0].isogeny_class()
+    MWI = MWInfo_class(Cl, HeightBound=HeightBound)
+    # Now we must map the points to the correct curves!
+
+    n = len(Cl.curves)
+    fixed_MWI = range(n) # just to set length
+    for i in range(n):
+        E = curves[i]
+        j = Cl.index(E) # checks for isomorphism, not just equality
+        iso = Cl.curves[j].isomorphism_to(E)
+        fixed_MWI[i] = [MWI[j][0], map(iso,MWI[j][1])]
+
+    # Check we have it right:
+    assert all([all([P in C for P in mwi[1]]) for C,mwi in zip(curves,fixed_MWI)])
+    return fixed_MWI
+
+def encode_point(P):
+    r"""
+    Converts a list of points into a list of lists of 3 lists of d lists of strings
+    """
+    return [[str(x) for x in list(c)] for c in list(P)]
+
+def encode_points(Plist):
+    r"""
+    Converts a list of points into a list of lists of 3 lists of d lists of strings
+    """
+    return [encode_point(P) for P in Plist]
+
+def get_generators(field, iso_class, verbose=False, store=False):
+    r""" Retrieves the curves in the isogeny class from the database, finds
+    their ranks (or bounds) and generators, and optionally stores the
+    result back in the database.  """
+    res = nfcurves.find({'field_label': field, 'short_class_label': iso_class})
+    if not res:
+        raise ValueError("No curves in the database ovver field %s in class %s" % (field,iso_class))
+    Es = [ECNF(e).E for e in res]
+    if verbose:
+        print("Curves in class %s: %s" % (iso_class,[E.ainvs() for E in Es]))
+    mwi = MWInfo_curves(Es, HeightBound=2)
+    if verbose:
+        print("MW info: %s" % mwi)
+    res.rewind()
+    for e, mw in zip(res,mwi):
+        data = {}
+        data['rank_bounds'] = mw[0]
+        if mw[0][0]==mw[0][1]:
+            data['rank'] = mw[0][0]
+        data['gens'] = encode_points(mw[1])
+        if verbose:
+            print("About to update %s using data %s" % (e['label'],data))
+        if store:
+            nfcurves.update(e, {'$set': data}, upsert=True)
+        else:
+            print("(not done, dummy run)")
+
+########################################################################
 #
 # Code to go through nfcurves database (for one field) to find curves
 # (grouped into isogeny classes) and output Magma code to process
 # these.
 #
-############################################################
+# This is redundant now we use the Magma interface from Sage dircectly
+#
+#########################################################################
 
 def output_magma_field(field_label, outfilename=None, verbose=False):
     r"""
@@ -126,83 +295,3 @@ def output_magma_point_search(curves, outfilename=None, verbose=False):
     if outfilename:
         outfile.close()
 
-##########################################
-#
-# Functions below here not ready for use!
-#
-##########################################
-
-def magma_output_iter(infilename):
-    r"""
-    Read Magma search output
-
-    INPUT:
-
-    - ``infilename`` (string) -- name of file containing Magma output
-    """
-    infile = file(infilename)
-
-    while True:
-        try:
-            L = infile.next()
-        except StopIteration:
-            raise StopIteration
-
-        if 'Field' in L:
-            field_label = L.split()[1]
-            K = HilbertNumberField(field_label)
-            KK = K.K()
-            w = KK.gen()
-
-        if 'Isogeny class' in L:
-            class_label = L.split()[2]
-            cond_label, iso_label = class_label.split("-")
-            num = 0
-
-        if 'Curve' in L:
-            ai = [KK(a.encode()) for a in L[7:-2].split(",")]
-            num += 1
-            yield field_label, cond_label, iso_label, num, ai
-
-    infile.close()
-
-def export_magma_output(infilename, outfilename=None, verbose=False):
-    r"""
-    Convert Magma search output to a curve_data file.
-
-    INPUT:
-
-    - ``infilename`` (string) -- name of file containing Magma output
-
-    - ``outfilename`` (string, default ``None``) -- name of output file
-
-    - ``verbose`` (boolean, default ``False``) -- verbosity flag.
-    """
-    if outfilename:
-        outfile=file(outfilename, mode="w")
-
-    def output(L):
-        if outfilename:
-            outfile.write(L)
-        if verbose:
-            sys.stdout.write(L)
-
-    K = None
-
-    for field_label, cond_label, iso_label, num, ai in magma_output_iter(infilename):
-        ec = {}
-        ec['field_label'] = field_label
-        if not K:
-            K = HilbertNumberField(field_label)
-        ec['conductor_label'] = cond_label
-        ec['iso_label'] = iso_label
-        ec['number'] = num
-        N = K.ideal(cond_label)
-        norm = N.norm()
-        hnf = N.pari_hnf()
-        ec['conductor_ideal'] = "[%i,%s,%s]" % (norm, hnf[1][0], hnf[1][1])
-        ec['conductor_norm'] = norm
-        ec['ainvs'] = [[str(c) for c in list(a)] for a in ai]
-        ec['cm'] = '?'
-        ec['base_change'] = []
-        output(make_curves_line(ec)+"\n")
