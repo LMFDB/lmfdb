@@ -38,7 +38,7 @@ field) and value types (with examples):
    - torsion_order            int
    - torsion_structure        list of 0, 1 or 2 ints
    - gens                     list of lists of 3 lists of d lists of 2 ints
-   - torsion_gens             list of lists of 3 lists of d lists of 2 ints
+   - torsion_gens             list of lists of 3 lists of d lists of strings
    - sha_an                   int
    - isogeny_matrix     *     list of list of ints (degrees)
 

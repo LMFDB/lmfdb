@@ -237,7 +237,11 @@ class ECNF(object):
 
         # URLs of self and related objects:
         self.urls = {}
-        self.urls['curve'] = url_for(".show_ecnf", nf = self.field_label, conductor_label=self.conductor_label, class_label = self.iso_label, number = self.number)
+        # It's useful to be able to use this class out of context, when calling url_for will fail:
+        try:
+            self.urls['curve'] = url_for(".show_ecnf", nf = self.field_label, conductor_label=self.conductor_label, class_label = self.iso_label, number = self.number)
+        except RuntimeError:
+            return
         self.urls['class'] = url_for(".show_ecnf_isoclass", nf = self.field_label, conductor_label=self.conductor_label, class_label = self.iso_label)
         self.urls['conductor'] = url_for(".show_ecnf_conductor", nf = self.field_label, conductor_label=self.conductor_label)
         self.urls['field'] = url_for(".show_ecnf1", nf=self.field_label)
