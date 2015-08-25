@@ -52,12 +52,17 @@ def MWShaInfo(E, HeightBound = None):
         [[3, 3], [(2 : -1 : 1), (9/4 : -15/8 : 1), (-1 : 3 : 1)], {2: [0, 0]}]
 
     """
+    K = E.base_field()
+    def convert_point(P):
+        return E([K(c.sage()) for c in P.Eltseq()])
+    print("calling magma...")
     if HeightBound == None:
         MWSI = magma(E).MordellWeilShaInformation(nvals=3)
     else:
         MWSI = magma(E).MordellWeilShaInformation(nvals=3, HeightBound=HeightBound)
+    print("...done.")
     rank_bounds = MWSI[0].sage()
-    gens = [E(P.Eltseq().sage()) for P in MWSI[1]]
+    gens = [convert_point(P) for P in MWSI[1]]
     sha_bound_dict = dict(MWSI[2].sage())
     return [rank_bounds, gens, sha_bound_dict]
 
@@ -76,13 +81,15 @@ def map_points(maps, source, Plist):
     if len(Plist)==0:
         return Qlists
     nfill = 1
+    #print("Qlists = %s" % Qlists)
     #while True: // OK if input satisfies the conditions, but otherwise would loop for ever
     for nstep in range(ncurves): # upper bound for number if iterations needed
         for i in range(ncurves):
             for j in range(ncurves):
                 if Qlists[i]!=[] and (maps[i][j] != 0) and Qlists[j]==[]:
-                    print("Mapping from %s to %s at step %s" % (i,j,nstep))
+                    #print("Mapping from %s to %s at step %s" % (i,j,nstep))
                     Qlists[j] = [maps[i][j](P) for P in Qlists[i]]
+                    #print("...now Qlists = %s" % Qlists)
                     nfill += 1
                     if nfill==ncurves:
                         return Qlists
@@ -101,7 +108,12 @@ def MWInfo_class(Cl, HeightBound=None):
 
     A list of pairs [rank_bounds, gens], one for each curve in the class.
     """
-    source = find_source(Cl.isogenies())
+    #source = find_source(Cl.isogenies())
+    #adiscs = [E.discriminant().norm().abs() for E in Cl.curves]
+    #print("Abs disc list: %s" % adiscs)
+    ss = [len(str(E.ainvs())) for E in Cl.curves]
+    source=ss.index(min(ss))
+    print("Using curve %s to find points" % list(Cl.curves[source].ainvs()))
     MWI = MWShaInfo(Cl.curves[source], HeightBound=HeightBound)[:2] # ignore Sha part
     return [[MWI[0],pts] for pts in map_points(Cl.isogenies(), source, MWI[1])]
 
@@ -149,10 +161,11 @@ def MWInfo_curves(curves, HeightBound=None):
         E = curves[i]
         j = Cl.index(E) # checks for isomorphism, not just equality
         iso = Cl.curves[j].isomorphism_to(E)
-        fixed_MWI[i] = [MWI[j][0], map(iso,MWI[j][1])]
+        #print("(i,j)=(%s,%s)" % (i,j))
+        fixed_MWI[i] = [MWI[j][0], [iso(P) for P in MWI[j][1]]]
 
     # Check we have it right:
-    assert all([all([P in C for P in mwi[1]]) for C,mwi in zip(curves,fixed_MWI)])
+    assert all([all([P in curves[i] for P in fixed_MWI[i][1]]) for i in range(n)])
     return fixed_MWI
 
 def encode_point(P):
@@ -183,9 +196,9 @@ def get_generators(field, iso_class, verbose=False, store=False):
     res.rewind()
     for e, mw in zip(res,mwi):
         data = {}
-        data['rank_bounds'] = mw[0]
+        data['rank_bounds'] = [int(r) for r in mw[0]]
         if mw[0][0]==mw[0][1]:
-            data['rank'] = mw[0][0]
+            data['rank'] = int(mw[0][0])
         data['gens'] = encode_points(mw[1])
         if verbose:
             print("About to update %s using data %s" % (e['label'],data))
