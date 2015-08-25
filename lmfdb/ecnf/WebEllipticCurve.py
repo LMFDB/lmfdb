@@ -218,6 +218,19 @@ class ECNF(object):
             self.rk = web_latex(self.rank)
         except AttributeError:
             self.rk = "not recorded"
+        try:
+            self.rk_bnds = web_latex(self.rank_bounds)
+        except AttributeError:
+            self.rk_bnds = "not recorded"
+        except AttributeError:
+            self.rk = "not recorded"
+        try:
+            gens = [E([self.field.parse_NFelt(x) for x in P])
+                    for P in self.gens]
+            self.gens = ",".join([web_latex(P) for P in gens])
+        except AttributeError:
+            self.gens = "not recorded"
+
 #       if rank in self:
 #            self.r = web_latex(self.rank)
 
