@@ -16,6 +16,7 @@ from lmfdb.base import getDBConnection
 from sage.rings.all import ZZ, QQ
 from sage.databases.cremona import cremona_to_lmfdb
 from lmfdb.ecnf.hmf_check_find import (is_fundamental_discriminant, rqf_iterator)
+from lmfdb.ecnf.WebEllipticCurve import ECNF
 
 print "calling base._init()"
 dbport=37010
@@ -193,7 +194,13 @@ def get_generators(field, iso_class, verbose=False, store=False):
     mwi = MWInfo_curves(Es, HeightBound=2)
     if verbose:
         print("MW info: %s" % mwi)
-    res.rewind()
+
+    #res.rewind()
+
+    # We find the curves again, since the cursor times out after 10
+    # miniutes and finding the generators can take longer than that.
+
+    res = nfcurves.find({'field_label': field, 'short_class_label': iso_class})
     for e, mw in zip(res,mwi):
         data = {}
         data['rank_bounds'] = [int(r) for r in mw[0]]
@@ -206,6 +213,30 @@ def get_generators(field, iso_class, verbose=False, store=False):
             nfcurves.update(e, {'$set': data}, upsert=True)
         else:
             print("(not done, dummy run)")
+
+def get_all_generators(field, min_cond_norm=None, max_cond_norm=None, verbose=False, store=False):
+    r""" Retrieves curves from the database defined over the given field,
+    with conductor norm between given bounds (optional), finds their
+    ranks (or bounds) and generators, and optionally stores the result
+    back in the database.  """
+    query = {'field_label': field, 'number': int(1)}
+    if min_cond_norm or max_cond_norm:
+        query['conductor_norm'] = {}
+    if min_cond_norm:
+        query['conductor_norm']['$gte'] = int(min_cond_norm)
+    if max_cond_norm:
+        query['conductor_norm']['$lte'] = int(max_cond_norm)
+
+    res = nfcurves.find(query)
+    print("%s curves over field %s found" % (res.count(),field))
+    res.sort([('conductor_norm' , pymongo.ASCENDING)])
+    # extract the class labels all at the start, since otherwose the
+    # cursor might timeout:
+    classes = [r['short_class_label'] for r in res]
+    for isoclass in classes:
+        if verbose:
+            print("Getting generators for isogeny class %s" % isoclass)
+        get_generators(field, isoclass, verbose=verbose, store=store)
 
 ########################################################################
 #
