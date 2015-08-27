@@ -1,5 +1,5 @@
 from flask import url_for
-from sage.all import ZZ, var, PolynomialRing, QQ, GCD, RealField, rainbow, implicit_plot, plot, text
+from sage.all import ZZ, var, PolynomialRing, QQ, GCD, RealField, rainbow, implicit_plot, plot, text, Infinity
 from lmfdb.base import app, getDBConnection
 from lmfdb.utils import image_src, web_latex, web_latex_ideal_fact, encode_plot
 from lmfdb.WebNumberField import WebNumberField
@@ -213,26 +213,24 @@ class ECNF(object):
         self.torsion_gens = ",".join([web_latex(P) for P in torsion_gens])
 
 
-        # Rank etc
+        # Rank or bounds
         try:
             self.rk = web_latex(self.rank)
         except AttributeError:
-            self.rk = "not recorded"
+            self.rk = "?"
         try:
-            self.rk_bnds = web_latex(self.rank_bounds)
+            self.rk_bnds = "%s...%s" % tuple(self.rank_bounds)
         except AttributeError:
+            self.rank_bounds = [0,Infinity]
             self.rk_bnds = "not recorded"
-        except AttributeError:
-            self.rk = "not recorded"
+
+        # Generators
         try:
             gens = [E([self.field.parse_NFelt(x) for x in P])
                     for P in self.gens]
-            self.gens = ",".join([web_latex(P) for P in gens])
+            self.gens = ", ".join([web_latex(P) for P in gens])
         except AttributeError:
             self.gens = "not recorded"
-
-#       if rank in self:
-#            self.r = web_latex(self.rank)
 
         # Local data
         self.local_data = []
@@ -297,9 +295,12 @@ class ECNF(object):
             self.base_change = [] # in case it was False instead of []
             self.properties += [('Q-curve' , self.qc)]
 
+        r = self.rk
+        if r=="?":
+            r = self.rk_bnds
         self.properties += [
             ('Torsion order' , self.ntors),
-            ('Rank' , self.rk),
+            ('Rank' , r),
             ]
 
         for E0 in self.base_change:
