@@ -82,6 +82,15 @@ body {
     color: #181;
     margin: 10px 0 5px 0;
 }
+
+#content > h2.inline,
+#content > h3.inline {
+    font-weight: normal;
+    display: inline;
+    padding-right: 10px;
+    margin: 5px 0 10px 0;
+}
+
 #footer {
     clear: both;
     margin-top: 40px;
