@@ -1581,6 +1581,7 @@ class Lfunction_genus2_Q(Lfunction):
         self.title_end = ("where $A$ is a genus 2 curve "
                       + "of conductor " + str(isoclass['cond']))
         self.title_arithmetic = "$" + self.texname_arithmetic + "$" + ", " + self.title_end
+        self.title_analytic = "$" + self.texname + "$" + ", " + self.title_end
         self.title = "$" + self.texname + "$" + ", " + self.title_end
 
         constructor_logger(self, args)

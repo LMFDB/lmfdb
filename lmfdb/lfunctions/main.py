@@ -393,6 +393,7 @@ def initLfunction(L, args, request):
 #    if 'title_arithmetic' in L:
     try:
         info['title_arithmetic'] = L.title_arithmetic
+        info['title_analytic'] = L.title_analytic
     except AttributeError:
         pass
     try:

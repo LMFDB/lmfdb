@@ -59,7 +59,7 @@
 
       {% if title_arithmetic -%}
       <div id="title" class="arithmetic"><span id="title-content">{{ title_arithmetic|safe }}</span></div>
-      <div id="title" class="analytic nodisplay"><span id="title-content">{{ title|safe }}</span></div>
+      <div id="title" class="analytic nodisplay"><span id="title-content">{{ title_analytic|safe }}</span></div>
       {% else %}
       <div id="title"><span id="title-content">{{ title|safe }}</span></div>
       {% endif %}
