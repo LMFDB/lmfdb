@@ -289,15 +289,32 @@ def lfuncDShtml(L, fmt):
 
         ans += "<table class='dirichletseries'><tr>"
       #  ans += "<td valign='top' padding-top='2px'>" + "$" 
-        ans += "<td valign='top'>" + "$" 
+        ans += "<td valign='top'>"  # + "$" 
         if fmt == "arithmetic":
-            ans += L.texname_arithmetic
+           # ans += L.texname_arithmetic
+            ans += "<span class='term'>"
+            ans += L.htmlname_arithmetic
+            ans += "&thinsp;"
+            ans += "&nbsp;=&nbsp;"
+        #    ans += "1<sup>&thinsp;</sup>" + "&thinsp;"
+            ans += "1<sup></sup>" + "&nbsp;"
+            ans += "</span>"
+        elif hasattr(L, 'htmlname'):
+            ans += "<span class='term'>"
+            ans += L.htmlname
+            ans += "&thinsp;"
+            ans += "&nbsp;=&nbsp;"
+            ans += "1" + "&nbsp;"
+            ans += "</span>"
         else:
+            ans += '$' 
             ans += L.texname
-        ans += " = "
-        # ans = ans + seriescoeff(L.dirichlet_coefficients[0], 0, "literal", "", -6, 5)
-        ans = ans + "1^{\mathstrut}" + "$"  + "&nbsp;"
-        ans = ans + "</td><td valign='top'>"
+            ans += " = "
+            ans += "1^{\mathstrut}" + "$"  + "&nbsp;"
+     #   ans += " = "
+     #   # ans = ans + seriescoeff(L.dirichlet_coefficients[0], 0, "literal", "", -6, 5)
+     #   ans = ans + "1^{\mathstrut}" + "$"  + "&nbsp;"
+        ans += "</td><td valign='top'>"
 
         if fmt == "arithmetic":
             ds_length = len(L.dirichlet_coefficients_arithmetic)

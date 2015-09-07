@@ -1569,7 +1569,9 @@ class Lfunction_genus2_Q(Lfunction):
         # Need an option for the arithmetic normalization, leaving the
         # analytic normalization as the default.
         self.texname = "L(s,A)"
+        self.htmlname = "<em>L</em>(<em>s,A</em>)"
         self.texname_arithmetic = "L(A,s)"
+        self.htmlname_arithmetic = "<em>L</em>(<em>A,s</em>)"
         self.texnamecompleteds = "\\Lambda(s,A)"
         self.texnamecompleted1ms = "\\Lambda(1-s,A)"
         self.texnamecompleteds_arithmetic = "\\Lambda(A,s)"
