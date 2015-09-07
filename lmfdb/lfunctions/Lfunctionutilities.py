@@ -301,7 +301,7 @@ def lfuncDShtml(L, fmt):
             ans += L.htmlname
             ans += "&thinsp;"
             ans += "&nbsp;=&nbsp;"
-            ans += "1" + "&nbsp;"
+            ans += "1<sup></sup>" + "&nbsp;"
             ans += "</span>"
         else:
             ans += '$' 
