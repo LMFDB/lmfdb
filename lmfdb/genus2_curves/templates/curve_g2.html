@@ -226,25 +226,23 @@ function show_invs(invstyle) {
 
 {{code(data.code,['magma'],'num_rat_wpts')}}
 <br>
-<h2 style="display: inline"> Number of rational {{ KNOWL('g2c.num_rat_wpts', title='Weierstrass points') }}: </h2><p style="display: inline"> \({{data.data.num_rat_wpts}}\)</p>
+<h3 class="inline"> Number of rational {{ KNOWL('g2c.num_rat_wpts', title='Weierstrass points') }}: </h2>\({{data.data.num_rat_wpts}}\)
 
+<br>
 <h2 class='subhead'> Properties related to the {{KNOWL('g2c.jacobian', title='Jacobian')}}: </h2>
 
 {{code(data.code,['magma'],'two_selmer')}}
-<br>
-<h3 style="display: inline"> {{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank') }}: </h3><p style="display: inline">\({{data.data.two_selmer_rank}}\)</p>
+
+<h3 class="inline"> {{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank') }}: </h3>\({{data.data.two_selmer_rank}}\)
 
 <br>
 {{code(data.code,['magma'],'tor_struct')}}
 <br>
-<h3 style="display: inline"> {{ KNOWL('g2c.torsion', title='Torsion') }}: </h3><p style="display: inline">\({{data.data.tor_struct}}\) </p>
+<h3 class="inline"> {{ KNOWL('g2c.torsion', title='Torsion') }}: </h3>\({{data.data.tor_struct}}\)
 
 <br>
-<br>
-<h3 style="display: inline"> {{KNOWL('g2c.st_group', title='Sato-Tate group') }} </h3>
-<br>
+<h3> {{KNOWL('g2c.st_group', title='Sato-Tate group') }} </h3>
 
-<p>
     {% if data.data.real_geom_end_alg == 'R'%}
         \(\mathrm{ST} \simeq {{ data.data.st_group_name }}\)
     {% else %}
@@ -257,7 +255,8 @@ function show_invs(invstyle) {
         </tr>
     </table>
     {% endif %}
-</p>
+
+<br>
 
 <h3 style="display: inline"> {{ KNOWL('g2c.jac_endomorphisms', title='Endomorphisms of the Jacobian') }} </h3>
 
