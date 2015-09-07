@@ -77,6 +77,18 @@ def do_mult(ent):
         return ent[0]
     return "%s x%d" % (ent[0], ent[1])
 
+# input is a list of pairs, module and multiplicity
+def modules2string(n, t, modlist):
+    C = base.getDBConnection()
+    modlist = [[galois_module_knowl(n, t, z[0], C), int(z[1])] for z in modlist]
+    ans = modlist[0][0]
+    modlist[0][1] -= 1
+    for j in range(len(modlist)):
+        while modlist[j][1]>0:
+            ans += r' $\oplus$ '+modlist[j][0]
+            modlist[j][1] -= 1
+    return ans
+
 def nf_display_knowl(label, C, name=None):
     if not name:
         name = "Global Number Field %s" % label
@@ -300,15 +312,7 @@ class WebNumberField:
         gmods = C.transitivegroups.Gmodules
         n = self.degree()
         t = self.galois_t()
-        ugm = [[galois_module_knowl(n, t, z[0], C), int(z[1])] for z in ugm]
-        #ugm = [do_mult(a) for a in ugm]
-        ans = ugm[0][0]
-        ugm[0][1] -= 1
-        for j in range(len(ugm)):
-            while ugm[j][1]>0:
-                ans += r' $\oplus$ '+ugm[j][0]
-                ugm[j][1] -= 1
-        return ans
+        return modules2string(n, t, ugm)
 
     def K(self):
         if not self.haskey('K'):
