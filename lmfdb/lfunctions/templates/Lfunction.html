@@ -40,7 +40,7 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
 */
 </style>
 
-{% if BETA and user_is_authenticated and dirichlet_arithmetic -%}
+{% if dirichlet_arithmetic -%}
  <div align='center'>{{ KNOWL('lfunction.normalization', title='Normalization') }}: <button class='arithmetic active' onclick="show_normalization('arithmetic'); return false">arithmetic</button>
 <button class='analytic inactive' onclick="show_normalization('analytic'); return false">analytic</button></div>
 {% elif BETA %}
