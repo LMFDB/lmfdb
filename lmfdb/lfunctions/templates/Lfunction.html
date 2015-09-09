@@ -2,27 +2,65 @@
 
 {% block content %}
 
-{% if BETA and user_is_authenticated and dirichlet_arithmetic -%}
- <div align='center'>{{ KNOWL('lfunction.normalization', title='Normalization') }}: <button class='active'>arithmetic</button>
-<button class='inactive'>analytic</button></div>
-{% elif BETA and user_is_authenticated %}
- <div align='center'>{{ KNOWL('lfunction.normalization', title='Normalization') }}: <button class='inactive'>arithmetic</button>
-<button class='active'>analytic</button></div>
+<script>
+function show_normalization(normstyle) {
+    $('.analytic').hide();
+    $('.arithmetic').hide();
+    $('.'+normstyle).show();
+    $('button.analytic').show();
+    $('button.arithmetic').show();
+    if (normstyle == 'analytic') {
+       $('button.analytic').css('background', '#DFD');
+       $('button.analytic').css('border', '2px solid #ADA');
+       $('button.arithmetic').css('background', '#EEE');
+       $('button.arithmetic').css('border', '1px solid #EDD');
+    }
+    if (normstyle == 'arithmetic') {
+       $('button.arithmetic').css('background', '#DFD');
+       $('button.arithmetic').css('border', '2px solid #ADA');
+       $('button.analytic').css('background', '#EEE');
+       $('button.analytic').css('border', '1px solid #EDD');
+    }
+  }
+
+function show_moreless(ml) {
+    $('.more').hide();
+    $('.less').hide();
+    $('.'+ml).show();
+}
+</script>
+
+<style type="text/css">
+table.ntdata tr.toggle { font-size: 80%; text-align: right; }
+table.ntdata tr.toggle:nth-child(2n) { background: #FFF; }
+table.ntdata tr.toggle a:hover { background: #FFF; }
+/*
+table.ntdata tr.more:last-child { font-size: 80%; text-align: right; }
+table.ntdata tr.more:nth-child(2n) { background: #FFF; }
+*/
+</style>
+
+{% if dirichlet_arithmetic -%}
+ <div align='center'>{{ KNOWL('lfunction.normalization', title='Normalization') }}: <button class='arithmetic active' onclick="show_normalization('arithmetic'); return false">arithmetic</button>
+<button class='analytic inactive' onclick="show_normalization('analytic'); return false">analytic</button></div>
 {% elif BETA %}
 <div align='center'>{{ KNOWL('lfunction.normalization', title='Normalization') }}: 
 <button class='active'>analytic</button></div>
 {% endif %}
 
  <h2> {{ KNOWL('lfunction.dirichlet_series', title='Dirichlet series') }}</h2>
-{% if BETA and user_is_authenticated and dirichlet_arithmetic -%}
- <div>{{ dirichlet_arithmetic|safe }}</div>
+{% if dirichlet_arithmetic -%}
+ <div class="arithmetic">{{ dirichlet_arithmetic|safe }}</div>
+ <div class="analytic nodisplay">{{ dirichlet|safe }}</div>
 {% else %}
  <div>{{ dirichlet|safe }}</div>
 {% endif %}
 
+
  <h2>{{ KNOWL('lfunction.functional_equation',title='Functional equation') }}</h2>
-{% if BETA and user_is_authenticated and dirichlet_arithmetic -%}
- <div id="functionalEqText">\[{{ functionalequation_arithmetic }}\]</div>
+{% if dirichlet_arithmetic -%}
+ <div id="functionalEqText" class="arithmetic">\[{{ functionalequation_arithmetic }}\]</div>
+ <div id="functionalEqText" class="analytic nodisplay">\[{{ functionalequation }}\]</div>
 {% else %}
  <div id="functionalEqText">\[{{ functionalequation }}\]</div>
 {% endif %}
@@ -32,8 +70,9 @@
 </div>
 
  <h2>{{ KNOWL('lfunction.euler_product', title='Euler product') }}</h2>
-{% if BETA and user_is_authenticated and dirichlet_arithmetic -%}
- <div>{{ eulerproduct_arithmetic|safe }}</div>
+{% if dirichlet_arithmetic -%}
+ <div class="arithmetic">{{ eulerproduct_arithmetic|safe }}</div>
+ <div class="analytic nodisplay">\[{{ eulerproduct }}\]</div>
 {% else %}
  <div>\[{{ eulerproduct }}\]</div>
 {% endif %}
@@ -46,9 +85,9 @@
  {% endif %}
 
 <h2>Particular Values</h2>
-{% if BETA and user_is_authenticated and dirichlet_arithmetic -%}
+{% if dirichlet_arithmetic -%}
    {% if sv_critical_arithmetic or sv_edge_arithmetic %}
-      <div>
+      <div class="arithmetic">
       {% if sv_critical_arithmetic %}
           {{ sv_critical_arithmetic }}
       {% endif %}
@@ -63,6 +102,24 @@
    {% else %}
       <div>Not enough information (Dirichlet series coefficients/sign of the functional equation) to compute special values.</div>
    {% endif %}
+
+   {% if sv_critical or sv_edge %}
+      <div class="analytic nodisplay">
+      {% if sv_critical %}
+          {{ sv_critical }}
+      {% endif %}
+      {% if sv_edge %}
+          {% if Ltype=="riemann" or Ltype=="dedekindzeta" %}
+              <div align="center">Pole at \(s=1\)</div>
+          {% else %}
+              {{ sv_edge }}
+          {% endif %}
+      {% endif %}
+     </div>
+   {% else %}
+      <div>Not enough information (Dirichlet series coefficients/sign of the functional equation) to compute special values.</div>
+   {% endif %}
+
 {% else %}
    {% if sv_critical or sv_edge %}
       <div>
