@@ -1,13 +1,22 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
+<div>
+  <h2>  Base field   {{ info.field.knowl()|safe }} </h2>
+<p>
+ {{ KNOWL('nf.generator', 'Generator') }} \({{
+ info.field.generator_name() }}\), with {{
+ KNOWL('nf.minimal_polynomial', 'minimal polynomial') }}
+ \({{info.field.poly()}}\); {{ KNOWL('nf.class_number', 'class number')
+ }} \({{info.field.class_number()}}\).
+</p>
+</div>
+
 
   <h2>  Form  </h2>
 
 <p>
 <table>
- <tr><td>{{ KNOWL('nf', title='Base Field') }}:<td><A HREF="/NumberField/{{info.field_label }}">{{info.field_label}}</A> </tr>
-<tr><td>Base field defining polynomial:<td> ${{ info.field_poly }}$ </tr>
 <tr><td>{{ KNOWL('mf.hilbert.weight_vector', title='Weight') }}:<td> {{ info.weight }} </tr>
 <tr><td> {{ KNOWL('mf.hilbert.level_norm', title='Level') }}:<td> ${{ info.level_ideal }}$ </tr>
 <tr><td> Label:<td> ${{ info.label_suffix }}$ </tr>
@@ -26,11 +35,13 @@
 
   <h2>  Hecke eigenvalues ({{ KNOWL('mf.hilbert.q_expansion', title='$q$-expansion') }}) </h2>
 
+{% if info.dimension > 1 %}
 <p>
 <table>
 <tr><td> $e$ is a root of the defining polynomial: <td> ${{ info.hecke_polynomial }}$ </tr>
 </table>
 </p>
+{% endif %}
 
 <p>&nbsp;&nbsp;<a href='{{ info.label }}?display_eigs=True'>Print full eigenvalues</a>
 &nbsp;&nbsp;<a href='{{ info.label }}?display_eigs=False'>Hide large eigenvalues</a></p>
