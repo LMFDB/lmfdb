@@ -5,16 +5,16 @@
 
 <table class="ntdata">
 <tr>
-<th>Field</th>
 <th>Label</th>
-<th>Level</th>
-<th>Dimension</th>
+<th>{{ KNOWL('nf', title='Field') }}</th>
+<th>{{ KNOWL('mf.hilbert.level_norm', title='Level') }}</th>
+<th>{{ KNOWL('mf.hilbert.dimension', title='Dimension') }} </th>
 </tr>
 {% for form in info.forms: %}
 <tr>
-<td>{{form.field_label}}</td>
 <td align='left'><a href="{{url_for('hmf.render_hmf_webpage',field_label=form.field_label,label=form.label)}}">
-    {{form.short_label}} </a></td>
+  {{form.short_label}} </a></td>
+<td>{{form.field_label}}</td>
 <td>${{form.level_ideal}}$</td>
 <td>{{form.dimension}}</td>
 </tr>
