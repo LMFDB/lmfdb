@@ -65,9 +65,32 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
  <div id="functionalEqText">\[{{ functionalequation }}\]</div>
 {% endif %}
 
- <div>
-   {{ KNOWL('lfunction.selbergdata', title="Selberg data") }}: ${{ functionalequationSelberg }}$
-</div>
+<h2> {{ KNOWL('lfunction.invariants', title='Invariants') }}  </h2>
+
+  <table>
+
+        <tr>
+        <td> \( N \)</td>
+        <td>&nbsp;=&nbsp;</td>
+        <td> \({{ conductor }}\)
+        </td>
+        </tr>
+
+        <tr>
+        <td> \( d \)</td>
+        <td>&nbsp;=&nbsp;</td>
+        <td> \({{ degree }}\)
+        </td>
+        </tr>
+
+        <tr>
+        <td> {{ KNOWL('lfunction.selbergdata', title="Selberg Data") }} </td>
+        <td>&nbsp;=&nbsp;</td>
+        <td> ${{ functionalequationSelberg }}$
+        </td>
+        </tr>
+
+  </table>
 
  <h2>{{ KNOWL('lfunction.euler_product', title='Euler product') }}</h2>
 {% if dirichlet_arithmetic -%}

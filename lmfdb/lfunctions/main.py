@@ -625,6 +625,9 @@ def initLfunction(L, args, request):
 
 
     # the code below should be in Lfunction.py
+    info['conductor'] = L.level
+    info['degree'] = L.degree
+    info['sign'] = L.sign
     info['dirichlet'] = lfuncDShtml(L, "analytic")
     info['eulerproduct'] = lfuncEPtex(L, "abstract")
     info['functionalequation'] = lfuncFEtex(L, "analytic")

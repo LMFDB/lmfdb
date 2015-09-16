@@ -658,11 +658,15 @@ def lfuncFEtex(L, fmt):
             for mu in range(len(L.mu_fe) - 1):
                 ans += seriescoeff(L.mu_fe[mu], 0, "literal", "", -6, 5) + ", "
             ans += seriescoeff(L.mu_fe[-1], 0, "literal", "", -6, 5)
+        else:
+            ans += "\\ "
         ans += ":"
         if L.nu_fe != []:
             for nu in range(len(L.nu_fe) - 1):
                 ans += str(L.nu_fe[nu]) + ", "
             ans += str(L.nu_fe[-1])
+        else:
+            ans += "\\ "
         ans += "), "
         ans += seriescoeff(L.sign, 0, "literal", "", -6, 5)
         ans += ")"
