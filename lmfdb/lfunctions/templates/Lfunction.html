@@ -84,6 +84,49 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
         </tr>
 
         <tr>
+        <td> \( \varepsilon \)</td>
+        <td>&nbsp;=&nbsp;</td>
+        <td> {{ sign }}
+        </td>
+        </tr>
+
+        <tr>
+        <td> primitive </td>
+        <td>&nbsp;:&nbsp;</td>
+        <td> {{ primitive }}
+        </td>
+        </tr>
+
+        <tr>
+        <td> self-dual </td>
+        <td>&nbsp;:&nbsp;</td>
+        <td> {{ selfdual }}
+        </td>
+        </tr>
+
+{% if rank -%}
+
+        <tr>
+        <td> rank </td>
+        <td>&nbsp;=&nbsp;</td>
+        <td> {{ rank }}
+        </td>
+        </tr>
+
+{% endif %}
+
+{% if satotategroup -%}
+
+        <tr>
+        <td> Sato-Tate group </td>
+        <td>&nbsp;:&nbsp;</td>
+        <td> {{ satotategroup }}
+        </td>
+        </tr>
+
+{% endif %}
+
+        <tr>
         <td> {{ KNOWL('lfunction.selbergdata', title="Selberg data") }} </td>
         <td>&nbsp;=&nbsp;</td>
         <td> ${{ functionalequationSelberg }}$
