@@ -28,7 +28,7 @@ nfcurves = conn.elliptic_curves.nfcurves
 qcurves = conn.elliptic_curves.curves
 fields = conn.numberfields.fields
 
-def MWShaInfo(E, HeightBound = None):
+def MWShaInfo(E, HeightBound = None, test_saturation=False, verbose=False):
     r"""
     Interface to Magma's MordellWeilShaInformation function
 
@@ -56,23 +56,41 @@ def MWShaInfo(E, HeightBound = None):
     K = E.base_field()
     def convert_point(P):
         return E([K(c.sage()) for c in P.Eltseq()])
-    print("calling magma...")
+    if verbose:
+        print("calling magma...")
     if HeightBound == None:
         MWSI = magma(E).MordellWeilShaInformation(nvals=3)
     else:
         MWSI = magma(E).MordellWeilShaInformation(nvals=3, HeightBound=HeightBound)
-    print("...done.")
+    if verbose:
+        print("...done.")
     rank_bounds = MWSI[0].sage()
     gens = [convert_point(P) for P in MWSI[1]]
     sha_bound_dict = dict(MWSI[2].sage())
+    if gens and test_saturation:
+        if verbose:
+            print("testing that Magma's generators are saturated...")
+        newgens, index, newreg = E.saturation(gens,verbose)
+        if index>1:
+            # Must print this even if not verbose!
+            print("Magma's generators for curve %s were not saturated!  index = %s" % (E.ainvs(),index))
+            gens = newgens
+        else:
+            if verbose:
+                print("... and they are!")
     return [rank_bounds, gens, sha_bound_dict]
 
-def map_points(maps, source, Plist):
+def map_points(maps, source, Plist, verbose=False):
     r""" Given a matrix of isogenies and a list of points on one curve (with
     index 'source'), returns a list of their images on each other curve.
     Since the isogenies only exist for some i,j pairs, we need to know
     an index 'source' such that following the maps from that curve will
     cover the class, and the initial points must be on that curve.
+
+    We assume that the original points are saturated; after mapping
+    under a p-isogeny theimages may not be p-saturated so additional
+    p-saturation is done.  This requires Sage version 6.9 (pending) or
+    the working branch at http://trac.sagemath.org/ticket/8829.
     """
     ncurves = len(maps)
     if ncurves==1:
@@ -89,7 +107,22 @@ def map_points(maps, source, Plist):
             for j in range(ncurves):
                 if Qlists[i]!=[] and (maps[i][j] != 0) and Qlists[j]==[]:
                     #print("Mapping from %s to %s at step %s" % (i,j,nstep))
+                    phi = maps[i][j]
+                    p = phi.degree() # a prime
                     Qlists[j] = [maps[i][j](P) for P in Qlists[i]]
+                    # now do p-saturation (if possible)
+                    try:
+                        E = Qlists[j][0].curve()
+                        pts, index, reg = E.saturation(Qlists[j],one_prime=p)
+                        if index>1:
+                            Qlists[j] = pts
+                            if True:#verbose:
+                                print("%s-saturation needed on curve %s, gaining index %s" % (p,j,index))
+                        else:
+                            if verbose:
+                                print("image points on curve %s already %s-saturated" % (j,p))
+                    except AttributeError:
+                        print("Unable to %s-saturate, use a newer Sage version!" % p)
                     #print("...now Qlists = %s" % Qlists)
                     nfill += 1
                     if nfill==ncurves:
@@ -97,7 +130,7 @@ def map_points(maps, source, Plist):
     if nfill<ncurves:
         raise RuntimeError("In map_points, failed to cover the class!")
 
-def MWInfo_class(Cl, HeightBound=None):
+def MWInfo_class(Cl, HeightBound=None, test_saturation=False, verbose=False):
     r"""
     Get MW info for all curves in the class
 
@@ -114,9 +147,10 @@ def MWInfo_class(Cl, HeightBound=None):
     #print("Abs disc list: %s" % adiscs)
     ss = [len(str(E.ainvs())) for E in Cl.curves]
     source=ss.index(min(ss))
-    print("Using curve %s to find points" % list(Cl.curves[source].ainvs()))
-    MWI = MWShaInfo(Cl.curves[source], HeightBound=HeightBound)[:2] # ignore Sha part
-    return [[MWI[0],pts] for pts in map_points(Cl.isogenies(), source, MWI[1])]
+    if verbose:
+        print("Using curve %s to find points" % list(Cl.curves[source].ainvs()))
+    MWI = MWShaInfo(Cl.curves[source], HeightBound=HeightBound, test_saturation=test_saturation, verbose=verbose)[:2] # ignore Sha part
+    return [[MWI[0],pts] for pts in map_points(Cl.isogenies(), source, MWI[1], verbose)]
 
 def find_source(maps):
     r""" maps is an nxn array representing a directed graph on n vertices,
@@ -138,7 +172,7 @@ def find_source(maps):
                     return i
     raise ValueError("find_source problem with mat=%s: at end, children = %s but no source found!" % (mat,children))
 
-def MWInfo_curves(curves, HeightBound=None):
+def MWInfo_curves(curves, HeightBound=None, test_saturation=False, verbose=False):
     r""" Get MW info for all curves in the list; this is a list of all
     curves in a class in some order, where we do not have the maps
     between them, so we recompute the class with maps and take into
@@ -153,7 +187,7 @@ def MWInfo_curves(curves, HeightBound=None):
     A list of pairs [rank_bounds, gens], one for each class.
     """
     Cl = curves[0].isogeny_class()
-    MWI = MWInfo_class(Cl, HeightBound=HeightBound)
+    MWI = MWInfo_class(Cl, HeightBound=HeightBound, test_saturation=test_saturation, verbose=verbose)
     # Now we must map the points to the correct curves!
 
     n = len(Cl.curves)
@@ -181,7 +215,7 @@ def encode_points(Plist):
     """
     return [encode_point(P) for P in Plist]
 
-def get_generators(field, iso_class, verbose=False, store=False):
+def get_generators(field, iso_class, test_saturation=False, verbose=False, store=False):
     r""" Retrieves the curves in the isogeny class from the database, finds
     their ranks (or bounds) and generators, and optionally stores the
     result back in the database.  """
@@ -191,7 +225,7 @@ def get_generators(field, iso_class, verbose=False, store=False):
     Es = [ECNF(e).E for e in res]
     if verbose:
         print("Curves in class %s: %s" % (iso_class,[E.ainvs() for E in Es]))
-    mwi = MWInfo_curves(Es, HeightBound=2)
+    mwi = MWInfo_curves(Es, HeightBound=2, test_saturation=test_saturation, verbose=verbose)
     if verbose:
         print("MW info: %s" % mwi)
 
@@ -212,9 +246,10 @@ def get_generators(field, iso_class, verbose=False, store=False):
         if store:
             nfcurves.update(e, {'$set': data}, upsert=True)
         else:
-            print("(not done, dummy run)")
+            if verbose:
+                print("(not done, dummy run)")
 
-def get_all_generators(field, min_cond_norm=None, max_cond_norm=None, verbose=False, store=False):
+def get_all_generators(field, min_cond_norm=None, max_cond_norm=None, test_saturation=False, verbose=False, store=False):
     r""" Retrieves curves from the database defined over the given field,
     with conductor norm between given bounds (optional), finds their
     ranks (or bounds) and generators, and optionally stores the result
@@ -234,9 +269,9 @@ def get_all_generators(field, min_cond_norm=None, max_cond_norm=None, verbose=Fa
     # cursor might timeout:
     classes = [r['short_class_label'] for r in res]
     for isoclass in classes:
-        if verbose:
+        if True:#verbose:
             print("Getting generators for isogeny class %s" % isoclass)
-        get_generators(field, isoclass, verbose=verbose, store=store)
+        get_generators(field, isoclass, test_saturation=test_saturation, verbose=verbose, store=store)
 
 ########################################################################
 #
