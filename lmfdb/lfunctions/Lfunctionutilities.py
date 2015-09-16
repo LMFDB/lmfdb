@@ -288,16 +288,27 @@ def lfuncDShtml(L, fmt):
 #        ans = ans + "</td><td valign='top'>"
 
         ans += "<table class='dirichletseries'><tr>"
-      #  ans += "<td valign='top' padding-top='2px'>" + "$" 
-        ans += "<td valign='top'>" + "$" 
+        ans += "<td valign='top'>"  # + "$" 
         if fmt == "arithmetic":
-            ans += L.texname_arithmetic
+            ans += "<span class='term'>"
+            ans += L.htmlname_arithmetic
+            ans += "&thinsp;"
+            ans += "&nbsp;=&nbsp;"
+            ans += "1<sup></sup>" + "&nbsp;"
+            ans += "</span>"
+        elif hasattr(L, 'htmlname'):
+            ans += "<span class='term'>"
+            ans += L.htmlname
+            ans += "&thinsp;"
+            ans += "&nbsp;=&nbsp;"
+            ans += "1<sup></sup>" + "&nbsp;"
+            ans += "</span>"
         else:
+            ans += '$' 
             ans += L.texname
-        ans += " = "
-        # ans = ans + seriescoeff(L.dirichlet_coefficients[0], 0, "literal", "", -6, 5)
-        ans = ans + "1^{\mathstrut}" + "$"  + "&nbsp;"
-        ans = ans + "</td><td valign='top'>"
+            ans += " = "
+            ans += "1^{\mathstrut}" + "$"  + "&nbsp;"
+        ans += "</td><td valign='top'>"
 
         if fmt == "arithmetic":
             ds_length = len(L.dirichlet_coefficients_arithmetic)
@@ -461,13 +472,13 @@ def lfuncEPhtml(L,fmt):
     bad_primes = []
     for lf in L.bad_lfactors:
         bad_primes.append(lf[0])
-    eulerlim = 10
+    eulerlim = 25
     good_primes = []
     for j in range(0, eulerlim):
         this_prime = Primes().unrank(j)
         if this_prime not in bad_primes:
             good_primes.append(this_prime)
-    eptable = "<table class='ntdata euler'>\n"
+    eptable = "<table id='eptable' class='ntdata euler'>\n"
     eptable += "<thead>"
     eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th><th class='weight'>$f_p$</th></tr>\n"
     eptable += "</thead>"
@@ -483,15 +494,33 @@ def lfuncEPhtml(L,fmt):
         goodorbad = ""
     goodorbad = "good"
     firsttime = " class='first'"
-    for j in good_primes:
+    good_primes1 = good_primes[:9]
+    good_primes2 = good_primes[9:]
+    for j in good_primes1:
         this_prime_index = prime_pi(j) - 1
         eptable += ("<tr" + firsttime + "><td>" + goodorbad + "</td><td>" + str(j) + "</td><td>" +
                     "$" + list_to_factored_poly_otherorder(L.localfactors[this_prime_index]) + "$" +
                     "</td></tr>\n")
         goodorbad = ""
         firsttime = ""
+    firsttime = " id='moreep'"
+    for j in good_primes2:
+        this_prime_index = prime_pi(j) - 1
+        eptable += ("<tr" + firsttime +  " class='more nodisplay'" + "><td>" + goodorbad + "</td><td>" + str(j) + "</td><td>" +
+                    "$" + list_to_factored_poly_otherorder(L.localfactors[this_prime_index]) + "$" +
+                    "</td></tr>\n")
+        firsttime = ""
+
+    eptable += "<tr class='less toggle'><td></td><td></td><td> <a onclick='"
+    eptable += 'show_moreless("more"); return true' + "'"
+    eptable += ' href="#moreep" '
+    eptable += ">show more</a></td></tr>\n"
+    eptable += "<tr class='more toggle nodisplay'><td></td><td></td><td> <a onclick='"
+    eptable += 'show_moreless("less"); return true' + "'"
+    eptable += ' href="#eptable" '
+    eptable += ">show less</a></td></tr>\n"
     eptable += "</table>\n"
-    ans += eptable
+    ans += "\n" + eptable
     return(ans)
 
 def lfuncEpSymPower(L):

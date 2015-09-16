@@ -393,6 +393,7 @@ def initLfunction(L, args, request):
 #    if 'title_arithmetic' in L:
     try:
         info['title_arithmetic'] = L.title_arithmetic
+        info['title_analytic'] = L.title_analytic
     except AttributeError:
         pass
     try:
@@ -855,6 +856,11 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         # logger.debug(arg5+arg6+str(arg7)+str(arg8)+str(arg9))
         return Lfunction_EMF(level=arg5, weight=arg6, character=arg7, label=arg8, number=arg9)
 
+    elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'TotallyReal' and arg5 == 'holomorphic':  # Hilbert modular form
+        # logger.debug(arg5+arg6+str(arg7)+str(arg8)+str(arg9))
+        return Lfunction_HMF(field=arg4, label=arg6, character=arg7, number=arg8)
+
+# next option is probably from an archaic HMF url
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 != 'Q' and arg4 == 'holomorphic':  # Hilbert modular form
         # logger.debug(arg5+arg6+str(arg7)+str(arg8)+str(arg9))
         return Lfunction_HMF(field=arg3, label=arg5, character=arg6, number=arg7)

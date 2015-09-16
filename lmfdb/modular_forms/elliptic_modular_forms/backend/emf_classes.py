@@ -141,6 +141,7 @@ class ClassicalMFDisplay(MFDisplay):
         except:
             pass
             emf_logger.debug("Could not connect to pymongo!")
+
     def set_table_browsing(self, skip=[0, 0], limit=[(2, 16), (1, 50)], keys=['Weight', 'Level'], character=0, dimension_table=None, dimension_fun=dimension_new_cusp_forms, title='Dimension of newforms', check_db=True):
         r"""
         Table of Holomorphic modular forms spaces.
@@ -200,10 +201,10 @@ class ClassicalMFDisplay(MFDisplay):
                 else:
                     D = DirichletGroup_conrey(N)
                     for xc in D:
-                        if xc.sage_character() == kronecker_character_upside_down(N):
+                        x = xc.sage_character()
+                        if x == kronecker_character_upside_down(N):
                             cchi = xc.number()
                             break
-                x = xc.sage_character()
                 row = dict()
                 row['head'] = "\(\chi_{" + str(N) + "}(" + str(cchi) + ",\cdot) \)"
                 row['url'] = url_for('characters.render_Dirichletwebpage', modulus=N, number=cchi)

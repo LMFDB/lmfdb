@@ -1,0 +1,103 @@
+prompt:
+  sage:   'sage:'
+  pari:   'gp:'
+  magma:  'magma:'
+
+logo:
+  sage: <img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
+  pari: <img src = "http://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">
+  magma: <img src = "http://i.stack.imgur.com/0468s.png" width="50px">
+
+not-implemented:
+  sage: |
+    # (not yet implemented)
+  pari: |
+    \\ (not yet implemented)
+  magma: |
+    // (not yet implemented)
+
+field:
+  sage:  K = NumberField(%s,"a")
+  pari:  K = bnfinit(%s, 1)
+  magma: K<a> := NumberField(PolynomialRing(Rationals())!%s);
+
+poly:
+  sage:  K.defining_polynomial()
+  pari:  K.pol
+  magma: DefiningPolynomial(K);
+
+degree:
+  sage:  K.degree()
+  pari:  poldegree(K.pol)
+  magma: Degree(K);
+
+signature:
+  sage:  K.signature()
+  pari:  K.sign
+  magma: Signature(K);
+
+discriminant:
+  sage:  K.disc()
+  pari:  K.disc
+  magma: Discriminant(K);
+
+ramified_primes:
+  sage:  K.disc().support()
+  pari:  factor(abs(K.disc))[,1]~
+  magma: PrimeDivisors(Discriminant(K));
+
+integral_basis:
+  sage:  K.integral_basis()
+  pari:  K.zk
+  magma: IntegralBasis(K);
+
+class_group:
+  sage:  K.class_group().invariants()
+  pari:  K.clgp
+  magma: ClassGroup(K);
+
+unit_group:
+  sage:  UK = K.unit_group()
+  magma: |
+    UK, f := UnitGroup(K);
+
+unit_rank:
+  sage:  UK.rank()
+  pari:  |
+    #K.fu
+  magma: UnitRank(K);
+
+unit_torsion_gen:
+  sage:  UK.torsion_generator()
+  pari:  K.tu[2]
+  magma: K!f(TU.1) where TU,f is TorsionUnitGroup(K);
+
+fundamental_units:
+  sage:  UK.fundamental_units()
+  pari:  K.fu
+  magma: |
+    [K!f(g): g in Generators(UK)];
+
+regulator:
+  sage:  K.regulator()
+  pari:  K.reg
+  magma: Regulator(K);
+
+galois_group:
+  sage: |
+    K.galois_group(type='pari')
+  pari: polgalois(K.pol)
+  magma: GaloisGroup(K);
+
+prime_cycle_types:
+  sage: |
+    p = 7;  # to obtain a list of $[e_i,f_i]$ for the factorization of the ideal $p\mathcal{O}_K$:
+    [(e, pr.norm().valuation(p)) for pr,e in K.factor(p)]
+  pari: |
+    p = 7;  \\ to obtain a list of $[e_i,f_i]$ for the factorization of the ideal $p\mathcal{O}_K$:
+    idealfactors = idealprimedec(K, p); \\ get the data
+    vector(length(idealfactors), j, [idealfactors[j][3], idealfactors[j][4]])
+  magma: |
+    p := 7;  // to obtain a list of $[e_i,f_i]$ for the factorization of the ideal $p\mathcal{O}_K$:
+    idealfactors := Factorization(p*Integers(K));  // get the data
+    [<primefactor[2], Valuation(Norm(primefactor[1]), p)> : primefactor in idealfactors];

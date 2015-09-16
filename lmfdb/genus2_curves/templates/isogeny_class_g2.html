@@ -54,19 +54,18 @@ text-align: center;
 </p>
 
 <h2> {{ KNOWL('g2c.jac_endomorphisms', title='Endomorphisms of the Jacobian') }} </h2>
-{{info.endomorphism_statement}}
+<p>{{info.endomorphism_statement}}</p>
 <table>
-  <tr>  <td>\(\mathrm{End}(J) \otimes \Q\)</td><td>\(\simeq\)</td><td>\({{info.rat_end_alg_name}}\)</td>
-</tr>
-  <tr>  <td>\(\mathrm{End}(J) \otimes \R\)</td><td>\(\simeq\)</td><td>\({{info.real_end_alg_name}}\)</td>
-</tr>
-  <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}}) \otimes \Q\)</td><td>\(\simeq\)</td><td>\({{info.rat_geom_end_alg_name}}\)</td>
-</tr>
-  <tr>  <td>\(\mathrm{End}(J_{\overline{\Q}}) \otimes \R\)</td><td>\(\simeq\)</td><td>\({{info.real_geom_end_alg_name}}\)</td></tr>
+{% for endalgtype in ['end_ring_name', 'rat_end_alg_name', 'real_end_alg_name', 'geom_end_ring_name', 'rat_geom_end_alg_name', 'real_geom_end_alg_name'] %}
+{% if info[endalgtype][1] != '' %}
+<tr>  <td> \({{info[endalgtype][0]}}\)</td><td>\(\simeq\)</td><td>\({{info[endalgtype][1]}}\)</td></tr>
+{% endif %}
+{% endfor %}
 </table>
-
+{% if info.geom_end_field_name != '' %}
 <p>Field over which all endomorphisms are defined: 
-<A HREF="/NumberField/{{info.geom_end_field }}">{{info.geom_end_field_name}}</A></p>
+<a href="/NumberField/{{info.geom_end_field}}">{{info.geom_end_field_name}}</a></p>
+{% endif %}
 
 <h2>{{ KNOWL('ag.isogeny', title='Isogenies') }}</h2>
 

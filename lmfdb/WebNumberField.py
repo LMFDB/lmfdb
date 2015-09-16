@@ -4,6 +4,7 @@ from sage.all import *
 import re
 import pymongo
 import bson
+import yaml
 from lmfdb.utils import *
 from lmfdb.transitive_group import group_display_short, WebGaloisGroup, group_display_knowl, galois_module_knowl
 wnflog = make_logger("WNF")
@@ -76,6 +77,18 @@ def do_mult(ent):
         return ent[0]
     return "%s x%d" % (ent[0], ent[1])
 
+# input is a list of pairs, module and multiplicity
+def modules2string(n, t, modlist):
+    C = base.getDBConnection()
+    modlist = [[galois_module_knowl(n, t, z[0], C), int(z[1])] for z in modlist]
+    ans = modlist[0][0]
+    modlist[0][1] -= 1
+    for j in range(len(modlist)):
+        while modlist[j][1]>0:
+            ans += r' $\oplus$ '+modlist[j][0]
+            modlist[j][1] -= 1
+    return ans
+
 def nf_display_knowl(label, C, name=None):
     if not name:
         name = "Global Number Field %s" % label
@@ -121,6 +134,8 @@ class WebNumberField:
             self._data = self._get_dbdata()
         else:
             self._data = data
+        if self._data is not None:
+            self.make_code_snippets()
 
     # works with a string, or a list of coefficients
     @classmethod
@@ -297,15 +312,7 @@ class WebNumberField:
         gmods = C.transitivegroups.Gmodules
         n = self.degree()
         t = self.galois_t()
-        ugm = [[galois_module_knowl(n, t, z[0], C), int(z[1])] for z in ugm]
-        #ugm = [do_mult(a) for a in ugm]
-        ans = ugm[0][0]
-        ugm[0][1] -= 1
-        for j in range(len(ugm)):
-            while ugm[j][1]>0:
-                ans += r' $\oplus$ '+ugm[j][0]
-                ugm[j][1] -= 1
-        return ans
+        return modules2string(n, t, ugm)
 
     def K(self):
         if not self.haskey('K'):
@@ -529,3 +536,20 @@ class WebNumberField:
         f = self.conductor()
         return DirichletGroup_conrey(f)
 
+    def make_code_snippets(self):
+         # read in code.yaml from numberfields directory:
+        _curdir = os.path.dirname(os.path.abspath(__file__))
+        self.code = yaml.load(open(os.path.join(_curdir, "number_fields/code.yaml")))
+
+        # Fill in placeholders for this specific field:
+        for lang in ['sage', 'pari']:
+            self.code['field'][lang] = self.code['field'][lang] % self.poly()
+        self.code['field']['magma'] = self.code['field']['magma'] % self.coeffs()
+
+        for k in self.code:
+            if k != 'prompt':
+                for lang in self.code[k]:
+                    self.code[k][lang] = self.code[k][lang].split("\n")
+                    # remove final empty line
+                    if len(self.code[k][lang][-1])==0:
+                        self.code[k][lang] = self.code[k][lang][:-1]
