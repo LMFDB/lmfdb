@@ -29,8 +29,8 @@ import re
 import json
 from sage.all import os
 
-from pymongo.connection import Connection
-gmods = Connection(port=37010).transitivegroups.Gmodules
+from pymongo.mongo_client import MongoClient
+gmods = MongoClient(port=37010).transitivegroups.Gmodules
 
 def sd(f):
   for k in f.keys():
@@ -74,7 +74,11 @@ for path in sys.argv[1:]:
     fn = gzip.open(path) if filename[-3:] == '.gz' else open(path)
     count = 0
     for line in fn.readlines():
+<<<<<<< HEAD
         line = line.strip()
+=======
+        line.strip()
+>>>>>>> 4b844d723ef0245c6f7580f7980589b106f36938
         if re.match(r'\S',line):
             l = json.loads(line)
             do_import(l)
