@@ -146,10 +146,8 @@ def artin_representation_search(**args):
             galclass = [ar]
         if len(data) >= count:
             break
-    #these lines made an extra artin-rep appear, without its galois friends
-    #if cnt > 0 & cnt < count:
-        #data.append(galclass)
-    #data = [ArtinRepresentation(data=x) for x in results]
+    if len(data) < count and len(galclass)>0:
+        data.append(galclass)
 
     return render_template("artin-representation-search.html", req=req, data=data, data_count=len(data), title=title, bread=bread, query=query)
 
