@@ -229,8 +229,22 @@ class ECNF(object):
             gens = [E([self.field.parse_NFelt(x) for x in P])
                     for P in self.gens]
             self.gens = ", ".join([web_latex(P) for P in gens])
+            if self.rk == "?":
+                self.reg = "unknown"
+            else:
+                if gens:
+                    self.reg = E.regulator_of_points(gens)
+                else:
+                    self.reg = 1 # otherwise we only get 1.00000...
+
         except AttributeError:
             self.gens = "not recorded"
+            self.reg = "unknown"
+            try:
+                if self.rank==0:
+                    self.reg = 1
+            except AttributeError:
+                pass
 
         # Local data
         self.local_data = []
