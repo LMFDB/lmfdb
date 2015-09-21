@@ -2,6 +2,7 @@
 import re
 import tempfile
 import os
+import yaml
 from pymongo import ASCENDING, DESCENDING
 from flask import url_for, make_response
 import lmfdb.base
@@ -163,7 +164,7 @@ class WebEC(object):
             data['j_inv_factor'] = latex(data['j_invariant'].factor())
         data['j_inv_str'] = unicode(str(data['j_invariant']))
         data['j_inv_latex'] = web_latex(data['j_invariant'])
-        data['disc'] = self.E.discriminant()
+        data['disc'] = D = self.E.discriminant()
         data['disc_latex'] = web_latex(data['disc'])
         data['disc_factor'] = latex(data['disc'].factor())
         data['cond_factor'] =latex(N.factor())
@@ -296,7 +297,7 @@ class WebEC(object):
 
         local_data = self.local_data = []
         # if we use E.tamagawa_numbers() it calls E.local_data(p) which
-        # crashes on some curves e.g. 164411a1
+        # used to crash on some curves e.g. 164411a1
         tamagawa_numbers = []
         for p in bad_primes:
             local_info = self.E.local_data(p, algorithm="generic")
@@ -306,13 +307,21 @@ class WebEC(object):
             tamagawa_numbers.append(ZZ(local_info.tamagawa_number()))
             local_data_p['kodaira_symbol'] = web_latex(local_info.kodaira_symbol()).replace('$', '')
             local_data_p['reduction_type'] = local_info.bad_reduction_type()
+            local_data_p['ord_cond'] = local_info.conductor_valuation()
+            local_data_p['ord_disc'] = local_info.discriminant_valuation()
+            local_data_p['ord_den_j'] = max(0,-self.E.j_invariant().valuation(p))
             local_data.append(local_data_p)
 
-        bsd['tamagawa_factors'] = r' \cdot '.join(str(c.factor()) for c in tamagawa_numbers)
+        if len(bad_primes)>1:
+            bsd['tamagawa_factors'] = r' \cdot '.join(str(c.factor()) for c in tamagawa_numbers)
+        else:
+            bsd['tamagawa_factors'] = ''
         bsd['tamagawa_product'] = sage.misc.all.prod(tamagawa_numbers)
 
         cond, iso, num = split_lmfdb_label(self.lmfdb_label)
         data['newform'] =  web_latex(self.E.q_eigenform(10))
+
+        self.make_code_snippets()
 
         self.friends = [
             ('Isogeny class ' + self.lmfdb_iso, url_for(".by_double_iso_label", conductor=N, iso_label=iso)),
@@ -345,3 +354,22 @@ class WebEC(object):
                            ('%s' % N, url_for(".by_conductor", conductor=N)),
                            ('%s' % iso, url_for(".by_double_iso_label", conductor=N, iso_label=iso)),
                            ('%s' % num,' ')]
+
+    def make_code_snippets(self):
+        # read in code.yaml from current directory:
+
+        _curdir = os.path.dirname(os.path.abspath(__file__))
+        self.code =  yaml.load(open(os.path.join(_curdir, "code.yaml")))
+
+        # Fill in placeholders for this specific curve:
+
+        for lang in ['sage', 'pari', 'magma']:
+            self.code['curve'][lang] = self.code['curve'][lang] % (self.data['ainvs'],self.label)
+
+        for k in self.code:
+            if k != 'prompt':
+                for lang in self.code[k]:
+                    self.code[k][lang] = self.code[k][lang].split("\n")
+                    # remove final empty line
+                    if len(self.code[k][lang][-1])==0:
+                        self.code[k][lang] = self.code[k][lang][:-1]

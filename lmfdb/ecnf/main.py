@@ -199,10 +199,17 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
 
 
 @ecnf_page.route("/<nf>/<conductor_label>/<class_label>/<number>")
-def show_ecnf(nf, class_label, conductor_label, number):
+def show_ecnf(nf, conductor_label, class_label, number):
     nf_label = parse_field_string(nf)
     label = "".join(["-".join([nf_label, conductor_label, class_label]),number])
     ec = ECNF.by_label(label)
+    bread = [("Elliptic Curves", url_for(".index"))]
+    if not ec:
+        info = {}
+        info['query'] = {}
+        info['err'] = 'No elliptic curve in the database has label %s.' %label
+        return search_input_error(info,bread)
+
     title = "Elliptic Curve %s over Number Field %s" % (ec.short_label, ec.field.field_pretty())
     bread = [("Elliptic Curves", url_for(".index"))]
     bread.append((ec.field.field_pretty(),ec.urls['field']))
@@ -227,11 +234,16 @@ def elliptic_curve_search(**args):
         label = info.get('label', '').replace(" ", "")
         # This label should be a full isogeny class label or a full
         # curve label (including the field_label component)
-        label_parts = label.split("-",2)
-        nf = label_parts[0]
-        cond_label = label_parts[1]
-        cur_label = label_parts[2]
-        return show_ecnf(nf,cond_label,cur_label) ##!!!
+        try:
+            nf,cond_label,iso_label,number = split_full_label(label)
+        except IndexError:
+            if not 'query' in info:
+                info['query'] = {}
+            bread = [("Elliptic Curves", url_for(".index"))]
+            info['err'] = 'No elliptic curve in the database has label %s.' %label
+            return search_input_error(info,bread)
+
+        return show_ecnf(nf,cond_label,iso_label,number)
 
     query = {}
     bread = [('Elliptic Curves', url_for(".index")),
@@ -253,6 +265,9 @@ def elliptic_curve_search(**args):
 
     if 'conductor_label' in info:
         query['conductor_label'] = info['conductor_label']
+
+    if 'jinv' in info:
+        query['jinv'] = info['jinv']
 
     if info.get('torsion'):
         ran = info['torsion'] = clean_input(info['torsion'])

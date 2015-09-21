@@ -231,7 +231,8 @@ class ECNF(object):
                                'kodaira_symbol': web_latex(self.local_info.kodaira_symbol()).replace('$', ''),
                                'reduction_type': self.local_info.bad_reduction_type(),
                                 'ord_den_j': max(0,-E.j_invariant().valuation(p)),
-                                'ord_mindisc': self.local_info.discriminant_valuation()
+                                'ord_mindisc': self.local_info.discriminant_valuation(),
+                                'ord_cond': self.local_info.conductor_valuation()
                                })
 
         # URLs of self and related objects:
@@ -251,15 +252,16 @@ class ECNF(object):
 
         self.friends = []
         self.friends += [('Isogeny class '+self.short_class_label, self.urls['class'])]
+        self.friends += [('Twists',url_for('ecnf.index',field_label=self.field_label,jinv=self.jinv))]
         if self.field.is_real_quadratic():
             self.friends += [('Hilbert Modular Form '+self.hmf_label, self.urls['hmf'])]
         if self.field.is_imag_quadratic():
             self.friends += [('Bianchi Modular Form %s not yet available' % self.bmf_label, '')]
-        
+
         self.properties = [
             ('Base field', self.field.field_pretty()),
             ('Label' , self.label)]
-        
+
         # Plot
         if E.base_field().signature()[0]:
             self.plot = encode_plot(EC_nf_plot(E,self.field.generator_name()))

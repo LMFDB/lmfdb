@@ -26,9 +26,17 @@ except:
 
 from lmfdb.transitive_group import group_display_short, group_display_long, group_display_inertia, group_knowl_guts, galois_module_knowl_guts, subfield_display, otherrep_display, resolve_display, conjclasses, generators, chartable, aliastable, WebGaloisGroup, galois_module_knowl
 
-#import lmfdb.WebNumberField
+from lmfdb.WebNumberField import modules2string
 
-GG_credit = 'GAP, Magma, and J. Jones'
+GG_credit = 'GAP, Magma, J. Jones, and A. Bartel'
+
+# convert [0,5,21,0,1] to [[1,5],[2,21],[4,1]]
+def mult2mult(li):
+    ans = []
+    for j in range(len(li)):
+        if li[j]>0:
+            ans.append([j, li[j]])
+    return ans
 
 
 def get_bread(breads=[]):
@@ -281,11 +289,17 @@ def render_group_webpage(args):
             data['int_rep_classes'] = [str(z[0]) for z in intreps[0]['gens']]
             for onerep in intreps:
                 onerep['gens']=[list_to_latex_matrix(z[1]) for z in onerep['gens']]
-                #onerep.update({'gens': onerep['gens'][1]})
-                #onerep.update({'gens': [str(onerep['gens'][0]), list_to_latex_matrix(onerep['gens'][1]])})
             data['int_reps'] = intreps
-            #data['int_reps'] = [galois_module_knowl(n, t, z['index'], C) for z in intreps]
             data['int_reps_complete'] = int_reps_are_complete(intreps)
+            dcq = data['moddecompuniq']
+            if dcq[0] == 0:
+                data['decompunique'] = 0
+            else:
+                data['decompunique'] = dcq[0]
+                data['isoms'] = [[mult2mult(z[0]), mult2mult(z[1])] for z in dcq[1]]
+                data['isoms'] = [[modules2string(n,t,z[0]), modules2string(n,t,z[1])] for z in data['isoms']]
+                print dcq[1]
+                print data['isoms']
 
         friends = []
         one = C.numberfields.fields.find_one(query)

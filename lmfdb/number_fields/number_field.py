@@ -270,6 +270,19 @@ def number_field_render_webpage():
     else:
         return number_field_search(**args)
 
+@nf_page.route("/random")
+def random_nfglobal():
+    from sage.misc.prandom import randint
+    C = getDBConnection()
+    init_nf_count()
+    n = randint(0,nfields-1)
+    label = C.numberfields.fields.find()[n]['label']
+    #This version leaves the word 'random' in the URL:
+    #return render_field_webpage({'label': label})
+    #This version uses the number field's own URL:
+    #url =
+    return redirect(url_for(".by_label", label= label))
+
 
 def coeff_to_nf(c):
     return NumberField(coeff_to_poly(c), 'a')
@@ -838,7 +851,10 @@ def download_search(info, res):
             [str(wnf.poly()), str(wnf.disc()), str(wnf.galois_t()), str(wnf.class_group_invariants_raw())])
         s += '[' + entry + ']' + ',\\\n'
     s = s[:-3]
-    s += ']\n'
+    if dltype == 'gp':
+        s += '];\n'
+    else:
+        s += ']\n'
     if delim == 'brace':
         s = s.replace('[', '{')
         s = s.replace(']', '}')
