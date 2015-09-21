@@ -50,7 +50,7 @@ def download_web_modform(info):
     emf_logger.debug("IN GET_WEB_MODFORM!!! info={0}".format(info))
     level = my_get(info, 'level', -1, int)
     weight = my_get(info, 'weight', -1, int)
-    character = my_get(info, 'character', '', str)  # int(info.get('weight',0))
+    character = my_get(info, 'character',0, int)  # int(info.get('weight',0))
     emf_logger.debug("info={0}".format(info))
     if character == '':
         character = 0
@@ -65,7 +65,7 @@ def download_web_modform(info):
             else:
                 X = Newforms(level, weight, names='a')
         else:  # format=='web_new':
-            X = WebNewForm(N=level, k=weight, chi=character, label=label)
+            X = WebNewForm(level=level, weight=weight, character=character, label=label)
     s = dumps(X)
     name = "{0}-{1}-{2}-{3}-web_newform.sobj".format(weight, level, character, label)
     emf_logger.debug("name={0}".format(name))
