@@ -20,7 +20,7 @@
 <br>
 {% if is_rational==0 %}
 
-<h3>Embeddings</h3>
+<h3>{{ KNOWL('mf.elliptic.embeddings',title='Embeddings')}}</h3>
 It is possible to embed the Fourier coefficients in the \(q\)-expansion above
 in the field of complex numbers. The values of the different embeddings 
 that preserve the character are shown in the table below.
@@ -180,7 +180,7 @@ that preserve the character are shown in the table below.
   </ul>
 </div>
   {% endif %}
-<h2>Download Fourier coefficients </h2>
+<h2>Download {{KNOWL('mf.elliptic.fouriercoefficients',title='Fourier coefficients')}} </h2>
 
 We have {{ max_cn }} coefficients available from the database. 
 <form name="get_coefficients" method="post"  action="{{url_for('.get_downloads',level=level,weight=weight,character=character,label=label)}}">
@@ -195,7 +195,7 @@ We have {{ max_cn }} coefficients available from the database.
     </li>
     <li> 
       <label><input type=radio name="format" checked
-    value="coefficients" onclick="return selectCFormat(event)"> a
+    value="coefficients" onclick="return selectCFormat(event)">
     algebraic coefficients (text format)</label>
     </li>
     <li>
