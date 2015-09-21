@@ -86,7 +86,7 @@ class WebHeckeOrbits(WebDict):
     """
 
     def __init__(self, name, level, weight, character, parent=None,**kwds):
-        emf_logger.debug("Get Hecke orbits!")
+        emf_logger.debug("Get Hecke orbits! {0},{1},{2},{3},{4},kwds={5}".format(name,level,weight,character,type(parent),kwds))
         self.level = level
         self.weight = weight
         self.character = character
@@ -199,7 +199,8 @@ class WebModFormSpace(WebObject, CachedRepresentation):
             dbkey='galois_orbit_name',
             collection_name='webmodformspace',
             update_from_db=update_from_db)
-        emf_logger.critical("Have set properties of space 2 !!")        
+        emf_logger.critical("Have set properties of space 2 !!")
+        emf_logger.critical("orbits={0}".format(self.hecke_orbits))                
 
     def init_dynamic_properties(self):
         if self.character.is_trivial():
@@ -224,6 +225,7 @@ class WebModFormSpaceProperty(WebProperty):
         emf_logger.debug("CCCCharacter = {0}".format(self.character))
         if value is None:
             value = WebModFormSpace_cached(self.level, self.weight, self.character,update_hecke_orbits=update_hecke_orbits)
+        emf_logger.debug("CCCCharacter = {0}".format(self.character))
         super(WebModFormSpaceProperty, self).__init__(name,
                                                       include_in_update=include_in_update,
                                                       save_to_db=True,
