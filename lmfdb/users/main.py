@@ -52,7 +52,7 @@ def get_username(uid):
 def ctx_proc_userdata():
     userdata = {}
     userdata['userid'] = 'anon' if current_user.is_anonymous() else current_user._uid
-    userdata['username'] = 'Anonymous' if current_user.is_anonymous() else current_user.name()
+    userdata['username'] = 'Anonymous' if current_user.is_anonymous() else current_user.name
     userdata['user_is_authenticated'] = current_user.is_authenticated()
     userdata['user_is_admin'] = current_user.is_admin()
     userdata['get_username'] = get_username # this is a function
