@@ -18,6 +18,7 @@ from lmfdb.WebNumberField import nf_display_knowl, WebNumberField
 LIST_RE = re.compile(r'^(\d+|(\d+-(\d+)?))(,(\d+|(\d+-(\d+)?)))*$')
 TORS_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
 
+
 def split_full_label(lab):
     r""" Split a full curve label into 4 components
     (field_label,conductor_label,isoclass_label,curve_number)
@@ -25,9 +26,10 @@ def split_full_label(lab):
     data = lab.split("-")
     field_label = data[0]
     conductor_label = data[1]
-    isoclass_label = re.search("[a-z]+",data[2]).group()
-    curve_number = re.search("\d+",data[2]).group() # (a string)
-    return (field_label,conductor_label,isoclass_label,curve_number)
+    isoclass_label = re.search("[a-z]+", data[2]).group()
+    curve_number = re.search("\d+", data[2]).group()  # (a string)
+    return (field_label, conductor_label, isoclass_label, curve_number)
+
 
 def split_short_label(lab):
     r""" Split a short curve label into 3 components
@@ -35,9 +37,10 @@ def split_short_label(lab):
     """
     data = lab.split("-")
     conductor_label = data[0]
-    isoclass_label = re.search("[a-z]+",data[1]).group()
-    curve_number = re.search("\d+",data[1]).group() # (a string)
-    return (conductor_label,isoclass_label,curve_number)
+    isoclass_label = re.search("[a-z]+", data[1]).group()
+    curve_number = re.search("\d+", data[1]).group()  # (a string)
+    return (conductor_label, isoclass_label, curve_number)
+
 
 def split_class_label(lab):
     r""" Split a class label into 3 components
@@ -47,7 +50,8 @@ def split_class_label(lab):
     field_label = data[0]
     conductor_label = data[1]
     isoclass_label = data[2]
-    return (field_label,conductor_label,isoclass_label)
+    return (field_label, conductor_label, isoclass_label)
+
 
 def split_short_class_label(lab):
     r""" Split a short class label into 2 components
@@ -56,23 +60,26 @@ def split_short_class_label(lab):
     data = lab.split("-")
     conductor_label = data[0]
     isoclass_label = data[1]
-    return (conductor_label,isoclass_label)
+    return (conductor_label, isoclass_label)
 
 ecnf_credit = "John Cremona, Alyson Deines, Steve Donelly, Paul Gunnells, Warren Moore, Haluk Sengun, John Voight, Dan Yasaki"
+
 
 def get_bread(*breads):
     bc = [("Elliptic Curves", url_for(".index"))]
     map(bc.append, breads)
     return bc
 
+
 def web_ainvs(field_label, ainvs):
     return web_latex([make_field(field_label).parse_NFelt(x) for x in ainvs])
+
 
 @ecnf_page.route("/")
 def index():
 #    if 'jump' in request.args:
 #        return show_ecnf1(request.args['label'])
-    if len(request.args)>0:
+    if len(request.args) > 0:
         return elliptic_curve_search(data=request.args)
     bread = get_bread()
 
@@ -86,16 +93,16 @@ def index():
 
     data['fields'] = []
     # Rationals
-    data['fields'].append(['the rational field',(('1.1.1.1',[url_for('ec.rational_elliptic_curves'),'$\Q$']),)])
+    data['fields'].append(['the rational field', (('1.1.1.1', [url_for('ec.rational_elliptic_curves'), '$\Q$']),)])
     # Real quadratics (only a sample)
-    rqfs = ['2.2.%s.1' %str(d) for d in [5,89,229,497]]
-    data['fields'].append(['real quadratic fields',((nf,[url_for('.show_ecnf1',nf=nf),field_pretty(nf)]) for nf in rqfs)])
+    rqfs = ['2.2.%s.1' % str(d) for d in [5, 89, 229, 497]]
+    data['fields'].append(['real quadratic fields', ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in rqfs)])
     # Imaginary quadratics
-    iqfs = ['2.0.%s.1' %str(d) for d in [4,8,3,7,11]]
-    data['fields'].append(['imaginary quadratic fields',((nf,[url_for('.show_ecnf1',nf=nf),field_pretty(nf)]) for nf in iqfs)])
+    iqfs = ['2.0.%s.1' % str(d) for d in [4, 8, 3, 7, 11]]
+    data['fields'].append(['imaginary quadratic fields', ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in iqfs)])
     # Cubics
     cubics = ['3.1.23.1']
-    data['fields'].append(['cubic fields',((nf,[url_for('.show_ecnf1',nf=nf),field_pretty(nf)]) for nf in cubics)])
+    data['fields'].append(['cubic fields', ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in cubics)])
 
 # data['highlights'] holds data (URL and descriptive text) for a
 # sample of elliptic curves with interesting features:
@@ -123,21 +130,21 @@ def index():
     )
 
     return render_template("ecnf-index.html",
-        title="Elliptic Curves over Number Fields",
-        data=data,
-        bread=bread)
+                           title="Elliptic Curves over Number Fields",
+                           data=data,
+                           bread=bread)
 
 
 @ecnf_page.route("/<nf>/")
 def show_ecnf1(nf):
-    if nf=="1.1.1.1":
+    if nf == "1.1.1.1":
         return redirect(url_for("ec.rational_elliptic_curves", **request.args))
     if request.args:
         return elliptic_curve_search(data=request.args)
     start = 0
     count = 50
     nf_label = parse_field_string(nf)
-    query = {'field_label' : nf_label}
+    query = {'field_label': nf_label}
     cursor = db_ecnf().find(query)
     nres = cursor.count()
     if(start >= nres):
@@ -155,11 +162,11 @@ def show_ecnf1(nf):
     info = {}
     info['field'] = nf_label
     info['query'] = query
-    info['curves'] = res # [ECNF(e) for e in res]
+    info['curves'] = res  # [ECNF(e) for e in res]
     info['number'] = nres
     info['start'] = start
     info['count'] = count
-    info['more'] = int(start+count<nres)
+    info['more'] = int(start + count < nres)
     info['field_pretty'] = field_pretty
     info['web_ainvs'] = web_ainvs
     if nres == 1:
@@ -172,10 +179,12 @@ def show_ecnf1(nf):
     t = 'Elliptic Curves over %s' % field_pretty(nf_label)
     return render_template("ecnf-search-results.html", info=info, credit=ecnf_credit, bread=bread, title=t)
 
+
 @ecnf_page.route("/<nf>/<conductor_label>/")
 def show_ecnf_conductor(nf, conductor_label):
     nf_label = parse_field_string(nf)
-    return elliptic_curve_search(data={'nf_label':nf_label, 'conductor_label':conductor_label}, **request.args)
+    return elliptic_curve_search(data={'nf_label': nf_label, 'conductor_label': conductor_label}, **request.args)
+
 
 @ecnf_page.route("/<nf>/<conductor_label>/<class_label>/")
 def show_ecnf_isoclass(nf, conductor_label, class_label):
@@ -185,48 +194,49 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
     cl = ECNF_isoclass.by_label(label)
     title = "Elliptic Curve isogeny class %s over Number Field %s" % (full_class_label, cl.ECNF.field.field_pretty())
     bread = [("Elliptic Curves", url_for(".index"))]
-    bread.append((cl.ECNF.field.field_pretty(),url_for(".show_ecnf1", nf=nf_label)))
-    bread.append((conductor_label, url_for(".show_ecnf_conductor", nf = nf_label, conductor_label = conductor_label)))
-    bread.append((class_label, url_for(".show_ecnf_isoclass", nf = nf_label, conductor_label = conductor_label, class_label = class_label)))
+    bread.append((cl.ECNF.field.field_pretty(), url_for(".show_ecnf1", nf=nf_label)))
+    bread.append((conductor_label, url_for(".show_ecnf_conductor", nf=nf_label, conductor_label=conductor_label)))
+    bread.append((class_label, url_for(".show_ecnf_isoclass", nf=nf_label, conductor_label=conductor_label, class_label=class_label)))
     info = {}
     return render_template("show-ecnf-isoclass.html",
-        credit=ecnf_credit,
-        title=title,
-        bread=bread,
-        cl=cl,
-        properties2 = cl.properties,
-        friends = cl.friends)
+                           credit=ecnf_credit,
+                           title=title,
+                           bread=bread,
+                           cl=cl,
+                           properties2=cl.properties,
+                           friends=cl.friends)
 
 
 @ecnf_page.route("/<nf>/<conductor_label>/<class_label>/<number>")
 def show_ecnf(nf, conductor_label, class_label, number):
     nf_label = parse_field_string(nf)
-    label = "".join(["-".join([nf_label, conductor_label, class_label]),number])
+    label = "".join(["-".join([nf_label, conductor_label, class_label]), number])
     ec = ECNF.by_label(label)
     bread = [("Elliptic Curves", url_for(".index"))]
     if not ec:
         info = {}
         info['query'] = {}
-        info['err'] = 'No elliptic curve in the database has label %s.' %label
-        return search_input_error(info,bread)
+        info['err'] = 'No elliptic curve in the database has label %s.' % label
+        return search_input_error(info, bread)
 
     title = "Elliptic Curve %s over Number Field %s" % (ec.short_label, ec.field.field_pretty())
     bread = [("Elliptic Curves", url_for(".index"))]
-    bread.append((ec.field.field_pretty(),ec.urls['field']))
+    bread.append((ec.field.field_pretty(), ec.urls['field']))
     bread.append((ec.conductor_label, ec.urls['conductor']))
     bread.append((ec.iso_label, ec.urls['class']))
     bread.append((ec.number, ec.urls['curve']))
     info = {}
 
     return render_template("show-ecnf.html",
-        credit=ecnf_credit,
-        title=title,
-        bread=bread,
-        ec=ec,
-#        properties = ec.properties,
-        properties2 = ec.properties,
-        friends = ec.friends,
-        info=info)
+                           credit=ecnf_credit,
+                           title=title,
+                           bread=bread,
+                           ec=ec,
+                           #        properties = ec.properties,
+                           properties2=ec.properties,
+                           friends=ec.friends,
+                           info=info)
+
 
 def elliptic_curve_search(**args):
     info = to_dict(args['data'])
@@ -235,15 +245,15 @@ def elliptic_curve_search(**args):
         # This label should be a full isogeny class label or a full
         # curve label (including the field_label component)
         try:
-            nf,cond_label,iso_label,number = split_full_label(label)
+            nf, cond_label, iso_label, number = split_full_label(label)
         except IndexError:
             if not 'query' in info:
                 info['query'] = {}
             bread = [("Elliptic Curves", url_for(".index"))]
-            info['err'] = 'No elliptic curve in the database has label %s.' %label
-            return search_input_error(info,bread)
+            info['err'] = 'No elliptic curve in the database has label %s.' % label
+            return search_input_error(info, bread)
 
-        return show_ecnf(nf,cond_label,iso_label,number)
+        return show_ecnf(nf, cond_label, iso_label, number)
 
     query = {}
     bread = [('Elliptic Curves', url_for(".index")),
@@ -346,11 +356,11 @@ def elliptic_curve_search(**args):
         e['numb'] = str(e['number'])
         e['field_knowl'] = nf_display_knowl(e['field_label'], getDBConnection(), e['field_label'])
 
-    info['curves'] = res # [ECNF(e) for e in res]
+    info['curves'] = res  # [ECNF(e) for e in res]
     info['number'] = nres
     info['start'] = start
     info['count'] = count
-    info['more'] = int(start+count<nres)
+    info['more'] = int(start + count < nres)
     info['field_pretty'] = field_pretty
     info['web_ainvs'] = web_ainvs
     if nres == 1:
@@ -363,9 +373,9 @@ def elliptic_curve_search(**args):
     t = 'Elliptic Curve search results'
     return render_template("ecnf-search-results.html", info=info, credit=ecnf_credit, bread=bread, title=t)
 
+
 def search_input_error(info, bread):
     return render_template("ecnf-search-results.html", info=info, title='Elliptic Curve Search Input Error', bread=bread)
-
 
 
 # Harald wrote the following and it is not used -- JEC
@@ -379,4 +389,3 @@ def search():
         return "ERROR: we always do http get to explicitly display the search parameters"
     else:
         return redirect(404)
-

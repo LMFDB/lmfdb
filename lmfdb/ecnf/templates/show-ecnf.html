@@ -195,7 +195,35 @@ cellpadding="5";
 
 <div>
 <h2> {{ KNOWL('ec.mordell-weil', title="Mordell-Weil rank and generators") }} </h2>
-Not yet determined.
+{% if ec.rk == "?" %}
+{% if ec.rk_bnds != "not recorded" %}
+<b>Rank</b> \(r\) satisfies \({{ ec.rank_bounds[0] }} \le r \le {{ ec.rank_bounds[1] }}\)
+{% else %}
+Rank not yet determined.
+{% endif %}
+{% else %}
+<b>Rank:</b> \( {{ ec.rank }} \)
+{% endif %}
+
+{% if ec.rank_bounds[0] %}
+{% if ec.gens == 'not recorded' %}
+<p>No generators recorded.</p>
+{% else %}
+<p><b>
+{% if ec.rank_bounds[0] == 1 %}
+Generator:
+{% else %}
+Generators:
+{% endif %}</b>
+{{ ec.gens }}
+</p>
+
+{% endif %}
+{% endif %}
+<p>
+<b>Regulator:</b>
+{{ ec.reg }}
+</p>
 </div>
 
 <div>
