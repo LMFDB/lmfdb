@@ -626,6 +626,9 @@ def initLfunction(L, args, request):
 
     # the code below should be in Lfunction.py
     info['conductor'] = L.level
+    if not is_prime(L.level):
+        info['conductor_factored'] = latex(factor(L.level))
+
     info['degree'] = L.degree
     info['sign'] = "$"+styleTheSign(L.sign)+"$"
     if L.selfdual:

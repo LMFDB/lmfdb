@@ -70,16 +70,19 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
   <table>
 
         <tr>
-        <td> \( N \)</td>
+        <td> \( d \)</td>
         <td>&nbsp;=&nbsp;</td>
-        <td> \({{ conductor }}\)
+        <td> \({{ degree }}\)
         </td>
         </tr>
 
         <tr>
-        <td> \( d \)</td>
+        <td> \( N \)</td>
         <td>&nbsp;=&nbsp;</td>
-        <td> \({{ degree }}\)
+        <td> \({{ conductor }}\)
+{% if conductor_factored -%}
+     &nbsp;&nbsp;  = &nbsp;&nbsp; \({{ conductor_factored }}\)
+{% endif %}
         </td>
         </tr>
 
@@ -89,6 +92,31 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
         <td> {{ sign }}
         </td>
         </tr>
+
+        <tr>
+        <td> \( w \)</td>
+        <td>&nbsp;=&nbsp;</td>
+        <td> \( 1 \)
+        </td>
+        </tr>
+
+        <tr>
+        <td> \( \chi \)</td>
+        <td>&nbsp;:&nbsp;</td>
+        <td> trivial
+        </td>
+        </tr>
+
+{% if ST -%}
+
+        <tr>
+        <td> ST </td>
+        <td>&nbsp;:&nbsp;</td>
+        <td> {{ ST }}
+        </td>
+        </tr>
+
+{% endif %}
 
         <tr>
         <td> primitive </td>

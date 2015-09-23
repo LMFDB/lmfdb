@@ -216,7 +216,7 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
     elif ip < -1 * truncation:
         if float(abs(ip + 1)) < truncation:
             if seriescoefftype == "serieshtml":
-               return(" &minus;  <em>i</em>" + seriesvar(index, seriestype))
+               return(" &minus;  <em>i</em>" + "&middot;" + seriesvar(index, seriestype))
             else:
                return("-i" + "&middot;" + seriesvar(index, seriestype))
         else:
@@ -279,14 +279,6 @@ def lfuncDShtml(L, fmt):
     nonzeroterms = 1
 #    if fmt == "analytic" or fmt == "langlands":
     if fmt in ["analytic", "langlands", "arithmetic"]:
-      #  ans = "\\begin{align}\n"
-#        ans = ans + "<table class='dirichletseries'><tr>"
-#        ans = ans + "<td valign='top'>" + "$" + L.texname + "$" + "</td>"
-#        ans = ans + "<td valign='top'>" + "&nbsp;=&nbsp;" 
-#        # ans = ans + seriescoeff(L.dirichlet_coefficients[0], 0, "literal", "", -6, 5)
-#        ans = ans + "1<sup>&nbsp;</sup>"
-#        ans = ans + "</td><td valign='top'>"
-
         ans += "<table class='dirichletseries'><tr>"
         ans += "<td valign='top'>"  # + "$" 
         if fmt == "arithmetic":
@@ -335,7 +327,8 @@ def lfuncDShtml(L, fmt):
                 ans = ans + "\n"     # don't need  \cr in the html version
               #  ans = ans + "&"
                 nonzeroterms += 1   # This ensures we don t add more than one newline
-        ans = ans + " + ...\n</td></tr>\n</table>\n"
+   #     ans = ans + "<span> + &middot;&middot;&middot;</span>\n</td></tr>\n</table>\n"
+        ans = ans + "<span> + &#8943;</span>\n</td></tr>\n</table>\n"
 
     elif fmt == "abstract":
         if L.Ltype() == "riemann":
@@ -458,16 +451,31 @@ def lfuncEPtex(L, fmt):
 def lfuncEPhtml(L,fmt):
     """ Euler product as a formula and a table of local factors.
     """
-    ans = ""
     texform_gen = "\[L(A,s) = "
-    texform_gen += "\prod_{p \\text{ prime}} f_p(p^{-s})^{-1} \]\n"
-    ans += texform_gen + "where, for $p\\nmid " + str(L.level) + "$,\n"
-#    ans += "\[f_p(T) = 1 - a_p T + b_p T^2 + \chi(p) a_p p T^3 + \chi(p) p^2 T^4 \]"
-    ans += "\[f_p(T) = 1 - a_p T + b_p T^2 -  a_p p T^3 + p^2 T^4 \]"
-#    ans += "with $b_p = a_{p^2} - a_p^2$ and $\chi$ is the central character of the L-function."
+    texform_gen += "\prod_{p \\text{ prime}} Q_p(p^{-s})^{-1} \]\n"
+
+    pfactors = prime_divisors(L.level)
+    if len(pfactors) == 1:  #i.e., the conductor is prime
+        pgoodset = "$p \\neq " + str(L.level) + "$"
+        pbadset = "$p = " + str(L.level) + "$"
+    else:
+        badset = "\\{" + str(pfactors[0])
+        for j in range(1,len(pfactors)):
+            badset += ",\\;"
+            badset += str(pfactors[j])
+        badset += "\\}"
+        pgoodset = "$p \\notin " + badset + "$"
+        pbadset = "$p \\in " + badset + "$"
+
+
+    ans = ""
+ #   ans += texform_gen + "where, for $p\\nmid " + str(L.level) + "$,\n"
+    ans += texform_gen + "where, for " + pgoodset + ",\n"
+    ans += "\[Q_p(T) = 1 - a_p T + b_p T^2 -  a_p p T^3 + p^2 T^4 \]"
     ans += "with $b_p = a_p^2 - a_{p^2}$. "
-    ans += "If $p \mid "  + str(L.level) + "$, then $f_p$ is a polynomial of degree at most 3, "
-    ans += "with $f_p(0) = 1$."
+  #  ans += "If $p \mid "  + str(L.level) + "$, then $Q_p$ is a polynomial of degree at most 3, "
+    ans += "If " + pbadset + ", then $Q_p$ is a polynomial of degree at most 3, "
+    ans += "with $Q_p(0) = 1$."
     factN = list(factor(L.level))
     bad_primes = []
     for lf in L.bad_lfactors:
@@ -480,7 +488,7 @@ def lfuncEPhtml(L,fmt):
             good_primes.append(this_prime)
     eptable = "<table id='eptable' class='ntdata euler'>\n"
     eptable += "<thead>"
-    eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th><th class='weight'>$f_p$</th></tr>\n"
+    eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th><th class='weight'>$Q_p$</th></tr>\n"
     eptable += "</thead>"
     numfactors = len(L.localfactors)
     goodorbad = "bad"
@@ -651,8 +659,8 @@ def lfuncFEtex(L, fmt):
             ans += "\quad (\\text{with }\epsilon \\text{ unknown})"
         ans += "\n\\end{align}\n"
     elif fmt == "selberg":
-        ans += "(" + str(int(L.degree)) + ","
-        ans += str(int(L.level)) + ","
+        ans += "(" + str(int(L.degree)) + ",\\ "
+        ans += str(int(L.level)) + ",\\ "
         ans += "("
         if L.mu_fe != []:
             for mu in range(len(L.mu_fe) - 1):
@@ -667,7 +675,7 @@ def lfuncFEtex(L, fmt):
             ans += str(L.nu_fe[-1])
         else:
             ans += "\\ "
-        ans += "), "
+        ans += "),\\ "
         ans += seriescoeff(L.sign, 0, "literal", "", -6, 5)
         ans += ")"
 
