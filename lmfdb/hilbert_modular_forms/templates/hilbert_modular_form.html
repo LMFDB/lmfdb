@@ -1,16 +1,14 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<div>
-  <h2>  Base field   {{ info.field.knowl()|safe }} </h2>
+<h2>  Base field   {{ info.field.knowl()|safe }} </h2>
 <p>
  {{ KNOWL('nf.generator', 'Generator') }} \({{
  info.field.generator_name() }}\), with {{
  KNOWL('nf.minimal_polynomial', 'minimal polynomial') }}
- \({{info.field.poly()}}\); {{ KNOWL('nf.class_number', 'class number')
+ \({{info.field_poly}}\); {{ KNOWL('nf.class_number', 'class number')
  }} \({{info.field.class_number()}}\).
 </p>
-</div>
 
 
   <h2>  Form  </h2>

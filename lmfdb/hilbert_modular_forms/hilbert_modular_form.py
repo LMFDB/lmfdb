@@ -8,6 +8,7 @@ from lmfdb.base import app, getDBConnection
 from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
 from sage.misc.preparser import preparse
 from lmfdb.hilbert_modular_forms import hmf_page, hmf_logger
+from lmfdb.hilbert_modular_forms.hilbert_field import findvar
 
 import sage.all
 from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi
@@ -265,7 +266,8 @@ def render_hmf_webpage(**args):
         numeigs = 20
 
     hmf_field = C.hmfs.fields.find_one({'label': data['field_label']})
-    nf = WebNumberField(data['field_label'])
+    gen_name = findvar(data['level_ideal'])
+    nf = WebNumberField(data['field_label'], gen_name=gen_name)
     info['field'] = nf
     info['base_galois_group'] = nf.galois_string()
     info['field_degree'] = nf.degree()
