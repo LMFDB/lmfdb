@@ -25,26 +25,22 @@
 </p>
 <p>
   By degree:
-  <a href = "search_results?degree=2">$2$</a>
-  <a href = "search_results?degree=3">$3$</a>
-  <a href = "search_results?degree=4">$4$</a>
+  {% for n in [2,3,4] %}
+  <a href = "{{ url_for( 'ModularForm_GSp4_Q_top_level', page='search_results', query='{\"degree\":\"' ~ n ~ '\"}') }}">${{ n }}$</a>
+  {% endfor %}
 </p>
 <p>
   By weight:
-  <a href = "search_results?weight=2">$2$</a>
-  <a href = "search_results?weight=4-10">$4$-$10$</a>
-  <a href = "search_results?weight=11-20"$11$-$20$</a>
-  <a href = "search_results?weight=21-30">$21$-$30$</a>
-  <a href = "search_results?weight=31-">$31$-...</a>
+  {% set d = { 1:9,10:19,20:29,30:39,40:49,50:99} %}
+  {% for n in d|sort %}
+  <a href = "{{ url_for( 'ModularForm_GSp4_Q_top_level', page='search_results', query='{\"weight\":{ \"$gte\":\"' ~ n ~ '\", \"$lte\":\"' ~ d[n] ~'\"}}') }}">${{ n }}$-${{ d[n] }}$</a>
+  {% endfor %}  
 </p>
 <p>
   By degree of its field of definition:
-  <a href = "search_results?degree_of_field=1">$1$</a>
-  <a href = "search_results?degree_of_field=2">$2$</a>
-  <a href = "search_results?degree_of_field=3">$3$</a>
-  <a href = "search_results?degree_of_field=4">$4$</a>
-  <a href = "search_results?degree_of_field=5">$5$</a>
-  <a href = "search_results?degree_of_field=6-">$6$-...</a>
+  {% for n in [1,2,3,4,5,6,7,8] %}
+  <a href = "{{ url_for( 'ModularForm_GSp4_Q_top_level', page='search_results', query='{\"degree_of_field\":\"' ~ n ~ '\"}') }}">${{ n }}$</a>
+  {% endfor %}
 </p>
 
 </br>
@@ -73,12 +69,6 @@
     LMFDB label
   </a>
 </h2>
-<form>
-  <input name='label' size=25 example="SP4Z.26.Ups.1">
-  <button type='submit' name='jump' value='label'>Find</button>
-  <br><span class="formexample">e.g. SP4Z.26.Ups.1 or Kp.PY.277
-  </span>
-</form>
-
+<p>{% include 'includes/form_for_label_search.html' %}</p>
 
 {% endblock %}

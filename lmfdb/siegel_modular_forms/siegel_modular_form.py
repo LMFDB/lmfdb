@@ -163,7 +163,7 @@ def prepare_search_results_page( args, bread):
         results = sample.Samples( query)
         info.update( {'results': results})
     except Exception as e:
-        info.update( {'error': str(e)})
+        info.update( {'error': '%s %s' % (str(e),query)})
 
     bread.append( ('search results', 'search_results'))
     return render_template( "ModularForm_GSp4_Q_search_results.html",

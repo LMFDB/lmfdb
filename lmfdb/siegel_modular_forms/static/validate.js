@@ -42,7 +42,7 @@ function validate() {
 	return false;
     }
     alert( "Too big");
-    return false
+    return false;
 }
 
 
@@ -84,7 +84,7 @@ function prepare_query() {
 	    }
 	    else {
 		alert( "Error: " + input + ". Confusing input.");
-		return false
+		return false;
 	    }
 	    
 	}
