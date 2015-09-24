@@ -29,7 +29,8 @@
 	<td>{{ wt }}</td>
         {% for form,dim in forms|sort %}
 	<td>
-	  <a style="display: inline;" href="{{ url_for( 'ModularForm_GSp4_Q_top_level', group='Sp4Z', form = form, weight = wt, page = 'specimen') }}">
+
+	  <a style="display: inline;" href="{{ ['/ModularForm/GSp/Q/Sp4Z.',form]|join }}">
 	    {% if form=="Ups" %}
 	    \(\Upsilon\)
 	    {% elif form=="Ups_I" %}

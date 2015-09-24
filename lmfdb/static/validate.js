@@ -1,0 +1,1 @@
+../siegel_modular_forms/static/validate.js
