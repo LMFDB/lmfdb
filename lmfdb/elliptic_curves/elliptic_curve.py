@@ -58,6 +58,25 @@ def cmp_label(lab1, lab2):
     id2 = int(a), class_to_int(b), int(c)
     return cmp(id1, id2)
 
+def parse_torsion_structure(L):
+    r"""
+    Parse a string entered into torsion structure search box
+    '[]' --> []
+    '[n]' --> [str(n)]
+    'n' --> [str(n)]
+    '[m,n]' --> [str(m),str(n)]
+    'm,n' --> [str(m),str(n)]
+    """
+    L1 = clean_input(L) # strip whitespace
+    for L2 in [L1,'['+L1+']']:
+        if TORS_RE.match(L2):
+            L3 = parse_list(L2)
+            n = len(L3)
+            if n < 3 and all(x>1 for x in L3) and all(L3[i]%L3[i-1]==0 for i in range(1,n)):
+                return [str(a) for a in L3]
+    return 'Error parsing input %s for the torsion structure.  It needs to be a list of 0, 1 or 2 integers, optionally in square brackets, such as [6], 6, [2,2], or [2,4].  Moreover, each integer should be bigger than 1, and each divides the next.' % L
+
+
 #########################
 #    Top level
 #########################
@@ -242,11 +261,11 @@ def elliptic_curve_search(**args):
         query['number'] = 1
 
     if 'torsion_structure' in info and info['torsion_structure']:
-        info['torsion_structure'] = clean_input(info['torsion_structure'])
-        if not TORS_RE.match(info['torsion_structure']):
-            info['err'] = 'Error parsing input for the torsion structure.  It needs to be one or more integers in square brackets, such as [6], [2,2], or [2,4].  Moreover, each integer should be bigger than 1, and each divides the next.'
+        res = parse_torsion_structure(info['torsion_structure'])
+        if 'Error' in res:
+            info['err'] = res
             return search_input_error(info, bread)
-        query['torsion_structure'] = [str(a) for a in parse_list(info['torsion_structure'])]
+        query['torsion_structure'] = res
 
     if info.get('surj_primes'):
         info['surj_primes'] = clean_input(info['surj_primes'])
@@ -509,9 +528,7 @@ def padic_data():
     label = request.args['label']
     p = int(request.args['p'])
     info['p'] = p
-    print "label = %s; p = %s" % (label,p)
     N, iso, number = split_lmfdb_label(label)
-    # print N, iso, number
     if request.args['rank'] == '0':
         info['reg'] = 1
     elif number == '1':
