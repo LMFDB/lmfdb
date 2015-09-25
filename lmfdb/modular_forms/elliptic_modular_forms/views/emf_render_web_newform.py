@@ -91,7 +91,8 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     friends = list()
     space_url = url_for('emf.render_elliptic_modular_forms',level=level, weight=weight, character=character)
     friends.append(('\( S_{%s}(%s, %s)\)'%(WNF.weight, WNF.level, WNF.character.latex_name), space_url))
-    friends.append(('Number field ' + WNF.coefficient_field_label(), WNF.coefficient_field_url()))
+    if WNF.coefficient_field_label(check=True):
+        friends.append(('Number field ' + WNF.coefficient_field_label(), WNF.coefficient_field_url()))
     friends.append(('Number field ' + WNF.base_field_label(), WNF.base_field_url()))
     friends = uniq(friends)
     friends.append(("Dirichlet character \(" + WNF.character.latex_name + "\)", WNF.character.url()))

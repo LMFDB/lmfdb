@@ -31,6 +31,8 @@ from lmfdb.modular_forms.backend.mf_utils import my_get
 from plot_dom import draw_fundamental_domain
 import lmfdb.base
 from bson.binary import *
+from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty
+from lmfdb.utils import web_latex_split_on_re, web_latex_split_on_pm
 
 try:
     from dirichlet_conrey import *
@@ -358,3 +360,30 @@ def dimension_from_db(level,weight,chi=None,group='gamma0'):
         for i in dtable.keys():
             res[level][weight][int(i)] = dtable[i]
         return res
+
+def field_label(F, pretty = True, check=False):
+    r"""
+      Returns the LMFDB label of the field F.
+    """
+    if F.degree() == 1:
+        p = 'x'
+    else:
+        pp = F.polynomial()
+        x = pp.parent().gen()
+        p = str(pp).replace(str(x), 'x')
+    l = poly_to_field_label(p)
+    if l is None:
+        if check:
+            return False
+        else:
+            if pretty:
+                return web_latex_split_on_pm(pp)
+            else:
+                return pp
+    else:
+        if check:
+            return True
+    if pretty:
+        return field_pretty(l)
+    else:
+        return l

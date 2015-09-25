@@ -54,15 +54,14 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import
      WebModFormSpaceProperty
      )
 
-from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, space_label
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, space_label, field_label
+
+from lmfdb.utils import web_latex_split_on_re
 
 from lmfdb.modular_forms.elliptic_modular_forms import (
      emf_version,
      emf_logger
      )
-
-from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty
-from lmfdb.utils import web_latex_split_on_re
 
 from sage.rings.number_field.number_field_base import (
      NumberField
@@ -469,46 +468,31 @@ class WebNewForm(WebObject, CachedRepresentation):
     def url(self):
         return url_for('emf.render_elliptic_modular_forms', level=self.level, weight=self.weight, character=self.character.number, label=self.label)
 
-    def coefficient_field_label(self, pretty = True):
+    def coefficient_field_label(self, pretty = True, check=False):
         r"""
           Returns the LMFDB label of the (absolute) coefficient field (if it exists).
         """
         F = self.coefficient_field
-        #emf_logger.debug("pol={0}".format(p))
-        if F.degree() == 1:
-            p = 'x'
-        else:
-            p = F.polynomial()
-        l = poly_to_field_label(p)
-        if l is None:
-            return ''        
-        if pretty:
-            return field_pretty(l)
-        else:
-            return l
+        return field_label(F, pretty, check)
 
     def coefficient_field_url(self):
-        return url_for("number_fields.by_label", label=self.coefficient_field_label(pretty = False))
+        if self.coefficient_field_label(check=True):
+            return url_for("number_fields.by_label", label=self.coefficient_field_label(pretty = False))
+        else:
+            return ''
 
-    def base_field_label(self, pretty = True):
+    def base_field_label(self, pretty = True, check=False):
         r"""
           Returns the LMFDB label of the base field.
         """
         F = self.base_ring
-        if F.degree() == 1:
-            p = 'x'
-        else:
-            p = F.polynomial()
-        l = poly_to_field_label(p)
-        if l is None:
-            return ''
-        if pretty:
-            return field_pretty(l)
-        else:
-            return l
+        return field_label(F, pretty, check)
 
     def base_field_url(self):
-        return url_for("number_fields.by_label", label=self.base_field_label(pretty = False))
+        if self.base_field_label(check=True):
+            return url_for("number_fields.by_label", label=self.base_field_label(pretty = False))
+        else:
+            return ''
 
 
 from sage.all import cached_function,AlphabeticStrings

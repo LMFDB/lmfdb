@@ -107,8 +107,8 @@ class WebHeckeOrbits(WebDict):
         from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm_cached,WebNewForm
         res = {}
         for lbl in l:
-            #F = WebNewForm(self.level, self.weight, self.character, lbl, parent=self.parent)
-            F = WebNewForm_cached(self.level, self.weight, self.character, lbl, parent=self.parent)
+            F = WebNewForm(self.level, self.weight, self.character, lbl, parent=self.parent)
+            #F = WebNewForm_cached(self.level, self.weight, self.character, lbl, parent=self.parent)
             emf_logger.debug("Got F for label {0} : {1}".format(lbl,F))
             res[lbl]=F
 #            return {lbl : WebNewForm_cached(self.level, self.weight, self.character, lbl, parent=self.parent)
