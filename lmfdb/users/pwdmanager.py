@@ -127,9 +127,9 @@ class LmfdbUser(UserMixin):
     def id(self):
         return self._data['_id']
 
-    def is_authenticate(self):
-        """required by flask-login user class"""
-        return self._authenticated
+    # def is_authenticated(self):
+    #     """required by flask-login user class"""
+    #     return self._authenticated
 
     def is_anonymous(self):
         """required by flask-login user class"""
