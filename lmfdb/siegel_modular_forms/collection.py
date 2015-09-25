@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+# This file provides the class Collection whose instances
+# represent the respective collections of Siegel modular forms.
+#
+# Author: Nils Skoruppa <nils.skoruppa@gmail.com>
+
 import pymongo
 import importlib
 import sage.structure.sage_object

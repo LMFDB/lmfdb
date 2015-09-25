@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+# This file provides functions for computing dimensions of
+# collections of Siegel modular forms. It is partly based on
+# code implemented together with David Yuen and Fabien Cléry.
+#
+# Author: Nils Skoruppa <nils.skoruppa@gmail.com>
 
 from sage.misc.functional import is_odd, is_even
 from sage.rings.integer import Integer

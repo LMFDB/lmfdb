@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+# This file provides the class Sammple_Class which describes
+# a sample of a collection of Sıegel modular forms.
+#
+# Author: Nils Skoruppa <nils.skoruppa@gmail.com>
+
 import pymongo
 from sage.rings.integer import Integer
 from sage.misc.sage_eval import sage_eval
