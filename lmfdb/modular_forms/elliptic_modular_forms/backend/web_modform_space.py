@@ -128,6 +128,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
 
     EXAMPLES::
     - We assume that we are starting from scratch.
+    TODO: UPDATE THIS documentation! It is quite old. M.newforms has been replaced by M.hecke_orbits and takes WebNewForm objects.
 
     sage: M=WebModFormSpace(1,12)
     sage: M.galois_orbit_name

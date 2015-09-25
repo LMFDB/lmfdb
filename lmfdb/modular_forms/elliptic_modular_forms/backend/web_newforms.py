@@ -97,14 +97,16 @@ from sage.structure.unique_representation import CachedRepresentation
 
 class WebqExp(WebPoly):
 
-    def __init__(self, name, prec=10,
+    def __init__(self, name, maxprec = 10,
                  default_value=None):
+        self.maxprec = maxprec
         super(WebqExp, self).__init__(name, default_value=default_value)
 
     def latex(self, prec=None, name=None):
         if prec is None:
             qe = self.value()
         else:
+            prec = min(self.maxprec, prec)
             qe = self.value().truncate_powerseries(prec)
         wl = web_latex_split_on_re(qe)
         
@@ -118,7 +120,7 @@ class WebqExp(WebPoly):
             return None
         #print "f", f
         try:
-            f = f.truncate_powerseries(prec)
+            f = f.truncate_powerseries(f.degree())
             return f
         except:
             return f
@@ -247,7 +249,7 @@ class WebNewForm(WebObject, CachedRepresentation):
             WebStr('hecke_orbit_label', default_value=newform_label(level, weight, character_number, label)),
             WebStr('label', default_value=label),
             WebInt('dimension'),
-            WebqExp('q_expansion', prec=prec),
+            WebqExp('q_expansion', maxprec=prec),
             WebDict('_coefficients'),
             WebDict('_embeddings'),
             WebInt('prec', default_value=int(prec)), #precision of q-expansion
@@ -291,10 +293,12 @@ class WebNewForm(WebObject, CachedRepresentation):
     def __repr__(self):
         s = "WebNewform in S_{0}({1},chi_{2}) with label {3}".format(self.weight,self.level,self.character.number,self.label)
         return s
+
+    def init_dynamic_properties(self):
+        self._properties['q_expansion'].maxprec = self.prec
         
     def q_expansion_latex(self, prec=None, name=None):
         return self._properties['q_expansion'].latex(prec, name)
-
     
     def coefficient(self, n):
         r"""
@@ -526,14 +530,14 @@ def orbit_label(j):
 from lmfdb.utils import cache
 from lmfdb.modular_forms.elliptic_modular_forms import use_cache
 
-def WebNewForm_cached(level,weight,character,label,**kwds):
+def WebNewForm_cached(level,weight,character,label,parent=None, **kwds):
     if use_cache: 
         nlabel = newform_label(level, weight, character, label)
         F= cache.get(nlabel)
         emf_logger.critical("Looking for cached form:{0}".format(nlabel))
         if F is None:
             emf_logger.debug("F was not in cache!")
-            F = WebNewForm(level,weight,character,label,**kwds)
+            F = WebNewForm(level,weight,character,label,parent=parent,**kwds)
             emf_logger.debug("Computed F")
             try:
                 cache.set(nlabel, F , timeout=15 * 60) # keep 15 minutes

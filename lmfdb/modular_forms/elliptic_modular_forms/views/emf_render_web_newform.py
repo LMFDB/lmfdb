@@ -23,7 +23,7 @@ AUTHORS:
 """
 from flask import render_template, url_for,  send_file
 from sage.all import version,uniq,ZZ,Cusp,Infinity,latex,QQ
-from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm_cached
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm_cached, WebNewForm
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace_cached
 from lmfdb.utils import to_dict,ajax_more
 from lmfdb.modular_forms.backend.mf_utils import my_get
@@ -65,8 +65,8 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     emf_logger.debug("BITPREC: {0}".format(bprec))    
     try:
         M = WebModFormSpace_cached(level=level,weight=weight,character=character)
-        WNF = WebNewForm_cached(level=level,weight=weight, character=character, label=label,parent=M)
-        emf_logger.critical("defned webnewform for rendering!")
+        WNF = M.hecke_orbits[label]
+        emf_logger.critical("defined webnewform for rendering!")
         # if info.has_key('download') and info.has_key('tempfile'):
         #     WNF._save_to_file(info['tempfile'])
         #     info['filename']=str(weight)+'-'+str(level)+'-'+str(character)+'-'+label+'.sobj'
@@ -118,7 +118,8 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
         rdeg = WNF.coefficient_field.relative_degree()
     if cdeg==1:
         info['satake'] = WNF.satake
-    info['qexp'] = ajax_more(WNF.q_expansion_latex,{'prec':10,'name':'a'},{'prec':20,'name':'a'},{'prec':100,'name':'a'},{'prec':200,'name':'a'})
+    info['qexp'] = WNF.q_expansion_latex(prec=10, name='a')
+    info['qexp_display'] = url_for(".get_qexp_latex", level=level, weight=weight, character=character, label=label)
     
     # info['qexp'] = WNF.q_expansion_latex(prec=prec)
     #c_pol_st = str(WNF.absolute_polynomial)
@@ -285,17 +286,25 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
 import flask
 
 
-@emf.route("/Qexp/<int:level>/<int:weight>/<int:character>/<label>")
-def get_qexp(level, weight, character, label, **kwds):
-    emf_logger.debug(
-        "get_qexp for: level={0},weight={1},character={2},label={3}".format(level, weight, character, label))
-    prec = my_get(request.args, "prec", default_prec, int)
-    if not arg:
-        return flask.abort(404)
-    try:
-        WNF = WebNewForm_cached(level, weight, chi=character, label=label, prec=prec, verbose=2)
-        nc = max(prec, 5)
-        c = WNF.print_q_expansion(nc)
-        return c
-    except Exception as e:
-        return "<span style='color:red;'>ERROR: %s</span>" % e.message
+## @emf.route("/Qexp/<int:level>/<int:weight>/<int:character>/<label>")
+## def get_qexp(level, weight, character, label, **kwds):
+##     emf_logger.debug(
+##         "get_qexp for: level={0},weight={1},character={2},label={3}".format(level, weight, character, label))
+##     prec = my_get(request.args, "prec", default_prec, int)
+##     latex = my_get(request.args, "latex", False, bool)
+##     if not arg:
+##         return flask.abort(404)
+##     try:
+##         WNF = WebNewForm(level, weight, chi=character, label=label, prec=prec, verbose=2)
+##         nc = max(prec, 5)
+##         if not latex:
+##             c = WNF.print_q_expansion(nc)
+##         else:
+##             c = WNF.q_expansion_latex(nc)
+##         return c
+##     except Exception as e:
+##         return "<span style='color:red;'>ERROR: %s</span>" % e.message
+
+## @emf.route("/qexp_latex/<int:level>/<int:weight>/<int:character>/<label>")
+## def get_qexp_latex(level, weight, character, label, **kwds):
+##     return get_qexp(level, weight, character, label, latex=True, **kwds)
