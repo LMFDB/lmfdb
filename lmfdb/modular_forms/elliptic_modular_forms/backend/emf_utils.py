@@ -39,14 +39,20 @@ try:
 except:
     emf_logger.critical("Could not import dirichlet_conrey!")
 
-def newform_label(level, weight, character, label, embedding=None):
+def newform_label(level, weight, character, label, embedding=None, make_cache_label=False):
+    l = ''
+    if make_cache_label:
+        l = 'emf.'
     if embedding is None:
-        return "{0}.{1}.{2}{3}".format(level, weight, character, label)
+        l += "{0}.{1}.{2}{3}".format(level, weight, character, label)
     else:
-        return "{0}.{1}.{2}{3}.{4}".format(level, weight, character, label, embedding)
+        l += "{0}.{1}.{2}{3}.{4}".format(level, weight, character, label, embedding)
 
-def space_label(level, weight, character):
-    return "{0}.{1}.{2}".format(level, weight, character)
+def space_label(level, weight, character, make_cache_label=False):
+    l = ''
+    if make_cache_label:
+        l = 'emf.'
+    return l+"{0}.{1}.{2}".format(level, weight, character)
 
 def parse_range(arg, parse_singleton=int):
     # TODO: graceful errors

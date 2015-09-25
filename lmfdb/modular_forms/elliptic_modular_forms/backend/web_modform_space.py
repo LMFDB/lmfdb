@@ -245,7 +245,7 @@ from lmfdb.utils import cache
 from lmfdb.modular_forms.elliptic_modular_forms import use_cache
 def WebModFormSpace_cached(level,weight,character,**kwds):
     if use_cache: 
-        label = space_label(level, weight, character)
+        label = space_label(level, weight, character, make_cache_label = True)
         M= cache.get(label)
         emf_logger.critical("Looking for cached space:{0}".format(label))
         if M is None:

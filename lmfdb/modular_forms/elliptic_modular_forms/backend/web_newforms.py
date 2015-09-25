@@ -51,7 +51,8 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.web_character import (
      )
 
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import (
-     WebModFormSpaceProperty
+     WebModFormSpaceProperty,
+     WebModFormSpace_cached
      )
 
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, space_label, field_label
@@ -516,20 +517,8 @@ from lmfdb.modular_forms.elliptic_modular_forms import use_cache
 
 def WebNewForm_cached(level,weight,character,label,parent=None, **kwds):
     if use_cache: 
-        nlabel = newform_label(level, weight, character, label)
-        F= cache.get(nlabel)
-        emf_logger.critical("Looking for cached form:{0}".format(nlabel))
-        if F is None:
-            emf_logger.debug("F was not in cache!")
-            F = WebNewForm(level,weight,character,label,parent=parent,**kwds)
-            emf_logger.debug("Computed F")
-            try:
-                cache.set(nlabel, F , timeout=15 * 60) # keep 15 minutes
-            except Exception as e:
-                print e.message
-            emf_logger.debug("Inserted F in cache!")
-        else:
-            emf_logger.critical("F was in cache!")
+        M = WebModFormSpace_cached(level, weight, character)
+        return M.hecke_orbits[label]
     else:
         F = WebNewForm(level,weight,character,label,**kwds)
         emf_logger.critical("Computed F not using cache!")
