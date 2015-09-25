@@ -93,19 +93,25 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
         </td>
         </tr>
 
+{% if weight %}
         <tr>
         <td> \( w \)</td>
         <td>&nbsp;=&nbsp;</td>
-        <td> \( 1 \)
+        <td> {{ weight }}
         </td>
         </tr>
 
+{% endif %}
+
+{% if chi %}
         <tr>
         <td> \( \chi \)</td>
         <td>&nbsp;:&nbsp;</td>
-        <td> trivial
+        <td> {{ chi }}
         </td>
         </tr>
+
+{% endif %}
 
 {% if ST -%}
 
@@ -119,14 +125,14 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
 {% endif %}
 
         <tr>
-        <td> primitive </td>
+        <td> {{ KNOWL('lfunction.primitive', title="Primitive") }}  </td>
         <td>&nbsp;:&nbsp;</td>
         <td> {{ primitive }}
         </td>
         </tr>
 
         <tr>
-        <td> self-dual </td>
+        <td> {{ KNOWL('lfunction.self-dual', title="Self-dual") }} </td>
         <td>&nbsp;:&nbsp;</td>
         <td> {{ selfdual }}
         </td>
@@ -135,7 +141,7 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
 {% if rank -%}
 
         <tr>
-        <td> rank </td>
+        <td> Rank </td>
         <td>&nbsp;=&nbsp;</td>
         <td> {{ rank }}
         </td>
@@ -161,6 +167,25 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
         </td>
         </tr>
 
+{% if dirichlet_arithmetic -%}
+
+  {% if sv_critical_arithmetic %}
+        <tr>
+        <td> ${{ sv_critical_arithmetic[0] }}$ </td>
+        <td>&nbsp;$\approx$&nbsp;</td>
+        <td> ${{ sv_critical_arithmetic[1] }}$ </td>
+        </tr>
+  {% endif %}
+
+  {% if sv_edge_arithmetic %}
+        <tr>
+        <td> ${{ sv_edge_arithmetic[0] }}$ </td>
+        <td>&nbsp;$\approx$&nbsp;</td>
+        <td> ${{ sv_edge_arithmetic[1] }}$ </td>
+        </tr>
+  {% endif %}
+
+{% endif %}
   </table>
 
  <h2>{{ KNOWL('lfunction.euler_product', title='Euler product') }}</h2>
@@ -178,7 +203,9 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
   </div>
  {% endif %}
 
+{% if not dirichlet_arithmetic %}
 <h2>Particular Values</h2>
+{#
 {% if dirichlet_arithmetic -%}
    {% if sv_critical_arithmetic or sv_edge_arithmetic %}
       <div class="arithmetic">
@@ -215,6 +242,7 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
    {% endif %}
 
 {% else %}
+#}
    {% if sv_critical or sv_edge %}
       <div>
       {% if sv_critical %}
@@ -231,6 +259,10 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
    {% else %}
       <div>Not enough information (Dirichlet series coefficients/sign of the functional equation) to compute special values.</div>
    {% endif %}
+{#
+{% endif %}
+#}
+
 {% endif %}
 
  <h2> Imaginary part of the first few zeros on the {{ KNOWL('lfunction.critical_line', title='critical line') }}</h2>

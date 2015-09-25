@@ -452,7 +452,7 @@ def lfuncEPhtml(L,fmt):
     """ Euler product as a formula and a table of local factors.
     """
     texform_gen = "\[L(A,s) = "
-    texform_gen += "\prod_{p \\text{ prime}} Q_p(p^{-s})^{-1} \]\n"
+    texform_gen += "\prod_{p \\text{ prime}} F_p(p^{-s})^{-1} \]\n"
 
     pfactors = prime_divisors(L.level)
     if len(pfactors) == 1:  #i.e., the conductor is prime
@@ -471,11 +471,11 @@ def lfuncEPhtml(L,fmt):
     ans = ""
  #   ans += texform_gen + "where, for $p\\nmid " + str(L.level) + "$,\n"
     ans += texform_gen + "where, for " + pgoodset + ",\n"
-    ans += "\[Q_p(T) = 1 - a_p T + b_p T^2 -  a_p p T^3 + p^2 T^4 \]"
+    ans += "\[F_p(T) = 1 - a_p T + b_p T^2 -  a_p p T^3 + p^2 T^4 \]"
     ans += "with $b_p = a_p^2 - a_{p^2}$. "
-  #  ans += "If $p \mid "  + str(L.level) + "$, then $Q_p$ is a polynomial of degree at most 3, "
-    ans += "If " + pbadset + ", then $Q_p$ is a polynomial of degree at most 3, "
-    ans += "with $Q_p(0) = 1$."
+  #  ans += "If $p \mid "  + str(L.level) + "$, then $F_p$ is a polynomial of degree at most 3, "
+    ans += "If " + pbadset + ", then $F_p$ is a polynomial of degree at most 3, "
+    ans += "with $F_p(0) = 1$."
     factN = list(factor(L.level))
     bad_primes = []
     for lf in L.bad_lfactors:
@@ -488,7 +488,7 @@ def lfuncEPhtml(L,fmt):
             good_primes.append(this_prime)
     eptable = "<table id='eptable' class='ntdata euler'>\n"
     eptable += "<thead>"
-    eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th><th class='weight'>$Q_p$</th></tr>\n"
+    eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th><th class='weight'>$F_p$</th></tr>\n"
     eptable += "</thead>"
     numfactors = len(L.localfactors)
     goodorbad = "bad"
@@ -707,6 +707,10 @@ def specialValueString(L, s, sLatex, normalization="analytic"):
         return "\\[{0}=\\infty\\]".format(lfunction_value_tex)
     elif val.abs() < 1e-10:
         return "\\[{0}=0\\]".format(lfunction_value_tex)
+    elif normalization == "arithmetic":
+        return(lfunction_value_tex,
+               latex(round(val.real(), number_of_decimals)
+                         + round(val.imag(), number_of_decimals) * I))
     else:
         return "\\[{0} \\approx {1}\\]".format(lfunction_value_tex,
                                                latex(round(val.real(), number_of_decimals)

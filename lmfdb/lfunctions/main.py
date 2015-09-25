@@ -667,10 +667,12 @@ def set_gaga_properties(L):
     ans.append(('Sign', "$"+styleTheSign(L.sign)+"$"))
 
     if L.selfdual:
-        sd = 'Self-dual'
+ #       sd = 'Self-dual'
+        ans.append(('Self-dual', "yes"))
     else:
-        sd = 'Not self-dual'
-    ans.append((None, sd))
+ #       sd = 'Not self-dual'
+        ans.append(('Self-dual', "no"))
+ #   ans.append((None, sd))
 
     if L.algebraic:
         ans.append(('Motivic weight', str(L.motivic_weight)))
