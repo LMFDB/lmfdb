@@ -163,7 +163,7 @@ def get_qexp(level, weight, character, label, prec, latex=False, **kwds):
         if not latex:
             c = WNF.q_expansion
         else:
-            c = WNF.q_expansion_latex(prec=prec)
+            c = WNF.q_expansion_latex(prec=prec, name = 'a')
         return c
     except Exception as e:
         return "<span style='color:red;'>ERROR: %s</span>" % e.message

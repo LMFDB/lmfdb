@@ -19,13 +19,14 @@
         <div class="output">
           <span id="qexp_display">{{ qexp | safe }}</span>
         </div>
-        <div class="emptyspace"><br>
+	<div class="output">{{ polynomial_st | safe }}
+	</div>
+	<div class="emptyspace"><br>
         </div>
         <button id="morebutton">Show more coefficients</button>
     </form>
 </div>
 </div>
-{{ polynomial_st | safe }}
 <br>
 {% if is_rational==0 %}
 
