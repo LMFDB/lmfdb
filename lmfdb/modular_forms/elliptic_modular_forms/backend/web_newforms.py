@@ -97,19 +97,16 @@ from sage.structure.unique_representation import CachedRepresentation
 
 class WebqExp(WebPoly):
 
-    def __init__(self, name, maxprec = 10,
+    def __init__(self, name,
                  default_value=None):
-        self.maxprec = maxprec
         super(WebqExp, self).__init__(name, default_value=default_value)
 
     def latex(self, prec=None, name=None):
         if prec is None:
             qe = self.value()
         else:
-            prec = min(self.maxprec, prec)
             qe = self.value().truncate_powerseries(prec)
         wl = web_latex_split_on_re(qe)
-        
         if name is not None and self.value().base_ring().degree()>1:
             return wl.replace(latex(self.value().base_ring().gen()), name)
         else:
@@ -222,9 +219,9 @@ class WebNewForm(WebObject, CachedRepresentation):
     _file_key = ['hecke_orbit_label']
     _collection_name = 'webnewforms'
 
-    def __init__(self, level=1, weight=12, character=1, label='a', prec=10, bitprec=53, parent=None, update_from_db=True):
+    def __init__(self, level=1, weight=12, character=1, label='a', parent=None, update_from_db=True):
         emf_logger.critical("In WebNewForm {0}".format((level,weight,character,label,parent,update_from_db)))
-        self._reduction = (type(self),(level,weight,character,label),{'prec':prec,'bitprec':bitprec,'parent':parent,'update_from_db':update_from_db})
+        self._reduction = (type(self),(level,weight,character,label),{'parent':parent,'update_from_db':update_from_db})
         if isinstance(character, WebChar):
             character_number = character.number
         else:
@@ -249,10 +246,10 @@ class WebNewForm(WebObject, CachedRepresentation):
             WebStr('hecke_orbit_label', default_value=newform_label(level, weight, character_number, label)),
             WebStr('label', default_value=label),
             WebInt('dimension'),
-            WebqExp('q_expansion', maxprec=prec),
+            WebqExp('q_expansion'),
             WebDict('_coefficients'),
             WebDict('_embeddings'),
-            WebInt('prec', default_value=int(prec)), #precision of q-expansion
+            WebInt('prec',value=0), 
             WebNumberField('base_ring'),
             WebNumberField('coefficient_field'),
             WebInt('coefficient_field_degree'),
@@ -278,7 +275,7 @@ class WebNewForm(WebObject, CachedRepresentation):
         super(WebNewForm, self).__init__(
             update_from_db=update_from_db
             )
-        emf_logger.critical("After init properties 2")
+        emf_logger.critical("After init properties 2 prec={0}".format(self.prec))
         # We're setting the WebEigenvalues property after calling __init__ of the base class
         # because it will set hecke_orbit_label from the db first
 
