@@ -13,10 +13,20 @@
 {% else %}
 
 <div id="qexp">
-<h2> {{ KNOWL('mf.elliptic.q-expansion',title='q-expansion')}}</h2>
-{{ qexp | safe }}
+  <h2> {{ KNOWL('mf.elliptic.q-expansion',title='q-expansion')}}</h2>
+  <div>
+    <form>
+        <div class="output">
+          <span id="qexp_display">{{ qexp | safe }}</span>
+        </div>
+	<div class="output">{{ polynomial_st | safe }}
+	</div>
+	<div class="emptyspace"><br>
+        </div>
+        <button id="morebutton">Show more coefficients</button>
+    </form>
 </div>
-{{ polynomial_st | safe }}
+</div>
 <br>
 {% if is_rational==0 %}
 
@@ -244,8 +254,20 @@ We have {{ max_cn }} coefficients available from the database.
 
 <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
 
-
-
-
+<script type="text/javascript">
+var number_of_coefficients = 10;
+function more_handler(evt) {
+    number_of_coefficients += number_of_coefficients;
+    evt.preventDefault();
+    $("#qexp_display").load("{{qexp_display}}"+number_of_coefficients,
+        function() {
+            {# tell mathjx to render the output #}
+            MathJax.Hub.Queue(['Typeset', MathJax.Hub, "qexp_display"]);
+        });
+}
+$(function() {
+    $("#morebutton").click(function(e) {more_handler(e)});
+});
+</script>
 
 {% endblock %}

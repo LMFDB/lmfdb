@@ -107,8 +107,8 @@ class WebHeckeOrbits(WebDict):
         from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm_cached,WebNewForm
         res = {}
         for lbl in l:
-            #F = WebNewForm(self.level, self.weight, self.character, lbl, parent=self.parent)
-            F = WebNewForm_cached(self.level, self.weight, self.character, lbl, parent=self.parent)
+            F = WebNewForm(self.level, self.weight, self.character, lbl, parent=self.parent)
+            #F = WebNewForm_cached(self.level, self.weight, self.character, lbl, parent=self.parent)
             emf_logger.debug("Got F for label {0} : {1}".format(lbl,F))
             res[lbl]=F
 #            return {lbl : WebNewForm_cached(self.level, self.weight, self.character, lbl, parent=self.parent)
@@ -128,6 +128,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
 
     EXAMPLES::
     - We assume that we are starting from scratch.
+    TODO: UPDATE THIS documentation! It is quite old. M.newforms has been replaced by M.hecke_orbits and takes WebNewForm objects.
 
     sage: M=WebModFormSpace(1,12)
     sage: M.galois_orbit_name
@@ -244,7 +245,7 @@ from lmfdb.utils import cache
 from lmfdb.modular_forms.elliptic_modular_forms import use_cache
 def WebModFormSpace_cached(level,weight,character,**kwds):
     if use_cache: 
-        label = space_label(level, weight, character)
+        label = space_label(level, weight, character, make_cache_label = True)
         M= cache.get(label)
         emf_logger.critical("Looking for cached space:{0}".format(label))
         if M is None:
