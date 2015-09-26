@@ -22,7 +22,7 @@ AUTHOR: Fredrik Strömberg  <fredrik314@gmail.com>
 from flask import render_template, url_for, send_file
 from lmfdb.utils import to_dict 
 from sage.all import uniq
-from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace_cached
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace_cached, WebModFormSpace
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, EMF_TOP
 ###
 ###
@@ -110,7 +110,8 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
     for label in WMFS.hecke_orbits:
         f = WMFS.hecke_orbits[label]
         friends.append(('Number field ' + f.base_field_label(), f.base_field_url()))
-        friends.append(('Number field ' + f.coefficient_field_label(), f.coefficient_field_url()))
+        if f.coefficient_field_label(check=True):
+            friends.append(('Number field ' + f.coefficient_field_label(), f.coefficient_field_url()))
     friends.append(("Dirichlet character \(" + WMFS.character.latex_name + "\)", WMFS.character.url()))
     friends = uniq(friends)
     info['friends'] = friends

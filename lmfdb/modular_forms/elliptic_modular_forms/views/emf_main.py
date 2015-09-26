@@ -25,6 +25,7 @@ from lmfdb.base import app, db
 from lmfdb.modular_forms.backend.mf_utils import my_get
 from lmfdb.utils import to_dict
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace_cached
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import render_fd_plot,extract_data_from_jump_to
 from emf_render_web_newform import render_web_newform
 from emf_render_web_modform_space import render_web_modform_space
@@ -146,6 +147,31 @@ def render_plot(grouptype=0, level=1):
     response.headers['Content-type'] = 'image/png'
     return response
 
+@emf.route("/Qexp/<int:level>/<int:weight>/<int:character>/<label>/<int:prec>")
+def get_qexp(level, weight, character, label, prec, latex=False, **kwds):
+    emf_logger.debug(
+        "get_qexp for: level={0},weight={1},character={2},label={3}".format(level, weight, character, label))
+    #latex = my_get(request.args, "latex", False, bool)
+    emf_logger.debug(
+        "get_qexp latex: {0}, prec: {1}".format(latex, prec))
+    #if not arg:
+    #    return flask.abort(404)
+    try:
+        M = WebModFormSpace_cached(level=level,weight=weight,character=character)
+        WNF = M.hecke_orbits[label]
+        WNF.prec = prec
+        if not latex:
+            c = WNF.q_expansion
+        else:
+            c = WNF.q_expansion_latex(prec=prec, name = 'a')
+        return c
+    except Exception as e:
+        return "<span style='color:red;'>ERROR: %s</span>" % e.message
+
+@emf.route("/qexp_latex/<int:level>/<int:weight>/<int:character>/<label>/<int:prec>")
+@emf.route("/qexp_latex/<int:level>/<int:weight>/<int:character>/<label>/")
+def get_qexp_latex(level, weight, character, label, prec=10, **kwds):
+    return get_qexp(level, weight, character, label, prec, latex=True, **kwds)
 
 ## By including this we get additional routes which we use to test various new features
 from experimental import *

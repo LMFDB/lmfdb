@@ -51,18 +51,18 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.web_character import (
      )
 
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import (
-     WebModFormSpaceProperty
+     WebModFormSpaceProperty,
+     WebModFormSpace_cached
      )
 
-from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, space_label
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, space_label, field_label
+
+from lmfdb.utils import web_latex_split_on_re
 
 from lmfdb.modular_forms.elliptic_modular_forms import (
      emf_version,
      emf_logger
      )
-
-from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty
-from lmfdb.utils import web_latex_split_on_re
 
 from sage.rings.number_field.number_field_base import (
      NumberField
@@ -97,14 +97,16 @@ from sage.structure.unique_representation import CachedRepresentation
 
 class WebqExp(WebPoly):
 
-    def __init__(self, name, prec=10,
+    def __init__(self, name, maxprec = 10,
                  default_value=None):
+        self.maxprec = maxprec
         super(WebqExp, self).__init__(name, default_value=default_value)
 
     def latex(self, prec=None, name=None):
         if prec is None:
             qe = self.value()
         else:
+            prec = min(self.maxprec, prec)
             qe = self.value().truncate_powerseries(prec)
         wl = web_latex_split_on_re(qe)
         
@@ -118,7 +120,7 @@ class WebqExp(WebPoly):
             return None
         #print "f", f
         try:
-            f = f.truncate_powerseries(prec)
+            f = f.truncate_powerseries(f.degree())
             return f
         except:
             return f
@@ -247,7 +249,7 @@ class WebNewForm(WebObject, CachedRepresentation):
             WebStr('hecke_orbit_label', default_value=newform_label(level, weight, character_number, label)),
             WebStr('label', default_value=label),
             WebInt('dimension'),
-            WebqExp('q_expansion', prec=prec),
+            WebqExp('q_expansion', maxprec=prec),
             WebDict('_coefficients'),
             WebDict('_embeddings'),
             WebInt('prec', default_value=int(prec)), #precision of q-expansion
@@ -291,10 +293,12 @@ class WebNewForm(WebObject, CachedRepresentation):
     def __repr__(self):
         s = "WebNewform in S_{0}({1},chi_{2}) with label {3}".format(self.weight,self.level,self.character.number,self.label)
         return s
+
+    def init_dynamic_properties(self):
+        self._properties['q_expansion'].maxprec = self.prec
         
     def q_expansion_latex(self, prec=None, name=None):
         return self._properties['q_expansion'].latex(prec, name)
-
     
     def coefficient(self, n):
         r"""
@@ -465,46 +469,31 @@ class WebNewForm(WebObject, CachedRepresentation):
     def url(self):
         return url_for('emf.render_elliptic_modular_forms', level=self.level, weight=self.weight, character=self.character.number, label=self.label)
 
-    def coefficient_field_label(self, pretty = True):
+    def coefficient_field_label(self, pretty = True, check=False):
         r"""
           Returns the LMFDB label of the (absolute) coefficient field (if it exists).
         """
         F = self.coefficient_field
-        #emf_logger.debug("pol={0}".format(p))
-        if F.degree() == 1:
-            p = 'x'
-        else:
-            p = F.polynomial()
-        l = poly_to_field_label(p)
-        if l is None:
-            return ''        
-        if pretty:
-            return field_pretty(l)
-        else:
-            return l
+        return field_label(F, pretty, check)
 
     def coefficient_field_url(self):
-        return url_for("number_fields.by_label", label=self.coefficient_field_label(pretty = False))
+        if self.coefficient_field_label(check=True):
+            return url_for("number_fields.by_label", label=self.coefficient_field_label(pretty = False))
+        else:
+            return ''
 
-    def base_field_label(self, pretty = True):
+    def base_field_label(self, pretty = True, check=False):
         r"""
           Returns the LMFDB label of the base field.
         """
         F = self.base_ring
-        if F.degree() == 1:
-            p = 'x'
-        else:
-            p = F.polynomial()
-        l = poly_to_field_label(p)
-        if l is None:
-            return ''
-        if pretty:
-            return field_pretty(l)
-        else:
-            return l
+        return field_label(F, pretty, check)
 
     def base_field_url(self):
-        return url_for("number_fields.by_label", label=self.base_field_label(pretty = False))
+        if self.base_field_label(check=True):
+            return url_for("number_fields.by_label", label=self.base_field_label(pretty = False))
+        else:
+            return ''
 
 
 from sage.all import cached_function,AlphabeticStrings
@@ -526,22 +515,10 @@ def orbit_label(j):
 from lmfdb.utils import cache
 from lmfdb.modular_forms.elliptic_modular_forms import use_cache
 
-def WebNewForm_cached(level,weight,character,label,**kwds):
+def WebNewForm_cached(level,weight,character,label,parent=None, **kwds):
     if use_cache: 
-        nlabel = newform_label(level, weight, character, label)
-        F= cache.get(nlabel)
-        emf_logger.critical("Looking for cached form:{0}".format(nlabel))
-        if F is None:
-            emf_logger.debug("F was not in cache!")
-            F = WebNewForm(level,weight,character,label,**kwds)
-            emf_logger.debug("Computed F")
-            try:
-                cache.set(nlabel, F , timeout=15 * 60) # keep 15 minutes
-            except Exception as e:
-                print e.message
-            emf_logger.debug("Inserted F in cache!")
-        else:
-            emf_logger.critical("F was in cache!")
+        M = WebModFormSpace_cached(level, weight, character)
+        return M.hecke_orbits[label]
     else:
         F = WebNewForm(level,weight,character,label,**kwds)
         emf_logger.critical("Computed F not using cache!")
