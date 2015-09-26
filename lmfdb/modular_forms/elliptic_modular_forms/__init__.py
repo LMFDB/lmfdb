@@ -9,7 +9,7 @@ default_display_bprec = 26  # The default number of bits of precision to display
 from sage.env import SAGE_VERSION
 version_major, version_minor = [int(x) for x in SAGE_VERSION.split('.')[:2]]
 if (version_major, version_minor) >= (6,8):
-    emf_version = 1.2
+    emf_version = 1.3
 else:
     emf_version = 1.1
 
