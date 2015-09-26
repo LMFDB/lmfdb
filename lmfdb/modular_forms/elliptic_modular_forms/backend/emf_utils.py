@@ -47,12 +47,36 @@ def newform_label(level, weight, character, label, embedding=None, make_cache_la
         l += "{0}.{1}.{2}{3}".format(level, weight, character, label)
     else:
         l += "{0}.{1}.{2}{3}.{4}".format(level, weight, character, label, embedding)
+    return l
 
+def parse_newform_label(label):
+    r"""
+    Essentially the inverse of the above
+    """
+    if not isinstance(label,basestring):
+        raise ValueError,"Need label in string format"
+    l = label.split(".")
+    level = int(l[0]); weight = int(l[1])
+    character = int("".join([x for x in l[2] if x.isdigit()]))
+    label = "".join([x for x in l[2] if x.isalpha()])
+    if len(l)==4:
+        emb = int(l[3])
+        return level,weight,character,label,emb
+    else:
+        return level,weight,character,label
+        
 def space_label(level, weight, character, make_cache_label=False):
     l = ''
     if make_cache_label:
         l = 'emf.'
     return l+"{0}.{1}.{2}".format(level, weight, character)
+
+def parse_space_label(label):
+    if not isinstance(label,basestring):
+        raise ValueError,"Need label in string format"    
+    l = label.split(".")
+    level = int(l[0]); weight = int(l[1]); character = int(l[2])
+    return level,weight,character
 
 def parse_range(arg, parse_singleton=int):
     # TODO: graceful errors
