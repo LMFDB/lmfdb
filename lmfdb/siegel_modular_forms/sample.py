@@ -24,7 +24,8 @@ class DataBase():
             import lmfdb.base
             self.__client = lmfdb.base.getDBConnection()
         self.__db = self.__client.siegel_modular_forms_experimental
-            
+        # self.__db = self.__client.siegel_modular_forms
+        
     def find_one( self, *dct, **kwargs):
         collection = kwargs.get( 'collection', 'samples')
         col = self.__db[collection]
@@ -63,7 +64,7 @@ class Sample_class (sage.structure.sage_object.SageObject):
         self.__is_integral = doc.get( 'is_integral')
 
         self.__id = doc.get( '_id')
-
+ 
         # eigenvalues
         # evs = doc.get( 'eigenvalues')
         # loc_f = self.__field.gens_dict()

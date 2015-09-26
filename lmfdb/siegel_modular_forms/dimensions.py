@@ -15,7 +15,7 @@ from sage.rings.integer_ring import IntegerRing
 ## For general dimension related data from the data base
 ####################################################################
 
-DB_URL = 'mongodb://localhost:40000/'
+# DB_URL = 'mongodb://localhost:40000/'
 
 def fetch( dct):
 

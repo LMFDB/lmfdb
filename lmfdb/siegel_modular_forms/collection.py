@@ -14,10 +14,10 @@ import inspect
 
 def find_one( dct, collection = 'collections'):
 
-    DB_URL = 'mongodb://localhost:40000/'
-    client = pymongo.MongoClient( DB_URL)
-    # import lmfdb.base
-    # client = lmfdb.base.getDBConnection()
+    # DB_URL = 'mongodb://localhost:40000/'
+    # client = pymongo.MongoClient( DB_URL)
+    import lmfdb.base
+    client = lmfdb.base.getDBConnection()
 
     db = client.siegel_modular_forms
     col = db[collection]
@@ -27,10 +27,10 @@ def find_one( dct, collection = 'collections'):
 
 def find_all( dct, collection = 'samples'):
 
-    DB_URL = 'mongodb://localhost:40000/'
-    client = pymongo.MongoClient( DB_URL)
-    # import lmfdb.base
-    # client = lmfdb.base.getDBConnection()
+    # DB_URL = 'mongodb://localhost:40000/'
+    # client = pymongo.MongoClient( DB_URL)
+    import lmfdb.base
+    client = lmfdb.base.getDBConnection()
 
     db = client.siegel_modular_forms
     col = db[collection]
