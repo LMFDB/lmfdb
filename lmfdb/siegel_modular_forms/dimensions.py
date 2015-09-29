@@ -506,24 +506,15 @@ def dimension_Gamma0_3( wt_range):
 
 def _dimension_Gamma0_3(wt):
     """
-    Return the dimensions of subspaces of Siegel modular forms$Gamma0(3)$.
+    Return the dimensions of subspaces of Siegel modular forms on $Gamma0(3)$.
 
     OUTPUT
-        ( "Total", "Eisenstein", "Klingen", "Maass", "Interesting")
+        ( "Total")
 
     REMARK
         Only total dimension implemented.
     """
-    R = PowerSeriesRing(ZZ, default_prec=wt + 1, names=('x',))
+    R = PowerSeriesRing( IntegerRing(), default_prec = wt + 1, names=('x',))
     (x,) = R._first_ngens(1)
-    H_all = (1 + 2 * x ** 4 + x ** 6 + x ** 15 * (1 + 2 * x ** 2 + x ** 6)) / (1 - x ** 2) / (1 -
-                                                                                              x ** 4) / (1 - x ** 6) ** 2
-    # H_cusp  = ??
-    # H_Kl   = ??
-    # H_MS = ??
-    if is_even(wt):
-        a = H_all[wt]
-        return (a, tbi, tbi, tbi, tbi)
-    else:
-        a = H_all[wt]
-        return (a, tbi, tbi, 0, tbi)
+    H_all = (1 + 2 * x ** 4 + x ** 6 + x ** 15 * (1 + 2 * x ** 2 + x ** 6)) / (1 - x ** 2) / (1 - x ** 4) / (1 - x ** 6) ** 2
+    return ( H_all[wt],)

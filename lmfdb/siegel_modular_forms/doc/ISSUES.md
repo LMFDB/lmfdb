@@ -5,7 +5,8 @@
   * On ModularForm/GSp/Q/Gamma0_3/ it says "Dimensions not implemented".
     However, on the old page, the total dimensions are implemented:
     http://www.lmfdb.org/ModularForm/GSp/Q?page=dimensions&level=17&group=Gamma0_3&weight_range=20-30
-    
+  DONE
+  
   * Same issue for ModularForm/GSp/Q/Gamma0_3_psi_3/
   DONE
 
