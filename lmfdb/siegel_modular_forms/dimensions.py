@@ -375,27 +375,38 @@ def _dimension_Gamma0_4_half(k):
 def dimension_Gamma0_3_psi_3( wt_range):
     """
     <ul>
-      <li><span class="emph">Total</span>: The subspace of cusp forms.</li>
-      <li><span class="emph">Ikeda lifts</span>: The subspace of Ikeda lifts.</li>
-      <li><span class="emph">Miyawaki lifts</span>: The subspace of Miyawaki lifts.</li>
-      <li><span class="emph">Other</span>: The subspace that are not Ikeda or Miyawaki lifts.</li>
+      <li><span class="emph">Total</span>: The full space.</li>
     </ul>
     """
-    headers = ['Total', 'Ikeda lifts', 'Miyawaki lifts', 'Other']
+    headers = ['Total']
     dct = dict()
     for k in wt_range:
-        dims =  _dimension_Sp8Z( k)
-        dct[k] = dict( (headers[j],dims[j]) for j in range(4))
+        dims =  _dimension_Gamma0_3_psi_3( k)
+        dct[k] = dict( (headers[j],dims[j]) for j in range( len( headers)))
+    print headers, dct
     return headers, dct
 
 
 def _dimension_Gamma0_3_psi_3(wt):
     """
-    Return the dimensions of subspaces of Siegel modular forms on $Sp(8,Z)$.
+    Return the dimensions of the space of Siegel modular forms
+    on $Gamma_0(3)$ with character $\psi_3$.
 
     OUTPUT
-        ('Total', 'Ikeda lifts', 'Miyawaki lifts', 'Other')
+        ( "Total")
+
+    REMARK
+        Not completely implemented
     """
+    R = PowerSeriesRing( IntegerRing(), default_prec = wt + 1, names=('x',))
+    (x,) = R._first_ngens(1)
+    B = 1 / (1 - x ** 1) / (1 - x ** 3) / (1 - x ** 4) / (1 - x ** 3)
+    H_all_odd = B
+    H_all_even = B * x ** 14
+    if is_even(wt):
+        return (H_all_even[wt],)
+    else:
+        return (H_all_odd[wt],)
 
 
 
