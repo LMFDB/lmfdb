@@ -419,10 +419,13 @@ def dimension_Gamma0_4_psi_4( wt_range):
     <ul>
       <li><span class="emph">Total</span>: The full spaces.</li>
     </ul>
+    <p> Odd weights are not yet implemented.</p>
     """
     headers = ['Total']
     dct = dict()
+    s = t = 0 # Here starts a 'hack'
     for k in wt_range:
+        if is_odd(k): continue
         dims =  _dimension_Gamma0_4_psi_4( k)
         dct[k] = dict( (headers[j],dims[j]) for j in range( len(headers)))
     return headers, dct
