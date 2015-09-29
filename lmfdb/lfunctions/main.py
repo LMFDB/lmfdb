@@ -15,7 +15,7 @@ import LfunctionPlot as LfunctionPlot
 from lmfdb.utils import to_dict
 import bson
 from Lfunctionutilities import (p2sage, lfuncDShtml, lfuncEPtex, lfuncFEtex,
-                                truncatenumber, styleTheSign, specialValueString)
+                                truncatenumber, styleTheSign, specialValueString, specialValueTriple)
 from lmfdb.WebCharacter import WebDirichlet
 from lmfdb.lfunctions import l_function_page, logger
 from lmfdb.elliptic_curves.web_ec import cremona_label_regex, lmfdb_label_regex
@@ -414,8 +414,27 @@ def initLfunction(L, args, request):
 
     # Now we usually display both
     if L.Ltype() == "genus2curveQ":
-        info['sv_critical'] = specialValueString(L, 0.5, '1/2')
-        info['sv_critical_arithmetic'] = specialValueString(L, 0.5, str(ZZ(1)/2 + L.motivic_weight/2),'arithmetic')
+        if L.motivic_weight % 2 == 0:
+           arith_center = "\\frac{" + str(1 + L.motivic_weight) + "}{2}"
+        else:
+           arith_center = str(ZZ(1)/2 + L.motivic_weight/2)
+        svt_crit = specialValueTriple(L, 0.5, '\\frac12',arith_center)
+#        info['sv_critical'] = specialValueString(L, 0.5, '1/2')
+#        info['sv_critical_arithmetic'] = specialValueString(L, 0.5, str(ZZ(1)/2 + L.motivic_weight/2),'arithmetic')
+        info['sv_critical'] = svt_crit[0] + "\\ =\\ " + svt_crit[2]
+        info['sv_critical_analytic'] = [svt_crit[0], svt_crit[2]]
+        info['sv_critical_arithmetic'] = [svt_crit[1], svt_crit[2]]
+
+        if L.motivic_weight % 2 == 1:
+           arith_edge = "\\frac{" + str(2 + L.motivic_weight) + "}{2}"
+        else:
+           arith_edge = str(ZZ(1) + L.motivic_weight/2)
+
+        svt_edge = specialValueTriple(L, 1, '1',arith_edge)
+        info['sv_edge'] = svt_edge[0] + "\\ =\\ " + svt_edge[2]
+        info['sv_edge_analytic'] = [svt_edge[0], svt_edge[2]]
+        info['sv_edge_arithmetic'] = [svt_edge[1], svt_edge[2]]
+
     elif L.Ltype() != "artin" or (L.Ltype() == "artin" and L.sign != 0):
     #    if is_even(L.degree) :
     #        info['sv_critical'] = specialValueString(L, 0.5, '1/2')

@@ -716,6 +716,36 @@ def specialValueString(L, s, sLatex, normalization="analytic"):
                                                latex(round(val.real(), number_of_decimals)
                                                      + round(val.imag(), number_of_decimals) * I))
 
+def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
+    ''' Returns [L_arithmetic, L_analytic, L_val]
+    '''
+    number_of_decimals = 10
+    val = None
+    if hasattr(L,"lfunc_data"):
+        s_alg = s+p2sage(L.lfunc_data['analytic_normalization'])
+        for x in p2sage(L.lfunc_data['special_values']):
+            # the numbers here are always half integers
+            # so this comparison is exact
+            if x[0] == s_alg:
+                val = x[1]
+                break
+    if val is None:
+        val = L.sageLfunction.value(s)
+    # We must test for NaN first, since it would show as zero otherwise
+    # Try "RR(NaN) < float(1e-10)" in sage -- GT
+
+    lfunction_value_tex_arithmetic = L.texname_arithmetic.replace('s)',  sLatex_arithmetic + ')')
+    lfunction_value_tex_analytic = L.texname.replace('(s', '(' + sLatex_analytic)
+
+    if CC(val).real().is_NaN():
+        Lval = "\\infty"
+    elif val.abs() < 1e-10:
+        Lval = "0"
+    else:
+        Lval = latex(round(val.real(), number_of_decimals)
+                         + round(val.imag(), number_of_decimals) * I)
+
+    return [lfunction_value_tex_analytic, lfunction_value_tex_arithmetic, Lval]
 
 ###############################################################
 # Functions for Siegel dirichlet series

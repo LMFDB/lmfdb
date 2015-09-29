@@ -170,18 +170,37 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
 {% if dirichlet_arithmetic -%}
 
   {% if sv_critical_arithmetic %}
-        <tr>
+        <tr class="arithmetic">
         <td> ${{ sv_critical_arithmetic[0] }}$ </td>
+  {% if sv_critical_arithmetic[1] == "0" %}
+        <td>&nbsp;$=$&nbsp;</td>
+  {% else %}
         <td>&nbsp;$\approx$&nbsp;</td>
+  {% endif %}
         <td> ${{ sv_critical_arithmetic[1] }}$ </td>
+        </tr>
+        <tr class="analytic nodisplay">
+        <td> ${{ sv_critical_analytic[0] }}$ </td>
+  {% if sv_critical_analytic[1] == "0" %}
+        <td>&nbsp;$=$&nbsp;</td>
+  {% else %}
+        <td>&nbsp;$\approx$&nbsp;</td>
+  {% endif %}
+
+        <td> ${{ sv_critical_analytic[1] }}$ </td>
         </tr>
   {% endif %}
 
   {% if sv_edge_arithmetic %}
-        <tr>
+        <tr class="arithmetic">
         <td> ${{ sv_edge_arithmetic[0] }}$ </td>
         <td>&nbsp;$\approx$&nbsp;</td>
         <td> ${{ sv_edge_arithmetic[1] }}$ </td>
+        </tr>
+        <tr class="analytic nodisplay">
+        <td> ${{ sv_edge_analytic[0] }}$ </td>
+        <td>&nbsp;$\approx$&nbsp;</td>
+        <td> ${{ sv_edge_analytic[1] }}$ </td>
         </tr>
   {% endif %}
 
