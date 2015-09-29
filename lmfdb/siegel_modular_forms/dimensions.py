@@ -328,6 +328,13 @@ def _dimension_Sp8Z(wt):
 ####################################################################
 
 def dimension_Gamma0_4_half( wt_range):
+    """
+    <ul>
+      <li><span class="emph">Total</span>: The full space.</li>
+      <li><span class="emph">Non cusp</span>: The codimension of the subspace of cusp forms.</li>
+      <li><span class="emph">Cusp</span>: The subspace of cusp forms.</li>
+    </ul>
+    """
     headers = ['Total', 'Non cusp', 'Cusp']
     dct = dict()
     for k in wt_range:
@@ -358,3 +365,65 @@ def _dimension_Gamma0_4_half(k):
               x ** 12 + x ** 14) / (1 - x ** 2) ** 2 / (1 - x ** 6)
     a, c = H_all[k - 1], H_cusp[k - 1]
     return (a, a - c, c)
+
+
+
+####################################################################
+## Dimension formulas for Gamma0_3_psi_3
+####################################################################
+
+def dimension_Gamma0_3_psi_3( wt_range):
+    """
+    <ul>
+      <li><span class="emph">Total</span>: The subspace of cusp forms.</li>
+      <li><span class="emph">Ikeda lifts</span>: The subspace of Ikeda lifts.</li>
+      <li><span class="emph">Miyawaki lifts</span>: The subspace of Miyawaki lifts.</li>
+      <li><span class="emph">Other</span>: The subspace that are not Ikeda or Miyawaki lifts.</li>
+    </ul>
+    """
+    headers = ['Total', 'Ikeda lifts', 'Miyawaki lifts', 'Other']
+    dct = dict()
+    for k in wt_range:
+        dims =  _dimension_Sp8Z( k)
+        dct[k] = dict( (headers[j],dims[j]) for j in range(4))
+    return headers, dct
+
+
+def _dimension_Gamma0_3_psi_3(wt):
+    """
+    Return the dimensions of subspaces of Siegel modular forms on $Sp(8,Z)$.
+
+    OUTPUT
+        ('Total', 'Ikeda lifts', 'Miyawaki lifts', 'Other')
+    """
+
+
+
+####################################################################
+## Dimension formulas for Gamma0_4_psi_4
+####################################################################
+
+def dimension_Gamma0_4_psi_4( wt_range):
+    """
+    <ul>
+      <li><span class="emph">Total</span>: The subspace of cusp forms.</li>
+      <li><span class="emph">Ikeda lifts</span>: The subspace of Ikeda lifts.</li>
+      <li><span class="emph">Miyawaki lifts</span>: The subspace of Miyawaki lifts.</li>
+      <li><span class="emph">Other</span>: The subspace that are not Ikeda or Miyawaki lifts.</li>
+    </ul>
+    """
+    headers = ['Total', 'Ikeda lifts', 'Miyawaki lifts', 'Other']
+    dct = dict()
+    for k in wt_range:
+        dims =  _dimension_Sp8Z( k)
+        dct[k] = dict( (headers[j],dims[j]) for j in range(4))
+    return headers, dct
+
+
+def _dimension_Gamma0_4_psi_4(wt):
+    """
+    Return the dimensions of subspaces of Siegel modular forms on $Sp(8,Z)$.
+
+    OUTPUT
+        ('Total', 'Ikeda lifts', 'Miyawaki lifts', 'Other')
+    """
