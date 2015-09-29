@@ -3,7 +3,7 @@
 # Author: Nils Skoruppa <nils.skoruppa@gmail.com>
 
 from flask import render_template, url_for, request
-import siegel_core
+# import siegel_core
 import input_parser
 import dimensions
 import pickle
@@ -32,7 +32,9 @@ def rescan_collection():
     for a,b,files in os.walk( static):
         for f in files:
             try:
-                c = f.rstrip( '.json')
+                if f.endswith('.json'):
+                    c = f[:-5]
+                    print c
                 colns[c] = Collection( c, location = static)
             except Exception as e:
                 print str(e)
