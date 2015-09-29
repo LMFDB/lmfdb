@@ -5,9 +5,14 @@
   * On ModularForm/GSp/Q/Gamma0_3/ it says "Dimensions not implemented".
     However, on the old page, the total dimensions are implemented:
     http://www.lmfdb.org/ModularForm/GSp/Q?page=dimensions&level=17&group=Gamma0_3&weight_range=20-30
+    
+  * Same issue for ModularForm/GSp/Q/Gamma0_3_psi_3/
+  DONE
 
-  * Same issue for ModularForm/GSp/Q/Gamma0_3_psi_3/ and ModularForm/GSp/Q/Gamma0_4/
-    and ModularForm/GSp/Q/Gamma0_4_psi_4/.
+  * and ModularForm/GSp/Q/Gamma0_4/
+  DONE
+  
+  * and ModularForm/GSp/Q/Gamma0_4_psi_4/.
 
   * Avoid showing an empty table when you navigate to page Sp8Z.
 
@@ -22,6 +27,10 @@
     * How to add new collections
 
     * Explanation of the code parts: "what happens next after queries?"
+    
+  * func_doc for dimensions_Gamma0_4_half is missing.
+  DONE
+
 
 
 ## Easy issues
