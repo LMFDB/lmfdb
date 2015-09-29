@@ -684,6 +684,7 @@ def lfuncFEtex(L, fmt):
 
 def specialValueString(L, s, sLatex, normalization="analytic"):
     ''' Returns the LaTex to dislpay for L(s)
+        Will eventually be replaced by specialValueTriple.
     '''
     number_of_decimals = 10
     val = None
@@ -718,6 +719,8 @@ def specialValueString(L, s, sLatex, normalization="analytic"):
 
 def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
     ''' Returns [L_arithmetic, L_analytic, L_val]
+        Currently only used for genus 2 curves.
+        Eventually want to use for all L-functions.
     '''
     number_of_decimals = 10
     val = None
