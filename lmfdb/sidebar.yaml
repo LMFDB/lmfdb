@@ -115,16 +115,13 @@
                status: future
              - title: /NumberFields
                url_for: "ecnf.index"
-               status: beta
                colspan: onecolumn
              - title: $\Q$-curves
                status: future
            colspan: onecolumn
          - title: "Genus 2:"
-           status: beta
            part3:
              - title: $/\Q$
-               status: beta
                url_for: "g2c.index_Q"
              - title: $/\F_{q}(t)$
                status: future
