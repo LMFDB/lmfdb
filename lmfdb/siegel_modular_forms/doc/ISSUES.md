@@ -14,9 +14,12 @@
   DONE
   
   * and ModularForm/GSp/Q/Gamma0_4_psi_4/.
+  DONE
 
   * Avoid showing an empty table when you navigate to page Sp8Z.
-
+  DONE (Nils: David Yuen's data consisted of html pages - I needed hours
+       to put them into a form which could be send to and used in Warwick.)
+       
   * Implement downloading of mongodb obects as json file (important e.g. for people
     who need examples how to prepare the data which they want to add).
 
@@ -33,6 +36,11 @@
   DONE
 
 
+## Desired features (not necessary for a first release)
+
+  * The data objects are partly too big to fit in the mongodb, so one needs to use gridfs.
+    Who knows how to handle this?
+    
 
 ## Easy issues
 
