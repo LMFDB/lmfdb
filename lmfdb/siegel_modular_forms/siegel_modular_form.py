@@ -165,6 +165,7 @@ def prepare_search_results_page( args, bread):
     query = args.get('query')
     try:
         query = json.loads( query)
+        print query
         results = sample.Samples( query)
         info.update( {'results': results})
     except Exception as e:
