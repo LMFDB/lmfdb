@@ -328,6 +328,13 @@ def _dimension_Sp8Z(wt):
 ####################################################################
 
 def dimension_Gamma0_4_half( wt_range):
+    """
+    <ul>
+      <li><span class="emph">Total</span>: The full space.</li>
+      <li><span class="emph">Non cusp</span>: The codimension of the subspace of cusp forms.</li>
+      <li><span class="emph">Cusp</span>: The subspace of cusp forms.</li>
+    </ul>
+    """
     headers = ['Total', 'Non cusp', 'Cusp']
     dct = dict()
     for k in wt_range:
@@ -358,3 +365,159 @@ def _dimension_Gamma0_4_half(k):
               x ** 12 + x ** 14) / (1 - x ** 2) ** 2 / (1 - x ** 6)
     a, c = H_all[k - 1], H_cusp[k - 1]
     return (a, a - c, c)
+
+
+
+####################################################################
+## Dimension formulas for Gamma0_3_psi_3
+####################################################################
+
+def dimension_Gamma0_3_psi_3( wt_range):
+    """
+    <ul>
+      <li><span class="emph">Total</span>: The full space.</li>
+    </ul>
+    """
+    headers = ['Total']
+    dct = dict()
+    for k in wt_range:
+        dims =  _dimension_Gamma0_3_psi_3( k)
+        dct[k] = dict( (headers[j],dims[j]) for j in range( len( headers)))
+    print headers, dct
+    return headers, dct
+
+
+def _dimension_Gamma0_3_psi_3(wt):
+    """
+    Return the dimensions of the space of Siegel modular forms
+    on $Gamma_0(3)$ with character $\psi_3$.
+
+    OUTPUT
+        ( "Total")
+
+    REMARK
+        Not completely implemented
+    """
+    R = PowerSeriesRing( IntegerRing(), default_prec = wt + 1, names=('x',))
+    (x,) = R._first_ngens(1)
+    B = 1 / (1 - x ** 1) / (1 - x ** 3) / (1 - x ** 4) / (1 - x ** 3)
+    H_all_odd = B
+    H_all_even = B * x ** 14
+    if is_even(wt):
+        return (H_all_even[wt],)
+    else:
+        return (H_all_odd[wt],)
+
+
+
+####################################################################
+## Dimension formulas for Gamma0_4_psi_4
+####################################################################
+
+def dimension_Gamma0_4_psi_4( wt_range):
+    """
+    <ul>
+      <li><span class="emph">Total</span>: The full spaces.</li>
+    </ul>
+    <p> Odd weights are not yet implemented.</p>
+    """
+    headers = ['Total']
+    dct = dict()
+    s = t = 0 # Here starts a 'hack'
+    for k in wt_range:
+        if is_odd(k): continue
+        dims =  _dimension_Gamma0_4_psi_4( k)
+        dct[k] = dict( (headers[j],dims[j]) for j in range( len(headers)))
+    return headers, dct
+
+
+def _dimension_Gamma0_4_psi_4(wt):
+    """
+    Return the dimensions of subspaces of Siegel modular forms
+    on $Gamma_0(4)$
+    with character $\psi_4$.
+
+    OUTPUT
+        ( "Total")
+
+    REMARK
+        The formula for odd weights is unknown or not obvious from the paper.
+    """
+    R = PowerSeriesRing( IntegerRing(), default_prec = wt + 1, names=('x',))
+    (x,) = R._first_ngens(1)
+    H_all_even = (x ** 12 + x ** 14) / (1 - x ** 2) ** 3 / (1 - x ** 6)
+    if is_even(wt):
+        return (H_all_even[wt],)
+    else:
+        raise NotImplementedError( 'Dimensions of $M_{k}(\Gamma_0(4), \psi_4)$ for odd $k$ not implemented')
+
+
+
+
+####################################################################
+## Dimension formulas for Gamma0_4
+####################################################################
+
+def dimension_Gamma0_4( wt_range):
+    """
+    <ul>
+      <li><span class="emph">Total</span>: The full spaces.</li>
+    </ul>
+    """
+    headers = ['Total']
+    dct = dict()
+    for k in wt_range:
+        dims =  _dimension_Gamma0_4( k)
+        dct[k] = dict( (headers[j],dims[j]) for j in range( len(headers)))
+    return headers, dct
+
+
+def _dimension_Gamma0_4(wt):
+    """
+    Return the dimensions of subspaces of Siegel modular forms on $Gamma0(4)$.
+
+    OUTPUT
+        ( "Total",)
+
+    REMARK
+        Not completely implemented
+    """
+    R = PowerSeriesRing( IntegerRing(), default_prec = wt + 1, names=('x',))
+    (x,) = R._first_ngens(1)
+    H_all = (1 + x ** 4)(1 + x ** 11) / (1 - x ** 2) ** 3 / (1 - x ** 6)
+    return (H_all[wt],)
+
+
+
+####################################################################
+## Dimension formulas for Gamma0_3
+####################################################################
+
+def dimension_Gamma0_3( wt_range):
+    """
+    <ul>
+      <li><span class="emph">Total</span>: The full spaces.</li>
+    </ul>
+    """
+    headers = ['Total']
+    dct = dict()
+    for k in wt_range:
+        dims =  _dimension_Gamma0_3( k)
+        dct[k] = dict( (headers[j],dims[j]) for j in range( len(headers)))
+    return headers, dct
+
+
+def _dimension_Gamma0_3(wt):
+    """
+    Return the dimensions of subspaces of Siegel modular forms on $Gamma0(3)$.
+
+    OUTPUT
+        ( "Total")
+
+    REMARK
+        Only total dimension implemented.
+    """
+    R = PowerSeriesRing( IntegerRing(), default_prec = wt + 1, names=('x',))
+    (x,) = R._first_ngens(1)
+    H_all = (1 + 2 * x ** 4 + x ** 6 + x ** 15 * (1 + 2 * x ** 2 + x ** 6)) / (1 - x ** 2) / (1 - x ** 4) / (1 - x ** 6) ** 2
+    return ( H_all[wt],)
