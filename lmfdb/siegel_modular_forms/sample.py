@@ -12,7 +12,8 @@ from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
 from sage.rings.integer_ring import IntegerRing
 
 DB = None
-
+# DB_URL = 'mongodb://localhost:40000/'
+    
 class DataBase():
     """
     DB_URL = 'mongodb://localhost:40000/'
@@ -180,4 +181,35 @@ def Samples( dct):
     dct.update( { 'field': { '$exists': True}})
     docs = DB.find( dct, { 'Fourier_coefficients': 0, 'eigenvalues': 0})
     return [ Sample_class( doc) for doc in docs]
+
+
+def export( collection, name):
+    """
+    Return
+    """
+    global DB
+    if not DB:
+        DB = DataBase( DB_URL = DB_URL) 
+    
+    dct = { 'collection': collection, 'name': name}
+    doc = DB.find_one( dct, { 'Fourier_coefficients': 0, 'eigenvalues': 0})
+    id = doc.get('_id')
+    assert id != None, 'Error: the item "%s" was not accessible in the database.' % dct 
+
+    # Fourier coefficients and eigenvalues
+    fcs = DB.find( { 'owner_id': id, 'data_type': 'fc' })
+    doc['Fourier_coefficients'] = dict(( ( fc['det'], fc['data']) for fc in fcs))
+
+    evs = DB.find( { 'owner_id': id, 'data_type': 'ev'})
+    print evs
+    doc['eigenvalues'] = dict( ( (ev['index'], ev['data']) for ev in evs))
+
+    doc.pop( '_id')
+    label = doc['collection'][0] + '.' + doc['name']
+    doc['label']= label
+    
+    import json
+    from bson import BSON
+    from bson import json_util
+    return json.dumps( doc, sort_keys=True, indent=4, default = json_util.default)        
 

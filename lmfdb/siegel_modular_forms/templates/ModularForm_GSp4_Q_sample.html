@@ -33,7 +33,7 @@
     });
 </script>
 <p>
-  <button value="Download" onclick="window.location.href = '/home/lmfdb/data/Siegel-Modular-Forms/Sp4Z/eigenvalues/40_Maass-ev.sobj'">Download</button>
+  <button value="Download" onclick="window.location.href = '{{ url_for( 'ModularForm_GSp4_Q_top_level', download=sam.collection()[0]+'.'+sam.name()) }}'">Download</button>
   this sample in JavaScript object notation (json).
 </p>
 

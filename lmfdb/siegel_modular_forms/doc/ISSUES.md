@@ -23,7 +23,8 @@
        
   * Implement downloading of mongodb obects as json file (important e.g. for people
     who need examples how to prepare the data which they want to add).
-
+  DONE
+  
   * Reduction of polynomials should be implemented so that vector valued SMF are
     shown correctly (e.g. Error at ModularForm/GSp/Q/Sp4Z_2.14_C/)
   DONE
@@ -105,7 +106,8 @@
   * R: "Search for samples":
 
     *  Make sure that every suggested input is valid and leads to a meaningful page that has data.
-
+    DONE
+    
     * "Find a specific form by its LMFDB label": Typing in any of the suggestions
       leads to a cryptic javascript box, followed in the first two cases by an empty search result.
 

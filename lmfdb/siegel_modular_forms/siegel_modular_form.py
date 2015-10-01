@@ -2,7 +2,7 @@
 #
 # Author: Nils Skoruppa <nils.skoruppa@gmail.com>
 
-from flask import render_template, url_for, request
+from flask import render_template, url_for, request, send_file
 # import siegel_core
 import input_parser
 import dimensions
@@ -15,6 +15,7 @@ from lmfdb.base import app
 from lmfdb.siegel_modular_forms import smf_page
 from lmfdb.siegel_modular_forms import smf_logger
 import json
+import StringIO
 
 DATA = 'http://data.countnumber.de/Siegel-Modular-Forms/'
 COLNS = None
@@ -60,7 +61,18 @@ def ModularForm_GSp4_Q_top_level( page = None):
     
     # parse the request
     if not page:
-        return prepare_main_page( bread)
+        name = request.args.get( 'download')
+        if name:
+            a,b = name.split('.')
+            f = StringIO.StringIO( sample.export( a, b))
+            print f.getvalue()
+            f.seek(0)
+            return send_file( f,
+                              attachment_filename = name + '.json',
+                              as_attachment = True)
+        
+        else:
+            return prepare_main_page( bread)
     if page in COLNS:
         return prepare_collection_page( COLNS[page], request.args, bread)
     if 'dimensions' == page:
