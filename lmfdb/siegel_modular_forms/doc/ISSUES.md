@@ -1,7 +1,7 @@
 ## Bugs
 
   * "Browse samples", "By degree of its field of definition", never gives any results.
-  DONE (We needed to add a "degree_of_field" to the data sets on mongodb)
+  DONE (We needed to add a "degree_of_field" to the data sets
   
   * On ModularForm/GSp/Q/Gamma0_3/ it says "Dimensions not implemented".
     However, on the old page, the total dimensions are implemented:
@@ -26,7 +26,8 @@
 
   * Reduction of polynomials should be implemented so that vector valued SMF are
     shown correctly (e.g. Error at ModularForm/GSp/Q/Sp4Z_2.14_C/)
-
+  DONE
+  
   * Complete the documentation:
 
     * How to add new collections
@@ -35,6 +36,9 @@
     
   * func_doc for dimensions_Gamma0_4_half is missing.
   DONE
+
+  * If a sampel belongs to several collections it should also show up in all those on the collection page.
+  
 
 
 ## Easy issues
