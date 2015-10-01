@@ -38,7 +38,7 @@
   DONE
 
   * If a sampel belongs to several collections it should also show up in all those on the collection page.
-  
+  DONE  
 
 
 ## Easy issues
