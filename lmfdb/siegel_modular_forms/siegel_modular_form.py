@@ -43,7 +43,6 @@ def rescan_collection():
     COLNS = colns
 
 
-
 @app.route('/ModularForm/GSp/Q')
 @app.route('/ModularForm/GSp/Q/')
 @app.route('/ModularForm/GSp/Q/<page>')
@@ -211,7 +210,21 @@ def prepare_sample_page( sam, args, bread):
             info['error'] = 'list of generators: %s' % str(e)
             info['ideal_l'] = null_ideal
 
+    # Hack to reduce polynomials and to handle non integral stuff
+    if sam.representation() == '2':
+        fun = info['ideal_l'].reduce
+        def apple(x):
+            try:
+                return fun(x)
+            except:
+                try:
+                    return x.parent()(dict( (i, fun( x[i])) for i in x.dict()))
+                except:
+                    return 'Reduction undefined'
+        info['ideal_l'].reduce = apple
+        
     bread.append( (sam.collection()[0] + '.' + sam.name(), '/' + sam.collection()[0] + '.' + sam.name()))
     return render_template( "ModularForm_GSp4_Q_sample.html",
                             title='Siegel modular forms sample ' + sam.collection()[0] + '.'+ sam.name(),
                             bread=bread, **info)
+

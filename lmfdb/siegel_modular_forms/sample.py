@@ -62,9 +62,9 @@ class Sample_class (sage.structure.sage_object.SageObject):
         self.__type = doc.get( 'type')
         self.__is_eigenform = doc.get( 'is_eigenform')
         self.__is_integral = doc.get( 'is_integral')
-
+        self.__representation = doc.get( 'representation')
         self.__id = doc.get( '_id')
- 
+
         # eigenvalues
         # evs = doc.get( 'eigenvalues')
         # loc_f = self.__field.gens_dict()
@@ -104,7 +104,10 @@ class Sample_class (sage.structure.sage_object.SageObject):
 
     def is_integral( self):
         return self.__is_integral
- 
+
+    def representation( self):
+        return self.__representation
+        
     def available_eigenvalues( self):
         evs = DB.find( { 'owner_id': self.__id,
                              'data_type': 'ev',
