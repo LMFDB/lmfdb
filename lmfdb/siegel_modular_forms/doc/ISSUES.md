@@ -65,7 +65,7 @@
 
     * Can we populate the Discriminant, Signature, Is Galois lines under "Field"
       (sometimes there are no such fields, as in ModularForm/GSp/Q/Kp.2_PY2_523/)?
-
+  DONE
     * Sometimes it gives the field equation as polynomial in x
       (ModularForm/GSp/Q/Sp4Z.28_Maass/), sometimes with a show/hide button
       (ModularForm/GSp/Q/Sp4Z.32_Ups/)
@@ -83,7 +83,8 @@
   * Say "... for each weight k..." and put in actual value of j in top line.
 
     * What is the meaning of the triples?
-
+  DONE
+  
     * What is the meaning of 3, 21 and 111?
   DONE
   
@@ -115,7 +116,7 @@
     
     * "Find a specific form by its LMFDB label": Typing in any of the suggestions
       leads to a cryptic javascript box, followed in the first two cases by an empty search result.
-
+    DONE
 
   * R: Every input I try on ModularForm/GSp/Q/Sp8Z/ ends in an error message.
   DONE

@@ -57,9 +57,15 @@
 {% set K='\mathbb{Q}(a)' %} 
 <table>
   <tr> <td>Field</td> <td>$\mathbb{Q}(a)$</td> </tr>
+  {% if sam.field().degree() <= 5 %}
+  <tr> <td>Discriminant</td> <td>${{ latex(sam.field().discriminant().factor()) }}$</td> </tr>
+  <tr> <td>Signature</td> <td>${{ sam.field().signature() }}$</td> </tr>
+  <tr> <td>Is Galois</td> <td>${{ sam.field().is_galois() }}$</td> </tr>
+  {% else %}
   <tr> <td>Discriminant</td> <td>{# ${{ latex(sam.field().discriminant().factor()) }}$ #}</td> </tr>
   <tr> <td>Signature</td> <td>{# {{ sam.field().signature() }} #}</td> </tr>
   <tr> <td>Is Galois</td> <td>{# {{ sam.field().is_galois() }} #}</td> </tr>
+  {% endif %}
   <tr>
     <td>Field equation</td>
     {% set pol = sam.field().defining_polynomial() %}
