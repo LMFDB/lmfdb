@@ -392,18 +392,21 @@ def by_ec_label(label):
                 return elliptic_curve_jump_error(label, {})
 
         # We permanently redirect to the lmfdb label
-        if number:
+        if number: # it's a curve
             data = db_ec().find_one({'label': label})
             if data is None:
                 return elliptic_curve_jump_error(label, {})
             ec_logger.debug(url_for(".by_ec_label", label=data['lmfdb_label']))
-            return redirect(url_for(".by_ec_label", label=data['lmfdb_label']), 301)
-        else:
+            #return redirect(url_for(".by_ec_label", label=data['lmfdb_label']), 301)
+            return render_curve_webpage_by_label(data['label'])
+        else: # it's an isogeny class
             data = db_ec().find_one({'iso': label})
             if data is None:
                 return elliptic_curve_jump_error(label, {})
             ec_logger.debug(url_for(".by_ec_label", label=data['lmfdb_label']))
-            return redirect(url_for(".by_ec_label", label=data['lmfdb_iso']), 301)
+            #return redirect(url_for(".by_ec_label", label=data['iso']), 301)
+            return render_isogeny_class(data['iso'])
+
     if number:
         return redirect(url_for(".by_triple_label", conductor=N, iso_label=iso, number=number))
     else:
