@@ -38,7 +38,8 @@
   * func_doc for dimensions_Gamma0_4_half is missing.
   DONE
 
-  * If a sampel belongs to several collections it should also show up in all those on the collection page.
+  * If a sampel belongs to several collections it should also show up
+    in all those on the collection page.
   DONE  
 
 
@@ -62,12 +63,14 @@
 
   * Concerning sample pages:
 
-  * Can we populate the Discriminant, Signature, Is Galois lines under "Field"
-    (sometimes there are no such fields, as in ModularForm/GSp/Q/Kp.2_PY2_523/)?
+    * Can we populate the Discriminant, Signature, Is Galois lines under "Field"
+      (sometimes there are no such fields, as in ModularForm/GSp/Q/Kp.2_PY2_523/)?
 
-  * Sometimes it gives the field equation as polynomial in x
-    (ModularForm/GSp/Q/Sp4Z.28_Maass/), sometimes with a show/hide button
-    (ModularForm/GSp/Q/Sp4Z.32_Ups/)
+    * Sometimes it gives the field equation as polynomial in x
+      (ModularForm/GSp/Q/Sp4Z.28_Maass/), sometimes with a show/hide button
+      (ModularForm/GSp/Q/Sp4Z.32_Ups/)
+  DONE (That is fine: polynomials with more than 100 bytesasstrings are hidden
+       not to cluutter the page.)
 
   * ModularForm/GSp/Q/Sp4Z_j/ and ModularForm/GSp/Q/Gamma1_2/ and ModularForm/GSp/Q/Gamma0_2/:
     Explain what the input should be. (If you follow the first two suggestions under "e.g.",
@@ -75,13 +78,15 @@
 
   * Better explain output in pages like this:
     ModularForm/GSp/Q/Gamma1_2/?dim_args=[range(20%2C31)%2C4]
+  DONE
 
-    * Say "... for each weight k..." and put in actual value of j in top line.
+  * Say "... for each weight k..." and put in actual value of j in top line.
 
     * What is the meaning of the triples?
 
     * What is the meaning of 3, 21 and 111?
-
+  DONE
+  
   * formatting weird for More \lambda(\ell)... should be above the list
     of available lambdas
 
@@ -119,10 +124,12 @@
     http://beta.lmfdb.org/ModularForm/GSp/Q/Sp4Z_2/ doesn't work
 
   * N: Page for M_k,j(Gamma_0(2)) might be the same as that for M_k(Gamma0(2))
-
+  DONE
+  
   * N: On the main page I want to type 6+20 2 into weights but it won't
     accept it.  I guess I'm supposed to use GL(n,C) representation?  But
     that won't let me either.
+  DONE
 
   * N: generators of ... cut off at
     http://beta.lmfdb.org/ModularForm/GSp/Q/Kp.2_PY2_587_plus/?dets=8

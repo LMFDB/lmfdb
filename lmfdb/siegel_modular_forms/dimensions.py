@@ -37,12 +37,67 @@ def fetch( dct):
 ####################################################################
 
 def dimension_Gamma_2( wt_range, j):
+    """
+    <ul>
+      <li>First entry of the respective triple: The full space.</li>
+      <li>Second entry: The codimension of the subspace of cusp forms.</li>
+      <li>Third entry: The subspace of cusp form.</li>
+    </ul>
+    <p> More precisely, The trilple $[a,b,c]$ in
+    <ul>
+      <li>
+        row <span class="emph">All</span>
+        and in in the $k$th column shows the dimension of
+        the full space $M_{k,j}(\Gamma(2))$,
+        of the non cusp forms, and of the cusp forms.</li>
+      <li>
+        in row <span class="emph">$p$</span>, where $p$ is a partition of $6$,
+        and in in the $k$th column shows the multiplicity of the
+        $\mathrm{Sp}(4,\Z)$-representation
+        associated to $p$ in the full $\mathrm{Sp}(4,\Z)$-module
+        $M_{k,j}(\Gamma(2))$,
+        in the submodule of non cusp forms and of cusp forms.
+        (See below for details.)
+      </li>
+    </ul>
+
+    """
     return _dimension_Gamma_2( wt_range, j, group = 'Gamma(2)')
 
 def dimension_Gamma1_2( wt_range, j):
+    """
+    <ul>
+      <li>First entry of the respective triple: The full space.</li>
+      <li>Second entry: The codimension of the subspace of cusp forms.</li>
+      <li>Third entry: The subspace of cusp form.</li>
+    </ul>
+    <p> More precisely, The trilple $[a,b,c]$ in
+    <ul>
+      <li>
+        row <span class="emph">All</span>
+        and in in the $k$th column shows the dimension of
+        the full space $M_{k,j}(\Gamma(2))$,
+        of the non cusp forms, and of the cusp forms.</li>
+      <li>
+        in row <span class="emph">$p$</span>, where $p$ is a partition of $3$,
+        and in in the $k$th column shows the multiplicity of the
+        $\Gamma_1(2)$-representation
+        associated to $p$ in the full $\Gamma_1(2)$-module $M_{k,j}(\Gamma(2))$,
+        in the submodule of non cusp forms and of cusp forms.
+        (See below for details.)
+      </li>
+    </ul>
+    """
     return _dimension_Gamma_2( wt_range, j, group = 'Gamma1(2)')
 
 def dimension_Gamma0_2( wt_range, j):
+    """
+    <ul>
+      <li><span class="emph">Total</span>: The full space.</li>
+      <li><span class="emph">Non cusp</span>: The codimension of the subspace of cusp forms.</li>
+      <li><span class="emph">Cusp</span>: The subspace of cusp form.</li>
+    </ul>
+    """    
     return _dimension_Gamma_2( wt_range, j, group = 'Gamma0(2)')
 
 def dimension_Sp4Z( wt_range):
