@@ -1,7 +1,8 @@
 # Issues discussed with David,Nathan and ralf on Oct 2, 2015
 
   * The collections should be listed on the home page in a reasonable order.
-
+  DONE
+  
   * The 'formexamples' in the serach part on the home page should be reviewed.
   DONE
   
@@ -26,6 +27,8 @@
   * The column headings for dimensions on M_{k,2}(Sp(4,Z)) are shifted.
 
   * The last link on M_{k,2}(Sp(4,Z))'s collection page is dead.
+  DONE
+
 
 # Issues fixed in the week Sept. 28 to Oct. 2, 2015 
 
@@ -143,11 +146,11 @@
   * R: "Search for samples":
 
     *  Make sure that every suggested input is valid and leads to a meaningful page that has data.
-    DONE
+  DONE
     
     * "Find a specific form by its LMFDB label": Typing in any of the suggestions
       leads to a cryptic javascript box, followed in the first two cases by an empty search result.
-    DONE
+  DONE
 
   * R: Every input I try on ModularForm/GSp/Q/Sp8Z/ ends in an error message.
   DONE

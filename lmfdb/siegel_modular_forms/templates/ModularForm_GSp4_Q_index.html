@@ -18,7 +18,6 @@
   By collection:
   {% for col in cols_with_forms|sort( attribute = 'order') %}
   <a href="{{ col.name() }}">
-    {{ col.order }}:
     ${{ col.latex_name() }}$ 
   </a>
   &nbsp;
