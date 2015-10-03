@@ -1,3 +1,34 @@
+# Issues discussed with David,Nathan and ralf on Oct 2, 2015
+
+  * The collections should be listed on the home page in a reasonable order.
+
+  * The 'formexamples' in the serach part on the home page should be reviewed.
+  DONE
+  
+  * There should be a 'testfile' for the SMF part.
+
+  * Reduction Ideal on the sample pages should be renamed from \mathfrak{l} to \mathfrak{a}.
+  DONE (But I took \mathfrak{L} since \mathfrak{a} waslike \alpha and 'a'.)
+
+  * There should be more knowls explaining notions like 'collection', 'Miyawaki lift',
+    'GL(n,C) representations' and the like.
+
+  * There should be a uniform standard for entering aguments in textboxes in the lmfdb.
+    Instead of '4+20' some people prefer '4..24'
+    (since typing and calculating is fun for the user :-).
+
+  * The label for the textboxes for inputting dimension ranges should be induvidualized
+    for the collections.
+
+  * The collections pages should show up with some default precalcuated
+    dimension tables.
+
+  * The column headings for dimensions on M_{k,2}(Sp(4,Z)) are shifted.
+
+  * The last link on M_{k,2}(Sp(4,Z))'s collection page is dead.
+
+# Issues fixed in the week Sept. 28 to Oct. 2, 2015 
+
 ## Bugs
 
   * "Browse samples", "By degree of its field of definition", never gives any results.
@@ -122,7 +153,7 @@
   DONE
   
   * N: Link to http://beta.lmfdb.org/ModularForm/GSp/Q/Sp4Z_2/ on
-    http://beta.lmfdb.org/ModularForm/GSp/Q/Sp4Z_2/ doesn't work
+    http://beta.lmfdb.org/ModularForm/GSp/Q/Sp4Z_2/ doesn't work: Limk below
 
   * N: Page for M_k,j(Gamma_0(2)) might be the same as that for M_k(Gamma0(2))
   DONE

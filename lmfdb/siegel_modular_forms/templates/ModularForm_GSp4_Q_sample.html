@@ -102,7 +102,7 @@
 
 
 {% set red = ideal_l.reduce %}
-{% set mod_l = '' if 0 == ideal_l else ' \\bmod \\mathfrak{l}' %}
+{% set mod_l = '' if 0 == ideal_l else ' \\bmod \\mathfrak{L}' %}
 {% set evs = sam.available_eigenvalues() %}
 {% if evs|count > 0 %}
 <h2>Eigenvalues $\lambda(l)$ of $T(l)$</h2>
@@ -157,7 +157,7 @@
 <h3>Find more
 {% if evs|count > 0 %}$\lambda(l)${% endif %}
 {% if evs|count > 0 and fcs|count > 0%} and {% endif %}
-{% if fcs|count > 0 %}$c(F)${% endif %} reduced modulo an ideal $\mathfrak{l}$ of ${{ K }}$
+{% if fcs|count > 0 %}$c(F)${% endif %} reduced modulo an ideal $\mathfrak{L}$ of ${{ K }}$
 </h3>
 <table>
   {% if evs|count > 0 %}
@@ -201,7 +201,7 @@
 	    return true;
 	}
 	catch(err) {
-	    txt ="Check the field for the reducing ideal $\mathfrak{l}$.\n\nThe generators must be expressions which define rational polynomials in $a$ and which must not contain spaces.";
+	    txt ="Check the field for the reducing ideal $\mathfrak{L}$.\n\nThe generators must be expressions which define rational polynomials in $a$ and which must not contain spaces.";
 	    alert(txt);
 	    return false;
 	}
@@ -230,7 +230,7 @@
     {% endif %}
     <tr>
       <td>
-	<input id="modulus_field" name="modulus" value="{{ ideal_l.gens()|join('#')|replace(' ','')|replace('#',' ') }}" size="30" example="3 a+5">generators of $\mathfrak{l}$</input>
+	<input id="modulus_field" name="modulus" value="{{ ideal_l.gens()|join('#')|replace(' ','')|replace('#',' ') }}" size="30" example="3 a+5">generators of $\mathfrak{L}$</input>
 	<br />
 	<span class="formexample">e.g. 17 or 3 a^2+1</span>
       </td>
@@ -242,7 +242,9 @@
 </form>
 {% endif %}
 
-{{ ideal_l }}
+<p>
+  Here $\mathfrak{L}$ equals {{ ideal_l }}.
+</p>
 
 
 {% else %}
