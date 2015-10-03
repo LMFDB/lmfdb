@@ -14,7 +14,7 @@
     {% for header in table_headers %}
     <tr class = "{{ loop.cycle( 'odd', 'even') }}">
       <th align = "left">{{ header }}</th>
-      {% for k in dimensions %}
+      {% for k in dimensions|sort() %}
       <td>{{ dimensions[k][header] }}</td>
       {% endfor %}
     </tr>
