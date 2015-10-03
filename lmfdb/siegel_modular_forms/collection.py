@@ -77,6 +77,9 @@ class Collection (sage.structure.sage_object.SageObject):
             self.__dimension_desc = None
             self.__dimension_glossary = None
         self.__members = None
+        # a number for sorting the collections on the webpages iike
+        # {% for col in COLN|sort( attribute = 'order') %}
+        self.order = doc.get( 'order')
         
         
     def name( self):
