@@ -50,7 +50,7 @@ def rescan_collection():
 @app.route('/ModularForm/GSp/Q/<page>/')
 def ModularForm_GSp4_Q_top_level( page = None):
 
-    if not COLNS or request.args.get('empty_cache'):
+    if request.args.get('empty_cache') or not COLNS:
         # we trigger a (re)scan for available collections
         rescan_collection()
 
@@ -125,9 +125,12 @@ def prepare_collection_page( col, args, bread):
                         for k in Set( f.weight() for f in mbs)],
              }
     dim_args = args.get( 'dim_args')
+    if not dim_args:
+        dim_args = col.dim_args_default
+    print dim_args
     if dim_args:
         try:
-            dim_args = eval( args.get( 'dim_args'))
+            dim_args = eval( dim_args)
             header, table = col.dimension( *dim_args)
             info.update({ 'col': col,
                           'dimensions': table,

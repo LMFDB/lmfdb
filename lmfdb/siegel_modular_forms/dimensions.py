@@ -292,8 +292,8 @@ def __dimension_Sp6Z(wt):
         return (0, 0, 0, 0)
     R = PowerSeriesRing(IntegerRing(), default_prec=wt + 1, names=('x',))
     (x,) = R._first_ngens(1)
-    R = PowerSeriesRing(IntegerRing(), default_prec=2 * wt - 1, names=('y',))
-    (y,) = R._first_ngens(1)
+    S = PowerSeriesRing(IntegerRing(), default_prec=max(2 * wt - 1,1), names=('y',))
+    (y,) = S._first_ngens(1)
     H_all = 1 / ((1 - x ** 4) * (1 - x ** 12) ** 2 * (1 - x ** 14) * (1 - x ** 18) *
                 (1 - x ** 20) * (1 - x ** 30)) * (
                     1 + x ** 6 + x ** 10 + x ** 12 + 3 * x ** 16 + 2 * x ** 18 + 2 * x ** 20 +
@@ -304,6 +304,7 @@ def __dimension_Sp6Z(wt):
                     16 * x ** 70 + 15 * x ** 72 + 14 * x ** 74 + 12 * x ** 76 + 10 * x ** 78 + 10 * x ** 80 +
                     9 * x ** 82 + 6 * x ** 84 + 7 * x ** 86 + 5 * x ** 88 + 4 * x ** 90 + 5 * x ** 92 +
                     2 * x ** 94 + 2 * x ** 96 + 3 * x ** 98 + x ** 102 + x ** 104 + x ** 108 + x ** 114)
+
     H_noncusp = 1 / (1 - x ** 4) / (1 - x ** 6) / (1 - x ** 10) / (1 - x ** 12)
     H_E = y ** 12 / (1 - y ** 4) / (1 - y ** 6)
     H_Miyawaki1 = H_E[wt] * H_E[2 * wt - 4]
