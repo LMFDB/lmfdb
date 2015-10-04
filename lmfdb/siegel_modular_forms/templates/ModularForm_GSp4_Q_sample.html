@@ -38,12 +38,19 @@
 </p>
 
 <h2>Basic properties</h2>
+{% macro nice( x) %}
+{% if x == None %}
+  unkonwn
+{% else %}
+  {{ x }}
+{% endif %}
+{% endmacro %}
 <table>
-    <tr> <td>Type</td> <td>{{ sam.type()|default('unknown') }}</td> </tr>
-  <tr> <td>Weight</td> <td>${{ sam.weight()|default('unknown') }}$</td> </tr>
-  <tr> <td>Is Hecke eigenform</td> <td>{{ sam.is_eigenform()|default('unknown') }}</td> </tr>
-  <tr> <td>Has integral Fourier coefficients</td> <td>{{ sam.is_integral()|default('unknown') }}</td> </tr>
-  <tr> <td>Degree of field</td> <td>${{ sam.field().degree()|default('unknown') }}$</td> </tr>
+  <tr> <td>Type</td> <td>{{ nice( sam.type()) }}</td> </tr>
+  <tr> <td>Weight</td> <td>${{ nice(sam.weight()) }}$</td> </tr>
+  <tr> <td>Is Hecke eigenform</td> <td>{{ nice(sam.is_eigenform()) }}</td> </tr>
+  <tr> <td>Has integral Fourier coefficients</td> <td>{{ nice(sam.is_integral()) }}</td> </tr>
+  <tr> <td>Degree of field</td> <td>${{ nice(sam.field().degree()) }}$</td> </tr>
 </table>
 
 {% if sam.field() %}

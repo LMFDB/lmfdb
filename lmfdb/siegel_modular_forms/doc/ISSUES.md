@@ -24,10 +24,15 @@
   * The collections pages should show up with some default precalcuated
     dimension tables.
 
-  * The column headings for dimensions on M_{k,2}(Sp(4,Z)) are shifted.
-
+  * The column headings for dimensions on M_{k,2}(Sp(4,Z)) are somehow wrong.
+  NONE
+  
   * The last link on M_{k,2}(Sp(4,Z))'s collection page is dead.
   DONE
+
+  * 'GL(n,C) representation' select box does not work for input '0'.
+  DONE
+
 
 
 # Issues fixed in the week Sept. 28 to Oct. 2, 2015 
