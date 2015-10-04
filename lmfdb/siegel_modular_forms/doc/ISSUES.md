@@ -23,7 +23,8 @@
 
   * The collections pages should show up with some default precalcuated
     dimension tables.
-
+  DONE
+  
   * The column headings for dimensions on M_{k,2}(Sp(4,Z)) are somehow wrong.
   NONE
   
@@ -71,9 +72,10 @@
   * Complete the documentation:
 
     * How to add new collections
-
+  DONE
+  
     * Explanation of the code parts: "what happens next after queries?"
-    
+      
   * func_doc for dimensions_Gamma0_4_half is missing.
   DONE
 

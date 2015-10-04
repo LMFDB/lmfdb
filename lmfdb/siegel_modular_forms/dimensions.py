@@ -577,3 +577,40 @@ def _dimension_Gamma0_3(wt):
     (x,) = R._first_ngens(1)
     H_all = (1 + 2 * x ** 4 + x ** 6 + x ** 15 * (1 + 2 * x ** 2 + x ** 6)) / (1 - x ** 2) / (1 - x ** 4) / (1 - x ** 6) ** 2
     return ( H_all[wt],)
+
+
+
+
+####################################################################
+## Dimension formulas for DUMMY_0
+####################################################################
+
+def dimension_Dummy_0( wt_range):
+    """
+    <ul>
+      <li><span class="emph">Total</span>: The subspace of cusp forms.</li>
+      <li><span class="emph">Yoda lifts</span>: The subspace of Master Yoda lifts.</li>
+      <li><span class="emph">Hinkelstein series</span>: The subspace of Hinkelstein series.</li>
+    </ul>
+    """
+    headers = ['Total', 'Yoda lifts', 'Hinkelstein series']
+    dct = dict()
+    for k in wt_range:
+        dims =  _dimension_Dummy_0( k)
+        dct[k] = dict( (headers[j],dims[j]) for j in range(4))
+    return headers, dct
+
+
+def _dimension_Dummy_0(wt):
+    """
+    Return the dimensions of subspaces of Siegel modular forms in the collection Dummy_0.
+
+    OUTPUT
+        ('Total', 'Yoda lifts', 'Hinkelstein series')
+    """
+    # Here goes your code ike e.g.:
+    if wt > 37:
+        raise NotImplementedError( 'Dimensions of $Dummy_0$ for \(k > 37\) not implemented')
+    a,b,c = 1728, 28, 37
+
+    return (a,b,c)
