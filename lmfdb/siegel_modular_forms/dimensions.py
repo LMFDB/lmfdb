@@ -41,7 +41,7 @@ def dimension_Gamma_2( wt_range, j):
     <ul>
       <li>First entry of the respective triple: The full space.</li>
       <li>Second entry: The codimension of the subspace of cusp forms.</li>
-      <li>Third entry: The subspace of cusp form.</li>
+      <li>Third entry: The subspace of cusp forms.</li>
     </ul>
     <p> More precisely, The trilple $[a,b,c]$ in
     <ul>
@@ -69,7 +69,7 @@ def dimension_Gamma1_2( wt_range, j):
     <ul>
       <li>First entry of the respective triple: The full space.</li>
       <li>Second entry: The codimension of the subspace of cusp forms.</li>
-      <li>Third entry: The subspace of cusp form.</li>
+      <li>Third entry: The subspace of cusp forms.</li>
     </ul>
     <p> More precisely, The trilple $[a,b,c]$ in
     <ul>
@@ -95,7 +95,7 @@ def dimension_Gamma0_2( wt_range, j):
     <ul>
       <li><span class="emph">Total</span>: The full space.</li>
       <li><span class="emph">Non cusp</span>: The codimension of the subspace of cusp forms.</li>
-      <li><span class="emph">Cusp</span>: The subspace of cusp form.</li>
+      <li><span class="emph">Cusp</span>: The subspace of cusp forms.</li>
     </ul>
     """    
     return _dimension_Gamma_2( wt_range, j, group = 'Gamma0(2)')
@@ -117,7 +117,7 @@ def dimension_Sp4Z_2( wt_range):
     <ul>
       <li><span class="emph">Total</span>: The full space.</li>
       <li><span class="emph">Non cusp</span>: The subspace of non cusp forms.</li>
-      <li><span class="emph">Cusp</span>: The subspace of cusp form.</li>
+      <li><span class="emph">Cusp</span>: The subspace of cusp forms.</li>
     </ul>
     """
     return _dimension_Gamma_2( wt_range, 2, group = 'Sp4(Z)')
@@ -127,7 +127,7 @@ def dimension_Sp4Z_j( wt_range, j):
     <ul>
       <li><span class="emph">Total</span>: The full space.</li>
       <li><span class="emph">Non cusp</span>: The subspace of non cusp forms.</li>
-      <li><span class="emph">Cusp</span>: The subspace of cusp form.</li>
+      <li><span class="emph">Cusp</span>: The subspace of cusp forms.</li>
     </ul>
     """    
     return _dimension_Gamma_2( wt_range, j, group = 'Sp4(Z)')

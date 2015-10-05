@@ -10,7 +10,7 @@
       <td>
 	<label>Collection</label>
 	<select id="col_select">
-	  {% for c in cols_comp_dims %}
+	  {% for c in cols_comp_dims|sort( attribute = 'order') %}
 	  <option value='{{ c.dimension_desc()|tojson|safe }}'>${{ c.latex_name() }}$</option>
 	  {% endfor %}
 	</select>

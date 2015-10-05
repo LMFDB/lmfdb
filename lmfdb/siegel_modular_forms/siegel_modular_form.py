@@ -135,6 +135,7 @@ def prepare_collection_page( col, args, bread):
             info.update({ 'col': col,
                           'dimensions': table,
                           'table_headers': header,
+                          'dim_args': dim_args
                           })
         except Exception as e:
             info.update( {'error': str(e)})            

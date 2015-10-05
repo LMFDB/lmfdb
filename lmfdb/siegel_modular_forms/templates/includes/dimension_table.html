@@ -1,5 +1,9 @@
 <p>
-  The table shows, for each weight,
+  The table shows, for each
+  $k$ in the table header
+  {% if dim_args[1] %}
+  and for $j={{ dim_args[1] }}$
+  {% endif %}
   the dimensions of the following subspaces of ${{ col.latex_name() }}$:
   {{ col.dimension_glossary()|safe }}
   <table>
