@@ -154,7 +154,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
     """
 
     _key = ['level', 'weight', 'character']
-    _file_key = ['galois_orbit_name']
+    _file_key = ['space_label']
     _collection_name = 'webmodformspace'
 
     def __init__(self, level=1, weight=12, character=1,cuspidal=True, prec=10, bitprec=53, update_from_db=True,update_hecke_orbits=True):
@@ -179,6 +179,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
             WebDict('_character_galois_orbit_embeddings', default_value={}),
             WebCharProperty('character_orbit_rep', modulus=level, save_to_fs=True),
             WebCharProperty('character_used_in_computation', modulus=level, save_to_fs=True),
+            WebStr('space_label', default_value=space_label(level, weight, character), save_to_fs=True),
             WebStr('galois_orbit_name', default_value=space_label(level, weight, character), save_to_fs=True),
             WebInt('dimension'),
             WebInt('dimension_cusp_forms'),
@@ -197,7 +198,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
         emf_logger.critical("Have set properties of space 1 !!")
         super(WebModFormSpace, self).__init__(
             params=['level', 'weight', 'character'],
-            dbkey='galois_orbit_name',
+            dbkey='space_label',
             collection_name='webmodformspace',
             update_from_db=update_from_db)
         emf_logger.critical("Have set properties of space 2 !!")
@@ -234,7 +235,7 @@ class WebModFormSpaceProperty(WebProperty):
                                                       value = value)
 
     def to_fs(self):
-        return self.value().galois_orbit_name
+        return self.value().space_label
 
     def to_db(self):
         return self.to_fs()
