@@ -38,7 +38,6 @@ def db_ec():
 #########################
 
 LIST_RE = re.compile(r'^(\d+|(\d+-(\d+)?))(,(\d+|(\d+-(\d+)?)))*$')
-TORS_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
 QQ_RE = re.compile(r'^-?\d+(/\d+)?$')
 LIST_POSINT_RE = re.compile(r'^(\d+)(,\d+)*$')
 
@@ -64,16 +63,30 @@ def parse_torsion_structure(L):
     '[]' --> []
     '[n]' --> [str(n)]
     'n' --> [str(n)]
-    '[m,n]' --> [str(m),str(n)]
-    'm,n' --> [str(m),str(n)]
+    '[m,n]' or '[m n]' --> [str(m),str(n)]
+    'm,n' or 'm n' --> [str(m),str(n)]
     """
-    L1 = clean_input(L) # strip whitespace
-    for L2 in [L1,'['+L1+']']:
-        if TORS_RE.match(L2):
-            L3 = parse_list(L2)
-            n = len(L3)
-            if n < 3 and all(x>1 for x in L3) and all(L3[i]%L3[i-1]==0 for i in range(1,n)):
-                return [str(a) for a in L3]
+    # strip <whitespace> or <whitespace>[<whitespace> from the beginning:
+    L1 = re.sub(r'^\s*\[?\s*', '', str(L))
+    # strip <whitespace> or <whitespace>]<whitespace> from the beginning:
+    L1 = re.sub(r'\s*]?\s*$', '', L1)
+    # catch case where there is nothing left:
+    if not L1:
+        return []
+    # This matches a string of 1 or more digits at the start,
+    # optionally followed by nontrivial <ws> or <ws>,<ws> followed by
+    # 1 or more digits at the end:
+    TORS_RE = re.compile(r'^\d+((\s+|\s*,\s*)\d+)?$')
+    if TORS_RE.match(L1):
+        if ',' in L1:
+            # strip interior <ws> and use ',' as delimiter:
+            res = [int(a) for a in L1.replace(' ','').split(',')]
+        else:
+            # use whitespace as delimiter:
+            res = [int(a) for a in L1.split()]
+        n = len(res)
+        if (n==1 and res[0]>0) or (n==2 and res[0]>0 and res[1]>0 and res[1]%res[0]==0):
+            return res
     return 'Error parsing input %s for the torsion structure.  It needs to be a list of 0, 1 or 2 integers, optionally in square brackets, such as [6], 6, [2,2], or [2,4].  Moreover, each integer should be bigger than 1, and each divides the next.' % L
 
 
@@ -265,7 +278,9 @@ def elliptic_curve_search(**args):
         if 'Error' in res:
             info['err'] = res
             return search_input_error(info, bread)
-        query['torsion_structure'] = res
+        #update info for repeat searches
+        info['torsion_structure'] = str(res).replace(' ','')
+        query['torsion_structure'] = [str(r) for r in res]
 
     if info.get('surj_primes'):
         info['surj_primes'] = clean_input(info['surj_primes'])
