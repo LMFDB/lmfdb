@@ -43,7 +43,7 @@ def dimension_Gamma_2( wt_range, j):
       <li>Second entry: The codimension of the subspace of cusp forms.</li>
       <li>Third entry: The subspace of cusp forms.</li>
     </ul>
-    <p> More precisely, The trilple $[a,b,c]$ in
+    <p> More precisely, The triple $[a,b,c]$ in
     <ul>
       <li>
         row <span class="emph">All</span>
@@ -187,7 +187,19 @@ def _dimension_Gamma_2( wt_range, j, group = 'Gamma(2)'):
             dct[k]['All'] = [0,0,0]
         partitions.insert( 0,'All')
         return partitions, dct
-        
+
+    if 'Sp4(Z)' == group and 2 == j and wt_range[0] < 4:
+        wt_range1 = [ k for k in wt_range if k < 4]
+        wt_range2 = [ k for k in wt_range if k >= 4]
+        print wt_range1, wt_range2
+        if wt_range2 != []: 
+            headers, dct = _dimension_Gamma_2( wt_range2, j, group)
+        else:
+            headers, dct = ['Total', 'Non cusp', 'Cusp'], {}
+        for k in wt_range1:
+            dct[k] = dict( [(h,0) for h in headers])
+        return headers, dct
+    
     if j>=2 and  wt_range[0] < 4:
         raise NotImplementedError( 'Dimensions of \(M_{k,j}\) for \(k<4\) and even \(j\ge 2\) not implemented')
 
