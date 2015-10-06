@@ -29,7 +29,7 @@ Fix complex characters. I.e. embedddings and galois conjugates in a consistent w
 
 """
 from flask import url_for
-from sage.all import dumps,loads, euler_phi,gcd
+from sage.all import dumps,loads, euler_phi,gcd,trivial_character
 from lmfdb.modular_forms.elliptic_modular_forms import emf_logger,emf_version,use_cache
 from sage.rings.number_field.number_field_base import NumberField as NumberField_class
 from sage.all import copy
@@ -53,7 +53,6 @@ class WebChar(WebObject, CachedRepresentation):
     WebDirichletCharcter once this is ok.
     
     """
-
     _key = ['modulus', 'number']
     _file_key = ['modulus', 'number']
     _collection_name = 'webchar'
@@ -76,7 +75,7 @@ class WebChar(WebObject, CachedRepresentation):
             WebInt('order'),
             WebStr('latex_name'),
             WebStr('label',value="{0}.{1}".format(modulus,number)),
-            WebNoStoreObject('sage_character', DirichletCharacter),
+            WebNoStoreObject('sage_character', type(trivial_character(1))),
             WebDict('_values_algebraic'),
             WebDict('_values_float'),
             WebDict('_embeddings'),            
