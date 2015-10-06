@@ -52,20 +52,25 @@ def newform_label(level, weight, character, label, embedding=None, make_cache_la
 def parse_newform_label(label):
     r"""
     Essentially the inverse of the above. Given "N.k.ix" it returns N,k,i,x
+    or given "N.k.ix.d" return N,k,i,x,d
     """
     if not isinstance(label,basestring):
         raise ValueError,"Need label in string format"
     l = label.split(".")
+    if len(l) not in [3,4]:
+        raise ValueError,"{0} is not a valid newform label!".format(label)
+    if not l[0].isdigit() or not l[1].isdigit():
+        raise ValueError,"{0} is not a valid newform label!".format(label)
     level = int(l[0]); weight = int(l[1])
-    character = int("".join([x for x in l[2] if x.isdigit()]))
+    character = "".join([x for x in l[2] if x.isdigit()])
     orbit_label = "".join([x for x in l[2] if x.isalpha()])
-    if orbit_label == "":
+    if orbit_label == "" or not character.isdigit():
         raise ValueError,"{0} is not a valid newform label!".format(label)
     if len(l)==4:
         emb = int(l[3])
-        return level,weight,character,orbit_label,emb
+        return level,weight,int(character),orbit_label,emb
     else:
-        return level,weight,character,orbit_label
+        return level,weight,int(character),orbit_label
         
 def space_label(level, weight, character, make_cache_label=False):
     l = ''
