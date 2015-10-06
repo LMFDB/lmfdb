@@ -45,7 +45,7 @@ except:
     emf_logger.critical("Could not import dirichlet_conrey!")
 
 import logging
-emf_logger.setLevel(logging.DEBUG)
+#emf_logger.setLevel(logging.DEBUG)
     
 class WebChar(WebObject, CachedRepresentation):
     r"""
