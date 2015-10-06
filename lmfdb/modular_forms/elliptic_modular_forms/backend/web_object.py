@@ -474,19 +474,20 @@ class WebObject(object):
         """
         coll = self._collection
         key = self.key_dict()
-        ct = coll.find(key).count()
-        if ct > 0:
-            if ct == 1 or all:
-                coll.remove(key)
-        if ct <= 1 or all:
-            fs = self._files
-            file_key = self.file_key_dict()
-            coll = self._collection
-            if fs.exists(file_key):
-                fid = coll.find_one(file_key)['_id']
-                fs.delete(fid)
-            else:
-                raise IndexError("Record does not exist")
+        if all:
+            r = coll.delete_many(key) # delete meta records
+        else:
+            r = coll.delete_one(key) # delete meta records
+        if r.deleted_count == 0:
+            emf_logger.debug("There was no meta record present matching {0}".format(key))
+        fs = self._files
+        file_key = self.file_key_dict()
+        r = self._file_collection.find_one(file_key)
+        if r is None:
+            raise IndexError("Record does not exist")
+        fid = r['_id']
+        fs.delete(fid)
+                
 
     def update_from_db(self, ignore_non_existent = True, \
                        add_to_fs_query=None, add_to_db_query=None):
