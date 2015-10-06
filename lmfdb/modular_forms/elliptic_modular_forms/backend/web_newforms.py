@@ -288,6 +288,10 @@ class WebNewForm(WebObject, CachedRepresentation):
         emf_logger.critical("After init properties 3")
 
     def __repr__(self):
+        if self.dimension == 0:
+            s = "Zero "
+        else:
+            s = ""
         s = "WebNewform in S_{0}({1},chi_{2}) with label {3}".format(self.weight,self.level,self.character.number,self.label)
         return s
 
