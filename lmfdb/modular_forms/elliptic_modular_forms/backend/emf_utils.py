@@ -58,14 +58,14 @@ def parse_newform_label(label):
     l = label.split(".")
     level = int(l[0]); weight = int(l[1])
     character = int("".join([x for x in l[2] if x.isdigit()]))
-    label = "".join([x for x in l[2] if x.isalpha()])
-    if label == "":
-        raise ValueError,"{0} is not a valid newform label!"
+    orbit_label = "".join([x for x in l[2] if x.isalpha()])
+    if orbit_label == "":
+        raise ValueError,"{0} is not a valid newform label!".format(label)
     if len(l)==4:
         emb = int(l[3])
-        return level,weight,character,label,emb
+        return level,weight,character,orbit_label,emb
     else:
-        return level,weight,character,label
+        return level,weight,character,orbit_label
         
 def space_label(level, weight, character, make_cache_label=False):
     l = ''
