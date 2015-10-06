@@ -51,7 +51,7 @@ def newform_label(level, weight, character, label, embedding=None, make_cache_la
 
 def parse_newform_label(label):
     r"""
-    Essentially the inverse of the above
+    Essentially the inverse of the above. Given "N.k.ix" it returns N,k,i,x
     """
     if not isinstance(label,basestring):
         raise ValueError,"Need label in string format"
@@ -59,6 +59,8 @@ def parse_newform_label(label):
     level = int(l[0]); weight = int(l[1])
     character = int("".join([x for x in l[2] if x.isdigit()]))
     label = "".join([x for x in l[2] if x.isalpha()])
+    if label == "":
+        raise ValueError,"{0} is not a valid newform label!"
     if len(l)==4:
         emb = int(l[3])
         return level,weight,character,label,emb
