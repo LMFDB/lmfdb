@@ -38,7 +38,6 @@ def db_ec():
 #########################
 
 LIST_RE = re.compile(r'^(\d+|(\d+-(\d+)?))(,(\d+|(\d+-(\d+)?)))*$')
-TORS_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
 QQ_RE = re.compile(r'^-?\d+(/\d+)?$')
 LIST_POSINT_RE = re.compile(r'^(\d+)(,\d+)*$')
 
@@ -57,6 +56,39 @@ def cmp_label(lab1, lab2):
     a, b, c = parse_cremona_label(lab2)
     id2 = int(a), class_to_int(b), int(c)
     return cmp(id1, id2)
+
+def parse_torsion_structure(L):
+    r"""
+    Parse a string entered into torsion structure search box
+    '[]' --> []
+    '[n]' --> [str(n)]
+    'n' --> [str(n)]
+    '[m,n]' or '[m n]' --> [str(m),str(n)]
+    'm,n' or 'm n' --> [str(m),str(n)]
+    """
+    # strip <whitespace> or <whitespace>[<whitespace> from the beginning:
+    L1 = re.sub(r'^\s*\[?\s*', '', str(L))
+    # strip <whitespace> or <whitespace>]<whitespace> from the beginning:
+    L1 = re.sub(r'\s*]?\s*$', '', L1)
+    # catch case where there is nothing left:
+    if not L1:
+        return []
+    # This matches a string of 1 or more digits at the start,
+    # optionally followed by nontrivial <ws> or <ws>,<ws> followed by
+    # 1 or more digits at the end:
+    TORS_RE = re.compile(r'^\d+((\s+|\s*,\s*)\d+)?$')
+    if TORS_RE.match(L1):
+        if ',' in L1:
+            # strip interior <ws> and use ',' as delimiter:
+            res = [int(a) for a in L1.replace(' ','').split(',')]
+        else:
+            # use whitespace as delimiter:
+            res = [int(a) for a in L1.split()]
+        n = len(res)
+        if (n==1 and res[0]>0) or (n==2 and res[0]>0 and res[1]>0 and res[1]%res[0]==0):
+            return res
+    return 'Error parsing input %s for the torsion structure.  It needs to be a list of 0, 1 or 2 integers, optionally in square brackets, such as [6], 6, [2,2], or [2,4].  Moreover, each integer should be bigger than 1, and each divides the next.' % L
+
 
 #########################
 #    Top level
@@ -242,11 +274,13 @@ def elliptic_curve_search(**args):
         query['number'] = 1
 
     if 'torsion_structure' in info and info['torsion_structure']:
-        info['torsion_structure'] = clean_input(info['torsion_structure'])
-        if not TORS_RE.match(info['torsion_structure']):
-            info['err'] = 'Error parsing input for the torsion structure.  It needs to be one or more integers in square brackets, such as [6], [2,2], or [2,4].  Moreover, each integer should be bigger than 1, and each divides the next.'
+        res = parse_torsion_structure(info['torsion_structure'])
+        if 'Error' in res:
+            info['err'] = res
             return search_input_error(info, bread)
-        query['torsion_structure'] = [str(a) for a in parse_list(info['torsion_structure'])]
+        #update info for repeat searches
+        info['torsion_structure'] = str(res).replace(' ','')
+        query['torsion_structure'] = [str(r) for r in res]
 
     if info.get('surj_primes'):
         info['surj_primes'] = clean_input(info['surj_primes'])
@@ -512,9 +546,7 @@ def padic_data():
     label = request.args['label']
     p = int(request.args['p'])
     info['p'] = p
-    print "label = %s; p = %s" % (label,p)
     N, iso, number = split_lmfdb_label(label)
-    # print N, iso, number
     if request.args['rank'] == '0':
         info['reg'] = 1
     elif number == '1':
