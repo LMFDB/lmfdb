@@ -2,8 +2,8 @@
 #
 # Author: Nils Skoruppa <nils.skoruppa@gmail.com>
 
-from flask import render_template, url_for, request
-import siegel_core
+from flask import render_template, url_for, request, send_file
+# import siegel_core
 import input_parser
 import dimensions
 import pickle
@@ -15,6 +15,7 @@ from lmfdb.base import app
 from lmfdb.siegel_modular_forms import smf_page
 from lmfdb.siegel_modular_forms import smf_logger
 import json
+import StringIO
 
 DATA = 'http://data.countnumber.de/Siegel-Modular-Forms/'
 COLNS = None
@@ -32,7 +33,9 @@ def rescan_collection():
     for a,b,files in os.walk( static):
         for f in files:
             try:
-                c = f.rstrip( '.json')
+                if f.endswith('.json'):
+                    c = f[:-5]
+                    print c
                 colns[c] = Collection( c, location = static)
             except Exception as e:
                 print str(e)
@@ -41,14 +44,13 @@ def rescan_collection():
     COLNS = colns
 
 
-
 @app.route('/ModularForm/GSp/Q')
 @app.route('/ModularForm/GSp/Q/')
 @app.route('/ModularForm/GSp/Q/<page>')
 @app.route('/ModularForm/GSp/Q/<page>/')
 def ModularForm_GSp4_Q_top_level( page = None):
 
-    if not COLNS or request.args.get('empty_cache'):
+    if request.args.get('empty_cache') or not COLNS:
         # we trigger a (re)scan for available collections
         rescan_collection()
 
@@ -59,7 +61,18 @@ def ModularForm_GSp4_Q_top_level( page = None):
     
     # parse the request
     if not page:
-        return prepare_main_page( bread)
+        name = request.args.get( 'download')
+        if name:
+            a,b = name.split('.')
+            f = StringIO.StringIO( sample.export( a, b))
+            print f.getvalue()
+            f.seek(0)
+            return send_file( f,
+                              attachment_filename = name + '.json',
+                              as_attachment = True)
+        
+        else:
+            return prepare_main_page( bread)
     if page in COLNS:
         return prepare_collection_page( COLNS[page], request.args, bread)
     if 'dimensions' == page:
@@ -112,13 +125,17 @@ def prepare_collection_page( col, args, bread):
                         for k in Set( f.weight() for f in mbs)],
              }
     dim_args = args.get( 'dim_args')
+    if not dim_args:
+        dim_args = col.dim_args_default
+    print dim_args
     if dim_args:
         try:
-            dim_args = eval( args.get( 'dim_args'))
+            dim_args = eval( dim_args)
             header, table = col.dimension( *dim_args)
             info.update({ 'col': col,
                           'dimensions': table,
                           'table_headers': header,
+                          'dim_args': dim_args
                           })
         except Exception as e:
             info.update( {'error': str(e)})            
@@ -209,7 +226,21 @@ def prepare_sample_page( sam, args, bread):
             info['error'] = 'list of generators: %s' % str(e)
             info['ideal_l'] = null_ideal
 
+    # Hack to reduce polynomials and to handle non integral stuff
+    if sam.representation() == '2':
+        fun = info['ideal_l'].reduce
+        def apple(x):
+            try:
+                return fun(x)
+            except:
+                try:
+                    return x.parent()(dict( (i, fun( x[i])) for i in x.dict()))
+                except:
+                    return 'Reduction undefined'
+        info['ideal_l'].reduce = apple
+        
     bread.append( (sam.collection()[0] + '.' + sam.name(), '/' + sam.collection()[0] + '.' + sam.name()))
     return render_template( "ModularForm_GSp4_Q_sample.html",
                             title='Siegel modular forms sample ' + sam.collection()[0] + '.'+ sam.name(),
                             bread=bread, **info)
+

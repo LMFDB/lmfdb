@@ -16,9 +16,9 @@
 </h2>
 <p>
   By collection:
-  {% for col in cols_with_forms %}
+  {% for col in cols_with_forms|sort( attribute = 'order') %}
   <a href="{{ col.name() }}">
-    ${{ col.latex_name() }}$
+    ${{ col.latex_name() }}$ 
   </a>
   &nbsp;
   {% endfor %}
@@ -47,7 +47,7 @@
 
 <h2>Browse collections</h2>
 <p>
-  {% for col in cols %}
+  {% for col in cols|sort( attribute = 'order') %}
   <a href="{{ col.name() }}">
     ${{ col.latex_name() }}$
   </a>
