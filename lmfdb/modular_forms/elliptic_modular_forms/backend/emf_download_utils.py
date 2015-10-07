@@ -120,7 +120,7 @@ def print_list_of_coefficients(info):
     shead = "Cusp forms of weight " + str(weight) + "on \(" + latex(WMFS.group) + "\)"
     s = ""
     if((character is not None) and (character > 0)):
-        s = s + " and character \( \chi_{" + str(character) + "}\)"
+        shead = shead + " and character \( \chi_{" + str(character) + "}\)"
         # s="<table><tr><td>"
     coefs = ""
     if fmt == "sage":
