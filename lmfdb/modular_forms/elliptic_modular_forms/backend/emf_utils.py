@@ -144,7 +144,7 @@ def extract_data_from_jump_to(s):
     args['level'] = int(level)
     args['weight'] = int(weight) 
     args['character'] = int(character)
-    args['label'] = label
+    if label: args['label'] = label
     return args
 
 
