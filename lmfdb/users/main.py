@@ -55,7 +55,7 @@ def ctx_proc_userdata():
     userdata['username'] = 'Anonymous' if current_user.is_anonymous() else current_user.name
     userdata['user_is_authenticated'] = current_user.is_authenticated()
     userdata['user_is_admin'] = current_user.is_admin()
-    userdata['get_username'] = get_username
+    userdata['get_username'] = get_username # this is a function
     return userdata
 
 # blueprint specific definition of the body_class variable
@@ -124,7 +124,7 @@ def profile(userid):
     user = LmfdbUser(userid)
     bread = base_bread() + [(user.name, url_for('.profile', userid=user.get_id()))]
     userknowls = getDBConnection(
-    ).knowledge.knowls.find({'authors': userid}, fields=['title']).sort([('title', ASC)])
+    ).knowledge.knowls.find({'authors': userid}, ['title']).sort([('title', ASC)])
     userfiles = getDBConnection(
     ).upload.fs.files.find({'metadata.uploader_id': userid, 'metadata.status': 'approved'})
     userfilesmod = getDBConnection(

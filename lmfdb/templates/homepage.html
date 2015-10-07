@@ -17,7 +17,7 @@
             <input type="text" placeholder="search ..." name="q" size="13" />
           </form>
             &middot;
-          <a href="{{ feedbackpage }}" target="_blank">
+          <a href="{{ feedbackpage }}" target=_blank">
              Feedback</a>
             &middot;
           {% if g.show_menu %}
@@ -57,14 +57,19 @@
       {%- endif %} 
       {# this span inside a div thing is necessary to align it at the bottom, see css #}
 
+      {% if title_arithmetic -%}
+      <div id="title" class="arithmetic"><span id="title-content">{{ title_arithmetic|safe }}</span></div>
+      <div id="title" class="analytic nodisplay"><span id="title-content">{{ title_analytic|safe }}</span></div>
+      {% else %}
       <div id="title"><span id="title-content">{{ title|safe }}</span></div>
+      {% endif %}
 
     </div>
 </div>
 
-
-{% block sidebar -%} 
+{% block sidebar -%}
 {% if g.show_menu %}
+{#  This macro is not used! #}
  {% macro entry(title, entries) -%}
    {% if entries %}
     <h2>{{ title }}</h2>
@@ -76,407 +81,14 @@
    {% endif %}
  {%- endmacro %}
 
-
-   {% if BETA %}
-<style type="text/css">
-#sidebar .test { color:rgb(150,0,0);}
-#sidebar .test a { color:rgb(150,0,0);
-display: inline;
-  background: none;
-  padding: 0px;}
-/*#sidebar .list li {
-    padding: px;
-}*/
-#sidebar .list a {
-  display: inline;
-  background: none;
-  padding: 0px;
-
-}
-#sidebar h2 {
-      margin: 10px 0px 0px;}
-
-.rotation  {
-             -moz-transform: rotate(270deg);
-             -webkit-transform: rotate(270deg);
-             -o-transform: rotate(270deg);
-             -ms-transform: rotate(270deg);
-             transform: rotate(270deg); }
-
-
-#sidebar table th, #sidebar table td {
-	text-align: left;
-	padding: 0px;
-}
-
-#sidebar table.short{
-	border-width: 5px;
-	border-style: solid;
-	padding: 0px;
-	border-spacing: 0px;
-	border-color: #efe;
-	border-collapse: separate;
-}
-
-#sidebar table.short td.bor{
-/*	border-bottom: 5px solid #fff;
-*/	padding: 0px;
-	text-align: left;
-}
-
-#sidebar table.short td.nbor{
-	padding: 0px; text-align: left;
-}
-
-#sidebar table.short td.borc{
-	text-align: center;
-/*	border-bottom: 5px solid #fff;
-*/	padding: 0px;
-}
- 
-
-#sidebar table.short td.off { 
-	text-align: center;	
-/*	border-bottom: 5px solid #fff;
-*/	padding: 0px
-	background: #fff }
-
-</style>
-   {% endif %}
-
-
 <div id="sidebar">
-{% if BETA %}
-<h2 class="link">
-   <a href="{{ url_for('introduction') }}">Introduction and more</a>
-  </h2>
-<table class="short">
-<tr>
-<td width="100""><ul class="list">
-	<li><a href="{{ url_for('introduction') }}">Introduction</a></li>
-	<li><a href="{{url_for('introduction_tutorial')}}">Tutorial</a></li>
-	<li><a href="{{ url_for('bigpicture') }}">Map</a></li>
-	<li><a href="{{ url_for('citation') }}">Citation</a></li>
-	</ul></td>
-<td width="100"><ul class="list">
-	<li><a href="{{url_for('introduction_features')}}">Features</a></li>
-	<li><a href="{{ url_for('contact') }}">Contact</a></li>
-	<li></li>
-	<li><a href="{{ url_for('roadmap') }}">Future Plans</a></li>
-	</ul></td>
-</tr>
-</table> 
+{%- include "sidebar.html" -%}
 
-{% else %}
-  <h2 class="link">
-   <a href="{{ url_for('introduction') }}">Introduction</a>
-  </h2>
-  <ul class="list">
-    <li class="intro" style="padding-left: 0;">
-     <span>
-        <a href="{{url_for('introduction_features')}}">Features</a>
-        <a href="{{url_for('introduction_tutorial')}}">Tutorial</a>
-     </span>
-   </li>
-  </ul><ul>
-   <li class="bigpicture">
-    <a href="{{ url_for('bigpicture') }}">Map of LMFDB</a>
-   </li>
-   <li class="roadmap">
-    <a href="{{ url_for('roadmap') }}">Future Plans</a>
-   </li>
-  </ul>
-{% endif %}
-
-
-  <h2 class="link">
-   <a href="{{ url_for('l_functions.l_function_top_page') }}">L-functions</a>
-  </h2>
-  <ul class="list">
-   <li>
-    Degree:
-    {% if user_is_authenticated and (username == 'MichaelRubinstein' or username == 'Jonathan Bober' or username == 'Ralph Furmaniak' or username == 'Harald Schilly') %}
-      <span id="span1" style="position:relative;display:none">
-      <a class="lfunction"  href="{{url_for('l_functions.l_function_degree_page', degree='degree1')}}"><img src="/static/images/1dot.svg"/></a>
-      <a class="lfunction"  href="{{url_for('l_functions.l_function_degree_page', degree='degree2')}}"><img src="/static/images/2dot.svg"/></a>
-      <a class="lfunction"  href="{{url_for('l_functions.l_function_degree_page', degree='degree3')}}"><img src="/static/images/3dot.svg"/></a>
-      <a class="lfunction"  href="{{url_for('l_functions.l_function_degree_page', degree='degree4')}}"><img src="/static/images/4dot.svg"/></a>
-      </span>
-      <script>
-        if(Math.random()<0.02) {
-        $().ready(function() {
-	  $('#span2').hide();
-	  $('#span1').show();
-	  setTimeout(function() {
-	    $('#span1').hide();
-	    $('#span2').show();
-	  }, 1000);
-	});
-	}
-      </script>
-    {% endif %}
-    <a href="{{url_for('l_functions.l_function_degree_page', degree= 'degree1')}}">1</a>
-    <a href="{{url_for('l_functions.l_function_degree_page', degree= 'degree2')}}">2</a>
-    <a href="{{url_for('l_functions.l_function_degree_page', degree= 'degree3')}}">3</a>
-    <a href="{{url_for('l_functions.l_function_degree_page', degree= 'degree4')}}">4</a>
-    <a class="test" href="">5+</a>
-   </li>
-  {% if BETA %}
-  <li><a href="/TensorProducts">Operations</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="zeros/first/">Zeros</a></li>
-    {% endif %}
-  </ul>
-
-
-
-  <h2 class="link">
-       <a class="mf"    href="{{ url_for('mf.modular_form_main_page') }}">Modular Forms</a>
-  </h2>
-{% if BETA %}
-<table class="short">
-<tr>
-<td width="15" class="borc"><p class="test rotation">\(\GL(2)\)</p></td>
-<td width="185"class="bor">
-<ul class="list">
-<li><a class="emf"  href="{{ url_for('emf.render_elliptic_modular_forms') }}">Classical</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="mwf"  href="{{ url_for('mwf.render_maass_waveforms') }}">Maass</a></li>
-<li><a href="{{ url_for('hmf.hilbert_modular_form_render_webpage') }}">Hilbert</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a class="test" href="">Bianchi</a></li>
-<li class="test"><a href="">Half-integer</a></li>
-<li class="test"><a href="">Non-congruence</a></li>
-	</ul></td>
-</tr>
-<tr> 
-<td class="off" width="15"  bgcolor="#fff"><p class="test rotation">\(\GL(3)\)</p></td>
-<td width="185" bgcolor="#fff" class="bor">
-<ul class="list">
-<li><a class="test" href="">Cohomological</a></li> 
-<li><a href="{{ url_for('mwf.render_maass_waveforms') }}">Maass</a></li></ul></td>
-</ul></td>
-</tr>
-<tr> 
-<td width="15px" ><p class="rotation"> </p></td>
-<td width="185px" class="nbor">
-<ul class="list">
-<li><a class="test" href="">U(2,1)</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="{{ url_for('ModularForm_GSp4_Q_top_level') }}">Siegel</a></li>
-<li><a class="test" href="">others</a></li>
-</ul></td>
-</tr>
-</table>   
-
- 
-{% else %}
-  <ul>
-   <li><a class="emf"  href="{{ url_for('emf.render_elliptic_modular_forms') }}">Classical, $\GL(2)/\Q$</a></li>
-   <li><a class="mwf"  href="{{ url_for('mwf.render_maass_waveforms') }}">Maass, $\GL(2)/\Q$</a></li>
-   <li><a              href="{{ url_for('hmf.hilbert_modular_form_render_webpage') }}">Hilbert</a></li>
-   <li><a              href="{{ url_for('ModularForm_GSp4_Q_top_level') }}">Siegel</a> </li>
-  </ul>
-   {# <li><a href="{{ url_for('quadratic_twists') }}">Quadratic Twists</a></li> #}
-{#
-  <h2 class="link">
-       <a class="mf"    href="{{ url_for('mf.modular_form_main_page') }}">Maass Forms</a></h2>
-  <ul>
-   <li><a class="mwfp" href="{{ url_for('mwfp.render_picard_maass_forms') }}">for \(\PSL(2,\Z[i])\)</a></li>
-  </ul>
-#}
-    {% endif %}	
-
-
-{% if BETA %}
-{% else %}
-  <h2>Elliptic Curves</h2>
-  <ul>
-<li><a href="{{ url_for('ec.rational_elliptic_curves') }}  ">Elliptic Curves/\(\Q\)</a></li>
-<li class="test"><a href="{{ url_for('ecnf.index') }}">over other number fields</a></li>
-  </ul>
-{% endif %}     
-
-
-
-{% if BETA %}
-
-<h2> Varieties</h2>
-<table class="short">
-<tr>
-<td width="15px"  class="borc"><p class="test rotation">Curves</p></td>
-<td width="185px" class="bor">
-<ul class="list">
-	<li><a class="test" href="">Elliptic</a> 
-	<ul class="list">
-		<li><a href="{{ url_for('ec.rational_elliptic_curves') }}">/\(\Q\)</a>&nbsp;&nbsp;<a class="test" href="">/\(\F_{q}(t)\)</a></li>
-		<li><a class="test" href="">/Number Fields</a>
-		<li><a class="test" href="">\(\Q\)-curves</a></li>
-	</ul></li>
-	
-	<li><a class="test" href="">Hyperelliptic</a> 
-	<ul class="list">
-		<li><a class="test" href="{{ url_for('ec.rational_elliptic_curves') }}">/\(\Q\)</a>&nbsp;&nbsp;<a class="test"  href="">/\(\F_{q}(t)\)</a></li>
-		<li><a class="test"  href="">/Number Fields</a>
-	</ul></li>
-	<li><a class="test" href="">Belyi</a>&nbsp;&nbsp;&nbsp;&nbsp;<a class="test" href="">Shimura</a></li>
-	<li><a class="test" href="">Genus:</a> <a class="test" href="">3</a>,<a class="test" href="">4</a>,<a class="test" href="">5+</a></li>
-</ul></td></tr><tr> 
-<td  width="15" class="off" bgcolor="#fff" border-top="100px"><p class="rotation"><a class="test" href="">Surfaces</a></p></td>
-<td width="185"  bgcolor="#fff" class="bor">
-<ul class="list">
-<li><a class="test" href="">Abelian</a></li> 
-<li><a class="test" href="">\(K3\)</a></li>
-</ul></td>
-</tr>
-<tr> 
-<td width="15" class="nbor" > </p></td>
-<td width="185" class="nbor" >
-<ul class="list">
-<li class="test"><a href="">Calabi-Yau</a></li>
-<li class="test"><a href="">Shimura varieties</a></li>
-<li class="test"><a href="">Higher</a></li></li>
-</ul></td>
-</tr>
-</table>   
-
-{% endif %}
-
-
-
-
-
-{% if BETA %}
-<h2>Fields</h2>
-
-<table class="short">
-<tr><td><ul class="list">
-<li>Number fields</li></ul></td><td>
-<ul class="list">
-	<li><a href="{{ url_for('number_fields.number_field_render_webpage') }}">Global</a></li>
-	<li><a href="{{ url_for('local_fields.index') }}">Local</a></li>
-</ul></td></tr> <tr><td>
-<ul class="list">
-<li class="test"><a href="">Function Fields</a></li>
-</ul></td></tr>
-</table> 
-  
-
-<h2>Groups</h2>
-<table class="short">
-<tr>
-<td>
-<ul class="list">
-<li><a href="{{ url_for('galois_groups.index') }}">Galois Groups</a></li>
-
-<tr>
-<td><ul class="list">
-<li class="test">Subgroups of</li></ul></td>
-<td>
-<ul class="list">
-	<li><a  class="test" href=""> \(\SL(2)\)</a></li>
-	<li><a  class="test" href="">\(\GL(2,\F_q)\)</a></li>
-</ul></td></tr>
-</table> 
-
-
-{% else %}
-  <h2> Fields</h2>
-    <ul>
-      <li><a class = "number_fields" href="{{ url_for('number_fields.number_field_render_webpage') }}">Global Number Fields</a></li>
-      <li class="test"><a class="artin_representations" href="{{ url_for('artin_representations.index') }}">Artin Representations</a></li>
-      <li><a href="{{ url_for('local_fields.index') }}">Local Number Fields</a></li>
-      <li><a href="{{ url_for('galois_groups.index') }}">Galois Groups</a></li>
-      {#  Please keep the commented part, I might reinstate some of it POD
-      #<li><a class = "number_field_galois_groups" href="{{ url_for('number_field_galois_groups.index') }}">Galois Groups (only logged in)</a></li>
-      #}
-     </ul>
-{% endif %}
-
-
-
-
-
-
-  
-
-
-
-<!--
-	<h2 class="link">
-	    <a class="artin_representations" href="{{ url_for('artin_representations.index') }}">Artin Representations</a>
-	</h2>
--->
-  
-  {% if BETA %}
-<!--
-      <h2 class="link"> <a href='{{ url_for("hypergm.index") }}'>Hypergeometric motives</a></h2>
--->
-
-<h2>Representations</h2>
-<table class="short">
-<tr><td><ul class="list">
-<li>Characters</li></ul></td>
-<td>
-<ul class="list">
-	<li><a href="{{ url_for('characters.render_Dirichletwebpage') }} ">Dirichlet</a></li>
-	<li><a href="{{ url_for('characters.render_Heckewebpage') }} ">Hecke</a></li>
-</ul></td></tr>
-<tr> <td>
-<ul class="list">
-<li class="test"><a class="artin_representations" href="{{ url_for('artin_representations.index') }}">Artin</a> <a href="">Galois</a> </li>
-<li class="test"><a href="">Automorphic</a></li>
-</ul></td>
-</table> 
-
-<h2>Motives</h2>
-<table class="short">
-<tr><td vertical-align="left" line-height="0px">
-	<ul class="list">
-	<li class="test">Hypergeometric</li></ul></td><td>
-	<ul class="list">
-	<li> <a class="test" href="">/\(\Q\)</a> </li>
-	<li> <a class="test" href="">/\(\Q(\sqrt{d})\)</a></li>
-	</ul></td></tr>
-<tr> 
-<td width="100"><a  class="test" href="">Jacobi</a></td>
-<td width="100"><a  class="test" href="">\(G_2\)</a></td>
-</tr>
-</table> 
-
-  {% endif %}
-
-{% if BETA %}
-{% else %}
-  <h2>Zeros of L-functions</h2>
-   <ul>
-    <li><a href="{{ url_for('first L-function zeros.firstzeros') }}">First zeros</a></li>
-    <li><a href="{{ url_for('zeta zeros.zetazeros') }}">Zeta zeros</a></li>
-   </ul>
- {% endif %}
-
- 
-{% if BETA %}
-      <h2 class="link"> <a href='{{ url_for("stieltjes.stieltjes_constants") }}'>Miscellaneous</a></h2>
-  {% endif %}
-
-  <h2 class="link knowl">
-     <a class="knowl" href="{{ url_for("knowledge.index") }}">Knowledge</a>
-  </h2>
-
-
-
-   {{ entry("Data", getUploadedFor(request.path, true) ) }}
-  {# {% if user_is_authenticated %} {% endif %} #}
-
- {% if sidebar -%}
-  {% for topic, content in sidebar -%}
-    {{ entry(topic, content) }}
-  {%- endfor %}
- {%- endif %}
-
-
-
-
-
-
-
-
-
+{{ entry("Data", getUploadedFor(request.path, true) ) }}
 
 </div>
+
+
 {% else %}
 <style type="text/css">
 #main { margin: 0; }
@@ -557,7 +169,7 @@ display: inline;
 
 <div id="footer">
     {% if credit -%}
-      &copy; Data computed by {{ credit|safe }}.<br />
+      Data computed by {{ credit|safe }}.<br />
     {%- endif %}
     
     {% if support -%}
@@ -579,6 +191,8 @@ display: inline;
       {{ current_source|safe }}
       &middot;
       {{ latest_changeset|safe }}
+      &middot;
+      {{ sage_version|safe }}
     </div>
 </div>
 

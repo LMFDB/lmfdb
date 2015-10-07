@@ -2,7 +2,6 @@
 # copyright: harald schilly <harald.schilly@gmail.com>
 # license: Apache 2.0
 
-from pymongo import *
 import random
 from math import floor, ceil
 from lmfdb import base

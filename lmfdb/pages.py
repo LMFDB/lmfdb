@@ -35,7 +35,7 @@ class Box(object):
     def add_link(self, title, href):
         self.links.append((title, href))
 
-boxes = None
+the_boxes = None
 
 def load_boxes():
     boxes = []
@@ -52,17 +52,31 @@ def load_boxes():
 
 @app.route("/")
 def index():
-
-    global boxes
-    #if boxes is None: # FIXME: restore
-    boxes = load_boxes()
-    tmpl = "index-boxes.html" if g.BETA else "index.html"
+    global the_boxes
+    if the_boxes is None:
+        the_boxes = load_boxes()
+    boxes = the_boxes
+    tmpl = "index-boxes.html"
+    # We used to have an old version of the home page:
+    # tmpl = "index-boxes.html" if g.BETA else "index.html"
 
     return render_template(tmpl,
         titletag="The L-functions and modular forms database",
         title="",
         bread=None,
         boxes = boxes)
+
+# Harald suggested putting the following in base.pybut it does not work either there or here!
+#
+# create the sidebar from its yaml file and inject it into the jinja environment
+#from sidebar import get_sidebar
+#app.jinja_env.globals['sidebar'] = get_sidebar()
+#
+# so instead we do this to ensure that the sidebar content is available to every page:
+@app.context_processor
+def inject_sidebar():
+    from sidebar import get_sidebar
+    return dict(sidebar=get_sidebar())
 
 
 # geeky pages have humans.txt
@@ -137,6 +151,6 @@ def citation():
 
 @app.route("/contact")
 def contact():
-    t = "Contact"
+    t = "Contact and feedback"
     b = [(t, url_for("contact"))]
     return render_template('contact.html', title=t, body_class='', bread=b)

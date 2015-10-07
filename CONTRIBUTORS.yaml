@@ -1,5 +1,5 @@
 # This is the list of contributors to LMFDB
-# They are listed on /acknowledgement and mabye elsewhere
+# They are listed on /acknowledgement and maybe elsewhere
 # the 'name' field is mandatory, all others currently optional
 #  - affil: university or company affiliation
 #  - url: homepage
@@ -47,6 +47,10 @@ name: John Cremona
 affil: University of Warwick
 url: http://www2.warwick.ac.uk/fac/sci/maths/people/staff/john_cremona/
 ---
+name: Rachel Davis
+affil: Purdue University
+url: http://www.math.purdue.edu/~davis705
+---
 name: Paul-Olivier Dehaye
 url: http://user.math.uzh.ch/dehaye/
 affil: Universitat Zurich
@@ -87,6 +91,14 @@ name: Ralph Furmaniak
 affil: Stanford University
 url: http://stanford.edu/~rfurman/
 ---
+name: Paul E. Gunnells
+affil: University of Massachusetts Amherst
+url: http://people.math.umass.edu/~gunnells/
+---
+name: Anna Haensch
+affil: Duquesne University
+url: http://www.mathcs.duq.edu/~haensch/
+---
 name: Jonthan Hanke
 ---
 name: William Hart
@@ -107,7 +119,7 @@ affil: University of Bristol
 url: http://www.maths.bris.ac.uk/people/profile/majpk
 ---
 name: Kiran S. Kedlaya
-url: http://math.ucsd.edu/~kedlaya/
+url: http://kskedlaya.org/
 affil: University of California, San Diego
 ---
 name: Kamal Khuri-Makdisi
@@ -190,7 +202,7 @@ name: William Stein
 url: http://wstein.org/
 affil: University of Washington
 notes:
-  - Creator of <a href="http://www.sagemath.org">Sage</a>
+  - Creator of <a href="http://www.sagemath.org">SageMath</a>
 ---
 name: Andrew Sutherland
 url: http://math.mit.edu/~drew
@@ -213,6 +225,15 @@ name: Holger Then
 url: http://www.maths.bris.ac.uk/~mahlt/
 affil: University of Bristol
 ---
+name: Alex Torzewski
+url: http://www2.warwick.ac.uk/fac/sci/maths/people/staff/torzewski/
+affil: University of Warwick
+---
+name: Christelle Vincent
+affil: University of Vermont
+email: christelle.vincent@uvm.edu
+url: http://www.uvm.edu/~cvincen1/
+---
 name: John Voight
 url: http://www.math.dartmouth.edu/~jvoight
 affil: Dartmouth College
@@ -224,6 +245,10 @@ url: http://www.maths.bris.ac.uk/people/profile/malhw
 name: Mark Watkins
 affil: University of Sydney
 url: http://magma.maths.usyd.edu.au/~watkins/
+---
+name: David Watson
+url: http://emps.exeter.ac.uk/mathematics/staff/dw387
+affil: University of Exeter
 ---
 name: Jamie Weigandt
 affil: Purdue University
@@ -243,3 +268,4 @@ url: http://www.lakeforest.edu/academics/faculty/yuen/
 ---
 name: Patrick Kühn
 affil: Universität Zürich
+
