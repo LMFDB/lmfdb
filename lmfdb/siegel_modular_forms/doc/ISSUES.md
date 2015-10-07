@@ -20,7 +20,8 @@
 
   * The label for the textboxes for inputting dimension ranges should be induvidualized
     for the collections.
-
+  DONE
+  
   * The collections pages should show up with some default precalcuated
     dimension tables.
   DONE
