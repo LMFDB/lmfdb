@@ -219,7 +219,7 @@ class WebNewForm(WebObject, CachedRepresentation):
     _file_key = ['hecke_orbit_label']
     _collection_name = 'webnewforms'
 
-    def __init__(self, level=1, weight=12, character=1, label='a', parent=None, update_from_db=True):
+    def __init__(self, level=1, weight=12, character=1, label='a', prec=None, parent=None, update_from_db=True):
         emf_logger.critical("In WebNewForm {0}".format((level,weight,character,label,parent,update_from_db)))
         self._reduction = (type(self),(level,weight,character,label),{'parent':parent,'update_from_db':update_from_db})
         if isinstance(character, WebChar):
