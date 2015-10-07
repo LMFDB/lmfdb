@@ -61,13 +61,12 @@ table.ntdata th.colhead {
 {#{KNOWL('mf.ellipticemf_browse.all.info',title='Write about browsing') }#}
 <p>
 The table below gives the dimensions of the space of holomorphic
-{{ KNOWL('mf.elliptic.newform',title='newform') }}
+{{ KNOWL('mf.elliptic.newforms',title='newforms') }}
 of specified {{KNOWL('mf.elliptic.level',title='level')}},
 {{KNOWL('mf.elliptic.weight',title='weight')}}, and
 {% if show_all_characters is defined %}
-character.<br>
-Here, the characters are numbered in the same way as
-in sage: DirichletGroup(N).<br>
+{{KNOWL('mf.elliptic.character',title='character')}}.<br>
+<br>
 {% else %}
 trivial character.
 {% endif %}

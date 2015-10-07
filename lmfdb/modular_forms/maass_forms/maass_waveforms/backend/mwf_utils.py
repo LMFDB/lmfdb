@@ -7,6 +7,7 @@ from lmfdb.utils import *
 from lmfdb.modular_forms.elliptic_modular_forms.backend.plot_dom import *
 from lmfdb.modular_forms.maass_forms.maass_waveforms import MWF, mwf_logger, mwf
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import MaassDB
+from lmfdb.modular_forms.backend.mf_utils import my_get
 # from knowledge.knowl import Knowl
 # from psage.modform.maass.lpkbessel import *
 # build extensions
@@ -610,22 +611,6 @@ def search_for_eigenvalues(search):
     if search['rec_stop'] < 0:
         search['rec_stop'] = limit + rec_start
     return res
-
-
-def my_get(dict, key, default, f=None):
-    r"""
-    Improved version of dict.get where an empty string also gives default.
-    and before returning we apply f on the result.
-    """
-    x = dict.get(key, default)
-    if x == '':
-        x = default
-    if f is not None:
-        try:
-            x = f(x)
-        except:
-            pass
-    return x
 
 
 def ajax_once(callback, *arglist, **kwds):

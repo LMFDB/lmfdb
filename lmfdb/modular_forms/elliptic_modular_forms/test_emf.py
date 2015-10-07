@@ -4,7 +4,6 @@ from lmfdb.base import LmfdbTest
 from flask import request
 
 from views.emf_main import *
-import unittest2
 
 class EmfTest(LmfdbTest):
 
@@ -27,7 +26,7 @@ class EmfTest(LmfdbTest):
         assert '84480q^{8}' in page.data
         assert '0.5185' in page.data
         ## We also check that the L-function works
-        page = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/1/12/0/a/0/')
+        page = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/1/12/1/a/0/')
         assert '0.7921' in page.data 
 
     def test_level11(self):
@@ -39,8 +38,8 @@ class EmfTest(LmfdbTest):
         assert '2q^{4}' in page.data
         assert '2.3561' in page.data
         ## We also check that the L-function works
-        page = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/11/2/0/a/0/')
-        assert '0.25384' in page.data
+        page = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/11/2/1/a/0/')
+        assert '0.2538' in page.data
 
     def test_non_triv_character(self):
         r"""
@@ -51,7 +50,6 @@ class EmfTest(LmfdbTest):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/10/3/1/a/")                
         assert '2\zeta_{4}q^{4}' in page.data
 
-        
     def test_get_args(self):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/13/10/0/")
         assert '24936' in page.data

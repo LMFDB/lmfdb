@@ -27,7 +27,7 @@ from sage.rings.rational import Rational
 
 from lmfdb.WebCharacter import WebDirichletCharacter
 from lmfdb.WebNumberField import WebNumberField
-from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms import *
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes \
      import WebMaassForm
 
@@ -360,9 +360,9 @@ class Lfunction_EMF(Lfunction):
         
         # Create the modular form
         try:
-            self.MF = WebNewForm(k = self.weight, N = self.level,
-                                 chi = self.character, label = self.label, 
-                                 prec = self.numcoeff, verbose=0)
+            self.MF = WebNewForm(weight = self.weight, level = self.level,
+                                 character = self.character, label = self.label, 
+                                 prec = self.numcoeff)
         except:
             raise KeyError("No data available yet for this modular form, so" +
                            " not able to compute its L-function")
@@ -375,7 +375,7 @@ class Lfunction_EMF(Lfunction):
 
 
         # Get the data for the corresponding elliptic curve if possible
-        if self.weight == 2 and self.MF.is_rational():
+        if self.weight == 2 and self.MF.is_rational:
             self.ellipticcurve = EC_from_modform(self.level, self.label)
             self.nr_of_curves_in_class = nr_of_EC_in_isogeny_class(
                                                     self.ellipticcurve)
@@ -383,10 +383,9 @@ class Lfunction_EMF(Lfunction):
             self.ellipticcurve = False
 
         # Appending list of Dirichlet coefficients
-        embeddings = self.MF.q_expansion_embeddings(self.numcoeff + 1)
         self.algebraic_coefficients = []
         for n in range(1, self.numcoeff + 1):
-            self.algebraic_coefficients.append(embeddings[n][self.number])
+            self.algebraic_coefficients.append(self.MF.coefficient_embedding(n,self.number))
             
         self.dirichlet_coefficients = []
         for n in range(1, len(self.algebraic_coefficients) + 1):
@@ -419,7 +418,7 @@ class Lfunction_EMF(Lfunction):
 
         if self.character != 0:
             characterName = (" character \(%s\)" %
-                             (self.MF.conrey_character_name()))
+                             (self.MF.character.latex_name))
         else:
             characterName = " trivial character"
         self.title = ("$L(s,f)$, where $f$ is a holomorphic cusp form " +

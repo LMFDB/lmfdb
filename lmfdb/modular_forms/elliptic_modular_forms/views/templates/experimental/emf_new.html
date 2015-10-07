@@ -3,18 +3,14 @@
 {% block content %}
 <script type="text/javascript" src="{{ url_for('emf.static', filename='elliptic_modular_form_util-functions.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('emf.static', filename='elliptic_modular_form_scripts.js') }}"></script>
-
+{% if error is defined %}
+   {{ error | safe }}
+{% else %}
 <h1> {{ name | safe }} </h1>
 
 {% set KNOWL_ID = "mf.%s.%s.%s.%s"|format(level,weight,character,label) %}
 <h2>{{ KNOWL_INC(KNOWL_ID+'.top', title='') }}</h2>
 
-
-
-
-{% if error is defined %}
-   {{ error | safe }}
-{% else %}
 
 <div id="qexp">
 <h2> {{ KNOWL('mf.elliptic.q-expansion',title='q-expansion')}}</h2>
@@ -78,7 +74,7 @@ in the field of complex numbers. The values are shown in the table below.
     </th>
     {% for n in range(1,embeddings_len) %}
     <td style="white-space:nowrap;">
-      \({{ embeddings[n][h] }}\)
+      {{ embeddings[n][h] }}
     </td>
     {% endfor %}
   </tr>
@@ -87,11 +83,11 @@ in the field of complex numbers. The values are shown in the table below.
 </table>
 {% endif %}
 <h2> Detailed data</h2>
-{% if satake is defined %}
 <div>
   The first few {{KNOWL('mf.elliptic.satake_parameters',title='Satake parameters')}} \(\alpha_p\) and angles \(\theta_p = \textrm{Arg}(\alpha_p) \) are
 </div>
 <br>
+{% if satake is defined %}
 <table class="ntdata">
   <thead>
     <tr>
@@ -218,21 +214,20 @@ in the field of complex numbers. The values are shown in the table below.
 </div>
   {% endif %}
 <h2>Download Fourier coefficients</h2>
-We have {{ info.max_cn }} coefficients available from the database. 
 <form name="get_coefficients" method="post"  action="{{url_for('.get_downloads',level=level,weight=weight,character=character,label=label)}}">
   <input type="hidden" name="download" value="coefficients"/>
   Get / compute  <input type="text" size="10" name="number" value="10"/> 
   coefficients in the following format:
   <ul>
     <li> 
-      <label><input type=radio name="format" checked value="q_expansion" onclick="return selectCFormat(event)"> q-expansion (on one line)</label>
+      <label><input type=radio name="format" checked value="q_expansion_one_line" onclick="return selectCFormat(event)"> q-expansion (on one line)</label>
     </li>
     <li> 
-      <label><input type=radio name="format" checked value="coefficients" onclick="return selectCFormat(event)"> a table of coefficients (algebraic)</label>
+      <label><input type=radio name="format" checked value="q_expansion_table" onclick="return selectCFormat(event)"> q-expansion (table)</label>
     </li>
     <li>
       <label><input type=radio name="format" value="embeddings" onclick="return selectCFormat(event)"> Complex embeddings </label>
-      with <input type="text" size="10" name="bitprec" value="15"> digits precision.     
+      with <input type="text" size="10" name="prec" value="15"> digits precision.     
     </li>
   </ul>
 {#  <input type="button" name="Submit" value="Get coefficients"> #}
@@ -251,7 +246,7 @@ We have {{ info.max_cn }} coefficients available from the database.
 <div class="formexample"> 
   Note: In order to use this data file you currently need to download
   and import the entire lmfdb from: 
-<a href="https://github.com/LMFDB/lmfdb">lmfdb at github</a>. 
+<a href="http://code.google.com/p/lmfdb/">lmfdb at google code</a>. 
 {#
 <form name="download_file" method="post"  action="{{url_for('.render_elliptic_modular_forms')}}">
   Note: In order to use this data file you currently need to download
@@ -263,12 +258,10 @@ We have {{ info.max_cn }} coefficients available from the database.
 #}
 </div>
 {% endif %}
-</div>
 {% endif %}
-
 <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
 
-
+</div>
 
 
 

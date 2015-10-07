@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 from lmfdb.utils import to_dict, image_src
 from sage.all import dimension_new_cusp_forms, dimension_cusp_forms, dimension_eis, dimension_modular_forms, Zmod, DirichletGroup, latex
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, EMF_TOP, N_max_Gamma0_fdraw, N_max_Gamma1_fdraw
@@ -88,86 +88,6 @@ def render_table(level, **kwds):
     ncols = my_get(kwds, 'ncols', 10, int)
     ttype = my_get(kwds, 'ttype', 'newforms', str)
 
-
-@emf.route("/ranges", methods=["GET"])
-def browse_elliptic_modular_forms_ranges(**kwds):
-    r"""
-    Renders the webpage for browsing modular forms of given level and/or weight ranges.
-    """
-    emf_logger.debug("In browse_elliptic_modular_forms_ranges kwds: {0}".format(kwds))
-    emf_logger.debug("args={0}".format(request.args))
-    default = {}
-    default['level'] = '1-12'
-    default['weight'] = '2-36'
-    default['character'] = 0
-    info = dict()
-    args = to_dict(request.args)
-    emf_logger.debug("args={0}".format(args))
-    for field in ['level', 'weight', 'character']:
-        if args.get(field):
-            info[field] = parse_range(args[field])
-        else:
-            info[field] = parse_range(default[field])
-    if info['weight'] == 1:
-        return render_template("not_available.html")
-    elif (type(info['weight']) == dict) and info['weight'].get('min') == 1:
-        info['weight']['min'] = 2
-    emf_logger.debug("Input: info={0}".format(info))
-    bread = [(MF_TOP, url_for('mf.modular_form_main_page'))]
-    bread.append((EMF_TOP, url_for('emf.render_elliptic_modular_forms')))
-    limits_weight = extract_limits_as_tuple(info, 'weight')
-    limits_level = extract_limits_as_tuple(info, 'level')
-    if limits_weight[0] == limits_weight[1] and limits_level[0] == limits_level[1]:
-        return render_elliptic_modular_form_space_list_chars(limits_level[0], limits_weight[0])
-    if limits_level[0] > N_max_db:
-        emf_logger.debug("limits_level={0} > N_max_db={1}".format(limits_level, N_max_db))
-        return render_template("not_available.html")
-    if limits_weight[0] > k_max_db:
-        emf_logger.debug("limits_weight={0} > k_max_db={1}".format(limits_weight, k_max_db))
-        return render_template("not_available.html")
-    if info['character'] == 0:
-        info['grouptype'] = 0
-        info['groupother'] = 1
-        dimtbl = DimensionTable(0)
-    else:
-        info['grouptype'] = 1
-        info['groupother'] = 0
-        dimtbl = DimensionTable(1)
-        if info['character'] == -1:
-            info['show_all_characters'] = 1
-    disp = ClassicalMFDisplay('modularforms')
-    disp.set_table_browsing(limit=[limits_weight, limits_level],
-                            keys=['Weight', 'Level'], character=info['character'], dimension_table=dimtbl, title='Dimension of newforms')
-    tbl = disp._table
-    if tbl is None:
-        return render_template("not_available.html")
-    else:
-        info['browse_table'] = tbl
-    if limits_level[0] == limits_level[1]:
-        drawdomain = False
-        level = limits_level[0]
-        if info['grouptype'] == 0 and level <= N_max_Gamma0_fdraw:
-            drawdomain = True
-        elif level <= N_max_Gamma1_fdraw:
-            drawdomain = True
-        info['geometric'] = get_geometric_data(level, info['grouptype'])
-        if drawdomain:
-            info['fd_plot_url'] = url_for('emf.render_plot', level=level, grouptype=info['grouptype'])
-        title = "Newforms for \(\Gamma_{0}({1})\)".format(info['grouptype'], level)
-        level = int(level)
-        # info['list_spaces']=ajax_more(make_table_of_spaces_fixed_level,*largs,text='more')
-        bread.append(("Level %s" % level, url_for("emf.render_elliptic_modular_forms", level=level)))
-        info['browse_type'] = " of level %s " % level
-        info['title'] = title
-        info['bread'] = bread
-        info['level'] = level
-        return render_template("emf_browse_fixed_level.html", **info)
-    title = "Newforms for \(\Gamma_{0}(N)\)".format(info['grouptype'])
-    info['browse_type'] = ""
-    info['title'] = title
-    info['bread'] = bread
-    # info['level']=level
-    return render_template("emf_navigation.html", info=info, title=title, bread=bread)
 
 
 def browse_elliptic_modular_forms(level=0, weight=0, character=-1, label='', limits=None, **kwds):
@@ -389,7 +309,5 @@ def make_table_of_dimensions(level_start=1, level_stop=50, weight_start=1, weigh
     # s=s+"\n <br> \(N="+str(rowlen0)+"\cdot row+col\)"
     # print "SS=",s
     return s
-    # ss=re.sub('texttt','',s)
-    # info['popup_table']=ss
-        # info['sidebar']=set_sidebar([navigation,parents,siblings,friends,lifts])
-        #   return info
+
+

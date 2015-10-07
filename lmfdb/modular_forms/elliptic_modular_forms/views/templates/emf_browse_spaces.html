@@ -103,10 +103,9 @@ function set_value(id,val) {
 <h1>Browse holomorphic {{KNOWL('mf.elliptic.newform',title='newforms')}} for {{group}}</h1>
 
 <div>
-      {% if info.browse_table.rows is defined %}
-      {#{KNOWLl('mf.elliptic.browse.all.info') } #}
+
 The table below gives the dimensions of the space of holomorphic 
-{{KNOWL('mf.elliptic.newform',title='newforms')}} of integral
+{{KNOWL('mf.elliptic.new_form',title='newforms')}} of integral
 {{KNOWL('mf.elliptic.weight',title='weight')}} for {{group}}
 {% if info.grouptype == 1 %}
 .
@@ -123,6 +122,7 @@ table.ntdata th.left {
   text-align: right;
 }
 table.ntdata td { text-align: left; }
+table.ntdata td.center { text-align: center; }
 table.ntdata th.weight {
   text-align: left;
   background: #efe;
@@ -139,50 +139,65 @@ table.ntdata thead th.spaceleft {
   border-right: 2px solid #9b9;
   vertical-align: top;
 }
-
 </style>
-      {% set table = info.browse_table %}
-      {% set rows = info.browse_table.rows %}
+      {% set table = info.table %}
       <table class="ntdata">
         <thead>
           <tr class="space">
            <th class="spaceleft">Weight</th>
-           <th class="weight" colspan="{{table.col_heads|length}}">
+           <th class="level" colspan="{{info.col_heads|length}}">
 	     <span style="display:block;float:left;margin-right:3px;">Level \(N\)</span>
 	   </th>
           </tr>
           <tr class="space">
             <th class="spaceleft"></th>
-            {% for N in table.col_heads  %}
+            {% for N in info.col_heads  %}
 	    {% set col_url = url_for('emf.render_elliptic_modular_forms',level=N,character=chi) %}
             <th class="level"><a href="{{col_url}}">{{N}}</a></th>
             {% endfor %}
           </tr>
         </thead>
         <tbody>
-          {% for row in rows  %}
+          {% for k in info.row_heads  %}
+          
+
           <tr>
             <th class="left">
-              {% set k = table.row_heads[loop.index-1] %}
               {% set row_url = url_for('emf.render_elliptic_modular_forms',weight=k,character=chi) %}
               <a href="{{ row_url }}">{{ k }}</a>
             </th>
-            {% for cell in row  %}
-            <td align="center">
-	      {% if cell.url != '' %}
-                <a href="{{cell.url}}">{{cell.dim}}</a>
-              {% else %}
-		{{cell.dim}}
-	      {% endif  %}
+            {% for N in info.col_heads  %}
+            {% set indb = 0 %}
+            {% set dim = 0 %}
+            <td class="center">
+              {% if table[N] is defined and table[N][k] is defined %}
+                  {% if info.grouptype == 0 and table[N][k][0] is defined %}
+	              {% set url = url_for('emf.render_elliptic_modular_forms',level=N,weight=k,character=1) %}
+                      {% set dim = table[N][k][0] %}
+                      {% set indb = table[N][k][1] %}
+                  {% elif info.grouptype == 1 and table[N][k][0] is defined %}
+	              {% set url = url_for('emf.render_elliptic_modular_forms',level=N,weight=k) %}
+                      {% set dim = table[N][k][0] %}
+                      {% set indb = table[N][k][1] %}
+                  {% else %}
+                      {% set dim ="n/a" %}
+                  {% endif %}
+                  {% if indb == 1  and dim >0 %}
+                     <a href="{{url}}">{{dim}}</a>
+                  {% else %}
+                     {{dim}}
+              {% endif  %}
+           {% else %}
+               <small style="color:gray">n/a</small>
+           {% endif %}
             </td>
             {% endfor %}
           </tr>
           {% endfor %}
         </tbody>
       </table>
-      {% endif %}
     </td>
-
+    <small>"n/a" means that there is no information about this space in our database.</small>
 {% include 'select_ranges.html' %}
 
   <h1>Find a specific cusp form from the database</h1>
