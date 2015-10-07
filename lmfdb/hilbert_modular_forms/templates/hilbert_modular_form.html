@@ -1,27 +1,26 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-  <h2>  Base Field  </h2>
+<h2>  Base field   {{ info.field.knowl()|safe }} </h2>
 <p>
-<table>
-<tr><td>Base field label:<td><A HREF="/NumberField/{{info.field_label }}">{{info.field_label}}</A> </tr>
-<tr><td>Base field degree:<td> {{ info.field_degree }} </tr>
-<tr><td>Base field discriminant:<td> {{ info.field_disc }} </tr>
-<tr><td>Base field defining polynomial:<td> ${{ info.field_poly }}$ </tr>
-</table>
+ {{ KNOWL('nf.generator', 'Generator') }} \({{
+ info.field.generator_name() }}\), with {{
+ KNOWL('nf.minimal_polynomial', 'minimal polynomial') }}
+ \({{info.field_poly}}\); {{ KNOWL('nf.class_number', 'class number')
+ }} \({{info.field.class_number()}}\).
 </p>
+
 
   <h2>  Form  </h2>
 
 <p>
 <table>
-<tr><td> Weight:<td> {{ info.weight }} </tr>
-<tr><td> Level norm:<td> {{ info.level_norm }} </tr>
-<tr><td> Level:<td> ${{ info.level_ideal }}$ </tr>
+<tr><td>{{ KNOWL('mf.hilbert.weight_vector', title='Weight') }}:<td> {{ info.weight }} </tr>
+<tr><td> {{ KNOWL('mf.hilbert.level_norm', title='Level') }}:<td> ${{ info.level_ideal }}$ </tr>
 <tr><td> Label:<td> ${{ info.label_suffix }}$ </tr>
-<tr><td> Dimension:<td> {{ info.dimension }} </tr>
-<tr><td> Is CM?:<td> {{ info.is_CM }} </tr>
-<tr><td> Is base change?:<td> {{ info.is_base_change }} </tr>
+<tr><td> {{ KNOWL('mf.hilbert.dimension', title='Dimension') }}:<td> {{ info.dimension }} </tr>
+<tr><td> Is {{ KNOWL('mf.cm', title='CM') }} :<td> {{ info.is_CM }} </tr>
+<tr><td> Is {{ KNOWL('mf.base_change', title='base change') }} :<td> {{ info.is_base_change }} </tr>
 <tr><td> Parent newspace dimension:<td> {{ info.newspace_dimension }} </tr>
 </table>
 </p>
@@ -34,11 +33,13 @@
 
   <h2>  Hecke eigenvalues ({{ KNOWL('mf.hilbert.q_expansion', title='$q$-expansion') }}) </h2>
 
+{% if info.dimension > 1 %}
 <p>
 <table>
 <tr><td> $e$ is a root of the defining polynomial: <td> ${{ info.hecke_polynomial }}$ </tr>
 </table>
 </p>
+{% endif %}
 
 <p>&nbsp;&nbsp;<a href='{{ info.label }}?display_eigs=True'>Print full eigenvalues</a>
 &nbsp;&nbsp;<a href='{{ info.label }}?display_eigs=False'>Hide large eigenvalues</a></p>
@@ -46,7 +47,7 @@
 <table class="ntdata" cellpadding=5>
 <tr>
 <th>Norm</th>
-<th>Prime</th>
+<th>{{ KNOWL('nf.ideal.label.hmf', title='Prime') }} </th>
 <th>Eigenvalue</th>
 </tr>
 {% for entry in info.eigs: %}
