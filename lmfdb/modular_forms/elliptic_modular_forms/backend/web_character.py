@@ -121,12 +121,15 @@ class WebChar(WebObject, CachedRepresentation):
             emf_logger.debug('Not saving.')
 
     def init_dynamic_properties(self):
+        from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import dirichlet_character_conrey_galois_orbit_embeddings
         if self.number is not None:            
             emf_logger.debug('number: {0}'.format(self.number))
             self.character = DirichletCharacter_conrey(DirichletGroup_conrey(self.modulus),self.number)
             self.sage_character = self.character.sage_character()
             self.name = "Character nr. {0} of modulus {1}".format(self.number,self.modulus)
-
+            emb = dirichlet_character_conrey_galois_orbit_embeddings(self.modulus,self.number)
+            self.set_embeddings(emb)
+            
     def is_trivial(self):
         r"""
         Check if self is trivial.

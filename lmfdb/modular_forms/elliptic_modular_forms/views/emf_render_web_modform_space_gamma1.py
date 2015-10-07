@@ -66,7 +66,9 @@ def set_info_for_gamma1(level,weight,weight2=None):
         w1 = weight; w2 = weight
     table = {'galois_orbit':{},'galois_orbits_reps':{},'cells':{}}
     table['weights']=range(w1,w2+1)
-    max_gal_count = 0 
+    max_gal_count = 0
+    from  lmfdb.base import getDBConnection
+    db = getDBConnection()['modularforms2']['webmodformspace']
     for x in G:
         xi = x.number()
         table['galois_orbits_reps'][xi]= {'head' : "\(\chi_{" + str(level) + "}(" + str(xi) + ",\cdot) \)",
@@ -81,14 +83,17 @@ def set_info_for_gamma1(level,weight,weight2=None):
         if tmp_gal_count > max_gal_count:
             max_gal_count = tmp_gal_count
         table['cells'][xi]={}
+        orbit = map(lambda x:x.number(),x.galois_orbit()) 
         for k in range(w1,w2+1):
-            try:
-                d,t = dim_table[level][weight][xi]
-            except KeyError:
-                d = -1; t = 0
-            if t<>0:
+            # try:
+            #     d,t = dim_table[level][weight][xi]
+            # except KeyError:
+            #     d = -1; t = 0
+            r = db.find_one({'level':int(level),'weight':int(k),'character':{"$in":orbit}})
+            if not r is None:
+                d = r.get('dimension',"n/a")
                 url = url_for(
-                    'emf.render_elliptic_modular_forms', level=level, weight=weight, character=xi)
+                    'emf.render_elliptic_modular_forms', level=level, weight=k, character=xi)
             else:
                 url = ''
             table['cells'][xi][k] ={'N': level, 'k': k, 'chi': xi, 'url': url, 'dim': d}
