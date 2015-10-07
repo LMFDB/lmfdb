@@ -4,10 +4,25 @@
 <h2> Browse {{ KNOWL('mf.hilbert', title='Hilbert cusp forms') }} </h2>
 
 <p>
-By field:
-<a href="?field_label={{'Qsqrt5'}}">{{'Qsqrt5'}}</a>
-<a href="?field_label={{'Qsqrt8'}}">{{'Qsqrt8'}}</a>
+By {{ KNOWL('nf', title='base field') }}:
 </p>
+<ul>
+<li>
+Real quadratic fields <a href="?field_label=2.2.8.1">\(\Q(\sqrt{2})\)</a>,
+<a href="?field_label=2.2.5.1">\(\Q(\sqrt{5})\)</a>,...
+</li>
+<li>Cubic fields <a href="?field_label=3.3.49.1">3.3.49.1</a>,...
+</li>
+<li>
+Quartic fields <a href="?field_label=4.4.725.1">4.4.725.1</a>,...
+</li>
+<li>
+Quintic fields <a href="?field_label=5.5.14641.1">5.5.14641.1</a>,...
+</li>
+<li>
+Sextic fields <a href="?field_label=6.6.300125.1">6.6.300125.1</a>,...
+</li>
+</ul>
 
 
 <h2> Find a specific form by label </h2>
@@ -24,7 +39,7 @@ By field:
 <form>
 <table>
 <tr>
-<td>Field</td>  
+<td>{{ KNOWL('nf', title='Field') }}</td>  
 <td><input type='text' name='field_label' placeholder='2.2.5.1' size=10>
 <td><span class="formexample"> either a field label, e.g. 2.2.5.1 for
     \(\mathbb{Q}(\sqrt{5})\), or a nickname, e.g. Qsqrt5 </span></td>
