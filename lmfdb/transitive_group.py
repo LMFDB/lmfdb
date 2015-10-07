@@ -129,8 +129,18 @@ def group_display_short(n, t, C):
     group = C.transitivegroups.groups.find_one({'label': label})
     if group['pretty']:
         return group['pretty']
-    return group['name']
+    return "%dT%d"%(n,t)
+    #name = group['name']
+    #name = name.replace('=', ' = ')
+    #return name
 
+# Returns the empty string if there is no pretty name
+def group_display_pretty(n, t, C):
+    label = base_label(n, t)
+    group = C.transitivegroups.groups.find_one({'label': label})
+    if group['pretty']:
+        return group['pretty']
+    return ""
 
 def group_display_knowl(n, t, C, name=None):
     if not name:
@@ -224,8 +234,10 @@ def group_knowl_guts(n, t, C):
         inf += ", primitive"
     else:
         inf += ", imprimitive"
+    inf += '<div>'
+    inf += '<a title="%s [gg.conway_name]" knowl="gg.conway_name" kwarts="n=%s&t=%s">%s</a>: '%('CHM label',str(n),str(t),'CHM label')
+    inf += '%s</div>'%(group['name'])
 
-    inf = "&nbsp;&nbsp;&mdash;&nbsp;&nbsp;  " + inf + ""
     rest = '<div><h3>Generators</h3><blockquote>'
     rest += generators(n, t)
     rest += '</blockquote></div>'
@@ -241,8 +253,8 @@ def group_knowl_guts(n, t, C):
     rest += '</div>'
 
     if group['pretty']:
-        return group['pretty'] + inf + rest
-    return group['name'] + inf + rest
+        return group['pretty'] + "&nbsp;&nbsp;&mdash;&nbsp;&nbsp;  "+ inf + rest
+    return inf + rest
 
 
 def group_cclasses_knowl_guts(n, t, C):
@@ -251,6 +263,8 @@ def group_cclasses_knowl_guts(n, t, C):
     gname = group['name']
     if group['pretty']:
         gname = group['pretty']
+    else:
+        gname = gname.replace('=', ' = ')
     rest = '<div>Conjugacy class representatives for '
     rest += gname
     rest += '<blockquote>'
@@ -263,6 +277,7 @@ def group_character_table_knowl_guts(n, t, C):
     label = base_label(n, t)
     group = C.transitivegroups.groups.find_one({'label': label})
     gname = group['name']
+    gname = gname.replace('=', ' = ')
     if group['pretty']:
         gname = group['pretty']
     inf = '<div>Character table for '

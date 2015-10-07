@@ -15,6 +15,10 @@ table.reptable td, table.reptable th {
     <table>
       <tr><td>Degree $n$ :<td>&nbsp;&nbsp;<td>${{info.n}}$</tr>
       <tr><td>Transitive number $t$ :<td>&nbsp;&nbsp;<td>${{info.t}}$</tr>
+      {% if info.pretty_name %}
+      <tr><td>{{KNOWL('gg.simple_name', title='Group')}} :<td>&nbsp;&nbsp;<td>{{info.pretty_name}}</tr>
+      {% endif %}
+      <tr><td>{{KNOWL('gg.conway_name', title='CHM label')}} :<td>&nbsp;&nbsp;<td>${{info.name}}$</tr>
       <tr><td>Parity:<td>&nbsp;&nbsp;<td>{{info.parity}}</tr>
       <tr><td>Primitive:<td>&nbsp;&nbsp;<td>{{info.yesno(info.prim)}}</tr>
       <tr><td>Generators:<td>&nbsp;&nbsp;<td>{{info.gens}}</tr>
