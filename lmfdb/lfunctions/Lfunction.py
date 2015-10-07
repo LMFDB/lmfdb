@@ -27,7 +27,7 @@ from sage.rings.rational import Rational
 
 from lmfdb.WebCharacter import WebDirichletCharacter
 from lmfdb.WebNumberField import WebNumberField
-from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm, WebNewForm_cached
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes \
      import WebMaassForm
 
@@ -360,7 +360,7 @@ class Lfunction_EMF(Lfunction):
         
         # Create the modular form
         try:
-            self.MF = WebNewForm(weight = self.weight, level = self.level,
+            self.MF = WebNewForm_cached(weight = self.weight, level = self.level,
                                  character = self.character, label = self.label, 
                                  prec = self.numcoeff)
         except:
