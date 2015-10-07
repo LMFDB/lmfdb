@@ -160,6 +160,7 @@ def prepare_dimension_page( args, bread):
         info.update({ 'col': col,
                       'dimensions': table,
                       'table_headers': header,
+                      'dim_args': dim_args,
                       })
     except Exception as e:
         info.update( {'error': str(e)})
