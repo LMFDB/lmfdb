@@ -24,7 +24,7 @@ try:
 except:
     logger.fatal("It looks like the SPKGes gap_packages and database_gap are not installed on the server.  Please install them via 'sage -i ...' and try again.")
 
-from lmfdb.transitive_group import group_display_short, group_display_long, group_display_inertia, group_knowl_guts, galois_module_knowl_guts, subfield_display, otherrep_display, resolve_display, conjclasses, generators, chartable, aliastable, WebGaloisGroup, galois_module_knowl
+from lmfdb.transitive_group import group_display_short, group_display_pretty, group_display_long, group_display_inertia, group_knowl_guts, galois_module_knowl_guts, subfield_display, otherrep_display, resolve_display, conjclasses, generators, chartable, aliastable, WebGaloisGroup, galois_module_knowl
 
 from lmfdb.WebNumberField import modules2string
 
@@ -75,6 +75,11 @@ def ctx_galois_groups():
 def group_display_shortC(C):
     def gds(nt):
         return group_display_short(nt[0], nt[1], C)
+    return gds
+
+def group_display_prettyC(C):
+    def gds(nt):
+        return group_display_pretty(nt[0], nt[1], C)
     return gds
 
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
@@ -211,7 +216,7 @@ def galois_group_search(**args):
         start = 0
 
     info['groups'] = res
-    info['group_display'] = group_display_shortC(C)
+    info['group_display'] = group_display_prettyC(C)
     info['report'] = "found %s groups" % nres
     info['yesno'] = yesno
     info['wgg'] = WebGaloisGroup.from_data
@@ -247,7 +252,7 @@ def render_group_webpage(args):
             info['err'] = "Group " + label + " was not found in the database."
             info['label'] = label
             return search_input_error(info, bread)
-        title = 'Galois Group:' + label
+        title = 'Galois Group: ' + label
         wgg = WebGaloisGroup.from_data(data)
         n = data['n']
         t = data['t']
@@ -313,8 +318,13 @@ def render_group_webpage(args):
             ('Solvable:', yesno(data['solv'])),
             ('Primitive:', yesno(data['prim'])),
             ('$p$-group:', yesno(pgroup)),
-            ('Name:', group_display_short(n, t, C)),
         ]
+        pretty = group_display_pretty(n,t,C)
+        if len(pretty)>0:
+            prop2.extend([('Group:', pretty)])
+            info['pretty_name'] = pretty
+        data['name'] = re.sub(r'_(\d+)',r'_{\1}',data['name'])
+        data['name'] = re.sub(r'\^(\d+)',r'^{\1}',data['name'])
         info.update(data)
 
         bread = get_bread([(label, ' ')])
