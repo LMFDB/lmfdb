@@ -252,7 +252,7 @@ def render_group_webpage(args):
             info['err'] = "Group " + label + " was not found in the database."
             info['label'] = label
             return search_input_error(info, bread)
-        title = 'Galois Group:' + label
+        title = 'Galois Group: ' + label
         wgg = WebGaloisGroup.from_data(data)
         n = data['n']
         t = data['t']
@@ -321,7 +321,8 @@ def render_group_webpage(args):
         ]
         pretty = group_display_pretty(n,t,C)
         if len(pretty)>0:
-            prop2.extend([('Name:', pretty)])
+            prop2.extend([('Group:', pretty)])
+            info['pretty_name'] = pretty
         data['name'] = re.sub(r'_(\d+)',r'_{\1}',data['name'])
         data['name'] = re.sub(r'\^(\d+)',r'^{\1}',data['name'])
         info.update(data)

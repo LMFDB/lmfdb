@@ -129,9 +129,10 @@ def group_display_short(n, t, C):
     group = C.transitivegroups.groups.find_one({'label': label})
     if group['pretty']:
         return group['pretty']
-    name = group['name']
-    name = name.replace('=', ' = ')
-    return name
+    return "%dT%d"%(n,t)
+    #name = group['name']
+    #name = name.replace('=', ' = ')
+    #return name
 
 # Returns the empty string if there is no pretty name
 def group_display_pretty(n, t, C):
@@ -233,8 +234,10 @@ def group_knowl_guts(n, t, C):
         inf += ", primitive"
     else:
         inf += ", imprimitive"
+    inf += '<div>'
+    inf += '<a title="%s [gg.conway_name]" knowl="gg.conway_name" kwarts="n=%s&t=%s">%s</a>: '%('CHM label',str(n),str(t),'CHM label')
+    inf += '%s</div>'%(group['name'])
 
-    inf = "&nbsp;&nbsp;&mdash;&nbsp;&nbsp;  " + inf + ""
     rest = '<div><h3>Generators</h3><blockquote>'
     rest += generators(n, t)
     rest += '</blockquote></div>'
@@ -250,8 +253,8 @@ def group_knowl_guts(n, t, C):
     rest += '</div>'
 
     if group['pretty']:
-        return group['pretty'] + inf + rest
-    return group['name'] + inf + rest
+        return group['pretty'] + "&nbsp;&nbsp;&mdash;&nbsp;&nbsp;  "+ inf + rest
+    return inf + rest
 
 
 def group_cclasses_knowl_guts(n, t, C):
