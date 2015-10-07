@@ -173,9 +173,6 @@ def get_qexp(level, weight, character, label, prec, latex=False, **kwds):
 def get_qexp_latex(level, weight, character, label, prec=10, **kwds):
     return get_qexp(level, weight, character, label, prec, latex=True, **kwds)
 
-## By including this we get additional routes which we use to test various new features
-from experimental import *
-
 # If we don't match any arglist above we see if we have only a label
 @emf.route("/<test>/")
 def redirect_false_route(test=None):
