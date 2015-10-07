@@ -4,6 +4,8 @@ import re
 from lmfdb.lfunctions import logger
 from sage.all import *
 from lmfdb.genus2_curves.isog_class import list_to_factored_poly_otherorder
+from lmfdb.number_fields import group_display_knowl
+from lmfdb.base import getDBConnection
 
 ###############################################################
 # Functions for displaying numbers in correct format etc.
@@ -480,15 +482,27 @@ def lfuncEPhtml(L,fmt):
             good_primes.append(this_prime)
     eptable = "<table id='eptable' class='ntdata euler'>\n"
     eptable += "<thead>"
-    eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th><th class='weight'>$f_p$</th></tr>\n"
+    eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th><th class='weight'>$f_p$</th><th>$\Gal(f_p)$</th></tr>\n"
     eptable += "</thead>"
     numfactors = len(L.localfactors)
     goodorbad = "bad"
+    C = getDBConnection()
     for lf in L.bad_lfactors:
         try:
+            thispolygal = list_to_factored_poly_otherorder(lf[1], galois=True)
             eptable += ("<tr><td>" + goodorbad + "</td><td>" + str(lf[0]) + "</td><td>" + 
-                        "$" + list_to_factored_poly_otherorder(lf[1]) + "$" +
-                        "</td></tr>\n")
+                        "$" + thispolygal[0] + "$" +
+                        "</td>")
+            eptable += "<td>" 
+       #     eptable += group_display_knowl(4,thispolygal[1][0],C) 
+            this_gal_group = thispolygal[1]
+            eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C) 
+            for j in range(1,len(thispolygal[1])):
+                eptable += "$\\times$"
+                eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
+            eptable += "</td>"
+            eptable += "</tr>\n"
+
         except IndexError:
             eptable += "<tr><td></td><td>" + str(j) + "</td><td>" + "not available" + "</td></tr>\n"
         goodorbad = ""
@@ -498,17 +512,40 @@ def lfuncEPhtml(L,fmt):
     good_primes2 = good_primes[9:]
     for j in good_primes1:
         this_prime_index = prime_pi(j) - 1
+        thispolygal = list_to_factored_poly_otherorder(L.localfactors[this_prime_index],galois=True)
         eptable += ("<tr" + firsttime + "><td>" + goodorbad + "</td><td>" + str(j) + "</td><td>" +
-                    "$" + list_to_factored_poly_otherorder(L.localfactors[this_prime_index]) + "$" +
-                    "</td></tr>\n")
+                    "$" + thispolygal[0] + "$" +
+                    "</td>")
+        this_gal_group = thispolygal[1]
+        eptable += "<td>"
+        eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C) 
+        for j in range(1,len(thispolygal[1])):
+            eptable += "$\\times$"
+            eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
+        eptable += "</td>"
+        eptable += "</tr>\n"
+
+
+#        eptable += "<td>" + group_display_knowl(4,1,C) + "</td>"
+#        eptable += "</tr>\n"
         goodorbad = ""
         firsttime = ""
     firsttime = " id='moreep'"
     for j in good_primes2:
         this_prime_index = prime_pi(j) - 1
         eptable += ("<tr" + firsttime +  " class='more nodisplay'" + "><td>" + goodorbad + "</td><td>" + str(j) + "</td><td>" +
-                    "$" + list_to_factored_poly_otherorder(L.localfactors[this_prime_index]) + "$" +
-                    "</td></tr>\n")
+                    "$" + list_to_factored_poly_otherorder(L.localfactors[this_prime_index], galois=True)[0] + "$" +
+                    "</td>")
+        thispolygal = list_to_factored_poly_otherorder(L.localfactors[this_prime_index],galois=True)
+        this_gal_group = thispolygal[1]
+        eptable += "<td>"
+        eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C)
+        for j in range(1,len(thispolygal[1])):
+            eptable += "$\\times$"
+            eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
+        eptable += "</td>"
+
+        eptable += "</tr>\n"
         firsttime = ""
 
     eptable += "<tr class='less toggle'><td></td><td></td><td> <a onclick='"
