@@ -504,7 +504,10 @@ def lfuncEPhtml(L,fmt):
             eptable += "<td>" 
        #     eptable += group_display_knowl(4,thispolygal[1][0],C) 
             this_gal_group = thispolygal[1]
-            eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C) 
+            if this_gal_group[0]==[1,1]:
+                eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C,'$C_1$') 
+            else:
+                eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C) 
             for j in range(1,len(thispolygal[1])):
                 eptable += "$\\times$"
                 eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
