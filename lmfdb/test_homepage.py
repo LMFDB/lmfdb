@@ -56,3 +56,12 @@ class HomePageTest(LmfdbTest):
         page = self.tc.get("/NumberField/")
         assert 'x^7 - x^6 - 3 x^5 + x^4 + 4 x^3 - x^2 - x + 1' in page.data
 
+    # Box 4
+    def test_box4(self):
+        r"""
+        Check that the links in Box 4 work.
+        """
+        page = self.tc.get("/L/degree4/MaassForm/")
+        assert 'data on L-functions associated to Maass cusp forms for GSp(4) of level 1' in page.data
+        page = self.tc.get("/EllipticCurve/Q/102/c/")
+        assert r'1 &amp; 2 &amp; 4 &amp; 4 &amp; 8 &amp; 8' in page.data
