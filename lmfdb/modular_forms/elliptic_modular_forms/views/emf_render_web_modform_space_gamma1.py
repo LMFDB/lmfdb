@@ -33,7 +33,7 @@ def render_web_modform_space_gamma1(level=None, weight=None, character=None, lab
     r"""
     Render the webpage for the space of elliptic modular forms on gamma1 as a table of spaces of spaces on gamma0 with associated characters.
     """
-    emf_logger.debug("In render_ellitpic_modular_form_space kwds: {0}".format(kwds))
+    emf_logger.debug("In render_elliptic_modular_form_space kwds: {0}".format(kwds))
     emf_logger.debug(
         "Input: level={0},weight={1},character={2},label={3}".format(level, weight, character, label))
     info = to_dict(kwds)
@@ -96,6 +96,7 @@ def set_info_for_gamma1(level,weight,weight2=None):
                     'emf.render_elliptic_modular_forms', level=level, weight=k, character=xi)
             else:
                 url = ''
+                d = "n/a"
             table['cells'][xi][k] ={'N': level, 'k': k, 'chi': xi, 'url': url, 'dim': d}
     table['galois_orbits_reps_numbers']=table['galois_orbits_reps'].keys()
     table['galois_orbits_reps_numbers'].sort()
