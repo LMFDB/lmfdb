@@ -102,9 +102,22 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
     Trivial {%endif%}  {%endif%} </div>
 
     {% if data.mw.rank!=0 %}
-    <p><h3> Infinite order Mordell-Weil generators </h3>
+    {% if data.mw.rank==1 %}
+    <p><h3> Infinite order Mordell-Weil generator and height</h3>
+    {% else %}
+    <p><h3> Infinite order Mordell-Weil generators and heights</h3>
+    {% endif %}
       {{ code(data.code,'gens') }}
-      <div style='overflow:auto'><p> {{ data.mw.generators }} </p></div>
+      <div style='overflow:auto'><p>
+      <table>
+        <tr><td>\(P\)</td>
+          {% for pt in data.mw.generators %}<td>{{pt}}</td>{% endfor %}
+          </tr>
+        <tr><td>\(\hat{h}(P)\)</td>
+          {% for ht in data.mw.heights %}<td>{{ht}}</td>{% endfor %}
+          </tr>
+        </table>
+      </p></div>
     </p>
     {%endif %}
 
