@@ -44,8 +44,13 @@ def list_to_factored_poly_otherorder(s, galois=False):
     outstr = ''
     x = var('x')
     for v in sfacts_fc:
+        this_poly = v[0]
+        # if the factor is -1+T^2, replace it by 1-T^2
+        # this should happen an even number of times, mod powers 
+        if this_poly.substitute(T=0) == -1:
+            this_poly = -1*this_poly
+            v[0] = this_poly
         if galois:
-            this_poly = v[0]
             this_degree = this_poly.degree()
                 # hack because currently sage only handles monic polynomials:
             this_poly = expand(x**this_degree*this_poly.substitute(T=1/x))
