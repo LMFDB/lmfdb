@@ -458,8 +458,8 @@ def lfuncEPhtml(L,fmt):
 
     pfactors = prime_divisors(L.level)
     if len(pfactors) == 1:  #i.e., the conductor is prime
-        pgoodset = "$p \\neq " + str(L.level) + "$"
-        pbadset = "$p = " + str(L.level) + "$"
+        pgoodset = "$p \\neq " + str(pfactors[0]) + "$"
+        pbadset = "$p = " + str(pfactors[0]) + "$"
     else:
         badset = "\\{" + str(pfactors[0])
         for j in range(1,len(pfactors)):
@@ -490,7 +490,7 @@ def lfuncEPhtml(L,fmt):
             good_primes.append(this_prime)
     eptable = "<table id='eptable' class='ntdata euler'>\n"
     eptable += "<thead>"
-    eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th><th class='weight'>$F_p$</th><th class='weight'>$\Gal(F_p)$</th></tr>\n"
+    eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th><th class='weight'>$F_p$</th><th class='weight galois'>$\Gal(F_p)$</th></tr>\n"
     eptable += "</thead>"
     numfactors = len(L.localfactors)
     goodorbad = "bad"
@@ -501,10 +501,12 @@ def lfuncEPhtml(L,fmt):
             eptable += ("<tr><td>" + goodorbad + "</td><td>" + str(lf[0]) + "</td><td>" + 
                         "$" + thispolygal[0] + "$" +
                         "</td>")
-            eptable += "<td>" 
+            eptable += "<td class='galois'>" 
        #     eptable += group_display_knowl(4,thispolygal[1][0],C) 
             this_gal_group = thispolygal[1]
-            if this_gal_group[0]==[1,1]:
+            if this_gal_group[0]==[0,0]:
+                pass   # do nothing, because the local faco is 1
+            elif this_gal_group[0]==[1,1]:
                 eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C,'$C_1$') 
             else:
                 eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C) 
@@ -528,7 +530,7 @@ def lfuncEPhtml(L,fmt):
                     "$" + thispolygal[0] + "$" +
                     "</td>")
         this_gal_group = thispolygal[1]
-        eptable += "<td>"
+        eptable += "<td class='galois'>"
         eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C) 
         for j in range(1,len(thispolygal[1])):
             eptable += "$\\times$"
@@ -549,7 +551,7 @@ def lfuncEPhtml(L,fmt):
                     "</td>")
         thispolygal = list_to_factored_poly_otherorder(L.localfactors[this_prime_index],galois=True)
         this_gal_group = thispolygal[1]
-        eptable += "<td>"
+        eptable += "<td class='galois'>"
         eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C)
         for j in range(1,len(thispolygal[1])):
             eptable += "$\\times$"

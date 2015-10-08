@@ -45,6 +45,8 @@
             <span id="communication"></span>
           </span>
       </div>
+{# deleting the confusing prev/next character links, 
+   but leaving the code in case it is useful later
       {% if navi is defined -%}
         <div id="navi">
          {% for txt, u in navi -%}
@@ -55,6 +57,7 @@
       {%- elif navi_raw is defined -%}
         <div id="navi">{{ navi_raw|safe }}</div>
       {%- endif %} 
+#}
       {# this span inside a div thing is necessary to align it at the bottom, see css #}
 
       {% if title_arithmetic -%}
