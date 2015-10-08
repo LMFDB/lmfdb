@@ -27,8 +27,15 @@ def list_to_factored_poly(s):
     return str(factor(PolynomialRing(ZZ, 't')(s))).replace('*','')
 
 def list_to_factored_poly_otherorder(s, galois=False):
+    """ Either return the polynomial in a nice factored form,
+        or return a pair, with first entry the factored polynomial
+        and the second entry a list describing the Galois groups
+        of the factors.
+    """
     gal_list=[]
     if len(s) == 1:
+        if galois:
+            return [str(s[0]), [[0,0]]]
         return str(s[0])
     sfacts = factor(PolynomialRing(ZZ, 'T')(s))
     sfacts_fc = [[v[0],v[1]] for v in sfacts]
@@ -37,14 +44,15 @@ def list_to_factored_poly_otherorder(s, galois=False):
     outstr = ''
     x = var('x')
     for v in sfacts_fc:
-        this_poly = v[0]
-        this_degree = this_poly.degree()
-        this_poly = expand(x**this_degree*this_poly.substitute(T=1/x))
-        print "v is", v," of degree",this_degree
-        this_number_field = NumberField(this_poly, "a")
-        this_gal = this_number_field.galois_group(type='pari')
-        this_t_number = this_gal.group()._pari_()[2]._sage_()
-        gal_list.append([this_degree, this_t_number])
+        if galois:
+            this_poly = v[0]
+            this_degree = this_poly.degree()
+                # hack because currently sage only handles monic polynomials:
+            this_poly = expand(x**this_degree*this_poly.substitute(T=1/x))
+            this_number_field = NumberField(this_poly, "a")
+            this_gal = this_number_field.galois_group(type='pari')
+            this_t_number = this_gal.group()._pari_()[2]._sage_()
+            gal_list.append([this_degree, this_t_number])
         vcf = v[0].list()
         started = False
         if len(sfacts) > 1 or v[1] > 1:
