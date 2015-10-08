@@ -70,6 +70,11 @@ def list_to_factored_poly_otherorder(s, galois=False):
         if v[1] > 1:
             outstr += '^{' + str(v[1]) + '}'        
     if galois:
+        if galois and len(sfacts_fc)==2:
+            if sfacts[0][0].degree()==2 and sfacts[1][0].degree()==2:
+                troubletest = sfacts[0][0].disc()*sfacts[1][0].disc()
+                if troubletest.is_square():
+                    gal_list=[[2,1]]
         return [outstr, gal_list]
     return outstr
 
