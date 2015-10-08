@@ -8,7 +8,7 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 import tempfile
 import os
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range2, web_latex_split_on_pm, comma, clean_input, parse_range
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range2, web_latex_split_on_pm, comma, clean_input, parse_torsion_structure
 from lmfdb.number_fields.number_field import parse_list, parse_discs, make_disc_key
 from lmfdb.genus2_curves import g2c_page, g2c_logger
 from lmfdb.genus2_curves.isog_class import G2Cisog_class, url_for_label, isog_url_for_label
@@ -49,39 +49,6 @@ geom_aut_grp_dict = {
         '[12, 4]':'D_{12}',
         '[24, 8]':'2D_{12}',
         '[48, 29]':'tilde{S}_4'}
-
-def parse_torsion_structure(L):
-    r"""
-    Parse a string entered into torsion structure search box
-    '[]' --> []
-    '[n]' --> [str(n)]
-    'n' --> [str(n)]
-    '[m,n]' or '[m n]' --> [str(m),str(n)]
-    'm,n' or 'm n' --> [str(m),str(n)]
-    ... and similarly for up to 4 factors
-    """
-    # strip <whitespace> or <whitespace>[<whitespace> from the beginning:
-    L1 = re.sub(r'^\s*\[?\s*', '', str(L))
-    # strip <whitespace> or <whitespace>]<whitespace> from the beginning:
-    L1 = re.sub(r'\s*]?\s*$', '', L1)
-    # catch case where there is nothing left:
-    if not L1:
-        return []
-    # This matches a string of 1 or more digits at the start,
-    # optionally followed by up to 3 times (nontrivial <ws> or <ws>,<ws> followed by
-    # 1 or more digits):
-    TORS_RE = re.compile(r'^\d+((\s+|\s*,\s*)\d+){0,3}$')
-    if TORS_RE.match(L1):
-        if ',' in L1:
-            # strip interior <ws> and use ',' as delimiter:
-            res = [int(a) for a in L1.replace(' ','').split(',')]
-        else:
-            # use whitespace as delimiter:
-            res = [int(a) for a in L1.split()]
-        n = len(res)
-        if all(x>0 for x in res) and all(res[i+1]%res[i]==0 for i in range(n-1)):
-            return res
-    return 'Error parsing input %s for the torsion structure.  It needs to be a list of 0, 1, 2, 3 or 4 integers, optionally in square brackets, separated by spaces or a comma, such as [6], 6, [2,2], or [2,4].  Moreover, each integer should be bigger than 1, and each divides the next.' % L
 
 
 #########################
@@ -220,7 +187,7 @@ def genus2_curve_search(**args):
         if info.get(fld):
             query[fld] = map(int,info[fld].strip()[1:-1].split(","))
     if info.get('torsion'):
-        res = parse_torsion_structure(info['torsion'])
+        res = parse_torsion_structure(info['torsion'],4)
         if 'Error' in res:
             # no error handling of malformed input yet!
             info['torsion'] = ''
