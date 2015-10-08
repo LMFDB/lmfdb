@@ -40,5 +40,19 @@ class HomePageTest(LmfdbTest):
         page = self.tc.get("/EllipticCurve/Q/234446/a/1")
         assert r'y^2 + x y = x^{3} -  x^{2} - 79 x + 289' in page.data
         page = self.tc.get("/L/EllipticCurve/Q/234446.a/")
-        print page
         assert 'L-function $L(s,E)$ for the Elliptic Curve Isogeny Class 234446.a' in page.data
+
+    # Box 3
+    def test_box3(self):
+        r"""
+        Check that the links in Box 3 work.
+        """
+        page = self.tc.get("/L/")
+        assert 'Holomorphic cusp form' in page.data
+        page = self.tc.get("/ModularForm/")
+        assert r'Maass Forms on \(\GL(2,\Q) \)' in page.data
+        page = self.tc.get("/EllipticCurve/Q/")
+        assert 'curve, label or isogeny class label' in page.data
+        page = self.tc.get("/NumberField/")
+        assert 'x^7 - x^6 - 3 x^5 + x^4 + 4 x^3 - x^2 - x + 1' in page.data
+
