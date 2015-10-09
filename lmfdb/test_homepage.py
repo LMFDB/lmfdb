@@ -65,3 +65,13 @@ class HomePageTest(LmfdbTest):
         assert 'data on L-functions associated to Maass cusp forms for GSp(4) of level 1' in page.data
         page = self.tc.get("/EllipticCurve/Q/102/c/")
         assert r'1 &amp; 2 &amp; 4 &amp; 4 &amp; 8 &amp; 8' in page.data
+
+    # Box 5
+    def test_box5(self):
+        r"""
+        Check that the links in Box 5 work.
+        """
+        page = self.tc.get("/bigpicture")
+        assert 'some varieties are modular' in page.data
+        page = self.tc.get("/knowledge/")
+        assert 'Recently modified Knowls' in page.data
