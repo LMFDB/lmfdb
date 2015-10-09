@@ -77,19 +77,19 @@ class HomePageTest(LmfdbTest):
         assert 'Recently modified Knowls' in page.data
 
     # Box 6
-    @unittest2.skip("Should test all external links form home page, but this does not work")
     def test_box6(self):
         r"""
         Check that the links in Box 6 work.
         """
+        import urllib2
+        page = urllib2.urlopen("https://github.com/LMFDB/lmfdb").read()
+        assert 'Modular Forms Database' in page
+        page = urllib2.urlopen("http://sagemath.org/").read()
+        assert 'mathematics software system' in page
+        page = urllib2.urlopen("http://pari.math.u-bordeaux.fr/").read()
+        assert 'PARI/GP is a widely used computer algebra system' in page
         # I could not get this one to work -- JEC
-        page = self.tc.get("https://github.com/LMFDB/lmfdb")
-        assert 'Modular Forms Database' in page.data
-        page = self.tc.get("http://sagemath.org/")
-        assert 'mathematics software system' in page.data
-        page = self.tc.get("http://pari.math.u-bordeaux.fr/")
-        assert 'PARI/GP is a widely used computer algebra system' in page.data
-        page = self.tc.get("http://magma.maths.usyd.edu.au/magma/")
-        assert 'Magma is a large, well-supported software package' in page.data
-        page = self.tc.get("https://www.python.org/")
-        assert 'Python Logo' in page.data
+        #page = urllib2.urlopen("http://magma.maths.usyd.edu.au/magma/").read()
+        #assert 'Magma is a large, well-supported software package' in page
+        page = urllib2.urlopen("https://www.python.org/").read()
+        assert 'Python Logo' in page
