@@ -385,7 +385,7 @@ def dimension_from_db(level,weight,chi=None,group='gamma0'):
     if q:
         dim_table = q.get('data',{})
         dim_table = json.loads(dim_table)
-    if group=='gamma0' and chi<>None:
+    if group=='gamma0' and chi!=None:
         d,t = dim_table.get(str(level),{}).get(str(weight),{}).get(str(chi),[-1,0])
         return  d,t
     elif chi is None:
