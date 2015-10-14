@@ -1,0 +1,36 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+{% if not error %}
+
+<h2>Dimensions</h2>
+<table>
+  <tr>
+    <td>
+    </td>
+    {% for j in jrange %}
+    <td> {{j}}
+    </td>
+    {% endfor %}
+  </tr>
+  {% for wt in krange %}
+  <tr>
+    <td>
+      {{ wt }}
+    </td>
+    {% for j in jrange %}
+    <td>{{dimtable[wt][j] }}
+    </td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+</table>
+
+{% else %}
+{% include 'None.html' %}
+{% endif %}
+
+{% endblock %}
+
+
+

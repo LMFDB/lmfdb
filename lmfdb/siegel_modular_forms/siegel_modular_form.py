@@ -43,6 +43,22 @@ def rescan_collection():
     global COLNS
     COLNS = colns
 
+@app.route('/ModularForm/GSp/Q/Sp4Z_j')
+@app.route('/ModularForm/GSp/Q/Sp4Z_j/')
+def ModularForm_GSp4_Q_Sp4Z_j():
+    bread = [('Siegel modular forms', url_for('ModularForm_GSp4_Q_top_level')),
+             ('$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z})$', '/ModularForm/GSp/Q/Sp4Z_j')]
+    
+    jrange = xrange(0, 11)
+    krange = xrange(10, 20)
+    dimtable = dimensions.dimension_table_Sp4Z_j(krange, jrange)
+    return render_template('ModularForm_GSp4_Q_Sp4Zj.html',
+                           title='$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z})$',
+                           bread = bread,
+                           dimtable = dimtable,
+                           jrange=jrange,
+                           krange=krange)
+                    
 
 @app.route('/ModularForm/GSp/Q')
 @app.route('/ModularForm/GSp/Q/')
