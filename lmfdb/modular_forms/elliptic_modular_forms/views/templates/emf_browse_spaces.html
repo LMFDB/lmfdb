@@ -198,15 +198,17 @@ table.ntdata thead th.spaceleft {
       </table>
     </td>
     <small>"n/a" means that there is no information about this space in our database.</small>
-{% include 'select_ranges.html' %}
+{#% include 'select_ranges.html' %#}
 
   <h1>Find a specific cusp form from the database</h1>
       <div>
-        Search by {{KNOWL('mf.elliptic.label',title="label")}} 
+        Search by {{KNOWL('mf.elliptic.label',title="label")}} of a
+        form, or of a space of forms
         <form name="search" method = "post" action="{{url_for('.render_elliptic_modular_forms')}}">	  
-          <input type="text" name="jump_to" value="" placeholder="1.12"> 
+          <input type="text" name="jump_to" value="" placeholder="1.12.1a"> 
 	  <button type="submit" value="Find">Find</button>
         </form>
+        <span class="formexample"> e.g. 1.12.1a or 11.6 </span>
       </div>
 
 {#

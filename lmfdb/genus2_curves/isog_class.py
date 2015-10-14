@@ -7,7 +7,7 @@ from flask import url_for, make_response
 import lmfdb.base
 from lmfdb.utils import comma, make_logger, web_latex, encode_plot
 from lmfdb.genus2_curves.web_g2c import g2c_page, g2c_logger, list_to_min_eqn, end_alg_name, st_group_name, st0_group_name, get_end_data
-from sage.all import QQ, PolynomialRing, factor,ZZ
+from sage.all import QQ, PolynomialRing, factor,ZZ, NumberField, expand, var
 from lmfdb.WebNumberField import field_pretty
 
 logger = make_logger("g2c")
@@ -26,15 +26,38 @@ def list_to_poly(s):
 def list_to_factored_poly(s):
     return str(factor(PolynomialRing(ZZ, 't')(s))).replace('*','')
 
-def list_to_factored_poly_otherorder(s):
+def list_to_factored_poly_otherorder(s, galois=False):
+    """ Either return the polynomial in a nice factored form,
+        or return a pair, with first entry the factored polynomial
+        and the second entry a list describing the Galois groups
+        of the factors.
+    """
+    gal_list=[]
     if len(s) == 1:
+        if galois:
+            return [str(s[0]), [[0,0]]]
         return str(s[0])
     sfacts = factor(PolynomialRing(ZZ, 'T')(s))
     sfacts_fc = [[v[0],v[1]] for v in sfacts]
     if sfacts.unit() == -1:
         sfacts_fc[0][0] *= -1
     outstr = ''
+    x = var('x')
     for v in sfacts_fc:
+        this_poly = v[0]
+        # if the factor is -1+T^2, replace it by 1-T^2
+        # this should happen an even number of times, mod powers 
+        if this_poly.substitute(T=0) == -1:
+            this_poly = -1*this_poly
+            v[0] = this_poly
+        if galois:
+            this_degree = this_poly.degree()
+                # hack because currently sage only handles monic polynomials:
+            this_poly = expand(x**this_degree*this_poly.substitute(T=1/x))
+            this_number_field = NumberField(this_poly, "a")
+            this_gal = this_number_field.galois_group(type='pari')
+            this_t_number = this_gal.group()._pari_()[2]._sage_()
+            gal_list.append([this_degree, this_t_number])
         vcf = v[0].list()
         started = False
         if len(sfacts) > 1 or v[1] > 1:
@@ -59,6 +82,13 @@ def list_to_factored_poly_otherorder(s):
             outstr += ')'
         if v[1] > 1:
             outstr += '^{' + str(v[1]) + '}'        
+    if galois:
+        if galois and len(sfacts_fc)==2:
+            if sfacts[0][0].degree()==2 and sfacts[1][0].degree()==2:
+                troubletest = sfacts[0][0].disc()*sfacts[1][0].disc()
+                if troubletest.is_square():
+                    gal_list=[[2,1]]
+        return [outstr, gal_list]
     return outstr
 
 def url_for_label(label):

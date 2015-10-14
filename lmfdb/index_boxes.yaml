@@ -9,8 +9,8 @@ links:
 title: Hall of Fame
 content: <p><ul class="list"><li><a href="/L/Riemann/">Riemann zeta function</a></li>
     <li><a href="/NumberField/3.1.23.1">Cubic Field of discriminant \(-23\)</a></li>
-    <li><a href="/ModularForm/GL2/Q/holomorphic/1/12/0/a/">Ramanujan \(\Delta\) function</a>and <a href="/L/ModularForm/GL2/Q/holomorphic/1/12/0/a/">its L-function </a></li>
-    <li><a href="/EllipticCurve/Q/234446.a1">First Rank 4 Elliptic curve</a> and <a href="/L/EllipticCurve/Q/234446.a/">its L-function </a></li>
+    <li><a href="/ModularForm/GL2/Q/holomorphic/1/12/1/a/">Ramanujan \(\Delta\) function</a>and <a href="/L/ModularForm/GL2/Q/holomorphic/1/12/1/a/0/">its L-function </a></li>
+    <li><a href="/EllipticCurve/Q/234446/a/1">First Rank 4 Elliptic curve</a> and <a href="/L/EllipticCurve/Q/234446.a/">its L-function </a></li>
     </ul></p>
 image: plot
 control: 0
@@ -28,7 +28,7 @@ links:
 ---
 title: Visualize Data
 image: sp_image
-content: <p>Explore individual plots or view distributions of various objects.</p><p>Examples&#58;<a href="/L/degree4/MaassForm/">\(\GL(4)\) Level one Maass forms,</a><a href="/EllipticCurve/Q/?label=102.c&jump=label+or+isogeny+class">Isogeny graph of elliptic curve 102.c.</a></p>
+content: <p>Explore individual plots or view distributions of various objects.</p><p>Examples&#58;<a href="/L/degree4/MaassForm/">\(\GL(4)\) Level one Maass forms,</a><a href="/EllipticCurve/Q/102/c/">Isogeny graph of elliptic curve 102.c.</a></p>
 control: 1
 links:
   - [ 0,0 ]

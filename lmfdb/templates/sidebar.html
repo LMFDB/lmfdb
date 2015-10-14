@@ -9,7 +9,7 @@
 	<div class="L">
 	<span class="heading">{{value.firstpart.heading}}</span>
 	{% for item in value.firstpart.entries %}
-		{% if item.status != "future" or BETA %}
+		{% if not item.status or BETA %}
 			<span class="L">{{item.url | safe}}</span>
 		{% endif %}
 	{% endfor %}
@@ -17,8 +17,10 @@
 	<table class="short">
 	<tr>
 	{% for item in value.secondpart.parts %}
+	    {% if not item.status or BETA %}
 		<td>{{item.url | safe}}</td>
 		{% if loop.index is even -%}</tr><tr>{%- endif %}
+	    {% endif %}
 	{% endfor %}</tr>
 	</table>
 

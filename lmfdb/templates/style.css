@@ -839,6 +839,10 @@ table.euler {
     margin-right:auto;
 }
 
+table.euler tr .galois {
+    padding-left: 25px;
+}
+
 .knowl-content {
   padding: 0 10px;
 }

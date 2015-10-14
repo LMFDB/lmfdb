@@ -31,7 +31,7 @@ def render_web_modform_space(level=None, weight=None, character=None, label=None
     r"""
     Render the webpage for a elliptic modular forms space.
     """
-    emf_logger.debug("In render_ellitpic_modular_form_space kwds: {0}".format(kwds))
+    emf_logger.debug("In render_elliptic_modular_form_space kwds: {0}".format(kwds))
     emf_logger.debug(
         "Input: level={0},weight={1},character={2},label={3}".format(level, weight, character, label))
     info = to_dict(kwds)

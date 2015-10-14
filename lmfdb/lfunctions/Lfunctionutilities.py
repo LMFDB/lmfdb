@@ -4,6 +4,8 @@ import re
 from lmfdb.lfunctions import logger
 from sage.all import *
 from lmfdb.genus2_curves.isog_class import list_to_factored_poly_otherorder
+from lmfdb.number_fields import group_display_knowl
+from lmfdb.base import getDBConnection
 
 ###############################################################
 # Functions for displaying numbers in correct format etc.
@@ -216,7 +218,7 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
     elif ip < -1 * truncation:
         if float(abs(ip + 1)) < truncation:
             if seriescoefftype == "serieshtml":
-               return(" &minus;  <em>i</em>" + seriesvar(index, seriestype))
+               return(" &minus;  <em>i</em>" + "&middot;" + seriesvar(index, seriestype))
             else:
                return("-i" + "&middot;" + seriesvar(index, seriestype))
         else:
@@ -279,14 +281,6 @@ def lfuncDShtml(L, fmt):
     nonzeroterms = 1
 #    if fmt == "analytic" or fmt == "langlands":
     if fmt in ["analytic", "langlands", "arithmetic"]:
-      #  ans = "\\begin{align}\n"
-#        ans = ans + "<table class='dirichletseries'><tr>"
-#        ans = ans + "<td valign='top'>" + "$" + L.texname + "$" + "</td>"
-#        ans = ans + "<td valign='top'>" + "&nbsp;=&nbsp;" 
-#        # ans = ans + seriescoeff(L.dirichlet_coefficients[0], 0, "literal", "", -6, 5)
-#        ans = ans + "1<sup>&nbsp;</sup>"
-#        ans = ans + "</td><td valign='top'>"
-
         ans += "<table class='dirichletseries'><tr>"
         ans += "<td valign='top'>"  # + "$" 
         if fmt == "arithmetic":
@@ -335,7 +329,8 @@ def lfuncDShtml(L, fmt):
                 ans = ans + "\n"     # don't need  \cr in the html version
               #  ans = ans + "&"
                 nonzeroterms += 1   # This ensures we don t add more than one newline
-        ans = ans + " + ...\n</td></tr>\n</table>\n"
+   #     ans = ans + "<span> + &middot;&middot;&middot;</span>\n</td></tr>\n</table>\n"
+        ans = ans + "<span> + &#8943;</span>\n</td></tr>\n</table>\n"
 
     elif fmt == "abstract":
         if L.Ltype() == "riemann":
@@ -458,16 +453,31 @@ def lfuncEPtex(L, fmt):
 def lfuncEPhtml(L,fmt):
     """ Euler product as a formula and a table of local factors.
     """
-    ans = ""
     texform_gen = "\[L(A,s) = "
-    texform_gen += "\prod_{p \\text{ prime}} f_p(p^{-s})^{-1} \]\n"
-    ans += texform_gen + "where, for $p\\nmid " + str(L.level) + "$,\n"
-#    ans += "\[f_p(T) = 1 - a_p T + b_p T^2 + \chi(p) a_p p T^3 + \chi(p) p^2 T^4 \]"
-    ans += "\[f_p(T) = 1 - a_p T + b_p T^2 -  a_p p T^3 + p^2 T^4 \]"
-#    ans += "with $b_p = a_{p^2} - a_p^2$ and $\chi$ is the central character of the L-function."
+    texform_gen += "\prod_{p \\text{ prime}} F_p(p^{-s})^{-1} \]\n"
+
+    pfactors = prime_divisors(L.level)
+    if len(pfactors) == 1:  #i.e., the conductor is prime
+        pgoodset = "$p \\neq " + str(pfactors[0]) + "$"
+        pbadset = "$p = " + str(pfactors[0]) + "$"
+    else:
+        badset = "\\{" + str(pfactors[0])
+        for j in range(1,len(pfactors)):
+            badset += ",\\;"
+            badset += str(pfactors[j])
+        badset += "\\}"
+        pgoodset = "$p \\notin " + badset + "$"
+        pbadset = "$p \\in " + badset + "$"
+
+
+    ans = ""
+ #   ans += texform_gen + "where, for $p\\nmid " + str(L.level) + "$,\n"
+    ans += texform_gen + "where, for " + pgoodset + ",\n"
+    ans += "\[F_p(T) = 1 - a_p T + b_p T^2 -  a_p p T^3 + p^2 T^4 \]"
     ans += "with $b_p = a_p^2 - a_{p^2}$. "
-    ans += "If $p \mid "  + str(L.level) + "$, then $f_p$ is a polynomial of degree at most 3, "
-    ans += "with $f_p(0) = 1$."
+  #  ans += "If $p \mid "  + str(L.level) + "$, then $F_p$ is a polynomial of degree at most 3, "
+    ans += "If " + pbadset + ", then $F_p$ is a polynomial of degree at most 3, "
+    ans += "with $F_p(0) = 1$."
     factN = list(factor(L.level))
     bad_primes = []
     for lf in L.bad_lfactors:
@@ -480,15 +490,32 @@ def lfuncEPhtml(L,fmt):
             good_primes.append(this_prime)
     eptable = "<table id='eptable' class='ntdata euler'>\n"
     eptable += "<thead>"
-    eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th><th class='weight'>$f_p$</th></tr>\n"
+    eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th><th class='weight'>$F_p$</th><th class='weight galois'>$\Gal(F_p)$</th></tr>\n"
     eptable += "</thead>"
     numfactors = len(L.localfactors)
     goodorbad = "bad"
+    C = getDBConnection()
     for lf in L.bad_lfactors:
         try:
+            thispolygal = list_to_factored_poly_otherorder(lf[1], galois=True)
             eptable += ("<tr><td>" + goodorbad + "</td><td>" + str(lf[0]) + "</td><td>" + 
-                        "$" + list_to_factored_poly_otherorder(lf[1]) + "$" +
-                        "</td></tr>\n")
+                        "$" + thispolygal[0] + "$" +
+                        "</td>")
+            eptable += "<td class='galois'>" 
+       #     eptable += group_display_knowl(4,thispolygal[1][0],C) 
+            this_gal_group = thispolygal[1]
+            if this_gal_group[0]==[0,0]:
+                pass   # do nothing, because the local faco is 1
+            elif this_gal_group[0]==[1,1]:
+                eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C,'$C_1$') 
+            else:
+                eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C) 
+            for j in range(1,len(thispolygal[1])):
+                eptable += "$\\times$"
+                eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
+            eptable += "</td>"
+            eptable += "</tr>\n"
+
         except IndexError:
             eptable += "<tr><td></td><td>" + str(j) + "</td><td>" + "not available" + "</td></tr>\n"
         goodorbad = ""
@@ -498,17 +525,40 @@ def lfuncEPhtml(L,fmt):
     good_primes2 = good_primes[9:]
     for j in good_primes1:
         this_prime_index = prime_pi(j) - 1
+        thispolygal = list_to_factored_poly_otherorder(L.localfactors[this_prime_index],galois=True)
         eptable += ("<tr" + firsttime + "><td>" + goodorbad + "</td><td>" + str(j) + "</td><td>" +
-                    "$" + list_to_factored_poly_otherorder(L.localfactors[this_prime_index]) + "$" +
-                    "</td></tr>\n")
+                    "$" + thispolygal[0] + "$" +
+                    "</td>")
+        this_gal_group = thispolygal[1]
+        eptable += "<td class='galois'>"
+        eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C) 
+        for j in range(1,len(thispolygal[1])):
+            eptable += "$\\times$"
+            eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
+        eptable += "</td>"
+        eptable += "</tr>\n"
+
+
+#        eptable += "<td>" + group_display_knowl(4,1,C) + "</td>"
+#        eptable += "</tr>\n"
         goodorbad = ""
         firsttime = ""
     firsttime = " id='moreep'"
     for j in good_primes2:
         this_prime_index = prime_pi(j) - 1
         eptable += ("<tr" + firsttime +  " class='more nodisplay'" + "><td>" + goodorbad + "</td><td>" + str(j) + "</td><td>" +
-                    "$" + list_to_factored_poly_otherorder(L.localfactors[this_prime_index]) + "$" +
-                    "</td></tr>\n")
+                    "$" + list_to_factored_poly_otherorder(L.localfactors[this_prime_index], galois=True)[0] + "$" +
+                    "</td>")
+        thispolygal = list_to_factored_poly_otherorder(L.localfactors[this_prime_index],galois=True)
+        this_gal_group = thispolygal[1]
+        eptable += "<td class='galois'>"
+        eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C)
+        for j in range(1,len(thispolygal[1])):
+            eptable += "$\\times$"
+            eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
+        eptable += "</td>"
+
+        eptable += "</tr>\n"
         firsttime = ""
 
     eptable += "<tr class='less toggle'><td></td><td></td><td> <a onclick='"
@@ -651,19 +701,23 @@ def lfuncFEtex(L, fmt):
             ans += "\quad (\\text{with }\epsilon \\text{ unknown})"
         ans += "\n\\end{align}\n"
     elif fmt == "selberg":
-        ans += "(" + str(int(L.degree)) + ","
-        ans += str(int(L.level)) + ","
+        ans += "(" + str(int(L.degree)) + ",\\ "
+        ans += str(int(L.level)) + ",\\ "
         ans += "("
         if L.mu_fe != []:
             for mu in range(len(L.mu_fe) - 1):
                 ans += seriescoeff(L.mu_fe[mu], 0, "literal", "", -6, 5) + ", "
             ans += seriescoeff(L.mu_fe[-1], 0, "literal", "", -6, 5)
+        else:
+            ans += "\\ "
         ans += ":"
         if L.nu_fe != []:
             for nu in range(len(L.nu_fe) - 1):
                 ans += str(L.nu_fe[nu]) + ", "
             ans += str(L.nu_fe[-1])
-        ans += "), "
+        else:
+            ans += "\\ "
+        ans += "),\\ "
         ans += seriescoeff(L.sign, 0, "literal", "", -6, 5)
         ans += ")"
 
@@ -672,6 +726,7 @@ def lfuncFEtex(L, fmt):
 
 def specialValueString(L, s, sLatex, normalization="analytic"):
     ''' Returns the LaTex to dislpay for L(s)
+        Will eventually be replaced by specialValueTriple.
     '''
     number_of_decimals = 10
     val = None
@@ -695,11 +750,47 @@ def specialValueString(L, s, sLatex, normalization="analytic"):
         return "\\[{0}=\\infty\\]".format(lfunction_value_tex)
     elif val.abs() < 1e-10:
         return "\\[{0}=0\\]".format(lfunction_value_tex)
+    elif normalization == "arithmetic":
+        return(lfunction_value_tex,
+               latex(round(val.real(), number_of_decimals)
+                         + round(val.imag(), number_of_decimals) * I))
     else:
         return "\\[{0} \\approx {1}\\]".format(lfunction_value_tex,
                                                latex(round(val.real(), number_of_decimals)
                                                      + round(val.imag(), number_of_decimals) * I))
 
+def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
+    ''' Returns [L_arithmetic, L_analytic, L_val]
+        Currently only used for genus 2 curves.
+        Eventually want to use for all L-functions.
+    '''
+    number_of_decimals = 10
+    val = None
+    if hasattr(L,"lfunc_data"):
+        s_alg = s+p2sage(L.lfunc_data['analytic_normalization'])
+        for x in p2sage(L.lfunc_data['special_values']):
+            # the numbers here are always half integers
+            # so this comparison is exact
+            if x[0] == s_alg:
+                val = x[1]
+                break
+    if val is None:
+        val = L.sageLfunction.value(s)
+    # We must test for NaN first, since it would show as zero otherwise
+    # Try "RR(NaN) < float(1e-10)" in sage -- GT
+
+    lfunction_value_tex_arithmetic = L.texname_arithmetic.replace('s)',  sLatex_arithmetic + ')')
+    lfunction_value_tex_analytic = L.texname.replace('(s', '(' + sLatex_analytic)
+
+    if CC(val).real().is_NaN():
+        Lval = "\\infty"
+    elif val.abs() < 1e-10:
+        Lval = "0"
+    else:
+        Lval = latex(round(val.real(), number_of_decimals)
+                         + round(val.imag(), number_of_decimals) * I)
+
+    return [lfunction_value_tex_analytic, lfunction_value_tex_arithmetic, Lval]
 
 ###############################################################
 # Functions for Siegel dirichlet series

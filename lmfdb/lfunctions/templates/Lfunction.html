@@ -41,11 +41,22 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
 </style>
 
 {% if dirichlet_arithmetic -%}
- <div align='center'>{{ KNOWL('lfunction.normalization', title='Normalization') }}: <button class='arithmetic active' onclick="show_normalization('arithmetic'); return false">arithmetic</button>
+ <div align='center'>{{ KNOWL('lfunction.normalization', title='Normalization') }}: &nbsp;  <button class='arithmetic active' onclick="show_normalization('arithmetic'); return false">arithmetic</button>
 <button class='analytic inactive' onclick="show_normalization('analytic'); return false">analytic</button></div>
 {% elif BETA %}
-<div align='center'>{{ KNOWL('lfunction.normalization', title='Normalization') }}: 
-<button class='active'>analytic</button></div>
+<div align='center'><div style="display: inline-block; vertical-align:top;">{{ KNOWL('lfunction.normalization', title='Normalization') }}:  &nbsp; 
+</div>
+<div style="display: inline-block; vertical-align:top;">
+<button class='active'>analytic</button>
+</div>
+<div style="display: inline-block; align:left;">
+<button class='inactive'>arithmetic</button>
+<br>
+<span style="font-size: 80%;">
+(not yet available)
+</span>
+</div>
+</div>
 {% endif %}
 
  <h2> {{ KNOWL('lfunction.dirichlet_series', title='Dirichlet series') }}</h2>
@@ -65,9 +76,147 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
  <div id="functionalEqText">\[{{ functionalequation }}\]</div>
 {% endif %}
 
- <div>
-   {{ KNOWL('lfunction.selbergdata', title="Selberg data") }}: ${{ functionalequationSelberg }}$
-</div>
+<h2> {{ KNOWL('lfunction.invariants', title='Invariants') }}  </h2>
+
+  <table>
+
+        <tr>
+        <td> \( d \)</td>
+        <td>&nbsp;=&nbsp;</td>
+        <td> \({{ degree }}\)
+        </td>
+        </tr>
+
+        <tr>
+        <td> \( N \)</td>
+        <td>&nbsp;=&nbsp;</td>
+        <td> \({{ conductor }}\)
+{% if conductor_factored -%}
+     &nbsp;&nbsp;  = &nbsp;&nbsp; \({{ conductor_factored }}\)
+{% endif %}
+        </td>
+        </tr>
+
+        <tr>
+        <td> \( \varepsilon \)</td>
+        <td>&nbsp;=&nbsp;</td>
+        <td> {{ sign }}
+        </td>
+        </tr>
+
+{% if weight %}
+        <tr>
+        <td> \( w \)</td>
+        <td>&nbsp;=&nbsp;</td>
+        <td> {{ weight }}
+        </td>
+        </tr>
+
+{% endif %}
+
+{% if chi %}
+        <tr>
+        <td> \( \chi \)</td>
+        <td>&nbsp;:&nbsp;</td>
+        <td> {{ chi }}
+        </td>
+        </tr>
+
+{% endif %}
+
+{% if ST -%}
+
+        <tr>
+        <td> ST </td>
+        <td>&nbsp;:&nbsp;</td>
+        <td> {{ ST }}
+        </td>
+        </tr>
+
+{% endif %}
+
+        <tr>
+        <td> {{ KNOWL('lfunction.primitive', title="Primitive") }}  </td>
+        <td>&nbsp;:&nbsp;</td>
+        <td> {{ primitive }}
+        </td>
+        </tr>
+
+        <tr>
+        <td> {{ KNOWL('lfunction.self-dual', title="Self-dual") }} </td>
+        <td>&nbsp;:&nbsp;</td>
+        <td> {{ selfdual }}
+        </td>
+        </tr>
+
+{% if rank -%}
+
+        <tr>
+        <td> Rank </td>
+        <td>&nbsp;=&nbsp;</td>
+        <td> {{ rank }}
+        </td>
+        </tr>
+
+{% endif %}
+
+{% if satotategroup -%}
+
+        <tr>
+        <td> Sato-Tate group </td>
+        <td>&nbsp;:&nbsp;</td>
+        <td> {{ satotategroup }}
+        </td>
+        </tr>
+
+{% endif %}
+
+        <tr>
+        <td> {{ KNOWL('lfunction.selbergdata', title="Selberg data") }} </td>
+        <td>&nbsp;=&nbsp;</td>
+        <td> ${{ functionalequationSelberg }}$
+        </td>
+        </tr>
+
+{% if dirichlet_arithmetic -%}
+
+  {% if sv_critical_arithmetic %}
+        <tr class="arithmetic">
+        <td> ${{ sv_critical_arithmetic[0] }}$ </td>
+  {% if sv_critical_arithmetic[1] == "0" %}
+        <td>&nbsp;$=$&nbsp;</td>
+  {% else %}
+        <td>&nbsp;$\approx$&nbsp;</td>
+  {% endif %}
+        <td> ${{ sv_critical_arithmetic[1] }}$ </td>
+        </tr>
+        <tr class="analytic nodisplay">
+        <td> ${{ sv_critical_analytic[0] }}$ </td>
+  {% if sv_critical_analytic[1] == "0" %}
+        <td>&nbsp;$=$&nbsp;</td>
+  {% else %}
+        <td>&nbsp;$\approx$&nbsp;</td>
+  {% endif %}
+
+        <td> ${{ sv_critical_analytic[1] }}$ </td>
+        </tr>
+  {% endif %}
+
+  {% if sv_edge_arithmetic %}
+        <tr class="arithmetic">
+        <td> ${{ sv_edge_arithmetic[0] }}$ </td>
+        <td>&nbsp;$\approx$&nbsp;</td>
+        <td> ${{ sv_edge_arithmetic[1] }}$ </td>
+        </tr>
+        <tr class="analytic nodisplay">
+        <td> ${{ sv_edge_analytic[0] }}$ </td>
+        <td>&nbsp;$\approx$&nbsp;</td>
+        <td> ${{ sv_edge_analytic[1] }}$ </td>
+        </tr>
+  {% endif %}
+
+{% endif %}
+  </table>
 
  <h2>{{ KNOWL('lfunction.euler_product', title='Euler product') }}</h2>
 {% if dirichlet_arithmetic -%}
@@ -84,7 +233,9 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
   </div>
  {% endif %}
 
+{% if not dirichlet_arithmetic %}
 <h2>Particular Values</h2>
+{#
 {% if dirichlet_arithmetic -%}
    {% if sv_critical_arithmetic or sv_edge_arithmetic %}
       <div class="arithmetic">
@@ -121,6 +272,7 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
    {% endif %}
 
 {% else %}
+#}
    {% if sv_critical or sv_edge %}
       <div>
       {% if sv_critical %}
@@ -137,6 +289,10 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
    {% else %}
       <div>Not enough information (Dirichlet series coefficients/sign of the functional equation) to compute special values.</div>
    {% endif %}
+{#
+{% endif %}
+#}
+
 {% endif %}
 
  <h2> Imaginary part of the first few zeros on the {{ KNOWL('lfunction.critical_line', title='critical line') }}</h2>

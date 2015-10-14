@@ -144,7 +144,7 @@ def extract_data_from_jump_to(s):
     args['level'] = int(level)
     args['weight'] = int(weight) 
     args['character'] = int(character)
-    args['label'] = label
+    if label: args['label'] = label
     return args
 
 
@@ -402,10 +402,10 @@ def field_label(F, pretty = True, check=False):
     r"""
       Returns the LMFDB label of the field F.
     """
-    if F.degree() == 1:
+    if F.absolute_degree() == 1:
         p = 'x'
     else:
-        pp = F.polynomial()
+        pp = F.absolute_polynomial()
         x = pp.parent().gen()
         p = str(pp).replace(str(x), 'x')
     l = poly_to_field_label(p)
@@ -424,3 +424,27 @@ def field_label(F, pretty = True, check=False):
         return field_pretty(l)
     else:
         return l
+
+@cached_function
+def dirichlet_character_conrey_galois_orbit_embeddings(N,xi):
+    r"""
+       Returns a dictionary that maps the Conrey numbers
+       of the Dirichlet characters in the Galois orbit of x
+       to the powers of $\zeta_{\phi(N)}$ so that the corresponding
+       embeddings map the labels.
+
+       Let $\zeta_{\phi(N)}$ be the generator of the cyclotomic field
+       of $N$-th roots of unity which is the base field
+       for the coefficients of a modular form contained in the database.
+       Considering the space $S_k(N,\chi)$, where $\chi = \chi_N(m, \cdot)$,
+       if embeddings()[m] = n, then $\zeta_{\phi(N)}$ is mapped to
+       $\zeta_{\phi(N)}^n = \mathrm{exp}(2\pi i n /\phi(N))$.
+    """    
+    embeddings = {}
+    base_number = 0
+    base_number = xi
+    embeddings[base_number] = 1
+    for n in range(2,N):
+        if gcd(n,N) == 1:
+            embeddings[Mod(base_number,N)**n] = n
+    return embeddings

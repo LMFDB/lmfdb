@@ -9,6 +9,7 @@ name: Matthew Alderson
 name: Samuele Anni
 email: samuele.anni@gmail.com
 affil: University of Warwick
+url: http://www2.warwick.ac.uk/fac/sci/maths/people/staff/anni/
 ---
 name: Salman Baig
 ---
@@ -87,6 +88,10 @@ name: Markus Fraczek
 email: markus.fraczek@gmail.com
 affil: University of Warwick
 ---
+name: Sharon Frechette
+affil: College of Holy Cross
+url: http://mathcs.holycross.edu/~sfrechet/
+---
 name: Ralph Furmaniak
 affil: Stanford University
 url: http://stanford.edu/~rfurman/
@@ -129,6 +134,9 @@ name: Sally Koutsoliotas
 url: http://www.bucknell.edu/x18772.xml
 affil: Bucknell University
 ---
+name: Watson Ladd
+affil: University of California
+---
 name: Stefan Lemurell
 url: http://www.math.chalmers.se/~sj/
 affil: Göteborgs Universitet
@@ -140,6 +148,9 @@ affil: University of Warwick
 name: Mark McConnell
 email: mmcconnell17704@yahoo.com
 affil: Princeton
+---
+name: Anna Medvedovsky
+affil: ICERM
 ---
 name: Robert Miller
 url: http://www.rlmiller.org/
@@ -190,9 +201,17 @@ name: Gagan Sekhon
 name: Haluk Sengun
 affil: University of Sheffield
 ---
+name: Jeroen Sijsling
+affil: Dartmouth College
+url: https://sites.google.com/site/sijsling/
+---
 name: Samir Siksek
 affil: University of Warwick
 url: http://homepages.warwick.ac.uk/staff/S.Siksek/
+---
+name: Joseph Silverman
+affil: Brown University
+url: http://www.math.brown.edu/~jhs/
 ---
 name: Nils-Peter Skoruppa
 url: http://www.nskoruppa.de/
@@ -214,7 +233,7 @@ affil: University of Nottingham
 url: https://sites.google.com/site/fredrikstroemberg/
 ---
 name: Holly Swisher
-url: http://www.math.oregonstate.edu/people/view/swisherh
+url: http://people.oregonstate.edu/~swisherh/home/
 affil: Oregon State University
 ---
 name: Gonzalo Tornaria

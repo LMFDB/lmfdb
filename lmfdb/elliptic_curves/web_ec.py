@@ -226,9 +226,12 @@ class WebEC(object):
 
         mw['rank'] = self.rank
         try:
-            mw['generators'] = ', '.join(web_latex(self.E(g).xy()) for g in parse_points(self.gens))
+            self.generators = [self.E(g) for g in parse_points(self.gens)]
+            mw['generators'] = [web_latex(P.xy()) for P in self.generators]
+            mw['heights'] = [P.height() for P in self.generators]
         except AttributeError:
             mw['generators'] = ''
+            mw['heights'] = []
 
         # Torsion subgroup: order, structure, generators
 

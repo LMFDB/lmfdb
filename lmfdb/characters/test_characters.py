@@ -90,8 +90,8 @@ class DirichletCharactersTest(LmfdbTest):
     def test_dirichletchar11(self):
         W = self.tc.get('/Character/Dirichlet/1/1')
         assert 'Character group' in W.data
-        assert '/Character/Dirichlet/0/1' not in W.data, "prev link"
-        assert '/Character/Dirichlet/2/1' in W.data, "next link"
+        #assert '/Character/Dirichlet/0/1' not in W.data, "prev link"
+        #assert '/Character/Dirichlet/2/1' in W.data, "next link"
         assert  '/NumberField/1.1.1.1' in W.data
      
     #@unittest2.skip("wait for new DirichletConrey")
@@ -105,7 +105,7 @@ class DirichletCharactersTest(LmfdbTest):
         assert 'Character group' in W.data
         assert '40486' in W.data
         assert '12409' in W.data, "log on generator"
-        assert '/Character/Dirichlet/40487/6' in W.data, "next link"
+        #assert '/Character/Dirichlet/40487/6' in W.data, "next link"
 
     def test_dirichletchar43(self):
         W = self.tc.get('/Character/Dirichlet/4/3')
@@ -133,7 +133,10 @@ class DirichletCharactersTest(LmfdbTest):
         #assert '(119,415)' in W.data, "generators"
         assert '(356,235)' in W.data, "generators"
         assert 'Kloosterman sum' in W.data
-        assert '/Character/Dirichlet/531/38' in W.data, "prev navigation"
+        # next line commented out as homepage.html no longer diplays
+        #these (deliberately) as they were not useful, and possibly
+        #confusing!
+        #assert '/Character/Dirichlet/531/38' in W.data, "prev navigation"
         assert  '(\\zeta_{87})' in W.data, "field of values"
 
 class HeckeCharactersTest(LmfdbTest):
