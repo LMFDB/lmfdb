@@ -10,6 +10,8 @@ from sage.misc.preparser import preparse
 from lmfdb.hilbert_modular_forms import hmf_page, hmf_logger
 from lmfdb.hilbert_modular_forms.hilbert_field import findvar
 
+from lmfdb.ecnf.main import split_class_label
+
 import sage.all
 from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi
 
@@ -50,8 +52,8 @@ def hilbert_modular_form_render_webpage():
     args = request.args
     if len(args) == 0:
         info = {}
-        credit = 'Lassina Dembele, Steve Donnelly and <A HREF="http://www.cems.uvm.edu/~voight/">John Voight</A>'
-        t = 'Hilbert Cusp Forms'
+        credit = 'John Cremona, Lassina Dembele, Steve Donnelly and <A HREF="http://www.math.dartmouth.edu/~jvoight/">John Voight</A>'
+        t = 'Hilbert Modular Forms'
         bread = [('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage"))]
         info['learnmore'] = []
         return render_template("hilbert_modular_form_all.html", info=info, credit=credit, title=t, bread=bread)
@@ -280,20 +282,18 @@ def render_hmf_webpage(**args):
         ('Download to Magma', url_for(".render_hmf_webpage_download", field_label=info['field_label'], label=info['label'], download_type='magma')),
         ('Download to Sage', url_for(".render_hmf_webpage_download", field_label=info['field_label'], label=info['label'], download_type='sage'))
         ]
-    info['friends'] = []
     info['friends'] = [('L-function',
                         url_for("l_functions.l_function_hmf_page", field=info['field_label'], label=info['label'], character='0', number='0'))]
 
-# info['learnmore'] = [('Number Field labels',
-# url_for("render_labels_page")), ('Galois group
-# labels',url_for("render_groups_page")), ('Discriminant
-# ranges',url_for("render_discriminants_page"))]
+    if data['dimension'] == 1:   # Try to attach associated elliptic curve
+        lab = split_class_label(info['label'])
+        info['friends'] += [('Isogeny class ' + info['label'], url_for("ecnf.show_ecnf_isoclass", nf=lab[0], conductor_label=lab[1], class_label=lab[2]))]
 
     bread = [('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")), ('%s' % data[
                                                                                          'label'], ' ')]
 
     t = "Hilbert Cusp Form %s" % info['label']
-    credit = 'Lassina Dembele, Steve Donnelly and <A HREF="http://www.cems.uvm.edu/~voight/">John Voight</A>'
+    credit = 'John Cremona, Lassina Dembele, Steve Donnelly and <A HREF="http://www.math.dartmouth.edu/~jvoight/">John Voight</A>'
 
     forms_space = C.hmfs.forms.find(
         {'field_label': data['field_label'], 'level_ideal': data['level_ideal']})

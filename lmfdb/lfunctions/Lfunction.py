@@ -496,7 +496,6 @@ class Lfunction_HMF(Lfunction):
         self.mu_fe = []
         self.nu_fe = [self.automorphyexp for i in range(self.field_degree)]
         
-        
         self.kappa_fe = [1 for i in range(self.field_degree)]
         self.lambda_fe = [self.automorphyexp for i in range(self.field_degree)]
         self.Q_fe = (float(sqrt(self.level)) / (2 * math.pi) **
@@ -583,7 +582,7 @@ class Lfunction_HMF(Lfunction):
 
         self.coefficient_period = 0
         self.coefficient_type = 3
-        self.quasidegree = 1
+        self.quasidegree = self.degree
 
         self.checkselfdual()
 
