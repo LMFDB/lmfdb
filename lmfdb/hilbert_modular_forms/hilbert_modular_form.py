@@ -11,6 +11,7 @@ from lmfdb.hilbert_modular_forms import hmf_page, hmf_logger
 from lmfdb.hilbert_modular_forms.hilbert_field import findvar
 
 from lmfdb.ecnf.main import split_class_label
+from lmfdb.ecnf.WebEllipticCurve import db_ecnf
 
 import sage.all
 from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi
@@ -296,7 +297,9 @@ def render_hmf_webpage(**args):
 
     if data['dimension'] == 1:   # Try to attach associated elliptic curve
         lab = split_class_label(info['label'])
-        info['friends'] += [('Isogeny class ' + info['label'], url_for("ecnf.show_ecnf_isoclass", nf=lab[0], conductor_label=lab[1], class_label=lab[2]))]
+        ec_from_hmf = db_ecnf().find_one({"label": label + '1'})
+        if ec_from_hmf <> None:
+            info['friends'] += [('Isogeny class ' + info['label'], url_for("ecnf.show_ecnf_isoclass", nf=lab[0], conductor_label=lab[1], class_label=lab[2]))]
 
     bread = [('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")), ('%s' % data[
                                                                                          'label'], ' ')]
