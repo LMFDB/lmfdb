@@ -5,6 +5,7 @@
 
 <h2>Dimensions</h2>
 <table>
+  <thead>
   <tr>
     <td>
     </td>
@@ -13,8 +14,9 @@
     </td>
     {% endfor %}
   </tr>
+  </thead>
   {% for wt in krange %}
-  <tr>
+  <tr class="{{ loop.cycle( 'odd', 'even') }}">
     <td>
       {{ wt }}
     </td>
