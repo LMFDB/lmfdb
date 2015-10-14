@@ -30,6 +30,7 @@ from lmfdb.WebNumberField import WebNumberField
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes \
      import WebMaassForm
+from lmfdb.base import url_for
 
 def constructor_logger(object, args):
     ''' Executed when a object is constructed for debugging reasons
