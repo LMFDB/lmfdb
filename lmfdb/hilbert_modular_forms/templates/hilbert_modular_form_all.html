@@ -8,22 +8,30 @@ By {{ KNOWL('nf', title='base field') }}:
 </p>
 <ul>
 <li>
-Real quadratic fields <a href="?field_label=2.2.8.1">\(\Q(\sqrt{2})\)</a>,
-<a href="?field_label=2.2.5.1">\(\Q(\sqrt{5})\)</a>,...
+Real quadratic fields <a href="?field_label=2.2.5.1">\(\Q(\sqrt{5})\)</a>, 
+<a href="?field_label=2.2.8.1">\(\Q(\sqrt{8})\)</a>, 
+<a href="?field_label=2.2.12.1">\(\Q(\sqrt{12})\)</a>, ..., 
+<a href="?field_label=2.2.401.1">\(\Q(\sqrt{401})\)</a>, ...
 </li>
-<li>Cubic fields <a href="?field_label=3.3.49.1">3.3.49.1</a>,...
-</li>
-<li>
-Quartic fields <a href="?field_label=4.4.725.1">4.4.725.1</a>,...
-</li>
-<li>
-Quintic fields <a href="?field_label=5.5.14641.1">5.5.14641.1</a>,...
+<li>Cubic fields <a href="?field_label=3.3.49.1">3.3.49.1</a>, ...,
+<a href="?field_label=3.3.1101.1">3.3.1101.1</a>, ...
 </li>
 <li>
-Sextic fields <a href="?field_label=6.6.300125.1">6.6.300125.1</a>,...
+Quartic fields <a href="?field_label=4.4.725.1">4.4.725.1</a>, 
+<a href="?field_label=4.4.1125.1">4.4.1125.1</a>, ...
+<a href="?field_label=4.4.18688.1">4.4.18688.1</a>, ...
+</li>
+<li>
+Quintic fields <a href="?field_label=5.5.14641.1">5.5.14641.1</a>, 
+<a href="?field_label=5.5.160801.1">5.5.160801.1</a>, ...
+</li>
+<li>
+Sextic fields <a href="?field_label=6.6.300125.1">6.6.300125.1</a>, 
+<a href="?field_label=6.6.1397493.1">6.6.1397493.1</a>, ...
 </li>
 </ul>
 
+<p>A <a href={{url_for('.random_hmf')}}>random Hilbert modular form</a> from the database</p>
 
 <h2> Find a specific form by label </h2>
 
@@ -43,6 +51,16 @@ Sextic fields <a href="?field_label=6.6.300125.1">6.6.300125.1</a>,...
 <td><input type='text' name='field_label' placeholder='2.2.5.1' size=10>
 <td><span class="formexample"> either a field label, e.g. 2.2.5.1 for
     \(\mathbb{Q}(\sqrt{5})\), or a nickname, e.g. Qsqrt5 </span></td>
+</tr>
+<tr>
+<td>Field {{ KNOWL('nf.degree', title='degree') }}</td>  
+<td><input type='text' name='field_degree' placeholder='2' size=10>
+<td><span class="formexample"> e.g. 2, 2..3</span></td>
+</tr>
+<tr>
+<td>Field {{ KNOWL('nf.discriminant', title='discriminant') }}</td>  
+<td><input type='text' name='field_disc' placeholder='1..100' size=10>
+<td><span class="formexample"> e.g. 1..100</span></td>
 </tr>
 <tr>
 <td>{{ KNOWL('mf.hilbert.weight_vector', title='Weight') }}</td>
