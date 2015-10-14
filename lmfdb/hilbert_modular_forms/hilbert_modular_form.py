@@ -69,7 +69,7 @@ def hilbert_modular_form_render_webpage():
 
 def hilbert_modular_form_search(**args):
     C = getDBConnection()
-    C.hmfs.forms.ensure_index([('level_norm', pymongo.ASCENDING), ('label', pymongo.ASCENDING)])
+#    C.hmfs.forms.ensure_index([('level_norm', pymongo.ASCENDING), ('label', pymongo.ASCENDING)])
 
     info = to_dict(args)  # what has been entered in the search boxes
     if 'label' in info:
