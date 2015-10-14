@@ -1,6 +1,11 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
+<div>The database contains {{info.counts.nforms_c}} Hilbert
+  newforms over {{info.counts.nfields_c}} totally real number fields
+  of degree up to {{info.counts.max_deg_c}}.
+</div>
+
 <h2> Browse {{ KNOWL('mf.hilbert', title='Hilbert cusp forms') }} </h2>
 
 <p>
