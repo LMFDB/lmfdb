@@ -1017,7 +1017,7 @@ class DedekindZeta(Lfunction):   # added by DK
 
         self.coefficient_period = 0
         self.selfdual = True
-        self.primitive = True
+        self.primitive = False
         self.coefficient_type = 3
         self.texname = "\\zeta_K(s)"
         self.texnamecompleteds = "\\Lambda_K(s)"
