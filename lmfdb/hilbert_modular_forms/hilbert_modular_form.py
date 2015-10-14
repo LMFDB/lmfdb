@@ -21,6 +21,11 @@ from lmfdb.number_fields.number_field import parse_list, parse_field_string
 
 from lmfdb.WebNumberField import *
 
+@hmf_page.route("/random")
+def random_hmf():    # Random Hilbert modular form
+    C = getDBConnection()
+    res = C.hmfs.forms.find_one()        
+    return redirect(url_for(".render_hmf_webpage", field_label=res['field_label'], label=res['label']))
 
 def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing polynomials)
     o_str = pol_str.replace('*', '')
@@ -70,7 +75,7 @@ def hilbert_modular_form_search(**args):
         args = {'label': info['label']}
         return render_hmf_webpage(**args)
     query = {}
-    for field in ['field_label', 'weight', 'level_norm', 'dimension']:
+    for field in ['field_degree', 'field_disc', 'field_label', 'weight', 'level_norm', 'dimension']:
         if info.get(field):
             if field == 'weight':
                 try:
@@ -80,6 +85,10 @@ def hilbert_modular_form_search(**args):
                     query[field] = str(parse_list(info[field]))
             elif field == 'field_label':
                 query[field] = parse_field_string(info[field])
+            elif field == 'field_degree':
+                query[field] = parse_range(info[field])
+            elif field == 'field_disc':
+                query[field] = parse_range(info[field])
             elif field == 'label':
                 query[field] = info[field]
             elif field == 'dimension':
